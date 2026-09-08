@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 using RoofRow = ThousandAndFirst.Simulation.City.KingdomCityBook.SubsidenceRoofRow;
 
@@ -18,17 +19,17 @@ namespace ThousandAndFirst.Tests
 			KingdomCityBook city = Carrier();
 			city.SubsidenceModel = wire;
 			Snapshot before = new Snapshot(city);
-			Assert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow row));
-			Assert.AreSame(city, row.City);
-			Assert.AreEqual(city.SettlementId, row.SettlementId);
-			Assert.AreEqual(11, row.ResidentId);
-			Assert.AreEqual(city.ResidentHomeWorkIds[0], row.HomeWorkId);
-			Assert.AreEqual(city.ResidentStandings[0], row.Standing);
-			Assert.AreEqual(RungFixture.Zone, row.ZoneId);
-			Assert.IsFalse(row.RoofStanding);
-			Assert.AreEqual(0, row.Reached); Assert.AreEqual(0, row.Warned);
-			Assert.IsFalse(city.TryPublishSubsidenceRoof(wire, row, true, RungFixture.Due, 0, out RoofRow after));
-			Assert.IsNull(after);
+			ClassicAssert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow row));
+			ClassicAssert.AreSame(city, row.City);
+			ClassicAssert.AreEqual(city.SettlementId, row.SettlementId);
+			ClassicAssert.AreEqual(11, row.ResidentId);
+			ClassicAssert.AreEqual(city.ResidentHomeWorkIds[0], row.HomeWorkId);
+			ClassicAssert.AreEqual(city.ResidentStandings[0], row.Standing);
+			ClassicAssert.AreEqual(RungFixture.Zone, row.ZoneId);
+			ClassicAssert.IsFalse(row.RoofStanding);
+			ClassicAssert.AreEqual(0, row.Reached); ClassicAssert.AreEqual(0, row.Warned);
+			ClassicAssert.IsFalse(city.TryPublishSubsidenceRoof(wire, row, true, RungFixture.Due, 0, out RoofRow after));
+			ClassicAssert.IsNull(after);
 			before.Unchanged(city);
 		}
 
@@ -36,27 +37,27 @@ namespace ThousandAndFirst.Tests
 		public void ExactIntentPublishesOnlyPlannedTupleKeepingEveryOtherFieldAndRawListReference(bool alreadyStanding)
 		{
 			KingdomCityBook city = Bound("roof-intent", alreadyStanding);
-			Assert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow prior));
+			ClassicAssert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow prior));
 			Snapshot before = new Snapshot(city);
 			long reached = alreadyStanding ? RungFixture.Due + 10 : RungFixture.Due;
 			long warned = alreadyStanding ? RungFixture.Due + 20 : 0;
-			Assert.IsTrue(city.TryPublishSubsidenceRoof(city.SubsidenceModel, prior,
+			ClassicAssert.IsTrue(city.TryPublishSubsidenceRoof(city.SubsidenceModel, prior,
 				true, reached, warned, out RoofRow after));
-			Assert.IsTrue(prior.SameCarriers(after));
-			Assert.AreSame(prior.Ids, after.Ids); Assert.AreSame(prior.Homes, after.Homes);
-			Assert.AreSame(prior.Standings, after.Standings); Assert.AreSame(prior.Zones, after.Zones);
-			Assert.AreSame(prior.Roofs, after.Roofs);
-			Assert.AreSame(prior.ReachedTicks, after.ReachedTicks);
-			Assert.AreSame(prior.WarnedTicks, after.WarnedTicks);
+			ClassicAssert.IsTrue(prior.SameCarriers(after));
+			ClassicAssert.AreSame(prior.Ids, after.Ids); ClassicAssert.AreSame(prior.Homes, after.Homes);
+			ClassicAssert.AreSame(prior.Standings, after.Standings); ClassicAssert.AreSame(prior.Zones, after.Zones);
+			ClassicAssert.AreSame(prior.Roofs, after.Roofs);
+			ClassicAssert.AreSame(prior.ReachedTicks, after.ReachedTicks);
+			ClassicAssert.AreSame(prior.WarnedTicks, after.WarnedTicks);
 			before.Unchanged(city, "ResidentRoofStanding", "ResidentRoofTicks", "ResidentRoofWarnedTicks");
-			Assert.IsTrue(after.RoofStanding);
-			Assert.AreEqual(reached, after.Reached); Assert.AreEqual(warned, after.Warned);
+			ClassicAssert.IsTrue(after.RoofStanding);
+			ClassicAssert.AreEqual(reached, after.Reached); ClassicAssert.AreEqual(warned, after.Warned);
 			CollectionAssert.AreEqual(new[] { 1, 0, 0 }, city.ResidentRoofStanding);
 			CollectionAssert.AreEqual(new[] { reached, 0L, 0L }, city.ResidentRoofTicks);
 			CollectionAssert.AreEqual(new[] { warned, 0L, 0L }, city.ResidentRoofWarnedTicks);
-			Assert.AreEqual(alreadyStanding, prior.RoofStanding, "snapshot scalar must not follow the live list");
-			Assert.AreEqual(alreadyStanding ? RungFixture.Due + 10 : 0, prior.Reached);
-			Assert.AreEqual(alreadyStanding ? RungFixture.Due + 20 : 0, prior.Warned);
+			ClassicAssert.AreEqual(alreadyStanding, prior.RoofStanding, "snapshot scalar must not follow the live list");
+			ClassicAssert.AreEqual(alreadyStanding ? RungFixture.Due + 10 : 0, prior.Reached);
+			ClassicAssert.AreEqual(alreadyStanding ? RungFixture.Due + 20 : 0, prior.Warned);
 		}
 
 		[Test]
@@ -64,14 +65,14 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityBook city = Bound("roof-intent");
 			string wire = city.SubsidenceModel;
-			Assert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow prior));
-			Assert.IsTrue(city.TryPublishSubsidenceRoof(wire, prior, true, RungFixture.Due, 0, out RoofRow after));
+			ClassicAssert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow prior));
+			ClassicAssert.IsTrue(city.TryPublishSubsidenceRoof(wire, prior, true, RungFixture.Due, 0, out RoofRow after));
 			Snapshot completed = new Snapshot(city);
-			Assert.IsFalse(city.TryPublishSubsidenceRoof(wire, prior, true, RungFixture.Due, 0, out RoofRow refused));
-			Assert.IsNull(refused);
+			ClassicAssert.IsFalse(city.TryPublishSubsidenceRoof(wire, prior, true, RungFixture.Due, 0, out RoofRow refused));
+			ClassicAssert.IsNull(refused);
 			completed.Unchanged(city);
-			Assert.IsTrue(city.TryPublishSubsidenceRoof(wire, after, true, RungFixture.Due, 0, out RoofRow confirmed));
-			Assert.IsTrue(after.SameCarriers(confirmed));
+			ClassicAssert.IsTrue(city.TryPublishSubsidenceRoof(wire, after, true, RungFixture.Due, 0, out RoofRow confirmed));
+			ClassicAssert.IsTrue(after.SameCarriers(confirmed));
 			completed.Unchanged(city);
 		}
 
@@ -79,15 +80,15 @@ namespace ThousandAndFirst.Tests
 		public void ProvedParentAcceptsOnlyMeasuredAfterTuple()
 		{
 			KingdomCityBook city = Bound("roof-proved");
-			Assert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow before));
+			ClassicAssert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow before));
 			Refuses(city, city.SubsidenceModel, before, true, RungFixture.Due, 0);
 			city.ResidentRoofStanding[0] = 1;
 			city.ResidentRoofTicks[0] = RungFixture.Due;
-			Assert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow measured));
+			ClassicAssert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow measured));
 			Snapshot snapshot = new Snapshot(city);
-			Assert.IsTrue(city.TryPublishSubsidenceRoof(city.SubsidenceModel, measured,
+			ClassicAssert.IsTrue(city.TryPublishSubsidenceRoof(city.SubsidenceModel, measured,
 				true, RungFixture.Due, 0, out RoofRow after));
-			Assert.IsTrue(measured.SameCarriers(after));
+			ClassicAssert.IsTrue(measured.SameCarriers(after));
 			snapshot.Unchanged(city);
 		}
 
@@ -95,7 +96,7 @@ namespace ThousandAndFirst.Tests
 		public void ParentWithoutCurrentRoofIntentCannotBypassCompetingWriterFence(string phase)
 		{
 			KingdomCityBook city = Bound(phase);
-			Assert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow prior));
+			ClassicAssert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow prior));
 			Refuses(city, city.SubsidenceModel, prior, true, RungFixture.Due, 0);
 		}
 
@@ -103,7 +104,7 @@ namespace ThousandAndFirst.Tests
 		public void LaterFrontierOrUnselectedResidentCannotBorrowAnotherResidentsRoofIntent(int id)
 		{
 			KingdomCityBook city = Bound("roof-intent");
-			Assert.IsTrue(city.TryCaptureSubsidenceRoof(id, out RoofRow prior));
+			ClassicAssert.IsTrue(city.TryCaptureSubsidenceRoof(id, out RoofRow prior));
 			Refuses(city, city.SubsidenceModel, prior, true, RungFixture.Due, 0);
 		}
 
@@ -113,7 +114,7 @@ namespace ThousandAndFirst.Tests
 		public void InvalidOrUnplannedTargetTupleRefusesWithoutAnyWrite(bool stands, long reached, long warned)
 		{
 			KingdomCityBook city = Bound("roof-intent");
-			Assert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow prior));
+			ClassicAssert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow prior));
 			Refuses(city, city.SubsidenceModel, prior, stands, reached, warned);
 		}
 
@@ -123,22 +124,22 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityBook city = Bound("roof-intent");
 			string expected = city.SubsidenceModel;
-			Assert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow prior));
+			ClassicAssert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow prior));
 			if (change == "null-prior") prior = null;
 			if (change == "foreign-city")
 			{
 				KingdomCityBook foreign = Bound("roof-intent");
-				Assert.AreEqual(city.SubsidenceModel, foreign.SubsidenceModel);
-				Assert.IsTrue(foreign.TryCaptureSubsidenceRoof(11, out prior));
+				ClassicAssert.AreEqual(city.SubsidenceModel, foreign.SubsidenceModel);
+				ClassicAssert.IsTrue(foreign.TryCaptureSubsidenceRoof(11, out prior));
 			}
 			if (change == "wrong-wire") expected = Wire(Parent("prepared"));
 			if (change == "replaced-parent") city.SubsidenceModel = Wire(Parent("prepared"));
 			if (change == "changed-city-id" || change == "foreign-parent-owner")
 			{
 				city.SettlementId = KingdomIdentityRules.SettlementPrefix + new string('d', 64);
-				Assert.AreNotEqual(city.SettlementId, prior.SettlementId);
-				Assert.IsFalse(city.TryCaptureSubsidenceRoof(11, out RoofRow renamed));
-				Assert.IsNull(renamed, "foreign parent must fail before a fresh capture");
+				ClassicAssert.AreNotEqual(city.SettlementId, prior.SettlementId);
+				ClassicAssert.IsFalse(city.TryCaptureSubsidenceRoof(11, out RoofRow renamed));
+				ClassicAssert.IsNull(renamed, "foreign parent must fail before a fresh capture");
 				if (change == "foreign-parent-owner") prior = new RoofRow(city, 0);
 			}
 			Refuses(city, expected, prior, true, RungFixture.Due, 0);
@@ -151,7 +152,7 @@ namespace ThousandAndFirst.Tests
 			if (change == "home") city.ResidentHomeWorkIds[0]++;
 			if (change == "zone") city.ResidentBoundZoneIds[0] = "another.zone";
 			if (change == "standing") city.ResidentStandings[0] = (int)KingdomResidentStanding.Expedition;
-			Assert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow prior));
+			ClassicAssert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow prior));
 			Refuses(city, city.SubsidenceModel, prior, true, RungFixture.Due, 0);
 		}
 
@@ -163,7 +164,7 @@ namespace ThousandAndFirst.Tests
 			book = book.With(book.Active.Copy(phase: KingdomSubsidenceStepPhase.Quarantined,
 				fault: "fixture quarantine"), book.Sequence);
 			city.SubsidenceModel = Wire(book);
-			Assert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow prior));
+			ClassicAssert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow prior));
 			Refuses(city, city.SubsidenceModel, prior, true, RungFixture.Due, 0);
 		}
 
@@ -172,7 +173,7 @@ namespace ThousandAndFirst.Tests
 		public void EqualReplacementListsDoNotSatisfyRawCarrierCompareAndSwap(string column)
 		{
 			KingdomCityBook city = Bound("roof-intent");
-			Assert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow prior));
+			ClassicAssert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow prior));
 			switch (column)
 			{
 				case "ids": city.ResidentIds = new List<int>(city.ResidentIds); break;
@@ -183,8 +184,8 @@ namespace ThousandAndFirst.Tests
 				case "reached": city.ResidentRoofTicks = new List<long>(city.ResidentRoofTicks); break;
 				default: city.ResidentRoofWarnedTicks = new List<long>(city.ResidentRoofWarnedTicks); break;
 			}
-			Assert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow replaced));
-			Assert.IsFalse(prior.SameCarriers(replaced));
+			ClassicAssert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow replaced));
+			ClassicAssert.IsFalse(prior.SameCarriers(replaced));
 			Refuses(city, city.SubsidenceModel, prior, true, RungFixture.Due, 0);
 		}
 
@@ -193,7 +194,7 @@ namespace ThousandAndFirst.Tests
 		public void ChangedBeforeTupleOrRowIdentityRefusesStaleSnapshot(string field)
 		{
 			KingdomCityBook city = Bound("roof-intent", true);
-			Assert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow prior));
+			ClassicAssert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow prior));
 			switch (field)
 			{
 				case "standing":
@@ -206,9 +207,9 @@ namespace ThousandAndFirst.Tests
 				default: city.ResidentIds[0] = 99; break;
 			}
 			Refuses(city, city.SubsidenceModel, prior, true, RungFixture.Due + 10, RungFixture.Due + 20);
-			Assert.IsTrue(prior.RoofStanding);
-			Assert.AreEqual(RungFixture.Due + 10, prior.Reached);
-			Assert.AreEqual(RungFixture.Due + 20, prior.Warned);
+			ClassicAssert.IsTrue(prior.RoofStanding);
+			ClassicAssert.AreEqual(RungFixture.Due + 10, prior.Reached);
+			ClassicAssert.AreEqual(RungFixture.Due + 20, prior.Warned);
 		}
 
 		[TestCase("null-column")] [TestCase("torn-column")] [TestCase("null-name")]
@@ -219,7 +220,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityBook city = Bound("roof-intent");
 			string wire = city.SubsidenceModel;
-			Assert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow prior));
+			ClassicAssert.IsTrue(city.TryCaptureSubsidenceRoof(11, out RoofRow prior));
 			switch (corruption)
 			{
 				case "null-column": city.ResidentRoofTicks = null; break;
@@ -236,8 +237,8 @@ namespace ThousandAndFirst.Tests
 				default: city.SubsidenceModel = wire.Substring(0, 30); break;
 			}
 			Snapshot snapshot = new Snapshot(city);
-			Assert.IsFalse(city.TryCaptureSubsidenceRoof(11, out RoofRow refused));
-			Assert.IsNull(refused);
+			ClassicAssert.IsFalse(city.TryCaptureSubsidenceRoof(11, out RoofRow refused));
+			ClassicAssert.IsNull(refused);
 			snapshot.Unchanged(city);
 			Refuses(city, wire, prior, true, RungFixture.Due, 0);
 		}
@@ -247,8 +248,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityBook city = Carrier();
 			Snapshot before = new Snapshot(city);
-			Assert.IsFalse(city.TryCaptureSubsidenceRoof(id, out RoofRow row));
-			Assert.IsNull(row);
+			ClassicAssert.IsFalse(city.TryCaptureSubsidenceRoof(id, out RoofRow row));
+			ClassicAssert.IsNull(row);
 			before.Unchanged(city);
 		}
 
@@ -256,8 +257,8 @@ namespace ThousandAndFirst.Tests
 			bool stands, long reached, long warned)
 		{
 			Snapshot before = new Snapshot(city);
-			Assert.IsFalse(city.TryPublishSubsidenceRoof(wire, prior, stands, reached, warned, out RoofRow after));
-			Assert.IsNull(after);
+			ClassicAssert.IsFalse(city.TryPublishSubsidenceRoof(wire, prior, stands, reached, warned, out RoofRow after));
+			ClassicAssert.IsNull(after);
 			before.Unchanged(city);
 		}
 
@@ -276,21 +277,21 @@ namespace ThousandAndFirst.Tests
 			KingdomSubsidenceRungPlan plan = new KingdomSubsidenceRungPlan(book.Active.Id,
 				book.RealmId, book.SettlementId, RungFixture.Zone, GrowthStage.City, GrowthStage.Town,
 				book.Active.DueTick, RungFixture.Prepared, book.Active.Completed, new[] { work });
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryFreezeRungPlan(book, plan, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryFreezeRungPlan(book, plan, out book));
 			if (phase == "prepared") return book;
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryArmRungWear(book, 0, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryArmRungWear(book, 0, out book));
 			if (phase == "wear-intent") return book;
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryProveRungWear(book, 0, true, true, work.AfterWear, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryProveRungWear(book, 0, true, true, work.AfterWear, out book));
 			if (phase == "wear-proved") return book;
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryArmRungRoof(book, 0, 0, out book));
-			if (phase == "roof-proved") Assert.IsTrue(KingdomSubsidenceStepRules.TryProveRungRoof(book,
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryArmRungRoof(book, 0, 0, out book));
+			if (phase == "roof-proved") ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryProveRungRoof(book,
 				0, 0, true, true, standing ? RungFixture.Due + 10 : RungFixture.Due,
 				standing ? RungFixture.Due + 20 : 0, out book));
 			return book;
 		}
 		private static string Wire(KingdomSubsidenceStepBook book)
 		{
-			Assert.IsTrue(KingdomSubsidenceStepCodec.TryEncode(book, out string wire));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepCodec.TryEncode(book, out string wire));
 			return wire;
 		}
 		private static KingdomCityBook Carrier(bool standing = false)
@@ -305,11 +306,11 @@ namespace ThousandAndFirst.Tests
 				new KingdomBrinkWindow(false, 0, 0), null, 0, null, "fixture", ""));
 			KingdomStocks stocks = new KingdomStocks(new KingdomStockPair(0, 0),
 				new KingdomStockPair(0, 0), new KingdomStockPair(0, 0));
-			Assert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
+			ClassicAssert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
 				RungFixture.Settlement, 0, stocks, new KingdomZoneRow[0], new KingdomWorkRow[0],
 				residents.ToArray(), new KingdomClockRow[0], out KingdomCityState state, out _));
 			KingdomCityBook city = new KingdomCityBook();
-			Assert.IsTrue(city.TryPublish(state, out _));
+			ClassicAssert.IsTrue(city.TryPublish(state, out _));
 			return city;
 		}
 
@@ -339,10 +340,10 @@ namespace ThousandAndFirst.Tests
 					object current = entry.Key.GetValue(city);
 					if (lists.TryGetValue(entry.Key, out object[] values))
 					{
-						Assert.AreSame(entry.Value, current, entry.Key.Name + " carrier replaced");
+						ClassicAssert.AreSame(entry.Value, current, entry.Key.Name + " carrier replaced");
 						if (!allowed.Contains(entry.Key.Name)) CollectionAssert.AreEqual(values, (IList)current, entry.Key.Name);
 					}
-					else Assert.AreEqual(entry.Value, current, entry.Key.Name);
+					else ClassicAssert.AreEqual(entry.Value, current, entry.Key.Name);
 				}
 			}
 		}

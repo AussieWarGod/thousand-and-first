@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -33,10 +34,10 @@ namespace ThousandAndFirst.Tests
 				bool actual = KingdomWaterDebitRules.TryPlan(
 					amount, volumes, pure, dedicated, out allocation, out total, out fault);
 
-				Assert.AreEqual(expected, actual, "availability classification");
+				ClassicAssert.AreEqual(expected, actual, "availability classification");
 				CollectionAssert.AreEqual(before, volumes, "planning mutated source volumes");
-				Assert.AreEqual(actual ? KingdomWaterDebitFault.None : KingdomWaterDebitFault.InsufficientWater, fault);
-				Assert.AreEqual(actual && amount > 0 ? amount : 0, total);
+				ClassicAssert.AreEqual(actual ? KingdomWaterDebitFault.None : KingdomWaterDebitFault.InsufficientWater, fault);
+				ClassicAssert.AreEqual(actual && amount > 0 ? amount : 0, total);
 				int remaining = (amount > 0) ? amount : 0;
 				for (int i = 0; i < 3; i++)
 				{
@@ -46,7 +47,7 @@ namespace ThousandAndFirst.Tests
 						expectedTake = Math.Min(volumes[i], remaining);
 						remaining -= expectedTake;
 					}
-					Assert.AreEqual(expectedTake, allocation[i], "allocation row " + i);
+					ClassicAssert.AreEqual(expectedTake, allocation[i], "allocation row " + i);
 				}
 			}
 		}
@@ -57,12 +58,12 @@ namespace ThousandAndFirst.Tests
 			int[] allocations;
 			int total;
 			KingdomWaterDebitFault fault;
-			Assert.IsFalse(KingdomWaterDebitRules.TryPlan(1, null, new bool[0], new bool[0], out allocations, out total, out fault));
-			Assert.AreEqual(KingdomWaterDebitFault.InvalidVessels, fault);
-			Assert.IsFalse(KingdomWaterDebitRules.TryPlan(1, new int[1], null, new bool[1], out allocations, out total, out fault));
-			Assert.IsFalse(KingdomWaterDebitRules.TryPlan(1, new int[1], new bool[1], null, out allocations, out total, out fault));
-			Assert.IsFalse(KingdomWaterDebitRules.TryPlan(1, new int[1], new bool[0], new bool[1], out allocations, out total, out fault));
-			Assert.IsFalse(KingdomWaterDebitRules.TryPlan(1, new int[1], new bool[1], new bool[0], out allocations, out total, out fault));
+			ClassicAssert.IsFalse(KingdomWaterDebitRules.TryPlan(1, null, new bool[0], new bool[0], out allocations, out total, out fault));
+			ClassicAssert.AreEqual(KingdomWaterDebitFault.InvalidVessels, fault);
+			ClassicAssert.IsFalse(KingdomWaterDebitRules.TryPlan(1, new int[1], null, new bool[1], out allocations, out total, out fault));
+			ClassicAssert.IsFalse(KingdomWaterDebitRules.TryPlan(1, new int[1], new bool[1], null, out allocations, out total, out fault));
+			ClassicAssert.IsFalse(KingdomWaterDebitRules.TryPlan(1, new int[1], new bool[0], new bool[1], out allocations, out total, out fault));
+			ClassicAssert.IsFalse(KingdomWaterDebitRules.TryPlan(1, new int[1], new bool[1], new bool[0], out allocations, out total, out fault));
 		}
 
 		[Test]
@@ -77,20 +78,20 @@ namespace ThousandAndFirst.Tests
 				switch (state)
 				{
 				case KingdomWaterDebitState.Reserved:
-					Assert.AreEqual(KingdomWaterDebitAction.Drain, commit);
-					Assert.AreEqual(KingdomWaterDebitAction.CancelReservation, rollback);
+					ClassicAssert.AreEqual(KingdomWaterDebitAction.Drain, commit);
+					ClassicAssert.AreEqual(KingdomWaterDebitAction.CancelReservation, rollback);
 					break;
 				case KingdomWaterDebitState.Committed:
-					Assert.AreEqual(KingdomWaterDebitAction.SucceedWithoutMutation, commit);
-					Assert.AreEqual(KingdomWaterDebitAction.Restore, rollback);
+					ClassicAssert.AreEqual(KingdomWaterDebitAction.SucceedWithoutMutation, commit);
+					ClassicAssert.AreEqual(KingdomWaterDebitAction.Restore, rollback);
 					break;
 				case KingdomWaterDebitState.RolledBack:
-					Assert.AreEqual(KingdomWaterDebitAction.Reject, commit);
-					Assert.AreEqual(KingdomWaterDebitAction.SucceedWithoutMutation, rollback);
+					ClassicAssert.AreEqual(KingdomWaterDebitAction.Reject, commit);
+					ClassicAssert.AreEqual(KingdomWaterDebitAction.SucceedWithoutMutation, rollback);
 					break;
 				default:
-					Assert.AreEqual(KingdomWaterDebitAction.Reject, commit);
-					Assert.AreEqual(KingdomWaterDebitAction.Reject, rollback);
+					ClassicAssert.AreEqual(KingdomWaterDebitAction.Reject, commit);
+					ClassicAssert.AreEqual(KingdomWaterDebitAction.Reject, rollback);
 					break;
 				}
 			}
@@ -110,7 +111,7 @@ namespace ThousandAndFirst.Tests
 				bool capacity = (mask & 8) != 0;
 				bool expected = original > 0 && current == original && allocation > 0 &&
 					allocation <= original && pure && dedicated && same && capacity;
-				Assert.AreEqual(expected, KingdomWaterDebitRules.EntryStillReserved(
+				ClassicAssert.AreEqual(expected, KingdomWaterDebitRules.EntryStillReserved(
 					original, current, allocation, pure, dedicated, same, capacity));
 			}
 		}
@@ -129,7 +130,7 @@ namespace ThousandAndFirst.Tests
 				bool capacity = (mask & 8) != 0;
 				bool expected = original > 0 && allocation > 0 && allocation <= original &&
 					current == original - allocation && emptyOrPure && dedicated && same && capacity;
-				Assert.AreEqual(expected, KingdomWaterDebitRules.EntryStillCommitted(
+				ClassicAssert.AreEqual(expected, KingdomWaterDebitRules.EntryStillCommitted(
 					original, current, allocation, emptyOrPure, dedicated, same, capacity));
 			}
 		}
@@ -142,9 +143,9 @@ namespace ThousandAndFirst.Tests
 				bool sameZone = (mask & 1) != 0;
 				bool sameComponents = (mask & 2) != 0;
 				bool expected = sameZone && sameComponents;
-				Assert.AreEqual(expected, KingdomWaterDebitRules.EntryStillReserved(
+				ClassicAssert.AreEqual(expected, KingdomWaterDebitRules.EntryStillReserved(
 					5, 5, 2, true, true, true, true, sameZone, sameComponents));
-				Assert.AreEqual(expected, KingdomWaterDebitRules.EntryStillCommitted(
+				ClassicAssert.AreEqual(expected, KingdomWaterDebitRules.EntryStillCommitted(
 					5, 3, 2, true, true, true, true, sameZone, sameComponents));
 			}
 		}
@@ -162,7 +163,7 @@ namespace ThousandAndFirst.Tests
 				bool binding = (mask & 2) != 0;
 				bool expected = before > 0 && allocation > 0 && allocation <= before &&
 					returned == allocation && after == before - allocation && state && binding;
-				Assert.AreEqual(expected, KingdomWaterDebitRules.DrainTransitionExact(
+				ClassicAssert.AreEqual(expected, KingdomWaterDebitRules.DrainTransitionExact(
 					before, after, allocation, returned, state, binding));
 			}
 		}
@@ -178,22 +179,22 @@ namespace ThousandAndFirst.Tests
 				int afterSpace;
 				bool commits = KingdomWaterDebitRules.TryCountersAfterCommit(
 					stored, space, amount, out afterStored, out afterSpace);
-				Assert.AreEqual(stored >= amount, commits);
+				ClassicAssert.AreEqual(stored >= amount, commits);
 				if (!commits) continue;
 				int restoredStored;
 				int restoredSpace;
-				Assert.IsTrue(KingdomWaterDebitRules.TryCountersAfterRollback(
+				ClassicAssert.IsTrue(KingdomWaterDebitRules.TryCountersAfterRollback(
 					afterStored, afterSpace, amount, out restoredStored, out restoredSpace));
-				Assert.AreEqual(stored, restoredStored);
-				Assert.AreEqual(space, restoredSpace);
+				ClassicAssert.AreEqual(stored, restoredStored);
+				ClassicAssert.AreEqual(space, restoredSpace);
 			}
 
 			int ignoredA;
 			int ignoredB;
-			Assert.IsFalse(KingdomWaterDebitRules.TryCountersAfterCommit(0, 0, -1, out ignoredA, out ignoredB));
-			Assert.IsFalse(KingdomWaterDebitRules.TryCountersAfterCommit(1, int.MaxValue, 1, out ignoredA, out ignoredB));
-			Assert.IsFalse(KingdomWaterDebitRules.TryCountersAfterRollback(int.MaxValue, 1, 1, out ignoredA, out ignoredB));
-			Assert.IsFalse(KingdomWaterDebitRules.TryCountersAfterRollback(0, 0, 1, out ignoredA, out ignoredB));
+			ClassicAssert.IsFalse(KingdomWaterDebitRules.TryCountersAfterCommit(0, 0, -1, out ignoredA, out ignoredB));
+			ClassicAssert.IsFalse(KingdomWaterDebitRules.TryCountersAfterCommit(1, int.MaxValue, 1, out ignoredA, out ignoredB));
+			ClassicAssert.IsFalse(KingdomWaterDebitRules.TryCountersAfterRollback(int.MaxValue, 1, 1, out ignoredA, out ignoredB));
+			ClassicAssert.IsFalse(KingdomWaterDebitRules.TryCountersAfterRollback(0, 0, 1, out ignoredA, out ignoredB));
 		}
 
 		[Test]
@@ -203,25 +204,25 @@ namespace ThousandAndFirst.Tests
 			int outstanding;
 			int lost;
 			bool exact;
-			Assert.IsTrue(KingdomWaterDebitRules.TryClassifyClaim(8,
+			ClassicAssert.IsTrue(KingdomWaterDebitRules.TryClassifyClaim(8,
 				new int[2] { 5, 7 }, new int[2] { 1, 5 }, new int[2] { 4, 2 },
 				new bool[2] { true, true }, new bool[2] { true, true },
 				out spent, out outstanding, out lost, out exact));
-			Assert.AreEqual(6, spent);
-			Assert.AreEqual(2, outstanding);
-			Assert.AreEqual(6, lost);
-			Assert.IsTrue(exact);
+			ClassicAssert.AreEqual(6, spent);
+			ClassicAssert.AreEqual(2, outstanding);
+			ClassicAssert.AreEqual(6, lost);
+			ClassicAssert.IsTrue(exact);
 
 			// A vanished second vessel makes the whole requested credit unsafe. Exact loss in
 			// the first row remains diagnostic, but no spend/outstanding split may invite retry.
-			Assert.IsTrue(KingdomWaterDebitRules.TryClassifyClaim(8,
+			ClassicAssert.IsTrue(KingdomWaterDebitRules.TryClassifyClaim(8,
 				new int[2] { 5, 7 }, new int[2] { 1, -1 }, new int[2] { 4, 1 },
 				new bool[2] { true, false }, new bool[2] { true, false },
 				out spent, out outstanding, out lost, out exact));
-			Assert.AreEqual(0, spent);
-			Assert.AreEqual(8, outstanding);
-			Assert.AreEqual(4, lost);
-			Assert.IsFalse(exact);
+			ClassicAssert.AreEqual(0, spent);
+			ClassicAssert.AreEqual(8, outstanding);
+			ClassicAssert.AreEqual(4, lost);
+			ClassicAssert.IsFalse(exact);
 		}
 
 		[Test]
@@ -231,18 +232,18 @@ namespace ThousandAndFirst.Tests
 			int outstanding;
 			int lost;
 			bool exact;
-			Assert.IsTrue(KingdomWaterDebitRules.TryClassifyClaim(int.MaxValue,
+			ClassicAssert.IsTrue(KingdomWaterDebitRules.TryClassifyClaim(int.MaxValue,
 				new int[2] { int.MaxValue, int.MaxValue }, new int[2] { 0, 0 },
 				new int[2] { int.MaxValue, int.MaxValue }, new bool[2] { true, true },
 				new bool[2] { true, true }, out spent, out outstanding, out lost, out exact));
-			Assert.AreEqual(int.MaxValue, spent);
-			Assert.AreEqual(0, outstanding);
-			Assert.AreEqual(int.MaxValue, lost);
-			Assert.IsTrue(exact);
-			Assert.IsFalse(KingdomWaterDebitRules.TryClassifyClaim(1,
+			ClassicAssert.AreEqual(int.MaxValue, spent);
+			ClassicAssert.AreEqual(0, outstanding);
+			ClassicAssert.AreEqual(int.MaxValue, lost);
+			ClassicAssert.IsTrue(exact);
+			ClassicAssert.IsFalse(KingdomWaterDebitRules.TryClassifyClaim(1,
 				new int[1], new int[0], new int[1], new bool[1], new bool[1],
 				out spent, out outstanding, out lost, out exact));
-			Assert.IsFalse(exact);
+			ClassicAssert.IsFalse(exact);
 		}
 	}
 }

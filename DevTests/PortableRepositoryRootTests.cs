@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -44,7 +45,7 @@ namespace ThousandAndFirst.Tests
 		{
 			WithRepositoryRoot(null, () =>
 			{
-				Assert.AreEqual(IndependentCheckoutRoot(), TestMain.RepositoryRoot);
+				ClassicAssert.AreEqual(IndependentCheckoutRoot(), TestMain.RepositoryRoot);
 			});
 		}
 
@@ -54,7 +55,7 @@ namespace ThousandAndFirst.Tests
 			string expected = IndependentCheckoutRoot();
 			WithRepositoryRoot(expected, () =>
 			{
-				Assert.AreEqual(expected, TestMain.RepositoryRoot);
+				ClassicAssert.AreEqual(expected, TestMain.RepositoryRoot);
 			});
 		}
 

@@ -1,6 +1,17 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current unreleased master-growth resume correction
+## Current unreleased claimed-ground light
+
+3051 staged sources;432,024 physical lines;1417 direct-XRL;zero cap failures;3082 generated
+cold-stage files. Exact inventory `fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`.
+A mod-owned zone part lights the claimed zone the founder stands in, gated on the new
+`r_TAF_OptionClaimedGroundLight` (default Yes) and revoked from the same activation guard.
+Engine-free suites pass 13,720 main and 5,098 Portable cases, zero skips; doc-freshness,
+structure, architecture and the Tools suites pass. Roslyn 9.0.306 on Linux compiles the staged
+baseline and compatibility sets clean. No dev-harness mode, no native run and no Windows gate ran
+for this delta.
+
+## Retained unreleased master-growth resume correction
 
 3049 staged sources;431,893 physical lines;1415 direct-XRL;zero cap failures;3080 generated
 cold-stage files. Exact inventory `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
@@ -10,7 +21,15 @@ isolated profile. Focused38cases pass; full1814 passes13715 main/5093 Portable,z
 four-mode53744 passes ordinary3045/3049,developer3177/3181 plus installed ABI.
 Repository71120 passes501 tooling tests and all repository audits. Hosted checks remain.
 Evidence `/mnt/c/taf-master-growth-native.sP00c6/README.md`. Public0.3.1 unchanged.
-Main PR6 still REVIEW_REQUIRED; never direct-push main/tag, bypass, or self-approve it.
+Main PR6 squash-merged to main as `be3f13a` at 2026-09-07T22:34:54Z; hosted run34167157170
+passed repository-audit and the full pure/portable lanes on ubuntu-latest and windows-latest.
+The pull-request review requirement was removed entirely (the sole collaborator can never
+approve their own PR); PR-based integration is now policy, enforced by the required status
+checks, linear history and `enforce_admins`, which is now ON. Required checks, linear history,
+no force-push, no deletion and conversation resolution remain; merges stay squash-only with
+delete-branch-on-merge, and no `dev` branch exists yet. Tag `v0.3.1`
+still targets `a46b5ad` and main is one squash commit ahead. Never direct-push main/tag or
+bypass required checks.
 
 ## Retained unreleased recovery correction
 
@@ -37,7 +56,8 @@ new hook and six tags; no pixel capture. One client only, `freshTransferVerified
 Current Alpha publication complete, broad Beta unfinished. Main and annotated tag were pushed;
 fresh remote refs match the exact release commit and tag object above.
 GitHub unexpectedly accepted that push while reporting bypassed PR/three-required-check rules.
-No protection settings were changed. Do not repeat direct main pushes or bypass checks; the
+That push changed no protection settings; main's protection was deliberately updated later, as
+recorded above. Do not repeat direct main pushes or bypass checks; the
 post-publication documentation closeout uses a separate PR. Preserve the accepted release/tag.
 Prior records and decisions follow.
 

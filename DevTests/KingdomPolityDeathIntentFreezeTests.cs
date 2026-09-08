@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -21,30 +22,30 @@ namespace ThousandAndFirst.Tests
 		public void FirstReadFreezeStampsMigratedProvenanceAndSecondReadReusesIt()
 		{
 			string legacy = KingdomPolityDeathIntentRules.EncodeV1Fixture(Record());
-			Assert.IsTrue(KingdomPolityDeathIntentRules.TryDecode(legacy,
+			ClassicAssert.IsTrue(KingdomPolityDeathIntentRules.TryDecode(legacy,
 				out KingdomPolityDeathIntentRecord first, out string failure), failure);
-			Assert.AreEqual(KingdomPolityDeathIntentProvenance.LegacyV1, first.Provenance);
-			Assert.AreEqual("", first.IncidentPlanId, "v1 bytes carry no plan id to recover");
+			ClassicAssert.AreEqual(KingdomPolityDeathIntentProvenance.LegacyV1, first.Provenance);
+			ClassicAssert.AreEqual("", first.IncidentPlanId, "v1 bytes carry no plan id to recover");
 
 			first.IncidentPlanId = ReadPlan; first.IncidentId = ReadIncident;
 			first.IncidentDigest = new string('b', 64);
 			first.Provenance = KingdomPolityDeathIntentProvenance.FrozenAtFirstRead;
-			Assert.IsTrue(KingdomPolityDeathIntentRules.TryEncode(first, out string frozen,
+			ClassicAssert.IsTrue(KingdomPolityDeathIntentRules.TryEncode(first, out string frozen,
 				out failure), failure);
 
 			// Second read: the durable bytes already carry the frozen tuple and are no longer
 			// LegacyV1, so the migration branch cannot fire again and nothing is re-derived.
-			Assert.IsTrue(KingdomPolityDeathIntentRules.TryDecode(frozen,
+			ClassicAssert.IsTrue(KingdomPolityDeathIntentRules.TryDecode(frozen,
 				out KingdomPolityDeathIntentRecord second, out failure), failure);
-			Assert.AreEqual(KingdomPolityDeathIntentProvenance.FrozenAtFirstRead,
+			ClassicAssert.AreEqual(KingdomPolityDeathIntentProvenance.FrozenAtFirstRead,
 				second.Provenance);
-			Assert.AreNotEqual(KingdomPolityDeathIntentProvenance.LegacyV1, second.Provenance);
-			Assert.AreEqual(ReadPlan, second.IncidentPlanId);
-			Assert.AreEqual(ReadIncident, second.IncidentId);
-			Assert.AreEqual(new string('b', 64), second.IncidentDigest);
-			Assert.IsTrue(KingdomPolityDeathIntentRules.TryEncode(second, out string repeated,
+			ClassicAssert.AreNotEqual(KingdomPolityDeathIntentProvenance.LegacyV1, second.Provenance);
+			ClassicAssert.AreEqual(ReadPlan, second.IncidentPlanId);
+			ClassicAssert.AreEqual(ReadIncident, second.IncidentId);
+			ClassicAssert.AreEqual(new string('b', 64), second.IncidentDigest);
+			ClassicAssert.IsTrue(KingdomPolityDeathIntentRules.TryEncode(second, out string repeated,
 				out failure), failure);
-			Assert.AreEqual(frozen, repeated, "a reused freeze must re-emit byte-identically");
+			ClassicAssert.AreEqual(frozen, repeated, "a reused freeze must re-emit byte-identically");
 
 			// The only re-derivation site is gated on LegacyV1 provenance, so a migrated record
 			// can never re-enter it.
@@ -60,33 +61,33 @@ namespace ThousandAndFirst.Tests
 			KingdomPolityDeathIntentRecord record = Record();
 			record.IncidentPlanId = ReadPlan; record.IncidentId = ReadIncident;
 			record.IncidentDigest = new string('b', 64);
-			Assert.IsTrue(KingdomPolityDeathIntentRules.TryEncode(record, out string atDeath,
+			ClassicAssert.IsTrue(KingdomPolityDeathIntentRules.TryEncode(record, out string atDeath,
 				out string failure), failure);
 			record.Provenance = KingdomPolityDeathIntentProvenance.FrozenAtFirstRead;
-			Assert.IsTrue(KingdomPolityDeathIntentRules.TryEncode(record, out string atRead,
+			ClassicAssert.IsTrue(KingdomPolityDeathIntentRules.TryEncode(record, out string atRead,
 				out failure), failure);
 
 			StringAssert.StartsWith(KingdomPolityDeathIntentRules.WirePrefix, atDeath);
 			StringAssert.StartsWith(KingdomPolityDeathIntentRules.MigratedWirePrefix, atRead);
 			StringAssert.DoesNotStartWith(KingdomPolityDeathIntentRules.WirePrefix, atRead);
-			Assert.AreNotEqual(atDeath, atRead,
+			ClassicAssert.AreNotEqual(atDeath, atRead,
 				"the two provenances must never share durable bytes");
 
 			// Same payload, disjoint digest domains: relabelling either form as the other fails
 			// its exact digest, so no stored migrated record can be promoted to a death claim.
 			string promoted = KingdomPolityDeathIntentRules.WirePrefix + atRead.Substring(
 				KingdomPolityDeathIntentRules.MigratedWirePrefix.Length);
-			Assert.IsFalse(KingdomPolityDeathIntentRules.TryDecode(promoted, out _, out failure));
+			ClassicAssert.IsFalse(KingdomPolityDeathIntentRules.TryDecode(promoted, out _, out failure));
 			StringAssert.Contains("digest", failure);
 			string demoted = KingdomPolityDeathIntentRules.MigratedWirePrefix + atDeath.Substring(
 				KingdomPolityDeathIntentRules.WirePrefix.Length);
-			Assert.IsFalse(KingdomPolityDeathIntentRules.TryDecode(demoted, out _, out failure));
+			ClassicAssert.IsFalse(KingdomPolityDeathIntentRules.TryDecode(demoted, out _, out failure));
 			StringAssert.Contains("digest", failure);
 
 			// Negative control: neither untouched form is refused.
-			Assert.IsTrue(KingdomPolityDeathIntentRules.TryDecode(atDeath, out _, out failure),
+			ClassicAssert.IsTrue(KingdomPolityDeathIntentRules.TryDecode(atDeath, out _, out failure),
 				failure);
-			Assert.IsTrue(KingdomPolityDeathIntentRules.TryDecode(atRead, out _, out failure),
+			ClassicAssert.IsTrue(KingdomPolityDeathIntentRules.TryDecode(atRead, out _, out failure),
 				failure);
 		}
 
@@ -95,16 +96,16 @@ namespace ThousandAndFirst.Tests
 		{
 			// Only byte-exact new bytes count as applied. Preserved old bytes and anything else
 			// are refusals, never a licence to re-derive the freeze.
-			Assert.AreEqual(KingdomPolityLegacyRewriteRecovery.Applied,
+			ClassicAssert.AreEqual(KingdomPolityLegacyRewriteRecovery.Applied,
 				KingdomPolityPhysicalCustodyRules.ClassifyLegacyRewriteRecovery(
 					true, true, true, true, false));
-			Assert.AreEqual(KingdomPolityLegacyRewriteRecovery.OldBytesPreserved,
+			ClassicAssert.AreEqual(KingdomPolityLegacyRewriteRecovery.OldBytesPreserved,
 				KingdomPolityPhysicalCustodyRules.ClassifyLegacyRewriteRecovery(
 					true, true, true, false, true));
-			Assert.AreEqual(KingdomPolityLegacyRewriteRecovery.Ambiguous,
+			ClassicAssert.AreEqual(KingdomPolityLegacyRewriteRecovery.Ambiguous,
 				KingdomPolityPhysicalCustodyRules.ClassifyLegacyRewriteRecovery(
 					true, true, true, false, false));
-			Assert.AreEqual(KingdomPolityLegacyRewriteRecovery.Ambiguous,
+			ClassicAssert.AreEqual(KingdomPolityLegacyRewriteRecovery.Ambiguous,
 				KingdomPolityPhysicalCustodyRules.ClassifyLegacyRewriteRecovery(
 					false, false, false, false, false));
 
@@ -138,17 +139,17 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RepresentativeIsPinnedToOrdinalZeroSoBothIncidentGatesAgree()
 		{
-			Assert.IsTrue(KingdomPolityDeathIntentRules.TryEncode(Record(), out _,
+			ClassicAssert.IsTrue(KingdomPolityDeathIntentRules.TryEncode(Record(), out _,
 				out string failure), failure);
 
 			KingdomPolityDeathIntentRecord notRepresentative = Record();
 			notRepresentative.Representative = false;
-			Assert.IsFalse(KingdomPolityDeathIntentRules.TryEncode(notRepresentative, out _,
+			ClassicAssert.IsFalse(KingdomPolityDeathIntentRules.TryEncode(notRepresentative, out _,
 				out _), "ordinal 0 must always be the representative");
 
 			KingdomPolityDeathIntentRecord laterOrdinal = Record();
 			laterOrdinal.Ordinal = 1;
-			Assert.IsFalse(KingdomPolityDeathIntentRules.TryEncode(laterOrdinal, out _, out _),
+			ClassicAssert.IsFalse(KingdomPolityDeathIntentRules.TryEncode(laterOrdinal, out _, out _),
 				"a non-zero ordinal must never claim to be the representative");
 
 			// Negative control: the same non-zero ordinal encodes once it stops claiming
@@ -156,7 +157,7 @@ namespace ThousandAndFirst.Tests
 			KingdomPolityDeathIntentRecord follower = Record();
 			follower.Ordinal = 1; follower.Representative = false;
 			follower.IncidentPlanId = follower.IncidentId = follower.IncidentDigest = "";
-			Assert.IsTrue(KingdomPolityDeathIntentRules.TryEncode(follower, out _, out failure),
+			ClassicAssert.IsTrue(KingdomPolityDeathIntentRules.TryEncode(follower, out _, out failure),
 				failure);
 		}
 

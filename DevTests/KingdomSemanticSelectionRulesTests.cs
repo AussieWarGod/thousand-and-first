@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.Kernel;
 
 namespace ThousandAndFirst.Tests
@@ -40,8 +41,8 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < declarations.Length; i++)
 			{
 				int at = source.IndexOf(declarations[i], StringComparison.Ordinal);
-				Assert.Greater(at, previous, "person plan field order/default " + i);
-				Assert.AreEqual(at, source.LastIndexOf(declarations[i], StringComparison.Ordinal),
+				ClassicAssert.Greater(at, previous, "person plan field order/default " + i);
+				ClassicAssert.AreEqual(at, source.LastIndexOf(declarations[i], StringComparison.Ordinal),
 					"person plan field declaration must remain unique: " + declarations[i]);
 				previous = at;
 			}
@@ -55,14 +56,14 @@ namespace ThousandAndFirst.Tests
 			List<KingdomSemanticWeightedEntry> canonical;
 			ulong total;
 			KingdomSemanticSelectionFault fault;
-			Assert.IsTrue(KingdomSemanticSelectionRules.TryCanonicalize(input,
+			ClassicAssert.IsTrue(KingdomSemanticSelectionRules.TryCanonicalize(input,
 				out canonical, out total, out fault));
-			Assert.AreEqual(3, canonical.Count);
-			Assert.AreEqual("alpha", canonical[0].StableKey);
-			Assert.AreEqual("middle", canonical[1].StableKey);
-			Assert.AreEqual("zeta", canonical[2].StableKey);
-			Assert.AreEqual(8UL, canonical[2].Weight);
-			Assert.AreEqual(17UL, total);
+			ClassicAssert.AreEqual(3, canonical.Count);
+			ClassicAssert.AreEqual("alpha", canonical[0].StableKey);
+			ClassicAssert.AreEqual("middle", canonical[1].StableKey);
+			ClassicAssert.AreEqual("zeta", canonical[2].StableKey);
+			ClassicAssert.AreEqual(8UL, canonical[2].Weight);
+			ClassicAssert.AreEqual(17UL, total);
 		}
 
 		[Test]
@@ -77,8 +78,8 @@ namespace ThousandAndFirst.Tests
 				string a = Choose(first, ordinal, 0U, 1);
 				string retry = Choose(first, ordinal, 0U, 1);
 				string reload = Choose(reordered, ordinal, 0U, 1);
-				Assert.AreEqual(a, retry, "retry " + ordinal);
-				Assert.AreEqual(a, reload, "merge order " + ordinal);
+				ClassicAssert.AreEqual(a, retry, "retry " + ordinal);
+				ClassicAssert.AreEqual(a, reload, "merge order " + ordinal);
 			}
 		}
 
@@ -94,13 +95,13 @@ namespace ThousandAndFirst.Tests
 				sequenceResults.Add(Choose(rows, ordinal, 0U, 1));
 				versionResults.Add(Choose(rows, ordinal, 0U, 2));
 			}
-			Assert.Greater(sequenceResults.Count, 1);
-			Assert.Greater(versionResults.Count, 1);
+			ClassicAssert.Greater(sequenceResults.Count, 1);
+			ClassicAssert.Greater(versionResults.Count, 1);
 			bool differs = false;
 			for (ulong ordinal = 1UL; ordinal <= 32UL; ordinal++)
 				if (Choose(rows, ordinal, 0U, 1) != Choose(rows, ordinal, 0U, 2))
 					differs = true;
-			Assert.IsTrue(differs, "rules version must enter the preimage");
+			ClassicAssert.IsTrue(differs, "rules version must enter the preimage");
 		}
 
 		[Test]
@@ -114,7 +115,7 @@ namespace ThousandAndFirst.Tests
 				Choose(rows, ordinal, 7U, 1);
 				Choose(rows, ordinal, 9U, 1);
 			}
-			Assert.AreEqual(frozen, Choose(rows, 27UL, 0U, 1));
+			ClassicAssert.AreEqual(frozen, Choose(rows, 27UL, 0U, 1));
 		}
 
 		[Test]
@@ -122,18 +123,18 @@ namespace ThousandAndFirst.Tests
 		{
 			SemanticEventKey key;
 			KernelFaultCode kernelFault;
-			Assert.IsTrue(SemanticEventKey.TryCreate(1, Settlement, Stream, 1U, 77UL,
+			ClassicAssert.IsTrue(SemanticEventKey.TryCreate(1, Settlement, Stream, 1U, 77UL,
 				out key, out kernelFault));
 			string first;
 			string again;
 			KingdomSemanticSelectionFault fault;
-			Assert.IsTrue(KingdomSemanticSelectionRules.TryName(Seed, key, 2U,
+			ClassicAssert.IsTrue(KingdomSemanticSelectionRules.TryName(Seed, key, 2U,
 				out first, out fault));
-			Assert.IsTrue(KingdomSemanticSelectionRules.TryName(Seed, key, 2U,
+			ClassicAssert.IsTrue(KingdomSemanticSelectionRules.TryName(Seed, key, 2U,
 				out again, out fault));
-			Assert.AreEqual(first, again);
+			ClassicAssert.AreEqual(first, again);
 			Assert.That(first.Length, Is.InRange(2, 16));
-			Assert.IsTrue(char.IsUpper(first[0]));
+			ClassicAssert.IsTrue(char.IsUpper(first[0]));
 			StringAssert.DoesNotContain("{", first);
 		}
 
@@ -144,17 +145,17 @@ namespace ThousandAndFirst.Tests
 			const int height = 5;
 			SemanticEventKey key;
 			KernelFaultCode kernelFault;
-			Assert.IsTrue(SemanticEventKey.TryCreate(1, Settlement, Stream, 1U, 91UL,
+			ClassicAssert.IsTrue(SemanticEventKey.TryCreate(1, Settlement, Stream, 1U, 91UL,
 				out key, out kernelFault));
 			int start;
 			KingdomSemanticSelectionFault fault;
-			Assert.IsTrue(KingdomSemanticSelectionRules.TryProbeStart(Seed, key, 6U,
+			ClassicAssert.IsTrue(KingdomSemanticSelectionRules.TryProbeStart(Seed, key, 6U,
 				width, height, out start, out fault));
 			HashSet<int> visited = new HashSet<int>();
 			for (int offset = 0; offset < width * height; offset++)
-				Assert.IsTrue(visited.Add(KingdomSemanticSelectionRules.ProbeIndex(start,
+				ClassicAssert.IsTrue(visited.Add(KingdomSemanticSelectionRules.ProbeIndex(start,
 					offset, width * height)));
-			Assert.AreEqual(width * height, visited.Count);
+			ClassicAssert.AreEqual(width * height, visited.Count);
 		}
 
 		[Test]
@@ -163,15 +164,15 @@ namespace ThousandAndFirst.Tests
 			string a;
 			string again;
 			string other;
-			Assert.IsTrue(KingdomSemanticSelectionRules.TryOwnerStreamId("furnish",
+			ClassicAssert.IsTrue(KingdomSemanticSelectionRules.TryOwnerStreamId("furnish",
 				"hut@3.4.9000", out a));
-			Assert.IsTrue(KingdomSemanticSelectionRules.TryOwnerStreamId("furnish",
+			ClassicAssert.IsTrue(KingdomSemanticSelectionRules.TryOwnerStreamId("furnish",
 				"hut@3.4.9000", out again));
-			Assert.IsTrue(KingdomSemanticSelectionRules.TryOwnerStreamId("other",
+			ClassicAssert.IsTrue(KingdomSemanticSelectionRules.TryOwnerStreamId("other",
 				"hut@3.4.9000", out other));
-			Assert.AreEqual(a, again);
-			Assert.AreNotEqual(a, other);
-			Assert.IsTrue(KernelSemanticId.IsValid(a));
+			ClassicAssert.AreEqual(a, again);
+			ClassicAssert.AreNotEqual(a, other);
+			ClassicAssert.IsTrue(KernelSemanticId.IsValid(a));
 		}
 
 		[Test]
@@ -181,14 +182,14 @@ namespace ThousandAndFirst.Tests
 			List<KingdomSemanticWeightedEntry> canonical;
 			ulong total;
 			KingdomSemanticSelectionFault fault;
-			Assert.IsFalse(KingdomSemanticSelectionRules.TryCanonicalize(zero,
+			ClassicAssert.IsFalse(KingdomSemanticSelectionRules.TryCanonicalize(zero,
 				out canonical, out total, out fault));
 			List<KingdomSemanticWeightedEntry> large = new List<KingdomSemanticWeightedEntry>();
 			for (int i = 0; i <= KingdomSemanticSelectionRules.MaxCatalogueEntries; i++)
 				large.Add(new KingdomSemanticWeightedEntry("row-" + i, 1UL));
-			Assert.IsFalse(KingdomSemanticSelectionRules.TryCanonicalize(large,
+			ClassicAssert.IsFalse(KingdomSemanticSelectionRules.TryCanonicalize(large,
 				out canonical, out total, out fault));
-			Assert.AreEqual(KingdomSemanticSelectionFault.CatalogueTooLarge, fault);
+			ClassicAssert.AreEqual(KingdomSemanticSelectionFault.CatalogueTooLarge, fault);
 		}
 
 		private static string Choose(IList<KingdomSemanticWeightedEntry> rows,
@@ -196,7 +197,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string selected;
 			KingdomSemanticSelectionFault fault;
-			Assert.IsTrue(KingdomSemanticSelectionRules.TryChoose(Seed, version,
+			ClassicAssert.IsTrue(KingdomSemanticSelectionRules.TryChoose(Seed, version,
 				Settlement, Stream, 1U, ordinal, draw, rows, out selected, out fault),
 				fault.ToString());
 			return selected;

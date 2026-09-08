@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -10,9 +11,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void OccasionTypeMetadataIsFrozen()
 		{
-			Assert.AreEqual("ThousandAndFirst.VoiceOccasion", typeof(VoiceOccasion).FullName);
-			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(VoiceOccasion)));
-			Assert.AreEqual(8, AllOccasions.Length);
+			ClassicAssert.AreEqual("ThousandAndFirst.VoiceOccasion", typeof(VoiceOccasion).FullName);
+			ClassicAssert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(VoiceOccasion)));
+			ClassicAssert.AreEqual(8, AllOccasions.Length);
 		}
 
 		/// <summary>A settlement id inside the frozen <c>taf:</c> grammar, as
@@ -63,23 +64,23 @@ namespace ThousandAndFirst.Tests
 		public void EmptyRollHasNoVoice()
 		{
 			KingdomVoiceRules.Speaker speaker = KingdomVoiceRules.ChooseSpeaker(new List<string>(), new List<string>(), Settlement, VoiceOccasion.StageUp, 100uL);
-			Assert.IsFalse(speaker.HasVoice);
-			Assert.IsNull(speaker.Name);
-			Assert.AreEqual("a settler", speaker.Attribution);
+			ClassicAssert.IsFalse(speaker.HasVoice);
+			ClassicAssert.IsNull(speaker.Name);
+			ClassicAssert.AreEqual("a settler", speaker.Attribution);
 		}
 
 		[Test]
 		public void NullRollHasNoVoice()
 		{
 			KingdomVoiceRules.Speaker speaker = KingdomVoiceRules.ChooseSpeaker(null, null, Settlement, VoiceOccasion.MealShared, 100uL);
-			Assert.IsFalse(speaker.HasVoice);
+			ClassicAssert.IsFalse(speaker.HasVoice);
 		}
 
 		[Test]
 		public void ARollOfBlanksHasNoVoice()
 		{
 			KingdomVoiceRules.Speaker speaker = KingdomVoiceRules.ChooseSpeaker(new List<string> { "", null, "" }, null, Settlement, VoiceOccasion.StageUp, 7uL);
-			Assert.IsFalse(speaker.HasVoice);
+			ClassicAssert.IsFalse(speaker.HasVoice);
 		}
 
 		/// <summary>
@@ -90,13 +91,13 @@ namespace ThousandAndFirst.Tests
 		public void NoVoiceLeavesTheAnnouncementWhole()
 		{
 			string announcement = "{{G|The water returned, and the settlement recovered.}}";
-			Assert.AreEqual(announcement, KingdomVoiceRules.Compose(KingdomVoiceRules.Speaker.None, VoiceOccasion.ThirstBroken, announcement));
+			ClassicAssert.AreEqual(announcement, KingdomVoiceRules.Compose(KingdomVoiceRules.Speaker.None, VoiceOccasion.ThirstBroken, announcement));
 		}
 
 		[Test]
 		public void NoVoiceAndNothingToAnnounceSaysNothing()
 		{
-			Assert.AreEqual("", KingdomVoiceRules.Compose(KingdomVoiceRules.Speaker.None, VoiceOccasion.ThirstBroken, null));
+			ClassicAssert.AreEqual("", KingdomVoiceRules.Compose(KingdomVoiceRules.Speaker.None, VoiceOccasion.ThirstBroken, null));
 		}
 
 		[Test]
@@ -108,8 +109,8 @@ namespace ThousandAndFirst.Tests
 				for (ulong tick = 0uL; tick < Sweep; tick++)
 				{
 					KingdomVoiceRules.Speaker speaker = KingdomVoiceRules.ChooseSpeaker(roll, Homes(), Settlement, AllOccasions[i], tick);
-					Assert.IsTrue(speaker.HasVoice);
-					Assert.IsTrue(roll.Contains(speaker.Name), "drew a name that is not on the roll: " + speaker.Name);
+					ClassicAssert.IsTrue(speaker.HasVoice);
+					ClassicAssert.IsTrue(roll.Contains(speaker.Name), "drew a name that is not on the roll: " + speaker.Name);
 				}
 			}
 		}
@@ -125,8 +126,8 @@ namespace ThousandAndFirst.Tests
 			{
 				KingdomVoiceRules.Speaker first = KingdomVoiceRules.ChooseSpeaker(Roll(), Homes(), Settlement, VoiceOccasion.CitizenLost, tick);
 				KingdomVoiceRules.Speaker second = KingdomVoiceRules.ChooseSpeaker(Roll(), Homes(), Settlement, VoiceOccasion.CitizenLost, tick);
-				Assert.AreEqual(first.Name, second.Name);
-				Assert.AreEqual(first.Origin, second.Origin);
+				ClassicAssert.AreEqual(first.Name, second.Name);
+				ClassicAssert.AreEqual(first.Origin, second.Origin);
 			}
 		}
 
@@ -142,7 +143,7 @@ namespace ThousandAndFirst.Tests
 			{
 				heard.Add(KingdomVoiceRules.ChooseSpeaker(Roll(), Homes(), Settlement, VoiceOccasion.StageUp, tick).Name);
 			}
-			Assert.Greater(heard.Count, 1, "every tick drew the same speaker");
+			ClassicAssert.Greater(heard.Count, 1, "every tick drew the same speaker");
 		}
 
 		/// <summary>Guards the occasion's place in the draw key: drop it and a stage-up and a
@@ -157,7 +158,7 @@ namespace ThousandAndFirst.Tests
 				string other = KingdomVoiceRules.ChooseSpeaker(Roll(), Homes(), Settlement, VoiceOccasion.MealShared, tick).Name;
 				differed = one != other;
 			}
-			Assert.IsTrue(differed, "the occasion never changed who spoke");
+			ClassicAssert.IsTrue(differed, "the occasion never changed who spoke");
 		}
 
 		/// <summary>Guards the settlement id's place in the draw key: drop it and two cities of
@@ -172,7 +173,7 @@ namespace ThousandAndFirst.Tests
 				string there = KingdomVoiceRules.ChooseSpeaker(Roll(), Homes(), OtherSettlement, VoiceOccasion.RaidRepelled, tick).Name;
 				differed = here != there;
 			}
-			Assert.IsTrue(differed, "the settlement never changed who spoke");
+			ClassicAssert.IsTrue(differed, "the settlement never changed who spoke");
 		}
 
 		/// <summary>
@@ -189,9 +190,9 @@ namespace ThousandAndFirst.Tests
 			List<string> roll = Roll();
 			KingdomVoiceRules.Speaker first = KingdomVoiceRules.ChooseSpeaker(roll, Homes(), BadId, VoiceOccasion.StageUp, 42uL);
 			KingdomVoiceRules.Speaker second = KingdomVoiceRules.ChooseSpeaker(roll, Homes(), BadId, VoiceOccasion.StageUp, 99uL);
-			Assert.IsTrue(first.HasVoice);
-			Assert.AreEqual(roll[0], first.Name);
-			Assert.AreEqual(first.Name, second.Name);
+			ClassicAssert.IsTrue(first.HasVoice);
+			ClassicAssert.AreEqual(roll[0], first.Name);
+			ClassicAssert.AreEqual(first.Name, second.Name);
 		}
 
 		[Test]
@@ -200,7 +201,7 @@ namespace ThousandAndFirst.Tests
 			List<string> roll = new List<string> { "", null, "Ptoh", "" };
 			for (ulong tick = 0uL; tick < Sweep; tick++)
 			{
-				Assert.AreEqual("Ptoh", KingdomVoiceRules.ChooseSpeaker(roll, null, Settlement, VoiceOccasion.MealShared, tick).Name);
+				ClassicAssert.AreEqual("Ptoh", KingdomVoiceRules.ChooseSpeaker(roll, null, Settlement, VoiceOccasion.MealShared, tick).Name);
 			}
 		}
 
@@ -212,7 +213,7 @@ namespace ThousandAndFirst.Tests
 			for (ulong tick = 0uL; tick < Sweep; tick++)
 			{
 				KingdomVoiceRules.Speaker speaker = KingdomVoiceRules.ChooseSpeaker(roll, homes, Settlement, VoiceOccasion.CitizenLost, tick);
-				Assert.AreEqual(homes[roll.IndexOf(speaker.Name)], speaker.Origin);
+				ClassicAssert.AreEqual(homes[roll.IndexOf(speaker.Name)], speaker.Origin);
 			}
 		}
 
@@ -225,8 +226,8 @@ namespace ThousandAndFirst.Tests
 			for (ulong tick = 0uL; tick < Sweep; tick++)
 			{
 				KingdomVoiceRules.Speaker speaker = KingdomVoiceRules.ChooseSpeaker(roll, homes, Settlement, VoiceOccasion.StageUp, tick);
-				Assert.IsTrue(speaker.HasVoice);
-				Assert.IsFalse(string.IsNullOrEmpty(KingdomVoiceRules.Line(VoiceOccasion.StageUp, speaker.Origin)));
+				ClassicAssert.IsTrue(speaker.HasVoice);
+				ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomVoiceRules.Line(VoiceOccasion.StageUp, speaker.Origin)));
 			}
 		}
 
@@ -241,20 +242,20 @@ namespace ThousandAndFirst.Tests
 			{
 				VoiceOccasion occasion = AllOccasions[i];
 				string plain = KingdomVoiceRules.Line(occasion, null);
-				Assert.IsFalse(string.IsNullOrEmpty(plain));
+				ClassicAssert.IsFalse(string.IsNullOrEmpty(plain));
 				HashSet<string> said = new HashSet<string>();
 				for (int j = 0; j < KingdomRules.Origins.Length; j++)
 				{
 					string line = KingdomVoiceRules.Line(occasion, KingdomRules.Origins[j]);
-					Assert.IsFalse(string.IsNullOrEmpty(line), KingdomRules.Origins[j] + " has nothing to say about " + occasion);
+					ClassicAssert.IsFalse(string.IsNullOrEmpty(line), KingdomRules.Origins[j] + " has nothing to say about " + occasion);
 					if (occasion == VoiceOccasion.FounderRegarded)
-						Assert.AreEqual(plain, line,
+						ClassicAssert.AreEqual(plain, line,
 							"founder regard is creed truth, never origin belief");
 					else
 					{
-						Assert.AreNotEqual(plain, line, KingdomRules.Origins[j]
+						ClassicAssert.AreNotEqual(plain, line, KingdomRules.Origins[j]
 							+ " falls through to the plain register on " + occasion);
-						Assert.IsTrue(said.Add(line),
+						ClassicAssert.IsTrue(said.Add(line),
 							"two origins say the same thing about " + occasion);
 					}
 				}
@@ -269,8 +270,8 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < AllOccasions.Length; i++)
 			{
 				string line = KingdomVoiceRules.Line(AllOccasions[i], Origin);
-				Assert.IsFalse(string.IsNullOrEmpty(line));
-				Assert.AreEqual(KingdomVoiceRules.Line(AllOccasions[i], null), line);
+				ClassicAssert.IsFalse(string.IsNullOrEmpty(line));
+				ClassicAssert.AreEqual(KingdomVoiceRules.Line(AllOccasions[i], null), line);
 			}
 		}
 
@@ -280,9 +281,9 @@ namespace ThousandAndFirst.Tests
 			KingdomVoiceRules.Speaker speaker = new KingdomVoiceRules.Speaker("Ptoh", "the hills");
 			string announcement = "{{C|Kyakukya has grown into a village.}}";
 			string composed = KingdomVoiceRules.Compose(speaker, VoiceOccasion.StageUp, announcement);
-			Assert.IsTrue(composed.StartsWith(announcement), composed);
-			Assert.IsTrue(composed.Contains("Ptoh"), composed);
-			Assert.IsTrue(composed.Contains(KingdomVoiceRules.Line(VoiceOccasion.StageUp, "the hills")), composed);
+			ClassicAssert.IsTrue(composed.StartsWith(announcement), composed);
+			ClassicAssert.IsTrue(composed.Contains("Ptoh"), composed);
+			ClassicAssert.IsTrue(composed.Contains(KingdomVoiceRules.Line(VoiceOccasion.StageUp, "the hills")), composed);
 		}
 
 		[Test]
@@ -290,8 +291,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomVoiceRules.Speaker speaker = new KingdomVoiceRules.Speaker("Ptoh", "the hills");
 			string composed = KingdomVoiceRules.Compose(speaker, VoiceOccasion.StageUp, null);
-			Assert.IsFalse(composed.StartsWith(" "), composed);
-			Assert.IsTrue(composed.Contains("Ptoh"), composed);
+			ClassicAssert.IsFalse(composed.StartsWith(" "), composed);
+			ClassicAssert.IsTrue(composed.Contains("Ptoh"), composed);
 		}
 
 		/// <summary>
@@ -306,9 +307,9 @@ namespace ThousandAndFirst.Tests
 			string composed = KingdomVoiceRules.Compose(speaker, VoiceOccasion.MealShared, "{{G|A feast is shared.}}", words);
 			int wordsAt = composed.IndexOf(words);
 			int lineAt = composed.IndexOf(KingdomVoiceRules.Line(VoiceOccasion.MealShared, "the banana grove"));
-			Assert.Greater(wordsAt, 0, composed);
-			Assert.Greater(lineAt, wordsAt, composed);
-			Assert.AreEqual(2, CountQuotes(composed), composed);
+			ClassicAssert.Greater(wordsAt, 0, composed);
+			ClassicAssert.Greater(lineAt, wordsAt, composed);
+			ClassicAssert.AreEqual(2, CountQuotes(composed), composed);
 		}
 
 		[Test]
@@ -316,14 +317,14 @@ namespace ThousandAndFirst.Tests
 		{
 			string announcement = "{{G|A feast is shared.}}";
 			string composed = KingdomVoiceRules.Compose(KingdomVoiceRules.Speaker.None, VoiceOccasion.MealShared, announcement, "It was good.");
-			Assert.AreEqual(announcement, composed);
+			ClassicAssert.AreEqual(announcement, composed);
 		}
 
 		[Test]
 		public void AttributionNamesTheSpeaker()
 		{
-			Assert.AreEqual("Ptoh", new KingdomVoiceRules.Speaker("Ptoh", "the hills").Attribution);
-			Assert.AreEqual("a settler", new KingdomVoiceRules.Speaker("", "the hills").Attribution);
+			ClassicAssert.AreEqual("Ptoh", new KingdomVoiceRules.Speaker("Ptoh", "the hills").Attribution);
+			ClassicAssert.AreEqual("a settler", new KingdomVoiceRules.Speaker("", "the hills").Attribution);
 		}
 
 		/// <summary>
@@ -335,7 +336,7 @@ namespace ThousandAndFirst.Tests
 		{
 			for (int i = 0; i < AllOccasions.Length; i++)
 			{
-				Assert.AreNotEqual(0, (int)AllOccasions[i]);
+				ClassicAssert.AreNotEqual(0, (int)AllOccasions[i]);
 			}
 		}
 
@@ -353,7 +354,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(VoiceOccasion.FounderRegarded, 8)]
 		public void OccasionCodesAreFrozen(VoiceOccasion Occasion, int Expected)
 		{
-			Assert.AreEqual(Expected, (int)Occasion);
+			ClassicAssert.AreEqual(Expected, (int)Occasion);
 		}
 
 		private static int CountQuotes(string Text)

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.DevTests
 {
@@ -17,61 +18,61 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomPolityLedger ledger = Fresh(); PlanRoute(ledger, KingdomPolityRoutePurpose.Delegation,
 				Manifest, new List<string> { Remote, "taf:site:waypoint", KingdomPolityTestData.Settlement });
-			Assert.IsTrue(KingdomPolityManifestRules.TryCreateCargoProof(
+			ClassicAssert.IsTrue(KingdomPolityManifestRules.TryCreateCargoProof(
 				"taf:manifest-proof:depart", "taf:trade-book:one", Manifest, "serving",
 				10L, 6L, 4L, 4L, 0L, 0L, "taf:receipt:debit", null, null,
 				out KingdomPolityManifestProof custody, out string failure), failure);
-			Assert.IsTrue(KingdomPolityRouteRules.TryDepart(ledger, ledger.Revision, Route, 90L,
+			ClassicAssert.IsTrue(KingdomPolityRouteRules.TryDepart(ledger, ledger.Revision, Route, 90L,
 				"taf:receipt:route-depart", custody, out KingdomPolityPublicationResult _, out failure), failure);
-			Assert.IsTrue(KingdomPolityRouteRules.TryAdvance(ledger, ledger.Revision, Route, 0,
+			ClassicAssert.IsTrue(KingdomPolityRouteRules.TryAdvance(ledger, ledger.Revision, Route, 0,
 				100L, 110L, out _, out failure), failure);
-			Assert.AreEqual(KingdomPolityRoutePhase.Traveling, ledger.Routes[0].Phase);
-			Assert.IsTrue(KingdomPolityRouteRules.TryAdvance(ledger, ledger.Revision, Route, 1,
+			ClassicAssert.AreEqual(KingdomPolityRoutePhase.Traveling, ledger.Routes[0].Phase);
+			ClassicAssert.IsTrue(KingdomPolityRouteRules.TryAdvance(ledger, ledger.Revision, Route, 1,
 				110L, 110L, out _, out failure), failure);
-			Assert.IsTrue(KingdomPolityManifestRules.TryCreateCargoProof(
+			ClassicAssert.IsTrue(KingdomPolityManifestRules.TryCreateCargoProof(
 				"taf:manifest-proof:delivered-too-early", "taf:trade-book:one", Manifest, "serving",
 				10L, 6L, 4L, 0L, 4L, 0L, "taf:receipt:debit", "taf:receipt:physical-delivery",
 				null, out KingdomPolityManifestProof delivered, out failure), failure);
-			Assert.IsFalse(KingdomPolityRouteRules.TryDeliverEntitlement(ledger, ledger.Revision,
+			ClassicAssert.IsFalse(KingdomPolityRouteRules.TryDeliverEntitlement(ledger, ledger.Revision,
 				Route, 110L, 150L, "taf:receipt:entitlement", delivered, out _, out failure),
 				"offscreen semantic delivery must not claim a physical mutation");
-			Assert.IsTrue(KingdomPolityRouteRules.TryDeliverEntitlement(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomPolityRouteRules.TryDeliverEntitlement(ledger, ledger.Revision,
 				Route, 110L, 150L, "taf:receipt:entitlement", custody, out _, out failure), failure);
-			Assert.AreEqual(KingdomPolityRoutePhase.Arrived, ledger.Routes[0].Phase);
-			Assert.IsTrue(KingdomPolityRouteRules.TryValidateLoadedEndpointDelivery(ledger, Route,
+			ClassicAssert.AreEqual(KingdomPolityRoutePhase.Arrived, ledger.Routes[0].Phase);
+			ClassicAssert.IsTrue(KingdomPolityRouteRules.TryValidateLoadedEndpointDelivery(ledger, Route,
 				KingdomPolityTestData.Settlement, delivered, out failure), failure);
-			Assert.IsTrue(KingdomPolityRouteRules.TryReturn(ledger, ledger.Revision, Route, 150L,
+			ClassicAssert.IsTrue(KingdomPolityRouteRules.TryReturn(ledger, ledger.Revision, Route, 150L,
 				"taf:receipt:route-return", delivered, out _, out failure), failure);
-			Assert.AreEqual(KingdomPolityRoutePhase.Returned, ledger.Routes[0].Phase);
-			Assert.IsFalse(KingdomPolityRouteRules.TryCancelPreparing(ledger, ledger.Revision,
+			ClassicAssert.AreEqual(KingdomPolityRoutePhase.Returned, ledger.Routes[0].Phase);
+			ClassicAssert.IsFalse(KingdomPolityRouteRules.TryCancelPreparing(ledger, ledger.Revision,
 				Route, out _, out failure));
-			Assert.IsTrue(KingdomPolityRules.TryValidate(ledger, out failure), failure);
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(ledger, out failure), failure);
 		}
 
 		[Test]
 		public void ErrandsAndCorrespondenceAreCanonicalViewsNotInventedCargoOrPeople()
 		{
 			KingdomPolityLedger ledger = Fresh();
-			Assert.IsTrue(KingdomPolityManifestRules.TryCreateErrandProof(
+			ClassicAssert.IsTrue(KingdomPolityManifestRules.TryCreateErrandProof(
 				"taf:manifest-proof:errand", "taf:office:courier", "taf:errand:message",
 				out KingdomPolityManifestProof errand, out string failure), failure);
-			Assert.AreEqual(0L, errand.Debited); Assert.IsNull(errand.UnitKey);
+			ClassicAssert.AreEqual(0L, errand.Debited); ClassicAssert.IsNull(errand.UnitKey);
 			PlanRoute(ledger, KingdomPolityRoutePurpose.Courier, errand.ManifestOrErrandId,
 				new List<string> { Remote, KingdomPolityTestData.Settlement });
-			Assert.IsTrue(KingdomPolityRouteRules.TryDepart(ledger, ledger.Revision, Route, 90L,
+			ClassicAssert.IsTrue(KingdomPolityRouteRules.TryDepart(ledger, ledger.Revision, Route, 90L,
 				"taf:receipt:courier-depart", errand, out KingdomPolityPublicationResult _, out failure), failure);
-			Assert.IsTrue(KingdomPolityRouteRules.TryAdvance(ledger, ledger.Revision, Route, 0,
+			ClassicAssert.IsTrue(KingdomPolityRouteRules.TryAdvance(ledger, ledger.Revision, Route, 0,
 				100L, 100L, out _, out failure), failure);
-			Assert.IsTrue(KingdomPolityCorrespondenceRules.TryCreateProof(
+			ClassicAssert.IsTrue(KingdomPolityCorrespondenceRules.TryCreateProof(
 				"taf:correspondence:courier", Route, KingdomPolityTestData.Rival,
 				"taf:need:answer", "taf:news:crossing", errand.ManifestOrErrandId, null,
 				out KingdomPolityCorrespondenceProof proof, out failure), failure);
-			Assert.IsTrue(KingdomPolityCorrespondenceRules.TryDescribe(ledger, proof,
+			ClassicAssert.IsTrue(KingdomPolityCorrespondenceRules.TryDescribe(ledger, proof,
 				out KingdomPolityCorrespondenceView view, out failure), failure);
-			Assert.AreEqual("deliver exact message", view.PurposeVerb);
-			Assert.AreEqual(KingdomPolityCorrespondencePhase.Available, view.Phase);
+			ClassicAssert.AreEqual("deliver exact message", view.PurposeVerb);
+			ClassicAssert.AreEqual(KingdomPolityCorrespondencePhase.Available, view.Phase);
 			proof.CounterpartyRef = "taf:office:invented";
-			Assert.IsFalse(KingdomPolityCorrespondenceRules.TryDescribe(ledger, proof,
+			ClassicAssert.IsFalse(KingdomPolityCorrespondenceRules.TryDescribe(ledger, proof,
 				out view, out failure), "changed correspondence digest must fail closed");
 		}
 
@@ -86,46 +87,46 @@ namespace ThousandAndFirst.DevTests
 					(KingdomPolityCohortPurpose)purpose, "taf:event:purpose-" + purpose, 2);
 				if (purpose == (int)KingdomPolityCohortPurpose.Envoy)
 					request.NamedFigureId = "taf:figure:rival-envoy";
-				Assert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, request,
+				ClassicAssert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, request,
 					out KingdomPolityPublicationResult _, out string failure), failure);
 				KingdomPolityCohortPlan planned = FindCohort(ledger, id);
-				Assert.AreEqual(2, planned.ResolvedMembers.Count);
-				Assert.LessOrEqual(planned.NamedRepresentativeAllowance, 1);
+				ClassicAssert.AreEqual(2, planned.ResolvedMembers.Count);
+				ClassicAssert.LessOrEqual(planned.NamedRepresentativeAllowance, 1);
 				if (purpose == 1) guard = planned;
 			}
-			Assert.IsTrue(KingdomPolityCohortRules.TryPrepareEndpointManifestation(ledger,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryPrepareEndpointManifestation(ledger,
 				ledger.Revision, guard.CohortId, Zone, 120L, out KingdomPolityPublicationResult prepared,
 				out string prepareFailure), prepareFailure);
 			KingdomPolityProjectionReceipt receipt = FindProjection(ledger, prepared.ProjectionId);
-			Assert.AreEqual(KingdomPolityProjectionPhase.Prepared, receipt.Phase);
-			Assert.AreEqual(guard.ResolvedMembers.Count, receipt.ObjectIds.Count,
+			ClassicAssert.AreEqual(KingdomPolityProjectionPhase.Prepared, receipt.Phase);
+			ClassicAssert.AreEqual(guard.ResolvedMembers.Count, receipt.ObjectIds.Count,
 				"object ids must exist before any runtime body call");
-			Assert.IsTrue(KingdomPolityCohortRules.TryCommitEndpointManifestation(ledger,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryCommitEndpointManifestation(ledger,
 				ledger.Revision, guard.CohortId, receipt.ProjectionId, receipt.ObjectIds, 121L,
 				out KingdomPolityPublicationResult _, out prepareFailure), prepareFailure);
-			Assert.IsTrue(KingdomPolityCohortRules.TryConcludeEndpointCohort(ledger,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryConcludeEndpointCohort(ledger,
 				ledger.Revision, guard.CohortId, "taf:fact:witnessed:guard-dismissed", out _,
 				out prepareFailure), prepareFailure);
-			Assert.IsTrue(KingdomPolityCohortRules.TryCommitEndpointCleanup(ledger,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryCommitEndpointCleanup(ledger,
 				ledger.Revision, guard.CohortId, receipt.ProjectionId, receipt.ObjectIds, out _,
 				out prepareFailure), prepareFailure);
 			KingdomPolityCohortPlanRequest resident = CohortRequest(ledger,
 				"taf:cohort:resident-face", KingdomPolityCohortPurpose.Envoy,
 				"taf:event:resident-face", 2, KingdomPolityTestData.Realm);
 			resident.NamedFigureId = "taf:figure:current-successor";
-			Assert.IsFalse(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, resident,
+			ClassicAssert.IsFalse(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, resident,
 				out _, out prepareFailure), "resident successor must never be regenerated");
 			KingdomPolityCohortPlanRequest single = CohortRequest(ledger, "taf:cohort:single-courier",
 				KingdomPolityCohortPurpose.Courier, "taf:event:single-courier", 1);
-			Assert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, single,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, single,
 				out _, out prepareFailure), prepareFailure);
 			KingdomPolityCohortPlanRequest seven = CohortRequest(ledger, "taf:cohort:seven-migrants",
 				KingdomPolityCohortPurpose.Migrant, "taf:event:seven-migrants", 7);
-			Assert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, seven,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, seven,
 				out _, out prepareFailure), prepareFailure);
 			KingdomPolityCohortPlanRequest eight = CohortRequest(ledger, "taf:cohort:eight-migrants",
 				KingdomPolityCohortPurpose.Migrant, "taf:event:eight-migrants", 8);
-			Assert.IsFalse(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, eight,
+			ClassicAssert.IsFalse(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, eight,
 				out _, out prepareFailure), "eight bodies exceed the declared attention bound");
 		}
 
@@ -136,32 +137,32 @@ namespace ThousandAndFirst.DevTests
 			OpenAndPlanTerms(ledger, envoyId, warbandId);
 			KingdomPolityLedger withoutFood = KingdomPolityRules.Clone(ledger);
 			KingdomPolityHospitalityPlanRequest request = HospitalityRequest(200L);
-			Assert.IsTrue(KingdomPolityHospitalityRules.TryPlanDebit(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomPolityHospitalityRules.TryPlanDebit(ledger, ledger.Revision,
 				"taf:incident-plan:terms", request,
 				out KingdomPolityHospitalityTransaction transaction,
 				out KingdomPolityPublicationResult _, out string failure), failure);
-			Assert.IsTrue(KingdomPolityHospitalityRules.TryCreateCommittedProof(transaction,
+			ClassicAssert.IsTrue(KingdomPolityHospitalityRules.TryCreateCommittedProof(transaction,
 				"taf:fact:witnessed:meal-shared", 200L,
 				out KingdomPolityHospitalityProof hospitality, out failure), failure);
-			Assert.IsTrue(KingdomPolityHospitalityRules.TryCommitDebit(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomPolityHospitalityRules.TryCommitDebit(ledger, ledger.Revision,
 				"taf:incident-plan:terms", hospitality, 200L, out _, out failure), failure);
-			Assert.IsTrue(KingdomPolityDiplomacyRules.TryAnswerTerms(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomPolityDiplomacyRules.TryAnswerTerms(ledger, ledger.Revision,
 				"taf:incident-plan:terms", KingdomPolityTermsChoice.Refuse,
 				"taf:fact:witnessed:terms-refused", 200L, hospitality,
 				out KingdomPolityPublicationResult _, out failure), failure);
-			Assert.IsTrue(KingdomPolityDiplomacyRules.TryAnswerTerms(withoutFood,
+			ClassicAssert.IsTrue(KingdomPolityDiplomacyRules.TryAnswerTerms(withoutFood,
 				withoutFood.Revision, "taf:incident-plan:terms", KingdomPolityTermsChoice.Refuse,
 				"taf:fact:witnessed:terms-refused", 200L, null, out _, out failure), failure);
-			Assert.AreEqual(Relation(ledger).Band, Relation(withoutFood).Band);
-			Assert.AreEqual(KingdomPolityRelationBand.Hostile, Relation(ledger).Band);
-			Assert.AreEqual(1, ledger.Fronts.Count);
-			Assert.AreEqual(KingdomPolityFrontPhase.ConfrontationAvailable, ledger.Fronts[0].Phase);
-			Assert.AreEqual(KingdomPolityRoutePhase.ConfrontationAvailable,
+			ClassicAssert.AreEqual(Relation(ledger).Band, Relation(withoutFood).Band);
+			ClassicAssert.AreEqual(KingdomPolityRelationBand.Hostile, Relation(ledger).Band);
+			ClassicAssert.AreEqual(1, ledger.Fronts.Count);
+			ClassicAssert.AreEqual(KingdomPolityFrontPhase.ConfrontationAvailable, ledger.Fronts[0].Phase);
+			ClassicAssert.AreEqual(KingdomPolityRoutePhase.ConfrontationAvailable,
 				FindRoute(ledger).Phase);
-			Assert.IsNull(FindPlan(ledger, "taf:incident-plan:clash").Conclusion,
+			ClassicAssert.IsNull(FindPlan(ledger, "taf:incident-plan:clash").Conclusion,
 				"refusing terms must not conclude the frozen clash");
-			Assert.IsTrue(KingdomPolityRules.TryValidate(ledger, out failure), failure);
-			Assert.AreEqual(KingdomPolityHospitalityPhase.Applied,
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(ledger, out failure), failure);
+			ClassicAssert.AreEqual(KingdomPolityHospitalityPhase.Applied,
 				FindPlan(ledger, "taf:incident-plan:terms").Hospitality.Phase);
 		}
 
@@ -173,13 +174,13 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomPolityLedger ledger = DiplomacyScene(out string envoyId, out string warbandId);
 			OpenAndPlanTerms(ledger, envoyId, warbandId);
-			Assert.IsTrue(KingdomPolityDiplomacyRules.TryAnswerTerms(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomPolityDiplomacyRules.TryAnswerTerms(ledger, ledger.Revision,
 				"taf:incident-plan:terms", Choice, "taf:fact:witnessed:terms-answered", 200L,
 				null, out KingdomPolityPublicationResult _, out string failure), failure);
-			Assert.AreEqual(Expected, Relation(ledger).Band);
-			Assert.IsNotNull(FindPlan(ledger, "taf:incident-plan:terms").Conclusion);
-			Assert.IsNull(FindPlan(ledger, "taf:incident-plan:clash").Conclusion);
-			Assert.IsTrue(KingdomPolityRules.TryValidate(ledger, out failure), failure);
+			ClassicAssert.AreEqual(Expected, Relation(ledger).Band);
+			ClassicAssert.IsNotNull(FindPlan(ledger, "taf:incident-plan:terms").Conclusion);
+			ClassicAssert.IsNull(FindPlan(ledger, "taf:incident-plan:clash").Conclusion);
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(ledger, out failure), failure);
 		}
 
 		[Test]
@@ -187,19 +188,19 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomPolityLedger ledger = DiplomacyScene(out string envoyId, out string warbandId);
 			OpenAndPlanTerms(ledger, envoyId, warbandId);
-			Assert.IsTrue(KingdomPolityHospitalityRules.TryPlanDebit(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomPolityHospitalityRules.TryPlanDebit(ledger, ledger.Revision,
 				"taf:incident-plan:terms", HospitalityRequest(200L),
 				out KingdomPolityHospitalityTransaction _, out KingdomPolityPublicationResult _,
 				out string failure), failure);
-			Assert.IsTrue(KingdomPolityHospitalityRules.TryQuarantineDebit(ledger,
+			ClassicAssert.IsTrue(KingdomPolityHospitalityRules.TryQuarantineDebit(ledger,
 				ledger.Revision, "taf:incident-plan:terms", "exact serving moved",
 				out _, out failure), failure);
-			Assert.IsTrue(KingdomPolityDiplomacyRules.TryAnswerTerms(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomPolityDiplomacyRules.TryAnswerTerms(ledger, ledger.Revision,
 				"taf:incident-plan:terms", KingdomPolityTermsChoice.Accept,
 				"taf:fact:witnessed:terms-after-empty-table", 201L, null,
 				out _, out failure), failure);
-			Assert.AreEqual(KingdomPolityRelationBand.Pact, Relation(ledger).Band);
-			Assert.AreEqual(KingdomPolityHospitalityPhase.Quarantined,
+			ClassicAssert.AreEqual(KingdomPolityRelationBand.Pact, Relation(ledger).Band);
+			ClassicAssert.AreEqual(KingdomPolityHospitalityPhase.Quarantined,
 				FindPlan(ledger, "taf:incident-plan:terms").Hospitality.Phase);
 		}
 
@@ -208,7 +209,7 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomPolityLedger ledger = DiplomacyScene(out string envoyId, out string warbandId);
 			OpenAndPlanTerms(ledger, envoyId, warbandId);
-			Assert.IsTrue(KingdomPolityDiplomacyRules.TryAnswerTerms(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomPolityDiplomacyRules.TryAnswerTerms(ledger, ledger.Revision,
 				"taf:incident-plan:terms", KingdomPolityTermsChoice.Refuse,
 				"taf:fact:witnessed:terms-refused", 200L, null,
 				out KingdomPolityPublicationResult _, out string failure), failure);
@@ -224,7 +225,7 @@ namespace ThousandAndFirst.DevTests
 					TargetId = KingdomPolityTestData.Settlement, Amount = 1,
 					ReceiptId = receipts[0] }
 			};
-			Assert.IsFalse(KingdomPolityClashRules.TryCreateLiveProof("taf:clash-proof:bad",
+			ClassicAssert.IsFalse(KingdomPolityClashRules.TryCreateLiveProof("taf:clash-proof:bad",
 				"taf:incident-plan:clash", KingdomPolityTestData.Settlement, Zone, 220L, facts,
 				projections, forbidden, new List<KingdomPolityRelationDelta>(), receipts,
 				out KingdomPolityWitnessedClashProof _, out failure),
@@ -234,17 +235,17 @@ namespace ThousandAndFirst.DevTests
 				new KingdomPolitySystemicDelta { Kind = KingdomPolitySystemicDeltaKind.RoutePosture,
 					TargetId = Route, Amount = -1, ReceiptId = receipts[0] }
 			};
-			Assert.IsTrue(KingdomPolityClashRules.TryCreateLiveProof("taf:clash-proof:yield",
+			ClassicAssert.IsTrue(KingdomPolityClashRules.TryCreateLiveProof("taf:clash-proof:yield",
 				"taf:incident-plan:clash", KingdomPolityTestData.Settlement, Zone, 220L, facts,
 				projections, actual, new List<KingdomPolityRelationDelta>(), receipts,
 				out KingdomPolityWitnessedClashProof proof, out failure), failure);
-			Assert.IsTrue(KingdomPolityClashRules.TryConcludeWitnessed(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomPolityClashRules.TryConcludeWitnessed(ledger, ledger.Revision,
 				proof, out KingdomPolityPublicationResult _, out failure), failure);
-			Assert.IsNotNull(FindPlan(ledger, "taf:incident-plan:clash").Conclusion);
-			Assert.AreEqual(KingdomPolityAftermathKind.WitnessedWithdrawal,
+			ClassicAssert.IsNotNull(FindPlan(ledger, "taf:incident-plan:clash").Conclusion);
+			ClassicAssert.AreEqual(KingdomPolityAftermathKind.WitnessedWithdrawal,
 				FindPlan(ledger, "taf:incident-plan:clash").Aftermath.Kind);
-			Assert.AreEqual(KingdomPolityFrontPhase.Ended, ledger.Fronts[0].Phase);
-			Assert.AreEqual(KingdomPolityRoutePhase.AvailableToWitness, FindRoute(ledger).Phase);
+			ClassicAssert.AreEqual(KingdomPolityFrontPhase.Ended, ledger.Fronts[0].Phase);
+			ClassicAssert.AreEqual(KingdomPolityRoutePhase.AvailableToWitness, FindRoute(ledger).Phase);
 		}
 
 		[Test]
@@ -252,26 +253,26 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomPolityLedger ledger = DiplomacyScene(out string envoyId, out string warbandId);
 			OpenAndPlanTerms(ledger, envoyId, warbandId);
-			Assert.IsTrue(KingdomPolityDiplomacyRules.TryAnswerTerms(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomPolityDiplomacyRules.TryAnswerTerms(ledger, ledger.Revision,
 				"taf:incident-plan:terms", KingdomPolityTermsChoice.Refuse,
 				"taf:fact:witnessed:terms-refused", 200L, null, out _, out string failure), failure);
 			KingdomPolityCohortPlan warband = FindCohort(ledger, warbandId);
 			string projection = FindProjection(ledger, warband.ManifestationReceiptId).ProjectionId;
 			string interventionFact = "taf:fact:witnessed:ceasefire-mediated";
-			Assert.IsTrue(KingdomPolityConflictRules.TryRecordWitnessedIntervention(ledger,
+			ClassicAssert.IsTrue(KingdomPolityConflictRules.TryRecordWitnessedIntervention(ledger,
 				ledger.Revision, "taf:incident-plan:clash",
 				KingdomPolityInterventionChoice.MediateCeasefire,
 				KingdomPolityTestData.Settlement, Zone, 220L, interventionFact,
 				new List<string> { projection }, out KingdomPolityPublicationResult recorded,
 				out failure), failure);
-			Assert.AreEqual(KingdomPolityCasOutcome.Applied, recorded.Outcome);
+			ClassicAssert.AreEqual(KingdomPolityCasOutcome.Applied, recorded.Outcome);
 			long afterRecord = ledger.Revision;
-			Assert.IsTrue(KingdomPolityConflictRules.TryRecordWitnessedIntervention(ledger,
+			ClassicAssert.IsTrue(KingdomPolityConflictRules.TryRecordWitnessedIntervention(ledger,
 				afterRecord - 1L, "taf:incident-plan:clash",
 				KingdomPolityInterventionChoice.MediateCeasefire,
 				KingdomPolityTestData.Settlement, Zone, 220L, interventionFact,
 				new List<string> { projection }, out recorded, out failure), failure);
-			Assert.AreEqual(KingdomPolityCasOutcome.AlreadyApplied, recorded.Outcome);
+			ClassicAssert.AreEqual(KingdomPolityCasOutcome.AlreadyApplied, recorded.Outcome);
 
 			List<KingdomPolityRelationDelta> deltas = new List<KingdomPolityRelationDelta>();
 			List<string> receipts = new List<string>();
@@ -285,25 +286,25 @@ namespace ThousandAndFirst.DevTests
 				receipts.Add(receipt);
 			}
 			KingdomPolityAuthority.AddSortedUnique(receipts, "taf:receipt:clash-mediated");
-			Assert.IsTrue(KingdomPolityClashRules.TryCreateLiveProof(
+			ClassicAssert.IsTrue(KingdomPolityClashRules.TryCreateLiveProof(
 				"taf:clash-proof:mediated", "taf:incident-plan:clash",
 				KingdomPolityTestData.Settlement, Zone, 221L,
 				new List<string> { interventionFact }, new List<string> { projection },
 				new List<KingdomPolitySystemicDelta>(), deltas, receipts,
 				out KingdomPolityWitnessedClashProof proof, out failure), failure);
-			Assert.IsTrue(KingdomPolityClashRules.TryConcludeWitnessed(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomPolityClashRules.TryConcludeWitnessed(ledger, ledger.Revision,
 				proof, out _, out failure), failure);
 			KingdomPolityIncidentRecord clash = FindPlan(ledger, "taf:incident-plan:clash");
-			Assert.AreEqual(KingdomPolityAftermathKind.Ceasefire, clash.Aftermath.Kind);
-			Assert.AreEqual(clash.Intervention.InterventionId, clash.Aftermath.InterventionId);
-			Assert.Contains(clash.Intervention.ReceiptId, clash.Conclusion.ReceiptRefs);
-			Assert.AreEqual(0, clash.Conclusion.SystemicDeltas.Count);
+			ClassicAssert.AreEqual(KingdomPolityAftermathKind.Ceasefire, clash.Aftermath.Kind);
+			ClassicAssert.AreEqual(clash.Intervention.InterventionId, clash.Aftermath.InterventionId);
+			ClassicAssert.Contains(clash.Intervention.ReceiptId, clash.Conclusion.ReceiptRefs);
+			ClassicAssert.AreEqual(0, clash.Conclusion.SystemicDeltas.Count);
 			for (int i = 0; i < ledger.Relations.Count; i++)
-				Assert.AreEqual(KingdomPolityRelationBand.Truce, ledger.Relations[i].Band);
-			Assert.AreEqual(KingdomPolityFrontPhase.Ended, ledger.Fronts[0].Phase);
+				ClassicAssert.AreEqual(KingdomPolityRelationBand.Truce, ledger.Relations[i].Band);
+			ClassicAssert.AreEqual(KingdomPolityFrontPhase.Ended, ledger.Fronts[0].Phase);
 			byte[] bytes = KingdomPolityCodec.EncodeEnvelope(ledger);
 			KingdomPolityLedger roundTrip = KingdomPolityCodec.DecodeEnvelope(bytes);
-			Assert.AreEqual(clash.Aftermath.ProofDigest,
+			ClassicAssert.AreEqual(clash.Aftermath.ProofDigest,
 				FindPlan(roundTrip, "taf:incident-plan:clash").Aftermath.ProofDigest);
 			Assert.Throws<System.IO.InvalidDataException>(() =>
 				KingdomPolityCodec.EncodeEnvelopeV4Fixture(ledger));
@@ -314,21 +315,21 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomPolityLedger ledger = DiplomacyScene(out string envoyId, out string warbandId);
 			OpenAndPlanTerms(ledger, envoyId, warbandId);
-			Assert.IsTrue(KingdomPolityDiplomacyRules.TryAnswerTerms(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomPolityDiplomacyRules.TryAnswerTerms(ledger, ledger.Revision,
 				"taf:incident-plan:terms", KingdomPolityTermsChoice.Refuse,
 				"taf:fact:witnessed:terms-refused", 200L, null, out _, out string failure), failure);
 			KingdomPolityCohortPlan warband = FindCohort(ledger, warbandId);
 			string projection = FindProjection(ledger, warband.ManifestationReceiptId).ProjectionId;
-			Assert.IsTrue(KingdomPolityConflictRules.TryRecordWitnessedIntervention(ledger,
+			ClassicAssert.IsTrue(KingdomPolityConflictRules.TryRecordWitnessedIntervention(ledger,
 				ledger.Revision, "taf:incident-plan:clash",
 				KingdomPolityInterventionChoice.SupportSettlement,
 				KingdomPolityTestData.Settlement, Zone, 220L,
 				"taf:fact:witnessed:settlement-supported", new List<string> { projection },
 				out _, out failure), failure);
 			KingdomPolityIncidentRecord clash = FindPlan(ledger, "taf:incident-plan:clash");
-			Assert.IsNull(clash.Conclusion); Assert.IsNull(clash.Aftermath);
-			Assert.AreEqual(KingdomPolityRelationBand.Hostile, Relation(ledger).Band);
-			Assert.IsTrue(KingdomPolityRules.TryValidate(ledger, out failure), failure);
+			ClassicAssert.IsNull(clash.Conclusion); ClassicAssert.IsNull(clash.Aftermath);
+			ClassicAssert.AreEqual(KingdomPolityRelationBand.Hostile, Relation(ledger).Band);
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(ledger, out failure), failure);
 		}
 
 		[Test]
@@ -337,7 +338,7 @@ namespace ThousandAndFirst.DevTests
 			KingdomPolityLedger ledger = Fresh();
 			KingdomPolityGrievanceRequest request = Grievance();
 			request.SourceEventId = "taf:standing:rival-minus-one-hundred";
-			Assert.IsFalse(KingdomPolityDiplomacyRules.TryOpenGrievance(ledger, ledger.Revision,
+			ClassicAssert.IsFalse(KingdomPolityDiplomacyRules.TryOpenGrievance(ledger, ledger.Revision,
 				request, out KingdomPolityPublicationResult _, out string failure));
 			StringAssert.Contains("caused event", failure);
 		}
@@ -347,22 +348,22 @@ namespace ThousandAndFirst.DevTests
 			KingdomPolityLedger ledger = Fresh(); PlanRoute(ledger,
 				KingdomPolityRoutePurpose.Delegation, "taf:errand:terms",
 				new List<string> { Remote, KingdomPolityTestData.Settlement });
-			Assert.IsTrue(KingdomPolityManifestRules.TryCreateErrandProof("taf:manifest-proof:terms",
+			ClassicAssert.IsTrue(KingdomPolityManifestRules.TryCreateErrandProof("taf:manifest-proof:terms",
 				"taf:office:rival", "taf:errand:terms", out KingdomPolityManifestProof errand,
 				out string failure), failure);
-			Assert.IsTrue(KingdomPolityRouteRules.TryDepart(ledger, ledger.Revision, Route, 90L,
+			ClassicAssert.IsTrue(KingdomPolityRouteRules.TryDepart(ledger, ledger.Revision, Route, 90L,
 				"taf:receipt:terms-depart", errand, out KingdomPolityPublicationResult _, out failure), failure);
-			Assert.IsTrue(KingdomPolityRouteRules.TryAdvance(ledger, ledger.Revision, Route, 0,
+			ClassicAssert.IsTrue(KingdomPolityRouteRules.TryAdvance(ledger, ledger.Revision, Route, 0,
 				100L, 100L, out _, out failure), failure);
 			EnvoyId = "taf:cohort:terms-envoy"; WarbandId = "taf:cohort:frozen-warband";
 			KingdomPolityCohortPlanRequest envoy = CohortRequest(ledger, EnvoyId,
 				KingdomPolityCohortPurpose.Envoy, Route, 2);
 			envoy.NamedFigureId = "taf:figure:rival-envoy";
-			Assert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, envoy,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, envoy,
 				out _, out failure), failure);
 			KingdomPolityCohortPlanRequest warband = CohortRequest(ledger, WarbandId,
 				KingdomPolityCohortPurpose.Warband, "taf:event:warband-mustered", 2);
-			Assert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, warband,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryPlan(ledger, ledger.Revision, warband,
 				out _, out failure), failure);
 			CommitManifestation(ledger, EnvoyId, 120L);
 			CommitManifestation(ledger, WarbandId, 121L); return ledger;
@@ -371,7 +372,7 @@ namespace ThousandAndFirst.DevTests
 		private static void OpenAndPlanTerms(KingdomPolityLedger Ledger, string EnvoyId,
 			string WarbandId)
 		{
-			Assert.IsTrue(KingdomPolityDiplomacyRules.TryOpenGrievance(Ledger, Ledger.Revision,
+			ClassicAssert.IsTrue(KingdomPolityDiplomacyRules.TryOpenGrievance(Ledger, Ledger.Revision,
 				Grievance(), out KingdomPolityPublicationResult _, out string failure), failure);
 			KingdomPolityTermsPlanRequest terms = new KingdomPolityTermsPlanRequest
 			{
@@ -384,7 +385,7 @@ namespace ThousandAndFirst.DevTests
 				TermKeys = new List<string> { "recognize-passage", "restore-access" },
 				EventStreamId = "taf:stream:terms", RulesVersion = 1, MaxSystemicWound = 1
 			};
-			Assert.IsTrue(KingdomPolityDiplomacyRules.TryPlanTerms(Ledger, Ledger.Revision,
+			ClassicAssert.IsTrue(KingdomPolityDiplomacyRules.TryPlanTerms(Ledger, Ledger.Revision,
 				terms, out _, out failure), failure);
 		}
 
@@ -428,11 +429,11 @@ namespace ThousandAndFirst.DevTests
 		private static void CommitManifestation(KingdomPolityLedger Ledger, string CohortId,
 			long Tick)
 		{
-			Assert.IsTrue(KingdomPolityCohortRules.TryPrepareEndpointManifestation(Ledger,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryPrepareEndpointManifestation(Ledger,
 				Ledger.Revision, CohortId, Zone, Tick, out KingdomPolityPublicationResult result,
 				out string failure), failure);
 			KingdomPolityProjectionReceipt receipt = FindProjection(Ledger, result.ProjectionId);
-			Assert.IsTrue(KingdomPolityCohortRules.TryCommitEndpointManifestation(Ledger,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryCommitEndpointManifestation(Ledger,
 				Ledger.Revision, CohortId, receipt.ProjectionId, receipt.ObjectIds, Tick,
 				out KingdomPolityPublicationResult _, out failure), failure);
 		}
@@ -441,7 +442,7 @@ namespace ThousandAndFirst.DevTests
 			string Id, KingdomPolityCohortPurpose Purpose, string Source, int Count,
 			string Polity = KingdomPolityTestData.Rival)
 		{
-			Assert.IsTrue(KingdomPolityCohortRules.TryResolverContract(Ledger, Polity, Purpose,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryResolverContract(Ledger, Polity, Purpose,
 				out int resolverRulesVersion, out int minimum, out int maximum,
 				out string failure), failure);
 			return new KingdomPolityCohortPlanRequest
@@ -478,7 +479,7 @@ namespace ThousandAndFirst.DevTests
 				Mode = KingdomPolityRouteMode.Foot, Purpose = Purpose, FirstDueTick = 100L,
 				ManifestOrErrandId = ManifestId, CounterpartyRef = KingdomPolityTestData.Rival
 			};
-			Assert.IsTrue(KingdomPolityRouteRules.TryPlan(Ledger, Ledger.Revision, request,
+			ClassicAssert.IsTrue(KingdomPolityRouteRules.TryPlan(Ledger, Ledger.Revision, request,
 				out KingdomPolityPublicationResult _, out string failure), failure);
 		}
 
@@ -495,7 +496,7 @@ namespace ThousandAndFirst.DevTests
 				if (ledger.Profiles[i].PolityId == KingdomPolityTestData.Rival) rival = ledger.Profiles[i];
 			rival.RoleKeys = new List<string> { "claimant", "courier", "envoy", "guard", "migrant",
 				"namesake", "patrol", "trader", "warband" };
-			Assert.IsTrue(KingdomPolityRules.TryValidate(ledger, out string failure), failure);
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(ledger, out string failure), failure);
 			return ledger;
 		}
 

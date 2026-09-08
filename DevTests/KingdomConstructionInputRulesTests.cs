@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -27,45 +28,45 @@ namespace ThousandAndFirst.Tests
 				8, 9, 10, 11, 12, 13);
 			AssertEnum<KingdomConstructionInputFault>(0, 1, 2, 3, 4, 5, 6, 7, 8, 9,
 				10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21);
-				Assert.AreEqual(3, KingdomConstructionInputRules.Schema);
-				Assert.AreEqual(1, KingdomConstructionInputRules.LegacySchema);
-			Assert.AreEqual(16, KingdomConstructionInputRules.MaxChildren);
+				ClassicAssert.AreEqual(3, KingdomConstructionInputRules.Schema);
+				ClassicAssert.AreEqual(1, KingdomConstructionInputRules.LegacySchema);
+			ClassicAssert.AreEqual(16, KingdomConstructionInputRules.MaxChildren);
 		}
 
 		[Test]
 		public void CreateFreezesThreeDayFloorExactClaimsAndCoordinateOnlyRoute()
 		{
 			KingdomConstructionInputReceipt receipt = Base();
-			Assert.AreEqual(6, receipt.WaterReserveFloor);
-			Assert.AreEqual("", receipt.ChildAt(0).SourceObjectId ?? "");
-			Assert.AreEqual("", receipt.ChildAt(0).TargetObjectId ?? "");
-			Assert.AreEqual(KingdomConstructionInputCargoShape.OpaqueObjectManifest,
+			ClassicAssert.AreEqual(6, receipt.WaterReserveFloor);
+			ClassicAssert.AreEqual("", receipt.ChildAt(0).SourceObjectId ?? "");
+			ClassicAssert.AreEqual("", receipt.ChildAt(0).TargetObjectId ?? "");
+			ClassicAssert.AreEqual(KingdomConstructionInputCargoShape.OpaqueObjectManifest,
 				receipt.ChildAt(0).CargoShape);
-			Assert.AreEqual(2, receipt.ChildAt(0).CargoCount, "central amount is object count");
-			Assert.AreEqual("Cistern", receipt.SourceAt(0).Blueprint);
-			Assert.AreEqual("EmptyWaterskin", receipt.CargoAt(0).Blueprint);
-			Assert.IsTrue(KingdomConstructionInputRules.TryValidate(receipt, out var fault), fault.ToString());
+			ClassicAssert.AreEqual(2, receipt.ChildAt(0).CargoCount, "central amount is object count");
+			ClassicAssert.AreEqual("Cistern", receipt.SourceAt(0).Blueprint);
+			ClassicAssert.AreEqual("EmptyWaterskin", receipt.CargoAt(0).Blueprint);
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryValidate(receipt, out var fault), fault.ToString());
 		}
 
 		[Test]
 		public void CodecRoundTripIsCanonicalAndRejectsCorruptionFutureSchemaAndBounds()
 		{
 			KingdomConstructionInputReceipt receipt = Base();
-			Assert.IsTrue(KingdomConstructionInputRules.TryEncode(receipt, out string encoded,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryEncode(receipt, out string encoded,
 				out var fault), fault.ToString());
-			Assert.IsTrue(KingdomConstructionInputRules.TryDecode(encoded, out var decoded,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryDecode(encoded, out var decoded,
 				out fault), fault.ToString());
-			Assert.AreEqual(receipt.PlanDigest, decoded.PlanDigest);
-			Assert.AreEqual("", decoded.ChildAt(0).SourceObjectId);
-			Assert.IsTrue(KingdomConstructionInputRules.TryEncode(decoded, out string again,
+			ClassicAssert.AreEqual(receipt.PlanDigest, decoded.PlanDigest);
+			ClassicAssert.AreEqual("", decoded.ChildAt(0).SourceObjectId);
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryEncode(decoded, out string again,
 				out fault));
-			Assert.AreEqual(encoded, again);
+			ClassicAssert.AreEqual(encoded, again);
 
 			string corrupt = encoded.Substring(0, encoded.Length - 1)
 				+ (encoded[encoded.Length - 1] == '0' ? "1" : "0");
-			Assert.IsFalse(KingdomConstructionInputRules.TryDecode(corrupt, out decoded, out fault));
-			Assert.AreEqual(KingdomConstructionInputFault.Digest, fault);
-			Assert.IsFalse(KingdomConstructionInputRules.TryDecode(
+			ClassicAssert.IsFalse(KingdomConstructionInputRules.TryDecode(corrupt, out decoded, out fault));
+			ClassicAssert.AreEqual(KingdomConstructionInputFault.Digest, fault);
+			ClassicAssert.IsFalse(KingdomConstructionInputRules.TryDecode(
 				new string('x', KingdomConstructionInputRules.MaxEncodedChars + 1),
 				out decoded, out fault));
 
@@ -73,8 +74,8 @@ namespace ThousandAndFirst.Tests
 			byte[] payload = Convert.FromBase64String(fields[1]);
 				payload[6] = 4; payload[7] = payload[8] = payload[9] = 0;
 			string future = fields[0] + "|" + Convert.ToBase64String(payload) + "|" + Hash(payload);
-			Assert.IsFalse(KingdomConstructionInputRules.TryDecode(future, out decoded, out fault));
-			Assert.AreEqual(KingdomConstructionInputFault.FutureSchema, fault);
+			ClassicAssert.IsFalse(KingdomConstructionInputRules.TryDecode(future, out decoded, out fault));
+			ClassicAssert.AreEqual(KingdomConstructionInputFault.FutureSchema, fault);
 		}
 
 		[Test]
@@ -93,7 +94,7 @@ namespace ThousandAndFirst.Tests
 				current.TxPhase, current.Revision, null, current.PauseStartedTick,
 				current.PausedTicks, current.CopySources(), current.CopyCargo(),
 				current.CopyChildren());
-			Assert.IsTrue(KingdomConstructionInputRules.TryPlanDigest(provisional,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryPlanDigest(provisional,
 				out string legacyDigest));
 			KingdomConstructionInputReceipt legacy = new KingdomConstructionInputReceipt(
 				provisional.Schema, provisional.ReceiptId, provisional.ConstructionJobId,
@@ -107,16 +108,16 @@ namespace ThousandAndFirst.Tests
 				provisional.TxPhase, provisional.Revision, legacyDigest,
 				provisional.PauseStartedTick, provisional.PausedTicks,
 				provisional.CopySources(), provisional.CopyCargo(), provisional.CopyChildren());
-			Assert.IsTrue(KingdomConstructionInputRules.TryEncode(legacy,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryEncode(legacy,
 				out string encoded, out var fault), fault.ToString());
-			Assert.IsTrue(KingdomConstructionInputRules.TryDecode(encoded,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryDecode(encoded,
 				out var decoded, out fault), fault.ToString());
-			Assert.AreEqual(KingdomConstructionInputRules.LegacySchema, decoded.Schema);
-			Assert.AreEqual(1, decoded.RequiredObjectCount);
-			Assert.AreEqual("mat-stack", decoded.RequiredObjectAt(0));
-			Assert.IsTrue(KingdomConstructionInputRules.TryEncode(decoded,
+			ClassicAssert.AreEqual(KingdomConstructionInputRules.LegacySchema, decoded.Schema);
+			ClassicAssert.AreEqual(1, decoded.RequiredObjectCount);
+			ClassicAssert.AreEqual("mat-stack", decoded.RequiredObjectAt(0));
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryEncode(decoded,
 				out string canonical, out fault));
-			Assert.AreEqual(encoded, canonical);
+			ClassicAssert.AreEqual(encoded, canonical);
 		}
 
 		[Test]
@@ -134,7 +135,7 @@ namespace ThousandAndFirst.Tests
 				current.TxPhase, current.Revision, null, current.PauseStartedTick,
 				current.PausedTicks, current.CopySources(), current.CopyCargo(),
 				current.CopyChildren());
-			Assert.IsTrue(KingdomConstructionInputRules.TryPlanDigest(provisional,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryPlanDigest(provisional,
 				out string digest));
 			KingdomConstructionInputReceipt schemaTwo = new KingdomConstructionInputReceipt(
 				2, provisional.ReceiptId, provisional.ConstructionJobId, provisional.OwnerKey,
@@ -148,12 +149,12 @@ namespace ThousandAndFirst.Tests
 				provisional.Revision, digest, provisional.PauseStartedTick,
 				provisional.PausedTicks, provisional.CopySources(), provisional.CopyCargo(),
 				provisional.CopyChildren());
-			Assert.IsTrue(KingdomConstructionInputRules.TryEncode(schemaTwo,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryEncode(schemaTwo,
 				out string encoded, out var fault), fault.ToString());
-			Assert.IsTrue(KingdomConstructionInputRules.TryDecode(encoded,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryDecode(encoded,
 				out var decoded, out fault), fault.ToString());
-			Assert.AreEqual(2, decoded.Schema);
-			Assert.IsTrue(KingdomConstructionInputRules.ExactChildBinding(decoded, 0,
+			ClassicAssert.AreEqual(2, decoded.Schema);
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.ExactChildBinding(decoded, 0,
 				decoded.ChildAt(0).JobId, decoded.ChildAt(0).TripId,
 				decoded.ConstructionJobId, 2, decoded.PlanDigest));
 		}
@@ -162,18 +163,18 @@ namespace ThousandAndFirst.Tests
 		public void GeneratedIdsChangeReceiptHashButNeverImmutablePlanDigest()
 		{
 			KingdomConstructionInputReceipt receipt = SourcePending(Base());
-			Assert.IsTrue(KingdomConstructionInputRules.TryReceiptDigest(receipt,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryReceiptDigest(receipt,
 				out string before, out var fault));
 			string plan = receipt.PlanDigest;
 			receipt = Source(receipt, 1, KingdomConstructionInputSourcePhase.SplitIntent);
 			receipt = SourceEvidence(receipt, 1, "mat-remainder", null, null, 0);
-			Assert.AreEqual(plan, receipt.PlanDigest);
-			Assert.IsTrue(KingdomConstructionInputRules.TryReceiptDigest(receipt,
+			ClassicAssert.AreEqual(plan, receipt.PlanDigest);
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryReceiptDigest(receipt,
 				out string after, out fault));
-			Assert.AreNotEqual(before, after);
-			Assert.IsFalse(KingdomConstructionInputRules.TryUpdateSourceEvidence(receipt,
+			ClassicAssert.AreNotEqual(before, after);
+			ClassicAssert.IsFalse(KingdomConstructionInputRules.TryUpdateSourceEvidence(receipt,
 				receipt.Revision, 1, "rewritten", null, null, 0, out var ignored, out fault));
-			Assert.AreEqual(KingdomConstructionInputFault.Witness, fault);
+			ClassicAssert.AreEqual(KingdomConstructionInputFault.Witness, fault);
 		}
 
 		[Test]
@@ -189,14 +190,14 @@ namespace ThousandAndFirst.Tests
 					|| i == (int)KingdomConstructionInputTxPhase.RollbackPending
 					|| i == (int)KingdomConstructionInputTxPhase.CancellationPending
 					|| i == (int)KingdomConstructionInputTxPhase.Quarantined;
-				Assert.AreEqual(expected, ok, "parent next " + i);
+				ClassicAssert.AreEqual(expected, ok, "parent next " + i);
 			}
 			KingdomConstructionInputReceipt reserved = Tx(initial,
 				KingdomConstructionInputTxPhase.Reserved);
-			Assert.IsFalse(KingdomConstructionInputRules.TryTransitionTransaction(reserved,
+			ClassicAssert.IsFalse(KingdomConstructionInputRules.TryTransitionTransaction(reserved,
 				initial.Revision, reserved.TxPhase, KingdomConstructionInputTxPhase.SourcePending,
 				out var stale, out var staleFault));
-			Assert.AreEqual(KingdomConstructionInputFault.Revision, staleFault);
+			ClassicAssert.AreEqual(KingdomConstructionInputFault.Revision, staleFault);
 
 			KingdomConstructionInputReceipt quarantined = Tx(initial,
 				KingdomConstructionInputTxPhase.Quarantined);
@@ -205,7 +206,7 @@ namespace ThousandAndFirst.Tests
 				bool ok = KingdomConstructionInputRules.TryTransitionSource(quarantined,
 					quarantined.Revision, 1, KingdomConstructionInputSourcePhase.Reserved,
 					(KingdomConstructionInputSourcePhase)i, out var changed, out var fault);
-				Assert.AreEqual(i == 2 || i == 11, ok, "partial source next " + i);
+				ClassicAssert.AreEqual(i == 2 || i == 11, ok, "partial source next " + i);
 			}
 		}
 
@@ -217,14 +218,14 @@ namespace ThousandAndFirst.Tests
 			receipt = Cargo(receipt, 0, KingdomConstructionInputCargoPhase.PickupIntent);
 			receipt = Move(receipt, 0, KingdomConstructionInputCargoPhase.InFlight,
 				KingdomConstructionInputTopology.CarrierInventory, "carrier-0", "source-zone", 2, 2, 0, 0);
-			Assert.IsFalse(KingdomConstructionInputRules.TryTransitionTransaction(receipt,
+			ClassicAssert.IsFalse(KingdomConstructionInputRules.TryTransitionTransaction(receipt,
 				receipt.Revision, receipt.TxPhase, KingdomConstructionInputTxPhase.Routing,
 				out var ignored, out var fault));
 			receipt = Cargo(receipt, 1, KingdomConstructionInputCargoPhase.PickupIntent);
 			receipt = Move(receipt, 1, KingdomConstructionInputCargoPhase.InFlight,
 				KingdomConstructionInputTopology.CarrierInventory, "carrier-1", "source-zone", 3, 2, 0, 0);
 			receipt = Tx(receipt, KingdomConstructionInputTxPhase.Routing);
-			Assert.AreEqual(KingdomConstructionInputTxPhase.Routing, receipt.TxPhase);
+			ClassicAssert.AreEqual(KingdomConstructionInputTxPhase.Routing, receipt.TxPhase);
 		}
 
 		[Test]
@@ -255,24 +256,24 @@ namespace ThousandAndFirst.Tests
 				MaterialOutstanding = MaterialClaim(KingdomMaterial.Timber, 1),
 				MaterialLost = EmptyClaim()
 			};
-			Assert.IsTrue(KingdomConstructionInputRules.TryCommittedClaims(receipt,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryCommittedClaims(receipt,
 				beforeClaims, out var committedClaims));
-			Assert.AreEqual(10, committedClaims.WaterSpent);
-			Assert.AreEqual(0, committedClaims.WaterOutstanding);
-			Assert.AreEqual(MaterialClaim(KingdomMaterial.Timber, 1),
+			ClassicAssert.AreEqual(10, committedClaims.WaterSpent);
+			ClassicAssert.AreEqual(0, committedClaims.WaterOutstanding);
+			ClassicAssert.AreEqual(MaterialClaim(KingdomMaterial.Timber, 1),
 				committedClaims.MaterialSpent);
-			Assert.AreEqual(MaterialClaim(KingdomMaterial.Timber, 1),
+			ClassicAssert.AreEqual(MaterialClaim(KingdomMaterial.Timber, 1),
 				committedClaims.MaterialLost);
 			receipt = Tx(receipt, KingdomConstructionInputTxPhase.Committed); RoundTrip(ref receipt);
-			Assert.IsTrue(KingdomConstructionInputRules.TryCommittedClaims(receipt,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryCommittedClaims(receipt,
 				beforeClaims, out committedClaims));
-			Assert.IsTrue(KingdomConstructionInputRules.CommittedClaimsExact(receipt,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.CommittedClaimsExact(receipt,
 				10, 0, 10, MaterialClaim(KingdomMaterial.Timber, 1), EmptyClaim(),
 				MaterialClaim(KingdomMaterial.Timber, 1)),
 				"Lost means all physical debit, even with zero ProvedLost");
-			Assert.IsTrue(KingdomConstructionInputRules.TryDeriveConservation(receipt,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryDeriveConservation(receipt,
 				KingdomConstructionInputKind.Water, out var water, out var fault));
-			Assert.AreEqual(10, water.Spent); Assert.AreEqual(0, water.ProvedLost);
+			ClassicAssert.AreEqual(10, water.Spent); ClassicAssert.AreEqual(0, water.ProvedLost);
 		}
 
 		[Test]
@@ -293,10 +294,10 @@ namespace ThousandAndFirst.Tests
 					9, 9, receipt.CargoAt(i).Amount - lost, lost);
 				receipt = Source(receipt, i, KingdomConstructionInputSourcePhase.Spent);
 			}
-			Assert.IsFalse(KingdomConstructionInputRules.TryTransitionTransaction(receipt,
+			ClassicAssert.IsFalse(KingdomConstructionInputRules.TryTransitionTransaction(receipt,
 				receipt.Revision, receipt.TxPhase, KingdomConstructionInputTxPhase.Closing,
 				out var ignored, out var fault));
-			Assert.AreEqual(KingdomConstructionInputFault.Transition, fault);
+			ClassicAssert.AreEqual(KingdomConstructionInputFault.Transition, fault);
 		}
 
 		[Test]
@@ -308,7 +309,7 @@ namespace ThousandAndFirst.Tests
 			rollback = Source(rollback, 1, KingdomConstructionInputSourcePhase.RestoreIntent);
 			rollback = Source(rollback, 1, KingdomConstructionInputSourcePhase.Restored);
 			rollback = Tx(rollback, KingdomConstructionInputTxPhase.RolledBack);
-			Assert.AreEqual(KingdomConstructionInputTxPhase.RolledBack, rollback.TxPhase);
+			ClassicAssert.AreEqual(KingdomConstructionInputTxPhase.RolledBack, rollback.TxPhase);
 
 			KingdomConstructionInputReceipt compensation = AtRouting();
 			compensation = Tx(compensation, KingdomConstructionInputTxPhase.CompensationPending);
@@ -326,7 +327,7 @@ namespace ThousandAndFirst.Tests
 					KingdomConstructionInputSourcePhase.Compensated);
 			}
 			compensation = Tx(compensation, KingdomConstructionInputTxPhase.Compensated);
-			Assert.AreEqual(KingdomConstructionInputTxPhase.Compensated, compensation.TxPhase);
+			ClassicAssert.AreEqual(KingdomConstructionInputTxPhase.Compensated, compensation.TxPhase);
 		}
 
 		[Test]
@@ -353,10 +354,10 @@ namespace ThousandAndFirst.Tests
 			mixed = Source(mixed, 0, KingdomConstructionInputSourcePhase.Compensated);
 			mixed = Tx(mixed, KingdomConstructionInputTxPhase.Cancelled);
 
-			Assert.IsTrue(KingdomConstructionInputRules.IsTerminal(mixed));
-			Assert.AreEqual(KingdomConstructionInputSourcePhase.Reserved,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.IsTerminal(mixed));
+			ClassicAssert.AreEqual(KingdomConstructionInputSourcePhase.Reserved,
 				mixed.SourceAt(1).Phase);
-			Assert.AreEqual(KingdomConstructionInputCargoPhase.Planned,
+			ClassicAssert.AreEqual(KingdomConstructionInputCargoPhase.Planned,
 				mixed.CargoAt(1).Phase);
 		}
 
@@ -371,41 +372,41 @@ namespace ThousandAndFirst.Tests
 			receipt = Tx(receipt, KingdomConstructionInputTxPhase.LandedAwaitingOwner);
 			receipt = Tx(receipt, KingdomConstructionInputTxPhase.DebitPending);
 			receipt = Cargo(receipt, 0, KingdomConstructionInputCargoPhase.DebitIntent);
-			Assert.IsFalse(KingdomConstructionInputRules.TryTransitionTransaction(receipt,
+			ClassicAssert.IsFalse(KingdomConstructionInputRules.TryTransitionTransaction(receipt,
 				receipt.Revision, receipt.TxPhase,
 				KingdomConstructionInputTxPhase.CancellationPending,
 				out var ignored, out var fault));
-			Assert.AreEqual(KingdomConstructionInputFault.Transition, fault);
+			ClassicAssert.AreEqual(KingdomConstructionInputFault.Transition, fault);
 		}
 
 		[Test]
 		public void PauseNeverMasksAfterOrThirdStateRecovery()
 		{
-			Assert.AreEqual(KingdomConstructionInputDecision.Acknowledge,
+			ClassicAssert.AreEqual(KingdomConstructionInputDecision.Acknowledge,
 				KingdomConstructionInputRules.DecidePhysicalMutation(A, B, B, true));
-			Assert.AreEqual(KingdomConstructionInputDecision.Quarantine,
+			ClassicAssert.AreEqual(KingdomConstructionInputDecision.Quarantine,
 				KingdomConstructionInputRules.DecidePhysicalMutation(A, B, C, true));
-			Assert.AreEqual(KingdomConstructionInputDecision.WaitPaused,
+			ClassicAssert.AreEqual(KingdomConstructionInputDecision.WaitPaused,
 				KingdomConstructionInputRules.DecidePhysicalMutation(A, B, A, true));
-			Assert.AreEqual(KingdomConstructionInputDecision.Apply,
+			ClassicAssert.AreEqual(KingdomConstructionInputDecision.Apply,
 				KingdomConstructionInputRules.DecidePhysicalMutation(A, B, A, false));
 
 			KingdomConstructionInputReceipt receipt = Base();
-			Assert.IsTrue(KingdomConstructionInputRules.TrySetPaused(receipt, receipt.Revision,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TrySetPaused(receipt, receipt.Revision,
 				100, true, out receipt, out var fault));
-			Assert.IsTrue(KingdomConstructionInputRules.TrySetPaused(receipt, receipt.Revision,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TrySetPaused(receipt, receipt.Revision,
 				107, false, out receipt, out fault));
-			Assert.AreEqual(7, receipt.PausedTicks);
+			ClassicAssert.AreEqual(7, receipt.PausedTicks);
 
 			KingdomConstructionInputReceipt rebased = Base();
-			Assert.IsTrue(KingdomConstructionInputRules.TryRebaseMasterPause(rebased,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryRebaseMasterPause(rebased,
 				rebased.Revision, 200, 240, out rebased, out fault));
-			Assert.IsFalse(rebased.Paused);
-			Assert.AreEqual(40, rebased.PausedTicks);
-			Assert.IsTrue(KingdomConstructionInputRules.TryEffectiveArrivalTick(300,
+			ClassicAssert.IsFalse(rebased.Paused);
+			ClassicAssert.AreEqual(40, rebased.PausedTicks);
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryEffectiveArrivalTick(300,
 				rebased.PausedTicks, out long arrival));
-			Assert.AreEqual(340, arrival);
-			Assert.IsFalse(KingdomConstructionInputRules.TryEffectiveArrivalTick(
+			ClassicAssert.AreEqual(340, arrival);
+			ClassicAssert.IsFalse(KingdomConstructionInputRules.TryEffectiveArrivalTick(
 				long.MaxValue, 1, out _));
 		}
 
@@ -414,16 +415,16 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomConstructionInputReceipt receipt = Base();
 			KingdomConstructionInputIntent intent = Intent(B, "realm", 4, 5);
-			Assert.IsTrue(KingdomConstructionInputRules.ExactIntentBinding(receipt, intent, 0));
-			Assert.AreNotEqual(intent.X, receipt.TargetX, "build cell and landing anchor differ");
-			Assert.IsFalse(KingdomConstructionInputRules.ExactIntentBinding(receipt,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.ExactIntentBinding(receipt, intent, 0));
+			ClassicAssert.AreNotEqual(intent.X, receipt.TargetX, "build cell and landing anchor differ");
+			ClassicAssert.IsFalse(KingdomConstructionInputRules.ExactIntentBinding(receipt,
 				Intent(C, "realm", 4, 5), 0), "catalog/build-truth drift refuses");
-			Assert.IsFalse(KingdomConstructionInputRules.ExactIntentBinding(receipt,
+			ClassicAssert.IsFalse(KingdomConstructionInputRules.ExactIntentBinding(receipt,
 				Intent(B, "exiled-realm", 4, 5), 0));
-			Assert.IsFalse(KingdomConstructionInputRules.ExactIntentBinding(receipt, intent, 1));
-			Assert.IsTrue(KingdomConstructionInputRules.ExactChildBinding(receipt, 0, 101, 101,
+			ClassicAssert.IsFalse(KingdomConstructionInputRules.ExactIntentBinding(receipt, intent, 1));
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.ExactChildBinding(receipt, 0, 101, 101,
 					"construction-job", receipt.Schema, receipt.PlanDigest));
-			Assert.IsFalse(KingdomConstructionInputRules.ExactChildBinding(receipt, 0, 101, 102,
+			ClassicAssert.IsFalse(KingdomConstructionInputRules.ExactChildBinding(receipt, 0, 101, 102,
 					"construction-job", receipt.Schema, receipt.PlanDigest));
 		}
 
@@ -432,55 +433,55 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomConstructionInputReceipt current = Base();
 			KingdomConstructionInputReceipt tx = Tx(current, KingdomConstructionInputTxPhase.Reserved);
-			Assert.IsTrue(KingdomConstructionInputRules.ValidReceiptUpdate(current, tx));
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.ValidReceiptUpdate(current, tx));
 			KingdomConstructionInputReceipt pending = Tx(tx,
 				KingdomConstructionInputTxPhase.SourcePending);
 			KingdomConstructionInputReceipt split = Source(pending, 1,
 				KingdomConstructionInputSourcePhase.SplitIntent);
-			Assert.IsTrue(KingdomConstructionInputRules.ValidReceiptUpdate(pending, split));
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.ValidReceiptUpdate(pending, split));
 			KingdomConstructionInputReceipt evidence = SourceEvidence(split, 1,
 				"mat-remainder", null, null, 0);
-			Assert.IsTrue(KingdomConstructionInputRules.ValidReceiptUpdate(split, evidence));
-			Assert.IsFalse(KingdomConstructionInputRules.ValidReceiptUpdate(evidence, evidence));
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.ValidReceiptUpdate(split, evidence));
+			ClassicAssert.IsFalse(KingdomConstructionInputRules.ValidReceiptUpdate(evidence, evidence));
 
 			KingdomConstructionInputSourceLine[] rows = evidence.CopySources();
 			rows[1] = rows[1].WithEvidence(rows[1].RemainderObjectId, A, B, 0);
 			KingdomConstructionInputReceipt batch = evidence.Copy(evidence.TxPhase,
 				evidence.Revision + 1, evidence.PauseStartedTick, evidence.PausedTicks,
 				rows, null, null);
-			Assert.IsTrue(KingdomConstructionInputRules.TryValidate(batch, out var fault));
-			Assert.IsFalse(KingdomConstructionInputRules.ValidReceiptUpdate(evidence, batch),
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryValidate(batch, out var fault));
+			ClassicAssert.IsFalse(KingdomConstructionInputRules.ValidReceiptUpdate(evidence, batch),
 				"two evidence fields cannot bypass one-update CAS");
 
 			KingdomConstructionInputReceipt paused;
-			Assert.IsTrue(KingdomConstructionInputRules.TrySetPaused(evidence, evidence.Revision,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TrySetPaused(evidence, evidence.Revision,
 				50, true, out paused, out fault));
-			Assert.IsTrue(KingdomConstructionInputRules.ValidReceiptUpdate(evidence, paused));
-			Assert.IsFalse(KingdomConstructionInputRules.IsTerminal(paused));
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.ValidReceiptUpdate(evidence, paused));
+			ClassicAssert.IsFalse(KingdomConstructionInputRules.IsTerminal(paused));
 		}
 
 		[Test]
 		public void RequiredObjectConsumesExactlyOneWholeMaterialObject()
 		{
 			KingdomConstructionInputReceipt exact = Base("mat-stack", true);
-			Assert.AreEqual("mat-stack", exact.RequiredObjectId);
-			Assert.AreEqual(0, exact.SourceAt(1).ResidualAfter);
+			ClassicAssert.AreEqual("mat-stack", exact.RequiredObjectId);
+			ClassicAssert.AreEqual(0, exact.SourceAt(1).ResidualAfter);
 			Assert.Throws<AssertionException>(() => Base("other-object", true));
 		}
 
 		[Test]
 		public void WaterReserveIsPerSettlementAggregateAcrossZonesAndVessels()
 		{
-			Assert.IsNotNull(WaterAcrossSettlements(60, 60),
+			ClassicAssert.IsNotNull(WaterAcrossSettlements(60, 60),
 				"two settlements contribute distinct six- and nine-dram floors");
-			Assert.IsNotNull(WaterAcrossOneSettlement(40, 40));
+			ClassicAssert.IsNotNull(WaterAcrossOneSettlement(40, 40));
 			Assert.Throws<AssertionException>(() => WaterAcrossOneSettlement(50, 50));
 		}
 
 		[Test]
 		public void RepeatedLiquidSourceMustBeOneExactResidualChain()
 		{
-			Assert.IsNotNull(ChainedWater(true));
+			ClassicAssert.IsNotNull(ChainedWater(true));
 			Assert.Throws<AssertionException>(() => ChainedWater(false));
 		}
 
@@ -490,22 +491,22 @@ namespace ThousandAndFirst.Tests
 			KingdomConstructionInputReceipt receipt = Base();
 			var duplicate = CloneSource(receipt.SourceAt(1), 1, receipt.SourceAt(0).LineId);
 			var bad = Rebuild(receipt, new[] { receipt.SourceAt(0), duplicate }, null, null);
-			Assert.IsFalse(KingdomConstructionInputRules.TryValidate(bad, out var fault));
-			Assert.AreEqual(KingdomConstructionInputFault.Duplicate, fault);
+			ClassicAssert.IsFalse(KingdomConstructionInputRules.TryValidate(bad, out var fault));
+			ClassicAssert.AreEqual(KingdomConstructionInputFault.Duplicate, fault);
 			bad = Rebuild(receipt, new[] { receipt.SourceAt(1), receipt.SourceAt(0) }, null, null);
-			Assert.IsFalse(KingdomConstructionInputRules.TryValidate(bad, out fault));
+			ClassicAssert.IsFalse(KingdomConstructionInputRules.TryValidate(bad, out fault));
 			var duplicateChildren = new[] { Child(0, 101, 0, 1, "source-zone", 1, 1),
 				Child(1, 101, 1, 1, "source-zone", 2, 1) };
 			bad = Rebuild(receipt, null, null, duplicateChildren);
-			Assert.IsFalse(KingdomConstructionInputRules.TryValidate(bad, out fault));
-			Assert.AreEqual(KingdomConstructionInputFault.Child, fault);
+			ClassicAssert.IsFalse(KingdomConstructionInputRules.TryValidate(bad, out fault));
+			ClassicAssert.AreEqual(KingdomConstructionInputFault.Child, fault);
 		}
 
 		private static KingdomConstructionInputReceipt Base(string required = null, bool whole = false)
 		{
 			string material = MaterialClaim(KingdomMaterial.Timber, 1);
 			KingdomConstructionInputIntent intent = Intent(B, "realm", 4, 5);
-			Assert.IsTrue(KingdomConstructionInputRules.TryIntentDigest(intent,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryIntentDigest(intent,
 				out string intentDigest, out var fault));
 			int before = whole ? 1 : 2;
 			var sources = new[]
@@ -539,7 +540,7 @@ namespace ThousandAndFirst.Tests
 					KingdomConstructionInputTopology.Invalid, null, null, -1, -1, null, null, 0, 0)
 			};
 			var children = new[] { Child(0, 101, 0, 2, "source-zone", 1, 1) };
-			Assert.IsTrue(KingdomConstructionInputRules.TryCreate("input-receipt",
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryCreate("input-receipt",
 				"construction-job", "realm", 0, "target-zone", 9, 9, intentDigest,
 				required, 10, material, 2, 1, 0, 0, EmptyClaim(), EmptyClaim(),
 				sources, cargo, children, out var receipt, out fault), fault.ToString());
@@ -551,7 +552,7 @@ namespace ThousandAndFirst.Tests
 			string empty = EmptyClaim();
 			var intent = new KingdomConstructionInputIntent("water-job", "realm", "target-zone",
 				1, 1, 4, 5, null, null, null, A, B, first + second, empty, 1, 2, 3);
-			Assert.IsTrue(KingdomConstructionInputRules.TryIntentDigest(intent,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryIntentDigest(intent,
 				out string digest, out var fault));
 			var sources = new[]
 			{
@@ -561,7 +562,7 @@ namespace ThousandAndFirst.Tests
 			var cargo = new[] { WaterCargo(0, first, 201), WaterCargo(1, second, 202) };
 			var children = new[] { Child(0, 201, 0, 1, "z1", 1, 1),
 				Child(1, 202, 1, 1, "z2", 2, 2) };
-			Assert.IsTrue(KingdomConstructionInputRules.TryCreate("water-receipt", "water-job",
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryCreate("water-receipt", "water-job",
 				"realm", 0, "target-zone", 9, 9, digest, null, first + second, empty,
 				5, 1, 0, 0, empty, empty, sources, cargo, children,
 				out var receipt, out fault), fault.ToString());
@@ -573,7 +574,7 @@ namespace ThousandAndFirst.Tests
 			string empty = EmptyClaim();
 			var intent = new KingdomConstructionInputIntent("water-job", "realm", "target-zone",
 				1, 1, 4, 5, null, null, null, A, B, first + second, empty, 1, 2, 3);
-			Assert.IsTrue(KingdomConstructionInputRules.TryIntentDigest(intent,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryIntentDigest(intent,
 				out string digest, out var fault));
 			var sources = new[]
 			{
@@ -583,7 +584,7 @@ namespace ThousandAndFirst.Tests
 			var cargo = new[] { WaterCargo(0, first, 201), WaterCargo(1, second, 202) };
 			var children = new[] { Child(0, 201, 0, 1, "z1", 1, 1),
 				Child(1, 202, 1, 1, "z2", 2, 2) };
-			Assert.IsTrue(KingdomConstructionInputRules.TryCreate("water-receipt", "water-job",
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryCreate("water-receipt", "water-job",
 				"realm", 0, "target-zone", 9, 9, digest, null, first + second, empty,
 				5, 1, 0, 0, empty, empty, sources, cargo, children,
 				out var receipt, out fault), fault.ToString());
@@ -595,7 +596,7 @@ namespace ThousandAndFirst.Tests
 			string empty = EmptyClaim();
 			var intent = new KingdomConstructionInputIntent("chain-job", "realm", "target-zone",
 				1, 1, 4, 5, null, null, null, A, B, 70, empty, 1, 2, 3);
-			Assert.IsTrue(KingdomConstructionInputRules.TryIntentDigest(intent,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryIntentDigest(intent,
 				out string digest, out var fault));
 			var first = WaterSource(0, "same", "z1", "holder", "water", 100, 40, 6);
 			int secondBefore = exact ? 60 : 61;
@@ -607,7 +608,7 @@ namespace ThousandAndFirst.Tests
 			var cargo = new[] { WaterCargo(0, 40, 201), WaterCargo(1, 30, 202) };
 			var children = new[] { Child(0, 201, 0, 1, "z1", 1, 1),
 				Child(1, 202, 1, 1, "z1", 1, 1) };
-			Assert.IsTrue(KingdomConstructionInputRules.TryCreate("chain-receipt", "chain-job",
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryCreate("chain-receipt", "chain-job",
 				"realm", 0, "target-zone", 9, 9, digest, null, 70, empty, 2, 1,
 				0, 0, empty, empty, new[] { first, second }, cargo, children,
 				out var receipt, out fault), fault.ToString());
@@ -699,14 +700,14 @@ namespace ThousandAndFirst.Tests
 		private static KingdomConstructionInputReceipt Tx(KingdomConstructionInputReceipt r,
 			KingdomConstructionInputTxPhase next)
 		{
-			Assert.IsTrue(KingdomConstructionInputRules.TryTransitionTransaction(r, r.Revision,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryTransitionTransaction(r, r.Revision,
 				r.TxPhase, next, out var changed, out var fault), fault.ToString()); return changed;
 		}
 
 		private static KingdomConstructionInputReceipt Source(KingdomConstructionInputReceipt r,
 			int ordinal, KingdomConstructionInputSourcePhase next)
 		{
-			Assert.IsTrue(KingdomConstructionInputRules.TryTransitionSource(r, r.Revision, ordinal,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryTransitionSource(r, r.Revision, ordinal,
 				r.SourceAt(ordinal).Phase, next, out var changed, out var fault), fault.ToString());
 			return changed;
 		}
@@ -714,7 +715,7 @@ namespace ThousandAndFirst.Tests
 		private static KingdomConstructionInputReceipt SourceEvidence(KingdomConstructionInputReceipt r,
 			int ordinal, string remainder, string before, string after, int lost)
 		{
-			Assert.IsTrue(KingdomConstructionInputRules.TryUpdateSourceEvidence(r, r.Revision,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryUpdateSourceEvidence(r, r.Revision,
 				ordinal, remainder, before, after, lost, out var changed, out var fault), fault.ToString());
 			return changed;
 		}
@@ -722,7 +723,7 @@ namespace ThousandAndFirst.Tests
 		private static KingdomConstructionInputReceipt Cargo(KingdomConstructionInputReceipt r,
 			int ordinal, KingdomConstructionInputCargoPhase next)
 		{
-			Assert.IsTrue(KingdomConstructionInputRules.TryTransitionCargo(r, r.Revision, ordinal,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryTransitionCargo(r, r.Revision, ordinal,
 				r.CargoAt(ordinal).Phase, next, out var changed, out var fault), fault.ToString());
 			return changed;
 		}
@@ -732,7 +733,7 @@ namespace ThousandAndFirst.Tests
 			string owner, string zone, int x, int y, int spent, int lost)
 		{
 			var old = r.CargoAt(ordinal);
-			Assert.IsTrue(KingdomConstructionInputRules.TryUpdateCargoEvidence(r, r.Revision,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryUpdateCargoEvidence(r, r.Revision,
 				ordinal, objectId, topology, owner, zone, x, y, old.BeforeWitnessHash,
 				old.AfterWitnessHash, spent, lost, out var changed, out var fault), fault.ToString());
 			return changed;
@@ -744,7 +745,7 @@ namespace ThousandAndFirst.Tests
 			int x, int y, int spent, int lost)
 		{
 			var old = r.CargoAt(ordinal);
-			Assert.IsTrue(KingdomConstructionInputRules.TryTransitionCargoWithEvidence(r,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryTransitionCargoWithEvidence(r,
 				r.Revision, ordinal, old.Phase, next, old.ObjectId, topology, owner, zone,
 				x, y, old.BeforeWitnessHash, old.AfterWitnessHash, spent, lost,
 				out var changed, out var fault), fault.ToString()); return changed;
@@ -752,9 +753,9 @@ namespace ThousandAndFirst.Tests
 
 		private static void RoundTrip(ref KingdomConstructionInputReceipt receipt)
 		{
-			Assert.IsTrue(KingdomConstructionInputRules.TryEncode(receipt, out string encoded,
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryEncode(receipt, out string encoded,
 				out var fault), fault.ToString());
-			Assert.IsTrue(KingdomConstructionInputRules.TryDecode(encoded, out receipt, out fault),
+			ClassicAssert.IsTrue(KingdomConstructionInputRules.TryDecode(encoded, out receipt, out fault),
 				fault.ToString());
 		}
 
@@ -808,9 +809,9 @@ namespace ThousandAndFirst.Tests
 
 		private static void AssertEnum<T>(params int[] expected)
 		{
-			Array values = Enum.GetValues(typeof(T)); Assert.AreEqual(expected.Length, values.Length);
+			Array values = Enum.GetValues(typeof(T)); ClassicAssert.AreEqual(expected.Length, values.Length);
 			for (int i = 0; i < expected.Length; i++)
-				Assert.AreEqual(expected[i], Convert.ToInt32(values.GetValue(i)), typeof(T).Name);
+				ClassicAssert.AreEqual(expected[i], Convert.ToInt32(values.GetValue(i)), typeof(T).Name);
 		}
 	}
 }

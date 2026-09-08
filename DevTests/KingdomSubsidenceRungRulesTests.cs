@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
@@ -19,15 +20,15 @@ namespace ThousandAndFirst.Tests
 			KingdomSubsidenceRungPlan plan = RungFixture.Plan(works);
 			string frozen = RungFixture.Wire(plan);
 			roofs[0] = null; works[0] = null;
-			Assert.AreEqual(frozen, RungFixture.Wire(plan));
-			Assert.AreSame(first, plan.Works[0]);
-			Assert.AreEqual(1, first.Roofs[0].ResidentId);
+			ClassicAssert.AreEqual(frozen, RungFixture.Wire(plan));
+			ClassicAssert.AreSame(first, plan.Works[0]);
+			ClassicAssert.AreEqual(1, first.Roofs[0].ResidentId);
 			Assert.Throws<NotSupportedException>(() => ((IList<KingdomSubsidenceRungWork>)plan.Works)[0] = null);
 			Assert.Throws<NotSupportedException>(() => ((IList<KingdomSubsidenceRungRoof>)first.Roofs)[0] = null);
-			Assert.IsTrue(KingdomSubsidenceRungRules.TryArmWear(plan, 0, out KingdomSubsidenceRungPlan armed));
-			Assert.AreEqual(frozen, RungFixture.Wire(plan));
-			Assert.AreEqual(KingdomSubsidenceEffectPhase.Intent, armed.Works[0].WearPhase);
-			Assert.AreSame(first.Roofs[0], armed.Works[0].Roofs[0]);
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.TryArmWear(plan, 0, out KingdomSubsidenceRungPlan armed));
+			ClassicAssert.AreEqual(frozen, RungFixture.Wire(plan));
+			ClassicAssert.AreEqual(KingdomSubsidenceEffectPhase.Intent, armed.Works[0].WearPhase);
+			ClassicAssert.AreSame(first.Roofs[0], armed.Works[0].Roofs[0]);
 		}
 
 		[TestCase(false)]
@@ -38,13 +39,13 @@ namespace ThousandAndFirst.Tests
 			KingdomSubsidenceRungPlan plan = new KingdomSubsidenceRungPlan(book.Active.Id,
 				book.RealmId, book.SettlementId, RungFixture.Zone, GrowthStage.City, GrowthStage.Town,
 				book.Active.DueTick, RungFixture.Prepared, book.Active.Completed, new KingdomSubsidenceRungWork[0]);
-			Assert.IsTrue(KingdomSubsidenceRungRules.Matches(plan, book));
-			Assert.AreEqual(cancelled ? 1 : 5, plan.Departed);
-			Assert.AreEqual(RungFixture.Due, plan.DueTick);
-			Assert.IsFalse(KingdomSubsidenceRungRules.Matches(new KingdomSubsidenceRungPlan(plan.StepId,
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.Matches(plan, book));
+			ClassicAssert.AreEqual(cancelled ? 1 : 5, plan.Departed);
+			ClassicAssert.AreEqual(RungFixture.Due, plan.DueTick);
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.Matches(new KingdomSubsidenceRungPlan(plan.StepId,
 				plan.RealmId, plan.SettlementId, plan.ZoneId, plan.From, GrowthStage.Village,
 				plan.DueTick, plan.PreparedTick, plan.Departed, plan.Works), book));
-			Assert.IsFalse(KingdomSubsidenceRungRules.Matches(new KingdomSubsidenceRungPlan(plan.StepId,
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.Matches(new KingdomSubsidenceRungPlan(plan.StepId,
 				plan.RealmId, plan.SettlementId, plan.ZoneId, plan.From, plan.To,
 				plan.DueTick + 1, plan.PreparedTick, plan.Departed, plan.Works), book));
 		}
@@ -54,17 +55,17 @@ namespace ThousandAndFirst.Tests
 		{
 			string selected = RungFixture.ObjectId(0);
 			KingdomSubsidenceRungWork work = RungFixture.ForObject(selected);
-			Assert.IsTrue(KingdomSubsidenceRules.RollRuin(RungFixture.Settlement, selected,
+			ClassicAssert.IsTrue(KingdomSubsidenceRules.RollRuin(RungFixture.Settlement, selected,
 				(ulong)RungFixture.Due, GrowthStage.City));
 			int increment = KingdomSubsidenceRules.RolledRuinIncrement(RungFixture.Settlement,
 				selected, (ulong)RungFixture.Due);
-			Assert.AreEqual(KingdomMaterialRules.AddWear(work.BeforeWear, increment), work.AfterWear);
-			Assert.IsTrue(KingdomSubsidenceRungRules.Valid(RungFixture.Plan(work)));
-			Assert.IsFalse(KingdomSubsidenceRungRules.Valid(RungFixture.Plan(
+			ClassicAssert.AreEqual(KingdomMaterialRules.AddWear(work.BeforeWear, increment), work.AfterWear);
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.Valid(RungFixture.Plan(work)));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.Valid(RungFixture.Plan(
 				RungFixture.ForObject(RungFixture.ObjectId(0, selected: false)))));
-			Assert.IsFalse(KingdomSubsidenceRungRules.Valid(RungFixture.Plan(
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.Valid(RungFixture.Plan(
 				RungFixture.CopyWork(work, afterWear: work.AfterWear - 1))));
-			Assert.AreEqual(work.AfterWear, RungFixture.ForObject(selected).AfterWear);
+			ClassicAssert.AreEqual(work.AfterWear, RungFixture.ForObject(selected).AfterWear);
 		}
 
 		[TestCase(false)]
@@ -73,18 +74,18 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomSubsidenceRungWork work = RungFixture.Work(before: hadPart ? 12 : 0, hadPart: hadPart);
 			KingdomSubsidenceRungPlan plan = RungFixture.Plan(work);
-			Assert.AreEqual(KingdomSubsidenceEffectAction.Refuse,
+			ClassicAssert.AreEqual(KingdomSubsidenceEffectAction.Refuse,
 				KingdomSubsidenceRungRules.WearAction(plan, 0, true, true, work.AfterWear));
-			Assert.IsFalse(KingdomSubsidenceRungRules.TryProveWear(plan, 0, true, true, work.AfterWear, out _));
-			Assert.IsTrue(KingdomSubsidenceRungRules.TryArmWear(plan, 0, out plan));
-			Assert.AreEqual(KingdomSubsidenceEffectAction.Refuse,
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.TryProveWear(plan, 0, true, true, work.AfterWear, out _));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.TryArmWear(plan, 0, out plan));
+			ClassicAssert.AreEqual(KingdomSubsidenceEffectAction.Refuse,
 				KingdomSubsidenceRungRules.WearAction(plan, 0, false, true, work.AfterWear));
-			Assert.IsFalse(KingdomSubsidenceRungRules.TryProveWear(plan, 0, false, true, work.AfterWear, out _));
-			Assert.AreEqual(KingdomSubsidenceEffectAction.Apply,
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.TryProveWear(plan, 0, false, true, work.AfterWear, out _));
+			ClassicAssert.AreEqual(KingdomSubsidenceEffectAction.Apply,
 				KingdomSubsidenceRungRules.WearAction(plan, 0, true, hadPart, work.BeforeWear));
-			Assert.AreEqual(KingdomSubsidenceEffectAction.Refuse,
+			ClassicAssert.AreEqual(KingdomSubsidenceEffectAction.Refuse,
 				KingdomSubsidenceRungRules.WearAction(plan, 0, true, false, work.AfterWear));
-			Assert.AreEqual(KingdomSubsidenceEffectAction.Refuse,
+			ClassicAssert.AreEqual(KingdomSubsidenceEffectAction.Refuse,
 				KingdomSubsidenceRungRules.WearAction(plan, 0, true, true, work.AfterWear + 1));
 		}
 
@@ -95,7 +96,7 @@ namespace ThousandAndFirst.Tests
 		public void MeasuredWearTupleRecoversCallbackCutsWithoutApplyingWearTwice(string cut)
 		{
 			KingdomSubsidenceRungPlan plan = RungFixture.Plan(RungFixture.Work(before: 12));
-			Assert.IsTrue(KingdomSubsidenceRungRules.TryArmWear(plan, 0, out plan));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.TryArmWear(plan, 0, out plan));
 			plan = RungFixture.RoundTrip(plan);
 			int wear = plan.Works[0].BeforeWear, mutations = 0;
 			Func<bool> callback = () =>
@@ -105,22 +106,22 @@ namespace ThousandAndFirst.Tests
 				if (cut == "throw-after") throw new InvalidOperationException("after write");
 				return cut != "false-after";
 			};
-			Assert.AreEqual(KingdomSubsidenceEffectAction.Apply,
+			ClassicAssert.AreEqual(KingdomSubsidenceEffectAction.Apply,
 				KingdomSubsidenceRungRules.WearAction(plan, 0, true, true, wear));
 			try { callback(); } catch (InvalidOperationException) { }
 			// A false return or exception is not the receipt; the measured tuple plus the supplied authority is.
 			KingdomSubsidenceEffectAction recovery = KingdomSubsidenceRungRules.WearAction(plan, 0, true, true, wear);
-			Assert.AreEqual(cut == "throw-before" ? KingdomSubsidenceEffectAction.Apply
+			ClassicAssert.AreEqual(cut == "throw-before" ? KingdomSubsidenceEffectAction.Apply
 				: KingdomSubsidenceEffectAction.Confirm, recovery);
 			if (recovery == KingdomSubsidenceEffectAction.Apply) { wear = plan.Works[0].AfterWear; mutations++; }
-			Assert.IsTrue(KingdomSubsidenceRungRules.TryProveWear(plan, 0, true, true, wear, out plan));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.TryProveWear(plan, 0, true, true, wear, out plan));
 			plan = RungFixture.RoundTrip(plan);
-			Assert.AreEqual(KingdomSubsidenceEffectAction.Confirm,
+			ClassicAssert.AreEqual(KingdomSubsidenceEffectAction.Confirm,
 				KingdomSubsidenceRungRules.WearAction(plan, 0, true, true, wear));
-			Assert.IsTrue(KingdomSubsidenceRungRules.TryProveWear(plan, 0, true, true, wear, out plan));
-			Assert.AreEqual(1, mutations);
-			Assert.IsTrue(KingdomSubsidenceRungRules.PhysicalComplete(plan));
-			Assert.AreEqual(KingdomSubsidenceEffectAction.Refuse,
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.TryProveWear(plan, 0, true, true, wear, out plan));
+			ClassicAssert.AreEqual(1, mutations);
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.PhysicalComplete(plan));
+			ClassicAssert.AreEqual(KingdomSubsidenceEffectAction.Refuse,
 				KingdomSubsidenceRungRules.WearAction(plan, 0, true, true, plan.Works[0].BeforeWear));
 		}
 
@@ -129,30 +130,30 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomSubsidenceRungPlan plan = RungFixture.Plan(RungFixture.Work(0,
 				roofs: new[] { RungFixture.Roof(1), RungFixture.Roof(2) }), RungFixture.Work(1));
-			Assert.IsFalse(KingdomSubsidenceRungRules.TryArmRoof(plan, 0, 0, out _));
-			Assert.IsFalse(KingdomSubsidenceRungRules.TryArmWear(plan, 1, out _));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.TryArmRoof(plan, 0, 0, out _));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.TryArmWear(plan, 1, out _));
 			plan = RungFixture.ProveWear(plan, 0);
-			Assert.IsFalse(KingdomSubsidenceRungRules.PhysicalComplete(plan));
-			Assert.IsFalse(KingdomSubsidenceRungRules.TryArmRoof(plan, 0, 1, out _));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.PhysicalComplete(plan));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.TryArmRoof(plan, 0, 1, out _));
 			for (int i = 0; i < 2; i++)
 			{
-				Assert.AreEqual(KingdomSubsidenceEffectAction.Refuse,
+				ClassicAssert.AreEqual(KingdomSubsidenceEffectAction.Refuse,
 					KingdomSubsidenceRungRules.RoofAction(plan, 0, i, true, true, plan.DueTick, 0));
-				Assert.IsTrue(KingdomSubsidenceRungRules.TryArmRoof(plan, 0, i, out plan));
+				ClassicAssert.IsTrue(KingdomSubsidenceRungRules.TryArmRoof(plan, 0, i, out plan));
 				plan = RungFixture.RoundTrip(plan);
-				Assert.AreEqual(KingdomSubsidenceEffectAction.Apply,
+				ClassicAssert.AreEqual(KingdomSubsidenceEffectAction.Apply,
 					KingdomSubsidenceRungRules.RoofAction(plan, 0, i, true, false, 0, 0));
-				Assert.AreEqual(KingdomSubsidenceEffectAction.Refuse,
+				ClassicAssert.AreEqual(KingdomSubsidenceEffectAction.Refuse,
 					KingdomSubsidenceRungRules.RoofAction(plan, 0, i, false, true, plan.DueTick, 0));
-				Assert.IsFalse(KingdomSubsidenceRungRules.TryProveRoof(plan, 0, i, false, true, plan.DueTick, 0, out _));
-				Assert.IsFalse(KingdomSubsidenceRungRules.TryArmWear(plan, 1, out _));
-				Assert.IsTrue(KingdomSubsidenceRungRules.TryProveRoof(plan, 0, i, true, true, plan.DueTick, 0, out plan));
-				Assert.AreEqual(KingdomSubsidenceEffectPhase.Proved, plan.Works[0].WearPhase);
-				Assert.IsTrue(KingdomSubsidenceRungRules.TryArmWear(plan, 0, out plan));
-				Assert.AreEqual(KingdomSubsidenceEffectPhase.Proved, plan.Works[0].Roofs[i].Phase);
+				ClassicAssert.IsFalse(KingdomSubsidenceRungRules.TryProveRoof(plan, 0, i, false, true, plan.DueTick, 0, out _));
+				ClassicAssert.IsFalse(KingdomSubsidenceRungRules.TryArmWear(plan, 1, out _));
+				ClassicAssert.IsTrue(KingdomSubsidenceRungRules.TryProveRoof(plan, 0, i, true, true, plan.DueTick, 0, out plan));
+				ClassicAssert.AreEqual(KingdomSubsidenceEffectPhase.Proved, plan.Works[0].WearPhase);
+				ClassicAssert.IsTrue(KingdomSubsidenceRungRules.TryArmWear(plan, 0, out plan));
+				ClassicAssert.AreEqual(KingdomSubsidenceEffectPhase.Proved, plan.Works[0].Roofs[i].Phase);
 			}
 			plan = RungFixture.ProveWear(plan, 1);
-			Assert.IsTrue(KingdomSubsidenceRungRules.PhysicalComplete(plan));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.PhysicalComplete(plan));
 		}
 
 		[TestCase(0L, 0L)]
@@ -164,14 +165,14 @@ namespace ThousandAndFirst.Tests
 				reached, warned, KingdomSubsidenceEffectPhase.Prepared);
 			KingdomSubsidenceRungPlan plan = RungFixture.ProveWear(
 				RungFixture.Plan(RungFixture.Work(roofs: new[] { roof })), 0);
-			Assert.IsTrue(KingdomSubsidenceRungRules.TryArmRoof(plan, 0, 0, out plan));
-			Assert.AreEqual(KingdomSubsidenceEffectAction.Confirm,
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.TryArmRoof(plan, 0, 0, out plan));
+			ClassicAssert.AreEqual(KingdomSubsidenceEffectAction.Confirm,
 				KingdomSubsidenceRungRules.RoofAction(plan, 0, 0, true, true, reached, warned));
-			Assert.IsTrue(KingdomSubsidenceRungRules.TryProveRoof(plan, 0, 0, true, true, reached, warned, out plan));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.TryProveRoof(plan, 0, 0, true, true, reached, warned, out plan));
 			KingdomSubsidenceRungRoof stored = RungFixture.RoundTrip(plan).Works[0].Roofs[0];
-			Assert.AreEqual(reached, stored.BeforeReached);
-			Assert.AreEqual(warned, stored.BeforeWarned);
-			Assert.AreEqual(KingdomSubsidenceEffectAction.Refuse,
+			ClassicAssert.AreEqual(reached, stored.BeforeReached);
+			ClassicAssert.AreEqual(warned, stored.BeforeWarned);
+			ClassicAssert.AreEqual(KingdomSubsidenceEffectAction.Refuse,
 				KingdomSubsidenceRungRules.RoofAction(plan, 0, 0, true, true, reached + 1, warned));
 		}
 
@@ -190,9 +191,9 @@ namespace ThousandAndFirst.Tests
 				field == "prepared" ? p.DueTick - 1 : p.PreparedTick,
 				field == "zero-departed" ? 0 : field == "over-departed" ? 6 : p.Departed,
 				field == "null-works" ? null : p.Works);
-			Assert.IsFalse(KingdomSubsidenceRungRules.Valid(bad));
-			Assert.IsFalse(KingdomSubsidenceRungCodec.TryEncode(bad, out _));
-			Assert.AreEqual(before, RungFixture.Wire(p));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.Valid(bad));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungCodec.TryEncode(bad, out _));
+			ClassicAssert.AreEqual(before, RungFixture.Wire(p));
 		}
 
 		[TestCase("null-work")] [TestCase("duplicate-work")] [TestCase("work-order")]
@@ -230,17 +231,17 @@ namespace ThousandAndFirst.Tests
 				case "no-crossing": plan = RungFixture.Plan(RungFixture.Work(before: 60, roofs: new[] { first })); break;
 				default: plan = RungFixture.Plan(RungFixture.CopyWork(RungFixture.Work(roofs: new[] { first }), plot: "")); break;
 			}
-			Assert.IsFalse(KingdomSubsidenceRungRules.Valid(plan));
-			Assert.IsFalse(KingdomSubsidenceRungRules.PhysicalComplete(plan));
-			Assert.IsFalse(KingdomSubsidenceRungCodec.TryEncode(plan, out _));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.Valid(plan));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.PhysicalComplete(plan));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungCodec.TryEncode(plan, out _));
 		}
 
 		[TestCase(null)] [TestCase("")] [TestCase("bad\nname")] [TestCase("bad\0name")]
 		public void RequiredTextRejectsNullEmptyAndControlCharacters(string text)
 		{
 			KingdomSubsidenceRungWork work = RungFixture.Work();
-			Assert.IsFalse(KingdomSubsidenceRungRules.Valid(RungFixture.Plan(RungFixture.CopyWork(work, name: text, replaceName: true))));
-			Assert.IsFalse(KingdomSubsidenceRungRules.Text(text, 512, false));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.Valid(RungFixture.Plan(RungFixture.CopyWork(work, name: text, replaceName: true))));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.Text(text, 512, false));
 		}
 
 		[TestCase(0xD800, "")] [TestCase(0xDC00, "")] [TestCase(0xD800, "x")]
@@ -249,9 +250,9 @@ namespace ThousandAndFirst.Tests
 			// Attribute metadata uses UTF-8; construct the malformed UTF-16 only after discovery.
 			string text = new string((char)codeUnit, 1) + suffix;
 			KingdomSubsidenceRungWork work = RungFixture.Work();
-			Assert.IsFalse(KingdomSubsidenceRungRules.Valid(RungFixture.Plan(
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.Valid(RungFixture.Plan(
 				RungFixture.CopyWork(work, name: text, replaceName: true))));
-			Assert.IsFalse(KingdomSubsidenceRungRules.Text(text, 512, false));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.Text(text, 512, false));
 		}
 
 		[Test]
@@ -260,16 +261,16 @@ namespace ThousandAndFirst.Tests
 			string id = RungFixture.ObjectId(0, suffix: "-\ud83c\udfe0:|");
 			KingdomSubsidenceRungPlan plan = RungFixture.Plan(RungFixture.CopyWork(
 				RungFixture.ForObject(id), name: "Roof \ud83c\udfe0:|", replaceName: true));
-			Assert.IsTrue(KingdomSubsidenceRungRules.Valid(plan));
-			Assert.AreEqual(id, RungFixture.RoundTrip(plan).Works[0].ObjectId);
-			Assert.AreEqual("Roof \ud83c\udfe0:|", RungFixture.RoundTrip(plan).Works[0].Name);
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.Valid(plan));
+			ClassicAssert.AreEqual(id, RungFixture.RoundTrip(plan).Works[0].ObjectId);
+			ClassicAssert.AreEqual("Roof \ud83c\udfe0:|", RungFixture.RoundTrip(plan).Works[0].Name);
 		}
 
 		[Test]
 		public void NestedNullsAndRawRoofBoundsRefuseWithoutDefaulting()
 		{
 			KingdomSubsidenceRungWork work = RungFixture.Work();
-			Assert.IsFalse(KingdomSubsidenceRungRules.Valid(RungFixture.Plan(
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.Valid(RungFixture.Plan(
 				new KingdomSubsidenceRungWork(work.WorkId, work.ObjectId, work.Blueprint, work.PlotId,
 					work.DesignStamp, work.Name, work.X, work.Y, work.HadWearPart, work.BeforeWear,
 					work.AfterWear, work.WearPhase, null))));
@@ -283,22 +284,22 @@ namespace ThousandAndFirst.Tests
 				new KingdomSubsidenceRungRoof(1, "body", true, 0, RungFixture.Prepared + 1, KingdomSubsidenceEffectPhase.Prepared) })
 			{
 				KingdomSubsidenceRungPlan bad = RungFixture.Plan(RungFixture.Work(roofs: new[] { roof }));
-				Assert.IsFalse(KingdomSubsidenceRungRules.Valid(bad));
-				Assert.AreSame(roof, bad.Works[0].Roofs[0]);
-				Assert.IsFalse(KingdomSubsidenceRungCodec.TryEncode(bad, out _));
+				ClassicAssert.IsFalse(KingdomSubsidenceRungRules.Valid(bad));
+				ClassicAssert.AreSame(roof, bad.Works[0].Roofs[0]);
+				ClassicAssert.IsFalse(KingdomSubsidenceRungCodec.TryEncode(bad, out _));
 			}
 		}
 
 		[Test]
 		public void MissingPlanAndOutOfRangeIndicesRefuseInsteadOfAdvancing()
 		{
-			Assert.IsFalse(KingdomSubsidenceRungRules.Valid(null));
-			Assert.IsFalse(KingdomSubsidenceRungRules.TryArmWear(null, 0, out _));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.Valid(null));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.TryArmWear(null, 0, out _));
 			KingdomSubsidenceRungPlan plan = RungFixture.Plan(RungFixture.Work());
 			foreach (int index in new[] { -1, 1, int.MaxValue })
 			{
-				Assert.IsFalse(KingdomSubsidenceRungRules.TryArmWear(plan, index, out _));
-				Assert.IsFalse(KingdomSubsidenceRungRules.TryArmRoof(plan, 0, index, out _));
+				ClassicAssert.IsFalse(KingdomSubsidenceRungRules.TryArmWear(plan, index, out _));
+				ClassicAssert.IsFalse(KingdomSubsidenceRungRules.TryArmRoof(plan, 0, index, out _));
 			}
 		}
 	}
@@ -341,27 +342,27 @@ namespace ThousandAndFirst.Tests
 				Settlement, Zone, GrowthStage.City, GrowthStage.Town, Due, Prepared, 5, works);
 		internal static string Wire(KingdomSubsidenceRungPlan plan)
 		{
-			Assert.IsTrue(KingdomSubsidenceRungCodec.TryEncode(plan, out string wire));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungCodec.TryEncode(plan, out string wire));
 			return wire;
 		}
 		internal static KingdomSubsidenceRungPlan RoundTrip(KingdomSubsidenceRungPlan plan)
 		{
 			string wire = Wire(plan);
-			Assert.IsTrue(KingdomSubsidenceRungCodec.TryDecode(wire, out KingdomSubsidenceRungPlan decoded));
-			Assert.AreEqual(wire, Wire(decoded));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungCodec.TryDecode(wire, out KingdomSubsidenceRungPlan decoded));
+			ClassicAssert.AreEqual(wire, Wire(decoded));
 			return decoded;
 		}
 		internal static KingdomSubsidenceRungPlan ProveWear(KingdomSubsidenceRungPlan plan, int index)
 		{
-			Assert.IsTrue(KingdomSubsidenceRungRules.TryArmWear(plan, index, out plan));
-			Assert.IsTrue(KingdomSubsidenceRungRules.TryProveWear(plan, index, true, true, plan.Works[index].AfterWear, out plan));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.TryArmWear(plan, index, out plan));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.TryProveWear(plan, index, true, true, plan.Works[index].AfterWear, out plan));
 			return plan;
 		}
 		internal static KingdomSubsidenceStepBook Settling(bool cancelled)
 		{
-			Assert.IsTrue(KingdomSubsidenceStepCodec.TryDecode(KingdomSubsidenceStepCodec.FreshWire, out KingdomSubsidenceStepBook book));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryAdmit(book, Realm, Settlement, out book));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryBegin(book, Due - KingdomSubsidenceStepRules.StepTicks,
+			ClassicAssert.IsTrue(KingdomSubsidenceStepCodec.TryDecode(KingdomSubsidenceStepCodec.FreshWire, out KingdomSubsidenceStepBook book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryAdmit(book, Realm, Settlement, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryBegin(book, Due - KingdomSubsidenceStepRules.StepTicks,
 				Due, GrowthStage.City, 5, out book, 0, "water"));
 			for (int id = 1; id <= (cancelled ? 1 : 5); id++)
 			{
@@ -373,11 +374,11 @@ namespace ThousandAndFirst.Tests
 					ResidentId = id, BodyObjectId = body, ZoneId = Zone, ResidentName = "Fixture resident", PreparedTick = Due,
 					OperationId = KingdomResidentDepartureRules.Id(Realm, Settlement, id, body, Due)
 				};
-				Assert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(book, op, out book));
-				Assert.IsTrue(KingdomSubsidenceStepRules.TryCredit(book, op.OperationId, GrowthStage.Town, out book));
-				Assert.IsTrue(KingdomSubsidenceStepRules.TryReleaseRetired(book, op.OperationId, out book));
+				ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(book, op, out book));
+				ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryCredit(book, op.OperationId, GrowthStage.Town, out book));
+				ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryReleaseRetired(book, op.OperationId, out book));
 			}
-			if (cancelled) Assert.IsTrue(KingdomSubsidenceStepRules.TryCancel(book, Due + 100, 1, out book));
+			if (cancelled) ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryCancel(book, Due + 100, 1, out book));
 			return book;
 		}
 	}

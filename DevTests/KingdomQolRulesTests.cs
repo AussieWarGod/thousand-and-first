@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -34,7 +35,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, "")]
 		public void Fold_TrimsAndLowersAndTreatsBlankAsBlank(string source, string expected)
 		{
-			Assert.AreEqual(expected, KingdomQolRules.Fold(source));
+			ClassicAssert.AreEqual(expected, KingdomQolRules.Fold(source));
 		}
 
 		[TestCase("taf:damp", true)]
@@ -46,39 +47,39 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, false)]
 		public void IsNamespaced_WantsAColonWithSomethingOnBothSides(string tag, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomQolRules.IsNamespaced(tag));
+			ClassicAssert.AreEqual(expected, KingdomQolRules.IsNamespaced(tag));
 		}
 
 		[Test]
 		public void ParseTags_FoldsSplitsAndDropsBlanks()
 		{
 			string[] tags = KingdomQolRules.ParseTags(" TAF:Damp , , taf:dark ");
-			Assert.AreEqual(2, tags.Length);
-			Assert.AreEqual(KingdomQolRules.TagDamp, tags[0]);
-			Assert.AreEqual(KingdomQolRules.TagDark, tags[1]);
+			ClassicAssert.AreEqual(2, tags.Length);
+			ClassicAssert.AreEqual(KingdomQolRules.TagDamp, tags[0]);
+			ClassicAssert.AreEqual(KingdomQolRules.TagDark, tags[1]);
 		}
 
 		[Test]
 		public void ParseTags_DropsRepeatsAndKeepsFirstOrder()
 		{
 			string[] tags = KingdomQolRules.ParseTags("taf:dark,taf:damp,TAF:DARK");
-			Assert.AreEqual(2, tags.Length);
-			Assert.AreEqual(KingdomQolRules.TagDark, tags[0]);
-			Assert.AreEqual(KingdomQolRules.TagDamp, tags[1]);
+			ClassicAssert.AreEqual(2, tags.Length);
+			ClassicAssert.AreEqual(KingdomQolRules.TagDark, tags[0]);
+			ClassicAssert.AreEqual(KingdomQolRules.TagDamp, tags[1]);
 		}
 
 		[Test]
 		public void ParseTags_KeepsATagNothingInThisModHasEverHeardOf()
 		{
 			string[] tags = KingdomQolRules.ParseTags("theirmod:hearthfire");
-			Assert.AreEqual(1, tags.Length);
-			Assert.AreEqual("theirmod:hearthfire", tags[0]);
+			ClassicAssert.AreEqual(1, tags.Length);
+			ClassicAssert.AreEqual("theirmod:hearthfire", tags[0]);
 		}
 
 		[Test]
 		public void ParseTags_DropsABareRemovalPrefixWithNothingAfterIt()
 		{
-			Assert.AreEqual(0, KingdomQolRules.ParseTags("-").Length);
+			ClassicAssert.AreEqual(0, KingdomQolRules.ParseTags("-").Length);
 		}
 
 		[TestCase("")]
@@ -86,7 +87,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null)]
 		public void ParseTags_EmptySourceIsAnEmptySetAndNotAFailure(string source)
 		{
-			Assert.AreEqual(0, KingdomQolRules.ParseTags(source).Length);
+			ClassicAssert.AreEqual(0, KingdomQolRules.ParseTags(source).Length);
 		}
 
 		// --- Merging an authored refinement onto a derived list ------------------------------
@@ -97,9 +98,9 @@ namespace ThousandAndFirst.Tests
 			string[] merged = KingdomQolRules.Merge(
 				new string[1] { KingdomQolRules.TagDamp },
 				new string[1] { KingdomQolRules.TagQuiet });
-			Assert.AreEqual(2, merged.Length);
-			Assert.IsTrue(Holds(merged, KingdomQolRules.TagDamp));
-			Assert.IsTrue(Holds(merged, KingdomQolRules.TagQuiet));
+			ClassicAssert.AreEqual(2, merged.Length);
+			ClassicAssert.IsTrue(Holds(merged, KingdomQolRules.TagDamp));
+			ClassicAssert.IsTrue(Holds(merged, KingdomQolRules.TagQuiet));
 		}
 
 		[Test]
@@ -108,9 +109,9 @@ namespace ThousandAndFirst.Tests
 			string[] merged = KingdomQolRules.Merge(
 				new string[2] { KingdomQolRules.TagSky, KingdomQolRules.TagDamp },
 				new string[1] { "-taf:sky" });
-			Assert.AreEqual(1, merged.Length);
-			Assert.IsFalse(Holds(merged, KingdomQolRules.TagSky));
-			Assert.IsTrue(Holds(merged, KingdomQolRules.TagDamp));
+			ClassicAssert.AreEqual(1, merged.Length);
+			ClassicAssert.IsFalse(Holds(merged, KingdomQolRules.TagSky));
+			ClassicAssert.IsTrue(Holds(merged, KingdomQolRules.TagDamp));
 		}
 
 		[Test]
@@ -119,16 +120,16 @@ namespace ThousandAndFirst.Tests
 			string[] merged = KingdomQolRules.Merge(
 				new string[1] { KingdomQolRules.TagDamp },
 				new string[1] { "-taf:charge" });
-			Assert.AreEqual(1, merged.Length);
-			Assert.IsTrue(Holds(merged, KingdomQolRules.TagDamp));
+			ClassicAssert.AreEqual(1, merged.Length);
+			ClassicAssert.IsTrue(Holds(merged, KingdomQolRules.TagDamp));
 		}
 
 		[Test]
 		public void Merge_KeepsWhatTheRefinementDoesNotMention()
 		{
 			string[] merged = KingdomQolRules.Merge(new string[1] { KingdomQolRules.TagCharge }, null);
-			Assert.AreEqual(1, merged.Length);
-			Assert.IsTrue(Holds(merged, KingdomQolRules.TagCharge));
+			ClassicAssert.AreEqual(1, merged.Length);
+			ClassicAssert.IsTrue(Holds(merged, KingdomQolRules.TagCharge));
 		}
 
 		[Test]
@@ -137,9 +138,9 @@ namespace ThousandAndFirst.Tests
 			string[] derived = new string[1] { KingdomQolRules.TagSky };
 			string[] refinement = new string[2] { "-taf:sky", KingdomQolRules.TagDamp };
 			KingdomQolRules.Merge(derived, refinement);
-			Assert.AreEqual(1, derived.Length);
-			Assert.AreEqual(KingdomQolRules.TagSky, derived[0]);
-			Assert.AreEqual(2, refinement.Length);
+			ClassicAssert.AreEqual(1, derived.Length);
+			ClassicAssert.AreEqual(KingdomQolRules.TagSky, derived[0]);
+			ClassicAssert.AreEqual(2, refinement.Length);
 		}
 
 		// --- Derive before authoring ---------------------------------------------------------
@@ -148,11 +149,11 @@ namespace ThousandAndFirst.Tests
 		public void Derive_AnOrdinaryPersonAsksNothingAndEatsAndDrinks()
 		{
 			QolProfile profile = KingdomQolRules.Derive(ResidentTruth.Person);
-			Assert.AreEqual(0, profile.Needs.Length);
-			Assert.AreEqual(0, profile.Prefers.Length);
-			Assert.AreEqual(0, profile.Refuses.Length);
-			Assert.IsTrue(profile.EatsFood);
-			Assert.IsTrue(profile.DrinksWater);
+			ClassicAssert.AreEqual(0, profile.Needs.Length);
+			ClassicAssert.AreEqual(0, profile.Prefers.Length);
+			ClassicAssert.AreEqual(0, profile.Refuses.Length);
+			ClassicAssert.IsTrue(profile.EatsFood);
+			ClassicAssert.IsTrue(profile.DrinksWater);
 		}
 
 		[Test]
@@ -161,7 +162,7 @@ namespace ThousandAndFirst.Tests
 			ResidentTruth truth = ResidentTruth.Person;
 			truth.Species = "Mopango";
 			QolProfile profile = KingdomQolRules.Derive(truth);
-			Assert.AreEqual("Mopango", profile.Species);
+			ClassicAssert.AreEqual("Mopango", profile.Species);
 		}
 
 		[TestCase("Mopango", "species:mopango")]
@@ -171,13 +172,13 @@ namespace ThousandAndFirst.Tests
 		[TestCase("bad|species", null)]
 		public void SpeciesTag_IsOpenFoldedAndRosterSafe(string species, string expected)
 		{
-			Assert.AreEqual(expected, KingdomQolRules.SpeciesTag(species));
+			ClassicAssert.AreEqual(expected, KingdomQolRules.SpeciesTag(species));
 		}
 
 		[Test]
 		public void SpeciesTag_DropsOverlongIdentityWithoutTruncating()
 		{
-			Assert.IsNull(KingdomQolRules.SpeciesTag(
+			ClassicAssert.IsNull(KingdomQolRules.SpeciesTag(
 				new string('s', KingdomQolRules.MaxSpeciesLength + 1)));
 		}
 
@@ -187,7 +188,7 @@ namespace ThousandAndFirst.Tests
 			ResidentTruth truth = ResidentTruth.Person;
 			truth.Species = "a species from another mod";
 			QolProfile profile = KingdomQolRules.Derive(truth);
-			Assert.IsTrue(Holds(KingdomQolRules.SelfTags(profile),
+			ClassicAssert.IsTrue(Holds(KingdomQolRules.SelfTags(profile),
 				"species:a species from another mod"));
 		}
 
@@ -199,11 +200,11 @@ namespace ThousandAndFirst.Tests
 			ResidentTruth truth = ResidentTruth.Person;
 			truth.Species = "Ooze";
 			QolProfile ooze = KingdomQolRules.Derive(truth);
-			Assert.IsTrue(KingdomLodgingRules.Conflicts(
+			ClassicAssert.IsTrue(KingdomLodgingRules.Conflicts(
 				newcomer.Refuses, KingdomQolRules.SelfTags(newcomer),
 				ooze.Refuses, KingdomQolRules.SelfTags(ooze), 0,
 				KingdomLodgingRules.Closeness.Packed));
-			Assert.IsTrue(KingdomLodgingRules.Intersects(newcomer.Refuses,
+			ClassicAssert.IsTrue(KingdomLodgingRules.Intersects(newcomer.Refuses,
 				KingdomQolRules.SelfTags(ooze)));
 		}
 
@@ -213,7 +214,7 @@ namespace ThousandAndFirst.Tests
 			ResidentTruth truth = ResidentTruth.Person;
 			truth.Robot = true;
 			QolProfile profile = KingdomQolRules.Derive(truth);
-			Assert.IsTrue(Holds(profile.Needs, KingdomQolRules.TagCharge));
+			ClassicAssert.IsTrue(Holds(profile.Needs, KingdomQolRules.TagCharge));
 		}
 
 		[Test]
@@ -222,8 +223,8 @@ namespace ThousandAndFirst.Tests
 			ResidentTruth truth = ResidentTruth.Person;
 			truth.Robot = true;
 			QolProfile profile = KingdomQolRules.Derive(truth);
-			Assert.IsFalse(profile.EatsFood);
-			Assert.IsFalse(profile.DrinksWater);
+			ClassicAssert.IsFalse(profile.EatsFood);
+			ClassicAssert.IsFalse(profile.DrinksWater);
 		}
 
 		[Test]
@@ -231,8 +232,8 @@ namespace ThousandAndFirst.Tests
 		{
 			ResidentTruth truth = default(ResidentTruth);
 			QolProfile profile = KingdomQolRules.Derive(truth);
-			Assert.IsFalse(profile.EatsFood);
-			Assert.IsFalse(profile.DrinksWater);
+			ClassicAssert.IsFalse(profile.EatsFood);
+			ClassicAssert.IsFalse(profile.DrinksWater);
 		}
 
 		[Test]
@@ -241,8 +242,8 @@ namespace ThousandAndFirst.Tests
 			ResidentTruth truth = ResidentTruth.Person;
 			truth.Inorganic = true;
 			QolProfile profile = KingdomQolRules.Derive(truth);
-			Assert.IsFalse(profile.EatsFood);
-			Assert.IsFalse(profile.DrinksWater);
+			ClassicAssert.IsFalse(profile.EatsFood);
+			ClassicAssert.IsFalse(profile.DrinksWater);
 		}
 
 		[Test]
@@ -251,7 +252,7 @@ namespace ThousandAndFirst.Tests
 			ResidentTruth truth = ResidentTruth.Person;
 			truth.Aquatic = true;
 			QolProfile profile = KingdomQolRules.Derive(truth);
-			Assert.IsTrue(Holds(profile.Needs, KingdomQolRules.TagOpenWater));
+			ClassicAssert.IsTrue(Holds(profile.Needs, KingdomQolRules.TagOpenWater));
 		}
 
 		[Test]
@@ -261,7 +262,7 @@ namespace ThousandAndFirst.Tests
 			truth.Aquatic = true;
 			truth.Flying = true;
 			QolProfile profile = KingdomQolRules.Derive(truth);
-			Assert.IsFalse(Holds(profile.Needs, KingdomQolRules.TagOpenWater));
+			ClassicAssert.IsFalse(Holds(profile.Needs, KingdomQolRules.TagOpenWater));
 		}
 
 		[Test]
@@ -270,9 +271,9 @@ namespace ThousandAndFirst.Tests
 			ResidentTruth truth = ResidentTruth.Person;
 			truth.Fungal = true;
 			QolProfile profile = KingdomQolRules.Derive(truth);
-			Assert.IsTrue(Holds(profile.Needs, KingdomQolRules.TagDamp));
-			Assert.IsFalse(Holds(profile.Needs, KingdomQolRules.TagDark));
-			Assert.IsTrue(Holds(profile.Prefers, KingdomQolRules.TagDark));
+			ClassicAssert.IsTrue(Holds(profile.Needs, KingdomQolRules.TagDamp));
+			ClassicAssert.IsFalse(Holds(profile.Needs, KingdomQolRules.TagDark));
+			ClassicAssert.IsTrue(Holds(profile.Prefers, KingdomQolRules.TagDark));
 		}
 
 		[Test]
@@ -281,7 +282,7 @@ namespace ThousandAndFirst.Tests
 			ResidentTruth truth = ResidentTruth.Person;
 			truth.Photosynthetic = true;
 			QolProfile profile = KingdomQolRules.Derive(truth);
-			Assert.IsTrue(Holds(profile.Needs, KingdomQolRules.TagSky));
+			ClassicAssert.IsTrue(Holds(profile.Needs, KingdomQolRules.TagSky));
 		}
 
 		[Test]
@@ -293,7 +294,7 @@ namespace ThousandAndFirst.Tests
 			truth.Fungal = true;
 			truth.Photosynthetic = true;
 			truth.Inorganic = true;
-			Assert.AreEqual(0, KingdomQolRules.Derive(truth).Refuses.Length);
+			ClassicAssert.AreEqual(0, KingdomQolRules.Derive(truth).Refuses.Length);
 		}
 
 		[Test]
@@ -303,8 +304,8 @@ namespace ThousandAndFirst.Tests
 			truth.Robot = true;
 			truth.Fungal = true;
 			QolProfile profile = KingdomQolRules.Derive(truth);
-			Assert.IsTrue(Holds(profile.Needs, KingdomQolRules.TagCharge));
-			Assert.IsTrue(Holds(profile.Needs, KingdomQolRules.TagDamp));
+			ClassicAssert.IsTrue(Holds(profile.Needs, KingdomQolRules.TagCharge));
+			ClassicAssert.IsTrue(Holds(profile.Needs, KingdomQolRules.TagDamp));
 		}
 
 		[Test]
@@ -315,7 +316,7 @@ namespace ThousandAndFirst.Tests
 			QolProfile first = KingdomQolRules.Derive(truth);
 			first.Needs[0] = "vandalised";
 			QolProfile second = KingdomQolRules.Derive(truth);
-			Assert.AreEqual(KingdomQolRules.TagCharge, second.Needs[0]);
+			ClassicAssert.AreEqual(KingdomQolRules.TagCharge, second.Needs[0]);
 		}
 
 		// --- Authored refinement -------------------------------------------------------------
@@ -326,8 +327,8 @@ namespace ThousandAndFirst.Tests
 			ResidentTruth truth = ResidentTruth.Person;
 			truth.Robot = true;
 			QolProfile profile = KingdomQolRules.Refine(KingdomQolRules.Derive(truth), "taf:quiet", null, null);
-			Assert.IsTrue(Holds(profile.Needs, KingdomQolRules.TagCharge));
-			Assert.IsTrue(Holds(profile.Needs, KingdomQolRules.TagQuiet));
+			ClassicAssert.IsTrue(Holds(profile.Needs, KingdomQolRules.TagCharge));
+			ClassicAssert.IsTrue(Holds(profile.Needs, KingdomQolRules.TagQuiet));
 		}
 
 		[Test]
@@ -336,7 +337,7 @@ namespace ThousandAndFirst.Tests
 			ResidentTruth truth = ResidentTruth.Person;
 			truth.Photosynthetic = true;
 			QolProfile profile = KingdomQolRules.Refine(KingdomQolRules.Derive(truth), "-taf:sky", null, null);
-			Assert.IsFalse(Holds(profile.Needs, KingdomQolRules.TagSky));
+			ClassicAssert.IsFalse(Holds(profile.Needs, KingdomQolRules.TagSky));
 		}
 
 		[Test]
@@ -345,8 +346,8 @@ namespace ThousandAndFirst.Tests
 			ResidentTruth truth = ResidentTruth.Person;
 			truth.Robot = true;
 			QolProfile profile = KingdomQolRules.Refine(KingdomQolRules.Derive(truth), "taf:quiet", "taf:dark", "taf:damp");
-			Assert.IsFalse(profile.EatsFood);
-			Assert.IsFalse(profile.DrinksWater);
+			ClassicAssert.IsFalse(profile.EatsFood);
+			ClassicAssert.IsFalse(profile.DrinksWater);
 		}
 
 		[Test]
@@ -356,7 +357,7 @@ namespace ThousandAndFirst.Tests
 			truth.Species = "Mopango";
 			QolProfile profile = KingdomQolRules.Refine(
 				KingdomQolRules.Derive(truth), "taf:quiet", null, null);
-			Assert.AreEqual("Mopango", profile.Species);
+			ClassicAssert.AreEqual("Mopango", profile.Species);
 		}
 
 		[Test]
@@ -366,24 +367,24 @@ namespace ThousandAndFirst.Tests
 			truth.Fungal = true;
 			QolProfile derived = KingdomQolRules.Derive(truth);
 			QolProfile refined = KingdomQolRules.Refine(derived, null, null, null);
-			Assert.AreEqual(derived.Needs.Length, refined.Needs.Length);
-			Assert.IsTrue(Holds(refined.Needs, KingdomQolRules.TagDamp));
-			Assert.IsTrue(Holds(refined.Prefers, KingdomQolRules.TagDark));
+			ClassicAssert.AreEqual(derived.Needs.Length, refined.Needs.Length);
+			ClassicAssert.IsTrue(Holds(refined.Needs, KingdomQolRules.TagDamp));
+			ClassicAssert.IsTrue(Holds(refined.Prefers, KingdomQolRules.TagDark));
 		}
 
 		[Test]
 		public void Refine_AuthorsARefusalTheDerivationNeverGives()
 		{
 			QolProfile profile = KingdomQolRules.Refine(KingdomQolRules.Derive(ResidentTruth.Person), null, null, "taf:damp");
-			Assert.IsTrue(Holds(profile.Refuses, KingdomQolRules.TagDamp));
+			ClassicAssert.IsTrue(Holds(profile.Refuses, KingdomQolRules.TagDamp));
 		}
 
 		[Test]
 		public void Refine_ANullDerivedProfileReadsAsAnOrdinaryPerson()
 		{
 			QolProfile profile = KingdomQolRules.Refine(null, "taf:quiet", null, null);
-			Assert.IsTrue(profile.EatsFood);
-			Assert.IsTrue(Holds(profile.Needs, KingdomQolRules.TagQuiet));
+			ClassicAssert.IsTrue(profile.EatsFood);
+			ClassicAssert.IsTrue(Holds(profile.Needs, KingdomQolRules.TagQuiet));
 		}
 
 		// --- The household a resident keeps ---------------------------------------------------
@@ -394,7 +395,7 @@ namespace ThousandAndFirst.Tests
 			ResidentTruth truth = ResidentTruth.Person;
 			truth.Fungal = true;
 			string[] household = KingdomQolRules.HouseholdProvides(KingdomQolRules.Derive(truth));
-			Assert.IsTrue(Holds(household, KingdomQolRules.TagDamp));
+			ClassicAssert.IsTrue(Holds(household, KingdomQolRules.TagDamp));
 		}
 
 		[Test]
@@ -402,13 +403,13 @@ namespace ThousandAndFirst.Tests
 		{
 			string[] household = KingdomQolRules.HouseholdProvides(
 				KingdomQolRules.Derive(ResidentTruth.Person), "taf:quiet");
-			Assert.IsTrue(Holds(household, KingdomQolRules.TagQuiet));
+			ClassicAssert.IsTrue(Holds(household, KingdomQolRules.TagQuiet));
 		}
 
 		[Test]
 		public void HouseholdProvides_ANullResidentProvidesNothing()
 		{
-			Assert.AreEqual(0, KingdomQolRules.HouseholdProvides(null).Length);
+			ClassicAssert.AreEqual(0, KingdomQolRules.HouseholdProvides(null).Length);
 		}
 
 		// --- What a roof provides on its own --------------------------------------------------
@@ -420,32 +421,32 @@ namespace ThousandAndFirst.Tests
 		public void ProvidedByRoof_FollowsTheSameAdmitsSkyTheRestOfThePlotCodeUses(KingdomPlotRules.RoofState roof, string expected)
 		{
 			string[] provided = KingdomQolRules.ProvidedByRoof(roof);
-			Assert.AreEqual(1, provided.Length);
-			Assert.AreEqual(expected, provided[0]);
+			ClassicAssert.AreEqual(1, provided.Length);
+			ClassicAssert.AreEqual(expected, provided[0]);
 		}
 
 		[Test]
 		public void DesignOffer_APlotOffersItsRoofAsWellAsWhatItDeclared()
 		{
 			string[] offer = KingdomQolRules.DesignOffer("taf:damp", KingdomPlotRules.RoofState.Carved, IsPlot: true);
-			Assert.IsTrue(Holds(offer, KingdomQolRules.TagDamp));
-			Assert.IsTrue(Holds(offer, KingdomQolRules.TagDark));
+			ClassicAssert.IsTrue(Holds(offer, KingdomQolRules.TagDamp));
+			ClassicAssert.IsTrue(Holds(offer, KingdomQolRules.TagDark));
 		}
 
 		[Test]
 		public void DesignOffer_ATentHousesThePhotosyntheticSettlerAndAStoneHouseDoesNot()
 		{
-			Assert.IsTrue(Holds(KingdomQolRules.DesignOffer(null, KingdomPlotRules.RoofState.Soft, IsPlot: true), KingdomQolRules.TagSky));
-			Assert.IsFalse(Holds(KingdomQolRules.DesignOffer(null, KingdomPlotRules.RoofState.Walled, IsPlot: true), KingdomQolRules.TagSky));
+			ClassicAssert.IsTrue(Holds(KingdomQolRules.DesignOffer(null, KingdomPlotRules.RoofState.Soft, IsPlot: true), KingdomQolRules.TagSky));
+			ClassicAssert.IsFalse(Holds(KingdomQolRules.DesignOffer(null, KingdomPlotRules.RoofState.Walled, IsPlot: true), KingdomQolRules.TagSky));
 		}
 
 		[Test]
 		public void DesignOffer_ASingleCellWorkOffersOnlyWhatItDeclared()
 		{
 			string[] offer = KingdomQolRules.DesignOffer("taf:charge", KingdomPlotRules.RoofState.Walled, IsPlot: false);
-			Assert.AreEqual(1, offer.Length);
-			Assert.IsTrue(Holds(offer, KingdomQolRules.TagCharge));
-			Assert.IsFalse(Holds(offer, KingdomQolRules.TagDark));
+			ClassicAssert.AreEqual(1, offer.Length);
+			ClassicAssert.IsTrue(Holds(offer, KingdomQolRules.TagCharge));
+			ClassicAssert.IsFalse(Holds(offer, KingdomQolRules.TagDark));
 		}
 
 		// --- The stratum: weather reaches nothing under rock (QB-19) ---------------------------
@@ -457,8 +458,8 @@ namespace ThousandAndFirst.Tests
 		public void ProvidedByRoof_UndergroundEveryRoofIsShadeAndNoneIsSky(KingdomPlotRules.RoofState roof)
 		{
 			string[] provided = KingdomQolRules.ProvidedByRoof(roof, Underground: true);
-			Assert.AreEqual(1, provided.Length);
-			Assert.AreEqual(KingdomQolRules.TagDark, provided[0]);
+			ClassicAssert.AreEqual(1, provided.Length);
+			ClassicAssert.AreEqual(KingdomQolRules.TagDark, provided[0]);
 		}
 
 		[Test]
@@ -468,11 +469,11 @@ namespace ThousandAndFirst.Tests
 			// underground -- Open is a claim about walls, and a field in the deep raises none -- so
 			// reading AdmitsSky alone sold a cellar-field as sky and housed a photosynthetic
 			// settler several hundred feet under the sun.
-			Assert.IsTrue(KingdomPlotRules.AdmitsSky(
+			ClassicAssert.IsTrue(KingdomPlotRules.AdmitsSky(
 				KingdomPlotRules.RoofOnGround(KingdomPlotRules.RoofState.Open, Underground: true)));
 			string[] provided = KingdomQolRules.ProvidedByRoof(KingdomPlotRules.RoofState.Open, Underground: true);
-			Assert.IsFalse(Holds(provided, KingdomQolRules.TagSky));
-			Assert.IsTrue(Holds(provided, KingdomQolRules.TagDark));
+			ClassicAssert.IsFalse(Holds(provided, KingdomQolRules.TagSky));
+			ClassicAssert.IsTrue(Holds(provided, KingdomQolRules.TagDark));
 		}
 
 		[TestCase(KingdomPlotRules.RoofState.Open, "taf:sky")]
@@ -482,8 +483,8 @@ namespace ThousandAndFirst.Tests
 		public void ProvidedByRoof_TheSurfaceAnswerIsExactlyWhatItAlwaysWas(KingdomPlotRules.RoofState roof, string expected)
 		{
 			string[] provided = KingdomQolRules.ProvidedByRoof(roof, Underground: false);
-			Assert.AreEqual(1, provided.Length);
-			Assert.AreEqual(expected, provided[0]);
+			ClassicAssert.AreEqual(1, provided.Length);
+			ClassicAssert.AreEqual(expected, provided[0]);
 			CollectionAssert.AreEqual(KingdomQolRules.ProvidedByRoof(roof), provided);
 		}
 
@@ -506,15 +507,15 @@ namespace ThousandAndFirst.Tests
 		public void DesignOffer_AnOpenPlotInTheDeepOffersShadeAndKeepsWhatItDeclared()
 		{
 			string[] offer = KingdomQolRules.DesignOffer("taf:damp", KingdomPlotRules.RoofState.Open, IsPlot: true, Underground: true);
-			Assert.IsFalse(Holds(offer, KingdomQolRules.TagSky));
-			Assert.IsTrue(Holds(offer, KingdomQolRules.TagDark));
-			Assert.IsTrue(Holds(offer, KingdomQolRules.TagDamp));
+			ClassicAssert.IsFalse(Holds(offer, KingdomQolRules.TagSky));
+			ClassicAssert.IsTrue(Holds(offer, KingdomQolRules.TagDark));
+			ClassicAssert.IsTrue(Holds(offer, KingdomQolRules.TagDamp));
 		}
 
 		[Test]
 		public void DesignOffer_CanvasUnderTheRockIsNoMoreSkyThanRockIs()
 		{
-			Assert.IsFalse(Holds(
+			ClassicAssert.IsFalse(Holds(
 				KingdomQolRules.DesignOffer(null, KingdomPlotRules.RoofState.Soft, IsPlot: true, Underground: true),
 				KingdomQolRules.TagSky));
 		}
@@ -534,9 +535,9 @@ namespace ThousandAndFirst.Tests
 		public void DesignOffer_ASingleCellWorkInTheDeepStillOffersOnlyWhatItDeclared()
 		{
 			string[] offer = KingdomQolRules.DesignOffer("taf:charge", KingdomPlotRules.RoofState.Open, IsPlot: false, Underground: true);
-			Assert.AreEqual(1, offer.Length);
-			Assert.IsTrue(Holds(offer, KingdomQolRules.TagCharge));
-			Assert.IsFalse(Holds(offer, KingdomQolRules.TagDark));
+			ClassicAssert.AreEqual(1, offer.Length);
+			ClassicAssert.IsTrue(Holds(offer, KingdomQolRules.TagCharge));
+			ClassicAssert.IsFalse(Holds(offer, KingdomQolRules.TagDark));
 		}
 
 		// --- The same question the lodging pass actually asks ----------------------------------
@@ -547,9 +548,9 @@ namespace ThousandAndFirst.Tests
 			ResidentTruth truth = ResidentTruth.Person;
 			truth.Photosynthetic = true;
 			List<string> needs = new List<string>(KingdomQolRules.Derive(truth).Needs);
-			Assert.IsTrue(KingdomLodgingRules.MeetsNeeds(needs, new List<string>(
+			ClassicAssert.IsTrue(KingdomLodgingRules.MeetsNeeds(needs, new List<string>(
 				KingdomQolRules.DesignOffer(null, KingdomPlotRules.RoofState.Open, IsPlot: true, Underground: false))));
-			Assert.IsFalse(KingdomLodgingRules.MeetsNeeds(needs, new List<string>(
+			ClassicAssert.IsFalse(KingdomLodgingRules.MeetsNeeds(needs, new List<string>(
 				KingdomQolRules.DesignOffer(null, KingdomPlotRules.RoofState.Open, IsPlot: true, Underground: true))));
 		}
 
@@ -560,8 +561,8 @@ namespace ThousandAndFirst.Tests
 			truth.Fungal = true;
 			QolProfile profile = KingdomQolRules.Derive(truth);
 			string[] deep = KingdomQolRules.DesignOffer("taf:damp", KingdomPlotRules.RoofState.Open, IsPlot: true, Underground: true);
-			Assert.IsTrue(KingdomLodgingRules.MeetsNeeds(new List<string>(profile.Needs), new List<string>(deep)));
-			Assert.AreEqual(KingdomCeremonyRules.TasteShadeAmount, KingdomQolRules.PreferShade(deep, profile));
+			ClassicAssert.IsTrue(KingdomLodgingRules.MeetsNeeds(new List<string>(profile.Needs), new List<string>(deep)));
+			ClassicAssert.AreEqual(KingdomCeremonyRules.TasteShadeAmount, KingdomQolRules.PreferShade(deep, profile));
 		}
 
 		[Test]
@@ -571,7 +572,7 @@ namespace ThousandAndFirst.Tests
 			truth.Fungal = true;
 			QolProfile profile = KingdomQolRules.Derive(truth);
 			string[] sunlit = KingdomQolRules.DesignOffer("taf:damp", KingdomPlotRules.RoofState.Open, IsPlot: true, Underground: false);
-			Assert.AreEqual(0, KingdomQolRules.PreferShade(sunlit, profile));
+			ClassicAssert.AreEqual(0, KingdomQolRules.PreferShade(sunlit, profile));
 		}
 
 		[Test]
@@ -579,10 +580,10 @@ namespace ThousandAndFirst.Tests
 		{
 			QolProfile profile = Profile(null, null, new string[1] { KingdomQolRules.TagSky });
 			string tag;
-			Assert.AreEqual(QolVerdict.Refused, KingdomQolRules.Judge(
+			ClassicAssert.AreEqual(QolVerdict.Refused, KingdomQolRules.Judge(
 				KingdomQolRules.DesignOffer(null, KingdomPlotRules.RoofState.Open, IsPlot: true, Underground: false),
 				profile, out tag));
-			Assert.AreEqual(QolVerdict.Match, KingdomQolRules.Judge(
+			ClassicAssert.AreEqual(QolVerdict.Match, KingdomQolRules.Judge(
 				KingdomQolRules.DesignOffer(null, KingdomPlotRules.RoofState.Open, IsPlot: true, Underground: true),
 				profile, out tag));
 		}
@@ -596,10 +597,10 @@ namespace ThousandAndFirst.Tests
 			QolVerdict verdict = KingdomQolRules.Judge(
 				new string[1] { KingdomQolRules.TagCharge },
 				Profile(new string[1] { KingdomQolRules.TagCharge }, null, null), out tag);
-			Assert.AreEqual(QolVerdict.Match, verdict);
-			Assert.AreEqual("", tag);
-			Assert.IsTrue(KingdomQolRules.IsMatch(verdict));
-			Assert.IsFalse(KingdomQolRules.IsBlocked(verdict));
+			ClassicAssert.AreEqual(QolVerdict.Match, verdict);
+			ClassicAssert.AreEqual("", tag);
+			ClassicAssert.IsTrue(KingdomQolRules.IsMatch(verdict));
+			ClassicAssert.IsFalse(KingdomQolRules.IsBlocked(verdict));
 		}
 
 		[Test]
@@ -609,9 +610,9 @@ namespace ThousandAndFirst.Tests
 			QolVerdict verdict = KingdomQolRules.Judge(
 				KingdomQolRules.NoTags,
 				Profile(new string[1] { KingdomQolRules.TagCharge }, null, null), out tag);
-			Assert.AreEqual(QolVerdict.NeedUnmet, verdict);
-			Assert.AreEqual(KingdomQolRules.TagCharge, tag);
-			Assert.IsTrue(KingdomQolRules.IsBlocked(verdict));
+			ClassicAssert.AreEqual(QolVerdict.NeedUnmet, verdict);
+			ClassicAssert.AreEqual(KingdomQolRules.TagCharge, tag);
+			ClassicAssert.IsTrue(KingdomQolRules.IsBlocked(verdict));
 		}
 
 		[Test]
@@ -621,8 +622,8 @@ namespace ThousandAndFirst.Tests
 			QolVerdict verdict = KingdomQolRules.Judge(
 				new string[1] { KingdomQolRules.TagDamp },
 				Profile(null, null, new string[1] { KingdomQolRules.TagDamp }), out tag);
-			Assert.AreEqual(QolVerdict.Refused, verdict);
-			Assert.AreEqual(KingdomQolRules.TagDamp, tag);
+			ClassicAssert.AreEqual(QolVerdict.Refused, verdict);
+			ClassicAssert.AreEqual(KingdomQolRules.TagDamp, tag);
 		}
 
 		[Test]
@@ -632,8 +633,8 @@ namespace ThousandAndFirst.Tests
 			QolVerdict verdict = KingdomQolRules.Judge(
 				new string[1] { KingdomQolRules.TagDamp },
 				Profile(new string[1] { KingdomQolRules.TagCharge }, null, new string[1] { KingdomQolRules.TagDamp }), out tag);
-			Assert.AreEqual(QolVerdict.Refused, verdict);
-			Assert.AreEqual(KingdomQolRules.TagDamp, tag);
+			ClassicAssert.AreEqual(QolVerdict.Refused, verdict);
+			ClassicAssert.AreEqual(KingdomQolRules.TagDamp, tag);
 		}
 
 		[Test]
@@ -643,8 +644,8 @@ namespace ThousandAndFirst.Tests
 			QolVerdict verdict = KingdomQolRules.Judge(
 				new string[1] { KingdomQolRules.TagSky },
 				Profile(new string[1] { "theirmod:hearthfire" }, null, null), out tag);
-			Assert.AreEqual(QolVerdict.NeedUnmet, verdict);
-			Assert.AreEqual("theirmod:hearthfire", tag);
+			ClassicAssert.AreEqual(QolVerdict.NeedUnmet, verdict);
+			ClassicAssert.AreEqual("theirmod:hearthfire", tag);
 		}
 
 		[Test]
@@ -654,7 +655,7 @@ namespace ThousandAndFirst.Tests
 			QolVerdict verdict = KingdomQolRules.Judge(
 				new string[2] { KingdomQolRules.TagSky, "theirmod:hearthfire" },
 				Profile(new string[1] { KingdomQolRules.TagSky }, null, null), out tag);
-			Assert.AreEqual(QolVerdict.Match, verdict);
+			ClassicAssert.AreEqual(QolVerdict.Match, verdict);
 		}
 
 		[Test]
@@ -664,21 +665,21 @@ namespace ThousandAndFirst.Tests
 			QolVerdict verdict = KingdomQolRules.Judge(
 				new string[1] { " TAF:Charge " },
 				Profile(new string[1] { "taf:charge" }, null, null), out tag);
-			Assert.AreEqual(QolVerdict.Match, verdict);
+			ClassicAssert.AreEqual(QolVerdict.Match, verdict);
 		}
 
 		[Test]
 		public void Judge_ANullProfileAsksNothingAndAlwaysMatches()
 		{
 			string tag;
-			Assert.AreEqual(QolVerdict.Match, KingdomQolRules.Judge(null, null, out tag));
+			ClassicAssert.AreEqual(QolVerdict.Match, KingdomQolRules.Judge(null, null, out tag));
 		}
 
 		[Test]
 		public void Judge_ANullOfferProvidesNothingRatherThanEverything()
 		{
 			string tag;
-			Assert.AreEqual(QolVerdict.NeedUnmet,
+			ClassicAssert.AreEqual(QolVerdict.NeedUnmet,
 				KingdomQolRules.Judge(null, Profile(new string[1] { KingdomQolRules.TagSky }, null, null), out tag));
 		}
 
@@ -688,7 +689,7 @@ namespace ThousandAndFirst.Tests
 			string tag;
 			KingdomQolRules.Judge(KingdomQolRules.NoTags,
 				Profile(new string[2] { KingdomQolRules.TagCharge, KingdomQolRules.TagSky }, null, null), out tag);
-			Assert.AreEqual(KingdomQolRules.TagCharge, tag);
+			ClassicAssert.AreEqual(KingdomQolRules.TagCharge, tag);
 		}
 
 		// --- Prefers: small, capped, and never a penalty ---------------------------------------
@@ -696,7 +697,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PreferShade_AnUnmetPreferenceIsWorthNothingAtAll()
 		{
-			Assert.AreEqual(0, KingdomQolRules.PreferShade(
+			ClassicAssert.AreEqual(0, KingdomQolRules.PreferShade(
 				KingdomQolRules.NoTags,
 				Profile(null, new string[1] { KingdomQolRules.TagDark }, null)));
 		}
@@ -704,7 +705,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PreferShade_AMetPreferenceIsWorthOneTasteUnit()
 		{
-			Assert.AreEqual(KingdomCeremonyRules.TasteShadeAmount, KingdomQolRules.PreferShade(
+			ClassicAssert.AreEqual(KingdomCeremonyRules.TasteShadeAmount, KingdomQolRules.PreferShade(
 				new string[1] { KingdomQolRules.TagDark },
 				Profile(null, new string[1] { KingdomQolRules.TagDark }, null)));
 		}
@@ -718,8 +719,8 @@ namespace ThousandAndFirst.Tests
 				KingdomQolRules.TagDamp, KingdomQolRules.TagCharge
 			};
 			QolProfile profile = Profile(null, offer, null);
-			Assert.AreEqual(KingdomQolRules.MaxPreferShade, KingdomQolRules.PreferShade(offer, profile));
-			Assert.AreEqual(KingdomQolRules.MaxPrefersCounted * KingdomCeremonyRules.TasteShadeAmount,
+			ClassicAssert.AreEqual(KingdomQolRules.MaxPreferShade, KingdomQolRules.PreferShade(offer, profile));
+			ClassicAssert.AreEqual(KingdomQolRules.MaxPrefersCounted * KingdomCeremonyRules.TasteShadeAmount,
 				KingdomQolRules.MaxPreferShade);
 		}
 
@@ -731,7 +732,7 @@ namespace ThousandAndFirst.Tests
 				KingdomQolRules.TagDark, KingdomQolRules.TagQuiet, KingdomQolRules.TagDamp
 			};
 			List<bool> flags = KingdomQolRules.PreferFlags(offer, Profile(null, offer, null));
-			Assert.AreEqual(KingdomQolRules.MaxPrefersCounted, flags.Count);
+			ClassicAssert.AreEqual(KingdomQolRules.MaxPrefersCounted, flags.Count);
 		}
 
 		[Test]
@@ -740,14 +741,14 @@ namespace ThousandAndFirst.Tests
 			string[] offer = new string[1] { KingdomQolRules.TagDark };
 			QolProfile profile = Profile(null, new string[2] { KingdomQolRules.TagDark, KingdomQolRules.TagQuiet }, null);
 			List<bool> flags = KingdomQolRules.PreferFlags(offer, profile);
-			Assert.AreEqual(KingdomCeremonyRules.TasteShade(flags), KingdomQolRules.PreferShade(offer, profile));
+			ClassicAssert.AreEqual(KingdomCeremonyRules.TasteShade(flags), KingdomQolRules.PreferShade(offer, profile));
 		}
 
 		[Test]
 		public void PreferShade_IsNeverNegativeForAnyoneWhoWantedAnything()
 		{
 			QolProfile profile = Profile(null, new string[2] { KingdomQolRules.TagDark, KingdomQolRules.TagQuiet }, null);
-			Assert.GreaterOrEqual(KingdomQolRules.PreferShade(KingdomQolRules.NoTags, profile), 0);
+			ClassicAssert.GreaterOrEqual(KingdomQolRules.PreferShade(KingdomQolRules.NoTags, profile), 0);
 		}
 
 		[Test]
@@ -758,9 +759,9 @@ namespace ThousandAndFirst.Tests
 			// plain count of met wants -- never a negative number, and never a debt.
 			QolProfile profile = Profile(null, new string[1] { KingdomQolRules.TagDamp }, new string[1] { KingdomQolRules.TagDamp });
 			string tag;
-			Assert.AreEqual(QolVerdict.Refused,
+			ClassicAssert.AreEqual(QolVerdict.Refused,
 				KingdomQolRules.Judge(new string[1] { KingdomQolRules.TagDamp }, profile, out tag));
-			Assert.GreaterOrEqual(KingdomQolRules.PreferShade(new string[1] { KingdomQolRules.TagDamp }, profile), 0);
+			ClassicAssert.GreaterOrEqual(KingdomQolRules.PreferShade(new string[1] { KingdomQolRules.TagDamp }, profile), 0);
 		}
 
 		[Test]
@@ -771,8 +772,8 @@ namespace ThousandAndFirst.Tests
 			int first = KingdomQolRules.PreferShade(offer, profile);
 			int second = KingdomQolRules.PreferShade(offer, profile);
 			int third = KingdomQolRules.PreferShade(offer, profile);
-			Assert.AreEqual(first, second);
-			Assert.AreEqual(second, third);
+			ClassicAssert.AreEqual(first, second);
+			ClassicAssert.AreEqual(second, third);
 		}
 
 		// --- Saying so (STANDARDS 7b) -------------------------------------------------------------
@@ -780,7 +781,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void WillNotSleepBeside_IsTheSentenceTheBriefItselfWrote()
 		{
-			Assert.AreEqual("Vashti will not sleep beside the fungal cellar.",
+			ClassicAssert.AreEqual("Vashti will not sleep beside the fungal cellar.",
 				KingdomQolRules.WillNotSleepBeside("Vashti", "fungal cellar"));
 		}
 
@@ -788,53 +789,53 @@ namespace ThousandAndFirst.Tests
 		public void RefusalLine_ForARefusalOpensWithThatSentence()
 		{
 			string line = KingdomQolRules.RefusalLine(QolVerdict.Refused, "Vashti", "fungal cellar", KingdomQolRules.TagDamp);
-			Assert.IsTrue(line.StartsWith("Vashti will not sleep beside the fungal cellar."), line);
+			ClassicAssert.IsTrue(line.StartsWith("Vashti will not sleep beside the fungal cellar."), line);
 		}
 
 		[Test]
 		public void RefusalLine_ForAnUnmetNeedNamesTheThingAndWhatWouldLiftIt()
 		{
 			string line = KingdomQolRules.RefusalLine(QolVerdict.NeedUnmet, "Vashti", "timber hut", KingdomQolRules.TagCharge);
-			Assert.IsTrue(line.Contains("Vashti"), line);
-			Assert.IsTrue(line.Contains("timber hut"), line);
-			Assert.IsTrue(line.Contains(KingdomQolRules.TagPhrase(KingdomQolRules.TagCharge)), line);
-			Assert.IsTrue(line.Contains("other quarters"), line);
+			ClassicAssert.IsTrue(line.Contains("Vashti"), line);
+			ClassicAssert.IsTrue(line.Contains("timber hut"), line);
+			ClassicAssert.IsTrue(line.Contains(KingdomQolRules.TagPhrase(KingdomQolRules.TagCharge)), line);
+			ClassicAssert.IsTrue(line.Contains("other quarters"), line);
 		}
 
 		[Test]
 		public void RefusalLine_SaysNothingAtAllAboutAMatch()
 		{
-			Assert.IsNull(KingdomQolRules.RefusalLine(QolVerdict.Match, "Vashti", "timber hut", ""));
+			ClassicAssert.IsNull(KingdomQolRules.RefusalLine(QolVerdict.Match, "Vashti", "timber hut", ""));
 		}
 
 		[Test]
 		public void RefusalLine_ACreedClashReadsAsOneRatherThanAsAMissingTag()
 		{
 			string line = KingdomQolRules.RefusalLine(QolVerdict.Refused, "Vashti", "fine house", "");
-			Assert.IsTrue(line.Contains("believes"), line);
+			ClassicAssert.IsTrue(line.Contains("believes"), line);
 		}
 
 		[Test]
 		public void RefusalLine_AnUnknownTagIsQuotedRatherThanGuessedAt()
 		{
 			string line = KingdomQolRules.RefusalLine(QolVerdict.NeedUnmet, "Vashti", "timber hut", "theirmod:hearthfire");
-			Assert.IsTrue(line.Contains("\"theirmod:hearthfire\""), line);
+			ClassicAssert.IsTrue(line.Contains("\"theirmod:hearthfire\""), line);
 		}
 
 		[Test]
 		public void RefusalLine_ANamelessNewcomerIsStillNamedSomething()
 		{
 			string line = KingdomQolRules.RefusalLine(QolVerdict.NeedUnmet, "", "timber hut", KingdomQolRules.TagSky);
-			Assert.IsTrue(line.StartsWith("The newcomer") || line.StartsWith("the newcomer"), line);
+			ClassicAssert.IsTrue(line.StartsWith("The newcomer") || line.StartsWith("the newcomer"), line);
 		}
 
 		[Test]
 		public void NowhereLine_NamesTheSettlementAndTheThingItLacks()
 		{
 			string line = KingdomQolRules.NowhereLine("Vashti", "Ninefold", KingdomQolRules.TagCharge);
-			Assert.IsTrue(line.Contains("Ninefold"), line);
-			Assert.IsTrue(line.Contains(KingdomQolRules.TagPhrase(KingdomQolRules.TagCharge)), line);
-			Assert.IsTrue(line.Contains("Vashti"), line);
+			ClassicAssert.IsTrue(line.Contains("Ninefold"), line);
+			ClassicAssert.IsTrue(line.Contains(KingdomQolRules.TagPhrase(KingdomQolRules.TagCharge)), line);
+			ClassicAssert.IsTrue(line.Contains("Vashti"), line);
 		}
 
 		[TestCase("taf:charge")]
@@ -846,9 +847,9 @@ namespace ThousandAndFirst.Tests
 		public void TagPhrase_EveryTagThisModShipsHasProseOfItsOwn(string tag)
 		{
 			string phrase = KingdomQolRules.TagPhrase(tag);
-			Assert.IsFalse(string.IsNullOrEmpty(phrase));
-			Assert.IsFalse(phrase.Contains("\""), phrase);
-			Assert.AreNotEqual(tag, phrase);
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(phrase));
+			ClassicAssert.IsFalse(phrase.Contains("\""), phrase);
+			ClassicAssert.AreNotEqual(tag, phrase);
 		}
 
 		[Test]
@@ -856,9 +857,9 @@ namespace ThousandAndFirst.Tests
 		{
 			for (int i = 0; i < KingdomQolRules.OwnTags.Length; i++)
 			{
-				Assert.AreNotEqual("\"" + KingdomQolRules.OwnTags[i] + "\"",
+				ClassicAssert.AreNotEqual("\"" + KingdomQolRules.OwnTags[i] + "\"",
 					KingdomQolRules.TagPhrase(KingdomQolRules.OwnTags[i]));
-				Assert.AreNotEqual("\"" + KingdomQolRules.OwnTags[i] + "\"",
+				ClassicAssert.AreNotEqual("\"" + KingdomQolRules.OwnTags[i] + "\"",
 					KingdomQolRules.TagObjection(KingdomQolRules.OwnTags[i]));
 			}
 		}
@@ -868,8 +869,8 @@ namespace ThousandAndFirst.Tests
 		{
 			for (int i = 0; i < KingdomQolRules.OwnTags.Length; i++)
 			{
-				Assert.IsTrue(KingdomQolRules.IsNamespaced(KingdomQolRules.OwnTags[i]), KingdomQolRules.OwnTags[i]);
-				Assert.IsTrue(KingdomQolRules.OwnTags[i].StartsWith(KingdomQolRules.Namespace), KingdomQolRules.OwnTags[i]);
+				ClassicAssert.IsTrue(KingdomQolRules.IsNamespaced(KingdomQolRules.OwnTags[i]), KingdomQolRules.OwnTags[i]);
+				ClassicAssert.IsTrue(KingdomQolRules.OwnTags[i].StartsWith(KingdomQolRules.Namespace), KingdomQolRules.OwnTags[i]);
 			}
 		}
 	}

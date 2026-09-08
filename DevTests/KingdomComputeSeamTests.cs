@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 
 // A forged engine namespace, declared here and nowhere else.
@@ -203,14 +204,14 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ComputeOutcomeEnumsKeepByteAbiAndExactValues()
 		{
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomComputeStatus)));
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomComputeStatus)));
 			CollectionAssert.AreEqual(new[] { "Ok", "Refused", "Faulted", "OverBudget" },
 				Enum.GetNames(typeof(KingdomComputeStatus)));
 			CollectionAssert.AreEqual(new byte[] { 0, 1, 2, 3 },
 				Array.ConvertAll((KingdomComputeStatus[])Enum.GetValues(typeof(KingdomComputeStatus)),
 					value => (byte)value));
 
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomComputeRefusal)));
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomComputeRefusal)));
 			CollectionAssert.AreEqual(new[] { "None", "NullJob", "NullClock", "Threw",
 				"EngineTypeAtBoundary", "MutableField", "MutableStatic", "ClosureTooLarge" },
 				Enum.GetNames(typeof(KingdomComputeRefusal)));
@@ -231,12 +232,12 @@ namespace ThousandAndFirst.Tests
 			KingdomComputeJournalRing journal;
 			KingdomExecutor executor = Executor(new long[2] { 1000L, 1400L }, out journal);
 			KingdomComputeResult<SeamCargo> result = executor.Submit(new SeamCargo(21L), new DoublingComputation(4, succeeds: true, throws: false));
-			Assert.AreEqual(KingdomComputeStatus.Ok, result.Status);
-			Assert.IsTrue(result.Published);
-			Assert.AreEqual(42L, result.Value.Amount);
-			Assert.AreEqual(400L, result.Receipt.Microseconds);
-			Assert.AreEqual(232L, result.Receipt.Counters.RowVisits);
-			Assert.AreEqual(1, journal.Count);
+			ClassicAssert.AreEqual(KingdomComputeStatus.Ok, result.Status);
+			ClassicAssert.IsTrue(result.Published);
+			ClassicAssert.AreEqual(42L, result.Value.Amount);
+			ClassicAssert.AreEqual(400L, result.Receipt.Microseconds);
+			ClassicAssert.AreEqual(232L, result.Receipt.Counters.RowVisits);
+			ClassicAssert.AreEqual(1, journal.Count);
 		}
 
 		[Test]
@@ -245,11 +246,11 @@ namespace ThousandAndFirst.Tests
 			KingdomComputeJournalRing journal;
 			KingdomExecutor executor = Executor(new long[2] { 0L, 500L }, out journal);
 			KingdomComputeResult<SeamCargo> result = executor.Submit(new SeamCargo(21L), new DoublingComputation(0, succeeds: false, throws: false));
-			Assert.AreEqual(KingdomComputeStatus.Faulted, result.Status);
-			Assert.IsFalse(result.Published);
-			Assert.AreEqual(0L, result.Value.Amount, "a faulted job published a value");
-			Assert.AreEqual(KingdomCityFault.ClockRegression, result.Fault);
-			Assert.AreEqual(1, journal.Count, "a fault must still be measured");
+			ClassicAssert.AreEqual(KingdomComputeStatus.Faulted, result.Status);
+			ClassicAssert.IsFalse(result.Published);
+			ClassicAssert.AreEqual(0L, result.Value.Amount, "a faulted job published a value");
+			ClassicAssert.AreEqual(KingdomCityFault.ClockRegression, result.Fault);
+			ClassicAssert.AreEqual(1, journal.Count, "a fault must still be measured");
 		}
 
 		/// <summary>A misbehaving job stalls itself, never the city and never the turn. That is the
@@ -260,9 +261,9 @@ namespace ThousandAndFirst.Tests
 			KingdomComputeJournalRing journal;
 			KingdomExecutor executor = Executor(new long[2] { 0L, 100L }, out journal);
 			KingdomComputeResult<SeamCargo> result = executor.Submit(new SeamCargo(3L), new DoublingComputation(0, succeeds: true, throws: true));
-			Assert.AreEqual(KingdomComputeStatus.Faulted, result.Status);
-			Assert.AreEqual(KingdomComputeRefusal.Threw, result.Refusal);
-			Assert.AreEqual(0L, result.Value.Amount);
+			ClassicAssert.AreEqual(KingdomComputeStatus.Faulted, result.Status);
+			ClassicAssert.AreEqual(KingdomComputeRefusal.Threw, result.Refusal);
+			ClassicAssert.AreEqual(0L, result.Value.Amount);
 		}
 
 		[Test]
@@ -271,9 +272,9 @@ namespace ThousandAndFirst.Tests
 			KingdomComputeJournalRing journal;
 			KingdomExecutor executor = Executor(new long[1] { 0L }, out journal);
 			KingdomComputeResult<SeamCargo> result = executor.Submit(new SeamCargo(1L), (IKingdomComputation<SeamCargo, SeamCargo>)null);
-			Assert.AreEqual(KingdomComputeStatus.Refused, result.Status);
-			Assert.AreEqual(KingdomComputeRefusal.NullJob, result.Refusal);
-			Assert.AreEqual(0, journal.Count, "a refusal ran nothing, so it measured nothing");
+			ClassicAssert.AreEqual(KingdomComputeStatus.Refused, result.Status);
+			ClassicAssert.AreEqual(KingdomComputeRefusal.NullJob, result.Refusal);
+			ClassicAssert.AreEqual(0, journal.Count, "a refusal ran nothing, so it measured nothing");
 		}
 
 		/// <summary>Over the reckon lane's 8 ms fail rung (LIVING-CITY-ARCHITECTURE §0.0). The job
@@ -284,9 +285,9 @@ namespace ThousandAndFirst.Tests
 			KingdomComputeJournalRing journal;
 			KingdomExecutor executor = Executor(new long[2] { 0L, 8001L }, out journal);
 			KingdomComputeResult<SeamCargo> result = executor.Submit(new SeamCargo(21L), new DoublingComputation(0, succeeds: true, throws: false));
-			Assert.AreEqual(KingdomComputeStatus.OverBudget, result.Status);
-			Assert.AreEqual(0L, result.Value.Amount, "an abandoned job published a value");
-			Assert.AreEqual(KingdomBudgetVerdict.Over, result.Receipt.Verdict);
+			ClassicAssert.AreEqual(KingdomComputeStatus.OverBudget, result.Status);
+			ClassicAssert.AreEqual(0L, result.Value.Amount, "an abandoned job published a value");
+			ClassicAssert.AreEqual(KingdomBudgetVerdict.Over, result.Receipt.Verdict);
 		}
 
 		/// <summary>Draws are per happening, never per day: 512 a city pass is the ceiling, so 513
@@ -297,9 +298,9 @@ namespace ThousandAndFirst.Tests
 			KingdomComputeJournalRing journal;
 			KingdomExecutor executor = Executor(new long[2] { 0L, 10L }, out journal);
 			KingdomComputeResult<SeamCargo> result = executor.Submit(new SeamCargo(21L), new DoublingComputation(KingdomBudgetRules.MaxDrawsPerCityPass + 1, succeeds: true, throws: false));
-			Assert.AreEqual(KingdomComputeStatus.OverBudget, result.Status);
-			Assert.AreEqual(KingdomBudgetVerdict.Over, result.Receipt.CountVerdict);
-			Assert.AreEqual(KingdomBudgetVerdict.Within, result.Receipt.TimeVerdict);
+			ClassicAssert.AreEqual(KingdomComputeStatus.OverBudget, result.Status);
+			ClassicAssert.AreEqual(KingdomBudgetVerdict.Over, result.Receipt.CountVerdict);
+			ClassicAssert.AreEqual(KingdomBudgetVerdict.Within, result.Receipt.TimeVerdict);
 		}
 
 		[Test]
@@ -308,9 +309,9 @@ namespace ThousandAndFirst.Tests
 			KingdomComputeJournalRing journal;
 			KingdomExecutor executor = Executor(new long[2] { 0L, 3000L }, out journal);
 			KingdomComputeResult<SeamCargo> result = executor.Submit(new SeamCargo(21L), new DoublingComputation(0, succeeds: true, throws: false));
-			Assert.AreEqual(KingdomComputeStatus.Ok, result.Status);
-			Assert.AreEqual(KingdomBudgetVerdict.Warn, result.Receipt.Verdict);
-			Assert.AreEqual(42L, result.Value.Amount);
+			ClassicAssert.AreEqual(KingdomComputeStatus.Ok, result.Status);
+			ClassicAssert.AreEqual(KingdomBudgetVerdict.Warn, result.Receipt.Verdict);
+			ClassicAssert.AreEqual(42L, result.Value.Amount);
 		}
 
 		[Test]
@@ -322,14 +323,14 @@ namespace ThousandAndFirst.Tests
 				journal.Record(new KingdomPerfReceipt(KingdomBudgetLane.Reckon, "taf:test", i, KingdomComputeCounters.None, 0L,
 					KingdomBudgetVerdict.Within, KingdomBudgetVerdict.Within));
 			}
-			Assert.AreEqual(KingdomComputeJournalRing.Capacity, journal.Count, "the ring grew");
+			ClassicAssert.AreEqual(KingdomComputeJournalRing.Capacity, journal.Count, "the ring grew");
 			KingdomPerfReceipt oldest;
-			Assert.IsTrue(journal.TryGet(0, out oldest));
-			Assert.AreEqual(3L, oldest.Microseconds, "the ring did not forget its oldest three");
+			ClassicAssert.IsTrue(journal.TryGet(0, out oldest));
+			ClassicAssert.AreEqual(3L, oldest.Microseconds, "the ring did not forget its oldest three");
 			KingdomPerfReceipt worst;
-			Assert.IsTrue(journal.TryWorst(KingdomBudgetLane.Reckon, out worst));
-			Assert.AreEqual(KingdomComputeJournalRing.Capacity + 2L, worst.Microseconds);
-			Assert.IsFalse(journal.TryWorst(KingdomBudgetLane.Reify, out worst), "a lane nothing ran on has no worst");
+			ClassicAssert.IsTrue(journal.TryWorst(KingdomBudgetLane.Reckon, out worst));
+			ClassicAssert.AreEqual(KingdomComputeJournalRing.Capacity + 2L, worst.Microseconds);
+			ClassicAssert.IsFalse(journal.TryWorst(KingdomBudgetLane.Reify, out worst), "a lane nothing ran on has no worst");
 		}
 
 		// =================================================================================
@@ -366,13 +367,13 @@ namespace ThousandAndFirst.Tests
 					KingdomComputeRefusal refusal;
 					string offender;
 					bool clean = KingdomComputeSeam.TryValidateBoundary(boundary[0], boundary[1], out refusal, out offender);
-					Assert.IsTrue(clean, type.FullName + " crosses the seam with " + offender + " (" + refusal + ")");
+					ClassicAssert.IsTrue(clean, type.FullName + " crosses the seam with " + offender + " (" + refusal + ")");
 					checkedBoundaries++;
 				}
 			}
 			// The sweep has to have actually looked at something: a rename that made every
 			// computation unfindable would otherwise pass silently.
-			Assert.Greater(checkedBoundaries, 0, "the sweep found no computation to check");
+			ClassicAssert.Greater(checkedBoundaries, 0, "the sweep found no computation to check");
 		}
 
 		/// <summary>The ban fires. Without this the sweep above proves nothing, because no Qud
@@ -382,9 +383,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomComputeRefusal refusal;
 			string offender;
-			Assert.IsFalse(KingdomComputeSeam.TryValidateBoundary(typeof(XRL.World.ForgedGameObject), typeof(SeamCargo), out refusal, out offender));
-			Assert.AreEqual(KingdomComputeRefusal.EngineTypeAtBoundary, refusal);
-			Assert.AreEqual("XRL.World.ForgedGameObject", offender);
+			ClassicAssert.IsFalse(KingdomComputeSeam.TryValidateBoundary(typeof(XRL.World.ForgedGameObject), typeof(SeamCargo), out refusal, out offender));
+			ClassicAssert.AreEqual(KingdomComputeRefusal.EngineTypeAtBoundary, refusal);
+			ClassicAssert.AreEqual("XRL.World.ForgedGameObject", offender);
 		}
 
 		[Test]
@@ -392,9 +393,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomComputeRefusal refusal;
 			string offender;
-			Assert.IsFalse(KingdomComputeSeam.TryValidateBoundary(typeof(SeamMutableCargo), typeof(SeamCargo), out refusal, out offender));
-			Assert.AreEqual(KingdomComputeRefusal.MutableField, refusal);
-			Assert.IsTrue(offender.EndsWith("SeamMutableCargo.Amount"), offender);
+			ClassicAssert.IsFalse(KingdomComputeSeam.TryValidateBoundary(typeof(SeamMutableCargo), typeof(SeamCargo), out refusal, out offender));
+			ClassicAssert.AreEqual(KingdomComputeRefusal.MutableField, refusal);
+			ClassicAssert.IsTrue(offender.EndsWith("SeamMutableCargo.Amount"), offender);
 		}
 
 		[Test]
@@ -402,9 +403,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomComputeRefusal refusal;
 			string offender;
-			Assert.IsFalse(KingdomComputeSeam.TryValidateBoundary(typeof(SeamStaticCargo), typeof(SeamCargo), out refusal, out offender));
-			Assert.AreEqual(KingdomComputeRefusal.MutableStatic, refusal);
-			Assert.IsTrue(offender.EndsWith("SeamStaticCargo.Tally"), offender);
+			ClassicAssert.IsFalse(KingdomComputeSeam.TryValidateBoundary(typeof(SeamStaticCargo), typeof(SeamCargo), out refusal, out offender));
+			ClassicAssert.AreEqual(KingdomComputeRefusal.MutableStatic, refusal);
+			ClassicAssert.IsTrue(offender.EndsWith("SeamStaticCargo.Tally"), offender);
 		}
 
 		/// <summary>Engine-adjacent namespaces are named by prefix, and a prefix match is only a
@@ -420,7 +421,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, false)]
 		public void EngineNamespacesAreNamedOnBoundaries(string space, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomComputeSeam.IsEngineNamespace(space));
+			ClassicAssert.AreEqual(expected, KingdomComputeSeam.IsEngineNamespace(space));
 		}
 
 		[TestCase("Assembly-CSharp", true)]
@@ -431,7 +432,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, false)]
 		public void EngineAssembliesAreNamed(string assembly, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomComputeSeam.IsEngineAssembly(assembly));
+			ClassicAssert.AreEqual(expected, KingdomComputeSeam.IsEngineAssembly(assembly));
 		}
 
 		/// <summary>The whole model is boundary-eligible, so every one of its types must survive
@@ -458,7 +459,7 @@ namespace ThousandAndFirst.Tests
 			{
 				KingdomComputeRefusal refusal;
 				string offender;
-				Assert.IsTrue(KingdomComputeSeam.TryValidateType(type, out refusal, out offender),
+				ClassicAssert.IsTrue(KingdomComputeSeam.TryValidateType(type, out refusal, out offender),
 					type.Name + " failed the seam walk at " + offender + " (" + refusal + ")");
 			}
 		}

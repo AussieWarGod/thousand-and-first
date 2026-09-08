@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
@@ -12,9 +13,9 @@ namespace ThousandAndFirst.Tests
 		public void FreshBookHasExplicitVersionedUnadmittedStorage()
 		{
 			KingdomCityBook city = new KingdomCityBook();
-			Assert.AreEqual(4, city.SchemaVersion);
-			Assert.AreEqual(KingdomSubsidenceStepCodec.FreshWire, city.SubsidenceModel);
-			Assert.IsTrue(city.HasValidSubsidenceStorage());
+			ClassicAssert.AreEqual(4, city.SchemaVersion);
+			ClassicAssert.AreEqual(KingdomSubsidenceStepCodec.FreshWire, city.SubsidenceModel);
+			ClassicAssert.IsTrue(city.HasValidSubsidenceStorage());
 		}
 
 		[TestCase(1)]
@@ -25,15 +26,15 @@ namespace ThousandAndFirst.Tests
 			KingdomCityBook city = new KingdomCityBook();
 			city.ReadNamedState(() =>
 			{
-				Assert.AreEqual(0, city.SchemaVersion);
-				Assert.IsNull(city.SubsidenceModel);
+				ClassicAssert.AreEqual(0, city.SchemaVersion);
+				ClassicAssert.IsNull(city.SubsidenceModel);
 				city.SchemaVersion = schema;
 				city.ProcessedThroughTick = 777L;
 			});
-			Assert.AreEqual(4, city.SchemaVersion);
-			Assert.AreEqual(KingdomSubsidenceStepCodec.LegacyWire, city.SubsidenceModel);
-			Assert.AreEqual(777L, city.ProcessedThroughTick);
-			Assert.IsTrue(city.HasValidSubsidenceStorage());
+			ClassicAssert.AreEqual(4, city.SchemaVersion);
+			ClassicAssert.AreEqual(KingdomSubsidenceStepCodec.LegacyWire, city.SubsidenceModel);
+			ClassicAssert.AreEqual(777L, city.ProcessedThroughTick);
+			ClassicAssert.IsTrue(city.HasValidSubsidenceStorage());
 		}
 
 		[TestCase("ss1:new")]
@@ -42,8 +43,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityBook city = new KingdomCityBook();
 			city.ReadNamedState(() => { city.SchemaVersion = 4; city.SubsidenceModel = wire; });
-			Assert.AreEqual(wire, city.SubsidenceModel);
-			Assert.IsFalse(city.SubsidenceReadFailed);
+			ClassicAssert.AreEqual(wire, city.SubsidenceModel);
+			ClassicAssert.IsFalse(city.SubsidenceReadFailed);
 		}
 
 		[TestCase(null)]
@@ -59,9 +60,9 @@ namespace ThousandAndFirst.Tests
 				city.SubsidenceModel = wire;
 			}));
 			city.Normalize();
-			Assert.AreEqual(wire, city.SubsidenceModel);
-			Assert.IsTrue(city.SubsidenceReadFailed);
-			Assert.IsFalse(city.HasValidSubsidenceStorage());
+			ClassicAssert.AreEqual(wire, city.SubsidenceModel);
+			ClassicAssert.IsTrue(city.SubsidenceReadFailed);
+			ClassicAssert.IsFalse(city.HasValidSubsidenceStorage());
 		}
 
 		[TestCase(-1)]
@@ -72,8 +73,8 @@ namespace ThousandAndFirst.Tests
 			KingdomCityBook city = new KingdomCityBook();
 			Assert.Throws<InvalidDataException>(() =>
 				city.ReadNamedState(() => city.SchemaVersion = schema));
-			Assert.IsNull(city.SubsidenceModel);
-			Assert.IsTrue(city.SubsidenceReadFailed);
+			ClassicAssert.IsNull(city.SubsidenceModel);
+			ClassicAssert.IsTrue(city.SubsidenceReadFailed);
 		}
 
 		[TestCase(1, "ss1:new")]
@@ -87,8 +88,8 @@ namespace ThousandAndFirst.Tests
 				city.SchemaVersion = schema;
 				city.SubsidenceModel = wire;
 			}));
-			Assert.AreEqual(wire, city.SubsidenceModel);
-			Assert.IsTrue(city.SubsidenceReadFailed);
+			ClassicAssert.AreEqual(wire, city.SubsidenceModel);
+			ClassicAssert.IsTrue(city.SubsidenceReadFailed);
 		}
 
 		[TestCase(false)]
@@ -106,10 +107,10 @@ namespace ThousandAndFirst.Tests
 			captured.ReadFrom(original);
 			KingdomSettlement restored = new KingdomSettlement();
 			captured.WriteTo(restored);
-			Assert.AreSame(city, restored.City);
-			Assert.AreEqual(1234L, restored.LastSubsidenceTick);
-			Assert.IsTrue(restored.City.SubsidenceReadFailed);
-			Assert.IsFalse(restored.City.HasValidSubsidenceStorage());
+			ClassicAssert.AreSame(city, restored.City);
+			ClassicAssert.AreEqual(1234L, restored.LastSubsidenceTick);
+			ClassicAssert.IsTrue(restored.City.SubsidenceReadFailed);
+			ClassicAssert.IsFalse(restored.City.HasValidSubsidenceStorage());
 		}
 
 		[Test]
@@ -124,9 +125,9 @@ namespace ThousandAndFirst.Tests
 				captured.ReadFrom(current);
 				KingdomSettlement restored = new KingdomSettlement();
 				captured.WriteTo(restored);
-				Assert.AreSame(exact, restored.City);
-				Assert.AreEqual(9876L, restored.LastSubsidenceTick);
-				Assert.AreEqual("ss1:legacy", restored.City.SubsidenceModel);
+				ClassicAssert.AreSame(exact, restored.City);
+				ClassicAssert.AreEqual(9876L, restored.LastSubsidenceTick);
+				ClassicAssert.AreEqual("ss1:legacy", restored.City.SubsidenceModel);
 				current = restored;
 			}
 		}
@@ -142,22 +143,22 @@ namespace ThousandAndFirst.Tests
 			captured.ReadFrom(source);
 			KingdomSettlement restored = new KingdomSettlement();
 			captured.WriteTo(restored);
-			Assert.AreSame(source.City, restored.City);
-			Assert.AreEqual(wire, restored.City.SubsidenceModel);
-			Assert.AreEqual(9876L, restored.LastSubsidenceTick);
-			Assert.IsTrue(restored.City.HasValidSubsidenceStorage());
+			ClassicAssert.AreSame(source.City, restored.City);
+			ClassicAssert.AreEqual(wire, restored.City.SubsidenceModel);
+			ClassicAssert.AreEqual(9876L, restored.LastSubsidenceTick);
+			ClassicAssert.IsTrue(restored.City.HasValidSubsidenceStorage());
 		}
 
 		internal static string PendingWire(bool faulted)
 		{
-			Assert.IsTrue(KingdomIdentityRules.TryMintRealm(new string('1', 32),
+			ClassicAssert.IsTrue(KingdomIdentityRules.TryMintRealm(new string('1', 32),
 				out string realm, out KingdomIdentityFault fault));
-			Assert.IsTrue(KingdomIdentityRules.TryMintSettlement(realm, new string('2', 32),
+			ClassicAssert.IsTrue(KingdomIdentityRules.TryMintSettlement(realm, new string('2', 32),
 				out string settlement, out fault));
-			Assert.IsTrue(KingdomSubsidenceStepCodec.TryDecode("ss1:legacy", out KingdomSubsidenceStepBook legacy));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryAdmit(legacy, realm, settlement,
+			ClassicAssert.IsTrue(KingdomSubsidenceStepCodec.TryDecode("ss1:legacy", out KingdomSubsidenceStepBook legacy));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryAdmit(legacy, realm, settlement,
 				out KingdomSubsidenceStepBook admitted));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryBegin(admitted, 9876L,
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryBegin(admitted, 9876L,
 				9876L + KingdomSubsidenceStepRules.StepTicks, GrowthStage.City, 5,
 				out KingdomSubsidenceStepBook begun, 0, "water"));
 			KingdomResidentDepartureOperation departure = new KingdomResidentDepartureOperation
@@ -170,12 +171,12 @@ namespace ThousandAndFirst.Tests
 			};
 			departure.OperationId = KingdomResidentDepartureRules.Id(realm, settlement,
 				departure.ResidentId, departure.BodyObjectId, departure.PreparedTick);
-			Assert.IsTrue(KingdomResidentDepartureRules.Valid(departure));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(begun, departure,
+			ClassicAssert.IsTrue(KingdomResidentDepartureRules.Valid(departure));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(begun, departure,
 				out KingdomSubsidenceStepBook pending));
 			if (faulted) pending = pending.With(pending.Active.Copy(
 				phase: KingdomSubsidenceStepPhase.Quarantined, fault: "storage-fixture-cut"), pending.Sequence);
-			Assert.IsTrue(KingdomSubsidenceStepCodec.TryEncode(pending, out string wire));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepCodec.TryEncode(pending, out string wire));
 			return wire;
 		}
 

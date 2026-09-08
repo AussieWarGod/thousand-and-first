@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -25,13 +26,13 @@ namespace ThousandAndFirst.Tests
 
 		private static void AssertEnumAbi(Type Type, string Names)
 		{
-			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(Type), Type.Name);
-			Assert.AreEqual("ThousandAndFirst." + Type.Name, Type.FullName);
-			Assert.AreEqual(Names, string.Join("|", Enum.GetNames(Type)), Type.Name);
+			ClassicAssert.AreEqual(typeof(int), Enum.GetUnderlyingType(Type), Type.Name);
+			ClassicAssert.AreEqual("ThousandAndFirst." + Type.Name, Type.FullName);
+			ClassicAssert.AreEqual(Names, string.Join("|", Enum.GetNames(Type)), Type.Name);
 			Array values = Enum.GetValues(Type);
 			for (int i = 0; i < values.Length; i++)
 			{
-				Assert.AreEqual(i, Convert.ToInt32(values.GetValue(i)), Type.Name + "[" + i + "]");
+				ClassicAssert.AreEqual(i, Convert.ToInt32(values.GetValue(i)), Type.Name + "[" + i + "]");
 			}
 		}
 
@@ -54,15 +55,15 @@ namespace ThousandAndFirst.Tests
 			AssertEnumAbi(typeof(BountyTerminalPhase), "None|ChronicleDone|LedgerIntent|LedgerDone|MessageIntent|MessageDone|CleanupAttempting|CleanupLost");
 
 			Type attempt = typeof(KingdomBountyRules.BountyAttempt);
-			Assert.AreEqual("ThousandAndFirst.KingdomBountyRules+BountyAttempt", attempt.FullName);
-			Assert.AreEqual(typeof(bool), attempt.GetField("Determined").FieldType);
-			Assert.AreEqual(typeof(BountyOutcome), attempt.GetField("Outcome").FieldType);
-			Assert.AreEqual(typeof(string), attempt.GetField("Name").FieldType);
-			Assert.AreEqual(typeof(int), attempt.GetField("RosterIndex").FieldType);
-			Assert.AreEqual(typeof(int), attempt.GetField("VirtueIndex").FieldType);
-			Assert.AreEqual(typeof(int), attempt.GetField("FlawIndex").FieldType);
-			Assert.AreEqual(typeof(bool), attempt.GetField("TasteMatched").FieldType);
-			Assert.AreEqual(7, attempt.GetFields().Length);
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomBountyRules+BountyAttempt", attempt.FullName);
+			ClassicAssert.AreEqual(typeof(bool), attempt.GetField("Determined").FieldType);
+			ClassicAssert.AreEqual(typeof(BountyOutcome), attempt.GetField("Outcome").FieldType);
+			ClassicAssert.AreEqual(typeof(string), attempt.GetField("Name").FieldType);
+			ClassicAssert.AreEqual(typeof(int), attempt.GetField("RosterIndex").FieldType);
+			ClassicAssert.AreEqual(typeof(int), attempt.GetField("VirtueIndex").FieldType);
+			ClassicAssert.AreEqual(typeof(int), attempt.GetField("FlawIndex").FieldType);
+			ClassicAssert.AreEqual(typeof(bool), attempt.GetField("TasteMatched").FieldType);
+			ClassicAssert.AreEqual(7, attempt.GetFields().Length);
 		}
 
 		// --- The task tables ------------------------------------------------------------------
@@ -70,11 +71,11 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TaskCount_MatchesTheEnumSoANewTaskCannotBeForgottenInTheTables()
 		{
-			Assert.AreEqual(KingdomBountyRules.TaskCount, Enum.GetValues(typeof(BountyTask)).Length);
-			Assert.AreEqual(KingdomBountyRules.TaskCount, KingdomBountyRules.TaskKeys.Length);
-			Assert.AreEqual(KingdomBountyRules.TaskCount, KingdomBountyRules.TaskNames.Length);
-			Assert.AreEqual(KingdomBountyRules.TaskCount, KingdomBountyRules.TaskTasteCategories.Length);
-			Assert.AreEqual(KingdomBountyRules.TaskCount, KingdomBountyRules.TakeBaseChance.Length);
+			ClassicAssert.AreEqual(KingdomBountyRules.TaskCount, Enum.GetValues(typeof(BountyTask)).Length);
+			ClassicAssert.AreEqual(KingdomBountyRules.TaskCount, KingdomBountyRules.TaskKeys.Length);
+			ClassicAssert.AreEqual(KingdomBountyRules.TaskCount, KingdomBountyRules.TaskNames.Length);
+			ClassicAssert.AreEqual(KingdomBountyRules.TaskCount, KingdomBountyRules.TaskTasteCategories.Length);
+			ClassicAssert.AreEqual(KingdomBountyRules.TaskCount, KingdomBountyRules.TakeBaseChance.Length);
 		}
 
 		[Test]
@@ -82,8 +83,8 @@ namespace ThousandAndFirst.Tests
 		{
 			HashSet<string> keys = new HashSet<string>(KingdomBountyRules.TaskKeys, StringComparer.Ordinal);
 			HashSet<string> names = new HashSet<string>(KingdomBountyRules.TaskNames, StringComparer.Ordinal);
-			Assert.AreEqual(KingdomBountyRules.TaskCount, keys.Count);
-			Assert.AreEqual(KingdomBountyRules.TaskCount, names.Count);
+			ClassicAssert.AreEqual(KingdomBountyRules.TaskCount, keys.Count);
+			ClassicAssert.AreEqual(KingdomBountyRules.TaskCount, names.Count);
 		}
 
 		[TestCase(BountyTask.Clearance, "clearance")]
@@ -92,15 +93,15 @@ namespace ThousandAndFirst.Tests
 		[TestCase(BountyTask.Scouting, "scouting")]
 		public void TaskKey_NamesItsOwnTask(BountyTask task, string expected)
 		{
-			Assert.AreEqual(expected, KingdomBountyRules.TaskKey(task));
+			ClassicAssert.AreEqual(expected, KingdomBountyRules.TaskKey(task));
 		}
 
 		[Test]
 		public void TaskKeyAndName_FallBackRatherThanThrowOnAValueOutsideTheEnum()
 		{
-			Assert.AreEqual(KingdomBountyRules.TaskKeys[0], KingdomBountyRules.TaskKey((BountyTask)99));
-			Assert.AreEqual(KingdomBountyRules.TaskNames[0], KingdomBountyRules.TaskName((BountyTask)99));
-			Assert.AreEqual(KingdomBountyRules.TaskKeys[0], KingdomBountyRules.TaskKey((BountyTask)(-1)));
+			ClassicAssert.AreEqual(KingdomBountyRules.TaskKeys[0], KingdomBountyRules.TaskKey((BountyTask)99));
+			ClassicAssert.AreEqual(KingdomBountyRules.TaskNames[0], KingdomBountyRules.TaskName((BountyTask)99));
+			ClassicAssert.AreEqual(KingdomBountyRules.TaskKeys[0], KingdomBountyRules.TaskKey((BountyTask)(-1)));
 		}
 
 		[TestCase(BountyTask.Clearance)]
@@ -110,15 +111,15 @@ namespace ThousandAndFirst.Tests
 		public void TasteIndexFor_ResolvesIntoTheCeremonysOwnFamilyList(BountyTask task)
 		{
 			int index = KingdomBountyRules.TasteIndexFor(task);
-			Assert.IsTrue(index >= 0, "task " + task + " names a family the ceremony does not carry");
-			Assert.IsTrue(index < KingdomCeremonyRules.TasteCategories.Length);
-			Assert.AreEqual(KingdomBountyRules.TaskTasteCategories[(int)task], KingdomCeremonyRules.TasteCategories[index]);
+			ClassicAssert.IsTrue(index >= 0, "task " + task + " names a family the ceremony does not carry");
+			ClassicAssert.IsTrue(index < KingdomCeremonyRules.TasteCategories.Length);
+			ClassicAssert.AreEqual(KingdomBountyRules.TaskTasteCategories[(int)task], KingdomCeremonyRules.TasteCategories[index]);
 		}
 
 		[Test]
 		public void TasteIndexFor_ReportsMinusOneForATaskOutsideTheEnumRatherThanIndexZero()
 		{
-			Assert.AreEqual(-1, KingdomBountyRules.TasteIndexFor((BountyTask)99));
+			ClassicAssert.AreEqual(-1, KingdomBountyRules.TasteIndexFor((BountyTask)99));
 		}
 
 		[Test]
@@ -127,7 +128,7 @@ namespace ThousandAndFirst.Tests
 			HashSet<int> seen = new HashSet<int>();
 			for (int i = 0; i < KingdomBountyRules.TaskCount; i++)
 			{
-				Assert.IsTrue(seen.Add(KingdomBountyRules.TasteIndexFor((BountyTask)i)), "two tasks share a taste family");
+				ClassicAssert.IsTrue(seen.Add(KingdomBountyRules.TasteIndexFor((BountyTask)i)), "two tasks share a taste family");
 			}
 		}
 
@@ -142,7 +143,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(int.MaxValue, KingdomBountyRules.MaxPrice)]
 		public void ClampPrice_FoldsAnythingIntoAPayablePrice(int given, int expected)
 		{
-			Assert.AreEqual(expected, KingdomBountyRules.ClampPrice(given));
+			ClassicAssert.AreEqual(expected, KingdomBountyRules.ClampPrice(given));
 		}
 
 		[Test]
@@ -154,7 +155,7 @@ namespace ThousandAndFirst.Tests
 				for (int j = 0; j < magnitudes.Length; j++)
 				{
 					int price = KingdomBountyRules.SuggestedPrice((BountyTask)i, magnitudes[j]);
-					Assert.IsTrue(price >= KingdomBountyRules.MinPrice && price <= KingdomBountyRules.MaxPrice,
+					ClassicAssert.IsTrue(price >= KingdomBountyRules.MinPrice && price <= KingdomBountyRules.MaxPrice,
 						"task " + (BountyTask)i + " magnitude " + magnitudes[j] + " suggested " + price);
 				}
 			}
@@ -163,15 +164,15 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void SuggestedPrice_AsksMoreForMoreGroundAndMoreLoads()
 		{
-			Assert.IsTrue(KingdomBountyRules.SuggestedPrice(BountyTask.Clearance, 40) > KingdomBountyRules.SuggestedPrice(BountyTask.Clearance, 4));
-			Assert.IsTrue(KingdomBountyRules.SuggestedPrice(BountyTask.Fetch, 30) > KingdomBountyRules.SuggestedPrice(BountyTask.Fetch, 3));
+			ClassicAssert.IsTrue(KingdomBountyRules.SuggestedPrice(BountyTask.Clearance, 40) > KingdomBountyRules.SuggestedPrice(BountyTask.Clearance, 4));
+			ClassicAssert.IsTrue(KingdomBountyRules.SuggestedPrice(BountyTask.Fetch, 30) > KingdomBountyRules.SuggestedPrice(BountyTask.Fetch, 3));
 		}
 
 		[Test]
 		public void SuggestedPrice_IgnoresMagnitudeForTheTwoTasksThatHaveNoSize()
 		{
-			Assert.AreEqual(KingdomBountyRules.SuggestedPrice(BountyTask.Manning, 0), KingdomBountyRules.SuggestedPrice(BountyTask.Manning, 900));
-			Assert.AreEqual(KingdomBountyRules.SuggestedPrice(BountyTask.Scouting, 0), KingdomBountyRules.SuggestedPrice(BountyTask.Scouting, 900));
+			ClassicAssert.AreEqual(KingdomBountyRules.SuggestedPrice(BountyTask.Manning, 0), KingdomBountyRules.SuggestedPrice(BountyTask.Manning, 900));
+			ClassicAssert.AreEqual(KingdomBountyRules.SuggestedPrice(BountyTask.Scouting, 0), KingdomBountyRules.SuggestedPrice(BountyTask.Scouting, 900));
 		}
 
 		// --- Who reads it ---------------------------------------------------------------------
@@ -183,24 +184,24 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < names.Length; i++)
 			{
 				ulong ordinal = KingdomBountyRules.PersonOrdinal(names[i]);
-				Assert.IsTrue((ordinal & 0x8000000000000000uL) != 0uL, "top bit clear for '" + names[i] + "'");
-				Assert.IsTrue(ordinal > (ulong)long.MaxValue, "ordinal is reachable by a tick count");
+				ClassicAssert.IsTrue((ordinal & 0x8000000000000000uL) != 0uL, "top bit clear for '" + names[i] + "'");
+				ClassicAssert.IsTrue(ordinal > (ulong)long.MaxValue, "ordinal is reachable by a tick count");
 			}
 		}
 
 		[Test]
 		public void PersonOrdinal_IsStableForOneNameAndDistinctBetweenNames()
 		{
-			Assert.AreEqual(KingdomBountyRules.PersonOrdinal("Aeru"), KingdomBountyRules.PersonOrdinal("Aeru"));
-			Assert.AreNotEqual(KingdomBountyRules.PersonOrdinal("Aeru"), KingdomBountyRules.PersonOrdinal("Voss"));
-			Assert.AreNotEqual(KingdomBountyRules.PersonOrdinal("Aeru"), KingdomBountyRules.PersonOrdinal("aeru"));
-			Assert.AreNotEqual(KingdomBountyRules.PersonOrdinal("ab"), KingdomBountyRules.PersonOrdinal("ba"));
+			ClassicAssert.AreEqual(KingdomBountyRules.PersonOrdinal("Aeru"), KingdomBountyRules.PersonOrdinal("Aeru"));
+			ClassicAssert.AreNotEqual(KingdomBountyRules.PersonOrdinal("Aeru"), KingdomBountyRules.PersonOrdinal("Voss"));
+			ClassicAssert.AreNotEqual(KingdomBountyRules.PersonOrdinal("Aeru"), KingdomBountyRules.PersonOrdinal("aeru"));
+			ClassicAssert.AreNotEqual(KingdomBountyRules.PersonOrdinal("ab"), KingdomBountyRules.PersonOrdinal("ba"));
 		}
 
 		[Test]
 		public void PersonOrdinal_TreatsNullAndEmptyAsTheSameStableOrdinalRatherThanThrowing()
 		{
-			Assert.AreEqual(KingdomBountyRules.PersonOrdinal(null), KingdomBountyRules.PersonOrdinal(""));
+			ClassicAssert.AreEqual(KingdomBountyRules.PersonOrdinal(null), KingdomBountyRules.PersonOrdinal(""));
 		}
 
 		[TestCase(0, 0, 0)]
@@ -214,7 +215,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(-3, 1, KingdomBountyRules.AppetiteEager)]
 		public void TraitAppetite_ReadsThePairRatherThanWhatThePairSays(int virtueIndex, int flawIndex, int expected)
 		{
-			Assert.AreEqual(expected, KingdomBountyRules.TraitAppetite(virtueIndex, flawIndex));
+			ClassicAssert.AreEqual(expected, KingdomBountyRules.TraitAppetite(virtueIndex, flawIndex));
 		}
 
 		[Test]
@@ -228,7 +229,7 @@ namespace ThousandAndFirst.Tests
 					seen.Add(KingdomBountyRules.TraitAppetite(virtueIndex, flawIndex));
 				}
 			}
-			Assert.AreEqual(3, seen.Count, "no notable is ever eager, or none is ever reluctant");
+			ClassicAssert.AreEqual(3, seen.Count, "no notable is ever eager, or none is ever reluctant");
 		}
 
 		// --- The chances ----------------------------------------------------------------------
@@ -236,17 +237,17 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ReadChancePercent_RisesWithThePriceAndStopsAtTheCeiling()
 		{
-			Assert.AreEqual(KingdomBountyRules.ReadBaseChance + KingdomBountyRules.ReadChancePerDram, KingdomBountyRules.ReadChancePercent(1));
-			Assert.IsTrue(KingdomBountyRules.ReadChancePercent(12) > KingdomBountyRules.ReadChancePercent(3));
-			Assert.AreEqual(KingdomBountyRules.ReadChanceCeiling, KingdomBountyRules.ReadChancePercent(KingdomBountyRules.MaxPrice));
+			ClassicAssert.AreEqual(KingdomBountyRules.ReadBaseChance + KingdomBountyRules.ReadChancePerDram, KingdomBountyRules.ReadChancePercent(1));
+			ClassicAssert.IsTrue(KingdomBountyRules.ReadChancePercent(12) > KingdomBountyRules.ReadChancePercent(3));
+			ClassicAssert.AreEqual(KingdomBountyRules.ReadChanceCeiling, KingdomBountyRules.ReadChancePercent(KingdomBountyRules.MaxPrice));
 		}
 
 		[Test]
 		public void ReadChancePercent_ClampsThePriceBeforeReadingIt()
 		{
-			Assert.AreEqual(KingdomBountyRules.ReadChancePercent(1), KingdomBountyRules.ReadChancePercent(0));
-			Assert.AreEqual(KingdomBountyRules.ReadChancePercent(1), KingdomBountyRules.ReadChancePercent(-40));
-			Assert.AreEqual(KingdomBountyRules.ReadChancePercent(KingdomBountyRules.MaxPrice), KingdomBountyRules.ReadChancePercent(9999));
+			ClassicAssert.AreEqual(KingdomBountyRules.ReadChancePercent(1), KingdomBountyRules.ReadChancePercent(0));
+			ClassicAssert.AreEqual(KingdomBountyRules.ReadChancePercent(1), KingdomBountyRules.ReadChancePercent(-40));
+			ClassicAssert.AreEqual(KingdomBountyRules.ReadChancePercent(KingdomBountyRules.MaxPrice), KingdomBountyRules.ReadChancePercent(9999));
 		}
 
 		[Test]
@@ -254,8 +255,8 @@ namespace ThousandAndFirst.Tests
 		{
 			for (int price = -5; price <= 60; price++)
 			{
-				Assert.IsTrue(KingdomBountyRules.ReadChancePercent(price) <= KingdomBountyRules.ReadChanceCeiling);
-				Assert.IsTrue(KingdomBountyRules.ReadChancePercent(price) < 100);
+				ClassicAssert.IsTrue(KingdomBountyRules.ReadChancePercent(price) <= KingdomBountyRules.ReadChanceCeiling);
+				ClassicAssert.IsTrue(KingdomBountyRules.ReadChancePercent(price) < 100);
 			}
 		}
 
@@ -265,7 +266,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(BountyTask.Scouting)]
 		public void TakeChancePercent_StartsFromItsOwnTasksBase(BountyTask task)
 		{
-			Assert.AreEqual(KingdomBountyRules.TakeBaseChance[(int)task] + KingdomBountyRules.TakeChancePerDram,
+			ClassicAssert.AreEqual(KingdomBountyRules.TakeBaseChance[(int)task] + KingdomBountyRules.TakeChancePerDram,
 				KingdomBountyRules.TakeChancePercent(task, 1, Notable: false, TasteMatched: false, Appetite: 0));
 		}
 
@@ -273,11 +274,11 @@ namespace ThousandAndFirst.Tests
 		public void TakeChancePercent_EveryShadeActuallyMovesTheNumber()
 		{
 			int plain = KingdomBountyRules.TakeChancePercent(BountyTask.Manning, 1, false, false, 0);
-			Assert.AreEqual(plain + KingdomBountyRules.TakeTasteBonus, KingdomBountyRules.TakeChancePercent(BountyTask.Manning, 1, false, true, 0));
-			Assert.AreEqual(plain + KingdomBountyRules.TakeNotableBonus, KingdomBountyRules.TakeChancePercent(BountyTask.Manning, 1, true, false, 0));
-			Assert.AreEqual(plain + KingdomBountyRules.TakeAppetiteWeight, KingdomBountyRules.TakeChancePercent(BountyTask.Manning, 1, false, false, 1));
-			Assert.AreEqual(plain - KingdomBountyRules.TakeAppetiteWeight, KingdomBountyRules.TakeChancePercent(BountyTask.Manning, 1, false, false, -1));
-			Assert.IsTrue(KingdomBountyRules.TakeChancePercent(BountyTask.Manning, 20, false, false, 0) > plain);
+			ClassicAssert.AreEqual(plain + KingdomBountyRules.TakeTasteBonus, KingdomBountyRules.TakeChancePercent(BountyTask.Manning, 1, false, true, 0));
+			ClassicAssert.AreEqual(plain + KingdomBountyRules.TakeNotableBonus, KingdomBountyRules.TakeChancePercent(BountyTask.Manning, 1, true, false, 0));
+			ClassicAssert.AreEqual(plain + KingdomBountyRules.TakeAppetiteWeight, KingdomBountyRules.TakeChancePercent(BountyTask.Manning, 1, false, false, 1));
+			ClassicAssert.AreEqual(plain - KingdomBountyRules.TakeAppetiteWeight, KingdomBountyRules.TakeChancePercent(BountyTask.Manning, 1, false, false, -1));
+			ClassicAssert.IsTrue(KingdomBountyRules.TakeChancePercent(BountyTask.Manning, 20, false, false, 0) > plain);
 		}
 
 		[Test]
@@ -292,8 +293,8 @@ namespace ThousandAndFirst.Tests
 						for (int mask = 0; mask < 4; mask++)
 						{
 							int chance = KingdomBountyRules.TakeChancePercent((BountyTask)taskIndex, price, (mask & 1) != 0, (mask & 2) != 0, appetite);
-							Assert.IsTrue(chance >= KingdomBountyRules.TakeChanceFloor, "below the floor: " + chance);
-							Assert.IsTrue(chance <= KingdomBountyRules.TakeChanceCeiling, "above the ceiling: " + chance);
+							ClassicAssert.IsTrue(chance >= KingdomBountyRules.TakeChanceFloor, "below the floor: " + chance);
+							ClassicAssert.IsTrue(chance <= KingdomBountyRules.TakeChanceCeiling, "above the ceiling: " + chance);
 						}
 					}
 				}
@@ -303,7 +304,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TakeChancePercent_ClampsThePriceSoAHugeOfferCannotBuyCertainty()
 		{
-			Assert.AreEqual(KingdomBountyRules.TakeChancePercent(BountyTask.Fetch, KingdomBountyRules.MaxPrice, true, true, 1),
+			ClassicAssert.AreEqual(KingdomBountyRules.TakeChancePercent(BountyTask.Fetch, KingdomBountyRules.MaxPrice, true, true, 1),
 				KingdomBountyRules.TakeChancePercent(BountyTask.Fetch, 100000, true, true, 1));
 		}
 
@@ -317,12 +318,12 @@ namespace ThousandAndFirst.Tests
 			{
 				KingdomBountyRules.BountyAttempt first = KingdomBountyRules.Resolve(Settlement, 4200L, pass, roster, BountyTask.Fetch, 12);
 				KingdomBountyRules.BountyAttempt second = KingdomBountyRules.Resolve(Settlement, 4200L, pass, roster, BountyTask.Fetch, 12);
-				Assert.AreEqual(first.Outcome, second.Outcome);
-				Assert.AreEqual(first.Name, second.Name);
-				Assert.AreEqual(first.RosterIndex, second.RosterIndex);
-				Assert.AreEqual(first.VirtueIndex, second.VirtueIndex);
-				Assert.AreEqual(first.FlawIndex, second.FlawIndex);
-				Assert.AreEqual(first.TasteMatched, second.TasteMatched);
+				ClassicAssert.AreEqual(first.Outcome, second.Outcome);
+				ClassicAssert.AreEqual(first.Name, second.Name);
+				ClassicAssert.AreEqual(first.RosterIndex, second.RosterIndex);
+				ClassicAssert.AreEqual(first.VirtueIndex, second.VirtueIndex);
+				ClassicAssert.AreEqual(first.FlawIndex, second.FlawIndex);
+				ClassicAssert.AreEqual(first.TasteMatched, second.TasteMatched);
 			}
 		}
 
@@ -340,7 +341,7 @@ namespace ThousandAndFirst.Tests
 					differences++;
 				}
 			}
-			Assert.IsTrue(differences > 0, "two settlements drew the same notice the same way every pass");
+			ClassicAssert.IsTrue(differences > 0, "two settlements drew the same notice the same way every pass");
 		}
 
 		[Test]
@@ -353,18 +354,18 @@ namespace ThousandAndFirst.Tests
 				KingdomBountyRules.BountyAttempt attempt = KingdomBountyRules.Resolve(Settlement, 1200L, pass, roster, BountyTask.Clearance, 8);
 				seen.Add(attempt.Outcome + "/" + (attempt.Name ?? "-"));
 			}
-			Assert.IsTrue(seen.Count > 1, "every pass drew the same reader and the same answer");
+			ClassicAssert.IsTrue(seen.Count > 1, "every pass drew the same reader and the same answer");
 		}
 
 		[Test]
 		public void Resolve_ReportsNobodyTriedWhenThereIsNobodyOnTheRoster()
 		{
 			KingdomBountyRules.BountyAttempt empty = KingdomBountyRules.Resolve(Settlement, 1200L, 0, new List<string>(), BountyTask.Fetch, 40);
-			Assert.AreEqual(BountyOutcome.NobodyTried, empty.Outcome);
-			Assert.IsNull(empty.Name);
-			Assert.AreEqual(-1, empty.RosterIndex);
+			ClassicAssert.AreEqual(BountyOutcome.NobodyTried, empty.Outcome);
+			ClassicAssert.IsNull(empty.Name);
+			ClassicAssert.AreEqual(-1, empty.RosterIndex);
 			KingdomBountyRules.BountyAttempt none = KingdomBountyRules.Resolve(Settlement, 1200L, 0, null, BountyTask.Fetch, 40);
-			Assert.AreEqual(BountyOutcome.NobodyTried, none.Outcome);
+			ClassicAssert.AreEqual(BountyOutcome.NobodyTried, none.Outcome);
 		}
 
 		[Test]
@@ -373,9 +374,9 @@ namespace ThousandAndFirst.Tests
 			List<string> roster = Roster("Aeru", "Voss");
 			for (int pass = 0; pass < 20; pass++)
 			{
-				Assert.AreEqual(BountyOutcome.NobodyTried, KingdomBountyRules.Resolve(null, 1200L, pass, roster, BountyTask.Fetch, 40).Outcome);
-				Assert.AreEqual(BountyOutcome.NobodyTried, KingdomBountyRules.Resolve("no", 1200L, pass, roster, BountyTask.Fetch, 40).Outcome);
-				Assert.AreEqual(BountyOutcome.NobodyTried, KingdomBountyRules.Resolve("NOT THE GRAMMAR", 1200L, pass, roster, BountyTask.Fetch, 40).Outcome);
+				ClassicAssert.AreEqual(BountyOutcome.NobodyTried, KingdomBountyRules.Resolve(null, 1200L, pass, roster, BountyTask.Fetch, 40).Outcome);
+				ClassicAssert.AreEqual(BountyOutcome.NobodyTried, KingdomBountyRules.Resolve("no", 1200L, pass, roster, BountyTask.Fetch, 40).Outcome);
+				ClassicAssert.AreEqual(BountyOutcome.NobodyTried, KingdomBountyRules.Resolve("NOT THE GRAMMAR", 1200L, pass, roster, BountyTask.Fetch, 40).Outcome);
 			}
 		}
 
@@ -388,11 +389,11 @@ namespace ThousandAndFirst.Tests
 				KingdomBountyRules.BountyAttempt attempt = KingdomBountyRules.Resolve(Settlement, 3600L, pass, roster, BountyTask.Scouting, 20);
 				if (attempt.Outcome == BountyOutcome.NobodyTried)
 				{
-					Assert.IsNull(attempt.Name);
+					ClassicAssert.IsNull(attempt.Name);
 					continue;
 				}
-				Assert.IsTrue(attempt.RosterIndex >= 0 && attempt.RosterIndex < roster.Count);
-				Assert.AreEqual(roster[attempt.RosterIndex], attempt.Name);
+				ClassicAssert.IsTrue(attempt.RosterIndex >= 0 && attempt.RosterIndex < roster.Count);
+				ClassicAssert.AreEqual(roster[attempt.RosterIndex], attempt.Name);
 			}
 		}
 
@@ -409,7 +410,7 @@ namespace ThousandAndFirst.Tests
 					readers.Add(attempt.Name);
 				}
 			}
-			Assert.AreEqual(3, readers.Count, "the notice only ever reached " + readers.Count + " of the three settlers");
+			ClassicAssert.AreEqual(3, readers.Count, "the notice only ever reached " + readers.Count + " of the three settlers");
 		}
 
 		[Test]
@@ -429,7 +430,7 @@ namespace ThousandAndFirst.Tests
 					rich++;
 				}
 			}
-			Assert.IsTrue(rich > cheap, "the posted price bought nothing: cheap=" + cheap + " rich=" + rich);
+			ClassicAssert.IsTrue(rich > cheap, "the posted price bought nothing: cheap=" + cheap + " rich=" + rich);
 		}
 
 		[Test]
@@ -450,8 +451,8 @@ namespace ThousandAndFirst.Tests
 					takings++;
 				}
 			}
-			Assert.IsTrue(refusals > 0, "nobody ever refused a posted notice");
-			Assert.IsTrue(takings > 0, "nobody ever took a posted notice");
+			ClassicAssert.IsTrue(refusals > 0, "nobody ever refused a posted notice");
+			ClassicAssert.IsTrue(takings > 0, "nobody ever took a posted notice");
 		}
 
 		[Test]
@@ -460,10 +461,10 @@ namespace ThousandAndFirst.Tests
 			List<string> roster = Roster("Aeru");
 			KingdomBountyRules.BountyAttempt capped = KingdomBountyRules.Resolve(Settlement, 1200L, KingdomBountyRules.MaxPasses, roster, BountyTask.Fetch, 8);
 			KingdomBountyRules.BountyAttempt beyond = KingdomBountyRules.Resolve(Settlement, 1200L, int.MaxValue, roster, BountyTask.Fetch, 8);
-			Assert.AreEqual(capped.Outcome, beyond.Outcome);
+			ClassicAssert.AreEqual(capped.Outcome, beyond.Outcome);
 			KingdomBountyRules.BountyAttempt negative = KingdomBountyRules.Resolve(Settlement, 1200L, -7, roster, BountyTask.Fetch, 8);
 			KingdomBountyRules.BountyAttempt zero = KingdomBountyRules.Resolve(Settlement, 1200L, 0, roster, BountyTask.Fetch, 8);
-			Assert.AreEqual(zero.Outcome, negative.Outcome);
+			ClassicAssert.AreEqual(zero.Outcome, negative.Outcome);
 		}
 
 		[Test]
@@ -485,8 +486,8 @@ namespace ThousandAndFirst.Tests
 					indifferent = name;
 				}
 			}
-			Assert.IsNotNull(tasteful, "no settler in five hundred ever wanted the stores kept ahead of need");
-			Assert.IsNotNull(indifferent);
+			ClassicAssert.IsNotNull(tasteful, "no settler in five hundred ever wanted the stores kept ahead of need");
+			ClassicAssert.IsNotNull(indifferent);
 			int read = 0;
 			for (int pass = 0; pass < 60; pass++)
 			{
@@ -494,15 +495,15 @@ namespace ThousandAndFirst.Tests
 				if (yes.Name != null)
 				{
 					read++;
-					Assert.IsTrue(yes.TasteMatched, "a settler who stated the task's own taste was not credited with it");
+					ClassicAssert.IsTrue(yes.TasteMatched, "a settler who stated the task's own taste was not credited with it");
 				}
 				KingdomBountyRules.BountyAttempt no = KingdomBountyRules.Resolve(Settlement, 8401L, pass, Roster(indifferent), BountyTask.Fetch, KingdomBountyRules.MaxPrice);
 				if (no.Name != null)
 				{
-					Assert.IsFalse(no.TasteMatched, "a settler who never stated the task's taste was credited with it anyway");
+					ClassicAssert.IsFalse(no.TasteMatched, "a settler who never stated the task's taste was credited with it anyway");
 				}
 			}
-			Assert.IsTrue(read > 0, "nobody read the notice at all, so nothing was proved");
+			ClassicAssert.IsTrue(read > 0, "nobody read the notice at all, so nothing was proved");
 		}
 
 		[Test]
@@ -529,7 +530,7 @@ namespace ThousandAndFirst.Tests
 			KingdomCeremonyRules.ChooseLeaderTraits(Settlement, KingdomBountyRules.PersonOrdinal(tasteful), out virtueIndex, out flawIndex);
 			int keen = KingdomBountyRules.TakeChancePercent(BountyTask.Manning, 8, false, true, KingdomBountyRules.TraitAppetite(virtueIndex, flawIndex));
 			int plain = KingdomBountyRules.TakeChancePercent(BountyTask.Manning, 8, false, false, KingdomBountyRules.TraitAppetite(virtueIndex, flawIndex));
-			Assert.IsTrue(keen > plain, "stating a taste for the work bought nothing");
+			ClassicAssert.IsTrue(keen > plain, "stating a taste for the work bought nothing");
 		}
 
 		// --- The frontier ---------------------------------------------------------------------
@@ -542,11 +543,11 @@ namespace ThousandAndFirst.Tests
 			{
 				int x;
 				int y;
-				Assert.IsTrue(KingdomBountyRules.TryNeighbour(10, 10, step, out x, out y));
-				Assert.IsFalse(x == 10 && y == 10, "step " + step + " named the zone itself");
-				Assert.IsTrue(offsets.Add((x - 10) + "," + (y - 10)), "step " + step + " repeated another step");
+				ClassicAssert.IsTrue(KingdomBountyRules.TryNeighbour(10, 10, step, out x, out y));
+				ClassicAssert.IsFalse(x == 10 && y == 10, "step " + step + " named the zone itself");
+				ClassicAssert.IsTrue(offsets.Add((x - 10) + "," + (y - 10)), "step " + step + " repeated another step");
 			}
-			Assert.AreEqual(KingdomBountyRules.NeighbourCount, offsets.Count);
+			ClassicAssert.AreEqual(KingdomBountyRules.NeighbourCount, offsets.Count);
 		}
 
 		[Test]
@@ -554,8 +555,8 @@ namespace ThousandAndFirst.Tests
 		{
 			int x;
 			int y;
-			Assert.IsFalse(KingdomBountyRules.TryNeighbour(10, 10, -1, out x, out y));
-			Assert.IsFalse(KingdomBountyRules.TryNeighbour(10, 10, KingdomBountyRules.NeighbourCount, out x, out y));
+			ClassicAssert.IsFalse(KingdomBountyRules.TryNeighbour(10, 10, -1, out x, out y));
+			ClassicAssert.IsFalse(KingdomBountyRules.TryNeighbour(10, 10, KingdomBountyRules.NeighbourCount, out x, out y));
 		}
 
 		[Test]
@@ -571,9 +572,9 @@ namespace ThousandAndFirst.Tests
 					refused++;
 					continue;
 				}
-				Assert.IsTrue(x >= 0 && y >= 0);
+				ClassicAssert.IsTrue(x >= 0 && y >= 0);
 			}
-			Assert.AreEqual(5, refused, "the corner of the world let a scout walk off it");
+			ClassicAssert.AreEqual(5, refused, "the corner of the world let a scout walk off it");
 		}
 
 		[TestCase(0, 0, 0)]
@@ -584,10 +585,10 @@ namespace ThousandAndFirst.Tests
 		{
 			int parasang;
 			int zone;
-			Assert.IsTrue(KingdomBountyRules.TrySplitGlobal(global, out parasang, out zone));
-			Assert.AreEqual(expectedParasang, parasang);
-			Assert.AreEqual(expectedZone, zone);
-			Assert.AreEqual(global, parasang * KingdomBountyRules.ZonesPerParasang + zone);
+			ClassicAssert.IsTrue(KingdomBountyRules.TrySplitGlobal(global, out parasang, out zone));
+			ClassicAssert.AreEqual(expectedParasang, parasang);
+			ClassicAssert.AreEqual(expectedZone, zone);
+			ClassicAssert.AreEqual(global, parasang * KingdomBountyRules.ZonesPerParasang + zone);
 		}
 
 		[Test]
@@ -595,16 +596,16 @@ namespace ThousandAndFirst.Tests
 		{
 			int parasang;
 			int zone;
-			Assert.IsFalse(KingdomBountyRules.TrySplitGlobal(-1, out parasang, out zone));
-			Assert.IsFalse(KingdomBountyRules.TrySplitGlobal(-3, out parasang, out zone));
+			ClassicAssert.IsFalse(KingdomBountyRules.TrySplitGlobal(-1, out parasang, out zone));
+			ClassicAssert.IsFalse(KingdomBountyRules.TrySplitGlobal(-3, out parasang, out zone));
 		}
 
 		[Test]
 		public void TryPickFrontier_RefusesWhenThereIsNothingToPickFrom()
 		{
 			int index;
-			Assert.IsFalse(KingdomBountyRules.TryPickFrontier(Settlement, 1200L, 0, 0, out index));
-			Assert.IsFalse(KingdomBountyRules.TryPickFrontier(Settlement, 1200L, 0, -4, out index));
+			ClassicAssert.IsFalse(KingdomBountyRules.TryPickFrontier(Settlement, 1200L, 0, 0, out index));
+			ClassicAssert.IsFalse(KingdomBountyRules.TryPickFrontier(Settlement, 1200L, 0, -4, out index));
 		}
 
 		[Test]
@@ -614,10 +615,10 @@ namespace ThousandAndFirst.Tests
 			{
 				int first;
 				int second;
-				Assert.IsTrue(KingdomBountyRules.TryPickFrontier(Settlement, 1200L, pass, 7, out first));
-				Assert.IsTrue(KingdomBountyRules.TryPickFrontier(Settlement, 1200L, pass, 7, out second));
-				Assert.AreEqual(first, second);
-				Assert.IsTrue(first >= 0 && first < 7);
+				ClassicAssert.IsTrue(KingdomBountyRules.TryPickFrontier(Settlement, 1200L, pass, 7, out first));
+				ClassicAssert.IsTrue(KingdomBountyRules.TryPickFrontier(Settlement, 1200L, pass, 7, out second));
+				ClassicAssert.AreEqual(first, second);
+				ClassicAssert.IsTrue(first >= 0 && first < 7);
 			}
 		}
 
@@ -631,15 +632,15 @@ namespace ThousandAndFirst.Tests
 				KingdomBountyRules.TryPickFrontier(Settlement, 5000L, pass, 5, out index);
 				picked.Add(index);
 			}
-			Assert.IsTrue(picked.Count > 1, "every scout reported the same edge");
+			ClassicAssert.IsTrue(picked.Count > 1, "every scout reported the same edge");
 		}
 
 		[Test]
 		public void TryPickFrontier_FallsBackToARealCandidateWhenTheKernelRefuses()
 		{
 			int index;
-			Assert.IsTrue(KingdomBountyRules.TryPickFrontier(null, 1200L, 0, 4, out index));
-			Assert.AreEqual(0, index);
+			ClassicAssert.IsTrue(KingdomBountyRules.TryPickFrontier(null, 1200L, 0, 4, out index));
+			ClassicAssert.AreEqual(0, index);
 		}
 
 		// --- How long the work takes ----------------------------------------------------------
@@ -652,22 +653,22 @@ namespace ThousandAndFirst.Tests
 		[TestCase(400, KingdomBountyRules.HaulMaxDays)]
 		public void HaulDays_ScalesWithTheLoadAndStopsAtItsCap(int units, int expected)
 		{
-			Assert.AreEqual(expected, KingdomBountyRules.HaulDays(units));
+			ClassicAssert.AreEqual(expected, KingdomBountyRules.HaulDays(units));
 		}
 
 		[Test]
 		public void WorkDays_ClearanceHasNoClockBecauseTheGangsOwnEffortIsItsClock()
 		{
-			Assert.AreEqual(0, KingdomBountyRules.WorkDays(BountyTask.Clearance, 40));
+			ClassicAssert.AreEqual(0, KingdomBountyRules.WorkDays(BountyTask.Clearance, 40));
 		}
 
 		[Test]
 		public void WorkDays_EveryOtherTaskRunsForARealNumberOfDays()
 		{
-			Assert.AreEqual(KingdomBountyRules.HaulDays(16), KingdomBountyRules.WorkDays(BountyTask.Fetch, 16));
-			Assert.AreEqual(KingdomBountyRules.ManningSeasonDays, KingdomBountyRules.WorkDays(BountyTask.Manning, 0));
-			Assert.AreEqual(KingdomBountyRules.ScoutDays, KingdomBountyRules.WorkDays(BountyTask.Scouting, 0));
-			Assert.IsTrue(KingdomBountyRules.ManningSeasonDays > KingdomBountyRules.ScoutDays);
+			ClassicAssert.AreEqual(KingdomBountyRules.HaulDays(16), KingdomBountyRules.WorkDays(BountyTask.Fetch, 16));
+			ClassicAssert.AreEqual(KingdomBountyRules.ManningSeasonDays, KingdomBountyRules.WorkDays(BountyTask.Manning, 0));
+			ClassicAssert.AreEqual(KingdomBountyRules.ScoutDays, KingdomBountyRules.WorkDays(BountyTask.Scouting, 0));
+			ClassicAssert.IsTrue(KingdomBountyRules.ManningSeasonDays > KingdomBountyRules.ScoutDays);
 		}
 
 		// --- Saying why, once -----------------------------------------------------------------
@@ -686,13 +687,13 @@ namespace ThousandAndFirst.Tests
 		[TestCase(BountyBlock.NoFreeHands, false)]
 		public void IsPermanent_SeparatesWhatCanLiftFromWhatNeverWill(BountyBlock block, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomBountyRules.IsPermanent(block));
+			ClassicAssert.AreEqual(expected, KingdomBountyRules.IsPermanent(block));
 		}
 
 		[Test]
 		public void BlockReason_SaysNothingOnlyWhenThereIsNothingToSay()
 		{
-			Assert.IsNull(KingdomBountyRules.BlockReason(BountyBlock.None, BountyTask.Fetch, "Ulu"));
+			ClassicAssert.IsNull(KingdomBountyRules.BlockReason(BountyBlock.None, BountyTask.Fetch, "Ulu"));
 			foreach (BountyBlock block in Enum.GetValues(typeof(BountyBlock)))
 			{
 				if (block == BountyBlock.None)
@@ -700,8 +701,8 @@ namespace ThousandAndFirst.Tests
 					continue;
 				}
 				string reason = KingdomBountyRules.BlockReason(block, BountyTask.Fetch, "Ulu");
-				Assert.IsFalse(string.IsNullOrEmpty(reason), "block " + block + " stalls in silence");
-				Assert.IsTrue(reason.EndsWith("."), "block " + block + " is not a sentence: " + reason);
+				ClassicAssert.IsFalse(string.IsNullOrEmpty(reason), "block " + block + " stalls in silence");
+				ClassicAssert.IsTrue(reason.EndsWith("."), "block " + block + " is not a sentence: " + reason);
 			}
 		}
 
@@ -715,7 +716,7 @@ namespace ThousandAndFirst.Tests
 					continue;
 				}
 				string reason = KingdomBountyRules.BlockReason(block, BountyTask.Clearance, "Ulu");
-				Assert.IsTrue(reason.Contains("No one will ever claim it")
+				ClassicAssert.IsTrue(reason.Contains("No one will ever claim it")
 					|| reason.Contains("take the notice down"),
 					"block " + block + " reads as a wait: " + reason);
 			}
@@ -724,14 +725,14 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void BlockReason_NamesTheSettlementAndSurvivesHavingNoNameForIt()
 		{
-			Assert.IsTrue(KingdomBountyRules.BlockReason(BountyBlock.NoIdleWork, BountyTask.Manning, "Ulu").Contains("Ulu"));
-			Assert.IsTrue(KingdomBountyRules.BlockReason(BountyBlock.NoIdleWork, BountyTask.Manning, null).Contains("the settlement"));
-			Assert.IsTrue(KingdomBountyRules.BlockReason(BountyBlock.NoIdleWork, BountyTask.Manning, "").Contains("the settlement"));
-			Assert.IsTrue(KingdomBountyRules.BlockReason(BountyBlock.ManningTargetLost,
+			ClassicAssert.IsTrue(KingdomBountyRules.BlockReason(BountyBlock.NoIdleWork, BountyTask.Manning, "Ulu").Contains("Ulu"));
+			ClassicAssert.IsTrue(KingdomBountyRules.BlockReason(BountyBlock.NoIdleWork, BountyTask.Manning, null).Contains("the settlement"));
+			ClassicAssert.IsTrue(KingdomBountyRules.BlockReason(BountyBlock.NoIdleWork, BountyTask.Manning, "").Contains("the settlement"));
+			ClassicAssert.IsTrue(KingdomBountyRules.BlockReason(BountyBlock.ManningTargetLost,
 				BountyTask.Manning, "Ulu").Contains("exact work"));
-			Assert.IsTrue(KingdomBountyRules.BlockReason(BountyBlock.ManningWorkerAbsent,
+			ClassicAssert.IsTrue(KingdomBountyRules.BlockReason(BountyBlock.ManningWorkerAbsent,
 				BountyTask.Manning, "Ulu").Contains("clock is stopped"));
-			Assert.IsTrue(KingdomBountyRules.BlockReason(BountyBlock.NoFreeHands,
+			ClassicAssert.IsTrue(KingdomBountyRules.BlockReason(BountyBlock.NoFreeHands,
 				BountyTask.Manning, "Ulu").Contains("ordinary work pool"));
 		}
 
@@ -740,9 +741,9 @@ namespace ThousandAndFirst.Tests
 		{
 			string clearance = KingdomBountyRules.BlockReason(BountyBlock.NobodyToTry, BountyTask.Clearance, "Ulu");
 			string scouting = KingdomBountyRules.BlockReason(BountyBlock.NobodyToTry, BountyTask.Scouting, "Ulu");
-			Assert.AreNotEqual(clearance, scouting);
-			Assert.IsTrue(clearance.Contains(KingdomBountyRules.TaskName(BountyTask.Clearance)));
-			Assert.IsTrue(scouting.Contains(KingdomBountyRules.TaskName(BountyTask.Scouting)));
+			ClassicAssert.AreNotEqual(clearance, scouting);
+			ClassicAssert.IsTrue(clearance.Contains(KingdomBountyRules.TaskName(BountyTask.Clearance)));
+			ClassicAssert.IsTrue(scouting.Contains(KingdomBountyRules.TaskName(BountyTask.Scouting)));
 		}
 
 		// --- The prose ------------------------------------------------------------------------
@@ -754,55 +755,55 @@ namespace ThousandAndFirst.Tests
 		public void NoticeText_StatesThePriceAndReadsDifferentlyForEachTask(BountyTask task)
 		{
 			string text = KingdomBountyRules.NoticeText(task, 7, null);
-			Assert.IsTrue(text.Contains("7 drams"), "the notice does not say what it pays: " + text);
-			Assert.AreNotEqual(KingdomBountyRules.NoticeText(BountyTask.Clearance, 7, null), KingdomBountyRules.NoticeText(BountyTask.Scouting, 7, null));
+			ClassicAssert.IsTrue(text.Contains("7 drams"), "the notice does not say what it pays: " + text);
+			ClassicAssert.AreNotEqual(KingdomBountyRules.NoticeText(BountyTask.Clearance, 7, null), KingdomBountyRules.NoticeText(BountyTask.Scouting, 7, null));
 		}
 
 		[Test]
 		public void NoticeText_CountsOneDramAsOneDram()
 		{
-			Assert.IsTrue(KingdomBountyRules.NoticeText(BountyTask.Fetch, 1, null).Contains("1 dram of"));
-			Assert.IsFalse(KingdomBountyRules.NoticeText(BountyTask.Fetch, 1, null).Contains("1 drams"));
+			ClassicAssert.IsTrue(KingdomBountyRules.NoticeText(BountyTask.Fetch, 1, null).Contains("1 dram of"));
+			ClassicAssert.IsFalse(KingdomBountyRules.NoticeText(BountyTask.Fetch, 1, null).Contains("1 drams"));
 		}
 
 		[Test]
 		public void NoticeText_ClampsThePriceItPrintsSoNoNoticeEverPromisesNothing()
 		{
-			Assert.IsTrue(KingdomBountyRules.NoticeText(BountyTask.Fetch, 0, null).Contains(KingdomBountyRules.MinPrice + " dram"));
-			Assert.IsTrue(KingdomBountyRules.NoticeText(BountyTask.Fetch, 9999, null).Contains(KingdomBountyRules.MaxPrice + " drams"));
+			ClassicAssert.IsTrue(KingdomBountyRules.NoticeText(BountyTask.Fetch, 0, null).Contains(KingdomBountyRules.MinPrice + " dram"));
+			ClassicAssert.IsTrue(KingdomBountyRules.NoticeText(BountyTask.Fetch, 9999, null).Contains(KingdomBountyRules.MaxPrice + " drams"));
 		}
 
 		[Test]
 		public void NoticeText_CarriesTheDetailClauseWhenThereIsOneAndReadsWholeWhenThereIsNot()
 		{
-			Assert.IsTrue(KingdomBountyRules.NoticeText(BountyTask.Clearance, 5, "The cord runs round 25 paces of it.").Contains("25 paces"));
-			Assert.IsFalse(KingdomBountyRules.NoticeText(BountyTask.Clearance, 5, null).EndsWith(" "));
+			ClassicAssert.IsTrue(KingdomBountyRules.NoticeText(BountyTask.Clearance, 5, "The cord runs round 25 paces of it.").Contains("25 paces"));
+			ClassicAssert.IsFalse(KingdomBountyRules.NoticeText(BountyTask.Clearance, 5, null).EndsWith(" "));
 		}
 
 		[Test]
 		public void PostedChronicle_IsALowerCaseClauseWithNoTrailingPeriod()
 		{
 			string line = KingdomBountyRules.PostedChronicle("Ulu", BountyTask.Clearance, 5);
-			Assert.IsFalse(line.EndsWith("."));
-			Assert.AreEqual(char.ToLowerInvariant(line[0]), line[0]);
-			Assert.IsTrue(line.Contains("Ulu"));
-			Assert.IsTrue(line.Contains("5 drams"));
+			ClassicAssert.IsFalse(line.EndsWith("."));
+			ClassicAssert.AreEqual(char.ToLowerInvariant(line[0]), line[0]);
+			ClassicAssert.IsTrue(line.Contains("Ulu"));
+			ClassicAssert.IsTrue(line.Contains("5 drams"));
 		}
 
 		[Test]
 		public void RefusedChronicle_NamesTheSettlerAndGivesTheirOwnDrawnFlawAsTheReason()
 		{
 			string line = KingdomBountyRules.RefusedChronicle("Aeru", BountyTask.Fetch, 3);
-			Assert.IsTrue(line.StartsWith("Aeru "));
-			Assert.IsTrue(line.Contains(KingdomCeremonyRules.FlawText(3)));
-			Assert.IsFalse(line.EndsWith("."));
+			ClassicAssert.IsTrue(line.StartsWith("Aeru "));
+			ClassicAssert.IsTrue(line.Contains(KingdomCeremonyRules.FlawText(3)));
+			ClassicAssert.IsFalse(line.EndsWith("."));
 		}
 
 		[Test]
 		public void RefusedChronicle_NeverLosesTheDeedWhenTheNameIsMissing()
 		{
-			Assert.IsTrue(KingdomBountyRules.RefusedChronicle(null, BountyTask.Fetch, 0).StartsWith("somebody "));
-			Assert.IsTrue(KingdomBountyRules.RefusedChronicle("", BountyTask.Fetch, 0).StartsWith("somebody "));
+			ClassicAssert.IsTrue(KingdomBountyRules.RefusedChronicle(null, BountyTask.Fetch, 0).StartsWith("somebody "));
+			ClassicAssert.IsTrue(KingdomBountyRules.RefusedChronicle("", BountyTask.Fetch, 0).StartsWith("somebody "));
 		}
 
 		[Test]
@@ -810,41 +811,41 @@ namespace ThousandAndFirst.Tests
 		{
 			string plain = KingdomBountyRules.TakenChronicle("Voss", BountyTask.Manning, 2, TasteMatched: false);
 			string tasted = KingdomBountyRules.TakenChronicle("Voss", BountyTask.Manning, 2, TasteMatched: true);
-			Assert.AreNotEqual(plain, tasted);
-			Assert.IsTrue(tasted.Contains("the very thing they had said they wanted to see"));
-			Assert.IsTrue(plain.Contains(KingdomCeremonyRules.VirtueText(2)));
-			Assert.IsTrue(plain.StartsWith("Voss "));
+			ClassicAssert.AreNotEqual(plain, tasted);
+			ClassicAssert.IsTrue(tasted.Contains("the very thing they had said they wanted to see"));
+			ClassicAssert.IsTrue(plain.Contains(KingdomCeremonyRules.VirtueText(2)));
+			ClassicAssert.IsTrue(plain.StartsWith("Voss "));
 		}
 
 		[Test]
 		public void PaidChronicle_SaysWhatLeftTheStoresAndInFrontOfWhom()
 		{
 			string line = KingdomBountyRules.PaidChronicle("Kest", "Ulu", BountyTask.Scouting, 6);
-			Assert.IsTrue(line.Contains("Kest"));
-			Assert.IsTrue(line.Contains("Ulu"));
-			Assert.IsTrue(line.Contains("6 drams"));
-			Assert.IsFalse(line.EndsWith("."));
+			ClassicAssert.IsTrue(line.Contains("Kest"));
+			ClassicAssert.IsTrue(line.Contains("Ulu"));
+			ClassicAssert.IsTrue(line.Contains("6 drams"));
+			ClassicAssert.IsFalse(line.EndsWith("."));
 		}
 
 		[Test]
 		public void OwedChronicle_StatesTheDebtPlainlyRatherThanWritingItOff()
 		{
 			string part = KingdomBountyRules.OwedChronicle("Kest", "Ulu", 3, 5);
-			Assert.IsTrue(part.Contains("3 drams"));
-			Assert.IsTrue(part.Contains("5 still owed"));
+			ClassicAssert.IsTrue(part.Contains("3 drams"));
+			ClassicAssert.IsTrue(part.Contains("5 still owed"));
 			string none = KingdomBountyRules.OwedChronicle("Kest", "Ulu", 0, 8);
-			Assert.IsTrue(none.Contains("not a dram"));
-			Assert.AreNotEqual(part, none);
+			ClassicAssert.IsTrue(none.Contains("not a dram"));
+			ClassicAssert.AreNotEqual(part, none);
 		}
 
 		[Test]
 		public void OwedLedgerNote_NamesTheCreditorAndTheAmountAndPromisesIt()
 		{
 			string note = KingdomBountyRules.OwedLedgerNote("Kest", 4);
-			Assert.IsTrue(note.Contains("Kest"));
-			Assert.IsTrue(note.Contains("4 drams"));
-			Assert.IsTrue(note.Contains("the day the stores can cover it"));
-			Assert.IsTrue(KingdomBountyRules.OwedLedgerNote(null, 1).Contains("1 dram "));
+			ClassicAssert.IsTrue(note.Contains("Kest"));
+			ClassicAssert.IsTrue(note.Contains("4 drams"));
+			ClassicAssert.IsTrue(note.Contains("the day the stores can cover it"));
+			ClassicAssert.IsTrue(KingdomBountyRules.OwedLedgerNote(null, 1).Contains("1 dram "));
 		}
 
 		[Test]
@@ -852,16 +853,16 @@ namespace ThousandAndFirst.Tests
 		{
 			string unclaimed = KingdomBountyRules.WithdrawnChronicle("Ulu", BountyTask.Fetch, Claimed: false, Name: null);
 			string claimed = KingdomBountyRules.WithdrawnChronicle("Ulu", BountyTask.Fetch, Claimed: true, Name: "Aeru");
-			Assert.AreNotEqual(unclaimed, claimed);
-			Assert.IsTrue(unclaimed.Contains("unclaimed and unpaid for"));
-			Assert.IsTrue(claimed.Contains("Aeru"));
-			Assert.IsTrue(claimed.Contains("nobody was made to give anything back"));
+			ClassicAssert.AreNotEqual(unclaimed, claimed);
+			ClassicAssert.IsTrue(unclaimed.Contains("unclaimed and unpaid for"));
+			ClassicAssert.IsTrue(claimed.Contains("Aeru"));
+			ClassicAssert.IsTrue(claimed.Contains("nobody was made to give anything back"));
 		}
 
 		[Test]
 		public void WithdrawnChronicle_FallsBackToTheUnclaimedTellingWhenNobodyIsNamed()
 		{
-			Assert.AreEqual(KingdomBountyRules.WithdrawnChronicle("Ulu", BountyTask.Fetch, false, null),
+			ClassicAssert.AreEqual(KingdomBountyRules.WithdrawnChronicle("Ulu", BountyTask.Fetch, false, null),
 				KingdomBountyRules.WithdrawnChronicle("Ulu", BountyTask.Fetch, true, null));
 		}
 
@@ -869,20 +870,20 @@ namespace ThousandAndFirst.Tests
 		public void ScoutChronicle_NamesTheGroundWhenItHasOneAndStaysASentenceWhenItDoesNot()
 		{
 			string named = KingdomBountyRules.ScoutChronicle("Kest", "Ulu", "a salt marsh");
-			Assert.IsTrue(named.Contains("a salt marsh"));
-			Assert.IsTrue(named.Contains("Kest"));
+			ClassicAssert.IsTrue(named.Contains("a salt marsh"));
+			ClassicAssert.IsTrue(named.Contains("Kest"));
 			string unnamed = KingdomBountyRules.ScoutChronicle("Kest", "Ulu", null);
-			Assert.IsFalse(unnamed.EndsWith(":"));
-			Assert.AreNotEqual(named, unnamed);
+			ClassicAssert.IsFalse(unnamed.EndsWith(":"));
+			ClassicAssert.AreNotEqual(named, unnamed);
 		}
 
 		[Test]
 		public void ScoutDeed_IsALowerCaseNounPhraseFitForTheArrivalGrammar()
 		{
 			string deed = KingdomBountyRules.ScoutDeed("Ulu");
-			Assert.AreEqual(char.ToLowerInvariant(deed[0]), deed[0]);
-			Assert.IsFalse(deed.EndsWith("."));
-			Assert.IsTrue(deed.Contains("Ulu"));
+			ClassicAssert.AreEqual(char.ToLowerInvariant(deed[0]), deed[0]);
+			ClassicAssert.IsFalse(deed.EndsWith("."));
+			ClassicAssert.IsTrue(deed.Contains("Ulu"));
 		}
 
 		// --- Durable lifecycle fault decisions --------------------------------------------
@@ -891,34 +892,34 @@ namespace ThousandAndFirst.Tests
 		public void NoticeEventId_IsStableBoundedAndDistinctPerNotice()
 		{
 			string first = KingdomBountyRules.NoticeEventId("Notice / 41");
-			Assert.AreEqual(first, KingdomBountyRules.NoticeEventId("Notice / 41"));
-			Assert.AreNotEqual(first, KingdomBountyRules.NoticeEventId("Notice / 42"));
-			Assert.IsTrue(KingdomBountyRules.IsNoticeEventId(first));
-			Assert.LessOrEqual(first.Length, 180);
+			ClassicAssert.AreEqual(first, KingdomBountyRules.NoticeEventId("Notice / 41"));
+			ClassicAssert.AreNotEqual(first, KingdomBountyRules.NoticeEventId("Notice / 42"));
+			ClassicAssert.IsTrue(KingdomBountyRules.IsNoticeEventId(first));
+			ClassicAssert.LessOrEqual(first.Length, 180);
 		}
 
 		[Test]
 		public void TransferAction_ReloadNeverContinuesAMutationIntent()
 		{
-			Assert.AreEqual(BountyTransferAction.Bind, KingdomBountyRules.TransferAction(
+			ClassicAssert.AreEqual(BountyTransferAction.Bind, KingdomBountyRules.TransferAction(
 				BountyTransferPhase.None, BountyTransferLocation.SourceOnly));
-			Assert.AreEqual(BountyTransferAction.Remove, KingdomBountyRules.TransferAction(
+			ClassicAssert.AreEqual(BountyTransferAction.Remove, KingdomBountyRules.TransferAction(
 				BountyTransferPhase.Bound, BountyTransferLocation.SourceOnly));
-			Assert.AreEqual(BountyTransferAction.Quarantine, KingdomBountyRules.TransferAction(
+			ClassicAssert.AreEqual(BountyTransferAction.Quarantine, KingdomBountyRules.TransferAction(
 				BountyTransferPhase.RemoveIntent, BountyTransferLocation.Detached));
-			Assert.AreEqual(BountyTransferAction.Quarantine, KingdomBountyRules.TransferAction(
+			ClassicAssert.AreEqual(BountyTransferAction.Quarantine, KingdomBountyRules.TransferAction(
 				BountyTransferPhase.Detached, BountyTransferLocation.Detached));
-			Assert.AreEqual(BountyTransferAction.Quarantine, KingdomBountyRules.TransferAction(
+			ClassicAssert.AreEqual(BountyTransferAction.Quarantine, KingdomBountyRules.TransferAction(
 				BountyTransferPhase.AddIntent, BountyTransferLocation.DestinationOnly));
-			Assert.AreEqual(BountyTransferAction.Confirm, KingdomBountyRules.TransferAction(
+			ClassicAssert.AreEqual(BountyTransferAction.Confirm, KingdomBountyRules.TransferAction(
 				BountyTransferPhase.Arrived, BountyTransferLocation.DestinationOnly));
-			Assert.AreEqual(BountyTransferAction.Quarantine, KingdomBountyRules.TransferAction(
+			ClassicAssert.AreEqual(BountyTransferAction.Quarantine, KingdomBountyRules.TransferAction(
 				BountyTransferPhase.RemoveIntent, BountyTransferLocation.SourceOnly),
 				"an interrupted remove callback may have restored the source");
-			Assert.AreEqual(BountyTransferAction.Quarantine, KingdomBountyRules.TransferAction(
+			ClassicAssert.AreEqual(BountyTransferAction.Quarantine, KingdomBountyRules.TransferAction(
 				BountyTransferPhase.AddIntent, BountyTransferLocation.Detached),
 				"an interrupted add callback may have detached the item again");
-			Assert.AreEqual(BountyTransferAction.Quarantine, KingdomBountyRules.TransferAction(
+			ClassicAssert.AreEqual(BountyTransferAction.Quarantine, KingdomBountyRules.TransferAction(
 				BountyTransferPhase.Arrived, BountyTransferLocation.Both));
 		}
 
@@ -930,19 +931,19 @@ namespace ThousandAndFirst.Tests
 			int[] allocation = new int[2] { 3, 3 };
 			bool[] same = new bool[2] { true, true };
 			bool[] pure = new bool[2] { true, true };
-			Assert.AreEqual(BountyPaymentObservation.Original, KingdomBountyRules.ObservePayment(
+			ClassicAssert.AreEqual(BountyPaymentObservation.Original, KingdomBountyRules.ObservePayment(
 				6, original, new int[2] { 10, 8 }, allocation, same, pure, out proved));
-			Assert.AreEqual(0, proved);
-			Assert.AreEqual(BountyPaymentObservation.Debited, KingdomBountyRules.ObservePayment(
+			ClassicAssert.AreEqual(0, proved);
+			ClassicAssert.AreEqual(BountyPaymentObservation.Debited, KingdomBountyRules.ObservePayment(
 				6, original, new int[2] { 7, 5 }, allocation, same, pure, out proved));
-			Assert.AreEqual(6, proved);
-			Assert.AreEqual(BountyPaymentObservation.Mixed, KingdomBountyRules.ObservePayment(
+			ClassicAssert.AreEqual(6, proved);
+			ClassicAssert.AreEqual(BountyPaymentObservation.Mixed, KingdomBountyRules.ObservePayment(
 				6, original, new int[2] { 7, 8 }, allocation, same, pure, out proved));
-			Assert.AreEqual(3, proved);
-			Assert.AreEqual(BountyPaymentObservation.Uncertain, KingdomBountyRules.ObservePayment(
+			ClassicAssert.AreEqual(3, proved);
+			ClassicAssert.AreEqual(BountyPaymentObservation.Uncertain, KingdomBountyRules.ObservePayment(
 				6, original, new int[2] { 9, 8 }, allocation, same, pure, out proved));
-			Assert.AreEqual(0, proved);
-			Assert.AreEqual(BountyPaymentObservation.Uncertain, KingdomBountyRules.ObservePayment(
+			ClassicAssert.AreEqual(0, proved);
+			ClassicAssert.AreEqual(BountyPaymentObservation.Uncertain, KingdomBountyRules.ObservePayment(
 				6, original, new int[2] { 7, 5 }, allocation,
 				new bool[2] { true, false }, pure, out proved));
 		}
@@ -950,35 +951,35 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PaymentAction_NeverDebitsAgainAfterAnIntent()
 		{
-			Assert.AreEqual(BountyPaymentAction.Bind, KingdomBountyRules.PaymentAction(
+			ClassicAssert.AreEqual(BountyPaymentAction.Bind, KingdomBountyRules.PaymentAction(
 				BountyPaymentPhase.None, BountyPaymentObservation.Malformed));
-			Assert.AreEqual(BountyPaymentAction.Debit, KingdomBountyRules.PaymentAction(
+			ClassicAssert.AreEqual(BountyPaymentAction.Debit, KingdomBountyRules.PaymentAction(
 				BountyPaymentPhase.Bound, BountyPaymentObservation.Original));
-			Assert.AreEqual(BountyPaymentAction.Quarantine, KingdomBountyRules.PaymentAction(
+			ClassicAssert.AreEqual(BountyPaymentAction.Quarantine, KingdomBountyRules.PaymentAction(
 				BountyPaymentPhase.DebitIntent, BountyPaymentObservation.Original));
-			Assert.AreEqual(BountyPaymentAction.Quarantine, KingdomBountyRules.PaymentAction(
+			ClassicAssert.AreEqual(BountyPaymentAction.Quarantine, KingdomBountyRules.PaymentAction(
 				BountyPaymentPhase.DebitIntent, BountyPaymentObservation.Debited));
-			Assert.AreEqual(BountyPaymentAction.Quarantine, KingdomBountyRules.PaymentAction(
+			ClassicAssert.AreEqual(BountyPaymentAction.Quarantine, KingdomBountyRules.PaymentAction(
 				BountyPaymentPhase.DebitIntent, BountyPaymentObservation.Mixed));
-			Assert.AreEqual(BountyPaymentAction.Wait, KingdomBountyRules.PaymentAction(
+			ClassicAssert.AreEqual(BountyPaymentAction.Wait, KingdomBountyRules.PaymentAction(
 				BountyPaymentPhase.Credited, BountyPaymentObservation.Original));
 		}
 
 		[Test]
 		public void ValidLifecycleScalars_RejectsMalformedReloadStateFailClosed()
 		{
-			Assert.IsTrue(KingdomBountyRules.ValidLifecycleScalars((int)BountyTask.Fetch, 8, 3,
+			ClassicAssert.IsTrue(KingdomBountyRules.ValidLifecycleScalars((int)BountyTask.Fetch, 8, 3,
 				true, "Aeru", 2, KingdomBountyRules.NoticeEventStream("41"), 1200L,
 				false, 7, 0, 0, 0, 0));
-			Assert.IsFalse(KingdomBountyRules.ValidLifecycleScalars(99, 8, 0, false, null,
+			ClassicAssert.IsFalse(KingdomBountyRules.ValidLifecycleScalars(99, 8, 0, false, null,
 				0, null, 0L, false, 0, 0, 0, 0, 0));
-			Assert.IsFalse(KingdomBountyRules.ValidLifecycleScalars((int)BountyTask.Fetch, 8, 9,
+			ClassicAssert.IsFalse(KingdomBountyRules.ValidLifecycleScalars((int)BountyTask.Fetch, 8, 9,
 				false, null, 0, null, 0L, false, 0, 0, 0, 0, 0));
-			Assert.IsFalse(KingdomBountyRules.ValidLifecycleScalars((int)BountyTask.Fetch, 8, 0,
+			ClassicAssert.IsFalse(KingdomBountyRules.ValidLifecycleScalars((int)BountyTask.Fetch, 8, 0,
 				true, null, 0, null, 0L, false, 0, 0, 0, 0, 0));
-			Assert.IsFalse(KingdomBountyRules.ValidLifecycleScalars((int)BountyTask.Fetch, 8, 0,
+			ClassicAssert.IsFalse(KingdomBountyRules.ValidLifecycleScalars((int)BountyTask.Fetch, 8, 0,
 				false, null, 2, "bad-stream", 1200L, false, 0, 0, 0, 0, 0));
-			Assert.IsFalse(KingdomBountyRules.ValidLifecycleScalars((int)BountyTask.Fetch, 8, 0,
+			ClassicAssert.IsFalse(KingdomBountyRules.ValidLifecycleScalars((int)BountyTask.Fetch, 8, 0,
 				false, null, 0, null, 0L, false, 0, 99, 0, 0, 0));
 		}
 
@@ -987,12 +988,12 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = KingdomBountyLogicalSource.Read();
 			string notice = ReadRepoSource("Quests/r_KingdomNotice.cs");
-			Assert.AreEqual(22, KingdomBountyLogicalSource.FileCount);
-			Assert.AreEqual(2, Count(source, "public partial class r_KingdomNotice"));
-			Assert.AreEqual(20, Count(source, "public static partial class KingdomBounty"));
-			Assert.AreEqual(1, Count(source, "\t\tprivate sealed class CleanupFrame"));
-			Assert.AreEqual(1, Count(source, "\t\tprivate sealed class InventoryFrame"));
-			Assert.AreEqual(1, Count(source, "\t\tprivate sealed class PaymentFrame"));
+			ClassicAssert.AreEqual(22, KingdomBountyLogicalSource.FileCount);
+			ClassicAssert.AreEqual(2, Count(source, "public partial class r_KingdomNotice"));
+			ClassicAssert.AreEqual(20, Count(source, "public static partial class KingdomBounty"));
+			ClassicAssert.AreEqual(1, Count(source, "\t\tprivate sealed class CleanupFrame"));
+			ClassicAssert.AreEqual(1, Count(source, "\t\tprivate sealed class InventoryFrame"));
+			ClassicAssert.AreEqual(1, Count(source, "\t\tprivate sealed class PaymentFrame"));
 			StringAssert.Contains("[Serializable]\n\tpublic partial class r_KingdomNotice : IPart", notice);
 
 			CollectionAssert.AreEqual(new[]
@@ -1090,7 +1091,7 @@ namespace ThousandAndFirst.Tests
 			string frontier = ReadRepoSource("Quests/KingdomBounty.ReadingGround.cs");
 			string topology = ReadRepoSource("Core/KingdomSystem.z08.SettlementTopology.cs");
 			StringAssert.Contains("System.NonSeatClaimsZone(id)", frontier);
-			Assert.IsFalse(frontier.Contains("System.Away"));
+			ClassicAssert.IsFalse(frontier.Contains("System.Away"));
 			StringAssert.Contains("for (int i = 0; i < SettlementTopology.Count; i++)",
 				topology);
 			StringAssert.Contains(
@@ -1104,7 +1105,7 @@ namespace ThousandAndFirst.Tests
 			string transfer = ReadRepoSource("Quests/KingdomBounty.Transfer.cs");
 			const string protectedEvidence =
 				"TryObjectGraphAvailableForOrdinaryTransfer(item, out _)";
-			Assert.AreEqual(5, Count(transfer, protectedEvidence));
+			ClassicAssert.AreEqual(5, Count(transfer, protectedEvidence));
 			AssertOrdered(transfer, "private static bool ContinueTransfer(",
 				protectedEvidence, protectedEvidence,
 				"Data.TransferPhase = (int)BountyTransferPhase.RemoveIntent",
@@ -1126,8 +1127,8 @@ namespace ThousandAndFirst.Tests
 				"Data.PaymentPhase = (int)BountyPaymentPhase.DebitIntent", StringComparison.Ordinal);
 			int paymentCall = source.IndexOf("bool committed = debit.Commit()", paymentIntent,
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(paymentIntent, 0);
-			Assert.Greater(paymentCall, paymentIntent);
+			ClassicAssert.GreaterOrEqual(paymentIntent, 0);
+			ClassicAssert.Greater(paymentCall, paymentIntent);
 			StringAssert.Contains("TryCaptureBoundPayment(Data, Z, Survey, Notice", source);
 			StringAssert.Contains("ObserveCapturedPayment(frame", source);
 			StringAssert.Contains("ReferenceEquals(vessel.ComponentLiquids, Frame.Dictionaries[i])", source);
@@ -1145,13 +1146,13 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int cleanupCall = source.IndexOf("InvokeCleanupOnce(Notice, false)", cleanupIntent,
 				StringComparison.Ordinal);
-			Assert.Greater(cleanupCall, cleanupIntent);
-			Assert.AreEqual(1, Count(source, ".Obliterate("));
+			ClassicAssert.Greater(cleanupCall, cleanupIntent);
+			ClassicAssert.AreEqual(1, Count(source, ".Obliterate("));
 			int recovery = source.IndexOf("else if (phase == BountyTerminalPhase.CleanupAttempting)",
 				cleanupCall, StringComparison.Ordinal);
 			int recoveryEnd = source.IndexOf("\n\t\t}\n", recovery, StringComparison.Ordinal);
-			Assert.Greater(recovery, cleanupCall);
-			Assert.IsFalse(source.Substring(recovery, recoveryEnd - recovery).Contains("InvokeCleanupOnce"));
+			ClassicAssert.Greater(recovery, cleanupCall);
+			ClassicAssert.IsFalse(source.Substring(recovery, recoveryEnd - recovery).Contains("InvokeCleanupOnce"));
 		}
 
 		[Test]
@@ -1159,31 +1160,31 @@ namespace ThousandAndFirst.Tests
 		{
 			int[] numbers;
 			string[] ids;
-			Assert.IsTrue(KingdomBountyRules.TryCanonicalIntRows("0|7|2147483647", out numbers));
-			Assert.AreEqual(3, numbers.Length);
-			Assert.IsFalse(KingdomBountyRules.TryCanonicalIntRows("01", out numbers));
-			Assert.IsFalse(KingdomBountyRules.TryCanonicalIntRows(
+			ClassicAssert.IsTrue(KingdomBountyRules.TryCanonicalIntRows("0|7|2147483647", out numbers));
+			ClassicAssert.AreEqual(3, numbers.Length);
+			ClassicAssert.IsFalse(KingdomBountyRules.TryCanonicalIntRows("01", out numbers));
+			ClassicAssert.IsFalse(KingdomBountyRules.TryCanonicalIntRows(
 				new string('1', KingdomBountyRules.MaxPaymentRowsChars + 1), out numbers));
-			Assert.IsFalse(KingdomBountyRules.TryCanonicalIntRows(
+			ClassicAssert.IsFalse(KingdomBountyRules.TryCanonicalIntRows(
 				new string('|', KingdomBountyRules.MaxPaymentRows), out numbers));
-			Assert.IsTrue(KingdomBountyRules.TryObjectIdRows("vessel-1|vessel-2", out ids));
-			Assert.IsFalse(KingdomBountyRules.TryObjectIdRows("same|same", out ids));
+			ClassicAssert.IsTrue(KingdomBountyRules.TryObjectIdRows("vessel-1|vessel-2", out ids));
+			ClassicAssert.IsFalse(KingdomBountyRules.TryObjectIdRows("same|same", out ids));
 			string rules = ReadRepoSource("Quests/KingdomBountyRules.cs");
-			Assert.Less(rules.IndexOf("Text.Length > MaxPaymentRowsChars", StringComparison.Ordinal),
+			ClassicAssert.Less(rules.IndexOf("Text.Length > MaxPaymentRowsChars", StringComparison.Ordinal),
 				rules.IndexOf("Text.Split('|')", StringComparison.Ordinal));
 		}
 
 		[Test]
 		public void UninspectableSinkRecovery_IsExplicitLossNotClaimedDelivery()
 		{
-			Assert.AreEqual(BountySinkDisposition.Lost,
+			ClassicAssert.AreEqual(BountySinkDisposition.Lost,
 				KingdomBountyRules.RecoverUninspectable(BountySinkDisposition.Attempting));
-			Assert.AreEqual(BountySinkDisposition.Pending,
+			ClassicAssert.AreEqual(BountySinkDisposition.Pending,
 				KingdomBountyRules.RecoverUninspectable(BountySinkDisposition.Pending));
-			Assert.IsTrue(KingdomBountyRules.SinkSettled(BountySinkDisposition.Delivered));
-			Assert.IsTrue(KingdomBountyRules.SinkSettled(BountySinkDisposition.Skipped));
-			Assert.IsTrue(KingdomBountyRules.SinkSettled(BountySinkDisposition.Lost));
-			Assert.IsFalse(KingdomBountyRules.SinkSettled(BountySinkDisposition.Attempting));
+			ClassicAssert.IsTrue(KingdomBountyRules.SinkSettled(BountySinkDisposition.Delivered));
+			ClassicAssert.IsTrue(KingdomBountyRules.SinkSettled(BountySinkDisposition.Skipped));
+			ClassicAssert.IsTrue(KingdomBountyRules.SinkSettled(BountySinkDisposition.Lost));
+			ClassicAssert.IsFalse(KingdomBountyRules.SinkSettled(BountySinkDisposition.Attempting));
 		}
 
 		private static int Count(string Text, string Needle)
@@ -1220,7 +1221,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < Needles.Length; i++)
 			{
 				int next = Source.IndexOf(Needles[i], cursor, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(next, cursor, Needles[i]);
+				ClassicAssert.GreaterOrEqual(next, cursor, Needles[i]);
 				cursor = next + Needles[i].Length;
 			}
 		}

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -61,11 +62,11 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void HarnessTreeExistsSoTheContainmentSweepsAreNotVacuous()
 		{
-			Assert.IsTrue(Directory.Exists(HarnessRoot),
+			ClassicAssert.IsTrue(Directory.Exists(HarnessRoot),
 				"the harness tree is absent; containment sweeps would pass vacuously");
-			Assert.Greater(HarnessSources().Count, 0,
+			ClassicAssert.Greater(HarnessSources().Count, 0,
 				"the harness tree holds no C# source; containment sweeps would pass vacuously");
-			Assert.Greater(ProductionSources().Count, 0,
+			ClassicAssert.Greater(ProductionSources().Count, 0,
 				"no production source was found; the production sweep would pass vacuously");
 		}
 
@@ -87,7 +88,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("EXCLUDE_DIRS=(", stage);
 			int start = stage.IndexOf("EXCLUDE_DIRS=(", StringComparison.Ordinal);
 			int end = stage.IndexOf(')', start);
-			Assert.Greater(end, start, "EXCLUDE_DIRS assignment is unterminated");
+			ClassicAssert.Greater(end, start, "EXCLUDE_DIRS assignment is unterminated");
 			string list = stage.Substring(start, end - start);
 			StringAssert.Contains(" " + HarnessDirectory + " ", list);
 		}
@@ -99,9 +100,9 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("\"" + HarnessDirectory + "/\"", audit);
 			StringAssert.Contains("development-only path entered runtime inventory", audit);
 			int tuple = audit.IndexOf("relative.startswith((", StringComparison.Ordinal);
-			Assert.Greater(tuple, -1, "the dev-path guard tuple is missing");
+			ClassicAssert.Greater(tuple, -1, "the dev-path guard tuple is missing");
 			int close = audit.IndexOf("))", tuple);
-			Assert.Greater(close, tuple, "the dev-path guard tuple is unterminated");
+			ClassicAssert.Greater(close, tuple, "the dev-path guard tuple is unterminated");
 			StringAssert.Contains("\"" + HarnessDirectory + "/\"",
 				audit.Substring(tuple, close - tuple));
 		}
@@ -116,7 +117,7 @@ namespace ThousandAndFirst.Tests
 			List<string> offenders = new List<string>();
 			foreach (string path in ProductionSources())
 				if (File.ReadAllText(path).Contains(HarnessNamespace)) offenders.Add(path);
-			Assert.IsEmpty(offenders,
+			ClassicAssert.IsEmpty(offenders,
 				"production source references the harness namespace: " + string.Join(", ", offenders));
 		}
 
@@ -138,7 +139,7 @@ namespace ThousandAndFirst.Tests
 					if (text.Contains(marker) && !path.EndsWith("KingdomScenarioProvenance.cs",
 						StringComparison.Ordinal)) offenders.Add(path + " (" + marker + ")");
 			}
-			Assert.IsEmpty(offenders,
+			ClassicAssert.IsEmpty(offenders,
 				"a scenario registration attribute lives outside the harness tree: "
 				+ string.Join(", ", offenders));
 		}
@@ -160,7 +161,7 @@ namespace ThousandAndFirst.Tests
 				int lines = text.Split('\n').Length;
 				if (lines >= 300) offenders.Add(path + " (" + lines + " lines)");
 			}
-			Assert.IsEmpty(offenders, "harness source violates house law: "
+			ClassicAssert.IsEmpty(offenders, "harness source violates house law: "
 				+ string.Join(", ", offenders));
 		}
 	}

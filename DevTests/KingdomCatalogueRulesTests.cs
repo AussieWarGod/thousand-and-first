@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -29,41 +30,41 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void DecomposedPublicTypes_PreserveIdentityFieldsAndDefaults()
 		{
-			Assert.AreEqual("ThousandAndFirst.CatalogueSeverity", typeof(CatalogueSeverity).FullName);
-			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(CatalogueSeverity)));
-			Assert.AreEqual("Note|Fault", string.Join("|", Enum.GetNames(typeof(CatalogueSeverity))));
-			Assert.AreEqual(0, (int)CatalogueSeverity.Note);
-			Assert.AreEqual(1, (int)CatalogueSeverity.Fault);
+			ClassicAssert.AreEqual("ThousandAndFirst.CatalogueSeverity", typeof(CatalogueSeverity).FullName);
+			ClassicAssert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(CatalogueSeverity)));
+			ClassicAssert.AreEqual("Note|Fault", string.Join("|", Enum.GetNames(typeof(CatalogueSeverity))));
+			ClassicAssert.AreEqual(0, (int)CatalogueSeverity.Note);
+			ClassicAssert.AreEqual(1, (int)CatalogueSeverity.Fault);
 
-			Assert.AreEqual("ThousandAndFirst.CatalogueFinding", typeof(CatalogueFinding).FullName);
-			Assert.AreEqual("Key|Attribute|Severity|Message", DeclaredFieldNames(typeof(CatalogueFinding)));
+			ClassicAssert.AreEqual("ThousandAndFirst.CatalogueFinding", typeof(CatalogueFinding).FullName);
+			ClassicAssert.AreEqual("Key|Attribute|Severity|Message", DeclaredFieldNames(typeof(CatalogueFinding)));
 			CatalogueFinding finding = new CatalogueFinding("hut", "Plot", CatalogueSeverity.Fault, "bad");
-			Assert.AreEqual("hut", finding.Key);
-			Assert.AreEqual("Plot", finding.Attribute);
-			Assert.AreEqual(CatalogueSeverity.Fault, finding.Severity);
-			Assert.AreEqual("bad", finding.Message);
+			ClassicAssert.AreEqual("hut", finding.Key);
+			ClassicAssert.AreEqual("Plot", finding.Attribute);
+			ClassicAssert.AreEqual(CatalogueSeverity.Fault, finding.Severity);
+			ClassicAssert.AreEqual("bad", finding.Message);
 
-			Assert.AreEqual("ThousandAndFirst.CatalogueEntry", typeof(CatalogueEntry).FullName);
-			Assert.AreEqual("Key|DisplayName|Category|Styles|MinStage|Plot|Open|Contents|CostDrams|Materials|Carries|Staff|Manning|Defence|SuccessorKey|SuccessorEnvelopeGrowth|FootprintWidth|FootprintHeight|Roof|RoofDeclared|RequiresSky|Declarations|Origin",
+			ClassicAssert.AreEqual("ThousandAndFirst.CatalogueEntry", typeof(CatalogueEntry).FullName);
+			ClassicAssert.AreEqual("Key|DisplayName|Category|Styles|MinStage|Plot|Open|Contents|CostDrams|Materials|Carries|Staff|Manning|Defence|SuccessorKey|SuccessorEnvelopeGrowth|FootprintWidth|FootprintHeight|Roof|RoofDeclared|RequiresSky|Declarations|Origin",
 				DeclaredFieldNames(typeof(CatalogueEntry)));
 			CatalogueEntry entry = new CatalogueEntry();
-			Assert.AreEqual("civic", entry.Category);
-			Assert.AreEqual("common", entry.Styles);
-			Assert.AreEqual("scaled", entry.Manning);
-			Assert.AreEqual(KingdomPlotRules.RoofState.Walled, entry.Roof);
-			Assert.AreEqual(1, entry.Declarations);
+			ClassicAssert.AreEqual("civic", entry.Category);
+			ClassicAssert.AreEqual("common", entry.Styles);
+			ClassicAssert.AreEqual("scaled", entry.Manning);
+			ClassicAssert.AreEqual(KingdomPlotRules.RoofState.Walled, entry.Roof);
+			ClassicAssert.AreEqual(1, entry.Declarations);
 
-			Assert.AreEqual("ThousandAndFirst.KindAmount", typeof(KindAmount).FullName);
-			Assert.AreEqual("Kind|Amount", DeclaredFieldNames(typeof(KindAmount)));
+			ClassicAssert.AreEqual("ThousandAndFirst.KindAmount", typeof(KindAmount).FullName);
+			ClassicAssert.AreEqual("Kind|Amount", DeclaredFieldNames(typeof(KindAmount)));
 			KindAmount amount = new KindAmount("water", 7);
-			Assert.AreEqual("water", amount.Kind);
-			Assert.AreEqual(7, amount.Amount);
-			Assert.IsTrue(typeof(KindAmount).GetField("Kind").IsInitOnly);
-			Assert.IsTrue(typeof(KindAmount).GetField("Amount").IsInitOnly);
+			ClassicAssert.AreEqual("water", amount.Kind);
+			ClassicAssert.AreEqual(7, amount.Amount);
+			ClassicAssert.IsTrue(typeof(KindAmount).GetField("Kind").IsInitOnly);
+			ClassicAssert.IsTrue(typeof(KindAmount).GetField("Amount").IsInitOnly);
 
 			Type tally = typeof(KingdomCatalogueRules.SupportTally);
-			Assert.AreEqual("ThousandAndFirst.KingdomCatalogueRules+SupportTally", tally.FullName);
-			Assert.AreEqual("Water|Food|Roof|Lift|Works", DeclaredFieldNames(tally));
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomCatalogueRules+SupportTally", tally.FullName);
+			ClassicAssert.AreEqual("Water|Food|Roof|Lift|Works", DeclaredFieldNames(tally));
 		}
 
 		private static CatalogueEntry Entry(string Key,
@@ -133,16 +134,16 @@ namespace ThousandAndFirst.Tests
 		[TestCase(GrowthStage.Camp, KingdomPlotRules.PlotSize.Medium, GrowthStage.Steading)]
 		public void EffectiveMinStage_TakesTheLaterOfTheTwoGates(GrowthStage authored, KingdomPlotRules.PlotSize plot, GrowthStage expected)
 		{
-			Assert.AreEqual(expected, KingdomCatalogueRules.EffectiveMinStage(authored, plot));
+			ClassicAssert.AreEqual(expected, KingdomCatalogueRules.EffectiveMinStage(authored, plot));
 		}
 
 		[Test]
 		public void EffectiveMinStage_LeavesASingleCellWorkExactlyWhereItsAuthorPutIt()
 		{
 			// A wall segment is not a plot, so nothing about plot size may push its stage around.
-			Assert.AreEqual(GrowthStage.Camp,
+			ClassicAssert.AreEqual(GrowthStage.Camp,
 				KingdomCatalogueRules.EffectiveMinStage(GrowthStage.Camp, KingdomPlotRules.PlotSize.None));
-			Assert.AreEqual(GrowthStage.Village,
+			ClassicAssert.AreEqual(GrowthStage.Village,
 				KingdomCatalogueRules.EffectiveMinStage(GrowthStage.Village, KingdomPlotRules.PlotSize.None));
 		}
 
@@ -161,7 +162,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, false)]
 		public void IsBindingSupport_IsOnlyTheThree(string kind, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomCatalogueRules.IsBindingSupport(kind));
+			ClassicAssert.AreEqual(expected, KingdomCatalogueRules.IsBindingSupport(kind));
 		}
 
 		[TestCase("water", true)]
@@ -171,7 +172,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("", false)]
 		public void IsKnownSupport_CoversBothHalvesAndNothingElse(string kind, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomCatalogueRules.IsKnownSupport(kind));
+			ClassicAssert.AreEqual(expected, KingdomCatalogueRules.IsKnownSupport(kind));
 		}
 
 		[Test]
@@ -188,42 +189,42 @@ namespace ThousandAndFirst.Tests
 		{
 			// Frozen five-argument compatibility arithmetic. Live population calls the two-axis
 			// PopulationEquilibrium below.
-			Assert.AreEqual(20, KingdomCatalogueRules.Equilibrium(20, 30, 40, 0, 0));
-			Assert.AreEqual(20, KingdomCatalogueRules.Equilibrium(40, 20, 30, 0, 0));
-			Assert.AreEqual(20, KingdomCatalogueRules.Equilibrium(30, 40, 20, 0, 0));
+			ClassicAssert.AreEqual(20, KingdomCatalogueRules.Equilibrium(20, 30, 40, 0, 0));
+			ClassicAssert.AreEqual(20, KingdomCatalogueRules.Equilibrium(40, 20, 30, 0, 0));
+			ClassicAssert.AreEqual(20, KingdomCatalogueRules.Equilibrium(30, 40, 20, 0, 0));
 		}
 
 		[Test]
 		public void PopulationEquilibrium_BindsOnlyWaterAndRoof()
 		{
-			Assert.AreEqual(20, KingdomCatalogueRules.PopulationEquilibrium(20, 40, 0, 0));
-			Assert.AreEqual(20, KingdomCatalogueRules.PopulationEquilibrium(40, 20, 0, 0));
-			Assert.AreEqual(30, KingdomCatalogueRules.PopulationEquilibrium(20, 40, 10, 0));
+			ClassicAssert.AreEqual(20, KingdomCatalogueRules.PopulationEquilibrium(20, 40, 0, 0));
+			ClassicAssert.AreEqual(20, KingdomCatalogueRules.PopulationEquilibrium(40, 20, 0, 0));
+			ClassicAssert.AreEqual(30, KingdomCatalogueRules.PopulationEquilibrium(20, 40, 10, 0));
 			CollectionAssert.AreEqual(new[] { "water", "roof" },
 				KingdomCatalogueRules.PopulationBindingSupports);
-			Assert.AreEqual("water", KingdomCatalogueRules.PopulationBindingSupport(20, 20));
-			Assert.AreEqual("roof", KingdomCatalogueRules.PopulationBindingSupport(30, 20));
+			ClassicAssert.AreEqual("water", KingdomCatalogueRules.PopulationBindingSupport(20, 20));
+			ClassicAssert.AreEqual("roof", KingdomCatalogueRules.PopulationBindingSupport(30, 20));
 		}
 
 		[Test]
 		public void Equilibrium_NeverFallsBelowTheFloor()
 		{
-			Assert.AreEqual(KingdomCatalogueRules.FloorLevel, KingdomCatalogueRules.Equilibrium(0, 0, 0, 0, 0));
-			Assert.AreEqual(KingdomCatalogueRules.FloorLevel, KingdomCatalogueRules.Equilibrium(40, 0, 40, 0, 0));
-			Assert.AreEqual(KingdomCatalogueRules.FloorLevel, KingdomCatalogueRules.Equilibrium(2, 2, 2, 0, 0));
+			ClassicAssert.AreEqual(KingdomCatalogueRules.FloorLevel, KingdomCatalogueRules.Equilibrium(0, 0, 0, 0, 0));
+			ClassicAssert.AreEqual(KingdomCatalogueRules.FloorLevel, KingdomCatalogueRules.Equilibrium(40, 0, 40, 0, 0));
+			ClassicAssert.AreEqual(KingdomCatalogueRules.FloorLevel, KingdomCatalogueRules.Equilibrium(2, 2, 2, 0, 0));
 			// A negative binding total is arithmetic nobody intended, and it still may not push
 			// the settlement under its floor.
-			Assert.AreEqual(KingdomCatalogueRules.FloorLevel, KingdomCatalogueRules.Equilibrium(-5, 40, 40, 0, 0));
+			ClassicAssert.AreEqual(KingdomCatalogueRules.FloorLevel, KingdomCatalogueRules.Equilibrium(-5, 40, 40, 0, 0));
 		}
 
 		[Test]
 		public void Equilibrium_LiftsTheLevelButOnlyToItsCap()
 		{
 			// Cap is half the binding level: twenty binding takes at most ten of lift.
-			Assert.AreEqual(23, KingdomCatalogueRules.Equilibrium(20, 20, 20, 3, 0));
-			Assert.AreEqual(30, KingdomCatalogueRules.Equilibrium(20, 20, 20, 10, 0));
-			Assert.AreEqual(30, KingdomCatalogueRules.Equilibrium(20, 20, 20, 11, 0));
-			Assert.AreEqual(30, KingdomCatalogueRules.Equilibrium(20, 20, 20, 900, 0));
+			ClassicAssert.AreEqual(23, KingdomCatalogueRules.Equilibrium(20, 20, 20, 3, 0));
+			ClassicAssert.AreEqual(30, KingdomCatalogueRules.Equilibrium(20, 20, 20, 10, 0));
+			ClassicAssert.AreEqual(30, KingdomCatalogueRules.Equilibrium(20, 20, 20, 11, 0));
+			ClassicAssert.AreEqual(30, KingdomCatalogueRules.Equilibrium(20, 20, 20, 900, 0));
 		}
 
 		[Test]
@@ -231,13 +232,13 @@ namespace ThousandAndFirst.Tests
 		{
 			// Zero binding means zero cap: comfort is worth nothing when the casks are dry, and
 			// the floor is what is left.
-			Assert.AreEqual(KingdomCatalogueRules.FloorLevel, KingdomCatalogueRules.Equilibrium(0, 90, 90, 400, 0));
+			ClassicAssert.AreEqual(KingdomCatalogueRules.FloorLevel, KingdomCatalogueRules.Equilibrium(0, 90, 90, 400, 0));
 		}
 
 		[Test]
 		public void Equilibrium_TreatsANegativeLiftAsNone()
 		{
-			Assert.AreEqual(20, KingdomCatalogueRules.Equilibrium(20, 20, 20, -50, 0));
+			ClassicAssert.AreEqual(20, KingdomCatalogueRules.Equilibrium(20, 20, 20, -50, 0));
 		}
 
 		// --- The shade a named notable carries (brief: notable tastes, leader traits, Add. 4) ---
@@ -247,8 +248,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// The number the ceremony used to compute and log. Three points of shade with no
 			// lifting work standing is three more settlers, exactly as three points of shrine is.
-			Assert.AreEqual(23, KingdomCatalogueRules.Equilibrium(20, 20, 20, 0, 3));
-			Assert.AreEqual(26, KingdomCatalogueRules.Equilibrium(20, 20, 20, 3, 3));
+			ClassicAssert.AreEqual(23, KingdomCatalogueRules.Equilibrium(20, 20, 20, 0, 3));
+			ClassicAssert.AreEqual(26, KingdomCatalogueRules.Equilibrium(20, 20, 20, 3, 3));
 		}
 
 		[Test]
@@ -256,9 +257,9 @@ namespace ThousandAndFirst.Tests
 		{
 			// A notable is texture, not a way past the water: twenty binding takes ten of lift and
 			// shade together, and not one more whichever half it came from.
-			Assert.AreEqual(30, KingdomCatalogueRules.Equilibrium(20, 20, 20, 8, 8));
-			Assert.AreEqual(30, KingdomCatalogueRules.Equilibrium(20, 20, 20, 0, 900));
-			Assert.AreEqual(KingdomCatalogueRules.FloorLevel, KingdomCatalogueRules.Equilibrium(0, 90, 90, 0, 40));
+			ClassicAssert.AreEqual(30, KingdomCatalogueRules.Equilibrium(20, 20, 20, 8, 8));
+			ClassicAssert.AreEqual(30, KingdomCatalogueRules.Equilibrium(20, 20, 20, 0, 900));
+			ClassicAssert.AreEqual(KingdomCatalogueRules.FloorLevel, KingdomCatalogueRules.Equilibrium(0, 90, 90, 0, 40));
 		}
 
 		[Test]
@@ -266,10 +267,10 @@ namespace ThousandAndFirst.Tests
 		{
 			// There is no negative shade in the shipped tables, and if one ever arrives it costs
 			// the settlement nothing: an unmet taste means their default, never a penalty.
-			Assert.AreEqual(20, KingdomCatalogueRules.Equilibrium(20, 20, 20, 0, -50));
+			ClassicAssert.AreEqual(20, KingdomCatalogueRules.Equilibrium(20, 20, 20, 0, -50));
 			// Neither half may eat the other: a negative shade leaves a standing shrine alone.
-			Assert.AreEqual(23, KingdomCatalogueRules.Equilibrium(20, 20, 20, 3, -1));
-			Assert.AreEqual(23, KingdomCatalogueRules.Equilibrium(20, 20, 20, -50, 3));
+			ClassicAssert.AreEqual(23, KingdomCatalogueRules.Equilibrium(20, 20, 20, 3, -1));
+			ClassicAssert.AreEqual(23, KingdomCatalogueRules.Equilibrium(20, 20, 20, -50, 3));
 		}
 
 		// --- A household's yard trade (brief: yard trades) --------------------------------------
@@ -281,11 +282,11 @@ namespace ThousandAndFirst.Tests
 			// population equilibrium ignores it. The house is still one work rather than two.
 			KingdomCatalogueRules.SupportTally house = KingdomCatalogueRules.FoldWork(
 				default(KingdomCatalogueRules.SupportTally), Parse("roof:4"), 100);
-			Assert.AreEqual(1, house.Works);
+			ClassicAssert.AreEqual(1, house.Works);
 			KingdomCatalogueRules.SupportTally worked = KingdomCatalogueRules.FoldShade(house, Parse("food:1"), 100);
-			Assert.AreEqual(1, worked.Food, "a vine lattice feeds the settlement it stands in");
-			Assert.AreEqual(4, worked.Roof);
-			Assert.AreEqual(1, worked.Works, "a yard trade is a household's sideline, not a second work");
+			ClassicAssert.AreEqual(1, worked.Food, "a vine lattice feeds the settlement it stands in");
+			ClassicAssert.AreEqual(4, worked.Roof);
+			ClassicAssert.AreEqual(1, worked.Works, "a yard trade is a household's sideline, not a second work");
 		}
 
 		[Test]
@@ -293,8 +294,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCatalogueRules.SupportTally tally = KingdomCatalogueRules.FoldShade(
 				default(KingdomCatalogueRules.SupportTally), Parse("craft:1,learning:1"), 100);
-			Assert.AreEqual(2, tally.Lift);
-			Assert.AreEqual(0, tally.Works);
+			ClassicAssert.AreEqual(2, tally.Lift);
+			ClassicAssert.AreEqual(0, tally.Works);
 		}
 
 		[Test]
@@ -302,9 +303,9 @@ namespace ThousandAndFirst.Tests
 		{
 			// Addendum 10(b) reaches a sideline the same way it reaches a work: a half-ruined
 			// house's yard is worth half of what it makes.
-			Assert.AreEqual(1, KingdomCatalogueRules.FoldShade(
+			ClassicAssert.AreEqual(1, KingdomCatalogueRules.FoldShade(
 				default(KingdomCatalogueRules.SupportTally), Parse("food:2"), 50).Food);
-			Assert.AreEqual(0, KingdomCatalogueRules.FoldShade(
+			ClassicAssert.AreEqual(0, KingdomCatalogueRules.FoldShade(
 				default(KingdomCatalogueRules.SupportTally), Parse("food:1"), 0).Food);
 		}
 
@@ -312,7 +313,7 @@ namespace ThousandAndFirst.Tests
 		{
 			System.Collections.Generic.List<KindAmount> tally;
 			string error;
-			Assert.IsTrue(KingdomCatalogueRules.TryParseTally(Source, out tally, out error), error);
+			ClassicAssert.IsTrue(KingdomCatalogueRules.TryParseTally(Source, out tally, out error), error);
 			return tally;
 		}
 
@@ -323,7 +324,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(9, 5, 5, "food")]
 		public void BindingSupport_NamesWhatIsHoldingTheSettlementBack(int water, int food, int roof, string expected)
 		{
-			Assert.AreEqual(expected, KingdomCatalogueRules.BindingSupport(water, food, roof));
+			ClassicAssert.AreEqual(expected, KingdomCatalogueRules.BindingSupport(water, food, roof));
 		}
 
 		[Test]
@@ -332,16 +333,16 @@ namespace ThousandAndFirst.Tests
 			string water = KingdomCatalogueRules.LimitLine("water", 12);
 			string food = KingdomCatalogueRules.LimitLine("food", 12);
 			string roof = KingdomCatalogueRules.LimitLine("roof", 12);
-			Assert.IsTrue(water.Contains("12"));
-			Assert.IsTrue(food.Contains("12"));
-			Assert.IsTrue(roof.Contains("12"));
-			Assert.AreNotEqual(water, food);
-			Assert.AreNotEqual(food, roof);
-			Assert.AreNotEqual(water, roof);
+			ClassicAssert.IsTrue(water.Contains("12"));
+			ClassicAssert.IsTrue(food.Contains("12"));
+			ClassicAssert.IsTrue(roof.Contains("12"));
+			ClassicAssert.AreNotEqual(water, food);
+			ClassicAssert.AreNotEqual(food, roof);
+			ClassicAssert.AreNotEqual(water, roof);
 			// An unknown support still gets a line: 7b says a stall explains itself, and a kind
 			// this file has never heard of is exactly when that matters most.
 			string unknown = KingdomCatalogueRules.LimitLine("moonlight", 12);
-			Assert.IsTrue(unknown.Contains("12"));
+			ClassicAssert.IsTrue(unknown.Contains("12"));
 		}
 
 		// --- The Carries list ---------------------------------------------------------------
@@ -352,33 +353,33 @@ namespace ThousandAndFirst.Tests
 		public void TryParseTally_ReadsAnAbsentListAsEmptyRatherThanBroken(string written)
 		{
 			bool ok = KingdomCatalogueRules.TryParseTally(written, out var tally, out var error);
-			Assert.IsTrue(ok);
-			Assert.IsNull(error);
-			Assert.AreEqual(0, tally.Count);
+			ClassicAssert.IsTrue(ok);
+			ClassicAssert.IsNull(error);
+			ClassicAssert.AreEqual(0, tally.Count);
 		}
 
 		[Test]
 		public void TryParseTally_FoldsKindsAndKeepsOrder()
 		{
 			bool ok = KingdomCatalogueRules.TryParseTally(" WATER : 6 , food:2 ,, spirit:1 ", out var tally, out var error);
-			Assert.IsTrue(ok);
-			Assert.IsNull(error);
-			Assert.AreEqual(3, tally.Count);
-			Assert.AreEqual("water", tally[0].Kind);
-			Assert.AreEqual(6, tally[0].Amount);
-			Assert.AreEqual("food", tally[1].Kind);
-			Assert.AreEqual(2, tally[1].Amount);
-			Assert.AreEqual("spirit", tally[2].Kind);
-			Assert.AreEqual(1, tally[2].Amount);
+			ClassicAssert.IsTrue(ok);
+			ClassicAssert.IsNull(error);
+			ClassicAssert.AreEqual(3, tally.Count);
+			ClassicAssert.AreEqual("water", tally[0].Kind);
+			ClassicAssert.AreEqual(6, tally[0].Amount);
+			ClassicAssert.AreEqual("food", tally[1].Kind);
+			ClassicAssert.AreEqual(2, tally[1].Amount);
+			ClassicAssert.AreEqual("spirit", tally[2].Kind);
+			ClassicAssert.AreEqual(1, tally[2].Amount);
 		}
 
 		[Test]
 		public void TryParseTally_AcceptsZero()
 		{
 			bool ok = KingdomCatalogueRules.TryParseTally("craft:0", out var tally, out _);
-			Assert.IsTrue(ok);
-			Assert.AreEqual(1, tally.Count);
-			Assert.AreEqual(0, tally[0].Amount);
+			ClassicAssert.IsTrue(ok);
+			ClassicAssert.AreEqual(1, tally.Count);
+			ClassicAssert.AreEqual(0, tally[0].Amount);
 		}
 
 		[TestCase("water")]
@@ -390,9 +391,9 @@ namespace ThousandAndFirst.Tests
 		public void TryParseTally_RefusesAPairItCannotRead(string written)
 		{
 			bool ok = KingdomCatalogueRules.TryParseTally(written, out var tally, out var error);
-			Assert.IsFalse(ok);
-			Assert.IsNotNull(error);
-			Assert.IsNotNull(tally);
+			ClassicAssert.IsFalse(ok);
+			ClassicAssert.IsNotNull(error);
+			ClassicAssert.IsNotNull(tally);
 		}
 
 		[Test]
@@ -401,18 +402,18 @@ namespace ThousandAndFirst.Tests
 			// The caller logs and carries on; it must not be credited with nothing for a list
 			// whose first two thirds were perfectly good.
 			bool ok = KingdomCatalogueRules.TryParseTally("water:6,food:2,rubbish", out var tally, out _);
-			Assert.IsFalse(ok);
-			Assert.AreEqual(2, tally.Count);
+			ClassicAssert.IsFalse(ok);
+			ClassicAssert.AreEqual(2, tally.Count);
 		}
 
 		[Test]
 		public void AmountOf_AddsRepeatsAndAnswersZeroForAnythingAbsent()
 		{
 			KingdomCatalogueRules.TryParseTally("water:2,water:3,food:4", out var tally, out _);
-			Assert.AreEqual(5, KingdomCatalogueRules.AmountOf(tally, "water"));
-			Assert.AreEqual(4, KingdomCatalogueRules.AmountOf(tally, "FOOD"));
-			Assert.AreEqual(0, KingdomCatalogueRules.AmountOf(tally, "roof"));
-			Assert.AreEqual(0, KingdomCatalogueRules.AmountOf(null, "water"));
+			ClassicAssert.AreEqual(5, KingdomCatalogueRules.AmountOf(tally, "water"));
+			ClassicAssert.AreEqual(4, KingdomCatalogueRules.AmountOf(tally, "FOOD"));
+			ClassicAssert.AreEqual(0, KingdomCatalogueRules.AmountOf(tally, "roof"));
+			ClassicAssert.AreEqual(0, KingdomCatalogueRules.AmountOf(null, "water"));
 		}
 
 		[Test]
@@ -421,8 +422,8 @@ namespace ThousandAndFirst.Tests
 			KingdomCatalogueRules.TryParseTally("water:9,food:9,roof:9,craft:2,spirit:3,moonlight:5", out var tally, out _);
 			// The three binding kinds contribute nothing to lift; the unknown kind does, because a
 			// third party inventing a new binding good would make every older catalogue unbuildable.
-			Assert.AreEqual(10, KingdomCatalogueRules.LiftOf(tally));
-			Assert.AreEqual(0, KingdomCatalogueRules.LiftOf(null));
+			ClassicAssert.AreEqual(10, KingdomCatalogueRules.LiftOf(tally));
+			ClassicAssert.AreEqual(0, KingdomCatalogueRules.LiftOf(null));
 		}
 
 		// --- Validate -----------------------------------------------------------------------
@@ -430,8 +431,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Validate_SaysNothingAboutNothing()
 		{
-			Assert.AreEqual(0, KingdomCatalogueRules.Validate(null, null).Count);
-			Assert.AreEqual(0, KingdomCatalogueRules.Validate(new List<CatalogueEntry>(), null).Count);
+			ClassicAssert.AreEqual(0, KingdomCatalogueRules.Validate(null, null).Count);
+			ClassicAssert.AreEqual(0, KingdomCatalogueRules.Validate(new List<CatalogueEntry>(), null).Count);
 		}
 
 		[Test]
@@ -455,15 +456,15 @@ namespace ThousandAndFirst.Tests
 				Entry("palisade", KingdomPlotRules.PlotSize.None, GrowthStage.Camp, "defense", null, 6, Defence: 3)
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, new List<string> { "common" });
-			Assert.AreEqual(0, findings.Count, FirstMessage(findings));
-			Assert.IsFalse(KingdomCatalogueRules.AnyFault(findings));
+			ClassicAssert.AreEqual(0, findings.Count, FirstMessage(findings));
+			ClassicAssert.IsFalse(KingdomCatalogueRules.AnyFault(findings));
 		}
 
 		[Test]
 		public void Validate_SkipsEntriesWithNoKeyAtAllRatherThanReportingThemForever()
 		{
 			List<CatalogueEntry> entries = new List<CatalogueEntry> { null, new CatalogueEntry(), Entry("hut") };
-			Assert.AreEqual(0, KingdomCatalogueRules.Validate(entries, null).Count);
+			ClassicAssert.AreEqual(0, KingdomCatalogueRules.Validate(entries, null).Count);
 		}
 
 		[Test]
@@ -471,8 +472,8 @@ namespace ThousandAndFirst.Tests
 		{
 			List<CatalogueEntry> entries = new List<CatalogueEntry> { Entry("hut"), Entry("hut") };
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, "hut", "Key", CatalogueSeverity.Fault));
-			Assert.IsTrue(KingdomCatalogueRules.AnyFault(findings));
+			ClassicAssert.IsTrue(Has(findings, "hut", "Key", CatalogueSeverity.Fault));
+			ClassicAssert.IsTrue(KingdomCatalogueRules.AnyFault(findings));
 		}
 
 		[Test]
@@ -480,8 +481,8 @@ namespace ThousandAndFirst.Tests
 		{
 			List<CatalogueEntry> entries = new List<CatalogueEntry> { Entry("hut", Successor: "palace") };
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, "hut", "UpgradesTo", CatalogueSeverity.Fault));
-			Assert.AreEqual(1, Count(findings, CatalogueSeverity.Fault));
+			ClassicAssert.IsTrue(Has(findings, "hut", "UpgradesTo", CatalogueSeverity.Fault));
+			ClassicAssert.AreEqual(1, Count(findings, CatalogueSeverity.Fault));
 		}
 
 		[Test]
@@ -494,9 +495,9 @@ namespace ThousandAndFirst.Tests
 				Entry("c", Successor: "a")
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, "a", "UpgradesTo", CatalogueSeverity.Fault));
-			Assert.IsTrue(Has(findings, "b", "UpgradesTo", CatalogueSeverity.Fault));
-			Assert.IsTrue(Has(findings, "c", "UpgradesTo", CatalogueSeverity.Fault));
+			ClassicAssert.IsTrue(Has(findings, "a", "UpgradesTo", CatalogueSeverity.Fault));
+			ClassicAssert.IsTrue(Has(findings, "b", "UpgradesTo", CatalogueSeverity.Fault));
+			ClassicAssert.IsTrue(Has(findings, "c", "UpgradesTo", CatalogueSeverity.Fault));
 		}
 
 		[Test]
@@ -504,7 +505,7 @@ namespace ThousandAndFirst.Tests
 		{
 			List<CatalogueEntry> entries = new List<CatalogueEntry> { Entry("hut", Successor: "hut") };
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, "hut", "UpgradesTo", CatalogueSeverity.Fault));
+			ClassicAssert.IsTrue(Has(findings, "hut", "UpgradesTo", CatalogueSeverity.Fault));
 		}
 
 		[Test]
@@ -519,7 +520,7 @@ namespace ThousandAndFirst.Tests
 				Entry("house", KingdomPlotRules.PlotSize.Medium, GrowthStage.Steading, "housing", "roof:8", 16)
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, "hut", "UpgradesTo", CatalogueSeverity.Fault));
+			ClassicAssert.IsTrue(Has(findings, "hut", "UpgradesTo", CatalogueSeverity.Fault));
 		}
 
 		[Test]
@@ -533,7 +534,7 @@ namespace ThousandAndFirst.Tests
 					"food", "food:9", 46)
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.AreEqual(0, Count(findings, CatalogueSeverity.Fault), FirstMessage(findings));
+			ClassicAssert.AreEqual(0, Count(findings, CatalogueSeverity.Fault), FirstMessage(findings));
 		}
 
 		[Test]
@@ -547,7 +548,7 @@ namespace ThousandAndFirst.Tests
 					"food", "food:12", 80)
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, "fieldrows", "UpgradesTo", CatalogueSeverity.Fault));
+			ClassicAssert.IsTrue(Has(findings, "fieldrows", "UpgradesTo", CatalogueSeverity.Fault));
 		}
 
 		[Test]
@@ -567,7 +568,7 @@ namespace ThousandAndFirst.Tests
 					"civic", "roof:60,order:4,luxury:4", 190)
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.AreEqual(0, Count(findings, CatalogueSeverity.Fault), FirstMessage(findings));
+			ClassicAssert.AreEqual(0, Count(findings, CatalogueSeverity.Fault), FirstMessage(findings));
 		}
 
 		[Test]
@@ -581,7 +582,7 @@ namespace ThousandAndFirst.Tests
 					"civic", "spirit:4,order:3", 46)
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, "heartbasin", "UpgradesTo", CatalogueSeverity.Fault));
+			ClassicAssert.IsTrue(Has(findings, "heartbasin", "UpgradesTo", CatalogueSeverity.Fault));
 		}
 
 		[Test]
@@ -592,7 +593,7 @@ namespace ThousandAndFirst.Tests
 				Entry("hut", KingdomPlotRules.PlotSize.Small, GrowthStage.Camp, "housing", "roof:3", 6, Successor: "hutyard"),
 				Entry("hutyard", KingdomPlotRules.PlotSize.Small, GrowthStage.Camp, "housing", "roof:5", 10)
 			};
-			Assert.AreEqual(0, KingdomCatalogueRules.Validate(entries, null).Count);
+			ClassicAssert.AreEqual(0, KingdomCatalogueRules.Validate(entries, null).Count);
 		}
 
 		[Test]
@@ -604,7 +605,7 @@ namespace ThousandAndFirst.Tests
 				Entry("early", KingdomPlotRules.PlotSize.Medium, GrowthStage.Steading, "storage", "water:9", 22)
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, "late", "UpgradesTo", CatalogueSeverity.Fault));
+			ClassicAssert.IsTrue(Has(findings, "late", "UpgradesTo", CatalogueSeverity.Fault));
 		}
 
 		[Test]
@@ -616,8 +617,8 @@ namespace ThousandAndFirst.Tests
 				Entry("cheap", KingdomPlotRules.PlotSize.Small, GrowthStage.Camp, "housing", "roof:5", 6)
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, "dear", "UpgradesTo", CatalogueSeverity.Note));
-			Assert.AreEqual(0, Count(findings, CatalogueSeverity.Fault));
+			ClassicAssert.IsTrue(Has(findings, "dear", "UpgradesTo", CatalogueSeverity.Note));
+			ClassicAssert.AreEqual(0, Count(findings, CatalogueSeverity.Fault));
 		}
 
 		[Test]
@@ -629,7 +630,7 @@ namespace ThousandAndFirst.Tests
 				Entry("vat", KingdomPlotRules.PlotSize.Small, GrowthStage.Camp, "storage", "water:3", 8)
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, "shed", "UpgradesTo", CatalogueSeverity.Note));
+			ClassicAssert.IsTrue(Has(findings, "shed", "UpgradesTo", CatalogueSeverity.Note));
 		}
 
 		[Test]
@@ -642,8 +643,8 @@ namespace ThousandAndFirst.Tests
 				Entry("keep", KingdomPlotRules.PlotSize.Large, GrowthStage.Town, "defense", "order:4", 40, Defence: 8)
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsFalse(Has(findings, "keep", "Defence", CatalogueSeverity.Fault));
-			Assert.AreEqual(0, Count(findings, CatalogueSeverity.Fault));
+			ClassicAssert.IsFalse(Has(findings, "keep", "Defence", CatalogueSeverity.Fault));
+			ClassicAssert.AreEqual(0, Count(findings, CatalogueSeverity.Fault));
 		}
 
 		[Test]
@@ -655,8 +656,8 @@ namespace ThousandAndFirst.Tests
 					Open: true, Contents: "r_KingdomFurnishings_Civic")
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsFalse(Has(findings, "yard", "Contents", CatalogueSeverity.Note));
-			Assert.AreEqual(0, Count(findings, CatalogueSeverity.Fault));
+			ClassicAssert.IsFalse(Has(findings, "yard", "Contents", CatalogueSeverity.Note));
+			ClassicAssert.AreEqual(0, Count(findings, CatalogueSeverity.Fault));
 		}
 
 		[Test]
@@ -667,7 +668,7 @@ namespace ThousandAndFirst.Tests
 				Entry("hut", KingdomPlotRules.PlotSize.Small, GrowthStage.Camp, "housing", "roof:3", 6,
 					Contents: "r_KingdomFurnishings_Dwelling")
 			};
-			Assert.AreEqual(0, KingdomCatalogueRules.Validate(entries, null).Count);
+			ClassicAssert.AreEqual(0, KingdomCatalogueRules.Validate(entries, null).Count);
 		}
 
 		[Test]
@@ -678,7 +679,7 @@ namespace ThousandAndFirst.Tests
 				Entry("hall", KingdomPlotRules.PlotSize.Large, GrowthStage.Camp, "civic", "spirit:3", 40)
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, "hall", "MinStage", CatalogueSeverity.Note));
+			ClassicAssert.IsTrue(Has(findings, "hall", "MinStage", CatalogueSeverity.Note));
 		}
 
 		[Test]
@@ -686,7 +687,7 @@ namespace ThousandAndFirst.Tests
 		{
 			List<CatalogueEntry> entries = new List<CatalogueEntry> { Entry("hut", Carries: "roof") };
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, "hut", "Carries", CatalogueSeverity.Fault));
+			ClassicAssert.IsTrue(Has(findings, "hut", "Carries", CatalogueSeverity.Fault));
 		}
 
 		[Test]
@@ -696,7 +697,7 @@ namespace ThousandAndFirst.Tests
 			// material never has to be added in two places.
 			List<CatalogueEntry> entries = new List<CatalogueEntry> { Entry("hut", Materials: "chrome:4") };
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, "hut", "Materials", CatalogueSeverity.Fault));
+			ClassicAssert.IsTrue(Has(findings, "hut", "Materials", CatalogueSeverity.Fault));
 		}
 
 		[Test]
@@ -706,7 +707,7 @@ namespace ThousandAndFirst.Tests
 			{
 				Entry("hut", Materials: "mud:1,canvas:2,timber:3,stone:4,marble:5,scrap:6")
 			};
-			Assert.AreEqual(0, KingdomCatalogueRules.Validate(entries, null).Count);
+			ClassicAssert.AreEqual(0, KingdomCatalogueRules.Validate(entries, null).Count);
 		}
 
 		[Test]
@@ -714,8 +715,8 @@ namespace ThousandAndFirst.Tests
 		{
 			List<CatalogueEntry> entries = new List<CatalogueEntry> { Entry("hut", Carries: "roof:3,moonlight:2") };
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, "hut", "Carries", CatalogueSeverity.Note));
-			Assert.AreEqual(0, Count(findings, CatalogueSeverity.Fault));
+			ClassicAssert.IsTrue(Has(findings, "hut", "Carries", CatalogueSeverity.Note));
+			ClassicAssert.AreEqual(0, Count(findings, CatalogueSeverity.Fault));
 		}
 
 		[Test]
@@ -724,8 +725,8 @@ namespace ThousandAndFirst.Tests
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(
 				new List<CatalogueEntry> { Entry("colossus", Category: "craft",
 					Carries: "craft:8,wealth:3") }, null);
-			Assert.IsFalse(Has(findings, "colossus", "Carries", CatalogueSeverity.Note));
-			Assert.AreEqual(0, Count(findings, CatalogueSeverity.Fault));
+			ClassicAssert.IsFalse(Has(findings, "colossus", "Carries", CatalogueSeverity.Note));
+			ClassicAssert.AreEqual(0, Count(findings, CatalogueSeverity.Fault));
 		}
 
 		[Test]
@@ -736,7 +737,7 @@ namespace ThousandAndFirst.Tests
 				Entry("folly", KingdomPlotRules.PlotSize.Small, GrowthStage.Camp, "craft", null, 8, Staff: 3)
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, "folly", "Carries", CatalogueSeverity.Note));
+			ClassicAssert.IsTrue(Has(findings, "folly", "Carries", CatalogueSeverity.Note));
 		}
 
 		[Test]
@@ -748,7 +749,7 @@ namespace ThousandAndFirst.Tests
 			open.RoofDeclared = false;
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(
 				new List<CatalogueEntry> { open }, null);
-			Assert.IsTrue(Has(findings, "open-bunks", "Carries", CatalogueSeverity.Fault));
+			ClassicAssert.IsTrue(Has(findings, "open-bunks", "Carries", CatalogueSeverity.Fault));
 			StringAssert.Contains("effective roof is open", FirstMessage(findings));
 		}
 
@@ -760,7 +761,7 @@ namespace ThousandAndFirst.Tests
 			open.Roof = KingdomPlotRules.RoofState.Open;
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(
 				new List<CatalogueEntry> { open }, null);
-			Assert.IsTrue(Has(findings, "empty-court", "Roof", CatalogueSeverity.Fault));
+			ClassicAssert.IsTrue(Has(findings, "empty-court", "Roof", CatalogueSeverity.Fault));
 		}
 
 		[TestCase(KingdomPlotRules.RoofState.Soft)]
@@ -774,8 +775,8 @@ namespace ThousandAndFirst.Tests
 			sheltered.RoofDeclared = true;
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(
 				new List<CatalogueEntry> { sheltered }, null);
-			Assert.IsFalse(Has(findings, "shelter", "Carries", CatalogueSeverity.Fault));
-			Assert.IsFalse(Has(findings, "shelter", "Roof", CatalogueSeverity.Fault));
+			ClassicAssert.IsFalse(Has(findings, "shelter", "Carries", CatalogueSeverity.Fault));
+			ClassicAssert.IsFalse(Has(findings, "shelter", "Roof", CatalogueSeverity.Fault));
 		}
 
 		[Test]
@@ -785,8 +786,8 @@ namespace ThousandAndFirst.Tests
 			field.Roof = KingdomPlotRules.RoofState.Open;
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(
 				new List<CatalogueEntry> { field }, null);
-			Assert.IsFalse(Has(findings, "field", "Carries", CatalogueSeverity.Fault));
-			Assert.IsFalse(Has(findings, "field", "Roof", CatalogueSeverity.Fault));
+			ClassicAssert.IsFalse(Has(findings, "field", "Carries", CatalogueSeverity.Fault));
+			ClassicAssert.IsFalse(Has(findings, "field", "Roof", CatalogueSeverity.Fault));
 		}
 
 		[Test]
@@ -798,8 +799,8 @@ namespace ThousandAndFirst.Tests
 				Entry("tower", KingdomPlotRules.PlotSize.None, GrowthStage.Steading, "defense", null, 12, Staff: 2, Defence: 6)
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsFalse(Has(findings, "tower", "Carries", CatalogueSeverity.Note));
-			Assert.AreEqual(0, Count(findings, CatalogueSeverity.Fault));
+			ClassicAssert.IsFalse(Has(findings, "tower", "Carries", CatalogueSeverity.Note));
+			ClassicAssert.AreEqual(0, Count(findings, CatalogueSeverity.Fault));
 		}
 
 		[Test]
@@ -810,7 +811,7 @@ namespace ThousandAndFirst.Tests
 				Entry("mill", KingdomPlotRules.PlotSize.Small, GrowthStage.Camp, "power", "craft:1", 8, Staff: 3, Manning: "rota")
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, "mill", "Manning", CatalogueSeverity.Note));
+			ClassicAssert.IsTrue(Has(findings, "mill", "Manning", CatalogueSeverity.Note));
 		}
 
 		[Test]
@@ -821,7 +822,7 @@ namespace ThousandAndFirst.Tests
 				Entry("cairn", KingdomPlotRules.PlotSize.Small, GrowthStage.Camp, "memorial", "spirit:1", 5, Manning: "threshold")
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, "cairn", "Manning", CatalogueSeverity.Note));
+			ClassicAssert.IsTrue(Has(findings, "cairn", "Manning", CatalogueSeverity.Note));
 		}
 
 		[Test]
@@ -832,7 +833,7 @@ namespace ThousandAndFirst.Tests
 				Entry("odd", KingdomPlotRules.PlotSize.Small, GrowthStage.Camp, "menagerie", "spirit:1", 5)
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, "odd", "Category", CatalogueSeverity.Note));
+			ClassicAssert.IsTrue(Has(findings, "odd", "Category", CatalogueSeverity.Note));
 		}
 
 		[Test]
@@ -840,7 +841,7 @@ namespace ThousandAndFirst.Tests
 		{
 			List<CatalogueEntry> entries = new List<CatalogueEntry> { Entry("hut", Styles: "common,brackish") };
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, new List<string> { "common" });
-			Assert.IsTrue(Has(findings, null, "Styles", CatalogueSeverity.Note));
+			ClassicAssert.IsTrue(Has(findings, null, "Styles", CatalogueSeverity.Note));
 		}
 
 		[Test]
@@ -848,7 +849,7 @@ namespace ThousandAndFirst.Tests
 		{
 			List<CatalogueEntry> entries = new List<CatalogueEntry> { Entry("hut", Styles: "common") };
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, new List<string> { "common", "moonstair" });
-			Assert.IsTrue(Has(findings, null, "style", CatalogueSeverity.Note));
+			ClassicAssert.IsTrue(Has(findings, null, "style", CatalogueSeverity.Note));
 		}
 
 		[Test]
@@ -860,7 +861,7 @@ namespace ThousandAndFirst.Tests
 				Entry("fire", KingdomPlotRules.PlotSize.Small, GrowthStage.Camp, "civic", "spirit:1", 2, Styles: "all")
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, new List<string> { "common", "moonstair" });
-			Assert.IsFalse(Has(findings, null, "style", CatalogueSeverity.Note));
+			ClassicAssert.IsFalse(Has(findings, null, "style", CatalogueSeverity.Note));
 		}
 
 		/// <summary>
@@ -874,7 +875,7 @@ namespace ThousandAndFirst.Tests
 		{
 			List<CatalogueEntry> entries = new List<CatalogueEntry> { Entry("hut", Styles: "all,!eatr") };
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, new List<string> { "common", "eater" });
-			Assert.IsTrue(Has(findings, null, "Styles", CatalogueSeverity.Note));
+			ClassicAssert.IsTrue(Has(findings, null, "Styles", CatalogueSeverity.Note));
 		}
 
 		/// <summary>A list of nothing but refusals is offered to every style there is, so it
@@ -885,8 +886,8 @@ namespace ThousandAndFirst.Tests
 		{
 			List<CatalogueEntry> entries = new List<CatalogueEntry> { Entry("hut", Styles: "!eater") };
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, new List<string> { "common", "eater", "moonstair" });
-			Assert.IsFalse(Has(findings, null, "style", CatalogueSeverity.Note));
-			Assert.IsFalse(Has(findings, null, "Styles", CatalogueSeverity.Note), "eater IS referred to, by being refused");
+			ClassicAssert.IsFalse(Has(findings, null, "style", CatalogueSeverity.Note));
+			ClassicAssert.IsFalse(Has(findings, null, "Styles", CatalogueSeverity.Note), "eater IS referred to, by being refused");
 		}
 
 		[Test]
@@ -896,8 +897,8 @@ namespace ThousandAndFirst.Tests
 			// unknown there would bury the findings that matter.
 			List<CatalogueEntry> entries = new List<CatalogueEntry> { Entry("hut", Styles: "common,brackish") };
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsFalse(Has(findings, null, "Styles", CatalogueSeverity.Note));
-			Assert.IsFalse(Has(findings, null, "style", CatalogueSeverity.Note));
+			ClassicAssert.IsFalse(Has(findings, null, "Styles", CatalogueSeverity.Note));
+			ClassicAssert.IsFalse(Has(findings, null, "style", CatalogueSeverity.Note));
 		}
 
 		[Test]
@@ -909,8 +910,8 @@ namespace ThousandAndFirst.Tests
 				Entry("scriptorium", KingdomPlotRules.PlotSize.Medium, GrowthStage.Village, "knowledge", "learning:6", 26)
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, null, "MinStage", CatalogueSeverity.Note));
-			Assert.AreEqual(1, Count(findings, CatalogueSeverity.Note));
+			ClassicAssert.IsTrue(Has(findings, null, "MinStage", CatalogueSeverity.Note));
+			ClassicAssert.AreEqual(1, Count(findings, CatalogueSeverity.Note));
 		}
 
 		[Test]
@@ -921,19 +922,19 @@ namespace ThousandAndFirst.Tests
 				Entry("shelf", KingdomPlotRules.PlotSize.Small, GrowthStage.Camp, "knowledge", "learning:1", 10),
 				Entry("scriptorium", KingdomPlotRules.PlotSize.Medium, GrowthStage.Village, "knowledge", "learning:6", 26)
 			};
-			Assert.AreEqual(0, KingdomCatalogueRules.Validate(entries, null).Count);
+			ClassicAssert.AreEqual(0, KingdomCatalogueRules.Validate(entries, null).Count);
 		}
 
 		[Test]
 		public void AnyFault_SeparatesTheTwoSeverities()
 		{
-			Assert.IsFalse(KingdomCatalogueRules.AnyFault(null));
-			Assert.IsFalse(KingdomCatalogueRules.AnyFault(new List<CatalogueFinding>()));
-			Assert.IsFalse(KingdomCatalogueRules.AnyFault(new List<CatalogueFinding>
+			ClassicAssert.IsFalse(KingdomCatalogueRules.AnyFault(null));
+			ClassicAssert.IsFalse(KingdomCatalogueRules.AnyFault(new List<CatalogueFinding>()));
+			ClassicAssert.IsFalse(KingdomCatalogueRules.AnyFault(new List<CatalogueFinding>
 			{
 				new CatalogueFinding("a", "Plot", CatalogueSeverity.Note, "x")
 			}));
-			Assert.IsTrue(KingdomCatalogueRules.AnyFault(new List<CatalogueFinding>
+			ClassicAssert.IsTrue(KingdomCatalogueRules.AnyFault(new List<CatalogueFinding>
 			{
 				new CatalogueFinding("a", "Plot", CatalogueSeverity.Note, "x"),
 				new CatalogueFinding("b", "Plot", CatalogueSeverity.Fault, "y")

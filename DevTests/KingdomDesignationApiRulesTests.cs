@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Api;
 
 namespace ThousandAndFirst.Tests
@@ -21,24 +22,24 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TranslationCarriesIdentityAndGrantsOnlyOpenYardUse()
 		{
-			Assert.IsTrue(KingdomDesignationRules.TryTranslate(
+			ClassicAssert.IsTrue(KingdomDesignationRules.TryTranslate(
 				Row(new KingdomApiCell(3, 4), new KingdomApiCell(4, 4)), 80, 25,
 				out KingdomBenefitDesignation row, out string failure), failure);
-			Assert.AreEqual("other.mod", row.ProviderId);
-			Assert.AreEqual("3", row.ProviderVersion);
-			Assert.AreEqual("hall:7", row.Identity);
-			Assert.AreEqual("r9", row.Revision);
-			Assert.AreEqual("JoppaWorld.11.22.1.1.10", row.ZoneId);
-			Assert.AreEqual("42", row.RootId);
-			Assert.AreEqual("meeting-hall", row.BuildingKey);
-			Assert.AreEqual("lot:1", row.LotId);
-			Assert.AreEqual(2, row.Cells.Count);
-			Assert.AreEqual(3, row.Cells[0].X); Assert.AreEqual(4, row.Cells[0].Y);
-			Assert.AreEqual(KingdomDesignationRules.ExternalCellUse, row.Cells[0].Use);
-			Assert.AreEqual(0, (int)(row.Cells[0].Use & (KingdomBenefitCellUse.Covered
+			ClassicAssert.AreEqual("other.mod", row.ProviderId);
+			ClassicAssert.AreEqual("3", row.ProviderVersion);
+			ClassicAssert.AreEqual("hall:7", row.Identity);
+			ClassicAssert.AreEqual("r9", row.Revision);
+			ClassicAssert.AreEqual("JoppaWorld.11.22.1.1.10", row.ZoneId);
+			ClassicAssert.AreEqual("42", row.RootId);
+			ClassicAssert.AreEqual("meeting-hall", row.BuildingKey);
+			ClassicAssert.AreEqual("lot:1", row.LotId);
+			ClassicAssert.AreEqual(2, row.Cells.Count);
+			ClassicAssert.AreEqual(3, row.Cells[0].X); ClassicAssert.AreEqual(4, row.Cells[0].Y);
+			ClassicAssert.AreEqual(KingdomDesignationRules.ExternalCellUse, row.Cells[0].Use);
+			ClassicAssert.AreEqual(0, (int)(row.Cells[0].Use & (KingdomBenefitCellUse.Covered
 				| KingdomBenefitCellUse.Interior | KingdomBenefitCellUse.Ingress)));
-			Assert.AreEqual(0, row.Caps.Count);
-			Assert.AreEqual(0, row.AcceptedTags.Count);
+			ClassicAssert.AreEqual(0, row.Caps.Count);
+			ClassicAssert.AreEqual(0, row.AcceptedTags.Count);
 		}
 
 		[TestCase(-1, 0)]
@@ -47,35 +48,35 @@ namespace ThousandAndFirst.Tests
 		[TestCase(0, 25)]
 		public void ACellOutsideTheActiveZoneRefusesTheWholeRow(int X, int Y)
 		{
-			Assert.IsFalse(KingdomDesignationRules.TryTranslate(
+			ClassicAssert.IsFalse(KingdomDesignationRules.TryTranslate(
 				Row(new KingdomApiCell(1, 1), new KingdomApiCell(X, Y)), 80, 25,
 				out KingdomBenefitDesignation row, out string failure));
-			Assert.IsNull(row);
+			ClassicAssert.IsNull(row);
 			StringAssert.Contains("outside the active zone", failure);
 		}
 
 		[Test]
 		public void ADuplicatedCellRefusesTheWholeRow()
 		{
-			Assert.IsFalse(KingdomDesignationRules.TryTranslate(
+			ClassicAssert.IsFalse(KingdomDesignationRules.TryTranslate(
 				Row(new KingdomApiCell(5, 5), new KingdomApiCell(5, 5)), 80, 25,
 				out KingdomBenefitDesignation row, out string failure));
-			Assert.IsNull(row);
+			ClassicAssert.IsNull(row);
 			StringAssert.Contains("duplicated", failure);
 		}
 
 		[Test]
 		public void NullEmptyOrOverBoundCellsRefuse()
 		{
-			Assert.IsFalse(KingdomDesignationRules.TryTranslate(Row((KingdomApiCell[])null),
+			ClassicAssert.IsFalse(KingdomDesignationRules.TryTranslate(Row((KingdomApiCell[])null),
 				80, 25, out _, out string nullFailure));
 			StringAssert.Contains("no bounded exact cells", nullFailure);
-			Assert.IsFalse(KingdomDesignationRules.TryTranslate(Row(), 80, 25, out _, out _));
+			ClassicAssert.IsFalse(KingdomDesignationRules.TryTranslate(Row(), 80, 25, out _, out _));
 			KingdomApiCell[] over = new KingdomApiCell[
 				KingdomDesignationRules.MaxCellsPerDesignation + 1];
-			Assert.IsFalse(KingdomDesignationRules.TryTranslate(Row(over), 80, 25, out _, out _));
-			Assert.IsFalse(KingdomDesignationRules.TryTranslate(null, 80, 25, out _, out _));
-			Assert.IsFalse(KingdomDesignationRules.TryTranslate(Row(new KingdomApiCell(0, 0)),
+			ClassicAssert.IsFalse(KingdomDesignationRules.TryTranslate(Row(over), 80, 25, out _, out _));
+			ClassicAssert.IsFalse(KingdomDesignationRules.TryTranslate(null, 80, 25, out _, out _));
+			ClassicAssert.IsFalse(KingdomDesignationRules.TryTranslate(Row(new KingdomApiCell(0, 0)),
 				0, 25, out _, out _));
 		}
 
@@ -83,16 +84,16 @@ namespace ThousandAndFirst.Tests
 		public void TheApiFaceRoundTripsIdentityAndCells()
 		{
 			KingdomApiDesignation source = Row(new KingdomApiCell(7, 8), new KingdomApiCell(8, 8));
-			Assert.IsTrue(KingdomDesignationRules.TryTranslate(source, 80, 25,
+			ClassicAssert.IsTrue(KingdomDesignationRules.TryTranslate(source, 80, 25,
 				out KingdomBenefitDesignation row, out _));
 			KingdomApiDesignation back = KingdomDesignationRules.ToApi(row);
-			Assert.AreEqual(source.Identity, back.Identity);
-			Assert.AreEqual(source.RootId, back.RootId);
-			Assert.AreEqual(source.BuildingKey, back.BuildingKey);
-			Assert.AreEqual(2, back.Cells.Length);
-			Assert.AreEqual(new KingdomApiCell(7, 8), back.Cells[0]);
-			Assert.AreEqual(new KingdomApiCell(8, 8), back.Cells[1]);
-			Assert.IsNull(KingdomDesignationRules.ToApi(null));
+			ClassicAssert.AreEqual(source.Identity, back.Identity);
+			ClassicAssert.AreEqual(source.RootId, back.RootId);
+			ClassicAssert.AreEqual(source.BuildingKey, back.BuildingKey);
+			ClassicAssert.AreEqual(2, back.Cells.Length);
+			ClassicAssert.AreEqual(new KingdomApiCell(7, 8), back.Cells[0]);
+			ClassicAssert.AreEqual(new KingdomApiCell(8, 8), back.Cells[1]);
+			ClassicAssert.IsNull(KingdomDesignationRules.ToApi(null));
 		}
 
 		/// <summary>The published contracts name no internal type: a Growth layout change cannot

@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Linq;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -19,7 +20,7 @@ namespace ThousandAndFirst.Tests
 		[Test] public void ConsentPrecedesEveryMutationAndDebitDoesNotExist()
 		{
 			string source = Relocation(); string ui = TestMain.ReadRepositoryText("Growth/KingdomRelocation.UI.cs");
-			Assert.Less(ui.IndexOf("Consent to this complete plan", StringComparison.Ordinal),
+			ClassicAssert.Less(ui.IndexOf("Consent to this complete plan", StringComparison.Ordinal),
 				ui.IndexOf("TryOpen(Zone, exact.Receipt", StringComparison.Ordinal));
 			StringAssert.Contains("ReproveApproved", ui);
 			StringAssert.DoesNotContain("Consume(", source);
@@ -35,7 +36,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("RootEscrow(Receipt, item", objects);
 			StringAssert.Contains("destination.AddObject(item", objects);
 			StringAssert.Contains("Row.State = KingdomRelocationRowState.Rooted", objects);
-			Assert.Less(objects.IndexOf("Row.State = KingdomRelocationRowState.Rooted", StringComparison.Ordinal),
+			ClassicAssert.Less(objects.IndexOf("Row.State = KingdomRelocationRowState.Rooted", StringComparison.Ordinal),
 				objects.IndexOf("RemoveForHandover", StringComparison.Ordinal));
 			StringAssert.DoesNotContain("Clone(", source);
 			StringAssert.DoesNotContain("KingdomPlots.Stake", source);
@@ -83,7 +84,7 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int advance = activation.IndexOf("KingdomArchitectureRules.AdvanceLabour",
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(resume, 0); Assert.Greater(advance, resume);
+			ClassicAssert.GreaterOrEqual(resume, 0); ClassicAssert.Greater(advance, resume);
 			StringAssert.Contains("TryHandOver(System, Zone, ref expected", activation);
 		}
 
@@ -101,7 +102,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomRelocationMovePhase.RollingBack", activation);
 			StringAssert.Contains("KingdomRelocationMovePhase.RolledBack", activation);
 			string rollback = TestMain.ReadRepositoryText("Growth/KingdomRelocation.Rollback.cs");
-			Assert.Less(rollback.IndexOf("Receipt.Failure = Bounded(Reason)", StringComparison.Ordinal),
+			ClassicAssert.Less(rollback.IndexOf("Receipt.Failure = Bounded(Reason)", StringComparison.Ordinal),
 				rollback.IndexOf("move.Phase = KingdomRelocationMovePhase.RollingBack", StringComparison.Ordinal));
 			StringAssert.Contains("RestoreCellReady", rollback);
 		}
@@ -167,7 +168,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Name=\"r_KingdomRelocationStake\" Inherits=\"Sign\"", blueprints);
 			foreach (string path in Directory.GetFiles(Path.Combine(TestMain.RepositoryRoot, "Growth"),
 				"KingdomRelocation*.cs"))
-				Assert.Less(File.ReadLines(path).Count(), 300, Path.GetFileName(path));
+				ClassicAssert.Less(File.ReadLines(path).Count(), 300, Path.GetFileName(path));
 		}
 	}
 }

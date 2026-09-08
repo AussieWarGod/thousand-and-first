@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -20,9 +21,9 @@ namespace ThousandAndFirst.Tests
 			int freeze = runtime.IndexOf("KingdomPolityAmbientTransactionRules.TryFreeze", assign);
 			int reserve = runtime.IndexOf("TryReserveAmbientPlan", freeze);
 			int plan = runtime.IndexOf("KingdomPolityCohortRules.TryPlan", reserve);
-			Assert.GreaterOrEqual(assign, 0); Assert.Greater(freeze, assign);
-			Assert.Greater(reserve, freeze);
-			Assert.Greater(plan, reserve);
+			ClassicAssert.GreaterOrEqual(assign, 0); ClassicAssert.Greater(freeze, assign);
+			ClassicAssert.Greater(reserve, freeze);
+			ClassicAssert.Greater(plan, reserve);
 			StringAssert.Contains("PolityId = assignment.PolityId", runtime);
 			StringAssert.Contains("Present(S, cohort, loadedSettlementId)", runtime);
 		}

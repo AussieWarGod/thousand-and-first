@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -30,12 +31,12 @@ namespace ThousandAndFirst.Tests
 			AssertAdvance(partitioned, 35L, 20L, 1);
 
 			CollectionAssert.AreEqual(WriteCadence(direct), WriteCadence(partitioned));
-			Assert.AreEqual(2UL, direct.ArrivalOrdinalHighWater);
-			Assert.AreEqual(1UL, direct.ArrivalOpportunity.Ordinal);
+			ClassicAssert.AreEqual(2UL, direct.ArrivalOrdinalHighWater);
+			ClassicAssert.AreEqual(1UL, direct.ArrivalOpportunity.Ordinal);
 			StringAssert.StartsWith("taf:growth-arrival-opportunity:",
 				direct.ArrivalOpportunity.EventId);
-			Assert.AreEqual(30L, direct.ArrivalDebtRanges[0].FirstDueTick);
-			Assert.AreEqual(2UL, direct.ArrivalDebtRanges[0].FirstOrdinal);
+			ClassicAssert.AreEqual(30L, direct.ArrivalDebtRanges[0].FirstDueTick);
+			ClassicAssert.AreEqual(2UL, direct.ArrivalDebtRanges[0].FirstOrdinal);
 		}
 
 		[Test]
@@ -45,10 +46,10 @@ namespace ThousandAndFirst.Tests
 			AssertAdvance(book, 10L, 10L, 0); Freeze(book);
 			AssertAdvance(book, 10L, 10L, 1);
 			AssertAdvance(book, 1_000_000L, 10L, 1);
-			Assert.AreEqual(1, book.ArrivalDebtRanges.Count);
-			Assert.AreEqual(99_999UL, book.ArrivalDebtRanges[0].Count);
-			Assert.AreEqual(100_000UL, book.ArrivalOrdinalHighWater);
-			Assert.AreEqual(0UL, book.ArrivalOrdinalRetiredThrough);
+			ClassicAssert.AreEqual(1, book.ArrivalDebtRanges.Count);
+			ClassicAssert.AreEqual(99_999UL, book.ArrivalDebtRanges[0].Count);
+			ClassicAssert.AreEqual(100_000UL, book.ArrivalOrdinalHighWater);
+			ClassicAssert.AreEqual(0UL, book.ArrivalOrdinalRetiredThrough);
 		}
 
 		[Test]
@@ -60,11 +61,11 @@ namespace ThousandAndFirst.Tests
 			AssertAdvance(book, 30L, 10L, 1);
 			KingdomGrowthArrivalOpportunity opportunity = book.ArrivalOpportunity;
 			ulong debt = KingdomLifecycleRules.ArrivalDebtCount(book);
-			Assert.IsTrue(KingdomLifecycleRules.TryRetireGrowthArrivalOpportunity(book,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryRetireGrowthArrivalOpportunity(book,
 				opportunity));
-			Assert.AreEqual(1UL, book.ArrivalOrdinalRetiredThrough);
-			Assert.AreEqual(debt - 1UL, KingdomLifecycleRules.ArrivalDebtCount(book));
-			Assert.AreEqual(book.ArrivalDebtRanges[0].FirstDueTick, book.NextArrivalTick);
+			ClassicAssert.AreEqual(1UL, book.ArrivalOrdinalRetiredThrough);
+			ClassicAssert.AreEqual(debt - 1UL, KingdomLifecycleRules.ArrivalDebtCount(book));
+			ClassicAssert.AreEqual(book.ArrivalDebtRanges[0].FirstDueTick, book.NextArrivalTick);
 		}
 
 		[Test]
@@ -79,24 +80,24 @@ namespace ThousandAndFirst.Tests
 				ArrivalCandidateRetiredThrough = 7L, ArrivalCandidate = legacy,
 				NextArrivalTick = 20L, ArrivalIntervalTicks = 10L
 			};
-			Assert.IsTrue(KingdomLifecycleRules.UpgradeHistoricalGrowthArrivalCadence(
+			ClassicAssert.IsTrue(KingdomLifecycleRules.UpgradeHistoricalGrowthArrivalCadence(
 				withCandidate));
-			Assert.AreSame(legacy, withCandidate.ArrivalCandidate);
-			Assert.AreEqual("LegacySettler", withCandidate.ArrivalCandidate.Blueprint);
-			Assert.AreEqual(8UL, withCandidate.ArrivalOrdinalHighWater);
-			Assert.AreEqual(0, withCandidate.ArrivalDebtRanges.Count);
+			ClassicAssert.AreSame(legacy, withCandidate.ArrivalCandidate);
+			ClassicAssert.AreEqual("LegacySettler", withCandidate.ArrivalCandidate.Blueprint);
+			ClassicAssert.AreEqual(8UL, withCandidate.ArrivalOrdinalHighWater);
+			ClassicAssert.AreEqual(0, withCandidate.ArrivalDebtRanges.Count);
 
 			KingdomGrowthBook empty = new KingdomGrowthBook
 			{
 				ArrivalCandidateRetiredThrough = 7L, NextArrivalTick = 20L,
 				ArrivalIntervalTicks = 10L
 			};
-			Assert.IsTrue(KingdomLifecycleRules.UpgradeHistoricalGrowthArrivalCadence(empty));
-			Assert.IsTrue(KingdomLifecycleRules.TryBindHistoricalGrowthArrivalCadence(empty,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.UpgradeHistoricalGrowthArrivalCadence(empty));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryBindHistoricalGrowthArrivalCadence(empty,
 				1_000L, 10L, 7, 3, out string failure), failure);
-			Assert.AreEqual(1_010L, empty.NextArrivalTick);
-			Assert.AreEqual(7UL, empty.ArrivalOrdinalHighWater);
-			Assert.AreEqual(0, empty.ArrivalDebtRanges.Count);
+			ClassicAssert.AreEqual(1_010L, empty.NextArrivalTick);
+			ClassicAssert.AreEqual(7UL, empty.ArrivalOrdinalHighWater);
+			ClassicAssert.AreEqual(0, empty.ArrivalDebtRanges.Count);
 		}
 
 		[Test]
@@ -106,7 +107,7 @@ namespace ThousandAndFirst.Tests
 			book.ArrivalOrdinalHighWater = ulong.MaxValue;
 			book.ArrivalOrdinalRetiredThrough = ulong.MaxValue;
 			byte[] before = WriteCadence(book);
-			Assert.IsFalse(KingdomLifecycleRules.TryAdvanceGrowthArrivalCadence(book,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryAdvanceGrowthArrivalCadence(book,
 				10L, 10L, 0, 3, out _));
 			CollectionAssert.AreEqual(before, WriteCadence(book));
 		}
@@ -117,7 +118,7 @@ namespace ThousandAndFirst.Tests
 			KingdomGrowthBook book = ActiveCadence();
 			AssertAdvance(book, 5L, 10L, 0);
 			byte[] before = WriteCadence(book);
-			Assert.IsFalse(KingdomLifecycleRules.TryAdvanceGrowthArrivalCadence(book,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryAdvanceGrowthArrivalCadence(book,
 				4L, 10L, 0, 3, out _));
 			CollectionAssert.AreEqual(before, WriteCadence(book));
 		}
@@ -137,9 +138,9 @@ namespace ThousandAndFirst.Tests
 					FirstOrdinal = (ulong)i + 1UL, Count = 1UL, FirstDueTick = i + 1L,
 					IntervalTicks = 1L
 				});
-			Assert.IsTrue(KingdomLifecycleRules.GrowthArrivalCadenceShape(book));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.GrowthArrivalCadenceShape(book));
 			byte[] before = WriteCadence(book);
-			Assert.IsFalse(KingdomLifecycleRules.TryAdvanceGrowthArrivalCadence(book,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryAdvanceGrowthArrivalCadence(book,
 				100L, 10L, 0, 3, out _));
 			CollectionAssert.AreEqual(before, WriteCadence(book));
 		}
@@ -153,7 +154,7 @@ namespace ThousandAndFirst.Tests
 			KingdomGrowthBook loaded = ReadCadence(first, book.ArrivalIntervalTicks,
 				book.NextArrivalTick);
 			CollectionAssert.AreEqual(first, WriteCadence(loaded));
-			Assert.AreEqual(book.ArrivalOpportunity.PayloadHash,
+			ClassicAssert.AreEqual(book.ArrivalOpportunity.PayloadHash,
 				loaded.ArrivalOpportunity.PayloadHash);
 		}
 
@@ -164,16 +165,16 @@ namespace ThousandAndFirst.Tests
 			AssertAdvance(book, 25L, 10L, 0); Freeze(book);
 			KingdomSettlement settlement = new KingdomSettlement();
 			settlement.LifecycleBook.Growth = book;
-			Assert.IsTrue(KingdomArchivedSettlementCodec.TryEncode(settlement,
+			ClassicAssert.IsTrue(KingdomArchivedSettlementCodec.TryEncode(settlement,
 				out byte[] v18, out string failure), failure);
-			Assert.AreEqual(KingdomArchivedSettlementCodec.CurrentVersion,
+			ClassicAssert.AreEqual(KingdomArchivedSettlementCodec.CurrentVersion,
 				BitConverter.ToInt32(v18, 4));
-			Assert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(v18,
+			ClassicAssert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(v18,
 				out KingdomSettlement loaded, out int future, out failure), failure);
-			Assert.AreEqual(0, future);
+			ClassicAssert.AreEqual(0, future);
 			CollectionAssert.AreEqual(WriteCadence(book),
 				WriteCadence(loaded.LifecycleBook.Growth));
-			Assert.IsFalse(KingdomArchivedSettlementCodec.TryEncodePhysicalFirstGuestV16ForTests(
+			ClassicAssert.IsFalse(KingdomArchivedSettlementCodec.TryEncodePhysicalFirstGuestV16ForTests(
 				settlement, out byte[] _, out failure));
 			StringAssert.Contains("historical arrival cadence", failure);
 		}
@@ -185,9 +186,9 @@ namespace ThousandAndFirst.Tests
 			AssertAdvance(book, 10L, 10L, 0); Freeze(book);
 			KingdomGrowthArrivalOpportunity opportunity = book.ArrivalOpportunity;
 			opportunity.PersonName = "different";
-			Assert.IsFalse(KingdomLifecycleRules.TryRetireGrowthArrivalOpportunity(book,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryRetireGrowthArrivalOpportunity(book,
 				opportunity));
-			Assert.IsFalse(KingdomLifecycleRules.TryAdvanceGrowthArrivalCadence(book,
+			ClassicAssert.IsFalse(KingdomLifecycleRules.TryAdvanceGrowthArrivalCadence(book,
 				20L, 10L, 1, 3, out _));
 		}
 
@@ -205,11 +206,11 @@ namespace ThousandAndFirst.Tests
 			book.WorkPaused = false;
 			book.OptionState = KingdomLifecycleOptionState.Enabled;
 			book.ArrivalCadenceResumePending = true;
-			Assert.IsTrue(KingdomLifecycleRules.TryRestartGrowthArrivalCadenceAfterPause(book,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryRestartGrowthArrivalCadenceAfterPause(book,
 				100L, 20L, 1, 3, out string failure), failure);
-			Assert.AreEqual(3L, book.ArrivalRateEpoch);
-			Assert.AreEqual(120L, book.ArrivalCadenceNextDueTick);
-			Assert.AreEqual(1UL, book.ArrivalOrdinalHighWater);
+			ClassicAssert.AreEqual(3L, book.ArrivalRateEpoch);
+			ClassicAssert.AreEqual(120L, book.ArrivalCadenceNextDueTick);
+			ClassicAssert.AreEqual(1UL, book.ArrivalOrdinalHighWater);
 		}
 
 		[Test]
@@ -261,13 +262,13 @@ namespace ThousandAndFirst.Tests
 		private static void AssertAdvance(KingdomGrowthBook book, long now, long interval,
 			int cohort)
 		{
-			Assert.IsTrue(KingdomLifecycleRules.TryAdvanceGrowthArrivalCadence(book, now,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryAdvanceGrowthArrivalCadence(book, now,
 				interval, cohort, 3, out string failure), failure);
 		}
 
 		private static void Freeze(KingdomGrowthBook book)
 		{
-			Assert.IsTrue(KingdomLifecycleRules.TryFreezeGrowthArrivalOpportunity(book, 3,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryFreezeGrowthArrivalOpportunity(book, 3,
 				KingdomLifecycleRules.GrowthArrivalEventStreamId,
 				KingdomLifecycleRules.GrowthArrivalEventKindCode, false, "Settler", "Joppa",
 				"water", "Ari", "1 of Nivvun, 1000 AR", out _));

@@ -2,6 +2,7 @@
 using System;
 
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -56,7 +57,7 @@ namespace ThousandAndFirst.Tests
 			string salvage = Read("Growth/KingdomSalvage.cs");
 			Ordered(salvage, "TryObjectGraphAvailableForOrdinaryTransfer(Machine, out Failure)",
 				"Machine.SetIntProperty(CertifiedProperty, 0)");
-			Assert.LessOrEqual(Read("Trade/KingdomNativeTradeCargoFence.cs").Split('\n').Length,
+			ClassicAssert.LessOrEqual(Read("Trade/KingdomNativeTradeCargoFence.cs").Split('\n').Length,
 				300);
 		}
 
@@ -68,7 +69,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < markers.Length; i++)
 			{
 				int next = source.IndexOf(markers[i], at + 1, StringComparison.Ordinal);
-				Assert.Greater(next, at, markers[i]);
+				ClassicAssert.Greater(next, at, markers[i]);
 				at = next;
 			}
 		}

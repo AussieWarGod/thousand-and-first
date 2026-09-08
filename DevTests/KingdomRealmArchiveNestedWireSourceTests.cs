@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -25,8 +26,8 @@ namespace ThousandAndFirst.Tests
 			int read = source.IndexOf("IComposite value = Reader.ReadComposite();", StringComparison.Ordinal);
 			int proof = source.IndexOf("Reader.Errors != errors || value == null || value.GetType() != typeof(T)", StringComparison.Ordinal);
 			int accept = source.IndexOf("return (T)value;", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(before, 0); Assert.Greater(read, before);
-			Assert.Greater(proof, read); Assert.Greater(accept, proof);
+			ClassicAssert.GreaterOrEqual(before, 0); ClassicAssert.Greater(read, before);
+			ClassicAssert.Greater(proof, read); ClassicAssert.Greater(accept, proof);
 			StringAssert.Contains("throw new InvalidDataException", source.Substring(proof, accept - proof));
 		}
 	}

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -48,18 +49,18 @@ namespace ThousandAndFirst.Tests
 			plain.Anchor = null;
 			List<KingdomRealizedObjectFact> stable = KingdomRealizedCaptureRules.Stabilized(
 				new List<KingdomRealizedObjectFact> { stateful, door, plain, null });
-			Assert.AreEqual(3, stable.Count);
-			Assert.IsNull(stable[0].Tile); Assert.IsNull(stable[0].TileColor);
-			Assert.IsNull(stable[0].ColorString); Assert.AreEqual(0, stable[0].RenderLayer);
-			Assert.AreEqual("north", stable[0].Anchor);
-			Assert.AreEqual("r_KingdomCivicCampfire", stable[0].Blueprint);
-			Assert.IsTrue(stable[0].Solid);
-			Assert.IsNull(stable[1].RenderString); Assert.IsTrue(stable[1].Door);
-			Assert.AreEqual("Terrain/sw_wall.bmp", stable[2].Tile);
-			Assert.AreEqual("&y", stable[2].TileColor);
-			Assert.AreEqual(5, stable[2].RenderLayer);
-			Assert.AreEqual("Terrain/sw_wall.bmp", stateful.Tile, "the source facts are untouched");
-			Assert.AreEqual(0, KingdomRealizedCaptureRules.Stabilized(null).Count);
+			ClassicAssert.AreEqual(3, stable.Count);
+			ClassicAssert.IsNull(stable[0].Tile); ClassicAssert.IsNull(stable[0].TileColor);
+			ClassicAssert.IsNull(stable[0].ColorString); ClassicAssert.AreEqual(0, stable[0].RenderLayer);
+			ClassicAssert.AreEqual("north", stable[0].Anchor);
+			ClassicAssert.AreEqual("r_KingdomCivicCampfire", stable[0].Blueprint);
+			ClassicAssert.IsTrue(stable[0].Solid);
+			ClassicAssert.IsNull(stable[1].RenderString); ClassicAssert.IsTrue(stable[1].Door);
+			ClassicAssert.AreEqual("Terrain/sw_wall.bmp", stable[2].Tile);
+			ClassicAssert.AreEqual("&y", stable[2].TileColor);
+			ClassicAssert.AreEqual(5, stable[2].RenderLayer);
+			ClassicAssert.AreEqual("Terrain/sw_wall.bmp", stateful.Tile, "the source facts are untouched");
+			ClassicAssert.AreEqual(0, KingdomRealizedCaptureRules.Stabilized(null).Count);
 		}
 
 		private static KingdomRealizedObjectFact Object(int x, int y, string blueprint)
@@ -120,8 +121,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void SameRealizedLotDigestsIdentically()
 		{
-			Assert.AreEqual(Baseline(), Baseline());
-			Assert.AreEqual(64, Baseline().Length);
+			ClassicAssert.AreEqual(Baseline(), Baseline());
+			ClassicAssert.AreEqual(64, Baseline().Length);
 		}
 
 		/// <summary>Enumeration order must not change the answer.</summary>
@@ -132,7 +133,7 @@ namespace ThousandAndFirst.Tests
 			reversed.Reverse();
 			List<KingdomRealizedCellFact> shuffled = Cells(2, 2);
 			shuffled.Reverse();
-			Assert.AreEqual(Baseline(), Digest(shuffled, reversed));
+			ClassicAssert.AreEqual(Baseline(), Digest(shuffled, reversed));
 		}
 
 		// ----- the whole point: different realized ground must not match -----------------------
@@ -154,7 +155,7 @@ namespace ThousandAndFirst.Tests
 				case "Door": cell.Door = !cell.Door; break;
 				case "Liquid": cell.Liquid = !cell.Liquid; break;
 			}
-			Assert.AreNotEqual(Baseline(), Digest(altered, Objects()));
+			ClassicAssert.AreNotEqual(Baseline(), Digest(altered, Objects()));
 		}
 
 		[Test]
@@ -162,13 +163,13 @@ namespace ThousandAndFirst.Tests
 		{
 			List<KingdomRealizedObjectFact> fewer = Objects();
 			fewer.RemoveAt(1);
-			Assert.AreNotEqual(Baseline(), Digest(Cells(2, 2), fewer));
+			ClassicAssert.AreNotEqual(Baseline(), Digest(Cells(2, 2), fewer));
 		}
 
 		[Test]
 		public void AMovedObjectChangesTheDigest()
 		{
-			Assert.AreNotEqual(Baseline(), Mutated(delegate (KingdomRealizedObjectFact o)
+			ClassicAssert.AreNotEqual(Baseline(), Mutated(delegate (KingdomRealizedObjectFact o)
 				{ o.X = 1; }));
 		}
 
@@ -182,7 +183,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("TileColor")]
 		public void EveryRecordedTextFieldChangesTheDigest(string field)
 		{
-			Assert.AreNotEqual(Baseline(), Mutated(delegate (KingdomRealizedObjectFact o)
+			ClassicAssert.AreNotEqual(Baseline(), Mutated(delegate (KingdomRealizedObjectFact o)
 			{
 				switch (field)
 				{
@@ -211,7 +212,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("Liquid")]
 		public void EveryRecordedStateFieldChangesTheDigest(string field)
 		{
-			Assert.AreNotEqual(Baseline(), Mutated(delegate (KingdomRealizedObjectFact o)
+			ClassicAssert.AreNotEqual(Baseline(), Mutated(delegate (KingdomRealizedObjectFact o)
 			{
 				switch (field)
 				{
@@ -243,8 +244,8 @@ namespace ThousandAndFirst.Tests
 		{
 			string stripped = Mutated(delegate (KingdomRealizedObjectFact o)
 				{ o.PhysicsPresent = false; o.Solid = false; });
-			Assert.AreNotEqual(Baseline(), stripped);
-			Assert.AreNotEqual(stripped, Mutated(delegate (KingdomRealizedObjectFact o)
+			ClassicAssert.AreNotEqual(Baseline(), stripped);
+			ClassicAssert.AreNotEqual(stripped, Mutated(delegate (KingdomRealizedObjectFact o)
 				{ o.PhysicsPresent = true; o.Solid = false; }),
 				"a missing part and a present-but-permeable part are different results");
 		}
@@ -260,9 +261,9 @@ namespace ThousandAndFirst.Tests
 				{ o.Solid = false; });
 			string toggledDeclared = Mutated(delegate (KingdomRealizedObjectFact o)
 				{ o.BlueprintSolid = false; });
-			Assert.AreNotEqual(Baseline(), toggledLive);
-			Assert.AreNotEqual(Baseline(), toggledDeclared);
-			Assert.AreNotEqual(toggledLive, toggledDeclared);
+			ClassicAssert.AreNotEqual(Baseline(), toggledLive);
+			ClassicAssert.AreNotEqual(Baseline(), toggledDeclared);
+			ClassicAssert.AreNotEqual(toggledLive, toggledDeclared);
 		}
 
 		// ----- RED 9: lot identity is a precondition, never cross-path identity -------------------
@@ -277,7 +278,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void DifferentLawfulLotIdsWithIdenticalPlacementsDigestAlike()
 		{
-			Assert.AreEqual(Measured("plot-hearth-0021"), Measured("taf-gallery-4-0f2c8a11"));
+			ClassicAssert.AreEqual(Measured("plot-hearth-0021"), Measured("taf-gallery-4-0f2c8a11"));
 		}
 
 		/// <summary>
@@ -296,7 +297,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AnUnprovedAuthorityRowDoesNotMatchAProvedOne()
 		{
-			Assert.AreNotEqual(Measured("plot-hearth-0021"), Measured(null));
+			ClassicAssert.AreNotEqual(Measured("plot-hearth-0021"), Measured(null));
 		}
 
 	}

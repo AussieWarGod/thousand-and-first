@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 using ThousandAndFirst.Harness;
 
@@ -68,7 +69,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomScenarioDefinition row = Row();
 			row.DisplayName = new string('n', KingdomScenarioRowValidator.MaxTextChars + 1);
-			Assert.IsTrue(Reports(row, "oversize authored text"),
+			ClassicAssert.IsTrue(Reports(row, "oversize authored text"),
 				"the guard the XML adapter used to make unreachable must fire");
 		}
 
@@ -77,7 +78,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomScenarioDefinition row = Row();
 			row.Description = new string('d', KingdomScenarioRowValidator.MaxTextChars + 1);
-			Assert.IsTrue(Reports(row, "oversize authored text"));
+			ClassicAssert.IsTrue(Reports(row, "oversize authored text"));
 		}
 
 		// ----- the empty domain member a||b used to become a|b ------------------------------------
@@ -90,7 +91,7 @@ namespace ThousandAndFirst.Tests
 			// Exactly what "north||east" now yields once the adapter stopped discarding empties.
 			parameter.Domain = new List<string> { "north", "", "east" };
 			row.Parameters.Add(parameter);
-			Assert.IsTrue(Reports(row, "malformed domain value"));
+			ClassicAssert.IsTrue(Reports(row, "malformed domain value"));
 		}
 
 		[Test]
@@ -100,7 +101,7 @@ namespace ThousandAndFirst.Tests
 			KingdomScenarioParameter parameter = new KingdomScenarioParameter { Name = "facing" };
 			parameter.Domain = new List<string>();
 			row.Parameters.Add(parameter);
-			Assert.IsTrue(Reports(row, "empty domain"));
+			ClassicAssert.IsTrue(Reports(row, "empty domain"));
 		}
 
 		[Test]
@@ -110,7 +111,7 @@ namespace ThousandAndFirst.Tests
 			KingdomScenarioParameter parameter = new KingdomScenarioParameter { Name = "facing" };
 			parameter.Domain = new List<string> { "north", "north" };
 			row.Parameters.Add(parameter);
-			Assert.IsTrue(Reports(row, "repeats domain value"));
+			ClassicAssert.IsTrue(Reports(row, "repeats domain value"));
 		}
 
 		// ----- the reserved request name --------------------------------------------------------
@@ -129,7 +130,7 @@ namespace ThousandAndFirst.Tests
 			};
 			parameter.Domain = new List<string> { "north" };
 			row.Parameters.Add(parameter);
-			Assert.IsTrue(Reports(row, "reserved request name"));
+			ClassicAssert.IsTrue(Reports(row, "reserved request name"));
 		}
 
 		[Test]
@@ -139,7 +140,7 @@ namespace ThousandAndFirst.Tests
 			KingdomScenarioParameter parameter = new KingdomScenarioParameter { Name = "facing" };
 			parameter.Domain = new List<string> { "north" };
 			row.Parameters.Add(parameter);
-			Assert.IsFalse(Reports(row, "reserved request name"));
+			ClassicAssert.IsFalse(Reports(row, "reserved request name"));
 		}
 
 		[Test]
@@ -153,7 +154,7 @@ namespace ThousandAndFirst.Tests
 				parameter.Domain = new List<string> { "north" };
 				row.Parameters.Add(parameter);
 			}
-			Assert.IsTrue(Reports(row, "declared twice"));
+			ClassicAssert.IsTrue(Reports(row, "declared twice"));
 		}
 	}
 }

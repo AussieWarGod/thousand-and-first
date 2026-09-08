@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -21,14 +22,14 @@ namespace ThousandAndFirst.Tests
 			XDocument buildings = XDocument.Parse(Read("RuntimeData/KingdomBuildings.xml"));
 			XElement[] rows = buildings.Root.Elements("building")
 				.Where(row => (string)row.Attribute("Key") == "bench").ToArray();
-			Assert.AreEqual(1, rows.Length);
+			ClassicAssert.AreEqual(1, rows.Length);
 			XElement bench = rows[0];
-			Assert.AreEqual("r_KingdomBench", (string)bench.Attribute("Blueprint"));
-			Assert.AreEqual("1", (string)bench.Attribute("Staff"));
-			Assert.AreEqual("scaled", (string)bench.Attribute("Manning"));
-			Assert.AreEqual("timber:4", (string)bench.Attribute("Materials"));
+			ClassicAssert.AreEqual("r_KingdomBench", (string)bench.Attribute("Blueprint"));
+			ClassicAssert.AreEqual("1", (string)bench.Attribute("Staff"));
+			ClassicAssert.AreEqual("scaled", (string)bench.Attribute("Manning"));
+			ClassicAssert.AreEqual("timber:4", (string)bench.Attribute("Materials"));
 			XElement[] skins = bench.Elements("skin").ToArray();
-			Assert.AreEqual(4, skins.Length);
+			ClassicAssert.AreEqual(4, skins.Length);
 			Assert.That(skins.All(skin => skin.Attribute("Staff") == null
 				&& skin.Attribute("Manning") == null), Is.True);
 
@@ -41,11 +42,11 @@ namespace ThousandAndFirst.Tests
 					.Where(row => (string)row.Attribute("BuildKey") == "bench"))
 				{
 					tiers++;
-					Assert.IsNull(tier.Attribute("Staff"), path);
-					Assert.IsNull(tier.Attribute("Manning"), path);
+					ClassicAssert.IsNull(tier.Attribute("Staff"), path);
+					ClassicAssert.IsNull(tier.Attribute("Manning"), path);
 				}
 			}
-			Assert.Greater(tiers, 0, "no architecture tier consumes the staffed bench entry");
+			ClassicAssert.Greater(tiers, 0, "no architecture tier consumes the staffed bench entry");
 		}
 
 		[Test]
@@ -95,9 +96,9 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int open = source.IndexOf("KingdomGuestLifecycle.Open", activation,
 				StringComparison.Ordinal);
-			Assert.Greater(keeper, activation);
-			Assert.Greater(option, keeper);
-			Assert.Greater(open, option);
+			ClassicAssert.Greater(keeper, activation);
+			ClassicAssert.Greater(option, keeper);
+			ClassicAssert.Greater(open, option);
 
 			int update = source.IndexOf("UpdateKeeperConversation(System, keeper, TimeTicks)",
 				StringComparison.Ordinal);
@@ -105,9 +106,9 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int accessibility = source.IndexOf("Options.DisableAllIdleTileAnimations", update,
 				StringComparison.Ordinal);
-			Assert.Greater(update, 0);
-			Assert.Greater(ambient, update);
-			Assert.Greater(accessibility, ambient,
+			ClassicAssert.Greater(update, 0);
+			ClassicAssert.Greater(ambient, update);
+			ClassicAssert.Greater(accessibility, ambient,
 				"idle-animation settings must not suppress the keeper's direct conversation");
 		}
 
@@ -123,7 +124,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("AmbientUseCount = 2", rules);
 			StringAssert.Contains("ShareNews = 1", rules);
 			StringAssert.Contains("KeepCompany = 2", rules);
-			Assert.AreEqual(1, Count(runtime, "ParticleText("));
+			ClassicAssert.AreEqual(1, Count(runtime, "ParticleText("));
 			StringAssert.Contains("0f, -0.2f", runtime);
 			StringAssert.Contains("GameObject.FindByID(Part.KeeperObjectId)", runtime);
 			StringAssert.Contains("KingdomStations.PostOf(Actor) != 0", runtime);
@@ -157,7 +158,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("if (!Enabled", projection);
 			StringAssert.Contains("RequirePart<r_KingdomLocusAmbient>()", projection);
 			StringAssert.Contains("if (!sameAuthority)", projection);
-			Assert.GreaterOrEqual(Count(part, "[NonSerialized]"), 10);
+			ClassicAssert.GreaterOrEqual(Count(part, "[NonSerialized]"), 10);
 			StringAssert.Contains("!Part.AuthorityEnabled", runtime);
 			StringAssert.Contains("!Enabled || Options.GetOption", runtime);
 			StringAssert.Contains("KingdomExperienceRules.CanEmit", runtime);

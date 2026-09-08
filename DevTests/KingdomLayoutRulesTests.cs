@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 using Frontier = ThousandAndFirst.KingdomRules.Frontier;
 using Mark = ThousandAndFirst.KingdomLayoutRules.LayoutMark;
@@ -51,14 +52,14 @@ namespace ThousandAndFirst.Tests
 		private static Point Chosen(Purpose Purpose, Frontier Edges, List<Mark> Marks, List<Point> Candidates, out Outcome Outcome)
 		{
 			Outcome = KingdomLayoutRules.Choose(Purpose, W, H, Edges, Marks, Candidates, HasFounder: false, 0, 0, out var index);
-			Assert.GreaterOrEqual(index, 0, "expected a sited cell");
+			ClassicAssert.GreaterOrEqual(index, 0, "expected a sited cell");
 			return Candidates[index];
 		}
 
 		private static void AssertAt(int X, int Y, Point Actual)
 		{
-			Assert.AreEqual(X, Actual.X, "x");
-			Assert.AreEqual(Y, Actual.Y, "y");
+			ClassicAssert.AreEqual(X, Actual.X, "x");
+			ClassicAssert.AreEqual(Y, Actual.Y, "y");
 		}
 
 		// --- PurposeOf: a building's Category is the whole of what the plan knows about it ---
@@ -81,7 +82,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, Purpose.Unknown)]
 		public void PurposeOf_ReadsTheCategory(string category, Purpose expected)
 		{
-			Assert.AreEqual(expected, KingdomLayoutRules.PurposeOf(category));
+			ClassicAssert.AreEqual(expected, KingdomLayoutRules.PurposeOf(category));
 		}
 
 		[Test]
@@ -92,7 +93,7 @@ namespace ThousandAndFirst.Tests
 			string[] documented = new string[] { "storage", "housing", "civic", "faith", "craft", "power", "defense", "knowledge", "food", "memorial" };
 			for (int i = 0; i < documented.Length; i++)
 			{
-				Assert.AreNotEqual(Purpose.Unknown, KingdomLayoutRules.PurposeOf(documented[i]), documented[i]);
+				ClassicAssert.AreNotEqual(Purpose.Unknown, KingdomLayoutRules.PurposeOf(documented[i]), documented[i]);
 			}
 		}
 
@@ -109,11 +110,11 @@ namespace ThousandAndFirst.Tests
 		public void EmptyGround_DefersToTheFounder(Purpose purpose)
 		{
 			List<Mark> marks = Marks();
-			Assert.IsFalse(KingdomLayoutRules.HasOpinion(purpose, marks, Frontier.North | Frontier.West));
+			ClassicAssert.IsFalse(KingdomLayoutRules.HasOpinion(purpose, marks, Frontier.North | Frontier.West));
 			Outcome outcome = KingdomLayoutRules.Choose(purpose, W, H, Frontier.North | Frontier.West, marks,
 				Points(P(10, 10), P(20, 10)), HasFounder: true, 10, 10, out var index);
-			Assert.AreEqual(Outcome.Defer, outcome);
-			Assert.AreEqual(-1, index);
+			ClassicAssert.AreEqual(Outcome.Defer, outcome);
+			ClassicAssert.AreEqual(-1, index);
 		}
 
 		[TestCase(Purpose.Sited)]
@@ -126,19 +127,19 @@ namespace ThousandAndFirst.Tests
 			List<Mark> marks = Marks(M(10, 10, Purpose.Storage), M(12, 10, Purpose.Housing), M(14, 10, Purpose.Civic), M(16, 10, Purpose.Sited));
 			Outcome outcome = KingdomLayoutRules.Choose(purpose, W, H, Frontier.North, marks,
 				Points(P(30, 10), P(11, 11)), HasFounder: true, 30, 10, out var index);
-			Assert.AreEqual(Outcome.Defer, outcome);
-			Assert.AreEqual(-1, index);
+			ClassicAssert.AreEqual(Outcome.Defer, outcome);
+			ClassicAssert.AreEqual(-1, index);
 		}
 
 		[Test]
 		public void NoClearGround_SitesNothing()
 		{
 			List<Mark> marks = Marks(M(10, 10, Purpose.Storage));
-			Assert.IsTrue(KingdomLayoutRules.HasOpinion(Purpose.Storage, marks, Frontier.None));
+			ClassicAssert.IsTrue(KingdomLayoutRules.HasOpinion(Purpose.Storage, marks, Frontier.None));
 			Outcome outcome = KingdomLayoutRules.Choose(Purpose.Storage, W, H, Frontier.None, marks,
 				Points(), HasFounder: true, 10, 11, out var index);
-			Assert.AreEqual(Outcome.None, outcome);
-			Assert.AreEqual(-1, index);
+			ClassicAssert.AreEqual(Outcome.None, outcome);
+			ClassicAssert.AreEqual(-1, index);
 		}
 
 		// --- Storage: the casks go where the water already is --------------------------------
@@ -147,12 +148,12 @@ namespace ThousandAndFirst.Tests
 		public void Storage_GathersByTheWater_WithALaneAroundIt()
 		{
 			List<Mark> marks = Marks(M(10, 10, Purpose.Storage));
-			Assert.AreEqual(-14, Score(Purpose.Storage, 11, 10, Frontier.None, marks), "hard against the cask");
-			Assert.AreEqual(-8, Score(Purpose.Storage, 12, 10, Frontier.None, marks), "one lane away");
-			Assert.AreEqual(-40, Score(Purpose.Storage, 20, 10, Frontier.None, marks), "across the camp");
+			ClassicAssert.AreEqual(-14, Score(Purpose.Storage, 11, 10, Frontier.None, marks), "hard against the cask");
+			ClassicAssert.AreEqual(-8, Score(Purpose.Storage, 12, 10, Frontier.None, marks), "one lane away");
+			ClassicAssert.AreEqual(-40, Score(Purpose.Storage, 20, 10, Frontier.None, marks), "across the camp");
 			Point chosen = Chosen(Purpose.Storage, Frontier.None, marks,
 				Points(P(11, 10), P(12, 10), P(20, 10), P(40, 20)), out var outcome);
-			Assert.AreEqual(Outcome.Grammar, outcome);
+			ClassicAssert.AreEqual(Outcome.Grammar, outcome);
 			AssertAt(12, 10, chosen);
 		}
 
@@ -162,12 +163,12 @@ namespace ThousandAndFirst.Tests
 			// The whole point of the storage rule: a settlement puts its casks together, so a
 			// new one goes to the water even when the water is nowhere near the gathering places.
 			List<Mark> marks = Marks(M(70, 20, Purpose.Storage), M(10, 5, Purpose.Civic), M(11, 5, Purpose.Civic), M(12, 5, Purpose.Housing));
-			Assert.IsTrue(KingdomLayoutRules.TryHeart(marks, out var heartX, out var heartY));
-			Assert.AreEqual(26, heartX);
-			Assert.AreEqual(9, heartY);
+			ClassicAssert.IsTrue(KingdomLayoutRules.TryHeart(marks, out var heartX, out var heartY));
+			ClassicAssert.AreEqual(26, heartX);
+			ClassicAssert.AreEqual(9, heartY);
 			Point chosen = Chosen(Purpose.Storage, Frontier.None, marks,
 				Points(P(68, 20), P(26, 9)), out var outcome);
-			Assert.AreEqual(Outcome.Grammar, outcome);
+			ClassicAssert.AreEqual(Outcome.Grammar, outcome);
 			AssertAt(68, 20, chosen);
 		}
 
@@ -175,8 +176,8 @@ namespace ThousandAndFirst.Tests
 		public void Storage_WithNoVesselsYet_FallsBackToTheHeart()
 		{
 			List<Mark> marks = Marks(M(40, 12, Purpose.Civic));
-			Assert.AreEqual(-4, Score(Purpose.Storage, 42, 12, Frontier.None, marks), "two cells off the heart, no lane cost");
-			Assert.AreEqual(-20, Score(Purpose.Storage, 50, 12, Frontier.None, marks));
+			ClassicAssert.AreEqual(-4, Score(Purpose.Storage, 42, 12, Frontier.None, marks), "two cells off the heart, no lane cost");
+			ClassicAssert.AreEqual(-20, Score(Purpose.Storage, 50, 12, Frontier.None, marks));
 		}
 
 		// --- Housing: people do not sleep on the wall ----------------------------------------
@@ -185,12 +186,12 @@ namespace ThousandAndFirst.Tests
 		public void Housing_StandsBackFromTheFrontier_EvenToReachItsOwnKind()
 		{
 			List<Mark> marks = Marks(M(10, 0, Purpose.Housing));
-			Assert.AreEqual(-68, Score(Purpose.Housing, 12, 0, Frontier.North, marks), "close kin, but on the wall line");
-			Assert.AreEqual(-16, Score(Purpose.Housing, 14, 4, Frontier.North, marks), "further from kin, off the line");
+			ClassicAssert.AreEqual(-68, Score(Purpose.Housing, 12, 0, Frontier.North, marks), "close kin, but on the wall line");
+			ClassicAssert.AreEqual(-16, Score(Purpose.Housing, 14, 4, Frontier.North, marks), "further from kin, off the line");
 			Point chosen = Chosen(Purpose.Housing, Frontier.North, marks, Points(P(12, 0), P(14, 4)), out var outcome);
-			Assert.AreEqual(Outcome.Grammar, outcome);
+			ClassicAssert.AreEqual(Outcome.Grammar, outcome);
 			AssertAt(14, 4, chosen);
-			Assert.GreaterOrEqual(chosen.Y, KingdomRules.FrontierBandCells, "housing sited inside the wall line");
+			ClassicAssert.GreaterOrEqual(chosen.Y, KingdomRules.FrontierBandCells, "housing sited inside the wall line");
 		}
 
 		[Test]
@@ -198,7 +199,7 @@ namespace ThousandAndFirst.Tests
 		{
 			List<Mark> marks = Marks(M(10, 10, Purpose.Storage), M(50, 10, Purpose.Housing));
 			Point chosen = Chosen(Purpose.Housing, Frontier.None, marks, Points(P(12, 10), P(52, 10)), out var outcome);
-			Assert.AreEqual(Outcome.Grammar, outcome);
+			ClassicAssert.AreEqual(Outcome.Grammar, outcome);
 			AssertAt(52, 10, chosen);
 		}
 
@@ -208,8 +209,8 @@ namespace ThousandAndFirst.Tests
 			// Claim the neighbour and the edge stops being frontier: the same cell that was
 			// forbidden yesterday is ordinary ground today, with nothing moved or torn down.
 			List<Mark> marks = Marks(M(10, 0, Purpose.Housing));
-			Assert.AreEqual(-68, Score(Purpose.Housing, 12, 0, Frontier.North, marks));
-			Assert.AreEqual(-8, Score(Purpose.Housing, 12, 0, Frontier.None, marks));
+			ClassicAssert.AreEqual(-68, Score(Purpose.Housing, 12, 0, Frontier.North, marks));
+			ClassicAssert.AreEqual(-8, Score(Purpose.Housing, 12, 0, Frontier.None, marks));
 		}
 
 		// --- Defence: a wall extends the wall ------------------------------------------------
@@ -222,13 +223,13 @@ namespace ThousandAndFirst.Tests
 			int thicken = Score(Purpose.Defence, 11, 1, Frontier.North, line);
 			int extend = Score(Purpose.Defence, 13, 0, Frontier.North, line);
 			int stray = Score(Purpose.Defence, 40, 0, Frontier.North, line);
-			Assert.AreEqual(40, corner, "two segments in reach");
-			Assert.AreEqual(34, thicken, "three segments in reach: the line getting fatter, not longer");
-			Assert.AreEqual(20, extend, "the end of the line");
-			Assert.AreEqual(0, stray, "a fresh stub somewhere else along the same edge");
-			Assert.Greater(corner, thicken);
-			Assert.Greater(thicken, extend);
-			Assert.Greater(extend, stray);
+			ClassicAssert.AreEqual(40, corner, "two segments in reach");
+			ClassicAssert.AreEqual(34, thicken, "three segments in reach: the line getting fatter, not longer");
+			ClassicAssert.AreEqual(20, extend, "the end of the line");
+			ClassicAssert.AreEqual(0, stray, "a fresh stub somewhere else along the same edge");
+			ClassicAssert.Greater(corner, thicken);
+			ClassicAssert.Greater(thicken, extend);
+			ClassicAssert.Greater(extend, stray);
 		}
 
 		[Test]
@@ -237,7 +238,7 @@ namespace ThousandAndFirst.Tests
 			List<Mark> line = Marks(M(6, 0, Purpose.Defence), M(8, 0, Purpose.Defence), M(10, 0, Purpose.Defence));
 			Point chosen = Chosen(Purpose.Defence, Frontier.North, line,
 				Points(P(11, 0), P(9, 0), P(5, 0)), out var outcome);
-			Assert.AreEqual(Outcome.Grammar, outcome);
+			ClassicAssert.AreEqual(Outcome.Grammar, outcome);
 			AssertAt(9, 0, chosen);
 		}
 
@@ -247,7 +248,7 @@ namespace ThousandAndFirst.Tests
 			// The band is where a wall belongs; scoring it as a bad place to build would make
 			// the plan refuse to wall anything.
 			List<Mark> line = Marks(M(10, 0, Purpose.Defence));
-			Assert.AreEqual(20, Score(Purpose.Defence, 11, 0, Frontier.North, line));
+			ClassicAssert.AreEqual(20, Score(Purpose.Defence, 11, 0, Frontier.North, line));
 		}
 
 		[TestCase(Frontier.None, 1, false, TestName = "Defence_NoFrontier_NothingToWall")]
@@ -260,7 +261,7 @@ namespace ThousandAndFirst.Tests
 			{
 				marks.Add(M(10 + i, 0, Purpose.Defence));
 			}
-			Assert.AreEqual(expected, KingdomLayoutRules.HasOpinion(Purpose.Defence, marks, edges));
+			ClassicAssert.AreEqual(expected, KingdomLayoutRules.HasOpinion(Purpose.Defence, marks, edges));
 		}
 
 		// --- Civic: the settled heart --------------------------------------------------------
@@ -269,16 +270,16 @@ namespace ThousandAndFirst.Tests
 		public void Civic_ThickensTheHeart_AndKeepsItsLane()
 		{
 			List<Mark> marks = Marks(M(10, 10, Purpose.Storage), M(20, 10, Purpose.Housing), M(15, 5, Purpose.Civic));
-			Assert.IsTrue(KingdomLayoutRules.TryHeart(marks, out var heartX, out var heartY));
-			Assert.AreEqual(15, heartX);
-			Assert.AreEqual(8, heartY);
-			Assert.AreEqual(-2, Score(Purpose.Civic, 16, 7, Frontier.None, marks), "one cell off the heart");
-			Assert.AreEqual(-4, Score(Purpose.Civic, 15, 10, Frontier.None, marks), "two cells off the heart");
-			Assert.AreEqual(-14, Score(Purpose.Civic, 15, 6, Frontier.None, marks), "hard against the shrine");
-			Assert.AreEqual(-50, Score(Purpose.Civic, 40, 10, Frontier.None, marks), "out in the corner");
+			ClassicAssert.IsTrue(KingdomLayoutRules.TryHeart(marks, out var heartX, out var heartY));
+			ClassicAssert.AreEqual(15, heartX);
+			ClassicAssert.AreEqual(8, heartY);
+			ClassicAssert.AreEqual(-2, Score(Purpose.Civic, 16, 7, Frontier.None, marks), "one cell off the heart");
+			ClassicAssert.AreEqual(-4, Score(Purpose.Civic, 15, 10, Frontier.None, marks), "two cells off the heart");
+			ClassicAssert.AreEqual(-14, Score(Purpose.Civic, 15, 6, Frontier.None, marks), "hard against the shrine");
+			ClassicAssert.AreEqual(-50, Score(Purpose.Civic, 40, 10, Frontier.None, marks), "out in the corner");
 			Point chosen = Chosen(Purpose.Civic, Frontier.None, marks,
 				Points(P(15, 10), P(16, 7), P(15, 6), P(40, 10)), out var outcome);
-			Assert.AreEqual(Outcome.Grammar, outcome);
+			ClassicAssert.AreEqual(Outcome.Grammar, outcome);
 			AssertAt(16, 7, chosen);
 		}
 
@@ -286,7 +287,7 @@ namespace ThousandAndFirst.Tests
 		public void Heart_IgnoresWalls_BecauseAWallIsAtTheEdgeByDefinition()
 		{
 			List<Mark> marks = Marks(M(0, 0, Purpose.Defence), M(79, 24, Purpose.Defence), M(10, 10, Purpose.Civic));
-			Assert.IsTrue(KingdomLayoutRules.TryHeart(marks, out var x, out var y));
+			ClassicAssert.IsTrue(KingdomLayoutRules.TryHeart(marks, out var x, out var y));
 			AssertAt(10, 10, P(x, y));
 		}
 
@@ -299,7 +300,7 @@ namespace ThousandAndFirst.Tests
 			{
 				marks.Add(M(10 + i * 2, 4, Purpose.Defence));
 			}
-			Assert.AreEqual(expected, KingdomLayoutRules.TryHeart(marks, out var x, out var y));
+			ClassicAssert.AreEqual(expected, KingdomLayoutRules.TryHeart(marks, out var x, out var y));
 			if (expected)
 			{
 				AssertAt(12, 4, P(x, y));
@@ -310,17 +311,17 @@ namespace ThousandAndFirst.Tests
 		public void Heart_RoundsToTheNearestCell()
 		{
 			List<Mark> marks = Marks(M(0, 0, Purpose.Civic), M(0, 3, Purpose.Civic));
-			Assert.IsTrue(KingdomLayoutRules.TryHeart(marks, out var x, out var y));
+			ClassicAssert.IsTrue(KingdomLayoutRules.TryHeart(marks, out var x, out var y));
 			AssertAt(0, 2, P(x, y));
 		}
 
 		[Test]
 		public void Heart_OfNothingIsNowhere()
 		{
-			Assert.IsFalse(KingdomLayoutRules.TryHeart(Marks(), out var x, out var y));
-			Assert.AreEqual(0, x);
-			Assert.AreEqual(0, y);
-			Assert.IsFalse(KingdomLayoutRules.TryHeart(null, out _, out _));
+			ClassicAssert.IsFalse(KingdomLayoutRules.TryHeart(Marks(), out var x, out var y));
+			ClassicAssert.AreEqual(0, x);
+			ClassicAssert.AreEqual(0, y);
+			ClassicAssert.IsFalse(KingdomLayoutRules.TryHeart(null, out _, out _));
 		}
 
 		// --- Fields and graves: rings out past the built-up ground ---------------------------
@@ -329,12 +330,12 @@ namespace ThousandAndFirst.Tests
 		public void Field_LiesOutPastTheLastRoof_AndRowsAbut()
 		{
 			List<Mark> marks = Marks(M(40, 12, Purpose.Civic));
-			Assert.AreEqual(0, Score(Purpose.Field, 46, 12, Frontier.None, marks), "on the ring");
-			Assert.AreEqual(-15, Score(Purpose.Field, 41, 12, Frontier.None, marks), "in among the buildings, and no lane cost");
-			Assert.AreEqual(-18, Score(Purpose.Field, 52, 12, Frontier.None, marks), "off in the waste");
+			ClassicAssert.AreEqual(0, Score(Purpose.Field, 46, 12, Frontier.None, marks), "on the ring");
+			ClassicAssert.AreEqual(-15, Score(Purpose.Field, 41, 12, Frontier.None, marks), "in among the buildings, and no lane cost");
+			ClassicAssert.AreEqual(-18, Score(Purpose.Field, 52, 12, Frontier.None, marks), "off in the waste");
 			Point chosen = Chosen(Purpose.Field, Frontier.None, marks,
 				Points(P(41, 12), P(46, 12), P(52, 12)), out var outcome);
-			Assert.AreEqual(Outcome.Grammar, outcome);
+			ClassicAssert.AreEqual(Outcome.Grammar, outcome);
 			AssertAt(46, 12, chosen);
 		}
 
@@ -342,10 +343,10 @@ namespace ThousandAndFirst.Tests
 		public void Field_ExtendsTheFieldOnceThereIsOne()
 		{
 			List<Mark> marks = Marks(M(40, 12, Purpose.Civic), M(46, 12, Purpose.Field));
-			Assert.AreEqual(-10, Score(Purpose.Field, 47, 12, Frontier.None, marks), "the next furrow over");
-			Assert.AreEqual(-12, Score(Purpose.Field, 49, 12, Frontier.None, marks), "dead on the ring but away from the plot");
+			ClassicAssert.AreEqual(-10, Score(Purpose.Field, 47, 12, Frontier.None, marks), "the next furrow over");
+			ClassicAssert.AreEqual(-12, Score(Purpose.Field, 49, 12, Frontier.None, marks), "dead on the ring but away from the plot");
 			Point chosen = Chosen(Purpose.Field, Frontier.None, marks, Points(P(47, 12), P(49, 12)), out var outcome);
-			Assert.AreEqual(Outcome.Grammar, outcome);
+			ClassicAssert.AreEqual(Outcome.Grammar, outcome);
 			AssertAt(47, 12, chosen);
 		}
 
@@ -353,9 +354,9 @@ namespace ThousandAndFirst.Tests
 		public void Memorial_LiesFurtherOutThanTheFields()
 		{
 			List<Mark> marks = Marks(M(40, 12, Purpose.Civic));
-			Assert.AreEqual(0, Score(Purpose.Memorial, 49, 12, Frontier.None, marks));
-			Assert.AreEqual(-9, Score(Purpose.Memorial, 46, 12, Frontier.None, marks));
-			Assert.Greater(KingdomLayoutRules.MemorialRingCells, KingdomLayoutRules.FieldRingCells);
+			ClassicAssert.AreEqual(0, Score(Purpose.Memorial, 49, 12, Frontier.None, marks));
+			ClassicAssert.AreEqual(-9, Score(Purpose.Memorial, 46, 12, Frontier.None, marks));
+			ClassicAssert.Greater(KingdomLayoutRules.MemorialRingCells, KingdomLayoutRules.FieldRingCells);
 		}
 
 		[TestCase(Purpose.Storage, true)]
@@ -366,7 +367,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Purpose.Defence, false)]
 		public void KeepsLanes_OnlyForWhatIsWalkedIntoAndUsed(Purpose purpose, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomLayoutRules.KeepsLanes(purpose));
+			ClassicAssert.AreEqual(expected, KingdomLayoutRules.KeepsLanes(purpose));
 		}
 
 		// --- The founder: intent beats grammar, up to a point --------------------------------
@@ -376,11 +377,11 @@ namespace ThousandAndFirst.Tests
 		{
 			List<Mark> marks = Marks(M(10, 10, Purpose.Storage));
 			List<Point> candidates = Points(P(12, 10), P(14, 11));
-			Assert.AreEqual(-8, Score(Purpose.Storage, 12, 10, Frontier.None, marks), "the plan's own pick");
-			Assert.AreEqual(-16, Score(Purpose.Storage, 14, 11, Frontier.None, marks), "beside the founder, within tolerance");
+			ClassicAssert.AreEqual(-8, Score(Purpose.Storage, 12, 10, Frontier.None, marks), "the plan's own pick");
+			ClassicAssert.AreEqual(-16, Score(Purpose.Storage, 14, 11, Frontier.None, marks), "beside the founder, within tolerance");
 			Outcome outcome = KingdomLayoutRules.Choose(Purpose.Storage, W, H, Frontier.None, marks, candidates,
 				HasFounder: true, 14, 10, out var index);
-			Assert.AreEqual(Outcome.Founder, outcome);
+			ClassicAssert.AreEqual(Outcome.Founder, outcome);
 			AssertAt(14, 11, candidates[index]);
 		}
 
@@ -390,11 +391,11 @@ namespace ThousandAndFirst.Tests
 			// Standing on the wall line asking for a bunk. The plan does not build it there.
 			List<Mark> marks = Marks(M(40, 10, Purpose.Housing));
 			List<Point> candidates = Points(P(11, 0), P(38, 10), P(41, 11));
-			Assert.AreEqual(-176, Score(Purpose.Housing, 11, 0, Frontier.North, marks));
-			Assert.AreEqual(-8, Score(Purpose.Housing, 38, 10, Frontier.North, marks));
+			ClassicAssert.AreEqual(-176, Score(Purpose.Housing, 11, 0, Frontier.North, marks));
+			ClassicAssert.AreEqual(-8, Score(Purpose.Housing, 38, 10, Frontier.North, marks));
 			Outcome outcome = KingdomLayoutRules.Choose(Purpose.Housing, W, H, Frontier.North, marks, candidates,
 				HasFounder: true, 10, 0, out var index);
-			Assert.AreEqual(Outcome.Grammar, outcome);
+			ClassicAssert.AreEqual(Outcome.Grammar, outcome);
 			AssertAt(38, 10, candidates[index]);
 		}
 
@@ -407,7 +408,7 @@ namespace ThousandAndFirst.Tests
 			List<Point> candidates = Points(P(12, 10), P(16, 10));
 			Outcome outcome = KingdomLayoutRules.Choose(Purpose.Storage, W, H, Frontier.None, marks, candidates,
 				HasFounder: true, 18, 10, out var index);
-			Assert.AreEqual(Outcome.Grammar, outcome);
+			ClassicAssert.AreEqual(Outcome.Grammar, outcome);
 			AssertAt(12, 10, candidates[index]);
 		}
 
@@ -421,7 +422,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(0, 3, 2, 2, 0, 3, 2, 2, false, TestName = "Beats_NothingBeatsItself")]
 		public void Beats_RanksTwoCandidates(int scoreA, int reachA, int ax, int ay, int scoreB, int reachB, int bx, int by, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomLayoutRules.Beats(scoreA, reachA, P(ax, ay), scoreB, reachB, P(bx, by)));
+			ClassicAssert.AreEqual(expected, KingdomLayoutRules.Beats(scoreA, reachA, P(ax, ay), scoreB, reachB, P(bx, by)));
 		}
 
 		[Test]
@@ -467,11 +468,11 @@ namespace ThousandAndFirst.Tests
 				Outcome outcome = KingdomLayoutRules.Choose(purpose, W, H, edges, marks, candidates, hasFounder, founderX, founderY, out var index);
 				if (outcome == Outcome.Defer || outcome == Outcome.None)
 				{
-					Assert.AreEqual(-1, index, "scenario " + scenario);
+					ClassicAssert.AreEqual(-1, index, "scenario " + scenario);
 					continue;
 				}
-				Assert.GreaterOrEqual(index, 0, "scenario " + scenario);
-				Assert.Less(index, candidates.Count, "scenario " + scenario);
+				ClassicAssert.GreaterOrEqual(index, 0, "scenario " + scenario);
+				ClassicAssert.Less(index, candidates.Count, "scenario " + scenario);
 				int best = int.MinValue;
 				for (int i = 0; i < candidates.Count; i++)
 				{
@@ -484,14 +485,14 @@ namespace ThousandAndFirst.Tests
 				int chosen = Score(purpose, candidates[index].X, candidates[index].Y, edges, marks);
 				if (outcome == Outcome.Grammar)
 				{
-					Assert.AreEqual(best, chosen, "scenario " + scenario + ": the plan's own pick is the best ground it saw");
+					ClassicAssert.AreEqual(best, chosen, "scenario " + scenario + ": the plan's own pick is the best ground it saw");
 				}
 				else
 				{
-					Assert.IsTrue(hasFounder, "scenario " + scenario + ": no founder, no founder's ground");
-					Assert.LessOrEqual(KingdomLayoutRules.Chebyshev(candidates[index].X, candidates[index].Y, founderX, founderY),
+					ClassicAssert.IsTrue(hasFounder, "scenario " + scenario + ": no founder, no founder's ground");
+					ClassicAssert.LessOrEqual(KingdomLayoutRules.Chebyshev(candidates[index].X, candidates[index].Y, founderX, founderY),
 						KingdomLayoutRules.FounderReachCells, "scenario " + scenario);
-					Assert.GreaterOrEqual(chosen, best - KingdomLayoutRules.FounderTolerance, "scenario " + scenario);
+					ClassicAssert.GreaterOrEqual(chosen, best - KingdomLayoutRules.FounderTolerance, "scenario " + scenario);
 				}
 			}
 		}
@@ -518,7 +519,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Purpose.Storage, Outcome.None, null)]
 		public void PlacementClause_NamesTheGroundInTheSettlementsTerms(Purpose purpose, Outcome outcome, string expected)
 		{
-			Assert.AreEqual(expected, KingdomLayoutRules.PlacementClause(purpose, outcome));
+			ClassicAssert.AreEqual(expected, KingdomLayoutRules.PlacementClause(purpose, outcome));
 		}
 	}
 }

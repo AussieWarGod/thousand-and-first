@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -16,20 +17,20 @@ namespace ThousandAndFirst.Tests
 				"KingdomBuildings.xml"));
 			XElement watchhouse = Building(catalogue, "watchhouse");
 			XElement barracks = Building(catalogue, "barracks");
-			Assert.AreEqual("barracks", (string)watchhouse.Attribute("UpgradesTo"));
-			Assert.AreEqual("stone:14,shapedtimber:6",
+			ClassicAssert.AreEqual("barracks", (string)watchhouse.Attribute("UpgradesTo"));
+			ClassicAssert.AreEqual("stone:14,shapedtimber:6",
 				(string)watchhouse.Attribute("UpgradeMaterials"));
-			Assert.AreEqual("M", (string)watchhouse.Attribute("Plot"));
-			Assert.AreEqual("L", (string)barracks.Attribute("Plot"));
-			Assert.IsNull(watchhouse.Attribute("Defence"));
-			Assert.IsNull(barracks.Attribute("Defence"));
+			ClassicAssert.AreEqual("M", (string)watchhouse.Attribute("Plot"));
+			ClassicAssert.AreEqual("L", (string)barracks.Attribute("Plot"));
+			ClassicAssert.IsNull(watchhouse.Attribute("Defence"));
+			ClassicAssert.IsNull(barracks.Attribute("Defence"));
 
 			foreach (string key in new[] { "palisade", "rubblewall" })
 			{
 				XElement wall = Building(catalogue, key);
-				Assert.AreEqual("rampart", (string)wall.Attribute("UpgradesTo"), key);
-				Assert.IsNull(wall.Attribute("Plot"), key);
-				Assert.IsNotNull(wall.Attribute("Defence"), key);
+				ClassicAssert.AreEqual("rampart", (string)wall.Attribute("UpgradesTo"), key);
+				ClassicAssert.IsNull(wall.Attribute("Plot"), key);
+				ClassicAssert.IsNotNull(wall.Attribute("Defence"), key);
 			}
 
 			XDocument architecture = XDocument.Parse(TestMain.ReadRepositoryText(
@@ -45,12 +46,12 @@ namespace ThousandAndFirst.Tests
 				(string)e.Attribute("BuildKey") == "watchhouse");
 			XElement largeBarracks = large.Elements("tier").Single(e =>
 				(string)e.Attribute("BuildKey") == "barracks");
-			Assert.AreEqual("0", (string)mediumWatch.Attribute("Level"));
-			Assert.AreEqual("0", (string)largeWatch.Attribute("Level"));
-			Assert.AreEqual("defense-watchhouse-l0",
+			ClassicAssert.AreEqual("0", (string)mediumWatch.Attribute("Level"));
+			ClassicAssert.AreEqual("0", (string)largeWatch.Attribute("Level"));
+			ClassicAssert.AreEqual("defense-watchhouse-l0",
 				(string)largeWatch.Attribute("Map"));
-			Assert.AreEqual("1", (string)largeBarracks.Attribute("Level"));
-			Assert.AreEqual("renovate-expand",
+			ClassicAssert.AreEqual("1", (string)largeBarracks.Attribute("Level"));
+			ClassicAssert.AreEqual("renovate-expand",
 				(string)largeBarracks.Attribute("Transition"));
 		}
 
@@ -64,14 +65,14 @@ namespace ThousandAndFirst.Tests
 				.GroupBy(e => (string)e.Attribute("Creed"))
 				.ToDictionary(group => group.Key, group => group.ToArray(),
 					StringComparer.Ordinal);
-			Assert.AreEqual(33, byCreed.Count);
+			ClassicAssert.AreEqual(33, byCreed.Count);
 			CollectionAssert.AreEquivalent(new[] { "Robots" }, byCreed
 				.Where(pair => pair.Value.Length > 1).Select(pair => pair.Key));
 			XElement[] successors = byCreed.Values.SelectMany(value => value)
 				.Where(e => e.Attribute("UpgradesTo") != null).ToArray();
-			Assert.AreEqual(1, successors.Length);
-			Assert.AreEqual("robotchargebay", (string)successors[0].Attribute("Key"));
-			Assert.AreEqual("robotservicebay",
+			ClassicAssert.AreEqual(1, successors.Length);
+			ClassicAssert.AreEqual("robotchargebay", (string)successors[0].Attribute("Key"));
+			ClassicAssert.AreEqual("robotservicebay",
 				(string)successors[0].Attribute("UpgradesTo"));
 		}
 

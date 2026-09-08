@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
@@ -19,7 +20,7 @@ namespace ThousandAndFirst.Tests
 			const string practice =
 				"taf:experience:first-feast:practice:"
 				+ "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-			Assert.IsTrue(KingdomCommunalRiteRules.TryPracticeSubject(practice,
+			ClassicAssert.IsTrue(KingdomCommunalRiteRules.TryPracticeSubject(practice,
 				out int subject));
 			return new KingdomHappeningProposal(
 				KingdomCommunalRiteRules.EventId(settlement, 30L, subject),
@@ -33,25 +34,25 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ExternalPracticeProjectionPersistsExactSourceAndOwnsNoSemanticReceipt()
 		{
-			Assert.IsTrue(KingdomHappeningLifecycleRules.TryOpen(
+			ClassicAssert.IsTrue(KingdomHappeningLifecycleRules.TryOpen(
 				KingdomHappeningLifecycleBook.Empty, Proposal(), 30L,
 				out KingdomHappeningLifecycleBook book,
 				out KingdomHappeningLifecycleFault fault), fault.ToString());
-			Assert.AreEqual(KingdomPhysicalHappeningKind.CommunalRite, book.Active.Kind);
+			ClassicAssert.AreEqual(KingdomPhysicalHappeningKind.CommunalRite, book.Active.Kind);
 			StringAssert.Contains("taf:experience:first-feast:practice:", book.Active.PlanQuote);
-			Assert.IsTrue(KingdomHappeningLifecycleRules.TryEncode(book, out string wire));
-			Assert.IsTrue(KingdomHappeningLifecycleRules.TryDecode(wire, out book, out fault),
+			ClassicAssert.IsTrue(KingdomHappeningLifecycleRules.TryEncode(book, out string wire));
+			ClassicAssert.IsTrue(KingdomHappeningLifecycleRules.TryDecode(wire, out book, out fault),
 				fault.ToString());
-			Assert.IsTrue(KingdomHappeningLifecycleRules.TrySetPhase(book, book.Active.EventId,
+			ClassicAssert.IsTrue(KingdomHappeningLifecycleRules.TrySetPhase(book, book.Active.EventId,
 				KingdomHappeningLifecyclePhase.Prepared, KingdomHappeningLifecyclePhase.Restoring,
 				false, 0L, 31L, out book, out fault), fault.ToString());
-			Assert.IsTrue(KingdomHappeningLifecycleRules.TryMarkRestored(book,
+			ClassicAssert.IsTrue(KingdomHappeningLifecycleRules.TryMarkRestored(book,
 				book.Active.EventId, 0, false, 32L, out book, out fault), fault.ToString());
-			Assert.IsTrue(KingdomHappeningLifecycleRules.TryMarkRestored(book,
+			ClassicAssert.IsTrue(KingdomHappeningLifecycleRules.TryMarkRestored(book,
 				book.Active.EventId, -1, true, 33L, out book, out fault), fault.ToString());
-			Assert.IsTrue(KingdomHappeningLifecycleRules.TryClear(book, book.Active.EventId,
+			ClassicAssert.IsTrue(KingdomHappeningLifecycleRules.TryClear(book, book.Active.EventId,
 				out book, out fault), fault.ToString());
-			Assert.AreEqual(0, book.SemanticReceipts.Length,
+			ClassicAssert.AreEqual(0, book.SemanticReceipts.Length,
 				"exact D8 authority lives in its authenticated section, never an int hash receipt");
 		}
 
@@ -59,7 +60,7 @@ namespace ThousandAndFirst.Tests
 		public void ReadyCommunalRiteCannotTimeoutBeforeCivicMemoryAcknowledges()
 		{
 			KingdomHappeningLifecycleBook rite = Ready(Proposal(), 30L);
-			Assert.AreEqual(KingdomHappeningResumeAction.WaitExternal,
+			ClassicAssert.AreEqual(KingdomHappeningResumeAction.WaitExternal,
 				KingdomHappeningLifecycleRules.ResumeAction(rite.Active,
 					34L + KingdomHappeningLifecycleRules.ExternalReadyTimeoutTicks,
 					false, false, false, false, false));
@@ -73,11 +74,11 @@ namespace ThousandAndFirst.Tests
 				"", "", "", "", "", "", "", "raising", "proof",
 				source.Participants);
 			KingdomHappeningLifecycleBook ordinary = Ready(raising, 30L);
-			Assert.AreEqual(KingdomHappeningResumeAction.WaitExternal,
+			ClassicAssert.AreEqual(KingdomHappeningResumeAction.WaitExternal,
 				KingdomHappeningLifecycleRules.ResumeAction(ordinary.Active,
 					33L + KingdomHappeningLifecycleRules.ExternalReadyTimeoutTicks,
 					false, false, false, false, false));
-			Assert.AreEqual(KingdomHappeningResumeAction.Restore,
+			ClassicAssert.AreEqual(KingdomHappeningResumeAction.Restore,
 				KingdomHappeningLifecycleRules.ResumeAction(ordinary.Active,
 					34L + KingdomHappeningLifecycleRules.ExternalReadyTimeoutTicks,
 					false, false, false, false, false),
@@ -87,19 +88,19 @@ namespace ThousandAndFirst.Tests
 		private static KingdomHappeningLifecycleBook Ready(
 			KingdomHappeningProposal proposal, long tick)
 		{
-			Assert.IsTrue(KingdomHappeningLifecycleRules.TryOpen(
+			ClassicAssert.IsTrue(KingdomHappeningLifecycleRules.TryOpen(
 				KingdomHappeningLifecycleBook.Empty, proposal, tick,
 				out KingdomHappeningLifecycleBook book,
 				out KingdomHappeningLifecycleFault fault), fault.ToString());
-			Assert.IsTrue(KingdomHappeningLifecycleRules.TrySetPhase(book,
+			ClassicAssert.IsTrue(KingdomHappeningLifecycleRules.TrySetPhase(book,
 				book.Active.EventId, KingdomHappeningLifecyclePhase.Prepared,
 				KingdomHappeningLifecyclePhase.Walking, false, 0L, tick + 1L,
 				out book, out fault), fault.ToString());
-			Assert.IsTrue(KingdomHappeningLifecycleRules.TrySetPhase(book,
+			ClassicAssert.IsTrue(KingdomHappeningLifecycleRules.TrySetPhase(book,
 				book.Active.EventId, KingdomHappeningLifecyclePhase.Walking,
 				KingdomHappeningLifecyclePhase.Holding, false, tick + 3L, tick + 2L,
 				out book, out fault), fault.ToString());
-			Assert.IsTrue(KingdomHappeningLifecycleRules.TrySetPhase(book,
+			ClassicAssert.IsTrue(KingdomHappeningLifecycleRules.TrySetPhase(book,
 				book.Active.EventId, KingdomHappeningLifecyclePhase.Holding,
 				KingdomHappeningLifecyclePhase.Ready, true, 0L, tick + 4L,
 				out book, out fault), fault.ToString());

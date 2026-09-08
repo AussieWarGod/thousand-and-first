@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -52,8 +53,8 @@ namespace ThousandAndFirst.Tests
 		public void ATotallyCleanGameIsEligible()
 		{
 			string refusal;
-			Assert.IsTrue(Eligible(Absent(), Absent(), Absent(), Absent(), Absent(), out refusal));
-			Assert.IsNull(refusal);
+			ClassicAssert.IsTrue(Eligible(Absent(), Absent(), Absent(), Absent(), Absent(), out refusal));
+			ClassicAssert.IsNull(refusal);
 		}
 
 		// ----- a stamp of any kind refuses --------------------------------------------------------
@@ -62,7 +63,7 @@ namespace ThousandAndFirst.Tests
 		public void AStampedGameIsNotEligible()
 		{
 			string refusal;
-			Assert.IsFalse(Eligible(Text("sc1|k"), Int(1), Absent(), Absent(), Absent(),
+			ClassicAssert.IsFalse(Eligible(Text("sc1|k"), Int(1), Absent(), Absent(), Absent(),
 				out refusal));
 			StringAssert.Contains("scenario stamp", refusal);
 		}
@@ -71,10 +72,10 @@ namespace ThousandAndFirst.Tests
 		public void ATornStampIsNotEligible()
 		{
 			string refusal;
-			Assert.IsFalse(Eligible(Text(""), Int(1), Absent(), Absent(), Absent(), out refusal));
+			ClassicAssert.IsFalse(Eligible(Text(""), Int(1), Absent(), Absent(), Absent(), out refusal));
 			StringAssert.Contains("unreadable", refusal);
-			Assert.IsFalse(Eligible(Absent(), Int(1), Absent(), Absent(), Absent(), out refusal));
-			Assert.IsFalse(Eligible(Text("sc1|k"), Absent(), Absent(), Absent(), Absent(),
+			ClassicAssert.IsFalse(Eligible(Absent(), Int(1), Absent(), Absent(), Absent(), out refusal));
+			ClassicAssert.IsFalse(Eligible(Text("sc1|k"), Absent(), Absent(), Absent(), Absent(),
 				out refusal));
 		}
 
@@ -92,7 +93,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string refusal;
 			KingdomDurableKeyObservation second = committed == 0 ? Absent() : Int(committed);
-			Assert.IsFalse(Eligible(Absent(), Absent(), Int(attempt), second, Absent(),
+			ClassicAssert.IsFalse(Eligible(Absent(), Absent(), Int(attempt), second, Absent(),
 				out refusal));
 			StringAssert.Contains("transaction marker", refusal);
 		}
@@ -100,10 +101,10 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ATornCrossCheckMarkerRefusesEvenWithNoStamp()
 		{
-			Assert.IsFalse(Eligible(Absent(), Int(1), Absent()),
+			ClassicAssert.IsFalse(Eligible(Absent(), Int(1), Absent()),
 				"a committed cross-check with no transaction key is corruption");
-			Assert.IsFalse(Eligible(Int(2), Absent(), Absent()));
-			Assert.IsFalse(Eligible(Text("1"), Absent(), Absent()),
+			ClassicAssert.IsFalse(Eligible(Int(2), Absent(), Absent()));
+			ClassicAssert.IsFalse(Eligible(Text("1"), Absent(), Absent()),
 				"a wrong-typed transaction key is torn, not absent");
 		}
 
@@ -115,7 +116,7 @@ namespace ThousandAndFirst.Tests
 		public void ASurvivingRequestKeyRefusesEvenWithNoStamp()
 		{
 			string refusal;
-			Assert.IsFalse(Eligible(Absent(), Absent(), Absent(), Absent(),
+			ClassicAssert.IsFalse(Eligible(Absent(), Absent(), Absent(), Absent(),
 				Text("arch-gallery-slice;facing=north;seed=#0"), out refusal));
 			StringAssert.Contains("request key", refusal);
 		}
@@ -123,11 +124,11 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AnEmptyWrongTypedOrDualRequestKeyRefuses()
 		{
-			Assert.IsFalse(Eligible(Absent(), Absent(), Text("")),
+			ClassicAssert.IsFalse(Eligible(Absent(), Absent(), Text("")),
 				"an explicitly stored empty request is present, not absent");
-			Assert.IsFalse(Eligible(Absent(), Absent(), Int(0)),
+			ClassicAssert.IsFalse(Eligible(Absent(), Absent(), Int(0)),
 				"a request key under the int table is present, not absent");
-			Assert.IsFalse(Eligible(Absent(), Absent(),
+			ClassicAssert.IsFalse(Eligible(Absent(), Absent(),
 				new KingdomDurableKeyObservation
 				{
 					HasString = true,
@@ -135,7 +136,7 @@ namespace ThousandAndFirst.Tests
 					HasInt = true,
 					Int = 1
 				}), "a dual-typed request key is present twice over");
-			Assert.IsFalse(Eligible(Absent(), Absent(),
+			ClassicAssert.IsFalse(Eligible(Absent(), Absent(),
 				new KingdomDurableKeyObservation { HasBoolean = true }));
 		}
 
@@ -143,9 +144,9 @@ namespace ThousandAndFirst.Tests
 		public void AnUnobservedGameIsNotEligible()
 		{
 			string refusal;
-			Assert.IsFalse(Eligible(null, null, null, null, null, out refusal));
-			Assert.IsNotNull(refusal);
-			Assert.IsFalse(Eligible(null, null, Absent()));
+			ClassicAssert.IsFalse(Eligible(null, null, null, null, null, out refusal));
+			ClassicAssert.IsNotNull(refusal);
+			ClassicAssert.IsFalse(Eligible(null, null, Absent()));
 		}
 
 		/// <summary>Every refusal names which authority it saw, so an operator can act on it.</summary>
@@ -154,11 +155,11 @@ namespace ThousandAndFirst.Tests
 		{
 			string refusal;
 			Eligible(Text("sc1|k"), Int(1), Absent(), Absent(), Absent(), out refusal);
-			Assert.IsNotEmpty(refusal);
+			ClassicAssert.IsNotEmpty(refusal);
 			Eligible(Absent(), Absent(), Int(1), Absent(), Absent(), out refusal);
-			Assert.IsNotEmpty(refusal);
+			ClassicAssert.IsNotEmpty(refusal);
 			Eligible(Absent(), Absent(), Absent(), Absent(), Text("x"), out refusal);
-			Assert.IsNotEmpty(refusal);
+			ClassicAssert.IsNotEmpty(refusal);
 		}
 	}
 }

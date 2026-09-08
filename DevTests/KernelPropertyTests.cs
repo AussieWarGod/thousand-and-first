@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.Kernel;
 
 namespace ThousandAndFirst.Tests
@@ -51,7 +52,7 @@ namespace ThousandAndFirst.Tests
 		{
 			byte[] bytes;
 			KernelFaultCode fault;
-			Assert.IsTrue(FixedPeriodToyRules.TryEncodeCanonical(state, out bytes, out fault), "encode fault " + fault);
+			ClassicAssert.IsTrue(FixedPeriodToyRules.TryEncodeCanonical(state, out bytes, out fault), "encode fault " + fault);
 			return KernelDigest.ToLowercaseHex(bytes);
 		}
 
@@ -68,11 +69,11 @@ namespace ThousandAndFirst.Tests
 				long end = 1L + rng.NextInt(400);
 
 				ToyAdvanceResult created = FixedPeriodToyRules.Create(KernelCanonicalTests.GoldenSeed(), 3, Settlement, 0L, interval, startEnabled);
-				Assert.IsTrue(created.Succeeded);
+				ClassicAssert.IsTrue(created.Succeeded);
 
 				// Direct: one wake straight to the end.
 				ToyAdvanceResult direct = FixedPeriodToyRules.AdvanceThrough(created.State, end, startEnabled);
-				Assert.IsTrue(direct.Succeeded, "direct advance");
+				ClassicAssert.IsTrue(direct.Succeeded, "direct advance");
 
 				// Partitioned: an arbitrary set of intermediate wakes, same option throughout, so
 				// the input history is identical and only the wake partition differs. The cut set
@@ -121,16 +122,16 @@ namespace ThousandAndFirst.Tests
 					}
 					string beforeRepeat = cut == last ? Encode(walked) : null;
 					ToyAdvanceResult step = FixedPeriodToyRules.AdvanceThrough(walked, cut, startEnabled);
-					Assert.IsTrue(step.Succeeded, "partition step at " + cut);
+					ClassicAssert.IsTrue(step.Succeeded, "partition step at " + cut);
 					walked = step.State;
 					if (beforeRepeat != null)
 					{
-						Assert.AreEqual(beforeRepeat, Encode(walked), "a zero-length span must change nothing at tick " + cut);
+						ClassicAssert.AreEqual(beforeRepeat, Encode(walked), "a zero-length span must change nothing at tick " + cut);
 					}
 					last = cut;
 				}
 				ToyAdvanceResult final = FixedPeriodToyRules.AdvanceThrough(walked, end, startEnabled);
-				Assert.IsTrue(final.Succeeded, "partition final");
+				ClassicAssert.IsTrue(final.Succeeded, "partition final");
 
 				if (!string.Equals(Encode(direct.State), Encode(final.State), StringComparison.Ordinal))
 				{
@@ -139,7 +140,7 @@ namespace ThousandAndFirst.Tests
 				cases++;
 			}
 
-			Assert.AreEqual(10000, cases);
+			ClassicAssert.AreEqual(10000, cases);
 		}
 
 		/// <summary>
@@ -191,7 +192,7 @@ namespace ThousandAndFirst.Tests
 
 				ToyAdvanceResult created = FixedPeriodToyRules.Create(
 					KernelCanonicalTests.GoldenSeed(), 3, Settlement, 0L, interval, initial);
-				Assert.IsTrue(created.Succeeded);
+				ClassicAssert.IsTrue(created.Succeeded);
 
 				// Baseline: wake only where the history says something changed, plus the end.
 				FixedPeriodToyState sparse = created.State;
@@ -200,11 +201,11 @@ namespace ThousandAndFirst.Tests
 				{
 					sparseValue = !sparseValue;
 					ToyAdvanceResult step = FixedPeriodToyRules.AdvanceThrough(sparse, at[t], sparseValue);
-					Assert.IsTrue(step.Succeeded, "baseline transition " + t);
+					ClassicAssert.IsTrue(step.Succeeded, "baseline transition " + t);
 					sparse = step.State;
 				}
 				ToyAdvanceResult sparseEnd = FixedPeriodToyRules.AdvanceThrough(sparse, end, sparseValue);
-				Assert.IsTrue(sparseEnd.Succeeded, "baseline end");
+				ClassicAssert.IsTrue(sparseEnd.Succeeded, "baseline end");
 
 				// Comparison: the identical history observed far more often. Every extra wake
 				// carries the value actually in force at that moment, and no wake at a change tick
@@ -224,20 +225,20 @@ namespace ThousandAndFirst.Tests
 						}
 						long mid = last + 1L + rng.NextInt((int)(span - 1L));
 						ToyAdvanceResult between = FixedPeriodToyRules.AdvanceThrough(dense, mid, denseValue);
-						Assert.IsTrue(between.Succeeded, "dense intermediate wake");
+						ClassicAssert.IsTrue(between.Succeeded, "dense intermediate wake");
 						dense = between.State;
 						last = mid;
 					}
 
 					denseValue = !denseValue;
 					ToyAdvanceResult step = FixedPeriodToyRules.AdvanceThrough(dense, at[t], denseValue);
-					Assert.IsTrue(step.Succeeded, "dense transition " + t);
+					ClassicAssert.IsTrue(step.Succeeded, "dense transition " + t);
 					dense = step.State;
 					last = at[t];
 
 					// The same wake again at the same tick, under the now-current value.
 					ToyAdvanceResult duplicate = FixedPeriodToyRules.AdvanceThrough(dense, at[t], denseValue);
-					Assert.IsTrue(duplicate.Succeeded, "duplicate wake at a change tick");
+					ClassicAssert.IsTrue(duplicate.Succeeded, "duplicate wake at a change tick");
 					dense = duplicate.State;
 				}
 
@@ -251,12 +252,12 @@ namespace ThousandAndFirst.Tests
 					}
 					long mid = last + 1L + rng.NextInt((int)(span - 1L));
 					ToyAdvanceResult between = FixedPeriodToyRules.AdvanceThrough(dense, mid, denseValue);
-					Assert.IsTrue(between.Succeeded, "dense tail wake");
+					ClassicAssert.IsTrue(between.Succeeded, "dense tail wake");
 					dense = between.State;
 					last = mid;
 				}
 				ToyAdvanceResult denseEnd = FixedPeriodToyRules.AdvanceThrough(dense, end, denseValue);
-				Assert.IsTrue(denseEnd.Succeeded, "dense end");
+				ClassicAssert.IsTrue(denseEnd.Succeeded, "dense end");
 
 				if (!string.Equals(Encode(sparseEnd.State), Encode(denseEnd.State), StringComparison.Ordinal))
 				{
@@ -266,8 +267,8 @@ namespace ThousandAndFirst.Tests
 				cases++;
 			}
 
-			Assert.AreEqual(10000, cases);
-			Assert.IsTrue(deadlineCoincidences > 1000,
+			ClassicAssert.AreEqual(10000, cases);
+			ClassicAssert.IsTrue(deadlineCoincidences > 1000,
 				"the deadline-coincidence case must actually be exercised, not merely possible; saw " + deadlineCoincidences);
 		}
 
@@ -292,7 +293,7 @@ namespace ThousandAndFirst.Tests
 
 				ToyAdvanceResult created = FixedPeriodToyRules.Create(
 					KernelCanonicalTests.GoldenSeed(), 3, Settlement, 0L, interval, value);
-				Assert.IsTrue(created.Succeeded);
+				ClassicAssert.IsTrue(created.Succeeded);
 
 				// Walk forward, and at each step put the change on whatever deadline the state is
 				// carrying right now. Record the ticks so the dense run can reproduce them exactly.
@@ -317,7 +318,7 @@ namespace ThousandAndFirst.Tests
 
 					value = !value;
 					ToyAdvanceResult step = FixedPeriodToyRules.AdvanceThrough(sparse, deadline, value);
-					Assert.IsTrue(step.Succeeded, "sparse step " + s);
+					ClassicAssert.IsTrue(step.Succeeded, "sparse step " + s);
 					sparse = step.State;
 					changeTicks.Add(deadline);
 					changeValues.Add(value);
@@ -325,7 +326,7 @@ namespace ThousandAndFirst.Tests
 
 				long end = sparse.ProcessedThroughTick + 1L + rng.NextInt(25);
 				ToyAdvanceResult sparseEnd = FixedPeriodToyRules.AdvanceThrough(sparse, end, value);
-				Assert.IsTrue(sparseEnd.Succeeded);
+				ClassicAssert.IsTrue(sparseEnd.Succeeded);
 
 				// The same timestamped history, observed at every tick in between.
 				FixedPeriodToyState dense = created.State;
@@ -336,19 +337,19 @@ namespace ThousandAndFirst.Tests
 					for (long t = cursor + 1L; t < changeTicks[s]; t++)
 					{
 						ToyAdvanceResult between = FixedPeriodToyRules.AdvanceThrough(dense, t, denseValue);
-						Assert.IsTrue(between.Succeeded, "dense tick " + t);
+						ClassicAssert.IsTrue(between.Succeeded, "dense tick " + t);
 						dense = between.State;
 					}
 					denseValue = changeValues[s];
 					ToyAdvanceResult atChange = FixedPeriodToyRules.AdvanceThrough(dense, changeTicks[s], denseValue);
-					Assert.IsTrue(atChange.Succeeded, "dense change " + s);
+					ClassicAssert.IsTrue(atChange.Succeeded, "dense change " + s);
 					dense = atChange.State;
 					cursor = changeTicks[s];
 				}
 				for (long t = cursor + 1L; t <= end; t++)
 				{
 					ToyAdvanceResult between = FixedPeriodToyRules.AdvanceThrough(dense, t, denseValue);
-					Assert.IsTrue(between.Succeeded, "dense tail " + t);
+					ClassicAssert.IsTrue(between.Succeeded, "dense tail " + t);
 					dense = between.State;
 				}
 
@@ -360,8 +361,8 @@ namespace ThousandAndFirst.Tests
 				cases++;
 			}
 
-			Assert.AreEqual(4000, cases);
-			Assert.IsTrue(coincidences > 2000,
+			ClassicAssert.AreEqual(4000, cases);
+			ClassicAssert.IsTrue(coincidences > 2000,
 				"most changes must actually land on a live deadline, or this tests nothing; saw " + coincidences);
 		}
 
@@ -377,11 +378,11 @@ namespace ThousandAndFirst.Tests
 
 				ToyAdvanceResult created = FixedPeriodToyRules.Create(KernelCanonicalTests.GoldenSeed(), 3, Settlement, 0L, interval, enabled);
 				ToyAdvanceResult once = FixedPeriodToyRules.AdvanceThrough(created.State, now, enabled);
-				Assert.IsTrue(once.Succeeded);
+				ClassicAssert.IsTrue(once.Succeeded);
 				ToyAdvanceResult twice = FixedPeriodToyRules.AdvanceThrough(once.State, now, enabled);
-				Assert.IsTrue(twice.Succeeded);
+				ClassicAssert.IsTrue(twice.Succeeded);
 
-				Assert.AreEqual(Encode(once.State), Encode(twice.State), "a repeated wake must emit nothing further, case " + i);
+				ClassicAssert.AreEqual(Encode(once.State), Encode(twice.State), "a repeated wake must emit nothing further, case " + i);
 			}
 		}
 
@@ -390,17 +391,17 @@ namespace ThousandAndFirst.Tests
 		{
 			ToyAdvanceResult created = FixedPeriodToyRules.Create(KernelCanonicalTests.GoldenSeed(), 3, Settlement, 0L, 1L, true);
 			ToyAdvanceResult advanced = FixedPeriodToyRules.AdvanceThrough(created.State, 200L, true);
-			Assert.IsTrue(advanced.Succeeded);
-			Assert.AreEqual(200uL, advanced.State.NextOrdinal);
+			ClassicAssert.IsTrue(advanced.Succeeded);
+			ClassicAssert.AreEqual(200uL, advanced.State.NextOrdinal);
 
 			Dictionary<string, ulong> seen = new Dictionary<string, ulong>();
 			for (ulong ordinal = 0uL; ordinal < 200uL; ordinal++)
 			{
 				SemanticEventKey key;
 				KernelFaultCode fault;
-				Assert.IsTrue(FixedPeriodToyRules.TryGetEventKey(advanced.State, ordinal, out key, out fault), "ordinal " + ordinal);
+				ClassicAssert.IsTrue(FixedPeriodToyRules.TryGetEventKey(advanced.State, ordinal, out key, out fault), "ordinal " + ordinal);
 				string id;
-				Assert.IsTrue(SemanticEventIdentity.TryCreateId(KernelCanonicalTests.GoldenSeed(), key, out id, out fault));
+				ClassicAssert.IsTrue(SemanticEventIdentity.TryCreateId(KernelCanonicalTests.GoldenSeed(), key, out id, out fault));
 				if (seen.ContainsKey(id))
 				{
 					Assert.Fail("identity collision between ordinals " + seen[id] + " and " + ordinal);
@@ -412,9 +413,9 @@ namespace ThousandAndFirst.Tests
 				string idAgain;
 				FixedPeriodToyRules.TryGetEventKey(advanced.State, ordinal, out again, out fault);
 				SemanticEventIdentity.TryCreateId(KernelCanonicalTests.GoldenSeed(), again, out idAgain, out fault);
-				Assert.AreEqual(id, idAgain);
+				ClassicAssert.AreEqual(id, idAgain);
 			}
-			Assert.AreEqual(200, seen.Count);
+			ClassicAssert.AreEqual(200, seen.Count);
 		}
 
 		[Test]
@@ -425,12 +426,12 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < 10000; i++)
 			{
 				SemanticEventKey key;
-				Assert.IsTrue(SemanticEventKey.TryCreate(3, Settlement, "taf:stream:test", 1u, (ulong)i, out key, out fault));
+				ClassicAssert.IsTrue(SemanticEventKey.TryCreate(3, Settlement, "taf:stream:test", 1u, (ulong)i, out key, out fault));
 				string id;
-				Assert.IsTrue(SemanticEventIdentity.TryCreateId(KernelCanonicalTests.GoldenSeed(), key, out id, out fault));
-				Assert.IsTrue(ids.Add(id), "collision at ordinal " + i);
+				ClassicAssert.IsTrue(SemanticEventIdentity.TryCreateId(KernelCanonicalTests.GoldenSeed(), key, out id, out fault));
+				ClassicAssert.IsTrue(ids.Add(id), "collision at ordinal " + i);
 			}
-			Assert.AreEqual(10000, ids.Count);
+			ClassicAssert.AreEqual(10000, ids.Count);
 		}
 
 		[Test]
@@ -446,10 +447,10 @@ namespace ThousandAndFirst.Tests
 				// Any regressed wake must leave the source exactly as it was.
 				long regressed = rng.NextInt(100);
 				ToyAdvanceResult failed = FixedPeriodToyRules.AdvanceThrough(created.State, regressed, rng.NextBool());
-				Assert.IsFalse(failed.Succeeded, "case " + i);
-				Assert.AreEqual(KernelFaultCode.ClockRegression, failed.Fault);
-				Assert.AreEqual(before, Encode(created.State));
-				Assert.AreEqual(before, Encode(failed.State), "the failed result carries the untouched source");
+				ClassicAssert.IsFalse(failed.Succeeded, "case " + i);
+				ClassicAssert.AreEqual(KernelFaultCode.ClockRegression, failed.Fault);
+				ClassicAssert.AreEqual(before, Encode(created.State));
+				ClassicAssert.AreEqual(before, Encode(failed.State), "the failed result carries the untouched source");
 			}
 		}
 	}

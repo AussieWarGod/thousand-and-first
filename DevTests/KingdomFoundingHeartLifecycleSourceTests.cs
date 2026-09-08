@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -46,7 +47,7 @@ namespace ThousandAndFirst.Tests
 			Ordered(Between(source, "internal KingdomFoundingHeartLifecycleWorld(", "internal void Current()"),
 				"Retained == null", "Retained = this", "TryBindStampedPlan(", "plan.AuthorityClass",
 				"KingdomScenarioFoundingStep.TryProvePreconditions(", "KingdomScenarioTransactionMarker.TryBegin(");
-			Assert.AreEqual(1, Regex.Matches(source, @"KingdomScenarioTransactionMarker\.TryBegin\s*\(").Count);
+			ClassicAssert.AreEqual(1, Regex.Matches(source, @"KingdomScenarioTransactionMarker\.TryBegin\s*\(").Count);
 			Contains(Between(source, "internal void Current()", "internal KingdomFoundingHeartPlan Plan()"),
 				"ReferenceEquals(The.Game, Game)", "ReferenceEquals(The.Player?.CurrentZone, Zone)",
 				"ReferenceEquals(The.ZoneManager?.ActiveZone, Zone)", "Game.TimeTicks == Tick", "ReferenceEquals(Owner, System)");
@@ -80,8 +81,8 @@ namespace ThousandAndFirst.Tests
 				"targeted == 1 && ReferenceEquals(final, observed)", "NoReplay(world, predecessor, final)", "probes.Check()",
 				"Pass(rows, current, ref passed)",
 				"KingdomFoundingHeartRetirementChecks.Run(world, predecessor, final, rows, ref passed, ref current)", "probes.Check()");
-			Assert.AreEqual(1, Regex.Matches(source, @"KingdomScenarioTransactionMarker\.TryCommit\s*\(").Count);
-			Assert.IsFalse(Regex.IsMatch(source + Read(World), @"\.TimeTicks\s*=(?!=)"));
+			ClassicAssert.AreEqual(1, Regex.Matches(source, @"KingdomScenarioTransactionMarker\.TryCommit\s*\(").Count);
+			ClassicAssert.IsFalse(Regex.IsMatch(source + Read(World), @"\.TimeTicks\s*=(?!=)"));
 			foreach (string forbidden in new[] { "GetMethod(", ".Invoke(", ".SetValue(", "BindingFlags" })
 				StringAssert.DoesNotContain(forbidden, source + Read(World));
 			Contains(run, "suppliedTick=", "unchangedWorldTick=", "Synthetic faults and future calendar argument",
@@ -239,14 +240,14 @@ namespace ThousandAndFirst.Tests
 			{
 				if (string.IsNullOrWhiteSpace(line) || line.StartsWith("#", StringComparison.Ordinal)) continue;
 				string[] field = line.TrimEnd('\r').Split(new[] { '=' }, 2);
-				Assert.AreEqual(2, field.Length); Assert.IsFalse(persona.ContainsKey(field[0])); persona.Add(field[0], field[1]);
+				ClassicAssert.AreEqual(2, field.Length); ClassicAssert.IsFalse(persona.ContainsKey(field[0])); persona.Add(field[0], field[1]);
 			}
 			CollectionAssert.AreEquivalent(new[] { "DESCRIPTION", "REQUEST", "START", "SCRIPT", "VERBS", "EXPECT", "LOG_EXPECT", "SET" }, persona.Keys);
-			Assert.AreEqual("founding-first-city", persona["REQUEST"]); Assert.AreEqual("8.22@40,12", persona["START"]);
-			Assert.AreEqual("stagedigest;founding-heart-lifecycle;stagedigest", persona["SCRIPT"]);
-			Assert.AreEqual("founding-heart-lifecycle", persona["VERBS"]);
-			Assert.AreEqual("stagedigest:OK~founded=false,founding-heart-lifecycle:OK~cases=15 passed=15 failed=0,stagedigest:OK~founded=true,COMPLETE", persona["EXPECT"]);
-			Assert.AreEqual("[\"MODWARN [Pets of Harvest Dawn] - Mod defining manual load order, please convert it to use the Dependencies field.\","
+			ClassicAssert.AreEqual("founding-first-city", persona["REQUEST"]); ClassicAssert.AreEqual("8.22@40,12", persona["START"]);
+			ClassicAssert.AreEqual("stagedigest;founding-heart-lifecycle;stagedigest", persona["SCRIPT"]);
+			ClassicAssert.AreEqual("founding-heart-lifecycle", persona["VERBS"]);
+			ClassicAssert.AreEqual("stagedigest:OK~founded=false,founding-heart-lifecycle:OK~cases=15 passed=15 failed=0,stagedigest:OK~founded=true,COMPLETE", persona["EXPECT"]);
+			ClassicAssert.AreEqual("[\"MODWARN [Pets of Harvest Dawn] - Mod defining manual load order, please convert it to use the Dependencies field.\","
 				+ "\"MODWARN [Pets of Harvest Dawn] - XmlDataHelper:: <...>/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/DLC/PetsPack1/Freehold_Pet_Ercolano/PopulationTables.xml line 4 char 6\"]", persona["LOG_EXPECT"]);
 		}
 
@@ -275,13 +276,13 @@ namespace ThousandAndFirst.Tests
 			foreach (string term in terms)
 			{
 				string needle = Flat(term); int found = source.IndexOf(needle, cursor, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(found, 0, term); cursor = found + needle.Length;
+				ClassicAssert.GreaterOrEqual(found, 0, term); cursor = found + needle.Length;
 			}
 		}
 		private static string Between(string source, string start, string end)
 		{
-			int first = source.IndexOf(start, StringComparison.Ordinal); Assert.GreaterOrEqual(first, 0, start);
-			int last = source.IndexOf(end, first + start.Length, StringComparison.Ordinal); Assert.Greater(last, first, end);
+			int first = source.IndexOf(start, StringComparison.Ordinal); ClassicAssert.GreaterOrEqual(first, 0, start);
+			int last = source.IndexOf(end, first + start.Length, StringComparison.Ordinal); ClassicAssert.Greater(last, first, end);
 			return source.Substring(first, last - first);
 		}
 	}

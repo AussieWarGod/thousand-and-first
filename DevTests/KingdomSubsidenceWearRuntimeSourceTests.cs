@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -142,7 +143,7 @@ namespace ThousandAndFirst.Tests
 			string prefix = code.Substring(apply, fence - apply);
 			// The only assignment ahead of the first fence constant is the null every pre-binding
 			// refusal returns; nothing is handed back that could be mistaken for a measurement.
-			Assert.AreEqual(1, Count(prefix, "observed = "),
+			ClassicAssert.AreEqual(1, Count(prefix, "observed = "),
 				"observed is bound only in the two arms, never before the fences.");
 			Has(prefix, "observed = null;");
 			int admitted = code.IndexOf("== KingdomSubsidenceEffectAction.Refuse", StringComparison.Ordinal);
@@ -150,7 +151,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string bind in new[] { "observed = instance;", "observed = present;" })
 				Assert.That(code.IndexOf(bind, StringComparison.Ordinal), Is.GreaterThan(admitted),
 					"Binding follows admission: " + bind);
-			Assert.AreEqual(4, Count(code, "observed = "),
+			ClassicAssert.AreEqual(4, Count(code, "observed = "),
 				"One null, one existing-part bind, and the allocated instance on refusal and on success.");
 		}
 
@@ -162,7 +163,7 @@ namespace ThousandAndFirst.Tests
 			Assert.That(Count(code, ".IDIfAssigned"), Is.GreaterThanOrEqualTo(1),
 				"The runtime must read the non-minting id property at least once.");
 			// Every ".ID" in the code is part of ".IDIfAssigned"; no bare id property is read.
-			Assert.AreEqual(Count(code, ".IDIfAssigned"), Count(code, ".ID"),
+			ClassicAssert.AreEqual(Count(code, ".IDIfAssigned"), Count(code, ".ID"),
 				"The runtime may never read the minting ID property.");
 			foreach (string banned in new[] { "new GameObject", "GameID", "SetStringProperty(",
 				"SetIntProperty(", "SetStringGameState(", "SetInt64GameState(" })
@@ -196,7 +197,7 @@ namespace ThousandAndFirst.Tests
 			// post-admission re-measure, and again inside the work fences the mutation seams call.
 			Has(Flat(TestMain.ReadRepositoryText(Construction)),
 				"internal static bool ConstructionAvailable(GameObject work)");
-			Assert.AreEqual(3, Count(code, "ConstructionAvailable("),
+			ClassicAssert.AreEqual(3, Count(code, "ConstructionAvailable("),
 				"Construction is fenced before binding, after admission, and in WorkFenceRefusal.");
 			Ordered(Method(Runtime, WorkFence),
 				"if (!SameAttachment(work, part)) return PartNotExact;",
@@ -224,7 +225,7 @@ namespace ThousandAndFirst.Tests
 				"internal static KingdomSubsidenceEffectAction WearAction(KingdomSubsidenceRungPlan plan, int index, bool exactAuthority, bool hasPart, int observedWear)",
 				"if (!exactAuthority || !AtFrontier(plan, index)) return KingdomSubsidenceEffectAction.Refuse;");
 			string code = Code(Runtime);
-			Assert.AreEqual(3, Count(code, "KingdomWearRules.WearCause.Subsidence"),
+			ClassicAssert.AreEqual(3, Count(code, "KingdomWearRules.WearCause.Subsidence"),
 				"The cause is stamped on a new part, on an existing part, and compared in the receipt.");
 			// The receipt phases reused here are the part's existing ones, unchanged.
 			Has(Flat(TestMain.ReadRepositoryText(Declarations)), "public enum KingdomWearIncidentPhase",
@@ -242,7 +243,7 @@ namespace ThousandAndFirst.Tests
 			string code = Code(Runtime);
 			int guard = code.IndexOf(Guard, StringComparison.Ordinal);
 			Assert.That(guard, Is.GreaterThan(0), "The post-admission re-measure must exist.");
-			Assert.AreEqual(2, Count(code, "= (int)KingdomWearIncidentPhase.Bound;"),
+			ClassicAssert.AreEqual(2, Count(code, "= (int)KingdomWearIncidentPhase.Bound;"),
 				"Bound is stamped on the allocated instance and on an unbound existing part only.");
 			foreach (string stamp in new[] { "instance.IncidentPhase = (int)KingdomWearIncidentPhase.Bound;",
 				"present.IncidentPhase = (int)KingdomWearIncidentPhase.Bound;" })
@@ -270,8 +271,8 @@ namespace ThousandAndFirst.Tests
 			int attached = code.IndexOf("work.AddPart(", StringComparison.Ordinal);
 			Assert.That(allocated, Is.GreaterThanOrEqualTo(0), "The part must be allocated here.");
 			Assert.That(attached, Is.GreaterThan(allocated), "Allocation precedes attachment.");
-			Assert.AreEqual(1, Count(code, "AddPart("), "Exactly one attachment call may exist.");
-			Assert.AreEqual(1, Count(code, "new r_KingdomWear("),
+			ClassicAssert.AreEqual(1, Count(code, "AddPart("), "Exactly one attachment call may exist.");
+			ClassicAssert.AreEqual(1, Count(code, "new r_KingdomWear("),
 				"Exactly one allocation may exist; a replacement is never minted.");
 		}
 
@@ -286,9 +287,9 @@ namespace ThousandAndFirst.Tests
 					+ "+ (attach == null ? \"\" : \" (\" + attach.GetType().Name + \")\"); return false; }",
 				"observed = instance; if (!reprovesAuthority()) { refusal = AuthorityLost; return false; }");
 			string code = Code(Runtime);
-			Assert.AreEqual(1, Count(code, "attach.GetType()"),
+			ClassicAssert.AreEqual(1, Count(code, "attach.GetType()"),
 				"The exception's type is read once, inside the refusal text.");
-			Assert.AreEqual(1, Count(code, "GetType()"), "No other exception metadata is read.");
+			ClassicAssert.AreEqual(1, Count(code, "GetType()"), "No other exception metadata is read.");
 			foreach (string banned in new[] { "attach.Message", "attach.ToString(", "attach.StackTrace",
 				"raised.Message", "raised.GetType(", "raised.ToString(" })
 				StringAssert.DoesNotContain(banned, code);
@@ -316,7 +317,7 @@ namespace ThousandAndFirst.Tests
 			Has(body, "observed = present; if (present.IncidentPhase == (int)KingdomWearIncidentPhase.None)",
 				"present.IncidentPhase = (int)KingdomWearIncidentPhase.Bound;",
 				"if (!SameAttachment(work, observed) || !SameReceipt(observed, plan, row)) { refusal = PartNotExact; return false; }");
-			Assert.AreEqual(1, Count(Code(Runtime), "= work.GetPart<r_KingdomWear>();"),
+			ClassicAssert.AreEqual(1, Count(Code(Runtime), "= work.GetPart<r_KingdomWear>();"),
 				"The part is fetched into a local exactly once and never re-fetched.");
 			// The type test in Copies is broader than GetPart's exact-type match, on purpose.
 			Has(Flat(TestMain.ReadRepositoryText(Runtime)),
@@ -331,8 +332,8 @@ namespace ThousandAndFirst.Tests
 				"if (observed.Wear != row.BeforeWear) { refusal = BeforeChanged; return false; }",
 				PreWrite, PostWrite, ConfirmSeam);
 			string code = Code(Runtime);
-			Assert.AreEqual(1, Count(code, "observed.Wear = "), "Exactly one wear write may exist.");
-			Assert.AreEqual(2, Count(code, ".Wear = "),
+			ClassicAssert.AreEqual(1, Count(code, "observed.Wear = "), "Exactly one wear write may exist.");
+			ClassicAssert.AreEqual(2, Count(code, ".Wear = "),
 				"Only the pre-attachment before-state and the one mutation write a wear field.");
 			int intent = code.IndexOf("observed.IncidentPhase = (int)KingdomWearIncidentPhase.MutationIntent;",
 				StringComparison.Ordinal);
@@ -349,9 +350,9 @@ namespace ThousandAndFirst.Tests
 				"if (!SameReceipt(part, plan, row) || !BindablePhase(part.IncidentPhase) || (phase != AnyBindablePhase && part.IncidentPhase != phase)) return ForeignIncident;",
 				"if (part.Wear != wear) return wear == row.BeforeWear ? BeforeChanged : AfterNotExact;",
 				"return null;");
-			Assert.AreEqual(4, Count(code, " FenceRefusal("),
+			ClassicAssert.AreEqual(4, Count(code, " FenceRefusal("),
 				"One declaration, both mutation seams, and the idempotent-confirm seam.");
-			Assert.AreEqual(3, Count(code, "WorkFenceRefusal("),
+			ClassicAssert.AreEqual(3, Count(code, "WorkFenceRefusal("),
 				"One declaration, the post-admission re-measure, and the full fence set.");
 			Has(Flat(TestMain.ReadRepositoryText(Runtime)),
 				"phase and wear. reprovesAuthority proves owner, parent and work custody ONLY: never wear,",
@@ -380,11 +381,11 @@ namespace ThousandAndFirst.Tests
 				"observed.IncidentPhase = (int)KingdomWearIncidentPhase.MutationIntent;");
 			Has(body, ConfirmSeam);
 			string code = Code(Runtime);
-			Assert.AreEqual(1, Count(code, "= (int)KingdomWearIncidentPhase.MutationIntent;"),
+			ClassicAssert.AreEqual(1, Count(code, "= (int)KingdomWearIncidentPhase.MutationIntent;"),
 				"MutationIntent is stamped once, and never as a regression from Mutated.");
-			Assert.AreEqual(0, Count(code, "observed.Wear = row.BeforeWear"),
+			ClassicAssert.AreEqual(0, Count(code, "observed.Wear = row.BeforeWear"),
 				"The wear is never written back down to the before-state.");
-			Assert.AreEqual(2, Count(code, "observed.IncidentPhase = (int)KingdomWearIncidentPhase.Mutated;"),
+			ClassicAssert.AreEqual(2, Count(code, "observed.IncidentPhase = (int)KingdomWearIncidentPhase.Mutated;"),
 				"The terminal stamp is written on the mutation tail and on the confirm tail only.");
 		}
 
@@ -415,7 +416,7 @@ namespace ThousandAndFirst.Tests
 				"string.IsNullOrEmpty(work.IDIfAssigned)", "(requireCell && work.CurrentCell == null)",
 				"game == null", "work.HasIntProperty(KingdomConstruction.ReceiptProperty)) return false;",
 				"KingdomScenarioStateShape.TryAuthorityText(");
-			Assert.AreEqual(1, Count(common, "requireCell && work.CurrentCell == null"));
+			ClassicAssert.AreEqual(1, Count(common, "requireCell && work.CurrentCell == null"));
 			StringAssert.DoesNotContain("ConstructionAvailableForRelease(", Code(Runtime));
 		}
 
@@ -431,8 +432,8 @@ namespace ThousandAndFirst.Tests
 				"if (!present) return true;",
 				"if (!KingdomConstructionRules.TryDecode(wire, out List<KingdomConstructionJob> jobs)) return false;",
 				"foreach (KingdomConstructionJob job in jobs)");
-			Assert.AreEqual(1, Count(Code(Construction), "KingdomScenarioStateShape.TryAuthorityText("));
-			Assert.AreEqual(1, Count(Code(Construction), "KingdomConstructionRules.TryDecode("));
+			ClassicAssert.AreEqual(1, Count(Code(Construction), "KingdomScenarioStateShape.TryAuthorityText("));
+			ClassicAssert.AreEqual(1, Count(Code(Construction), "KingdomConstructionRules.TryDecode("));
 		}
 
 		[Test]
@@ -487,7 +488,7 @@ namespace ThousandAndFirst.Tests
 			int start = source.IndexOf(Flat(signature), StringComparison.Ordinal);
 			Assert.That(start, Is.GreaterThanOrEqualTo(0), path + ": " + signature);
 			int open = source.IndexOf('{', start), depth = 0;
-			Assert.GreaterOrEqual(open, 0, "Unopened source method: " + path + ": " + signature);
+			ClassicAssert.GreaterOrEqual(open, 0, "Unopened source method: " + path + ": " + signature);
 			for (int i = open; i < source.Length; i++)
 			{
 				if (source[i] == '{') depth++;

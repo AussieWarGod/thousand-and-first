@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -25,8 +26,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int create = growth.IndexOf("GameObject.Create(candidate.Blueprint)",
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(waiting, 0);
-			Assert.Greater(create, waiting,
+			ClassicAssert.GreaterOrEqual(waiting, 0);
+			ClassicAssert.Greater(create, waiting,
 				"AwaitingChoice must return before any physical candidate callback");
 			StringAssert.Contains("TryInterposeLegacyFirstGuest", growth);
 			StringAssert.Contains("DecodedLegacyCandidateHasNoMaterialDebit", growth);
@@ -45,10 +46,10 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int continueGrowth = admission.IndexOf("TryContinueFirstGuestDecision",
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(reserve, 0);
-			Assert.Greater(admit, reserve);
-			Assert.GreaterOrEqual(admit, 0);
-			Assert.Greater(continueGrowth, admit,
+			ClassicAssert.GreaterOrEqual(reserve, 0);
+			ClassicAssert.Greater(admit, reserve);
+			ClassicAssert.GreaterOrEqual(admit, 0);
+			ClassicAssert.Greater(continueGrowth, admit,
 				"physical guest recovery must begin only after Growth owns the choice");
 			StringAssert.Contains("NewFirstGuestBodyRequest", admission);
 			StringAssert.Contains("TryReleaseBodies", admission);
@@ -76,11 +77,11 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int reconcile = source.IndexOf("ReconcileArrival(system, zone, survey", publish,
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(first, 0);
-			Assert.Greater(correspondence, first);
-			Assert.Greater(ordinary, correspondence);
-			Assert.Greater(publish, ordinary);
-			Assert.Greater(reconcile, publish);
+			ClassicAssert.GreaterOrEqual(first, 0);
+			ClassicAssert.Greater(correspondence, first);
+			ClassicAssert.Greater(ordinary, correspondence);
+			ClassicAssert.Greater(publish, ordinary);
+			ClassicAssert.Greater(reconcile, publish);
 		}
 
 		[Test]
@@ -97,8 +98,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int ordinary = arrival.IndexOf("TryFreezeGrowthArrivalOpportunity", special,
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(gate, 0); Assert.Greater(special, gate);
-			Assert.Greater(ordinary, special);
+			ClassicAssert.GreaterOrEqual(gate, 0); ClassicAssert.Greater(special, gate);
+			ClassicAssert.Greater(ordinary, special);
 			string recovery = Source("Growth/KingdomGrowth.FirstGuestRecovery.cs");
 			AssertOrdered(recovery, "candidate.LegacyAutomaticRecovery",
 				"!TryCivicStoryAllowsFirstGuest(system, tick",
@@ -121,13 +122,13 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int recover = reconcile.IndexOf("EnsureFirstGuestBodyLeaseForRecovery", firstGuestGate,
 				StringComparison.Ordinal);
-			Assert.Greater(zone, bind);
-			Assert.Greater(interpose, zone,
+			ClassicAssert.Greater(zone, bind);
+			ClassicAssert.Greater(interpose, zone,
 				"foreign-zone activation returns before five physical proof reads");
-			Assert.Greater(migrate, interpose,
+			ClassicAssert.Greater(migrate, interpose,
 				"foreign-zone activation returns before semantic coordinate migration");
-			Assert.Greater(firstGuestGate, migrate);
-			Assert.Greater(recover, firstGuestGate);
+			ClassicAssert.Greater(firstGuestGate, migrate);
+			ClassicAssert.Greater(recover, firstGuestGate);
 			string recovery = Source("Growth/KingdomGrowth.FirstGuestRecovery.cs");
 			AssertOrdered(recovery, "SameFirstGuestBodyRequest(expected, actual)",
 				"GrowthFirstGuestBodyLeaseRecoveryRequired", "TryRecoverDurableBodies");
@@ -149,10 +150,10 @@ namespace ThousandAndFirst.Tests
 			int observe = admission.IndexOf("TryObserveConfiguredOptions", StringComparison.Ordinal);
 			int reserve = admission.IndexOf("TryReserveBodies", StringComparison.Ordinal);
 			int admit = admission.IndexOf("TryAdmitGrowthFirstGuest", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(current, 0);
-			Assert.Greater(observe, current);
-			Assert.Greater(reserve, observe);
-			Assert.Greater(admit, current);
+			ClassicAssert.GreaterOrEqual(current, 0);
+			ClassicAssert.Greater(observe, current);
+			ClassicAssert.Greater(reserve, observe);
+			ClassicAssert.Greater(admit, current);
 		}
 
 		[Test]
@@ -174,11 +175,11 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PausedCorrespondenceReadsFrozenFactsBeforeAnyLeaseOrChoice()
 		{
-			Assert.IsTrue(KingdomCharterMenuRules.AvailableWhileSimulationPaused(
+			ClassicAssert.IsTrue(KingdomCharterMenuRules.AvailableWhileSimulationPaused(
 				KingdomCharterAction.FirstGuestCorrespondence));
 			string source = Source("Growth/KingdomFirstGuestRuntime.cs");
 			int open = source.IndexOf("public static void Open", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(open, 0);
+			ClassicAssert.GreaterOrEqual(open, 0);
 			string body = source.Substring(open);
 			int pause = body.IndexOf("if (!KingdomMaster.NewWorkAllowed(system))",
 				StringComparison.Ordinal);
@@ -189,12 +190,12 @@ namespace ThousandAndFirst.Tests
 			int choice = body.IndexOf("Popup.PickOption", StringComparison.Ordinal);
 			int defer = body.IndexOf("Defer(system, growth, candidate", StringComparison.Ordinal);
 			int decline = body.IndexOf("Decline(system, founder", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(pause, 0);
-			Assert.Greater(directFacts, pause);
-			Assert.Greater(presentation, directFacts);
-			Assert.Greater(choice, presentation);
-			Assert.Greater(defer, choice);
-			Assert.Greater(decline, choice);
+			ClassicAssert.GreaterOrEqual(pause, 0);
+			ClassicAssert.Greater(directFacts, pause);
+			ClassicAssert.Greater(presentation, directFacts);
+			ClassicAssert.Greater(choice, presentation);
+			ClassicAssert.Greater(defer, choice);
+			ClassicAssert.Greater(decline, choice);
 			string readOnlyBranch = body.Substring(pause, presentation - pause);
 			StringAssert.Contains("simulation is paused", readOnlyBranch);
 			StringAssert.Contains("read-only", readOnlyBranch);
@@ -411,8 +412,8 @@ namespace ThousandAndFirst.Tests
 			int thaw = events.IndexOf("HandleEvent(ZoneThawedEvent", StringComparison.Ordinal);
 			int suspend = events.IndexOf("HandleEvent(SuspendingEvent", StringComparison.Ordinal);
 			int activated = events.IndexOf("HandleEvent(ZoneActivatedEvent", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(thaw, 0); Assert.Greater(suspend, thaw);
-			Assert.Greater(activated, suspend);
+			ClassicAssert.GreaterOrEqual(thaw, 0); ClassicAssert.Greater(suspend, thaw);
+			ClassicAssert.Greater(activated, suspend);
 			AssertOrdered(events.Substring(thaw, suspend - thaw),
 				"OnPhysicalFirstGuestZoneActivated", "ObserveAutomaticWake");
 			AssertOrdered(events.Substring(suspend, activated - suspend),
@@ -472,7 +473,7 @@ namespace ThousandAndFirst.Tests
 				"Core/KingdomSemanticSelection.FirstGuest.cs"
 			};
 			for (int i = 0; i < files.Length; i++)
-				Assert.Less(File.ReadAllLines(Path.Combine(TestMain.RepositoryRoot,
+				ClassicAssert.Less(File.ReadAllLines(Path.Combine(TestMain.RepositoryRoot,
 					files[i])).Length, 300,
 					files[i]);
 		}
@@ -532,7 +533,7 @@ namespace ThousandAndFirst.Tests
 			{
 				int current = source.IndexOf(needles[i], previous + 1,
 					StringComparison.Ordinal);
-				Assert.Greater(current, previous, needles[i]);
+				ClassicAssert.Greater(current, previous, needles[i]);
 				previous = current;
 			}
 		}

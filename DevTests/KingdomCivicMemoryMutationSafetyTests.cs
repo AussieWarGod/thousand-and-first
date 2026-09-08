@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -100,7 +101,7 @@ namespace ThousandAndFirst.Tests
 			KingdomCivicMemoryAuthority authority = new KingdomCivicMemoryAuthority(
 				KingdomCivicMemoryTestFamilies.Table());
 
-			Assert.IsTrue(authority.TryCommit(new SwitchingList(sound, malformed), 0L,
+			ClassicAssert.IsTrue(authority.TryCommit(new SwitchingList(sound, malformed), 0L,
 				out string failure), failure);
 			CollectionAssert.AreEqual(sound.Payload(), authority.Read().Section(id).Payload());
 		}
@@ -130,15 +131,15 @@ namespace ThousandAndFirst.Tests
 				id <= KingdomCivicMemoryLimits.LastKnownSection; id++) table.Add(id, reader);
 			authority = new KingdomCivicMemoryAuthority(table);
 
-			Assert.IsFalse(authority.TryCommit(new List<KingdomCivicMemorySection>
+			ClassicAssert.IsFalse(authority.TryCommit(new List<KingdomCivicMemorySection>
 			{
 				new KingdomCivicMemorySection(KingdomCivicMemoryLimits.SectionCivicArtifacts,
 					KingdomCivicMemoryTestFamilies.Sound(4))
 			}, 0L, out string failure));
-			Assert.IsTrue(nestedAttempted);
-			Assert.IsTrue(authority.Latch.Tripped);
+			ClassicAssert.IsTrue(nestedAttempted);
+			ClassicAssert.IsTrue(authority.Latch.Tripped);
 			StringAssert.Contains("re-entrant", failure);
-			Assert.IsTrue(authority.IsEmpty);
+			ClassicAssert.IsTrue(authority.IsEmpty);
 		}
 
 		[Test]
@@ -159,10 +160,10 @@ namespace ThousandAndFirst.Tests
 				return 1;
 			}, index => proposed);
 
-			Assert.IsFalse(authority.TryCommit(hostile, 0L, out string failure));
-			Assert.IsTrue(authority.Latch.Tripped);
+			ClassicAssert.IsFalse(authority.TryCommit(hostile, 0L, out string failure));
+			ClassicAssert.IsTrue(authority.Latch.Tripped);
 			StringAssert.Contains("re-entrant", failure);
-			Assert.IsTrue(authority.IsEmpty,
+			ClassicAssert.IsTrue(authority.IsEmpty,
 				"the guarded nested adoption and the outer commit must both leave state untouched");
 		}
 
@@ -178,9 +179,9 @@ namespace ThousandAndFirst.Tests
 			KingdomCivicMemoryAuthority authority = new KingdomCivicMemoryAuthority(
 				KingdomCivicMemoryTestFamilies.Table());
 
-			Assert.IsFalse(authority.TryCommit(hostile, 0L, out string failure));
+			ClassicAssert.IsFalse(authority.TryCommit(hostile, 0L, out string failure));
 			StringAssert.Contains("outside", failure);
-			Assert.IsFalse(indexed);
+			ClassicAssert.IsFalse(indexed);
 		}
 
 		[Test]
@@ -194,9 +195,9 @@ namespace ThousandAndFirst.Tests
 			string failure = null;
 
 			Assert.DoesNotThrow(() => accepted = authority.TryCommit(hostile, 0L, out failure));
-			Assert.IsFalse(accepted);
+			ClassicAssert.IsFalse(accepted);
 			StringAssert.Contains("count exploded", failure);
-			Assert.IsTrue(authority.IsEmpty);
+			ClassicAssert.IsTrue(authority.IsEmpty);
 		}
 
 		[Test]
@@ -209,7 +210,7 @@ namespace ThousandAndFirst.Tests
 			KingdomCivicMemoryState state = KingdomCivicMemoryState.Of(
 				new SwitchingList(sound, null), 0L);
 
-			Assert.AreEqual(1, state.Count);
+			ClassicAssert.AreEqual(1, state.Count);
 			CollectionAssert.AreEqual(sound.Payload(), state.Section(id).Payload());
 		}
 
@@ -226,7 +227,7 @@ namespace ThousandAndFirst.Tests
 				});
 				Assert.Throws<ArgumentOutOfRangeException>(
 					() => KingdomCivicMemoryState.Of(hostile, 0L));
-				Assert.IsFalse(indexed);
+				ClassicAssert.IsFalse(indexed);
 			}
 		}
 
@@ -245,10 +246,10 @@ namespace ThousandAndFirst.Tests
 					new KingdomCivicMemorySection(id,
 						KingdomCivicMemoryTestFamilies.Sound(8))
 				}, 0L, out failure));
-			Assert.IsFalse(accepted);
+			ClassicAssert.IsFalse(accepted);
 			StringAssert.Contains("inspection exploded", failure);
-			Assert.IsTrue(authority.Latch.Tripped);
-			Assert.IsTrue(authority.IsEmpty);
+			ClassicAssert.IsTrue(authority.Latch.Tripped);
+			ClassicAssert.IsTrue(authority.IsEmpty);
 		}
 	}
 }

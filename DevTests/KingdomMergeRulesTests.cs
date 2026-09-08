@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -14,7 +15,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void MergeDeclarationsKeepTheirPublicAbiAndDefaults()
 		{
-			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(MergeReach)));
+			ClassicAssert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(MergeReach)));
 			CollectionAssert.AreEqual(new int[3] { 0, 1, 2 }, new int[3]
 			{
 				(int)MergeReach.Spent,
@@ -28,8 +29,8 @@ namespace ThousandAndFirst.Tests
 			};
 			for (int i = 0; i < declarations.Length; i++)
 			{
-				Assert.IsTrue(declarations[i].IsPublic, declarations[i].FullName);
-				Assert.IsTrue(declarations[i].IsSealed, declarations[i].FullName);
+				ClassicAssert.IsTrue(declarations[i].IsPublic, declarations[i].FullName);
+				ClassicAssert.IsTrue(declarations[i].IsSealed, declarations[i].FullName);
 			}
 
 			CollectionAssert.AreEqual(new string[2] { "Name", "Value" },
@@ -47,23 +48,23 @@ namespace ThousandAndFirst.Tests
 			}, FieldNames(typeof(MergeOffer)));
 
 			BuildingDraft draft = new BuildingDraft();
-			Assert.IsNull(draft.Key);
-			Assert.IsNull(draft.Origin);
-			Assert.AreEqual(1, draft.Declarations);
-			Assert.AreEqual(0, draft.Attributes.Count);
-			Assert.IsNull(draft.Skins);
-			Assert.AreEqual(0, draft.SkinKeysThisPass.Count);
+			ClassicAssert.IsNull(draft.Key);
+			ClassicAssert.IsNull(draft.Origin);
+			ClassicAssert.AreEqual(1, draft.Declarations);
+			ClassicAssert.AreEqual(0, draft.Attributes.Count);
+			ClassicAssert.IsNull(draft.Skins);
+			ClassicAssert.AreEqual(0, draft.SkinKeysThisPass.Count);
 			MergeOffer offer = new MergeOffer();
-			Assert.AreEqual(0, offer.SkinKeys.Count);
-			Assert.IsFalse(offer.WearingSkinWithdrawn);
-			Assert.AreEqual(0, offer.Diverged.Count);
+			ClassicAssert.AreEqual(0, offer.SkinKeys.Count);
+			ClassicAssert.IsFalse(offer.WearingSkinWithdrawn);
+			ClassicAssert.AreEqual(0, offer.Diverged.Count);
 
 			System.Reflection.ParameterInfo[] workCtor = typeof(StandingWork).GetConstructor(
 				new System.Type[3] { typeof(string), typeof(BuildingDraft), typeof(string) }).GetParameters();
-			Assert.IsNull(workCtor[2].DefaultValue);
+			ClassicAssert.IsNull(workCtor[2].DefaultValue);
 			System.Reflection.ParameterInfo[] draftCtor = typeof(BuildingDraft).GetConstructor(
 				new System.Type[2] { typeof(string), typeof(string) }).GetParameters();
-			Assert.IsNull(draftCtor[1].DefaultValue);
+			ClassicAssert.IsNull(draftCtor[1].DefaultValue);
 		}
 
 		private static string[] FieldNames(System.Type type)
@@ -168,8 +169,8 @@ namespace ThousandAndFirst.Tests
 		{
 			BuildingDraft later = Draft("tent", KingdomMergeRules.AttrCost, "9", KingdomMergeRules.AttrStyles, "verdant");
 			BuildingDraft merged = KingdomMergeRules.Merge(Base("tent"), later, null);
-			Assert.AreEqual("9", merged.Get(KingdomMergeRules.AttrCost));
-			Assert.AreEqual("verdant", merged.Get(KingdomMergeRules.AttrStyles));
+			ClassicAssert.AreEqual("9", merged.Get(KingdomMergeRules.AttrCost));
+			ClassicAssert.AreEqual("verdant", merged.Get(KingdomMergeRules.AttrStyles));
 		}
 
 		[Test]
@@ -177,11 +178,11 @@ namespace ThousandAndFirst.Tests
 		{
 			BuildingDraft later = Draft("tent", KingdomMergeRules.AttrCost, "9");
 			BuildingDraft merged = KingdomMergeRules.Merge(Base("tent"), later, null);
-			Assert.AreEqual("r_tent", merged.Get(KingdomMergeRules.AttrBlueprint));
-			Assert.AreEqual("1200", merged.Get(KingdomMergeRules.AttrTicks));
-			Assert.AreEqual("housing", merged.Get(KingdomMergeRules.AttrCategory));
-			Assert.AreEqual("roof:2", merged.Get(KingdomMergeRules.AttrCarries));
-			Assert.AreEqual("S", merged.Get(KingdomMergeRules.AttrPlot));
+			ClassicAssert.AreEqual("r_tent", merged.Get(KingdomMergeRules.AttrBlueprint));
+			ClassicAssert.AreEqual("1200", merged.Get(KingdomMergeRules.AttrTicks));
+			ClassicAssert.AreEqual("housing", merged.Get(KingdomMergeRules.AttrCategory));
+			ClassicAssert.AreEqual("roof:2", merged.Get(KingdomMergeRules.AttrCarries));
+			ClassicAssert.AreEqual("S", merged.Get(KingdomMergeRules.AttrPlot));
 		}
 
 		[Test]
@@ -191,9 +192,9 @@ namespace ThousandAndFirst.Tests
 			// second is "no table", and a modder needs both.
 			BuildingDraft with = Draft("hut", KingdomMergeRules.AttrContents, "Hut_Contents");
 			BuildingDraft merged = KingdomMergeRules.Merge(with, Draft("hut", KingdomMergeRules.AttrContents, ""), null);
-			Assert.AreEqual("", merged.Get(KingdomMergeRules.AttrContents));
+			ClassicAssert.AreEqual("", merged.Get(KingdomMergeRules.AttrContents));
 			BuildingDraft silent = KingdomMergeRules.Merge(with, Draft("hut", KingdomMergeRules.AttrCost, "5"), null);
-			Assert.AreEqual("Hut_Contents", silent.Get(KingdomMergeRules.AttrContents));
+			ClassicAssert.AreEqual("Hut_Contents", silent.Get(KingdomMergeRules.AttrContents));
 		}
 
 		[Test]
@@ -202,19 +203,19 @@ namespace ThousandAndFirst.Tests
 			BuildingDraft standing = Base("tent");
 			BuildingDraft later = Draft("tent", KingdomMergeRules.AttrCost, "9");
 			KingdomMergeRules.Merge(standing, later, null);
-			Assert.AreEqual("4", standing.Get(KingdomMergeRules.AttrCost));
-			Assert.IsFalse(later.Names(KingdomMergeRules.AttrBlueprint));
+			ClassicAssert.AreEqual("4", standing.Get(KingdomMergeRules.AttrCost));
+			ClassicAssert.IsFalse(later.Names(KingdomMergeRules.AttrBlueprint));
 		}
 
 		[Test]
 		public void Merge_CountsHowManyFilesTheDesignIsMadeOf()
 		{
 			BuildingDraft once = Base("tent");
-			Assert.AreEqual(1, once.Declarations);
+			ClassicAssert.AreEqual(1, once.Declarations);
 			BuildingDraft twice = KingdomMergeRules.Merge(once, Draft("tent", KingdomMergeRules.AttrCost, "5"), null);
-			Assert.AreEqual(2, twice.Declarations);
+			ClassicAssert.AreEqual(2, twice.Declarations);
 			BuildingDraft thrice = KingdomMergeRules.Merge(twice, Draft("tent", KingdomMergeRules.AttrCost, "6"), null);
-			Assert.AreEqual(3, thrice.Declarations);
+			ClassicAssert.AreEqual(3, thrice.Declarations);
 		}
 
 		[Test]
@@ -222,11 +223,11 @@ namespace ThousandAndFirst.Tests
 		{
 			List<CatalogueFinding> findings = new List<CatalogueFinding>();
 			KingdomMergeRules.Merge(Base("tent"), Draft("tent", KingdomMergeRules.AttrCost, "9", KingdomMergeRules.AttrStyles, "verdant"), findings);
-			Assert.AreEqual(1, findings.Count);
-			Assert.AreEqual(CatalogueSeverity.Note, findings[0].Severity);
-			Assert.IsTrue(findings[0].Message.Contains(KingdomMergeRules.AttrCost));
-			Assert.IsTrue(findings[0].Message.Contains(KingdomMergeRules.AttrStyles));
-			Assert.IsFalse(findings[0].Message.Contains(KingdomMergeRules.AttrBlueprint));
+			ClassicAssert.AreEqual(1, findings.Count);
+			ClassicAssert.AreEqual(CatalogueSeverity.Note, findings[0].Severity);
+			ClassicAssert.IsTrue(findings[0].Message.Contains(KingdomMergeRules.AttrCost));
+			ClassicAssert.IsTrue(findings[0].Message.Contains(KingdomMergeRules.AttrStyles));
+			ClassicAssert.IsFalse(findings[0].Message.Contains(KingdomMergeRules.AttrBlueprint));
 		}
 
 		[Test]
@@ -234,7 +235,7 @@ namespace ThousandAndFirst.Tests
 		{
 			List<CatalogueFinding> findings = new List<CatalogueFinding>();
 			KingdomMergeRules.Merge(Base("tent"), Draft("tent", KingdomMergeRules.AttrCost, "4"), findings);
-			Assert.AreEqual(0, findings.Count);
+			ClassicAssert.AreEqual(0, findings.Count);
 		}
 
 		// --- A merge into a key nothing declared ----------------------------------------------
@@ -243,9 +244,9 @@ namespace ThousandAndFirst.Tests
 		public void Merge_IntoAKeyNothingDeclaredCreatesIt()
 		{
 			BuildingDraft merged = KingdomMergeRules.Merge(null, Base("newthing"), null);
-			Assert.AreEqual("newthing", merged.Key);
-			Assert.AreEqual(1, merged.Declarations);
-			Assert.AreEqual("r_newthing", merged.Get(KingdomMergeRules.AttrBlueprint));
+			ClassicAssert.AreEqual("newthing", merged.Key);
+			ClassicAssert.AreEqual(1, merged.Declarations);
+			ClassicAssert.AreEqual("r_newthing", merged.Get(KingdomMergeRules.AttrBlueprint));
 		}
 
 		[Test]
@@ -253,10 +254,10 @@ namespace ThousandAndFirst.Tests
 		{
 			List<CatalogueFinding> findings = new List<CatalogueFinding>();
 			BuildingDraft merged = KingdomMergeRules.Merge(null, Draft("tnet", KingdomMergeRules.AttrCost, "9"), findings);
-			Assert.AreEqual("9", merged.Get(KingdomMergeRules.AttrCost));
-			Assert.AreEqual(1, findings.Count);
-			Assert.IsTrue(findings[0].Message.Contains(KingdomMergeRules.AttrBlueprint));
-			Assert.IsTrue(findings[0].Message.Contains(KingdomMergeRules.AttrDisplayName));
+			ClassicAssert.AreEqual("9", merged.Get(KingdomMergeRules.AttrCost));
+			ClassicAssert.AreEqual(1, findings.Count);
+			ClassicAssert.IsTrue(findings[0].Message.Contains(KingdomMergeRules.AttrBlueprint));
+			ClassicAssert.IsTrue(findings[0].Message.Contains(KingdomMergeRules.AttrDisplayName));
 		}
 
 		[Test]
@@ -264,7 +265,7 @@ namespace ThousandAndFirst.Tests
 		{
 			List<CatalogueFinding> findings = new List<CatalogueFinding>();
 			KingdomMergeRules.Merge(null, Base("tent"), findings);
-			Assert.AreEqual(0, findings.Count);
+			ClassicAssert.AreEqual(0, findings.Count);
 		}
 
 		[TestCase("DisplayName")]
@@ -276,17 +277,17 @@ namespace ThousandAndFirst.Tests
 			BuildingDraft draft = Base("tent");
 			draft.Set(Missing, "");
 			List<string> missing;
-			Assert.IsTrue(KingdomMergeRules.IsFragment(draft, out missing));
-			Assert.AreEqual(1, missing.Count);
-			Assert.AreEqual(Missing, missing[0]);
+			ClassicAssert.IsTrue(KingdomMergeRules.IsFragment(draft, out missing));
+			ClassicAssert.AreEqual(1, missing.Count);
+			ClassicAssert.AreEqual(Missing, missing[0]);
 		}
 
 		[Test]
 		public void IsFragment_IsFalseForADesignThatNamesAllFour()
 		{
 			List<string> missing;
-			Assert.IsFalse(KingdomMergeRules.IsFragment(Base("tent"), out missing));
-			Assert.AreEqual(0, missing.Count);
+			ClassicAssert.IsFalse(KingdomMergeRules.IsFragment(Base("tent"), out missing));
+			ClassicAssert.AreEqual(0, missing.Count);
 		}
 
 		// --- Skins: append, and replace by key --------------------------------------------------
@@ -297,10 +298,10 @@ namespace ThousandAndFirst.Tests
 			BuildingDraft draft = Base("hut");
 			bool replaced;
 			string error;
-			Assert.IsTrue(KingdomMergeRules.TryMergeSkin(draft, Skin("verdant", "&g"), out replaced, out error));
-			Assert.IsFalse(replaced);
-			Assert.AreEqual(1, draft.Skins.Count);
-			Assert.AreEqual("verdant", draft.Skins[0].Key);
+			ClassicAssert.IsTrue(KingdomMergeRules.TryMergeSkin(draft, Skin("verdant", "&g"), out replaced, out error));
+			ClassicAssert.IsFalse(replaced);
+			ClassicAssert.AreEqual(1, draft.Skins.Count);
+			ClassicAssert.AreEqual("verdant", draft.Skins[0].Key);
 		}
 
 		[Test]
@@ -313,14 +314,14 @@ namespace ThousandAndFirst.Tests
 			KingdomMergeRules.TryMergeSkin(first, Skin("bleached", "&Y"), out replaced, out error);
 
 			BuildingDraft second = KingdomMergeRules.Merge(first, Draft("hut"), null);
-			Assert.IsTrue(KingdomMergeRules.TryMergeSkin(second, Skin("verdant", "&W"), out replaced, out error));
-			Assert.IsTrue(replaced);
-			Assert.AreEqual(2, second.Skins.Count);
+			ClassicAssert.IsTrue(KingdomMergeRules.TryMergeSkin(second, Skin("verdant", "&W"), out replaced, out error));
+			ClassicAssert.IsTrue(replaced);
+			ClassicAssert.AreEqual(2, second.Skins.Count);
 			// In place: re-colouring the verdant skin must not move it below the bleached one in
 			// the list the founder is offered.
-			Assert.AreEqual("verdant", second.Skins[0].Key);
-			Assert.AreEqual("&W", second.Skins[0].ColorString);
-			Assert.AreEqual("bleached", second.Skins[1].Key);
+			ClassicAssert.AreEqual("verdant", second.Skins[0].Key);
+			ClassicAssert.AreEqual("&W", second.Skins[0].ColorString);
+			ClassicAssert.AreEqual("bleached", second.Skins[1].Key);
 		}
 
 		[Test]
@@ -330,10 +331,10 @@ namespace ThousandAndFirst.Tests
 			bool replaced;
 			string error;
 			KingdomMergeRules.TryMergeSkin(draft, Skin("verdant", "&g"), out replaced, out error);
-			Assert.IsFalse(KingdomMergeRules.TryMergeSkin(draft, Skin("verdant", "&W"), out replaced, out error));
-			Assert.IsNotNull(error);
-			Assert.AreEqual(1, draft.Skins.Count);
-			Assert.AreEqual("&g", draft.Skins[0].ColorString);
+			ClassicAssert.IsFalse(KingdomMergeRules.TryMergeSkin(draft, Skin("verdant", "&W"), out replaced, out error));
+			ClassicAssert.IsNotNull(error);
+			ClassicAssert.AreEqual(1, draft.Skins.Count);
+			ClassicAssert.AreEqual("&g", draft.Skins[0].ColorString);
 		}
 
 		[Test]
@@ -344,11 +345,11 @@ namespace ThousandAndFirst.Tests
 			string error;
 			KingdomMergeRules.TryMergeSkin(first, Skin("verdant", "&g"), out replaced, out error);
 			BuildingDraft second = KingdomMergeRules.Merge(first, Draft("hut", KingdomMergeRules.AttrCost, "5"), null);
-			Assert.AreEqual(1, second.Skins.Count);
+			ClassicAssert.AreEqual(1, second.Skins.Count);
 			// And the second file may add its own without the first's list being reopened.
 			KingdomMergeRules.TryMergeSkin(second, Skin("marble", "&y"), out replaced, out error);
-			Assert.AreEqual(2, second.Skins.Count);
-			Assert.AreEqual(1, first.Skins.Count);
+			ClassicAssert.AreEqual(2, second.Skins.Count);
+			ClassicAssert.AreEqual(1, first.Skins.Count);
 		}
 
 		[Test]
@@ -359,10 +360,10 @@ namespace ThousandAndFirst.Tests
 			string error;
 			KingdomMergeRules.TryMergeSkin(first, Skin("verdant", "&g"), out replaced, out error);
 			// Same element, same key: refused.
-			Assert.IsFalse(KingdomMergeRules.TryMergeSkin(first, Skin("verdant", "&W"), out replaced, out error));
+			ClassicAssert.IsFalse(KingdomMergeRules.TryMergeSkin(first, Skin("verdant", "&W"), out replaced, out error));
 			// New element, same key: replaces.
 			BuildingDraft second = KingdomMergeRules.Merge(first, Draft("hut"), null);
-			Assert.IsTrue(KingdomMergeRules.TryMergeSkin(second, Skin("verdant", "&W"), out replaced, out error));
+			ClassicAssert.IsTrue(KingdomMergeRules.TryMergeSkin(second, Skin("verdant", "&W"), out replaced, out error));
 		}
 
 		// --- Load order, and three files piling up ----------------------------------------------
@@ -374,11 +375,11 @@ namespace ThousandAndFirst.Tests
 			KingdomMergeRules.Absorb(Base("hut"));
 			KingdomMergeRules.Absorb(Draft("hut", KingdomMergeRules.AttrCost, "7"));
 			BuildingDraft merged = KingdomMergeRules.Absorb(Draft("hut", KingdomMergeRules.AttrCarries, "roof:3"));
-			Assert.AreEqual("7", merged.Get(KingdomMergeRules.AttrCost));
-			Assert.AreEqual("roof:3", merged.Get(KingdomMergeRules.AttrCarries));
-			Assert.AreEqual("r_hut", merged.Get(KingdomMergeRules.AttrBlueprint));
-			Assert.AreEqual(3, merged.Declarations);
-			Assert.AreEqual(3, KingdomMergeRules.DeclarationsOf("hut"));
+			ClassicAssert.AreEqual("7", merged.Get(KingdomMergeRules.AttrCost));
+			ClassicAssert.AreEqual("roof:3", merged.Get(KingdomMergeRules.AttrCarries));
+			ClassicAssert.AreEqual("r_hut", merged.Get(KingdomMergeRules.AttrBlueprint));
+			ClassicAssert.AreEqual(3, merged.Declarations);
+			ClassicAssert.AreEqual(3, KingdomMergeRules.DeclarationsOf("hut"));
 		}
 
 		[Test]
@@ -388,7 +389,7 @@ namespace ThousandAndFirst.Tests
 			KingdomMergeRules.Absorb(Base("hut"));
 			KingdomMergeRules.Absorb(Draft("hut", KingdomMergeRules.AttrCost, "7"));
 			BuildingDraft merged = KingdomMergeRules.Absorb(Draft("hut", KingdomMergeRules.AttrCost, "2"));
-			Assert.AreEqual("2", merged.Get(KingdomMergeRules.AttrCost));
+			ClassicAssert.AreEqual("2", merged.Get(KingdomMergeRules.AttrCost));
 		}
 
 		[Test]
@@ -396,11 +397,11 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomMergeRules.ClearDrafts();
 			KingdomMergeRules.Absorb(Base("hut"));
-			Assert.IsNull(KingdomMergeRules.Absorb(Draft("hut", KingdomMergeRules.AttrCost, "5")).Get(KingdomMergeRules.AttrUpgradesTo));
+			ClassicAssert.IsNull(KingdomMergeRules.Absorb(Draft("hut", KingdomMergeRules.AttrCost, "5")).Get(KingdomMergeRules.AttrUpgradesTo));
 			BuildingDraft merged = KingdomMergeRules.Absorb(Draft("hut", KingdomMergeRules.AttrUpgradesTo, "stonehouse"));
-			Assert.AreEqual("stonehouse", merged.Get(KingdomMergeRules.AttrUpgradesTo));
+			ClassicAssert.AreEqual("stonehouse", merged.Get(KingdomMergeRules.AttrUpgradesTo));
 			// And the water cost the base catalogue set is still the water cost.
-			Assert.AreEqual("5", merged.Get(KingdomMergeRules.AttrCost));
+			ClassicAssert.AreEqual("5", merged.Get(KingdomMergeRules.AttrCost));
 		}
 
 		[Test]
@@ -411,9 +412,9 @@ namespace ThousandAndFirst.Tests
 			KingdomMergeRules.Absorb(Base("tent"));
 			KingdomMergeRules.Absorb(Draft("hut", KingdomMergeRules.AttrCost, "7"));
 			BuildingDraft tent;
-			Assert.IsTrue(KingdomMergeRules.TryGetDraft("tent", out tent));
-			Assert.AreEqual("4", tent.Get(KingdomMergeRules.AttrCost));
-			Assert.AreEqual(1, tent.Declarations);
+			ClassicAssert.IsTrue(KingdomMergeRules.TryGetDraft("tent", out tent));
+			ClassicAssert.AreEqual("4", tent.Get(KingdomMergeRules.AttrCost));
+			ClassicAssert.AreEqual(1, tent.Declarations);
 		}
 
 		[Test]
@@ -423,8 +424,8 @@ namespace ThousandAndFirst.Tests
 			KingdomMergeRules.Absorb(Base("hut"));
 			KingdomMergeRules.ClearDrafts();
 			BuildingDraft draft;
-			Assert.IsFalse(KingdomMergeRules.TryGetDraft("hut", out draft));
-			Assert.AreEqual(0, KingdomMergeRules.Findings.Count);
+			ClassicAssert.IsFalse(KingdomMergeRules.TryGetDraft("hut", out draft));
+			ClassicAssert.AreEqual(0, KingdomMergeRules.Findings.Count);
 		}
 
 		// --- The guardrail: merges shape future commissions only ---------------------------------
@@ -459,14 +460,14 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < KingdomMergeRules.SpentAttributes.Length; i++)
 			{
 				string attribute = KingdomMergeRules.SpentAttributes[i];
-				Assert.AreEqual(raised.Get(attribute), offer.Raised.Get(attribute), attribute);
+				ClassicAssert.AreEqual(raised.Get(attribute), offer.Raised.Get(attribute), attribute);
 			}
 			for (int i = 0; i < KingdomMergeRules.StampedAttributes.Length; i++)
 			{
 				string attribute = KingdomMergeRules.StampedAttributes[i];
-				Assert.AreEqual(raised.Get(attribute), offer.Raised.Get(attribute), attribute);
+				ClassicAssert.AreEqual(raised.Get(attribute), offer.Raised.Get(attribute), attribute);
 			}
-			Assert.AreEqual(KingdomMergeRules.SpentAttributes.Length + KingdomMergeRules.StampedAttributes.Length, offer.Diverged.Count);
+			ClassicAssert.AreEqual(KingdomMergeRules.SpentAttributes.Length + KingdomMergeRules.StampedAttributes.Length, offer.Diverged.Count);
 		}
 
 		[Test]
@@ -477,10 +478,10 @@ namespace ThousandAndFirst.Tests
 			BuildingDraft raised = Draft("hut", KingdomMergeRules.AttrCost, "4", KingdomMergeRules.AttrBlueprint, "r_hut");
 			BuildingDraft merged = Draft("hut", KingdomMergeRules.AttrCost, "40", KingdomMergeRules.AttrBlueprint, "r_hut");
 			MergeOffer offer = KingdomMergeRules.Reconcile(new StandingWork("hut", raised), merged);
-			Assert.AreEqual(1, offer.Diverged.Count);
-			Assert.AreEqual(KingdomMergeRules.AttrCost, offer.Diverged[0]);
-			Assert.AreEqual("4", offer.Raised.Get(KingdomMergeRules.AttrCost));
-			Assert.IsNotNull(KingdomMergeRules.StandingLine("the old hut", offer));
+			ClassicAssert.AreEqual(1, offer.Diverged.Count);
+			ClassicAssert.AreEqual(KingdomMergeRules.AttrCost, offer.Diverged[0]);
+			ClassicAssert.AreEqual("4", offer.Raised.Get(KingdomMergeRules.AttrCost));
+			ClassicAssert.IsNotNull(KingdomMergeRules.StandingLine("the old hut", offer));
 		}
 
 		[Test]
@@ -489,8 +490,8 @@ namespace ThousandAndFirst.Tests
 			BuildingDraft raised = Draft("hut", KingdomMergeRules.AttrCost, "4", KingdomMergeRules.AttrCarries, "roof:2");
 			BuildingDraft merged = Draft("hut", KingdomMergeRules.AttrCost, "4", KingdomMergeRules.AttrCarries, "roof:5");
 			MergeOffer offer = KingdomMergeRules.Reconcile(new StandingWork("hut", raised), merged);
-			Assert.AreEqual(0, offer.Diverged.Count);
-			Assert.IsNull(KingdomMergeRules.StandingLine("the old hut", offer));
+			ClassicAssert.AreEqual(0, offer.Diverged.Count);
+			ClassicAssert.IsNull(KingdomMergeRules.StandingLine("the old hut", offer));
 		}
 
 		[Test]
@@ -499,9 +500,9 @@ namespace ThousandAndFirst.Tests
 			BuildingDraft raised = Draft("hut", KingdomMergeRules.AttrCost, "4");
 			StandingWork work = new StandingWork("hut", raised);
 			MergeOffer offer = KingdomMergeRules.Reconcile(work, Draft("hut", KingdomMergeRules.AttrCost, "40"));
-			Assert.IsFalse(ReferenceEquals(offer.Raised, raised));
+			ClassicAssert.IsFalse(ReferenceEquals(offer.Raised, raised));
 			offer.Raised.Set(KingdomMergeRules.AttrCost, "1");
-			Assert.AreEqual("4", raised.Get(KingdomMergeRules.AttrCost));
+			ClassicAssert.AreEqual("4", raised.Get(KingdomMergeRules.AttrCost));
 		}
 
 		[Test]
@@ -513,8 +514,8 @@ namespace ThousandAndFirst.Tests
 			string error;
 			KingdomMergeRules.TryMergeSkin(merged, Skin("marble", "&y"), out replaced, out error);
 			MergeOffer offer = KingdomMergeRules.Reconcile(new StandingWork("hut", raised), merged);
-			Assert.IsTrue(offer.SkinKeys.Contains("marble"));
-			Assert.AreEqual(0, offer.Diverged.Count);
+			ClassicAssert.IsTrue(offer.SkinKeys.Contains("marble"));
+			ClassicAssert.AreEqual(0, offer.Diverged.Count);
 		}
 
 		[Test]
@@ -523,8 +524,8 @@ namespace ThousandAndFirst.Tests
 			BuildingDraft raised = Base("hut");
 			BuildingDraft merged = KingdomMergeRules.Merge(raised, Draft("hut", KingdomMergeRules.AttrUpgradesTo, "stonehouse"), null);
 			MergeOffer offer = KingdomMergeRules.Reconcile(new StandingWork("hut", raised), merged);
-			Assert.AreEqual("stonehouse", offer.SuccessorKey);
-			Assert.AreEqual(0, offer.Diverged.Count);
+			ClassicAssert.AreEqual("stonehouse", offer.SuccessorKey);
+			ClassicAssert.AreEqual(0, offer.Diverged.Count);
 		}
 
 		[Test]
@@ -537,8 +538,8 @@ namespace ThousandAndFirst.Tests
 			BuildingDraft merged = Base("hut");
 			KingdomMergeRules.TryMergeSkin(merged, Skin("marble", "&y"), out replaced, out error);
 			MergeOffer offer = KingdomMergeRules.Reconcile(new StandingWork("hut", raised, "verdant"), merged);
-			Assert.IsTrue(offer.WearingSkinWithdrawn);
-			Assert.AreEqual("verdant", offer.WearingSkinKey);
+			ClassicAssert.IsTrue(offer.WearingSkinWithdrawn);
+			ClassicAssert.AreEqual("verdant", offer.WearingSkinKey);
 		}
 
 		[Test]
@@ -547,18 +548,18 @@ namespace ThousandAndFirst.Tests
 			BuildingDraft raised = Base("hut");
 			BuildingDraft merged = KingdomMergeRules.Merge(raised, Draft("hut", KingdomMergeRules.AttrDisplayName, "sod house"), null);
 			MergeOffer offer = KingdomMergeRules.Reconcile(new StandingWork("hut", raised), merged);
-			Assert.AreEqual("sod house", offer.DisplayName);
-			Assert.AreEqual("r_hut", offer.Raised.Get(KingdomMergeRules.AttrBlueprint));
+			ClassicAssert.AreEqual("sod house", offer.DisplayName);
+			ClassicAssert.AreEqual("r_hut", offer.Raised.Get(KingdomMergeRules.AttrBlueprint));
 		}
 
 		[Test]
 		public void Reconcile_IsNullForNoWorkAndSurvivesAWorkWithNoRaisedDraft()
 		{
-			Assert.IsNull(KingdomMergeRules.Reconcile(null, Base("hut")));
+			ClassicAssert.IsNull(KingdomMergeRules.Reconcile(null, Base("hut")));
 			MergeOffer offer = KingdomMergeRules.Reconcile(new StandingWork("hut", null), Base("hut"));
-			Assert.IsNull(offer.Raised);
-			Assert.AreEqual(0, offer.Diverged.Count);
-			Assert.AreEqual("hut", offer.DisplayName);
+			ClassicAssert.IsNull(offer.Raised);
+			ClassicAssert.AreEqual(0, offer.Diverged.Count);
+			ClassicAssert.AreEqual("hut", offer.DisplayName);
 		}
 
 		[TestCase("Cost", MergeReach.Spent)]
@@ -585,8 +586,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase("Bananas", MergeReach.Read)]
 		public void Classify_SaysHowFarAChangeToEachAttributeReaches(string Attribute, MergeReach Expected)
 		{
-			Assert.AreEqual(Expected, KingdomMergeRules.Classify(Attribute));
-			Assert.AreEqual(Expected == MergeReach.Read, KingdomMergeRules.ReachesStandingWork(Attribute));
+			ClassicAssert.AreEqual(Expected, KingdomMergeRules.Classify(Attribute));
+			ClassicAssert.AreEqual(Expected == MergeReach.Read, KingdomMergeRules.ReachesStandingWork(Attribute));
 		}
 
 		// --- Post-merge coherence, in the validator ---------------------------------------------
@@ -601,11 +602,11 @@ namespace ThousandAndFirst.Tests
 				Entry("hall", KingdomPlotRules.PlotSize.Small, 12, 9, Declarations: 2)
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, "hall", "Footprint", CatalogueSeverity.Fault));
+			ClassicAssert.IsTrue(Has(findings, "hall", "Footprint", CatalogueSeverity.Fault));
 			string message = MessageFor(findings, "hall", "Footprint");
-			Assert.IsTrue(message.Contains("12"));
-			Assert.IsTrue(message.Contains("6"));
-			Assert.IsTrue(message.Contains("merge of 2 declarations"));
+			ClassicAssert.IsTrue(message.Contains("12"));
+			ClassicAssert.IsTrue(message.Contains("6"));
+			ClassicAssert.IsTrue(message.Contains("merge of 2 declarations"));
 		}
 
 		[Test]
@@ -617,7 +618,7 @@ namespace ThousandAndFirst.Tests
 				Entry("shed", KingdomPlotRules.PlotSize.Medium, 3, 2)
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.AreEqual(0, Count(findings, CatalogueSeverity.Fault));
+			ClassicAssert.AreEqual(0, Count(findings, CatalogueSeverity.Fault));
 		}
 
 		[TestCase(6, 0)]
@@ -626,7 +627,7 @@ namespace ThousandAndFirst.Tests
 		{
 			List<CatalogueEntry> entries = new List<CatalogueEntry> { Entry("hut", KingdomPlotRules.PlotSize.Medium, Width, Height) };
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, "hut", "Footprint", CatalogueSeverity.Fault));
+			ClassicAssert.IsTrue(Has(findings, "hut", "Footprint", CatalogueSeverity.Fault));
 		}
 
 		[Test]
@@ -634,7 +635,7 @@ namespace ThousandAndFirst.Tests
 		{
 			List<CatalogueEntry> entries = new List<CatalogueEntry> { Entry("tower", KingdomPlotRules.PlotSize.None, 3, 3) };
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, "tower", "Footprint", CatalogueSeverity.Fault));
+			ClassicAssert.IsTrue(Has(findings, "tower", "Footprint", CatalogueSeverity.Fault));
 		}
 
 		[Test]
@@ -642,8 +643,8 @@ namespace ThousandAndFirst.Tests
 		{
 			List<CatalogueEntry> entries = new List<CatalogueEntry> { Entry("hut", KingdomPlotRules.PlotSize.Small) };
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsFalse(Has(findings, "hut", "Footprint", CatalogueSeverity.Fault));
-			Assert.IsFalse(Has(findings, "hut", "Footprint", CatalogueSeverity.Note));
+			ClassicAssert.IsFalse(Has(findings, "hut", "Footprint", CatalogueSeverity.Fault));
+			ClassicAssert.IsFalse(Has(findings, "hut", "Footprint", CatalogueSeverity.Note));
 		}
 
 		[Test]
@@ -656,10 +657,10 @@ namespace ThousandAndFirst.Tests
 				Entry("house", KingdomPlotRules.PlotSize.Small, Successor: "tent", Declarations: 3)
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, "tent", "UpgradesTo", CatalogueSeverity.Fault));
+			ClassicAssert.IsTrue(Has(findings, "tent", "UpgradesTo", CatalogueSeverity.Fault));
 			string message = MessageFor(findings, "tent", "UpgradesTo");
-			Assert.IsTrue(message.Contains("hut from 2 files"));
-			Assert.IsTrue(message.Contains("house from 3 files"));
+			ClassicAssert.IsTrue(message.Contains("hut from 2 files"));
+			ClassicAssert.IsTrue(message.Contains("house from 3 files"));
 		}
 
 		[Test]
@@ -671,8 +672,8 @@ namespace ThousandAndFirst.Tests
 				Entry("hut", KingdomPlotRules.PlotSize.Small, Successor: "tent")
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, "tent", "UpgradesTo", CatalogueSeverity.Fault));
-			Assert.IsFalse(MessageFor(findings, "tent", "UpgradesTo").Contains("files"));
+			ClassicAssert.IsTrue(Has(findings, "tent", "UpgradesTo", CatalogueSeverity.Fault));
+			ClassicAssert.IsFalse(MessageFor(findings, "tent", "UpgradesTo").Contains("files"));
 		}
 
 		[Test]
@@ -683,7 +684,7 @@ namespace ThousandAndFirst.Tests
 				Entry("hall", KingdomPlotRules.PlotSize.Small, 12, 9, Declarations: 2, Origin: "SomeMod")
 			};
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(MessageFor(findings, "hall", "Footprint").Contains("SomeMod"));
+			ClassicAssert.IsTrue(MessageFor(findings, "hall", "Footprint").Contains("SomeMod"));
 		}
 
 		[Test]
@@ -693,7 +694,7 @@ namespace ThousandAndFirst.Tests
 			// would build is half of what the files said.
 			List<CatalogueEntry> entries = new List<CatalogueEntry> { Entry("hut"), Entry("hut") };
 			List<CatalogueFinding> findings = KingdomCatalogueRules.Validate(entries, null);
-			Assert.IsTrue(Has(findings, "hut", "Key", CatalogueSeverity.Fault));
+			ClassicAssert.IsTrue(Has(findings, "hut", "Key", CatalogueSeverity.Fault));
 		}
 	}
 }

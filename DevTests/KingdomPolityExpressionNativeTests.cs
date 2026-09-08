@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.DevTests
 {
@@ -17,7 +18,7 @@ namespace ThousandAndFirst.DevTests
 				"Dromad", "HindrenVillager", "Scrapbot", "Club", "Leather Armor",
 				"Wooden Buckler", "Long Sword", "Long Sword2", "Steel Long Sword",
 				"Long Sword3", "Chain Mail", "Carbide Plate Armor", "Waterskin" })
-				Assert.IsTrue(ContainsInTree(Path.Combine(root, "ObjectBlueprints"),
+				ClassicAssert.IsTrue(ContainsInTree(Path.Combine(root, "ObjectBlueprints"),
 					"Name=\"" + key + "\""), key);
 			foreach (string key in new[] { "LongBlades", "Tactics", "Customs", "Persuasion",
 				"Tinkering", "Survival", "Tactics_Hurdle", "CookingAndGathering",

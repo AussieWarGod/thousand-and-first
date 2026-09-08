@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.DevTests
 {
@@ -23,32 +24,32 @@ namespace ThousandAndFirst.DevTests
 			Assert.That(wire, Does.StartWith("v2\n"));
 			List<KingdomLabRegistryEntry> loaded = KingdomLabRules.ParseRegistry(
 				wire, out bool quarantined);
-			Assert.IsFalse(quarantined);
-			Assert.AreEqual(2, loaded.Count);
-			Assert.AreEqual(row.RulerSuccessionOrdinal,
+			ClassicAssert.IsFalse(quarantined);
+			ClassicAssert.AreEqual(2, loaded.Count);
+			ClassicAssert.AreEqual(row.RulerSuccessionOrdinal,
 				loaded[0].RulerSuccessionOrdinal);
-			Assert.AreEqual(row.RulerLifeId, loaded[0].RulerLifeId);
-			Assert.IsTrue(KingdomLabRules.RegistryAuthority(loaded[0], row,
+			ClassicAssert.AreEqual(row.RulerLifeId, loaded[0].RulerLifeId);
+			ClassicAssert.IsTrue(KingdomLabRules.RegistryAuthority(loaded[0], row,
 				RequireActive: true));
-			Assert.AreEqual(-1, loaded[1].RulerSuccessionOrdinal);
-			Assert.AreEqual("", loaded[1].RulerLifeId);
-			Assert.AreEqual(wire, KingdomLabRules.FormatRegistry(loaded));
+			ClassicAssert.AreEqual(-1, loaded[1].RulerSuccessionOrdinal);
+			ClassicAssert.AreEqual("", loaded[1].RulerLifeId);
+			ClassicAssert.AreEqual(wire, KingdomLabRules.FormatRegistry(loaded));
 			string[] lines = wire.Split('\n');
 			string[] fields = lines[1].Split('|');
 			fields[6] = "1";
 			lines[1] = string.Join("|", fields);
 			List<KingdomLabRegistryEntry> tampered = KingdomLabRules.ParseRegistry(
 				string.Join("\n", lines), out quarantined);
-			Assert.IsTrue(quarantined);
-			Assert.AreEqual(1, tampered.Count, "foreign life row must be discarded");
+			ClassicAssert.IsTrue(quarantined);
+			ClassicAssert.AreEqual(1, tampered.Count, "foreign life row must be discarded");
 
 			KingdomLabRegistryEntry changed = row.Copy();
 			changed.RulerSuccessionOrdinal++;
-			Assert.IsFalse(KingdomLabRules.RegistryAuthority(row, changed, false));
+			ClassicAssert.IsFalse(KingdomLabRules.RegistryAuthority(row, changed, false));
 			changed = row.Copy();
 			changed.RulerLifeId = KingdomBodyHistoryRulerLifeRules.Identity(
 				Realm, 1, "taf:object:" + row.PatientId);
-			Assert.IsFalse(KingdomLabRules.RegistryAuthority(row, changed, false));
+			ClassicAssert.IsFalse(KingdomLabRules.RegistryAuthority(row, changed, false));
 		}
 
 		private static KingdomLabRegistryEntry BoundRow()

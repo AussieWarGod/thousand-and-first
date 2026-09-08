@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -119,7 +120,7 @@ namespace ThousandAndFirst.Tests
 				"Experience/KingdomCommunalRiteRuntime.Terminal.cs",
 				"Experience/KingdomCommunalRiteRuntime.Open.cs" };
 			for (int i = 0; i < files.Length; i++)
-				Assert.Less(Source(files[i]).Split('\n').Length, 300, files[i]);
+				ClassicAssert.Less(Source(files[i]).Split('\n').Length, 300, files[i]);
 		}
 
 		[Test]
@@ -128,7 +129,7 @@ namespace ThousandAndFirst.Tests
 			string recovery = Source("Experience/KingdomCommunalRiteRuntime.Recovery.cs");
 			StringAssert.Contains("KingdomCommunalRiteOptionDisposition.Unreadable", recovery);
 			StringAssert.Contains("KingdomCommunalRiteOptionDisposition.Current", recovery);
-			Assert.Less(recovery.IndexOf("ObserveOption(", StringComparison.Ordinal),
+			ClassicAssert.Less(recovery.IndexOf("ObserveOption(", StringComparison.Ordinal),
 				recovery.IndexOf("KingdomCommunalRiteRules.TryCommit(committed",
 					StringComparison.Ordinal));
 			string drive = Source("Simulation/City/KingdomPhysicalHappenings.cs");

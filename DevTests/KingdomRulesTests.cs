@@ -1,5 +1,6 @@
 ﻿#if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -9,37 +10,37 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PublicEnumMetadataRemainsStableAcrossPartialFiles()
 		{
-			Assert.AreEqual("ThousandAndFirst.GrowthStage", typeof(GrowthStage).FullName);
-			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(GrowthStage)));
-			Assert.AreEqual(0, (int)GrowthStage.Camp);
-			Assert.AreEqual(1, (int)GrowthStage.Steading);
-			Assert.AreEqual(2, (int)GrowthStage.Village);
-			Assert.AreEqual(3, (int)GrowthStage.Town);
-			Assert.AreEqual(4, (int)GrowthStage.City);
+			ClassicAssert.AreEqual("ThousandAndFirst.GrowthStage", typeof(GrowthStage).FullName);
+			ClassicAssert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(GrowthStage)));
+			ClassicAssert.AreEqual(0, (int)GrowthStage.Camp);
+			ClassicAssert.AreEqual(1, (int)GrowthStage.Steading);
+			ClassicAssert.AreEqual(2, (int)GrowthStage.Village);
+			ClassicAssert.AreEqual(3, (int)GrowthStage.Town);
+			ClassicAssert.AreEqual(4, (int)GrowthStage.City);
 
-			Assert.AreEqual("ThousandAndFirst.KingdomRules+GatePolicy",
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomRules+GatePolicy",
 				typeof(KingdomRules.GatePolicy).FullName);
-			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(KingdomRules.GatePolicy)));
-			Assert.AreEqual(0, (int)KingdomRules.GatePolicy.Open);
-			Assert.AreEqual(1, (int)KingdomRules.GatePolicy.Guarded);
+			ClassicAssert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(KingdomRules.GatePolicy)));
+			ClassicAssert.AreEqual(0, (int)KingdomRules.GatePolicy.Open);
+			ClassicAssert.AreEqual(1, (int)KingdomRules.GatePolicy.Guarded);
 
-			Assert.AreEqual("ThousandAndFirst.KingdomRules+StoresPolicy",
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomRules+StoresPolicy",
 				typeof(KingdomRules.StoresPolicy).FullName);
-			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(KingdomRules.StoresPolicy)));
-			Assert.AreEqual(0, (int)KingdomRules.StoresPolicy.Plenty);
-			Assert.AreEqual(1, (int)KingdomRules.StoresPolicy.Thrift);
+			ClassicAssert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(KingdomRules.StoresPolicy)));
+			ClassicAssert.AreEqual(0, (int)KingdomRules.StoresPolicy.Plenty);
+			ClassicAssert.AreEqual(1, (int)KingdomRules.StoresPolicy.Thrift);
 
-			Assert.AreEqual("ThousandAndFirst.KingdomRules+PetitionKind",
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomRules+PetitionKind",
 				typeof(KingdomRules.PetitionKind).FullName);
-			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(KingdomRules.PetitionKind)));
-			Assert.AreEqual(0, (int)KingdomRules.PetitionKind.None);
-			Assert.AreEqual(1, (int)KingdomRules.PetitionKind.Thirst);
-			Assert.AreEqual(2, (int)KingdomRules.PetitionKind.Shelter);
-			Assert.AreEqual(3, (int)KingdomRules.PetitionKind.Craft);
-			Assert.AreEqual(4, (int)KingdomRules.PetitionKind.Peace);
-			Assert.AreEqual(5, (int)KingdomRules.PetitionKind.Memorial);
-			Assert.AreEqual(6, (int)KingdomRules.PetitionKind.Flesh);
-			Assert.AreEqual(7, (int)KingdomRules.PetitionKind.Chrome);
+			ClassicAssert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(KingdomRules.PetitionKind)));
+			ClassicAssert.AreEqual(0, (int)KingdomRules.PetitionKind.None);
+			ClassicAssert.AreEqual(1, (int)KingdomRules.PetitionKind.Thirst);
+			ClassicAssert.AreEqual(2, (int)KingdomRules.PetitionKind.Shelter);
+			ClassicAssert.AreEqual(3, (int)KingdomRules.PetitionKind.Craft);
+			ClassicAssert.AreEqual(4, (int)KingdomRules.PetitionKind.Peace);
+			ClassicAssert.AreEqual(5, (int)KingdomRules.PetitionKind.Memorial);
+			ClassicAssert.AreEqual(6, (int)KingdomRules.PetitionKind.Flesh);
+			ClassicAssert.AreEqual(7, (int)KingdomRules.PetitionKind.Chrome);
 		}
 
 		[TestCase(GrowthStage.Camp, 50)]
@@ -49,7 +50,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(GrowthStage.City, 10)]
 		public void SpilloverPercent(GrowthStage stage, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.SpilloverPercent(stage));
+			ClassicAssert.AreEqual(expected, KingdomRules.SpilloverPercent(stage));
 		}
 
 		[TestCase(100, GrowthStage.Camp, 50)]
@@ -64,7 +65,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(-200, GrowthStage.City, -20)]
 		public void SpilloverDelta(int repDelta, GrowthStage stage, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.SpilloverDelta(repDelta, stage));
+			ClassicAssert.AreEqual(expected, KingdomRules.SpilloverDelta(repDelta, stage));
 		}
 
 		[TestCase(0, 3600L)]
@@ -73,7 +74,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(50, 33600L)]
 		public void ArrivalIntervalTicks(int population, long expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.ArrivalIntervalTicks(population));
+			ClassicAssert.AreEqual(expected, KingdomRules.ArrivalIntervalTicks(population));
 		}
 
 		// A camp drinks one dram per settler per day. It used to be a quarter of that, which is
@@ -86,7 +87,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(50, 50)]
 		public void UpkeepDrams(int population, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.UpkeepDrams(population));
+			ClassicAssert.AreEqual(expected, KingdomRules.UpkeepDrams(population));
 		}
 
 		[TestCase(0, 1200L)]
@@ -102,7 +103,7 @@ namespace ThousandAndFirst.Tests
 			// Whole days, all of them. Expressed against the daily rate so retuning upkeep cannot
 			// quietly invalidate what this claims to prove.
 			int expected = KingdomRules.UpkeepDrams(population) * KingdomRules.ElapsedDays(elapsed);
-			Assert.AreEqual(expected, KingdomRules.UpkeepForElapsed(population, elapsed));
+			ClassicAssert.AreEqual(expected, KingdomRules.UpkeepForElapsed(population, elapsed));
 		}
 
 		// --- The uncapping (Addendum 8 clause 1) ------------------------------------------------
@@ -113,10 +114,10 @@ namespace ThousandAndFirst.Tests
 			// Derived from the doctrine, not from a table: a settlement drinks every day it
 			// exists, so the bill for N days is N times the bill for one, at any N.
 			int oneDay = KingdomRules.UpkeepForElapsed(20, KingdomRules.TicksPerDay);
-			Assert.Greater(oneDay, 0, "the fixture has to cost something for this to mean anything");
+			ClassicAssert.Greater(oneDay, 0, "the fixture has to cost something for this to mean anything");
 			foreach (int days in new int[5] { 3, 4, 30, 90, 400 })
 			{
-				Assert.AreEqual(oneDay * days, KingdomRules.UpkeepForElapsed(20, KingdomRules.TicksPerDay * days),
+				ClassicAssert.AreEqual(oneDay * days, KingdomRules.UpkeepForElapsed(20, KingdomRules.TicksPerDay * days),
 					days + " days away cost something other than " + days + " days of drinking");
 			}
 		}
@@ -130,7 +131,7 @@ namespace ThousandAndFirst.Tests
 			int daily = KingdomRules.UpkeepDrams(20);
 			for (int days = 1; days <= 6; days++)
 			{
-				Assert.AreEqual(daily * days, KingdomRules.UpkeepForElapsed(20, KingdomRules.TicksPerDay * days),
+				ClassicAssert.AreEqual(daily * days, KingdomRules.UpkeepForElapsed(20, KingdomRules.TicksPerDay * days),
 					"day " + days + " of the absence was not charged like the ones before it");
 			}
 		}
@@ -142,8 +143,8 @@ namespace ThousandAndFirst.Tests
 			// there is" -- which the stores answer by handing over everything there is -- instead
 			// of wrapping into a negative amount they would silently GAIN.
 			long enormous = KingdomRules.TicksPerDay * 3000000000L;
-			Assert.AreEqual(int.MaxValue, KingdomRules.UpkeepForElapsed(60, enormous));
-			Assert.Greater(KingdomRules.UpkeepForElapsed(60, enormous), KingdomRules.UpkeepForElapsed(60, KingdomRules.TicksPerDay * 400));
+			ClassicAssert.AreEqual(int.MaxValue, KingdomRules.UpkeepForElapsed(60, enormous));
+			ClassicAssert.Greater(KingdomRules.UpkeepForElapsed(60, enormous), KingdomRules.UpkeepForElapsed(60, KingdomRules.TicksPerDay * 400));
 		}
 
 		[Test]
@@ -151,8 +152,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// Past what the kernel's checked arithmetic can fold, the answer is zero days rather
 			// than a guess: a corrupt stamp must not mint a debt, and zero mints nothing.
-			Assert.AreEqual(0, KingdomRules.UpkeepForElapsed(60, long.MaxValue));
-			Assert.AreEqual(0, KingdomRules.UpkeepForElapsed(60, -1L));
+			ClassicAssert.AreEqual(0, KingdomRules.UpkeepForElapsed(60, long.MaxValue));
+			ClassicAssert.AreEqual(0, KingdomRules.UpkeepForElapsed(60, -1L));
 		}
 
 		[TestCase(0L, 0)]
@@ -164,7 +165,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(-500L, 0)]
 		public void ElapsedDays(long elapsed, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.ElapsedDays(elapsed));
+			ClassicAssert.AreEqual(expected, KingdomRules.ElapsedDays(elapsed));
 		}
 
 		[Test]
@@ -172,8 +173,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// The kernel's checked arithmetic refuses an elapsed it cannot fold. Zero is the safe
 			// answer, because zero days mints no debt.
-			Assert.AreEqual(0, KingdomRules.ElapsedDays(long.MinValue));
-			Assert.GreaterOrEqual(KingdomRules.ElapsedDays(long.MaxValue), 0);
+			ClassicAssert.AreEqual(0, KingdomRules.ElapsedDays(long.MinValue));
+			ClassicAssert.GreaterOrEqual(KingdomRules.ElapsedDays(long.MaxValue), 0);
 		}
 
 		[TestCase(0L, 5000L, 5000L)]
@@ -185,7 +186,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(5000L, 4000L, 4000L)]
 		public void AdvanceCheckpoint(long previous, long current, long expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.AdvanceCheckpoint(previous, current));
+			ClassicAssert.AreEqual(expected, KingdomRules.AdvanceCheckpoint(previous, current));
 		}
 
 		[Test]
@@ -197,8 +198,8 @@ namespace ThousandAndFirst.Tests
 			long start = 1000L;
 			long now = start + KingdomRules.TicksPerDay * 90 + 500L;
 			long advanced = KingdomRules.AdvanceCheckpoint(start, now);
-			Assert.AreEqual(start + KingdomRules.TicksPerDay * 90, advanced);
-			Assert.AreEqual(500L, now - advanced, "the part-day was thrown away instead of carried");
+			ClassicAssert.AreEqual(start + KingdomRules.TicksPerDay * 90, advanced);
+			ClassicAssert.AreEqual(500L, now - advanced, "the part-day was thrown away instead of carried");
 		}
 
 		[Test]
@@ -211,8 +212,8 @@ namespace ThousandAndFirst.Tests
 			foreach (int days in new int[6] { 0, 1, 3, 4, 30, 365 })
 			{
 				long now = start + KingdomRules.TicksPerDay * days + 700L;
-				Assert.AreEqual(days, KingdomRules.ElapsedDays(now - start));
-				Assert.AreEqual(start + KingdomRules.TicksPerDay * days, KingdomRules.AdvanceCheckpoint(start, now));
+				ClassicAssert.AreEqual(days, KingdomRules.ElapsedDays(now - start));
+				ClassicAssert.AreEqual(start + KingdomRules.TicksPerDay * days, KingdomRules.AdvanceCheckpoint(start, now));
 			}
 		}
 
@@ -232,10 +233,10 @@ namespace ThousandAndFirst.Tests
 				System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static);
 			foreach (System.Reflection.MethodInfo method in methods)
 			{
-				Assert.AreNotEqual("HeartbeatDays", method.Name, "the capped day count came back");
-				Assert.AreNotEqual("HeartbeatCheckpoint", method.Name, "the forgiving checkpoint came back");
+				ClassicAssert.AreNotEqual("HeartbeatDays", method.Name, "the capped day count came back");
+				ClassicAssert.AreNotEqual("HeartbeatCheckpoint", method.Name, "the forgiving checkpoint came back");
 			}
-			Assert.IsNull(typeof(KingdomRules).GetField("LegacyAbsenceCap"), "the absence cap came back");
+			ClassicAssert.IsNull(typeof(KingdomRules).GetField("LegacyAbsenceCap"), "the absence cap came back");
 		}
 
 		[TestCase(0L, 0)]
@@ -248,7 +249,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// The same table the capped pair was pinned at, with the one row that used to read 3
 			// now reading 100. That row IS the rework: a hundred days away is a hundred days.
-			Assert.AreEqual(expected, KingdomRules.ElapsedDays(elapsed));
+			ClassicAssert.AreEqual(expected, KingdomRules.ElapsedDays(elapsed));
 		}
 
 		[Test]
@@ -261,8 +262,8 @@ namespace ThousandAndFirst.Tests
 			// to be reordered to do it -- under the retired cap this read three days and nobody
 			// could see the bug.
 			long anOldWorld = KingdomRules.TicksPerDay * 250;
-			Assert.AreEqual(250, KingdomRules.ElapsedDays(anOldWorld - 0L));
-			Assert.AreEqual(0, KingdomRules.ElapsedDays(anOldWorld - anOldWorld));
+			ClassicAssert.AreEqual(250, KingdomRules.ElapsedDays(anOldWorld - 0L));
+			ClassicAssert.AreEqual(0, KingdomRules.ElapsedDays(anOldWorld - anOldWorld));
 		}
 
 		[Test]
@@ -272,8 +273,8 @@ namespace ThousandAndFirst.Tests
 			// deep a cushion the discretionary spenders leave behind. It says nothing about how
 			// much elapsed time anything is willing to look at, and the proof is that the upkeep
 			// bill ignores it entirely.
-			Assert.AreEqual(3, KingdomRules.ReserveDays);
-			Assert.AreEqual(KingdomRules.UpkeepDrams(20) * 10,
+			ClassicAssert.AreEqual(3, KingdomRules.ReserveDays);
+			ClassicAssert.AreEqual(KingdomRules.UpkeepDrams(20) * 10,
 				KingdomRules.UpkeepForElapsed(20, KingdomRules.TicksPerDay * 10),
 				"the reserve depth leaked into the bill");
 		}
@@ -291,7 +292,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(-4, 100, 0)]
 		public void ActivityDays(int days, int effectiveness, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.ActivityDays(days, effectiveness));
+			ClassicAssert.AreEqual(expected, KingdomRules.ActivityDays(days, effectiveness));
 		}
 
 		[Test]
@@ -301,7 +302,7 @@ namespace ThousandAndFirst.Tests
 			// working days than there were days.
 			for (int effectiveness = 0; effectiveness <= 200; effectiveness += 25)
 			{
-				Assert.LessOrEqual(KingdomRules.ActivityDays(40, effectiveness), 40);
+				ClassicAssert.LessOrEqual(KingdomRules.ActivityDays(40, effectiveness), 40);
 			}
 		}
 
@@ -314,7 +315,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(-20L, 100, 0L)]
 		public void LabouredTicks(long elapsed, int effectiveness, long expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.LabouredTicks(elapsed, effectiveness));
+			ClassicAssert.AreEqual(expected, KingdomRules.LabouredTicks(elapsed, effectiveness));
 		}
 
 		[Test]
@@ -322,8 +323,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// Scaled by halves and quarters rather than multiplied first, so a very long stretch
 			// gives an answer instead of a wrapped one.
-			Assert.AreEqual(long.MaxValue / 2, KingdomRules.LabouredTicks(long.MaxValue, 50), 1L);
-			Assert.GreaterOrEqual(KingdomRules.LabouredTicks(long.MaxValue, 99), 0L);
+			ClassicAssert.AreEqual(long.MaxValue / 2, KingdomRules.LabouredTicks(long.MaxValue, 50), 1L);
+			ClassicAssert.GreaterOrEqual(KingdomRules.LabouredTicks(long.MaxValue, 99), 0L);
 		}
 
 		[TestCase(0, 0)]
@@ -333,7 +334,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(-3, 0)]
 		public void RaisingEffectiveness(int freeHands, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.RaisingEffectiveness(freeHands));
+			ClassicAssert.AreEqual(expected, KingdomRules.RaisingEffectiveness(freeHands));
 		}
 
 		[Test]
@@ -341,8 +342,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// The author's ruling: a scaffold nobody works on does not rise. Stated here as the
 			// arithmetic the scaffold reads -- no hands, no labour ticks, at any elapsed.
-			Assert.AreEqual(0, KingdomRules.RaisingEffectiveness(0));
-			Assert.AreEqual(0L, KingdomRules.LabouredTicks(KingdomRules.TicksPerDay * 400, KingdomRules.RaisingEffectiveness(0)));
+			ClassicAssert.AreEqual(0, KingdomRules.RaisingEffectiveness(0));
+			ClassicAssert.AreEqual(0L, KingdomRules.LabouredTicks(KingdomRules.TicksPerDay * 400, KingdomRules.RaisingEffectiveness(0)));
 		}
 
 		[Test]
@@ -354,11 +355,11 @@ namespace ThousandAndFirst.Tests
 			// does not quietly slow every build in the game), half a crew takes twice as long,
 			// and an empty settlement never gets there at any length of absence.
 			long authored = 3600L;
-			Assert.AreEqual(authored, KingdomRules.LabouredTicks(authored, KingdomRules.RaisingEffectiveness(KingdomRules.RaisingHandsWanted)));
-			Assert.AreEqual(authored, KingdomRules.LabouredTicks(authored * 2, KingdomRules.RaisingEffectiveness(1)));
+			ClassicAssert.AreEqual(authored, KingdomRules.LabouredTicks(authored, KingdomRules.RaisingEffectiveness(KingdomRules.RaisingHandsWanted)));
+			ClassicAssert.AreEqual(authored, KingdomRules.LabouredTicks(authored * 2, KingdomRules.RaisingEffectiveness(1)));
 			foreach (long elapsed in new long[4] { authored, authored * 10, KingdomRules.TicksPerDay * 400, KingdomRules.TicksPerDay * 4000 })
 			{
-				Assert.AreEqual(0L, KingdomRules.LabouredTicks(elapsed, KingdomRules.RaisingEffectiveness(0)),
+				ClassicAssert.AreEqual(0L, KingdomRules.LabouredTicks(elapsed, KingdomRules.RaisingEffectiveness(0)),
 					"an empty settlement raised something over " + elapsed + " ticks");
 			}
 		}
@@ -366,8 +367,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RaisingShortfallLine_SaysNothingWhenTheCrewIsWhole()
 		{
-			Assert.IsNull(KingdomRules.RaisingShortfallLine("stone house", KingdomRules.RaisingHandsWanted));
-			Assert.IsNull(KingdomRules.RaisingShortfallLine("stone house", KingdomRules.RaisingHandsWanted + 3));
+			ClassicAssert.IsNull(KingdomRules.RaisingShortfallLine("stone house", KingdomRules.RaisingHandsWanted));
+			ClassicAssert.IsNull(KingdomRules.RaisingShortfallLine("stone house", KingdomRules.RaisingHandsWanted + 3));
 		}
 
 		[Test]
@@ -378,7 +379,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("nobody", none);
 			string few = KingdomRules.RaisingShortfallLine("stone house", 1);
 			StringAssert.Contains("stone house", few);
-			Assert.AreNotEqual(none, few, "an empty crew and a short one give the founder the same sentence");
+			ClassicAssert.AreNotEqual(none, few, "an empty crew and a short one give the founder the same sentence");
 		}
 
 		[TestCase(GrowthStage.Camp, 1)]
@@ -388,7 +389,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(GrowthStage.City, 7)]
 		public void ShopTierForStage(GrowthStage stage, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.ShopTierForStage(stage));
+			ClassicAssert.AreEqual(expected, KingdomRules.ShopTierForStage(stage));
 		}
 
 		[TestCase(0, 0, false)]
@@ -398,27 +399,27 @@ namespace ThousandAndFirst.Tests
 		[TestCase(10, 2, false)]
 		public void HasRoomToHouse(int population, int beds, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.HasRoomToHouse(population, beds));
+			ClassicAssert.AreEqual(expected, KingdomRules.HasRoomToHouse(population, beds));
 		}
 
 		[Test]
 		public void AssignCrewFillsInPriorityOrder()
 		{
 			int[] crew = KingdomRules.AssignCrew(5, new int[3] { 2, 2, 2 });
-			Assert.AreEqual(2, crew[0]);
-			Assert.AreEqual(2, crew[1]);
-			Assert.AreEqual(1, crew[2], "the last work runs shorthanded on what is left");
+			ClassicAssert.AreEqual(2, crew[0]);
+			ClassicAssert.AreEqual(2, crew[1]);
+			ClassicAssert.AreEqual(1, crew[2], "the last work runs shorthanded on what is left");
 
 			int[] threshold = KingdomRules.AssignCrew(5, new int[3] { 2, 2, 2 }, new bool[3] { false, false, true });
-			Assert.AreEqual(0, threshold[2], "an all-or-nothing work takes nobody rather than run short");
+			ClassicAssert.AreEqual(0, threshold[2], "an all-or-nothing work takes nobody rather than run short");
 
 			int[] spill = KingdomRules.AssignCrew(5, new int[3] { 2, 4, 1 }, new bool[3] { false, true, false });
-			Assert.AreEqual(2, spill[0]);
-			Assert.AreEqual(0, spill[1], "threshold work skipped");
-			Assert.AreEqual(1, spill[2], "hands it refused pass down the line");
+			ClassicAssert.AreEqual(2, spill[0]);
+			ClassicAssert.AreEqual(0, spill[1], "threshold work skipped");
+			ClassicAssert.AreEqual(1, spill[2], "hands it refused pass down the line");
 
-			Assert.AreEqual(0, KingdomRules.AssignCrew(5, null).Length);
-			Assert.AreEqual(0, KingdomRules.AssignCrew(-3, new int[1] { 1 })[0]);
+			ClassicAssert.AreEqual(0, KingdomRules.AssignCrew(5, null).Length);
+			ClassicAssert.AreEqual(0, KingdomRules.AssignCrew(-3, new int[1] { 1 })[0]);
 		}
 
 		[TestCase(0, 0, 100)]
@@ -430,7 +431,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(2, 3, 66)]
 		public void CrewEffectiveness(int assigned, int needed, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.CrewEffectiveness(assigned, needed));
+			ClassicAssert.AreEqual(expected, KingdomRules.CrewEffectiveness(assigned, needed));
 		}
 
 		[TestCase("threshold", true)]
@@ -438,7 +439,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, false)]
 		public void IsThresholdManning(string manning, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.IsThresholdManning(manning));
+			ClassicAssert.AreEqual(expected, KingdomRules.IsThresholdManning(manning));
 		}
 
 		[TestCase(10000L, KingdomRules.GatePolicy.Open, KingdomRules.StoresPolicy.Plenty, 10000L)]
@@ -447,7 +448,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(10000L, KingdomRules.GatePolicy.Guarded, KingdomRules.StoresPolicy.Thrift, 18200L)]
 		public void PolicyInterval(long baseInterval, KingdomRules.GatePolicy gate, KingdomRules.StoresPolicy stores, long expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.PolicyInterval(baseInterval, gate, stores));
+			ClassicAssert.AreEqual(expected, KingdomRules.PolicyInterval(baseInterval, gate, stores));
 		}
 
 		[TestCase(12, KingdomRules.StoresPolicy.Plenty, 12)]
@@ -455,7 +456,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(0, KingdomRules.StoresPolicy.Thrift, 0)]
 		public void PolicyUpkeep(int baseUpkeep, KingdomRules.StoresPolicy stores, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.PolicyUpkeep(baseUpkeep, stores));
+			ClassicAssert.AreEqual(expected, KingdomRules.PolicyUpkeep(baseUpkeep, stores));
 		}
 
 		[TestCase(4, 1200L, KingdomRules.StoresPolicy.Thrift)]
@@ -468,14 +469,14 @@ namespace ThousandAndFirst.Tests
 			// Policy applies to the daily rate before the days multiply, so cost never changes
 			// with how often the founder walks in.
 			int expected = KingdomRules.PolicyUpkeep(KingdomRules.UpkeepDrams(population), stores) * KingdomRules.ElapsedDays(elapsed);
-			Assert.AreEqual(expected, KingdomRules.PolicyUpkeepForElapsed(population, elapsed, stores));
+			ClassicAssert.AreEqual(expected, KingdomRules.PolicyUpkeepForElapsed(population, elapsed, stores));
 		}
 
 		[Test]
 		public void PolicyUpkeepForElapsed_ThriftAlwaysCostsLessOrTheSame()
 		{
 			long elapsed = KingdomRules.TicksPerDay * 3;
-			Assert.LessOrEqual(
+			ClassicAssert.LessOrEqual(
 				KingdomRules.PolicyUpkeepForElapsed(40, elapsed, KingdomRules.StoresPolicy.Thrift),
 				KingdomRules.PolicyUpkeepForElapsed(40, elapsed, KingdomRules.StoresPolicy.Plenty));
 		}
@@ -488,7 +489,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(6, 9, 28)]
 		public void TributeDemand(int baseDrams, int deferred, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.TributeDemand(baseDrams, deferred));
+			ClassicAssert.AreEqual(expected, KingdomRules.TributeDemand(baseDrams, deferred));
 		}
 
 		[TestCase(250, 0, true)]
@@ -498,7 +499,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(-500, 0, false)]
 		public void CanTalkDown(int standing, int deferred, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.CanTalkDown(standing, deferred));
+			ClassicAssert.AreEqual(expected, KingdomRules.CanTalkDown(standing, deferred));
 		}
 
 		[TestCase(0, 0, 0, 0, 0, false, 0, KingdomRules.PetitionKind.None)]
@@ -510,7 +511,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(100, 8, 20, 0, 0, true, 0, KingdomRules.PetitionKind.None)]
 		public void ChoosePetition(int stored, int pop, int beds, int idle, int worst, bool shrine, int dead, KingdomRules.PetitionKind expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.ChoosePetition(stored, pop, beds, idle, worst, shrine, dead));
+			ClassicAssert.AreEqual(expected, KingdomRules.ChoosePetition(stored, pop, beds, idle, worst, shrine, dead));
 		}
 
 		[TestCase(KingdomRules.PetitionKind.Thirst, 40, 40, 8, 20, 0, 0, true, true)]
@@ -526,7 +527,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomRules.PetitionKind.None, 0, 0, 8, 20, 0, 0, true, false)]
 		public void IsPetitionMet(KingdomRules.PetitionKind kind, int target, int stored, int pop, int beds, int idle, int standing, bool shrine, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.IsPetitionMet(kind, target, stored, pop, beds, idle, standing, shrine));
+			ClassicAssert.AreEqual(expected, KingdomRules.IsPetitionMet(kind, target, stored, pop, beds, idle, standing, shrine));
 		}
 
 		[TestCase(0)]
@@ -541,7 +542,7 @@ namespace ThousandAndFirst.Tests
 			{
 				expected = 16;
 			}
-			Assert.AreEqual(expected, KingdomRules.ThirstPetitionTarget(population));
+			ClassicAssert.AreEqual(expected, KingdomRules.ThirstPetitionTarget(population));
 		}
 
 		[TestCase(1000L, 2000L, 500L, 0)]
@@ -552,7 +553,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(2000L, 2000L, 0L, 0)]
 		public void BankedCycles(long now, long due, long interval, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.BankedCycles(now, due, interval));
+			ClassicAssert.AreEqual(expected, KingdomRules.BankedCycles(now, due, interval));
 		}
 
 		[TestCase("the cistern you raised", 100L, "the hills", "word of the cistern you raised reached the hills")]
@@ -561,42 +562,42 @@ namespace ThousandAndFirst.Tests
 		[TestCase("", 0L, "the hills", "word of shared water reached the hills")]
 		public void ArrivalReason(string deed, long age, string origin, string expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.ArrivalReason(deed, age, origin));
+			ClassicAssert.AreEqual(expected, KingdomRules.ArrivalReason(deed, age, origin));
 		}
 
 		[Test]
 		public void LedgerDigestReportsWhatMoved()
 		{
 			KingdomLedger ledger = new KingdomLedger();
-			Assert.IsFalse(ledger.Any, "an empty ledger has nothing to report");
+			ClassicAssert.IsFalse(ledger.Any, "an empty ledger has nothing to report");
 			ledger.Arrivals = 2;
 			ledger.Delivered = 6;
 			ledger.UpkeepDrawn = 3;
 			ledger.Note("something happened");
-			Assert.IsTrue(ledger.Any);
+			ClassicAssert.IsTrue(ledger.Any);
 			string digest = ledger.Digest("Kavvat", 4);
-			Assert.IsTrue(digest.Contains("Kavvat"));
-			Assert.IsTrue(digest.Contains("4 days"));
-			Assert.IsTrue(digest.Contains("something happened"));
-			Assert.IsTrue(digest.Contains("6 delivered under charter"));
+			ClassicAssert.IsTrue(digest.Contains("Kavvat"));
+			ClassicAssert.IsTrue(digest.Contains("4 days"));
+			ClassicAssert.IsTrue(digest.Contains("something happened"));
+			ClassicAssert.IsTrue(digest.Contains("6 delivered under charter"));
 			ledger.Reset();
-			Assert.IsFalse(ledger.Any, "reset clears the ledger between visits");
-			Assert.IsTrue(ledger.Digest("Kavvat", 1).Contains("nothing moved"));
+			ClassicAssert.IsFalse(ledger.Any, "reset clears the ledger between visits");
+			ClassicAssert.IsTrue(ledger.Digest("Kavvat", 1).Contains("nothing moved"));
 		}
 
 		[Test]
 		public void LedgerAccountingAloneIsReportable()
 		{
 			KingdomLedger ledger = new KingdomLedger();
-			Assert.IsFalse(ledger.Any);
+			ClassicAssert.IsFalse(ledger.Any);
 			ledger.Fetched = 4;
-			Assert.IsTrue(ledger.Any);
+			ClassicAssert.IsTrue(ledger.Any);
 			ledger.Reset();
 			ledger.UpkeepDrawn = 1;
-			Assert.IsTrue(ledger.Any);
+			ClassicAssert.IsTrue(ledger.Any);
 			ledger.Reset();
 			ledger.ArrivalCost = 2;
-			Assert.IsTrue(ledger.Any);
+			ClassicAssert.IsTrue(ledger.Any);
 		}
 
 		[TestCase("cask rack (holds 64 drams)", "cask rack")]
@@ -606,7 +607,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, null)]
 		public void StripParenthetical(string input, string expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.StripParenthetical(input));
+			ClassicAssert.AreEqual(expected, KingdomRules.StripParenthetical(input));
 		}
 
 		[Test]
@@ -614,9 +615,9 @@ namespace ThousandAndFirst.Tests
 		{
 			string a = KingdomRules.ComposeOutsider("the well ran dry", 0);
 			string b = KingdomRules.ComposeOutsider("the well ran dry", 6);
-			Assert.AreNotEqual(a, b);
-			Assert.IsTrue(a.StartsWith("It is said that"));
-			Assert.IsTrue(b.StartsWith("It is said that"));
+			ClassicAssert.AreNotEqual(a, b);
+			ClassicAssert.IsTrue(a.StartsWith("It is said that"));
+			ClassicAssert.IsTrue(b.StartsWith("It is said that"));
 		}
 
 		[TestCase(0, 0, GrowthStage.Camp)]
@@ -634,7 +635,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(100, 0, GrowthStage.Camp)]
 		public void StageFor(int population, int capacity, GrowthStage expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.StageFor(population, capacity));
+			ClassicAssert.AreEqual(expected, KingdomRules.StageFor(population, capacity));
 		}
 
 		[TestCase(GrowthStage.Camp, 3, 0, 10, false, 4, "a new camp: three people, ten drams, nothing built")]
@@ -646,18 +647,18 @@ namespace ThousandAndFirst.Tests
 		[TestCase(GrowthStage.Camp, -5, -2, -10, false, 0, "negative inputs cannot add vigour")]
 		public void SealedVigour(GrowthStage stage, int population, int defence, int stored, bool withered, int expected, string why)
 		{
-			Assert.AreEqual(expected, KingdomRules.SealedVigour(stage, population, defence, stored, withered), why);
+			ClassicAssert.AreEqual(expected, KingdomRules.SealedVigour(stage, population, defence, stored, withered), why);
 		}
 
 		[Test]
 		public void SealedVigourIsBoundedAgainstOverflowAndHoarding()
 		{
-			Assert.AreEqual(100, KingdomRules.SealedVigour(GrowthStage.City, int.MaxValue, int.MaxValue, int.MaxValue, false), "no input combination may exceed the ceiling");
-			Assert.AreEqual(0, KingdomRules.SealedVigour(GrowthStage.Camp, int.MinValue, int.MinValue, int.MinValue, false), "no input combination may go below zero");
+			ClassicAssert.AreEqual(100, KingdomRules.SealedVigour(GrowthStage.City, int.MaxValue, int.MaxValue, int.MaxValue, false), "no input combination may exceed the ceiling");
+			ClassicAssert.AreEqual(0, KingdomRules.SealedVigour(GrowthStage.Camp, int.MinValue, int.MinValue, int.MinValue, false), "no input combination may go below zero");
 
 			int honest = KingdomRules.SealedVigour(GrowthStage.Town, 30, 15, 200, false);
 			int hoarded = KingdomRules.SealedVigour(GrowthStage.Town, 30, 15, 2000000, false);
-			Assert.AreEqual(honest, hoarded, "stores past the cap must not buy a better inheritance, however much is banked before the end");
+			ClassicAssert.AreEqual(honest, hoarded, "stores past the cap must not buy a better inheritance, however much is banked before the end");
 		}
 
 		[Test]
@@ -667,7 +668,7 @@ namespace ThousandAndFirst.Tests
 			for (int population = 0; population <= 60; population++)
 			{
 				int vigour = KingdomRules.SealedVigour(GrowthStage.Village, population, 4, 120, false);
-				Assert.IsTrue(vigour >= previous, "one more settler must never lower the seal (at population " + population + ")");
+				ClassicAssert.IsTrue(vigour >= previous, "one more settler must never lower the seal (at population " + population + ")");
 				previous = vigour;
 			}
 
@@ -675,7 +676,7 @@ namespace ThousandAndFirst.Tests
 			for (int defence = 0; defence <= 40; defence++)
 			{
 				int vigour = KingdomRules.SealedVigour(GrowthStage.Village, 12, defence, 120, false);
-				Assert.IsTrue(vigour >= previous, "one more point of defence must never lower the seal (at defence " + defence + ")");
+				ClassicAssert.IsTrue(vigour >= previous, "one more point of defence must never lower the seal (at defence " + defence + ")");
 				previous = vigour;
 			}
 
@@ -683,7 +684,7 @@ namespace ThousandAndFirst.Tests
 			for (GrowthStage stage = GrowthStage.Camp; stage <= GrowthStage.City; stage++)
 			{
 				int vigour = KingdomRules.SealedVigour(stage, 12, 4, 120, false);
-				Assert.IsTrue(vigour >= previous, "growing a stage must never lower the seal (at " + stage + ")");
+				ClassicAssert.IsTrue(vigour >= previous, "growing a stage must never lower the seal (at " + stage + ")");
 				previous = vigour;
 			}
 		}
@@ -694,19 +695,19 @@ namespace ThousandAndFirst.Tests
 			for (long seed = -5000L; seed <= 5000L; seed += 37L)
 			{
 				int first = KingdomRules.InterregnumRoll(seed);
-				Assert.AreEqual(first, KingdomRules.InterregnumRoll(seed), "a legacy must always draw the same fate, or promotion could be rerolled for a better inheritance");
-				Assert.IsTrue(first >= 0 && first <= 99, "roll out of range at seed " + seed);
+				ClassicAssert.AreEqual(first, KingdomRules.InterregnumRoll(seed), "a legacy must always draw the same fate, or promotion could be rerolled for a better inheritance");
+				ClassicAssert.IsTrue(first >= 0 && first <= 99, "roll out of range at seed " + seed);
 			}
 
-			Assert.AreEqual(KingdomRules.InterregnumRoll(long.MaxValue), KingdomRules.InterregnumRoll(long.MaxValue), "extreme seeds stay deterministic");
-			Assert.IsTrue(KingdomRules.InterregnumRoll(long.MinValue) >= 0, "extreme seeds stay in range");
+			ClassicAssert.AreEqual(KingdomRules.InterregnumRoll(long.MaxValue), KingdomRules.InterregnumRoll(long.MaxValue), "extreme seeds stay deterministic");
+			ClassicAssert.IsTrue(KingdomRules.InterregnumRoll(long.MinValue) >= 0, "extreme seeds stay in range");
 
 			var seen = new System.Collections.Generic.HashSet<int>();
 			for (long seed = 0L; seed < 400L; seed++)
 			{
 				seen.Add(KingdomRules.InterregnumRoll(seed));
 			}
-			Assert.IsTrue(seen.Count > 60, "the draw must actually vary between lineages, saw only " + seen.Count + " distinct values");
+			ClassicAssert.IsTrue(seen.Count > 60, "the draw must actually vary between lineages, saw only " + seen.Count + " distinct values");
 		}
 
 		[TestCase(100, 0, 12, KingdomRules.InheritedState.Held)]
@@ -719,15 +720,15 @@ namespace ThousandAndFirst.Tests
 		[TestCase(0, 99, 0, KingdomRules.InheritedState.Ruins)]
 		public void ResolveInheritedState(int vigour, int roll, int population, KingdomRules.InheritedState expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.ResolveInheritedState(vigour, roll, population));
+			ClassicAssert.AreEqual(expected, KingdomRules.ResolveInheritedState(vigour, roll, population));
 		}
 
 		[Test]
 		public void TheEmptySettlementFloorOverridesTheDraw()
 		{
-			Assert.AreEqual(KingdomRules.InheritedState.Abandoned, KingdomRules.ResolveInheritedState(100, 0, 0), "a settlement sealed with nobody in it is never found inhabited");
-			Assert.AreEqual(KingdomRules.InheritedState.Held, KingdomRules.ResolveInheritedState(100, 99, 12), "a city sealed at full vigour survives the worst draw there is");
-			Assert.AreEqual(KingdomRules.InheritedState.Ruins, KingdomRules.ResolveInheritedState(0, 40, 0), "a settlement sealed at nothing survives no draw at all");
+			ClassicAssert.AreEqual(KingdomRules.InheritedState.Abandoned, KingdomRules.ResolveInheritedState(100, 0, 0), "a settlement sealed with nobody in it is never found inhabited");
+			ClassicAssert.AreEqual(KingdomRules.InheritedState.Held, KingdomRules.ResolveInheritedState(100, 99, 12), "a city sealed at full vigour survives the worst draw there is");
+			ClassicAssert.AreEqual(KingdomRules.InheritedState.Ruins, KingdomRules.ResolveInheritedState(0, 40, 0), "a settlement sealed at nothing survives no draw at all");
 		}
 
 		/// <summary>
@@ -757,7 +758,7 @@ namespace ThousandAndFirst.Tests
 							for (int roll = 0; roll <= 99; roll += 11)
 							{
 								KingdomRules.InheritedState state = KingdomRules.ResolveInheritedState(vigour, roll, population);
-								Assert.AreNotEqual(KingdomRules.InheritedState.Held, state, "a withered seal resolved to Held at vigour " + vigour + ", roll " + roll);
+								ClassicAssert.AreNotEqual(KingdomRules.InheritedState.Held, state, "a withered seal resolved to Held at vigour " + vigour + ", roll " + roll);
 								if (state == KingdomRules.InheritedState.Faded)
 								{
 									sawFaded = true;
@@ -767,19 +768,19 @@ namespace ThousandAndFirst.Tests
 					}
 				}
 			}
-			Assert.IsTrue(highest < KingdomRules.HoldsAt, "the withered ceiling (" + highest + ") must sit below the holding threshold (" + KingdomRules.HoldsAt + ") for the invariant to hold without a branch");
-			Assert.IsTrue(sawFaded, "a large withered settlement must still be able to be found thinned but lived in, or the ladder has lost a rung");
+			ClassicAssert.IsTrue(highest < KingdomRules.HoldsAt, "the withered ceiling (" + highest + ") must sit below the holding threshold (" + KingdomRules.HoldsAt + ") for the invariant to hold without a branch");
+			ClassicAssert.IsTrue(sawFaded, "a large withered settlement must still be able to be found thinned but lived in, or the ladder has lost a rung");
 		}
 
 		[Test]
 		public void SealBoundariesSitExactlyWhereTheConstantsSay()
 		{
-			Assert.AreEqual(KingdomRules.InheritedState.Held, KingdomRules.ResolveInheritedState(KingdomRules.HoldsAt, 0, 12));
-			Assert.AreEqual(KingdomRules.InheritedState.Faded, KingdomRules.ResolveInheritedState(KingdomRules.HoldsAt - 1, 0, 12));
-			Assert.AreEqual(KingdomRules.InheritedState.Faded, KingdomRules.ResolveInheritedState(KingdomRules.FadesAt, 0, 12));
-			Assert.AreEqual(KingdomRules.InheritedState.Abandoned, KingdomRules.ResolveInheritedState(KingdomRules.FadesAt - 1, 0, 12));
-			Assert.AreEqual(KingdomRules.InheritedState.Abandoned, KingdomRules.ResolveInheritedState(KingdomRules.EmptiesAt, 0, 12));
-			Assert.AreEqual(KingdomRules.InheritedState.Ruins, KingdomRules.ResolveInheritedState(KingdomRules.EmptiesAt - 1, 0, 12));
+			ClassicAssert.AreEqual(KingdomRules.InheritedState.Held, KingdomRules.ResolveInheritedState(KingdomRules.HoldsAt, 0, 12));
+			ClassicAssert.AreEqual(KingdomRules.InheritedState.Faded, KingdomRules.ResolveInheritedState(KingdomRules.HoldsAt - 1, 0, 12));
+			ClassicAssert.AreEqual(KingdomRules.InheritedState.Faded, KingdomRules.ResolveInheritedState(KingdomRules.FadesAt, 0, 12));
+			ClassicAssert.AreEqual(KingdomRules.InheritedState.Abandoned, KingdomRules.ResolveInheritedState(KingdomRules.FadesAt - 1, 0, 12));
+			ClassicAssert.AreEqual(KingdomRules.InheritedState.Abandoned, KingdomRules.ResolveInheritedState(KingdomRules.EmptiesAt, 0, 12));
+			ClassicAssert.AreEqual(KingdomRules.InheritedState.Ruins, KingdomRules.ResolveInheritedState(KingdomRules.EmptiesAt - 1, 0, 12));
 		}
 
 		[Test]
@@ -789,9 +790,9 @@ namespace ThousandAndFirst.Tests
 			int justUnder = KingdomRules.SealedVigour(GrowthStage.Camp, 0, 0, atCap - KingdomRules.VigourWaterPerPoint, false);
 			int exactly = KingdomRules.SealedVigour(GrowthStage.Camp, 0, 0, atCap, false);
 			int far = KingdomRules.SealedVigour(GrowthStage.Camp, 0, 0, atCap * 100, false);
-			Assert.AreEqual(KingdomRules.VigourFromWaterCap - 1, justUnder, "one point below the cap");
-			Assert.AreEqual(KingdomRules.VigourFromWaterCap, exactly, "the cap is reached exactly at " + atCap + " drams");
-			Assert.AreEqual(KingdomRules.VigourFromWaterCap, far, "and never exceeded, however much is hoarded");
+			ClassicAssert.AreEqual(KingdomRules.VigourFromWaterCap - 1, justUnder, "one point below the cap");
+			ClassicAssert.AreEqual(KingdomRules.VigourFromWaterCap, exactly, "the cap is reached exactly at " + atCap + " drams");
+			ClassicAssert.AreEqual(KingdomRules.VigourFromWaterCap, far, "and never exceeded, however much is hoarded");
 		}
 
 		/// <summary>
@@ -827,15 +828,15 @@ namespace ThousandAndFirst.Tests
 							for (int population = 0; population <= KingdomRules.MaxPopulation; population++)
 							{
 								int here = KingdomRules.SealedVigour(stage, population, defence, stored, withered);
-								Assert.IsTrue(here >= 0 && here <= KingdomRules.MaxSealedVigour, "seal out of range at " + stage + "/" + population + "/" + defence + "/" + stored);
+								ClassicAssert.IsTrue(here >= 0 && here <= KingdomRules.MaxSealedVigour, "seal out of range at " + stage + "/" + population + "/" + defence + "/" + stored);
 
 								string where = " at " + stage + ", pop " + population + ", defence " + defence + ", stored " + stored + ", withered " + withered;
-								Assert.IsTrue(KingdomRules.SealedVigour(stage, population + 1, defence, stored, withered) >= here, "one more settler lowered the seal" + where);
-								Assert.IsTrue(KingdomRules.SealedVigour(stage, population, defence + 1, stored, withered) >= here, "one more point of defence lowered the seal" + where);
-								Assert.IsTrue(KingdomRules.SealedVigour(stage, population, defence, stored + 1, withered) >= here, "one more dram lowered the seal" + where);
+								ClassicAssert.IsTrue(KingdomRules.SealedVigour(stage, population + 1, defence, stored, withered) >= here, "one more settler lowered the seal" + where);
+								ClassicAssert.IsTrue(KingdomRules.SealedVigour(stage, population, defence + 1, stored, withered) >= here, "one more point of defence lowered the seal" + where);
+								ClassicAssert.IsTrue(KingdomRules.SealedVigour(stage, population, defence, stored + 1, withered) >= here, "one more dram lowered the seal" + where);
 								if (stage < GrowthStage.City)
 								{
-									Assert.IsTrue(KingdomRules.SealedVigour(stage + 1, population, defence, stored, withered) >= here, "growing a stage lowered the seal" + where);
+									ClassicAssert.IsTrue(KingdomRules.SealedVigour(stage + 1, population, defence, stored, withered) >= here, "growing a stage lowered the seal" + where);
 								}
 							}
 						}
@@ -850,13 +851,13 @@ namespace ThousandAndFirst.Tests
 			int best = KingdomRules.SealedVigour(GrowthStage.Town, 30, 15, 300, false);
 			KingdomRules.InheritedState atBestDraw = KingdomRules.ResolveInheritedState(best, 0, 30);
 			KingdomRules.InheritedState atWorstDraw = KingdomRules.ResolveInheritedState(best, 99, 30);
-			Assert.AreNotEqual(atBestDraw, atWorstDraw, "the swing must actually move a mid-range seal");
+			ClassicAssert.AreNotEqual(atBestDraw, atWorstDraw, "the swing must actually move a mid-range seal");
 
 			// The constant is named for the points it costs; at /100 the worst draw could only
 			// ever take 39 of a declared 40, which is a small lie every later reader re-derives.
 			int justAboveThreshold = KingdomRules.HoldsAt + KingdomRules.InterregnumSwing;
-			Assert.AreEqual(KingdomRules.InheritedState.Held, KingdomRules.ResolveInheritedState(justAboveThreshold, 99, 12), "a seal exactly the swing above the threshold survives the worst draw");
-			Assert.AreEqual(KingdomRules.InheritedState.Faded, KingdomRules.ResolveInheritedState(justAboveThreshold - 1, 99, 12), "and one point below it does not");
+			ClassicAssert.AreEqual(KingdomRules.InheritedState.Held, KingdomRules.ResolveInheritedState(justAboveThreshold, 99, 12), "a seal exactly the swing above the threshold survives the worst draw");
+			ClassicAssert.AreEqual(KingdomRules.InheritedState.Faded, KingdomRules.ResolveInheritedState(justAboveThreshold - 1, 99, 12), "and one point below it does not");
 		}
 
 		[Test]
@@ -870,10 +871,10 @@ namespace ThousandAndFirst.Tests
 			};
 			foreach (KingdomRules.InheritedState state in garbage)
 			{
-				Assert.IsFalse(KingdomRules.IsKnownState(state), "unrecognised state " + (int)state);
-				Assert.AreEqual(0, KingdomRules.InheritedPopulation(40, state), "an unrecognised state must not hand back a population");
-				Assert.IsFalse(KingdomRules.AllWorksSurvive(state), "an unrecognised state must not promise intact works");
-				Assert.AreEqual(KingdomRules.RuinStandingFloorPercent, KingdomRules.StandingPercent(state, 0), "an unrecognised state must not promise intact structures");
+				ClassicAssert.IsFalse(KingdomRules.IsKnownState(state), "unrecognised state " + (int)state);
+				ClassicAssert.AreEqual(0, KingdomRules.InheritedPopulation(40, state), "an unrecognised state must not hand back a population");
+				ClassicAssert.IsFalse(KingdomRules.AllWorksSurvive(state), "an unrecognised state must not promise intact works");
+				ClassicAssert.AreEqual(KingdomRules.RuinStandingFloorPercent, KingdomRules.StandingPercent(state, 0), "an unrecognised state must not promise intact structures");
 			}
 		}
 
@@ -883,16 +884,16 @@ namespace ThousandAndFirst.Tests
 			int camp = KingdomRules.SealedVigour(GrowthStage.Camp, 12, 0, 0, false);
 			foreach (int garbage in new int[5] { -1, 5, 99, int.MinValue, int.MaxValue })
 			{
-				Assert.AreEqual(camp, KingdomRules.SealedVigour((GrowthStage)garbage, 12, 0, 0, false), "an out-of-domain stage (" + garbage + ") must contribute nothing, not the best case: clamping high values to City hands garbage a city's standing, which is the outcome the guard exists to prevent");
+				ClassicAssert.AreEqual(camp, KingdomRules.SealedVigour((GrowthStage)garbage, 12, 0, 0, false), "an out-of-domain stage (" + garbage + ") must contribute nothing, not the best case: clamping high values to City hands garbage a city's standing, which is the outcome the guard exists to prevent");
 			}
-			Assert.IsTrue(KingdomRules.SealedVigour((GrowthStage)int.MaxValue, 60, 40, 4000, false) < KingdomRules.SealedVigour(GrowthStage.City, 60, 40, 4000, false), "and must never match a real City");
+			ClassicAssert.IsTrue(KingdomRules.SealedVigour((GrowthStage)int.MaxValue, 60, 40, 4000, false) < KingdomRules.SealedVigour(GrowthStage.City, 60, 40, 4000, false), "and must never match a real City");
 		}
 
 		[Test]
 		public void ResolveInheritedStateClampsRatherThanThrows()
 		{
-			Assert.AreEqual(KingdomRules.InheritedState.Held, KingdomRules.ResolveInheritedState(int.MaxValue, int.MinValue, 12), "out-of-range inputs clamp");
-			Assert.AreEqual(KingdomRules.InheritedState.Ruins, KingdomRules.ResolveInheritedState(int.MinValue, int.MaxValue, 0), "and clamp the other way");
+			ClassicAssert.AreEqual(KingdomRules.InheritedState.Held, KingdomRules.ResolveInheritedState(int.MaxValue, int.MinValue, 12), "out-of-range inputs clamp");
+			ClassicAssert.AreEqual(KingdomRules.InheritedState.Ruins, KingdomRules.ResolveInheritedState(int.MinValue, int.MaxValue, 0), "and clamp the other way");
 		}
 
 		[Test]
@@ -904,7 +905,7 @@ namespace ThousandAndFirst.Tests
 				int roll = KingdomRules.InterregnumRoll(seed);
 				KingdomRules.InheritedState first = KingdomRules.ResolveInheritedState(vigour, roll, 30);
 				KingdomRules.InheritedState again = KingdomRules.ResolveInheritedState(vigour, KingdomRules.InterregnumRoll(seed), 30);
-				Assert.AreEqual(first, again, "resolving the same legacy twice must produce the same settlement, at seed " + seed);
+				ClassicAssert.AreEqual(first, again, "resolving the same legacy twice must produce the same settlement, at seed " + seed);
 			}
 		}
 
@@ -917,7 +918,7 @@ namespace ThousandAndFirst.Tests
 				for (int vigour = 0; vigour <= 100; vigour++)
 				{
 					KingdomRules.InheritedState state = KingdomRules.ResolveInheritedState(vigour, roll, 12);
-					Assert.IsTrue(state <= previous, "raising the seal must never worsen the outcome (vigour " + vigour + ", roll " + roll + ")");
+					ClassicAssert.IsTrue(state <= previous, "raising the seal must never worsen the outcome (vigour " + vigour + ", roll " + roll + ")");
 					previous = state;
 				}
 			}
@@ -931,7 +932,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(0, KingdomRules.InheritedState.Held, 0)]
 		public void InheritedPopulation(int population, KingdomRules.InheritedState state, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.InheritedPopulation(population, state));
+			ClassicAssert.AreEqual(expected, KingdomRules.InheritedPopulation(population, state));
 		}
 
 		[TestCase(KingdomRules.InheritedState.Held, true)]
@@ -940,31 +941,31 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomRules.InheritedState.Ruins, false)]
 		public void AllWorksSurvive(KingdomRules.InheritedState state, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.AllWorksSurvive(state));
+			ClassicAssert.AreEqual(expected, KingdomRules.AllWorksSurvive(state));
 		}
 
 		[Test]
 		public void OnlyRuinsTakeStructuresDownAndEvenThenNotAllOfThem()
 		{
-			Assert.AreEqual(100, KingdomRules.StandingPercent(KingdomRules.InheritedState.Held, 50));
-			Assert.AreEqual(100, KingdomRules.StandingPercent(KingdomRules.InheritedState.Faded, 50));
-			Assert.AreEqual(100, KingdomRules.StandingPercent(KingdomRules.InheritedState.Abandoned, 99), "abandoned is intact and derelict, never damaged - empty is the point of it");
+			ClassicAssert.AreEqual(100, KingdomRules.StandingPercent(KingdomRules.InheritedState.Held, 50));
+			ClassicAssert.AreEqual(100, KingdomRules.StandingPercent(KingdomRules.InheritedState.Faded, 50));
+			ClassicAssert.AreEqual(100, KingdomRules.StandingPercent(KingdomRules.InheritedState.Abandoned, 99), "abandoned is intact and derelict, never damaged - empty is the point of it");
 
-			Assert.AreEqual(KingdomRules.RuinStandingCeilingPercent, KingdomRules.StandingPercent(KingdomRules.InheritedState.Ruins, 0), "the kindest interregnum leaves the most standing");
-			Assert.AreEqual(KingdomRules.RuinStandingFloorPercent, KingdomRules.StandingPercent(KingdomRules.InheritedState.Ruins, 99), "the harshest leaves the least");
+			ClassicAssert.AreEqual(KingdomRules.RuinStandingCeilingPercent, KingdomRules.StandingPercent(KingdomRules.InheritedState.Ruins, 0), "the kindest interregnum leaves the most standing");
+			ClassicAssert.AreEqual(KingdomRules.RuinStandingFloorPercent, KingdomRules.StandingPercent(KingdomRules.InheritedState.Ruins, 99), "the harshest leaves the least");
 
 			int previous = 101;
 			for (int roll = 0; roll <= 99; roll++)
 			{
 				int standing = KingdomRules.StandingPercent(KingdomRules.InheritedState.Ruins, roll);
-				Assert.IsTrue(standing <= previous, "standing must never rise as adversity rises, at roll " + roll);
-				Assert.IsTrue(standing >= KingdomRules.RuinStandingFloorPercent, "a ruin must stay legible as a place, at roll " + roll);
-				Assert.IsTrue(standing <= KingdomRules.RuinStandingCeilingPercent, "a ruin must still read as ruined, at roll " + roll);
+				ClassicAssert.IsTrue(standing <= previous, "standing must never rise as adversity rises, at roll " + roll);
+				ClassicAssert.IsTrue(standing >= KingdomRules.RuinStandingFloorPercent, "a ruin must stay legible as a place, at roll " + roll);
+				ClassicAssert.IsTrue(standing <= KingdomRules.RuinStandingCeilingPercent, "a ruin must still read as ruined, at roll " + roll);
 				previous = standing;
 			}
 
-			Assert.AreEqual(KingdomRules.RuinStandingCeilingPercent, KingdomRules.StandingPercent(KingdomRules.InheritedState.Ruins, int.MinValue), "out-of-range rolls clamp");
-			Assert.AreEqual(KingdomRules.RuinStandingFloorPercent, KingdomRules.StandingPercent(KingdomRules.InheritedState.Ruins, int.MaxValue), "and clamp rather than wrap - a modulo would turn 150 into a mild 50");
+			ClassicAssert.AreEqual(KingdomRules.RuinStandingCeilingPercent, KingdomRules.StandingPercent(KingdomRules.InheritedState.Ruins, int.MinValue), "out-of-range rolls clamp");
+			ClassicAssert.AreEqual(KingdomRules.RuinStandingFloorPercent, KingdomRules.StandingPercent(KingdomRules.InheritedState.Ruins, int.MaxValue), "and clamp rather than wrap - a modulo would turn 150 into a mild 50");
 		}
 
 		[TestCase(0, 3, KingdomRules.RaidOutcome.Overrun)]
@@ -975,7 +976,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(11, 2, KingdomRules.RaidOutcome.Plundered)]
 		public void ResolveRaid(int defence, int raidSize, KingdomRules.RaidOutcome expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.ResolveRaid(defence, raidSize));
+			ClassicAssert.AreEqual(expected, KingdomRules.ResolveRaid(defence, raidSize));
 		}
 
 		[TestCase(24, 0, KingdomRules.RaidOutcome.Overrun, 24)]
@@ -985,7 +986,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(24, 12, KingdomRules.RaidOutcome.Repelled, 0)]
 		public void RaidPlunder(int baseDrams, int defence, KingdomRules.RaidOutcome outcome, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.RaidPlunder(baseDrams, defence, outcome));
+			ClassicAssert.AreEqual(expected, KingdomRules.RaidPlunder(baseDrams, defence, outcome));
 		}
 
 		// Hands, not heads; and a rate, not a windfall. One day of five free hands is ten drams,
@@ -1002,7 +1003,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(5, 100, 100, -2, 0)]
 		public void FetchableDrams(int hands, int openWater, int storageSpace, int days, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.FetchableDrams(hands, openWater, storageSpace, days));
+			ClassicAssert.AreEqual(expected, KingdomRules.FetchableDrams(hands, openWater, storageSpace, days));
 		}
 
 		[Test]
@@ -1013,7 +1014,7 @@ namespace ThousandAndFirst.Tests
 			// without limit. Zero elapsed days must fetch nothing, however many times it is asked.
 			for (int i = 0; i < 10; i++)
 			{
-				Assert.AreEqual(0, KingdomRules.FetchableDrams(20, 1000, 1000, 0));
+				ClassicAssert.AreEqual(0, KingdomRules.FetchableDrams(20, 1000, 1000, 0));
 			}
 		}
 
@@ -1022,8 +1023,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// Twenty citizens with fifteen crewing works fetch as five, not as twenty. Staffing a
 			// mill has to cost something or it is not a choice.
-			Assert.AreEqual(10, KingdomRules.FetchableDrams(5, 1000, 1000, 1));
-			Assert.Less(KingdomRules.FetchableDrams(5, 1000, 1000, 1), KingdomRules.FetchableDrams(20, 1000, 1000, 1));
+			ClassicAssert.AreEqual(10, KingdomRules.FetchableDrams(5, 1000, 1000, 1));
+			ClassicAssert.Less(KingdomRules.FetchableDrams(5, 1000, 1000, 1), KingdomRules.FetchableDrams(20, 1000, 1000, 1));
 		}
 
 		[Test]
@@ -1033,11 +1034,11 @@ namespace ThousandAndFirst.Tests
 			// stopped at the retired three-day cap while upkeep did not, every absence would be
 			// a guaranteed loss no staffing could answer -- which is the failure mode the
 			// uncapping is most likely to introduce.
-			Assert.AreEqual(2 * KingdomRules.FetchDramsPerSettler * 90,
+			ClassicAssert.AreEqual(2 * KingdomRules.FetchDramsPerSettler * 90,
 				KingdomRules.FetchableDrams(2, 100000, 100000, 90));
 			for (int days = 1; days <= 6; days++)
 			{
-				Assert.AreEqual(days * KingdomRules.FetchDramsPerSettler * 2,
+				ClassicAssert.AreEqual(days * KingdomRules.FetchDramsPerSettler * 2,
 					KingdomRules.FetchableDrams(2, 100000, 100000, days),
 					"day " + days + " of the absence fetched nothing");
 			}
@@ -1048,9 +1049,9 @@ namespace ThousandAndFirst.Tests
 		{
 			// Uncapping the clock must not uncap the haul: what is actually there and what will
 			// actually fit are the only ceilings, and they still bite at any length.
-			Assert.AreEqual(40, KingdomRules.FetchableDrams(20, 40, 100000, 400), "drank a pool that was not there");
-			Assert.AreEqual(15, KingdomRules.FetchableDrams(20, 100000, 15, 400), "stored more than the cisterns hold");
-			Assert.AreEqual(0, KingdomRules.FetchableDrams(20, 0, 100000, 400), "a dry site fetched something");
+			ClassicAssert.AreEqual(40, KingdomRules.FetchableDrams(20, 40, 100000, 400), "drank a pool that was not there");
+			ClassicAssert.AreEqual(15, KingdomRules.FetchableDrams(20, 100000, 15, 400), "stored more than the cisterns hold");
+			ClassicAssert.AreEqual(0, KingdomRules.FetchableDrams(20, 0, 100000, 400), "a dry site fetched something");
 		}
 
 		[Test]
@@ -1063,7 +1064,7 @@ namespace ThousandAndFirst.Tests
 			{
 				int fetched = KingdomRules.FetchableDrams(3, 100000, 100000, days);
 				int drunk = KingdomRules.UpkeepForElapsed(5, KingdomRules.TicksPerDay * days);
-				Assert.GreaterOrEqual(fetched, drunk, "a camp went backwards over " + days + " days");
+				ClassicAssert.GreaterOrEqual(fetched, drunk, "a camp went backwards over " + days + " days");
 			}
 		}
 
@@ -1075,7 +1076,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(0, GrowthStage.City, 0)]
 		public void UpkeepDrams_ScalesWithWhatTheSettlementHasBecome(int population, GrowthStage stage, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.UpkeepDrams(population, stage));
+			ClassicAssert.AreEqual(expected, KingdomRules.UpkeepDrams(population, stage));
 		}
 
 		[Test]
@@ -1085,7 +1086,7 @@ namespace ThousandAndFirst.Tests
 			foreach (GrowthStage stage in System.Enum.GetValues(typeof(GrowthStage)))
 			{
 				int now = KingdomRules.UpkeepDrams(30, stage);
-				Assert.GreaterOrEqual(now, previous, "upkeep fell going up to " + stage);
+				ClassicAssert.GreaterOrEqual(now, previous, "upkeep fell going up to " + stage);
 				previous = now;
 			}
 		}
@@ -1097,7 +1098,7 @@ namespace ThousandAndFirst.Tests
 			foreach (GrowthStage stage in System.Enum.GetValues(typeof(GrowthStage)))
 			{
 				int now = KingdomRules.MaxBuildingsForStage(stage);
-				Assert.GreaterOrEqual(now, previous, "the plan shrank on growing into " + stage);
+				ClassicAssert.GreaterOrEqual(now, previous, "the plan shrank on growing into " + stage);
 				previous = now;
 			}
 		}
@@ -1109,7 +1110,7 @@ namespace ThousandAndFirst.Tests
 			// cisterns. Housing plots normally embody several fixtures, so this stays conservative.
 			int sleepPlaces = 50;
 			int cisterns = 1024 / 256;
-			Assert.Greater(KingdomRules.MaxBuildingsForStage(GrowthStage.City),
+			ClassicAssert.Greater(KingdomRules.MaxBuildingsForStage(GrowthStage.City),
 				(sleepPlaces + cisterns) * 3,
 				"a City has no room left over for being a city");
 		}
@@ -1121,7 +1122,7 @@ namespace ThousandAndFirst.Tests
 			// more, but no global multiplier can turn a single prop into invisible households.
 			int sleepPlaces = 50;
 			int cisterns = 1024 / 256;
-			Assert.LessOrEqual(sleepPlaces + cisterns,
+			ClassicAssert.LessOrEqual(sleepPlaces + cisterns,
 				KingdomRules.MaxBuildingsForStage(GrowthStage.City),
 				"a City still cannot be built within the building cap");
 		}
@@ -1136,7 +1137,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(2, GrowthStage.Village, 1, KingdomRules.ThirstOutcome.Warned)]
 		public void ResolveThirst(int dryStreak, GrowthStage stage, int population, KingdomRules.ThirstOutcome expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.ResolveThirst(dryStreak, stage, population));
+			ClassicAssert.AreEqual(expected, KingdomRules.ResolveThirst(dryStreak, stage, population));
 		}
 
 		[TestCase("you poured the first water", "Reegan", "Reegan poured the first water")]
@@ -1146,7 +1147,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, "Reegan", null)]
 		public void ToThirdPerson(string text, string founder, string expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.ToThirdPerson(text, founder));
+			ClassicAssert.AreEqual(expected, KingdomRules.ToThirdPerson(text, founder));
 		}
 
 		[TestCase("agrarian", "vinelands")]
@@ -1155,7 +1156,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("nonesuch", "nonesuch")]
 		public void DistrictName(string district, string expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.DistrictName(district));
+			ClassicAssert.AreEqual(expected, KingdomRules.DistrictName(district));
 		}
 
 		[TestCase("agrarian", true)]
@@ -1166,7 +1167,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, false)]
 		public void IsValidDistrict(string district, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.IsValidDistrict(district));
+			ClassicAssert.AreEqual(expected, KingdomRules.IsValidDistrict(district));
 		}
 
 		[TestCase(0, null, 3600L)]
@@ -1175,7 +1176,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(10, "shrine", 9600L)]
 		public void ArrivalIntervalWithDistrict(int population, string district, long expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.ArrivalIntervalTicks(population, district));
+			ClassicAssert.AreEqual(expected, KingdomRules.ArrivalIntervalTicks(population, district));
 		}
 
 		[TestCase("well", "the well", "Well", "4", "1200", "common", null, null, true)]
@@ -1192,24 +1193,24 @@ namespace ThousandAndFirst.Tests
 		public void TryParseBuildAttributes(string key, string display, string blueprint, string cost, string ticks, string styles, string category, string minStage, bool expectedOk)
 		{
 			bool ok = KingdomRules.TryParseBuildAttributes(key, display, blueprint, cost, ticks, styles, category, minStage, null, null, null, out var entry, out var error);
-			Assert.AreEqual(expectedOk, ok);
+			ClassicAssert.AreEqual(expectedOk, ok);
 			if (ok)
 			{
-				Assert.AreEqual(string.IsNullOrEmpty(styles) ? "common" : styles, entry.Styles);
-				Assert.AreEqual(string.IsNullOrEmpty(category) ? "civic" : category, entry.Category);
+				ClassicAssert.AreEqual(string.IsNullOrEmpty(styles) ? "common" : styles, entry.Styles);
+				ClassicAssert.AreEqual(string.IsNullOrEmpty(category) ? "civic" : category, entry.Category);
 				if (!string.IsNullOrEmpty(minStage))
 				{
-					Assert.AreEqual(minStage.ToLower(), entry.MinStage.ToString().ToLower());
+					ClassicAssert.AreEqual(minStage.ToLower(), entry.MinStage.ToString().ToLower());
 				}
 				else
 				{
-					Assert.AreEqual(GrowthStage.Camp, entry.MinStage);
+					ClassicAssert.AreEqual(GrowthStage.Camp, entry.MinStage);
 				}
-				Assert.IsNull(error);
+				ClassicAssert.IsNull(error);
 			}
 			else
 			{
-				Assert.IsNotNull(error);
+				ClassicAssert.IsNotNull(error);
 			}
 		}
 
@@ -1221,15 +1222,15 @@ namespace ThousandAndFirst.Tests
 		public void TryParseBuildDefence(string defence, int expectedDefence, bool expectedOk)
 		{
 			bool ok = KingdomRules.TryParseBuildAttributes("wall", "wall", "Wall", "4", "1200", "all", "defense", null, null, null, defence, out var entry, out var error);
-			Assert.AreEqual(expectedOk, ok);
+			ClassicAssert.AreEqual(expectedOk, ok);
 			if (ok)
 			{
-				Assert.AreEqual(expectedDefence, entry.Defence);
-				Assert.IsNull(error);
+				ClassicAssert.AreEqual(expectedDefence, entry.Defence);
+				ClassicAssert.IsNull(error);
 			}
 			else
 			{
-				Assert.IsNotNull(error);
+				ClassicAssert.IsNotNull(error);
 			}
 		}
 
@@ -1243,7 +1244,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("fungal", "common", false)]
 		public void StyleAllows(string entryStyles, string cityStyle, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.StyleAllows(entryStyles, cityStyle));
+			ClassicAssert.AreEqual(expected, KingdomRules.StyleAllows(entryStyles, cityStyle));
 		}
 
 		[TestCase(GrowthStage.Camp, 0)]
@@ -1253,15 +1254,15 @@ namespace ThousandAndFirst.Tests
 		[TestCase(GrowthStage.City, 5)]
 		public void RaidSize(GrowthStage stage, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.RaidSize(stage));
+			ClassicAssert.AreEqual(expected, KingdomRules.RaidSize(stage));
 		}
 
 		[Test]
 		public void RaiderTables()
 		{
-			Assert.IsNotNull(KingdomRules.RaiderTableFor("Snapjaws"));
-			Assert.IsNull(KingdomRules.RaiderTableFor("Joppa"));
-			Assert.IsNull(KingdomRules.RaiderTableFor(null));
+			ClassicAssert.IsNotNull(KingdomRules.RaiderTableFor("Snapjaws"));
+			ClassicAssert.IsNull(KingdomRules.RaiderTableFor("Joppa"));
+			ClassicAssert.IsNull(KingdomRules.RaiderTableFor(null));
 		}
 
 		[TestCase("route", "water charter", "250", "6", "3600", "DromadTrader1", true)]
@@ -1275,15 +1276,15 @@ namespace ThousandAndFirst.Tests
 		public void TryParseDealAttributes(string key, string display, string minStanding, string income, string interval, string caravan, bool expectedOk)
 		{
 			bool ok = KingdomRules.TryParseDealAttributes(key, display, minStanding, income, interval, caravan, out var entry, out var error);
-			Assert.AreEqual(expectedOk, ok);
+			ClassicAssert.AreEqual(expectedOk, ok);
 			if (ok)
 			{
-				Assert.AreEqual(string.IsNullOrEmpty(caravan) ? "DromadTrader1" : caravan, entry.CaravanBlueprint);
-				Assert.IsNull(error);
+				ClassicAssert.AreEqual(string.IsNullOrEmpty(caravan) ? "DromadTrader1" : caravan, entry.CaravanBlueprint);
+				ClassicAssert.IsNull(error);
 			}
 			else
 			{
-				Assert.IsNotNull(error);
+				ClassicAssert.IsNotNull(error);
 			}
 		}
 
@@ -1294,7 +1295,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("hello happened", 35, "Some deny that hello happened.")]
 		public void ComposeOutsider(string text, int roll, string expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.ComposeOutsider(text, roll));
+			ClassicAssert.AreEqual(expected, KingdomRules.ComposeOutsider(text, roll));
 		}
 
 		[TestCase("JoppaWorld.11.22.1.1.10", true, "JoppaWorld", 34, 67, 10)]
@@ -1308,13 +1309,13 @@ namespace ThousandAndFirst.Tests
 		public void TryParseZoneID(string zoneID, bool expectedOk, string world, int gx, int gy, int z)
 		{
 			bool ok = KingdomRules.TryParseZoneID(zoneID, out var w, out var x, out var y, out var depth);
-			Assert.AreEqual(expectedOk, ok);
+			ClassicAssert.AreEqual(expectedOk, ok);
 			if (expectedOk)
 			{
-				Assert.AreEqual(world, w);
-				Assert.AreEqual(gx, x);
-				Assert.AreEqual(gy, y);
-				Assert.AreEqual(z, depth);
+				ClassicAssert.AreEqual(world, w);
+				ClassicAssert.AreEqual(gx, x);
+				ClassicAssert.AreEqual(gy, y);
+				ClassicAssert.AreEqual(z, depth);
 			}
 		}
 
@@ -1328,7 +1329,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("garbage", "JoppaWorld.11.22.1.2.10", false)]
 		public void ZonesAdjacent(string a, string b, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.ZonesAdjacent(a, b));
+			ClassicAssert.AreEqual(expected, KingdomRules.ZonesAdjacent(a, b));
 		}
 
 		[TestCase("Joppa:100", true, "Joppa", 100)]
@@ -1345,11 +1346,11 @@ namespace ThousandAndFirst.Tests
 		public void TryParseFactionAmount(string parameter, bool expectedOk, string expectedFaction, int expectedAmount)
 		{
 			bool ok = KingdomRules.TryParseFactionAmount(parameter, out var faction, out var amount);
-			Assert.AreEqual(expectedOk, ok);
+			ClassicAssert.AreEqual(expectedOk, ok);
 			if (expectedOk)
 			{
-				Assert.AreEqual(expectedFaction, faction);
-				Assert.AreEqual(expectedAmount, amount);
+				ClassicAssert.AreEqual(expectedFaction, faction);
+				ClassicAssert.AreEqual(expectedAmount, amount);
 			}
 		}
 
@@ -1361,8 +1362,8 @@ namespace ThousandAndFirst.Tests
 		public void RestampDeadline_LeavesADeadlineThatHasNotComeDueAlone()
 		{
 			long due = KingdomRules.TicksPerDay * 10;
-			Assert.AreEqual(due, KingdomRules.RestampDeadline(due, due - 1L, 600L, 0));
-			Assert.AreEqual(due, KingdomRules.RestampDeadline(due, 0L, 600L, 1));
+			ClassicAssert.AreEqual(due, KingdomRules.RestampDeadline(due, due - 1L, 600L, 0));
+			ClassicAssert.AreEqual(due, KingdomRules.RestampDeadline(due, 0L, 600L, 1));
 		}
 
 		[Test]
@@ -1372,8 +1373,8 @@ namespace ThousandAndFirst.Tests
 			// version of "close enough" for a load already standing in the sand, or for a slot
 			// that has come and gone.
 			long due = KingdomRules.TicksPerDay * 10;
-			Assert.AreEqual(due + 600L, KingdomRules.RestampDeadline(due, due, 600L, 0));
-			Assert.AreEqual(due + 1L + 600L, KingdomRules.RestampDeadline(due, due + 1L, 600L, 0));
+			ClassicAssert.AreEqual(due + 600L, KingdomRules.RestampDeadline(due, due, 600L, 0));
+			ClassicAssert.AreEqual(due + 1L + 600L, KingdomRules.RestampDeadline(due, due + 1L, 600L, 0));
 		}
 
 		[Test]
@@ -1384,9 +1385,9 @@ namespace ThousandAndFirst.Tests
 			// boundary is inclusive, which is the shipped raid behaviour to the tick.
 			long due = KingdomRules.TicksPerDay * 10;
 			long onTheEdge = due + KingdomRules.TicksPerDay;
-			Assert.AreEqual(due, KingdomRules.RestampDeadline(due, onTheEdge, 600L, 1),
+			ClassicAssert.AreEqual(due, KingdomRules.RestampDeadline(due, onTheEdge, 600L, 1),
 				"a day past the deadline stopped counting as witnessed");
-			Assert.AreEqual(onTheEdge + 1L + 600L, KingdomRules.RestampDeadline(due, onTheEdge + 1L, 600L, 1),
+			ClassicAssert.AreEqual(onTheEdge + 1L + 600L, KingdomRules.RestampDeadline(due, onTheEdge + 1L, 600L, 1),
 				"a tick past the band did not re-stamp");
 		}
 
@@ -1395,15 +1396,15 @@ namespace ThousandAndFirst.Tests
 		{
 			// A wrapped deadline would read as long overdue and fire on the spot, which is the
 			// one outcome the whole helper exists to prevent.
-			Assert.AreEqual(long.MaxValue, KingdomRules.RestampDeadline(0L, long.MaxValue - 5L, 600L, 0));
-			Assert.GreaterOrEqual(KingdomRules.RestampDeadline(0L, long.MaxValue - 5L, 600L, 0), long.MaxValue - 5L);
+			ClassicAssert.AreEqual(long.MaxValue, KingdomRules.RestampDeadline(0L, long.MaxValue - 5L, 600L, 0));
+			ClassicAssert.GreaterOrEqual(KingdomRules.RestampDeadline(0L, long.MaxValue - 5L, 600L, 0), long.MaxValue - 5L);
 		}
 
 		[Test]
 		public void RestampDeadline_ANonPositiveLeadPutsItAtNowRatherThanBehindIt()
 		{
-			Assert.AreEqual(5000L, KingdomRules.RestampDeadline(1000L, 5000L, 0L, 0));
-			Assert.AreEqual(5000L, KingdomRules.RestampDeadline(1000L, 5000L, -600L, 0));
+			ClassicAssert.AreEqual(5000L, KingdomRules.RestampDeadline(1000L, 5000L, 0L, 0));
+			ClassicAssert.AreEqual(5000L, KingdomRules.RestampDeadline(1000L, 5000L, -600L, 0));
 		}
 
 		[Test]
@@ -1414,13 +1415,13 @@ namespace ThousandAndFirst.Tests
 			// the day of the warning running out find somebody home; raiders who came a season
 			// early wait rather than looting in the dark.
 			long due = KingdomRules.TicksPerDay * 20;
-			Assert.AreEqual(due, KingdomRules.RestampDeadline(due, due + KingdomRules.TicksPerDay, KingdomRules.RaidWarningLeadTicks, KingdomRules.RaidWitnessGraceDays),
+			ClassicAssert.AreEqual(due, KingdomRules.RestampDeadline(due, due + KingdomRules.TicksPerDay, KingdomRules.RaidWarningLeadTicks, KingdomRules.RaidWitnessGraceDays),
 				"a raid a day overdue stopped resolving");
 			long season = due + KingdomRules.TicksPerDay * 90;
-			Assert.AreEqual(season + KingdomRules.RaidWarningLeadTicks,
+			ClassicAssert.AreEqual(season + KingdomRules.RaidWarningLeadTicks,
 				KingdomRules.RestampDeadline(due, season, KingdomRules.RaidWarningLeadTicks, KingdomRules.RaidWitnessGraceDays),
 				"a raid ninety days overdue did not buy a fresh window from the homecoming");
-			Assert.AreEqual(1, KingdomRules.RaidWitnessGraceDays, "the raid's band changed width");
+			ClassicAssert.AreEqual(1, KingdomRules.RaidWitnessGraceDays, "the raid's band changed width");
 		}
 
 		[Test]
@@ -1430,9 +1431,9 @@ namespace ThousandAndFirst.Tests
 			// all turns the load back and re-stamps a full window from the witnessing.
 			long due = KingdomRules.TicksPerDay * 10;
 			long now = due + 1L;
-			Assert.AreEqual(now + KingdomManifestRules.ManifestWindowTicks,
+			ClassicAssert.AreEqual(now + KingdomManifestRules.ManifestWindowTicks,
 				KingdomRules.RestampDeadline(due, now, KingdomManifestRules.ManifestWindowTicks, 0));
-			Assert.AreEqual(KingdomManifestRules.ManifestWindowTicks,
+			ClassicAssert.AreEqual(KingdomManifestRules.ManifestWindowTicks,
 				KingdomRules.RestampDeadline(due, now, KingdomManifestRules.ManifestWindowTicks, 0) - now,
 				"the second window was not a full window");
 		}
@@ -1446,8 +1447,8 @@ namespace ThousandAndFirst.Tests
 			long interval = KingdomRules.ArrivalIntervalTicks(12);
 			long due = KingdomRules.TicksPerDay * 5;
 			long longAway = due + KingdomRules.TicksPerDay * 100;
-			Assert.AreEqual(longAway + interval, KingdomRules.RestampDeadline(due, longAway, interval, 0));
-			Assert.AreEqual(due + interval, KingdomRules.RestampDeadline(due, due, interval, 0),
+			ClassicAssert.AreEqual(longAway + interval, KingdomRules.RestampDeadline(due, longAway, interval, 0));
+			ClassicAssert.AreEqual(due + interval, KingdomRules.RestampDeadline(due, due, interval, 0),
 				"a slot due exactly now was not spent");
 		}
 
@@ -1459,10 +1460,10 @@ namespace ThousandAndFirst.Tests
 		public void PassagesThrough_ReportsNothingBeforeTheFirstIsDue()
 		{
 			KingdomRules.Passages none = KingdomRules.PassagesThrough(5000L, 4999L, 1200L, 400L);
-			Assert.AreEqual(0, none.Departed);
-			Assert.AreEqual(0L, none.StandingSince);
-			Assert.AreEqual(5000L, none.NextDueTick);
-			Assert.AreEqual(0L, none.LastDepartedTick);
+			ClassicAssert.AreEqual(0, none.Departed);
+			ClassicAssert.AreEqual(0L, none.StandingSince);
+			ClassicAssert.AreEqual(5000L, none.NextDueTick);
+			ClassicAssert.AreEqual(0L, none.LastDepartedTick);
 		}
 
 		[Test]
@@ -1472,8 +1473,8 @@ namespace ThousandAndFirst.Tests
 			// of the world. Every visitor clock plants its stamp before it counts, and this
 			// answers nothing rather than a thousand arrivals if one ever forgets.
 			KingdomRules.Passages none = KingdomRules.PassagesThrough(0L, KingdomRules.TicksPerDay * 400, 1200L, 400L);
-			Assert.AreEqual(0, none.Departed);
-			Assert.AreEqual(0L, none.StandingSince);
+			ClassicAssert.AreEqual(0, none.Departed);
+			ClassicAssert.AreEqual(0L, none.StandingSince);
 		}
 
 		[Test]
@@ -1485,9 +1486,9 @@ namespace ThousandAndFirst.Tests
 			long interval = KingdomRules.TicksPerDay * 3;
 			long patience = KingdomRules.TicksPerDay / 3;
 			KingdomRules.Passages passages = KingdomRules.PassagesThrough(due, due + 100L, interval, patience);
-			Assert.AreEqual(0, passages.Departed);
-			Assert.AreEqual(due, passages.StandingSince);
-			Assert.AreEqual(due + interval, passages.NextDueTick);
+			ClassicAssert.AreEqual(0, passages.Departed);
+			ClassicAssert.AreEqual(due, passages.StandingSince);
+			ClassicAssert.AreEqual(due + interval, passages.NextDueTick);
 		}
 
 		[Test]
@@ -1502,9 +1503,9 @@ namespace ThousandAndFirst.Tests
 			// is left standing, so the whole run is departures.
 			long now = due + KingdomRules.TicksPerDay * 90 + KingdomRules.TicksPerDay / 2;
 			KingdomRules.Passages passages = KingdomRules.PassagesThrough(due, now, interval, patience);
-			Assert.AreEqual(31, passages.Departed, "the road stopped running while nobody watched");
-			Assert.AreEqual(0L, passages.StandingSince, "somebody was left standing at the gate for a season");
-			Assert.Greater(passages.NextDueTick, now, "the next one was already overdue on arrival");
+			ClassicAssert.AreEqual(31, passages.Departed, "the road stopped running while nobody watched");
+			ClassicAssert.AreEqual(0L, passages.StandingSince, "somebody was left standing at the gate for a season");
+			ClassicAssert.Greater(passages.NextDueTick, now, "the next one was already overdue on arrival");
 		}
 
 		[Test]
@@ -1517,11 +1518,11 @@ namespace ThousandAndFirst.Tests
 			long due = interval;
 			long now = due + KingdomRules.TicksPerDay * 30;
 			KingdomRules.Passages passages = KingdomRules.PassagesThrough(due, now, interval, patience);
-			Assert.Greater(passages.Departed, 0);
+			ClassicAssert.Greater(passages.Departed, 0);
 			int daysAgo = KingdomRules.ElapsedDays(now - passages.LastDepartedTick);
-			Assert.GreaterOrEqual(daysAgo, 0);
-			Assert.LessOrEqual(daysAgo, 3, "the last passage was dated further back than one interval");
-			Assert.AreEqual(0, KingdomRules.PassagesThrough(due, due - 1L, interval, patience).LastDepartedTick,
+			ClassicAssert.GreaterOrEqual(daysAgo, 0);
+			ClassicAssert.LessOrEqual(daysAgo, 3, "the last passage was dated further back than one interval");
+			ClassicAssert.AreEqual(0, KingdomRules.PassagesThrough(due, due - 1L, interval, patience).LastDepartedTick,
 				"a run with nobody in it still dated somebody");
 		}
 
@@ -1535,10 +1536,10 @@ namespace ThousandAndFirst.Tests
 			for (long away = 0; away <= KingdomRules.TicksPerDay * 120; away += KingdomRules.TicksPerDay / 4)
 			{
 				KingdomRules.Passages passages = KingdomRules.PassagesThrough(interval, interval + away, interval, patience);
-				Assert.GreaterOrEqual(passages.Departed, 0);
+				ClassicAssert.GreaterOrEqual(passages.Departed, 0);
 				if (passages.StandingSince > 0L)
 				{
-					Assert.Less(interval + away - passages.StandingSince, patience, "somebody stood past their own patience");
+					ClassicAssert.Less(interval + away - passages.StandingSince, patience, "somebody stood past their own patience");
 				}
 			}
 		}
@@ -1555,15 +1556,15 @@ namespace ThousandAndFirst.Tests
 				long now = interval + away;
 				KingdomRules.Passages passages = KingdomRules.PassagesThrough(interval, now, interval, patience);
 				long expected = (now - interval) / interval + 1L;
-				Assert.AreEqual(expected, passages.Departed + ((passages.StandingSince > 0L) ? 1 : 0));
+				ClassicAssert.AreEqual(expected, passages.Departed + ((passages.StandingSince > 0L) ? 1 : 0));
 			}
 		}
 
 		[Test]
 		public void PassagesThrough_RefusesANonsenseIntervalRatherThanDividingByIt()
 		{
-			Assert.AreEqual(0, KingdomRules.PassagesThrough(1000L, 90000L, 0L, 400L).Departed);
-			Assert.AreEqual(0, KingdomRules.PassagesThrough(1000L, 90000L, -3L, 400L).Departed);
+			ClassicAssert.AreEqual(0, KingdomRules.PassagesThrough(1000L, 90000L, 0L, 400L).Departed);
+			ClassicAssert.AreEqual(0, KingdomRules.PassagesThrough(1000L, 90000L, -3L, 400L).Departed);
 		}
 
 		[Test]
@@ -1572,8 +1573,8 @@ namespace ThousandAndFirst.Tests
 			// A visitor kind that does not wait at all departs the instant they arrive, and the
 			// answer is all-departed rather than a null-patience visitor standing forever.
 			KingdomRules.Passages passages = KingdomRules.PassagesThrough(1200L, 1200L, 1200L, 0L);
-			Assert.AreEqual(1, passages.Departed);
-			Assert.AreEqual(0L, passages.StandingSince);
+			ClassicAssert.AreEqual(1, passages.Departed);
+			ClassicAssert.AreEqual(0L, passages.StandingSince);
 		}
 	}
 }

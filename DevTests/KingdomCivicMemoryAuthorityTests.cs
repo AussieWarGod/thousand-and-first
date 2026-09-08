@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -33,7 +34,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCivicMemoryAuthority authority = Fresh();
 			string failure;
-			Assert.IsTrue(authority.TryCommit(One(Id, Payload), 0L, out failure), failure);
+			ClassicAssert.IsTrue(authority.TryCommit(One(Id, Payload), 0L, out failure), failure);
 			return authority;
 		}
 
@@ -41,11 +42,11 @@ namespace ThousandAndFirst.Tests
 		public void AFreshAuthorityIsEmptyAndNotQuarantined()
 		{
 			KingdomCivicMemoryAuthority authority = Fresh();
-			Assert.IsTrue(authority.IsEmpty);
-			Assert.IsFalse(authority.Quarantined);
-			Assert.IsFalse(authority.IsFutureOuter);
-			Assert.IsFalse(authority.ReadOnly);
-			Assert.AreEqual(0L, authority.Revision);
+			ClassicAssert.IsTrue(authority.IsEmpty);
+			ClassicAssert.IsFalse(authority.Quarantined);
+			ClassicAssert.IsFalse(authority.IsFutureOuter);
+			ClassicAssert.IsFalse(authority.ReadOnly);
+			ClassicAssert.AreEqual(0L, authority.Revision);
 		}
 
 		[Test]
@@ -62,10 +63,10 @@ namespace ThousandAndFirst.Tests
 			payload[0] = 0xFF;
 
 			KingdomCivicMemoryState again = authority.Read();
-			Assert.AreEqual(1, again.Count, "clearing a returned list must not empty the authority");
+			ClassicAssert.AreEqual(1, again.Count, "clearing a returned list must not empty the authority");
 			CollectionAssert.AreEqual(sound, again.Section(Artifacts).Payload(),
 				"editing a returned payload must not edit the authority's copy");
-			Assert.IsNull(again.Section(Treaty));
+			ClassicAssert.IsNull(again.Section(Treaty));
 		}
 
 		[Test]
@@ -73,7 +74,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCivicMemoryAuthority authority =
 				Holding(Practice, KingdomCivicMemoryTestFamilies.Sound(4));
-			Assert.AreNotSame(authority.Read().Section(Practice),
+			ClassicAssert.AreNotSame(authority.Read().Section(Practice),
 				authority.Read().Section(Practice));
 		}
 
@@ -85,19 +86,19 @@ namespace ThousandAndFirst.Tests
 			byte[] first = KingdomCivicMemoryTestFamilies.Sound(4);
 			byte[] second = KingdomCivicMemoryTestFamilies.Sound(6);
 
-			Assert.IsTrue(authority.TryCommit(One(Artifacts, first), 0L, out failure), failure);
-			Assert.AreEqual(1L, authority.Revision);
-			Assert.AreEqual("", failure);
+			ClassicAssert.IsTrue(authority.TryCommit(One(Artifacts, first), 0L, out failure), failure);
+			ClassicAssert.AreEqual(1L, authority.Revision);
+			ClassicAssert.AreEqual("", failure);
 
-			Assert.IsFalse(authority.TryCommit(One(Artifacts, second), 0L, out failure),
+			ClassicAssert.IsFalse(authority.TryCommit(One(Artifacts, second), 0L, out failure),
 				"a commit built against revision 0 must not land on revision 1");
 			StringAssert.Contains("revision", failure);
-			Assert.AreEqual(1L, authority.Revision, "a refused commit must not move the revision");
+			ClassicAssert.AreEqual(1L, authority.Revision, "a refused commit must not move the revision");
 			CollectionAssert.AreEqual(first, authority.Read().Section(Artifacts).Payload(),
 				"a refused commit must not change a single byte of the authority");
 
-			Assert.IsTrue(authority.TryCommit(One(Artifacts, second), 1L, out failure), failure);
-			Assert.AreEqual(2L, authority.Revision);
+			ClassicAssert.IsTrue(authority.TryCommit(One(Artifacts, second), 1L, out failure), failure);
+			ClassicAssert.AreEqual(2L, authority.Revision);
 			CollectionAssert.AreEqual(second, authority.Read().Section(Artifacts).Payload());
 		}
 
@@ -110,8 +111,8 @@ namespace ThousandAndFirst.Tests
 			authority.AdoptSaved(KingdomCivicMemoryCodec.Encode(
 				KingdomCivicMemoryState.Of(One(Artifacts, loaded), 0L)));
 
-			Assert.AreEqual(preparedAgainst + 1L, authority.Revision);
-			Assert.IsFalse(authority.TryCommit(
+			ClassicAssert.AreEqual(preparedAgainst + 1L, authority.Revision);
+			ClassicAssert.IsFalse(authority.TryCommit(
 				One(Artifacts, KingdomCivicMemoryTestFamilies.Sound(4)), preparedAgainst,
 				out string failure));
 			StringAssert.Contains("revision", failure);
@@ -129,10 +130,10 @@ namespace ThousandAndFirst.Tests
 				KingdomCivicMemoryTestFamilies.Sound(
 					KingdomCivicMemoryLimits.MaxBodyHistoryBytes + 1));
 
-			Assert.IsFalse(authority.TryCommit(oversize, 1L, out failure));
-			Assert.IsNotEmpty(failure);
-			Assert.AreEqual(1L, authority.Revision);
-			Assert.AreEqual(1, authority.Read().Count);
+			ClassicAssert.IsFalse(authority.TryCommit(oversize, 1L, out failure));
+			ClassicAssert.IsNotEmpty(failure);
+			ClassicAssert.AreEqual(1L, authority.Revision);
+			ClassicAssert.AreEqual(1, authority.Read().Count);
 			CollectionAssert.AreEqual(sound, authority.Read().Section(Artifacts).Payload());
 		}
 
@@ -143,10 +144,10 @@ namespace ThousandAndFirst.Tests
 			byte[] rubbish = { 9, 9, 9, 9, 1, 1, 1, 1 };
 			authority.AdoptSaved(rubbish);
 
-			Assert.IsTrue(authority.Quarantined);
-			Assert.IsTrue(authority.Latch.Tripped);
-			Assert.IsTrue(authority.ReadOnly);
-			Assert.IsNotEmpty(authority.Latch.Reason);
+			ClassicAssert.IsTrue(authority.Quarantined);
+			ClassicAssert.IsTrue(authority.Latch.Tripped);
+			ClassicAssert.IsTrue(authority.ReadOnly);
+			ClassicAssert.IsNotEmpty(authority.Latch.Reason);
 			CollectionAssert.AreEqual(rubbish, authority.Read().RetainedPayload(),
 				"the refused bytes are the only copy left and must be kept exactly");
 		}
@@ -159,13 +160,13 @@ namespace ThousandAndFirst.Tests
 			KingdomCivicMemoryAuthority absent = Fresh();
 			absent.AdoptAbsent();
 
-			Assert.IsTrue(absent.IsEmpty);
-			Assert.IsFalse(absent.Quarantined);
-			Assert.IsFalse(quarantined.IsEmpty,
+			ClassicAssert.IsTrue(absent.IsEmpty);
+			ClassicAssert.IsFalse(absent.Quarantined);
+			ClassicAssert.IsFalse(quarantined.IsEmpty,
 				"a save whose records were refused must never look like one that never had any");
-			Assert.IsTrue(quarantined.Quarantined);
-			Assert.IsNotEmpty(quarantined.Read().Fault);
-			Assert.AreEqual("", absent.Read().Fault);
+			ClassicAssert.IsTrue(quarantined.Quarantined);
+			ClassicAssert.IsNotEmpty(quarantined.Read().Fault);
+			ClassicAssert.AreEqual("", absent.Read().Fault);
 		}
 
 		[Test]
@@ -176,13 +177,13 @@ namespace ThousandAndFirst.Tests
 			byte[] kept = authority.Read().RetainedPayload();
 
 			string failure;
-			Assert.IsFalse(authority.TryCommit(
+			ClassicAssert.IsFalse(authority.TryCommit(
 				One(Artifacts, KingdomCivicMemoryTestFamilies.Sound(4)), authority.Revision,
 				out failure), "a well-formed commit must not replace unreadable evidence");
 			StringAssert.Contains("overwriting them would destroy the only copy", failure,
 				"the founder must be told their records are being defended, not merely that the "
 				+ "session is read-only");
-			Assert.IsTrue(authority.Quarantined);
+			ClassicAssert.IsTrue(authority.Quarantined);
 			CollectionAssert.AreEqual(kept, authority.Read().RetainedPayload());
 		}
 
@@ -192,25 +193,25 @@ namespace ThousandAndFirst.Tests
 			KingdomCivicMemoryAuthority authority = Fresh();
 			byte[] refused = { 4, 4, 4, 4 };
 			authority.AdoptSaved(refused);
-			Assert.IsTrue(authority.Latch.Tripped);
+			ClassicAssert.IsTrue(authority.Latch.Tripped);
 
 			string first = authority.Latch.Reason;
 			authority.Latch.Trip("something vaguer that happened afterwards");
-			Assert.AreEqual(first, authority.Latch.Reason,
+			ClassicAssert.AreEqual(first, authority.Latch.Reason,
 				"the first cause is the one worth keeping");
 
 			// A later lawful read does not retire the latch: this session stays read-only.
 			authority.AdoptSaved(KingdomCivicMemoryCodec.Encode(KingdomCivicMemoryState.Of(
 				One(Artifacts, KingdomCivicMemoryTestFamilies.Sound(4)), 0L)));
-			Assert.IsTrue(authority.Latch.Tripped,
+			ClassicAssert.IsTrue(authority.Latch.Tripped,
 				"reading a good payload later must not dismiss an earlier failure");
-			Assert.IsTrue(authority.ReadOnly);
-			Assert.IsTrue(authority.Quarantined,
+			ClassicAssert.IsTrue(authority.ReadOnly);
+			ClassicAssert.IsTrue(authority.Quarantined,
 				"a later adoption must not replace the state defended by the latch");
 			CollectionAssert.AreEqual(refused, authority.Read().RetainedPayload());
 
 			string failure;
-			Assert.IsFalse(authority.TryCommit(
+			ClassicAssert.IsFalse(authority.TryCommit(
 				One(Artifacts, KingdomCivicMemoryTestFamilies.Sound(6)), authority.Revision,
 				out failure));
 			StringAssert.Contains("overwriting them would destroy the only copy", failure,
@@ -224,7 +225,7 @@ namespace ThousandAndFirst.Tests
 			byte[] refused = { 8, 7, 6, 5 };
 			quarantined.AdoptSaved(refused);
 			quarantined.AdoptAbsent();
-			Assert.IsTrue(quarantined.Quarantined);
+			ClassicAssert.IsTrue(quarantined.Quarantined);
 			CollectionAssert.AreEqual(refused, quarantined.Read().RetainedPayload());
 
 			byte[] future = KingdomCivicMemoryCodec.Encode(KingdomCivicMemoryState.Of(
@@ -240,8 +241,8 @@ namespace ThousandAndFirst.Tests
 			KingdomCivicMemoryAuthority newer = Fresh();
 			newer.AdoptSaved(future);
 			newer.AdoptAbsent();
-			Assert.IsTrue(newer.IsFutureOuter);
-			Assert.IsTrue(newer.Latch.Tripped,
+			ClassicAssert.IsTrue(newer.IsFutureOuter);
+			ClassicAssert.IsTrue(newer.Latch.Tripped,
 				"a contradictory second adoption is a session fault, not permission to reset");
 			CollectionAssert.AreEqual(future, newer.Read().RetainedPayload());
 		}
@@ -254,8 +255,8 @@ namespace ThousandAndFirst.Tests
 			KingdomCivicMemoryAuthority authority = new KingdomCivicMemoryAuthority(
 				KingdomCivicMemoryTestFamilies.TableThrowing(Artifacts));
 			Assert.DoesNotThrow(() => authority.AdoptSaved(envelope));
-			Assert.IsTrue(authority.Quarantined);
-			Assert.IsTrue(authority.Latch.Tripped);
+			ClassicAssert.IsTrue(authority.Quarantined);
+			ClassicAssert.IsTrue(authority.Latch.Tripped);
 			StringAssert.Contains("inspection exploded", authority.Latch.Reason);
 			CollectionAssert.AreEqual(envelope, authority.Read().RetainedPayload());
 		}
@@ -277,14 +278,14 @@ namespace ThousandAndFirst.Tests
 			{
 				KingdomCivicMemoryAuthority authority = Fresh();
 				authority.AdoptSaved(bad);
-				Assert.IsTrue(authority.Quarantined);
-				Assert.IsTrue(authority.Latch.Tripped,
+				ClassicAssert.IsTrue(authority.Quarantined);
+				ClassicAssert.IsTrue(authority.Latch.Tripped,
 					"a quarantined authority must always be a latched one");
 			}
 			KingdomCivicMemoryAuthority framing = Fresh();
 			framing.AdoptUnreadableFraming(new byte[] { 7 }, "bad framing");
-			Assert.IsTrue(framing.Quarantined);
-			Assert.IsTrue(framing.Latch.Tripped);
+			ClassicAssert.IsTrue(framing.Quarantined);
+			ClassicAssert.IsTrue(framing.Latch.Tripped);
 		}
 
 		[Test]
@@ -297,9 +298,9 @@ namespace ThousandAndFirst.Tests
 				KingdomCivicMemoryState.Of(One(futureId, stranger), 0L)));
 
 			KingdomCivicMemoryState held = authority.Read();
-			Assert.IsFalse(authority.Quarantined, "an unknown id is not a malformed payload");
-			Assert.IsTrue(held.HasFutureSections);
-			Assert.IsFalse(held.Section(futureId).KnownToThisBuild);
+			ClassicAssert.IsFalse(authority.Quarantined, "an unknown id is not a malformed payload");
+			ClassicAssert.IsTrue(held.HasFutureSections);
+			ClassicAssert.IsFalse(held.Section(futureId).KnownToThisBuild);
 			CollectionAssert.AreEqual(stranger, held.Section(futureId).Payload());
 
 			CollectionAssert.AreEqual(stranger,

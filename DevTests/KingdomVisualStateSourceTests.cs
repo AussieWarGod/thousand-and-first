@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -15,9 +16,9 @@ namespace ThousandAndFirst.Tests
 		private static string Method(string source, string signature)
 		{
 			int start = source.IndexOf(signature, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, signature);
+			ClassicAssert.GreaterOrEqual(start, 0, signature);
 			int open = source.IndexOf('{', start);
-			Assert.Greater(open, start, signature);
+			ClassicAssert.Greater(open, start, signature);
 			int depth = 0;
 			for (int i = open; i < source.Length; i++)
 			{
@@ -40,10 +41,10 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("wear == null ? 0 : wear.Wear", source);
 			StringAssert.Contains("GetIntProperty(\"KingdomBrownout\") == 1", source);
 			StringAssert.Contains("GetIntProperty(\"KingdomEffectiveness\")", source);
-			Assert.IsFalse(source.Contains("GameObject.Create"));
-			Assert.IsFalse(source.Contains("AddObject("));
-			Assert.IsFalse(source.Contains("Destroy("));
-			Assert.IsFalse(source.Contains("Obliterate("));
+			ClassicAssert.IsFalse(source.Contains("GameObject.Create"));
+			ClassicAssert.IsFalse(source.Contains("AddObject("));
+			ClassicAssert.IsFalse(source.Contains("Destroy("));
+			ClassicAssert.IsFalse(source.Contains("Obliterate("));
 		}
 
 		[Test]
@@ -58,8 +59,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("selected.Root.SetIntProperty(HandsProperty, assigned)", presence);
 			StringAssert.Contains("KingdomStations.Post(free[at], workId, KingdomWorkKind.Construction)",
 				presence);
-			Assert.IsFalse(presence.Contains("GameObject.Create"));
-			Assert.IsFalse(presence.Contains("AddObject("));
+			ClassicAssert.IsFalse(presence.Contains("GameObject.Create"));
+			ClassicAssert.IsFalse(presence.Contains("AddObject("));
 
 			string scaffold = KingdomScaffoldLogicalSource.Read();
 			string plot = KingdomPlot2LogicalSource.Read();
@@ -74,9 +75,9 @@ namespace ThousandAndFirst.Tests
 				raising, StringComparison.Ordinal);
 			int allocation = crews.IndexOf("AssignCrew(pool, demand, extensionAffinities)[0]",
 				extension, StringComparison.Ordinal);
-			Assert.Greater(raising, 0);
-			Assert.Greater(extension, raising);
-			Assert.Greater(allocation, extension);
+			ClassicAssert.Greater(raising, 0);
+			ClassicAssert.Greater(extension, raising);
+			ClassicAssert.Greater(allocation, extension);
 		}
 
 		[Test]
@@ -86,7 +87,7 @@ namespace ThousandAndFirst.Tests
 			int method = growth.IndexOf("public static void AssignWork", StringComparison.Ordinal);
 			int end = growth.IndexOf("public static bool Emigrate", method, StringComparison.Ordinal);
 			string assign = growth.Substring(method, end - method);
-			Assert.IsFalse(assign.Contains("if (Survey.Works.Count == 0)"));
+			ClassicAssert.IsFalse(assign.Contains("if (Survey.Works.Count == 0)"));
 			StringAssert.Contains("KingdomConstructionPresence.Assign(System, Survey)", assign);
 		}
 
@@ -101,8 +102,8 @@ namespace ThousandAndFirst.Tests
 			string release = Method(stations, "internal static bool Release");
 			StringAssert.Contains("Settler.Brain.Stay(target)", release);
 			StringAssert.Contains("new MoveTo(target, careful: true)", release);
-			Assert.IsFalse(release.Contains("AddObject("));
-			Assert.IsFalse(release.Contains("Teleport"));
+			ClassicAssert.IsFalse(release.Contains("AddObject("));
+			ClassicAssert.IsFalse(release.Contains("Teleport"));
 		}
 
 		[Test]
@@ -114,7 +115,7 @@ namespace ThousandAndFirst.Tests
 			string plot = KingdomPlot2LogicalSource.Read();
 			StringAssert.Contains("public int DoorY;", plot);
 			string scaffold = KingdomScaffoldLogicalSource.Read();
-			Assert.IsFalse(scaffold.Contains("public int ConstructionCrew"));
+			ClassicAssert.IsFalse(scaffold.Contains("public int ConstructionCrew"));
 		}
 	}
 }

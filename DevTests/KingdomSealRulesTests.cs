@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 using ThousandAndFirst.Simulation.City;
 
@@ -16,57 +17,57 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RuleDeclarationsKeepExactMetadataAndDefaults()
 		{
-			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomSealEligibility)));
-			Assert.AreEqual("0:Living,1:Checkpointed,2:Ended,3:Orphaned",
+			ClassicAssert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomSealEligibility)));
+			ClassicAssert.AreEqual("0:Living,1:Checkpointed,2:Ended,3:Orphaned",
 				string.Join(",", Array.ConvertAll((KingdomSealEligibility[])Enum.GetValues(
 					typeof(KingdomSealEligibility)), value => ((int)value) + ":" + value)));
-			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomImportPolicy)));
-			Assert.AreEqual("0:Off,1:LatestEligible",
+			ClassicAssert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomImportPolicy)));
+			ClassicAssert.AreEqual("0:Off,1:LatestEligible",
 				string.Join(",", Array.ConvertAll((KingdomImportPolicy[])Enum.GetValues(
 					typeof(KingdomImportPolicy)), value => ((int)value) + ":" + value)));
 			Type lineageType = typeof(KingdomSealLineage);
-			Assert.IsTrue(lineageType.IsNotPublic);
-			Assert.IsTrue(lineageType.IsSealed);
-			Assert.AreEqual(5, lineageType.GetFields().Length);
-			Assert.IsNotNull(lineageType.GetConstructor(new Type[]
+			ClassicAssert.IsTrue(lineageType.IsNotPublic);
+			ClassicAssert.IsTrue(lineageType.IsSealed);
+			ClassicAssert.AreEqual(5, lineageType.GetFields().Length);
+			ClassicAssert.IsNotNull(lineageType.GetConstructor(new Type[]
 				{ typeof(string), typeof(string), typeof(string), typeof(int), typeof(int) }));
 			KingdomSealLineage lineage = new KingdomSealLineage();
-			Assert.AreEqual("", lineage.LineageId);
-			Assert.AreEqual("", lineage.LegacyId);
-			Assert.AreEqual("", lineage.OriginGameId);
-			Assert.AreEqual(0, lineage.Generation);
-			Assert.AreEqual(0, lineage.Revision);
+			ClassicAssert.AreEqual("", lineage.LineageId);
+			ClassicAssert.AreEqual("", lineage.LegacyId);
+			ClassicAssert.AreEqual("", lineage.OriginGameId);
+			ClassicAssert.AreEqual(0, lineage.Generation);
+			ClassicAssert.AreEqual(0, lineage.Revision);
 			Type identityType = typeof(KingdomSealIdentity);
-			Assert.IsTrue(identityType.IsNotPublic);
-			Assert.IsTrue(identityType.IsSealed);
-			Assert.AreEqual(18, identityType.GetFields().Length);
+			ClassicAssert.IsTrue(identityType.IsNotPublic);
+			ClassicAssert.IsTrue(identityType.IsSealed);
+			ClassicAssert.AreEqual(18, identityType.GetFields().Length);
 			KingdomSealIdentity identity = new KingdomSealIdentity();
-			Assert.IsNull(identity.RealmId);
-			Assert.IsNull(identity.SettlementId);
-			Assert.AreEqual(0, identity.SettlementIds.Count);
-			Assert.AreEqual(0, identity.SettlementProvenanceRows.Count);
-			Assert.AreEqual("", identity.RealmIdentityTransactionId);
-			Assert.AreEqual("", identity.RealmIdentityLegacyFaction);
-			Assert.AreEqual("", identity.RealmIdentityFirstClaimedZone);
-			Assert.AreEqual("", identity.SettlementIdentityTransactionId);
-			Assert.AreEqual("", identity.SettlementIdentityFirstClaimedZone);
-			Assert.AreEqual("", identity.SettlementIdentityLegacyId);
+			ClassicAssert.IsNull(identity.RealmId);
+			ClassicAssert.IsNull(identity.SettlementId);
+			ClassicAssert.AreEqual(0, identity.SettlementIds.Count);
+			ClassicAssert.AreEqual(0, identity.SettlementProvenanceRows.Count);
+			ClassicAssert.AreEqual("", identity.RealmIdentityTransactionId);
+			ClassicAssert.AreEqual("", identity.RealmIdentityLegacyFaction);
+			ClassicAssert.AreEqual("", identity.RealmIdentityFirstClaimedZone);
+			ClassicAssert.AreEqual("", identity.SettlementIdentityTransactionId);
+			ClassicAssert.AreEqual("", identity.SettlementIdentityFirstClaimedZone);
+			ClassicAssert.AreEqual("", identity.SettlementIdentityLegacyId);
 		}
 
 		[Test]
 		public void SealRecordKeepsExactPersistedFieldOrderAndDefaults()
 		{
-			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomSealStatus)));
-			Assert.AreEqual("0:Living,1:Terminal,2:Retired,3:Promoted",
+			ClassicAssert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomSealStatus)));
+			ClassicAssert.AreEqual("0:Living,1:Terminal,2:Retired,3:Promoted",
 				string.Join(",", Array.ConvertAll((KingdomSealStatus[])Enum.GetValues(
 					typeof(KingdomSealStatus)), value => ((int)value) + ":" + value)));
 			Type type = typeof(KingdomSealRecord);
-			Assert.IsTrue(type.IsNotPublic && type.IsSealed);
-			Assert.AreEqual("ThousandAndFirst.KingdomSealRecord", type.FullName);
+			ClassicAssert.IsTrue(type.IsNotPublic && type.IsSealed);
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomSealRecord", type.FullName);
 			System.Reflection.FieldInfo[] fields = type.GetFields(
 				System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance |
 				System.Reflection.BindingFlags.DeclaredOnly);
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				"WriterVersion,EngineVersion,Status,LineageId,LegacyId,OriginGameId,Generation,"
 				+ "Revision,WrittenTick,FounderName,CauseText,CauseKind,CauseTurn,RealmName,"
 				+ "SettlementName,SettlementId,RealmId,RealmSettlementIds,RealmSettlementProvenance,"
@@ -86,34 +87,34 @@ namespace ThousandAndFirst.Tests
 				string.Join(",", Array.ConvertAll(fields, field => field.Name)));
 
 			KingdomSealRecord record = new KingdomSealRecord();
-			Assert.AreEqual(6, KingdomSealRecord.CurrentSchema);
-			Assert.AreEqual(4, KingdomSealRecord.FirstSchema);
-			Assert.AreEqual(KingdomSealStatus.Living, record.Status);
-			Assert.AreEqual(-1, record.InterregnumRoll);
-			Assert.AreEqual(-1, record.InheritedState);
-			Assert.AreEqual(KingdomInheritanceSpatialRules.NoEntry, record.SpatialEntrySide);
+			ClassicAssert.AreEqual(6, KingdomSealRecord.CurrentSchema);
+			ClassicAssert.AreEqual(4, KingdomSealRecord.FirstSchema);
+			ClassicAssert.AreEqual(KingdomSealStatus.Living, record.Status);
+			ClassicAssert.AreEqual(-1, record.InterregnumRoll);
+			ClassicAssert.AreEqual(-1, record.InheritedState);
+			ClassicAssert.AreEqual(KingdomInheritanceSpatialRules.NoEntry, record.SpatialEntrySide);
 			for (int i = 0; i < fields.Length; i++)
 			{
 				object value = fields[i].GetValue(record);
-				if (fields[i].FieldType == typeof(string)) Assert.AreEqual("", value, fields[i].Name);
+				if (fields[i].FieldType == typeof(string)) ClassicAssert.AreEqual("", value, fields[i].Name);
 				if (typeof(System.Collections.ICollection).IsAssignableFrom(fields[i].FieldType))
 				{
-					Assert.IsNotNull(value, fields[i].Name);
-					Assert.AreEqual(0, ((System.Collections.ICollection)value).Count, fields[i].Name);
+					ClassicAssert.IsNotNull(value, fields[i].Name);
+					ClassicAssert.AreEqual(0, ((System.Collections.ICollection)value).Count, fields[i].Name);
 				}
 			}
 		}
 
 		private static string MintRealm()
 		{
-			Assert.IsTrue(KingdomIdentityRules.TryMintRealm(FoundingTransaction,
+			ClassicAssert.IsTrue(KingdomIdentityRules.TryMintRealm(FoundingTransaction,
 				out string id, out KingdomIdentityFault fault), fault.ToString());
 			return id;
 		}
 
 		private static string MintSettlement()
 		{
-			Assert.IsTrue(KingdomIdentityRules.TryMintSettlement(ExactRealmId,
+			ClassicAssert.IsTrue(KingdomIdentityRules.TryMintSettlement(ExactRealmId,
 				FoundingTransaction, out string id, out KingdomIdentityFault fault),
 				fault.ToString());
 			return id;
@@ -215,7 +216,7 @@ namespace ThousandAndFirst.Tests
 				SettlementIdentityFoundedTick = Seat.FoundedTick,
 				SettlementIdentityFirstClaimedZone = Seat.ClaimedZones[0]
 			};
-			Assert.IsTrue(KingdomSealRules.TryBuildSettlementProvenance(ExactSettlementId,
+			ClassicAssert.IsTrue(KingdomSealRules.TryBuildSettlementProvenance(ExactSettlementId,
 				identity.SettlementIdentityVersion, identity.SettlementIdentityOrigin,
 				identity.SettlementIdentityTransactionId, identity.SettlementIdentityFoundedTick,
 				identity.SettlementIdentityFirstClaimedZone,
@@ -237,7 +238,7 @@ namespace ThousandAndFirst.Tests
 			KingdomSealRecord bound = KingdomSealRules.Capture(seat, SampleIdentity(seat),
 				new KingdomSealLineage("lineage", "legacy", "origin", 0, 1),
 				"Realm", "Founder", new List<string>(), new List<string>(), 100L);
-			Assert.AreEqual(ExactSettlementId, bound.SettlementId);
+			ClassicAssert.AreEqual(ExactSettlementId, bound.SettlementId);
 		}
 
 		internal static KingdomSealRecord SampleCapturedRecord(string lineageId, string legacyId, string originId, int generation, int revision)
@@ -266,18 +267,18 @@ namespace ThousandAndFirst.Tests
 				KingdomPolityProfileRules.LegacyProfileProvenanceDigest(record.ProfileSchema,
 					record.TechnologyBand, record.CanonicalBodyKeys, record.SourceProfileDigest);
 
-			Assert.IsTrue(KingdomSealRecord.TryParse(record.Compose(),
+			ClassicAssert.IsTrue(KingdomSealRecord.TryParse(record.Compose(),
 				out KingdomSealRecord read, out KingdomSealFault fault, out string detail),
 				fault + ": " + detail);
-			Assert.AreEqual(6, read.TechnologyBand);
+			ClassicAssert.AreEqual(6, read.TechnologyBand);
 			CollectionAssert.AreEqual(new[] { "goatfolk", "human" }, read.CanonicalBodyKeys);
-			Assert.AreEqual(record.SourceProfileDigest, read.SourceProfileDigest);
-			Assert.AreEqual(record.ProfileProvenanceDigest, read.ProfileProvenanceDigest);
+			ClassicAssert.AreEqual(record.SourceProfileDigest, read.SourceProfileDigest);
+			ClassicAssert.AreEqual(record.ProfileProvenanceDigest, read.ProfileProvenanceDigest);
 
 			record.TechnologyBand++;
-			Assert.IsFalse(KingdomSealRecord.TryParse(record.Compose(),
+			ClassicAssert.IsFalse(KingdomSealRecord.TryParse(record.Compose(),
 				out read, out fault, out detail));
-			Assert.AreEqual(KingdomSealFault.OutOfBounds, fault);
+			ClassicAssert.AreEqual(KingdomSealFault.OutOfBounds, fault);
 			StringAssert.Contains("profile provenance", detail);
 		}
 
@@ -286,8 +287,8 @@ namespace ThousandAndFirst.Tests
 		{
 			string value = "{{R|Kavvat}} &Y\n\\ \u007f";
 			string sanitized = KingdomSealRules.SanitizeText(value, 64);
-			Assert.AreEqual("Kavvat", sanitized);
-			Assert.IsTrue(KingdomSealRules.IsSafeText(sanitized));
+			ClassicAssert.AreEqual("Kavvat", sanitized);
+			ClassicAssert.IsTrue(KingdomSealRules.IsSafeText(sanitized));
 		}
 
 		[Test]
@@ -297,8 +298,8 @@ namespace ThousandAndFirst.Tests
 			long one = KingdomSealRules.InterregnumSeed(a);
 			long two = KingdomSealRules.InterregnumSeed(a);
 			long changed = KingdomSealRules.InterregnumSeed(new KingdomSealLineage("lineage-a", "legacy-a-2", "game-a", 2, 4));
-			Assert.AreEqual(one, two);
-			Assert.AreNotEqual(one, changed);
+			ClassicAssert.AreEqual(one, two);
+			ClassicAssert.AreNotEqual(one, changed);
 		}
 
 		[Test]
@@ -321,11 +322,11 @@ namespace ThousandAndFirst.Tests
 
 			KingdomInheritPlacement placement;
 			KingdomInheritFault fault;
-			Assert.IsTrue(KingdomInheritRules.TryPrepare(record.WorkKeys, record.WorkX,
+			ClassicAssert.IsTrue(KingdomInheritRules.TryPrepare(record.WorkKeys, record.WorkX,
 				record.WorkY, record.WorkConditions, KingdomRules.InheritedState.Held, 0,
 				out placement, out fault), fault.ToString());
-			Assert.AreEqual("tent", placement.WorkAt(0).Key);
-			Assert.AreEqual("heartbasin", placement.WorkAt(1).Key);
+			ClassicAssert.AreEqual("tent", placement.WorkAt(0).Key);
+			ClassicAssert.AreEqual("heartbasin", placement.WorkAt(1).Key);
 		}
 
 		[Test]
@@ -349,12 +350,12 @@ namespace ThousandAndFirst.Tests
 
 			KingdomInheritPlacement placement;
 			KingdomInheritFault fault;
-			Assert.IsTrue(KingdomInheritRules.TryPrepare(record.WorkKeys, record.WorkX,
+			ClassicAssert.IsTrue(KingdomInheritRules.TryPrepare(record.WorkKeys, record.WorkX,
 				record.WorkY, record.WorkConditions, KingdomRules.InheritedState.Held, 0,
 				out placement, out fault), fault.ToString());
-			Assert.AreEqual(KingdomInheritRules.MemoryKey, placement.WorkAt(0).Key);
-			Assert.AreEqual(KingdomInheritRules.MemoryKey, placement.WorkAt(1).Key);
-			Assert.AreNotEqual(placement.WorkAt(0).X, placement.WorkAt(1).X);
+			ClassicAssert.AreEqual(KingdomInheritRules.MemoryKey, placement.WorkAt(0).Key);
+			ClassicAssert.AreEqual(KingdomInheritRules.MemoryKey, placement.WorkAt(1).Key);
+			ClassicAssert.AreNotEqual(placement.WorkAt(0).X, placement.WorkAt(1).X);
 		}
 
 		[Test]
@@ -369,23 +370,23 @@ namespace ThousandAndFirst.Tests
 				KingdomSealRules.InterregnumSeed(new KingdomSealLineage(promoted.LineageId, promoted.LegacyId,
 					promoted.OriginGameId, promoted.Generation, promoted.Revision)));
 
-			Assert.AreEqual(KingdomSealStatus.Promoted, promoted.Status);
-			Assert.AreEqual(expectedRoll, promoted.InterregnumRoll);
-			Assert.IsTrue(promoted.IsResolved);
+			ClassicAssert.AreEqual(KingdomSealStatus.Promoted, promoted.Status);
+			ClassicAssert.AreEqual(expectedRoll, promoted.InterregnumRoll);
+			ClassicAssert.IsTrue(promoted.IsResolved);
 		}
 
 		[Test]
 		public void JudgeAndMayPromoteFollowEligibilityRules()
 		{
-			Assert.AreEqual(KingdomSealEligibility.Ended, KingdomSealRules.Judge(true, false));
-			Assert.AreEqual(KingdomSealEligibility.Checkpointed, KingdomSealRules.Judge(true, true));
-			Assert.AreEqual(KingdomSealEligibility.Living, KingdomSealRules.Judge(false, true));
-			Assert.AreEqual(KingdomSealEligibility.Orphaned, KingdomSealRules.Judge(false, false));
+			ClassicAssert.AreEqual(KingdomSealEligibility.Ended, KingdomSealRules.Judge(true, false));
+			ClassicAssert.AreEqual(KingdomSealEligibility.Checkpointed, KingdomSealRules.Judge(true, true));
+			ClassicAssert.AreEqual(KingdomSealEligibility.Living, KingdomSealRules.Judge(false, true));
+			ClassicAssert.AreEqual(KingdomSealEligibility.Orphaned, KingdomSealRules.Judge(false, false));
 
-			Assert.IsFalse(KingdomSealRules.MayPromote(KingdomSealStatus.Retired, KingdomSealEligibility.Living));
-			Assert.IsFalse(KingdomSealRules.MayPromote(KingdomSealStatus.Living, KingdomSealEligibility.Ended));
-			Assert.IsTrue(KingdomSealRules.MayPromote(KingdomSealStatus.Terminal, KingdomSealEligibility.Ended));
-			Assert.IsFalse(KingdomSealRules.MayPromote(KingdomSealStatus.Terminal, KingdomSealEligibility.Checkpointed));
+			ClassicAssert.IsFalse(KingdomSealRules.MayPromote(KingdomSealStatus.Retired, KingdomSealEligibility.Living));
+			ClassicAssert.IsFalse(KingdomSealRules.MayPromote(KingdomSealStatus.Living, KingdomSealEligibility.Ended));
+			ClassicAssert.IsTrue(KingdomSealRules.MayPromote(KingdomSealStatus.Terminal, KingdomSealEligibility.Ended));
+			ClassicAssert.IsFalse(KingdomSealRules.MayPromote(KingdomSealStatus.Terminal, KingdomSealEligibility.Checkpointed));
 		}
 
 		[Test]
@@ -399,8 +400,8 @@ namespace ThousandAndFirst.Tests
 				SampleCapturedRecord("dynasty", "legacy-c", "game-c", 2, 2)));
 
 			KingdomSealRecord picked = KingdomSealRules.Select(new[] { a, b, c }, new HashSet<string> { "legacy-c" }, KingdomImportPolicy.LatestEligible);
-			Assert.AreEqual("legacy-b", picked.LegacyId);
-			Assert.AreEqual("dynasty", picked.LineageId);
+			ClassicAssert.AreEqual("legacy-b", picked.LegacyId);
+			ClassicAssert.AreEqual("dynasty", picked.LineageId);
 		}
 
 		[Test]
@@ -408,15 +409,15 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomSealRecord founder = SampleCapturedRecord("dynasty", "legacy-founder", "game-founder", 0, 1);
 			KingdomSealRecord heir = SampleCapturedRecord("dynasty", "legacy-heir", "game-heir", 1, 1);
-			Assert.AreEqual(founder.LineageId, heir.LineageId);
-			Assert.AreNotEqual(founder.LegacyId, heir.LegacyId);
+			ClassicAssert.AreEqual(founder.LineageId, heir.LineageId);
+			ClassicAssert.AreNotEqual(founder.LegacyId, heir.LegacyId);
 
 			KingdomSealRecord parsed;
 			KingdomSealFault fault;
 			string detail;
-			Assert.IsTrue(KingdomSealRecord.TryParse(heir.Compose(), out parsed, out fault, out detail), detail);
-			Assert.AreEqual("dynasty", parsed.LineageId);
-			Assert.AreEqual("legacy-heir", parsed.LegacyId);
+			ClassicAssert.IsTrue(KingdomSealRecord.TryParse(heir.Compose(), out parsed, out fault, out detail), detail);
+			ClassicAssert.AreEqual("dynasty", parsed.LineageId);
+			ClassicAssert.AreEqual("legacy-heir", parsed.LegacyId);
 			CollectionAssert.AreEqual(heir.RealmSettlementProvenance,
 				parsed.RealmSettlementProvenance);
 		}
@@ -425,13 +426,13 @@ namespace ThousandAndFirst.Tests
 		public void WholeTopologyProvenanceRejectsReplacementAndWrongRealm()
 		{
 			const string secondTransaction = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
-			Assert.IsTrue(KingdomIdentityRules.TryMintSettlement(ExactRealmId,
+			ClassicAssert.IsTrue(KingdomIdentityRules.TryMintSettlement(ExactRealmId,
 				secondTransaction, out string second, out KingdomIdentityFault fault),
 				fault.ToString());
-			Assert.IsTrue(KingdomSealRules.TryBuildSettlementProvenance(ExactSettlementId,
+			ClassicAssert.IsTrue(KingdomSealRules.TryBuildSettlementProvenance(ExactSettlementId,
 				KingdomIdentityRules.RulesVersion, KingdomIdentityOrigin.FoundingTransaction,
 				FoundingTransaction, 10L, "zone-a", "", out string firstRow));
-			Assert.IsTrue(KingdomSealRules.TryBuildSettlementProvenance(second,
+			ClassicAssert.IsTrue(KingdomSealRules.TryBuildSettlementProvenance(second,
 				KingdomIdentityRules.RulesVersion, KingdomIdentityOrigin.FoundingTransaction,
 				secondTransaction, 20L, "zone-b", "", out string secondRow));
 			List<KeyValuePair<string, string>> pairs = new List<KeyValuePair<string, string>>
@@ -442,20 +443,20 @@ namespace ThousandAndFirst.Tests
 			pairs.Sort((a, b) => string.CompareOrdinal(a.Key, b.Key));
 			List<string> ids = new List<string> { pairs[0].Key, pairs[1].Key };
 			List<string> rows = new List<string> { pairs[0].Value, pairs[1].Value };
-			Assert.IsTrue(KingdomSealRules.ExactTopologyProvenance(ExactRealmId, ids, rows));
+			ClassicAssert.IsTrue(KingdomSealRules.ExactTopologyProvenance(ExactRealmId, ids, rows));
 
 			const string replacementTransaction = "cccccccccccccccccccccccccccccccc";
-			Assert.IsTrue(KingdomIdentityRules.TryMintSettlement(ExactRealmId,
+			ClassicAssert.IsTrue(KingdomIdentityRules.TryMintSettlement(ExactRealmId,
 				replacementTransaction, out string replacement, out fault), fault.ToString());
 			List<string> replaced = new List<string>(ids);
 			replaced[1] = replacement;
 			replaced.Sort(StringComparer.Ordinal);
-			Assert.IsFalse(KingdomSealRules.ExactTopologyProvenance(ExactRealmId,
+			ClassicAssert.IsFalse(KingdomSealRules.ExactTopologyProvenance(ExactRealmId,
 				replaced, rows));
 
-			Assert.IsTrue(KingdomIdentityRules.TryMintRealm(secondTransaction,
+			ClassicAssert.IsTrue(KingdomIdentityRules.TryMintRealm(secondTransaction,
 				out string wrongRealm, out fault), fault.ToString());
-			Assert.IsFalse(KingdomSealRules.ExactTopologyProvenance(wrongRealm, ids, rows));
+			ClassicAssert.IsFalse(KingdomSealRules.ExactTopologyProvenance(wrongRealm, ids, rows));
 		}
 
 		[Test]
@@ -494,10 +495,10 @@ namespace ThousandAndFirst.Tests
 			KingdomSealRecord migrated;
 			KingdomSealFault fault;
 			string detail;
-			Assert.IsFalse(KingdomSealRecord.TryParse(KingdomSealFormat.Compose(1, schemaOne),
+			ClassicAssert.IsFalse(KingdomSealRecord.TryParse(KingdomSealFormat.Compose(1, schemaOne),
 				out migrated, out fault, out detail));
-			Assert.IsNull(migrated);
-			Assert.AreEqual(KingdomSealFault.UnsupportedSchema, fault);
+			ClassicAssert.IsNull(migrated);
+			ClassicAssert.AreEqual(KingdomSealFault.UnsupportedSchema, fault);
 		}
 
 		[Test]
@@ -505,11 +506,11 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomSealRecord original = SampleCapturedRecord("old-topology", "old-topology-run",
 				"game-old-topology", 0, 1);
-			Assert.IsFalse(KingdomSealRecord.TryParse(
+			ClassicAssert.IsFalse(KingdomSealRecord.TryParse(
 				KingdomSealFormat.Compose(3, original.WriteBody()), out KingdomSealRecord parsed,
 				out KingdomSealFault fault, out string detail));
-			Assert.IsNull(parsed);
-			Assert.AreEqual(KingdomSealFault.UnsupportedSchema, fault, detail);
+			ClassicAssert.IsNull(parsed);
+			ClassicAssert.AreEqual(KingdomSealFault.UnsupportedSchema, fault, detail);
 		}
 
 		[Test]
@@ -518,7 +519,7 @@ namespace ThousandAndFirst.Tests
 			KingdomSealRecord retired = KingdomSealRules.WithRetirement(
 				SampleCapturedRecord("dynasty", "legacy-retired", "game-retired", 1, 1));
 			Assert.Throws<InvalidOperationException>(() => KingdomSealRules.Promote(retired, KingdomSealEligibility.Ended));
-			Assert.AreEqual(KingdomSealStatus.Promoted, KingdomSealRules.PromoteRetirement(retired).Status);
+			ClassicAssert.AreEqual(KingdomSealStatus.Promoted, KingdomSealRules.PromoteRetirement(retired).Status);
 		}
 
 		[Test]
@@ -529,9 +530,9 @@ namespace ThousandAndFirst.Tests
 			KingdomSealRecord parsed;
 			KingdomSealFault fault;
 			string detail;
-			Assert.IsFalse(KingdomSealRecord.TryParse(malformed.Compose(), out parsed, out fault, out detail));
-			Assert.IsNull(parsed);
-			Assert.AreEqual(KingdomSealFault.MissingKey, fault);
+			ClassicAssert.IsFalse(KingdomSealRecord.TryParse(malformed.Compose(), out parsed, out fault, out detail));
+			ClassicAssert.IsNull(parsed);
+			ClassicAssert.AreEqual(KingdomSealFault.MissingKey, fault);
 		}
 
 		[Test]
@@ -542,9 +543,9 @@ namespace ThousandAndFirst.Tests
 			KingdomSealRecord parsed;
 			KingdomSealFault fault;
 			string detail;
-			Assert.IsFalse(KingdomSealRecord.TryParse(malformed.Compose(), out parsed, out fault, out detail));
-			Assert.IsNull(parsed);
-			Assert.AreEqual(KingdomSealFault.OutOfBounds, fault);
+			ClassicAssert.IsFalse(KingdomSealRecord.TryParse(malformed.Compose(), out parsed, out fault, out detail));
+			ClassicAssert.IsNull(parsed);
+			ClassicAssert.AreEqual(KingdomSealFault.OutOfBounds, fault);
 		}
 
 		[Test]
@@ -555,11 +556,11 @@ namespace ThousandAndFirst.Tests
 			book.WorkZoneIds.Add("z1");
 			book.WorkZoneIds.Add("z1");
 			string grounded = KingdomSealRules.ChooseGround(book, new List<string> { "z3" });
-			Assert.AreEqual("z1", grounded);
+			ClassicAssert.AreEqual("z1", grounded);
 
 			KingdomCityBook none = new KingdomCityBook();
 			string fallback = KingdomSealRules.ChooseGround(none, new List<string> { "z9", "z4" });
-			Assert.AreEqual("z4", fallback);
+			ClassicAssert.AreEqual("z4", fallback);
 		}
 	}
 

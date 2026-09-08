@@ -6,6 +6,7 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -51,7 +52,7 @@ namespace ThousandAndFirst.Tests
 			string fixture = TestMain.ReadRepositoryText(Path.Combine("DevTests",
 				"Compatibility", "KingdomEnrolledNamedWireV1.fixture"))
 				.Replace("\r\n", "\n");
-			Assert.AreEqual("2aa28675990e80727bac1eb7fe365cd2682c13ea860e9cd2cf7311a3fb1bdfb8",
+			ClassicAssert.AreEqual("2aa28675990e80727bac1eb7fe365cd2682c13ea860e9cd2cf7311a3fb1bdfb8",
 				Sha256(fixture));
 			string[] rows = fixture.Split(new[] { '\n' },
 				StringSplitOptions.RemoveEmptyEntries);
@@ -99,15 +100,15 @@ namespace ThousandAndFirst.Tests
 				string[] columns = row.Split('\t');
 				loaded[columns[2]] = columns[3];
 			}
-			Assert.AreEqual("gene-old", loaded["Who"]);
-			Assert.AreEqual("Aru", loaded["Named"]);
-			Assert.AreEqual("Old Ibul", loaded["City"]);
-			Assert.AreEqual("9876543210", loaded["Tick"]);
-			Assert.AreEqual("true", loaded["LapseAnnounced"]);
-			Assert.AreEqual("", loaded["PurposePairId"]);
-			Assert.AreEqual("0", loaded["PurposePairEpoch"]);
-			Assert.AreEqual("", loaded["PurposeOperationId"]);
-			Assert.AreEqual("", loaded["PurposeAuthorityId"]);
+			ClassicAssert.AreEqual("gene-old", loaded["Who"]);
+			ClassicAssert.AreEqual("Aru", loaded["Named"]);
+			ClassicAssert.AreEqual("Old Ibul", loaded["City"]);
+			ClassicAssert.AreEqual("9876543210", loaded["Tick"]);
+			ClassicAssert.AreEqual("true", loaded["LapseAnnounced"]);
+			ClassicAssert.AreEqual("", loaded["PurposePairId"]);
+			ClassicAssert.AreEqual("0", loaded["PurposePairEpoch"]);
+			ClassicAssert.AreEqual("", loaded["PurposeOperationId"]);
+			ClassicAssert.AreEqual("", loaded["PurposeAuthorityId"]);
 
 			foreach (string field in new[] { "PurposePairId", "PurposePairEpoch",
 				"PurposeOperationId", "PurposeAuthorityId" })

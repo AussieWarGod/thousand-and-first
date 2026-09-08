@@ -4,6 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using Snapshot = ThousandAndFirst.Harness.KingdomQuickstartSaveSnapshot;
 using Codec = ThousandAndFirst.Harness.KingdomQuickstartSaveSnapshotCodec;
 
@@ -22,21 +23,21 @@ namespace ThousandAndFirst.Tests
 		public void SixSelectionsRoundTripEveryImmutableField(string profile, bool advisor)
 		{
 			Snapshot expected = Good(profile, advisor); string wire = Wire(expected);
-			Assert.IsTrue(Codec.TryDecode(wire, out Snapshot actual)); Assert.AreNotSame(expected, actual);
-			CollectionAssert.AreEqual(Values(expected), Values(actual)); Assert.AreEqual(15, Values(actual).Length);
-			Assert.AreEqual(wire, Wire(actual)); CollectionAssert.AreEqual(Raw(expected), Bytes(wire));
+			ClassicAssert.IsTrue(Codec.TryDecode(wire, out Snapshot actual)); ClassicAssert.AreNotSame(expected, actual);
+			CollectionAssert.AreEqual(Values(expected), Values(actual)); ClassicAssert.AreEqual(15, Values(actual).Length);
+			ClassicAssert.AreEqual(wire, Wire(actual)); CollectionAssert.AreEqual(Raw(expected), Bytes(wire));
 			FieldInfo[] fields = typeof(Snapshot).GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
-			Assert.AreEqual(15, fields.Length); foreach (FieldInfo field in fields) Assert.IsTrue(field.IsInitOnly, field.Name);
+			ClassicAssert.AreEqual(15, fields.Length); foreach (FieldInfo field in fields) ClassicAssert.IsTrue(field.IsInitOnly, field.Name);
 		}
 
 		[TestCase(5)] [TestCase(13)]
 		public void OptionalNullAndEmptyRemainDistinct(int field)
 		{
 			Snapshot absent = Change(field, null), empty = Change(field, "");
-			Assert.IsTrue(Codec.TryDecode(Wire(absent), out Snapshot a));
-			Assert.IsTrue(Codec.TryDecode(Wire(empty), out Snapshot b));
-			Assert.IsNull(Values(a)[field]); Assert.AreEqual("", Values(b)[field]);
-			Assert.AreNotEqual(Wire(absent), Wire(empty));
+			ClassicAssert.IsTrue(Codec.TryDecode(Wire(absent), out Snapshot a));
+			ClassicAssert.IsTrue(Codec.TryDecode(Wire(empty), out Snapshot b));
+			ClassicAssert.IsNull(Values(a)[field]); ClassicAssert.AreEqual("", Values(b)[field]);
+			ClassicAssert.AreNotEqual(Wire(absent), Wire(empty));
 		}
 
 		[TestCase(5)] [TestCase(11)] [TestCase(13)] [TestCase(14)]
@@ -44,10 +45,10 @@ namespace ThousandAndFirst.Tests
 		{
 			foreach (string text in new[] { "é-漢-\U0001F9EA", "e\u0301-漢-\U0001F9EA" })
 			{
-				Snapshot value = Change(field, text); Assert.IsTrue(Codec.TryDecode(Wire(value), out Snapshot read));
-				Assert.AreEqual(text, Values(read)[field]);
+				Snapshot value = Change(field, text); ClassicAssert.IsTrue(Codec.TryDecode(Wire(value), out Snapshot read));
+				ClassicAssert.AreEqual(text, Values(read)[field]);
 			}
-			Assert.AreNotEqual(Wire(Change(field, "é")), Wire(Change(field, "e\u0301")));
+			ClassicAssert.AreNotEqual(Wire(Change(field, "é")), Wire(Change(field, "e\u0301")));
 		}
 
 		[TestCase(null)] [TestCase("")] [TestCase("01234567-89AB-CDEF-0123-456789ABCDEF")]
@@ -57,7 +58,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("#42 x")] [TestCase("#42\n")] [TestCase("SEED")]
 		public void InvalidSharedSeedGrammarRefuses(string value) { Refuses(Change(1, value)); }
 		[TestCase("#0")] [TestCase("#4242")] [TestCase("named-seed")]
-		public void ExistingSeedGrammarIsNotNarrowed(string value) { Assert.IsNotNull(Wire(Change(1, value))); }
+		public void ExistingSeedGrammarIsNotNarrowed(string value) { ClassicAssert.IsNotNull(Wire(Change(1, value))); }
 		[TestCase(null)] [TestCase("")] [TestCase("Marsh")] [TestCase("swamp")] [TestCase("marsh ")]
 		public void InvalidProfileRefuses(string value) { Refuses(Change(2, value)); }
 		[TestCase(0)] [TestCase(-1)] [TestCase(int.MinValue)]
@@ -68,8 +69,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PositiveIdentityAndClockExtremesRemainRepresentable()
 		{
-			Assert.IsNotNull(Wire(Change(4, int.MaxValue)));
-			for (int i = 6; i <= 9; i++) foreach (long value in new[] { 0L, long.MaxValue }) Assert.IsNotNull(Wire(Change(i, value)));
+			ClassicAssert.IsNotNull(Wire(Change(4, int.MaxValue)));
+			for (int i = 6; i <= 9; i++) foreach (long value in new[] { 0L, long.MaxValue }) ClassicAssert.IsNotNull(Wire(Change(i, value)));
 		}
 
 		[Test]
@@ -108,9 +109,9 @@ namespace ThousandAndFirst.Tests
 			foreach (int field in new[] { 5, 11, 13, 14 })
 			{
 				int at = Array.IndexOf(TextFields, field);
-				Assert.IsTrue(Codec.TryDecode(Wire(Change(field, new string('x', limits[at]))), out _));
+				ClassicAssert.IsTrue(Codec.TryDecode(Wire(Change(field, new string('x', limits[at]))), out _));
 			}
-			Assert.IsNotNull(Wire(Change(1, "#" + new string('a', 96))));
+			ClassicAssert.IsNotNull(Wire(Change(1, "#" + new string('a', 96))));
 			Refuses(Change(11, new string('\u0800', Codec.MaxHeartReceiptChars)), false);
 			BadWire(Codec.Prefix + new string('A', Codec.MaxWireChars));
 		}
@@ -155,7 +156,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string wire = Wire(Good()); BadWire(wire.Insert(Codec.Prefix.Length + 4, "\n"));
 			for (int i = 0; i < 3 && !wire.EndsWith("=", StringComparison.Ordinal); i++) wire = Wire(Change(11, "heart" + new string('x', i)));
-			Assert.IsTrue(wire.EndsWith("=", StringComparison.Ordinal));
+			ClassicAssert.IsTrue(wire.EndsWith("=", StringComparison.Ordinal));
 			const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 			int at = wire.Length - (wire.EndsWith("==", StringComparison.Ordinal) ? 3 : 2);
 			char[] chars = wire.ToCharArray(); chars[at] = alphabet[alphabet.IndexOf(chars[at]) + 1];
@@ -169,14 +170,14 @@ namespace ThousandAndFirst.Tests
 		}
 		private static string Receipt(string key, bool advisor, int target = 6)
 		{
-			Assert.IsTrue(KingdomQuickstartRules.TryProfile(key, out KingdomQuickstartProfile profile));
-			Assert.IsTrue(KingdomQuickstartRules.TryCreateReceipt(key, profile.ZoneId, out KingdomQuickstartReceipt receipt));
+			ClassicAssert.IsTrue(KingdomQuickstartRules.TryProfile(key, out KingdomQuickstartProfile profile));
+			ClassicAssert.IsTrue(KingdomQuickstartRules.TryCreateReceipt(key, profile.ZoneId, out KingdomQuickstartReceipt receipt));
 			string[] values = { "", "Starapple", "water-id", "larder-id", "materials-id", advisor ? "advisor-id" : "", "" };
 			for (int phase = 1; phase <= target; phase++)
 			{
 				var disposition = phase == 5 ? (advisor ? KingdomQuickstartAdvisorDisposition.Included
 					: KingdomQuickstartAdvisorDisposition.Omitted) : KingdomQuickstartAdvisorDisposition.Unresolved;
-				Assert.IsTrue(KingdomQuickstartRules.TryAdvance(receipt, (KingdomQuickstartPhase)phase, values[phase], disposition, out var next));
+				ClassicAssert.IsTrue(KingdomQuickstartRules.TryAdvance(receipt, (KingdomQuickstartPhase)phase, values[phase], disposition, out var next));
 				receipt = next;
 			}
 			return KingdomQuickstartRules.Encode(receipt);
@@ -194,15 +195,15 @@ namespace ThousandAndFirst.Tests
 				(long)v[6], (long)v[7], (long)v[8], (long)v[9], (string)v[10], (string)v[11], (string)v[12], (string)v[13], (string)v[14]);
 		}
 		private static string Wire(Snapshot value)
-		{ Assert.IsTrue(Codec.Valid(value)); Assert.IsTrue(Codec.TryEncode(value, out string wire)); return wire; }
+		{ ClassicAssert.IsTrue(Codec.Valid(value)); ClassicAssert.IsTrue(Codec.TryEncode(value, out string wire)); return wire; }
 		private static void Refuses(Snapshot value, bool decode = true)
 		{
-			object[] before = value == null ? null : Values(value); Assert.IsFalse(Codec.Valid(value));
-			string wire = "stale"; Assert.IsFalse(Codec.TryEncode(value, out wire)); Assert.IsNull(wire);
+			object[] before = value == null ? null : Values(value); ClassicAssert.IsFalse(Codec.Valid(value));
+			string wire = "stale"; ClassicAssert.IsFalse(Codec.TryEncode(value, out wire)); ClassicAssert.IsNull(wire);
 			if (value != null) { CollectionAssert.AreEqual(before, Values(value)); if (decode) BadWire(Envelope(Raw(value))); }
 		}
 		private static void BadWire(string wire)
-		{ Snapshot value = Good(); Assert.IsFalse(Codec.TryDecode(wire, out value), wire == null ? "null" : "length " + wire.Length); Assert.IsNull(value); }
+		{ Snapshot value = Good(); ClassicAssert.IsFalse(Codec.TryDecode(wire, out value), wire == null ? "null" : "length " + wire.Length); ClassicAssert.IsNull(value); }
 		private static string Envelope(byte[] bytes) { return Codec.Prefix + Convert.ToBase64String(bytes); }
 		private static byte[] Bytes(string wire) { return Convert.FromBase64String(wire.Substring(Codec.Prefix.Length)); }
 		private static byte[] Raw(Snapshot value)

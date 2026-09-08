@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 using ThousandAndFirst.Harness;
 
@@ -53,15 +54,15 @@ namespace ThousandAndFirst.Tests
 		{
 			List<KingdomScenarioOwnerRow> rows = Two();
 			KingdomScenarioSelectorRules.Sort(rows);
-			Assert.AreEqual("object-a", rows[0].Id);
-			Assert.AreEqual("object-b", rows[1].Id);
+			ClassicAssert.AreEqual("object-a", rows[0].Id);
+			ClassicAssert.AreEqual("object-b", rows[1].Id);
 			List<KingdomScenarioOwnerRow> tied = new List<KingdomScenarioOwnerRow>
 			{
 				Row(2, 2, "zeta"),
 				Row(2, 2, "alpha")
 			};
 			KingdomScenarioSelectorRules.Sort(tied);
-			Assert.AreEqual("alpha", tied[0].Id);
+			ClassicAssert.AreEqual("alpha", tied[0].Id);
 		}
 
 		// ----- arity ------------------------------------------------------------------------------
@@ -71,9 +72,9 @@ namespace ThousandAndFirst.Tests
 		public void ZeroCandidatesRefuses()
 		{
 			string failure;
-			Assert.AreEqual(-1, Resolve(new List<KingdomScenarioOwnerRow>(), "", out failure));
+			ClassicAssert.AreEqual(-1, Resolve(new List<KingdomScenarioOwnerRow>(), "", out failure));
 			StringAssert.Contains("no building", failure);
-			Assert.AreEqual(-1, Resolve(null, "", out failure));
+			ClassicAssert.AreEqual(-1, Resolve(null, "", out failure));
 		}
 
 		[Test]
@@ -81,8 +82,8 @@ namespace ThousandAndFirst.Tests
 		{
 			string failure;
 			List<KingdomScenarioOwnerRow> one = new List<KingdomScenarioOwnerRow> { Row(4, 3, "a") };
-			Assert.AreEqual(0, Resolve(one, "", out failure));
-			Assert.IsNull(failure);
+			ClassicAssert.AreEqual(0, Resolve(one, "", out failure));
+			ClassicAssert.IsNull(failure);
 		}
 
 		/// <summary>
@@ -95,7 +96,7 @@ namespace ThousandAndFirst.Tests
 			string failure;
 			List<KingdomScenarioOwnerRow> rows = Two();
 			KingdomScenarioSelectorRules.Sort(rows);
-			Assert.AreEqual(-1, Resolve(rows, "", out failure));
+			ClassicAssert.AreEqual(-1, Resolve(rows, "", out failure));
 			StringAssert.Contains("2 buildings", failure);
 			StringAssert.Contains("at=4,3", failure);
 			StringAssert.Contains("at=11,7", failure);
@@ -110,8 +111,8 @@ namespace ThousandAndFirst.Tests
 			string failure;
 			List<KingdomScenarioOwnerRow> rows = Two();
 			KingdomScenarioSelectorRules.Sort(rows);
-			Assert.AreEqual(1, Resolve(rows, "at=11,7", out failure));
-			Assert.AreEqual(0, Resolve(rows, "at=4,3", out failure));
+			ClassicAssert.AreEqual(1, Resolve(rows, "at=11,7", out failure));
+			ClassicAssert.AreEqual(0, Resolve(rows, "at=4,3", out failure));
 		}
 
 		[Test]
@@ -120,7 +121,7 @@ namespace ThousandAndFirst.Tests
 			string failure;
 			List<KingdomScenarioOwnerRow> rows = Two();
 			KingdomScenarioSelectorRules.Sort(rows);
-			Assert.AreEqual(1, Resolve(rows, "id=object-b", out failure));
+			ClassicAssert.AreEqual(1, Resolve(rows, "id=object-b", out failure));
 		}
 
 		[Test]
@@ -129,9 +130,9 @@ namespace ThousandAndFirst.Tests
 			string failure;
 			List<KingdomScenarioOwnerRow> rows = Two();
 			KingdomScenarioSelectorRules.Sort(rows);
-			Assert.AreEqual(-1, Resolve(rows, "at=99,99", out failure));
+			ClassicAssert.AreEqual(-1, Resolve(rows, "at=99,99", out failure));
 			StringAssert.Contains("names no building", failure);
-			Assert.AreEqual(-1, Resolve(rows, "id=object-z", out failure));
+			ClassicAssert.AreEqual(-1, Resolve(rows, "id=object-z", out failure));
 		}
 
 		/// <summary>Two rows on one cell cannot both be "the" selection; identity settles it.</summary>
@@ -144,9 +145,9 @@ namespace ThousandAndFirst.Tests
 				Row(2, 2, "alpha"),
 				Row(2, 2, "zeta")
 			};
-			Assert.AreEqual(-1, Resolve(tied, "at=2,2", out failure));
+			ClassicAssert.AreEqual(-1, Resolve(tied, "at=2,2", out failure));
 			StringAssert.Contains("more than one", failure);
-			Assert.AreEqual(1, Resolve(tied, "id=zeta", out failure));
+			ClassicAssert.AreEqual(1, Resolve(tied, "id=zeta", out failure));
 		}
 
 		[TestCase("north")]
@@ -165,9 +166,9 @@ namespace ThousandAndFirst.Tests
 			int x;
 			int y;
 			string id;
-			Assert.IsFalse(KingdomScenarioSelectorRules.TryParse(selector, out hasCoordinate,
+			ClassicAssert.IsFalse(KingdomScenarioSelectorRules.TryParse(selector, out hasCoordinate,
 				out x, out y, out id, out failure), selector);
-			Assert.IsNotEmpty(failure);
+			ClassicAssert.IsNotEmpty(failure);
 		}
 
 		[Test]
@@ -178,11 +179,11 @@ namespace ThousandAndFirst.Tests
 			int x;
 			int y;
 			string id;
-			Assert.IsTrue(KingdomScenarioSelectorRules.TryParse("", out hasCoordinate, out x,
+			ClassicAssert.IsTrue(KingdomScenarioSelectorRules.TryParse("", out hasCoordinate, out x,
 				out y, out id, out failure));
-			Assert.IsFalse(hasCoordinate);
-			Assert.IsNull(id);
-			Assert.IsNull(failure);
+			ClassicAssert.IsFalse(hasCoordinate);
+			ClassicAssert.IsNull(id);
+			ClassicAssert.IsNull(failure);
 		}
 	}
 }

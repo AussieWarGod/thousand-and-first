@@ -8,7 +8,7 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-## Unreleased — master pause/resume correction and first-settler legibility
+## Unreleased — master pause/resume correction, the claimed-ground light, and first-settler legibility
 
 - Master resume now validates a complete growth schedule before publishing it. Fresh
   growth no longer receives a positive deadline with a zero interval; established growth
@@ -19,6 +19,14 @@ below it.
   arrival recovery, stale ownership, canonical save payloads and arithmetic refusal.
   Native regression and four-mode compilation pass. Full licensed suites pass13,715 main
   and5,093 Portable cases,zero skips; repository audit passes501 tooling tests.
+- Claimed ground now reads at a glance. While you stand in a zone your seat claims, a
+  mod-owned zone part lights the whole zone to the torch tier once per rendered frame and
+  remembers its floor once per visit. Walls still stop sight, interiors behind them stay
+  dark, and nothing hidden is revealed: this is lamplight, not omniscience or x-ray sight.
+- New option `r_TAF_OptionClaimedGroundLight`, default Yes. Losing the claim, seceding,
+  being exiled, or switching the option off takes the part off on the next visit; explored
+  floor stays explored, because unsetting it would erase legitimately walked ground. No
+  saved field, wire or public API change, and a save loaded without the mod is dark again.
 - The first guest now announces itself. Publishing the first-guest correspondence writes one
   player message naming the settlement and pointing at the Charter, said once per opportunity
   because a standing candidate blocks any second publication.
@@ -29,18 +37,18 @@ below it.
   settler's tent and its bill; otherwise it asks for more housing. One shared predicate now backs
   the Charter label and the next-need line. No save format, option, or arrival-interval change.
 
-> **Current unreleased census — exact structural gate passed.** Current 3049-file census is line-cap green:
-> 431,926 physical lines, zero files at or above 300, 1415 direct-XRL imports. Inventory SHA-256:
-> `440a4d85ebbe8c0ee650481ee600d9d120ac23f99b3d486a6e980c2bdc9fd348`.
-> The generated cold-install inventory contains 3080 files; no new subscription claim.
-> Linux dotnet 9.0.306 against the licensed install runs the full source suite green at 13,716
-> cases and the portable kernel at 5,093 cases, zero skips in both, and compiles the staged
-> tree clean in both ordinary modes: baseline 3045 sources, compatibility 3049 plus the
-> tracked Hearthpyre 2.2.3 ABI stub, warnings as errors. This digest carries no
-> human semantic review and no native in-game run: the exact-inventory human semantic review
-> remains a release blocker, and the first-guest beat is source- and suite-verified only.
+> **Current unreleased census — exact structural gate passed.** Current 3051-file census is line-cap green:
+> 432,024 physical lines,zero files at or above300; direct `XRL`
+> imports occur in 1417 files, 0 of them over the line limit. Inventory SHA-256:
+> `fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`.
+> The generated cold-install inventory contains 3082 files; no new subscription claim.
+> Engine-free suites and the repository tooling suites pass. Roslyn 9.0.306 on Linux compiled the
+> staged baseline (3047 sources) and staged compatibility (3051 sources) sets clean against the
+> licensed Managed references, warnings as errors. The two dev-harness modes, the Windows gate and
+> any native run did NOT happen for this delta, and the exact-inventory human semantic review is
+> open against the new digest. This is not Beta sign-off.
 
-> **Retained master-growth census — exact structural gate passed.** Current 3049-file census is line-cap green:
+> **Retained unreleased master-resume census — exact structural gate passed.** Its3049-file census is line-cap green:
 > 431,893 physical lines,zero files at or above300,1415 direct-XRL imports. Inventory SHA-256:
 > `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
 > The generated cold-install inventory contains 3080 files; no new subscription claim.

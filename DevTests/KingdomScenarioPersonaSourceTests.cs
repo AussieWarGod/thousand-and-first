@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 using ThousandAndFirst.Harness;
 
@@ -33,11 +34,11 @@ namespace ThousandAndFirst.Tests
 		private static IList<string> Personas()
 		{
 			string directory = Path.Combine(TestMain.RepositoryRoot, "Tools", "personas");
-			Assert.IsTrue(Directory.Exists(directory), "Tools/personas is missing");
+			ClassicAssert.IsTrue(Directory.Exists(directory), "Tools/personas is missing");
 			string[] found = Directory.GetFiles(directory, "*.persona");
 			Array.Sort(found, StringComparer.Ordinal);
 			List<string> rows = new List<string>(found);
-			Assert.Greater(rows.Count, 5, "the persona matrix authors more than a token case");
+			ClassicAssert.Greater(rows.Count, 5, "the persona matrix authors more than a token case");
 			return rows;
 		}
 
@@ -72,7 +73,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string path in Personas())
 			{
 				string expect = Field(File.ReadAllText(path), "EXPECT");
-				Assert.IsNotNull(expect, path);
+				ClassicAssert.IsNotNull(expect, path);
 				foreach (string item in expect.Split(','))
 				{
 					int tilde = item.IndexOf('~');
@@ -83,7 +84,7 @@ namespace ThousandAndFirst.Tests
 					asserted++;
 				}
 			}
-			Assert.Greater(asserted, 0, "no persona binds to a reason code");
+			ClassicAssert.Greater(asserted, 0, "no persona binds to a reason code");
 		}
 
 		/// <summary>Every terminal a persona may declare is a row some runtime shard writes.</summary>
@@ -112,8 +113,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int thrown = realizer.IndexOf("ThousandAndFirst scenario harness refused to open",
 				StringComparison.Ordinal);
-			Assert.Greater(journalled, -1);
-			Assert.Greater(thrown, journalled);
+			ClassicAssert.Greater(journalled, -1);
+			ClassicAssert.Greater(thrown, journalled);
 		}
 
 		/// <summary>
@@ -142,15 +143,15 @@ namespace ThousandAndFirst.Tests
 			string verbs = Read("Harness/KingdomScenarioVerbs.cs");
 			StringAssert.Contains("KingdomScenarioHostedArcology.Run(", verbs);
 			StringAssert.Contains("arcology <entry|teaching|terrace|ward>", verbs);
-			Assert.IsTrue(KingdomScenarioVerbApi.IsReserved("arcology"));
+			ClassicAssert.IsTrue(KingdomScenarioVerbApi.IsReserved("arcology"));
 			string profile = Read("Tools/scenario_profile.py");
 			string matrix = Read("Tools/personas/persona_matrix.py");
 			StringAssert.Contains("\"arcology\"", profile);
 			StringAssert.Contains("\"arcology\"", matrix);
 			int script = profile.IndexOf("SCRIPT_VERBS = (", StringComparison.Ordinal);
 			int counted = profile.IndexOf("COUNTED_VERB", script, StringComparison.Ordinal);
-			Assert.Greater(script, -1);
-			Assert.Greater(counted, script);
+			ClassicAssert.Greater(script, -1);
+			ClassicAssert.Greater(counted, script);
 			StringAssert.DoesNotContain("\"arcology\"", profile.Substring(script,
 				counted - script), "production-only navigation must remain attended");
 		}
@@ -174,9 +175,9 @@ namespace ThousandAndFirst.Tests
 			int fresh = runner.IndexOf("mktemp -d /mnt/c/taf-scenario.XXXXXX", StringComparison.Ordinal);
 			int prepare = runner.IndexOf("\"$PREPARE\" \"${prepare_args[@]}\"",
 				StringComparison.Ordinal);
-			Assert.Greater(idle, -1, "a persona must refuse a pre-existing game without killing it");
-			Assert.Greater(fresh, idle, "prior profiles must survive every fresh launch");
-			Assert.Greater(prepare, fresh);
+			ClassicAssert.Greater(idle, -1, "a persona must refuse a pre-existing game without killing it");
+			ClassicAssert.Greater(fresh, idle, "prior profiles must survive every fresh launch");
+			ClassicAssert.Greater(prepare, fresh);
 			StringAssert.Contains("prepare_args+=(\"$TAF_PERSONA_SEED\")", runner);
 			StringAssert.Contains("capture_temp=\"$CAPTURE_DIR/.$artifact.$$.png\"", runner);
 			StringAssert.Contains("mv -f -- \"$capture_temp\" \"$capture_target\"", runner);
@@ -195,15 +196,15 @@ namespace ThousandAndFirst.Tests
 				captureGate, StringComparison.Ordinal);
 			int captureFault = runner.IndexOf("if [ -n \"$capture_problem\" ]", published,
 				StringComparison.Ordinal);
-			Assert.Greater(archived, -1, "the journal must be archived before any diagnosis returns");
-			Assert.Greater(checkInput, archived, "ordinary log checks use the retained raw archive");
-			Assert.Greater(expectedLog, checkInput, "declared literal diagnostics derive from the raw archive");
-			Assert.Greater(logChecked, expectedLog,
+			ClassicAssert.Greater(archived, -1, "the journal must be archived before any diagnosis returns");
+			ClassicAssert.Greater(checkInput, archived, "ordinary log checks use the retained raw archive");
+			ClassicAssert.Greater(expectedLog, checkInput, "declared literal diagnostics derive from the raw archive");
+			ClassicAssert.Greater(logChecked, expectedLog,
 				"raw or exact-diagnostic-filtered Player.log must pass TAF diagnostics before journal assertion");
-			Assert.Greater(asserted, logChecked, "journal assertion follows clean durable evidence");
-			Assert.Greater(captureGate, asserted, "capture is gated on the asserted verdict");
-			Assert.Greater(published, captureGate, "only a validated PASS image is published");
-			Assert.Greater(captureFault, asserted,
+			ClassicAssert.Greater(asserted, logChecked, "journal assertion follows clean durable evidence");
+			ClassicAssert.Greater(captureGate, asserted, "capture is gated on the asserted verdict");
+			ClassicAssert.Greater(published, captureGate, "only a validated PASS image is published");
+			ClassicAssert.Greater(captureFault, asserted,
 				"capture failure is appended only after journal assertion");
 			StringAssert.Contains("$MATRIX\" assert \"$(persona_path \"$persona\")\" \\",
 				runner);
@@ -242,8 +243,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("string owner = Definition.Owner ?? \"\";", digests);
 			int owner = digests.IndexOf("sb.Append(owner)", StringComparison.Ordinal);
 			int sort = digests.IndexOf("rows.Sort(StringComparer.Ordinal)", StringComparison.Ordinal);
-			Assert.Greater(owner, -1);
-			Assert.Greater(sort, -1);
+			ClassicAssert.Greater(owner, -1);
+			ClassicAssert.Greater(sort, -1);
 		}
 
 		/// <summary>
@@ -260,15 +261,15 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int construct = registry.IndexOf("Activator.CreateInstance(type)",
 				StringComparison.Ordinal);
-			Assert.Greater(guard, -1);
-			Assert.Greater(construct, guard);
+			ClassicAssert.Greater(guard, -1);
+			ClassicAssert.Greater(construct, guard);
 			// One dispatch path: extensions are asked only after the closed built-in set declines.
 			string verbs = Read("Harness/KingdomScenarioVerbs.cs");
 			int builtin = verbs.IndexOf("case \"flatten\":", StringComparison.Ordinal);
 			int extension = verbs.IndexOf("KingdomScenarioVerbRegistry.TryRun(",
 				StringComparison.Ordinal);
-			Assert.Greater(builtin, -1);
-			Assert.Greater(extension, builtin);
+			ClassicAssert.Greater(builtin, -1);
+			ClassicAssert.Greater(extension, builtin);
 		}
 	}
 }

@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -18,7 +19,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(10, 65)]
 		public void ComputeWaterCost_MatchesTheFormula(int complexity, int expected)
 		{
-			Assert.AreEqual(expected, KingdomSalvageRules.ComputeWaterCost(complexity));
+			ClassicAssert.AreEqual(expected, KingdomSalvageRules.ComputeWaterCost(complexity));
 		}
 
 		[Test]
@@ -27,11 +28,11 @@ namespace ThousandAndFirst.Tests
 			// A mutation that lets a higher Complexity ever cost less would let a founder game
 			// the price by exaggerating a machine's own difficulty rating.
 			int previous = KingdomSalvageRules.ComputeWaterCost(0);
-			Assert.GreaterOrEqual(previous, 0);
+			ClassicAssert.GreaterOrEqual(previous, 0);
 			for (int complexity = 1; complexity <= 50; complexity++)
 			{
 				int cost = KingdomSalvageRules.ComputeWaterCost(complexity);
-				Assert.GreaterOrEqual(cost, previous, "complexity=" + complexity);
+				ClassicAssert.GreaterOrEqual(cost, previous, "complexity=" + complexity);
 				previous = cost;
 			}
 		}
@@ -47,18 +48,18 @@ namespace ThousandAndFirst.Tests
 		[TestCase(10, 7)]
 		public void ComputeHandsRequired_MatchesTheFormula(int difficulty, int expected)
 		{
-			Assert.AreEqual(expected, KingdomSalvageRules.ComputeHandsRequired(difficulty));
+			ClassicAssert.AreEqual(expected, KingdomSalvageRules.ComputeHandsRequired(difficulty));
 		}
 
 		[Test]
 		public void ComputeHandsRequired_NeverNegativeAndNeverDecreasesWithDifficulty()
 		{
 			int previous = KingdomSalvageRules.ComputeHandsRequired(0);
-			Assert.GreaterOrEqual(previous, 0);
+			ClassicAssert.GreaterOrEqual(previous, 0);
 			for (int difficulty = 1; difficulty <= 50; difficulty++)
 			{
 				int hands = KingdomSalvageRules.ComputeHandsRequired(difficulty);
-				Assert.GreaterOrEqual(hands, previous, "difficulty=" + difficulty);
+				ClassicAssert.GreaterOrEqual(hands, previous, "difficulty=" + difficulty);
 				previous = hands;
 			}
 		}
@@ -68,10 +69,10 @@ namespace ThousandAndFirst.Tests
 		{
 			// A zeroed constant here would make certification free, or make every machine
 			// certifiable regardless of who is standing in the settlement.
-			Assert.Greater(KingdomSalvageRules.SalvageBaseWaterCost, 0);
-			Assert.Greater(KingdomSalvageRules.SalvageWaterPerComplexity, 0);
-			Assert.Greater(KingdomSalvageRules.SalvageBaseHandsRequired, 0);
-			Assert.Greater(KingdomSalvageRules.SalvageDifficultyPerHand, 0);
+			ClassicAssert.Greater(KingdomSalvageRules.SalvageBaseWaterCost, 0);
+			ClassicAssert.Greater(KingdomSalvageRules.SalvageWaterPerComplexity, 0);
+			ClassicAssert.Greater(KingdomSalvageRules.SalvageBaseHandsRequired, 0);
+			ClassicAssert.Greater(KingdomSalvageRules.SalvageDifficultyPerHand, 0);
 		}
 
 		// --- Assess: the refusal cases that protect the player's stores and settlers ---------
@@ -86,7 +87,7 @@ namespace ThousandAndFirst.Tests
 		public void Assess_ChecksInProtectiveOrder(bool hazardous, bool broken, bool rusted, bool understood, int complexity, int difficulty, int storedWater, int population, KingdomSalvageRules.SalvageVerdict expected)
 		{
 			KingdomSalvageRules.SalvageVerdict verdict = KingdomSalvageRules.Assess(hazardous, broken, rusted, understood, complexity, difficulty, storedWater, population, out _, out _);
-			Assert.AreEqual(expected, verdict);
+			ClassicAssert.AreEqual(expected, verdict);
 		}
 
 		[Test]
@@ -101,7 +102,7 @@ namespace ThousandAndFirst.Tests
 				bool broken = (mask & 2) != 0;
 				bool rusted = (mask & 4) != 0;
 				KingdomSalvageRules.SalvageVerdict verdict = KingdomSalvageRules.Assess(hazardous, broken, rusted, true, 0, 0, 1000, 1000, out _, out _);
-				Assert.AreNotEqual(KingdomSalvageRules.SalvageVerdict.Certified, verdict, "mask=" + mask);
+				ClassicAssert.AreNotEqual(KingdomSalvageRules.SalvageVerdict.Certified, verdict, "mask=" + mask);
 			}
 		}
 
@@ -113,9 +114,9 @@ namespace ThousandAndFirst.Tests
 			int cost = KingdomSalvageRules.ComputeWaterCost(3);
 			int hands = KingdomSalvageRules.ComputeHandsRequired(2);
 			KingdomSalvageRules.SalvageVerdict verdict = KingdomSalvageRules.Assess(false, false, false, true, 3, 2, cost, hands, out int waterCost, out int handsRequired);
-			Assert.AreEqual(KingdomSalvageRules.SalvageVerdict.Certified, verdict);
-			Assert.AreEqual(cost, waterCost);
-			Assert.AreEqual(hands, handsRequired);
+			ClassicAssert.AreEqual(KingdomSalvageRules.SalvageVerdict.Certified, verdict);
+			ClassicAssert.AreEqual(cost, waterCost);
+			ClassicAssert.AreEqual(hands, handsRequired);
 		}
 
 		[Test]
@@ -124,7 +125,7 @@ namespace ThousandAndFirst.Tests
 			int cost = KingdomSalvageRules.ComputeWaterCost(3);
 			int hands = KingdomSalvageRules.ComputeHandsRequired(2);
 			KingdomSalvageRules.SalvageVerdict verdict = KingdomSalvageRules.Assess(false, false, false, true, 3, 2, cost - 1, hands, out _, out _);
-			Assert.AreEqual(KingdomSalvageRules.SalvageVerdict.RefusedCannotAfford, verdict);
+			ClassicAssert.AreEqual(KingdomSalvageRules.SalvageVerdict.RefusedCannotAfford, verdict);
 		}
 
 		[Test]
@@ -133,7 +134,7 @@ namespace ThousandAndFirst.Tests
 			int cost = KingdomSalvageRules.ComputeWaterCost(3);
 			int hands = KingdomSalvageRules.ComputeHandsRequired(2);
 			KingdomSalvageRules.SalvageVerdict verdict = KingdomSalvageRules.Assess(false, false, false, true, 3, 2, cost, hands - 1, out _, out _);
-			Assert.AreEqual(KingdomSalvageRules.SalvageVerdict.RefusedNoHands, verdict);
+			ClassicAssert.AreEqual(KingdomSalvageRules.SalvageVerdict.RefusedNoHands, verdict);
 		}
 
 		[TestCase(5, 3)]
@@ -145,8 +146,8 @@ namespace ThousandAndFirst.Tests
 			// dangerous or unknown - "disclosed before the founder commits" holds for every
 			// refusal, not just the affordable-but-declined ones.
 			KingdomSalvageRules.Assess(true, false, false, false, complexity, difficulty, 0, 0, out int waterCost, out int handsRequired);
-			Assert.AreEqual(KingdomSalvageRules.ComputeWaterCost(complexity), waterCost);
-			Assert.AreEqual(KingdomSalvageRules.ComputeHandsRequired(difficulty), handsRequired);
+			ClassicAssert.AreEqual(KingdomSalvageRules.ComputeWaterCost(complexity), waterCost);
+			ClassicAssert.AreEqual(KingdomSalvageRules.ComputeHandsRequired(difficulty), handsRequired);
 		}
 
 		// --- IsRefusal / IsRetryable: what the Charter uses to decide how to answer ----------
@@ -157,7 +158,7 @@ namespace ThousandAndFirst.Tests
 			foreach (KingdomSalvageRules.SalvageVerdict verdict in Enum.GetValues(typeof(KingdomSalvageRules.SalvageVerdict)))
 			{
 				bool expected = verdict != KingdomSalvageRules.SalvageVerdict.Certified;
-				Assert.AreEqual(expected, KingdomSalvageRules.IsRefusal(verdict), verdict.ToString());
+				ClassicAssert.AreEqual(expected, KingdomSalvageRules.IsRefusal(verdict), verdict.ToString());
 			}
 		}
 
@@ -170,7 +171,7 @@ namespace ThousandAndFirst.Tests
 			foreach (KingdomSalvageRules.SalvageVerdict verdict in Enum.GetValues(typeof(KingdomSalvageRules.SalvageVerdict)))
 			{
 				bool expected = verdict == KingdomSalvageRules.SalvageVerdict.RefusedCannotAfford || verdict == KingdomSalvageRules.SalvageVerdict.RefusedNoHands;
-				Assert.AreEqual(expected, KingdomSalvageRules.IsRetryable(verdict), verdict.ToString());
+				ClassicAssert.AreEqual(expected, KingdomSalvageRules.IsRetryable(verdict), verdict.ToString());
 			}
 		}
 	}

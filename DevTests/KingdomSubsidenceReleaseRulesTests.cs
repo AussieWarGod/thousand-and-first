@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -14,16 +15,16 @@ namespace ThousandAndFirst.Tests
 		public void EqualityAndFrozenTargetRequireEveryExactField(int field)
 		{
 			KingdomSubsidenceWearReceipt before = Receipt(), copy = From(Values(before));
-			Assert.IsTrue(KingdomSubsidenceReleaseRules.Same(before, copy));
-			Assert.IsTrue(KingdomSubsidenceReleaseRules.Same(before, before));
-			Assert.IsFalse(KingdomSubsidenceReleaseRules.Same(before, Different(before, field)));
+			ClassicAssert.IsTrue(KingdomSubsidenceReleaseRules.Same(before, copy));
+			ClassicAssert.IsTrue(KingdomSubsidenceReleaseRules.Same(before, before));
+			ClassicAssert.IsFalse(KingdomSubsidenceReleaseRules.Same(before, Different(before, field)));
 			KingdomSubsidenceWearReceipt target = Target(before), foreign = Different(target, field);
-			Assert.IsFalse(KingdomSubsidenceReleaseRules.ValidProof(Step, 12, 24, before, foreign));
-			Assert.IsNull(KingdomSubsidenceReleaseRules.AfterWrite(before, foreign, 0));
-			Assert.IsFalse(KingdomSubsidenceReleaseRules.TryNextWrite(before, foreign, before, out int next));
-			Assert.AreEqual(-1, next);
-			Assert.IsFalse(KingdomSubsidenceReleaseRules.TryNextWrite(before, target, foreign, out next));
-			Assert.AreEqual(-1, next);
+			ClassicAssert.IsFalse(KingdomSubsidenceReleaseRules.ValidProof(Step, 12, 24, before, foreign));
+			ClassicAssert.IsNull(KingdomSubsidenceReleaseRules.AfterWrite(before, foreign, 0));
+			ClassicAssert.IsFalse(KingdomSubsidenceReleaseRules.TryNextWrite(before, foreign, before, out int next));
+			ClassicAssert.AreEqual(-1, next);
+			ClassicAssert.IsFalse(KingdomSubsidenceReleaseRules.TryNextWrite(before, target, foreign, out next));
+			ClassicAssert.AreEqual(-1, next);
 			CollectionAssert.AreEqual(Values(copy), Values(before));
 		}
 
@@ -33,13 +34,13 @@ namespace ThousandAndFirst.Tests
 			KingdomSubsidenceWearReceipt before = Receipt(), target = Target(before);
 			object[] original = Values(before), final = Values(target);
 			KingdomSubsidenceWearReceipt observed = KingdomSubsidenceReleaseRules.AfterWrite(before, target, cut);
-			Assert.AreEqual(cut >= 1 ? Step : "previous incident", observed.LastCompletedId);
-			Assert.AreEqual(cut >= 2 ? 0 : 3, observed.Phase);
-			Assert.AreEqual(cut >= 3 ? null : Step, observed.Id);
-			Assert.AreEqual(cut >= 4 ? null : "previous line", observed.Line);
-			foreach (int field in new[] { 2, 3, 4, 5, 6, 9 }) Assert.AreEqual(original[field], Values(observed)[field]);
-			Assert.IsTrue(KingdomSubsidenceReleaseRules.TryNextWrite(before, target, observed, out int next));
-			Assert.AreEqual(cut, next);
+			ClassicAssert.AreEqual(cut >= 1 ? Step : "previous incident", observed.LastCompletedId);
+			ClassicAssert.AreEqual(cut >= 2 ? 0 : 3, observed.Phase);
+			ClassicAssert.AreEqual(cut >= 3 ? null : Step, observed.Id);
+			ClassicAssert.AreEqual(cut >= 4 ? null : "previous line", observed.Line);
+			foreach (int field in new[] { 2, 3, 4, 5, 6, 9 }) ClassicAssert.AreEqual(original[field], Values(observed)[field]);
+			ClassicAssert.IsTrue(KingdomSubsidenceReleaseRules.TryNextWrite(before, target, observed, out int next));
+			ClassicAssert.AreEqual(cut, next);
 			CollectionAssert.AreEqual(original, Values(before)); CollectionAssert.AreEqual(final, Values(target));
 		}
 
@@ -53,9 +54,9 @@ namespace ThousandAndFirst.Tests
 				object[] values = Values(before), final = Values(target);
 				for (int bit = 0; bit < 4; bit++) if ((mask & (1 << bit)) != 0) values[order[bit]] = final[order[bit]];
 				int expected = Array.IndexOf(legal, mask);
-				Assert.AreEqual(expected >= 0, KingdomSubsidenceReleaseRules.TryNextWrite(before, target,
+				ClassicAssert.AreEqual(expected >= 0, KingdomSubsidenceReleaseRules.TryNextWrite(before, target,
 					From(values), out int next), "write mask " + mask);
-				Assert.AreEqual(expected, next, "write mask " + mask);
+				ClassicAssert.AreEqual(expected, next, "write mask " + mask);
 			}
 		}
 
@@ -68,11 +69,11 @@ namespace ThousandAndFirst.Tests
 			KingdomSubsidenceWearReceipt target = Target(before);
 			for (int cut = 0; cut <= 4; cut++)
 			{
-				Assert.IsTrue(KingdomSubsidenceReleaseRules.TryNextWrite(before, target,
+				ClassicAssert.IsTrue(KingdomSubsidenceReleaseRules.TryNextWrite(before, target,
 					KingdomSubsidenceReleaseRules.AfterWrite(before, target, cut), out int next));
 				int expected = cut == 0 && completedAlready ? 1 : cut;
 				if (cut >= 3 && lineAlreadyNull) expected = 4;
-				Assert.AreEqual(expected, next);
+				ClassicAssert.AreEqual(expected, next);
 			}
 		}
 
@@ -84,9 +85,9 @@ namespace ThousandAndFirst.Tests
 				for (int message = 0; message <= (int)KingdomWearSinkDisposition.Lost; message++)
 				{
 					KingdomSubsidenceWearReceipt before = Change(Change(Receipt(beforeWear, afterWear), 6, cause), 9, message);
-					Assert.IsTrue(KingdomSubsidenceReleaseRules.TryPlan(Step, beforeWear, afterWear, before, out var target));
-					Assert.IsTrue(KingdomSubsidenceReleaseRules.ValidProof(Step, beforeWear, afterWear, before, target));
-					Assert.AreEqual(cause, target.LastCause); Assert.AreEqual(message, target.MessageState);
+					ClassicAssert.IsTrue(KingdomSubsidenceReleaseRules.TryPlan(Step, beforeWear, afterWear, before, out var target));
+					ClassicAssert.IsTrue(KingdomSubsidenceReleaseRules.ValidProof(Step, beforeWear, afterWear, before, target));
+					ClassicAssert.AreEqual(cause, target.LastCause); ClassicAssert.AreEqual(message, target.MessageState);
 				}
 		}
 
@@ -114,8 +115,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase("taf:subsidence-step:v1:CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC")]
 		public void StepIdentityAndBothRequestedWearValuesMustMatch(string step)
 		{
-			Assert.IsFalse(KingdomSubsidenceReleaseRules.TryPlan(step, 12, 24, Receipt(), out var target));
-			Assert.IsNull(target);
+			ClassicAssert.IsFalse(KingdomSubsidenceReleaseRules.TryPlan(step, 12, 24, Receipt(), out var target));
+			ClassicAssert.IsNull(target);
 			foreach (int bad in new[] { -1, 0, 13, 25, KingdomMaterialRules.MaxWearPercent + 1, int.MaxValue })
 			{
 				Refuses(Receipt(), bad, 24); Refuses(Receipt(), 12, bad);
@@ -126,8 +127,8 @@ namespace ThousandAndFirst.Tests
 		public void NullableStringsNeverConflateAbsentAndEmpty(int field)
 		{
 			KingdomSubsidenceWearReceipt absent = Change(Receipt(), field, null), empty = Change(Receipt(), field, "");
-			Assert.IsFalse(KingdomSubsidenceReleaseRules.Same(absent, empty));
-			Assert.IsFalse(KingdomSubsidenceReleaseRules.Same(empty, absent));
+			ClassicAssert.IsFalse(KingdomSubsidenceReleaseRules.Same(absent, empty));
+			ClassicAssert.IsFalse(KingdomSubsidenceReleaseRules.Same(empty, absent));
 			if (field == 1) { Refuses(absent); Refuses(empty); return; }
 			Target(absent); Target(empty);
 		}
@@ -138,7 +139,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string text in new[] { null, "", "a:|\ud83c\udfe0", new string('x', KingdomWearRules.MaxSavedTextChars) })
 			{
 				KingdomSubsidenceWearReceipt before = Change(Receipt(), field, text);
-				Target(before); Assert.AreEqual(text, Values(before)[field]);
+				Target(before); ClassicAssert.AreEqual(text, Values(before)[field]);
 			}
 			foreach (string text in new[] { "bad\0text", "bad\ntext", "bad\u007ftext", "bad\u0085text",
 				new string((char)0xD800, 1), new string((char)0xDC00, 1), new string((char)0xD800, 1) + "x",
@@ -150,18 +151,18 @@ namespace ThousandAndFirst.Tests
 		public void InvalidCutsAndMissingReceiptsRefuseWithoutThrowing(int cut)
 		{
 			KingdomSubsidenceWearReceipt before = Receipt(), target = Target(before);
-			Assert.IsNull(KingdomSubsidenceReleaseRules.AfterWrite(before, target, cut));
-			Assert.IsTrue(KingdomSubsidenceReleaseRules.Same(null, null));
-			Assert.IsFalse(KingdomSubsidenceReleaseRules.Same(null, before)); Refuses(null);
+			ClassicAssert.IsNull(KingdomSubsidenceReleaseRules.AfterWrite(before, target, cut));
+			ClassicAssert.IsTrue(KingdomSubsidenceReleaseRules.Same(null, null));
+			ClassicAssert.IsFalse(KingdomSubsidenceReleaseRules.Same(null, before)); Refuses(null);
 			foreach (var pair in new[] { new[] { before, null }, new[] { null, target }, new KingdomSubsidenceWearReceipt[2] })
 			{
-				Assert.IsFalse(KingdomSubsidenceReleaseRules.ValidProof(Step, 12, 24, pair[0], pair[1]));
-				Assert.IsNull(KingdomSubsidenceReleaseRules.AfterWrite(pair[0], pair[1], 0));
-				Assert.IsFalse(KingdomSubsidenceReleaseRules.TryNextWrite(pair[0], pair[1], before, out int next));
-				Assert.AreEqual(-1, next);
+				ClassicAssert.IsFalse(KingdomSubsidenceReleaseRules.ValidProof(Step, 12, 24, pair[0], pair[1]));
+				ClassicAssert.IsNull(KingdomSubsidenceReleaseRules.AfterWrite(pair[0], pair[1], 0));
+				ClassicAssert.IsFalse(KingdomSubsidenceReleaseRules.TryNextWrite(pair[0], pair[1], before, out int next));
+				ClassicAssert.AreEqual(-1, next);
 			}
-			Assert.IsFalse(KingdomSubsidenceReleaseRules.TryNextWrite(before, target, null, out int missing));
-			Assert.AreEqual(-1, missing);
+			ClassicAssert.IsFalse(KingdomSubsidenceReleaseRules.TryNextWrite(before, target, null, out int missing));
+			ClassicAssert.AreEqual(-1, missing);
 		}
 
 		[Test]
@@ -169,26 +170,26 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomSubsidenceRungPlan plan = RungFixture.Plan(RungFixture.Work());
 			KingdomSubsidenceWearReceipt observed = Receipt(plan.Works[0].BeforeWear, plan.Works[0].AfterWear);
-			Assert.IsFalse(KingdomSubsidenceRungRules.TryArmRelease(plan, 0, true, observed, out _));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.TryArmRelease(plan, 0, true, observed, out _));
 			plan = RungFixture.ProveWear(plan, 0);
-			Assert.IsTrue(KingdomSubsidenceRungRules.PhysicalComplete(plan));
-			Assert.IsFalse(KingdomSubsidenceRungRules.ReleasedComplete(plan));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.PhysicalComplete(plan));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.ReleasedComplete(plan));
 			string prior = RungFixture.Wire(plan);
-			Assert.IsFalse(KingdomSubsidenceRungRules.TryProveRelease(plan, 0, true, observed, out _));
-			Assert.IsFalse(KingdomSubsidenceRungRules.TryArmRelease(plan, 0, false, observed, out _));
-			Assert.IsTrue(KingdomSubsidenceRungRules.TryArmRelease(plan, 0, true, observed, out var intent));
-			Assert.AreEqual(prior, RungFixture.Wire(plan));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.TryProveRelease(plan, 0, true, observed, out _));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.TryArmRelease(plan, 0, false, observed, out _));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.TryArmRelease(plan, 0, true, observed, out var intent));
+			ClassicAssert.AreEqual(prior, RungFixture.Wire(plan));
 			intent = RungFixture.RoundTrip(intent);
 			KingdomSubsidenceRungWork row = intent.Works[0], copied = RungFixture.CopyWork(row);
-			Assert.AreEqual(KingdomSubsidenceReleasePhase.Intent, copied.ReleasePhase);
-			Assert.AreSame(row.ReleaseBefore, copied.ReleaseBefore); Assert.AreSame(row.ReleaseAfter, copied.ReleaseAfter);
+			ClassicAssert.AreEqual(KingdomSubsidenceReleasePhase.Intent, copied.ReleasePhase);
+			ClassicAssert.AreSame(row.ReleaseBefore, copied.ReleaseBefore); ClassicAssert.AreSame(row.ReleaseAfter, copied.ReleaseAfter);
 			for (int cut = 0; cut < 4; cut++)
-				Assert.IsFalse(KingdomSubsidenceRungRules.TryProveRelease(intent, 0, true,
+				ClassicAssert.IsFalse(KingdomSubsidenceRungRules.TryProveRelease(intent, 0, true,
 					KingdomSubsidenceReleaseRules.AfterWrite(row.ReleaseBefore, row.ReleaseAfter, cut), out _));
-			Assert.IsFalse(KingdomSubsidenceRungRules.TryProveRelease(intent, 0, false, row.ReleaseAfter, out _));
-			Assert.IsTrue(KingdomSubsidenceRungRules.TryProveRelease(intent, 0, true, row.ReleaseAfter, out plan));
-			Assert.IsTrue(KingdomSubsidenceRungRules.ReleasedComplete(RungFixture.RoundTrip(plan)));
-			Assert.AreEqual(KingdomSubsidenceReleasePhase.Intent, intent.Works[0].ReleasePhase);
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.TryProveRelease(intent, 0, false, row.ReleaseAfter, out _));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.TryProveRelease(intent, 0, true, row.ReleaseAfter, out plan));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.ReleasedComplete(RungFixture.RoundTrip(plan)));
+			ClassicAssert.AreEqual(KingdomSubsidenceReleasePhase.Intent, intent.Works[0].ReleasePhase);
 		}
 
 		[Test]
@@ -197,16 +198,16 @@ namespace ThousandAndFirst.Tests
 			KingdomSubsidenceRungPlan plan = RungFixture.ProveWear(RungFixture.Plan(RungFixture.Work()), 0);
 			KingdomSubsidenceWearReceipt cleared = Target(Receipt(plan.Works[0].BeforeWear, plan.Works[0].AfterWear));
 			KingdomSubsidenceWearReceipt target = Target(cleared);
-			Assert.IsTrue(KingdomSubsidenceReleaseRules.Same(cleared, target));
-			Assert.IsTrue(KingdomSubsidenceReleaseRules.TryNextWrite(cleared, target, cleared, out int next));
-			Assert.AreEqual(4, next);
-			Assert.AreEqual(KingdomSubsidenceReleasePhase.Pending, plan.Works[0].ReleasePhase);
-			Assert.IsFalse(KingdomSubsidenceRungRules.TryProveRelease(plan, 0, true, cleared, out _));
-			Assert.IsTrue(KingdomSubsidenceRungRules.TryArmRelease(plan, 0, true, cleared, out plan));
-			Assert.AreEqual(KingdomSubsidenceReleasePhase.Intent, plan.Works[0].ReleasePhase);
-			Assert.IsFalse(KingdomSubsidenceRungRules.ReleasedComplete(plan));
-			Assert.IsTrue(KingdomSubsidenceRungRules.TryProveRelease(plan, 0, true, cleared, out plan));
-			Assert.IsTrue(KingdomSubsidenceRungRules.ReleasedComplete(plan));
+			ClassicAssert.IsTrue(KingdomSubsidenceReleaseRules.Same(cleared, target));
+			ClassicAssert.IsTrue(KingdomSubsidenceReleaseRules.TryNextWrite(cleared, target, cleared, out int next));
+			ClassicAssert.AreEqual(4, next);
+			ClassicAssert.AreEqual(KingdomSubsidenceReleasePhase.Pending, plan.Works[0].ReleasePhase);
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.TryProveRelease(plan, 0, true, cleared, out _));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.TryArmRelease(plan, 0, true, cleared, out plan));
+			ClassicAssert.AreEqual(KingdomSubsidenceReleasePhase.Intent, plan.Works[0].ReleasePhase);
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.ReleasedComplete(plan));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.TryProveRelease(plan, 0, true, cleared, out plan));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.ReleasedComplete(plan));
 			foreach (int field in new[] { 1, 8 }) Refuses(Change(cleared, field, ""), cleared.BeforeWear, cleared.AfterWear);
 			Refuses(Change(cleared, 7, "foreign"), cleared.BeforeWear, cleared.AfterWear);
 		}
@@ -216,33 +217,33 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomSubsidenceRungPlan plan = RungFixture.Plan(RungFixture.Work(0), RungFixture.Work(1));
 			plan = RungFixture.ProveWear(RungFixture.ProveWear(plan, 0), 1);
-			Assert.IsTrue(KingdomSubsidenceRungRules.PhysicalComplete(plan));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungRules.PhysicalComplete(plan));
 			KingdomSubsidenceWearReceipt second = Receipt(plan.Works[1].BeforeWear, plan.Works[1].AfterWear);
-			Assert.IsFalse(KingdomSubsidenceRungRules.TryArmRelease(plan, 1, true, second, out _));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.TryArmRelease(plan, 1, true, second, out _));
 			foreach (KingdomSubsidenceReleasePhase phase in new[] { KingdomSubsidenceReleasePhase.Intent,
 				KingdomSubsidenceReleasePhase.Released, (KingdomSubsidenceReleasePhase)255 })
-				Assert.IsFalse(KingdomSubsidenceRungRules.Valid(plan.Replace(1,
+				ClassicAssert.IsFalse(KingdomSubsidenceRungRules.Valid(plan.Replace(1,
 					plan.Works[1].WithRelease(phase, second, Target(second)))));
-			Assert.IsFalse(KingdomSubsidenceRungRules.Valid(plan.Replace(0,
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.Valid(plan.Replace(0,
 				plan.Works[0].WithRelease(KingdomSubsidenceReleasePhase.Pending, second, Target(second)))));
-			Assert.IsFalse(KingdomSubsidenceRungRules.ReleasedComplete(null));
-			Assert.IsFalse(KingdomSubsidenceRungRules.TryArmRelease(null, 0, true, second, out _));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.ReleasedComplete(null));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungRules.TryArmRelease(null, 0, true, second, out _));
 			foreach (int index in new[] { -1, 2, int.MaxValue })
 			{
-				Assert.IsFalse(KingdomSubsidenceRungRules.TryArmRelease(plan, index, true, second, out _));
-				Assert.IsFalse(KingdomSubsidenceRungRules.TryProveRelease(plan, index, true, second, out _));
+				ClassicAssert.IsFalse(KingdomSubsidenceRungRules.TryArmRelease(plan, index, true, second, out _));
+				ClassicAssert.IsFalse(KingdomSubsidenceRungRules.TryProveRelease(plan, index, true, second, out _));
 			}
 			for (int index = 0; index < 2; index++)
 			{
 				KingdomSubsidenceRungWork row = plan.Works[index];
-				Assert.IsTrue(KingdomSubsidenceRungRules.TryArmRelease(plan, index, true,
+				ClassicAssert.IsTrue(KingdomSubsidenceRungRules.TryArmRelease(plan, index, true,
 					Receipt(row.BeforeWear, row.AfterWear), out plan));
-				if (index == 0) Assert.IsFalse(KingdomSubsidenceRungRules.TryArmRelease(plan, 1, true, second, out _));
-				Assert.IsFalse(KingdomSubsidenceRungRules.ReleasedComplete(plan));
-				Assert.IsTrue(KingdomSubsidenceRungRules.TryProveRelease(plan, index, true,
+				if (index == 0) ClassicAssert.IsFalse(KingdomSubsidenceRungRules.TryArmRelease(plan, 1, true, second, out _));
+				ClassicAssert.IsFalse(KingdomSubsidenceRungRules.ReleasedComplete(plan));
+				ClassicAssert.IsTrue(KingdomSubsidenceRungRules.TryProveRelease(plan, index, true,
 					plan.Works[index].ReleaseAfter, out plan));
 				plan = RungFixture.RoundTrip(plan);
-				Assert.AreEqual(index == 1, KingdomSubsidenceRungRules.ReleasedComplete(plan));
+				ClassicAssert.AreEqual(index == 1, KingdomSubsidenceRungRules.ReleasedComplete(plan));
 			}
 		}
 
@@ -251,16 +252,16 @@ namespace ThousandAndFirst.Tests
 				before, after, after, (int)KingdomWearRules.WearCause.Raid, "previous incident", "previous line", 3);
 		private static KingdomSubsidenceWearReceipt Target(KingdomSubsidenceWearReceipt before)
 		{
-			Assert.IsTrue(KingdomSubsidenceReleaseRules.TryPlan(Step, before.BeforeWear, before.AfterWear, before, out var target));
-			Assert.IsTrue(KingdomSubsidenceReleaseRules.ValidProof(Step, before.BeforeWear, before.AfterWear, before, target));
+			ClassicAssert.IsTrue(KingdomSubsidenceReleaseRules.TryPlan(Step, before.BeforeWear, before.AfterWear, before, out var target));
+			ClassicAssert.IsTrue(KingdomSubsidenceReleaseRules.ValidProof(Step, before.BeforeWear, before.AfterWear, before, target));
 			return target;
 		}
 		private static void Refuses(KingdomSubsidenceWearReceipt receipt, int before = 12, int after = 24)
 		{
 			object[] original = receipt == null ? null : Values(receipt);
-			Assert.IsFalse(KingdomSubsidenceReleaseRules.TryPlan(Step, before, after, receipt, out var target));
-			Assert.IsNull(target);
-			Assert.IsFalse(KingdomSubsidenceReleaseRules.ValidProof(Step, before, after, receipt, Target(Receipt())));
+			ClassicAssert.IsFalse(KingdomSubsidenceReleaseRules.TryPlan(Step, before, after, receipt, out var target));
+			ClassicAssert.IsNull(target);
+			ClassicAssert.IsFalse(KingdomSubsidenceReleaseRules.ValidProof(Step, before, after, receipt, Target(Receipt())));
 			if (receipt != null) CollectionAssert.AreEqual(original, Values(receipt));
 		}
 		private static object[] Values(KingdomSubsidenceWearReceipt r)

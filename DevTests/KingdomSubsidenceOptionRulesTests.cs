@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -21,7 +22,7 @@ namespace ThousandAndFirst.Tests
 
 		private static KingdomSubsidenceOptionRules.Snapshot DisableSnapshot()
 		{
-			Assert.IsTrue(KingdomSubsidenceOptionRules.Observe(Reading(1), false, 2, 101,
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionRules.Observe(Reading(1), false, 2, 101,
 				out KingdomSubsidenceOptionRules.Snapshot snapshot).Valid);
 			return snapshot;
 		}
@@ -59,19 +60,19 @@ namespace ThousandAndFirst.Tests
 		public void EveryWrongOrMultipleTableCombinationRefusesReadAndPublication(int mask)
 		{
 			KingdomDurableKeyObservation observed = Reading(mask);
-			Assert.IsFalse(KingdomSubsidenceOptionRules.TryRead(observed, out KingdomElapsedOptionRecord _,
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionRules.TryRead(observed, out KingdomElapsedOptionRecord _,
 				out bool present));
-			Assert.IsTrue(present);
+			ClassicAssert.IsTrue(present);
 			KingdomElapsedOptionDecision decision = KingdomSubsidenceOptionRules.Observe(observed,
 				true, 2, 101, out KingdomSubsidenceOptionRules.Snapshot rejected);
-			Assert.IsFalse(decision.Valid);
-			Assert.AreEqual(KingdomElapsedOptionAction.Invalid, decision.Action);
-			Assert.IsNull(rejected);
-			Assert.IsFalse(KingdomSubsidenceOptionRules.CanPublish(DisableSnapshot(), observed, out string wire));
-			Assert.IsNull(wire);
-			Assert.IsFalse(KingdomSubsidenceOptionRules.ProvesPublished(DisableSnapshot(), Reading(mask, Target)));
-			Assert.AreEqual(Prior, observed.String);
-			Assert.AreEqual(mask, (observed.HasString ? 1 : 0) | (observed.HasInt ? 2 : 0)
+			ClassicAssert.IsFalse(decision.Valid);
+			ClassicAssert.AreEqual(KingdomElapsedOptionAction.Invalid, decision.Action);
+			ClassicAssert.IsNull(rejected);
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionRules.CanPublish(DisableSnapshot(), observed, out string wire));
+			ClassicAssert.IsNull(wire);
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionRules.ProvesPublished(DisableSnapshot(), Reading(mask, Target)));
+			ClassicAssert.AreEqual(Prior, observed.String);
+			ClassicAssert.AreEqual(mask, (observed.HasString ? 1 : 0) | (observed.HasInt ? 2 : 0)
 				| (observed.HasInt64 ? 4 : 0) | (observed.HasObject ? 8 : 0) | (observed.HasBoolean ? 16 : 0));
 		}
 
@@ -86,37 +87,37 @@ namespace ThousandAndFirst.Tests
 		public void PresentMalformedTextNeverBecomesAbsentOrFresh(string wire)
 		{
 			KingdomDurableKeyObservation observed = Reading(1, wire);
-			Assert.IsFalse(KingdomSubsidenceOptionRules.TryRead(observed, out KingdomElapsedOptionRecord _,
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionRules.TryRead(observed, out KingdomElapsedOptionRecord _,
 				out bool present));
-			Assert.IsTrue(present);
+			ClassicAssert.IsTrue(present);
 			KingdomElapsedOptionDecision decision = KingdomSubsidenceOptionRules.Observe(observed,
 				true, 2, 101, out KingdomSubsidenceOptionRules.Snapshot snapshot);
-			Assert.IsFalse(decision.Valid);
-			Assert.AreEqual(KingdomElapsedOptionAction.Invalid, decision.Action);
-			Assert.IsNull(snapshot);
-			Assert.IsFalse(KingdomSubsidenceOptionRules.CanPublish(DisableSnapshot(), observed, out string _));
-			Assert.IsFalse(KingdomSubsidenceOptionRules.ProvesPublished(DisableSnapshot(), observed));
-			Assert.AreEqual(wire, observed.String);
+			ClassicAssert.IsFalse(decision.Valid);
+			ClassicAssert.AreEqual(KingdomElapsedOptionAction.Invalid, decision.Action);
+			ClassicAssert.IsNull(snapshot);
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionRules.CanPublish(DisableSnapshot(), observed, out string _));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionRules.ProvesPublished(DisableSnapshot(), observed));
+			ClassicAssert.AreEqual(wire, observed.String);
 		}
 
 		[Test]
 		public void OnlyFiveTableAbsenceInitializesAndSameTickPublicationCannotRun()
 		{
 			KingdomDurableKeyObservation absent = Reading(0);
-			Assert.IsTrue(KingdomSubsidenceOptionRules.TryRead(absent, out KingdomElapsedOptionRecord prior,
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionRules.TryRead(absent, out KingdomElapsedOptionRecord prior,
 				out bool present));
-			Assert.IsFalse(present);
-			Assert.AreEqual(KingdomElapsedOptionState.Unobserved, prior.State);
+			ClassicAssert.IsFalse(present);
+			ClassicAssert.AreEqual(KingdomElapsedOptionState.Unobserved, prior.State);
 			KingdomElapsedOptionDecision first = KingdomSubsidenceOptionRules.Observe(absent,
 				true, 2, 100, out KingdomSubsidenceOptionRules.Snapshot snapshot);
-			Assert.AreEqual(KingdomElapsedOptionAction.AnchorEnabled, first.Action);
-			Assert.IsTrue(KingdomSubsidenceOptionRules.CanPublish(snapshot, absent, out string wire));
-			Assert.AreEqual(Prior, wire);
-			Assert.IsTrue(KingdomSubsidenceOptionRules.ProvesPublished(snapshot, Reading(1, wire)));
-			Assert.IsFalse(KingdomSubsidenceOptionRules.CanPublish(snapshot, Reading(1, wire), out string _));
-			Assert.AreEqual(KingdomElapsedOptionAction.Wait,
+			ClassicAssert.AreEqual(KingdomElapsedOptionAction.AnchorEnabled, first.Action);
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionRules.CanPublish(snapshot, absent, out string wire));
+			ClassicAssert.AreEqual(Prior, wire);
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionRules.ProvesPublished(snapshot, Reading(1, wire)));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionRules.CanPublish(snapshot, Reading(1, wire), out string _));
+			ClassicAssert.AreEqual(KingdomElapsedOptionAction.Wait,
 				KingdomSubsidenceOptionRules.Observe(Reading(1, wire), true, 2, 100, out snapshot).Action);
-			Assert.AreEqual(KingdomElapsedOptionAction.Run,
+			ClassicAssert.AreEqual(KingdomElapsedOptionAction.Run,
 				KingdomSubsidenceOptionRules.Observe(Reading(1, wire), true, 2, 101, out snapshot).Action);
 		}
 
@@ -127,16 +128,16 @@ namespace ThousandAndFirst.Tests
 			KingdomElapsedOptionRecord record = new KingdomElapsedOptionRecord(enabled
 				? KingdomElapsedOptionState.Enabled : KingdomElapsedOptionState.Disabled, 100, 2);
 			string wire = KingdomElapsedOptionRules.Encode(record);
-			Assert.IsTrue(KingdomSubsidenceOptionRules.TryRead(Reading(1, wire), out KingdomElapsedOptionRecord prior,
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionRules.TryRead(Reading(1, wire), out KingdomElapsedOptionRecord prior,
 				out bool present));
-			Assert.IsTrue(present);
-			Assert.AreEqual(wire, KingdomElapsedOptionRules.Encode(prior));
+			ClassicAssert.IsTrue(present);
+			ClassicAssert.AreEqual(wire, KingdomElapsedOptionRules.Encode(prior));
 			KingdomElapsedOptionDecision decision = KingdomSubsidenceOptionRules.Observe(Reading(1, wire),
 				enabled, 2, 101, out KingdomSubsidenceOptionRules.Snapshot snapshot);
-			Assert.AreEqual(enabled ? KingdomElapsedOptionAction.Run : KingdomElapsedOptionAction.Disabled, decision.Action);
-			Assert.AreEqual(100, decision.Record.ObservedTick);
-			Assert.AreEqual(wire, snapshot.PriorWire);
-			Assert.AreEqual(wire, snapshot.NextWire);
+			ClassicAssert.AreEqual(enabled ? KingdomElapsedOptionAction.Run : KingdomElapsedOptionAction.Disabled, decision.Action);
+			ClassicAssert.AreEqual(100, decision.Record.ObservedTick);
+			ClassicAssert.AreEqual(wire, snapshot.PriorWire);
+			ClassicAssert.AreEqual(wire, snapshot.NextWire);
 		}
 
 		[TestCase(2L, 99L)]
@@ -147,33 +148,33 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomElapsedOptionDecision decision = KingdomSubsidenceOptionRules.Observe(Reading(1),
 				true, token, now, out KingdomSubsidenceOptionRules.Snapshot snapshot);
-			Assert.IsFalse(decision.Valid);
-			Assert.AreEqual(KingdomElapsedOptionAction.Invalid, decision.Action);
-			Assert.AreEqual(Prior, KingdomElapsedOptionRules.Encode(decision.Record));
-			Assert.IsNull(snapshot);
+			ClassicAssert.IsFalse(decision.Valid);
+			ClassicAssert.AreEqual(KingdomElapsedOptionAction.Invalid, decision.Action);
+			ClassicAssert.AreEqual(Prior, KingdomElapsedOptionRules.Encode(decision.Record));
+			ClassicAssert.IsNull(snapshot);
 		}
 
 		[Test]
 		public void ModuleTogglesAndMasterRelatchPublishBeforeRepeatsCanRun()
 		{
 			KingdomSubsidenceOptionRules.Snapshot snapshot = DisableSnapshot();
-			Assert.AreEqual(KingdomElapsedOptionTransition.Disabled, snapshot.Decision.Transition);
-			Assert.IsTrue(KingdomSubsidenceOptionRules.CanPublish(snapshot, Reading(1), out string disabled));
-			Assert.AreEqual(Target, disabled);
-			Assert.AreEqual(KingdomElapsedOptionAction.Disabled,
+			ClassicAssert.AreEqual(KingdomElapsedOptionTransition.Disabled, snapshot.Decision.Transition);
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionRules.CanPublish(snapshot, Reading(1), out string disabled));
+			ClassicAssert.AreEqual(Target, disabled);
+			ClassicAssert.AreEqual(KingdomElapsedOptionAction.Disabled,
 				KingdomSubsidenceOptionRules.Observe(Reading(1, disabled), false, 2, 101, out snapshot).Action);
-			Assert.AreEqual(KingdomElapsedOptionTransition.Enabled,
+			ClassicAssert.AreEqual(KingdomElapsedOptionTransition.Enabled,
 				KingdomSubsidenceOptionRules.Observe(Reading(1, disabled), true, 2, 102, out snapshot).Transition);
-			Assert.IsTrue(KingdomSubsidenceOptionRules.CanPublish(snapshot, Reading(1, disabled), out string enabled));
-			Assert.AreEqual(KingdomElapsedOptionAction.Wait,
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionRules.CanPublish(snapshot, Reading(1, disabled), out string enabled));
+			ClassicAssert.AreEqual(KingdomElapsedOptionAction.Wait,
 				KingdomSubsidenceOptionRules.Observe(Reading(1, enabled), true, 2, 102, out snapshot).Action);
-			Assert.AreEqual(KingdomElapsedOptionTransition.MasterRelatchedEnabled,
+			ClassicAssert.AreEqual(KingdomElapsedOptionTransition.MasterRelatchedEnabled,
 				KingdomSubsidenceOptionRules.Observe(Reading(1, enabled), true, 3, 103, out snapshot).Transition);
-			Assert.IsTrue(KingdomSubsidenceOptionRules.CanPublish(snapshot, Reading(1, enabled), out string relatched));
-			Assert.IsTrue(KingdomSubsidenceOptionRules.ProvesPublished(snapshot, Reading(1, relatched)));
-			Assert.AreEqual(KingdomElapsedOptionAction.Wait,
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionRules.CanPublish(snapshot, Reading(1, enabled), out string relatched));
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionRules.ProvesPublished(snapshot, Reading(1, relatched)));
+			ClassicAssert.AreEqual(KingdomElapsedOptionAction.Wait,
 				KingdomSubsidenceOptionRules.Observe(Reading(1, relatched), true, 3, 103, out snapshot).Action);
-			Assert.AreEqual(KingdomElapsedOptionAction.Run,
+			ClassicAssert.AreEqual(KingdomElapsedOptionAction.Run,
 				KingdomSubsidenceOptionRules.Observe(Reading(1, relatched), true, 3, 104, out snapshot).Action);
 		}
 
@@ -184,33 +185,33 @@ namespace ThousandAndFirst.Tests
 			KingdomSubsidenceOptionRules.Observe(mutable, false, 2, 101,
 				out KingdomSubsidenceOptionRules.Snapshot snapshot);
 			mutable.String = Target;
-			Assert.AreEqual(Prior, snapshot.PriorWire);
-			Assert.IsFalse(KingdomSubsidenceOptionRules.CanPublish(snapshot, mutable, out string refused));
-			Assert.IsNull(refused);
-			Assert.IsFalse(KingdomSubsidenceOptionRules.CanPublish(snapshot, Reading(0), out refused));
-			Assert.IsTrue(KingdomSubsidenceOptionRules.CanPublish(snapshot, Reading(1), out string wire));
-			Assert.AreEqual(Target, wire);
-			Assert.IsFalse(KingdomSubsidenceOptionRules.ProvesPublished(snapshot, Reading(1)));
-			Assert.IsFalse(KingdomSubsidenceOptionRules.ProvesPublished(snapshot, Reading(0, Target)));
-			Assert.IsTrue(KingdomSubsidenceOptionRules.ProvesPublished(snapshot, mutable));
+			ClassicAssert.AreEqual(Prior, snapshot.PriorWire);
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionRules.CanPublish(snapshot, mutable, out string refused));
+			ClassicAssert.IsNull(refused);
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionRules.CanPublish(snapshot, Reading(0), out refused));
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionRules.CanPublish(snapshot, Reading(1), out string wire));
+			ClassicAssert.AreEqual(Target, wire);
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionRules.ProvesPublished(snapshot, Reading(1)));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionRules.ProvesPublished(snapshot, Reading(0, Target)));
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionRules.ProvesPublished(snapshot, mutable));
 			mutable.HasBoolean = true;
-			Assert.IsFalse(KingdomSubsidenceOptionRules.ProvesPublished(snapshot, mutable));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionRules.ProvesPublished(snapshot, mutable));
 		}
 
 		[Test]
 		public void MissingObservationSnapshotAndOversizedWireCannotAuthorizeAnything()
 		{
-			Assert.IsFalse(KingdomSubsidenceOptionRules.Observe(null, true, 0, 0,
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionRules.Observe(null, true, 0, 0,
 				out KingdomSubsidenceOptionRules.Snapshot snapshot).Valid);
-			Assert.IsNull(snapshot);
-			Assert.IsFalse(KingdomSubsidenceOptionRules.CanPublish(null, Reading(0), out string _));
-			Assert.IsFalse(KingdomSubsidenceOptionRules.CanPublish(DisableSnapshot(), null, out string _));
-			Assert.IsFalse(KingdomSubsidenceOptionRules.ProvesPublished(null, Reading(1, Target)));
-			Assert.IsFalse(KingdomSubsidenceOptionRules.ProvesPublished(DisableSnapshot(), null));
-			Assert.IsFalse(KingdomSubsidenceOptionRules.Observe(
+			ClassicAssert.IsNull(snapshot);
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionRules.CanPublish(null, Reading(0), out string _));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionRules.CanPublish(DisableSnapshot(), null, out string _));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionRules.ProvesPublished(null, Reading(1, Target)));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionRules.ProvesPublished(DisableSnapshot(), null));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionRules.Observe(
 				Reading(1, new string('x', KingdomElapsedOptionRules.MaxEncodedChars + 1)),
 				true, 2, 101, out snapshot).Valid);
-			Assert.IsNull(snapshot);
+			ClassicAssert.IsNull(snapshot);
 		}
 	}
 }

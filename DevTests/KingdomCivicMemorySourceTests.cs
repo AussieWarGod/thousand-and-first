@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -43,7 +44,7 @@ namespace ThousandAndFirst.Tests
 
 			int write = save.IndexOf("public override void Write(SerializationWriter Writer)",
 				StringComparison.Ordinal);
-			Assert.Greater(write, -1);
+			ClassicAssert.Greater(write, -1);
 			int magic = save.IndexOf("Writer.Write(BlockMagic);", write, StringComparison.Ordinal);
 			int version = save.IndexOf("Writer.Write(CurrentBlockVersion);", magic,
 				StringComparison.Ordinal);
@@ -51,10 +52,10 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int payload = save.IndexOf("Writer.WriteBytesDirect(envelope);", length,
 				StringComparison.Ordinal);
-			Assert.Greater(magic, write);
-			Assert.Greater(version, magic);
-			Assert.Greater(length, version);
-			Assert.Greater(payload, length);
+			ClassicAssert.Greater(magic, write);
+			ClassicAssert.Greater(version, magic);
+			ClassicAssert.Greater(length, version);
+			ClassicAssert.Greater(payload, length);
 		}
 
 		[Test]
@@ -62,18 +63,18 @@ namespace ThousandAndFirst.Tests
 		{
 			string save = Save();
 			int method = save.IndexOf("public override void BeforeSave()", StringComparison.Ordinal);
-			Assert.Greater(method, -1, "civic memory must have a BeforeSave veto");
+			ClassicAssert.Greater(method, -1, "civic memory must have a BeforeSave veto");
 			string body = save.Substring(method);
 
 			int check = body.IndexOf("if (Records.Latch.Tripped)", StringComparison.Ordinal);
 			int thrown = body.IndexOf("throw new InvalidOperationException", check,
 				StringComparison.Ordinal);
-			Assert.Greater(check, -1, "BeforeSave must read the latch");
-			Assert.Greater(thrown, check, "reading the latch must be followed by a refusal");
+			ClassicAssert.Greater(check, -1, "BeforeSave must read the latch");
+			ClassicAssert.Greater(thrown, check, "reading the latch must be followed by a refusal");
 
-			Assert.IsFalse(body.Contains("Latch.Trip("),
+			ClassicAssert.IsFalse(body.Contains("Latch.Trip("),
 				"BeforeSave observes the latch; it must not be able to set one either");
-			Assert.IsFalse(body.Contains("AdoptAbsent"),
+			ClassicAssert.IsFalse(body.Contains("AdoptAbsent"),
 				"the veto must never reach for the empty-save path");
 
 			StringAssert.Contains("XRL/XRLGame.cs:1580-1590", save);
@@ -95,30 +96,30 @@ namespace ThousandAndFirst.Tests
 			string save = Save();
 			int read = save.IndexOf("public override void Read(SerializationReader Reader)",
 				StringComparison.Ordinal);
-			Assert.Greater(read, -1);
+			ClassicAssert.Greater(read, -1);
 			string body = save.Substring(read,
 				save.IndexOf("private static int Word(", read, StringComparison.Ordinal) - read);
 
 			// The real bytes are accumulated as they are read, and that accumulator -- not a
 			// substitute -- is what is handed to quarantine.
-			Assert.IsTrue(Regex.IsMatch(body,
+			ClassicAssert.IsTrue(Regex.IsMatch(body,
 				@"Records\.AdoptUnreadableFraming\(\s*recovered\.ToArray\(\)\s*,"),
 				"the framing path must quarantine the bytes it actually recovered");
-			Assert.IsTrue(Regex.IsMatch(body, @"Word\(Reader,\s*recovered\)"),
+			ClassicAssert.IsTrue(Regex.IsMatch(body, @"Word\(Reader,\s*recovered\)"),
 				"every framing word read must be added to that accumulator");
 
 			// The specific defect this replaces: adopting a stand-in payload, whose decode would
 			// latch first with a synthetic cause and lose the real one.
-			Assert.IsFalse(Regex.IsMatch(body, @"AdoptSaved\(\s*new byte\[0\]\s*\)"),
+			ClassicAssert.IsFalse(Regex.IsMatch(body, @"AdoptSaved\(\s*new byte\[0\]\s*\)"),
 				"the framing path must never adopt an empty stand-in; the latch is one-way and "
 				+ "would keep that decode's synthetic cause instead of the true one");
-			Assert.IsFalse(body.Contains("Records.Latch.Trip("),
+			ClassicAssert.IsFalse(body.Contains("Records.Latch.Trip("),
 				"the framing path must set its cause through AdoptUnreadableFraming, which trips "
 				+ "the latch before anything else can");
 
 			int quarantine = body.IndexOf("Records.AdoptUnreadableFraming(", StringComparison.Ordinal);
 			int rethrow = body.IndexOf("throw;", quarantine, StringComparison.Ordinal);
-			Assert.Greater(rethrow, quarantine, "it must record before it rethrows, not after");
+			ClassicAssert.Greater(rethrow, quarantine, "it must record before it rethrows, not after");
 
 			// And AdoptUnreadableFraming really does put the cause on the latch before the state.
 			string authority = Source("Core", "KingdomCivicMemoryAuthority.cs");
@@ -130,9 +131,9 @@ namespace ThousandAndFirst.Tests
 			int trip = adopt.IndexOf("Latch.Trip(cause);", StringComparison.Ordinal);
 			int keep = adopt.IndexOf("KingdomCivicMemoryState.Quarantine(Evidence", trip,
 				StringComparison.Ordinal);
-			Assert.Greater(trip, -1, "the true cause must reach the latch");
-			Assert.Greater(keep, trip, "and the evidence must be kept, unmodified");
-			Assert.IsFalse(adopt.Contains("Decode("),
+			ClassicAssert.Greater(trip, -1, "the true cause must reach the latch");
+			ClassicAssert.Greater(keep, trip, "and the evidence must be kept, unmodified");
+			ClassicAssert.IsFalse(adopt.Contains("Decode("),
 				"this path must never decode anything; that is how a synthetic cause gets in");
 
 			StringAssert.Contains("XRL/World/SerializationReader.cs:1320-1340", save);
@@ -155,9 +156,9 @@ namespace ThousandAndFirst.Tests
 			int latch = body.IndexOf("Records.AdoptUnreadableFraming(", catchAt,
 				StringComparison.Ordinal);
 			int rethrow = body.IndexOf("throw;", latch, StringComparison.Ordinal);
-			Assert.Greater(catchAt, -1);
-			Assert.Greater(latch, catchAt);
-			Assert.Greater(rethrow, latch);
+			ClassicAssert.Greater(catchAt, -1);
+			ClassicAssert.Greater(latch, catchAt);
+			ClassicAssert.Greater(rethrow, latch);
 		}
 
 		[Test]
@@ -172,9 +173,9 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int complete = save.IndexOf("CustomReadCompleted = true;", adopt,
 				StringComparison.Ordinal);
-			Assert.Greater(clear, read);
-			Assert.Greater(adopt, clear);
-			Assert.Greater(complete, adopt);
+			ClassicAssert.Greater(clear, read);
+			ClassicAssert.Greater(adopt, clear);
+			ClassicAssert.Greater(complete, adopt);
 
 			string guard = Source("Core", "KingdomCivicMemorySystem.LoadGuard.cs");
 			StringAssert.Contains("public override void AfterLoad(XRLGame Game)", guard);
@@ -188,16 +189,16 @@ namespace ThousandAndFirst.Tests
 		{
 			string latch = Source("Core", "KingdomCivicMemoryLatch.cs");
 
-			Assert.IsTrue(Regex.IsMatch(latch, @"public\s+bool\s+Tripped\s*=>\s*Thrown\s*;"),
+			ClassicAssert.IsTrue(Regex.IsMatch(latch, @"public\s+bool\s+Tripped\s*=>\s*Thrown\s*;"),
 				"Tripped must be an expression-bodied read, never a settable property");
-			Assert.IsTrue(Regex.IsMatch(latch, @"private\s+bool\s+Thrown\s*;"),
+			ClassicAssert.IsTrue(Regex.IsMatch(latch, @"private\s+bool\s+Thrown\s*;"),
 				"the latch's state must be private");
-			Assert.IsFalse(Regex.IsMatch(latch, @"\bThrown\s*=\s*false"),
+			ClassicAssert.IsFalse(Regex.IsMatch(latch, @"\bThrown\s*=\s*false"),
 				"the latch must have no off switch");
 
 			foreach (string name in new[] { "Clear", "Reset", "Dismiss", "Acknowledge",
 				"Untrip", "Unlatch", "Repair", "Forgive" })
-				Assert.IsFalse(Regex.IsMatch(latch,
+				ClassicAssert.IsFalse(Regex.IsMatch(latch,
 					@"(public|internal|protected|private)\s[^\n]*\b" + name + @"\s*\("),
 					"KingdomCivicMemoryLatch must declare no " + name + " member");
 
@@ -286,8 +287,8 @@ namespace ThousandAndFirst.Tests
 			int mapEnd = bindings.IndexOf(
 				"private static KingdomCivicMemoryNested EnvelopeState(", mapStart,
 				StringComparison.Ordinal);
-			Assert.Greater(mapStart, -1);
-			Assert.Greater(mapEnd, mapStart);
+			ClassicAssert.Greater(mapStart, -1);
+			ClassicAssert.Greater(mapEnd, mapStart);
 			string map = bindings.Substring(mapStart, mapEnd - mapStart);
 			int futureState = map.IndexOf("State == KingdomCuriosityBookState.FutureOpaque",
 				StringComparison.Ordinal);
@@ -301,11 +302,11 @@ namespace ThousandAndFirst.Tests
 				currentVerdict, StringComparison.Ordinal);
 			int malformedVerdict = map.IndexOf("return KingdomCivicMemoryNested.Malformed",
 				invalidState, StringComparison.Ordinal);
-			Assert.Greater(futureVerdict, futureState);
-			Assert.Greater(currentState, futureVerdict);
-			Assert.Greater(currentVerdict, currentState);
-			Assert.Greater(invalidState, currentVerdict);
-			Assert.Greater(malformedVerdict, invalidState,
+			ClassicAssert.Greater(futureVerdict, futureState);
+			ClassicAssert.Greater(currentState, futureVerdict);
+			ClassicAssert.Greater(currentVerdict, currentState);
+			ClassicAssert.Greater(invalidState, currentVerdict);
+			ClassicAssert.Greater(malformedVerdict, invalidState,
 				"undefined O6/D7 book states must fail closed after the two supported states");
 		}
 
@@ -338,15 +339,15 @@ namespace ThousandAndFirst.Tests
 				int refused = bindings.IndexOf("return InvalidIdentity(", accepted,
 					StringComparison.Ordinal);
 
-				Assert.Greater(method, -1, families[i, 0]);
-				Assert.Greater(decode, method, families[i, 0]);
-				Assert.Greater(disposition, decode, families[i, 0]);
-				Assert.Greater(currentOnly, disposition,
+				ClassicAssert.Greater(method, -1, families[i, 0]);
+				ClassicAssert.Greater(decode, method, families[i, 0]);
+				ClassicAssert.Greater(disposition, decode, families[i, 0]);
+				ClassicAssert.Greater(currentOnly, disposition,
 					families[i, 0] + " must preserve future/quarantine before identity validation");
-				Assert.Greater(identity, currentOnly,
+				ClassicAssert.Greater(identity, currentOnly,
 					families[i, 0] + " must ask its Store about decoded authority identity");
-				Assert.Greater(accepted, identity, families[i, 0]);
-				Assert.Greater(refused, accepted,
+				ClassicAssert.Greater(accepted, identity, families[i, 0]);
+				ClassicAssert.Greater(refused, accepted,
 					families[i, 0] + " must map invalid populated-unbound v1 to malformed");
 			}
 
@@ -384,11 +385,11 @@ namespace ThousandAndFirst.Tests
 			int commitDelegate = transactions.IndexOf("return Records.TryCommitSection(Lease, Payload, "
 				+ "out Failure);", commit, StringComparison.Ordinal);
 
-			Assert.Greater(read, -1);
-			Assert.Greater(readDelegate, read,
+			ClassicAssert.Greater(read, -1);
+			ClassicAssert.Greater(readDelegate, read,
 				"the engine surface must return the authority's origin-bound lease unchanged");
-			Assert.Greater(commit, readDelegate);
-			Assert.Greater(commitDelegate, commit,
+			ClassicAssert.Greater(commit, readDelegate);
+			ClassicAssert.Greater(commitDelegate, commit,
 				"the engine surface must offer the same lease back to the same authority");
 			StringAssert.Contains("KingdomCivicMemorySectionLease", transactions);
 		}
@@ -412,14 +413,14 @@ namespace ThousandAndFirst.Tests
 			int release = lease.IndexOf("finally { MutationInProgress = false; }", issue,
 				StringComparison.Ordinal);
 
-			Assert.Greater(enter, -1);
-			Assert.Greater(inspect, enter);
-			Assert.Greater(reread, inspect);
-			Assert.Greater(identity, reread);
-			Assert.Greater(revision, identity);
-			Assert.Greater(issue, revision,
+			ClassicAssert.Greater(enter, -1);
+			ClassicAssert.Greater(inspect, enter);
+			ClassicAssert.Greater(reread, inspect);
+			ClassicAssert.Greater(identity, reread);
+			ClassicAssert.Greater(revision, identity);
+			ClassicAssert.Greater(issue, revision,
 				"no lease may escape before both snapshot identity and revision are rechecked");
-			Assert.Greater(release, issue,
+			ClassicAssert.Greater(release, issue,
 				"every return and family exception must release only the guard this read acquired");
 		}
 
@@ -446,8 +447,8 @@ namespace ThousandAndFirst.Tests
 			int verify = save.IndexOf("KingdomCivicMemoryDerivation.Verify(out derivation)",
 				StringComparison.Ordinal);
 			int latch = save.IndexOf("if (Records.Latch.Tripped)", StringComparison.Ordinal);
-			Assert.Greater(verify, -1, "BeforeSave must verify the derivation");
-			Assert.Greater(latch, verify, "the derivation is checked before the latch");
+			ClassicAssert.Greater(verify, -1, "BeforeSave must verify the derivation");
+			ClassicAssert.Greater(latch, verify, "the derivation is checked before the latch");
 		}
 
 		/// <summary>The revision counter must refuse to wrap rather than turn over.</summary>
@@ -457,8 +458,8 @@ namespace ThousandAndFirst.Tests
 			string commit = Source("Core", "KingdomCivicMemoryAuthority.Commit.cs");
 			int guard = commit.IndexOf("Current.Revision == long.MaxValue", StringComparison.Ordinal);
 			int increment = commit.IndexOf("Current.Revision + 1", StringComparison.Ordinal);
-			Assert.Greater(guard, -1, "the commit path must name the last expressible revision");
-			Assert.Greater(increment, guard, "and must refuse it before incrementing");
+			ClassicAssert.Greater(guard, -1, "the commit path must name the last expressible revision");
+			ClassicAssert.Greater(increment, guard, "and must refuse it before incrementing");
 		}
 
 		[Test]
@@ -475,13 +476,13 @@ namespace ThousandAndFirst.Tests
 			int parse = decode.IndexOf("ReadSections(reader, stream", integrity,
 				StringComparison.Ordinal);
 
-			Assert.Greater(cap, -1);
-			Assert.Greater(clone, cap, "oversized input must be refused before a second allocation");
-			Assert.Greater(length, clone);
-			Assert.Greater(integrity, length);
-			Assert.Greater(parse, integrity);
-			Assert.IsFalse(decode.Contains("VerifyIntegrity(Bytes)"));
-			Assert.IsFalse(decode.Contains("new MemoryStream(Bytes"));
+			ClassicAssert.Greater(cap, -1);
+			ClassicAssert.Greater(clone, cap, "oversized input must be refused before a second allocation");
+			ClassicAssert.Greater(length, clone);
+			ClassicAssert.Greater(integrity, length);
+			ClassicAssert.Greater(parse, integrity);
+			ClassicAssert.IsFalse(decode.Contains("VerifyIntegrity(Bytes)"));
+			ClassicAssert.IsFalse(decode.Contains("new MemoryStream(Bytes"));
 		}
 
 		[Test]
@@ -496,11 +497,11 @@ namespace ThousandAndFirst.Tests
 			int absent = loader.IndexOf(
 				"if (kingdomSystem == null || seal == null || memory == null) return;",
 				civic, StringComparison.Ordinal);
-			Assert.Greater(realm, -1);
-			Assert.Greater(seal, realm);
-			Assert.Greater(civic, seal,
+			ClassicAssert.Greater(realm, -1);
+			ClassicAssert.Greater(seal, realm);
+			ClassicAssert.Greater(civic, seal,
 				"civic memory must be read alongside the already-proved realm and seal systems");
-			Assert.Greater(absent, civic,
+			ClassicAssert.Greater(absent, civic,
 				"a prepared-removal roster must return without recreating any carrier");
 			StringAssert.DoesNotContain("RequireSystem<KingdomSystem>()", loader);
 			StringAssert.DoesNotContain("RequireSystem<KingdomSeal>()", loader);
@@ -512,7 +513,7 @@ namespace ThousandAndFirst.Tests
 		{
 			foreach (string path in Directory.GetFiles(
 				Path.Combine(TestMain.RepositoryRoot, "Core"), "KingdomCivicMemory*.cs"))
-				Assert.Less(File.ReadAllLines(path).Length, 300,
+				ClassicAssert.Less(File.ReadAllLines(path).Length, 300,
 					Path.GetFileName(path) + " must stay under 300 physical lines");
 		}
 	}

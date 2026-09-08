@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -60,7 +61,7 @@ namespace ThousandAndFirst.Tests
 				.Cast<Match>().Select(match => match.Groups[1].Value).OrderBy(value => value).ToArray();
 			string[] captured = Regex.Matches(Body(Runtime, "private static int[] HomecomingCounts("), @"\bledger\.(\w+)")
 				.Cast<Match>().Select(match => match.Groups[1].Value).OrderBy(value => value).ToArray();
-			Assert.Greater(cleared.Length, 0);
+			ClassicAssert.Greater(cleared.Length, 0);
 			CollectionAssert.AreEqual(cleared, captured);
 			ContainsAll(Body(Runtime, "private static bool HomecomingExact("),
 				"int[] counts = HomecomingCounts(frame.Ledger);",
@@ -142,7 +143,7 @@ namespace ThousandAndFirst.Tests
 			Ordered(Body(Runtime, Entry), "TryPrepareHomecoming(", "KingdomSubsidenceStepRules.Valid(next)",
 				"KingdomSubsidenceStepCodec.TryEncode(next, out string wire)", "!HomecomingExact(frame)",
 				"if (wire != owner.Owner.Wire && !SaveOption(owner, next)) return false;");
-			Assert.AreEqual(1, Regex.Matches(Read(Runtime), @"\bSaveOption\(").Count);
+			ClassicAssert.AreEqual(1, Regex.Matches(Read(Runtime), @"\bSaveOption\(").Count);
 		}
 
 		[Test]
@@ -155,7 +156,7 @@ namespace ThousandAndFirst.Tests
 				"show(digest);", "if (!HomecomingExact(frame)", "TryPrepareHomecoming(",
 				"if (failures != KingdomSubsidenceReportArchive.None)",
 				"next = next.WithFailures(KingdomSubsidenceReportArchive.None);", "!SaveOption(owner, next)");
-			Assert.AreEqual(1, Regex.Matches(Read(Runtime), @"\bWithFailures\(").Count);
+			ClassicAssert.AreEqual(1, Regex.Matches(Read(Runtime), @"\bWithFailures\(").Count);
 			ContainsAll(Body("Growth/KingdomSubsidenceReportArchive.cs", "internal static string Digest("),
 				"Unconfirmed subsidence reports", "Reading acknowledges this saved warning; delivery is not claimed.");
 			StringAssert.DoesNotContain("WithBatch(KingdomSubsidenceBatchRules.None)", Read(Runtime));
@@ -170,7 +171,7 @@ namespace ThousandAndFirst.Tests
 				+ "// Reset is non-virtual BCL bookkeeping; no external callback follows this barrier. "
 				+ "system.ResidentDepartureCapacityWarnings = acknowledgedDepartures; "
 				+ "ledger.Reset(); system.HomecomingDays = 0; refusal = null; return true;");
-			Assert.AreEqual(1, Regex.Matches(Read(Runtime), @"\bledger\.Reset\(").Count);
+			ClassicAssert.AreEqual(1, Regex.Matches(Read(Runtime), @"\bledger\.Reset\(").Count);
 			StringAssert.DoesNotContain("system.Ledger.Reset", Read(Runtime));
 			StringAssert.DoesNotContain(".Clear(", Read(Runtime));
 		}
@@ -192,7 +193,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = Read(path);
 			int start = source.IndexOf(signature, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, signature);
+			ClassicAssert.GreaterOrEqual(start, 0, signature);
 			int open = source.IndexOf('{', start), depth = 0;
 			for (int i = open; i < source.Length; i++)
 			{
@@ -212,7 +213,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string token in tokens)
 			{
 				int at = source.IndexOf(token, cursor, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(at, cursor, "Missing or reordered source contract: " + token);
+				ClassicAssert.GreaterOrEqual(at, cursor, "Missing or reordered source contract: " + token);
 				cursor = at + token.Length;
 			}
 		}

@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
@@ -25,20 +26,20 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < fields.Length; i++)
 			{
 				names[i] = fields[i].Name;
-				if (RequireReadonly) Assert.IsTrue(fields[i].IsInitOnly, Type.Name + "." + fields[i].Name);
+				if (RequireReadonly) ClassicAssert.IsTrue(fields[i].IsInitOnly, Type.Name + "." + fields[i].Name);
 			}
 			return string.Join("|", names);
 		}
 
 		private static void AssertByteEnum(Type Type, string Names)
 		{
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(Type), Type.Name);
-			Assert.AreEqual("ThousandAndFirst.Simulation.City." + Type.Name, Type.FullName);
-			Assert.AreEqual(Names, string.Join("|", Enum.GetNames(Type)), Type.Name);
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(Type), Type.Name);
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.City." + Type.Name, Type.FullName);
+			ClassicAssert.AreEqual(Names, string.Join("|", Enum.GetNames(Type)), Type.Name);
 			Array values = Enum.GetValues(Type);
 			for (int i = 0; i < values.Length; i++)
 			{
-				Assert.AreEqual(i, Convert.ToInt32(values.GetValue(i)), Type.Name + "[" + i + "]");
+				ClassicAssert.AreEqual(i, Convert.ToInt32(values.GetValue(i)), Type.Name + "[" + i + "]");
 			}
 		}
 
@@ -50,21 +51,21 @@ namespace ThousandAndFirst.Tests
 			AssertByteEnum(typeof(KingdomWorkTier), "Industry|Refining|Amenity|Food|Water|Watch");
 			AssertByteEnum(typeof(KingdomJoinVerdict), "Joined|Crossed|RefusedKind|RefusedLiquid|RefusedUntyped");
 
-			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomNetworkNode", typeof(KingdomNetworkNode).FullName);
-			Assert.AreEqual("WorkId|Role|Tier|Capacity|RatePerDay", DeclaredFields(typeof(KingdomNetworkNode), true));
-			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomNetworkEdge", typeof(KingdomNetworkEdge).FullName);
-			Assert.AreEqual("NodeA|NodeB|CapacityPerDay|ConditionPercent", DeclaredFields(typeof(KingdomNetworkEdge), true));
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.City.KingdomNetworkNode", typeof(KingdomNetworkNode).FullName);
+			ClassicAssert.AreEqual("WorkId|Role|Tier|Capacity|RatePerDay", DeclaredFields(typeof(KingdomNetworkNode), true));
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.City.KingdomNetworkEdge", typeof(KingdomNetworkEdge).FullName);
+			ClassicAssert.AreEqual("NodeA|NodeB|CapacityPerDay|ConditionPercent", DeclaredFields(typeof(KingdomNetworkEdge), true));
 
 			Type graph = typeof(KingdomNetworkGraph);
-			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomNetworkGraph", graph.FullName);
-			Assert.IsTrue(graph.IsSealed);
-			Assert.IsFalse(graph.IsPublic);
-			Assert.AreEqual("nodes|edges|order|parentEdge|NetworkId|Kind|LiquidId|TopologyStamp",
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.City.KingdomNetworkGraph", graph.FullName);
+			ClassicAssert.IsTrue(graph.IsSealed);
+			ClassicAssert.IsFalse(graph.IsPublic);
+			ClassicAssert.AreEqual("nodes|edges|order|parentEdge|NetworkId|Kind|LiquidId|TopologyStamp",
 				DeclaredFields(graph, true));
 			Type rules = typeof(KingdomNetworkRules);
-			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomNetworkRules", rules.FullName);
-			Assert.IsTrue(rules.IsAbstract && rules.IsSealed);
-			Assert.IsFalse(rules.IsPublic);
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.City.KingdomNetworkRules", rules.FullName);
+			ClassicAssert.IsTrue(rules.IsAbstract && rules.IsSealed);
+			ClassicAssert.IsFalse(rules.IsPublic);
 		}
 
 		private static KingdomNetworkNode Source(int id, int rate)
@@ -86,7 +87,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomNetworkGraph graph;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomNetworkGraph.TryBuild(1, KingdomNetworkKind.Electrical, null, 7L,
+			ClassicAssert.IsTrue(KingdomNetworkGraph.TryBuild(1, KingdomNetworkKind.Electrical, null, 7L,
 				nodes, nodes.Length, edges, edges.Length, out graph, out fault), fault.ToString());
 			return graph;
 		}
@@ -95,7 +96,7 @@ namespace ThousandAndFirst.Tests
 		{
 			int[] reach = new int[graph.NodeCount];
 			KingdomCityFault fault;
-			Assert.IsTrue(graph.TryBottleneck(reach, out visits, out fault), fault.ToString());
+			ClassicAssert.IsTrue(graph.TryBottleneck(reach, out visits, out fault), fault.ToString());
 			return reach;
 		}
 
@@ -111,11 +112,11 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomJoinVerdict verdict = KingdomNetworkRules.JudgeJoin(true,
 				KingdomNetworkKind.Liquid, "water", KingdomNetworkKind.Liquid, "salt");
-			Assert.AreEqual(KingdomJoinVerdict.RefusedLiquid, verdict);
+			ClassicAssert.AreEqual(KingdomJoinVerdict.RefusedLiquid, verdict);
 			string line = KingdomNetworkRules.RefusalLine(verdict, "water", "salt");
 			StringAssert.Contains("water", line);
 			StringAssert.Contains("salt", line);
-			Assert.IsFalse(line.Contains("merge"), "a refusal must not describe the thing it refused to do as having happened");
+			ClassicAssert.IsFalse(line.Contains("merge"), "a refusal must not describe the thing it refused to do as having happened");
 		}
 
 		/// <summary>Same liquid, both declaring: one line. Case and stray whitespace are the
@@ -125,7 +126,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(" water ", "water")]
 		public void ASameLiquidDeclaredJoinIsOneLine(string mine, string theirs)
 		{
-			Assert.AreEqual(KingdomJoinVerdict.Joined,
+			ClassicAssert.AreEqual(KingdomJoinVerdict.Joined,
 				KingdomNetworkRules.JudgeJoin(true, KingdomNetworkKind.Liquid, mine, KingdomNetworkKind.Liquid, theirs));
 		}
 
@@ -140,8 +141,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomJoinVerdict verdict = KingdomNetworkRules.JudgeJoin(false,
 				KingdomNetworkKind.Liquid, "water", KingdomNetworkKind.Liquid, "salt");
-			Assert.AreEqual(KingdomJoinVerdict.Crossed, verdict);
-			Assert.AreEqual("", KingdomNetworkRules.RefusalLine(verdict, "water", "salt"));
+			ClassicAssert.AreEqual(KingdomJoinVerdict.Crossed, verdict);
+			ClassicAssert.AreEqual("", KingdomNetworkRules.RefusalLine(verdict, "water", "salt"));
 		}
 
 		/// <summary>An untyped line joins nothing at all. Two blanks are not an agreement:
@@ -149,10 +150,10 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AnUntypedLineJoinsNothingIncludingAnotherUntypedLine()
 		{
-			Assert.AreEqual(KingdomJoinVerdict.RefusedUntyped,
+			ClassicAssert.AreEqual(KingdomJoinVerdict.RefusedUntyped,
 				KingdomNetworkRules.JudgeJoin(true, KingdomNetworkKind.Liquid, "", KingdomNetworkKind.Liquid, ""));
-			Assert.IsFalse(KingdomNetworkRules.LiquidsMatch("", ""));
-			Assert.IsFalse(KingdomNetworkRules.LiquidsMatch(null, "water"));
+			ClassicAssert.IsFalse(KingdomNetworkRules.LiquidsMatch("", ""));
+			ClassicAssert.IsFalse(KingdomNetworkRules.LiquidsMatch(null, "water"));
 		}
 
 		/// <summary>Two families never join, which is vanilla's own rule
@@ -160,7 +161,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TwoFamiliesNeverJoinEvenWhenBothDeclare()
 		{
-			Assert.AreEqual(KingdomJoinVerdict.RefusedKind,
+			ClassicAssert.AreEqual(KingdomJoinVerdict.RefusedKind,
 				KingdomNetworkRules.JudgeJoin(true, KingdomNetworkKind.Mechanical, null, KingdomNetworkKind.Electrical, null));
 		}
 
@@ -169,9 +170,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void OneSidedDeclarationJoinsNothing()
 		{
-			Assert.IsTrue(KingdomNetworkRules.DeclaredToward(KingdomNetworkRules.JoinNorth, KingdomNetworkRules.JoinSouth, KingdomNetworkRules.JoinNorth));
-			Assert.IsFalse(KingdomNetworkRules.DeclaredToward(KingdomNetworkRules.JoinNorth, KingdomNetworkRules.JoinEast, KingdomNetworkRules.JoinNorth));
-			Assert.IsFalse(KingdomNetworkRules.DeclaredToward(KingdomNetworkRules.JoinEast, KingdomNetworkRules.JoinSouth, KingdomNetworkRules.JoinNorth));
+			ClassicAssert.IsTrue(KingdomNetworkRules.DeclaredToward(KingdomNetworkRules.JoinNorth, KingdomNetworkRules.JoinSouth, KingdomNetworkRules.JoinNorth));
+			ClassicAssert.IsFalse(KingdomNetworkRules.DeclaredToward(KingdomNetworkRules.JoinNorth, KingdomNetworkRules.JoinEast, KingdomNetworkRules.JoinNorth));
+			ClassicAssert.IsFalse(KingdomNetworkRules.DeclaredToward(KingdomNetworkRules.JoinEast, KingdomNetworkRules.JoinSouth, KingdomNetworkRules.JoinNorth));
 		}
 
 		/// <summary>A misspelt declaration joins NOTHING rather than everything. The dangerous
@@ -185,8 +186,8 @@ namespace ThousandAndFirst.Tests
 		public void AMisspeltDeclarationCapsTheSegmentRatherThanOpeningIt(string text, bool ok, int expected)
 		{
 			int mask;
-			Assert.AreEqual(ok, KingdomNetworkRules.TryParseJoins(text, out mask));
-			Assert.AreEqual(expected, mask);
+			ClassicAssert.AreEqual(ok, KingdomNetworkRules.TryParseJoins(text, out mask));
+			ClassicAssert.AreEqual(expected, mask);
 		}
 
 		/// <summary>A crossover carries a run straight through and pairs nothing else. North in,
@@ -195,10 +196,10 @@ namespace ThousandAndFirst.Tests
 		public void ACrossoverCarriesThroughAndNeverAround()
 		{
 			int cross = KingdomNetworkRules.JoinAll;
-			Assert.AreEqual(KingdomNetworkRules.JoinSouth, KingdomNetworkRules.CrossoverExit(cross, KingdomNetworkRules.JoinNorth));
-			Assert.AreEqual(KingdomNetworkRules.JoinWest, KingdomNetworkRules.CrossoverExit(cross, KingdomNetworkRules.JoinEast));
+			ClassicAssert.AreEqual(KingdomNetworkRules.JoinSouth, KingdomNetworkRules.CrossoverExit(cross, KingdomNetworkRules.JoinNorth));
+			ClassicAssert.AreEqual(KingdomNetworkRules.JoinWest, KingdomNetworkRules.CrossoverExit(cross, KingdomNetworkRules.JoinEast));
 			int halfLaid = KingdomNetworkRules.JoinNorth | KingdomNetworkRules.JoinEast;
-			Assert.AreEqual(0, KingdomNetworkRules.CrossoverExit(halfLaid, KingdomNetworkRules.JoinNorth),
+			ClassicAssert.AreEqual(0, KingdomNetworkRules.CrossoverExit(halfLaid, KingdomNetworkRules.JoinNorth),
 				"half a crossover is a dead end, not a corner");
 		}
 
@@ -214,10 +215,10 @@ namespace ThousandAndFirst.Tests
 			KingdomNetworkEdge[] edges = new KingdomNetworkEdge[0];
 			KingdomNetworkGraph graph;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomNetworkGraph.TryBuild(1, KingdomNetworkKind.Liquid, null, 1L, nodes, 1, edges, 0, out graph, out fault));
-			Assert.AreEqual(KingdomCityFault.NullArgument, fault);
-			Assert.IsFalse(KingdomNetworkGraph.TryBuild(1, KingdomNetworkKind.Electrical, "water", 1L, nodes, 1, edges, 0, out graph, out fault));
-			Assert.AreEqual(KingdomCityFault.NullArgument, fault);
+			ClassicAssert.IsFalse(KingdomNetworkGraph.TryBuild(1, KingdomNetworkKind.Liquid, null, 1L, nodes, 1, edges, 0, out graph, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.NullArgument, fault);
+			ClassicAssert.IsFalse(KingdomNetworkGraph.TryBuild(1, KingdomNetworkKind.Electrical, "water", 1L, nodes, 1, edges, 0, out graph, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.NullArgument, fault);
 		}
 
 		/// <summary>An edge naming a node that is not there is a refusal, never a dropped edge.
@@ -230,8 +231,8 @@ namespace ThousandAndFirst.Tests
 			KingdomNetworkEdge[] edges = new KingdomNetworkEdge[1] { new KingdomNetworkEdge(0, 5, 100, 100) };
 			KingdomNetworkGraph graph;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomNetworkGraph.TryBuild(1, KingdomNetworkKind.Electrical, null, 1L, nodes, 2, edges, 1, out graph, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidIndex, fault);
+			ClassicAssert.IsFalse(KingdomNetworkGraph.TryBuild(1, KingdomNetworkKind.Electrical, null, 1L, nodes, 2, edges, 1, out graph, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidIndex, fault);
 		}
 
 		/// <summary>Over the caps is a refusal, not a truncation. §0.0(c) budgets 32 nodes and 48
@@ -247,9 +248,9 @@ namespace ThousandAndFirst.Tests
 			}
 			KingdomNetworkGraph graph;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomNetworkGraph.TryBuild(1, KingdomNetworkKind.Electrical, null, 1L,
+			ClassicAssert.IsFalse(KingdomNetworkGraph.TryBuild(1, KingdomNetworkKind.Electrical, null, 1L,
 				nodes, nodes.Length, new KingdomNetworkEdge[0], 0, out graph, out fault));
-			Assert.AreEqual(KingdomCityFault.RowCapExceeded, fault);
+			ClassicAssert.AreEqual(KingdomCityFault.RowCapExceeded, fault);
 		}
 
 		// ---- The traversal and its op bound ---------------------------------------------------
@@ -277,9 +278,9 @@ namespace ThousandAndFirst.Tests
 			};
 			int visits;
 			int[] reach = Bottleneck(Build(nodes, edges), out visits);
-			Assert.AreEqual(KingdomNetworkRules.Unlimited, reach[0], "a source is its own bottleneck");
-			Assert.AreEqual(400, reach[1]);
-			Assert.AreEqual(400, reach[2], "the far end is narrowed by the first segment, not by its own");
+			ClassicAssert.AreEqual(KingdomNetworkRules.Unlimited, reach[0], "a source is its own bottleneck");
+			ClassicAssert.AreEqual(400, reach[1]);
+			ClassicAssert.AreEqual(400, reach[2], "the far end is narrowed by the first segment, not by its own");
 		}
 
 		/// <summary>Addendum 10(b): a cracked main carries less rather than the same. Condition
@@ -292,7 +293,7 @@ namespace ThousandAndFirst.Tests
 			KingdomNetworkNode[] nodes = new KingdomNetworkNode[2] { Source(1, 1000), Sink(2, 1000, KingdomWorkTier.Industry) };
 			KingdomNetworkEdge[] edges = new KingdomNetworkEdge[1] { new KingdomNetworkEdge(0, 1, 400, condition) };
 			int visits;
-			Assert.AreEqual(expected, Bottleneck(Build(nodes, edges), out visits)[1]);
+			ClassicAssert.AreEqual(expected, Bottleneck(Build(nodes, edges), out visits)[1]);
 		}
 
 		/// <summary>A node nothing reaches gets nothing, and says so with a zero rather than with a
@@ -311,8 +312,8 @@ namespace ThousandAndFirst.Tests
 			KingdomNetworkGraph graph = Build(nodes, edges);
 			int visits;
 			int[] reach = Bottleneck(graph, out visits);
-			Assert.AreEqual(0, reach[2]);
-			Assert.AreEqual(2, graph.ReachedCount);
+			ClassicAssert.AreEqual(0, reach[2]);
+			ClassicAssert.AreEqual(2, graph.ReachedCount);
 		}
 
 		/// <summary>
@@ -326,7 +327,7 @@ namespace ThousandAndFirst.Tests
 			KingdomNetworkNode[] nodes = new KingdomNetworkNode[2] { Store(1, 24000, 12000), Sink(2, 4000, KingdomWorkTier.Industry) };
 			KingdomNetworkEdge[] edges = new KingdomNetworkEdge[1] { new KingdomNetworkEdge(0, 1, 5000, 100) };
 			int visits;
-			Assert.AreEqual(5000, Bottleneck(Build(nodes, edges), out visits)[1]);
+			ClassicAssert.AreEqual(5000, Bottleneck(Build(nodes, edges), out visits)[1]);
 		}
 
 		/// <summary>
@@ -349,9 +350,9 @@ namespace ThousandAndFirst.Tests
 			};
 			int visits;
 			int[] reach = Bottleneck(Build(nodes, edges), out visits);
-			Assert.AreEqual(KingdomNetworkRules.Unlimited, reach[0], "the lowest store is the one root");
-			Assert.AreEqual(90, reach[1]);
-			Assert.AreEqual(40, reach[2], "the far cistern is narrowed by the narrowest length on the way to it");
+			ClassicAssert.AreEqual(KingdomNetworkRules.Unlimited, reach[0], "the lowest store is the one root");
+			ClassicAssert.AreEqual(90, reach[1]);
+			ClassicAssert.AreEqual(40, reach[2], "the far cistern is narrowed by the narrowest length on the way to it");
 		}
 
 		/// <summary>With a source on the line the stores are NOT roots — they are reached through
@@ -364,8 +365,8 @@ namespace ThousandAndFirst.Tests
 			KingdomNetworkEdge[] edges = new KingdomNetworkEdge[1] { new KingdomNetworkEdge(0, 1, 300, 50) };
 			int visits;
 			int[] reach = Bottleneck(Build(nodes, edges), out visits);
-			Assert.AreEqual(KingdomNetworkRules.Unlimited, reach[0]);
-			Assert.AreEqual(150, reach[1], "the store is behind a half-wrecked main and must be fed through it");
+			ClassicAssert.AreEqual(KingdomNetworkRules.Unlimited, reach[0]);
+			ClassicAssert.AreEqual(150, reach[1], "the store is behind a half-wrecked main and must be fed through it");
 		}
 
 		/// <summary>
@@ -397,14 +398,14 @@ namespace ThousandAndFirst.Tests
 			}
 			KingdomNetworkGraph graph;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomNetworkGraph.TryBuild(1, KingdomNetworkKind.Electrical, null, 1L,
+			ClassicAssert.IsTrue(KingdomNetworkGraph.TryBuild(1, KingdomNetworkKind.Electrical, null, 1L,
 				nodes, nodes.Length, edges, edges.Length, out graph, out fault), fault.ToString());
 			int visits;
 			Bottleneck(graph, out visits);
-			Assert.LessOrEqual(visits, KingdomNetworkRules.MaxSolveVisits(graph.NodeCount, graph.EdgeCount),
+			ClassicAssert.LessOrEqual(visits, KingdomNetworkRules.MaxSolveVisits(graph.NodeCount, graph.EdgeCount),
 				"the solve broke §0.0's network lane");
-			Assert.LessOrEqual(visits, 80, "the caps compose to eighty node-visits and the solve must stay inside them");
-			Assert.AreEqual(KingdomBudgetVerdict.Within,
+			ClassicAssert.LessOrEqual(visits, 80, "the caps compose to eighty node-visits and the solve must stay inside them");
+			ClassicAssert.AreEqual(KingdomBudgetVerdict.Within,
 				KingdomBudgetRules.JudgeCount(KingdomBudgetLane.NetworkSolve, (long)visits * KingdomBudgetRules.MaxBreakpoints));
 		}
 
@@ -428,8 +429,8 @@ namespace ThousandAndFirst.Tests
 			KingdomNetworkGraph graph = Build(nodes, edges);
 			int visits;
 			Bottleneck(graph, out visits);
-			Assert.AreEqual(3, graph.ReachedCount);
-			Assert.LessOrEqual(visits, KingdomNetworkRules.MaxSolveVisits(3, 3));
+			ClassicAssert.AreEqual(3, graph.ReachedCount);
+			ClassicAssert.LessOrEqual(visits, KingdomNetworkRules.MaxSolveVisits(3, 3));
 		}
 
 		// ---- Topology invalidates only on placement -------------------------------------------
@@ -443,9 +444,9 @@ namespace ThousandAndFirst.Tests
 		public void AGraphIsStaleOnlyWhenTheGroundStampMoved()
 		{
 			KingdomNetworkGraph graph = Build(new KingdomNetworkNode[1] { Source(1, 10) }, new KingdomNetworkEdge[0]);
-			Assert.IsFalse(KingdomNetworkRules.NeedsRebuild(graph, 7L), "the stamp it was built at is not a reason to rebuild");
-			Assert.IsTrue(KingdomNetworkRules.NeedsRebuild(graph, 8L));
-			Assert.IsTrue(KingdomNetworkRules.NeedsRebuild(null, 7L), "no graph and a stale graph are one branch");
+			ClassicAssert.IsFalse(KingdomNetworkRules.NeedsRebuild(graph, 7L), "the stamp it was built at is not a reason to rebuild");
+			ClassicAssert.IsTrue(KingdomNetworkRules.NeedsRebuild(graph, 8L));
+			ClassicAssert.IsTrue(KingdomNetworkRules.NeedsRebuild(null, 7L), "no graph and a stale graph are one branch");
 		}
 
 		// ---- The row widths §0.0(c) budgets ---------------------------------------------------
@@ -458,12 +459,12 @@ namespace ThousandAndFirst.Tests
 		public void TheNodeAndEdgeRowsFitTheWidthsTheTableBudgets()
 		{
 			int nodeBytes;
-			Assert.IsTrue(KingdomCityMemoryRules.TryMeasureDeclaredRowBytes(typeof(KingdomNetworkNode), out nodeBytes));
-			Assert.LessOrEqual(nodeBytes, KingdomCityMemoryRules.NetworkNodeBytes, "the node row outgrew §0.0(c)'s sixteen bytes");
+			ClassicAssert.IsTrue(KingdomCityMemoryRules.TryMeasureDeclaredRowBytes(typeof(KingdomNetworkNode), out nodeBytes));
+			ClassicAssert.LessOrEqual(nodeBytes, KingdomCityMemoryRules.NetworkNodeBytes, "the node row outgrew §0.0(c)'s sixteen bytes");
 			int edgeBytes;
-			Assert.IsTrue(KingdomCityMemoryRules.TryMeasureDeclaredRowBytes(typeof(KingdomNetworkEdge), out edgeBytes));
-			Assert.LessOrEqual(edgeBytes, KingdomCityMemoryRules.NetworkEdgeBytes, "the edge row outgrew §0.0(c)'s sixteen bytes");
-			Assert.AreEqual(16, edgeBytes, "the edge row is budgeted at exactly its declared width");
+			ClassicAssert.IsTrue(KingdomCityMemoryRules.TryMeasureDeclaredRowBytes(typeof(KingdomNetworkEdge), out edgeBytes));
+			ClassicAssert.LessOrEqual(edgeBytes, KingdomCityMemoryRules.NetworkEdgeBytes, "the edge row outgrew §0.0(c)'s sixteen bytes");
+			ClassicAssert.AreEqual(16, edgeBytes, "the edge row is budgeted at exactly its declared width");
 		}
 
 		/// <summary>
@@ -477,10 +478,10 @@ namespace ThousandAndFirst.Tests
 		{
 			System.Reflection.FieldInfo[] fields = typeof(KingdomNetworkEdge)
 				.GetFields(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic);
-			Assert.AreEqual(4, fields.Length);
+			ClassicAssert.AreEqual(4, fields.Length);
 			foreach (System.Reflection.FieldInfo field in fields)
 			{
-				Assert.IsTrue(field.FieldType.IsPrimitive,
+				ClassicAssert.IsTrue(field.FieldType.IsPrimitive,
 					"an edge that carried a reference would be an edge that names its provider, and the shell-as-backbone would need a second edge kind");
 			}
 		}
@@ -496,7 +497,7 @@ namespace ThousandAndFirst.Tests
 			};
 			KingdomCityState state;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityState.TryCreate(1, 1, "seat", 100L, default(KingdomStocks), zones,
+			ClassicAssert.IsTrue(KingdomCityState.TryCreate(1, 1, "seat", 100L, default(KingdomStocks), zones,
 				new KingdomWorkRow[0], new KingdomResidentRow[0], new KingdomClockRow[0], out state, out fault), fault.ToString());
 			return state;
 		}
@@ -514,21 +515,21 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState after;
 			long moved;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomNetworkRules.TryPostTransfer(before, KingdomStockKind.Water, 0, 1, 120L, out after, out moved, out fault), fault.ToString());
-			Assert.AreEqual(120L, moved);
+			ClassicAssert.IsTrue(KingdomNetworkRules.TryPostTransfer(before, KingdomStockKind.Water, 0, 1, 120L, out after, out moved, out fault), fault.ToString());
+			ClassicAssert.AreEqual(120L, moved);
 			KingdomZoneRow giver;
 			KingdomZoneRow taker;
-			Assert.IsTrue(after.TryZone(0, out giver));
-			Assert.IsTrue(after.TryZone(1, out taker));
-			Assert.AreEqual(380L, giver.Stocks.Water.Level);
-			Assert.AreEqual(-120, giver.OwedWater);
-			Assert.AreEqual(220L, taker.Stocks.Water.Level);
-			Assert.AreEqual(120, taker.OwedWater);
+			ClassicAssert.IsTrue(after.TryZone(0, out giver));
+			ClassicAssert.IsTrue(after.TryZone(1, out taker));
+			ClassicAssert.AreEqual(380L, giver.Stocks.Water.Level);
+			ClassicAssert.AreEqual(-120, giver.OwedWater);
+			ClassicAssert.AreEqual(220L, taker.Stocks.Water.Level);
+			ClassicAssert.AreEqual(120, taker.OwedWater);
 			// The identity, stated the way the audit line states it.
-			Assert.AreEqual(500L, giver.Stocks.Water.Level - giver.OwedWater, "the giver's GROUND moved, and it must not have");
-			Assert.AreEqual(100L, taker.Stocks.Water.Level - taker.OwedWater, "the taker's GROUND moved, and it must not have");
-			Assert.AreEqual(600L, giver.Stocks.Water.Level + taker.Stocks.Water.Level, "the city invented or destroyed water");
-			Assert.AreEqual(0, giver.OwedWater + taker.OwedWater, "the city's net debt moved");
+			ClassicAssert.AreEqual(500L, giver.Stocks.Water.Level - giver.OwedWater, "the giver's GROUND moved, and it must not have");
+			ClassicAssert.AreEqual(100L, taker.Stocks.Water.Level - taker.OwedWater, "the taker's GROUND moved, and it must not have");
+			ClassicAssert.AreEqual(600L, giver.Stocks.Water.Level + taker.Stocks.Water.Level, "the city invented or destroyed water");
+			ClassicAssert.AreEqual(0, giver.OwedWater + taker.OwedWater, "the city's net debt moved");
 		}
 
 		/// <summary>What a row already owes as a DRAW is promised to a vessel nobody has opened,
@@ -540,8 +541,8 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState after;
 			long moved;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomNetworkRules.TryPostTransfer(before, KingdomStockKind.Water, 0, 1, 500L, out after, out moved, out fault), fault.ToString());
-			Assert.AreEqual(100L, moved, "only the part of the level nothing has already claimed may run");
+			ClassicAssert.IsTrue(KingdomNetworkRules.TryPostTransfer(before, KingdomStockKind.Water, 0, 1, 500L, out after, out moved, out fault), fault.ToString());
+			ClassicAssert.AreEqual(100L, moved, "only the part of the level nothing has already claimed may run");
 		}
 
 		/// <summary>A line into a full vessel moves nothing, and reports nothing moved rather than
@@ -553,9 +554,9 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState after;
 			long moved;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomNetworkRules.TryPostTransfer(before, KingdomStockKind.Water, 0, 1, 500L, out after, out moved, out fault), fault.ToString());
-			Assert.AreEqual(0L, moved);
-			Assert.AreSame(before, after, "a transfer that moved nothing must not publish a new book");
+			ClassicAssert.IsTrue(KingdomNetworkRules.TryPostTransfer(before, KingdomStockKind.Water, 0, 1, 500L, out after, out moved, out fault), fault.ToString());
+			ClassicAssert.AreEqual(0L, moved);
+			ClassicAssert.AreSame(before, after, "a transfer that moved nothing must not publish a new book");
 		}
 
 		/// <summary>A line from a zone to itself is a topology bug, and it is refused loudly rather
@@ -567,9 +568,9 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState after;
 			long moved;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomNetworkRules.TryPostTransfer(before, KingdomStockKind.Water, 1, 1, 10L, out after, out moved, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidIndex, fault);
-			Assert.AreSame(before, after);
+			ClassicAssert.IsFalse(KingdomNetworkRules.TryPostTransfer(before, KingdomStockKind.Water, 1, 1, 10L, out after, out moved, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidIndex, fault);
+			ClassicAssert.AreSame(before, after);
 		}
 
 		/// <summary>The debt is an <c>int</c> because a dram is counted in <c>int</c> everywhere the
@@ -582,9 +583,9 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState after;
 			long moved;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomNetworkRules.TryPostTransfer(before, KingdomStockKind.Water, 0, 1, 1000L, out after, out moved, out fault));
-			Assert.AreEqual(KingdomCityFault.ArithmeticOverflow, fault);
-			Assert.AreSame(before, after, "a refused carry leaves the book byte-identical");
+			ClassicAssert.IsFalse(KingdomNetworkRules.TryPostTransfer(before, KingdomStockKind.Water, 0, 1, 1000L, out after, out moved, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.ArithmeticOverflow, fault);
+			ClassicAssert.AreSame(before, after, "a refused carry leaves the book byte-identical");
 		}
 	}
 }

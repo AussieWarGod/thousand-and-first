@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -24,7 +25,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(true, 1, true, true, 4)]
 		public void Distance_CountsEveryUnmetGate(bool tech, int knowledge, bool zones, bool stage, int expected)
 		{
-			Assert.AreEqual(expected, KingdomTechMapRules.Distance(tech, knowledge, zones, stage));
+			ClassicAssert.AreEqual(expected, KingdomTechMapRules.Distance(tech, knowledge, zones, stage));
 		}
 
 		/// <summary>A district gate does not count as distance. It is answered by standing
@@ -33,7 +34,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Distance_ADistrictIsNotDistance()
 		{
-			Assert.AreEqual(0, KingdomTechMapRules.Distance(false, 0, false, false));
+			ClassicAssert.AreEqual(0, KingdomTechMapRules.Distance(false, 0, false, false));
 			string missing = KingdomTechMapRules.Missing(null, null, "workshop", 0, 1, null, "a craft quarter");
 			StringAssert.Contains("a craft quarter", missing);
 		}
@@ -50,10 +51,10 @@ namespace ThousandAndFirst.Tests
 			int ground = missing.IndexOf("parasangs");
 			int stage = missing.IndexOf("Town");
 			int district = missing.IndexOf("craft quarter");
-			Assert.Less(knowledge, craft);
-			Assert.Less(craft, ground);
-			Assert.Less(ground, stage);
-			Assert.Less(stage, district);
+			ClassicAssert.Less(knowledge, craft);
+			ClassicAssert.Less(craft, ground);
+			ClassicAssert.Less(ground, stage);
+			ClassicAssert.Less(stage, district);
 		}
 
 		/// <summary>Nothing in the way and no district is no clause at all, not an empty
@@ -61,7 +62,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Missing_NothingInTheWayIsSilence()
 		{
-			Assert.AreEqual("", KingdomTechMapRules.Missing(null, null, "workshop", 0, 2, null, null));
+			ClassicAssert.AreEqual("", KingdomTechMapRules.Missing(null, null, "workshop", 0, 2, null, null));
 		}
 
 		/// <summary>The head names the level, the count, and what the next rung costs — the same
@@ -105,7 +106,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RoadsNotTaken_AllWalkedIsSilence()
 		{
-			Assert.AreEqual("", KingdomTechMapRules.RoadsNotTaken(true, true, true));
+			ClassicAssert.AreEqual("", KingdomTechMapRules.RoadsNotTaken(true, true, true));
 		}
 
 		/// <summary>Nearest first, then by name. Fully determined, so a reload never reshuffles the
@@ -120,9 +121,9 @@ namespace ThousandAndFirst.Tests
 				new TechMapRow("b", "bakehouse", 1, "x")
 			};
 			KingdomTechMapRules.Sort(rows);
-			Assert.AreEqual("arclight forge", rows[0].Name);
-			Assert.AreEqual("bakehouse", rows[1].Name);
-			Assert.AreEqual("cistern", rows[2].Name);
+			ClassicAssert.AreEqual("arclight forge", rows[0].Name);
+			ClassicAssert.AreEqual("bakehouse", rows[1].Name);
+			ClassicAssert.AreEqual("cistern", rows[2].Name);
 		}
 
 		/// <summary>Distance is said in words, so the number never has to be interpreted, and zero
@@ -140,8 +141,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Row_OpenIsZeroDistance()
 		{
-			Assert.IsTrue(new TechMapRow("k", "n", 0, "").Open);
-			Assert.IsFalse(new TechMapRow("k", "n", 1, "x").Open);
+			ClassicAssert.IsTrue(new TechMapRow("k", "n", 0, "").Open);
+			ClassicAssert.IsFalse(new TechMapRow("k", "n", 1, "x").Open);
 		}
 	}
 }

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -10,34 +11,34 @@ namespace ThousandAndFirst.Tests
 	{
 		[Test] public void LabourIsTimeAndHardnessBounded()
 		{
-			Assert.AreEqual(2000L, KingdomRelocationRules.LabourTicks(20, 5, 100, 1000));
-			Assert.Greater(KingdomRelocationRules.LabourTicks(200, 50, 180, 1000), 2000L);
-			Assert.AreEqual(0L, KingdomRelocationRules.LabourTicks(0, 5, 100, 1000));
+			ClassicAssert.AreEqual(2000L, KingdomRelocationRules.LabourTicks(20, 5, 100, 1000));
+			ClassicAssert.Greater(KingdomRelocationRules.LabourTicks(200, 50, 180, 1000), 2000L);
+			ClassicAssert.AreEqual(0L, KingdomRelocationRules.LabourTicks(0, 5, 100, 1000));
 		}
 
 		[Test] public void ShiftPreservesWholeLotGeometry()
 		{
 			KingdomRelocationRect source = new KingdomRelocationRect(2, 3, 9, 8);
 			KingdomRelocationRect moved = KingdomRelocationRules.Shift(source, 20, 4);
-			Assert.AreEqual(source.Width, moved.Width); Assert.AreEqual(source.Height, moved.Height);
-			Assert.AreEqual(22, moved.X1); Assert.AreEqual(12, moved.Y2);
-			Assert.AreEqual(25, moved.CenterX); Assert.AreEqual(9, moved.CenterY);
+			ClassicAssert.AreEqual(source.Width, moved.Width); ClassicAssert.AreEqual(source.Height, moved.Height);
+			ClassicAssert.AreEqual(22, moved.X1); ClassicAssert.AreEqual(12, moved.Y2);
+			ClassicAssert.AreEqual(25, moved.CenterX); ClassicAssert.AreEqual(9, moved.CenterY);
 		}
 
 		[Test] public void DayCeilingCannotOverflow()
 		{
-			Assert.AreEqual(int.MaxValue, KingdomRelocationRules.Days(long.MaxValue, 2L));
-			Assert.AreEqual(2, KingdomRelocationRules.Days(1001L, 1000L));
+			ClassicAssert.AreEqual(int.MaxValue, KingdomRelocationRules.Days(long.MaxValue, 2L));
+			ClassicAssert.AreEqual(2, KingdomRelocationRules.Days(1001L, 1000L));
 		}
 
 		[Test] public void HappyReceiptRoundTripsCanonically()
 		{
 			KingdomRelocationReceipt receipt = Receipt();
-			Assert.IsTrue(KingdomRelocationRules.Valid(receipt, out string failure), failure);
-			Assert.IsTrue(KingdomRelocationCodec.TryEncode(receipt, out string first, out failure), failure);
-			Assert.IsTrue(KingdomRelocationCodec.TryDecode(first, out var read, out failure), failure);
-			Assert.IsTrue(KingdomRelocationCodec.TryEncode(read, out string second, out failure), failure);
-			Assert.AreEqual(first, second); Assert.AreEqual("lot-1", read.Moves[0].PlotId);
+			ClassicAssert.IsTrue(KingdomRelocationRules.Valid(receipt, out string failure), failure);
+			ClassicAssert.IsTrue(KingdomRelocationCodec.TryEncode(receipt, out string first, out failure), failure);
+			ClassicAssert.IsTrue(KingdomRelocationCodec.TryDecode(first, out var read, out failure), failure);
+			ClassicAssert.IsTrue(KingdomRelocationCodec.TryEncode(read, out string second, out failure), failure);
+			ClassicAssert.AreEqual(first, second); ClassicAssert.AreEqual("lot-1", read.Moves[0].PlotId);
 		}
 
 		[TestCase(KingdomRelocationMovePhase.Waiting)]
@@ -55,7 +56,7 @@ namespace ThousandAndFirst.Tests
 			{ move.RemainingTicks = 0; move.CompletionTick = 3000; move.Rows[0].State = KingdomRelocationRowState.Rooted; }
 			if (phase == KingdomRelocationMovePhase.RolledBack)
 			{ move.RemainingTicks = 0; move.CompletionTick = 3000; }
-			Assert.IsTrue(KingdomRelocationRules.Valid(receipt, out string failure), failure);
+			ClassicAssert.IsTrue(KingdomRelocationRules.Valid(receipt, out string failure), failure);
 		}
 
 		[Test] public void CompleteRequiresDestinationParity()
@@ -63,11 +64,11 @@ namespace ThousandAndFirst.Tests
 			KingdomRelocationReceipt receipt = Receipt(); KingdomRelocationMove move = receipt.Moves[0];
 			move.Phase = KingdomRelocationMovePhase.Complete; move.RemainingTicks = 0;
 			move.CompletionTick = 3000;
-			Assert.IsFalse(KingdomRelocationRules.Valid(receipt, out _));
+			ClassicAssert.IsFalse(KingdomRelocationRules.Valid(receipt, out _));
 			move.Rows[0].State = move.Rows[1].State = KingdomRelocationRowState.Destination;
 			move.Clearance[0].State = KingdomRelocationClearState.Removed;
 			receipt.CurrentMove = 1; receipt.Phase = KingdomRelocationPhase.Complete;
-			Assert.IsTrue(KingdomRelocationRules.Valid(receipt, out string failure), failure);
+			ClassicAssert.IsTrue(KingdomRelocationRules.Valid(receipt, out string failure), failure);
 		}
 
 		[Test] public void PartialHandoverIsDurableButNotComplete()
@@ -77,16 +78,16 @@ namespace ThousandAndFirst.Tests
 			move.CompletionTick = 3000; move.Rows[0].State = KingdomRelocationRowState.Destination;
 			move.Rows[1].State = KingdomRelocationRowState.Rooted;
 			move.Clearance[0].State = KingdomRelocationClearState.RemovalPending;
-			Assert.IsTrue(KingdomRelocationRules.Valid(receipt, out string failure), failure);
+			ClassicAssert.IsTrue(KingdomRelocationRules.Valid(receipt, out string failure), failure);
 			move.Phase = KingdomRelocationMovePhase.Complete;
-			Assert.IsFalse(KingdomRelocationRules.Valid(receipt, out _));
+			ClassicAssert.IsFalse(KingdomRelocationRules.Valid(receipt, out _));
 		}
 
 		[Test] public void DuplicateObjectIdsFailClosed()
 		{
 			KingdomRelocationReceipt receipt = Receipt();
 			receipt.Moves[0].Rows[1].ObjectId = receipt.Moves[0].Rows[0].ObjectId;
-			Assert.IsFalse(KingdomRelocationRules.Valid(receipt, out string failure));
+			ClassicAssert.IsFalse(KingdomRelocationRules.Valid(receipt, out string failure));
 			StringAssert.Contains("duplicated", failure);
 		}
 
@@ -94,7 +95,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomRelocationReceipt receipt = Receipt();
 			receipt.Moves[0].Rows[0].ObjectId = receipt.HeartId;
-			Assert.IsFalse(KingdomRelocationRules.Valid(receipt, out string failure));
+			ClassicAssert.IsFalse(KingdomRelocationRules.Valid(receipt, out string failure));
 			StringAssert.Contains("duplicated", failure);
 		}
 
@@ -103,7 +104,7 @@ namespace ThousandAndFirst.Tests
 			KingdomRelocationReceipt receipt = Receipt();
 			KingdomRelocationMove second = Move("root-2", "lot-1", 45, 2);
 			receipt.Moves.Add(second);
-			Assert.IsFalse(KingdomRelocationRules.Valid(receipt, out _));
+			ClassicAssert.IsFalse(KingdomRelocationRules.Valid(receipt, out _));
 		}
 
 		[Test] public void OverlappingDestinationsFailClosed()
@@ -111,7 +112,7 @@ namespace ThousandAndFirst.Tests
 			KingdomRelocationReceipt receipt = Receipt();
 			KingdomRelocationMove second = Move("root-2", "lot-2", 42, 2);
 			receipt.Moves.Add(second);
-			Assert.IsFalse(KingdomRelocationRules.Valid(receipt, out string failure));
+			ClassicAssert.IsFalse(KingdomRelocationRules.Valid(receipt, out string failure));
 			StringAssert.Contains("overlap", failure);
 		}
 
@@ -120,7 +121,7 @@ namespace ThousandAndFirst.Tests
 			KingdomRelocationReceipt receipt = Receipt();
 			KingdomRelocationMove second = Move("root-2", "lot-2", 55, 2);
 			receipt.Moves.Add(second);
-			Assert.IsFalse(KingdomRelocationRules.Valid(receipt, out string failure));
+			ClassicAssert.IsFalse(KingdomRelocationRules.Valid(receipt, out string failure));
 			StringAssert.Contains("sources overlap", failure);
 		}
 
@@ -128,7 +129,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomRelocationReceipt receipt = Receipt();
 			receipt.Moves[0].Destination = receipt.HeartGround;
-			Assert.IsFalse(KingdomRelocationRules.Valid(receipt, out _));
+			ClassicAssert.IsFalse(KingdomRelocationRules.Valid(receipt, out _));
 		}
 
 		[Test] public void SourceAndFutureSourceCollisionsFailClosed()
@@ -137,14 +138,14 @@ namespace ThousandAndFirst.Tests
 			receipt.Moves[0].Destination = new KingdomRelocationRect(14, 8, 21, 13);
 			receipt.Moves[0].Clearance[0].X = 14;
 			receipt.Moves[0].Clearance[0].Y = 8;
-			Assert.IsFalse(KingdomRelocationRules.Valid(receipt, out string overlap));
+			ClassicAssert.IsFalse(KingdomRelocationRules.Valid(receipt, out string overlap));
 			StringAssert.Contains("source overlaps", overlap);
 			receipt = Receipt();
 			KingdomRelocationMove later = Move("root-2", "lot-2", 55, 2);
 			later.Source = new KingdomRelocationRect(42, 2, 49, 7);
 			later.Footprint = new KingdomRelocationRect(43, 3, 48, 6);
 			receipt.Moves.Add(later);
-			Assert.IsFalse(KingdomRelocationRules.Valid(receipt, out string future));
+			ClassicAssert.IsFalse(KingdomRelocationRules.Valid(receipt, out string future));
 			StringAssert.Contains("later source", future);
 		}
 
@@ -156,7 +157,7 @@ namespace ThousandAndFirst.Tests
 			move.Rows[0].State = move.Rows[1].State = KingdomRelocationRowState.Destination;
 			move.Clearance[0].State = KingdomRelocationClearState.Removed;
 			receipt.CurrentMove = 1;
-			Assert.IsFalse(KingdomRelocationRules.Valid(receipt, out string failure));
+			ClassicAssert.IsFalse(KingdomRelocationRules.Valid(receipt, out string failure));
 			StringAssert.Contains("no current move", failure);
 		}
 
@@ -170,37 +171,37 @@ namespace ThousandAndFirst.Tests
 				LotType = "housing", LotSize = 2, Facing = 1, Snapshot = "snapshot",
 				Hash = new string('a', 64), MainX = 15, MainY = 9
 			};
-			Assert.IsTrue(KingdomRelocationCodec.TryEncode(receipt, out string encoded,
+			ClassicAssert.IsTrue(KingdomRelocationCodec.TryEncode(receipt, out string encoded,
 				out string failure), failure);
-			Assert.IsTrue(KingdomRelocationCodec.TryDecode(encoded, out var read, out failure), failure);
-			Assert.AreEqual("snapshot", read.Moves[0].Architecture.Snapshot);
-			Assert.AreEqual(new string('a', 64), read.Moves[0].Architecture.Hash);
+			ClassicAssert.IsTrue(KingdomRelocationCodec.TryDecode(encoded, out var read, out failure), failure);
+			ClassicAssert.AreEqual("snapshot", read.Moves[0].Architecture.Snapshot);
+			ClassicAssert.AreEqual(new string('a', 64), read.Moves[0].Architecture.Hash);
 		}
 
 		[Test] public void MalformedAndFutureCodecsFailClosed()
 		{
-			Assert.IsFalse(KingdomRelocationCodec.TryDecode("not base64", out _, out _));
-			Assert.IsTrue(KingdomRelocationCodec.TryEncode(Receipt(), out string encoded, out _));
+			ClassicAssert.IsFalse(KingdomRelocationCodec.TryDecode("not base64", out _, out _));
+			ClassicAssert.IsTrue(KingdomRelocationCodec.TryEncode(Receipt(), out string encoded, out _));
 			byte[] bytes = Convert.FromBase64String(encoded); bytes[4] = 99;
-			Assert.IsFalse(KingdomRelocationCodec.TryDecode(Convert.ToBase64String(bytes), out _, out string failure));
+			ClassicAssert.IsFalse(KingdomRelocationCodec.TryDecode(Convert.ToBase64String(bytes), out _, out string failure));
 			StringAssert.Contains("schema", failure);
 		}
 
 		[Test] public void TrailingBytesAndOversizeTextFailClosed()
 		{
-			Assert.IsTrue(KingdomRelocationCodec.TryEncode(Receipt(), out string encoded, out _));
+			ClassicAssert.IsTrue(KingdomRelocationCodec.TryEncode(Receipt(), out string encoded, out _));
 			byte[] bytes = Convert.FromBase64String(encoded), extra = new byte[bytes.Length + 1];
 			Array.Copy(bytes, extra, bytes.Length);
-			Assert.IsFalse(KingdomRelocationCodec.TryDecode(Convert.ToBase64String(extra), out _, out _));
+			ClassicAssert.IsFalse(KingdomRelocationCodec.TryDecode(Convert.ToBase64String(extra), out _, out _));
 			KingdomRelocationReceipt receipt = Receipt();
 			receipt.Moves[0].DisplayName = new string('x', KingdomRelocationRules.MaxNameChars + 1);
-			Assert.IsFalse(KingdomRelocationCodec.TryEncode(receipt, out _, out _));
+			ClassicAssert.IsFalse(KingdomRelocationCodec.TryEncode(receipt, out _, out _));
 			receipt = Receipt(); receipt.Moves[0].Rows[0].OffsetX = -1;
-			Assert.IsFalse(KingdomRelocationCodec.TryEncode(receipt, out _, out _));
+			ClassicAssert.IsFalse(KingdomRelocationCodec.TryEncode(receipt, out _, out _));
 			receipt = Receipt(); receipt.Moves[0].Destination = new KingdomRelocationRect(
 				KingdomRelocationRules.MaxCoordinate + 1, 2,
 				KingdomRelocationRules.MaxCoordinate + 8, 7);
-			Assert.IsFalse(KingdomRelocationCodec.TryEncode(receipt, out _, out _));
+			ClassicAssert.IsFalse(KingdomRelocationCodec.TryEncode(receipt, out _, out _));
 		}
 
 		private static KingdomRelocationReceipt Receipt()

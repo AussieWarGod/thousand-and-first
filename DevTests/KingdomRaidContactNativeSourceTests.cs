@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -44,7 +45,7 @@ namespace ThousandAndFirst.Tests
 				"KingdomRaidIncidentRules.Incident(Book.RaidLedger, Fixture.Incident.Id)",
 				"KingdomRaidResolution.StoresPlundered", "byte[] settled = Wire()",
 				"KingdomRaids.StepRaider(Actor.Body, Actor.Objective, Tick)", "Same(settled, Wire())");
-			Assert.AreEqual(3, Regex.Matches(run, @"KingdomRaids\.StepRaider\(").Count);
+			ClassicAssert.AreEqual(3, Regex.Matches(run, @"KingdomRaids\.StepRaider\(").Count);
 			StringAssert.DoesNotContain("OnWorldWake(", source);
 			StringAssert.DoesNotContain("ResumeOpen(", source);
 			StringAssert.Contains("SystemMoveTo(destination, energyCost: 0", Method(source, "private void Move("));
@@ -58,10 +59,10 @@ namespace ThousandAndFirst.Tests
 		public void PersonaBracketsExactContactCaseAndLabelsSyntheticEvidence()
 		{
 			string persona = Read("Tools/personas/raid-contact-native-check.persona");
-			Assert.AreEqual("founding-first-city", Setting(persona, "REQUEST"));
-			Assert.AreEqual("raid-contact-native-check", Setting(persona, "VERBS"));
-			Assert.AreEqual("stagedigest;raid-contact-native-check;stagedigest", Setting(persona, "SCRIPT"));
-			Assert.AreEqual("stagedigest:OK~founded=false,raid-contact-native-check:OK~cases=1 passed=1 failed=0,"
+			ClassicAssert.AreEqual("founding-first-city", Setting(persona, "REQUEST"));
+			ClassicAssert.AreEqual("raid-contact-native-check", Setting(persona, "VERBS"));
+			ClassicAssert.AreEqual("stagedigest;raid-contact-native-check;stagedigest", Setting(persona, "SCRIPT"));
+			ClassicAssert.AreEqual("stagedigest:OK~founded=false,raid-contact-native-check:OK~cases=1 passed=1 failed=0,"
 				+ "stagedigest:OK~founded=true,COMPLETE", Setting(persona, "EXPECT"));
 			StringAssert.Contains("synthetic=true; ordinary-acceptance=false; save-load=untested", Read(Checks));
 		}
@@ -173,14 +174,14 @@ namespace ThousandAndFirst.Tests
 		{
 			string[] rows = source.Split('\n').Select(row => row.Trim())
 				.Where(row => row.StartsWith(key + "=", StringComparison.Ordinal)).ToArray();
-			Assert.AreEqual(1, rows.Length); return rows[0].Substring(key.Length + 1);
+			ClassicAssert.AreEqual(1, rows.Length); return rows[0].Substring(key.Length + 1);
 		}
 		private static string Method(string source, string signature)
 		{
 			int start = source.IndexOf(signature, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, signature);
+			ClassicAssert.GreaterOrEqual(start, 0, signature);
 			int open = source.IndexOf('{', start), depth = 0;
-			Assert.GreaterOrEqual(open, 0, signature);
+			ClassicAssert.GreaterOrEqual(open, 0, signature);
 			for (int i = open; i < source.Length; i++)
 			{
 				if (source[i] == '{') depth++;
@@ -194,7 +195,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string token in tokens)
 			{
 				int at = source.IndexOf(token, cursor, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(at, cursor, "Missing or reordered: " + token); cursor = at + token.Length;
+				ClassicAssert.GreaterOrEqual(at, cursor, "Missing or reordered: " + token); cursor = at + token.Length;
 			}
 		}
 	}

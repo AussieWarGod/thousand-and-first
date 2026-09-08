@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -14,8 +15,8 @@ namespace ThousandAndFirst.Tests
 			string system = KingdomSystemLogicalSource.Read();
 			string pass = Between(system, "private bool AttendSeatedSemantics(Zone Z)",
 				"private bool PrepareSemanticPass(Zone Z, long NowTick)");
-			Assert.AreEqual(1, Count(pass, "KingdomSurvey.Take(Z, this)"));
-			Assert.AreEqual(1, Count(pass, "survey.BindPass()"));
+			ClassicAssert.AreEqual(1, Count(pass, "KingdomSurvey.Take(Z, this)"));
+			ClassicAssert.AreEqual(1, Count(pass, "survey.BindPass()"));
 			StringAssert.Contains("KingdomExpeditions.OnSettlementPass(this, Z, survey);", pass);
 			StringAssert.DoesNotContain("survey = KingdomSurvey.Take", Between(pass,
 				"KingdomExpeditions.OnSettlementPass", "SemanticStepHappenings"));
@@ -27,7 +28,7 @@ namespace ThousandAndFirst.Tests
 			string survey = KingdomSurveyLogicalSource.Read();
 			string take = Between(survey, "public static KingdomSurvey Take(Zone Z)",
 				"public static IEnumerable<GameObject> ObjectsFor(Zone Z)");
-			Assert.AreEqual(1, Count(take, "Z.GetObjects()"));
+			ClassicAssert.AreEqual(1, Count(take, "Z.GetObjects()"));
 			StringAssert.Contains("KingdomSurvey bound = ActiveFor(Z);", take);
 			StringAssert.Contains("survey.AddRoot(item, citizenshipSystem);", take);
 			StringAssert.Contains("public bool ObserveAdded(GameObject Item)", survey);
@@ -55,7 +56,7 @@ namespace ThousandAndFirst.Tests
 			string system = KingdomSystemLogicalSource.Read();
 			string step = Between(system, "private bool TrySemanticStep(long Bit",
 				"}\n\n\t}\n}");
-			Assert.Less(step.IndexOf("KingdomSurvey.BeginBenefitEpochInActive()",
+			ClassicAssert.Less(step.IndexOf("KingdomSurvey.BeginBenefitEpochInActive()",
 				StringComparison.Ordinal), step.IndexOf("Action();", StringComparison.Ordinal));
 			string staffing = Source("Growth", "KingdomGrowth.z15.WorkAssignment.cs");
 			StringAssert.Contains("Survey.InvalidateBenefits();", staffing);
@@ -78,7 +79,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("row.MaterialStockpile = !pendingImprovement", capture);
 
 			string scaffold = KingdomScaffoldLogicalSource.Read();
-			Assert.Less(scaffold.IndexOf(
+			ClassicAssert.Less(scaffold.IndexOf(
 				"Successor.SetIntProperty(PendingImprovementSuccessorProperty, 1)",
 				StringComparison.Ordinal), scaffold.IndexOf(
 				"Successor.SetIntProperty(\"KingdomBuilt\", 1)", StringComparison.Ordinal));
@@ -155,7 +156,7 @@ namespace ThousandAndFirst.Tests
 
 				string faith = Source("Experience",
 					"KingdomFaith.z03.EducationAndConsecration.cs");
-				Assert.AreEqual(2, Count(faith, "KingdomCapabilityRuntime.Roots("));
+				ClassicAssert.AreEqual(2, Count(faith, "KingdomCapabilityRuntime.Roots("));
 				StringAssert.DoesNotContain("KingdomCapabilityRuntime.Count(", faith);
 				string capabilities = Source("Growth", "KingdomCapabilityRuntime.cs");
 				StringAssert.Contains("if (!ours || KingdomUpgrade.IsFunctionallyBuilt(root))",
@@ -173,7 +174,7 @@ namespace ThousandAndFirst.Tests
 				StringAssert.Contains("!r_KingdomScaffold.HasPendingImprovementSuccessorAuthority(item)",
 					growth);
 				string water = Source("Growth", "KingdomGrowth.z17.WaterAndCapacity.cs");
-				Assert.AreEqual(6, Count(water,
+				ClassicAssert.AreEqual(6, Count(water,
 					"r_KingdomScaffold.HasPendingImprovementSuccessorAuthority(item)"));
 				StringAssert.Contains("public static bool TryCountBeds", water);
 				StringAssert.Contains("survey.TryBenefits", water);
@@ -267,14 +268,14 @@ namespace ThousandAndFirst.Tests
 		public void NetworkLogicalSourceKeepsOnePartialAuthorityAndZoneLineIdentity()
 		{
 			string networks = NetworksSource();
-			Assert.AreEqual(4, Count(networks, "public static partial class KingdomNetworks"));
-			Assert.AreEqual(1, Count(networks, "internal sealed class KingdomZoneLine"));
+			ClassicAssert.AreEqual(4, Count(networks, "public static partial class KingdomNetworks"));
+			ClassicAssert.AreEqual(1, Count(networks, "internal sealed class KingdomZoneLine"));
 			StringAssert.DoesNotContain("public static class KingdomNetworks", networks);
-			Assert.Less(networks.IndexOf("internal static KingdomCityState Run", StringComparison.Ordinal),
+			ClassicAssert.Less(networks.IndexOf("internal static KingdomCityState Run", StringComparison.Ordinal),
 				networks.IndexOf("public static int Attend", StringComparison.Ordinal));
-			Assert.Less(networks.IndexOf("public static int Attend", StringComparison.Ordinal),
+			ClassicAssert.Less(networks.IndexOf("public static int Attend", StringComparison.Ordinal),
 				networks.IndexOf("private static bool TryComposeGraphs", StringComparison.Ordinal));
-			Assert.Less(networks.IndexOf("private static bool TryComposeGraphs", StringComparison.Ordinal),
+			ClassicAssert.Less(networks.IndexOf("private static bool TryComposeGraphs", StringComparison.Ordinal),
 				networks.IndexOf("private static int Through", StringComparison.Ordinal));
 		}
 
@@ -282,7 +283,7 @@ namespace ThousandAndFirst.Tests
 		public void ConstructionPresenceLogicalSourceKeepsOnePartialAuthority()
 		{
 			string presence = PresenceSource();
-			Assert.AreEqual(2, Count(presence,
+			ClassicAssert.AreEqual(2, Count(presence,
 				"public static partial class KingdomConstructionPresence"));
 			StringAssert.DoesNotContain("public static class KingdomConstructionPresence", presence);
 			StringAssert.Contains("public static int Assign", presence);
@@ -332,9 +333,9 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int clockIntent = growth.IndexOf("KingdomGrowthPhase.ClockIntent", refresh,
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(bind, 0);
-			Assert.Greater(refresh, bind);
-			Assert.Greater(clockIntent, refresh);
+			ClassicAssert.GreaterOrEqual(bind, 0);
+			ClassicAssert.Greater(refresh, bind);
+			ClassicAssert.Greater(clockIntent, refresh);
 			StringAssert.Contains("Survey?.ObserveCurrentTopology(leaver);", growth);
 
 			string water = KingdomWaterDebitLogicalSource.Read();
@@ -358,8 +359,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int removalPhase = handover.IndexOf("TryRemoveHandoverPredecessor(",
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(carryPhase, 0);
-			Assert.Greater(removalPhase, carryPhase);
+			ClassicAssert.GreaterOrEqual(carryPhase, 0);
+			ClassicAssert.Greater(removalPhase, carryPhase);
 			string carryBody = Between(upgrade,
 				"private static bool TryCarryHandoverContents(",
 				"private static bool TryRemoveHandoverPredecessor(");
@@ -370,9 +371,9 @@ namespace ThousandAndFirst.Tests
 			int successorRefresh = removalBody.IndexOf("activeSurvey.ObserveChanged(Successor)",
 				StringComparison.Ordinal);
 			int predecessorRemoval = removalBody.IndexOf("Predecessor.Destroy", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(carry, 0);
-			Assert.GreaterOrEqual(successorRefresh, 0);
-			Assert.Greater(predecessorRemoval, successorRefresh);
+			ClassicAssert.GreaterOrEqual(carry, 0);
+			ClassicAssert.GreaterOrEqual(successorRefresh, 0);
+			ClassicAssert.Greater(predecessorRemoval, successorRefresh);
 
 			string gatehouse = KingdomGatehouseLogicalSource.Read();
 			StringAssert.Contains("KingdomSurvey.ObserveAddResultInActive(Z, Item, accepted);",
@@ -429,8 +430,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int frame = continuation.IndexOf("TryBindFrame(System, Book, operation, Z",
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(bind, 0);
-			Assert.Greater(frame, bind);
+			ClassicAssert.GreaterOrEqual(bind, 0);
+			ClassicAssert.Greater(frame, bind);
 			StringAssert.Contains("BoundTradeSurvey(Z)?.ObserveCurrentTopology(inventory.Owner);", trade);
 			StringAssert.Contains("KingdomSurvey.ObserveAddResultInActive(Z, caravan, added);", trade);
 			StringAssert.Contains("BoundTradeSurvey(Z)?.ObserveCurrentTopology(old);", trade);
@@ -482,9 +483,9 @@ namespace ThousandAndFirst.Tests
 		private static string Between(string source, string startTerm, string endTerm)
 		{
 			int start = source.IndexOf(startTerm, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, "missing source boundary: " + startTerm);
+			ClassicAssert.GreaterOrEqual(start, 0, "missing source boundary: " + startTerm);
 			int end = source.IndexOf(endTerm, start + startTerm.Length, StringComparison.Ordinal);
-			Assert.Greater(end, start, "missing source boundary: " + endTerm);
+			ClassicAssert.Greater(end, start, "missing source boundary: " + endTerm);
 			return source.Substring(start, end - start);
 		}
 

@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Text;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -25,18 +26,18 @@ namespace ThousandAndFirst.Tests
 			KingdomFoundingHeartPlan plan = Plan();
 			string id = KingdomFoundingHeartRules.StableId(Transaction, Zone, role);
 			string wire = KingdomFoundingHeartReservationRules.Encode(plan, id, role);
-			Assert.IsNotNull(wire);
+			ClassicAssert.IsNotNull(wire);
 			AssertRead(Key(id), wire, Transaction, Zone, id);
-			Assert.AreEqual(FrozenSeal, wire.Split('|')[5]);
-			Assert.AreEqual(68, wire.Split('|')[5].Length);
+			ClassicAssert.AreEqual(FrozenSeal, wire.Split('|')[5]);
+			ClassicAssert.AreEqual(68, wire.Split('|')[5].Length);
 		}
 
 		[Test]
 		public void FrozenProductionFormatLiteralReadsAndWriterDoesNotChangeItsBytes()
 		{
 			AssertRead(Key(FrozenId), FrozenWire, Transaction, Zone, FrozenId);
-			Assert.AreEqual(FrozenWire, KingdomFoundingHeartReservationRules.Encode(Plan(), FrozenId, "slot-0"));
-			Assert.AreEqual("r_TAF_FoundingHeartReserved:" + FrozenId, Key(FrozenId));
+			ClassicAssert.AreEqual(FrozenWire, KingdomFoundingHeartReservationRules.Encode(Plan(), FrozenId, "slot-0"));
+			ClassicAssert.AreEqual("r_TAF_FoundingHeartReserved:" + FrozenId, Key(FrozenId));
 		}
 
 		[TestCase("slot-0")] [TestCase("slot-1")] [TestCase("slot-2")]
@@ -54,9 +55,9 @@ namespace ThousandAndFirst.Tests
 				using (BinaryReader reader = new BinaryReader(stream, new UTF8Encoding(false, true), true))
 				{
 					string loadedKey = reader.ReadString(), loadedWire = reader.ReadString();
-					Assert.AreEqual(key, loadedKey); Assert.AreEqual(wire, loadedWire);
+					ClassicAssert.AreEqual(key, loadedKey); ClassicAssert.AreEqual(wire, loadedWire);
 					CollectionAssert.AreEqual(Encoding.UTF8.GetBytes(wire), Encoding.UTF8.GetBytes(loadedWire));
-					Assert.AreEqual(stream.Length, stream.Position);
+					ClassicAssert.AreEqual(stream.Length, stream.Position);
 					AssertRead(loadedKey, loadedWire, Transaction, Zone, id);
 				}
 			}
@@ -68,9 +69,9 @@ namespace ThousandAndFirst.Tests
 			KingdomFoundingHeartPlan plan = Plan(); plan.States[0] = firstState;
 			string before = KingdomFoundingHeartRules.Encode(plan);
 			int[] states = (int[])plan.States.Clone();
-			Assert.AreEqual(FrozenWire, KingdomFoundingHeartReservationRules.Encode(plan, FrozenId, "slot-0"));
+			ClassicAssert.AreEqual(FrozenWire, KingdomFoundingHeartReservationRules.Encode(plan, FrozenId, "slot-0"));
 			CollectionAssert.AreEqual(states, plan.States);
-			Assert.AreEqual(before, KingdomFoundingHeartRules.Encode(plan));
+			ClassicAssert.AreEqual(before, KingdomFoundingHeartRules.Encode(plan));
 		}
 
 		[TestCase("bare")] [TestCase("wrong-prefix")] [TestCase("upper-prefix")] [TestCase("upper-hex")]
@@ -113,9 +114,9 @@ namespace ThousandAndFirst.Tests
 		public void InvalidRolesRefuseEvenWithMatchingDeterministicIdentity(string role)
 		{
 			string id = KingdomFoundingHeartRules.StableId(Transaction, Zone, role);
-			Assert.IsNotNull(id);
+			ClassicAssert.IsNotNull(id);
 			Refuses(Key(id), Raw(Transaction, Zone, role, id));
-			Assert.IsNull(KingdomFoundingHeartReservationRules.Encode(Plan(), id, role));
+			ClassicAssert.IsNull(KingdomFoundingHeartReservationRules.Encode(Plan(), id, role));
 		}
 
 		[TestCase("/w==")] [TestCase("gA==")] [TestCase("wK8=")]
@@ -123,9 +124,9 @@ namespace ThousandAndFirst.Tests
 		public void InvalidUtf8CannotAcquireTheReplacementTextIdentity(string encodedZone)
 		{
 			string replacement = Encoding.UTF8.GetString(Convert.FromBase64String(encodedZone));
-			Assert.IsTrue(replacement.IndexOf('\uFFFD') >= 0);
+			ClassicAssert.IsTrue(replacement.IndexOf('\uFFFD') >= 0);
 			string id = KingdomFoundingHeartRules.StableId(Transaction, replacement, "slot-0");
-			Assert.IsNotNull(id);
+			ClassicAssert.IsNotNull(id);
 			string[] fields = Raw(Transaction, replacement, "slot-0", id).Split('|');
 			fields[2] = encodedZone;
 			Refuses(Key(id), string.Join("|", fields));
@@ -138,13 +139,13 @@ namespace ThousandAndFirst.Tests
 			KingdomFoundingHeartPlan plan = Plan(); plan.ZoneId = zone;
 			plan.PlotId = KingdomFoundingHeartRules.StableId(Transaction, zone, "plot");
 			string id = KingdomFoundingHeartRules.StableId(Transaction, zone, "slot-0");
-			Assert.IsNotNull(id);
-			Assert.IsTrue(KingdomFoundingHeartRules.Valid(plan));
+			ClassicAssert.IsNotNull(id);
+			ClassicAssert.IsTrue(KingdomFoundingHeartRules.Valid(plan));
 			int[] states = plan.States, before = (int[])states.Clone();
 			string plot = plan.PlotId;
-			Assert.IsNull(KingdomFoundingHeartReservationRules.Encode(plan, id, "slot-0"));
-			Assert.AreEqual(zone, plan.ZoneId); Assert.AreEqual(plot, plan.PlotId);
-			Assert.AreSame(states, plan.States); CollectionAssert.AreEqual(before, states);
+			ClassicAssert.IsNull(KingdomFoundingHeartReservationRules.Encode(plan, id, "slot-0"));
+			ClassicAssert.AreEqual(zone, plan.ZoneId); ClassicAssert.AreEqual(plot, plan.PlotId);
+			ClassicAssert.AreSame(states, plan.States); CollectionAssert.AreEqual(before, states);
 		}
 
 		[TestCase("zone-\u00E9")] [TestCase("zone-\uFFFD")] [TestCase("zone-\U0001F30D")]
@@ -154,9 +155,9 @@ namespace ThousandAndFirst.Tests
 			plan.PlotId = KingdomFoundingHeartRules.StableId(Transaction, zone, "plot");
 			string id = KingdomFoundingHeartRules.StableId(Transaction, zone, "slot-0");
 			string wire = KingdomFoundingHeartReservationRules.Encode(plan, id, "slot-0");
-			Assert.IsNotNull(wire);
+			ClassicAssert.IsNotNull(wire);
 			AssertRead(Key(id), wire, Transaction, zone, id);
-			Assert.AreEqual(B64(zone), wire.Split('|')[2]);
+			ClassicAssert.AreEqual(B64(zone), wire.Split('|')[2]);
 		}
 
 		[TestCase(null)] [TestCase("")] [TestCase("bad")]
@@ -167,7 +168,7 @@ namespace ThousandAndFirst.Tests
 		{
 			Refuses(Key(FrozenId), Raw(transaction, Zone, "slot-0", FrozenId));
 			KingdomFoundingHeartPlan plan = Plan(); plan.TransactionId = transaction;
-			Assert.IsNull(KingdomFoundingHeartReservationRules.Encode(plan, FrozenId, "slot-0"));
+			ClassicAssert.IsNull(KingdomFoundingHeartReservationRules.Encode(plan, FrozenId, "slot-0"));
 		}
 
 		[Test]
@@ -176,7 +177,7 @@ namespace ThousandAndFirst.Tests
 			Refuses(Key(FrozenId), Raw(new string('a', 32), Zone, "slot-0", FrozenId));
 			Refuses(Key(FrozenId), Raw(Transaction, "another-zone", "slot-0", FrozenId));
 			Refuses(Key(FrozenId), Raw(Transaction, Zone, "final", FrozenId));
-			Assert.IsNull(KingdomFoundingHeartReservationRules.Encode(Plan(), FrozenId, "final"));
+			ClassicAssert.IsNull(KingdomFoundingHeartReservationRules.Encode(Plan(), FrozenId, "final"));
 		}
 
 		[TestCase(null)] [TestCase("")] [TestCase("foreign")]
@@ -188,11 +189,11 @@ namespace ThousandAndFirst.Tests
 		{
 			string zone = new string('z', length);
 			string id = KingdomFoundingHeartRules.StableId(Transaction, zone, "slot-0") ?? FrozenId;
-			Assert.AreEqual(accepted, KingdomFoundingHeartReservationRules.TryRead(Key(id), Raw(Transaction, zone, "slot-0", id),
+			ClassicAssert.AreEqual(accepted, KingdomFoundingHeartReservationRules.TryRead(Key(id), Raw(Transaction, zone, "slot-0", id),
 				out _, out _, out _));
 			KingdomFoundingHeartPlan plan = Plan(); plan.ZoneId = zone;
 			plan.PlotId = KingdomFoundingHeartRules.StableId(Transaction, zone, "plot");
-			Assert.AreEqual(accepted, KingdomFoundingHeartReservationRules.Encode(plan, id, "slot-0") != null);
+			ClassicAssert.AreEqual(accepted, KingdomFoundingHeartReservationRules.Encode(plan, id, "slot-0") != null);
 		}
 
 		[Test]
@@ -201,7 +202,7 @@ namespace ThousandAndFirst.Tests
 			string[] fields = FrozenWire.Split('|');
 			fields[1] += new string(' ', 4096 - FrozenWire.Length);
 			string boundary = string.Join("|", fields);
-			Assert.AreEqual(4096, boundary.Length);
+			ClassicAssert.AreEqual(4096, boundary.Length);
 			AssertRead(Key(FrozenId), boundary, Transaction, Zone, FrozenId);
 			Refuses(Key(FrozenId), boundary + " ");
 			Refuses(new string('k', 2048), FrozenWire);
@@ -228,24 +229,24 @@ namespace ThousandAndFirst.Tests
 		public void InvalidEncoderInputsReturnNullWithoutChangingThePlan()
 		{
 			KingdomFoundingHeartPlan plan = Plan(); string before = KingdomFoundingHeartRules.Encode(plan);
-			Assert.IsNull(KingdomFoundingHeartReservationRules.Encode(null, FrozenId, "slot-0"));
+			ClassicAssert.IsNull(KingdomFoundingHeartReservationRules.Encode(null, FrozenId, "slot-0"));
 			foreach (string value in new[] { null, "", "foreign" })
 			{
-				Assert.IsNull(KingdomFoundingHeartReservationRules.Encode(plan, value, "slot-0"));
-				Assert.IsNull(KingdomFoundingHeartReservationRules.Encode(plan, FrozenId, value));
+				ClassicAssert.IsNull(KingdomFoundingHeartReservationRules.Encode(plan, value, "slot-0"));
+				ClassicAssert.IsNull(KingdomFoundingHeartReservationRules.Encode(plan, FrozenId, value));
 			}
-			Assert.AreEqual(before, KingdomFoundingHeartRules.Encode(plan));
+			ClassicAssert.AreEqual(before, KingdomFoundingHeartRules.Encode(plan));
 			plan.States[1] = 2;
-			Assert.IsNull(KingdomFoundingHeartReservationRules.Encode(plan, FrozenId, "slot-0"));
+			ClassicAssert.IsNull(KingdomFoundingHeartReservationRules.Encode(plan, FrozenId, "slot-0"));
 		}
 
 		private static KingdomFoundingHeartPlan Plan()
 		{
-			Assert.IsTrue(KingdomFoundingHeartStakeRules.TryCreate("heartbasin", "first basin",
+			ClassicAssert.IsTrue(KingdomFoundingHeartStakeRules.TryCreate("heartbasin", "first basin",
 				"r_KingdomPlotWorks", 38, 11, 42, 13, 0, true, false, null,
 				"TAF_HeartBasinContents", 2, true, 3, false, 40, 11, false,
 				out KingdomFoundingHeartStakeTruth truth));
-			Assert.IsTrue(KingdomFoundingHeartRules.TryCreate(Transaction, Zone,
+			ClassicAssert.IsTrue(KingdomFoundingHeartRules.TryCreate(Transaction, Zone,
 				40, 12, 30, 2, 49, 21, 38, 11, 42, 13, 900L, 600L,
 				"p4,frozen-authored-payload", KingdomFoundingHeartStakeRules.Encode(truth), out KingdomFoundingHeartPlan plan));
 			return plan;
@@ -263,13 +264,13 @@ namespace ThousandAndFirst.Tests
 		}
 		private static void AssertRead(string key, string raw, string transaction, string zone, string id)
 		{
-			Assert.IsTrue(KingdomFoundingHeartReservationRules.TryRead(key, raw, out string gotTransaction,
+			ClassicAssert.IsTrue(KingdomFoundingHeartReservationRules.TryRead(key, raw, out string gotTransaction,
 				out string gotZone, out string gotId));
-			Assert.AreEqual(transaction, gotTransaction); Assert.AreEqual(zone, gotZone); Assert.AreEqual(id, gotId);
+			ClassicAssert.AreEqual(transaction, gotTransaction); ClassicAssert.AreEqual(zone, gotZone); ClassicAssert.AreEqual(id, gotId);
 		}
 		private static void Refuses(string key, string raw)
 		{
-			Assert.IsFalse(KingdomFoundingHeartReservationRules.TryRead(key, raw, out _, out _, out _));
+			ClassicAssert.IsFalse(KingdomFoundingHeartReservationRules.TryRead(key, raw, out _, out _, out _));
 		}
 	}
 }

@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -106,10 +107,10 @@ namespace ThousandAndFirst.Tests
 			int paid = proof.IndexOf(
 				"else if (!KingdomArchitectureRuntime.TryAcceptFrozenEnvelope(",
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(paid, 0);
+			ClassicAssert.GreaterOrEqual(paid, 0);
 			int settled = proof.IndexOf("HashSet<GameObject> settled", paid,
 				StringComparison.Ordinal);
-			Assert.Greater(settled, paid);
+			ClassicAssert.Greater(settled, paid);
 			string paidBranch = proof.Substring(paid, settled - paid);
 			StringAssert.DoesNotContain("TryCreateSitingProbe", paidBranch);
 			StringAssert.DoesNotContain("KingdomArchitecture.", paidBranch);
@@ -211,7 +212,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < Terms.Length; i++)
 			{
 				int found = Source.IndexOf(Terms[i], offset, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(found, 0, "missing ordered term: " + Terms[i]);
+				ClassicAssert.GreaterOrEqual(found, 0, "missing ordered term: " + Terms[i]);
 				offset = found + Terms[i].Length;
 			}
 		}

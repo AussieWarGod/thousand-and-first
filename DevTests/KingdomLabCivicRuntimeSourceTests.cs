@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -71,9 +72,9 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int mutation = faith.IndexOf("target.SetStringProperty(ShrineCreedProperty",
 				guard, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(guard, 0);
-			Assert.Greater(candidates, guard);
-			Assert.Greater(mutation, candidates);
+			ClassicAssert.GreaterOrEqual(guard, 0);
+			ClassicAssert.Greater(candidates, guard);
+			ClassicAssert.Greater(mutation, candidates);
 		}
 
 		[Test]
@@ -91,7 +92,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("recovered.IDIfAssigned, ExpectedTargetObjectId", lodging);
 			StringAssert.Contains("TryPrepareLabRehouse", lodging);
 			StringAssert.Contains("target?.IDIfAssigned, ExpectedTargetObjectId", lodging);
-			Assert.AreEqual(1, Count(lodging,
+			ClassicAssert.AreEqual(1, Count(lodging,
 				"Resident.SetStringProperty(HomePlotIdProperty, ExpectedTargetPlot)"));
 			StringAssert.DoesNotContain("SetStringProperty(HomePlotIdProperty, null", lodging);
 		}
@@ -138,7 +139,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Reconcile(System, Z, Survey, owner, part)", runtime);
 			int reconcile = runtime.IndexOf("Reconcile(System", StringComparison.Ordinal);
 			int fence = runtime.IndexOf("if (!allowNew) return", StringComparison.Ordinal);
-			Assert.Greater(fence, reconcile);
+			ClassicAssert.Greater(fence, reconcile);
 			StringAssert.Contains("Empty(part.SavantPrice)", runtime);
 			StringAssert.Contains("Empty(part.RefusalDeparture)", runtime);
 			StringAssert.Contains("KingdomChronicle.RecordOnce", receipts);
@@ -171,9 +172,9 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int recovery = departure.IndexOf("TryCompleteDepartureProjection(System",
 				receipt, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(preflight, 0);
-			Assert.Greater(receipt, preflight);
-			Assert.Greater(recovery, receipt);
+			ClassicAssert.GreaterOrEqual(preflight, 0);
+			ClassicAssert.Greater(receipt, preflight);
+			ClassicAssert.Greater(recovery, receipt);
 
 			string projection = Source("Growth/KingdomLab.CivicDepartureProjection.cs");
 			int classify = projection.IndexOf("DepartureProjection(Resident, Receipt)",
@@ -192,14 +193,14 @@ namespace ThousandAndFirst.Tests
 				readback, StringComparison.Ordinal);
 			int brink = projection.IndexOf("KingdomLodging.StartLabRoofBrink", cohabitation,
 				StringComparison.Ordinal);
-			Assert.Greater(exact, classify);
-			Assert.Greater(marker, exact);
-			Assert.Greater(revalidate, marker);
-			Assert.Greater(clear, revalidate);
-			Assert.Greater(readback, clear);
-			Assert.Greater(cohabitation, readback,
+			ClassicAssert.Greater(exact, classify);
+			ClassicAssert.Greater(marker, exact);
+			ClassicAssert.Greater(revalidate, marker);
+			ClassicAssert.Greater(clear, revalidate);
+			ClassicAssert.Greater(readback, clear);
+			ClassicAssert.Greater(cohabitation, readback,
 				"both a fresh projection and a retry after HomePlotId cleared invalidate the cache");
-			Assert.Greater(brink, cohabitation);
+			ClassicAssert.Greater(brink, cohabitation);
 
 			string receipts = Source("Growth/KingdomLab.CivicReceipts.cs");
 			int terminal = receipts.IndexOf("Part.Stamp(after)", StringComparison.Ordinal);
@@ -207,8 +208,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int closeRecord = receipts.IndexOf("RecordClose(System, Part, after.Kind)",
 				cleanup, StringComparison.Ordinal);
-			Assert.Greater(cleanup, terminal);
-			Assert.Greater(closeRecord, cleanup);
+			ClassicAssert.Greater(cleanup, terminal);
+			ClassicAssert.Greater(closeRecord, cleanup);
 			StringAssert.Contains("ReconcileClosedDeparture(System", Source(
 				"Growth/KingdomLab.CivicReconciliation.cs"));
 
@@ -217,7 +218,7 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int apply = interaction.IndexOf("TryResolveRehouse(System", choice,
 				StringComparison.Ordinal);
-			Assert.Greater(apply, choice,
+			ClassicAssert.Greater(apply, choice,
 				"the durable granted intent must precede physical rehouse mutation");
 			StringAssert.Contains("The exact promise remains prepared", interaction);
 			StringAssert.Contains("moved to a third plot", interaction);
@@ -227,8 +228,8 @@ namespace ThousandAndFirst.Tests
 				"DepartureProjection(resident, receipt)", StringComparison.Ordinal);
 			int recoveredCause = reconciliation.IndexOf(
 				"ExactDepartureCause(System", projectedMarker, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(projectedMarker, 0);
-			Assert.Greater(recoveredCause, projectedMarker,
+			ClassicAssert.GreaterOrEqual(projectedMarker, 0);
+			ClassicAssert.Greater(recoveredCause, projectedMarker,
 				"resident marker/home projection must classify before cause recovery");
 			StringAssert.Contains("MarkerMatches(GameObject Resident",
 				Source("Growth/KingdomLab.CivicReceipts.cs"));
@@ -279,7 +280,7 @@ namespace ThousandAndFirst.Tests
 				"Growth/r_KingdomLabCivicFriction.cs"
 			};
 			for (int i = 0; i < files.Length; i++)
-				Assert.Less(File.ReadAllLines(Path.Combine(TestMain.RepositoryRoot,
+				ClassicAssert.Less(File.ReadAllLines(Path.Combine(TestMain.RepositoryRoot,
 					files[i])).Length, 300, files[i]);
 		}
 

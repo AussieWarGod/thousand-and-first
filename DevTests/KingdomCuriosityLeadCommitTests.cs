@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -15,14 +16,14 @@ namespace ThousandAndFirst.Tests
 		public void BothCompatibleBooksAreOfferedAndLandUnderTheirOwnSectionIds()
 		{
 			KingdomCivicMemoryAuthority authority = Authority();
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), Leads(),
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), Leads(),
 				authority.Revision, out KingdomCuriosityLeadCommitReport report,
 				out string failure), failure);
-			Assert.AreEqual(KingdomCuriosityLeadCarriage.Offered, report.Curiosity);
-			Assert.AreEqual(KingdomCuriosityLeadCarriage.Offered, report.CivicLeads);
+			ClassicAssert.AreEqual(KingdomCuriosityLeadCarriage.Offered, report.Curiosity);
+			ClassicAssert.AreEqual(KingdomCuriosityLeadCarriage.Offered, report.CivicLeads);
 			KingdomCivicMemoryState state = authority.Read();
-			Assert.IsNotNull(Section(state, KingdomCivicMemoryLimits.SectionCuriosity));
-			Assert.IsNotNull(Section(state, KingdomCivicMemoryLimits.SectionCivicLeads));
+			ClassicAssert.IsNotNull(Section(state, KingdomCivicMemoryLimits.SectionCuriosity));
+			ClassicAssert.IsNotNull(Section(state, KingdomCivicMemoryLimits.SectionCivicLeads));
 		}
 
 		/// <summary>
@@ -37,14 +38,14 @@ namespace ThousandAndFirst.Tests
 			KingdomCivicMemoryAuthority authority = Authority(
 				new KingdomCivicMemorySection(KingdomCivicMemoryLimits.SectionCuriosity, future));
 			KingdomCuriosityBook curiosity = KingdomCuriosityLeadCodec.DecodeCuriosity(future);
-			Assert.AreEqual(KingdomCuriosityBookState.FutureOpaque, curiosity.State);
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.FutureOpaque, curiosity.State);
 
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, curiosity, Leads(),
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, curiosity, Leads(),
 				authority.Revision, out KingdomCuriosityLeadCommitReport report,
 				out string failure), failure);
-			Assert.AreEqual(KingdomCuriosityLeadCarriage.Withheld, report.Curiosity);
+			ClassicAssert.AreEqual(KingdomCuriosityLeadCarriage.Withheld, report.Curiosity);
 			StringAssert.Contains("later build", report.CuriosityReason);
-			Assert.AreEqual(KingdomCuriosityLeadCarriage.Offered, report.CivicLeads);
+			ClassicAssert.AreEqual(KingdomCuriosityLeadCarriage.Offered, report.CivicLeads);
 			CollectionAssert.AreEqual(future,
 				Section(authority.Read(), KingdomCivicMemoryLimits.SectionCuriosity).Payload(),
 				"the later build's bytes must come through this commit unchanged");
@@ -67,7 +68,7 @@ namespace ThousandAndFirst.Tests
 		{
 			byte[] damaged = { 1, 2, 3, 4, 5, 6, 7, 8 };
 			KingdomCuriosityBook curiosity = KingdomCuriosityLeadCodec.DecodeCuriosity(damaged);
-			Assert.AreEqual(KingdomCuriosityBookState.Quarantined, curiosity.State);
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.Quarantined, curiosity.State);
 
 			KingdomCivicMemoryAuthority authority = new KingdomCivicMemoryAuthority(Table());
 			authority.AdoptSaved(KingdomCivicMemoryCodec.Encode(KingdomCivicMemoryState.Of(
@@ -76,14 +77,14 @@ namespace ThousandAndFirst.Tests
 					new KingdomCivicMemorySection(KingdomCivicMemoryLimits.SectionCuriosity,
 						damaged)
 				}, 1L)));
-			Assert.IsTrue(authority.ReadOnly,
+			ClassicAssert.IsTrue(authority.ReadOnly,
 				"a family that refuses its own payload must put civic memory beyond writing");
 
 			long revision = authority.Revision;
-			Assert.IsFalse(KingdomCuriosityLeadCommit.TryCommit(authority, curiosity, Leads(),
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCommit.TryCommit(authority, curiosity, Leads(),
 				revision, out _, out string failure));
 			StringAssert.Contains("read-only", failure);
-			Assert.AreEqual(revision, authority.Revision);
+			ClassicAssert.AreEqual(revision, authority.Revision);
 			CollectionAssert.AreEqual(damaged, curiosity.OpaquePayload,
 				"the refused payload is kept whole as the evidence of what went wrong");
 		}
@@ -103,24 +104,24 @@ namespace ThousandAndFirst.Tests
 		{
 			byte[] damaged = { 1, 2, 3, 4, 5, 6, 7, 8 };
 			KingdomCuriosityBook curiosity = KingdomCuriosityLeadCodec.DecodeCuriosity(damaged);
-			Assert.AreEqual(KingdomCuriosityBookState.Quarantined, curiosity.State);
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.Quarantined, curiosity.State);
 
 			KingdomCivicMemoryAuthority holding = Permissive();
-			Assert.IsTrue(holding.TryCommit(new List<KingdomCivicMemorySection>
+			ClassicAssert.IsTrue(holding.TryCommit(new List<KingdomCivicMemorySection>
 			{
 				new KingdomCivicMemorySection(KingdomCivicMemoryLimits.SectionCuriosity, damaged)
 			}, holding.Revision, out string seeded), seeded);
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(holding, curiosity, Leads(),
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(holding, curiosity, Leads(),
 				holding.Revision, out KingdomCuriosityLeadCommitReport report,
 				out string failure), failure);
-			Assert.AreEqual(KingdomCuriosityLeadCarriage.Withheld, report.Curiosity);
+			ClassicAssert.AreEqual(KingdomCuriosityLeadCarriage.Withheld, report.Curiosity);
 			StringAssert.Contains("evidence", report.CuriosityReason);
 			CollectionAssert.AreEqual(damaged,
 				Section(holding.Read(), KingdomCivicMemoryLimits.SectionCuriosity).Payload(),
 				"the original evidence must still stand in the save after this commit");
 
 			KingdomCivicMemoryAuthority empty = Permissive();
-			Assert.IsFalse(KingdomCuriosityLeadCommit.TryCommit(empty, curiosity, Leads(),
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCommit.TryCommit(empty, curiosity, Leads(),
 				empty.Revision, out report, out failure));
 			StringAssert.Contains("holds no such section", report.CuriosityReason);
 		}
@@ -145,13 +146,13 @@ namespace ThousandAndFirst.Tests
 			long revision = authority.Revision;
 			KingdomCuriosityBook future = KingdomCuriosityLeadCodec.DecodeCuriosity(
 				KingdomCuriosityLeadCodecTests.Future(0x31554354, 7));
-			Assert.IsFalse(KingdomCuriosityLeadCommit.TryCommit(authority, future, Leads(),
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCommit.TryCommit(authority, future, Leads(),
 				revision, out KingdomCuriosityLeadCommitReport report, out string failure));
-			Assert.AreEqual(KingdomCuriosityLeadCarriage.Withheld, report.Curiosity);
+			ClassicAssert.AreEqual(KingdomCuriosityLeadCarriage.Withheld, report.Curiosity);
 			StringAssert.Contains("holds no such section", report.CuriosityReason);
-			Assert.IsNotEmpty(failure);
-			Assert.AreEqual(revision, authority.Revision);
-			Assert.IsNull(Section(authority.Read(), KingdomCivicMemoryLimits.SectionCivicLeads),
+			ClassicAssert.IsNotEmpty(failure);
+			ClassicAssert.AreEqual(revision, authority.Revision);
+			ClassicAssert.IsNull(Section(authority.Read(), KingdomCivicMemoryLimits.SectionCivicLeads),
 				"the lead book must not land while the curiosity book stops the commit");
 		}
 
@@ -165,7 +166,7 @@ namespace ThousandAndFirst.Tests
 			KingdomCivicMemoryAuthority authority = Authority(new KingdomCivicMemorySection(
 				KingdomCivicMemoryLimits.SectionCuriosity, theirs));
 			KingdomCuriosityBook future = KingdomCuriosityLeadCodec.DecodeCuriosity(mine);
-			Assert.IsFalse(KingdomCuriosityLeadCommit.TryCommit(authority, future, Leads(),
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCommit.TryCommit(authority, future, Leads(),
 				authority.Revision, out KingdomCuriosityLeadCommitReport report, out string _));
 			StringAssert.Contains("not the payload this book was read from",
 				report.CuriosityReason);
@@ -183,39 +184,39 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCivicMemoryAuthority authority = Authority();
 			KingdomCivicLeadBook leads = new KingdomCivicLeadBook();
-			Assert.IsTrue(KingdomCivicLeadRules.TryPrepare(leads, 0L,
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryPrepare(leads, 0L,
 				KingdomCuriosityLeadCodecTests.LeadCause(0), 0, true,
 				out KingdomCivicLeadReceipt receipt, out string failure), failure);
 
-			Assert.IsFalse(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
 				authority.Revision, receipt, out _, out _, out failure),
 				"an uncommitted prepared row is not durable");
 			StringAssert.Contains("no civic-lead section", failure);
 
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), leads,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), leads,
 				authority.Revision, out _, out failure), failure);
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
 				authority.Revision, receipt, out KingdomCivicMemorySectionLease lease,
 				out KingdomCivicLeadDurableStanding standing, out failure), failure);
-			Assert.AreEqual(KingdomCivicLeadDurableStanding.Prepared, standing);
-			Assert.AreEqual(authority.Revision, lease.ExpectedRevision,
+			ClassicAssert.AreEqual(KingdomCivicLeadDurableStanding.Prepared, standing);
+			ClassicAssert.AreEqual(authority.Revision, lease.ExpectedRevision,
 				"the lease carries the revision its bytes were read at");
-			Assert.AreEqual(KingdomCivicMemoryLimits.SectionCivicLeads, lease.SectionId);
+			ClassicAssert.AreEqual(KingdomCivicMemoryLimits.SectionCivicLeads, lease.SectionId);
 
-			Assert.IsFalse(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
 				authority.Revision - 1, receipt, out _, out _, out failure),
 				"a stale civic-memory revision must not vouch for durability");
 			StringAssert.Contains("the caller read at", failure);
 
 			KingdomCivicLeadReceipt fabricated = receipt.Copy();
 			fabricated.Title += " and a little more";
-			Assert.IsFalse(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
 				authority.Revision, fabricated, out _, out _, out failure));
 			StringAssert.Contains("differs from the row this authority holds", failure);
 
 			KingdomCivicLeadReceipt foreign = receipt.Copy();
 			foreign.SourceId = "taf:delve:never-prepared";
-			Assert.IsFalse(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
 				authority.Revision, foreign, out _, out _, out failure));
 			StringAssert.Contains("holds no civic lead for that source", failure);
 		}
@@ -230,30 +231,30 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCivicMemoryAuthority authority = Authority();
 			KingdomCivicLeadBook leads = new KingdomCivicLeadBook();
-			Assert.IsTrue(KingdomCivicLeadRules.TryPrepare(leads, 0L,
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryPrepare(leads, 0L,
 				KingdomCuriosityLeadCodecTests.LeadCause(0), 0, true,
 				out KingdomCivicLeadReceipt receipt, out string failure), failure);
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), leads,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), leads,
 				authority.Revision, out _, out failure), failure);
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
 				authority.Revision, receipt, out KingdomCivicMemorySectionLease lease,
 				out _, out failure), failure);
 
-			Assert.IsFalse(KingdomCuriosityLeadCommit.TryCommitProjectedLead(authority, null,
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCommit.TryCommitProjectedLead(authority, null,
 				receipt, out failure));
 			StringAssert.Contains("no civic-lead lease", failure);
 
 			KingdomCivicMemoryAuthority other = Authority();
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(other, Curiosity(), Leads(),
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(other, Curiosity(), Leads(),
 				other.Revision, out _, out failure), failure);
-			Assert.IsFalse(KingdomCuriosityLeadCommit.TryCommitProjectedLead(other, lease,
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCommit.TryCommitProjectedLead(other, lease,
 				receipt, out failure),
 				"a lease belongs to the authority that issued it");
 			StringAssert.Contains("another authority", failure);
 
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryCommitProjectedLead(authority, lease,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryCommitProjectedLead(authority, lease,
 				receipt, out failure), failure);
-			Assert.AreEqual(KingdomCivicLeadPhase.Projected, Durable(authority).Rows[0].Phase);
+			ClassicAssert.AreEqual(KingdomCivicLeadPhase.Projected, Durable(authority).Rows[0].Phase);
 		}
 
 		/// <summary>
@@ -265,22 +266,22 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCivicMemoryAuthority authority = Authority();
 			KingdomCivicLeadBook leads = new KingdomCivicLeadBook();
-			Assert.IsTrue(KingdomCivicLeadRules.TryPrepare(leads, 0L,
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryPrepare(leads, 0L,
 				KingdomCuriosityLeadCodecTests.LeadCause(0), 0, true,
 				out KingdomCivicLeadReceipt receipt, out string failure), failure);
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), leads,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), leads,
 				authority.Revision, out _, out failure), failure);
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
 				authority.Revision, receipt, out KingdomCivicMemorySectionLease lease,
 				out _, out failure), failure);
 
 			// Something else commits while this lease is being carried across the journal.
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), leads,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), leads,
 				authority.Revision, out _, out failure), failure);
 
-			Assert.IsFalse(KingdomCuriosityLeadCommit.TryCommitProjectedLead(authority, lease,
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCommit.TryCommitProjectedLead(authority, lease,
 				receipt, out failure), "a lease overtaken by another commit must be refused");
-			Assert.AreEqual(KingdomCivicLeadPhase.Prepared, Durable(authority).Rows[0].Phase,
+			ClassicAssert.AreEqual(KingdomCivicLeadPhase.Prepared, Durable(authority).Rows[0].Phase,
 				"a refused commit leaves the durable row prepared, ready for the retry");
 		}
 
@@ -293,27 +294,27 @@ namespace ThousandAndFirst.Tests
 		public void ThePreparedRowMatchNamesTheRevisionItWasReadAt()
 		{
 			KingdomCivicLeadBook book = new KingdomCivicLeadBook();
-			Assert.IsTrue(KingdomCivicLeadRules.TryPrepare(book, 0L,
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryPrepare(book, 0L,
 				KingdomCuriosityLeadCodecTests.LeadCause(0), 0, true,
 				out KingdomCivicLeadReceipt receipt, out string failure), failure);
-			Assert.IsTrue(KingdomCivicLeadRules.TryMatchPreparedRow(book, book.Revision, receipt,
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryMatchPreparedRow(book, book.Revision, receipt,
 				out failure), failure);
-			Assert.IsFalse(KingdomCivicLeadRules.TryMatchPreparedRow(book, book.Revision - 1,
+			ClassicAssert.IsFalse(KingdomCivicLeadRules.TryMatchPreparedRow(book, book.Revision - 1,
 				receipt, out failure));
 			StringAssert.Contains("now stands at", failure);
-			Assert.IsFalse(KingdomCivicLeadRules.TryMatchPreparedRow(book, book.Revision + 1,
+			ClassicAssert.IsFalse(KingdomCivicLeadRules.TryMatchPreparedRow(book, book.Revision + 1,
 				receipt, out failure));
 			StringAssert.Contains("now stands at", failure);
 
 			// And the revision the caller names really is the book's, not merely any number:
 			// preparing a second lead moves the book and the old reading stops matching.
 			long stale = book.Revision;
-			Assert.IsTrue(KingdomCivicLeadRules.TryPrepare(book, book.Revision,
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryPrepare(book, book.Revision,
 				KingdomCuriosityLeadCodecTests.LeadCause(1), 0, true, out _, out failure),
 				failure);
-			Assert.IsFalse(KingdomCivicLeadRules.TryMatchPreparedRow(book, stale, receipt,
+			ClassicAssert.IsFalse(KingdomCivicLeadRules.TryMatchPreparedRow(book, stale, receipt,
 				out failure));
-			Assert.IsTrue(KingdomCivicLeadRules.TryMatchPreparedRow(book, book.Revision, receipt,
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryMatchPreparedRow(book, book.Revision, receipt,
 				out failure), failure);
 		}
 
@@ -324,17 +325,17 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCivicMemoryAuthority authority = Authority();
 			KingdomCivicLeadBook leads = new KingdomCivicLeadBook();
-			Assert.IsTrue(KingdomCivicLeadRules.TryPrepare(leads, 0L,
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryPrepare(leads, 0L,
 				KingdomCuriosityLeadCodecTests.LeadCause(0), 0, true,
 				out KingdomCivicLeadReceipt receipt, out string failure), failure);
-			Assert.IsTrue(KingdomCivicLeadRules.TryMarkProjected(leads, leads.Revision,
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryMarkProjected(leads, leads.Revision,
 				receipt.SourceId, receipt.LeadId, receipt.Locator, out failure), failure);
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), leads,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), leads,
 				authority.Revision, out _, out failure), failure);
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
 				authority.Revision, receipt, out _,
 				out KingdomCivicLeadDurableStanding standing, out failure), failure);
-			Assert.AreEqual(KingdomCivicLeadDurableStanding.Projected, standing);
+			ClassicAssert.AreEqual(KingdomCivicLeadDurableStanding.Projected, standing);
 		}
 
 		/// <summary>A commit built against a revision the authority has moved past is refused
@@ -343,13 +344,13 @@ namespace ThousandAndFirst.Tests
 		public void ACommitBuiltAgainstAStaleAuthorityRevisionIsRefused()
 		{
 			KingdomCivicMemoryAuthority authority = Authority();
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), Leads(),
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), Leads(),
 				authority.Revision, out _, out string failure), failure);
 			long moved = authority.Revision;
-			Assert.IsFalse(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), Leads(),
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), Leads(),
 				moved - 1, out _, out failure));
 			StringAssert.Contains("now stands at", failure);
-			Assert.AreEqual(moved, authority.Revision);
+			ClassicAssert.AreEqual(moved, authority.Revision);
 		}
 
 		/// <summary>An undefined state is refused at the seam as well as at the writer, so a
@@ -361,17 +362,17 @@ namespace ThousandAndFirst.Tests
 			long revision = authority.Revision;
 			KingdomCuriosityBook curiosity = Curiosity();
 			curiosity.State = (KingdomCuriosityBookState)9;
-			Assert.IsFalse(KingdomCuriosityLeadCommit.TryCommit(authority, curiosity, Leads(),
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCommit.TryCommit(authority, curiosity, Leads(),
 				revision, out _, out string failure));
 			StringAssert.Contains("does not define", failure);
-			Assert.AreEqual(revision, authority.Revision);
+			ClassicAssert.AreEqual(revision, authority.Revision);
 
 			KingdomCivicLeadBook leads = Leads();
 			leads.State = (KingdomCuriosityBookState)9;
-			Assert.IsFalse(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), leads,
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), leads,
 				revision, out _, out failure));
 			StringAssert.Contains("does not define", failure);
-			Assert.AreEqual(revision, authority.Revision);
+			ClassicAssert.AreEqual(revision, authority.Revision);
 		}
 
 		/// <summary>
@@ -385,15 +386,15 @@ namespace ThousandAndFirst.Tests
 			long revision = authority.Revision;
 			KingdomCuriosityBook broken = Curiosity();
 			broken.Rows[0].Reason = "bad\ud800";
-			Assert.IsFalse(KingdomCuriosityLeadCommit.TryCommit(authority, broken, Leads(),
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCommit.TryCommit(authority, broken, Leads(),
 				revision, out KingdomCuriosityLeadCommitReport report, out string failure));
-			Assert.AreEqual(KingdomCuriosityLeadCarriage.Unwritable, report.Curiosity);
-			Assert.AreEqual(KingdomCuriosityLeadCarriage.Withheld, report.CivicLeads);
-			Assert.IsNotEmpty(failure);
-			Assert.AreEqual(revision, authority.Revision);
+			ClassicAssert.AreEqual(KingdomCuriosityLeadCarriage.Unwritable, report.Curiosity);
+			ClassicAssert.AreEqual(KingdomCuriosityLeadCarriage.Withheld, report.CivicLeads);
+			ClassicAssert.IsNotEmpty(failure);
+			ClassicAssert.AreEqual(revision, authority.Revision);
 			KingdomCivicMemoryState state = authority.Read();
-			Assert.IsNull(Section(state, KingdomCivicMemoryLimits.SectionCuriosity));
-			Assert.IsNull(Section(state, KingdomCivicMemoryLimits.SectionCivicLeads),
+			ClassicAssert.IsNull(Section(state, KingdomCivicMemoryLimits.SectionCuriosity));
+			ClassicAssert.IsNull(Section(state, KingdomCivicMemoryLimits.SectionCivicLeads),
 				"the lead book must not land while the curiosity book is refused");
 		}
 
@@ -401,13 +402,13 @@ namespace ThousandAndFirst.Tests
 		public void AStaleRevisionIsRefusedAndNothingIsWritten()
 		{
 			KingdomCivicMemoryAuthority authority = Authority();
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), Leads(),
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), Leads(),
 				authority.Revision, out _, out string failure), failure);
 			long current = authority.Revision;
-			Assert.IsFalse(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), Leads(),
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), Leads(),
 				current - 1, out _, out failure));
-			Assert.IsNotEmpty(failure);
-			Assert.AreEqual(current, authority.Revision);
+			ClassicAssert.IsNotEmpty(failure);
+			ClassicAssert.AreEqual(current, authority.Revision);
 		}
 
 		/// <summary>
@@ -420,29 +421,29 @@ namespace ThousandAndFirst.Tests
 		public void AReadOnlyAuthorityIsNeverCommittedToEvenWithTwoGoodBooks()
 		{
 			KingdomCivicMemoryAuthority authority = Latched();
-			Assert.IsTrue(authority.ReadOnly);
+			ClassicAssert.IsTrue(authority.ReadOnly);
 			long revision = authority.Revision;
-			Assert.IsFalse(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), Leads(),
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), Leads(),
 				revision, out _, out string failure));
 			StringAssert.Contains("read-only", failure);
 			StringAssert.Contains(authority.ReadOnlyReason, failure);
-			Assert.AreEqual(revision, authority.Revision);
-			Assert.IsNull(authority.Read().Section(KingdomCivicMemoryLimits.SectionCuriosity));
+			ClassicAssert.AreEqual(revision, authority.Revision);
+			ClassicAssert.IsNull(authority.Read().Section(KingdomCivicMemoryLimits.SectionCuriosity));
 		}
 
 		[Test]
 		public void AnAbsentAuthorityOrBookIsRefusedRatherThanSkipped()
 		{
-			Assert.IsFalse(KingdomCuriosityLeadCommit.TryCommit(null, Curiosity(), Leads(), 0L,
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCommit.TryCommit(null, Curiosity(), Leads(), 0L,
 				out _, out string failure));
-			Assert.IsNotEmpty(failure);
+			ClassicAssert.IsNotEmpty(failure);
 			KingdomCivicMemoryAuthority authority = Authority();
-			Assert.IsFalse(KingdomCuriosityLeadCommit.TryCommit(authority, null, Leads(),
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCommit.TryCommit(authority, null, Leads(),
 				authority.Revision, out _, out failure));
-			Assert.IsNotEmpty(failure);
-			Assert.IsFalse(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), null,
+			ClassicAssert.IsNotEmpty(failure);
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), null,
 				authority.Revision, out _, out failure));
-			Assert.IsNotEmpty(failure);
+			ClassicAssert.IsNotEmpty(failure);
 		}
 
 		/// <summary>Two books that are both beyond this build's authorship name no section, and
@@ -458,14 +459,14 @@ namespace ThousandAndFirst.Tests
 				new KingdomCivicMemorySection(KingdomCivicMemoryLimits.SectionCivicLeads,
 					futureLeads));
 			long revision = authority.Revision;
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority,
 				KingdomCuriosityLeadCodec.DecodeCuriosity(futureCuriosity),
 				KingdomCuriosityLeadCodec.DecodeLeads(futureLeads),
 				revision, out KingdomCuriosityLeadCommitReport report, out string failure),
 				failure);
-			Assert.AreEqual(KingdomCuriosityLeadCarriage.Withheld, report.Curiosity);
-			Assert.AreEqual(KingdomCuriosityLeadCarriage.Withheld, report.CivicLeads);
-			Assert.AreEqual(revision, authority.Revision,
+			ClassicAssert.AreEqual(KingdomCuriosityLeadCarriage.Withheld, report.Curiosity);
+			ClassicAssert.AreEqual(KingdomCuriosityLeadCarriage.Withheld, report.CivicLeads);
+			ClassicAssert.AreEqual(revision, authority.Revision,
 				"a commit that names nothing must not advance the authority");
 			CollectionAssert.AreEqual(futureCuriosity,
 				Section(authority.Read(), KingdomCivicMemoryLimits.SectionCuriosity).Payload());
@@ -482,23 +483,23 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCivicMemoryAuthority authority = Authority();
 			KingdomCivicLeadBook mine = new KingdomCivicLeadBook();
-			Assert.IsTrue(KingdomCivicLeadRules.TryPrepare(mine, 0L,
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryPrepare(mine, 0L,
 				KingdomCuriosityLeadCodecTests.LeadCause(0), 0, true,
 				out KingdomCivicLeadReceipt receipt, out string failure), failure);
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), mine,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), mine,
 				authority.Revision, out _, out failure), failure);
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
 				authority.Revision, receipt, out KingdomCivicMemorySectionLease lease,
 				out KingdomCivicLeadDurableStanding standing, out failure), failure);
-			Assert.AreEqual(KingdomCivicLeadDurableStanding.Prepared, standing);
+			ClassicAssert.AreEqual(KingdomCivicLeadDurableStanding.Prepared, standing);
 
 			long before = authority.Revision;
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryCommitProjectedLead(authority, lease,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryCommitProjectedLead(authority, lease,
 				receipt, out failure), failure);
-			Assert.Greater(authority.Revision, before, "the save must actually have taken it");
-			Assert.AreEqual(KingdomCivicLeadPhase.Prepared, mine.Rows[0].Phase,
+			ClassicAssert.Greater(authority.Revision, before, "the save must actually have taken it");
+			ClassicAssert.AreEqual(KingdomCivicLeadPhase.Prepared, mine.Rows[0].Phase,
 				"the caller's own book is not what was committed");
-			Assert.AreEqual(KingdomCivicLeadPhase.Projected, Durable(authority).Rows[0].Phase);
+			ClassicAssert.AreEqual(KingdomCivicLeadPhase.Projected, Durable(authority).Rows[0].Phase);
 		}
 
 		/// <summary>
@@ -511,31 +512,31 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCivicMemoryAuthority authority = Authority();
 			KingdomCivicLeadBook mine = new KingdomCivicLeadBook();
-			Assert.IsTrue(KingdomCivicLeadRules.TryPrepare(mine, 0L,
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryPrepare(mine, 0L,
 				KingdomCuriosityLeadCodecTests.LeadCause(0), 0, true,
 				out KingdomCivicLeadReceipt receipt, out string failure), failure);
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), mine,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), mine,
 				authority.Revision, out _, out failure), failure);
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
 				authority.Revision, receipt, out KingdomCivicMemorySectionLease carried,
 				out _, out failure), failure);
 
 			// The first attempt's commit is overtaken and refused.
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), mine,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), mine,
 				authority.Revision, out _, out failure), failure);
-			Assert.IsFalse(KingdomCuriosityLeadCommit.TryCommitProjectedLead(authority, carried,
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCommit.TryCommitProjectedLead(authority, carried,
 				receipt, out failure));
-			Assert.AreEqual(KingdomCivicLeadPhase.Prepared, Durable(authority).Rows[0].Phase,
+			ClassicAssert.AreEqual(KingdomCivicLeadPhase.Prepared, Durable(authority).Rows[0].Phase,
 				"a refused commit leaves the durable row prepared on purpose");
 
 			// The retry opens a fresh lease on the same standing, and finishes.
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
 				authority.Revision, receipt, out KingdomCivicMemorySectionLease lease,
 				out KingdomCivicLeadDurableStanding standing, out failure), failure);
-			Assert.AreEqual(KingdomCivicLeadDurableStanding.Prepared, standing);
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryCommitProjectedLead(authority, lease,
+			ClassicAssert.AreEqual(KingdomCivicLeadDurableStanding.Prepared, standing);
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryCommitProjectedLead(authority, lease,
 				receipt, out failure), failure);
-			Assert.AreEqual(KingdomCivicLeadPhase.Projected, Durable(authority).Rows[0].Phase);
+			ClassicAssert.AreEqual(KingdomCivicLeadPhase.Projected, Durable(authority).Rows[0].Phase);
 		}
 
 		/// <summary>
@@ -550,13 +551,13 @@ namespace ThousandAndFirst.Tests
 			KingdomCivicLeadReceipt receipt = Projected(authority);
 
 			long settled = authority.Revision;
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority, settled,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority, settled,
 				receipt, out KingdomCivicMemorySectionLease lease,
 				out KingdomCivicLeadDurableStanding standing, out string failure), failure);
-			Assert.AreEqual(KingdomCivicLeadDurableStanding.Projected, standing);
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryCommitProjectedLead(authority, lease,
+			ClassicAssert.AreEqual(KingdomCivicLeadDurableStanding.Projected, standing);
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryCommitProjectedLead(authority, lease,
 				receipt, out failure), failure);
-			Assert.AreEqual(settled, authority.Revision,
+			ClassicAssert.AreEqual(settled, authority.Revision,
 				"a completed projection must not spend another revision");
 		}
 
@@ -567,16 +568,16 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCivicMemoryAuthority authority = Authority();
 			KingdomCivicLeadReceipt receipt = Projected(authority);
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
 				authority.Revision, receipt, out KingdomCivicMemorySectionLease lease,
 				out _, out string failure), failure);
 
 			KingdomCivicLeadReceipt altered = receipt.Copy();
 			altered.Title += " and another thing";
-			Assert.IsFalse(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
 				authority.Revision, altered, out _, out _, out failure));
 			StringAssert.Contains("differs from this receipt", failure);
-			Assert.IsFalse(KingdomCuriosityLeadCommit.TryCommitProjectedLead(authority, lease,
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCommit.TryCommitProjectedLead(authority, lease,
 				altered, out failure));
 		}
 
@@ -584,15 +585,15 @@ namespace ThousandAndFirst.Tests
 		private static KingdomCivicLeadReceipt Projected(KingdomCivicMemoryAuthority authority)
 		{
 			KingdomCivicLeadBook mine = new KingdomCivicLeadBook();
-			Assert.IsTrue(KingdomCivicLeadRules.TryPrepare(mine, 0L,
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryPrepare(mine, 0L,
 				KingdomCuriosityLeadCodecTests.LeadCause(0), 0, true,
 				out KingdomCivicLeadReceipt receipt, out string failure), failure);
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), mine,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, Curiosity(), mine,
 				authority.Revision, out _, out failure), failure);
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryReadDurableStanding(authority,
 				authority.Revision, receipt, out KingdomCivicMemorySectionLease lease,
 				out _, out failure), failure);
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryCommitProjectedLead(authority, lease,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryCommitProjectedLead(authority, lease,
 				receipt, out failure), failure);
 			return receipt;
 		}
@@ -601,9 +602,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCivicMemorySection section = authority.Read()
 				.Section(KingdomCivicMemoryLimits.SectionCivicLeads);
-			Assert.IsNotNull(section);
+			ClassicAssert.IsNotNull(section);
 			KingdomCivicLeadBook book = KingdomCuriosityLeadCodec.DecodeLeads(section.Payload());
-			Assert.AreEqual(KingdomCuriosityBookState.Compatible, book.State, book.Fault);
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.Compatible, book.State, book.Fault);
 			return book;
 		}
 
@@ -645,7 +646,7 @@ namespace ThousandAndFirst.Tests
 				authority.AdoptSaved(KingdomCivicMemoryCodec.Encode(
 					KingdomCivicMemoryState.Of(new List<KingdomCivicMemorySection>(seeded), 1L)));
 			}
-			Assert.IsFalse(authority.ReadOnly, authority.ReadOnlyReason);
+			ClassicAssert.IsFalse(authority.ReadOnly, authority.ReadOnlyReason);
 			return authority;
 		}
 
@@ -689,7 +690,7 @@ namespace ThousandAndFirst.Tests
 		private static KingdomCuriosityBook Curiosity()
 		{
 			KingdomCuriosityBook book = new KingdomCuriosityBook();
-			Assert.IsTrue(KingdomCuriosityRules.TryPrepare(book, 0L,
+			ClassicAssert.IsTrue(KingdomCuriosityRules.TryPrepare(book, 0L,
 				KingdomCuriosityLeadCodecTests.Cause("one"),
 				KingdomCuriosityLeadCodecTests.Notes(), out _, out string failure), failure);
 			return book;
@@ -698,7 +699,7 @@ namespace ThousandAndFirst.Tests
 		private static KingdomCivicLeadBook Leads()
 		{
 			KingdomCivicLeadBook book = new KingdomCivicLeadBook();
-			Assert.IsTrue(KingdomCivicLeadRules.TryPrepare(book, 0L,
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryPrepare(book, 0L,
 				KingdomCuriosityLeadCodecTests.LeadCause(0), 0, true, out _, out string failure),
 				failure);
 			return book;

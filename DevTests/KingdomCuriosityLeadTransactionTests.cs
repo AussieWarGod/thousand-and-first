@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -11,22 +12,22 @@ namespace ThousandAndFirst.Tests
 		public void PlanWithoutAttentionChangesNeitherC18NorItsCallerReceipt()
 		{
 			KingdomCivicMemoryAuthority authority = Authority();
-			Assert.IsTrue(KingdomCuriosityLeadTransactions.TryPlanCuriosity(authority,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadTransactions.TryPlanCuriosity(authority,
 				KingdomCuriosityLeadCodecTests.Cause("plan"),
 				KingdomCuriosityLeadCodecTests.Notes(), out KingdomCuriosityLeadPlan plan,
 				out string failure), failure);
 			KingdomCuriosityReceipt caller = plan.CuriosityReceipt;
 			caller.NoteText = "fabricated";
 			long before = authority.Revision;
-			Assert.IsFalse(KingdomCuriosityLeadTransactions.TryCommit(plan, authority,
+			ClassicAssert.IsFalse(KingdomCuriosityLeadTransactions.TryCommit(plan, authority,
 				EnabledLedger(), out bool committed, out failure));
-			Assert.IsFalse(committed); Assert.AreEqual(before, authority.Revision);
+			ClassicAssert.IsFalse(committed); ClassicAssert.AreEqual(before, authority.Revision);
 			StringAssert.Contains("audience", failure);
-			Assert.AreNotEqual("fabricated", plan.CuriosityReceipt.NoteText,
+			ClassicAssert.AreNotEqual("fabricated", plan.CuriosityReceipt.NoteText,
 				"receipts handed to callers are copies, not plan authority");
-			Assert.IsTrue(KingdomCuriosityLeadTransactions.TryProveSourceAbsent(authority,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadTransactions.TryProveSourceAbsent(authority,
 				plan.CuriosityReceipt.SourceId, out bool absent, out failure), failure);
-			Assert.IsTrue(absent);
+			ClassicAssert.IsTrue(absent);
 		}
 
 		[Test]
@@ -34,21 +35,21 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCivicMemoryAuthority authority = Authority();
 			KingdomExperienceLedger ledger = EnabledLedger();
-			Assert.IsTrue(KingdomCuriosityLeadTransactions.TryPlanCuriosity(authority,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadTransactions.TryPlanCuriosity(authority,
 				KingdomCuriosityLeadCodecTests.Cause("publish"),
 				KingdomCuriosityLeadCodecTests.Notes(), out KingdomCuriosityLeadPlan plan,
 				out string failure), failure);
 			KingdomCuriosityReceipt expected = plan.CuriosityReceipt;
 			Reserve(ledger, expected.SourceId, expected.SettlementId, expected.PreparedTick);
-			Assert.IsTrue(KingdomCuriosityLeadTransactions.TryCommit(plan, authority, ledger,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadTransactions.TryCommit(plan, authority, ledger,
 				out bool committed, out failure), failure);
-			Assert.IsTrue(committed);
-			Assert.IsTrue(KingdomCuriosityLeadTransactions.TryReadExactCuriosity(authority,
+			ClassicAssert.IsTrue(committed);
+			ClassicAssert.IsTrue(KingdomCuriosityLeadTransactions.TryReadExactCuriosity(authority,
 				expected, out KingdomCuriosityReceipt durable, out failure), failure);
-			Assert.AreEqual(expected.NoteId, durable.NoteId);
+			ClassicAssert.AreEqual(expected.NoteId, durable.NoteId);
 
 			KingdomCuriosityReceipt fabricated = expected.Copy(); fabricated.Reason += " changed";
-			Assert.IsFalse(KingdomCuriosityLeadTransactions.TryReadExactCuriosity(authority,
+			ClassicAssert.IsFalse(KingdomCuriosityLeadTransactions.TryReadExactCuriosity(authority,
 				fabricated, out _, out failure));
 			StringAssert.Contains("differs", failure);
 		}
@@ -59,31 +60,31 @@ namespace ThousandAndFirst.Tests
 			KingdomCivicMemoryAuthority authority = Authority();
 			KingdomCivicMemoryAuthority other = Authority();
 			KingdomExperienceLedger ledger = EnabledLedger();
-			Assert.IsTrue(KingdomCuriosityLeadTransactions.TryPlanLead(authority,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadTransactions.TryPlanLead(authority,
 				KingdomCuriosityLeadCodecTests.LeadCause(3), 0,
 				out KingdomCuriosityLeadPlan plan, out string failure), failure);
 			KingdomCivicLeadReceipt row = plan.CivicLeadReceipt;
 			Reserve(ledger, row.SourceId, row.SettlementId, row.CompletedTick);
-			Assert.IsFalse(KingdomCuriosityLeadTransactions.TryCommit(plan, other, ledger,
+			ClassicAssert.IsFalse(KingdomCuriosityLeadTransactions.TryCommit(plan, other, ledger,
 				out _, out failure));
 			StringAssert.Contains("another authority", failure);
 
-			Assert.IsTrue(KingdomCuriosityLeadTransactions.TryCommit(plan, authority, ledger,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadTransactions.TryCommit(plan, authority, ledger,
 				out bool committed, out failure), failure);
-			Assert.IsTrue(committed);
-			Assert.IsTrue(KingdomCuriosityLeadTransactions.TryReadExactLead(authority, row,
+			ClassicAssert.IsTrue(committed);
+			ClassicAssert.IsTrue(KingdomCuriosityLeadTransactions.TryReadExactLead(authority, row,
 				out _, out failure), failure);
-			Assert.IsTrue(KingdomCuriosityLeadTransactions.TryPlanLead(authority,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadTransactions.TryPlanLead(authority,
 				KingdomCuriosityLeadCodecTests.LeadCause(3), 511, out plan, out failure), failure);
 			long retryRevision = authority.Revision;
-			Assert.IsTrue(KingdomCuriosityLeadTransactions.TryCommit(plan, authority, ledger,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadTransactions.TryCommit(plan, authority, ledger,
 				out committed, out failure), failure);
-			Assert.IsFalse(committed); Assert.AreEqual(retryRevision, authority.Revision);
+			ClassicAssert.IsFalse(committed); ClassicAssert.AreEqual(retryRevision, authority.Revision);
 
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority,
 				new KingdomCuriosityBook(), new KingdomCivicLeadBook(), authority.Revision,
 				out _, out failure), failure);
-			Assert.IsFalse(KingdomCuriosityLeadTransactions.TryCommit(plan, authority, ledger,
+			ClassicAssert.IsFalse(KingdomCuriosityLeadTransactions.TryCommit(plan, authority, ledger,
 				out _, out failure));
 			StringAssert.Contains("changed", failure);
 		}
@@ -98,7 +99,7 @@ namespace ThousandAndFirst.Tests
 			{
 				KingdomCuriosityCause cause = KingdomCuriosityLeadCodecTests.Cause("old-" + i);
 				cause.SettlementId = "taf:settlement:old";
-				Assert.IsTrue(KingdomCuriosityRules.TryPrepare(curiosity, curiosity.Revision,
+				ClassicAssert.IsTrue(KingdomCuriosityRules.TryPrepare(curiosity, curiosity.Revision,
 					cause, KingdomCuriosityLeadCodecTests.Notes(), out _, out failure), failure);
 			}
 			KingdomCivicLeadBook leads = new KingdomCivicLeadBook();
@@ -106,44 +107,44 @@ namespace ThousandAndFirst.Tests
 			{
 				KingdomCivicLeadCause cause = KingdomCuriosityLeadCodecTests.LeadCause(i);
 				cause.SettlementId = "taf:settlement:old";
-				Assert.IsTrue(KingdomCivicLeadRules.TryPrepare(leads, leads.Revision, cause, i,
+				ClassicAssert.IsTrue(KingdomCivicLeadRules.TryPrepare(leads, leads.Revision, cause, i,
 					true, out _, out failure), failure);
 			}
-			Assert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, curiosity, leads,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCommit.TryCommit(authority, curiosity, leads,
 				authority.Revision, out _, out string seeded), seeded);
 			long before = authority.Revision;
-			Assert.IsTrue(KingdomCuriosityLeadTransactions.TryRetireForeignSettlements(authority,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadTransactions.TryRetireForeignSettlements(authority,
 				new[] { "taf:settlement:new" }, out bool committed, out int retired,
 				out failure), failure);
-			Assert.IsTrue(committed); Assert.AreEqual(11, retired);
-			Assert.Greater(authority.Revision, before);
-			Assert.IsTrue(KingdomCuriosityLeadTransactions.TryRead(authority, out _,
+			ClassicAssert.IsTrue(committed); ClassicAssert.AreEqual(11, retired);
+			ClassicAssert.Greater(authority.Revision, before);
+			ClassicAssert.IsTrue(KingdomCuriosityLeadTransactions.TryRead(authority, out _,
 				out curiosity, out leads, out failure), failure);
-			Assert.AreEqual(0, curiosity.Rows.Count); Assert.AreEqual(0, leads.Rows.Count);
+			ClassicAssert.AreEqual(0, curiosity.Rows.Count); ClassicAssert.AreEqual(0, leads.Rows.Count);
 
 			long settled = authority.Revision;
-			Assert.IsTrue(KingdomCuriosityLeadTransactions.TryRetireForeignSettlements(authority,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadTransactions.TryRetireForeignSettlements(authority,
 				new[] { "taf:settlement:new" }, out committed, out retired, out failure), failure);
-			Assert.IsFalse(committed); Assert.AreEqual(0, retired);
-			Assert.AreEqual(settled, authority.Revision);
+			ClassicAssert.IsFalse(committed); ClassicAssert.AreEqual(0, retired);
+			ClassicAssert.AreEqual(settled, authority.Revision);
 		}
 
 		[Test]
 		public void InvalidReplacementTopologyCannotRetireAnything()
 		{
 			KingdomCivicMemoryAuthority authority = Authority(); long before = authority.Revision;
-			Assert.IsFalse(KingdomCuriosityLeadTransactions.TryRetireForeignSettlements(authority,
+			ClassicAssert.IsFalse(KingdomCuriosityLeadTransactions.TryRetireForeignSettlements(authority,
 				new[] { "taf:settlement:one", "taf:settlement:one" }, out _, out _,
 				out string failure));
-			StringAssert.Contains("topology", failure); Assert.AreEqual(before, authority.Revision);
+			StringAssert.Contains("topology", failure); ClassicAssert.AreEqual(before, authority.Revision);
 		}
 
 		private static KingdomExperienceLedger EnabledLedger()
 		{
 			KingdomExperienceLedger ledger = new KingdomExperienceLedger();
-			Assert.IsTrue(KingdomExperienceRules.TryBindEmptyIdentity(ledger,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryBindEmptyIdentity(ledger,
 				"taf:realm:transaction-test", out string failure), failure);
-			Assert.IsTrue(KingdomExperienceRules.TryObserveOptions(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryObserveOptions(ledger, ledger.Revision,
 				true, true, true, 0L, out failure), failure);
 			return ledger;
 		}
@@ -159,7 +160,7 @@ namespace ThousandAndFirst.Tests
 				OptionKind = KingdomExperienceOptionKind.CivicKnowledge,
 				CauseTick = tick, ReservedTick = tick, EnableEpoch = ledger.Knowledge.EnableEpoch
 			};
-			Assert.IsTrue(KingdomExperienceRules.TryReserveAudience(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomExperienceRules.TryReserveAudience(ledger, ledger.Revision,
 				request, out _, out string failure), failure);
 		}
 

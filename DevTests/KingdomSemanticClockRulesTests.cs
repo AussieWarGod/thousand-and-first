@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
@@ -9,10 +10,10 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CadenceIsAnAbsoluteGameDay()
 		{
-			Assert.AreEqual(KingdomRules.TicksPerDay, KingdomSemanticClockRules.CadenceTicks);
-			Assert.AreEqual(0L, KingdomSemanticClockRules.AbsoluteBoundary(1199L));
-			Assert.AreEqual(1200L, KingdomSemanticClockRules.AbsoluteBoundary(1200L));
-			Assert.AreEqual(1200L, KingdomSemanticClockRules.AbsoluteBoundary(2399L));
+			ClassicAssert.AreEqual(KingdomRules.TicksPerDay, KingdomSemanticClockRules.CadenceTicks);
+			ClassicAssert.AreEqual(0L, KingdomSemanticClockRules.AbsoluteBoundary(1199L));
+			ClassicAssert.AreEqual(1200L, KingdomSemanticClockRules.AbsoluteBoundary(1200L));
+			ClassicAssert.AreEqual(1200L, KingdomSemanticClockRules.AbsoluteBoundary(2399L));
 		}
 
 		[Test]
@@ -20,8 +21,8 @@ namespace ThousandAndFirst.Tests
 		{
 			var state = KingdomSemanticClockRules.FromLastDispatchTick(2399L);
 
-			Assert.AreEqual(1200L, state.LastBoundaryTick);
-			Assert.AreEqual(2399L, state.LastDispatchTick);
+			ClassicAssert.AreEqual(1200L, state.LastBoundaryTick);
+			ClassicAssert.AreEqual(2399L, state.LastDispatchTick);
 		}
 
 		[Test]
@@ -31,11 +32,11 @@ namespace ThousandAndFirst.Tests
 			var before = KingdomSemanticClockRules.Decide(state, 2399L, ForceActivation: false);
 			var due = KingdomSemanticClockRules.Decide(state, 2400L, ForceActivation: false);
 
-			Assert.IsFalse(before.ShouldDispatch);
-			Assert.AreEqual(KingdomSemanticDispatchKind.Cadence, due.Kind);
-			Assert.AreEqual(2400L, due.DueBoundaryTick);
-			Assert.AreEqual(2400L, due.Next.LastBoundaryTick);
-			Assert.AreEqual(2400L, due.Next.LastDispatchTick);
+			ClassicAssert.IsFalse(before.ShouldDispatch);
+			ClassicAssert.AreEqual(KingdomSemanticDispatchKind.Cadence, due.Kind);
+			ClassicAssert.AreEqual(2400L, due.DueBoundaryTick);
+			ClassicAssert.AreEqual(2400L, due.Next.LastBoundaryTick);
+			ClassicAssert.AreEqual(2400L, due.Next.LastDispatchTick);
 		}
 
 		[Test]
@@ -55,9 +56,9 @@ namespace ThousandAndFirst.Tests
 				}
 			}
 
-			Assert.IsTrue(direct.ShouldDispatch);
-			Assert.AreEqual(direct.Next.LastBoundaryTick, split.LastBoundaryTick);
-			Assert.AreEqual(direct.Next.LastDispatchTick, split.LastDispatchTick);
+			ClassicAssert.IsTrue(direct.ShouldDispatch);
+			ClassicAssert.AreEqual(direct.Next.LastBoundaryTick, split.LastBoundaryTick);
+			ClassicAssert.AreEqual(direct.Next.LastDispatchTick, split.LastDispatchTick);
 		}
 
 		[Test]
@@ -67,8 +68,8 @@ namespace ThousandAndFirst.Tests
 			var duplicate = KingdomSemanticClockRules.Decide(state, 2400L, ForceActivation: true);
 			var fresh = KingdomSemanticClockRules.Decide(state, 2401L, ForceActivation: true);
 
-			Assert.IsFalse(duplicate.ShouldDispatch);
-			Assert.IsFalse(fresh.ShouldDispatch);
+			ClassicAssert.IsFalse(duplicate.ShouldDispatch);
+			ClassicAssert.IsFalse(fresh.ShouldDispatch);
 		}
 
 		[Test]
@@ -78,9 +79,9 @@ namespace ThousandAndFirst.Tests
 			var first = KingdomSemanticClockRules.Decide(empty, 1L, ForceActivation: true);
 			var settled = KingdomSemanticClockRules.Decide(first.Next, 1199L, ForceActivation: true);
 
-			Assert.AreEqual(KingdomSemanticDispatchKind.Activation, first.Kind);
-			Assert.AreEqual(1L, first.Next.LastDispatchTick);
-			Assert.IsFalse(settled.ShouldDispatch);
+			ClassicAssert.AreEqual(KingdomSemanticDispatchKind.Activation, first.Kind);
+			ClassicAssert.AreEqual(1L, first.Next.LastDispatchTick);
+			ClassicAssert.IsFalse(settled.ShouldDispatch);
 		}
 
 		[Test]
@@ -90,23 +91,23 @@ namespace ThousandAndFirst.Tests
 			var first = KingdomSemanticClockRules.Decide(state, 2400L, ForceActivation: false);
 			var retry = KingdomSemanticClockRules.Decide(state, 2400L, ForceActivation: false);
 
-			Assert.AreEqual(KingdomSemanticDispatchKind.Cadence, first.Kind);
-			Assert.AreEqual(first.Kind, retry.Kind);
-			Assert.AreEqual(state.LastBoundaryTick, 1200L);
-			Assert.AreEqual(state.LastDispatchTick, 1300L);
+			ClassicAssert.AreEqual(KingdomSemanticDispatchKind.Cadence, first.Kind);
+			ClassicAssert.AreEqual(first.Kind, retry.Kind);
+			ClassicAssert.AreEqual(state.LastBoundaryTick, 1200L);
+			ClassicAssert.AreEqual(state.LastDispatchTick, 1300L);
 		}
 
 		[Test]
 		public void SubsystemReceiptResumesOnlyItsOwnGroundUntilPublished()
 		{
 			const long required = 15L;
-			Assert.AreEqual(KingdomSemanticPassReceiptVerdict.Start,
+			ClassicAssert.AreEqual(KingdomSemanticPassReceiptVerdict.Start,
 				KingdomSemanticClockRules.ReceiptVerdict(false, 0L, null, 0L, required,
 					0L, "A"));
-			Assert.AreEqual(KingdomSemanticPassReceiptVerdict.Resume,
+			ClassicAssert.AreEqual(KingdomSemanticPassReceiptVerdict.Resume,
 				KingdomSemanticClockRules.ReceiptVerdict(true, 2400L, "A", 3L, required,
 					1200L, "A"));
-			Assert.AreEqual(KingdomSemanticPassReceiptVerdict.RefuseDifferentGround,
+			ClassicAssert.AreEqual(KingdomSemanticPassReceiptVerdict.RefuseDifferentGround,
 				KingdomSemanticClockRules.ReceiptVerdict(true, 2400L, "A", 3L, required,
 					1200L, "B"));
 		}
@@ -115,10 +116,10 @@ namespace ThousandAndFirst.Tests
 		public void CompletedButUnpublishedReceiptIsReplayedAsNoOpsThenReplacedAfterPublish()
 		{
 			const long required = 31L;
-			Assert.AreEqual(KingdomSemanticPassReceiptVerdict.Resume,
+			ClassicAssert.AreEqual(KingdomSemanticPassReceiptVerdict.Resume,
 				KingdomSemanticClockRules.ReceiptVerdict(true, 2400L, "A", required,
 					required, 1200L, "A"));
-			Assert.AreEqual(KingdomSemanticPassReceiptVerdict.Start,
+			ClassicAssert.AreEqual(KingdomSemanticPassReceiptVerdict.Start,
 				KingdomSemanticClockRules.ReceiptVerdict(true, 2400L, "A", required,
 					required, 2400L, "A"));
 		}
@@ -127,10 +128,10 @@ namespace ThousandAndFirst.Tests
 		public void InvalidOrPreDayTicksDoNotCreateCadenceWork()
 		{
 			var empty = new KingdomSemanticClockState(-1L, -1L);
-			Assert.IsFalse(KingdomSemanticClockRules.Decide(empty, -1L, false).ShouldDispatch);
-			Assert.IsFalse(KingdomSemanticClockRules.Decide(empty, 1L, false).ShouldDispatch);
-			Assert.AreEqual(0L, empty.LastBoundaryTick);
-			Assert.AreEqual(0L, empty.LastDispatchTick);
+			ClassicAssert.IsFalse(KingdomSemanticClockRules.Decide(empty, -1L, false).ShouldDispatch);
+			ClassicAssert.IsFalse(KingdomSemanticClockRules.Decide(empty, 1L, false).ShouldDispatch);
+			ClassicAssert.AreEqual(0L, empty.LastBoundaryTick);
+			ClassicAssert.AreEqual(0L, empty.LastDispatchTick);
 		}
 	}
 }

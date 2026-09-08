@@ -5,6 +5,7 @@ using System.IO;
 using System.Reflection;
 using System.Security.Cryptography;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.DevTests
 {
@@ -51,20 +52,20 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomSiteEvidenceSnapshot snapshot = Site();
 			KingdomSitePracticeBook book = new KingdomSitePracticeBook();
-			Assert.IsTrue(KingdomSitePracticeRules.TryPreview(snapshot,
+			ClassicAssert.IsTrue(KingdomSitePracticeRules.TryPreview(snapshot,
 				out string first, out string second, out string failure), failure);
-			Assert.AreNotEqual(first, second);
-			Assert.IsTrue(KingdomSitePracticeRules.TryRead(book, 0L, snapshot, 2, 20L,
+			ClassicAssert.AreNotEqual(first, second);
+			ClassicAssert.IsTrue(KingdomSitePracticeRules.TryRead(book, 0L, snapshot, 2, 20L,
 				out KingdomSitePracticeReceipt receipt, out failure), failure);
-			Assert.AreEqual("waystation", receipt.Source.Vocation);
+			ClassicAssert.AreEqual("waystation", receipt.Source.Vocation);
 			long revision = book.Revision;
-			Assert.IsTrue(KingdomSitePracticeRules.TryRead(book, 0L, snapshot, 2, 99L,
+			ClassicAssert.IsTrue(KingdomSitePracticeRules.TryRead(book, 0L, snapshot, 2, 99L,
 				out KingdomSitePracticeReceipt retry, out failure), failure);
-			Assert.AreSame(receipt, retry);
-			Assert.AreEqual(revision, book.Revision);
-			Assert.IsFalse(KingdomSitePracticeRules.TryRead(book, revision, snapshot, 1,
+			ClassicAssert.AreSame(receipt, retry);
+			ClassicAssert.AreEqual(revision, book.Revision);
+			ClassicAssert.IsFalse(KingdomSitePracticeRules.TryRead(book, revision, snapshot, 1,
 				99L, out KingdomSitePracticeReceipt _, out failure));
-			Assert.AreEqual(revision, book.Revision);
+			ClassicAssert.AreEqual(revision, book.Revision);
 			StringAssert.Contains("chosen vocation remains", receipt.Description);
 		}
 
@@ -74,21 +75,21 @@ namespace ThousandAndFirst.DevTests
 			KingdomSitePracticeBook book = new KingdomSitePracticeBook();
 			KingdomSiteEvidenceSnapshot bad = Site();
 			bad.WorkReceiptId = null;
-			Assert.IsFalse(KingdomSitePracticeRules.TryRead(book, 0L, bad, 1, 20L,
+			ClassicAssert.IsFalse(KingdomSitePracticeRules.TryRead(book, 0L, bad, 1, 20L,
 				out KingdomSitePracticeReceipt _, out string _));
 			for (int i = 0; i < KingdomSitePracticeRules.MaxRows; i++)
 			{
 				KingdomSiteEvidenceSnapshot row = Site();
 				row.SettlementId = "taf:settlement:capacity:" + i;
 				row.Digest = KingdomSitePracticeRules.SnapshotDigest(row);
-				Assert.IsTrue(KingdomSitePracticeRules.TryRead(book, book.Revision, row, 1,
+				ClassicAssert.IsTrue(KingdomSitePracticeRules.TryRead(book, book.Revision, row, 1,
 					20L, out KingdomSitePracticeReceipt _, out string failure), failure);
 			}
-			Assert.IsFalse(KingdomSitePracticeRules.TryRead(book, book.Revision, Site(), 1,
+			ClassicAssert.IsFalse(KingdomSitePracticeRules.TryRead(book, book.Revision, Site(), 1,
 				20L, out KingdomSitePracticeReceipt _, out string _));
 			KingdomSiteEvidenceSnapshot malformed = Site();
 			malformed.DeedText = "bad\ud800";
-			Assert.DoesNotThrow(() => Assert.IsFalse(KingdomSitePracticeRules.TryRead(
+			Assert.DoesNotThrow(() => ClassicAssert.IsFalse(KingdomSitePracticeRules.TryRead(
 				new KingdomSitePracticeBook(), 0L, malformed, 1, 20L,
 				out KingdomSitePracticeReceipt _, out string _)));
 		}
@@ -109,18 +110,18 @@ namespace ThousandAndFirst.DevTests
 				"taf:construction:aaa", "taf:object:work-a", 20L);
 			KingdomSiteBuiltWorkEvidence second = Work(founding.SettlementId,
 				"taf:construction:bbb", "taf:object:work-b", 30L);
-			Assert.IsTrue(KingdomSitePracticeRules.TryBuildPreview(founding,
+			ClassicAssert.IsTrue(KingdomSitePracticeRules.TryBuildPreview(founding,
 				new List<KingdomSiteBuiltWorkEvidence> { second, first },
 				out KingdomSitePracticePreview left, out string failure), failure);
-			Assert.IsTrue(KingdomSitePracticeRules.TryBuildPreview(founding,
+			ClassicAssert.IsTrue(KingdomSitePracticeRules.TryBuildPreview(founding,
 				new List<KingdomSiteBuiltWorkEvidence> { first, second },
 				out KingdomSitePracticePreview right, out failure), failure);
-			Assert.AreEqual("taf:construction:aaa", left.Snapshot.WorkReceiptId);
-			Assert.AreEqual(left.Snapshot.Digest, right.Snapshot.Digest);
-			Assert.AreEqual(20L, left.Snapshot.ObservedTick);
-			Assert.AreNotEqual(left.FirstReading, left.SecondReading);
+			ClassicAssert.AreEqual("taf:construction:aaa", left.Snapshot.WorkReceiptId);
+			ClassicAssert.AreEqual(left.Snapshot.Digest, right.Snapshot.Digest);
+			ClassicAssert.AreEqual(20L, left.Snapshot.ObservedTick);
+			ClassicAssert.AreNotEqual(left.FirstReading, left.SecondReading);
 			second.SettlementId = "taf:settlement:foreign";
-			Assert.IsFalse(KingdomSitePracticeRules.TryBuildPreview(founding,
+			ClassicAssert.IsFalse(KingdomSitePracticeRules.TryBuildPreview(founding,
 				new List<KingdomSiteBuiltWorkEvidence> { first, second },
 				out KingdomSitePracticePreview _, out string _));
 		}
@@ -143,41 +144,41 @@ namespace ThousandAndFirst.DevTests
 					"taf:settlement:seat", vocations[i], kinds[i], authorities[i],
 					"taf:evidence:" + i, "exact source fact " + i,
 					"useful result " + i);
-				Assert.IsTrue(KingdomVocationServiceRules.TryBuildAvailableOffer(source,
+				ClassicAssert.IsTrue(KingdomVocationServiceRules.TryBuildAvailableOffer(source,
 					out KingdomVocationServiceOffer offer, out string failure), failure);
-				Assert.AreEqual(KingdomVocationServiceOfferState.Available, offer.State);
-				Assert.AreEqual(authorities[i], offer.Authority);
-				Assert.AreEqual(0, offer.InputUnits);
-				Assert.AreEqual(0, offer.OutputUnits);
-				Assert.IsFalse(offer.MutatesSource);
-				Assert.IsTrue(KingdomVocationServiceRules.TryValidateOffer(offer,
+				ClassicAssert.AreEqual(KingdomVocationServiceOfferState.Available, offer.State);
+				ClassicAssert.AreEqual(authorities[i], offer.Authority);
+				ClassicAssert.AreEqual(0, offer.InputUnits);
+				ClassicAssert.AreEqual(0, offer.OutputUnits);
+				ClassicAssert.IsFalse(offer.MutatesSource);
+				ClassicAssert.IsTrue(KingdomVocationServiceRules.TryValidateOffer(offer,
 					out failure), failure);
 			}
-			Assert.IsTrue(KingdomVocationServiceRules.TryBuildHoldingReport(
+			ClassicAssert.IsTrue(KingdomVocationServiceRules.TryBuildHoldingReport(
 				"taf:settlement:seat", out KingdomVocationServiceOffer neutral,
 				out string holdingFailure), holdingFailure);
-			Assert.AreEqual(KingdomVocationServiceOfferState.Neutral, neutral.State);
-			Assert.AreEqual(KingdomVocationServiceAuthority.None, neutral.Authority);
-			Assert.IsNull(neutral.Verb);
-			Assert.IsNull(neutral.SourceReceiptId);
+			ClassicAssert.AreEqual(KingdomVocationServiceOfferState.Neutral, neutral.State);
+			ClassicAssert.AreEqual(KingdomVocationServiceAuthority.None, neutral.Authority);
+			ClassicAssert.IsNull(neutral.Verb);
+			ClassicAssert.IsNull(neutral.SourceReceiptId);
 			StringAssert.Contains("promises no vocation service", neutral.Report);
 			foreach (PropertyInfo property in typeof(KingdomVocationServiceOffer).GetProperties())
-				Assert.IsNull(property.GetSetMethod(true), property.Name + " must be get-only");
+				ClassicAssert.IsNull(property.GetSetMethod(true), property.Name + " must be get-only");
 		}
 
 		[Test]
 		public void D12UnavailableAndInvalidEnumsFailClosed()
 		{
-			Assert.IsTrue(KingdomVocationServiceRules.TryBuildUnavailable(
+			ClassicAssert.IsTrue(KingdomVocationServiceRules.TryBuildUnavailable(
 				"taf:settlement:seat", "reliquary", "authority is absent",
 				"restore exact authority", out KingdomVocationServiceOffer unavailable,
 				out string failure), failure);
-			Assert.AreEqual(KingdomVocationServiceOfferState.Unavailable,
+			ClassicAssert.AreEqual(KingdomVocationServiceOfferState.Unavailable,
 				unavailable.State);
-			Assert.AreEqual(KingdomVocationServiceAuthority.ArtifactRecognition,
+			ClassicAssert.AreEqual(KingdomVocationServiceAuthority.ArtifactRecognition,
 				unavailable.Authority);
-			Assert.AreEqual(0, unavailable.InputUnits);
-			Assert.IsFalse(KingdomVocationServiceRules.TryBuildUnavailable(
+			ClassicAssert.AreEqual(0, unavailable.InputUnits);
+			ClassicAssert.IsFalse(KingdomVocationServiceRules.TryBuildUnavailable(
 				"bad", "reliquary", null, "repair", out unavailable, out failure));
 			KingdomVocationServiceOffer invalid = new KingdomVocationServiceOffer(
 				(KingdomVocationServiceOfferState)99, "taf:settlement:seat", "waystation",
@@ -185,11 +186,11 @@ namespace ThousandAndFirst.DevTests
 				KingdomVocationServiceAuthority.PolityRoute, "Ask for a route brief",
 				"polity route authority", "taf:evidence:1", "exact source", "result", "view",
 				"on request", "dismissed", "report", null, null);
-			Assert.IsFalse(KingdomVocationServiceRules.TryValidateOffer(invalid,
+			ClassicAssert.IsFalse(KingdomVocationServiceRules.TryValidateOffer(invalid,
 				out failure));
 			KingdomVocationServiceBook legacy = LegacyEnvelope().VocationServices;
 			legacy.Rows[0].Request.Kind = (KingdomVocationServiceKind)99;
-			Assert.IsFalse(KingdomVocationServiceRules.TryValidate(legacy, out failure));
+			ClassicAssert.IsFalse(KingdomVocationServiceRules.TryValidate(legacy, out failure));
 		}
 
 		[Test]
@@ -200,35 +201,35 @@ namespace ThousandAndFirst.DevTests
 				"taf:settlement:seat", "waystation", KingdomVocationServiceKind.RouteBrief,
 				KingdomVocationServiceAuthority.PolityRoute, "taf:receipt:route:1",
 				"exact current-realm caravan route", "exact route result");
-			Assert.IsTrue(KingdomVocationServiceRules.TryBuildAvailableOffer(source,
+			ClassicAssert.IsTrue(KingdomVocationServiceRules.TryBuildAvailableOffer(source,
 				out KingdomVocationServiceOffer offer, out string failure), failure);
-			Assert.IsTrue(KingdomVocationServiceRules.TryPrepareRequest(book, offer, 25L,
+			ClassicAssert.IsTrue(KingdomVocationServiceRules.TryPrepareRequest(book, offer, 25L,
 				out KingdomVocationServiceRequest request, out failure), failure);
-			Assert.IsTrue(KingdomVocationServiceRules.TryServe(book, 0L, request, 30L,
+			ClassicAssert.IsTrue(KingdomVocationServiceRules.TryServe(book, 0L, request, 30L,
 				out KingdomVocationServiceReceipt receipt, out failure), failure);
-			Assert.AreEqual(1L, book.Revision);
-			Assert.AreEqual(0, receipt.Request.InputUnits);
-			Assert.AreEqual(0, receipt.OutputUnits);
-			Assert.IsTrue(KingdomVocationServiceRules.TryServe(book, 0L, request, 99L,
+			ClassicAssert.AreEqual(1L, book.Revision);
+			ClassicAssert.AreEqual(0, receipt.Request.InputUnits);
+			ClassicAssert.AreEqual(0, receipt.OutputUnits);
+			ClassicAssert.IsTrue(KingdomVocationServiceRules.TryServe(book, 0L, request, 99L,
 				out KingdomVocationServiceReceipt retry, out failure), failure);
-			Assert.AreSame(receipt, retry);
-			Assert.AreEqual(1L, book.Revision);
+			ClassicAssert.AreSame(receipt, retry);
+			ClassicAssert.AreEqual(1L, book.Revision);
 		}
 
 		[Test]
 		public void IndependentEnvelopeIsBoundAuthenticatedAndFutureOpaque()
 		{
 			KingdomCivicPracticeEnvelope envelope = new KingdomCivicPracticeEnvelope();
-			Assert.IsTrue(envelope.TryBindEmptyIdentity(Realm, out string failure), failure);
-			Assert.IsTrue(KingdomSitePracticeRules.TryRead(envelope.SitePractices, 0L,
+			ClassicAssert.IsTrue(envelope.TryBindEmptyIdentity(Realm, out string failure), failure);
+			ClassicAssert.IsTrue(KingdomSitePracticeRules.TryRead(envelope.SitePractices, 0L,
 				Site(), 1, 20L, out KingdomSitePracticeReceipt _, out failure), failure);
 			byte[] bytes = KingdomCivicPracticeCodec.Encode(envelope);
-			Assert.LessOrEqual(bytes.Length, KingdomCivicPracticeCodec.MaxEnvelopeBytes);
+			ClassicAssert.LessOrEqual(bytes.Length, KingdomCivicPracticeCodec.MaxEnvelopeBytes);
 			KingdomCivicPracticeEnvelope loaded = KingdomCivicPracticeCodec.Decode(bytes);
-			Assert.AreEqual(1, loaded.SitePractices.Rows.Count);
-			Assert.AreEqual(0, loaded.VocationServices.Rows.Count);
+			ClassicAssert.AreEqual(1, loaded.SitePractices.Rows.Count);
+			ClassicAssert.AreEqual(0, loaded.VocationServices.Rows.Count);
 			CollectionAssert.AreEqual(bytes, KingdomCivicPracticeCodec.Encode(loaded));
-			Assert.IsTrue(KingdomCivicPracticeStore.ReadForRealm(bytes, OtherRealm,
+			ClassicAssert.IsTrue(KingdomCivicPracticeStore.ReadForRealm(bytes, OtherRealm,
 				out failure).Quarantined);
 			KingdomCivicPracticeEnvelope future = new KingdomCivicPracticeEnvelope
 			{
@@ -237,7 +238,7 @@ namespace ThousandAndFirst.DevTests
 			};
 			byte[] futureBytes = KingdomCivicPracticeCodec.Encode(future);
 			KingdomCivicPracticeEnvelope opaque = KingdomCivicPracticeCodec.Decode(futureBytes);
-			Assert.IsTrue(opaque.IsOpaqueFuture);
+			ClassicAssert.IsTrue(opaque.IsOpaqueFuture);
 			CollectionAssert.AreEqual(futureBytes, KingdomCivicPracticeCodec.Encode(opaque));
 		}
 
@@ -245,31 +246,31 @@ namespace ThousandAndFirst.DevTests
 		public void WireV1GoldenMigratesOnlyWhenAuthorityIsEmpty()
 		{
 			byte[] bytes = Convert.FromBase64String(LegacyGolden);
-			Assert.AreEqual(992, bytes.Length);
+			ClassicAssert.AreEqual(992, bytes.Length);
 			KingdomCivicPracticeEnvelope legacy = KingdomCivicPracticeCodec.Decode(bytes);
-			Assert.IsFalse(legacy.IdentityBound);
-			Assert.AreEqual(1, legacy.SitePractices.Rows.Count);
-			Assert.AreEqual("taf:work:cistern",
+			ClassicAssert.IsFalse(legacy.IdentityBound);
+			ClassicAssert.AreEqual(1, legacy.SitePractices.Rows.Count);
+			ClassicAssert.AreEqual("taf:work:cistern",
 				legacy.SitePractices.Rows[0].Source.WorkReceiptId);
-			Assert.AreEqual(1, legacy.VocationServices.Rows.Count);
-			Assert.AreEqual("Ask for a route brief", legacy.VocationServices.Rows[0].Verb);
-			Assert.AreEqual(KingdomVocationServiceReceipt.CurrentVersion,
+			ClassicAssert.AreEqual(1, legacy.VocationServices.Rows.Count);
+			ClassicAssert.AreEqual("Ask for a route brief", legacy.VocationServices.Rows[0].Verb);
+			ClassicAssert.AreEqual(KingdomVocationServiceReceipt.CurrentVersion,
 				legacy.VocationServices.Rows[0].Version);
-			Assert.AreEqual(0, legacy.VocationServices.Rows[0].Request.InputUnits);
-			Assert.AreEqual(0, legacy.VocationServices.Rows[0].OutputUnits);
-			Assert.IsFalse(legacy.TryBindEmptyIdentity(Realm, out string failure));
+			ClassicAssert.AreEqual(0, legacy.VocationServices.Rows[0].Request.InputUnits);
+			ClassicAssert.AreEqual(0, legacy.VocationServices.Rows[0].OutputUnits);
+			ClassicAssert.IsFalse(legacy.TryBindEmptyIdentity(Realm, out string failure));
 			byte[] ingress = (byte[])bytes.Clone();
 			KingdomCivicPracticeEnvelope quarantined =
 				KingdomCivicPracticeStore.ReadForRealm(bytes, Realm, out failure);
-			Assert.IsTrue(quarantined.Quarantined);
+			ClassicAssert.IsTrue(quarantined.Quarantined);
 			CollectionAssert.AreEqual(ingress, bytes);
 			byte[] emptyV1 = Convert.FromBase64String(
 				"VEZTUAEAAAAwAAAAFAAAAFRGU1ABAAAAAAAAAAAAAAAAAAAAFAAAAFRGU1ABAAAAAAAAAAAAAAAAAAAA4jHwsfuc9LX/1cXX6xJRYtEJVELb9TQVng09DGPYx1w=");
 			KingdomCivicPracticeEnvelope migrated =
 				KingdomCivicPracticeStore.ReadForRealm(emptyV1, Realm, out failure);
-			Assert.IsNull(failure);
-			Assert.IsTrue(migrated.IdentityBound);
-			Assert.AreEqual(4,
+			ClassicAssert.IsNull(failure);
+			ClassicAssert.IsTrue(migrated.IdentityBound);
+			ClassicAssert.AreEqual(4,
 				BitConverter.ToInt32(KingdomCivicPracticeCodec.Encode(migrated), 4));
 		}
 
@@ -280,27 +281,27 @@ namespace ThousandAndFirst.DevTests
 				"taf:settlement:seat", "waystation", KingdomVocationServiceKind.RouteBrief,
 				KingdomVocationServiceAuthority.PolityRoute, "taf:source:waystation:1",
 				"exact source 1", "exact route result 1");
-			Assert.IsTrue(KingdomVocationServiceRules.TryBuildAvailableOffer(source,
+			ClassicAssert.IsTrue(KingdomVocationServiceRules.TryBuildAvailableOffer(source,
 				out KingdomVocationServiceOffer offer, out string failure), failure);
 			KingdomCivicPracticeEnvelope current = new KingdomCivicPracticeEnvelope();
-			Assert.IsTrue(current.TryBindEmptyIdentity(Realm, out failure), failure);
-			Assert.IsTrue(KingdomVocationServiceRules.TryPrepareRequest(
+			ClassicAssert.IsTrue(current.TryBindEmptyIdentity(Realm, out failure), failure);
+			ClassicAssert.IsTrue(KingdomVocationServiceRules.TryPrepareRequest(
 				current.VocationServices, offer, 10L,
 				out KingdomVocationServiceRequest request, out failure), failure);
-			Assert.IsTrue(KingdomVocationServiceRules.TryServe(current.VocationServices,
+			ClassicAssert.IsTrue(KingdomVocationServiceRules.TryServe(current.VocationServices,
 				0L, request, 10L, out KingdomVocationServiceReceipt _, out failure), failure);
 			byte[] frozen = Convert.FromBase64String(LegacyV2Golden);
-			Assert.AreEqual(578, frozen.Length);
+			ClassicAssert.AreEqual(578, frozen.Length);
 			CollectionAssert.AreEqual(frozen,
 				KingdomCivicPracticeCodec.EncodeLegacyV2ForTests(current));
 			KingdomCivicPracticeEnvelope migrated = KingdomCivicPracticeCodec.Decode(frozen);
-			Assert.IsTrue(migrated.IdentityBound);
-			Assert.AreEqual(Realm, migrated.RealmId);
-			Assert.AreEqual(KingdomVocationServiceReceipt.CurrentVersion,
+			ClassicAssert.IsTrue(migrated.IdentityBound);
+			ClassicAssert.AreEqual(Realm, migrated.RealmId);
+			ClassicAssert.AreEqual(KingdomVocationServiceReceipt.CurrentVersion,
 				migrated.VocationServices.Rows[0].Version);
-			Assert.AreEqual(0, migrated.VocationServices.Rows[0].Request.InputUnits);
-			Assert.AreEqual(0, migrated.VocationServices.Rows[0].OutputUnits);
-			Assert.AreEqual(4, BitConverter.ToInt32(
+			ClassicAssert.AreEqual(0, migrated.VocationServices.Rows[0].Request.InputUnits);
+			ClassicAssert.AreEqual(0, migrated.VocationServices.Rows[0].OutputUnits);
+			ClassicAssert.AreEqual(4, BitConverter.ToInt32(
 				KingdomCivicPracticeCodec.Encode(migrated), 4));
 		}
 
@@ -311,27 +312,27 @@ namespace ThousandAndFirst.DevTests
 				"taf:settlement:seat", "waystation", KingdomVocationServiceKind.RouteBrief,
 				KingdomVocationServiceAuthority.PolityRoute, "taf:source:prior:1",
 				"exact prior route", "current-only route endpoints and stage");
-			Assert.IsTrue(KingdomVocationServiceRules.TryBuildAvailableOffer(source,
+			ClassicAssert.IsTrue(KingdomVocationServiceRules.TryBuildAvailableOffer(source,
 				out KingdomVocationServiceOffer offer, out string failure), failure);
 			KingdomCivicPracticeEnvelope current = new KingdomCivicPracticeEnvelope();
-			Assert.IsTrue(current.TryBindEmptyIdentity(Realm, out failure), failure);
-			Assert.IsTrue(KingdomVocationServiceRules.TryPrepareRequest(
+			ClassicAssert.IsTrue(current.TryBindEmptyIdentity(Realm, out failure), failure);
+			ClassicAssert.IsTrue(KingdomVocationServiceRules.TryPrepareRequest(
 				current.VocationServices, offer, 17L,
 				out KingdomVocationServiceRequest request, out failure), failure);
-			Assert.IsTrue(KingdomVocationServiceRules.TryServe(current.VocationServices,
+			ClassicAssert.IsTrue(KingdomVocationServiceRules.TryServe(current.VocationServices,
 				0L, request, 19L, out KingdomVocationServiceReceipt _, out failure), failure);
 
 			byte[] prior = KingdomCivicPracticeCodec.EncodePriorV3ForTests(current);
-			Assert.AreEqual(3, BitConverter.ToInt32(prior, 4));
+			ClassicAssert.AreEqual(3, BitConverter.ToInt32(prior, 4));
 			KingdomCivicPracticeEnvelope migrated = KingdomCivicPracticeCodec.Decode(prior);
-			Assert.AreEqual(1, migrated.VocationServices.Rows.Count);
+			ClassicAssert.AreEqual(1, migrated.VocationServices.Rows.Count);
 			KingdomVocationServiceReceipt row = migrated.VocationServices.Rows[0];
-			Assert.AreEqual(KingdomVocationServiceReceipt.CurrentVersion, row.Version);
-			Assert.AreEqual("taf:source:prior:1", row.Request.SourceReceiptId);
-			Assert.AreEqual(19L, row.CompletedTick);
+			ClassicAssert.AreEqual(KingdomVocationServiceReceipt.CurrentVersion, row.Version);
+			ClassicAssert.AreEqual("taf:source:prior:1", row.Request.SourceReceiptId);
+			ClassicAssert.AreEqual(19L, row.CompletedTick);
 			StringAssert.Contains("Legacy route brief", row.Request.ResultText);
 			StringAssert.Contains(row.Request.ResultText, row.OutputText);
-			Assert.AreEqual(4, BitConverter.ToInt32(
+			ClassicAssert.AreEqual(4, BitConverter.ToInt32(
 				KingdomCivicPracticeCodec.Encode(migrated), 4));
 		}
 
@@ -345,25 +346,25 @@ namespace ThousandAndFirst.DevTests
 			AuthorityPort port = new AuthorityPort(authority);
 			KingdomSitePracticeChoiceView view = View(Site());
 
-			Assert.IsTrue(KingdomCivicPracticeTransactions.TryChoose(port, Realm, view, 1,
+			ClassicAssert.IsTrue(KingdomCivicPracticeTransactions.TryChoose(port, Realm, view, 1,
 				20L, out KingdomCivicPracticeCommitResult result, out string failure), failure);
-			Assert.IsTrue(result.Changed);
-			Assert.AreEqual(1, port.CommitCalls);
+			ClassicAssert.IsTrue(result.Changed);
+			ClassicAssert.AreEqual(1, port.CommitCalls);
 			long outerRevision = authority.Revision;
 			byte[] afterBytes = SectionBytes(authority, Practice);
 			KingdomCivicPracticeEnvelope after = KingdomCivicPracticeCodec.Decode(afterBytes);
-			Assert.AreEqual(1, after.SitePractices.Rows.Count);
-			Assert.AreEqual("waystation", after.SitePractices.Rows[0].Source.Vocation);
-			Assert.AreEqual(1, after.VocationServices.Rows.Count);
+			ClassicAssert.AreEqual(1, after.SitePractices.Rows.Count);
+			ClassicAssert.AreEqual("waystation", after.SitePractices.Rows[0].Source.Vocation);
+			ClassicAssert.AreEqual(1, after.VocationServices.Rows.Count);
 			CollectionAssert.AreEqual(serviceBytes, ExtractServiceBytes(afterBytes));
 
-			Assert.IsTrue(KingdomCivicPracticeTransactions.TryChoose(port, Realm, view, 1,
+			ClassicAssert.IsTrue(KingdomCivicPracticeTransactions.TryChoose(port, Realm, view, 1,
 				200L, out KingdomCivicPracticeCommitResult retry, out failure), failure);
-			Assert.IsFalse(retry.Changed);
-			Assert.AreEqual(result.PracticeId, retry.PracticeId);
-			Assert.AreEqual(result.ChosenTick, retry.ChosenTick);
-			Assert.AreEqual(outerRevision, authority.Revision);
-			Assert.AreEqual(1, port.CommitCalls);
+			ClassicAssert.IsFalse(retry.Changed);
+			ClassicAssert.AreEqual(result.PracticeId, retry.PracticeId);
+			ClassicAssert.AreEqual(result.ChosenTick, retry.ChosenTick);
+			ClassicAssert.AreEqual(outerRevision, authority.Revision);
+			ClassicAssert.AreEqual(1, port.CommitCalls);
 		}
 
 		[Test]
@@ -374,37 +375,37 @@ namespace ThousandAndFirst.DevTests
 			string openedDigest = view.EvidenceDigest;
 			opened.WorkText = "mutated caller evidence";
 			opened.Digest = KingdomSitePracticeRules.SnapshotDigest(opened);
-			Assert.AreEqual(openedDigest, view.EvidenceDigest);
+			ClassicAssert.AreEqual(openedDigest, view.EvidenceDigest);
 			KingdomSiteEvidenceSnapshot changed = Site();
 			changed.WorkText = "a different exact completed work";
 			changed.Digest = KingdomSitePracticeRules.SnapshotDigest(changed);
-			Assert.IsFalse(view.Matches(Realm, Preview(changed), out string failure));
+			ClassicAssert.IsFalse(view.Matches(Realm, Preview(changed), out string failure));
 
 			KingdomCivicMemoryAuthority untouched = Authority();
 			AuthorityPort guardPort = new AuthorityPort(untouched);
-			Assert.IsFalse(KingdomCivicPracticeTransactions.TryChoose(guardPort, Realm,
+			ClassicAssert.IsFalse(KingdomCivicPracticeTransactions.TryChoose(guardPort, Realm,
 				view, 3, 20L, out KingdomCivicPracticeCommitResult _, out failure));
-			Assert.AreEqual(0, guardPort.ReadCalls);
+			ClassicAssert.AreEqual(0, guardPort.ReadCalls);
 
 			KingdomCivicMemoryAuthority moved = Authority();
 			StalePort stale = new StalePort(moved);
-			Assert.IsFalse(KingdomCivicPracticeTransactions.TryChoose(stale, Realm, view,
+			ClassicAssert.IsFalse(KingdomCivicPracticeTransactions.TryChoose(stale, Realm, view,
 				1, 20L, out KingdomCivicPracticeCommitResult _, out failure));
 			StringAssert.Contains("revision", failure);
-			Assert.IsNull(moved.Read().Section(Practice));
+			ClassicAssert.IsNull(moved.Read().Section(Practice));
 		}
 
 		[Test]
 		public void D1FailsClosedForCapacityWrongRealmNestedFutureQuarantineAndFutureOuter()
 		{
 			KingdomCivicPracticeEnvelope full = new KingdomCivicPracticeEnvelope();
-			Assert.IsTrue(full.TryBindEmptyIdentity(Realm, out string failure), failure);
+			ClassicAssert.IsTrue(full.TryBindEmptyIdentity(Realm, out string failure), failure);
 			for (int i = 0; i < KingdomSitePracticeRules.MaxRows; i++)
 			{
 				KingdomSiteEvidenceSnapshot row = Site();
 				row.SettlementId = "taf:settlement:full:" + i;
 				row.Digest = KingdomSitePracticeRules.SnapshotDigest(row);
-				Assert.IsTrue(KingdomSitePracticeRules.TryRead(full.SitePractices,
+				ClassicAssert.IsTrue(KingdomSitePracticeRules.TryRead(full.SitePractices,
 					full.SitePractices.Revision, row, 1, 20L,
 					out KingdomSitePracticeReceipt _, out failure), failure);
 			}
@@ -412,7 +413,7 @@ namespace ThousandAndFirst.DevTests
 				View(Site()), "capacity");
 
 			KingdomCivicPracticeEnvelope foreign = new KingdomCivicPracticeEnvelope();
-			Assert.IsTrue(foreign.TryBindEmptyIdentity(OtherRealm, out failure), failure);
+			ClassicAssert.IsTrue(foreign.TryBindEmptyIdentity(OtherRealm, out failure), failure);
 			AssertRefusedUnchanged(AuthorityHolding(KingdomCivicPracticeCodec.Encode(foreign)),
 				View(Site()), "realm");
 
@@ -433,23 +434,23 @@ namespace ThousandAndFirst.DevTests
 
 			KingdomCivicMemoryAuthority futureOuter = Authority();
 			futureOuter.AdoptSaved(FutureOuterBytes());
-			Assert.IsTrue(futureOuter.IsFutureOuter);
+			ClassicAssert.IsTrue(futureOuter.IsFutureOuter);
 			AssertRefusedUnchanged(futureOuter, View(Site()), "read-only");
 		}
 
 		[Test]
 		public void ExactCapArithmeticStillMatchesBothLegacyBooks()
 		{
-			Assert.AreEqual(20 + 8 * (4 + 4096),
+			ClassicAssert.AreEqual(20 + 8 * (4 + 4096),
 				KingdomCivicPracticeCodec.MaxSiteBookBytes);
-			Assert.AreEqual(20 + 48 * (4 + 4096),
+			ClassicAssert.AreEqual(20 + 48 * (4 + 4096),
 				KingdomCivicPracticeCodec.MaxServiceBookBytes);
-			Assert.AreEqual(229774, KingdomCivicPracticeCodec.MaxEnvelopeBytes);
-			Assert.AreEqual(KingdomCivicPracticeCodec.MaxEnvelopeBytes,
+			ClassicAssert.AreEqual(229774, KingdomCivicPracticeCodec.MaxEnvelopeBytes);
+			ClassicAssert.AreEqual(KingdomCivicPracticeCodec.MaxEnvelopeBytes,
 				KingdomCivicMemoryLimits.MaxCivicPracticeBytes);
-			Assert.AreEqual(839860, KingdomCivicMemoryLimits.MaxCumulativePayloadBytes);
-			Assert.AreEqual(840048, KingdomCivicMemoryLimits.MaxEnvelopeBytes);
-			Assert.LessOrEqual(KingdomCivicPracticeCodec.Encode(
+			ClassicAssert.AreEqual(839860, KingdomCivicMemoryLimits.MaxCumulativePayloadBytes);
+			ClassicAssert.AreEqual(840048, KingdomCivicMemoryLimits.MaxEnvelopeBytes);
+			ClassicAssert.LessOrEqual(KingdomCivicPracticeCodec.Encode(
 				BoundLegacyEnvelope(Realm)).Length,
 				KingdomCivicPracticeCodec.MaxEnvelopeBytes);
 		}
@@ -460,19 +461,19 @@ namespace ThousandAndFirst.DevTests
 			long revision = authority.Revision;
 			byte[] before = AuthorityEvidence(authority);
 			AuthorityPort port = new AuthorityPort(authority);
-			Assert.IsFalse(KingdomCivicPracticeTransactions.TryChoose(port, Realm, view, 1,
+			ClassicAssert.IsFalse(KingdomCivicPracticeTransactions.TryChoose(port, Realm, view, 1,
 				20L, out KingdomCivicPracticeCommitResult _, out string failure));
-			Assert.IsNotNull(failure);
+			ClassicAssert.IsNotNull(failure);
 			StringAssert.Contains(expectedFailure, failure.ToLowerInvariant());
-			Assert.AreEqual(revision, authority.Revision);
+			ClassicAssert.AreEqual(revision, authority.Revision);
 			CollectionAssert.AreEqual(before, AuthorityEvidence(authority));
-			Assert.AreEqual(0, port.CommitCalls);
+			ClassicAssert.AreEqual(0, port.CommitCalls);
 		}
 
 		private static KingdomSitePracticeChoiceView View(
 			KingdomSiteEvidenceSnapshot snapshot)
 		{
-			Assert.IsTrue(KingdomSitePracticeChoiceView.TryCreate(Realm, Preview(snapshot),
+			ClassicAssert.IsTrue(KingdomSitePracticeChoiceView.TryCreate(Realm, Preview(snapshot),
 				out KingdomSitePracticeChoiceView view, out string failure), failure);
 			return view;
 		}
@@ -480,7 +481,7 @@ namespace ThousandAndFirst.DevTests
 		private static KingdomSitePracticePreview Preview(
 			KingdomSiteEvidenceSnapshot snapshot)
 		{
-			Assert.IsTrue(KingdomSitePracticeRules.TryPreview(snapshot,
+			ClassicAssert.IsTrue(KingdomSitePracticeRules.TryPreview(snapshot,
 				out string first, out string second, out string failure), failure);
 			return new KingdomSitePracticePreview
 			{
@@ -543,7 +544,7 @@ namespace ThousandAndFirst.DevTests
 			using (BinaryReader reader = new BinaryReader(stream))
 			{
 				reader.ReadInt32();
-				Assert.AreEqual(KingdomCivicPracticeCodec.CurrentWireVersion,
+				ClassicAssert.AreEqual(KingdomCivicPracticeCodec.CurrentWireVersion,
 					reader.ReadInt32());
 				int payloadLength = reader.ReadInt32();
 				byte[] payload = reader.ReadBytes(payloadLength);
@@ -574,7 +575,7 @@ namespace ThousandAndFirst.DevTests
 		private static KingdomCivicMemoryAuthority AuthorityHolding(byte[] practiceBytes)
 		{
 			KingdomCivicMemoryAuthority authority = Authority();
-			Assert.IsTrue(authority.TryCommit(One(Practice, practiceBytes), 0L,
+			ClassicAssert.IsTrue(authority.TryCommit(One(Practice, practiceBytes), 0L,
 				out string failure), failure);
 			return authority;
 		}

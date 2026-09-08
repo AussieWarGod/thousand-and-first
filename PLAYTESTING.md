@@ -97,6 +97,11 @@ without spending it. This slower route is useful for economy and compatibility t
 - Food storage or crops, one named citizen's home/work relationship, and one road connection.
 - A second city, trade route, rival cohort, inherited realm, or hosted arcology only after the
   small founding loop is stable.
+- Standing in a claimed zone at night: the settlement should read as lit ground with dark
+  building interiors, and the minimap should hold the whole zone. Walk into an unclaimed
+  neighbour and confirm ordinary darkness. The checkbox is
+  "your claimed ground is lit while you stand on it" (`r_TAF_OptionClaimedGroundLight`, on by
+  default); switching it off should darken the zone at once. Explored floor stays explored.
 
 [TESTING.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/TESTING.md) is the
 exhaustive maintainer protocol. Alpha testers may submit a

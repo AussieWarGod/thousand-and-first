@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -16,35 +17,35 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomNamedCookReceipt first = Prepare(1, 17, "Ari", "body-17");
 			KingdomNamedCookReceipt second = Prepare(1, 17, "Ari", "body-17");
-			Assert.AreEqual(KingdomNamedCookPhase.Prepared, first.Phase);
-			Assert.AreEqual(first.RecipeId, second.RecipeId);
-			Assert.AreEqual(first.EffectId, second.EffectId);
-			Assert.AreEqual(first.GraphFingerprint, second.GraphFingerprint);
-			Assert.AreEqual("salt-crack of New Grit Gate", first.RecipeDisplayName);
-			Assert.IsTrue(Guid.TryParseExact(first.EffectId, "D", out _));
+			ClassicAssert.AreEqual(KingdomNamedCookPhase.Prepared, first.Phase);
+			ClassicAssert.AreEqual(first.RecipeId, second.RecipeId);
+			ClassicAssert.AreEqual(first.EffectId, second.EffectId);
+			ClassicAssert.AreEqual(first.GraphFingerprint, second.GraphFingerprint);
+			ClassicAssert.AreEqual("salt-crack of New Grit Gate", first.RecipeDisplayName);
+			ClassicAssert.IsTrue(Guid.TryParseExact(first.EffectId, "D", out _));
 			AssertValid(first);
 		}
 
 		[Test]
 		public void GenerationAndResidentSeparateAppointmentIdentity()
 		{
-			Assert.AreNotEqual(Prepare(1, 17, "Ari", "body-17").RecipeId,
+			ClassicAssert.AreNotEqual(Prepare(1, 17, "Ari", "body-17").RecipeId,
 				Prepare(2, 17, "Ari", "body-17").RecipeId);
-			Assert.AreNotEqual(Prepare(1, 17, "Ari", "body-17").RecipeId,
+			ClassicAssert.AreNotEqual(Prepare(1, 17, "Ari", "body-17").RecipeId,
 				Prepare(1, 18, "Ula", "body-18").RecipeId);
 		}
 
 		[Test]
 		public void CandidateLawRefusesExistingVanillaRecipeBeforeAppointment()
 		{
-			Assert.AreEqual(KingdomNamedCookVerdict.Allowed, Judge());
-			Assert.AreEqual(KingdomNamedCookVerdict.NativeRecipeAlreadyPresent,
+			ClassicAssert.AreEqual(KingdomNamedCookVerdict.Allowed, Judge());
+			ClassicAssert.AreEqual(KingdomNamedCookVerdict.NativeRecipeAlreadyPresent,
 				Judge(shares: true));
-			Assert.AreEqual(KingdomNamedCookVerdict.NativeRecipeAlreadyPresent,
+			ClassicAssert.AreEqual(KingdomNamedCookVerdict.NativeRecipeAlreadyPresent,
 				Judge(teaches: true));
-			Assert.AreEqual(KingdomNamedCookVerdict.ForeignCookMarker,
+			ClassicAssert.AreEqual(KingdomNamedCookVerdict.ForeignCookMarker,
 				Judge(marker: true));
-			Assert.AreEqual(KingdomNamedCookVerdict.OpenReceipt,
+			ClassicAssert.AreEqual(KingdomNamedCookVerdict.OpenReceipt,
 				Judge(open: true));
 		}
 
@@ -55,12 +56,12 @@ namespace ThousandAndFirst.Tests
 			KingdomNamedCookReceipt applied = KingdomNamedCookRules.Applied(prepared);
 			KingdomNamedCookReceipt releasing = KingdomNamedCookRules.BeginRelease(applied);
 			KingdomNamedCookReceipt released = KingdomNamedCookRules.Released(releasing, 900L);
-			Assert.AreEqual(KingdomNamedCookPhase.Prepared, prepared.Phase);
-			Assert.AreEqual(KingdomNamedCookPhase.Applied, applied.Phase);
-			Assert.AreEqual(KingdomNamedCookPhase.ReleasePrepared, releasing.Phase);
-			Assert.AreEqual(KingdomNamedCookPhase.Released, released.Phase);
-			Assert.AreEqual(900L, released.ReleasedTick);
-			Assert.IsNull(KingdomNamedCookRules.Released(releasing, 99L));
+			ClassicAssert.AreEqual(KingdomNamedCookPhase.Prepared, prepared.Phase);
+			ClassicAssert.AreEqual(KingdomNamedCookPhase.Applied, applied.Phase);
+			ClassicAssert.AreEqual(KingdomNamedCookPhase.ReleasePrepared, releasing.Phase);
+			ClassicAssert.AreEqual(KingdomNamedCookPhase.Released, released.Phase);
+			ClassicAssert.AreEqual(900L, released.ReleasedTick);
+			ClassicAssert.IsNull(KingdomNamedCookRules.Released(releasing, 99L));
 			AssertValid(released);
 		}
 
@@ -79,21 +80,21 @@ namespace ThousandAndFirst.Tests
 			{
 				KingdomNamedCookReceipt applied = KingdomNamedCookRules.Applied(
 					Prepare(i + 1, 17 + i, "Cook " + i, "body-" + i));
-				Assert.AreEqual(KingdomNamedCookServiceState.Available,
+				ClassicAssert.AreEqual(KingdomNamedCookServiceState.Available,
 					KingdomNamedCookRules.ServiceState(applied));
 				KingdomNamedCookReceipt prepared = KingdomNamedCookRules.BeginVacancy(
 					applied, causes[i]);
-				Assert.IsNotNull(prepared, causes[i].ToString());
-				Assert.AreEqual(causes[i], KingdomNamedCookRules.VacancyCause(prepared.Phase));
-				Assert.AreEqual(KingdomNamedCookServiceState.RecoveryPending,
+				ClassicAssert.IsNotNull(prepared, causes[i].ToString());
+				ClassicAssert.AreEqual(causes[i], KingdomNamedCookRules.VacancyCause(prepared.Phase));
+				ClassicAssert.AreEqual(KingdomNamedCookServiceState.RecoveryPending,
 					KingdomNamedCookRules.ServiceState(prepared));
 				KingdomNamedCookReceipt vacant = KingdomNamedCookRules.CompleteVacancy(
 					prepared, 900L + i);
-				Assert.IsNotNull(vacant, causes[i].ToString());
-				Assert.AreEqual(causes[i], KingdomNamedCookRules.VacancyCause(vacant.Phase));
-				Assert.AreEqual(KingdomNamedCookServiceState.Vacant,
+				ClassicAssert.IsNotNull(vacant, causes[i].ToString());
+				ClassicAssert.AreEqual(causes[i], KingdomNamedCookRules.VacancyCause(vacant.Phase));
+				ClassicAssert.AreEqual(KingdomNamedCookServiceState.Vacant,
 					KingdomNamedCookRules.ServiceState(vacant));
-				Assert.IsNotEmpty(KingdomNamedCookRules.VacancyClause(vacant));
+				ClassicAssert.IsNotEmpty(KingdomNamedCookRules.VacancyClause(vacant));
 				AssertValid(vacant);
 			}
 		}
@@ -107,17 +108,17 @@ namespace ThousandAndFirst.Tests
 				KingdomNamedCookVacancyCause.Death);
 			KingdomNamedCookReceipt retry = KingdomNamedCookRules.BeginVacancy(death,
 				KingdomNamedCookVacancyCause.Death);
-			Assert.AreNotSame(death, retry);
-			Assert.AreEqual(death.Phase, retry.Phase);
-			Assert.IsNull(KingdomNamedCookRules.BeginVacancy(death,
+			ClassicAssert.AreNotSame(death, retry);
+			ClassicAssert.AreEqual(death.Phase, retry.Phase);
+			ClassicAssert.IsNull(KingdomNamedCookRules.BeginVacancy(death,
 				KingdomNamedCookVacancyCause.Departure));
-			Assert.IsNull(KingdomNamedCookRules.CompleteVacancy(death, 99L));
+			ClassicAssert.IsNull(KingdomNamedCookRules.CompleteVacancy(death, 99L));
 			KingdomNamedCookReceipt departure = KingdomNamedCookRules.BeginVacancy(applied,
 				KingdomNamedCookVacancyCause.Departure);
 			KingdomNamedCookReceipt restored = KingdomNamedCookRules.CancelVacancy(departure,
 				KingdomNamedCookVacancyCause.Departure);
-			Assert.AreEqual(KingdomNamedCookPhase.Applied, restored.Phase);
-			Assert.IsNull(KingdomNamedCookRules.CancelVacancy(departure,
+			ClassicAssert.AreEqual(KingdomNamedCookPhase.Applied, restored.Phase);
+			ClassicAssert.IsNull(KingdomNamedCookRules.CancelVacancy(departure,
 				KingdomNamedCookVacancyCause.Death));
 		}
 
@@ -129,7 +130,7 @@ namespace ThousandAndFirst.Tests
 			AssertInvalid(receipt);
 			KingdomNamedCookReceipt quarantined = KingdomNamedCookRules.Quarantined(
 				receipt, "external graph diverged");
-			Assert.AreEqual(KingdomNamedCookPhase.Quarantined, quarantined.Phase);
+			ClassicAssert.AreEqual(KingdomNamedCookPhase.Quarantined, quarantined.Phase);
 			AssertValid(quarantined);
 		}
 
@@ -182,8 +183,8 @@ namespace ThousandAndFirst.Tests
 			int deathVacancy = deathRuntime.IndexOf("Roles(f, r, body)", StringComparison.Ordinal);
 			int deathAccounts = deathRuntime.IndexOf("Accounts(f, index, ref r)", StringComparison.Ordinal);
 			int clear = deathRuntime.IndexOf("ClearCountedProperties(f, r, body)", StringComparison.Ordinal);
-			Assert.Greater(deathWrite, 0); Assert.Greater(deathVacancy, deathWrite);
-			Assert.Greater(deathAccounts, deathVacancy); Assert.Greater(clear, deathAccounts);
+			ClassicAssert.Greater(deathWrite, 0); ClassicAssert.Greater(deathVacancy, deathWrite);
+			ClassicAssert.Greater(deathAccounts, deathVacancy); ClassicAssert.Greater(clear, deathAccounts);
 			StringAssert.Contains("KingdomResidentDeathRuntime.TryWitness", lifecycle);
 			StringAssert.Contains("KingdomResidentDeathRuntime.ReadCook(death.CookBefore)", lifecycle);
 			StringAssert.Contains("KingdomResidentDeathRuntime.CookWire(original) != death.CookBefore", lifecycle);
@@ -191,8 +192,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomNamedCookVacancyCause.Departure", effects);
 			int prepare = preparation.IndexOf("PrepareCookLoss(System, Body",
 				StringComparison.Ordinal);
-			Assert.Greater(prepare, 0);
-			Assert.Less(begin.IndexOf("KingdomResidentDeparturePreparation.TryPrepare",
+			ClassicAssert.Greater(prepare, 0);
+			ClassicAssert.Less(begin.IndexOf("KingdomResidentDeparturePreparation.TryPrepare",
 				StringComparison.Ordinal), begin.IndexOf("TryContinue(System, Body",
 				StringComparison.Ordinal));
 			StringAssert.Contains("CancelPreparedCookLoss(System, Body, PriorCook", preparation);
@@ -225,15 +226,15 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("public ThousandAndFirst.KingdomNamedCookReceipt NamedCook", book);
 			StringAssert.Contains("FinalizeCopy", marker);
 			StringAssert.Contains("ManageNamedCook = 37", menu);
-			Assert.AreEqual(37, (int)KingdomCharterAction.ManageNamedCook);
+			ClassicAssert.AreEqual(37, (int)KingdomCharterAction.ManageNamedCook);
 		}
 
 		[Test]
 		public void PhaseEnumIsAppendOnly()
 		{
-			Assert.AreEqual("0,1,2,3,4,5,6,7,8,9,10,11,12,13",
+			ClassicAssert.AreEqual("0,1,2,3,4,5,6,7,8,9,10,11,12,13",
 				JoinValues(typeof(KingdomNamedCookPhase)));
-			Assert.AreEqual("0,1,2,3,4,5", JoinValues(typeof(KingdomNamedCookVacancyCause)));
+			ClassicAssert.AreEqual("0,1,2,3,4,5", JoinValues(typeof(KingdomNamedCookVacancyCause)));
 		}
 
 		private static KingdomNamedCookReceipt Prepare(int generation, int resident,
@@ -241,7 +242,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomNamedCookReceipt receipt;
 			string failure;
-			Assert.IsTrue(KingdomNamedCookRules.TryPrepare(Realm, City,
+			ClassicAssert.IsTrue(KingdomNamedCookRules.TryPrepare(Realm, City,
 				"  New   Grit Gate ", resident, name, body, generation, 100L,
 				out receipt, out failure), failure);
 			return receipt;
@@ -257,14 +258,14 @@ namespace ThousandAndFirst.Tests
 		private static void AssertValid(KingdomNamedCookReceipt receipt)
 		{
 			string failure;
-			Assert.IsTrue(KingdomNamedCookRules.Validate(receipt, out failure), failure);
+			ClassicAssert.IsTrue(KingdomNamedCookRules.Validate(receipt, out failure), failure);
 		}
 
 		private static void AssertInvalid(KingdomNamedCookReceipt receipt)
 		{
 			string failure;
-			Assert.IsFalse(KingdomNamedCookRules.Validate(receipt, out failure));
-			Assert.IsNotEmpty(failure);
+			ClassicAssert.IsFalse(KingdomNamedCookRules.Validate(receipt, out failure));
+			ClassicAssert.IsNotEmpty(failure);
 		}
 
 		private static string JoinValues(Type type)

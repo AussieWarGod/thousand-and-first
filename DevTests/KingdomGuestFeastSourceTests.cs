@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -100,9 +101,9 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < PureFiles.Length; i++)
 			{
 				int lines = TestMain.ReadRepositoryText(PureFiles[i]).Split('\n').Length;
-				Assert.Less(lines, 300, PureFiles[i] + " has " + lines + " lines");
+				ClassicAssert.Less(lines, 300, PureFiles[i] + " has " + lines + " lines");
 			}
-			Assert.Less(TestMain.ReadRepositoryText(
+			ClassicAssert.Less(TestMain.ReadRepositoryText(
 				"Simulation/City/KingdomPhysicalHappenings.07.CommunalRite.cs").Split('\n').Length,
 				300);
 		}

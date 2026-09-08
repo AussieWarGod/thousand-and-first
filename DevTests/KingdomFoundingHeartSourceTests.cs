@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -26,9 +27,9 @@ namespace ThousandAndFirst.Tests
 		private static string Slice(string SourceText, string Start, string End)
 		{
 			int first = SourceText.IndexOf(Start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(first, 0, Start);
+			ClassicAssert.GreaterOrEqual(first, 0, Start);
 			int last = SourceText.IndexOf(End, first + Start.Length, StringComparison.Ordinal);
-			Assert.Greater(last, first, End);
+			ClassicAssert.Greater(last, first, End);
 			return SourceText.Substring(first, last - first);
 		}
 
@@ -38,7 +39,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < Terms.Length; i++)
 			{
 				int found = SourceText.IndexOf(Terms[i], cursor, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(found, 0, Terms[i]);
+				ClassicAssert.GreaterOrEqual(found, 0, Terms[i]);
 				cursor = found + Terms[i].Length;
 			}
 		}
@@ -217,7 +218,7 @@ namespace ThousandAndFirst.Tests
 				"TryReadFoundingHeartWorkAuthority(zone, parent", StringComparison.Ordinal);
 			int finalHeartProof = labour.LastIndexOf(
 				"TryReadFoundingHeartWorkAuthority(zone, parent", StringComparison.Ordinal);
-			Assert.Greater(finalHeartProof, firstHeartProof,
+			ClassicAssert.Greater(finalHeartProof, firstHeartProof,
 				"each physical stage must reprove frozen heart authority before cursor commit");
 			StringAssert.Contains("Works.StageApplied == priorStage", labour);
 			string finish = Source("Growth/KingdomPlot2.30.Finish.cs");
@@ -463,7 +464,7 @@ namespace ThousandAndFirst.Tests
 				"Growth/KingdomPlot2.33b.LegacyEffects.cs" })
 			{
 				int lines = Source(path).Split('\n').Length;
-				Assert.Less(lines, 300, path + " has " + lines + " physical lines");
+				ClassicAssert.Less(lines, 300, path + " has " + lines + " physical lines");
 			}
 		}
 		/// <summary>The founding heart binds its immutable basin by anchor ROLE. The draft compiler

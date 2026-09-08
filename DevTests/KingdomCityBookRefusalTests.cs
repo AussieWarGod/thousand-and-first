@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
@@ -21,13 +22,13 @@ namespace ThousandAndFirst.Tests
             KingdomCityFault fault = KingdomCityFault.None;
             bool accepted = true;
             Assert.DoesNotThrow(() => accepted = book.TryRead(out state, out fault));
-            Assert.IsFalse(accepted, "Malformed durable storage must not project a healthy city.");
-            Assert.IsNull(state);
-            Assert.AreNotEqual(KingdomCityFault.None, fault);
-            Assert.AreEqual("broken", book.SubsidenceModel);
-            Assert.IsTrue(book.SubsidenceReadFailed);
-            Assert.AreEqual(ragged ? 1 : 0, book.WorkIds.Count);
-            Assert.AreEqual(0, book.WorkAnchorsX.Count);
+            ClassicAssert.IsFalse(accepted, "Malformed durable storage must not project a healthy city.");
+            ClassicAssert.IsNull(state);
+            ClassicAssert.AreNotEqual(KingdomCityFault.None, fault);
+            ClassicAssert.AreEqual("broken", book.SubsidenceModel);
+            ClassicAssert.IsTrue(book.SubsidenceReadFailed);
+            ClassicAssert.AreEqual(ragged ? 1 : 0, book.WorkIds.Count);
+            ClassicAssert.AreEqual(0, book.WorkAnchorsX.Count);
         }
 
         [TestCase(BrinkKind.Roof)]
@@ -42,15 +43,15 @@ namespace ThousandAndFirst.Tests
             int channel = -1;
             Assert.DoesNotThrow(() => accepted = book.TryReadBrink(1, kind,
                 out stands, out reached, out warned, out toward, out channel));
-            Assert.IsFalse(accepted);
-            Assert.IsFalse(stands);
-            Assert.AreEqual(0, reached);
-            Assert.AreEqual(0, warned);
-            Assert.IsNull(toward);
-            Assert.AreEqual(0, channel);
-            Assert.AreEqual(1, book.ResidentIds.Count);
-            Assert.AreEqual(0, book.ResidentRoofStanding.Count);
-            Assert.AreEqual(0, book.ResidentCreedStanding.Count);
+            ClassicAssert.IsFalse(accepted);
+            ClassicAssert.IsFalse(stands);
+            ClassicAssert.AreEqual(0, reached);
+            ClassicAssert.AreEqual(0, warned);
+            ClassicAssert.IsNull(toward);
+            ClassicAssert.AreEqual(0, channel);
+            ClassicAssert.AreEqual(1, book.ResidentIds.Count);
+            ClassicAssert.AreEqual(0, book.ResidentRoofStanding.Count);
+            ClassicAssert.AreEqual(0, book.ResidentCreedStanding.Count);
         }
 
         [TestCase(BrinkKind.Roof)]
@@ -61,11 +62,11 @@ namespace ThousandAndFirst.Tests
             book.ResidentIds.Add(1);
             bool accepted = true;
             Assert.DoesNotThrow(() => accepted = book.TryWriteBrink(1, kind, true, 10, 20, "Mechanimists", 1));
-            Assert.IsFalse(accepted);
-            Assert.AreEqual("broken", book.SubsidenceModel);
-            Assert.AreEqual(1, book.ResidentIds.Count);
-            Assert.AreEqual(0, book.ResidentRoofStanding.Count);
-            Assert.AreEqual(0, book.ResidentCreedStanding.Count);
+            ClassicAssert.IsFalse(accepted);
+            ClassicAssert.AreEqual("broken", book.SubsidenceModel);
+            ClassicAssert.AreEqual(1, book.ResidentIds.Count);
+            ClassicAssert.AreEqual(0, book.ResidentRoofStanding.Count);
+            ClassicAssert.AreEqual(0, book.ResidentCreedStanding.Count);
         }
 
         [Test]
@@ -74,10 +75,10 @@ namespace ThousandAndFirst.Tests
             KingdomCityBook book = new KingdomCityBook { SettlementId = "taf:city:loading", SubsidenceReadFailed = true };
             KingdomCityState state;
             KingdomCityFault fault;
-            Assert.IsTrue(book.TryReadExact(out state, out fault));
-            Assert.IsNotNull(state);
-            Assert.AreEqual(KingdomCityFault.None, fault);
-            Assert.IsTrue(book.SubsidenceReadFailed);
+            ClassicAssert.IsTrue(book.TryReadExact(out state, out fault));
+            ClassicAssert.IsNotNull(state);
+            ClassicAssert.AreEqual(KingdomCityFault.None, fault);
+            ClassicAssert.IsTrue(book.SubsidenceReadFailed);
         }
     }
 }

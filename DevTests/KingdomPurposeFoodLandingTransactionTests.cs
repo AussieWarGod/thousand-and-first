@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -14,25 +15,25 @@ namespace ThousandAndFirst.Tests
 			KingdomPurposeLandingTransactionState before = Retirement(
 				KingdomPurposePairPhase.CargoAwaitingConsumption,
 				KingdomPurposeLandingCargoRecordShape.WholeCurrent, 0);
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.SemanticCasRefused,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.SemanticCasRefused,
 				KingdomPurposePortfolioRules.DriveLandingRetirement(before, false,
 					out KingdomPurposeLandingTransactionState waiting));
-			Assert.AreEqual(before.PairPhase, waiting.PairPhase);
-			Assert.AreEqual(before.PairRevision, waiting.PairRevision);
-			Assert.IsFalse(waiting.RootPresent);
-			Assert.AreEqual(0, waiting.ExactServingMarks);
-			Assert.AreEqual(KingdomPurposeLandingCargoRecordShape.CleanLegacy,
+			ClassicAssert.AreEqual(before.PairPhase, waiting.PairPhase);
+			ClassicAssert.AreEqual(before.PairRevision, waiting.PairRevision);
+			ClassicAssert.IsFalse(waiting.RootPresent);
+			ClassicAssert.AreEqual(0, waiting.ExactServingMarks);
+			ClassicAssert.AreEqual(KingdomPurposeLandingCargoRecordShape.CleanLegacy,
 				waiting.CargoRecord);
-			Assert.AreEqual(KingdomPurposeLandingCleanupStep.RootRetired, waiting.Cleanup);
-			Assert.IsFalse(KingdomPurposePortfolioRules.RetiredCargoIsReleased(waiting));
+			ClassicAssert.AreEqual(KingdomPurposeLandingCleanupStep.RootRetired, waiting.Cleanup);
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.RetiredCargoIsReleased(waiting));
 
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.PairPublished,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.PairPublished,
 				KingdomPurposePortfolioRules.DriveLandingRetirement(waiting, true,
 					out KingdomPurposeLandingTransactionState published));
-			Assert.AreEqual(KingdomPurposePairPhase.Active, published.PairPhase);
-			Assert.AreEqual(KingdomPurposeOperationPhase.Invalid, published.OperationPhase);
-			Assert.AreEqual(before.PairRevision + 1, published.PairRevision);
-			Assert.IsTrue(KingdomPurposePortfolioRules.RetiredCargoIsReleased(published));
+			ClassicAssert.AreEqual(KingdomPurposePairPhase.Active, published.PairPhase);
+			ClassicAssert.AreEqual(KingdomPurposeOperationPhase.Invalid, published.OperationPhase);
+			ClassicAssert.AreEqual(before.PairRevision + 1, published.PairRevision);
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.RetiredCargoIsReleased(published));
 		}
 
 		[Test]
@@ -41,20 +42,20 @@ namespace ThousandAndFirst.Tests
 			KingdomPurposeLandingTransactionState before = Retirement(
 				KingdomPurposePairPhase.SecondPending,
 				KingdomPurposeLandingCargoRecordShape.CleanLegacy, 6);
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.SemanticCasRefused,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.SemanticCasRefused,
 				KingdomPurposePortfolioRules.DriveLandingRetirement(before, false,
 					out KingdomPurposeLandingTransactionState waiting));
-			Assert.AreEqual(KingdomPurposePairPhase.SecondPending, waiting.PairPhase);
-			Assert.AreEqual(KingdomPurposeLandingCleanupStep.RootRetired, waiting.Cleanup);
-			Assert.IsFalse(KingdomPurposePortfolioRules.RetiredCargoIsReleased(waiting));
+			ClassicAssert.AreEqual(KingdomPurposePairPhase.SecondPending, waiting.PairPhase);
+			ClassicAssert.AreEqual(KingdomPurposeLandingCleanupStep.RootRetired, waiting.Cleanup);
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.RetiredCargoIsReleased(waiting));
 
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.PairPublished,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.PairPublished,
 				KingdomPurposePortfolioRules.DriveLandingRetirement(waiting, true,
 					out KingdomPurposeLandingTransactionState published));
-			Assert.AreEqual(KingdomPurposePairPhase.ReturnOutstanding, published.PairPhase);
-			Assert.AreEqual(KingdomPurposeOperationPhase.Prepared, published.OperationPhase);
-			Assert.AreEqual(before.PairRevision + 1, published.PairRevision);
-			Assert.IsTrue(KingdomPurposePortfolioRules.RetiredCargoIsReleased(published));
+			ClassicAssert.AreEqual(KingdomPurposePairPhase.ReturnOutstanding, published.PairPhase);
+			ClassicAssert.AreEqual(KingdomPurposeOperationPhase.Prepared, published.OperationPhase);
+			ClassicAssert.AreEqual(before.PairRevision + 1, published.PairRevision);
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.RetiredCargoIsReleased(published));
 		}
 
 		[Test]
@@ -63,23 +64,23 @@ namespace ThousandAndFirst.Tests
 			KingdomPurposeLandingTransactionState before = Retirement(
 				KingdomPurposePairPhase.CargoAwaitingConsumption,
 				KingdomPurposeLandingCargoRecordShape.WholeCurrent, 4);
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.SemanticCasRefused,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.SemanticCasRefused,
 				KingdomPurposePortfolioRules.DriveLandingRetirement(before, false,
 					out KingdomPurposeLandingTransactionState waiting));
-			Assert.IsFalse(KingdomPurposePortfolioRules.RetiredCargoIsReleased(waiting));
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.Refused,
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.RetiredCargoIsReleased(waiting));
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.Refused,
 				KingdomPurposePortfolioRules.DriveCompetingOperationAdmission(waiting, true,
 					out KingdomPurposeLandingTransactionState refused));
 			AssertSame(waiting, refused);
 
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.PairPublished,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.PairPublished,
 				KingdomPurposePortfolioRules.DriveLandingRetirement(waiting, true,
 					out KingdomPurposeLandingTransactionState released));
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.OperationAdmitted,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.OperationAdmitted,
 				KingdomPurposePortfolioRules.DriveCompetingOperationAdmission(released, true,
 					out KingdomPurposeLandingTransactionState admitted));
-			Assert.AreEqual(KingdomPurposePairPhase.OperationOutstanding, admitted.PairPhase);
-			Assert.AreEqual(released.NextOperationOrdinal + 1, admitted.NextOperationOrdinal);
+			ClassicAssert.AreEqual(KingdomPurposePairPhase.OperationOutstanding, admitted.PairPhase);
+			ClassicAssert.AreEqual(released.NextOperationOrdinal + 1, admitted.NextOperationOrdinal);
 		}
 
 		[Test]
@@ -134,26 +135,26 @@ namespace ThousandAndFirst.Tests
 			KingdomPurposeLandingTransactionState before = Landing();
 			before.Attempt = KingdomPurposeLandingAttemptState.Settled;
 			before.Custody = KingdomPurposeLandingCustodyProof.NullNestedInventoryIndex;
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.EntryProved,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.EntryProved,
 				KingdomPurposePortfolioRules.DriveLandingEntryReconciliation(before,
 					out KingdomPurposeLandingTransactionState entered));
-			Assert.AreEqual(KingdomPurposeLandingAttemptState.Clear, entered.Attempt);
-			Assert.AreEqual(KingdomPurposeLandingCleanupStep.AttemptRetired, entered.Cleanup);
-			Assert.IsFalse(KingdomPurposePortfolioRules.LandingCanOfferFresh(entered));
+			ClassicAssert.AreEqual(KingdomPurposeLandingAttemptState.Clear, entered.Attempt);
+			ClassicAssert.AreEqual(KingdomPurposeLandingCleanupStep.AttemptRetired, entered.Cleanup);
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.LandingCanOfferFresh(entered));
 
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.SemanticCasRefused,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.SemanticCasRefused,
 				KingdomPurposePortfolioRules.DriveFinalLandingCheckpoint(entered, false,
 					out KingdomPurposeLandingTransactionState faulted));
-			Assert.IsTrue(faulted.FaultPresent);
-			Assert.AreEqual(KingdomPurposeLandingAttemptState.Clear, faulted.Attempt);
-			Assert.AreEqual(KingdomPurposeLandingCleanupStep.AttemptRetired, faulted.Cleanup);
-			Assert.IsFalse(KingdomPurposePortfolioRules.LandingCanOfferFresh(faulted));
+			ClassicAssert.IsTrue(faulted.FaultPresent);
+			ClassicAssert.AreEqual(KingdomPurposeLandingAttemptState.Clear, faulted.Attempt);
+			ClassicAssert.AreEqual(KingdomPurposeLandingCleanupStep.AttemptRetired, faulted.Cleanup);
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.LandingCanOfferFresh(faulted));
 
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.SemanticCasRefused,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.SemanticCasRefused,
 				KingdomPurposePortfolioRules.DriveFinalLandingCheckpoint(faulted, false,
 					out KingdomPurposeLandingTransactionState retry));
-			Assert.IsTrue(retry.FaultPresent);
-			Assert.IsFalse(KingdomPurposePortfolioRules.LandingCanOfferFresh(retry));
+			ClassicAssert.IsTrue(retry.FaultPresent);
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.LandingCanOfferFresh(retry));
 		}
 
 		[Test]
@@ -179,25 +180,25 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomPurposeLandingTransactionState before = Landing();
 			before.StoreRack = KingdomPurposeLandingStoreRackProof.MissingFromCellList;
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.SemanticCasRefused,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.SemanticCasRefused,
 				KingdomPurposePortfolioRules.DriveFinalLandingCheckpoint(before, false,
 					out KingdomPurposeLandingTransactionState faulted));
-			Assert.IsTrue(faulted.FaultPresent);
-			Assert.AreEqual(before.PairPhase, faulted.PairPhase);
-			Assert.AreEqual(before.PairRevision, faulted.PairRevision);
-			Assert.AreEqual(before.ExactServingMarks, faulted.ExactServingMarks);
-			Assert.IsTrue(faulted.RootPresent);
+			ClassicAssert.IsTrue(faulted.FaultPresent);
+			ClassicAssert.AreEqual(before.PairPhase, faulted.PairPhase);
+			ClassicAssert.AreEqual(before.PairRevision, faulted.PairRevision);
+			ClassicAssert.AreEqual(before.ExactServingMarks, faulted.ExactServingMarks);
+			ClassicAssert.IsTrue(faulted.RootPresent);
 
 			faulted.StoreRack = KingdomPurposeLandingStoreRackProof.Exact;
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.SemanticCasRefused,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.SemanticCasRefused,
 				KingdomPurposePortfolioRules.DriveFinalLandingCheckpoint(faulted, false,
 					out KingdomPurposeLandingTransactionState retry));
-			Assert.IsTrue(retry.FaultPresent);
-			Assert.IsFalse(KingdomPurposePortfolioRules.LandingCanOfferFresh(retry));
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.Quarantined,
+			ClassicAssert.IsTrue(retry.FaultPresent);
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.LandingCanOfferFresh(retry));
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.Quarantined,
 				KingdomPurposePortfolioRules.DriveFinalLandingCheckpoint(retry, true,
 					out KingdomPurposeLandingTransactionState quarantined));
-			Assert.AreEqual(KingdomPurposePairPhase.Quarantined, quarantined.PairPhase);
+			ClassicAssert.AreEqual(KingdomPurposePairPhase.Quarantined, quarantined.PairPhase);
 		}
 
 		[Test]
@@ -205,64 +206,64 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomPurposeLandingTransactionState before = Landing();
 			before.MeasuredRosterExact = false;
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.SemanticCasRefused,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.SemanticCasRefused,
 				KingdomPurposePortfolioRules.DriveFinalLandingCheckpoint(before, false,
 					out KingdomPurposeLandingTransactionState faulted));
-			Assert.IsTrue(faulted.FaultPresent);
-			Assert.AreEqual(before.ExactServingMarks, faulted.ExactServingMarks);
+			ClassicAssert.IsTrue(faulted.FaultPresent);
+			ClassicAssert.AreEqual(before.ExactServingMarks, faulted.ExactServingMarks);
 			faulted.MeasuredRosterExact = true;
-			Assert.IsFalse(KingdomPurposePortfolioRules.LandingCanOfferFresh(faulted));
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.SemanticCasRefused,
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.LandingCanOfferFresh(faulted));
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.SemanticCasRefused,
 				KingdomPurposePortfolioRules.DriveFinalLandingCheckpoint(faulted, false,
 					out KingdomPurposeLandingTransactionState retry));
-			Assert.IsTrue(retry.FaultPresent);
+			ClassicAssert.IsTrue(retry.FaultPresent);
 		}
 
 		[Test]
 		public void FinalCleanupThenDeliveredCasRefusedRetryConverges()
 		{
 			KingdomPurposeLandingTransactionState before = Landing();
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.SemanticCasRefused,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.SemanticCasRefused,
 				KingdomPurposePortfolioRules.DriveFinalLandingCheckpoint(before, false,
 					out KingdomPurposeLandingTransactionState waiting));
-			Assert.AreEqual(KingdomPurposeOperationPhase.LandingPending,
+			ClassicAssert.AreEqual(KingdomPurposeOperationPhase.LandingPending,
 				waiting.OperationPhase);
-			Assert.AreEqual(KingdomPurposeLandingCleanupStep.MarksRetired, waiting.Cleanup);
-			Assert.AreEqual(0, waiting.ExactServingMarks);
-			Assert.IsFalse(waiting.FaultPresent);
+			ClassicAssert.AreEqual(KingdomPurposeLandingCleanupStep.MarksRetired, waiting.Cleanup);
+			ClassicAssert.AreEqual(0, waiting.ExactServingMarks);
+			ClassicAssert.IsFalse(waiting.FaultPresent);
 
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.PairPublished,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.PairPublished,
 				KingdomPurposePortfolioRules.DriveFinalLandingCheckpoint(waiting, true,
 					out KingdomPurposeLandingTransactionState delivered));
-			Assert.AreEqual(KingdomPurposePairPhase.CargoAwaitingConsumption,
+			ClassicAssert.AreEqual(KingdomPurposePairPhase.CargoAwaitingConsumption,
 				delivered.PairPhase);
-			Assert.AreEqual(KingdomPurposeOperationPhase.Delivered, delivered.OperationPhase);
-			Assert.AreEqual(before.PairRevision + 1, delivered.PairRevision);
-			Assert.AreEqual(before.OperationRevision + 1, delivered.OperationRevision);
+			ClassicAssert.AreEqual(KingdomPurposeOperationPhase.Delivered, delivered.OperationPhase);
+			ClassicAssert.AreEqual(before.PairRevision + 1, delivered.PairRevision);
+			ClassicAssert.AreEqual(before.OperationRevision + 1, delivered.OperationRevision);
 		}
 
 		[Test]
 		public void FinalDeliveryThenCreditRetirementComposesWithoutStateReset()
 		{
 			KingdomPurposeLandingTransactionState landing = Landing();
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.PairPublished,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.PairPublished,
 				KingdomPurposePortfolioRules.DriveFinalLandingCheckpoint(landing, true,
 					out KingdomPurposeLandingTransactionState delivered));
-			Assert.AreEqual(KingdomPurposeLandingCleanupStep.PairPublished, delivered.Cleanup);
-			Assert.IsTrue(delivered.RootPresent);
-			Assert.AreEqual(KingdomPurposeLandingCargoRecordShape.WholeCurrent,
+			ClassicAssert.AreEqual(KingdomPurposeLandingCleanupStep.PairPublished, delivered.Cleanup);
+			ClassicAssert.IsTrue(delivered.RootPresent);
+			ClassicAssert.AreEqual(KingdomPurposeLandingCargoRecordShape.WholeCurrent,
 				delivered.CargoRecord);
-			Assert.IsFalse(KingdomPurposePortfolioRules.RetiredCargoIsReleased(delivered));
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.RetiredCargoIsReleased(delivered));
 
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.PairPublished,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.PairPublished,
 				KingdomPurposePortfolioRules.DriveLandingRetirement(delivered, true,
 					out KingdomPurposeLandingTransactionState credited));
-			Assert.AreEqual(KingdomPurposePairPhase.Active, credited.PairPhase);
-			Assert.AreEqual(0, credited.OperationRevision);
-			Assert.IsFalse(credited.RootPresent);
-			Assert.AreEqual(KingdomPurposeLandingCargoRecordShape.CleanLegacy,
+			ClassicAssert.AreEqual(KingdomPurposePairPhase.Active, credited.PairPhase);
+			ClassicAssert.AreEqual(0, credited.OperationRevision);
+			ClassicAssert.IsFalse(credited.RootPresent);
+			ClassicAssert.AreEqual(KingdomPurposeLandingCargoRecordShape.CleanLegacy,
 				credited.CargoRecord);
-			Assert.IsTrue(KingdomPurposePortfolioRules.RetiredCargoIsReleased(credited));
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.RetiredCargoIsReleased(credited));
 		}
 
 		[Test]
@@ -270,20 +271,20 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomPurposeLandingTransactionState landing = Landing();
 			landing.PairPhase = KingdomPurposePairPhase.BootstrapOutstanding;
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.PairPublished,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.PairPublished,
 				KingdomPurposePortfolioRules.DriveFinalLandingCheckpoint(landing, true,
 					out KingdomPurposeLandingTransactionState delivered));
-			Assert.AreEqual(KingdomPurposePairPhase.SecondPending, delivered.PairPhase);
-			Assert.IsFalse(KingdomPurposePortfolioRules.RetiredCargoIsReleased(delivered));
+			ClassicAssert.AreEqual(KingdomPurposePairPhase.SecondPending, delivered.PairPhase);
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.RetiredCargoIsReleased(delivered));
 
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.PairPublished,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.PairPublished,
 				KingdomPurposePortfolioRules.DriveLandingRetirement(delivered, true,
 					out KingdomPurposeLandingTransactionState returned));
-			Assert.AreEqual(KingdomPurposePairPhase.ReturnOutstanding, returned.PairPhase);
-			Assert.AreEqual(KingdomPurposeOperationPhase.Prepared, returned.OperationPhase);
-			Assert.AreEqual(delivered.NextOperationOrdinal + 1, returned.NextOperationOrdinal);
-			Assert.AreEqual(0, returned.OperationRevision);
-			Assert.IsTrue(KingdomPurposePortfolioRules.RetiredCargoIsReleased(returned));
+			ClassicAssert.AreEqual(KingdomPurposePairPhase.ReturnOutstanding, returned.PairPhase);
+			ClassicAssert.AreEqual(KingdomPurposeOperationPhase.Prepared, returned.OperationPhase);
+			ClassicAssert.AreEqual(delivered.NextOperationOrdinal + 1, returned.NextOperationOrdinal);
+			ClassicAssert.AreEqual(0, returned.OperationRevision);
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.RetiredCargoIsReleased(returned));
 		}
 
 		[Test]
@@ -291,17 +292,17 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomPurposeLandingTransactionState before = Landing();
 			before.Attempt = KingdomPurposeLandingAttemptState.Settled;
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.EntryProved,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.EntryProved,
 				KingdomPurposePortfolioRules.DriveLandingEntryReconciliation(before,
 					out KingdomPurposeLandingTransactionState entered));
-			Assert.AreEqual(KingdomPurposeLandingAttemptState.Clear, entered.Attempt);
-			Assert.AreEqual(KingdomPurposeLandingCleanupStep.AttemptRetired, entered.Cleanup);
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.SemanticCasRefused,
+			ClassicAssert.AreEqual(KingdomPurposeLandingAttemptState.Clear, entered.Attempt);
+			ClassicAssert.AreEqual(KingdomPurposeLandingCleanupStep.AttemptRetired, entered.Cleanup);
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.SemanticCasRefused,
 				KingdomPurposePortfolioRules.DriveFinalLandingCheckpoint(entered, false,
 					out KingdomPurposeLandingTransactionState waiting));
-			Assert.AreEqual(KingdomPurposeLandingAttemptState.Clear, waiting.Attempt);
-			Assert.AreEqual(KingdomPurposeLandingCleanupStep.MarksRetired, waiting.Cleanup);
-			Assert.IsFalse(waiting.FaultPresent);
+			ClassicAssert.AreEqual(KingdomPurposeLandingAttemptState.Clear, waiting.Attempt);
+			ClassicAssert.AreEqual(KingdomPurposeLandingCleanupStep.MarksRetired, waiting.Cleanup);
+			ClassicAssert.IsFalse(waiting.FaultPresent);
 		}
 
 		[Test]
@@ -314,24 +315,24 @@ namespace ThousandAndFirst.Tests
 			AssertRetirementRefusesWithoutMutation(pair);
 			KingdomPurposeLandingTransactionState landingPair = Landing();
 			landingPair.PairRevision = int.MaxValue;
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.Refused,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.Refused,
 				KingdomPurposePortfolioRules.DriveFinalLandingCheckpoint(landingPair, true,
 					out KingdomPurposeLandingTransactionState landingPairRefused));
 			AssertSame(landingPair, landingPairRefused);
 
 			KingdomPurposeLandingTransactionState operation = Landing();
 			operation.OperationRevision = int.MaxValue;
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.Quarantined,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.Quarantined,
 				KingdomPurposePortfolioRules.DriveFinalLandingCheckpoint(operation, true,
 					out KingdomPurposeLandingTransactionState operationQuarantined));
-			Assert.AreEqual(KingdomPurposePairPhase.Quarantined,
+			ClassicAssert.AreEqual(KingdomPurposePairPhase.Quarantined,
 				operationQuarantined.PairPhase);
-			Assert.AreEqual(operation.PairRevision + 1, operationQuarantined.PairRevision);
-			Assert.IsTrue(operationQuarantined.FaultPresent);
-			Assert.AreEqual(operation.ExactServingMarks,
+			ClassicAssert.AreEqual(operation.PairRevision + 1, operationQuarantined.PairRevision);
+			ClassicAssert.IsTrue(operationQuarantined.FaultPresent);
+			ClassicAssert.AreEqual(operation.ExactServingMarks,
 				operationQuarantined.ExactServingMarks);
 			operation.Attempt = KingdomPurposeLandingAttemptState.Settled;
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.Refused,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.Refused,
 				KingdomPurposePortfolioRules.DriveLandingEntryReconciliation(operation,
 					out KingdomPurposeLandingTransactionState entryRefused));
 			AssertSame(operation, entryRefused);
@@ -351,10 +352,10 @@ namespace ThousandAndFirst.Tests
 				KingdomPurposePairPhase.CargoAwaitingConsumption,
 				KingdomPurposeLandingCargoRecordShape.WholeCurrent, 4);
 			lastCredit.NextOperationOrdinal = int.MaxValue;
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.PairPublished,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.PairPublished,
 				KingdomPurposePortfolioRules.DriveLandingRetirement(lastCredit, true,
 					out KingdomPurposeLandingTransactionState released));
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.Refused,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.Refused,
 				KingdomPurposePortfolioRules.DriveCompetingOperationAdmission(released, true,
 					out KingdomPurposeLandingTransactionState admissionRefused));
 			AssertSame(released, admissionRefused);
@@ -503,67 +504,67 @@ namespace ThousandAndFirst.Tests
 		private static void AssertPublishedRetirement(
 			KingdomPurposeLandingTransactionState before, KingdomPurposePairPhase target)
 		{
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.PairPublished,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.PairPublished,
 				KingdomPurposePortfolioRules.DriveLandingRetirement(before, true,
 					out KingdomPurposeLandingTransactionState after));
-			Assert.AreEqual(target, after.PairPhase);
-			Assert.AreEqual(before.PairRevision + 1, after.PairRevision);
-			Assert.AreEqual(0, after.OperationRevision);
-			Assert.AreEqual(0, after.ExactServingMarks);
-			Assert.IsFalse(after.RootPresent);
-			Assert.AreEqual(KingdomPurposeLandingCargoRecordShape.CleanLegacy,
+			ClassicAssert.AreEqual(target, after.PairPhase);
+			ClassicAssert.AreEqual(before.PairRevision + 1, after.PairRevision);
+			ClassicAssert.AreEqual(0, after.OperationRevision);
+			ClassicAssert.AreEqual(0, after.ExactServingMarks);
+			ClassicAssert.IsFalse(after.RootPresent);
+			ClassicAssert.AreEqual(KingdomPurposeLandingCargoRecordShape.CleanLegacy,
 				after.CargoRecord);
-			Assert.IsTrue(KingdomPurposePortfolioRules.RetiredCargoIsReleased(after));
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.RetiredCargoIsReleased(after));
 		}
 
 		private static void AssertRetirementRefusesWithoutMutation(
 			KingdomPurposeLandingTransactionState before)
 		{
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.Refused,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.Refused,
 				KingdomPurposePortfolioRules.DriveLandingRetirement(before, true,
 					out KingdomPurposeLandingTransactionState after));
 			AssertSame(before, after);
-			Assert.IsTrue(after.RootPresent);
-			Assert.AreEqual(before.ExactServingMarks, after.ExactServingMarks);
-			Assert.IsFalse(KingdomPurposePortfolioRules.RetiredCargoIsReleased(after));
+			ClassicAssert.IsTrue(after.RootPresent);
+			ClassicAssert.AreEqual(before.ExactServingMarks, after.ExactServingMarks);
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.RetiredCargoIsReleased(after));
 		}
 
 		private static void AssertCustodyRefuses(KingdomPurposeLandingCustodyProof proof)
 		{
-			Assert.IsFalse(KingdomPurposePortfolioRules.LandingCustodyIsComplete(proof));
+			ClassicAssert.IsFalse(KingdomPurposePortfolioRules.LandingCustodyIsComplete(proof));
 			KingdomPurposeLandingTransactionState before = Landing();
 			before.Custody = proof;
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.SemanticCasRefused,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.SemanticCasRefused,
 				KingdomPurposePortfolioRules.DriveFinalLandingCheckpoint(before, false,
 					out KingdomPurposeLandingTransactionState after));
-			Assert.IsTrue(after.FaultPresent);
-			Assert.AreEqual(before.ExactServingMarks, after.ExactServingMarks);
-			Assert.IsTrue(after.RootPresent);
-			Assert.AreEqual(before.PairPhase, after.PairPhase);
+			ClassicAssert.IsTrue(after.FaultPresent);
+			ClassicAssert.AreEqual(before.ExactServingMarks, after.ExactServingMarks);
+			ClassicAssert.IsTrue(after.RootPresent);
+			ClassicAssert.AreEqual(before.PairPhase, after.PairPhase);
 		}
 
 		private static void AssertSame(KingdomPurposeLandingTransactionState expected,
 			KingdomPurposeLandingTransactionState actual)
 		{
-			Assert.AreEqual(expected.PairPhase, actual.PairPhase);
-			Assert.AreEqual(expected.ResumePhase, actual.ResumePhase);
-			Assert.AreEqual(expected.OperationPhase, actual.OperationPhase);
-			Assert.AreEqual(expected.CargoRecord, actual.CargoRecord);
-			Assert.AreEqual(expected.Attempt, actual.Attempt);
-			Assert.AreEqual(expected.EntryCustody, actual.EntryCustody);
-			Assert.AreEqual(expected.Custody, actual.Custody);
-			Assert.AreEqual(expected.StoreRack, actual.StoreRack);
-			Assert.AreEqual(expected.Cleanup, actual.Cleanup);
-			Assert.AreEqual(expected.PairRevision, actual.PairRevision);
-			Assert.AreEqual(expected.OperationRevision, actual.OperationRevision);
-			Assert.AreEqual(expected.NextOperationOrdinal, actual.NextOperationOrdinal);
-			Assert.AreEqual(expected.Carried, actual.Carried);
-			Assert.AreEqual(expected.ExactServingMarks, actual.ExactServingMarks);
-			Assert.AreEqual(expected.RootPresent, actual.RootPresent);
-			Assert.AreEqual(expected.MeasuredRosterExact, actual.MeasuredRosterExact);
-			Assert.AreEqual(expected.MalformedCoResidentEvidence,
+			ClassicAssert.AreEqual(expected.PairPhase, actual.PairPhase);
+			ClassicAssert.AreEqual(expected.ResumePhase, actual.ResumePhase);
+			ClassicAssert.AreEqual(expected.OperationPhase, actual.OperationPhase);
+			ClassicAssert.AreEqual(expected.CargoRecord, actual.CargoRecord);
+			ClassicAssert.AreEqual(expected.Attempt, actual.Attempt);
+			ClassicAssert.AreEqual(expected.EntryCustody, actual.EntryCustody);
+			ClassicAssert.AreEqual(expected.Custody, actual.Custody);
+			ClassicAssert.AreEqual(expected.StoreRack, actual.StoreRack);
+			ClassicAssert.AreEqual(expected.Cleanup, actual.Cleanup);
+			ClassicAssert.AreEqual(expected.PairRevision, actual.PairRevision);
+			ClassicAssert.AreEqual(expected.OperationRevision, actual.OperationRevision);
+			ClassicAssert.AreEqual(expected.NextOperationOrdinal, actual.NextOperationOrdinal);
+			ClassicAssert.AreEqual(expected.Carried, actual.Carried);
+			ClassicAssert.AreEqual(expected.ExactServingMarks, actual.ExactServingMarks);
+			ClassicAssert.AreEqual(expected.RootPresent, actual.RootPresent);
+			ClassicAssert.AreEqual(expected.MeasuredRosterExact, actual.MeasuredRosterExact);
+			ClassicAssert.AreEqual(expected.MalformedCoResidentEvidence,
 				actual.MalformedCoResidentEvidence);
-			Assert.AreEqual(expected.FaultPresent, actual.FaultPresent);
+			ClassicAssert.AreEqual(expected.FaultPresent, actual.FaultPresent);
 		}
 
 		private static void AssertOrphanedLanding(KingdomPurposePairPhase resume,
@@ -572,13 +573,13 @@ namespace ThousandAndFirst.Tests
 			KingdomPurposeLandingTransactionState before = Landing();
 			before.PairPhase = KingdomPurposePairPhase.Orphaned;
 			before.ResumePhase = resume;
-			Assert.AreEqual(KingdomPurposeLandingTransactionVerdict.PairPublished,
+			ClassicAssert.AreEqual(KingdomPurposeLandingTransactionVerdict.PairPublished,
 				KingdomPurposePortfolioRules.DriveFinalLandingCheckpoint(before, true,
 					out KingdomPurposeLandingTransactionState after));
-			Assert.AreEqual(KingdomPurposePairPhase.Orphaned, after.PairPhase);
-			Assert.AreEqual(expectedResume, after.ResumePhase);
-			Assert.AreEqual(before.PairRevision + 1, after.PairRevision);
-			Assert.AreEqual(before.OperationRevision + 1, after.OperationRevision);
+			ClassicAssert.AreEqual(KingdomPurposePairPhase.Orphaned, after.PairPhase);
+			ClassicAssert.AreEqual(expectedResume, after.ResumePhase);
+			ClassicAssert.AreEqual(before.PairRevision + 1, after.PairRevision);
+			ClassicAssert.AreEqual(before.OperationRevision + 1, after.OperationRevision);
 		}
 
 		private static string Source(string relative)
@@ -589,9 +590,9 @@ namespace ThousandAndFirst.Tests
 		private static string Between(string source, string from, string to)
 		{
 			int start = source.IndexOf(from, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, from);
+			ClassicAssert.GreaterOrEqual(start, 0, from);
 			int end = source.IndexOf(to, start + from.Length, StringComparison.Ordinal);
-			Assert.Greater(end, start, to);
+			ClassicAssert.Greater(end, start, to);
 			return source.Substring(start, end - start);
 		}
 
@@ -601,7 +602,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < terms.Length; i++)
 			{
 				int next = source.IndexOf(terms[i], cursor + 1, StringComparison.Ordinal);
-				Assert.Greater(next, cursor, terms[i]);
+				ClassicAssert.Greater(next, cursor, terms[i]);
 				cursor = next;
 			}
 		}

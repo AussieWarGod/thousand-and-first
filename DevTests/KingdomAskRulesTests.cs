@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Api;
 using ThousandAndFirst.Simulation.City;
 
@@ -24,7 +25,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityState state;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
+			ClassicAssert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
 				"taf:city:kavvat", 900L, stocks, zones, works, residents, null, out state, out fault), fault.ToString());
 			return KingdomReadingRules.Project("Kavvat", state);
 		}
@@ -73,8 +74,8 @@ namespace ThousandAndFirst.Tests
 		public void Derive_ADryCisternIsGrave()
 		{
 			KingdomAsk[] asks = KingdomAskRules.Derive(Read(Stocks(0L, 240L, 5L, 60L), null, null, null));
-			Assert.IsTrue(Has(asks, "thirst"));
-			Assert.AreEqual(KingdomAskWeight.Grave, asks[0].Weight);
+			ClassicAssert.IsTrue(Has(asks, "thirst"));
+			ClassicAssert.AreEqual(KingdomAskWeight.Grave, asks[0].Weight);
 		}
 
 		/// <summary>One dram is not an ask. The board fires on empty, never on nearly empty, which
@@ -82,7 +83,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Derive_OneDramIsNotAnAsk()
 		{
-			Assert.IsFalse(Has(KingdomAskRules.Derive(Read(Stocks(1L, 240L, 5L, 60L), null, null, null)), "thirst"));
+			ClassicAssert.IsFalse(Has(KingdomAskRules.Derive(Read(Stocks(1L, 240L, 5L, 60L), null, null, null)), "thirst"));
 		}
 
 		/// <summary>A city that has dedicated no vessels is not thirsty. It has no cisterns, which
@@ -90,15 +91,15 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Derive_NoVesselsIsNotThirst()
 		{
-			Assert.IsFalse(Has(KingdomAskRules.Derive(Read(Stocks(0L, 0L, 0L, 0L), null, null, null)), "thirst"));
+			ClassicAssert.IsFalse(Has(KingdomAskRules.Derive(Read(Stocks(0L, 0L, 0L, 0L), null, null, null)), "thirst"));
 		}
 
 		/// <summary>Bare larders with residents report that the optional meal is unavailable.</summary>
 		[Test]
 		public void Derive_BareLardersAskOnlyWhenSomebodyLivesHere()
 		{
-			Assert.IsFalse(Has(KingdomAskRules.Derive(Read(Stocks(9L, 9L, 0L, 60L), null, null, null)), "meal"));
-			Assert.IsTrue(Has(KingdomAskRules.Derive(Read(Stocks(9L, 9L, 0L, 60L), null, null,
+			ClassicAssert.IsFalse(Has(KingdomAskRules.Derive(Read(Stocks(9L, 9L, 0L, 60L), null, null, null)), "meal"));
+			ClassicAssert.IsTrue(Has(KingdomAskRules.Derive(Read(Stocks(9L, 9L, 0L, 60L), null, null,
 				new KingdomResidentRow[1] { Settler(1) })), "meal"));
 		}
 
@@ -110,7 +111,7 @@ namespace ThousandAndFirst.Tests
 			KingdomAsk[] asks = KingdomAskRules.Derive(Read(default(KingdomStocks),
 				new KingdomZoneRow[2] { Zone(Here, 1, 0L, 0L), Zone(There, 1, 0L, 0L) }, null,
 				new KingdomResidentRow[4] { Settler(1), Settler(2), Settler(3), Settler(4) }));
-			Assert.IsTrue(Has(asks, "shelter"));
+			ClassicAssert.IsTrue(Has(asks, "shelter"));
 			for (int i = 0; i < asks.Length; i++)
 			{
 				if (asks[i].Kind == KingdomAskRules.OwnKindPrefix + "shelter")
@@ -124,7 +125,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Derive_EnoughRoofsIsSilence()
 		{
-			Assert.IsFalse(Has(KingdomAskRules.Derive(Read(default(KingdomStocks),
+			ClassicAssert.IsFalse(Has(KingdomAskRules.Derive(Read(default(KingdomStocks),
 				new KingdomZoneRow[1] { Zone(Here, 4, 0L, 0L) }, null,
 				new KingdomResidentRow[1] { Settler(1) })), "shelter"));
 		}
@@ -137,11 +138,11 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomAsk[] worn = KingdomAskRules.Derive(Read(default(KingdomStocks), null,
 				new KingdomWorkRow[1] { Work(1, KingdomHappeningRules.BreakdownConditionFloor, 2, KingdomWorkKind.Producer) }, null));
-			Assert.AreEqual(KingdomAskWeight.Pressing, worn[0].Weight);
+			ClassicAssert.AreEqual(KingdomAskWeight.Pressing, worn[0].Weight);
 
 			KingdomAsk[] idle = KingdomAskRules.Derive(Read(default(KingdomStocks), null,
 				new KingdomWorkRow[1] { Work(1, 100, 0, KingdomWorkKind.Producer) }, null));
-			Assert.AreEqual(KingdomAskWeight.Passing, idle[0].Weight);
+			ClassicAssert.AreEqual(KingdomAskWeight.Passing, idle[0].Weight);
 		}
 
 		/// <summary>A store and a growing ground with nobody on them are not asks. A larder with
@@ -151,7 +152,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomWorkKind.Other)]
 		public void Derive_KindsThatDoNotNeedHandsAreNotAsks(KingdomWorkKind kind)
 		{
-			Assert.IsFalse(Has(KingdomAskRules.Derive(Read(default(KingdomStocks), null,
+			ClassicAssert.IsFalse(Has(KingdomAskRules.Derive(Read(default(KingdomStocks), null,
 				new KingdomWorkRow[1] { Work(1, 100, 0, kind) }, null)), "stopped"));
 		}
 
@@ -161,9 +162,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Derive_AFullStoreAsksOnlyWhenThereIsRoomElsewhere()
 		{
-			Assert.IsFalse(Has(KingdomAskRules.Derive(Read(default(KingdomStocks),
+			ClassicAssert.IsFalse(Has(KingdomAskRules.Derive(Read(default(KingdomStocks),
 				new KingdomZoneRow[1] { Zone(Here, 9, 20L, 20L) }, null, null)), "haulage"));
-			Assert.IsTrue(Has(KingdomAskRules.Derive(Read(default(KingdomStocks),
+			ClassicAssert.IsTrue(Has(KingdomAskRules.Derive(Read(default(KingdomStocks),
 				new KingdomZoneRow[2] { Zone(Here, 9, 20L, 20L), Zone(There, 9, 0L, 20L) }, null, null)), "haulage"));
 		}
 
@@ -175,12 +176,12 @@ namespace ThousandAndFirst.Tests
 			KingdomAsk[] asks = KingdomAskRules.Derive(Read(Stocks(0L, 240L, 0L, 60L),
 				new KingdomZoneRow[1] { Zone(Here, 0, 0L, 0L) }, new KingdomWorkRow[1] { Work(1, 100, 0, KingdomWorkKind.Producer) },
 				new KingdomResidentRow[1] { Settler(1) }));
-			Assert.AreEqual(KingdomAskRules.OwnKindPrefix + "thirst", asks[0].Kind);
-			Assert.AreEqual(KingdomAskRules.OwnKindPrefix + "shelter", asks[1].Kind);
-			Assert.AreEqual(KingdomAskRules.OwnKindPrefix + "meal", asks[2].Kind);
+			ClassicAssert.AreEqual(KingdomAskRules.OwnKindPrefix + "thirst", asks[0].Kind);
+			ClassicAssert.AreEqual(KingdomAskRules.OwnKindPrefix + "shelter", asks[1].Kind);
+			ClassicAssert.AreEqual(KingdomAskRules.OwnKindPrefix + "meal", asks[2].Kind);
 			for (int i = 1; i < asks.Length; i++)
 			{
-				Assert.IsTrue(asks[i - 1].Weight >= asks[i].Weight, "weights must not ascend");
+				ClassicAssert.IsTrue(asks[i - 1].Weight >= asks[i].Weight, "weights must not ascend");
 			}
 		}
 
@@ -194,14 +195,14 @@ namespace ThousandAndFirst.Tests
 			{
 				works[i] = Work(i + 1, 10, 0, KingdomWorkKind.Producer);
 			}
-			Assert.AreEqual(KingdomAskRules.MaxAsks, KingdomAskRules.Derive(Read(default(KingdomStocks), null, works, null)).Length);
+			ClassicAssert.AreEqual(KingdomAskRules.MaxAsks, KingdomAskRules.Derive(Read(default(KingdomStocks), null, works, null)).Length);
 		}
 
 		/// <summary>A contented city asks for nothing, and says nothing.</summary>
 		[Test]
 		public void Derive_AContentedCityIsSilent()
 		{
-			Assert.AreEqual(0, KingdomAskRules.Derive(Read(Stocks(100L, 240L, 30L, 60L),
+			ClassicAssert.AreEqual(0, KingdomAskRules.Derive(Read(Stocks(100L, 240L, 30L, 60L),
 				new KingdomZoneRow[1] { Zone(Here, 4, 5L, 20L) },
 				new KingdomWorkRow[1] { Work(1, 100, 2, KingdomWorkKind.Producer) },
 				new KingdomResidentRow[1] { Settler(1) })).Length);
@@ -211,7 +212,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Derive_ANullReadingIsAnEmptyBoard()
 		{
-			Assert.AreEqual(0, KingdomAskRules.Derive(null).Length);
+			ClassicAssert.AreEqual(0, KingdomAskRules.Derive(null).Length);
 		}
 
 		/// <summary>Every ask says what would settle it. STANDARDS §7b applied forward: an ask that
@@ -223,11 +224,11 @@ namespace ThousandAndFirst.Tests
 				new KingdomZoneRow[2] { Zone(Here, 0, 20L, 20L), Zone(There, 0, 0L, 20L) },
 				new KingdomWorkRow[1] { Work(1, 5, 0, KingdomWorkKind.Refiner) },
 				new KingdomResidentRow[1] { Settler(1) }));
-			Assert.Greater(asks.Length, 3);
+			ClassicAssert.Greater(asks.Length, 3);
 			for (int i = 0; i < asks.Length; i++)
 			{
-				Assert.IsFalse(string.IsNullOrEmpty(asks[i].Title), "every ask has a title");
-				Assert.IsFalse(string.IsNullOrEmpty(asks[i].Want), "every ask names its remedy");
+				ClassicAssert.IsFalse(string.IsNullOrEmpty(asks[i].Title), "every ask has a title");
+				ClassicAssert.IsFalse(string.IsNullOrEmpty(asks[i].Want), "every ask names its remedy");
 			}
 		}
 
@@ -237,9 +238,9 @@ namespace ThousandAndFirst.Tests
 		public void Name_PrefersTheResolvedNameAndFallsBackToTheKey()
 		{
 			KingdomWorkReading work = new KingdomWorkReading(1, Here, "mill", 100, 0, KingdomWorkClass.Producer, 0, 0, 0L);
-			Assert.AreEqual("The mill", KingdomAskRules.Name(work, null));
-			Assert.AreEqual("Stone mill", KingdomAskRules.Name(work, delegate(string key) { return "stone mill"; }));
-			Assert.AreEqual("A work", KingdomAskRules.Name(
+			ClassicAssert.AreEqual("The mill", KingdomAskRules.Name(work, null));
+			ClassicAssert.AreEqual("Stone mill", KingdomAskRules.Name(work, delegate(string key) { return "stone mill"; }));
+			ClassicAssert.AreEqual("A work", KingdomAskRules.Name(
 				new KingdomWorkReading(1, Here, null, 100, 0, KingdomWorkClass.Producer, 0, 0, 0L), null));
 		}
 
@@ -258,9 +259,9 @@ namespace ThousandAndFirst.Tests
 				new KingdomAsk("mod:x", "same", "w", "taf:zone:c", KingdomAskWeight.Grave)
 			};
 			KingdomAskRules.SortBoard(board);
-			Assert.AreEqual("taf:zone:c", board[0].ZoneId);
-			Assert.AreEqual("taf:zone:a", board[1].ZoneId);
-			Assert.AreEqual("taf:zone:b", board[2].ZoneId);
+			ClassicAssert.AreEqual("taf:zone:c", board[0].ZoneId);
+			ClassicAssert.AreEqual("taf:zone:a", board[1].ZoneId);
+			ClassicAssert.AreEqual("taf:zone:b", board[2].ZoneId);
 		}
 
 		/// <summary>A mod's grave ask outranks the city's passing one. Ours are GATHERED first for
@@ -274,7 +275,7 @@ namespace ThousandAndFirst.Tests
 				new KingdomAsk("mod:x", "theirs", "w", null, KingdomAskWeight.Grave)
 			};
 			KingdomAskRules.SortBoard(board);
-			Assert.AreEqual("theirs", board[0].Title);
+			ClassicAssert.AreEqual("theirs", board[0].Title);
 		}
 
 		/// <summary>Everything a mod teaches the city sorts after everything the city says itself,
@@ -282,7 +283,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void KindOrder_PutsTheCitysOwnVoiceFirst()
 		{
-			Assert.Less(KingdomAskRules.KindOrder(KingdomAskRules.OwnKindPrefix + "haulage"),
+			ClassicAssert.Less(KingdomAskRules.KindOrder(KingdomAskRules.OwnKindPrefix + "haulage"),
 				KingdomAskRules.KindOrder("their-mod:weather"));
 		}
 	}

@@ -228,11 +228,17 @@ namespace ThousandAndFirst
 				if (E.Zone != null && ClaimedZones != null
 					&& !ClaimedZones.Contains(E.Zone.ZoneID))
 				{
+					// Ground that stopped being the realm's stops being lit, on the same branch
+					// that already answers for a claim the founder no longer holds.
+					KingdomClaimedGround.RemoveZone(E.Zone);
 					AttendFormerClaimCustody(E.Zone);
 					return;
 				}
 				KingdomNamedCook.ReconcileZone(this, E.Zone);
 				KingdomAssentingMoot.ReconcileZone(this, E.Zone);
+				// Presentation, after the ward and before the settlement pass: the founder's own
+				// ground reads at a glance while they stand on it, and nothing here spends.
+				KingdomClaimedGround.ReconcileZone(this, E.Zone);
 				Simulation.City.KingdomSemanticDispatcher.OnZoneActivated(this, E.Zone,
 					The.Game.TimeTicks, AttendSeatedSemantics);
 				if (!KingdomPolityActiveRuntime.TryReconcile(this, The.Game.TimeTicks,

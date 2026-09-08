@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -26,12 +27,12 @@ namespace ThousandAndFirst.Tests
 		private static void AssertBefore(string source, string method, string gate, string work)
 		{
 			int start = source.IndexOf(method, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, method);
+			ClassicAssert.GreaterOrEqual(start, 0, method);
 			int gateAt = source.IndexOf(gate, start, StringComparison.Ordinal);
 			int workAt = source.IndexOf(work, start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(gateAt, 0, method + " gate");
-			Assert.GreaterOrEqual(workAt, 0, method + " work");
-			Assert.Less(gateAt, workAt, method + " must gate before allocations/delegates");
+			ClassicAssert.GreaterOrEqual(gateAt, 0, method + " gate");
+			ClassicAssert.GreaterOrEqual(workAt, 0, method + " work");
+			ClassicAssert.Less(gateAt, workAt, method + " must gate before allocations/delegates");
 		}
 
 		[Test]
@@ -40,8 +41,8 @@ namespace ThousandAndFirst.Tests
 			XDocument options = XDocument.Parse(TestMain.ReadRepositoryText("Options.xml"));
 			XElement master = options.Root.Elements("option").Single(row =>
 				(string)row.Attribute("ID") == "r_TAF_OptionMaster");
-			Assert.AreEqual("Checkbox", (string)master.Attribute("Type"));
-			Assert.AreEqual("Yes", (string)master.Attribute("Default"));
+			ClassicAssert.AreEqual("Checkbox", (string)master.Attribute("Type"));
+			ClassicAssert.AreEqual("Yes", (string)master.Attribute("Default"));
 
 			string system = KingdomSystemLogicalSource.Read();
 			StringAssert.Contains("public KingdomMasterLatchValue MasterOption;", system);
@@ -108,10 +109,10 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int slateCommission = slate.IndexOf("Commission(Building, Actor", slateGate,
 				StringComparison.Ordinal);
-			Assert.Less(slateRecovery, slateGate, "lab recovery must remain available while paused");
-			Assert.Less(slateGate, slateCommission, "new lab commission must follow master gate");
+			ClassicAssert.Less(slateRecovery, slateGate, "lab recovery must remain available while paused");
+			ClassicAssert.Less(slateGate, slateCommission, "new lab commission must follow master gate");
 			string succession = KingdomSuccessionLogicalSource.Read();
-			Assert.GreaterOrEqual(Occurrences(succession,
+			ClassicAssert.GreaterOrEqual(Occurrences(succession,
 				"KingdomMaster.AutomaticWorkAllowed(system)"), 3,
 				"death interception plus load/save recovery must honor master-off");
 			AssertBefore(succession, "public override bool HandleEvent(AfterDieEvent E)",
@@ -192,11 +193,11 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < persisted.Length; i++)
 			{
 				int at = seal.IndexOf(persisted[i], prior, StringComparison.Ordinal);
-				Assert.Greater(at, prior, persisted[i]);
+				ClassicAssert.Greater(at, prior, persisted[i]);
 				prior = at;
 			}
 			int firstTransient = seal.IndexOf("[NonSerialized]", prior, StringComparison.Ordinal);
-			Assert.Greater(firstTransient, prior);
+			ClassicAssert.Greater(firstTransient, prior);
 
 			AssertBefore(seal, "public override void Write(SerializationWriter Writer)",
 				"Writer.Write(SerializationMagic)", "Writer.WriteNamedFields(this, typeof(KingdomSeal)");
@@ -219,23 +220,23 @@ namespace ThousandAndFirst.Tests
 			int fields = part.IndexOf('{', type) + 1;
 			int methods = part.IndexOf("public override bool WantTurnTick()", fields,
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(type, 0);
-			Assert.Greater(methods, fields);
+			ClassicAssert.GreaterOrEqual(type, 0);
+			ClassicAssert.Greater(methods, fields);
 			string layout = part.Substring(fields, methods - fields);
-			Assert.AreEqual(4, Occurrences(layout, "\t\tpublic "));
+			ClassicAssert.AreEqual(4, Occurrences(layout, "\t\tpublic "));
 			int stage = layout.IndexOf("public KingdomCropRules.PlotStage Stage;",
 				StringComparison.Ordinal);
 			int next = layout.IndexOf("public long NextStageTick;", StringComparison.Ordinal);
 			int crop = layout.IndexOf("public string CropBlueprint;", StringComparison.Ordinal);
 			int announced = layout.IndexOf("public bool NoLarderAnnounced;",
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(stage, 0);
-			Assert.GreaterOrEqual(next, 0);
-			Assert.GreaterOrEqual(crop, 0);
-			Assert.GreaterOrEqual(announced, 0);
-			Assert.Less(stage, next);
-			Assert.Less(next, crop);
-			Assert.Less(crop, announced);
+			ClassicAssert.GreaterOrEqual(stage, 0);
+			ClassicAssert.GreaterOrEqual(next, 0);
+			ClassicAssert.GreaterOrEqual(crop, 0);
+			ClassicAssert.GreaterOrEqual(announced, 0);
+			ClassicAssert.Less(stage, next);
+			ClassicAssert.Less(next, crop);
+			ClassicAssert.Less(crop, announced);
 		}
 
 		private static int Occurrences(string source, string value)
@@ -251,37 +252,37 @@ namespace ThousandAndFirst.Tests
 		{
 			XDocument document = XDocument.Parse(TestMain.ReadRepositoryText("ObjectBlueprints.xml"));
 			XElement campfire = Blueprint(document, "r_KingdomCivicCampfire");
-			Assert.AreEqual("Campfire", (string)campfire.Attribute("Inherits"));
-			Assert.IsTrue(Child(campfire, "removepart", "Temporary2"));
-			Assert.AreEqual("Campfire Remains", (string)campfire.Elements("part").Single(row =>
+			ClassicAssert.AreEqual("Campfire", (string)campfire.Attribute("Inherits"));
+			ClassicAssert.IsTrue(Child(campfire, "removepart", "Temporary2"));
+			ClassicAssert.AreEqual("Campfire Remains", (string)campfire.Elements("part").Single(row =>
 				(string)row.Attribute("Name") == "Campfire").Attribute("ExtinguishBlueprint"));
 
 			XElement bookshelf = Blueprint(document, "r_KingdomCivicBookshelf");
-			Assert.AreEqual("Bookshelf", (string)bookshelf.Attribute("Inherits"));
-			Assert.IsTrue(Child(bookshelf, "removebuilder", "RandomTile"));
-			Assert.IsTrue(Child(bookshelf, "removepart", "PackagePush2"));
-			Assert.IsTrue(Child(bookshelf, "removepart", "PackageMirror"));
-			Assert.AreEqual("*delete", (string)bookshelf.Elements("tag").Single(row =>
+			ClassicAssert.AreEqual("Bookshelf", (string)bookshelf.Attribute("Inherits"));
+			ClassicAssert.IsTrue(Child(bookshelf, "removebuilder", "RandomTile"));
+			ClassicAssert.IsTrue(Child(bookshelf, "removepart", "PackagePush2"));
+			ClassicAssert.IsTrue(Child(bookshelf, "removepart", "PackageMirror"));
+			ClassicAssert.AreEqual("*delete", (string)bookshelf.Elements("tag").Single(row =>
 				(string)row.Attribute("Name") == "InventoryPopulationTable").Attribute("Value"));
 
 			XElement torch = Blueprint(document, "r_KingdomCivicTorchpost");
-			Assert.AreEqual("Torchpost", (string)torch.Attribute("Inherits"));
-			Assert.IsTrue(Child(torch, "removebuilder", "RandomTile"));
-			Assert.IsTrue(Child(torch, "removepart", "PackagePush2"));
-			Assert.IsTrue(Child(torch, "removepart", "PackageMirror"));
+			ClassicAssert.AreEqual("Torchpost", (string)torch.Attribute("Inherits"));
+			ClassicAssert.IsTrue(Child(torch, "removebuilder", "RandomTile"));
+			ClassicAssert.IsTrue(Child(torch, "removepart", "PackagePush2"));
+			ClassicAssert.IsTrue(Child(torch, "removepart", "PackageMirror"));
 
 			XElement hookah = Blueprint(document, "r_KingdomCivicHookah");
-			Assert.AreEqual("Hookah", (string)hookah.Attribute("Inherits"));
-			Assert.IsTrue(Child(hookah, "removepart", "TinkerItem"));
-			Assert.IsTrue(Child(hookah, "removepart", "DiceRollGame"));
+			ClassicAssert.AreEqual("Hookah", (string)hookah.Attribute("Inherits"));
+			ClassicAssert.IsTrue(Child(hookah, "removepart", "TinkerItem"));
+			ClassicAssert.IsTrue(Child(hookah, "removepart", "DiceRollGame"));
 			XElement liquid = hookah.Elements("part").Single(row =>
 				(string)row.Attribute("Name") == "LiquidVolume");
-			Assert.AreEqual("0", (string)liquid.Attribute("Volume"));
-			Assert.AreEqual("0", (string)liquid.Attribute("StartVolume"));
-			Assert.AreEqual("", (string)liquid.Attribute("InitialLiquid"));
+			ClassicAssert.AreEqual("0", (string)liquid.Attribute("Volume"));
+			ClassicAssert.AreEqual("0", (string)liquid.Attribute("StartVolume"));
+			ClassicAssert.AreEqual("", (string)liquid.Attribute("InitialLiquid"));
 
 			XElement shelf = Blueprint(document, "r_KingdomFixtureShelfTimber");
-			Assert.AreEqual("r_KingdomCivicBookshelf", (string)shelf.Attribute("Inherits"));
+			ClassicAssert.AreEqual("r_KingdomCivicBookshelf", (string)shelf.Attribute("Inherits"));
 		}
 
 		[Test]
@@ -302,7 +303,7 @@ namespace ThousandAndFirst.Tests
 					if (raw.Contains(attribute.Value))
 						bypasses.Add(Path.GetRelativePath(root, file) + ":" + attribute.Value);
 			}
-			Assert.AreEqual(0, bypasses.Count, string.Join(", ", bypasses));
+			ClassicAssert.AreEqual(0, bypasses.Count, string.Join(", ", bypasses));
 		}
 	}
 }

@@ -2,6 +2,7 @@
 using System;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -39,9 +40,9 @@ namespace ThousandAndFirst.Tests
 			foreach (string path in new[] { Save, State, Load })
 			{
 				string source = Read(path);
-				Assert.IsFalse(Regex.IsMatch(source, @"KingdomQuickstartBootstrap\s*\.\s*Run\s*\("), path);
-				Assert.IsFalse(Regex.IsMatch(source, @"\b(?:TrySeed|Restrip|Realize|TryCreateReceipt|CreateObject)\s*\("), path);
-				Assert.IsFalse(Regex.IsMatch(source, @"(?:new\s+|RequireSystem\s*<)KingdomScenarioAutoRunner\b"), path);
+				ClassicAssert.IsFalse(Regex.IsMatch(source, @"KingdomQuickstartBootstrap\s*\.\s*Run\s*\("), path);
+				ClassicAssert.IsFalse(Regex.IsMatch(source, @"\b(?:TrySeed|Restrip|Realize|TryCreateReceipt|CreateObject)\s*\("), path);
+				ClassicAssert.IsFalse(Regex.IsMatch(source, @"(?:new\s+|RequireSystem\s*<)KingdomScenarioAutoRunner\b"), path);
 				StringAssert.DoesNotContain("NativeFixture", source, path);
 			}
 		}
@@ -58,8 +59,8 @@ namespace ThousandAndFirst.Tests
 				"finally { Saving = false; }", "failure == null,", "Parked.Task.GetAwaiter().GetResult()");
 			Contains(Read(Save), "HarmonyPatch(typeof(XRLCore), \"NewGame\", new Type[0])",
 				"HarmonyPostfix, HarmonyPriority(Priority.Last)", "new TaskCompletionSource<bool>()");
-			Assert.IsFalse(Regex.IsMatch(source, @"\bParked\.(?:SetResult|TrySetResult|SetException|TrySetCanceled)\s*\("));
-			Assert.IsFalse(Regex.IsMatch(source, @"\bRunGame\s*\("));
+			ClassicAssert.IsFalse(Regex.IsMatch(source, @"\bParked\.(?:SetResult|TrySetResult|SetException|TrySetCanceled)\s*\("));
+			ClassicAssert.IsFalse(Regex.IsMatch(source, @"\bRunGame\s*\("));
 		}
 
 		[Test]
@@ -94,7 +95,7 @@ namespace ThousandAndFirst.Tests
 				"KingdomScenarioSaveFiles.HashText(wire)", "WriteNew(Path.Combine(root, KingdomScenarioSaveFiles.ReceiptFile), receipt)");
 			Contains(source, "Directory.GetDirectories(directory).Length == 0", "Path.GetFileName(path) == \"Cache.db\"",
 				"ReadText(Path.Combine(root, KingdomScenarioSaveFiles.ReceiptFile), 512) == receipt", "MaxWireChars) == wire");
-			Assert.IsFalse(Regex.IsMatch(source, @"\.(?:SetStringGameState|SetIntGameState|Delete|Move)\s*\("));
+			ClassicAssert.IsFalse(Regex.IsMatch(source, @"\.(?:SetStringGameState|SetIntGameState|Delete|Move)\s*\("));
 		}
 
 		[Test]
@@ -111,8 +112,8 @@ namespace ThousandAndFirst.Tests
 				"!KingdomNativeRegressionContext.HasAnyState(Game, KingdomScenarioSaveFiles.SnapshotKey)",
 				"Game.Turns, Game.TimeTicks, Game.ActionTicks, Game.PlayerActionTicks",
 				"KingdomScenarioDurableState.ProvesExactText(key, expected)");
-			Assert.IsFalse(Regex.IsMatch(source, @"founder\.(?:ID|IDIfAssigned)\b"));
-			Assert.IsFalse(Regex.IsMatch(source, @"\.(?:SetStringGameState|SetIntGameState|SetZoneProperty|RequirePart|AddObject)\s*\("));
+			ClassicAssert.IsFalse(Regex.IsMatch(source, @"founder\.(?:ID|IDIfAssigned)\b"));
+			ClassicAssert.IsFalse(Regex.IsMatch(source, @"\.(?:SetStringGameState|SetIntGameState|SetZoneProperty|RequirePart|AddObject)\s*\("));
 		}
 
 		[Test]
@@ -130,7 +131,7 @@ namespace ThousandAndFirst.Tests
 				"KingdomScenarioLoadWitness.VerifyRecovered");
 			Contains(source, "bool quickstartVerified = false", "Result = Barrier.Pending", "Barrier.Start(Load)",
 				"finally { Armed = false; }", "KingdomQuickstartLoadTest.Finish(quickstartVerified)");
-			Assert.IsFalse(Regex.IsMatch(source, @"\b(?:RunGame|TryRestoreModsAndLoadAsync)\s*\("));
+			ClassicAssert.IsFalse(Regex.IsMatch(source, @"\b(?:RunGame|TryRestoreModsAndLoadAsync)\s*\("));
 		}
 
 		[Test]
@@ -172,8 +173,8 @@ namespace ThousandAndFirst.Tests
 		private static string Between(string source, string first, string last)
 		{
 			source = Compact(source); first = Compact(first); last = Compact(last);
-			int begin = source.IndexOf(first, StringComparison.Ordinal); Assert.GreaterOrEqual(begin, 0, first);
-			int end = source.IndexOf(last, begin + first.Length, StringComparison.Ordinal); Assert.Greater(end, begin, last);
+			int begin = source.IndexOf(first, StringComparison.Ordinal); ClassicAssert.GreaterOrEqual(begin, 0, first);
+			int end = source.IndexOf(last, begin + first.Length, StringComparison.Ordinal); ClassicAssert.Greater(end, begin, last);
 			return source.Substring(begin, end - begin);
 		}
 		private static void Contains(string source, params string[] tokens)
@@ -184,7 +185,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string token in tokens)
 			{
 				string expected = Compact(token); int at = source.IndexOf(expected, cursor, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(at, cursor, token); cursor = at + expected.Length;
+				ClassicAssert.GreaterOrEqual(at, cursor, token); cursor = at + expected.Length;
 			}
 		}
 	}

@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Text.Json;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -19,20 +20,20 @@ namespace ThousandAndFirst.Tests
 		{
 			using JsonDocument document = JsonDocument.Parse(Read("manifest.json"));
 			JsonElement directories = document.RootElement.GetProperty("Directories");
-			Assert.AreEqual(2, directories.GetArrayLength());
+			ClassicAssert.AreEqual(2, directories.GetArrayLength());
 			JsonElement common = directories[0].GetProperty("Paths");
 			for (int i = 0; i < common.GetArrayLength(); i++)
 			{
 				string path = common[i].GetString();
-				Assert.IsFalse(path.StartsWith("/Integrations", StringComparison.Ordinal));
+				ClassicAssert.IsFalse(path.StartsWith("/Integrations", StringComparison.Ordinal));
 			}
 			StringAssert.Contains("/RuntimeData/", common.GetRawText());
 			StringAssert.DoesNotContain("/Textures/", common.GetRawText(),
 				"vanilla-only runtime art must not advertise an absent local texture tree");
 			JsonElement bridge = directories[1];
-			Assert.AreEqual("/Integrations/Hearthpyre223/",
+			ClassicAssert.AreEqual("/Integrations/Hearthpyre223/",
 				bridge.GetProperty("Path").GetString());
-			Assert.AreEqual("2.2.3", bridge.GetProperty("Dependencies")
+			ClassicAssert.AreEqual("2.2.3", bridge.GetProperty("Dependencies")
 				.GetProperty("Hearthpyre").GetString());
 		}
 
@@ -45,8 +46,8 @@ namespace ThousandAndFirst.Tests
 				"Options.xml", "PopulationTables.xml", "Worlds.xml" };
 			foreach (string name in names)
 			{
-				Assert.IsFalse(File.Exists(Path.Combine(TestMain.RepositoryRoot, name)), name);
-				Assert.IsTrue(File.Exists(Path.Combine(TestMain.RepositoryRoot,
+				ClassicAssert.IsFalse(File.Exists(Path.Combine(TestMain.RepositoryRoot, name)), name);
+				ClassicAssert.IsTrue(File.Exists(Path.Combine(TestMain.RepositoryRoot,
 					"RuntimeData", name)), name);
 			}
 		}
@@ -108,7 +109,7 @@ namespace ThousandAndFirst.Tests
 
 			string adoption = Read("Growth/KingdomAdoptionDesignation.cs");
 			StringAssert.Contains("KingdomForeignFootprints.TryMatchExact", adoption);
-			Assert.Less(adoption.IndexOf("KingdomForeignFootprints.TryMatchExact",
+			ClassicAssert.Less(adoption.IndexOf("KingdomForeignFootprints.TryMatchExact",
 				StringComparison.Ordinal), adoption.IndexOf("TryCreate(Z.ZoneID",
 				StringComparison.Ordinal));
 			string designation = Read("Growth/KingdomDesignationSources.Adopted.cs");
@@ -124,7 +125,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("RefuseProviderContradictions", registry);
 			StringAssert.Contains("DescribeRowFault(Sources[i], rowFault)", registry);
 			StringAssert.Contains("TryProviderPreflight", registry);
-			Assert.Less(registry.IndexOf("TryProviderPreflight", StringComparison.Ordinal),
+			ClassicAssert.Less(registry.IndexOf("TryProviderPreflight", StringComparison.Ordinal),
 				registry.IndexOf("TryNormalize(Provider, Sources[i]", StringComparison.Ordinal));
 			StringAssert.DoesNotContain("Math.Min(Sources.Length", registry);
 			StringAssert.Contains("KingdomForeignFootprintBudgetRules.Apply", registry);
@@ -146,18 +147,18 @@ namespace ThousandAndFirst.Tests
 			string begin = Read("Core/KingdomFoundingTransaction.10Begin.cs");
 			StringAssert.Contains("Basin.PendingExternalBinding = externalBinding", stage);
 			StringAssert.Contains("PayloadDigestWithExternalBinding", begin);
-			Assert.Less(begin.IndexOf("TryStageFoundingReceipt", StringComparison.Ordinal),
+			ClassicAssert.Less(begin.IndexOf("TryStageFoundingReceipt", StringComparison.Ordinal),
 				begin.IndexOf("KingdomLiquids.Drain", StringComparison.Ordinal));
 			StringAssert.Contains("TryPassExternalPourBarrier", begin);
 			string first = Read("Core/KingdomFoundingTransaction.12PublishFirst.cs");
-			Assert.Less(first.IndexOf("CommitExternalBinding", StringComparison.Ordinal),
+			ClassicAssert.Less(first.IndexOf("CommitExternalBinding", StringComparison.Ordinal),
 				first.IndexOf("KingdomFounding.Found", StringComparison.Ordinal));
 			string second = Read("Core/KingdomFoundingTransaction.14PublishSecondCore.cs");
-			Assert.Less(second.IndexOf("CommitExternalBinding", StringComparison.Ordinal),
+			ClassicAssert.Less(second.IndexOf("CommitExternalBinding", StringComparison.Ordinal),
 				second.IndexOf("TryFreezeSecondIdentity", StringComparison.Ordinal));
 			string binding = Read("Core/KingdomExternalOwnership.Binding.cs");
 			StringAssert.Contains("Site.SetZoneProperty(BindingProperty, Encoded)", binding);
-			Assert.Less(binding.IndexOf("Site.SetZoneProperty(BindingProperty, Encoded)",
+			ClassicAssert.Less(binding.IndexOf("Site.SetZoneProperty(BindingProperty, Encoded)",
 					StringComparison.Ordinal),
 				binding.IndexOf("Site.SetZoneProperty(BindingAuthorityProperty, Authority)",
 					StringComparison.Ordinal));
@@ -169,14 +170,14 @@ namespace ThousandAndFirst.Tests
 		public void VisitedGroundPausesBeforeAnySemanticPassMutation()
 		{
 			string source = Read("Core/KingdomSystem.z21.SemanticPass.cs");
-			Assert.Less(source.IndexOf("CanOperate", StringComparison.Ordinal),
+			ClassicAssert.Less(source.IndexOf("CanOperate", StringComparison.Ordinal),
 				source.IndexOf("PrepareSemanticPass", StringComparison.Ordinal));
 			StringAssert.Contains("FinishPublishedClaimStage", source);
 			string events = Read("Core/KingdomSystem.z20.Events.cs");
-			Assert.Less(events.LastIndexOf("ExternalOwnershipAllows(E.Zone)",
+			ClassicAssert.Less(events.LastIndexOf("ExternalOwnershipAllows(E.Zone)",
 					StringComparison.Ordinal),
 				events.IndexOf("if (TrySeat(E.Zone))", StringComparison.Ordinal));
-			Assert.Less(events.IndexOf("ExternalOwnershipAllows(The.ZoneManager?.ActiveZone)",
+			ClassicAssert.Less(events.IndexOf("ExternalOwnershipAllows(The.ZoneManager?.ActiveZone)",
 					StringComparison.Ordinal),
 				events.IndexOf("KingdomConstruction.OnGlobalRecoveryPass", StringComparison.Ordinal));
 			string registry = Read("Core/KingdomExternalOwnership.cs");
@@ -189,15 +190,15 @@ namespace ThousandAndFirst.Tests
 		public void OrdinaryClaimRecoveryAndDebugResetKeepExactAuthority()
 		{
 			string claim = Read("Core/KingdomCharterPart.Ground.cs");
-			Assert.Less(claim.IndexOf("ResumeExternalClaimIfNeeded", StringComparison.Ordinal),
+			ClassicAssert.Less(claim.IndexOf("ResumeExternalClaimIfNeeded", StringComparison.Ordinal),
 				claim.IndexOf("JudgeClaim", StringComparison.Ordinal));
 			StringAssert.Contains("ExternalClaimPublicationObserved", claim);
 			string runtime = Read("Core/KingdomExternalOwnership.Binding.cs");
 			StringAssert.Contains("ClaimAuthorityPrefix + Realm.Length", runtime);
 			string reset = Read("Core/KingdomFoundingTransaction.01DebugReset.cs");
-			Assert.Less(reset.IndexOf("CanResetForRealms", StringComparison.Ordinal),
+			ClassicAssert.Less(reset.IndexOf("CanResetForRealms", StringComparison.Ordinal),
 				reset.IndexOf("Everything above is read-only", StringComparison.Ordinal));
-			Assert.Greater(reset.LastIndexOf("TryClearForRealmReset", StringComparison.Ordinal),
+			ClassicAssert.Greater(reset.LastIndexOf("TryClearForRealmReset", StringComparison.Ordinal),
 				reset.IndexOf("Founding or claim cleanup did not retain", StringComparison.Ordinal));
 		}
 	}

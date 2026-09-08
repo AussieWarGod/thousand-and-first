@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -20,8 +21,8 @@ namespace ThousandAndFirst.Tests
 		{
 			XDocument objects = XDocument.Parse(TestMain.ReadRepositoryText("ObjectBlueprints.xml"));
 			XElement render = Part(Blueprint(objects, name), "Render");
-			Assert.AreEqual(glyph, (string)render.Attribute("RenderString"));
-			Assert.IsNull(render.Attribute("Tile"));
+			ClassicAssert.AreEqual(glyph, (string)render.Attribute("RenderString"));
+			ClassicAssert.IsNull(render.Attribute("Tile"));
 		}
 
 		[Test]
@@ -29,9 +30,9 @@ namespace ThousandAndFirst.Tests
 		{
 			XDocument objects = XDocument.Parse(TestMain.ReadRepositoryText("ObjectBlueprints.xml"));
 			XElement lamp = Blueprint(objects, "r_KingdomArcologySpectrumLamp");
-			Assert.AreEqual("items/sw_hitech_lightsource1.bmp",
+			ClassicAssert.AreEqual("items/sw_hitech_lightsource1.bmp",
 				(string)Part(lamp, "Render").Attribute("Tile"));
-			Assert.IsNull(lamp.Elements("part").SingleOrDefault(e =>
+			ClassicAssert.IsNull(lamp.Elements("part").SingleOrDefault(e =>
 				(string)e.Attribute("Name") == "LightSource"));
 		}
 
@@ -40,27 +41,27 @@ namespace ThousandAndFirst.Tests
 		{
 			XDocument objects = XDocument.Parse(TestMain.ReadRepositoryText("ObjectBlueprints.xml"));
 			XElement rack = Blueprint(objects, "r_KingdomCreedWeaponRack");
-			Assert.IsNotNull(Part(rack, "Container"));
-			Assert.IsNotNull(Part(rack, "Inventory"));
-			Assert.IsFalse(rack.Elements("inventoryobject").Any());
-			Assert.IsFalse(rack.Elements("tag").Any(e =>
+			ClassicAssert.IsNotNull(Part(rack, "Container"));
+			ClassicAssert.IsNotNull(Part(rack, "Inventory"));
+			ClassicAssert.IsFalse(rack.Elements("inventoryobject").Any());
+			ClassicAssert.IsFalse(rack.Elements("tag").Any(e =>
 				(string)e.Attribute("Name") == "InventoryPopulationTable"));
-			Assert.IsFalse(rack.Elements("part").Any(e =>
+			ClassicAssert.IsFalse(rack.Elements("part").Any(e =>
 				(string)e.Attribute("Name") == "Commerce"));
 			XElement practice = Blueprint(objects, "r_KingdomCreedPracticeArmsRack");
-			Assert.IsFalse(practice.Elements("part").Any(e =>
+			ClassicAssert.IsFalse(practice.Elements("part").Any(e =>
 				(string)e.Attribute("Name") == "Container"
 					|| (string)e.Attribute("Name") == "Inventory"));
 
 			XElement trunk = Blueprint(objects, "r_KingdomCreedLivingTrunk");
-			Assert.AreEqual("true", (string)Part(trunk, "Physics").Attribute("Solid"));
+			ClassicAssert.AreEqual("true", (string)Part(trunk, "Physics").Attribute("Solid"));
 			XDocument architecture = XDocument.Parse(TestMain.ReadRepositoryText(
 				"Architecture/KingdomArchitectures-Creeds.xml"));
 			XElement school = architecture.Descendants("map").Single(e =>
 				(string)e.Attribute("Key") == "creed-chavvah-school-s0");
 			XElement living = school.Elements("glyph").Single(e =>
 				(string)e.Attribute("Char") == "t");
-			Assert.AreEqual("adjacent", (string)living.Attribute("Pass"));
+			ClassicAssert.AreEqual("adjacent", (string)living.Attribute("Pass"));
 		}
 
 		[TestCase("r_KingdomSnapjawTrailDen", "127")]
@@ -71,14 +72,14 @@ namespace ThousandAndFirst.Tests
 		{
 			XDocument objects = XDocument.Parse(TestMain.ReadRepositoryText("ObjectBlueprints.xml"));
 			XElement profile = Blueprint(objects, "r_KingdomOpenCreedFurnitureProfile");
-			Assert.IsFalse(profile.Elements("part").Any(e =>
+			ClassicAssert.IsFalse(profile.Elements("part").Any(e =>
 				(string)e.Attribute("Name") == "Render" && e.Attribute("Tile") != null));
 			XElement root = Blueprint(objects, name);
-			Assert.AreEqual("r_KingdomOpenCreedFurnitureProfile",
+			ClassicAssert.AreEqual("r_KingdomOpenCreedFurnitureProfile",
 				(string)root.Attribute("Inherits"));
 			XElement render = Part(root, "Render");
-			Assert.AreEqual(glyph, (string)render.Attribute("RenderString"));
-			Assert.IsNull(render.Attribute("Tile"));
+			ClassicAssert.AreEqual(glyph, (string)render.Attribute("RenderString"));
+			ClassicAssert.IsNull(render.Attribute("Tile"));
 		}
 
 		[Test]
@@ -97,7 +98,7 @@ namespace ThousandAndFirst.Tests
 				string tile = (string)Part(blueprint, "Render").Attribute("Tile");
 				return tile ?? "terrain/sw_arena_floor.bmp";
 			}).ToArray();
-			Assert.AreEqual(names.Length,
+			ClassicAssert.AreEqual(names.Length,
 				tiles.Distinct(StringComparer.OrdinalIgnoreCase).Count());
 		}
 
@@ -118,13 +119,13 @@ namespace ThousandAndFirst.Tests
 					new[] { "DirtFloor", "DirtPath", "DirtRoad" }.Contains(
 						(string)slot.Attribute("Blueprint"))
 					&& (string)slot.Attribute("Material") == "stone").ToArray();
-				Assert.IsEmpty(falseStone, file);
+				ClassicAssert.IsEmpty(falseStone, file);
 			}
 
 			XDocument objects = XDocument.Parse(TestMain.ReadRepositoryText("ObjectBlueprints.xml"));
 			XElement dust = Blueprint(objects, "r_KingdomGroundStoneDust");
-			Assert.AreEqual("cut-stone dust", (string)Part(dust, "Render").Attribute("DisplayName"));
-			Assert.AreEqual("Terrain/sw_ground_dots3.png",
+			ClassicAssert.AreEqual("cut-stone dust", (string)Part(dust, "Render").Attribute("DisplayName"));
+			ClassicAssert.AreEqual("Terrain/sw_ground_dots3.png",
 				(string)Part(dust, "Render").Attribute("Tile"));
 		}
 
@@ -142,23 +143,23 @@ namespace ThousandAndFirst.Tests
 			foreach (var item in expected)
 			{
 				XElement store = Blueprint(objects, item.Key);
-				Assert.AreEqual("r_KingdomFixtureBasketEmpty",
+				ClassicAssert.AreEqual("r_KingdomFixtureBasketEmpty",
 					(string)store.Attribute("Inherits"), item.Key);
-				Assert.AreEqual(item.Value, (string)Part(store, "Render").Attribute("Tile"),
+				ClassicAssert.AreEqual(item.Value, (string)Part(store, "Render").Attribute("Tile"),
 					item.Key);
-				Assert.AreEqual(item.Value, (string)store.Elements("tag").Single(e =>
+				ClassicAssert.AreEqual(item.Value, (string)store.Elements("tag").Single(e =>
 					(string)e.Attribute("Name") == "EmptyTile").Attribute("Value"), item.Key);
-				Assert.AreEqual("*delete", (string)store.Elements("tag").Single(e =>
+				ClassicAssert.AreEqual("*delete", (string)store.Elements("tag").Single(e =>
 					(string)e.Attribute("Name") == "InventoryPopulationTable").Attribute("Value"),
 					item.Key);
-				Assert.IsFalse(store.Elements("inventoryobject").Any(), item.Key);
-				Assert.IsFalse(store.Elements("part").Any(e =>
+				ClassicAssert.IsFalse(store.Elements("inventoryobject").Any(), item.Key);
+				ClassicAssert.IsFalse(store.Elements("part").Any(e =>
 					(string)e.Attribute("Name") == "Commerce"
 					|| (string)e.Attribute("Name") == "LiquidVolume"), item.Key);
 			}
-			Assert.AreEqual(expected.Count - 1, expected.Values.Distinct(
+			ClassicAssert.AreEqual(expected.Count - 1, expected.Values.Distinct(
 				StringComparer.OrdinalIgnoreCase).Count());
-			Assert.AreNotEqual(
+			ClassicAssert.AreNotEqual(
 				(string)Part(Blueprint(objects, "r_KingdomCreedJoppaSeedBin"), "Render")
 					.Attribute("TileColor"),
 				(string)Part(Blueprint(objects, "r_KingdomCreedSnapjawMeatCache"), "Render")
@@ -168,7 +169,7 @@ namespace ThousandAndFirst.Tests
 				"Architecture/KingdomArchitectures-Creeds.xml"));
 			string[] references = { "$seedbin", "$spicejar", "$meatcache", "$labelledbin" };
 			foreach (string reference in references)
-				Assert.AreEqual(1, architecture.Descendants("glyph").Count(e =>
+				ClassicAssert.AreEqual(1, architecture.Descendants("glyph").Count(e =>
 					(string)e.Attribute("Object") == reference), reference);
 		}
 
@@ -181,17 +182,17 @@ namespace ThousandAndFirst.Tests
 			string[] lore = names.Select(name =>
 			{
 				XElement memorial = Blueprint(objects, name);
-				Assert.IsNotNull(Part(memorial, "SmartuseLooks"), name);
-				Assert.IsNotNull(Part(memorial, "Interesting"), name);
-				Assert.IsFalse(memorial.Elements("part").Any(e =>
+				ClassicAssert.IsNotNull(Part(memorial, "SmartuseLooks"), name);
+				ClassicAssert.IsNotNull(Part(memorial, "Interesting"), name);
+				ClassicAssert.IsFalse(memorial.Elements("part").Any(e =>
 					(string)e.Attribute("Name") == "RevealVillageHistoryOnLook"), name);
-				Assert.IsFalse(memorial.Elements("part").Any(e =>
+				ClassicAssert.IsFalse(memorial.Elements("part").Any(e =>
 					(string)e.Attribute("Name") == "Container"
 					|| (string)e.Attribute("Name") == "Inventory"), name);
 				return (string)Part(memorial, "RulesDescription").Attribute("Text");
 			}).ToArray();
-			Assert.IsTrue(lore.All(text => !string.IsNullOrWhiteSpace(text)));
-			Assert.AreEqual(names.Length, lore.Distinct(StringComparer.Ordinal).Count());
+			ClassicAssert.IsTrue(lore.All(text => !string.IsNullOrWhiteSpace(text)));
+			ClassicAssert.AreEqual(names.Length, lore.Distinct(StringComparer.Ordinal).Count());
 		}
 
 		[Test]
@@ -200,12 +201,12 @@ namespace ThousandAndFirst.Tests
 			XDocument objects = XDocument.Parse(TestMain.ReadRepositoryText("ObjectBlueprints.xml"));
 			XElement relicCase = Blueprint(objects, "r_KingdomFixtureRelicCaseScrap");
 			XElement relic = Blueprint(objects, "r_KingdomFixtureMachineRelic");
-			Assert.AreNotEqual((string)Part(relicCase, "Render").Attribute("Tile"),
+			ClassicAssert.AreNotEqual((string)Part(relicCase, "Render").Attribute("Tile"),
 				(string)Part(relic, "Render").Attribute("Tile"));
 			string[] active = { "Container", "Inventory", "Commerce", "ElectricalPowerTransmission",
 				"ElectricalPowerGenerator", "GreatMachine", "QuestManager" };
 			foreach (XElement item in new XElement[] { relicCase, relic })
-				Assert.IsFalse(item.Elements("part").Any(e => active.Contains(
+				ClassicAssert.IsFalse(item.Elements("part").Any(e => active.Contains(
 					(string)e.Attribute("Name"))), (string)item.Attribute("Name"));
 
 			XDocument architecture = XDocument.Parse(TestMain.ReadRepositoryText(
@@ -216,8 +217,8 @@ namespace ThousandAndFirst.Tests
 				(string)e.Attribute("Role") == "recovered-relic-case").Attribute("Blueprint");
 			string relicBlueprint = (string)palette.Elements("slot").Single(e =>
 				(string)e.Attribute("Role") == "retained-machine-relic").Attribute("Blueprint");
-			Assert.AreEqual("r_KingdomFixtureRelicCaseScrap", caseBlueprint);
-			Assert.AreEqual("r_KingdomFixtureMachineRelic", relicBlueprint);
+			ClassicAssert.AreEqual("r_KingdomFixtureRelicCaseScrap", caseBlueprint);
+			ClassicAssert.AreEqual("r_KingdomFixtureMachineRelic", relicBlueprint);
 		}
 
 		[Test]
@@ -236,15 +237,15 @@ namespace ThousandAndFirst.Tests
 			AssertGlyphCount(architecture, "creed-chavvah-school-s0", "B", 14);
 
 			XElement ossuary = Blueprint(objects, "r_KingdomStructureGyreOssuaryScreen");
-			Assert.AreEqual("BaseWallBone", (string)ossuary.Attribute("Inherits"));
-			Assert.IsNull(Part(ossuary, "Render").Attribute("Tile"));
+			ClassicAssert.AreEqual("BaseWallBone", (string)ossuary.Attribute("Inherits"));
+			ClassicAssert.IsNull(Part(ossuary, "Render").Attribute("Tile"));
 			XElement bough = Blueprint(objects, "r_KingdomStructureChavvahTrunk");
-			Assert.AreEqual("ChavvahTrunk", (string)bough.Attribute("Inherits"));
-			Assert.IsNull(Part(bough, "Render").Attribute("Tile"));
+			ClassicAssert.AreEqual("ChavvahTrunk", (string)bough.Attribute("Inherits"));
+			ClassicAssert.IsNull(Part(bough, "Render").Attribute("Tile"));
 
 			XElement pennon = Blueprint(objects, "r_KingdomCreedGoatfolkChallengePennon");
-			Assert.AreEqual("Items/sw_banner.bmp", (string)Part(pennon, "Render").Attribute("Tile"));
-			Assert.IsFalse(pennon.Elements("part").Any(e =>
+			ClassicAssert.AreEqual("Items/sw_banner.bmp", (string)Part(pennon, "Render").Attribute("Tile"));
+			ClassicAssert.IsFalse(pennon.Elements("part").Any(e =>
 				(string)e.Attribute("Name") == "Container"
 				|| (string)e.Attribute("Name") == "Inventory"));
 			string generator = TestMain.ReadRepositoryText(
@@ -259,11 +260,11 @@ namespace ThousandAndFirst.Tests
 			XDocument catalogue = XDocument.Parse(TestMain.ReadRepositoryText("KingdomBuildings.xml"));
 			XElement[] works = catalogue.Descendants("building").Where(e =>
 				(string)e.Attribute("Creed") == "Mechanimists").ToArray();
-			Assert.AreEqual(1, works.Length);
-			Assert.AreEqual("reliquary", (string)works[0].Attribute("Key"));
-			Assert.AreEqual("L", (string)works[0].Attribute("Plot"));
-			Assert.AreEqual("Town", (string)works[0].Attribute("MinStage"));
-			Assert.AreEqual("workshop", (string)works[0].Attribute("MinTech"));
+			ClassicAssert.AreEqual(1, works.Length);
+			ClassicAssert.AreEqual("reliquary", (string)works[0].Attribute("Key"));
+			ClassicAssert.AreEqual("L", (string)works[0].Attribute("Plot"));
+			ClassicAssert.AreEqual("Town", (string)works[0].Attribute("MinStage"));
+			ClassicAssert.AreEqual("workshop", (string)works[0].Attribute("MinTech"));
 		}
 
 		[Test]
@@ -292,9 +293,9 @@ namespace ThousandAndFirst.Tests
 			XDocument objects = XDocument.Parse(TestMain.ReadRepositoryText("ObjectBlueprints.xml"));
 			XElement fixture = Blueprint(objects, "r_KingdomHindrenLoomSemantic");
 			XElement render = Part(fixture, "Render");
-			Assert.AreEqual("Hindren treadle stitcher",
+			ClassicAssert.AreEqual("Hindren treadle stitcher",
 				(string)render.Attribute("DisplayName"));
-			Assert.AreEqual("Items/sw_sewing_machine.bmp", (string)render.Attribute("Tile"));
+			ClassicAssert.AreEqual("Items/sw_sewing_machine.bmp", (string)render.Attribute("Tile"));
 			StringAssert.DoesNotContain("Nacham", fixture.ToString());
 			StringAssert.Contains("needle and bobbin", fixture.ToString());
 		}
@@ -309,7 +310,7 @@ namespace ThousandAndFirst.Tests
 			char character = ((string)glyph.Attribute("Char"))[0];
 			int count = map.Elements("row").Sum(row =>
 				((string)row.Attribute("Cells")).Count(value => value == character));
-			Assert.AreEqual(expected, count, mapKey + " " + anchor);
+			ClassicAssert.AreEqual(expected, count, mapKey + " " + anchor);
 		}
 
 		private static void AssertGlyphCount(XDocument architecture, string mapKey,
@@ -320,7 +321,7 @@ namespace ThousandAndFirst.Tests
 			char character = glyph[0];
 			int count = map.Elements("row").Sum(row =>
 				((string)row.Attribute("Cells")).Count(value => value == character));
-			Assert.AreEqual(expected, count, mapKey + " " + glyph);
+			ClassicAssert.AreEqual(expected, count, mapKey + " " + glyph);
 		}
 
 		private static XElement Blueprint(XDocument document, string name)

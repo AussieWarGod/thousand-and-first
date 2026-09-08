@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -20,8 +21,8 @@ namespace ThousandAndFirst.Tests
 				C("new", 200, 1, 1), C("old", 100, 70, 20), C("middle", 150, 2, 2)
 			};
 			KingdomRaisingPlan plan = KingdomConstructionPresenceRules.Plan(candidates, 20, 2);
-			Assert.AreEqual(1, plan.SelectedIndex);
-			Assert.AreEqual(2, plan.AssignedHands);
+			ClassicAssert.AreEqual(1, plan.SelectedIndex);
+			ClassicAssert.AreEqual(2, plan.AssignedHands);
 		}
 
 		[Test]
@@ -35,8 +36,8 @@ namespace ThousandAndFirst.Tests
 			{
 				C("b", 10, 5, 5), C("a", 20, 1, 1)
 			};
-			Assert.AreEqual("b", forward[KingdomConstructionPresenceRules.Oldest(forward)].ObjectId);
-			Assert.AreEqual("b", reverse[KingdomConstructionPresenceRules.Oldest(reverse)].ObjectId);
+			ClassicAssert.AreEqual("b", forward[KingdomConstructionPresenceRules.Oldest(forward)].ObjectId);
+			ClassicAssert.AreEqual("b", reverse[KingdomConstructionPresenceRules.Oldest(reverse)].ObjectId);
 		}
 
 		[Test]
@@ -47,7 +48,7 @@ namespace ThousandAndFirst.Tests
 				C("z", 10, 3, 4), C("z2", 10, 2, 4), C("b", 10, 7, 3),
 				C("a", 10, 7, 3)
 			};
-			Assert.AreEqual("a", candidates[KingdomConstructionPresenceRules.Oldest(candidates)].ObjectId);
+			ClassicAssert.AreEqual("a", candidates[KingdomConstructionPresenceRules.Oldest(candidates)].ObjectId);
 		}
 
 		[TestCase(-1, 2, 0)]
@@ -59,7 +60,7 @@ namespace ThousandAndFirst.Tests
 			int expected)
 		{
 			var candidates = new List<KingdomRaisingCandidate> { C("one", 1, 1, 1) };
-			Assert.AreEqual(expected,
+			ClassicAssert.AreEqual(expected,
 				KingdomConstructionPresenceRules.Plan(candidates, available, wanted).AssignedHands);
 		}
 
@@ -67,13 +68,13 @@ namespace ThousandAndFirst.Tests
 		public void InvalidCandidatesNeverMintASelection()
 		{
 			var candidates = new List<KingdomRaisingCandidate> { C(null, 1, 1, 1), C("", 0, 0, 0) };
-			Assert.AreEqual(-1, KingdomConstructionPresenceRules.Plan(candidates, 2, 2).SelectedIndex);
+			ClassicAssert.AreEqual(-1, KingdomConstructionPresenceRules.Plan(candidates, 2, 2).SelectedIndex);
 		}
 
 		[Test]
 		public void QueueTellingNamesBothWorksAndTheHandsSpentOnceLaw()
 		{
-			Assert.AreEqual("The kiln waits. The settlement's raising gang is committed first to "
+			ClassicAssert.AreEqual("The kiln waits. The settlement's raising gang is committed first to "
 				+ "the cistern; the same hands cannot stand at two frames.",
 				KingdomConstructionPresenceRules.QueueLine("kiln", "cistern"));
 		}

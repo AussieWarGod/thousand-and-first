@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -64,12 +65,12 @@ namespace ThousandAndFirst.Tests
 				"String = hasString ? Game.GetStringGameState(Key, null) : null,");
 			Has(reader, "HasString = hasString,", "HasInt = hasInt,", "HasInt64 = hasInt64,",
 				"HasObject = hasObject,", "HasBoolean = hasBoolean");
-			Assert.AreEqual(1, Count(reader, "GetStringGameState("), "One value fetch, and only one.");
+			ClassicAssert.AreEqual(1, Count(reader, "GetStringGameState("), "One value fetch, and only one.");
 			string observer = Method(Runtime, Observer);
 			int tables = observer.IndexOf("TryTables(game, out Refusal)", StringComparison.Ordinal);
 			int first = observer.IndexOf("Observe(game, key)", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(tables, 0, "The observer must prove every table dictionary exists.");
-			Assert.Greater(first, tables, "No key may be read before the tables are proved present.");
+			ClassicAssert.GreaterOrEqual(tables, 0, "The observer must prove every table dictionary exists.");
+			ClassicAssert.Greater(first, tables, "No key may be read before the tables are proved present.");
 			string source = Flat(TestMain.ReadRepositoryText(Runtime));
 			foreach (string banned in new[] { "GetIntGameState(", "GetInt64GameState(",
 				"GetObjectGameState(", "GetBooleanGameState(", "GameState[", "TryGetValue(" })
@@ -138,8 +139,8 @@ namespace ThousandAndFirst.Tests
 			// The frozen owner is re-proved AFTER the table reads, never only before them.
 			int capture = body.IndexOf("KingdomSubsidenceOptionTables tables = new", StringComparison.Ordinal);
 			int reprove = body.IndexOf("ReprovesExact(", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(capture, 0, "The observer must capture the five tables.");
-			Assert.Greater(reprove, capture, "The captured owner must be re-proved after the reads.");
+			ClassicAssert.GreaterOrEqual(capture, 0, "The observer must capture the five tables.");
+			ClassicAssert.Greater(reprove, capture, "The captured owner must be re-proved after the reads.");
 			string source = Flat(TestMain.ReadRepositoryText(Runtime));
 			Has(source,
 				"internal readonly struct KingdomSubsidenceOptionTables", "internal readonly bool HasString;",
@@ -180,21 +181,21 @@ namespace ThousandAndFirst.Tests
 				"Result = KingdomSubsidenceOptionPublication.Published;");
 			int capture = body.IndexOf("KingdomSubsidenceOptionTables current =", StringComparison.Ordinal);
 			int write = body.IndexOf("game.SetStringGameState(", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(capture, 0, "Publish must capture the five tables before it decides.");
-			Assert.Greater(write, capture, "Publish must read before it writes.");
+			ClassicAssert.GreaterOrEqual(capture, 0, "Publish must capture the five tables before it decides.");
+			ClassicAssert.Greater(write, capture, "Publish must read before it writes.");
 			// One capture before the write and one after it; publish never reads a single table.
-			Assert.AreEqual(2, Count(body, "Observe(game, key)"), "Exactly two five-table captures.");
+			ClassicAssert.AreEqual(2, Count(body, "Observe(game, key)"), "Exactly two five-table captures.");
 			StringAssert.DoesNotContain("GetStringGameState(", body);
 			int firstReprove = body.IndexOf("ReprovesExact(", StringComparison.Ordinal);
 			int lastReprove = body.LastIndexOf("ReprovesExact(", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(firstReprove, 0, "A re-prove must open the publication.");
-			Assert.Less(firstReprove, write, "A re-prove must precede the write.");
-			Assert.Greater(lastReprove, write, "A re-prove must follow the write.");
-			Assert.Greater(lastReprove,
+			ClassicAssert.GreaterOrEqual(firstReprove, 0, "A re-prove must open the publication.");
+			ClassicAssert.Less(firstReprove, write, "A re-prove must precede the write.");
+			ClassicAssert.Greater(lastReprove, write, "A re-prove must follow the write.");
+			ClassicAssert.Greater(lastReprove,
 				body.IndexOf("KingdomSubsidenceOptionTables after =", StringComparison.Ordinal),
 				"Final capture must be owner-proved before success.");
 			string source = Flat(TestMain.ReadRepositoryText(Runtime));
-			Assert.AreEqual(1, Count(source, "SetStringGameState("),
+			ClassicAssert.AreEqual(1, Count(source, "SetStringGameState("),
 				"Exactly one single-writer publication call may exist.");
 			foreach (string banned in new[] { "RemoveStringGameState(", "AppendStringGameState(" })
 				StringAssert.DoesNotContain(banned, source);
@@ -206,8 +207,8 @@ namespace ThousandAndFirst.Tests
 			string body = Method(Runtime, Publish);
 			int capture = body.IndexOf("KingdomSubsidenceOptionTables current =", StringComparison.Ordinal);
 			int write = body.IndexOf("game.SetStringGameState(", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(capture, 0, "Publish must capture the five tables.");
-			Assert.Greater(write, capture, "The write must follow that capture.");
+			ClassicAssert.GreaterOrEqual(capture, 0, "Publish must capture the five tables.");
+			ClassicAssert.Greater(write, capture, "The write must follow that capture.");
 			string decision = body.Substring(capture, write - capture);
 			Has(decision, "if (!ReprovesExact(Observed, out Refusal)) return false;",
 				"if (KingdomSubsidenceOptionRules.ProvesPublished(Observed.Snapshot, current.Row())) { Result = KingdomSubsidenceOptionPublication.Confirmed; Refusal = null; return true; }",
@@ -225,12 +226,12 @@ namespace ThousandAndFirst.Tests
 			int confirmed = body.IndexOf("Result = KingdomSubsidenceOptionPublication.Confirmed;",
 				StringComparison.Ordinal);
 			int reprove = body.IndexOf("ReprovesExact(", capture, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(confirmed, 0, "Publish must be able to confirm without writing.");
-			Assert.Greater(proves, capture, "The target is proved on the fresh capture.");
-			Assert.Greater(flags, proves, "No table comparison may precede that confirmation.");
-			Assert.Greater(admits, proves, "The publish admission may not precede that confirmation.");
-			Assert.Greater(reprove, capture, "The owner is re-proved on the capture...");
-			Assert.Less(reprove, confirmed, "...and before an idempotent confirmation returns.");
+			ClassicAssert.GreaterOrEqual(confirmed, 0, "Publish must be able to confirm without writing.");
+			ClassicAssert.Greater(proves, capture, "The target is proved on the fresh capture.");
+			ClassicAssert.Greater(flags, proves, "No table comparison may precede that confirmation.");
+			ClassicAssert.Greater(admits, proves, "The publish admission may not precede that confirmation.");
+			ClassicAssert.Greater(reprove, capture, "The owner is re-proved on the capture...");
+			ClassicAssert.Less(reprove, confirmed, "...and before an idempotent confirmation returns.");
 		}
 
 		[Test]
@@ -284,9 +285,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomElapsedOptionDecision decision = KingdomSubsidenceOptionRules.Observe(Row(PriorWire),
 				false, 2L, 101L, out KingdomSubsidenceOptionRules.Snapshot snapshot);
-			Assert.IsTrue(decision.Valid, "The disable observation must be a valid decision.");
-			Assert.AreEqual(PriorWire, snapshot.PriorWire);
-			Assert.AreEqual(TargetWire, snapshot.NextWire);
+			ClassicAssert.IsTrue(decision.Valid, "The disable observation must be a valid decision.");
+			ClassicAssert.AreEqual(PriorWire, snapshot.PriorWire);
+			ClassicAssert.AreEqual(TargetWire, snapshot.NextWire);
 			return snapshot;
 		}
 
@@ -294,9 +295,9 @@ namespace ThousandAndFirst.Tests
 		public void PureRulesProveTheExactTargetAndNeverTheObservedPriorBytes()
 		{
 			KingdomSubsidenceOptionRules.Snapshot snapshot = DisableSnapshot();
-			Assert.IsTrue(KingdomSubsidenceOptionRules.ProvesPublished(snapshot, Row(TargetWire)),
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionRules.ProvesPublished(snapshot, Row(TargetWire)),
 				"The exact target proves an idempotent publication.");
-			Assert.IsFalse(KingdomSubsidenceOptionRules.ProvesPublished(snapshot, Row(PriorWire)),
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionRules.ProvesPublished(snapshot, Row(PriorWire)),
 				"The observed prior is evidence to publish from, never proof of publication.");
 		}
 
@@ -304,31 +305,31 @@ namespace ThousandAndFirst.Tests
 		public void PureRulesAdmitOnlyThePriorBytesAndRefuseTargetAndForeignAlike()
 		{
 			KingdomSubsidenceOptionRules.Snapshot snapshot = DisableSnapshot();
-			Assert.IsTrue(KingdomSubsidenceOptionRules.CanPublish(snapshot, Row(PriorWire), out string wire));
-			Assert.AreEqual(snapshot.NextWire, wire);
-			Assert.AreEqual(TargetWire, wire);
+			ClassicAssert.IsTrue(KingdomSubsidenceOptionRules.CanPublish(snapshot, Row(PriorWire), out string wire));
+			ClassicAssert.AreEqual(snapshot.NextWire, wire);
+			ClassicAssert.AreEqual(TargetWire, wire);
 			// A racing writer's well-formed record is foreign, not a licence to overwrite.
-			Assert.IsFalse(KingdomSubsidenceOptionRules.CanPublish(snapshot, Row(ForeignWire),
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionRules.CanPublish(snapshot, Row(ForeignWire),
 				out string foreign), "Foreign bytes never admit a write.");
-			Assert.IsNull(foreign);
+			ClassicAssert.IsNull(foreign);
 			// The idempotent path is ProvesPublished; the target is never rewritten over itself.
-			Assert.IsFalse(KingdomSubsidenceOptionRules.CanPublish(snapshot, Row(TargetWire),
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionRules.CanPublish(snapshot, Row(TargetWire),
 				out string republished), "The already-published target never admits a rewrite.");
-			Assert.IsNull(republished);
+			ClassicAssert.IsNull(republished);
 		}
 
 		[Test]
 		public void PureRulesRefuseAnExplicitlyStoredEmptyStringAndAnAbsentKeyOnBothSides()
 		{
 			KingdomSubsidenceOptionRules.Snapshot snapshot = DisableSnapshot();
-			Assert.IsFalse(KingdomSubsidenceOptionRules.CanPublish(snapshot, Row(""), out string stored),
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionRules.CanPublish(snapshot, Row(""), out string stored),
 				"A stored empty string is present and unreadable, never a fresh key.");
-			Assert.IsNull(stored);
-			Assert.IsFalse(KingdomSubsidenceOptionRules.ProvesPublished(snapshot, Row("")));
-			Assert.IsFalse(KingdomSubsidenceOptionRules.CanPublish(snapshot, Row(null), out string absent),
+			ClassicAssert.IsNull(stored);
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionRules.ProvesPublished(snapshot, Row("")));
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionRules.CanPublish(snapshot, Row(null), out string absent),
 				"An absent key no longer matches an observation taken from a present one.");
-			Assert.IsNull(absent);
-			Assert.IsFalse(KingdomSubsidenceOptionRules.ProvesPublished(snapshot, Row(null)));
+			ClassicAssert.IsNull(absent);
+			ClassicAssert.IsFalse(KingdomSubsidenceOptionRules.ProvesPublished(snapshot, Row(null)));
 		}
 
 		private static int Count(string source, string needle)
@@ -357,7 +358,7 @@ namespace ThousandAndFirst.Tests
 			int start = source.IndexOf(Flat(signature), StringComparison.Ordinal);
 			Assert.That(start, Is.GreaterThanOrEqualTo(0), path + ": " + signature);
 			int open = source.IndexOf('{', start), depth = 0;
-			Assert.GreaterOrEqual(open, 0, "Unopened source method: " + path + ": " + signature);
+			ClassicAssert.GreaterOrEqual(open, 0, "Unopened source method: " + path + ": " + signature);
 			for (int i = open; i < source.Length; i++)
 			{
 				if (source[i] == '{') depth++;

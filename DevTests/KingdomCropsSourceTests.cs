@@ -2,6 +2,7 @@
 using System;
 
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -30,10 +31,10 @@ namespace ThousandAndFirst.Tests
 		public void CropAuthorityAndXmlPartDeclarationsHaveOneOwner()
 		{
 			string source = KingdomCropsLogicalSource.Read();
-			Assert.AreEqual(8, Count(source, "public static partial class KingdomCrops"));
-			Assert.AreEqual(1, Count(source, "public class r_KingdomSeed : IPart"));
-			Assert.AreEqual(1, Count(source, "public class r_KingdomWildSeed : IPart"));
-			Assert.AreEqual(1, Count(source, "public const string WildSeedTakenProperty"));
+			ClassicAssert.AreEqual(8, Count(source, "public static partial class KingdomCrops"));
+			ClassicAssert.AreEqual(1, Count(source, "public class r_KingdomSeed : IPart"));
+			ClassicAssert.AreEqual(1, Count(source, "public class r_KingdomWildSeed : IPart"));
+			ClassicAssert.AreEqual(1, Count(source, "public const string WildSeedTakenProperty"));
 			StringAssert.DoesNotContain("public static class KingdomCrops", source);
 		}
 
@@ -43,7 +44,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < markers.Length; i++)
 			{
 				int next = source.IndexOf(markers[i], position + 1, StringComparison.Ordinal);
-				Assert.Greater(next, position, markers[i]);
+				ClassicAssert.Greater(next, position, markers[i]);
 				position = next;
 			}
 		}

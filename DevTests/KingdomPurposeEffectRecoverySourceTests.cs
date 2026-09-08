@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -17,9 +18,9 @@ namespace ThousandAndFirst.Tests
 		private static string Between(string source, string from, string to)
 		{
 			int start = source.IndexOf(from, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, from);
+			ClassicAssert.GreaterOrEqual(start, 0, from);
 			int end = source.IndexOf(to, start + from.Length, StringComparison.Ordinal);
-			Assert.Greater(end, start, to);
+			ClassicAssert.Greater(end, start, to);
 			return source.Substring(start, end - start);
 		}
 
@@ -29,7 +30,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < terms.Length; i++)
 			{
 				int next = source.IndexOf(terms[i], cursor + 1, StringComparison.Ordinal);
-				Assert.Greater(next, cursor, terms[i]);
+				ClassicAssert.Greater(next, cursor, terms[i]);
 				cursor = next;
 			}
 		}

@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -17,7 +18,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = Plot();
 			// 07n.FoundingHeartDiagnostics names the founding heart's refusals: one more shard.
-			Assert.AreEqual(57, Count(source, "public static partial class KingdomPlots"));
+			ClassicAssert.AreEqual(57, Count(source, "public static partial class KingdomPlots"));
 			StringAssert.DoesNotContain("public static class KingdomPlots", source);
 			string yielding = Between(source, "[Serializable]\n\tpublic class r_KingdomYielding : IPart",
 				"[Serializable]\n\tpublic class r_KingdomPlotWorks : IPart");
@@ -223,9 +224,9 @@ namespace ThousandAndFirst.Tests
 		private static string Between(string source, string start, string end)
 		{
 			int first = source.IndexOf(start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(first, 0, "missing source boundary: " + start);
+			ClassicAssert.GreaterOrEqual(first, 0, "missing source boundary: " + start);
 			int last = source.IndexOf(end, first + start.Length, StringComparison.Ordinal);
-			Assert.Greater(last, first, "missing source boundary: " + end);
+			ClassicAssert.Greater(last, first, "missing source boundary: " + end);
 			return source.Substring(first, last - first);
 		}
 
@@ -235,7 +236,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < terms.Length; i++)
 			{
 				int found = source.IndexOf(terms[i], offset, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(found, 0, "missing ordered source term: " + terms[i]);
+				ClassicAssert.GreaterOrEqual(found, 0, "missing ordered source term: " + terms[i]);
 				offset = found + terms[i].Length;
 			}
 		}

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -16,15 +17,15 @@ namespace ThousandAndFirst.Tests
 			List<string> official = new List<string> { "old official" };
 			List<string> outsider = new List<string> { "old outsider" };
 			string fingerprint, officialBefore, officialAfter, outsiderBefore, outsiderAfter;
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryFingerprint(id, "a deed", true,
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryFingerprint(id, "a deed", true,
 				null, out fingerprint));
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryHashList("official", official,
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryHashList("official", official,
 				out officialBefore));
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryHashAfter("official", official,
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryHashAfter("official", official,
 				"new official", out officialAfter));
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryHashList("outsider", outsider,
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryHashList("outsider", outsider,
 				out outsiderBefore));
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryHashAfter("outsider", outsider,
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryHashAfter("outsider", outsider,
 				"new outsider", out outsiderAfter));
 			return new KingdomChronicleReceipt
 			{
@@ -74,27 +75,27 @@ namespace ThousandAndFirst.Tests
 		public void CanonicalSha256UsesLengthPrefixesNullAndDomainSeparation()
 		{
 			string fixture, splitA, splitB, nullValue, emptyValue, official, outsider;
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryCanonicalHash("fixture",
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryCanonicalHash("fixture",
 				new string[] { "a", "bc", null }, out fixture));
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				"f72b719bd06c8f3663b948f75846594a08cc577cb02797b005f11dbb04fa1453",
 				fixture);
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryCanonicalHash("fixture",
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryCanonicalHash("fixture",
 				new string[] { "ab", "c" }, out splitA));
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryCanonicalHash("fixture",
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryCanonicalHash("fixture",
 				new string[] { "a", "bc" }, out splitB));
-			Assert.AreNotEqual(splitA, splitB, "field boundaries must not alias");
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryCanonicalHash("fixture",
+			ClassicAssert.AreNotEqual(splitA, splitB, "field boundaries must not alias");
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryCanonicalHash("fixture",
 				new string[] { null }, out nullValue));
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryCanonicalHash("fixture",
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryCanonicalHash("fixture",
 				new string[] { "" }, out emptyValue));
-			Assert.AreNotEqual(nullValue, emptyValue);
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryHashList("official",
+			ClassicAssert.AreNotEqual(nullValue, emptyValue);
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryHashList("official",
 				new List<string> { "same" }, out official));
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryHashList("outsider",
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryHashList("outsider",
 				new List<string> { "same" }, out outsider));
-			Assert.AreNotEqual(official, outsider);
-			Assert.AreEqual(64, fixture.Length);
+			ClassicAssert.AreNotEqual(official, outsider);
+			ClassicAssert.AreEqual(64, fixture.Length);
 		}
 
 		[Test]
@@ -104,17 +105,17 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < KingdomChronicleReceiptRules.MaxEntries; i++)
 				values.Add("entry-" + i);
 			string predicted, actual;
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryHashAfter("official", values,
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryHashAfter("official", values,
 				"tail", out predicted));
 			KingdomChronicleReceiptRules.AppendBounded(values, "tail");
-			Assert.AreEqual(KingdomChronicleReceiptRules.MaxEntries, values.Count);
-			Assert.AreEqual("entry-0", values[0],
+			ClassicAssert.AreEqual(KingdomChronicleReceiptRules.MaxEntries, values.Count);
+			ClassicAssert.AreEqual("entry-0", values[0],
 				"the founding/root milestone is not ordinary FIFO news");
-			Assert.AreEqual("entry-2", values[1]);
-			Assert.AreEqual("tail", values[values.Count - 1]);
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryHashList("official", values,
+			ClassicAssert.AreEqual("entry-2", values[1]);
+			ClassicAssert.AreEqual("tail", values[values.Count - 1]);
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryHashList("official", values,
 				out actual));
-			Assert.AreEqual(predicted, actual);
+			ClassicAssert.AreEqual(predicted, actual);
 		}
 
 		[Test]
@@ -124,15 +125,15 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < KingdomChronicleReceiptRules.MaxEntries; i++)
 				values.Add("same");
 			string before, after;
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryHashList("official", values,
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryHashList("official", values,
 				out before));
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryHashAfter("official", values,
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryHashAfter("official", values,
 				"same", out after));
-			Assert.AreEqual(before, after);
-			Assert.AreEqual(KingdomChronicleListAction.MarkLost,
+			ClassicAssert.AreEqual(before, after);
+			ClassicAssert.AreEqual(KingdomChronicleListAction.MarkLost,
 				KingdomChronicleReceiptRules.ListAction(
 					KingdomChronicleSinkDisposition.Pending, before, before, after));
-			Assert.AreEqual(KingdomChronicleListAction.MarkLost,
+			ClassicAssert.AreEqual(KingdomChronicleListAction.MarkLost,
 				KingdomChronicleReceiptRules.ListAction(
 					KingdomChronicleSinkDisposition.Attempting, after, before, after));
 		}
@@ -142,25 +143,25 @@ namespace ThousandAndFirst.Tests
 		{
 			List<string> beforeList = new List<string> { "before" };
 			string before, after, unrelated;
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryHashList("official", beforeList,
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryHashList("official", beforeList,
 				out before));
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryHashAfter("official", beforeList,
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryHashAfter("official", beforeList,
 				"event", out after));
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryHashList("official",
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryHashList("official",
 				new List<string> { "other" }, out unrelated));
-			Assert.AreEqual(KingdomChronicleListAction.Append,
+			ClassicAssert.AreEqual(KingdomChronicleListAction.Append,
 				KingdomChronicleReceiptRules.ListAction(
 					KingdomChronicleSinkDisposition.Pending, before, before, after));
-			Assert.AreEqual(KingdomChronicleListAction.Append,
+			ClassicAssert.AreEqual(KingdomChronicleListAction.Append,
 				KingdomChronicleReceiptRules.ListAction(
 					KingdomChronicleSinkDisposition.Attempting, before, before, after));
-			Assert.AreEqual(KingdomChronicleListAction.ConfirmDelivered,
+			ClassicAssert.AreEqual(KingdomChronicleListAction.ConfirmDelivered,
 				KingdomChronicleReceiptRules.ListAction(
 					KingdomChronicleSinkDisposition.Attempting, after, before, after));
-			Assert.AreEqual(KingdomChronicleListAction.MarkLost,
+			ClassicAssert.AreEqual(KingdomChronicleListAction.MarkLost,
 				KingdomChronicleReceiptRules.ListAction(
 					KingdomChronicleSinkDisposition.Attempting, unrelated, before, after));
-			Assert.AreEqual(KingdomChronicleSinkDisposition.Lost,
+			ClassicAssert.AreEqual(KingdomChronicleSinkDisposition.Lost,
 				KingdomChronicleReceiptRules.RecoverUninspectable(
 					KingdomChronicleSinkDisposition.Attempting));
 		}
@@ -171,41 +172,41 @@ namespace ThousandAndFirst.Tests
 			KingdomChronicleReceipt active = Active("event:active");
 			string text;
 			KingdomChronicleRegistryFault fault;
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryWriteRegistry(
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryWriteRegistry(
 				new List<KingdomChronicleReceipt> { active }, out text, out fault), fault.ToString());
 			StringAssert.Contains("\na|", text);
 			List<KingdomChronicleReceipt> parsed;
 			bool migrated;
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryParseRegistry(text, out parsed,
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryParseRegistry(text, out parsed,
 				out migrated, out fault), fault.ToString());
-			Assert.IsFalse(migrated);
-			Assert.AreEqual(KingdomChronicleSinkDisposition.Pending,
+			ClassicAssert.IsFalse(migrated);
+			ClassicAssert.AreEqual(KingdomChronicleSinkDisposition.Pending,
 				parsed[0].OfficialState);
-			Assert.AreEqual(KingdomChronicleSinkDisposition.Delivered,
+			ClassicAssert.AreEqual(KingdomChronicleSinkDisposition.Delivered,
 				parsed[0].OutsiderState);
-			Assert.AreEqual(KingdomChronicleSinkDisposition.Pending,
+			ClassicAssert.AreEqual(KingdomChronicleSinkDisposition.Pending,
 				parsed[0].JournalState);
-			Assert.AreEqual(active.OfficialAfter, parsed[0].OfficialAfter);
+			ClassicAssert.AreEqual(active.OfficialAfter, parsed[0].OfficialAfter);
 
 			active.OfficialState = KingdomChronicleSinkDisposition.Delivered;
 			active.JournalState = KingdomChronicleSinkDisposition.Skipped;
-			Assert.IsTrue(KingdomChronicleReceiptRules.ReceiptValid(active),
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.ReceiptValid(active),
 				"terminal active row must remain valid across a save cut");
 			KingdomChronicleReceipt compact = KingdomChronicleReceiptRules.Compact(active);
-			Assert.IsNotNull(compact);
-			Assert.IsTrue(compact.Compact);
-			Assert.IsNull(compact.Official);
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryWriteRegistry(
+			ClassicAssert.IsNotNull(compact);
+			ClassicAssert.IsTrue(compact.Compact);
+			ClassicAssert.IsNull(compact.Official);
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryWriteRegistry(
 				new List<KingdomChronicleReceipt> { compact }, out text, out fault));
 			StringAssert.Contains("\ntg|", text);
 
 			KingdomChronicleReceipt illegal = Terminal("event:illegal");
 			illegal.OfficialState = KingdomChronicleSinkDisposition.Skipped;
-			Assert.IsFalse(KingdomChronicleReceiptRules.ReceiptValid(illegal),
+			ClassicAssert.IsFalse(KingdomChronicleReceiptRules.ReceiptValid(illegal),
 				"inspectable list sinks cannot silently use journal-only Skipped");
 			illegal = Active("event:none");
 			illegal.JournalState = KingdomChronicleSinkDisposition.None;
-			Assert.IsFalse(KingdomChronicleReceiptRules.ReceiptValid(illegal));
+			ClassicAssert.IsFalse(KingdomChronicleReceiptRules.ReceiptValid(illegal));
 		}
 
 		[Test]
@@ -215,15 +216,15 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < 65; i++) rows.Add(Terminal("event:" + i));
 			string text;
 			KingdomChronicleRegistryFault fault;
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryWriteRegistry(rows, out text,
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryWriteRegistry(rows, out text,
 				out fault), fault.ToString());
 			List<KingdomChronicleReceipt> parsed;
 			bool migrated;
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryParseRegistry(text, out parsed,
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryParseRegistry(text, out parsed,
 				out migrated, out fault), fault.ToString());
-			Assert.AreEqual(65, parsed.Count);
-			Assert.AreEqual("event:0", parsed[0].EventId);
-			Assert.AreEqual("event:64", parsed[64].EventId);
+			ClassicAssert.AreEqual(65, parsed.Count);
+			ClassicAssert.AreEqual("event:0", parsed[0].EventId);
+			ClassicAssert.AreEqual("event:64", parsed[64].EventId);
 		}
 
 		[Test]
@@ -234,17 +235,17 @@ namespace ThousandAndFirst.Tests
 				rows.Add(Terminal("event:" + i));
 			string text;
 			KingdomChronicleRegistryFault fault;
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryWriteRegistry(rows, out text,
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryWriteRegistry(rows, out text,
 				out fault), fault.ToString());
 			List<KingdomChronicleReceipt> parsed;
 			bool migrated;
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryParseRegistry(text, out parsed,
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryParseRegistry(text, out parsed,
 				out migrated, out fault), fault.ToString());
-			Assert.AreEqual(KingdomChronicleReceiptRules.MaxReceipts, parsed.Count);
+			ClassicAssert.AreEqual(KingdomChronicleReceiptRules.MaxReceipts, parsed.Count);
 			rows.Add(Terminal("event:overflow"));
-			Assert.IsFalse(KingdomChronicleReceiptRules.TryWriteRegistry(rows, out text,
+			ClassicAssert.IsFalse(KingdomChronicleReceiptRules.TryWriteRegistry(rows, out text,
 				out fault));
-			Assert.AreEqual(KingdomChronicleRegistryFault.TooManyRows, fault);
+			ClassicAssert.AreEqual(KingdomChronicleRegistryFault.TooManyRows, fault);
 		}
 
 		[Test]
@@ -255,24 +256,24 @@ namespace ThousandAndFirst.Tests
 			KingdomChronicleReceipt receipt = Terminal(id);
 			string text;
 			KingdomChronicleRegistryFault fault;
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryWriteRegistry(
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryWriteRegistry(
 				new List<KingdomChronicleReceipt> { receipt }, out text, out fault));
 			StringAssert.Contains("\ntc|" + job + "|", text);
-			Assert.IsFalse(text.Contains("construction:"),
+			ClassicAssert.IsFalse(text.Contains("construction:"),
 				"compact row stores exact job and coordinate, not repeated prefix");
 			List<KingdomChronicleReceipt> parsed;
 			bool migrated;
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryParseRegistry(text, out parsed,
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryParseRegistry(text, out parsed,
 				out migrated, out fault), fault.ToString());
-			Assert.AreEqual(id, parsed[0].EventId);
-			Assert.AreEqual(KingdomChronicleSinkDisposition.Lost,
+			ClassicAssert.AreEqual(id, parsed[0].EventId);
+			ClassicAssert.AreEqual(KingdomChronicleSinkDisposition.Lost,
 				parsed[0].OutsiderState);
 			string parsedJob, coordinate;
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryConstructionIdentity(id,
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryConstructionIdentity(id,
 				out parsedJob, out coordinate));
-			Assert.AreEqual(job, parsedJob);
-			Assert.AreEqual("raised:chronicle", coordinate);
-			Assert.IsFalse(KingdomChronicleReceiptRules.TryConstructionIdentity(
+			ClassicAssert.AreEqual(job, parsedJob);
+			ClassicAssert.AreEqual("raised:chronicle", coordinate);
+			ClassicAssert.IsFalse(KingdomChronicleReceiptRules.TryConstructionIdentity(
 				"construction:" + job.ToUpperInvariant() + ":raised", out parsedJob,
 				out coordinate));
 		}
@@ -288,29 +289,29 @@ namespace ThousandAndFirst.Tests
 			List<KingdomChronicleReceipt> parsed;
 			bool migrated;
 			KingdomChronicleRegistryFault fault;
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryParseRegistry(legacy, out parsed,
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryParseRegistry(legacy, out parsed,
 				out migrated, out fault), fault.ToString());
-			Assert.IsTrue(migrated);
-			Assert.AreEqual(2, parsed.Count);
-			Assert.AreEqual(generic, parsed[0].EventId);
-			Assert.IsTrue(parsed[0].LegacyBlocked);
-			Assert.IsNull(parsed[0].Fingerprint,
+			ClassicAssert.IsTrue(migrated);
+			ClassicAssert.AreEqual(2, parsed.Count);
+			ClassicAssert.AreEqual(generic, parsed[0].EventId);
+			ClassicAssert.IsTrue(parsed[0].LegacyBlocked);
+			ClassicAssert.IsNull(parsed[0].Fingerprint,
 				"legacy FNV fingerprint must never authorize v3 delivery");
-			Assert.AreEqual(KingdomChronicleSinkDisposition.Lost,
+			ClassicAssert.AreEqual(KingdomChronicleSinkDisposition.Lost,
 				parsed[0].OfficialState);
-			Assert.AreEqual(KingdomChronicleSinkDisposition.Lost,
+			ClassicAssert.AreEqual(KingdomChronicleSinkDisposition.Lost,
 				parsed[1].JournalState,
 				"legacy accomplishment intent is uncertainty, not delivery");
 			string v3;
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryWriteRegistry(parsed, out v3,
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryWriteRegistry(parsed, out v3,
 				out fault), fault.ToString());
 			StringAssert.StartsWith(KingdomChronicleReceiptRules.Header, v3);
 			StringAssert.Contains("\ntg|", v3);
 			StringAssert.Contains("\ntc|" + job + "|", v3);
-			Assert.IsTrue(KingdomChronicleReceiptRules.TryParseRegistry(v3, out parsed,
+			ClassicAssert.IsTrue(KingdomChronicleReceiptRules.TryParseRegistry(v3, out parsed,
 				out migrated, out fault), fault.ToString());
-			Assert.IsFalse(migrated);
-			Assert.AreEqual(construction, parsed[1].EventId);
+			ClassicAssert.IsFalse(migrated);
+			ClassicAssert.AreEqual(construction, parsed[1].EventId);
 		}
 
 		[Test]
@@ -319,29 +320,29 @@ namespace ThousandAndFirst.Tests
 			List<KingdomChronicleReceipt> parsed;
 			bool migrated;
 			KingdomChronicleRegistryFault fault;
-			Assert.IsFalse(KingdomChronicleReceiptRules.TryParseRegistry(
+			ClassicAssert.IsFalse(KingdomChronicleReceiptRules.TryParseRegistry(
 				"taf-chronicle|4", out parsed, out migrated, out fault));
-			Assert.AreEqual(KingdomChronicleRegistryFault.UnknownVersion, fault);
-			Assert.IsFalse(KingdomChronicleReceiptRules.TryParseRegistry(
+			ClassicAssert.AreEqual(KingdomChronicleRegistryFault.UnknownVersion, fault);
+			ClassicAssert.IsFalse(KingdomChronicleReceiptRules.TryParseRegistry(
 				"not-a-registry", out parsed, out migrated, out fault));
-			Assert.AreEqual(KingdomChronicleRegistryFault.MalformedHeader, fault);
-			Assert.IsFalse(KingdomChronicleReceiptRules.TryParseRegistry(
+			ClassicAssert.AreEqual(KingdomChronicleRegistryFault.MalformedHeader, fault);
+			ClassicAssert.IsFalse(KingdomChronicleReceiptRules.TryParseRegistry(
 				KingdomChronicleReceiptRules.Header + new string('\n',
 					KingdomChronicleReceiptRules.MaxReceipts + 1), out parsed,
 					out migrated, out fault));
-			Assert.AreEqual(KingdomChronicleRegistryFault.TooManyRows, fault);
-			Assert.IsFalse(KingdomChronicleReceiptRules.TryParseRegistry(
+			ClassicAssert.AreEqual(KingdomChronicleRegistryFault.TooManyRows, fault);
+			ClassicAssert.IsFalse(KingdomChronicleReceiptRules.TryParseRegistry(
 				new string('x', KingdomChronicleReceiptRules.MaxRegistryChars + 1),
 				out parsed, out migrated, out fault));
-			Assert.AreEqual(KingdomChronicleRegistryFault.RawTooLong, fault);
-			Assert.IsFalse(KingdomChronicleReceiptRules.TryParseRegistry(
+			ClassicAssert.AreEqual(KingdomChronicleRegistryFault.RawTooLong, fault);
+			ClassicAssert.IsFalse(KingdomChronicleReceiptRules.TryParseRegistry(
 				KingdomChronicleReceiptRules.Header + "\ntg|!!!!|" + ZeroHash
 					+ "|3|3|4|1|0", out parsed, out migrated, out fault));
-			Assert.AreEqual(KingdomChronicleRegistryFault.MalformedRow, fault);
-			Assert.IsFalse(KingdomChronicleReceiptRules.TryParseRegistry(
+			ClassicAssert.AreEqual(KingdomChronicleRegistryFault.MalformedRow, fault);
+			ClassicAssert.IsFalse(KingdomChronicleReceiptRules.TryParseRegistry(
 				"v1\n" + LegacyRow("legacy", 2), out parsed, out migrated, out fault));
-			Assert.AreEqual(KingdomChronicleRegistryFault.MalformedRow, fault);
-			Assert.IsFalse(migrated, "invalid legacy data must never be labeled migrated");
+			ClassicAssert.AreEqual(KingdomChronicleRegistryFault.MalformedRow, fault);
+			ClassicAssert.IsFalse(migrated, "invalid legacy data must never be labeled migrated");
 		}
 	}
 }

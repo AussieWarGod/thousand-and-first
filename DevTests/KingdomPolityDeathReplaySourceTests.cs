@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -138,7 +139,7 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int returned = endpoints.IndexOf("return ReconcileReturn(ledger, P, Manifest",
 				abandoned, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(abandoned, 0); Assert.Greater(returned, abandoned);
+			ClassicAssert.GreaterOrEqual(abandoned, 0); ClassicAssert.Greater(returned, abandoned);
 		}
 
 		[Test]
@@ -181,10 +182,10 @@ namespace ThousandAndFirst.Tests
 			// TryWriteDeathIntent, and starting there would swallow the whole file.
 			int loop = replay.IndexOf("internal static bool TryReplayDeathIntents",
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(loop, 0, "TryReplayDeathIntents");
+			ClassicAssert.GreaterOrEqual(loop, 0, "TryReplayDeathIntents");
 			int present = replay.IndexOf("if (present)", loop, StringComparison.Ordinal);
 			int absent = replay.IndexOf("if (!witnessed)", present, StringComparison.Ordinal);
-			Assert.Greater(absent, present, "if (!witnessed)");
+			ClassicAssert.Greater(absent, present, "if (!witnessed)");
 			string branch = replay.Substring(present, absent - present);
 			AssertBefore(branch, "TryBuildCustodyPlan", "TryClearRemovalWitness");
 			AssertBefore(branch, "TryClearRemovalWitness", "TryClearDeathIntent");
@@ -339,10 +340,10 @@ namespace ThousandAndFirst.Tests
 				"private static bool TryWriteCleanupIntent");
 			AssertBefore(remove, "TryFindResidentObject", "TryProveLocalObjectAbsence");
 			AssertBefore(remove, "TryWriteRemovalWitness(Cell", "TryClearCleanupIntent");
-			Assert.Greater(remove.LastIndexOf("TryProveLocalObjectAbsence",
+			ClassicAssert.Greater(remove.LastIndexOf("TryProveLocalObjectAbsence",
 				StringComparison.Ordinal), remove.IndexOf("TryClearCleanupIntent",
 					StringComparison.Ordinal));
-			Assert.Greater(write.LastIndexOf("InspectUniqueRawZoneSlot(zone",
+			ClassicAssert.Greater(write.LastIndexOf("InspectUniqueRawZoneSlot(zone",
 				StringComparison.Ordinal), write.IndexOf("zone.SetZoneProperty",
 					StringComparison.Ordinal));
 			StringAssert.Contains("KingdomPolityCleanupEvidenceProof.Exact", write);
@@ -355,14 +356,14 @@ namespace ThousandAndFirst.Tests
 			string clear = Method(source, "private static bool TryClearCleanupIntent");
 			string conditional = Method(source, "private static bool TryRemoveExactRawZoneSlot");
 			int remove = clear.IndexOf("TryRemoveExactRawZoneSlot", StringComparison.Ordinal);
-			Assert.Greater(remove, clear.IndexOf("CleanupIntentCanClear", StringComparison.Ordinal));
+			ClassicAssert.Greater(remove, clear.IndexOf("CleanupIntentCanClear", StringComparison.Ordinal));
 			int witnessBefore = clear.LastIndexOf("TryProveRemovalWitness", remove,
 				StringComparison.Ordinal);
-			Assert.Greater(witnessBefore, clear.IndexOf("TryProveExactCleanupIntent",
+			ClassicAssert.Greater(witnessBefore, clear.IndexOf("TryProveExactCleanupIntent",
 				StringComparison.Ordinal));
 			StringAssert.DoesNotContain("TryProveExactCleanupIntent",
 				clear.Substring(witnessBefore, remove - witnessBefore));
-			Assert.Greater(clear.LastIndexOf("TryProveRemovalWitness", StringComparison.Ordinal), remove);
+			ClassicAssert.Greater(clear.LastIndexOf("TryProveRemovalWitness", StringComparison.Ordinal), remove);
 			StringAssert.Contains("ICollection<KeyValuePair<string, object>>", conditional);
 			StringAssert.Contains("new KeyValuePair<string, object>(Key, Expected)", conditional);
 			StringAssert.DoesNotContain("InspectUniqueRawZoneSlot", conditional);
@@ -458,18 +459,18 @@ namespace ThousandAndFirst.Tests
 		private static string Between(string source, string opening, string closing)
 		{
 			int a = source.IndexOf(opening, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(a, 0, opening);
+			ClassicAssert.GreaterOrEqual(a, 0, opening);
 			int b = source.IndexOf(closing, a, StringComparison.Ordinal);
-			Assert.Greater(b, a, closing);
+			ClassicAssert.Greater(b, a, closing);
 			return source.Substring(a, b - a);
 		}
 
 		private static string Method(string source, string signature)
 		{
 			int start = source.IndexOf(signature, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, signature);
+			ClassicAssert.GreaterOrEqual(start, 0, signature);
 			int open = source.IndexOf('{', start);
-			Assert.Greater(open, start, signature + " body");
+			ClassicAssert.Greater(open, start, signature + " body");
 			int depth = 0;
 			for (int i = open; i < source.Length; i++)
 			{
@@ -484,7 +485,7 @@ namespace ThousandAndFirst.Tests
 		{
 			int a = source.IndexOf(earlier, StringComparison.Ordinal);
 			int b = source.IndexOf(later, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(a, 0, earlier); Assert.Greater(b, a, later);
+			ClassicAssert.GreaterOrEqual(a, 0, earlier); ClassicAssert.Greater(b, a, later);
 		}
 	}
 }

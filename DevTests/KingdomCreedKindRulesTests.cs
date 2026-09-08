@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -13,7 +14,7 @@ namespace ThousandAndFirst.Tests
 		private static KingdomCreedDefinition Parse(string name, string kind,
 			string theology = null)
 		{
-			Assert.IsTrue(KingdomCreedKindRules.TryParse(new KingdomCreedDraft
+			ClassicAssert.IsTrue(KingdomCreedKindRules.TryParse(new KingdomCreedDraft
 			{
 				Name = name, Kind = kind, Theology = theology
 			}, out KingdomCreedDefinition parsed, out string error), error);
@@ -23,7 +24,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PublicKindsAndDtosHaveStableExactShape()
 		{
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomCreedKind)));
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomCreedKind)));
 			CollectionAssert.AreEqual(new byte[] { 0, 1, 2, 3, 4, 5 },
 				Enum.GetValues(typeof(KingdomCreedKind)).Cast<KingdomCreedKind>()
 					.Select(x => (byte)x).ToArray());
@@ -41,7 +42,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("cult", KingdomCreedKind.Cult)]
 		public void ExactSixKindsParseCaseInsensitively(string token, KingdomCreedKind expected)
 		{
-			Assert.AreEqual(expected, Parse("Example", token.ToUpperInvariant()).Kind);
+			ClassicAssert.AreEqual(expected, Parse("Example", token.ToUpperInvariant()).Kind);
 		}
 
 		[Test]
@@ -53,20 +54,20 @@ namespace ThousandAndFirst.Tests
 				Parse("Church", "order", "yes"), Parse("Way", "doctrine"),
 				Parse("Lamb", "cult")
 			};
-			Assert.IsFalse(KingdomCreedKindRules.UsesTheology(definitions, "Village"));
-			Assert.IsFalse(KingdomCreedKindRules.UsesTheology(definitions, "Guild"));
-			Assert.IsTrue(KingdomCreedKindRules.UsesTheology(definitions, "Church"));
-			Assert.IsTrue(KingdomCreedKindRules.UsesTheology(definitions, "Way"));
-			Assert.IsTrue(KingdomCreedKindRules.UsesTheology(definitions, "Lamb"));
-			Assert.IsFalse(KingdomCreedKindRules.UsesTheology(definitions, "ThirdParty"));
-			Assert.IsFalse(KingdomCreedKindRules.TryFind(definitions, "ThirdParty", out _));
+			ClassicAssert.IsFalse(KingdomCreedKindRules.UsesTheology(definitions, "Village"));
+			ClassicAssert.IsFalse(KingdomCreedKindRules.UsesTheology(definitions, "Guild"));
+			ClassicAssert.IsTrue(KingdomCreedKindRules.UsesTheology(definitions, "Church"));
+			ClassicAssert.IsTrue(KingdomCreedKindRules.UsesTheology(definitions, "Way"));
+			ClassicAssert.IsTrue(KingdomCreedKindRules.UsesTheology(definitions, "Lamb"));
+			ClassicAssert.IsFalse(KingdomCreedKindRules.UsesTheology(definitions, "ThirdParty"));
+			ClassicAssert.IsFalse(KingdomCreedKindRules.TryFind(definitions, "ThirdParty", out _));
 
 			foreach (string kind in new string[] { "community", "people", "polity" })
-				Assert.IsFalse(KingdomCreedKindRules.TryParse(new KingdomCreedDraft
+				ClassicAssert.IsFalse(KingdomCreedKindRules.TryParse(new KingdomCreedDraft
 				{
 					Name = "Bad", Kind = kind, Theology = "yes"
 				}, out _, out _), kind);
-			Assert.IsFalse(KingdomCreedKindRules.TryParse(new KingdomCreedDraft
+			ClassicAssert.IsFalse(KingdomCreedKindRules.TryParse(new KingdomCreedDraft
 			{
 				Name = "Bad", Kind = "doctrine", Theology = "no"
 			}, out _, out _));
@@ -79,18 +80,18 @@ namespace ThousandAndFirst.Tests
 			{
 				Name = "Order", Kind = "order", Theology = "yes"
 			};
-			Assert.IsTrue(KingdomCreedKindRules.TryMerge(first,
+			ClassicAssert.IsTrue(KingdomCreedKindRules.TryMerge(first,
 				new KingdomCreedDraft { Name = "Order" }, out KingdomCreedDraft inherited,
 				out string error), error);
-			Assert.AreEqual("yes", inherited.Theology);
-			Assert.IsTrue(KingdomCreedKindRules.TryMerge(inherited,
+			ClassicAssert.AreEqual("yes", inherited.Theology);
+			ClassicAssert.IsTrue(KingdomCreedKindRules.TryMerge(inherited,
 				new KingdomCreedDraft { Name = "Order", Theology = "" },
 				out KingdomCreedDraft cleared, out error), error);
-			Assert.IsFalse(Parse(cleared.Name, cleared.Kind, cleared.Theology).Theological);
-			Assert.IsFalse(KingdomCreedKindRules.TryMerge(first,
+			ClassicAssert.IsFalse(Parse(cleared.Name, cleared.Kind, cleared.Theology).Theological);
+			ClassicAssert.IsFalse(KingdomCreedKindRules.TryMerge(first,
 				new KingdomCreedDraft { Name = "Order", Kind = "cult" }, out _, out error));
 			StringAssert.Contains("cannot clear or change", error);
-			Assert.IsFalse(KingdomCreedKindRules.TryMerge(first,
+			ClassicAssert.IsFalse(KingdomCreedKindRules.TryMerge(first,
 				new KingdomCreedDraft { Name = "Other" }, out _, out error));
 			StringAssert.Contains("cannot merge", error);
 		}
@@ -102,7 +103,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("religion")]
 		public void MissingMalformedAndDuplicateKindTokensAreRejected(string kind)
 		{
-			Assert.IsFalse(KingdomCreedKindRules.TryParse(new KingdomCreedDraft
+			ClassicAssert.IsFalse(KingdomCreedKindRules.TryParse(new KingdomCreedDraft
 			{
 				Name = "Bad", Kind = kind
 			}, out _, out string error));
@@ -115,23 +116,23 @@ namespace ThousandAndFirst.Tests
 			XDocument document = XDocument.Parse(
 				TestMain.ReadRepositoryText("KingdomCreeds.xml"));
 			XElement[] rows = document.Root.Elements("creed").ToArray();
-			Assert.AreEqual(33, rows.Length);
+			ClassicAssert.AreEqual(33, rows.Length);
 			foreach (XElement row in rows)
-				Assert.IsTrue(KingdomCreedKindRules.TryParse(new KingdomCreedDraft
+				ClassicAssert.IsTrue(KingdomCreedKindRules.TryParse(new KingdomCreedDraft
 				{
 					Name = (string)row.Attribute("Name"), Kind = (string)row.Attribute("Kind"),
 					Theology = (string)row.Attribute("Theology")
 				}, out _, out string error), error);
-			Assert.AreEqual(33, rows.Select(x => (string)x.Attribute("Name"))
+			ClassicAssert.AreEqual(33, rows.Select(x => (string)x.Attribute("Name"))
 				.Distinct(StringComparer.OrdinalIgnoreCase).Count());
 			var counts = rows.GroupBy(x => (string)x.Attribute("Kind"))
 				.ToDictionary(x => x.Key, x => x.Count());
-			Assert.AreEqual(4, counts["community"]);
-			Assert.AreEqual(16, counts["people"]);
-			Assert.AreEqual(2, counts["polity"]);
-			Assert.AreEqual(7, counts["order"]);
-			Assert.AreEqual(2, counts["doctrine"]);
-			Assert.AreEqual(2, counts["cult"]);
+			ClassicAssert.AreEqual(4, counts["community"]);
+			ClassicAssert.AreEqual(16, counts["people"]);
+			ClassicAssert.AreEqual(2, counts["polity"]);
+			ClassicAssert.AreEqual(7, counts["order"]);
+			ClassicAssert.AreEqual(2, counts["doctrine"]);
+			ClassicAssert.AreEqual(2, counts["cult"]);
 			string[] theological = rows.Where(x =>
 				(string)x.Attribute("Kind") == "doctrine"
 				|| (string)x.Attribute("Kind") == "cult"
@@ -149,8 +150,8 @@ namespace ThousandAndFirst.Tests
 			KingdomCreedDefinition gyre = Parse("Gyre Wights",
 				(string)rows.Single(x => (string)x.Attribute("Name") == "Gyre Wights")
 					.Attribute("Kind"));
-			Assert.AreEqual(KingdomCreedKind.People, gyre.Kind);
-			Assert.IsFalse(gyre.Theological,
+			ClassicAssert.AreEqual(KingdomCreedKind.People, gyre.Kind);
+			ClassicAssert.IsFalse(gyre.Theological,
 				"the people who worship Girsh cannot themselves become shrine theology");
 		}
 

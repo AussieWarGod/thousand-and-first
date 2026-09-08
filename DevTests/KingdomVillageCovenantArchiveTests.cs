@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -35,11 +36,11 @@ namespace ThousandAndFirst.Tests
 		public void AnEmptyArchiveBindsOnceAndThenOnlyConfirmsTheSameRealm()
 		{
 			KingdomVillageCovenantArchive archive = KingdomVillageCovenantTests.Bound();
-			Assert.AreEqual(Realm, archive.RealmId);
-			Assert.IsTrue(archive.IdentityBound);
-			Assert.IsTrue(KingdomVillageCovenantRules.TryBindEmptyIdentity(archive, Realm,
+			ClassicAssert.AreEqual(Realm, archive.RealmId);
+			ClassicAssert.IsTrue(archive.IdentityBound);
+			ClassicAssert.IsTrue(KingdomVillageCovenantRules.TryBindEmptyIdentity(archive, Realm,
 				out string same), same);
-			Assert.IsFalse(KingdomVillageCovenantRules.TryBindEmptyIdentity(archive, OtherRealm,
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryBindEmptyIdentity(archive, OtherRealm,
 				out string other));
 			StringAssert.Contains("belongs to another realm", other);
 		}
@@ -49,7 +50,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomVillageCovenantArchive archive =
 				KingdomVillageCovenantTests.With(KingdomVillageCovenantTests.Row());
-			Assert.IsFalse(KingdomVillageCovenantRules.TryBindEmptyIdentity(archive, OtherRealm,
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryBindEmptyIdentity(archive, OtherRealm,
 				out string failure));
 			StringAssert.Contains("belongs to another realm", failure);
 		}
@@ -60,7 +61,7 @@ namespace ThousandAndFirst.Tests
 			KingdomVillageCovenantArchive archive = new KingdomVillageCovenantArchive();
 			archive.Rows.Add(KingdomVillageCovenantTests.Row());
 			archive.Revision = archive.Rows.Count;
-			Assert.IsFalse(KingdomVillageCovenantRules.TryValidate(archive, out string failure));
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryValidate(archive, out string failure));
 			StringAssert.Contains("unbound covenant archive is carrying covenants", failure);
 		}
 
@@ -71,16 +72,16 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomVillageCovenantReceipt row = KingdomVillageCovenantTests.Row();
 			KingdomVillageCovenantArchive first = KingdomVillageCovenantTests.With(row);
-			Assert.AreEqual(1L, first.Revision);
+			ClassicAssert.AreEqual(1L, first.Revision);
 
-			Assert.IsTrue(KingdomVillageCovenantRules.TryAppend(first, row.Copy(), Realm,
+			ClassicAssert.IsTrue(KingdomVillageCovenantRules.TryAppend(first, row.Copy(), Realm,
 				out KingdomVillageCovenantArchive again, out KingdomVillageCovenantAppend outcome,
 				out KingdomVillageCovenantReceipt effective, out string failure), failure);
-			Assert.IsTrue(KingdomVillageCovenantRules.Same(row, effective));
-			Assert.AreEqual(KingdomVillageCovenantAppend.AlreadyRecorded, outcome);
-			Assert.AreSame(first, again, "an exact replay must not build a new archive");
-			Assert.AreEqual(1L, again.Revision, "an exact replay must spend no revision");
-			Assert.AreEqual(1, again.Rows.Count);
+			ClassicAssert.IsTrue(KingdomVillageCovenantRules.Same(row, effective));
+			ClassicAssert.AreEqual(KingdomVillageCovenantAppend.AlreadyRecorded, outcome);
+			ClassicAssert.AreSame(first, again, "an exact replay must not build a new archive");
+			ClassicAssert.AreEqual(1L, again.Revision, "an exact replay must spend no revision");
+			ClassicAssert.AreEqual(1, again.Rows.Count);
 		}
 
 		[Test]
@@ -90,13 +91,13 @@ namespace ThousandAndFirst.Tests
 			KingdomVillageCovenantArchive archive = KingdomVillageCovenantTests.With(row);
 			KingdomVillageCovenantReceipt conflicting = KingdomVillageCovenantTests.Row(
 				display: "a village that never agreed");
-			Assert.IsFalse(KingdomVillageCovenantRules.TryAppend(archive, conflicting, Realm,
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryAppend(archive, conflicting, Realm,
 				out KingdomVillageCovenantArchive next, out _, out _, out string failure));
 			StringAssert.Contains("kept rather than replaced", failure);
-			Assert.IsNull(next);
-			Assert.AreEqual(1, archive.Rows.Count);
-			Assert.AreEqual(row.ReceiptId, archive.Rows[0].ReceiptId);
-			Assert.AreEqual(1L, archive.Revision);
+			ClassicAssert.IsNull(next);
+			ClassicAssert.AreEqual(1, archive.Rows.Count);
+			ClassicAssert.AreEqual(row.ReceiptId, archive.Rows[0].ReceiptId);
+			ClassicAssert.AreEqual(1L, archive.Revision);
 		}
 
 		[Test]
@@ -104,12 +105,12 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomVillageCovenantArchive first =
 				KingdomVillageCovenantTests.With(KingdomVillageCovenantTests.Row());
-			Assert.IsTrue(KingdomVillageCovenantRules.TryAppend(first, Nth(3), Realm,
+			ClassicAssert.IsTrue(KingdomVillageCovenantRules.TryAppend(first, Nth(3), Realm,
 				out KingdomVillageCovenantArchive second, out _, out _, out string failure), failure);
-			Assert.AreEqual(1, first.Rows.Count, "the archive read from must not have grown");
-			Assert.AreEqual(1L, first.Revision);
-			Assert.AreEqual(2, second.Rows.Count);
-			Assert.AreEqual(2L, second.Revision);
+			ClassicAssert.AreEqual(1, first.Rows.Count, "the archive read from must not have grown");
+			ClassicAssert.AreEqual(1L, first.Revision);
+			ClassicAssert.AreEqual(2, second.Rows.Count);
+			ClassicAssert.AreEqual(2L, second.Revision);
 		}
 
 		[Test]
@@ -120,13 +121,13 @@ namespace ThousandAndFirst.Tests
 			KingdomVillageCovenantReceipt c = Nth(3);
 			KingdomVillageCovenantArchive forward = KingdomVillageCovenantTests.With(a, b, c);
 			KingdomVillageCovenantArchive backward = KingdomVillageCovenantTests.With(c, b, a);
-			Assert.AreEqual(3, forward.Rows.Count);
+			ClassicAssert.AreEqual(3, forward.Rows.Count);
 			for (int i = 0; i < forward.Rows.Count; i++)
-				Assert.AreEqual(forward.Rows[i].ReceiptId, backward.Rows[i].ReceiptId,
+				ClassicAssert.AreEqual(forward.Rows[i].ReceiptId, backward.Rows[i].ReceiptId,
 					"the same covenants must sit in the same order however they arrived");
-			Assert.IsTrue(KingdomVillageCovenantCodec.TryEncode(forward, out byte[] one,
+			ClassicAssert.IsTrue(KingdomVillageCovenantCodec.TryEncode(forward, out byte[] one,
 				out string first), first);
-			Assert.IsTrue(KingdomVillageCovenantCodec.TryEncode(backward, out byte[] two,
+			ClassicAssert.IsTrue(KingdomVillageCovenantCodec.TryEncode(backward, out byte[] two,
 				out string second), second);
 			CollectionAssert.AreEqual(one, two, "one set of covenants has one set of bytes");
 		}
@@ -139,7 +140,7 @@ namespace ThousandAndFirst.Tests
 			KingdomVillageCovenantReceipt swap = archive.Rows[0];
 			archive.Rows[0] = archive.Rows[1];
 			archive.Rows[1] = swap;
-			Assert.IsFalse(KingdomVillageCovenantRules.TryValidate(archive, out string failure));
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryValidate(archive, out string failure));
 			StringAssert.Contains("out of their canonical order", failure);
 		}
 
@@ -150,7 +151,7 @@ namespace ThousandAndFirst.Tests
 				KingdomVillageCovenantTests.With(KingdomVillageCovenantTests.Row());
 			archive.Rows.Add(archive.Rows[0].Copy());
 			archive.Revision = archive.Rows.Count;
-			Assert.IsFalse(KingdomVillageCovenantRules.TryValidate(archive, out string failure));
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryValidate(archive, out string failure));
 			StringAssert.Contains("same receipt twice", failure);
 		}
 
@@ -166,12 +167,12 @@ namespace ThousandAndFirst.Tests
 				KingdomVillageCovenantTests.With(KingdomVillageCovenantTests.Row());
 			KingdomVillageCovenantReceipt twin =
 				KingdomVillageCovenantTests.Row(display: "a village that never agreed");
-			Assert.AreNotEqual(archive.Rows[0].ReceiptId, twin.ReceiptId,
+			ClassicAssert.AreNotEqual(archive.Rows[0].ReceiptId, twin.ReceiptId,
 				"the two rows really do have different names");
 			archive.Rows.Add(twin);
 			archive.Rows.Sort((a, b) => string.CompareOrdinal(a.ReceiptId, b.ReceiptId));
 			archive.Revision = archive.Rows.Count;
-			Assert.IsFalse(KingdomVillageCovenantRules.TryValidate(archive, out string failure));
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryValidate(archive, out string failure));
 			StringAssert.Contains("claim one founding transaction", failure);
 		}
 
@@ -186,7 +187,7 @@ namespace ThousandAndFirst.Tests
 			KingdomVillageCovenantArchive archive = KingdomVillageCovenantTests.Bound();
 			archive.Rows.Add(KingdomVillageCovenantTests.Row(realm: OtherRealm));
 			archive.Revision = archive.Rows.Count;
-			Assert.IsFalse(KingdomVillageCovenantRules.TryValidate(archive, out string failure));
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryValidate(archive, out string failure));
 			StringAssert.Contains("names another realm than the archive holding it", failure);
 		}
 
@@ -213,7 +214,7 @@ namespace ThousandAndFirst.Tests
 			Write(trailing, lengthAt, declared + 1);
 			KingdomVillageCovenantArchive afterCovenants =
 				KingdomVillageCovenantCodec.Decode(Reseal(trailing));
-			Assert.AreEqual(KingdomVillageCovenantState.Quarantined, afterCovenants.State);
+			ClassicAssert.AreEqual(KingdomVillageCovenantState.Quarantined, afterCovenants.State);
 			StringAssert.Contains("bytes after the last covenant", afterCovenants.Fault);
 
 			// The same byte, but claimed by the row rather than left after it.
@@ -223,7 +224,7 @@ namespace ThousandAndFirst.Tests
 			Write(fatRow, rowAt, KingdomVillageCovenantCodec.ReadInt32(fatRow, rowAt) + 1);
 			KingdomVillageCovenantArchive afterFields =
 				KingdomVillageCovenantCodec.Decode(Reseal(fatRow));
-			Assert.AreEqual(KingdomVillageCovenantState.Quarantined, afterFields.State);
+			ClassicAssert.AreEqual(KingdomVillageCovenantState.Quarantined, afterFields.State);
 			StringAssert.Contains("bytes after the end of a covenant row", afterFields.Fault);
 		}
 
@@ -251,21 +252,21 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < KingdomVillageCovenantArchive.MaxRows; i++)
 			{
 				KingdomVillageCovenantReceipt row = Nth(i);
-				Assert.IsTrue(KingdomVillageCovenantRules.TryAppend(archive, row, Realm,
+				ClassicAssert.IsTrue(KingdomVillageCovenantRules.TryAppend(archive, row, Realm,
 					out archive, out _, out _, out string failure), failure);
 				recorded.Add(row.ReceiptId);
 			}
-			Assert.AreEqual(KingdomVillageCovenantArchive.MaxRows, archive.Rows.Count);
+			ClassicAssert.AreEqual(KingdomVillageCovenantArchive.MaxRows, archive.Rows.Count);
 
-			Assert.IsFalse(KingdomVillageCovenantRules.TryAppend(archive,
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryAppend(archive,
 				Nth(KingdomVillageCovenantArchive.MaxRows), Realm,
 				out KingdomVillageCovenantArchive next, out _, out _, out string full));
 			StringAssert.Contains("is full at", full);
 			StringAssert.Contains("every earlier one is kept", full);
-			Assert.IsNull(next);
-			Assert.AreEqual(KingdomVillageCovenantArchive.MaxRows, archive.Rows.Count);
+			ClassicAssert.IsNull(next);
+			ClassicAssert.AreEqual(KingdomVillageCovenantArchive.MaxRows, archive.Rows.Count);
 			for (int i = 0; i < recorded.Count; i++)
-				Assert.IsTrue(archive.Rows.Exists(r => r.ReceiptId == recorded[i]),
+				ClassicAssert.IsTrue(archive.Rows.Exists(r => r.ReceiptId == recorded[i]),
 					"a full archive must still hold every covenant it already had");
 		}
 
@@ -275,14 +276,14 @@ namespace ThousandAndFirst.Tests
 			KingdomVillageCovenantArchive archive = KingdomVillageCovenantTests.Bound();
 			KingdomVillageCovenantReceipt first = Nth(0);
 			for (int i = 0; i < KingdomVillageCovenantArchive.MaxRows; i++)
-				Assert.IsTrue(KingdomVillageCovenantRules.TryAppend(archive,
+				ClassicAssert.IsTrue(KingdomVillageCovenantRules.TryAppend(archive,
 					i == 0 ? first : Nth(i), Realm, out archive, out _, out _, out string failure),
 					failure);
-			Assert.IsTrue(KingdomVillageCovenantRules.TryAppend(archive, first.Copy(), Realm,
+			ClassicAssert.IsTrue(KingdomVillageCovenantRules.TryAppend(archive, first.Copy(), Realm,
 				out KingdomVillageCovenantArchive same, out KingdomVillageCovenantAppend outcome,
 				out _, out string replay), replay);
-			Assert.AreEqual(KingdomVillageCovenantAppend.AlreadyRecorded, outcome);
-			Assert.AreSame(archive, same);
+			ClassicAssert.AreEqual(KingdomVillageCovenantAppend.AlreadyRecorded, outcome);
+			ClassicAssert.AreSame(archive, same);
 		}
 
 		/// <summary>
@@ -295,25 +296,25 @@ namespace ThousandAndFirst.Tests
 		public void TheRevisionIsTheArchivesOwnLengthAndAForgedOneIsRefused()
 		{
 			KingdomVillageCovenantArchive empty = KingdomVillageCovenantTests.Bound();
-			Assert.AreEqual(0L, empty.Revision);
+			ClassicAssert.AreEqual(0L, empty.Revision);
 			KingdomVillageCovenantArchive one =
 				KingdomVillageCovenantTests.With(KingdomVillageCovenantTests.Row());
-			Assert.AreEqual(1L, one.Revision);
+			ClassicAssert.AreEqual(1L, one.Revision);
 			KingdomVillageCovenantArchive two = KingdomVillageCovenantTests.With(Nth(1), Nth(2));
-			Assert.AreEqual(2L, two.Revision);
+			ClassicAssert.AreEqual(2L, two.Revision);
 
 			foreach (long forged in new[] { long.MaxValue, 7L, -1L })
 			{
 				KingdomVillageCovenantArchive archive = KingdomVillageCovenantTests.Bound();
 				archive.Revision = forged;
-				Assert.IsFalse(KingdomVillageCovenantRules.TryValidate(archive, out string invalid),
+				ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryValidate(archive, out string invalid),
 					"revision " + forged + " must not validate against an empty archive");
 				StringAssert.Contains("it is its own length", invalid);
-				Assert.IsFalse(KingdomVillageCovenantRules.TryAppend(archive,
+				ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryAppend(archive,
 					KingdomVillageCovenantTests.Row(), Realm,
 					out KingdomVillageCovenantArchive next, out _, out _, out string failure));
 				StringAssert.Contains("it is its own length", failure);
-				Assert.IsNull(next);
+				ClassicAssert.IsNull(next);
 			}
 		}
 
@@ -321,7 +322,7 @@ namespace ThousandAndFirst.Tests
 		public void AnAppendToAnArchiveBoundToAnotherRealmIsRefused()
 		{
 			KingdomVillageCovenantArchive archive = KingdomVillageCovenantTests.Bound(OtherRealm);
-			Assert.IsFalse(KingdomVillageCovenantRules.TryAppend(archive,
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryAppend(archive,
 				KingdomVillageCovenantTests.Row(), Realm, out _, out _, out _, out string failure));
 			StringAssert.Contains("not bound to this exact realm", failure);
 		}
@@ -333,16 +334,16 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomVillageCovenantArchive archive =
 				KingdomVillageCovenantTests.With(Nth(1), Nth(2), Nth(3));
-			Assert.IsTrue(KingdomVillageCovenantCodec.TryEncode(archive, out byte[] bytes,
+			ClassicAssert.IsTrue(KingdomVillageCovenantCodec.TryEncode(archive, out byte[] bytes,
 				out string failure), failure);
 			KingdomVillageCovenantArchive back = KingdomVillageCovenantCodec.Decode(bytes);
-			Assert.AreEqual(KingdomVillageCovenantState.Compatible, back.State, back.Fault);
-			Assert.AreEqual(archive.RealmId, back.RealmId);
-			Assert.AreEqual(archive.Revision, back.Revision);
-			Assert.AreEqual(archive.Rows.Count, back.Rows.Count);
+			ClassicAssert.AreEqual(KingdomVillageCovenantState.Compatible, back.State, back.Fault);
+			ClassicAssert.AreEqual(archive.RealmId, back.RealmId);
+			ClassicAssert.AreEqual(archive.Revision, back.Revision);
+			ClassicAssert.AreEqual(archive.Rows.Count, back.Rows.Count);
 			for (int i = 0; i < archive.Rows.Count; i++)
-				Assert.IsTrue(KingdomVillageCovenantRules.Same(archive.Rows[i], back.Rows[i]));
-			Assert.IsTrue(KingdomVillageCovenantCodec.TryEncode(back, out byte[] again,
+				ClassicAssert.IsTrue(KingdomVillageCovenantRules.Same(archive.Rows[i], back.Rows[i]));
+			ClassicAssert.IsTrue(KingdomVillageCovenantCodec.TryEncode(back, out byte[] again,
 				out string second), second);
 			CollectionAssert.AreEqual(bytes, again);
 		}
@@ -350,10 +351,10 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AnUnboundArchiveHasNoRealmToBeSavedUnderAndIsNotWritten()
 		{
-			Assert.IsFalse(KingdomVillageCovenantCodec.TryEncode(
+			ClassicAssert.IsFalse(KingdomVillageCovenantCodec.TryEncode(
 				new KingdomVillageCovenantArchive(), out byte[] bytes, out string failure));
 			StringAssert.Contains("no realm to be saved under", failure);
-			Assert.IsNull(bytes);
+			ClassicAssert.IsNull(bytes);
 		}
 
 		[TestCase(0, TestName = "the magic")]
@@ -365,7 +366,7 @@ namespace ThousandAndFirst.Tests
 			byte[] bytes = Encoded();
 			bytes[offset] ^= 0x01;
 			KingdomVillageCovenantArchive back = KingdomVillageCovenantCodec.Decode(bytes);
-			Assert.AreEqual(KingdomVillageCovenantState.Quarantined, back.State);
+			ClassicAssert.AreEqual(KingdomVillageCovenantState.Quarantined, back.State);
 			StringAssert.Contains("would not read", back.Fault);
 			CollectionAssert.AreEqual(bytes, back.OpaquePayload,
 				"a refusal keeps the real bytes as its evidence");
@@ -377,7 +378,7 @@ namespace ThousandAndFirst.Tests
 			byte[] bytes = Encoded();
 			bytes[bytes.Length - 1] ^= 0x01;
 			KingdomVillageCovenantArchive back = KingdomVillageCovenantCodec.Decode(bytes);
-			Assert.AreEqual(KingdomVillageCovenantState.Quarantined, back.State);
+			ClassicAssert.AreEqual(KingdomVillageCovenantState.Quarantined, back.State);
 			StringAssert.Contains("digest no longer covers", back.Fault);
 		}
 
@@ -387,11 +388,11 @@ namespace ThousandAndFirst.Tests
 			byte[] bytes = Encoded();
 			byte[] longer = new byte[bytes.Length + 1];
 			Array.Copy(bytes, longer, bytes.Length);
-			Assert.AreEqual(KingdomVillageCovenantState.Quarantined,
+			ClassicAssert.AreEqual(KingdomVillageCovenantState.Quarantined,
 				KingdomVillageCovenantCodec.Decode(longer).State);
 			byte[] shorter = new byte[bytes.Length - 1];
 			Array.Copy(bytes, shorter, shorter.Length);
-			Assert.AreEqual(KingdomVillageCovenantState.Quarantined,
+			ClassicAssert.AreEqual(KingdomVillageCovenantState.Quarantined,
 				KingdomVillageCovenantCodec.Decode(shorter).State);
 		}
 
@@ -400,9 +401,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomVillageCovenantArchive back = KingdomVillageCovenantCodec.Decode(
 				new byte[KingdomVillageCovenantCodec.MaxEnvelopeBytes + 1]);
-			Assert.AreEqual(KingdomVillageCovenantState.Quarantined, back.State);
+			ClassicAssert.AreEqual(KingdomVillageCovenantState.Quarantined, back.State);
 			StringAssert.Contains("-byte cap this family accepts", back.Fault);
-			Assert.IsNull(back.OpaquePayload,
+			ClassicAssert.IsNull(back.OpaquePayload,
 				"an over-cap payload is refused before anything is allocated for it");
 		}
 
@@ -410,7 +411,7 @@ namespace ThousandAndFirst.Tests
 		public void NoBytesAtAllIsARefusalRatherThanAnEmptyArchive()
 		{
 			KingdomVillageCovenantArchive back = KingdomVillageCovenantCodec.Decode(null);
-			Assert.AreEqual(KingdomVillageCovenantState.Quarantined, back.State);
+			ClassicAssert.AreEqual(KingdomVillageCovenantState.Quarantined, back.State);
 			StringAssert.Contains("no bytes at all", back.Fault);
 		}
 
@@ -426,9 +427,9 @@ namespace ThousandAndFirst.Tests
 			string realm = back.RealmId;
 			string receipt = back.Rows[0].ReceiptId;
 			for (int i = 0; i < bytes.Length; i++) bytes[i] = 0x5A;
-			Assert.AreEqual(KingdomVillageCovenantState.Compatible, back.State);
-			Assert.AreEqual(realm, back.RealmId);
-			Assert.AreEqual(receipt, back.Rows[0].ReceiptId);
+			ClassicAssert.AreEqual(KingdomVillageCovenantState.Compatible, back.State);
+			ClassicAssert.AreEqual(realm, back.RealmId);
+			ClassicAssert.AreEqual(receipt, back.Rows[0].ReceiptId);
 		}
 
 		[Test]
@@ -437,10 +438,10 @@ namespace ThousandAndFirst.Tests
 			byte[] bytes = Encoded();
 			bytes[0] ^= 0x01;
 			KingdomVillageCovenantArchive back = KingdomVillageCovenantCodec.Decode(bytes);
-			Assert.AreEqual(KingdomVillageCovenantState.Quarantined, back.State);
+			ClassicAssert.AreEqual(KingdomVillageCovenantState.Quarantined, back.State);
 			byte first = back.OpaquePayload[0];
 			bytes[0] ^= 0x40;
-			Assert.AreEqual(first, back.OpaquePayload[0],
+			ClassicAssert.AreEqual(first, back.OpaquePayload[0],
 				"evidence a caller can still edit is not evidence");
 		}
 
@@ -448,7 +449,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomVillageCovenantArchive archive =
 				KingdomVillageCovenantTests.With(KingdomVillageCovenantTests.Row());
-			Assert.IsTrue(KingdomVillageCovenantCodec.TryEncode(archive, out byte[] bytes,
+			ClassicAssert.IsTrue(KingdomVillageCovenantCodec.TryEncode(archive, out byte[] bytes,
 				out string failure), failure);
 			return bytes;
 		}

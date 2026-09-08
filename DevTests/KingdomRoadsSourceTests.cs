@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -13,11 +14,11 @@ namespace ThousandAndFirst.Tests
 		public void LogicalFamilyPreservesAuthorityNestedTypesAndMemberOrder()
 		{
 			string source = KingdomRoadsLogicalSource.Read();
-			Assert.AreEqual(11, KingdomRoadsLogicalSource.FileCount);
-			Assert.AreEqual(11, Count(source, "public static partial class KingdomRoads"));
-			Assert.AreEqual(1, Count(source, "private struct Errand"));
-			Assert.AreEqual(1, Count(source, "private sealed class RoadReceipt"));
-			Assert.AreEqual(1, Count(source, "private sealed class RoadRow"));
+			ClassicAssert.AreEqual(11, KingdomRoadsLogicalSource.FileCount);
+			ClassicAssert.AreEqual(11, Count(source, "public static partial class KingdomRoads"));
+			ClassicAssert.AreEqual(1, Count(source, "private struct Errand"));
+			ClassicAssert.AreEqual(1, Count(source, "private sealed class RoadReceipt"));
+			ClassicAssert.AreEqual(1, Count(source, "private sealed class RoadRow"));
 			StringAssert.DoesNotContain("public static class KingdomRoads", source);
 
 			AssertOrdered(source,
@@ -112,7 +113,7 @@ namespace ThousandAndFirst.Tests
 			string[] tiles = rungs.Select(e => (string)e.Elements("part").Single(p =>
 				(string)p.Attribute("Name") == "Render").Attribute("Tile")
 					?? "terrain/sw_arena_floor.bmp").ToArray();
-			Assert.AreEqual(3, tiles.Distinct(StringComparer.OrdinalIgnoreCase).Count(),
+			ClassicAssert.AreEqual(3, tiles.Distinct(StringComparer.OrdinalIgnoreCase).Count(),
 				"road wear must not collapse back into one inherited dirt render");
 		}
 
@@ -122,7 +123,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < Markers.Length; i++)
 			{
 				int next = Source.IndexOf(Markers[i], position + 1, StringComparison.Ordinal);
-				Assert.Greater(next, position, Markers[i]);
+				ClassicAssert.Greater(next, position, Markers[i]);
 				position = next;
 			}
 		}

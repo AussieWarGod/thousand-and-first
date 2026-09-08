@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.DevTests
 {
@@ -11,42 +12,42 @@ namespace ThousandAndFirst.DevTests
 		public void CanonicalEnvelopeRoundTripsEveryFrozenField()
 		{
 			KingdomPolityDeathIntentRecord expected = Record();
-			Assert.IsTrue(KingdomPolityDeathIntentRules.TryEncode(expected,
+			ClassicAssert.IsTrue(KingdomPolityDeathIntentRules.TryEncode(expected,
 				out string wire, out string failure), failure);
 			StringAssert.StartsWith(KingdomPolityDeathIntentRules.WirePrefix, wire);
-			Assert.IsTrue(KingdomPolityDeathIntentRules.TryDecode(wire,
+			ClassicAssert.IsTrue(KingdomPolityDeathIntentRules.TryDecode(wire,
 				out KingdomPolityDeathIntentRecord actual, out failure), failure);
-			Assert.AreEqual(expected.Kind, actual.Kind);
-			Assert.AreEqual(expected.RealmId, actual.RealmId);
-			Assert.AreEqual(expected.CohortId, actual.CohortId);
-			Assert.AreEqual(expected.ProjectionId, actual.ProjectionId);
-			Assert.AreEqual(expected.ZoneId, actual.ZoneId);
-			Assert.AreEqual(expected.ObjectId, actual.ObjectId);
-			Assert.AreEqual(expected.Ordinal, actual.Ordinal);
-			Assert.AreEqual(expected.Purpose, actual.Purpose);
-			Assert.AreEqual(expected.Representative, actual.Representative);
-			Assert.AreEqual(expected.Tick, actual.Tick);
-			Assert.AreEqual(expected.Attribution, actual.Attribution);
-			Assert.AreEqual(expected.Visibility, actual.Visibility);
-			Assert.AreEqual(expected.IncidentPlanId, actual.IncidentPlanId);
-			Assert.AreEqual(expected.IncidentId, actual.IncidentId);
-			Assert.AreEqual(expected.IncidentDigest, actual.IncidentDigest);
-			Assert.IsTrue(KingdomPolityDeathIntentRules.TryEncode(actual,
+			ClassicAssert.AreEqual(expected.Kind, actual.Kind);
+			ClassicAssert.AreEqual(expected.RealmId, actual.RealmId);
+			ClassicAssert.AreEqual(expected.CohortId, actual.CohortId);
+			ClassicAssert.AreEqual(expected.ProjectionId, actual.ProjectionId);
+			ClassicAssert.AreEqual(expected.ZoneId, actual.ZoneId);
+			ClassicAssert.AreEqual(expected.ObjectId, actual.ObjectId);
+			ClassicAssert.AreEqual(expected.Ordinal, actual.Ordinal);
+			ClassicAssert.AreEqual(expected.Purpose, actual.Purpose);
+			ClassicAssert.AreEqual(expected.Representative, actual.Representative);
+			ClassicAssert.AreEqual(expected.Tick, actual.Tick);
+			ClassicAssert.AreEqual(expected.Attribution, actual.Attribution);
+			ClassicAssert.AreEqual(expected.Visibility, actual.Visibility);
+			ClassicAssert.AreEqual(expected.IncidentPlanId, actual.IncidentPlanId);
+			ClassicAssert.AreEqual(expected.IncidentId, actual.IncidentId);
+			ClassicAssert.AreEqual(expected.IncidentDigest, actual.IncidentDigest);
+			ClassicAssert.IsTrue(KingdomPolityDeathIntentRules.TryEncode(actual,
 				out string repeated, out failure), failure);
-			Assert.AreEqual(wire, repeated);
+			ClassicAssert.AreEqual(wire, repeated);
 		}
 
 		[Test]
 		public void DigestTamperAndFutureEnvelopeFailClosed()
 		{
-			Assert.IsTrue(KingdomPolityDeathIntentRules.TryEncode(Record(),
+			ClassicAssert.IsTrue(KingdomPolityDeathIntentRules.TryEncode(Record(),
 				out string wire, out string failure), failure);
 			char replacement = wire[wire.Length - 1] == '0' ? '1' : '0';
 			string tampered = wire.Substring(0, wire.Length - 1) + replacement;
-			Assert.IsFalse(KingdomPolityDeathIntentRules.TryDecode(tampered, out _, out _));
+			ClassicAssert.IsFalse(KingdomPolityDeathIntentRules.TryDecode(tampered, out _, out _));
 			string future = wire.Replace(":v2:", ":v3:");
-			Assert.IsFalse(KingdomPolityDeathIntentRules.TryDecode(future, out _, out _));
-			Assert.AreEqual(KingdomPolityDeathIntentState.Ambiguous,
+			ClassicAssert.IsFalse(KingdomPolityDeathIntentRules.TryDecode(future, out _, out _));
+			ClassicAssert.AreEqual(KingdomPolityDeathIntentState.Ambiguous,
 				KingdomPolityDeathIntentRules.Classify(true, true, false, false));
 		}
 
@@ -57,19 +58,19 @@ namespace ThousandAndFirst.DevTests
 			source.Visibility = KingdomPolityDeathVisibility.PhysicalOnly;
 			source.Attribution = KingdomPolityDeathAttribution.Unattributed;
 			string wire = KingdomPolityDeathIntentRules.EncodeV1Fixture(source);
-			Assert.IsTrue(KingdomPolityDeathIntentRules.TryDecode(wire,
+			ClassicAssert.IsTrue(KingdomPolityDeathIntentRules.TryDecode(wire,
 				out KingdomPolityDeathIntentRecord decoded, out string failure), failure);
-			Assert.AreEqual(KingdomPolityDeathIntentProvenance.LegacyV1, decoded.Provenance);
-			Assert.AreEqual("", decoded.IncidentPlanId);
-			Assert.AreEqual("", decoded.IncidentId);
-			Assert.AreEqual("", decoded.IncidentDigest);
+			ClassicAssert.AreEqual(KingdomPolityDeathIntentProvenance.LegacyV1, decoded.Provenance);
+			ClassicAssert.AreEqual("", decoded.IncidentPlanId);
+			ClassicAssert.AreEqual("", decoded.IncidentId);
+			ClassicAssert.AreEqual("", decoded.IncidentDigest);
 
 			// A v1 record cannot re-encode until a first-read freeze stamps its provenance, and
 			// when it does the bytes carry the migrated prefix, never the death-time one.
-			Assert.IsFalse(KingdomPolityDeathIntentRules.TryEncode(decoded, out _, out failure));
+			ClassicAssert.IsFalse(KingdomPolityDeathIntentRules.TryEncode(decoded, out _, out failure));
 			StringAssert.Contains("freeze at first read", failure);
 			decoded.Provenance = KingdomPolityDeathIntentProvenance.FrozenAtFirstRead;
-			Assert.IsTrue(KingdomPolityDeathIntentRules.TryEncode(decoded,
+			ClassicAssert.IsTrue(KingdomPolityDeathIntentRules.TryEncode(decoded,
 				out string rewritten, out failure), failure);
 			StringAssert.StartsWith(KingdomPolityDeathIntentRules.MigratedWirePrefix, rewritten);
 			StringAssert.DoesNotStartWith(KingdomPolityDeathIntentRules.WirePrefix, rewritten);
@@ -78,18 +79,18 @@ namespace ThousandAndFirst.DevTests
 		[Test]
 		public void TruncatedAndOversizedEnvelopeFailClosed()
 		{
-			Assert.IsTrue(KingdomPolityDeathIntentRules.TryEncode(Record(),
+			ClassicAssert.IsTrue(KingdomPolityDeathIntentRules.TryEncode(Record(),
 				out string wire, out string failure), failure);
-			Assert.IsFalse(KingdomPolityDeathIntentRules.TryDecode(
+			ClassicAssert.IsFalse(KingdomPolityDeathIntentRules.TryDecode(
 				wire.Substring(0, wire.Length - 3), out _, out _));
-			Assert.IsFalse(KingdomPolityDeathIntentRules.TryDecode(new string('x',
+			ClassicAssert.IsFalse(KingdomPolityDeathIntentRules.TryDecode(new string('x',
 				KingdomPolityDeathIntentRules.MaximumWireCharacters + 1), out _, out _));
 		}
 
 		[Test]
 		public void InvalidUtf8WithFreshDigestStillFailsClosed()
 		{
-			Assert.IsTrue(KingdomPolityDeathIntentRules.TryEncode(Record(),
+			ClassicAssert.IsTrue(KingdomPolityDeathIntentRules.TryEncode(Record(),
 				out string wire, out string failure), failure);
 			int separator = wire.Length - 65;
 			string body = wire.Substring(KingdomPolityDeathIntentRules.WirePrefix.Length,
@@ -100,7 +101,7 @@ namespace ThousandAndFirst.DevTests
 			string invalid = KingdomPolityDeathIntentRules.WirePrefix + body + ":" +
 				KingdomPolityRules.ActivationDigest(
 					"polity-visible-death-intent-envelope-v2", body);
-			Assert.IsFalse(KingdomPolityDeathIntentRules.TryDecode(invalid, out _, out _));
+			ClassicAssert.IsFalse(KingdomPolityDeathIntentRules.TryDecode(invalid, out _, out _));
 		}
 
 		[Test]
@@ -108,23 +109,23 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomPolityDeathIntentRecord record = Record();
 			record.ZoneId = new string('z', KingdomPolityDeathIntentRules.MaximumFieldBytes + 1);
-			Assert.IsFalse(KingdomPolityDeathIntentRules.TryEncode(record, out _, out _));
+			ClassicAssert.IsFalse(KingdomPolityDeathIntentRules.TryEncode(record, out _, out _));
 			record = Record(); record.ZoneId = "zone-\ud800";
-			Assert.IsFalse(KingdomPolityDeathIntentRules.TryEncode(record, out _, out _));
+			ClassicAssert.IsFalse(KingdomPolityDeathIntentRules.TryEncode(record, out _, out _));
 		}
 
 		[Test]
 		public void SlotClassifierPreservesWrongTypedMalformedAndForeignAuthority()
 		{
-			Assert.AreEqual(KingdomPolityDeathIntentState.Clear,
+			ClassicAssert.AreEqual(KingdomPolityDeathIntentState.Clear,
 				KingdomPolityDeathIntentRules.Classify(false, false, false, false));
-			Assert.AreEqual(KingdomPolityDeathIntentState.Ambiguous,
+			ClassicAssert.AreEqual(KingdomPolityDeathIntentState.Ambiguous,
 				KingdomPolityDeathIntentRules.Classify(true, false, false, false));
-			Assert.AreEqual(KingdomPolityDeathIntentState.Ambiguous,
+			ClassicAssert.AreEqual(KingdomPolityDeathIntentState.Ambiguous,
 				KingdomPolityDeathIntentRules.Classify(true, true, false, false));
-			Assert.AreEqual(KingdomPolityDeathIntentState.Ambiguous,
+			ClassicAssert.AreEqual(KingdomPolityDeathIntentState.Ambiguous,
 				KingdomPolityDeathIntentRules.Classify(true, true, true, false));
-			Assert.AreEqual(KingdomPolityDeathIntentState.Outstanding,
+			ClassicAssert.AreEqual(KingdomPolityDeathIntentState.Outstanding,
 				KingdomPolityDeathIntentRules.Classify(true, true, true, true));
 		}
 
@@ -132,39 +133,39 @@ namespace ThousandAndFirst.DevTests
 		public void ExactTupleAndCausalTickRejectDrift()
 		{
 			KingdomPolityDeathIntentRecord record = Record();
-			Assert.IsTrue(KingdomPolityDeathIntentRules.ExactBinding(record, record.RealmId,
+			ClassicAssert.IsTrue(KingdomPolityDeathIntentRules.ExactBinding(record, record.RealmId,
 				record.CohortId, record.ProjectionId, record.ZoneId, record.ObjectId,
 				record.Ordinal, record.Purpose, record.Representative));
-			Assert.IsFalse(KingdomPolityDeathIntentRules.ExactBinding(record, record.RealmId,
+			ClassicAssert.IsFalse(KingdomPolityDeathIntentRules.ExactBinding(record, record.RealmId,
 				record.CohortId, "taf:projection:foreign", record.ZoneId, record.ObjectId,
 				record.Ordinal, record.Purpose, record.Representative));
-			Assert.IsTrue(KingdomPolityDeathIntentRules.CausalTick(record, 100L, 200L));
-			Assert.IsFalse(KingdomPolityDeathIntentRules.CausalTick(record, 151L, 200L));
-			Assert.IsFalse(KingdomPolityDeathIntentRules.CausalTick(record, 100L, 149L));
+			ClassicAssert.IsTrue(KingdomPolityDeathIntentRules.CausalTick(record, 100L, 200L));
+			ClassicAssert.IsFalse(KingdomPolityDeathIntentRules.CausalTick(record, 151L, 200L));
+			ClassicAssert.IsFalse(KingdomPolityDeathIntentRules.CausalTick(record, 100L, 149L));
 		}
 
 		[Test]
 		public void FrozenVisibilityAndAttributionSelectOnlyOwnedConsequences()
 		{
 			KingdomPolityDeathIntentRecord record = Record();
-			Assert.AreEqual(KingdomPolityDeathIntentAction.ReplayEnvoy,
+			ClassicAssert.AreEqual(KingdomPolityDeathIntentAction.ReplayEnvoy,
 				KingdomPolityDeathIntentRules.Decide(record,
 					KingdomPolityCohortPhase.Materialized));
 			record.Purpose = KingdomPolityCohortPurpose.Warband;
-			Assert.AreEqual(KingdomPolityDeathIntentAction.ReplayWarband,
+			ClassicAssert.AreEqual(KingdomPolityDeathIntentAction.ReplayWarband,
 				KingdomPolityDeathIntentRules.Decide(record,
 					KingdomPolityCohortPhase.Concluded));
 			record.Ordinal = 1; record.Representative = false;
-			Assert.AreEqual(KingdomPolityDeathIntentAction.Clear,
+			ClassicAssert.AreEqual(KingdomPolityDeathIntentAction.Clear,
 				KingdomPolityDeathIntentRules.Decide(record,
 					KingdomPolityCohortPhase.Materialized));
 			record.Visibility = KingdomPolityDeathVisibility.PhysicalOnly;
 			record.IncidentPlanId = record.IncidentId = record.IncidentDigest = "";
 			record.Attribution = KingdomPolityDeathAttribution.Unattributed;
-			Assert.AreEqual(KingdomPolityDeathIntentAction.Abandon,
+			ClassicAssert.AreEqual(KingdomPolityDeathIntentAction.Abandon,
 				KingdomPolityDeathIntentRules.Decide(record,
 					KingdomPolityCohortPhase.Materialized));
-			Assert.AreEqual(KingdomPolityDeathIntentAction.Clear,
+			ClassicAssert.AreEqual(KingdomPolityDeathIntentAction.Clear,
 				KingdomPolityDeathIntentRules.Decide(record,
 					KingdomPolityCohortPhase.Abandoned));
 		}
@@ -175,7 +176,7 @@ namespace ThousandAndFirst.DevTests
 			KingdomPolityDeathIntentRecord record = Record();
 			record.Visibility = KingdomPolityDeathVisibility.PhysicalOnly;
 			record.Attribution = KingdomPolityDeathAttribution.PlayerWitnessed;
-			Assert.IsFalse(KingdomPolityDeathIntentRules.TryEncode(record, out _, out _));
+			ClassicAssert.IsFalse(KingdomPolityDeathIntentRules.TryEncode(record, out _, out _));
 		}
 
 		[Test]
@@ -200,7 +201,7 @@ namespace ThousandAndFirst.DevTests
 					original.InterventionOptionKeys)
 			};
 			ledger.Incidents.Add(reused);
-			Assert.IsFalse(KingdomPolityDeathIncidentRules.TryFreeze(ledger, cohort, 0, true,
+			ClassicAssert.IsFalse(KingdomPolityDeathIncidentRules.TryFreeze(ledger, cohort, 0, true,
 				out _, out _, out _, out string failure));
 			StringAssert.Contains("multiple open incident authorities", failure);
 		}
@@ -211,9 +212,9 @@ namespace ThousandAndFirst.DevTests
 			KingdomPolityLedger ledger = Scene(out KingdomPolityCohortPlan cohort,
 				out KingdomPolityProjectionReceipt _);
 			ledger.Incidents.Clear();
-			Assert.IsTrue(KingdomPolityDeathIncidentRules.TryFreeze(ledger, cohort, 0, false,
+			ClassicAssert.IsTrue(KingdomPolityDeathIncidentRules.TryFreeze(ledger, cohort, 0, false,
 				out string plan, out string incident, out string digest, out string failure), failure);
-			Assert.AreEqual("", plan); Assert.AreEqual("", incident); Assert.AreEqual("", digest);
+			ClassicAssert.AreEqual("", plan); ClassicAssert.AreEqual("", incident); ClassicAssert.AreEqual("", digest);
 		}
 
 		[Test]
@@ -228,17 +229,17 @@ namespace ThousandAndFirst.DevTests
 			KingdomPolityGrievanceRecord grievance = ledger.Grievances[0];
 			KingdomPolityGrievancePhase grievancePhase = grievance.Phase;
 			string consumed = grievance.ConsumedByIncidentId;
-			Assert.IsTrue(KingdomPolityCohortRules.TryAbandonEndpointCohort(ledger,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryAbandonEndpointCohort(ledger,
 				ledger.Revision, intent, true, out KingdomPolityPublicationResult result,
 				out string failure), failure);
-			Assert.AreEqual(KingdomPolityCasOutcome.Applied, result.Outcome);
+			ClassicAssert.AreEqual(KingdomPolityCasOutcome.Applied, result.Outcome);
 			cohort = KingdomPolityAuthority.Cohort(ledger, cohort.CohortId);
-			Assert.AreEqual(KingdomPolityCohortPhase.Abandoned, cohort.Phase);
-			Assert.IsNull(cohort.RewardEventId);
-			Assert.IsNull(terms.Conclusion);
-			Assert.AreEqual(route, KingdomPolityGapTestData.RouteRecord(ledger).Phase);
-			Assert.AreEqual(grievancePhase, grievance.Phase);
-			Assert.AreEqual(consumed, grievance.ConsumedByIncidentId);
+			ClassicAssert.AreEqual(KingdomPolityCohortPhase.Abandoned, cohort.Phase);
+			ClassicAssert.IsNull(cohort.RewardEventId);
+			ClassicAssert.IsNull(terms.Conclusion);
+			ClassicAssert.AreEqual(route, KingdomPolityGapTestData.RouteRecord(ledger).Phase);
+			ClassicAssert.AreEqual(grievancePhase, grievance.Phase);
+			ClassicAssert.AreEqual(consumed, grievance.ConsumedByIncidentId);
 		}
 
 		[Test]
@@ -248,11 +249,11 @@ namespace ThousandAndFirst.DevTests
 				out KingdomPolityProjectionReceipt projection);
 			KingdomPolityDeathIntentRecord intent = PhysicalIntent(ledger, cohort, projection);
 			byte[] before = KingdomPolityCodec.EncodeEnvelope(ledger);
-			Assert.IsFalse(KingdomPolityCohortRules.TryAbandonEndpointCohort(ledger,
+			ClassicAssert.IsFalse(KingdomPolityCohortRules.TryAbandonEndpointCohort(ledger,
 				ledger.Revision, intent, false, out _, out _));
 			CollectionAssert.AreEqual(before, KingdomPolityCodec.EncodeEnvelope(ledger));
 			intent.Visibility = KingdomPolityDeathVisibility.PlayerVisible;
-			Assert.IsFalse(KingdomPolityCohortRules.TryAbandonEndpointCohort(ledger,
+			ClassicAssert.IsFalse(KingdomPolityCohortRules.TryAbandonEndpointCohort(ledger,
 				ledger.Revision, intent, true, out _, out _));
 			CollectionAssert.AreEqual(before, KingdomPolityCodec.EncodeEnvelope(ledger));
 		}
@@ -264,25 +265,25 @@ namespace ThousandAndFirst.DevTests
 				out KingdomPolityProjectionReceipt projection);
 			KingdomPolityDeathIntentRecord intent = PhysicalIntent(ledger, cohort, projection);
 			long revision = ledger.Revision;
-			Assert.IsTrue(KingdomPolityCohortRules.TryAbandonEndpointCohort(ledger, revision,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryAbandonEndpointCohort(ledger, revision,
 				intent, true, out _, out string failure), failure);
 			byte[] abandoned = KingdomPolityCodec.EncodeEnvelope(ledger);
-			Assert.IsTrue(KingdomPolityCohortRules.TryAbandonEndpointCohort(ledger, revision,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryAbandonEndpointCohort(ledger, revision,
 				intent, true, out KingdomPolityPublicationResult repeated, out failure), failure);
-			Assert.AreEqual(KingdomPolityCasOutcome.AlreadyApplied, repeated.Outcome);
+			ClassicAssert.AreEqual(KingdomPolityCasOutcome.AlreadyApplied, repeated.Outcome);
 			CollectionAssert.AreEqual(abandoned, KingdomPolityCodec.EncodeEnvelope(ledger));
-			Assert.IsTrue(KingdomPolityCohortRules.TryCommitEndpointCleanup(ledger,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryCommitEndpointCleanup(ledger,
 				ledger.Revision, cohort.CohortId, projection.ProjectionId, projection.ObjectIds,
 				out _, out failure), failure);
 			cohort = KingdomPolityAuthority.Cohort(ledger, cohort.CohortId);
 			projection = KingdomPolityAuthority.Projection(ledger, projection.ProjectionId);
-			Assert.AreEqual(KingdomPolityCohortPhase.Abandoned, cohort.Phase);
-			Assert.AreEqual(KingdomPolityProjectionPhase.Cleaned, projection.Phase);
+			ClassicAssert.AreEqual(KingdomPolityCohortPhase.Abandoned, cohort.Phase);
+			ClassicAssert.AreEqual(KingdomPolityProjectionPhase.Cleaned, projection.Phase);
 			KingdomPolityLedger decoded = KingdomPolityCodec.DecodeEnvelope(
 				KingdomPolityCodec.EncodeEnvelope(ledger));
-			Assert.AreEqual(6, (byte)KingdomPolityAuthority.Cohort(decoded,
+			ClassicAssert.AreEqual(6, (byte)KingdomPolityAuthority.Cohort(decoded,
 				cohort.CohortId).Phase);
-			Assert.IsTrue(KingdomPolityRules.TryValidate(decoded, out failure), failure);
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(decoded, out failure), failure);
 		}
 
 		[Test]
@@ -290,15 +291,15 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomPolityLedger ledger = Scene(out KingdomPolityCohortPlan cohort,
 				out KingdomPolityProjectionReceipt projection);
-			Assert.IsFalse(KingdomPolityAttentionRules.TryAdmitPlan(ledger, 4, out _));
-			Assert.IsTrue(KingdomPolityCohortRules.TryAbandonEndpointCohort(ledger,
+			ClassicAssert.IsFalse(KingdomPolityAttentionRules.TryAdmitPlan(ledger, 4, out _));
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryAbandonEndpointCohort(ledger,
 				ledger.Revision, PhysicalIntent(ledger, cohort, projection), true,
 				out _, out string failure), failure);
 			cohort = KingdomPolityAuthority.Cohort(ledger, cohort.CohortId);
-			Assert.IsTrue(KingdomPolityAttentionRules.TryAdmitPlan(ledger, 4, out failure), failure);
-			Assert.AreEqual(KingdomPolityLeaseRecoveryAction.CleanupAbandonedLoaded,
+			ClassicAssert.IsTrue(KingdomPolityAttentionRules.TryAdmitPlan(ledger, 4, out failure), failure);
+			ClassicAssert.AreEqual(KingdomPolityLeaseRecoveryAction.CleanupAbandonedLoaded,
 				KingdomPolityExperienceRecoveryRules.Decide(cohort, cohort.SurfaceRef, false));
-			Assert.AreEqual(KingdomPolityLeaseRecoveryAction.ReleaseTerminal,
+			ClassicAssert.AreEqual(KingdomPolityLeaseRecoveryAction.ReleaseTerminal,
 				KingdomPolityExperienceRecoveryRules.Decide(cohort, null, false));
 		}
 
@@ -307,12 +308,12 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomPolityLedger ledger = Scene(out KingdomPolityCohortPlan cohort,
 				out KingdomPolityProjectionReceipt projection);
-			Assert.IsTrue(KingdomPolityCohortRules.TryAbandonEndpointCohort(ledger,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryAbandonEndpointCohort(ledger,
 				ledger.Revision, PhysicalIntent(ledger, cohort, projection), true,
 				out _, out string failure), failure);
 			KingdomPolityAuthority.Cohort(ledger, cohort.CohortId).RewardEventId =
 				"taf:receipt:false-semantic-reward";
-			Assert.IsFalse(KingdomPolityRules.TryValidate(ledger, out failure));
+			ClassicAssert.IsFalse(KingdomPolityRules.TryValidate(ledger, out failure));
 			StringAssert.Contains("abandoned cohort", failure);
 		}
 
@@ -324,11 +325,11 @@ namespace ThousandAndFirst.DevTests
 			cohort.Phase = KingdomPolityCohortPhase.Concluded;
 			cohort.RewardEventId = "taf:receipt:wrong-envoy-conclusion";
 			byte[] before = KingdomPolityCodec.EncodeEnvelope(ledger);
-			Assert.IsFalse(KingdomPolityDiplomacyRules.TryConcludeNeutralEnvoyDeath(ledger,
+			ClassicAssert.IsFalse(KingdomPolityDiplomacyRules.TryConcludeNeutralEnvoyDeath(ledger,
 				ledger.Revision, KingdomPolityGapTestData.TermsPlan, cohort.CohortId,
 				projection.ProjectionId, projection.ObjectIds[0], KingdomPolityTestData.Realm,
 				230L, null, out KingdomPolityEnvoyDeathOutcome refused, out _, out _));
-			Assert.AreEqual(KingdomPolityEnvoyDeathOutcome.Refused, refused);
+			ClassicAssert.AreEqual(KingdomPolityEnvoyDeathOutcome.Refused, refused);
 			CollectionAssert.AreEqual(before, KingdomPolityCodec.EncodeEnvelope(ledger));
 		}
 
@@ -343,12 +344,12 @@ namespace ThousandAndFirst.DevTests
 		public void ArmedCleanupTokenAcceptsOnlyOneExactRawIntent(string cut, bool complete, int matches,
 			bool exactType, bool exactValue, KingdomPolityCleanupEvidenceProof expected)
 		{
-			Assert.IsNotEmpty(cut);
+			ClassicAssert.IsNotEmpty(cut);
 			KingdomPolityCleanupEvidenceProof proof =
 				KingdomPolityPhysicalCustodyRules.ClassifyCleanupEvidence(complete, matches,
 					exactType, exactValue);
-			Assert.AreEqual(expected, proof);
-			Assert.AreEqual(expected == KingdomPolityCleanupEvidenceProof.Exact,
+			ClassicAssert.AreEqual(expected, proof);
+			ClassicAssert.AreEqual(expected == KingdomPolityCleanupEvidenceProof.Exact,
 				proof == KingdomPolityCleanupEvidenceProof.Exact);
 		}
 
@@ -371,10 +372,10 @@ namespace ThousandAndFirst.DevTests
 			string cut, KingdomPolityCleanupEvidenceProof intent,
 			KingdomPolityCleanupEvidenceProof witness)
 		{
-			Assert.IsNotEmpty(cut);
+			ClassicAssert.IsNotEmpty(cut);
 			KingdomPolityLedger ledger = Scene(out _, out _);
 			byte[] before = KingdomPolityCodec.EncodeEnvelope(ledger);
-			Assert.IsFalse(KingdomPolityPhysicalCustodyRules.PreparedAbsenceCanRollback(
+			ClassicAssert.IsFalse(KingdomPolityPhysicalCustodyRules.PreparedAbsenceCanRollback(
 				intent, witness));
 			CollectionAssert.AreEqual(before, KingdomPolityCodec.EncodeEnvelope(ledger));
 		}
@@ -382,10 +383,10 @@ namespace ThousandAndFirst.DevTests
 		[Test]
 		public void PlannedAbsentBodyNeedsIntentOrExactFinalWitness()
 		{
-			Assert.IsTrue(KingdomPolityPhysicalCustodyRules.PreparedAbsenceCanRollback(
+			ClassicAssert.IsTrue(KingdomPolityPhysicalCustodyRules.PreparedAbsenceCanRollback(
 				KingdomPolityCleanupEvidenceProof.Exact,
 				KingdomPolityCleanupEvidenceProof.Absent));
-			Assert.IsTrue(KingdomPolityPhysicalCustodyRules.PreparedAbsenceCanRollback(
+			ClassicAssert.IsTrue(KingdomPolityPhysicalCustodyRules.PreparedAbsenceCanRollback(
 				KingdomPolityCleanupEvidenceProof.Absent,
 				KingdomPolityCleanupEvidenceProof.Exact));
 		}
@@ -393,13 +394,13 @@ namespace ThousandAndFirst.DevTests
 		[Test]
 		public void FinalWitnessMutationDuringIntentClearIsNeverAcknowledged()
 		{
-			Assert.IsTrue(KingdomPolityPhysicalCustodyRules.CleanupIntentCanClear(
+			ClassicAssert.IsTrue(KingdomPolityPhysicalCustodyRules.CleanupIntentCanClear(
 				KingdomPolityCleanupEvidenceProof.Exact,
 				KingdomPolityCleanupEvidenceProof.Exact));
-			Assert.IsFalse(KingdomPolityPhysicalCustodyRules.CleanupIntentClearAcknowledged(
+			ClassicAssert.IsFalse(KingdomPolityPhysicalCustodyRules.CleanupIntentClearAcknowledged(
 				KingdomPolityCleanupEvidenceProof.Absent,
 				KingdomPolityCleanupEvidenceProof.Ambiguous));
-			Assert.IsFalse(KingdomPolityPhysicalCustodyRules.CleanupIntentClearAcknowledged(
+			ClassicAssert.IsFalse(KingdomPolityPhysicalCustodyRules.CleanupIntentClearAcknowledged(
 				KingdomPolityCleanupEvidenceProof.Exact,
 				KingdomPolityCleanupEvidenceProof.Exact));
 		}
@@ -453,14 +454,14 @@ namespace ThousandAndFirst.DevTests
 			KingdomPolityCleanupEvidenceProof intentAfterClear,
 			KingdomPolityCleanupEvidenceProof witnessAfterClear, bool expected)
 		{
-			Assert.IsNotEmpty(cut);
+			ClassicAssert.IsNotEmpty(cut);
 			bool actual = locator == KingdomPolityCleanupEvidenceProof.Absent && localAbsent &&
 				KingdomPolityPhysicalCustodyRules.PreparedAbsenceCanRollback(initialIntent,
 					initialWitness) && KingdomPolityPhysicalCustodyRules.CleanupIntentCanClear(
 					intentBeforeClear, witnessBeforeClear) &&
 				KingdomPolityPhysicalCustodyRules.CleanupIntentClearAcknowledged(
 					intentAfterClear, witnessAfterClear);
-			Assert.AreEqual(expected, actual);
+			ClassicAssert.AreEqual(expected, actual);
 		}
 
 		[Test]
@@ -470,7 +471,7 @@ namespace ThousandAndFirst.DevTests
 			if (KingdomPolityPhysicalCustodyRules.CleanupIntentCanClear(
 				KingdomPolityCleanupEvidenceProof.Ambiguous,
 				KingdomPolityCleanupEvidenceProof.Exact)) slot = null;
-			Assert.AreSame(foreign, slot);
+			ClassicAssert.AreSame(foreign, slot);
 		}
 
 		[TestCase(false, 0, KingdomPolityCleanupEvidenceProof.Unscannable)]
@@ -480,7 +481,7 @@ namespace ThousandAndFirst.DevTests
 		public void BoundedResidentLookupRefusesDuplicateAndScanExhaustion(bool complete,
 			int matches, KingdomPolityCleanupEvidenceProof expected)
 		{
-			Assert.AreEqual(expected,
+			ClassicAssert.AreEqual(expected,
 				KingdomPolityPhysicalCustodyRules.ClassifyResidentEvidence(complete, matches));
 		}
 
@@ -488,7 +489,7 @@ namespace ThousandAndFirst.DevTests
 		public void CachedAndUncachedDuplicateIdRefusesEvenWhenNativeCacheWouldReturnFirst()
 		{
 			const int cachedMatches = 1, uncachedMatches = 1;
-			Assert.AreEqual(KingdomPolityCleanupEvidenceProof.Ambiguous,
+			ClassicAssert.AreEqual(KingdomPolityCleanupEvidenceProof.Ambiguous,
 				KingdomPolityPhysicalCustodyRules.ClassifyResidentEvidence(true,
 					cachedMatches + uncachedMatches));
 		}
@@ -498,15 +499,15 @@ namespace ThousandAndFirst.DevTests
 		{
 			const string projection = "taf:projection:cleanup-golden";
 			const string body = "taf:object:cleanup-golden";
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				"r_TAF_PolityCleanupIntent_v1:c489599ea039178dcaa03dbcfaf1077a0acbcbccbfd0102e758a4992ba1ba715",
 				KingdomPolityPhysicalCustodyRules.CleanupIntentKey(projection, body));
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				"taf:intent:polity-cleanup:v1:dd1402f7c3b4d2c449a40667a96a4f416d9c3c35c4de93a8051aa73b88263834",
 				KingdomPolityPhysicalCustodyRules.PreparedCleanupIntent(
 					"taf:realm:v1:cleanup-golden", "taf:cohort:cleanup-golden", projection,
 					"zone/cleanup-golden", body, 2, 17, 23, 1, 1));
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				"taf:receipt:polity-body-removal-witness:v1:8f039b4e116ed4da749d5273caf1ccc0cb02c4d3eeea25b93ebf6b1296c012f7",
 				KingdomPolityPhysicalCustodyRules.RemovalWitness(
 					KingdomPolityPhysicalCustodyRules.CleanupRemovalKind,
@@ -526,8 +527,8 @@ namespace ThousandAndFirst.DevTests
 			bool present, bool exactType, bool exactCurrent, bool exactLegacy,
 			KingdomPolityLegacyRewriteRecovery expected)
 		{
-			Assert.IsNotEmpty(cut);
-			Assert.AreEqual(expected,
+			ClassicAssert.IsNotEmpty(cut);
+			ClassicAssert.AreEqual(expected,
 				KingdomPolityPhysicalCustodyRules.ClassifyLegacyRewriteRecovery(read,
 					present, exactType, exactCurrent, exactLegacy));
 		}
@@ -542,19 +543,19 @@ namespace ThousandAndFirst.DevTests
 			KingdomPolityCleanupEvidenceProof finalGearWitness =
 				KingdomPolityCleanupEvidenceProof.Exact;
 			byte[] before = KingdomPolityCodec.EncodeEnvelope(ledger);
-			Assert.IsFalse(KingdomPolityCohortRules.TryRollbackPreparedEndpointManifestation(
+			ClassicAssert.IsFalse(KingdomPolityCohortRules.TryRollbackPreparedEndpointManifestation(
 				ledger, ledger.Revision - 1L, cohort.CohortId, projection.ProjectionId,
 				projection.ZoneId, projection.ObjectIds, out KingdomPolityPublicationResult conflict,
 				out string failure));
-			Assert.AreEqual(KingdomPolityCasOutcome.Conflict, conflict.Outcome);
-			Assert.AreEqual(KingdomPolityCleanupEvidenceProof.Exact, finalBodyWitness);
-			Assert.AreEqual(KingdomPolityCleanupEvidenceProof.Exact, finalGearWitness);
+			ClassicAssert.AreEqual(KingdomPolityCasOutcome.Conflict, conflict.Outcome);
+			ClassicAssert.AreEqual(KingdomPolityCleanupEvidenceProof.Exact, finalBodyWitness);
+			ClassicAssert.AreEqual(KingdomPolityCleanupEvidenceProof.Exact, finalGearWitness);
 			CollectionAssert.AreEqual(before, KingdomPolityCodec.EncodeEnvelope(ledger));
-			Assert.IsTrue(KingdomPolityCohortRules.TryRollbackPreparedEndpointManifestation(
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryRollbackPreparedEndpointManifestation(
 				ledger, ledger.Revision, cohort.CohortId, projection.ProjectionId,
 				projection.ZoneId, projection.ObjectIds, out KingdomPolityPublicationResult retry,
 				out failure), failure);
-			Assert.AreEqual(KingdomPolityCasOutcome.Applied, retry.Outcome);
+			ClassicAssert.AreEqual(KingdomPolityCasOutcome.Applied, retry.Outcome);
 		}
 
 		private static KingdomPolityLedger PreparedScene(out KingdomPolityCohortPlan Cohort,
@@ -565,16 +566,16 @@ namespace ThousandAndFirst.DevTests
 			KingdomPolityRouteRecord route = KingdomPolityAuthority.Route(ledger,
 				KingdomPolityTestData.Route);
 			Cohort.SurfaceRef = route.DestinationId;
-			Assert.IsTrue(KingdomPolityRules.TryValidate(ledger, out string failure), failure);
-			Assert.IsTrue(KingdomPolityManifestRules.TryCreateErrandProof(
+			ClassicAssert.IsTrue(KingdomPolityRules.TryValidate(ledger, out string failure), failure);
+			ClassicAssert.IsTrue(KingdomPolityManifestRules.TryCreateErrandProof(
 				"taf:manifest-proof:cleanup-rollback", "taf:office:rival",
 				route.ManifestOrErrandId, out KingdomPolityManifestProof errand, out failure), failure);
-			Assert.IsTrue(KingdomPolityRouteRules.TryDepart(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomPolityRouteRules.TryDepart(ledger, ledger.Revision,
 				route.RouteId, 1200L, "taf:receipt:cleanup-rollback-departed", errand,
 				out KingdomPolityPublicationResult _, out failure), failure);
-			Assert.IsTrue(KingdomPolityRouteRules.TryAdvance(ledger, ledger.Revision,
+			ClassicAssert.IsTrue(KingdomPolityRouteRules.TryAdvance(ledger, ledger.Revision,
 				route.RouteId, 0, 1200L, 1200L, out _, out failure), failure);
-			Assert.IsTrue(KingdomPolityCohortRules.TryPrepareEndpointManifestation(ledger,
+			ClassicAssert.IsTrue(KingdomPolityCohortRules.TryPrepareEndpointManifestation(ledger,
 				ledger.Revision, Cohort.CohortId, KingdomPolityGapTestData.Zone, 1201L,
 				out KingdomPolityPublicationResult prepared, out failure), failure);
 			Cohort = KingdomPolityAuthority.Cohort(ledger, Cohort.CohortId);

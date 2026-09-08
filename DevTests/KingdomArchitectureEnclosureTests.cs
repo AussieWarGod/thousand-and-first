@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -16,12 +17,12 @@ namespace ThousandAndFirst.Tests
 		public void ShippedCorpusCompilesEveryVariantInEveryFacing()
 		{
 			ArchitectureCorpus corpus = KingdomArchitectureCorpusFixture.Load();
-			Assert.AreEqual(89, corpus.Palettes.Count);
-			Assert.AreEqual(333, corpus.Maps.Count);
-			Assert.AreEqual(344, corpus.Cases.Count);
-			Assert.IsTrue(corpus.Maps.ContainsKey("defense-watchhouse-l0"),
+			ClassicAssert.AreEqual(89, corpus.Palettes.Count);
+			ClassicAssert.AreEqual(333, corpus.Maps.Count);
+			ClassicAssert.AreEqual(344, corpus.Cases.Count);
+			ClassicAssert.IsTrue(corpus.Maps.ContainsKey("defense-watchhouse-l0"),
 				"the large predecessor map is part of the authored garrison renovation");
-			Assert.AreEqual(1, corpus.Cases.Count(item => item.Tier.BuildKey == "watchhouse"
+			ClassicAssert.AreEqual(1, corpus.Cases.Count(item => item.Tier.BuildKey == "watchhouse"
 				&& item.Tier.MapKey == "defense-watchhouse-l0"),
 				"the garrison expansion adds one deliberate predecessor case, not a duplicate");
 			int compiled = 0;
@@ -30,11 +31,11 @@ namespace ThousandAndFirst.Tests
 				{
 					ArchitectureCompileRequest request =
 						KingdomArchitectureCorpusFixture.Request(corpus, corpus.Cases[i], facing);
-					Assert.IsTrue(KingdomArchitectureRules.TryCompile(request,
+					ClassicAssert.IsTrue(KingdomArchitectureRules.TryCompile(request,
 						out _, out string failure), request.Map.Key + ": " + failure);
 					compiled++;
 				}
-			Assert.AreEqual(corpus.Cases.Count
+			ClassicAssert.AreEqual(corpus.Cases.Count
 				* Enum.GetValues(typeof(ArchitectureFacing)).Length, compiled);
 		}
 
@@ -68,10 +69,10 @@ namespace ThousandAndFirst.Tests
 				{
 					ArchitectureCompileRequest request =
 						KingdomArchitectureCorpusFixture.Request(corpus, corpus.Cases[i], facing);
-					Assert.IsTrue(KingdomArchitectureRules.TryCompile(request,
+					ClassicAssert.IsTrue(KingdomArchitectureRules.TryCompile(request,
 						out ArchitectureLayoutSnapshot snapshot, out string failure),
 						request.Map.Key + " " + facing + ": " + failure);
-					Assert.IsTrue(KingdomArchitectureRules.TryWorldDimensions(snapshot.Width,
+					ClassicAssert.IsTrue(KingdomArchitectureRules.TryWorldDimensions(snapshot.Width,
 						snapshot.Height, facing, out int width, out int height));
 					KingdomPlotRules.PlotRect rect = new KingdomPlotRules.PlotRect(
 						20, 20, 19 + width, 19 + height);
@@ -81,15 +82,15 @@ namespace ThousandAndFirst.Tests
 						ArchitectureAnchor entrance = snapshot.Anchors[a];
 						if (!IsRoadEntrance(entrance.Key)) continue;
 						List<ArchitecturePoint> exact = new List<ArchitecturePoint>();
-						Assert.IsTrue(KingdomRoadRules.TryAuthoredLane(snapshot, rect, entrance,
+						ClassicAssert.IsTrue(KingdomRoadRules.TryAuthoredLane(snapshot, rect, entrance,
 							exact, out int doorX, out int doorY, out int laneX, out int laneY),
 							request.Map.Key + " " + facing + " " + entrance.Key);
-						Assert.IsNotEmpty(exact, "every authored lane includes its reserved margin");
-						Assert.AreEqual(1, Math.Abs(exact[exact.Count - 1].X - laneX)
+						ClassicAssert.IsNotEmpty(exact, "every authored lane includes its reserved margin");
+						ClassicAssert.AreEqual(1, Math.Abs(exact[exact.Count - 1].X - laneX)
 							+ Math.Abs(exact[exact.Count - 1].Y - laneY),
 							"lane must be cardinally beyond its reserved margin");
 						HashSet<int> claimed = ClaimedWorldCells(snapshot, rect);
-						Assert.IsTrue(KingdomRoadRules.TryExactTrace(
+						ClassicAssert.IsTrue(KingdomRoadRules.TryExactTrace(
 							delegate(int x, int y)
 							{
 								return !claimed.Contains(KingdomRoadRules.Pack(x, y, 80));
@@ -105,23 +106,23 @@ namespace ThousandAndFirst.Tests
 						poseRoutes++;
 						routes++;
 					}
-					Assert.Greater(poseRoutes, 0, request.Map.Key + " " + facing);
+					ClassicAssert.Greater(poseRoutes, 0, request.Map.Key + " " + facing);
 					if (road) roadPoses++;
 					if (generated) generatedPoses++;
 					poses++;
 				}
 			}
 			int facingCount = Enum.GetValues(typeof(ArchitectureFacing)).Length;
-			Assert.AreEqual(corpus.Cases.Count * facingCount, poses);
-			Assert.AreEqual(publicRoutes + serviceRoutes, routes);
-			Assert.GreaterOrEqual(publicRoutes, poses,
+			ClassicAssert.AreEqual(corpus.Cases.Count * facingCount, poses);
+			ClassicAssert.AreEqual(publicRoutes + serviceRoutes, routes);
+			ClassicAssert.GreaterOrEqual(publicRoutes, poses,
 				"every shipped pose retains at least one public road ingress");
-			Assert.Greater(serviceRoutes, 0,
+			ClassicAssert.Greater(serviceRoutes, 0,
 				"service ingress must exercise the same exact route law");
-			Assert.Greater(interiorEntrances, 0,
+			ClassicAssert.Greater(interiorEntrances, 0,
 				"claim-interior entrances exercise the egress search, not only edge doors");
-			Assert.AreEqual(roadCases * facingCount, roadPoses);
-			Assert.AreEqual(generatedCases * facingCount, generatedPoses);
+			ClassicAssert.AreEqual(roadCases * facingCount, roadPoses);
+			ClassicAssert.AreEqual(generatedCases * facingCount, generatedPoses);
 		}
 
 		private static bool IsRoadEntrance(string key)
@@ -140,44 +141,44 @@ namespace ThousandAndFirst.Tests
 				item.Tier.BuildKey == "heartbasin" && item.Variant.Key == "fallback");
 			int riteX = 40;
 			int riteY = 12;
-			Assert.IsTrue(KingdomPlotRules.TrySurveyedHeart(riteX, riteY, 80, 25,
+			ClassicAssert.IsTrue(KingdomPlotRules.TrySurveyedHeart(riteX, riteY, 80, 25,
 				out KingdomPlotRules.PlotRect survey));
-			Assert.IsTrue(KingdomPlotRules.TryHeartRect(survey, riteX, riteY,
+			ClassicAssert.IsTrue(KingdomPlotRules.TryHeartRect(survey, riteX, riteY,
 				KingdomPlotRules.HeartSizeForRung(1), out KingdomPlotRules.PlotRect rect));
-			Assert.AreEqual(6, rect.Width);
-			Assert.AreEqual(4, rect.Height);
-			Assert.AreEqual(38, rect.X1);
-			Assert.AreEqual(11, rect.Y1);
-			Assert.AreEqual(43, rect.X2);
-			Assert.AreEqual(14, rect.Y2);
+			ClassicAssert.AreEqual(6, rect.Width);
+			ClassicAssert.AreEqual(4, rect.Height);
+			ClassicAssert.AreEqual(38, rect.X1);
+			ClassicAssert.AreEqual(11, rect.Y1);
+			ClassicAssert.AreEqual(43, rect.X2);
+			ClassicAssert.AreEqual(14, rect.Y2);
 			int matchingPoses = 0;
 			foreach (ArchitectureFacing facing in Enum.GetValues(typeof(ArchitectureFacing)))
 			{
-				Assert.IsTrue(KingdomArchitectureRules.TryCompile(
+				ClassicAssert.IsTrue(KingdomArchitectureRules.TryCompile(
 					KingdomArchitectureCorpusFixture.Request(corpus, heart, facing),
 					out ArchitectureLayoutSnapshot snapshot, out string failure), failure);
-				Assert.AreEqual(1, snapshot.Placements.Count(item => item.ExistingAuthority));
+				ClassicAssert.AreEqual(1, snapshot.Placements.Count(item => item.ExistingAuthority));
 				ArchitecturePlacement basin = snapshot.Placements.Single(item => item.ExistingAuthority);
 				// The compiler binds the stateful anchor to its cell; every consumer must compare
 				// the role, never the composed key (the founding refused on exactly that once).
 				StringAssert.StartsWith("fixture:first-basin@", basin.StatefulAnchor, facing.ToString());
-				Assert.AreEqual("fixture:first-basin",
+				ClassicAssert.AreEqual("fixture:first-basin",
 					KingdomArchitectureRules.AnchorRole(basin.StatefulAnchor));
 				ArchitectureCellState basinCell = Cell(snapshot, basin.X, basin.Y);
-				Assert.AreEqual(ArchitecturePassability.Walkable, basinCell.Passability);
+				ClassicAssert.AreEqual(ArchitecturePassability.Walkable, basinCell.Passability);
 				List<ArchitectureAnchor> entrances = snapshot.Anchors.Where(item =>
 					item.Key == "entrance:public"
 						|| item.Key.StartsWith("entrance:public@", StringComparison.Ordinal)).ToList();
-				Assert.AreEqual(2, entrances.Count, facing.ToString());
+				ClassicAssert.AreEqual(2, entrances.Count, facing.ToString());
 				foreach (ArchitectureAnchor entrance in entrances)
-					Assert.IsTrue(ReachableWalkCell(snapshot, entrance.X, entrance.Y,
+					ClassicAssert.IsTrue(ReachableWalkCell(snapshot, entrance.X, entrance.Y,
 						basin.X, basin.Y), facing + " " + entrance.Key);
-				Assert.AreEqual(1, Math.Abs(snapshot.MainX - basin.X)
+				ClassicAssert.AreEqual(1, Math.Abs(snapshot.MainX - basin.X)
 					+ Math.Abs(snapshot.MainY - basin.Y));
-				Assert.IsTrue(KingdomArchitectureRules.TryWorldDimensions(snapshot.Width,
+				ClassicAssert.IsTrue(KingdomArchitectureRules.TryWorldDimensions(snapshot.Width,
 					snapshot.Height, facing, out int width, out int height));
 				if (width != rect.Width || height != rect.Height) continue;
-				Assert.IsTrue(KingdomArchitectureRules.TryToWorld(rect.X1, rect.Y1,
+				ClassicAssert.IsTrue(KingdomArchitectureRules.TryToWorld(rect.X1, rect.Y1,
 					snapshot.Width, snapshot.Height, facing, basin.X, basin.Y,
 					out int basinX, out int basinY));
 				if (basinX != riteX || basinY != riteY) continue;
@@ -189,19 +190,19 @@ namespace ThousandAndFirst.Tests
 				foreach (ArchitectureAnchor entrance in entrances)
 				{
 					List<ArchitecturePoint> route = new List<ArchitecturePoint>();
-					Assert.IsTrue(KingdomRoadRules.TryAuthoredLane(snapshot, rect, entrance,
+					ClassicAssert.IsTrue(KingdomRoadRules.TryAuthoredLane(snapshot, rect, entrance,
 						route, out int doorX, out int doorY, out int laneX, out int laneY));
-					Assert.IsTrue(KingdomQuickstartRules.RequiresPreparedGround(doorX, doorY));
+					ClassicAssert.IsTrue(KingdomQuickstartRules.RequiresPreparedGround(doorX, doorY));
 					foreach (ArchitecturePoint point in route)
-						Assert.IsTrue(KingdomQuickstartRules.RequiresPreparedGround(point.X, point.Y),
+						ClassicAssert.IsTrue(KingdomQuickstartRules.RequiresPreparedGround(point.X, point.Y),
 							"unprepared ingress at " + point.X + "," + point.Y);
-					Assert.IsTrue(KingdomQuickstartRules.RequiresPreparedGround(laneX, laneY),
+					ClassicAssert.IsTrue(KingdomQuickstartRules.RequiresPreparedGround(laneX, laneY),
 						"unprepared lane at " + laneX + "," + laneY);
 					endpoints.Add(laneX + "," + laneY);
 				}
 				CollectionAssert.AreEquivalent(new[] { "40,16", "41,16" }, endpoints);
 			}
-			Assert.AreEqual(1, matchingPoses);
+			ClassicAssert.AreEqual(1, matchingPoses);
 		}
 
 		private static bool ReachableWalkCell(ArchitectureLayoutSnapshot snapshot,
@@ -239,7 +240,7 @@ namespace ThousandAndFirst.Tests
 			{
 				ArchitectureCellState cell = Snapshot.Cells[i];
 				if (!KingdomArchitectureRules.IsClaimed(cell.Claim)) continue;
-				Assert.IsTrue(KingdomArchitectureRules.TryToWorld(Rect.X1, Rect.Y1,
+				ClassicAssert.IsTrue(KingdomArchitectureRules.TryToWorld(Rect.X1, Rect.Y1,
 					Snapshot.Width, Snapshot.Height, Snapshot.Facing, cell.X, cell.Y,
 					out int x, out int y));
 				result.Add(KingdomRoadRules.Pack(x, y, 80));
@@ -262,8 +263,8 @@ namespace ThousandAndFirst.Tests
 				KeyValuePair<string, string> edge = edges[edgeIndex];
 				List<ArchitectureCorpusCase> beforeCases = CasesFor(corpus, edge.Key);
 				List<ArchitectureCorpusCase> afterCases = CasesFor(corpus, edge.Value);
-				Assert.IsNotEmpty(beforeCases, edge.Key + " has no authored architecture tier");
-				Assert.IsNotEmpty(afterCases, edge.Value + " has no authored architecture tier");
+				ClassicAssert.IsNotEmpty(beforeCases, edge.Key + " has no authored architecture tier");
+				ClassicAssert.IsNotEmpty(afterCases, edge.Value + " has no authored architecture tier");
 				int edgeTransitions = 0;
 				for (int beforeIndex = 0; beforeIndex < beforeCases.Count; beforeIndex++)
 				{
@@ -272,23 +273,23 @@ namespace ThousandAndFirst.Tests
 						CompatibleUpgradeBinding(beforeCase, afterCase)
 						&& afterCase.Variant.Key == beforeCase.Variant.Key).ToList();
 					if (shared.Count == 0) continue;
-					Assert.AreEqual(1, shared.Count, edge.Key + "->" + edge.Value + " "
+					ClassicAssert.AreEqual(1, shared.Count, edge.Key + "->" + edge.Value + " "
 						+ beforeCase.PlanKey + "/" + beforeCase.Binding.Key + "/"
 						+ beforeCase.Variant.Key + " has ambiguous successor architecture");
 					ArchitectureCorpusCase afterCase = shared[0];
-					Assert.Greater(afterCase.Tier.Level, beforeCase.Tier.Level,
+					ClassicAssert.Greater(afterCase.Tier.Level, beforeCase.Tier.Level,
 						edge.Key + "->" + edge.Value + " is not in production level order");
 					foreach (ArchitectureFacing facing in Enum.GetValues(typeof(ArchitectureFacing)))
 					{
-						Assert.IsTrue(KingdomArchitectureRules.TryCompile(
+						ClassicAssert.IsTrue(KingdomArchitectureRules.TryCompile(
 							KingdomArchitectureCorpusFixture.Request(corpus, beforeCase, facing),
 							out ArchitectureLayoutSnapshot before, out string failure),
 							beforeCase.Tier.MapKey + " " + facing + ": " + failure);
-						Assert.IsTrue(KingdomArchitectureRules.TryCompile(
+						ClassicAssert.IsTrue(KingdomArchitectureRules.TryCompile(
 							KingdomArchitectureCorpusFixture.Request(corpus, afterCase, facing),
 							out ArchitectureLayoutSnapshot after, out failure),
 							afterCase.Tier.MapKey + " " + facing + ": " + failure);
-						Assert.IsTrue(KingdomArchitectureRules.TryBuildDelta(before, after,
+						ClassicAssert.IsTrue(KingdomArchitectureRules.TryBuildDelta(before, after,
 							out _, out failure), edge.Key + "->" + edge.Value + " "
 								+ beforeCase.PlanKey + "/" + beforeCase.Binding.Key + "/"
 								+ beforeCase.Variant.Key + " " + facing + ": " + failure);
@@ -296,13 +297,13 @@ namespace ThousandAndFirst.Tests
 						edgeTransitions++;
 					}
 				}
-				Assert.Greater(edgeTransitions, 0,
+				ClassicAssert.Greater(edgeTransitions, 0,
 					edge.Key + "->" + edge.Value + " has no shared reachable architecture variant");
 				coveredEdges.Add(edge.Key + "->" + edge.Value);
 			}
-			Assert.AreEqual(edges.Count, coveredEdges.Count,
+			ClassicAssert.AreEqual(edges.Count, coveredEdges.Count,
 				"every catalogue plot upgrade edge must be exercised");
-			Assert.GreaterOrEqual(transitions, edges.Count * 4,
+			ClassicAssert.GreaterOrEqual(transitions, edges.Count * 4,
 				"every covered edge must compile in all four facings");
 		}
 
@@ -312,13 +313,13 @@ namespace ThousandAndFirst.Tests
 			ArchitectureCorpus corpus = KingdomArchitectureCorpusFixture.Load();
 			ArchitectureCorpusCase item = corpus.Cases.Find(value =>
 				value.Tier.MapKey == "housing-hut-s0");
-			Assert.IsNotNull(item);
+			ClassicAssert.IsNotNull(item);
 			ArchitectureCompileRequest request = KingdomArchitectureCorpusFixture.Request(
 				corpus, item, ArchitectureFacing.North);
-			Assert.IsTrue(KingdomArchitectureRules.TryCompile(request,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryCompile(request,
 				out _, out string failure), failure);
 			request.Map.Rows[1] = ".#b@i.";
-			Assert.IsFalse(KingdomArchitectureRules.TryCompile(request, out _, out failure));
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryCompile(request, out _, out failure));
 			StringAssert.Contains("bare leak", failure);
 			StringAssert.Contains("4,1", failure);
 		}
@@ -329,11 +330,11 @@ namespace ThousandAndFirst.Tests
 			ArchitectureCorpus corpus = KingdomArchitectureCorpusFixture.Load();
 			ArchitectureCorpusCase item = corpus.Cases.Find(value =>
 				value.Tier.MapKey == "housing-hut-s0");
-			Assert.IsNotNull(item);
+			ClassicAssert.IsNotNull(item);
 			ArchitectureCompileRequest request = KingdomArchitectureCorpusFixture.Request(
 				corpus, item, ArchitectureFacing.North);
 			request.Map.Rows[2] = ".#+.#.";
-			Assert.IsFalse(KingdomArchitectureRules.TryCompile(request, out _, out string failure));
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryCompile(request, out _, out string failure));
 			StringAssert.Contains("no bounded unclaimed walk to the lot exterior", failure);
 		}
 
@@ -341,40 +342,40 @@ namespace ThousandAndFirst.Tests
 		public void PureLawDistinguishesBareLeakBarrierOpeningAndRooflessPlan()
 		{
 			ArchitectureLayoutSnapshot snapshot = BoundarySnapshot();
-			Assert.IsFalse(KingdomArchitectureRules.TryValidateEnclosure(snapshot,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryValidateEnclosure(snapshot,
 				out string failure));
 			StringAssert.Contains("bare leak", failure);
 
 			snapshot.Placements.Add(new ArchitecturePlacement
 				{ Layer = ArchitectureLayer.Structure, X = 1, Y = 1 });
-			Assert.IsTrue(KingdomArchitectureRules.TryValidateEnclosure(snapshot, out failure), failure);
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryValidateEnclosure(snapshot, out failure), failure);
 
 			snapshot.Placements.RemoveAt(snapshot.Placements.Count - 1);
 			snapshot.Anchors.Add(new ArchitectureAnchor
 				{ Key = "threshold:test", X = 1, Y = 1 });
-			Assert.IsTrue(KingdomArchitectureRules.TryValidateEnclosure(snapshot, out failure), failure);
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryValidateEnclosure(snapshot, out failure), failure);
 
 			snapshot.Anchors.Clear();
 			Cell(snapshot, 1, 1).Cover = ArchitectureCover.Open;
-			Assert.IsTrue(KingdomArchitectureRules.TryValidateEnclosure(snapshot, out failure), failure);
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryValidateEnclosure(snapshot, out failure), failure);
 
 			Cell(snapshot, 1, 1).Cover = ArchitectureCover.Walled;
 			Cell(snapshot, 2, 1).Claim = ArchitectureClaim.Building;
 			Cell(snapshot, 2, 1).Cover = ArchitectureCover.Soft;
 			snapshot.Placements.Add(new ArchitecturePlacement
 				{ Layer = ArchitectureLayer.Structure, X = 2, Y = 1 });
-			Assert.IsTrue(KingdomArchitectureRules.TryValidateEnclosure(snapshot, out failure), failure);
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryValidateEnclosure(snapshot, out failure), failure);
 		}
 
 		[Test]
 		public void PureLawFailsClosedOnMalformedInput()
 		{
-			Assert.IsFalse(KingdomArchitectureRules.TryValidateEnclosure(null,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryValidateEnclosure(null,
 				out string failure));
 			StringAssert.Contains("malformed", failure);
 			ArchitectureLayoutSnapshot snapshot = BoundarySnapshot();
 			snapshot.Cells.RemoveAt(0);
-			Assert.IsFalse(KingdomArchitectureRules.TryValidateEnclosure(snapshot, out failure));
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryValidateEnclosure(snapshot, out failure));
 			StringAssert.Contains("incomplete", failure);
 		}
 
@@ -382,10 +383,10 @@ namespace ThousandAndFirst.Tests
 		public void RemovingEdgeBarrierCreatesNamedExteriorLeak()
 		{
 			ArchitectureLayoutSnapshot snapshot = EdgeSnapshot();
-			Assert.IsTrue(KingdomArchitectureRules.TryValidateEnclosure(snapshot,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryValidateEnclosure(snapshot,
 				out string failure), failure);
 			snapshot.Placements.RemoveAt(snapshot.Placements.Count - 1);
-			Assert.IsFalse(KingdomArchitectureRules.TryValidateEnclosure(snapshot, out failure));
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryValidateEnclosure(snapshot, out failure));
 			StringAssert.Contains("bare leak at 0,1 toward -1,1", failure);
 		}
 

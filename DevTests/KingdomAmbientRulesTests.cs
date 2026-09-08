@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 using ThousandAndFirst.Simulation.City;
 
@@ -36,8 +37,8 @@ namespace ThousandAndFirst.Tests
 			{
 				string line;
 				int key;
-				Assert.IsTrue(KingdomAmbientRules.TryLine(Stopped, band, out line, out key), band.ToString());
-				Assert.IsTrue(line.Contains("stopped") || line.Contains("quiet"), band + " said: " + line);
+				ClassicAssert.IsTrue(KingdomAmbientRules.TryLine(Stopped, band, out line, out key), band.ToString());
+				ClassicAssert.IsTrue(line.Contains("stopped") || line.Contains("quiet"), band + " said: " + line);
 			}
 		}
 
@@ -47,8 +48,8 @@ namespace ThousandAndFirst.Tests
 			KingdomAmbientReading dry = new KingdomAmbientReading(3, 0, true, 2, 2, 2, true);
 			string line;
 			int key;
-			Assert.IsTrue(KingdomAmbientRules.TryLine(dry, KingdomDayBand.SaltSun, out line, out key));
-			Assert.IsTrue(line.Contains("cisterns"), line);
+			ClassicAssert.IsTrue(KingdomAmbientRules.TryLine(dry, KingdomDayBand.SaltSun, out line, out key));
+			ClassicAssert.IsTrue(line.Contains("cisterns"), line);
 		}
 
 		[Test]
@@ -58,9 +59,9 @@ namespace ThousandAndFirst.Tests
 			{
 				string line;
 				int key;
-				Assert.IsTrue(KingdomAmbientRules.TryLine(Busy, band, out line, out key), band.ToString());
-				Assert.AreNotEqual("", line);
-				Assert.AreNotEqual(KingdomAmbientRules.NoKey, key);
+				ClassicAssert.IsTrue(KingdomAmbientRules.TryLine(Busy, band, out line, out key), band.ToString());
+				ClassicAssert.AreNotEqual("", line);
+				ClassicAssert.AreNotEqual(KingdomAmbientRules.NoKey, key);
 			}
 		}
 
@@ -75,9 +76,9 @@ namespace ThousandAndFirst.Tests
 			string b;
 			int keyA;
 			int keyB;
-			Assert.IsTrue(KingdomAmbientRules.TryLine(Busy, KingdomDayBand.Rising, out a, out keyA));
-			Assert.IsTrue(KingdomAmbientRules.TryLine(Busy, KingdomDayBand.Hindsun, out b, out keyB));
-			Assert.AreNotEqual(keyA, keyB);
+			ClassicAssert.IsTrue(KingdomAmbientRules.TryLine(Busy, KingdomDayBand.Rising, out a, out keyA));
+			ClassicAssert.IsTrue(KingdomAmbientRules.TryLine(Busy, KingdomDayBand.Hindsun, out b, out keyB));
+			ClassicAssert.AreNotEqual(keyA, keyB);
 		}
 
 		/// <summary>The state-change rule, which is the whole of "never per slice": the same line
@@ -85,16 +86,16 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Speakable_OncePerStateChangeOrPerDay()
 		{
-			Assert.IsTrue(KingdomAmbientRules.Speakable(7, 0, 3L, -1L), "a book that has said nothing may speak");
-			Assert.IsFalse(KingdomAmbientRules.Speakable(7, 7, 3L, 3L), "the same line inside one day is silence");
-			Assert.IsTrue(KingdomAmbientRules.Speakable(7, 7, 4L, 3L), "the same line tomorrow is a new day");
-			Assert.IsTrue(KingdomAmbientRules.Speakable(8, 7, 3L, 3L), "a different line is a state change");
+			ClassicAssert.IsTrue(KingdomAmbientRules.Speakable(7, 0, 3L, -1L), "a book that has said nothing may speak");
+			ClassicAssert.IsFalse(KingdomAmbientRules.Speakable(7, 7, 3L, 3L), "the same line inside one day is silence");
+			ClassicAssert.IsTrue(KingdomAmbientRules.Speakable(7, 7, 4L, 3L), "the same line tomorrow is a new day");
+			ClassicAssert.IsTrue(KingdomAmbientRules.Speakable(8, 7, 3L, 3L), "a different line is a state change");
 		}
 
 		[Test]
 		public void Speakable_NeverSpeaksNothing()
 		{
-			Assert.IsFalse(KingdomAmbientRules.Speakable(KingdomAmbientRules.NoKey, 4, 9L, 1L));
+			ClassicAssert.IsFalse(KingdomAmbientRules.Speakable(KingdomAmbientRules.NoKey, 4, 9L, 1L));
 		}
 
 		[TestCase(0L, 0L)]
@@ -103,8 +104,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase(2400L, 2L)]
 		public void DayOrdinal_CutsOnTheEnginesOwnDay(long tick, long expected)
 		{
-			Assert.AreEqual(expected, KingdomAmbientRules.DayOrdinal(tick));
-			Assert.AreEqual(1200L, KingdomHappeningRules.TicksPerDay);
+			ClassicAssert.AreEqual(expected, KingdomAmbientRules.DayOrdinal(tick));
+			ClassicAssert.AreEqual(1200L, KingdomHappeningRules.TicksPerDay);
 		}
 
 		/// <summary>An empty city is not a silent one: a place with nothing standing in it still
@@ -114,8 +115,8 @@ namespace ThousandAndFirst.Tests
 		{
 			string line;
 			int key;
-			Assert.IsTrue(KingdomAmbientRules.TryLine(KingdomAmbientReading.Empty, KingdomDayBand.BeetleMoon, out line, out key));
-			Assert.AreNotEqual("", line);
+			ClassicAssert.IsTrue(KingdomAmbientRules.TryLine(KingdomAmbientReading.Empty, KingdomDayBand.BeetleMoon, out line, out key));
+			ClassicAssert.AreNotEqual("", line);
 		}
 
 		/// <summary>Bread-smell is a rendering of a work having run, not of the hour. Take the
@@ -127,10 +128,10 @@ namespace ThousandAndFirst.Tests
 			string cold;
 			int a;
 			int b;
-			Assert.IsTrue(KingdomAmbientRules.TryLine(new KingdomAmbientReading(2, 0, true, 0, 0, 0, false), KingdomDayBand.SaltSun, out cooked, out a));
-			Assert.IsTrue(KingdomAmbientRules.TryLine(new KingdomAmbientReading(2, 0, false, 0, 0, 0, false), KingdomDayBand.SaltSun, out cold, out b));
-			Assert.AreNotEqual(cooked, cold);
-			Assert.IsTrue(cooked.Contains("Bread"), cooked);
+			ClassicAssert.IsTrue(KingdomAmbientRules.TryLine(new KingdomAmbientReading(2, 0, true, 0, 0, 0, false), KingdomDayBand.SaltSun, out cooked, out a));
+			ClassicAssert.IsTrue(KingdomAmbientRules.TryLine(new KingdomAmbientReading(2, 0, false, 0, 0, 0, false), KingdomDayBand.SaltSun, out cold, out b));
+			ClassicAssert.AreNotEqual(cooked, cold);
+			ClassicAssert.IsTrue(cooked.Contains("Bread"), cooked);
 		}
 
 		/// <summary>The shrine's hour is the shrine's, and only when somebody is keeping it.</summary>
@@ -141,10 +142,10 @@ namespace ThousandAndFirst.Tests
 			string empty;
 			int a;
 			int b;
-			Assert.IsTrue(KingdomAmbientRules.TryLine(new KingdomAmbientReading(1, 0, false, 2, 0, 0, false), KingdomDayBand.Hindsun, out kept, out a));
-			Assert.IsTrue(KingdomAmbientRules.TryLine(new KingdomAmbientReading(1, 0, false, 0, 0, 0, false), KingdomDayBand.Hindsun, out empty, out b));
-			Assert.IsTrue(kept.Contains("shrine"), kept);
-			Assert.IsFalse(empty.Contains("shrine"), empty);
+			ClassicAssert.IsTrue(KingdomAmbientRules.TryLine(new KingdomAmbientReading(1, 0, false, 2, 0, 0, false), KingdomDayBand.Hindsun, out kept, out a));
+			ClassicAssert.IsTrue(KingdomAmbientRules.TryLine(new KingdomAmbientReading(1, 0, false, 0, 0, 0, false), KingdomDayBand.Hindsun, out empty, out b));
+			ClassicAssert.IsTrue(kept.Contains("shrine"), kept);
+			ClassicAssert.IsFalse(empty.Contains("shrine"), empty);
 		}
 	}
 }

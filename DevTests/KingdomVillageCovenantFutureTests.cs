@@ -4,6 +4,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -61,12 +62,12 @@ namespace ThousandAndFirst.Tests
 		{
 			byte[] bytes = FutureBytes();
 			KingdomVillageCovenantArchive back = KingdomVillageCovenantCodec.Decode(bytes);
-			Assert.AreEqual(KingdomVillageCovenantState.FutureOpaque, back.State, back.Fault);
-			Assert.AreEqual(KingdomVillageCovenantCodec.CurrentWireVersion + 1, back.OpaqueVersion);
-			Assert.AreEqual(0, back.Rows.Count);
-			Assert.IsFalse(back.IdentityBound);
+			ClassicAssert.AreEqual(KingdomVillageCovenantState.FutureOpaque, back.State, back.Fault);
+			ClassicAssert.AreEqual(KingdomVillageCovenantCodec.CurrentWireVersion + 1, back.OpaqueVersion);
+			ClassicAssert.AreEqual(0, back.Rows.Count);
+			ClassicAssert.IsFalse(back.IdentityBound);
 			StringAssert.Contains("keep but not read", back.Fault);
-			Assert.IsTrue(KingdomVillageCovenantRules.TryValidate(back, out string failure),
+			ClassicAssert.IsTrue(KingdomVillageCovenantRules.TryValidate(back, out string failure),
 				failure);
 		}
 
@@ -75,10 +76,10 @@ namespace ThousandAndFirst.Tests
 		{
 			byte[] bytes = FutureBytes();
 			KingdomVillageCovenantArchive back = KingdomVillageCovenantCodec.Decode(bytes);
-			Assert.IsTrue(KingdomVillageCovenantCodec.TryEncode(back, out byte[] again,
+			ClassicAssert.IsTrue(KingdomVillageCovenantCodec.TryEncode(back, out byte[] again,
 				out string failure), failure);
 			CollectionAssert.AreEqual(bytes, again);
-			Assert.AreEqual(KingdomVillageCovenantState.FutureOpaque,
+			ClassicAssert.AreEqual(KingdomVillageCovenantState.FutureOpaque,
 				KingdomVillageCovenantCodec.Decode(again).State);
 		}
 
@@ -96,10 +97,10 @@ namespace ThousandAndFirst.Tests
 				OpaquePayload = new byte[] { 1, 2, 3, 4 },
 				Fault = "a claim about bytes that cannot support it"
 			};
-			Assert.IsFalse(KingdomVillageCovenantCodec.TryEncode(lying, out byte[] bytes,
+			ClassicAssert.IsFalse(KingdomVillageCovenantCodec.TryEncode(lying, out byte[] bytes,
 				out string failure));
 			StringAssert.Contains("retained bytes do not verify", failure);
-			Assert.IsNull(bytes);
+			ClassicAssert.IsNull(bytes);
 		}
 
 		[Test]
@@ -108,7 +109,7 @@ namespace ThousandAndFirst.Tests
 			KingdomVillageCovenantArchive back =
 				KingdomVillageCovenantCodec.Decode(FutureBytes());
 			back.OpaqueVersion = KingdomVillageCovenantCodec.CurrentWireVersion + 2;
-			Assert.IsFalse(KingdomVillageCovenantCodec.TryEncode(back, out _, out string failure));
+			ClassicAssert.IsFalse(KingdomVillageCovenantCodec.TryEncode(back, out _, out string failure));
 			StringAssert.Contains("while its retained bytes declare", failure);
 		}
 
@@ -122,7 +123,7 @@ namespace ThousandAndFirst.Tests
 				OpaquePayload = KingdomVillageCovenantArchiveTests.Encoded(),
 				Fault = "our own bytes wearing a stranger's coat"
 			};
-			Assert.IsFalse(KingdomVillageCovenantCodec.TryEncode(lying, out _, out string failure));
+			ClassicAssert.IsFalse(KingdomVillageCovenantCodec.TryEncode(lying, out _, out string failure));
 			StringAssert.Contains("this build's own revision", failure);
 		}
 
@@ -132,11 +133,11 @@ namespace ThousandAndFirst.Tests
 			byte[] bytes = KingdomVillageCovenantArchiveTests.Encoded();
 			bytes[0] ^= 0x01;
 			KingdomVillageCovenantArchive back = KingdomVillageCovenantCodec.Decode(bytes);
-			Assert.AreEqual(KingdomVillageCovenantState.Quarantined, back.State);
-			Assert.IsFalse(KingdomVillageCovenantCodec.TryEncode(back, out byte[] again,
+			ClassicAssert.AreEqual(KingdomVillageCovenantState.Quarantined, back.State);
+			ClassicAssert.IsFalse(KingdomVillageCovenantCodec.TryEncode(back, out byte[] again,
 				out string failure));
 			StringAssert.Contains("quarantined evidence", failure);
-			Assert.IsNull(again);
+			ClassicAssert.IsNull(again);
 		}
 
 		[Test]
@@ -145,7 +146,7 @@ namespace ThousandAndFirst.Tests
 			byte[] bytes = FutureBytes();
 			bytes[bytes.Length - 3] ^= 0x01;
 			KingdomVillageCovenantArchive back = KingdomVillageCovenantCodec.Decode(bytes);
-			Assert.AreEqual(KingdomVillageCovenantState.Quarantined, back.State,
+			ClassicAssert.AreEqual(KingdomVillageCovenantState.Quarantined, back.State,
 				"a later revision whose digest fails is not a lawful successor");
 		}
 
@@ -155,7 +156,7 @@ namespace ThousandAndFirst.Tests
 			foreach (int version in new[] { 0, -1, int.MinValue })
 			{
 				byte[] bytes = Forge(version, new byte[] { 1 });
-				Assert.AreEqual(KingdomVillageCovenantState.Quarantined,
+				ClassicAssert.AreEqual(KingdomVillageCovenantState.Quarantined,
 					KingdomVillageCovenantCodec.Decode(bytes).State,
 					"wire revision " + version + " could never have been allocated");
 			}
@@ -202,25 +203,25 @@ namespace ThousandAndFirst.Tests
 			KingdomVillageCovenantArchive foreign = KingdomVillageCovenantCodec.Decode(
 				ForgeWithMagic(0x31424654, KingdomVillageCovenantCodec.CurrentWireVersion, body,
 					body.Length));
-			Assert.AreEqual(KingdomVillageCovenantState.Quarantined, foreign.State);
+			ClassicAssert.AreEqual(KingdomVillageCovenantState.Quarantined, foreign.State);
 			StringAssert.Contains("magic is not this family's", foreign.Fault);
 
 			KingdomVillageCovenantArchive impossible = KingdomVillageCovenantCodec.Decode(
 				ForgeWithMagic(KingdomVillageCovenantCodec.Magic, 0, body, body.Length));
-			Assert.AreEqual(KingdomVillageCovenantState.Quarantined, impossible.State);
+			ClassicAssert.AreEqual(KingdomVillageCovenantState.Quarantined, impossible.State);
 			StringAssert.Contains("no build could have allocated", impossible.Fault);
 
 			KingdomVillageCovenantArchive miscounted = KingdomVillageCovenantCodec.Decode(
 				ForgeWithMagic(KingdomVillageCovenantCodec.Magic,
 					KingdomVillageCovenantCodec.CurrentWireVersion, body, body.Length - 1));
-			Assert.AreEqual(KingdomVillageCovenantState.Quarantined, miscounted.State);
+			ClassicAssert.AreEqual(KingdomVillageCovenantState.Quarantined, miscounted.State);
 			StringAssert.Contains("does not account for every byte", miscounted.Fault);
 
 			KingdomVillageCovenantArchive overCap = KingdomVillageCovenantCodec.Decode(
 				ForgeWithMagic(KingdomVillageCovenantCodec.Magic,
 					KingdomVillageCovenantCodec.CurrentWireVersion, body,
 					KingdomVillageCovenantCodec.MaxPayloadBytes + 1));
-			Assert.AreEqual(KingdomVillageCovenantState.Quarantined, overCap.State);
+			ClassicAssert.AreEqual(KingdomVillageCovenantState.Quarantined, overCap.State);
 			StringAssert.Contains("does not account for every byte", overCap.Fault);
 		}
 
@@ -239,7 +240,7 @@ namespace ThousandAndFirst.Tests
 
 			byte[] strangeFlag = Redigest(sound, bound, 2);
 			KingdomVillageCovenantArchive flagged = KingdomVillageCovenantCodec.Decode(strangeFlag);
-			Assert.AreEqual(KingdomVillageCovenantState.Quarantined, flagged.State);
+			ClassicAssert.AreEqual(KingdomVillageCovenantState.Quarantined, flagged.State);
 			StringAssert.Contains("neither bound nor unbound", flagged.Fault);
 
 			// The row length prefix sits after the identity frame and the twenty-byte header. A
@@ -249,7 +250,7 @@ namespace ThousandAndFirst.Tests
 			{
 				KingdomVillageCovenantArchive row = KingdomVillageCovenantCodec.Decode(
 					RedigestInt32(sound, rowLength, declared));
-				Assert.AreEqual(KingdomVillageCovenantState.Quarantined, row.State,
+				ClassicAssert.AreEqual(KingdomVillageCovenantState.Quarantined, row.State,
 					"a row declaring " + declared + " bytes is outside the row bound");
 				StringAssert.Contains("a covenant row declares " + declared, row.Fault);
 			}
@@ -290,7 +291,7 @@ namespace ThousandAndFirst.Tests
 				OpaquePayload = new byte[] { 1 },
 				Fault = "a future that is not later than the present"
 			};
-			Assert.IsFalse(KingdomVillageCovenantRules.TryValidate(lying, out string failure));
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.TryValidate(lying, out string failure));
 			StringAssert.Contains("not later than this build's", failure);
 		}
 
@@ -301,11 +302,11 @@ namespace ThousandAndFirst.Tests
 			{
 				State = (KingdomVillageCovenantState)77
 			};
-			Assert.IsFalse(KingdomVillageCovenantRules.Defined(strange.State));
-			Assert.IsFalse(KingdomVillageCovenantCodec.TryEncode(strange, out _,
+			ClassicAssert.IsFalse(KingdomVillageCovenantRules.Defined(strange.State));
+			ClassicAssert.IsFalse(KingdomVillageCovenantCodec.TryEncode(strange, out _,
 				out string failure));
 			StringAssert.Contains("which this build does not define", failure);
-			Assert.AreEqual(KingdomCivicMemoryNested.Malformed,
+			ClassicAssert.AreEqual(KingdomCivicMemoryNested.Malformed,
 				KingdomVillageCovenantInspection.Inspect(new byte[] { 1, 2, 3 }, out _));
 		}
 
@@ -318,29 +319,29 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheArchivesMaximumIsExactlyItsOwnArithmetic()
 		{
-			Assert.AreEqual(48, KingdomVillageCovenantArchive.MaxRows);
-			Assert.AreEqual(4 + 8 * 4 + 88 + 32 + 77 + 2048 + 768 + 768 + 205 + 60 + 4 + 8,
+			ClassicAssert.AreEqual(48, KingdomVillageCovenantArchive.MaxRows);
+			ClassicAssert.AreEqual(4 + 8 * 4 + 88 + 32 + 77 + 2048 + 768 + 768 + 205 + 60 + 4 + 8,
 				KingdomVillageCovenantCodec.MaxAuthoredRowBytes);
-			Assert.AreEqual(4094, KingdomVillageCovenantCodec.MaxAuthoredRowBytes);
-			Assert.AreEqual(4096, KingdomVillageCovenantCodec.MaxRowBytes);
-			Assert.LessOrEqual(KingdomVillageCovenantCodec.MaxAuthoredRowBytes,
+			ClassicAssert.AreEqual(4094, KingdomVillageCovenantCodec.MaxAuthoredRowBytes);
+			ClassicAssert.AreEqual(4096, KingdomVillageCovenantCodec.MaxRowBytes);
+			ClassicAssert.LessOrEqual(KingdomVillageCovenantCodec.MaxAuthoredRowBytes,
 				KingdomVillageCovenantCodec.MaxRowBytes,
 				"what this build authors must fit what it reserved room to read");
-			Assert.AreEqual(88, KingdomVillageCovenantRules.MaxReceiptIdBytes);
-			Assert.AreEqual(32, KingdomVillageCovenantRules.MaxTransactionIdBytes);
-			Assert.AreEqual(77, KingdomVillageCovenantRules.MaxRealmIdBytes);
-			Assert.AreEqual(2048, KingdomVillageCovenantRules.MaxAuthorityBytes);
-			Assert.AreEqual(768, KingdomVillageCovenantRules.MaxFactionIdBytes);
-			Assert.AreEqual(768, KingdomVillageCovenantRules.MaxDisplayNameBytes);
-			Assert.AreEqual(205, KingdomVillageCovenantRules.MaxZoneIdBytes);
-			Assert.AreEqual(60, KingdomVillageCovenantRules.MaxChronicleEventBytes);
-			Assert.AreEqual(82, KingdomVillageCovenantCodec.IdentityFramingBytes);
-			Assert.AreEqual(20, KingdomVillageCovenantCodec.HeaderBytes);
-			Assert.AreEqual(44, KingdomVillageCovenantCodec.EnvelopeOverheadBytes);
-			Assert.AreEqual(82 + 20 + 48 * (4 + 4096),
+			ClassicAssert.AreEqual(88, KingdomVillageCovenantRules.MaxReceiptIdBytes);
+			ClassicAssert.AreEqual(32, KingdomVillageCovenantRules.MaxTransactionIdBytes);
+			ClassicAssert.AreEqual(77, KingdomVillageCovenantRules.MaxRealmIdBytes);
+			ClassicAssert.AreEqual(2048, KingdomVillageCovenantRules.MaxAuthorityBytes);
+			ClassicAssert.AreEqual(768, KingdomVillageCovenantRules.MaxFactionIdBytes);
+			ClassicAssert.AreEqual(768, KingdomVillageCovenantRules.MaxDisplayNameBytes);
+			ClassicAssert.AreEqual(205, KingdomVillageCovenantRules.MaxZoneIdBytes);
+			ClassicAssert.AreEqual(60, KingdomVillageCovenantRules.MaxChronicleEventBytes);
+			ClassicAssert.AreEqual(82, KingdomVillageCovenantCodec.IdentityFramingBytes);
+			ClassicAssert.AreEqual(20, KingdomVillageCovenantCodec.HeaderBytes);
+			ClassicAssert.AreEqual(44, KingdomVillageCovenantCodec.EnvelopeOverheadBytes);
+			ClassicAssert.AreEqual(82 + 20 + 48 * (4 + 4096),
 				KingdomVillageCovenantCodec.MaxPayloadBytes);
-			Assert.AreEqual(196902, KingdomVillageCovenantCodec.MaxPayloadBytes);
-			Assert.AreEqual(196946, KingdomVillageCovenantCodec.MaxEnvelopeBytes);
+			ClassicAssert.AreEqual(196902, KingdomVillageCovenantCodec.MaxPayloadBytes);
+			ClassicAssert.AreEqual(196946, KingdomVillageCovenantCodec.MaxEnvelopeBytes);
 		}
 
 		/// <summary>
@@ -352,15 +353,15 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheCovenantSectionSitsUnderTheCapAnUnknownSectionAlreadyHad()
 		{
-			Assert.AreEqual(9, KingdomCivicMemoryLimits.SectionVillageCovenant);
-			Assert.AreEqual(KingdomCivicMemoryLimits.SectionVillageCovenant,
+			ClassicAssert.AreEqual(9, KingdomCivicMemoryLimits.SectionVillageCovenant);
+			ClassicAssert.AreEqual(KingdomCivicMemoryLimits.SectionVillageCovenant,
 				KingdomCivicMemoryLimits.LastKnownSection);
-			Assert.AreEqual(KingdomVillageCovenantCodec.MaxEnvelopeBytes,
+			ClassicAssert.AreEqual(KingdomVillageCovenantCodec.MaxEnvelopeBytes,
 				KingdomCivicMemoryLimits.MaxVillageCovenantBytes);
-			Assert.AreEqual(KingdomCivicMemoryLimits.MaxVillageCovenantBytes,
+			ClassicAssert.AreEqual(KingdomCivicMemoryLimits.MaxVillageCovenantBytes,
 				KingdomCivicMemoryLimits.SectionCap(
 					KingdomCivicMemoryLimits.SectionVillageCovenant));
-			Assert.Less(KingdomCivicMemoryLimits.MaxVillageCovenantBytes,
+			ClassicAssert.Less(KingdomCivicMemoryLimits.MaxVillageCovenantBytes,
 				KingdomCivicMemoryLimits.MaxTreatyBytes,
 				"a newly known section must never be allowed more room than an unknown one had");
 		}
@@ -368,16 +369,16 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheEnvelopesTotalsMovedByExactlyTheOneNewCap()
 		{
-			Assert.AreEqual(9, KingdomCivicMemoryLimits.KnownSectionCount);
-			Assert.AreEqual(18, KingdomCivicMemoryLimits.MaxSections);
-			Assert.AreEqual(642914 + 196946,
+			ClassicAssert.AreEqual(9, KingdomCivicMemoryLimits.KnownSectionCount);
+			ClassicAssert.AreEqual(18, KingdomCivicMemoryLimits.MaxSections);
+			ClassicAssert.AreEqual(642914 + 196946,
 				KingdomCivicMemoryLimits.MaxCumulativePayloadBytes);
-			Assert.AreEqual(839860, KingdomCivicMemoryLimits.MaxCumulativePayloadBytes);
-			Assert.AreEqual(44 + 18 * 8 + 839860, KingdomCivicMemoryLimits.MaxEnvelopeBytes);
-			Assert.AreEqual(840048, KingdomCivicMemoryLimits.MaxEnvelopeBytes);
+			ClassicAssert.AreEqual(839860, KingdomCivicMemoryLimits.MaxCumulativePayloadBytes);
+			ClassicAssert.AreEqual(44 + 18 * 8 + 839860, KingdomCivicMemoryLimits.MaxEnvelopeBytes);
+			ClassicAssert.AreEqual(840048, KingdomCivicMemoryLimits.MaxEnvelopeBytes);
 			// Four maximal unknown sections must still exceed the whole budget: that is what stops
 			// a stranger's payloads from together making a save larger than every known family could.
-			Assert.Greater(4 * KingdomCivicMemoryLimits.MaxTreatyBytes,
+			ClassicAssert.Greater(4 * KingdomCivicMemoryLimits.MaxTreatyBytes,
 				KingdomCivicMemoryLimits.MaxCumulativePayloadBytes);
 		}
 
@@ -397,14 +398,14 @@ namespace ThousandAndFirst.Tests
 				string transaction = i.ToString("x2") + "0123456789abcdef0123456789abcd";
 				KingdomVillageCovenantReceipt row = KingdomVillageCovenantTests.Row(transaction,
 					wide, wide);
-				Assert.IsTrue(KingdomVillageCovenantRules.TryAppend(archive, row,
+				ClassicAssert.IsTrue(KingdomVillageCovenantRules.TryAppend(archive, row,
 					KingdomVillageCovenantTests.Realm, out archive, out _, out _,
 					out string failure), failure);
 			}
-			Assert.IsTrue(KingdomVillageCovenantCodec.TryEncode(archive, out byte[] bytes,
+			ClassicAssert.IsTrue(KingdomVillageCovenantCodec.TryEncode(archive, out byte[] bytes,
 				out string encode), encode);
-			Assert.LessOrEqual(bytes.Length, KingdomVillageCovenantCodec.MaxEnvelopeBytes);
-			Assert.AreEqual(KingdomVillageCovenantArchive.MaxRows,
+			ClassicAssert.LessOrEqual(bytes.Length, KingdomVillageCovenantCodec.MaxEnvelopeBytes);
+			ClassicAssert.AreEqual(KingdomVillageCovenantArchive.MaxRows,
 				KingdomVillageCovenantCodec.Decode(bytes).Rows.Count);
 		}
 	}

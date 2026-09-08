@@ -2,6 +2,7 @@
 using System;
 
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -27,10 +28,10 @@ namespace ThousandAndFirst.Tests
 		public void ConstantsAndAuthorityDeclarationHaveOneOwner()
 		{
 			string source = KingdomFoundingLogicalSource.Read();
-			Assert.AreEqual(9, Count(source, "public static partial class KingdomFounding"));
-			Assert.AreEqual(1, Count(source, "private const string PendingFactionProperty"));
-			Assert.AreEqual(1, Count(source, "internal static bool ClaimZone("));
-			Assert.AreEqual(1, Count(source, "internal static bool TryRestoreRuinStructures("));
+			ClassicAssert.AreEqual(9, Count(source, "public static partial class KingdomFounding"));
+			ClassicAssert.AreEqual(1, Count(source, "private const string PendingFactionProperty"));
+			ClassicAssert.AreEqual(1, Count(source, "internal static bool ClaimZone("));
+			ClassicAssert.AreEqual(1, Count(source, "internal static bool TryRestoreRuinStructures("));
 			StringAssert.DoesNotContain("public static class KingdomFounding", source);
 		}
 
@@ -40,7 +41,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < markers.Length; i++)
 			{
 				int next = source.IndexOf(markers[i], position + 1, StringComparison.Ordinal);
-				Assert.Greater(next, position, markers[i]);
+				ClassicAssert.Greater(next, position, markers[i]);
 				position = next;
 			}
 		}

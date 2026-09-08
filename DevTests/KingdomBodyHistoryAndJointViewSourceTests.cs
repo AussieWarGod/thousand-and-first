@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Tests;
 
 namespace ThousandAndFirst.DevTests
@@ -19,13 +20,13 @@ namespace ThousandAndFirst.DevTests
 			StringAssert.Contains("part.Abstract", source);
 			StringAssert.Contains("part.GetOrdinalName()", source);
 			StringAssert.Contains("part.Cybernetics", source);
-			Assert.IsFalse(source.Contains("part.ID"));
-			Assert.IsFalse(source.Contains("GetParts(true"));
-			Assert.IsFalse(source.Contains("ZoneManager"));
-			Assert.IsFalse(source.Contains("GetZone("));
-			Assert.IsFalse(source.Contains("Journal"));
-			Assert.IsFalse(source.Contains("Damage"));
-			Assert.IsFalse(source.Contains("Scar"));
+			ClassicAssert.IsFalse(source.Contains("part.ID"));
+			ClassicAssert.IsFalse(source.Contains("GetParts(true"));
+			ClassicAssert.IsFalse(source.Contains("ZoneManager"));
+			ClassicAssert.IsFalse(source.Contains("GetZone("));
+			ClassicAssert.IsFalse(source.Contains("Journal"));
+			ClassicAssert.IsFalse(source.Contains("Damage"));
+			ClassicAssert.IsFalse(source.Contains("Scar"));
 		}
 
 		[Test]
@@ -40,12 +41,12 @@ namespace ThousandAndFirst.DevTests
 			StringAssert.Contains("ExactLiveBodyPart", source);
 			StringAssert.Contains("EffectNonces", source);
 			StringAssert.Contains("ValidEvidence", source);
-			Assert.IsFalse(source.Contains("TryRecordWitnessedProcedure"));
-			Assert.IsFalse(source.Contains("SetString"));
-			Assert.IsFalse(source.Contains("RemoveString"));
-			Assert.IsFalse(source.Contains("RequirePart"));
+			ClassicAssert.IsFalse(source.Contains("TryRecordWitnessedProcedure"));
+			ClassicAssert.IsFalse(source.Contains("SetString"));
+			ClassicAssert.IsFalse(source.Contains("RemoveString"));
+			ClassicAssert.IsFalse(source.Contains("RequirePart"));
 			string application = TestMain.ReadRepositoryText("Growth/KingdomLab.Application.cs");
-			Assert.IsFalse(application.Contains("TryBuildCompletedBodyHistoryEvidence"));
+			ClassicAssert.IsFalse(application.Contains("TryBuildCompletedBodyHistoryEvidence"));
 		}
 
 		[Test]
@@ -64,16 +65,16 @@ namespace ThousandAndFirst.DevTests
 			StringAssert.Contains("TryReadAuthority", source);
 			StringAssert.Contains("Authority.Valid()", source);
 			StringAssert.Contains("taf:hosted-enclave:v1:", source);
-			Assert.IsFalse(adapters.Contains("SourceReceiptId = Authority.CarrierId"));
-			Assert.IsFalse(source.Contains("GetStanding("));
-			Assert.IsFalse(source.Contains("UseEnergy"));
-			Assert.IsFalse(source.Contains("SetStringProperty"));
-			Assert.IsFalse(source.Contains("SetIntProperty"));
-			Assert.IsFalse(source.Contains("RecordDeed"));
-			Assert.IsFalse(source.Contains("Normalize("));
-			Assert.IsFalse(source.Contains("ReconcileRoot("));
-			Assert.IsFalse(source.Contains("Operational("));
-			Assert.IsFalse(source.Contains("FindByID("));
+			ClassicAssert.IsFalse(adapters.Contains("SourceReceiptId = Authority.CarrierId"));
+			ClassicAssert.IsFalse(source.Contains("GetStanding("));
+			ClassicAssert.IsFalse(source.Contains("UseEnergy"));
+			ClassicAssert.IsFalse(source.Contains("SetStringProperty"));
+			ClassicAssert.IsFalse(source.Contains("SetIntProperty"));
+			ClassicAssert.IsFalse(source.Contains("RecordDeed"));
+			ClassicAssert.IsFalse(source.Contains("Normalize("));
+			ClassicAssert.IsFalse(source.Contains("ReconcileRoot("));
+			ClassicAssert.IsFalse(source.Contains("Operational("));
+			ClassicAssert.IsFalse(source.Contains("FindByID("));
 		}
 
 		[Test]
@@ -87,9 +88,9 @@ namespace ThousandAndFirst.DevTests
 				System.StringComparison.Ordinal);
 			int building = source.IndexOf("!GameObject.Validate(Building)",
 				System.StringComparison.Ordinal);
-			Assert.GreaterOrEqual(city, 0);
-			Assert.Greater(absent, city);
-			Assert.Greater(building, absent,
+			ClassicAssert.GreaterOrEqual(city, 0);
+			ClassicAssert.Greater(absent, city);
+			ClassicAssert.Greater(building, absent,
 				"an absent receipt is a valid Absent owner, not an invalid missing building");
 			StringAssert.Contains("System.OwnedZone(LoadedZone.ZoneID)", source);
 			StringAssert.Contains("System.SettlementIdForOwnedZone(LoadedZone.ZoneID)", source);
@@ -117,7 +118,7 @@ namespace ThousandAndFirst.DevTests
 			for (int i = 0; i < paths.Length; i++)
 			{
 				int lines = TestMain.ReadRepositoryText(paths[i]).Split('\n').Length;
-				Assert.Less(lines, 300, paths[i]);
+				ClassicAssert.Less(lines, 300, paths[i]);
 			}
 		}
 	}

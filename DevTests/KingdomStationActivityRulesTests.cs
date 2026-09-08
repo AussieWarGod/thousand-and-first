@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
@@ -15,8 +16,8 @@ namespace ThousandAndFirst.Tests
 		public void EveryCurrentWorkHasADistinctLegibleAct(
 			KingdomWorkKind kind, KingdomDayShape shape, KingdomStationActivity expected)
 		{
-			Assert.AreEqual(expected, KingdomStationActivityRules.For(kind, shape));
-			Assert.IsTrue(KingdomStationActivityRules.Cue(expected).Exists);
+			ClassicAssert.AreEqual(expected, KingdomStationActivityRules.For(kind, shape));
+			ClassicAssert.IsTrue(KingdomStationActivityRules.Cue(expected).Exists);
 		}
 
 		[TestCase(KingdomDayShape.Watch, KingdomStationActivity.Watch)]
@@ -24,17 +25,17 @@ namespace ThousandAndFirst.Tests
 		public void StandingPolicyShapesAlreadyHavePresentationSeams(
 			KingdomDayShape shape, KingdomStationActivity expected)
 		{
-			Assert.AreEqual(expected, KingdomStationActivityRules.For(KingdomWorkKind.Other, shape));
+			ClassicAssert.AreEqual(expected, KingdomStationActivityRules.For(KingdomWorkKind.Other, shape));
 		}
 
 		[Test]
 		public void AnUnknownOrHearthPostCannotInventWork()
 		{
-			Assert.AreEqual(KingdomStationActivity.None,
+			ClassicAssert.AreEqual(KingdomStationActivity.None,
 				KingdomStationActivityRules.For(KingdomWorkKind.Other, KingdomDayShape.Hearth));
-			Assert.AreEqual(KingdomStationActivity.None,
+			ClassicAssert.AreEqual(KingdomStationActivity.None,
 				KingdomStationActivityRules.For((KingdomWorkKind)255, (KingdomDayShape)255));
-			Assert.IsFalse(KingdomStationActivityRules.Cue((KingdomStationActivity)255).Exists);
+			ClassicAssert.IsFalse(KingdomStationActivityRules.Cue((KingdomStationActivity)255).Exists);
 		}
 
 		[Test]
@@ -44,10 +45,10 @@ namespace ThousandAndFirst.Tests
 				value <= (int)KingdomStationActivity.Pray; value++)
 			{
 				KingdomStationActivityCue cue = KingdomStationActivityRules.Cue((KingdomStationActivity)value);
-				Assert.IsTrue(cue.Exists);
-				Assert.LessOrEqual(cue.Text.Length, 24);
-				Assert.IsTrue(cue.Text.StartsWith("*") && cue.Text.EndsWith("*"));
-				Assert.AreNotEqual(' ', cue.Color);
+				ClassicAssert.IsTrue(cue.Exists);
+				ClassicAssert.LessOrEqual(cue.Text.Length, 24);
+				ClassicAssert.IsTrue(cue.Text.StartsWith("*") && cue.Text.EndsWith("*"));
+				ClassicAssert.AreNotEqual(' ', cue.Color);
 			}
 		}
 

@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -69,7 +70,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < forbidden.Length; i++)
 				StringAssert.DoesNotContain(forbidden[i], runtime, forbidden[i]);
 			StringAssert.DoesNotContain("System?.City", runtime);
-			Assert.Less(runtime.IndexOf("KingdomMaster.NewWorkAllowed(System)",
+			ClassicAssert.Less(runtime.IndexOf("KingdomMaster.NewWorkAllowed(System)",
 				StringComparison.Ordinal), runtime.IndexOf("TryVoiceSettlement(System, SettlementId",
 					StringComparison.Ordinal));
 		}
@@ -93,9 +94,9 @@ namespace ThousandAndFirst.Tests
 				"public readonly struct KingdomCivicVoiceCandidate");
 			string receipt = Slice(model, "public sealed class KingdomCivicVoiceReceipt",
 				"public KingdomCivicVoiceReceipt Copy()");
-			Assert.AreEqual(1, Count(preview, "public string Facts;"));
-			Assert.AreEqual(1, Count(receipt, "public string Facts;"));
-			Assert.AreEqual(2, Count(model, "public string Facts;"));
+			ClassicAssert.AreEqual(1, Count(preview, "public string Facts;"));
+			ClassicAssert.AreEqual(1, Count(receipt, "public string Facts;"));
+			ClassicAssert.AreEqual(2, Count(model, "public string Facts;"));
 			StringAssert.DoesNotContain("Origin", model);
 			StringAssert.DoesNotContain("Mood", model);
 			StringAssert.DoesNotContain("Relationship", model);
@@ -113,8 +114,8 @@ namespace ThousandAndFirst.Tests
 			string codec = Read("Experience/KingdomExperienceCodec.Civic.cs");
 			string write = Slice(codec, "private static void WriteVoice",
 				"private static KingdomCivicVoiceReceipt ReadVoice");
-			Assert.AreEqual(1, Count(write, "WriteVoiceText(W, R.Facts)"));
-			Assert.AreEqual(1, Count(codec, "Facts = ReadVoiceText(R)"));
+			ClassicAssert.AreEqual(1, Count(write, "WriteVoiceText(W, R.Facts)"));
+			ClassicAssert.AreEqual(1, Count(codec, "Facts = ReadVoiceText(R)"));
 		}
 
 		[Test]
@@ -136,7 +137,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < needles.Length; i++)
 			{
 				int at = text.IndexOf(needles[i], prior + 1, StringComparison.Ordinal);
-				Assert.Greater(at, prior, needles[i]); prior = at;
+				ClassicAssert.Greater(at, prior, needles[i]); prior = at;
 			}
 		}
 
@@ -152,7 +153,7 @@ namespace ThousandAndFirst.Tests
 		{
 			int a = text.IndexOf(start, StringComparison.Ordinal);
 			int b = text.IndexOf(end, a + 1, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(a, 0); Assert.Greater(b, a); return text.Substring(a, b - a);
+			ClassicAssert.GreaterOrEqual(a, 0); ClassicAssert.Greater(b, a); return text.Substring(a, b - a);
 		}
 	}
 }

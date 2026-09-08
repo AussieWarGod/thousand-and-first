@@ -1,6 +1,7 @@
 ﻿#if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -29,7 +30,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void NestedRoadDeclarationsKeepTheirPersistedAbi()
 		{
-			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(KingdomRoadRules.WearState)));
+			ClassicAssert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(KingdomRoadRules.WearState)));
 			CollectionAssert.AreEqual(new int[5] { 0, 1, 2, 3, 4 }, new int[5]
 			{
 				(int)KingdomRoadRules.WearState.Untouched,
@@ -38,7 +39,7 @@ namespace ThousandAndFirst.Tests
 				(int)KingdomRoadRules.WearState.Path,
 				(int)KingdomRoadRules.WearState.Paved
 			});
-			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(KingdomRoadRules.RouteKind)));
+			ClassicAssert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(KingdomRoadRules.RouteKind)));
 			CollectionAssert.AreEqual(new int[4] { 0, 1, 2, 3 }, new int[4]
 			{
 				(int)KingdomRoadRules.RouteKind.HomeToWork,
@@ -48,22 +49,22 @@ namespace ThousandAndFirst.Tests
 			});
 
 			System.Reflection.FieldInfo[] fields = typeof(KingdomRoadRules.WornCell).GetFields();
-			Assert.AreEqual(3, fields.Length);
-			Assert.AreEqual("X", fields[0].Name);
-			Assert.AreEqual("Y", fields[1].Name);
-			Assert.AreEqual("Traffic", fields[2].Name);
+			ClassicAssert.AreEqual(3, fields.Length);
+			ClassicAssert.AreEqual("X", fields[0].Name);
+			ClassicAssert.AreEqual("Y", fields[1].Name);
+			ClassicAssert.AreEqual("Traffic", fields[2].Name);
 			for (int i = 0; i < fields.Length; i++)
 			{
-				Assert.AreEqual(typeof(int), fields[i].FieldType);
+				ClassicAssert.AreEqual(typeof(int), fields[i].FieldType);
 			}
 
 			KingdomRoadRules.WornCell empty = default(KingdomRoadRules.WornCell);
-			Assert.AreEqual(0, empty.X);
-			Assert.AreEqual(0, empty.Y);
-			Assert.AreEqual(0, empty.Traffic);
+			ClassicAssert.AreEqual(0, empty.X);
+			ClassicAssert.AreEqual(0, empty.Y);
+			ClassicAssert.AreEqual(0, empty.Traffic);
 			System.Reflection.MethodInfo invoke = typeof(KingdomRoadRules.CellFilter).GetMethod("Invoke");
-			Assert.AreEqual(typeof(bool), invoke.ReturnType);
-			Assert.AreEqual(2, invoke.GetParameters().Length);
+			ClassicAssert.AreEqual(typeof(bool), invoke.ReturnType);
+			ClassicAssert.AreEqual(2, invoke.GetParameters().Length);
 		}
 
 		// --- The ladder ------------------------------------------------------------------
@@ -79,7 +80,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(4000, KingdomRoadRules.WearState.Path)]
 		public void WearAtReadsTheLadder(int traffic, KingdomRoadRules.WearState expected)
 		{
-			Assert.AreEqual(expected, KingdomRoadRules.WearAt(traffic));
+			ClassicAssert.AreEqual(expected, KingdomRoadRules.WearAt(traffic));
 		}
 
 		[TestCase(KingdomRoadRules.WearState.Untouched, 0)]
@@ -89,7 +90,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomRoadRules.WearState.Paved, int.MaxValue)]
 		public void ThresholdForNamesEachRung(KingdomRoadRules.WearState state, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRoadRules.ThresholdFor(state));
+			ClassicAssert.AreEqual(expected, KingdomRoadRules.ThresholdFor(state));
 		}
 
 		[TestCase(KingdomRoadRules.WearState.Worn)]
@@ -98,22 +99,22 @@ namespace ThousandAndFirst.Tests
 		public void ThresholdIsExactlyTheRungItBuys(KingdomRoadRules.WearState state)
 		{
 			int threshold = KingdomRoadRules.ThresholdFor(state);
-			Assert.AreEqual(state, KingdomRoadRules.WearAt(threshold));
-			Assert.Less((int)KingdomRoadRules.WearAt(threshold - 1), (int)state);
+			ClassicAssert.AreEqual(state, KingdomRoadRules.WearAt(threshold));
+			ClassicAssert.Less((int)KingdomRoadRules.WearAt(threshold - 1), (int)state);
 		}
 
 		[Test]
 		public void TheLadderClimbsAndTheCeilingIsAboveIt()
 		{
-			Assert.Less(KingdomRoadRules.WornTraffic, KingdomRoadRules.TroddenTraffic);
-			Assert.Less(KingdomRoadRules.TroddenTraffic, KingdomRoadRules.PathTraffic);
-			Assert.LessOrEqual(KingdomRoadRules.PathTraffic, KingdomRoadRules.MaxTraffic);
+			ClassicAssert.Less(KingdomRoadRules.WornTraffic, KingdomRoadRules.TroddenTraffic);
+			ClassicAssert.Less(KingdomRoadRules.TroddenTraffic, KingdomRoadRules.PathTraffic);
+			ClassicAssert.LessOrEqual(KingdomRoadRules.PathTraffic, KingdomRoadRules.MaxTraffic);
 		}
 
 		[Test]
 		public void WalkingNeverReachesPaving()
 		{
-			Assert.AreNotEqual(KingdomRoadRules.WearState.Paved, KingdomRoadRules.WearAt(int.MaxValue));
+			ClassicAssert.AreNotEqual(KingdomRoadRules.WearState.Paved, KingdomRoadRules.WearAt(int.MaxValue));
 		}
 
 		[TestCase(KingdomRoadRules.WearState.Untouched, "untouched ground")]
@@ -123,7 +124,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomRoadRules.WearState.Paved, "paving")]
 		public void WearNameSaysEachRungOutLoud(KingdomRoadRules.WearState state, string expected)
 		{
-			Assert.AreEqual(expected, KingdomRoadRules.WearName(state));
+			ClassicAssert.AreEqual(expected, KingdomRoadRules.WearName(state));
 		}
 
 		// --- Traffic ---------------------------------------------------------------------
@@ -135,7 +136,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase((KingdomRoadRules.RouteKind)99, 0)]
 		public void RouteWeightIsPerErrand(KingdomRoadRules.RouteKind kind, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRoadRules.RouteWeightPercent(kind));
+			ClassicAssert.AreEqual(expected, KingdomRoadRules.RouteWeightPercent(kind));
 		}
 
 		[TestCase(KingdomRoadRules.RouteKind.HomeToWork, 0, 0)]
@@ -149,7 +150,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase((KingdomRoadRules.RouteKind)99, 40, 0)]
 		public void WalkersNeverExceedThePlaceOrTheCap(KingdomRoadRules.RouteKind kind, int population, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRoadRules.WalkersFor(kind, population));
+			ClassicAssert.AreEqual(expected, KingdomRoadRules.WalkersFor(kind, population));
 		}
 
 		[TestCase(0, 3, KingdomRoadRules.RouteKind.HomeToWork, 0)]
@@ -162,7 +163,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(99, 1, KingdomRoadRules.RouteKind.HomeToWork, 24)]
 		public void TrafficIsWalkersTimesDaysTimesWeight(int walkers, int days, KingdomRoadRules.RouteKind kind, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRoadRules.TrafficFor(walkers, days, kind));
+			ClassicAssert.AreEqual(expected, KingdomRoadRules.TrafficFor(walkers, days, kind));
 		}
 
 		[Test]
@@ -174,8 +175,8 @@ namespace ThousandAndFirst.Tests
 			// walkers term and the tally's own saturation.
 			int oneDay = KingdomRoadRules.TrafficFor(2, 1, KingdomRoadRules.RouteKind.HomeToWork);
 			int tenDays = KingdomRoadRules.TrafficFor(2, 10, KingdomRoadRules.RouteKind.HomeToWork);
-			Assert.AreEqual(oneDay * 10, tenDays, "ten days did not lay ten days of walking");
-			Assert.Greater(KingdomRoadRules.TrafficFor(2, KingdomRules.ElapsedDays(KingdomRules.TicksPerDay * 400L), KingdomRoadRules.RouteKind.HomeToWork),
+			ClassicAssert.AreEqual(oneDay * 10, tenDays, "ten days did not lay ten days of walking");
+			ClassicAssert.Greater(KingdomRoadRules.TrafficFor(2, KingdomRules.ElapsedDays(KingdomRules.TicksPerDay * 400L), KingdomRoadRules.RouteKind.HomeToWork),
 				tenDays, "a four-hundred-day stretch laid no more than ten days");
 		}
 
@@ -185,8 +186,8 @@ namespace ThousandAndFirst.Tests
 			// Clause 2, and the reason uncapping needed nothing else attached: traffic is
 			// WALKERS times days, so an empty settlement over four hundred days lays exactly what
 			// it lays over an afternoon. Idleness wears nothing.
-			Assert.AreEqual(0, KingdomRoadRules.TrafficFor(0, 400, KingdomRoadRules.RouteKind.HomeToWork));
-			Assert.AreEqual(0, KingdomRoadRules.TrafficFor(-3, 400, KingdomRoadRules.RouteKind.HomeToWork));
+			ClassicAssert.AreEqual(0, KingdomRoadRules.TrafficFor(0, 400, KingdomRoadRules.RouteKind.HomeToWork));
+			ClassicAssert.AreEqual(0, KingdomRoadRules.TrafficFor(-3, 400, KingdomRoadRules.RouteKind.HomeToWork));
 		}
 
 		[Test]
@@ -196,7 +197,7 @@ namespace ThousandAndFirst.Tests
 			// special-case it and callers must). A wrapped negative would read as ground that had
 			// been UNwalked, so the widened multiply saturates at the tally's own ceiling.
 			int enormous = KingdomRoadRules.TrafficFor(KingdomRoadRules.MaxWalkersPerRoute, int.MaxValue, KingdomRoadRules.RouteKind.HomeToWork);
-			Assert.AreEqual(KingdomRoadRules.MaxTraffic, enormous);
+			ClassicAssert.AreEqual(KingdomRoadRules.MaxTraffic, enormous);
 		}
 
 		[Test]
@@ -205,12 +206,12 @@ namespace ThousandAndFirst.Tests
 			// One household's daily walk at the absence cap. The pacing that follows is the
 			// whole feel of the feature, so it is asserted rather than left to be discovered.
 			int perPass = KingdomRoadRules.TrafficFor(2, 3, KingdomRoadRules.RouteKind.HomeToWork);
-			Assert.AreEqual(36, perPass);
-			Assert.AreEqual(KingdomRoadRules.WearState.Untouched, KingdomRoadRules.WearAt(perPass));
-			Assert.AreEqual(KingdomRoadRules.WearState.Worn, KingdomRoadRules.WearAt(perPass * 2));
-			Assert.AreEqual(KingdomRoadRules.WearState.Trodden, KingdomRoadRules.WearAt(perPass * 4));
-			Assert.AreEqual(KingdomRoadRules.WearState.Trodden, KingdomRoadRules.WearAt(perPass * 8));
-			Assert.AreEqual(KingdomRoadRules.WearState.Path, KingdomRoadRules.WearAt(perPass * 9));
+			ClassicAssert.AreEqual(36, perPass);
+			ClassicAssert.AreEqual(KingdomRoadRules.WearState.Untouched, KingdomRoadRules.WearAt(perPass));
+			ClassicAssert.AreEqual(KingdomRoadRules.WearState.Worn, KingdomRoadRules.WearAt(perPass * 2));
+			ClassicAssert.AreEqual(KingdomRoadRules.WearState.Trodden, KingdomRoadRules.WearAt(perPass * 4));
+			ClassicAssert.AreEqual(KingdomRoadRules.WearState.Trodden, KingdomRoadRules.WearAt(perPass * 8));
+			ClassicAssert.AreEqual(KingdomRoadRules.WearState.Path, KingdomRoadRules.WearAt(perPass * 9));
 		}
 
 		// --- Rotation --------------------------------------------------------------------
@@ -225,7 +226,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomRules.TicksPerDay - 1L, 5, 0)]
 		public void RotationTurnsOnTheDayNotOnADraw(long ticks, int count, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRoadRules.RotationStart(ticks, count));
+			ClassicAssert.AreEqual(expected, KingdomRoadRules.RotationStart(ticks, count));
 		}
 
 		[Test]
@@ -238,7 +239,7 @@ namespace ThousandAndFirst.Tests
 			}
 			for (int i = 0; i < seen.Length; i++)
 			{
-				Assert.IsTrue(seen[i], "errand " + i + " was never reached by the rotation");
+				ClassicAssert.IsTrue(seen[i], "errand " + i + " was never reached by the rotation");
 			}
 		}
 
@@ -250,9 +251,9 @@ namespace ThousandAndFirst.Tests
 		[TestCase(3, 2, 5, 13)]
 		public void PackAndUnpackAgree(int x, int y, int width, int packed)
 		{
-			Assert.AreEqual(packed, KingdomRoadRules.Pack(x, y, width));
-			Assert.AreEqual(x, KingdomRoadRules.UnpackX(packed, width));
-			Assert.AreEqual(y, KingdomRoadRules.UnpackY(packed, width));
+			ClassicAssert.AreEqual(packed, KingdomRoadRules.Pack(x, y, width));
+			ClassicAssert.AreEqual(x, KingdomRoadRules.UnpackX(packed, width));
+			ClassicAssert.AreEqual(y, KingdomRoadRules.UnpackY(packed, width));
 		}
 
 		[TestCase(0, 0, 5, 5, true)]
@@ -263,7 +264,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(0, 5, 5, 5, false)]
 		public void InBoundsIsTheZone(int x, int y, int width, int height, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomRoadRules.InBounds(x, y, width, height));
+			ClassicAssert.AreEqual(expected, KingdomRoadRules.InBounds(x, y, width, height));
 		}
 
 		// --- Routing ---------------------------------------------------------------------
@@ -272,7 +273,7 @@ namespace ThousandAndFirst.Tests
 		public void AStraightWalkIsTheGroundBetweenAndNotTheEnds()
 		{
 			List<int> route = new List<int>();
-			Assert.IsTrue(KingdomRoadRules.TryTrace(Grid(new string[1] { "....." }), 5, 1, 0, 0, 4, 0, 48, 400, route));
+			ClassicAssert.IsTrue(KingdomRoadRules.TryTrace(Grid(new string[1] { "....." }), 5, 1, 0, 0, 4, 0, 48, 400, route));
 			CollectionAssert.AreEqual(new int[3] { 1, 2, 3 }, route);
 		}
 
@@ -280,16 +281,16 @@ namespace ThousandAndFirst.Tests
 		public void AdjacentEndsHaveNoGroundBetweenThem()
 		{
 			List<int> route = new List<int>();
-			Assert.IsTrue(KingdomRoadRules.TryTrace(Grid(new string[1] { "....." }), 5, 1, 0, 0, 1, 0, 48, 400, route));
-			Assert.AreEqual(0, route.Count);
+			ClassicAssert.IsTrue(KingdomRoadRules.TryTrace(Grid(new string[1] { "....." }), 5, 1, 0, 0, 1, 0, 48, 400, route));
+			ClassicAssert.AreEqual(0, route.Count);
 		}
 
 		[Test]
 		public void NobodyWalksToWhereTheyAlreadyAre()
 		{
 			List<int> route = new List<int>();
-			Assert.IsFalse(KingdomRoadRules.TryTrace(Grid(new string[1] { "....." }), 5, 1, 2, 0, 2, 0, 48, 400, route));
-			Assert.AreEqual(0, route.Count);
+			ClassicAssert.IsFalse(KingdomRoadRules.TryTrace(Grid(new string[1] { "....." }), 5, 1, 2, 0, 2, 0, 48, 400, route));
+			ClassicAssert.AreEqual(0, route.Count);
 		}
 
 		[Test]
@@ -298,28 +299,28 @@ namespace ThousandAndFirst.Tests
 			string[] rows = new string[3] { "..#..", "..#..", "....." };
 			KingdomRoadRules.CellFilter grid = Grid(rows);
 			List<int> route = new List<int>();
-			Assert.IsTrue(KingdomRoadRules.TryTrace(grid, 5, 3, 0, 0, 4, 0, 48, 400, route));
-			Assert.Greater(route.Count, 0);
+			ClassicAssert.IsTrue(KingdomRoadRules.TryTrace(grid, 5, 3, 0, 0, 4, 0, 48, 400, route));
+			ClassicAssert.Greater(route.Count, 0);
 			int previousX = 0;
 			int previousY = 0;
 			for (int i = 0; i < route.Count; i++)
 			{
 				int x = KingdomRoadRules.UnpackX(route[i], 5);
 				int y = KingdomRoadRules.UnpackY(route[i], 5);
-				Assert.IsTrue(grid(x, y), "the walk passed through a cell nobody can walk through");
-				Assert.AreEqual(1, KingdomLayoutRules.Chebyshev(x, y, previousX, previousY), "the walk skipped a cell");
+				ClassicAssert.IsTrue(grid(x, y), "the walk passed through a cell nobody can walk through");
+				ClassicAssert.AreEqual(1, KingdomLayoutRules.Chebyshev(x, y, previousX, previousY), "the walk skipped a cell");
 				previousX = x;
 				previousY = y;
 			}
-			Assert.AreEqual(1, KingdomLayoutRules.Chebyshev(previousX, previousY, 4, 0), "the walk did not arrive");
+			ClassicAssert.AreEqual(1, KingdomLayoutRules.Chebyshev(previousX, previousY, 4, 0), "the walk did not arrive");
 		}
 
 		[Test]
 		public void WalledOffIsNoWalkAtAll()
 		{
 			List<int> route = new List<int>();
-			Assert.IsFalse(KingdomRoadRules.TryTrace(Grid(new string[3] { "..#..", "..#..", "..#.." }), 5, 3, 0, 1, 4, 1, 48, 400, route));
-			Assert.AreEqual(0, route.Count);
+			ClassicAssert.IsFalse(KingdomRoadRules.TryTrace(Grid(new string[3] { "..#..", "..#..", "..#.." }), 5, 3, 0, 1, 4, 1, 48, 400, route));
+			ClassicAssert.AreEqual(0, route.Count);
 		}
 
 		[Test]
@@ -328,7 +329,7 @@ namespace ThousandAndFirst.Tests
 			// A home and a work are solid objects. If the far end had to be walkable, no errand
 			// in a real settlement would ever have a route at all.
 			List<int> route = new List<int>();
-			Assert.IsTrue(KingdomRoadRules.TryTrace(Grid(new string[1] { "....#" }), 5, 1, 0, 0, 4, 0, 48, 400, route));
+			ClassicAssert.IsTrue(KingdomRoadRules.TryTrace(Grid(new string[1] { "....#" }), 5, 1, 0, 0, 4, 0, 48, 400, route));
 			CollectionAssert.AreEqual(new int[3] { 1, 2, 3 }, route);
 		}
 
@@ -336,15 +337,15 @@ namespace ThousandAndFirst.Tests
 		public void ARouteTooLongToBeAnErrandIsRefusedWhole()
 		{
 			List<int> route = new List<int>();
-			Assert.IsFalse(KingdomRoadRules.TryTrace(Grid(new string[1] { ".........." }), 10, 1, 0, 0, 9, 0, 2, 400, route));
-			Assert.AreEqual(0, route.Count);
+			ClassicAssert.IsFalse(KingdomRoadRules.TryTrace(Grid(new string[1] { ".........." }), 10, 1, 0, 0, 9, 0, 2, 400, route));
+			ClassicAssert.AreEqual(0, route.Count);
 		}
 
 		[Test]
 		public void TheSearchGivesUpRatherThanFloodingTheZone()
 		{
 			List<int> route = new List<int>();
-			Assert.IsFalse(KingdomRoadRules.TryTrace(Grid(new string[1] { ".........." }), 10, 1, 0, 0, 9, 0, 48, 1, route));
+			ClassicAssert.IsFalse(KingdomRoadRules.TryTrace(Grid(new string[1] { ".........." }), 10, 1, 0, 0, 9, 0, 48, 1, route));
 		}
 
 		[Test]
@@ -354,8 +355,8 @@ namespace ThousandAndFirst.Tests
 			KingdomRoadRules.CellFilter grid = Grid(rows);
 			List<int> first = new List<int>();
 			List<int> second = new List<int>();
-			Assert.IsTrue(KingdomRoadRules.TryTrace(grid, 10, 4, 0, 0, 9, 3, 48, 400, first));
-			Assert.IsTrue(KingdomRoadRules.TryTrace(grid, 10, 4, 0, 0, 9, 3, 48, 400, second));
+			ClassicAssert.IsTrue(KingdomRoadRules.TryTrace(grid, 10, 4, 0, 0, 9, 3, 48, 400, first));
+			ClassicAssert.IsTrue(KingdomRoadRules.TryTrace(grid, 10, 4, 0, 0, 9, 3, 48, 400, second));
 			CollectionAssert.AreEqual(first, second);
 		}
 
@@ -365,16 +366,16 @@ namespace ThousandAndFirst.Tests
 		public void ARouteOffTheGridIsNoRoute(int fromX, int fromY, int toX, int toY)
 		{
 			List<int> route = new List<int>();
-			Assert.IsFalse(KingdomRoadRules.TryTrace(Grid(new string[1] { "....." }), 5, 1, fromX, fromY, toX, toY, 48, 400, route));
+			ClassicAssert.IsFalse(KingdomRoadRules.TryTrace(Grid(new string[1] { "....." }), 5, 1, fromX, fromY, toX, toY, 48, 400, route));
 		}
 
 		[Test]
 		public void NoGridAndNoListAreBothRefusals()
 		{
 			List<int> route = new List<int>();
-			Assert.IsFalse(KingdomRoadRules.TryTrace(null, 5, 1, 0, 0, 4, 0, 48, 400, route));
-			Assert.IsFalse(KingdomRoadRules.TryTrace(Grid(new string[1] { "....." }), 5, 1, 0, 0, 4, 0, 48, 400, null));
-			Assert.IsFalse(KingdomRoadRules.TryTrace(Grid(new string[1] { "....." }), 0, 1, 0, 0, 4, 0, 48, 400, route));
+			ClassicAssert.IsFalse(KingdomRoadRules.TryTrace(null, 5, 1, 0, 0, 4, 0, 48, 400, route));
+			ClassicAssert.IsFalse(KingdomRoadRules.TryTrace(Grid(new string[1] { "....." }), 5, 1, 0, 0, 4, 0, 48, 400, null));
+			ClassicAssert.IsFalse(KingdomRoadRules.TryTrace(Grid(new string[1] { "....." }), 0, 1, 0, 0, 4, 0, 48, 400, route));
 		}
 
 		// --- The way out -----------------------------------------------------------------
@@ -382,32 +383,32 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void GroundWithNoFrontierHasNoWayOut()
 		{
-			Assert.IsFalse(KingdomRoadRules.TryGate(10, 10, KingdomRules.Frontier.None, 5, 5, out _, out _));
+			ClassicAssert.IsFalse(KingdomRoadRules.TryGate(10, 10, KingdomRules.Frontier.None, 5, 5, out _, out _));
 		}
 
 		[Test]
 		public void TheGateIsTheEdgeCellNearestTheHeart()
 		{
-			Assert.IsTrue(KingdomRoadRules.TryGate(10, 10, KingdomRules.Frontier.North, 5, 5, out var x, out var y));
-			Assert.AreEqual(5, x);
-			Assert.AreEqual(1, y);
-			Assert.IsTrue(KingdomRules.IsOnFrontier(x, y, 10, 10, KingdomRules.Frontier.North));
+			ClassicAssert.IsTrue(KingdomRoadRules.TryGate(10, 10, KingdomRules.Frontier.North, 5, 5, out var x, out var y));
+			ClassicAssert.AreEqual(5, x);
+			ClassicAssert.AreEqual(1, y);
+			ClassicAssert.IsTrue(KingdomRules.IsOnFrontier(x, y, 10, 10, KingdomRules.Frontier.North));
 		}
 
 		[Test]
 		public void TheGateIsTheSameGateEveryTime()
 		{
-			Assert.IsTrue(KingdomRoadRules.TryGate(20, 20, KingdomRules.Frontier.East | KingdomRules.Frontier.West, 10, 10, out var firstX, out var firstY));
-			Assert.IsTrue(KingdomRoadRules.TryGate(20, 20, KingdomRules.Frontier.East | KingdomRules.Frontier.West, 10, 10, out var secondX, out var secondY));
-			Assert.AreEqual(firstX, secondX);
-			Assert.AreEqual(firstY, secondY);
+			ClassicAssert.IsTrue(KingdomRoadRules.TryGate(20, 20, KingdomRules.Frontier.East | KingdomRules.Frontier.West, 10, 10, out var firstX, out var firstY));
+			ClassicAssert.IsTrue(KingdomRoadRules.TryGate(20, 20, KingdomRules.Frontier.East | KingdomRules.Frontier.West, 10, 10, out var secondX, out var secondY));
+			ClassicAssert.AreEqual(firstX, secondX);
+			ClassicAssert.AreEqual(firstY, secondY);
 		}
 
 		[Test]
 		public void AZoneWithNoSizeHasNoGate()
 		{
-			Assert.IsFalse(KingdomRoadRules.TryGate(0, 10, KingdomRules.Frontier.North, 0, 0, out _, out _));
-			Assert.IsFalse(KingdomRoadRules.TryGate(10, 0, KingdomRules.Frontier.North, 0, 0, out _, out _));
+			ClassicAssert.IsFalse(KingdomRoadRules.TryGate(0, 10, KingdomRules.Frontier.North, 0, 0, out _, out _));
+			ClassicAssert.IsFalse(KingdomRoadRules.TryGate(10, 0, KingdomRules.Frontier.North, 0, 0, out _, out _));
 		}
 
 		// --- The gatehouse: a placement rule, not a size ---------------------------------
@@ -423,7 +424,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("", false)]
 		public void OnlyTheGatehouseIsSitedAtTheGate(string key, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomRoadRules.SitesAtGate(key));
+			ClassicAssert.AreEqual(expected, KingdomRoadRules.SitesAtGate(key));
 		}
 
 		[Test]
@@ -431,13 +432,13 @@ namespace ThousandAndFirst.Tests
 		{
 			// The whole rule: on the frontier wall, astride the road. TryGate names the cell the
 			// settlement's own HeartToGate route is walked to, and the gatehouse goes there.
-			Assert.IsTrue(KingdomRoadRules.TryGate(20, 20, KingdomRules.Frontier.North, 10, 10, out var gateX, out var gateY));
+			ClassicAssert.IsTrue(KingdomRoadRules.TryGate(20, 20, KingdomRules.Frontier.North, 10, 10, out var gateX, out var gateY));
 			int[] xs = new int[4] { 2, 10, 18, 6 };
 			int[] ys = new int[4] { 0, 1, 0, 1 };
 			int index = KingdomRoadRules.NearestToGate(xs, ys, gateX, gateY);
-			Assert.AreEqual(1, index);
-			Assert.AreEqual(gateX, xs[index]);
-			Assert.AreEqual(gateY, ys[index]);
+			ClassicAssert.AreEqual(1, index);
+			ClassicAssert.AreEqual(gateX, xs[index]);
+			ClassicAssert.AreEqual(gateY, ys[index]);
 		}
 
 		[Test]
@@ -446,12 +447,12 @@ namespace ThousandAndFirst.Tests
 			// The protection law forbids taking ground that holds anything, so the rule aims at
 			// the way out and settles for the nearest offered cell - which is still the wall
 			// astride the road.
-			Assert.IsTrue(KingdomRoadRules.TryGate(20, 20, KingdomRules.Frontier.North, 10, 10, out var gateX, out var gateY));
+			ClassicAssert.IsTrue(KingdomRoadRules.TryGate(20, 20, KingdomRules.Frontier.North, 10, 10, out var gateX, out var gateY));
 			int[] xs = new int[3] { 2, 12, 18 };
 			int[] ys = new int[3] { 1, 1, 1 };
 			int index = KingdomRoadRules.NearestToGate(xs, ys, gateX, gateY);
-			Assert.AreEqual(1, index, "the nearest offered cell, not the first one enumerated");
-			Assert.IsTrue(KingdomLayoutRules.Chebyshev(xs[index], ys[index], gateX, gateY) <= 2);
+			ClassicAssert.AreEqual(1, index, "the nearest offered cell, not the first one enumerated");
+			ClassicAssert.IsTrue(KingdomLayoutRules.Chebyshev(xs[index], ys[index], gateX, gateY) <= 2);
 		}
 
 		[Test]
@@ -465,8 +466,8 @@ namespace ThousandAndFirst.Tests
 			int[] shuffledYs = new int[4] { 2, 0, 1, 1 };
 			int first = KingdomRoadRules.NearestToGate(xs, ys, 10, 1);
 			int second = KingdomRoadRules.NearestToGate(shuffled, shuffledYs, 10, 1);
-			Assert.AreEqual(xs[first], shuffled[second]);
-			Assert.AreEqual(ys[first], shuffledYs[second]);
+			ClassicAssert.AreEqual(xs[first], shuffled[second]);
+			ClassicAssert.AreEqual(ys[first], shuffledYs[second]);
 		}
 
 		[Test]
@@ -475,14 +476,14 @@ namespace ThousandAndFirst.Tests
 			int[] xs = new int[3] { 11, 9, 10 };
 			int[] ys = new int[3] { 0, 0, 1 };
 			int index = KingdomRoadRules.NearestToGate(xs, ys, 10, 0);
-			Assert.AreEqual(1, index, "same distance, so the northmost then westmost cell wins");
+			ClassicAssert.AreEqual(1, index, "same distance, so the northmost then westmost cell wins");
 		}
 
 		[Test]
 		public void NoGroundOfferedMeansNoGateSiting()
 		{
-			Assert.AreEqual(-1, KingdomRoadRules.NearestToGate(new int[0], new int[0], 5, 5));
-			Assert.AreEqual(-1, KingdomRoadRules.NearestToGate(null, null, 5, 5));
+			ClassicAssert.AreEqual(-1, KingdomRoadRules.NearestToGate(new int[0], new int[0], 5, 5));
+			ClassicAssert.AreEqual(-1, KingdomRoadRules.NearestToGate(null, null, 5, 5));
 		}
 
 		[Test]
@@ -490,19 +491,19 @@ namespace ThousandAndFirst.Tests
 		{
 			// The brief's "walls move outward as the city spans zones", read at the gate: a zone
 			// whose north edge stops being frontier stops having its way out through the north.
-			Assert.IsTrue(KingdomRoadRules.TryGate(20, 20, KingdomRules.Frontier.North | KingdomRules.Frontier.South, 10, 5,
+			ClassicAssert.IsTrue(KingdomRoadRules.TryGate(20, 20, KingdomRules.Frontier.North | KingdomRules.Frontier.South, 10, 5,
 				out var beforeX, out var beforeY));
-			Assert.AreEqual(1, beforeY, "the heart sits near the north edge, so the way out is north");
-			Assert.IsTrue(KingdomRoadRules.TryGate(20, 20, KingdomRules.Frontier.South, 10, 5, out var afterX, out var afterY));
-			Assert.AreNotEqual(beforeY, afterY, "the way out moved to the edge that still faces the world");
-			Assert.IsTrue(KingdomRules.IsOnFrontier(afterX, afterY, 20, 20, KingdomRules.Frontier.South));
-			Assert.IsFalse(KingdomRules.IsOnFrontier(afterX, afterY, 20, 20, KingdomRules.Frontier.North));
+			ClassicAssert.AreEqual(1, beforeY, "the heart sits near the north edge, so the way out is north");
+			ClassicAssert.IsTrue(KingdomRoadRules.TryGate(20, 20, KingdomRules.Frontier.South, 10, 5, out var afterX, out var afterY));
+			ClassicAssert.AreNotEqual(beforeY, afterY, "the way out moved to the edge that still faces the world");
+			ClassicAssert.IsTrue(KingdomRules.IsOnFrontier(afterX, afterY, 20, 20, KingdomRules.Frontier.South));
+			ClassicAssert.IsFalse(KingdomRules.IsOnFrontier(afterX, afterY, 20, 20, KingdomRules.Frontier.North));
 		}
 
 		[Test]
 		public void AZoneTheRealmSurroundsHasNoGateToSiteAGatehouseAt()
 		{
-			Assert.IsFalse(KingdomRoadRules.TryGate(20, 20, KingdomRules.Frontier.None, 10, 10, out _, out _));
+			ClassicAssert.IsFalse(KingdomRoadRules.TryGate(20, 20, KingdomRules.Frontier.None, 10, 10, out _, out _));
 		}
 
 		// --- The lane --------------------------------------------------------------------
@@ -514,10 +515,10 @@ namespace ThousandAndFirst.Tests
 		public void ADoorOpensOntoTheLaneTheGrammarReserved(int doorX, int doorY, int laneX, int laneY)
 		{
 			KingdomPlotRules.PlotRect rect = new KingdomPlotRules.PlotRect(10, 10, 14, 13);
-			Assert.IsTrue(KingdomRoadRules.TryLane(rect, doorX, doorY, out var x, out var y));
-			Assert.AreEqual(laneX, x);
-			Assert.AreEqual(laneY, y);
-			Assert.IsFalse(KingdomPlotRules.Reserved(rect).Contains(x, y), "the lane cell is inside the plot's own reserved rect");
+			ClassicAssert.IsTrue(KingdomRoadRules.TryLane(rect, doorX, doorY, out var x, out var y));
+			ClassicAssert.AreEqual(laneX, x);
+			ClassicAssert.AreEqual(laneY, y);
+			ClassicAssert.IsFalse(KingdomPlotRules.Reserved(rect).Contains(x, y), "the lane cell is inside the plot's own reserved rect");
 		}
 
 		[TestCase(10, 10)]
@@ -527,7 +528,7 @@ namespace ThousandAndFirst.Tests
 		public void ACornerOrAnInsideCellSaysNothingAboutWhichWayADoorFaces(int doorX, int doorY)
 		{
 			KingdomPlotRules.PlotRect rect = new KingdomPlotRules.PlotRect(10, 10, 14, 13);
-			Assert.IsFalse(KingdomRoadRules.TryLane(rect, doorX, doorY, out _, out _));
+			ClassicAssert.IsFalse(KingdomRoadRules.TryLane(rect, doorX, doorY, out _, out _));
 		}
 
 		[Test]
@@ -537,22 +538,22 @@ namespace ThousandAndFirst.Tests
 			foreach (ArchitectureFacing facing in System.Enum.GetValues(typeof(ArchitectureFacing)))
 			{
 				snapshot.Facing = facing;
-				Assert.IsTrue(KingdomArchitectureRules.TryWorldDimensions(snapshot.Width,
+				ClassicAssert.IsTrue(KingdomArchitectureRules.TryWorldDimensions(snapshot.Width,
 					snapshot.Height, facing, out int width, out int height));
 				KingdomPlotRules.PlotRect rect = new KingdomPlotRules.PlotRect(
 					10, 10, 9 + width, 9 + height);
 				List<ArchitecturePoint> route = new List<ArchitecturePoint>();
-				Assert.IsTrue(KingdomRoadRules.TryAuthoredLane(snapshot, rect,
+				ClassicAssert.IsTrue(KingdomRoadRules.TryAuthoredLane(snapshot, rect,
 					snapshot.Anchors[0], route, out int doorX, out int doorY,
 					out int laneX, out int laneY), facing.ToString());
-				Assert.AreEqual(2, route.Count, "one unclaimed edge cell plus one road margin");
-				Assert.IsTrue(KingdomArchitectureRules.TryToWorld(rect.X1, rect.Y1,
+				ClassicAssert.AreEqual(2, route.Count, "one unclaimed edge cell plus one road margin");
+				ClassicAssert.IsTrue(KingdomArchitectureRules.TryToWorld(rect.X1, rect.Y1,
 					snapshot.Width, snapshot.Height, facing, 4, 2,
 					out int edgeX, out int edgeY));
-				Assert.AreEqual(edgeX, route[0].X, facing.ToString());
-				Assert.AreEqual(edgeY, route[0].Y, facing.ToString());
-				Assert.IsFalse(KingdomPlotRules.Reserved(rect).Contains(laneX, laneY));
-				Assert.IsTrue(KingdomRoadRules.TryExactTrace(
+				ClassicAssert.AreEqual(edgeX, route[0].X, facing.ToString());
+				ClassicAssert.AreEqual(edgeY, route[0].Y, facing.ToString());
+				ClassicAssert.IsFalse(KingdomPlotRules.Reserved(rect).Contains(laneX, laneY));
+				ClassicAssert.IsTrue(KingdomRoadRules.TryExactTrace(
 					delegate(int x, int y) { return x != doorX || y != doorY; },
 					30, 30, doorX, doorY, laneX, laneY,
 					KingdomRoadRules.MaxRouteCells, route, new List<int>()));
@@ -573,11 +574,11 @@ namespace ThousandAndFirst.Tests
 			snapshot.Facing = ArchitectureFacing.East;
 			KingdomPlotRules.PlotRect rect = new KingdomPlotRules.PlotRect(10, 10, 13, 14);
 			List<ArchitecturePoint> route = new List<ArchitecturePoint>();
-			Assert.IsTrue(KingdomRoadRules.TryAuthoredLane(snapshot, rect, snapshot.Anchors[0],
+			ClassicAssert.IsTrue(KingdomRoadRules.TryAuthoredLane(snapshot, rect, snapshot.Anchors[0],
 				route, out int doorX, out int doorY, out int laneX, out int laneY));
-			Assert.AreEqual(1, route.Count, "a border entrance contributes only the exterior margin");
-			Assert.AreEqual(doorX + 2, laneX, "canonical north rotates east");
-			Assert.AreEqual(doorY, laneY);
+			ClassicAssert.AreEqual(1, route.Count, "a border entrance contributes only the exterior margin");
+			ClassicAssert.AreEqual(doorX + 2, laneX, "canonical north rotates east");
+			ClassicAssert.AreEqual(doorY, laneY);
 		}
 
 		[Test]
@@ -597,17 +598,17 @@ namespace ThousandAndFirst.Tests
 			KingdomPlotRules.PlotRect rect = new KingdomPlotRules.PlotRect(10, 10, 14, 13);
 			List<ArchitecturePoint> route = new List<ArchitecturePoint>();
 
-			Assert.IsTrue(KingdomRoadRules.TryAuthoredLane(snapshot, rect,
+			ClassicAssert.IsTrue(KingdomRoadRules.TryAuthoredLane(snapshot, rect,
 				snapshot.Anchors[0], route, out int doorX, out int doorY,
 				out int laneX, out int laneY));
-			Assert.AreEqual(12, doorX);
-			Assert.AreEqual(13, doorY);
-			Assert.AreEqual(1, route.Count);
-			Assert.AreEqual(12, route[0].X);
-			Assert.AreEqual(14, route[0].Y, "the first exterior cell is reserved margin");
-			Assert.AreEqual(12, laneX);
-			Assert.AreEqual(15, laneY, "road evidence belongs at the lane, not its margin");
-			Assert.IsFalse(KingdomPlotRules.Reserved(rect).Contains(laneX, laneY));
+			ClassicAssert.AreEqual(12, doorX);
+			ClassicAssert.AreEqual(13, doorY);
+			ClassicAssert.AreEqual(1, route.Count);
+			ClassicAssert.AreEqual(12, route[0].X);
+			ClassicAssert.AreEqual(14, route[0].Y, "the first exterior cell is reserved margin");
+			ClassicAssert.AreEqual(12, laneX);
+			ClassicAssert.AreEqual(15, laneY, "road evidence belongs at the lane, not its margin");
+			ClassicAssert.IsFalse(KingdomPlotRules.Reserved(rect).Contains(laneX, laneY));
 		}
 
 		[Test]
@@ -619,12 +620,12 @@ namespace ThousandAndFirst.Tests
 				cell => cell.X == 4 && cell.Y == 2);
 
 			approach.Claim = ArchitectureClaim.Building;
-			Assert.IsFalse(KingdomRoadRules.TryAuthoredLane(snapshot,
+			ClassicAssert.IsFalse(KingdomRoadRules.TryAuthoredLane(snapshot,
 				new KingdomPlotRules.PlotRect(10, 10, 14, 13), snapshot.Anchors[0],
 				route, out _, out _, out _, out _));
 			approach.Claim = ArchitectureClaim.Unclaimed;
 			approach.Passability = ArchitecturePassability.Blocked;
-			Assert.IsFalse(KingdomRoadRules.TryAuthoredLane(snapshot,
+			ClassicAssert.IsFalse(KingdomRoadRules.TryAuthoredLane(snapshot,
 				new KingdomPlotRules.PlotRect(10, 10, 14, 13), snapshot.Anchors[0],
 				route, out _, out _, out _, out _));
 			approach.Passability = ArchitecturePassability.Walkable;
@@ -633,7 +634,7 @@ namespace ThousandAndFirst.Tests
 				X = 4, Y = 2, Claim = ArchitectureClaim.Unclaimed,
 				Passability = ArchitecturePassability.Walkable
 			});
-			Assert.IsFalse(KingdomRoadRules.TryAuthoredLane(snapshot,
+			ClassicAssert.IsFalse(KingdomRoadRules.TryAuthoredLane(snapshot,
 				new KingdomPlotRules.PlotRect(10, 10, 14, 13), snapshot.Anchors[0],
 				route, out _, out _, out _, out _));
 		}
@@ -646,21 +647,21 @@ namespace ThousandAndFirst.Tests
 			{
 				new ArchitecturePoint(2, 1), new ArchitecturePoint(3, 1)
 			};
-			Assert.IsFalse(KingdomRoadRules.TryExactTrace(
+			ClassicAssert.IsFalse(KingdomRoadRules.TryExactTrace(
 				delegate(int x, int y) { return x != 2 || y != 1; },
 				8, 6, 1, 1, 4, 1, 8, route, packed));
-			Assert.IsEmpty(packed, "a refused exact route publishes no prefix");
+			ClassicAssert.IsEmpty(packed, "a refused exact route publishes no prefix");
 
 			route[1] = new ArchitecturePoint(2, 1);
-			Assert.IsFalse(KingdomRoadRules.TryExactTrace(delegate(int x, int y) { return true; },
+			ClassicAssert.IsFalse(KingdomRoadRules.TryExactTrace(delegate(int x, int y) { return true; },
 				8, 6, 1, 1, 3, 1, 8, route, packed));
-			Assert.IsEmpty(packed);
+			ClassicAssert.IsEmpty(packed);
 
 			route[0] = new ArchitecturePoint(2, 2);
 			route.RemoveAt(1);
-			Assert.IsFalse(KingdomRoadRules.TryExactTrace(delegate(int x, int y) { return true; },
+			ClassicAssert.IsFalse(KingdomRoadRules.TryExactTrace(delegate(int x, int y) { return true; },
 				8, 6, 1, 1, 3, 2, 8, route, packed));
-			Assert.IsEmpty(packed);
+			ClassicAssert.IsEmpty(packed);
 		}
 
 		private static ArchitectureLayoutSnapshot InteriorEntranceSnapshot()
@@ -697,33 +698,33 @@ namespace ThousandAndFirst.Tests
 		public void AFirstWalkAdmitsACellAndLaterOnesAddToIt()
 		{
 			List<KingdomRoadRules.WornCell> tally = new List<KingdomRoadRules.WornCell>();
-			Assert.IsTrue(KingdomRoadRules.Accrue(tally, 3, 4, 30, out var first));
-			Assert.AreEqual(30, first);
-			Assert.AreEqual(1, tally.Count);
-			Assert.IsTrue(KingdomRoadRules.Accrue(tally, 3, 4, 30, out var second));
-			Assert.AreEqual(60, second);
-			Assert.AreEqual(1, tally.Count);
-			Assert.AreEqual(60, KingdomRoadRules.TrafficAt(tally, 3, 4));
-			Assert.AreEqual(0, KingdomRoadRules.TrafficAt(tally, 9, 9));
+			ClassicAssert.IsTrue(KingdomRoadRules.Accrue(tally, 3, 4, 30, out var first));
+			ClassicAssert.AreEqual(30, first);
+			ClassicAssert.AreEqual(1, tally.Count);
+			ClassicAssert.IsTrue(KingdomRoadRules.Accrue(tally, 3, 4, 30, out var second));
+			ClassicAssert.AreEqual(60, second);
+			ClassicAssert.AreEqual(1, tally.Count);
+			ClassicAssert.AreEqual(60, KingdomRoadRules.TrafficAt(tally, 3, 4));
+			ClassicAssert.AreEqual(0, KingdomRoadRules.TrafficAt(tally, 9, 9));
 		}
 
 		[Test]
 		public void ATallyNeverClimbsPastItsCeiling()
 		{
 			List<KingdomRoadRules.WornCell> tally = new List<KingdomRoadRules.WornCell>();
-			Assert.IsTrue(KingdomRoadRules.Accrue(tally, 0, 0, KingdomRoadRules.MaxTraffic + 5000, out var total));
-			Assert.AreEqual(KingdomRoadRules.MaxTraffic, total);
-			Assert.IsTrue(KingdomRoadRules.Accrue(tally, 0, 0, 500, out total));
-			Assert.AreEqual(KingdomRoadRules.MaxTraffic, total);
+			ClassicAssert.IsTrue(KingdomRoadRules.Accrue(tally, 0, 0, KingdomRoadRules.MaxTraffic + 5000, out var total));
+			ClassicAssert.AreEqual(KingdomRoadRules.MaxTraffic, total);
+			ClassicAssert.IsTrue(KingdomRoadRules.Accrue(tally, 0, 0, 500, out total));
+			ClassicAssert.AreEqual(KingdomRoadRules.MaxTraffic, total);
 		}
 
 		[Test]
 		public void WalkingNowhereAdmitsNothing()
 		{
 			List<KingdomRoadRules.WornCell> tally = new List<KingdomRoadRules.WornCell>();
-			Assert.IsTrue(KingdomRoadRules.Accrue(tally, 1, 1, 0, out var total));
-			Assert.AreEqual(0, total);
-			Assert.AreEqual(0, tally.Count);
+			ClassicAssert.IsTrue(KingdomRoadRules.Accrue(tally, 1, 1, 0, out var total));
+			ClassicAssert.AreEqual(0, total);
+			ClassicAssert.AreEqual(0, tally.Count);
 		}
 
 		[Test]
@@ -734,11 +735,11 @@ namespace ThousandAndFirst.Tests
 			{
 				tally.Add(new KingdomRoadRules.WornCell(i % 80, i / 80, 10));
 			}
-			Assert.IsFalse(KingdomRoadRules.Accrue(tally, 79, 79, 10, out var refused));
-			Assert.AreEqual(0, refused);
-			Assert.AreEqual(KingdomRoadRules.MaxTrackedCells, tally.Count);
-			Assert.IsTrue(KingdomRoadRules.Accrue(tally, 0, 0, 10, out var fed));
-			Assert.AreEqual(20, fed);
+			ClassicAssert.IsFalse(KingdomRoadRules.Accrue(tally, 79, 79, 10, out var refused));
+			ClassicAssert.AreEqual(0, refused);
+			ClassicAssert.AreEqual(KingdomRoadRules.MaxTrackedCells, tally.Count);
+			ClassicAssert.IsTrue(KingdomRoadRules.Accrue(tally, 0, 0, 10, out var fed));
+			ClassicAssert.AreEqual(20, fed);
 		}
 
 		[Test]
@@ -746,19 +747,19 @@ namespace ThousandAndFirst.Tests
 		{
 			List<KingdomRoadRules.WornCell> tally = new List<KingdomRoadRules.WornCell>();
 			KingdomRoadRules.Accrue(tally, 2, 2, 300, out _);
-			Assert.IsTrue(KingdomRoadRules.Retire(tally, 2, 2));
-			Assert.AreEqual(0, tally.Count);
-			Assert.IsFalse(KingdomRoadRules.Retire(tally, 2, 2));
+			ClassicAssert.IsTrue(KingdomRoadRules.Retire(tally, 2, 2));
+			ClassicAssert.AreEqual(0, tally.Count);
+			ClassicAssert.IsFalse(KingdomRoadRules.Retire(tally, 2, 2));
 		}
 
 		[Test]
 		public void ANullTallyIsARefusalAndNotACrash()
 		{
-			Assert.IsFalse(KingdomRoadRules.Accrue(null, 1, 1, 10, out var total));
-			Assert.AreEqual(0, total);
-			Assert.AreEqual(0, KingdomRoadRules.TrafficAt(null, 1, 1));
-			Assert.AreEqual(-1, KingdomRoadRules.IndexOf(null, 1, 1));
-			Assert.IsFalse(KingdomRoadRules.Retire(null, 1, 1));
+			ClassicAssert.IsFalse(KingdomRoadRules.Accrue(null, 1, 1, 10, out var total));
+			ClassicAssert.AreEqual(0, total);
+			ClassicAssert.AreEqual(0, KingdomRoadRules.TrafficAt(null, 1, 1));
+			ClassicAssert.AreEqual(-1, KingdomRoadRules.IndexOf(null, 1, 1));
+			ClassicAssert.IsFalse(KingdomRoadRules.Retire(null, 1, 1));
 		}
 
 		// --- Writing it down -------------------------------------------------------------
@@ -772,16 +773,16 @@ namespace ThousandAndFirst.Tests
 				new KingdomRoadRules.WornCell(3, 4, 299)
 			};
 			string written = KingdomRoadRules.Encode(tally);
-			Assert.AreEqual("1,2,50;3,4,299", written);
-			Assert.IsTrue(KingdomRoadRules.TryDecode(written, out var read, out var error));
-			Assert.IsNull(error);
-			Assert.AreEqual(2, read.Count);
-			Assert.AreEqual(1, read[0].X);
-			Assert.AreEqual(2, read[0].Y);
-			Assert.AreEqual(3, read[1].X);
-			Assert.AreEqual(4, read[1].Y);
-			Assert.AreEqual(50, KingdomRoadRules.TrafficAt(read, 1, 2));
-			Assert.AreEqual(299, KingdomRoadRules.TrafficAt(read, 3, 4));
+			ClassicAssert.AreEqual("1,2,50;3,4,299", written);
+			ClassicAssert.IsTrue(KingdomRoadRules.TryDecode(written, out var read, out var error));
+			ClassicAssert.IsNull(error);
+			ClassicAssert.AreEqual(2, read.Count);
+			ClassicAssert.AreEqual(1, read[0].X);
+			ClassicAssert.AreEqual(2, read[0].Y);
+			ClassicAssert.AreEqual(3, read[1].X);
+			ClassicAssert.AreEqual(4, read[1].Y);
+			ClassicAssert.AreEqual(50, KingdomRoadRules.TrafficAt(read, 1, 2));
+			ClassicAssert.AreEqual(299, KingdomRoadRules.TrafficAt(read, 3, 4));
 		}
 
 		[TestCase(null)]
@@ -789,9 +790,9 @@ namespace ThousandAndFirst.Tests
 		[TestCase("   ")]
 		public void GroundNobodyHasWalkedWritesNothingAndReadsCleanly(string raw)
 		{
-			Assert.IsTrue(KingdomRoadRules.TryDecode(raw, out var cells, out var error));
-			Assert.IsNull(error);
-			Assert.AreEqual(0, cells.Count);
+			ClassicAssert.IsTrue(KingdomRoadRules.TryDecode(raw, out var cells, out var error));
+			ClassicAssert.IsNull(error);
+			ClassicAssert.AreEqual(0, cells.Count);
 		}
 
 		[Test]
@@ -804,9 +805,9 @@ namespace ThousandAndFirst.Tests
 				new KingdomRoadRules.WornCell(1, KingdomRoadRules.MaxCoordinate + 1, 30),
 				new KingdomRoadRules.WornCell(2, 2, 30)
 			};
-			Assert.AreEqual("2,2,30", KingdomRoadRules.Encode(tally));
-			Assert.AreEqual("", KingdomRoadRules.Encode(null));
-			Assert.AreEqual("", KingdomRoadRules.Encode(new List<KingdomRoadRules.WornCell>()));
+			ClassicAssert.AreEqual("2,2,30", KingdomRoadRules.Encode(tally));
+			ClassicAssert.AreEqual("", KingdomRoadRules.Encode(null));
+			ClassicAssert.AreEqual("", KingdomRoadRules.Encode(new List<KingdomRoadRules.WornCell>()));
 		}
 
 		[Test]
@@ -816,7 +817,7 @@ namespace ThousandAndFirst.Tests
 			{
 				new KingdomRoadRules.WornCell(1, 1, KingdomRoadRules.MaxTraffic + 900)
 			};
-			Assert.AreEqual("1,1," + KingdomRoadRules.MaxTraffic, KingdomRoadRules.Encode(tally));
+			ClassicAssert.AreEqual("1,1," + KingdomRoadRules.MaxTraffic, KingdomRoadRules.Encode(tally));
 		}
 
 		[TestCase("nonsense")]
@@ -833,38 +834,38 @@ namespace ThousandAndFirst.Tests
 		[TestCase("1,1000,3")]
 		public void AMalformedOrImpossibleCellIsDroppedAndSaidSo(string raw)
 		{
-			Assert.IsFalse(KingdomRoadRules.TryDecode(raw, out var cells, out var error));
-			Assert.AreEqual(0, cells.Count);
-			Assert.IsNotNull(error);
+			ClassicAssert.IsFalse(KingdomRoadRules.TryDecode(raw, out var cells, out var error));
+			ClassicAssert.AreEqual(0, cells.Count);
+			ClassicAssert.IsNotNull(error);
 		}
 
 		[Test]
 		public void OneBadCellDoesNotCostTheRestOfTheGround()
 		{
-			Assert.IsFalse(KingdomRoadRules.TryDecode("1,2,50;garbage;3,4,60", out var cells, out var error));
-			Assert.IsNotNull(error);
-			Assert.AreEqual(2, cells.Count);
-			Assert.AreEqual(50, KingdomRoadRules.TrafficAt(cells, 1, 2));
-			Assert.AreEqual(60, KingdomRoadRules.TrafficAt(cells, 3, 4));
+			ClassicAssert.IsFalse(KingdomRoadRules.TryDecode("1,2,50;garbage;3,4,60", out var cells, out var error));
+			ClassicAssert.IsNotNull(error);
+			ClassicAssert.AreEqual(2, cells.Count);
+			ClassicAssert.AreEqual(50, KingdomRoadRules.TrafficAt(cells, 1, 2));
+			ClassicAssert.AreEqual(60, KingdomRoadRules.TrafficAt(cells, 3, 4));
 		}
 
 		[Test]
 		public void ARepeatedCellKeepsTheHeavierReading()
 		{
-			Assert.IsFalse(KingdomRoadRules.TryDecode("1,2,10;1,2,40", out var cells, out var error));
-			Assert.IsNotNull(error);
-			Assert.AreEqual(1, cells.Count);
-			Assert.AreEqual(40, KingdomRoadRules.TrafficAt(cells, 1, 2));
-			Assert.IsFalse(KingdomRoadRules.TryDecode("1,2,40;1,2,10", out cells, out error));
-			Assert.AreEqual(40, KingdomRoadRules.TrafficAt(cells, 1, 2));
+			ClassicAssert.IsFalse(KingdomRoadRules.TryDecode("1,2,10;1,2,40", out var cells, out var error));
+			ClassicAssert.IsNotNull(error);
+			ClassicAssert.AreEqual(1, cells.Count);
+			ClassicAssert.AreEqual(40, KingdomRoadRules.TrafficAt(cells, 1, 2));
+			ClassicAssert.IsFalse(KingdomRoadRules.TryDecode("1,2,40;1,2,10", out cells, out error));
+			ClassicAssert.AreEqual(40, KingdomRoadRules.TrafficAt(cells, 1, 2));
 		}
 
 		[Test]
 		public void ATallyReadInFromOutsideIsClampedNotBelieved()
 		{
-			Assert.IsTrue(KingdomRoadRules.TryDecode("5,5," + (KingdomRoadRules.MaxTraffic + 10000), out var cells, out var error));
-			Assert.IsNull(error);
-			Assert.AreEqual(KingdomRoadRules.MaxTraffic, KingdomRoadRules.TrafficAt(cells, 5, 5));
+			ClassicAssert.IsTrue(KingdomRoadRules.TryDecode("5,5," + (KingdomRoadRules.MaxTraffic + 10000), out var cells, out var error));
+			ClassicAssert.IsNull(error);
+			ClassicAssert.AreEqual(KingdomRoadRules.MaxTraffic, KingdomRoadRules.TrafficAt(cells, 5, 5));
 		}
 
 		[Test]
@@ -879,9 +880,9 @@ namespace ThousandAndFirst.Tests
 				}
 				raw.Append(i % 100).Append(KingdomRoadRules.FieldSeparator).Append(i / 100).Append(KingdomRoadRules.FieldSeparator).Append(10);
 			}
-			Assert.IsFalse(KingdomRoadRules.TryDecode(raw.ToString(), out var cells, out var error));
-			Assert.IsNotNull(error);
-			Assert.AreEqual(KingdomRoadRules.MaxTrackedCells, cells.Count);
+			ClassicAssert.IsFalse(KingdomRoadRules.TryDecode(raw.ToString(), out var cells, out var error));
+			ClassicAssert.IsNotNull(error);
+			ClassicAssert.AreEqual(KingdomRoadRules.MaxTrackedCells, cells.Count);
 		}
 
 		// --- Paving ----------------------------------------------------------------------
@@ -899,7 +900,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, "DirtPath")]
 		public void PavingIsLaidInTheWallTheSettlementBuildsIn(string wall, string expected)
 		{
-			Assert.AreEqual(expected, KingdomRoadRules.PavedFloorFor(wall));
+			ClassicAssert.AreEqual(expected, KingdomRoadRules.PavedFloorFor(wall));
 		}
 
 		[Test]
@@ -910,8 +911,8 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < KingdomPlotRules.WallMaterials.Length; i++)
 			{
 				string wall = KingdomPlotRules.WallMaterials[i];
-				Assert.AreNotEqual("DirtPath", KingdomRoadRules.PavedFloorFor(wall), "no paving is named for " + wall);
-				Assert.IsTrue(KingdomRoadRules.CanPaveIn(KingdomRoadRules.PaveMaterialFor(wall)), "nothing can be spent to pave in " + wall);
+				ClassicAssert.AreNotEqual("DirtPath", KingdomRoadRules.PavedFloorFor(wall), "no paving is named for " + wall);
+				ClassicAssert.IsTrue(KingdomRoadRules.CanPaveIn(KingdomRoadRules.PaveMaterialFor(wall)), "nothing can be spent to pave in " + wall);
 			}
 		}
 
@@ -930,7 +931,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, KingdomMaterial.Mud)]
 		public void PavingIsPaidForInWhatTheWallsAreMadeOf(string wall, KingdomMaterial expected)
 		{
-			Assert.AreEqual(expected, KingdomRoadRules.PaveMaterialFor(wall));
+			ClassicAssert.AreEqual(expected, KingdomRoadRules.PaveMaterialFor(wall));
 		}
 
 		[TestCase(KingdomMaterial.Mud, false)]
@@ -941,7 +942,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomMaterial.Scrap, true)]
 		public void YouCannotPaveTheGroundWithTheGround(KingdomMaterial material, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomRoadRules.CanPaveIn(material));
+			ClassicAssert.AreEqual(expected, KingdomRoadRules.CanPaveIn(material));
 		}
 
 		[TestCase(-3, 0)]
@@ -950,7 +951,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(12, 12 * KingdomRoadRules.PaveUnitsPerCell)]
 		public void PavingCostsPerCell(int cells, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRoadRules.PaveCost(cells));
+			ClassicAssert.AreEqual(expected, KingdomRoadRules.PaveCost(cells));
 		}
 
 		[TestCase(-1, 0)]
@@ -959,7 +960,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomRoadRules.MaxPaveCellsPerOrder + 30, KingdomRoadRules.MaxPaveCellsPerOrder)]
 		public void OneOrderCoversOnlyWhatOneOrderCovers(int available, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRoadRules.PaveCells(available));
+			ClassicAssert.AreEqual(expected, KingdomRoadRules.PaveCells(available));
 		}
 
 		// --- Prose -----------------------------------------------------------------------
@@ -969,7 +970,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomRoadRules.WearState.Paved)]
 		public void TheRungsThatSayNothingSayNothing(KingdomRoadRules.WearState state)
 		{
-			Assert.IsNull(KingdomRoadRules.WearLine(state, "Ezra"));
+			ClassicAssert.IsNull(KingdomRoadRules.WearLine(state, "Ezra"));
 		}
 
 		[TestCase(KingdomRoadRules.WearState.Trodden)]
@@ -977,9 +978,9 @@ namespace ThousandAndFirst.Tests
 		public void TheRungsWorthRemarkingOnNameTheSettlement(KingdomRoadRules.WearState state)
 		{
 			string line = KingdomRoadRules.WearLine(state, "Ezra");
-			Assert.IsNotNull(line);
+			ClassicAssert.IsNotNull(line);
 			StringAssert.Contains("Ezra", line);
-			Assert.IsNotNull(KingdomRoadRules.WearLine(state, null));
+			ClassicAssert.IsNotNull(KingdomRoadRules.WearLine(state, null));
 		}
 
 		[Test]
@@ -1014,17 +1015,17 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains(KingdomMaterialRules.MaterialName(KingdomMaterial.Stone), shortfall);
 			StringAssert.Contains("Ezra", KingdomRoadRules.RefuseHands("Ezra"));
 			StringAssert.Contains("Ezra", KingdomRoadRules.RefuseTallyFull("Ezra"));
-			Assert.IsNotEmpty(KingdomRoadRules.RefuseNotOurGround());
+			ClassicAssert.IsNotEmpty(KingdomRoadRules.RefuseNotOurGround());
 		}
 
 		[Test]
 		public void ARefusalNeverLeavesAHoleWhereTheNameGoes()
 		{
-			Assert.IsNotEmpty(KingdomRoadRules.RefuseNothingWorn(null));
-			Assert.IsNotEmpty(KingdomRoadRules.RefuseHands(null));
-			Assert.IsNotEmpty(KingdomRoadRules.RefuseTallyFull(null));
-			Assert.IsNotEmpty(KingdomRoadRules.PavedLine(1, KingdomMaterial.Stone, null));
-			Assert.IsNotEmpty(KingdomRoadRules.PavedRecord(1, KingdomMaterial.Stone, null));
+			ClassicAssert.IsNotEmpty(KingdomRoadRules.RefuseNothingWorn(null));
+			ClassicAssert.IsNotEmpty(KingdomRoadRules.RefuseHands(null));
+			ClassicAssert.IsNotEmpty(KingdomRoadRules.RefuseTallyFull(null));
+			ClassicAssert.IsNotEmpty(KingdomRoadRules.PavedLine(1, KingdomMaterial.Stone, null));
+			ClassicAssert.IsNotEmpty(KingdomRoadRules.PavedRecord(1, KingdomMaterial.Stone, null));
 		}
 	}
 }

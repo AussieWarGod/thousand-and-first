@@ -2,6 +2,7 @@
 using System;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -23,7 +24,7 @@ namespace ThousandAndFirst.Tests
 				"SCRIPT=stagedigest;raid-recovery-turn-setup;advance 1;raid-recovery-turn-check;stagedigest",
 				"VERBS=raid-recovery-turn-setup,raid-recovery-turn-check",
 				"EXPECT=stagedigest:OK~founded=false,raid-recovery-turn-setup:OK~setup=Active originals-removed=3,advance:OK,raid-recovery-turn-check:OK~cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE" })
-				Assert.AreEqual(1, Regex.Matches(persona, "(?m)^" + Regex.Escape(row) + "$" ).Count);
+				ClassicAssert.AreEqual(1, Regex.Matches(persona, "(?m)^" + Regex.Escape(row) + "$" ).Count);
 		}
 		[Test]
 		public void ActualDeathsRemainActiveUntilObservedEngineEvents()
@@ -33,7 +34,7 @@ namespace ThousandAndFirst.Tests
 				"death finalized recovery before real turn", "new KingdomRaidRecoveryTurnWitness(", "Awaiting = true");
 			foreach (string token in new[] { "KingdomRaids.OnWorldWake(", "KingdomHeartbeat.", ".HandleEvent(",
 				"KingdomRaids.RaiderDying(", ".RemoveObject(", ".Obliterate(", ".FinishQuest(" }) StringAssert.DoesNotContain(token, source);
-			Assert.IsFalse(Regex.IsMatch(source, @"\.(RecoveryState|Turns|TimeTicks|Energy|Speed)\s*=(?!=)"));
+			ClassicAssert.IsFalse(Regex.IsMatch(source, @"\.(RecoveryState|Turns|TimeTicks|Energy|Speed)\s*=(?!=)"));
 			StringAssert.Contains("ordinary-acceptance=false; save-load=untested", source);
 		}
 		[Test]
@@ -70,7 +71,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string token in tokens)
 			{
 				int at = source.IndexOf(token, cursor, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(at, cursor, "Missing or reordered: " + token); cursor = at + token.Length;
+				ClassicAssert.GreaterOrEqual(at, cursor, "Missing or reordered: " + token); cursor = at + token.Length;
 			}
 		}
 	}

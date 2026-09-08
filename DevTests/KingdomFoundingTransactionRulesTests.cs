@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -10,8 +11,8 @@ namespace ThousandAndFirst.Tests
 	{
 		private static void AssertByteEnum(Type type, string expected)
 		{
-			Assert.IsTrue(type.IsPublic && type.IsEnum, type.FullName);
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(type), type.FullName);
+			ClassicAssert.IsTrue(type.IsPublic && type.IsEnum, type.FullName);
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(type), type.FullName);
 			Array values = Enum.GetValues(type);
 			string[] shape = new string[values.Length];
 			for (int i = 0; i < values.Length; i++)
@@ -19,7 +20,7 @@ namespace ThousandAndFirst.Tests
 				object value = values.GetValue(i);
 				shape[i] = Convert.ToInt32(value) + ":" + value;
 			}
-			Assert.AreEqual(expected, string.Join(",", shape), type.FullName);
+			ClassicAssert.AreEqual(expected, string.Join(",", shape), type.FullName);
 		}
 
 		private static void AssertPublicFields(Type type, string[] names, Type[] types)
@@ -27,11 +28,11 @@ namespace ThousandAndFirst.Tests
 			System.Reflection.FieldInfo[] fields = type.GetFields(
 				System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public |
 				System.Reflection.BindingFlags.DeclaredOnly);
-			Assert.AreEqual(names.Length, fields.Length, type.FullName + " field count");
+			ClassicAssert.AreEqual(names.Length, fields.Length, type.FullName + " field count");
 			for (int i = 0; i < names.Length; i++)
 			{
-				Assert.AreEqual(names[i], fields[i].Name, type.FullName + " field order " + i);
-				Assert.AreEqual(types[i], fields[i].FieldType, type.FullName + "." + names[i]);
+				ClassicAssert.AreEqual(names[i], fields[i].Name, type.FullName + " field order " + i);
+				ClassicAssert.AreEqual(types[i], fields[i].FieldType, type.FullName + "." + names[i]);
 			}
 		}
 
@@ -55,12 +56,12 @@ namespace ThousandAndFirst.Tests
 				"0:None,1:Required,2:Inserted,3:Skipped");
 
 			Type rules = typeof(KingdomFoundingTransactionRules);
-			Assert.AreEqual("ThousandAndFirst.KingdomFoundingTransactionRules", rules.FullName);
-			Assert.IsTrue(rules.IsPublic && rules.IsAbstract && rules.IsSealed);
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomFoundingTransactionRules", rules.FullName);
+			ClassicAssert.IsTrue(rules.IsPublic && rules.IsAbstract && rules.IsSealed);
 
 			Type authority = typeof(KingdomFoundingAuthority);
-			Assert.AreEqual("ThousandAndFirst.KingdomFoundingAuthority", authority.FullName);
-			Assert.IsTrue(authority.IsPublic && authority.IsValueType);
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomFoundingAuthority", authority.FullName);
+			ClassicAssert.IsTrue(authority.IsPublic && authority.IsValueType);
 			AssertPublicFields(authority,
 				new[] { "Kind", "TransactionID", "OwnerKind", "OwnerNonce", "RealmFaction",
 					"ZoneID", "RiteX", "RiteY", "PayloadDigest" },
@@ -68,24 +69,24 @@ namespace ThousandAndFirst.Tests
 					typeof(KingdomFoundingOwnerKind), typeof(string), typeof(string), typeof(string),
 					typeof(int), typeof(int), typeof(string) });
 			KingdomFoundingAuthority emptyAuthority = default(KingdomFoundingAuthority);
-			Assert.AreEqual(KingdomFoundingKind.None, emptyAuthority.Kind);
-			Assert.AreEqual(KingdomFoundingOwnerKind.None, emptyAuthority.OwnerKind);
-			Assert.IsNull(emptyAuthority.TransactionID);
-			Assert.AreEqual(0, emptyAuthority.RiteX);
+			ClassicAssert.AreEqual(KingdomFoundingKind.None, emptyAuthority.Kind);
+			ClassicAssert.AreEqual(KingdomFoundingOwnerKind.None, emptyAuthority.OwnerKind);
+			ClassicAssert.IsNull(emptyAuthority.TransactionID);
+			ClassicAssert.AreEqual(0, emptyAuthority.RiteX);
 
 			Type result = typeof(KingdomFoundingResult);
-			Assert.AreEqual("ThousandAndFirst.KingdomFoundingResult", result.FullName);
-			Assert.IsTrue(result.IsPublic && result.IsValueType);
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomFoundingResult", result.FullName);
+			ClassicAssert.IsTrue(result.IsPublic && result.IsValueType);
 			AssertPublicFields(result,
 				new[] { "Outcome", "Water", "Projection", "Failure" },
 				new[] { typeof(KingdomFoundingOutcome), typeof(KingdomFoundingWaterDisposition),
 					typeof(KingdomFoundingProjection), typeof(string) });
 			KingdomFoundingResult emptyResult = default(KingdomFoundingResult);
-			Assert.AreEqual(KingdomFoundingOutcome.Refused, emptyResult.Outcome);
-			Assert.AreEqual(KingdomFoundingWaterDisposition.Untouched, emptyResult.Water);
-			Assert.AreEqual(KingdomFoundingProjection.None, emptyResult.Projection);
-			Assert.IsNull(emptyResult.Failure);
-			Assert.AreEqual("", KingdomFoundingResult.From(KingdomFoundingOutcome.Refused,
+			ClassicAssert.AreEqual(KingdomFoundingOutcome.Refused, emptyResult.Outcome);
+			ClassicAssert.AreEqual(KingdomFoundingWaterDisposition.Untouched, emptyResult.Water);
+			ClassicAssert.AreEqual(KingdomFoundingProjection.None, emptyResult.Projection);
+			ClassicAssert.IsNull(emptyResult.Failure);
+			ClassicAssert.AreEqual("", KingdomFoundingResult.From(KingdomFoundingOutcome.Refused,
 				KingdomFoundingWaterDisposition.Untouched, KingdomFoundingProjection.None).Failure);
 		}
 
@@ -100,15 +101,15 @@ namespace ThousandAndFirst.Tests
 					bool pending = KingdomFoundingTransactionRules.IsPending(kind, phase);
 					if (kind == KingdomFoundingKind.None)
 					{
-						Assert.AreEqual(phase == KingdomFoundingPhase.None, valid,
+						ClassicAssert.AreEqual(phase == KingdomFoundingPhase.None, valid,
 							kind + "/" + phase + " validity");
-						Assert.IsFalse(pending, kind + "/" + phase + " pending");
+						ClassicAssert.IsFalse(pending, kind + "/" + phase + " pending");
 					}
 					else
 					{
-						Assert.IsTrue(valid,
+						ClassicAssert.IsTrue(valid,
 							kind + "/" + phase + " validity");
-						Assert.AreEqual(phase == KingdomFoundingPhase.WaterCommitted ||
+						ClassicAssert.AreEqual(phase == KingdomFoundingPhase.WaterCommitted ||
 							phase == KingdomFoundingPhase.PublicationCommitted ||
 							phase == KingdomFoundingPhase.RecoveryRequired ||
 							phase == KingdomFoundingPhase.Complete, pending,
@@ -132,20 +133,20 @@ namespace ThousandAndFirst.Tests
 								published == 1, changed == 1, restored == 1);
 						if (published == 1)
 						{
-							Assert.AreEqual(KingdomFoundingOutcome.RecoverableFailure, result);
+							ClassicAssert.AreEqual(KingdomFoundingOutcome.RecoverableFailure, result);
 						}
 						else if (changed == 0)
 						{
-							Assert.AreEqual(KingdomFoundingOutcome.Refused, result);
+							ClassicAssert.AreEqual(KingdomFoundingOutcome.Refused, result);
 						}
 						else
 						{
-							Assert.AreEqual(restored == 1
+							ClassicAssert.AreEqual(restored == 1
 								? KingdomFoundingOutcome.CompensatedFailure
 								: KingdomFoundingOutcome.RecoverableFailure, result);
 						}
-						Assert.IsFalse(KingdomFoundingTransactionRules.ChargesEnergy(result));
-						Assert.IsFalse(KingdomFoundingTransactionRules.RequestsInventoryExit(result));
+						ClassicAssert.IsFalse(KingdomFoundingTransactionRules.ChargesEnergy(result));
+						ClassicAssert.IsFalse(KingdomFoundingTransactionRules.RequestsInventoryExit(result));
 					}
 				}
 			}
@@ -159,9 +160,9 @@ namespace ThousandAndFirst.Tests
 				KingdomFoundingResult result = KingdomFoundingResult.From(outcome,
 					KingdomFoundingTransactionRules.WaterDisposition(outcome, RestorationExact: true),
 					KingdomFoundingProjection.Seal);
-				Assert.AreEqual(outcome == KingdomFoundingOutcome.Committed, result.Committed);
-				Assert.AreEqual(outcome == KingdomFoundingOutcome.Committed, result.ChargesEnergy);
-				Assert.AreEqual(outcome == KingdomFoundingOutcome.Committed,
+				ClassicAssert.AreEqual(outcome == KingdomFoundingOutcome.Committed, result.Committed);
+				ClassicAssert.AreEqual(outcome == KingdomFoundingOutcome.Committed, result.ChargesEnergy);
+				ClassicAssert.AreEqual(outcome == KingdomFoundingOutcome.Committed,
 					result.RequestsInventoryExit);
 			}
 		}
@@ -169,22 +170,22 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void WaterDispositionNeverCallsLostWaterRestored()
 		{
-			Assert.AreEqual(KingdomFoundingWaterDisposition.Untouched,
+			ClassicAssert.AreEqual(KingdomFoundingWaterDisposition.Untouched,
 				KingdomFoundingTransactionRules.WaterDisposition(
 					KingdomFoundingOutcome.Refused, RestorationExact: false));
-			Assert.AreEqual(KingdomFoundingWaterDisposition.RestoredExactly,
+			ClassicAssert.AreEqual(KingdomFoundingWaterDisposition.RestoredExactly,
 				KingdomFoundingTransactionRules.WaterDisposition(
 					KingdomFoundingOutcome.CompensatedFailure, RestorationExact: true));
-			Assert.AreEqual(KingdomFoundingWaterDisposition.RestorationFailed,
+			ClassicAssert.AreEqual(KingdomFoundingWaterDisposition.RestorationFailed,
 				KingdomFoundingTransactionRules.WaterDisposition(
 					KingdomFoundingOutcome.CompensatedFailure, RestorationExact: false));
-			Assert.AreEqual(KingdomFoundingWaterDisposition.HeldForRecovery,
+			ClassicAssert.AreEqual(KingdomFoundingWaterDisposition.HeldForRecovery,
 				KingdomFoundingTransactionRules.WaterDisposition(
 					KingdomFoundingOutcome.RecoverableFailure, RestorationExact: true));
-			Assert.AreEqual(KingdomFoundingWaterDisposition.RestorationFailed,
+			ClassicAssert.AreEqual(KingdomFoundingWaterDisposition.RestorationFailed,
 				KingdomFoundingTransactionRules.WaterDisposition(
 					KingdomFoundingOutcome.RecoverableFailure, RestorationExact: false));
-			Assert.AreEqual(KingdomFoundingWaterDisposition.Spent,
+			ClassicAssert.AreEqual(KingdomFoundingWaterDisposition.Spent,
 				KingdomFoundingTransactionRules.WaterDisposition(
 					KingdomFoundingOutcome.Committed, RestorationExact: false));
 		}
@@ -202,7 +203,7 @@ namespace ThousandAndFirst.Tests
 				{
 					succeeded[step] = true;
 				}
-				Assert.IsFalse(KingdomFoundingTransactionRules.ProjectionSequenceComplete(
+				ClassicAssert.IsFalse(KingdomFoundingTransactionRules.ProjectionSequenceComplete(
 					succeeded, KingdomFoundingProjection.Seal),
 					"failure at " + (KingdomFoundingProjection)fail);
 			}
@@ -219,11 +220,11 @@ namespace ThousandAndFirst.Tests
 				KingdomFoundingOutcome outcome =
 					KingdomFoundingTransactionRules.FailureOutcome(
 						published, WaterChanged: true, RestorationExact: true);
-				Assert.AreEqual(published
+				ClassicAssert.AreEqual(published
 					? KingdomFoundingOutcome.RecoverableFailure
 					: KingdomFoundingOutcome.CompensatedFailure, outcome,
 					"failure after " + projection);
-				Assert.AreEqual(published
+				ClassicAssert.AreEqual(published
 					? KingdomFoundingWaterDisposition.HeldForRecovery
 					: KingdomFoundingWaterDisposition.RestoredExactly,
 					KingdomFoundingTransactionRules.WaterDisposition(outcome,
@@ -241,13 +242,13 @@ namespace ThousandAndFirst.Tests
 			{
 				succeeded[step] = true;
 			}
-			Assert.IsTrue(KingdomFoundingTransactionRules.ProjectionSequenceComplete(
+			ClassicAssert.IsTrue(KingdomFoundingTransactionRules.ProjectionSequenceComplete(
 				succeeded, KingdomFoundingProjection.Seal));
-			Assert.IsFalse(KingdomFoundingTransactionRules.ProjectionSequenceComplete(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.ProjectionSequenceComplete(
 				null, KingdomFoundingProjection.Seal));
-			Assert.IsFalse(KingdomFoundingTransactionRules.ProjectionSequenceComplete(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.ProjectionSequenceComplete(
 				new bool[2], KingdomFoundingProjection.Seal));
-			Assert.IsFalse(KingdomFoundingTransactionRules.ProjectionSequenceComplete(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.ProjectionSequenceComplete(
 				succeeded, KingdomFoundingProjection.None));
 		}
 
@@ -260,33 +261,33 @@ namespace ThousandAndFirst.Tests
 		public void SameVesselCommittedVolumeIsChecked(int original, int cost,
 			bool expected, int expectedVolume)
 		{
-			Assert.AreEqual(expected, KingdomFoundingTransactionRules.TryCommittedVolume(
+			ClassicAssert.AreEqual(expected, KingdomFoundingTransactionRules.TryCommittedVolume(
 				original, cost, out var committed));
-			Assert.AreEqual(expectedVolume, committed);
+			ClassicAssert.AreEqual(expectedVolume, committed);
 		}
 
 		[Test]
 		public void ReceiptHeadersClearOnlyProvenPreDebitOrTerminalState()
 		{
-			Assert.AreEqual(KingdomFoundingReceiptNormalization.Clean,
+			ClassicAssert.AreEqual(KingdomFoundingReceiptNormalization.Clean,
 				KingdomFoundingTransactionRules.Normalize(KingdomFoundingKind.None,
 					KingdomFoundingPhase.None));
-			Assert.AreEqual(KingdomFoundingReceiptNormalization.Pending,
+			ClassicAssert.AreEqual(KingdomFoundingReceiptNormalization.Pending,
 				KingdomFoundingTransactionRules.Normalize(KingdomFoundingKind.FirstCity,
 					KingdomFoundingPhase.WaterCommitted));
-			Assert.AreEqual(KingdomFoundingReceiptNormalization.ClearStaged,
+			ClassicAssert.AreEqual(KingdomFoundingReceiptNormalization.ClearStaged,
 				KingdomFoundingTransactionRules.Normalize(KingdomFoundingKind.SecondCity,
 					KingdomFoundingPhase.None));
-				Assert.AreEqual(KingdomFoundingReceiptNormalization.Pending,
+				ClassicAssert.AreEqual(KingdomFoundingReceiptNormalization.Pending,
 					KingdomFoundingTransactionRules.Normalize(KingdomFoundingKind.VillageCharter,
 					KingdomFoundingPhase.Complete));
-			Assert.AreEqual(KingdomFoundingReceiptNormalization.Quarantine,
+			ClassicAssert.AreEqual(KingdomFoundingReceiptNormalization.Quarantine,
 				KingdomFoundingTransactionRules.Normalize(KingdomFoundingKind.None,
 					KingdomFoundingPhase.WaterCommitted));
-			Assert.AreEqual(KingdomFoundingReceiptNormalization.Quarantine,
+			ClassicAssert.AreEqual(KingdomFoundingReceiptNormalization.Quarantine,
 				KingdomFoundingTransactionRules.Normalize((KingdomFoundingKind)99,
 					KingdomFoundingPhase.WaterCommitted));
-			Assert.AreEqual(KingdomFoundingReceiptNormalization.Quarantine,
+			ClassicAssert.AreEqual(KingdomFoundingReceiptNormalization.Quarantine,
 				KingdomFoundingTransactionRules.Normalize(KingdomFoundingKind.FirstCity,
 					(KingdomFoundingPhase)99));
 		}
@@ -294,26 +295,26 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ReceiptIdentityBindsExactBasinTransactionAndRealm()
 		{
-			Assert.IsTrue(KingdomFoundingTransactionRules.ReceiptBindingMatches(
+			ClassicAssert.IsTrue(KingdomFoundingTransactionRules.ReceiptBindingMatches(
 				"basin-1", "basin-1", "tx-1", "Kavvat", "Kavvat", null,
 				KingdomFoundingKind.FirstCity));
-			Assert.IsTrue(KingdomFoundingTransactionRules.ReceiptBindingMatches(
+			ClassicAssert.IsTrue(KingdomFoundingTransactionRules.ReceiptBindingMatches(
 				"basin-1", "basin-1", "tx-1", "Kavvat", "Kavvat", "Kavvat",
 				KingdomFoundingKind.FirstCity));
-			Assert.IsTrue(KingdomFoundingTransactionRules.ReceiptBindingMatches(
+			ClassicAssert.IsTrue(KingdomFoundingTransactionRules.ReceiptBindingMatches(
 				"basin-1", "basin-1", "tx-1", "Kavvat", "Sheol", "Kavvat",
 				KingdomFoundingKind.SecondCity));
 
-			Assert.IsFalse(KingdomFoundingTransactionRules.ReceiptBindingMatches(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.ReceiptBindingMatches(
 				"basin-1", "clone-2", "tx-1", "Kavvat", "Kavvat", "Kavvat",
 				KingdomFoundingKind.FirstCity), "deep copy cannot spend copied receipt");
-			Assert.IsFalse(KingdomFoundingTransactionRules.ReceiptBindingMatches(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.ReceiptBindingMatches(
 				"basin-1", "basin-1", "", "Kavvat", "Kavvat", "Kavvat",
 				KingdomFoundingKind.FirstCity), "transaction id required");
-			Assert.IsFalse(KingdomFoundingTransactionRules.ReceiptBindingMatches(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.ReceiptBindingMatches(
 				"basin-1", "basin-1", "tx-1", "Other", "Kavvat", null,
 				KingdomFoundingKind.FirstCity), "first intent is its realm binding");
-			Assert.IsFalse(KingdomFoundingTransactionRules.ReceiptBindingMatches(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.ReceiptBindingMatches(
 				"basin-1", "basin-1", "tx-1", "Kavvat", "Sheol", "Other",
 				KingdomFoundingKind.SecondCity), "later rites bind live realm");
 		}
@@ -321,31 +322,31 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void LaterRecoveryUsesEitherOpenSlotWithoutReplacingUnrelatedCities()
 		{
-			Assert.IsTrue(KingdomFoundingTransactionRules.SecondRecoveryCanProject(
+			ClassicAssert.IsTrue(KingdomFoundingTransactionRules.SecondRecoveryCanProject(
 				1, 3, HasOpenNonSeatSlot: true, TargetIsExactSeat: false,
 				AlreadyPublished: false));
-			Assert.IsTrue(KingdomFoundingTransactionRules.SecondRecoveryCanProject(
+			ClassicAssert.IsTrue(KingdomFoundingTransactionRules.SecondRecoveryCanProject(
 				2, 3, HasOpenNonSeatSlot: true, TargetIsExactSeat: false,
 				AlreadyPublished: false), "third city may use second open non-seat slot");
-			Assert.IsTrue(KingdomFoundingTransactionRules.SecondRecoveryCanProject(
+			ClassicAssert.IsTrue(KingdomFoundingTransactionRules.SecondRecoveryCanProject(
 				2, 3, HasOpenNonSeatSlot: true, TargetIsExactSeat: true,
 				AlreadyPublished: true));
-			Assert.IsTrue(KingdomFoundingTransactionRules.SecondRecoveryCanProject(
+			ClassicAssert.IsTrue(KingdomFoundingTransactionRules.SecondRecoveryCanProject(
 				3, 3, HasOpenNonSeatSlot: false, TargetIsExactSeat: false,
 				TargetIsExactNonSeat: true, AlreadyPublished: true),
 				"exact transaction city may recover from either non-seat row");
 
-			Assert.IsFalse(KingdomFoundingTransactionRules.SecondRecoveryCanProject(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.SecondRecoveryCanProject(
 				3, 3, HasOpenNonSeatSlot: false, TargetIsExactSeat: false,
 				AlreadyPublished: false), "full realm blocks new publication");
-			Assert.IsFalse(KingdomFoundingTransactionRules.SecondRecoveryCanProject(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.SecondRecoveryCanProject(
 				2, 3, HasOpenNonSeatSlot: true, TargetIsExactSeat: false,
 				TargetIsExactNonSeat: false, AlreadyPublished: true),
 				"unrelated city blocks published receipt");
-			Assert.IsFalse(KingdomFoundingTransactionRules.SecondRecoveryCanProject(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.SecondRecoveryCanProject(
 				3, 3, HasOpenNonSeatSlot: true, TargetIsExactSeat: true,
 				AlreadyPublished: true), "room flag must agree with bounded count");
-			Assert.IsFalse(KingdomFoundingTransactionRules.SecondRecoveryCanProject(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.SecondRecoveryCanProject(
 				4, 3, HasOpenNonSeatSlot: false, TargetIsExactSeat: true,
 				AlreadyPublished: true), "over-cap state is never trusted");
 		}
@@ -353,25 +354,25 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RawReceiptParserRejectsMissingUnknownAndFalseCleanHeaders()
 		{
-			Assert.AreEqual(KingdomFoundingReceiptNormalization.Clean,
+			ClassicAssert.AreEqual(KingdomFoundingReceiptNormalization.Clean,
 				KingdomFoundingTransactionRules.NormalizeRaw(false, 0, false, 0,
 					AnyPayloadPresent: false));
-			Assert.AreEqual(KingdomFoundingReceiptNormalization.Quarantine,
+			ClassicAssert.AreEqual(KingdomFoundingReceiptNormalization.Quarantine,
 				KingdomFoundingTransactionRules.NormalizeRaw(false, 0, false, 0,
 					AnyPayloadPresent: true));
-			Assert.AreEqual(KingdomFoundingReceiptNormalization.Quarantine,
+			ClassicAssert.AreEqual(KingdomFoundingReceiptNormalization.Quarantine,
 				KingdomFoundingTransactionRules.NormalizeRaw(true, 1, false, 0,
 					AnyPayloadPresent: true));
-			Assert.AreEqual(KingdomFoundingReceiptNormalization.Quarantine,
+			ClassicAssert.AreEqual(KingdomFoundingReceiptNormalization.Quarantine,
 				KingdomFoundingTransactionRules.NormalizeRaw(true, 99, true, 1,
 					AnyPayloadPresent: true));
-			Assert.AreEqual(KingdomFoundingReceiptNormalization.Quarantine,
+			ClassicAssert.AreEqual(KingdomFoundingReceiptNormalization.Quarantine,
 				KingdomFoundingTransactionRules.NormalizeRaw(true, 1, true, 99,
 					AnyPayloadPresent: true));
-			Assert.AreEqual(KingdomFoundingReceiptNormalization.Quarantine,
+			ClassicAssert.AreEqual(KingdomFoundingReceiptNormalization.Quarantine,
 				KingdomFoundingTransactionRules.NormalizeRaw(true, 0, true, 0,
 					AnyPayloadPresent: true));
-			Assert.AreEqual(KingdomFoundingReceiptNormalization.Pending,
+			ClassicAssert.AreEqual(KingdomFoundingReceiptNormalization.Pending,
 				KingdomFoundingTransactionRules.NormalizeRaw(true, 2, true, 4,
 					AnyPayloadPresent: true), "Complete remains paid until observed");
 		}
@@ -379,67 +380,67 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void OnlyNamedEnumValuesAreAccepted()
 		{
-			Assert.IsFalse(KingdomFoundingTransactionRules.IsKnownKind(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.IsKnownKind(
 				(KingdomFoundingKind)255));
-			Assert.IsFalse(KingdomFoundingTransactionRules.IsKnownKind(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.IsKnownKind(
 				(KingdomFoundingKind)4));
-			Assert.IsFalse(KingdomFoundingTransactionRules.IsKnownPhase(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.IsKnownPhase(
 				(KingdomFoundingPhase)255));
-			Assert.IsFalse(KingdomFoundingTransactionRules.IsKnownPhase(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.IsKnownPhase(
 				(KingdomFoundingPhase)5));
-			Assert.IsFalse(KingdomFoundingTransactionRules.IsKnownOwnerKind(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.IsKnownOwnerKind(
 				(KingdomFoundingOwnerKind)3));
-			Assert.IsFalse(KingdomFoundingTransactionRules.IsKnownChronicleDisposition(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.IsKnownChronicleDisposition(
 				(KingdomChronicleDisposition)255));
 		}
 
 		[Test]
 		public void ChronicleDispositionFreezesOptionalJournalOutcome()
 		{
-			Assert.IsTrue(KingdomFoundingTransactionRules.ChronicleDispositionValid(
+			ClassicAssert.IsTrue(KingdomFoundingTransactionRules.ChronicleDispositionValid(
 				0, KingdomChronicleDisposition.None, 0));
-			Assert.IsTrue(KingdomFoundingTransactionRules.ChronicleDispositionValid(
+			ClassicAssert.IsTrue(KingdomFoundingTransactionRules.ChronicleDispositionValid(
 				1, KingdomChronicleDisposition.Required, 0));
-			Assert.IsTrue(KingdomFoundingTransactionRules.ChronicleDispositionValid(
+			ClassicAssert.IsTrue(KingdomFoundingTransactionRules.ChronicleDispositionValid(
 				1, KingdomChronicleDisposition.Required, 1));
-			Assert.IsTrue(KingdomFoundingTransactionRules.ChronicleDispositionValid(
+			ClassicAssert.IsTrue(KingdomFoundingTransactionRules.ChronicleDispositionValid(
 				2, KingdomChronicleDisposition.Inserted, 1));
-			Assert.IsTrue(KingdomFoundingTransactionRules.ChronicleDispositionValid(
+			ClassicAssert.IsTrue(KingdomFoundingTransactionRules.ChronicleDispositionValid(
 				2, KingdomChronicleDisposition.Skipped, 0));
-			Assert.IsFalse(KingdomFoundingTransactionRules.ChronicleDispositionValid(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.ChronicleDispositionValid(
 				2, KingdomChronicleDisposition.None, 0));
-			Assert.IsFalse(KingdomFoundingTransactionRules.ChronicleDispositionValid(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.ChronicleDispositionValid(
 				2, KingdomChronicleDisposition.Required, 1));
-			Assert.IsFalse(KingdomFoundingTransactionRules.ChronicleDispositionValid(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.ChronicleDispositionValid(
 				2, KingdomChronicleDisposition.Skipped, 1));
 		}
 
 		[Test]
 		public void LegacyChronicleMigrationIsConservativeAndTerminalOnceWritten()
 		{
-			Assert.IsTrue(KingdomFoundingTransactionRules.TryMigrateChronicleDisposition(
+			ClassicAssert.IsTrue(KingdomFoundingTransactionRules.TryMigrateChronicleDisposition(
 				2, RawPresent: false, Raw: 0, AccomplishmentCount: 1,
 				ChronicleOptionIsNo: false, out var inserted, out var writeInserted));
-			Assert.AreEqual(KingdomChronicleDisposition.Inserted, inserted);
-			Assert.IsTrue(writeInserted);
+			ClassicAssert.AreEqual(KingdomChronicleDisposition.Inserted, inserted);
+			ClassicAssert.IsTrue(writeInserted);
 
-			Assert.IsTrue(KingdomFoundingTransactionRules.TryMigrateChronicleDisposition(
+			ClassicAssert.IsTrue(KingdomFoundingTransactionRules.TryMigrateChronicleDisposition(
 				2, RawPresent: false, Raw: 0, AccomplishmentCount: 0,
 				ChronicleOptionIsNo: true, out var skipped, out var writeSkipped));
-			Assert.AreEqual(KingdomChronicleDisposition.Skipped, skipped);
-			Assert.IsTrue(writeSkipped);
-			Assert.IsFalse(KingdomFoundingTransactionRules.TryMigrateChronicleDisposition(
+			ClassicAssert.AreEqual(KingdomChronicleDisposition.Skipped, skipped);
+			ClassicAssert.IsTrue(writeSkipped);
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.TryMigrateChronicleDisposition(
 				2, RawPresent: false, Raw: 0, AccomplishmentCount: 0,
 				ChronicleOptionIsNo: false, out var _, out var _),
 				"an option change cannot invent the old decision");
 
-			Assert.IsTrue(KingdomFoundingTransactionRules.TryMigrateChronicleDisposition(
+			ClassicAssert.IsTrue(KingdomFoundingTransactionRules.TryMigrateChronicleDisposition(
 				2, RawPresent: true, Raw: (int)KingdomChronicleDisposition.Skipped,
 				AccomplishmentCount: 0, ChronicleOptionIsNo: false,
 				out var persisted, out var rewrite));
-			Assert.AreEqual(KingdomChronicleDisposition.Skipped, persisted,
+			ClassicAssert.AreEqual(KingdomChronicleDisposition.Skipped, persisted,
 				"persisted option-No disposition stays valid after option becomes Yes");
-			Assert.IsFalse(rewrite);
+			ClassicAssert.IsFalse(rewrite);
 		}
 
 		[Test]
@@ -448,10 +449,10 @@ namespace ThousandAndFirst.Tests
 			KingdomFoundingAuthority authority = Authority("0123456789abcdef0123456789abcdef",
 				"fedcba9876543210fedcba9876543210", "Kavvat", "JoppaWorld.1.1.1.1.10");
 			string encoded = KingdomFoundingTransactionRules.FormatAuthority(authority);
-			Assert.IsNotNull(encoded);
-			Assert.IsTrue(KingdomFoundingTransactionRules.TryParseAuthority(encoded,
+			ClassicAssert.IsNotNull(encoded);
+			ClassicAssert.IsTrue(KingdomFoundingTransactionRules.TryParseAuthority(encoded,
 				out var parsed));
-			Assert.AreEqual(encoded,
+			ClassicAssert.AreEqual(encoded,
 				KingdomFoundingTransactionRules.FormatAuthority(parsed));
 
 			KingdomFoundingAuthority[] foreign = new KingdomFoundingAuthority[]
@@ -468,16 +469,16 @@ namespace ThousandAndFirst.Tests
 			};
 			foreach (KingdomFoundingAuthority other in foreign)
 			{
-				Assert.IsFalse(KingdomFoundingTransactionRules.AuthorityMatches(
+				ClassicAssert.IsFalse(KingdomFoundingTransactionRules.AuthorityMatches(
 					encoded, other));
 			}
 			KingdomFoundingAuthority differentRite = authority;
 			differentRite.RiteX++;
-			Assert.IsFalse(KingdomFoundingTransactionRules.AuthorityMatches(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.AuthorityMatches(
 				encoded, differentRite));
 			KingdomFoundingAuthority differentDigest = authority;
 			differentDigest.PayloadDigest = new string('b', 64);
-			Assert.IsFalse(KingdomFoundingTransactionRules.AuthorityMatches(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.AuthorityMatches(
 				encoded, differentDigest));
 		}
 
@@ -487,17 +488,17 @@ namespace ThousandAndFirst.Tests
 			KingdomFoundingAuthority authority = Authority("0123456789abcdef0123456789abcdef",
 				"fedcba9876543210fedcba9876543210", "Kavvat", "zone");
 			string encoded = KingdomFoundingTransactionRules.FormatAuthority(authority);
-			Assert.IsFalse(KingdomFoundingTransactionRules.TryParseAuthority(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.TryParseAuthority(
 				encoded + "|extra", out var _));
-			Assert.IsFalse(KingdomFoundingTransactionRules.TryParseAuthority(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.TryParseAuthority(
 				encoded.Replace("taf-founding-v1", "taf-founding-v2"), out var _));
 			authority.RiteX = -1;
-			Assert.IsNull(KingdomFoundingTransactionRules.FormatAuthority(authority));
+			ClassicAssert.IsNull(KingdomFoundingTransactionRules.FormatAuthority(authority));
 			authority.RiteX = 256;
-			Assert.IsNull(KingdomFoundingTransactionRules.FormatAuthority(authority));
+			ClassicAssert.IsNull(KingdomFoundingTransactionRules.FormatAuthority(authority));
 			authority.RiteX = 1;
 			authority.OwnerKind = (KingdomFoundingOwnerKind)99;
-			Assert.IsNull(KingdomFoundingTransactionRules.FormatAuthority(authority));
+			ClassicAssert.IsNull(KingdomFoundingTransactionRules.FormatAuthority(authority));
 		}
 
 		[Test]
@@ -512,37 +513,37 @@ namespace ThousandAndFirst.Tests
 			string digest = KingdomFoundingTransactionRules.VillageStandingEffectDigest(
 				transaction, encoded, "village-faction", "the village", zone,
 				599, 99, 600, 0);
-			Assert.IsNotNull(digest);
-			Assert.AreEqual(digest,
+			ClassicAssert.IsNotNull(digest);
+			ClassicAssert.AreEqual(digest,
 				KingdomFoundingTransactionRules.VillageStandingEffectDigest(
 					transaction, encoded, "village-faction", "the village", zone,
 					599, 99, 600, 0), "canonical input is deterministic");
-			Assert.AreNotEqual(digest,
+			ClassicAssert.AreNotEqual(digest,
 				KingdomFoundingTransactionRules.VillageStandingEffectDigest(
 					transaction, encoded, "other-faction", "the village", zone,
 					599, 99, 600, 0), "faction is receipt-bound");
-			Assert.AreNotEqual(digest,
+			ClassicAssert.AreNotEqual(digest,
 				KingdomFoundingTransactionRules.VillageStandingEffectDigest(
 					transaction, encoded, "village-faction", "other display", zone,
 					599, 99, 600, 0), "display is receipt-bound");
-			Assert.IsNull(KingdomFoundingTransactionRules.VillageStandingEffectDigest(
+			ClassicAssert.IsNull(KingdomFoundingTransactionRules.VillageStandingEffectDigest(
 				transaction, encoded, "village-faction", "the village", zone,
 				600, 0, 600, 0), "preexisting sealed standing is not this transaction's effect");
-			Assert.IsNull(KingdomFoundingTransactionRules.VillageStandingEffectDigest(
+			ClassicAssert.IsNull(KingdomFoundingTransactionRules.VillageStandingEffectDigest(
 				transaction, encoded, "village-faction", "the village", zone,
 				601, 0, 600, 0), "preexisting higher standing is not this transaction's effect");
-			Assert.IsNull(KingdomFoundingTransactionRules.VillageStandingEffectDigest(
+			ClassicAssert.IsNull(KingdomFoundingTransactionRules.VillageStandingEffectDigest(
 				transaction, encoded, "village-faction", "the village", zone,
 				599, -1, 600, 0), "noncanonical before pair is refused");
-			Assert.IsNull(KingdomFoundingTransactionRules.VillageStandingEffectDigest(
+			ClassicAssert.IsNull(KingdomFoundingTransactionRules.VillageStandingEffectDigest(
 				transaction, encoded, "village-faction", "the village", zone,
 				599, 99, 600, 1), "after pair must be exact whole standing");
-			Assert.IsNull(KingdomFoundingTransactionRules.VillageStandingEffectDigest(
+			ClassicAssert.IsNull(KingdomFoundingTransactionRules.VillageStandingEffectDigest(
 				transaction, encoded, "village-faction", "the village", zone,
 				599, 99, 601, 0), "after pair must be the sealed covenant target");
 			KingdomFoundingAuthority wrongKind = authority;
 			wrongKind.Kind = KingdomFoundingKind.SecondCity;
-			Assert.IsNull(KingdomFoundingTransactionRules.VillageStandingEffectDigest(
+			ClassicAssert.IsNull(KingdomFoundingTransactionRules.VillageStandingEffectDigest(
 				transaction, KingdomFoundingTransactionRules.FormatAuthority(wrongKind),
 				"village-faction", "the village", zone, 599, 99, 600, 0));
 		}
@@ -553,16 +554,16 @@ namespace ThousandAndFirst.Tests
 			string transaction = "0123456789abcdef0123456789abcdef";
 			string original = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 			string clone = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
-			Assert.IsTrue(KingdomFoundingTransactionRules.ReceiptBindingMatches(
+			ClassicAssert.IsTrue(KingdomFoundingTransactionRules.ReceiptBindingMatches(
 				original, original, KingdomFoundingOwnerKind.Basin, transaction,
 				"Kavvat", "Kavvat", "Kavvat", KingdomFoundingKind.FirstCity));
-			Assert.IsFalse(KingdomFoundingTransactionRules.ReceiptBindingMatches(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.ReceiptBindingMatches(
 				original, clone, KingdomFoundingOwnerKind.Basin, transaction,
 				"Kavvat", "Kavvat", "Kavvat", KingdomFoundingKind.FirstCity));
-			Assert.IsFalse(KingdomFoundingTransactionRules.ReceiptBindingMatches(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.ReceiptBindingMatches(
 				original, original, KingdomFoundingOwnerKind.Direct, transaction,
 				"Kavvat", "Kavvat", "Kavvat", KingdomFoundingKind.FirstCity));
-			Assert.IsFalse(KingdomFoundingTransactionRules.ReceiptBindingMatches(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.ReceiptBindingMatches(
 				"not-a-nonce", "not-a-nonce", KingdomFoundingOwnerKind.Basin, transaction,
 				"Kavvat", "Kavvat", "Kavvat", KingdomFoundingKind.FirstCity));
 		}
@@ -570,13 +571,13 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ComponentParserRejectsNoncanonicalCorruptAndOversizedPayloads()
 		{
-			Assert.IsTrue(KingdomFoundingTransactionRules.TryDecodeComponents(
+			ClassicAssert.IsTrue(KingdomFoundingTransactionRules.TryDecodeComponents(
 				"d2F0ZXI=:1000", out var water));
-			Assert.IsTrue(KingdomFoundingTransactionRules.ComponentsDescribePureWater(
+			ClassicAssert.IsTrue(KingdomFoundingTransactionRules.ComponentsDescribePureWater(
 				water, 8));
-			Assert.IsTrue(KingdomFoundingTransactionRules.TryDecodeComponents("",
+			ClassicAssert.IsTrue(KingdomFoundingTransactionRules.TryDecodeComponents("",
 				out var empty));
-			Assert.IsTrue(KingdomFoundingTransactionRules.ComponentsDescribePureWater(
+			ClassicAssert.IsTrue(KingdomFoundingTransactionRules.ComponentsDescribePureWater(
 				empty, 0));
 			string[] malformed = new string[]
 			{
@@ -586,10 +587,10 @@ namespace ThousandAndFirst.Tests
 			};
 			foreach (string encoded in malformed)
 			{
-				Assert.IsFalse(KingdomFoundingTransactionRules.TryDecodeComponents(
+				ClassicAssert.IsFalse(KingdomFoundingTransactionRules.TryDecodeComponents(
 					encoded, out var _), encoded);
 			}
-			Assert.IsFalse(KingdomFoundingTransactionRules.TryDecodeComponents(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.TryDecodeComponents(
 				new string('x', KingdomFoundingTransactionRules.MaximumComponentEncodingLength + 1),
 				out var _));
 		}
@@ -597,17 +598,17 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void WaterAlgebraRejectsEveryCorruptAxis()
 		{
-			Assert.IsTrue(KingdomFoundingTransactionRules.WaterAlgebraValid(
+			ClassicAssert.IsTrue(KingdomFoundingTransactionRules.WaterAlgebraValid(
 				16, 20, 8, 20, 8, true, true));
-			Assert.IsFalse(KingdomFoundingTransactionRules.WaterAlgebraValid(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.WaterAlgebraValid(
 				15, 20, 8, 20, 8, true, true), "wrong debit");
-			Assert.IsFalse(KingdomFoundingTransactionRules.WaterAlgebraValid(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.WaterAlgebraValid(
 				16, 15, 8, 15, 8, true, true), "volume exceeds max");
-			Assert.IsFalse(KingdomFoundingTransactionRules.WaterAlgebraValid(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.WaterAlgebraValid(
 				16, 20, 8, 21, 8, true, true), "max changed");
-			Assert.IsFalse(KingdomFoundingTransactionRules.WaterAlgebraValid(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.WaterAlgebraValid(
 				16, 20, 8, 20, 8, false, true), "original mixture");
-			Assert.IsFalse(KingdomFoundingTransactionRules.WaterAlgebraValid(
+			ClassicAssert.IsFalse(KingdomFoundingTransactionRules.WaterAlgebraValid(
 				16, 20, 8, 20, 8, true, false), "committed mixture");
 		}
 
@@ -619,7 +620,7 @@ namespace ThousandAndFirst.Tests
 			{
 				if (phase == KingdomFoundingPhase.RecoveryRequired)
 				{
-					Assert.AreEqual(KingdomFoundingReceiptNormalization.Quarantine,
+					ClassicAssert.AreEqual(KingdomFoundingReceiptNormalization.Quarantine,
 						KingdomFoundingTransactionRules.ValidatePhaseState(phase,
 							PayloadValid: true, CurrentMatchesOriginal: false,
 							CurrentMatchesCommitted: true, CompletionObserved: false));
@@ -631,19 +632,19 @@ namespace ThousandAndFirst.Tests
 					: completion
 						? KingdomFoundingReceiptNormalization.ClearStaged
 						: KingdomFoundingReceiptNormalization.Pending;
-				Assert.AreEqual(expected,
+				ClassicAssert.AreEqual(expected,
 					KingdomFoundingTransactionRules.ValidatePhaseState(phase,
 						PayloadValid: true,
 						CurrentMatchesOriginal: phase == KingdomFoundingPhase.None,
 						CurrentMatchesCommitted: phase != KingdomFoundingPhase.None,
 						CompletionObserved: completion), phase.ToString());
 			}
-			Assert.AreEqual(KingdomFoundingReceiptNormalization.Quarantine,
+			ClassicAssert.AreEqual(KingdomFoundingReceiptNormalization.Quarantine,
 				KingdomFoundingTransactionRules.ValidatePhaseState(
 					KingdomFoundingPhase.Complete, PayloadValid: true,
 					CurrentMatchesOriginal: false, CurrentMatchesCommitted: true,
 					CompletionObserved: false), "a false Complete cannot clear");
-			Assert.AreEqual(KingdomFoundingReceiptNormalization.Quarantine,
+			ClassicAssert.AreEqual(KingdomFoundingReceiptNormalization.Quarantine,
 				KingdomFoundingTransactionRules.ValidatePhaseState(
 					KingdomFoundingPhase.PublicationCommitted, PayloadValid: false,
 					CurrentMatchesOriginal: false, CurrentMatchesCommitted: true,

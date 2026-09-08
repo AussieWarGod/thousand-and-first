@@ -2,6 +2,7 @@
 using System;
 
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -44,11 +45,11 @@ namespace ThousandAndFirst.Tests
 		public void DeclarationsAndConstantsHaveOneOwner()
 		{
 			string source = KingdomCentralLogisticsLogicalSource.Read();
-			Assert.AreEqual(1, Count(source, "internal readonly struct KingdomManifestTripView"));
-			Assert.AreEqual(1, Count(source, "internal readonly struct KingdomManifestReservation"));
-			Assert.AreEqual(17, Count(source, "internal static partial class KingdomCentralLogistics"));
-			Assert.AreEqual(1, Count(source, "TargetReceiptProperty = \"KingdomDeliveryReceipt\""));
-			Assert.AreEqual(1, Count(source, "FoodReceiptJobProperty = \"KingdomDeliveryReceiptJob\""));
+			ClassicAssert.AreEqual(1, Count(source, "internal readonly struct KingdomManifestTripView"));
+			ClassicAssert.AreEqual(1, Count(source, "internal readonly struct KingdomManifestReservation"));
+			ClassicAssert.AreEqual(17, Count(source, "internal static partial class KingdomCentralLogistics"));
+			ClassicAssert.AreEqual(1, Count(source, "TargetReceiptProperty = \"KingdomDeliveryReceipt\""));
+			ClassicAssert.AreEqual(1, Count(source, "FoodReceiptJobProperty = \"KingdomDeliveryReceiptJob\""));
 			StringAssert.DoesNotContain("internal static class KingdomCentralLogistics", source);
 		}
 
@@ -72,7 +73,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < markers.Length; i++)
 			{
 				int next = source.IndexOf(markers[i], position + 1, StringComparison.Ordinal);
-				Assert.Greater(next, position, markers[i]);
+				ClassicAssert.Greater(next, position, markers[i]);
 				position = next;
 			}
 		}
