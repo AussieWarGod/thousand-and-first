@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using ConsoleLib.Console;
 using XRL.Core;
 using XRL.UI;
@@ -25,9 +25,13 @@ namespace XRL.World.ZoneParts
 	/// its own second pass, the founder's visibility reckoning and the wizard whole-map toggle
 	/// have all run (:2507-2518). The restore only ever closes cells the projection
 	/// itself opened, so every predicate that reads <c>Cell.IsVisible()</c> &mdash; reify
-	/// ordering, death witness, hostile perception, rest, autoexplore, targeting, Look &mdash;
+	/// ordering, death witness, hostile perception, rest, autoexplore, Look &mdash;
 	/// still runs on ordinary line of sight, and no sight another hand granted or took away is
-	/// written over. Light stays at 200, which is none of the six tiers the Invisibility mutation
+	/// written over. Targeting is the one place where the drawn frame is felt: <c>Cell.Render</c>
+	/// sets <c>XRLCore.CludgeTargetRendered</c> for a drawn sidebar target
+	/// (D/XRL/World/Cell.cs:642), and the engine's lost-sight drop (D/XRL/Core/XRLCore.cs:2533)
+	/// gates on that flag before it asks <c>IsVisible()</c> at all, so a creature already locked
+	/// keeps its lock while it is drawn through a wall. The shipped option text says so. Light stays at 200, which is none of the six tiers the Invisibility mutation
 	/// reveals at (Darkvision 10, Dimvision 15, Interpolight 210, Radar 228, LitRadar 232,
 	/// Omniscient 255), so invisible creatures stay invisible.
 	/// </summary>
@@ -148,29 +152,25 @@ namespace XRL.World.ZoneParts
 			// Only where the founder actually is, and asked the same O(1) way as the light asks it
 			// (Zone.HasObject is Object.CurrentZone == this, D/XRL/World/Zone.cs:3365-3368).
 			if (!ParentZone.HasObject(The.Player)) return;
-			Cell cell = The.Player.CurrentCell;
-			if (cell == null) return;
-			// The map is read before the sweep, because Zone.AddVisibility dereferences it on its
-			// first line (SetVisibility -> VisibilityMap[x + y * Width], D/XRL/World/Zone.cs:5086
-			// and 4463-4470), so a guard placed after it would guard nothing.
+			// The honest map, exactly as the frame about to be drawn left it, and no reckoning of
+			// this mod's own. The engine has already made the founder's at D/XRL/Core/XRLCore.cs
+			// :2511-2512, which it reaches before the Render this projection hangs off (:2524), and
+			// nothing between them touches either map: the wizard toggle at :2514-2518 is the only
+			// statement in the gap, and this stands down when it is on. Repeating the same centre
+			// and radius could not open one further cell &mdash; Zone.AddVisibility only ever opens
+			// and never closes (D/XRL/World/Zone.cs:5084-5100) &mdash; and it is not free: the
+			// default visibility radius is 80 (GetVisibilityRadius, D/XRL/World/GameObject.cs
+			// :17869-17876) against an 80x25 zone, and pass 1 has just lit every cell
+			// to 200, so the GetLight(i, j) > 1 term prunes nothing and every wall interior pays a
+			// fresh line-of-sight walk on the render thread, every frame, in the walled city this
+			// is for. The seat is what makes the snapshot honest, not a sweep: the draw comes behind
+			// the whole render dispatch, so the light Blackout REMOVES in the engine's own second
+			// pass (D/XRL/World/Parts/Blackout.cs:47-67) is already gone, and the founder's
+			// reckoning was made over what remained. Only zones this seat claims ever carry this
+			// part (KingdomClaimedGround.ReconcileZone), so no branch reaches here having skipped
+			// that reckoning.
 			bool[] live = ParentZone.VisibilityMap;
 			if (live == null) return;
-			// The founder's own reckoning, repeated. The engine makes it for itself at
-			// D/XRL/Core/XRLCore.cs:2511-2512, which it reaches before the Render this projection
-			// hangs off (:2524), so on that path this adds nothing new: AddVisibility only ever
-			// OPENS cells and never closes one (D/XRL/World/Zone.cs:5084-5100), and the same
-			// centre and radius twice is the same set. It is kept because the snapshot must not
-			// depend on which branch reached the draw &mdash; the world-map branch
-			// (D/XRL/Core/XRLCore.cs:2469-2479) draws with no such reckoning at all &mdash; and
-			// because it is the line that states what the honest map is. It reads the light map on
-			// its way: a cell further off than a neighbour is only opened where
-			// GetLight(i, j) > 1, which is why this runs at the draw and not inside the dispatch.
-			// Blackout REMOVES light from the engine's own second pass
-			// (D/XRL/World/Parts/Blackout.cs:47-67), and it hangs on an object, so it is queued
-			// behind every zone part (D/XRL/World/Zone.cs:7632-7677): a snapshot taken from a zone
-			// part's turn in that pass would answer with light a Blackout was about to take away,
-			// and the subtractive restore would keep those cells open into the turn that follows.
-			ParentZone.AddVisibility(cell.X, cell.Y, The.Player.GetVisibilityRadius());
 			HonestVisibility = (bool[])live.Clone();
 			ProjectedZone = ParentZone;
 			ParentZone.VisAll();

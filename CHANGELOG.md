@@ -49,12 +49,44 @@ below it.
   the ground rather than trusting the branch that ran, so it never promises one. The reservation on
   a staked lot remains an owned object property registered in the removal-coverage allowlist.
   Ordinary founding is untouched. Public 0.3.1 is unchanged.
+- Inside a zone your seat claims you now see every citizen and what they are doing, walls or
+  no walls. This is the eye only: the rules, rest, autoexplore and Look still use ordinary line
+  of sight, and invisible creatures stay invisible at every one of the six light tiers that
+  would reveal them (Darkvision 10, Dimvision 15, Interpolight 210, Radar 228, LitRadar 232,
+  Omniscient 255) — the claimed ground is lit to 200, which is none of them. Three honest
+  oddities follow: a creature you are already targeting through a wall keeps its lock and never
+  triggers "you have lost sight of", you hear what is drawn, and Look will refuse a cell you can
+  plainly see. The shipped option text names the retained lock rather than claiming targeting is
+  untouched. Creatures you see this way count as seen, so they register in the bestiary — and
+  `Seen()` also records the blueprint and registers a `Worshippable`-tagged object with the
+  factions, which is the one place a drawing-only projection writes state that outlives the
+  frame. New option `r_TAF_OptionCitySight`, default Yes; switching it off closes the walls on
+  the next frame. Existing saves need nothing: the projection is one frame of drawing state,
+  never persisted, and a save made while it is on loads identically with it off.
+- The projection is taken from a flag armed by a Harmony prefix on
+  `XRLCore.RenderBaseToBuffer` and spent by a prefix on `Zone.Render(ScreenBuffer)`, so it lands
+  behind every native light and visibility contributor and makes no visibility reckoning of its
+  own — the engine has already made the founder's before the draw, so repeating it could open no
+  further cell while costing a whole-zone line-of-sight sweep on the render thread every frame.
+  A Harmony finalizer on the same method closes the projection on every exit from the draw,
+  including a thrown one, and the prefix body is wrapped like every other Harmony body here.
+- City sight adds 6 source-contract cases: the one-drawn-frame projection shape (the
+  non-rendering-frame early return ordered before the whole-zone reveal, the honest snapshot
+  taken before it and with no reckoning of its own, one after-render restore, no explored-map
+  write, all six invisibility tiers named), the two backstops (an outstanding projection dropped
+  at the head of the next frame, restored ahead of every gate at end of turn), the render seam
+  and its Zone.Render seat, the draw-scope finalizer that closes a thrown frame, a render model, run rather than read, that fails if the projection moves back inside the dispatch behind a `Blackout`, and a
+  repo-wide sweep asserting the crashing patch target (`BeforeRenderEvent.Send`) appears in no
+  staged source. Suites pass 13,910 main and 5,199 Portable cases, zero skips; 615 tooling tests
+  pass. The staged baseline (3,051 sources) and compatibility (3,055 sources) compile modes were
+  re-run clean with warnings-as-errors on these bytes, along with both dev-harness overlay
+  modes.
 
 > **Current unreleased census — exact structural gate passed.** Current 3055-file census is line-cap green:
-> 432,929 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> 432,941 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1420 files, 0 of them over the line limit. Inventory SHA-256:
-> `775a00449c261509328411b494bf6190218d462b130223d6ad0766a6ac8d8b16`.
+> `6cf0107a0f3a919282aea20237c25dec63be268ab27fd1836a696b4a40d979c1`.
 > The generated cold-install inventory contains 3086 files; no new subscription claim.
 > The city-sight delta over the merged `dev` tent-row census is two added and two modified
 > production sources: the render-scope finalizer and the render seam that owns the projection are
@@ -62,7 +94,7 @@ below it.
 > modifications. All four compile modes are clean on Linux with the SDK Roslyn against the
 > installed managed assemblies rather than through `Tools/gate.sh`: staged baseline (3051 sources),
 > staged compatibility (3055), dev-harness baseline (3205) and dev-harness compatibility (3209).
-> Both engine-free suites run green there (13,909 main/5,198
+> Both engine-free suites run green there (13,910 main/5,199
 > Portable,zero skips) and the repository audit passes.
 > NOT run for it: the installed-Hearthpyre source step, the
 > Windows gate, the developer boot matrix and any native in-game run. The 1,700-tick raising figure
@@ -70,20 +102,6 @@ below it.
 > review is open against this digest; this is not Beta sign-off.
 
 ## Unreleased — empty-camp legacy correction
-
-### Added
-
-- Inside a zone your seat claims you now see every citizen and what they are doing, walls or
-  no walls. This is the eye only: the rules, rest, targeting and Look still use ordinary line
-  of sight, and invisible creatures stay invisible at every one of the six light tiers that
-  would reveal them (Darkvision 10, Dimvision 15, Interpolight 210, Radar 228, LitRadar 232,
-  Omniscient 255) — the claimed ground is lit to 200, which is none of them. Three honest
-  oddities follow: a creature you are targeting through a wall never triggers "you have lost
-  sight of", you hear what is drawn, and Look will refuse a cell you can plainly see.
-  Creatures you see this way count as seen, so they register in the bestiary. New option
-  `r_TAF_OptionCitySight`, default Yes; switching it off closes the walls on the next frame.
-  Existing saves need nothing: the projection is one frame of drawing state, never persisted,
-  and a save made while it is on loads identically with it off.
 
 ### Fixed
 
@@ -129,14 +147,6 @@ below it.
 - Full suites pass 13,826 main and 5,116 Portable cases, zero skips, up from 13,735 and
   5,109 on the `dev` integration branch. 501 tooling tests pass. The four-mode compile
   gate passed the pre-merge bytes and was not re-run for the merged tree.
-- City sight adds 2 source-contract cases: the one-drawn-frame projection shape (the
-  non-rendering-frame early return ordered before the whole-zone reveal, the honest snapshot
-  taken before it, one after-render restore, no explored-map write, all six invisibility
-  tiers named) and the two backstops (an outstanding projection dropped at the head of the
-  next frame, restored ahead of every gate at end of turn). Suites pass 13,828 main and
-  5,118 Portable cases, zero skips; 522 tooling tests pass. The staged baseline (3,048
-  sources) and compatibility (3,052 sources) compile modes were re-run clean with
-  warnings-as-errors on these bytes; the dev-harness overlay profile was not re-run.
 - Tools: the smoke launcher accepts every seal schema the game reads (4..6) and the full
   legacy store layout; it previously refused progressed profiles. Maintainer tooling only,
   with no player-visible or runtime effect.

@@ -3,8 +3,8 @@
 ## Current city-sight census over the Kingdom Quickstart tent rows — 2026-09-08
 
 3055 production C# files;3,086 cold-install files in the generated inventory;
-432,929 physical lines,1420 direct-XRL,zero cap failures. Exact digest
-`775a00449c261509328411b494bf6190218d462b130223d6ad0766a6ac8d8b16`.
+432,941 physical lines,1420 direct-XRL,zero cap failures. Exact digest
+`6cf0107a0f3a919282aea20237c25dec63be268ab27fd1836a696b4a40d979c1`.
 The quickstart bootstrap stakes two receiptless `tentrow` lots between the founding proof and the
 receipt's first advance, one search per lot before either is staked; nothing here stamps
 completion. On top of that, city sight's projection is taken at the engine's own `Zone.Render`

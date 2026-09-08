@@ -2,8 +2,8 @@
 
 ## Current unreleased city sight over the Kingdom Quickstart tent rows
 
-3055 staged sources;432,929 physical lines;1420 direct-XRL;zero cap failures;3086 generated
-cold-stage files. Exact inventory `775a00449c261509328411b494bf6190218d462b130223d6ad0766a6ac8d8b16`.
+3055 staged sources;432,941 physical lines;1420 direct-XRL;zero cap failures;3086 generated
+cold-stage files. Exact inventory `6cf0107a0f3a919282aea20237c25dec63be268ab27fd1836a696b4a40d979c1`.
 Quickstart stakes two `tentrow` lots at founding, west of the supply column at (21,9)-(26,12) and
 (21,13)-(26,16); six beds between them, receiptless, free, and never debited. No receipt phase,
 option, grant or verifier change. The receipt wire is versioned: a receipt this version mints
@@ -22,8 +22,8 @@ walk over its own second-pass handler list). Evidence:
 `Tools/PortableOutput/player-claimed-light-native-check*.log` and
 `player-first-guest-native-check*.log`. That seat is now a forbidden string in the source
 contract.
-Structure, doc freshness, architecture and the Tools suite pass; engine-free suites pass13,909
-main/5,198 Portable,zero skips on Linux .NET9.0.306, and Roslyn 9.0.306 on Linux compiles the
+Structure, doc freshness, architecture and the Tools suite pass; engine-free suites pass13,910
+main/5,199 Portable,zero skips on Linux .NET9.0.306, and Roslyn 9.0.306 on Linux compiles the
 staged baseline (3051), compatibility (3055), dev-harness baseline (3205) and dev-harness
 compatibility (3209) sets clean. NOT run:
 the installed-ABI source step, the Windows gate, the developer boot matrix and any native run.

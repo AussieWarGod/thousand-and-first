@@ -2,12 +2,12 @@
 
 ## Current city-sight census over the Kingdom Quickstart tent rows — 2026-09-08
 
-**3055** production C# files,432,929 physical lines,1420 direct-XRL,zero cap failures;
+**3055** production C# files,432,941 physical lines,1420 direct-XRL,zero cap failures;
 3086 generated cold-install files. Exact digest
-`775a00449c261509328411b494bf6190218d462b130223d6ad0766a6ac8d8b16`.
+`6cf0107a0f3a919282aea20237c25dec63be268ab27fd1836a696b4a40d979c1`.
 Two added sources (the render-scope finalizer and the render seam) and two modified over the
 merged tent-row census. Structure, doc freshness, architecture and the Tools suite pass.
-Engine-free suites pass13,909 main/5,198 Portable,zero
+Engine-free suites pass13,910 main/5,199 Portable,zero
 skips on Linux .NET9.0.306, and Roslyn 9.0.306 on Linux compiled all four modes clean: staged
 baseline (3051 sources), staged compatibility (3055), dev-harness baseline (3205) and dev-harness
 compatibility (3209). No native run,

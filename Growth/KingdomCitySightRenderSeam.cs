@@ -109,10 +109,22 @@ namespace ThousandAndFirst
 	[HarmonyPatch(typeof(Zone), nameof(Zone.Render), new Type[] { typeof(ScreenBuffer) })]
 	internal static class KingdomCitySightDrawSeam
 	{
+		// Wrapped the way this mod wraps every other Harmony body (see
+		// KingdomGuestFeastEnteredCellPatch): a presentation projection must not carry a fault out
+		// of a prefix and into the engine's own frame. The arming has already been spent by the
+		// time anything can throw, and KingdomCitySightDrawScope's finalizer closes whatever the
+		// projection had opened, so the caught frame simply draws honestly.
 		private static void Prefix(Zone __instance)
 		{
-			if (!KingdomCitySightRenderSeam.SpendOn(__instance)) return;
-			__instance.GetPart<KingdomClaimedGroundLight>()?.ProjectCitySight();
+			try
+			{
+				if (!KingdomCitySightRenderSeam.SpendOn(__instance)) return;
+				__instance.GetPart<KingdomClaimedGroundLight>()?.ProjectCitySight();
+			}
+			catch (Exception error)
+			{
+				KingdomLog.Log("city sight: projection skipped (" + error.Message + ")");
+			}
 		}
 	}
 }

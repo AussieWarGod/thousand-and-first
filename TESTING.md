@@ -66,8 +66,8 @@ published arrival debt/opportunities, open Prepared/Intent/Proved clock leases, 
 continuation and field-clock evidence; successful results round-trip canonically. Stale
 owners, contradictory unbacked clocks, disabled states and overflow remain tested refusals.
 No fixture callback witness establishes actual physical creation, ordinary play or save/load.
-Current production digest `775a00449c261509328411b494bf6190218d462b130223d6ad0766a6ac8d8b16`
-passes the exact structural gate. For that digest the engine-free suites pass13,909 main/5,198
+Current production digest `6cf0107a0f3a919282aea20237c25dec63be268ab27fd1836a696b4a40d979c1`
+passes the exact structural gate. For that digest the engine-free suites pass13,910 main/5,199
 Portable cases,zero skips, on Linux under the CI-pinned SDK9.0.306. The retained
 `d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0` digest carried13,834 main/5,123
 Portable cases, zero skips. The retained

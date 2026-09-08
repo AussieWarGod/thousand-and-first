@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
@@ -70,13 +71,17 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.Less(part.IndexOf("ParentZone.AddLight(LightLevel.Light)",
 					StringComparison.Ordinal),
 				part.IndexOf("ParentZone.VisAll()", StringComparison.Ordinal),
-				"AddVisibility gates on light, so the ground is lit before the honest map is read");
+				"the engine's own AddVisibility gates on light, so pass 1 lights the ground before "
+					+ "the frame's honest map is read at the draw");
 			ClassicAssert.Less(
 				part.IndexOf("HonestVisibility = (bool[])live.Clone()", StringComparison.Ordinal),
 				part.IndexOf("ParentZone.VisAll()", StringComparison.Ordinal),
 				"the snapshot is the honest map, so it is taken before the zone is opened");
-			StringAssert.Contains(
-				"ParentZone.AddVisibility(cell.X, cell.Y, The.Player.GetVisibilityRadius())", part);
+			StringAssert.DoesNotContain("ParentZone.AddVisibility", part,
+				"the engine already made the founder's reckoning at XRLCore.cs:2511-2512, before the "
+					+ "draw this seat hangs off; repeating the same centre and radius cannot open one "
+					+ "further cell and pays a whole-zone line-of-sight sweep on the render thread "
+					+ "every frame. The snapshot only reads what the frame already decided");
 			ClassicAssert.AreEqual(3,
 				Regex.Matches(part, Regex.Escape("[NonSerialized]")).Count,
 				"every scrap of projection state is frame state, never save state");
@@ -177,6 +182,9 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("ProjectCitySight()", seam);
 			StringAssert.Contains("Blackout", seam,
 				"the seam names the native second-pass contributor it must come back behind");
+			StringAssert.Contains("catch (Exception error)", seam,
+				"a presentation projection may not carry a fault out of a prefix into the engine's "
+					+ "own frame; every other Harmony body in this mod is wrapped the same way");
 			foreach (string forbidden in ForbiddenEverywhere)
 				StringAssert.DoesNotContain(forbidden, seam);
 
@@ -302,6 +310,14 @@ namespace ThousandAndFirst.Tests
 				"<option\\s+ID=\"" + SightOptionId + "\"[^>]+>").Value;
 			StringAssert.Contains("Type=\"Checkbox\"", sight);
 			StringAssert.Contains("Default=\"Yes\"", sight);
+			// The one surface a player reads may not deny what docs/API.md discloses. Cell.Render
+			// sets XRLCore.CludgeTargetRendered for a drawn sidebar target (D/XRL/World/Cell.cs:642),
+			// and the engine's lost-sight drop (D/XRL/Core/XRLCore.cs:2533) gates on that flag before
+			// it asks IsVisible(), so a creature already locked keeps its lock through a wall.
+			ClassicAssert.IsFalse(Regex.IsMatch(sight, "targeting[^\"]*still use"),
+				"the option text may not list targeting among what ordinary sight still governs");
+			StringAssert.Contains("keeps its lock while it is drawn through a wall", sight,
+				"and it must say what does happen instead");
 			StringAssert.Contains(SightOptionId, Source(Path.Combine("docs", "API.md")));
 			StringAssert.Contains(SightOptionId, Source("PLAYTESTING.md"));
 		}
@@ -356,8 +372,10 @@ namespace ThousandAndFirst.Tests
 			// Pass 1, zone parts ahead of objects: the claimed-ground light, LightLevel.Light.
 			for (int i = 0; i < ModelWidth; i++)
 				light[i] = 200;
+			// A seat inside the dispatch has no engine reckoning behind it yet, so it has to make
+			// one for itself &mdash; over pass-1 light, before Blackout has taken any away.
 			if (project && !atTheDraw)
-				honest = ModelProject(light, visible);
+				honest = ModelProject(light, visible, reckonForItself: true);
 			// Blackout's second-pass turn: RemoveLight to LightLevel.Blackout, which is 0 and so
 			// below the > 1 AddVisibility asks for (D/XRL/World/Parts/Blackout.cs:58-65).
 			for (int i = 0; i < ModelWidth; i++)
@@ -366,8 +384,10 @@ namespace ThousandAndFirst.Tests
 					light[i] = 0;
 			// The engine's own player reckoning, which it makes BEFORE the draw the seam sits on.
 			ModelAddVisibility(light, visible);
+			// The shipped seat: the reckoning above is the honest map, and the projection only
+			// reads it (KingdomClaimedGroundLight.ProjectCitySight makes no AddVisibility call).
 			if (project && atTheDraw)
-				honest = ModelProject(light, visible);
+				honest = ModelProject(light, visible, reckonForItself: false);
 			if (honest != null)
 				for (int i = 0; i < ModelWidth; i++)
 					if (!honest[i])
@@ -375,11 +395,15 @@ namespace ThousandAndFirst.Tests
 			return visible;
 		}
 
-		/// <summary>The projection itself: the founder's own reckoning, the snapshot, then the
-		/// zone opened whole (KingdomClaimedGroundLight.ProjectCitySight).</summary>
-		private static bool[] ModelProject(int[] light, bool[] visible)
+		/// <summary>The projection itself: the snapshot, then the zone opened whole
+		/// (KingdomClaimedGroundLight.ProjectCitySight). <paramref name="reckonForItself"/> is the
+		/// seat this mod moved away from: from inside the dispatch the engine's own reckoning has
+		/// not happened yet, so a projection there has to compute one over pre-Blackout light, and
+		/// the subtractive close then leaves the darkened cells open. The shipped seat passes
+		/// false, because the honest map is already sitting there when it reads.</summary>
+		private static bool[] ModelProject(int[] light, bool[] visible, bool reckonForItself)
 		{
-			ModelAddVisibility(light, visible);
+			if (reckonForItself) ModelAddVisibility(light, visible);
 			bool[] honest = (bool[])visible.Clone();
 			for (int i = 0; i < ModelWidth; i++)
 				visible[i] = true;
@@ -402,6 +426,57 @@ namespace ThousandAndFirst.Tests
 			}
 		}
 
+		/// <summary>
+		/// The crashing patch target, swept where the law actually runs. The seat that killed the
+		/// game was a Harmony patch on the render dispatch's static entry: Harmony re-hosted the
+		/// method and the re-hosted copy threw NullReferenceException out of itself on the first
+		/// drawn frame. "Neither the patch target nor that list may appear in a shipped source
+		/// again" is a repo-wide law, so it is enforced repo-wide rather than over the three files
+		/// this fixture happens to name. The scope is Tools/stage.sh's own EXCLUDE_DIRS, read out of
+		/// the script, so one list governs both what ships and what is swept.
+		/// </summary>
+		[Test]
+		public void TheCrashingPatchTargetAppearsInNoStagedSource()
+		{
+			List<string> staged = StagedSources();
+			ClassicAssert.Greater(staged.Count, 100,
+				"the staged tree is too small to be real; the sweep would pass vacuously");
+			foreach (string path in staged)
+			{
+				string source = File.ReadAllText(path);
+				StringAssert.DoesNotContain("BeforeRenderEvent.Send", source, path);
+				StringAssert.DoesNotContain("AfterHandlers", source, path);
+			}
+		}
+
+		/// <summary>Every C# source a cold install would carry: the repository tree minus the
+		/// development-only trees Tools/stage.sh prunes, plus build output, which is not in the
+		/// tree stage.sh walks either.</summary>
+		private static List<string> StagedSources()
+		{
+			Match declared = Regex.Match(Source("Tools/stage.sh"),
+				@"(?m)^EXCLUDE_DIRS=\(([^)]*)\)");
+			ClassicAssert.IsTrue(declared.Success, "Tools/stage.sh no longer declares EXCLUDE_DIRS");
+			HashSet<string> pruned = new HashSet<string>(declared.Groups[1].Value.Split(
+				new[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries),
+				StringComparer.Ordinal);
+			string root = TestMain.RepositoryRoot + Path.DirectorySeparatorChar;
+			List<string> result = new List<string>();
+			foreach (string path in Directory.EnumerateFiles(TestMain.RepositoryRoot, "*.cs",
+				SearchOption.AllDirectories))
+			{
+				string relative = path.Substring(root.Length);
+				string[] segments = relative.Split(Path.DirectorySeparatorChar);
+				if (pruned.Contains(segments[0])) continue;
+				bool built = false;
+				foreach (string segment in segments)
+					if (segment == "obj" || segment == "bin") built = true;
+				if (built) continue;
+				result.Add(path);
+			}
+			return result;
+		}
+
 		/// <summary>What neither file may ever do. <c>SetExplored</c> stays here even though city
 		/// sight opens the visibility map: remembered floor is one-way and is owned by the
 		/// projection's single activation-time reveal, so nothing on the render path writes it.
@@ -411,7 +486,10 @@ namespace ThousandAndFirst.Tests
 		/// it, and the re-hosted copy threw NullReferenceException out of itself on the first
 		/// drawn frame in three of four unattended launches (Send_Patch1, the native dump naming
 		/// the walk over its own second-pass handler list). Neither the patch target nor that list
-		/// may appear in a shipped source again.</summary>
+		/// may appear in a shipped source again &mdash; a law this fixture enforces over every
+		/// staged source in
+		/// <see cref="TheCrashingPatchTargetAppearsInNoStagedSource"/>, not only over the three
+		/// files named here.</summary>
 		private static readonly string[] ForbiddenEverywhere = new string[]
 		{
 			"GetZone(", "LightAll", "LightLevel.Omniscient", "SetExplored",

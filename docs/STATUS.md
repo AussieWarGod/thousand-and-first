@@ -79,12 +79,12 @@ digest. Only a `q2` receipt owes a stake, so a pre-existing `q1` save keeps its 
 every phase, Reserved included, and the completion notice counts the claims standing on the ground
 rather than trusting the branch that ran.
 
-Current census:3055 staged C# files;432,929 physical lines;3086 files in the generated
+Current census:3055 staged C# files;432,941 physical lines;3086 files in the generated
 cold-install inventory. Staged compilation covers3055 sources, baseline and compatibility symbols,
 run here by Roslyn 9.0.306 on Linux against the licensed Managed references with warnings as errors
 (baseline compiles 3051 of them; the optional-mod bridge is compatibility-only).
 Direct `XRL` imports: 1420 files, 0 over the line limit.
-Inventory SHA-256: `775a00449c261509328411b494bf6190218d462b130223d6ad0766a6ac8d8b16`.
+Inventory SHA-256: `6cf0107a0f3a919282aea20237c25dec63be268ab27fd1836a696b4a40d979c1`.
 The two dev-harness compile modes are clean here as well (3205 baseline, 3209
 compatibility sources). NOT RUN for this delta: the installed-Hearthpyre source/ABI
 step, `Tools/gate.sh` itself, the Windows gate, the developer boot matrix and any native in-game

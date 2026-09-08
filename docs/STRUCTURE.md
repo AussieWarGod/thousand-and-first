@@ -21,10 +21,10 @@ python3 Tools/check-structure.py --release
 ## Current isolated draft census
 
 The render-only city sight over the Kingdom Quickstart tent rows reports 3055 staged
-production C# files and 432,929 physical lines.
+production C# files and 432,941 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`775a00449c261509328411b494bf6190218d462b130223d6ad0766a6ac8d8b16`. The census reports
+`6cf0107a0f3a919282aea20237c25dec63be268ab27fd1836a696b4a40d979c1`. The census reports
 1420 files with direct `XRL` imports; 0 of those exceed the line limit.
 
 The delta over the merged tent-row census is two added and two modified production sources and no

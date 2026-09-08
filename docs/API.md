@@ -1516,7 +1516,7 @@ one-way, because unsetting those bits would erase legitimately walked ground.
 | `KingdomClaimedGround.ReconcileZone(KingdomSystem, Zone)` | One activation of one claimed zone: attach or restamp the light, then `Zone.ExploreAll()` once. Every refusal revokes instead of returning &mdash; ground the seat does not claim, ground two settlements both answer for, the option switched off, and a realm the master gate has stopped all take the part off. |
 | `KingdomClaimedGround.RemoveZone(Zone)` | Take the part off. The revocation path for secession, exile, a lost claim, and the option switched off. |
 | `XRL.World.ZoneParts.KingdomClaimedGroundLight` | The part itself: `BeforeRenderEvent` pass 1 → `ParentZone.AddLight(LightLevel.Light)` while `ParentZone.HasObject(The.Player)`. It queues itself into no second-pass handler list. Named-field save, registered in `KingdomRemovalCoverage.CustomZoneParts`. |
-| `ThousandAndFirst.KingdomCitySightRenderSeam` | The one seat the city-sight projection is taken from: a flag armed by a Harmony prefix on `XRLCore.RenderBaseToBuffer` and spent by a Harmony prefix on `Zone.Render(ScreenBuffer)`, so the projection lands immediately before the engine draws the zone — after the whole render dispatch (and so after `Blackout`), after the founder's own visibility reckoning, and after the wizard whole-map toggle. Both prefixes return `void`, so neither can skip or rewrite the engine's own work. The render dispatch's static entry is deliberately *not* patched: a Harmony postfix there made the engine re-host the method, and the re-hosted copy threw `NullReferenceException` out of itself on the first drawn frame in three of four unattended launches. |
+| `ThousandAndFirst.KingdomCitySightRenderSeam` | The one seat the city-sight projection is taken from: a flag armed by a Harmony prefix on `XRLCore.RenderBaseToBuffer` and spent by a Harmony prefix on `Zone.Render(ScreenBuffer)`, so the projection lands immediately before the engine draws the zone — after the whole render dispatch (and so after `Blackout`), after the founder's own visibility reckoning, and after the wizard whole-map toggle. Both prefixes return `void`, so neither can skip or rewrite the engine's own work. The render dispatch's static entry is deliberately *not* patched: a Harmony postfix there made the engine re-host the method, and the re-hosted copy threw `NullReferenceException` out of itself on the first drawn frame in three of four unattended launches. The `Zone.Render` prefix body is wrapped in `try`/`catch` like every other Harmony body in this mod, so a projection that faults is logged and skipped rather than carried into the engine's frame. |
 
 **City sight: your citizens through your own walls.** The same part carries a second, separately
 gated behaviour (`r_TAF_OptionCitySight`, default **Yes**) that opens the claimed zone for the drawn
@@ -1531,8 +1531,11 @@ hangs on an object, and objects are dispatched behind zone parts, so a zone part
 would always take its turn ahead of it — and a snapshot taken there would call cells honestly
 visible that a `Blackout` was about to darken, which the subtractive close then leaves open. From
 outside the dispatch the projection re-reads both checkboxes and the founder's presence rather than
-inheriting the pass-1 light's decision. It snapshots — after computing the founder's own
-`AddVisibility` exactly as the engine is about to — calls `Zone.VisAll()`, and closes the zone again
+inheriting the pass-1 light's decision. It makes no visibility reckoning of its own: the engine's
+own `AddVisibility` for the founder (D/XRL/Core/XRLCore.cs:2511-2512) has already run by the time
+the draw is reached, and repeating the same centre and radius could open no further cell while
+costing a whole-zone line-of-sight sweep on the render thread every frame. It snapshots what the
+frame decided, calls `Zone.VisAll()`, and closes the zone again
 from a single `XRLCore.RegisterAfterRenderCallback` in the same frame, under a Harmony finalizer on
 `XRLCore.RenderBaseToBuffer` that guarantees the close even on a frame that throws. The close is subtractive: only cells the projection itself opened are shut, so sight another
 hand granted or took away after the snapshot is left alone. Nothing is
@@ -1554,10 +1557,22 @@ ordinary return, debug early return, or a thrown render — because the engine's
 no `finally` and stops at the first callback that throws.
 
 Consequences worth knowing: `Cell.Render` sets `CludgeTargetRendered` for a drawn sidebar target, so
-"You have lost sight of X" will not fire while X is drawn through a wall; `RenderSoundEvent` fires
-for drawn objects; `Look` still refuses a cell ordinary sight does not reach; and `Cell.Render` calls
-`Seen()` on every drawn object, so bestiary registration fills from citizens seen this way. Light
-stays at 200, which is none of the six tiers the Invisibility mutation reveals at (Darkvision 10,
+"You have lost sight of X" will not fire while X is drawn through a wall — the engine's lost-sight
+drop gates on that flag before it asks `IsVisible()`, so a creature you had already locked keeps its
+lock, and the shipped option text says so rather than claiming targeting is untouched;
+`RenderSoundEvent` fires for drawn objects; `Look` still refuses a cell ordinary sight does not
+reach; and `Cell.Render` calls `Seen()` on every drawn object, so bestiary registration fills from
+citizens seen this way.
+
+That last call outlives the frame twice over. `GameObject.Seen()` records the blueprint in the game's
+saved `BlueprintsSeen` set, and it also calls `Factions.RegisterWorshippable(this)`, so a
+`Worshippable`-tagged object drawn through a wall writes faction state that is saved too. Both are
+narrow — `BlueprintsSeen` is read by the disguise check and by wishing, and the worshippable
+registration needs the tag — but they are persistent state caused by a render-only projection.
+"Nothing is persisted" above describes the projection's own snapshot, not everything a projected
+draw sets in motion.
+
+Light stays at 200, which is none of the six tiers the Invisibility mutation reveals at (Darkvision 10,
 Dimvision 15, Interpolight 210, Radar 228, LitRadar 232, Omniscient 255).
 
 | Member | Contract |
