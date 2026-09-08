@@ -38,9 +38,10 @@ The ruling admits, for that workflow only:
 What the lane actually automates: lane resolution from the tag, tag/lineage/metadata/candidate
 proofs, the Linux repository audit and both portable suites, the full licensed
 `Tools/release-check.sh` run at the tagged commit, the immutable package and its verified native
-copy, the upload plan, the publisher `check`, and one `-Submit`. What it does not automate:
-Steam sign-in, Steam Guard, the Workshop legal agreement, `-Finalize`, the subscribed-byte check,
-the signed-out listing inspection, the in-game smoke, and the announcement.
+copy, the upload plan, the publisher `check`, one `-Submit`, the polled `-Verify`, and — once that
+reports `SubscribedInstallationVerified` — one `-Finalize` from the same run directory. What it
+does not automate: Steam sign-in, Steam Guard, the Workshop legal agreement, the subscribed-byte
+check, the signed-out listing inspection, the in-game smoke, and the announcement.
 
 Mitigations in force for the accepted residual risk:
 
@@ -50,11 +51,13 @@ Mitigations in force for the accepted residual risk:
 - Fork pull-request workflows require maintainer approval for **all** external contributors.
 - A tag ruleset restricts creation, update and deletion of `v*` and `staging-v*` to repository
   admins, so no other credential can forge a trigger.
-- Both GitHub Environments carry a required human reviewer and a deployment **tag** policy
-  (`v*` and `staging-v*` respectively), and the public lane takes two separate approvals. One
-  privileged job is deliberately outside that gate: `verify` declares no environment, so it takes
-  no approval. It runs `-Verify`, which observes one subscribed installation and writes no
-  installation or finalization record, and it only runs after an approved `publish` has succeeded.
+- Both GitHub Environments carry a deployment **tag** policy (`v*` and `staging-v*` respectively)
+  and **no required reviewers**: pushing the annotated tag is the approval, and the admin-only tag
+  ruleset above is what restricts who can push one. The environments still scope each lane's tag
+  policy, which is why the workflow keeps them. The lane is therefore unattended end to end —
+  `check`, `-Submit`, `-Verify`, `-Finalize` — and the operator's decision is made once, when the
+  tag is pushed. The `verify` and `finalize` jobs declare no environment at all; `finalize` runs
+  only after `verify` has reported `SubscribedInstallationVerified`.
 - No Steam credential and no repository secret exist for the workflow to leak; the signed-in Steam
   client is ambient state of the operator's own desktop session.
 - The privileged jobs use no third-party actions, check nothing out on the Steam host, upload
@@ -415,11 +418,15 @@ trigger**, so push it only when the release is ready; there is no separate "star
 
 Tag grammar, and nothing else is accepted:
 
-| Tag | Lane | Item | Package mode | Plan mode | Environment | Approvals |
+| Tag | Lane | Item | Package mode | Plan mode | Environment (tag policy) | Approval |
 | --- | --- | --- | --- | --- | --- | --- |
-| `staging-v<version>` | private staging | `3796495680` | `--test` | `--mode test` | `steam-workshop-staging` | one |
-| `staging-v<version>-<K>` | private staging, `K`th re-candidate | `3796495680` | `--test` | `--mode test` | `steam-workshop-staging` | one |
-| `v<version>` | public Alpha | `3794797472` | `--alpha` | `--mode alpha` | `steam-workshop` | two |
+| `staging-v<version>` | private staging | `3796495680` | `--test` | `--mode test` | `steam-workshop-staging` | the tag push |
+| `staging-v<version>-<K>` | private staging, `K`th re-candidate | `3796495680` | `--test` | `--mode test` | `steam-workshop-staging` | the tag push |
+| `v<version>` | public Alpha | `3794797472` | `--alpha` | `--mode alpha` | `steam-workshop` | the tag push |
+
+Neither environment has a required reviewer. The run never waits for a human, so **pushing the tag
+is the single irreversible decision**: the admin-only tag ruleset is what stands between anyone and
+a release, and the environments survive only to scope each lane's deployment tag policy.
 
 `<version>` is a `0.3.x` patch and never `0.3.0`. `<K>` is a positive integer; the private item
 admits an equal-or-higher patch, so a re-candidate reuses the version and increments `K`. The
@@ -447,12 +454,12 @@ Order of a full 0.3.x release:
    changed since the last review, commit a refreshed `docs/STRUCTURE_REVIEW.json` naming the human
    reviewer, so `python3 Tools/check-structure.py --release` exits 0. Both lanes run that command
    on the hosted runner within seconds of the tag push, and stage 11 of the licensed gate runs it
-   again on the Steam host; a stale review stops the release before any approval is spent.
-2. Push `staging-v<version>` on that commit. Approve `steam-workshop-staging` when the run waits.
-   The pipeline gates, packages `--test`, plans, checks and submits to the staging item.
-3. Human: `-Finalize` from the retained run directory, then the section-4 subscribed smoke, then
-   bind the receipt into `docs/PRIVATE_PACKAGE_RECEIPT.sha256`. That binding commit is
-   `candidateCommit`.
+   again on the Steam host; a stale review stops the release before the licensed gate is burned.
+2. Push `staging-v<version>` on that commit. Nothing waits for an approval. The pipeline gates,
+   packages `--test`, plans, checks, submits, verifies and finalizes against the staging item.
+3. Human: confirm the `finalize` job's recorded finalization SHA-256, then the section-4
+   subscribed smoke, then bind the receipt into `docs/PRIVATE_PACKAGE_RECEIPT.sha256`. That
+   binding commit is `candidateCommit`.
 4. Public flip commit: canonicalize Alpha metadata, status line, changelog heading and a fresh
    `docs/ALPHA_CANDIDATE.json`. Open the release pull request from `dev` to `main` and merge it
    **with a merge commit**, once the author has enabled merge commits for release pull requests —
@@ -462,13 +469,20 @@ Order of a full 0.3.x release:
    **immediately** after the merge and before anything else lands on `main`: the public lane
    compares the tagged commit against the `origin/main` tip as the job reads it, not as it stood at
    trigger time, so a push to `main` while a release run is queued behind the concurrency group
-   turns a legitimate release into a refusal. Approve `public-confirm`, then approve `publish`.
-   Never cancel a running `publish` job.
-6. Human: `-Finalize`, then the complete section-6 post-upload checklist.
+   turns a legitimate release into a refusal. Never cancel a running `publish` or `finalize` job.
+6. Human: the complete section-6 post-upload checklist, once the `finalize` job is green.
 
-The pipeline stops at `SubmittedUnverified`. That is not delivery, and `-Finalize` is deliberately
-left to the operator: it writes immutable records, needs the identical plan, package and paths from
-the retained run directory, and a bad finalization poisons the item's history.
+`SubmittedUnverified` is not delivery, so the pipeline does not stop there. A `verify` job polls
+`-Verify` for up to 20 minutes, and **only** when it reports `SubscribedInstallationVerified` does
+a `finalize` job run `-Finalize` — from the same run directory, with the plan path, `PLAN_SHA`,
+item, change note and `RECEIPT_SHA` read back from the recorded `inputs\handoff.env`, never
+rebuilt, into a fresh `evidence-finalize-<attempt>` directory. It requires exit 0,
+`SubscribedInstallationVerified`, `attemptFinalized=true` and a non-null `finalizationSHA`; every
+other outcome fails closed with its meaning from
+[PUBLISHING.md](../Tools/WorkshopSteam/PUBLISHING.md). Finalization still writes immutable records
+and still needs the identical plan, package and paths, and a bad finalization still poisons the
+item's history — which is why the job never retries and why finalizing by hand from the retained
+run directory (runbook step 15) remains the fallback when it cannot run.
 
 If any privileged step fails, **do not re-run the workflow for that tag.** `submit` creates its
 attempt directory before the SDK is initialised, so a refusal at or after that point retains an
@@ -646,7 +660,7 @@ self-hosted runners are persistent and can be compromised by untrusted workflow 
 - Prefer a private release-control repository. Restrict its runner group to that repository and the
   exact allowlisted upload workflow at a pinned SHA where the GitHub plan supports workflow-scoped
   access. Otherwise keep the Steam host offline/attended instead of registering it as an Actions
-  runner. The workflow still uses a protected environment with required human reviewers.
+  runner. The workflow still declares an environment whose deployment tag policy scopes each lane.
 - `workflow_dispatch` selects a branch or tag, not a raw SHA. Dispatch only the trusted protected
   workflow ref, require a full candidate SHA as input, and verify that exact SHA/annotated tag and
   artifact digest before privileged work. Never use `pull_request`, `pull_request_target`, or an
@@ -662,15 +676,16 @@ self-hosted runners are persistent and can be compromised by untrusted workflow 
 - Snapshot/reimage the runner between release windows where practical, isolate it from developer
   machines and private data, and retain only redacted receipts. Disable the runner outside release
   windows.
-- Require a second approval for Public visibility. On any mismatch, keep/move the item Private and
-  follow Recovery; never retry by creating a new item.
+- Require a distinct, recorded confirmation of what a Public release covers. On any mismatch,
+  keep/move the item Private and follow Recovery; never retry by creating a new item.
 
 How the deployed workflow satisfies the surviving bullets: it pins every third-party action by full
 commit SHA and uses none at all on the Steam host; it holds `permissions: contents: read` and no
 secrets; it exposes the Steam host to no fork artifact, because nothing is checked out or
 downloaded there; its `workflow_dispatch` path requires the full candidate SHA as an input and
-refuses unless that SHA is the tag's commit; and it implements the second Public approval as a
-separate hosted `public-confirm` job on the same environment, so the operator approves twice.
+refuses unless that SHA is the tag's commit; and it implements the Public confirmation as a
+separate hosted `public-confirm` job, which records the exact tag, commit, version and digests the
+public lane is about to publish before any Steam-host work begins.
 
 ### Adoption gates
 
@@ -757,8 +772,8 @@ runner as a Windows service.
    `.\config.cmd --url https://github.com/AussieWarGod/thousand-and-first --token <TOKEN> --name taf-steam-gamingpc --labels taf-steam --work _work --unattended --replace`.
    The `self-hosted`, `windows` and `x64` labels are added automatically; the workflow targets
    `[self-hosted, windows, taf-steam]`. `--ephemeral` would accept exactly one job, and a release
-   run has two self-hosted jobs (`publish` and `verify`), so use it only if you accept
-   re-registering between them.
+   run has three self-hosted jobs (`publish`, `verify` and `finalize`), so use it only if you
+   accept re-registering between them.
 7. **Start it by hand in the desktop session where Steam is running**, from a **non-elevated**
    console, under the same Windows account as the WSL distro: `cd C:\actions-runner ; .\run.cmd`.
    Elevation is a real failure mode, not a nicety: Valve lists a different administration access
@@ -773,9 +788,9 @@ runner as a Windows service.
    and C# suites. This also pre-warms the NuGet cache, which matters because every launcher mode
    recompiles its helper inside a 210-second budget.
 9. **Per release window:** start Steam and confirm the signed-in owner; start `run.cmd`; push the
-   tag; approve the environment deployment(s) when the run shows "Waiting"; then do the human
-   steps. Never cancel a running `publish` job and never press Ctrl+C in the runner window while
-   it runs — a killed launcher child is an uncertain retained attempt. Disable sleep and hibernate
+   tag; then do the remaining human steps once the run is green. Nothing waits for an approval, so
+   the tag push is the point of no return. Never cancel a running `publish` or `finalize` job and
+   never press Ctrl+C in the runner window while one runs — a killed launcher child is an uncertain retained attempt. Disable sleep and hibernate
    for the window, and consider pausing Qud's Steam auto-update: a game update changes the SDK
    hashes and fails every run closed until `sdk.lock.json` is deliberately re-pinned.
 10. **Both Workshop copies of `r_ThousandAndFirst` cannot be enabled together.** `-Verify` and
@@ -792,21 +807,24 @@ runner as a Windows service.
 13. **Evidence rotation is manual.** Each run leaves `C:\taf-release\run-<id>-<attempt>\` (package,
     plan, note, logs, redacted artifact, evidence directories) and a clone under `~/taf-release` in
     WSL. Keep the run directory of every *submitted* attempt until its `-Finalize` has succeeded,
-    because finalization needs the identical plan, package, receipt and paths. Delete only fully
-    finalized or never-submitted run directories. Never touch the registry root.
+    because finalization needs the identical plan, package, receipt and paths — the `finalize` job
+    reads them straight back out of `inputs\handoff.env`. Delete only fully finalized or
+    never-submitted run directories. Never touch the registry root.
 14. **The `verify` job may go red, and that is not a failed release.** It polls `-Verify` for up
     to 20 minutes after submit, but Steam builds and delivers the new bytes on its own schedule and
     may take longer. If it exhausts that budget, the submission still stands and no record was
     written. Re-run **only that job** — "Re-run failed jobs" — once Steam reports the update live.
-    Never use "Re-run all jobs": that re-takes the environment approval, re-burns the multi-hour
-    licensed gate, and then stops at the retained-attempt fence. Verifying by hand from the
+    Never use "Re-run all jobs": that re-burns the multi-hour licensed gate and then stops at the
+    retained-attempt fence. A re-run of `verify` alone carries `finalize` with it, because
+    `finalize` gates on that job's reported status. Verifying and then finalizing by hand from the
     retained run directory is equally valid.
-15. **Finalize by hand** from the retained run directory once Steam has delivered the update: run
-    the launcher named in `inputs\launcher-win.txt` with the same `-PlanPath`, `-PlanSHA`,
-    `-ItemId`, `-ChangeNotePath` and `-ReceiptSHA` from `inputs\handoff.env`, a **new empty**
-    `-EvidenceRoot`, and `-Finalize`. Success is exit 0 with `SubscribedInstallationVerified`,
-    `attemptFinalized=true` and a non-null `finalizationSHA`. The next submit to that item is
-    refused until this is done.
+15. **Finalize by hand — the fallback only.** The `finalize` job does this automatically after a
+    green `verify`, using exactly these inputs. Do it by hand only when that job could not run or
+    failed closed, and only after reading its step summary: run the launcher named in
+    `inputs\launcher-win.txt` with the same `-PlanPath`, `-PlanSHA`, `-ItemId`, `-ChangeNotePath`
+    and `-ReceiptSHA` from `inputs\handoff.env`, a **new empty** `-EvidenceRoot`, and `-Finalize`.
+    Success is exit 0 with `SubscribedInstallationVerified`, `attemptFinalized=true` and a non-null
+    `finalizationSHA`. The next submit to that item is refused until this is done.
 
 ## Recovery
 

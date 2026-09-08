@@ -20,16 +20,55 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
-The stockpile unit capacity over the first-basin water store, the Kingdom Quickstart tent rows,
-the empty-camp legacy correction, the camp-guide topic tree, the claimed-ground light and the
-first-settler legibility change together report 3059 staged production C# files and 433,954
+The Kingdom Quickstart shelter ingress over the render-only city sight, the stockpile unit
+capacity, the first-basin water store and the Kingdom Quickstart tent rows reports 3062 staged
+production C# files and 434,436 physical lines.
+Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
+1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
+`ff13330463a990edbef95c2ae35e0e552691f2f8e0f86a525dc873bd61f7c202`. The census reports
+1425 files with direct `XRL` imports; 0 of those exceed the line limit.
+
+The shelter-ingress delta over the retained city-sight draft below is one added and one modified
+production source and no
+removals: the quickstart rules' shelter partial is the addition and the quickstart rules the
+modification. Before the merge, all four `Tools/gate.sh` modes compiled clean on that delta's own
+bytes under Roslyn on this machine — staged
+baseline (3050 sources), staged compatibility (3054), dev-harness baseline (3204) and dev-harness
+compatibility (3208) — with the installed-Hearthpyre source and ABI step, against the licensed
+Managed references with warnings as errors. The six-profile native Quickstart boot matrix at seed
+`#43101` passes on those bytes, as do `quickstart-save marsh yes` and its cold load; the Windows
+gate did not run. On the merged tree the staged baseline (3058 sources) and staged compatibility
+(3062 sources plus the tracked Hearthpyre 2.2.3 ABI stub) sets compile clean under Roslyn 9.0.306
+on Linux; the two dev-harness modes, the installed-Hearthpyre source step, the Windows gate and any
+native run did not run for the merged bytes. The exact-inventory semantic review in
+`docs/STRUCTURE_REVIEW.json` binds an earlier digest and is therefore open for it.
+
+## Retained city-sight census
+
+The render-only city sight over the stockpile unit capacity, the first-basin water store, the
+Kingdom Quickstart tent rows, the empty-camp legacy correction, the camp-guide topic tree, the
+claimed-ground light and the first-settler legibility change together reported 3061 staged
+production C# files and 434,296
 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`5db8f7381ade172c6b0b34925a111f4d4c28f32da77cf0be266914aa53e77674`. The census reports
-1423 files with direct `XRL` imports; 0 of those exceed the line limit.
+`7147169b7ccb8d2142d9791bd5faec8405eb305e33bca7a9b9feb9c3948c5a1e`. The census reports
+1425 files with direct `XRL` imports; 0 of those exceed the line limit.
 
-The stockpile delta over the retained first-basin draft is three added production sources — the
+The city-sight delta over the merged stockpile census is two added and two modified production
+sources and no removals: the render-scope finalizer (`Growth/KingdomCitySightDrawScope.cs`) and the
+render seam that owns the projection (`Growth/KingdomCitySightRenderSeam.cs`) are the additions;
+the claimed-ground light part and the settlement event file are the modifications. Merging the
+city-sight end-of-turn backstop with the basin-capacity zone-activation guard put
+`Core/KingdomSystem.z20.Events.cs` at 305 physical lines, over the strict cap; the merge reflowed
+those two comment blocks wider — every word and engine citation kept, no code and no statement
+order changed, so every source test that pins ordering in that shard is untouched — and it is back
+at 299. The staged baseline (3057 sources) and staged compatibility (3061 sources plus the tracked
+Hearthpyre 2.2.3 ABI stub) sets compile clean under Roslyn 9.0.306 on Linux against the licensed
+Managed references with warnings as errors; the two dev-harness modes, the installed-Hearthpyre
+source step, the Windows gate and any native run did not run for it.
+
+The stockpile delta beneath it was three added production sources — the
 capacity constants (`Core/KingdomRules.MaterialStores.cs`), the survey's material-store reads
 (`Growth/KingdomSurvey.11.MaterialStores.cs`) and the stockpile-room rules
 (`Growth/KingdomMaterials.StockpileRoom.cs`, which owns the room, the intake that respects it and

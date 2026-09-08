@@ -38,30 +38,74 @@ the current bytes; those receipts are pending and are not claimed here.
 
 Workflow **authored, not yet exercised.** `.github/workflows/release.yml` adds a tag-triggered
 Steam Workshop release lane under the author ruling of 2026-09-08 recorded in
-[RELEASING.md](RELEASING.md#author-ruling-2026-09-08--automated-release-lane-and-the-doctrine-it-amends).
+[RELEASING.md](RELEASING.md#author-ruling-2026-09-08--automated-release-lane-and-the-doctrine-it-amends);
+pushing an annotated `v*`/`staging-v*` tag now runs the whole lane unattended — gate, package,
+plan, publisher `check`, one `-Submit`, the polled `-Verify`, and, only on
+`SubscribedInstallationVerified`, one `-Finalize` from the same run directory with the recorded
+plan, `PLAN_SHA` and `RECEIPT_SHA`. Both environments' required reviewers were removed, so the
+admin-only tag ruleset is the approval and no job waits for a human.
 No pipeline release has run; every claim below is a configuration fact, not a release result.
 
-Verified against the GitHub API on 2026-09-08:
+Verified against the GitHub API on 2026-09-08, amended for the reviewer removal of 2026-09-09:
 
 | Setting | State |
 | --- | --- |
-| Environment `steam-workshop` | required reviewer + branch/tag policy; deployment tag pattern `v*` |
-| Environment `steam-workshop-staging` | required reviewer + branch/tag policy; deployment tag pattern `staging-v*` |
+| Environment `steam-workshop` | **no required reviewers**; branch/tag policy only, deployment tag pattern `v*` |
+| Environment `steam-workshop-staging` | **no required reviewers**; branch/tag policy only, deployment tag pattern `staging-v*` |
 | Tag ruleset "release tags" | active; restricts creation, update and deletion of `refs/tags/v*` and `refs/tags/staging-v*`; bypass limited to the repository admin role |
 | Fork pull-request workflows | approval required for all external contributors |
 | Workflow permissions | read-only; pull-request approval by Actions disabled |
 | Repository secrets for the lane | none, by design; no Steam credential exists in GitHub |
 | Self-hosted runners | **0 registered.** The `taf-steam` runner is not installed yet, so the pipeline cannot run |
 
-Two environment settings are still open: `can_admins_bypass` is `true` on both environments and
-should be turned off so the approval cannot be skipped, and the "prevent self-review" option must
-stay off, because the sole collaborator both pushes the tag and approves the deployment.
+The two open environment-approval settings are moot now that neither environment has a required
+reviewer: there is no approval for `can_admins_bypass` to skip and no review for "prevent
+self-review" to block. The tag ruleset carries the whole gate, so its admin-only bypass list is
+the setting to keep audited.
 
 Open before the first pipeline release: register and start the `taf-steam` runner per the runbook
 in [RELEASING.md](RELEASING.md#steam-host-runner-runbook); rule on the merge method for release
 pull requests, since the currently enabled squash-only merge rewrites the receipt-binding commit
 that the packager requires as an ancestor of the tagged `main` commit; and run the first
 `staging-v0.3.2` release, recording its run id, attempt number and finalization SHA here.
+
+## Unreleased Kingdom Quickstart shelter ingress
+
+The two tent-row lots staked at founding now stake on every shipped profile. `KingdomPlots.Stake`
+runs the authored public-ingress preflight
+(`Growth/KingdomArchitectureRuntime.RoadIngress.cs`), which walks each lot's DoorToLane route and
+refuses any route cell that is not physically walkable. The camp bared the two lot rectangles only,
+so the single exterior cell each route leaves by stood in unbared wilderness: the marsh refused lot
+B at (21,13)-(26,16) for (24,17) and the canyon refused lot A at (21,9)-(26,12) for (23,8). Only
+the dunes founded, because its ground happened to be bare at both. The prepared-ground mask now
+also bares each route's reserved road margin and the lane endpoint one cell beyond it — (23,8) and
+(23,7) north of lot A, (24,17) and (24,18) south of lot B — so the mask widens by exactly four
+cells. Those cells are declared beside the lots because the quickstart's ground authority is
+engine-free; `DevTests/KingdomQuickstartShelterIngressTests.cs` recomputes them from the shipped
+architecture with the same `KingdomRoadRules.TryAuthoredLane` the stake walks and fails on drift.
+The heart-ingress endpoints are unchanged and refusal is still fail-closed with the same message.
+
+Current census after merging `dev` (the Kingdom Quickstart tent rows, the first-basin water store,
+the stockpile unit capacity and the render-only city sight included) and the shelter ingress: 3062
+staged C# files; 434,436 physical lines; 3093 files in the generated
+cold-install inventory. Staged compilation covers 3062 sources, baseline and compatibility symbols
+(baseline compiles 3058 of them; the optional-mod bridge is compatibility-only), run here by Roslyn
+9.0.306 on Linux against the licensed Managed references with warnings as
+errors. Direct `XRL` imports: 1425 files, 0 over the line limit.
+Inventory SHA-256: `ff13330463a990edbef95c2ae35e0e552691f2f8e0f86a525dc873bd61f7c202`.
+Before the merge, all four `Tools/gate.sh` modes compiled clean on the shelter-ingress delta's own
+bytes — staged baseline (3050 sources), staged compatibility (3054), dev-harness baseline (3204)
+and dev-harness compatibility (3208) — with the installed-Hearthpyre source and ABI step, and the
+engine-free suites passed13,905 main/5,193 Portable cases,zero skips there with 615 Tools tests.
+On the merged tree the engine-free suites pass 13,987 main / 5,199 Portable cases, zero
+skips, and the Tools suite passes 627 tests. The six-profile Quickstart boot matrix at seed `#43101` ran natively on these bytes and all
+six reach checker `verdict=PASS`, each with two `[TAF] plot staked: tentrow` rows and a
+strict-clean Player.log; `quickstart-save marsh yes` and its separate cold load also pass, with
+unchanged heart, stock and IDs and no bootstrap replay.
+NOT RUN for the merged tree: the two dev-harness modes, the installed-Hearthpyre source step, the
+Windows gate, ordinary play, graceful Quit and Steam delivery. The
+1,700-tick figure remains a reading of the raising rule, not of a running plot clock. No human
+exact-inventory semantic review binds this digest.
 
 ## Unreleased stockpile unit capacity
 
@@ -143,12 +187,13 @@ which unblocks exile for any realm at profile revision2 or above. Schema0/1
 bytes remain unchanged; older0.3.1 readers reject schema2,so any next public package needs
 a new version. Public0.3.1/main/tag are unchanged.
 
-Current census after merging `dev` (the Kingdom Quickstart tent rows and the first-basin water
-store included) and the stockpile unit capacity: 3059 staged C# files; 433,954
-physical lines; 3090 files in the generated cold-install inventory. Staged compilation covers 3059
-sources, baseline and compatibility symbols (baseline compiles 3055 of them; the optional-mod
-bridge is compatibility-only). Direct `XRL` imports: 1423 files, 0 over the line limit.
-Inventory SHA-256: `5db8f7381ade172c6b0b34925a111f4d4c28f32da77cf0be266914aa53e77674`.
+Current census after merging `dev` (the Kingdom Quickstart tent rows, the first-basin water store
+and the stockpile unit capacity included) and the render-only city sight: 3061 staged C# files;
+434,296
+physical lines; 3092 files in the generated cold-install inventory. Staged compilation covers 3061
+sources, baseline and compatibility symbols (baseline compiles 3057 of them; the optional-mod
+bridge is compatibility-only). Direct `XRL` imports: 1425 files, 0 over the line limit.
+Inventory SHA-256: `7147169b7ccb8d2142d9791bd5faec8405eb305e33bca7a9b9feb9c3948c5a1e`.
 The seal lane's OWN delta &mdash; four modified production sources, no additions or removals
 &mdash; was proved against integration parent2be6b00 (3045 unchanged) and read in full by root
 and an independent reviewer; the three added and seven modified C# sources plus one option row
@@ -173,7 +218,20 @@ digest. The stockpile unit capacity on top of all of it is three added productio
 `Growth/KingdomMaterials.StockpileRoom.cs`), six modified and the regenerated removal-coverage
 roster; Roslyn 9.0.306 on Linux compiled the staged baseline and compatibility sets clean on the
 merged tree and both engine-free suites run green there (13,980 main / 5,193 Portable, zero
-skips). This is source review,not functional acceptance.
+skips). The render-only city sight on top of all of it is two added production sources
+(`Growth/KingdomCitySightDrawScope.cs` and `Growth/KingdomCitySightRenderSeam.cs`) and two
+modified — the claimed-ground light part and the settlement system's event file, which now carries
+both the end-of-turn restore backstop and the basin-capacity zone-activation guard. The review-response
+passes rewrote the projection's seat and close: the part now queues nothing into the render
+dispatch's second pass, and the projection is taken at the engine's own `Zone.Render` call, armed by
+a prefix on `XRLCore.RenderBaseToBuffer`, so it comes behind `Blackout`'s own second-pass light
+removal, which `Zone.AddVisibility` reads. An unattended native pass on the seat before that one — a
+Harmony postfix on the render dispatch's static entry — crashed the game: the re-hosted engine
+method threw `NullReferenceException` out of itself on the first drawn frame in three of four
+launches. That seat is now a forbidden string in the source contract. Merging the two additions put
+`Core/KingdomSystem.z20.Events.cs` at 305 physical lines, over the strict cap; the merge reflowed
+their two comment blocks wider, keeping every word and engine citation and moving no code, and the
+shard is back at 299. This is source review,not functional acceptance.
 
 Focused38898 passed149 cases,zero skips. That receipt predates the seventh
 KingdomWaterMaintenanceNativeSourceTests case and is retained as measured. The branch adds

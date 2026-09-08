@@ -8,6 +8,66 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
+## Unreleased — Workshop listing copy: drop single-player boilerplate
+
+- Removed the redundant "Single-player only" / "no multiplayer or user-moderation surface"
+  sentence from the Workshop listing and README (author ruling, issue #51). Steam Workshop mods
+  for a single-player game already carry that property; the line described no behavior a player
+  needed to plan around.
+- Updated together: the `Tools/workshop_metadata.py` description generator, the
+  `docs/WORKSHOP-DESCRIPTION-TEMPLATES.md` template, the regenerated `workshop.json` Description
+  field, and `README.md`. The assertion pins in `Tools/test-workshop-package.sh` and
+  `Tools/tests/workshop_metadata_test.py` now assert the shortened sentence rather than merely
+  dropping the old assertion. No manifest, version, or C# source change.
+
+## Unreleased — Kingdom Quickstart shelter ingress
+
+- The two tent-row lots staked at founding are now staked on every shipped profile. The stake's
+  authored public-ingress preflight walks each lot's DoorToLane route and refuses a route cell that
+  is not physically walkable; the camp bared the lot rectangles only, so on the marsh and in the
+  canyon the one cell each route leaves by was unbared wilderness and the settlement refused the
+  lot. The dunes happened to be bare there, which is why only that profile founded.
+- The prepared-ground mask now also bares the exterior cells of each lot's route: the reserved road
+  margin and the lane endpoint one cell beyond it. Lot A is posed facing south and leaves north
+  through (23,8) and (23,7); lot B is posed facing north and leaves south through (24,17) and
+  (24,18). The mask widens by exactly four cells and by nothing else.
+- Those four cells are declared beside the lots rather than derived at runtime, because the
+  quickstart's ground authority is engine-free and may not read the plot machinery. A new test
+  recomputes them from the shipped architecture with the same `KingdomRoadRules.TryAuthoredLane`
+  the stake walks, and fails on any drift between the two.
+- Refusal is still fail-closed and still names the lot: a route cell that cannot be bared stops the
+  bootstrap with the message it stopped with before, rather than staking a lot the settlement will
+  not admit.
+
+> **Current unreleased census — exact structural gate passed.** Current 3062-file census is line-cap green:
+> 434,436 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
+> imports occur in 1425 files, 0 of them over the line limit. Inventory SHA-256:
+> `ff13330463a990edbef95c2ae35e0e552691f2f8e0f86a525dc873bd61f7c202`.
+> The generated cold-install inventory contains 3093 files; no new subscription claim.
+> This digest is the shelter ingress merged over the render-only city sight, the stockpile unit
+> capacity, the first-basin water store and the Kingdom Quickstart tent rows retained below; each
+> delta carries its own review chain and none is restated for the others.
+> The shelter-ingress delta over the city-sight census below is one added and one modified production
+> source: the quickstart rules' new shelter partial, and the quickstart rules themselves. Before the
+> merge, all four
+> `Tools/gate.sh` modes compiled clean on that delta's own bytes — staged baseline (3050 sources), staged
+> compatibility (3054), dev-harness baseline (3204) and dev-harness compatibility (3208) — together
+> with the installed-Hearthpyre source and ABI step, and both engine-free suites ran green there (13,905
+> main/5,193 Portable, zero skips).
+> On the merged tree the staged baseline (3058 sources) and staged compatibility (3062 sources plus
+> the tracked Hearthpyre 2.2.3 ABI stub) compile clean under Roslyn 9.0.306 on Linux against the
+> installed managed assemblies rather than through `Tools/gate.sh`; both engine-free suites run green
+> there (13,987 main/5,199 Portable, zero skips) and the 627-test tooling suite passes.
+> The six-profile Quickstart boot matrix at seed `#43101` ran natively on these bytes: marsh,
+> canyon and dunes with advisor yes and no all reach checker `verdict=PASS` with two
+> `[TAF] plot staked: tentrow` rows apiece and a strict-clean Player.log, and `quickstart-save
+> marsh yes` plus its separate cold load pass with unchanged heart, stock and IDs.
+> NOT run for the merged tree: the two dev-harness modes, the installed-Hearthpyre source step, the
+> Windows gate, ordinary play, graceful Quit and Steam delivery. The
+> 1,700-tick raising figure is still a reading of the raising rule, not of a running plot clock.
+> The exact-inventory human semantic review is open against this digest; this is not Beta sign-off.
+
 ## Unreleased — Kingdom Quickstart tent rows
 
 - Kingdom Quickstart now stakes two settlers' tent rows at founding, west of the supply
@@ -49,26 +109,60 @@ below it.
   the ground rather than trusting the branch that ran, so it never promises one. The reservation on
   a staked lot remains an owned object property registered in the removal-coverage allowlist.
   Ordinary founding is untouched. Public 0.3.1 is unchanged.
+- Inside a zone your seat claims you now see every citizen and what they are doing, walls or
+  no walls. This is the eye only: the rules, rest, autoexplore and Look still use ordinary line
+  of sight, and invisible creatures stay invisible at every one of the six light tiers that
+  would reveal them (Darkvision 10, Dimvision 15, Interpolight 210, Radar 228, LitRadar 232,
+  Omniscient 255) — the claimed ground is lit to 200, which is none of them. Three honest
+  oddities follow: a creature you are already targeting through a wall keeps its lock and never
+  triggers "you have lost sight of", you hear what is drawn, and Look will refuse a cell you can
+  plainly see. The shipped option text names the retained lock rather than claiming targeting is
+  untouched. Creatures you see this way count as seen, so they register in the bestiary — and
+  `Seen()` also records the blueprint and registers a `Worshippable`-tagged object with the
+  factions, which is the one place a drawing-only projection writes state that outlives the
+  frame. New option `r_TAF_OptionCitySight`, default Yes; switching it off closes the walls on
+  the next frame. Existing saves need nothing: the projection is one frame of drawing state,
+  never persisted, and a save made while it is on loads identically with it off.
+- The projection is taken from a flag armed by a Harmony prefix on
+  `XRLCore.RenderBaseToBuffer` and spent by a prefix on `Zone.Render(ScreenBuffer)`, so it lands
+  behind every native light and visibility contributor and makes no visibility reckoning of its
+  own — the engine has already made the founder's before the draw, so repeating it could open no
+  further cell while costing a whole-zone line-of-sight sweep on the render thread every frame.
+  A Harmony finalizer on the same method closes the projection on every exit from the draw,
+  including a thrown one, and the prefix body is wrapped like every other Harmony body here.
+- City sight adds 6 source-contract cases: the one-drawn-frame projection shape (the
+  non-rendering-frame early return ordered before the whole-zone reveal, the honest snapshot
+  taken before it and with no reckoning of its own, one after-render restore, no explored-map
+  write, all six invisibility tiers named), the two backstops (an outstanding projection dropped
+  at the head of the next frame, restored ahead of every gate at end of turn), the render seam
+  and its Zone.Render seat, the draw-scope finalizer that closes a thrown frame, a render model, run rather than read, that fails if the projection moves back inside the dispatch behind a `Blackout`, and a
+  repo-wide sweep asserting the crashing patch target (`BeforeRenderEvent.Send`) appears in no
+  staged source. Suites pass 13,910 main and 5,199 Portable cases, zero skips; 627 tooling tests
+  pass. The staged baseline (3,051 sources) and compatibility (3,055 sources) compile modes were
+  re-run clean with warnings-as-errors on these bytes, along with both dev-harness overlay
+  modes.
 
-> **Current unreleased census — exact structural gate passed.** Current 3059-file census is line-cap green:
-> 433,954 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> **Retained city-sight census — exact structural gate passed.** That 3061-file census was line-cap green:
+> 434,296 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
-> imports occur in 1423 files, 0 of them over the line limit. Inventory SHA-256:
-> `5db8f7381ade172c6b0b34925a111f4d4c28f32da77cf0be266914aa53e77674`.
-> The generated cold-install inventory contains 3090 files; no new subscription claim.
-> This digest is the stockpile unit capacity merged over the Kingdom Quickstart tent rows and the
-> first-basin water store retained below; each delta carries its own review chain and none is
-> restated for the others.
-> The stockpile delta over the retained tent-row and first-basin censuses below is three added and
-> six modified production sources plus the regenerated removal-coverage roster; the tent-row delta
-> under it was one added and six modified production
-> sources: the quickstart bootstrap's shelter partial, the quickstart rules, the bootstrap, the camp
-> builder, the generated removal coverage, the quickstart receipt model and its wire codec. The
-> merged tree compiles clean in the staged baseline (3055 sources) and staged compatibility
-> (3059 sources plus the tracked Hearthpyre 2.2.3 ABI stub), on Linux with the SDK Roslyn 9.0.306
+> imports occur in 1425 files, 0 of them over the line limit. Inventory SHA-256:
+> `7147169b7ccb8d2142d9791bd5faec8405eb305e33bca7a9b9feb9c3948c5a1e`.
+> The generated cold-install inventory contains 3092 files; no new subscription claim.
+> This digest is the render-only city sight merged over the stockpile unit capacity, the
+> first-basin water store and the Kingdom Quickstart tent rows retained below; each delta carries
+> its own review chain and none is restated for the others.
+> The city-sight delta over the merged stockpile census is two added and two modified
+> production sources: the render-scope finalizer and the render seam that owns the projection are
+> the additions; the claimed-ground light part and the settlement event file are the
+> modifications. Merging the city-sight end-of-turn backstop with the basin-capacity zone-activation
+> guard put `Core/KingdomSystem.z20.Events.cs` at 305 physical lines, so the merge reflowed those two
+> comment blocks wider — every word and engine citation kept, no code or statement order changed —
+> and the shard is back at 299.
+> The merged tree compiles clean in the staged baseline (3057 sources) and staged compatibility
+> (3061 sources plus the tracked Hearthpyre 2.2.3 ABI stub), on Linux with the SDK Roslyn 9.0.306
 > against the installed
 > managed assemblies rather than through `Tools/gate.sh`; both engine-free suites run green there
-> (13,980 main/5,193 Portable, zero skips) and the 627-test tooling suite passes.
+> (13,986 main/5,199 Portable, zero skips) and the 627-test tooling suite passes.
 > NOT run for it: the installed-Hearthpyre source step, the two dev-harness modes, the
 > Windows gate, the developer boot matrix and any native in-game run. The 1,700-tick raising figure
 > is a reading of the raising rule, not of a running plot clock. The exact-inventory human semantic
@@ -297,8 +391,8 @@ below it.
 > Root and independent AI reviewer read the seal lane's four changed production sources and
 > the first-basin water store's two added and twelve modified ones, and affected
 > boundaries; unchanged sources inherit the complete canonical parent review chain. This
-> digest covers the merge with `dev`, so the exact-inventory human semantic review is open
-> against it and the Windows compile gate has not re-run for the merged bytes.
+> digest covers that merge with `dev`, so the exact-inventory human semantic review is open
+> against it and the Windows compile gate has not re-run for those merged bytes.
 
 ## Retained unreleased — master pause/resume correction, the claimed-ground light, and first-settler legibility
 
