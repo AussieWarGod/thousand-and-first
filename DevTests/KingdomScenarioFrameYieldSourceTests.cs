@@ -128,19 +128,30 @@ namespace ThousandAndFirst.Tests
 		/// <summary>
 		/// The guards have to be REACHABLE. <c>PlayerTurn</c> parks its whole energy loop on
 		/// <c>while (!GameManager.focused)</c> before it renders or fires the end-of-turn
-		/// callbacks, so an unfocused window can reach no seam at all: the verb refuses up front
-		/// rather than hanging, and the deadline that covers a merely slow loop is evaluated in the
-		/// frame seam itself, which is the one place a drawn frame is guaranteed to pass through.
+		/// callbacks, so an unfocused window would reach no seam at all. The verb therefore ASSERTS
+		/// focus rather than refusing on it - a refusal would refuse every unattended persona,
+		/// which is the only way these observers ever run - and the deadline that covers a merely
+		/// slow loop is evaluated in the frame seam itself, the one place a drawn frame must pass.
 		/// </summary>
 		[Test]
-		public void TheYieldRefusesUnfocusedAndChecksItsDeadlineInsideTheFrameSeam()
+		public void TheYieldAssertsFocusAndChecksItsDeadlineInsideTheFrameSeam()
 		{
 			string frames = Read("Harness/KingdomScenarioFrames.cs");
-			StringAssert.Contains("if (!GameManager.focused)", frames);
+			// The old up-front refusal is GONE: an unattended window is the ordinary case.
+			StringAssert.DoesNotContain("if (!GameManager.focused)", frames);
+			StringAssert.Contains("if (!KingdomScenarioFocus.TryHold(out failure))", frames);
 			StringAssert.Contains(
 				"internal const string CodeUnfocused = \"taf-frames-window-unfocused\";", frames);
 			StringAssert.Contains(
 				"internal const string CodeNoSeam = \"taf-frames-no-frame-seam\";", frames);
+			// The hold is lowered wherever a yield ends, which is the one clearing routine.
+			StringAssert.Contains("KingdomScenarioFocus.Release();", frames);
+			ClassicAssert.AreEqual(1, Occurrences(frames, "KingdomScenarioFocus.Release();"),
+				"the focus hold must be lowered from exactly one place");
+			int cancel = frames.IndexOf("internal static void Cancel()", StringComparison.Ordinal);
+			ClassicAssert.Greater(
+				frames.IndexOf("KingdomScenarioFocus.Release();", StringComparison.Ordinal), cancel,
+				"the release must sit inside the routine every end of a yield runs");
 			int observe = frames.IndexOf("internal static void Observe(", StringComparison.Ordinal);
 			int deadline = frames.IndexOf("Clock.Elapsed.TotalSeconds > DeadlineSeconds",
 				observe, StringComparison.Ordinal);
@@ -149,6 +160,60 @@ namespace ThousandAndFirst.Tests
 				"the wall-clock deadline must be evaluated inside the frame seam");
 			// A seam that threw would end the engine's render loop for the rest of the session.
 			StringAssert.Contains("catch (Exception error) { Fail(error); }", frames);
+		}
+
+		/// <summary>
+		/// The focus override is SCOPED and it FAILS CLOSED. It is raised only for a sealed
+		/// scripted profile, it writes the one flag <c>PlayerTurn</c>'s park reads
+		/// (<c>D/XRL/Core/XRLCore.cs:756</c>) and never the separate input gate
+		/// <c>XRLCore.bThreadFocus</c> that <c>Keyboard.kbhit</c>
+		/// (<c>D/ConsoleLib/Console/Keyboard.cs:940</c>) and the mouse paths consult, and it reads
+		/// the flag BACK before the verb arms - because the park sits upstream of every seam a
+		/// pending yield could otherwise be failed from.
+		/// </summary>
+		[Test]
+		public void TheFocusOverrideIsSealedScopedInputSafeAndReadBack()
+		{
+			string focus = Read("Harness/KingdomScenarioFocus.cs");
+			StringAssert.Contains("if (!KingdomScenarioScript.Present())", focus);
+			// Writing the input gate would let an unattended run accept or send a keystroke.
+			StringAssert.DoesNotContain("bThreadFocus =", focus);
+			StringAssert.Contains("GameManager.focused = XRLCore.bThreadFocus;", focus);
+			StringAssert.Contains("if (Held && GameManager.focused) return true;", focus);
+			StringAssert.Contains("GameManager.focused = true;", focus);
+			ClassicAssert.AreEqual(1, Occurrences(focus, "GameManager.focused = true;"),
+				"the override must assert the flag from exactly one place");
+		}
+
+		/// <summary>
+		/// The override rides the ONLY two writers of that flag,
+		/// <c>GameManager.OnApplicationFocus(bool)</c> (<c>D/GameManager.cs:1912</c>) and
+		/// <c>GameManager.OnApplicationPause(bool)</c> (<c>:1918</c>), as postfixes installed
+		/// lazily on the first hold. An attribute here would arm the patch at mod load for every
+		/// persona - the exact shape of the <c>BeforeRenderEvent.Send</c> crash - and the property
+		/// getter is deliberately NOT the target, because an inlined static field read would never
+		/// see the patch and the override would fail silently.
+		/// </summary>
+		[Test]
+		public void TheFocusOverrideIsALazyPostfixOnBothUnityHandlersAndNeverTheGetter()
+		{
+			string focus = Read("Harness/KingdomScenarioFocus.cs");
+			StringAssert.DoesNotContain("[Harmony", focus);
+			StringAssert.DoesNotContain("typeof(BeforeRenderEvent)", focus);
+			StringAssert.DoesNotContain("prefix:", focus);
+			StringAssert.DoesNotContain("transpiler:", focus);
+			StringAssert.DoesNotContain("get_focused", focus);
+			StringAssert.Contains(
+				"internal const string FocusMessage = \"OnApplicationFocus\";", focus);
+			StringAssert.Contains(
+				"internal const string PauseMessage = \"OnApplicationPause\";", focus);
+			ClassicAssert.AreEqual(2, Occurrences(focus, "postfix: new HarmonyMethod(seam)"),
+				"both Unity focus messages must carry the re-assertion");
+			StringAssert.Contains("private static bool Installed;", focus);
+			StringAssert.Contains("if (Installed) return true;", focus);
+			ClassicAssert.Greater(focus.IndexOf("Installed = true;", StringComparison.Ordinal),
+				focus.IndexOf("harmony.Patch(focus,", StringComparison.Ordinal),
+				"the installed flag must follow the patch calls, never precede them");
 		}
 
 		/// <summary>

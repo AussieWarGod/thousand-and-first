@@ -1083,16 +1083,45 @@ on the first `yield-frames` of the process and nowhere else, and a run that neve
 unpatched run. An install that fails refuses the verb (`taf-frames-no-frame-seam`) instead of
 arming a yield nothing would count.
 
-**What it cannot cover.** `PlayerTurn` parks its whole energy loop on
-`while (!GameManager.focused && Game.Running)` at the **head** of the loop — upstream of the render
-call and of the end-of-turn callbacks — so an unfocused window draws no frame *and* fires no seam,
-and no in-engine guard can end that stall. (`advance` never meets the park: spending the energy
-keeps `RunSegment` out of `PlayerTurn` altogether, which is why turns advance unattended while
-frames do not.) The verb therefore **refuses to arm** while the window is already unfocused
-(`taf-frames-window-unfocused`); focus lost mid-yield is left to the persona's own `TIMEOUT`. While
-frames do arrive, the wall-clock deadline (120s) is evaluated inside the frame seam itself and
-again in the resume seam, and an idle-opportunity counter catches a segment loop that never enters
-`PlayerTurn` at all. A `RunSegment` inner loop that both skips `PlayerTurn` and never spends the
+**Focus is asserted, not waited for.** `PlayerTurn` parks its whole energy loop on
+`while (!GameManager.focused && Game.Running) Thread.Sleep(200)` (`D/XRL/Core/XRLCore.cs:756`) at
+the **head** of the loop — upstream of the end-of-turn callbacks (`:2374`), of `RenderBase`
+(`:2387`, `:2392`) and of `Keyboard.IdleWait()` (`:2408`) — and `Tools/run-scenario.ps1` launches a
+scripted profile **without activation** on purpose, so the operator keeps their foreground window.
+Refusing on that (the previous design) refused every unattended persona, which is the only way a
+render-dependent observer ever runs. `Harness/KingdomScenarioFocus.cs` therefore **asserts the
+engine's own flag** for the duration of a hold, and the verb no longer refuses an unfocused window.
+
+That is safe because `GameManager.focused` (`D/GameManager.cs:404`, over the field `_focused` at
+`:118`) has **exactly one reader in the whole engine** — that park. Input is gated by a *different*
+flag, `XRLCore.bThreadFocus` (`D/XRL/Core/XRLCore.cs:223`), which `Keyboard.kbhit()`
+(`D/ConsoleLib/Console/Keyboard.cs:940`), `Keyboard.GetNextKey` (`:1015`) and the mouse paths in
+`GameManager` (`:1162`, `:1259`, `:1807`, `:2157`, `:3100`) all consult. The override **never**
+writes `bThreadFocus`, so every input gate stays shut while the render loop runs — it can neither
+send nor accept a keystroke or a click. The setter's one side effect runs in the safe direction: a
+false→true transition calls `Keyboard.ClearInput()` and `Keyboard.ClearMouseEvents()` and sets
+`mouseDisable` (`D/GameManager.cs:412-416`), which **discards** pending input.
+
+The flag's only writers are Unity's two message handlers, `GameManager.OnApplicationFocus(bool)`
+(`D/GameManager.cs:1912`) and `GameManager.OnApplicationPause(bool)` (`:1918`). Both take a
+**postfix** that re-asserts the flag while a hold stands, so a focus event arriving mid-yield
+cannot re-park the loop; `OnApplicationFocus`'s own `bThreadFocus` write is left exactly as the
+engine made it. The property *getter* is deliberately not the patch target: it is a one-line static
+field read and `PlayerTurn` is JITted long before any yield arms, so an inlined read would never
+see the patch and the override would fail **silently**. Writing the property instead lands in
+`_focused`, which an inlined getter reads too. The hold is raised only when a **sealed script is
+present**, installs its two postfixes lazily on the first hold (no Harmony attribute, for the
+`PatchAll` reason above), and on release hands the flag back to `XRLCore.bThreadFocus` — the
+engine's own last focus signal, a field this harness never writes.
+
+**Fail-closed.** The verb reads the flag **back** after the override writes it and refuses
+(`taf-frames-window-unfocused`) when it did not take, because the park sits upstream of every seam
+a pending yield could otherwise be failed from. Once the loop runs, the proof the override took is
+a real drawn frame: the wall-clock deadline (120s) is evaluated inside the frame seam *and* in the
+resume seam, which fires every `PlayerTurn` iteration, and an idle-opportunity counter catches a
+segment loop that never enters `PlayerTurn` at all. (`advance` never meets the park at all:
+spending the energy keeps `RunSegment` out of `PlayerTurn`, which is why turns advanced unattended
+long before frames did.) A `RunSegment` inner loop that both skips `PlayerTurn` and never spends the
 turn reaches no seam either: only the persona's `TIMEOUT` ends it. That is a visible timeout, never
 a silent pass. **This primitive has not yet run natively to a pass**; the `BeforeRenderEvent`
 design is the only thing that has run, and it crashed — nothing here is evidence of a pass.

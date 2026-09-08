@@ -34,21 +34,20 @@ namespace ThousandAndFirst.Harness
 	/// file owns the whole account. <see cref="Yield" /> is registered through
 	/// <c>XRLCore.RegisterOnEndPlayerTurnCallback</c>, fires once per <c>PlayerTurn</c> iteration on
 	/// the game thread, and spends the opportunity with the same <c>PassTurn()</c> CmdWait makes
-	/// once the count is met. Energy below the threshold ends <c>PlayerTurn</c>'s loop and
-	/// <c>RunSegment</c>'s, and the next segment brings the <c>BeginTakeActionEvent</c> the runner
-	/// resumes on: the SAME continuation <c>advance</c> uses.
+	/// once the count is met. Energy below the threshold ends both loops, and the next segment
+	/// brings the <c>BeginTakeActionEvent</c> the runner resumes on: <c>advance</c>'s continuation.
 	/// </para>
 	/// <para>
-	/// FAIL-CLOSED, AND THE ONE HOLE THE ENGINE PUTS THERE. <c>PlayerTurn</c> parks its whole energy
-	/// loop on <c>while (!GameManager.focused &amp;&amp; Game.Running) Thread.Sleep(200)</c>
+	/// FOCUS, THEN FAIL-CLOSED. <c>PlayerTurn</c> parks its whole energy loop on
+	/// <c>while (!GameManager.focused &amp;&amp; Game.Running) Thread.Sleep(200)</c>
 	/// (<c>D/XRL/Core/XRLCore.cs:756</c>) - at the HEAD of the loop, upstream of the render call and
-	/// the end-of-turn callbacks - so an unfocused window draws no frame AND fires no seam, and no
-	/// in-engine guard could end that stall. The verb therefore REFUSES to arm while the window is
-	/// already unfocused, and focus lost mid-yield is left to the persona's own TIMEOUT: a visible
-	/// timeout, never a silent pass. (<c>advance</c> never meets the park: spending the energy keeps
-	/// <c>RunSegment</c> out of <c>PlayerTurn</c>.) While frames DO arrive, the wall-clock deadline
-	/// is checked in the frame seam itself and again in the resume seam, and the idle-opportunity
-	/// counter catches a segment loop that never enters <c>PlayerTurn</c>.
+	/// the end-of-turn callbacks - and the launcher leaves a scripted window unfocused on purpose.
+	/// <see cref="KingdomScenarioFocus" /> therefore ASSERTS that one flag for the hold and never
+	/// <c>XRLCore.bThreadFocus</c>, so the loop runs while every input gate stays shut, and the verb
+	/// refuses when the override does not read back. (<c>advance</c> never meets the park: spending
+	/// the energy keeps it out of <c>PlayerTurn</c>.) That it TOOK is proved by a real frame: the
+	/// deadline is checked in the frame seam and again in the resume seam, and the idle counter
+	/// catches a segment loop that never enters <c>PlayerTurn</c> at all.
 	/// </para>
 	/// </summary>
 	internal static class KingdomScenarioFrames
@@ -119,6 +118,7 @@ namespace ThousandAndFirst.Harness
 
 		internal static void Cancel()
 		{
+			KingdomScenarioFocus.Release();
 			Waiting = false;
 			Requested = 0;
 			Observed = 0;
@@ -156,12 +156,12 @@ namespace ThousandAndFirst.Harness
 			GameObject player = The.Player;
 			if (player == null || The.Game == null || player.CurrentZone == null)
 				return Refuse(CodeNoGame, "there is no live player zone the engine could render");
-			if (!GameManager.focused)
-				return Refuse(CodeUnfocused, "PlayerTurn parks its whole loop while the window is "
-					+ "unfocused, so an armed yield would draw no frame and fire no seam");
 			string failure;
 			if (!KingdomScenarioFrameObserver.TryInstall(out failure))
 				return Refuse(CodeNoSeam, "no drawn-frame seam, so nothing counts a frame: " + failure);
+			if (!KingdomScenarioFocus.TryHold(out failure))
+				return Refuse(CodeUnfocused, "PlayerTurn would park its whole loop, drawing no "
+					+ "frame and firing no seam: " + failure);
 			Requested = frames;
 			Observed = 0;
 			Marked = 0;
