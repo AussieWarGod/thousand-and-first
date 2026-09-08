@@ -27,19 +27,28 @@ TAF_DIAGNOSTIC = re.compile(
     rb"|(?i:^[ \t]*(?:at|---).*thousandandfirst[.:])")
 
 
+# A retained non-TAF diagnostic line is decoded (UTF-8, replacement on error) and cut to this many
+# characters before being folded into the caller's report -- it is not kept verbatim.
+RETAINED_LINE_MAX_CHARS = 500
+
+
 def diagnostics(raw: bytes) -> list[str]:
     """Enforce the TAF-only contract over a whole Player.log; return retained non-TAF lines.
 
     Raises on the first TAF-tagged MODERROR/MODWARN or TAF exception/stack frame. Any other
     diagnostic-shaped line (a third party's own MODWARN/MODERROR/WARN/ERROR/Exception) is
-    collected here, verbatim, for the caller to fold into its report -- it is never fatal.
+    collected here -- decoded (UTF-8, replacement on error) and truncated to
+    RETAINED_LINE_MAX_CHARS characters, not verbatim -- for the caller to fold into its report;
+    it is never fatal. A line matching neither diagnostic pattern is never decoded.
     """
     retained = []
     for line in raw.replace(b"\r\n", b"\n").split(b"\n"):
-        text = line.decode("utf-8", errors="replace")[:500]
-        require(not TAF_DIAGNOSTIC.search(line), "native log reported a Thousand and First diagnostic: " + text)
-        if ANY_DIAGNOSTIC.search(line):
-            retained.append(text)
+        is_taf = TAF_DIAGNOSTIC.search(line)
+        if not (is_taf or ANY_DIAGNOSTIC.search(line)):
+            continue
+        text = line.decode("utf-8", errors="replace")[:RETAINED_LINE_MAX_CHARS]
+        require(not is_taf, "native log reported a Thousand and First diagnostic: " + text)
+        retained.append(text)
     return retained
 
 
