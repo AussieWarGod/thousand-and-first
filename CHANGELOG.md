@@ -64,7 +64,7 @@ below it.
 > Root and independent AI reviewer read all four changed production sources and affected
 > boundaries; unchanged sources inherit the complete canonical parent review chain.
 
-## Retained unreleased — master pause/resume correction
+## Retained unreleased — master pause/resume correction, the claimed-ground light, and first-settler legibility
 
 - Master resume now validates a complete growth schedule before publishing it. Fresh
   growth no longer receives a positive deadline with a zero interval; established growth
@@ -75,8 +75,57 @@ below it.
   arrival recovery, stale ownership, canonical save payloads and arithmetic refusal.
   Native regression and four-mode compilation pass. Full licensed suites pass13,715 main
   and5,093 Portable cases,zero skips; repository audit passes501 tooling tests.
+- Claimed ground now reads at a glance. While you stand in a zone your seat claims, a
+  mod-owned zone part lights the whole zone to the torch tier once per rendered frame and
+  remembers its floor once per visit. Walls still stop sight, interiors behind them stay
+  dark, and nothing hidden is revealed: this is lamplight, not omniscience or x-ray sight.
+- New option `r_TAF_OptionClaimedGroundLight`, default Yes. Losing the claim, seceding,
+  being exiled, or switching the option off takes the part off on the next visit; explored
+  floor stays explored, because unsetting it would erase legitimately walked ground. No
+  saved field, wire or public API change, and a save loaded without the mod is dark again.
+- Reed-at-Dawn and the other camp guides now answer five fixed questions as well as giving
+  the opening inventory: founding and claimed ground; commissioning, materials and hands;
+  water and the stores; who may arrive and what a roof has to do with it; petitions and raids.
+  The words live in one engine-free file and are proved without a game.
+- The guide says in his own voice that he is not on the roll and passes through, that hands
+  come off the roll, and that nobody new stays unless a roof stands with room left under it.
+  He never states the roll's current size, so every word stays true whether or not a camp is
+  seeded with founding settlers. No answer promises an arrival, a pair of hands or a finished
+  building, because the settlement refuses all three until a roof stands with room under it
+  and somebody lives there.
+- No receipt phase, wire, save field, option, grant or advisor verifier predicate changes.
+  A guide is built once, with the world: existing Quickstart saves keep the one-node guide,
+  and only worlds created after this change get the topics. Public0.3.1 is unchanged.
+- The first guest now announces itself. Publishing the first-guest correspondence writes one
+  player message naming the kingdom and pointing at the Charter, said once per opportunity because
+  a standing candidate makes the next arrival pass return before it reaches that publication.
+- The durable half is presentation, not a ledger note: an unanswered first guest is now said by the
+  Charter/Status next-need line, so it survives a save and cannot be dropped the way a ledger note
+  is once twelve notes stand. It is said alongside the settlement's ordinary want, never instead of
+  it, so deferring a guest cannot silence a settlement running out of water.
+- The stale housing advice is replaced. With no roof at all the line names the settler's tent and
+  its bill in the material name the rest of the interface uses (brush, not the catalogue's
+  `canvas`), and promises only what a roof buys: the first guest's citizenship gate never reads
+  lodging, so a roof buys cover now and the arrival after this one.
+- One rules-layer predicate, `GrowthFirstGuestAwaitsAnswer`, now backs the Charter label, the
+  next-need line and the correspondence guard, binding both the candidate phase and the choice
+  state so a quarantined candidate cannot read as a standing question. No save format, option, or
+  arrival-interval change.
 
-> **Retained master-growth census — exact structural gate passed.** Its3049-file census is line-cap green:
+> **Retained unreleased camp-guide, claimed-ground and first-guest census — exact structural gate passed.** Its3052-file census is line-cap green:
+> 432,239 physical lines,zero files at or above300; direct `XRL`
+> imports occur in 1417 files, 0 of them over the line limit. Inventory SHA-256:
+> `cf01fcc9993de9cee88d8ec6dc17dd8111eb37375f546d08850ac957fb372cad`.
+> The generated cold-install inventory contains 3083 files; no new subscription claim.
+> Engine-free suites pass13,735 main and5,109 Portable cases,zero skips, and the repository
+> tooling suites pass501 tests. Roslyn 9.0.306 on Linux compiled the
+> staged baseline (3048 sources) and staged compatibility (3052 sources plus the tracked
+> Hearthpyre 2.2.3 ABI stub) sets clean against the
+> licensed Managed references, warnings as errors. The two dev-harness modes, the Windows gate and
+> any native run did NOT happen for this delta, and the exact-inventory human semantic review is
+> open against the new digest. This is not Beta sign-off.
+
+> **Retained unreleased master-resume census — exact structural gate passed.** Its3049-file census is line-cap green:
 > 431,893 physical lines,zero files at or above300,1415 direct-XRL imports. Inventory SHA-256:
 > `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
 > The generated cold-install inventory contains 3080 files; no new subscription claim.

@@ -866,6 +866,48 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.AreEqual(0, experience.BodyReservations.Count);
 		}
 
+		[Test]
+		public void AwaitingAnAnswerNeedsBothTheChoicePhaseAndAnUnansweredChoiceState()
+		{
+			ClassicAssert.IsFalse(KingdomLifecycleRules.GrowthFirstGuestAwaitsAnswer(null),
+				"nothing standing owes the founder a reply");
+			ClassicAssert.IsFalse(KingdomLifecycleRules.GrowthFirstGuestAwaitsAnswer(
+				new KingdomGrowthArrivalCandidate
+				{
+					Phase = KingdomGrowthArrivalCandidatePhase.AwaitingChoice
+				}), "a candidate with no first guest asks the founder nothing");
+
+			KingdomGrowthBook awaiting = Published();
+			ClassicAssert.IsTrue(KingdomLifecycleRules.GrowthFirstGuestAwaitsAnswer(
+				awaiting.ArrivalCandidate));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryDeferGrowthFirstGuest(awaiting,
+				awaiting.ArrivalCandidate, 121L));
+			ClassicAssert.IsTrue(KingdomLifecycleRules.GrowthFirstGuestAwaitsAnswer(
+				awaiting.ArrivalCandidate),
+				"deferring costs nothing and expires never, so the question still stands");
+
+			KingdomGrowthBook quarantined = Published();
+			ClassicAssert.IsTrue(KingdomLifecycleRules.QuarantineGrowthArrivalCandidate(quarantined,
+				quarantined.ArrivalCandidate, "arrival evidence is unreadable"));
+			ClassicAssert.AreEqual(KingdomGrowthFirstGuestChoiceState.AwaitingChoice,
+				quarantined.ArrivalCandidate.FirstGuest.ChoiceState);
+			ClassicAssert.IsFalse(KingdomLifecycleRules.GrowthFirstGuestAwaitsAnswer(
+				quarantined.ArrivalCandidate),
+				"a quarantined candidate refuses every choice, so it cannot await one");
+
+			KingdomGrowthBook admitted = Published();
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryAdmitGrowthFirstGuest(admitted,
+				admitted.ArrivalCandidate, Body(admitted.ArrivalCandidate, 121L, 1L), 121L));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.GrowthFirstGuestAwaitsAnswer(
+				admitted.ArrivalCandidate), "an admitted guest has their answer");
+
+			KingdomGrowthBook declined = Published();
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryDeclineGrowthFirstGuest(declined,
+				declined.ArrivalCandidate, 121L));
+			ClassicAssert.IsFalse(KingdomLifecycleRules.GrowthFirstGuestAwaitsAnswer(
+				declined.ArrivalCandidate), "a declined guest has their answer");
+		}
+
 		private static void RetireDeclinedFirstGuest(KingdomGrowthBook growth)
 		{
 			KingdomGrowthArrivalCandidate candidate = growth.ArrivalCandidate;
