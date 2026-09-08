@@ -267,6 +267,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # Same contract as portable.yml's `repository-audit` job, which no longer runs on tag
+          # pushes: the whole-tree whitespace check it performs when there is no `before` SHA,
+          # then the audit itself.
+          git diff --check "$(git hash-object -t tree /dev/null)" HEAD
           ./Tools/portable-check.sh
 
       - name: reproduce the package from HEAD blobs and record the receipt digest
