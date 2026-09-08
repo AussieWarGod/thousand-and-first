@@ -273,7 +273,10 @@ namespace ThousandAndFirst
 					return debit.FailReservation(KingdomWaterDebitFault.InsufficientWater,
 						"The exact allocations do not sum to the requested debit.");
 				}
-				return debit;
+				// The reservation is now open on exact vessels and stays open until Commit or
+				// Rollback runs, which may be several publishes later. Record it so a resize can
+				// see the hold; the depth counter below is back to zero the moment this returns.
+				return debit.RegisterReservation();
 			}
 			catch (Exception ex)
 			{

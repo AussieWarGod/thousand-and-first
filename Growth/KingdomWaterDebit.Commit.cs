@@ -149,6 +149,7 @@ namespace ThousandAndFirst
 				if (State == KingdomWaterDebitState.Failed) ReconcilePhysicalRows();
 				Operating = false;
 				OpenTransactions--;
+				ReleaseReservation();
 			}
 		}
 

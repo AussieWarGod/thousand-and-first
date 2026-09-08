@@ -76,7 +76,12 @@ namespace ThousandAndFirst
 				if (Building.GetIntProperty(HeartEffectProperty) != 2) return false;
 				// The rung's own water. Idempotent and only ever upward, so an interrupted
 				// ceremony above costs the basin nothing: the next load or activation repeats it.
-				ReconcileBasinCapacity(System, Building, Z);
+				// Guarded like every other callback in this method: a refusal here must skip one
+				// idempotent step, never abort the settlement pass after the rung stamp landed.
+				KingdomSystem.Guard("heart basin capacity", delegate
+				{
+					ReconcileBasinCapacity(System, Building, Z);
+				});
 			}
 			if (KingdomDelveRules.IsDelve(Job.TargetKey))
 			{

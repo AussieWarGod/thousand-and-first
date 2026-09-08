@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using XRL;
 using XRL.World;
@@ -63,6 +64,14 @@ namespace ThousandAndFirst
 		/// <param name="System">The realm. Null or unfounded reconciles nothing.</param>
 		/// <param name="Z">The zone the heart stands in. Never thawed by this call.</param>
 		/// <returns>True when the basin was found and left at or above its rung's capacity.</returns>
+		/// <remarks>
+		/// The basin is resolved only through <c>TryExactAnchoredComponent</c>, which needs an
+		/// a3|/a4| managed layout receipt on the heart's owner. A heart raised before managed
+		/// layouts, whose owner carries an a2 or absent snapshot, is therefore NOT reconciled by
+		/// this call and its basin stays outside the water accounts until the next rung restamps
+		/// the layout. That is deliberate: guessing a basin from a standing relic mark alone would
+		/// let any relic-marked object in the zone be dedicated as a settlement store.
+		/// </remarks>
 		internal static bool ReconcileBasinCapacity(KingdomSystem System, Zone Z)
 		{
 			GameObject root;
@@ -94,7 +103,7 @@ namespace ThousandAndFirst
 				return true;
 			}
 			string reason;
-			if (BasinCapacityHeld(basin, out reason))
+			if (BasinCapacityHeld(System, basin, vessel, out reason))
 			{
 				AnnounceBasinCapacityHold(System, basin, capacity, reason);
 				return false;
@@ -102,8 +111,11 @@ namespace ThousandAndFirst
 			ReleaseBasinCapacityHold(basin);
 			vessel.MaxVolume = capacity;
 			KingdomSurvey.ObserveChangedInActive(Z, basin);
-			System.Ledger.Note("The first basin was widened to hold " + capacity
-				+ " drams as the heart rose to rung " + rung + ".");
+			// Worded for the catch-up callers too: the load and zone-activation paths raise no
+			// rung on the visit that widens the basin, so the line says what the rung is worth
+			// rather than announcing a rung that just rose.
+			System.Ledger.Note("The first basin now holds " + capacity
+				+ " drams, which is what rung " + rung + " is worth.");
 			KingdomLog.Log("basin: capacity raised to " + capacity + " at rung " + rung);
 			return true;
 		}
@@ -114,6 +126,12 @@ namespace ThousandAndFirst
 		/// plot pieces &mdash; the basin survives that sweep because an existing-authority
 		/// placement is stamped <c>PlotPartProperty = 0</c> and the sweep only releases a mark
 		/// from a piece stamped 1.
+		/// <para>
+		/// The ledger line below is not seen at a fresh founding: the rite stamps the dedication
+		/// itself in <c>KingdomPlot2.07c.FoundingHeartMarks</c> as the relic slot is created, so
+		/// the first reconciliation of a new settlement finds the mark already set and says
+		/// nothing. It is written for the pre-change save that gains the dedication on load.
+		/// </para>
 		/// </summary>
 		private static void DedicateBasinStore(KingdomSystem System, Zone Z, GameObject Basin)
 		{
@@ -125,17 +143,37 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Whether something is holding this basin's size still. Both answers are honest refusals
-		/// rather than failures: a reservation verifier asserts the vessel's MaxVolume has not
-		/// moved since it was measured, so widening underneath one would quarantine a receipt the
-		/// founder is in the middle of spending.
+		/// Whether something is holding this basin's size still. Every answer is an honest refusal
+		/// rather than a failure: each of these three readers asserts that the vessel's MaxVolume
+		/// has not moved since it was measured, so widening underneath one would refuse or
+		/// quarantine a receipt the founder is in the middle of spending.
+		/// <para>
+		/// The three are genuinely different windows. <c>TransactionOpen</c> is call-stack depth,
+		/// so it only answers for a drain that is executing underneath this call.
+		/// <c>VesselReserved</c> is the reserve-then-work-then-commit window, which spans
+		/// publishes and is where the hazard actually lives. A prepared growth water leg is the
+		/// one MaxVolume freeze that survives a save: the arrival endpoint refuses forever if
+		/// <c>vessel.MaxVolume != leg.Capacity</c>, so an unsettled leg on the basin outranks the
+		/// rung's capacity until the arrival settles or is retired.
+		/// </para>
 		/// </summary>
-		private static bool BasinCapacityHeld(GameObject Basin, out string Reason)
+		private static bool BasinCapacityHeld(KingdomSystem System, GameObject Basin,
+			LiquidVolume Vessel, out string Reason)
 		{
 			Reason = null;
 			if (KingdomWaterDebit.TransactionOpen)
 			{
 				Reason = "a water debit is being settled";
+				return true;
+			}
+			if (KingdomWaterDebit.VesselReserved(Vessel))
+			{
+				Reason = "an open water debit is bound to it";
+				return true;
+			}
+			if (GrowthLegHoldsBasin(System, Basin))
+			{
+				Reason = "an arrival is drawing from it";
 				return true;
 			}
 			KingdomConstructionInputLeaseSnapshot leases;
@@ -149,6 +187,40 @@ namespace ThousandAndFirst
 			{
 				Reason = "a construction lease holds its water";
 				return true;
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Whether any prepared-but-unsettled growth water leg names this basin. A leg records the
+		/// vessel's MaxVolume as <c>leg.Capacity</c> when it is prepared and the arrival endpoint
+		/// re-proves that number before it settles, so a widen landing between the two would strand
+		/// the arrival permanently. Legs before the operation's cursor are already settled and hold
+		/// nothing.
+		/// </summary>
+		private static bool GrowthLegHoldsBasin(KingdomSystem System, GameObject Basin)
+		{
+			KingdomGrowthBook growth = System?.LifecycleBook?.Growth;
+			if (growth == null || !GameObject.Validate(Basin)) return false;
+			string id = Basin.IDIfAssigned;
+			if (string.IsNullOrEmpty(id)) return false;
+			return UnsettledLegNames(growth.HeartbeatOp, id)
+				|| UnsettledLegNames(growth.ArrivalOp, id)
+				|| UnsettledLegNames(growth.DepartureOp, id)
+				|| UnsettledLegNames(growth.DeliveryOp, id)
+				|| UnsettledLegNames(growth.FetchOp, id)
+				|| UnsettledLegNames(growth.MillOp, id);
+		}
+
+		private static bool UnsettledLegNames(KingdomGrowthOperation Operation, string Id)
+		{
+			if (Operation == null || Operation.WaterLegs == null) return false;
+			for (int i = (Operation.WaterCursor > 0 ? Operation.WaterCursor : 0);
+				i < Operation.WaterLegs.Count; i++)
+			{
+				KingdomGrowthWaterLeg leg = Operation.WaterLegs[i];
+				if (leg != null && string.Equals(leg.ContainerId, Id, StringComparison.Ordinal))
+					return true;
 			}
 			return false;
 		}

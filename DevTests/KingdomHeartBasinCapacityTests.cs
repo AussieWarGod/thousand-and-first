@@ -23,6 +23,9 @@ namespace ThousandAndFirst.Tests
 		private const string Events = "Core/KingdomSystem.z20.Events.cs";
 		private const string Blueprints = "RuntimeData/ObjectBlueprints.xml";
 		private const string Buildings = "RuntimeData/KingdomBuildings.xml";
+		private const string Ground = "Growth/KingdomPlot2.04.Ground.cs";
+		private const string Protection = "Growth/KingdomMaterials.15.GroundAndWalls.cs";
+		private const string Reservations = "Growth/KingdomWaterDebit.OpenReservations.cs";
 
 		[Test]
 		public void TheBasinLadderIsExactAndClimbsStrictlyAndIsSilentOffTheLadder()
@@ -145,11 +148,16 @@ namespace ThousandAndFirst.Tests
 		public void AHeldBasinIsSkippedAndSaidOnceAndTheFlagClearsWhenTheHoldLifts()
 		{
 			string loader = Read(Loader);
-			Ordered(loader, "private static bool BasinCapacityHeld(GameObject Basin, out string Reason)",
+			// Three genuinely different windows, and the depth counter is the weakest of them:
+			// it is zero for the whole reserve-then-commit window, which is where the hazard is.
+			Ordered(loader, "private static bool BasinCapacityHeld(KingdomSystem System, GameObject Basin,",
+				"LiquidVolume Vessel, out string Reason)",
 				"if (KingdomWaterDebit.TransactionOpen)",
+				"if (KingdomWaterDebit.VesselReserved(Vessel))",
+				"if (GrowthLegHoldsBasin(System, Basin))",
 				"KingdomConstructionInputLeaseAuthority.TryCapture(out leases, out failure)",
 				"KingdomConstructionInputLeaseAuthority.IsLeased(leases, Basin)");
-			Ordered(loader, "if (BasinCapacityHeld(basin, out reason))",
+			Ordered(loader, "if (BasinCapacityHeld(System, basin, vessel, out reason))",
 				"AnnounceBasinCapacityHold(System, basin, capacity, reason);", "return false;");
 			Ordered(loader, "private static void AnnounceBasinCapacityHold(",
 				"if (Basin.GetIntProperty(BasinCapacityHeldProperty) == 1) return;",
@@ -201,7 +209,11 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void BothLiveStampsAndTheCatalogueAgreeWhereTheWaterIs()
 		{
+			// Guarded like every sibling callback in FinishPlotEffects: a throw from the survey,
+			// the anchored lookup or the ledger must not abort the settlement pass after the rung
+			// stamp has already been advanced.
 			Ordered(Read(Effects), "KingdomCeremonyHeart.OnRungRaised(",
+				"KingdomSystem.Guard(\"heart basin capacity\", delegate",
 				"ReconcileBasinCapacity(System, Building, Z);");
 			Ordered(Read(Events), "KingdomPlots.RecoverLegacyPlotFinalEffects(this, E.Zone)",
 				"KingdomPlots.ReconcileBasinCapacity(this, E.Zone);");
@@ -209,6 +221,92 @@ namespace ThousandAndFirst.Tests
 			Contains(catalogue, "NOTHING HERE STORES WATER",
 				"THE FIRST BASIN IS THE EXCEPTION, and it is not a rung.",
 				"KingdomPlotRules.HeartBasinCapacityForRung: 16/48/160/512/1024");
+		}
+
+		[Test]
+		public void AnOpenReservationOnTheBasinIsSeenPerVesselAndIsDroppedWhenItSettles()
+		{
+			string reservations = Read(Reservations);
+			// The per-vessel question. A depth counter cannot answer it: every OpenTransactions
+			// increment is paired with a finally inside one method body, so the counter is zero
+			// for the whole window between a reserved receipt being handed back and its commit.
+			Contains(reservations,
+				"internal static bool VesselReserved(LiquidVolume Vessel)",
+				"debit.State != KingdomWaterDebitState.Reserved",
+				"ReferenceEquals(Entries[i].Vessel, Vessel)");
+			// Weak references plus a live state re-read, so an abandoned receipt cannot leave a
+			// permanent refusal behind the way a strong per-vessel set would.
+			Contains(reservations,
+				"List<WeakReference<KingdomWaterDebit>> OpenReservations",
+				"OpenReservations.Add(new WeakReference<KingdomWaterDebit>(this));");
+			Ordered(reservations, "if (!OpenReservations[i].TryGetTarget(out debit) || debit == null",
+				"|| debit.State != KingdomWaterDebitState.Reserved)", "OpenReservations.RemoveAt(i);");
+			// Registered when reservation returns still reserved.
+			Ordered(Read("Growth/KingdomWaterDebit.cs"),
+				"if (total != debit.Amount)", "return debit.RegisterReservation();");
+			// Dropped on every terminal transition: commit, rollback, a cancelled reservation and
+			// a failed reservation.
+			foreach (string path in new[] { "Growth/KingdomWaterDebit.Commit.cs",
+				"Growth/KingdomWaterDebit.RollbackAndVerification.cs" })
+				Ordered(Read(path), "finally", "OpenTransactions--;", "ReleaseReservation();");
+			Ordered(Read("Growth/KingdomWaterDebit.RollbackAndVerification.cs"),
+				"KingdomWaterDebitAction.CancelReservation", "ReleaseReservation();");
+			Ordered(Read("Growth/KingdomWaterDebit.ClaimsAndHelpers.cs"),
+				"private KingdomWaterDebit FailReservation(", "Entries.Clear();",
+				"ReleaseReservation();");
+		}
+
+		[Test]
+		public void AnUnsettledArrivalWaterLegOnTheBasinHoldsItsCapacityStill()
+		{
+			// leg.Capacity is the vessel's MaxVolume at preparation and the arrival endpoint
+			// re-proves it before settling, so a widen in between strands the arrival forever.
+			// This is the one MaxVolume freeze that survives a save, which is why it is read
+			// alongside the two in-memory doors.
+			Contains(Read("Growth/KingdomGrowth.z06.ArrivalPreparation.cs"),
+				"vessel.MaxVolume, vessel.Volume,");
+			Contains(Read("Growth/KingdomGrowth.z10.ArrivalProofAndDomainHash.cs"),
+				"MaxVolume != leg.Capacity");
+			string loader = Read(Loader);
+			Ordered(loader, "private static bool GrowthLegHoldsBasin(KingdomSystem System, GameObject Basin)",
+				"KingdomGrowthBook growth = System?.LifecycleBook?.Growth;",
+				"string id = Basin.IDIfAssigned;",
+				"UnsettledLegNames(growth.HeartbeatOp, id)",
+				"UnsettledLegNames(growth.ArrivalOp, id)",
+				"UnsettledLegNames(growth.DepartureOp, id)",
+				"UnsettledLegNames(growth.DeliveryOp, id)",
+				"UnsettledLegNames(growth.FetchOp, id)",
+				"UnsettledLegNames(growth.MillOp, id)");
+			// Only legs at or after the cursor are unsettled; the ones behind it are already done.
+			Ordered(loader, "private static bool UnsettledLegNames(KingdomGrowthOperation Operation, string Id)",
+				"i = (Operation.WaterCursor > 0 ? Operation.WaterCursor : 0);",
+				"i < Operation.WaterLegs.Count; i++",
+				"string.Equals(leg.ContainerId, Id, StringComparison.Ordinal)");
+		}
+
+		[Test]
+		public void TheDedicatedBasinStillReadsAsBareGroundAndIsNeverToldToBeStruck()
+		{
+			// The dedication puts KingdomStores == 1 on the basin, which the settlement-works
+			// clause would otherwise read as Held -- and a Held basin refuses the very rungs that
+			// are supposed to be raised around it. The relic exemption therefore stands ABOVE it.
+			string ground = Read(Ground);
+			Ordered(ground, "public static KingdomPlotRules.GroundKind ReadObject(GameObject Object)",
+				"Object.GetIntProperty(HeartStakeProperty) == 1 || Object.GetIntProperty(HeartRelicProperty) == 1",
+				"return KingdomPlotRules.GroundKind.Bare;",
+				"Object.GetIntProperty(\"KingdomBuilt\") == 1 || Object.GetIntProperty(\"KingdomStores\") == 1",
+				"return KingdomPlotRules.GroundKind.Held;");
+			// And the founder-facing refusal for the basin's cell never names a remedy the mod
+			// always denies: a relic can be struck by nobody.
+			string protection = Read(Protection);
+			Ordered(protection, "public static bool IsProtected(GameObject Object, out string Reason)",
+				"if (Object.GetIntProperty(KingdomPlots.HeartRelicProperty) == 1)",
+				"Reason = \"The first basin was poured at the rite and is never cleared or struck. "
+					+ "Build around it.\";",
+				"Object.GetIntProperty(\"KingdomBuilt\") == 1 || Object.GetIntProperty(\"KingdomCitizen\") == 1");
+			Contains(Read("Growth/KingdomArchitectureStamper.Components.cs"),
+				"private static bool TryStrikeRemovable(GameObject Item,",
+				"Item.GetIntProperty(KingdomPlots.HeartRelicProperty) == 1)");
 		}
 
 		private static string Read(string path)

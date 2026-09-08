@@ -2,12 +2,15 @@
 
 ## Current unreleased first-basin water store
 
-3053 staged sources;432,561 physical lines;1418 direct-XRL;zero cap failures;3084 generated
-cold-stage files. Exact inventory `31aa61e6816e610d47125e374a34ee8f3b3a882be696c9c4aa7485ebd7e66995`.
+3054 staged sources;432,745 physical lines;1419 direct-XRL;zero cap failures;3085 generated
+cold-stage files. Exact inventory `ddb858489bf45062661de62af320befe464184c728c9f2924c35253d07424b65`.
 The founding heart's first basin becomes the settlement's first water store: dedicated in code at
 the relic slot, capacity 16/48/160/512/1024 by rung, raised only and never lowered, skipped with
-one ledger line while a water debit or routed-input lease is open, and reconciled once on load and
-on zone activation for worlds built before it. No saved field, wire format, option or verifier
+one ledger line while an open water debit is bound to that vessel, an unsettled arrival water leg
+draws from it, or a routed-input lease holds it, and reconciled once on load and on zone activation
+for worlds built before it. The catch-up resolves the basin only through the anchored-component
+lookup, which needs an a3|/a4| managed layout receipt on the heart's owner: a heart whose owner
+carries an a2 or absent snapshot is NOT reconciled until its next rung restamps the layout. No saved field, wire format, option or verifier
 predicate changes. Roslyn 9.0.306 on Linux compiles the dev-harness baseline and compatibility
 sets clean. No native run and no exact-inventory human semantic review bind this digest.
 

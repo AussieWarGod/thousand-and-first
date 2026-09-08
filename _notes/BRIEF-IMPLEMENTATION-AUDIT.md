@@ -2,9 +2,9 @@
 
 ## Current first-basin water-store census — 2026-09-09
 
-**3053** production C# files,432,561 physical lines,1418 direct-XRL,zero cap failures;
-3084 generated cold-install files. Exact digest
-`31aa61e6816e610d47125e374a34ee8f3b3a882be696c9c4aa7485ebd7e66995`.
+**3054** production C# files,432,745 physical lines,1419 direct-XRL,zero cap failures;
+3085 generated cold-install files. Exact digest
+`ddb858489bf45062661de62af320befe464184c728c9f2924c35253d07424b65`.
 The founding heart's first basin is the settlement's first water store, with a per-rung capacity
 raised and never lowered. No receipt phase, wire, option, grant or verifier predicate changes.
 Roslyn 9.0.306 on Linux compiled the dev-harness baseline and compatibility sets clean. No native

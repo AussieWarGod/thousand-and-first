@@ -251,6 +251,7 @@ namespace ThousandAndFirst
 			this.Fault = Fault;
 			this.Failure = Failure;
 			Entries.Clear();
+			ReleaseReservation();
 			return this;
 		}
 

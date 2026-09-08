@@ -49,6 +49,15 @@ namespace ThousandAndFirst
 					+ " holds equipment or stored objects. Empty it before clearing this ground.";
 				return true;
 			}
+			if (Object.GetIntProperty(KingdomPlots.HeartRelicProperty) == 1)
+			{
+				// The basin is the settlement's water store, so it would otherwise be caught by
+				// the settlement-works clause below and be told to strike it. It can never be
+				// struck: both TryStrikeRemovable and TryRemovableComponent refuse a relic
+				// outright, so that refusal would name a remedy the mod always denies.
+				Reason = "The first basin was poured at the rite and is never cleared or struck. Build around it.";
+				return true;
+			}
 			if (Object.GetIntProperty("KingdomBuilt") == 1 || Object.GetIntProperty("KingdomCitizen") == 1
 				|| Object.GetIntProperty("KingdomStores") == 1 || Object.GetIntProperty("KingdomLarder") == 1
 				|| Object.GetIntProperty(StockpileProperty) == 1
