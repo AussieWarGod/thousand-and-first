@@ -54,6 +54,9 @@ below it.
 - Full suites pass 13,826 main and 5,116 Portable cases, zero skips, up from 13,735 and
   5,109 on the `dev` integration branch. 501 tooling tests pass. The four-mode compile
   gate passed the pre-merge bytes and was not re-run for the merged tree.
+- Tools: the smoke launcher accepts every seal schema the game reads (4..6) and the full
+  legacy store layout; it previously refused progressed profiles. Maintainer tooling only,
+  with no player-visible or runtime effect.
 - A controlled native water-maintenance scenario proves upkeep billing, one drought
   departure, loyal-core retention, refill and paid recovery with exact Chronicle
   delivery. Water scarcity itself is not new here; it shipped in 0.3.1 code and this
