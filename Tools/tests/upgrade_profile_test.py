@@ -1,6 +1,7 @@
 """Synthetic host contracts only. No test result here is native upgrade acceptance."""
 from __future__ import annotations
 
+import ast
 import importlib.util
 import json
 import os
@@ -193,6 +194,22 @@ class UpgradeProfileStateTest(unittest.TestCase):
         self.assertLess(text.index("Assert-ClosedSeal -"), text.index("if ($OwnAttended)"))
         self.assertIn("@('CoQ', 'CavesOfQud')", text)
         self.assertIn("Start-TafOwnedScenarioProcess -Root $rootPath -Game $Game", text)
+
+    def test_external_wslpath_and_powershell_calls_are_bounded(self):
+        # A hung wslpath/powershell.exe helper must not block the unattended runner forever
+        # (native() copies state; stopped_source() gates the stop-proof step on it).
+        tree = ast.parse((TOOLS / "upgrade_profile_state.py").read_text())
+        checked = 0
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef) and node.name in ("native", "stopped_source"):
+                for call in ast.walk(node):
+                    if (isinstance(call, ast.Call) and isinstance(call.func, ast.Attribute)
+                            and call.func.attr == "run" and isinstance(call.func.value, ast.Name)
+                            and call.func.value.id == "subprocess"):
+                        checked += 1
+                        self.assertIn("timeout", [kw.arg for kw in call.keywords],
+                                     f"{node.name}() has an unbounded subprocess.run call")
+        self.assertEqual(checked, 4, "expected wslpath+powershell.exe calls in native() and stopped_source()")
 
 
 if __name__ == "__main__":

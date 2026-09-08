@@ -25,6 +25,8 @@ GUID = fs.GUID
 ID = r"[A-Za-z0-9_-]{1,96}"
 SAVE_LEAF = re.compile(r"(?:(?:Primary|Checkpoint|Quick)\.(?:json|sav\.gz(?:\.bak)?)|(?:Cache|PrimaryCache|CheckpointCache|QuickCache)\.db)\Z")
 STORE_FOLDERS = ("Stages", "Legacies", "Receipts", "Claims")
+WSLPATH_TIMEOUT_SECONDS = 15  # matches run-upgrade-profile.py's bounded path conversion
+STOP_ASSERT_TIMEOUT_SECONDS = 60  # matches run-upgrade-profile.py's bounded stop-mode call
 
 
 def receipt_tuple(name: str) -> bool:
@@ -130,7 +132,8 @@ def native(mode: str, plan: dict) -> dict:
     fs.write_new(path, json.dumps(plan, ensure_ascii=True, separators=(",", ":")).encode("utf-8"))
     helper = Path(__file__).with_name("upgrade-profile-trust.ps1")
     helper_win = subprocess.run(["wslpath", "-w", str(helper)], check=True,
-                                stdout=subprocess.PIPE, text=True).stdout.strip()
+                                stdout=subprocess.PIPE, text=True,
+                                timeout=WSLPATH_TIMEOUT_SECONDS).stdout.strip()
     plan_win = "C:\\" + scratch.name + "\\plan.json"
     run = subprocess.run(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
                           helper_win, "-Mode", mode, "-Plan", plan_win], check=True,
@@ -163,9 +166,10 @@ def stopped_source(source: Path, game: Path) -> None:
     fs.ownership_shape(fs.read_bytes(source / "process-ownership.json", 16384), source)
     helper = Path(__file__).with_name("assert-scenario-source-stopped.ps1")
     convert = lambda path: subprocess.run(["wslpath", "-w", str(path)], check=True,
-        stdout=subprocess.PIPE, text=True).stdout.strip()
+        stdout=subprocess.PIPE, text=True, timeout=WSLPATH_TIMEOUT_SECONDS).stdout.strip()
     subprocess.run(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
-                    convert(helper), "-Root", windows(source), "-Game", convert(game)], check=True)
+                    convert(helper), "-Root", windows(source), "-Game", convert(game)], check=True,
+                   timeout=STOP_ASSERT_TIMEOUT_SECONDS)
 
 
 def capture_donor(source: Path, config: dict, state: dict) -> dict:
