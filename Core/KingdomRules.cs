@@ -104,8 +104,12 @@ namespace ThousandAndFirst
 		/// <summary>
 		/// True worst civic-container envelope on one zone. A City may commission 220 plot roots;
 		/// every root may itself be one vessel/larder. A founder can also dedicate the 24+8 manual
-		/// allowances before those roots are raised. Plot furnishings are not separate civic stores:
-		/// current authored components never carried the marks, and legacy population furnishings
+		/// allowances before those roots are raised. Plot furnishings are not separate civic stores,
+		/// with ONE exception: the heart's first basin (<c>fixture:first-basin</c>, an
+		/// ExistingAuthority placement) carries KingdomStores from the rite onward and is counted
+		/// by <c>KingdomGrowth.CountDedicatedVessels</c>, so it CONSUMES one of the 24 manual
+		/// allowances rather than adding a 253rd container -- the number below does not move for
+		/// it. Every other authored component carries no mark, and legacy population furnishings
 		/// are normalized back to personal vessels by <c>KingdomSurvey</c>.
 		/// </summary>
 		public static readonly int MaxCivicContainersPerZone =

@@ -37,12 +37,13 @@ schema refusals,unresolved cohort denial,revision-aware exile and retained found
 receipts are covered. Four checked-in seals written by writer code byte-identical to tag
 `v0.3.1` live in `DevTests/Fixtures/SealProfile`; their SHA-256s are pinned in
 `DevTests/KingdomSealProfileHistoricalFixtureTests.cs` and are never regenerated.
-Retained3052-source production digest
-`c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`
-passed the structural gate at its own checkpoint; its exact-inventory human semantic review is
-open after the `dev` merge. The Windows suites that pass13,826 main/5,116 Portable cases,zero
-skips,up from13,735/5,109 on the `dev` integration branch, ran on THAT retained digest and are
-not restated for the current one;
+Current3056-source production digest
+`5160ed08e19734f315ebe8c7fe2ab4e5e7e1bb6bc632ae97a0c511d1f40cd325`
+passes the structural gate; its exact-inventory human semantic review is open after the `dev`
+merge. The Windows suites that pass13,826 main/5,116 Portable cases,zero skips,up from
+13,735/5,109 on the `dev` integration branch, ran on the retained3052-source digest
+`c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c` and are not restated for the
+current one;
 canonical39198 passes ordinary3045/3049 and developer3182/3186 with137 Harness files,all four
 modes plus installed source/ABI on the pre-merge bytes,and is not restated for the merged tree.
 Complete ordinary/developer source comparisons pass for the bytes it ran on.
@@ -84,9 +85,13 @@ baseline and dev-harness compatibility compiles. The shared `DevTests/refs.rsp` 
 `-langversion:latest`, so those compiles are not pinned to C# 7.3; `LangVersion` 7.3 is pinned
 only in `DevTests/Engine*/Probe.csproj` and `Tools/WorkshopSteam/*.csproj`. Retained sections
 below keep their original wording as written at their own checkpoints.
-Staged compatibility compilation runs across 3053 production C# sources, staged baseline across
-3049 (the optional-mod bridge is a compatibility-only source); the generated
-cold-install inventory contains 3084 files. Neither count proves subscriber delivery.
+Staged compatibility compilation runs across 3059 production C# sources, staged baseline across
+3055 (the optional-mod bridge is a compatibility-only source); the generated
+cold-install inventory contains 3090 files. Neither count proves subscriber delivery.
+The receipts named above were measured at the earlier 3052/3048/3083 census, before the Kingdom
+Quickstart tent rows, the first-basin water store and the stockpile unit capacity added production
+sources; the engine-free suites were re-run on the current bytes and their counts are recorded in
+`CHANGELOG.md`.
 The Kingdom Quickstart tent-row delta inside this census compiled clean in the staged baseline and
 staged compatibility modes only, run on Linux with the SDK Roslyn against the installed managed
 assemblies rather than through `Tools/gate.sh`; the two dev-harness modes, the installed-ABI
@@ -96,6 +101,9 @@ The receipt wire tag that decides the founding stake is covered by codec cases o
 `q1` Reserved receipt decodes with no shelter obligation, re-encodes to the same bytes, keeps that
 answer through an advance, and refuses a tag edited in place. No native resumed pre-existing save
 witnesses it.
+The first-basin water-store delta inside this census compiled clean in the staged baseline, staged
+compatibility and both dev-harness modes on the same Linux SDK Roslyn; the installed-ABI source
+step, the Windows gate, the developer boot matrix and any native run are outstanding for it too.
 [Native/focused evidence](/mnt/c/taf-master-growth-native.sP00c6/README.md).
 
 ## Retained real-turn recovery validation

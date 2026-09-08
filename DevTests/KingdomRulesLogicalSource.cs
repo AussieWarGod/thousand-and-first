@@ -11,6 +11,7 @@ namespace ThousandAndFirst.Tests
 			"Core/KingdomRules.Dish.cs",
 			"Core/KingdomRules.Meals.cs",
 			"Core/KingdomRules.FoodIndustry.cs",
+			"Core/KingdomRules.MaterialStores.cs",
 			"Core/KingdomRules.Economy.cs",
 			"Core/KingdomRules.Clock.cs",
 			"Core/KingdomRules.Population.cs",

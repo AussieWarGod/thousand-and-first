@@ -116,8 +116,10 @@ namespace ThousandAndFirst
 			for (int i = 0; i < stock.Stockpiles.Count; i++)
 			{
 				GameObject candidate = stock.Stockpiles[i];
+				// A store with no room left is not chosen: the salvage takes the cell path below
+				// and is counted as spilled, rather than pushing past a stated capacity.
 				if (GameObject.Validate(candidate) && candidate.CurrentZone == Z
-					&& candidate.Inventory != null)
+					&& candidate.Inventory != null && StockpileRoom(candidate) >= 1)
 				{
 					destination = candidate;
 					break;
