@@ -97,7 +97,7 @@ namespace ThousandAndFirst.DevTests
 		}
 
 		[Test]
-		public void CanonicalProfileCommitmentRejectsTamperAndUnresolvedCapture()
+		public void CanonicalProfileCommitmentRejectsTamperAndMixedUnresolvedCapture()
 		{
 			KingdomPolityFoundationFacts facts = Foundation();
 			ClassicAssert.IsTrue(KingdomPolityProfileRules.TryCreateCurrent(facts,
@@ -120,7 +120,7 @@ namespace ThousandAndFirst.DevTests
 			duplicate.CanonicalBodyKeys.Add(duplicate.CanonicalBodyKeys[0]);
 			ClassicAssert.IsFalse(KingdomPolityProfileRules.ValidLegacy(duplicate, out failure));
 
-			source.BodyKeys = new List<string> { "unresolved" };
+			source.BodyKeys = new List<string> { "human", "unresolved" };
 			ClassicAssert.IsFalse(KingdomPolityProfileRules.TryCaptureLegacyProfile(OldSnapshot(), source,
 				out failure));
 			StringAssert.Contains("lacks canonical", failure);

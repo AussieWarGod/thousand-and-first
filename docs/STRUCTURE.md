@@ -20,6 +20,20 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
+The empty-camp legacy correction reports3049 staged production C# files,431,913 physical
+lines,zero at or above300,and1415 direct-XRL files. Exact inventory:
+`5070e0e1a9093ec9725cc428d18118da8bf5818d478e460b6cda3410c384c4c7`.
+The complete canonical comparison against integration parent2be6b00 verifies3045 unchanged
+and four modified sources,with no additions or removals. Root and independent AI reviewer
+read the four-file delta and affected seal,profile,foundation,import and exile boundaries.
+Explicit committed-unresolved profile schema2 preserves real technology and provenance
+without inventing bodies; existing immutable foundation observation owns exile admission.
+Old schema0/1 encodings remain unchanged. New schema2 needs a new public version and is
+not downgrade-readable by0.3.1. [Review evidence](STRUCTURE_REVIEW_0_3_1.md) binds this
+digest; automated and native acceptance remain separately scoped. Public0.3.1 is unchanged.
+
+## Retained master-growth census
+
 The master-growth resume correction reports3049 staged production C# files,431,893 physical lines,
 zero at or above300,and1415 direct-XRL files. Exact inventory:
 `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.

@@ -10,7 +10,7 @@ namespace ThousandAndFirst
 			if (Schema < 6) return true;
 			if (!ReadInt(Body, KeyProfileSchema,
 				KingdomPolityProfileRules.UnresolvedLegacyProfileSchema,
-				KingdomPolityProfileRules.CurrentLegacyProfileSchema,
+				KingdomPolityProfileRules.CommittedUnresolvedLegacyProfileSchema,
 				out Record.ProfileSchema, ref Fault, ref Detail) ||
 				!ReadInt(Body, KeyTechnologyBand, 0, 10,
 					out Record.TechnologyBand, ref Fault, ref Detail) ||

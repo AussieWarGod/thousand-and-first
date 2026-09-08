@@ -8,7 +8,63 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-## Unreleased — master pause/resume correction
+## Unreleased — empty-camp legacy correction
+
+### Fixed
+
+- A realm whose residents map to no canonical body can now stage and seal its legacy. In
+  0.3.1 the automatic daily seal stage of such a realm failed closed ("current polity
+  profile lacks canonical seal-safe phenotype provenance") and no legacy was ever recorded.
+  This covers an empty camp (population 0) and also a populated settlement whose residents
+  are all non-canonical species. The seal now carries an explicit committed-unresolved
+  profile (`profile_schema` 2): the real technology band and both provenance digests, a
+  body pool of exactly `unresolved`, and no species, gear or NPCs inferred from stage,
+  style or origin.
+- Realm exile now proves the original (revision 1) foundation receipt instead of
+  recomputing it from the latest profile revision, so a realm whose profile was revised
+  after founding can still be exiled. That covers any realm at profile revision 2 or
+  above, not only an empty camp. The original foundation receipt is never rewritten.
+
+### Compatibility
+
+- Reading older data: 0.3.2 reads every 0.3.0/0.3.1 seal and save unchanged.
+  `profile_schema` 0 and 1 keep their bytes, digest domains and meaning; nothing is
+  rewritten on load. Seals produced by writer code byte-identical to the 0.3.1 tag are
+  checked in as the regression fixture (`DevTests/Fixtures/SealProfile`).
+- Rolling back: the outer seal format stays `taf-seal 6`, but any seal or save that
+  carries `profile_schema` 2 — a realm that had no canonical body when it was staged,
+  promoted, reserved or exiled — is not readable by 0.3.1. 0.3.1 treats such a legacy
+  seal as absent, and loading a 0.3.2 save whose pending inheritance was built from one
+  clears that reservation (RepairRequired). No downgrade writer is provided: schema 2
+  cannot be expressed as schema 1 without inventing bodies, or as schema 0 without
+  dropping technology and provenance, and this project never fabricates. Back up saves
+  before updating; see PLAYTESTING.md, "Upgrade, rollback, and uninstall".
+
+### Tests
+
+- 91 new cases: 73 seal/schema/exile regressions, 7 native-source wiring cases, 9
+  historical-fixture cases over checked-in 0.3.1-writer seals (schema 0/1 identity read,
+  byte-exact recompose, transition copy, saved reservation shape, widened/mixed refusals,
+  reader-bound source pin) and 2 exile cases (a canonical-body revised realm, and a pin
+  that a profile revision never re-cuts the current realm foundation receipt).
+- Full suites pass 13,806 main and 5,100 Portable cases, zero skips, up from 13,715 and
+  5,093 on the integration branch. All four compile modes and 501 tooling tests pass.
+- A controlled native water-maintenance scenario proves upkeep billing, one drought
+  departure, loyal-core retention, refill and paid recovery with exact Chronicle
+  delivery. Water scarcity itself is not new here; it shipped in 0.3.1 code and this
+  change only adds the native proof. Known gap: the ordinary 12-note summary can omit the
+  departure line; the Chronicle receipt is the durable record. Save/load remains
+  separately gated. Retained failures and bounded native scope are recorded in
+  `docs/STATUS.md`.
+
+> **Current unreleased census — exact structural gate passed.** Current 3049-file census is line-cap green:
+> 431,913 physical lines,zero files at or above300,1415 direct-XRL imports. Inventory SHA-256:
+> `5070e0e1a9093ec9725cc428d18118da8bf5818d478e460b6cda3410c384c4c7`.
+> The generated cold-install inventory contains 3080 files; no new subscription claim.
+> Root and independent AI reviewer read all four changed production sources and affected
+> boundaries; unchanged sources inherit the complete canonical parent review chain.
+
+## Retained unreleased — master pause/resume correction
 
 - Master resume now validates a complete growth schedule before publishing it. Fresh
   growth no longer receives a positive deadline with a zero interval; established growth
@@ -20,7 +76,7 @@ below it.
   Native regression and four-mode compilation pass. Full licensed suites pass13,715 main
   and5,093 Portable cases,zero skips; repository audit passes501 tooling tests.
 
-> **Current unreleased census — exact structural gate passed.** Current 3049-file census is line-cap green:
+> **Retained master-growth census — exact structural gate passed.** Its3049-file census is line-cap green:
 > 431,893 physical lines,zero files at or above300,1415 direct-XRL imports. Inventory SHA-256:
 > `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
 > The generated cold-install inventory contains 3080 files; no new subscription claim.

@@ -102,6 +102,16 @@ enabled.
 To roll back, restore the backed-up save and its matching mod package together. Loading a newer
 save with older mod code is not a supported rollback.
 
+The next release carries one specific rollback hazard. From that release a realm whose
+residents map to no canonical body — an empty camp, or a settlement whose residents are
+all non-canonical species — writes a legacy seal with `profile_schema` 2. The outer seal
+format is unchanged (`taf-seal 6`), but 0.3.1 cannot read that value: it treats such a
+legacy seal on disk as absent, and loading a newer save whose pending inheritance was
+built from one clears that reservation and marks the state RepairRequired. No downgrade
+writer is provided, because the record cannot be re-encoded for 0.3.1 without inventing a
+body pool the realm never had or dropping its technology band and provenance. Back up the
+save and keep the matching package before updating.
+
 To uninstall:
 
 1. Exit Qud.
