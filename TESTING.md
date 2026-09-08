@@ -669,6 +669,45 @@ sequence has the bounded native evidence below; ordinary raids and save/load rep
 remain unsigned. Separate contact case 28b.2 also has bounded native evidence below;
 neither earlier launch pass supplied that proof or closes the remaining gates.
 
+## Unattended observers for the attended light / guide / first-guest steps
+
+Three personas replace the human-eyes observations the pinned native protocol still asks for on
+the claimed-ground light, the camp guide's topics, and the first guest's correspondence. They are
+**registered, not yet run**: no native receipt exists for any of them, and nothing here is
+evidence of a pass.
+
+| Persona | Command | Attended step it replaces |
+| --- | --- | --- |
+| [`claimed-light-native-check`](Tools/personas/claimed-light-native-check.persona) | `Tools/run-personas.sh claimed-light-native-check` | walking the held zone to see it lit, and reading part cardinality and `SettlementId` by eye |
+| [`guide-topics-native-check`](Tools/personas/guide-topics-native-check.persona) | `Tools/run-personas.sh guide-topics-native-check` | talking through all five topics in order, comparing each rendered answer, and checking every return to Start |
+| [`first-guest-native-check`](Tools/personas/first-guest-native-check.persona) | `Tools/run-personas.sh first-guest-native-check` | reading the opening message once, and reading the Charter next-need ordering by eye |
+
+What the machine asserts:
+
+- **Light.** The same zone is the negative control before it is claimed: a real `Zone.Activated()`
+  on unclaimed ground attaches nothing and dispatches nothing. After a real founding and a second
+  real activation, exactly one `KingdomClaimedGroundLight` stands with the seat's own
+  `SettlementId`; after real rendered frames no cell reads below `LightLevel.Light`
+  (`Zone.GetLight`, `Cell.IsLit`), and no live zone outside `ClaimedZones` carries the part.
+- **Guide.** The production advisor creator builds a real guide; its authored
+  `ConversationScript.Blueprint` must carry the house farewell first and then the five pinned
+  topics in `Core/KingdomQuickstartGuideRules.cs` order, each opening its own answer node with the
+  pinned answer and exactly one `I have more to ask.` choice back to `Start`.
+- **First guest.** A founded, watered, roofless camp runs the real arrival cadence over real
+  turns. The opening line is counted as the engine writes it and must be written exactly once
+  across two due passes, the candidate must still await an answer, no ledger note may appear, and
+  `KingdomReports.NextNeed` must put the guest line ahead of the camp's still-present roofless
+  want.
+
+What stays human-only: rendered pixels and rendered dialogue; line-of-sight through walls;
+attribution of the light at night as against ambient `Daylight`, which can reach the same tier on
+its own — the persona asserts coverage and reports the deficit the part's own dispatch closed;
+the option-toggle and claim-loss cases; every old-save case; and every save-then-cold-load pair.
+The runner has no reload leg: `Tools/prepare-scenario-load.py` and
+`Tools/verify-scenario-rung-load.py` are a separate two-profile operator route with its own
+snapshot codec and load witness, not something a `.persona` can express, so a save/load pair for
+the light and the first guest is blocked on that route rather than hosted here.
+
 ## Beta Quickstart cleanup — native seams and open acceptance
 
 Use disposable development profiles and controlled fault injection; never alter an ordinary save

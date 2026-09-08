@@ -749,6 +749,7 @@
 	<Compile Include="KingdomRaidRecoveryBoundarySourceTests.cs" />
 	<Compile Include="KingdomRaidRecoveryGuardsNativeSourceTests.cs" />
 	<Compile Include="KingdomRaidRecoveryTurnNativeSourceTests.cs" />
+	<Compile Include="KingdomNativeObserverSourceTests.cs" />
 	<Compile Include="KingdomRaidMasterTurnNativeSourceTests.cs" />
 	<Compile Include="KingdomWaterMaintenanceNativeSourceTests.cs" />
 	<Compile Include="KingdomEmptyCampSealTests.cs" />

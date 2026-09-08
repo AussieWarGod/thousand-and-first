@@ -1,0 +1,11 @@
+# Real founding, the engine's own Zone.Activated(), and light read only after real rendered frames.
+# The unclaimed control is this same zone before the claim; no remote zone is thawed to look at it.
+# Not ordinary play, not a night walk, and no claim-loss, option-toggle or cold-load coverage.
+DESCRIPTION=a claimed zone carries one stamped light part and reports no cell below Light after real frames
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;claimed-light-setup;advance 20;claimed-light-check;stagedigest
+VERBS=claimed-light-setup,claimed-light-check
+EXPECT=stagedigest:OK~founded=false,claimed-light-setup:OK~native-claimed-light phase=1,advance:OK,claimed-light-check:OK~native-claimed-light cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
+SET=growth,native-regression
+TIMEOUT=600
