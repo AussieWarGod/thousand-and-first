@@ -386,6 +386,134 @@ namespace ThousandAndFirst.Tests
 			StringAssert.DoesNotContain("debit.Rollback()", commission.Substring(close));
 		}
 
+		[Test]
+		public void EveryReceiptThatCanRefundAfterItsOwnCallbacksHoldsItsVesselsAcrossThem()
+		{
+			// The adversary, once per caller: the caller commits, runs its OWN callbacks -- publishes,
+			// material commits, rows, a destroyed seed, an enrolment part, a standing batch -- and only
+			// then decides whether to compensate. A basin widening landing in that span makes Rollback
+			// refuse (AllStillCommitted asserts MaxVolume == OriginalMaxVolume), so the founder's water
+			// is gone for good. Each caller must therefore open its window BEFORE the commit and close
+			// it in an ENCLOSING finally, so no exit -- refusal, exception or success -- can either
+			// drop the hold early or keep it after the caller's last compensation.
+			foreach (var caller in PostCommitRefundCallers)
+			{
+				string source = Compact(Read(caller.File));
+				string begin = caller.Receipt + ".BeginCompensationWindow();";
+				string end = caller.Receipt + ".EndCompensationWindow();";
+				ClassicAssert.AreEqual(1, Occurrences(source, begin), caller.File + " opens once");
+				ClassicAssert.AreEqual(1, Occurrences(source, end), caller.File + " closes once");
+				int opened = source.IndexOf(begin, StringComparison.Ordinal);
+				int committed = source.IndexOf(Compact(caller.Commit), StringComparison.Ordinal);
+				ClassicAssert.GreaterOrEqual(committed, 0, caller.File + " commit token");
+				ClassicAssert.Less(opened, committed, caller.File + " opens before its commit");
+				// The close is lexically inside a finally block, not merely somewhere below.
+				ClassicAssert.IsTrue(Regex.IsMatch(source,
+					@"finally \{[^{}]*" + Regex.Escape(end)),
+					caller.File + " closes its window in an enclosing finally");
+				// And nothing below the close still tries to compensate that same receipt: a
+				// refund reached after the hold is dropped is the very hazard this window covers.
+				int closed = source.IndexOf(end, StringComparison.Ordinal);
+				StringAssert.DoesNotContain(caller.Receipt + ".Rollback()", source.Substring(closed));
+			}
+		}
+
+		[Test]
+		public void TheConstructionWindowSpansTheMaterialCommitAndTheRefundThatFollowsIt()
+		{
+			// Funding commits the water, publishes, commits the MATERIAL -- real object callbacks --
+			// and only then may refund a clean no-material attempt. The whole span is one window.
+			Ordered(Read(Funding), "Water.BeginCompensationWindow();", "try",
+				"bool waterCommitted = Water.Commit();",
+				"KingdomMaterialDebitResult result = Material.Commit();",
+				"bool rolledBack = Water.Rollback();",
+				"finally", "Water.EndCompensationWindow();");
+		}
+
+		[Test]
+		public void TheSowingWindowSpansTheLaidRowsAndTheSpentSeedAndTheRefundThatFollowsThem()
+		{
+			Ordered(Read(Sowing), "debit.BeginCompensationWindow();", "try", "!debit.Commit())",
+				"laid = LayRows(zone, work, row, rows);",
+				"bool destroyed = Seed.Destroy(null, Silent: true);",
+				"bool waterRestored = debit.Rollback();",
+				"finally", "debit.EndCompensationWindow();");
+		}
+
+		[Test]
+		public void TheHallsCommissionCompensatesBeforeEveryExitInsideItsOwnWindow()
+		{
+			// The hall closes its window with a plain statement rather than a finally, so its
+			// contract is the stricter one: every exit reached between the commit and the close
+			// compensates the receipt first, and Rollback drops the hold unconditionally.
+			string commission = Compact(Read("Growth/KingdomLab.Commission.cs"));
+			int opened = commission.IndexOf("debit.BeginCompensationWindow(); debit.Commit();",
+				StringComparison.Ordinal);
+			int closed = commission.IndexOf("debit.EndCompensationWindow();", StringComparison.Ordinal);
+			ClassicAssert.GreaterOrEqual(opened, 0);
+			ClassicAssert.Greater(closed, opened);
+			string[] exits = commission.Substring(opened, closed - opened).Split(
+				new[] { "return;" }, StringSplitOptions.None);
+			for (int i = 0; i < exits.Length - 1; i++)
+				StringAssert.Contains("debit.Rollback()", exits[i],
+					"commission exit " + (i + 1) + " inside the window compensates first");
+			ClassicAssert.Greater(exits.Length, 1, "the window really does contain early exits");
+			StringAssert.DoesNotContain("debit.Rollback()", commission.Substring(closed));
+		}
+
+		[Test]
+		public void TheFinishedRungIsFreeToWidenTheBasinTheFundingItPaidForDrained()
+		{
+			// The other half of the same law: a window that OUTLIVED its caller would deadlock the
+			// very rung it paid for. The rung's widening runs in the plot effects pass, after Fund
+			// has returned and its finally has dropped the hold, and that pass opens no water debit
+			// of its own -- so the completion is never asking a hold it is itself holding.
+			string effects = Read(Effects);
+			Ordered(effects, "KingdomSystem.Guard(\"heart basin capacity\", delegate",
+				"ReconcileBasinCapacity(System, Building, Z);");
+			StringAssert.DoesNotContain("KingdomWaterDebit", effects);
+			StringAssert.DoesNotContain("CompensationWindow", effects);
+			string funding = Read(Funding);
+			StringAssert.DoesNotContain("ReconcileBasinCapacity", funding);
+			ClassicAssert.IsTrue(Regex.IsMatch(Compact(funding),
+				@"finally \{[^{}]*Water\.EndCompensationWindow\(\);"),
+				"the funding hold cannot survive the method that took it");
+		}
+
+		private const string Funding = "Growth/KingdomConstruction.Funding.cs";
+		private const string Sowing = "Growth/KingdomCrops.02.Sowing.cs";
+
+		private sealed class PostCommitRefundCaller
+		{
+			internal string File;
+			internal string Receipt;
+			internal string Commit;
+		}
+
+		private static readonly PostCommitRefundCaller[] PostCommitRefundCallers =
+		{
+			new PostCommitRefundCaller { File = Funding, Receipt = "Water",
+				Commit = "bool waterCommitted = Water.Commit();" },
+			new PostCommitRefundCaller { File = Sowing, Receipt = "debit",
+				Commit = "|| !debit.Commit())" },
+			new PostCommitRefundCaller { File = "Growth/KingdomAnnexe.Enrollment.cs",
+				Receipt = "debit", Commit = "if (!debit.Commit())" },
+			new PostCommitRefundCaller { File = "Growth/KingdomLab.Funding.cs",
+				Receipt = "debit", Commit = "debit.Commit();" },
+			new PostCommitRefundCaller { File = "Growth/KingdomLab.RemovalFunding.cs",
+				Receipt = "debit", Commit = "debit.Commit();" },
+			new PostCommitRefundCaller { File = "Growth/KingdomLab.RemovalOffer.cs",
+				Receipt = "debit", Commit = "debit.Commit();" }
+		};
+
+		private static int Occurrences(string source, string token)
+		{
+			int count = 0;
+			for (int at = source.IndexOf(token, StringComparison.Ordinal); at >= 0;
+				at = source.IndexOf(token, at + token.Length, StringComparison.Ordinal)) count++;
+			return count;
+		}
+
 		private static string Read(string path)
 		{
 			return TestMain.ReadRepositoryText(path);
