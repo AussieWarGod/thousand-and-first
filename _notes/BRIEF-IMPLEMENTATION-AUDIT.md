@@ -1,6 +1,16 @@
 # Brief-to-implementation audit
 
-## Current master-growth resume census — 2026-09-07
+## Current claimed-ground light census — 2026-09-08
+
+**3051** production C# files,432,014 physical lines,1417 direct-XRL,zero cap failures;
+3082 generated cold-install files. Exact digest
+`79b3f18874f4cd1270f145f2e6f857c6c4fce521bf65687fea5dc3552a999af0`.
+Two added production files (a mod-owned `IZonePart` and its projection), one modified event
+shard, one removal-registry line, one option row and documentation. No wire or API change.
+Engine-free suites and the repository tooling suites pass; no compile, native or Windows gate
+ran for this delta, and the exact-inventory semantic review is open against the new digest.
+
+## Retained master-growth resume census — 2026-09-07
 
 **3049** production C# files,431,893 physical lines,1415 direct-XRL,zero cap failures;
 3080 generated cold-install files. Exact digest

@@ -1,6 +1,15 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current unreleased master-growth resume correction
+## Current unreleased claimed-ground light
+
+3051 staged sources;432,014 physical lines;1417 direct-XRL;zero cap failures;3082 generated
+cold-stage files. Exact inventory `79b3f18874f4cd1270f145f2e6f857c6c4fce521bf65687fea5dc3552a999af0`.
+A mod-owned zone part lights the claimed zone the founder stands in, gated on the new
+`r_TAF_OptionClaimedGroundLight` (default Yes) and revoked from the same activation guard.
+Engine-free suites pass 13,719 main cases; doc-freshness, structure, architecture and the
+Tools suites pass. No compile, no native run and no Windows gate ran for this delta.
+
+## Retained unreleased master-growth resume correction
 
 3049 staged sources;431,893 physical lines;1415 direct-XRL;zero cap failures;3080 generated
 cold-stage files. Exact inventory `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.

@@ -51,9 +51,10 @@ completion once and unchanged repeat. Strict raw log/15journalrows and receipt-o
 stop pass. Comparison83480 matches all3181 production/Harness C# bytes. This is actual
 engine-turn coverage in a synthetic fixture, not ordinary play or save/load acceptance.
 
-Current census:3049 staged C# files;431,893 physical lines;3080 files in the generated
-cold-install inventory. Canonical compilation covers3049 sources, baseline and compatibility symbols.
-Inventory SHA-256: `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
+Current census:3051 staged C# files;432,014 physical lines;3082 files in the generated
+cold-install inventory. Canonical compilation covers3051 sources, baseline and compatibility symbols.
+Inventory SHA-256: `79b3f18874f4cd1270f145f2e6f857c6c4fce521bf65687fea5dc3552a999af0`.
+Direct `XRL` imports: 1417 files, 0 over the line limit.
 
 Focused86313 passes38 engine-free cases, including modern/historical open-arrival clock
 cuts through retirement, candidate continuation, canonical round-trips, exact child ownership,

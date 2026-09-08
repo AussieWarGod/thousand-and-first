@@ -1499,6 +1499,23 @@ Growth no longer credits those same water-production days; TESTING step 90r guar
 billing. Capacity-bound batching remains an owning logistics decision where many
 jobs compete over many holders; it does not grant another subsystem cargo authority.
 
+**Claimed ground is lit while you stand on it.** `KingdomClaimedGround`
+(`r_TAF_OptionClaimedGroundLight`) gates a mod-owned zone part that raises the zone the founder is
+standing in to `LightLevel.Light` once per rendered frame, and remembers its floor once per
+activation. Its checkbox in `Options.xml` defaults to **Yes**. Sight rules are untouched: `Light`
+is the torch tier, so walls still stop it, interiors behind them stay dark, and nothing hidden is
+revealed — it is not `Omniscient` and not the wizard's `VisAll`. Only the zone the founder occupies
+is ever touched, and only while it is in the seat's `ClaimedZones`; a claim lost, a city seceded, a
+founder exiled, or the option switched off takes the part off on the next visit. Explored floor is
+one-way, because unsetting those bits would erase legitimately walked ground.
+
+| Member | Contract |
+|---|---|
+| `KingdomClaimedGround.Enabled` / `OptionId` | Gate `r_TAF_OptionClaimedGroundLight`, default **Yes**. Read at attachment and again on every frame, so switching it off darkens the zone immediately and removes the part on the next visit. |
+| `KingdomClaimedGround.ReconcileZone(KingdomSystem, Zone)` | One activation of one claimed zone: attach or restamp the light, then `Zone.ExploreAll()` once. Refuses ground the seat does not claim, ground two settlements answer for, and a realm that may take no new work. |
+| `KingdomClaimedGround.RemoveZone(Zone)` | Take the part off. The revocation path for secession, exile, a lost claim, and the option switched off. |
+| `XRL.World.ZoneParts.KingdomClaimedGroundLight` | The part itself: `BeforeRenderEvent` → `ParentZone.AddLight(LightLevel.Light)` while `ParentZone.HasObject(The.Player)`. Named-field save, registered in `KingdomRemovalCoverage.CustomZoneParts`. |
+
 ## The city has a history — happenings, ambience, and what the creeds make of you
 
 > Design: `_notes/LIVING-CITY-ARCHITECTURE.md` §7.4 W4 (happenings, the shared telling budget, the

@@ -8,7 +8,7 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-## Unreleased — master pause/resume correction
+## Unreleased — master pause/resume correction, and the claimed-ground light
 
 - Master resume now validates a complete growth schedule before publishing it. Fresh
   growth no longer receives a positive deadline with a zero interval; established growth
@@ -19,8 +19,25 @@ below it.
   arrival recovery, stale ownership, canonical save payloads and arithmetic refusal.
   Native regression and four-mode compilation pass. Full licensed suites pass13,715 main
   and5,093 Portable cases,zero skips; repository audit passes501 tooling tests.
+- Claimed ground now reads at a glance. While you stand in a zone your seat claims, a
+  mod-owned zone part lights the whole zone to the torch tier once per rendered frame and
+  remembers its floor once per visit. Walls still stop sight, interiors behind them stay
+  dark, and nothing hidden is revealed: this is lamplight, not omniscience or x-ray sight.
+- New option `r_TAF_OptionClaimedGroundLight`, default Yes. Losing the claim, seceding,
+  being exiled, or switching the option off takes the part off on the next visit; explored
+  floor stays explored, because unsetting it would erase legitimately walked ground. No
+  saved field, wire or public API change, and a save loaded without the mod is dark again.
 
-> **Current unreleased census — exact structural gate passed.** Current 3049-file census is line-cap green:
+> **Current unreleased census — exact structural gate passed.** Current 3051-file census is line-cap green:
+> 432,014 physical lines,zero files at or above300; direct `XRL`
+> imports occur in 1417 files, 0 of them over the line limit. Inventory SHA-256:
+> `79b3f18874f4cd1270f145f2e6f857c6c4fce521bf65687fea5dc3552a999af0`.
+> The generated cold-install inventory contains 3082 files; no new subscription claim.
+> Engine-free suites and the repository tooling suites pass. No compile, native run or
+> Windows gate ran for this delta, and the exact-inventory human semantic review is open
+> against the new digest. This is not Beta sign-off.
+
+> **Retained unreleased master-resume census — exact structural gate passed.** Its3049-file census is line-cap green:
 > 431,893 physical lines,zero files at or above300,1415 direct-XRL imports. Inventory SHA-256:
 > `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
 > The generated cold-install inventory contains 3080 files; no new subscription claim.

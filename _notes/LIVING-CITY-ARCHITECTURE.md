@@ -53,6 +53,7 @@ sentiment, it is a set of budgets, and they are written here as numbers so that 
 | **Route planning** — per slice | ≤ 16 open jobs, ≤ 8 stops a trip, 2-opt ≤ 50 swap tests → ≲ 1,000 int ops, **zero draws** | > 2,000 int ops | any draw in the planner | the planner (§3.10) |
 | **Network solve** — per city, per reckon | ≤ 4 networks x (≤ 32 nodes + 48 edges); one re-solve per network breakpoint → **≤ 5,120 node-visits** | > 8,000 | > 12,000, or a topology walk at reckon | the solve (§3.11) |
 | **Zones we hold resident** | ≤ 1 beyond the seated zone, self-releasing | 2 | > 2, or held with no debt | §6.4 |
+| **Render — claimed-ground light** | one `AddLight(LightLevel.Light)` sweep = **≤ 2,000 cell mixes per rendered frame** (80x25), only while the founder stands in a claimed zone, and one `ExploreAll()` per activation | > 0.2 ms a frame | > 0.5 ms a frame, or any sweep in a zone the founder is not in | the part (§3.12) |
 | **Executor** — any submitted computation | budget and timeout owned by the seam; an abandoned job publishes nothing | — | a job that publishes on fault, or **any engine type across the boundary** | the reflection test (§2.5) |
 
 **(a) Reckon — the arithmetic, counted rather than asserted.** The worst case in the mandate is a
@@ -228,7 +229,9 @@ city's *clock*. But a founder on the world map is standing in no city zone and i
 reification, so the same blind spot is harmless in a *pump*: how much work is owed is always
 derived from `The.Game.TimeTicks` deltas; the pump only decides **when a slice of it is spent**.
 One handler, one virtual call a turn, returning immediately when there is no seated claimed zone
-and no debt. That is the only per-turn cost this design adds anywhere.
+and no debt. That is the only per-turn cost this design adds anywhere. It is not the only cost:
+the claimed-ground light (§3.12) is presentation on the engine's own render dispatch, paid per
+rendered frame and only while the founder is standing in a zone the realm claims.
 
 **(f) City size is bounded by the rules, never by the architecture.** Addendum 12(c): *"a city
 might end up being 9 zones or more, especially with verticality."* Nothing above changes when it
@@ -1582,6 +1585,34 @@ Three things changed and nothing else did:
 The proof is an identity rather than a promise: `Generated + Discharged == Delivered + Charged +
 Spilled`, asserted in every branch, so there is no fourth destination for a charge and nothing
 arrives from a fifth source.
+
+### 3.12 The claimed-ground light — presentation on the render dispatch
+
+A settlement the founder cannot read at a glance is a settlement they navigate by memory. The
+claimed-ground light answers that and nothing else: while the founder stands in a zone the seat
+claims, `XRL.World.ZoneParts.KingdomClaimedGroundLight` raises the whole zone to
+`LightLevel.Light` once per `BeforeRenderEvent`, and the activation that attached it called
+`Zone.ExploreAll()` once so the minimap holds the city instead of a corridor.
+
+**What it is not.** `Light` is 200, the tier a torch answers with, so line of sight still rules:
+walls stop it, interiors behind them stay dark, and nothing hidden becomes visible. It is
+deliberately not `Omniscient` (255), which the engine treats as psychic sight, and it is not the
+wizard `VisAll` toggle, which would see creatures through walls and change what two of this mod's
+own surfaces classify as seen.
+
+**Where it is decided.** `ThousandAndFirst.KingdomClaimedGround.ReconcileZone` runs in the one
+semantic activation guard, after the ward and before the attended settlement pass. Ground that is
+not in `ClaimedZones`, ground two settlements both answer for, and the option switched off all take
+the part off instead; secession, exile and a claim let go therefore revoke the light on the next
+visit. No claim is ever thawed to be lit — the current zone only.
+
+**What it costs, and what it cannot take back.** The budget row in §0.0 is the contract: at most
+2,000 cell light-mixes per rendered frame, and only in the zone the founder occupies. The part is
+mod-owned, so a save loaded without this mod drops it and the ground is dark again. Explored floor
+is the one thing that does not come back: `ExploreAll` sets memory bits the founder's own walking
+would have set, and unsetting them would erase legitimately walked ground, so turning the option
+off stops new reveals rather than un-revealing old ones. Gate: `r_TAF_OptionClaimedGroundLight`,
+default **Yes**.
 
 ## 4. Events with meaning
 

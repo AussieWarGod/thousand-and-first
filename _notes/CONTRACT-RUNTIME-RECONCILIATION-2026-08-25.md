@@ -1,6 +1,15 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
-## Current master-growth resume census — 2026-09-07
+## Current claimed-ground light census — 2026-09-08
+
+3051 production C# files;3,082 cold-install files in the generated inventory;
+432,014 physical lines,1417 direct-XRL,zero cap failures. Exact digest
+`79b3f18874f4cd1270f145f2e6f857c6c4fce521bf65687fea5dc3552a999af0`.
+Presentation only: a mod-owned zone part raises the founder's own claimed zone to the torch
+light tier per rendered frame and remembers its floor once per activation. No wire, no saved
+field, no new completion authority. Compile, native and Windows gates did not run for it.
+
+## Retained master-growth resume census — 2026-09-07
 
 3049 production C# files;3,080 cold-install files in the generated inventory;
 431,893 physical lines,1415 direct-XRL,zero cap failures. Exact digest

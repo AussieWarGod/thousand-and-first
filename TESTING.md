@@ -21,7 +21,7 @@ published arrival debt/opportunities, open Prepared/Intent/Proved clock leases, 
 continuation and field-clock evidence; successful results round-trip canonically. Stale
 owners, contradictory unbacked clocks, disabled states and overflow remain tested refusals.
 No fixture callback witness establishes actual physical creation, ordinary play or save/load.
-Current production digest `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`
+Current production digest `79b3f18874f4cd1270f145f2e6f857c6c4fce521bf65687fea5dc3552a999af0`
 passes the exact structural gate. Full Windows1814 passed13,715 main/5,093 Portable cases,
 zero skips. Canonical53744 passed all four modes: ordinary3045/3049,developer3177/3181,
 132 Harness files,plus installed Hearthpyre ABI. Repository71120 passed501 tooling tests
@@ -31,8 +31,8 @@ baseline and dev-harness compatibility compiles. The shared `DevTests/refs.rsp` 
 `-langversion:latest`, so those compiles are not pinned to C# 7.3; `LangVersion` 7.3 is pinned
 only in `DevTests/Engine*/Probe.csproj` and `Tools/WorkshopSteam/*.csproj`. Retained sections
 below keep their original wording as written at their own checkpoints.
-Canonical compilation runs across 3049 production C# sources; the generated
-cold-install inventory contains 3080 files. Neither count proves subscriber delivery.
+Canonical compilation runs across 3051 production C# sources; the generated
+cold-install inventory contains 3082 files. Neither count proves subscriber delivery.
 [Native/focused evidence](/mnt/c/taf-master-growth-native.sP00c6/README.md).
 
 ## Retained real-turn recovery validation
