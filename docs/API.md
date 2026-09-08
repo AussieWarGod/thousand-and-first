@@ -1515,17 +1515,25 @@ one-way, because unsetting those bits would erase legitimately walked ground.
 | `KingdomClaimedGround.Enabled` / `OptionId` | Gate `r_TAF_OptionClaimedGroundLight`, default **Yes**. Read at attachment and again on every frame, so switching it off darkens the zone immediately and removes the part on the next visit. |
 | `KingdomClaimedGround.ReconcileZone(KingdomSystem, Zone)` | One activation of one claimed zone: attach or restamp the light, then `Zone.ExploreAll()` once. Every refusal revokes instead of returning &mdash; ground the seat does not claim, ground two settlements both answer for, the option switched off, and a realm the master gate has stopped all take the part off. |
 | `KingdomClaimedGround.RemoveZone(Zone)` | Take the part off. The revocation path for secession, exile, a lost claim, and the option switched off. |
-| `XRL.World.ZoneParts.KingdomClaimedGroundLight` | The part itself: `BeforeRenderEvent` → `ParentZone.AddLight(LightLevel.Light)` while `ParentZone.HasObject(The.Player)`. Named-field save, registered in `KingdomRemovalCoverage.CustomZoneParts`. |
+| `XRL.World.ZoneParts.KingdomClaimedGroundLight` | The part itself: `BeforeRenderEvent` pass 1 → `ParentZone.AddLight(LightLevel.Light)` while `ParentZone.HasObject(The.Player)`. It adds itself to no `AfterHandlers` list. Named-field save, registered in `KingdomRemovalCoverage.CustomZoneParts`. |
+| `ThousandAndFirst.KingdomCitySightRenderSeam` | Harmony postfix on `BeforeRenderEvent.Send`: the one seat the city-sight projection is taken from, after the whole render dispatch (and so after `Blackout`) has returned. |
 
 **City sight: your citizens through your own walls.** The same part carries a second, separately
 gated behaviour (`r_TAF_OptionCitySight`, default **Yes**) that opens the claimed zone for the drawn
-frame only. The light's guard registers the part into `BeforeRenderEvent.AfterHandlers`, and the
-projection is taken on that second pass — after every zone part and every object has finished
-writing sight, which is where the honest map is whole. It snapshots there — after computing the
-founder's own `AddVisibility` exactly as the engine is about to — calls `Zone.VisAll()`, and closes
-the zone again from a single `XRLCore.RegisterAfterRenderCallback` in the same frame, under a
-Harmony finalizer on `XRLCore.RenderBaseToBuffer` that guarantees the close even on a frame that
-throws. The close is subtractive: only cells the projection itself opened are shut, so sight another
+frame only. The part queues nothing into `BeforeRenderEvent.AfterHandlers`: the projection is taken
+from `ThousandAndFirst.KingdomCitySightRenderSeam`, a Harmony postfix on `BeforeRenderEvent.Send`,
+which returns only after pass 1 has reached every zone part and every object **and** the engine has
+walked its own second pass. Coming back behind that second pass is the point. `Blackout` is the one
+native part that acts there, and what it does is *remove* light; `Zone.AddVisibility` opens a cell
+further off than a neighbour only where the light map still reads above `LightLevel.None`. Blackout
+hangs on an object, and objects are dispatched behind zone parts, so a zone part that queued itself
+would always take its turn ahead of it — and a snapshot taken there would call cells honestly
+visible that a `Blackout` was about to darken, which the subtractive close then leaves open. From
+outside the dispatch the projection re-reads both checkboxes and the founder's presence rather than
+inheriting the pass-1 light's decision. It snapshots — after computing the founder's own
+`AddVisibility` exactly as the engine is about to — calls `Zone.VisAll()`, and closes the zone again
+from a single `XRLCore.RegisterAfterRenderCallback` in the same frame, under a Harmony finalizer on
+`XRLCore.RenderBaseToBuffer` that guarantees the close even on a frame that throws. The close is subtractive: only cells the projection itself opened are shut, so sight another
 hand granted or took away after the snapshot is left alone. Nothing is
 persisted: the snapshot is a `[NonSerialized]` static, and `ExploredMap` is never written, so
 remembered floor stays owned by `ReconcileZone`'s one-shot `Zone.ExploreAll()`.

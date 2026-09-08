@@ -17,6 +17,7 @@ namespace ThousandAndFirst.Tests
 		private const string PartFile = "Growth/KingdomClaimedGroundLight.cs";
 		private const string ProjectionFile = "Growth/KingdomClaimedGroundLight.Projection.cs";
 		private const string DrawScopeFile = "Growth/KingdomCitySightDrawScope.cs";
+		private const string SeamFile = "Growth/KingdomCitySightRenderSeam.cs";
 		private const string EventsFile = "Core/KingdomSystem.z20.Events.cs";
 		private const string OptionId = "r_TAF_OptionClaimedGroundLight";
 		private const string SightOptionId = "r_TAF_OptionCitySight";
@@ -130,28 +131,41 @@ namespace ThousandAndFirst.Tests
 		}
 
 		/// <summary>
-		/// Zone parts are dispatched before the cells and the objects standing on them, so a
-		/// snapshot taken from a zone part's ordinary pass is taken BEFORE native sight the frame
-		/// is still owed (IrisdualMolting and LeyShifting both add visibility from the object
-		/// pass). The projection therefore rides the engine's own second pass, which runs after
-		/// every pass-1 handler on every part and every object, and it stands down entirely where
-		/// a later engine decision would be overwritten instead.
+		/// Zone parts are dispatched before the cells and the objects standing on them, and the
+		/// engine's second pass walks the AfterHandlers a pass-1 handler queued itself into, in
+		/// the order they were queued. A zone part therefore cannot reach the END of that pass:
+		/// Blackout is an object part, so it is always queued behind, and what it does there is
+		/// remove the light Zone.AddVisibility gates distant cells on. The projection is taken
+		/// after the whole dispatch has returned instead, from a postfix on BeforeRenderEvent.Send
+		/// — the part queues nothing at all — and it stands down entirely where a later engine
+		/// decision would be overwritten.
 		/// </summary>
 		[Test]
 		public void TheSnapshotIsTakenAfterEveryNativeVisibilityContributor()
 		{
 			string part = Source(PartFile);
 			StringAssert.Contains("if (E.Pass == 1)", part);
-			StringAssert.Contains("else if (E.Pass == 2)", part);
-			StringAssert.Contains("E.AfterHandlers.Add(this);", part);
-			ClassicAssert.Less(
-				part.IndexOf("E.AfterHandlers.Add(this);", StringComparison.Ordinal),
-				part.IndexOf("ProjectCitySight();", StringComparison.Ordinal),
-				"the projection is reached from the second pass, never from the pass that "
-					+ "runs ahead of every object handler");
+			StringAssert.DoesNotContain("E.AfterHandlers.Add", part,
+				"a zone part queued into AfterHandlers takes its turn ahead of Blackout, which "
+					+ "hangs on an object and is queued behind every zone part");
+			StringAssert.DoesNotContain("E.Pass == 2", part,
+				"the projection no longer has a seat inside the dispatch");
 			ClassicAssert.AreEqual(1,
-				Regex.Matches(part, Regex.Escape("ProjectCitySight();")).Count,
-				"one seat for the projection, and it is the second pass");
+				Regex.Matches(part, Regex.Escape("ProjectCitySight()")).Count,
+				"one seat for the projection, and the render seam owns it");
+
+			string seam = Source(SeamFile);
+			StringAssert.Contains(
+				"[HarmonyPatch(typeof(BeforeRenderEvent), nameof(BeforeRenderEvent.Send))]", seam);
+			StringAssert.Contains("private static void Postfix(Zone Z)", seam);
+			StringAssert.Contains("ProjectCitySight()", seam);
+			StringAssert.DoesNotContain("Prefix", seam,
+				"a prefix would run before the dispatch, which is worse than the seat it replaced");
+			StringAssert.Contains("Blackout", seam,
+				"the seam names the native second-pass contributor it must come back behind");
+			foreach (string forbidden in ForbiddenEverywhere)
+				StringAssert.DoesNotContain(forbidden, seam);
+
 			StringAssert.Contains("core.VisAllToggle) return;", part);
 			ClassicAssert.Less(part.IndexOf("core.VisAllToggle) return;", StringComparison.Ordinal),
 				part.IndexOf("ParentZone.VisAll()", StringComparison.Ordinal),
@@ -267,6 +281,100 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Default=\"Yes\"", sight);
 			StringAssert.Contains(SightOptionId, Source(Path.Combine("docs", "API.md")));
 			StringAssert.Contains(SightOptionId, Source("PLAYTESTING.md"));
+		}
+
+		/// <summary>
+		/// The ordering, run rather than read. A Blackout stands in the zone: the engine walks its
+		/// own second pass, where Blackout removes the light Zone.AddVisibility gates every cell
+		/// further off than a neighbour on. Taken from inside that pass, the honest snapshot holds
+		/// cells the Blackout was about to darken, and the subtractive restore — which never
+		/// closes a cell the snapshot held open — leaves them visible into the next turn. Taken
+		/// after the dispatch, the snapshot is exactly the sight an unprojected frame would have
+		/// left. The seat is read out of the shipped source, so moving the projection back into
+		/// AfterHandlers fails here rather than passing quietly.
+		/// </summary>
+		[Test]
+		public void TheHonestSnapshotSurvivesABlackoutStandingInTheZone()
+		{
+			bool queuedIntoTheSecondPass = Source(PartFile).Contains("E.AfterHandlers.Add");
+			bool afterDispatch = Source(SeamFile).Contains(
+				"[HarmonyPatch(typeof(BeforeRenderEvent), nameof(BeforeRenderEvent.Send))]");
+			ClassicAssert.IsFalse(queuedIntoTheSecondPass,
+				"the part must not queue itself ahead of Blackout");
+			ClassicAssert.IsTrue(afterDispatch, "the projection is taken after the dispatch");
+
+			bool[] honestFrame = RenderModelFrame(project: false, afterDispatch: true);
+			CollectionAssert.AreEqual(honestFrame,
+				RenderModelFrame(project: true, afterDispatch: afterDispatch),
+				"city sight may show the frame whole and still leave behind exactly the sight the "
+					+ "founder honestly had");
+			CollectionAssert.AreNotEqual(honestFrame,
+				RenderModelFrame(project: true, afterDispatch: false),
+				"the model has to catch the seat this moved away from, or it pins nothing");
+		}
+
+		private const int ModelWidth = 10;
+		private const int ModelPlayerX = 0;
+		private const int ModelPlayerRadius = 8;
+		private const int ModelBlackoutX = 6;
+		private const int ModelBlackoutRadius = 2;
+
+		/// <summary>One drawn frame of the engine's own order, reduced to the row that matters:
+		/// clear both maps (D/XRL/Core/XRLCore.cs:2505-2506), pass 1 (zone parts, then objects),
+		/// the second pass in queue order, the engine's own player reckoning (:2511-2512), the
+		/// draw, then this mod's after-render restore. Returns the visibility map the frame leaves
+		/// behind, which is what the turn after it reads.</summary>
+		private static bool[] RenderModelFrame(bool project, bool afterDispatch)
+		{
+			int[] light = new int[ModelWidth];
+			bool[] visible = new bool[ModelWidth];
+			bool[] honest = null;
+			// Pass 1, zone parts ahead of objects: the claimed-ground light, LightLevel.Light.
+			for (int i = 0; i < ModelWidth; i++)
+				light[i] = 200;
+			if (project && !afterDispatch)
+				honest = ModelProject(light, visible);
+			// Blackout's second-pass turn: RemoveLight to LightLevel.Blackout, which is 0 and so
+			// below the > 1 AddVisibility asks for (D/XRL/World/Parts/Blackout.cs:58-65).
+			for (int i = 0; i < ModelWidth; i++)
+				if ((i - ModelBlackoutX) * (i - ModelBlackoutX)
+					<= ModelBlackoutRadius * ModelBlackoutRadius && light[i] < 210)
+					light[i] = 0;
+			if (project && afterDispatch)
+				honest = ModelProject(light, visible);
+			ModelAddVisibility(light, visible);
+			if (honest != null)
+				for (int i = 0; i < ModelWidth; i++)
+					if (!honest[i])
+						visible[i] = false;
+			return visible;
+		}
+
+		/// <summary>The projection itself: the founder's own reckoning, the snapshot, then the
+		/// zone opened whole (KingdomClaimedGroundLight.ProjectCitySight).</summary>
+		private static bool[] ModelProject(int[] light, bool[] visible)
+		{
+			ModelAddVisibility(light, visible);
+			bool[] honest = (bool[])visible.Clone();
+			for (int i = 0; i < ModelWidth; i++)
+				visible[i] = true;
+			return honest;
+		}
+
+		/// <summary>Zone.AddVisibility on one row (D/XRL/World/Zone.cs:5084-5100): the founder's
+		/// own cell always, a neighbour always, and anything further only where the light map
+		/// still reads above LightLevel.None. It only ever opens cells; it never closes one.
+		/// </summary>
+		private static void ModelAddVisibility(int[] light, bool[] visible)
+		{
+			visible[ModelPlayerX] = true;
+			for (int i = 0; i < ModelWidth; i++)
+			{
+				int distance = (i - ModelPlayerX) * (i - ModelPlayerX);
+				if (distance <= ModelPlayerRadius * ModelPlayerRadius && !visible[i]
+					&& (distance <= 1 || light[i] > 1))
+					visible[i] = true;
+			}
 		}
 
 		/// <summary>What neither file may ever do. <c>SetExplored</c> stays here even though city

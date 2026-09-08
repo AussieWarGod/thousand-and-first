@@ -79,13 +79,14 @@ digest. Only a `q2` receipt owes a stake, so a pre-existing `q1` save keeps its 
 every phase, Reserved included, and the completion notice counts the claims standing on the ground
 rather than trusting the branch that ran.
 
-Current census:3053 staged C# files;432,593 physical lines;3084 files in the generated
-cold-install inventory. Staged compilation covers3053 sources, baseline and compatibility symbols,
+Current census:3055 staged C# files;432,836 physical lines;3086 files in the generated
+cold-install inventory. Staged compilation covers3055 sources, baseline and compatibility symbols,
 run here by Roslyn 9.0.306 on Linux against the licensed Managed references with warnings as errors
-(baseline compiles 3049 of them; the optional-mod bridge is compatibility-only).
-Direct `XRL` imports: 1418 files, 0 over the line limit.
-Inventory SHA-256: `d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0`.
-NOT RUN for this delta: the two dev-harness compile modes, the installed-Hearthpyre source/ABI
+(baseline compiles 3051 of them; the optional-mod bridge is compatibility-only).
+Direct `XRL` imports: 1420 files, 0 over the line limit.
+Inventory SHA-256: `2a6a2fa22549729b3d35ad2f44cf2ae523091a3c1c999540af9bd2667ddade16`.
+The two dev-harness compile modes are clean here as well (3200 baseline, 3204
+compatibility sources). NOT RUN for this delta: the installed-Hearthpyre source/ABI
 step, `Tools/gate.sh` itself, the Windows gate, the developer boot matrix and any native in-game
 run. The 1,700-tick figure is a reading of the raising rule, not of a running plot clock; the
 second lot's preparation on the marsh, canyon and dunes profiles is unproven. A pre-existing save
@@ -117,9 +118,12 @@ this merged digest. This is source review,not functional acceptance. The census 
 above are the render-only city-sight branch's, which sits on top of that comparison and adds two
 further modified production sources — the claimed-ground light part and the settlement system's
 end-of-turn dispatch — plus one option row; the retained four-file comparison sentence describes the
-parent delta it was written for and is unchanged. The review-response pass adds one further
-production source, `Growth/KingdomCitySightDrawScope.cs`, and rewrites the projection's seat and
-close inside the claimed-ground light part.
+parent delta it was written for and is unchanged. The review-response passes add two further
+production sources, `Growth/KingdomCitySightDrawScope.cs` and
+`Growth/KingdomCitySightRenderSeam.cs`, and rewrite the projection's seat and close: the part now
+queues nothing into `BeforeRenderEvent.AfterHandlers`, and the projection is taken from a postfix
+on `BeforeRenderEvent.Send` so it comes back behind `Blackout`'s own second-pass light removal,
+which `Zone.AddVisibility` reads.
 
 Focused38898 passed149 cases,zero skips. That receipt predates the seventh
 KingdomWaterMaintenanceNativeSourceTests case and is retained as measured. The branch adds

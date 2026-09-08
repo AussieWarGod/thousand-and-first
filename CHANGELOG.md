@@ -50,20 +50,21 @@ below it.
   a staked lot remains an owned object property registered in the removal-coverage allowlist.
   Ordinary founding is untouched. Public 0.3.1 is unchanged.
 
-> **Current unreleased census — exact structural gate passed.** Current 3053-file census is line-cap green:
-> 432,593 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> **Current unreleased census — exact structural gate passed.** Current 3055-file census is line-cap green:
+> 432,836 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
-> imports occur in 1418 files, 0 of them over the line limit. Inventory SHA-256:
-> `d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0`.
-> The generated cold-install inventory contains 3084 files; no new subscription claim.
-> The tent-row delta over the merged `dev` census below is one added and six modified production
-> sources: the quickstart bootstrap's shelter partial, the quickstart rules, the bootstrap, the camp
-> builder, the generated removal coverage, the quickstart receipt model and its wire codec. It
-> compiled clean in the staged baseline (3049 sources) and staged compatibility (3053 sources)
-> modes only, on Linux with the SDK Roslyn against the installed managed assemblies rather than
-> through `Tools/gate.sh`; both engine-free suites run green there (13,834 main/5,123 Portable,zero
-> skips) and the repository audit passes.
-> NOT run for it: the two dev-harness compile modes, the installed-Hearthpyre source step, the
+> imports occur in 1420 files, 0 of them over the line limit. Inventory SHA-256:
+> `2a6a2fa22549729b3d35ad2f44cf2ae523091a3c1c999540af9bd2667ddade16`.
+> The generated cold-install inventory contains 3086 files; no new subscription claim.
+> The city-sight delta over the merged `dev` tent-row census is two added and two modified
+> production sources: the render-scope finalizer and the render seam that owns the projection are
+> the additions; the claimed-ground light part and the settlement event file are the
+> modifications. All four compile modes are clean on Linux with the SDK Roslyn against the
+> installed managed assemblies rather than through `Tools/gate.sh`: staged baseline (3051 sources),
+> staged compatibility (3055), dev-harness baseline (3200) and dev-harness compatibility (3204).
+> Both engine-free suites run green there (13,903 main/5,192
+> Portable,zero skips) and the repository audit passes.
+> NOT run for it: the installed-Hearthpyre source step, the
 > Windows gate, the developer boot matrix and any native in-game run. The 1,700-tick raising figure
 > is a reading of the raising rule, not of a running plot clock. The exact-inventory human semantic
 > review is open against this digest; this is not Beta sign-off.
@@ -168,19 +169,13 @@ below it.
 > **Retained empty-camp merge census — exact structural gate passed.** That 3052-file census was line-cap green:
 > 432,259 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
-> imports occur in 1418 files, 0 of them over the line limit. Inventory SHA-256:
-> `050328383519c937a74ae81d1daf6af4543d80f23c3d4682a243e4a4cbca2d64`.
-> The generated cold-install inventory contains 3084 files; no new subscription claim.
+> imports occur in 1417 files, 0 of them over the line limit. Inventory SHA-256:
+> `c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`.
+> The generated cold-install inventory contains 3083 files; no new subscription claim.
 > Root and independent AI reviewer read all four changed production sources and affected
 > boundaries; unchanged sources inherit the complete canonical parent review chain. This
-> digest covers the merge with `dev`, so the exact-inventory human semantic review is open
-> against it and the Windows compile gate has not re-run for the merged bytes.
-> The digest above is the render-only city-sight branch's: on top of the four-file merge delta the
-> sentence above describes it adds Growth/KingdomClaimedGroundLight.cs and
-> Core/KingdomSystem.z20.Events.cs plus one option row, which carry this branch's own review chain.
-> The independent review response adds one production source, Growth/KingdomCitySightDrawScope.cs,
-> and moves the city-sight projection onto the render dispatch's second pass with a subtractive
-> close; that is the whole of the delta this digest carries over the sentence above.
+> digest covers that merge with `dev`, so the exact-inventory human semantic review is open
+> against it and the Windows compile gate has not re-run for those merged bytes.
 
 ## Retained unreleased — master pause/resume correction, the claimed-ground light, and first-settler legibility
 

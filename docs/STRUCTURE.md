@@ -20,33 +20,32 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
-The Kingdom Quickstart tent rows over the empty-camp legacy correction report 3053 staged
-production C# files and 432,593 physical lines.
+The render-only city sight over the Kingdom Quickstart tent rows reports 3055 staged
+production C# files and 432,836 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0`. The census reports
-1418 files with direct `XRL` imports; 0 of those exceed the line limit.
+`2a6a2fa22549729b3d35ad2f44cf2ae523091a3c1c999540af9bd2667ddade16`. The census reports
+1420 files with direct `XRL` imports; 0 of those exceed the line limit.
 
-The delta over the retained draft below is one added and six modified production sources and no
-removals: the quickstart bootstrap's shelter partial is the addition; the quickstart rules, the
-bootstrap, the camp builder, the generated removal coverage, the quickstart receipt model and its
-wire codec are the modifications. The staged
-baseline (3049 sources) and staged compatibility (3053 sources) sets compile clean under Roslyn
-9.0.306 on Linux against the licensed Managed references with warnings as errors; the two
-dev-harness modes, the installed-Hearthpyre source step, the Windows gate and any native run did
-not run for this delta. The exact-inventory semantic review in `docs/STRUCTURE_REVIEW.json` binds
+The delta over the merged tent-row census is two added and two modified production sources and no
+removals: the render-scope finalizer and the render seam that owns the city-sight projection are
+the additions; the claimed-ground light part and the settlement event file are the modifications.
+All four
+compile modes are clean under Roslyn 9.0.306 on Linux against the licensed Managed references with
+warnings as errors: staged baseline (3051 sources), staged compatibility (3055), dev-harness
+baseline (3200) and dev-harness compatibility (3204). The installed-Hearthpyre source step, the
+Windows gate and any native run did not run for this delta. The exact-inventory semantic review in `docs/STRUCTURE_REVIEW.json` binds
 an earlier digest and is therefore open for it.
 
 ## Retained empty-camp legacy census
 
 The empty-camp legacy correction over the camp-guide topic tree, the claimed-ground light and the
-first-settler legibility change, plus the render-only city sight added on top of the claimed-ground
-light, together report 3053 staged production C# files and 432,460
+first-settler legibility change together report 3052 staged production C# files and 432,259
 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`050328383519c937a74ae81d1daf6af4543d80f23c3d4682a243e4a4cbca2d64`. The census reports
-1418 files with direct `XRL` imports; 0 of those exceed the line limit.
+`c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`. The census reports
+1417 files with direct `XRL` imports; 0 of those exceed the line limit.
 
 The delta over the retained draft below is four modified production sources and no additions or
 removals: the seal profile reader/writer, the polity realm-legacy facts writer, the refound-import

@@ -1,14 +1,16 @@
 # Brief-to-implementation audit
 
-## Current Kingdom Quickstart tent-row census — 2026-09-08
+## Current city-sight census over the Kingdom Quickstart tent rows — 2026-09-08
 
-**3053** production C# files,432,564 physical lines,1418 direct-XRL,zero cap failures;
-3084 generated cold-install files. Exact digest
-`f5571291a26a1bd1db608f0d1c3f79ed296569bddce4979208cb564f8c22df63`.
-One added source (the bootstrap's shelter partial) and four modified. Structure, doc freshness,
-architecture and the Tools suite pass. Engine-free suites pass13,831 main/5,120 Portable,zero
-skips on Linux .NET9.0.306, and Roslyn 9.0.306 on Linux compiled the staged baseline (3049
-sources) and compatibility (3053 sources) sets clean. No native run, dev-harness mode,
+**3055** production C# files,432,836 physical lines,1420 direct-XRL,zero cap failures;
+3086 generated cold-install files. Exact digest
+`2a6a2fa22549729b3d35ad2f44cf2ae523091a3c1c999540af9bd2667ddade16`.
+Two added sources (the render-scope finalizer and the render seam) and two modified over the
+merged tent-row census. Structure, doc freshness, architecture and the Tools suite pass.
+Engine-free suites pass13,903 main/5,192 Portable,zero
+skips on Linux .NET9.0.306, and Roslyn 9.0.306 on Linux compiled all four modes clean: staged
+baseline (3051 sources), staged compatibility (3055), dev-harness baseline (3200) and dev-harness
+compatibility (3204). No native run,
 installed-ABI source step, Windows gate or exact-inventory human semantic review binds it.
 
 ## Retained camp-guide topic census — 2026-09-08

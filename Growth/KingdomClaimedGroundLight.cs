@@ -17,15 +17,18 @@ namespace XRL.World.ZoneParts
 	///
 	/// City sight rides on top of that, under its own checkbox: for the drawn frame only, the
 	/// claimed zone is shown whole, so citizens behind their own walls are drawn doing what they
-	/// are doing. It is an eye, never a rule. The honest visibility map is read on the render
-	/// dispatch's second pass, after every zone part and every object has had its say
-	/// (D/XRL/World/BeforeRenderEvent.cs:40-53), and the restore only ever closes cells the
-	/// projection itself opened, so every predicate that reads <c>Cell.IsVisible()</c> &mdash;
-	/// reify ordering, death witness, hostile perception, rest, autoexplore, targeting, Look
-	/// &mdash; still runs on ordinary line of sight, and no sight another hand granted or took
-	/// away is written over. Light stays at 200, which is none of the six tiers the Invisibility
-	/// mutation reveals at (Darkvision 10, Dimvision 15, Interpolight 210, Radar 228,
-	/// LitRadar 232, Omniscient 255), so invisible creatures stay invisible.
+	/// are doing. It is an eye, never a rule. The honest visibility map is read once the WHOLE
+	/// render dispatch has returned, from
+	/// <see cref="ThousandAndFirst.KingdomCitySightRenderSeam"/> &mdash; a postfix on
+	/// <c>BeforeRenderEvent.Send</c>, which comes back only after pass 1 has reached every zone
+	/// part and every object AND the engine has walked its own second pass
+	/// (D/XRL/World/BeforeRenderEvent.cs:40-61). The restore only ever closes cells the projection
+	/// itself opened, so every predicate that reads <c>Cell.IsVisible()</c> &mdash; reify
+	/// ordering, death witness, hostile perception, rest, autoexplore, targeting, Look &mdash;
+	/// still runs on ordinary line of sight, and no sight another hand granted or took away is
+	/// written over. Light stays at 200, which is none of the six tiers the Invisibility mutation
+	/// reveals at (Darkvision 10, Dimvision 15, Interpolight 210, Radar 228, LitRadar 232,
+	/// Omniscient 255), so invisible creatures stay invisible.
 	/// </summary>
 	[Serializable]
 	public sealed class KingdomClaimedGroundLight : IZonePart
@@ -89,23 +92,7 @@ namespace XRL.World.ZoneParts
 					&& ThousandAndFirst.KingdomClaimedGround.Enabled
 					&& The.Player != null
 					&& ParentZone.HasObject(The.Player))
-				{
 					ParentZone.AddLight(LightLevel.Light);
-					// Zone parts are dispatched BEFORE the cells and the objects standing on them
-					// (D/XRL/World/Zone.cs:7634-7676), so a snapshot taken here would be taken
-					// ahead of native sight this frame is still owed: IrisdualMolting adds
-					// visibility from the object pass (D/XRL/World/Effects/IrisdualMolting.cs:76)
-					// and so does LeyShifting (D/XRL/World/Parts/Mutation/LeyShifting.cs:93). The
-					// engine's own second pass runs after every pass-1 handler on every part and
-					// every object (D/XRL/World/BeforeRenderEvent.cs:40-53), which is where the
-					// honest map is whole; Blackout uses the same seat
-					// (D/XRL/World/Parts/Blackout.cs:47-67).
-					E.AfterHandlers.Add(this);
-				}
-			}
-			else if (E.Pass == 2)
-			{
-				ProjectCitySight();
 			}
 			return base.HandleEvent(E);
 		}
@@ -122,10 +109,15 @@ namespace XRL.World.ZoneParts
 		}
 
 		/// <summary>Open the claimed zone for the frame about to be drawn, and only for it. Reached
-		/// from the render dispatch's second pass, so the map read here is the one every native
-		/// contributor has already finished writing.</summary>
-		private void ProjectCitySight()
+		/// from <see cref="ThousandAndFirst.KingdomCitySightRenderSeam"/> once the render dispatch
+		/// has returned, so the map read here is the one every native contributor &mdash; light
+		/// and visibility alike &mdash; has already finished writing. The gates the pass-1 light
+		/// stands on are asked again here rather than inherited: this is a fresh entry from
+		/// outside the dispatch, and a checkbox or a founder that changed since is a projection
+		/// that must not be taken.</summary>
+		internal void ProjectCitySight()
 		{
+			if (!ThousandAndFirst.KingdomClaimedGround.Enabled) return;
 			if (!CitySightEnabled) return;
 			// One projection per frame, whatever the dispatch does. A second would read the already
 			// opened map as the honest one and leave the zone open for good.
@@ -148,8 +140,10 @@ namespace XRL.World.ZoneParts
 			// closing the map back over it.
 			XRLCore core = XRLCore.Core;
 			if (core != null && core.VisAllToggle) return;
-			// Pass 2 is a fresh entry, so nothing established on pass 1 is assumed to still hold.
 			if (ParentZone == null || The.Player == null) return;
+			// Only where the founder actually is, and asked the same O(1) way as the light asks it
+			// (Zone.HasObject is Object.CurrentZone == this, D/XRL/World/Zone.cs:3365-3368).
+			if (!ParentZone.HasObject(The.Player)) return;
 			Cell cell = The.Player.CurrentCell;
 			if (cell == null) return;
 			// The map is read before the sweep, because Zone.AddVisibility dereferences it on its
@@ -158,7 +152,15 @@ namespace XRL.World.ZoneParts
 			bool[] live = ParentZone.VisibilityMap;
 			if (live == null) return;
 			// Exactly the reckoning the engine is about to make for itself
-			// (D/XRL/Core/XRLCore.cs:2511-2512), taken early so the honest answer can be kept.
+			// (D/XRL/Core/XRLCore.cs:2511-2512), taken early so the honest answer can be kept. It
+			// reads the light map on its way &mdash; a cell further off than a neighbour is only
+			// opened where GetLight(i, j) > 1 (D/XRL/World/Zone.cs:5084-5100) &mdash; which is why
+			// this runs after the dispatch and not inside it. Blackout REMOVES light from the
+			// engine's own second pass (D/XRL/World/Parts/Blackout.cs:47-67), and it hangs on an
+			// object, so it is queued behind every zone part (D/XRL/World/Zone.cs:7632-7677): a
+			// snapshot taken from a zone part's turn in that pass would answer with light a
+			// Blackout was about to take away, and the subtractive restore would keep those cells
+			// open into the turn that follows.
 			ParentZone.AddVisibility(cell.X, cell.Y, The.Player.GetVisibilityRadius());
 			HonestVisibility = (bool[])live.Clone();
 			ProjectedZone = ParentZone;
