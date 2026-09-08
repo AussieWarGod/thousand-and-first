@@ -21,18 +21,23 @@ published arrival debt/opportunities, open Prepared/Intent/Proved clock leases, 
 continuation and field-clock evidence; successful results round-trip canonically. Stale
 owners, contradictory unbacked clocks, disabled states and overflow remain tested refusals.
 No fixture callback witness establishes actual physical creation, ordinary play or save/load.
-Current production digest `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`
-passes the exact structural gate. Full Windows1814 passed13,715 main/5,093 Portable cases,
-zero skips. Canonical53744 passed all four modes: ordinary3045/3049,developer3177/3181,
-132 Harness files,plus installed Hearthpyre ABI. Repository71120 passed501 tooling tests
+Current production digest `fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`
+passes the exact structural gate. For this digest the engine-free suites passed13,720 main/5,098
+Portable cases, zero skips, and Roslyn 9.0.306 on Linux compiled the staged baseline and staged
+compatibility sets clean against the licensed Managed references with warnings as errors. The
+Windows1814 run of13,715 main/5,093 Portable cases and Canonical53744's four modes
+(ordinary3045/3049,developer3177/3181,132 Harness files,plus installed Hearthpyre ABI) belong to
+the retained `a3a9c8dd` digest, NOT to this one: the two dev-harness modes and the Windows gate did
+not run here. Repository71120 passed501 tooling tests
 and all repository audits. Hosted integration checks remain separate.
 "All four modes" names `Tools/gate.sh`'s staged baseline, staged compatibility, dev-harness
 baseline and dev-harness compatibility compiles. The shared `DevTests/refs.rsp` sets
 `-langversion:latest`, so those compiles are not pinned to C# 7.3; `LangVersion` 7.3 is pinned
 only in `DevTests/Engine*/Probe.csproj` and `Tools/WorkshopSteam/*.csproj`. Retained sections
 below keep their original wording as written at their own checkpoints.
-Canonical compilation runs across 3049 production C# sources; the generated
-cold-install inventory contains 3080 files. Neither count proves subscriber delivery.
+Staged compatibility compilation runs across 3051 production C# sources, staged baseline across
+3047 (the optional-mod bridge is a compatibility-only source); the generated
+cold-install inventory contains 3082 files. Neither count proves subscriber delivery.
 [Native/focused evidence](/mnt/c/taf-master-growth-native.sP00c6/README.md).
 
 ## Retained real-turn recovery validation

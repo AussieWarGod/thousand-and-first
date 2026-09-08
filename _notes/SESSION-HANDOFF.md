@@ -1,6 +1,17 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current unreleased master-growth resume correction
+## Current unreleased claimed-ground light
+
+3051 staged sources;432,024 physical lines;1417 direct-XRL;zero cap failures;3082 generated
+cold-stage files. Exact inventory `fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`.
+A mod-owned zone part lights the claimed zone the founder stands in, gated on the new
+`r_TAF_OptionClaimedGroundLight` (default Yes) and revoked from the same activation guard.
+Engine-free suites pass 13,720 main and 5,098 Portable cases, zero skips; doc-freshness,
+structure, architecture and the Tools suites pass. Roslyn 9.0.306 on Linux compiles the staged
+baseline and compatibility sets clean. No dev-harness mode, no native run and no Windows gate ran
+for this delta.
+
+## Retained unreleased master-growth resume correction
 
 3049 staged sources;431,893 physical lines;1415 direct-XRL;zero cap failures;3080 generated
 cold-stage files. Exact inventory `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
