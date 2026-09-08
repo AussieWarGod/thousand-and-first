@@ -1,6 +1,18 @@
 # Brief-to-implementation audit
 
-## Current Kingdom Quickstart tent-row census — 2026-09-08
+## Current Kingdom Quickstart shelter-ingress census — 2026-09-09
+
+**3054** production C# files,432,733 physical lines,1418 direct-XRL,zero cap failures;
+3085 generated cold-install files. Exact digest
+`5f22a97d1fbfcefcbe7f28f7e0a0211ad558a6cf0fbb22eba78b22f1bb46f325`.
+One added source (the quickstart rules' shelter partial) and one modified. Structure, doc freshness
+and the Tools suite (615 tests) pass. Engine-free suites pass13,905 main/5,193 Portable,zero
+skips, all four `Tools/gate.sh` modes compile clean (baseline 3050, compatibility 3054,
+dev-harness 3204/3208) with the installed-Hearthpyre source/ABI step, and the six-profile native
+Quickstart boot matrix at seed `#43101` passes, with `quickstart-save marsh yes` and its cold load.
+No Windows gate, ordinary-play acceptance or exact-inventory human semantic review binds it.
+
+## Retained Kingdom Quickstart tent-row census — 2026-09-08
 
 **3053** production C# files,432,564 physical lines,1418 direct-XRL,zero cap failures;
 3084 generated cold-install files. Exact digest

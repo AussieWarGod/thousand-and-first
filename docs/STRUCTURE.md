@@ -20,6 +20,25 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
+The Kingdom Quickstart shelter ingress over the tent rows reports 3054 staged
+production C# files and 432,733 physical lines.
+Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
+1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
+`5f22a97d1fbfcefcbe7f28f7e0a0211ad558a6cf0fbb22eba78b22f1bb46f325`. The census reports
+1418 files with direct `XRL` imports; 0 of those exceed the line limit.
+
+The delta over the retained draft below is one added and one modified production source and no
+removals: the quickstart rules' shelter partial is the addition and the quickstart rules the
+modification. All four `Tools/gate.sh` modes compile clean under Roslyn on this machine — staged
+baseline (3050 sources), staged compatibility (3054), dev-harness baseline (3204) and dev-harness
+compatibility (3208) — with the installed-Hearthpyre source and ABI step, against the licensed
+Managed references with warnings as errors. The six-profile native Quickstart boot matrix at seed
+`#43101` passes on these bytes, as do `quickstart-save marsh yes` and its cold load; the Windows
+gate did not run. The exact-inventory semantic review in `docs/STRUCTURE_REVIEW.json` binds an
+earlier digest and is therefore open for it.
+
+## Retained Kingdom Quickstart tent-row census
+
 The Kingdom Quickstart tent rows over the empty-camp legacy correction report 3053 staged
 production C# files and 432,593 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed

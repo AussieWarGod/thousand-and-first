@@ -1,6 +1,21 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current unreleased Kingdom Quickstart tent rows
+## Current unreleased Kingdom Quickstart shelter ingress
+
+3054 staged sources;432,733 physical lines;1418 direct-XRL;zero cap failures;3085 generated
+cold-stage files. Exact inventory `5f22a97d1fbfcefcbe7f28f7e0a0211ad558a6cf0fbb22eba78b22f1bb46f325`.
+The camp now bares each shelter lot's authored ingress route as well as the lot itself: the stake's
+public-ingress preflight walks that route and refuses an unbared cell, which is why only the dunes
+founded. Four cells are added — (23,8) and (23,7) north of lot A, (24,17) and (24,18) south of
+lot B — and nothing else changes. Heart-ingress endpoints, lot rectangles, receipt wire and refusal
+message are untouched. Structure, doc freshness and the Tools suite (615) pass; engine-free suites
+pass13,905 main/5,193 Portable,zero skips; all four `Tools/gate.sh` modes plus the
+installed-Hearthpyre source/ABI step compile clean (3050/3054/3204/3208). The six-profile native
+boot matrix at seed `#43101` passes with two `plot staked: tentrow` rows per boot, as do
+`quickstart-save marsh yes` and its cold load. NOT run: the Windows gate, ordinary play, graceful
+Quit and Steam delivery. Public0.3.1 unchanged. Never direct-push main/tag, bypass, or self-approve.
+
+## Retained unreleased Kingdom Quickstart tent rows
 
 3053 staged sources;432,593 physical lines;1418 direct-XRL;zero cap failures;3084 generated
 cold-stage files. Exact inventory `d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0`.

@@ -63,6 +63,38 @@ pull requests, since the currently enabled squash-only merge rewrites the receip
 that the packager requires as an ancestor of the tagged `main` commit; and run the first
 `staging-v0.3.2` release, recording its run id, attempt number and finalization SHA here.
 
+## Unreleased Kingdom Quickstart shelter ingress
+
+The two tent-row lots staked at founding now stake on every shipped profile. `KingdomPlots.Stake`
+runs the authored public-ingress preflight
+(`Growth/KingdomArchitectureRuntime.RoadIngress.cs`), which walks each lot's DoorToLane route and
+refuses any route cell that is not physically walkable. The camp bared the two lot rectangles only,
+so the single exterior cell each route leaves by stood in unbared wilderness: the marsh refused lot
+B at (21,13)-(26,16) for (24,17) and the canyon refused lot A at (21,9)-(26,12) for (23,8). Only
+the dunes founded, because its ground happened to be bare at both. The prepared-ground mask now
+also bares each route's reserved road margin and the lane endpoint one cell beyond it — (23,8) and
+(23,7) north of lot A, (24,17) and (24,18) south of lot B — so the mask widens by exactly four
+cells. Those cells are declared beside the lots because the quickstart's ground authority is
+engine-free; `DevTests/KingdomQuickstartShelterIngressTests.cs` recomputes them from the shipped
+architecture with the same `KingdomRoadRules.TryAuthoredLane` the stake walks and fails on drift.
+The heart-ingress endpoints are unchanged and refusal is still fail-closed with the same message.
+
+Current census:3054 staged C# files;432,733 physical lines;3085 files in the generated
+cold-install inventory. Staged compilation covers3054 sources, baseline and compatibility symbols;
+all four `Tools/gate.sh` modes compile clean here — staged baseline (3050 sources), staged
+compatibility (3054), dev-harness baseline (3204) and dev-harness compatibility (3208) — with the
+installed-Hearthpyre source and ABI step, against the licensed Managed references with warnings as
+errors. Direct `XRL` imports: 1418 files, 0 over the line limit.
+Inventory SHA-256: `5f22a97d1fbfcefcbe7f28f7e0a0211ad558a6cf0fbb22eba78b22f1bb46f325`.
+Engine-free suites pass13,905 main/5,193 Portable cases,zero skips; the Tools suite passes 615
+tests. The six-profile Quickstart boot matrix at seed `#43101` ran natively on these bytes and all
+six reach checker `verdict=PASS`, each with two `[TAF] plot staked: tentrow` rows and a
+strict-clean Player.log; `quickstart-save marsh yes` and its separate cold load also pass, with
+unchanged heart, stock and IDs and no bootstrap replay.
+NOT RUN for this delta: the Windows gate, ordinary play, graceful Quit and Steam delivery. The
+1,700-tick figure remains a reading of the raising rule, not of a running plot clock. No human
+exact-inventory semantic review binds this digest.
+
 ## Unreleased Kingdom Quickstart tent rows
 
 Kingdom Quickstart stakes two `tentrow` lots at founding, west of the supply column at
@@ -79,7 +111,7 @@ digest. Only a `q2` receipt owes a stake, so a pre-existing `q1` save keeps its 
 every phase, Reserved included, and the completion notice counts the claims standing on the ground
 rather than trusting the branch that ran.
 
-Current census:3053 staged C# files;432,593 physical lines;3084 files in the generated
+Retained tent-row census:3053 staged C# files;432,593 physical lines;3084 files in the generated
 cold-install inventory. Staged compilation covers3053 sources, baseline and compatibility symbols,
 run here by Roslyn 9.0.306 on Linux against the licensed Managed references with warnings as errors
 (baseline compiles 3049 of them; the optional-mod bridge is compatibility-only).

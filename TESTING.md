@@ -84,9 +84,16 @@ baseline and dev-harness compatibility compiles. The shared `DevTests/refs.rsp` 
 `-langversion:latest`, so those compiles are not pinned to C# 7.3; `LangVersion` 7.3 is pinned
 only in `DevTests/Engine*/Probe.csproj` and `Tools/WorkshopSteam/*.csproj`. Retained sections
 below keep their original wording as written at their own checkpoints.
-Staged compatibility compilation runs across 3053 production C# sources, staged baseline across
-3049 (the optional-mod bridge is a compatibility-only source); the generated
-cold-install inventory contains 3084 files. Neither count proves subscriber delivery.
+Staged compatibility compilation runs across 3054 production C# sources, staged baseline across
+3050 (the optional-mod bridge is a compatibility-only source); the generated
+cold-install inventory contains 3085 files. Neither count proves subscriber delivery.
+The Kingdom Quickstart shelter-ingress delta inside this census compiled clean in all four
+`Tools/gate.sh` modes — staged baseline, staged compatibility and both dev-harness profiles — with
+the installed-Hearthpyre source and ABI step; the Windows gate did not run for it. Its
+prepared-ground widening is proved natively: the six-profile Quickstart boot matrix at seed
+`#43101` passes with two `[TAF] plot staked: tentrow` rows in every boot, and `quickstart-save
+marsh yes` with its separate cold load passes with unchanged heart, stock and IDs. Ordinary play,
+graceful Quit and Steam delivery remain outside it.
 The Kingdom Quickstart tent-row delta inside this census compiled clean in the staged baseline and
 staged compatibility modes only, run on Linux with the SDK Roslyn against the installed managed
 assemblies rather than through `Tools/gate.sh`; the two dev-harness modes, the installed-ABI

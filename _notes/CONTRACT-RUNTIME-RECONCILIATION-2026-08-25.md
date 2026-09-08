@@ -1,6 +1,18 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
-## Current Kingdom Quickstart tent-row census — 2026-09-08
+## Current Kingdom Quickstart shelter-ingress census — 2026-09-09
+
+3054 production C# files;3,085 cold-install files in the generated inventory;
+432,733 physical lines,1418 direct-XRL,zero cap failures. Exact digest
+`5f22a97d1fbfcefcbe7f28f7e0a0211ad558a6cf0fbb22eba78b22f1bb46f325`.
+The camp bares each shelter lot's authored DoorToLane route as well as the lot, so the stake's
+public-ingress preflight finds walkable ground on every profile rather than only on the dunes;
+nothing here invents a completion and a route cell that cannot be bared still stops the bootstrap.
+All four `Tools/gate.sh` modes (3050/3054/3204/3208) plus the installed-Hearthpyre source/ABI step
+bind this digest, and the six-profile native Quickstart boot matrix at seed `#43101` passes on it
+together with `quickstart-save marsh yes` and its cold load; no Windows gate binds it.
+
+## Retained Kingdom Quickstart tent-row census — 2026-09-08
 
 3053 production C# files;3,084 cold-install files in the generated inventory;
 432,564 physical lines,1418 direct-XRL,zero cap failures. Exact digest
