@@ -1,6 +1,31 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current unreleased Kingdom Quickstart tent rows
+## Current unreleased first-basin water store over the Quickstart tent rows
+
+3056 staged sources;433,308 physical lines;1421 direct-XRL;zero cap failures;3087 generated
+cold-stage files. Exact inventory `5160ed08e19734f315ebe8c7fe2ab4e5e7e1bb6bc632ae97a0c511d1f40cd325`.
+The founding heart's first basin becomes the settlement's first water store: dedicated in code at
+the relic slot, capacity 16/48/160/512/1024 by rung, raised only and never lowered, skipped with
+one ledger line while an open water debit is bound to that vessel, an unsettled arrival water leg
+draws from it, or a routed-input lease holds it, and reconciled once on load and on zone activation
+for worlds built before it. The catch-up resolves the basin only through the anchored-component
+lookup, which needs an a3|/a4| managed layout receipt on the heart's owner: a heart whose owner
+carries an a2 or absent snapshot is NOT reconciled until its next rung restamps the layout. The
+reconciliation is asked only AFTER the seat exchange and only for ground the seated settlement
+claims, and the reconciler refuses unclaimed ground itself, so a second, foreign, seceded or
+exiled city's heart can never be dedicated into the wrong ledger or measured against the wrong
+growth book. A committed water receipt keeps its per-vessel hold while its caller's declared
+compensation window is open, and every caller that can refund AFTER its own callbacks now opens
+that window before its commit and closes it in an enclosing finally: construction funding across
+the material commit, sowing across the laid rows and the spent seed, annexe enrolment across the
+roll and the standing batch, and the lab's commission and its two removal lanes. The window never
+outlives the method that took it, so a finished rung is still free to widen the basin its funding
+drained. No saved field, wire format, option or verifier predicate changes. Roslyn 9.0.306 on Linux
+compiles the staged and dev-harness baseline and compatibility sets clean. No native run,
+installed-ABI source step, Windows gate and no exact-inventory human semantic review bind this
+digest.
+
+## Retained unreleased Kingdom Quickstart tent rows
 
 3053 staged sources;432,593 physical lines;1418 direct-XRL;zero cap failures;3084 generated
 cold-stage files. Exact inventory `d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0`.
@@ -11,10 +36,6 @@ carries the shelter obligation under tag `q2`, the shipped `q1` shape is still w
 byte for byte, and only a `q2` receipt owes a stake — so a pre-existing `q1` save resumed at any
 phase, Reserved included, keeps old behaviour and never stakes on ground the old narrower mask
 never bared. Codec and source-contract cases prove that; no native resumed save does.
-Structure, doc freshness, architecture and the Tools suite pass; engine-free suites pass13,834
-main/5,123 Portable,zero skips on Linux .NET9.0.306, and Roslyn 9.0.306 on Linux compiles the
-staged baseline (3049) and compatibility (3053) sets clean. NOT run: the two dev-harness modes,
-the installed-ABI source step, the Windows gate, the developer boot matrix and any native run.
 The 1,700-tick raising figure is a reading of `KingdomPlotRules.RaiseTicks`, not of a plot clock.
 Public0.3.1 unchanged. Never direct-push main/tag, bypass, or self-approve.
 

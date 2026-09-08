@@ -1,15 +1,27 @@
 # Brief-to-implementation audit
 
-## Current Kingdom Quickstart tent-row census — 2026-09-08
+## Current first-basin water-store over Quickstart tent-row census — 2026-09-09
+
+**3056** production C# files,433,308 physical lines,1421 direct-XRL,zero cap failures;
+3087 generated cold-install files. Exact digest
+`5160ed08e19734f315ebe8c7fe2ab4e5e7e1bb6bc632ae97a0c511d1f40cd325`.
+The founding heart's first basin is the settlement's first water store, with a per-rung capacity
+raised and never lowered, and every water caller that can refund after its own callbacks now holds
+its vessels across them. No receipt phase, wire, option, grant or verifier predicate changes.
+Roslyn 9.0.306 on Linux compiled the staged and dev-harness baseline and compatibility sets clean.
+No native run, installed-ABI source step, Windows gate or exact-inventory human semantic review
+binds it.
+
+## Retained Kingdom Quickstart tent-row census — 2026-09-08
 
 **3053** production C# files,432,564 physical lines,1418 direct-XRL,zero cap failures;
 3084 generated cold-install files. Exact digest
 `f5571291a26a1bd1db608f0d1c3f79ed296569bddce4979208cb564f8c22df63`.
 One added source (the bootstrap's shelter partial) and four modified. Structure, doc freshness,
-architecture and the Tools suite pass. Engine-free suites pass13,831 main/5,120 Portable,zero
+architecture and the Tools suite passed. Engine-free suites passed13,831 main/5,120 Portable,zero
 skips on Linux .NET9.0.306, and Roslyn 9.0.306 on Linux compiled the staged baseline (3049
-sources) and compatibility (3053 sources) sets clean. No native run, dev-harness mode,
-installed-ABI source step, Windows gate or exact-inventory human semantic review binds it.
+sources) and compatibility (3053 sources) sets clean. That checkpoint is not restated for the
+merged digest above.
 
 ## Retained camp-guide topic census — 2026-09-08
 

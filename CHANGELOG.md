@@ -50,25 +50,44 @@ below it.
   a staked lot remains an owned object property registered in the removal-coverage allowlist.
   Ordinary founding is untouched. Public 0.3.1 is unchanged.
 
-> **Current unreleased census — exact structural gate passed.** Current 3053-file census is line-cap green:
-> 432,593 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> **Current unreleased census — exact structural gate passed.** Current 3056-file census is line-cap green:
+> 433,308 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
-> imports occur in 1418 files, 0 of them over the line limit. Inventory SHA-256:
-> `d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0`.
-> The generated cold-install inventory contains 3084 files; no new subscription claim.
-> The tent-row delta over the merged `dev` census below is one added and six modified production
+> imports occur in 1421 files, 0 of them over the line limit. Inventory SHA-256:
+> `5160ed08e19734f315ebe8c7fe2ab4e5e7e1bb6bc632ae97a0c511d1f40cd325`.
+> The generated cold-install inventory contains 3087 files; no new subscription claim.
+> This digest is the Kingdom Quickstart tent rows merged with the first-basin water store retained
+> below; each delta carries its own review chain and neither is restated for the other.
+> The tent-row delta over the retained first-basin census below is one added and six modified production
 > sources: the quickstart bootstrap's shelter partial, the quickstart rules, the bootstrap, the camp
-> builder, the generated removal coverage, the quickstart receipt model and its wire codec. It
-> compiled clean in the staged baseline (3049 sources) and staged compatibility (3053 sources)
-> modes only, on Linux with the SDK Roslyn against the installed managed assemblies rather than
-> through `Tools/gate.sh`; both engine-free suites run green there (13,834 main/5,123 Portable,zero
-> skips) and the repository audit passes.
-> NOT run for it: the two dev-harness compile modes, the installed-Hearthpyre source step, the
+> builder, the generated removal coverage, the quickstart receipt model and its wire codec. The
+> merged tree compiles clean in the staged baseline (3052 sources), staged compatibility
+> (3056 sources) and both dev-harness modes, on Linux with the SDK Roslyn against the installed
+> managed assemblies rather than through `Tools/gate.sh`; both engine-free suites run green there
+> (13,925 main/5,193 Portable,zero skips) and the repository audit passes.
+> NOT run for it: the installed-Hearthpyre source step, the
 > Windows gate, the developer boot matrix and any native in-game run. The 1,700-tick raising figure
 > is a reading of the raising rule, not of a running plot clock. The exact-inventory human semantic
 > review is open against this digest; this is not Beta sign-off.
 
 ## Unreleased — empty-camp legacy correction
+
+### Added
+
+- The first basin is the settlement's first water store: 16 drams at the rite ground, 48 at
+  the waterstone, 160 at the moot, 512 at the court, 1024 at the arcology. It ships empty —
+  the rite's 8 drams are the cost, not a deposit — and its capacity is only ever raised,
+  never lowered, so drams already in it can never spill when the rung around it is rebuilt.
+  A camp of five drinking from it can now become a steading without a cask rack. The
+  dedication is stamped in code at the founding-heart relic slot rather than authored on the
+  blueprint, so the Debug architecture gallery's photographic copy of the same basin stays
+  out of every settlement's water accounts. A widening that would land underneath an open
+  water debit bound to that basin, an unsettled arrival water leg drawing from it, or a
+  routed-input construction lease holding it, is skipped and said once in the ledger, then
+  taken when that clears. For an existing save: a standing basin is dedicated and brought up
+  to what its rung is worth on load or on the first activation of its settlement zone, and
+  from then on it permanently occupies one of the settlement's 24 dedicated-vessel slots,
+  which is one fewer cask or rack the charter will count.
 
 ### Fixed
 
@@ -84,6 +103,27 @@ below it.
   recomputing it from the latest profile revision, so a realm whose profile was revised
   after founding can still be exiled. That covers any realm at profile revision 2 or
   above, not only an empty camp. The original foundation receipt is never rewritten.
+- The first basin's capacity reconciliation now runs only AFTER the seat exchange, and only
+  on ground the seated settlement claims. Walking into a second city activated that zone
+  before the seat moved, so the dedication would have landed in the departed city's water
+  accounts and the unsettled-arrival-leg hold would have been read from the departed city's
+  growth book, missing a leg the destination city was holding; a foreign, seceded or exiled
+  realm's standing heart could also have been dedicated as the seated settlement's water
+  store. Both reconciler entries now refuse unclaimed ground themselves — including the one a
+  finished rung uses, which resolves the seated realm rather than the realm that owns the
+  ground — so no caller can reach one of those hearts by asking at the wrong moment.
+- A committed water receipt whose caller may still compensate it now keeps its per-vessel
+  hold until that caller closes the window. The hall's commission commits the water, runs the
+  bit-debit callbacks and only then decides whether to roll back; the hold was dropped at
+  commit, so a basin widened inside that span made the rollback refuse — it re-proves
+  `MaxVolume == OriginalMaxVolume` before it restores a dram — turning a recoverable
+  interruption into water the founder could never get back. The window is opt-in and never
+  inferred from a commit: a caller that commits and then finishes its own work, such as a
+  construction whose completed rung widens the very basin it drained, must not hold that
+  vessel or the rung it paid for could never widen anything. Every caller that can refund
+  after its own callbacks closes that window in a `finally`, so a throw inside the span cannot
+  leave an abandoned receipt holding a vessel; the hall's commission settle span moved into
+  `Growth/KingdomLab.Commission.Settle.cs` to make room for one.
 
 ### Compatibility
 
@@ -112,8 +152,23 @@ below it.
   reader-bound source pin) and 2 exile cases (a canonical-body revised realm, and a pin
   that a profile revision never re-cuts the current realm foundation receipt).
 - Full suites pass 13,826 main and 5,116 Portable cases, zero skips, up from 13,735 and
-  5,109 on the `dev` integration branch. 501 tooling tests pass. The four-mode compile
-  gate passed the pre-merge bytes and was not re-run for the merged tree.
+  5,109 on the `dev` integration branch. 501 tooling tests pass. With the first-basin water
+  store merged over the Kingdom Quickstart tent rows, the Linux Roslyn 9.0.306 run of the
+  same suites passes 13,925 main and 5,193 Portable cases, zero skips (this count is from
+  Linux, not from the licensed Windows run above): 21 new cases covering the capacity ladder
+  against the stage gates and the leak law,
+  the relic-slot dedication and the gallery's exclusion from it, the existing-authority stamp
+  the survey sweep respects, the raise-only reconciler, the announce-once hold and its three
+  distinct hold sources, the per-vessel open-reservation registry, the unsettled arrival water
+  leg, the basin's unchanged bare-ground reading and un-strikeable refusal, the seat-then-
+  claim order the reconciliation is asked in, the committed receipt that keeps its vessel
+  hold across a caller's compensation window, one adversary contract per caller that can refund
+  after its own callbacks (the window opens before the commit, closes inside an enclosing
+  finally, opens exactly once and has no refund below it), the construction and sowing spans
+  themselves, the hall commission's compensate-before-every-exit invariant, the proof that a
+  finished rung is still free to widen the basin its funding drained, and the loader's attribute
+  pair and no-thaw contract. The staged and dev-harness baseline and compatibility compiles were
+  re-run on the merged tree; the installed-ABI source step and the Windows gate were not.
 - Tools: the smoke launcher accepts every seal schema the game reads (4..6) and the full
   legacy store layout; it previously refused progressed profiles. Maintainer tooling only,
   with no player-visible or runtime effect.
@@ -165,13 +220,14 @@ below it.
   separately gated. Retained failures and bounded native scope are recorded in
   `docs/STATUS.md`.
 
-> **Retained empty-camp merge census — exact structural gate passed.** That 3052-file census was line-cap green:
-> 432,259 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> **Retained first-basin water-store census — exact structural gate passed.** That 3054-file census was line-cap green:
+> 432,819 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
-> imports occur in 1417 files, 0 of them over the line limit. Inventory SHA-256:
-> `c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`.
-> The generated cold-install inventory contains 3083 files; no new subscription claim.
-> Root and independent AI reviewer read all four changed production sources and affected
+> imports occur in 1419 files, 0 of them over the line limit. Inventory SHA-256:
+> `bb8531b8c45a7a57f4a9bcfc1c86576a095e37b872e3b1ede82f446ade729e94`.
+> The generated cold-install inventory contains 3085 files; no new subscription claim.
+> Root and independent AI reviewer read the seal lane's four changed production sources and
+> the first-basin water store's two added and twelve modified ones, and affected
 > boundaries; unchanged sources inherit the complete canonical parent review chain. This
 > digest covers the merge with `dev`, so the exact-inventory human semantic review is open
 > against it and the Windows compile gate has not re-run for the merged bytes.

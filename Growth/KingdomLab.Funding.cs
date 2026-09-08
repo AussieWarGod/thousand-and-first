@@ -23,24 +23,37 @@ namespace ThousandAndFirst
 				KingdomWaterDebit debit;
 				if (survey != null && survey.TryReserveExactWater(Job.WaterOwed - Job.WaterPaid, out debit))
 				{
-					if (!ValidApplicationTarget(Actor, Job, Procedure))
+					// Opened BEFORE the commit and closed in the finally below: the retry may still
+					// roll this receipt back after the commit's own callbacks, and Rollback re-proves
+					// each bound vessel's MaxVolume before it restores a dram.
+					debit.BeginCompensationWindow();
+					try
 					{
-						debit.Rollback();
-						Job.Fault = "The frozen patient slot or bearer changed before retry payment. Nothing was charged.";
-						return;
+						if (!ValidApplicationTarget(Actor, Job, Procedure))
+						{
+							debit.Rollback();
+							Job.Fault = "The frozen patient slot or bearer changed before retry payment. Nothing was charged.";
+							return;
+						}
+						debit.Commit();
+						if (!ValidApplicationTarget(Actor, Job, Procedure))
+						{
+							debit.Rollback();
+							MergeWaterReceipt(Job, debit);
+							Job.State = Job.WaterQuarantined ? KingdomLabJobPhase.ApplicationRecovery
+								: KingdomLabJobPhase.FundingRecovery;
+							Job.Fault = "The target changed during water retry callbacks; exact compensation was measured before any bit, kept, or body mutation.";
+							EnsureJobGovernance(Job);
+							return;
+						}
+						waterExact = MergeWaterReceipt(Job, debit);
 					}
-					debit.Commit();
-					if (!ValidApplicationTarget(Actor, Job, Procedure))
+					finally
 					{
-						debit.Rollback();
-						MergeWaterReceipt(Job, debit);
-						Job.State = Job.WaterQuarantined ? KingdomLabJobPhase.ApplicationRecovery
-							: KingdomLabJobPhase.FundingRecovery;
-						Job.Fault = "The target changed during water retry callbacks; exact compensation was measured before any bit, kept, or body mutation.";
-						EnsureJobGovernance(Job);
-						return;
+						// Closed before the bit, kept and body work below, which must be free to widen
+						// whatever this receipt drained.
+						debit.EndCompensationWindow();
 					}
-					waterExact = MergeWaterReceipt(Job, debit);
 				}
 			}
 			bool bitsExact = string.IsNullOrEmpty(Job.BitOutstanding);

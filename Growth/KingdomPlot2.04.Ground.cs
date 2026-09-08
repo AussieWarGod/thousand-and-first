@@ -72,6 +72,18 @@ namespace ThousandAndFirst
 			{
 				return KingdomPlotRules.GroundKind.Bare;
 			}
+			if (Object.GetIntProperty(HeartStakeProperty) == 1 || Object.GetIntProperty(HeartRelicProperty) == 1)
+			{
+				// A survey stake is the founder's ambition paced out, and the basin is what the
+				// first water was poured from. Neither is an obstruction and neither is ever
+				// cleared: reading them as bare ground is what lets ordinary plots be built over
+				// surveyed ground (the mark is a preference, not a claim) and what lets every rung
+				// of the heart be raised AROUND the basin rather than refused by it. This clause
+				// stands ABOVE the settlement-works clause below on purpose: the basin is also the
+				// settlement's dedicated water store (KingdomStores == 1), and if the works clause
+				// were reached first the basin would read Held and start refusing its own rungs.
+				return KingdomPlotRules.GroundKind.Bare;
+			}
 			if (Object.GetIntProperty("KingdomBuilt") == 1 || Object.GetIntProperty("KingdomStores") == 1
 				|| Object.GetIntProperty("KingdomLarder") == 1 || Object.GetIntProperty("KingdomDefence") > 0
 				|| Object.GetIntProperty(PlotPartProperty) == 1 || Object.HasPart("r_KingdomScaffold")
@@ -80,15 +92,6 @@ namespace ThousandAndFirst
 				// The settlement's own works are not obstructions to be cleared; they are the
 				// settlement. A plot never lands on one, and never takes one down to fit.
 				return KingdomPlotRules.GroundKind.Held;
-			}
-			if (Object.GetIntProperty(HeartStakeProperty) == 1 || Object.GetIntProperty(HeartRelicProperty) == 1)
-			{
-				// A survey stake is the founder's ambition paced out, and the basin is what the
-				// first water was poured from. Neither is an obstruction and neither is ever
-				// cleared: reading them as bare ground is what lets ordinary plots be built over
-				// surveyed ground (the mark is a preference, not a claim) and what lets every rung
-				// of the heart be raised AROUND the basin rather than refused by it.
-				return KingdomPlotRules.GroundKind.Bare;
 			}
 			if (Object.HasPart("LiquidVolume"))
 			{

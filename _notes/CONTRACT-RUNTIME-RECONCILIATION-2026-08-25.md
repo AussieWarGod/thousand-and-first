@@ -1,15 +1,29 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
-## Current Kingdom Quickstart tent-row census — 2026-09-08
+## Current first-basin water-store over Quickstart tent-row census — 2026-09-09
+
+3056 production C# files;3,087 cold-install files in the generated inventory;
+433,308 physical lines,1421 direct-XRL,zero cap failures. Exact digest
+`5160ed08e19734f315ebe8c7fe2ab4e5e7e1bb6bc632ae97a0c511d1f40cd325`.
+The founding heart's first basin becomes the settlement's first water store: the relic slot stamps
+the store dedication in code so the Debug gallery's copy never joins a settlement's accounts, and
+capacity grows with the rung standing over it. A committed water receipt keeps its per-vessel hold
+while its caller's compensation window is open, and every caller that can refund after its own
+callbacks now opens that window before its commit and closes it in an enclosing finally. No receipt
+phase, wire, option, grant or verifier predicate changes. Roslyn 9.0.306 on Linux compiled the
+staged and dev-harness baseline and compatibility sets clean. No native, installed-ABI or human
+semantic-review evidence binds this digest.
+
+## Retained Kingdom Quickstart tent-row census — 2026-09-08
 
 3053 production C# files;3,084 cold-install files in the generated inventory;
 432,564 physical lines,1418 direct-XRL,zero cap failures. Exact digest
 `f5571291a26a1bd1db608f0d1c3f79ed296569bddce4979208cb564f8c22df63`.
 The quickstart bootstrap stakes two receiptless `tentrow` lots between the founding proof and the
-receipt's first advance, one search per lot before either is staked; nothing here stamps
-completion. Staged baseline (3049 sources) and staged compatibility (3053 sources) compiles bind
-this digest, run on Linux with the SDK Roslyn against the installed managed assemblies rather than
-through `Tools/gate.sh`; no dev-harness mode, Windows gate or native evidence binds it.
+receipt's first advance, one search per lot before either is staked; nothing there stamps
+completion. Staged baseline (3049 sources) and staged compatibility (3053 sources) compiles bound
+that digest, run on Linux with the SDK Roslyn against the installed managed assemblies rather than
+through `Tools/gate.sh`; no dev-harness mode, Windows gate or native evidence bound it.
 
 ## Retained camp-guide topic census — 2026-09-08
 
