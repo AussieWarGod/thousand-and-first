@@ -2,13 +2,16 @@
 
 ## Current unreleased Kingdom Quickstart shelter lot
 
-3050 staged sources;432,114 physical lines;1416 direct-XRL;zero cap failures;3081 generated
-cold-stage files. Exact inventory `1a26a79fe4bcdb53957b7682d7fb858c2c08ad101c183e10f8b14795a4e20642`.
+3050 staged sources;432,135 physical lines;1416 direct-XRL;zero cap failures;3081 generated
+cold-stage files. Exact inventory `c76829759e702521f37f77565dec078515e408824118d43a4526bcb3ce9a9b56`.
 Quickstart now stakes one settler's tent lot at founding, west of the supply column, so the
 mode no longer opens on a roofless camp nobody can join. No receipt wire or persisted field
 changes; existing saves are past the branch and keep old behaviour. Structure, doc freshness
-and the Tools suite pass. NOT compiled and NOT run natively: the staged four-mode gate needs
-Windows, and the developer boot matrix and every timing claim about the tent are outstanding.
+and the Tools suite pass. Compiled clean in the staged baseline and staged compatibility modes
+only, on Linux with the SDK Roslyn against the installed managed assemblies rather than through
+`Tools/gate.sh`; both public suites run green there (13,718 main/5,096 Portable,zero skips).
+NOT run natively: the two dev-harness modes, the installed-ABI step and the developer boot
+matrix are outstanding, and every timing claim about the tent is still a source reading.
 Public0.3.1 unchanged. Main PR6 still REVIEW_REQUIRED; never direct-push main/tag, bypass,
 or self-approve it.
 

@@ -17,7 +17,7 @@ Each successful camp physically contains 24 drams of fresh water in dedicated ca
 
 The optional named camp guide explains this opening inventory. The guide is passive and immobile, carries no stock, awards no experience, provides no labour, staffing, support, or defence, and is not a citizen.
 
-One settler's tent is staked at founding, granted free: the stores above are unchanged. It is staked, not standing. The lot is receiptless, so it keeps the same calendar clock the first heart uses and advances at day boundaries — expect the tent within the first days, not by nightfall, and expect no settler to build it. Until a roof stands nobody joins, so this one lot is the opening the mode did not have before. Nothing else is commissioned for you, and nothing commissioned rises while the population is zero.
+One settler's tent is staked at founding, granted free: the stores above are unchanged. It is staked, not standing. The lot is receiptless, so it keeps the same calendar clock the first heart uses and advances at day boundaries — expect the tent within the first days, not by nightfall, and expect no settler to build it. Until a roof stands nobody joins, so this one lot is the opening the mode did not have before. Nothing else is commissioned for you, and nothing commissioned rises while the population is zero. The staked lot is labelled from the shared building catalogue and so reads on screen as `plot: settler's tent (a roof by nightfall)`; that parenthetical describes an ordinary commissioned tent built by settler hands, not this receiptless lot. Trust the timing above, not the label.
 
 ## Safety and compatibility
 

@@ -26,14 +26,20 @@ namespace ThousandAndFirst
 			try
 			{
 				bool completedNow;
-				if (!RunCore(Game, out completedNow, out Failure)) return false;
+				bool shelterStanding;
+				if (!RunCore(Game, out completedNow, out shelterStanding,
+					out Failure)) return false;
 				if (completedNow)
 					Popup.Show("{{W|Your kingdom stands.}} The founder's casks hold "
 						+ KingdomQuickstartRules.StarterWaterDrams + " drams of water, the larder "
 						+ "holds " + KingdomQuickstartRules.StarterFoodServings
 						+ " meals, and the materials chest holds only what you can see. None of "
-						+ "these stores produces replacements. A settler's tent is staked west of "
-						+ "them; it rises on the settlement's own calendar within the first days.");
+						+ "these stores produces replacements."
+						+ (shelterStanding
+							? " A settler's tent lot is staked west of them. It rises over the"
+								+ " first days, not by nightfall, and only at the day boundaries"
+								+ " you spend on this claimed ground."
+							: ""));
 				return true;
 			}
 			catch (Exception ex)
@@ -50,9 +56,10 @@ namespace ThousandAndFirst
 		}
 
 		private static bool RunCore(XRLGame Game, out bool CompletedNow,
-			out string Failure)
+			out bool ShelterStanding, out string Failure)
 		{
 			CompletedNow = false;
+			ShelterStanding = false;
 			Failure = "";
 			if (GrantQuarantined(Game))
 			{
@@ -218,6 +225,11 @@ namespace ThousandAndFirst
 					KingdomQuickstartAdvisorDisposition.Unresolved, out Failure)) return false;
 			if (!VerifyComplete(system, zone, receipt, out Failure)) return false;
 			CompletedNow = true;
+			// Read the ground, not the branch that ran. A save cut past the Reserved phase resumes
+			// straight through to Complete without ever staking a lot, so the completion notice may
+			// only name the tent when a shelter claim is actually standing here.
+			ShelterStanding = TryFindShelter(zone, out GameObject shelter, out _)
+				&& shelter != null;
 			return true;
 		}
 

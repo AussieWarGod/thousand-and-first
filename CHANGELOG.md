@@ -1,4 +1,4 @@
-﻿# Changelog
+# Changelog
 
 All notable changes to The Thousand and First. Versions are semantic: patch for fixes,
 minor for additive API and content, major for breaking changes. Supported API is defined in
@@ -24,9 +24,12 @@ below it.
   refuse a foreign value there, aborting every later grant phase on the same boot.
 - If zoning or the authored-ground preflight refuses the lot, the bootstrap stops with that
   reason. It never stamps completion and never publishes a receipt it did not measure.
-- No new persisted field and no receipt wire change. Existing Quickstart saves are already
-  past the Reserved phase, so the branch never runs for them: they keep their old behaviour
-  and simply have no tent. Ordinary founding is untouched. Public 0.3.1 is unchanged.
+- No new receipt field and no receipt wire change; the shelter's reservation is a new owned
+  object property, registered in the removal-coverage allowlist. Existing Quickstart saves are
+  already past the Reserved phase, so the branch never runs for them: they keep their old
+  behaviour and simply have no tent, and the completion notice reads the ground rather than
+  the branch, so it never promises one. Ordinary founding is untouched. Public 0.3.1 is
+  unchanged.
 
 ## Unreleased — master pause/resume correction
 
@@ -37,16 +40,23 @@ below it.
   local/global pause time counts once. No save format changes. Public0.3.1 is unchanged.
 - Add a real-engine master off/on regression and38 engine-free cases covering continued
   arrival recovery, stale ownership, canonical save payloads and arithmetic refusal.
-  Native regression and four-mode compilation pass. Full licensed suites pass13,715 main
-  and5,093 Portable cases,zero skips; repository audit passes501 tooling tests.
+  Native regression and four-mode compilation pass for that correction, on its own 3049-file
+  digest. Full licensed suites pass13,715 main and5,093 Portable cases,zero skips; repository
+  audit passes501 tooling tests. None of that evidence covers the shelter delta above.
 
 > **Current unreleased census — exact structural gate passed.** Current 3050-file census is line-cap green:
-> 432,114 physical lines,zero files at or above300; direct `XRL`
+> 432,135 physical lines,zero files at or above300; direct `XRL`
 > imports occur in 1416 files, 0 of them over the line limit. Inventory SHA-256:
-> `1a26a79fe4bcdb53957b7682d7fb858c2c08ad101c183e10f8b14795a4e20642`.
+> `c76829759e702521f37f77565dec078515e408824118d43a4526bcb3ce9a9b56`.
 > The generated cold-install inventory contains 3081 files; no new subscription claim.
-> Root and independent AI reviewer inspected the complete five-source delta. Native scope
-> and remaining gates are recorded in `docs/STATUS.md`; this is not Beta sign-off.
+> Root and independent AI reviewer inspected the complete five-source delta of the retained
+> master-growth entry below; the shelter delta above is one added and four modified sources.
+> The shelter delta compiled clean in the staged baseline and staged compatibility modes only,
+> on Linux with the SDK Roslyn against the installed managed assemblies rather than through
+> `Tools/gate.sh`; both public suites run green there (13,718 main/5,096 Portable,zero skips).
+> The two dev-harness modes, the installed-ABI step and the developer boot matrix are
+> outstanding for it, and every timing claim about the staked tent remains a source reading.
+> Native scope and remaining gates are recorded in `docs/STATUS.md`; this is not Beta sign-off.
 
 > **Retained unreleased recovery correction — exact structural gate passed.** Its3047-file census is line-cap green:
 > 431,611 physical lines, zero files at or above300. Direct `XRL`

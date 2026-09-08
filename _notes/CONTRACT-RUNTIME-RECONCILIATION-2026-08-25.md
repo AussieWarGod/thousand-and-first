@@ -3,11 +3,12 @@
 ## Current Kingdom Quickstart shelter census — 2026-09-08
 
 3050 production C# files;3,081 cold-install files in the generated inventory;
-432,114 physical lines,1416 direct-XRL,zero cap failures. Exact digest
-`1a26a79fe4bcdb53957b7682d7fb858c2c08ad101c183e10f8b14795a4e20642`.
+432,135 physical lines,1416 direct-XRL,zero cap failures. Exact digest
+`c76829759e702521f37f77565dec078515e408824118d43a4526bcb3ce9a9b56`.
 The quickstart bootstrap stakes one shelter lot between the founding proof and the receipt's
-first advance; the lot is receiptless, so nothing here stamps completion. No compile or
-native evidence binds this digest.
+first advance; the lot is receiptless, so nothing here stamps completion. Staged baseline and
+staged compatibility compiles bind this digest, run on Linux with the SDK Roslyn against the
+installed managed assemblies rather than through `Tools/gate.sh`; no native evidence binds it.
 
 ## Retained master-growth resume census — 2026-09-07
 

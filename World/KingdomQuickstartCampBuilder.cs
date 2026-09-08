@@ -7,8 +7,9 @@ using XRL.World;
 namespace XRL.World.ZoneBuilders
 {
 	/// <summary>
-	/// Makes only the founding apron and supply path usable. The rest of the wilderness zone is
-	/// untouched; owned things, loose items, pools, and creatures are moved rather than deleted.
+	/// Makes only the founding apron, supply path, and the one reserved shelter lot usable. The
+	/// rest of the wilderness zone is untouched; owned things, loose items, pools, and creatures
+	/// are moved rather than deleted.
 	/// </summary>
 	public sealed class KingdomQuickstartCampBuilder
 	{
@@ -193,7 +194,8 @@ namespace XRL.World.ZoneBuilders
 				&& Start.X == KingdomQuickstartRules.StartCellX && Start.Y == KingdomQuickstartRules.StartCellY;
 		}
 
-		/// <summary>Small heart apron, one supply column, and a three-cell-wide approach.</summary>
+		/// <summary>Small heart apron, one supply column, a three-cell-wide approach, the two heart
+		/// ingress endpoints, and the reserved shelter lot.</summary>
 		internal static bool Required(int X, int Y)
 		{
 			return KingdomQuickstartRules.RequiresPreparedGround(X, Y);

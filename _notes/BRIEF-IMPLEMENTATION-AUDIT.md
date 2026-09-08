@@ -2,11 +2,14 @@
 
 ## Current Kingdom Quickstart shelter census — 2026-09-08
 
-**3050** production C# files,432,114 physical lines,1416 direct-XRL,zero cap failures;
+**3050** production C# files,432,135 physical lines,1416 direct-XRL,zero cap failures;
 3081 generated cold-install files. Exact digest
-`1a26a79fe4bcdb53957b7682d7fb858c2c08ad101c183e10f8b14795a4e20642`.
-One added source (the bootstrap's shelter partial) and two modified. Structure, doc
-freshness and the Tools suite pass; compilation and native evidence are outstanding.
+`c76829759e702521f37f77565dec078515e408824118d43a4526bcb3ce9a9b56`.
+One added source (the bootstrap's shelter partial) and four modified. Structure, doc
+freshness and the Tools suite pass. Compiled clean in the staged baseline and staged
+compatibility modes only, on Linux with the SDK Roslyn against the installed managed
+assemblies rather than through `Tools/gate.sh`; both public suites run green there. The
+two dev-harness modes, the installed-ABI step and native evidence are outstanding.
 
 ## Retained master-growth resume census — 2026-09-07
 

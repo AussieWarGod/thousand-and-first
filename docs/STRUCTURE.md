@@ -20,13 +20,17 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
-The Kingdom Quickstart shelter lot reports3050 staged production C# files,432,114 physical
+The Kingdom Quickstart shelter lot reports3050 staged production C# files,432,135 physical
 lines,zero at or above300,and1416 files with direct `XRL` imports. Exact inventory:
-`1a26a79fe4bcdb53957b7682d7fb858c2c08ad101c183e10f8b14795a4e20642`.
-The complete canonical parent/current comparison enumerates3049 unchanged,two modified,
+`c76829759e702521f37f77565dec078515e408824118d43a4526bcb3ce9a9b56`.
+The complete canonical parent/current comparison enumerates3045 unchanged,four modified,
 one added,no removals. The added source is the bootstrap's shelter partial; the modified
-sources are the quickstart rules and the bootstrap itself. No compile or native evidence
-binds this digest yet.
+sources are the quickstart rules, the bootstrap, the camp builder and the generated removal
+coverage. The Kingdom Quickstart shelter delta inside this census compiled clean in the
+staged baseline and staged compatibility modes only, run on Linux with the SDK Roslyn against
+the installed managed assemblies rather than through `Tools/gate.sh`; the two dev-harness
+modes, the installed-ABI step and the developer boot matrix are outstanding for it, and every
+timing claim about the staked tent remains a source reading.
 
 ## Retained master-growth resume census
 

@@ -64,6 +64,10 @@ The v0.3 Alpha target adds a separate **Kingdom Quickstart** game mode:
 5. Confirm one staked settler's tent lot stands west of the supply column, around (21,9)-(26,12).
    It is a staked plot, not a finished building: it rises on the settlement calendar over the
    first days, with no citizens and nothing spent from the chest. Report the day it finishes.
+   The lot reads on screen as `plot: settler's tent (a roof by nightfall)` — that parenthetical
+   is the shared catalogue's word for a commissioned tent, not a promise about this lot. A
+   Quickstart save made before this change has no lot, and the founding notice does not name
+   one; report it if a save without a lot is told a tent is staked.
 6. Open the **Charter** ability and follow its current offers. Save, quit to desktop, reload, and
    revisit the heart and the tent lot before expanding the test.
 

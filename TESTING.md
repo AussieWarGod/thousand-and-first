@@ -1,4 +1,4 @@
-﻿# The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
+# The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
 The current public Alpha manifest is `0.3.1`, published with one subscribed installation
 verified. Working-tree changes do not inherit that tagged release's receipts. The unreleased
@@ -21,7 +21,7 @@ published arrival debt/opportunities, open Prepared/Intent/Proved clock leases, 
 continuation and field-clock evidence; successful results round-trip canonically. Stale
 owners, contradictory unbacked clocks, disabled states and overflow remain tested refusals.
 No fixture callback witness establishes actual physical creation, ordinary play or save/load.
-Current production digest `1a26a79fe4bcdb53957b7682d7fb858c2c08ad101c183e10f8b14795a4e20642`
+Current production digest `c76829759e702521f37f77565dec078515e408824118d43a4526bcb3ce9a9b56`
 passes the exact structural gate. Full Windows1814 passed13,715 main/5,093 Portable cases,
 zero skips. Canonical53744 passed all four modes: ordinary3045/3049,developer3177/3181,
 132 Harness files,plus installed Hearthpyre ABI. Repository71120 passed501 tooling tests
@@ -33,11 +33,13 @@ only in `DevTests/Engine*/Probe.csproj` and `Tools/WorkshopSteam/*.csproj`. Reta
 below keep their original wording as written at their own checkpoints.
 Canonical compilation runs across 3050 production C# sources; the generated
 cold-install inventory contains 3081 files. Neither count proves subscriber delivery.
-The Kingdom Quickstart shelter lot inside this census compiled clean in the staged baseline
+The Kingdom Quickstart shelter delta inside this census compiled clean in the staged baseline
 and staged compatibility modes only, run on Linux with the SDK Roslyn against the installed
 managed assemblies rather than through `Tools/gate.sh`; the two dev-harness modes, the
 installed-ABI step and the developer boot matrix are outstanding for it, and every timing
-claim about the staked tent remains a source reading.
+claim about the staked tent remains a source reading. Both public suites run green on that
+delta on Linux under the CI-pinned SDK9.0.306: 13,718 main and 5,096 Portable cases,zero
+skips, two of them the new shelter pins.
 [Native/focused evidence](/mnt/c/taf-master-growth-native.sP00c6/README.md).
 
 ## Retained real-turn recovery validation

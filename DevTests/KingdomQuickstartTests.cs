@@ -178,6 +178,47 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void CompletionNoticeNamesTheTentOnlyWhenAShelterActuallyStands()
+		{
+			string bootstrap = TestMain.ReadRepositoryText(
+				"World/KingdomQuickstartBootstrap.cs");
+			// The tent sentence is a conditional arm read from the ground, never from the branch
+			// that ran: a save cut past the Reserved phase resumes straight to Complete with no
+			// lot staked anywhere, and must not be told a tent is waiting for it.
+			StringAssert.Contains("out bool ShelterStanding, out string Failure", bootstrap);
+			StringAssert.Contains("ShelterStanding = TryFindShelter(zone, out GameObject shelter, out _)",
+				bootstrap);
+			int guard = bootstrap.IndexOf("+ (shelterStanding", StringComparison.Ordinal);
+			int sentence = bootstrap.IndexOf("A settler's tent lot is staked west of them.",
+				StringComparison.Ordinal);
+			Assert.That(guard, Is.GreaterThanOrEqualTo(0));
+			Assert.That(sentence, Is.GreaterThan(guard));
+			ClassicAssert.AreEqual(sentence, bootstrap.LastIndexOf(
+				"A settler's tent lot is staked west of them.", StringComparison.Ordinal));
+			// The timing the docs promise, and no flatter claim than the calendar can keep.
+			StringAssert.Contains("not by nightfall", bootstrap);
+		}
+
+		[Test]
+		public void ShelterAdoptionProvesTheDesignBeforeItWritesAnyReservation()
+		{
+			string shelter = TestMain.ReadRepositoryText(
+				"World/KingdomQuickstartBootstrap.Shelter.cs");
+			int find = shelter.IndexOf("private static bool TryFindShelter(",
+				StringComparison.Ordinal);
+			int mark = shelter.IndexOf("private static bool MarkShelter(",
+				StringComparison.Ordinal);
+			Assert.That(find, Is.GreaterThanOrEqualTo(0));
+			Assert.That(mark, Is.GreaterThan(find));
+			string finder = shelter.Substring(find, mark - find);
+			// An unmarked object is adopted only when it also carries our own design key, so a
+			// foreign plot stamped on the reserved rectangle is refused before MarkShelter can
+			// write our reservation onto it. Prove custody, then write.
+			StringAssert.Contains("KingdomUpgrade.BuildKeyProperty", finder);
+			StringAssert.Contains("KingdomQuickstartRules.ShelterBuildKey", finder);
+		}
+
+		[Test]
 		public void ReceiptIsExactMonotoneAndTamperEvident()
 		{
 			Assert.That(KingdomQuickstartRules.TryCreateReceipt("marsh",
@@ -346,6 +387,7 @@ namespace ThousandAndFirst.Tests
 				+ TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.StockVerification.cs")
 				+ TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.Advisor.cs")
 				+ TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.Recovery.cs")
+				+ TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.Shelter.cs")
 				+ TestMain.ReadRepositoryText(
 					"World/KingdomQuickstartBootstrap.Verification.cs");
 			StringAssert.Contains("KingdomFoundingTransaction.TryFoundFirstWithoutWater", bootstrap);

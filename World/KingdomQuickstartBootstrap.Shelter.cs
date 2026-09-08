@@ -68,6 +68,11 @@ namespace ThousandAndFirst
 		/// The one shelter already standing on this ground, or null. The stamped rectangle is read
 		/// as well as the marker, because the marker is written after the stake: a cut between the
 		/// two must find the lot, not stake a second one.
+		/// <para>
+		/// An unmarked object is adopted only when it also carries our own design key, so a foreign
+		/// plot that happens to be stamped on this rectangle is never marked before it is refused.
+		/// The bootstrap proves custody before it writes, as every other grant path here does.
+		/// </para>
 		/// </summary>
 		private static bool TryFindShelter(Zone Zone, out GameObject Shelter, out string Failure)
 		{
@@ -81,7 +86,9 @@ namespace ThousandAndFirst
 				if (!GameObject.Validate(item)) continue;
 				KingdomPlotRules.PlotRect rect;
 				if (!item.HasStringProperty(KingdomQuickstartRules.ShelterMarkerProperty)
-					&& !(KingdomPlots.TryReadStampedRect(item, out rect) && SameShelterRect(rect)))
+					&& !(KingdomPlots.TryReadStampedRect(item, out rect) && SameShelterRect(rect)
+						&& string.Equals(item.GetStringProperty(KingdomUpgrade.BuildKeyProperty, ""),
+							KingdomQuickstartRules.ShelterBuildKey, StringComparison.Ordinal)))
 					continue;
 				matches++;
 				Shelter = item;
