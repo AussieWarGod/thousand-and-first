@@ -50,7 +50,8 @@ class FakeCommit:
 class UpgradeProfileInputTest(unittest.TestCase):
     def config(self, mode="source"):
         return inputs.configuration(mode, inputs.OLD_PIN if mode in ("source", "downgrade") else CURRENT,
-                                    CURRENT, "reader" if mode in ("downgrade", "stage-source") else "inheritance", "#123")
+                                    CURRENT, "reader" if mode in ("downgrade", "stage-source") else "inheritance", "#123",
+                                    schema=inputs.PROFILE_V1)
 
     def test_old_runtime_pin_not_a_version_label(self):
         for pin in ("v0.3.1", "dev", "a" * 40):
@@ -141,7 +142,8 @@ class UpgradeProfileStateTest(unittest.TestCase):
                                  ["Synced", "Synced/Saves"])
 
     def fixture(self, root):
-        config = inputs.configuration("source", inputs.OLD_PIN, CURRENT, "inheritance", "#123")
+        config = inputs.configuration("source", inputs.OLD_PIN, CURRENT, "inheritance", "#123",
+                                      schema=inputs.PROFILE_V1)
         save = root / "Synced/Saves" / GAME
         save.mkdir(parents=True)
         payloads = {"Primary.sav.gz": b"synthetic-not-a-native-save", "Cache.db": b"post-quit-cache",

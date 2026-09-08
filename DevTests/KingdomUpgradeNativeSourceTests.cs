@@ -10,7 +10,7 @@ namespace ThousandAndFirst.Tests
 	public sealed class KingdomUpgradeNativeSourceTests
 	{
 		[Test]
-		public void SourceRequiresManualOneShotArmAndRealSaveWithoutCallingIt()
+		public void ObserverRequiresOneShotArmAndRealSaveWithoutCallingIt()
 		{
 			string source = Read("Harness/KingdomUpgradeSource.cs");
 			foreach (string token in new[] { "[WishCommand(\"kingdom:upgrade-arm\", null)]", "!Attempted",

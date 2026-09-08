@@ -14,7 +14,8 @@ import subprocess
 import tempfile
 
 import scenario_profile
-from upgrade_profile_inputs import CONFIG, OLD_PIN, SHA, json_bytes, local_inputs, parse_config, portable, require, sha
+from upgrade_profile_inputs import (CONFIG, OLD_PIN, SHA, json_bytes, local_inputs, parse_config,
+                                    portable, recipe_request, require, sha)
 
 _spec = importlib.util.spec_from_file_location("taf_load_files", Path(__file__).with_name("prepare-scenario-load.py"))
 assert _spec and _spec.loader
@@ -157,21 +158,65 @@ def native(mode: str, plan: dict) -> dict:
     return proof
 
 
-def authenticate_source(repo: Path, source: Path, mode: str, pin: str | None = None) -> tuple[dict, dict]:
+def stopped_source(source: Path, game: Path) -> None:
+    """Exact owned-process exit, including retained donor ancestors; no process is stopped here."""
+    fs.ownership_shape(fs.read_bytes(source / "process-ownership.json", 16384), source)
+    helper = Path(__file__).with_name("assert-scenario-source-stopped.ps1")
+    convert = lambda path: subprocess.run(["wslpath", "-w", str(path)], check=True,
+        stdout=subprocess.PIPE, text=True).stdout.strip()
+    subprocess.run(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File",
+                    convert(helper), "-Root", windows(source), "-Game", convert(game)], check=True)
+
+
+def capture_donor(source: Path, config: dict, state: dict) -> dict:
+    from upgrade_profile_witnesses import capture_donor as observed
+    return observed(source, config, state)
+
+
+def capture_stage(source: Path, config: dict, state: dict) -> dict:
+    from upgrade_profile_witnesses import capture_stage as observed
+    return observed(source, config, state)
+
+
+def authenticate_source(repo: Path, source: Path, mode: str, pin: str | None = None,
+                        game: Path | None = None) -> tuple[dict, dict]:
     config = parse_config(fs.read_bytes(source / "Local" / CONFIG, 4096))
     require(config["mode"] == mode and (pin is None or config["runtime"] == pin),
             "source profile provenance is not the requested runtime/mode")
-    expected = local_inputs(repo, config)
+    donor_witness, donor_authority = None, None
+    if config.get("donor") is not None:
+        require(mode == "source" and config["case"] == "inheritance" and game is not None,
+                "retained donor authentication requires the exact source mode and game executable")
+        reference = config["donor"]
+        donor_root = Path(reference["root"])
+        require(str(donor_root).casefold() != str(source).casefold(), "source is its own donor")
+        stopped_source(donor_root, game)
+        # Finite chain: configuration forbids any donor reference on source-donor itself.
+        donor_config, donor_state = authenticate_source(repo, donor_root, "source-donor", OLD_PIN, game=game)
+        require(donor_config["probe"] == reference["probe"], "retained donor probe was not explicitly bound")
+        donor_witness = capture_donor(donor_root, donor_config, donor_state)
+        require(donor_witness["receiptSha256"] == reference["receiptSha256"],
+                "retained native donor receipt changed")
+        donor_authority = sha(json_bytes(dict(config=donor_config, files=donor_state["files"],
+            directories=donor_state["directories"], localHashes=donor_state["localHashes"], witness=donor_witness)))
+    expected = local_inputs(repo, config, donor_witness=donor_witness)
     # Upgrade destinations carry load inputs and cannot masquerade as fresh stage sources.
-    # A stage-source uses current pinned runtime/probes and an attended-only marker.
+    # New source recipes also prove their exact unattended scripts and retained native ancestor.
     files, directories = inventory(source, ["Local", "Synced"])
     local = {row["path"][6:]: row["sha256"] for row in files if row["path"].startswith("Local/")}
-    require(local == {p: sha(raw) for p, raw in expected.items()},
+    birth = {p: sha(raw) for p, raw in expected.items()}
+    observed_expected = dict(birth)
+    if config["schema"] == "taf-upgrade-profile-v2":
+        from upgrade_profile_options import validate_options
+        options = fs.read_bytes(source / "Local/PlayerOptions.json", 1024**2)
+        validate_options(config, expected["PlayerOptions.json"], options)
+        observed_expected["PlayerOptions.json"] = sha(options)
+    require(local == observed_expected,
             "source Local differs from independently pinned runtime/probe inputs")
     seal = scenario_profile.read_seal(str(source) + ".seal/profile.sha256")
-    require(seal == {scenario_profile.normalize(p): h for p, h in local.items()},
-            "source closed seal disagrees with pinned inputs")
-    request = ("arch-gallery-slice;facing=north;seed=" + config["seed"] + "\n").encode("ascii")
+    require(seal == {scenario_profile.normalize(p): h for p, h in birth.items()},
+            "source original closed seal disagrees with pinned birth inputs")
+    request = (recipe_request(repo, config) + "\n").encode("ascii")
     require(fs.read_bytes(Path(str(source) + ".seal/request.txt"), 1024) == request,
             "source request seal mismatch")
     state_files = [row for row in files if row["path"].startswith("Synced/")]
@@ -179,7 +224,7 @@ def authenticate_source(repo: Path, source: Path, mode: str, pin: str | None = N
     validate_state(state_files, state_dirs)
     proof = native("Inspect", native_plan(source, None, ["Local", "Synced"], files, directories))
     return config, dict(files=state_files, directories=state_dirs, inspect=proof,
-                        localHashes=local)
+                        localHashes=local, donorWitness=donor_witness, donorAuthority=donor_authority)
 
 
 def capture(source: Path, config: dict, state: dict) -> tuple[bytes, bytes, dict]:
@@ -211,4 +256,8 @@ def capture(source: Path, config: dict, state: dict) -> tuple[bytes, bytes, dict
     require(cache is not None and cache["size"] > 0, "selected post-quit cache missing")
     request = ("taf-scenario-load-v1\n" + lines[2] + "\n" + lines[4] + "\n" + lines[5]
                + "\n" + cache["sha256"] + "\n" + lines[7] + "\n").encode("ascii")
-    return snapshot, request, dict(gameId=lines[2], receiptSha256=sha(raw), snapshotSha256=sha(snapshot))
+    witness = dict(gameId=lines[2], receiptSha256=sha(raw), snapshotSha256=sha(snapshot))
+    if config["schema"] == "taf-upgrade-profile-v2":
+        from upgrade_profile_witnesses import source_link
+        witness.update(source_link(source, config, state, lines[2], sha(snapshot), sha(raw)))
+    return snapshot, request, witness
