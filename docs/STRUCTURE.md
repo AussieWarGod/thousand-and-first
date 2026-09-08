@@ -21,10 +21,10 @@ python3 Tools/check-structure.py --release
 ## Current isolated draft census
 
 The Kingdom Quickstart tent rows over the empty-camp legacy correction report 3053 staged
-production C# files and 432,557 physical lines.
+production C# files and 432,564 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`a7d35c2ca056c4fdf7478cc58d0460b55df0fb7c20fc3a62ecd050607e467180`. The census reports
+`f5571291a26a1bd1db608f0d1c3f79ed296569bddce4979208cb564f8c22df63`. The census reports
 1418 files with direct `XRL` imports; 0 of those exceed the line limit.
 
 The delta over the retained draft below is one added and four modified production sources and no

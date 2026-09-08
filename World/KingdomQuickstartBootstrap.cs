@@ -38,9 +38,9 @@ namespace ThousandAndFirst
 						+ (shelterLots > 0
 							? " " + shelterLots + " tent-row lot"
 								+ (shelterLots == 1 ? " is" : "s are") + " staked west of them,"
-								+ " three beds apiece once they stand. They rise over the first"
-								+ " days, not by nightfall, and only at the day boundaries you"
-								+ " spend on this claimed ground."
+								+ " three beds to a row once it stands. Raising runs over the"
+								+ " first days, not by nightfall, and only at the day boundaries"
+								+ " you spend on this claimed ground."
 							: ""));
 				return true;
 			}

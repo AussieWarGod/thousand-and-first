@@ -37,11 +37,12 @@ schema refusals,unresolved cohort denial,revision-aware exile and retained found
 receipts are covered. Four checked-in seals written by writer code byte-identical to tag
 `v0.3.1` live in `DevTests/Fixtures/SealProfile`; their SHA-256s are pinned in
 `DevTests/KingdomSealProfileHistoricalFixtureTests.cs` and are never regenerated.
-Current3052-source production digest
+Retained3052-source production digest
 `c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`
-passes the structural gate; its exact-inventory human semantic review is open after the `dev`
-merge. Final Windows suites on the merged tree pass13,826 main/5,116 Portable cases,zero
-skips,up from13,735/5,109 on the `dev` integration branch;
+passed the structural gate at its own checkpoint; its exact-inventory human semantic review is
+open after the `dev` merge. The Windows suites that pass13,826 main/5,116 Portable cases,zero
+skips,up from13,735/5,109 on the `dev` integration branch, ran on THAT retained digest and are
+not restated for the current one;
 canonical39198 passes ordinary3045/3049 and developer3182/3186 with137 Harness files,all four
 modes plus installed source/ABI on the pre-merge bytes,and is not restated for the merged tree.
 Complete ordinary/developer source comparisons pass for the bytes it ran on.
@@ -65,7 +66,7 @@ published arrival debt/opportunities, open Prepared/Intent/Proved clock leases, 
 continuation and field-clock evidence; successful results round-trip canonically. Stale
 owners, contradictory unbacked clocks, disabled states and overflow remain tested refusals.
 No fixture callback witness establishes actual physical creation, ordinary play or save/load.
-Current production digest `a7d35c2ca056c4fdf7478cc58d0460b55df0fb7c20fc3a62ecd050607e467180`
+Current production digest `f5571291a26a1bd1db608f0d1c3f79ed296569bddce4979208cb564f8c22df63`
 passes the exact structural gate. For that digest the engine-free suites pass13,831 main/5,120
 Portable cases,zero skips, on Linux under the CI-pinned SDK9.0.306. The retained
 `dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96` digest carried13,731 main/5,109

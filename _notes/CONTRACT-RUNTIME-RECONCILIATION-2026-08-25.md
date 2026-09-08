@@ -3,8 +3,8 @@
 ## Current Kingdom Quickstart tent-row census — 2026-09-08
 
 3053 production C# files;3,084 cold-install files in the generated inventory;
-432,557 physical lines,1418 direct-XRL,zero cap failures. Exact digest
-`a7d35c2ca056c4fdf7478cc58d0460b55df0fb7c20fc3a62ecd050607e467180`.
+432,564 physical lines,1418 direct-XRL,zero cap failures. Exact digest
+`f5571291a26a1bd1db608f0d1c3f79ed296569bddce4979208cb564f8c22df63`.
 The quickstart bootstrap stakes two receiptless `tentrow` lots between the founding proof and the
 receipt's first advance, one search per lot before either is staked; nothing here stamps
 completion. Staged baseline (3049 sources) and staged compatibility (3053 sources) compiles bind

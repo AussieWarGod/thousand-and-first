@@ -2,9 +2,9 @@
 
 ## Current Kingdom Quickstart tent-row census — 2026-09-08
 
-**3053** production C# files,432,557 physical lines,1418 direct-XRL,zero cap failures;
+**3053** production C# files,432,564 physical lines,1418 direct-XRL,zero cap failures;
 3084 generated cold-install files. Exact digest
-`a7d35c2ca056c4fdf7478cc58d0460b55df0fb7c20fc3a62ecd050607e467180`.
+`f5571291a26a1bd1db608f0d1c3f79ed296569bddce4979208cb564f8c22df63`.
 One added source (the bootstrap's shelter partial) and four modified. Structure, doc freshness,
 architecture and the Tools suite pass. Engine-free suites pass13,831 main/5,120 Portable,zero
 skips on Linux .NET9.0.306, and Roslyn 9.0.306 on Linux compiled the staged baseline (3049

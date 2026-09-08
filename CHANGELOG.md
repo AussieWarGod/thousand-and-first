@@ -34,19 +34,23 @@ below it.
   object is adopted only when it carries our own design key, so a foreign plot stamped on a
   reserved rectangle is refused before anything is written to it.
 - If zoning or the authored-ground preflight refuses a lot, the bootstrap stops with that
-  reason. It never stamps completion and never publishes a receipt it did not measure.
+  reason. It never stamps completion and never publishes a receipt it did not measure. The lots
+  are staked before the stores are granted, so that refusal also costs that world its casks,
+  larder, materials chest and advisor, not just a row.
 - No new receipt field and no receipt wire change; the reservation is an owned object property
-  registered in the removal-coverage allowlist. Existing Quickstart saves are already past the
-  Reserved phase, so the branch never runs for them: they keep their old behaviour and simply
-  have no rows, and the completion notice counts the claims standing on the ground rather than
-  trusting the branch, so it never promises one. Ordinary founding is untouched. Public 0.3.1
-  is unchanged.
+  registered in the removal-coverage allowlist. Saves whose receipt has already advanced past
+  Reserved never run this branch: they keep their old behaviour and simply have no rows, and the
+  completion notice counts the claims standing on the ground rather than trusting the branch, so
+  it never promises one. A pre-existing save still at the Reserved phase does run the branch, on
+  ground the old narrower prepared-ground mask never bared; that resume is untested, and a
+  preflight refusal there would stop its bootstrap for good. Ordinary founding is untouched.
+  Public 0.3.1 is unchanged.
 
 > **Current unreleased census — exact structural gate passed.** Current 3053-file census is line-cap green:
-> 432,557 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> 432,564 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1418 files, 0 of them over the line limit. Inventory SHA-256:
-> `a7d35c2ca056c4fdf7478cc58d0460b55df0fb7c20fc3a62ecd050607e467180`.
+> `f5571291a26a1bd1db608f0d1c3f79ed296569bddce4979208cb564f8c22df63`.
 > The generated cold-install inventory contains 3084 files; no new subscription claim.
 > The tent-row delta over the merged `dev` census below is one added and four modified production
 > sources: the quickstart bootstrap's shelter partial, the quickstart rules, the bootstrap, the camp

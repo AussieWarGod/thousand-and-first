@@ -173,8 +173,15 @@ namespace ThousandAndFirst.Tests
 			// first arrivals are not refused for want of room.
 			ClassicAssert.AreEqual("tentrow", KingdomQuickstartRules.ShelterBuildKey);
 			string rules = TestMain.ReadRepositoryText("Core/KingdomQuickstartRules.cs");
-			StringAssert.Contains("\"tentrow\"", rules);
-			StringAssert.DoesNotContain("\"tent\"", rules);
+			int key = rules.IndexOf("public const string ShelterBuildKey",
+				StringComparison.Ordinal);
+			Assert.That(key, Is.GreaterThanOrEqualTo(0));
+			// Scoped to the declaration, so an unrelated "tent" elsewhere in the file never
+			// fails this contract, and the key itself still cannot slip back to the 3x2 design.
+			string declaration = rules.Substring(key,
+				rules.IndexOf('\n', key) - key);
+			StringAssert.Contains("\"tentrow\"", declaration);
+			StringAssert.DoesNotContain("\"tent\"", declaration);
 			string catalogue = TestMain.ReadRepositoryText("RuntimeData/KingdomBuildings.xml");
 			int row = catalogue.IndexOf("Key=\"tentrow\"", StringComparison.Ordinal);
 			Assert.That(row, Is.GreaterThanOrEqualTo(0));

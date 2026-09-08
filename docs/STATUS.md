@@ -72,21 +72,23 @@ is receiptless, so the lots keep the shipped schema-zero calendar: by `KingdomPl
 each row is 1,700 ticks — 1,200 design plus 500 enclosure for the ten edge cells of a 5x2
 footprint — against 1,200 ticks to the day. The prepared-ground mask widens by 48 cells so the camp
 builder bares both lots; each lot is searched before it is staked, so a cut between the two resumes
-by staking only the missing one. No receipt phase, wire or saved field changes; existing Quickstart
-saves are past the branch and keep their old behaviour, and the completion notice counts the claims
-standing on the ground rather than trusting the branch that ran.
+by staking only the missing one. No receipt phase, wire or saved field changes; saves whose receipt
+has already advanced past Reserved never run this branch and keep their old behaviour, and the
+completion notice counts the claims standing on the ground rather than trusting the branch that ran.
 
-Current census:3053 staged C# files;432,557 physical lines;3084 files in the generated
+Current census:3053 staged C# files;432,564 physical lines;3084 files in the generated
 cold-install inventory. Staged compilation covers3053 sources, baseline and compatibility symbols,
 run here by Roslyn 9.0.306 on Linux against the licensed Managed references with warnings as errors
 (baseline compiles 3049 of them; the optional-mod bridge is compatibility-only).
 Direct `XRL` imports: 1418 files, 0 over the line limit.
-Inventory SHA-256: `a7d35c2ca056c4fdf7478cc58d0460b55df0fb7c20fc3a62ecd050607e467180`.
+Inventory SHA-256: `f5571291a26a1bd1db608f0d1c3f79ed296569bddce4979208cb564f8c22df63`.
 NOT RUN for this delta: the two dev-harness compile modes, the installed-Hearthpyre source/ABI
 step, `Tools/gate.sh` itself, the Windows gate, the developer boot matrix and any native in-game
 run. The 1,700-tick figure is a reading of the raising rule, not of a running plot clock; the
-second lot's preparation on the marsh, canyon and dunes profiles is unproven. No human
-exact-inventory semantic review binds this digest.
+second lot's preparation on the marsh, canyon and dunes profiles is unproven. A pre-existing save
+resumed at the Reserved phase, whose world was built with the narrower prepared-ground mask, is
+untested: the stake runs there on unbared ground, and a preflight refusal would stop that
+bootstrap permanently. No human exact-inventory semantic review binds this digest.
 
 ## Unreleased empty-camp legacy and native water regression
 

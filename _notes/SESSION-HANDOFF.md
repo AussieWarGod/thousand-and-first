@@ -2,11 +2,14 @@
 
 ## Current unreleased Kingdom Quickstart tent rows
 
-3053 staged sources;432,557 physical lines;1418 direct-XRL;zero cap failures;3084 generated
-cold-stage files. Exact inventory `a7d35c2ca056c4fdf7478cc58d0460b55df0fb7c20fc3a62ecd050607e467180`.
+3053 staged sources;432,564 physical lines;1418 direct-XRL;zero cap failures;3084 generated
+cold-stage files. Exact inventory `f5571291a26a1bd1db608f0d1c3f79ed296569bddce4979208cb564f8c22df63`.
 Quickstart stakes two `tentrow` lots at founding, west of the supply column at (21,9)-(26,12) and
 (21,13)-(26,16); six beds between them, receiptless, free, and never debited. No receipt phase,
-wire, option, grant or verifier change; existing saves are past the branch and keep old behaviour.
+wire, option, grant or verifier change; saves whose receipt already advanced past Reserved never
+run this branch and keep old behaviour, while a pre-existing save resumed at Reserved does run it
+on ground the old narrower mask never bared — untested, and a preflight refusal there would stop
+that bootstrap permanently.
 Structure, doc freshness, architecture and the Tools suite pass; engine-free suites pass13,831
 main/5,120 Portable,zero skips on Linux .NET9.0.306, and Roslyn 9.0.306 on Linux compiles the
 staged baseline (3049) and compatibility (3053) sets clean. NOT run: the two dev-harness modes,

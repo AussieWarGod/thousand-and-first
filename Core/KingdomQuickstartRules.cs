@@ -82,6 +82,9 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static KingdomPlotRules.PlotRect ShelterLot(int Index)
 		{
+			if (Index < 0 || Index >= ShelterLots.Length)
+				throw new ArgumentOutOfRangeException("Index", "The quickstart reserves "
+					+ ShelterLots.Length + " shelter lots.");
 			return ShelterLots[Index];
 		}
 
@@ -102,7 +105,11 @@ namespace ThousandAndFirst
 			// preflight refuses a lot holding a creature, an item, or open liquid.
 			bool shelter = false;
 			for (int i = 0; i < ShelterLots.Length; i++)
-				if (ShelterLots[i].Contains(X, Y)) shelter = true;
+				if (ShelterLots[i].Contains(X, Y))
+				{
+					shelter = true;
+					break;
+				}
 			return apron || supply || approach || heartLanes || shelter;
 		}
 
