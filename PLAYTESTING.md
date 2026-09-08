@@ -1,4 +1,4 @@
-﻿# Alpha Playtesting Guide
+# Alpha Playtesting Guide
 
 This guide is for tagged release packages and the public `0.3.0` Alpha on
 [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472). A repository
@@ -72,8 +72,8 @@ Talk to the advisor: besides the opening inventory line it offers five fixed que
 founding and held ground, commissioning and materials and hands, water and the stores, who may
 arrive and why a roof comes first, and petitions and raiders. Each answer returns to the opening,
 and Live and drink. ends the conversation. It is information only; nothing in it is a promise that
-anyone will join, that hands will appear, or that anything commissioned will rise while the
-settlement counts nobody. A world created before this change keeps the single-line advisor.
+anyone will join, that hands will appear, or that anything commissioned will rise before there
+are free hands to raise it. The guide never states the roll's current size. A world created before this change keeps the single-line advisor.
 
 If the tagged v0.3 Alpha does not show this mode after the required restart, report a loader or
 package bug instead of using debug wishes to conceal it.

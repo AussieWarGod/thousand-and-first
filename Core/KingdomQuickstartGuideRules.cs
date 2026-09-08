@@ -1,5 +1,3 @@
-using System;
-
 namespace ThousandAndFirst
 {
 	/// <summary>
@@ -33,8 +31,13 @@ namespace ThousandAndFirst
 	/// benefit-free on every recovery pass. So the only thing he can be widened with is TRUE
 	/// information about the rules the founder is already standing inside. Nothing here may
 	/// promise an arrival, a pair of hands, or a finished building &#8212; the settlement refuses
-	/// all three until a roof stands and somebody lives under it, and a guide that said otherwise
-	/// would leave a player waiting for something that never comes.
+	/// all three until a roof stands with room under it and somebody lives there, and a guide that
+	/// said otherwise would leave a player waiting for something that never comes.
+	/// </para>
+	/// <para>
+	/// Nothing here may state the roll's current size either. The guide speaks about roofs, hands
+	/// and later arrivals as RULES, so every word stays true whether the camp was seeded with
+	/// founding settlers or with nobody at all.
 	/// </para>
 	/// </summary>
 	public static class KingdomQuickstartGuideRules
@@ -42,11 +45,10 @@ namespace ThousandAndFirst
 		/// <summary>
 		/// What he says when the conversation opens.
 		/// <para>
-		/// The inventory sentence is the original one, unchanged. What follows it answers the two
-		/// questions the opening raises and the old line left standing: who the man beside the
-		/// casks is, and why the settlement's count reads nobody with him in plain sight. Both are
-		/// stated as the rules state them &#8212; he is off the roll, and the roll stays empty
-		/// until somebody stays, which nobody does where no roof is standing.
+		/// The inventory sentence is the original one, unchanged. What follows it answers the
+		/// question the opening raises and the old line left standing: who the man beside the
+		/// casks is. He is off the roll, and he points at the two numbers that actually decide
+		/// what the settlement can do &#8212; roofs with room, and hands not already spoken for.
 		/// </para>
 		/// </summary>
 		public const string Start =
@@ -54,8 +56,8 @@ namespace ThousandAndFirst
 			+ "twenty-four drams and the larder twelve meals. They make nothing. "
 			+ "Raise shelter, then give hands and ground to the works that gather food "
 			+ "and water; only such work replaces what the city spends. I am not on your roll. "
-			+ "I pass through, and I am not counted. Your count stands at nobody until someone "
-			+ "comes to stay, and nobody stays where no roof is standing.";
+			+ "I pass through, and I am not counted. Read the roll and the roofs instead: hands "
+			+ "come off the roll, and nobody new stays unless a roof stands with room left in it.";
 
 		/// <summary>How he ends it. The house farewell.</summary>
 		public const string Goodbye = "Live and drink.";
@@ -70,11 +72,10 @@ namespace ThousandAndFirst
 			new string[2]
 			{
 				"How was this place founded, and what ground is mine?",
-				"The heart was set before you woke, by the ordinary rite and no other way. "
-					+ "What the realm holds is the ground around that heart: the cells swept "
-					+ "for you and the way in. Land past it is nobody's until the settlement "
-					+ "reaches it. Your charter will tell you what is held, and it will not "
-					+ "flatter you about the rest."
+				"The heart was set before you woke, by the ordinary founding and no other way. "
+					+ "What the realm holds is the ground around that heart, and no more of it "
+					+ "than the settlement has reached; land past that is nobody's. Your charter "
+					+ "will tell you what is held, and it will not flatter you about the rest."
 			},
 			new string[2]
 			{
@@ -82,36 +83,40 @@ namespace ThousandAndFirst
 				"You commission a design and the ground is marked. Nothing rises off a mark. "
 					+ "Every design names the materials it eats, and the stores must already "
 					+ "hold them; the chest holds one mud, three brush and four timber, and "
-					+ "nothing adds to it but work. Then the design wants hands — settlers "
-					+ "who live here and are not already spoken for. With nobody on the roll "
-					+ "there are no hands, and a commission is a shape in the dirt that waits."
+					+ "nothing adds to it but work. Then the design wants hands — settlers who "
+					+ "live here and are not already spoken for. Where the roll is empty, or "
+					+ "every name on it is busy, a commission is a shape in the dirt that waits."
 			},
 			new string[2]
 			{
 				"What about water?",
 				"What the casks hold is what you carried. Nothing in them fills again. "
 					+ "Dedicate a vessel and the settlement keeps its water in one place where "
-					+ "it can be counted; after that only work that gathers — a catchment, "
-					+ "an air-well, a wheel set over water — puts drams back. Drink from "
-					+ "the casks and the number goes down and stays down."
+					+ "it can be counted. Putting drams back is other work — a pan worked for "
+					+ "what the brine was hiding, canvas and gutters under a cold night, a damp "
+					+ "seam followed back into rock — and a camp may commission none of it. "
+					+ "Five living here, and somewhere to store what they draw, is the price of "
+					+ "that ladder. Until then the number only goes down."
 			},
 			new string[2]
 			{
 				"Will anyone come?",
 				"People pass. One of them may ask to be taken in, and asking is not staying. "
-					+ "Nobody joins a place with no roof standing — not a stranger walking "
-					+ "up, not a guest welcomed at your own fire. Raise a roof and keep it "
-					+ "standing, and an arrival has somewhere to be put and the roll can "
-					+ "begin. Do not spend a face before it comes."
+					+ "Nobody joins a place that has no roof with room left under it — not a "
+					+ "stranger walking up, not a guest welcomed at your own fire. The welcome "
+					+ "is not the transaction; the bed is. Raise housing before it is wanted "
+					+ "and an arrival has somewhere to be put. Do not spend a face before it "
+					+ "comes."
 			},
 			new string[2]
 			{
 				"What comes after that — petitions, and raiders?",
-				"Settlers put questions to you and wait on the answer; refuse them all and "
-					+ "they remember which refusal was theirs. Others come armed and ask "
-					+ "nothing. A wall, and people willing to stand behind it, is the only "
-					+ "answer to the second kind, and it has to be standing before it is "
-					+ "wanted. Both wait on the same thing you do: somebody living here."
+				"Settlers put questions to you and wait on the answer; where nobody lives, "
+					+ "nobody asks, and declining one costs you nothing but the asking. "
+					+ "Raiders neither ask nor wait to be invited — they come for the water, "
+					+ "and a settlement holding some is worth the walk whether or not anybody "
+					+ "lives in it. What you have raised counts only when you answer the raid: "
+					+ "a wall nobody fortifies behind counts for nothing."
 			}
 		};
 

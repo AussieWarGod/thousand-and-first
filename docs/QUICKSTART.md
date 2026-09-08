@@ -1,4 +1,4 @@
-﻿# Kingdom Quickstart
+# Kingdom Quickstart
 
 Kingdom Quickstart is an optional new-game mode for testing or learning The Thousand and First. It does not alter Classic or Kingdom starts.
 
@@ -15,7 +15,7 @@ Kingdom Quickstart is an optional new-game mode for testing or learning The Thou
 
 Each successful camp physically contains 24 drams of fresh water in dedicated casks, 12 style-appropriate meals in a larder, and a chest containing 1 mud, 3 brush, and 4 timber. These are finite objects and items. They grant no hidden production and replenish only through ordinary settlement work.
 
-The optional named camp guide explains this opening inventory and answers five fixed questions: how the place was founded and what ground is held, how anything gets built, water and the stores, whether anyone will come, and petitions and raiders. Every answer returns to the opening, and the guide says plainly that he is not on the roll, that the settlement counts nobody until someone comes to stay, and that nobody stays where no roof is standing. The guide is passive and immobile, carries no stock, awards no experience, provides no labour, staffing, support, or defence, and is not a citizen.
+The optional named camp guide explains this opening inventory and answers five fixed questions: how the place was founded and what ground is held, how anything gets built, water and the stores, whether anyone will come, and petitions and raiders. Every answer returns to the opening, and the guide says plainly that he is not on the roll and is not counted, that hands come off the roll, and that nobody new stays unless a roof stands with room left in it. He never states how many people the settlement currently counts, so the guide stays accurate however a camp is seeded. The guide is passive and immobile, carries no stock, awards no experience, provides no labour, staffing, support, or defence, and is not a citizen.
 
 ## Safety and compatibility
 

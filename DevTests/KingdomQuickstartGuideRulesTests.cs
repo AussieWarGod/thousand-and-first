@@ -71,9 +71,49 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("twenty-four drams", start);
 			StringAssert.Contains("twelve meals", start);
 			StringAssert.Contains("not on your roll", start);
-			StringAssert.Contains("stands at nobody until someone comes to stay", start);
-			StringAssert.Contains("nobody stays where no roof is standing", start);
+			StringAssert.Contains("I pass through, and I am not counted", start);
+			StringAssert.Contains("hands come off the roll", start);
+			StringAssert.Contains("nobody new stays unless a roof stands with room left in it",
+				start);
 			Assert.That(KingdomQuickstartGuideRules.Goodbye, Is.EqualTo("Live and drink."));
+		}
+
+		/// <summary>
+		/// The opening inventory is spelled out in words, but the camp is stocked from constants.
+		/// Tie the two together so raising a starter quantity cannot leave the guide quoting a
+		/// number the founder will not find in the casks.
+		/// </summary>
+		[Test]
+		public void TheSpelledInventoryMatchesTheQuantitiesTheCampIsStockedWith()
+		{
+			Dictionary<int, string> words = new Dictionary<int, string>
+			{
+				{ 1, "one" }, { 3, "three" }, { 4, "four" }, { 12, "twelve" },
+				{ 24, "twenty-four" }
+			};
+			int[] quoted =
+			{
+				KingdomQuickstartRules.StarterWaterDrams,
+				KingdomQuickstartRules.StarterFoodServings,
+				KingdomQuickstartRules.StarterMud,
+				KingdomQuickstartRules.StarterBrush,
+				KingdomQuickstartRules.StarterTimber
+			};
+			foreach (int quantity in quoted)
+			{
+				Assert.That(words.ContainsKey(quantity), Is.True,
+					"the guide has no word for " + quantity + "; its text must be rewritten");
+			}
+			string start = KingdomQuickstartGuideRules.Start;
+			StringAssert.Contains(
+				words[KingdomQuickstartRules.StarterWaterDrams] + " drams", start);
+			StringAssert.Contains(
+				words[KingdomQuickstartRules.StarterFoodServings] + " meals", start);
+			string built = KingdomQuickstartGuideRules.Topics()[1].Answer;
+			StringAssert.Contains("the chest holds "
+				+ words[KingdomQuickstartRules.StarterMud] + " mud, "
+				+ words[KingdomQuickstartRules.StarterBrush] + " brush and "
+				+ words[KingdomQuickstartRules.StarterTimber] + " timber", built);
 		}
 
 		/// <summary>
@@ -99,10 +139,65 @@ namespace ThousandAndFirst.Tests
 				Assert.That(words.Contains("["), Is.False, words);
 				Assert.That(Regex.IsMatch(words, "[0-9]+ *, *[0-9]+"), Is.False, words);
 			}
-			StringAssert.Contains("Nobody joins a place with no roof standing",
+			StringAssert.Contains("Nobody joins a place that has no roof with room left under it",
 				KingdomQuickstartGuideRules.Topics()[3].Answer);
-			StringAssert.Contains("there are no hands",
+			StringAssert.Contains("a commission is a shape in the dirt that waits",
 				KingdomQuickstartGuideRules.Topics()[1].Answer);
+		}
+
+		/// <summary>
+		/// The guide may never state how many people are on the roll. The Quickstart is free to
+		/// seed founding settlers with accommodation, or to seed none, and every word here has to
+		/// survive that either way: the roll and the roofs are spoken of as rules, never counted.
+		/// </summary>
+		[Test]
+		public void NoWordStatesTheCurrentSizeOfTheRoll()
+		{
+			string[] forbidden =
+			{
+				"stands at nobody", "counts nobody", "count stands", "with nobody on the roll",
+				"nobody lives here", "you have no settlers", "the roll is empty until"
+			};
+			foreach (string words in AllWords())
+			{
+				foreach (string banned in forbidden)
+				{
+					Assert.That(words.IndexOf(banned, StringComparison.OrdinalIgnoreCase),
+						Is.LessThan(0), banned + " states the roll size in: " + words);
+				}
+			}
+		}
+
+		/// <summary>
+		/// The water answer names only work that actually returns drams, and states the real gate
+		/// in front of it. A water wheel carries craft, not water, and every gatherer in the
+		/// catalogue is Steading-gated, which is five living here plus somewhere to store it.
+		/// </summary>
+		[Test]
+		public void TheWaterAnswerNamesRealGatherersAndTheRealGate()
+		{
+			string water = KingdomQuickstartGuideRules.Topics()[2].Answer;
+			StringAssert.Contains("Dedicate a vessel", water);
+			StringAssert.Contains("a camp may commission none of it", water);
+			StringAssert.Contains("Five living here", water);
+			Assert.That(water.IndexOf("wheel", StringComparison.OrdinalIgnoreCase),
+				Is.LessThan(0), "a water wheel carries craft, not water: " + water);
+		}
+
+		/// <summary>
+		/// The petitions-and-raiders answer states the raid lane as the code resolves it. Raids
+		/// gate on founding and a water objective, never on population, and defence is zero
+		/// outside a fortify answer &#8212; so the guide must not tie raiders to who lives here,
+		/// and must not claim a standing wall defends by itself.
+		/// </summary>
+		[Test]
+		public void ThePetitionsAndRaidersAnswerMatchesHowRaidsResolve()
+		{
+			string last = KingdomQuickstartGuideRules.Topics()[4].Answer;
+			StringAssert.Contains("where nobody lives, nobody asks", last);
+			StringAssert.Contains("costs you nothing but the asking", last);
+			StringAssert.Contains("whether or not anybody lives in it", last);
+			StringAssert.Contains("a wall nobody fortifies behind counts for nothing", last);
 		}
 
 		/// <summary>The words file must stay engine-free so it can be proved without a game.</summary>
