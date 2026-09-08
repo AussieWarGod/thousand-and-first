@@ -7,10 +7,21 @@ namespace ThousandAndFirst
 {
 	public static partial class KingdomQuickstartRules
 	{
+		/// <summary>
+		/// Wire tag of a receipt this version mints. <c>q1</c> stays exactly what it was: the same
+		/// ten fields under the same digest, written by versions whose world build never bared the
+		/// shelter lots. Only the tag distinguishes them, so an old wire keeps its exact bytes and
+		/// its old obligations, and neither tag can be read as the other.
+		/// </summary>
+		private const string ShelterWireTag = "q2";
+
+		private const string LegacyWireTag = "q1";
+
 		public static string Encode(KingdomQuickstartReceipt Receipt)
 		{
 			if (!Valid(Receipt)) return null;
-			string body = "q1|" + B64(Receipt.ProfileKey) + "|" + B64(Receipt.ZoneId)
+			string body = (Receipt.ShelterObligation ? ShelterWireTag : LegacyWireTag)
+				+ "|" + B64(Receipt.ProfileKey) + "|" + B64(Receipt.ZoneId)
 				+ "|" + ((int)Receipt.Phase).ToString(CultureInfo.InvariantCulture)
 				+ "|" + B64(Receipt.FoodBlueprint) + "|" + B64(Receipt.WaterObjectId)
 				+ "|" + B64(Receipt.LarderObjectId) + "|" + B64(Receipt.StockpileObjectId)
@@ -24,7 +35,8 @@ namespace ThousandAndFirst
 			Receipt = null;
 			if (string.IsNullOrEmpty(Wire) || Wire.Length > MaximumWireLength) return false;
 			string[] fields = Wire.Split('|');
-			if (fields.Length != 11 || fields[0] != "q1") return false;
+			if (fields.Length != 11 || (fields[0] != LegacyWireTag
+				&& fields[0] != ShelterWireTag)) return false;
 			string body = string.Join("|", fields, 0, 10);
 			if (!string.Equals(Digest(body), fields[10], StringComparison.Ordinal)) return false;
 			try
@@ -41,7 +53,9 @@ namespace ThousandAndFirst
 					StockpileObjectId = Text(fields[7]),
 					AdvisorDisposition = (KingdomQuickstartAdvisorDisposition)int.Parse(
 						fields[8], NumberStyles.Integer, CultureInfo.InvariantCulture),
-					AdvisorObjectId = Text(fields[9])
+					AdvisorObjectId = Text(fields[9]),
+					ShelterObligation = string.Equals(fields[0], ShelterWireTag,
+						StringComparison.Ordinal)
 				};
 			}
 			catch

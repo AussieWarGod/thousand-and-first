@@ -10,13 +10,30 @@ using XRL.Core;
 
 namespace ThousandAndFirst.Harness
 {
-	// Host pins old production AND old Harness; only these three observer files come from the candidate.
-	// No current Harness overlay, script, load request, world start, or save load belongs to this probe.
+	// Host pins old production AND old Harness. V1 uses three observers and no script; V2 also
+	// overlays the narrow Autostart boundary. Neither recipe creates a game or loads a save.
 	[HarmonyPatch(typeof(MainMenu), "Show", new Type[] { })]
 	internal static class KingdomDowngradeProbe
 	{
 		private static int Consumed;
-		[HarmonyPostfix]
+		internal const string ReaderScript = "upgrade-downgrade-check\n";
+		private static string ScriptRoot, ScriptRequestHash, ScriptFault;
+		private static MainMenu ScriptMenu;
+		// No reference to the optional fourth overlay type: historical three-file recipes compile.
+		internal static void AdmitScript(MainMenu menu, string root, string requestHash)
+		{
+			Require(ScriptFault == null && menu != null && (ScriptRoot == null || ScriptRoot == root
+				&& ScriptRequestHash == requestHash && ReferenceEquals(ScriptMenu, menu)),
+				"reader script admission changed");
+			ScriptRoot = root; ScriptRequestHash = requestHash; ScriptMenu = menu;
+		}
+		internal static void RefuseScript(Exception error)
+		{
+			ScriptFault = ScriptFault ?? Bounded(error.GetType().Name + ": " + error.Message);
+			try { MetricsManager.LogError("native-downgrade-reader REFUSED: script admission: " + ScriptFault); }
+			catch { }
+		}
+		[HarmonyPostfix, HarmonyPriority(Priority.Last)]
 		internal static void Postfix(MainMenu __instance)
 		{
 			try
@@ -26,6 +43,7 @@ namespace ThousandAndFirst.Harness
 					Path.Combine(local, KingdomDowngradeRequest.FileName))) return;
 				if (Interlocked.Exchange(ref Consumed, 1) != 0) return;
 				Require(__instance != null, "main-menu instance missing");
+				Require(ScriptRoot == null || ReferenceEquals(ScriptMenu, __instance), "reader main-menu instance changed");
 				string root = Root(); Owner(root);
 				string report = Observe(root, out KingdomDowngradeRequest request, out string requestHash);
 				Owner(root);
@@ -52,6 +70,7 @@ namespace ThousandAndFirst.Harness
 					KingdomDowngradeRequest.MaximumRequestBytes, out requestHash);
 				Require(KingdomDowngradeRequest.TryParse(wire, out request) && request.Root == root,
 					"downgrade request is malformed or belongs to another root");
+				RequestAdmission(root, requestHash);
 				KingdomDowngradeFiles.RequireAbsent(Path.Combine(root, KingdomDowngradeRequest.ReportName));
 				string[] texts = Inputs(files, request);
 				var accepted = new KingdomSealRecord[2]; int rejected = 0;
@@ -138,6 +157,7 @@ namespace ThousandAndFirst.Harness
 				string wire = files.Read(Path.Combine(request.Root, "Local", KingdomDowngradeRequest.FileName),
 					KingdomDowngradeRequest.MaximumRequestBytes, out string hash);
 				Require(hash == requestHash && wire == request.Compose(), "request changed after report");
+				RequestAdmission(request.Root, hash);
 				string echo = files.Read(Path.Combine(request.Root, KingdomDowngradeRequest.ReportName),
 					16384, out string reportHash);
 				Require(echo == report && reportHash == KingdomDowngradeFiles.HashText(report), "report readback differs");
@@ -175,14 +195,28 @@ namespace ThousandAndFirst.Harness
 		private static void Anchor(KingdomDowngradeFiles files, string root)
 		{
 			Owner(root);
+			Require(ScriptFault == null, "reader script boundary previously refused: " + ScriptFault);
 			foreach (string suffix in new[] { "", "Local", "Save", "Synced", "Synced\\Saves",
 				"Synced\\ThousandAndFirst", "Synced\\ThousandAndFirst\\Stages" })
 				files.Anchor(suffix == "" ? root : Path.Combine(root, suffix));
 			foreach (string path in Directory.EnumerateFileSystemEntries(Path.Combine(root, "Synced", "Saves")))
 				throw new InvalidOperationException("old-reader profile contains a saved game: " + path);
-			foreach (string leaf in new[] { "scenario-script.txt", "scenario-load.txt", "scenario-load-snapshot.txt" })
+			foreach (string leaf in new[] { "scenario-load.txt", "scenario-load-snapshot.txt", "upgrade-save-request.txt", "upgrade-stage-source.txt" })
 				KingdomDowngradeFiles.RequireAbsent(Path.Combine(root, "Local", leaf));
+			string script = Path.Combine(root, "Local", "scenario-script.txt");
+			if (KingdomDowngradeFiles.Present(script))
+			{
+				Require(files.Read(script, 128, out _) == ReaderScript && ScriptRoot == root,
+					"exact reader script lacks witnessed Autostart boundary");
+			}
+			else
+			{
+				Require(ScriptRoot == null, "admitted reader script disappeared");
+				KingdomDowngradeFiles.RequireAbsent(Path.Combine(root, "Local", "upgrade-persona.txt"));
+			}
 		}
+		private static void RequestAdmission(string root, string hash)
+		{ Require(ScriptRoot == null || ScriptRoot == root && ScriptRequestHash == hash, "admitted reader request changed"); }
 		private static string Root()
 		{
 			Require(Environment.OSVersion.Platform == PlatformID.Win32NT, "native Windows profile required");

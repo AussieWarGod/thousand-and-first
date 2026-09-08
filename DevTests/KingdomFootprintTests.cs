@@ -669,6 +669,31 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void TheQuickstartTentRowCostsSeventeenHundredTicksOnPreparedGround()
+		{
+			// What the Kingdom Quickstart's two staked lots actually cost, read off this rule
+			// rather than asserted in prose. The camp mask bares all 24 cells of each 6x4 plot,
+			// so clearing is free. `tentrow` declares neither a roof nor Open="yes", so it reads
+			// as Walled and the settlement DOES pay for the enclosure: a 5x2 footprint has
+			// 2*(5+2)-4 = 10 edge cells at 50 ticks each. 1200 + 0 + 500 = 1700 ticks, which at
+			// 1200 ticks a day is a shade over 1.42 days -- not a roof by nightfall.
+			Rect footprint = R(0, 0, 4, 1);
+			ClassicAssert.AreEqual(10, KingdomPlotRules.Perimeter(footprint));
+			ClassicAssert.AreEqual(1700L, KingdomPlotRules.RaiseTicks(1200L,
+				Cells(24, Ground.Bare), footprint, Roof.Walled, Underground: false));
+			// One un-cleared brush cell left anywhere inside a lot adds 100 ticks, which is the
+			// whole reason the prepared-ground mask covers both lots.
+			List<Ground> oneMissed = Cells(23, Ground.Bare);
+			oneMissed.Add(Ground.Brush);
+			ClassicAssert.AreEqual(1800L, KingdomPlotRules.RaiseTicks(1200L, oneMissed,
+				footprint, Roof.Walled, Underground: false));
+			// A design that declared itself open would pay no enclosure at all; this one does not,
+			// so the 500 is not an accident of the test's own ground.
+			ClassicAssert.AreEqual(1200L, KingdomPlotRules.RaiseTicks(1200L,
+				Cells(24, Ground.Bare), footprint, Roof.Open, Underground: false));
+		}
+
+		[Test]
 		public void ARaisingNeverFinishesInTheInstantItIsStaked()
 		{
 			ClassicAssert.AreEqual(1L, KingdomPlotRules.RaiseTicks(0L, Cells(4, Ground.Bare), R(0, 0, 1, 1), Roof.Open, Underground: false));
