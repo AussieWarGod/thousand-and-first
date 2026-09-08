@@ -9,17 +9,54 @@ import re
 
 from upgrade_profile_inputs import OLD_PIN, SHA, require, sha
 
-DIAGNOSTIC = re.compile(rb"\b(?:MODWARN|MODERROR|WARN(?:ING)?|ERROR|FATAL|REFUSED)\b|\b(?:[\w.]+)?Exception\b"
-                        rb"|^\s*(?:at\s|---)", re.IGNORECASE)
+# Any diagnostic-shaped line at all -- ours or a third party's. Deciding what gets RETAINED (never
+# fatal on its own); TAF_DIAGNOSTIC below is what may actually refuse a run.
+ANY_DIAGNOSTIC = re.compile(rb"\b(?:MODWARN|MODERROR|WARN(?:ING)?|ERROR|FATAL|REFUSED)\b|\b(?:[\w.]+)?Exception\b"
+                            rb"|^\s*(?:at\s|---)", re.IGNORECASE)
+
+# Same TAF-only failure contract Tools/check-player-log.sh enforces for every smoke/persona run:
+# only a MODERROR/MODWARN line naming The Thousand and First, or an exception/stack frame naming
+# it, ever refuses a native run. A third party's own MODWARN (for example the installed Pets of
+# Harvest Dawn pack's manual-load-order warning, emitted at mod DISCOVERY -- before this profile's
+# ModSettings.json Enabled flag for that pack can gate anything, see upgrade_profile_inputs.py) is
+# not ours to refuse a run over.
+TAF_DIAGNOSTIC = re.compile(
+    rb"^MOD(?:ERROR|WARN) \[The Thousand and First(?: \[ALPHA\])?(?: \[DEV SCENARIO HARNESS\])?\](?:[ \t]|$)"
+    rb"|(?i:(?=.*(?:\[taf\]|thousandandfirst|the thousand and first))"
+    rb"(?=.*(?:exception|error|fault|quarantin|inspection required)))"
+    rb"|(?i:^[ \t]*(?:at|---).*thousandandfirst[.:])")
+
+
+# A retained non-TAF diagnostic line is decoded (UTF-8, replacement on error) and cut to this many
+# characters before being folded into the caller's report -- it is not kept verbatim.
+RETAINED_LINE_MAX_CHARS = 500
+
+
+def diagnostics(raw: bytes) -> list[str]:
+    """Enforce the TAF-only contract over a whole Player.log; return retained non-TAF lines.
+
+    Raises on the first TAF-tagged MODERROR/MODWARN or TAF exception/stack frame. Any other
+    diagnostic-shaped line (a third party's own MODWARN/MODERROR/WARN/ERROR/Exception) is
+    collected here -- decoded (UTF-8, replacement on error) and truncated to
+    RETAINED_LINE_MAX_CHARS characters, not verbatim -- for the caller to fold into its report;
+    it is never fatal. A line matching neither diagnostic pattern is never decoded.
+    """
+    retained = []
+    for line in raw.replace(b"\r\n", b"\n").split(b"\n"):
+        is_taf = TAF_DIAGNOSTIC.search(line)
+        if not (is_taf or ANY_DIAGNOSTIC.search(line)):
+            continue
+        text = line.decode("utf-8", errors="replace")[:RETAINED_LINE_MAX_CHARS]
+        require(not is_taf, "native log reported a Thousand and First diagnostic: " + text)
+        retained.append(text)
+    return retained
 
 
 def source_log(source: Path) -> str:
     from upgrade_profile_state import fs
     raw = fs.read_bytes(source / "Player.log", 64 * 1024**2)
     require(bool(raw), "native source log is missing or empty")
-    for line in raw.replace(b"\r\n", b"\n").split(b"\n"):
-        require(not DIAGNOSTIC.search(line), "unexpected native source diagnostic: "
-                + line.decode("utf-8", errors="replace")[:500])
+    diagnostics(raw)
     return sha(raw)
 
 

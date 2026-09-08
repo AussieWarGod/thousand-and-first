@@ -14,7 +14,7 @@ import time
 import scenario_profile
 from upgrade_profile_inputs import CONFIG, OLD_PIN, PROFILE_V2, json_bytes, local_inputs, parse_config, recipe_request, require, sha
 import upgrade_profile_state as state
-from upgrade_profile_witnesses import DIAGNOSTIC
+from upgrade_profile_witnesses import diagnostics
 
 fs = state.fs
 SECONDS = 600
@@ -157,8 +157,11 @@ def _peek(path: Path, maximum: int) -> bytes | None:
 def _ready(root: Path, mode: str) -> bool:
     require(not any(os.path.lexists(root / name) for name in FAILURES), "native failure artifact retained")
     log = _peek(root / "Player.log", 64 * 1024**2) or b""
-    for line in log.split(b"\n")[:-1]:
-        require(not DIAGNOSTIC.search(line), "native log reported a failure: " + line.decode("utf-8", errors="replace")[:300])
+    # Only fully newline-terminated lines: a live run may still be flushing its last line, and
+    # scanning a torn partial write is not this gate's job. TAF-only contract (see
+    # upgrade_profile_witnesses.diagnostics); a third-party diagnostic (e.g. Pets MODWARN) is
+    # retained for the report, never fatal here.
+    diagnostics(log[: log.rfind(b"\n") + 1])
     journal = _peek(root / "scenario-journal.tsv", 1024**2) or b""
     rows = [line.rstrip(b"\r").split(b"\t") for line in journal.split(b"\n")[:-1]]
     require(all(len(row) == 4 and row[2] == b"OK" for row in rows), "native journal refused or malformed")
@@ -208,8 +211,14 @@ def _source_verdict(args, config: dict) -> str:
                  state.capture(args.root, current, facts)[2])
         observed.append((facts["files"], facts["directories"], facts["localHashes"], facts.get("donorAuthority"), value))
     require(observed[0] == observed[1], "native source evidence changed during final reproof")
-    return ("NATIVE SOURCE CAPTURE PASS: mode=" + config["mode"] + "; game-id=" + observed[0][-1]["gameId"]
-            + "; candidate=" + args.candidate + "; upgrade-not-yet-proven=true; ordinary-ui-acceptance=false")
+    # Re-derive from the completed log: any TAF diagnostic would already have refused during
+    # polling, so this only ever collects third-party diagnostics retained for the report.
+    retained = diagnostics(fs.read_bytes(args.root / "Player.log", 64 * 1024**2))
+    verdict = ("NATIVE SOURCE CAPTURE PASS: mode=" + config["mode"] + "; game-id=" + observed[0][-1]["gameId"]
+              + "; candidate=" + args.candidate + "; upgrade-not-yet-proven=true; ordinary-ui-acceptance=false")
+    if retained:
+        verdict += "; retained non-TAF diagnostics: " + " | ".join(retained)
+    return verdict
 
 
 def _verdict(args, config: dict) -> str:

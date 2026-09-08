@@ -266,9 +266,13 @@ def local_inputs(repo: Path, config: dict, extra: dict[str, bytes] | None = None
     result["PlayerOptions.json"] = json_bytes(options)
     settings = json.loads(runtime.blob("Tools/smoke/ModSettings.json"))
     require(isinstance(settings, dict), "pinned mod settings not an object")
-    # The installed optional Pets pack emits known MODWARN lines. These deliberately TAF-only
-    # fixtures disable it BEFORE sealing rather than filtering diagnostics after the game runs.
-    # This derived profile setting is independent of the pinned production/Harness byte inventory.
+    # This disables the installed optional Pets pack's CONTENT for the scenario (population
+    # tables, etc.) -- it does NOT and cannot suppress the pack's own MODWARN lines. The engine
+    # emits those at mod DISCOVERY, before this ModSettings.json Enabled flag is ever read, so a
+    # cold load always logs them regardless of this setting. The TAF-only failure contract (see
+    # Tools/check-player-log.sh and upgrade_profile_witnesses.diagnostics) is what actually
+    # tolerates them: a third-party MODWARN is retained in the report, never fatal. This derived
+    # profile setting is independent of the pinned production/Harness byte inventory.
     settings["FreeholdGames_DLC_PetsPack1"] = {"Title": "Pets of Harvest Dawn", "Enabled": False}
     result["ModSettings.json"] = json_bytes(settings)
     result[CONFIG] = json_bytes(config)
