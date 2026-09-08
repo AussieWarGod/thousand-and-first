@@ -52,11 +52,13 @@ stop pass. Comparison83480 matches all3181 production/Harness C# bytes. This is 
 engine-turn coverage in a synthetic fixture, not ordinary play or save/load acceptance.
 
 Current census:3051 staged C# files;432,024 physical lines;3082 files in the generated
-cold-install inventory. Staged compilation covers3051 sources, baseline and compatibility symbols,
+cold-install inventory. The digest also covers the unreleased tent-chest data change, whose only
+production-source delta is the regenerated `Core/KingdomRemovalCoverage.Generated.cs` allowlist;
+no hand-written source, saved format or public API changed with it. Staged compilation covers3051 sources, baseline and compatibility symbols,
 run here by Roslyn 9.0.306 on Linux against the licensed Managed references with warnings as errors
 (baseline compiles 3047 of them; the optional-mod bridge is compatibility-only). The dev-harness
 modes and the Windows gate did not run for this census.
-Inventory SHA-256: `fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`.
+Inventory SHA-256: `e3342ca0c06c4ba078a0e001e2fa13d2aab2bfd5d16eec2acca5ba97ac800e2f`.
 Direct `XRL` imports: 1417 files, 0 over the line limit.
 
 Focused86313 passes38 engine-free cases, including modern/historical open-arrival clock

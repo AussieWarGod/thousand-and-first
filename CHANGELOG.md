@@ -8,7 +8,7 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-## Unreleased — master pause/resume correction, and the claimed-ground light
+## Unreleased — master pause/resume correction, the claimed-ground light, and a chest in the tent
 
 - Master resume now validates a complete growth schedule before publishing it. Fresh
   growth no longer receives a positive deadline with a zero interval; established growth
@@ -27,12 +27,30 @@ below it.
   being exiled, or switching the option off takes the part off on the next visit; explored
   floor stays explored, because unsetting it would erase legitimately walked ground. No
   saved field, wire or public API change, and a save loaded without the mod is dark again.
+- The first housing rung stores in an empty timber chest instead of a woven basket. The
+  settler's tent, the tent-row and every hut they renovate into carry
+  `r_KingdomFixtureChestEmpty` in their storage slot, so a founder who raises a tent has
+  somewhere to put what they carried in on the first night.
+- The chest had to be given to the whole rung, not the tent alone. An early-housing
+  renovation must retain every stateful fixture of its source exactly, so a chest under
+  canvas that turned back into a basket under a roof would be a store the upgrade destroyed.
+  The tent, tent-row, hut, hut-yard, mud-brick hut, mud-brick court, block hut and block yard
+  each pay the one timber the chest costs; later rungs keep the woven basket.
+- The chest is furniture, not a civic account: it counts toward larder or stockpile only
+  after the Charter's dedication mark, exactly as any other vessel does. Nothing binds
+  automatically and founding gains no new requirement. Architecture snapshots freeze per plot
+  at stake time, so standing tents keep their basket and only new commissions get the chest.
+- Data only. No saved field, wire format or public API changes; the one production-source
+  delta is the regenerated removal-coverage allowlist.
 
 > **Current unreleased census — exact structural gate passed.** Current 3051-file census is line-cap green:
 > 432,024 physical lines,zero files at or above300; direct `XRL`
 > imports occur in 1417 files, 0 of them over the line limit. Inventory SHA-256:
-> `fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`.
+> `e3342ca0c06c4ba078a0e001e2fa13d2aab2bfd5d16eec2acca5ba97ac800e2f`.
 > The generated cold-install inventory contains 3082 files; no new subscription claim.
+> Its only production-source delta over the retained census below is the regenerated
+> `Core/KingdomRemovalCoverage.Generated.cs` allowlist, which gains one owned blueprint name;
+> `Tools/generate-removal-coverage.py --check` is clean.
 > Engine-free suites and the repository tooling suites pass. Roslyn 9.0.306 on Linux compiled the
 > staged baseline (3047 sources) and staged compatibility (3051 sources) sets clean against the
 > licensed Managed references, warnings as errors. The two dev-harness modes, the Windows gate and
