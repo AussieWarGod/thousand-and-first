@@ -8,6 +8,18 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
+## Unreleased — Workshop listing copy: drop single-player boilerplate
+
+- Removed the redundant "Single-player only" / "no multiplayer or user-moderation surface"
+  sentence from the Workshop listing and README (author ruling, issue #51). Steam Workshop mods
+  for a single-player game already carry that property; the line described no behavior a player
+  needed to plan around.
+- Updated together: the `Tools/workshop_metadata.py` description generator, the
+  `docs/WORKSHOP-DESCRIPTION-TEMPLATES.md` template, the regenerated `workshop.json` Description
+  field, and `README.md`. The assertion pins in `Tools/test-workshop-package.sh` and
+  `Tools/tests/workshop_metadata_test.py` now assert the shortened sentence rather than merely
+  dropping the old assertion. No manifest, version, or C# source change.
+
 ## Unreleased — Kingdom Quickstart shelter ingress
 
 - The two tent-row lots staked at founding are now staked on every shipped profile. The stake's

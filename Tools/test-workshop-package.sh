@@ -314,7 +314,7 @@ for anchor in (
     "It never carries items, liquids, charge, or old actor identity.",
     "This listing stays Alpha; Beta and Release will be separate Workshop items.",
     "Built for Caves of Qud v1.0.5, core build 2.0.211.51.",
-    "native compatibility remains unverified. Single-player only.",
+    "native compatibility remains unverified.",
     "Back up saves before every Alpha install or update.",
 ):
     assert data["Description"].count(anchor) == 1, anchor

@@ -351,7 +351,7 @@ def canonical_description(manifest: dict) -> str:
         f"Built for Caves of Qud v{GAME_MARKETING_VERSION}, core build {GAME_CORE_BUILD}. "
         "Later game builds are unverified. No dependency is required. Optional exact-version "
         "Hearthpyre 2.2.3 integration is included when Hearthpyre loads first; native "
-        "compatibility remains unverified. Single-player only.",
+        "compatibility remains unverified.",
         "Back up saves before every Alpha install or update. Keep only one enabled copy of "
         "the mod; a local install plus a Workshop subscription can load the wrong one.",
         "Bugs and playtest feedback:\n"

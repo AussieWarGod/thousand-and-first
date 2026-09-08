@@ -35,8 +35,6 @@ or full historical-save compatibility; see
 - Optional cross-world legacy. Layout and history may carry only when enabled before world
   creation; items, liquids, charge, and actor identity do not.
 
-The mod remains single-player. It does not add multiplayer or a user-moderation surface.
-
 ## Supported environment
 
 The release target is Caves of Qud **v1.0.5, core build 2.0.211.51**. Newer game builds are
