@@ -484,6 +484,14 @@
     <Compile Include="..\Harness\KingdomQuickstartSaveSnapshot.cs" />
     <Compile Include="..\Harness\KingdomQuickstartSaveSnapshotCodec.cs" />
     <Compile Include="KingdomQuickstartSaveSnapshotTests.cs" />
+    <Compile Include="..\Harness\KingdomUpgradeSnapshot.cs" />
+    <Compile Include="..\Harness\KingdomUpgradeSnapshotCodec.cs" />
+    <Compile Include="..\Harness\KingdomUpgradeGraph.cs" />
+    <Compile Include="..\Harness\KingdomDowngradeRequest.cs" />
+    <Compile Include="..\Harness\KingdomDowngradeFiles.cs" />
+    <Compile Include="KingdomUpgradeSnapshotTests.cs" />
+    <Compile Include="KingdomUpgradeNativeSourceTests.cs" />
+    <Compile Include="KingdomDowngradeRequestTests.cs" />
     <Compile Include="KingdomQuickstartRoundtripSourceTests.cs" />
     <Compile Include="KingdomQuickstartGrantScopeTests.cs" />
     <Compile Include="KingdomQuickstartStockRulesTests.cs" />

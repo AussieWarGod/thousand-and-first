@@ -95,9 +95,16 @@ claiming compatibility with another build.
 
 | Mode | Purpose | Public proof required |
 |---|---|---|
-| `--test` | Private bootstrap/candidate; `workshop.json` may be absent | Clean committed package only |
+| `--test` | Private bootstrap/candidate; local `--test` tooling tolerates `workshop.json` absent | Clean committed package only |
 | `--alpha` | Public `0.3.x`, labelled **v0.3 Alpha**; first version is exactly `0.3.0` | Private receipt binding, final preview, structure review, public metadata, annotated tag |
 | `--release` | Evidence-complete later lane | Every Alpha gate plus `docs/RELEASE_EVIDENCE.json` and retained human/native artifacts |
+
+The `workshop.json`-may-be-absent tolerance above is the **local** `--test` tooling only:
+`Tools/workshop_metadata.py validate_workshop` returns `None` for a missing file when invoked
+directly in `test` mode. The **automated staging lane** in `.github/workflows/release.yml` is
+stricter: it requires `workshop.json` to already exist once its own `workshop` subcommand call
+has run, and refuses the run naming the missing file (exit 1) rather than failing on an
+unhandled `FileNotFoundError`.
 
 Alpha deliberately does not invent final human evidence. It uses the machine-only
 `docs/ALPHA_CANDIDATE.json` record instead. Beta and production Release are separate Workshop
@@ -379,16 +386,27 @@ From that clean public-candidate commit, run the gates, create its new annotated
 ./Tools/portable-check.sh
 ./Tools/release-check.sh --alpha
 git status --short
-git tag -a "v${VERSION}" -m "The Thousand and First v${VERSION} Alpha"
+git tag -a "v${VERSION}" \
+  -m "The Thousand and First v${VERSION} Alpha" \
+  -m "What changed for players in this update, in plain words."
 ./Tools/workshop-package.sh --alpha "/absolute/path/TAF-${VERSION}-alpha"
 ```
 
 Upload only that new package, then repeat signed-out listing, subscribed-byte, and public-smoke
 verification. Never reuse another item's ID, rewrite an existing tag, merge package folders, or
-treat a prior receipt as proof of changed bytes.
+treat a prior receipt as proof of changed bytes. The tag must carry a body: a single `-m` makes
+an empty message body, and the pipeline's own `-m "title" -m "changelist"` shape (see
+"Updating Alpha — automated lane" below) is what an empty-body tag fails against.
 
-The command block above stays valid for a fully manual release and is the fallback whenever the
-runner is unavailable.
+The manual commands above remain valid for proving and packaging a release by hand, but they
+are not a way to avoid the automated lane: `.github/workflows/release.yml` triggers on every
+`v*`/`staging-v*` tag **push**, with no distinction between a "manual" and an "automated"
+tag, so pushing `v${VERSION}` always starts the hosted pipeline too. If the Steam-host runner is
+genuinely unavailable, the correct fallback is to let that run fail closed at the
+runner-dependent stage, not to delete and re-push the tag around it — the tag ruleset makes
+delete-and-retag admin-only precisely so a tag push cannot be quietly redone. The
+automated-lane tag command below is the authority for what a real release tag looks like; this
+manual block exists to reproduce the same package bytes by hand, not to bypass the pipeline.
 
 ### Updating Alpha — automated lane
 

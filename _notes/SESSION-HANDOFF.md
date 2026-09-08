@@ -1,9 +1,9 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current unreleased first-basin water store
+## Current unreleased first-basin water store over the Quickstart tent rows
 
-3054 staged sources;432,819 physical lines;1419 direct-XRL;zero cap failures;3085 generated
-cold-stage files. Exact inventory `bb8531b8c45a7a57f4a9bcfc1c86576a095e37b872e3b1ede82f446ade729e94`.
+3055 staged sources;433,231 physical lines;1420 direct-XRL;zero cap failures;3086 generated
+cold-stage files. Exact inventory `f559d70b5006ceeb5d6cc2d5380c2dd38cd5a0068d56d68e5a2554a99afadaaf`.
 The founding heart's first basin becomes the settlement's first water store: dedicated in code at
 the relic slot, capacity 16/48/160/512/1024 by rung, raised only and never lowered, skipped with
 one ledger line while an open water debit is bound to that vessel, an unsettled arrival water leg
@@ -15,10 +15,29 @@ reconciliation is asked only AFTER the seat exchange and only for ground the sea
 claims, and the reconciler refuses unclaimed ground itself, so a second, foreign, seceded or
 exiled city's heart can never be dedicated into the wrong ledger or measured against the wrong
 growth book. A committed water receipt keeps its per-vessel hold while its caller's declared
-compensation window is open (the hall's commission opens one across the bit-debit callbacks), so a
-widen can no longer land between a commit and the rollback that re-proves MaxVolume. No saved
-field, wire format, option or verifier predicate changes. Roslyn 9.0.306 on Linux compiles the dev-harness baseline and compatibility
-sets clean. No native run and no exact-inventory human semantic review bind this digest.
+compensation window is open, and every caller that can refund AFTER its own callbacks now opens
+that window before its commit and closes it in an enclosing finally: construction funding across
+the material commit, sowing across the laid rows and the spent seed, annexe enrolment across the
+roll and the standing batch, and the lab's commission and its two removal lanes. The window never
+outlives the method that took it, so a finished rung is still free to widen the basin its funding
+drained. No saved field, wire format, option or verifier predicate changes. Roslyn 9.0.306 on Linux
+compiles the staged and dev-harness baseline and compatibility sets clean. No native run,
+installed-ABI source step, Windows gate and no exact-inventory human semantic review bind this
+digest.
+
+## Retained unreleased Kingdom Quickstart tent rows
+
+3053 staged sources;432,593 physical lines;1418 direct-XRL;zero cap failures;3084 generated
+cold-stage files. Exact inventory `d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0`.
+Quickstart stakes two `tentrow` lots at founding, west of the supply column at (21,9)-(26,12) and
+(21,13)-(26,16); six beds between them, receiptless, free, and never debited. No receipt phase,
+option, grant or verifier change. The receipt wire is versioned: a receipt this version mints
+carries the shelter obligation under tag `q2`, the shipped `q1` shape is still written and read
+byte for byte, and only a `q2` receipt owes a stake — so a pre-existing `q1` save resumed at any
+phase, Reserved included, keeps old behaviour and never stakes on ground the old narrower mask
+never bared. Codec and source-contract cases prove that; no native resumed save does.
+The 1,700-tick raising figure is a reading of `KingdomPlotRules.RaiseTicks`, not of a plot clock.
+Public0.3.1 unchanged. Never direct-push main/tag, bypass, or self-approve.
 
 ## Retained unreleased camp-guide topic tree
 

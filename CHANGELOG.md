@@ -8,6 +8,68 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
+## Unreleased — Kingdom Quickstart tent rows
+
+- Kingdom Quickstart now stakes two settlers' tent rows at founding, west of the supply
+  column at (21,9)-(26,12) and (21,13)-(26,16), between the founding proof and the receipt's
+  first advance. Without a standing roof nobody joins a settlement, and nothing commissioned
+  rises while the population is zero, so the mode previously opened on a camp that could not
+  proceed.
+- The lots are keyed to the catalogue's `tentrow` design rather than `tent`: 5x2 footprint,
+  three roofs apiece, so the pair is six beds and the first arrivals are not refused for want
+  of room. They are granted free and never debited: opening water, meals and materials are
+  unchanged, and the founding stays unpriced.
+- They are staked, not built. Each stake is receiptless, so the lot keeps the shipped calendar
+  clock the first heart uses. By the raising rule each row is 1,700 ticks — 1,200 for the
+  design and 500 for the enclosure round a 5x2 footprint — against 1,200 ticks to the day, so
+  the rows stand about a day and a half in, at day boundaries spent on claimed ground, with no
+  settler labour. That figure is read from the rule, not yet from a running plot clock.
+- The prepared-ground mask widens by those 48 cells so the camp builder bares both lots; the
+  authored-ground preflight refuses a lot holding a creature, an item, or open liquid. Each lot
+  is searched before it is staked, so a save cut between the two resumes by staking only the
+  one that is missing.
+- Idempotency uses a shelter-only string property and the staked rectangle, never the
+  quickstart grant marker: the grant recovery scan reads every object in the zone and would
+  refuse a foreign value there, aborting every later grant phase on the same boot. An unmarked
+  object is adopted only when it carries our own design key, so a foreign plot stamped on a
+  reserved rectangle is refused before anything is written to it.
+- If zoning or the authored-ground preflight refuses a lot, the bootstrap stops with that
+  reason. It never stamps completion and never publishes a receipt it did not measure. The lots
+  are staked before the stores are granted, so that refusal also costs that world its casks,
+  larder, materials chest and advisor, not just a row.
+- The obligation to stake is versioned onto the receipt rather than assumed of every save. A
+  receipt minted by this version carries a shelter obligation and is written under the wire tag
+  `q2`; the shipped `q1` shape is still written and still read, byte for byte, and the tag is
+  inside the digest, so no edit promotes an old receipt in place. Only a `q2` receipt owes its
+  founding pass a stake.
+- A pre-existing `q1` save therefore continues exactly as it did, at the Reserved phase as at any
+  later one: no stake is attempted on the 48 lot cells the older prepared-ground mask never bared,
+  so a preflight refusal there cannot cost that world its casks, larder, materials chest or
+  advisor. Such a save simply has no rows, and the completion notice counts the claims standing on
+  the ground rather than trusting the branch that ran, so it never promises one. The reservation on
+  a staked lot remains an owned object property registered in the removal-coverage allowlist.
+  Ordinary founding is untouched. Public 0.3.1 is unchanged.
+
+> **Current unreleased census — exact structural gate passed.** Current 3055-file census is line-cap green:
+> 433,231 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
+> imports occur in 1420 files, 0 of them over the line limit. Inventory SHA-256:
+> `f559d70b5006ceeb5d6cc2d5380c2dd38cd5a0068d56d68e5a2554a99afadaaf`.
+> The generated cold-install inventory contains 3086 files; no new subscription claim.
+> This digest is the Kingdom Quickstart tent rows merged with the first-basin water store retained
+> below; each delta carries its own review chain and neither is restated for the other.
+> The tent-row delta over the retained first-basin census below is one added and six modified production
+> sources: the quickstart bootstrap's shelter partial, the quickstart rules, the bootstrap, the camp
+> builder, the generated removal coverage, the quickstart receipt model and its wire codec. The
+> merged tree compiles clean in the staged baseline (3051 sources), staged compatibility
+> (3055 sources) and both dev-harness modes, on Linux with the SDK Roslyn against the installed
+> managed assemblies rather than through `Tools/gate.sh`; both engine-free suites run green there
+> (13,919 main/5,187 Portable,zero skips) and the repository audit passes.
+> NOT run for it: the installed-Hearthpyre source step, the
+> Windows gate, the developer boot matrix and any native in-game run. The 1,700-tick raising figure
+> is a reading of the raising rule, not of a running plot clock. The exact-inventory human semantic
+> review is open against this digest; this is not Beta sign-off.
+
 ## Unreleased — empty-camp legacy correction
 
 ### Added
@@ -87,20 +149,43 @@ below it.
   that a profile revision never re-cuts the current realm foundation receipt).
 - Full suites pass 13,826 main and 5,116 Portable cases, zero skips, up from 13,735 and
   5,109 on the `dev` integration branch. 501 tooling tests pass. With the first-basin water
-  store, the Linux Roslyn 9.0.306 run of the same suites passes 13,842 main and 5,116
-  Portable cases, zero skips (this count is from Linux, not from the licensed Windows run
-  above): 16 new cases covering the capacity ladder against the stage gates and the leak law,
+  store merged over the Kingdom Quickstart tent rows, the Linux Roslyn 9.0.306 run of the
+  same suites passes 13,919 main and 5,187 Portable cases, zero skips (this count is from
+  Linux, not from the licensed Windows run above): 21 new cases covering the capacity ladder
+  against the stage gates and the leak law,
   the relic-slot dedication and the gallery's exclusion from it, the existing-authority stamp
   the survey sweep respects, the raise-only reconciler, the announce-once hold and its three
   distinct hold sources, the per-vessel open-reservation registry, the unsettled arrival water
   leg, the basin's unchanged bare-ground reading and un-strikeable refusal, the seat-then-
   claim order the reconciliation is asked in, the committed receipt that keeps its vessel
-  hold across a caller's compensation window, and the loader's attribute pair and no-thaw
-  contract. The four-mode compile
-  gate passed the pre-merge bytes and was not re-run for the merged tree.
+  hold across a caller's compensation window, one adversary contract per caller that can refund
+  after its own callbacks (the window opens before the commit, closes inside an enclosing
+  finally, opens exactly once and has no refund below it), the construction and sowing spans
+  themselves, the hall commission's compensate-before-every-exit invariant, the proof that a
+  finished rung is still free to widen the basin its funding drained, and the loader's attribute
+  pair and no-thaw contract. The staged and dev-harness baseline and compatibility compiles were
+  re-run on the merged tree; the installed-ABI source step and the Windows gate were not.
 - Tools: the smoke launcher accepts every seal schema the game reads (4..6) and the full
   legacy store layout; it previously refused progressed profiles. Maintainer tooling only,
   with no player-visible or runtime effect.
+- Tools/tests: a cross-version upgrade/downgrade profile copier and its native observers.
+  `Tools/prepare-upgrade-profile.py` builds sealed developer profiles whose runtime comes
+  only from pinned Git blobs (`git ls-tree` / `git cat-file` at the `v0.3.1` tag commit
+  `a46b5ad` or at a named candidate commit), never from a worktree or a checkout, so an
+  actual 0.3.1 save can be produced and then transported into a current-runtime profile.
+  The Win32 copy helper holds single-link handles and hashes every file before, on copy,
+  on readback and after, refusing rather than deleting on any mismatch; only `Synced` is
+  ever copied, so no old runtime reaches an upgrade profile. Three Harness overlays
+  observe the old save, the current load before repair and normalization, and the old
+  reader's `profile_schema` 2 refusal at the main menu; each is gated by the sealed
+  scenario marker and by a `taf-scenario`/`taf-smoke` profile root, and Harness ships in
+  no player build. `run-scenario.ps1 -OwnAttended` adds an owned, receipt-bearing,
+  unfocused launch for the marker-only observer profiles; it runs after the existing
+  closed-seal assertion and relaxes nothing. Protocol and exact commands are in
+  [docs/CROSS_VERSION_TESTING.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/CROSS_VERSION_TESTING.md).
+  Maintainer tooling only, with no player-visible or runtime effect. The native protocol
+  itself has NOT been run; this entry claims the tooling and its checks, not a
+  cross-version compatibility verdict.
 - A controlled native water-maintenance scenario proves upkeep billing, one drought
   departure, loyal-core retention, refill and paid recovery with exact Chronicle
   delivery. Water scarcity itself is not new here; it shipped in 0.3.1 code and this
@@ -109,7 +194,7 @@ below it.
   separately gated. Retained failures and bounded native scope are recorded in
   `docs/STATUS.md`.
 
-> **Current unreleased census — exact structural gate passed.** Current 3054-file census is line-cap green:
+> **Retained first-basin water-store census — exact structural gate passed.** That 3054-file census was line-cap green:
 > 432,819 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1419 files, 0 of them over the line limit. Inventory SHA-256:

@@ -37,11 +37,13 @@ schema refusals,unresolved cohort denial,revision-aware exile and retained found
 receipts are covered. Four checked-in seals written by writer code byte-identical to tag
 `v0.3.1` live in `DevTests/Fixtures/SealProfile`; their SHA-256s are pinned in
 `DevTests/KingdomSealProfileHistoricalFixtureTests.cs` and are never regenerated.
-Current3054-source production digest
-`bb8531b8c45a7a57f4a9bcfc1c86576a095e37b872e3b1ede82f446ade729e94`
+Current3055-source production digest
+`f559d70b5006ceeb5d6cc2d5380c2dd38cd5a0068d56d68e5a2554a99afadaaf`
 passes the structural gate; its exact-inventory human semantic review is open after the `dev`
-merge. Final Windows suites on the merged tree pass13,826 main/5,116 Portable cases,zero
-skips,up from13,735/5,109 on the `dev` integration branch;
+merge. The Windows suites that pass13,826 main/5,116 Portable cases,zero skips,up from
+13,735/5,109 on the `dev` integration branch, ran on the retained3052-source digest
+`c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c` and are not restated for the
+current one;
 canonical39198 passes ordinary3045/3049 and developer3182/3186 with137 Harness files,all four
 modes plus installed source/ABI on the pre-merge bytes,and is not restated for the merged tree.
 Complete ordinary/developer source comparisons pass for the bytes it ran on.
@@ -65,9 +67,13 @@ published arrival debt/opportunities, open Prepared/Intent/Proved clock leases, 
 continuation and field-clock evidence; successful results round-trip canonically. Stale
 owners, contradictory unbacked clocks, disabled states and overflow remain tested refusals.
 No fixture callback witness establishes actual physical creation, ordinary play or save/load.
-Current production digest `dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`
-passes the exact structural gate. For this digest the engine-free suites passed13,731 main/5,109
-Portable cases, zero skips, and Roslyn 9.0.306 on Linux compiled the staged baseline and staged
+Current production digest `d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0`
+passes the exact structural gate. For that digest the engine-free suites pass13,834 main/5,123
+Portable cases,zero skips, on Linux under the CI-pinned SDK9.0.306. The retained
+`f5571291a26a1bd1db608f0d1c3f79ed296569bddce4979208cb564f8c22df63` digest carried13,831 main/5,120
+Portable cases, zero skips. The retained
+`dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96` digest carried13,731 main/5,109
+Portable cases, zero skips, and Roslyn 9.0.306 on Linux compiled its staged baseline and staged
 compatibility sets clean against the licensed Managed references with warnings as errors. The
 Windows1814 run of13,715 main/5,093 Portable cases and Canonical53744's four modes
 (ordinary3045/3049,developer3177/3181,132 Harness files,plus installed Hearthpyre ABI) belong to
@@ -79,9 +85,21 @@ baseline and dev-harness compatibility compiles. The shared `DevTests/refs.rsp` 
 `-langversion:latest`, so those compiles are not pinned to C# 7.3; `LangVersion` 7.3 is pinned
 only in `DevTests/Engine*/Probe.csproj` and `Tools/WorkshopSteam/*.csproj`. Retained sections
 below keep their original wording as written at their own checkpoints.
-Staged compatibility compilation runs across 3054 production C# sources, staged baseline across
-3050 (the optional-mod bridge is a compatibility-only source); the generated
-cold-install inventory contains 3085 files. Neither count proves subscriber delivery.
+Staged compatibility compilation runs across 3055 production C# sources, staged baseline across
+3051 (the optional-mod bridge is a compatibility-only source); the generated
+cold-install inventory contains 3086 files. Neither count proves subscriber delivery.
+The Kingdom Quickstart tent-row delta inside this census compiled clean in the staged baseline and
+staged compatibility modes only, run on Linux with the SDK Roslyn against the installed managed
+assemblies rather than through `Tools/gate.sh`; the two dev-harness modes, the installed-ABI
+source step, the Windows gate and the developer boot matrix are outstanding for it, and every
+timing claim about the staked rows remains a reading of `KingdomPlotRules.RaiseTicks`.
+The receipt wire tag that decides the founding stake is covered by codec cases only: an old-shape
+`q1` Reserved receipt decodes with no shelter obligation, re-encodes to the same bytes, keeps that
+answer through an advance, and refuses a tag edited in place. No native resumed pre-existing save
+witnesses it.
+The first-basin water-store delta inside this census compiled clean in the staged baseline, staged
+compatibility and both dev-harness modes on the same Linux SDK Roslyn; the installed-ABI source
+step, the Windows gate, the developer boot matrix and any native run are outstanding for it too.
 [Native/focused evidence](/mnt/c/taf-master-growth-native.sP00c6/README.md).
 
 ## Retained real-turn recovery validation

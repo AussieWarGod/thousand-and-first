@@ -20,20 +20,22 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
-The first-basin water store over the empty-camp legacy correction, the camp-guide topic tree, the
-claimed-ground light and the first-settler legibility change together report 3054 staged production
-C# files and 432,819 physical lines.
+The first-basin water store over the Kingdom Quickstart tent rows, the empty-camp legacy
+correction, the camp-guide topic tree, the claimed-ground light and the first-settler legibility
+change together report 3055 staged production C# files and 433,231 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`bb8531b8c45a7a57f4a9bcfc1c86576a095e37b872e3b1ede82f446ade729e94`. The census reports
-1419 files with direct `XRL` imports; 0 of those exceed the line limit.
+`f559d70b5006ceeb5d6cc2d5380c2dd38cd5a0068d56d68e5a2554a99afadaaf`. The census reports
+1420 files with direct `XRL` imports; 0 of those exceed the line limit.
 
-The delta over the retained draft below is two ADDED production sources
+The delta over the retained tent-row draft below is two ADDED production sources
 (`Growth/KingdomPlotHeartRules.Loader.cs`, `Growth/KingdomWaterDebit.OpenReservations.cs`) and
-seventeen modified ones. The first-basin water store owns the two additions plus the founding-heart
+eighteen modified ones. The first-basin water store owns the two additions plus the founding-heart
 identity and marks shards, the plot-effects furnishing shard, the zone-activation events shard,
 the heart rules table, the ground reading, the ground-protection law, the four water-debit shards,
-the lab commission shard and the generated removal-coverage table; root and an independent AI reviewer read that delta and
+the generated removal-coverage table, and the six water callers that can refund after their own
+callbacks: construction funding, sowing, annexe enrolment, the lab commission and its two removal
+lanes. Root and an independent AI reviewer read that delta and
 every required finding it raised is addressed here. The seal lane beneath it contributed four
 modified production sources and no additions or removals: the seal profile reader/writer, the
 polity realm-legacy facts writer, the refound-import reader and the realm-exile rule. Root and
@@ -45,6 +47,35 @@ New schema2 needs a new public version and is not downgrade-readable by0.3.1.
 [Review evidence](STRUCTURE_REVIEW_0_3_1.md) records the reviewed reasoning; the exact-inventory
 semantic review in `docs/STRUCTURE_REVIEW.json` binds an earlier digest and is therefore open for
 this delta. Automated and native acceptance remain separately scoped. Public0.3.1 is unchanged.
+
+## Retained Kingdom Quickstart tent-row census
+
+The Kingdom Quickstart tent rows over the empty-camp legacy correction reported 3053 staged
+production C# files and 432,593 physical lines.
+Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
+1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
+`d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0`. The census reports
+1418 files with direct `XRL` imports; 0 of those exceed the line limit.
+
+The delta over the retained draft below was one added and six modified production sources and no
+removals: the quickstart bootstrap's shelter partial is the addition; the quickstart rules, the
+bootstrap, the camp builder, the generated removal coverage, the quickstart receipt model and its
+wire codec are the modifications. The staged
+baseline (3049 sources) and staged compatibility (3053 sources) sets compiled clean under Roslyn
+9.0.306 on Linux against the licensed Managed references with warnings as errors; the two
+dev-harness modes, the installed-Hearthpyre source step, the Windows gate and any native run did
+not run for that delta. The exact-inventory semantic review in `docs/STRUCTURE_REVIEW.json` binds
+an earlier digest and is therefore open for it.
+
+## Retained empty-camp legacy census
+
+The empty-camp legacy correction over the camp-guide topic tree, the claimed-ground light and the
+first-settler legibility change together reported 3052 staged production C# files and 432,259
+physical lines.
+Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
+1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
+`c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`. The census reports
+1417 files with direct `XRL` imports; 0 of those exceed the line limit.
 
 ## Retained camp-guide, claimed-ground and first-guest census
 

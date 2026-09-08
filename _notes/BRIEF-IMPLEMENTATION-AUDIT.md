@@ -1,14 +1,27 @@
 # Brief-to-implementation audit
 
-## Current first-basin water-store census — 2026-09-09
+## Current first-basin water-store over Quickstart tent-row census — 2026-09-09
 
-**3054** production C# files,432,819 physical lines,1419 direct-XRL,zero cap failures;
-3085 generated cold-install files. Exact digest
-`bb8531b8c45a7a57f4a9bcfc1c86576a095e37b872e3b1ede82f446ade729e94`.
+**3055** production C# files,433,231 physical lines,1420 direct-XRL,zero cap failures;
+3086 generated cold-install files. Exact digest
+`f559d70b5006ceeb5d6cc2d5380c2dd38cd5a0068d56d68e5a2554a99afadaaf`.
 The founding heart's first basin is the settlement's first water store, with a per-rung capacity
-raised and never lowered. No receipt phase, wire, option, grant or verifier predicate changes.
-Roslyn 9.0.306 on Linux compiled the dev-harness baseline and compatibility sets clean. No native
-run, staged-mode gate or exact-inventory human semantic review binds it.
+raised and never lowered, and every water caller that can refund after its own callbacks now holds
+its vessels across them. No receipt phase, wire, option, grant or verifier predicate changes.
+Roslyn 9.0.306 on Linux compiled the staged and dev-harness baseline and compatibility sets clean.
+No native run, installed-ABI source step, Windows gate or exact-inventory human semantic review
+binds it.
+
+## Retained Kingdom Quickstart tent-row census — 2026-09-08
+
+**3053** production C# files,432,564 physical lines,1418 direct-XRL,zero cap failures;
+3084 generated cold-install files. Exact digest
+`f5571291a26a1bd1db608f0d1c3f79ed296569bddce4979208cb564f8c22df63`.
+One added source (the bootstrap's shelter partial) and four modified. Structure, doc freshness,
+architecture and the Tools suite passed. Engine-free suites passed13,831 main/5,120 Portable,zero
+skips on Linux .NET9.0.306, and Roslyn 9.0.306 on Linux compiled the staged baseline (3049
+sources) and compatibility (3053 sources) sets clean. That checkpoint is not restated for the
+merged digest above.
 
 ## Retained camp-guide topic census — 2026-09-08
 
