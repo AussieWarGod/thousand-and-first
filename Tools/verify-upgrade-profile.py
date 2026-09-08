@@ -18,13 +18,12 @@ import scenario_profile
 from upgrade_profile_inputs import CONFIG, OLD_PIN, SHA, local_inputs, parse_config, require, sha
 from upgrade_profile_state import (authenticate_source, capture, capture_stage, fs, inventory,
                                    native, native_plan, windows)
+from upgrade_profile_witnesses import diagnostics
 
 _spec = importlib.util.spec_from_file_location("taf_upgrade_host", Path(__file__).with_name("prepare-upgrade-profile.py"))
 assert _spec and _spec.loader
 host = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(host)
-DIAGNOSTIC = re.compile(rb"\b(?:MODWARN|MODERROR|WARN(?:ING)?|ERROR|FATAL|REFUSED)\b|\b(?:[\w.]+)?Exception\b"
-                        rb"|^\s*(?:at\s|---)", re.IGNORECASE)
 
 
 def journal(raw: bytes, config: dict, game_id: str) -> None:
@@ -134,8 +133,10 @@ def verify(args) -> str:
     native("Inspect", native_plan(args.root, None, ["Local", "Synced"], files, dirs))
     log_hash = host.clean_log(args.root)
     raw_log = fs.read_bytes(args.root / "Player.log", 64 * 1024**2)
-    for line in raw_log.replace(b"\r\n", b"\n").split(b"\n"):
-        require(not DIAGNOSTIC.search(line), "unexpected native diagnostic: " + line.decode("utf-8", errors="replace")[:500])
+    # TAF-only contract (upgrade_profile_witnesses.diagnostics), same as host.clean_log() above:
+    # only a MODERROR/MODWARN naming The Thousand and First ever refuses here. A third party's
+    # own MODWARN/MODERROR is retained below and folded into the verdict, never fatal on its own.
+    retained = diagnostics(raw_log)
     if config["mode"] == "upgrade":
         request = extra["scenario-load.txt"].decode("ascii").split("\n")
         require(len(request) == 7 and request[0] == "taf-scenario-load-v1" and request[-1] == ""
@@ -164,6 +165,8 @@ def verify(args) -> str:
         require(capture_stage(args.source, after_config, after_state) == stage_witness,
                 "retained native stage capture changed during terminal proof")
     require(fs.digest(args.root / "Player.log") == log_hash, "terminal native log changed")
+    if retained:
+        verdict += "; retained non-TAF diagnostics: " + " | ".join(retained)
     return verdict + "; candidate=" + args.candidate + "; ordinary-ui-acceptance=false"
 
 

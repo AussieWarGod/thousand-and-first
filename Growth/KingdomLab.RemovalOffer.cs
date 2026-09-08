@@ -169,30 +169,43 @@ namespace ThousandAndFirst
 			}
 			else
 			{
-				debit.Commit();
-				target = KingdomProcedures.ClassifyOwned(Actor, snapshot, out ignored);
-				if (target != KingdomLabOwnedTargetState.Present)
+				// Opened BEFORE the commit and closed in the finally below: the classification after
+				// the commit may still send this receipt to Rollback, and Rollback re-proves each
+				// bound vessel's MaxVolume before it restores a dram.
+				debit.BeginCompensationWindow();
+				try
 				{
-					bool compensated = debit.Rollback();
+					debit.Commit();
+					target = KingdomProcedures.ClassifyOwned(Actor, snapshot, out ignored);
+					if (target != KingdomLabOwnedTargetState.Present)
+					{
+						bool compensated = debit.Rollback();
+						MergeRemovalWater(job, debit);
+						if (target == KingdomLabOwnedTargetState.Absent && compensated
+							&& job.WaterPaid == 0 && job.WaterLost == 0 && !job.WaterQuarantined)
+						{
+							ArchiveCleanAbsentRemoval(Actor, job, procedure, snapshot);
+							Popup.Show("The exact graft became absent during water callbacks. The debit was compensated exactly; no removal success or governance action was claimed.");
+						}
+						else
+						{
+							job.State = KingdomLabRemovalPhase.Quarantined;
+							job.Fault = "The exact target changed during water callbacks. Compensation was measured; the receipt is quarantined and no replacement was touched.";
+							EnsureRemovalGovernance(job);
+							Popup.Show(job.Fault);
+						}
+						return;
+					}
 					MergeRemovalWater(job, debit);
-					if (target == KingdomLabOwnedTargetState.Absent && compensated
-						&& job.WaterPaid == 0 && job.WaterLost == 0 && !job.WaterQuarantined)
-					{
-						ArchiveCleanAbsentRemoval(Actor, job, procedure, snapshot);
-						Popup.Show("The exact graft became absent during water callbacks. The debit was compensated exactly; no removal success or governance action was claimed.");
-					}
-					else
-					{
-						job.State = KingdomLabRemovalPhase.Quarantined;
-						job.Fault = "The exact target changed during water callbacks. Compensation was measured; the receipt is quarantined and no replacement was touched.";
-						EnsureRemovalGovernance(job);
-						Popup.Show(job.Fault);
-					}
-					return;
+					job.State = KingdomLabRules.RemovalFundingPhase(job.WaterOwed,
+						job.WaterPaid, job.WaterQuarantined);
 				}
-				MergeRemovalWater(job, debit);
-				job.State = KingdomLabRules.RemovalFundingPhase(job.WaterOwed,
-					job.WaterPaid, job.WaterQuarantined);
+				finally
+				{
+					// Closed before anything this offer settles below, which must be free to widen
+					// whatever this receipt drained.
+					debit.EndCompensationWindow();
+				}
 			}
 			if (job.State == KingdomLabRemovalPhase.FundingRecovery
 				&& job.WaterPaid == 0 && job.WaterLost == 0 && !job.WaterQuarantined)

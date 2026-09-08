@@ -259,9 +259,9 @@ namespace ThousandAndFirst
 				// Loud rather than quiet: the raw stock is already gone, so an item blueprint that
 				// does not exist has eaten it. This is a wiring fault in the mod's own files and
 				// nobody's fault in the game, and it must not read as a yard having a slow day.
-				MetricsManager.LogError("ThousandAndFirst KingdomMaterials: the " + KingdomMaterialRules.YardName(kind)
-					+ " made " + made + " " + KingdomMaterialRules.MaterialName(refined) + " and nothing could be created for it; is "
-					+ (BlueprintFor(refined) ?? "its blueprint") + " declared?");
+				ReportNothingLanded(stock, Yard.CurrentCell, "the " + KingdomMaterialRules.YardName(kind)
+					+ " made " + made + " " + KingdomMaterialRules.MaterialName(refined),
+					BlueprintFor(refined));
 				return;
 			}
 			string madeLine = made + " " + KingdomMaterialRules.MaterialName(refined);

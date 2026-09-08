@@ -169,12 +169,32 @@ class UnattendedRunEvidenceTest(unittest.TestCase):
             self.assertTrue(runner._ready(ROOT, "source"))
 
     def test_native_refusals_errors_duplicates_and_trailing_rows_fail(self):
-        for log, journal in ((b"MODERROR defect\n", JOURNAL), (b"", JOURNAL.replace(b"\tOK\t", b"\tREFUSED\t")),
+        for log, journal in ((b"MODERROR [The Thousand and First] defect\n", JOURNAL),
+                             (b"", JOURNAL.replace(b"\tOK\t", b"\tREFUSED\t")),
                              (b"", JOURNAL + JOURNAL), (b"", JOURNAL + JOURNAL.replace(b"SCRIPT-COMPLETE", b"extra"))):
             content = {"Player.log": log, "scenario-journal.tsv": journal}
             with self.subTest(log=log, journal=journal), mock.patch.object(runner.os.path, "lexists", return_value=False), \
                     mock.patch.object(runner, "_peek", side_effect=lambda path, limit: content.get(path.name)):
                 with self.assertRaises(ValueError):
+                    runner._ready(ROOT, "upgrade")
+
+    def test_third_party_diagnostic_never_refuses_only_a_taf_one_does(self):
+        # The installed Pets of Harvest Dawn pack's own MODWARN (emitted at mod discovery, before
+        # any ModSettings.json Enabled flag can gate it -- see upgrade_profile_inputs.py) must
+        # never refuse the native run; only a MODERROR/MODWARN naming The Thousand and First does
+        # (the same contract Tools/check-player-log.sh enforces for smoke/persona runs).
+        pets = (b"INFO clean\nMODWARN [Pets of Harvest Dawn] - Mod defining manual load order, "
+                b"please convert it to use the Dependencies field.\n")
+        content = {"Player.log": pets, "scenario-journal.tsv": JOURNAL}
+        with mock.patch.object(runner.os.path, "lexists", return_value=False), \
+                mock.patch.object(runner, "_peek", side_effect=lambda path, limit: content.get(path.name)):
+            self.assertTrue(runner._ready(ROOT, "upgrade"))
+        for tagged in (b"MODWARN [The Thousand and First] - refused\n",
+                       b"MODERROR [The Thousand and First] - refused\n"):
+            content = {"Player.log": b"INFO clean\n" + tagged, "scenario-journal.tsv": JOURNAL}
+            with self.subTest(tagged=tagged), mock.patch.object(runner.os.path, "lexists", return_value=False), \
+                    mock.patch.object(runner, "_peek", side_effect=lambda path, limit: content.get(path.name)):
+                with self.assertRaisesRegex(ValueError, "Thousand and First diagnostic"):
                     runner._ready(ROOT, "upgrade")
 
     def test_reader_waits_for_actual_report_bound_native_log(self):

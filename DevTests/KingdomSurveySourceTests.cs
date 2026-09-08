@@ -12,7 +12,7 @@ namespace ThousandAndFirst.Tests
 		public void LogicalFamilyPreservesAuthorityNestedTypesAndInitializerOrder()
 		{
 			string source = KingdomSurveyLogicalSource.Read();
-			ClassicAssert.AreEqual(14, Count(source, "public partial class KingdomSurvey"));
+			ClassicAssert.AreEqual(15, Count(source, "public partial class KingdomSurvey"));
 			ClassicAssert.AreEqual(1, Count(source, "private sealed class ReferenceComparer"));
 			ClassicAssert.AreEqual(1, Count(source, "private sealed class IndexedRow"));
 			ClassicAssert.AreEqual(1, Count(source, "public sealed class PassScope"));
