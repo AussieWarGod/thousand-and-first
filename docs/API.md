@@ -1543,7 +1543,7 @@ Dimvision 15, Interpolight 210, Radar 228, LitRadar 232, Omniscient 255).
 | Member | Contract |
 |---|---|
 | `KingdomClaimedGroundLight.CitySightOptionId` / `CitySightEnabled` | Gate `r_TAF_OptionCitySight`, default **Yes**, read per frame so switching it off closes the walls on the next frame. |
-| `KingdomClaimedGroundLight.RestoreHonestVisibility()` | Writes the honest snapshot back into the exact zone it was taken from and never touches `ExploredMap`. A no-op with nothing outstanding, so the after-render callback and the end-of-turn backstop can both call it. |
+| `KingdomClaimedGroundLight.RestoreHonestVisibility()` (internal, not callable by other mods) | Writes the honest snapshot back into the exact zone it was taken from and never touches `ExploredMap`. A no-op with nothing outstanding, so the after-render callback and the end-of-turn backstop can both call it. Documented for readers of the render path only: the member is `internal static`, so it is not part of the supported external surface. |
 
 ## The city has a history — happenings, ambience, and what the creeds make of you
 

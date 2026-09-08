@@ -73,7 +73,9 @@ below it.
   taken before it, one after-render restore, no explored-map write, all six invisibility
   tiers named) and the two backstops (an outstanding projection dropped at the head of the
   next frame, restored ahead of every gate at end of turn). Suites pass 13,828 main and
-  5,118 Portable cases, zero skips; 522 tooling tests pass.
+  5,118 Portable cases, zero skips; 522 tooling tests pass. The staged baseline (3,048
+  sources) and compatibility (3,052 sources) compile modes were re-run clean with
+  warnings-as-errors on these bytes; the dev-harness overlay profile was not re-run.
 - Tools: the smoke launcher accepts every seal schema the game reads (4..6) and the full
   legacy store layout; it previously refused progressed profiles. Maintainer tooling only,
   with no player-visible or runtime effect.
@@ -86,15 +88,18 @@ below it.
   `docs/STATUS.md`.
 
 > **Current unreleased census — exact structural gate passed.** Current 3052-file census is line-cap green:
-> 432,375 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> 432,387 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1417 files, 0 of them over the line limit. Inventory SHA-256:
-> `5dca46b0f1913c5547464d33aa3701302c4df3115ef66f5c8060a93f0e2bbfb4`.
+> `2e111b4713e2f275f21dc7e858cd1f3d86d2f067ad3a6debbc3d17712789b767`.
 > The generated cold-install inventory contains 3083 files; no new subscription claim.
 > Root and independent AI reviewer read all four changed production sources and affected
 > boundaries; unchanged sources inherit the complete canonical parent review chain. This
 > digest covers the merge with `dev`, so the exact-inventory human semantic review is open
 > against it and the Windows compile gate has not re-run for the merged bytes.
+> The digest above is the render-only city-sight branch's: on top of the four-file merge delta the
+> sentence above describes it adds Growth/KingdomClaimedGroundLight.cs and
+> Core/KingdomSystem.z20.Events.cs plus one option row, which carry this branch's own review chain.
 
 ## Retained unreleased — master pause/resume correction, the claimed-ground light, and first-settler legibility
 

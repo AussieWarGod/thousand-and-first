@@ -52,7 +52,11 @@ namespace ThousandAndFirst
 			// City sight is a one-frame projection restored by the engine's own after-render pass.
 			// This is the backstop, and it is deliberately ahead of every gate below: a turn must
 			// never begin on an opened visibility map, whatever the master option or ownership say.
-			// The zone part cannot host it, because EndTurnEvent.Send(Zone) has no engine caller.
+			// A zone part could receive EndTurnEvent (ActionManager.ProcessSingleTurn dispatches it to
+			// every cached zone, D/XRL/Core/ActionManager.cs:439-450), but the system is the earlier and
+			// safer seat: EndTurnEvent.Send(game) runs at ActionManager.cs:1650, before ProcessSingleTurn
+			// at :1651, and that pass skips Suspended/Stale zones, so a zone-part backstop would fire
+			// later and not at all for a zone suspended with a projection outstanding.
 			XRL.World.ZoneParts.KingdomClaimedGroundLight.RestoreHonestVisibility();
 			XRLGame game = The.Game;
 			if (game == null) return base.HandleEvent(E);

@@ -66,7 +66,7 @@ namespace XRL.World.ZoneParts
 		public override bool HandleEvent(BeforeRenderEvent E)
 		{
 			// The engine cleared the visibility map immediately before this dispatch
-			// (D/XRL/Core/XRLCore.cs:2504-2507), so a projection still outstanding here belongs to
+			// (D/XRL/Core/XRLCore.cs:2505-2507), so a projection still outstanding here belongs to
 			// a frame that is already over: the map it was taken from has been wiped, and writing
 			// that stale snapshot back would union two frames of sight rather than restore one.
 			// Drop it instead.
@@ -106,20 +106,28 @@ namespace XRL.World.ZoneParts
 		private void ProjectCitySight()
 		{
 			if (!CitySightEnabled) return;
-			// The load-bearing line. bDraw == 11 is a frame the engine abandons before it renders
-			// and before it runs the after-render callbacks (D/XRL/Core/XRLCore.cs:2517-2519), so a
-			// projection taken here would never be put back, and the between-frames hostile check
-			// that rest and autoexplore lean on adds visibility WITHOUT clearing first
-			// (D/XRL/World/GameObject.cs:11586-11588). A whole turn would then run on an opened map:
-			// rest broken by a hostile three rooms away, autoexplore pathing into unwalked interiors.
+			// The load-bearing line. GameManager.bDraw is the engine's debug render-step tracer
+			// (public static int bDraw = 0 at D/GameManager.cs:270, reset at XRLCore.cs:3502, read
+			// only by debug step gates), so ordinary play never reaches 11 and this return is a
+			// hazard guard rather than a routine skip. On such a frame the engine abandons the draw
+			// before it renders and before it runs the after-render callbacks
+			// (D/XRL/Core/XRLCore.cs:2520-2522, ahead of Render at :2524 and the callback loop at
+			// :2525), so a projection taken here would never be put back, and the between-frames
+			// hostile check that rest and autoexplore lean on adds visibility WITHOUT clearing
+			// first (D/XRL/World/GameObject.cs:11586-11588). A whole turn would then run on an
+			// opened map: rest broken by a hostile three rooms away, autoexplore pathing into
+			// unwalked interiors.
 			if (GameManager.bDraw == 11) return;
 			Cell cell = The.Player.CurrentCell;
 			if (cell == null) return;
-			// Exactly the reckoning the engine is about to make for itself
-			// (D/XRL/Core/XRLCore.cs:2509-2512), taken early so the honest answer can be kept.
-			ParentZone.AddVisibility(cell.X, cell.Y, The.Player.GetVisibilityRadius());
+			// The map is read before the sweep, because Zone.AddVisibility dereferences it on its
+			// first line (SetVisibility -> VisibilityMap[x + y * Width], D/XRL/World/Zone.cs:5086
+			// and 4463-4470), so a guard placed after it would guard nothing.
 			bool[] live = ParentZone.VisibilityMap;
 			if (live == null) return;
+			// Exactly the reckoning the engine is about to make for itself
+			// (D/XRL/Core/XRLCore.cs:2511-2512), taken early so the honest answer can be kept.
+			ParentZone.AddVisibility(cell.X, cell.Y, The.Player.GetVisibilityRadius());
 			HonestVisibility = (bool[])live.Clone();
 			ProjectedZone = ParentZone;
 			ParentZone.VisAll();

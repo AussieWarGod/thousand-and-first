@@ -22,11 +22,11 @@ python3 Tools/check-structure.py --release
 
 The empty-camp legacy correction over the camp-guide topic tree, the claimed-ground light and the
 first-settler legibility change, plus the render-only city sight added on top of the claimed-ground
-light, together report 3052 staged production C# files and 432,375
+light, together report 3052 staged production C# files and 432,387
 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`5dca46b0f1913c5547464d33aa3701302c4df3115ef66f5c8060a93f0e2bbfb4`. The census reports
+`2e111b4713e2f275f21dc7e858cd1f3d86d2f067ad3a6debbc3d17712789b767`. The census reports
 1417 files with direct `XRL` imports; 0 of those exceed the line limit.
 
 The delta over the retained draft below is four modified production sources and no additions or
