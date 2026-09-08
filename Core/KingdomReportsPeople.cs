@@ -13,7 +13,8 @@ namespace ThousandAndFirst
 		/// <summary>
 		/// One plain sentence naming the settlement's most pressing want, so a founder always
 		/// knows the next thing to do without reading a manual. Ordered by what actually
-		/// blocks growth: water, then beds, then hands, then storage.
+		/// blocks growth: an unanswered first guest, then water, then beds, then hands,
+		/// then storage.
 		/// </summary>
 		/// <returns>Advice line, or empty when nothing is wanting.</returns>
 		public static string NextNeed(KingdomSystem System, Zone Here)
@@ -21,6 +22,13 @@ namespace ThousandAndFirst
 			if (Here == null || !System.ClaimedZones.Contains(Here.ZoneID))
 			{
 				return "Stand on the kingdom's own ground to see what it wants.";
+			}
+			// Named before water and beds because it is not a want the settlement can work at: it
+			// is a question addressed to the founder, and it stands here until it is answered.
+			// The arrival message is transient; this is the half a founder finds after a reload.
+			if (KingdomFirstGuestRuntime.IsAwaitingAnswer(System))
+			{
+				return "A first guest is waiting for your answer. (Charter: read the first guest's correspondence)";
 			}
 			int stored = KingdomGrowth.CountStoredWater(Here);
 			int capacity = KingdomGrowth.CountStorageCapacity(Here);
@@ -53,7 +61,14 @@ namespace ThousandAndFirst
 			}
 			if (!KingdomRules.HasRoomToHouse(System.Population, beds))
 			{
-				return "There is no bed free. Commission a communal bunk — and if the beds that exist are ones nobody arriving will take, the roll says whose needs they fail.";
+				// With no roof at all a founder needs the name of a design, not a category: the
+				// tent is the one housing plan a fresh camp's own supplies can pay for. Said only
+				// while arrivals are switched on; with growth off, nobody is coming to stay.
+				if (beds <= 0 && KingdomGrowth.Enabled)
+				{
+					return "No roof stands. Commission a settler's tent (3 drams, 2 canvas) and the first settler will stay.";
+				}
+				return "There is no bed free. Commission more housing — and if the beds that exist are ones nobody arriving will take, the roll says whose needs they fail.";
 			}
 			if (System.IdleWorks > 0)
 			{

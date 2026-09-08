@@ -493,6 +493,33 @@ namespace ThousandAndFirst.Tests
 			return source;
 		}
 
+		[Test]
+		public void OpeningCorrespondenceIsAnnouncedOnceAndKeptByTheNextNeedLine()
+		{
+			string start = Source("Growth/KingdomGrowth.FirstGuestStart.cs");
+			AssertOrdered(start, "TryPublishGrowthArrivalCandidate",
+				"MessageQueue.AddPlayerMessage",
+				"Charter: read the first guest's correspondence",
+				"return ArrivalResult.Deferred;");
+			StringAssert.DoesNotContain("GameObject.Create", start);
+			StringAssert.DoesNotContain("Ledger.Note", start);
+
+			string runtime = Source("Growth/KingdomFirstGuestRuntime.cs");
+			AssertOrdered(runtime, "public static bool IsAwaitingAnswer(KingdomSystem system)",
+				"public static string CharterLabel(KingdomSystem system)",
+				"if (!IsAwaitingAnswer(system))");
+
+			string people = Source("Core/KingdomReportsPeople.cs");
+			AssertOrdered(people, "KingdomFirstGuestRuntime.IsAwaitingAnswer(System)",
+				"A first guest is waiting for your answer.",
+				"Charter: read the first guest's correspondence",
+				"int stored = KingdomGrowth.CountStoredWater(Here);");
+			StringAssert.DoesNotContain("communal bunk", people);
+			StringAssert.Contains("beds <= 0 && KingdomGrowth.Enabled", people);
+			StringAssert.Contains("Commission a settler's tent (3 drams, 2 canvas)", people);
+			StringAssert.Contains("Commission more housing", people);
+		}
+
 		private static string Source(string path)
 		{
 			return TestMain.ReadRepositoryText(path);

@@ -7,13 +7,23 @@ namespace ThousandAndFirst
 {
 	public static partial class KingdomFirstGuestRuntime
 	{
+		/// <summary>
+		/// True while a first guest's correspondence stands open and unanswered. One predicate, so
+		/// the Charter label, the Charter header's next need, and Status cannot disagree about
+		/// whether the founder still owes this person a reply.
+		/// </summary>
+		public static bool IsAwaitingAnswer(KingdomSystem system)
+		{
+			KingdomGrowthFirstGuestOpportunity x =
+				system?.LifecycleBook?.Growth?.ArrivalCandidate?.FirstGuest;
+			return x != null
+				&& (x.ChoiceState == KingdomGrowthFirstGuestChoiceState.AwaitingChoice
+					|| x.ChoiceState == KingdomGrowthFirstGuestChoiceState.Deferred);
+		}
+
 		public static string CharterLabel(KingdomSystem system)
 		{
-			KingdomGrowthArrivalCandidate candidate =
-				system?.LifecycleBook?.Growth?.ArrivalCandidate;
-			KingdomGrowthFirstGuestOpportunity x = candidate?.FirstGuest;
-			if (x == null || x.ChoiceState != KingdomGrowthFirstGuestChoiceState.AwaitingChoice
-				&& x.ChoiceState != KingdomGrowthFirstGuestChoiceState.Deferred)
+			if (!IsAwaitingAnswer(system))
 				return "{{K|No first guest is awaiting an answer}}";
 			return KingdomMaster.NewWorkAllowed(system)
 				? "{{W|Read the first guest's correspondence}}"

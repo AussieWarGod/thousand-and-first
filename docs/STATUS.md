@@ -1,4 +1,4 @@
-# Current implementation and release evidence
+﻿# Current implementation and release evidence
 
 **Snapshot:** 2026-09-07
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
@@ -29,9 +29,16 @@ completion once and unchanged repeat. Strict raw log/15journalrows and receipt-o
 stop pass. Comparison83480 matches all3181 production/Harness C# bytes. This is actual
 engine-turn coverage in a synthetic fixture, not ordinary play or save/load acceptance.
 
-Current census:3049 staged C# files;431,893 physical lines;3080 files in the generated
+Current census:3049 staged C# files;431,926 physical lines;3080 files in the generated
 cold-install inventory. Canonical compilation covers3049 sources, baseline and compatibility symbols.
-Inventory SHA-256: `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
+Inventory SHA-256: `440a4d85ebbe8c0ee650481ee600d9d120ac23f99b3d486a6e980c2bdc9fd348`.
+The first-settler legibility change (one message when the first-guest correspondence opens, a
+durable next-need line, corrected housing advice) moved that digest from `a3a9c8dd`. Linux
+dotnet 9.0.306 against the licensed install passes the full source suite at 13,716 cases and
+the portable kernel at 5,093 cases, zero skips in both, plus doc, structure, tooling and
+architecture audits. It has no native in-game run and no human semantic review; every native,
+Windows-suite, four-mode compile and review result recorded below binds the earlier `a3a9c8dd`
+digest.
 
 Focused86313 passes38 engine-free cases, including modern/historical open-arrival clock
 cuts through retirement, candidate continuation, canonical round-trips, exact child ownership,

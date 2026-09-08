@@ -8,7 +8,7 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-## Unreleased — master pause/resume correction
+## Unreleased — master pause/resume correction and first-settler legibility
 
 - Master resume now validates a complete growth schedule before publishing it. Fresh
   growth no longer receives a positive deadline with a zero interval; established growth
@@ -19,8 +19,26 @@ below it.
   arrival recovery, stale ownership, canonical save payloads and arithmetic refusal.
   Native regression and four-mode compilation pass. Full licensed suites pass13,715 main
   and5,093 Portable cases,zero skips; repository audit passes501 tooling tests.
+- The first guest now announces itself. Publishing the first-guest correspondence writes one
+  player message naming the settlement and pointing at the Charter, said once per opportunity
+  because a standing candidate blocks any second publication.
+- The durable half is presentation, not a ledger note: an unanswered first guest is now the first
+  branch of the Charter/Status next-need line, so it survives a save and cannot be dropped the way
+  a ledger note is once twelve notes stand.
+- The stale housing advice is replaced. With no roof at all and arrivals enabled the line names the
+  settler's tent and its bill; otherwise it asks for more housing. One shared predicate now backs
+  the Charter label and the next-need line. No save format, option, or arrival-interval change.
 
 > **Current unreleased census — exact structural gate passed.** Current 3049-file census is line-cap green:
+> 431,926 physical lines, zero files at or above 300, 1415 direct-XRL imports. Inventory SHA-256:
+> `440a4d85ebbe8c0ee650481ee600d9d120ac23f99b3d486a6e980c2bdc9fd348`.
+> The generated cold-install inventory contains 3080 files; no new subscription claim.
+> Linux dotnet 9.0.306 against the licensed install runs the full source suite green at 13,716
+> cases and the portable kernel at 5,093 cases, zero skips in both. This digest carries no
+> human semantic review and no native in-game run: the exact-inventory human semantic review
+> remains a release blocker, and the first-guest beat is source- and suite-verified only.
+
+> **Retained master-growth census — exact structural gate passed.** Current 3049-file census is line-cap green:
 > 431,893 physical lines,zero files at or above300,1415 direct-XRL imports. Inventory SHA-256:
 > `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
 > The generated cold-install inventory contains 3080 files; no new subscription claim.

@@ -1,4 +1,4 @@
-# Structural release contract
+﻿# Structural release contract
 
 Addendum 9 of the binding building-catalogue brief requires services to stay strictly under 300
 lines, own one responsibility, and communicate through protocols at boundaries before public
@@ -30,6 +30,13 @@ reproves exact source authority before the existing all-participant master publi
 Original children, health, field work and already-published arrival work remain retained;
 no saved format or public API changes. [Review evidence](STRUCTURE_REVIEW_0_3_1.md)
 binds this exact digest; native, managed and compile evidence remain separate.
+
+The first-settler legibility change reports3049 staged production C# files,431,926 physical lines,
+zero at or above300,and1415 direct-XRL files. Exact inventory:
+`440a4d85ebbe8c0ee650481ee600d9d120ac23f99b3d486a6e980c2bdc9fd348`.
+Three production files changed (a player message on first-guest publication, one shared
+awaiting-answer predicate, and the next-need lines that read it); one DevTests source pin was
+added. No human semantic review binds this digest, so the release gate stays closed on it.
 
 ## Retained recovery census
 

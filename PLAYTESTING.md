@@ -1,4 +1,4 @@
-# Alpha Playtesting Guide
+﻿# Alpha Playtesting Guide
 
 This guide is for tagged release packages and the public `0.3.0` Alpha on
 [Steam Workshop](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472). A repository
@@ -63,6 +63,15 @@ The v0.3 Alpha target adds a separate **Kingdom Quickstart** game mode:
    citizen grant.
 5. Open the **Charter** ability and follow its current offers. Save, quit to desktop, reload, and
    revisit the heart before expanding the test.
+6. Expect no citizens at the start. A Quickstart camp begins with the founder, the optional guide,
+   and nobody else; the first traveller is due 3600 ticks (three in-game days at population zero)
+   after founding, and only while you stand on claimed ground for the settlement pass to run.
+7. When that traveller writes, one message says so and the Charter header keeps saying it under
+   **Next need** until you answer. Open **Charter** and read the first guest's correspondence,
+   then **Admit this person through Growth**.
+8. Walk to the admitted guest and choose **Welcome as citizen**. With no roof standing, the
+   **Next need** line names the settler's tent (3 drams, 2 canvas) - the opening chest's brush is
+   the canvas. Report the whole chain, including exactly where it stalls.
 
 An optional passive charter advisor is controlled by a Mods option before world creation. The
 advisor grants no labour, civic support, defence, or loot. Changing that option later does not
