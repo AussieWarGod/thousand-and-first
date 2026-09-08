@@ -27,14 +27,28 @@ below it.
   being exiled, or switching the option off takes the part off on the next visit; explored
   floor stays explored, because unsetting it would erase legitimately walked ground. No
   saved field, wire or public API change, and a save loaded without the mod is dark again.
+- Reed-at-Dawn and the other camp guides now answer five fixed questions as well as giving
+  the opening inventory: founding and claimed ground; commissioning, materials and hands;
+  water and the stores; who may arrive and what a roof has to do with it; petitions and raids.
+  The words live in one engine-free file and are proved without a game.
+- The guide says in his own voice that he is not on the roll and passes through, that hands
+  come off the roll, and that nobody new stays unless a roof stands with room left under it.
+  He never states the roll's current size, so every word stays true whether or not a camp is
+  seeded with founding settlers. No answer promises an arrival, a pair of hands or a finished
+  building, because the settlement refuses all three until a roof stands with room under it
+  and somebody lives there.
+- No receipt phase, wire, save field, option, grant or advisor verifier predicate changes.
+  A guide is built once, with the world: existing Quickstart saves keep the one-node guide,
+  and only worlds created after this change get the topics. Public0.3.1 is unchanged.
 
-> **Current unreleased census — exact structural gate passed.** Current 3051-file census is line-cap green:
-> 432,024 physical lines,zero files at or above300; direct `XRL`
+> **Current unreleased census — exact structural gate passed.** Current 3052-file census is line-cap green:
+> 432,178 physical lines,zero files at or above300; direct `XRL`
 > imports occur in 1417 files, 0 of them over the line limit. Inventory SHA-256:
-> `fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`.
-> The generated cold-install inventory contains 3082 files; no new subscription claim.
-> Engine-free suites and the repository tooling suites pass. Roslyn 9.0.306 on Linux compiled the
-> staged baseline (3047 sources) and staged compatibility (3051 sources) sets clean against the
+> `dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`.
+> The generated cold-install inventory contains 3083 files; no new subscription claim.
+> Engine-free suites pass13,731 main and5,109 Portable cases,zero skips, and the repository
+> tooling suites pass501 tests. Roslyn 9.0.306 on Linux compiled the
+> staged baseline (3048 sources) and staged compatibility (3052 sources) sets clean against the
 > licensed Managed references, warnings as errors. The two dev-harness modes, the Windows gate and
 > any native run did NOT happen for this delta, and the exact-inventory human semantic review is
 > open against the new digest. This is not Beta sign-off.

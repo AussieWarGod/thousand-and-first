@@ -51,20 +51,20 @@ completion once and unchanged repeat. Strict raw log/15journalrows and receipt-o
 stop pass. Comparison83480 matches all3181 production/Harness C# bytes. This is actual
 engine-turn coverage in a synthetic fixture, not ordinary play or save/load acceptance.
 
-Current census:3051 staged C# files;432,024 physical lines;3082 files in the generated
-cold-install inventory. Staged compilation covers3051 sources, baseline and compatibility symbols,
+Current census:3052 staged C# files;432,178 physical lines;3083 files in the generated
+cold-install inventory. Staged compilation covers3052 sources, baseline and compatibility symbols,
 run here by Roslyn 9.0.306 on Linux against the licensed Managed references with warnings as errors
-(baseline compiles 3047 of them; the optional-mod bridge is compatibility-only). The dev-harness
+(baseline compiles 3048 of them; the optional-mod bridge is compatibility-only). The dev-harness
 modes and the Windows gate did not run for this census.
-Inventory SHA-256: `fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`.
+Inventory SHA-256: `dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`.
 Direct `XRL` imports: 1417 files, 0 over the line limit.
 
 Focused86313 passes38 engine-free cases, including modern/historical open-arrival clock
 cuts through retirement, candidate continuation, canonical round-trips, exact child ownership,
 recorded debt, pause overlap and arithmetic refusal. Candidate fixtures use supported
 semantic version1; no production guard was relaxed to pass them. Four source-wiring cases
-support the75th persona. Structural release gate passes exact3049-source digest
-`a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
+support the75th persona. Structural release gate passes exact3052-source digest
+`dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`.
 Independent source/native/test review found no Required issue. Full licensed Windows1814
 passed13,715 main and5,093 Portable cases,zero skips; normal rebuilds had zero warnings/errors.
 Canonical53744 passed all four C#7.3 modes: ordinary3045/3049,developer3177/3181,132 Harness
