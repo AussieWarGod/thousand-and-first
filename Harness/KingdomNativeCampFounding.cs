@@ -51,10 +51,23 @@ namespace ThousandAndFirst.Harness
 		/// Places one reservoir holding <paramref name="Drams" /> of fresh water, marks it as the
 		/// settlement's store, and dedicates it through the production check-in on a bound survey.
 		/// Returns the dedicated volume so the caller can prove the stock it later reads.
-		/// </summary>
+		/// <para>
+		/// THE GROUND IS NOT EMPTY ANY MORE. A fresh founding now dedicates the founding heart's
+		/// relic-slot first basin as a settlement water store - the rite stamps
+		/// <c>KingdomStores</c> in <c>KingdomPlot2.07c.FoundingHeartMarks</c> as the slot is
+		/// created, which <c>Growth/KingdomPlotHeartRules.Loader.cs</c> documents. So this fixture
+		/// measures the settlement's stores BEFORE it places its own vessel and asserts the exact
+		/// DELTA: one store added, that store being this liquid, and the stock rising by exactly
+		/// the drams asked for. That is strictly stronger than the old count-of-one, which only
+		/// held while a camp had no basin, and it stays true whatever the basin happens to hold.
+		/// </para></summary>
 		internal static LiquidVolume Dedicate(XRLGame Game, Zone Zone, KingdomSystem System,
 			int Drams, Action<GameObject> Track, Action<bool, string> Require)
 		{
+			KingdomSurvey before = KingdomSurvey.Take(Zone, System);
+			Require(before != null, "the settlement could not be surveyed before dedication");
+			int baseStores = before.Stores.Count;
+			int baseWater = before.StoredWater;
 			GameObject vessel = GameObject.Create("r_KingdomReservoir");
 			Require(GameObject.Validate(vessel), "the reservoir blueprint produced no object");
 			Track(vessel);
@@ -71,9 +84,16 @@ namespace ThousandAndFirst.Harness
 				"native placement substituted the reservoir");
 			long tick = Game.TimeTicks;
 			KingdomSurvey survey = KingdomSurvey.Take(Zone, System);
-			Require(survey != null && survey.Stores.Count == 1
-				&& ReferenceEquals(survey.Stores[0], liquid) && survey.StoredWater == Drams,
-				"the dedication survey does not read exactly one stocked store");
+			Require(survey != null, "the settlement could not be surveyed after dedication");
+			int mine = 0;
+			for (int i = 0; i < survey.Stores.Count; i++)
+				if (ReferenceEquals(survey.Stores[i], liquid)) mine++;
+			Require(survey.Stores.Count == baseStores + 1 && mine == 1
+				&& survey.StoredWater == baseWater + Drams,
+				"the dedication survey does not read exactly one added stocked store: stores "
+					+ baseStores + "->" + survey.Stores.Count + ", this liquid read " + mine
+					+ " time(s), stored water " + baseWater + "->" + survey.StoredWater
+					+ " for " + Drams + " dram(s) dedicated");
 			using (survey.BindPass())
 			{
 				Require(ReferenceEquals(KingdomSurvey.ActiveFor(Zone), survey),
