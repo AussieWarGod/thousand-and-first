@@ -204,36 +204,30 @@ namespace ThousandAndFirst
 						return spilled;
 					}
 				}
-				while (remaining > 0)
+				if (remaining > 0 && Fallback == null)
 				{
-					GameObject item = GameObject.Create(blueprint);
-					if (item == null)
+					// No ground to set it down on. Nothing is made at all: creating a body only
+					// to destroy it runs two sets of other people's callbacks over an object this
+					// delivery never wanted, which is precisely how custody is lost.
+					KingdomLog.Log("materials: " + remaining + " units of "
+						+ KingdomMaterialRules.MaterialName(Material)
+						+ " had nowhere to go and were never made");
+					remaining = 0;
+				}
+				if (remaining > 0)
+				{
+					// Ground is a destination like any other, and is paid on the same proof.
+					KingdomDepositOutcome overflow = KingdomDepositEngine.Fill(
+						new GroundSpillHost(Zone, Fallback, blueprint, remaining), remaining,
+						remaining);
+					spilled += overflow.Placed;
+					remaining -= overflow.Placed;
+					if (overflow.Refused)
 					{
-						break;
+						Custody = overflow.Custody;
+						Tally.Add(Material, placed + spilled);
+						return spilled;
 					}
-					int batch = 1;
-					if (item.HasPart("Stacker") && remaining > 1)
-					{
-						batch = remaining;
-						item.Count = batch;
-					}
-					if (Fallback != null)
-					{
-						GameObject accepted;
-						try { accepted = Fallback.AddObject(item); }
-						catch
-						{
-							KingdomSurvey.ObserveAddResultInActive(Zone, item, null);
-							throw;
-						}
-						KingdomSurvey.ObserveAddResultInActive(Zone, item, accepted);
-						spilled += batch;
-					}
-					else
-					{
-						item.Obliterate();
-					}
-					remaining -= batch;
 				}
 				Tally.Add(Material, placed + spilled);
 				return spilled;

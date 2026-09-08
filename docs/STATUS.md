@@ -81,24 +81,27 @@ The heart-ingress endpoints are unchanged and refusal is still fail-closed with 
 
 Current census after merging `dev` (the Kingdom Quickstart tent rows, the first-basin water store,
 the stockpile unit capacity, the render-only city sight and the shelter ingress included) and the
-stockpile deposit custody fix: 3065
-staged C# files; 434,811 physical lines; 3096 files in the generated
-cold-install inventory. Staged compilation covers 3065 sources, baseline and compatibility symbols
-(baseline compiles 3061 of them; the optional-mod bridge is compatibility-only), run here by Roslyn
+stockpile deposit custody fix: 3067
+staged C# files; 435,151 physical lines; 3098 files in the generated
+cold-install inventory. Staged compilation covers 3067 sources, baseline and compatibility symbols
+(baseline compiles 3063 of them; the optional-mod bridge is compatibility-only), run here by Roslyn
 9.0.306 on Linux against the licensed Managed references with warnings as
-errors. Direct `XRL` imports: 1426 files, 0 over the line limit.
-Inventory SHA-256: `111a5d07c49a2c7acebb0cd276c3a1fc8562b3ba8a0756fec1963b7d3f87d70b`.
+errors. Direct `XRL` imports: 1428 files, 0 over the line limit.
+Inventory SHA-256: `2c2b3c81ee2a50f204aebca207e5a01b76f855bb86b9a3fdeb5393d489d681bc`.
 Before the merge, all four `Tools/gate.sh` modes compiled clean on the shelter-ingress delta's own
 bytes — staged baseline (3050 sources), staged compatibility (3054), dev-harness baseline (3204)
 and dev-harness compatibility (3208) — with the installed-Hearthpyre source and ABI step, and the
 engine-free suites passed13,905 main/5,193 Portable cases,zero skips there with 615 Tools tests.
-On the merged tree the engine-free suites pass 14,003 main / 5,199 Portable cases, zero
-skips, and the Tools suite passes 627 tests. The six-profile Quickstart boot matrix at seed `#43101` ran natively on these bytes and all
-six reach checker `verdict=PASS`, each with two `[TAF] plot staked: tentrow` rows and a
-strict-clean Player.log; `quickstart-save marsh yes` and its separate cold load also pass, with
-unchanged heart, stock and IDs and no bootstrap replay.
+On the merged tree the engine-free suites pass 14,019 main / 5,199 Portable cases, zero
+skips, and the Tools suite passes 627 tests.
+The six-profile Quickstart boot matrix at seed `#43101` ran natively on the SHELTER-INGRESS bytes,
+not on these: all six reached checker `verdict=PASS`, each with two `[TAF] plot staked: tentrow`
+rows and a strict-clean Player.log, and `quickstart-save marsh yes` and its separate cold load
+passed there with unchanged heart, stock and IDs and no bootstrap replay. Those results are
+retained for that checkpoint and are NOT claimed for the custody bytes, which have had no native
+run at all.
 NOT RUN for the merged tree: the two dev-harness modes, the installed-Hearthpyre source step, the
-Windows gate, ordinary play, graceful Quit and Steam delivery. The
+Windows gate, any native run, ordinary play, graceful Quit and Steam delivery. The
 1,700-tick figure remains a reading of the raising rule, not of a running plot clock. No human
 exact-inventory semantic review binds this digest.
 

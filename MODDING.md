@@ -355,7 +355,16 @@ somewhere else, credits only what the store itself provably gained, and says so 
 bound for the chest ended up somewhere the keepers cannot account for; the rest of the load is
 held rather than made a second time."* The saying is taken back by the next delivery that lands in
 that store proved. A bundle your handler is holding is never destroyed to resolve the ambiguity —
-only one standing in no inventory and no cell is withdrawn.
+only one standing in no inventory, no cell, no equipment slot and no implant socket is withdrawn,
+and only when the destruction is not vetoed: `Obliterate` returns `false` for a refused destroy,
+and a `BeforeDestroyObjectEvent` handler may move the body before refusing, so the settlement reads
+the body again afterwards and stops rather than assuming it won.
+
+The ground is a destination like any other. Overflow set down at the founder's feet is proved the
+same way and paid the same way: `Cell.AddObject` hands your object back even when `Physics.EnterCell`
+refused it, so the cell is read instead of the call, and a stack already lying there that absorbs
+the bundle is paid for out of what the cell gained. Nothing is created at all when there is no
+ground to set it down on.
 
 **What fills a stockpile is wider than "materials".** A store's hold is everything the settlement
 can spend: ordinary materials, rare finds, **and anything vanilla can take apart into bits** —

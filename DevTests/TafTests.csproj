@@ -832,6 +832,7 @@
 	<Compile Include="..\Core\KingdomRules.MaterialStores.cs" />
 	<Compile Include="..\Core\IKingdomDepositHost.cs" />
 	<Compile Include="..\Core\KingdomDepositEngine.cs" />
+	<Compile Include="KingdomStockpileCustodyFixture.cs" />
 	<Compile Include="KingdomStockpileCustodyTests.cs" />
 	<Compile Include="..\Core\KingdomRules.Population.cs" />
 	<Compile Include="..\Core\KingdomRules.InheritanceSeal.cs" />

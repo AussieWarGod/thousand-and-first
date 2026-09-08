@@ -131,7 +131,17 @@ namespace ThousandAndFirst
 			}
 			Cell stakeCell = StakeObject.CurrentCell;
 			MaterialStock stock = Stock(Z);
-			int spilled = stock.PutAll(yield, stakeCell);
+			int spilled = stock.PutAll(yield, stakeCell, out KingdomDepositCustody yieldCustody);
+			if (yieldCustody != KingdomDepositCustody.Settled)
+			{
+				// A bundle of the cleared yield is standing somewhere the keepers cannot account
+				// for. The stake is held rather than removed: nothing more is issued, and the
+				// chronicle below is not reached, so the settlement is never told it grew richer
+				// by a tally nothing was credited for.
+				Order.BlockedAnnounced = true;
+				System.Ledger.Note("{{r|The cleared yield could not be proved into the stockpiles. The stake is held for inspection rather than issuing it twice.}}");
+				return;
+			}
 			if (vetoed)
 			{
 				if (!Order.BlockedAnnounced)
@@ -162,11 +172,22 @@ namespace ThousandAndFirst
 				int mud = KingdomMaterialRules.GroundMud(assessment.Cells);
 				StakeObject.SetIntProperty(ClearanceGroundPhaseProperty, 1);
 				yield.Add(KingdomMaterial.Mud, mud);
-				try { spilled += stock.Put(KingdomMaterial.Mud, mud, stakeCell); }
+				KingdomDepositCustody mudCustody;
+				try { spilled += stock.Put(KingdomMaterial.Mud, mud, stakeCell, out mudCustody); }
 				catch
 				{
 					Order.BlockedAnnounced = true;
 					System.Ledger.Note("{{r|The clearance ground-yield callback threw. The stake is held for inspection rather than issuing mud twice.}}");
+					return;
+				}
+				if (mudCustody != KingdomDepositCustody.Settled)
+				{
+					// A refusal comes back NORMALLY, so the throw guard above never sees it.
+					// Stamping the phase here would read as "issued" for ever after and forfeit
+					// the mud in silence; the phase stays at 1 and the stake is held for
+					// inspection exactly as an interrupted callback leaves it.
+					Order.BlockedAnnounced = true;
+					System.Ledger.Note("{{r|The clearance ground yield could not be proved into the stockpiles. The stake is held for inspection rather than issuing mud twice.}}");
 					return;
 				}
 				StakeObject.SetIntProperty(ClearanceGroundPhaseProperty, 2);

@@ -10,7 +10,8 @@ namespace ThousandAndFirst
 		// Everything here is a single engine operation and a reading taken straight afterwards.
 		// The law about what may be counted, what may be destroyed and when the delivery stops
 		// lives in KingdomDepositEngine, which knows nothing about GameObjects and can therefore
-		// be driven against a handler that carries the bundle off mid-callback.
+		// be driven against a handler that carries the bundle off, vetoes its destruction, or
+		// merges it away mid-callback.
 
 		/// <summary>
 		/// One store, one material, and the observations the survey needs while a delivery runs
@@ -25,6 +26,11 @@ namespace ThousandAndFirst
 
 			private readonly string Blueprint;
 
+			/// <summary>The saying, remembered here as well as on the store. A store a handler
+			/// destroyed mid-fill can no longer carry a property, and this at least keeps one
+			/// fill from saying the same thing twice about it.</summary>
+			private bool Spoken;
+
 			internal StockpileDepositHost(Zone Z, GameObject Container, string Blueprint)
 			{
 				this.Z = Z;
@@ -38,17 +44,19 @@ namespace ThousandAndFirst
 			{
 				get
 				{
-					return GameObject.Validate(Container) && Container.GetIntProperty(
-						KingdomRules.StockpileCustodyAnnouncedProperty) == 1;
+					return GameObject.Validate(Container)
+						? Container.GetIntProperty(
+							KingdomRules.StockpileCustodyAnnouncedProperty) == 1
+						: Spoken;
 				}
 				set
 				{
-					if (!GameObject.Validate(Container))
+					Spoken = value;
+					if (GameObject.Validate(Container))
 					{
-						return;
+						Container.SetIntProperty(KingdomRules.StockpileCustodyAnnouncedProperty,
+							value ? 1 : 0, RemoveIfZero: true);
 					}
-					Container.SetIntProperty(KingdomRules.StockpileCustodyAnnouncedProperty,
-						value ? 1 : 0, RemoveIfZero: true);
 				}
 			}
 
@@ -57,9 +65,9 @@ namespace ThousandAndFirst
 				return DepositRoomNow(Container);
 			}
 
-			public int HeldNow()
+			public int MaterialHeldNow()
 			{
-				return DepositHeldNow(Container);
+				return DepositMaterialHeldNow(Container, Blueprint);
 			}
 
 			public object Create()
@@ -93,21 +101,29 @@ namespace ThousandAndFirst
 				return GameObject.Validate(Bundle as GameObject);
 			}
 
-			/// <summary>A bundle in no inventory and in no cell reached nobody at all, and is the
-			/// only kind this delivery may ever destroy.</summary>
-			public bool Ownerless(object Bundle)
+			/// <summary>Nobody is holding it: no cell, and no holder of any of the three kinds the
+			/// engine keeps separately. Equipping and implanting both CLEAR the inventory and the
+			/// cell, so reading those two alone would call an equipped bundle ownerless and licence
+			/// the delivery to destroy something a creature is wearing.</summary>
+			public bool HeldByNobody(object Bundle)
 			{
 				GameObject item = Bundle as GameObject;
-				return item != null && item.InInventory == null && item.CurrentCell == null;
+				return GameObject.Validate(item) && item.Holder == null
+					&& item.CurrentCell == null;
 			}
 
-			public void Discard(object Bundle)
+			/// <summary>Destruction is vetoable, and a veto handler may move the body before it
+			/// refuses, so the body is read again afterwards. Only a bundle that is provably gone
+			/// counts as withdrawn.</summary>
+			public bool Discard(object Bundle)
 			{
 				GameObject item = Bundle as GameObject;
-				if (GameObject.Validate(item))
+				if (!GameObject.Validate(item))
 				{
-					item.Obliterate();
+					return false;
 				}
+				bool gone = item.Obliterate(null, Silent: true);
+				return gone && !GameObject.Validate(item);
 			}
 
 			/// <summary>A deposit must never merge into an exact stack another durable receipt
@@ -146,7 +162,7 @@ namespace ThousandAndFirst
 					+ " ended up somewhere the keepers cannot account for; the rest of the load"
 					+ " is held rather than made a second time.}}");
 				KingdomLog.Log("materials: deposit custody unproved, blueprint=" + Blueprint
-					+ " room=" + RoomNow() + " held=" + HeldNow());
+					+ " room=" + RoomNow() + " held=" + MaterialHeldNow());
 			}
 		}
 	}

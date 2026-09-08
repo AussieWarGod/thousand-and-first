@@ -2,19 +2,19 @@
 
 ## Current unreleased stockpile deposit custody
 
-3065 staged sources; 434,811 physical lines; 1426 direct-XRL; zero cap failures; 3096 generated
-cold-stage files. Exact inventory `111a5d07c49a2c7acebb0cd276c3a1fc8562b3ba8a0756fec1963b7d3f87d70b`.
-Two physical custody defects in the merged stockpile-capacity deposit are fixed. A bundle an
+3067 staged sources; 435,151 physical lines; 1428 direct-XRL; zero cap failures; 3098 generated
+cold-stage files. Exact inventory `2c2b3c81ee2a50f204aebca207e5a01b76f855bb86b9a3fdeb5393d489d681bc`.
+Sixteen custody findings from two independent reviews of PR #84 are fixed, over the two physical defects first found in the merged stockpile-capacity deposit. A bundle an
 insertion callback moved elsewhere was preserved and counted as zero, so `MaterialStock.Put` made
 the units a second time in the next store or on the ground; and a bundle a stack-count handler had
 already carried off was obliterated whenever the stamp proof failed. The deposit law now lives
 engine-free in `Core/KingdomDepositEngine.cs` behind `Core/IKingdomDepositHost.cs`: unproved
 custody stops the whole `Put`, only what a store provably gained is credited, a body is withdrawn
-only when proved ownerless, and the founder is told once. Counting stays whole, intake is still the
+only when proved held by nobody AND provably destroyed, custody is proved before every mutation, a vanished bundle is credited only by the destination's own gain IN THAT MATERIAL, the landing proof requires the destination to still be dedicated stock, the overflow path runs the same law, a throwing handler keeps what was proved, and every caller that writes a receipt reads the custody first. The founder is told once. Counting stays whole, intake is still the
 only refusal (ruling 5), the catch-up envelope is untouched and old saves read as before. It sits
 over the Kingdom Quickstart shelter ingress retained below. Structure, doc freshness and the Tools
-suite (627) pass; engine-free suites pass 14,003 main / 5,199 Portable, zero skips, and Roslyn
-9.0.306 on Linux compiles the staged baseline (3061) and compatibility (3065) sets clean. The two
+suite (627) pass; engine-free suites pass 14,019 main / 5,199 Portable, zero skips, and Roslyn
+9.0.306 on Linux compiles the staged baseline (3063) and compatibility (3067) sets clean. The two
 new deposit regressions were confirmed to fail against the pre-fix behaviour. NOT run for these
 bytes: the two dev-harness modes, the installed-ABI source step, the Windows gate, the native
 Quickstart boot matrix, ordinary play, graceful Quit and Steam delivery. Public 0.3.1 unchanged.

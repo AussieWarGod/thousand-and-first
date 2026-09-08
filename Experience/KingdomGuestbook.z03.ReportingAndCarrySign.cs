@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using XRL;
@@ -118,7 +118,16 @@ namespace ThousandAndFirst
 				return;
 			}
 			System.Haul = null;
-			int spilled = KingdomMaterials.Deliver(System, Z, manifest);
+			int spilled = KingdomMaterials.Deliver(System, Z, manifest,
+				out KingdomDepositCustody custody);
+			if (custody != KingdomDepositCustody.Settled)
+			{
+				// The load did not arrive. Deliver has already said so; writing "delivered" into
+				// the chronicle on top of it would be a receipt for material nobody can find.
+				KingdomLog.Log("carry-sign: haul held, custody unproved manifest=" + description
+					+ " spilled=" + spilled);
+				return;
+			}
 			KingdomChronicle.Record(System, KingdomGuestRules.DeliveredChronicleLine(KingdomPresentation.Rich(System.SeatName), description));
 			System.Ledger.Note(KingdomGuestRules.DeliveredLedgerNote(description));
 			KingdomLog.Log("carry-sign: delivered manifest=" + description + " spilled=" + spilled);

@@ -27,22 +27,52 @@ below it.
 - The refining yard no longer reads a held load as a missing item blueprint. `Put` reports how the
   delivery ended, and `ReportNothingLanded` keeps a wiring fault, a settlement out of room, and a
   load held for unprovable custody apart from one another.
+- Withdrawal is no longer assumed to succeed. `GameObject.Obliterate` is vetoable, and a
+  `BeforeDestroyObjectEvent` handler may move the body before it refuses, so every withdrawal is
+  read back off the body and an unproved one stops the delivery instead of leaving the units to be
+  made again elsewhere.
+- Custody is proved before every mutation, not only room and count. A creation or stack-count
+  handler that carried the bundle off while the store still had room used to pass the old proof
+  outright, and the insertion would then have taken the body out of whoever was holding it.
+- A bundle that stopped existing BEFORE its insertion is no longer treated as safely withdrawn:
+  nothing distinguishes "this delivery destroyed it" from "a handler merged its units away", so it
+  refuses rather than leaving the whole batch to be minted again.
+- Credit for a vanished bundle is now read per material rather than off whole occupancy. A handler
+  that retired the timber and dropped an equal count of stone left the store just as full and used
+  to be paid in full for timber that never arrived.
+- The landing proof now requires the destination to still be dedicated settlement stock. A handler
+  that cleared the dedication left exact inventory membership intact and still took full credit.
+- The overflow path is no longer its own unproved loop. It stamps a count that fires
+  `StackCountChangedEvent`, and `Cell.AddObject` returns the object it was handed even when
+  `Physics.EnterCell` refused it, so a refusing cell or a taking handler used to mint ledger units.
+  Ground now runs the same law through the same seam and is paid on proof; with no ground at all
+  nothing is created, where a body used to be made only to be destroyed.
+- A handler that throws inside a callback no longer discards what the delivery had already proved.
+  The fill returns the proved units with an uncertain custody instead of unwinding past the caller.
+- Every settlement-owned caller that writes a receipt now reads the custody first. The clearance
+  stake no longer stamps its one-shot ground yield as issued after a refusal (which forfeited the
+  mud permanently and in silence) and no longer chronicles a yield nothing was credited for; the
+  refining yard reads the short raw return before starting a second delivery and does not report a
+  run it could not prove home; and a charter whose load was held is said in the ledger instead of
+  reading as an ordinary zero-spill success with a "delivered" line in the chronicle.
 
 ### Changed
 
 - The deposit law moved out of the engine-facing shard into `Core/KingdomDepositEngine.cs` behind
-  `Core/IKingdomDepositHost.cs`, so it can be driven against handlers that relocate, fill, or
-  destroy the bundle mid-callback. `Growth/KingdomMaterials.StockpileDeposit.cs` is the only piece
-  that touches a `GameObject`. Counting stays whole and intake is still the only thing refused
+  `Core/IKingdomDepositHost.cs`, so it can be driven against handlers that relocate, fill, veto a
+  destruction, or merge the bundle away mid-callback.
+  `Growth/KingdomMaterials.StockpileDeposit.cs` and `Growth/KingdomMaterials.GroundSpill.cs` are
+  the only pieces that touch a `GameObject`, and the yard work moved into
+  `Growth/KingdomMaterials.10b.YardWork.cs` to stay under the line cap. Counting stays whole and intake is still the only thing refused
   (ruling 5); no capacity, catch-up envelope, or stored item is touched, and a standing save reads
   exactly what it read before.
 
-> **Current unreleased census — exact structural gate passed.** Current 3065-file census is line-cap green:
-> 434,811 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> **Current unreleased census — exact structural gate passed.** Current 3067-file census is line-cap green:
+> 435,151 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
-> imports occur in 1426 files, 0 of them over the line limit. Inventory SHA-256:
-> `111a5d07c49a2c7acebb0cd276c3a1fc8562b3ba8a0756fec1963b7d3f87d70b`.
-> The generated cold-install inventory contains 3096 files; no new subscription claim.
+> imports occur in 1428 files, 0 of them over the line limit. Inventory SHA-256:
+> `2c2b3c81ee2a50f204aebca207e5a01b76f855bb86b9a3fdeb5393d489d681bc`.
+> The generated cold-install inventory contains 3098 files; no new subscription claim.
 > This digest is the stockpile deposit custody fix merged over the Kingdom Quickstart shelter
 > ingress, the render-only city sight, the stockpile unit capacity, the first-basin water store and
 > the Kingdom Quickstart tent rows retained below; each delta carries its own review chain and none
@@ -50,10 +80,10 @@ below it.
 > The custody delta over the shelter-ingress census below is three added and four modified
 > production sources: the engine-free deposit law, its host seam, the GameObject implementation of
 > that seam, and the room, stock, rules and yard shards that route through it.
-> On these bytes the staged baseline (3061 sources) and staged compatibility (3065 sources plus the
+> On these bytes the staged baseline (3063 sources) and staged compatibility (3067 sources plus the
 > tracked Hearthpyre 2.2.3 ABI stub) compile clean under Roslyn 9.0.306 on Linux against the
 > installed managed assemblies rather than through `Tools/gate.sh`; both engine-free suites run
-> green there (14,003 main/5,199 Portable, zero skips) and the 627-test tooling suite passes. The
+> green there (14,019 main/5,199 Portable, zero skips) and the 627-test tooling suite passes. The
 > two new deposit regressions were confirmed to FAIL against the pre-fix behaviour before the fix
 > was kept.
 > NOT run for this delta: the two dev-harness modes, the installed-Hearthpyre source step, the
@@ -200,7 +230,7 @@ below it.
 > comment blocks wider — every word and engine citation kept, no code or statement order changed —
 > and the shard is back at 299.
 > The merged tree compiles clean in the staged baseline (3057 sources) and staged compatibility
-> (3061 sources plus the tracked Hearthpyre 2.2.3 ABI stub), on Linux with the SDK Roslyn 9.0.306
+> (3063 sources plus the tracked Hearthpyre 2.2.3 ABI stub), on Linux with the SDK Roslyn 9.0.306
 > against the installed
 > managed assemblies rather than through `Tools/gate.sh`; both engine-free suites run green there
 > (13,986 main/5,199 Portable, zero skips) and the 627-test tooling suite passes.

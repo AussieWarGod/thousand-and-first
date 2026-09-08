@@ -141,14 +141,55 @@ namespace ThousandAndFirst
 				&& IsStockpile(Container)) ? StockpileRoom(Container) : 0;
 		}
 
-		/// <summary>What an exact destination physically holds right now, and nothing at all once
-		/// it has stopped being a destination. Read either side of an insertion, this is how the
-		/// delivery learns what a store actually gained when the bundle it made stopped being the
-		/// thing the units arrived in.</summary>
-		internal static int DepositHeldNow(GameObject Container)
+		/// <summary>
+		/// Units of ONE blueprint standing in an exact destination right now, and nothing at all
+		/// once it has stopped being a destination. Read either side of an insertion, this is how
+		/// the delivery learns what a store actually gained when the bundle it made stopped being
+		/// the thing the units arrived in.
+		/// <para>
+		/// Deliberately NARROWER than the room reading beside it. Room is whole-occupancy, because
+		/// everything in a chest takes up the space it takes up; but a gain is evidence about ONE
+		/// material, and a handler that retires the timber and drops an equal count of stone would
+		/// otherwise pay this delivery in full for timber that never arrived.
+		/// </para>
+		/// </summary>
+		internal static int DepositMaterialHeldNow(GameObject Container, string Blueprint)
 		{
-			return (GameObject.Validate(Container) && Container.Inventory != null
-				&& IsStockpile(Container)) ? KingdomSurvey.StockHeldIn(Container) : 0;
+			if (!GameObject.Validate(Container) || Container.Inventory == null
+				|| !IsStockpile(Container) || string.IsNullOrEmpty(Blueprint))
+			{
+				return 0;
+			}
+			return CountBlueprint(Container.Inventory.Objects, Blueprint);
+		}
+
+		/// <summary>The same reading for open ground, which has no capacity and no designation:
+		/// units of one blueprint standing in an exact cell right now.</summary>
+		internal static int GroundMaterialHeldNow(Cell Ground, string Blueprint)
+		{
+			return (Ground != null && !string.IsNullOrEmpty(Blueprint))
+				? CountBlueprint(Ground.Objects, Blueprint) : 0;
+		}
+
+		/// <summary>Units of one blueprint in a list of objects, counting a stack of twenty as
+		/// twenty and a thing with no count at all as one.</summary>
+		private static int CountBlueprint(IReadOnlyList<GameObject> Objects, string Blueprint)
+		{
+			int held = 0;
+			if (Objects == null)
+			{
+				return 0;
+			}
+			for (int i = 0; i < Objects.Count; i++)
+			{
+				GameObject item = Objects[i];
+				if (item == null || item.Blueprint != Blueprint)
+				{
+					continue;
+				}
+				held += (item.Count > 0) ? item.Count : 1;
+			}
+			return held;
 		}
 
 		/// <summary>
@@ -156,6 +197,10 @@ namespace ThousandAndFirst
 		/// made for, as itself, of the material it was made of, carrying the count it was stamped
 		/// with. Insertion runs other people's callbacks, so a delivery that counted the CALL
 		/// would pay itself for a bundle that was refused, replaced, merged away, or carried off.
+		/// The destination must still be a dedicated stockpile at that instant too: a handler that
+		/// released the designation leaves exact custody intact, and crediting the settlement's
+		/// stock for material standing in a container it no longer counts is the same lie by a
+		/// different route.
 		/// </summary>
 		internal static bool DepositLanded(GameObject Container, GameObject Item,
 			GameObject Accepted, string Blueprint, int Batch)
@@ -163,6 +208,7 @@ namespace ThousandAndFirst
 			return ReferenceEquals(Accepted, Item) && GameObject.Validate(Item)
 				&& Item.Blueprint == Blueprint && Item.Count == Batch
 				&& GameObject.Validate(Container) && Container.Inventory != null
+				&& IsStockpile(Container)
 				&& Item.Physics != null && ReferenceEquals(Item.Physics.InInventory, Container)
 				&& Item.CurrentCell == null && Container.Inventory.Objects.Contains(Item);
 		}
