@@ -15,7 +15,12 @@ namespace ThousandAndFirst.Harness
 		internal const string SetupVerb = "bounty-fetch-setup", CheckVerb = "bounty-fetch-check";
 		internal const string RevisitVerb = "bounty-fetch-revisit";
 		internal const string Receipt = "r_TAF_ScenarioBountyFetchNative_v1";
-		private static readonly string[] Script = { "stagedigest", SetupVerb, "advance 2400",
+		// Exact phase transitions, not a report store. Each verb requires the phase its
+		// predecessor wrote and then writes its own, so the mandatory revisit step still has an
+		// owner phase it can prove; the report itself travels back as the verb's result.
+		internal const string IntentPhase = "intent", CarriedPhase = "carried";
+		internal const string RevisitedPhase = "revisited";
+		private static readonly string[] Script = { "stagedigest", SetupVerb, "advance 7200",
 			CheckVerb, "advance 1200", RevisitVerb, "stagedigest" };
 		public int ScenarioVerbApiVersion { get { return KingdomScenarioVerbApi.Version; } }
 		public IEnumerable<string> ScenarioVerbs
@@ -36,26 +41,34 @@ namespace ThousandAndFirst.Harness
 				if (verb == SetupVerb)
 				{
 					Require(Eligible(game, zone), "requires fresh stamped marsh, enabled bounty and materials, and no haul hook");
-					game.SetStringGameState(Receipt, "intent");
-					Require(KingdomScenarioDurableState.ProvesExactText(Receipt, "intent"),
-						"bounty fetch intent failed exact readback");
+					game.SetStringGameState(Receipt, IntentPhase);
 				}
-				Require(game != null && KingdomScenarioDurableState.ProvesExactText(Receipt, "intent"),
-					"bounty fetch owner intent absent or torn");
+				string expected = Required(verb);
+				Require(game != null && KingdomScenarioDurableState.ProvesExactText(Receipt, expected),
+					"bounty fetch owner phase absent, out of order or torn");
 				string result = KingdomBountyFetchNativeChecks.Run(verb, game, zone, out bool complete);
 				if (complete)
 				{
+					string written = Written(verb);
 					Require(ReferenceEquals(The.Game, game)
-						&& KingdomScenarioDurableState.ProvesExactText(Receipt, "intent"),
+						&& KingdomScenarioDurableState.ProvesExactText(Receipt, expected),
 						"bounty fetch report owner changed");
-					game.SetStringGameState(Receipt, result);
-					Require(KingdomScenarioDurableState.ProvesExactText(Receipt, result),
-						"bounty fetch report failed exact readback");
+					game.SetStringGameState(Receipt, written);
+					Require(KingdomScenarioDurableState.ProvesExactText(Receipt, written),
+						"bounty fetch phase failed exact readback");
 				}
 				Ok = true; return result;
 			}
 			catch (Exception error) { return KingdomBountyFetchNativeChecks.Fail(error); }
 		}
+
+		/// <summary>The exact phase this verb's predecessor must have left on the receipt.</summary>
+		private static string Required(string verb)
+		{ return (verb == RevisitVerb) ? CarriedPhase : IntentPhase; }
+
+		/// <summary>The exact phase this verb writes once its own report is complete.</summary>
+		private static string Written(string verb)
+		{ return (verb == CheckVerb) ? CarriedPhase : RevisitedPhase; }
 
 		// The shipped carry-sign seam must be absent: a hook that took the haul over would move
 		// the load through a different route entirely, and this fixture would prove nothing about
@@ -83,7 +96,7 @@ namespace ThousandAndFirst.Harness
 	}
 
 	// Void observations only. The real settlement pass is called by the game, never by this
-	// fixture; these two record that it ran and what the notice looked like on each side.
+	// fixture; these two record that it ran on the fixture's own realm and ground.
 	[HarmonyPatch(typeof(KingdomBounty), "OnSettlementPass")]
 	internal static class KingdomBountyFetchPassObserver
 	{

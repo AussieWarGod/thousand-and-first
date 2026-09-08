@@ -13,6 +13,10 @@ namespace ThousandAndFirst.Harness
 	internal sealed class KingdomBountyFetchNativeFixture
 	{
 		internal const string Sentinel = "Vinewafer";
+		internal const string StoreBlueprint = "r_KingdomReservoir";
+		/// <summary>Real drams in a real dedicated vessel; the shipped payout draws the price
+		/// from these and nothing here writes a payment phase, a proved amount or a Paid value.</summary>
+		internal const int StoredDrams = 240;
 		internal static readonly string[] Carried = { "r_KingdomTimber", "r_KingdomCutStone" };
 		internal readonly XRLGame Game;
 		internal readonly Zone Zone;
@@ -21,8 +25,12 @@ namespace ThousandAndFirst.Harness
 		internal readonly GameObject[] Loads = new GameObject[2], Sentinels = new GameObject[2];
 		internal readonly string[] LoadIds = new string[2], SentinelIds = new string[2];
 		internal readonly int[] LoadCounts = new int[2], SentinelCounts = new int[2];
-		internal GameObject Pile, Destination, Notice;
+		internal GameObject Pile, Destination, Notice, Store;
+		internal LiquidVolume StoreWater;
+		internal KingdomSystem System;
+		internal r_KingdomNotice Data;
 		internal string PileId, DestinationId, NoticeId;
+		internal long PostedTick;
 		internal int Price;
 
 		internal KingdomBountyFetchNativeFixture(XRLGame game, Zone zone)
@@ -30,7 +38,7 @@ namespace ThousandAndFirst.Harness
 
 		internal KingdomSystem Build()
 		{
-			KingdomSystem system = Found();
+			KingdomSystem system = System = Found();
 			long tick = Game.TimeTicks;
 			Enroll(system, tick);
 			Pile = Create("Chest"); PlaceObject(Pile);
@@ -52,6 +60,7 @@ namespace ThousandAndFirst.Harness
 					"a sentinel classified as settlement material");
 			}
 			Require(Pile.Inventory.Objects.Count == 4, "fixture pile is not two loads and two sentinels");
+			Fund();
 			Stake(system);
 			Require(Game.TimeTicks == tick, "fixture construction advanced the world clock");
 			return system;
@@ -71,6 +80,30 @@ namespace ThousandAndFirst.Harness
 			KingdomSystem system = Game.GetSystem<KingdomSystem>();
 			Require(system != null && system.Founded, "founding did not publish a founded realm");
 			return system;
+		}
+
+		// The realm's own funded store. This founding runs KingdomFoundingTransaction
+		// .TryFoundFirstWithoutWater (KingdomScenarioFoundingStep.TryFound), and the founding basin
+		// blueprint r_KingdomFirstBasin is stocked Volume="0", so the realm owns no drams at all.
+		// Without this a posted price has nothing to be drawn from: the carry would complete and
+		// then stall unpaid on the board, and the notice would never be retired.
+		private void Fund()
+		{
+			Store = Create(StoreBlueprint);
+			StoreWater = Store.GetPart<LiquidVolume>();
+			Require(StoreWater != null && ReferenceEquals(StoreWater.ParentObject, Store)
+				&& StoreWater.Volume == 0 && StoreWater.MaxVolume >= StoredDrams
+				&& KingdomLiquids.CanReceiveFreshWater(StoreWater),
+				"the fixture store is not an empty receivable vessel");
+			Store.SetIntProperty("KingdomStores", 1);
+			PlaceObject(Store);
+			Require(KingdomLiquids.Fill(StoreWater, "water", StoredDrams) == StoredDrams
+				&& StoreWater.Volume == StoredDrams && KingdomLiquids.HasFreshWater(StoreWater),
+				"the fixture store did not receive its exact fresh water");
+			Require(Store.GetIntProperty("KingdomStores") == 1
+				&& ReferenceEquals(Store.CurrentZone, Zone)
+				&& !KingdomMaterials.IsStockpile(Store) && StoredDrams > KingdomBountyRules.MaxPrice,
+				"the funded store is not a dedicated vessel that can cover the posted price");
 		}
 
 		private void Enroll(KingdomSystem system, long tick)
@@ -104,12 +137,15 @@ namespace ThousandAndFirst.Harness
 		{
 			Cell cell = Clear();
 			Notice = Create(KingdomBounty.NoticeBlueprint);
-			r_KingdomNotice data = Notice.GetPart<r_KingdomNotice>();
+			r_KingdomNotice data = Data = Notice.GetPart<r_KingdomNotice>();
 			Require(data != null, "the notice blueprint carries no notice part");
-			Price = 1;
+			// The loudest lawful price. The reader roll is a real per-day draw shaded by the
+			// price, so a minimum-price notice can stand unread for many in-game days and the
+			// sealed advance budget would decide the verdict instead of the carry.
+			Price = KingdomBountyRules.MaxPrice;
 			data.TaskCode = (int)BountyTask.Fetch;
 			data.Price = Price;
-			data.PostedTick = Game.TimeTicks;
+			data.PostedTick = PostedTick = Game.TimeTicks;
 			data.ScheduleVersion = 2;
 			data.EventStreamId = KingdomBountyRules.NoticeEventStream(Notice.ID);
 			data.LifecycleId = KingdomBountyRules.NoticeEventId(Notice.ID);
@@ -135,8 +171,10 @@ namespace ThousandAndFirst.Harness
 				&& data.PileId == PileId && !string.IsNullOrEmpty(NoticeId),
 				"the fetch mark did not bind the exact notice");
 			Require(!data.LifecycleQuarantined && data.TransferPhase == 0 && data.TransferredUnits == 0
-				&& string.IsNullOrEmpty(data.WorkerName) && data.DueTick == 0L && !data.Done,
-				"the staked notice already carries worker, transfer or completion state");
+				&& string.IsNullOrEmpty(data.WorkerName) && data.DueTick == 0L && !data.Done
+				&& data.Paid == 0 && data.PaymentPhase == 0 && data.CompletionPhase == 0
+				&& data.TerminalPhase == 0 && data.TakePhase == 0,
+				"the staked notice already carries worker, transfer, payment or completion state");
 		}
 
 		private GameObject Stow(GameObject container, string blueprint, int wanted,
