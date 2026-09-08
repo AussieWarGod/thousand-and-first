@@ -255,6 +255,17 @@
   <object Name="r_KingdomFixtureBasketEmpty" Inherits="Woven Basket">
     <tag Name="InventoryPopulationTable" Value="*delete" />
   </object>
+  <!-- The canvas palette's store. Inherits the vanilla Chest wholesale for its Container,
+       Inventory, and already-wired tile, exactly as r_KingdomLarder does, so nothing new has to
+       be taught to read it. Takeable is forced off because vanilla's Chest is carryable and an
+       authored fixture must stay where the map put it - the same reason the Quickstart camp's
+       materials chest forces it (World/KingdomQuickstartBootstrap.Materials.cs). It ships empty
+       and stays empty until somebody carries something into it. -->
+  <object Name="r_KingdomFixtureChestEmpty" Inherits="Chest">
+    <stag Name="Contemporary" />
+    <tag Name="InventoryPopulationTable" Value="*delete" />
+    <part Name="Physics" Takeable="false" />
+  </object>
   <!-- Creed food stores are real, empty containers with category-grounded native silhouettes
        and colorways. They
        inherit the same no-population custody contract; construction never stocks food. EmptyTile

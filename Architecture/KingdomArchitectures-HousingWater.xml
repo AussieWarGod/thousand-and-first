@@ -17,7 +17,21 @@
     <slot Key="floor" Blueprint="DirtPath" Role="floor" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="wall" Blueprint="r_KingdomStructureCanvasWall" Role="wall" Material="canvas" MinTech="hands" Natural="no" />
     <slot Key="bed" Blueprint="r_KingdomFixtureBedrollCanvas" Role="sleep" Material="canvas" MinTech="hands" Natural="no" />
-    <slot Key="storage" Blueprint="r_KingdomFixtureBasketEmpty" Role="storage" Material="canvas" MinTech="hands" Natural="no" />
+    <!-- A tent gets a timber chest, not a reed basket: the first thing a founder wants under
+         canvas is somewhere to put what they carried in, and a chest is the container the
+         Charter's dedication mark already knows how to read.
+
+         The whole first housing rung carries the same chest, and it has to. A renovation must
+         retain every stateful fixture of its source exactly - same cell, blueprint and material
+         (KingdomArchitectureTransitions.xml; DevTests/KingdomSocketTransitionRulesTests.cs
+         ShippedEarlyHousingRoutesCoverEveryExactSizeAndStayCheaper). The tent renovates into hut,
+         mud-brick hut and block hut, and the tent-row into their yard and court forms, so a chest
+         under canvas that became a basket again under a roof would be a store the upgrade
+         destroyed. housing-timber/verdant/fungal/hindren/mud/rubble-hands therefore carry it too,
+         and mudhut, mudhutcourt, blockhut and blockyard each pay the one timber it costs - the
+         same concession those two styles already make for the canvas they do not grow either.
+         Later rungs (stone, marble, stilt, bone, natural) still keep the woven basket. -->
+    <slot Key="storage" Blueprint="r_KingdomFixtureChestEmpty" Role="storage" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="seat" Blueprint="r_KingdomFixtureCushionCanvas" Role="seating" Material="canvas" MinTech="hands" Natural="no" />
   </palette>
 
@@ -28,7 +42,7 @@
     <slot Key="wall" Blueprint="r_KingdomStructureBrinestalkWall" Role="wall" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="door" Blueprint="r_KingdomFixtureDoorTimber" Role="door" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="bed" Blueprint="r_KingdomFixtureBedrollCanvas" Role="sleep" Material="canvas" MinTech="hands" Natural="no" />
-    <slot Key="storage" Blueprint="r_KingdomFixtureBasketEmpty" Role="storage" Material="canvas" MinTech="hands" Natural="no" />
+    <slot Key="storage" Blueprint="r_KingdomFixtureChestEmpty" Role="storage" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="hearth" Blueprint="r_KingdomCivicCampfire" Role="heat" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="seat" Blueprint="r_KingdomFixtureChairTimber" Role="seating" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="table" Blueprint="r_KingdomFixtureTableTimber" Role="work-surface" Material="timber" MinTech="hands" Natural="no" />
@@ -40,7 +54,7 @@
     <slot Key="wall" Blueprint="r_KingdomStructureBrinestalkWall" Role="wall" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="door" Blueprint="r_KingdomFixtureGateBrinestalk" Role="door" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="bed" Blueprint="r_KingdomFixtureBedrollCanvas" Role="sleep" Material="canvas" MinTech="hands" Natural="no" />
-    <slot Key="storage" Blueprint="r_KingdomFixtureBasketEmpty" Role="storage" Material="canvas" MinTech="hands" Natural="no" />
+    <slot Key="storage" Blueprint="r_KingdomFixtureChestEmpty" Role="storage" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="hearth" Blueprint="r_KingdomCivicCampfire" Role="heat" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="seat" Blueprint="r_KingdomFixtureChairTimber" Role="seating" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="table" Blueprint="r_KingdomFixtureTableTimber" Role="work-surface" Material="timber" MinTech="hands" Natural="no" />
@@ -53,7 +67,7 @@
     <slot Key="wall" Blueprint="r_KingdomStructurePetalWall" Role="wall" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="door" Blueprint="r_KingdomFixtureDoorTimber" Role="door" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="bed" Blueprint="r_KingdomFixtureBedrollCanvas" Role="sleep" Material="canvas" MinTech="hands" Natural="no" />
-    <slot Key="storage" Blueprint="r_KingdomFixtureBasketEmpty" Role="storage" Material="canvas" MinTech="hands" Natural="no" />
+    <slot Key="storage" Blueprint="r_KingdomFixtureChestEmpty" Role="storage" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="hearth" Blueprint="r_KingdomCivicCampfire" Role="heat" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="seat" Blueprint="r_KingdomFixtureCushionCanvas" Role="seating" Material="canvas" MinTech="hands" Natural="no" />
     <slot Key="table" Blueprint="r_KingdomFixtureTableTimber" Role="work-surface" Material="timber" MinTech="hands" Natural="no" />
@@ -66,7 +80,7 @@
     <slot Key="wall" Blueprint="r_KingdomStructureMushroomWall" Role="wall" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="door" Blueprint="r_KingdomFixtureGateBrinestalk" Role="door" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="bed" Blueprint="r_KingdomFixtureBedrollCanvas" Role="sleep" Material="canvas" MinTech="hands" Natural="no" />
-    <slot Key="storage" Blueprint="r_KingdomFixtureBasketEmpty" Role="storage" Material="canvas" MinTech="hands" Natural="no" />
+    <slot Key="storage" Blueprint="r_KingdomFixtureChestEmpty" Role="storage" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="hearth" Blueprint="r_KingdomCivicCampfire" Role="heat" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="seat" Blueprint="r_KingdomFixtureCushionCanvas" Role="seating" Material="canvas" MinTech="hands" Natural="no" />
     <slot Key="table" Blueprint="r_KingdomFixtureTableTimber" Role="work-surface" Material="timber" MinTech="hands" Natural="no" />
@@ -79,7 +93,7 @@
     <slot Key="wall" Blueprint="r_KingdomStructureMudWall" Role="wall" Material="mud" MinTech="hands" Natural="no" />
     <slot Key="door" Blueprint="Archway" Role="stone-sill-entry" Material="stone" MinTech="hands" Natural="no" />
     <slot Key="bed" Blueprint="r_KingdomFixtureBedrollCanvas" Role="sleep" Material="canvas" MinTech="hands" Natural="no" />
-    <slot Key="storage" Blueprint="r_KingdomFixtureBasketEmpty" Role="storage" Material="canvas" MinTech="hands" Natural="no" />
+    <slot Key="storage" Blueprint="r_KingdomFixtureChestEmpty" Role="storage" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="seat" Blueprint="r_KingdomFixtureCushionCanvas" Role="seating" Material="canvas" MinTech="hands" Natural="no" />
   </palette>
 
@@ -90,7 +104,7 @@
     <slot Key="wall" Blueprint="Rubble" Role="wall" Material="stone" MinTech="hands" Natural="no" />
     <slot Key="door" Blueprint="Archway" Role="door" Material="stone" MinTech="hands" Natural="no" />
     <slot Key="bed" Blueprint="r_KingdomFixtureBedrollCanvas" Role="sleep" Material="canvas" MinTech="hands" Natural="no" />
-    <slot Key="storage" Blueprint="r_KingdomFixtureBasketEmpty" Role="storage" Material="canvas" MinTech="hands" Natural="no" />
+    <slot Key="storage" Blueprint="r_KingdomFixtureChestEmpty" Role="storage" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="seat" Blueprint="r_KingdomFixtureCushionCanvas" Role="seating" Material="canvas" MinTech="hands" Natural="no" />
   </palette>
 

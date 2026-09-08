@@ -132,8 +132,8 @@
   <building Key="tent" DisplayName="settler's tent (a roof by nightfall)" Blueprint="r_KingdomTent"
             Cost="3" Ticks="900" Styles="all" Category="housing" Plot="S" Adoptable="yes"
             Footprint="3x2" Roof="Soft"
-            Materials="canvas:2" Carries="roof:1" Contents="r_KingdomFurnishings_Dwelling"
-            UpgradesTo="tentrow" UpgradeMaterials="canvas:1,timber:1">
+            Materials="canvas:2,timber:1" Carries="roof:1" Contents="r_KingdomFurnishings_Dwelling"
+            UpgradesTo="tentrow" UpgradeMaterials="canvas:1">
     <skin Key="canvas" ColorString="&amp;y" DetailColor="w" />
     <skin Key="verdant" Style="verdant" ColorString="&amp;g" DetailColor="w" />
     <skin Key="fungal" Style="fungal" ColorString="&amp;m" DetailColor="w" />
@@ -854,12 +854,12 @@
   <building Key="mudhut" DisplayName="mud-brick hut (dug out of the pan and dried in the flat sun)" Blueprint="r_KingdomMudHut" Adoptable="yes"
             Cost="6" Ticks="1800" Styles="common" Category="housing" Plot="S"
             Footprint="4x3"
-            Materials="mud:10,canvas:2" Carries="roof:1" Contents="r_KingdomFurnishings_Dwelling"
+            Materials="mud:10,canvas:2,timber:1" Carries="roof:1" Contents="r_KingdomFurnishings_Dwelling"
             UpgradesTo="mudhutcourt" UpgradeMaterials="mud:6,stone:2" />
   <building Key="mudhutcourt" DisplayName="mud-brick hut and court (a wall, and a strip of shade the street borrows)" Blueprint="r_KingdomMudHutCourt" Adoptable="yes"
             Cost="10" Ticks="2400" Styles="common" Category="housing" Plot="S"
             Footprint="5x4"
-            Materials="mud:16,stone:2,canvas:2" Carries="roof:3" Contents="r_KingdomFurnishings_Dwelling" />
+            Materials="mud:16,stone:2,canvas:2,timber:1" Carries="roof:3" Contents="r_KingdomFurnishings_Dwelling" />
   <building Key="caravanserai" DisplayName="caravanserai (a blank wall to the wind and one gate wide enough for a laden dromad)" Blueprint="r_KingdomCaravanserai" Adoptable="yes"
             Cost="44" Ticks="7200" Styles="common" Category="civic" Plot="L" MinStage="Town"
             Districts="market,none"
@@ -910,12 +910,12 @@
   <building Key="blockhut" DisplayName="block hut (a fallen course squared off and roofed in salvaged plate)" Blueprint="r_KingdomBlockHut" Adoptable="yes"
             Cost="6" Ticks="1800" Styles="eater" Category="housing" Plot="S"
             Footprint="4x3"
-            Materials="scrap:6,stone:4,canvas:2" Carries="roof:1" Contents="r_KingdomFurnishings_Dwelling"
+            Materials="scrap:6,stone:4,canvas:2,timber:1" Carries="roof:1" Contents="r_KingdomFurnishings_Dwelling"
             UpgradesTo="blockyard" UpgradeMaterials="scrap:2,stone:2" />
   <building Key="blockyard" DisplayName="block hut and yard (two courses re-stood at a right angle, and the corner swept)" Blueprint="r_KingdomBlockYard" Adoptable="yes"
             Cost="10" Ticks="2400" Styles="eater" Category="housing" Plot="S"
             Footprint="5x4"
-            Materials="scrap:8,stone:6,canvas:2" Carries="roof:3" Contents="r_KingdomFurnishings_Dwelling" />
+            Materials="scrap:8,stone:6,canvas:2,timber:1" Carries="roof:3" Contents="r_KingdomFurnishings_Dwelling" />
   <building Key="rubblewall" DisplayName="re-stood course (the wall that was already here, put back up)" Blueprint="r_KingdomRubbleWall"
             Cost="6" Ticks="1800" Styles="eater" Category="defense"
             Materials="stone:6,scrap:2" Defence="3"
