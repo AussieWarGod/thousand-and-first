@@ -11,12 +11,20 @@ namespace ThousandAndFirst.Tests
 	/// <para>
 	/// The whole mechanism is a NEGATIVE: the verb must NOT spend the player's action opportunity,
 	/// because unspent energy is the only thing that carries <c>ActionManager.RunSegment</c> into
-	/// <c>XRLCore.PlayerTurn</c>, which is where the per-frame <c>BeforeRenderEvent</c> dispatch
-	/// lives. A well-meant "spend the turn like advance does" edit would restore exactly the bug
-	/// two native runs found - a 2400-turn advance that rendered nothing - and would still pass
-	/// every other suite, because nothing else in the tree can see the omission. These contracts
-	/// pin the omission, the two seams that put the script back in control, and the three places
-	/// the verb's name and bound are restated.
+	/// <c>XRLCore.PlayerTurn</c>, which is where the per-frame render path lives. A well-meant
+	/// "spend the turn like advance does" edit would restore exactly the bug two native runs found
+	/// - a 2400-turn advance that rendered nothing - and would still pass every other suite,
+	/// because nothing else in the tree can see the omission. These contracts pin the omission, the
+	/// two seams that put the script back in control, and the three places the verb's name and
+	/// bound are restated.
+	/// </para>
+	/// <para>
+	/// TWO OF THEM ARE NATIVE-CRASH PINS. A postfix on <c>BeforeRenderEvent.Send</c> made Harmony
+	/// rewrite that method, and the rewrite read its own type's <c>static readonly Instance</c> as
+	/// null: native runs died at <c>RunGame: NullReferenceException</c> in
+	/// <c>BeforeRenderEvent.Send_Patch1</c> before the game loop started, for EVERY persona,
+	/// because Qud <c>PatchAll</c>s a mod assembly at load. So the target is pinned away from that
+	/// method, and the install is pinned lazy - a persona that never yields must run unpatched.
 	/// </para>
 	/// </summary>
 	[TestFixture]
@@ -60,10 +68,87 @@ namespace ThousandAndFirst.Tests
 			// so a second game in the same process must not stack a second resume seam.
 			StringAssert.Contains("if (Hooked) return;", frames);
 			string observer = Read("Harness/KingdomScenarioFrameObserver.cs");
-			StringAssert.Contains("[HarmonyPostfix]", observer);
-			StringAssert.DoesNotContain("[HarmonyPrefix]", observer);
+			StringAssert.Contains("postfix: new HarmonyMethod(seam)", observer);
+			StringAssert.DoesNotContain("prefix:", observer);
+			StringAssert.DoesNotContain("transpiler:", observer);
 			StringAssert.DoesNotContain("__result", observer);
-			StringAssert.Contains("BeforeRenderEvent", observer);
+		}
+
+		/// <summary>
+		/// The frame is counted where a frame is actually DRAWN, and never on
+		/// <c>BeforeRenderEvent.Send</c>: patching that method crashed the game natively, so the
+		/// forbidden target is pinned in BOTH frame-yield files rather than in a comment.
+		/// </summary>
+		[Test]
+		public void TheFrameSeamObservesRenderBaseToBufferAndNeverPatchesBeforeRenderEvent()
+		{
+			string observer = Read("Harness/KingdomScenarioFrameObserver.cs");
+			StringAssert.Contains("internal const string Target = \"RenderBaseToBuffer\";", observer);
+			StringAssert.Contains("AccessTools.Method(typeof(XRLCore), Target,", observer);
+			StringAssert.Contains("new Type[] { typeof(ScreenBuffer) })", observer);
+			foreach (string file in new[] { "Harness/KingdomScenarioFrameObserver.cs",
+				"Harness/KingdomScenarioFrames.cs" })
+			{
+				StringAssert.DoesNotContain("typeof(BeforeRenderEvent)", Read(file));
+				StringAssert.DoesNotContain("HarmonyPatch(", Read(file));
+			}
+		}
+
+		/// <summary>
+		/// The seam is installed by the FIRST yield and by nothing else. Qud calls
+		/// <c>Harmony.PatchAll</c> on a mod assembly at load, so an attribute here would arm the
+		/// patch for every persona in every game - which is how the crash above reached personas
+		/// that never yield a frame. Attributes are therefore absent, the install runs from the
+		/// verb, and the driver that arms the resume seam must not touch it.
+		/// </summary>
+		[Test]
+		public void TheFrameSeamIsInstalledLazilyByTheVerbAndNeverAtModLoad()
+		{
+			string observer = Read("Harness/KingdomScenarioFrameObserver.cs");
+			StringAssert.DoesNotContain("[Harmony", observer);
+			StringAssert.Contains("private static bool Installed;", observer);
+			StringAssert.Contains("if (Installed) return true;", observer);
+			// Set only after Harmony returned, so a failed install is retried, not assumed done.
+			ClassicAssert.Greater(observer.IndexOf("Installed = true;", StringComparison.Ordinal),
+				observer.IndexOf("new Harmony(HarmonyId).Patch(", StringComparison.Ordinal),
+				"the installed flag must follow the patch call, never precede it");
+			string frames = Read("Harness/KingdomScenarioFrames.cs");
+			ClassicAssert.AreEqual(1,
+				Occurrences(frames, "KingdomScenarioFrameObserver.TryInstall(out failure)"),
+				"the frame seam installs from exactly one place");
+			int arm = frames.IndexOf("internal static void ArmDriver()", StringComparison.Ordinal);
+			int run = frames.IndexOf("internal static string Run(", StringComparison.Ordinal);
+			int install = frames.IndexOf("KingdomScenarioFrameObserver.TryInstall(",
+				StringComparison.Ordinal);
+			ClassicAssert.Greater(arm, -1, "the driver entry is missing");
+			ClassicAssert.Greater(install, run, "the install must sit inside the verb");
+			ClassicAssert.Greater(run, arm, "the verb must follow the driver entry");
+		}
+
+		/// <summary>
+		/// The guards have to be REACHABLE. <c>PlayerTurn</c> parks its whole energy loop on
+		/// <c>while (!GameManager.focused)</c> before it renders or fires the end-of-turn
+		/// callbacks, so an unfocused window can reach no seam at all: the verb refuses up front
+		/// rather than hanging, and the deadline that covers a merely slow loop is evaluated in the
+		/// frame seam itself, which is the one place a drawn frame is guaranteed to pass through.
+		/// </summary>
+		[Test]
+		public void TheYieldRefusesUnfocusedAndChecksItsDeadlineInsideTheFrameSeam()
+		{
+			string frames = Read("Harness/KingdomScenarioFrames.cs");
+			StringAssert.Contains("if (!GameManager.focused)", frames);
+			StringAssert.Contains(
+				"internal const string CodeUnfocused = \"taf-frames-window-unfocused\";", frames);
+			StringAssert.Contains(
+				"internal const string CodeNoSeam = \"taf-frames-no-frame-seam\";", frames);
+			int observe = frames.IndexOf("internal static void Observe(", StringComparison.Ordinal);
+			int deadline = frames.IndexOf("Clock.Elapsed.TotalSeconds > DeadlineSeconds",
+				observe, StringComparison.Ordinal);
+			ClassicAssert.Greater(observe, -1, "the frame seam is missing");
+			ClassicAssert.Greater(deadline, observe,
+				"the wall-clock deadline must be evaluated inside the frame seam");
+			// A seam that threw would end the engine's render loop for the rest of the session.
+			StringAssert.Contains("catch (Exception error) { Fail(error); }", frames);
 		}
 
 		/// <summary>

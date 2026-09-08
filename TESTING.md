@@ -1047,39 +1047,55 @@ the code, never to the wording: `taf-advance-malformed-count`, `taf-advance-coun
 `taf-advance-already-running`, `taf-advance-stalled`, `taf-advance-lost-player`.
 
 **`yield-frames <frames>`** is the one verb that spans **rendered frames**, for state that only a
-drawn frame produces — lighting, visibility, anything whose production code answers
-`BeforeRenderEvent`. It exists because `advance` structurally **cannot** deliver a frame: the
-per-frame dispatch lives inside `XRLCore.PlayerTurn`, `ActionManager.RunSegment` enters
-`PlayerTurn` only while the player still holds 1000 energy, and `advance` spends that energy on
-purpose so the engine never gets there. Two native runs proved it — a 2400-turn advance moved the
-clock in about four seconds and rendered **zero** frames. The engine's attended long waits do not
-help either: `RenderBase` returns early for `AutoAct.Setting` `"r"`, `"z"` and `"."`, which is
-every rest and CmdWaitN.
+drawn frame produces — lighting, visibility, anything whose production code answers the engine's
+per-frame dispatch. It exists because `advance` structurally **cannot** deliver a frame: the render
+path lives inside `XRLCore.PlayerTurn`, `ActionManager.RunSegment` enters `PlayerTurn` only while
+the player still holds 1000 energy, and `advance` spends that energy on purpose so the engine never
+gets there. Two native runs proved it — a 2400-turn advance moved the clock in about four seconds
+and rendered **zero** frames. The engine's attended long waits do not help either: `RenderBase`
+returns early for `AutoAct.Setting` `"r"`, `"z"` and `"."`, which is every rest and CmdWaitN.
 
 The mechanism is a deliberate omission: `yield-frames` arms a counter and returns **without
 spending the action opportunity**, so `RunSegment` walks on into `PlayerTurn`, whose loop is the
 ordinary idle render loop a human sees while standing still — render a frame, `Keyboard.IdleWait()`
-for the throttle interval, render again. Two seams put the script back in control, both public
-engine extension points with nothing replaced: a **void Harmony postfix on
-`BeforeRenderEvent.Send`** counts the dispatch the observer actually cares about (only for the
-zone the yield armed on, so another zone's frame is never miscounted), and a callback registered
-through `XRLCore.RegisterOnEndPlayerTurnCallback` — one call per `PlayerTurn` iteration, on the
-game thread — spends the opportunity with the same `PassTurn()` `CmdWait` makes once the count is
-met. Energy below the threshold ends `PlayerTurn`'s loop and `RunSegment`'s, and the next segment
-brings the `BeginTakeActionEvent` the runner resumes on: the **same** continuation `advance`
-already uses. Rows are `yield-frames` (armed) and the bookkeeping `yield-frames-complete`, which
-names the count actually observed. Reason codes: `taf-frames-malformed-count`,
-`taf-frames-count-out-of-range` (the cap is 240 per line), `taf-frames-no-driver`,
-`taf-frames-no-live-game`, `taf-frames-already-running`, `taf-frames-advance-pending`,
-`taf-frames-stalled`, `taf-frames-lost-player`.
+for the throttle interval, render again. Two seams put the script back in control, both void
+observers with nothing replaced: a **Harmony postfix on `XRLCore.RenderBaseToBuffer`** counts one
+real **drawn** frame per call (only for the zone the yield armed on, so another zone's frame is
+never miscounted, and only when `GameManager.bDraw` is zero, because a suppressed draw drew
+nothing), and a callback registered through `XRLCore.RegisterOnEndPlayerTurnCallback` — one call
+per `PlayerTurn` iteration, on the game thread — spends the opportunity with the same `PassTurn()`
+`CmdWait` makes once the count is met. Energy below the threshold ends `PlayerTurn`'s loop and
+`RunSegment`'s, and the next segment brings the `BeginTakeActionEvent` the runner resumes on: the
+**same** continuation `advance` already uses. Rows are `yield-frames` (armed) and the bookkeeping
+`yield-frames-complete`, which names the count actually observed. Reason codes:
+`taf-frames-malformed-count`, `taf-frames-count-out-of-range` (the cap is 240 per line),
+`taf-frames-no-driver`, `taf-frames-no-live-game`, `taf-frames-already-running`,
+`taf-frames-advance-pending`, `taf-frames-stalled`, `taf-frames-lost-player`,
+`taf-frames-window-unfocused`, `taf-frames-no-frame-seam`.
 
-**What it cannot cover.** A wall-clock deadline (120s) catches a render loop that stalls — the
-engine parks `PlayerTurn` on `while (!GameManager.focused)`, so a window that loses focus mid-run
-is a real stall — and an idle-opportunity counter catches a segment loop that never enters
-`PlayerTurn` at all. Neither seam can reach a `RunSegment` inner loop that both skips `PlayerTurn`
-and never spends the turn: nothing fires there, so only the persona's own `TIMEOUT` ends it. That
-is a visible timeout, never a silent pass. **This primitive has not yet run natively**; it is
-registered and compiled, and nothing here is evidence of a pass.
+**The frame seam is installed lazily, and never on `BeforeRenderEvent.Send`.** The first design
+postfixed that method, and Harmony's rewrite of it read the type's own `static readonly Instance`
+as null: native runs died at `RunGame: NullReferenceException` in `BeforeRenderEvent.Send_Patch1`,
+from the very first draw `XRLCore.RunGame` performs. Because Qud calls `Harmony.PatchAll` on a mod
+assembly at load, that crash hit **every** persona, including ones that never yield a frame, so the
+observer now carries no Harmony attribute at all: `KingdomScenarioFrames.Run` installs the postfix
+on the first `yield-frames` of the process and nowhere else, and a run that never yields is an
+unpatched run. An install that fails refuses the verb (`taf-frames-no-frame-seam`) instead of
+arming a yield nothing would count.
+
+**What it cannot cover.** `PlayerTurn` parks its whole energy loop on
+`while (!GameManager.focused && Game.Running)` at the **head** of the loop — upstream of the render
+call and of the end-of-turn callbacks — so an unfocused window draws no frame *and* fires no seam,
+and no in-engine guard can end that stall. (`advance` never meets the park: spending the energy
+keeps `RunSegment` out of `PlayerTurn` altogether, which is why turns advance unattended while
+frames do not.) The verb therefore **refuses to arm** while the window is already unfocused
+(`taf-frames-window-unfocused`); focus lost mid-yield is left to the persona's own `TIMEOUT`. While
+frames do arrive, the wall-clock deadline (120s) is evaluated inside the frame seam itself and
+again in the resume seam, and an idle-opportunity counter catches a segment loop that never enters
+`PlayerTurn` at all. A `RunSegment` inner loop that both skips `PlayerTurn` and never spends the
+turn reaches no seam either: only the persona's `TIMEOUT` ends it. That is a visible timeout, never
+a silent pass. **This primitive has not yet run natively to a pass**; the `BeforeRenderEvent`
+design is the only thing that has run, and it crashed — nothing here is evidence of a pass.
 
 `OK` and `REFUSED` come from each verb's own boolean, never from matching its prose. `REFUSED`
 means the verb declined to act; an ineligible verdict, an unhealthy roster, and an empty anchor
