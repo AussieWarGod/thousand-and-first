@@ -80,15 +80,46 @@ the stamp, and the bundle is proved standing in that exact store with the count 
 with before a single unit is counted. No saved field, wire format, option or public API changes;
 the new state is one object int property.
 
-Census after the stockpile-capacity change:3055 staged C# files;432,723 physical lines;3086 files
-in the generated cold-install inventory. Staged compilation covers3055 sources, baseline and
+Census after the stockpile-capacity change over the merged Kingdom Quickstart tent rows:3056
+staged C# files;433,213 physical lines;3087 files
+in the generated cold-install inventory. Staged compilation covers3056 sources, baseline and
 compatibility symbols, run here by Roslyn 9.0.306 on Linux against the licensed Managed references
-with warnings as errors (baseline compiles3051 of them; the optional-mod bridge is
+with warnings as errors (baseline compiles3052 of them; the optional-mod bridge is
 compatibility-only, and the tracked Hearthpyre 2.2.3 ABI stub compiles clean first). The
 dev-harness modes and the Windows gate did not run for this census.
-Direct `XRL` imports: 1419 files, 0 over the line limit.
-Inventory SHA-256: `fb245d82f14dc9963f1a2291d3eec1dc8e4a47ae98134cb3d9dbbc3f1524764a`.
+Direct `XRL` imports: 1420 files, 0 over the line limit.
+Inventory SHA-256: `36f75a7f2421919a3fdb0fac8d5bb18d9174c2b58788addbff127723153ccc21`.
 No native game run was made for this change; every player-facing claim above is unproven natively.
+
+## Retained unreleased Kingdom Quickstart tent rows
+
+Kingdom Quickstart stakes two `tentrow` lots at founding, west of the supply column at
+(21,9)-(26,12) and (21,13)-(26,16), between the founding proof and the receipt's first advance.
+The pair carries six beds (`Carries="roof:3"` per row), granted free and never debited. Each stake
+is receiptless, so the lots keep the shipped schema-zero calendar: by `KingdomPlotRules.RaiseTicks`
+each row is 1,700 ticks — 1,200 design plus 500 enclosure for the ten edge cells of a 5x2
+footprint — against 1,200 ticks to the day. The prepared-ground mask widens by 48 cells so the camp
+builder bares both lots; each lot is searched before it is staked, so a cut between the two resumes
+by staking only the missing one. No receipt phase changes. The receipt gains one versioned field:
+a receipt this version mints carries the shelter obligation and encodes under the wire tag `q2`,
+while the shipped `q1` shape is still written and read byte for byte and the tag sits inside the
+digest. Only a `q2` receipt owes a stake, so a pre-existing `q1` save keeps its old behaviour at
+every phase, Reserved included, and the completion notice counts the claims standing on the ground
+rather than trusting the branch that ran.
+
+That census:3053 staged C# files;432,593 physical lines;3084 files in the generated
+cold-install inventory. Staged compilation covers3053 sources, baseline and compatibility symbols,
+run here by Roslyn 9.0.306 on Linux against the licensed Managed references with warnings as errors
+(baseline compiles 3049 of them; the optional-mod bridge is compatibility-only).
+Direct `XRL` imports: 1418 files, 0 over the line limit.
+Inventory SHA-256: `d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0`.
+NOT RUN for this delta: the two dev-harness compile modes, the installed-Hearthpyre source/ABI
+step, `Tools/gate.sh` itself, the Windows gate, the developer boot matrix and any native in-game
+run. The 1,700-tick figure is a reading of the raising rule, not of a running plot clock; the
+second lot's preparation on the marsh, canyon and dunes profiles is unproven. A pre-existing save
+resumed at the Reserved phase now skips the stake by its own `q1` wire tag, which is proved by
+source-contract and codec cases rather than by a native resumed save. No human exact-inventory
+semantic review binds this digest.
 
 ## Retained unreleased empty-camp legacy and native water regression
 
@@ -102,7 +133,7 @@ which unblocks exile for any realm at profile revision2 or above. Schema0/1
 bytes remain unchanged; older0.3.1 readers reject schema2,so any next public package needs
 a new version. Public0.3.1/main/tag are unchanged.
 
-Current census after merging `dev`:3052 staged C# files;432,259 physical lines;3083 files in
+Retained empty-camp census after merging `dev`:3052 staged C# files;432,259 physical lines;3083 files in
 the generated cold-install inventory. Direct `XRL` imports: 1417 files, 0 over the line limit.
 Inventory SHA-256: `c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`.
 Complete canonical parent comparison of this branch's own delta proves3045 unchanged/four

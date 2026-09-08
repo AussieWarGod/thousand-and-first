@@ -8,6 +8,66 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
+## Unreleased — Kingdom Quickstart tent rows
+
+- Kingdom Quickstart now stakes two settlers' tent rows at founding, west of the supply
+  column at (21,9)-(26,12) and (21,13)-(26,16), between the founding proof and the receipt's
+  first advance. Without a standing roof nobody joins a settlement, and nothing commissioned
+  rises while the population is zero, so the mode previously opened on a camp that could not
+  proceed.
+- The lots are keyed to the catalogue's `tentrow` design rather than `tent`: 5x2 footprint,
+  three roofs apiece, so the pair is six beds and the first arrivals are not refused for want
+  of room. They are granted free and never debited: opening water, meals and materials are
+  unchanged, and the founding stays unpriced.
+- They are staked, not built. Each stake is receiptless, so the lot keeps the shipped calendar
+  clock the first heart uses. By the raising rule each row is 1,700 ticks — 1,200 for the
+  design and 500 for the enclosure round a 5x2 footprint — against 1,200 ticks to the day, so
+  the rows stand about a day and a half in, at day boundaries spent on claimed ground, with no
+  settler labour. That figure is read from the rule, not yet from a running plot clock.
+- The prepared-ground mask widens by those 48 cells so the camp builder bares both lots; the
+  authored-ground preflight refuses a lot holding a creature, an item, or open liquid. Each lot
+  is searched before it is staked, so a save cut between the two resumes by staking only the
+  one that is missing.
+- Idempotency uses a shelter-only string property and the staked rectangle, never the
+  quickstart grant marker: the grant recovery scan reads every object in the zone and would
+  refuse a foreign value there, aborting every later grant phase on the same boot. An unmarked
+  object is adopted only when it carries our own design key, so a foreign plot stamped on a
+  reserved rectangle is refused before anything is written to it.
+- If zoning or the authored-ground preflight refuses a lot, the bootstrap stops with that
+  reason. It never stamps completion and never publishes a receipt it did not measure. The lots
+  are staked before the stores are granted, so that refusal also costs that world its casks,
+  larder, materials chest and advisor, not just a row.
+- The obligation to stake is versioned onto the receipt rather than assumed of every save. A
+  receipt minted by this version carries a shelter obligation and is written under the wire tag
+  `q2`; the shipped `q1` shape is still written and still read, byte for byte, and the tag is
+  inside the digest, so no edit promotes an old receipt in place. Only a `q2` receipt owes its
+  founding pass a stake.
+- A pre-existing `q1` save therefore continues exactly as it did, at the Reserved phase as at any
+  later one: no stake is attempted on the 48 lot cells the older prepared-ground mask never bared,
+  so a preflight refusal there cannot cost that world its casks, larder, materials chest or
+  advisor. Such a save simply has no rows, and the completion notice counts the claims standing on
+  the ground rather than trusting the branch that ran, so it never promises one. The reservation on
+  a staked lot remains an owned object property registered in the removal-coverage allowlist.
+  Ordinary founding is untouched. Public 0.3.1 is unchanged.
+
+> **Retained tent-row census — exact structural gate passed.** That 3053-file census was line-cap green:
+> 432,593 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
+> imports occur in 1418 files, 0 of them over the line limit. Inventory SHA-256:
+> `d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0`.
+> The generated cold-install inventory contains 3084 files; no new subscription claim.
+> The tent-row delta over the merged `dev` census below is one added and six modified production
+> sources: the quickstart bootstrap's shelter partial, the quickstart rules, the bootstrap, the camp
+> builder, the generated removal coverage, the quickstart receipt model and its wire codec. It
+> compiled clean in the staged baseline (3049 sources) and staged compatibility (3053 sources)
+> modes only, on Linux with the SDK Roslyn against the installed managed assemblies rather than
+> through `Tools/gate.sh`; both engine-free suites run green there (13,834 main/5,123 Portable,zero
+> skips) and the repository audit passes.
+> NOT run for it: the two dev-harness compile modes, the installed-Hearthpyre source step, the
+> Windows gate, the developer boot matrix and any native in-game run. The 1,700-tick raising figure
+> is a reading of the raising rule, not of a running plot clock. The exact-inventory human semantic
+> review is open against this digest; this is not Beta sign-off.
+
 ## Unreleased — empty-camp legacy correction and stockpile capacity
 
 ### Fixed
@@ -85,10 +145,11 @@ below it.
   (the stamping of a stack count included, which is itself a callback seam), the one-room
   adversary in numbers, the stamped bundle being refused outright when its store fills
   while the stamp runs, only what a store actually gained ever being counted, and the
-  landing proof with its narrower withdrawal (only a bundle that reached nobody). Measured on this branch with `dev` merged (which
-  brought the cross-version
-  profile tooling): full suites pass 13,924 main and 5,180 Portable cases, zero skips, and
-  563 tooling tests pass. Both staged compile modes are clean with warnings as errors.
+  landing proof with its narrower withdrawal (only a bundle that reached nobody).
+  Measured on this branch with `dev` merged (which brought the cross-version profile
+  tooling and the Kingdom Quickstart tent rows): full suites pass 13,951 main and 5,187
+  Portable cases, zero skips, and 564 tooling tests pass. Both staged compile modes are
+  clean with warnings as errors.
 - Tools: the smoke launcher accepts every seal schema the game reads (4..6) and the full
   legacy store layout; it previously refused progressed profiles. Maintainer tooling only,
   with no player-visible or runtime effect.
@@ -118,17 +179,19 @@ below it.
   separately gated. Retained failures and bounded native scope are recorded in
   `docs/STATUS.md`.
 
-> **Current unreleased census — exact structural gate passed.** Current 3055-file census is line-cap green:
-> 432,723 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> **Current unreleased census — exact structural gate passed.** Current 3056-file census is line-cap green:
+> 433,213 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
-> imports occur in 1419 files, 0 of them over the line limit. Inventory SHA-256:
-> `fb245d82f14dc9963f1a2291d3eec1dc8e4a47ae98134cb3d9dbbc3f1524764a`.
-> The generated cold-install inventory contains 3086 files; no new subscription claim.
-> It covers the stockpile unit capacity above the retained empty-camp legacy correction: three
+> imports occur in 1420 files, 0 of them over the line limit. Inventory SHA-256:
+> `36f75a7f2421919a3fdb0fac8d5bb18d9174c2b58788addbff127723153ccc21`.
+> The generated cold-install inventory contains 3087 files; no new subscription claim.
+> It covers the stockpile unit capacity above the retained Kingdom Quickstart tent rows merged
+> from `dev` and the empty-camp legacy correction below them: three
 > added production sources (the capacity constants, the survey's material-store reads and the
-> stockpile-room rules), three modified (the delivery, the status line and the porter carry) and
+> stockpile-room rules, which own the room, the intake that respects it and that intake's proofs),
+> three modified (the delivery, the status line and the porter carry) and
 > the regenerated removal-coverage roster. Roslyn 9.0.306 on Linux compiled the staged baseline
-> (3051 sources) and staged compatibility (3055 sources plus the tracked Hearthpyre 2.2.3 ABI
+> (3052 sources) and staged compatibility (3056 sources plus the tracked Hearthpyre 2.2.3 ABI
 > stub) sets clean against the licensed Managed references, warnings as errors. The two
 > dev-harness modes did not run for this delta, no native run was made, and the exact-inventory
 > human semantic review is open against this digest.

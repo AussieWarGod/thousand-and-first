@@ -20,21 +20,29 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
-The stockpile unit capacity over the empty-camp legacy correction reports 3055 staged production
-C# files and 432,723 physical lines.
+The stockpile unit capacity over the Kingdom Quickstart tent rows reports 3056 staged production
+C# files and 433,213 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`fb245d82f14dc9963f1a2291d3eec1dc8e4a47ae98134cb3d9dbbc3f1524764a`. The census reports
-1419 files with direct `XRL` imports; 0 of those exceed the line limit.
+`36f75a7f2421919a3fdb0fac8d5bb18d9174c2b58788addbff127723153ccc21`. The census reports
+1420 files with direct `XRL` imports; 0 of those exceed the line limit.
 
-The delta over the retained draft below is three added production sources — the capacity
-constants (`Core/KingdomRules.MaterialStores.cs`), the survey's material-store reads
+The stockpile delta is three added production sources — the capacity constants
+(`Core/KingdomRules.MaterialStores.cs`), the survey's material-store reads
 (`Growth/KingdomSurvey.11.MaterialStores.cs`) and the stockpile-room rules
 (`Growth/KingdomMaterials.StockpileRoom.cs`, which owns the room, the intake that respects it and
 that intake's proofs) — three modified (the delivery, the status line and the porter carry), and
-the regenerated removal-coverage roster. Each new file owns one responsibility. No saved format, wire or public API changes. The
-exact-inventory semantic review in `docs/STRUCTURE_REVIEW.json` still binds an earlier digest and
-is therefore open for this delta.
+the regenerated removal-coverage roster. The merged tent-row delta below it is one added and six
+modified production sources: the quickstart bootstrap's shelter partial is the addition; the
+quickstart rules, the bootstrap, the camp builder, the generated removal coverage, the quickstart
+receipt model and its wire codec are the modifications. Each new file owns one responsibility. No
+saved format, wire or public API changes for the stockpile delta; the tent-row delta versions the
+quickstart receipt wire tag as recorded in `CHANGELOG.md`. The staged baseline (3052 sources) and
+staged compatibility (3056 sources) sets compile clean under Roslyn 9.0.306 on Linux against the
+licensed Managed references with warnings as errors; the two dev-harness modes, the
+installed-Hearthpyre source step, the Windows gate and any native run did not run for either
+delta. The exact-inventory semantic review in `docs/STRUCTURE_REVIEW.json` still binds an earlier
+digest and is therefore open for both.
 
 ## Retained empty-camp legacy census
 

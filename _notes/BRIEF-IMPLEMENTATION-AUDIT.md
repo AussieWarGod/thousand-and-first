@@ -2,14 +2,27 @@
 
 ## Current stockpile-capacity census — 2026-09-08
 
-**3055** production C# files,432,723 physical lines,1419 direct-XRL,zero cap failures;
-3086 generated cold-install files. Exact digest
-`fb245d82f14dc9963f1a2291d3eec1dc8e4a47ae98134cb3d9dbbc3f1524764a`.
+**3056** production C# files,433,213 physical lines,1420 direct-XRL,zero cap failures;
+3087 generated cold-install files. Exact digest
+`36f75a7f2421919a3fdb0fac8d5bb18d9174c2b58788addbff127723153ccc21`.
 A dedicated stockpile now states how many material units it holds; counting stays whole and only
-intake refuses. Three added production sources, three modified, one regenerated roster. Roslyn
-9.0.306 on Linux compiled the staged baseline (3051 sources) and compatibility (3055 sources)
-sets clean, warnings as errors. No native run, dev-harness mode or exact-inventory human semantic
-review binds it.
+intake refuses. The delivery proves the destination and its room after every engine callback, the
+stamping of a stack count included, and proves the bundle standing in that exact store before it
+counts a unit. Three added production sources, three modified, one regenerated roster, over the
+tent-row census retained below. Roslyn 9.0.306 on Linux compiled the staged baseline (3052
+sources) and compatibility (3056 sources) sets clean, warnings as errors. No native run,
+dev-harness mode or exact-inventory human semantic review binds it.
+
+## Retained Kingdom Quickstart tent-row census — 2026-09-08
+
+**3053** production C# files,432,564 physical lines,1418 direct-XRL,zero cap failures;
+3084 generated cold-install files. Exact digest
+`f5571291a26a1bd1db608f0d1c3f79ed296569bddce4979208cb564f8c22df63`.
+One added source (the bootstrap's shelter partial) and four modified. Structure, doc freshness,
+architecture and the Tools suite pass. Engine-free suites pass13,831 main/5,120 Portable,zero
+skips on Linux .NET9.0.306, and Roslyn 9.0.306 on Linux compiled the staged baseline (3049
+sources) and compatibility (3053 sources) sets clean. No native run, dev-harness mode,
+installed-ABI source step, Windows gate or exact-inventory human semantic review binds it.
 
 ## Retained camp-guide topic census — 2026-09-08
 

@@ -2,15 +2,27 @@
 
 ## Current stockpile-capacity census — 2026-09-08
 
-3055 production C# files;3,086 cold-install files in the generated inventory;
-432,723 physical lines,1419 direct-XRL,zero cap failures. Exact digest
-`fb245d82f14dc9963f1a2291d3eec1dc8e4a47ae98134cb3d9dbbc3f1524764a`.
+3056 production C# files;3,087 cold-install files in the generated inventory;
+433,213 physical lines,1420 direct-XRL,zero cap failures. Exact digest
+`36f75a7f2421919a3fdb0fac8d5bb18d9174c2b58788addbff127723153ccc21`.
 A dedicated stockpile declares its size in material units off a new blueprint tag; the two
 counting paths never read it, so the settlement ledger and every purpose-local debit view agree
 by construction and an over-cap standing save reads exactly what it read before. Only intake
-refuses. No receipt phase, wire, option, grant or verifier predicate changes. Roslyn 9.0.306 on
-Linux compiled the staged baseline (3051 sources) and compatibility (3055 sources) sets clean.
+refuses, and intake counts the outcome it proved rather than the call it made. No receipt phase,
+wire, option, grant or verifier predicate changes. Roslyn 9.0.306 on Linux compiled the staged
+baseline (3052 sources) and compatibility (3056 sources) sets clean.
 No native, dev-harness or human semantic-review evidence binds this digest.
+
+## Retained Kingdom Quickstart tent-row census — 2026-09-08
+
+3053 production C# files;3,084 cold-install files in the generated inventory;
+432,564 physical lines,1418 direct-XRL,zero cap failures. Exact digest
+`f5571291a26a1bd1db608f0d1c3f79ed296569bddce4979208cb564f8c22df63`.
+The quickstart bootstrap stakes two receiptless `tentrow` lots between the founding proof and the
+receipt's first advance, one search per lot before either is staked; nothing here stamps
+completion. Staged baseline (3049 sources) and staged compatibility (3053 sources) compiles bind
+this digest, run on Linux with the SDK Roslyn against the installed managed assemblies rather than
+through `Tools/gate.sh`; no dev-harness mode, Windows gate or native evidence binds it.
 
 ## Retained camp-guide topic census — 2026-09-08
 

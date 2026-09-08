@@ -1,16 +1,38 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current unreleased stockpile unit capacity
+## Current unreleased stockpile unit capacity over the Kingdom Quickstart tent rows
 
-3055 staged sources;432,723 physical lines;1419 direct-XRL;zero cap failures;3086 generated
-cold-stage files. Exact inventory `fb245d82f14dc9963f1a2291d3eec1dc8e4a47ae98134cb3d9dbbc3f1524764a`.
+3056 staged sources;433,213 physical lines;1420 direct-XRL;zero cap failures;3087 generated
+cold-stage files. Exact inventory `36f75a7f2421919a3fdb0fac8d5bb18d9174c2b58788addbff127723153ccc21`.
 A dedicated stockpile now holds a stated number of material units (32 by default, off the new
 `r_KingdomStockpileCapacity` blueprint tag when one is declared); counting stays whole and only
-intake refuses, so no standing save reads lower than it did. Three added production sources,
-three modified, one regenerated removal-coverage roster; no receipt, wire, option, grant or
-verifier change. Roslyn 9.0.306 on Linux compiles the staged baseline (3051) and compatibility
-(3055) sets clean, warnings as errors. No native run, no dev-harness mode and no exact-inventory
-human semantic review bind this digest.
+intake refuses, so no standing save reads lower than it did. The delivery remembers nothing across
+an engine callback: creating the bundle, stamping its count (`Stacker.StackCount`, which sends
+`StackCountChangedEvent`) and inserting it each run other people's handlers, so the destination and
+its room are proved after the creation and again after the stamp, and the bundle is proved standing
+in that exact store with its stamped count before a unit is counted. Three added production
+sources, three modified, one regenerated removal-coverage roster; no receipt, wire, option, grant
+or verifier change. Roslyn 9.0.306 on Linux compiles the staged baseline (3052) and compatibility
+(3056) sets clean, warnings as errors. No native run, no dev-harness mode and no
+exact-inventory human semantic review bind this digest.
+
+## Retained unreleased Kingdom Quickstart tent rows
+
+3053 staged sources;432,593 physical lines;1418 direct-XRL;zero cap failures;3084 generated
+cold-stage files. Exact inventory `d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0`.
+Quickstart stakes two `tentrow` lots at founding, west of the supply column at (21,9)-(26,12) and
+(21,13)-(26,16); six beds between them, receiptless, free, and never debited. No receipt phase,
+option, grant or verifier change. The receipt wire is versioned: a receipt this version mints
+carries the shelter obligation under tag `q2`, the shipped `q1` shape is still written and read
+byte for byte, and only a `q2` receipt owes a stake — so a pre-existing `q1` save resumed at any
+phase, Reserved included, keeps old behaviour and never stakes on ground the old narrower mask
+never bared. Codec and source-contract cases prove that; no native resumed save does.
+Structure, doc freshness, architecture and the Tools suite pass; engine-free suites pass13,834
+main/5,123 Portable,zero skips on Linux .NET9.0.306, and Roslyn 9.0.306 on Linux compiles the
+staged baseline (3049) and compatibility (3053) sets clean. NOT run: the two dev-harness modes,
+the installed-ABI source step, the Windows gate, the developer boot matrix and any native run.
+The 1,700-tick raising figure is a reading of `KingdomPlotRules.RaiseTicks`, not of a plot clock.
+Public0.3.1 unchanged. Never direct-push main/tag, bypass, or self-approve.
 
 ## Retained unreleased camp-guide topic tree
 
