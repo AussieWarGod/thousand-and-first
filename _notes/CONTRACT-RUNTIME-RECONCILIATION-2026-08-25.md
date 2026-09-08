@@ -3,8 +3,8 @@
 ## Current first-basin water-store census — 2026-09-09
 
 3054 production C# files;3,085 cold-install files in the generated inventory;
-432,745 physical lines,1419 direct-XRL,zero cap failures. Exact digest
-`ddb858489bf45062661de62af320befe464184c728c9f2924c35253d07424b65`.
+432,819 physical lines,1419 direct-XRL,zero cap failures. Exact digest
+`bb8531b8c45a7a57f4a9bcfc1c86576a095e37b872e3b1ede82f446ade729e94`.
 The founding heart's first basin becomes the settlement's first water store: the relic slot stamps
 the store dedication in code so the Debug gallery's copy never joins a settlement's accounts, and
 capacity grows with the rung standing over it. No receipt phase, wire, option, grant or verifier

@@ -75,20 +75,20 @@ which unblocks exile for any realm at profile revision2 or above. Schema0/1
 bytes remain unchanged; older0.3.1 readers reject schema2,so any next public package needs
 a new version. Public0.3.1/main/tag are unchanged.
 
-Current census after merging `dev` and the first-basin water store:3054 staged C# files;432,745
+Current census after merging `dev` and the first-basin water store:3054 staged C# files;432,819
 physical lines;3085 files in the generated cold-install inventory. Staged compilation covers3054
 sources, baseline and compatibility symbols (baseline compiles3050 of them; the optional-mod
 bridge is compatibility-only). Direct `XRL` imports: 1419 files, 0 over the line limit.
-Inventory SHA-256: `ddb858489bf45062661de62af320befe464184c728c9f2924c35253d07424b65`.
+Inventory SHA-256: `bb8531b8c45a7a57f4a9bcfc1c86576a095e37b872e3b1ede82f446ade729e94`.
 The seal lane's OWN delta &mdash; four modified production sources, no additions or removals
 &mdash; was proved against integration parent2be6b00 (3045 unchanged) and read in full by root
 and an independent reviewer; the three added and seven modified C# sources plus one option row
 merged from `dev` carry their own review chain. The first-basin water store is a further
 two added production sources (`Growth/KingdomPlotHeartRules.Loader.cs` and
-`Growth/KingdomWaterDebit.OpenReservations.cs`) and twelve modified ones: the founding-heart
+`Growth/KingdomWaterDebit.OpenReservations.cs`) and thirteen modified ones: the founding-heart
 identity and marks shards, the plot-effects furnishing shard, the zone-activation events shard,
-the heart rules table, the ground reading, the ground-protection law, the four water-debit shards
-and the generated removal-coverage table. Root and an independent AI reviewer read that delta;
+the heart rules table, the ground reading, the ground-protection law, the four water-debit shards,
+the lab commission shard and the generated removal-coverage table. Root and an independent AI reviewer read that delta;
 every required finding from the review pass is addressed on this branch. The exact structural
 release gate passes and the exact-inventory human semantic review is open against this merged
 digest. This is source review,not functional acceptance.

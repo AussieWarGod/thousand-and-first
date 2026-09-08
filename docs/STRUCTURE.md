@@ -22,18 +22,18 @@ python3 Tools/check-structure.py --release
 
 The first-basin water store over the empty-camp legacy correction, the camp-guide topic tree, the
 claimed-ground light and the first-settler legibility change together report 3054 staged production
-C# files and 432,745 physical lines.
+C# files and 432,819 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`ddb858489bf45062661de62af320befe464184c728c9f2924c35253d07424b65`. The census reports
+`bb8531b8c45a7a57f4a9bcfc1c86576a095e37b872e3b1ede82f446ade729e94`. The census reports
 1419 files with direct `XRL` imports; 0 of those exceed the line limit.
 
 The delta over the retained draft below is two ADDED production sources
 (`Growth/KingdomPlotHeartRules.Loader.cs`, `Growth/KingdomWaterDebit.OpenReservations.cs`) and
-sixteen modified ones. The first-basin water store owns the two additions plus the founding-heart
+seventeen modified ones. The first-basin water store owns the two additions plus the founding-heart
 identity and marks shards, the plot-effects furnishing shard, the zone-activation events shard,
-the heart rules table, the ground reading, the ground-protection law, the four water-debit shards
-and the generated removal-coverage table; root and an independent AI reviewer read that delta and
+the heart rules table, the ground reading, the ground-protection law, the four water-debit shards,
+the lab commission shard and the generated removal-coverage table; root and an independent AI reviewer read that delta and
 every required finding it raised is addressed here. The seal lane beneath it contributed four
 modified production sources and no additions or removals: the seal profile reader/writer, the
 polity realm-legacy facts writer, the refound-import reader and the realm-exile rule. Root and

@@ -2,16 +2,22 @@
 
 ## Current unreleased first-basin water store
 
-3054 staged sources;432,745 physical lines;1419 direct-XRL;zero cap failures;3085 generated
-cold-stage files. Exact inventory `ddb858489bf45062661de62af320befe464184c728c9f2924c35253d07424b65`.
+3054 staged sources;432,819 physical lines;1419 direct-XRL;zero cap failures;3085 generated
+cold-stage files. Exact inventory `bb8531b8c45a7a57f4a9bcfc1c86576a095e37b872e3b1ede82f446ade729e94`.
 The founding heart's first basin becomes the settlement's first water store: dedicated in code at
 the relic slot, capacity 16/48/160/512/1024 by rung, raised only and never lowered, skipped with
 one ledger line while an open water debit is bound to that vessel, an unsettled arrival water leg
 draws from it, or a routed-input lease holds it, and reconciled once on load and on zone activation
 for worlds built before it. The catch-up resolves the basin only through the anchored-component
 lookup, which needs an a3|/a4| managed layout receipt on the heart's owner: a heart whose owner
-carries an a2 or absent snapshot is NOT reconciled until its next rung restamps the layout. No saved field, wire format, option or verifier
-predicate changes. Roslyn 9.0.306 on Linux compiles the dev-harness baseline and compatibility
+carries an a2 or absent snapshot is NOT reconciled until its next rung restamps the layout. The
+reconciliation is asked only AFTER the seat exchange and only for ground the seated settlement
+claims, and the reconciler refuses unclaimed ground itself, so a second, foreign, seceded or
+exiled city's heart can never be dedicated into the wrong ledger or measured against the wrong
+growth book. A committed water receipt keeps its per-vessel hold while its caller's declared
+compensation window is open (the hall's commission opens one across the bit-debit callbacks), so a
+widen can no longer land between a commit and the rollback that re-proves MaxVolume. No saved
+field, wire format, option or verifier predicate changes. Roslyn 9.0.306 on Linux compiles the dev-harness baseline and compatibility
 sets clean. No native run and no exact-inventory human semantic review bind this digest.
 
 ## Retained unreleased camp-guide topic tree

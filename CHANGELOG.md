@@ -41,6 +41,23 @@ below it.
   recomputing it from the latest profile revision, so a realm whose profile was revised
   after founding can still be exiled. That covers any realm at profile revision 2 or
   above, not only an empty camp. The original foundation receipt is never rewritten.
+- The first basin's capacity reconciliation now runs only AFTER the seat exchange, and only
+  on ground the seated settlement claims. Walking into a second city activated that zone
+  before the seat moved, so the dedication would have landed in the departed city's water
+  accounts and the unsettled-arrival-leg hold would have been read from the departed city's
+  growth book, missing a leg the destination city was holding; a foreign, seceded or exiled
+  realm's standing heart could also have been dedicated as the seated settlement's water
+  store. The reconciler now refuses unclaimed ground itself, so no caller can reach one of
+  those hearts by asking at the wrong moment.
+- A committed water receipt whose caller may still compensate it now keeps its per-vessel
+  hold until that caller closes the window. The hall's commission commits the water, runs the
+  bit-debit callbacks and only then decides whether to roll back; the hold was dropped at
+  commit, so a basin widened inside that span made the rollback refuse — it re-proves
+  `MaxVolume == OriginalMaxVolume` before it restores a dram — turning a recoverable
+  interruption into water the founder could never get back. The window is opt-in and never
+  inferred from a commit: a caller that commits and then finishes its own work, such as a
+  construction whose completed rung widens the very basin it drained, must not hold that
+  vessel or the rung it paid for could never widen anything.
 
 ### Compatibility
 
@@ -70,14 +87,16 @@ below it.
   that a profile revision never re-cuts the current realm foundation receipt).
 - Full suites pass 13,826 main and 5,116 Portable cases, zero skips, up from 13,735 and
   5,109 on the `dev` integration branch. 501 tooling tests pass. With the first-basin water
-  store, the Linux Roslyn 9.0.306 run of the same suites passes 13,840 main and 5,116
+  store, the Linux Roslyn 9.0.306 run of the same suites passes 13,842 main and 5,116
   Portable cases, zero skips (this count is from Linux, not from the licensed Windows run
-  above): 14 new cases covering the capacity ladder against the stage gates and the leak law,
+  above): 16 new cases covering the capacity ladder against the stage gates and the leak law,
   the relic-slot dedication and the gallery's exclusion from it, the existing-authority stamp
   the survey sweep respects, the raise-only reconciler, the announce-once hold and its three
   distinct hold sources, the per-vessel open-reservation registry, the unsettled arrival water
-  leg, the basin's unchanged bare-ground reading and un-strikeable refusal, and the loader's
-  attribute pair and no-thaw contract. The four-mode compile
+  leg, the basin's unchanged bare-ground reading and un-strikeable refusal, the seat-then-
+  claim order the reconciliation is asked in, the committed receipt that keeps its vessel
+  hold across a caller's compensation window, and the loader's attribute pair and no-thaw
+  contract. The four-mode compile
   gate passed the pre-merge bytes and was not re-run for the merged tree.
 - Tools: the smoke launcher accepts every seal schema the game reads (4..6) and the full
   legacy store layout; it previously refused progressed profiles. Maintainer tooling only,
@@ -91,10 +110,10 @@ below it.
   `docs/STATUS.md`.
 
 > **Current unreleased census — exact structural gate passed.** Current 3054-file census is line-cap green:
-> 432,745 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> 432,819 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1419 files, 0 of them over the line limit. Inventory SHA-256:
-> `ddb858489bf45062661de62af320befe464184c728c9f2924c35253d07424b65`.
+> `bb8531b8c45a7a57f4a9bcfc1c86576a095e37b872e3b1ede82f446ade729e94`.
 > The generated cold-install inventory contains 3085 files; no new subscription claim.
 > Root and independent AI reviewer read the seal lane's four changed production sources and
 > the first-basin water store's two added and twelve modified ones, and affected

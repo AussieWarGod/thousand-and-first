@@ -176,10 +176,6 @@ namespace ThousandAndFirst
 				if (!KingdomPlots.RecoverLegacyPlotFinalEffects(this, E.Zone))
 					KingdomLog.Log("plot effects: active-zone legacy recovery refused");
 			});
-			Guard("heart basin capacity", delegate
-			{
-				KingdomPlots.ReconcileBasinCapacity(this, E.Zone);
-			});
 			Guard("hosted authority activation", delegate
 			{
 				if (!KingdomHostedArcology.TryReconciliationRoot(E.Zone,
@@ -225,6 +221,21 @@ namespace ThousandAndFirst
 				if (E.Zone != null && KingdomCreed.SecededHolds(this, E.Zone.ZoneID))
 				{
 					XRL.Messages.MessageQueue.AddPlayerMessage("{{K|This ground isn't yours to keep anymore. (Charter: how your cities hold each other)}}");
+				}
+			});
+			// AFTER the seat, and gated on the seated realm's own claim. The reconciliation
+			// dedicates a store into the SEATED settlement's accounts and reads that settlement's
+			// unsettled growth water legs, so asking before the exchange would answer for the city
+			// the founder just left: a second city's basin could be dedicated and widened against
+			// the wrong ledger, and a hold the destination city is holding would be missed. A
+			// stranger's, a seceded city's or an exiled realm's ground is not in ClaimedZones and
+			// is therefore never reconciled at all.
+			Guard("heart basin capacity", delegate
+			{
+				if (E.Zone != null && ClaimedZones != null
+					&& ClaimedZones.Contains(E.Zone.ZoneID))
+				{
+					KingdomPlots.ReconcileBasinCapacity(this, E.Zone);
 				}
 			});
 			Guard("semantic activation", delegate

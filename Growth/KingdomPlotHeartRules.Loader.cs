@@ -35,6 +35,8 @@ namespace ThousandAndFirst
 			if (system == null || !system.Founded) return;
 			Zone zone = The.ZoneManager?.ActiveZone;
 			if (zone == null) return;
+			// The seat is whatever the save was written with, so the claim gate below reads the
+			// settlement whose accounts the dedication would land in.
 			KingdomSystem.Guard("heart basin capacity", delegate
 			{
 				KingdomPlots.ReconcileBasinCapacity(system, zone);
@@ -62,7 +64,11 @@ namespace ThousandAndFirst
 		/// </para>
 		/// </summary>
 		/// <param name="System">The realm. Null or unfounded reconciles nothing.</param>
-		/// <param name="Z">The zone the heart stands in. Never thawed by this call.</param>
+		/// <param name="Z">The zone the heart stands in. Never thawed by this call. Ground the
+		/// SEATED settlement does not claim reconciles nothing: the dedication writes into the
+		/// seated city's water accounts and the hold reads the seated city's growth book, so a
+		/// foreign, seceded, exiled or not-yet-seated heart is refused rather than guessed at.
+		/// Callers on the activation path must therefore ask AFTER the seat exchange.</param>
 		/// <returns>True when the basin was found and left at or above its rung's capacity.</returns>
 		/// <remarks>
 		/// The basin is resolved only through <c>TryExactAnchoredComponent</c>, which needs an
@@ -76,6 +82,7 @@ namespace ThousandAndFirst
 		{
 			GameObject root;
 			return System != null && System.Founded && Z != null
+				&& System.ClaimedZones != null && System.ClaimedZones.Contains(Z.ZoneID)
 				&& TryStandingHeartRoot(Z, out root)
 				&& ReconcileBasinCapacity(System, root, Z);
 		}

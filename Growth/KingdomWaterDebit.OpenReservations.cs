@@ -31,8 +31,17 @@ namespace ThousandAndFirst
 		private static readonly List<WeakReference<KingdomWaterDebit>> OpenReservations =
 			new List<WeakReference<KingdomWaterDebit>>();
 
-		/// <summary>Whether any live receipt has this exact vessel reserved and not yet committed,
-		/// rolled back or failed. Reference identity only; no vessel is read or touched.</summary>
+		/// <summary>Set while the caller of a COMMITTED receipt has declared that it may still
+		/// compensate it. Opt-in, and never inferred: a caller that commits and then runs its own
+		/// completion work &mdash; a construction whose finished rung widens the very basin it just
+		/// drained &mdash; must NOT hold the vessel, or the rung it paid for could never widen
+		/// anything. Only a caller that will call <c>Rollback</c> after its own callbacks asks for
+		/// this.</summary>
+		private bool CompensationWindowOpen;
+
+		/// <summary>Whether any live receipt still holds this exact vessel: reserved and unsettled,
+		/// or committed inside a caller's declared compensation window. Reference identity only; no
+		/// vessel is read or touched.</summary>
 		internal static bool VesselReserved(LiquidVolume Vessel)
 		{
 			if (Vessel == null) return false;
@@ -41,7 +50,7 @@ namespace ThousandAndFirst
 			{
 				KingdomWaterDebit debit;
 				if (!OpenReservations[i].TryGetTarget(out debit) || debit == null
-					|| debit.State != KingdomWaterDebitState.Reserved)
+					|| !debit.HoldsVessels)
 				{
 					OpenReservations.RemoveAt(i);
 					continue;
@@ -49,6 +58,47 @@ namespace ThousandAndFirst
 				if (debit.BindsVessel(Vessel)) held = true;
 			}
 			return held;
+		}
+
+		/// <summary>
+		/// Whether this receipt is still holding the vessels it bound. Reserved is the ordinary
+		/// answer. Committed counts too while the caller's compensation window is open, because
+		/// <c>Rollback</c> re-proves <c>entry.Vessel.MaxVolume == entry.OriginalMaxVolume</c>
+		/// before it restores a single dram: a resize landing between the commit and the caller's
+		/// compensation turns a recoverable interruption into a refused restoration.
+		/// </summary>
+		private bool HoldsVessels
+		{
+			get
+			{
+				return State == KingdomWaterDebitState.Reserved
+					|| (State == KingdomWaterDebitState.Committed && CompensationWindowOpen);
+			}
+		}
+
+		/// <summary>
+		/// Declares that this receipt's caller may still compensate the debit AFTER it commits, so
+		/// the vessel hold survives the commit instead of being dropped by it.
+		/// <para>
+		/// Opened before <c>Commit</c> and closed by <see cref="EndCompensationWindow"/> at the
+		/// caller's last compensation point, or by the terminal release of whichever
+		/// <c>Rollback</c> settles the receipt. A receipt that is neither reserved nor committed is
+		/// past compensating and opens nothing.
+		/// </para>
+		/// </summary>
+		public void BeginCompensationWindow()
+		{
+			if (State == KingdomWaterDebitState.Reserved
+				|| State == KingdomWaterDebitState.Committed) CompensationWindowOpen = true;
+		}
+
+		/// <summary>Closes the caller's compensation window and drops the hold of a settled
+		/// receipt. Idempotent, and it never drops a hold that is still an open RESERVATION: only
+		/// the reservation's own terminal transition may do that.</summary>
+		public void EndCompensationWindow()
+		{
+			CompensationWindowOpen = false;
+			if (State != KingdomWaterDebitState.Reserved) ReleaseReservation();
 		}
 
 		/// <summary>Records a receipt that came back still reserved, so a resize can see its hold.
@@ -70,6 +120,7 @@ namespace ThousandAndFirst
 		/// Idempotent, and never throws: it runs from terminal finally blocks.</summary>
 		private void ReleaseReservation()
 		{
+			CompensationWindowOpen = false;
 			for (int i = OpenReservations.Count - 1; i >= 0; i--)
 			{
 				KingdomWaterDebit existing;

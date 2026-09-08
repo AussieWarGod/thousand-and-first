@@ -38,7 +38,7 @@ receipts are covered. Four checked-in seals written by writer code byte-identica
 `v0.3.1` live in `DevTests/Fixtures/SealProfile`; their SHA-256s are pinned in
 `DevTests/KingdomSealProfileHistoricalFixtureTests.cs` and are never regenerated.
 Current3054-source production digest
-`ddb858489bf45062661de62af320befe464184c728c9f2924c35253d07424b65`
+`bb8531b8c45a7a57f4a9bcfc1c86576a095e37b872e3b1ede82f446ade729e94`
 passes the structural gate; its exact-inventory human semantic review is open after the `dev`
 merge. Final Windows suites on the merged tree pass13,826 main/5,116 Portable cases,zero
 skips,up from13,735/5,109 on the `dev` integration branch;

@@ -149,7 +149,12 @@ namespace ThousandAndFirst
 				if (State == KingdomWaterDebitState.Failed) ReconcilePhysicalRows();
 				Operating = false;
 				OpenTransactions--;
-				ReleaseReservation();
+				// A committed receipt whose caller declared a compensation window keeps its hold.
+				// Rollback re-proves every bound vessel's MaxVolume before it restores a dram, so a
+				// resize landing between this commit and the caller's compensation would refuse the
+				// restoration for good. Every other terminal state drops the hold here as before.
+				if (State != KingdomWaterDebitState.Committed || !CompensationWindowOpen)
+					ReleaseReservation();
 			}
 		}
 

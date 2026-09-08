@@ -204,7 +204,7 @@ namespace ThousandAndFirst {
 				job.Fault = "The exact patient slot or bearer changed before water commit. Nothing was charged.";
 				return;
 			}
-			debit.Commit();
+			debit.BeginCompensationWindow(); debit.Commit();
 			if (!ValidApplicationTarget(Actor, job, frozen))
 			{
 				debit.Rollback();
@@ -275,8 +275,8 @@ namespace ThousandAndFirst {
 				EnsureJobGovernance(job);
 				return;
 			}
-			keptPhase = (waterExact && bitsExact) ? SpendKeptExact(keptSpend)
-				: KingdomKeptSpendPhase.RefusedClean;
+			debit.EndCompensationWindow(); keptPhase = (waterExact && bitsExact)
+				? SpendKeptExact(keptSpend) : KingdomKeptSpendPhase.RefusedClean;
 			int keptMeasured = (waterExact && bitsExact) ? KeptSpent(keptSpend) : 0;
 			job.KeptPaid = keptMeasured; job.KeptLost = keptMeasured;
 			if (keptPhase == KingdomKeptSpendPhase.Partial)

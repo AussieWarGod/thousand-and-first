@@ -215,7 +215,15 @@ namespace ThousandAndFirst.Tests
 			Ordered(Read(Effects), "KingdomCeremonyHeart.OnRungRaised(",
 				"KingdomSystem.Guard(\"heart basin capacity\", delegate",
 				"ReconcileBasinCapacity(System, Building, Z);");
+			// AFTER the seat exchange, and only for ground the seated realm claims. Before the
+			// exchange the flat fields -- ClaimedZones, Ledger, LifecycleBook -- still answer for
+			// the city the founder just left, so a second city's basin would be dedicated into the
+			// wrong ledger and an unsettled water leg held by the DESTINATION city would be missed.
 			Ordered(Read(Events), "KingdomPlots.RecoverLegacyPlotFinalEffects(this, E.Zone)",
+				"if (TrySeat(E.Zone))",
+				"Guard(\"heart basin capacity\", delegate",
+				"if (E.Zone != null && ClaimedZones != null",
+				"&& ClaimedZones.Contains(E.Zone.ZoneID))",
 				"KingdomPlots.ReconcileBasinCapacity(this, E.Zone);");
 			string catalogue = Read(Buildings);
 			Contains(catalogue, "NOTHING HERE STORES WATER",
@@ -232,7 +240,7 @@ namespace ThousandAndFirst.Tests
 			// for the whole window between a reserved receipt being handed back and its commit.
 			Contains(reservations,
 				"internal static bool VesselReserved(LiquidVolume Vessel)",
-				"debit.State != KingdomWaterDebitState.Reserved",
+				"!debit.HoldsVessels",
 				"ReferenceEquals(Entries[i].Vessel, Vessel)");
 			// Weak references plus a live state re-read, so an abandoned receipt cannot leave a
 			// permanent refusal behind the way a strong per-vessel set would.
@@ -240,12 +248,12 @@ namespace ThousandAndFirst.Tests
 				"List<WeakReference<KingdomWaterDebit>> OpenReservations",
 				"OpenReservations.Add(new WeakReference<KingdomWaterDebit>(this));");
 			Ordered(reservations, "if (!OpenReservations[i].TryGetTarget(out debit) || debit == null",
-				"|| debit.State != KingdomWaterDebitState.Reserved)", "OpenReservations.RemoveAt(i);");
+				"|| !debit.HoldsVessels)", "OpenReservations.RemoveAt(i);");
 			// Registered when reservation returns still reserved.
 			Ordered(Read("Growth/KingdomWaterDebit.cs"),
 				"if (total != debit.Amount)", "return debit.RegisterReservation();");
-			// Dropped on every terminal transition: commit, rollback, a cancelled reservation and
-			// a failed reservation.
+			// Dropped on every terminal transition: commit (unless the caller declared a
+			// compensation window, below), rollback, a cancelled reservation and a failed one.
 			foreach (string path in new[] { "Growth/KingdomWaterDebit.Commit.cs",
 				"Growth/KingdomWaterDebit.RollbackAndVerification.cs" })
 				Ordered(Read(path), "finally", "OpenTransactions--;", "ReleaseReservation();");
@@ -307,6 +315,75 @@ namespace ThousandAndFirst.Tests
 			Contains(Read("Growth/KingdomArchitectureStamper.Components.cs"),
 				"private static bool TryStrikeRemovable(GameObject Item,",
 				"Item.GetIntProperty(KingdomPlots.HeartRelicProperty) == 1)");
+		}
+
+		[Test]
+		public void TheBasinIsReconciledOnlyOnGroundTheSeatedRealmActuallyClaims()
+		{
+			// The seat exchange writes the destination settlement over the flat fields, so a
+			// reconciliation asked before it answers for the wrong city: the dedication lands in
+			// the departed city's water accounts and GrowthLegHoldsBasin reads the departed
+			// city's LifecycleBook, missing a prepared arrival leg the destination city holds.
+			string events = Read(Events);
+			int ownership = events.LastIndexOf("ExternalOwnershipAllows(E.Zone)",
+				StringComparison.Ordinal);
+			int seat = events.IndexOf("if (TrySeat(E.Zone))", StringComparison.Ordinal);
+			int basin = events.IndexOf("Guard(\"heart basin capacity\", delegate",
+				StringComparison.Ordinal);
+			ClassicAssert.GreaterOrEqual(ownership, 0);
+			ClassicAssert.Greater(seat, ownership);
+			ClassicAssert.Greater(basin, seat);
+			ClassicAssert.AreEqual(1, Regex.Matches(events,
+				@"Guard\(""heart basin capacity""").Count);
+			// And the reconciler refuses unclaimed ground itself, so no caller can reach a
+			// foreign, seceded, exiled or not-yet-seated heart by asking at the wrong moment.
+			Ordered(Read(Loader),
+				"internal static bool ReconcileBasinCapacity(KingdomSystem System, Zone Z)",
+				"System != null && System.Founded && Z != null",
+				"System.ClaimedZones != null && System.ClaimedZones.Contains(Z.ZoneID)",
+				"TryStandingHeartRoot(Z, out root)",
+				"ReconcileBasinCapacity(System, root, Z);");
+		}
+
+		[Test]
+		public void ACommittedReceiptStillOpenToCompensationKeepsItsVesselHold()
+		{
+			// The adversary: the hall commits the water, runs the bits callbacks, and only THEN
+			// decides whether to compensate. A widen landing in that span makes Rollback refuse
+			// (AllStillCommitted asserts MaxVolume == OriginalMaxVolume), turning a recoverable
+			// interruption into water the founder can never get back.
+			string reservations = Read(Reservations);
+			Contains(reservations, "private bool CompensationWindowOpen;",
+				"public void BeginCompensationWindow()",
+				"public void EndCompensationWindow()");
+			Ordered(reservations, "private bool HoldsVessels",
+				"State == KingdomWaterDebitState.Reserved",
+				"(State == KingdomWaterDebitState.Committed && CompensationWindowOpen)");
+			Contains(Read("Growth/KingdomWaterDebit.ReservationVerification.cs"),
+				"entry.Vessel != null && entry.Vessel.MaxVolume == entry.OriginalMaxVolume");
+			// Commit drops the hold as before, EXCEPT inside a declared window.
+			Ordered(Read("Growth/KingdomWaterDebit.Commit.cs"), "finally", "OpenTransactions--;",
+				"if (State != KingdomWaterDebitState.Committed || !CompensationWindowOpen)",
+				"ReleaseReservation();");
+			// Opt-in, and never inferred from a commit: a caller that commits and then finishes
+			// its own work -- a construction whose completed rung widens the very basin it just
+			// drained -- must not hold that vessel, or the rung could never widen anything.
+			Contains(reservations, "Opt-in, and never inferred");
+			// Closing the window releases the hold, and a still-open RESERVATION is never dropped
+			// by it: only the reservation's own terminal transition may do that.
+			Ordered(reservations, "public void EndCompensationWindow()",
+				"CompensationWindowOpen = false;",
+				"if (State != KingdomWaterDebitState.Reserved) ReleaseReservation();");
+			string commission = Read("Growth/KingdomLab.Commission.cs");
+			Ordered(commission, "debit.BeginCompensationWindow(); debit.Commit();",
+				"KingdomMaterialDebitResult bitResult = bitDebit.Commit();",
+				"bool waterRestored = debit.Rollback();",
+				"debit.EndCompensationWindow();");
+			// The window closes only below the last compensation the caller can reach.
+			int close = commission.IndexOf("debit.EndCompensationWindow();",
+				StringComparison.Ordinal);
+			ClassicAssert.GreaterOrEqual(close, 0);
+			StringAssert.DoesNotContain("debit.Rollback()", commission.Substring(close));
 		}
 
 		private static string Read(string path)
