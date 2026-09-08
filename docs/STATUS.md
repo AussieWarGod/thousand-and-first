@@ -75,9 +75,12 @@ which unblocks exile for any realm at profile revision2 or above. Schema0/1
 bytes remain unchanged; older0.3.1 readers reject schema2,so any next public package needs
 a new version. Public0.3.1/main/tag are unchanged.
 
-Current census after merging `dev`:3052 staged C# files;432,387 physical lines;3083 files in
-the generated cold-install inventory. Direct `XRL` imports: 1417 files, 0 over the line limit.
-Inventory SHA-256: `2e111b4713e2f275f21dc7e858cd1f3d86d2f067ad3a6debbc3d17712789b767`.
+Current census after merging `dev`:3053 staged C# files;432,460 physical lines;3084 files in
+the generated cold-install inventory. Direct `XRL` imports: 1418 files, 0 over the line limit.
+Inventory SHA-256: `050328383519c937a74ae81d1daf6af4543d80f23c3d4682a243e4a4cbca2d64`.
+Staged compilation covers3053 sources, baseline and compatibility symbols, re-run here by
+Roslyn 9.0.306 on Linux against the licensed Managed references with warnings as errors
+(baseline compiles 3049 of them; the optional-mod bridge is compatibility-only).
 Complete canonical parent comparison of this branch's own delta proves3045 unchanged/four
 modified/no additions or removals against integration parent2be6b00; the three added and
 seven modified C# sources plus one option row merged from `dev` carry their own review chain. Root and
@@ -87,7 +90,9 @@ this merged digest. This is source review,not functional acceptance. The census 
 above are the render-only city-sight branch's, which sits on top of that comparison and adds two
 further modified production sources — the claimed-ground light part and the settlement system's
 end-of-turn dispatch — plus one option row; the retained four-file comparison sentence describes the
-parent delta it was written for and is unchanged.
+parent delta it was written for and is unchanged. The review-response pass adds one further
+production source, `Growth/KingdomCitySightDrawScope.cs`, and rewrites the projection's seat and
+close inside the claimed-ground light part.
 
 Focused38898 passed149 cases,zero skips. That receipt predates the seventh
 KingdomWaterMaintenanceNativeSourceTests case and is retained as measured. The branch adds

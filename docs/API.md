@@ -1519,19 +1519,30 @@ one-way, because unsetting those bits would erase legitimately walked ground.
 
 **City sight: your citizens through your own walls.** The same part carries a second, separately
 gated behaviour (`r_TAF_OptionCitySight`, default **Yes**) that opens the claimed zone for the drawn
-frame only. Inside the light's guard it snapshots the honest visibility map — after computing the
-founder's own `AddVisibility` exactly as the engine is about to — calls `Zone.VisAll()`, and puts the
-snapshot back from a single `XRLCore.RegisterAfterRenderCallback` in the same frame. Nothing is
+frame only. The light's guard registers the part into `BeforeRenderEvent.AfterHandlers`, and the
+projection is taken on that second pass — after every zone part and every object has finished
+writing sight, which is where the honest map is whole. It snapshots there — after computing the
+founder's own `AddVisibility` exactly as the engine is about to — calls `Zone.VisAll()`, and closes
+the zone again from a single `XRLCore.RegisterAfterRenderCallback` in the same frame, under a
+Harmony finalizer on `XRLCore.RenderBaseToBuffer` that guarantees the close even on a frame that
+throws. The close is subtractive: only cells the projection itself opened are shut, so sight another
+hand granted or took away after the snapshot is left alone. Nothing is
 persisted: the snapshot is a `[NonSerialized]` static, and `ExploredMap` is never written, so
 remembered floor stays owned by `ReconcileZone`'s one-shot `Zone.ExploreAll()`.
 
-Three guards make it an eye and not a rule. A frame with `GameManager.bDraw == 11` is abandoned by
+Six guards make it an eye and not a rule. A frame with `GameManager.bDraw == 11` is abandoned by
 the engine before it renders and before after-render callbacks run, so the projection is not taken
 at all — otherwise a whole turn of rest, autoexplore and the lost-sight check would run on an opened
 map, because the between-frames hostile check adds visibility without clearing first. A projection
 still outstanding at the head of the next `BeforeRenderEvent` is *discarded* rather than restored,
 because the engine has already cleared that map. And `KingdomSystem`'s `EndTurnEvent` handler
-restores ahead of every gate it owns, so no turn can begin projected.
+restores ahead of every gate it owns, so no turn can begin projected. The wizard `VisAll` toggle
+stands the projection down entirely, because the engine opens the map for itself immediately after
+this dispatch and an honest close would undo that. A projection already outstanding is never taken
+twice in one frame, because the second reading would take the opened map for the honest one. And the
+Harmony finalizer on `XRLCore.RenderBaseToBuffer` closes the zone on every exit from the draw —
+ordinary return, debug early return, or a thrown render — because the engine's own callback loop has
+no `finally` and stops at the first callback that throws.
 
 Consequences worth knowing: `Cell.Render` sets `CludgeTargetRendered` for a drawn sidebar target, so
 "You have lost sight of X" will not fire while X is drawn through a wall; `RenderSoundEvent` fires
@@ -1543,7 +1554,8 @@ Dimvision 15, Interpolight 210, Radar 228, LitRadar 232, Omniscient 255).
 | Member | Contract |
 |---|---|
 | `KingdomClaimedGroundLight.CitySightOptionId` / `CitySightEnabled` | Gate `r_TAF_OptionCitySight`, default **Yes**, read per frame so switching it off closes the walls on the next frame. |
-| `KingdomClaimedGroundLight.RestoreHonestVisibility()` (internal, not callable by other mods) | Writes the honest snapshot back into the exact zone it was taken from and never touches `ExploredMap`. A no-op with nothing outstanding, so the after-render callback and the end-of-turn backstop can both call it. Documented for readers of the render path only: the member is `internal static`, so it is not part of the supported external surface. |
+| `KingdomClaimedGroundLight.RestoreHonestVisibility()` (internal, not callable by other mods) | Clears only the cells the projection opened, in the exact zone the snapshot was taken from, and never touches `ExploredMap`. It never sets a cell visible, so it cannot write one frame's sight into another or overwrite blindness applied after the snapshot. A no-op with nothing outstanding, so the draw scope, the after-render callback and the end-of-turn backstop can all call it. Documented for readers of the render path only: the member is `internal static`, so it is not part of the supported external surface. |
+| `ThousandAndFirst.KingdomCitySightDrawScope` (internal) | Harmony finalizer on `XRLCore.RenderBaseToBuffer`: the `finally` the engine does not write. Returns `void`, so a thrown render keeps its own exception; its only effect is the subtractive close, so a projection can outlive at most the draw it was taken for. |
 
 ## The city has a history — happenings, ambience, and what the creeds make of you
 

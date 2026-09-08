@@ -79,9 +79,9 @@ baseline and dev-harness compatibility compiles. The shared `DevTests/refs.rsp` 
 `-langversion:latest`, so those compiles are not pinned to C# 7.3; `LangVersion` 7.3 is pinned
 only in `DevTests/Engine*/Probe.csproj` and `Tools/WorkshopSteam/*.csproj`. Retained sections
 below keep their original wording as written at their own checkpoints.
-Staged compatibility compilation runs across 3052 production C# sources, staged baseline across
-3048 (the optional-mod bridge is a compatibility-only source); the generated
-cold-install inventory contains 3083 files. Neither count proves subscriber delivery.
+Staged compatibility compilation runs across 3053 production C# sources, staged baseline across
+3049 (the optional-mod bridge is a compatibility-only source); the generated
+cold-install inventory contains 3084 files. Neither count proves subscriber delivery.
 [Native/focused evidence](/mnt/c/taf-master-growth-native.sP00c6/README.md).
 
 ## Retained real-turn recovery validation

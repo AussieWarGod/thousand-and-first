@@ -17,13 +17,15 @@ namespace XRL.World.ZoneParts
 	///
 	/// City sight rides on top of that, under its own checkbox: for the drawn frame only, the
 	/// claimed zone is shown whole, so citizens behind their own walls are drawn doing what they
-	/// are doing. It is an eye, never a rule. The honest visibility map is taken before the zone is
-	/// opened up and put back inside the same frame, so every predicate that reads
-	/// <c>Cell.IsVisible()</c> &mdash; reify ordering, death witness, hostile perception, rest,
-	/// autoexplore, targeting, Look &mdash; still runs on ordinary line of sight. Light stays at
-	/// 200, which is none of the six tiers the Invisibility mutation reveals at (Darkvision 10,
-	/// Dimvision 15, Interpolight 210, Radar 228, LitRadar 232, Omniscient 255), so invisible
-	/// creatures stay invisible.
+	/// are doing. It is an eye, never a rule. The honest visibility map is read on the render
+	/// dispatch's second pass, after every zone part and every object has had its say
+	/// (D/XRL/World/BeforeRenderEvent.cs:40-53), and the restore only ever closes cells the
+	/// projection itself opened, so every predicate that reads <c>Cell.IsVisible()</c> &mdash;
+	/// reify ordering, death witness, hostile perception, rest, autoexplore, targeting, Look
+	/// &mdash; still runs on ordinary line of sight, and no sight another hand granted or took
+	/// away is written over. Light stays at 200, which is none of the six tiers the Invisibility
+	/// mutation reveals at (Darkvision 10, Dimvision 15, Interpolight 210, Radar 228,
+	/// LitRadar 232, Omniscient 255), so invisible creatures stay invisible.
 	/// </summary>
 	[Serializable]
 	public sealed class KingdomClaimedGroundLight : IZonePart
@@ -65,27 +67,44 @@ namespace XRL.World.ZoneParts
 
 		public override bool HandleEvent(BeforeRenderEvent E)
 		{
-			// The engine cleared the visibility map immediately before this dispatch
-			// (D/XRL/Core/XRLCore.cs:2505-2507), so a projection still outstanding here belongs to
-			// a frame that is already over: the map it was taken from has been wiped, and writing
-			// that stale snapshot back would union two frames of sight rather than restore one.
-			// Drop it instead.
-			DiscardOutstandingProjection();
-			// Presentation only, and only where the founder actually is: a claimed zone the founder
-			// is not standing in pays nothing at all. The option is read here as well as at the
-			// activation that attaches the part, so switching it off goes dark on the next frame
-			// instead of waiting for the visit that removes the part. The founder is checked for
-			// existence first because this runs on the render dispatch: the engine sends
-			// BeforeRenderEvent before it touches the player itself (D/XRL/Core/XRLCore.cs:2507),
-			// and Zone.HasObject dereferences what it is handed (D/XRL/World/Zone.cs:3365-3368),
-			// so a frame drawn with no player must be a frame this part does nothing on rather
-			// than a null reference thrown out of the renderer.
-			if (ParentZone != null
-				&& ThousandAndFirst.KingdomClaimedGround.Enabled
-				&& The.Player != null
-				&& ParentZone.HasObject(The.Player))
+			if (E.Pass == 1)
 			{
-				ParentZone.AddLight(LightLevel.Light);
+				// The engine cleared the visibility map immediately before this dispatch
+				// (D/XRL/Core/XRLCore.cs:2505-2507), so a projection still outstanding here belongs
+				// to a frame that is already over: the map it was taken from has been wiped, and
+				// writing that stale snapshot back would union two frames of sight rather than
+				// restore one. Drop it instead.
+				DiscardOutstandingProjection();
+				// Presentation only, and only where the founder actually is: a claimed zone the
+				// founder is not standing in pays nothing at all. The option is read here as well
+				// as at the activation that attaches the part, so switching it off goes dark on the
+				// next frame instead of waiting for the visit that removes the part. The founder is
+				// checked for existence first because this runs on the render dispatch: the engine
+				// sends BeforeRenderEvent before it touches the player itself
+				// (D/XRL/Core/XRLCore.cs:2507), and Zone.HasObject dereferences what it is handed
+				// (D/XRL/World/Zone.cs:3365-3368), so a frame drawn with no player must be a frame
+				// this part does nothing on rather than a null reference thrown out of the
+				// renderer.
+				if (ParentZone != null
+					&& ThousandAndFirst.KingdomClaimedGround.Enabled
+					&& The.Player != null
+					&& ParentZone.HasObject(The.Player))
+				{
+					ParentZone.AddLight(LightLevel.Light);
+					// Zone parts are dispatched BEFORE the cells and the objects standing on them
+					// (D/XRL/World/Zone.cs:7634-7676), so a snapshot taken here would be taken
+					// ahead of native sight this frame is still owed: IrisdualMolting adds
+					// visibility from the object pass (D/XRL/World/Effects/IrisdualMolting.cs:76)
+					// and so does LeyShifting (D/XRL/World/Parts/Mutation/LeyShifting.cs:93). The
+					// engine's own second pass runs after every pass-1 handler on every part and
+					// every object (D/XRL/World/BeforeRenderEvent.cs:40-53), which is where the
+					// honest map is whole; Blackout uses the same seat
+					// (D/XRL/World/Parts/Blackout.cs:47-67).
+					E.AfterHandlers.Add(this);
+				}
+			}
+			else if (E.Pass == 2)
+			{
 				ProjectCitySight();
 			}
 			return base.HandleEvent(E);
@@ -102,10 +121,15 @@ namespace XRL.World.ZoneParts
 			SettlementId = SettlementId ?? "";
 		}
 
-		/// <summary>Open the claimed zone for the frame about to be drawn, and only for it.</summary>
+		/// <summary>Open the claimed zone for the frame about to be drawn, and only for it. Reached
+		/// from the render dispatch's second pass, so the map read here is the one every native
+		/// contributor has already finished writing.</summary>
 		private void ProjectCitySight()
 		{
 			if (!CitySightEnabled) return;
+			// One projection per frame, whatever the dispatch does. A second would read the already
+			// opened map as the honest one and leave the zone open for good.
+			if (HonestVisibility != null) return;
 			// The load-bearing line. GameManager.bDraw is the engine's debug render-step tracer
 			// (public static int bDraw = 0 at D/GameManager.cs:270, reset at XRLCore.cs:3502, read
 			// only by debug step gates), so ordinary play never reaches 11 and this return is a
@@ -118,6 +142,14 @@ namespace XRL.World.ZoneParts
 			// opened map: rest broken by a hostile three rooms away, autoexplore pathing into
 			// unwalked interiors.
 			if (GameManager.bDraw == 11) return;
+			// Wizard whole-map sight opens the zone for itself immediately after this dispatch
+			// (D/XRL/Core/XRLCore.cs:2514-2518). That is a deliberate engine decision made AFTER
+			// any snapshot this part could take, so the projection stands aside rather than
+			// closing the map back over it.
+			XRLCore core = XRLCore.Core;
+			if (core != null && core.VisAllToggle) return;
+			// Pass 2 is a fresh entry, so nothing established on pass 1 is assumed to still hold.
+			if (ParentZone == null || The.Player == null) return;
 			Cell cell = The.Player.CurrentCell;
 			if (cell == null) return;
 			// The map is read before the sweep, because Zone.AddVisibility dereferences it on its
@@ -134,10 +166,15 @@ namespace XRL.World.ZoneParts
 			EnsureRestoreRegistered();
 		}
 
-		/// <summary>Put the honest map back. Called from the engine's own after-render pass, in the
-		/// same frame the projection was taken, and again at end of turn as a backstop so no turn
-		/// can begin on an opened map. Never touches the explored map: remembered floor is one-way,
-		/// and the projection's activation-time reveal is what owns it.</summary>
+		/// <summary>Close what the projection opened. Called from the draw scope that wraps the
+		/// render (<see cref="ThousandAndFirst.KingdomCitySightDrawScope"/>) so no thrown frame can
+		/// leave the zone open, from the engine's own after-render pass so the honest map is back
+		/// before anything later in the same frame reads it, and again at end of turn as a backstop
+		/// so no turn can begin on an opened map. It is subtractive on purpose: a cell honest sight
+		/// already held is left exactly as the frame left it, so blindness or sight another hand
+		/// granted after the snapshot survives and the restore can never hand out sight of its own.
+		/// Never touches the explored map: remembered floor is one-way, and the projection's
+		/// activation-time reveal is what owns it.</summary>
 		internal static void RestoreHonestVisibility()
 		{
 			bool[] honest = HonestVisibility;
@@ -147,7 +184,8 @@ namespace XRL.World.ZoneParts
 			if (honest == null || zone == null) return;
 			bool[] live = zone.VisibilityMap;
 			if (live == null || live.Length != honest.Length) return;
-			Array.Copy(honest, live, honest.Length);
+			for (int i = 0; i < honest.Length; i++)
+				if (!honest[i]) live[i] = false;
 		}
 
 		/// <summary>A projection whose frame is already over. The map it belonged to has been
@@ -166,7 +204,10 @@ namespace XRL.World.ZoneParts
 		}
 
 		/// <summary>Runs for every frame the engine draws, including frames this part took no part
-		/// in; with nothing outstanding it is a no-op.</summary>
+		/// in; with nothing outstanding it is a no-op. This is the ordinary seat, not the
+		/// guaranteed one: the engine's callback loop has no finally and stops at the first
+		/// callback that throws (D/XRL/Core/XRLCore.cs:2524-2528), which is what
+		/// <see cref="ThousandAndFirst.KingdomCitySightDrawScope"/> exists to cover.</summary>
 		private static void OnAfterRender(XRLCore Renderer, ScreenBuffer Buffer)
 		{
 			RestoreHonestVisibility();

@@ -2,7 +2,7 @@
 
 ## Current camp-guide topic census — 2026-09-08
 
-**3052** production C# files,432,178 physical lines,1417 direct-XRL,zero cap failures;
+**3053** production C# files,432,178 physical lines,1417 direct-XRL,zero cap failures;
 3083 generated cold-install files. Exact digest
 `dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`.
 One engine-free words file plus a five-topic root-option loop on the optional Quickstart guide.

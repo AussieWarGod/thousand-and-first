@@ -16,6 +16,7 @@ namespace ThousandAndFirst.Tests
 	{
 		private const string PartFile = "Growth/KingdomClaimedGroundLight.cs";
 		private const string ProjectionFile = "Growth/KingdomClaimedGroundLight.Projection.cs";
+		private const string DrawScopeFile = "Growth/KingdomCitySightDrawScope.cs";
 		private const string EventsFile = "Core/KingdomSystem.z20.Events.cs";
 		private const string OptionId = "r_TAF_OptionClaimedGroundLight";
 		private const string SightOptionId = "r_TAF_OptionCitySight";
@@ -82,7 +83,12 @@ namespace ThousandAndFirst.Tests
 				Regex.Matches(part, Regex.Escape("XRLCore.RegisterAfterRenderCallback")).Count,
 				"the engine offers no unregister, so exactly one callback is ever added");
 			StringAssert.Contains("if (RestoreRegistered) return;", part);
-			StringAssert.Contains("Array.Copy(honest, live, honest.Length)", part);
+			StringAssert.Contains("if (!honest[i]) live[i] = false;", part);
+			StringAssert.DoesNotContain("Array.Copy(honest", part,
+				"a whole-map write puts back cells the frame legitimately changed after the "
+					+ "snapshot; the close is subtractive");
+			StringAssert.DoesNotContain("live[i] = true", part,
+				"the close may only shut cells the projection opened, never open one");
 			StringAssert.Contains("zone.VisibilityMap", part);
 			StringAssert.DoesNotContain("ExploreAll", part);
 			StringAssert.DoesNotContain("ExploredMap", part);
@@ -96,8 +102,8 @@ namespace ThousandAndFirst.Tests
 		/// <summary>
 		/// Two backstops, and they are deliberately different operations. At the head of the next
 		/// frame the engine has already cleared the map, so an outstanding snapshot is DROPPED —
-		/// writing it back would union two frames of sight. At end of turn nothing has cleared, so
-		/// the honest map is written back, ahead of every gate the handler owns.
+		/// acting on it would be acting on a frame that is over. At end of turn nothing has
+		/// cleared, so the projection is closed, ahead of every gate the handler owns.
 		/// </summary>
 		[Test]
 		public void AnOutstandingProjectionIsDroppedAtRenderAndRestoredBeforeAnyTurnBegins()
@@ -121,6 +127,73 @@ namespace ThousandAndFirst.Tests
 				"the backstop belongs to the end-of-turn dispatch");
 			ClassicAssert.Less(restore, wake,
 				"no turn may begin on an opened map, whatever the master option or ownership say");
+		}
+
+		/// <summary>
+		/// Zone parts are dispatched before the cells and the objects standing on them, so a
+		/// snapshot taken from a zone part's ordinary pass is taken BEFORE native sight the frame
+		/// is still owed (IrisdualMolting and LeyShifting both add visibility from the object
+		/// pass). The projection therefore rides the engine's own second pass, which runs after
+		/// every pass-1 handler on every part and every object, and it stands down entirely where
+		/// a later engine decision would be overwritten instead.
+		/// </summary>
+		[Test]
+		public void TheSnapshotIsTakenAfterEveryNativeVisibilityContributor()
+		{
+			string part = Source(PartFile);
+			StringAssert.Contains("if (E.Pass == 1)", part);
+			StringAssert.Contains("else if (E.Pass == 2)", part);
+			StringAssert.Contains("E.AfterHandlers.Add(this);", part);
+			ClassicAssert.Less(
+				part.IndexOf("E.AfterHandlers.Add(this);", StringComparison.Ordinal),
+				part.IndexOf("ProjectCitySight();", StringComparison.Ordinal),
+				"the projection is reached from the second pass, never from the pass that "
+					+ "runs ahead of every object handler");
+			ClassicAssert.AreEqual(1,
+				Regex.Matches(part, Regex.Escape("ProjectCitySight();")).Count,
+				"one seat for the projection, and it is the second pass");
+			StringAssert.Contains("core.VisAllToggle) return;", part);
+			ClassicAssert.Less(part.IndexOf("core.VisAllToggle) return;", StringComparison.Ordinal),
+				part.IndexOf("ParentZone.VisAll()", StringComparison.Ordinal),
+				"the wizard toggle opens the map itself immediately after this dispatch, so a "
+					+ "projection that would be closed back over it is never taken");
+			StringAssert.Contains("if (HonestVisibility != null) return;", part);
+			ClassicAssert.Less(
+				part.IndexOf("if (HonestVisibility != null) return;", StringComparison.Ordinal),
+				part.IndexOf("HonestVisibility = (bool[])live.Clone()", StringComparison.Ordinal),
+				"a second projection in one frame would read the opened map as the honest one");
+		}
+
+		/// <summary>
+		/// The close may not depend on the engine finishing the frame. XRLCore.RenderBaseToBuffer
+		/// has no finally: it calls Zone.Render and then walks the after-render callbacks in a bare
+		/// loop, so a throwing render — or any callback registered ahead of this mod's — would
+		/// otherwise leave the zone open until the end-of-turn backstop. A Harmony finalizer is the
+		/// finally the engine does not write, and it returns void so it never eats the exception
+		/// the renderer was already raising.
+		/// </summary>
+		[Test]
+		public void TheProjectionIsClosedEvenWhenARenderCallbackThrows()
+		{
+			string scope = Source(DrawScopeFile);
+			StringAssert.Contains(
+				"[HarmonyPatch(typeof(XRLCore), nameof(XRLCore.RenderBaseToBuffer))]", scope);
+			StringAssert.Contains("private static void Finalizer()", scope);
+			StringAssert.Contains(
+				"KingdomClaimedGroundLight.RestoreHonestVisibility();", scope);
+			StringAssert.DoesNotContain("Exception Finalizer", scope,
+				"a finalizer that returns an Exception rewrites what the renderer threw");
+			StringAssert.DoesNotContain("catch", scope,
+				"the draw scope closes the projection; it never swallows a render failure");
+			StringAssert.DoesNotContain("Prefix", scope);
+			StringAssert.DoesNotContain("Postfix", scope,
+				"a postfix does not run on a thrown frame, which is the whole hazard");
+			foreach (string forbidden in ForbiddenEverywhere)
+				StringAssert.DoesNotContain(forbidden, scope);
+
+			string part = Source(PartFile);
+			StringAssert.Contains("KingdomCitySightDrawScope", part,
+				"the part names the scope that guarantees its close");
 		}
 
 		[Test]
