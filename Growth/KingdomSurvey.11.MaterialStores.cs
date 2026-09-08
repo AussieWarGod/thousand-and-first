@@ -39,17 +39,20 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// Units of material one container holds right now, counted by stack so a stack of twenty
-		/// stones reads as twenty. The material vocabulary is WIDE: ordinary materials, rare finds,
-		/// and anything vanilla can take apart into bits, because the settlement spends bits too.
+		/// stones reads as twenty. The material vocabulary is WIDE: materials, rare finds, and
+		/// anything vanilla can take apart into bits, because the settlement spends bits too.
 		/// Most ordinary loot is worth bits, so it DOES occupy stockpile room &mdash; a chest
 		/// dedicated as a stockpile is not also a good loot chest. Only a thing worth no bits and
 		/// no material at all counts as nothing and takes up no room.
 		/// <para>
 		/// PHYSICAL, exactly as <see cref="HeldIn"/> is the physical number for a larder while
-		/// the ordinary-food authority answers the spendable one. A stack another work has leased
-		/// still occupies the room it occupies; if the room number moved when a lease released,
-		/// a chest would appear to grow and shrink for reasons nobody standing in front of it
-		/// could see.
+		/// the ordinary-food authority answers the spendable one. CUSTODY is read here, never
+		/// spend eligibility: the wide material read is <see cref="KingdomMaterials.TryMaterialOf"/>
+		/// and not the ordinary one, because a stack a work has reserved or a porter has marked as
+		/// cargo is still standing in the chest taking up the room it takes up. Were the ordinary
+		/// read used instead, stamping a reservation on an unmoved stack would empty that stack out
+		/// of the count while it sat there, and the chest would appear to grow and shrink for
+		/// reasons nobody standing in front of it could see.
 		/// </para>
 		/// </summary>
 		/// <param name="Container">Any object. Null, or one with no inventory, holds nothing.
@@ -68,7 +71,7 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
-				if (KingdomMaterials.TryOrdinaryMaterialOf(item, out _)
+				if (KingdomMaterials.TryMaterialOf(item, out _)
 					|| KingdomMaterials.TryExoticOf(item, out _)
 					|| KingdomMaterials.TryBitsOf(item, bits))
 				{

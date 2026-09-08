@@ -3,8 +3,8 @@
 ## Current stockpile-capacity census — 2026-09-08
 
 3055 production C# files;3,086 cold-install files in the generated inventory;
-432,658 physical lines,1419 direct-XRL,zero cap failures. Exact digest
-`6ce61a18804652df07b4c7ba7988feb65dde276e3403d39e0413eb2d41be3a78`.
+432,723 physical lines,1419 direct-XRL,zero cap failures. Exact digest
+`fb245d82f14dc9963f1a2291d3eec1dc8e4a47ae98134cb3d9dbbc3f1524764a`.
 A dedicated stockpile declares its size in material units off a new blueprint tag; the two
 counting paths never read it, so the settlement ledger and every purpose-local debit view agree
 by construction and an over-cap standing save reads exactly what it read before. Only intake

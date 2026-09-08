@@ -63,5 +63,40 @@ namespace ThousandAndFirst
 		{
 			return (Declared > 0) ? Declared : DefaultStockpileCapacity;
 		}
+
+		/// <summary>
+		/// How many units one delivery may put into a store in a single insertion: what is left to
+		/// deliver, the room the store had when the delivery chose it, the room it has RIGHT NOW
+		/// re-read off the store itself, and whether the thing being placed stacks at all.
+		/// <para>
+		/// The live reading may only ever LOWER the batch. Creating an item and putting it into an
+		/// inventory both run other people's callbacks, and a handler that drops something into
+		/// this same store mid-delivery has already spent room the entry number still claims;
+		/// paying the rest of the delivery out of the stale number is how a store ends up over its
+		/// stated size. A live reading that is HIGHER is not taken either: this delivery was
+		/// granted the room it was granted, and room something else released while it ran belongs
+		/// to the next delivery to find.
+		/// </para>
+		/// </summary>
+		/// <param name="Remaining">Units still to deliver. Nothing left places nothing.</param>
+		/// <param name="Room">Room the store had when the delivery chose it.</param>
+		/// <param name="LiveRoom">Room proved off the store after the last callback.</param>
+		/// <param name="Stackable">Whether the item stacks. One that does not carries one unit.
+		/// </param>
+		/// <returns>Units for this one insertion, never above either room and never negative.
+		/// </returns>
+		public static int DepositBatch(int Remaining, int Room, int LiveRoom, bool Stackable)
+		{
+			int room = (Room < LiveRoom) ? Room : LiveRoom;
+			if (Remaining < 1 || room < 1)
+			{
+				return 0;
+			}
+			if (!Stackable || Remaining < 2 || room < 2)
+			{
+				return 1;
+			}
+			return (Remaining < room) ? Remaining : room;
+		}
 	}
 }

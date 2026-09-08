@@ -208,7 +208,13 @@ namespace ThousandAndFirst
 				return spilled;
 			}
 
-			/// <summary>Fills one stockpile up to the room it declared, and no further.</summary>
+			/// <summary>
+			/// Fills one stockpile up to the room it declared, and no further. The room is
+			/// re-proved off the destination itself before every single insertion, because
+			/// creation and insertion each run other people's callbacks: a handler that puts
+			/// something into this same store mid-delivery would otherwise be paid for out of a
+			/// number read before it ran, and one store with room for one unit would take four.
+			/// </summary>
 			/// <returns>Units actually placed in it.</returns>
 			private int Deposit(GameObject Container, string Blueprint, int Room,
 				ref int Remaining)
@@ -222,10 +228,20 @@ namespace ThousandAndFirst
 					{
 						break;
 					}
-					int batch = 1;
-					if (item.HasPart("Stacker") && Remaining > 1 && room > 1)
+					// Creation has already run its callbacks, so the destination is proved again
+					// here rather than trusted: the batch is bounded by the room this exact store
+					// has at this instant as well as by the room it was chosen with.
+					int batch = KingdomRules.DepositBatch(Remaining, room,
+						DepositRoomNow(Container), item.HasPart("Stacker"));
+					if (batch < 1)
 					{
-						batch = (Remaining < room) ? Remaining : room;
+						// Nothing is placed and nothing is counted; the units stay in Remaining
+						// and go to the next store with room, or on the ground.
+						item.Obliterate();
+						break;
+					}
+					if (batch > 1)
+					{
 						item.Count = batch;
 					}
 					GameObject accepted = null;
@@ -246,6 +262,17 @@ namespace ThousandAndFirst
 					room -= batch;
 				}
 				return placed;
+			}
+
+			/// <summary>Room in an exact destination that is still a dedicated stockpile, proved
+			/// fresh after a callback rather than remembered. Anything else has no room at all: a
+			/// store another handler destroyed, took the inventory off, or released mid-delivery
+			/// has stopped being a destination, and the delivery walks on rather than putting
+			/// material somewhere the settlement no longer counts.</summary>
+			private static int DepositRoomNow(GameObject Container)
+			{
+				return (GameObject.Validate(Container) && Container.Inventory != null
+					&& IsStockpile(Container)) ? StockpileRoom(Container) : 0;
 			}
 
 			/// <summary>Puts a whole tally away, reporting how much of it ended up on the

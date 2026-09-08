@@ -38,7 +38,9 @@ below it.
   anything that can be taken apart for bits, which is most loot — so a chest you dedicate
   as a stockpile is a poor loot chest. Never weight: the reports keep printing units, now
   with the room beside the tally (`18 of 32 units`). An over-cap stockpile in a standing
-  save reads exactly what it read before.
+  save reads exactly what it read before. The hold is physical rather than spendable: a
+  stack a live work has reserved is still standing in the chest and still counts against
+  the room, so the room never jumps when a reservation is taken or released.
 
 ### Compatibility
 
@@ -69,15 +71,17 @@ below it.
 - Full suites pass 13,826 main and 5,116 Portable cases, zero skips, up from 13,735 and
   5,109 on the `dev` integration branch. 501 tooling tests pass. The four-mode compile
   gate passed the pre-merge bytes and was not re-run for the merged tree.
-- The stockpile unit capacity adds 23 cases in `DevTests/KingdomStockpileCapacityTests.cs`:
+- The stockpile unit capacity adds 34 cases in `DevTests/KingdomStockpileCapacityTests.cs`:
   the capacity fallback and the named ladder, the tag identities, both counting paths
   staying capacity-blind, the physical hold, room never going negative, a delivery filling
   to room then walking on then spilling, a full store never being emptied, fullness said
   once and taken back, the porter, the status line and its physical-aware empty branch,
   every settlement-owned intake path choosing a store with room, a settlement out of room
-  never reported as a missing blueprint, the modder documentation, and the materials
-  roster count. Measured on this branch with `dev` merged (which brought the cross-version
-  profile tooling): full suites pass 13,913 main and 5,180 Portable cases, zero skips, and
+  never reported as a missing blueprint, the modder documentation, the materials
+  roster count, the destination and its room being re-proved after every engine callback,
+  and the one-room adversary in numbers. Measured on this branch with `dev` merged (which
+  brought the cross-version
+  profile tooling): full suites pass 13,924 main and 5,180 Portable cases, zero skips, and
   563 tooling tests pass. Both staged compile modes are clean with warnings as errors.
 - Tools: the smoke launcher accepts every seal schema the game reads (4..6) and the full
   legacy store layout; it previously refused progressed profiles. Maintainer tooling only,
@@ -109,10 +113,10 @@ below it.
   `docs/STATUS.md`.
 
 > **Current unreleased census — exact structural gate passed.** Current 3055-file census is line-cap green:
-> 432,658 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> 432,723 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1419 files, 0 of them over the line limit. Inventory SHA-256:
-> `6ce61a18804652df07b4c7ba7988feb65dde276e3403d39e0413eb2d41be3a78`.
+> `fb245d82f14dc9963f1a2291d3eec1dc8e4a47ae98134cb3d9dbbc3f1524764a`.
 > The generated cold-install inventory contains 3086 files; no new subscription claim.
 > It covers the stockpile unit capacity above the retained empty-camp legacy correction: three
 > added production sources (the capacity constants, the survey's material-store reads and the

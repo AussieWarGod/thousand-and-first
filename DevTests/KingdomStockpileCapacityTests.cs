@@ -95,18 +95,33 @@ namespace ThousandAndFirst.Tests
 		}
 
 		/// <summary>The physical hold classifies with the material vocabulary and nothing else:
-		/// no routed-input lease gate, so a leased stack still occupies the room it occupies and
-		/// the number never jumps when a lease releases (R10). Anything unclassified counts as
-		/// nothing and consumes no room.</summary>
+		/// no routed-input lease gate and no custody gate, so a leased or reserved stack still
+		/// occupies the room it occupies and the number never jumps when a lease releases (R10).
+		/// Anything unclassified counts as nothing and consumes no room.
+		/// <para>
+		/// The counterexample this pins: a purpose-effect debit stamps its witness onto a stack
+		/// that has not moved and has not changed count and is still in the same store
+		/// (<c>Growth/KingdomPurposePortfolio.EffectDebitEvidence.cs</c>), which makes it protected
+		/// cargo and so no longer ORDINARY. Read with the ordinary classifier, twenty stones would
+		/// vanish out of the physical hold while sitting in the chest, and the store would offer
+		/// twenty units of room it does not have.
+		/// </para>
+		/// </summary>
 		[Test]
 		public void PhysicalHoldClassifiesWithoutTheLeaseGate()
 		{
 			string stores = TestMain.ReadRepositoryText(StoresFile);
 			StringAssert.Contains("public static int StockHeldIn(GameObject Container)", stores);
-			StringAssert.Contains("KingdomMaterials.TryOrdinaryMaterialOf(item, out _)", stores);
+			StringAssert.Contains("KingdomMaterials.TryMaterialOf(item, out _)", stores);
 			StringAssert.Contains("KingdomMaterials.TryExoticOf(item, out _)", stores);
 			StringAssert.Contains("KingdomMaterials.TryBitsOf(item, bits)", stores);
 			StringAssert.Contains("held += (item.Count > 0) ? item.Count : 1;", stores);
+			ClassicAssert.IsFalse(stores.Contains("TryOrdinaryMaterialOf"),
+				"the physical hold must count custody, not spend eligibility");
+			ClassicAssert.IsFalse(stores.Contains("HasProtectedCargoEvidence"),
+				"a reserved stack still stands in the store and still takes up its room");
+			ClassicAssert.IsFalse(stores.Contains("TryProveEmpty"),
+				"a stack carrying custody evidence still takes up its room");
 			ClassicAssert.IsFalse(stores.Contains("CanUseMaterial"),
 				"the physical hold must not apply the routed-input lease gate");
 			ClassicAssert.IsFalse(stores.Contains("TallyAvailableHeld"),
@@ -149,9 +164,59 @@ namespace ThousandAndFirst.Tests
 				"Tally.Add(Material, placed + spilled);");
 			string deposit = Between(put, "private int Deposit(GameObject Container", "return placed;");
 			StringAssert.Contains("while (Remaining > 0 && room > 0)", deposit);
-			StringAssert.Contains("batch = (Remaining < room) ? Remaining : room;", deposit);
+			StringAssert.Contains("int batch = KingdomRules.DepositBatch(Remaining, room,", deposit);
 			StringAssert.Contains("room -= batch;", deposit);
 			StringAssert.Contains("NoStack: true", deposit);
+		}
+
+		/// <summary>The delivery never trusts a remembered room across an engine callback. It
+		/// creates the item, RE-PROVES this exact destination and its room, and only then chooses
+		/// a batch; a destination that stopped being a dedicated stockpile has no room at all, and
+		/// an item created for a store that filled underneath it is discarded rather than forced
+		/// in. Nothing already stored is touched on that path.</summary>
+		[Test]
+		public void DepositReProvesTheDestinationAfterEveryCallback()
+		{
+			string put = PutSource();
+			string deposit = Between(put, "private int Deposit(GameObject Container",
+				"private static int DepositRoomNow(");
+			AssertOrdered(deposit,
+				"GameObject item = GameObject.Create(Blueprint);",
+				"int batch = KingdomRules.DepositBatch(Remaining, room,",
+				"DepositRoomNow(Container), item.HasPart(\"Stacker\"));",
+				"if (batch < 1)",
+				"item.Obliterate();",
+				"break;",
+				"Container.Inventory.AddObject(item, null,",
+				"placed += batch;",
+				"Remaining -= batch;",
+				"room -= batch;");
+			StringAssert.Contains(
+				"GameObject.Validate(Container) && Container.Inventory != null", put);
+			StringAssert.Contains("&& IsStockpile(Container)) ? StockpileRoom(Container) : 0;",
+				put);
+		}
+
+		/// <summary>The one-room adversary, in numbers. A store is chosen with room for four and
+		/// something running inside the delivery's own creation or insertion callback fills it to
+		/// one: the next insertion carries one unit, not four. Filled outright, it carries none.
+		/// Room released underneath the delivery is not taken either &mdash; it belongs to the
+		/// next delivery to find it.</summary>
+		[TestCase(9, 4, 4, true, 4)]
+		[TestCase(9, 4, 1, true, 1)]
+		[TestCase(9, 4, 0, true, 0)]
+		[TestCase(9, 4, -3, true, 0)]
+		[TestCase(9, 0, 4, true, 0)]
+		[TestCase(2, 4, 3, true, 2)]
+		[TestCase(9, 4, 9, true, 4)]
+		[TestCase(9, 4, 4, false, 1)]
+		[TestCase(1, 4, 4, true, 1)]
+		[TestCase(0, 4, 4, true, 0)]
+		public void DepositBatchNeverExceedsTheRoomProvedRightNow(int remaining, int room,
+			int live, bool stackable, int expected)
+		{
+			ClassicAssert.AreEqual(expected,
+				KingdomRules.DepositBatch(remaining, room, live, stackable));
 		}
 
 		/// <summary>A full store is skipped and nothing already in it is touched: no Destroy, no
@@ -164,9 +229,11 @@ namespace ThousandAndFirst.Tests
 				"a refused delivery must never disturb what is already stored");
 			ClassicAssert.AreEqual(0, Occurrences(put, "RemoveObject("),
 				"a refused delivery must never disturb what is already stored");
-			// The one Obliterate is the pre-existing discard of an item this method just created
-			// when the caller has no ground to drop on. It never touches stored goods.
-			ClassicAssert.AreEqual(1, Occurrences(put, "item.Obliterate();"));
+			// Both Obliterates discard an item this method just created and never placed: one
+			// when the caller has no ground to drop on, one when the destination filled up
+			// underneath the delivery between the creation and the insertion. Neither touches
+			// stored goods, and neither decrements what is still to deliver.
+			ClassicAssert.AreEqual(2, Occurrences(put, "item.Obliterate();"));
 		}
 
 		/// <summary>STANDARDS 7b: said once when the store fills, taken back the moment it has
@@ -347,6 +414,11 @@ namespace ThousandAndFirst.Tests
 			// occupies stockpile room, which is most loot.
 			StringAssert.Contains("anything vanilla can take apart into bits", modding);
 			StringAssert.Contains("junk in it is counted against the capacity", modding);
+			// And that the hold is custody rather than spend eligibility, so a modder reading it
+			// does not expect a reserved stack to free the room it is standing in.
+			StringAssert.Contains("still counts against the", modding);
+			StringAssert.Contains("the room never jumps when a reservation is taken or released",
+				modding);
 		}
 
 		private static string PutSource()

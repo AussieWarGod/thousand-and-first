@@ -334,7 +334,9 @@ can spend: ordinary materials, rare finds, **and anything vanilla can take apart
 which is most ordinary loot, a spare rifle included, because the settlement spends bits too. Only
 a thing worth no bits and no material at all takes up no room. So a dedicated stockpile is a poor
 loot chest: junk in it is counted against the capacity, and material deliveries will spill onto
-the ground once it is full.
+the ground once it is full. The hold is **physical, not spendable**: a stack a work has reserved
+or a porter has marked as cargo is still standing in the store, so it still counts against the
+capacity and the room never jumps when a reservation is taken or released.
 
 A charter may carry material as well as water, per caravan. Charter entries live under
 `<kingdomdeals Schema="1">` in `KingdomDeals.xml`:
