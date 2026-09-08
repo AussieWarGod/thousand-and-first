@@ -72,6 +72,53 @@ receipt row order or equivalent receipt spelling cannot make unchanged content n
 No record is cleared or overwritten. `-Submit`, `-Inspect`, `-Verify` and `-Finalize` are mutually
 exclusive. Shared launcher inputs, including `ChangeNotePath`, remain required in every mode.
 
+## Invocation from release.yml
+
+`.github/workflows/release.yml` drives this launcher on the attended Steam host. What it does is
+fixed, so a reader of an evidence directory can tell a pipeline attempt from a hand-run one.
+
+Layout per run, under `C:\taf-release\run-<run id>-<attempt>\`:
+
+| Path | Contents |
+| --- | --- |
+| `inputs\plan.json`, `inputs\change-note.md` | `-PlanPath` and `-ChangeNotePath` |
+| `inputs\handoff.env` | `PLAN_SHA` and `RECEIPT_SHA` for `-PlanSHA` and `-ReceiptSHA` |
+| `package\TAF-<version>-<mode>` | the native copy the plan's `contentPath` names |
+| `evidence-probe`, `evidence-probe2`, `evidence-check`, `evidence-submit`, `evidence-verify-<n>` | one fresh empty `-EvidenceRoot` each |
+| `logs\`, `artifact\` | raw child console output, and a redacted copy of it |
+
+The package is built on WSL ext4 and then copied to that native path, because the packager refuses
+every `/mnt/<drive>` destination on this host: DrvFs reports mode 777 without metadata, so the
+packager's shared-writable-ancestor, `700` scratch and `644`/`755` file-mode assertions cannot
+hold there. The copy is verified — receipt digest, sorted inventory equality and a full
+`sha256sum -c` over the copied tree — before the plan is generated against it. That is what the
+0.3.1 release did by hand.
+
+The launcher is invoked as
+`powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -File <\\wsl.localhost\...\Tools\workshop-steam-upload.ps1>`,
+so `$PSScriptRoot` — and therefore `WorkshopSteam\sdk.lock.json` and the helper projects — resolves
+inside the run's fresh WSL clone at the tagged commit. Plan paths stay canonical
+`/mnt/<lowercase drive>/...`, as `Convert-PlanPath` requires.
+
+Sequence and the pipeline's acceptance rules:
+
+1. A read-only `workshop-steam-probe.ps1` run **before** the multi-hour licensed gate, so an absent
+   or wrong Steam session fails in seconds and never reaches an attempt.
+2. Launcher with **no** action switch. The pipeline requires exit 0 and `checked_not_submitted`.
+3. A second `steam.exe` process check and a second read-only probe, immediately before submission.
+4. Launcher with `-Submit`. The pipeline requires exit 0, `SubmittedUnverified` and
+   `metadataMatches=true`. Every other exit code is mapped to its meaning from the table below and
+   fails the job.
+5. A separate job runs `-Verify` afterwards. It writes no records, so re-running it is safe.
+
+The pipeline never retries and never runs `-Finalize`; finalization stays an operator step from the
+retained run directory. `-Inspect` is not used by the pipeline: its exit 7 is informational.
+
+Two consequences worth stating plainly. **CI attempts consume the same 64-attempt lifetime ceiling
+per item** as hand-run ones. And **a Qud update that changes either SDK DLL fails every pipeline
+run closed** until `sdk.lock.json` is deliberately re-pinned and the release check's preflight is
+re-verified.
+
 ## Fixed registry root
 
 The publisher admits exactly one release-state root, compiled into

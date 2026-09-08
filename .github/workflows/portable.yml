@@ -2,6 +2,11 @@ name: Portable checks
 
 on:
   push:
+    # Release tags run .github/workflows/release.yml, which repeats this exact job as its
+    # `portable-tests` matrix. Skipping them here avoids a duplicate run on every tag push.
+    tags-ignore:
+      - 'v*'
+      - 'staging-v*'
   pull_request:
   workflow_dispatch:
 
