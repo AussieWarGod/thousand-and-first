@@ -27,6 +27,19 @@ below it.
   being exiled, or switching the option off takes the part off on the next visit; explored
   floor stays explored, because unsetting it would erase legitimately walked ground. No
   saved field, wire or public API change, and a save loaded without the mod is dark again.
+- Reed-at-Dawn and the other camp guides now answer five fixed questions as well as giving
+  the opening inventory: founding and claimed ground; commissioning, materials and hands;
+  water and the stores; who may arrive and what a roof has to do with it; petitions and raids.
+  The words live in one engine-free file and are proved without a game.
+- The guide says in his own voice that he is not on the roll and passes through, that hands
+  come off the roll, and that nobody new stays unless a roof stands with room left under it.
+  He never states the roll's current size, so every word stays true whether or not a camp is
+  seeded with founding settlers. No answer promises an arrival, a pair of hands or a finished
+  building, because the settlement refuses all three until a roof stands with room under it
+  and somebody lives there.
+- No receipt phase, wire, save field, option, grant or advisor verifier predicate changes.
+  A guide is built once, with the world: existing Quickstart saves keep the one-node guide,
+  and only worlds created after this change get the topics. Public0.3.1 is unchanged.
 - The first guest now announces itself. Publishing the first-guest correspondence writes one
   player message naming the kingdom and pointing at the Charter, said once per opportunity because
   a standing candidate makes the next arrival pass return before it reaches that publication.
@@ -43,16 +56,16 @@ below it.
   state so a quarantined candidate cannot read as a standing question. No save format, option, or
   arrival-interval change.
 
-> **Current unreleased census — exact structural gate passed.** Current 3051-file census is line-cap green:
-> 432,085 physical lines,zero files at or above300; direct `XRL`
+> **Current unreleased census — exact structural gate passed.** Current 3052-file census is line-cap green:
+> 432,239 physical lines,zero files at or above300; direct `XRL`
 > imports occur in 1417 files, 0 of them over the line limit. Inventory SHA-256:
-> `1b8eed811fdffd3380a9e8ecc46a547cff27a9d022ff193e934821a83c254ba8`.
-> The generated cold-install inventory contains 3082 files; no new subscription claim.
-> The repository tooling suites pass. Linux dotnet 9.0.306 against the licensed install runs the
-> full source suite green at 13,724 cases and the portable kernel at 5,098 cases, zero skips in
-> both, and Roslyn 9.0.306 on Linux compiled the staged baseline (3047 sources) and staged
-> compatibility (3051 sources plus the tracked Hearthpyre 2.2.3 ABI stub) sets clean
-> against the licensed Managed references, warnings as errors. The two dev-harness modes, the Windows gate and
+> `cf01fcc9993de9cee88d8ec6dc17dd8111eb37375f546d08850ac957fb372cad`.
+> The generated cold-install inventory contains 3083 files; no new subscription claim.
+> Engine-free suites pass13,735 main and5,109 Portable cases,zero skips, and the repository
+> tooling suites pass501 tests. Roslyn 9.0.306 on Linux compiled the
+> staged baseline (3048 sources) and staged compatibility (3052 sources plus the tracked
+> Hearthpyre 2.2.3 ABI stub) sets clean against the
+> licensed Managed references, warnings as errors. The two dev-harness modes, the Windows gate and
 > any native run did NOT happen for this delta, and the exact-inventory human semantic review is
 > open against the new digest. This is not Beta sign-off.
 

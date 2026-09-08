@@ -51,17 +51,17 @@ with no roof at all the line names the settler's tent and its bill, and promises
 actually buys, because the first guest's citizenship gate never reads lodging. No saved fields,
 formats, options or arrival intervals change; public0.3.1 is unchanged.
 
-Current census:3051 staged C# files;432,085 physical lines;3082 files in the generated
-cold-install inventory. Staged compilation covers3051 sources, baseline and compatibility symbols,
+Current census:3052 staged C# files;432,239 physical lines;3083 files in the generated
+cold-install inventory. Staged compilation covers3052 sources, baseline and compatibility symbols,
 run here by Roslyn 9.0.306 on Linux against the licensed Managed references with warnings as errors
-(baseline compiles 3047 of them; the optional-mod bridge is compatibility-only, and the
+(baseline compiles 3048 of them; the optional-mod bridge is compatibility-only, and the
 tracked Hearthpyre 2.2.3 ABI stub compiles clean first). The dev-harness modes and the Windows gate did
 not run for this census.
-Inventory SHA-256: `1b8eed811fdffd3380a9e8ecc46a547cff27a9d022ff193e934821a83c254ba8`.
+Inventory SHA-256: `cf01fcc9993de9cee88d8ec6dc17dd8111eb37375f546d08850ac957fb372cad`.
 Direct `XRL` imports: 1417 files, 0 over the line limit.
-Linux dotnet 9.0.306 against the licensed install passes the full source suite at 13,724 cases and
-the portable kernel at 5,098 cases, zero skips in both, and passes the doc, structure and tooling
-audits. No native in-game run and no human semantic review bind this digest.
+Linux dotnet 9.0.306 against the licensed install passes the full source suite at 13,735 cases and
+the portable kernel at 5,109 cases, zero skips in both, and passes the doc, structure and
+tooling audits. No native in-game run and no human semantic review bind this digest.
 
 ## Unreleased master-growth resume correction, case28d.5
 
@@ -79,12 +79,12 @@ completion once and unchanged repeat. Strict raw log/15journalrows and receipt-o
 stop pass. Comparison83480 matches all3181 production/Harness C# bytes. This is actual
 engine-turn coverage in a synthetic fixture, not ordinary play or save/load acceptance.
 
-Retained claimed-ground census:3051 staged C# files;432,024 physical lines;3082 files in the
-generated cold-install inventory. Staged compilation covered3051 sources, baseline and
-compatibility symbols, run by Roslyn 9.0.306 on Linux against the licensed Managed references
-with warnings as errors (baseline compiled 3047 of them; the optional-mod bridge is
-compatibility-only). The dev-harness modes and the Windows gate did not run for that census.
-Inventory SHA-256: `fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`.
+Retained camp-guide census:3052 staged C# files;432,178 physical lines;3083 files in the generated
+cold-install inventory. Staged compilation covered3052 sources, baseline and compatibility symbols,
+run here by Roslyn 9.0.306 on Linux against the licensed Managed references with warnings as errors
+(baseline compiled 3048 of them; the optional-mod bridge is compatibility-only). The dev-harness
+modes and the Windows gate did not run for that census.
+Inventory SHA-256: `dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`.
 Direct `XRL` imports: 1417 files, 0 over the line limit.
 
 Retained master-growth census:3049 staged C# files;431,893 physical lines;3080 files in the
@@ -97,8 +97,8 @@ Focused86313 passes38 engine-free cases, including modern/historical open-arriva
 cuts through retirement, candidate continuation, canonical round-trips, exact child ownership,
 recorded debt, pause overlap and arithmetic refusal. Candidate fixtures use supported
 semantic version1; no production guard was relaxed to pass them. Four source-wiring cases
-support the75th persona. Structural release gate passes exact3049-source digest
-`a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
+support the75th persona. Structural release gate passes exact3052-source digest
+`dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`.
 Independent source/native/test review found no Required issue. Full licensed Windows1814
 passed13,715 main and5,093 Portable cases,zero skips; normal rebuilds had zero warnings/errors.
 Canonical53744 passed all four C#7.3 modes: ordinary3045/3049,developer3177/3181,132 Harness

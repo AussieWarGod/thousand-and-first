@@ -306,6 +306,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("brain.Mobile = false", bootstrap);
 			StringAssert.Contains("advisor.RequirePart<NoXPGain>()", bootstrap);
 			StringAssert.DoesNotContain("SetIntProperty(\"KingdomBuilt\", 1", bootstrap);
+			StringAssert.Contains("addSimpleRootInformationOption(advisor", bootstrap);
 			string camp = TestMain.ReadRepositoryText("World/KingdomQuickstartCampBuilder.cs");
 			StringAssert.Contains("KingdomPlots.ReadObject", camp);
 			StringAssert.Contains("SystemLongDistanceMoveTo", camp);

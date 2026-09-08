@@ -1,6 +1,16 @@
 # Brief-to-implementation audit
 
-## Current claimed-ground light census — 2026-09-08
+## Current camp-guide topic census — 2026-09-08
+
+**3052** production C# files,432,178 physical lines,1417 direct-XRL,zero cap failures;
+3083 generated cold-install files. Exact digest
+`dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`.
+One engine-free words file plus a five-topic root-option loop on the optional Quickstart guide.
+Engine-free suites pass13731 main/5109 Portable,zero skips on Linux .NET9.0.306, and Roslyn
+9.0.306 on Linux compiled the staged baseline (3048 sources) and compatibility (3052 sources)
+sets clean. No native run, dev-harness mode or exact-inventory human semantic review binds it.
+
+## Retained claimed-ground light census — 2026-09-08
 
 **3051** production C# files,432,024 physical lines,1417 direct-XRL,zero cap failures;
 3082 generated cold-install files. Exact digest

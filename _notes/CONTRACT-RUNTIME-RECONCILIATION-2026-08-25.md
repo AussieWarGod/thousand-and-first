@@ -1,6 +1,18 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
-## Current claimed-ground light census — 2026-09-08
+## Current camp-guide topic census — 2026-09-08
+
+3052 production C# files;3,083 cold-install files in the generated inventory;
+432,178 physical lines,1417 direct-XRL,zero cap failures. Exact digest
+`dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`.
+The optional Quickstart guide gains five fixed information topics from one engine-free words
+file; no receipt phase, wire, option, grant or verifier predicate changes, and existing saves
+keep the one-node guide. It sits over the claimed-ground light below. Engine-free suites
+pass13731 main/5109 Portable,zero skips on Linux .NET9.0.306, and Roslyn 9.0.306 on Linux
+compiled the staged baseline (3048 sources) and compatibility (3052 sources) sets clean. No
+native, dev-harness or human semantic-review evidence binds this digest.
+
+## Retained claimed-ground light census — 2026-09-08
 
 3051 production C# files;3,082 cold-install files in the generated inventory;
 432,024 physical lines,1417 direct-XRL,zero cap failures. Exact digest

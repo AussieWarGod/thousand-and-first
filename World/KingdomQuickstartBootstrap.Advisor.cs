@@ -96,11 +96,17 @@ namespace ThousandAndFirst
 				brain.DoReequip = false;
 				brain.PartyLeader = null;
 				ConversationsAPI.addSimpleConversationToObject(advisor,
-					"Count what is here, founder, not what you wish were here. The casks hold "
-					+ "twenty-four drams and the larder twelve meals. They make nothing. "
-					+ "Raise shelter, then give hands and ground to the works that gather food "
-					+ "and water; only such work replaces what the city spends.",
-					"Live and drink.");
+					KingdomQuickstartGuideRules.Start,
+					KingdomQuickstartGuideRules.Goodbye);
+				// One root choice per topic. The engine adds the node and wires it back to
+				// Start with "I have more to ask." itself (Qud/API/ConversationsAPI.cs:236-243),
+				// so the guide widens without a new part, blueprint, option, or grant.
+				foreach (KingdomQuickstartGuideTopic topic
+					in KingdomQuickstartGuideRules.Topics())
+				{
+					ConversationsAPI.addSimpleRootInformationOption(advisor, topic.Topic,
+						topic.Answer);
+				}
 				if (!TryPrepareGrant(advisor, Receipt,
 					KingdomQuickstartPhase.AdvisorResolved, out failure)
 					|| !TryPlaceGrant(Zone, advisor, KingdomQuickstartRules.AdvisorCellX,

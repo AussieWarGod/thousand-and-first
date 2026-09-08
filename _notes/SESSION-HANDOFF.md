@@ -1,6 +1,17 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current unreleased claimed-ground light
+## Current unreleased camp-guide topic tree
+
+3052 staged sources;432,178 physical lines;1417 direct-XRL;zero cap failures;3083 generated
+cold-stage files. Exact inventory `dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`.
+One engine-free words file (`Core/KingdomQuickstartGuideRules.cs`) and a five-topic root-option
+loop on the optional Quickstart guide; no receipt, wire, option, grant or verifier change.
+Engine-free suites pass13731 main/5109 Portable,zero skips on Linux .NET9.0.306, and Roslyn
+9.0.306 on Linux compiles the staged baseline (3048) and compatibility (3052) sets clean. No
+native run, no dev-harness mode and no exact-inventory human semantic review bind this digest;
+the master-growth digest below keeps its own review. Existing saves keep the one-node guide.
+
+## Retained unreleased claimed-ground light
 
 3051 staged sources;432,024 physical lines;1417 direct-XRL;zero cap failures;3082 generated
 cold-stage files. Exact inventory `fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`.

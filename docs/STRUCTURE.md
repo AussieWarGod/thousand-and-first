@@ -20,23 +20,25 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
-The claimed-ground light and the first-settler legibility change together report 3051 staged
-production C# files and 432,085 physical lines.
+The camp-guide topic tree, the claimed-ground light and the first-settler legibility change
+together report 3052 staged production C# files and 432,239 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`1b8eed811fdffd3380a9e8ecc46a547cff27a9d022ff193e934821a83c254ba8`. The census reports
+`cf01fcc9993de9cee88d8ec6dc17dd8111eb37375f546d08850ac957fb372cad`. The census reports
 1417 files with direct `XRL` imports; 0 of those exceed the line limit.
 
-The delta over the retained draft below is two added production files &mdash; a mod-owned
-`IZonePart` and its projection &mdash; plus one modified event shard, one registry line, one
-option row, four modified first-guest production shards and documentation. No saved format, wire
-or public API is removed. The exact-inventory semantic review in `docs/STRUCTURE_REVIEW.json`
-still binds the previous digest and is therefore open for this delta; the human review it records
-has not been re-run here.
+The delta over the retained draft below is three added production files &mdash; a mod-owned
+`IZonePart` and its projection, and one engine-free words file for the optional Quickstart
+guide &mdash; plus one modified event shard, one registry line, one option row, the guide's
+root-option loop, four modified first-guest production shards and documentation. No saved format,
+wire or public API is removed. The exact-inventory
+semantic review in `docs/STRUCTURE_REVIEW.json` still binds the previous digest and is therefore
+open for this delta; the human review it records has not been re-run here.
 
-The claimed-ground light on its own reported 3051 files and 432,024 physical lines at inventory
-digest `fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`; that digest no longer
-binds the current bytes.
+The camp-guide topic tree over the claimed-ground light alone reported 3052 files and 432,178
+physical lines at inventory digest
+`dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`; that digest no longer binds
+the current bytes.
 
 ## Retained master-growth resume draft census
 
