@@ -20,6 +20,24 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
+The stockpile unit capacity over the empty-camp legacy correction reports 3055 staged production
+C# files and 432,578 physical lines.
+Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
+1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
+`440067f9d7dc5299752e3e9a467cf3cafc12a1d58920af5551c45cff2db88d9d`. The census reports
+1419 files with direct `XRL` imports; 0 of those exceed the line limit.
+
+The delta over the retained draft below is three added production sources — the capacity
+constants (`Core/KingdomRules.MaterialStores.cs`), the survey's material-store reads
+(`Growth/KingdomSurvey.11.MaterialStores.cs`) and the stockpile-room rules
+(`Growth/KingdomMaterials.StockpileRoom.cs`) — three modified (the delivery, the status line and
+the porter carry), and the regenerated removal-coverage roster. Each new file owns one
+responsibility and the largest is 90 lines. No saved format, wire or public API changes. The
+exact-inventory semantic review in `docs/STRUCTURE_REVIEW.json` still binds an earlier digest and
+is therefore open for this delta.
+
+## Retained empty-camp legacy census
+
 The empty-camp legacy correction over the camp-guide topic tree, the claimed-ground light and the
 first-settler legibility change together report 3052 staged production C# files and 432,259
 physical lines.

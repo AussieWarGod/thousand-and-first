@@ -25,6 +25,16 @@ below it.
   after founding can still be exiled. That covers any realm at profile revision 2 or
   above, not only an empty camp. The original foundation receipt is never rewritten.
 
+### Added
+
+- A stockpile now holds a stated number of material units — 32 for a chest dedicated by
+  hand, declared on the blueprint for built stores. A full store refuses the next
+  delivery, which then goes to the next store with room or is stacked on the ground;
+  nothing you already put in a chest is ever uncounted, moved or lost. The keepers say a
+  store is full once, and stop saying it the moment there is room again. Never weight: the
+  reports keep printing units, now with the room beside the tally (`18 of 32 units`). An
+  over-cap stockpile in a standing save reads exactly what it read before.
+
 ### Compatibility
 
 - Reading older data: 0.3.2 reads every 0.3.0/0.3.1 seal and save unchanged.
@@ -65,16 +75,26 @@ below it.
   separately gated. Retained failures and bounded native scope are recorded in
   `docs/STATUS.md`.
 
-> **Current unreleased census — exact structural gate passed.** Current 3052-file census is line-cap green:
-> 432,259 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> **Current unreleased census — exact structural gate passed.** Current 3055-file census is line-cap green:
+> 432,578 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
-> imports occur in 1417 files, 0 of them over the line limit. Inventory SHA-256:
-> `c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`.
-> The generated cold-install inventory contains 3083 files; no new subscription claim.
-> Root and independent AI reviewer read all four changed production sources and affected
-> boundaries; unchanged sources inherit the complete canonical parent review chain. This
-> digest covers the merge with `dev`, so the exact-inventory human semantic review is open
-> against it and the Windows compile gate has not re-run for the merged bytes.
+> imports occur in 1419 files, 0 of them over the line limit. Inventory SHA-256:
+> `440067f9d7dc5299752e3e9a467cf3cafc12a1d58920af5551c45cff2db88d9d`.
+> The generated cold-install inventory contains 3086 files; no new subscription claim.
+> It covers the stockpile unit capacity above the retained empty-camp legacy correction: three
+> added production sources (the capacity constants, the survey's material-store reads and the
+> stockpile-room rules), three modified (the delivery, the status line and the porter carry) and
+> the regenerated removal-coverage roster. Roslyn 9.0.306 on Linux compiled the staged baseline
+> (3051 sources) and staged compatibility (3055 sources plus the tracked Hearthpyre 2.2.3 ABI
+> stub) sets clean against the licensed Managed references, warnings as errors. The two
+> dev-harness modes did not run for this delta, no native run was made, and the exact-inventory
+> human semantic review is open against this digest.
+>
+> The earlier `c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c` digest bound the
+> empty-camp legacy merge with `dev` at3052 files and432,259 physical lines; it no longer binds
+> the current bytes. Root and independent AI reviewer read all four production sources changed in
+> that delta and their affected boundaries; unchanged sources inherit the complete canonical
+> parent review chain.
 
 ## Retained unreleased — master pause/resume correction, the claimed-ground light, and first-settler legibility
 

@@ -20,6 +20,7 @@ namespace ThousandAndFirst.Tests
 			"Growth/KingdomSurvey.08.WaterStorage.cs",
 			"Growth/KingdomSurvey.09.PoolsAndSynchronization.cs",
 			"Growth/KingdomSurvey.10.FoodAvailability.cs",
+			"Growth/KingdomSurvey.11.MaterialStores.cs",
 			"Growth/KingdomSurvey.cs"
 		};
 

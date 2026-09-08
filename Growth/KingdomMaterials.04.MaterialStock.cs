@@ -127,6 +127,14 @@ namespace ThousandAndFirst
 			/// Puts real items into the stockpiles, and onto the ground when there is nowhere
 			/// else for them. Material is never held in the abstract: what the settlement earned
 			/// exists somewhere a founder can walk to and pick up.
+			/// <para>
+			/// A stockpile takes only what it has room for
+			/// (<see cref="KingdomMaterials.StockpileRoom"/>). The delivery fills the first store
+			/// with room, moves to the next, and spills whatever is left exactly as it already
+			/// spills when no stockpile exists at all. Nothing already inside a full store is
+			/// moved, released, or uncounted &mdash; intake is the only thing that is ever
+			/// refused (ruling 5).
+			/// </para>
 			/// </summary>
 			/// <param name="Material">Which material.</param>
 			/// <param name="Units">How many units. Zero and negative do nothing.</param>
@@ -145,18 +153,23 @@ namespace ThousandAndFirst
 				{
 					return 0;
 				}
-				GameObject container = null;
-				for (int i = 0; i < Stockpiles.Count; i++)
-				{
-					if (Stockpiles[i].Inventory != null)
-					{
-						container = Stockpiles[i];
-						break;
-					}
-				}
 				int placed = 0;
 				int spilled = 0;
 				int remaining = Units;
+				for (int i = 0; i < Stockpiles.Count && remaining > 0; i++)
+				{
+					GameObject container = Stockpiles[i];
+					if (container == null || container.Inventory == null)
+					{
+						continue;
+					}
+					int room = StockpileRoomSpoken(container);
+					if (room < 1)
+					{
+						continue;
+					}
+					placed += Deposit(container, blueprint, room, ref remaining);
+				}
 				while (remaining > 0)
 				{
 					GameObject item = GameObject.Create(blueprint);
@@ -170,24 +183,7 @@ namespace ThousandAndFirst
 						batch = remaining;
 						item.Count = batch;
 					}
-					if (container != null)
-					{
-						GameObject accepted = null;
-						// A deposit must never merge into an exact stack another durable receipt
-						// owns. NoStack keeps both identities observable across engine callbacks.
-						try { accepted = container.Inventory.AddObject(item, null,
-							Silent: true, NoStack: true); }
-						catch
-						{
-							KingdomSurvey.ObserveCurrentTopologyInActive(Zone, container);
-							KingdomSurvey.ObserveAddResultInActive(Zone, item, accepted);
-							throw;
-						}
-						KingdomSurvey.ObserveChangedInActive(Zone, container);
-						KingdomSurvey.ObserveAddResultInActive(Zone, item, accepted);
-						placed += batch;
-					}
-					else if (Fallback != null)
+					if (Fallback != null)
 					{
 						GameObject accepted;
 						try { accepted = Fallback.AddObject(item); }
@@ -207,6 +203,46 @@ namespace ThousandAndFirst
 				}
 				Tally.Add(Material, placed + spilled);
 				return spilled;
+			}
+
+			/// <summary>Fills one stockpile up to the room it declared, and no further.</summary>
+			/// <returns>Units actually placed in it.</returns>
+			private int Deposit(GameObject Container, string Blueprint, int Room,
+				ref int Remaining)
+			{
+				int placed = 0;
+				int room = Room;
+				while (Remaining > 0 && room > 0)
+				{
+					GameObject item = GameObject.Create(Blueprint);
+					if (item == null)
+					{
+						break;
+					}
+					int batch = 1;
+					if (item.HasPart("Stacker") && Remaining > 1 && room > 1)
+					{
+						batch = (Remaining < room) ? Remaining : room;
+						item.Count = batch;
+					}
+					GameObject accepted = null;
+					// A deposit must never merge into an exact stack another durable receipt
+					// owns. NoStack keeps both identities observable across engine callbacks.
+					try { accepted = Container.Inventory.AddObject(item, null,
+						Silent: true, NoStack: true); }
+					catch
+					{
+						KingdomSurvey.ObserveCurrentTopologyInActive(Zone, Container);
+						KingdomSurvey.ObserveAddResultInActive(Zone, item, accepted);
+						throw;
+					}
+					KingdomSurvey.ObserveChangedInActive(Zone, Container);
+					KingdomSurvey.ObserveAddResultInActive(Zone, item, accepted);
+					placed += batch;
+					Remaining -= batch;
+					room -= batch;
+				}
+				return placed;
 			}
 
 			/// <summary>Puts a whole tally away, reporting how much of it ended up on the

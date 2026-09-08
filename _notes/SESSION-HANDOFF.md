@@ -1,6 +1,18 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current unreleased camp-guide topic tree
+## Current unreleased stockpile unit capacity
+
+3055 staged sources;432,578 physical lines;1419 direct-XRL;zero cap failures;3086 generated
+cold-stage files. Exact inventory `440067f9d7dc5299752e3e9a467cf3cafc12a1d58920af5551c45cff2db88d9d`.
+A dedicated stockpile now holds a stated number of material units (32 by default, off the new
+`r_KingdomStockpileCapacity` blueprint tag when one is declared); counting stays whole and only
+intake refuses, so no standing save reads lower than it did. Three added production sources,
+three modified, one regenerated removal-coverage roster; no receipt, wire, option, grant or
+verifier change. Roslyn 9.0.306 on Linux compiles the staged baseline (3051) and compatibility
+(3055) sets clean, warnings as errors. No native run, no dev-harness mode and no exact-inventory
+human semantic review bind this digest.
+
+## Retained unreleased camp-guide topic tree
 
 3052 staged sources;432,178 physical lines;1417 direct-XRL;zero cap failures;3083 generated
 cold-stage files. Exact inventory `dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`.

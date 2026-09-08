@@ -1,6 +1,18 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
-## Current camp-guide topic census — 2026-09-08
+## Current stockpile-capacity census — 2026-09-09
+
+3055 production C# files;3,086 cold-install files in the generated inventory;
+432,578 physical lines,1419 direct-XRL,zero cap failures. Exact digest
+`440067f9d7dc5299752e3e9a467cf3cafc12a1d58920af5551c45cff2db88d9d`.
+A dedicated stockpile declares its size in material units off a new blueprint tag; the two
+counting paths never read it, so the settlement ledger and every purpose-local debit view agree
+by construction and an over-cap standing save reads exactly what it read before. Only intake
+refuses. No receipt phase, wire, option, grant or verifier predicate changes. Roslyn 9.0.306 on
+Linux compiled the staged baseline (3051 sources) and compatibility (3055 sources) sets clean.
+No native, dev-harness or human semantic-review evidence binds this digest.
+
+## Retained camp-guide topic census — 2026-09-08
 
 3052 production C# files;3,083 cold-install files in the generated inventory;
 432,178 physical lines,1417 direct-XRL,zero cap failures. Exact digest

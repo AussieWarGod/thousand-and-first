@@ -298,6 +298,33 @@ To make your own item count as one of the nine, tag its blueprint:
 </object>
 ```
 
+**How much a stockpile holds is declared on the blueprint**, in **units** — not weight and not
+inventory slots, for the same reason a pantry declares servings rather than shelf space: a
+material is one stacked object whose count *is* the unit count, and this mod reads an item's
+weight nowhere.
+
+```xml
+<object Name="MyMod_TimberRack" Inherits="Chest">
+  <tag Name="r_KingdomStockpileCapacity" Value="96" />
+</object>
+```
+
+A dedicated container that declares nothing gets `KingdomRules.DefaultStockpileCapacity` (32) —
+never zero, because a store that could hold nothing would refuse every delivery the settlement
+ever earned and look, from outside, like a broken haul. This is a **separate account** from
+`r_KingdomLarderCapacity`: one chest may be a larder and a stockpile at once, and "how many
+servings" and "how many units of stone" are two questions with two answers.
+
+**The limit refuses intake; it never truncates a count.** The settlement's own delivery fills the
+first store with room, walks on to the next, and drops whatever is left on the ground exactly as
+it already does when no stockpile exists at all. A porter carrying a marked pile in re-reads the
+room before every bundle, and stops when the store is full.
+**Nothing already in a store is ever moved, released, or uncounted.**
+A chest the player overfilled by hand keeps everything in it and
+the reports keep counting all of it; it simply stops being chosen as a destination, and says so
+once: *"The chest will not take another bundle; it holds all the keepers can account for."* The
+status report prints the room beside the tally, as `18 of 32 units`.
+
 A charter may carry material as well as water, per caravan. Charter entries live under
 `<kingdomdeals Schema="1">` in `KingdomDeals.xml`:
 

@@ -63,7 +63,29 @@ pull requests, since the currently enabled squash-only merge rewrites the receip
 that the packager requires as an ancestor of the tagged `main` commit; and run the first
 `staging-v0.3.2` release, recording its run id, attempt number and finalization SHA here.
 
-## Unreleased empty-camp legacy and native water regression
+## Unreleased stockpile unit capacity
+
+A dedicated stockpile now declares how many material units it holds — 32 for a chest the founder
+dedicated by hand, off the new `r_KingdomStockpileCapacity` blueprint tag for anything that
+declares one. Counting is unchanged and stays whole: `Stock()` and `StockForExactContainer()`
+never read a capacity, so the settlement ledger and every purpose-local debit view agree by
+construction and an over-cap stockpile standing in an old save reads exactly what it read before.
+What the capacity changes is intake only: a delivery fills the first store with room, walks on to
+the next, and spills the remainder to the ground exactly as it already did when no stockpile
+existed. A full store says so once and stops saying it when it has room again. No saved field,
+wire format, option or public API changes; the new state is one object int property.
+
+Census after the stockpile-capacity change:3055 staged C# files;432,578 physical lines;3086 files
+in the generated cold-install inventory. Staged compilation covers3055 sources, baseline and
+compatibility symbols, run here by Roslyn 9.0.306 on Linux against the licensed Managed references
+with warnings as errors (baseline compiles3051 of them; the optional-mod bridge is
+compatibility-only, and the tracked Hearthpyre 2.2.3 ABI stub compiles clean first). The
+dev-harness modes and the Windows gate did not run for this census.
+Direct `XRL` imports: 1419 files, 0 over the line limit.
+Inventory SHA-256: `440067f9d7dc5299752e3e9a467cf3cafc12a1d58920af5551c45cff2db88d9d`.
+No native game run was made for this change; every player-facing claim above is unproven natively.
+
+## Retained unreleased empty-camp legacy and native water regression
 
 An actual empty-camp heartbeat exposed rejected automatic legacy staging: no living body
 evidence exists yet. Explicit committed-unresolved profile schema2 now retains real technology

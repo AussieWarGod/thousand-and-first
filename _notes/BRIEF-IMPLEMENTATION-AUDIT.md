@@ -1,6 +1,17 @@
 # Brief-to-implementation audit
 
-## Current camp-guide topic census — 2026-09-08
+## Current stockpile-capacity census — 2026-09-09
+
+**3055** production C# files,432,578 physical lines,1419 direct-XRL,zero cap failures;
+3086 generated cold-install files. Exact digest
+`440067f9d7dc5299752e3e9a467cf3cafc12a1d58920af5551c45cff2db88d9d`.
+A dedicated stockpile now states how many material units it holds; counting stays whole and only
+intake refuses. Three added production sources, three modified, one regenerated roster. Roslyn
+9.0.306 on Linux compiled the staged baseline (3051 sources) and compatibility (3055 sources)
+sets clean, warnings as errors. No native run, dev-harness mode or exact-inventory human semantic
+review binds it.
+
+## Retained camp-guide topic census — 2026-09-08
 
 **3052** production C# files,432,178 physical lines,1417 direct-XRL,zero cap failures;
 3083 generated cold-install files. Exact digest
