@@ -1517,6 +1517,34 @@ one-way, because unsetting those bits would erase legitimately walked ground.
 | `KingdomClaimedGround.RemoveZone(Zone)` | Take the part off. The revocation path for secession, exile, a lost claim, and the option switched off. |
 | `XRL.World.ZoneParts.KingdomClaimedGroundLight` | The part itself: `BeforeRenderEvent` → `ParentZone.AddLight(LightLevel.Light)` while `ParentZone.HasObject(The.Player)`. Named-field save, registered in `KingdomRemovalCoverage.CustomZoneParts`. |
 
+**City sight: your citizens through your own walls.** The same part carries a second, separately
+gated behaviour (`r_TAF_OptionCitySight`, default **Yes**) that opens the claimed zone for the drawn
+frame only. Inside the light's guard it snapshots the honest visibility map — after computing the
+founder's own `AddVisibility` exactly as the engine is about to — calls `Zone.VisAll()`, and puts the
+snapshot back from a single `XRLCore.RegisterAfterRenderCallback` in the same frame. Nothing is
+persisted: the snapshot is a `[NonSerialized]` static, and `ExploredMap` is never written, so
+remembered floor stays owned by `ReconcileZone`'s one-shot `Zone.ExploreAll()`.
+
+Three guards make it an eye and not a rule. A frame with `GameManager.bDraw == 11` is abandoned by
+the engine before it renders and before after-render callbacks run, so the projection is not taken
+at all — otherwise a whole turn of rest, autoexplore and the lost-sight check would run on an opened
+map, because the between-frames hostile check adds visibility without clearing first. A projection
+still outstanding at the head of the next `BeforeRenderEvent` is *discarded* rather than restored,
+because the engine has already cleared that map. And `KingdomSystem`'s `EndTurnEvent` handler
+restores ahead of every gate it owns, so no turn can begin projected.
+
+Consequences worth knowing: `Cell.Render` sets `CludgeTargetRendered` for a drawn sidebar target, so
+"You have lost sight of X" will not fire while X is drawn through a wall; `RenderSoundEvent` fires
+for drawn objects; `Look` still refuses a cell ordinary sight does not reach; and `Cell.Render` calls
+`Seen()` on every drawn object, so bestiary registration fills from citizens seen this way. Light
+stays at 200, which is none of the six tiers the Invisibility mutation reveals at (Darkvision 10,
+Dimvision 15, Interpolight 210, Radar 228, LitRadar 232, Omniscient 255).
+
+| Member | Contract |
+|---|---|
+| `KingdomClaimedGroundLight.CitySightOptionId` / `CitySightEnabled` | Gate `r_TAF_OptionCitySight`, default **Yes**, read per frame so switching it off closes the walls on the next frame. |
+| `KingdomClaimedGroundLight.RestoreHonestVisibility()` | Writes the honest snapshot back into the exact zone it was taken from and never touches `ExploredMap`. A no-op with nothing outstanding, so the after-render callback and the end-of-turn backstop can both call it. |
+
 ## The city has a history — happenings, ambience, and what the creeds make of you
 
 > Design: `_notes/LIVING-CITY-ARCHITECTURE.md` §7.4 W4 (happenings, the shared telling budget, the

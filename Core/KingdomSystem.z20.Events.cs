@@ -49,6 +49,11 @@ namespace ThousandAndFirst
 		/// </summary>
 		public override bool HandleEvent(EndTurnEvent E)
 		{
+			// City sight is a one-frame projection restored by the engine's own after-render pass.
+			// This is the backstop, and it is deliberately ahead of every gate below: a turn must
+			// never begin on an opened visibility map, whatever the master option or ownership say.
+			// The zone part cannot host it, because EndTurnEvent.Send(Zone) has no engine caller.
+			XRL.World.ZoneParts.KingdomClaimedGroundLight.RestoreHonestVisibility();
 			XRLGame game = The.Game;
 			if (game == null) return base.HandleEvent(E);
 			KingdomBounty.ObserveManningGlobalOption(this, game.TimeTicks);

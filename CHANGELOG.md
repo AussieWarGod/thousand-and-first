@@ -10,6 +10,20 @@ below it.
 
 ## Unreleased — empty-camp legacy correction
 
+### Added
+
+- Inside a zone your seat claims you now see every citizen and what they are doing, walls or
+  no walls. This is the eye only: the rules, rest, targeting and Look still use ordinary line
+  of sight, and invisible creatures stay invisible at every one of the six light tiers that
+  would reveal them (Darkvision 10, Dimvision 15, Interpolight 210, Radar 228, LitRadar 232,
+  Omniscient 255) — the claimed ground is lit to 200, which is none of them. Three honest
+  oddities follow: a creature you are targeting through a wall never triggers "you have lost
+  sight of", you hear what is drawn, and Look will refuse a cell you can plainly see.
+  Creatures you see this way count as seen, so they register in the bestiary. New option
+  `r_TAF_OptionCitySight`, default Yes; switching it off closes the walls on the next frame.
+  Existing saves need nothing: the projection is one frame of drawing state, never persisted,
+  and a save made while it is on loads identically with it off.
+
 ### Fixed
 
 - A realm whose residents map to no canonical body can now stage and seal its legacy. In
@@ -54,6 +68,12 @@ below it.
 - Full suites pass 13,826 main and 5,116 Portable cases, zero skips, up from 13,735 and
   5,109 on the `dev` integration branch. 501 tooling tests pass. The four-mode compile
   gate passed the pre-merge bytes and was not re-run for the merged tree.
+- City sight adds 2 source-contract cases: the one-drawn-frame projection shape (the
+  non-rendering-frame early return ordered before the whole-zone reveal, the honest snapshot
+  taken before it, one after-render restore, no explored-map write, all six invisibility
+  tiers named) and the two backstops (an outstanding projection dropped at the head of the
+  next frame, restored ahead of every gate at end of turn). Suites pass 13,828 main and
+  5,118 Portable cases, zero skips; 522 tooling tests pass.
 - Tools: the smoke launcher accepts every seal schema the game reads (4..6) and the full
   legacy store layout; it previously refused progressed profiles. Maintainer tooling only,
   with no player-visible or runtime effect.
@@ -66,10 +86,10 @@ below it.
   `docs/STATUS.md`.
 
 > **Current unreleased census — exact structural gate passed.** Current 3052-file census is line-cap green:
-> 432,259 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> 432,375 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1417 files, 0 of them over the line limit. Inventory SHA-256:
-> `c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`.
+> `5dca46b0f1913c5547464d33aa3701302c4df3115ef66f5c8060a93f0e2bbfb4`.
 > The generated cold-install inventory contains 3083 files; no new subscription claim.
 > Root and independent AI reviewer read all four changed production sources and affected
 > boundaries; unchanged sources inherit the complete canonical parent review chain. This

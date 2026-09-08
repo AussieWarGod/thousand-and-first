@@ -75,15 +75,19 @@ which unblocks exile for any realm at profile revision2 or above. Schema0/1
 bytes remain unchanged; older0.3.1 readers reject schema2,so any next public package needs
 a new version. Public0.3.1/main/tag are unchanged.
 
-Current census after merging `dev`:3052 staged C# files;432,259 physical lines;3083 files in
+Current census after merging `dev`:3052 staged C# files;432,375 physical lines;3083 files in
 the generated cold-install inventory. Direct `XRL` imports: 1417 files, 0 over the line limit.
-Inventory SHA-256: `c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`.
+Inventory SHA-256: `5dca46b0f1913c5547464d33aa3701302c4df3115ef66f5c8060a93f0e2bbfb4`.
 Complete canonical parent comparison of this branch's own delta proves3045 unchanged/four
 modified/no additions or removals against integration parent2be6b00; the three added and
 seven modified C# sources plus one option row merged from `dev` carry their own review chain. Root and
 independent reviewer read the complete four-file delta and affected boundaries; the exact
 structural release gate passes and the exact-inventory human semantic review is open against
-this merged digest. This is source review,not functional acceptance.
+this merged digest. This is source review,not functional acceptance. The census line and digest
+above are the render-only city-sight branch's, which sits on top of that comparison and adds two
+further modified production sources — the claimed-ground light part and the settlement system's
+end-of-turn dispatch — plus one option row; the retained four-file comparison sentence describes the
+parent delta it was written for and is unchanged.
 
 Focused38898 passed149 cases,zero skips. That receipt predates the seventh
 KingdomWaterMaintenanceNativeSourceTests case and is retained as measured. The branch adds
