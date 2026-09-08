@@ -120,10 +120,14 @@ namespace ThousandAndFirst
 			{
 				GameObject item = roots[i];
 				// Old population-furnished plots marked every liquid prop as a separate civic store.
-				// That multiplied one legal plot into up to sixty-four accounting rows. Current
-				// authored components never carry this authority; migrate old non-root plot pieces by
-				// releasing the mark only. Vessel and water remain physically untouched, while any
-				// standing signed debt remains on the city row for real civic roots to settle.
+				// That multiplied one legal plot into up to sixty-four accounting rows. Authored
+				// components carry this authority in exactly one case -- the heart's first basin,
+				// which the rite and the reconciler stamp KingdomStores on -- and it survives this
+				// sweep because an ExistingAuthority placement is stamped PlotPartProperty=0
+				// (KingdomArchitectureStamper.Verification/.UpgradeRetag), so the test below never
+				// sees it. Migrate old non-root plot pieces by releasing the mark only. Vessel and
+				// water remain physically untouched, while any standing signed debt remains on the
+				// city row for real civic roots to settle.
 				if (item.GetIntProperty(KingdomPlots.PlotPartProperty) == 1
 					&& item.GetIntProperty("KingdomBuilt") != 1
 					&& item.GetIntProperty("KingdomStores") == 1)

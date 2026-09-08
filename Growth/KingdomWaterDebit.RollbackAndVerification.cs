@@ -21,6 +21,7 @@ namespace ThousandAndFirst
 			if (action == KingdomWaterDebitAction.CancelReservation)
 			{
 				State = KingdomWaterDebitState.RolledBack;
+				ReleaseReservation();
 				Fault = KingdomWaterDebitFault.None;
 				Failure = null;
 				RestorationExact = true;
@@ -46,6 +47,7 @@ namespace ThousandAndFirst
 			int newSpace = 0;
 			try
 			{
+				OpenTransactions++;
 				if (!AllStillCommitted())
 				{
 					return Fail(KingdomWaterDebitFault.VesselChanged,
@@ -126,6 +128,8 @@ namespace ThousandAndFirst
 			{
 				if (State == KingdomWaterDebitState.Failed) ReconcilePhysicalRows();
 				Operating = false;
+				OpenTransactions--;
+				ReleaseReservation();
 			}
 		}
 

@@ -811,6 +811,7 @@
 	<Compile Include="KingdomVisualStateRulesTests.cs" />
 	<Compile Include="KingdomVisualStateSourceTests.cs" />
     <Compile Include="KingdomWearRulesTests.cs" />
+    <Compile Include="KingdomHeartBasinCapacityTests.cs" />
     <Compile Include="KingdomBrinkRulesTests.cs" />
     <Compile Include="KingdomSubsidenceRulesTests.cs" />
     <Compile Include="KingdomHeartRulesTests.cs" />
@@ -821,10 +822,12 @@
 	<Compile Include="KingdomLiquidVisualRulesTests.cs" />
 	<Compile Include="KingdomLiquidRuntimeSourceTests.cs" />
     <Compile Include="KingdomFlowRulesTests.cs" />
+	<Compile Include="KingdomStockpileCapacityTests.cs" />
     <Compile Include="..\Core\KingdomRules.cs" />
 	<Compile Include="..\Core\KingdomRules.Dish.cs" />
 	<Compile Include="..\Core\KingdomRules.Meals.cs" />
 	<Compile Include="..\Core\KingdomRules.FoodIndustry.cs" />
+	<Compile Include="..\Core\KingdomRules.MaterialStores.cs" />
 	<Compile Include="..\Core\KingdomRules.Population.cs" />
 	<Compile Include="..\Core\KingdomRules.InheritanceSeal.cs" />
 	<Compile Include="..\Core\KingdomRules.InheritanceResolution.cs" />

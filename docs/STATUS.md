@@ -63,7 +63,45 @@ pull requests, since the currently enabled squash-only merge rewrites the receip
 that the packager requires as an ancestor of the tagged `main` commit; and run the first
 `staging-v0.3.2` release, recording its run id, attempt number and finalization SHA here.
 
-## Unreleased Kingdom Quickstart tent rows
+## Unreleased stockpile unit capacity
+
+A dedicated stockpile now declares how many material units it holds — 48 for a chest the founder
+dedicated by hand, off the new `r_KingdomStockpileCapacity` blueprint tag for anything that
+declares one, and the shipped stores declare a ladder of it: 48 for a fixture shelf, 64 for a
+locker or service bank, 96 for the civic larder and a purpose's own input and output stores, 192
+for the granary and 384 for the Granary-Colossus. The default is a floor the catalogue leans on:
+eight hand-dedicated stores at that size hold 384 units, which is held above the grandest single
+bill in `RuntimeData/KingdomBuildings.xml` (the arcology, 308 units of material, rare finds and
+bit-bearing stock standing at once) by test, so no shipped design is priced beyond what a
+settlement can ever stand up. Counting is unchanged and stays whole: `Stock()` and `StockForExactContainer()`
+never read a capacity, so the settlement ledger and every purpose-local debit view agree by
+construction and an over-cap stockpile standing in an old save reads exactly what it read before.
+What the capacity changes is intake only: a delivery fills the first store with room, walks on to
+the next, and spills the remainder to the ground exactly as it already did when no stockpile
+existed. A full store says so once and stops saying it when it has room again. Nothing is
+remembered across a callback: creating the bundle, stamping its count (which is
+`Stacker.StackCount`, and sends `StackCountChangedEvent`) and inserting it each run other
+people's handlers, so the destination and its room are proved after the creation and again after
+the stamp, and the bundle is proved standing in that exact store with the count it was stamped
+with before a single unit is counted. No saved field, wire format or option changes, and the public API
+changes are additive only (`KingdomSurvey.StockCapacityOf`/`StockHeldIn`,
+`KingdomMaterials.StockpileRoom`/`FullStockpiles`/`StockRoomClause`,
+`KingdomRules.StockpileCapacity`/`MaxStockpiles`/`MaxReachableStockpileUnits` and the named
+capacity constants); the new state is one object int
+property.
+
+Census after the stockpile-capacity change over the merged Kingdom Quickstart tent rows:3056
+staged C# files;433,239 physical lines;3087 files
+in the generated cold-install inventory. Staged compilation covers3056 sources, baseline and
+compatibility symbols, run here by Roslyn 9.0.306 on Linux against the licensed Managed references
+with warnings as errors (baseline compiles3052 of them; the optional-mod bridge is
+compatibility-only, and the tracked Hearthpyre 2.2.3 ABI stub compiles clean first). The
+dev-harness modes and the Windows gate did not run for this census.
+Direct `XRL` imports: 1420 files, 0 over the line limit.
+Inventory SHA-256: `4f006f327ef59e0c36e65ea11fad27b5b508d8946bffa9ed8770a147fe3dde79`.
+No native game run was made for this change; every player-facing claim above is unproven natively.
+
+## Retained unreleased Kingdom Quickstart tent rows
 
 Kingdom Quickstart stakes two `tentrow` lots at founding, west of the supply column at
 (21,9)-(26,12) and (21,13)-(26,16), between the founding proof and the receipt's first advance.
@@ -79,14 +117,13 @@ digest. Only a `q2` receipt owes a stake, so a pre-existing `q1` save keeps its 
 every phase, Reserved included, and the completion notice counts the claims standing on the ground
 rather than trusting the branch that ran.
 
-Current census:3055 staged C# files;432,941 physical lines;3086 files in the generated
-cold-install inventory. Staged compilation covers3055 sources, baseline and compatibility symbols,
+That census:3053 staged C# files;432,593 physical lines;3084 files in the generated
+cold-install inventory. Staged compilation covers3053 sources, baseline and compatibility symbols,
 run here by Roslyn 9.0.306 on Linux against the licensed Managed references with warnings as errors
-(baseline compiles 3051 of them; the optional-mod bridge is compatibility-only).
-Direct `XRL` imports: 1420 files, 0 over the line limit.
-Inventory SHA-256: `6cf0107a0f3a919282aea20237c25dec63be268ab27fd1836a696b4a40d979c1`.
-The two dev-harness compile modes are clean here as well (3205 baseline, 3209
-compatibility sources). NOT RUN for this delta: the installed-Hearthpyre source/ABI
+(baseline compiles 3049 of them; the optional-mod bridge is compatibility-only).
+Direct `XRL` imports: 1418 files, 0 over the line limit.
+Inventory SHA-256: `d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0`.
+NOT RUN for this delta: the two dev-harness compile modes, the installed-Hearthpyre source/ABI
 step, `Tools/gate.sh` itself, the Windows gate, the developer boot matrix and any native in-game
 run. The 1,700-tick figure is a reading of the raising rule, not of a running plot clock; the
 second lot's preparation on the marsh, canyon and dunes profiles is unproven. A pre-existing save
@@ -94,7 +131,7 @@ resumed at the Reserved phase now skips the stake by its own `q1` wire tag, whic
 source-contract and codec cases rather than by a native resumed save. No human exact-inventory
 semantic review binds this digest.
 
-## Unreleased empty-camp legacy and native water regression
+## Retained unreleased empty-camp legacy and native water regression
 
 An actual empty-camp heartbeat exposed rejected automatic legacy staging: no living body
 evidence exists yet. Explicit committed-unresolved profile schema2 now retains real technology
@@ -106,28 +143,51 @@ which unblocks exile for any realm at profile revision2 or above. Schema0/1
 bytes remain unchanged; older0.3.1 readers reject schema2,so any next public package needs
 a new version. Public0.3.1/main/tag are unchanged.
 
-Retained empty-camp census after merging `dev`:3052 staged C# files;432,259 physical lines;3083 files in
-the generated cold-install inventory. Direct `XRL` imports: 1417 files, 0 over the line limit.
-Inventory SHA-256: `c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`.
-Complete canonical parent comparison of this branch's own delta proves3045 unchanged/four
-modified/no additions or removals against integration parent2be6b00; the three added and
-seven modified C# sources plus one option row merged from `dev` carry their own review chain. Root and
-independent reviewer read the complete four-file delta and affected boundaries; the exact
-structural release gate passes and the exact-inventory human semantic review is open against
-this merged digest. This is source review,not functional acceptance. The census line and digest
-above are the render-only city-sight branch's, which sits on top of that comparison and adds two
-further modified production sources — the claimed-ground light part and the settlement system's
-end-of-turn dispatch — plus one option row; the retained four-file comparison sentence describes the
-parent delta it was written for and is unchanged. The review-response passes add two further
-production sources, `Growth/KingdomCitySightDrawScope.cs` and
-`Growth/KingdomCitySightRenderSeam.cs`, and rewrite the projection's seat and close: the part now
-queues nothing into the render dispatch's second pass, and the projection is taken at the engine's
-own `Zone.Render` call, armed by a prefix on `XRLCore.RenderBaseToBuffer`, so it comes behind
-`Blackout`'s own second-pass light removal, which `Zone.AddVisibility` reads. An unattended native
-pass on the seat before that one — a Harmony postfix on the render dispatch's static entry —
-crashed the game: the re-hosted engine method threw `NullReferenceException` out of itself on the
-first drawn frame in three of four launches. That seat is now a forbidden string in the source
-contract.
+Current census after merging `dev` (the Kingdom Quickstart tent rows, the first-basin water store
+and the stockpile unit capacity included) and the render-only city sight: 3061 staged C# files;
+434,296
+physical lines; 3092 files in the generated cold-install inventory. Staged compilation covers 3061
+sources, baseline and compatibility symbols (baseline compiles 3057 of them; the optional-mod
+bridge is compatibility-only). Direct `XRL` imports: 1425 files, 0 over the line limit.
+Inventory SHA-256: `7147169b7ccb8d2142d9791bd5faec8405eb305e33bca7a9b9feb9c3948c5a1e`.
+The seal lane's OWN delta &mdash; four modified production sources, no additions or removals
+&mdash; was proved against integration parent2be6b00 (3045 unchanged) and read in full by root
+and an independent reviewer; the three added and seven modified C# sources plus one option row
+merged from `dev` carry their own review chain. The first-basin water store is a further
+three added production sources (`Growth/KingdomPlotHeartRules.Loader.cs`,
+`Growth/KingdomWaterDebit.OpenReservations.cs` and `Growth/KingdomLab.Commission.Settle.cs`) and
+twenty-one modified ones: the founding-heart
+identity and marks shards, the plot-effects furnishing shard, the zone-activation events shard,
+the heart rules table, the civic-container envelope note, the survey capture sweep, the ground
+reading, the ground-protection law, the four water-debit shards,
+the generated removal-coverage table, and the seven water callers that can refund after their own
+callbacks (construction funding, sowing, annexe enrolment, the lab commission, the lab retry
+funding lane and its two removal lanes). Root and an independent AI reviewer read that delta;
+every required finding from the review pass is addressed on this branch. The Kingdom Quickstart
+tent rows merged from `dev` are one added and six modified production sources on top of it and
+carry their own review chain; the retained3052-source digest
+`c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c` they were measured against is
+not restated here. The exact structural
+release gate passes and the exact-inventory human semantic review is open against this merged
+digest. The stockpile unit capacity on top of all of it is three added production sources
+(`Core/KingdomRules.MaterialStores.cs`, `Growth/KingdomSurvey.11.MaterialStores.cs` and
+`Growth/KingdomMaterials.StockpileRoom.cs`), six modified and the regenerated removal-coverage
+roster; Roslyn 9.0.306 on Linux compiled the staged baseline and compatibility sets clean on the
+merged tree and both engine-free suites run green there (13,980 main / 5,193 Portable, zero
+skips). The render-only city sight on top of all of it is two added production sources
+(`Growth/KingdomCitySightDrawScope.cs` and `Growth/KingdomCitySightRenderSeam.cs`) and two
+modified — the claimed-ground light part and the settlement system's event file, which now carries
+both the end-of-turn restore backstop and the basin-capacity zone-activation guard. The review-response
+passes rewrote the projection's seat and close: the part now queues nothing into the render
+dispatch's second pass, and the projection is taken at the engine's own `Zone.Render` call, armed by
+a prefix on `XRLCore.RenderBaseToBuffer`, so it comes behind `Blackout`'s own second-pass light
+removal, which `Zone.AddVisibility` reads. An unattended native pass on the seat before that one — a
+Harmony postfix on the render dispatch's static entry — crashed the game: the re-hosted engine
+method threw `NullReferenceException` out of itself on the first drawn frame in three of four
+launches. That seat is now a forbidden string in the source contract. Merging the two additions put
+`Core/KingdomSystem.z20.Events.cs` at 305 physical lines, over the strict cap; the merge reflowed
+their two comment blocks wider, keeping every word and engine citation and moving no code, and the
+shard is back at 299. This is source review,not functional acceptance.
 
 Focused38898 passed149 cases,zero skips. That receipt predates the seventh
 KingdomWaterMaintenanceNativeSourceTests case and is retained as measured. The branch adds

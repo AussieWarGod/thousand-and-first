@@ -166,9 +166,16 @@ namespace ThousandAndFirst
 			string held = stock.Tally.Describe();
 			string bits = stock.Bits.Describe();
 			string exotics = stock.Exotics.Describe();
+			int physical;
+			string room = " (" + StockRoomClause(stock, out physical) + ")";
 			if (held == null && bits == null && exotics == null)
 			{
-				return "The stockpiles stand empty.";
+				// Physically holding something while nothing in it can be spent is a lease, not an
+				// empty store. "The stockpiles stand empty (30 of 48 units)" would read, in one
+				// breath, as a broken count.
+				return (physical > 0)
+					? ("The stockpiles hold nothing that can be spent right now" + room + ".")
+					: ("The stockpiles stand empty" + room + ".");
 			}
 			// The rare finds and the tinkering stock are counted separately because they are spent
 			// separately: neither one is ever drawn on for a wall, and a founder reading one line
@@ -176,7 +183,57 @@ namespace ThousandAndFirst
 			return ((held == null) ? "The stockpiles hold nothing the walls are made of" : ("The stockpiles hold {{C|" + held + "}}"))
 				+ ((bits == null) ? "" : (", and stock enough for bits: {{C|" + bits + "}}"))
 				+ ((exotics == null) ? "" : (", and {{C|" + exotics + "}} laid aside"))
-				+ ".";
+				+ room + ".";
+		}
+
+		/// <summary>
+		/// How much room the dedicated stockpiles have left, as the founder reads it: units held
+		/// of units declared, and how many stores will take nothing more. PHYSICAL on both sides,
+		/// so the two halves of the fraction always answer the same question &mdash; the named
+		/// tallies above are the spendable view and may read lower while a work holds a lease.
+		/// </summary>
+		public static string StockRoomClause(MaterialStock Stock)
+		{
+			int held;
+			return StockRoomClause(Stock, out held);
+		}
+
+		/// <summary>The same clause, handing back the physical hold it already counted, so a
+		/// caller that also needs to know whether anything is standing in the stores does not walk
+		/// every stockpile's inventory a second time. One pass counts held, capacity and full.
+		/// </summary>
+		/// <param name="Stock">The settlement's stock. Null holds nothing in nothing.</param>
+		/// <param name="Held">Units physically standing in the dedicated stockpiles.</param>
+		public static string StockRoomClause(MaterialStock Stock, out int Held)
+		{
+			int held = 0;
+			int capacity = 0;
+			int full = 0;
+			if (Stock != null)
+			{
+				for (int i = 0; i < Stock.Stockpiles.Count; i++)
+				{
+					GameObject container = Stock.Stockpiles[i];
+					// A thing that holds nothing is not a store: it must not add capacity the
+					// settlement does not have, nor be counted among the stores that are full.
+					if (container == null || container.Inventory == null)
+					{
+						continue;
+					}
+					int stored = KingdomSurvey.StockHeldIn(container);
+					int size = KingdomSurvey.StockCapacityOf(container);
+					held += stored;
+					capacity += size;
+					if (size - stored < 1)
+					{
+						full++;
+					}
+				}
+			}
+			Held = held;
+			return held + " of " + capacity + " units"
+				+ ((full < 1) ? ""
+					: ("; " + full + ((full == 1) ? " stockpile full" : " stockpiles full")));
 		}
 
 	}
