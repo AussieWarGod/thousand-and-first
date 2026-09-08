@@ -26,6 +26,8 @@ namespace ThousandAndFirst.Tests
 		private const string Ground = "Growth/KingdomPlot2.04.Ground.cs";
 		private const string Protection = "Growth/KingdomMaterials.15.GroundAndWalls.cs";
 		private const string Reservations = "Growth/KingdomWaterDebit.OpenReservations.cs";
+		private const string Commission = "Growth/KingdomLab.Commission.cs";
+		private const string Settle = "Growth/KingdomLab.Commission.Settle.cs";
 
 		[Test]
 		public void TheBasinLadderIsExactAndClimbsStrictlyAndIsSilentOffTheLadder()
@@ -343,6 +345,14 @@ namespace ThousandAndFirst.Tests
 				"System.ClaimedZones != null && System.ClaimedZones.Contains(Z.ZoneID)",
 				"TryStandingHeartRoot(Z, out root)",
 				"ReconcileBasinCapacity(System, root, Z);");
+			// The root-taking overload is the entry the rung's own completion uses, and that
+			// completion resolves the SEATED realm rather than the one that owns the ground, so
+			// the same claim gate is proved there too and not merely at its callers.
+			Ordered(Read(Loader),
+				"internal static bool ReconcileBasinCapacity(KingdomSystem System, GameObject Root, Zone Z)",
+				"if (System == null || !System.Founded || Z == null || !GameObject.Validate(Root)",
+				"|| System.ClaimedZones == null || !System.ClaimedZones.Contains(Z.ZoneID)",
+				"|| Root.GetIntProperty(HeartPlotProperty) != 1) return false;");
 		}
 
 		[Test]
@@ -374,16 +384,16 @@ namespace ThousandAndFirst.Tests
 			Ordered(reservations, "public void EndCompensationWindow()",
 				"CompensationWindowOpen = false;",
 				"if (State != KingdomWaterDebitState.Reserved) ReleaseReservation();");
-			string commission = Read("Growth/KingdomLab.Commission.cs");
-			Ordered(commission, "debit.BeginCompensationWindow(); debit.Commit();",
+			string settle = Read(Settle);
+			Ordered(settle, "debit.BeginCompensationWindow();", "try", "debit.Commit();",
 				"KingdomMaterialDebitResult bitResult = bitDebit.Commit();",
 				"bool waterRestored = debit.Rollback();",
-				"debit.EndCompensationWindow();");
+				"finally", "debit.EndCompensationWindow();");
 			// The window closes only below the last compensation the caller can reach.
-			int close = commission.IndexOf("debit.EndCompensationWindow();",
+			int close = settle.IndexOf("debit.EndCompensationWindow();",
 				StringComparison.Ordinal);
 			ClassicAssert.GreaterOrEqual(close, 0);
-			StringAssert.DoesNotContain("debit.Rollback()", commission.Substring(close));
+			StringAssert.DoesNotContain("debit.Rollback()", settle.Substring(close));
 		}
 
 		[Test]
@@ -441,24 +451,32 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void TheHallsCommissionCompensatesBeforeEveryExitInsideItsOwnWindow()
+		public void TheHallsCommissionSettlesItsWindowInAFinallyAndNowhereElse()
 		{
-			// The hall closes its window with a plain statement rather than a finally, so its
-			// contract is the stricter one: every exit reached between the commit and the close
-			// compensates the receipt first, and Rollback drops the hold unconditionally.
-			string commission = Compact(Read("Growth/KingdomLab.Commission.cs"));
-			int opened = commission.IndexOf("debit.BeginCompensationWindow(); debit.Commit();",
-				StringComparison.Ordinal);
-			int closed = commission.IndexOf("debit.EndCompensationWindow();", StringComparison.Ordinal);
+			// The hall's window used to be closed by a plain statement, so a throw anywhere in the
+			// span -- a live-body read, a persisted receipt write, a bit commit, a governance
+			// republish -- unwound with the receipt Committed and the window still open, and every
+			// vessel it bound stayed held for a caller that no longer existed. The span now lives
+			// in its own shard so a real finally can close it, and the commission shard itself
+			// holds no window at all.
+			string commission = Compact(Read(Commission));
+			StringAssert.DoesNotContain("BeginCompensationWindow", commission);
+			StringAssert.DoesNotContain("EndCompensationWindow", commission);
+			Ordered(commission, "if (!SettleCommissionFunding(Actor, job, frozen, debit, bitDebit,"
+				+ " bitCost, out waterExact, out bitsExact)) return;");
+			// And inside the shard, every exit reached between the commit and the finally still
+			// compensates the receipt first: the finally covers the throw, not the refusals.
+			string settle = Compact(Read(Settle));
+			int opened = settle.IndexOf("debit.Commit();", StringComparison.Ordinal);
+			int closed = settle.IndexOf("finally { ", StringComparison.Ordinal);
 			ClassicAssert.GreaterOrEqual(opened, 0);
 			ClassicAssert.Greater(closed, opened);
-			string[] exits = commission.Substring(opened, closed - opened).Split(
-				new[] { "return;" }, StringSplitOptions.None);
+			string[] exits = settle.Substring(opened, closed - opened).Split(
+				new[] { "return false;" }, StringSplitOptions.None);
 			for (int i = 0; i < exits.Length - 1; i++)
 				StringAssert.Contains("debit.Rollback()", exits[i],
 					"commission exit " + (i + 1) + " inside the window compensates first");
-			ClassicAssert.Greater(exits.Length, 1, "the window really does contain early exits");
-			StringAssert.DoesNotContain("debit.Rollback()", commission.Substring(closed));
+			ClassicAssert.AreEqual(4, exits.Length, "three refusals and the settled fall-through");
 		}
 
 		[Test]
@@ -498,6 +516,8 @@ namespace ThousandAndFirst.Tests
 				Commit = "|| !debit.Commit())" },
 			new PostCommitRefundCaller { File = "Growth/KingdomAnnexe.Enrollment.cs",
 				Receipt = "debit", Commit = "if (!debit.Commit())" },
+			new PostCommitRefundCaller { File = Settle,
+				Receipt = "debit", Commit = "debit.Commit();" },
 			new PostCommitRefundCaller { File = "Growth/KingdomLab.Funding.cs",
 				Receipt = "debit", Commit = "debit.Commit();" },
 			new PostCommitRefundCaller { File = "Growth/KingdomLab.RemovalFunding.cs",

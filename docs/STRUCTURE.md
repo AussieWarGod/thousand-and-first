@@ -28,14 +28,16 @@ Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict
 `f559d70b5006ceeb5d6cc2d5380c2dd38cd5a0068d56d68e5a2554a99afadaaf`. The census reports
 1420 files with direct `XRL` imports; 0 of those exceed the line limit.
 
-The delta over the retained tent-row draft below is two ADDED production sources
-(`Growth/KingdomPlotHeartRules.Loader.cs`, `Growth/KingdomWaterDebit.OpenReservations.cs`) and
-eighteen modified ones. The first-basin water store owns the two additions plus the founding-heart
+The delta over the retained tent-row draft below is three ADDED production sources
+(`Growth/KingdomPlotHeartRules.Loader.cs`, `Growth/KingdomWaterDebit.OpenReservations.cs`,
+`Growth/KingdomLab.Commission.Settle.cs`) and twenty-one modified ones. The first-basin water store
+owns the three additions plus the founding-heart
 identity and marks shards, the plot-effects furnishing shard, the zone-activation events shard,
-the heart rules table, the ground reading, the ground-protection law, the four water-debit shards,
-the generated removal-coverage table, and the six water callers that can refund after their own
-callbacks: construction funding, sowing, annexe enrolment, the lab commission and its two removal
-lanes. Root and an independent AI reviewer read that delta and
+the heart rules table, the civic-container envelope note, the survey capture sweep, the ground
+reading, the ground-protection law, the four water-debit shards,
+the generated removal-coverage table, and the seven water callers that can refund after their own
+callbacks: construction funding, sowing, annexe enrolment, the lab commission, the lab retry
+funding lane and its two removal lanes. Root and an independent AI reviewer read that delta and
 every required finding it raised is addressed here. The seal lane beneath it contributed four
 modified production sources and no additions or removals: the seal profile reader/writer, the
 polity realm-legacy facts writer, the refound-import reader and the realm-exile rule. Root and

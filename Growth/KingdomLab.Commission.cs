@@ -204,78 +204,13 @@ namespace ThousandAndFirst {
 				job.Fault = "The exact patient slot or bearer changed before water commit. Nothing was charged.";
 				return;
 			}
-			debit.BeginCompensationWindow(); debit.Commit();
-			if (!ValidApplicationTarget(Actor, job, frozen))
-			{
-				debit.Rollback();
-				MergeWaterReceipt(job, debit);
-				bitDebit?.Cancel();
-				job.State = job.WaterQuarantined ? KingdomLabJobPhase.ApplicationRecovery
-					: KingdomLabJobPhase.FundingRecovery;
-				job.Fault = job.WaterQuarantined
-					? "The target changed during water callbacks and exact compensation could not be proved. The receipt is quarantined."
-					: "The target changed during water callbacks. The exact debit was compensated; retry charges only the outstanding price.";
-				EnsureJobGovernance(job);
-				return;
-			}
-			bool waterExact = MergeWaterReceipt(job, debit);
-			bool bitsExact = bitCost.IsEmpty();
-			if (!waterExact)
-			{
-				bitDebit?.Cancel();
-			}
-			else if (bitDebit != null)
-			{
-				if (!ValidApplicationTarget(Actor, job, frozen))
-				{
-					debit.Rollback();
-					MergeWaterReceipt(job, debit);
-					bitDebit.Cancel();
-					job.State = job.WaterQuarantined ? KingdomLabJobPhase.ApplicationRecovery
-						: KingdomLabJobPhase.FundingRecovery;
-					job.Fault = "The exact target changed before bit commit. Water compensation was measured; no bits or body effect were touched.";
-					EnsureJobGovernance(job);
-					return;
-				}
-				KingdomMaterialDebitResult bitResult = bitDebit.Commit();
-				bitsExact = bitResult.Exact;
-				if (bitResult.Outcome == KingdomMaterialDebitOutcome.RecoverablePartial
-					&& bitDebit.CanCompensate)
-				{
-					KingdomMaterialDebitResult compensation = bitDebit.Compensate();
-					if (compensation.Outcome == KingdomMaterialDebitOutcome.CompensatedExact)
-					{
-						bitResult = compensation;
-					}
-				}
-				job.BitOutstanding = bitsExact ? "" : ((bitResult.Outcome == KingdomMaterialDebitOutcome.CompensatedExact)
-					? bitDebit.Reservation.Requested.ToClaimString()
-					: bitResult.Outstanding.ToClaimString());
-				if (!bitsExact)
-				{
-					job.Fault = bitResult.Failure ?? "The exact bit debit was interrupted.";
-				}
-			}
-			if (waterExact && bitsExact && !ValidApplicationTarget(Actor, job, frozen))
-			{
-				bool bitsRestored = bitDebit == null;
-				if (bitDebit != null && bitDebit.CanCompensate)
-				{
-					KingdomMaterialDebitResult compensation = bitDebit.Compensate();
-					bitsRestored = compensation.Outcome == KingdomMaterialDebitOutcome.CompensatedExact;
-					if (bitsRestored) job.BitOutstanding = job.BitClaim;
-				}
-				bool waterRestored = debit.Rollback();
-				MergeWaterReceipt(job, debit);
-				job.State = (bitsRestored && waterRestored && !job.WaterQuarantined)
-					? KingdomLabJobPhase.FundingRecovery : KingdomLabJobPhase.ApplicationRecovery;
-				job.Fault = (bitsRestored && waterRestored && !job.WaterQuarantined)
-					? "The exact target changed during funding callbacks. Water and bits were compensated; no kept part or body effect was touched."
-					: "The exact target changed during funding callbacks and complete compensation could not be proved. The receipt is quarantined.";
-				EnsureJobGovernance(job);
-				return;
-			}
-			debit.EndCompensationWindow(); keptPhase = (waterExact && bitsExact)
+			bool waterExact, bitsExact;
+			// The commit, the bit callbacks and every compensation they can reach live in one
+			// declared window closed by a finally, so no exit -- refusal, exception or success --
+			// can leave this receipt holding the hall's vessels after the commission unwinds.
+			if (!SettleCommissionFunding(Actor, job, frozen, debit, bitDebit, bitCost,
+					out waterExact, out bitsExact)) return;
+			keptPhase = (waterExact && bitsExact)
 				? SpendKeptExact(keptSpend) : KingdomKeptSpendPhase.RefusedClean;
 			int keptMeasured = (waterExact && bitsExact) ? KeptSpent(keptSpend) : 0;
 			job.KeptPaid = keptMeasured; job.KeptLost = keptMeasured;

@@ -88,10 +88,20 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>Same reconciliation against a heart root the caller already holds &mdash; the
-		/// rung's own completion stamp, which knows its building without searching for it.</summary>
+		/// rung's own completion stamp, which knows its building without searching for it.
+		/// <para>
+		/// The seated realm's claim is proved HERE and not only by the searching overload above,
+		/// because this is the entry the rung's own completion uses and that completion resolves
+		/// its realm as the SEATED one rather than the one that owns the ground. A rung finishing
+		/// on ground that left <c>ClaimedZones</c> &mdash; seceded, exiled, or never seated
+		/// &mdash; would otherwise dedicate a foreign basin into the seated city's water accounts
+		/// and read the seated city's growth book for the hold: the exact wrong-ledger widening
+		/// the claim gate exists to refuse.
+		/// </para></summary>
 		internal static bool ReconcileBasinCapacity(KingdomSystem System, GameObject Root, Zone Z)
 		{
 			if (System == null || !System.Founded || Z == null || !GameObject.Validate(Root)
+				|| System.ClaimedZones == null || !System.ClaimedZones.Contains(Z.ZoneID)
 				|| Root.GetIntProperty(HeartPlotProperty) != 1) return false;
 			int rung = HeartRung(Z);
 			int capacity = KingdomPlotRules.HeartBasinCapacityForRung(rung);
