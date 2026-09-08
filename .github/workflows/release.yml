@@ -5,8 +5,8 @@ name: Steam Workshop release
 # The amendment, its mitigations and the adoption-gate status live in docs/RELEASING.md; the
 # operator runbook lives in the same document under "Steam host runner runbook".
 #
-#   v0.3.N              -> PUBLIC item 3794797472  : package --alpha, plan --mode alpha, TWO approvals
-#   staging-v0.3.N      -> PRIVATE item 3796495680 : package --test,  plan --mode test,  ONE approval
+#   v0.3.N              -> PUBLIC item 3794797472  : package --alpha, plan --mode alpha
+#   staging-v0.3.N      -> PRIVATE item 3796495680 : package --test,  plan --mode test
 #   staging-v0.3.N-K    -> same private lane, K = re-candidate ordinal (private admits equal patch)
 #
 # Both lanes are restricted to the 0.3.x Alpha grammar. A Beta lane needs a deliberate change here.
@@ -16,8 +16,11 @@ name: Steam Workshop release
 # extract and bound the change note from the ANNOTATED TAG MESSAGE BODY, run the Linux repository
 # audit and both portable suites, and reproduce the package receipt from HEAD blobs.
 #
-# The Steam-host jobs are gated by a GitHub Environment with a required human reviewer and run the
-# repository's own release tooling at the exact tagged commit from a fresh WSL clone. They use NO
+# The Steam-host jobs declare a GitHub Environment whose deployment tag policy scopes each lane.
+# Those environments carry NO required reviewers: pushing an annotated tag IS the approval, and the
+# admin-only tag ruleset is what restricts who may push one. The lane therefore runs
+# check -> submit -> verify -> finalize unattended, using the repository's own release tooling at
+# the exact tagged commit from a fresh WSL clone. They use NO
 # third-party actions: nothing is checked out and nothing is uploaded on that machine. Evidence
 # stays in the host run directory; the step log prints stage names, exit codes and SHA-256 digests
 # only, and gate output is written to files rather than tee-d to this public log.
@@ -364,16 +367,17 @@ jobs:
         run: dotnet run --project DevTests/PortableTests.csproj --no-restore -v q --nologo
 
   public-confirm:
-    # docs/RELEASING.md requires a second approval for Public visibility. This hosted job does
-    # nothing but wait for a distinct approval on the same environment before the Steam host runs.
-    name: second approval for PUBLIC visibility
+    # docs/RELEASING.md requires a distinct, recorded statement of what a PUBLIC release covers.
+    # The environment carries no required reviewer, so this hosted job records the exact tag,
+    # commit, version and digests the public lane is about to publish before the Steam host runs.
+    name: recorded confirmation for PUBLIC visibility
     needs: [release-checks, portable-tests]
     if: ${{ needs.release-checks.outputs.lane == 'public' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     environment: steam-workshop
     steps:
-      - name: record what this approval covers
+      - name: record what this public release covers
         shell: bash
         env:
           TAG: ${{ needs.release-checks.outputs.tag }}
@@ -384,7 +388,7 @@ jobs:
           NOTE: ${{ needs.release-checks.outputs.note_sha256 }}
         run: |
           {
-            echo "## Second approval granted for PUBLIC item $ITEM"
+            echo "## PUBLIC release confirmed for item $ITEM"
             echo "- tag \`$TAG\` -> commit \`$COMMIT\`, version \`$VERSION\`"
             echo "- package receipt SHA-256 \`$RECEIPT\`, change note SHA-256 \`$NOTE\`"
           } >> "$GITHUB_STEP_SUMMARY"
@@ -746,7 +750,7 @@ jobs:
           Write-Host "publisher submit: exit $($proc.ExitCode) status $status metadataMatches=$meta attempt=$attempt"
           $summary = "## Publisher SUBMIT`n`n- exit $($proc.ExitCode), status ``$status``, metadataMatches=$meta`n- attempt ``$attempt```n"
           if ($proc.ExitCode -eq 0 -and $status -eq 'SubmittedUnverified' -and $meta -eq $true) {
-            $summary += "- SubmittedUnverified is NOT delivery. Human steps remain: -Finalize from this run directory, subscribed-byte check, signed-out listing inspection, load/save/reload smoke, announcement.`n"
+            $summary += "- SubmittedUnverified is NOT delivery. The verify and finalize jobs run next from this run directory. Human steps remain: signed-out listing inspection, load/save/reload smoke, announcement.`n"
             [IO.File]::AppendAllText($env:GITHUB_STEP_SUMMARY, $summary)
           } else {
             $hint = switch ($proc.ExitCode) {
@@ -817,8 +821,8 @@ jobs:
   verify:
     # Post-upload observation only. -Verify reads one subscribed installation and writes NO
     # installation or finalization records, so this job is safe to re-run once Steam has delivered
-    # the update. -Finalize stays a human step from the retained run directory: it writes immutable
-    # records, needs the identical plan/package/paths, and its failure poisons the item's history.
+    # the update. It is also the gate for the finalize job below, which is why this job publishes
+    # the reported status as an output: only SubscribedInstallationVerified admits finalization.
     name: post-upload installed verification (-Verify, writes no records)
     needs: [release-checks, publish]
     if: ${{ !cancelled() && needs.publish.result == 'success' }}
@@ -832,8 +836,11 @@ jobs:
     env:
       TAF_ITEM: ${{ needs.release-checks.outputs.item }}
       TAF_RUN_DIR: ${{ needs.publish.outputs.run_dir_win }}
+    outputs:
+      status: ${{ steps.verify.outputs.status }}
     steps:
       - name: verify one subscribed installation against the submitted package
+        id: verify
         run: |
           $ErrorActionPreference = 'Stop'
           $run = $env:TAF_RUN_DIR
@@ -889,9 +896,12 @@ jobs:
             Start-Sleep -Seconds ([int]$interval.TotalSeconds)
           }
           $waited = [int]((Get-Date) - $started).TotalMinutes
+          # Published as a job output so the finalize job can require the exact status string
+          # rather than infer it from this job's conclusion.
+          [IO.File]::AppendAllText($env:GITHUB_OUTPUT, "status=$status`n")
           [IO.File]::AppendAllText($env:GITHUB_STEP_SUMMARY, "## -Verify`n`n- exit $exitCode, status ``$status`` after $attempt attempt(s) over ~$waited min. One subscribed client only; freshTransferVerified and releaseReady stay false by design.`n")
           if (-not $passed) {
-            throw "Installed verification did not pass within the $($budget.TotalMinutes)-minute budget (last: exit $exitCode, $status). Steam may simply not have delivered the update yet. The submission still stands and NO record was written. Re-run ONLY this job (Re-run failed jobs) once Steam reports the update live - never Re-run all jobs, which would re-take the environment approval, re-burn the licensed gate, and stop at the retained-attempt fence. Verifying by hand from the retained run directory is equally valid."
+            throw "Installed verification did not pass within the $($budget.TotalMinutes)-minute budget (last: exit $exitCode, $status). Steam may simply not have delivered the update yet. The submission still stands and NO record was written. Re-run ONLY this job (Re-run failed jobs) once Steam reports the update live - never Re-run all jobs, which would re-burn the multi-hour licensed gate and then stop at the retained-attempt fence. Verifying and then finalizing by hand from the retained run directory is equally valid."
           }
 
       - name: redact the verification evidence into the host run directory (no upload)
@@ -934,3 +944,150 @@ jobs:
             [IO.File]::WriteAllText($dst, $t, $utf8)
           }
           Write-Host "redacted $($sources.Count) verification files under $art"
+
+  finalize:
+    # Automatic finalization. The tag push is the approval, and a release is not finished while its
+    # attempt is unfinalized: check and submit refuse this item until every retained attempt has
+    # been finalized. This job runs ONLY after verify reported exit 0 with
+    # SubscribedInstallationVerified, and it reuses the SAME run directory, the SAME plan, change
+    # note and package paths, and the SAME PLAN_SHA/RECEIPT_SHA the publish job recorded in
+    # inputs\handoff.env. Nothing is re-planned, re-packaged or re-hashed as an input here; the
+    # retained plan is re-hashed only to prove it did not move. -Finalize verifies the original
+    # package, plan, receipt and content path, performs fresh installed verification, and only then
+    # writes its immutable .installation.json and .finalization.json siblings. One invocation, no
+    # retry, and a cancelled run is never safe. Every other outcome fails closed with its meaning
+    # from Tools/WorkshopSteam/PUBLISHING.md; finalizing by hand from the retained run directory is
+    # the fallback when this job cannot run.
+    name: finalize the submitted attempt (-Finalize, writes immutable records)
+    needs: [release-checks, publish, verify]
+    if: ${{ success() && needs.publish.result == 'success' && needs.verify.result == 'success' && needs.verify.outputs.status == 'SubscribedInstallationVerified' }}
+    runs-on: [self-hosted, windows, taf-steam]
+    # One launcher run: a helper recompile inside its 210-second budget, one installed
+    # verification, one record write, then redaction. There is no polling loop and no retry.
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: powershell
+    env:
+      TAF_ITEM: ${{ needs.release-checks.outputs.item }}
+      TAF_RUN_DIR: ${{ needs.publish.outputs.run_dir_win }}
+    steps:
+      - name: finalize from the recorded plan, receipt and package paths (no rebuild, no retry)
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $run = $env:TAF_RUN_DIR
+          if ([string]::IsNullOrWhiteSpace($run) -or -not (Test-Path -LiteralPath $run -PathType Container)) {
+            throw "publish run directory is missing: '$run'"
+          }
+          $launcher = (Get-Content -LiteralPath (Join-Path $run 'inputs\launcher-win.txt') -Raw).Trim()
+          $handoff = ConvertFrom-StringData (Get-Content -LiteralPath (Join-Path $run 'inputs\handoff.env') -Raw)
+          $planPath = Join-Path $run 'inputs\plan.json'
+          $notePath = Join-Path $run 'inputs\change-note.md'
+          foreach ($p in @($launcher, $planPath, $notePath)) {
+            if (-not (Test-Path -LiteralPath $p -PathType Leaf)) {
+              throw 'A recorded finalization input from the publish run directory is missing; refusing to finalize.'
+            }
+          }
+          # PLAN_SHA and RECEIPT_SHA are READ from the publish job's handoff and passed verbatim.
+          # They are never recomputed as the values to send: re-hashing the retained plan below
+          # proves only that its bytes did not move. A changed plan is a fence, not a re-plan.
+          $planSha = $handoff.PLAN_SHA
+          $receiptSha = $handoff.RECEIPT_SHA
+          if ([string]::IsNullOrWhiteSpace($planSha) -or [string]::IsNullOrWhiteSpace($receiptSha)) {
+            throw 'inputs\handoff.env does not carry both PLAN_SHA and RECEIPT_SHA; refusing to finalize.'
+          }
+          $onDisk = (Get-FileHash -LiteralPath $planPath -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($onDisk -ne $planSha.ToLowerInvariant()) {
+            throw "The retained upload plan no longer hashes to the recorded PLAN_SHA (recorded $planSha, on disk $onDisk). Finalization must bind the exact submitted plan; refusing."
+          }
+          $evidence = Join-Path $run "evidence-finalize-$env:GITHUB_RUN_ATTEMPT"
+          if (Test-Path -LiteralPath $evidence) { throw "finalization evidence directory already exists: $evidence" }
+          New-Item -ItemType Directory -Path $evidence | Out-Null
+          $quote = { param($s) '"' + $s + '"' }
+          $argLine = @('-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File', (& $quote $launcher),
+            '-QudRoot', (& $quote $env:TAF_QUD_ROOT_WIN),
+            '-PlanPath', (& $quote $planPath), '-PlanSHA', $planSha,
+            '-ItemId', $env:TAF_ITEM,
+            '-ChangeNotePath', (& $quote $notePath),
+            '-ReceiptSHA', $receiptSha,
+            '-EvidenceRoot', (& $quote $evidence), '-Finalize') -join ' '
+          $out = Join-Path $run "logs\launcher-finalize-$env:GITHUB_RUN_ATTEMPT.stdout"
+          $err = Join-Path $run "logs\launcher-finalize-$env:GITHUB_RUN_ATTEMPT.stderr"
+          $proc = Start-Process -FilePath 'powershell.exe' -ArgumentList $argLine -NoNewWindow -Wait -PassThru `
+            -RedirectStandardOutput $out -RedirectStandardError $err
+          $report = $null
+          $reportPath = Join-Path $evidence 'upload.stdout'
+          if (Test-Path -LiteralPath $reportPath) {
+            $json = Get-Content -LiteralPath $reportPath | Where-Object { $_ -match '^\s*\{' } | Select-Object -Last 1
+            if ($json) { $report = $json | ConvertFrom-Json }
+          }
+          $status = if ($report) { $report.status } else { '<no report>' }
+          $finalized = if ($report) { $report.attemptFinalized } else { $null }
+          $finalizationSha = if ($report) { $report.finalizationSHA } else { $null }
+          # Digest-only step log: stage name, exit code, status name and SHA-256 values. No account
+          # id, native path or SDK diagnostic is printed; the redaction step below sweeps the files.
+          Write-Host "publisher finalize: exit $($proc.ExitCode) status $status attemptFinalized=$finalized"
+          $ok = ($proc.ExitCode -eq 0 -and $status -eq 'SubscribedInstallationVerified' -and $finalized -eq $true -and -not [string]::IsNullOrWhiteSpace($finalizationSha))
+          $summary = "## -Finalize`n`n- exit $($proc.ExitCode), status ``$status``, attemptFinalized=$finalized`n"
+          if ($ok) {
+            $summary += "- finalization SHA-256 ``$finalizationSha```n"
+            $summary += "- bound to the publish job's recorded plan SHA-256 ``$planSha`` and package receipt SHA-256 ``$receiptSha``, unchanged.`n"
+            $summary += "- One subscribed client only: ``freshTransferVerified`` and ``releaseReady`` stay false by design. The signed-out listing inspection, the in-game load/save/reload smoke and the announcement remain human steps.`n"
+            [IO.File]::AppendAllText($env:GITHUB_STEP_SUMMARY, $summary)
+          } else {
+            $hint = switch ($proc.ExitCode) {
+              2 { 'refused: argument, note, plan, receipt, package or installed-verification refusal. No finalization record was written.' }
+              3 { 'check_refused: package or installed verification not ready. No finalization record was written.' }
+              4 { 'NeedsUser: the SDK needs the operator, for example the Workshop legal agreement.' }
+              5 { 'Uncertain/Rejected: the observation did not settle.' }
+              6 { 'state_root_refused: ATTEMPT_ROOT is not the compiled fixed root. Nothing was read or written.' }
+              7 { 'attempt_retained: an attempt is retained for this item and this tool never retries.' }
+              8 { 'lock_abandoned_uncertain: the item mutex was abandoned by an earlier holder.' }
+              10 { 'cleanup_uncertain: cleanup failed; the proven outcome is retained under outcomeStatus.' }
+              default { 'launcher-level failure or the 210-second helper timeout: treat the finalization as incomplete.' }
+            }
+            $summary += "- **FAILED CLOSED**: $hint`n"
+            $summary += "- Do NOT re-run this workflow for this tag, and do not re-run this job blindly. A crash between installation and finalization retains a partial fence for operator investigation, and no tool in this repository clears it. Finalize by hand from the retained run directory with the SAME ``-PlanPath``, ``-PlanSHA``, ``-ItemId``, ``-ChangeNotePath`` and ``-ReceiptSHA`` and a NEW empty ``-EvidenceRoot``; the exit table and the retained-attempt rules are in ``Tools/WorkshopSteam/PUBLISHING.md``.`n"
+            [IO.File]::AppendAllText($env:GITHUB_STEP_SUMMARY, $summary)
+            throw "-Finalize did not succeed - $hint Reconcile by hand; this job never retries."
+          }
+
+      - name: redact the finalization evidence into the host run directory (no upload)
+        if: ${{ always() }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $run = $env:TAF_RUN_DIR
+          if ([string]::IsNullOrWhiteSpace($run) -or -not (Test-Path -LiteralPath $run -PathType Container)) {
+            Write-Host "publish run directory is unavailable; nothing to redact"
+            exit 0
+          }
+          $art = Join-Path $run 'artifact'
+          New-Item -ItemType Directory -Path $art -Force | Out-Null
+          $sources = @()
+          $evidence = Join-Path $run "evidence-finalize-$env:GITHUB_RUN_ATTEMPT"
+          if (Test-Path -LiteralPath $evidence -PathType Container) {
+            foreach ($f in @('upload.stdout','upload.stderr','build.log','sdk.lock.json')) {
+              $p = Join-Path $evidence $f
+              if (Test-Path -LiteralPath $p -PathType Leaf) { $sources += $p }
+            }
+          }
+          $logs = Join-Path $run 'logs'
+          if (Test-Path -LiteralPath $logs -PathType Container) {
+            Get-ChildItem -LiteralPath $logs -File -Filter "launcher-finalize-$env:GITHUB_RUN_ATTEMPT.*" -ErrorAction SilentlyContinue | ForEach-Object {
+              $sources += $_.FullName
+            }
+          }
+          $utf8 = New-Object Text.UTF8Encoding($false)
+          foreach ($src in $sources) {
+            $t = [IO.File]::ReadAllText($src)
+            $t = [regex]::Replace($t, '(?i)(\bSteam[ \t]{0,8}ID[ \t]{0,8}[:=][ \t]{0,8})[0-9]{1,20}(?![0-9])', '${1}[REDACTED]')
+            $t = [regex]::Replace($t, '\b7656119[0-9]{10}\b', '[REDACTED-STEAMID64]')
+            $t = [regex]::Replace($t, '(?i)([A-Za-z]):\\Users\\[^\\\r\n"'']+', '${1}:\Users\[REDACTED]')
+            $t = [regex]::Replace($t, '(?i)/mnt/([a-z])/Users/[^/\r\n"'']+', '/mnt/${1}/Users/[REDACTED]')
+            $t = [regex]::Replace($t, '(?i)\\\\wsl(\$|\.localhost)\\[^\\\r\n]+\\home\\[^\\\r\n]+', '\\wsl.localhost\[REDACTED]\home\[REDACTED]')
+            $t = [regex]::Replace($t, '/home/[^/\r\n"'']+', '/home/[REDACTED]')
+            # Prefix with the containing directory so evidence and log names cannot collide.
+            $dst = Join-Path $art ([IO.Path]::GetFileName([IO.Path]::GetDirectoryName($src)) + '-' + [IO.Path]::GetFileName($src))
+            [IO.File]::WriteAllText($dst, $t, $utf8)
+          }
+          Write-Host "redacted $($sources.Count) finalization files under $art"
