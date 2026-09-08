@@ -71,6 +71,12 @@ namespace ThousandAndFirst
 		public string StockpileObjectId = "";
 		public KingdomQuickstartAdvisorDisposition AdvisorDisposition;
 		public string AdvisorObjectId = "";
+		/// <summary>
+		/// True only for a receipt minted by a version that bares the shelter lots when it builds
+		/// the world, and therefore the only receipt whose founding pass owes those lots a stake.
+		/// A receipt written before the lots existed decodes false and resumes exactly as it did.
+		/// </summary>
+		public bool ShelterObligation;
 
 		public KingdomQuickstartReceipt Copy()
 		{
@@ -84,7 +90,8 @@ namespace ThousandAndFirst
 				LarderObjectId = LarderObjectId,
 				StockpileObjectId = StockpileObjectId,
 				AdvisorDisposition = AdvisorDisposition,
-				AdvisorObjectId = AdvisorObjectId
+				AdvisorObjectId = AdvisorObjectId,
+				ShelterObligation = ShelterObligation
 			};
 		}
 	}

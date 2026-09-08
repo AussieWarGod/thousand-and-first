@@ -194,6 +194,18 @@ class UpgradeProfileTrustSourceTests(unittest.TestCase):
         for false_claim in ("continuousIdleVerified = true", "gracefulQuitVerified = true", "sourceVersionVerified = true", "saveCompatibilityVerified = true"):
             self.assertNotIn(false_claim, self.cs + self.ps)
 
+    def test_inspect_null_destination_survives_the_dotnet_string_boundary(self):
+        """PowerShell turns a bare $null into "" for a [string] parameter.
+
+        Run() requires destination == null for Inspect, so a bare $null made EVERY Inspect
+        (and therefore every prepare-upgrade-profile.py mode) refuse with destination_invalid.
+        """
+        self.assertIn("$destination = [NullString]::Value", self.ps)
+        self.assertNotIn("$destination = $null", self.ps)
+        self.assertLess(self.ps.index("$destination = [NullString]::Value"),
+                        self.ps.index("$result = $session.Run("))
+        self.assertIn('mode == "Inspect" ? destination == null', self.cs)
+
     def test_independent_cleanup_no_success_on_failure_no_partial_deletion(self):
         self.assertIn("if (Disposed) return; Disposed = true", self.cs)
         self.assertIn("Held[i].Stream.Dispose(); } catch (Exception e) { failures.Add(e); }", self.cs)
