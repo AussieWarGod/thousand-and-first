@@ -125,6 +125,17 @@ namespace ThousandAndFirst
 		/// because these are separate accounts kept by separate people.</summary>
 		public const int MaxStockpiles = 8;
 
+		/// <summary>The most material one ground can hold when the founder has only ever walked up
+		/// to chests and dedicated them: every store the keepers will account for, each at the size
+		/// a container that declares nothing gets. A bill is covered out of ONE reading of the
+		/// stores (<see cref="CanPay"/>), so the catalogue's grandest single bill must fit inside
+		/// this number or that design can never be commissioned at all. Pinned against
+		/// <c>RuntimeData/KingdomBuildings.xml</c> by <c>KingdomStockpileCapacityTests</c>; a
+		/// commissioned store declaring a rung of the ladder only ever raises the real ceiling
+		/// above it.</summary>
+		public const int MaxReachableStockpileUnits =
+			MaxStockpiles * KingdomRules.DefaultStockpileCapacity;
+
 		/// <summary>Whether the material economy resolves at all. Rides the growth toggle rather
 		/// than adding a switch of its own: materials are what growth costs.</summary>
 		public static bool Enabled => KingdomGrowth.Enabled;

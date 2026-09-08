@@ -41,13 +41,14 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void NamedCapacities_AreTheTunableLadderTheRulingFixed()
 		{
-			ClassicAssert.AreEqual(32, KingdomRules.DefaultStockpileCapacity);
-			ClassicAssert.AreEqual(32, KingdomRules.HeartStockpileCapacity);
+			ClassicAssert.AreEqual(48, KingdomRules.DefaultStockpileCapacity);
+			ClassicAssert.AreEqual(48, KingdomRules.ShelfCapacity);
+			ClassicAssert.AreEqual(64, KingdomRules.LockerCapacity);
 			ClassicAssert.AreEqual(96, KingdomRules.StorehouseCapacity);
 			ClassicAssert.AreEqual(192, KingdomRules.StoreyardCapacity);
 			ClassicAssert.AreEqual(384, KingdomRules.StorehallCapacity);
-			ClassicAssert.AreEqual(48, KingdomRules.ShelfCapacity);
-			ClassicAssert.AreEqual(64, KingdomRules.LockerCapacity);
+			ClassicAssert.AreEqual(8 * KingdomRules.DefaultStockpileCapacity,
+				KingdomMaterials.MaxReachableStockpileUnits);
 		}
 
 		[Test]
@@ -393,7 +394,7 @@ namespace ThousandAndFirst.Tests
 
 		/// <summary>The empty line and the room clause must agree. A store physically holding
 		/// thirty units that a live work has leased has nothing SPENDABLE in it, and must not read
-		/// "The stockpiles stand empty (30 of 32 units)" &mdash; one sentence saying two things.
+		/// "The stockpiles stand empty (30 of 48 units)" &mdash; one sentence saying two things.
 		/// </summary>
 		[Test]
 		public void TheEmptyLineIsPhysicalAwareAndNeverContradictsTheRoom()
@@ -457,19 +458,81 @@ namespace ThousandAndFirst.Tests
 		}
 
 		/// <summary>Every capacity a blueprint declares is one of the named tunable constants, so
-		/// the ladder stays a ladder and nobody hand-writes a loose number into XML.</summary>
+		/// the ladder stays a ladder and nobody hand-writes a loose number into XML. The shipped
+		/// catalogue really declares the tag, so this is a live pin and not an empty loop.
+		/// </summary>
 		[Test]
 		public void DeclaredBlueprintCapacitiesAreNamedConstants()
 		{
+			List<int> declared = DeclaredStockpileCapacities();
+			ClassicAssert.GreaterOrEqual(declared.Count, 11,
+				"the shipped stores must declare the tag, or the ladder is dead constants");
 			HashSet<int> named = new HashSet<int>
 			{
-				KingdomRules.DefaultStockpileCapacity, KingdomRules.HeartStockpileCapacity,
-				KingdomRules.StorehouseCapacity, KingdomRules.StoreyardCapacity,
-				KingdomRules.StorehallCapacity, KingdomRules.ShelfCapacity,
-				KingdomRules.LockerCapacity
+				KingdomRules.DefaultStockpileCapacity, KingdomRules.ShelfCapacity,
+				KingdomRules.LockerCapacity, KingdomRules.StorehouseCapacity,
+				KingdomRules.StoreyardCapacity, KingdomRules.StorehallCapacity
 			};
-			// Vacuous until T-storage-2/T-camp-2 declare the tag: nothing in RuntimeData carries
-			// it yet, so this matches zero declarations today and guards every later one.
+			for (int i = 0; i < declared.Count; i++)
+			{
+				ClassicAssert.IsTrue(named.Contains(declared[i]),
+					"RuntimeData declares stockpile capacity " + declared[i]
+					+ ", which is not a named constant in KingdomRules.MaterialStores");
+			}
+			// And the other way round: a named rung nothing declares is dead weight that reads,
+			// from the rules file, like shipped content.
+			HashSet<int> shipped = new HashSet<int>(declared);
+			foreach (int rung in new[]
+			{
+				KingdomRules.ShelfCapacity, KingdomRules.LockerCapacity,
+				KingdomRules.StorehouseCapacity, KingdomRules.StoreyardCapacity,
+				KingdomRules.StorehallCapacity
+			})
+			{
+				ClassicAssert.IsTrue(shipped.Contains(rung),
+					"no shipped blueprint declares the " + rung + "-unit rung");
+			}
+		}
+
+		/// <summary>
+		/// The cap must never make a shipped design impossible to raise. A bill is covered out of
+		/// ONE reading of everything the stores hold (<c>KingdomMaterials.CanPay</c>), and the
+		/// founder may only ever dedicate <c>MaxStockpiles</c> of them, so the ceiling a founder
+		/// reaches with ordinary chests alone has to clear the grandest bill in the catalogue
+		/// &mdash; materials, the rare finds that must be standing beside them, and the
+		/// bit-bearing stock that occupies the same room.
+		/// </summary>
+		[Test]
+		public void TheReachableHoldCoversTheGrandestCatalogueBill()
+		{
+			int worst = LargestCatalogueBillUnits();
+			ClassicAssert.Greater(worst, 0, "the catalogue must have priced something");
+			ClassicAssert.GreaterOrEqual(KingdomMaterials.MaxReachableStockpileUnits, worst,
+				"eight hand-dedicated stores at the default size cannot hold the "
+				+ worst + "-unit bill, so that design could never be commissioned");
+		}
+
+		/// <summary>And a settlement that commissioned the top of the ladder holds the grandest
+		/// bill in ONE store, so the release valve the rules file promises is real content rather
+		/// than a comment.</summary>
+		[Test]
+		public void OneShippedStoreHoldsTheGrandestCatalogueBill()
+		{
+			int worst = LargestCatalogueBillUnits();
+			int largest = 0;
+			List<int> declared = DeclaredStockpileCapacities();
+			for (int i = 0; i < declared.Count; i++)
+			{
+				if (declared[i] > largest) largest = declared[i];
+			}
+			ClassicAssert.GreaterOrEqual(largest, worst,
+				"no single shipped store holds the " + worst + "-unit bill");
+		}
+
+		/// <summary>Every capacity declared in shipped RuntimeData, in file order.</summary>
+		private static List<int> DeclaredStockpileCapacities()
+		{
+			List<int> found = new List<int>();
 			Regex declaration = new Regex(
 				"Name=\"" + Regex.Escape(KingdomRules.StockpileCapacityTag)
 				+ "\"\\s+Value=\"([^\"]*)\"");
@@ -480,14 +543,59 @@ namespace ThousandAndFirst.Tests
 			{
 				foreach (Match match in declaration.Matches(TestMain.ReadRepositoryText(relative)))
 				{
-					int declared;
-					ClassicAssert.IsTrue(int.TryParse(match.Groups[1].Value, out declared),
+					int value;
+					ClassicAssert.IsTrue(int.TryParse(match.Groups[1].Value, out value),
 						relative + " declares a non-numeric stockpile capacity");
-					ClassicAssert.IsTrue(named.Contains(declared),
-						relative + " declares stockpile capacity " + declared
-						+ ", which is not a named constant in KingdomRules.MaterialStores");
+					found.Add(value);
 				}
 			}
+			return found;
+		}
+
+		/// <summary>The largest single design price in the catalogue, in units that must be
+		/// STANDING in the stores at one instant: material units, exotic units, and one unit for
+		/// each bit tier a high-craft design asks for, since bits come out of real objects that
+		/// occupy real room.</summary>
+		private static int LargestCatalogueBillUnits()
+		{
+			string catalogue = TestMain.ReadRepositoryText("RuntimeData/KingdomBuildings.xml");
+			int worst = 0;
+			// The OPENING tag only: a design with skins closes with </building>, and its children
+			// must not be swept into somebody else's price.
+			foreach (Match design in new Regex("<building\\s[^>]*>", RegexOptions.Singleline)
+				.Matches(catalogue))
+			{
+				int units = TalliedUnits(design.Value, "Materials")
+					+ TalliedUnits(design.Value, "Exotics")
+					+ DeclaredLength(design.Value, "Bits");
+				int upgrade = TalliedUnits(design.Value, "UpgradeMaterials");
+				if (units > worst) worst = units;
+				if (upgrade > worst) worst = upgrade;
+			}
+			return worst;
+		}
+
+		/// <summary>Sums a <c>key:units</c> price attribute. Absent prices nothing.</summary>
+		private static int TalliedUnits(string Design, string Attribute)
+		{
+			Match found = new Regex("(?<![A-Za-z])" + Attribute + "=\"([^\"]*)\"").Match(Design);
+			if (!found.Success) return 0;
+			int total = 0;
+			foreach (string entry in found.Groups[1].Value.Split(','))
+			{
+				int at = entry.IndexOf(':');
+				int units;
+				if (at > 0 && int.TryParse(entry.Substring(at + 1), out units)) total += units;
+			}
+			return total;
+		}
+
+		/// <summary>Length of a bit-tier string: one bit-bearing object per tier asked for.
+		/// </summary>
+		private static int DeclaredLength(string Design, string Attribute)
+		{
+			Match found = new Regex("(?<![A-Za-z])" + Attribute + "=\"([^\"]*)\"").Match(Design);
+			return found.Success ? found.Groups[1].Value.Trim().Length : 0;
 		}
 
 		/// <summary>The modder-facing contract is documented where a modder looks for it.</summary>

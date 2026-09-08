@@ -171,7 +171,7 @@ namespace ThousandAndFirst
 			if (held == null && bits == null && exotics == null)
 			{
 				// Physically holding something while nothing in it can be spent is a lease, not an
-				// empty store. "The stockpiles stand empty (30 of 32 units)" would read, in one
+				// empty store. "The stockpiles stand empty (30 of 48 units)" would read, in one
 				// breath, as a broken count.
 				return (physical > 0)
 					? ("The stockpiles hold nothing that can be spent right now" + room + ".")

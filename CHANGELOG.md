@@ -87,8 +87,12 @@ below it.
 
 ### Added
 
-- A stockpile now holds a stated number of material units — 32 for a chest dedicated by
-  hand, declared on the blueprint for built stores. A full store refuses the next
+- A stockpile now holds a stated number of material units — 48 for a chest dedicated by
+  hand, declared on the blueprint for built stores, which run from 48 for a fixture shelf
+  through 64 for a locker, 96 for the civic larder and a purpose's own stores, 192 for the
+  granary to 384 for the Granary-Colossus. Eight hand-dedicated stores hold 384 units
+  between them, which is more than the grandest single bill in the catalogue, so no design
+  the mod ships is ever made impossible to raise by the cap. A full store refuses the next
   delivery, which then goes to the next store with room or is stacked on the ground;
   nothing you already put in a chest is ever uncounted, moved or lost. Every way the
   settlement takes material in respects it: its own deliveries, clearance payout, strike
@@ -97,7 +101,7 @@ below it.
   stockpile holds everything the settlement can spend — materials, rare finds, and
   anything that can be taken apart for bits, which is most loot — so a chest you dedicate
   as a stockpile is a poor loot chest. Never weight: the reports keep printing units, now
-  with the room beside the tally (`18 of 32 units`). An over-cap stockpile in a standing
+  with the room beside the tally (`18 of 48 units`). An over-cap stockpile in a standing
   save reads exactly what it read before. The hold is physical rather than spendable: a
   stack a live work has reserved is still standing in the chest and still counts against
   the room, so the room never jumps when a reservation is taken or released. A delivery
@@ -189,8 +193,9 @@ below it.
 > from `dev` and the empty-camp legacy correction below them: three
 > added production sources (the capacity constants, the survey's material-store reads and the
 > stockpile-room rules, which own the room, the intake that respects it and that intake's proofs),
-> three modified (the delivery, the status line and the porter carry) and
-> the regenerated removal-coverage roster. Roslyn 9.0.306 on Linux compiled the staged baseline
+> six modified (the delivery, the status line, the porter carry, the clearance payout's
+> destination choice, the strike salvage's destination choice and the yard's nothing-landed
+> fault line) and the regenerated removal-coverage roster. Roslyn 9.0.306 on Linux compiled the staged baseline
 > (3052 sources) and staged compatibility (3056 sources plus the tracked Hearthpyre 2.2.3 ABI
 > stub) sets clean against the licensed Managed references, warnings as errors. The two
 > dev-harness modes did not run for this delta, no native run was made, and the exact-inventory

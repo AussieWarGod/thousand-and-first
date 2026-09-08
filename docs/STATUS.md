@@ -65,9 +65,15 @@ that the packager requires as an ancestor of the tagged `main` commit; and run t
 
 ## Unreleased stockpile unit capacity
 
-A dedicated stockpile now declares how many material units it holds — 32 for a chest the founder
+A dedicated stockpile now declares how many material units it holds — 48 for a chest the founder
 dedicated by hand, off the new `r_KingdomStockpileCapacity` blueprint tag for anything that
-declares one. Counting is unchanged and stays whole: `Stock()` and `StockForExactContainer()`
+declares one, and the shipped stores declare a ladder of it: 48 for a fixture shelf, 64 for a
+locker or service bank, 96 for the civic larder and a purpose's own input and output stores, 192
+for the granary and 384 for the Granary-Colossus. The default is a floor the catalogue leans on:
+eight hand-dedicated stores at that size hold 384 units, which is held above the grandest single
+bill in `RuntimeData/KingdomBuildings.xml` (the arcology, 308 units of material, rare finds and
+bit-bearing stock standing at once) by test, so no shipped design is priced beyond what a
+settlement can ever stand up. Counting is unchanged and stays whole: `Stock()` and `StockForExactContainer()`
 never read a capacity, so the settlement ledger and every purpose-local debit view agree by
 construction and an over-cap stockpile standing in an old save reads exactly what it read before.
 What the capacity changes is intake only: a delivery fills the first store with room, walks on to
@@ -77,8 +83,11 @@ remembered across a callback: creating the bundle, stamping its count (which is
 `Stacker.StackCount`, and sends `StackCountChangedEvent`) and inserting it each run other
 people's handlers, so the destination and its room are proved after the creation and again after
 the stamp, and the bundle is proved standing in that exact store with the count it was stamped
-with before a single unit is counted. No saved field, wire format, option or public API changes;
-the new state is one object int property.
+with before a single unit is counted. No saved field, wire format or option changes, and the public API
+changes are additive only (`KingdomSurvey.StockCapacityOf`/`StockHeldIn`,
+`KingdomMaterials.StockpileRoom`/`FullStockpiles`/`StockRoomClause`/`MaxReachableStockpileUnits`,
+`KingdomRules.StockpileCapacity` and the named capacity constants); the new state is one object int
+property.
 
 Census after the stockpile-capacity change over the merged Kingdom Quickstart tent rows:3056
 staged C# files;433,213 physical lines;3087 files

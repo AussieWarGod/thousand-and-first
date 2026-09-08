@@ -30,28 +30,41 @@ namespace ThousandAndFirst
 
 		/// <summary>What a stockpile with no declared capacity holds. A chest the founder walked
 		/// up to and dedicated: one early building bill's worth of stone, not a programme's.
+		/// <para>
+		/// This number is a floor the catalogue leans on, and it is the rung that moves if a
+		/// grander design is ever written. A settlement keeps at most
+		/// <see cref="KingdomMaterials.MaxStockpiles"/> stores on one ground, and a bill is paid
+		/// out of ONE reading of everything those stores hold, so a cap set too low would not make
+		/// a design expensive &mdash; it would make it impossible, permanently and silently. The
+		/// pin is <see cref="KingdomMaterials.MaxReachableStockpileUnits"/> against the grandest
+		/// bill in <c>RuntimeData/KingdomBuildings.xml</c>, asserted in
+		/// <c>KingdomStockpileCapacityTests</c>.
+		/// </para>
 		/// </summary>
-		public const int DefaultStockpileCapacity = 32;
+		public const int DefaultStockpileCapacity = 48;
 
-		/// <summary>The camp heart's own store. Deliberately the same as a hand-dedicated chest:
-		/// the camp is a camp, and a commissioned storehouse is the answer to wanting more.
-		/// </summary>
-		public const int HeartStockpileCapacity = 32;
-
-		/// <summary>The first commissioned store.</summary>
-		public const int StorehouseCapacity = 96;
-
-		/// <summary>The commissioned store's second rung.</summary>
-		public const int StoreyardCapacity = 192;
-
-		/// <summary>The commissioned store's third rung.</summary>
-		public const int StorehallCapacity = 384;
-
-		/// <summary>A dry shelf added to a roofed camp.</summary>
+		/// <summary>A dry shelf or rack: the smallest thing worth dedicating, and deliberately the
+		/// same size as the chest a founder walked up to and dedicated by hand. Declared by the
+		/// timber and metal fixture shelves.</summary>
 		public const int ShelfCapacity = 48;
 
-		/// <summary>A locker added to a roofed camp.</summary>
+		/// <summary>A locker or service bank, shut against the weather. Declared by the scrap
+		/// locker and the scrap service bank.</summary>
 		public const int LockerCapacity = 64;
+
+		/// <summary>The first commissioned store: the civic larder, and a purpose's own input and
+		/// output racks and baskets, which are stockpiles from the moment they are placed.
+		/// </summary>
+		public const int StorehouseCapacity = 96;
+
+		/// <summary>The commissioned store's second rung: the granary's raised timber floor.
+		/// </summary>
+		public const int StoreyardCapacity = 192;
+
+		/// <summary>The commissioned store's third rung, declared by the Granary-Colossus &mdash;
+		/// the one store in the catalogue that holds the grandest single bill on its own.
+		/// </summary>
+		public const int StorehallCapacity = 384;
 
 		/// <summary>
 		/// A declared stockpile capacity, read back safely. Zero, absent, or negative is a

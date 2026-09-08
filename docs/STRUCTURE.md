@@ -31,8 +31,9 @@ The stockpile delta is three added production sources — the capacity constants
 (`Core/KingdomRules.MaterialStores.cs`), the survey's material-store reads
 (`Growth/KingdomSurvey.11.MaterialStores.cs`) and the stockpile-room rules
 (`Growth/KingdomMaterials.StockpileRoom.cs`, which owns the room, the intake that respects it and
-that intake's proofs) — three modified (the delivery, the status line and the porter carry), and
-the regenerated removal-coverage roster. The merged tent-row delta below it is one added and six
+that intake's proofs) — six modified (the delivery, the status line, the porter carry, the
+clearance payout's destination choice, the strike salvage's destination choice and the yard's
+nothing-landed fault line), and the regenerated removal-coverage roster. The merged tent-row delta below it is one added and six
 modified production sources: the quickstart bootstrap's shelter partial is the addition; the
 quickstart rules, the bootstrap, the camp builder, the generated removal coverage, the quickstart
 receipt model and its wire codec are the modifications. Each new file owns one responsibility. No
