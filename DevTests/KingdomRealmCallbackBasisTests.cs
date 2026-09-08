@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -65,9 +66,9 @@ namespace ThousandAndFirst.Tests
 			KingdomRealmCallbackPhase phase, int intent, int settled, bool expected)
 		{
 			string failure;
-			Assert.AreEqual(expected, KingdomRealmArchive.ValidBasisShape(phase, intent, settled,
+			ClassicAssert.AreEqual(expected, KingdomRealmArchive.ValidBasisShape(phase, intent, settled,
 				out failure), phase + " " + intent + "/" + settled);
-			Assert.AreEqual(expected, failure == null, "a refusal must carry failure text");
+			ClassicAssert.AreEqual(expected, failure == null, "a refusal must carry failure text");
 		}
 
 		[Test]
@@ -75,24 +76,24 @@ namespace ThousandAndFirst.Tests
 		{
 			string failure;
 			KingdomRealmArchive.ValidBasisShape(KingdomRealmCallbackPhase.Intent, 12345, 0, out failure);
-			Assert.AreEqual("callback hash basis version is out of range", failure);
+			ClassicAssert.AreEqual("callback hash basis version is out of range", failure);
 			KingdomRealmArchive.ValidBasisShape(KingdomRealmCallbackPhase.None, 3, 0, out failure);
-			Assert.AreEqual("unresolved callback carries a hash basis", failure);
+			ClassicAssert.AreEqual("unresolved callback carries a hash basis", failure);
 			KingdomRealmArchive.ValidBasisShape(KingdomRealmCallbackPhase.Attempting, 3, 4, out failure);
-			Assert.AreEqual("unsettled callback carries a settle hash basis", failure);
+			ClassicAssert.AreEqual("unsettled callback carries a settle hash basis", failure);
 			KingdomRealmArchive.ValidBasisShape((KingdomRealmCallbackPhase)200, 0, 0, out failure);
-			Assert.AreEqual("callback receipt phase is noncanonical", failure);
+			ClassicAssert.AreEqual("callback receipt phase is noncanonical", failure);
 			KingdomRealmArchive.ValidBasisShape((KingdomRealmCallbackReceipt)null, out failure);
-			Assert.AreEqual("callback receipt is absent", failure);
+			ClassicAssert.AreEqual("callback receipt is absent", failure);
 		}
 
 		[Test]
 		public void BasisUpperBoundTracksTheSettlementCodecRatherThanALiteral()
 		{
 			int codec = KingdomArchivedSettlementCodec.CurrentVersion;
-			Assert.IsTrue(KingdomRealmArchive.ValidBasisShape(KingdomRealmCallbackPhase.Settled,
+			ClassicAssert.IsTrue(KingdomRealmArchive.ValidBasisShape(KingdomRealmCallbackPhase.Settled,
 				codec, codec, out _));
-			Assert.IsFalse(KingdomRealmArchive.ValidBasisShape(KingdomRealmCallbackPhase.Settled,
+			ClassicAssert.IsFalse(KingdomRealmArchive.ValidBasisShape(KingdomRealmCallbackPhase.Settled,
 				codec + 1, 0, out _));
 			StringAssert.Contains("KingdomArchivedSettlementCodec.CurrentVersion", Read(BasisWire),
 				"the bound must not be a hardcoded 19");
@@ -102,19 +103,19 @@ namespace ThousandAndFirst.Tests
 		public void ReceiptsFromEnvelopesTwoThroughEightStayUnresolvedAndLegal()
 		{
 			KingdomRealmCallbackReceipt fresh = new KingdomRealmCallbackReceipt();
-			Assert.AreEqual(0, fresh.IntentSettlementSchema);
-			Assert.AreEqual(0, fresh.SettledSettlementSchema);
-			Assert.IsTrue(KingdomRealmArchive.ValidBasisShape(fresh, out _));
+			ClassicAssert.AreEqual(0, fresh.IntentSettlementSchema);
+			ClassicAssert.AreEqual(0, fresh.SettledSettlementSchema);
+			ClassicAssert.IsTrue(KingdomRealmArchive.ValidBasisShape(fresh, out _));
 			foreach (KingdomRealmCallbackPhase phase in
 				Enum.GetValues(typeof(KingdomRealmCallbackPhase)))
-				Assert.IsTrue(KingdomRealmArchive.ValidBasisShape(phase, 0, 0, out _), "" + phase);
+				ClassicAssert.IsTrue(KingdomRealmArchive.ValidBasisShape(phase, 0, 0, out _), "" + phase);
 		}
 
 		[Test]
 		public void ReceiptShapeAppendsExactlyTwoIntsAfterTheFrozenTwelveFields()
 		{
 			Type type = typeof(KingdomRealmCallbackReceipt);
-			Assert.IsTrue(Attribute.IsDefined(type, typeof(SerializableAttribute)), type.FullName);
+			ClassicAssert.IsTrue(Attribute.IsDefined(type, typeof(SerializableAttribute)), type.FullName);
 			FieldInfo[] fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public
 				| BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
 			Array.Sort(fields, (left, right) => left.MetadataToken.CompareTo(right.MetadataToken));
@@ -122,8 +123,8 @@ namespace ThousandAndFirst.Tests
 			string[] actual = new string[fields.Length];
 			for (int i = 0; i < fields.Length; i++)
 			{
-				Assert.IsTrue(fields[i].IsPublic && !fields[i].IsInitOnly, fields[i].Name);
-				Assert.IsFalse(Attribute.IsDefined(fields[i], typeof(NonSerializedAttribute)),
+				ClassicAssert.IsTrue(fields[i].IsPublic && !fields[i].IsInitOnly, fields[i].Name);
+				ClassicAssert.IsFalse(Attribute.IsDefined(fields[i], typeof(NonSerializedAttribute)),
 					fields[i].Name);
 				actual[i] = TypeName(fields[i].FieldType) + " " + fields[i].Name + "="
 					+ DefaultValue(fields[i].GetValue(value));
@@ -182,8 +183,8 @@ namespace ThousandAndFirst.Tests
 				+ "WriteHashBasisTail(Writer,ExileChronicle,ExileAbility,ReturnChronicle,"
 				+ "ReturnReputation,ReturnFeelings,ReturnSeat,ReturnAbility);", write,
 				"the tail is the last frame and follows the digest with nothing between");
-			Assert.AreEqual(1, Occurrences(envelope, "WriteHashBasisTail("));
-			Assert.AreEqual(1, Occurrences(envelope, "TryReadHashBasisTail("));
+			ClassicAssert.AreEqual(1, Occurrences(envelope, "WriteHashBasisTail("));
+			ClassicAssert.AreEqual(1, Occurrences(envelope, "TryReadHashBasisTail("));
 			string receipts = "";
 			for (int i = 0; i < ReceiptOrder.Length; i++)
 				receipts += "WriteCallback(Writer," + ReceiptOrder[i] + ");";
@@ -210,7 +211,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < ReceiptOrder.Length; i++)
 				expected += "Writer.Write(" + ReceiptOrder[i] + "Receipt.IntentSettlementSchema);"
 					+ "Writer.Write(" + ReceiptOrder[i] + "Receipt.SettledSettlementSchema);";
-			Assert.AreEqual(expected, Compact(Block(Read(BasisWire),
+			ClassicAssert.AreEqual(expected, Compact(Block(Read(BasisWire),
 				"private static void WriteHashBasisTail(")),
 				"exactly 14 Int32, (intent,settled) per receipt, source-pinned order");
 		}
@@ -226,9 +227,9 @@ namespace ThousandAndFirst.Tests
 			StringAssert.StartsWith(
 				"Failure=null;if(Version<HashBasisVersion)returntrue;" + reads, body,
 				"wire 2-8 consumes no tail byte; wire 9 reads all 14 before touching a field");
-			Assert.Less(body.IndexOf(reads, StringComparison.Ordinal) + reads.Length,
+			ClassicAssert.Less(body.IndexOf(reads, StringComparison.Ordinal) + reads.Length,
 				body.IndexOf("ValidBasisShape(", StringComparison.Ordinal));
-			Assert.Less(body.IndexOf("ValidBasisShape(", StringComparison.Ordinal),
+			ClassicAssert.Less(body.IndexOf("ValidBasisShape(", StringComparison.Ordinal),
 				body.IndexOf("IntentSettlementSchema=", StringComparison.Ordinal));
 		}
 
@@ -264,7 +265,7 @@ namespace ThousandAndFirst.Tests
 				+ "ClearHashBasis();", Compact(Block(envelope,
 				"internal void ResetToPoisonEnvelope(string Failure)")),
 				"the poison envelope publishes fresh receipts with no basis");
-			Assert.AreEqual(14, Occurrences(Block(Read(BasisWire),
+			ClassicAssert.AreEqual(14, Occurrences(Block(Read(BasisWire),
 				"private void ClearHashBasis()"), "SettlementSchema = 0;"));
 		}
 
@@ -318,7 +319,7 @@ namespace ThousandAndFirst.Tests
 				StringAssert.DoesNotContain("SettledSettlementSchema", source, path);
 				StringAssert.DoesNotContain("HashBasis", source, path);
 			}
-			Assert.AreEqual("Writer.Write((byte)1);Writer.Write((byte)Value.Phase);"
+			ClassicAssert.AreEqual("Writer.Write((byte)1);Writer.Write((byte)Value.Phase);"
 				+ "Writer.Write((byte)Value.Disposition);Writer.Write((byte)Value.Scope);"
 				+ "WriteGraphString(Writer,Value.BeforeGraph);"
 				+ "WriteGraphString(Writer,Value.AfterGraph);"
@@ -378,9 +379,9 @@ namespace ThousandAndFirst.Tests
 		private static string Block(string source, string signature)
 		{
 			int at = source.IndexOf(signature, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(at, 0, signature);
+			ClassicAssert.GreaterOrEqual(at, 0, signature);
 			int start = source.IndexOf('{', at);
-			Assert.GreaterOrEqual(start, 0, signature);
+			ClassicAssert.GreaterOrEqual(start, 0, signature);
 			int depth = 1;
 			for (int i = start + 1; i < source.Length; i++)
 			{

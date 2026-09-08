@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -11,12 +12,12 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ActivationRequiresEveryCurrentSeatedGroundProof()
 		{
-			Assert.IsTrue(Eligible(true, true, true, true, true, true));
+			ClassicAssert.IsTrue(Eligible(true, true, true, true, true, true));
 			for (int missing = 0; missing < 6; missing++)
 			{
 				bool[] proof = { true, true, true, true, true, true };
 				proof[missing] = false;
-				Assert.IsFalse(Eligible(proof[0], proof[1], proof[2], proof[3],
+				ClassicAssert.IsFalse(Eligible(proof[0], proof[1], proof[2], proof[3],
 					proof[4], proof[5]), "proof " + missing + " must be mandatory");
 			}
 		}
@@ -26,11 +27,11 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomAssentingMootReceipt first = Prepare();
 			KingdomAssentingMootReceipt second = Prepare();
-			Assert.AreEqual(KingdomAssentingMootPhase.Prepared, first.Phase);
-			Assert.AreEqual(first.AuthorityId, second.AuthorityId);
-			Assert.AreEqual(first.MembershipFingerprint, second.MembershipFingerprint);
+			ClassicAssert.AreEqual(KingdomAssentingMootPhase.Prepared, first.Phase);
+			ClassicAssert.AreEqual(first.AuthorityId, second.AuthorityId);
+			ClassicAssert.AreEqual(first.MembershipFingerprint, second.MembershipFingerprint);
 			AssertValid(first);
-			Assert.IsFalse(KingdomAssentingMootRules.TryPrepare("realm", "city", "City",
+			ClassicAssert.IsFalse(KingdomAssentingMootRules.TryPrepare("realm", "city", "City",
 				"zone", "building", "lot", 0, 1, 10L, out _, out _));
 		}
 
@@ -45,12 +46,12 @@ namespace ThousandAndFirst.Tests
 			receipt = Add(receipt, KingdomAssentingMootRole.Exemption, 20);
 			CollectionAssert.AreEqual(new[] { 10, 20, 30 }, receipt.AssentResidentIds);
 			CollectionAssert.AreEqual(new[] { 20 }, receipt.ExemptResidentIds);
-			Assert.AreEqual(0, original.AssentResidentIds.Count);
-			Assert.IsTrue(KingdomAssentingMootRules.Contains(receipt,
+			ClassicAssert.AreEqual(0, original.AssentResidentIds.Count);
+			ClassicAssert.IsTrue(KingdomAssentingMootRules.Contains(receipt,
 				KingdomAssentingMootRole.Assent, 20));
-			Assert.IsTrue(KingdomAssentingMootRules.Contains(receipt,
+			ClassicAssert.IsTrue(KingdomAssentingMootRules.Contains(receipt,
 				KingdomAssentingMootRole.Exemption, 20));
-			Assert.IsFalse(KingdomAssentingMootRules.TryChangeMember(receipt,
+			ClassicAssert.IsFalse(KingdomAssentingMootRules.TryChangeMember(receipt,
 				KingdomAssentingMootRole.Assent, true, 20, "resident-20", "body-20",
 				99L, out _, out _));
 			AssertValid(receipt);
@@ -62,13 +63,13 @@ namespace ThousandAndFirst.Tests
 			KingdomAssentingMootReceipt receipt = Prepare();
 			for (int i = 1; i <= KingdomAssentingMootRules.MaxAssents; i++)
 				receipt = Add(receipt, KingdomAssentingMootRole.Assent, i);
-			Assert.IsFalse(KingdomAssentingMootRules.TryChangeMember(receipt,
+			ClassicAssert.IsFalse(KingdomAssentingMootRules.TryChangeMember(receipt,
 				KingdomAssentingMootRole.Assent, true, 99, "overflow", "body-overflow",
 				99L, out _, out _));
-			Assert.AreEqual(60, KingdomAssentingMootRules.StrengthFor(6, 0));
-			Assert.AreEqual(40, KingdomAssentingMootRules.StrengthFor(6, 2));
-			Assert.AreEqual(0, KingdomAssentingMootRules.StrengthFor(2, 4));
-			Assert.AreEqual(60, KingdomAssentingMootRules.StrengthFor(999, -1));
+			ClassicAssert.AreEqual(60, KingdomAssentingMootRules.StrengthFor(6, 0));
+			ClassicAssert.AreEqual(40, KingdomAssentingMootRules.StrengthFor(6, 2));
+			ClassicAssert.AreEqual(0, KingdomAssentingMootRules.StrengthFor(2, 4));
+			ClassicAssert.AreEqual(60, KingdomAssentingMootRules.StrengthFor(999, -1));
 		}
 
 		[Test]
@@ -82,12 +83,12 @@ namespace ThousandAndFirst.Tests
 				KingdomAssentingMootRules.Suspended(applied, "resident departed", 120L);
 			KingdomAssentingMootReceipt again =
 				KingdomAssentingMootRules.PrepareProjection(suspended, 130L);
-			Assert.AreEqual(KingdomAssentingMootPhase.Prepared, prepared.Phase);
-			Assert.AreEqual(KingdomAssentingMootPhase.Applied, applied.Phase);
-			Assert.AreEqual(10, applied.Strength);
-			Assert.AreEqual(KingdomAssentingMootPhase.Suspended, suspended.Phase);
-			Assert.AreEqual(0, suspended.Strength);
-			Assert.AreEqual(KingdomAssentingMootPhase.Prepared, again.Phase);
+			ClassicAssert.AreEqual(KingdomAssentingMootPhase.Prepared, prepared.Phase);
+			ClassicAssert.AreEqual(KingdomAssentingMootPhase.Applied, applied.Phase);
+			ClassicAssert.AreEqual(10, applied.Strength);
+			ClassicAssert.AreEqual(KingdomAssentingMootPhase.Suspended, suspended.Phase);
+			ClassicAssert.AreEqual(0, suspended.Strength);
+			ClassicAssert.AreEqual(KingdomAssentingMootPhase.Prepared, again.Phase);
 			AssertValid(applied);
 			AssertValid(suspended);
 			AssertValid(again);
@@ -99,11 +100,11 @@ namespace ThousandAndFirst.Tests
 			KingdomAssentingMootReceipt current = Add(Prepare(),
 				KingdomAssentingMootRole.Assent, 7);
 			string oldAuthority = current.AuthorityId;
-			Assert.IsTrue(KingdomAssentingMootRules.TryRebind(current, "zone-b",
+			ClassicAssert.IsTrue(KingdomAssentingMootRules.TryRebind(current, "zone-b",
 				"building-b", "lot-b", 901, 150L,
 				out KingdomAssentingMootReceipt rebound, out string failure), failure);
-			Assert.AreNotEqual(oldAuthority, rebound.AuthorityId);
-			Assert.AreEqual(current.Generation + 1, rebound.Generation);
+			ClassicAssert.AreNotEqual(oldAuthority, rebound.AuthorityId);
+			ClassicAssert.AreEqual(current.Generation + 1, rebound.Generation);
 			CollectionAssert.AreEqual(current.AssentResidentIds, rebound.AssentResidentIds);
 			AssertValid(rebound);
 		}
@@ -117,8 +118,8 @@ namespace ThousandAndFirst.Tests
 			AssertInvalid(receipt);
 			KingdomAssentingMootReceipt quarantined =
 				KingdomAssentingMootRules.Quarantined(receipt, new string('x', 900));
-			Assert.AreEqual(KingdomAssentingMootPhase.Quarantined, quarantined.Phase);
-			Assert.LessOrEqual(quarantined.Fault.Length,
+			ClassicAssert.AreEqual(KingdomAssentingMootPhase.Quarantined, quarantined.Phase);
+			ClassicAssert.LessOrEqual(quarantined.Fault.Length,
 				KingdomAssentingMootRules.MaxFaultChars);
 			AssertValid(quarantined);
 		}
@@ -168,21 +169,21 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("DescendsFrom(\"TerrainMoonStair\")", activation);
 			StringAssert.Contains("r_KingdomAssentingMoot.RuntimeOwnerVersion", activation);
 			StringAssert.DoesNotContain("Learn(", shared + activation);
-			Assert.AreEqual(2, Count(hooks, "KingdomAssentingMoot.ReconcileZone"));
-			Assert.AreEqual(1, Count(hooks, "KingdomAssentingMoot.ReconcileAll"));
+			ClassicAssert.AreEqual(2, Count(hooks, "KingdomAssentingMoot.ReconcileZone"));
+			ClassicAssert.AreEqual(1, Count(hooks, "KingdomAssentingMoot.ReconcileAll"));
 			StringAssert.Contains("PruneLoadedMemberProjections(System, Zone)", hooks);
 		}
 
 		[Test]
 		public void PhaseAndRoleEnumsAreAppendOnly()
 		{
-			Assert.AreEqual("0,1,2,3,4", JoinValues(typeof(KingdomAssentingMootPhase)));
-			Assert.AreEqual("1,2", JoinValues(typeof(KingdomAssentingMootRole)));
+			ClassicAssert.AreEqual("0,1,2,3,4", JoinValues(typeof(KingdomAssentingMootPhase)));
+			ClassicAssert.AreEqual("1,2", JoinValues(typeof(KingdomAssentingMootRole)));
 		}
 
 		private static KingdomAssentingMootReceipt Prepare()
 		{
-			Assert.IsTrue(KingdomAssentingMootRules.TryPrepare("realm-a", "city-a",
+			ClassicAssert.IsTrue(KingdomAssentingMootRules.TryPrepare("realm-a", "city-a",
 				"New Grit Gate", "zone-a", "building-a", "lot-a", 900, 1, 100L,
 				out KingdomAssentingMootReceipt receipt, out string failure), failure);
 			return receipt;
@@ -191,7 +192,7 @@ namespace ThousandAndFirst.Tests
 		private static KingdomAssentingMootReceipt Add(KingdomAssentingMootReceipt receipt,
 			KingdomAssentingMootRole role, int id)
 		{
-			Assert.IsTrue(KingdomAssentingMootRules.TryChangeMember(receipt, role, true, id,
+			ClassicAssert.IsTrue(KingdomAssentingMootRules.TryChangeMember(receipt, role, true, id,
 				"resident-" + id, "body-" + id, 100L + id,
 				out KingdomAssentingMootReceipt next, out string failure), failure);
 			return next;
@@ -204,13 +205,13 @@ namespace ThousandAndFirst.Tests
 
 		private static void AssertValid(KingdomAssentingMootReceipt receipt)
 		{
-			Assert.IsTrue(KingdomAssentingMootRules.Validate(receipt, out string failure), failure);
+			ClassicAssert.IsTrue(KingdomAssentingMootRules.Validate(receipt, out string failure), failure);
 		}
 
 		private static void AssertInvalid(KingdomAssentingMootReceipt receipt)
 		{
-			Assert.IsFalse(KingdomAssentingMootRules.Validate(receipt, out string failure));
-			Assert.IsNotEmpty(failure);
+			ClassicAssert.IsFalse(KingdomAssentingMootRules.Validate(receipt, out string failure));
+			ClassicAssert.IsNotEmpty(failure);
 		}
 
 		private static int Count(string source, string value)

@@ -8,38 +8,7 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-## Unreleased — a chest in the tent (DO NOT MERGE — blocked)
-
-> **Status: blocked on an author decision.** The change below is complete and every static gate
-> and the Portable suite pass, but `KingdomSocketTransitionRulesTests`
-> `.ShippedEarlyHousingRoutesCoverEveryExactSizeAndStayCheaper` refuses it: an early-housing
-> renovation must retain every stateful fixture of its source exactly, and `tent` renovates into
-> `hut`, `mudhut` and `blockhut`. Giving the tent a timber chest therefore requires the same chest
-> in `housing-timber-hands`, `housing-mud-hands` and `housing-rubble-hands`, which means paying a
-> timber in the mud-brick and block huts — styles whose whole point is that they raise what the
-> salt flat and the ruin field give. That is a style decision, not a mechanical fix.
-
-- The canvas housing palette's storage slot is an empty timber chest instead of a reed basket,
-  and the settler's tent pays the one timber it needs (`canvas:2,timber:1`); the staked
-  tent-row already carried a brace. A founder who raises a tent now has somewhere to put what
-  they carried in.
-- The chest is furniture, not a civic account: it counts toward larder or stockpile only after
-  the Charter's dedication mark, exactly as any other vessel does. Nothing binds automatically
-  and founding gains no new requirement.
-- Data only. Architecture snapshots freeze per plot at stake time, so standing tents keep their
-  basket and only new commissions receive the chest. No saved field, wire format or public API
-  changes; the one production-source delta is the regenerated removal-coverage allowlist.
-
-> **Current unreleased census — line-cap green, human semantic review OPEN.** Current 3049-file census is line-cap green:
-> 431,893 physical lines,zero files at or above300,1415 direct-XRL imports. Inventory SHA-256:
-> `ea6fd5c8404865bae167a2462dd7e5eb7decfb8ba7362453c5fec31ff7e00330`.
-> The generated cold-install inventory contains 3080 files; no new subscription claim.
-> Its only production-source delta over the retained census below is the regenerated
-> `Core/KingdomRemovalCoverage.Generated.cs` allowlist. No semantic review binds this digest, so
-> exact-inventory human semantic review remains a release blocker and is now open; no native run,
-> compile gate or licensed suite was executed for this entry.
-
-## Unreleased — master pause/resume correction
+## Unreleased — master pause/resume correction, and the claimed-ground light
 
 - Master resume now validates a complete growth schedule before publishing it. Fresh
   growth no longer receives a positive deadline with a zero interval; established growth
@@ -50,8 +19,27 @@ below it.
   arrival recovery, stale ownership, canonical save payloads and arithmetic refusal.
   Native regression and four-mode compilation pass. Full licensed suites pass13,715 main
   and5,093 Portable cases,zero skips; repository audit passes501 tooling tests.
+- Claimed ground now reads at a glance. While you stand in a zone your seat claims, a
+  mod-owned zone part lights the whole zone to the torch tier once per rendered frame and
+  remembers its floor once per visit. Walls still stop sight, interiors behind them stay
+  dark, and nothing hidden is revealed: this is lamplight, not omniscience or x-ray sight.
+- New option `r_TAF_OptionClaimedGroundLight`, default Yes. Losing the claim, seceding,
+  being exiled, or switching the option off takes the part off on the next visit; explored
+  floor stays explored, because unsetting it would erase legitimately walked ground. No
+  saved field, wire or public API change, and a save loaded without the mod is dark again.
 
-> **Retained unreleased census — exact structural gate passed.** Current 3049-file census is line-cap green:
+> **Current unreleased census — exact structural gate passed.** Current 3051-file census is line-cap green:
+> 432,024 physical lines,zero files at or above300; direct `XRL`
+> imports occur in 1417 files, 0 of them over the line limit. Inventory SHA-256:
+> `fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`.
+> The generated cold-install inventory contains 3082 files; no new subscription claim.
+> Engine-free suites and the repository tooling suites pass. Roslyn 9.0.306 on Linux compiled the
+> staged baseline (3047 sources) and staged compatibility (3051 sources) sets clean against the
+> licensed Managed references, warnings as errors. The two dev-harness modes, the Windows gate and
+> any native run did NOT happen for this delta, and the exact-inventory human semantic review is
+> open against the new digest. This is not Beta sign-off.
+
+> **Retained unreleased master-resume census — exact structural gate passed.** Its3049-file census is line-cap green:
 > 431,893 physical lines,zero files at or above300,1415 direct-XRL imports. Inventory SHA-256:
 > `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
 > The generated cold-install inventory contains 3080 files; no new subscription claim.

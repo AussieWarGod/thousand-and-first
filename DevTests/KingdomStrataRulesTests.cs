@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -27,11 +28,11 @@ namespace ThousandAndFirst.Tests
 		[TestCase("   ")]
 		public void ADesignThatNamesNoStratumStandsInEveryOneOfThem(string strata)
 		{
-			Assert.IsTrue(KingdomZoningRules.StrataAdmits(strata, KingdomZoningRules.StratumSurface));
-			Assert.IsTrue(KingdomZoningRules.StrataAdmits(strata, KingdomZoningRules.StratumDeep));
-			Assert.IsTrue(KingdomZoningRules.StrataAdmits(strata, KingdomZoningRules.StratumSky));
-			Assert.IsTrue(KingdomZoningRules.StrataAdmits(strata, KingdomZoningRules.StratumArcology));
-			Assert.IsTrue(KingdomZoningRules.StrataAdmits(strata, "somebody else's seabed"));
+			ClassicAssert.IsTrue(KingdomZoningRules.StrataAdmits(strata, KingdomZoningRules.StratumSurface));
+			ClassicAssert.IsTrue(KingdomZoningRules.StrataAdmits(strata, KingdomZoningRules.StratumDeep));
+			ClassicAssert.IsTrue(KingdomZoningRules.StrataAdmits(strata, KingdomZoningRules.StratumSky));
+			ClassicAssert.IsTrue(KingdomZoningRules.StrataAdmits(strata, KingdomZoningRules.StratumArcology));
+			ClassicAssert.IsTrue(KingdomZoningRules.StrataAdmits(strata, "somebody else's seabed"));
 		}
 
 		[Test]
@@ -42,16 +43,16 @@ namespace ThousandAndFirst.Tests
 			ZoningJudgement judgement = KingdomZoningRules.Judge(ZoneGate.Open, null, "storage", 1, null,
 				Underground: true, RequiresSky: false, Roll: BuilderRoll.Unknown,
 				Stratum: KingdomZoningRules.StratumDeep);
-			Assert.IsTrue(judgement.Permitted);
-			Assert.IsNull(judgement.Detail);
-			Assert.IsNull(judgement.Note);
+			ClassicAssert.IsTrue(judgement.Permitted);
+			ClassicAssert.IsNull(judgement.Detail);
+			ClassicAssert.IsNull(judgement.Note);
 		}
 
 		[Test]
 		public void TheOpenGateIsStillOpenNowThatItCarriesAStratum()
 		{
-			Assert.IsTrue(ZoneGate.Open.IsOpen);
-			Assert.IsNull(ZoneGate.Open.Strata);
+			ClassicAssert.IsTrue(ZoneGate.Open.IsOpen);
+			ClassicAssert.IsNull(ZoneGate.Open.Strata);
 		}
 
 		[Test]
@@ -59,9 +60,9 @@ namespace ThousandAndFirst.Tests
 		{
 			ZoneGate gate = KingdomZoningRules.ParseGateAttributes("carvedcell", null, null, null, null,
 				null, null, null, "deep", out string error);
-			Assert.IsNull(error);
-			Assert.IsFalse(gate.IsOpen, "a design that belongs to one stratum has something to refuse");
-			Assert.AreEqual("deep", gate.Strata);
+			ClassicAssert.IsNull(error);
+			ClassicAssert.IsFalse(gate.IsOpen, "a design that belongs to one stratum has something to refuse");
+			ClassicAssert.AreEqual("deep", gate.Strata);
 		}
 
 		[Test]
@@ -69,11 +70,11 @@ namespace ThousandAndFirst.Tests
 		{
 			// The published shapes are not re-cut under a third party already calling them
 			// (STANDARDS 9): each older overload is the newest one with a null on the end.
-			Assert.IsNull(KingdomZoningRules.ParseGateAttributes("k", null, null, null, null, out _).Strata);
-			Assert.IsNull(KingdomZoningRules.ParseGateAttributes("k", null, null, null, null, null, null, null, out _).Strata);
-			Assert.IsTrue(KingdomZoningRules.Judge(ZoneGate.Open, null, "housing", 1, null).Permitted);
-			Assert.IsTrue(KingdomZoningRules.Judge(ZoneGate.Open, null, "housing", 1, null, true, false).Permitted);
-			Assert.IsTrue(KingdomZoningRules.Judge(ZoneGate.Open, null, "housing", 1, null, true, false, BuilderRoll.Unknown).Permitted);
+			ClassicAssert.IsNull(KingdomZoningRules.ParseGateAttributes("k", null, null, null, null, out _).Strata);
+			ClassicAssert.IsNull(KingdomZoningRules.ParseGateAttributes("k", null, null, null, null, null, null, null, out _).Strata);
+			ClassicAssert.IsTrue(KingdomZoningRules.Judge(ZoneGate.Open, null, "housing", 1, null).Permitted);
+			ClassicAssert.IsTrue(KingdomZoningRules.Judge(ZoneGate.Open, null, "housing", 1, null, true, false).Permitted);
+			ClassicAssert.IsTrue(KingdomZoningRules.Judge(ZoneGate.Open, null, "housing", 1, null, true, false, BuilderRoll.Unknown).Permitted);
 		}
 
 		// ==================================================================================
@@ -92,7 +93,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("!deep", "surface")]
 		public void TheFirstWelcomedTokenIsWhereTheDesignLives(string strata, string expected)
 		{
-			Assert.AreEqual(expected, KingdomZoningRules.HomeStratum(strata));
+			ClassicAssert.AreEqual(expected, KingdomZoningRules.HomeStratum(strata));
 		}
 
 		[Test]
@@ -110,8 +111,8 @@ namespace ThousandAndFirst.Tests
 			// It stands everywhere by DEFAULT, not by sharing. Reading an absent attribute as a
 			// share into every set would put the whole catalogue in the deep set's roster.
 			CollectionAssert.IsEmpty(KingdomZoningRules.StrataShared(null));
-			Assert.AreEqual("surface", KingdomZoningRules.HomeStratum(null));
-			Assert.IsTrue(KingdomZoningRules.StrataAdmits(null, "deep"));
+			ClassicAssert.AreEqual("surface", KingdomZoningRules.HomeStratum(null));
+			ClassicAssert.IsTrue(KingdomZoningRules.StrataAdmits(null, "deep"));
 		}
 
 		// ==================================================================================
@@ -138,7 +139,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(" deep , surface ", "surface", true)]
 		public void StrataAdmitsReadsTheListTheWayEveryOtherTagListIsRead(string strata, string stratum, bool admitted)
 		{
-			Assert.AreEqual(admitted, KingdomZoningRules.StrataAdmits(strata, stratum));
+			ClassicAssert.AreEqual(admitted, KingdomZoningRules.StrataAdmits(strata, stratum));
 		}
 
 		[Test]
@@ -146,9 +147,9 @@ namespace ThousandAndFirst.Tests
 		{
 			// The same asymmetry BuilderRoll.Unknown makes: a gate that cannot see where it stands
 			// must never be the reason a founder cannot build.
-			Assert.IsTrue(KingdomZoningRules.StrataAdmits("deep", null));
-			Assert.IsTrue(KingdomZoningRules.StrataAdmits("deep", ""));
-			Assert.IsTrue(KingdomZoningRules.StrataAdmits("deep", "  "));
+			ClassicAssert.IsTrue(KingdomZoningRules.StrataAdmits("deep", null));
+			ClassicAssert.IsTrue(KingdomZoningRules.StrataAdmits("deep", ""));
+			ClassicAssert.IsTrue(KingdomZoningRules.StrataAdmits("deep", "  "));
 		}
 
 		[Test]
@@ -156,10 +157,10 @@ namespace ThousandAndFirst.Tests
 		{
 			// The strata set is OPEN, exactly as the style set is: a third party's seabed refuses
 			// and describes itself rather than reading as a blank (STANDARDS 6).
-			Assert.IsTrue(KingdomZoningRules.StrataAdmits("seabed", "seabed"));
-			Assert.IsFalse(KingdomZoningRules.StrataAdmits("seabed", "deep"));
-			Assert.AreEqual("seabed", KingdomZoningRules.StratumName("seabed"));
-			Assert.AreEqual("seabed", KingdomZoningRules.HomeStratum("seabed"));
+			ClassicAssert.IsTrue(KingdomZoningRules.StrataAdmits("seabed", "seabed"));
+			ClassicAssert.IsFalse(KingdomZoningRules.StrataAdmits("seabed", "deep"));
+			ClassicAssert.AreEqual("seabed", KingdomZoningRules.StratumName("seabed"));
+			ClassicAssert.AreEqual("seabed", KingdomZoningRules.HomeStratum("seabed"));
 		}
 
 		// ==================================================================================
@@ -171,18 +172,18 @@ namespace ThousandAndFirst.Tests
 		{
 			// The whole of what "filtered subset" means. The sky set is never enumerated: it is
 			// whatever the surface set is, minus what filters itself out.
-			Assert.IsTrue(KingdomZoningRules.StrataAdmits("surface", KingdomZoningRules.StratumSky));
-			Assert.IsTrue(KingdomZoningRules.StrataAdmits("all", KingdomZoningRules.StratumSky));
-			Assert.IsTrue(KingdomZoningRules.StrataAdmits("surface,deep", KingdomZoningRules.StratumSky));
+			ClassicAssert.IsTrue(KingdomZoningRules.StrataAdmits("surface", KingdomZoningRules.StratumSky));
+			ClassicAssert.IsTrue(KingdomZoningRules.StrataAdmits("all", KingdomZoningRules.StratumSky));
+			ClassicAssert.IsTrue(KingdomZoningRules.StrataAdmits("surface,deep", KingdomZoningRules.StratumSky));
 		}
 
 		[Test]
 		public void ASurfaceDesignThatFiltersItselfOutOfTheSkyIsRefusedThere()
 		{
-			Assert.IsFalse(KingdomZoningRules.StrataAdmits("surface,!sky", KingdomZoningRules.StratumSky));
-			Assert.IsTrue(KingdomZoningRules.StrataAdmits("surface,!sky", KingdomZoningRules.StratumSurface));
-			Assert.IsFalse(KingdomZoningRules.StrataAdmits("all,!sky", KingdomZoningRules.StratumSky));
-			Assert.IsTrue(KingdomZoningRules.StrataAdmits("all,!sky", KingdomZoningRules.StratumDeep));
+			ClassicAssert.IsFalse(KingdomZoningRules.StrataAdmits("surface,!sky", KingdomZoningRules.StratumSky));
+			ClassicAssert.IsTrue(KingdomZoningRules.StrataAdmits("surface,!sky", KingdomZoningRules.StratumSurface));
+			ClassicAssert.IsFalse(KingdomZoningRules.StrataAdmits("all,!sky", KingdomZoningRules.StratumSky));
+			ClassicAssert.IsTrue(KingdomZoningRules.StrataAdmits("all,!sky", KingdomZoningRules.StratumDeep));
 		}
 
 		[Test]
@@ -190,18 +191,18 @@ namespace ThousandAndFirst.Tests
 		{
 			// The subset is of the SURFACE, so a set the surface does not hold does not reach the
 			// sky through it. A fungal vault is not raised on somebody's roof.
-			Assert.IsFalse(KingdomZoningRules.StrataAdmits("deep", KingdomZoningRules.StratumSky));
-			Assert.IsFalse(KingdomZoningRules.StrataAdmits("arcology", KingdomZoningRules.StratumSky));
+			ClassicAssert.IsFalse(KingdomZoningRules.StrataAdmits("deep", KingdomZoningRules.StratumSky));
+			ClassicAssert.IsFalse(KingdomZoningRules.StrataAdmits("arcology", KingdomZoningRules.StratumSky));
 		}
 
 		[Test]
 		public void ADesignThatNamesTheSkyIsJudgedOnWhatItNamedAndNotOnTheSurface()
 		{
-			Assert.IsTrue(KingdomZoningRules.StrataAdmits("sky", KingdomZoningRules.StratumSky));
-			Assert.IsFalse(KingdomZoningRules.StrataAdmits("sky", KingdomZoningRules.StratumSurface),
+			ClassicAssert.IsTrue(KingdomZoningRules.StrataAdmits("sky", KingdomZoningRules.StratumSky));
+			ClassicAssert.IsFalse(KingdomZoningRules.StrataAdmits("sky", KingdomZoningRules.StratumSurface),
 				"a design that lives on a roof does not stand on open ground");
-			Assert.IsTrue(KingdomZoningRules.StrataAdmits("deep,sky", KingdomZoningRules.StratumSky));
-			Assert.IsFalse(KingdomZoningRules.StrataAdmits("deep,sky", KingdomZoningRules.StratumSurface));
+			ClassicAssert.IsTrue(KingdomZoningRules.StrataAdmits("deep,sky", KingdomZoningRules.StratumSky));
+			ClassicAssert.IsFalse(KingdomZoningRules.StrataAdmits("deep,sky", KingdomZoningRules.StratumSurface));
 		}
 
 		// ==================================================================================
@@ -214,9 +215,9 @@ namespace ThousandAndFirst.Tests
 		public void AllOnItsOwnIsHowAStratumListSpellsNoRestriction(string strata)
 		{
 			ZoneGate gate = Parse(strata, out string error);
-			Assert.IsNull(error);
-			Assert.IsNull(gate.Strata);
-			Assert.IsTrue(gate.IsOpen);
+			ClassicAssert.IsNull(error);
+			ClassicAssert.IsNull(gate.Strata);
+			ClassicAssert.IsTrue(gate.IsOpen);
 		}
 
 		[Test]
@@ -225,9 +226,9 @@ namespace ThousandAndFirst.Tests
 			// "all" alone is no restriction; "all except the deep" is one, and dropping it for the
 			// word it happens to start with would silently un-gate the design.
 			ZoneGate gate = Parse("all,!deep", out string error);
-			Assert.IsNull(error);
-			Assert.AreEqual("all,!deep", gate.Strata);
-			Assert.IsFalse(KingdomZoningRules.StrataAdmits(gate.Strata, "deep"));
+			ClassicAssert.IsNull(error);
+			ClassicAssert.AreEqual("all,!deep", gate.Strata);
+			ClassicAssert.IsFalse(KingdomZoningRules.StrataAdmits(gate.Strata, "deep"));
 		}
 
 		[TestCase(",,")]
@@ -235,8 +236,8 @@ namespace ThousandAndFirst.Tests
 		public void AListWithNothingUsableInItIsDroppedAndNamed(string strata)
 		{
 			ZoneGate gate = Parse(strata, out string error);
-			Assert.IsNull(gate.Strata);
-			Assert.IsNotNull(error);
+			ClassicAssert.IsNull(gate.Strata);
+			ClassicAssert.IsNotNull(error);
 			StringAssert.Contains("Strata", error);
 		}
 
@@ -244,8 +245,8 @@ namespace ThousandAndFirst.Tests
 		public void AStrataListIsFoldedAndDeduplicatedLikeEveryOtherList()
 		{
 			ZoneGate gate = Parse(" Deep , SURFACE , deep ", out string error);
-			Assert.IsNull(error);
-			Assert.AreEqual("deep,surface", gate.Strata);
+			ClassicAssert.IsNull(error);
+			ClassicAssert.AreEqual("deep,surface", gate.Strata);
 		}
 
 		[Test]
@@ -255,11 +256,11 @@ namespace ThousandAndFirst.Tests
 			// so a typo in one narrows nothing and deletes nothing.
 			ZoneGate gate = KingdomZoningRules.ParseGateAttributes("post", "craft", "3", "machine:Solar Still", "workshop",
 				null, null, null, ",,", out string error);
-			Assert.IsNotNull(error);
-			Assert.AreEqual("craft", gate.Districts);
-			Assert.AreEqual(3, gate.MinZones);
-			Assert.AreEqual(TechLevel.Workshop, gate.MinTech);
-			Assert.IsNull(gate.Strata);
+			ClassicAssert.IsNotNull(error);
+			ClassicAssert.AreEqual("craft", gate.Districts);
+			ClassicAssert.AreEqual(3, gate.MinZones);
+			ClassicAssert.AreEqual(TechLevel.Workshop, gate.MinTech);
+			ClassicAssert.IsNull(gate.Strata);
 		}
 
 		[Test]
@@ -267,10 +268,10 @@ namespace ThousandAndFirst.Tests
 		{
 			ZoneGate gate = KingdomZoningRules.ParseGateAttributes("vaultgalleries", " agrarian ", "3", " machine:Solar Still ", "workshop",
 				"origin:the rust wells", "Barathrumites", "25", " deep , surface ", out string error);
-			Assert.IsNull(error);
-			Assert.AreEqual("deep,surface", gate.Strata);
-			Assert.AreEqual("Barathrumites", gate.Creed);
-			Assert.AreEqual(25, gate.CreedShare);
+			ClassicAssert.IsNull(error);
+			ClassicAssert.AreEqual("deep,surface", gate.Strata);
+			ClassicAssert.AreEqual("Barathrumites", gate.Creed);
+			ClassicAssert.AreEqual(25, gate.CreedShare);
 		}
 
 		// ==================================================================================
@@ -281,35 +282,35 @@ namespace ThousandAndFirst.Tests
 		public void ADeepDesignOnOpenGroundIsRefusedAndTheRefusalNamesTheDeep()
 		{
 			ZoningJudgement judgement = JudgeIn("deep", KingdomZoningRules.StratumSurface, Underground: false);
-			Assert.AreEqual(ZoningVerdict.RefusedStratum, judgement.Verdict);
-			Assert.AreEqual("the deep", judgement.Detail, "the refusal names the stratum that WOULD take it");
-			Assert.AreEqual("wants the deep", judgement.Note);
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedStratum, judgement.Verdict);
+			ClassicAssert.AreEqual("the deep", judgement.Detail, "the refusal names the stratum that WOULD take it");
+			ClassicAssert.AreEqual("wants the deep", judgement.Note);
 		}
 
 		[Test]
 		public void ASurfaceDesignUnderTheRockIsRefusedAndTheRefusalNamesOpenGround()
 		{
 			ZoningJudgement judgement = JudgeIn("surface", KingdomZoningRules.StratumDeep, Underground: true);
-			Assert.AreEqual(ZoningVerdict.RefusedStratum, judgement.Verdict);
-			Assert.AreEqual("open ground", judgement.Detail);
-			Assert.AreEqual("wants open ground", judgement.Note);
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedStratum, judgement.Verdict);
+			ClassicAssert.AreEqual("open ground", judgement.Detail);
+			ClassicAssert.AreEqual("wants open ground", judgement.Note);
 		}
 
 		[Test]
 		public void AShareTaggedDesignIsPermittedInBothItsStrata()
 		{
 			// The weep-tap's declaration: it lives in the deep and a surface city may still cut one.
-			Assert.IsTrue(JudgeIn("deep,surface", KingdomZoningRules.StratumDeep, Underground: true).Permitted);
-			Assert.IsTrue(JudgeIn("deep,surface", KingdomZoningRules.StratumSurface, Underground: false).Permitted);
+			ClassicAssert.IsTrue(JudgeIn("deep,surface", KingdomZoningRules.StratumDeep, Underground: true).Permitted);
+			ClassicAssert.IsTrue(JudgeIn("deep,surface", KingdomZoningRules.StratumSurface, Underground: false).Permitted);
 		}
 
 		[Test]
 		public void ARefusalThatNamesSeveralStrataNamesAllOfThem()
 		{
 			ZoningJudgement judgement = JudgeIn("deep,arcology", KingdomZoningRules.StratumSurface, Underground: false);
-			Assert.AreEqual(ZoningVerdict.RefusedStratum, judgement.Verdict);
-			Assert.AreEqual("the deep or the arcology", judgement.Detail);
-			Assert.AreEqual("wants the deep", judgement.Note, "the short tag names where it lives");
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedStratum, judgement.Verdict);
+			ClassicAssert.AreEqual("the deep or the arcology", judgement.Detail);
+			ClassicAssert.AreEqual("wants the deep", judgement.Note, "the short tag names where it lives");
 		}
 
 		[Test]
@@ -321,8 +322,8 @@ namespace ThousandAndFirst.Tests
 			ZoneGate gate = Parse("deep", out _);
 			ZoningJudgement judgement = KingdomZoningRules.Judge(gate, null, "power", 1, null,
 				Underground: true, RequiresSky: true, Roll: BuilderRoll.Unknown, Stratum: KingdomZoningRules.StratumDeep);
-			Assert.AreEqual(ZoningVerdict.RefusedStratum, judgement.Verdict);
-			Assert.AreEqual("wants open sky", judgement.Note, "the weather rule fired, not the set rule");
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedStratum, judgement.Verdict);
+			ClassicAssert.AreEqual("wants open sky", judgement.Note, "the weather rule fired, not the set rule");
 		}
 
 		[Test]
@@ -332,13 +333,13 @@ namespace ThousandAndFirst.Tests
 			// outranks the stratum, and the stratum outranks the district.
 			ZoneGate gate = KingdomZoningRules.ParseGateAttributes("x", "agrarian", "3", null, null,
 				null, null, null, "deep", out _);
-			Assert.AreEqual(ZoningVerdict.RefusedTerritory,
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedTerritory,
 				JudgeWith(gate, "shrine", 1, KingdomZoningRules.StratumSurface).Verdict);
-			Assert.AreEqual(ZoningVerdict.RefusedStratum,
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedStratum,
 				JudgeWith(gate, "shrine", 3, KingdomZoningRules.StratumSurface).Verdict);
-			Assert.AreEqual(ZoningVerdict.RefusedDistrict,
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedDistrict,
 				JudgeWith(gate, "shrine", 3, KingdomZoningRules.StratumDeep).Verdict);
-			Assert.IsTrue(JudgeWith(gate, "agrarian", 3, KingdomZoningRules.StratumDeep).Permitted);
+			ClassicAssert.IsTrue(JudgeWith(gate, "agrarian", 3, KingdomZoningRules.StratumDeep).Permitted);
 		}
 
 		[Test]
@@ -347,9 +348,9 @@ namespace ThousandAndFirst.Tests
 			// The overload every shipped caller uses. A deep design is refused on surface ground and
 			// permitted under the rock without anybody passing a stratum at all.
 			ZoneGate gate = Parse("deep", out _);
-			Assert.AreEqual(ZoningVerdict.RefusedStratum,
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedStratum,
 				KingdomZoningRules.Judge(gate, null, "housing", 1, null, false, false, BuilderRoll.Unknown).Verdict);
-			Assert.IsTrue(KingdomZoningRules.Judge(gate, null, "housing", 1, null, true, false, BuilderRoll.Unknown).Permitted);
+			ClassicAssert.IsTrue(KingdomZoningRules.Judge(gate, null, "housing", 1, null, true, false, BuilderRoll.Unknown).Permitted);
 		}
 
 		// ==================================================================================
@@ -360,7 +361,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(false, "surface")]
 		public void TheGroundNamesTheTwoStrataItCanName(bool underground, string expected)
 		{
-			Assert.AreEqual(expected, KingdomZoningRules.StratumOfGround(underground));
+			ClassicAssert.AreEqual(expected, KingdomZoningRules.StratumOfGround(underground));
 		}
 
 		[TestCase("surface", "open ground")]
@@ -372,7 +373,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("", "open ground")]
 		public void EveryStratumHasAWordTheFounderReads(string stratum, string expected)
 		{
-			Assert.AreEqual(expected, KingdomZoningRules.StratumName(stratum));
+			ClassicAssert.AreEqual(expected, KingdomZoningRules.StratumName(stratum));
 		}
 
 		[Test]
@@ -380,8 +381,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// Two functions, two questions: one names the weather a design was refused for want of,
 			// the other names the ground a design belongs to. The shipped sentence is not re-cut.
-			Assert.AreEqual("under the rock", KingdomZoningRules.StratumName(Underground: true));
-			Assert.AreEqual("open sky", KingdomZoningRules.StratumName(Underground: false));
+			ClassicAssert.AreEqual("under the rock", KingdomZoningRules.StratumName(Underground: true));
+			ClassicAssert.AreEqual("open sky", KingdomZoningRules.StratumName(Underground: false));
 		}
 
 		[TestCase("deep", "the deep")]
@@ -395,7 +396,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("", null)]
 		public void AStrataListReadsBackAsASentence(string strata, string expected)
 		{
-			Assert.AreEqual(expected, KingdomZoningRules.DescribeStrata(strata));
+			ClassicAssert.AreEqual(expected, KingdomZoningRules.DescribeStrata(strata));
 		}
 
 		// ==================================================================================
@@ -415,13 +416,13 @@ namespace ThousandAndFirst.Tests
 			// stops saying `Strata="deep"` breaks this and says so.
 			ZoneGate gate = KingdomZoningRules.ParseGateAttributes(key, null, null, null, null,
 				null, null, null, "deep", out string error);
-			Assert.IsNull(error);
-			Assert.AreEqual(KingdomZoningRules.StratumDeep, KingdomZoningRules.HomeStratum(gate.Strata));
+			ClassicAssert.IsNull(error);
+			ClassicAssert.AreEqual(KingdomZoningRules.StratumDeep, KingdomZoningRules.HomeStratum(gate.Strata));
 			CollectionAssert.IsEmpty(KingdomZoningRules.StrataShared(gate.Strata), "the starter set shares nowhere");
-			Assert.IsTrue(JudgeIn(gate.Strata, KingdomZoningRules.StratumDeep, Underground: true).Permitted);
-			Assert.AreEqual(ZoningVerdict.RefusedStratum,
+			ClassicAssert.IsTrue(JudgeIn(gate.Strata, KingdomZoningRules.StratumDeep, Underground: true).Permitted);
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedStratum,
 				JudgeIn(gate.Strata, KingdomZoningRules.StratumSurface, Underground: false).Verdict);
-			Assert.AreEqual(ZoningVerdict.RefusedStratum,
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedStratum,
 				JudgeIn(gate.Strata, KingdomZoningRules.StratumSky, Underground: false).Verdict);
 		}
 
@@ -431,8 +432,8 @@ namespace ThousandAndFirst.Tests
 			// The deep register's first line: there is no sky under the rock, so a deep design that
 			// declared Sky="yes" would be a design nobody could raise anywhere. Held here as an
 			// arithmetic fact rather than a promise: the two gates cannot both be satisfied.
-			Assert.IsFalse(KingdomZoningRules.StratumAccepts(Underground: true, RequiresSky: true));
-			Assert.IsFalse(KingdomZoningRules.StrataAdmits("deep", KingdomZoningRules.StratumSurface));
+			ClassicAssert.IsFalse(KingdomZoningRules.StratumAccepts(Underground: true, RequiresSky: true));
+			ClassicAssert.IsFalse(KingdomZoningRules.StrataAdmits("deep", KingdomZoningRules.StratumSurface));
 		}
 
 		[Test]
@@ -442,12 +443,12 @@ namespace ThousandAndFirst.Tests
 			// deep thing, and a surface city that cuts down to one is not doing something else.
 			ZoneGate gate = KingdomZoningRules.ParseGateAttributes("weeptap", null, null, null, null,
 				null, null, null, "deep,surface", out string error);
-			Assert.IsNull(error);
-			Assert.AreEqual(KingdomZoningRules.StratumDeep, KingdomZoningRules.HomeStratum(gate.Strata));
+			ClassicAssert.IsNull(error);
+			ClassicAssert.AreEqual(KingdomZoningRules.StratumDeep, KingdomZoningRules.HomeStratum(gate.Strata));
 			CollectionAssert.AreEqual(new List<string> { KingdomZoningRules.StratumSurface },
 				KingdomZoningRules.StrataShared(gate.Strata));
-			Assert.IsTrue(JudgeIn(gate.Strata, KingdomZoningRules.StratumDeep, Underground: true).Permitted);
-			Assert.IsTrue(JudgeIn(gate.Strata, KingdomZoningRules.StratumSurface, Underground: false).Permitted);
+			ClassicAssert.IsTrue(JudgeIn(gate.Strata, KingdomZoningRules.StratumDeep, Underground: true).Permitted);
+			ClassicAssert.IsTrue(JudgeIn(gate.Strata, KingdomZoningRules.StratumSurface, Underground: false).Permitted);
 		}
 
 		[Test]
@@ -459,14 +460,14 @@ namespace ThousandAndFirst.Tests
 			// the deep the niche tomb and the deep cut. A stratum is a place, not a penalty.
 			foreach (string strata in new string[1] { "all,!deep" })
 			{
-				Assert.IsFalse(KingdomZoningRules.StrataAdmits(strata, KingdomZoningRules.StratumDeep));
-				Assert.IsTrue(KingdomZoningRules.StrataAdmits(strata, KingdomZoningRules.StratumSurface));
-				Assert.IsTrue(KingdomZoningRules.StrataAdmits(strata, KingdomZoningRules.StratumSky));
-				Assert.AreEqual(KingdomZoningRules.StratumSurface, KingdomZoningRules.HomeStratum(strata));
+				ClassicAssert.IsFalse(KingdomZoningRules.StrataAdmits(strata, KingdomZoningRules.StratumDeep));
+				ClassicAssert.IsTrue(KingdomZoningRules.StrataAdmits(strata, KingdomZoningRules.StratumSurface));
+				ClassicAssert.IsTrue(KingdomZoningRules.StrataAdmits(strata, KingdomZoningRules.StratumSky));
+				ClassicAssert.AreEqual(KingdomZoningRules.StratumSurface, KingdomZoningRules.HomeStratum(strata));
 			}
 			ZoningJudgement judgement = JudgeIn("all,!deep", KingdomZoningRules.StratumDeep, Underground: true);
-			Assert.AreEqual(ZoningVerdict.RefusedStratum, judgement.Verdict);
-			Assert.AreEqual("any stratum but the deep", judgement.Detail);
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedStratum, judgement.Verdict);
+			ClassicAssert.AreEqual("any stratum but the deep", judgement.Detail);
 		}
 
 		[Test]
@@ -479,14 +480,14 @@ namespace ThousandAndFirst.Tests
 			// spending the same bargain twice.
 			// Corners, so this is the 5x4 footprint the stone house's tier stands on.
 			KingdomPlotRules.PlotRect footprint = new KingdomPlotRules.PlotRect(0, 0, 4, 3);
-			Assert.AreEqual(0L, KingdomPlotRules.EnclosureTicks(footprint, KingdomPlotRules.RoofState.Carved),
+			ClassicAssert.AreEqual(0L, KingdomPlotRules.EnclosureTicks(footprint, KingdomPlotRules.RoofState.Carved),
 				"the rock the carving left is the wall");
-			Assert.Greater(KingdomPlotRules.EnclosureTicks(footprint, KingdomPlotRules.RoofState.Walled), 0L,
+			ClassicAssert.Greater(KingdomPlotRules.EnclosureTicks(footprint, KingdomPlotRules.RoofState.Walled), 0L,
 				"and above ground the settlement raises it itself");
-			Assert.AreEqual(KingdomPlotRules.RoofState.Carved,
+			ClassicAssert.AreEqual(KingdomPlotRules.RoofState.Carved,
 				KingdomPlotRules.RoofOnGround(KingdomPlotRules.DefaultRoof(Open: false), Underground: true),
 				"which is why no deep record declares a roof: the ground already did");
-			Assert.AreEqual(200, KingdomPlotRules.UndergroundClearPercent, "and the price of it is the clearing");
+			ClassicAssert.AreEqual(200, KingdomPlotRules.UndergroundClearPercent, "and the price of it is the clearing");
 		}
 
 		[Test]
@@ -494,9 +495,9 @@ namespace ThousandAndFirst.Tests
 		{
 			// Addendum 15's first ruling, held as a fact about the vocabulary: the arcology token
 			// exists, it is not the deep, and nothing the deep set declares reaches it.
-			Assert.AreNotEqual(KingdomZoningRules.StratumDeep, KingdomZoningRules.StratumArcology);
-			Assert.IsFalse(KingdomZoningRules.StrataAdmits("deep", KingdomZoningRules.StratumArcology));
-			Assert.IsFalse(KingdomZoningRules.StrataAdmits("arcology", KingdomZoningRules.StratumDeep));
+			ClassicAssert.AreNotEqual(KingdomZoningRules.StratumDeep, KingdomZoningRules.StratumArcology);
+			ClassicAssert.IsFalse(KingdomZoningRules.StrataAdmits("deep", KingdomZoningRules.StratumArcology));
+			ClassicAssert.IsFalse(KingdomZoningRules.StrataAdmits("arcology", KingdomZoningRules.StratumDeep));
 		}
 
 		private static ZoneGate Parse(string Strata, out string Error)

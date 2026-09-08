@@ -1,5 +1,6 @@
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -9,15 +10,15 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void WireEnumsAndTasteMappingArePinned()
 		{
-			Assert.AreEqual(1, KingdomLabCivicRules.CurrentVersion);
-			Assert.AreEqual(1, (byte)KingdomLabCivicKind.SavantPrice);
-			Assert.AreEqual(2, (byte)KingdomLabCivicKind.RefusalDeparture);
-			Assert.AreEqual(5, (byte)KingdomLabCivicPhase.Quarantined);
-			Assert.AreEqual(3, (byte)KingdomLabCivicRequest.RoofRefusal);
-			Assert.AreEqual(2, (byte)KingdomLabCivicChoice.Refused);
-			Assert.AreEqual(5, (byte)KingdomLabCivicClosure.OwnerGone);
+			ClassicAssert.AreEqual(1, KingdomLabCivicRules.CurrentVersion);
+			ClassicAssert.AreEqual(1, (byte)KingdomLabCivicKind.SavantPrice);
+			ClassicAssert.AreEqual(2, (byte)KingdomLabCivicKind.RefusalDeparture);
+			ClassicAssert.AreEqual(5, (byte)KingdomLabCivicPhase.Quarantined);
+			ClassicAssert.AreEqual(3, (byte)KingdomLabCivicRequest.RoofRefusal);
+			ClassicAssert.AreEqual(2, (byte)KingdomLabCivicChoice.Refused);
+			ClassicAssert.AreEqual(5, (byte)KingdomLabCivicClosure.OwnerGone);
 			for (int i = 0; i < 10; i++)
-				Assert.AreEqual(i == 5 || i == 6
+				ClassicAssert.AreEqual(i == 5 || i == 6
 					? KingdomLabCivicRequest.ShrineUnconsecrated
 					: KingdomLabCivicRequest.NeighbourRehoused,
 					KingdomLabCivicRules.RequestForTaste(i), "taste " + i);
@@ -28,14 +29,14 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomLabCivicReceipt first = Savant(false);
 			KingdomLabCivicReceipt again = Savant(false);
-			Assert.NotNull(first);
+			ClassicAssert.NotNull(first);
 			Assert.That(KingdomLabCivicRules.Valid(first, out string failure),
 				Is.True, failure);
-			Assert.AreEqual(first.CauseDigest, again.CauseDigest);
-			Assert.AreEqual(first.EventId, again.EventId);
-			Assert.AreEqual(KingdomLabCivicRules.TasteOrdinalSource, first.TasteSource);
-			Assert.AreEqual(27L, first.TasteOrdinal);
-			Assert.AreEqual(LodgeReceipt, first.NotableLodgeReceiptId);
+			ClassicAssert.AreEqual(first.CauseDigest, again.CauseDigest);
+			ClassicAssert.AreEqual(first.EventId, again.EventId);
+			ClassicAssert.AreEqual(KingdomLabCivicRules.TasteOrdinalSource, first.TasteSource);
+			ClassicAssert.AreEqual(27L, first.TasteOrdinal);
+			ClassicAssert.AreEqual(LodgeReceipt, first.NotableLodgeReceiptId);
 
 			KingdomLabCivicReceipt tampered = first.Copy();
 			tampered.TargetHomeObjectId = "another-home";
@@ -51,13 +52,13 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void MalformedOrInferredSavantEvidenceNeverPrepares()
 		{
-			Assert.IsNull(PrepareSavant("Creed A", "Creed A", LodgeReceipt,
+			ClassicAssert.IsNull(PrepareSavant("Creed A", "Creed A", LodgeReceipt,
 				"plot-a", "plot-b"));
-			Assert.IsNull(PrepareSavant("Creed A", "Creed B", "intent:" + LodgeReceipt,
+			ClassicAssert.IsNull(PrepareSavant("Creed A", "Creed B", "intent:" + LodgeReceipt,
 				"plot-a", "plot-b"));
-			Assert.IsNull(PrepareSavant("Creed A", "Creed B", LodgeReceipt,
+			ClassicAssert.IsNull(PrepareSavant("Creed A", "Creed B", LodgeReceipt,
 				"plot-a", "plot-a"));
-			Assert.IsNull(PrepareSavant("Creed A", "Creed B", "not-a-lodge-receipt",
+			ClassicAssert.IsNull(PrepareSavant("Creed A", "Creed B", "not-a-lodge-receipt",
 				"plot-a", "plot-b"));
 		}
 
@@ -70,25 +71,25 @@ namespace ThousandAndFirst.Tests
 				"the move cannot close before the founder grants it");
 			Assert.That(KingdomLabCivicRules.TryChoose(prepared, true, 30L,
 				out KingdomLabCivicReceipt promised, out string failure), Is.True, failure);
-			Assert.AreEqual(KingdomLabCivicPhase.ChoicePrepared, promised.Phase);
+			ClassicAssert.AreEqual(KingdomLabCivicPhase.ChoicePrepared, promised.Phase);
 			Assert.That(KingdomLabCivicRules.TryClose(promised,
 				KingdomLabCivicClosure.Rehoused, 31L,
 				out KingdomLabCivicReceipt closed, out failure), Is.True, failure);
-			Assert.AreEqual(KingdomLabCivicPhase.Closed, closed.Phase);
-			Assert.AreEqual(KingdomLabCivicChoice.Granted, closed.Choice);
+			ClassicAssert.AreEqual(KingdomLabCivicPhase.Closed, closed.Phase);
+			ClassicAssert.AreEqual(KingdomLabCivicChoice.Granted, closed.Choice);
 			Assert.That(KingdomLabCivicRules.TryClose(closed,
 				KingdomLabCivicClosure.Rehoused, 99L,
 				out KingdomLabCivicReceipt retry, out failure), Is.True, failure);
-			Assert.AreEqual(closed.ClosedTick, retry.ClosedTick);
+			ClassicAssert.AreEqual(closed.ClosedTick, retry.ClosedTick);
 			Assert.That(KingdomLabCivicRules.TryClose(closed,
 				KingdomLabCivicClosure.CauseGone, 99L, out _, out _), Is.False);
 
 			Assert.That(KingdomLabCivicRules.TryChoose(Savant(false), false, 30L,
 				out KingdomLabCivicReceipt refused, out failure), Is.True, failure);
-			Assert.AreEqual(KingdomLabCivicClosure.Refused, refused.Closure);
+			ClassicAssert.AreEqual(KingdomLabCivicClosure.Refused, refused.Closure);
 			Assert.That(KingdomLabCivicRules.TryChoose(refused, false, 99L,
 				out retry, out failure), Is.True, failure);
-			Assert.AreEqual(refused.ClosedTick, retry.ClosedTick);
+			ClassicAssert.AreEqual(refused.ClosedTick, retry.ClosedTick);
 			Assert.That(KingdomLabCivicRules.TryChoose(refused, true, 99L,
 				out _, out _), Is.False);
 		}
@@ -98,13 +99,13 @@ namespace ThousandAndFirst.Tests
 		{
 			Assert.That(KingdomLabCivicRules.TryChoose(Savant(true), true, 30L,
 				out KingdomLabCivicReceipt shrine, out string failure), Is.True, failure);
-			Assert.AreEqual(KingdomLabCivicPhase.Active, shrine.Phase);
+			ClassicAssert.AreEqual(KingdomLabCivicPhase.Active, shrine.Phase);
 			Assert.That(KingdomLabCivicRules.TryClose(shrine,
 				KingdomLabCivicClosure.Rehoused, 31L, out _, out _), Is.False);
 			Assert.That(KingdomLabCivicRules.TryClose(shrine,
 				KingdomLabCivicClosure.CauseGone, 31L,
 				out KingdomLabCivicReceipt causeGone, out failure), Is.True, failure);
-			Assert.AreEqual(KingdomLabCivicChoice.Granted, causeGone.Choice);
+			ClassicAssert.AreEqual(KingdomLabCivicChoice.Granted, causeGone.Choice);
 
 			KingdomLabCivicReceipt leaving = Departure();
 			Assert.That(KingdomLabCivicRules.Valid(leaving, out failure), Is.True, failure);
@@ -113,7 +114,7 @@ namespace ThousandAndFirst.Tests
 			Assert.That(KingdomLabCivicRules.TryClose(leaving,
 				KingdomLabCivicClosure.Departed, 40L,
 				out KingdomLabCivicReceipt departed, out failure), Is.True, failure);
-			Assert.AreEqual(KingdomLabCivicClosure.Departed, departed.Closure);
+			ClassicAssert.AreEqual(KingdomLabCivicClosure.Departed, departed.Closure);
 			Assert.That(KingdomLabCivicRules.TryClose(Departure(),
 				KingdomLabCivicClosure.Refused, 40L, out _, out _), Is.False);
 		}
@@ -128,18 +129,18 @@ namespace ThousandAndFirst.Tests
 			for (int e = 0; e < eventCuts.Length; e++)
 				for (int o = 0; o < ownerCuts.Length; o++)
 					for (int d = 0; d < digestCuts.Length; d++)
-						Assert.AreEqual(KingdomLabDepartureProjection.RecoverableAtSource,
+						ClassicAssert.AreEqual(KingdomLabDepartureProjection.RecoverableAtSource,
 							Projection(receipt, receipt.SourcePlotId, eventCuts[e], ownerCuts[o],
 								digestCuts[d]), "every empty-or-exact marker-field cut recovers");
-			Assert.AreEqual(KingdomLabDepartureProjection.Active,
+			ClassicAssert.AreEqual(KingdomLabDepartureProjection.Active,
 				Projection(receipt, null, receipt.EventId, receipt.OwnerObjectId,
 					receipt.CauseDigest), "a fully published marker plus cleared home is active");
-			Assert.AreEqual(KingdomLabDepartureProjection.Diverged,
+			ClassicAssert.AreEqual(KingdomLabDepartureProjection.Diverged,
 				Projection(receipt, null, receipt.EventId, null, receipt.CauseDigest),
 				"home cannot clear before every exact marker field");
-			Assert.AreEqual(KingdomLabDepartureProjection.Diverged,
+			ClassicAssert.AreEqual(KingdomLabDepartureProjection.Diverged,
 				Projection(receipt, receipt.SourcePlotId, "foreign", null, null));
-			Assert.AreEqual(KingdomLabDepartureProjection.Diverged,
+			ClassicAssert.AreEqual(KingdomLabDepartureProjection.Diverged,
 				Projection(receipt, "third-plot", receipt.EventId, receipt.OwnerObjectId,
 					receipt.CauseDigest));
 
@@ -167,11 +168,11 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TargetCardinalityAndReadableProseAreExact()
 		{
-			Assert.AreEqual(KingdomLabObjectMatch.Missing,
+			ClassicAssert.AreEqual(KingdomLabObjectMatch.Missing,
 				KingdomLabCivicRules.ClassifyObjectMatches(0));
-			Assert.AreEqual(KingdomLabObjectMatch.Unique,
+			ClassicAssert.AreEqual(KingdomLabObjectMatch.Unique,
 				KingdomLabCivicRules.ClassifyObjectMatches(1));
-			Assert.AreEqual(KingdomLabObjectMatch.Duplicate,
+			ClassicAssert.AreEqual(KingdomLabObjectMatch.Duplicate,
 				KingdomLabCivicRules.ClassifyObjectMatches(2));
 			string shrine = KingdomLabCivicRules.RequestLine(Savant(true));
 			StringAssert.Contains("the salt shrine", shrine);
@@ -193,28 +194,28 @@ namespace ThousandAndFirst.Tests
 			KingdomLabCivicOwnerRow first = Owner("settlement-a", "zone-a", "hall-a");
 			Assert.That(KingdomLabCivicOwnerRules.TryClaim(book, second, out book), Is.True);
 			Assert.That(KingdomLabCivicOwnerRules.TryClaim(book, first, out book), Is.True);
-			Assert.AreEqual("settlement-a", book.Rows[0].SettlementId);
+			ClassicAssert.AreEqual("settlement-a", book.Rows[0].SettlementId);
 			Assert.That(KingdomLabCivicOwnerRules.TryClaim(book, first, out KingdomLabCivicOwnerBook same),
 				Is.True);
 			Assert.That(KingdomLabCivicOwnerRules.TryClaim(book,
 				Owner("settlement-a", "zone-a", "other-hall"), out _), Is.False);
 
 			string wire = KingdomLabCivicOwnerRules.Encode(same);
-			Assert.IsNotNull(wire);
+			ClassicAssert.IsNotNull(wire);
 			Assert.That(KingdomLabCivicOwnerRules.TryDecode(wire, out KingdomLabCivicOwnerBook decoded),
 				Is.True);
-			Assert.AreEqual(wire, KingdomLabCivicOwnerRules.Encode(decoded));
+			ClassicAssert.AreEqual(wire, KingdomLabCivicOwnerRules.Encode(decoded));
 			Assert.That(KingdomLabCivicOwnerRules.TryDecode(wire + "A", out _), Is.False);
 			Assert.That(KingdomLabCivicOwnerRules.TryRelease(decoded,
 				Owner("settlement-a", "zone-a", "other-hall"), out _), Is.False);
 			Assert.That(KingdomLabCivicOwnerRules.TryRelease(decoded, first, out book), Is.True);
-			Assert.IsNull(KingdomLabCivicOwnerRules.Find(book, "settlement-a"));
+			ClassicAssert.IsNull(KingdomLabCivicOwnerRules.Find(book, "settlement-a"));
 
 			Assert.That(KingdomLabCivicOwnerRules.TryClaim(book,
 				Owner("settlement-c", "zone-c", "hall-c"), out book), Is.True);
 			Assert.That(KingdomLabCivicOwnerRules.TryClaim(book,
 				Owner("settlement-d", "zone-d", "hall-d"), out book), Is.True);
-			Assert.AreEqual(KingdomLabCivicOwnerRules.MaxRows, book.Rows.Count);
+			ClassicAssert.AreEqual(KingdomLabCivicOwnerRules.MaxRows, book.Rows.Count);
 			Assert.That(KingdomLabCivicOwnerRules.TryClaim(book,
 				Owner("settlement-e", "zone-e", "hall-e"), out _), Is.False);
 		}

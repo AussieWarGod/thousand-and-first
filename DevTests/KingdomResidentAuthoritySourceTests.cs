@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -106,8 +107,8 @@ namespace ThousandAndFirst.Tests
 		{
 			string system = KingdomSystemLogicalSource.Read();
 			string settlement = KingdomSettlementLogicalSource.Read();
-			Assert.AreEqual(3, Count(system, "[Obsolete(\"Compatibility projection only;"));
-			Assert.AreEqual(3, Count(settlement, "[Obsolete(\"Compatibility projection only;"));
+			ClassicAssert.AreEqual(3, Count(system, "[Obsolete(\"Compatibility projection only;"));
+			ClassicAssert.AreEqual(3, Count(settlement, "[Obsolete(\"Compatibility projection only;"));
 			StringAssert.Contains("KingdomResidents.AdoptLegacyAuthority(this)", system);
 		}
 
@@ -119,8 +120,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int binding = source.IndexOf("public static bool Bind(", resolver,
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(resolver, 0);
-			Assert.Greater(binding, resolver);
+			ClassicAssert.GreaterOrEqual(resolver, 0);
+			ClassicAssert.Greater(binding, resolver);
 			string exact = source.Substring(resolver, binding - resolver);
 			StringAssert.Contains("GameObject.FindByID(Binding.ObjectId)", exact);
 			StringAssert.Contains("Binding.Kind == KingdomBindingKind.Resident", exact);
@@ -132,7 +133,7 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int books = source.IndexOf("private static IEnumerable<KingdomCityBook> Books(",
 				presence, StringComparison.Ordinal);
-			Assert.Greater(books, presence);
+			ClassicAssert.Greater(books, presence);
 			string presenceBody = source.Substring(presence, books - presence);
 			StringAssert.Contains("FindExactBindingObject(binding)", presenceBody);
 			StringAssert.DoesNotContain("GetObjects()", presenceBody);

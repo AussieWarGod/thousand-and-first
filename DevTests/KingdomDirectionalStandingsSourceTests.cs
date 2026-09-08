@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -111,7 +112,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Their regard for us and our policy toward them are separate", report);
 			StringAssert.Contains("their regard ", report);
 			StringAssert.Contains("our policy ", report);
-			Assert.GreaterOrEqual(Count(report, "\"unspecified\""), 2);
+			ClassicAssert.GreaterOrEqual(Count(report, "\"unspecified\""), 2);
 		}
 
 		[Test]
@@ -155,8 +156,8 @@ namespace ThousandAndFirst.Tests
 				"KingdomSystem.z24a.DirectionalStandingNormalization.cs"));
 			StringAssert.Contains("ValidateDirectionalStandingState(Standings", normalize);
 			StringAssert.Contains("ValidateDirectionalStandingState(ExiledStandings", normalize);
-			Assert.AreEqual(4, Count(normalize, "KingdomStandingRules.MaxRelationships"));
-			Assert.AreEqual(4, Count(normalize,
+			ClassicAssert.AreEqual(4, Count(normalize, "KingdomStandingRules.MaxRelationships"));
+			ClassicAssert.AreEqual(4, Count(normalize,
 				"KingdomStandingRules.EligibleForeignFaction"));
 			StringAssert.Contains("KingdomStandingRules.CanonicalPairs(regard, remainders)",
 				normalize);
@@ -191,7 +192,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < needles.Length; i++)
 			{
 				int next = source.IndexOf(needles[i], at + 1, StringComparison.Ordinal);
-				Assert.Greater(next, at, "missing/out-of-order: " + needles[i]);
+				ClassicAssert.Greater(next, at, "missing/out-of-order: " + needles[i]);
 				at = next;
 			}
 		}
@@ -207,10 +208,10 @@ namespace ThousandAndFirst.Tests
 		private static string Slice(string source, string startNeedle, string endNeedle)
 		{
 			int start = source.IndexOf(startNeedle, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, "missing start: " + startNeedle);
+			ClassicAssert.GreaterOrEqual(start, 0, "missing start: " + startNeedle);
 			int end = source.IndexOf(endNeedle, start + startNeedle.Length,
 				StringComparison.Ordinal);
-			Assert.Greater(end, start, "missing end: " + endNeedle);
+			ClassicAssert.Greater(end, start, "missing end: " + endNeedle);
 			return source.Substring(start, end - start);
 		}
 	}

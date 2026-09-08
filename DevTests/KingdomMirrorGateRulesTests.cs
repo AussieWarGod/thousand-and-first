@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -13,7 +14,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void GateDeclarationsKeepTheirWireAbiAndCopyDefaults()
 		{
-			Assert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(KingdomGateVerdict)));
+			ClassicAssert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(KingdomGateVerdict)));
 			CollectionAssert.AreEqual(new byte[8] { 0, 1, 2, 3, 4, 5, 6, 7 }, new byte[8]
 			{
 				(byte)KingdomGateVerdict.Offered,
@@ -25,7 +26,7 @@ namespace ThousandAndFirst.Tests
 				(byte)KingdomGateVerdict.RefusedFull,
 				(byte)KingdomGateVerdict.RefusedNamed
 			});
-			Assert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(KingdomGateHold)));
+			ClassicAssert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(KingdomGateHold)));
 			CollectionAssert.AreEqual(new byte[3] { 0, 1, 2 }, new byte[3]
 			{
 				(byte)KingdomGateHold.Unchanged,
@@ -33,25 +34,25 @@ namespace ThousandAndFirst.Tests
 				(byte)KingdomGateHold.Lost
 			});
 
-			Assert.AreEqual("ThousandAndFirst.KingdomGateRow", typeof(KingdomGateRow).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomGateRow", typeof(KingdomGateRow).FullName);
 			System.Reflection.FieldInfo[] fields = typeof(KingdomGateRow).GetFields(
 				System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic);
 			CollectionAssert.AreEqual(new string[3] { "Key", "City", "Partner" },
 				new string[3] { fields[0].Name, fields[1].Name, fields[2].Name });
 			for (int i = 0; i < fields.Length; i++)
 			{
-				Assert.AreEqual(typeof(string), fields[i].FieldType);
-				Assert.IsTrue(fields[i].IsInitOnly);
+				ClassicAssert.AreEqual(typeof(string), fields[i].FieldType);
+				ClassicAssert.IsTrue(fields[i].IsInitOnly);
 			}
 
 			KingdomGateRow blank = new KingdomGateRow(null, null, null);
-			Assert.AreEqual("", blank.Key);
-			Assert.AreEqual("", blank.City);
-			Assert.AreEqual("", blank.Partner);
+			ClassicAssert.AreEqual("", blank.Key);
+			ClassicAssert.AreEqual("", blank.City);
+			ClassicAssert.AreEqual("", blank.Partner);
 			KingdomGateRow partnered = new KingdomGateRow("key", "city", "first").WithPartner("second");
-			Assert.AreEqual("key", partnered.Key);
-			Assert.AreEqual("city", partnered.City);
-			Assert.AreEqual("second", partnered.Partner);
+			ClassicAssert.AreEqual("key", partnered.Key);
+			ClassicAssert.AreEqual("city", partnered.City);
+			ClassicAssert.AreEqual("second", partnered.Partner);
 		}
 
 		private static KingdomGateRow[] Register(params KingdomGateRow[] rows)
@@ -65,11 +66,11 @@ namespace ThousandAndFirst.Tests
 			KingdomGateRow[] rows = Register(
 				new KingdomGateRow(KeyA, "Kavvat", KeyB),
 				new KingdomGateRow(KeyB, "Ossuary Reach", KeyA));
-			Assert.IsFalse(KingdomMirrorGateRules.MayRemove(rows, KeyA));
-			Assert.IsFalse(KingdomMirrorGateRules.MayRemove(rows, KeyB));
-			Assert.IsTrue(KingdomMirrorGateRules.MayRemove(rows, KeyC));
-			Assert.IsFalse(KingdomMirrorGateRules.MayRemove(rows, null));
-			Assert.IsFalse(KingdomMirrorGateRules.MayRemove(rows, ""));
+			ClassicAssert.IsFalse(KingdomMirrorGateRules.MayRemove(rows, KeyA));
+			ClassicAssert.IsFalse(KingdomMirrorGateRules.MayRemove(rows, KeyB));
+			ClassicAssert.IsTrue(KingdomMirrorGateRules.MayRemove(rows, KeyC));
+			ClassicAssert.IsFalse(KingdomMirrorGateRules.MayRemove(rows, null));
+			ClassicAssert.IsFalse(KingdomMirrorGateRules.MayRemove(rows, ""));
 		}
 
 		// --- ComposeLocationKey: the ground names the arch, and names it the same way twice ------
@@ -80,7 +81,7 @@ namespace ThousandAndFirst.Tests
 			// Stability is the whole contract: the key survives a reload because it was never
 			// stored, only recomputed, and an arch rebuilt on the same cell inherits the crossing
 			// rather than orphaning it.
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				KingdomMirrorGateRules.ComposeLocationKey("JoppaWorld.11.22.1.1.10", 20, 10),
 				KingdomMirrorGateRules.ComposeLocationKey("JoppaWorld.11.22.1.1.10", 20, 10));
 		}
@@ -89,8 +90,8 @@ namespace ThousandAndFirst.Tests
 		public void ComposeLocationKey_SeparatesGroundThatIsNotTheSame()
 		{
 			string here = KingdomMirrorGateRules.ComposeLocationKey("JoppaWorld.11.22.1.1.10", 20, 10);
-			Assert.AreNotEqual(here, KingdomMirrorGateRules.ComposeLocationKey("JoppaWorld.11.22.1.1.10", 10, 20));
-			Assert.AreNotEqual(here, KingdomMirrorGateRules.ComposeLocationKey("JoppaWorld.11.22.1.1.11", 20, 10));
+			ClassicAssert.AreNotEqual(here, KingdomMirrorGateRules.ComposeLocationKey("JoppaWorld.11.22.1.1.10", 10, 20));
+			ClassicAssert.AreNotEqual(here, KingdomMirrorGateRules.ComposeLocationKey("JoppaWorld.11.22.1.1.11", 20, 10));
 		}
 
 		[TestCase(null, 1, 1)]
@@ -104,7 +105,7 @@ namespace ThousandAndFirst.Tests
 			// A key carrying one of the register's own separators would come back out of the
 			// register as two columns, so it is refused where it is made rather than escaped where
 			// it is read.
-			Assert.IsNull(KingdomMirrorGateRules.ComposeLocationKey(zoneId, x, y));
+			ClassicAssert.IsNull(KingdomMirrorGateRules.ComposeLocationKey(zoneId, x, y));
 		}
 
 		[TestCase(null, false)]
@@ -114,7 +115,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("Kav^vat", false)]
 		public void Storable_RefusesAnythingTheRegisterWouldGiveBackWrong(string text, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomMirrorGateRules.Storable(text));
+			ClassicAssert.AreEqual(expected, KingdomMirrorGateRules.Storable(text));
 		}
 
 		// --- the register: read, write, and repair --------------------------------------------
@@ -125,9 +126,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomGateRow[] rows;
 			int dropped;
-			Assert.IsTrue(KingdomMirrorGateRules.TryParseRegister(text, out rows, out dropped));
-			Assert.AreEqual(0, rows.Length);
-			Assert.AreEqual(0, dropped);
+			ClassicAssert.IsTrue(KingdomMirrorGateRules.TryParseRegister(text, out rows, out dropped));
+			ClassicAssert.AreEqual(0, rows.Length);
+			ClassicAssert.AreEqual(0, dropped);
 		}
 
 		[Test]
@@ -138,15 +139,15 @@ namespace ThousandAndFirst.Tests
 				new KingdomGateRow(KeyB, "Ossuary Reach", KeyA));
 			KingdomGateRow[] read;
 			int dropped;
-			Assert.IsTrue(KingdomMirrorGateRules.TryParseRegister(KingdomMirrorGateRules.FormatRegister(written), out read, out dropped));
-			Assert.AreEqual(0, dropped);
-			Assert.AreEqual(2, read.Length);
-			Assert.AreEqual(KeyA, read[0].Key);
-			Assert.AreEqual("Kavvat", read[0].City);
-			Assert.AreEqual(KeyB, read[0].Partner);
-			Assert.AreEqual(KeyB, read[1].Key);
-			Assert.AreEqual("Ossuary Reach", read[1].City);
-			Assert.AreEqual(KeyA, read[1].Partner);
+			ClassicAssert.IsTrue(KingdomMirrorGateRules.TryParseRegister(KingdomMirrorGateRules.FormatRegister(written), out read, out dropped));
+			ClassicAssert.AreEqual(0, dropped);
+			ClassicAssert.AreEqual(2, read.Length);
+			ClassicAssert.AreEqual(KeyA, read[0].Key);
+			ClassicAssert.AreEqual("Kavvat", read[0].City);
+			ClassicAssert.AreEqual(KeyB, read[0].Partner);
+			ClassicAssert.AreEqual(KeyB, read[1].Key);
+			ClassicAssert.AreEqual("Ossuary Reach", read[1].City);
+			ClassicAssert.AreEqual(KeyA, read[1].Partner);
 		}
 
 		[Test]
@@ -156,11 +157,11 @@ namespace ThousandAndFirst.Tests
 			// at the other end, and the drop must be reported rather than absorbed.
 			KingdomGateRow[] rows;
 			int dropped;
-			Assert.IsFalse(KingdomMirrorGateRules.TryParseRegister(KeyA + "^Kavvat^" + "|" + "nonsense" + "|" + KeyB + "^Ossuary Reach^", out rows, out dropped));
-			Assert.AreEqual(1, dropped);
-			Assert.AreEqual(2, rows.Length);
-			Assert.AreEqual(KeyA, rows[0].Key);
-			Assert.AreEqual(KeyB, rows[1].Key);
+			ClassicAssert.IsFalse(KingdomMirrorGateRules.TryParseRegister(KeyA + "^Kavvat^" + "|" + "nonsense" + "|" + KeyB + "^Ossuary Reach^", out rows, out dropped));
+			ClassicAssert.AreEqual(1, dropped);
+			ClassicAssert.AreEqual(2, rows.Length);
+			ClassicAssert.AreEqual(KeyA, rows[0].Key);
+			ClassicAssert.AreEqual(KeyB, rows[1].Key);
 		}
 
 		[Test]
@@ -168,9 +169,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomGateRow[] rows;
 			int dropped;
-			Assert.IsFalse(KingdomMirrorGateRules.TryParseRegister(KeyA + "^^", out rows, out dropped));
-			Assert.AreEqual(1, dropped);
-			Assert.AreEqual(0, rows.Length);
+			ClassicAssert.IsFalse(KingdomMirrorGateRules.TryParseRegister(KeyA + "^^", out rows, out dropped));
+			ClassicAssert.AreEqual(1, dropped);
+			ClassicAssert.AreEqual(0, rows.Length);
 		}
 
 		[Test]
@@ -178,10 +179,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomGateRow[] rows;
 			int dropped;
-			Assert.IsFalse(KingdomMirrorGateRules.TryParseRegister(KeyA + "^Kavvat^|" + KeyA + "^Somewhere Else^", out rows, out dropped));
-			Assert.AreEqual(1, dropped);
-			Assert.AreEqual(1, rows.Length);
-			Assert.AreEqual("Kavvat", rows[0].City);
+			ClassicAssert.IsFalse(KingdomMirrorGateRules.TryParseRegister(KeyA + "^Kavvat^|" + KeyA + "^Somewhere Else^", out rows, out dropped));
+			ClassicAssert.AreEqual(1, dropped);
+			ClassicAssert.AreEqual(1, rows.Length);
+			ClassicAssert.AreEqual("Kavvat", rows[0].City);
 		}
 
 		[Test]
@@ -198,16 +199,16 @@ namespace ThousandAndFirst.Tests
 			}
 			KingdomGateRow[] rows;
 			int dropped;
-			Assert.IsFalse(KingdomMirrorGateRules.TryParseRegister(text.ToString(), out rows, out dropped));
-			Assert.AreEqual(KingdomMirrorGateRules.MaxGates, rows.Length);
-			Assert.AreEqual(1, dropped);
+			ClassicAssert.IsFalse(KingdomMirrorGateRules.TryParseRegister(text.ToString(), out rows, out dropped));
+			ClassicAssert.AreEqual(KingdomMirrorGateRules.MaxGates, rows.Length);
+			ClassicAssert.AreEqual(1, dropped);
 		}
 
 		[Test]
 		public void FormatRegister_IsEmptyForNoArches()
 		{
-			Assert.AreEqual("", KingdomMirrorGateRules.FormatRegister(null));
-			Assert.AreEqual("", KingdomMirrorGateRules.FormatRegister(new KingdomGateRow[0]));
+			ClassicAssert.AreEqual("", KingdomMirrorGateRules.FormatRegister(null));
+			ClassicAssert.AreEqual("", KingdomMirrorGateRules.FormatRegister(new KingdomGateRow[0]));
 		}
 
 		// --- the register's wire: version token, pre-version saves, and newer builds -------------
@@ -223,12 +224,12 @@ namespace ThousandAndFirst.Tests
 				new KingdomGateRow(KeyA, "Kavvat", KeyB),
 				new KingdomGateRow(KeyB, "Ossuary Reach", KeyA));
 			string text = KingdomMirrorGateRules.FormatRegister(written);
-			Assert.AreEqual("v1", KingdomMirrorGateRules.RegisterVersionToken);
+			ClassicAssert.AreEqual("v1", KingdomMirrorGateRules.RegisterVersionToken);
 			StringAssert.StartsWith("v1|", text);
-			Assert.AreEqual("v1|" + LegacyPair, text);
-			Assert.AreEqual(LegacyPair, KingdomMirrorGateRules.LegacyRegisterText(written));
-			Assert.AreEqual("", KingdomMirrorGateRules.LegacyRegisterText(null));
-			Assert.AreEqual("", KingdomMirrorGateRules.LegacyRegisterText(new KingdomGateRow[0]));
+			ClassicAssert.AreEqual("v1|" + LegacyPair, text);
+			ClassicAssert.AreEqual(LegacyPair, KingdomMirrorGateRules.LegacyRegisterText(written));
+			ClassicAssert.AreEqual("", KingdomMirrorGateRules.LegacyRegisterText(null));
+			ClassicAssert.AreEqual("", KingdomMirrorGateRules.LegacyRegisterText(new KingdomGateRow[0]));
 		}
 
 		[Test]
@@ -239,11 +240,11 @@ namespace ThousandAndFirst.Tests
 			KingdomGateRow[] rows;
 			int dropped;
 			bool future;
-			Assert.IsTrue(KingdomMirrorGateRules.TryParseRegister(LegacyPair, out rows, out dropped, out future));
-			Assert.IsFalse(future);
-			Assert.AreEqual(0, dropped);
+			ClassicAssert.IsTrue(KingdomMirrorGateRules.TryParseRegister(LegacyPair, out rows, out dropped, out future));
+			ClassicAssert.IsFalse(future);
+			ClassicAssert.AreEqual(0, dropped);
 			AssertPair(rows);
-			Assert.AreEqual("v1|" + LegacyPair, KingdomMirrorGateRules.FormatRegister(rows));
+			ClassicAssert.AreEqual("v1|" + LegacyPair, KingdomMirrorGateRules.FormatRegister(rows));
 		}
 
 		[Test]
@@ -252,9 +253,9 @@ namespace ThousandAndFirst.Tests
 			KingdomGateRow[] rows;
 			int dropped;
 			bool future;
-			Assert.IsTrue(KingdomMirrorGateRules.TryParseRegister("v1|" + LegacyPair, out rows, out dropped, out future));
-			Assert.IsFalse(future);
-			Assert.AreEqual(0, dropped);
+			ClassicAssert.IsTrue(KingdomMirrorGateRules.TryParseRegister("v1|" + LegacyPair, out rows, out dropped, out future));
+			ClassicAssert.IsFalse(future);
+			ClassicAssert.AreEqual(0, dropped);
 			AssertPair(rows);
 		}
 
@@ -265,10 +266,10 @@ namespace ThousandAndFirst.Tests
 			KingdomGateRow[] rows;
 			int dropped;
 			bool future;
-			Assert.IsTrue(KingdomMirrorGateRules.TryParseRegister(text, out rows, out dropped, out future));
-			Assert.IsFalse(future);
-			Assert.AreEqual(0, rows.Length);
-			Assert.AreEqual(0, dropped);
+			ClassicAssert.IsTrue(KingdomMirrorGateRules.TryParseRegister(text, out rows, out dropped, out future));
+			ClassicAssert.IsFalse(future);
+			ClassicAssert.AreEqual(0, rows.Length);
+			ClassicAssert.AreEqual(0, dropped);
 		}
 
 		[TestCase("v2|")]
@@ -283,14 +284,14 @@ namespace ThousandAndFirst.Tests
 			int dropped;
 			bool future;
 			string text = token.EndsWith("|") ? token + LegacyPair : token;
-			Assert.IsFalse(KingdomMirrorGateRules.TryParseRegister(text, out rows, out dropped, out future));
-			Assert.IsTrue(future);
-			Assert.AreEqual(0, rows.Length);
-			Assert.AreEqual(0, dropped);
+			ClassicAssert.IsFalse(KingdomMirrorGateRules.TryParseRegister(text, out rows, out dropped, out future));
+			ClassicAssert.IsTrue(future);
+			ClassicAssert.AreEqual(0, rows.Length);
+			ClassicAssert.AreEqual(0, dropped);
 			// The two-count reading refuses the same way, with nothing to repair.
-			Assert.IsFalse(KingdomMirrorGateRules.TryParseRegister(text, out rows, out dropped));
-			Assert.AreEqual(0, rows.Length);
-			Assert.AreEqual(0, dropped);
+			ClassicAssert.IsFalse(KingdomMirrorGateRules.TryParseRegister(text, out rows, out dropped));
+			ClassicAssert.AreEqual(0, rows.Length);
+			ClassicAssert.AreEqual(0, dropped);
 		}
 
 		[TestCase("v|")]
@@ -305,9 +306,9 @@ namespace ThousandAndFirst.Tests
 			KingdomGateRow[] rows;
 			int dropped;
 			bool future;
-			Assert.IsFalse(KingdomMirrorGateRules.TryParseRegister(prefix + LegacyPair, out rows, out dropped, out future));
-			Assert.IsFalse(future);
-			Assert.AreEqual(1, dropped);
+			ClassicAssert.IsFalse(KingdomMirrorGateRules.TryParseRegister(prefix + LegacyPair, out rows, out dropped, out future));
+			ClassicAssert.IsFalse(future);
+			ClassicAssert.AreEqual(1, dropped);
 			AssertPair(rows);
 		}
 
@@ -317,12 +318,12 @@ namespace ThousandAndFirst.Tests
 			KingdomGateRow[] rows;
 			int dropped;
 			bool future;
-			Assert.IsFalse(KingdomMirrorGateRules.TryParseRegister("v1|" + KeyA + "^Kavvat^|nonsense|" + KeyB + "^Ossuary Reach^", out rows, out dropped, out future));
-			Assert.IsFalse(future);
-			Assert.AreEqual(1, dropped);
-			Assert.AreEqual(2, rows.Length);
-			Assert.AreEqual(KeyA, rows[0].Key);
-			Assert.AreEqual(KeyB, rows[1].Key);
+			ClassicAssert.IsFalse(KingdomMirrorGateRules.TryParseRegister("v1|" + KeyA + "^Kavvat^|nonsense|" + KeyB + "^Ossuary Reach^", out rows, out dropped, out future));
+			ClassicAssert.IsFalse(future);
+			ClassicAssert.AreEqual(1, dropped);
+			ClassicAssert.AreEqual(2, rows.Length);
+			ClassicAssert.AreEqual(KeyA, rows[0].Key);
+			ClassicAssert.AreEqual(KeyB, rows[1].Key);
 		}
 
 		[Test]
@@ -337,11 +338,11 @@ namespace ThousandAndFirst.Tests
 			KingdomGateRow[] rows;
 			int dropped;
 			bool future;
-			Assert.IsFalse(KingdomMirrorGateRules.TryParseRegister(text.ToString(), out rows, out dropped, out future));
-			Assert.IsFalse(future);
-			Assert.AreEqual(KingdomMirrorGateRules.MaxGates, rows.Length);
-			Assert.AreEqual("key0", rows[0].Key);
-			Assert.AreEqual(1, dropped);
+			ClassicAssert.IsFalse(KingdomMirrorGateRules.TryParseRegister(text.ToString(), out rows, out dropped, out future));
+			ClassicAssert.IsFalse(future);
+			ClassicAssert.AreEqual(KingdomMirrorGateRules.MaxGates, rows.Length);
+			ClassicAssert.AreEqual("key0", rows[0].Key);
+			ClassicAssert.AreEqual(1, dropped);
 		}
 
 		[Test]
@@ -353,13 +354,13 @@ namespace ThousandAndFirst.Tests
 
 		private static void AssertPair(KingdomGateRow[] rows)
 		{
-			Assert.AreEqual(2, rows.Length);
-			Assert.AreEqual(KeyA, rows[0].Key);
-			Assert.AreEqual("Kavvat", rows[0].City);
-			Assert.AreEqual(KeyB, rows[0].Partner);
-			Assert.AreEqual(KeyB, rows[1].Key);
-			Assert.AreEqual("Ossuary Reach", rows[1].City);
-			Assert.AreEqual(KeyA, rows[1].Partner);
+			ClassicAssert.AreEqual(2, rows.Length);
+			ClassicAssert.AreEqual(KeyA, rows[0].Key);
+			ClassicAssert.AreEqual("Kavvat", rows[0].City);
+			ClassicAssert.AreEqual(KeyB, rows[0].Partner);
+			ClassicAssert.AreEqual(KeyB, rows[1].Key);
+			ClassicAssert.AreEqual("Ossuary Reach", rows[1].City);
+			ClassicAssert.AreEqual(KeyA, rows[1].Partner);
 		}
 
 		// --- lookups ---------------------------------------------------------------------------
@@ -368,10 +369,10 @@ namespace ThousandAndFirst.Tests
 		public void IndexOfCity_ReadsCitiesTheWayAFounderDoes()
 		{
 			KingdomGateRow[] rows = Register(new KingdomGateRow(KeyA, "Kavvat", ""));
-			Assert.AreEqual(0, KingdomMirrorGateRules.IndexOfCity(rows, "kavvat"));
-			Assert.AreEqual(0, KingdomMirrorGateRules.IndexOfCity(rows, "KAVVAT"));
-			Assert.AreEqual(-1, KingdomMirrorGateRules.IndexOfCity(rows, "Kavva"));
-			Assert.AreEqual(-1, KingdomMirrorGateRules.IndexOfCity(rows, null));
+			ClassicAssert.AreEqual(0, KingdomMirrorGateRules.IndexOfCity(rows, "kavvat"));
+			ClassicAssert.AreEqual(0, KingdomMirrorGateRules.IndexOfCity(rows, "KAVVAT"));
+			ClassicAssert.AreEqual(-1, KingdomMirrorGateRules.IndexOfCity(rows, "Kavva"));
+			ClassicAssert.AreEqual(-1, KingdomMirrorGateRules.IndexOfCity(rows, null));
 		}
 
 		[Test]
@@ -380,18 +381,18 @@ namespace ThousandAndFirst.Tests
 			// Keys are machine-made and case is meaning in a zone id, so this one is ordinal where
 			// the city lookup beside it is not.
 			KingdomGateRow[] rows = Register(new KingdomGateRow(KeyA, "Kavvat", ""));
-			Assert.AreEqual(0, KingdomMirrorGateRules.IndexOfKey(rows, KeyA));
-			Assert.AreEqual(-1, KingdomMirrorGateRules.IndexOfKey(rows, KeyA.ToUpperInvariant()));
-			Assert.AreEqual(-1, KingdomMirrorGateRules.IndexOfKey(rows, ""));
-			Assert.AreEqual(-1, KingdomMirrorGateRules.IndexOfKey(null, KeyA));
+			ClassicAssert.AreEqual(0, KingdomMirrorGateRules.IndexOfKey(rows, KeyA));
+			ClassicAssert.AreEqual(-1, KingdomMirrorGateRules.IndexOfKey(rows, KeyA.ToUpperInvariant()));
+			ClassicAssert.AreEqual(-1, KingdomMirrorGateRules.IndexOfKey(rows, ""));
+			ClassicAssert.AreEqual(-1, KingdomMirrorGateRules.IndexOfKey(null, KeyA));
 		}
 
 		[Test]
 		public void PartnerOf_IsEmptyForAnArchNothingAnswers()
 		{
 			KingdomGateRow[] rows = Register(new KingdomGateRow(KeyA, "Kavvat", ""));
-			Assert.AreEqual("", KingdomMirrorGateRules.PartnerOf(rows, KeyA));
-			Assert.AreEqual("", KingdomMirrorGateRules.PartnerOf(rows, KeyB));
+			ClassicAssert.AreEqual("", KingdomMirrorGateRules.PartnerOf(rows, KeyA));
+			ClassicAssert.AreEqual("", KingdomMirrorGateRules.PartnerOf(rows, KeyB));
 		}
 
 		// --- TryDedicate ------------------------------------------------------------------------
@@ -401,11 +402,11 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomGateRow[] next;
 			string partner;
-			Assert.AreEqual(KingdomGateVerdict.Offered, KingdomMirrorGateRules.TryDedicate(new KingdomGateRow[0], KeyA, "Kavvat", out next, out partner));
-			Assert.AreEqual("", partner);
-			Assert.AreEqual(1, next.Length);
-			Assert.AreEqual(KeyA, next[0].Key);
-			Assert.AreEqual("", next[0].Partner);
+			ClassicAssert.AreEqual(KingdomGateVerdict.Offered, KingdomMirrorGateRules.TryDedicate(new KingdomGateRow[0], KeyA, "Kavvat", out next, out partner));
+			ClassicAssert.AreEqual("", partner);
+			ClassicAssert.AreEqual(1, next.Length);
+			ClassicAssert.AreEqual(KeyA, next[0].Key);
+			ClassicAssert.AreEqual("", next[0].Partner);
 		}
 
 		[Test]
@@ -416,13 +417,13 @@ namespace ThousandAndFirst.Tests
 			KingdomMirrorGateRules.TryDedicate(new KingdomGateRow[0], KeyA, "Kavvat", out first, out ignored);
 			KingdomGateRow[] next;
 			string partner;
-			Assert.AreEqual(KingdomGateVerdict.Joined, KingdomMirrorGateRules.TryDedicate(first, KeyB, "Ossuary Reach", out next, out partner));
-			Assert.AreEqual(KeyA, partner);
-			Assert.AreEqual(2, next.Length);
+			ClassicAssert.AreEqual(KingdomGateVerdict.Joined, KingdomMirrorGateRules.TryDedicate(first, KeyB, "Ossuary Reach", out next, out partner));
+			ClassicAssert.AreEqual(KeyA, partner);
+			ClassicAssert.AreEqual(2, next.Length);
 			// Both ends, or neither: an arch answering something that does not answer back is a
 			// one-way crossing, which is not a thing this design has.
-			Assert.AreEqual(KeyB, KingdomMirrorGateRules.PartnerOf(next, KeyA));
-			Assert.AreEqual(KeyA, KingdomMirrorGateRules.PartnerOf(next, KeyB));
+			ClassicAssert.AreEqual(KeyB, KingdomMirrorGateRules.PartnerOf(next, KeyA));
+			ClassicAssert.AreEqual(KeyA, KingdomMirrorGateRules.PartnerOf(next, KeyB));
 		}
 
 		[Test]
@@ -433,8 +434,8 @@ namespace ThousandAndFirst.Tests
 			KingdomGateRow[] rows = Register(new KingdomGateRow(KeyA, "Kavvat", ""));
 			KingdomGateRow[] next;
 			string partner;
-			Assert.AreEqual(KingdomGateVerdict.RefusedCityKeyed, KingdomMirrorGateRules.TryDedicate(rows, KeyB, "kavvat", out next, out partner));
-			Assert.AreSame(rows, next);
+			ClassicAssert.AreEqual(KingdomGateVerdict.RefusedCityKeyed, KingdomMirrorGateRules.TryDedicate(rows, KeyB, "kavvat", out next, out partner));
+			ClassicAssert.AreSame(rows, next);
 		}
 
 		[Test]
@@ -443,8 +444,8 @@ namespace ThousandAndFirst.Tests
 			KingdomGateRow[] rows = Register(new KingdomGateRow(KeyA, "Kavvat", ""));
 			KingdomGateRow[] next;
 			string partner;
-			Assert.AreEqual(KingdomGateVerdict.RefusedAlreadyKeyed, KingdomMirrorGateRules.TryDedicate(rows, KeyA, "Kavvat", out next, out partner));
-			Assert.AreSame(rows, next);
+			ClassicAssert.AreEqual(KingdomGateVerdict.RefusedAlreadyKeyed, KingdomMirrorGateRules.TryDedicate(rows, KeyA, "Kavvat", out next, out partner));
+			ClassicAssert.AreSame(rows, next);
 		}
 
 		[TestCase(null, "Kavvat")]
@@ -457,7 +458,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomGateRow[] next;
 			string partner;
-			Assert.AreEqual(KingdomGateVerdict.RefusedNamed, KingdomMirrorGateRules.TryDedicate(new KingdomGateRow[0], key, city, out next, out partner));
+			ClassicAssert.AreEqual(KingdomGateVerdict.RefusedNamed, KingdomMirrorGateRules.TryDedicate(new KingdomGateRow[0], key, city, out next, out partner));
 		}
 
 		[Test]
@@ -470,8 +471,8 @@ namespace ThousandAndFirst.Tests
 			}
 			KingdomGateRow[] next;
 			string partner;
-			Assert.AreEqual(KingdomGateVerdict.RefusedFull, KingdomMirrorGateRules.TryDedicate(rows, KeyA, "Kavvat", out next, out partner));
-			Assert.AreSame(rows, next);
+			ClassicAssert.AreEqual(KingdomGateVerdict.RefusedFull, KingdomMirrorGateRules.TryDedicate(rows, KeyA, "Kavvat", out next, out partner));
+			ClassicAssert.AreSame(rows, next);
 		}
 
 		[Test]
@@ -483,9 +484,9 @@ namespace ThousandAndFirst.Tests
 			KingdomGateRow[] next;
 			string partner;
 			KingdomMirrorGateRules.TryDedicate(rows, KeyB, "Ossuary Reach", out next, out partner);
-			Assert.AreEqual(1, rows.Length);
-			Assert.AreEqual("", rows[0].Partner);
-			Assert.AreEqual(KeyB, next[0].Partner);
+			ClassicAssert.AreEqual(1, rows.Length);
+			ClassicAssert.AreEqual("", rows[0].Partner);
+			ClassicAssert.AreEqual(KeyB, next[0].Partner);
 		}
 
 		[Test]
@@ -498,9 +499,9 @@ namespace ThousandAndFirst.Tests
 			string partner;
 			// Three cities, two of them already crossing: the third waits rather than stealing an
 			// end off a crossing that already exists.
-			Assert.AreEqual(KingdomGateVerdict.Offered, KingdomMirrorGateRules.TryDedicate(rows, KeyC, "Sallow Ford", out next, out partner));
-			Assert.AreEqual(KeyB, KingdomMirrorGateRules.PartnerOf(next, KeyA));
-			Assert.AreEqual("", KingdomMirrorGateRules.PartnerOf(next, KeyC));
+			ClassicAssert.AreEqual(KingdomGateVerdict.Offered, KingdomMirrorGateRules.TryDedicate(rows, KeyC, "Sallow Ford", out next, out partner));
+			ClassicAssert.AreEqual(KeyB, KingdomMirrorGateRules.PartnerOf(next, KeyA));
+			ClassicAssert.AreEqual("", KingdomMirrorGateRules.PartnerOf(next, KeyC));
 		}
 
 		// --- TryPair: the re-keying seam (QUESTION-BACKLOG QB-1) ---------------------------------
@@ -512,9 +513,9 @@ namespace ThousandAndFirst.Tests
 				new KingdomGateRow(KeyA, "Kavvat", ""),
 				new KingdomGateRow(KeyB, "Ossuary Reach", ""));
 			KingdomGateRow[] next;
-			Assert.AreEqual(KingdomGateVerdict.Joined, KingdomMirrorGateRules.TryPair(rows, KeyA, KeyB, out next));
-			Assert.AreEqual(KeyB, KingdomMirrorGateRules.PartnerOf(next, KeyA));
-			Assert.AreEqual(KeyA, KingdomMirrorGateRules.PartnerOf(next, KeyB));
+			ClassicAssert.AreEqual(KingdomGateVerdict.Joined, KingdomMirrorGateRules.TryPair(rows, KeyA, KeyB, out next));
+			ClassicAssert.AreEqual(KeyB, KingdomMirrorGateRules.PartnerOf(next, KeyA));
+			ClassicAssert.AreEqual(KeyA, KingdomMirrorGateRules.PartnerOf(next, KeyB));
 		}
 
 		[Test]
@@ -527,10 +528,10 @@ namespace ThousandAndFirst.Tests
 				new KingdomGateRow(KeyB, "Ossuary Reach", KeyA),
 				new KingdomGateRow(KeyC, "Sallow Ford", ""));
 			KingdomGateRow[] next;
-			Assert.AreEqual(KingdomGateVerdict.Joined, KingdomMirrorGateRules.TryPair(rows, KeyA, KeyC, out next));
-			Assert.AreEqual(KeyC, KingdomMirrorGateRules.PartnerOf(next, KeyA));
-			Assert.AreEqual(KeyA, KingdomMirrorGateRules.PartnerOf(next, KeyC));
-			Assert.AreEqual("", KingdomMirrorGateRules.PartnerOf(next, KeyB));
+			ClassicAssert.AreEqual(KingdomGateVerdict.Joined, KingdomMirrorGateRules.TryPair(rows, KeyA, KeyC, out next));
+			ClassicAssert.AreEqual(KeyC, KingdomMirrorGateRules.PartnerOf(next, KeyA));
+			ClassicAssert.AreEqual(KeyA, KingdomMirrorGateRules.PartnerOf(next, KeyC));
+			ClassicAssert.AreEqual("", KingdomMirrorGateRules.PartnerOf(next, KeyB));
 		}
 
 		[Test]
@@ -547,10 +548,10 @@ namespace ThousandAndFirst.Tests
 			KingdomMirrorGateRules.TryPair(rows, KeyA, KeyC, out next);
 			KingdomGateRow[] again;
 			KingdomMirrorGateRules.TryPair(next, KeyB, KeyC, out again);
-			Assert.AreEqual(3, again.Length);
-			Assert.GreaterOrEqual(KingdomMirrorGateRules.IndexOfKey(again, KeyA), 0);
-			Assert.GreaterOrEqual(KingdomMirrorGateRules.IndexOfKey(again, KeyB), 0);
-			Assert.GreaterOrEqual(KingdomMirrorGateRules.IndexOfKey(again, KeyC), 0);
+			ClassicAssert.AreEqual(3, again.Length);
+			ClassicAssert.GreaterOrEqual(KingdomMirrorGateRules.IndexOfKey(again, KeyA), 0);
+			ClassicAssert.GreaterOrEqual(KingdomMirrorGateRules.IndexOfKey(again, KeyB), 0);
+			ClassicAssert.GreaterOrEqual(KingdomMirrorGateRules.IndexOfKey(again, KeyC), 0);
 		}
 
 		[Test]
@@ -558,8 +559,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomGateRow[] rows = Register(new KingdomGateRow(KeyA, "Kavvat", ""));
 			KingdomGateRow[] next;
-			Assert.AreEqual(KingdomGateVerdict.RefusedUnkeyed, KingdomMirrorGateRules.TryPair(rows, KeyA, KeyB, out next));
-			Assert.AreSame(rows, next);
+			ClassicAssert.AreEqual(KingdomGateVerdict.RefusedUnkeyed, KingdomMirrorGateRules.TryPair(rows, KeyA, KeyB, out next));
+			ClassicAssert.AreSame(rows, next);
 		}
 
 		[Test]
@@ -567,8 +568,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomGateRow[] rows = Register(new KingdomGateRow(KeyA, "Kavvat", ""));
 			KingdomGateRow[] next;
-			Assert.AreEqual(KingdomGateVerdict.RefusedNamed, KingdomMirrorGateRules.TryPair(rows, KeyA, KeyA, out next));
-			Assert.AreSame(rows, next);
+			ClassicAssert.AreEqual(KingdomGateVerdict.RefusedNamed, KingdomMirrorGateRules.TryPair(rows, KeyA, KeyA, out next));
+			ClassicAssert.AreSame(rows, next);
 		}
 
 		[Test]
@@ -578,8 +579,8 @@ namespace ThousandAndFirst.Tests
 				new KingdomGateRow(KeyA, "Kavvat", ""),
 				new KingdomGateRow(KeyB, "Kavvat", ""));
 			KingdomGateRow[] next;
-			Assert.AreEqual(KingdomGateVerdict.RefusedCityKeyed, KingdomMirrorGateRules.TryPair(rows, KeyA, KeyB, out next));
-			Assert.AreSame(rows, next);
+			ClassicAssert.AreEqual(KingdomGateVerdict.RefusedCityKeyed, KingdomMirrorGateRules.TryPair(rows, KeyA, KeyB, out next));
+			ClassicAssert.AreSame(rows, next);
 		}
 
 		// --- TryRelease -------------------------------------------------------------------------
@@ -592,11 +593,11 @@ namespace ThousandAndFirst.Tests
 				new KingdomGateRow(KeyB, "Ossuary Reach", KeyA));
 			KingdomGateRow[] next;
 			string orphan;
-			Assert.AreEqual(KingdomGateVerdict.Released, KingdomMirrorGateRules.TryRelease(rows, KeyA, out next, out orphan));
-			Assert.AreEqual(KeyB, orphan);
-			Assert.AreEqual(1, next.Length);
-			Assert.AreEqual(KeyB, next[0].Key);
-			Assert.AreEqual("", next[0].Partner);
+			ClassicAssert.AreEqual(KingdomGateVerdict.Released, KingdomMirrorGateRules.TryRelease(rows, KeyA, out next, out orphan));
+			ClassicAssert.AreEqual(KeyB, orphan);
+			ClassicAssert.AreEqual(1, next.Length);
+			ClassicAssert.AreEqual(KeyB, next[0].Key);
+			ClassicAssert.AreEqual("", next[0].Partner);
 		}
 
 		[Test]
@@ -605,9 +606,9 @@ namespace ThousandAndFirst.Tests
 			KingdomGateRow[] rows = Register(new KingdomGateRow(KeyA, "Kavvat", ""));
 			KingdomGateRow[] next;
 			string orphan;
-			Assert.AreEqual(KingdomGateVerdict.Released, KingdomMirrorGateRules.TryRelease(rows, KeyA, out next, out orphan));
-			Assert.AreEqual("", orphan);
-			Assert.AreEqual(0, next.Length);
+			ClassicAssert.AreEqual(KingdomGateVerdict.Released, KingdomMirrorGateRules.TryRelease(rows, KeyA, out next, out orphan));
+			ClassicAssert.AreEqual("", orphan);
+			ClassicAssert.AreEqual(0, next.Length);
 		}
 
 		[Test]
@@ -616,8 +617,8 @@ namespace ThousandAndFirst.Tests
 			KingdomGateRow[] rows = Register(new KingdomGateRow(KeyA, "Kavvat", ""));
 			KingdomGateRow[] next;
 			string orphan;
-			Assert.AreEqual(KingdomGateVerdict.RefusedUnkeyed, KingdomMirrorGateRules.TryRelease(rows, KeyB, out next, out orphan));
-			Assert.AreSame(rows, next);
+			ClassicAssert.AreEqual(KingdomGateVerdict.RefusedUnkeyed, KingdomMirrorGateRules.TryRelease(rows, KeyB, out next, out orphan));
+			ClassicAssert.AreSame(rows, next);
 		}
 
 		// --- the standing draw ------------------------------------------------------------------
@@ -627,8 +628,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// A mutation to zero would make the crossing free, which is the one thing Addendum 22
 			// A2 rules it must not be.
-			Assert.AreEqual(3 * KingdomPowerRules.PostDailyNeedCharge, KingdomMirrorGateRules.OpenChargePerDay);
-			Assert.Greater(KingdomMirrorGateRules.OpenChargePerDay, KingdomPowerRules.WaterWheelChargePerDay);
+			ClassicAssert.AreEqual(3 * KingdomPowerRules.PostDailyNeedCharge, KingdomMirrorGateRules.OpenChargePerDay);
+			ClassicAssert.Greater(KingdomMirrorGateRules.OpenChargePerDay, KingdomPowerRules.WaterWheelChargePerDay);
 		}
 
 		[TestCase(0L, 0)]
@@ -636,7 +637,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(-4000L, 0)]
 		public void DrawForDays_OwesNothingForNoDays(long days, int expected)
 		{
-			Assert.AreEqual(expected, KingdomMirrorGateRules.DrawForDays(days));
+			ClassicAssert.AreEqual(expected, KingdomMirrorGateRules.DrawForDays(days));
 		}
 
 		[TestCase(1L)]
@@ -647,23 +648,23 @@ namespace ThousandAndFirst.Tests
 		{
 			// STANDARDS §8: a cap is a cost that quietly stops scaling. A hundred days away costs a
 			// hundred days, and what bounds it is the city's own salt rather than a ceiling here.
-			Assert.AreEqual((int)(days * KingdomMirrorGateRules.OpenChargePerDay), KingdomMirrorGateRules.DrawForDays(days));
+			ClassicAssert.AreEqual((int)(days * KingdomMirrorGateRules.OpenChargePerDay), KingdomMirrorGateRules.DrawForDays(days));
 		}
 
 		[Test]
 		public void DrawForDays_SaturatesRatherThanWrapping()
 		{
 			// A wrapped total would come back as a small number and light an arch nobody paid for.
-			Assert.AreEqual(int.MaxValue, KingdomMirrorGateRules.DrawForDays(long.MaxValue / 2L));
-			Assert.AreEqual(int.MaxValue, KingdomMirrorGateRules.DrawForDays(1000000L));
+			ClassicAssert.AreEqual(int.MaxValue, KingdomMirrorGateRules.DrawForDays(long.MaxValue / 2L));
+			ClassicAssert.AreEqual(int.MaxValue, KingdomMirrorGateRules.DrawForDays(1000000L));
 		}
 
 		[Test]
 		public void JudgeHold_DecidesNothingWhereNoDayTurnedOver()
 		{
 			// An arch is not closed by being looked at between days.
-			Assert.AreEqual(KingdomGateHold.Unchanged, KingdomMirrorGateRules.JudgeHold(0, 0));
-			Assert.AreEqual(KingdomGateHold.Unchanged, KingdomMirrorGateRules.JudgeHold(-1, 999999));
+			ClassicAssert.AreEqual(KingdomGateHold.Unchanged, KingdomMirrorGateRules.JudgeHold(0, 0));
+			ClassicAssert.AreEqual(KingdomGateHold.Unchanged, KingdomMirrorGateRules.JudgeHold(-1, 999999));
 		}
 
 		[Test]
@@ -673,10 +674,10 @@ namespace ThousandAndFirst.Tests
 			// which is the same ruling KingdomPower.Deliver makes about a half-lit forge. The
 			// off-by-one either side is the mutation this is here to catch.
 			int owed = KingdomMirrorGateRules.OpenChargePerDay;
-			Assert.AreEqual(KingdomGateHold.Held, KingdomMirrorGateRules.JudgeHold(owed, owed));
-			Assert.AreEqual(KingdomGateHold.Held, KingdomMirrorGateRules.JudgeHold(owed, owed + 1));
-			Assert.AreEqual(KingdomGateHold.Lost, KingdomMirrorGateRules.JudgeHold(owed, owed - 1));
-			Assert.AreEqual(KingdomGateHold.Lost, KingdomMirrorGateRules.JudgeHold(owed, 0));
+			ClassicAssert.AreEqual(KingdomGateHold.Held, KingdomMirrorGateRules.JudgeHold(owed, owed));
+			ClassicAssert.AreEqual(KingdomGateHold.Held, KingdomMirrorGateRules.JudgeHold(owed, owed + 1));
+			ClassicAssert.AreEqual(KingdomGateHold.Lost, KingdomMirrorGateRules.JudgeHold(owed, owed - 1));
+			ClassicAssert.AreEqual(KingdomGateHold.Lost, KingdomMirrorGateRules.JudgeHold(owed, 0));
 		}
 
 		// --- what the founder is told -----------------------------------------------------------
@@ -696,7 +697,7 @@ namespace ThousandAndFirst.Tests
 			};
 			for (int i = 0; i < refusals.Length; i++)
 			{
-				Assert.IsNotEmpty(KingdomMirrorGateRules.RefusalLine(refusals[i], "Kavvat"), refusals[i].ToString());
+				ClassicAssert.IsNotEmpty(KingdomMirrorGateRules.RefusalLine(refusals[i], "Kavvat"), refusals[i].ToString());
 			}
 		}
 
@@ -705,9 +706,9 @@ namespace ThousandAndFirst.Tests
 		{
 			// STANDARDS 7b's other half: a settlement that announced its successes as refusals
 			// would be a settlement nobody reads.
-			Assert.AreEqual("", KingdomMirrorGateRules.RefusalLine(KingdomGateVerdict.Offered, "Kavvat"));
-			Assert.AreEqual("", KingdomMirrorGateRules.RefusalLine(KingdomGateVerdict.Joined, "Kavvat"));
-			Assert.AreEqual("", KingdomMirrorGateRules.RefusalLine(KingdomGateVerdict.Released, "Kavvat"));
+			ClassicAssert.AreEqual("", KingdomMirrorGateRules.RefusalLine(KingdomGateVerdict.Offered, "Kavvat"));
+			ClassicAssert.AreEqual("", KingdomMirrorGateRules.RefusalLine(KingdomGateVerdict.Joined, "Kavvat"));
+			ClassicAssert.AreEqual("", KingdomMirrorGateRules.RefusalLine(KingdomGateVerdict.Released, "Kavvat"));
 		}
 
 		[Test]
@@ -743,9 +744,9 @@ namespace ThousandAndFirst.Tests
 			string waiting = KingdomMirrorGateRules.DescriptionLine(true, null, false);
 			string open = KingdomMirrorGateRules.DescriptionLine(true, "Kavvat", false);
 			string dark = KingdomMirrorGateRules.DescriptionLine(true, "Kavvat", true);
-			Assert.AreNotEqual(unkeyed, waiting);
-			Assert.AreNotEqual(waiting, open);
-			Assert.AreNotEqual(open, dark);
+			ClassicAssert.AreNotEqual(unkeyed, waiting);
+			ClassicAssert.AreNotEqual(waiting, open);
+			ClassicAssert.AreNotEqual(open, dark);
 			StringAssert.Contains("Kavvat", open);
 			StringAssert.Contains("Kavvat", dark);
 		}
@@ -753,9 +754,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Named_FallsBackToAWordRatherThanAnEmptyGap()
 		{
-			Assert.AreEqual("the city", KingdomMirrorGateRules.Named(null));
-			Assert.AreEqual("the city", KingdomMirrorGateRules.Named(""));
-			Assert.AreEqual("Kavvat", KingdomMirrorGateRules.Named("  Kavvat  "));
+			ClassicAssert.AreEqual("the city", KingdomMirrorGateRules.Named(null));
+			ClassicAssert.AreEqual("the city", KingdomMirrorGateRules.Named(""));
+			ClassicAssert.AreEqual("Kavvat", KingdomMirrorGateRules.Named("  Kavvat  "));
 		}
 
 		[Test]

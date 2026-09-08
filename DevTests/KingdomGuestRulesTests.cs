@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -11,23 +12,23 @@ namespace ThousandAndFirst.Tests
 		public void GuestRuleDeclarationsKeepExactPublicAndNestedAbi()
 		{
 			System.Type rules = typeof(KingdomGuestRules);
-			Assert.AreEqual("ThousandAndFirst.KingdomGuestRules", rules.FullName);
-			Assert.IsTrue(rules.IsPublic && rules.IsAbstract && rules.IsSealed);
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomGuestRules", rules.FullName);
+			ClassicAssert.IsTrue(rules.IsPublic && rules.IsAbstract && rules.IsSealed);
 
 			System.Type hook = typeof(KingdomGuestRules.HookKind);
 			System.Type lodging = typeof(KingdomGuestRules.LodgingVerdict);
 			System.Type plant = typeof(KingdomGuestRules.PlantVerdict);
-			Assert.AreEqual("ThousandAndFirst.KingdomGuestRules+HookKind", hook.FullName);
-			Assert.AreEqual("ThousandAndFirst.KingdomGuestRules+LodgingVerdict", lodging.FullName);
-			Assert.AreEqual("ThousandAndFirst.KingdomGuestRules+PlantVerdict", plant.FullName);
-			Assert.IsTrue(hook.IsNestedPublic && lodging.IsNestedPublic && plant.IsNestedPublic);
-			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(hook));
-			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(lodging));
-			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(plant));
-			Assert.AreEqual("0:Ruin,1:Machine,2:Debt", EnumShape(hook));
-			Assert.AreEqual("0:Lodged,1:NoTier,2:NoRoom,3:NoFineHouse,4:FineHouseOccupied,"
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomGuestRules+HookKind", hook.FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomGuestRules+LodgingVerdict", lodging.FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomGuestRules+PlantVerdict", plant.FullName);
+			ClassicAssert.IsTrue(hook.IsNestedPublic && lodging.IsNestedPublic && plant.IsNestedPublic);
+			ClassicAssert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(hook));
+			ClassicAssert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(lodging));
+			ClassicAssert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(plant));
+			ClassicAssert.AreEqual("0:Ruin,1:Machine,2:Debt", EnumShape(hook));
+			ClassicAssert.AreEqual("0:Lodged,1:NoTier,2:NoRoom,3:NoFineHouse,4:FineHouseOccupied,"
 				+ "5:ShopTooCrude", EnumShape(lodging));
-			Assert.AreEqual("0:Planted,1:NotFounded,2:NothingToCarry,3:NoRoad,4:AlreadyInFlight",
+			ClassicAssert.AreEqual("0:Planted,1:NotFounded,2:NothingToCarry,3:NoRoad,4:AlreadyInFlight",
 				EnumShape(plant));
 
 			string[] fields = { "RuinHooks", "MachineHooks", "NamedVillages", "DebtReasons" };
@@ -36,15 +37,15 @@ namespace ThousandAndFirst.Tests
 				System.Reflection.FieldInfo field = rules.GetField(fields[i],
 					System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static |
 					System.Reflection.BindingFlags.DeclaredOnly);
-				Assert.IsNotNull(field, fields[i]);
-				Assert.AreEqual(typeof(string[]), field.FieldType, fields[i]);
-				Assert.IsTrue(field.IsInitOnly, fields[i]);
+				ClassicAssert.IsNotNull(field, fields[i]);
+				ClassicAssert.AreEqual(typeof(string[]), field.FieldType, fields[i]);
+				ClassicAssert.IsTrue(field.IsInitOnly, fields[i]);
 			}
-			Assert.AreEqual(4, KingdomGuestRules.RuinHooks.Length);
-			Assert.AreEqual(4, KingdomGuestRules.MachineHooks.Length);
+			ClassicAssert.AreEqual(4, KingdomGuestRules.RuinHooks.Length);
+			ClassicAssert.AreEqual(4, KingdomGuestRules.MachineHooks.Length);
 			CollectionAssert.AreEqual(new[] { "Joppa", "Kyakukya", "Ezra" },
 				KingdomGuestRules.NamedVillages);
-			Assert.AreEqual(3, KingdomGuestRules.DebtReasons.Length);
+			ClassicAssert.AreEqual(3, KingdomGuestRules.DebtReasons.Length);
 		}
 
 		private static string EnumShape(System.Type type)
@@ -71,7 +72,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(9uL, KingdomGuestRules.HookKind.Ruin)]
 		public void PickHookKind_WrapsModuloHookKindCount(ulong roll, KingdomGuestRules.HookKind expected)
 		{
-			Assert.AreEqual(expected, KingdomGuestRules.PickHookKind(roll));
+			ClassicAssert.AreEqual(expected, KingdomGuestRules.PickHookKind(roll));
 		}
 
 		[TestCase(KingdomGuestRules.HookKind.Ruin, 0uL)]
@@ -81,7 +82,7 @@ namespace ThousandAndFirst.Tests
 		public void HookText_NeverEmptyForRuinOrMachine(KingdomGuestRules.HookKind kind, ulong roll)
 		{
 			string text = KingdomGuestRules.HookText(kind, roll);
-			Assert.IsFalse(string.IsNullOrEmpty(text));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(text));
 		}
 
 		[Test]
@@ -99,7 +100,7 @@ namespace ThousandAndFirst.Tests
 					}
 				}
 			}
-			Assert.IsTrue(sawAVillage, "every debt hook should name one of the verified vanilla villages");
+			ClassicAssert.IsTrue(sawAVillage, "every debt hook should name one of the verified vanilla villages");
 		}
 
 		[Test]
@@ -109,7 +110,7 @@ namespace ThousandAndFirst.Tests
 			// index by construction; if the split collapsed to one axis this pair would be equal.
 			string a = KingdomGuestRules.HookText(KingdomGuestRules.HookKind.Debt, 0uL);
 			string b = KingdomGuestRules.HookText(KingdomGuestRules.HookKind.Debt, 1uL);
-			Assert.AreNotEqual(a, b);
+			ClassicAssert.AreNotEqual(a, b);
 		}
 
 		[TestCase(KingdomGuestRules.HookKind.Ruin, KingdomPlotRules.PlotSize.Small)]
@@ -117,7 +118,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomGuestRules.HookKind.Machine, KingdomPlotRules.PlotSize.Large)]
 		public void RequiredTier_ScalesWithHookKind(KingdomGuestRules.HookKind kind, KingdomPlotRules.PlotSize expected)
 		{
-			Assert.AreEqual(expected, KingdomGuestRules.RequiredTier(kind));
+			ClassicAssert.AreEqual(expected, KingdomGuestRules.RequiredTier(kind));
 		}
 
 		[TestCase(KingdomGuestRules.HookKind.Ruin, "scavenger")]
@@ -125,7 +126,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomGuestRules.HookKind.Debt, "reckoner of debts")]
 		public void TradeNoun_IsNamedFromTheHook(KingdomGuestRules.HookKind kind, string expected)
 		{
-			Assert.AreEqual(expected, KingdomGuestRules.TradeNoun(kind));
+			ClassicAssert.AreEqual(expected, KingdomGuestRules.TradeNoun(kind));
 		}
 
 		// ---- Notable guest cadence: mirrors LocusRulesTests' guest-cadence coverage ----
@@ -135,19 +136,19 @@ namespace ThousandAndFirst.Tests
 		[TestCase(1001L, 1000L, true)]
 		public void ShouldArrive_TripsAtTheDueTickNotBeforeIt(long timeTicks, long nextDueTick, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomGuestRules.ShouldArrive(timeTicks, nextDueTick));
+			ClassicAssert.AreEqual(expected, KingdomGuestRules.ShouldArrive(timeTicks, nextDueTick));
 		}
 
 		[Test]
 		public void NextDueTick_AddsTheFullNotableInterval()
 		{
-			Assert.AreEqual(5000L + KingdomGuestRules.NotableGuestIntervalTicks, KingdomGuestRules.NextDueTick(5000L));
+			ClassicAssert.AreEqual(5000L + KingdomGuestRules.NotableGuestIntervalTicks, KingdomGuestRules.NextDueTick(5000L));
 		}
 
 		[Test]
 		public void DepartTickFor_AddsTheFullNotablePatience()
 		{
-			Assert.AreEqual(2000L + KingdomGuestRules.NotableGuestPatienceTicks, KingdomGuestRules.DepartTickFor(2000L));
+			ClassicAssert.AreEqual(2000L + KingdomGuestRules.NotableGuestPatienceTicks, KingdomGuestRules.DepartTickFor(2000L));
 		}
 
 		[Test]
@@ -155,8 +156,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// If a notable guest were tuned no differently from an ordinary traveller, giving it
 			// its own rules file instead of extending KingdomLocusRules would have bought nothing.
-			Assert.Greater(KingdomGuestRules.NotableGuestIntervalTicks, KingdomLocusRules.GuestIntervalTicks);
-			Assert.Greater(KingdomGuestRules.NotableGuestPatienceTicks, KingdomLocusRules.GuestPatienceTicks);
+			ClassicAssert.Greater(KingdomGuestRules.NotableGuestIntervalTicks, KingdomLocusRules.GuestIntervalTicks);
+			ClassicAssert.Greater(KingdomGuestRules.NotableGuestPatienceTicks, KingdomLocusRules.GuestPatienceTicks);
 		}
 
 		[TestCase(5000L, 0L, false)]
@@ -166,7 +167,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(5001L, 5000L, true)]
 		public void ShouldDepartUnattended_NeverFiresWithoutATrackedGuest(long timeTicks, long departTick, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomGuestRules.ShouldDepartUnattended(timeTicks, departTick));
+			ClassicAssert.AreEqual(expected, KingdomGuestRules.ShouldDepartUnattended(timeTicks, departTick));
 		}
 
 		// ---- Lodging verdict: tier checked before room, both independent facts ----
@@ -177,7 +178,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(true, true, KingdomGuestRules.LodgingVerdict.Lodged)]
 		public void AssessLodging_TierOutranksRoom(bool hasTier, bool hasRoom, KingdomGuestRules.LodgingVerdict expected)
 		{
-			Assert.AreEqual(expected, KingdomGuestRules.AssessLodging(hasTier, hasRoom));
+			ClassicAssert.AreEqual(expected, KingdomGuestRules.AssessLodging(hasTier, hasRoom));
 		}
 
 		[TestCase(false, KingdomPlotRules.PlotSize.None, false, 0,
@@ -194,7 +195,7 @@ namespace ThousandAndFirst.Tests
 			KingdomPlotRules.PlotSize tier, bool vacant, int shopTier,
 			KingdomGuestRules.LodgingVerdict expected)
 		{
-			Assert.AreEqual(expected, KingdomGuestRules.AssessLegendaryTraderLodging(
+			ClassicAssert.AreEqual(expected, KingdomGuestRules.AssessLegendaryTraderLodging(
 				hasFineHouse, tier, vacant, shopTier));
 		}
 
@@ -210,9 +211,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void LegendaryTraderIsANamedShopRoleNotAHookAlias()
 		{
-			Assert.AreEqual("legendary trader", KingdomGuestRules.SettledTradeNoun(
+			ClassicAssert.AreEqual("legendary trader", KingdomGuestRules.SettledTradeNoun(
 				KingdomGuestRules.HookKind.Ruin, LegendaryTrader: true));
-			Assert.AreEqual("scavenger", KingdomGuestRules.SettledTradeNoun(
+			ClassicAssert.AreEqual("scavenger", KingdomGuestRules.SettledTradeNoun(
 				KingdomGuestRules.HookKind.Ruin, LegendaryTrader: false));
 		}
 
@@ -226,7 +227,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void NoRoomRefusal_IsNeverEmpty()
 		{
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomGuestRules.NoRoomRefusal()));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomGuestRules.NoRoomRefusal()));
 		}
 
 		[Test]
@@ -277,7 +278,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Prior.RemoveIntProperty(\"VillageMerchant\")", helpers);
 			StringAssert.Contains("Prior.GetPart<GenericInventoryRestocker>() == old", helpers);
 			StringAssert.DoesNotContain("Prior.RemoveIntProperty(\"Merchant\")", helpers);
-			Assert.Less(handoff.IndexOf("TransferExactLocalMarketStock", StringComparison.Ordinal),
+			ClassicAssert.Less(handoff.IndexOf("TransferExactLocalMarketStock", StringComparison.Ordinal),
 				handoff.IndexOf("Trader.SetIntProperty(\"VillageMerchant\", 1)",
 					StringComparison.Ordinal),
 				"the prior merchant remains canonical until every exact stock move reads back");
@@ -301,7 +302,7 @@ namespace ThousandAndFirst.Tests
 				"TryObjectGraphAvailableForOrdinaryTransfer(item, out _)";
 			string transfer = Slice(handoff, "private static bool TransferExactLocalMarketStock(",
 				"private static bool RollbackMarketTransfer(");
-			Assert.AreEqual(4, Count(transfer, protectedEvidence));
+			ClassicAssert.AreEqual(4, Count(transfer, protectedEvidence));
 			AssertOrdered(transfer, "foreach (GameObject item in Trader.Inventory.Objects)",
 				protectedEvidence,
 				"foreach (GameObject item in new List<GameObject>(Prior.Inventory.Objects))",
@@ -314,7 +315,7 @@ namespace ThousandAndFirst.Tests
 
 			string rollback = Slice(handoff, "private static bool RollbackMarketTransfer(",
 				"private static bool ExactTransferableStock(");
-			Assert.AreEqual(2, Count(rollback, protectedEvidence));
+			ClassicAssert.AreEqual(2, Count(rollback, protectedEvidence));
 			AssertOrdered(rollback, protectedEvidence,
 				"Prior.Inventory.AddObjectToInventory(item, null", protectedEvidence,
 				"TryObjectGraphAvailableForOrdinaryTransfer(Moved[i], out _)",
@@ -365,7 +366,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string lodged = KingdomGuestRules.GuestbookLine("Oyu", KingdomGuestRules.HookKind.Ruin, "a sealed stair", true);
 			string departed = KingdomGuestRules.GuestbookLine("Oyu", KingdomGuestRules.HookKind.Ruin, "a sealed stair", false);
-			Assert.AreNotEqual(lodged, departed);
+			ClassicAssert.AreNotEqual(lodged, departed);
 			StringAssert.Contains("Oyu", lodged);
 			StringAssert.Contains("Oyu", departed);
 		}
@@ -383,7 +384,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(30, 30, KingdomPlotRules.PlotSize.Huge)]
 		public void ClassifyRectTier_MatchesTheFourStampedBands(int width, int height, KingdomPlotRules.PlotSize expected)
 		{
-			Assert.AreEqual(expected, KingdomGuestRules.ClassifyRectTier(width, height));
+			ClassicAssert.AreEqual(expected, KingdomGuestRules.ClassifyRectTier(width, height));
 		}
 
 		[Test]
@@ -393,9 +394,9 @@ namespace ThousandAndFirst.Tests
 			KingdomPlotRules.PlotSize medium = KingdomGuestRules.ClassifyRectTier(KingdomPlotRules.MediumWidth, KingdomPlotRules.MediumHeight);
 			KingdomPlotRules.PlotSize large = KingdomGuestRules.ClassifyRectTier(KingdomPlotRules.LargeWidth, KingdomPlotRules.LargeHeight);
 			KingdomPlotRules.PlotSize huge = KingdomGuestRules.ClassifyRectTier(KingdomPlotRules.HugeWidth, KingdomPlotRules.HugeHeight);
-			Assert.Less(small, medium);
-			Assert.Less(medium, large);
-			Assert.Less(large, huge);
+			ClassicAssert.Less(small, medium);
+			ClassicAssert.Less(medium, large);
+			ClassicAssert.Less(large, huge);
 		}
 
 		[TestCase(4, 4)]
@@ -403,10 +404,10 @@ namespace ThousandAndFirst.Tests
 		public void ExactDesignationBoundsPreservePhysicalShape(int width, int height)
 		{
 			KingdomBenefitReading reading = RectangularReading(width, height);
-			Assert.IsTrue(KingdomGuestRules.TryExactPlotBounds(reading.Designation.Cells,
+			ClassicAssert.IsTrue(KingdomGuestRules.TryExactPlotBounds(reading.Designation.Cells,
 				out int actualWidth, out int actualHeight));
-			Assert.AreEqual(width, actualWidth);
-			Assert.AreEqual(height, actualHeight);
+			ClassicAssert.AreEqual(width, actualWidth);
+			ClassicAssert.AreEqual(height, actualHeight);
 		}
 
 		[Test]
@@ -414,7 +415,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomBenefitReading reading = RectangularReading(2, 2);
 			reading.Designation.Cells.RemoveAt(0);
-			Assert.IsFalse(KingdomGuestRules.TryExactPlotBounds(
+			ClassicAssert.IsFalse(KingdomGuestRules.TryExactPlotBounds(
 				reading.Designation.Cells, out _, out _));
 		}
 
@@ -443,7 +444,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(-2, -2, 10, 2, 2, 10, 4)]
 		public void ZoneGridDistance_IsChebyshevAcrossAllThreeAxes(int gx1, int gy1, int z1, int gx2, int gy2, int z2, int expected)
 		{
-			Assert.AreEqual(expected, KingdomGuestRules.ZoneGridDistance(gx1, gy1, z1, gx2, gy2, z2));
+			ClassicAssert.AreEqual(expected, KingdomGuestRules.ZoneGridDistance(gx1, gy1, z1, gx2, gy2, z2));
 		}
 
 		[Test]
@@ -451,7 +452,7 @@ namespace ThousandAndFirst.Tests
 		{
 			int forward = KingdomGuestRules.ZoneGridDistance(1, 2, 10, 9, 5, 12);
 			int backward = KingdomGuestRules.ZoneGridDistance(9, 5, 12, 1, 2, 10);
-			Assert.AreEqual(forward, backward);
+			ClassicAssert.AreEqual(forward, backward);
 		}
 
 		[TestCase(0, KingdomGuestRules.CarrySignBaseDays)]
@@ -460,13 +461,13 @@ namespace ThousandAndFirst.Tests
 		[TestCase(-3, KingdomGuestRules.CarrySignBaseDays)]
 		public void HaulDays_ScalesWithDistanceAndNeverGoesBelowBase(int distance, int expected)
 		{
-			Assert.AreEqual(expected, KingdomGuestRules.HaulDays(distance));
+			ClassicAssert.AreEqual(expected, KingdomGuestRules.HaulDays(distance));
 		}
 
 		[Test]
 		public void HaulDueTick_AddsFullDaysInTicks()
 		{
-			Assert.AreEqual(1000L + 3 * KingdomRules.TicksPerDay, KingdomGuestRules.HaulDueTick(1000L, 3));
+			ClassicAssert.AreEqual(1000L + 3 * KingdomRules.TicksPerDay, KingdomGuestRules.HaulDueTick(1000L, 3));
 		}
 
 		[TestCase(999L, 1000L, false)]
@@ -474,7 +475,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(1001L, 1000L, true)]
 		public void ShouldResolveHaul_TripsAtTheDueTickNotBeforeIt(long timeTicks, long dueTick, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomGuestRules.ShouldResolveHaul(timeTicks, dueTick));
+			ClassicAssert.AreEqual(expected, KingdomGuestRules.ShouldResolveHaul(timeTicks, dueTick));
 		}
 
 		[TestCase(false, false, false)]
@@ -484,7 +485,7 @@ namespace ThousandAndFirst.Tests
 		public void HaulWaitsForSafety_UntilWarningAndPhysicalRaidersAreBothGone(
 			bool raidActive, bool raidersPresent, bool expected)
 		{
-			Assert.AreEqual(expected,
+			ClassicAssert.AreEqual(expected,
 				KingdomGuestRules.HaulWaitsForSafety(raidActive, raidersPresent));
 		}
 
@@ -498,7 +499,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(true, false, true, 5, KingdomGuestRules.PlantVerdict.Planted)]
 		public void AssessPlant_ChecksInFounderFacingOrder(bool founded, bool alreadyInFlight, bool hasRoad, int manifestTotal, KingdomGuestRules.PlantVerdict expected)
 		{
-			Assert.AreEqual(expected, KingdomGuestRules.AssessPlant(founded, alreadyInFlight, hasRoad, manifestTotal));
+			ClassicAssert.AreEqual(expected, KingdomGuestRules.AssessPlant(founded, alreadyInFlight, hasRoad, manifestTotal));
 		}
 
 		[TestCase(KingdomGuestRules.PlantVerdict.NotFounded)]
@@ -507,14 +508,14 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomGuestRules.PlantVerdict.NothingToCarry)]
 		public void PlantRefusal_IsNeverEmptyForARealRefusal(KingdomGuestRules.PlantVerdict verdict)
 		{
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomGuestRules.PlantRefusal(verdict)));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomGuestRules.PlantRefusal(verdict)));
 		}
 
 		[Test]
 		public void PlantRefusal_IsEmptyForThePlantedVerdict()
 		{
 			// Planted is not a refusal; the caller never shows this one.
-			Assert.AreEqual("", KingdomGuestRules.PlantRefusal(KingdomGuestRules.PlantVerdict.Planted));
+			ClassicAssert.AreEqual("", KingdomGuestRules.PlantRefusal(KingdomGuestRules.PlantVerdict.Planted));
 		}
 
 		[Test]
@@ -555,8 +556,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// The same relation the plain traveller's clock keeps, and for the same reason: it is
 			// what makes KingdomRules.PassagesThrough answer "at most one at the gate".
-			Assert.Less(KingdomGuestRules.NotableGuestPatienceTicks, KingdomGuestRules.NotableGuestIntervalTicks);
-			Assert.Greater(KingdomGuestRules.NotableGuestPatienceTicks, 0L);
+			ClassicAssert.Less(KingdomGuestRules.NotableGuestPatienceTicks, KingdomGuestRules.NotableGuestIntervalTicks);
+			ClassicAssert.Greater(KingdomGuestRules.NotableGuestPatienceTicks, 0L);
 		}
 
 		[Test]
@@ -569,8 +570,8 @@ namespace ThousandAndFirst.Tests
 			long now = due + KingdomRules.TicksPerDay * 200;
 			KingdomRules.Passages passages = KingdomRules.PassagesThrough(
 				due, now, KingdomGuestRules.NotableGuestIntervalTicks, KingdomGuestRules.NotableGuestPatienceTicks);
-			Assert.Greater(passages.Departed, 25, "two hundred days at a seven-day cadence is not one notable");
-			Assert.AreEqual(0L, passages.StandingSince);
+			ClassicAssert.Greater(passages.Departed, 25, "two hundred days at a seven-day cadence is not one notable");
+			ClassicAssert.AreEqual(0L, passages.StandingSince);
 		}
 
 		[Test]
@@ -579,9 +580,9 @@ namespace ThousandAndFirst.Tests
 			long due = KingdomGuestRules.NotableGuestIntervalTicks;
 			KingdomRules.Passages passages = KingdomRules.PassagesThrough(
 				due, due + KingdomRules.TicksPerDay, KingdomGuestRules.NotableGuestIntervalTicks, KingdomGuestRules.NotableGuestPatienceTicks);
-			Assert.AreEqual(due, passages.StandingSince);
-			Assert.AreEqual(0, passages.Departed);
-			Assert.AreEqual(due + KingdomGuestRules.NotableGuestPatienceTicks, KingdomGuestRules.DepartTickFor(passages.StandingSince));
+			ClassicAssert.AreEqual(due, passages.StandingSince);
+			ClassicAssert.AreEqual(0, passages.Departed);
+			ClassicAssert.AreEqual(due + KingdomGuestRules.NotableGuestPatienceTicks, KingdomGuestRules.DepartTickFor(passages.StandingSince));
 		}
 
 		[TestCase(0, "the last of them today")]
@@ -590,7 +591,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(12, "the last of them 12 days before you saw it")]
 		public void WhenPhrase_DatesAgainstTheDayTheFounderIsBeingTold(int daysAgo, string expected)
 		{
-			Assert.AreEqual(expected, KingdomGuestRules.WhenPhrase(daysAgo));
+			ClassicAssert.AreEqual(expected, KingdomGuestRules.WhenPhrase(daysAgo));
 		}
 
 		[Test]
@@ -616,16 +617,16 @@ namespace ThousandAndFirst.Tests
 			string rumor = KingdomGuestRules.PassedOutsiderRumor(3, "Tamsketh", 4);
 			StringAssert.Contains("Tamsketh", rumor);
 			StringAssert.Contains("talk", rumor);
-			Assert.AreNotEqual(KingdomGuestRules.PassedChronicleLine(3, "Tamsketh", 4), rumor);
+			ClassicAssert.AreNotEqual(KingdomGuestRules.PassedChronicleLine(3, "Tamsketh", 4), rumor);
 		}
 
 		[Test]
 		public void PassedLinesSayNothingWhenNobodyCame()
 		{
-			Assert.IsNull(KingdomGuestRules.PassedChronicleLine(0, "Tamsketh", 4));
-			Assert.IsNull(KingdomGuestRules.PassedOutsiderRumor(0, "Tamsketh", 4));
-			Assert.IsNull(KingdomGuestRules.PassedLedgerNote(0, 4));
-			Assert.IsNull(KingdomGuestRules.PassedGuestbookLine(-1, 4));
+			ClassicAssert.IsNull(KingdomGuestRules.PassedChronicleLine(0, "Tamsketh", 4));
+			ClassicAssert.IsNull(KingdomGuestRules.PassedOutsiderRumor(0, "Tamsketh", 4));
+			ClassicAssert.IsNull(KingdomGuestRules.PassedLedgerNote(0, 4));
+			ClassicAssert.IsNull(KingdomGuestRules.PassedGuestbookLine(-1, 4));
 		}
 
 		[Test]
@@ -633,7 +634,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string one = KingdomGuestRules.PassedLedgerNote(1, 0);
 			StringAssert.Contains("One notable", one);
-			Assert.IsFalse(one.Contains("1 notables"), "the singular case read as a plural");
+			ClassicAssert.IsFalse(one.Contains("1 notables"), "the singular case read as a plural");
 		}
 
 		[Test]
@@ -645,15 +646,15 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("nothing is lost", dated);
 			// A departure noticed the day it happened drops the clause rather than reading "0
 			// days before you saw it".
-			Assert.IsFalse(KingdomGuestRules.DepartedLedgerNote("Aeru", 0).Contains("before you saw it"));
+			ClassicAssert.IsFalse(KingdomGuestRules.DepartedLedgerNote("Aeru", 0).Contains("before you saw it"));
 			StringAssert.Contains("a day before you saw it", KingdomGuestRules.DepartedLedgerNote("Aeru", 1));
 		}
 		private static string Slice(string source, string start, string end)
 		{
 			int at = source.IndexOf(start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(at, 0, start);
+			ClassicAssert.GreaterOrEqual(at, 0, start);
 			int until = source.IndexOf(end, at + start.Length, StringComparison.Ordinal);
-			Assert.Greater(until, at, end);
+			ClassicAssert.Greater(until, at, end);
 			return source.Substring(at, until - at);
 		}
 
@@ -675,7 +676,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < values.Length; i++)
 			{
 				int at = source.IndexOf(values[i], cursor + 1, StringComparison.Ordinal);
-				Assert.Greater(at, cursor, values[i]);
+				ClassicAssert.Greater(at, cursor, values[i]);
 				cursor = at;
 			}
 		}

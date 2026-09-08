@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -26,7 +27,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("", "", 0)]
 		public void GroundWallBonus(string blueprint, string region, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.GroundWallBonus(blueprint, region));
+			ClassicAssert.AreEqual(expected, KingdomRules.GroundWallBonus(blueprint, region));
 		}
 
 		[Test]
@@ -34,7 +35,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// A ruin blueprint outranks a contradicting region reading, the same order
 			// StyleForSite resolves ground in.
-			Assert.AreEqual(2, KingdomRules.GroundWallBonus("TerrainRuins", "Saltmarsh"));
+			ClassicAssert.AreEqual(2, KingdomRules.GroundWallBonus("TerrainRuins", "Saltmarsh"));
 		}
 
 		[Test]
@@ -42,7 +43,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// A renamed or third-party blueprint the ladder does not know falls back to the
 			// region tag rather than answering zero outright.
-			Assert.AreEqual(1, KingdomRules.GroundWallBonus("TerrainOfSomeFutureUpdate", "Hills"));
+			ClassicAssert.AreEqual(1, KingdomRules.GroundWallBonus("TerrainOfSomeFutureUpdate", "Hills"));
 		}
 
 		[TestCase(false, false, 0)]
@@ -51,7 +52,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(true, true, 2)]
 		public void KnowledgeWallBonus(bool hasTinkering, bool hasAdvancedTinkering, int expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.KnowledgeWallBonus(hasTinkering, hasAdvancedTinkering));
+			ClassicAssert.AreEqual(expected, KingdomRules.KnowledgeWallBonus(hasTinkering, hasAdvancedTinkering));
 		}
 
 		[TestCase(0, "TerrainRuins", "Ruins", true, true, 0)]
@@ -60,7 +61,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// A design with no defence of its own never becomes a wall just because the ground
 			// and the founder both qualify.
-			Assert.AreEqual(expected, KingdomRules.WallDefence(baseDefence, blueprint, region, hasTinkering, hasAdvancedTinkering));
+			ClassicAssert.AreEqual(expected, KingdomRules.WallDefence(baseDefence, blueprint, region, hasTinkering, hasAdvancedTinkering));
 		}
 
 		[Test]
@@ -68,7 +69,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// The ladder's own floor: exactly the design's base Defence, nothing added and
 			// nothing taken away.
-			Assert.AreEqual(6, KingdomRules.WallDefence(6, "TerrainSaltdunes", "Saltdunes", false, false));
+			ClassicAssert.AreEqual(6, KingdomRules.WallDefence(6, "TerrainSaltdunes", "Saltdunes", false, false));
 		}
 
 		[Test]
@@ -76,16 +77,16 @@ namespace ThousandAndFirst.Tests
 		{
 			// Worked stone (+2) plus a Tinker I founder (+1 base, +1 advanced) on a defence-6
 			// design: 6 + 2 + 1 + 1.
-			Assert.AreEqual(10, KingdomRules.WallDefence(6, "TerrainRuins", "Ruins", true, true));
+			ClassicAssert.AreEqual(10, KingdomRules.WallDefence(6, "TerrainRuins", "Ruins", true, true));
 		}
 
 		[Test]
 		public void WallDefenceNeverFallsBelowBaseDefence()
 		{
 			int baseDefence = 3;
-			Assert.GreaterOrEqual(KingdomRules.WallDefence(baseDefence, null, null, false, false), baseDefence);
-			Assert.GreaterOrEqual(KingdomRules.WallDefence(baseDefence, "TerrainSaltdunes", "Saltdunes", true, true), baseDefence);
-			Assert.GreaterOrEqual(KingdomRules.WallDefence(baseDefence, "TerrainRuins", "Ruins", true, true), baseDefence);
+			ClassicAssert.GreaterOrEqual(KingdomRules.WallDefence(baseDefence, null, null, false, false), baseDefence);
+			ClassicAssert.GreaterOrEqual(KingdomRules.WallDefence(baseDefence, "TerrainSaltdunes", "Saltdunes", true, true), baseDefence);
+			ClassicAssert.GreaterOrEqual(KingdomRules.WallDefence(baseDefence, "TerrainRuins", "Ruins", true, true), baseDefence);
 		}
 
 		[TestCase(0, false, false)]
@@ -94,16 +95,16 @@ namespace ThousandAndFirst.Tests
 		public void FrontierWorkRequiresDefenceAndNoReservedPlot(int defence, bool hasPlot,
 			bool expected)
 		{
-			Assert.AreEqual(expected, KingdomRules.IsFrontierWork(defence, hasPlot));
+			ClassicAssert.AreEqual(expected, KingdomRules.IsFrontierWork(defence, hasPlot));
 		}
 
 		[Test]
 		public void DefensivePlotKeepsBaseRatingWhileFrontierWorkEarnsWallBonuses()
 		{
-			Assert.AreEqual(6, KingdomRules.BuiltDefence(6, true,
+			ClassicAssert.AreEqual(6, KingdomRules.BuiltDefence(6, true,
 				"TerrainRuins", "Ruins", true, true),
 				"a plotted arsenal is a building, not four abstract wall bonuses");
-			Assert.AreEqual(10, KingdomRules.BuiltDefence(6, false,
+			ClassicAssert.AreEqual(10, KingdomRules.BuiltDefence(6, false,
 				"TerrainRuins", "Ruins", true, true),
 				"the same unplotted design is a perimeter work and earns wall bonuses");
 		}
@@ -131,17 +132,17 @@ namespace ThousandAndFirst.Tests
 				"return Object.GetIntProperty(\"KingdomDefence\") > 0", classify);
 			int adoptedReceipt = plot.IndexOf(
 				"Object.GetIntProperty(AdoptedPlotProperty) == 1", classify);
-			Assert.Greater(adoptedReceipt, classify);
-			Assert.Greater(legacyFallback, adoptedReceipt,
+			ClassicAssert.Greater(adoptedReceipt, classify);
+			ClassicAssert.Greater(legacyFallback, adoptedReceipt,
 				"durable adopted-plot truth must win before legacy Defence fallback");
 
 			int release = plot.IndexOf("public static void ReleaseAdoptedPlot(");
 			int removePresence = plot.IndexOf("Adopted.RemoveIntProperty(PlotX2Property);", release);
 			int removeIdentity = plot.IndexOf("Adopted.RemoveStringProperty(PlotIdProperty);", release);
 			int removeOwner = plot.IndexOf("Adopted.RemoveIntProperty(AdoptedPlotProperty);", release);
-			Assert.Greater(removePresence, release);
-			Assert.Greater(removeIdentity, removePresence);
-			Assert.Greater(removeOwner, removeIdentity,
+			ClassicAssert.Greater(removePresence, release);
+			ClassicAssert.Greater(removeIdentity, removePresence);
+			ClassicAssert.Greater(removeOwner, removeIdentity,
 				"rect presence must disappear before adoption ownership commits its release");
 
 			int releaseAdoption = adopt.IndexOf("public static bool Release(");
@@ -149,8 +150,8 @@ namespace ThousandAndFirst.Tests
 				releaseAdoption);
 			int clearAdoption = adopt.IndexOf("ClearTyped(Adopted, AdoptedProperty);",
 				releaseAdoption);
-			Assert.Greater(clearPlot, releaseAdoption);
-			Assert.Greater(clearAdoption, clearPlot,
+			ClassicAssert.Greater(clearPlot, releaseAdoption);
+			ClassicAssert.Greater(clearAdoption, clearPlot,
 				"plot receipt must retire while interrupted release is still retryable");
 		}
 
@@ -165,7 +166,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void FrontierEdges_ALoneZoneIsFrontierOnEverySide()
 		{
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				KingdomRules.Frontier.North | KingdomRules.Frontier.South | KingdomRules.Frontier.West | KingdomRules.Frontier.East,
 				KingdomRules.FrontierEdges(Home, new string[1] { Home }));
 		}
@@ -174,25 +175,25 @@ namespace ThousandAndFirst.Tests
 		public void FrontierEdges_ClaimingTheNeighbourStopsThatEdgeBeingFrontier()
 		{
 			KingdomRules.Frontier edges = KingdomRules.FrontierEdges(Home, new string[2] { Home, North });
-			Assert.AreEqual(KingdomRules.Frontier.None, edges & KingdomRules.Frontier.North,
+			ClassicAssert.AreEqual(KingdomRules.Frontier.None, edges & KingdomRules.Frontier.North,
 				"the north edge is still frontier after claiming the ground north of it");
-			Assert.AreNotEqual(KingdomRules.Frontier.None, edges & KingdomRules.Frontier.South);
+			ClassicAssert.AreNotEqual(KingdomRules.Frontier.None, edges & KingdomRules.Frontier.South);
 		}
 
 		[Test]
 		public void FrontierEdges_SurroundedGroundHasNoFrontierAtAll()
 		{
-			Assert.AreEqual(KingdomRules.Frontier.None,
+			ClassicAssert.AreEqual(KingdomRules.Frontier.None,
 				KingdomRules.FrontierEdges(Home, new string[5] { Home, North, South, West, East }));
 		}
 
 		[Test]
 		public void FrontierEdges_AnotherWorldOrAnotherDepthIsNotANeighbour()
 		{
-			Assert.AreNotEqual(KingdomRules.Frontier.None,
+			ClassicAssert.AreNotEqual(KingdomRules.Frontier.None,
 				KingdomRules.FrontierEdges(Home, new string[2] { Home, "OtherWorld.5.5.1.0.10" }) & KingdomRules.Frontier.North,
 				"a zone in another world counted as bordering ground");
-			Assert.AreNotEqual(KingdomRules.Frontier.None,
+			ClassicAssert.AreNotEqual(KingdomRules.Frontier.None,
 				KingdomRules.FrontierEdges(Home, new string[2] { Home, "JoppaWorld.5.5.1.0.11" }) & KingdomRules.Frontier.North,
 				"a zone one stratum down counted as bordering ground on the surface");
 		}
@@ -200,9 +201,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void FrontierEdges_RubbishInputHasNoFrontier()
 		{
-			Assert.AreEqual(KingdomRules.Frontier.None, KingdomRules.FrontierEdges(null, new string[0]));
-			Assert.AreEqual(KingdomRules.Frontier.None, KingdomRules.FrontierEdges("not.a.zone", new string[0]));
-			Assert.AreEqual(KingdomRules.Frontier.None, KingdomRules.FrontierEdges(Home, null));
+			ClassicAssert.AreEqual(KingdomRules.Frontier.None, KingdomRules.FrontierEdges(null, new string[0]));
+			ClassicAssert.AreEqual(KingdomRules.Frontier.None, KingdomRules.FrontierEdges("not.a.zone", new string[0]));
+			ClassicAssert.AreEqual(KingdomRules.Frontier.None, KingdomRules.FrontierEdges(Home, null));
 		}
 
 		[Test]
@@ -210,10 +211,10 @@ namespace ThousandAndFirst.Tests
 		{
 			// An 80x25 zone whose only unclaimed neighbour lies north.
 			KingdomRules.Frontier north = KingdomRules.Frontier.North;
-			Assert.IsTrue(KingdomRules.IsOnFrontier(40, 0, 80, 25, north), "the north edge is not wall ground");
-			Assert.IsTrue(KingdomRules.IsOnFrontier(40, 1, 80, 25, north), "the band is thinner than it claims");
-			Assert.IsFalse(KingdomRules.IsOnFrontier(40, 12, 80, 25, north), "the middle of the zone is wall ground");
-			Assert.IsFalse(KingdomRules.IsOnFrontier(40, 24, 80, 25, north), "the south edge is wall ground for a north frontier");
+			ClassicAssert.IsTrue(KingdomRules.IsOnFrontier(40, 0, 80, 25, north), "the north edge is not wall ground");
+			ClassicAssert.IsTrue(KingdomRules.IsOnFrontier(40, 1, 80, 25, north), "the band is thinner than it claims");
+			ClassicAssert.IsFalse(KingdomRules.IsOnFrontier(40, 12, 80, 25, north), "the middle of the zone is wall ground");
+			ClassicAssert.IsFalse(KingdomRules.IsOnFrontier(40, 24, 80, 25, north), "the south edge is wall ground for a north frontier");
 		}
 
 		[Test]
@@ -223,7 +224,7 @@ namespace ThousandAndFirst.Tests
 			{
 				for (int y = 0; y < 25; y += 6)
 				{
-					Assert.IsFalse(KingdomRules.IsOnFrontier(x, y, 80, 25, KingdomRules.Frontier.None));
+					ClassicAssert.IsFalse(KingdomRules.IsOnFrontier(x, y, 80, 25, KingdomRules.Frontier.None));
 				}
 			}
 		}
@@ -231,8 +232,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void IsOnFrontier_ACornerBelongsToBothItsEdges()
 		{
-			Assert.IsTrue(KingdomRules.IsOnFrontier(0, 0, 80, 25, KingdomRules.Frontier.North));
-			Assert.IsTrue(KingdomRules.IsOnFrontier(0, 0, 80, 25, KingdomRules.Frontier.West));
+			ClassicAssert.IsTrue(KingdomRules.IsOnFrontier(0, 0, 80, 25, KingdomRules.Frontier.North));
+			ClassicAssert.IsTrue(KingdomRules.IsOnFrontier(0, 0, 80, 25, KingdomRules.Frontier.West));
 		}
 
 		// --- what a founder's claim does to the wall line ---------------------------------
@@ -249,9 +250,9 @@ namespace ThousandAndFirst.Tests
 			string[] after = new string[2] { Home, North };
 			int wasFacing = KingdomZoningRules.EdgeCount(KingdomRules.FrontierEdges(Home, before));
 			int nowFacing = KingdomZoningRules.EdgeCount(KingdomRules.FrontierEdges(Home, after));
-			Assert.AreEqual(4, wasFacing);
-			Assert.AreEqual(3, nowFacing);
-			Assert.IsTrue(KingdomZoningRules.ClaimedWallClause(wasFacing, nowFacing, "Kavvat").Contains("moves outward"));
+			ClassicAssert.AreEqual(4, wasFacing);
+			ClassicAssert.AreEqual(3, nowFacing);
+			ClassicAssert.IsTrue(KingdomZoningRules.ClaimedWallClause(wasFacing, nowFacing, "Kavvat").Contains("moves outward"));
 		}
 
 		[Test]
@@ -263,8 +264,8 @@ namespace ThousandAndFirst.Tests
 			// rather than told the wall moved.
 			int wasFacing = KingdomZoningRules.EdgeCount(KingdomRules.FrontierEdges(Home, new string[1] { Home }));
 			int nowFacing = KingdomZoningRules.EdgeCount(KingdomRules.FrontierEdges(Home, new string[2] { Home, Below }));
-			Assert.AreEqual(wasFacing, nowFacing);
-			Assert.IsTrue(KingdomZoningRules.ClaimedWallClause(wasFacing, nowFacing, "Kavvat").Contains("does not move"));
+			ClassicAssert.AreEqual(wasFacing, nowFacing);
+			ClassicAssert.IsTrue(KingdomZoningRules.ClaimedWallClause(wasFacing, nowFacing, "Kavvat").Contains("does not move"));
 		}
 
 		[Test]
@@ -272,8 +273,8 @@ namespace ThousandAndFirst.Tests
 		{
 			int wasFacing = KingdomZoningRules.EdgeCount(KingdomRules.FrontierEdges(Home, new string[1] { Home }));
 			int nowFacing = KingdomZoningRules.EdgeCount(KingdomRules.FrontierEdges(Home, new string[2] { Home, Corner }));
-			Assert.AreEqual(wasFacing, nowFacing);
-			Assert.IsTrue(KingdomZoningRules.ClaimedWallClause(wasFacing, nowFacing, "Kavvat").Contains("does not move"));
+			ClassicAssert.AreEqual(wasFacing, nowFacing);
+			ClassicAssert.IsTrue(KingdomZoningRules.ClaimedWallClause(wasFacing, nowFacing, "Kavvat").Contains("does not move"));
 		}
 
 		[Test]
@@ -283,7 +284,7 @@ namespace ThousandAndFirst.Tests
 			// the set FrontierEdges tests against, so no edge that was interior becomes frontier.
 			string[] before = new string[2] { Home, North };
 			string[] after = new string[3] { Home, North, West };
-			Assert.IsTrue(KingdomZoningRules.EdgeCount(KingdomRules.FrontierEdges(Home, after))
+			ClassicAssert.IsTrue(KingdomZoningRules.EdgeCount(KingdomRules.FrontierEdges(Home, after))
 				<= KingdomZoningRules.EdgeCount(KingdomRules.FrontierEdges(Home, before)));
 		}
 

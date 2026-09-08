@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -14,39 +15,39 @@ namespace ThousandAndFirst.Tests
 		{
 			string root = Path.Combine(TestMain.RepositoryRoot, "Experience");
 			foreach (string file in Directory.GetFiles(root, "KingdomSuccession*.cs"))
-				Assert.Less(File.ReadAllLines(file).Length, 300, Path.GetFileName(file));
+				ClassicAssert.Less(File.ReadAllLines(file).Length, 300, Path.GetFileName(file));
 		}
 
 		[Test]
 		public void SaveCarriedSuccessionEnumsKeepIntLayoutAndExactValues()
 		{
-			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(InterregnumPhase)));
+			ClassicAssert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(InterregnumPhase)));
 			CollectionAssert.AreEqual(new[] { "None", "WordOnTheRoad", "RiteDue", "Reigning" },
 				Enum.GetNames(typeof(InterregnumPhase)));
-			Assert.AreEqual(0, (int)InterregnumPhase.None);
-			Assert.AreEqual(1, (int)InterregnumPhase.WordOnTheRoad);
-			Assert.AreEqual(2, (int)InterregnumPhase.RiteDue);
-			Assert.AreEqual(3, (int)InterregnumPhase.Reigning);
+			ClassicAssert.AreEqual(0, (int)InterregnumPhase.None);
+			ClassicAssert.AreEqual(1, (int)InterregnumPhase.WordOnTheRoad);
+			ClassicAssert.AreEqual(2, (int)InterregnumPhase.RiteDue);
+			ClassicAssert.AreEqual(3, (int)InterregnumPhase.Reigning);
 
-			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(NewsRoad)));
+			ClassicAssert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(NewsRoad)));
 			CollectionAssert.AreEqual(new[] { "Seat", "Road", "Arch", "Rumour" },
 				Enum.GetNames(typeof(NewsRoad)));
-			Assert.AreEqual(0, (int)NewsRoad.Seat);
-			Assert.AreEqual(1, (int)NewsRoad.Road);
-			Assert.AreEqual(2, (int)NewsRoad.Arch);
-			Assert.AreEqual(3, (int)NewsRoad.Rumour);
+			ClassicAssert.AreEqual(0, (int)NewsRoad.Seat);
+			ClassicAssert.AreEqual(1, (int)NewsRoad.Road);
+			ClassicAssert.AreEqual(2, (int)NewsRoad.Arch);
+			ClassicAssert.AreEqual(3, (int)NewsRoad.Rumour);
 
-			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(MourningRiteStage)));
+			ClassicAssert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(MourningRiteStage)));
 			CollectionAssert.AreEqual(new[] { "None", "Frozen", "WordArrived",
 				"ProcessionComplete", "ShrinePlaced", "BodyCrossed", "Complete" },
 				Enum.GetNames(typeof(MourningRiteStage)));
-			Assert.AreEqual(0, (int)MourningRiteStage.None);
-			Assert.AreEqual(1, (int)MourningRiteStage.Frozen);
-			Assert.AreEqual(2, (int)MourningRiteStage.WordArrived);
-			Assert.AreEqual(3, (int)MourningRiteStage.ProcessionComplete);
-			Assert.AreEqual(4, (int)MourningRiteStage.ShrinePlaced);
-			Assert.AreEqual(5, (int)MourningRiteStage.BodyCrossed);
-			Assert.AreEqual(6, (int)MourningRiteStage.Complete);
+			ClassicAssert.AreEqual(0, (int)MourningRiteStage.None);
+			ClassicAssert.AreEqual(1, (int)MourningRiteStage.Frozen);
+			ClassicAssert.AreEqual(2, (int)MourningRiteStage.WordArrived);
+			ClassicAssert.AreEqual(3, (int)MourningRiteStage.ProcessionComplete);
+			ClassicAssert.AreEqual(4, (int)MourningRiteStage.ShrinePlaced);
+			ClassicAssert.AreEqual(5, (int)MourningRiteStage.BodyCrossed);
+			ClassicAssert.AreEqual(6, (int)MourningRiteStage.Complete);
 		}
 
 		[Test]
@@ -82,13 +83,13 @@ namespace ThousandAndFirst.Tests
 				(system, body) => system.Bodies.Remove(body),
 				(system, body) => system.Bodies.Add(body));
 
-			Assert.IsFalse(accessionPublished);
-			Assert.IsFalse(forward.SetBodyReturnedClean);
-			Assert.IsTrue(forward.TargetControls);
-			Assert.IsInstanceOf<InvalidOperationException>(forward.Failure);
-			Assert.IsTrue(rollback.TargetControls);
-			Assert.IsTrue(rollback.RegistrationsExact);
-			Assert.AreSame(founder, current);
+			ClassicAssert.IsFalse(accessionPublished);
+			ClassicAssert.IsFalse(forward.SetBodyReturnedClean);
+			ClassicAssert.IsTrue(forward.TargetControls);
+			ClassicAssert.IsInstanceOf<InvalidOperationException>(forward.Failure);
+			ClassicAssert.IsTrue(rollback.TargetControls);
+			ClassicAssert.IsTrue(rollback.RegistrationsExact);
+			ClassicAssert.AreSame(founder, current);
 			AssertEverySystemHasOnly(systems, founder);
 		}
 
@@ -114,10 +115,10 @@ namespace ThousandAndFirst.Tests
 				(system, body) => system.Bodies.Remove(body),
 				(system, body) => system.Bodies.Add(body));
 
-			Assert.IsTrue(forward.SetBodyReturnedClean);
-			Assert.IsTrue(forward.TargetControls);
-			Assert.IsTrue(forward.RegistrationsExact);
-			Assert.IsTrue(forward.MayPublishAccession);
+			ClassicAssert.IsTrue(forward.SetBodyReturnedClean);
+			ClassicAssert.IsTrue(forward.TargetControls);
+			ClassicAssert.IsTrue(forward.RegistrationsExact);
+			ClassicAssert.IsTrue(forward.MayPublishAccession);
 			AssertEverySystemHasOnly(systems, heir);
 		}
 
@@ -128,7 +129,7 @@ namespace ThousandAndFirst.Tests
 		public void RepairTokenRequiresExactHeirAndProvedGlobalRegistrations(
 			bool HeirControls, bool RegistrationsExact, bool Expected)
 		{
-			Assert.AreEqual(Expected, KingdomSuccessionRules.MayQueueAccessionRepair(
+			ClassicAssert.AreEqual(Expected, KingdomSuccessionRules.MayQueueAccessionRepair(
 				HeirControls, RegistrationsExact));
 		}
 
@@ -146,10 +147,10 @@ namespace ThousandAndFirst.Tests
 				(system, body) => system.Bodies.Remove(body),
 				(system, body) => system.Bodies.Add(body));
 
-			Assert.IsFalse(transfer.OriginalControls);
-			Assert.IsFalse(transfer.TargetControls);
-			Assert.IsFalse(transfer.MayPublishAccession);
-			Assert.IsFalse(KingdomSuccessionRules.MayQueueAccessionRepair(
+			ClassicAssert.IsFalse(transfer.OriginalControls);
+			ClassicAssert.IsFalse(transfer.TargetControls);
+			ClassicAssert.IsFalse(transfer.MayPublishAccession);
+			ClassicAssert.IsFalse(KingdomSuccessionRules.MayQueueAccessionRepair(
 				ReferenceEquals(current, heir), transfer.RegistrationsExact));
 			AssertEverySystemHasOnly(systems, third);
 		}
@@ -174,11 +175,11 @@ namespace ThousandAndFirst.Tests
 					system.Bodies.Add(body);
 				});
 
-			Assert.IsTrue(transfer.TargetControls);
-			Assert.IsFalse(transfer.RegistrationsExact);
-			Assert.Greater(transfer.RegistrationFailures, 0);
-			Assert.IsFalse(transfer.MayPublishAccession);
-			Assert.IsFalse(KingdomSuccessionRules.MayQueueAccessionRepair(true,
+			ClassicAssert.IsTrue(transfer.TargetControls);
+			ClassicAssert.IsFalse(transfer.RegistrationsExact);
+			ClassicAssert.Greater(transfer.RegistrationFailures, 0);
+			ClassicAssert.IsFalse(transfer.MayPublishAccession);
+			ClassicAssert.IsFalse(KingdomSuccessionRules.MayQueueAccessionRepair(true,
 				transfer.RegistrationsExact));
 		}
 
@@ -196,9 +197,9 @@ namespace ThousandAndFirst.Tests
 				(system, body) => system.Bodies.Remove(body),
 				(system, body) => system.Bodies.Add(body));
 
-			Assert.IsFalse(rollback.TargetControls);
-			Assert.IsFalse(rollback.OriginalControls);
-			Assert.IsFalse(KingdomSuccessionRules.MayQueueAccessionRepair(
+			ClassicAssert.IsFalse(rollback.TargetControls);
+			ClassicAssert.IsFalse(rollback.OriginalControls);
+			ClassicAssert.IsFalse(KingdomSuccessionRules.MayQueueAccessionRepair(
 				ReferenceEquals(current, heir), rollback.RegistrationsExact));
 			AssertEverySystemHasOnly(systems, third);
 		}
@@ -223,10 +224,10 @@ namespace ThousandAndFirst.Tests
 					system.Bodies.Add(body);
 				});
 
-			Assert.IsTrue(rollback.OriginalControls);
-			Assert.IsFalse(rollback.TargetControls);
-			Assert.IsFalse(rollback.RegistrationsExact);
-			Assert.IsFalse(KingdomSuccessionRules.MayQueueAccessionRepair(
+			ClassicAssert.IsTrue(rollback.OriginalControls);
+			ClassicAssert.IsFalse(rollback.TargetControls);
+			ClassicAssert.IsFalse(rollback.RegistrationsExact);
+			ClassicAssert.IsFalse(KingdomSuccessionRules.MayQueueAccessionRepair(
 				ReferenceEquals(current, heir), rollback.RegistrationsExact));
 		}
 
@@ -263,7 +264,7 @@ namespace ThousandAndFirst.Tests
 		public void AccessionFailureTerminalizesOnlyWithExactOriginalCarriersAndFounderControl(
 			bool CarriersExactlyOriginal, bool FounderControls, bool Expected)
 		{
-			Assert.AreEqual(Expected, KingdomSuccessionRules.MayTerminalAfterAccessionFailure(
+			ClassicAssert.AreEqual(Expected, KingdomSuccessionRules.MayTerminalAfterAccessionFailure(
 				CarriersExactlyOriginal, FounderControls));
 		}
 
@@ -274,7 +275,7 @@ namespace ThousandAndFirst.Tests
 		public void CorruptReadOrPersistedDisableMarkerKeepsSuccessionFailClosedAcrossResave(
 			bool CurrentReadFailed, bool PersistedDisabled, bool Expected)
 		{
-			Assert.AreEqual(Expected, KingdomSuccessionRules.SuccessionEnabled(
+			ClassicAssert.AreEqual(Expected, KingdomSuccessionRules.SuccessionEnabled(
 				CurrentReadFailed, PersistedDisabled));
 		}
 
@@ -284,29 +285,29 @@ namespace ThousandAndFirst.Tests
 			string completed = KingdomSuccessionRules.FounderDeathToken(1, 100L, "founder-one");
 			string pending = KingdomSuccessionRules.FounderDeathToken(2, 200L, "founder-two");
 			string failure;
-			Assert.IsTrue(KingdomSuccessionRules.TryValidateSavedState(0, "", "",
+			ClassicAssert.IsTrue(KingdomSuccessionRules.TryValidateSavedState(0, "", "",
 				InterregnumPhase.None, 0L, NewsRoad.Seat, 0, false, "", out failure), failure);
-			Assert.IsTrue(KingdomSuccessionRules.TryValidateSavedState(1, pending, completed,
+			ClassicAssert.IsTrue(KingdomSuccessionRules.TryValidateSavedState(1, pending, completed,
 				InterregnumPhase.RiteDue,
 				KingdomSuccessionRules.NewsDueTick(200L, 2), NewsRoad.Road, 2,
 				true, "", out failure), failure);
-			Assert.IsTrue(KingdomSuccessionRules.TryValidateSavedState(1, "", completed,
+			ClassicAssert.IsTrue(KingdomSuccessionRules.TryValidateSavedState(1, "", completed,
 				InterregnumPhase.Reigning, 0L, NewsRoad.Road, 0, false, completed,
 				out failure), failure);
 
-			Assert.IsFalse(KingdomSuccessionRules.TryValidateSavedState(-1, "", "",
+			ClassicAssert.IsFalse(KingdomSuccessionRules.TryValidateSavedState(-1, "", "",
 				InterregnumPhase.None, 0L, NewsRoad.Seat, 0, false, "", out failure));
-			Assert.IsFalse(KingdomSuccessionRules.TryValidateSavedState(1, pending, completed,
+			ClassicAssert.IsFalse(KingdomSuccessionRules.TryValidateSavedState(1, pending, completed,
 				(InterregnumPhase)99, 202L, NewsRoad.Road, 2, true, "", out failure));
-			Assert.IsFalse(KingdomSuccessionRules.TryValidateSavedState(1, pending, completed,
+			ClassicAssert.IsFalse(KingdomSuccessionRules.TryValidateSavedState(1, pending, completed,
 				InterregnumPhase.RiteDue, 201L, NewsRoad.Road, 2, true, "", out failure));
-			Assert.IsFalse(KingdomSuccessionRules.TryValidateSavedState(1, pending, completed,
+			ClassicAssert.IsFalse(KingdomSuccessionRules.TryValidateSavedState(1, pending, completed,
 				InterregnumPhase.RiteDue, 202L, (NewsRoad)99, 2, true, "", out failure));
-			Assert.IsFalse(KingdomSuccessionRules.TryValidateSavedState(1, "", completed,
+			ClassicAssert.IsFalse(KingdomSuccessionRules.TryValidateSavedState(1, "", completed,
 				InterregnumPhase.RiteDue, 0L, NewsRoad.Seat, 0, false, "", out failure));
-			Assert.IsFalse(KingdomSuccessionRules.TryValidateSavedState(1, "", completed,
+			ClassicAssert.IsFalse(KingdomSuccessionRules.TryValidateSavedState(1, "", completed,
 				InterregnumPhase.Reigning, 0L, NewsRoad.Seat, 0, true, "", out failure));
-			Assert.IsFalse(KingdomSuccessionRules.TryValidateSavedState(1, "", completed,
+			ClassicAssert.IsFalse(KingdomSuccessionRules.TryValidateSavedState(1, "", completed,
 				InterregnumPhase.Reigning, 0L, NewsRoad.Seat, 0, false,
 				KingdomSuccessionRules.FounderDeathToken(1, 101L, "other"), out failure));
 		}
@@ -317,16 +318,16 @@ namespace ThousandAndFirst.Tests
 			string valid = KingdomSuccessionRules.FounderDeathToken(3, 400L, "object:id");
 			int ordinal;
 			long tick;
-			Assert.IsTrue(KingdomSuccessionRules.TryReadDeathToken(valid, out ordinal, out tick));
-			Assert.AreEqual(3, ordinal);
-			Assert.AreEqual(400L, tick);
+			ClassicAssert.IsTrue(KingdomSuccessionRules.TryReadDeathToken(valid, out ordinal, out tick));
+			ClassicAssert.AreEqual(3, ordinal);
+			ClassicAssert.AreEqual(400L, tick);
 			string[] invalid = new[] { null, "", "v1:0:0:YQ==", "v1:1:-1:YQ==",
 				"v1:1:0:not base64", "v2:1:0:YQ==", new string('x', 513) };
 			for (int i = 0; i < invalid.Length; i++)
 			{
 				Assert.DoesNotThrow(delegate
 				{
-					Assert.IsFalse(KingdomSuccessionRules.TryReadDeathToken(invalid[i],
+					ClassicAssert.IsFalse(KingdomSuccessionRules.TryReadDeathToken(invalid[i],
 						out ordinal, out tick));
 				});
 			}
@@ -335,9 +336,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ModeOnIsTrueForFlagOrModeId()
 		{
-			Assert.IsTrue(KingdomSuccessionRules.ModeOn("Classic", true));
-			Assert.IsTrue(KingdomSuccessionRules.ModeOn(KingdomSuccessionRules.ModeId, false));
-			Assert.IsFalse(KingdomSuccessionRules.ModeOn("Classic", false));
+			ClassicAssert.IsTrue(KingdomSuccessionRules.ModeOn("Classic", true));
+			ClassicAssert.IsTrue(KingdomSuccessionRules.ModeOn(KingdomSuccessionRules.ModeId, false));
+			ClassicAssert.IsFalse(KingdomSuccessionRules.ModeOn("Classic", false));
 		}
 
 		[Test]
@@ -347,47 +348,47 @@ namespace ThousandAndFirst.Tests
 			NewsRoad road;
 
 			KingdomSuccessionRules.JudgeNews(ArchAnswers: true, SameWorld: true, DX: 9, DY: 9, DZ: 2, out days, out road);
-			Assert.AreEqual(NewsRoad.Arch, road);
-			Assert.AreEqual(0, days);
+			ClassicAssert.AreEqual(NewsRoad.Arch, road);
+			ClassicAssert.AreEqual(0, days);
 
 			KingdomSuccessionRules.JudgeNews(ArchAnswers: false, SameWorld: false, DX: 0, DY: 0, DZ: 0, out days, out road);
-			Assert.AreEqual(NewsRoad.Rumour, road);
-			Assert.AreEqual(KingdomSuccessionRules.RumourDays, days);
+			ClassicAssert.AreEqual(NewsRoad.Rumour, road);
+			ClassicAssert.AreEqual(KingdomSuccessionRules.RumourDays, days);
 
 			KingdomSuccessionRules.JudgeNews(ArchAnswers: false, SameWorld: true, DX: 0, DY: 0, DZ: 0, out days, out road);
-			Assert.AreEqual(NewsRoad.Seat, road);
-			Assert.AreEqual(0, days);
+			ClassicAssert.AreEqual(NewsRoad.Seat, road);
+			ClassicAssert.AreEqual(0, days);
 		}
 
 		[Test]
 		public void NewsArithmeticSaturatesAtHostileIntegerEdges()
 		{
-			Assert.AreEqual(int.MaxValue,
+			ClassicAssert.AreEqual(int.MaxValue,
 				KingdomSuccessionRules.NewsSteps(int.MinValue, int.MaxValue, int.MinValue));
-			Assert.AreEqual(KingdomSuccessionRules.RumourDays,
+			ClassicAssert.AreEqual(KingdomSuccessionRules.RumourDays,
 				KingdomSuccessionRules.NewsDays(int.MaxValue));
 
 			long nearEnd = long.MaxValue - KingdomRules.TicksPerDay;
-			Assert.AreEqual(long.MaxValue, KingdomSuccessionRules.NewsDueTick(nearEnd, 2));
-			Assert.AreEqual(0L, KingdomSuccessionRules.NewsDueTick(-100L, -2));
+			ClassicAssert.AreEqual(long.MaxValue, KingdomSuccessionRules.NewsDueTick(nearEnd, 2));
+			ClassicAssert.AreEqual(0L, KingdomSuccessionRules.NewsDueTick(-100L, -2));
 			long exactDue = KingdomSuccessionRules.NewsDueTick(500L, 3);
-			Assert.AreEqual(500L + 3L * KingdomRules.TicksPerDay, exactDue);
-			Assert.AreEqual(3L * KingdomRules.TicksPerDay,
+			ClassicAssert.AreEqual(500L + 3L * KingdomRules.TicksPerDay, exactDue);
+			ClassicAssert.AreEqual(3L * KingdomRules.TicksPerDay,
 				KingdomSuccessionRules.WorldTicksUntilDue(500L, exactDue));
-			Assert.AreEqual(5L, KingdomSuccessionRules.WorldTicksUntilDue(-10L, 5L));
-			Assert.AreEqual(0L, KingdomSuccessionRules.WorldTicksUntilDue(long.MaxValue, long.MaxValue));
+			ClassicAssert.AreEqual(5L, KingdomSuccessionRules.WorldTicksUntilDue(-10L, 5L));
+			ClassicAssert.AreEqual(0L, KingdomSuccessionRules.WorldTicksUntilDue(long.MaxValue, long.MaxValue));
 		}
 
 		[Test]
 		public void InterregnumCrossesOnlyAtTheDueTickOrAfterRite()
 		{
-			Assert.AreEqual(InterregnumPhase.None,
+			ClassicAssert.AreEqual(InterregnumPhase.None,
 				KingdomSuccessionRules.Phase(false, false, 100L, 200L));
-			Assert.AreEqual(InterregnumPhase.WordOnTheRoad,
+			ClassicAssert.AreEqual(InterregnumPhase.WordOnTheRoad,
 				KingdomSuccessionRules.Phase(true, false, 199L, 200L));
-			Assert.AreEqual(InterregnumPhase.RiteDue,
+			ClassicAssert.AreEqual(InterregnumPhase.RiteDue,
 				KingdomSuccessionRules.Phase(true, false, 200L, 200L));
-			Assert.AreEqual(InterregnumPhase.Reigning,
+			ClassicAssert.AreEqual(InterregnumPhase.Reigning,
 				KingdomSuccessionRules.Phase(true, true, 0L, long.MaxValue));
 		}
 
@@ -402,11 +403,11 @@ namespace ThousandAndFirst.Tests
 			};
 
 			int index;
-			Assert.IsTrue(KingdomSuccessionRules.TryChooseHeir(candidates, SuccessionLaw.Seniority, null, out index));
-			Assert.AreEqual(1, index, "same arrival tick should break by lexical name");
+			ClassicAssert.IsTrue(KingdomSuccessionRules.TryChooseHeir(candidates, SuccessionLaw.Seniority, null, out index));
+			ClassicAssert.AreEqual(1, index, "same arrival tick should break by lexical name");
 
-			Assert.IsTrue(KingdomSuccessionRules.TryChooseHeir(candidates, SuccessionLaw.Designee, "Bela", out index));
-			Assert.AreEqual(0, index);
+			ClassicAssert.IsTrue(KingdomSuccessionRules.TryChooseHeir(candidates, SuccessionLaw.Designee, "Bela", out index));
+			ClassicAssert.AreEqual(0, index);
 		}
 
 		[Test]
@@ -420,24 +421,24 @@ namespace ThousandAndFirst.Tests
 			};
 
 			int index;
-			Assert.IsTrue(KingdomSuccessionRules.TryChooseHeir(
+			ClassicAssert.IsTrue(KingdomSuccessionRules.TryChooseHeir(
 				candidates, SuccessionLaw.Seniority, null, out index));
-			Assert.AreEqual(0, index,
+			ClassicAssert.AreEqual(0, index,
 				"body reachability is a verdict on the chosen heir, never a reason to choose another");
 		}
 
 		[Test]
 		public void JudgeAndDynastyEndRulesMatchVerdictTable()
 		{
-			Assert.AreEqual(SuccessionVerdict.NotKingdomMode, KingdomSuccessionRules.Judge(false, true, true, true));
-			Assert.AreEqual(SuccessionVerdict.Unfounded, KingdomSuccessionRules.Judge(true, false, true, true));
-			Assert.AreEqual(SuccessionVerdict.NoHeir, KingdomSuccessionRules.Judge(true, true, false, true));
-			Assert.AreEqual(SuccessionVerdict.HeirUnreachable, KingdomSuccessionRules.Judge(true, true, true, false));
-			Assert.AreEqual(SuccessionVerdict.Succeeds, KingdomSuccessionRules.Judge(true, true, true, true));
+			ClassicAssert.AreEqual(SuccessionVerdict.NotKingdomMode, KingdomSuccessionRules.Judge(false, true, true, true));
+			ClassicAssert.AreEqual(SuccessionVerdict.Unfounded, KingdomSuccessionRules.Judge(true, false, true, true));
+			ClassicAssert.AreEqual(SuccessionVerdict.NoHeir, KingdomSuccessionRules.Judge(true, true, false, true));
+			ClassicAssert.AreEqual(SuccessionVerdict.HeirUnreachable, KingdomSuccessionRules.Judge(true, true, true, false));
+			ClassicAssert.AreEqual(SuccessionVerdict.Succeeds, KingdomSuccessionRules.Judge(true, true, true, true));
 
-			Assert.IsTrue(KingdomSuccessionRules.DynastyEnds(SuccessionVerdict.NoHeir));
-			Assert.IsTrue(KingdomSuccessionRules.DynastyEnds(SuccessionVerdict.HeirUnreachable));
-			Assert.IsFalse(KingdomSuccessionRules.DynastyEnds(SuccessionVerdict.Succeeds));
+			ClassicAssert.IsTrue(KingdomSuccessionRules.DynastyEnds(SuccessionVerdict.NoHeir));
+			ClassicAssert.IsTrue(KingdomSuccessionRules.DynastyEnds(SuccessionVerdict.HeirUnreachable));
+			ClassicAssert.IsFalse(KingdomSuccessionRules.DynastyEnds(SuccessionVerdict.Succeeds));
 		}
 
 		[Test]
@@ -450,18 +451,18 @@ namespace ThousandAndFirst.Tests
 				CreedMatchesRealm: true,
 				OnceLeftRealmCreed: false);
 
-			Assert.LessOrEqual(regard, KingdomSuccessionRules.AccessionRegardCeiling);
-			Assert.GreaterOrEqual(regard, KingdomSuccessionRules.AccessionRegardFloor);
-			Assert.AreEqual(KingdomSuccessionRules.MonthsServedCap, KingdomSuccessionRules.MonthsServed(1, now));
+			ClassicAssert.LessOrEqual(regard, KingdomSuccessionRules.AccessionRegardCeiling);
+			ClassicAssert.GreaterOrEqual(regard, KingdomSuccessionRules.AccessionRegardFloor);
+			ClassicAssert.AreEqual(KingdomSuccessionRules.MonthsServedCap, KingdomSuccessionRules.MonthsServed(1, now));
 		}
 
 		[Test]
 		public void ForgetsExemptsMapAndAccomplishments()
 		{
-			Assert.IsFalse(KingdomSuccessionRules.Forgets(JournalKind.MapNote, true));
-			Assert.IsFalse(KingdomSuccessionRules.Forgets(JournalKind.Accomplishment, true));
-			Assert.IsTrue(KingdomSuccessionRules.Forgets(JournalKind.GeneralNote, true));
-			Assert.IsFalse(KingdomSuccessionRules.Forgets(JournalKind.GeneralNote, false));
+			ClassicAssert.IsFalse(KingdomSuccessionRules.Forgets(JournalKind.MapNote, true));
+			ClassicAssert.IsFalse(KingdomSuccessionRules.Forgets(JournalKind.Accomplishment, true));
+			ClassicAssert.IsTrue(KingdomSuccessionRules.Forgets(JournalKind.GeneralNote, true));
+			ClassicAssert.IsFalse(KingdomSuccessionRules.Forgets(JournalKind.GeneralNote, false));
 		}
 
 		[Test]
@@ -472,36 +473,36 @@ namespace ThousandAndFirst.Tests
 			string otherObject = KingdomSuccessionRules.FounderDeathToken(1, 1200L, "object:two");
 			string otherTick = KingdomSuccessionRules.FounderDeathToken(1, 1201L, "object:one");
 
-			Assert.AreEqual(first, same);
-			Assert.AreNotEqual(first, otherObject);
-			Assert.AreNotEqual(first, otherTick);
+			ClassicAssert.AreEqual(first, same);
+			ClassicAssert.AreNotEqual(first, otherObject);
+			ClassicAssert.AreNotEqual(first, otherTick);
 			string stamp = KingdomSuccessionRules.FounderAttribute(first);
-			Assert.IsTrue(KingdomSuccessionRules.StampedBy(stamp,
+			ClassicAssert.IsTrue(KingdomSuccessionRules.StampedBy(stamp,
 				KingdomSuccessionRules.FounderAttribute(same)));
-			Assert.IsFalse(KingdomSuccessionRules.StampedBy(stamp,
+			ClassicAssert.IsFalse(KingdomSuccessionRules.StampedBy(stamp,
 				KingdomSuccessionRules.FounderAttribute(otherObject)));
 		}
 
 		[Test]
 		public void QuestInheritanceIsFlavorOnlyAndClassifiesTheDocumentedPersonalSet()
 		{
-			Assert.IsTrue(KingdomSuccessionRules.PersonalQuest(
+			ClassicAssert.IsTrue(KingdomSuccessionRules.PersonalQuest(
 				"Fetch Argyve a Knickknack", "renamed by another display layer"));
-			Assert.IsTrue(KingdomSuccessionRules.PersonalQuest(null,
+			ClassicAssert.IsTrue(KingdomSuccessionRules.PersonalQuest(null,
 				"Pax Klanq, I Presume? (inherited)"));
-			Assert.IsTrue(KingdomSuccessionRules.PersonalQuest(
+			ClassicAssert.IsTrue(KingdomSuccessionRules.PersonalQuest(
 				"If, Then, Else", "If, Then, Else"));
-			Assert.IsFalse(KingdomSuccessionRules.PersonalQuest(
+			ClassicAssert.IsFalse(KingdomSuccessionRules.PersonalQuest(
 				"What's Eating the Watervine?", "What's Eating the Watervine?"));
-			Assert.IsFalse(KingdomSuccessionRules.PersonalQuest(
+			ClassicAssert.IsFalse(KingdomSuccessionRules.PersonalQuest(
 				"Tomb of the Eaters", "Tomb of the Eaters"));
-			Assert.IsFalse(KingdomSuccessionRules.PersonalQuest(
+			ClassicAssert.IsFalse(KingdomSuccessionRules.PersonalQuest(
 				"dynamic village quest:1", "Find a snapjaw fort"));
 
 			string inherited = KingdomSuccessionRules.InheritedQuestName("The Assessment");
-			Assert.AreEqual("The Assessment (inherited)", inherited);
-			Assert.AreEqual(inherited, KingdomSuccessionRules.InheritedQuestName(inherited));
-			Assert.AreEqual("The Assessment",
+			ClassicAssert.AreEqual("The Assessment (inherited)", inherited);
+			ClassicAssert.AreEqual(inherited, KingdomSuccessionRules.InheritedQuestName(inherited));
+			ClassicAssert.AreEqual("The Assessment",
 				KingdomSuccessionRules.WithoutInheritedSuffix(inherited));
 		}
 
@@ -519,16 +520,16 @@ namespace ThousandAndFirst.Tests
 				"A Signal in the Noise");
 			string accession = KingdomSuccessionRules.AccessionRiteEventId(death);
 
-			Assert.AreEqual(chronicle, same);
-			Assert.AreNotEqual(chronicle, map);
-			Assert.AreNotEqual(chronicle, other);
-			Assert.AreNotEqual(chronicle, accession);
-			Assert.Less(chronicle.Length, 128);
-			Assert.Less(accession.Length, 128);
+			ClassicAssert.AreEqual(chronicle, same);
+			ClassicAssert.AreNotEqual(chronicle, map);
+			ClassicAssert.AreNotEqual(chronicle, other);
+			ClassicAssert.AreNotEqual(chronicle, accession);
+			ClassicAssert.Less(chronicle.Length, 128);
+			ClassicAssert.Less(accession.Length, 128);
 			StringAssert.StartsWith("taf:succession:unfinished:v1:", chronicle);
 			StringAssert.StartsWith("taf:succession:quest-origin:v1:", map);
 			StringAssert.StartsWith("taf:succession:accession-rite:v1:", accession);
-			Assert.IsNull(KingdomSuccessionRules.InheritedQuestEventId(death,
+			ClassicAssert.IsNull(KingdomSuccessionRules.InheritedQuestEventId(death,
 				new string('q', KingdomSuccessionRules.MaxQuestIdentityChars + 1)));
 		}
 
@@ -537,35 +538,35 @@ namespace ThousandAndFirst.Tests
 		{
 			string line = KingdomSuccessionRules.InheritedQuestChronicle("Nara",
 				"The Assessment (inherited)");
-			Assert.AreEqual("Nara died with The Assessment undone, and the heir inherited the undertaking",
+			ClassicAssert.AreEqual("Nara died with The Assessment undone, and the heir inherited the undertaking",
 				line);
-			Assert.IsFalse(line.Contains("(inherited)"));
-			Assert.Less(KingdomSuccessionRules.QuestMarkNote(
+			ClassicAssert.IsFalse(line.Contains("(inherited)"));
+			ClassicAssert.Less(KingdomSuccessionRules.QuestMarkNote(
 				new string('x', 5000), new string('y', 5000)).Length, 1100);
 		}
 
 		[Test]
 		public void AttemptGatePreventsEveryDuplicateAndConflictingReplay()
 		{
-			Assert.AreEqual(SuccessionAttemptVerdict.Invalid,
+			ClassicAssert.AreEqual(SuccessionAttemptVerdict.Invalid,
 				KingdomSuccessionRules.JudgeAttempt(null, null, null));
-			Assert.AreEqual(SuccessionAttemptVerdict.Begin,
+			ClassicAssert.AreEqual(SuccessionAttemptVerdict.Begin,
 				KingdomSuccessionRules.JudgeAttempt("a", null, null));
-			Assert.AreEqual(SuccessionAttemptVerdict.DuplicatePending,
+			ClassicAssert.AreEqual(SuccessionAttemptVerdict.DuplicatePending,
 				KingdomSuccessionRules.JudgeAttempt("a", "a", null));
-			Assert.AreEqual(SuccessionAttemptVerdict.Conflict,
+			ClassicAssert.AreEqual(SuccessionAttemptVerdict.Conflict,
 				KingdomSuccessionRules.JudgeAttempt("b", "a", null));
-			Assert.AreEqual(SuccessionAttemptVerdict.AlreadyCompleted,
+			ClassicAssert.AreEqual(SuccessionAttemptVerdict.AlreadyCompleted,
 				KingdomSuccessionRules.JudgeAttempt("a", null, "a"));
 		}
 
 		[Test]
 		public void CostsSeatOnlyForChosenHeirWhenEnabled()
 		{
-			Assert.IsTrue(KingdomSuccessionRules.CostsTheSeat(HeirChoice.Chosen, true));
-			Assert.IsFalse(KingdomSuccessionRules.CostsTheSeat(HeirChoice.Law, true));
-			Assert.IsFalse(KingdomSuccessionRules.CostsTheSeat(HeirChoice.Chosen, false));
-			Assert.IsFalse(KingdomSuccessionRules.CostsTheSeat(HeirChoice.Groomed, true));
+			ClassicAssert.IsTrue(KingdomSuccessionRules.CostsTheSeat(HeirChoice.Chosen, true));
+			ClassicAssert.IsFalse(KingdomSuccessionRules.CostsTheSeat(HeirChoice.Law, true));
+			ClassicAssert.IsFalse(KingdomSuccessionRules.CostsTheSeat(HeirChoice.Chosen, false));
+			ClassicAssert.IsFalse(KingdomSuccessionRules.CostsTheSeat(HeirChoice.Groomed, true));
 		}
 
 		[Test]
@@ -574,15 +575,15 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i <= (int)MourningRiteStage.Complete; i++)
 			{
 				MourningRiteStage stage = (MourningRiteStage)i;
-				Assert.IsTrue(KingdomSuccessionRules.MayAdvanceRite(stage, stage));
+				ClassicAssert.IsTrue(KingdomSuccessionRules.MayAdvanceRite(stage, stage));
 				if (i < (int)MourningRiteStage.Complete)
 				{
-					Assert.IsTrue(KingdomSuccessionRules.MayAdvanceRite(stage,
+					ClassicAssert.IsTrue(KingdomSuccessionRules.MayAdvanceRite(stage,
 						(MourningRiteStage)(i + 1)));
 				}
 				if (i + 2 <= (int)MourningRiteStage.Complete)
 				{
-					Assert.IsFalse(KingdomSuccessionRules.MayAdvanceRite(stage,
+					ClassicAssert.IsFalse(KingdomSuccessionRules.MayAdvanceRite(stage,
 						(MourningRiteStage)(i + 2)));
 				}
 			}
@@ -601,15 +602,15 @@ namespace ThousandAndFirst.Tests
 			string encoded = KingdomSuccessionRules.EncodeRiteManifest(rows);
 			const string golden = "v1|7|Ym9keTo3|QXxzaGE=|Sm9wcGFXb3JsZC4xLjEuMS4xLjEw|2|3|OS80|cGxvdDph|20|11\n"
 				+ "v1|8|Ym9keTo4|QgpyZW4=|Sm9wcGFXb3JsZC4xLjEuMS4xLjEw|4|5|MC8w||21|11";
-			Assert.AreEqual(golden, encoded);
+			ClassicAssert.AreEqual(golden, encoded);
 			KingdomRiteAttendee[] read;
-			Assert.IsTrue(KingdomSuccessionRules.TryDecodeRiteManifest(encoded, out read));
-			Assert.AreEqual(golden, KingdomSuccessionRules.EncodeRiteManifest(read));
-			Assert.AreEqual(2, read.Length);
-			Assert.AreEqual("A|sha", read[0].Name);
-			Assert.AreEqual("plot:a", read[0].Home);
-			Assert.AreEqual(21, read[1].RiteX);
-			Assert.IsFalse(KingdomSuccessionRules.TryDecodeRiteManifest(
+			ClassicAssert.IsTrue(KingdomSuccessionRules.TryDecodeRiteManifest(encoded, out read));
+			ClassicAssert.AreEqual(golden, KingdomSuccessionRules.EncodeRiteManifest(read));
+			ClassicAssert.AreEqual(2, read.Length);
+			ClassicAssert.AreEqual("A|sha", read[0].Name);
+			ClassicAssert.AreEqual("plot:a", read[0].Home);
+			ClassicAssert.AreEqual(21, read[1].RiteX);
+			ClassicAssert.IsFalse(KingdomSuccessionRules.TryDecodeRiteManifest(
 				encoded + "\n" + encoded.Split('\n')[0], out read),
 				"a duplicate resident/body row must never be accepted after a cut");
 		}
@@ -617,7 +618,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RiteManifestAdmitsEveryResidentInALegalFullCityAndNoSixtyFirst()
 		{
-			Assert.AreEqual(KingdomRules.MaxPopulation,
+			ClassicAssert.AreEqual(KingdomRules.MaxPopulation,
 				KingdomSuccessionRules.MaxRiteAttendees);
 			KingdomRiteAttendee[] full = new KingdomRiteAttendee[KingdomRules.MaxPopulation];
 			for (int i = 0; i < full.Length; i++)
@@ -627,29 +628,29 @@ namespace ThousandAndFirst.Tests
 					i % 25, i + "/1", "plot:" + i, (i + 10) % 80, (i + 5) % 25);
 			}
 			string encoded = KingdomSuccessionRules.EncodeRiteManifest(full);
-			Assert.IsNotEmpty(encoded);
-			Assert.LessOrEqual(encoded.Length, KingdomSuccessionRules.MaxRiteManifestChars);
-			Assert.IsTrue(KingdomSuccessionRules.TryDecodeRiteManifest(encoded,
+			ClassicAssert.IsNotEmpty(encoded);
+			ClassicAssert.LessOrEqual(encoded.Length, KingdomSuccessionRules.MaxRiteManifestChars);
+			ClassicAssert.IsTrue(KingdomSuccessionRules.TryDecodeRiteManifest(encoded,
 				out KingdomRiteAttendee[] decoded));
-			Assert.AreEqual(KingdomRules.MaxPopulation, decoded.Length);
+			ClassicAssert.AreEqual(KingdomRules.MaxPopulation, decoded.Length);
 
 			KingdomRiteAttendee[] tooMany = new KingdomRiteAttendee[full.Length + 1];
 			Array.Copy(full, tooMany, full.Length);
 			tooMany[full.Length] = new KingdomRiteAttendee(1000, "body:1000", "extra",
 				"JoppaWorld.1.1.1.1.10", 1, 1, "0/0", "plot:extra", 2, 2);
-			Assert.AreEqual("", KingdomSuccessionRules.EncodeRiteManifest(tooMany));
+			ClassicAssert.AreEqual("", KingdomSuccessionRules.EncodeRiteManifest(tooMany));
 		}
 
 		[Test]
 		public void FounderShrinePlacementIsStrictCheckBeforeMint()
 		{
-			Assert.AreEqual(FounderShrinePlacementVerdict.Create,
+			ClassicAssert.AreEqual(FounderShrinePlacementVerdict.Create,
 				KingdomSuccessionRules.JudgeFounderShrinePlacement(false, false, true, 0));
-			Assert.AreEqual(FounderShrinePlacementVerdict.AdoptExact,
+			ClassicAssert.AreEqual(FounderShrinePlacementVerdict.AdoptExact,
 				KingdomSuccessionRules.JudgeFounderShrinePlacement(true, true, false, 4));
-			Assert.AreEqual(FounderShrinePlacementVerdict.Refuse,
+			ClassicAssert.AreEqual(FounderShrinePlacementVerdict.Refuse,
 				KingdomSuccessionRules.JudgeFounderShrinePlacement(true, false, true, 0));
-			Assert.AreEqual(FounderShrinePlacementVerdict.Refuse,
+			ClassicAssert.AreEqual(FounderShrinePlacementVerdict.Refuse,
 				KingdomSuccessionRules.JudgeFounderShrinePlacement(false, false, true, 1));
 		}
 
@@ -669,14 +670,14 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int body = succession.IndexOf("SetPlayerBodyAndRebindAll(game, founder", shrine,
 				StringComparison.Ordinal);
-			Assert.Greater(time, freeze);
-			Assert.Greater(procession, time);
-			Assert.Greater(shrine, procession);
-			Assert.Greater(body, shrine);
+			ClassicAssert.Greater(time, freeze);
+			ClassicAssert.Greater(procession, time);
+			ClassicAssert.Greater(shrine, procession);
+			ClassicAssert.Greater(body, shrine);
 			StringAssert.Contains("InjectedCheckpoint?.Invoke(Stage)", succession);
 			StringAssert.Contains("bool onOwnedGround = System.OwnedZone(deathZoneId)", succession,
 				"any held city's ground must be immediate local news");
-			Assert.IsFalse(succession.Contains("MessageQueue.AddPlayerMessage"),
+			ClassicAssert.IsFalse(succession.Contains("MessageQueue.AddPlayerMessage"),
 				"the rite popup is the one successful semantic message");
 			StringAssert.Contains("Brain.PushGoal(new MoveTo", rite);
 			StringAssert.Contains("body.Move(path.Directions[i]", rite);
@@ -685,25 +686,25 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("for (int i = 0; i < bodies.Count; i++)", rite);
 			StringAssert.Contains("state.ResidentCount", rite);
 			StringAssert.Contains("result.Count >= needed", rite);
-			Assert.IsFalse(rite.Contains("radius <= 3"));
-			Assert.IsFalse(rite.Contains(
+			ClassicAssert.IsFalse(rite.Contains("radius <= 3"));
+			ClassicAssert.IsFalse(rite.Contains(
 				"rows.Count < KingdomSuccessionRules.MaxRiteAttendees"));
-			Assert.IsFalse(rite.Contains("SystemLongDistanceMoveTo"));
-			Assert.IsFalse(rite.Contains("Teleport"));
-			Assert.IsFalse(rite.Contains("CreateObject(\"Creature"));
+			ClassicAssert.IsFalse(rite.Contains("SystemLongDistanceMoveTo"));
+			ClassicAssert.IsFalse(rite.Contains("Teleport"));
+			ClassicAssert.IsFalse(rite.Contains("CreateObject(\"Creature"));
 		}
 
 		[Test]
 		public void SuccessionLogicalSourceKeepsSerializedShapeAndDeathMutationOrder()
 		{
 			string source = KingdomSuccessionLogicalSource.Read();
-			Assert.AreEqual(19, Count(source, "public sealed partial class KingdomSuccession"));
-			Assert.AreEqual(1, Count(source,
+			ClassicAssert.AreEqual(19, Count(source, "public sealed partial class KingdomSuccession"));
+			ClassicAssert.AreEqual(1, Count(source,
 				"public sealed partial class KingdomSuccession : IPlayerSystem"));
-			Assert.AreEqual(1, Count(source, "[Serializable]"));
-			Assert.AreEqual(4, Count(source, "[NonSerialized]"));
-			Assert.AreEqual(1, Count(source, "private sealed class HeirRuntime"));
-			Assert.AreEqual(1, Count(source, "private sealed class JournalSnapshot"));
+			ClassicAssert.AreEqual(1, Count(source, "[Serializable]"));
+			ClassicAssert.AreEqual(4, Count(source, "[NonSerialized]"));
+			ClassicAssert.AreEqual(1, Count(source, "private sealed class HeirRuntime"));
+			ClassicAssert.AreEqual(1, Count(source, "private sealed class JournalSnapshot"));
 			AssertOrdered(source,
 				"private int SerializationVersion = CurrentSerializationVersion;",
 				"private int SuccessionOrdinal;", "private string PendingDeathToken;",
@@ -734,8 +735,8 @@ namespace ThousandAndFirst.Tests
 				"private bool AccessionOwnershipCommitted;",
 				"internal static Action<MourningRiteStage> InjectedCheckpoint = null;");
 
-			Assert.AreEqual(1, Count(source, "CarryFounderSuccession(E, game, founder, system"));
-			Assert.AreEqual(1, Count(source, "private void CarryFounderSuccession("));
+			ClassicAssert.AreEqual(1, Count(source, "CarryFounderSuccession(E, game, founder, system"));
+			ClassicAssert.AreEqual(1, Count(source, "private void CarryFounderSuccession("));
 			AssertOrdered(source,
 				"private void HandleFounderDeath(AfterDieEvent E)",
 				"KingdomSuccessionRite.TryFreeze(system, heirBook, heirBody, riteCityName",
@@ -744,7 +745,7 @@ namespace ThousandAndFirst.Tests
 
 			int execution = source.IndexOf("private void CarryFounderSuccession(AfterDieEvent E",
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(execution, 0);
+			ClassicAssert.GreaterOrEqual(execution, 0);
 			AssertOrdered(source.Substring(execution),
 				"PendingDeathToken = token;", "PendingPhase = InterregnumPhase.WordOnTheRoad;",
 				"Checkpoint(MourningRiteStage.Frozen);", "founder.AddPart(remains);",
@@ -772,9 +773,9 @@ namespace ThousandAndFirst.Tests
 		public void SuccessionRiteLogicalSourceKeepsNestedAbiAndExactEngineOrder()
 		{
 			string rite = SuccessionRiteSource();
-			Assert.AreEqual(5, Count(rite, "internal static partial class KingdomSuccessionRite"));
-			Assert.AreEqual(1, Count(rite, "internal sealed class Plan"));
-			Assert.AreEqual(1, Count(rite, "private sealed class Walker"));
+			ClassicAssert.AreEqual(5, Count(rite, "internal static partial class KingdomSuccessionRite"));
+			ClassicAssert.AreEqual(1, Count(rite, "internal sealed class Plan"));
+			ClassicAssert.AreEqual(1, Count(rite, "private sealed class Walker"));
 			AssertOrdered(rite,
 				"internal string ZoneId;", "internal string CityName;",
 				"internal string FixtureObjectId;", "internal string FixtureName;",
@@ -794,7 +795,7 @@ namespace ThousandAndFirst.Tests
 
 			int tokenReceipt = rite.IndexOf(
 				"fixture.SetStringProperty(\"KingdomLastMourningRiteToken\"", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(tokenReceipt, 0);
+			ClassicAssert.GreaterOrEqual(tokenReceipt, 0);
 			AssertOrdered(rite.Substring(tokenReceipt),
 				"fixture.SetStringProperty(\"KingdomLastMourningRiteToken\"",
 				"fixture.SetStringProperty(\"KingdomLastMourningAttendees\"",
@@ -835,10 +836,10 @@ namespace ThousandAndFirst.Tests
 				succession);
 			StringAssert.Contains("out revealed, out questMarks", remains);
 			StringAssert.Contains("revealed, questMarks", remains);
-			Assert.IsFalse(succession.Contains("FailQuest("));
-			Assert.IsFalse(succession.Contains("FinishQuest("));
-			Assert.IsFalse(succession.Contains("Quests.Remove("));
-			Assert.IsFalse(succession.Contains("FinishedQuests.Add("));
+			ClassicAssert.IsFalse(succession.Contains("FailQuest("));
+			ClassicAssert.IsFalse(succession.Contains("FinishQuest("));
+			ClassicAssert.IsFalse(succession.Contains("Quests.Remove("));
+			ClassicAssert.IsFalse(succession.Contains("FinishedQuests.Add("));
 		}
 
 		[Test]
@@ -853,7 +854,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Cause", part);
 			StringAssert.Contains("History", part);
 			StringAssert.Contains("Name=\"r_KingdomFounderShrine\"", xml);
-			Assert.IsFalse(xml.Substring(xml.IndexOf("Name=\"r_KingdomFounderShrine\"",
+			ClassicAssert.IsFalse(xml.Substring(xml.IndexOf("Name=\"r_KingdomFounderShrine\"",
 				StringComparison.Ordinal), 700).Contains("LiquidVolume"));
 		}
 
@@ -875,7 +876,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < terms.Length; i++)
 			{
 				int next = source.IndexOf(terms[i], at + 1, StringComparison.Ordinal);
-				Assert.Greater(next, at, terms[i]);
+				ClassicAssert.Greater(next, at, terms[i]);
 				at = next;
 			}
 		}

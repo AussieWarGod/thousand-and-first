@@ -2,6 +2,7 @@
 using System;
 using System.Reflection;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -16,7 +17,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string token in tokens)
 			{
 				int found = source.IndexOf(token, start, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(found, start, token); start = found + token.Length;
+				ClassicAssert.GreaterOrEqual(found, start, token); start = found + token.Length;
 			}
 		}
 
@@ -116,10 +117,10 @@ namespace ThousandAndFirst.Tests
 				}
 				string method = field.Name == "PriorCook" ? "SameCook" : field.Name == "PriorOffice" ? "SameOffice" : "SamePolity";
 				int at = authority.IndexOf("private static bool " + method + "(", StringComparison.Ordinal);
-				Assert.GreaterOrEqual(at, 0, field.Name);
+				ClassicAssert.GreaterOrEqual(at, 0, field.Name);
 				string equality = authority.Substring(at, authority.IndexOf("\n\t\t}", at, StringComparison.Ordinal) - at);
 				foreach (FieldInfo nested in field.FieldType.GetFields(BindingFlags.Instance | BindingFlags.Public))
-					Assert.IsTrue(equality.Contains("A." + nested.Name + " == B." + nested.Name)
+					ClassicAssert.IsTrue(equality.Contains("A." + nested.Name + " == B." + nested.Name)
 						|| capacity.Contains("operation." + field.Name + "." + nested.Name + " == frozen." + field.Name + "." + nested.Name),
 						field.Name + "." + nested.Name + " is omitted from the exact frozen proof");
 			}

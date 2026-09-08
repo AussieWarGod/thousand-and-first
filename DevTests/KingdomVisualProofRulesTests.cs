@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -21,16 +22,16 @@ namespace ThousandAndFirst.Tests
 			states[total / 2] = KingdomVisualProofRules.Fail;
 			states[total - 1] = KingdomVisualProofRules.Pass;
 			string encoded = KingdomVisualProofRules.EncodeCheckpoint(Digest, states);
-			Assert.IsNotNull(encoded);
-			Assert.Less(encoded.Length, 1024);
-			Assert.IsTrue(KingdomVisualProofRules.TryDecodeCheckpoint(encoded, total, Digest,
+			ClassicAssert.IsNotNull(encoded);
+			ClassicAssert.Less(encoded.Length, 1024);
+			ClassicAssert.IsTrue(KingdomVisualProofRules.TryDecodeCheckpoint(encoded, total, Digest,
 				out byte[] decoded, out string failure), failure);
 			CollectionAssert.AreEqual(states, decoded);
 			KingdomVisualProofRules.Counts(decoded, out int passed, out int failed, out int open);
-			Assert.AreEqual(2, passed);
-			Assert.AreEqual(1, failed);
-			Assert.AreEqual(total - 3, open);
-			Assert.AreEqual(1, KingdomVisualProofRules.Next(decoded));
+			ClassicAssert.AreEqual(2, passed);
+			ClassicAssert.AreEqual(1, failed);
+			ClassicAssert.AreEqual(total - 3, open);
+			ClassicAssert.AreEqual(1, KingdomVisualProofRules.Next(decoded));
 		}
 
 		[Test]
@@ -39,28 +40,28 @@ namespace ThousandAndFirst.Tests
 			byte[] states = KingdomVisualProofRules.Empty(18);
 			string encoded = KingdomVisualProofRules.EncodeCheckpoint(Digest, states);
 			string other = new string('a', 64);
-			Assert.IsFalse(KingdomVisualProofRules.TryDecodeCheckpoint(encoded, 18, other,
+			ClassicAssert.IsFalse(KingdomVisualProofRules.TryDecodeCheckpoint(encoded, 18, other,
 				out _, out _));
-			Assert.IsFalse(KingdomVisualProofRules.TryDecodeCheckpoint("vp1|18|" + Digest + "|!",
+			ClassicAssert.IsFalse(KingdomVisualProofRules.TryDecodeCheckpoint("vp1|18|" + Digest + "|!",
 				18, Digest, out _, out _));
 			states[3] = 3;
-			Assert.IsNull(KingdomVisualProofRules.EncodeCheckpoint(Digest, states));
+			ClassicAssert.IsNull(KingdomVisualProofRules.EncodeCheckpoint(Digest, states));
 		}
 
 		[Test]
 		public void ScreenshotNamesAreDeterministicButNeverClaimFileExistence()
 		{
-			Assert.AreEqual("taf-architecture-0001.png",
+			ClassicAssert.AreEqual("taf-architecture-0001.png",
 				KingdomVisualProofRules.ExpectedScreenshot("architecture", 1, 1112));
-			Assert.AreEqual("taf-architecture-1112.png",
+			ClassicAssert.AreEqual("taf-architecture-1112.png",
 				KingdomVisualProofRules.ExpectedScreenshot("architecture", 1112, 1112));
-			Assert.AreEqual("taf-visual-0018.png",
+			ClassicAssert.AreEqual("taf-visual-0018.png",
 				KingdomVisualProofRules.ExpectedScreenshot("visual", 18, 18));
-			Assert.AreEqual("taf-visual-0022.png",
+			ClassicAssert.AreEqual("taf-visual-0022.png",
 				KingdomVisualProofRules.ExpectedScreenshot("visual", 22, 22));
-			Assert.IsTrue(KingdomVisualProofRules.ScreenshotMatches(
+			ClassicAssert.IsTrue(KingdomVisualProofRules.ScreenshotMatches(
 				@"C:\evidence\taf-visual-0018.png", "taf-visual-0018.png"));
-			Assert.IsFalse(KingdomVisualProofRules.ScreenshotMatches(
+			ClassicAssert.IsFalse(KingdomVisualProofRules.ScreenshotMatches(
 				"taf-visual-0017.png", "taf-visual-0018.png"));
 		}
 
@@ -75,7 +76,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("\tdigest=" + Digest, row);
 			StringAssert.Contains("\tverdict=pass", row);
 			StringAssert.Contains("\tcapture=human-asserted", row);
-			Assert.IsNull(KingdomVisualProofRules.EvidenceRow("visual", 4, 18, "gatehouse",
+			ClassicAssert.IsNull(KingdomVisualProofRules.EvidenceRow("visual", 4, 18, "gatehouse",
 				"vg1-0123456789abcdef01234567", Digest, "", "x.png", null));
 		}
 
@@ -118,9 +119,9 @@ namespace ThousandAndFirst.Tests
 				"KingdomArchitectureGalleryWishes*.cs"))
 			{
 				int lines = File.ReadAllLines(path).Length;
-				Assert.Less(lines, 300, Path.GetFileName(path));
+				ClassicAssert.Less(lines, 300, Path.GetFileName(path));
 			}
-			Assert.Less(File.ReadAllLines(Path.Combine(root, "Debug",
+			ClassicAssert.Less(File.ReadAllLines(Path.Combine(root, "Debug",
 				"KingdomVisualProofRules.cs")).Length, 300);
 		}
 

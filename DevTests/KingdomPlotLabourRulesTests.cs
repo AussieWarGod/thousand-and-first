@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -14,11 +15,11 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomPlotLabourStep step = KingdomPlotLabourRules.Advance(
 				Current(100L, 100L, 0L), 100L, effectiveness, 100);
-			Assert.AreEqual(KingdomPlotLabourVerdict.Attended, step.Verdict);
-			Assert.AreEqual(expected, step.WorkedTicks);
-			Assert.AreEqual(100L - expected, step.RemainingTicks);
-			Assert.AreEqual(100L, step.NextTick);
-			Assert.IsTrue(step.WriteReceipt);
+			ClassicAssert.AreEqual(KingdomPlotLabourVerdict.Attended, step.Verdict);
+			ClassicAssert.AreEqual(expected, step.WorkedTicks);
+			ClassicAssert.AreEqual(100L - expected, step.RemainingTicks);
+			ClassicAssert.AreEqual(100L, step.NextTick);
+			ClassicAssert.IsTrue(step.WriteReceipt);
 		}
 
 		[Test]
@@ -26,9 +27,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomPlotLabourStep step = KingdomPlotLabourRules.Advance(
 				Current(200L, 200L, 10L), 110L, 50, 40);
-			Assert.AreEqual(20L, step.WorkedTicks);
-			Assert.AreEqual(180L, step.RemainingTicks);
-			Assert.IsFalse(step.Complete);
+			ClassicAssert.AreEqual(20L, step.WorkedTicks);
+			ClassicAssert.AreEqual(180L, step.RemainingTicks);
+			ClassicAssert.IsFalse(step.Complete);
 		}
 
 		[Test]
@@ -36,10 +37,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomPlotLabourStep step = KingdomPlotLabourRules.Advance(
 				Current(400000L, 400000L, 10L), 1000010L, 50, 100);
-			Assert.IsTrue(step.Complete);
-			Assert.AreEqual(400000L, step.WorkedTicks);
-			Assert.AreEqual(800010L, step.CompletionTick);
-			Assert.AreEqual(1000010L, step.NextTick);
+			ClassicAssert.IsTrue(step.Complete);
+			ClassicAssert.AreEqual(400000L, step.WorkedTicks);
+			ClassicAssert.AreEqual(800010L, step.CompletionTick);
+			ClassicAssert.AreEqual(1000010L, step.NextTick);
 		}
 
 		[Test]
@@ -47,11 +48,11 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomPlotLabourStep step = KingdomPlotLabourRules.Advance(
 				Current(100L, 80L, 100L), 90L, 100, 100);
-			Assert.AreEqual(KingdomPlotLabourVerdict.Attended, step.Verdict);
-			Assert.IsFalse(step.NeedsAttendance);
-			Assert.IsFalse(step.WriteReceipt);
-			Assert.AreEqual(100L, step.NextTick);
-			Assert.AreEqual(80L, step.RemainingTicks);
+			ClassicAssert.AreEqual(KingdomPlotLabourVerdict.Attended, step.Verdict);
+			ClassicAssert.IsFalse(step.NeedsAttendance);
+			ClassicAssert.IsFalse(step.WriteReceipt);
+			ClassicAssert.AreEqual(100L, step.NextTick);
+			ClassicAssert.AreEqual(80L, step.RemainingTicks);
 		}
 
 		[Test]
@@ -59,19 +60,19 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomPlotLabourStep idle = KingdomPlotLabourRules.Advance(
 				Current(100L, 100L, 100L), 200L, 0, 100);
-			Assert.AreEqual(0L, idle.WorkedTicks);
-			Assert.AreEqual(200L, idle.NextTick);
+			ClassicAssert.AreEqual(0L, idle.WorkedTicks);
+			ClassicAssert.AreEqual(200L, idle.NextTick);
 			KingdomPlotLabourStep resumed = KingdomPlotLabourRules.Advance(
 				Current(100L, idle.RemainingTicks, idle.NextTick), 250L, 100, 100);
-			Assert.AreEqual(50L, resumed.WorkedTicks);
-			Assert.AreEqual(50L, resumed.RemainingTicks);
+			ClassicAssert.AreEqual(50L, resumed.WorkedTicks);
+			ClassicAssert.AreEqual(50L, resumed.RemainingTicks);
 		}
 
 		[Test]
 		public void ContradictoryIncompleteAndUnknownReceiptsRefuse()
 		{
 			KingdomPlotLabourReceipt contradictory = Current(100L, 101L, 0L);
-			Assert.AreEqual(KingdomPlotLabourVerdict.Invalid,
+			ClassicAssert.AreEqual(KingdomPlotLabourVerdict.Invalid,
 				KingdomPlotLabourRules.Assess(contradictory, 10L).Verdict);
 			KingdomPlotLabourReceipt incomplete = Current(100L, 50L, 0L);
 			incomplete.HasRemainingTicks = false;
@@ -94,11 +95,11 @@ namespace ThousandAndFirst.Tests
 			};
 			KingdomPlotLabourStep step = KingdomPlotLabourRules.Advance(
 				legacy, 300L, 0, 0);
-			Assert.AreEqual(KingdomPlotLabourVerdict.LegacyCalendar, step.Verdict);
-			Assert.AreEqual(200L, step.CompletedTicks);
-			Assert.AreEqual(400L, step.RequiredTicks);
-			Assert.IsFalse(step.NeedsAttendance);
-			Assert.IsFalse(step.WriteReceipt);
+			ClassicAssert.AreEqual(KingdomPlotLabourVerdict.LegacyCalendar, step.Verdict);
+			ClassicAssert.AreEqual(200L, step.CompletedTicks);
+			ClassicAssert.AreEqual(400L, step.RequiredTicks);
+			ClassicAssert.IsFalse(step.NeedsAttendance);
+			ClassicAssert.IsFalse(step.WriteReceipt);
 		}
 
 		private static KingdomPlotLabourReceipt Current(long required, long remaining,

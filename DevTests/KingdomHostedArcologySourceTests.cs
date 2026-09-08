@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Xml;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -22,12 +23,12 @@ namespace ThousandAndFirst.Tests
 			XmlElement shell = (XmlElement)doc.SelectSingleNode("//building[@Key='arcology']");
 			XmlElement ward = (XmlElement)doc.SelectSingleNode("//building[@Key='arcologyward']");
 			XmlElement terrace = (XmlElement)doc.SelectSingleNode("//building[@Key='arcologyterrace']");
-			Assert.AreEqual("arcology", court.GetAttribute("UpgradesTo"));
-			Assert.AreEqual("yes", shell.GetAttribute("Capital"));
-			Assert.AreEqual("yes", shell.GetAttribute("Megastructure"));
-			Assert.AreEqual("arcology", ward.GetAttribute("Strata"));
-			Assert.AreEqual("arcology", terrace.GetAttribute("Strata"));
-			Assert.AreEqual("food:14", terrace.GetAttribute("Carries"));
+			ClassicAssert.AreEqual("arcology", court.GetAttribute("UpgradesTo"));
+			ClassicAssert.AreEqual("yes", shell.GetAttribute("Capital"));
+			ClassicAssert.AreEqual("yes", shell.GetAttribute("Megastructure"));
+			ClassicAssert.AreEqual("arcology", ward.GetAttribute("Strata"));
+			ClassicAssert.AreEqual("arcology", terrace.GetAttribute("Strata"));
+			ClassicAssert.AreEqual("food:14", terrace.GetAttribute("Carries"));
 			StringAssert.DoesNotContain("HostedProducer", catalogue);
 			StringAssert.DoesNotContain("surface", ward.GetAttribute("Strata"));
 			StringAssert.DoesNotContain("surface", terrace.GetAttribute("Strata"));
@@ -38,29 +39,29 @@ namespace ThousandAndFirst.Tests
 		{
 			XmlDocument doc = new XmlDocument(); doc.LoadXml(Read("RuntimeData", "ObjectBlueprints.xml"));
 			XmlNode root = doc.SelectSingleNode("//object[@Name='r_KingdomArcology']");
-			Assert.IsNotNull(root.SelectSingleNode("part[@Name='r_KingdomArcology']"));
-			Assert.IsNotNull(root.SelectSingleNode(
+			ClassicAssert.IsNotNull(root.SelectSingleNode("part[@Name='r_KingdomArcology']"));
+			ClassicAssert.IsNotNull(root.SelectSingleNode(
 				"part[@Name='Interior'][@Cell='TAFArcology'][@X='1'][@Y='1'][@Z='10']"));
-			Assert.IsNotNull(root.SelectSingleNode("part[@Name='NoDamage']"));
-			Assert.IsNull(root.SelectSingleNode("part[@Name='Bed']"));
+			ClassicAssert.IsNotNull(root.SelectSingleNode("part[@Name='NoDamage']"));
+			ClassicAssert.IsNull(root.SelectSingleNode("part[@Name='Bed']"));
 			XmlNode ward = doc.SelectSingleNode("//object[@Name='r_KingdomArcologyWard']");
 			XmlNode terrace = doc.SelectSingleNode("//object[@Name='r_KingdomArcologyTerrace']");
-			Assert.IsNull(ward.SelectSingleNode("part[@Name='Bed']"));
-			Assert.AreEqual("Furniture", terrace.Attributes["Inherits"].Value);
-			Assert.IsNull(terrace.SelectSingleNode("tag[@Name='r_KingdomCropRows']"));
+			ClassicAssert.IsNull(ward.SelectSingleNode("part[@Name='Bed']"));
+			ClassicAssert.AreEqual("Furniture", terrace.Attributes["Inherits"].Value);
+			ClassicAssert.IsNull(terrace.SelectSingleNode("tag[@Name='r_KingdomCropRows']"));
 			XmlNode growbed = doc.SelectSingleNode("//object[@Name='r_KingdomArcologyGrowbed']");
-			Assert.IsNull(growbed.SelectSingleNode("part[@Name='r_KingdomPlot']"));
-			Assert.IsNull(growbed.SelectSingleNode("tag[@Name='r_KingdomCropRows']"));
-			Assert.AreEqual("2", growbed.SelectSingleNode(
+			ClassicAssert.IsNull(growbed.SelectSingleNode("part[@Name='r_KingdomPlot']"));
+			ClassicAssert.IsNull(growbed.SelectSingleNode("tag[@Name='r_KingdomCropRows']"));
+			ClassicAssert.AreEqual("2", growbed.SelectSingleNode(
 				"tag[@Name='r_TAF_HostedCropRows']").Attributes["Value"].Value);
-			Assert.AreEqual(1, doc.SelectNodes("//part[@Name='Interior'][@Cell='TAFArcology']").Count);
-			Assert.IsNull(doc.SelectSingleNode("//object[@Name='r_KingdomArcologyWardLift']"));
-			Assert.IsNull(doc.SelectSingleNode("//object[@Name='r_KingdomArcologyTerraceLift']"));
-			Assert.IsNotNull(doc.SelectSingleNode(
+			ClassicAssert.AreEqual(1, doc.SelectNodes("//part[@Name='Interior'][@Cell='TAFArcology']").Count);
+			ClassicAssert.IsNull(doc.SelectSingleNode("//object[@Name='r_KingdomArcologyWardLift']"));
+			ClassicAssert.IsNull(doc.SelectSingleNode("//object[@Name='r_KingdomArcologyTerraceLift']"));
+			ClassicAssert.IsNotNull(doc.SelectSingleNode(
 				"//object[@Name='r_KingdomArcologyStairsUp']/part[@Name='StairsUp'][@ConnectionObject='r_KingdomArcologyStairsDown']"));
-			Assert.IsNotNull(doc.SelectSingleNode(
+			ClassicAssert.IsNotNull(doc.SelectSingleNode(
 				"//object[@Name='r_KingdomArcologyStairsDown']/part[@Name='StairsDown'][@ConnectionObject='r_KingdomArcologyStairsUp']"));
-			Assert.IsNotNull(doc.SelectSingleNode(
+			ClassicAssert.IsNotNull(doc.SelectSingleNode(
 				"//object[@Name='r_KingdomArcologyExit']/part[@Name='InteriorPortal']"));
 		}
 
@@ -68,16 +69,16 @@ namespace ThousandAndFirst.Tests
 		public void InteriorWorldOwnsOneThreeByThreeByThreeSchema()
 		{
 			XmlDocument doc = new XmlDocument(); doc.LoadXml(Read("RuntimeData", "Worlds.xml"));
-			Assert.AreEqual(1, doc.SelectNodes("/worlds/world[@Name='Interior']").Count);
+			ClassicAssert.AreEqual(1, doc.SelectNodes("/worlds/world[@Name='Interior']").Count);
 			XmlNode cell = doc.SelectSingleNode("//cell[@Name='TAFArcology']");
-			Assert.IsNotNull(cell);
-			Assert.AreEqual(1, doc.SelectNodes("//cell[starts-with(@Name,'TAFArcology')]").Count);
-			Assert.AreEqual(3, cell.SelectNodes("zone[@x='0-2'][@y='0-2']").Count);
-			Assert.AreEqual(1, cell.SelectNodes("zone[@Level='9']").Count);
-			Assert.AreEqual(1, cell.SelectNodes("zone[@Level='10']").Count);
-			Assert.AreEqual(1, cell.SelectNodes("zone[@Level='11']").Count);
-			Assert.AreEqual(3, cell.SelectNodes("zone[@DisableForcedConnections='Yes']").Count);
-			Assert.AreEqual(3, doc.SelectNodes(
+			ClassicAssert.IsNotNull(cell);
+			ClassicAssert.AreEqual(1, doc.SelectNodes("//cell[starts-with(@Name,'TAFArcology')]").Count);
+			ClassicAssert.AreEqual(3, cell.SelectNodes("zone[@x='0-2'][@y='0-2']").Count);
+			ClassicAssert.AreEqual(1, cell.SelectNodes("zone[@Level='9']").Count);
+			ClassicAssert.AreEqual(1, cell.SelectNodes("zone[@Level='10']").Count);
+			ClassicAssert.AreEqual(1, cell.SelectNodes("zone[@Level='11']").Count);
+			ClassicAssert.AreEqual(3, cell.SelectNodes("zone[@DisableForcedConnections='Yes']").Count);
+			ClassicAssert.AreEqual(3, doc.SelectNodes(
 				"//builder[@Class='KingdomHostedArcologyBuilder']").Count);
 		}
 
@@ -100,10 +101,10 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < names.Length; i++)
 			{
 				XmlNode item = doc.SelectSingleNode("//object[@Name='" + names[i] + "']");
-				Assert.IsNotNull(item, names[i]);
-				Assert.AreEqual("Furniture", item.Attributes["Inherits"].Value, names[i]);
-				Assert.IsNull(item.SelectSingleNode("part[@Name='Inventory' or @Name='LiquidVolume' or @Name='Bed' or @Name='PowerSwitch' or @Name='ElectricalPowerTransmission']"), names[i]);
-				Assert.IsNull(item.SelectSingleNode("tag[@Name='r_KingdomCropRows' or @Name='r_TAF_HostedCropRows']"), names[i]);
+				ClassicAssert.IsNotNull(item, names[i]);
+				ClassicAssert.AreEqual("Furniture", item.Attributes["Inherits"].Value, names[i]);
+				ClassicAssert.IsNull(item.SelectSingleNode("part[@Name='Inventory' or @Name='LiquidVolume' or @Name='Bed' or @Name='PowerSwitch' or @Name='ElectricalPowerTransmission']"), names[i]);
+				ClassicAssert.IsNull(item.SelectSingleNode("tag[@Name='r_KingdomCropRows' or @Name='r_TAF_HostedCropRows']"), names[i]);
 			}
 		}
 
@@ -113,30 +114,30 @@ namespace ThousandAndFirst.Tests
 			string programme = Read("World", "KingdomHostedArcologyProgrammeBuilder.cs");
 			int growbeds = System.Text.RegularExpressions.Regex.Matches(programme,
 				"F\\([^)]*\\\"r_KingdomArcologyGrowbed\\\"").Count;
-			Assert.AreEqual(14, growbeds);
+			ClassicAssert.AreEqual(14, growbeds);
 			XmlDocument blueprints = new XmlDocument();
 			blueprints.LoadXml(Read("RuntimeData", "ObjectBlueprints.xml"));
 			int rows = int.Parse(blueprints.SelectSingleNode(
 				"//object[@Name='r_KingdomArcologyGrowbed']/tag[@Name='r_TAF_HostedCropRows']")
 				.Attributes["Value"].Value);
-			Assert.AreEqual(2, rows);
-			Assert.AreEqual(14, growbeds * rows
+			ClassicAssert.AreEqual(2, rows);
+			ClassicAssert.AreEqual(14, growbeds * rows
 				* KingdomCropRules.YieldPerRow / KingdomCropRules.CropDays);
 			string rules = Read("Growth", "KingdomHostedArcologyRules.cs");
 			System.Text.RegularExpressions.Match definition =
 				System.Text.RegularExpressions.Regex.Match(rules,
 					"RegisterBuiltInPaidLot\\(new\\s+KingdomHostedLotDefinition\\s*\\{"
 					+ "(?=[^}]*\\bKey\\s*=\\s*\\\"arcologyterrace\\\")([^}]*)\\}");
-			Assert.IsTrue(definition.Success);
+			ClassicAssert.IsTrue(definition.Success);
 			StringAssert.Contains("Supports = \"food:14\"", definition.Groups[1].Value);
 			StringAssert.Contains("PhysicalProducerBlueprint = \"r_KingdomArcologyGrowbed\"",
 				definition.Groups[1].Value);
 			StringAssert.Contains("PhysicalProducerCount = 14", definition.Groups[1].Value);
 			XmlDocument catalogue = new XmlDocument();
 			catalogue.LoadXml(Read("RuntimeData", "KingdomBuildings.xml"));
-			Assert.AreEqual("food:14", catalogue.SelectSingleNode(
+			ClassicAssert.AreEqual("food:14", catalogue.SelectSingleNode(
 				"//building[@Key='arcologyterrace']").Attributes["Carries"].Value);
-			Assert.IsTrue(System.Text.RegularExpressions.Regex.IsMatch(programme,
+			ClassicAssert.IsTrue(System.Text.RegularExpressions.Regex.IsMatch(programme,
 				"TerraceLotKey\\s*&&\\s*Programme\\s*==\\s*"
 				+ "KingdomArcologyProgramme\\.HydroponicTerrace\\s*\\?\\s*Terrace"));
 			string slate = Read("Growth", "KingdomHostedArcologySlateRules.cs");
@@ -169,10 +170,10 @@ namespace ThousandAndFirst.Tests
 			string programme = Read("World", "KingdomHostedArcologyProgrammeBuilder.cs");
 			int programmes = System.Text.RegularExpressions.Regex.Matches(programme,
 				"case KingdomArcologyProgramme\\.[A-Za-z]+: return Set\\(").Count;
-			Assert.AreEqual(27, programmes);
+			ClassicAssert.AreEqual(27, programmes);
 			for (int i = 0; i < 9; i++)
 				StringAssert.Contains("case " + i + ": return", programme);
-			Assert.AreEqual(6, System.Text.RegularExpressions.Regex.Matches(programme,
+			ClassicAssert.AreEqual(6, System.Text.RegularExpressions.Regex.Matches(programme,
 				"\\\"Techlight1\\\",\\\"light:").Count);
 			StringAssert.Contains("TAFArcologyPlanSignature", programme);
 			StringAssert.Contains("FoamcreteFloor", programme);
@@ -204,7 +205,7 @@ namespace ThousandAndFirst.Tests
 			string builder = Read("World", "KingdomHostedArcologyBuilder.cs");
 			StringAssert.DoesNotContain("KingdomHostedArcologyVisual.Reconcile", builder);
 			string events = Read("Core", "KingdomSystem.z20.Events.cs");
-			Assert.AreEqual(2, System.Text.RegularExpressions.Regex.Matches(events,
+			ClassicAssert.AreEqual(2, System.Text.RegularExpressions.Regex.Matches(events,
 				"KingdomHostedArcology\\.ReconcileActiveInterior").Count);
 			string runtime = Read("Growth", "KingdomHostedArcology.Runtime.cs");
 			StringAssert.Contains("interior.Schema != KingdomHostedArcologyTopology.Schema", runtime);
@@ -360,12 +361,12 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int master = events.IndexOf("KingdomMaster.ObserveAutomaticWake(this, game.TimeTicks)",
 				suspend, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(suspend, 0); Assert.Greater(observe, suspend);
-			Assert.Greater(master, observe,
+			ClassicAssert.GreaterOrEqual(suspend, 0); ClassicAssert.Greater(observe, suspend);
+			ClassicAssert.Greater(master, observe,
 				"final physical observation must not preserve stale fixtures while work is paused");
-			Assert.AreEqual(1, System.Text.RegularExpressions.Regex.Matches(events,
+			ClassicAssert.AreEqual(1, System.Text.RegularExpressions.Regex.Matches(events,
 				"KingdomHostedArcology\\.OnSuspending").Count);
-			Assert.AreEqual(1, System.Text.RegularExpressions.Regex.Matches(events,
+			ClassicAssert.AreEqual(1, System.Text.RegularExpressions.Regex.Matches(events,
 				"KingdomHostedArcology\\.OnDeactivated").Count);
 			StringAssert.Contains("Registrar.Register(ZoneDeactivatedEvent.ID)", register);
 			StringAssert.Contains("Registrar.Register(SuspendingEvent.ID)", register);
@@ -454,7 +455,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < files.Length; i++)
 			{
 				int lines = Read(files[i].Split('/')).Split('\n').Length;
-				Assert.Less(lines, 300, files[i]);
+				ClassicAssert.Less(lines, 300, files[i]);
 			}
 		}
 
@@ -465,9 +466,9 @@ namespace ThousandAndFirst.Tests
 			string construction = Read("Growth", "KingdomHostedArcology.Construction.cs");
 			string events = Read("Core", "KingdomSystem.z20.Events.cs");
 			string root = Read("Growth", "r_KingdomArcology.cs");
-			Assert.AreEqual(2, System.Text.RegularExpressions.Regex.Matches(events,
+			ClassicAssert.AreEqual(2, System.Text.RegularExpressions.Regex.Matches(events,
 				"KingdomHostedArcology\\.ReconcileRoot").Count);
-			Assert.AreEqual(1, System.Text.RegularExpressions.Regex.Matches(construction,
+			ClassicAssert.AreEqual(1, System.Text.RegularExpressions.Regex.Matches(construction,
 				"ReconcileRoot\\(shell").Count);
 			StringAssert.DoesNotContain("ReconcileRoot", root);
 			StringAssert.DoesNotContain("KingdomHostedArcology.Quarantine", root);
@@ -475,7 +476,7 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int next = authority.IndexOf("internal static bool TryReconciliationRoot",
 				pure, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(pure, 0); Assert.Greater(next, pure);
+			ClassicAssert.GreaterOrEqual(pure, 0); ClassicAssert.Greater(next, pure);
 			string body = authority.Substring(pure, next - pure);
 			StringAssert.Contains("GetSystem<KingdomSystem>()", body);
 			StringAssert.DoesNotContain("RequireSystem", body);
@@ -487,9 +488,9 @@ namespace ThousandAndFirst.Tests
 		{
 			int first = Source.IndexOf(First, StringComparison.Ordinal);
 			int second = Source.IndexOf(Second, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(first, 0, First);
-			Assert.GreaterOrEqual(second, 0, Second);
-			Assert.Less(first, second, First + " before " + Second);
+			ClassicAssert.GreaterOrEqual(first, 0, First);
+			ClassicAssert.GreaterOrEqual(second, 0, Second);
+			ClassicAssert.Less(first, second, First + " before " + Second);
 		}
 	}
 }

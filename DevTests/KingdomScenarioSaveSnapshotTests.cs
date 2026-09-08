@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Harness;
 
 namespace ThousandAndFirst.Tests
@@ -21,16 +22,16 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomScenarioSaveSnapshot expected = Good();
 			string wire = Wire(expected);
-			Assert.IsTrue(wire.StartsWith("ssv1:", StringComparison.Ordinal));
-			Assert.IsTrue(KingdomScenarioSaveSnapshotCodec.TryDecode(wire, out KingdomScenarioSaveSnapshot actual));
-			Assert.AreEqual(expected.GameId, actual.GameId); Assert.AreEqual(expected.StepWire, actual.StepWire);
-			Assert.AreEqual(expected.ZoneId, actual.ZoneId); Assert.AreEqual(expected.Now, actual.Now);
-			Assert.AreEqual(expected.LedgerDepartures, actual.LedgerDepartures);
-			Assert.AreEqual(expected.MissingResidentId, actual.MissingResidentId);
-			Assert.AreEqual(expected.MissingObjectId, actual.MissingObjectId);
+			ClassicAssert.IsTrue(wire.StartsWith("ssv1:", StringComparison.Ordinal));
+			ClassicAssert.IsTrue(KingdomScenarioSaveSnapshotCodec.TryDecode(wire, out KingdomScenarioSaveSnapshot actual));
+			ClassicAssert.AreEqual(expected.GameId, actual.GameId); ClassicAssert.AreEqual(expected.StepWire, actual.StepWire);
+			ClassicAssert.AreEqual(expected.ZoneId, actual.ZoneId); ClassicAssert.AreEqual(expected.Now, actual.Now);
+			ClassicAssert.AreEqual(expected.LedgerDepartures, actual.LedgerDepartures);
+			ClassicAssert.AreEqual(expected.MissingResidentId, actual.MissingResidentId);
+			ClassicAssert.AreEqual(expected.MissingObjectId, actual.MissingObjectId);
 			CollectionAssert.AreEqual(expected.ResidentIds, actual.ResidentIds);
 			CollectionAssert.AreEqual(expected.ObjectIds, actual.ObjectIds);
-			Assert.AreEqual(wire, Wire(actual));
+			ClassicAssert.AreEqual(wire, Wire(actual));
 		}
 
 		[Test]
@@ -39,10 +40,10 @@ namespace ThousandAndFirst.Tests
 			int[] ids = Ids(); string[] objects = Objects();
 			KingdomScenarioSaveSnapshot value = Good(ids: ids, objects: objects);
 			string before = Wire(value); ids[0] = 500; objects[0] = "changed";
-			Assert.AreEqual(1, value.ResidentIds[0]); Assert.AreEqual("body-1", value.ObjectIds[0]);
+			ClassicAssert.AreEqual(1, value.ResidentIds[0]); ClassicAssert.AreEqual("body-1", value.ObjectIds[0]);
 			Assert.Throws<NotSupportedException>(() => ((IList<int>)value.ResidentIds)[0] = 500);
 			Assert.Throws<NotSupportedException>(() => ((IList<string>)value.ObjectIds)[0] = "changed");
-			Assert.AreEqual(before, Wire(value));
+			ClassicAssert.AreEqual(before, Wire(value));
 		}
 
 		[TestCase(null)] [TestCase("")] [TestCase("01234567-89AB-CDEF-0123-456789ABCDEF")]
@@ -75,8 +76,8 @@ namespace ThousandAndFirst.Tests
 		{
 			string[] objects = Objects(); objects[0] = "body-\U0001F9EA"; objects[1] = "BODY-2";
 			KingdomScenarioSaveSnapshot value = Good(step: "opaque-\U0001F9EA", objects: objects);
-			Assert.IsTrue(KingdomScenarioSaveSnapshotCodec.TryDecode(Wire(value), out KingdomScenarioSaveSnapshot read));
-			Assert.AreEqual(value.StepWire, read.StepWire); CollectionAssert.AreEqual(objects, read.ObjectIds);
+			ClassicAssert.IsTrue(KingdomScenarioSaveSnapshotCodec.TryDecode(Wire(value), out KingdomScenarioSaveSnapshot read));
+			ClassicAssert.AreEqual(value.StepWire, read.StepWire); CollectionAssert.AreEqual(objects, read.ObjectIds);
 		}
 
 		[TestCase(-1L, 1, 50)] [TestCase(0L, 0, 50)] [TestCase(0L, -1, 50)]
@@ -116,7 +117,7 @@ namespace ThousandAndFirst.Tests
 		public void MaximumAsciiStepWireFitsButOversizedUtf8PayloadRefuses()
 		{
 			string maximum = new string('s', KingdomScenarioSaveSnapshotCodec.MaxStepWireChars);
-			Assert.IsTrue(KingdomScenarioSaveSnapshotCodec.TryDecode(Wire(Good(step: maximum)), out _));
+			ClassicAssert.IsTrue(KingdomScenarioSaveSnapshotCodec.TryDecode(Wire(Good(step: maximum)), out _));
 			Refuses(Good(step: new string('\u0800', KingdomScenarioSaveSnapshotCodec.MaxStepWireChars)));
 		}
 
@@ -149,7 +150,7 @@ namespace ThousandAndFirst.Tests
 			string wire = Wire(Good()); RefusesWire(wire.Insert(8, "\n"));
 			for (int extra = 0; extra < 3 && !wire.EndsWith("=", StringComparison.Ordinal); extra++)
 				wire = Wire(Good(step: StepWire + new string('x', extra + 1)));
-			Assert.IsTrue(wire.EndsWith("=", StringComparison.Ordinal));
+			ClassicAssert.IsTrue(wire.EndsWith("=", StringComparison.Ordinal));
 			const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 			int at = wire.Length - (wire.EndsWith("==", StringComparison.Ordinal) ? 3 : 2);
 			char[] chars = wire.ToCharArray(); chars[at] = alphabet[alphabet.IndexOf(chars[at]) + 1];
@@ -212,17 +213,17 @@ namespace ThousandAndFirst.Tests
 		}
 		private static string Wire(KingdomScenarioSaveSnapshot value)
 		{
-			Assert.IsTrue(KingdomScenarioSaveSnapshotCodec.Valid(value));
-			Assert.IsTrue(KingdomScenarioSaveSnapshotCodec.TryEncode(value, out string wire)); return wire;
+			ClassicAssert.IsTrue(KingdomScenarioSaveSnapshotCodec.Valid(value));
+			ClassicAssert.IsTrue(KingdomScenarioSaveSnapshotCodec.TryEncode(value, out string wire)); return wire;
 		}
 		private static void Refuses(KingdomScenarioSaveSnapshot value)
 		{
-			Assert.IsFalse(KingdomScenarioSaveSnapshotCodec.Valid(value));
-			Assert.IsFalse(KingdomScenarioSaveSnapshotCodec.TryEncode(value, out string wire)); Assert.IsNull(wire);
+			ClassicAssert.IsFalse(KingdomScenarioSaveSnapshotCodec.Valid(value));
+			ClassicAssert.IsFalse(KingdomScenarioSaveSnapshotCodec.TryEncode(value, out string wire)); ClassicAssert.IsNull(wire);
 		}
 		private static void RefusesWire(string wire)
 		{
-			Assert.IsFalse(KingdomScenarioSaveSnapshotCodec.TryDecode(wire, out KingdomScenarioSaveSnapshot value)); Assert.IsNull(value);
+			ClassicAssert.IsFalse(KingdomScenarioSaveSnapshotCodec.TryDecode(wire, out KingdomScenarioSaveSnapshot value)); ClassicAssert.IsNull(value);
 		}
 		private static byte[] Bytes(string wire) { return Convert.FromBase64String(wire.Substring(5)); }
 		private static string Envelope(byte[] bytes) { return "ssv1:" + Convert.ToBase64String(bytes); }

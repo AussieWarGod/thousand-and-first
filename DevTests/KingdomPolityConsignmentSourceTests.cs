@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -184,7 +185,7 @@ namespace ThousandAndFirst.Tests
 		{
 			int a = source.IndexOf(first, StringComparison.Ordinal);
 			int b = source.IndexOf(second, a < 0 ? 0 : a, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(a, 0, first); Assert.Greater(b, a, second);
+			ClassicAssert.GreaterOrEqual(a, 0, first); ClassicAssert.Greater(b, a, second);
 		}
 	}
 }

@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -59,7 +60,7 @@ namespace ThousandAndFirst.Tests
 			int basin = blueprints.IndexOf("<object Name=\"r_KingdomFirstBasin\"",
 				System.StringComparison.Ordinal);
 			int end = blueprints.IndexOf("</object>", basin, System.StringComparison.Ordinal);
-			Assert.GreaterOrEqual(basin, 0);
+			ClassicAssert.GreaterOrEqual(basin, 0);
 			StringAssert.Contains("<part Name=\"LiquidVolume\"", blueprints.Substring(basin,
 				end - basin));
 		}
@@ -135,10 +136,10 @@ namespace ThousandAndFirst.Tests
 				System.StringComparison.Ordinal);
 			int loaded = source.IndexOf("private static Zone ExactLoadedZone(", find,
 				System.StringComparison.Ordinal);
-			Assert.GreaterOrEqual(find, 0);
-			Assert.Greater(loaded, find);
+			ClassicAssert.GreaterOrEqual(find, 0);
+			ClassicAssert.Greater(loaded, find);
 			string exactLookup = source.Substring(find, loaded - find);
-			Assert.GreaterOrEqual(Occurrences(exactLookup, "GameObject.FindByID(objectId)"), 2);
+			ClassicAssert.GreaterOrEqual(Occurrences(exactLookup, "GameObject.FindByID(objectId)"), 2);
 			StringAssert.DoesNotContain("KingdomSurvey.ObjectsFor", exactLookup);
 			StringAssert.DoesNotContain("GetObjects()", exactLookup);
 			StringAssert.Contains("ReferenceEquals(exact.CurrentZone, zone)", exactLookup);
@@ -177,26 +178,26 @@ namespace ThousandAndFirst.Tests
 			string happenings = KingdomHappeningsLogicalSource.Read();
 			int legacyCapture = happenings.IndexOf("long legacySinceTick = book.LastExtensionTick;",
 				System.StringComparison.Ordinal);
-			Assert.GreaterOrEqual(legacyCapture, 0);
-			Assert.Greater(happenings.IndexOf("book.LastExtensionTick = nowTick;",
+			ClassicAssert.GreaterOrEqual(legacyCapture, 0);
+			ClassicAssert.Greater(happenings.IndexOf("book.LastExtensionTick = nowTick;",
 				System.StringComparison.Ordinal), legacyCapture);
 
 			string sourceKey;
-			Assert.IsTrue(Api.KingdomHappeningCursorRules.TrySourceKey("fixture-owner",
+			ClassicAssert.IsTrue(Api.KingdomHappeningCursorRules.TrySourceKey("fixture-owner",
 				"Fixture.Assembly", "Fixture.Source", out sourceKey));
 			string cursor;
 			long since;
-			Assert.IsTrue(Api.KingdomHappeningCursorRules.TryAdvance("", sourceKey, 100L,
+			ClassicAssert.IsTrue(Api.KingdomHappeningCursorRules.TryAdvance("", sourceKey, 100L,
 				out since, out cursor));
-			Assert.AreEqual(0L, since);
+			ClassicAssert.AreEqual(0L, since);
 			string resumed;
-			Assert.IsTrue(Api.KingdomHappeningCursorRules.TryRebaseAfterPause(cursor, 100L,
+			ClassicAssert.IsTrue(Api.KingdomHappeningCursorRules.TryRebaseAfterPause(cursor, 100L,
 				1300L, out resumed));
-			Assert.IsTrue(Api.KingdomHappeningCursorRules.TryAdvance(resumed, sourceKey, 1400L,
+			ClassicAssert.IsTrue(Api.KingdomHappeningCursorRules.TryAdvance(resumed, sourceKey, 1400L,
 				out since, out cursor));
-			Assert.AreEqual(1300L, since,
+			ClassicAssert.AreEqual(1300L, since,
 				"a source must never receive the master-paused happening window");
-			Assert.IsFalse(Api.KingdomHappeningCursorRules.TryRebaseAfterPause(resumed, 1200L,
+			ClassicAssert.IsFalse(Api.KingdomHappeningCursorRules.TryRebaseAfterPause(resumed, 1200L,
 				1400L, out cursor), "a post-disable receipt must fail the atomic resume plan");
 		}
 

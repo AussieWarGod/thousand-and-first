@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -27,7 +28,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < terms.Length; i++)
 			{
 				int next = source.IndexOf(terms[i], cursor + 1, StringComparison.Ordinal);
-				Assert.Greater(next, cursor, terms[i]);
+				ClassicAssert.Greater(next, cursor, terms[i]);
 				cursor = next;
 			}
 		}
@@ -119,8 +120,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.DoesNotContain("interior.TryEnter(", source);
 			StringAssert.DoesNotContain("player.DirectMoveTo(", source);
 			int move = source.IndexOf("player.SystemLongDistanceMoveTo(", StringComparison.Ordinal);
-			Assert.Greater(move, -1);
-			Assert.AreEqual(move, source.LastIndexOf(
+			ClassicAssert.Greater(move, -1);
+			ClassicAssert.AreEqual(move, source.LastIndexOf(
 				"player.SystemLongDistanceMoveTo(", StringComparison.Ordinal));
 			StringAssert.DoesNotContain("KingdomHostedArcology.TryReserve", source);
 			StringAssert.DoesNotContain("KingdomHostedArcology.BindAuthority", source);
@@ -146,8 +147,8 @@ namespace ThousandAndFirst.Tests
 			string runner = Read("Harness/KingdomScenarioAutoRunner.cs");
 			int finish = runner.IndexOf("private void Finish(", StringComparison.Ordinal);
 			int release = runner.IndexOf("private void Release()", finish, StringComparison.Ordinal);
-			Assert.Greater(finish, -1);
-			Assert.Greater(release, finish);
+			ClassicAssert.Greater(finish, -1);
+			ClassicAssert.Greater(release, finish);
 			string finishBody = runner.Substring(finish, release - finish);
 			AssertOrder(finishBody, "KingdomScenarioJournal.Append(Row, Ok, Message)", "Release();");
 
@@ -249,7 +250,7 @@ namespace ThousandAndFirst.Tests
 			string run = Read("Harness/KingdomScenarioRun.cs");
 			StringAssert.Contains("The attempt marker stands, so this profile is spent", run);
 			int refusal = run.IndexOf("the production transaction refused", StringComparison.Ordinal);
-			Assert.Greater(refusal, -1);
+			ClassicAssert.Greater(refusal, -1);
 			StringAssert.DoesNotContain("SetIntGameState", run);
 		}
 
@@ -261,7 +262,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("The transaction committed; the differential comparison did not run.",
 				run);
 			int conclude = run.IndexOf("private static string Conclude(", StringComparison.Ordinal);
-			Assert.Greater(conclude, -1);
+			ClassicAssert.Greater(conclude, -1);
 			string body = run.Substring(conclude);
 			StringAssert.DoesNotContain("TryStage", body);
 			StringAssert.DoesNotContain("TryBegin", body);
@@ -310,7 +311,7 @@ namespace ThousandAndFirst.Tests
 				"The.Game.SetIntGameState(StampedState, KingdomScenarioStateShape.MarkerValue);");
 			int presence = authority.IndexOf(
 				"internal static KingdomScenarioStampShape Presence(", StringComparison.Ordinal);
-			Assert.Greater(presence, -1);
+			ClassicAssert.Greater(presence, -1);
 			string body = authority.Substring(presence);
 			AssertOrder(body,
 				"KingdomScenarioStampShape shape = Shape(out Failure);",
@@ -350,7 +351,7 @@ namespace ThousandAndFirst.Tests
 			string realizer = Read("Harness/KingdomScenarioRealizer.cs");
 			int bind = realizer.IndexOf("internal static bool TryBindStampedPlan(",
 				StringComparison.Ordinal);
-			Assert.Greater(bind, -1);
+			ClassicAssert.Greater(bind, -1);
 			string body = realizer.Substring(bind);
 			StringAssert.Contains("KingdomScenarioProvenanceRules.TryValidateStampShape", body);
 			StringAssert.Contains("plan.PlanDigest, Record.PlanDigest", body);

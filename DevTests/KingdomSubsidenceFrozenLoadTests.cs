@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
@@ -22,19 +23,19 @@ namespace ThousandAndFirst.Tests
 			KingdomCityBook loaded = new KingdomCityBook();
 			loaded.ReadNamedState(() =>
 			{
-				Assert.AreEqual(0, loaded.SchemaVersion);
-				Assert.IsNull(loaded.SubsidenceModel);
-				Assert.IsTrue(loaded.SubsidenceReadFailed);
+				ClassicAssert.AreEqual(0, loaded.SchemaVersion);
+				ClassicAssert.IsNull(loaded.SubsidenceModel);
+				ClassicAssert.IsTrue(loaded.SubsidenceReadFailed);
 				payload.ReadInto(loaded);
 			});
-			Assert.IsFalse(loaded.SubsidenceReadFailed);
-			Assert.IsTrue(loaded.HasValidSubsidenceStorage());
-			Assert.IsTrue(loaded.TryReadExact(out KingdomCityState state, out _));
-			Assert.AreEqual(2, state.ResidentCount);
-			Assert.IsTrue(loaded.TryCaptureSubsidenceRoof(11, out KingdomCityBook.SubsidenceRoofRow roof));
-			Assert.AreEqual(source.ResidentRoofStanding[0] == 1, roof.RoofStanding);
-			Assert.AreEqual(source.ResidentRoofTicks[0], roof.Reached);
-			Assert.AreEqual(source.ResidentRoofWarnedTicks[0], roof.Warned);
+			ClassicAssert.IsFalse(loaded.SubsidenceReadFailed);
+			ClassicAssert.IsTrue(loaded.HasValidSubsidenceStorage());
+			ClassicAssert.IsTrue(loaded.TryReadExact(out KingdomCityState state, out _));
+			ClassicAssert.AreEqual(2, state.ResidentCount);
+			ClassicAssert.IsTrue(loaded.TryCaptureSubsidenceRoof(11, out KingdomCityBook.SubsidenceRoofRow roof));
+			ClassicAssert.AreEqual(source.ResidentRoofStanding[0] == 1, roof.RoofStanding);
+			ClassicAssert.AreEqual(source.ResidentRoofTicks[0], roof.Reached);
+			ClassicAssert.AreEqual(source.ResidentRoofWarnedTicks[0], roof.Warned);
 			payload.Unchanged(loaded);
 			payload.Unchanged(source);
 		}
@@ -47,8 +48,8 @@ namespace ThousandAndFirst.Tests
 			for (int repeat = 0; repeat < 3; repeat++)
 			{
 				city.Normalize();
-				Assert.IsFalse(city.SubsidenceReadFailed);
-				Assert.IsTrue(city.HasValidSubsidenceStorage());
+				ClassicAssert.IsFalse(city.SubsidenceReadFailed);
+				ClassicAssert.IsTrue(city.HasValidSubsidenceStorage());
 				payload.Unchanged(city);
 			}
 		}
@@ -66,11 +67,11 @@ namespace ThousandAndFirst.Tests
 			NamedPayload payload = new NamedPayload(source);
 			KingdomCityBook loaded = new KingdomCityBook();
 			Assert.Throws<InvalidDataException>(() => loaded.ReadNamedState(() => payload.ReadInto(loaded)));
-			Assert.IsTrue(loaded.SubsidenceReadFailed);
-			Assert.IsFalse(loaded.HasValidSubsidenceStorage());
+			ClassicAssert.IsTrue(loaded.SubsidenceReadFailed);
+			ClassicAssert.IsFalse(loaded.HasValidSubsidenceStorage());
 			payload.Unchanged(loaded);
 			loaded.Normalize();
-			Assert.IsTrue(loaded.SubsidenceReadFailed);
+			ClassicAssert.IsTrue(loaded.SubsidenceReadFailed);
 			payload.Unchanged(loaded);
 			payload.Unchanged(source);
 		}
@@ -85,16 +86,16 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityBook city = Frozen("roof-intent", false);
 			Corrupt(city, corruption);
-			Assert.IsFalse(city.SubsidenceReadFailed);
-			Assert.IsFalse(city.HasValidSubsidenceStorage());
-			Assert.IsFalse(city.SubsidenceReadFailed, "observation alone must not replace the failure latch");
+			ClassicAssert.IsFalse(city.SubsidenceReadFailed);
+			ClassicAssert.IsFalse(city.HasValidSubsidenceStorage());
+			ClassicAssert.IsFalse(city.SubsidenceReadFailed, "observation alone must not replace the failure latch");
 			NamedPayload payload = new NamedPayload(city);
 			city.Normalize();
-			Assert.IsTrue(city.SubsidenceReadFailed);
-			Assert.IsFalse(city.HasValidSubsidenceStorage());
+			ClassicAssert.IsTrue(city.SubsidenceReadFailed);
+			ClassicAssert.IsFalse(city.HasValidSubsidenceStorage());
 			payload.Unchanged(city);
 			city.Normalize();
-			Assert.IsTrue(city.SubsidenceReadFailed);
+			ClassicAssert.IsTrue(city.SubsidenceReadFailed);
 			payload.Unchanged(city);
 		}
 
@@ -105,8 +106,8 @@ namespace ThousandAndFirst.Tests
 			city.SubsidenceReadFailed = true;
 			NamedPayload payload = new NamedPayload(city);
 			city.Normalize();
-			Assert.IsTrue(city.SubsidenceReadFailed);
-			Assert.IsFalse(city.HasValidSubsidenceStorage());
+			ClassicAssert.IsTrue(city.SubsidenceReadFailed);
+			ClassicAssert.IsFalse(city.HasValidSubsidenceStorage());
 			payload.Unchanged(city);
 		}
 
@@ -121,8 +122,8 @@ namespace ThousandAndFirst.Tests
 			city.SubsidenceReadFailed = true;
 			NamedPayload payload = new NamedPayload(city);
 			city.Normalize();
-			Assert.IsTrue(city.SubsidenceReadFailed);
-			Assert.IsFalse(city.HasValidSubsidenceStorage());
+			ClassicAssert.IsTrue(city.SubsidenceReadFailed);
+			ClassicAssert.IsFalse(city.HasValidSubsidenceStorage());
 			payload.Unchanged(city);
 		}
 
@@ -137,9 +138,9 @@ namespace ThousandAndFirst.Tests
 				payload.ReadInto(loaded);
 				throw new InvalidOperationException("frozen named-reader cut");
 			}));
-			Assert.IsTrue(loaded.SubsidenceReadFailed);
+			ClassicAssert.IsTrue(loaded.SubsidenceReadFailed);
 			loaded.Normalize();
-			Assert.IsFalse(loaded.HasValidSubsidenceStorage());
+			ClassicAssert.IsFalse(loaded.HasValidSubsidenceStorage());
 			payload.Unchanged(loaded);
 			payload.Unchanged(source);
 		}
@@ -152,13 +153,13 @@ namespace ThousandAndFirst.Tests
 			List<int> ids = city.ResidentIds;
 			city.ResidentRoofWarnedTicks = null;
 			city.Normalize();
-			Assert.AreEqual(wire, city.SubsidenceModel);
-			Assert.IsFalse(city.SubsidenceReadFailed);
-			Assert.IsTrue(city.HasValidSubsidenceStorage());
-			Assert.AreSame(ids, city.ResidentIds);
-			Assert.AreEqual(0, city.ResidentCount, "ordinary ragged rows retain the existing shortest-column policy");
-			Assert.IsNotNull(city.ResidentRoofWarnedTicks);
-			Assert.IsTrue(city.TryReadExact(out _, out _));
+			ClassicAssert.AreEqual(wire, city.SubsidenceModel);
+			ClassicAssert.IsFalse(city.SubsidenceReadFailed);
+			ClassicAssert.IsTrue(city.HasValidSubsidenceStorage());
+			ClassicAssert.AreSame(ids, city.ResidentIds);
+			ClassicAssert.AreEqual(0, city.ResidentCount, "ordinary ragged rows retain the existing shortest-column policy");
+			ClassicAssert.IsNotNull(city.ResidentRoofWarnedTicks);
+			ClassicAssert.IsTrue(city.TryReadExact(out _, out _));
 		}
 
 		[TestCase("ss1:new")] [TestCase("ss1:legacy")]
@@ -171,16 +172,16 @@ namespace ThousandAndFirst.Tests
 			city.ResidentNames[0] = null;
 			city.ResidentCauses[0] = (int)KingdomStandingCause.Founder;
 			city.Normalize();
-			Assert.AreSame(names, city.ResidentNames); Assert.AreSame(causes, city.ResidentCauses);
-			Assert.AreEqual("", city.ResidentNames[0]);
-			Assert.AreEqual((int)KingdomStandingCause.None, city.ResidentCauses[0]);
-			Assert.AreEqual(2, city.ResidentCount);
-			Assert.AreEqual(RungFixture.Due + 10, city.ResidentRoofTicks[0]);
-			Assert.AreEqual(RungFixture.Due + 20, city.ResidentRoofWarnedTicks[0]);
-			Assert.AreEqual(wire, city.SubsidenceModel);
-			Assert.IsFalse(city.SubsidenceReadFailed);
-			Assert.IsTrue(city.HasValidSubsidenceStorage());
-			Assert.IsTrue(city.TryReadExact(out _, out _));
+			ClassicAssert.AreSame(names, city.ResidentNames); ClassicAssert.AreSame(causes, city.ResidentCauses);
+			ClassicAssert.AreEqual("", city.ResidentNames[0]);
+			ClassicAssert.AreEqual((int)KingdomStandingCause.None, city.ResidentCauses[0]);
+			ClassicAssert.AreEqual(2, city.ResidentCount);
+			ClassicAssert.AreEqual(RungFixture.Due + 10, city.ResidentRoofTicks[0]);
+			ClassicAssert.AreEqual(RungFixture.Due + 20, city.ResidentRoofWarnedTicks[0]);
+			ClassicAssert.AreEqual(wire, city.SubsidenceModel);
+			ClassicAssert.IsFalse(city.SubsidenceReadFailed);
+			ClassicAssert.IsTrue(city.HasValidSubsidenceStorage());
+			ClassicAssert.IsTrue(city.TryReadExact(out _, out _));
 		}
 
 		private static void Corrupt(KingdomCityBook city, string corruption)
@@ -217,25 +218,25 @@ namespace ThousandAndFirst.Tests
 			KingdomSubsidenceRungPlan plan = new KingdomSubsidenceRungPlan(book.Active.Id, book.RealmId,
 				book.SettlementId, RungFixture.Zone, GrowthStage.City, GrowthStage.Town,
 				book.Active.DueTick, RungFixture.Prepared, book.Active.Completed, new[] { work });
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryFreezeRungPlan(book, plan, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryFreezeRungPlan(book, plan, out book));
 			if (phase != "prepared")
 			{
-				Assert.IsTrue(KingdomSubsidenceStepRules.TryArmRungWear(book, 0, out book));
-				Assert.IsTrue(KingdomSubsidenceStepRules.TryProveRungWear(book, 0, true, true, work.AfterWear, out book));
-				Assert.IsTrue(KingdomSubsidenceStepRules.TryArmRungRoof(book, 0, 0, out book));
+				ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryArmRungWear(book, 0, out book));
+				ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryProveRungWear(book, 0, true, true, work.AfterWear, out book));
+				ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryArmRungRoof(book, 0, 0, out book));
 			}
 			if (phase == "roof-proved")
 			{
 				city.ResidentRoofStanding[0] = 1;
 				city.ResidentRoofTicks[0] = standing ? RungFixture.Due + 10 : RungFixture.Due;
-				Assert.IsTrue(KingdomSubsidenceStepRules.TryProveRungRoof(book, 0, 0, true, true,
+				ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryProveRungRoof(book, 0, 0, true, true,
 					city.ResidentRoofTicks[0], city.ResidentRoofWarnedTicks[0], out book));
 			}
 			if (phase == "quarantined") book = book.With(book.Active.Copy(
 				phase: KingdomSubsidenceStepPhase.Quarantined, fault: "frozen-load-fixture"), book.Sequence);
-			Assert.IsTrue(KingdomSubsidenceStepCodec.TryEncode(book, out string wire));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepCodec.TryEncode(book, out string wire));
 			city.SubsidenceModel = wire;
-			Assert.IsTrue(city.HasValidSubsidenceStorage());
+			ClassicAssert.IsTrue(city.HasValidSubsidenceStorage());
 			return city;
 		}
 
@@ -250,12 +251,12 @@ namespace ThousandAndFirst.Tests
 				null, 0, null, "fixture", ""));
 			KingdomStocks stocks = new KingdomStocks(new KingdomStockPair(0, 0),
 				new KingdomStockPair(0, 0), new KingdomStockPair(0, 0));
-			Assert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
+			ClassicAssert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
 				RungFixture.Settlement, 777, stocks, new KingdomZoneRow[0], new KingdomWorkRow[0],
 				rows.ToArray(), new KingdomClockRow[0], out KingdomCityState state, out _));
 			KingdomCityBook city = new KingdomCityBook();
-			Assert.IsTrue(city.TryPublish(state, out _));
-			Assert.IsTrue(city.TryReadExact(out _, out _));
+			ClassicAssert.IsTrue(city.TryPublish(state, out _));
+			ClassicAssert.IsTrue(city.TryReadExact(out _, out _));
 			return city;
 		}
 
@@ -267,7 +268,7 @@ namespace ThousandAndFirst.Tests
 			{
 				foreach (FieldInfo field in typeof(KingdomCityBook).GetFields(BindingFlags.Public | BindingFlags.Instance))
 				{
-					Assert.IsFalse(Attribute.IsDefined(field, typeof(NonSerializedAttribute)), field.Name);
+					ClassicAssert.IsFalse(Attribute.IsDefined(field, typeof(NonSerializedAttribute)), field.Name);
 					object value = field.GetValue(city);
 					fields.Add(field, value);
 					if (value is IList list)
@@ -287,8 +288,8 @@ namespace ThousandAndFirst.Tests
 				{
 					object actual = field.Key.GetValue(city);
 					if (field.Key.FieldType.IsValueType || field.Key.FieldType == typeof(string))
-						Assert.AreEqual(field.Value, actual, field.Key.Name);
-					else Assert.AreSame(field.Value, actual, field.Key.Name + " carrier reference");
+						ClassicAssert.AreEqual(field.Value, actual, field.Key.Name);
+					else ClassicAssert.AreSame(field.Value, actual, field.Key.Name + " carrier reference");
 					if (contents.TryGetValue(field.Key, out object[] expected))
 						CollectionAssert.AreEqual(expected, (IList)actual, field.Key.Name + " raw values");
 				}

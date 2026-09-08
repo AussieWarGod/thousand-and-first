@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -191,7 +192,7 @@ namespace ThousandAndFirst.Tests
 				"Growth/KingdomScaffoldLabourRules.cs"
 			};
 			for (int i = 0; i < paths.Length; i++)
-				Assert.Less(Read(paths[i]).Split('\n').Length, 300, paths[i]);
+				ClassicAssert.Less(Read(paths[i]).Split('\n').Length, 300, paths[i]);
 		}
 
 		private static string Read(string Path)
@@ -203,8 +204,8 @@ namespace ThousandAndFirst.Tests
 		{
 			int start = Source.IndexOf(Start, StringComparison.Ordinal);
 			int end = Source.IndexOf(End, start + Start.Length, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, Start);
-			Assert.Greater(end, start, End);
+			ClassicAssert.GreaterOrEqual(start, 0, Start);
+			ClassicAssert.Greater(end, start, End);
 			return Source.Substring(start, end - start);
 		}
 
@@ -214,7 +215,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < Terms.Length; i++)
 			{
 				int found = Source.IndexOf(Terms[i], offset, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(found, 0, "missing ordered source term: " + Terms[i]);
+				ClassicAssert.GreaterOrEqual(found, 0, "missing ordered source term: " + Terms[i]);
 				offset = found + Terms[i].Length;
 			}
 		}

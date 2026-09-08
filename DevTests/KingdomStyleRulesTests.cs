@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -13,28 +14,28 @@ namespace ThousandAndFirst.Tests
 		private static void AssertPublicDto(System.Type Type, string[] Names,
 			System.Type[] Types)
 		{
-			Assert.IsTrue(Type.IsPublic);
-			Assert.IsTrue(Type.IsSealed);
-			Assert.IsNotNull(Type.GetConstructor(System.Type.EmptyTypes));
+			ClassicAssert.IsTrue(Type.IsPublic);
+			ClassicAssert.IsTrue(Type.IsSealed);
+			ClassicAssert.IsNotNull(Type.GetConstructor(System.Type.EmptyTypes));
 			System.Reflection.FieldInfo[] fields = Type.GetFields();
-			Assert.AreEqual(Names.Length, fields.Length);
+			ClassicAssert.AreEqual(Names.Length, fields.Length);
 			for (int i = 0; i < Names.Length; i++)
 			{
 				System.Reflection.FieldInfo field = Type.GetField(Names[i]);
-				Assert.IsNotNull(field, Names[i]);
-				Assert.AreEqual(Types[i], field.FieldType, Names[i]);
-				Assert.IsTrue(field.IsPublic, Names[i]);
-				Assert.IsFalse(field.IsInitOnly, Names[i]);
+				ClassicAssert.IsNotNull(field, Names[i]);
+				ClassicAssert.AreEqual(Types[i], field.FieldType, Names[i]);
+				ClassicAssert.IsTrue(field.IsPublic, Names[i]);
+				ClassicAssert.IsFalse(field.IsInitOnly, Names[i]);
 			}
 		}
 
 		[Test]
 		public void StyleDeclarationsKeepExactPublicAbi()
 		{
-			Assert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(KingdomStyleStratum)));
-			Assert.AreEqual(0, (byte)KingdomStyleStratum.Any);
-			Assert.AreEqual(1, (byte)KingdomStyleStratum.Surface);
-			Assert.AreEqual(2, (byte)KingdomStyleStratum.Deep);
+			ClassicAssert.AreEqual(typeof(byte), System.Enum.GetUnderlyingType(typeof(KingdomStyleStratum)));
+			ClassicAssert.AreEqual(0, (byte)KingdomStyleStratum.Any);
+			ClassicAssert.AreEqual(1, (byte)KingdomStyleStratum.Surface);
+			ClassicAssert.AreEqual(2, (byte)KingdomStyleStratum.Deep);
 			AssertPublicDto(typeof(KingdomStyleDraft), new string[] { "Name", "Aliases", "Terrain", "Region",
 				"Strata", "Priority", "GroundClause", "Crop", "Seed", "CropRow",
 				"WallMaterial", "TimberWall" }, new System.Type[] { typeof(string), typeof(string),
@@ -60,7 +61,7 @@ namespace ThousandAndFirst.Tests
 				Priority = priority, GroundClause = clause, Crop = crop, Seed = seed,
 				CropRow = row, WallMaterial = wallMaterial, TimberWall = timberWall
 			};
-			Assert.IsTrue(KingdomStyleRules.TryParse(draft, out KingdomStyleDefinition result,
+			ClassicAssert.IsTrue(KingdomStyleRules.TryParse(draft, out KingdomStyleDefinition result,
 				out string error), error);
 			return result;
 		}
@@ -72,18 +73,18 @@ namespace ThousandAndFirst.Tests
 			{
 				Style("common"), Style("moonstair", aliases: "gyre,stair")
 			};
-			Assert.IsTrue(KingdomStyleRules.TryCanonical(definitions, "GYRE", out string canonical));
-			Assert.AreEqual("moonstair", canonical);
+			ClassicAssert.IsTrue(KingdomStyleRules.TryCanonical(definitions, "GYRE", out string canonical));
+			ClassicAssert.AreEqual("moonstair", canonical);
 			CollectionAssert.AreEqual(new string[] { "moonstair", "gyre", "stair" },
 				KingdomStyleRules.KeysFor(definitions, "gyre"));
-			Assert.IsTrue(KingdomStyleRules.TagAccepts(definitions, "gyre", "moonstair"));
-			Assert.IsTrue(KingdomStyleRules.TagAccepts(definitions, "moonstair", "gyre"));
-			Assert.IsFalse(KingdomStyleRules.TagAccepts(definitions, "all,!gyre", "moonstair"));
-			Assert.AreEqual("moonstair", KingdomStyleRules.MigrateLegacyKey("GYRE"));
-			Assert.AreEqual("third-party", KingdomStyleRules.MigrateLegacyKey("third-party"));
+			ClassicAssert.IsTrue(KingdomStyleRules.TagAccepts(definitions, "gyre", "moonstair"));
+			ClassicAssert.IsTrue(KingdomStyleRules.TagAccepts(definitions, "moonstair", "gyre"));
+			ClassicAssert.IsFalse(KingdomStyleRules.TagAccepts(definitions, "all,!gyre", "moonstair"));
+			ClassicAssert.AreEqual("moonstair", KingdomStyleRules.MigrateLegacyKey("GYRE"));
+			ClassicAssert.AreEqual("third-party", KingdomStyleRules.MigrateLegacyKey("third-party"));
 
 			KingdomStyleDefinition collision = Style("other", aliases: "moonstair");
-			Assert.IsFalse(KingdomStyleRules.TryValidateBehavior(definitions, collision, -1,
+			ClassicAssert.IsFalse(KingdomStyleRules.TryValidateBehavior(definitions, collision, -1,
 				out string collisionError));
 			StringAssert.Contains("canonical name or alias", collisionError);
 		}
@@ -99,28 +100,28 @@ namespace ThousandAndFirst.Tests
 					wallMaterial: "shaped stone", timberWall: "GlassWall")
 			};
 
-			Assert.AreEqual("Congealed love", KingdomStyleRules.CropForStyle(definitions, "GLASS"));
-			Assert.AreEqual("GlassSeed", KingdomStyleRules.SeedForStyle(definitions, "glass"));
-			Assert.AreEqual("GlassRow", KingdomStyleRules.CropRowForStyle(definitions, "glass"));
-			Assert.AreEqual("Congealed love", KingdomStyleRules.CropForSeed(definitions, "GlassSeed"));
-			Assert.AreEqual("GlassSeed", KingdomStyleRules.SeedForCrop(definitions, "Congealed love"));
-			Assert.AreEqual("GlassRow", KingdomStyleRules.RowForCrop(definitions, "Congealed love"));
-			Assert.IsTrue(KingdomStyleRules.TryWallMaterial(definitions, "glass",
+			ClassicAssert.AreEqual("Congealed love", KingdomStyleRules.CropForStyle(definitions, "GLASS"));
+			ClassicAssert.AreEqual("GlassSeed", KingdomStyleRules.SeedForStyle(definitions, "glass"));
+			ClassicAssert.AreEqual("GlassRow", KingdomStyleRules.CropRowForStyle(definitions, "glass"));
+			ClassicAssert.AreEqual("Congealed love", KingdomStyleRules.CropForSeed(definitions, "GlassSeed"));
+			ClassicAssert.AreEqual("GlassSeed", KingdomStyleRules.SeedForCrop(definitions, "Congealed love"));
+			ClassicAssert.AreEqual("GlassRow", KingdomStyleRules.RowForCrop(definitions, "Congealed love"));
+			ClassicAssert.IsTrue(KingdomStyleRules.TryWallMaterial(definitions, "glass",
 				out KingdomMaterial material));
-			Assert.AreEqual(KingdomMaterial.ShapedStone, material);
-			Assert.AreEqual("GlassWall", KingdomStyleRules.TimberWallForStyle(definitions, "glass"));
-			Assert.AreEqual("Starapple", KingdomStyleRules.CropForStyle(definitions, "old-style"));
-			Assert.AreEqual("CommonWall", KingdomStyleRules.TimberWallForStyle(definitions, "old-style"));
+			ClassicAssert.AreEqual(KingdomMaterial.ShapedStone, material);
+			ClassicAssert.AreEqual("GlassWall", KingdomStyleRules.TimberWallForStyle(definitions, "glass"));
+			ClassicAssert.AreEqual("Starapple", KingdomStyleRules.CropForStyle(definitions, "old-style"));
+			ClassicAssert.AreEqual("CommonWall", KingdomStyleRules.TimberWallForStyle(definitions, "old-style"));
 		}
 
 		[Test]
 		public void CropBehaviourIsAtomicAndReverseMappingsCannotConflict()
 		{
-			Assert.IsTrue(KingdomStyleRules.TryParse(new KingdomStyleDraft
+			ClassicAssert.IsTrue(KingdomStyleRules.TryParse(new KingdomStyleDraft
 			{
 				Name = "partial", Crop = "CropOnly"
 			}, out KingdomStyleDefinition partial, out string parseError), parseError);
-			Assert.IsFalse(KingdomStyleRules.TryValidateBehavior(null, partial, -1,
+			ClassicAssert.IsFalse(KingdomStyleRules.TryValidateBehavior(null, partial, -1,
 				out string partialError));
 			StringAssert.Contains("Crop, Seed, and CropRow together", partialError);
 
@@ -130,13 +131,13 @@ namespace ThousandAndFirst.Tests
 			};
 			KingdomStyleDefinition conflict = Style("second", crop: "SecondCrop",
 				seed: "SharedSeed", row: "SecondRow");
-			Assert.IsFalse(KingdomStyleRules.TryValidateBehavior(definitions, conflict, -1,
+			ClassicAssert.IsFalse(KingdomStyleRules.TryValidateBehavior(definitions, conflict, -1,
 				out string conflictError));
 			StringAssert.Contains("different crop", conflictError);
 
 			KingdomStyleDefinition shared = Style("third", crop: "FirstCrop",
 				seed: "SharedSeed", row: "FirstRow");
-			Assert.IsTrue(KingdomStyleRules.TryValidateBehavior(definitions, shared, -1,
+			ClassicAssert.IsTrue(KingdomStyleRules.TryValidateBehavior(definitions, shared, -1,
 				out string sharedError), sharedError);
 		}
 
@@ -149,12 +150,12 @@ namespace ThousandAndFirst.Tests
 				Style("glass", "TerrainGlass,CrystalDunes", "Glass", "surface", "700",
 					"ground bright enough to found a glass city")
 			};
-			Assert.AreEqual("glass", KingdomStyleRules.Resolve(definitions,
+			ClassicAssert.AreEqual("glass", KingdomStyleRules.Resolve(definitions,
 				"TerrainGlassDunes", "Desert", 10, 10));
-			Assert.IsTrue(KingdomStyleRules.TryCanonical(definitions, " GLASS ",
+			ClassicAssert.IsTrue(KingdomStyleRules.TryCanonical(definitions, " GLASS ",
 				out string canonical));
-			Assert.AreEqual("glass", canonical);
-			Assert.AreEqual("ground bright enough to found a glass city",
+			ClassicAssert.AreEqual("glass", canonical);
+			ClassicAssert.AreEqual("ground bright enough to found a glass city",
 				KingdomStyleRules.DescribeGround(definitions, "glass"));
 		}
 
@@ -167,7 +168,7 @@ namespace ThousandAndFirst.Tests
 				Style("ruin", "Ruins", null, "all", "10"),
 				Style("marsh", null, "Saltmarsh", "all", "900")
 			};
-			Assert.AreEqual("ruin", KingdomStyleRules.Resolve(definitions,
+			ClassicAssert.AreEqual("ruin", KingdomStyleRules.Resolve(definitions,
 				"TerrainJoppaRuins", "Saltmarsh", 10, 10));
 		}
 
@@ -181,10 +182,10 @@ namespace ThousandAndFirst.Tests
 				Style("second", "Ruins", null, "all", "10"),
 				Style("high", "Ruins", null, "all", "11")
 			};
-			Assert.AreEqual("high", KingdomStyleRules.Resolve(definitions,
+			ClassicAssert.AreEqual("high", KingdomStyleRules.Resolve(definitions,
 				"TerrainRuins", null, 10, 10));
 			definitions.RemoveAt(3);
-			Assert.AreEqual("first", KingdomStyleRules.Resolve(definitions,
+			ClassicAssert.AreEqual("first", KingdomStyleRules.Resolve(definitions,
 				"TerrainRuins", null, 10, 10));
 		}
 
@@ -197,9 +198,9 @@ namespace ThousandAndFirst.Tests
 				Style("canopy", "Jungle", null, "surface", "20"),
 				Style("root", "Jungle", null, "deep", "30")
 			};
-			Assert.AreEqual("canopy", KingdomStyleRules.Resolve(definitions,
+			ClassicAssert.AreEqual("canopy", KingdomStyleRules.Resolve(definitions,
 				"TerrainJungle", null, 10, 10));
-			Assert.AreEqual("root", KingdomStyleRules.Resolve(definitions,
+			ClassicAssert.AreEqual("root", KingdomStyleRules.Resolve(definitions,
 				"TerrainJungle", null, 11, 10));
 		}
 
@@ -210,9 +211,9 @@ namespace ThousandAndFirst.Tests
 			{
 				Style("common"), Style("glass")
 			};
-			Assert.AreEqual("common", KingdomStyleRules.Resolve(definitions,
+			ClassicAssert.AreEqual("common", KingdomStyleRules.Resolve(definitions,
 				"TerrainUnknown", "Unknown", 10, 10));
-			Assert.IsTrue(KingdomStyleRules.TryCanonical(definitions, "glass", out _));
+			ClassicAssert.IsTrue(KingdomStyleRules.TryCanonical(definitions, "glass", out _));
 		}
 
 		[Test]
@@ -231,21 +232,21 @@ namespace ThousandAndFirst.Tests
 				TimberWall = ""
 			};
 			KingdomStyleDraft merged = KingdomStyleRules.Merge(earlier, later);
-			Assert.AreEqual("Glass", merged.Terrain);
-			Assert.AreEqual("Dunes", merged.Region);
-			Assert.AreEqual("surface", merged.Strata);
-			Assert.AreEqual("900", merged.Priority);
-			Assert.AreEqual("", merged.GroundClause, "blank explicitly clears inherited prose");
-			Assert.AreEqual("NewCrop", merged.Crop);
-			Assert.AreEqual("OldSeed", merged.Seed);
-			Assert.AreEqual("OldRow", merged.CropRow);
-			Assert.AreEqual("timber", merged.WallMaterial);
-			Assert.AreEqual("", merged.TimberWall,
+			ClassicAssert.AreEqual("Glass", merged.Terrain);
+			ClassicAssert.AreEqual("Dunes", merged.Region);
+			ClassicAssert.AreEqual("surface", merged.Strata);
+			ClassicAssert.AreEqual("900", merged.Priority);
+			ClassicAssert.AreEqual("", merged.GroundClause, "blank explicitly clears inherited prose");
+			ClassicAssert.AreEqual("NewCrop", merged.Crop);
+			ClassicAssert.AreEqual("OldSeed", merged.Seed);
+			ClassicAssert.AreEqual("OldRow", merged.CropRow);
+			ClassicAssert.AreEqual("timber", merged.WallMaterial);
+			ClassicAssert.AreEqual("", merged.TimberWall,
 				"blank explicitly clears inherited behaviour");
-			Assert.IsTrue(KingdomStyleRules.TryParse(merged, out KingdomStyleDefinition parsed,
+			ClassicAssert.IsTrue(KingdomStyleRules.TryParse(merged, out KingdomStyleDefinition parsed,
 				out string error), error);
-			Assert.IsNull(parsed.GroundClause);
-			Assert.IsNull(parsed.TimberWallBlueprint);
+			ClassicAssert.IsNull(parsed.GroundClause);
+			ClassicAssert.IsNull(parsed.TimberWallBlueprint);
 		}
 
 		[TestCase("glass", "Crop", "Seed", "Row", "adamant", "Wall")]
@@ -257,12 +258,12 @@ namespace ThousandAndFirst.Tests
 		public void MalformedBehaviourDeclarationsFailLoudly(string name, string crop,
 			string seed, string row, string material, string timberWall = "Wall")
 		{
-			Assert.IsFalse(KingdomStyleRules.TryParse(new KingdomStyleDraft
+			ClassicAssert.IsFalse(KingdomStyleRules.TryParse(new KingdomStyleDraft
 			{
 				Name = name, Crop = crop, Seed = seed, CropRow = row,
 				WallMaterial = material, TimberWall = timberWall
 			}, out _, out string error));
-			Assert.IsFalse(string.IsNullOrEmpty(error));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(error));
 		}
 
 		[TestCase("bad style", "Terrain", null, null, null)]
@@ -275,12 +276,12 @@ namespace ThousandAndFirst.Tests
 		public void MalformedDeclarationsFailLoudly(string name, string terrain, string region,
 			string strata, string priority)
 		{
-			Assert.IsFalse(KingdomStyleRules.TryParse(new KingdomStyleDraft
+			ClassicAssert.IsFalse(KingdomStyleRules.TryParse(new KingdomStyleDraft
 			{
 				Name = name, Terrain = terrain, Region = region, Strata = strata,
 				Priority = priority
 			}, out _, out string error));
-			Assert.IsFalse(string.IsNullOrEmpty(error));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(error));
 		}
 
 		[Test]
@@ -335,11 +336,11 @@ namespace ThousandAndFirst.Tests
 				"common", "verdant", "fungal", "moonstair", "eater"
 			}, styles.Select(e => (string)e.Attribute("Name")).ToArray());
 			XElement stair = styles.Single(e => (string)e.Attribute("Name") == "moonstair");
-			Assert.AreEqual("gyre", (string)stair.Attribute("Aliases"));
-			Assert.AreEqual("Bundle of Noisegrass", (string)stair.Attribute("Crop"));
-			Assert.AreEqual("r_KingdomSeedNoisegrass", (string)stair.Attribute("Seed"));
-			Assert.AreEqual("r_KingdomRowNoisegrass", (string)stair.Attribute("CropRow"));
-			Assert.IsFalse(styles.Any(e => (string)e.Attribute("Crop") == "Godshroom Cap"));
+			ClassicAssert.AreEqual("gyre", (string)stair.Attribute("Aliases"));
+			ClassicAssert.AreEqual("Bundle of Noisegrass", (string)stair.Attribute("Crop"));
+			ClassicAssert.AreEqual("r_KingdomSeedNoisegrass", (string)stair.Attribute("Seed"));
+			ClassicAssert.AreEqual("r_KingdomRowNoisegrass", (string)stair.Attribute("CropRow"));
+			ClassicAssert.IsFalse(styles.Any(e => (string)e.Attribute("Crop") == "Godshroom Cap"));
 
 			XElement[] environmental = catalogue.Descendants("building")
 				.Where(e => (string)e.Attribute("Styles") == "moonstair").ToArray();
@@ -347,37 +348,37 @@ namespace ThousandAndFirst.Tests
 				environmental.Select(e => (string)e.Attribute("Key")).ToArray());
 			XElement crystalCourt = environmental.Single(e =>
 				(string)e.Attribute("Key") == "sacramentcourt");
-			Assert.AreEqual("civic", (string)crystalCourt.Attribute("Category"));
-			Assert.AreEqual("market,none", (string)crystalCourt.Attribute("Districts"));
+			ClassicAssert.AreEqual("civic", (string)crystalCourt.Attribute("Category"));
+			ClassicAssert.AreEqual("market,none", (string)crystalCourt.Attribute("Districts"));
 			foreach (XElement building in environmental)
 			{
 				string display = ((string)building.Attribute("DisplayName") ?? "").ToLowerInvariant();
 				StringAssert.DoesNotContain("gyre", display);
 				StringAssert.DoesNotContain("girsh", display);
 				StringAssert.DoesNotContain("sacrament", display);
-				Assert.IsNull(building.Attribute("Creed"));
-				Assert.IsNull(building.Attribute("Builders"));
+				ClassicAssert.IsNull(building.Attribute("Creed"));
+				ClassicAssert.IsNull(building.Attribute("Builders"));
 			}
 			foreach (string key in new string[] { "girshrotchapel", "gyrewightashcourt" })
 			{
 				XElement creedWork = catalogue.Descendants("building").Single(e =>
 					(string)e.Attribute("Key") == key);
-				Assert.AreEqual("all", (string)creedWork.Attribute("Styles"));
+				ClassicAssert.AreEqual("all", (string)creedWork.Attribute("Styles"));
 				StringAssert.StartsWith("creed:", (string)creedWork.Attribute("Builders"));
-				Assert.IsNotEmpty((string)creedWork.Attribute("Creed"));
+				ClassicAssert.IsNotEmpty((string)creedWork.Attribute("Creed"));
 			}
-			Assert.AreEqual("all", (string)catalogue.Descendants("building").Single(e =>
+			ClassicAssert.AreEqual("all", (string)catalogue.Descendants("building").Single(e =>
 				(string)e.Attribute("Key") == "bazaar").Attribute("Styles"));
-			Assert.AreEqual("all", (string)catalogue.Descendants("building").Single(e =>
+			ClassicAssert.AreEqual("all", (string)catalogue.Descendants("building").Single(e =>
 				(string)e.Attribute("Key") == "bathhouse").Attribute("Styles"));
 
 			XDocument objects = XDocument.Parse(TestMain.ReadRepositoryText(
 				Path.Combine("RuntimeData", "ObjectBlueprints.xml")));
 			XElement mill = objects.Descendants("object").Single(e =>
 				(string)e.Attribute("Name") == "r_KingdomGrindMill");
-			Assert.IsNotNull(objects.Descendants("object").SingleOrDefault(e =>
+			ClassicAssert.IsNotNull(objects.Descendants("object").SingleOrDefault(e =>
 				(string)e.Attribute("Name") == "r_KingdomMoonStairCrystalRoot"));
-			Assert.IsNotNull(objects.Descendants("object").SingleOrDefault(e =>
+			ClassicAssert.IsNotNull(objects.Descendants("object").SingleOrDefault(e =>
 				(string)e.Attribute("Name") == "r_KingdomStructureMoonStairCrystalRib"));
 			string architecture = TestMain.ReadRepositoryText(Path.Combine(
 				"Architecture", "KingdomArchitectures-HousingWater.xml"));

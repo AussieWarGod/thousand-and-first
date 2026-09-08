@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
@@ -29,12 +30,12 @@ namespace ThousandAndFirst.Tests
 			};
 			KingdomContainerDemandReceipt receipt;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomContainerCatchUpRules.TryMeasure(rows, rows.Length,
+			ClassicAssert.IsTrue(KingdomContainerCatchUpRules.TryMeasure(rows, rows.Length,
 				-25, 0, 0, out receipt, out fault), fault.ToString());
-			Assert.AreEqual(3, receipt.RestUnits);
-			Assert.AreEqual(25, receipt.WaterMovable);
-			Assert.AreEqual(0, receipt.WaterBlocked);
-			Assert.AreEqual(9, receipt.OwedThirds);
+			ClassicAssert.AreEqual(3, receipt.RestUnits);
+			ClassicAssert.AreEqual(25, receipt.WaterMovable);
+			ClassicAssert.AreEqual(0, receipt.WaterBlocked);
+			ClassicAssert.AreEqual(9, receipt.OwedThirds);
 		}
 
 		[Test]
@@ -48,10 +49,10 @@ namespace ThousandAndFirst.Tests
 			};
 			KingdomContainerDemandReceipt receipt;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomContainerCatchUpRules.TryMeasure(rows, rows.Length,
+			ClassicAssert.IsTrue(KingdomContainerCatchUpRules.TryMeasure(rows, rows.Length,
 				0, 9, 0, out receipt, out fault));
-			Assert.AreEqual(3, receipt.Units);
-			Assert.AreEqual(9, receipt.FoodMovable);
+			ClassicAssert.AreEqual(3, receipt.Units);
+			ClassicAssert.AreEqual(9, receipt.FoodMovable);
 		}
 
 		[Test]
@@ -66,12 +67,12 @@ namespace ThousandAndFirst.Tests
 			};
 			KingdomContainerDemandReceipt receipt;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomContainerCatchUpRules.TryMeasure(rows, rows.Length,
+			ClassicAssert.IsTrue(KingdomContainerCatchUpRules.TryMeasure(rows, rows.Length,
 				-12, 9, 0, out receipt, out fault));
-			Assert.AreEqual(2, receipt.VisibleUnits);
-			Assert.AreEqual(2, receipt.RestUnits);
-			Assert.AreEqual(12, receipt.WaterMovable);
-			Assert.AreEqual(9, receipt.FoodMovable);
+			ClassicAssert.AreEqual(2, receipt.VisibleUnits);
+			ClassicAssert.AreEqual(2, receipt.RestUnits);
+			ClassicAssert.AreEqual(12, receipt.WaterMovable);
+			ClassicAssert.AreEqual(9, receipt.FoodMovable);
 		}
 
 		[Test]
@@ -86,7 +87,7 @@ namespace ThousandAndFirst.Tests
 			List<int> order = new List<int>();
 			KingdomContainerSettlementReceipt receipt;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomContainerCatchUpRules.TrySettle(rows, rows.Length,
+			ClassicAssert.IsTrue(KingdomContainerCatchUpRules.TrySettle(rows, rows.Length,
 				-3, 0, 0, 2, 1,
 				delegate(int source, KingdomStockKind kind, KingdomUnitDirection direction,
 					int offered, out int applied)
@@ -96,8 +97,8 @@ namespace ThousandAndFirst.Tests
 					return true;
 				}, out receipt, out fault));
 			CollectionAssert.AreEqual(new[] { 10, 20, 30 }, order);
-			Assert.AreEqual(0, receipt.OwedWater);
-			Assert.AreEqual(2, receipt.VisibleSpent);
+			ClassicAssert.AreEqual(0, receipt.OwedWater);
+			ClassicAssert.AreEqual(2, receipt.VisibleSpent);
 		}
 
 		[Test]
@@ -107,12 +108,12 @@ namespace ThousandAndFirst.Tests
 			KingdomReifySpend first;
 			KingdomReifySpend second;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCatchUpRules.TryPlanTurn(demand, 15, 4, out first, out fault));
-			Assert.AreEqual(5, first.Medium);
-			Assert.IsTrue(KingdomCatchUpRules.TryPlanTurn(demand,
+			ClassicAssert.IsTrue(KingdomCatchUpRules.TryPlanTurn(demand, 15, 4, out first, out fault));
+			ClassicAssert.AreEqual(5, first.Medium);
+			ClassicAssert.IsTrue(KingdomCatchUpRules.TryPlanTurn(demand,
 				15 - first.ThirdsSpent, 4, out second, out fault));
-			Assert.AreEqual(0, second.Units);
-			Assert.AreEqual(5, first.Units + second.Units);
+			ClassicAssert.AreEqual(0, second.Units);
+			ClassicAssert.AreEqual(5, first.Units + second.Units);
 		}
 
 		[Test]
@@ -125,14 +126,14 @@ namespace ThousandAndFirst.Tests
 			};
 			KingdomContainerDemandReceipt demand;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomContainerCatchUpRules.TryMeasure(rows, rows.Length,
+			ClassicAssert.IsTrue(KingdomContainerCatchUpRules.TryMeasure(rows, rows.Length,
 				-8, 6, 0, out demand, out fault));
-			Assert.AreEqual(0, demand.Units);
-			Assert.AreEqual(8, demand.WaterBlocked);
-			Assert.AreEqual(6, demand.FoodBlocked);
+			ClassicAssert.AreEqual(0, demand.Units);
+			ClassicAssert.AreEqual(8, demand.WaterBlocked);
+			ClassicAssert.AreEqual(6, demand.FoodBlocked);
 			int callbacks = 0;
 			KingdomContainerSettlementReceipt settled;
-			Assert.IsTrue(KingdomContainerCatchUpRules.TrySettle(rows, rows.Length,
+			ClassicAssert.IsTrue(KingdomContainerCatchUpRules.TrySettle(rows, rows.Length,
 				-8, 6, 0, 8, 8,
 				delegate(int source, KingdomStockKind kind, KingdomUnitDirection direction,
 					int offered, out int applied)
@@ -141,10 +142,10 @@ namespace ThousandAndFirst.Tests
 					applied = 0;
 					return false;
 				}, out settled, out fault));
-			Assert.AreEqual(0, callbacks);
-			Assert.AreEqual(-8, settled.OwedWater);
-			Assert.AreEqual(6, settled.OwedFood);
-			Assert.AreEqual(0, settled.UnitsSpent);
+			ClassicAssert.AreEqual(0, callbacks);
+			ClassicAssert.AreEqual(-8, settled.OwedWater);
+			ClassicAssert.AreEqual(6, settled.OwedFood);
+			ClassicAssert.AreEqual(0, settled.UnitsSpent);
 		}
 
 		[Test]
@@ -158,7 +159,7 @@ namespace ThousandAndFirst.Tests
 			int callbacks = 0;
 			KingdomContainerSettlementReceipt receipt;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomContainerCatchUpRules.TrySettle(rows, rows.Length,
+			ClassicAssert.IsTrue(KingdomContainerCatchUpRules.TrySettle(rows, rows.Length,
 				-10, 0, 0, 0, 8,
 				delegate(int source, KingdomStockKind kind, KingdomUnitDirection direction,
 					int offered, out int applied)
@@ -167,10 +168,10 @@ namespace ThousandAndFirst.Tests
 					applied = 3;
 					return false;
 				}, out receipt, out fault));
-			Assert.AreEqual(1, callbacks, "a later reserve may not leapfrog a failed oldest vessel");
-			Assert.AreEqual(-7, receipt.OwedWater);
-			Assert.AreEqual(1, receipt.UnitsSpent);
-			Assert.IsTrue(receipt.CallbackFailed);
+			ClassicAssert.AreEqual(1, callbacks, "a later reserve may not leapfrog a failed oldest vessel");
+			ClassicAssert.AreEqual(-7, receipt.OwedWater);
+			ClassicAssert.AreEqual(1, receipt.UnitsSpent);
+			ClassicAssert.IsTrue(receipt.CallbackFailed);
 		}
 
 		[Test]
@@ -181,7 +182,7 @@ namespace ThousandAndFirst.Tests
 				rows[i] = Row(i + 1, i + 1, KingdomStockKind.Water, false, 0, 1);
 			KingdomContainerSettlementReceipt first;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomContainerCatchUpRules.TrySettle(rows, rows.Length,
+			ClassicAssert.IsTrue(KingdomContainerCatchUpRules.TrySettle(rows, rows.Length,
 				-12, 0, 0, 0, 8,
 				delegate(int source, KingdomStockKind kind, KingdomUnitDirection direction,
 					int offered, out int applied)
@@ -190,10 +191,10 @@ namespace ThousandAndFirst.Tests
 					rows[source] = Row(source + 1, source + 1, kind, false, 0, 0);
 					return true;
 				}, out first, out fault));
-			Assert.AreEqual(-4, first.OwedWater);
+			ClassicAssert.AreEqual(-4, first.OwedWater);
 			// Persisted signed debt is the resume token; already-empty vessels cannot pay twice.
 			KingdomContainerSettlementReceipt reloaded;
-			Assert.IsTrue(KingdomContainerCatchUpRules.TrySettle(rows, rows.Length,
+			ClassicAssert.IsTrue(KingdomContainerCatchUpRules.TrySettle(rows, rows.Length,
 				first.OwedWater, 0, 0, 0, 8,
 				delegate(int source, KingdomStockKind kind, KingdomUnitDirection direction,
 					int offered, out int applied)
@@ -202,8 +203,8 @@ namespace ThousandAndFirst.Tests
 					rows[source] = Row(source + 1, source + 1, kind, false, 0, 0);
 					return true;
 				}, out reloaded, out fault));
-			Assert.AreEqual(0, reloaded.OwedWater);
-			Assert.AreEqual(12, first.UnitsSpent + reloaded.UnitsSpent);
+			ClassicAssert.AreEqual(0, reloaded.OwedWater);
+			ClassicAssert.AreEqual(12, first.UnitsSpent + reloaded.UnitsSpent);
 		}
 
 		[Test]
@@ -215,15 +216,15 @@ namespace ThousandAndFirst.Tests
 				rows[i] = Row(i + 1, i + 1, KingdomStockKind.Water, false, 0, 1);
 			KingdomContainerDemandReceipt receipt;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomContainerCatchUpRules.TryMeasure(rows, rows.Length,
+			ClassicAssert.IsTrue(KingdomContainerCatchUpRules.TryMeasure(rows, rows.Length,
 				-containers, 0, 0, out receipt, out fault));
 			int units = receipt.Units + KingdomRules.MaxPopulation;
-			Assert.AreEqual(KingdomCatchUpRules.WorstBacklogUnits, units);
+			ClassicAssert.AreEqual(KingdomCatchUpRules.WorstBacklogUnits, units);
 			int turns;
-			Assert.IsTrue(KingdomCatchUpRules.TryTurnsToDrain(
+			ClassicAssert.IsTrue(KingdomCatchUpRules.TryTurnsToDrain(
 				units * KingdomCatchUpRules.ThirdsPerUnit, out turns, out fault));
-			Assert.AreEqual(39, turns);
-			Assert.Less(turns, KingdomCatchUpRules.GraceWindowTurns);
+			ClassicAssert.AreEqual(39, turns);
+			ClassicAssert.Less(turns, KingdomCatchUpRules.GraceWindowTurns);
 		}
 	}
 }

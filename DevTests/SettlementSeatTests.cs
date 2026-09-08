@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -74,21 +75,21 @@ namespace ThousandAndFirst.Tests
 				// deliberately normalizes every pre-ruling consequence to its inert projection.
 				if (field.Name == "HungerStreak" || field.Name == "MealShade")
 				{
-					Assert.AreEqual(0, actual, "retired field " + field.Name + " was reanimated");
+					ClassicAssert.AreEqual(0, actual, "retired field " + field.Name + " was reanimated");
 					continue;
 				}
 				if (field.Name == "Famished" || field.Name == "ScrapsAnnounced")
 				{
-					Assert.AreEqual(false, actual, "retired field " + field.Name + " was reanimated");
+					ClassicAssert.AreEqual(false, actual, "retired field " + field.Name + " was reanimated");
 					continue;
 				}
 				if (field.FieldType.IsValueType)
 				{
-					Assert.AreEqual(expected, actual, "field " + field.Name + " was not carried through capture and restore");
+					ClassicAssert.AreEqual(expected, actual, "field " + field.Name + " was not carried through capture and restore");
 				}
 				else
 				{
-					Assert.AreSame(expected, actual, "field " + field.Name + " was not carried through capture and restore");
+					ClassicAssert.AreSame(expected, actual, "field " + field.Name + " was not carried through capture and restore");
 				}
 			}
 		}
@@ -103,16 +104,16 @@ namespace ThousandAndFirst.Tests
 			KingdomLegacyRosterProjectionTestAccess.Names(seat).Add("Ptoh");
 			KingdomSettlement captured = new KingdomSettlement();
 			captured.ReadFrom(seat);
-			Assert.AreSame(KingdomLegacyRosterProjectionTestAccess.Names(seat),
+			ClassicAssert.AreSame(KingdomLegacyRosterProjectionTestAccess.Names(seat),
 				KingdomLegacyRosterProjectionTestAccess.Names(captured));
-			Assert.AreSame(seat.Ledger, captured.Ledger);
+			ClassicAssert.AreSame(seat.Ledger, captured.Ledger);
 		}
 
 		[Test]
 		public void ASeatMissingAFieldIsRefusedAndNamesIt()
 		{
 			List<string> mismatches = KingdomSettlement.SeatMismatches(typeof(PartialSeat));
-			Assert.AreEqual(KingdomSettlement.CarriedFields().Length - 2, mismatches.Count, "every field the seat cannot carry must be named");
+			ClassicAssert.AreEqual(KingdomSettlement.CarriedFields().Length - 2, mismatches.Count, "every field the seat cannot carry must be named");
 			bool refused = false;
 			try
 			{
@@ -122,7 +123,7 @@ namespace ThousandAndFirst.Tests
 			{
 				refused = true;
 			}
-			Assert.IsTrue(refused, "reading from an incomplete seat must throw rather than silently drop a city");
+			ClassicAssert.IsTrue(refused, "reading from an incomplete seat must throw rather than silently drop a city");
 		}
 
 		[Test]
@@ -141,9 +142,9 @@ namespace ThousandAndFirst.Tests
 			{
 				refused = true;
 			}
-			Assert.IsTrue(refused);
-			Assert.IsNull(seat.SettlementName, "a refused write must write nothing at all");
-			Assert.AreEqual(0, seat.Population, "a refused write must write nothing at all");
+			ClassicAssert.IsTrue(refused);
+			ClassicAssert.IsNull(seat.SettlementName, "a refused write must write nothing at all");
+			ClassicAssert.AreEqual(0, seat.Population, "a refused write must write nothing at all");
 		}
 
 		[Test]
@@ -158,7 +159,7 @@ namespace ThousandAndFirst.Tests
 					named = true;
 				}
 			}
-			Assert.IsTrue(named, "a seat field of the wrong type must be reported, not quietly coerced");
+			ClassicAssert.IsTrue(named, "a seat field of the wrong type must be reported, not quietly coerced");
 		}
 
 		[Test]
@@ -179,12 +180,12 @@ namespace ThousandAndFirst.Tests
 			KingdomSettlement restored = new KingdomSettlement();
 			captured.WriteTo(restored);
 
-			Assert.AreEqual(3, restored.ClaimedZones.Count, "a claim the founder made must not be lost by walking between cities");
-			Assert.AreEqual("JoppaWorld.11.22.1.1.10", restored.ClaimedZones[0]);
-			Assert.AreEqual("JoppaWorld.11.22.2.1.10", restored.ClaimedZones[1]);
-			Assert.AreEqual("JoppaWorld.11.22.1.1.11", restored.ClaimedZones[2], "the vertical claim travels like any other");
-			Assert.AreEqual(GrowthStage.Town, restored.Stage, "the rung the ceiling is read against travels with the ground");
-			Assert.AreSame(seat.ClaimedZones, restored.ClaimedZones);
+			ClassicAssert.AreEqual(3, restored.ClaimedZones.Count, "a claim the founder made must not be lost by walking between cities");
+			ClassicAssert.AreEqual("JoppaWorld.11.22.1.1.10", restored.ClaimedZones[0]);
+			ClassicAssert.AreEqual("JoppaWorld.11.22.2.1.10", restored.ClaimedZones[1]);
+			ClassicAssert.AreEqual("JoppaWorld.11.22.1.1.11", restored.ClaimedZones[2], "the vertical claim travels like any other");
+			ClassicAssert.AreEqual(GrowthStage.Town, restored.Stage, "the rung the ceiling is read against travels with the ground");
+			ClassicAssert.AreSame(seat.ClaimedZones, restored.ClaimedZones);
 		}
 
 		[Test]
@@ -204,10 +205,10 @@ namespace ThousandAndFirst.Tests
 			KingdomSettlement nowSeated = new KingdomSettlement();
 			away.WriteTo(nowSeated);
 
-			Assert.AreEqual(1, nowSeated.ClaimedZones.Count);
-			Assert.AreEqual("JoppaWorld.30.30.1.1.10", nowSeated.ClaimedZones[0]);
-			Assert.AreEqual("JoppaWorld.11.22.1.1.10", capturedSeat.ClaimedZones[0]);
-			Assert.AreNotSame(capturedSeat.ClaimedZones, nowSeated.ClaimedZones);
+			ClassicAssert.AreEqual(1, nowSeated.ClaimedZones.Count);
+			ClassicAssert.AreEqual("JoppaWorld.30.30.1.1.10", nowSeated.ClaimedZones[0]);
+			ClassicAssert.AreEqual("JoppaWorld.11.22.1.1.10", capturedSeat.ClaimedZones[0]);
+			ClassicAssert.AreNotSame(capturedSeat.ClaimedZones, nowSeated.ClaimedZones);
 		}
 
 		[Test]
@@ -231,8 +232,8 @@ namespace ThousandAndFirst.Tests
 			KingdomSettlement nowSeated = new KingdomSettlement();
 			away.WriteTo(nowSeated);
 
-			Assert.AreEqual(5, captured.HomecomingDays);
-			Assert.AreEqual(2, nowSeated.HomecomingDays);
+			ClassicAssert.AreEqual(5, captured.HomecomingDays);
+			ClassicAssert.AreEqual(2, nowSeated.HomecomingDays);
 			StringAssert.Contains("Kavvat", captured.Ledger.Notes[0]);
 			StringAssert.Contains("Ezra", nowSeated.Ledger.Notes[0]);
 		}
@@ -243,7 +244,7 @@ namespace ThousandAndFirst.Tests
 			List<string> carried = CarriedFieldNames();
 			foreach (string realmField in RealmOnlyFields)
 			{
-				Assert.IsFalse(carried.Contains(realmField), realmField + " is realm state and must not travel with a city");
+				ClassicAssert.IsFalse(carried.Contains(realmField), realmField + " is realm state and must not travel with a city");
 			}
 		}
 
@@ -253,7 +254,7 @@ namespace ThousandAndFirst.Tests
 			List<string> carried = CarriedFieldNames();
 			foreach (string settlementField in SettlementFields)
 			{
-				Assert.IsTrue(carried.Contains(settlementField), settlementField + " belongs to a city and must be carried");
+				ClassicAssert.IsTrue(carried.Contains(settlementField), settlementField + " belongs to a city and must be carried");
 			}
 		}
 
@@ -273,12 +274,12 @@ namespace ThousandAndFirst.Tests
 			{
 				if (IsContainerField(field))
 				{
-					Assert.IsNotNull(field.GetValue(settlement), field.Name + " must be repaired by Normalize, not left null for a consumer to trip over");
+					ClassicAssert.IsNotNull(field.GetValue(settlement), field.Name + " must be repaired by Normalize, not left null for a consumer to trip over");
 				}
 			}
-			Assert.AreEqual("common", settlement.Style);
-			Assert.AreEqual(0, settlement.ClaimedZones.Count);
-			Assert.IsNotNull(settlement.Ledger.Notes);
+			ClassicAssert.AreEqual("common", settlement.Style);
+			ClassicAssert.AreEqual(0, settlement.ClaimedZones.Count);
+			ClassicAssert.IsNotNull(settlement.Ledger.Notes);
 		}
 
 		[Test]
@@ -286,11 +287,11 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomSettlement first = new KingdomSettlement();
 			first.Normalize();
-			Assert.IsNull(first.Vocation, "the realm's first city was founded before there was a purpose to name");
+			ClassicAssert.IsNull(first.Vocation, "the realm's first city was founded before there was a purpose to name");
 			KingdomSettlement strange = new KingdomSettlement();
 			strange.Vocation = "capital-of-the-world";
 			strange.Normalize();
-			Assert.AreEqual(KingdomSettlement.NeutralVocation, strange.Vocation);
+			ClassicAssert.AreEqual(KingdomSettlement.NeutralVocation, strange.Vocation);
 		}
 
 		[Test]
@@ -305,12 +306,12 @@ namespace ThousandAndFirst.Tests
 				ScrapsAnnounced = true
 			};
 			legacy.Normalize();
-			Assert.AreEqual(0, legacy.NotableShade,
+			ClassicAssert.AreEqual(0, legacy.NotableShade,
 				"title-only civic offices cannot retain a hidden legacy capacity modifier");
-			Assert.AreEqual(0, legacy.MealShade);
-			Assert.AreEqual(0, legacy.HungerStreak);
-			Assert.IsFalse(legacy.Famished);
-			Assert.IsFalse(legacy.ScrapsAnnounced);
+			ClassicAssert.AreEqual(0, legacy.MealShade);
+			ClassicAssert.AreEqual(0, legacy.HungerStreak);
+			ClassicAssert.IsFalse(legacy.Famished);
+			ClassicAssert.IsFalse(legacy.ScrapsAnnounced);
 		}
 
 		[Test]
@@ -327,11 +328,11 @@ namespace ThousandAndFirst.Tests
 			captured.ReadFrom(legacySeat);
 			KingdomSettlement restored = new KingdomSettlement();
 			captured.WriteTo(restored);
-			Assert.AreEqual(0, captured.NotableShade);
-			Assert.AreEqual(0, restored.NotableShade);
-			Assert.AreEqual(0, restored.MealShade);
-			Assert.AreEqual(0, restored.HungerStreak);
-			Assert.IsFalse(restored.Famished);
+			ClassicAssert.AreEqual(0, captured.NotableShade);
+			ClassicAssert.AreEqual(0, restored.NotableShade);
+			ClassicAssert.AreEqual(0, restored.MealShade);
+			ClassicAssert.AreEqual(0, restored.HungerStreak);
+			ClassicAssert.IsFalse(restored.Famished);
 		}
 
 		[Test]
@@ -350,15 +351,15 @@ namespace ThousandAndFirst.Tests
 				RaidDueTick = 1234L
 			};
 			settlement.Normalize();
-			Assert.AreEqual(GrowthStage.Camp, settlement.Stage);
-			Assert.AreEqual(KingdomRules.MealVerdict.None, settlement.LastMeal);
-			Assert.AreEqual(KingdomRules.GatePolicy.Open, settlement.Gate);
-			Assert.AreEqual(KingdomRules.StoresPolicy.Plenty, settlement.Stores);
-			Assert.AreEqual(KingdomRules.PetitionKind.None, settlement.PetitionKind);
-			Assert.AreEqual(PetitionLifecycle.None, settlement.PetitionState);
-			Assert.AreEqual(0, settlement.RaidState);
-			Assert.IsNull(settlement.RaidFactionName);
-			Assert.AreEqual(0L, settlement.RaidDueTick);
+			ClassicAssert.AreEqual(GrowthStage.Camp, settlement.Stage);
+			ClassicAssert.AreEqual(KingdomRules.MealVerdict.None, settlement.LastMeal);
+			ClassicAssert.AreEqual(KingdomRules.GatePolicy.Open, settlement.Gate);
+			ClassicAssert.AreEqual(KingdomRules.StoresPolicy.Plenty, settlement.Stores);
+			ClassicAssert.AreEqual(KingdomRules.PetitionKind.None, settlement.PetitionKind);
+			ClassicAssert.AreEqual(PetitionLifecycle.None, settlement.PetitionState);
+			ClassicAssert.AreEqual(0, settlement.RaidState);
+			ClassicAssert.IsNull(settlement.RaidFactionName);
+			ClassicAssert.AreEqual(0L, settlement.RaidDueTick);
 		}
 
 		[Test]
@@ -381,23 +382,23 @@ namespace ThousandAndFirst.Tests
 			List<string> names = KingdomLegacyRosterProjectionTestAccess.Names(settlement);
 			List<string> origins = KingdomLegacyRosterProjectionTestAccess.Origins(settlement);
 			List<string> arrivals = KingdomLegacyRosterProjectionTestAccess.Arrivals(settlement);
-			Assert.AreEqual(3, names.Count);
-			Assert.AreEqual(2, origins.Count);
-			Assert.AreEqual(4, arrivals.Count);
-			Assert.AreEqual("Ptoh", names[0]);
-			Assert.AreEqual("Ptoh", names[1],
+			ClassicAssert.AreEqual(3, names.Count);
+			ClassicAssert.AreEqual(2, origins.Count);
+			ClassicAssert.AreEqual(4, arrivals.Count);
+			ClassicAssert.AreEqual("Ptoh", names[0]);
+			ClassicAssert.AreEqual("Ptoh", names[1],
 				"duplicate names are legitimate rows, not a normalization key");
-			Assert.AreEqual("reef", origins[1]);
-			Assert.AreEqual("staler", arrivals[3],
+			ClassicAssert.AreEqual("reef", origins[1]);
+			ClassicAssert.AreEqual("staler", arrivals[3],
 				"settlement normalization cannot destroy unresolved old-save evidence; realm migration owns it");
-			Assert.AreEqual(1, settlement.DeadNames.Count);
-			Assert.AreEqual(1, settlement.DeadOrigins.Count);
-			Assert.AreEqual(1, settlement.DeadArrived.Count);
-			Assert.AreEqual(1, settlement.DeadCauses.Count);
-			Assert.AreEqual("Eresh", settlement.DeadNames[0]);
-			Assert.AreEqual("dune", settlement.DeadOrigins[0]);
-			Assert.AreEqual("first", settlement.DeadArrived[0]);
-			Assert.AreEqual("age", settlement.DeadCauses[0]);
+			ClassicAssert.AreEqual(1, settlement.DeadNames.Count);
+			ClassicAssert.AreEqual(1, settlement.DeadOrigins.Count);
+			ClassicAssert.AreEqual(1, settlement.DeadArrived.Count);
+			ClassicAssert.AreEqual(1, settlement.DeadCauses.Count);
+			ClassicAssert.AreEqual("Eresh", settlement.DeadNames[0]);
+			ClassicAssert.AreEqual("dune", settlement.DeadOrigins[0]);
+			ClassicAssert.AreEqual("first", settlement.DeadArrived[0]);
+			ClassicAssert.AreEqual("age", settlement.DeadCauses[0]);
 		}
 
 		[Test]
@@ -409,9 +410,9 @@ namespace ThousandAndFirst.Tests
 			seat.Style = null;
 			KingdomSettlement captured = new KingdomSettlement();
 			captured.ReadFrom(seat);
-			Assert.IsNotNull(KingdomLegacyRosterProjectionTestAccess.Names(captured));
-			Assert.IsNotNull(captured.Ledger);
-			Assert.AreEqual("common", captured.Style);
+			ClassicAssert.IsNotNull(KingdomLegacyRosterProjectionTestAccess.Names(captured));
+			ClassicAssert.IsNotNull(captured.Ledger);
+			ClassicAssert.AreEqual("common", captured.Style);
 		}
 
 		[TestCase(false, 0, false, false, KingdomSettlement.SecondFoundingVerdict.NothingFoundedYet)]
@@ -423,14 +424,14 @@ namespace ThousandAndFirst.Tests
 		[TestCase(true, 3, false, false, KingdomSettlement.SecondFoundingVerdict.RealmIsFull)]
 		public void JudgeSecondFounding(bool founded, int held, bool claimed, bool adjacent, KingdomSettlement.SecondFoundingVerdict expected)
 		{
-			Assert.AreEqual(expected, KingdomSettlement.JudgeSecondFounding(founded, held, claimed, adjacent));
+			ClassicAssert.AreEqual(expected, KingdomSettlement.JudgeSecondFounding(founded, held, claimed, adjacent));
 		}
 
 		[Test]
 		public void TheCapIsThreeCities()
 		{
-			Assert.AreEqual(3, KingdomSettlement.MaxSettlements);
-			Assert.AreEqual(KingdomSettlement.SecondFoundingVerdict.RealmIsFull, KingdomSettlement.JudgeSecondFounding(true, KingdomSettlement.MaxSettlements, false, false));
+			ClassicAssert.AreEqual(3, KingdomSettlement.MaxSettlements);
+			ClassicAssert.AreEqual(KingdomSettlement.SecondFoundingVerdict.RealmIsFull, KingdomSettlement.JudgeSecondFounding(true, KingdomSettlement.MaxSettlements, false, false));
 		}
 
 		[Test]
@@ -441,33 +442,33 @@ namespace ThousandAndFirst.Tests
 				string refusal = KingdomSettlement.SecondFoundingRefusal(verdict, "Kavvat");
 				if (verdict == KingdomSettlement.SecondFoundingVerdict.Allowed)
 				{
-					Assert.AreEqual("", refusal, "an allowed founding refuses nothing");
+					ClassicAssert.AreEqual("", refusal, "an allowed founding refuses nothing");
 				}
 				else
 				{
-					Assert.IsTrue(refusal.Length > 0, verdict + " must tell the founder why");
+					ClassicAssert.IsTrue(refusal.Length > 0, verdict + " must tell the founder why");
 				}
 			}
-			Assert.IsTrue(KingdomSettlement.SecondFoundingRefusal(KingdomSettlement.SecondFoundingVerdict.RealmIsFull, "Kavvat").Contains("Kavvat"));
-			Assert.IsTrue(KingdomSettlement.SecondFoundingRefusal(KingdomSettlement.SecondFoundingVerdict.RealmIsFull, null).Contains("the realm"));
+			ClassicAssert.IsTrue(KingdomSettlement.SecondFoundingRefusal(KingdomSettlement.SecondFoundingVerdict.RealmIsFull, "Kavvat").Contains("Kavvat"));
+			ClassicAssert.IsTrue(KingdomSettlement.SecondFoundingRefusal(KingdomSettlement.SecondFoundingVerdict.RealmIsFull, null).Contains("the realm"));
 		}
 
 		[Test]
 		public void EveryVocationIsKnownAndSpeaks()
 		{
-			Assert.AreEqual(KingdomSettlement.Vocations.Length, KingdomSettlement.VocationBlurbs.Length);
+			ClassicAssert.AreEqual(KingdomSettlement.Vocations.Length, KingdomSettlement.VocationBlurbs.Length);
 			foreach (string vocation in KingdomSettlement.Vocations)
 			{
-				Assert.IsTrue(KingdomSettlement.IsKnownVocation(vocation));
-				Assert.IsTrue(KingdomSettlement.VocationClause(vocation).Length > 0, vocation + " must have a clause");
-				Assert.IsTrue(KingdomSettlement.VocationBlurb(vocation).Length > 0, vocation + " must have a blurb");
-				Assert.IsTrue(KingdomSettlement.VocationSuffix(vocation).StartsWith(", "));
+				ClassicAssert.IsTrue(KingdomSettlement.IsKnownVocation(vocation));
+				ClassicAssert.IsTrue(KingdomSettlement.VocationClause(vocation).Length > 0, vocation + " must have a clause");
+				ClassicAssert.IsTrue(KingdomSettlement.VocationBlurb(vocation).Length > 0, vocation + " must have a blurb");
+				ClassicAssert.IsTrue(KingdomSettlement.VocationSuffix(vocation).StartsWith(", "));
 			}
-			Assert.IsTrue(KingdomSettlement.IsKnownVocation(KingdomSettlement.NeutralVocation));
-			Assert.IsFalse(KingdomSettlement.IsKnownVocation("capital-of-the-world"));
-			Assert.AreEqual("", KingdomSettlement.VocationClause(null));
-			Assert.AreEqual("", KingdomSettlement.VocationSuffix(null));
-			Assert.AreEqual("", KingdomSettlement.VocationBlurb("capital-of-the-world"));
+			ClassicAssert.IsTrue(KingdomSettlement.IsKnownVocation(KingdomSettlement.NeutralVocation));
+			ClassicAssert.IsFalse(KingdomSettlement.IsKnownVocation("capital-of-the-world"));
+			ClassicAssert.AreEqual("", KingdomSettlement.VocationClause(null));
+			ClassicAssert.AreEqual("", KingdomSettlement.VocationSuffix(null));
+			ClassicAssert.AreEqual("", KingdomSettlement.VocationBlurb("capital-of-the-world"));
 		}
 
 		[Test]
@@ -478,10 +479,10 @@ namespace ThousandAndFirst.Tests
 			settlement.Vocation = "refuge";
 			settlement.Population = 4;
 			string described = settlement.Describe();
-			Assert.IsTrue(described.Contains("Sheol"));
-			Assert.IsTrue(described.Contains("refuge"));
-			Assert.IsTrue(described.Contains("pop=4"));
-			Assert.IsTrue(new KingdomSettlement().Describe().Contains("(unnamed)"));
+			ClassicAssert.IsTrue(described.Contains("Sheol"));
+			ClassicAssert.IsTrue(described.Contains("refuge"));
+			ClassicAssert.IsTrue(described.Contains("pop=4"));
+			ClassicAssert.IsTrue(new KingdomSettlement().Describe().Contains("(unnamed)"));
 		}
 
 		private static List<string> CarriedFieldNames()
@@ -636,10 +637,10 @@ namespace ThousandAndFirst.Tests
 			ThousandAndFirst.Simulation.City.KingdomBindingRegistry registry = new ThousandAndFirst.Simulation.City.KingdomBindingRegistry();
 			ThousandAndFirst.Simulation.City.KingdomBindingTable table;
 			ThousandAndFirst.Simulation.City.KingdomCityFault fault;
-			Assert.IsTrue(ThousandAndFirst.Simulation.City.KingdomBindingTable.Empty.TryBind(
+			ClassicAssert.IsTrue(ThousandAndFirst.Simulation.City.KingdomBindingTable.Empty.TryBind(
 				7, ThousandAndFirst.Simulation.City.KingdomBindingKind.Resident, "JoppaWorld.11.22.1.1.10", "obj-7", 700L,
 				out table, out fault), fault.ToString());
-			Assert.IsTrue(registry.TryPublish(table, out fault), fault.ToString());
+			ClassicAssert.IsTrue(registry.TryPublish(table, out fault), fault.ToString());
 
 			// The whole swap, both directions, over a realm holding two cities.
 			KingdomSettlement seat = new KingdomSettlement();
@@ -654,14 +655,14 @@ namespace ThousandAndFirst.Tests
 			away.WriteTo(nowSeated);
 
 			// Nothing in the swap can reach the registry: it is not among the fields a city carries.
-			Assert.IsFalse(CarriedFieldNames().Contains("Bindings"));
+			ClassicAssert.IsFalse(CarriedFieldNames().Contains("Bindings"));
 			ThousandAndFirst.Simulation.City.KingdomBindingTable after;
-			Assert.IsTrue(registry.TryRead(out after, out fault), fault.ToString());
+			ClassicAssert.IsTrue(registry.TryRead(out after, out fault), fault.ToString());
 			ThousandAndFirst.Simulation.City.KingdomBinding binding;
-			Assert.IsTrue(after.TryGet(7, ThousandAndFirst.Simulation.City.KingdomBindingKind.Resident, out binding),
+			ClassicAssert.IsTrue(after.TryGet(7, ThousandAndFirst.Simulation.City.KingdomBindingKind.Resident, out binding),
 				"a body bound in the city the founder walked out of is still bound after they walk into the other");
-			Assert.AreEqual("JoppaWorld.11.22.1.1.10", binding.ZoneId);
-			Assert.AreEqual(700L, binding.MintedTick);
+			ClassicAssert.AreEqual("JoppaWorld.11.22.1.1.10", binding.ZoneId);
+			ClassicAssert.AreEqual(700L, binding.MintedTick);
 		}
 
 		/// <summary>Every city carries its own book, and the two books are never the same object:
@@ -677,27 +678,27 @@ namespace ThousandAndFirst.Tests
 			capturedSeat.ReadFrom(seat);
 			KingdomSettlement nowSeated = new KingdomSettlement();
 			away.WriteTo(nowSeated);
-			Assert.AreNotSame(capturedSeat.City, nowSeated.City);
-			Assert.AreEqual(1, capturedSeat.City.ResidentCount);
-			Assert.AreEqual(1, nowSeated.City.ResidentCount);
+			ClassicAssert.AreNotSame(capturedSeat.City, nowSeated.City);
+			ClassicAssert.AreEqual(1, capturedSeat.City.ResidentCount);
+			ClassicAssert.AreEqual(1, nowSeated.City.ResidentCount);
 			int index;
-			Assert.IsTrue(capturedSeat.City.TryResidentRow(7, out index));
-			Assert.IsFalse(capturedSeat.City.TryResidentRow(9, out index), "one city's roll must never appear on the other's");
-			Assert.IsTrue(nowSeated.City.TryResidentRow(9, out index));
-			Assert.IsFalse(nowSeated.City.TryResidentRow(7, out index));
+			ClassicAssert.IsTrue(capturedSeat.City.TryResidentRow(7, out index));
+			ClassicAssert.IsFalse(capturedSeat.City.TryResidentRow(9, out index), "one city's roll must never appear on the other's");
+			ClassicAssert.IsTrue(nowSeated.City.TryResidentRow(9, out index));
+			ClassicAssert.IsFalse(nowSeated.City.TryResidentRow(7, out index));
 			ThousandAndFirst.Simulation.City.KingdomCityState capturedState;
 			ThousandAndFirst.Simulation.City.KingdomCityState seatedState;
 			ThousandAndFirst.Simulation.City.KingdomCityFault fault;
-			Assert.IsTrue(capturedSeat.City.TryRead(out capturedState, out fault), fault.ToString());
-			Assert.IsTrue(nowSeated.City.TryRead(out seatedState, out fault), fault.ToString());
-			Assert.IsTrue(capturedState.TryResident(0,
+			ClassicAssert.IsTrue(capturedSeat.City.TryRead(out capturedState, out fault), fault.ToString());
+			ClassicAssert.IsTrue(nowSeated.City.TryRead(out seatedState, out fault), fault.ToString());
+			ClassicAssert.IsTrue(capturedState.TryResident(0,
 				out ThousandAndFirst.Simulation.City.KingdomResidentRow captured));
-			Assert.IsTrue(seatedState.TryResident(0,
+			ClassicAssert.IsTrue(seatedState.TryResident(0,
 				out ThousandAndFirst.Simulation.City.KingdomResidentRow seated));
-			Assert.AreEqual("origin-7", captured.Origin);
-			Assert.AreEqual("arrival-7", captured.Arrived);
-			Assert.AreEqual("origin-9", seated.Origin);
-			Assert.AreEqual("arrival-9", seated.Arrived);
+			ClassicAssert.AreEqual("origin-7", captured.Origin);
+			ClassicAssert.AreEqual("arrival-7", captured.Arrived);
+			ClassicAssert.AreEqual("origin-9", seated.Origin);
+			ClassicAssert.AreEqual("arrival-9", seated.Arrived);
 		}
 
 		/// <summary>Writes one settler onto a city's book through its only publisher, so the
@@ -707,9 +708,9 @@ namespace ThousandAndFirst.Tests
 		{
 			ThousandAndFirst.Simulation.City.KingdomCityState state;
 			ThousandAndFirst.Simulation.City.KingdomCityFault fault;
-			Assert.IsTrue(city.City.TryRead(out state, out fault), fault.ToString());
+			ClassicAssert.IsTrue(city.City.TryRead(out state, out fault), fault.ToString());
 			ThousandAndFirst.Simulation.City.KingdomCityState peopled;
-			Assert.IsTrue(state.TryWithResidents(new ThousandAndFirst.Simulation.City.KingdomResidentRow[1]
+			ClassicAssert.IsTrue(state.TryWithResidents(new ThousandAndFirst.Simulation.City.KingdomResidentRow[1]
 			{
 				new ThousandAndFirst.Simulation.City.KingdomResidentRow(residentId, "Ptoh", 0, 0, 400L, 0, 0, 0,
 					ThousandAndFirst.Simulation.City.KingdomDayShape.Hearth,
@@ -719,7 +720,7 @@ namespace ThousandAndFirst.Tests
 						ThousandAndFirst.Simulation.City.KingdomBrinkWindow.None, null, 0, null,
 						"origin-" + residentId, "arrival-" + residentId)
 			}, out peopled, out fault), fault.ToString());
-			Assert.IsTrue(city.City.TryPublish(peopled, out fault), fault.ToString());
+			ClassicAssert.IsTrue(city.City.TryPublish(peopled, out fault), fault.ToString());
 		}
 
 		/// <summary>A seat that has room for two of a city's fields and no more. Stands in for the

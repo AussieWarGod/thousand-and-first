@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -27,7 +28,7 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int publish = market.IndexOf("if (!PublishMarketTierAcknowledgement", commit,
 				StringComparison.Ordinal);
-			Assert.Greater(commit, 0); Assert.Greater(publish, commit);
+			ClassicAssert.Greater(commit, 0); ClassicAssert.Greater(publish, commit);
 			StringAssert.Contains("System.HasShopkeeper = false", market);
 		}
 
@@ -68,7 +69,7 @@ namespace ThousandAndFirst.Tests
 			string authority = Read("Growth/KingdomMarketProviderAuthority.cs");
 			string office = Read("Growth/KingdomGrowth.z18b.MarketOffice.cs");
 			string projection = Read("Growth/KingdomGrowth.z18c.MarketProjection.cs");
-			Assert.GreaterOrEqual(Occurrences(marker,
+			ClassicAssert.GreaterOrEqual(Occurrences(marker,
 				"KingdomMarketProviderAuthority.TryProve"), 2);
 			StringAssert.Contains("survey.InvalidateBenefits()", authority);
 			StringAssert.Contains("TryMarketServiceStanding", authority);
@@ -127,15 +128,15 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("TryCommitLegendaryMarketProjection", handoff);
 			StringAssert.DoesNotContain("RemoveIntProperty(\"_stock\")", detachment);
 			StringAssert.DoesNotContain("Obliterate", custody + detachment + projection + handoff);
-			Assert.Less(File.ReadAllLines(Path.Combine(TestMain.RepositoryRoot,
+			ClassicAssert.Less(File.ReadAllLines(Path.Combine(TestMain.RepositoryRoot,
 				"Growth/KingdomMarketStockCustody.cs")).Length, 300);
-			Assert.Less(File.ReadAllLines(Path.Combine(TestMain.RepositoryRoot,
+			ClassicAssert.Less(File.ReadAllLines(Path.Combine(TestMain.RepositoryRoot,
 				"Growth/KingdomMarketStockDetachment.cs")).Length, 300);
-			Assert.Less(File.ReadAllLines(Path.Combine(TestMain.RepositoryRoot,
+			ClassicAssert.Less(File.ReadAllLines(Path.Combine(TestMain.RepositoryRoot,
 				"Growth/KingdomMarketStockProjection.cs")).Length, 300);
-			Assert.Less(File.ReadAllLines(Path.Combine(TestMain.RepositoryRoot,
+			ClassicAssert.Less(File.ReadAllLines(Path.Combine(TestMain.RepositoryRoot,
 				"Growth/KingdomMarketStockSplit.cs")).Length, 300);
-			Assert.Less(File.ReadAllLines(Path.Combine(TestMain.RepositoryRoot,
+			ClassicAssert.Less(File.ReadAllLines(Path.Combine(TestMain.RepositoryRoot,
 				"Experience/KingdomGuestbook.z01b.MarketHandoff.cs")).Length, 300);
 		}
 
@@ -156,9 +157,9 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int complete = handoff.IndexOf("CompleteHandoff", retirePrior,
 				StringComparison.Ordinal);
-			Assert.Greater(seal, 0); Assert.Greater(prepare, seal);
-			Assert.Greater(transfer, prepare); Assert.Greater(retirePrior, transfer);
-			Assert.Greater(complete, retirePrior);
+			ClassicAssert.Greater(seal, 0); ClassicAssert.Greater(prepare, seal);
+			ClassicAssert.Greater(transfer, prepare); ClassicAssert.Greater(retirePrior, transfer);
+			ClassicAssert.Greater(complete, retirePrior);
 			StringAssert.Contains("baseBlank", projection);
 			StringAssert.Contains("baseExact", projection);
 			StringAssert.Contains("if (!baseBlank && !baseExact) return false", projection);
@@ -184,7 +185,7 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int configure = lifecycle.IndexOf("ConfigureLegendaryTraderShop", apply,
 				StringComparison.Ordinal);
-			Assert.Greater(enrol, apply); Assert.Greater(configure, enrol);
+			ClassicAssert.Greater(enrol, apply); ClassicAssert.Greater(configure, enrol);
 			StringAssert.Contains("HandoffResidentId", projection + handoff);
 			StringAssert.Contains("PriorResidentId", projection + handoff);
 			StringAssert.Contains("KingdomResidentStanding.Dead", terminal);
@@ -218,8 +219,8 @@ namespace ThousandAndFirst.Tests
 				pending, StringComparison.Ordinal);
 			int pendingResult = projection.IndexOf("if (!pendingStock) return true", clear,
 				StringComparison.Ordinal);
-			Assert.Greater(pending, 0); Assert.Greater(clear, pending);
-			Assert.Greater(pendingResult, clear);
+			ClassicAssert.Greater(pending, 0); ClassicAssert.Greater(clear, pending);
+			ClassicAssert.Greater(pendingResult, clear);
 			StringAssert.Contains("HandoffPrepared = marker.HandoffPrepared", removal);
 			StringAssert.Contains("HandoffResidentId = marker.HandoffResidentId", removal);
 			StringAssert.Contains("PriorResidentId = marker.PriorResidentId", removal);
@@ -241,8 +242,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int finish = accession.IndexOf("FinishAccessionBody", citizenship,
 				StringComparison.Ordinal);
-			Assert.Greater(observe, 0); Assert.Greater(citizenship, observe);
-			Assert.Greater(finish, citizenship);
+			ClassicAssert.Greater(observe, 0); ClassicAssert.Greater(citizenship, observe);
+			ClassicAssert.Greater(finish, citizenship);
 			StringAssert.Contains("TryObserveAccessionLoss", repair);
 			StringAssert.Contains("SuccessorMarketBlocked", accession);
 			StringAssert.Contains("SuccessorMarketBlocked", repair);
@@ -250,10 +251,10 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int repairStart = repair.IndexOf("internal static KingdomAccessionOutcome TryRepairAccession",
 				StringComparison.Ordinal);
-			Assert.Less(accession.IndexOf("SuccessorMarketBlocked", accedeStart,
+			ClassicAssert.Less(accession.IndexOf("SuccessorMarketBlocked", accedeStart,
 				StringComparison.Ordinal), accession.IndexOf("KingdomResidentRules.TryRemove",
 				accedeStart, StringComparison.Ordinal));
-			Assert.Less(repair.IndexOf("SuccessorMarketBlocked", repairStart,
+			ClassicAssert.Less(repair.IndexOf("SuccessorMarketBlocked", repairStart,
 				StringComparison.Ordinal), repair.IndexOf("KingdomResidentRules.TryRemove",
 				repairStart, StringComparison.Ordinal));
 			StringAssert.Contains("KingdomAccessionOutcome.RepairRequired", accession + repair);
@@ -263,8 +264,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int complete = office.IndexOf("TryCompleteOfficeVacancy", retire,
 				StringComparison.Ordinal);
-			Assert.Greater(prepare, 0); Assert.Greater(cleanup, prepare);
-			Assert.Greater(retire, cleanup); Assert.Greater(complete, retire);
+			ClassicAssert.Greater(prepare, 0); ClassicAssert.Greater(cleanup, prepare);
+			ClassicAssert.Greater(retire, cleanup); ClassicAssert.Greater(complete, retire);
 			StringAssert.Contains("KingdomCivicOfficeVacancyCause.AuthorityLost", office);
 			StringAssert.Contains("TryPrepareTransaction", stock);
 			StringAssert.Contains("TryCommitTransaction", stock);
@@ -280,8 +281,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int failClosed = stock.IndexOf("System.HasShopkeeper = false", legendCommit,
 				StringComparison.Ordinal);
-			Assert.Greater(preview, 0); Assert.Greater(legendCommit, preview);
-			Assert.Greater(failClosed, legendCommit);
+			ClassicAssert.Greater(preview, 0); ClassicAssert.Greater(legendCommit, preview);
+			ClassicAssert.Greater(failClosed, legendCommit);
 		}
 
 		[Test]
@@ -304,11 +305,11 @@ namespace ThousandAndFirst.Tests
 			int gate = death.IndexOf("SuccessorMarketBlocked", StringComparison.Ordinal);
 			int transfer = death.IndexOf("SetPlayerBodyAndRebindAll(game, founder", gate,
 				StringComparison.Ordinal);
-			Assert.Greater(gate, 0); Assert.Greater(transfer, gate);
+			ClassicAssert.Greater(gate, 0); ClassicAssert.Greater(transfer, gate);
 			int coldGate = recovery.IndexOf("SuccessorMarketBlocked", StringComparison.Ordinal);
 			int coldTransfer = recovery.IndexOf("SetPlayerBodyAndRebindAll(game, founder",
 				coldGate, StringComparison.Ordinal);
-			Assert.Greater(coldGate, 0); Assert.Greater(coldTransfer, coldGate);
+			ClassicAssert.Greater(coldGate, 0); ClassicAssert.Greater(coldTransfer, coldGate);
 			StringAssert.Contains("PendingDeathToken", interop);
 			StringAssert.Contains("PendingAccessionRepairResidentId", interop);
 			StringAssert.Contains("DeathSelectionInProgress", interop);
@@ -319,8 +320,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int selectionUnlock = succession.IndexOf("DeathSelectionInProgress = false",
 				deathCall, StringComparison.Ordinal);
-			Assert.Greater(selectionLock, 0); Assert.Greater(deathCall, selectionLock);
-			Assert.Greater(selectionUnlock, deathCall);
+			ClassicAssert.Greater(selectionLock, 0); ClassicAssert.Greater(deathCall, selectionLock);
+			ClassicAssert.Greater(selectionUnlock, deathCall);
 			StringAssert.Contains("TryResolveBoundBody(System, row.ResidentId",
 				heirs);
 			StringAssert.Contains("true, out GameObject body", heirs);
@@ -365,11 +366,11 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int stackCheck = inventory.IndexOf("CheckStacks();", took,
 				StringComparison.Ordinal);
-			Assert.Greater(stockIn, 0); Assert.Greater(saleSplit, 0);
-			Assert.Greater(stockIn, saleSplit); Assert.Greater(take, stockIn);
-			Assert.Greater(stockOut, 0); Assert.Greater(buySplit, 0);
-			Assert.Greater(stockOut, buySplit); Assert.Greater(took, 0);
-			Assert.Greater(stackCheck, took);
+			ClassicAssert.Greater(stockIn, 0); ClassicAssert.Greater(saleSplit, 0);
+			ClassicAssert.Greater(stockIn, saleSplit); ClassicAssert.Greater(take, stockIn);
+			ClassicAssert.Greater(stockOut, 0); ClassicAssert.Greater(buySplit, 0);
+			ClassicAssert.Greater(stockOut, buySplit); ClassicAssert.Greater(took, 0);
+			ClassicAssert.Greater(stackCheck, took);
 			StringAssert.Contains("Trader.UseDrams", trade);
 			StringAssert.Contains("Trader.GiveDrams", trade);
 			StringAssert.Contains("AssumeTradersHaveWater", trade);
@@ -412,9 +413,9 @@ namespace ThousandAndFirst.Tests
 			int prepareSource = handoff.IndexOf("PrepareSourceHandoff", StringComparison.Ordinal);
 			int prepareTarget = handoff.IndexOf("TryPrepareLegendaryMarketProjection",
 				StringComparison.Ordinal);
-			Assert.Greater(graphPreflight, 0);
-			Assert.Greater(prepareSource, graphPreflight);
-			Assert.Greater(prepareTarget, prepareSource);
+			ClassicAssert.Greater(graphPreflight, 0);
+			ClassicAssert.Greater(prepareSource, graphPreflight);
+			ClassicAssert.Greater(prepareTarget, prepareSource);
 			StringAssert.Contains("ReproveResumingHandoff", handoff);
 			StringAssert.Contains("TryProveLegendary", Read(
 				"Experience/KingdomGuestbook.z01d.MarketHandoffSource.cs"));
@@ -445,8 +446,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int beginAbandon = lodgeTerminal.IndexOf("TryBeginLodgeAbandon", sealOutcome,
 				StringComparison.Ordinal);
-			Assert.Greater(sealOutcome, 0);
-			Assert.Greater(beginAbandon, sealOutcome);
+			ClassicAssert.Greater(sealOutcome, 0);
+			ClassicAssert.Greater(beginAbandon, sealOutcome);
 			StringAssert.Contains("return receipts == 1 && identities == 1", lodgeTerminal);
 			StringAssert.Contains("return receipts == 0 || receipts == 1 && identities == 1",
 				lodgeTerminal);
@@ -458,9 +459,9 @@ namespace ThousandAndFirst.Tests
 				terminalCheckpoint, StringComparison.Ordinal);
 			int lifecycleRemoval = lifecycleDrive.IndexOf("TryRemoveReleasedLodge",
 				targetDeadCheckpoint, StringComparison.Ordinal);
-			Assert.Greater(terminalCheckpoint, 0);
-			Assert.Greater(targetDeadCheckpoint, terminalCheckpoint);
-			Assert.Greater(lifecycleRemoval, targetDeadCheckpoint);
+			ClassicAssert.Greater(terminalCheckpoint, 0);
+			ClassicAssert.Greater(targetDeadCheckpoint, terminalCheckpoint);
+			ClassicAssert.Greater(lifecycleRemoval, targetDeadCheckpoint);
 			StringAssert.Contains("TryRetireCurrent", projection);
 			StringAssert.Contains("override void FinalizeCopy", projection);
 			StringAssert.Contains("KingdomMarketStockProtection.TryRetire(ParentObject)",
@@ -481,10 +482,10 @@ namespace ThousandAndFirst.Tests
 			int completed = handoff.IndexOf("CompleteHandoff()", StringComparison.Ordinal);
 			int sourceClose = handoff.IndexOf("CompleteCommittedSourceResidue", completed,
 				StringComparison.Ordinal);
-			Assert.Greater(sourceClose, completed);
+			ClassicAssert.Greater(sourceClose, completed);
 			int residue = handoff.IndexOf("CompleteCommittedSourceResidue",
 				StringComparison.Ordinal);
-			Assert.Greater(residue, 0);
+			ClassicAssert.Greater(residue, 0);
 			StringAssert.Contains("TryCommitLifecycleMarketSource", Read(
 				"Experience/KingdomGuestbook.z01d.MarketHandoffSource.cs"));
 			string sourceHelper = Read(
@@ -503,8 +504,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int committedMarketClear = committedClear.IndexOf("MarketTransferTargetProperty, null",
 				StringComparison.Ordinal);
-			Assert.Greater(committedStockClear, 0);
-			Assert.Greater(committedMarketClear, committedStockClear);
+			ClassicAssert.Greater(committedStockClear, 0);
+			ClassicAssert.Greater(committedMarketClear, committedStockClear);
 			int committedCleanupCall = sourceHelper.IndexOf("TryClearCommittedHandoff(Target",
 				StringComparison.Ordinal);
 			int committedCheckpoint = sourceHelper.IndexOf(
@@ -512,9 +513,9 @@ namespace ThousandAndFirst.Tests
 				committedCleanupCall, StringComparison.Ordinal);
 			int committedSourceRemoval = sourceHelper.IndexOf("source.RemovePart(exact)",
 				committedCheckpoint, StringComparison.Ordinal);
-			Assert.Greater(committedCleanupCall, 0);
-			Assert.Greater(committedCheckpoint, committedCleanupCall);
-			Assert.Greater(committedSourceRemoval, committedCheckpoint);
+			ClassicAssert.Greater(committedCleanupCall, 0);
+			ClassicAssert.Greater(committedCheckpoint, committedCleanupCall);
+			ClassicAssert.Greater(committedSourceRemoval, committedCheckpoint);
 			StringAssert.Contains("CompletedDeadSourceHandoff", sourceHelper);
 			StringAssert.Contains("TryOpenLodgeForTarget", sourceHelper);
 			StringAssert.Contains("lodge == Open.Id", sourceHelper);
@@ -535,8 +536,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int abortMarketClear = abort.IndexOf("MarketTransferTargetProperty, null",
 				StringComparison.Ordinal);
-			Assert.Greater(abortStockClear, 0);
-			Assert.Greater(abortMarketClear, abortStockClear,
+			ClassicAssert.Greater(abortStockClear, 0);
+			ClassicAssert.Greater(abortMarketClear, abortStockClear,
 				"durable cleanup clears stock intent first");
 			string abortAuthority = Read("Growth/KingdomMarketLegendaryAbortAuthority.cs");
 			StringAssert.Contains("MarketSourceDead", abortAuthority);
@@ -578,9 +579,9 @@ namespace ThousandAndFirst.Tests
 				terminalMutation);
 			StringAssert.Contains("Target.GetPart<r_KingdomLegendaryMarketProjection>() != null",
 				terminalMutation);
-			Assert.Less(File.ReadAllLines(Path.Combine(TestMain.RepositoryRoot,
+			ClassicAssert.Less(File.ReadAllLines(Path.Combine(TestMain.RepositoryRoot,
 					"Growth/KingdomMarketHandoffTerminalAuthority.cs")).Length, 300);
-			Assert.Less(File.ReadAllLines(Path.Combine(TestMain.RepositoryRoot,
+			ClassicAssert.Less(File.ReadAllLines(Path.Combine(TestMain.RepositoryRoot,
 					"Growth/KingdomMarketHandoffTerminalMutation.cs")).Length, 300);
 			string officeContext = Read("Experience/KingdomOfficeRuntime.Context.cs");
 			string officeCommands = Read("Experience/KingdomOfficeRuntime.Commands.cs");
@@ -595,8 +596,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomMarketProviderAuthority.LiveResident",
 				Read("Growth/KingdomMarketStockCustody.cs"));
 			string detachment = Read("Growth/KingdomMarketStockDetachment.cs") + Read("Growth/KingdomMarketStockProtection.cs");
-			Assert.AreEqual(2, Occurrences(detachment, "TryPrepareTransaction(System"));
-			Assert.AreEqual(2, Occurrences(detachment, "TryCommitTransaction(System"));
+			ClassicAssert.AreEqual(2, Occurrences(detachment, "TryPrepareTransaction(System"));
+			ClassicAssert.AreEqual(2, Occurrences(detachment, "TryCommitTransaction(System"));
 			string rollback = Read("Growth/KingdomMarketRemoval.Rollback.cs");
 			StringAssert.Contains("catch (Exception) { restored = false; }", rollback);
 			StringAssert.Contains("MatchesStock", rollback);

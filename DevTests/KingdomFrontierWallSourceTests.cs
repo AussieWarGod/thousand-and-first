@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -37,27 +38,27 @@ namespace ThousandAndFirst.Tests
 			XDocument document = XDocument.Parse(TestMain.ReadRepositoryText("ObjectBlueprints.xml"));
 			XElement brinestalk = Blueprint(document, "r_KingdomStructureBrinestalkWall");
 			XElement rock = Blueprint(document, "r_KingdomStructureRockWall");
-			Assert.AreEqual("BrinestalkWall", (string)brinestalk.Attribute("Inherits"));
-			Assert.AreEqual("BaseWallRock", (string)rock.Attribute("Inherits"));
+			ClassicAssert.AreEqual("BrinestalkWall", (string)brinestalk.Attribute("Inherits"));
+			ClassicAssert.AreEqual("BaseWallRock", (string)rock.Attribute("Inherits"));
 			foreach (XElement wrapper in new XElement[] { brinestalk, rock })
 			{
-				Assert.IsTrue(Child(wrapper, "removebuilder", "Animated"));
-				Assert.IsTrue(Child(wrapper, "removebuilder", "RandomTile"));
-				Assert.IsTrue(Child(wrapper, "removepart", "Graffitied"));
-				Assert.IsTrue(Child(wrapper, "removetag", "NamingTag"));
-				Assert.IsTrue(Child(wrapper, "removetag", "Animatable"));
-				Assert.IsTrue(Child(wrapper, "removetag",
+				ClassicAssert.IsTrue(Child(wrapper, "removebuilder", "Animated"));
+				ClassicAssert.IsTrue(Child(wrapper, "removebuilder", "RandomTile"));
+				ClassicAssert.IsTrue(Child(wrapper, "removepart", "Graffitied"));
+				ClassicAssert.IsTrue(Child(wrapper, "removetag", "NamingTag"));
+				ClassicAssert.IsTrue(Child(wrapper, "removetag", "Animatable"));
+				ClassicAssert.IsTrue(Child(wrapper, "removetag",
 					"DynamicObjectsTable:AnimatableFurniture"));
-				Assert.IsFalse(Child(wrapper, "removetag", "PaintedWall"));
+				ClassicAssert.IsFalse(Child(wrapper, "removetag", "PaintedWall"));
 			}
 
-			Assert.AreEqual("r_KingdomStructureBrinestalkWall",
+			ClassicAssert.AreEqual("r_KingdomStructureBrinestalkWall",
 				(string)Blueprint(document, "r_KingdomPalisade").Attribute("Inherits"));
-			Assert.AreEqual("r_KingdomStructureRockWall",
+			ClassicAssert.AreEqual("r_KingdomStructureRockWall",
 				(string)Blueprint(document, "r_KingdomRampart").Attribute("Inherits"));
-			Assert.AreEqual("Rubble",
+			ClassicAssert.AreEqual("Rubble",
 				(string)Blueprint(document, "r_KingdomRubbleWall").Attribute("Inherits"));
-			Assert.IsTrue(Child(Blueprint(document, "r_KingdomRubbleWall"),
+			ClassicAssert.IsTrue(Child(Blueprint(document, "r_KingdomRubbleWall"),
 				"removebuilder", "RandomTile"));
 		}
 
@@ -68,26 +69,26 @@ namespace ThousandAndFirst.Tests
 			XElement palisade = Blueprint(document, "r_KingdomPalisade");
 			XElement rampart = Blueprint(document, "r_KingdomRampart");
 			XElement rubble = Blueprint(document, "r_KingdomRubbleWall");
-			Assert.AreEqual("Walls/wall_brinestalk-00000000.png",
+			ClassicAssert.AreEqual("Walls/wall_brinestalk-00000000.png",
 				Attribute(palisade, "part", "Render", "Tile"));
-			Assert.AreEqual("900", Attribute(palisade, "part", "Physics", "Weight"));
-			Assert.AreEqual("120", Attribute(palisade, "stat", "Hitpoints", "Value"));
-			Assert.AreEqual("4", Attribute(palisade, "stat", "AV", "Value"));
+			ClassicAssert.AreEqual("900", Attribute(palisade, "part", "Physics", "Weight"));
+			ClassicAssert.AreEqual("120", Attribute(palisade, "stat", "Hitpoints", "Value"));
+			ClassicAssert.AreEqual("4", Attribute(palisade, "stat", "AV", "Value"));
 			StringAssert.Contains("Cut thornbrush", Attribute(palisade, "part", "Description", "Short"));
 
-			Assert.AreEqual("Tiles/wall_rock-00000000.bmp",
+			ClassicAssert.AreEqual("Tiles/wall_rock-00000000.bmp",
 				Attribute(rampart, "part", "Render", "Tile"));
-			Assert.AreEqual("4000", Attribute(rampart, "part", "Physics", "Weight"));
-			Assert.AreEqual("400", Attribute(rampart, "stat", "Hitpoints", "Value"));
-			Assert.AreEqual("10", Attribute(rampart, "stat", "AV", "Value"));
+			ClassicAssert.AreEqual("4000", Attribute(rampart, "part", "Physics", "Weight"));
+			ClassicAssert.AreEqual("400", Attribute(rampart, "stat", "Hitpoints", "Value"));
+			ClassicAssert.AreEqual("10", Attribute(rampart, "stat", "AV", "Value"));
 			StringAssert.Contains("Fieldstone", Attribute(rampart, "part", "Description", "Short"));
 
-			Assert.AreEqual("3000", Attribute(rubble, "part", "Physics", "Weight"));
-			Assert.AreEqual("220", Attribute(rubble, "stat", "Hitpoints", "Value"));
-			Assert.AreEqual("5", Attribute(rubble, "stat", "AV", "Value"));
-			Assert.AreEqual("Tiles2/sw_rubble_2.bmp",
+			ClassicAssert.AreEqual("3000", Attribute(rubble, "part", "Physics", "Weight"));
+			ClassicAssert.AreEqual("220", Attribute(rubble, "stat", "Hitpoints", "Value"));
+			ClassicAssert.AreEqual("5", Attribute(rubble, "stat", "AV", "Value"));
+			ClassicAssert.AreEqual("Tiles2/sw_rubble_2.bmp",
 				Attribute(rubble, "part", "Render", "Tile"));
-			Assert.AreNotEqual(Attribute(rampart, "part", "Render", "Tile"),
+			ClassicAssert.AreNotEqual(Attribute(rampart, "part", "Render", "Tile"),
 				Attribute(rubble, "part", "Render", "Tile"));
 			StringAssert.Contains("already here", Attribute(rubble, "part", "Description", "Short"));
 		}
@@ -97,24 +98,24 @@ namespace ThousandAndFirst.Tests
 		{
 			XDocument document = XDocument.Parse(TestMain.ReadRepositoryText("ObjectBlueprints.xml"));
 			XElement profile = Blueprint(document, "r_KingdomOpenCreedFurnitureProfile");
-			Assert.AreEqual("Furniture", (string)profile.Attribute("Inherits"));
-			Assert.IsTrue(Child(profile, "removepart", "Graffitied"));
-			Assert.AreEqual("false", Attribute(profile, "part", "Physics", "Solid"));
-			Assert.IsFalse(profile.Elements("part").Any(part =>
+			ClassicAssert.AreEqual("Furniture", (string)profile.Attribute("Inherits"));
+			ClassicAssert.IsTrue(Child(profile, "removepart", "Graffitied"));
+			ClassicAssert.AreEqual("false", Attribute(profile, "part", "Physics", "Solid"));
+			ClassicAssert.IsFalse(profile.Elements("part").Any(part =>
 				(string)part.Attribute("Name") == "Render"));
 			foreach (string name in new string[] { "r_KingdomSnapjawTrailDen",
 				"r_KingdomIssachariRiflePorch", "r_KingdomTemplarPurityArsenal",
 				"r_KingdomWardensWatchLodge" })
 			{
 				XElement work = Blueprint(document, name);
-				Assert.AreEqual("r_KingdomOpenCreedFurnitureProfile",
+				ClassicAssert.AreEqual("r_KingdomOpenCreedFurnitureProfile",
 					(string)work.Attribute("Inherits"), name);
-				Assert.AreEqual("false", Attribute(work, "part", "Physics", "Solid"), name);
+				ClassicAssert.AreEqual("false", Attribute(work, "part", "Physics", "Solid"), name);
 				XElement render = work.Elements("part").Single(part =>
 					(string)part.Attribute("Name") == "Render");
-				Assert.IsFalse(string.IsNullOrWhiteSpace((string)render.Attribute("RenderString")),
+				ClassicAssert.IsFalse(string.IsNullOrWhiteSpace((string)render.Attribute("RenderString")),
 					name);
-				Assert.IsNull(render.Attribute("Tile"), name + " inherited a wall tile");
+				ClassicAssert.IsNull(render.Attribute("Tile"), name + " inherited a wall tile");
 			}
 		}
 
@@ -142,7 +143,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = TestMain.ReadRepositoryText(
 				"Debug/KingdomArchitectureGalleryWishes.VisualCases.cs");
-			Assert.AreEqual(3, Occurrences(source, "AddWallTopologyCase(result"));
+			ClassicAssert.AreEqual(3, Occurrences(source, "AddWallTopologyCase(result"));
 			foreach (string key in new string[] { "palisade", "rampart", "rubblewall" })
 				StringAssert.Contains("AddWallTopologyCase(result, \"" + key + "\"", source);
 			StringAssert.DoesNotContain("AddObjectCase(result, \"palisade\"", source);
@@ -153,10 +154,10 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int end = source.IndexOf("private static void AddLineCase", start,
 				StringComparison.Ordinal);
-			Assert.Greater(start, 0);
-			Assert.Greater(end, start);
+			ClassicAssert.Greater(start, 0);
+			ClassicAssert.Greater(end, start);
 			string method = source.Substring(start, end - start);
-			Assert.AreEqual(24, Occurrences(method, "item.Placements.Add"));
+			ClassicAssert.AreEqual(24, Occurrences(method, "item.Placements.Add"));
 			foreach (string role in new string[] { "single", "horizontal-centre",
 				"vertical-centre", "corner-turn", "tee-centre", "cross-centre",
 				"gate-adjacent-west", "gate", "gate-adjacent-east" })
@@ -169,26 +170,26 @@ namespace ThousandAndFirst.Tests
 
 			MatchCollection placements = Regex.Matches(method,
 				"At\\(\"[^\"]+\", (?:Wall|Gate), ([0-9]+), ([0-9]+)\\)");
-			Assert.AreEqual(24, placements.Count);
+			ClassicAssert.AreEqual(24, placements.Count);
 			HashSet<string> occupied = new HashSet<string>(StringComparer.Ordinal);
 			foreach (Match placement in placements)
 			{
 				int x = int.Parse(placement.Groups[1].Value);
 				int y = int.Parse(placement.Groups[2].Value);
-				Assert.GreaterOrEqual(x, 0);
-				Assert.Less(x, 13);
-				Assert.GreaterOrEqual(y, 0);
-				Assert.Less(y, 9);
-				Assert.IsTrue(occupied.Add(x + "," + y), "duplicate visual cell " + x + "," + y);
+				ClassicAssert.GreaterOrEqual(x, 0);
+				ClassicAssert.Less(x, 13);
+				ClassicAssert.GreaterOrEqual(y, 0);
+				ClassicAssert.Less(y, 9);
+				ClassicAssert.IsTrue(occupied.Add(x + "," + y), "duplicate visual cell " + x + "," + y);
 			}
 		}
 
 		private static string ObjectBlock(string Source, string Name)
 		{
 			int start = Source.IndexOf("<object Name=\"" + Name + "\"", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, Name);
+			ClassicAssert.GreaterOrEqual(start, 0, Name);
 			int end = Source.IndexOf("</object>", start, StringComparison.Ordinal);
-			Assert.Greater(end, start, Name);
+			ClassicAssert.Greater(end, start, Name);
 			return Source.Substring(start, end - start);
 		}
 

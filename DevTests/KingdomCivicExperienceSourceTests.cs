@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -104,13 +105,13 @@ namespace ThousandAndFirst.Tests
 			int capture = runtime.IndexOf("Capture(f, body, cause", StringComparison.Ordinal);
 			int persist = runtime.IndexOf("Save(f, next)", StringComparison.Ordinal);
 			int resume = runtime.IndexOf("Resume(f, index, body)", StringComparison.Ordinal);
-			Assert.Greater(capture, 0); Assert.Greater(persist, capture); Assert.Greater(resume, persist);
+			ClassicAssert.Greater(capture, 0); ClassicAssert.Greater(persist, capture); ClassicAssert.Greater(resume, persist);
 			int death = runtime.IndexOf("TryPublishWitnessedDeath", StringComparison.Ordinal);
 			int vacancy = runtime.IndexOf("Roles(f, r, body)", StringComparison.Ordinal);
 			int account = runtime.IndexOf("Accounts(f, index, ref r)", StringComparison.Ordinal);
 			int forget = runtime.IndexOf("ClearCountedProperties(f, r, body)", StringComparison.Ordinal);
-			Assert.Greater(death, 0); Assert.Greater(vacancy, death); Assert.Greater(account, vacancy);
-			Assert.Greater(forget, account);
+			ClassicAssert.Greater(death, 0); ClassicAssert.Greater(vacancy, death); ClassicAssert.Greater(account, vacancy);
+			ClassicAssert.Greater(forget, account);
 			StringAssert.Contains("!DeadExact(f, r) || !Office(f, r, body)", roles);
 			StringAssert.Contains("KingdomExperienceRules.TryPrepareOfficeVacancy", roles);
 			StringAssert.Contains("KingdomOfficeRuntime.TryConcludeWitnessedDeath", roles);
@@ -119,7 +120,7 @@ namespace ThousandAndFirst.Tests
 			int prepared = accounts.IndexOf("TryPrepareAccounts(r, before", StringComparison.Ordinal);
 			int saved = accounts.IndexOf("Save(f, index, prepared)", StringComparison.Ordinal);
 			int written = accounts.IndexOf("PutMap(f, i, next)", StringComparison.Ordinal);
-			Assert.Greater(prepared, 0); Assert.Greater(saved, prepared); Assert.Greater(written, saved);
+			ClassicAssert.Greater(prepared, 0); ClassicAssert.Greater(saved, prepared); ClassicAssert.Greater(written, saved);
 			StringAssert.DoesNotContain("HonourDead(", offices + runtime + roles);
 			StringAssert.DoesNotContain("UpdateOffice(", offices + runtime + roles);
 			string reconcile = Read("Experience/KingdomOfficeRuntime.Reconcile.cs");
@@ -137,8 +138,8 @@ namespace ThousandAndFirst.Tests
 			int forgetLeaver = departure.IndexOf("KingdomResidentIdentity.Forget",
 				StringComparison.Ordinal);
 			int destroyed = departure.IndexOf("leaver.Obliterate()", StringComparison.Ordinal);
-			Assert.Greater(observe, 0); Assert.Greater(forgetLeaver, observe);
-			Assert.Greater(destroyed, forgetLeaver);
+			ClassicAssert.Greater(observe, 0); ClassicAssert.Greater(forgetLeaver, observe);
+			ClassicAssert.Greater(destroyed, forgetLeaver);
 			StringAssert.Contains("Predecessor", Read("Experience/KingdomExperienceRules.Office.cs"));
 		}
 
@@ -161,18 +162,18 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("TryOfficeCityState(System, prepared.SettlementId", commands);
 			StringAssert.Contains("CanCompleteOfficeDeathVacancy", commands);
 			StringAssert.Contains("TryCompleteOfficeDeathVacancy", commands);
-			Assert.Less(commands.IndexOf("CanCompleteOfficeDeathVacancy",
+			ClassicAssert.Less(commands.IndexOf("CanCompleteOfficeDeathVacancy",
 				StringComparison.Ordinal), commands.IndexOf("TryCleanupDeathProjection(System, prepared",
 				StringComparison.Ordinal));
 			StringAssert.Contains("receipt.VacancyCause == KingdomCivicOfficeVacancyCause.Death",
 				reconcile);
 			StringAssert.Contains("KingdomCivicOfficeVacancyCause cause = residentFound", reconcile);
-			Assert.Less(reconcile.IndexOf("row.Standing == KingdomResidentStanding.Dead",
+			ClassicAssert.Less(reconcile.IndexOf("row.Standing == KingdomResidentStanding.Dead",
 				StringComparison.Ordinal), reconcile.IndexOf("? KingdomCivicOfficeVacancyCause.AuthorityLost",
 				StringComparison.Ordinal));
 			StringAssert.Contains("context.State, out Failure", reconcile);
 			StringAssert.Contains("CanCompleteOfficeDeathVacancy", reconcile);
-			Assert.Less(reconcile.IndexOf("CanCompleteOfficeDeathVacancy",
+			ClassicAssert.Less(reconcile.IndexOf("CanCompleteOfficeDeathVacancy",
 				StringComparison.Ordinal), reconcile.IndexOf("TryCleanupDeathProjection(System, receipt",
 				StringComparison.Ordinal));
 			StringAssert.Contains("MarkDeathResidue", commands + reconcile + projection);
@@ -238,8 +239,8 @@ namespace ThousandAndFirst.Tests
 			int saved = death.IndexOf("Save(f, next)", StringComparison.Ordinal);
 			int marked = death.IndexOf("TryPublishWitnessedDeath", StringComparison.Ordinal);
 			int eligibility = death.IndexOf("Roles(f, r, body)", StringComparison.Ordinal);
-			Assert.Greater(captured, 0); Assert.Greater(saved, captured); Assert.Greater(marked, saved);
-			Assert.Greater(eligibility, marked);
+			ClassicAssert.Greater(captured, 0); ClassicAssert.Greater(saved, captured); ClassicAssert.Greater(marked, saved);
+			ClassicAssert.Greater(eligibility, marked);
 			StringAssert.Contains("if (r.Remembrance)", witness);
 			StringAssert.Contains("if (prior == null && !KingdomExperienceRules.TryCreateRemembranceEligibility", witness);
 			StringAssert.Contains("r.Settlement, r.SettlementName, r.Before.ResidentId, r.Before.Name, r.Tick", witness);
@@ -279,7 +280,7 @@ namespace ThousandAndFirst.Tests
 			string commands = Read("Experience/KingdomRemembranceRuntime.Commands.cs");
 			string projection = Read("Experience/KingdomRemembranceRuntime.Projection.cs");
 			string reconcile = Read("Experience/KingdomRemembranceRuntime.Reconcile.cs");
-			Assert.Less(commands.IndexOf("TryPrepareRemembranceProjection", StringComparison.Ordinal),
+			ClassicAssert.Less(commands.IndexOf("TryPrepareRemembranceProjection", StringComparison.Ordinal),
 				commands.IndexOf("EnsureProjection(System", StringComparison.Ordinal));
 			StringAssert.Contains("KnownProjectionState", projection);
 			StringAssert.Contains("PriorState(Carrier, Description, Marker)", projection);
@@ -347,7 +348,7 @@ namespace ThousandAndFirst.Tests
 			{
 				string root = Path.Combine(TestMain.RepositoryRoot, "Experience");
 				foreach (string file in Directory.GetFiles(root, prefixes[p] + "*.cs"))
-					Assert.Less(File.ReadAllLines(file).Length, 300, Path.GetFileName(file));
+					ClassicAssert.Less(File.ReadAllLines(file).Length, 300, Path.GetFileName(file));
 			}
 		}
 	}

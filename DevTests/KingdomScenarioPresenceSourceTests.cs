@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -95,7 +96,7 @@ namespace ThousandAndFirst.Tests
 				cursor = realizer.IndexOf("GetStringGameState(", cursor + 1,
 					StringComparison.Ordinal);
 			}
-			Assert.AreEqual(1, reads,
+			ClassicAssert.AreEqual(1, reads,
 				"one raw text read in the realizer: the engine seed, which follows the engine's "
 					+ "own contract");
 			// The stamp read moved with the presence reader; it is still exactly one, and still
@@ -109,7 +110,7 @@ namespace ThousandAndFirst.Tests
 				cursor = authority.IndexOf("GetStringGameState(", cursor + 1,
 					StringComparison.Ordinal);
 			}
-			Assert.AreEqual(1, authorityReads,
+			ClassicAssert.AreEqual(1, authorityReads,
 				"one raw text read in the authority: the stamp already proved present");
 		}
 	}

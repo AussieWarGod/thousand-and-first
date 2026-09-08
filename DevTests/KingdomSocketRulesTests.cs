@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -31,7 +32,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("civic", KingdomPlotRules.PlotSize.Small, null, KingdomPlotRules.PlotSize.Small, KingdomSocketRules.ChangeKind.Retype)]
 		public void ClassifyChange_MatchesTypeAndSizeExactly(string currentCategory, KingdomPlotRules.PlotSize currentSize, string targetCategory, KingdomPlotRules.PlotSize targetSize, KingdomSocketRules.ChangeKind expected)
 		{
-			Assert.AreEqual(expected, KingdomSocketRules.ClassifyChange(currentCategory, currentSize, targetCategory, targetSize));
+			ClassicAssert.AreEqual(expected, KingdomSocketRules.ClassifyChange(currentCategory, currentSize, targetCategory, targetSize));
 		}
 
 		[Test]
@@ -39,9 +40,9 @@ namespace ThousandAndFirst.Tests
 		{
 			string sameSet = KingdomSocketRules.VerbFor(KingdomSocketRules.ChangeKind.SameSet);
 			string retype = KingdomSocketRules.VerbFor(KingdomSocketRules.ChangeKind.Retype);
-			Assert.IsFalse(string.IsNullOrEmpty(sameSet));
-			Assert.IsFalse(string.IsNullOrEmpty(retype));
-			Assert.AreNotEqual(sameSet, retype);
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(sameSet));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(retype));
+			ClassicAssert.AreNotEqual(sameSet, retype);
 		}
 
 		[TestCase(6, 4, KingdomPlotRules.PlotSize.Small)]
@@ -52,18 +53,18 @@ namespace ThousandAndFirst.Tests
 		public void ActualSizeComesFromStakedRectangleNotDesignMinimum(int width,
 			int height, KingdomPlotRules.PlotSize expected)
 		{
-			Assert.IsTrue(KingdomSocketRules.TryActualSize(width, height, out var actual));
-			Assert.AreEqual(expected, actual);
+			ClassicAssert.IsTrue(KingdomSocketRules.TryActualSize(width, height, out var actual));
+			ClassicAssert.AreEqual(expected, actual);
 		}
 
 		[Test]
 		public void SameSetMayUseLargerActualLotButNeverSmallerOne()
 		{
-			Assert.IsTrue(KingdomSocketRules.FitsSameSet("craft",
+			ClassicAssert.IsTrue(KingdomSocketRules.FitsSameSet("craft",
 				KingdomPlotRules.PlotSize.Large, "CRAFT", KingdomPlotRules.PlotSize.Small));
-			Assert.IsFalse(KingdomSocketRules.FitsSameSet("craft",
+			ClassicAssert.IsFalse(KingdomSocketRules.FitsSameSet("craft",
 				KingdomPlotRules.PlotSize.Small, "craft", KingdomPlotRules.PlotSize.Medium));
-			Assert.IsFalse(KingdomSocketRules.FitsSameSet("craft",
+			ClassicAssert.IsFalse(KingdomSocketRules.FitsSameSet("craft",
 				KingdomPlotRules.PlotSize.Large, "civic", KingdomPlotRules.PlotSize.Small));
 		}
 
@@ -77,7 +78,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(0, 0, 1, 1, false)]
 		public void FootprintFits_NeverAllowsTheDesignToOutgrowThePlot(int plotWidth, int plotHeight, int needWidth, int needHeight, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomSocketRules.FootprintFits(plotWidth, plotHeight, needWidth, needHeight));
+			ClassicAssert.AreEqual(expected, KingdomSocketRules.FootprintFits(plotWidth, plotHeight, needWidth, needHeight));
 		}
 
 		// --- Refusals: STANDARDS 7b, never silent, always name what would lift it --------------
@@ -86,55 +87,55 @@ namespace ThousandAndFirst.Tests
 		public void RefuseTooSmall_NamesTheDesignAndBothDimensions()
 		{
 			string message = KingdomSocketRules.RefuseTooSmall("great hall", 5, 4, 12, 9);
-			Assert.IsTrue(message.Contains("great hall"));
-			Assert.IsTrue(message.Contains("12"));
-			Assert.IsTrue(message.Contains("9"));
-			Assert.IsTrue(message.Contains("5"));
-			Assert.IsTrue(message.Contains("4"));
+			ClassicAssert.IsTrue(message.Contains("great hall"));
+			ClassicAssert.IsTrue(message.Contains("12"));
+			ClassicAssert.IsTrue(message.Contains("9"));
+			ClassicAssert.IsTrue(message.Contains("5"));
+			ClassicAssert.IsTrue(message.Contains("4"));
 		}
 
 		[Test]
 		public void RefuseAdopted_NamesTheBuilding()
 		{
-			Assert.IsTrue(KingdomSocketRules.RefuseAdopted("bathhouse").Contains("bathhouse"));
+			ClassicAssert.IsTrue(KingdomSocketRules.RefuseAdopted("bathhouse").Contains("bathhouse"));
 		}
 
 		[Test]
 		public void RefuseNotAPlot_NamesTheDesign()
 		{
-			Assert.IsTrue(KingdomSocketRules.RefuseNotAPlot("cask rack").Contains("cask rack"));
+			ClassicAssert.IsTrue(KingdomSocketRules.RefuseNotAPlot("cask rack").Contains("cask rack"));
 		}
 
 		[Test]
 		public void RefuseAlreadyThat_NamesTheBuilding()
 		{
-			Assert.IsTrue(KingdomSocketRules.RefuseAlreadyThat("scriptorium").Contains("scriptorium"));
+			ClassicAssert.IsTrue(KingdomSocketRules.RefuseAlreadyThat("scriptorium").Contains("scriptorium"));
 		}
 
 		[Test]
 		public void RefuseCondemned_NamesTheBuilding()
 		{
-			Assert.IsTrue(KingdomSocketRules.RefuseCondemned("bathhouse").Contains("bathhouse"));
+			ClassicAssert.IsTrue(KingdomSocketRules.RefuseCondemned("bathhouse").Contains("bathhouse"));
 		}
 
 		[Test]
 		public void RefuseImproving_NamesTheBuilding()
 		{
-			Assert.IsTrue(KingdomSocketRules.RefuseImproving("cistern").Contains("cistern"));
+			ClassicAssert.IsTrue(KingdomSocketRules.RefuseImproving("cistern").Contains("cistern"));
 		}
 
 		[Test]
 		public void RefuseUnknownSkin_NamesBothTheKeyAndTheBuilding()
 		{
 			string message = KingdomSocketRules.RefuseUnknownSkin("verdant-roof", "scriptorium");
-			Assert.IsTrue(message.Contains("verdant-roof"));
-			Assert.IsTrue(message.Contains("scriptorium"));
+			ClassicAssert.IsTrue(message.Contains("verdant-roof"));
+			ClassicAssert.IsTrue(message.Contains("scriptorium"));
 		}
 
 		[Test]
 		public void RefuseUnknownDesign_NamesTheBuilding()
 		{
-			Assert.IsTrue(KingdomSocketRules.RefuseUnknownDesign("scriptorium").Contains("scriptorium"));
+			ClassicAssert.IsTrue(KingdomSocketRules.RefuseUnknownDesign("scriptorium").Contains("scriptorium"));
 		}
 
 		// --- RedressCost: trivial, and zero for a water-only design ----------------------------
@@ -144,15 +145,15 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomMaterialTally full = Tally(0, 0, 100, 100);
 			KingdomMaterialTally redress = KingdomSocketRules.RedressCost(full);
-			Assert.Less(redress.Total(), full.Total());
-			Assert.AreEqual(full.Get(KingdomMaterial.Timber) * KingdomSocketRules.RedressCostPercent / 100, redress.Get(KingdomMaterial.Timber));
+			ClassicAssert.Less(redress.Total(), full.Total());
+			ClassicAssert.AreEqual(full.Get(KingdomMaterial.Timber) * KingdomSocketRules.RedressCostPercent / 100, redress.Get(KingdomMaterial.Timber));
 		}
 
 		[Test]
 		public void RedressCost_OfAWaterOnlyDesignIsNothing()
 		{
-			Assert.IsTrue(KingdomSocketRules.RedressCost(new KingdomMaterialTally()).IsEmpty());
-			Assert.IsTrue(KingdomSocketRules.RedressCost(null).IsEmpty());
+			ClassicAssert.IsTrue(KingdomSocketRules.RedressCost(new KingdomMaterialTally()).IsEmpty());
+			ClassicAssert.IsTrue(KingdomSocketRules.RedressCost(null).IsEmpty());
 		}
 
 		[Test]
@@ -162,7 +163,7 @@ namespace ThousandAndFirst.Tests
 			// tenth of a small number floors to zero, which is exactly the "trivial" the
 			// addendum asks for and never a hidden minimum charge nobody authored.
 			KingdomMaterialTally cheap = Tally(0, 0, 4);
-			Assert.IsTrue(KingdomSocketRules.RedressCost(cheap).IsEmpty());
+			ClassicAssert.IsTrue(KingdomSocketRules.RedressCost(cheap).IsEmpty());
 		}
 
 		// --- AssessConversion: strike effort + new cost - salvage, composed once ---------------
@@ -172,8 +173,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomMaterialTally oldCost = Tally(0, 0, 8, 4);
 			KingdomSocketRules.ConversionQuote quote = KingdomSocketRules.AssessConversion(oldCost, 50, new KingdomMaterialTally(), 0);
-			Assert.AreEqual(KingdomMaterialRules.StrikeEffort(oldCost.Total(), 50), quote.StrikeEffort);
-			Assert.AreEqual(KingdomMaterialRules.DaysForOneHand(quote.StrikeEffort), quote.EffortDays);
+			ClassicAssert.AreEqual(KingdomMaterialRules.StrikeEffort(oldCost.Total(), 50), quote.StrikeEffort);
+			ClassicAssert.AreEqual(KingdomMaterialRules.DaysForOneHand(quote.StrikeEffort), quote.EffortDays);
 		}
 
 		[Test]
@@ -185,7 +186,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < KingdomMaterialRules.MaterialCount; i++)
 			{
 				KingdomMaterial material = (KingdomMaterial)i;
-				Assert.AreEqual(expected.Get(material), quote.Salvage.Get(material));
+				ClassicAssert.AreEqual(expected.Get(material), quote.Salvage.Get(material));
 			}
 		}
 
@@ -193,15 +194,15 @@ namespace ThousandAndFirst.Tests
 		public void AssessConversion_NewDramsIsTheNewDesignsOwnFullCost()
 		{
 			KingdomSocketRules.ConversionQuote quote = KingdomSocketRules.AssessConversion(new KingdomMaterialTally(), 0, new KingdomMaterialTally(), 240);
-			Assert.AreEqual(240, quote.NewDrams);
+			ClassicAssert.AreEqual(240, quote.NewDrams);
 		}
 
 		[Test]
 		public void AssessConversion_NegativeDramsClampToZero()
 		{
 			KingdomSocketRules.ConversionQuote quote = KingdomSocketRules.AssessConversion(new KingdomMaterialTally(), -5, new KingdomMaterialTally(), -5);
-			Assert.AreEqual(0, quote.NewDrams);
-			Assert.AreEqual(KingdomMaterialRules.StrikeEffort(0, 0), quote.StrikeEffort);
+			ClassicAssert.AreEqual(0, quote.NewDrams);
+			ClassicAssert.AreEqual(KingdomMaterialRules.StrikeEffort(0, 0), quote.StrikeEffort);
 		}
 
 		[Test]
@@ -213,7 +214,7 @@ namespace ThousandAndFirst.Tests
 			KingdomMaterialTally newCost = Tally(0, 0, 10);
 			KingdomSocketRules.ConversionQuote quote = KingdomSocketRules.AssessConversion(oldCost, 0, newCost, 0);
 			int expectedNet = 10 - quote.Salvage.Get(KingdomMaterial.Timber);
-			Assert.AreEqual(expectedNet, quote.NetMaterials.Get(KingdomMaterial.Timber));
+			ClassicAssert.AreEqual(expectedNet, quote.NetMaterials.Get(KingdomMaterial.Timber));
 		}
 
 		[Test]
@@ -224,16 +225,16 @@ namespace ThousandAndFirst.Tests
 			KingdomMaterialTally oldCost = Tally(0, 0, 100);
 			KingdomMaterialTally newCost = Tally(0, 0, 1);
 			KingdomSocketRules.ConversionQuote quote = KingdomSocketRules.AssessConversion(oldCost, 0, newCost, 0);
-			Assert.AreEqual(0, quote.NetMaterials.Get(KingdomMaterial.Timber));
+			ClassicAssert.AreEqual(0, quote.NetMaterials.Get(KingdomMaterial.Timber));
 		}
 
 		[Test]
 		public void AssessConversion_ANullMaterialCostOnEitherSideReadsAsEmpty()
 		{
 			KingdomSocketRules.ConversionQuote quote = KingdomSocketRules.AssessConversion(null, 10, null, 20);
-			Assert.AreEqual(0, quote.Salvage.Total());
-			Assert.AreEqual(0, quote.NetMaterials.Total());
-			Assert.AreEqual(20, quote.NewDrams);
+			ClassicAssert.AreEqual(0, quote.Salvage.Total());
+			ClassicAssert.AreEqual(0, quote.NetMaterials.Total());
+			ClassicAssert.AreEqual(20, quote.NewDrams);
 		}
 
 		[Test]
@@ -242,8 +243,8 @@ namespace ThousandAndFirst.Tests
 			KingdomMaterialTally oldCost = Tally(0, 0, 8);
 			KingdomMaterialTally newCost = Tally(0, 0, 10);
 			KingdomSocketRules.AssessConversion(oldCost, 0, newCost, 0);
-			Assert.AreEqual(8, oldCost.Get(KingdomMaterial.Timber));
-			Assert.AreEqual(10, newCost.Get(KingdomMaterial.Timber));
+			ClassicAssert.AreEqual(8, oldCost.Get(KingdomMaterial.Timber));
+			ClassicAssert.AreEqual(10, newCost.Get(KingdomMaterial.Timber));
 		}
 
 		// --- DescribeConversion: the one disclosed figure, composed before anything moves ------
@@ -253,9 +254,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomSocketRules.ConversionQuote quote = KingdomSocketRules.AssessConversion(Tally(0, 0, 8), 40, Tally(0, 0, 10), 120);
 			string text = KingdomSocketRules.DescribeConversion("bathhouse", "scriptorium", KingdomSocketRules.ChangeKind.SameSet, quote);
-			Assert.IsTrue(text.Contains("bathhouse"));
-			Assert.IsTrue(text.Contains("scriptorium"));
-			Assert.IsTrue(text.Contains("120"));
+			ClassicAssert.IsTrue(text.Contains("bathhouse"));
+			ClassicAssert.IsTrue(text.Contains("scriptorium"));
+			ClassicAssert.IsTrue(text.Contains("120"));
 		}
 
 		[Test]
@@ -265,8 +266,8 @@ namespace ThousandAndFirst.Tests
 			KingdomSocketRules.ConversionQuote withoutSalvage = KingdomSocketRules.AssessConversion(new KingdomMaterialTally(), 0, new KingdomMaterialTally(), 0);
 			string withText = KingdomSocketRules.DescribeConversion("hut", "hall", KingdomSocketRules.ChangeKind.Retype, withSalvage);
 			string withoutText = KingdomSocketRules.DescribeConversion("hut", "hall", KingdomSocketRules.ChangeKind.Retype, withoutSalvage);
-			Assert.IsTrue(withText.Contains("comes back"));
-			Assert.IsFalse(withoutText.Contains("comes back"));
+			ClassicAssert.IsTrue(withText.Contains("comes back"));
+			ClassicAssert.IsFalse(withoutText.Contains("comes back"));
 		}
 
 		[Test]
@@ -274,7 +275,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomSocketRules.ConversionQuote quote = KingdomSocketRules.AssessConversion(Tally(0, 0, 8), 10, Tally(0, 0, 4), 20);
 			string text = KingdomSocketRules.DescribeConversion("hut", "hall", KingdomSocketRules.ChangeKind.Retype, quote);
-			Assert.IsTrue(text.Contains("No water is ever refunded"));
+			ClassicAssert.IsTrue(text.Contains("No water is ever refunded"));
 		}
 
 		[Test]
@@ -283,7 +284,7 @@ namespace ThousandAndFirst.Tests
 			KingdomSocketRules.ConversionQuote quote = KingdomSocketRules.AssessConversion(new KingdomMaterialTally(), 0, new KingdomMaterialTally(), 0);
 			string sameSet = KingdomSocketRules.DescribeConversion("hut", "cabin", KingdomSocketRules.ChangeKind.SameSet, quote);
 			string retype = KingdomSocketRules.DescribeConversion("hut", "hall", KingdomSocketRules.ChangeKind.Retype, quote);
-			Assert.AreNotEqual(sameSet.Substring(0, 9), retype.Substring(0, 9));
+			ClassicAssert.AreNotEqual(sameSet.Substring(0, 9), retype.Substring(0, 9));
 		}
 	}
 }

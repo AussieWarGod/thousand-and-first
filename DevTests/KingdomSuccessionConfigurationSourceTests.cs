@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -23,11 +24,11 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int commit = ui.IndexOf("KingdomGovernanceScope.Commit", change,
 				StringComparison.Ordinal);
-			Assert.Greater(residents, 0);
-			Assert.Greater(preview, residents);
-			Assert.Greater(confirm, preview);
-			Assert.Greater(change, confirm);
-			Assert.Greater(commit, change);
+			ClassicAssert.Greater(residents, 0);
+			ClassicAssert.Greater(preview, residents);
+			ClassicAssert.Greater(confirm, preview);
+			ClassicAssert.Greater(change, confirm);
+			ClassicAssert.Greater(commit, change);
 			StringAssert.Contains("resident \" + ResidentId", Source(
 				"Experience/KingdomSuccession.TellingAndModels.cs"));
 			StringAssert.Contains("Homes, cities, and tenure", ui);
@@ -49,15 +50,15 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int carry = selection.IndexOf("CarryFounderSuccession", body,
 				StringComparison.Ordinal);
-			Assert.Greater(resolve, config);
-			Assert.Greater(receipt, resolve);
-			Assert.Greater(body, receipt);
-			Assert.Greater(carry, body);
+			ClassicAssert.Greater(resolve, config);
+			ClassicAssert.Greater(receipt, resolve);
+			ClassicAssert.Greater(body, receipt);
+			ClassicAssert.Greater(carry, body);
 			int freeze = execution.IndexOf("PendingSelectionReceipt = selectionReceipt",
 				StringComparison.Ordinal);
 			int clock = execution.IndexOf("game.TimeTicks = dueTick", freeze,
 				StringComparison.Ordinal);
-			Assert.Greater(clock, freeze);
+			ClassicAssert.Greater(clock, freeze);
 			StringAssert.Contains("no substitute was tried", selection);
 			StringAssert.DoesNotContain("chosen.Rule.Name, out", selection);
 		}
@@ -75,8 +76,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int completed = seat.IndexOf("CompletedSeatConsequenceToken = receipt.DeathToken",
 				exile, StringComparison.Ordinal);
-			Assert.Greater(exile, active);
-			Assert.Greater(completed, exile);
+			ClassicAssert.Greater(exile, active);
+			ClassicAssert.Greater(completed, exile);
 			StringAssert.Contains("CompletedSeatConsequenceToken", seat);
 			StringAssert.Contains("WithholdsCharter", loader);
 			StringAssert.Contains("ChosenSeatBlocksReturn", begin);
@@ -124,8 +125,8 @@ namespace ThousandAndFirst.Tests
 			int refresh = death.IndexOf("TryRefreshGrooming", StringComparison.Ordinal);
 			int resolve = death.IndexOf("TryResolveConfiguredHeir", refresh,
 				StringComparison.Ordinal);
-			Assert.Greater(refresh, 0);
-			Assert.Greater(resolve, refresh);
+			ClassicAssert.Greater(refresh, 0);
+			ClassicAssert.Greater(resolve, refresh);
 			StringAssert.Contains("GroomedUnready", death);
 		}
 
@@ -146,7 +147,7 @@ namespace ThousandAndFirst.Tests
 				"Core/KingdomCharterPart.Succession.cs"
 			};
 			for (int i = 0; i < paths.Length; i++)
-				Assert.Less(Source(paths[i]).Split('\n').Length, 301, paths[i]);
+				ClassicAssert.Less(Source(paths[i]).Split('\n').Length, 301, paths[i]);
 		}
 	}
 }

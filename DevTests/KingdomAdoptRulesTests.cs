@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -48,7 +49,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("", KingdomAdoptRules.RoleKind.Work)]
 		public void ClassifyRole_MatchesTheTaxonomy(string category, KingdomAdoptRules.RoleKind expected)
 		{
-			Assert.AreEqual(expected, KingdomAdoptRules.ClassifyRole(category));
+			ClassicAssert.AreEqual(expected, KingdomAdoptRules.ClassifyRole(category));
 		}
 
 		// --- MeasureEnclosure: the honest, bounded flood fill ----------------------------------
@@ -115,9 +116,9 @@ namespace ThousandAndFirst.Tests
 				"#####"
 			};
 			KingdomAdoptRules.EnclosureMeasurement measurement = KingdomAdoptRules.MeasureEnclosure(2, 2, FromGrid(room));
-			Assert.IsTrue(measurement.Bounded);
-			Assert.AreEqual(9, measurement.RoomCells);
-			Assert.AreEqual(1, measurement.DoorCells);
+			ClassicAssert.IsTrue(measurement.Bounded);
+			ClassicAssert.AreEqual(9, measurement.RoomCells);
+			ClassicAssert.AreEqual(1, measurement.DoorCells);
 		}
 
 		[Test]
@@ -135,9 +136,9 @@ namespace ThousandAndFirst.Tests
 				"#####"
 			};
 			KingdomAdoptRules.EnclosureMeasurement measurement = KingdomAdoptRules.MeasureEnclosure(1, 1, FromGrid(room));
-			Assert.IsTrue(measurement.Bounded);
-			Assert.AreEqual(8, measurement.RoomCells);
-			Assert.AreEqual(1, measurement.DoorCells);
+			ClassicAssert.IsTrue(measurement.Bounded);
+			ClassicAssert.AreEqual(8, measurement.RoomCells);
+			ClassicAssert.AreEqual(1, measurement.DoorCells);
 		}
 
 		[Test]
@@ -152,9 +153,9 @@ namespace ThousandAndFirst.Tests
 				"#####"
 			};
 			KingdomAdoptRules.EnclosureMeasurement measurement = KingdomAdoptRules.MeasureEnclosure(2, 2, FromGrid(room));
-			Assert.IsTrue(measurement.Bounded);
-			Assert.AreEqual(9, measurement.RoomCells);
-			Assert.AreEqual(2, measurement.DoorCells);
+			ClassicAssert.IsTrue(measurement.Bounded);
+			ClassicAssert.AreEqual(9, measurement.RoomCells);
+			ClassicAssert.AreEqual(2, measurement.DoorCells);
 		}
 
 		[Test]
@@ -171,9 +172,9 @@ namespace ThousandAndFirst.Tests
 				"#####"
 			};
 			KingdomAdoptRules.EnclosureMeasurement measurement = KingdomAdoptRules.MeasureEnclosure(2, 2, FromGrid(room));
-			Assert.IsTrue(measurement.Bounded);
-			Assert.AreEqual(9, measurement.RoomCells);
-			Assert.AreEqual(0, measurement.DoorCells);
+			ClassicAssert.IsTrue(measurement.Bounded);
+			ClassicAssert.AreEqual(9, measurement.RoomCells);
+			ClassicAssert.AreEqual(0, measurement.DoorCells);
 		}
 
 		[Test]
@@ -187,8 +188,8 @@ namespace ThousandAndFirst.Tests
 				"####"
 			};
 			KingdomAdoptRules.EnclosureMeasurement measurement = KingdomAdoptRules.MeasureEnclosure(1, 1, FromGrid(room));
-			Assert.IsTrue(measurement.Bounded);
-			Assert.AreEqual(KingdomAdoptRules.MinEnclosedRoomCells, measurement.RoomCells);
+			ClassicAssert.IsTrue(measurement.Bounded);
+			ClassicAssert.AreEqual(KingdomAdoptRules.MinEnclosedRoomCells, measurement.RoomCells);
 		}
 
 		[Test]
@@ -202,9 +203,9 @@ namespace ThousandAndFirst.Tests
 				"#####"
 			};
 			KingdomAdoptRules.EnclosureMeasurement measurement = KingdomAdoptRules.MeasureEnclosure(0, 0, FromGrid(room));
-			Assert.IsFalse(measurement.Bounded);
-			Assert.AreEqual(0, measurement.RoomCells);
-			Assert.AreEqual(0, measurement.DoorCells);
+			ClassicAssert.IsFalse(measurement.Bounded);
+			ClassicAssert.AreEqual(0, measurement.RoomCells);
+			ClassicAssert.AreEqual(0, measurement.DoorCells);
 		}
 
 		[Test]
@@ -219,15 +220,15 @@ namespace ThousandAndFirst.Tests
 				"#####"
 			};
 			KingdomAdoptRules.EnclosureMeasurement measurement = KingdomAdoptRules.MeasureEnclosure(4, 1, FromGrid(room));
-			Assert.IsFalse(measurement.Bounded);
+			ClassicAssert.IsFalse(measurement.Bounded);
 		}
 
 		[Test]
 		public void MeasureEnclosure_NullLookupFindsNothing()
 		{
 			KingdomAdoptRules.EnclosureMeasurement measurement = KingdomAdoptRules.MeasureEnclosure(0, 0, null);
-			Assert.IsFalse(measurement.Bounded);
-			Assert.AreEqual(0, measurement.RoomCells);
+			ClassicAssert.IsFalse(measurement.Bounded);
+			ClassicAssert.AreEqual(0, measurement.RoomCells);
 		}
 
 		[Test]
@@ -236,8 +237,8 @@ namespace ThousandAndFirst.Tests
 			// The honest cheaper proxy the design calls for: ground with nowhere to stop blows
 			// the fill's budget almost immediately rather than being walked in full.
 			KingdomAdoptRules.EnclosureMeasurement measurement = KingdomAdoptRules.MeasureEnclosure(0, 0, (X, Y) => KingdomAdoptRules.CellKind.Open);
-			Assert.IsFalse(measurement.Bounded);
-			Assert.AreEqual(KingdomAdoptRules.MaxEnclosedRoomCells, measurement.RoomCells);
+			ClassicAssert.IsFalse(measurement.Bounded);
+			ClassicAssert.AreEqual(KingdomAdoptRules.MaxEnclosedRoomCells, measurement.RoomCells);
 		}
 
 		[TestCase(200, true)]
@@ -276,9 +277,9 @@ namespace ThousandAndFirst.Tests
 				return KingdomAdoptRules.CellKind.Wall;
 			};
 			KingdomAdoptRules.EnclosureMeasurement measurement = KingdomAdoptRules.MeasureEnclosure(-1, -1, lookup);
-			Assert.IsTrue(measurement.Bounded);
-			Assert.AreEqual(9, measurement.RoomCells);
-			Assert.AreEqual(1, measurement.DoorCells);
+			ClassicAssert.IsTrue(measurement.Bounded);
+			ClassicAssert.AreEqual(9, measurement.RoomCells);
+			ClassicAssert.AreEqual(1, measurement.DoorCells);
 		}
 
 		[Test]
@@ -348,7 +349,7 @@ namespace ThousandAndFirst.Tests
 				Bounded = true, RoomCells = 8, DoorCells = 1 };
 			KingdomAdoptRules.AdoptionVerdict verdict = KingdomAdoptRules.Assess(
 				KingdomAdoptRules.RoleKind.Housing, alreadyServing, belowStage, false, enclosure);
-			Assert.AreEqual(expected, verdict);
+			ClassicAssert.AreEqual(expected, verdict);
 		}
 
 		// --- Assess: Storage --------------------------------------------------------------------
@@ -360,7 +361,7 @@ namespace ThousandAndFirst.Tests
 		public void Assess_Storage_ChecksInProtectiveOrder(bool alreadyServing, bool belowStage, bool isStorageCapable, KingdomAdoptRules.AdoptionVerdict expected)
 		{
 			KingdomAdoptRules.AdoptionVerdict verdict = KingdomAdoptRules.Assess(KingdomAdoptRules.RoleKind.Storage, alreadyServing, belowStage, isStorageCapable, default);
-			Assert.AreEqual(expected, verdict);
+			ClassicAssert.AreEqual(expected, verdict);
 		}
 
 		// --- Assess: Work (civic, faith, craft, knowledge, power, defense, and unknowns) --------
@@ -370,7 +371,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomAdoptRules.EnclosureMeasurement enclosure = new KingdomAdoptRules.EnclosureMeasurement { Bounded = true, RoomCells = 20, DoorCells = 2 };
 			KingdomAdoptRules.AdoptionVerdict verdict = KingdomAdoptRules.Assess(KingdomAdoptRules.RoleKind.Work, true, false, false, enclosure);
-			Assert.AreEqual(KingdomAdoptRules.AdoptionVerdict.RefusedAlreadyServing, verdict);
+			ClassicAssert.AreEqual(KingdomAdoptRules.AdoptionVerdict.RefusedAlreadyServing, verdict);
 		}
 
 		[Test]
@@ -378,7 +379,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomAdoptRules.EnclosureMeasurement enclosure = new KingdomAdoptRules.EnclosureMeasurement { Bounded = true, RoomCells = 20, DoorCells = 2 };
 			KingdomAdoptRules.AdoptionVerdict verdict = KingdomAdoptRules.Assess(KingdomAdoptRules.RoleKind.Work, false, true, false, enclosure);
-			Assert.AreEqual(KingdomAdoptRules.AdoptionVerdict.RefusedBelowStage, verdict);
+			ClassicAssert.AreEqual(KingdomAdoptRules.AdoptionVerdict.RefusedBelowStage, verdict);
 		}
 
 		[TestCase(false, 0, 0, KingdomAdoptRules.AdoptionVerdict.RefusedUnbounded)]
@@ -391,7 +392,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomAdoptRules.EnclosureMeasurement enclosure = new KingdomAdoptRules.EnclosureMeasurement { Bounded = bounded, RoomCells = roomCells, DoorCells = doorCells };
 			KingdomAdoptRules.AdoptionVerdict verdict = KingdomAdoptRules.Assess(KingdomAdoptRules.RoleKind.Work, false, false, false, enclosure);
-			Assert.AreEqual(expected, verdict);
+			ClassicAssert.AreEqual(expected, verdict);
 		}
 
 		[Test]
@@ -403,7 +404,7 @@ namespace ThousandAndFirst.Tests
 			{
 				KingdomAdoptRules.EnclosureMeasurement enclosure = new KingdomAdoptRules.EnclosureMeasurement { Bounded = true, RoomCells = roomCells, DoorCells = 0 };
 				KingdomAdoptRules.AdoptionVerdict verdict = KingdomAdoptRules.Assess(KingdomAdoptRules.RoleKind.Work, false, false, false, enclosure);
-				Assert.AreNotEqual(KingdomAdoptRules.AdoptionVerdict.Adopted, verdict, "roomCells=" + roomCells);
+				ClassicAssert.AreNotEqual(KingdomAdoptRules.AdoptionVerdict.Adopted, verdict, "roomCells=" + roomCells);
 			}
 		}
 
@@ -417,7 +418,7 @@ namespace ThousandAndFirst.Tests
 			{
 				KingdomAdoptRules.EnclosureMeasurement enclosure = new KingdomAdoptRules.EnclosureMeasurement { Bounded = false, RoomCells = roomCells, DoorCells = 3 };
 				KingdomAdoptRules.AdoptionVerdict verdict = KingdomAdoptRules.Assess(KingdomAdoptRules.RoleKind.Work, false, false, false, enclosure);
-				Assert.AreNotEqual(KingdomAdoptRules.AdoptionVerdict.Adopted, verdict, "roomCells=" + roomCells);
+				ClassicAssert.AreNotEqual(KingdomAdoptRules.AdoptionVerdict.Adopted, verdict, "roomCells=" + roomCells);
 			}
 		}
 
@@ -429,7 +430,7 @@ namespace ThousandAndFirst.Tests
 			foreach (KingdomAdoptRules.AdoptionVerdict verdict in Enum.GetValues(typeof(KingdomAdoptRules.AdoptionVerdict)))
 			{
 				bool expected = verdict != KingdomAdoptRules.AdoptionVerdict.Adopted;
-				Assert.AreEqual(expected, KingdomAdoptRules.IsRefusal(verdict), verdict.ToString());
+				ClassicAssert.AreEqual(expected, KingdomAdoptRules.IsRefusal(verdict), verdict.ToString());
 			}
 		}
 
@@ -438,8 +439,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// A zeroed or inverted pair here would either let a single cell count as a building
 			// or make the flood fill's own budget smaller than the minimum it must accept.
-			Assert.Greater(KingdomAdoptRules.MinEnclosedRoomCells, 0);
-			Assert.Greater(KingdomAdoptRules.MaxEnclosedRoomCells, KingdomAdoptRules.MinEnclosedRoomCells);
+			ClassicAssert.Greater(KingdomAdoptRules.MinEnclosedRoomCells, 0);
+			ClassicAssert.Greater(KingdomAdoptRules.MaxEnclosedRoomCells, KingdomAdoptRules.MinEnclosedRoomCells);
 		}
 
 		[Test]
@@ -448,26 +449,26 @@ namespace ThousandAndFirst.Tests
 			ArchitecturePoint[] cells = { new ArchitecturePoint(2, 2),
 				new ArchitecturePoint(1, 1), new ArchitecturePoint(2, 1),
 				new ArchitecturePoint(1, 2) };
-			Assert.IsTrue(KingdomAdoptionDesignationRules.TryCreate("zone.1", "root-1",
+			ClassicAssert.IsTrue(KingdomAdoptionDesignationRules.TryCreate("zone.1", "root-1",
 				"tent", cells, false, "Hearthpyre", "2.2.3",
 				"00000000-0000-0000-0000-000000000001", "abc123",
 				out KingdomAdoptionDesignationReceipt receipt, out string failure), failure);
 			string encoded = KingdomAdoptionDesignationRules.Encode(receipt);
-			Assert.IsTrue(KingdomAdoptionDesignationRules.TryDecode(encoded,
+			ClassicAssert.IsTrue(KingdomAdoptionDesignationRules.TryDecode(encoded,
 				out KingdomAdoptionDesignationReceipt decoded, out failure), failure);
-			Assert.AreEqual("Hearthpyre", decoded.ForeignProviderId);
-			Assert.AreEqual("2.2.3", decoded.ForeignProviderVersion);
-			Assert.AreEqual("00000000-0000-0000-0000-000000000001",
+			ClassicAssert.AreEqual("Hearthpyre", decoded.ForeignProviderId);
+			ClassicAssert.AreEqual("2.2.3", decoded.ForeignProviderVersion);
+			ClassicAssert.AreEqual("00000000-0000-0000-0000-000000000001",
 				decoded.ForeignIdentity);
-			Assert.AreEqual("abc123", decoded.ForeignRevision);
-			Assert.AreEqual(new ArchitecturePoint(1, 1), decoded.Cells[0]);
+			ClassicAssert.AreEqual("abc123", decoded.ForeignRevision);
+			ClassicAssert.AreEqual(new ArchitecturePoint(1, 1), decoded.Cells[0]);
 
-			Assert.IsTrue(KingdomAdoptionDesignationRules.TryCreate("zone.1", "root-1",
+			ClassicAssert.IsTrue(KingdomAdoptionDesignationRules.TryCreate("zone.1", "root-1",
 				"tent", cells, false, "Hearthpyre", "2.2.3",
 				decoded.ForeignIdentity, "def456", out KingdomAdoptionDesignationReceipt changed,
 				out failure), failure);
-			Assert.AreNotEqual(receipt.Revision, changed.Revision);
-			Assert.IsFalse(KingdomAdoptionDesignationRules.TryCreate("zone.1", "root-1",
+			ClassicAssert.AreNotEqual(receipt.Revision, changed.Revision);
+			ClassicAssert.IsFalse(KingdomAdoptionDesignationRules.TryCreate("zone.1", "root-1",
 				"tent", cells, false, "Hearthpyre", null, null, null,
 				out _, out _), "partial foreign identity must fail closed");
 		}

@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -213,7 +214,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string file in Directory.GetFiles(root, "*.cs", SearchOption.TopDirectoryOnly))
 			{
 				int lines = File.ReadAllLines(file).Length;
-				Assert.Less(lines, 300, Path.GetFileName(file) + " must be split");
+				ClassicAssert.Less(lines, 300, Path.GetFileName(file) + " must be split");
 			}
 		}
 
@@ -221,7 +222,7 @@ namespace ThousandAndFirst.Tests
 		{
 			int start = source.IndexOf("public sealed class KingdomPolityLegacySnapshot",
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0);
+			ClassicAssert.GreaterOrEqual(start, 0);
 			int end = source.IndexOf("public sealed class KingdomPolityRealmExileFacts",
 				start, StringComparison.Ordinal);
 			return end < 0 ? source.Substring(start) : source.Substring(start, end - start);
@@ -236,7 +237,7 @@ namespace ThousandAndFirst.Tests
 		{
 			int a = source.IndexOf(first, StringComparison.Ordinal);
 			int b = source.IndexOf(second, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(a, 0, first); Assert.Greater(b, a, second);
+			ClassicAssert.GreaterOrEqual(a, 0, first); ClassicAssert.Greater(b, a, second);
 		}
 	}
 }

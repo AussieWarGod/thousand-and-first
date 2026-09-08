@@ -5,6 +5,7 @@ using System.Linq;
 using System.Xml.Linq;
 
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -22,15 +23,15 @@ namespace ThousandAndFirst.Tests
 			{
 				XElement building = buildings.Descendants("building").Single(e =>
 					(string)e.Attribute("Key") == key);
-				Assert.AreEqual("deep", (string)building.Attribute("Strata"), key);
-				Assert.IsNull(building.Attribute("Crop"),
+				ClassicAssert.AreEqual("deep", (string)building.Attribute("Strata"), key);
+				ClassicAssert.IsNull(building.Attribute("Crop"),
 					"crop identity belongs to the physical field, not new catalogue/stratum grammar");
-				Assert.AreEqual("Plump Mushroom", InheritedTag(index,
+				ClassicAssert.AreEqual("Plump Mushroom", InheritedTag(index,
 					(string)building.Attribute("Blueprint"), "r_KingdomCropBlueprint"), key);
 			}
 			XElement declaration = objects.Descendants("tag").Single(e =>
 				(string)e.Attribute("Name") == "r_KingdomCropBlueprint");
-			Assert.AreEqual("r_KingdomFungalVault",
+			ClassicAssert.AreEqual("r_KingdomFungalVault",
 				(string)declaration.Parent.Attribute("Name"));
 		}
 
@@ -41,7 +42,7 @@ namespace ThousandAndFirst.Tests
 			XElement row = XDocument.Parse(TestMain.ReadRepositoryText(
 				"KingdomBuildings.xml")).Descendants("style").Single(e =>
 				(string)e.Attribute("Name") == "fungal");
-			Assert.IsTrue(KingdomStyleRules.TryParse(new KingdomStyleDraft
+			ClassicAssert.IsTrue(KingdomStyleRules.TryParse(new KingdomStyleDraft
 			{
 				Name = (string)row.Attribute("Name"),
 				Terrain = (string)row.Attribute("Terrain"),
@@ -56,19 +57,19 @@ namespace ThousandAndFirst.Tests
 				TimberWall = (string)row.Attribute("TimberWall")
 			}, out KingdomStyleDefinition fungal, out string error), error);
 			List<KingdomStyleDefinition> registry = new List<KingdomStyleDefinition> { fungal };
-			Assert.IsTrue(KingdomCropRules.DeclaredCropAllows(null, "Starapple"));
-			Assert.IsTrue(KingdomCropRules.DeclaredCropAllows(crop, crop));
-			Assert.IsFalse(KingdomCropRules.DeclaredCropAllows(crop, "Starapple"));
-			Assert.AreEqual("r_KingdomSeedMushroom",
+			ClassicAssert.IsTrue(KingdomCropRules.DeclaredCropAllows(null, "Starapple"));
+			ClassicAssert.IsTrue(KingdomCropRules.DeclaredCropAllows(crop, crop));
+			ClassicAssert.IsFalse(KingdomCropRules.DeclaredCropAllows(crop, "Starapple"));
+			ClassicAssert.AreEqual("r_KingdomSeedMushroom",
 				KingdomStyleRules.SeedForCrop(registry, crop));
-			Assert.AreEqual(crop,
+			ClassicAssert.AreEqual(crop,
 				KingdomStyleRules.CropForSeed(registry,
 					KingdomStyleRules.SeedForCrop(registry, crop)));
-			Assert.AreEqual("r_KingdomRowMushroom",
+			ClassicAssert.AreEqual("r_KingdomRowMushroom",
 				KingdomStyleRules.RowForCrop(registry, crop));
-			Assert.AreEqual(6, KingdomCropRules.FoodPerDayForRows(12));
-			Assert.AreEqual(18, KingdomCropRules.FoodPerDayForRows(36));
-			Assert.AreEqual(KingdomCropRules.CropDays,
+			ClassicAssert.AreEqual(6, KingdomCropRules.FoodPerDayForRows(12));
+			ClassicAssert.AreEqual(18, KingdomCropRules.FoodPerDayForRows(36));
+			ClassicAssert.AreEqual(KingdomCropRules.CropDays,
 				KingdomCropRules.CropDaysForStyle("fungal"));
 		}
 
@@ -82,11 +83,11 @@ namespace ThousandAndFirst.Tests
 				"row identity must come from the same merged registry");
 			int declaration = At(source, "string declaredCrop = DeclaredCrop(work);");
 			int refusal = At(source, "DeclaredCropRefusal(");
-			Assert.Less(declaration, refusal);
-			Assert.Less(refusal, At(source, "Popup.ShowYesNo("));
-			Assert.Less(refusal, At(source, "TryReserveExactWater("));
-			Assert.Less(refusal, At(source, "debit.Commit()"));
-			Assert.Less(refusal, At(source, "Seed.Destroy("));
+			ClassicAssert.Less(declaration, refusal);
+			ClassicAssert.Less(refusal, At(source, "Popup.ShowYesNo("));
+			ClassicAssert.Less(refusal, At(source, "TryReserveExactWater("));
+			ClassicAssert.Less(refusal, At(source, "debit.Commit()"));
+			ClassicAssert.Less(refusal, At(source, "Seed.Destroy("));
 			StringAssert.Contains("KingdomOrdinaryFoodAuthority.TryObjectNow(Seed", source);
 			StringAssert.Contains("SeedAtSnapshot(Seed", source);
 			StringAssert.Contains("TryObjectNow(rowsAfter[i]", source);
@@ -121,7 +122,7 @@ namespace ThousandAndFirst.Tests
 		private static int At(string source, string token)
 		{
 			int at = source.IndexOf(token, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(at, 0, token);
+			ClassicAssert.GreaterOrEqual(at, 0, token);
 			return at;
 		}
 	}

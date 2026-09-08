@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -12,10 +13,10 @@ namespace ThousandAndFirst.Tests
 	{
 		private static void AssertRetired(MemberInfo member, string replacement)
 		{
-			Assert.IsNotNull(member);
+			ClassicAssert.IsNotNull(member);
 			ObsoleteAttribute obsolete = member.GetCustomAttribute<ObsoleteAttribute>();
-			Assert.IsNotNull(obsolete, member.Name + " lacks its retirement marker");
-			Assert.IsTrue(obsolete.IsError, member.Name + " still admits new source callers");
+			ClassicAssert.IsNotNull(obsolete, member.Name + " lacks its retirement marker");
+			ClassicAssert.IsTrue(obsolete.IsError, member.Name + " still admits new source callers");
 			StringAssert.Contains(replacement, obsolete.Message);
 		}
 
@@ -38,8 +39,8 @@ namespace ThousandAndFirst.Tests
 			string source = TestMain.ReadRepositoryText("Core/KingdomQolQuestions.cs");
 			StringAssert.Contains(
 				"[System.Obsolete(\"Retired before public release; use KingdomLodging", source);
-			Assert.IsFalse(source.Contains("return KingdomQolRules.JudgeCohabitation("));
-			Assert.IsFalse(source.Contains("return KingdomQolRules.IsMatch(JudgeCohabitation("));
+			ClassicAssert.IsFalse(source.Contains("return KingdomQolRules.JudgeCohabitation("));
+			ClassicAssert.IsFalse(source.Contains("return KingdomQolRules.IsMatch(JudgeCohabitation("));
 		}
 
 		[Test]
@@ -63,8 +64,8 @@ namespace ThousandAndFirst.Tests
 						found = population;
 						break;
 					}
-				Assert.IsNotNull(found, names[i] + " population is missing");
-				Assert.AreEqual("pickone", (string)found.Attribute("Style"),
+				ClassicAssert.IsNotNull(found, names[i] + " population is missing");
+				ClassicAssert.AreEqual("pickone", (string)found.Attribute("Style"),
 					names[i] + " uses Weight but Qud will ignore it and emit every row without Style=pickone");
 			}
 		}
@@ -92,8 +93,8 @@ namespace ThousandAndFirst.Tests
 		{
 			string manifest = TestMain.ReadRepositoryText("manifest.json");
 			Match version = Regex.Match(manifest, "\\\"version\\\"\\s*:\\s*\\\"([^\\\"]+)\\\"");
-			Assert.IsTrue(version.Success, "manifest version is missing");
-			Assert.AreEqual(version.Groups[1].Value, KingdomReleaseInfo.Version);
+			ClassicAssert.IsTrue(version.Success, "manifest version is missing");
+			ClassicAssert.AreEqual(version.Groups[1].Value, KingdomReleaseInfo.Version);
 			foreach (string path in new string[]
 			{
 				"Debug/KingdomArchitectureGalleryWishes.cs",

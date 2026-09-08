@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -26,29 +27,29 @@ namespace ThousandAndFirst.Tests
 			int locatorField = lengthPrefix + 64 * 3 + 5 + 8;
 			int leadIdField = lengthPrefix + 82;
 
-			Assert.AreEqual(772, idField); Assert.AreEqual(1156, textField);
-			Assert.AreEqual(196, categoryField); Assert.AreEqual(209, locatorField);
-			Assert.AreEqual(86, leadIdField);
-			Assert.AreEqual(20, KingdomCuriosityLeadCodec.HeaderBytes);
-			Assert.AreEqual(32, KingdomCuriosityLeadCodec.DigestBytes);
+			ClassicAssert.AreEqual(772, idField); ClassicAssert.AreEqual(1156, textField);
+			ClassicAssert.AreEqual(196, categoryField); ClassicAssert.AreEqual(209, locatorField);
+			ClassicAssert.AreEqual(86, leadIdField);
+			ClassicAssert.AreEqual(20, KingdomCuriosityLeadCodec.HeaderBytes);
+			ClassicAssert.AreEqual(32, KingdomCuriosityLeadCodec.DigestBytes);
 
 			int curiosityRow = 4 + 1 + idField + 4 + idField + 4 + textField + idField + idField
 				+ locatorField + textField + textField + 8 + 8 + categoryField;
 			int leadRow = 4 + 1 + idField + 4 + idField + leadIdField + locatorField
 				+ textField + textField + 8 + lengthPrefix;
-			Assert.AreEqual(6990, curiosityRow);
-			Assert.AreEqual(4172, leadRow);
-			Assert.AreEqual(curiosityRow, KingdomCuriosityLeadCodec.MaxCuriosityRowBytes);
-			Assert.AreEqual(leadRow, KingdomCuriosityLeadCodec.MaxCivicLeadRowBytes);
+			ClassicAssert.AreEqual(6990, curiosityRow);
+			ClassicAssert.AreEqual(4172, leadRow);
+			ClassicAssert.AreEqual(curiosityRow, KingdomCuriosityLeadCodec.MaxCuriosityRowBytes);
+			ClassicAssert.AreEqual(leadRow, KingdomCuriosityLeadCodec.MaxCivicLeadRowBytes);
 
-			Assert.AreEqual(20 + 3 * 6990 + 32, KingdomCuriosityLeadCodec.ExactCuriosityBookBytes);
-			Assert.AreEqual(20 + 8 * 4172 + 32, KingdomCuriosityLeadCodec.ExactLeadBookBytes);
-			Assert.AreEqual(21022, KingdomCuriosityLeadCodec.ExactCuriosityBookBytes);
-			Assert.AreEqual(33428, KingdomCuriosityLeadCodec.ExactLeadBookBytes);
-			Assert.AreEqual(KingdomCuriosityLeadCodec.MaxLeadBookBytes,
+			ClassicAssert.AreEqual(20 + 3 * 6990 + 32, KingdomCuriosityLeadCodec.ExactCuriosityBookBytes);
+			ClassicAssert.AreEqual(20 + 8 * 4172 + 32, KingdomCuriosityLeadCodec.ExactLeadBookBytes);
+			ClassicAssert.AreEqual(21022, KingdomCuriosityLeadCodec.ExactCuriosityBookBytes);
+			ClassicAssert.AreEqual(33428, KingdomCuriosityLeadCodec.ExactLeadBookBytes);
+			ClassicAssert.AreEqual(KingdomCuriosityLeadCodec.MaxLeadBookBytes,
 				KingdomCuriosityLeadCodec.MaxBookBytes);
-			Assert.AreEqual(3, KingdomCuriosityBook.MaxRows);
-			Assert.AreEqual(8, KingdomCivicLeadBook.MaxRows);
+			ClassicAssert.AreEqual(3, KingdomCuriosityBook.MaxRows);
+			ClassicAssert.AreEqual(8, KingdomCivicLeadBook.MaxRows);
 		}
 
 		/// <summary>
@@ -65,30 +66,30 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheAcceptedCapsAreHistoricalAndTheExactCapsStayInsideThem()
 		{
-			Assert.AreEqual(22031, KingdomCuriosityLeadCodec.MaxCuriosityBookBytes);
-			Assert.AreEqual(37708, KingdomCuriosityLeadCodec.MaxLeadBookBytes);
-			Assert.Less(KingdomCuriosityLeadCodec.ExactCuriosityBookBytes,
+			ClassicAssert.AreEqual(22031, KingdomCuriosityLeadCodec.MaxCuriosityBookBytes);
+			ClassicAssert.AreEqual(37708, KingdomCuriosityLeadCodec.MaxLeadBookBytes);
+			ClassicAssert.Less(KingdomCuriosityLeadCodec.ExactCuriosityBookBytes,
 				KingdomCuriosityLeadCodec.MaxCuriosityBookBytes);
-			Assert.Less(KingdomCuriosityLeadCodec.ExactLeadBookBytes,
+			ClassicAssert.Less(KingdomCuriosityLeadCodec.ExactLeadBookBytes,
 				KingdomCuriosityLeadCodec.MaxLeadBookBytes);
 
 			// The accepted curiosity cap is exactly three maximal revision 1 rows under the frame:
 			// the same row arithmetic without the category field and without the digest.
 			const int revisionOneCuriosityRow = 7337;
-			Assert.AreEqual(20 + 3 * revisionOneCuriosityRow,
+			ClassicAssert.AreEqual(20 + 3 * revisionOneCuriosityRow,
 				KingdomCuriosityLeadCodec.MaxCuriosityBookBytes);
 
 			// A payload one byte past the accepted cap is refused without being copied at all.
 			byte[] over = new byte[KingdomCuriosityLeadCodec.MaxCuriosityBookBytes + 1];
 			KingdomCuriosityBook book = KingdomCuriosityLeadCodec.DecodeCuriosity(over);
-			Assert.AreEqual(KingdomCuriosityBookState.Quarantined, book.State);
-			Assert.IsNull(book.OpaquePayload);
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.Quarantined, book.State);
+			ClassicAssert.IsNull(book.OpaquePayload);
 
 			// A payload at exactly the accepted cap is copied and judged on its contents.
 			byte[] at = new byte[KingdomCuriosityLeadCodec.MaxCuriosityBookBytes];
 			book = KingdomCuriosityLeadCodec.DecodeCuriosity(at);
-			Assert.AreEqual(KingdomCuriosityBookState.Quarantined, book.State);
-			Assert.AreEqual(at.Length, book.OpaquePayload.Length,
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.Quarantined, book.State);
+			ClassicAssert.AreEqual(at.Length, book.OpaquePayload.Length,
 				"a payload inside the accepted cap is kept as evidence even when it will not read");
 		}
 
@@ -102,28 +103,28 @@ namespace ThousandAndFirst.Tests
 		{
 			byte[] mine = ValidWithCategory();
 			KingdomCuriosityBook book = KingdomCuriosityLeadCodec.DecodeCuriosity(mine);
-			Assert.AreEqual(KingdomCuriosityBookState.Compatible, book.State, book.Fault);
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.Compatible, book.State, book.Fault);
 			string locator = book.Rows[0].Locator;
 			mine[mine.Length - 1] ^= 0xFF;
-			Assert.AreEqual(locator, book.Rows[0].Locator,
+			ClassicAssert.AreEqual(locator, book.Rows[0].Locator,
 				"a decoded book must not change when the caller edits the array afterwards");
 
 			byte[] future = Future(0x31554354, 7);
 			byte[] handed = (byte[])future.Clone();
 			KingdomCuriosityBook opaque = KingdomCuriosityLeadCodec.DecodeCuriosity(handed);
-			Assert.AreEqual(KingdomCuriosityBookState.FutureOpaque, opaque.State);
-			Assert.AreNotSame(handed, opaque.OpaquePayload);
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.FutureOpaque, opaque.State);
+			ClassicAssert.AreNotSame(handed, opaque.OpaquePayload);
 			handed[8] ^= 0xFF;
 			CollectionAssert.AreEqual(future, opaque.OpaquePayload,
 				"a future book's retained bytes are its own snapshot");
-			Assert.IsTrue(KingdomCuriosityLeadCodec.TryEncode(opaque, out byte[] again,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCodec.TryEncode(opaque, out byte[] again,
 				out string failure), failure);
 			CollectionAssert.AreEqual(future, again);
 
 			byte[] damaged = { 1, 2, 3, 4, 5 };
 			byte[] handedDamaged = (byte[])damaged.Clone();
 			KingdomCivicLeadBook leads = KingdomCuriosityLeadCodec.DecodeLeads(handedDamaged);
-			Assert.AreNotSame(handedDamaged, leads.OpaquePayload);
+			ClassicAssert.AreNotSame(handedDamaged, leads.OpaquePayload);
 			handedDamaged[0] = 99;
 			CollectionAssert.AreEqual(damaged, leads.OpaquePayload);
 		}
@@ -139,24 +140,24 @@ namespace ThousandAndFirst.Tests
 		public void AnUndefinedBookStateIsRefusedRatherThanDefaultedToAnything(int raw)
 		{
 			KingdomCuriosityBookState undefined = (KingdomCuriosityBookState)raw;
-			Assert.IsFalse(KingdomCuriosityLeadCodec.Defined(undefined));
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCodec.Defined(undefined));
 
 			KingdomCuriosityBook curiosity = new KingdomCuriosityBook();
-			Assert.IsTrue(KingdomCuriosityRules.TryPrepare(curiosity, 0L, Cause("one"), Notes(),
+			ClassicAssert.IsTrue(KingdomCuriosityRules.TryPrepare(curiosity, 0L, Cause("one"), Notes(),
 				out _, out string failure), failure);
 			curiosity.State = undefined;
-			Assert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(curiosity, out byte[] bytes,
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(curiosity, out byte[] bytes,
 				out failure));
-			Assert.IsNull(bytes);
+			ClassicAssert.IsNull(bytes);
 			StringAssert.Contains("nothing is written for it", failure,
 				"the writer must refuse this itself rather than pass it further in");
 
 			KingdomCivicLeadBook leads = new KingdomCivicLeadBook { State = undefined };
-			Assert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(leads, out bytes, out failure));
-			Assert.IsNull(bytes);
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(leads, out bytes, out failure));
+			ClassicAssert.IsNull(bytes);
 			StringAssert.Contains("nothing is written for it", failure);
-			Assert.IsFalse(KingdomCuriosityRules.ValidBook(curiosity));
-			Assert.IsFalse(KingdomCivicLeadRules.ValidBook(leads));
+			ClassicAssert.IsFalse(KingdomCuriosityRules.ValidBook(curiosity));
+			ClassicAssert.IsFalse(KingdomCivicLeadRules.ValidBook(leads));
 		}
 
 		/// <summary>
@@ -169,17 +170,17 @@ namespace ThousandAndFirst.Tests
 		public void OpaqueReemissionRefusesAnUndefinedStateOnItsOwnAccount(int raw)
 		{
 			byte[] future = Future(0x31554354, 7);
-			Assert.IsFalse(KingdomCuriosityLeadCodec.TryReemitOpaque(
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCodec.TryReemitOpaque(
 				(KingdomCuriosityBookState)raw, future, 7,
 				KingdomCuriosityLeadCodec.CuriosityMagic,
 				KingdomCuriosityLeadCodec.MaxCuriosityBookBytes,
 				KingdomCuriosityLeadCodec.CuriosityHighestKnownVersion, "curiosity",
 				out byte[] bytes, out string failure));
-			Assert.IsNull(bytes);
+			ClassicAssert.IsNull(bytes);
 			StringAssert.Contains("will not be re-emitted", failure);
 
 			// The same bytes under the state that does describe them are re-emitted exactly.
-			Assert.IsTrue(KingdomCuriosityLeadCodec.TryReemitOpaque(
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCodec.TryReemitOpaque(
 				KingdomCuriosityBookState.FutureOpaque, future, 7,
 				KingdomCuriosityLeadCodec.CuriosityMagic,
 				KingdomCuriosityLeadCodec.MaxCuriosityBookBytes,
@@ -191,20 +192,20 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheThreeDefinedStatesAreExactlyTheOnesThisBuildAnswersFor()
 		{
-			Assert.IsTrue(KingdomCuriosityLeadCodec.Defined(
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCodec.Defined(
 				KingdomCuriosityBookState.Compatible));
-			Assert.IsTrue(KingdomCuriosityLeadCodec.Defined(
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCodec.Defined(
 				KingdomCuriosityBookState.FutureOpaque));
-			Assert.IsTrue(KingdomCuriosityLeadCodec.Defined(
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCodec.Defined(
 				KingdomCuriosityBookState.Quarantined));
 			// The predicate root maps into the civic-memory bindings, pinned on both books.
-			Assert.IsTrue(KingdomCuriosityLeadCodec.DecodeCuriosity(
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCodec.DecodeCuriosity(
 				Future(0x31554354, 5)).IsOpaqueFuture);
-			Assert.IsTrue(KingdomCuriosityLeadCodec.DecodeLeads(
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCodec.DecodeLeads(
 				Future(0x314C4354, 5)).IsOpaqueFuture);
-			Assert.IsFalse(KingdomCuriosityLeadCodec.DecodeCuriosity(
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCodec.DecodeCuriosity(
 				new byte[] { 1, 2, 3 }).IsOpaqueFuture);
-			Assert.IsFalse(KingdomCuriosityLeadCodec.DecodeLeads(
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCodec.DecodeLeads(
 				new byte[] { 1, 2, 3 }).IsOpaqueFuture);
 		}
 
@@ -217,18 +218,18 @@ namespace ThousandAndFirst.Tests
 			const int revisionOneRow = 4711;
 			const int revisionOneLocatorField = 752;
 			const int canonicalLocatorField = 209;
-			Assert.AreEqual(4, KingdomCuriosityLeadCodec.AbsentStringBytes);
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(4, KingdomCuriosityLeadCodec.AbsentStringBytes);
+			ClassicAssert.AreEqual(
 				revisionOneRow - revisionOneLocatorField + canonicalLocatorField
 					+ KingdomCuriosityLeadCodec.AbsentStringBytes,
 				KingdomCuriosityLeadCodec.MaxCivicLeadRowBytes,
 				"the revision 1 row claimed 4711: it forgot the four-byte fault marker every row "
 					+ "actually writes, and allowed a 748-byte locator the canonical grammar "
 					+ "caps at 205");
-			Assert.AreEqual(20 + 8 * revisionOneRow, 37708,
+			ClassicAssert.AreEqual(20 + 8 * revisionOneRow, 37708,
 				"the revision 1 book cap was the header plus eight of those rows");
-			Assert.AreEqual(37708 - KingdomCuriosityLeadCodec.ExactLeadBookBytes, 4280);
-			Assert.AreEqual(22031 - KingdomCuriosityLeadCodec.ExactCuriosityBookBytes, 1009);
+			ClassicAssert.AreEqual(37708 - KingdomCuriosityLeadCodec.ExactLeadBookBytes, 4280);
+			ClassicAssert.AreEqual(22031 - KingdomCuriosityLeadCodec.ExactCuriosityBookBytes, 1009);
 		}
 
 		[Test]
@@ -236,20 +237,20 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCuriosityBook curiosity = new KingdomCuriosityBook();
 			for (int i = 0; i < KingdomCuriosityBook.MaxRows; i++)
-				Assert.IsTrue(KingdomCuriosityRules.TryPrepare(curiosity, curiosity.Revision,
+				ClassicAssert.IsTrue(KingdomCuriosityRules.TryPrepare(curiosity, curiosity.Revision,
 					Cause("source-" + i), Notes(), out _, out string f), f);
-			Assert.IsTrue(KingdomCuriosityLeadCodec.TryEncode(curiosity, out byte[] bytes,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCodec.TryEncode(curiosity, out byte[] bytes,
 				out string failure), failure);
-			Assert.LessOrEqual(bytes.Length, KingdomCuriosityLeadCodec.MaxCuriosityBookBytes);
+			ClassicAssert.LessOrEqual(bytes.Length, KingdomCuriosityLeadCodec.MaxCuriosityBookBytes);
 			KingdomCuriosityBook back = KingdomCuriosityLeadCodec.DecodeCuriosity(bytes);
-			Assert.AreEqual(KingdomCuriosityBookState.Compatible, back.State, back.Fault);
-			Assert.AreEqual(KingdomCuriosityBook.MaxRows, back.Rows.Count);
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.Compatible, back.State, back.Fault);
+			ClassicAssert.AreEqual(KingdomCuriosityBook.MaxRows, back.Rows.Count);
 
 			KingdomCivicLeadBook leads = FullLeadBook();
-			Assert.IsTrue(KingdomCuriosityLeadCodec.TryEncode(leads, out bytes, out failure),
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCodec.TryEncode(leads, out bytes, out failure),
 				failure);
-			Assert.LessOrEqual(bytes.Length, KingdomCuriosityLeadCodec.MaxLeadBookBytes);
-			Assert.AreEqual(KingdomCivicLeadBook.MaxRows,
+			ClassicAssert.LessOrEqual(bytes.Length, KingdomCuriosityLeadCodec.MaxLeadBookBytes);
+			ClassicAssert.AreEqual(KingdomCivicLeadBook.MaxRows,
 				KingdomCuriosityLeadCodec.DecodeLeads(bytes).Rows.Count);
 		}
 
@@ -259,10 +260,10 @@ namespace ThousandAndFirst.Tests
 		public void ANullPayloadIsQuarantinedWithNothingInventedToHold()
 		{
 			KingdomCuriosityBook book = KingdomCuriosityLeadCodec.DecodeCuriosity(null);
-			Assert.AreEqual(KingdomCuriosityBookState.Quarantined, book.State);
-			Assert.IsNull(book.OpaquePayload);
-			Assert.IsNotEmpty(book.Fault);
-			Assert.AreEqual(0, book.Rows.Count);
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.Quarantined, book.State);
+			ClassicAssert.IsNull(book.OpaquePayload);
+			ClassicAssert.IsNotEmpty(book.Fault);
+			ClassicAssert.AreEqual(0, book.Rows.Count);
 		}
 
 		[Test]
@@ -270,9 +271,9 @@ namespace ThousandAndFirst.Tests
 		{
 			byte[] stub = { 1, 2, 3 };
 			KingdomCuriosityBook book = KingdomCuriosityLeadCodec.DecodeCuriosity(stub);
-			Assert.AreEqual(KingdomCuriosityBookState.Quarantined, book.State);
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.Quarantined, book.State);
 			CollectionAssert.AreEqual(stub, book.OpaquePayload);
-			Assert.AreNotSame(stub, book.OpaquePayload, "evidence must be this book's own copy");
+			ClassicAssert.AreNotSame(stub, book.OpaquePayload, "evidence must be this book's own copy");
 		}
 
 		[Test]
@@ -281,8 +282,8 @@ namespace ThousandAndFirst.Tests
 			byte[] huge = Valid();
 			Array.Resize(ref huge, KingdomCuriosityLeadCodec.MaxCuriosityBookBytes + 1);
 			KingdomCuriosityBook book = KingdomCuriosityLeadCodec.DecodeCuriosity(huge);
-			Assert.AreEqual(KingdomCuriosityBookState.Quarantined, book.State);
-			Assert.IsNull(book.OpaquePayload);
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.Quarantined, book.State);
+			ClassicAssert.IsNull(book.OpaquePayload);
 			StringAssert.Contains(huge.Length.ToString(), book.Fault);
 		}
 
@@ -300,12 +301,12 @@ namespace ThousandAndFirst.Tests
 		public void TrailingBytesAreRefusedOnTheirOwnAccountInBothRevisions()
 		{
 			byte[] leads = ValidLeads();
-			Assert.AreEqual(KingdomCuriosityLeadCodec.FirstWireVersion,
+			ClassicAssert.AreEqual(KingdomCuriosityLeadCodec.FirstWireVersion,
 				KingdomCuriosityLeadCodec.ReadInt32(leads, 4), "the lead book carries no digest");
 			byte[] padded = new byte[leads.Length + 1];
 			Buffer.BlockCopy(leads, 0, padded, 0, leads.Length);
 			KingdomCivicLeadBook leadBook = KingdomCuriosityLeadCodec.DecodeLeads(padded);
-			Assert.AreEqual(KingdomCuriosityBookState.Quarantined, leadBook.State);
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.Quarantined, leadBook.State);
 			StringAssert.Contains("past the end of the rows", leadBook.Fault);
 			CollectionAssert.AreEqual(padded, leadBook.OpaquePayload);
 
@@ -317,7 +318,7 @@ namespace ThousandAndFirst.Tests
 			Buffer.BlockCopy(valid, bodyEnd, inside, bodyEnd + 1,
 				KingdomCuriosityLeadCodec.DigestBytes);
 			KingdomCuriosityBook book = KingdomCuriosityLeadCodec.DecodeCuriosity(Reseal(inside));
-			Assert.AreEqual(KingdomCuriosityBookState.Quarantined, book.State);
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.Quarantined, book.State);
 			StringAssert.Contains("past the end of the rows", book.Fault,
 				"the digest was resealed over the padding, so only the end-of-rows check is left");
 		}
@@ -326,11 +327,11 @@ namespace ThousandAndFirst.Tests
 		public void AForeignMagicIsRefusedByBothBooks()
 		{
 			byte[] curiosity = Valid();
-			Assert.AreEqual(KingdomCuriosityBookState.Quarantined,
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.Quarantined,
 				KingdomCuriosityLeadCodec.DecodeLeads(curiosity).State,
 				"a curiosity book must not read as a civic-lead book");
 			byte[] leads = ValidLeads();
-			Assert.AreEqual(KingdomCuriosityBookState.Quarantined,
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.Quarantined,
 				KingdomCuriosityLeadCodec.DecodeCuriosity(leads).State);
 		}
 
@@ -344,9 +345,9 @@ namespace ThousandAndFirst.Tests
 			byte[] bytes = Valid();
 			Write(bytes, 4, version);
 			KingdomCuriosityBook book = KingdomCuriosityLeadCodec.DecodeCuriosity(bytes);
-			Assert.AreEqual(KingdomCuriosityBookState.Quarantined, book.State);
-			Assert.IsFalse(book.IsOpaqueFuture);
-			Assert.AreEqual(0, book.OpaqueVersion);
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.Quarantined, book.State);
+			ClassicAssert.IsFalse(book.IsOpaqueFuture);
+			ClassicAssert.AreEqual(0, book.OpaqueVersion);
 			StringAssert.Contains(version.ToString(), book.Fault);
 		}
 
@@ -356,28 +357,28 @@ namespace ThousandAndFirst.Tests
 		public void AnExhaustedBookRevisionRefusesEveryMutationInsteadOfWrapping()
 		{
 			KingdomCuriosityBook book = new KingdomCuriosityBook();
-			Assert.IsTrue(KingdomCuriosityRules.TryPrepare(book, 0L, Cause("one"), Notes(),
+			ClassicAssert.IsTrue(KingdomCuriosityRules.TryPrepare(book, 0L, Cause("one"), Notes(),
 				out KingdomCuriosityReceipt row, out string failure), failure);
 			book.Revision = long.MaxValue;
-			Assert.IsFalse(KingdomCuriosityRules.TryClose(book, long.MaxValue, row.SourceId,
+			ClassicAssert.IsFalse(KingdomCuriosityRules.TryClose(book, long.MaxValue, row.SourceId,
 				KingdomCuriosityState.Viewed, 30L, out failure));
 			StringAssert.Contains("exhausted", failure);
-			Assert.AreEqual(long.MaxValue, book.Revision);
-			Assert.IsFalse(KingdomCuriosityRules.TryPrepare(book, long.MaxValue, Cause("two"),
+			ClassicAssert.AreEqual(long.MaxValue, book.Revision);
+			ClassicAssert.IsFalse(KingdomCuriosityRules.TryPrepare(book, long.MaxValue, Cause("two"),
 				Notes(), out _, out failure));
-			Assert.AreEqual(1, book.Rows.Count);
+			ClassicAssert.AreEqual(1, book.Rows.Count);
 
 			KingdomCivicLeadBook leads = new KingdomCivicLeadBook();
-			Assert.IsTrue(KingdomCivicLeadRules.TryPrepare(leads, 0L, LeadCause(0), 0, true,
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryPrepare(leads, 0L, LeadCause(0), 0, true,
 				out KingdomCivicLeadReceipt lead, out failure), failure);
 			leads.Revision = long.MaxValue;
-			Assert.IsFalse(KingdomCivicLeadRules.TryMarkProjected(leads, long.MaxValue,
+			ClassicAssert.IsFalse(KingdomCivicLeadRules.TryMarkProjected(leads, long.MaxValue,
 				lead.SourceId, lead.LeadId, lead.Locator, out failure));
 			StringAssert.Contains("exhausted", failure);
-			Assert.IsFalse(KingdomCivicLeadRules.TryInvalidate(leads, long.MaxValue,
+			ClassicAssert.IsFalse(KingdomCivicLeadRules.TryInvalidate(leads, long.MaxValue,
 				lead.SourceId, out failure));
-			Assert.AreEqual(long.MaxValue, leads.Revision);
-			Assert.AreEqual(KingdomCivicLeadPhase.Prepared, leads.Rows[0].Phase);
+			ClassicAssert.AreEqual(long.MaxValue, leads.Revision);
+			ClassicAssert.AreEqual(KingdomCivicLeadPhase.Prepared, leads.Rows[0].Phase);
 		}
 
 		[Test]
@@ -385,7 +386,7 @@ namespace ThousandAndFirst.Tests
 		{
 			byte[] bytes = Valid();
 			Write(bytes, 8, -1); Write(bytes, 12, -1);
-			Assert.AreEqual(KingdomCuriosityBookState.Quarantined,
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.Quarantined,
 				KingdomCuriosityLeadCodec.DecodeCuriosity(Reseal(bytes)).State);
 		}
 
@@ -393,39 +394,39 @@ namespace ThousandAndFirst.Tests
 		public void DuplicateAndUnsortedRowsAreBothRefused()
 		{
 			KingdomCuriosityBook book = new KingdomCuriosityBook();
-			Assert.IsTrue(KingdomCuriosityRules.TryPrepare(book, 0L, Cause("a"), Notes(),
+			ClassicAssert.IsTrue(KingdomCuriosityRules.TryPrepare(book, 0L, Cause("a"), Notes(),
 				out _, out string failure), failure);
-			Assert.IsTrue(KingdomCuriosityRules.TryPrepare(book, book.Revision, Cause("b"),
+			ClassicAssert.IsTrue(KingdomCuriosityRules.TryPrepare(book, book.Revision, Cause("b"),
 				Notes(), out _, out failure), failure);
 
 			KingdomCuriosityBook unsorted = new KingdomCuriosityBook { Revision = book.Revision };
 			unsorted.Rows.Add(book.Rows[1].Copy()); unsorted.Rows.Add(book.Rows[0].Copy());
-			Assert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(unsorted, out _, out failure));
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(unsorted, out _, out failure));
 			StringAssert.Contains("own rules", failure);
 
 			KingdomCuriosityBook duplicate = new KingdomCuriosityBook { Revision = book.Revision };
 			duplicate.Rows.Add(book.Rows[0].Copy()); duplicate.Rows.Add(book.Rows[0].Copy());
-			Assert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(duplicate, out _, out failure));
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(duplicate, out _, out failure));
 		}
 
 		[Test]
 		public void InvalidUtf8NeverEscapesInEitherDirection()
 		{
 			KingdomCuriosityBook book = new KingdomCuriosityBook();
-			Assert.IsTrue(KingdomCuriosityRules.TryPrepare(book, 0L, Cause("one"), Notes(),
+			ClassicAssert.IsTrue(KingdomCuriosityRules.TryPrepare(book, 0L, Cause("one"), Notes(),
 				out _, out string failure), failure);
 			book.Rows[0].Reason = "bad\ud800";
-			Assert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(book, out _, out failure));
-			Assert.IsNotEmpty(failure);
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(book, out _, out failure));
+			ClassicAssert.IsNotEmpty(failure);
 
 			byte[] bytes = Valid();
 			int at = IndexOfAscii(bytes, "because the lower");
-			Assert.Greater(at, 0);
+			ClassicAssert.Greater(at, 0);
 			bytes[at] = 0xFF; bytes[at + 1] = 0xFE;
 			KingdomCuriosityBook broken = KingdomCuriosityLeadCodec.DecodeCuriosity(
 				Reseal(bytes));
-			Assert.AreEqual(KingdomCuriosityBookState.Quarantined, broken.State);
-			Assert.AreEqual(0, broken.Rows.Count);
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.Quarantined, broken.State);
+			ClassicAssert.AreEqual(0, broken.Rows.Count);
 		}
 
 		/// <summary>
@@ -441,7 +442,7 @@ namespace ThousandAndFirst.Tests
 		public void AStringThatCannotSurviveTheWireIsRefusedBeforeTheRevisionMoves()
 		{
 			KingdomCuriosityBook book = new KingdomCuriosityBook();
-			Assert.IsTrue(KingdomCuriosityRules.TryPrepare(book, 0L, Cause("one"), Notes(),
+			ClassicAssert.IsTrue(KingdomCuriosityRules.TryPrepare(book, 0L, Cause("one"), Notes(),
 				out _, out string failure), failure);
 			long revision = book.Revision;
 
@@ -455,10 +456,10 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < poisons.Length; i++)
 			{
 				KingdomCuriosityCause cause = Cause("two"); poisons[i](cause);
-				Assert.IsFalse(KingdomCuriosityRules.TryPrepare(book, revision, cause, Notes(),
+				ClassicAssert.IsFalse(KingdomCuriosityRules.TryPrepare(book, revision, cause, Notes(),
 					out _, out failure), "poison " + i);
-				Assert.AreEqual(revision, book.Revision, "poison " + i + " advanced the revision");
-				Assert.AreEqual(1, book.Rows.Count);
+				ClassicAssert.AreEqual(revision, book.Revision, "poison " + i + " advanced the revision");
+				ClassicAssert.AreEqual(1, book.Rows.Count);
 			}
 
 			System.Collections.Generic.List<KingdomCuriosityNote> poisoned =
@@ -467,13 +468,13 @@ namespace ThousandAndFirst.Tests
 					new KingdomCuriosityNote("taf:note:one", "JoppaWorld.10.20.1.2.10",
 						"the drowned \uD800cistern", "Historic Sites", true)
 				};
-			Assert.IsFalse(KingdomCuriosityRules.TryPrepare(book, revision, Cause("three"),
+			ClassicAssert.IsFalse(KingdomCuriosityRules.TryPrepare(book, revision, Cause("three"),
 				poisoned, out _, out failure));
-			Assert.AreEqual(revision, book.Revision);
+			ClassicAssert.AreEqual(revision, book.Revision);
 
 			// And a book that is already sound stays writable, so the guard is not simply refusing
 			// everything.
-			Assert.IsTrue(KingdomCuriosityLeadCodec.TryEncode(book, out _, out failure), failure);
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCodec.TryEncode(book, out _, out failure), failure);
 		}
 
 		/// <summary>
@@ -488,10 +489,10 @@ namespace ThousandAndFirst.Tests
 			ShiftingNotes notes = new ShiftingNotes(
 				new KingdomCuriosityNote("taf:note:one", "JoppaWorld.10.20.1.2.10",
 					"the drowned cistern", "Historic Sites", true));
-			Assert.IsTrue(KingdomCuriosityRules.TryPrepare(book, 0L, Cause("one"), notes,
+			ClassicAssert.IsTrue(KingdomCuriosityRules.TryPrepare(book, 0L, Cause("one"), notes,
 				out KingdomCuriosityReceipt row, out string failure), failure);
-			Assert.AreEqual("taf:note:one", row.NoteId);
-			Assert.AreEqual(1, notes.Copies,
+			ClassicAssert.AreEqual("taf:note:one", row.NoteId);
+			ClassicAssert.AreEqual(1, notes.Copies,
 				"the list must be copied exactly once, not walked twice through the caller");
 		}
 
@@ -534,14 +535,14 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCuriosityBook book = KingdomCuriosityLeadCodec.DecodeCuriosity(
 				new byte[] { 1, 2, 3 });
-			Assert.IsFalse(KingdomCuriosityRules.TryPrepare(book, 0L, Cause("one"), Notes(),
+			ClassicAssert.IsFalse(KingdomCuriosityRules.TryPrepare(book, 0L, Cause("one"), Notes(),
 				out _, out _));
-			Assert.IsFalse(KingdomCuriosityRules.TryClose(book, 0L, "one",
+			ClassicAssert.IsFalse(KingdomCuriosityRules.TryClose(book, 0L, "one",
 				KingdomCuriosityState.Viewed, 1L, out _));
-			Assert.IsFalse(KingdomCuriosityRules.TryGetTerminalAttentionRelease(book, "one",
+			ClassicAssert.IsFalse(KingdomCuriosityRules.TryGetTerminalAttentionRelease(book, "one",
 				out _, out _));
-			Assert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(book, out byte[] bytes, out string f));
-			Assert.IsNull(bytes);
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(book, out byte[] bytes, out string f));
+			ClassicAssert.IsNull(bytes);
 			StringAssert.Contains("evidence", f);
 		}
 
@@ -554,27 +555,27 @@ namespace ThousandAndFirst.Tests
 		public void ALeadRowWhoseIdentityIsNotItsOwnDerivationIsRefusedBothWays()
 		{
 			KingdomCivicLeadBook book = new KingdomCivicLeadBook();
-			Assert.IsTrue(KingdomCivicLeadRules.TryPrepare(book, 0L, LeadCause(0), 0, true,
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryPrepare(book, 0L, LeadCause(0), 0, true,
 				out KingdomCivicLeadReceipt row, out string failure), failure);
-			Assert.IsTrue(KingdomCuriosityLeadCodec.TryEncode(book, out byte[] sound,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCodec.TryEncode(book, out byte[] sound,
 				out failure), failure);
 
 			string honest = row.LeadId;
 			book.Rows[0].LeadId = KingdomCivicLeadRules.LeadId("taf:delve:other",
 				row.Locator);
-			Assert.AreNotEqual(honest, book.Rows[0].LeadId);
-			Assert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(book, out _, out failure),
+			ClassicAssert.AreNotEqual(honest, book.Rows[0].LeadId);
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(book, out _, out failure),
 				"a lead identity that is not this row's own derivation must not be written");
 			StringAssert.Contains("does not satisfy its own rules", failure);
 
 			int at = IndexOfAscii(sound, honest);
-			Assert.Greater(at, 0);
+			ClassicAssert.Greater(at, 0);
 			byte[] tampered = (byte[])sound.Clone();
 			tampered[at + KingdomCivicLeadRules.LeadIdPrefix.Length] =
 				tampered[at + KingdomCivicLeadRules.LeadIdPrefix.Length] == (byte)'0'
 					? (byte)'1' : (byte)'0';
 			KingdomCivicLeadBook back = KingdomCuriosityLeadCodec.DecodeLeads(tampered);
-			Assert.AreEqual(KingdomCuriosityBookState.Quarantined, back.State,
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.Quarantined, back.State,
 				"a wire row whose identity is not its own derivation is not authority");
 			CollectionAssert.AreEqual(tampered, back.OpaquePayload);
 		}
@@ -593,16 +594,16 @@ namespace ThousandAndFirst.Tests
 		{
 			byte[] future = Future(0x31554354, version);
 			KingdomCuriosityBook book = KingdomCuriosityLeadCodec.DecodeCuriosity(future);
-			Assert.AreEqual(KingdomCuriosityBookState.FutureOpaque, book.State);
-			Assert.IsTrue(book.IsOpaqueFuture); Assert.IsFalse(book.Quarantined);
-			Assert.AreEqual(version, book.OpaqueVersion);
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.FutureOpaque, book.State);
+			ClassicAssert.IsTrue(book.IsOpaqueFuture); ClassicAssert.IsFalse(book.Quarantined);
+			ClassicAssert.AreEqual(version, book.OpaqueVersion);
 			CollectionAssert.AreEqual(future, book.OpaquePayload);
-			Assert.AreEqual(0, book.Rows.Count);
-			Assert.IsTrue(KingdomCuriosityLeadCodec.TryEncode(book, out byte[] again,
+			ClassicAssert.AreEqual(0, book.Rows.Count);
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCodec.TryEncode(book, out byte[] again,
 				out string failure), failure);
 			CollectionAssert.AreEqual(future, again);
-			Assert.AreNotSame(future, again);
-			Assert.IsFalse(KingdomCuriosityRules.TryPrepare(book, 0L, Cause("one"), Notes(),
+			ClassicAssert.AreNotSame(future, again);
+			ClassicAssert.IsFalse(KingdomCuriosityRules.TryPrepare(book, 0L, Cause("one"), Notes(),
 				out _, out _), "a future book is read-only");
 		}
 
@@ -612,13 +613,13 @@ namespace ThousandAndFirst.Tests
 		{
 			byte[] future = Future(0x314C4354, version);
 			KingdomCivicLeadBook book = KingdomCuriosityLeadCodec.DecodeLeads(future);
-			Assert.AreEqual(KingdomCuriosityBookState.FutureOpaque, book.State, book.Fault);
-			Assert.AreEqual(version, book.OpaqueVersion);
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.FutureOpaque, book.State, book.Fault);
+			ClassicAssert.AreEqual(version, book.OpaqueVersion);
 			CollectionAssert.AreEqual(future, book.OpaquePayload);
-			Assert.IsTrue(KingdomCuriosityLeadCodec.TryEncode(book, out byte[] again,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCodec.TryEncode(book, out byte[] again,
 				out string failure), failure);
 			CollectionAssert.AreEqual(future, again);
-			Assert.IsFalse(KingdomCivicLeadRules.TryPrepare(book, 0L, LeadCause(0), 0, true,
+			ClassicAssert.IsFalse(KingdomCivicLeadRules.TryPrepare(book, 0L, LeadCause(0), 0, true,
 				out _, out _));
 		}
 
@@ -634,8 +635,8 @@ namespace ThousandAndFirst.Tests
 			byte[] unsealed_ = new byte[future.Length - KingdomCuriosityLeadCodec.DigestBytes];
 			Buffer.BlockCopy(future, 0, unsealed_, 0, unsealed_.Length);
 			KingdomCuriosityBook book = KingdomCuriosityLeadCodec.DecodeCuriosity(unsealed_);
-			Assert.AreEqual(KingdomCuriosityBookState.Quarantined, book.State);
-			Assert.IsFalse(book.IsOpaqueFuture);
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.Quarantined, book.State);
+			ClassicAssert.IsFalse(book.IsOpaqueFuture);
 			CollectionAssert.AreEqual(unsealed_, book.OpaquePayload);
 		}
 
@@ -645,7 +646,7 @@ namespace ThousandAndFirst.Tests
 			byte[] future = Future(0x31554354, 7);
 			future[12] ^= 0x01;
 			KingdomCuriosityBook book = KingdomCuriosityLeadCodec.DecodeCuriosity(future);
-			Assert.AreEqual(KingdomCuriosityBookState.Quarantined, book.State);
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.Quarantined, book.State);
 			StringAssert.Contains("digest", book.Fault);
 			CollectionAssert.AreEqual(future, book.OpaquePayload);
 		}
@@ -677,10 +678,10 @@ namespace ThousandAndFirst.Tests
 					State = KingdomCuriosityBookState.FutureOpaque,
 					OpaqueVersion = 7, OpaquePayload = forgeries[i]
 				};
-				Assert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(forged, out byte[] bytes,
+				ClassicAssert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(forged, out byte[] bytes,
 					out string failure), "forgery " + i + " was written back");
-				Assert.IsNull(bytes, "forgery " + i);
-				Assert.IsNotEmpty(failure, "forgery " + i);
+				ClassicAssert.IsNull(bytes, "forgery " + i);
+				ClassicAssert.IsNotEmpty(failure, "forgery " + i);
 			}
 		}
 
@@ -701,9 +702,9 @@ namespace ThousandAndFirst.Tests
 				State = KingdomCuriosityBookState.FutureOpaque,
 				OpaqueVersion = declared, OpaquePayload = valid
 			};
-			Assert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(forged, out byte[] bytes,
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(forged, out byte[] bytes,
 				out string failure));
-			Assert.IsNull(bytes);
+			ClassicAssert.IsNull(bytes);
 			StringAssert.Contains("do not verify as one", failure);
 
 			byte[] leads = ValidLeads();
@@ -713,9 +714,9 @@ namespace ThousandAndFirst.Tests
 				OpaqueVersion = KingdomCuriosityLeadCodec.ReadInt32(leads, 4),
 				OpaquePayload = leads
 			};
-			Assert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(forgedLeads, out bytes,
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(forgedLeads, out bytes,
 				out failure));
-			Assert.IsNull(bytes);
+			ClassicAssert.IsNull(bytes);
 		}
 
 		/// <summary>
@@ -728,10 +729,10 @@ namespace ThousandAndFirst.Tests
 		{
 			byte[] bytes = ValidWithCategory();
 			int at = IndexOfAscii(bytes, "Historic Sites");
-			Assert.Greater(at, 0);
+			ClassicAssert.Greater(at, 0);
 			Write(bytes, at - 4, 16000000);
 			KingdomCuriosityBook book = KingdomCuriosityLeadCodec.DecodeCuriosity(Reseal(bytes));
-			Assert.AreEqual(KingdomCuriosityBookState.Quarantined, book.State);
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.Quarantined, book.State);
 			StringAssert.Contains("declares 16000000 bytes", book.Fault,
 				"the field's own bound must refuse this, not the end of the payload");
 		}
@@ -745,13 +746,13 @@ namespace ThousandAndFirst.Tests
 			Write(bytes, 16, KingdomCuriosityBook.MaxRows + 1);
 			KingdomCuriosityBook book = KingdomCuriosityLeadCodec.DecodeCuriosity(
 				Reseal(bytes));
-			Assert.AreEqual(KingdomCuriosityBookState.Quarantined, book.State);
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.Quarantined, book.State);
 			StringAssert.Contains("the row count is 4 against a maximum of 3", book.Fault);
 
 			byte[] enormous = Valid();
 			Write(enormous, 16, int.MaxValue);
 			book = KingdomCuriosityLeadCodec.DecodeCuriosity(Reseal(enormous));
-			Assert.AreEqual(KingdomCuriosityBookState.Quarantined, book.State);
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.Quarantined, book.State);
 			StringAssert.Contains("the row count is", book.Fault);
 		}
 
@@ -770,9 +771,9 @@ namespace ThousandAndFirst.Tests
 			Buffer.BlockCopy(two, 0, mislabelled, 0, mislabelled.Length);
 			Write(mislabelled, 4, KingdomCuriosityLeadCodec.FirstWireVersion);
 			KingdomCuriosityBook book = KingdomCuriosityLeadCodec.DecodeCuriosity(mislabelled);
-			Assert.AreEqual(KingdomCuriosityBookState.Quarantined, book.State,
+			ClassicAssert.AreEqual(KingdomCuriosityBookState.Quarantined, book.State,
 				"a revision 1 frame has no room for a revision 2 row, however well formed");
-			Assert.AreEqual(0, book.Rows.Count);
+			ClassicAssert.AreEqual(0, book.Rows.Count);
 			CollectionAssert.AreEqual(mislabelled, book.OpaquePayload);
 		}
 
@@ -783,12 +784,12 @@ namespace ThousandAndFirst.Tests
 		public void ARowMustMatchItsOwnDeclaredRevisionInBothDirections()
 		{
 			KingdomCuriosityBook book = new KingdomCuriosityBook();
-			Assert.IsTrue(KingdomCuriosityRules.TryPrepare(book, 0L, Cause("one"), Notes(),
+			ClassicAssert.IsTrue(KingdomCuriosityRules.TryPrepare(book, 0L, Cause("one"), Notes(),
 				out _, out string failure), failure);
-			Assert.AreEqual(KingdomCuriosityReceipt.CategoryVersion, book.Rows[0].Version);
+			ClassicAssert.AreEqual(KingdomCuriosityReceipt.CategoryVersion, book.Rows[0].Version);
 
 			book.Rows[0].NoteCategory = null;
-			Assert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(book, out _, out failure),
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(book, out _, out failure),
 				"a revision 2 row with no category must not be written");
 			StringAssert.Contains("does not satisfy its own rules", failure,
 				"the row must be refused by the book's rules, not by the writer running out of "
@@ -796,12 +797,12 @@ namespace ThousandAndFirst.Tests
 
 			book.Rows[0].Version = KingdomCuriosityReceipt.FirstVersion;
 			book.Rows[0].NoteCategory = "Historic Sites";
-			Assert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(book, out _, out failure),
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(book, out _, out failure),
 				"a revision 1 row carrying a category must not be written");
 			StringAssert.Contains("does not satisfy its own rules", failure);
 
 			book.Rows[0].NoteCategory = null;
-			Assert.IsTrue(KingdomCuriosityLeadCodec.TryEncode(book, out _, out failure), failure);
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCodec.TryEncode(book, out _, out failure), failure);
 		}
 
 		/// <summary>A book whose category a revision 1 row cannot testify to is not asked about
@@ -810,12 +811,12 @@ namespace ThousandAndFirst.Tests
 		public void CategoryIsComparedOnlyWhereTheReceiptCanTestifyToIt()
 		{
 			KingdomCuriosityBook book = new KingdomCuriosityBook();
-			Assert.IsTrue(KingdomCuriosityRules.TryPrepare(book, 0L, Cause("one"), Notes(),
+			ClassicAssert.IsTrue(KingdomCuriosityRules.TryPrepare(book, 0L, Cause("one"), Notes(),
 				out KingdomCuriosityReceipt current, out string failure), failure);
-			Assert.IsTrue(KingdomCuriosityRules.SameForeignNote(current,
+			ClassicAssert.IsTrue(KingdomCuriosityRules.SameForeignNote(current,
 				new KingdomCuriosityNote(current.NoteId, current.Locator, current.NoteText,
 					"Historic Sites", true)));
-			Assert.IsFalse(KingdomCuriosityRules.SameForeignNote(current,
+			ClassicAssert.IsFalse(KingdomCuriosityRules.SameForeignNote(current,
 				new KingdomCuriosityNote(current.NoteId, current.Locator, current.NoteText,
 					"Ruins", true)),
 				"a revision 2 receipt records the category and a changed one is a changed note");
@@ -823,7 +824,7 @@ namespace ThousandAndFirst.Tests
 			KingdomCuriosityReceipt migrated = current.Copy();
 			migrated.Version = KingdomCuriosityReceipt.FirstVersion;
 			migrated.NoteCategory = null;
-			Assert.IsTrue(KingdomCuriosityRules.SameForeignNote(migrated,
+			ClassicAssert.IsTrue(KingdomCuriosityRules.SameForeignNote(migrated,
 				new KingdomCuriosityNote(migrated.NoteId, migrated.Locator, migrated.NoteText,
 					"Ruins", true)),
 				"a revision 1 receipt stored no category, so silence must not be read as denial");
@@ -837,11 +838,11 @@ namespace ThousandAndFirst.Tests
 		{
 			byte[] future = Future(0x31554354, 7);
 			KingdomCuriosityBook book = KingdomCuriosityLeadCodec.DecodeCuriosity(future);
-			Assert.AreEqual(7, book.OpaqueVersion);
+			ClassicAssert.AreEqual(7, book.OpaqueVersion);
 			book.OpaqueVersion = 8;
-			Assert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(book, out byte[] bytes,
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(book, out byte[] bytes,
 				out string failure));
-			Assert.IsNull(bytes);
+			ClassicAssert.IsNull(bytes);
 			StringAssert.Contains("claims revision 8", failure);
 		}
 
@@ -854,14 +855,14 @@ namespace ThousandAndFirst.Tests
 			KingdomCuriosityBook relabelled = KingdomCuriosityLeadCodec.DecodeCuriosity(stub);
 			relabelled.State = KingdomCuriosityBookState.FutureOpaque;
 			relabelled.OpaqueVersion = 5;
-			Assert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(relabelled, out _, out string f));
-			Assert.IsNotEmpty(f);
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(relabelled, out _, out string f));
+			ClassicAssert.IsNotEmpty(f);
 
 			KingdomCivicLeadBook leadRelabelled = KingdomCuriosityLeadCodec.DecodeLeads(stub);
 			leadRelabelled.State = KingdomCuriosityBookState.FutureOpaque;
 			leadRelabelled.OpaqueVersion = 5;
-			Assert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(leadRelabelled, out _, out f));
-			Assert.IsNotEmpty(f);
+			ClassicAssert.IsFalse(KingdomCuriosityLeadCodec.TryEncode(leadRelabelled, out _, out f));
+			ClassicAssert.IsNotEmpty(f);
 		}
 
 		// ---- fixtures -------------------------------------------------------------------
@@ -926,9 +927,9 @@ namespace ThousandAndFirst.Tests
 		private static byte[] Valid()
 		{
 			KingdomCuriosityBook book = new KingdomCuriosityBook();
-			Assert.IsTrue(KingdomCuriosityRules.TryPrepare(book, 0L, Cause("one"), Notes(),
+			ClassicAssert.IsTrue(KingdomCuriosityRules.TryPrepare(book, 0L, Cause("one"), Notes(),
 				out _, out string failure), failure);
-			Assert.IsTrue(KingdomCuriosityLeadCodec.TryEncode(book, out byte[] bytes,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCodec.TryEncode(book, out byte[] bytes,
 				out failure), failure);
 			return bytes;
 		}
@@ -937,7 +938,7 @@ namespace ThousandAndFirst.Tests
 		private static byte[] ValidWithCategory()
 		{
 			byte[] bytes = Valid();
-			Assert.AreEqual(KingdomCuriosityLeadCodec.CuriosityHighestKnownVersion,
+			ClassicAssert.AreEqual(KingdomCuriosityLeadCodec.CuriosityHighestKnownVersion,
 				KingdomCuriosityLeadCodec.ReadInt32(bytes, 4),
 				"a freshly prepared row carries a category, so its book is revision 2");
 			return bytes;
@@ -946,9 +947,9 @@ namespace ThousandAndFirst.Tests
 		private static byte[] ValidLeads()
 		{
 			KingdomCivicLeadBook book = new KingdomCivicLeadBook();
-			Assert.IsTrue(KingdomCivicLeadRules.TryPrepare(book, 0L, LeadCause(0), 0, true,
+			ClassicAssert.IsTrue(KingdomCivicLeadRules.TryPrepare(book, 0L, LeadCause(0), 0, true,
 				out _, out string failure), failure);
-			Assert.IsTrue(KingdomCuriosityLeadCodec.TryEncode(book, out byte[] bytes,
+			ClassicAssert.IsTrue(KingdomCuriosityLeadCodec.TryEncode(book, out byte[] bytes,
 				out failure), failure);
 			return bytes;
 		}
@@ -957,7 +958,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCivicLeadBook book = new KingdomCivicLeadBook();
 			for (int i = 0; i < KingdomCivicLeadBook.MaxRows; i++)
-				Assert.IsTrue(KingdomCivicLeadRules.TryPrepare(book, book.Revision, LeadCause(i),
+				ClassicAssert.IsTrue(KingdomCivicLeadRules.TryPrepare(book, book.Revision, LeadCause(i),
 					i, true, out _, out string failure), failure);
 			return book;
 		}

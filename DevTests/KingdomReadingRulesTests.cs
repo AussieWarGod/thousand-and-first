@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Api;
 using ThousandAndFirst.Simulation.City;
 
@@ -20,19 +21,19 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PublishedReadingEnumsKeepByteAbiAndExactValues()
 		{
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomWorkClass)));
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomWorkClass)));
 			CollectionAssert.AreEqual(new[] { "Other", "Growing", "Store", "Producer",
 				"Refiner", "Power", "Construction" }, Enum.GetNames(typeof(KingdomWorkClass)));
 			CollectionAssert.AreEqual(new byte[] { 0, 1, 2, 3, 4, 5, 6 }, Array.ConvertAll(
 				(KingdomWorkClass[])Enum.GetValues(typeof(KingdomWorkClass)), value => (byte)value));
 
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomDayPlace)));
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomDayPlace)));
 			CollectionAssert.AreEqual(new[] { "Hearth", "Field", "Yard", "Market", "Craft",
 				"Watch", "Shrine" }, Enum.GetNames(typeof(KingdomDayPlace)));
 			CollectionAssert.AreEqual(new byte[] { 0, 1, 2, 3, 4, 5, 6 }, Array.ConvertAll(
 				(KingdomDayPlace[])Enum.GetValues(typeof(KingdomDayPlace)), value => (byte)value));
 
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomRollStanding)));
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomRollStanding)));
 			CollectionAssert.AreEqual(new[] { "Resident", "Abroad", "Dead", "Expedition" },
 				Enum.GetNames(typeof(KingdomRollStanding)));
 			CollectionAssert.AreEqual(new byte[] { 0, 1, 2, 3 }, Array.ConvertAll(
@@ -46,7 +47,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityState state;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
+			ClassicAssert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
 				"taf:city:kavvat", 900L, stocks, zones, works, residents, null, out state, out fault), fault.ToString());
 			return state;
 		}
@@ -74,44 +75,44 @@ namespace ThousandAndFirst.Tests
 				Book(new KingdomZoneRow[1] { zone }, new KingdomWorkRow[1] { work }, new KingdomResidentRow[1] { settler },
 					Stocks(100L, 240L, 12L, 60L, 3L, 40L)));
 
-			Assert.AreEqual("Kavvat", reading.CityName);
-			Assert.AreEqual("taf:city:kavvat", reading.SettlementId);
-			Assert.AreEqual(900L, reading.ProcessedThroughTick);
-			Assert.AreEqual(100L, reading.Water.Level);
-			Assert.AreEqual(240L, reading.Water.Capacity);
-			Assert.AreEqual(48L, reading.Food.Room);
+			ClassicAssert.AreEqual("Kavvat", reading.CityName);
+			ClassicAssert.AreEqual("taf:city:kavvat", reading.SettlementId);
+			ClassicAssert.AreEqual(900L, reading.ProcessedThroughTick);
+			ClassicAssert.AreEqual(100L, reading.Water.Level);
+			ClassicAssert.AreEqual(240L, reading.Water.Capacity);
+			ClassicAssert.AreEqual(48L, reading.Food.Room);
 
 			KingdomZoneReading z;
-			Assert.IsTrue(reading.TryZone(0, out z));
-			Assert.AreEqual(Here, z.ZoneId);
-			Assert.AreEqual(10L, z.Water.Level);
-			Assert.AreEqual(5, z.Roofs);
-			Assert.AreEqual(2, z.Defence);
-			Assert.AreEqual(-6, z.OwedWater);
-			Assert.AreEqual(7, z.OwedFood);
-			Assert.AreEqual(800L, z.LastReadTick);
+			ClassicAssert.IsTrue(reading.TryZone(0, out z));
+			ClassicAssert.AreEqual(Here, z.ZoneId);
+			ClassicAssert.AreEqual(10L, z.Water.Level);
+			ClassicAssert.AreEqual(5, z.Roofs);
+			ClassicAssert.AreEqual(2, z.Defence);
+			ClassicAssert.AreEqual(-6, z.OwedWater);
+			ClassicAssert.AreEqual(7, z.OwedFood);
+			ClassicAssert.AreEqual(800L, z.LastReadTick);
 
 			KingdomWorkReading w;
-			Assert.IsTrue(reading.TryWork(0, out w));
-			Assert.AreEqual(11, w.WorkId);
-			Assert.AreEqual("mill", w.DesignKey);
-			Assert.AreEqual(62, w.ConditionPercent);
-			Assert.AreEqual(2, w.CrewAssigned);
-			Assert.AreEqual(KingdomWorkClass.Producer, w.Class);
-			Assert.AreEqual(3, w.Stage);
-			Assert.AreEqual(44, w.Progress);
-			Assert.AreEqual(1200L, w.NextTick);
+			ClassicAssert.IsTrue(reading.TryWork(0, out w));
+			ClassicAssert.AreEqual(11, w.WorkId);
+			ClassicAssert.AreEqual("mill", w.DesignKey);
+			ClassicAssert.AreEqual(62, w.ConditionPercent);
+			ClassicAssert.AreEqual(2, w.CrewAssigned);
+			ClassicAssert.AreEqual(KingdomWorkClass.Producer, w.Class);
+			ClassicAssert.AreEqual(3, w.Stage);
+			ClassicAssert.AreEqual(44, w.Progress);
+			ClassicAssert.AreEqual(1200L, w.NextTick);
 
 			KingdomResidentReading r;
-			Assert.IsTrue(reading.TryResident(0, out r));
-			Assert.AreEqual(21, r.ResidentId);
-			Assert.AreEqual("Ptoh", r.Name);
-			Assert.AreEqual(Here, r.ZoneId);
-			Assert.AreEqual(KingdomDayPlace.Watch, r.Day);
-			Assert.AreEqual(KingdomRollStanding.Abroad, r.Standing);
-			Assert.AreEqual(300L, r.ArrivedTick);
-			Assert.AreEqual(11, r.HomeWorkId);
-			Assert.AreEqual(12, r.JobWorkId);
+			ClassicAssert.IsTrue(reading.TryResident(0, out r));
+			ClassicAssert.AreEqual(21, r.ResidentId);
+			ClassicAssert.AreEqual("Ptoh", r.Name);
+			ClassicAssert.AreEqual(Here, r.ZoneId);
+			ClassicAssert.AreEqual(KingdomDayPlace.Watch, r.Day);
+			ClassicAssert.AreEqual(KingdomRollStanding.Abroad, r.Standing);
+			ClassicAssert.AreEqual(300L, r.ArrivedTick);
+			ClassicAssert.AreEqual(11, r.HomeWorkId);
+			ClassicAssert.AreEqual(12, r.JobWorkId);
 		}
 
 		/// <summary>A null book is an empty reading, never null: every consumer is a loop over
@@ -120,12 +121,12 @@ namespace ThousandAndFirst.Tests
 		public void Project_ANullBookIsAnEmptyReading()
 		{
 			KingdomCityReading reading = KingdomReadingRules.Project("Kavvat", null);
-			Assert.IsNotNull(reading);
-			Assert.AreEqual(0, reading.ZoneCount);
-			Assert.AreEqual(0, reading.WorkCount);
-			Assert.AreEqual(0, reading.ResidentCount);
-			Assert.AreEqual(0, reading.LivingCount);
-			Assert.AreEqual("", reading.SettlementId);
+			ClassicAssert.IsNotNull(reading);
+			ClassicAssert.AreEqual(0, reading.ZoneCount);
+			ClassicAssert.AreEqual(0, reading.WorkCount);
+			ClassicAssert.AreEqual(0, reading.ResidentCount);
+			ClassicAssert.AreEqual(0, reading.LivingCount);
+			ClassicAssert.AreEqual("", reading.SettlementId);
 		}
 
 		/// <summary>Out-of-range reads answer false and a default, never an exception: an
@@ -137,9 +138,9 @@ namespace ThousandAndFirst.Tests
 			KingdomZoneReading z;
 			KingdomWorkReading w;
 			KingdomResidentReading r;
-			Assert.IsFalse(reading.TryZone(0, out z));
-			Assert.IsFalse(reading.TryWork(-1, out w));
-			Assert.IsFalse(reading.TryResident(9, out r));
+			ClassicAssert.IsFalse(reading.TryZone(0, out z));
+			ClassicAssert.IsFalse(reading.TryWork(-1, out w));
+			ClassicAssert.IsFalse(reading.TryResident(9, out r));
 		}
 
 		/// <summary>Only living rows count as living. A row that is abroad or dead is on the book
@@ -153,7 +154,7 @@ namespace ThousandAndFirst.Tests
 				Settler(2, KingdomResidentStanding.Abroad),
 				Settler(3, KingdomResidentStanding.Dead)
 			};
-			Assert.AreEqual(1, KingdomReadingRules.Project("Kavvat", Book(null, null, rows, default(KingdomStocks))).LivingCount);
+			ClassicAssert.AreEqual(1, KingdomReadingRules.Project("Kavvat", Book(null, null, rows, default(KingdomStocks))).LivingCount);
 		}
 
 		/// <summary>The class mapping is a switch, so it is total and it round-trips. Every model
@@ -167,8 +168,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomWorkKind.Construction, KingdomWorkClass.Construction)]
 		public void Class_MapsBothWays(KingdomWorkKind kind, KingdomWorkClass expected)
 		{
-			Assert.AreEqual(expected, KingdomReadingRules.Class(kind));
-			Assert.AreEqual(kind, KingdomReadingRules.Kind(expected));
+			ClassicAssert.AreEqual(expected, KingdomReadingRules.Class(kind));
+			ClassicAssert.AreEqual(kind, KingdomReadingRules.Kind(expected));
 		}
 
 		/// <summary>Rows and posts share this exact pure priority table. Each engine-supported work
@@ -188,7 +189,7 @@ namespace ThousandAndFirst.Tests
 			bool construction, bool store, bool power, bool refiner, bool producer,
 			KingdomWorkKind expected)
 		{
-			Assert.AreEqual(expected, KingdomWorkRules.Classify(new KingdomWorkTraits(growing,
+			ClassicAssert.AreEqual(expected, KingdomWorkRules.Classify(new KingdomWorkTraits(growing,
 				construction, store, power, refiner, producer)));
 		}
 
@@ -197,9 +198,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Class_AnUnknownKindIsOther()
 		{
-			Assert.AreEqual(KingdomWorkClass.Other, KingdomReadingRules.Class((KingdomWorkKind)200));
-			Assert.AreEqual(KingdomDayPlace.Hearth, KingdomReadingRules.Day((KingdomDayShape)200));
-			Assert.AreEqual(KingdomRollStanding.Resident, KingdomReadingRules.Standing((KingdomResidentStanding)200));
+			ClassicAssert.AreEqual(KingdomWorkClass.Other, KingdomReadingRules.Class((KingdomWorkKind)200));
+			ClassicAssert.AreEqual(KingdomDayPlace.Hearth, KingdomReadingRules.Day((KingdomDayShape)200));
+			ClassicAssert.AreEqual(KingdomRollStanding.Resident, KingdomReadingRules.Standing((KingdomResidentStanding)200));
 		}
 
 		/// <summary>Every day shape has a published place.</summary>
@@ -212,7 +213,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(KingdomDayShape.Shrine, KingdomDayPlace.Shrine)]
 		public void Day_MapsEveryShape(KingdomDayShape shape, KingdomDayPlace expected)
 		{
-			Assert.AreEqual(expected, KingdomReadingRules.Day(shape));
+			ClassicAssert.AreEqual(expected, KingdomReadingRules.Day(shape));
 		}
 
 		private static KingdomResidentRow Settler(int id, KingdomResidentStanding standing)

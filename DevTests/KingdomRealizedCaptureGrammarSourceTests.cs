@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -27,10 +28,10 @@ namespace ThousandAndFirst.Tests
 		private static string Section(string source, string start, string end)
 		{
 			int begin = source.IndexOf(start, StringComparison.Ordinal);
-			Assert.Greater(begin, -1, start);
+			ClassicAssert.Greater(begin, -1, start);
 			int stop = source.IndexOf(end, begin + start.Length, StringComparison.Ordinal);
 			if (stop < 0) stop = source.Length;
-			Assert.Greater(stop, begin, end);
+			ClassicAssert.Greater(stop, begin, end);
 			return source.Substring(begin, stop - begin);
 		}
 

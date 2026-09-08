@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 using Frontier = ThousandAndFirst.KingdomRules.Frontier;
 using Ground = ThousandAndFirst.KingdomPlotRules.GroundKind;
@@ -33,7 +34,7 @@ namespace ThousandAndFirst.Tests
 
 		private static Rect At(int X, int Y, Size Size)
 		{
-			Assert.IsTrue(KingdomPlotRules.TryRectAt(X, Y, Size, out var rect), "expected a rect for " + Size);
+			ClassicAssert.IsTrue(KingdomPlotRules.TryRectAt(X, Y, Size, out var rect), "expected a rect for " + Size);
 			return rect;
 		}
 
@@ -70,20 +71,20 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Size.Huge, 20, 18)]
 		public void TierHasItsDimensions(Size Size, int ExpectedWidth, int ExpectedHeight)
 		{
-			Assert.IsTrue(KingdomPlotRules.TryDimensions(Size, out var width, out var height));
-			Assert.AreEqual(ExpectedWidth, width, "width");
-			Assert.AreEqual(ExpectedHeight, height, "height");
-			Assert.AreEqual(0, width % 2, "every horizontal axis uses the same even seam law");
-			Assert.AreEqual(0, height % 2, "every vertical axis uses the same even seam law");
+			ClassicAssert.IsTrue(KingdomPlotRules.TryDimensions(Size, out var width, out var height));
+			ClassicAssert.AreEqual(ExpectedWidth, width, "width");
+			ClassicAssert.AreEqual(ExpectedHeight, height, "height");
+			ClassicAssert.AreEqual(0, width % 2, "every horizontal axis uses the same even seam law");
+			ClassicAssert.AreEqual(0, height % 2, "every vertical axis uses the same even seam law");
 		}
 
 		[Test]
 		public void NoneIsNotATier()
 		{
-			Assert.IsFalse(KingdomPlotRules.TryDimensions(Size.None, out var width, out var height));
-			Assert.AreEqual(0, width);
-			Assert.AreEqual(0, height);
-			Assert.IsFalse(KingdomPlotRules.TryRectAt(4, 4, Size.None, out _));
+			ClassicAssert.IsFalse(KingdomPlotRules.TryDimensions(Size.None, out var width, out var height));
+			ClassicAssert.AreEqual(0, width);
+			ClassicAssert.AreEqual(0, height);
+			ClassicAssert.IsFalse(KingdomPlotRules.TryRectAt(4, 4, Size.None, out _));
 		}
 
 		[Test]
@@ -96,8 +97,8 @@ namespace ThousandAndFirst.Tests
 			{
 				KingdomPlotRules.TryDimensions(order[i - 1], out var lastWidth, out var lastHeight);
 				KingdomPlotRules.TryDimensions(order[i], out var width, out var height);
-				Assert.Greater(width, lastWidth, order[i] + " width");
-				Assert.Greater(height, lastHeight, order[i] + " height");
+				ClassicAssert.Greater(width, lastWidth, order[i] + " width");
+				ClassicAssert.Greater(height, lastHeight, order[i] + " height");
 			}
 		}
 
@@ -105,48 +106,48 @@ namespace ThousandAndFirst.Tests
 		public void RectAtAnchorRunsFromTheAnchor()
 		{
 			Rect rect = At(10, 7, Size.Medium);
-			Assert.AreEqual(10, rect.X1);
-			Assert.AreEqual(7, rect.Y1);
-			Assert.AreEqual(17, rect.X2);
-			Assert.AreEqual(12, rect.Y2);
-			Assert.AreEqual(8, rect.Width);
-			Assert.AreEqual(6, rect.Height);
-			Assert.AreEqual(48, rect.Area);
+			ClassicAssert.AreEqual(10, rect.X1);
+			ClassicAssert.AreEqual(7, rect.Y1);
+			ClassicAssert.AreEqual(17, rect.X2);
+			ClassicAssert.AreEqual(12, rect.Y2);
+			ClassicAssert.AreEqual(8, rect.Width);
+			ClassicAssert.AreEqual(6, rect.Height);
+			ClassicAssert.AreEqual(48, rect.Area);
 		}
 
 		[Test]
 		public void CentreIsBiasedToTheLowCornerOnAnEvenSpan()
 		{
 			Rect rect = At(10, 10, Size.Small);
-			Assert.AreEqual(12, rect.CenterX, "6 wide, low centre");
-			Assert.AreEqual(11, rect.CenterY, "4 tall");
+			ClassicAssert.AreEqual(12, rect.CenterX, "6 wide, low centre");
+			ClassicAssert.AreEqual(11, rect.CenterY, "4 tall");
 		}
 
 		[Test]
 		public void BordersAndCornersAreTheEdgeCells()
 		{
 			Rect rect = R(0, 0, 4, 3);
-			Assert.IsTrue(rect.IsBorder(0, 0));
-			Assert.IsTrue(rect.IsCorner(0, 0));
-			Assert.IsTrue(rect.IsBorder(2, 0));
-			Assert.IsFalse(rect.IsCorner(2, 0));
-			Assert.IsFalse(rect.IsBorder(2, 1));
-			Assert.IsFalse(rect.IsBorder(9, 9));
-			Assert.IsTrue(rect.Contains(4, 3));
-			Assert.IsFalse(rect.Contains(5, 3));
+			ClassicAssert.IsTrue(rect.IsBorder(0, 0));
+			ClassicAssert.IsTrue(rect.IsCorner(0, 0));
+			ClassicAssert.IsTrue(rect.IsBorder(2, 0));
+			ClassicAssert.IsFalse(rect.IsCorner(2, 0));
+			ClassicAssert.IsFalse(rect.IsBorder(2, 1));
+			ClassicAssert.IsFalse(rect.IsBorder(9, 9));
+			ClassicAssert.IsTrue(rect.Contains(4, 3));
+			ClassicAssert.IsFalse(rect.Contains(5, 3));
 		}
 
 		[Test]
 		public void PersistedZoneRectsRejectTornInvertedAndOutOfZoneGeometry()
 		{
-			Assert.IsTrue(KingdomPlotRules.ValidZoneRect(R(0, 0, W - 1, H - 1), W, H));
-			Assert.IsFalse(KingdomPlotRules.ValidZoneRect(R(4, 2, 3, 8), W, H));
-			Assert.IsFalse(KingdomPlotRules.ValidZoneRect(R(4, 8, 9, 7), W, H));
-			Assert.IsFalse(KingdomPlotRules.ValidZoneRect(R(-1, 0, 4, 3), W, H));
-			Assert.IsFalse(KingdomPlotRules.ValidZoneRect(R(0, 0, W, 3), W, H));
-			Assert.IsFalse(KingdomPlotRules.ValidZoneRect(R(0, 0, 3, H), W, H));
-			Assert.IsFalse(KingdomPlotRules.ValidZoneRect(R(0, 0, 0, 0), 0, H));
-			Assert.IsFalse(KingdomPlotRules.Fits(R(4, 2, 3, 8), R(0, 0, 10, 10)));
+			ClassicAssert.IsTrue(KingdomPlotRules.ValidZoneRect(R(0, 0, W - 1, H - 1), W, H));
+			ClassicAssert.IsFalse(KingdomPlotRules.ValidZoneRect(R(4, 2, 3, 8), W, H));
+			ClassicAssert.IsFalse(KingdomPlotRules.ValidZoneRect(R(4, 8, 9, 7), W, H));
+			ClassicAssert.IsFalse(KingdomPlotRules.ValidZoneRect(R(-1, 0, 4, 3), W, H));
+			ClassicAssert.IsFalse(KingdomPlotRules.ValidZoneRect(R(0, 0, W, 3), W, H));
+			ClassicAssert.IsFalse(KingdomPlotRules.ValidZoneRect(R(0, 0, 3, H), W, H));
+			ClassicAssert.IsFalse(KingdomPlotRules.ValidZoneRect(R(0, 0, 0, 0), 0, H));
+			ClassicAssert.IsFalse(KingdomPlotRules.Fits(R(4, 2, 3, 8), R(0, 0, 10, 10)));
 		}
 
 		// --- Stage gating: the city builds bigger as it grows ------------------------------
@@ -158,7 +159,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(GrowthStage.City, Size.Huge)]
 		public void StageHasItsCeiling(GrowthStage Stage, Size Expected)
 		{
-			Assert.AreEqual(Expected, KingdomPlotRules.MaxSizeForStage(Stage));
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.MaxSizeForStage(Stage));
 		}
 
 		[TestCase(GrowthStage.Camp, Size.Small, true)]
@@ -175,7 +176,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(GrowthStage.City, Size.Small, true)]
 		public void StageGatesTheTier(GrowthStage Stage, Size Size, bool Expected)
 		{
-			Assert.AreEqual(Expected, KingdomPlotRules.Allows(Stage, Size));
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.Allows(Stage, Size));
 		}
 
 		[Test]
@@ -183,8 +184,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// Small plots never obsolete, and None is not a plot at all: a stage that allowed it
 			// would put single-cell furniture back on the plot path.
-			Assert.IsFalse(KingdomPlotRules.Allows(GrowthStage.Camp, Size.None));
-			Assert.IsFalse(KingdomPlotRules.Allows(GrowthStage.City, Size.None));
+			ClassicAssert.IsFalse(KingdomPlotRules.Allows(GrowthStage.Camp, Size.None));
+			ClassicAssert.IsFalse(KingdomPlotRules.Allows(GrowthStage.City, Size.None));
 		}
 
 		[TestCase(Size.Small, GrowthStage.Camp)]
@@ -193,8 +194,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Size.Huge, GrowthStage.City)]
 		public void EveryTierNamesTheStageThatLiftsIt(Size Size, GrowthStage Expected)
 		{
-			Assert.AreEqual(Expected, KingdomPlotRules.StageForSize(Size));
-			Assert.IsTrue(KingdomPlotRules.Allows(Expected, Size), "the stage it names must actually allow it");
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.StageForSize(Size));
+			ClassicAssert.IsTrue(KingdomPlotRules.Allows(Expected, Size), "the stage it names must actually allow it");
 		}
 
 		// --- Zone interior and the road budget --------------------------------------------
@@ -202,72 +203,72 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void InteriorIsInsetFromEveryEdge()
 		{
-			Assert.IsTrue(KingdomPlotRules.TryInterior(W, H, out var interior));
-			Assert.AreEqual(2, interior.X1);
-			Assert.AreEqual(2, interior.Y1);
-			Assert.AreEqual(77, interior.X2);
-			Assert.AreEqual(22, interior.Y2);
-			Assert.AreEqual(76, interior.Width);
-			Assert.AreEqual(21, interior.Height);
+			ClassicAssert.IsTrue(KingdomPlotRules.TryInterior(W, H, out var interior));
+			ClassicAssert.AreEqual(2, interior.X1);
+			ClassicAssert.AreEqual(2, interior.Y1);
+			ClassicAssert.AreEqual(77, interior.X2);
+			ClassicAssert.AreEqual(22, interior.Y2);
+			ClassicAssert.AreEqual(76, interior.Width);
+			ClassicAssert.AreEqual(21, interior.Height);
 		}
 
 		[Test]
 		public void AZoneTooSmallToInsetHasNoInterior()
 		{
-			Assert.IsFalse(KingdomPlotRules.TryInterior(4, 25, out _));
-			Assert.IsFalse(KingdomPlotRules.TryInterior(80, 4, out _));
-			Assert.AreEqual(0, KingdomPlotRules.PlotAreaAllowance(4, 4));
+			ClassicAssert.IsFalse(KingdomPlotRules.TryInterior(4, 25, out _));
+			ClassicAssert.IsFalse(KingdomPlotRules.TryInterior(80, 4, out _));
+			ClassicAssert.AreEqual(0, KingdomPlotRules.PlotAreaAllowance(4, 4));
 		}
 
 		[Test]
 		public void InsetOriginBoundsKeepTheTrueExteriorLaneInsideASurfaceZone()
 		{
 			int clearance = KingdomPlotRules.RoadMargin + 1;
-			Assert.IsTrue(KingdomPlotRules.TryInsetOriginBounds(W, H, 12, 10,
+			ClassicAssert.IsTrue(KingdomPlotRules.TryInsetOriginBounds(W, H, 12, 10,
 				clearance, out var large));
-			Assert.AreEqual(R(2, 2, 66, 13), large);
+			ClassicAssert.AreEqual(R(2, 2, 66, 13), large);
 			Rect southmost = new Rect(large.X1, large.Y2,
 				large.X1 + 11, large.Y2 + 9);
-			Assert.AreEqual(22, southmost.Y2);
-			Assert.LessOrEqual(southmost.Y2 + clearance, H - 1);
+			ClassicAssert.AreEqual(22, southmost.Y2);
+			ClassicAssert.LessOrEqual(southmost.Y2 + clearance, H - 1);
 
-			Assert.IsTrue(KingdomPlotRules.TryInsetOriginBounds(W, H, 20, 18,
+			ClassicAssert.IsTrue(KingdomPlotRules.TryInsetOriginBounds(W, H, 20, 18,
 				clearance, out var huge));
-			Assert.AreEqual(R(2, 2, 58, 5), huge);
-			Assert.LessOrEqual(huge.Y2 + 17 + clearance, H - 1);
+			ClassicAssert.AreEqual(R(2, 2, 58, 5), huge);
+			ClassicAssert.LessOrEqual(huge.Y2 + 17 + clearance, H - 1);
 
-			Assert.IsTrue(KingdomPlotRules.TryInsetOriginBounds(W, H, 18, 20,
+			ClassicAssert.IsTrue(KingdomPlotRules.TryInsetOriginBounds(W, H, 18, 20,
 				clearance, out var rotatedHuge));
-			Assert.AreEqual(R(2, 2, 60, 3), rotatedHuge);
-			Assert.LessOrEqual(rotatedHuge.Y2 + 19 + clearance, H - 1);
+			ClassicAssert.AreEqual(R(2, 2, 60, 3), rotatedHuge);
+			ClassicAssert.LessOrEqual(rotatedHuge.Y2 + 19 + clearance, H - 1);
 		}
 
 		[Test]
 		public void InsetOriginBoundsRefuseMalformedOrImpossibleGeometry()
 		{
-			Assert.IsFalse(KingdomPlotRules.TryInsetOriginBounds(W, H, 0, 10, 2, out _));
-			Assert.IsFalse(KingdomPlotRules.TryInsetOriginBounds(W, H, 12, 10, -1, out _));
-			Assert.IsFalse(KingdomPlotRules.TryInsetOriginBounds(12, 10, 12, 10, 1, out _));
-			Assert.IsFalse(KingdomPlotRules.TryInsetOriginBounds(int.MaxValue, H,
+			ClassicAssert.IsFalse(KingdomPlotRules.TryInsetOriginBounds(W, H, 0, 10, 2, out _));
+			ClassicAssert.IsFalse(KingdomPlotRules.TryInsetOriginBounds(W, H, 12, 10, -1, out _));
+			ClassicAssert.IsFalse(KingdomPlotRules.TryInsetOriginBounds(12, 10, 12, 10, 1, out _));
+			ClassicAssert.IsFalse(KingdomPlotRules.TryInsetOriginBounds(int.MaxValue, H,
 				int.MaxValue, 10, int.MaxValue, out _));
 		}
 
 		[Test]
 		public void EveryTierFitsASurfaceZonesInterior()
 		{
-			Assert.IsTrue(KingdomPlotRules.TryInterior(W, H, out var interior));
-			Assert.IsTrue(KingdomPlotRules.Fits(At(2, 2, Size.Huge), interior), "XL must fit or it can never be laid");
-			Assert.IsFalse(KingdomPlotRules.Fits(At(70, 2, Size.Huge), interior));
+			ClassicAssert.IsTrue(KingdomPlotRules.TryInterior(W, H, out var interior));
+			ClassicAssert.IsTrue(KingdomPlotRules.Fits(At(2, 2, Size.Huge), interior), "XL must fit or it can never be laid");
+			ClassicAssert.IsFalse(KingdomPlotRules.Fits(At(70, 2, Size.Huge), interior));
 		}
 
 		[Test]
 		public void ReservedRectIsTheLane()
 		{
 			Rect reserved = KingdomPlotRules.Reserved(R(10, 10, 14, 13));
-			Assert.AreEqual(9, reserved.X1);
-			Assert.AreEqual(9, reserved.Y1);
-			Assert.AreEqual(15, reserved.X2);
-			Assert.AreEqual(14, reserved.Y2);
+			ClassicAssert.AreEqual(9, reserved.X1);
+			ClassicAssert.AreEqual(9, reserved.Y1);
+			ClassicAssert.AreEqual(15, reserved.X2);
+			ClassicAssert.AreEqual(14, reserved.Y2);
 		}
 
 		[Test]
@@ -275,29 +276,29 @@ namespace ThousandAndFirst.Tests
 		{
 			Rect laid = R(10, 10, 14, 13);
 			// Hard against it: overlaps the lane.
-			Assert.IsTrue(KingdomPlotRules.CrowdsExisting(R(15, 10, 19, 13), Rects(laid)));
+			ClassicAssert.IsTrue(KingdomPlotRules.CrowdsExisting(R(15, 10, 19, 13), Rects(laid)));
 			// One cell of road between them: allowed, and that road is what settlers wear a path
 			// into later.
-			Assert.IsFalse(KingdomPlotRules.CrowdsExisting(R(16, 10, 20, 13), Rects(laid)));
+			ClassicAssert.IsFalse(KingdomPlotRules.CrowdsExisting(R(16, 10, 20, 13), Rects(laid)));
 			// Straight overlap.
-			Assert.IsTrue(KingdomPlotRules.CrowdsExisting(R(12, 12, 16, 15), Rects(laid)));
-			Assert.IsFalse(KingdomPlotRules.CrowdsExisting(R(0, 0, 4, 3), Rects(laid)));
-			Assert.IsFalse(KingdomPlotRules.CrowdsExisting(R(0, 0, 4, 3), null));
+			ClassicAssert.IsTrue(KingdomPlotRules.CrowdsExisting(R(12, 12, 16, 15), Rects(laid)));
+			ClassicAssert.IsFalse(KingdomPlotRules.CrowdsExisting(R(0, 0, 4, 3), Rects(laid)));
+			ClassicAssert.IsFalse(KingdomPlotRules.CrowdsExisting(R(0, 0, 4, 3), null));
 		}
 
 		[Test]
 		public void OverlapIsSymmetricAndInclusive()
 		{
-			Assert.IsTrue(KingdomPlotRules.Overlaps(R(0, 0, 4, 4), R(4, 4, 8, 8)));
-			Assert.IsTrue(KingdomPlotRules.Overlaps(R(4, 4, 8, 8), R(0, 0, 4, 4)));
-			Assert.IsFalse(KingdomPlotRules.Overlaps(R(0, 0, 3, 3), R(4, 4, 8, 8)));
+			ClassicAssert.IsTrue(KingdomPlotRules.Overlaps(R(0, 0, 4, 4), R(4, 4, 8, 8)));
+			ClassicAssert.IsTrue(KingdomPlotRules.Overlaps(R(4, 4, 8, 8), R(0, 0, 4, 4)));
+			ClassicAssert.IsFalse(KingdomPlotRules.Overlaps(R(0, 0, 3, 3), R(4, 4, 8, 8)));
 		}
 
 		[Test]
 		public void RoadBudgetLeavesFourPartsInTen()
 		{
 			// 76 x 21 interior is 1596 cells; sixty percent of it may be plot.
-			Assert.AreEqual(957, KingdomPlotRules.PlotAreaAllowance(W, H));
+			ClassicAssert.AreEqual(957, KingdomPlotRules.PlotAreaAllowance(W, H));
 		}
 
 		[Test]
@@ -310,18 +311,18 @@ namespace ThousandAndFirst.Tests
 				R(0, 0, 11, 9), R(0, 0, 11, 9),
 				R(0, 0, 7, 5), R(0, 0, 7, 5), R(0, 0, 7, 5), R(0, 0, 7, 5),
 				R(0, 0, 5, 3), R(0, 0, 5, 3), R(0, 0, 5, 3), R(0, 0, 5, 3), R(0, 0, 5, 3), R(0, 0, 5, 3));
-			Assert.AreEqual(936, KingdomPlotRules.LaidArea(laid));
-			Assert.IsTrue(KingdomPlotRules.WouldExceedBudget(laid, Size.Small, W, H), "the minimum mix leaves less than one S lot");
-			Assert.IsTrue(KingdomPlotRules.WouldExceedBudget(laid, Size.Large, W, H), "another hall does not");
+			ClassicAssert.AreEqual(936, KingdomPlotRules.LaidArea(laid));
+			ClassicAssert.IsTrue(KingdomPlotRules.WouldExceedBudget(laid, Size.Small, W, H), "the minimum mix leaves less than one S lot");
+			ClassicAssert.IsTrue(KingdomPlotRules.WouldExceedBudget(laid, Size.Large, W, H), "another hall does not");
 		}
 
 		[Test]
 		public void AnEmptyZoneAffordsAnythingAndANonPlotSpendsNothing()
 		{
-			Assert.IsFalse(KingdomPlotRules.WouldExceedBudget(null, Size.Huge, W, H));
-			Assert.IsFalse(KingdomPlotRules.WouldExceedBudget(Rects(R(0, 0, 69, 9)), Size.None, W, H));
-			Assert.IsTrue(KingdomPlotRules.WouldExceedBudget(Rects(R(0, 0, 69, 9)), Size.Huge, W, H));
-			Assert.AreEqual(0, KingdomPlotRules.LaidArea(null));
+			ClassicAssert.IsFalse(KingdomPlotRules.WouldExceedBudget(null, Size.Huge, W, H));
+			ClassicAssert.IsFalse(KingdomPlotRules.WouldExceedBudget(Rects(R(0, 0, 69, 9)), Size.None, W, H));
+			ClassicAssert.IsTrue(KingdomPlotRules.WouldExceedBudget(Rects(R(0, 0, 69, 9)), Size.Huge, W, H));
+			ClassicAssert.AreEqual(0, KingdomPlotRules.LaidArea(null));
 		}
 
 		// --- The heart: seeded at the rite, drifting to the built centre --------------------
@@ -329,17 +330,17 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void NoRiteAndNoWorksIsNoHeart()
 		{
-			Assert.IsFalse(KingdomPlotRules.TryHeart(Marks(), HasRite: false, 0, 0, out var x, out var y));
-			Assert.AreEqual(0, x);
-			Assert.AreEqual(0, y);
+			ClassicAssert.IsFalse(KingdomPlotRules.TryHeart(Marks(), HasRite: false, 0, 0, out var x, out var y));
+			ClassicAssert.AreEqual(0, x);
+			ClassicAssert.AreEqual(0, y);
 		}
 
 		[Test]
 		public void TheRiteGroundIsTheFirstHeart()
 		{
-			Assert.IsTrue(KingdomPlotRules.TryHeart(Marks(), HasRite: true, 12, 7, out var x, out var y));
-			Assert.AreEqual(12, x);
-			Assert.AreEqual(7, y);
+			ClassicAssert.IsTrue(KingdomPlotRules.TryHeart(Marks(), HasRite: true, 12, 7, out var x, out var y));
+			ClassicAssert.AreEqual(12, x);
+			ClassicAssert.AreEqual(7, y);
 		}
 
 		[Test]
@@ -348,25 +349,25 @@ namespace ThousandAndFirst.Tests
 			// Rite at 10,10; three works out at 30,10. The rite counts once, so the heart lands
 			// three quarters of the way toward the city and keeps moving as more is raised.
 			List<Mark> marks = Marks(M(30, 10, Purpose.Housing), M(30, 10, Purpose.Housing), M(30, 10, Purpose.Civic));
-			Assert.IsTrue(KingdomPlotRules.TryHeart(marks, HasRite: true, 10, 10, out var x, out var y));
-			Assert.AreEqual(25, x);
-			Assert.AreEqual(10, y);
+			ClassicAssert.IsTrue(KingdomPlotRules.TryHeart(marks, HasRite: true, 10, 10, out var x, out var y));
+			ClassicAssert.AreEqual(25, x);
+			ClassicAssert.AreEqual(10, y);
 		}
 
 		[Test]
 		public void OneWorkMovesTheHeartHalfWay()
 		{
-			Assert.IsTrue(KingdomPlotRules.TryHeart(Marks(M(20, 10, Purpose.Civic)), HasRite: true, 10, 10, out var x, out _));
-			Assert.AreEqual(15, x);
+			ClassicAssert.IsTrue(KingdomPlotRules.TryHeart(Marks(M(20, 10, Purpose.Civic)), HasRite: true, 10, 10, out var x, out _));
+			ClassicAssert.AreEqual(15, x);
 		}
 
 		[Test]
 		public void WallsDoNotDragTheHeartToTheEdge()
 		{
 			List<Mark> marks = Marks(M(0, 0, Purpose.Defence), M(0, 0, Purpose.Defence), M(0, 0, Purpose.Defence));
-			Assert.IsTrue(KingdomPlotRules.TryHeart(marks, HasRite: true, 40, 12, out var x, out var y));
-			Assert.AreEqual(40, x);
-			Assert.AreEqual(12, y);
+			ClassicAssert.IsTrue(KingdomPlotRules.TryHeart(marks, HasRite: true, 40, 12, out var x, out var y));
+			ClassicAssert.AreEqual(40, x);
+			ClassicAssert.AreEqual(12, y);
 		}
 
 		[Test]
@@ -374,9 +375,9 @@ namespace ThousandAndFirst.Tests
 		{
 			List<Mark> marks = Marks(M(20, 10, Purpose.Civic), M(30, 12, Purpose.Housing));
 			KingdomLayoutRules.TryHeart(marks, out var grammarX, out var grammarY);
-			Assert.IsTrue(KingdomPlotRules.TryHeart(marks, HasRite: false, 0, 0, out var x, out var y));
-			Assert.AreEqual(grammarX, x);
-			Assert.AreEqual(grammarY, y);
+			ClassicAssert.IsTrue(KingdomPlotRules.TryHeart(marks, HasRite: false, 0, 0, out var x, out var y));
+			ClassicAssert.AreEqual(grammarX, x);
+			ClassicAssert.AreEqual(grammarY, y);
 		}
 
 		[TestCase(Size.Small, 0)]
@@ -385,7 +386,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Size.Huge, 3)]
 		public void OnlyTheGreatPlotsWantTheHeart(Size Size, int Expected)
 		{
-			Assert.AreEqual(Expected, KingdomPlotRules.HeartPull(Size));
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.HeartPull(Size));
 		}
 
 		// --- Siting -----------------------------------------------------------------------
@@ -394,27 +395,27 @@ namespace ThousandAndFirst.Tests
 		public void ReachIsZeroInsideAndChebyshevOutside()
 		{
 			Rect rect = R(10, 10, 14, 13);
-			Assert.AreEqual(0, KingdomPlotRules.Reach(rect, 12, 12));
-			Assert.AreEqual(0, KingdomPlotRules.Reach(rect, 10, 10));
-			Assert.AreEqual(1, KingdomPlotRules.Reach(rect, 15, 12));
-			Assert.AreEqual(3, KingdomPlotRules.Reach(rect, 17, 9));
-			Assert.AreEqual(5, KingdomPlotRules.Reach(rect, 12, 18));
+			ClassicAssert.AreEqual(0, KingdomPlotRules.Reach(rect, 12, 12));
+			ClassicAssert.AreEqual(0, KingdomPlotRules.Reach(rect, 10, 10));
+			ClassicAssert.AreEqual(1, KingdomPlotRules.Reach(rect, 15, 12));
+			ClassicAssert.AreEqual(3, KingdomPlotRules.Reach(rect, 17, 9));
+			ClassicAssert.AreEqual(5, KingdomPlotRules.Reach(rect, 12, 18));
 		}
 
 		[Test]
 		public void ARectTouchesTheFrontierWhenAnyCellDoes()
 		{
-			Assert.IsTrue(KingdomPlotRules.TouchesFrontier(R(40, 1, 44, 4), W, H, Frontier.North));
-			Assert.IsFalse(KingdomPlotRules.TouchesFrontier(R(40, 2, 44, 5), W, H, Frontier.North));
-			Assert.IsFalse(KingdomPlotRules.TouchesFrontier(R(40, 1, 44, 4), W, H, Frontier.None));
-			Assert.IsTrue(KingdomPlotRules.TouchesFrontier(R(76, 10, 79, 13), W, H, Frontier.East));
+			ClassicAssert.IsTrue(KingdomPlotRules.TouchesFrontier(R(40, 1, 44, 4), W, H, Frontier.North));
+			ClassicAssert.IsFalse(KingdomPlotRules.TouchesFrontier(R(40, 2, 44, 5), W, H, Frontier.North));
+			ClassicAssert.IsFalse(KingdomPlotRules.TouchesFrontier(R(40, 1, 44, 4), W, H, Frontier.None));
+			ClassicAssert.IsTrue(KingdomPlotRules.TouchesFrontier(R(76, 10, 79, 13), W, H, Frontier.East));
 		}
 
 		[Test]
 		public void ARectIsScoredWhereItsCentreIs()
 		{
 			List<Mark> marks = Marks(M(40, 12, Purpose.Housing));
-			Assert.AreEqual(-48, KingdomPlotRules.ScoreRect(Purpose.Housing, Size.Small, At(50, 10, Size.Small), W, H, Frontier.None, marks, false, 0, 0));
+			ClassicAssert.AreEqual(-48, KingdomPlotRules.ScoreRect(Purpose.Housing, Size.Small, At(50, 10, Size.Small), W, H, Frontier.None, marks, false, 0, 0));
 		}
 
 		[Test]
@@ -427,9 +428,9 @@ namespace ThousandAndFirst.Tests
 			Rect touching = At(50, 1, Size.Small);
 			int clearScore = KingdomPlotRules.ScoreRect(Purpose.Housing, Size.Small, clear, W, H, Frontier.North, marks, false, 0, 0);
 			int touchingScore = KingdomPlotRules.ScoreRect(Purpose.Housing, Size.Small, touching, W, H, Frontier.North, marks, false, 0, 0);
-			Assert.AreEqual(-48, clearScore);
-			Assert.AreEqual(-108, touchingScore);
-			Assert.AreEqual(KingdomLayoutRules.FrontierPenalty, clearScore - touchingScore, "the difference is exactly one frontier penalty");
+			ClassicAssert.AreEqual(-48, clearScore);
+			ClassicAssert.AreEqual(-108, touchingScore);
+			ClassicAssert.AreEqual(KingdomLayoutRules.FrontierPenalty, clearScore - touchingScore, "the difference is exactly one frontier penalty");
 		}
 
 		[Test]
@@ -439,8 +440,8 @@ namespace ThousandAndFirst.Tests
 			Rect huge = At(0, 0, Size.Huge);
 			// Centre 9,6 is 31 cells from the heart: two per cell from the grammar, three more
 			// per cell because it is a great plot.
-			Assert.AreEqual(-155, KingdomPlotRules.ScoreRect(Purpose.Civic, Size.Huge, huge, W, H, Frontier.None, marks, false, 0, 0));
-			Assert.AreEqual(-62, KingdomPlotRules.ScoreRect(Purpose.Civic, Size.None, huge, W, H, Frontier.None, marks, false, 0, 0));
+			ClassicAssert.AreEqual(-155, KingdomPlotRules.ScoreRect(Purpose.Civic, Size.Huge, huge, W, H, Frontier.None, marks, false, 0, 0));
+			ClassicAssert.AreEqual(-62, KingdomPlotRules.ScoreRect(Purpose.Civic, Size.None, huge, W, H, Frontier.None, marks, false, 0, 0));
 		}
 
 		[Test]
@@ -452,24 +453,24 @@ namespace ThousandAndFirst.Tests
 			// A rite poured beside the great plot drags the drifting heart back toward it, so the
 			// same ground scores better.
 			int withRite = KingdomPlotRules.ScoreRect(Purpose.Civic, Size.Huge, huge, W, H, Frontier.None, marks, true, 0, 0);
-			Assert.AreEqual(-155, withoutRite);
-			Assert.AreEqual(-95, withRite);
+			ClassicAssert.AreEqual(-155, withoutRite);
+			ClassicAssert.AreEqual(-95, withRite);
 		}
 
 		[Test]
 		public void NoCandidatesIsNoneAndNoIndex()
 		{
-			Assert.AreEqual(Outcome.None, KingdomPlotRules.ChooseRect(Purpose.Housing, Size.Small, W, H, Frontier.None, Marks(M(40, 12, Purpose.Housing)), Rects(), false, 0, 0, false, 0, 0, out var index));
-			Assert.AreEqual(-1, index);
-			Assert.AreEqual(Outcome.None, KingdomPlotRules.ChooseRect(Purpose.Housing, Size.Small, W, H, Frontier.None, Marks(), null, false, 0, 0, false, 0, 0, out index));
-			Assert.AreEqual(-1, index);
+			ClassicAssert.AreEqual(Outcome.None, KingdomPlotRules.ChooseRect(Purpose.Housing, Size.Small, W, H, Frontier.None, Marks(M(40, 12, Purpose.Housing)), Rects(), false, 0, 0, false, 0, 0, out var index));
+			ClassicAssert.AreEqual(-1, index);
+			ClassicAssert.AreEqual(Outcome.None, KingdomPlotRules.ChooseRect(Purpose.Housing, Size.Small, W, H, Frontier.None, Marks(), null, false, 0, 0, false, 0, 0, out index));
+			ClassicAssert.AreEqual(-1, index);
 		}
 
 		[Test]
 		public void EmptyGroundDefersToTheFounder()
 		{
-			Assert.AreEqual(Outcome.Defer, KingdomPlotRules.ChooseRect(Purpose.Housing, Size.Small, W, H, Frontier.None, Marks(), Rects(At(10, 10, Size.Small)), true, 10, 10, false, 0, 0, out var index));
-			Assert.AreEqual(-1, index);
+			ClassicAssert.AreEqual(Outcome.Defer, KingdomPlotRules.ChooseRect(Purpose.Housing, Size.Small, W, H, Frontier.None, Marks(), Rects(At(10, 10, Size.Small)), true, 10, 10, false, 0, 0, out var index));
+			ClassicAssert.AreEqual(-1, index);
 		}
 
 		[Test]
@@ -477,8 +478,8 @@ namespace ThousandAndFirst.Tests
 		{
 			List<Mark> marks = Marks(M(40, 12, Purpose.Housing));
 			List<Rect> candidates = Rects(At(42, 11, Size.Small), At(60, 11, Size.Small));
-			Assert.AreEqual(Outcome.Grammar, KingdomPlotRules.ChooseRect(Purpose.Housing, Size.Small, W, H, Frontier.None, marks, candidates, false, 0, 0, false, 0, 0, out var index));
-			Assert.AreEqual(0, index);
+			ClassicAssert.AreEqual(Outcome.Grammar, KingdomPlotRules.ChooseRect(Purpose.Housing, Size.Small, W, H, Frontier.None, marks, candidates, false, 0, 0, false, 0, 0, out var index));
+			ClassicAssert.AreEqual(0, index);
 		}
 
 		[Test]
@@ -488,8 +489,8 @@ namespace ThousandAndFirst.Tests
 			List<Rect> candidates = Rects(At(42, 11, Size.Small), At(46, 11, Size.Small));
 			// The founder is standing in the second rect, which scores exactly one tolerance
 			// worse than the plan's best. Intent wins.
-			Assert.AreEqual(Outcome.Founder, KingdomPlotRules.ChooseRect(Purpose.Housing, Size.Small, W, H, Frontier.None, marks, candidates, true, 50, 12, false, 0, 0, out var index));
-			Assert.AreEqual(1, index);
+			ClassicAssert.AreEqual(Outcome.Founder, KingdomPlotRules.ChooseRect(Purpose.Housing, Size.Small, W, H, Frontier.None, marks, candidates, true, 50, 12, false, 0, 0, out var index));
+			ClassicAssert.AreEqual(1, index);
 		}
 
 		[Test]
@@ -499,8 +500,8 @@ namespace ThousandAndFirst.Tests
 			List<Rect> candidates = Rects(At(42, 0, Size.Small), At(42, 11, Size.Small));
 			// Standing in the frontier band is the one thing the plan feels strongly enough about
 			// to refuse the founder's own ground.
-			Assert.AreEqual(Outcome.Grammar, KingdomPlotRules.ChooseRect(Purpose.Housing, Size.Small, W, H, Frontier.North, marks, candidates, true, 43, 1, false, 0, 0, out var index));
-			Assert.AreEqual(1, index);
+			ClassicAssert.AreEqual(Outcome.Grammar, KingdomPlotRules.ChooseRect(Purpose.Housing, Size.Small, W, H, Frontier.North, marks, candidates, true, 43, 1, false, 0, 0, out var index));
+			ClassicAssert.AreEqual(1, index);
 		}
 
 		[Test]
@@ -510,8 +511,8 @@ namespace ThousandAndFirst.Tests
 			List<Rect> candidates = Rects(At(42, 11, Size.Small), At(46, 11, Size.Small));
 			// Three cells away from the second rect is outside FounderReachCells, so it is not
 			// their ground and the plan's own best wins.
-			Assert.AreEqual(Outcome.Grammar, KingdomPlotRules.ChooseRect(Purpose.Housing, Size.Small, W, H, Frontier.None, marks, candidates, true, 49, 18, false, 0, 0, out var index));
-			Assert.AreEqual(0, index);
+			ClassicAssert.AreEqual(Outcome.Grammar, KingdomPlotRules.ChooseRect(Purpose.Housing, Size.Small, W, H, Frontier.None, marks, candidates, true, 49, 18, false, 0, 0, out var index));
+			ClassicAssert.AreEqual(0, index);
 		}
 
 		[TestCase(true)]
@@ -522,8 +523,8 @@ namespace ThousandAndFirst.Tests
 			Rect west = At(30, 10, Size.Small);
 			Rect east = At(46, 10, Size.Small);
 			List<Rect> candidates = Reversed ? Rects(east, west) : Rects(west, east);
-			Assert.AreEqual(Outcome.Grammar, KingdomPlotRules.ChooseRect(Purpose.Civic, Size.Small, W, H, Frontier.None, marks, candidates, false, 0, 0, false, 0, 0, out var index));
-			Assert.AreEqual(30, candidates[index].X1, "the westward rect wins either way");
+			ClassicAssert.AreEqual(Outcome.Grammar, KingdomPlotRules.ChooseRect(Purpose.Civic, Size.Small, W, H, Frontier.None, marks, candidates, false, 0, 0, false, 0, 0, out var index));
+			ClassicAssert.AreEqual(30, candidates[index].X1, "the westward rect wins either way");
 		}
 
 		// --- The door faces the settlement -------------------------------------------------
@@ -531,28 +532,28 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheDoorIsCutNearestTheHeart()
 		{
-			Assert.IsTrue(KingdomPlotRules.TryDoor(R(10, 10, 14, 13), 12, 20, out var x, out var y));
-			Assert.AreEqual(11, x);
-			Assert.AreEqual(13, y);
+			ClassicAssert.IsTrue(KingdomPlotRules.TryDoor(R(10, 10, 14, 13), 12, 20, out var x, out var y));
+			ClassicAssert.AreEqual(11, x);
+			ClassicAssert.AreEqual(13, y);
 		}
 
 		[Test]
 		public void TheDoorIsNeverACorner()
 		{
 			Rect rect = R(10, 10, 14, 13);
-			Assert.IsTrue(KingdomPlotRules.TryDoor(rect, 0, 0, out var x, out var y));
-			Assert.IsFalse(rect.IsCorner(x, y), "a door in a corner is a hole in two walls");
-			Assert.IsTrue(rect.IsBorder(x, y));
-			Assert.AreEqual(11, x);
-			Assert.AreEqual(10, y);
+			ClassicAssert.IsTrue(KingdomPlotRules.TryDoor(rect, 0, 0, out var x, out var y));
+			ClassicAssert.IsFalse(rect.IsCorner(x, y), "a door in a corner is a hole in two walls");
+			ClassicAssert.IsTrue(rect.IsBorder(x, y));
+			ClassicAssert.AreEqual(11, x);
+			ClassicAssert.AreEqual(10, y);
 		}
 
 		[Test]
 		public void ARectWithNothingButCornersHasNoDoor()
 		{
-			Assert.IsFalse(KingdomPlotRules.TryDoor(R(0, 0, 1, 1), 5, 5, out var x, out var y));
-			Assert.AreEqual(0, x);
-			Assert.AreEqual(0, y);
+			ClassicAssert.IsFalse(KingdomPlotRules.TryDoor(R(0, 0, 1, 1), 5, 5, out var x, out var y));
+			ClassicAssert.AreEqual(0, x);
+			ClassicAssert.AreEqual(0, y);
 		}
 
 		// --- Clearance is extraction -------------------------------------------------------
@@ -567,7 +568,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Ground.Held, 0)]
 		public void EffortScalesWithHardness(Ground Kind, int Expected)
 		{
-			Assert.AreEqual(Expected, KingdomPlotRules.ClearEffort(Kind));
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.ClearEffort(Kind));
 		}
 
 		[TestCase(Ground.Bare, Material.None, 0)]
@@ -580,8 +581,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Ground.Held, Material.None, 0)]
 		public void RemovalEarns(Ground Kind, Material Expected, int ExpectedAmount)
 		{
-			Assert.AreEqual(Expected, KingdomPlotRules.YieldOf(Kind, out var amount));
-			Assert.AreEqual(ExpectedAmount, amount);
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.YieldOf(Kind, out var amount));
+			ClassicAssert.AreEqual(ExpectedAmount, amount);
 		}
 
 		[Test]
@@ -591,9 +592,9 @@ namespace ThousandAndFirst.Tests
 			// shale ridge worth the days it costs.
 			KingdomPlotRules.YieldOf(Ground.Brush, out var brush);
 			KingdomPlotRules.YieldOf(Ground.Trees, out var trees);
-			Assert.Greater(trees, brush);
-			Assert.Greater(KingdomPlotRules.ClearEffort(Ground.Rock), KingdomPlotRules.ClearEffort(Ground.Trees));
-			Assert.Greater(KingdomPlotRules.ClearEffort(Ground.Marble), KingdomPlotRules.ClearEffort(Ground.Rock));
+			ClassicAssert.Greater(trees, brush);
+			ClassicAssert.Greater(KingdomPlotRules.ClearEffort(Ground.Rock), KingdomPlotRules.ClearEffort(Ground.Trees));
+			ClassicAssert.Greater(KingdomPlotRules.ClearEffort(Ground.Marble), KingdomPlotRules.ClearEffort(Ground.Rock));
 		}
 
 		[TestCase(Ground.Liquid, true)]
@@ -603,7 +604,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Ground.Marble, false)]
 		public void WaterAndHeldGroundRefuseThePlot(Ground Kind, bool Expected)
 		{
-			Assert.AreEqual(Expected, KingdomPlotRules.Refuses(Kind));
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.Refuses(Kind));
 		}
 
 		[Test]
@@ -613,20 +614,20 @@ namespace ThousandAndFirst.Tests
 			ground.AddRange(Cells(4, KingdomPlotRules.GroundKind.Trees));
 			ground.AddRange(Cells(2, KingdomPlotRules.GroundKind.Rock));
 			ground.AddRange(Cells(14, KingdomPlotRules.GroundKind.Bare));
-			Assert.AreEqual(28, KingdomPlotRules.ClearEffort(ground, Underground: false));
-			Assert.AreEqual(24, KingdomPlotRules.YieldFor(ground, Material.Timber));
-			Assert.AreEqual(8, KingdomPlotRules.YieldFor(ground, Material.Stone));
-			Assert.AreEqual(0, KingdomPlotRules.YieldFor(ground, Material.Marble));
-			Assert.AreEqual(0, KingdomPlotRules.YieldFor(ground, Material.None));
-			Assert.AreEqual(0, KingdomPlotRules.ClearEffort(null, Underground: false));
+			ClassicAssert.AreEqual(28, KingdomPlotRules.ClearEffort(ground, Underground: false));
+			ClassicAssert.AreEqual(24, KingdomPlotRules.YieldFor(ground, Material.Timber));
+			ClassicAssert.AreEqual(8, KingdomPlotRules.YieldFor(ground, Material.Stone));
+			ClassicAssert.AreEqual(0, KingdomPlotRules.YieldFor(ground, Material.Marble));
+			ClassicAssert.AreEqual(0, KingdomPlotRules.YieldFor(ground, Material.None));
+			ClassicAssert.AreEqual(0, KingdomPlotRules.ClearEffort(null, Underground: false));
 		}
 
 		[Test]
 		public void CarvingCostsDouble()
 		{
 			List<Ground> ground = Cells(4, KingdomPlotRules.GroundKind.Rock);
-			Assert.AreEqual(24, KingdomPlotRules.ClearEffort(ground, Underground: false));
-			Assert.AreEqual(48, KingdomPlotRules.ClearEffort(ground, Underground: true));
+			ClassicAssert.AreEqual(24, KingdomPlotRules.ClearEffort(ground, Underground: false));
+			ClassicAssert.AreEqual(48, KingdomPlotRules.ClearEffort(ground, Underground: true));
 		}
 
 		// --- Enclosure and the carve bargain -----------------------------------------------
@@ -634,18 +635,18 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PerimeterIsTheEdgeCells()
 		{
-			Assert.AreEqual(14, KingdomPlotRules.Perimeter(R(0, 0, 4, 3)));
-			Assert.AreEqual(24, KingdomPlotRules.Perimeter(R(0, 0, 7, 5)));
-			Assert.AreEqual(5, KingdomPlotRules.Perimeter(R(0, 0, 4, 0)), "a line is all edge");
+			ClassicAssert.AreEqual(14, KingdomPlotRules.Perimeter(R(0, 0, 4, 3)));
+			ClassicAssert.AreEqual(24, KingdomPlotRules.Perimeter(R(0, 0, 7, 5)));
+			ClassicAssert.AreEqual(5, KingdomPlotRules.Perimeter(R(0, 0, 4, 0)), "a line is all edge");
 		}
 
 		[Test]
 		public void EnclosureIsFreeUndergroundAndFreeInTheOpen()
 		{
 			Rect rect = R(0, 0, 4, 3);
-			Assert.AreEqual(700L, KingdomPlotRules.EnclosureTicks(rect, Underground: false, Open: false));
-			Assert.AreEqual(0L, KingdomPlotRules.EnclosureTicks(rect, Underground: true, Open: false), "the rock is the wall");
-			Assert.AreEqual(0L, KingdomPlotRules.EnclosureTicks(rect, Underground: false, Open: true), "a field has no walls");
+			ClassicAssert.AreEqual(700L, KingdomPlotRules.EnclosureTicks(rect, Underground: false, Open: false));
+			ClassicAssert.AreEqual(0L, KingdomPlotRules.EnclosureTicks(rect, Underground: true, Open: false), "the rock is the wall");
+			ClassicAssert.AreEqual(0L, KingdomPlotRules.EnclosureTicks(rect, Underground: false, Open: true), "a field has no walls");
 		}
 
 		[Test]
@@ -655,16 +656,16 @@ namespace ThousandAndFirst.Tests
 			List<Ground> ground = new List<Ground>();
 			ground.AddRange(Cells(4, KingdomPlotRules.GroundKind.Trees));
 			ground.AddRange(Cells(16, KingdomPlotRules.GroundKind.Bare));
-			Assert.AreEqual(3500L, KingdomPlotRules.RaiseTicks(1200L, ground, rect, Underground: false, Open: false));
+			ClassicAssert.AreEqual(3500L, KingdomPlotRules.RaiseTicks(1200L, ground, rect, Underground: false, Open: false));
 			// Underground: the clearing is twice the work and the enclosure is nothing at all.
-			Assert.AreEqual(4400L, KingdomPlotRules.RaiseTicks(1200L, ground, rect, Underground: true, Open: false));
-			Assert.AreEqual(2800L, KingdomPlotRules.RaiseTicks(1200L, ground, rect, Underground: false, Open: true));
+			ClassicAssert.AreEqual(4400L, KingdomPlotRules.RaiseTicks(1200L, ground, rect, Underground: true, Open: false));
+			ClassicAssert.AreEqual(2800L, KingdomPlotRules.RaiseTicks(1200L, ground, rect, Underground: false, Open: true));
 		}
 
 		[Test]
 		public void RaisingNeverFinishesInTheInstantItIsStaked()
 		{
-			Assert.AreEqual(1L, KingdomPlotRules.RaiseTicks(0L, null, R(0, 0, 0, 0), Underground: false, Open: true));
+			ClassicAssert.AreEqual(1L, KingdomPlotRules.RaiseTicks(0L, null, R(0, 0, 0, 0), Underground: false, Open: true));
 		}
 
 		[TestCase(9, false)]
@@ -673,7 +674,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(40, true)]
 		public void TenIsTheSurface(int ZLevel, bool Expected)
 		{
-			Assert.AreEqual(Expected, KingdomPlotRules.IsUnderground(ZLevel));
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.IsUnderground(ZLevel));
 		}
 
 		// --- Stages ------------------------------------------------------------------------
@@ -685,7 +686,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Stage.Done, 100)]
 		public void StagesAreEvenlySpaced(Stage Stage, int Expected)
 		{
-			Assert.AreEqual(Expected, KingdomPlotRules.StagePercent(Stage));
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.StagePercent(Stage));
 		}
 
 		[TestCase(-5L, Stage.Staked)]
@@ -701,24 +702,24 @@ namespace ThousandAndFirst.Tests
 		[TestCase(100000L, Stage.Done)]
 		public void ALongAbsenceLandsOnTheStageItHonestlyBought(long Elapsed, Stage Expected)
 		{
-			Assert.AreEqual(Expected, KingdomPlotRules.StageAt(Elapsed, 100L));
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.StageAt(Elapsed, 100L));
 		}
 
 		[Test]
 		public void ARaisingWithNoDurationIsAlreadyDone()
 		{
-			Assert.AreEqual(Stage.Done, KingdomPlotRules.StageAt(0L, 0L));
-			Assert.AreEqual(Stage.Done, KingdomPlotRules.StageAt(0L, -1L));
+			ClassicAssert.AreEqual(Stage.Done, KingdomPlotRules.StageAt(0L, 0L));
+			ClassicAssert.AreEqual(Stage.Done, KingdomPlotRules.StageAt(0L, -1L));
 		}
 
 		[Test]
 		public void EveryMiddleStageAnnouncesItselfAndTheEndsDoNot()
 		{
-			Assert.IsNull(KingdomPlotRules.StageLine(Stage.Staked, "hut"), "the staking says so itself");
-			Assert.IsNull(KingdomPlotRules.StageLine(Stage.Done, "hut"), "the raising ceremony tells this one");
-			Assert.IsNotNull(KingdomPlotRules.StageLine(Stage.Cleared, "hut"));
-			Assert.IsNotNull(KingdomPlotRules.StageLine(Stage.Frame, "hut"));
-			Assert.IsNotNull(KingdomPlotRules.StageLine(Stage.Walls, "hut"));
+			ClassicAssert.IsNull(KingdomPlotRules.StageLine(Stage.Staked, "hut"), "the staking says so itself");
+			ClassicAssert.IsNull(KingdomPlotRules.StageLine(Stage.Done, "hut"), "the raising ceremony tells this one");
+			ClassicAssert.IsNotNull(KingdomPlotRules.StageLine(Stage.Cleared, "hut"));
+			ClassicAssert.IsNotNull(KingdomPlotRules.StageLine(Stage.Frame, "hut"));
+			ClassicAssert.IsNotNull(KingdomPlotRules.StageLine(Stage.Walls, "hut"));
 			StringAssert.Contains("hut", KingdomPlotRules.StageLine(Stage.Walls, "hut"));
 		}
 
@@ -729,7 +730,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Stage.Done, "finished")]
 		public void EachStageHasItsWord(Stage Stage, string Expected)
 		{
-			Assert.AreEqual(Expected, KingdomPlotRules.StageLabel(Stage));
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.StageLabel(Stage));
 		}
 
 		[TestCase(Size.None, 0)]
@@ -739,7 +740,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Size.Huge, 6)]
 		public void BiggerPlotsAreFurnishedMore(Size Size, int Expected)
 		{
-			Assert.AreEqual(Expected, KingdomPlotRules.ContentsRolls(Size));
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.ContentsRolls(Size));
 		}
 
 		// --- Wall material is the theme ----------------------------------------------------
@@ -754,15 +755,15 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, "Limestone")]
 		public void AStyleBuildsInItsOwnMaterial(string Style, string Expected)
 		{
-			Assert.AreEqual(Expected, KingdomPlotRules.WallBlueprintFor(Style, null));
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.WallBlueprintFor(Style, null));
 		}
 
 		[Test]
 		public void ARuinSiteReusesWhatIsAlreadyLyingAbout()
 		{
-			Assert.AreEqual("Foamcrete", KingdomPlotRules.WallBlueprintFor("verdant", "Baroque Ruins"));
-			Assert.AreEqual("Foamcrete", KingdomPlotRules.WallBlueprintFor("common", "the ruins"));
-			Assert.AreEqual("Limestone", KingdomPlotRules.WallBlueprintFor("common", "Saltmarsh"));
+			ClassicAssert.AreEqual("Foamcrete", KingdomPlotRules.WallBlueprintFor("verdant", "Baroque Ruins"));
+			ClassicAssert.AreEqual("Foamcrete", KingdomPlotRules.WallBlueprintFor("common", "the ruins"));
+			ClassicAssert.AreEqual("Limestone", KingdomPlotRules.WallBlueprintFor("common", "Saltmarsh"));
 		}
 
 		[Test]
@@ -794,8 +795,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, Size.None)]
 		public void SizesParse(string Raw, Size Expected)
 		{
-			Assert.IsTrue(KingdomPlotRules.TryParseSize(Raw, out var size));
-			Assert.AreEqual(Expected, size);
+			ClassicAssert.IsTrue(KingdomPlotRules.TryParseSize(Raw, out var size));
+			ClassicAssert.AreEqual(Expected, size);
 		}
 
 		[TestCase("XXL")]
@@ -803,8 +804,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase("4")]
 		public void AnUnknownSizeIsAnErrorAndNotSilentlyNoPlot(string Raw)
 		{
-			Assert.IsFalse(KingdomPlotRules.TryParseSize(Raw, out var size));
-			Assert.AreEqual(Size.None, size);
+			ClassicAssert.IsFalse(KingdomPlotRules.TryParseSize(Raw, out var size));
+			ClassicAssert.AreEqual(Size.None, size);
 		}
 
 		[TestCase("Yes", true)]
@@ -818,37 +819,37 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, false)]
 		public void FlagsParse(string Raw, bool Expected)
 		{
-			Assert.IsTrue(KingdomPlotRules.TryParseFlag(Raw, out var value));
-			Assert.AreEqual(Expected, value);
+			ClassicAssert.IsTrue(KingdomPlotRules.TryParseFlag(Raw, out var value));
+			ClassicAssert.AreEqual(Expected, value);
 		}
 
 		[TestCase("maybe")]
 		[TestCase("Y")]
 		public void AnUnknownFlagIsAnErrorAndNotSilentlyNo(string Raw)
 		{
-			Assert.IsFalse(KingdomPlotRules.TryParseFlag(Raw, out var value));
-			Assert.IsFalse(value);
+			ClassicAssert.IsFalse(KingdomPlotRules.TryParseFlag(Raw, out var value));
+			ClassicAssert.IsFalse(value);
 		}
 
 		[Test]
 		public void AWholePlotSpecParses()
 		{
-			Assert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("hut", "S", "No", "Yes", " Plot_HutContents ", out var spec, out var error));
-			Assert.IsNull(error);
-			Assert.AreEqual("hut", spec.Key);
-			Assert.AreEqual(Size.Small, spec.Size);
-			Assert.IsFalse(spec.Open);
-			Assert.IsTrue(spec.RequiresSky);
-			Assert.AreEqual("Plot_HutContents", spec.Contents);
+			ClassicAssert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("hut", "S", "No", "Yes", " Plot_HutContents ", out var spec, out var error));
+			ClassicAssert.IsNull(error);
+			ClassicAssert.AreEqual("hut", spec.Key);
+			ClassicAssert.AreEqual(Size.Small, spec.Size);
+			ClassicAssert.IsFalse(spec.Open);
+			ClassicAssert.IsTrue(spec.RequiresSky);
+			ClassicAssert.AreEqual("Plot_HutContents", spec.Contents);
 		}
 
 		[Test]
 		public void ADesignWithNoPlotAttributesIsNotAPlot()
 		{
-			Assert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("caskrack", null, null, null, null, out var spec, out var error));
-			Assert.IsNull(error);
-			Assert.AreEqual(Size.None, spec.Size);
-			Assert.IsNull(spec.Contents);
+			ClassicAssert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("caskrack", null, null, null, null, out var spec, out var error));
+			ClassicAssert.IsNull(error);
+			ClassicAssert.AreEqual(Size.None, spec.Size);
+			ClassicAssert.IsNull(spec.Contents);
 		}
 
 		[Test]
@@ -856,13 +857,13 @@ namespace ThousandAndFirst.Tests
 		{
 			// The five-argument call is still supported API, and a design read through it must
 			// build exactly what it always built: the whole plot, walled unless it is open.
-			Assert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("hut", "M", "No", null, null, out var walled, out _));
-			Assert.IsTrue(walled.FillsPlot);
-			Assert.IsFalse(walled.RoofDeclared);
-			Assert.AreEqual(KingdomPlotRules.RoofState.Walled, walled.Roof);
-			Assert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("field", "M", "Yes", null, null, out var open, out _));
-			Assert.IsTrue(open.FillsPlot);
-			Assert.AreEqual(KingdomPlotRules.RoofState.Open, open.Roof);
+			ClassicAssert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("hut", "M", "No", null, null, out var walled, out _));
+			ClassicAssert.IsTrue(walled.FillsPlot);
+			ClassicAssert.IsFalse(walled.RoofDeclared);
+			ClassicAssert.AreEqual(KingdomPlotRules.RoofState.Walled, walled.Roof);
+			ClassicAssert.IsTrue(KingdomPlotRules.TryParsePlotAttributes("field", "M", "Yes", null, null, out var open, out _));
+			ClassicAssert.IsTrue(open.FillsPlot);
+			ClassicAssert.AreEqual(KingdomPlotRules.RoofState.Open, open.Roof);
 		}
 
 		[Test]
@@ -871,10 +872,10 @@ namespace ThousandAndFirst.Tests
 			// Both now answer through the roof table. A settlement mid-raise must not find its
 			// walls suddenly free, or suddenly charged for underground.
 			Rect rect = At(0, 0, Size.Medium);
-			Assert.AreEqual(1200L, KingdomPlotRules.EnclosureTicks(rect, Underground: false, Open: false));
-			Assert.AreEqual(0L, KingdomPlotRules.EnclosureTicks(rect, Underground: false, Open: true));
-			Assert.AreEqual(0L, KingdomPlotRules.EnclosureTicks(rect, Underground: true, Open: false));
-			Assert.AreEqual(1000L + 1600L + 1200L,
+			ClassicAssert.AreEqual(1200L, KingdomPlotRules.EnclosureTicks(rect, Underground: false, Open: false));
+			ClassicAssert.AreEqual(0L, KingdomPlotRules.EnclosureTicks(rect, Underground: false, Open: true));
+			ClassicAssert.AreEqual(0L, KingdomPlotRules.EnclosureTicks(rect, Underground: true, Open: false));
+			ClassicAssert.AreEqual(1000L + 1600L + 1200L,
 				KingdomPlotRules.RaiseTicks(1000L, Cells(4, Ground.Trees), rect, Underground: false, Open: false));
 		}
 
@@ -883,24 +884,24 @@ namespace ThousandAndFirst.Tests
 		{
 			// Silently accepting these would ship a design whose Contents table never rolls and
 			// whose Sky gate never fires, with nothing anywhere saying so.
-			Assert.IsFalse(KingdomPlotRules.TryParsePlotAttributes("x", null, "Yes", null, null, out var spec, out var error));
-			Assert.IsNull(spec);
+			ClassicAssert.IsFalse(KingdomPlotRules.TryParsePlotAttributes("x", null, "Yes", null, null, out var spec, out var error));
+			ClassicAssert.IsNull(spec);
 			StringAssert.Contains("without a Plot size", error);
-			Assert.IsFalse(KingdomPlotRules.TryParsePlotAttributes("x", null, null, null, "SomeTable", out _, out _));
-			Assert.IsFalse(KingdomPlotRules.TryParsePlotAttributes("x", null, null, "Yes", null, out _, out _));
+			ClassicAssert.IsFalse(KingdomPlotRules.TryParsePlotAttributes("x", null, null, null, "SomeTable", out _, out _));
+			ClassicAssert.IsFalse(KingdomPlotRules.TryParsePlotAttributes("x", null, null, "Yes", null, out _, out _));
 		}
 
 		[Test]
 		public void EveryBadAttributeNamesTheDesignAndTheAttribute()
 		{
-			Assert.IsFalse(KingdomPlotRules.TryParsePlotAttributes("", "S", null, null, null, out _, out var blank));
+			ClassicAssert.IsFalse(KingdomPlotRules.TryParsePlotAttributes("", "S", null, null, null, out _, out var blank));
 			StringAssert.Contains("Key", blank);
-			Assert.IsFalse(KingdomPlotRules.TryParsePlotAttributes("hall", "XXL", null, null, null, out _, out var size));
+			ClassicAssert.IsFalse(KingdomPlotRules.TryParsePlotAttributes("hall", "XXL", null, null, null, out _, out var size));
 			StringAssert.Contains("hall", size);
 			StringAssert.Contains("Plot", size);
-			Assert.IsFalse(KingdomPlotRules.TryParsePlotAttributes("hall", "L", "sometimes", null, null, out _, out var open));
+			ClassicAssert.IsFalse(KingdomPlotRules.TryParsePlotAttributes("hall", "L", "sometimes", null, null, out _, out var open));
 			StringAssert.Contains("Open", open);
-			Assert.IsFalse(KingdomPlotRules.TryParsePlotAttributes("hall", "L", null, "sometimes", null, out _, out var sky));
+			ClassicAssert.IsFalse(KingdomPlotRules.TryParsePlotAttributes("hall", "L", null, "sometimes", null, out _, out var sky));
 			StringAssert.Contains("Sky", sky);
 		}
 
@@ -948,7 +949,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("large", room);
 			StringAssert.Contains("Ashfall", budget);
 			StringAssert.Contains("struck", budget);
-			Assert.AreNotEqual(room, budget, "the founder must be able to tell blocked ground from a full plan");
+			ClassicAssert.AreNotEqual(room, budget, "the founder must be able to tell blocked ground from a full plan");
 		}
 
 		[TestCase(Size.Small, "small")]
@@ -958,7 +959,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Size.None, "")]
 		public void EveryTierHasAWordForItself(Size Size, string Expected)
 		{
-			Assert.AreEqual(Expected, KingdomPlotRules.SizeName(Size));
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.SizeName(Size));
 		}
 	}
 }

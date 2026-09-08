@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -17,14 +18,14 @@ namespace ThousandAndFirst.Tests
 		public void OfferIsDurableBeforeDisplayAndDeferHasNoWritePath()
 		{
 			string open = Read("KingdomFirstFeastRuntime.Open.cs");
-			Assert.Less(open.IndexOf("TryPublishOffer(System, context", StringComparison.Ordinal),
+			ClassicAssert.Less(open.IndexOf("TryPublishOffer(System, context", StringComparison.Ordinal),
 				open.IndexOf("RenderOffer(receipt", StringComparison.Ordinal));
 			string transitions = Read("KingdomFirstFeastRules.Transitions.cs");
 			int defer = transitions.IndexOf(
 				"if (Choice == KingdomFirstFeastChoice.Defer)", StringComparison.Ordinal);
 			int decision = transitions.IndexOf("Next = Current.Copy(); Next.Choice = Choice",
 				StringComparison.Ordinal);
-			Assert.Greater(defer, 0); Assert.Greater(decision, defer);
+			ClassicAssert.Greater(defer, 0); ClassicAssert.Greater(decision, defer);
 			string slice = transitions.Substring(defer, decision - defer);
 			StringAssert.Contains("Next = Current.Copy(); return true;", slice);
 			StringAssert.DoesNotContain("Changed = true", slice);
@@ -53,7 +54,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < forbidden.Length; i++)
 				StringAssert.DoesNotContain(forbidden[i], combined, forbidden[i]);
 			string open = Read("KingdomFirstFeastRuntime.Open.cs");
-			Assert.AreEqual(1, Count(open, "KingdomGovernanceScope.Commit("));
+			ClassicAssert.AreEqual(1, Count(open, "KingdomGovernanceScope.Commit("));
 			StringAssert.Contains("decision == KingdomFirstFeastChoice.Adopt", open);
 			StringAssert.Contains("decision == KingdomFirstFeastChoice.Adapt", open);
 			StringAssert.Contains("if (committed", open);
@@ -80,9 +81,9 @@ namespace ThousandAndFirst.Tests
 				"KingdomCharterMenuRules.cs"));
 			string charter = TestMain.ReadRepositoryText(Path.Combine("Core",
 				"KingdomCharterPart.cs"));
-			Assert.AreEqual(3, Count(menu, "FirstFeastPractice"),
+			ClassicAssert.AreEqual(3, Count(menu, "FirstFeastPractice"),
 				"enum, route, and chapter placement are expected");
-			Assert.AreEqual(1, Count(charter,
+			ClassicAssert.AreEqual(1, Count(charter,
 				"case KingdomCharterAction.FirstFeastPractice:"));
 			StringAssert.Contains("KingdomFirstFeastRuntime.Open(System, ParentObject)", charter);
 		}
@@ -133,7 +134,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < files.Length; i++)
 			{
 				int lines = Read(files[i]).Split(new char[] { '\n' }).Length;
-				Assert.Less(lines, 300, files[i] + " has " + lines + " lines");
+				ClassicAssert.Less(lines, 300, files[i] + " has " + lines + " lines");
 			}
 		}
 
@@ -153,7 +154,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < needles.Length; i++)
 			{
 				int at = source.IndexOf(needles[i], prior + 1, StringComparison.Ordinal);
-				Assert.Greater(at, prior, needles[i]); prior = at;
+				ClassicAssert.Greater(at, prior, needles[i]); prior = at;
 			}
 		}
 	}

@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -29,7 +30,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("becomingannexe", true)]
 		public void ADesignIsOrdinaryUntilItNamesAParent(string declared, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomSatelliteRules.IsSatellite(declared));
+			ClassicAssert.AreEqual(expected, KingdomSatelliteRules.IsSatellite(declared));
 		}
 
 		[Test]
@@ -37,9 +38,9 @@ namespace ThousandAndFirst.Tests
 		{
 			// STANDARDS §6: a third-party file ships an outpost of its own megastructure without a
 			// line of our code changing, which a boolean could not express.
-			Assert.AreEqual("somebodyelsesgreatwork", KingdomSatelliteRules.ParentOf("  somebodyelsesgreatwork  "));
-			Assert.IsNull(KingdomSatelliteRules.ParentOf(""));
-			Assert.IsNull(KingdomSatelliteRules.ParentOf(null));
+			ClassicAssert.AreEqual("somebodyelsesgreatwork", KingdomSatelliteRules.ParentOf("  somebodyelsesgreatwork  "));
+			ClassicAssert.IsNull(KingdomSatelliteRules.ParentOf(""));
+			ClassicAssert.IsNull(KingdomSatelliteRules.ParentOf(null));
 		}
 
 		// --- The gate -----------------------------------------------------------------------------
@@ -47,9 +48,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AnOutpostWantsItsGreatWorkStandingSomewhereInTheRealm()
 		{
-			Assert.AreEqual(KingdomSatelliteVerdict.RefusedNoParent,
+			ClassicAssert.AreEqual(KingdomSatelliteVerdict.RefusedNoParent,
 				KingdomSatelliteRules.Judge(Satellite: true, RealmKeepsParent: false, CityKeeps: null, Key: Office));
-			Assert.AreEqual(KingdomSatelliteVerdict.Allowed,
+			ClassicAssert.AreEqual(KingdomSatelliteVerdict.Allowed,
 				KingdomSatelliteRules.Judge(Satellite: true, RealmKeepsParent: true, CityKeeps: null, Key: Office));
 		}
 
@@ -59,14 +60,14 @@ namespace ThousandAndFirst.Tests
 			// §5.5's transfer: the capital's structures project outward, so an outpost is judged
 			// against the realm rather than against the ground it stands on. There is no city
 			// argument in this rule at all, and that absence is the assertion.
-			Assert.AreEqual(KingdomSatelliteVerdict.Allowed,
+			ClassicAssert.AreEqual(KingdomSatelliteVerdict.Allowed,
 				KingdomSatelliteRules.Judge(Satellite: true, RealmKeepsParent: true, CityKeeps: null, Key: Surgery));
 		}
 
 		[Test]
 		public void OneOutpostPerCityPerGreatWork()
 		{
-			Assert.AreEqual(KingdomSatelliteVerdict.RefusedCityKeeps,
+			ClassicAssert.AreEqual(KingdomSatelliteVerdict.RefusedCityKeeps,
 				KingdomSatelliteRules.Judge(Satellite: true, RealmKeepsParent: true, CityKeeps: "someoneelsesoffice", Key: Office));
 		}
 
@@ -75,9 +76,9 @@ namespace ThousandAndFirst.Tests
 		{
 			// The purpose gate's own bargain: mending, re-siting or re-staking the one you have is
 			// not choosing again.
-			Assert.AreEqual(KingdomSatelliteVerdict.Allowed,
+			ClassicAssert.AreEqual(KingdomSatelliteVerdict.Allowed,
 				KingdomSatelliteRules.Judge(Satellite: true, RealmKeepsParent: true, CityKeeps: Office, Key: Office));
-			Assert.AreEqual(KingdomSatelliteVerdict.Allowed,
+			ClassicAssert.AreEqual(KingdomSatelliteVerdict.Allowed,
 				KingdomSatelliteRules.Judge(Satellite: true, RealmKeepsParent: true, CityKeeps: "RegistryOffice", Key: Office),
 				"matched the way the registry writes it");
 		}
@@ -87,7 +88,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// Per-parent, not per-city-total: a city choosing between a surgery and a registry
 			// office would be choosing between two great works it did not raise.
-			Assert.AreEqual(KingdomSatelliteVerdict.Allowed,
+			ClassicAssert.AreEqual(KingdomSatelliteVerdict.Allowed,
 				KingdomSatelliteRules.Judge(Satellite: true, RealmKeepsParent: true, CityKeeps: null, Key: Surgery),
 				"the office this city keeps is an outpost of a different parent, so it is not passed here at all");
 		}
@@ -95,7 +96,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AnOrdinaryDesignIsNeverAskedAnyOfThis()
 		{
-			Assert.AreEqual(KingdomSatelliteVerdict.Allowed,
+			ClassicAssert.AreEqual(KingdomSatelliteVerdict.Allowed,
 				KingdomSatelliteRules.Judge(Satellite: false, RealmKeepsParent: false, CityKeeps: "smithy", Key: "smithy"));
 		}
 
@@ -104,7 +105,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// The purpose gate's bargain again: a cardinality rule that cannot see must let the
 			// founder build, or a realm is bricked by a book nobody can open.
-			Assert.AreEqual(KingdomSatelliteVerdict.Allowed,
+			ClassicAssert.AreEqual(KingdomSatelliteVerdict.Allowed,
 				KingdomSatelliteRules.Judge(Satellite: true, RealmKeepsParent: true, CityKeeps: null, Key: Office));
 		}
 
@@ -115,9 +116,9 @@ namespace ThousandAndFirst.Tests
 		{
 			// Addendum 22 A2: lower rungs may sit anywhere; top rungs and once-ever ceremonies stay
 			// sited. Rung 1 is the vat-house, which is the last rung before anything is opened.
-			Assert.AreEqual(KingdomProcedureRules.RungVat, KingdomSatelliteRules.SurgeryCeilingRung);
-			Assert.Less(KingdomSatelliteRules.SurgeryCeilingRung, KingdomProcedureRules.RungHall);
-			Assert.Less(KingdomSatelliteRules.SurgeryCeilingRung, KingdomProcedureRules.RungTheatre);
+			ClassicAssert.AreEqual(KingdomProcedureRules.RungVat, KingdomSatelliteRules.SurgeryCeilingRung);
+			ClassicAssert.Less(KingdomSatelliteRules.SurgeryCeilingRung, KingdomProcedureRules.RungHall);
+			ClassicAssert.Less(KingdomSatelliteRules.SurgeryCeilingRung, KingdomProcedureRules.RungTheatre);
 		}
 
 		[Test]
@@ -125,7 +126,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// A ruling, not a knob. Enrolment rewrites what a body is allowed to be for the rest of
 			// a run, which is the most once-ever act the mod has.
-			Assert.IsFalse(KingdomSatelliteRules.OfficeEnrols);
+			ClassicAssert.IsFalse(KingdomSatelliteRules.OfficeEnrols);
 		}
 
 		// --- The prose contracts (STANDARDS 7b, §1.5) -----------------------------------------------
@@ -136,7 +137,7 @@ namespace ThousandAndFirst.Tests
 			string line = KingdomSatelliteRules.NoParentRefusalLine("the becoming annexe");
 			StringAssert.Contains("the becoming annexe", line);
 			StringAssert.Contains("need not be this one", line);
-			Assert.IsFalse(line.Contains("Satellite=\""), line);
+			ClassicAssert.IsFalse(line.Contains("Satellite=\""), line);
 		}
 
 		[Test]
@@ -144,7 +145,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string line = KingdomSatelliteRules.CityKeepsRefusalLine("the registry office");
 			StringAssert.Contains("the registry office", line);
-			Assert.IsFalse(line.Contains("cardinality"), line);
+			ClassicAssert.IsFalse(line.Contains("cardinality"), line);
 		}
 
 		[Test]
@@ -168,18 +169,18 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AGreatWorkNothingNamedIsStillSpokenOfHonestly()
 		{
-			Assert.AreEqual("the great work", KingdomSatelliteRules.Named(null));
-			Assert.AreEqual("the great work", KingdomSatelliteRules.Named(""));
-			Assert.AreEqual("the annexe", KingdomSatelliteRules.Named("  the annexe  "));
+			ClassicAssert.AreEqual("the great work", KingdomSatelliteRules.Named(null));
+			ClassicAssert.AreEqual("the great work", KingdomSatelliteRules.Named(""));
+			ClassicAssert.AreEqual("the annexe", KingdomSatelliteRules.Named("  the annexe  "));
 		}
 
 		[Test]
 		public void TheTwoShippedOutpostsAreNotTheSameRecord()
 		{
-			Assert.AreNotEqual(KingdomSatelliteRules.SurgeryKey, KingdomSatelliteRules.RegistryOfficeKey);
-			Assert.AreNotEqual(KingdomSatelliteRules.RegistryOfficeKey, Annexe,
+			ClassicAssert.AreNotEqual(KingdomSatelliteRules.SurgeryKey, KingdomSatelliteRules.RegistryOfficeKey);
+			ClassicAssert.AreNotEqual(KingdomSatelliteRules.RegistryOfficeKey, Annexe,
 				"an outpost is never its own parent");
-			Assert.AreNotEqual(KingdomSatelliteRules.SurgeryKey, KingdomLabRules.TheatreKey);
+			ClassicAssert.AreNotEqual(KingdomSatelliteRules.SurgeryKey, KingdomLabRules.TheatreKey);
 		}
 	}
 }

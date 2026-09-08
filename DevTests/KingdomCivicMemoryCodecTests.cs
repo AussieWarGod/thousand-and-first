@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -97,10 +98,10 @@ namespace ThousandAndFirst.Tests
 			KingdomCivicMemoryState decoded = KingdomCivicMemoryCodec.Decode(
 				KingdomCivicMemoryCodec.Encode(KingdomCivicMemoryState.Of(sections, 0L)), 7L);
 
-			Assert.AreEqual(AllIds.Length, decoded.Count);
-			Assert.AreEqual(7L, decoded.Revision);
-			Assert.IsFalse(decoded.Quarantined);
-			Assert.IsFalse(decoded.IsEmpty);
+			ClassicAssert.AreEqual(AllIds.Length, decoded.Count);
+			ClassicAssert.AreEqual(7L, decoded.Revision);
+			ClassicAssert.IsFalse(decoded.Quarantined);
+			ClassicAssert.IsFalse(decoded.IsEmpty);
 			for (int i = 0; i < AllIds.Length; i++)
 				CollectionAssert.AreEqual(sections[i].Payload(),
 					decoded.Section(AllIds[i]).Payload());
@@ -122,8 +123,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCivicMemoryState decoded = KingdomCivicMemoryCodec.Decode(
 				KingdomCivicMemoryCodec.Encode(KingdomCivicMemoryState.Empty()), 0L);
-			Assert.IsTrue(decoded.IsEmpty);
-			Assert.IsFalse(decoded.Quarantined);
+			ClassicAssert.IsTrue(decoded.IsEmpty);
+			ClassicAssert.IsFalse(decoded.Quarantined);
 		}
 
 		[Test]
@@ -249,7 +250,7 @@ namespace ThousandAndFirst.Tests
 				KingdomCivicMemoryLimits.MaxSections + 1, true);
 			KingdomCivicMemoryState decoded = KingdomCivicMemoryCodec.Decode(future, 0L);
 
-			Assert.IsTrue(decoded.IsFutureOuter,
+			ClassicAssert.IsTrue(decoded.IsFutureOuter,
 				"a v2 middle is opaque; its first word must not be interpreted as v1 section count");
 			CollectionAssert.AreEqual(future, KingdomCivicMemoryCodec.Encode(decoded));
 		}

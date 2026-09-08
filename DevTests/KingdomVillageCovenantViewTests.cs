@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -51,13 +52,13 @@ namespace ThousandAndFirst.Tests
 			KingdomVillageCovenantArchive archive =
 				KingdomVillageCovenantTests.With(KingdomVillageCovenantTests.Row());
 			KingdomJointCivicOwnerView owner = Owner(archive, 600);
-			Assert.AreEqual(KingdomJointOwnerState.Valid, owner.State, owner.Failure);
-			Assert.AreEqual("covenant", owner.OwnerKey);
-			Assert.AreEqual(KingdomVillageCovenantCodec.CurrentWireVersion, owner.SourceVersion);
+			ClassicAssert.AreEqual(KingdomJointOwnerState.Valid, owner.State, owner.Failure);
+			ClassicAssert.AreEqual("covenant", owner.OwnerKey);
+			ClassicAssert.AreEqual(KingdomVillageCovenantCodec.CurrentWireVersion, owner.SourceVersion);
 			StringAssert.StartsWith(KingdomVillageCovenantView.ReceiptPrefix,
 				owner.SourceReceiptId);
 			StringAssert.Contains(KingdomVillageCovenantTests.Display, owner.Text);
-			Assert.IsTrue(KingdomJointCivicViewRules.Valid(owner, "covenant"));
+			ClassicAssert.IsTrue(KingdomJointCivicViewRules.Valid(owner, "covenant"));
 		}
 
 		/// <summary>
@@ -72,10 +73,10 @@ namespace ThousandAndFirst.Tests
 				KingdomVillageCovenantTests.With(KingdomVillageCovenantTests.Row());
 			KingdomJointCivicOwnerView warm = Owner(archive, 900);
 			KingdomJointCivicOwnerView cold = Owner(archive, -750);
-			Assert.AreEqual(KingdomJointOwnerState.Valid, warm.State);
-			Assert.AreEqual(KingdomJointOwnerState.Valid, cold.State,
+			ClassicAssert.AreEqual(KingdomJointOwnerState.Valid, warm.State);
+			ClassicAssert.AreEqual(KingdomJointOwnerState.Valid, cold.State,
 				"a village that now resents the realm still sealed what it sealed");
-			Assert.AreEqual(warm.SourceReceiptId, cold.SourceReceiptId,
+			ClassicAssert.AreEqual(warm.SourceReceiptId, cold.SourceReceiptId,
 				"the source id names the evidence, not today's mood");
 			StringAssert.Contains("900", warm.Text);
 			StringAssert.Contains("-750", cold.Text);
@@ -87,11 +88,11 @@ namespace ThousandAndFirst.Tests
 			KingdomVillageCovenantArchive archive =
 				KingdomVillageCovenantTests.With(KingdomVillageCovenantTests.Row());
 			KingdomJointCivicOwnerView gone = Owner(archive, 600, coherent: false);
-			Assert.AreEqual(KingdomJointOwnerState.Invalid, gone.State);
+			ClassicAssert.AreEqual(KingdomJointOwnerState.Invalid, gone.State);
 			StringAssert.Contains("native gate", gone.Failure);
 
 			KingdomJointCivicOwnerView notAVillage = Owner(archive, 600, village: false);
-			Assert.AreEqual(KingdomJointOwnerState.Invalid, notAVillage.State);
+			ClassicAssert.AreEqual(KingdomJointOwnerState.Invalid, notAVillage.State);
 			StringAssert.Contains("native gate", notAVillage.Failure);
 		}
 
@@ -104,7 +105,7 @@ namespace ThousandAndFirst.Tests
 			wrong[0].ReceiptId = KingdomVillageCovenantView.ReceiptPrefix + "nope";
 			KingdomJointCivicOwnerView owner = KingdomVillageCovenantView.Owner(
 				KingdomVillageCovenantEvidence.Recorded, Realm, archive, wrong, null);
-			Assert.AreEqual(KingdomJointOwnerState.Invalid, owner.State);
+			ClassicAssert.AreEqual(KingdomJointOwnerState.Invalid, owner.State);
 			StringAssert.Contains("wrong receipt", owner.Failure);
 		}
 
@@ -115,7 +116,7 @@ namespace ThousandAndFirst.Tests
 				KingdomVillageCovenantTests.With(KingdomVillageCovenantTests.Row());
 			KingdomJointCivicOwnerView owner = KingdomVillageCovenantView.Owner(
 				KingdomVillageCovenantEvidence.Recorded, Realm, archive, null, null);
-			Assert.AreEqual(KingdomJointOwnerState.Invalid, owner.State);
+			ClassicAssert.AreEqual(KingdomJointOwnerState.Invalid, owner.State);
 			StringAssert.Contains("do not correspond", owner.Failure);
 		}
 
@@ -134,7 +135,7 @@ namespace ThousandAndFirst.Tests
 			archive.Rows.Sort((a, b) => string.CompareOrdinal(a.ReceiptId, b.ReceiptId));
 			archive.Revision = archive.Rows.Count;
 			KingdomJointCivicOwnerView owner = Owner(archive, 600);
-			Assert.AreEqual(KingdomJointOwnerState.Invalid, owner.State);
+			ClassicAssert.AreEqual(KingdomJointOwnerState.Invalid, owner.State);
 			StringAssert.Contains("claim one founding transaction", owner.Failure);
 		}
 
@@ -143,12 +144,12 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomVillageCovenantArchive foreign =
 				KingdomVillageCovenantTests.Bound(KingdomVillageCovenantTests.OtherRealm);
-			Assert.IsTrue(KingdomVillageCovenantRules.TryAppend(foreign,
+			ClassicAssert.IsTrue(KingdomVillageCovenantRules.TryAppend(foreign,
 				KingdomVillageCovenantTests.Row(realm: KingdomVillageCovenantTests.OtherRealm),
 				KingdomVillageCovenantTests.OtherRealm, out foreign, out _, out _,
 				out string appended), appended);
 			KingdomJointCivicOwnerView owner = Owner(foreign, 600);
-			Assert.AreEqual(KingdomJointOwnerState.Invalid, owner.State);
+			ClassicAssert.AreEqual(KingdomJointOwnerState.Invalid, owner.State);
 			StringAssert.Contains("not bound to this exact realm", owner.Failure);
 		}
 
@@ -165,10 +166,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomJointCivicOwnerView owner = KingdomVillageCovenantView.Owner(
 				KingdomVillageCovenantEvidence.ArchiveAbsent, Realm, null, null, null);
-			Assert.AreEqual(KingdomJointOwnerState.Absent, owner.State);
-			Assert.AreEqual(0, owner.SourceVersion);
-			Assert.IsEmpty(owner.SourceReceiptId);
-			Assert.IsEmpty(owner.Text);
+			ClassicAssert.AreEqual(KingdomJointOwnerState.Absent, owner.State);
+			ClassicAssert.AreEqual(0, owner.SourceVersion);
+			ClassicAssert.IsEmpty(owner.SourceReceiptId);
+			ClassicAssert.IsEmpty(owner.Text);
 			StringAssert.Contains("No durable exact village-covenant owner", owner.Failure);
 		}
 
@@ -185,9 +186,9 @@ namespace ThousandAndFirst.Tests
 				KingdomVillageCovenantEvidence.NoneRecorded, Realm, null, null, null);
 			KingdomJointCivicOwnerView absent = KingdomVillageCovenantView.Owner(
 				KingdomVillageCovenantEvidence.ArchiveAbsent, Realm, null, null, null);
-			Assert.AreEqual(KingdomJointOwnerState.Absent, none.State);
-			Assert.AreEqual(KingdomJointOwnerState.Absent, absent.State);
-			Assert.AreNotEqual(none.Failure, absent.Failure);
+			ClassicAssert.AreEqual(KingdomJointOwnerState.Absent, none.State);
+			ClassicAssert.AreEqual(KingdomJointOwnerState.Absent, absent.State);
+			ClassicAssert.AreNotEqual(none.Failure, absent.Failure);
 			StringAssert.Contains("has recorded no covenant", none.Failure);
 		}
 
@@ -200,10 +201,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomJointCivicOwnerView owner =
 				KingdomVillageCovenantView.Owner(evidence, Realm, null, null, null);
-			Assert.AreEqual(KingdomJointOwnerState.Invalid, owner.State);
+			ClassicAssert.AreEqual(KingdomJointOwnerState.Invalid, owner.State);
 			StringAssert.Contains(expected, owner.Failure);
-			Assert.IsEmpty(owner.Text);
-			Assert.IsEmpty(owner.SourceReceiptId);
+			ClassicAssert.IsEmpty(owner.Text);
+			ClassicAssert.IsEmpty(owner.SourceReceiptId);
 		}
 
 		[Test]
@@ -211,7 +212,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomJointCivicOwnerView owner = KingdomVillageCovenantView.Owner(
 				(KingdomVillageCovenantEvidence)99, Realm, null, null, null);
-			Assert.AreEqual(KingdomJointOwnerState.Invalid, owner.State);
+			ClassicAssert.AreEqual(KingdomJointOwnerState.Invalid, owner.State);
 			StringAssert.Contains("does not define", owner.Failure);
 		}
 
@@ -229,19 +230,19 @@ namespace ThousandAndFirst.Tests
 				KingdomVillageCovenantTests.Row(),
 				KingdomVillageCovenantTests.Row("fedcba9876543210fedcba9876543210", "Kyakukya",
 					"the people of Kyakukya"));
-			Assert.IsTrue(KingdomVillageCovenantCodec.TryEncode(archive, out byte[] bytes,
+			ClassicAssert.IsTrue(KingdomVillageCovenantCodec.TryEncode(archive, out byte[] bytes,
 				out string encode), encode);
 			KingdomVillageCovenantArchive reloaded = KingdomVillageCovenantCodec.Decode(bytes);
-			Assert.AreEqual(KingdomVillageCovenantState.Compatible, reloaded.State);
+			ClassicAssert.AreEqual(KingdomVillageCovenantState.Compatible, reloaded.State);
 
 			KingdomJointCivicView before = Fanned(Owner(archive, 600));
 			KingdomJointCivicView after = Fanned(Owner(reloaded, 600));
-			Assert.AreEqual(KingdomJointOwnerState.Valid, before.Covenant.State);
-			Assert.AreEqual(before.Covenant.SourceReceiptId, after.Covenant.SourceReceiptId);
-			Assert.AreEqual(before.Covenant.Text, after.Covenant.Text);
-			Assert.AreEqual(KingdomJointOwnerState.Valid, before.Creed.State);
-			Assert.AreEqual(KingdomJointOwnerState.Invalid, before.Moot.State);
-			Assert.AreEqual(KingdomJointOwnerState.Valid, before.Enclave.State);
+			ClassicAssert.AreEqual(KingdomJointOwnerState.Valid, before.Covenant.State);
+			ClassicAssert.AreEqual(before.Covenant.SourceReceiptId, after.Covenant.SourceReceiptId);
+			ClassicAssert.AreEqual(before.Covenant.Text, after.Covenant.Text);
+			ClassicAssert.AreEqual(KingdomJointOwnerState.Valid, before.Creed.State);
+			ClassicAssert.AreEqual(KingdomJointOwnerState.Invalid, before.Moot.State);
+			ClassicAssert.AreEqual(KingdomJointOwnerState.Valid, before.Enclave.State);
 		}
 
 		private static KingdomJointCivicView Fanned(KingdomJointCivicOwnerView covenant)
@@ -261,7 +262,7 @@ namespace ThousandAndFirst.Tests
 					ConstructionJobId = "raw-job-id",
 					Fault = ""
 				}, "Hosted lots are active.");
-			Assert.IsTrue(KingdomJointCivicViewRules.TryBuild(creed, covenant, moot, enclave,
+			ClassicAssert.IsTrue(KingdomJointCivicViewRules.TryBuild(creed, covenant, moot, enclave,
 				out KingdomJointCivicView view, out string failure), failure);
 			return view;
 		}
@@ -279,11 +280,11 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void GroundClaimedByTwoSettlementsOrByNoneProvesNothing()
 		{
-			Assert.IsFalse(KingdomJointCivicViewRules.TryProveOwnedGround(true, Seat, NonSeat,
+			ClassicAssert.IsFalse(KingdomJointCivicViewRules.TryProveOwnedGround(true, Seat, NonSeat,
 				Seat, out string overlap));
 			StringAssert.Contains("claimed by more than one settlement", overlap);
 
-			Assert.IsFalse(KingdomJointCivicViewRules.TryProveOwnedGround(false, Seat, null,
+			ClassicAssert.IsFalse(KingdomJointCivicViewRules.TryProveOwnedGround(false, Seat, null,
 				Seat, out string unowned));
 			StringAssert.Contains("not ground the realm owns", unowned);
 		}
@@ -291,15 +292,15 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void GroundOwnedByOneSettlementProvesOnlyThatSettlement()
 		{
-			Assert.IsTrue(KingdomJointCivicViewRules.TryProveOwnedGround(true, Seat, null, Seat,
+			ClassicAssert.IsTrue(KingdomJointCivicViewRules.TryProveOwnedGround(true, Seat, null, Seat,
 				out string seated), seated);
-			Assert.IsTrue(KingdomJointCivicViewRules.TryProveOwnedGround(false, Seat, NonSeat,
+			ClassicAssert.IsTrue(KingdomJointCivicViewRules.TryProveOwnedGround(false, Seat, NonSeat,
 				NonSeat, out string outlying), outlying);
 
-			Assert.IsFalse(KingdomJointCivicViewRules.TryProveOwnedGround(true, Seat, null,
+			ClassicAssert.IsFalse(KingdomJointCivicViewRules.TryProveOwnedGround(true, Seat, null,
 				NonSeat, out string wrongSeat));
 			StringAssert.Contains("other than the one that owns its ground", wrongSeat);
-			Assert.IsFalse(KingdomJointCivicViewRules.TryProveOwnedGround(false, Seat, NonSeat,
+			ClassicAssert.IsFalse(KingdomJointCivicViewRules.TryProveOwnedGround(false, Seat, NonSeat,
 				Seat, out string wrongOutlying));
 			StringAssert.Contains("other than the one that owns its ground", wrongOutlying);
 		}
@@ -307,10 +308,10 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void GroundWhoseOwningSettlementHasNoUsableIdentityProvesNothing()
 		{
-			Assert.IsFalse(KingdomJointCivicViewRules.TryProveOwnedGround(true, null, null, Seat,
+			ClassicAssert.IsFalse(KingdomJointCivicViewRules.TryProveOwnedGround(true, null, null, Seat,
 				out string absent));
 			StringAssert.Contains("has no identity", absent);
-			Assert.IsFalse(KingdomJointCivicViewRules.TryProveOwnedGround(true, "settlement-3",
+			ClassicAssert.IsFalse(KingdomJointCivicViewRules.TryProveOwnedGround(true, "settlement-3",
 				null, "settlement-3", out string raw));
 			StringAssert.Contains("not canonically named", raw);
 		}
@@ -322,8 +323,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomVillageCovenantArchive archive = Crowded();
 			KingdomJointCivicOwnerView owner = Owner(archive, 600);
-			Assert.AreEqual(KingdomJointOwnerState.Valid, owner.State, owner.Failure);
-			Assert.IsTrue(KingdomJointCivicViewRules.Report(owner.Text));
+			ClassicAssert.AreEqual(KingdomJointOwnerState.Valid, owner.State, owner.Failure);
+			ClassicAssert.IsTrue(KingdomJointCivicViewRules.Report(owner.Text));
 			StringAssert.Contains("48 village covenants stand on record", owner.Text);
 		}
 
@@ -339,14 +340,14 @@ namespace ThousandAndFirst.Tests
 			string named = KingdomVillageCovenantView.Summary(many.Rows, Seen(many, 600));
 			StringAssert.Contains("more, which the covenant register reads a page at a time",
 				named);
-			Assert.IsTrue(KingdomJointCivicViewRules.Report(named));
+			ClassicAssert.IsTrue(KingdomJointCivicViewRules.Report(named));
 
 			KingdomVillageCovenantArchive wide = Crowded();
 			string counted = KingdomVillageCovenantView.Summary(wide.Rows, Seen(wide, 600));
 			StringAssert.Contains("48 village covenants stand on record", counted);
 			StringAssert.DoesNotContain("sealed at standing", counted,
 				"names that cannot fit are counted rather than cut off part-way");
-			Assert.IsTrue(KingdomJointCivicViewRules.Report(counted));
+			ClassicAssert.IsTrue(KingdomJointCivicViewRules.Report(counted));
 		}
 
 		[Test]
@@ -357,18 +358,18 @@ namespace ThousandAndFirst.Tests
 			int offset = 0;
 			while (true)
 			{
-				Assert.IsTrue(KingdomVillageCovenantRegister.TryPage(archive, Realm, offset,
+				ClassicAssert.IsTrue(KingdomVillageCovenantRegister.TryPage(archive, Realm, offset,
 					out KingdomVillageCovenantRegister page, out string failure), failure);
-				Assert.AreEqual(archive.Rows.Count, page.Total);
-				Assert.AreEqual(offset, page.Offset);
-				Assert.LessOrEqual(page.Count, KingdomVillageCovenantRegister.PageRows);
+				ClassicAssert.AreEqual(archive.Rows.Count, page.Total);
+				ClassicAssert.AreEqual(offset, page.Offset);
+				ClassicAssert.LessOrEqual(page.Count, KingdomVillageCovenantRegister.PageRows);
 				for (int i = 0; i < page.Count; i++)
-					Assert.AreEqual(archive.Rows[offset + i].ReceiptId, page.Row(i).ReceiptId);
+					ClassicAssert.AreEqual(archive.Rows[offset + i].ReceiptId, page.Row(i).ReceiptId);
 				seen += page.Count;
 				if (page.NextOffset >= archive.Rows.Count) break;
 				offset = page.NextOffset;
 			}
-			Assert.AreEqual(archive.Rows.Count, seen);
+			ClassicAssert.AreEqual(archive.Rows.Count, seen);
 		}
 
 		[Test]
@@ -376,20 +377,20 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomVillageCovenantArchive archive =
 				KingdomVillageCovenantTests.With(KingdomVillageCovenantTests.Row());
-			Assert.IsTrue(KingdomVillageCovenantRegister.TryPage(archive, Realm, 0,
+			ClassicAssert.IsTrue(KingdomVillageCovenantRegister.TryPage(archive, Realm, 0,
 				out KingdomVillageCovenantRegister page, out string failure), failure);
 			KingdomVillageCovenantReceipt row = page.Row(0);
-			Assert.AreNotSame(archive.Rows[0], row);
+			ClassicAssert.AreNotSame(archive.Rows[0], row);
 			row.VillageDisplayName = "edited by a caller";
-			Assert.AreEqual(KingdomVillageCovenantTests.Display,
+			ClassicAssert.AreEqual(KingdomVillageCovenantTests.Display,
 				archive.Rows[0].VillageDisplayName);
-			Assert.AreEqual(KingdomVillageCovenantTests.Display,
+			ClassicAssert.AreEqual(KingdomVillageCovenantTests.Display,
 				page.Row(0).VillageDisplayName);
 
 			// And the other direction: a page already handed out must not change because the
 			// archive it was read from did.
 			archive.Rows[0].VillageDisplayName = "edited in the archive";
-			Assert.AreEqual(KingdomVillageCovenantTests.Display,
+			ClassicAssert.AreEqual(KingdomVillageCovenantTests.Display,
 				page.Row(0).VillageDisplayName,
 				"a page that aliased the archive would follow it");
 		}
@@ -397,18 +398,18 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheRegisterRefusesEveryArchiveTheSummaryWouldRefuse()
 		{
-			Assert.IsFalse(KingdomVillageCovenantRegister.TryPage(
+			ClassicAssert.IsFalse(KingdomVillageCovenantRegister.TryPage(
 				KingdomVillageCovenantTests.Bound(KingdomVillageCovenantTests.OtherRealm), Realm,
 				0, out _, out string foreign));
 			StringAssert.Contains("not bound to this exact realm", foreign);
 
 			byte[] bytes = KingdomVillageCovenantArchiveTests.Encoded();
 			bytes[0] ^= 0x01;
-			Assert.IsFalse(KingdomVillageCovenantRegister.TryPage(
+			ClassicAssert.IsFalse(KingdomVillageCovenantRegister.TryPage(
 				KingdomVillageCovenantCodec.Decode(bytes), Realm, 0, out _, out string broken));
 			StringAssert.Contains("Quarantined", broken);
 
-			Assert.IsFalse(KingdomVillageCovenantRegister.TryPage(
+			ClassicAssert.IsFalse(KingdomVillageCovenantRegister.TryPage(
 				KingdomVillageCovenantTests.With(KingdomVillageCovenantTests.Row()), Realm, 40,
 				out _, out string past));
 			StringAssert.Contains("was asked for row 40", past);
@@ -427,7 +428,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < KingdomVillageCovenantArchive.MaxRows; i++)
 			{
 				string transaction = i.ToString("x2") + "0123456789abcdef0123456789abcd";
-				Assert.IsTrue(KingdomVillageCovenantRules.TryAppend(archive,
+				ClassicAssert.IsTrue(KingdomVillageCovenantRules.TryAppend(archive,
 					KingdomVillageCovenantTests.Row(transaction, wide + i, wide + "v" + i),
 					Realm, out archive, out _, out _, out string failure), failure);
 			}

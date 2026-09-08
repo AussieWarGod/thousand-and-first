@@ -20,17 +20,19 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
-The tent-storage data correction reports3049 staged production C# files,431,893 physical lines,
-zero at or above300,and1415 direct-XRL files. Exact inventory:
-`ea6fd5c8404865bae167a2462dd7e5eb7decfb8ba7362453c5fec31ff7e00330`.
-Its only production-source delta over the retained census below is the regenerated
-`Core/KingdomRemovalCoverage.Generated.cs` allowlist, which gains one owned blueprint name;
-`Tools/generate-removal-coverage.py --check` is clean and no hand-written source, saved format
-or public API changed. No semantic review binds this digest, so
-`python3 Tools/check-structure.py --release` reports the exact-inventory human semantic review
-OPEN. That review is a release blocker and this census does not satisfy it.
+The claimed-ground light reports 3051 staged production C# files and 432,024 physical lines.
+Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
+1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
+`fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`. The census reports
+1417 files with direct `XRL` imports; 0 of those exceed the line limit.
 
-## Retained master-growth resume census
+The delta over the retained draft below is two added production files &mdash; a mod-owned
+`IZonePart` and its projection &mdash; plus one modified event shard, one registry line, one
+option row and documentation. No saved format, wire or public API is removed. The exact-inventory
+semantic review in `docs/STRUCTURE_REVIEW.json` still binds the previous digest and is therefore
+open for this delta; the human review it records has not been re-run here.
+
+## Retained master-growth resume draft census
 
 The master-growth resume correction reports3049 staged production C# files,431,893 physical lines,
 zero at or above300,and1415 direct-XRL files. Exact inventory:

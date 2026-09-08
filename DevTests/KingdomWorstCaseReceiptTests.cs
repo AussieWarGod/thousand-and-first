@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 using ThousandAndFirst.Simulation.City;
 
@@ -102,7 +103,7 @@ namespace ThousandAndFirst.Tests
 			}
 			KingdomCityState state;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityState.TryCreate(
+			ClassicAssert.IsTrue(KingdomCityState.TryCreate(
 				KingdomCityRules.SchemaVersion,
 				KingdomCityRules.RulesVersion,
 				"taf:city:kavvat",
@@ -121,7 +122,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomAdvanceOutcome<KingdomCityState> outcome;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomAdvanceRules.TryRun(
+			ClassicAssert.IsTrue(KingdomAdvanceRules.TryRun(
 				new KingdomCityAdvanceable(KingdomRules.TicksPerDay, null, null),
 				state,
 				state.ProcessedThroughTick,
@@ -144,17 +145,17 @@ namespace ThousandAndFirst.Tests
 			KingdomAdvanceOutcome<KingdomCityState> season = Season(state, SeasonDays);
 
 			long ceiling;
-			Assert.IsTrue(KingdomBudgetRules.TryMaxRowVisits(rows, out ceiling));
+			ClassicAssert.IsTrue(KingdomBudgetRules.TryMaxRowVisits(rows, out ceiling));
 
 			// The catch-up backlog the homecoming inherits, in the reify lane's own thirds.
 			KingdomCatchUpCounter counter = KingdomCityRules.CityCounter(season.State);
 			int turns;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCatchUpRules.TryTurnsToDrain(counter.OwedThirds, out turns, out fault), fault.ToString());
+			ClassicAssert.IsTrue(KingdomCatchUpRules.TryTurnsToDrain(counter.OwedThirds, out turns, out fault), fault.ToString());
 			// And the architectural worst §0.0(b) prices: the whole backlog a full parasang can
 			// present at once, not merely the one this city happens to be carrying.
 			int worstTurns;
-			Assert.IsTrue(KingdomCatchUpRules.TryTurnsToDrain(
+			ClassicAssert.IsTrue(KingdomCatchUpRules.TryTurnsToDrain(
 				KingdomCatchUpRules.WorstBacklogUnits * KingdomCatchUpRules.ThirdsPerUnit, out worstTurns, out fault), fault.ToString());
 
 			// One slice's planning, at the hard caps, on the same city.
@@ -169,15 +170,15 @@ namespace ThousandAndFirst.Tests
 				}
 			}
 			KingdomTripPlan plan;
-			Assert.IsTrue(KingdomLogisticsRules.TryPlanTrip(between, stops, out plan, out fault), fault.ToString());
+			ClassicAssert.IsTrue(KingdomLogisticsRules.TryPlanTrip(between, stops, out plan, out fault), fault.ToString());
 
 			KingdomZoneGraph graph;
-			Assert.IsTrue(KingdomCityRules.TryZoneGraph(season.State, out graph, out fault), fault.ToString());
+			ClassicAssert.IsTrue(KingdomCityRules.TryZoneGraph(season.State, out graph, out fault), fault.ToString());
 
 			long modelBytes;
-			Assert.IsTrue(KingdomCityMemoryRules.TryCityModelBytes(Zones, Works, Residents, 0, out modelBytes));
+			ClassicAssert.IsTrue(KingdomCityMemoryRules.TryCityModelBytes(Zones, Works, Residents, 0, out modelBytes));
 			long realmBytes;
-			Assert.IsTrue(KingdomCityMemoryRules.TryRealmBytesAtTodaysCaps(out realmBytes));
+			ClassicAssert.IsTrue(KingdomCityMemoryRules.TryRealmBytesAtTodaysCaps(out realmBytes));
 
 			Console.WriteLine(
 				"[TAF] perf WORSTCASE city=Kavvat zones=" + Zones + " works=" + Works + " settlers=" + Residents
@@ -189,22 +190,22 @@ namespace ThousandAndFirst.Tests
 				+ " model=" + modelBytes + "B realm=" + realmBytes + "B");
 
 			// ---- The pins ------------------------------------------------------------------
-			Assert.IsFalse(season.Overflowed,
+			ClassicAssert.IsFalse(season.Overflowed,
 				"a season away must not exhaust the breakpoint budget: the model, not the elapsed, bounds the passes");
-			Assert.LessOrEqual(season.RowVisits, ceiling,
+			ClassicAssert.LessOrEqual(season.RowVisits, ceiling,
 				"row-visits are 64 x 2R at the very worst (§0.0(a)); measured " + season.RowVisits + " against " + ceiling);
-			Assert.LessOrEqual(season.Steps, KingdomBudgetRules.MaxBreakpoints);
-			Assert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.Heartbeat, season.Steps > KingdomBudgetRules.HeartbeatStepsPerSlice ? KingdomBudgetRules.HeartbeatStepsPerSlice : season.Steps),
+			ClassicAssert.LessOrEqual(season.Steps, KingdomBudgetRules.MaxBreakpoints);
+			ClassicAssert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.Heartbeat, season.Steps > KingdomBudgetRules.HeartbeatStepsPerSlice ? KingdomBudgetRules.HeartbeatStepsPerSlice : season.Steps),
 				"the slice lane's step cap is a constant and the season does not move it");
-			Assert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.RoutePlan, plan.Operations),
+			ClassicAssert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.RoutePlan, plan.Operations),
 				"the planner cost " + plan.Operations + " int ops at its own hard caps");
-			Assert.LessOrEqual(graph.Operations, 729L,
+			ClassicAssert.LessOrEqual(graph.Operations, 729L,
 				"§3.10(2) prices the zone graph at 9³ = 729 ops and a four-zone city must be far under it");
-			Assert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.CatchUpDrain, turns),
+			ClassicAssert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.CatchUpDrain, turns),
 				"this city's backlog drains in " + turns + " turns at 8 units a turn");
-			Assert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.CatchUpDrain, worstTurns),
+			ClassicAssert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.CatchUpDrain, worstTurns),
 				"the architectural worst backlog drains in " + worstTurns + " turns, against a warn rung of 40");
-			Assert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.ModelBytes, realmBytes),
+			ClassicAssert.AreEqual(KingdomBudgetVerdict.Within, KingdomBudgetRules.JudgeCount(KingdomBudgetLane.ModelBytes, realmBytes),
 				"the realm's model is " + realmBytes + " bytes at today's caps");
 		}
 
@@ -221,9 +222,9 @@ namespace ThousandAndFirst.Tests
 			KingdomAdvanceOutcome<KingdomCityState> season = Season(state, SeasonDays);
 			KingdomAdvanceOutcome<KingdomCityState> year = Season(state, 4L * SeasonDays);
 			KingdomAdvanceOutcome<KingdomCityState> decade = Season(state, 40L * SeasonDays);
-			Assert.AreEqual(season.Steps, year.Steps, "the year crossed no breakpoint the season did not");
-			Assert.AreEqual(year.Steps, decade.Steps);
-			Assert.AreEqual(season.RowVisits, decade.RowVisits,
+			ClassicAssert.AreEqual(season.Steps, year.Steps, "the year crossed no breakpoint the season did not");
+			ClassicAssert.AreEqual(year.Steps, decade.Steps);
+			ClassicAssert.AreEqual(season.RowVisits, decade.RowVisits,
 				"row-visits that scale with the absence mean a lane is drawing per day");
 		}
 
@@ -242,17 +243,17 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState state = WorstCase();
 			KingdomCityFault fault;
 			KingdomCityState offset;
-			Assert.IsTrue(state.TryWithProcessedThroughTick(737L, out offset, out fault), fault.ToString());
+			ClassicAssert.IsTrue(state.TryWithProcessedThroughTick(737L, out offset, out fault), fault.ToString());
 			KingdomAdvanceOutcome<KingdomCityState> ragged;
-			Assert.IsTrue(KingdomAdvanceRules.TryRun(
+			ClassicAssert.IsTrue(KingdomAdvanceRules.TryRun(
 				new KingdomCityAdvanceable(KingdomRules.TicksPerDay, null, null),
 				offset,
 				737L,
 				737L + (SeasonDays * KingdomRules.TicksPerDay) + 419L,
 				out ragged,
 				out fault), fault.ToString());
-			Assert.IsFalse(ragged.Overflowed);
-			Assert.AreEqual(flat.Steps, ragged.Steps,
+			ClassicAssert.IsFalse(ragged.Overflowed);
+			ClassicAssert.AreEqual(flat.Steps, ragged.Steps,
 				"an unaligned cursor must not buy the model extra passes");
 		}
 
@@ -268,9 +269,9 @@ namespace ThousandAndFirst.Tests
 			long water = Ground(state, KingdomStockKind.Water);
 			long food = Ground(state, KingdomStockKind.Food);
 			KingdomCityState after = Season(state, SeasonDays).State;
-			Assert.AreEqual(water, Ground(after, KingdomStockKind.Water),
+			ClassicAssert.AreEqual(water, Ground(after, KingdomStockKind.Water),
 				"model total == ground total + counter-owed, per stock kind, at every instant");
-			Assert.AreEqual(food, Ground(after, KingdomStockKind.Food));
+			ClassicAssert.AreEqual(food, Ground(after, KingdomStockKind.Food));
 		}
 
 		private static long Ground(KingdomCityState state, KingdomStockKind kind)
@@ -279,9 +280,9 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < state.ZoneCount; i++)
 			{
 				KingdomZoneRow row;
-				Assert.IsTrue(state.TryZone(i, out row));
+				ClassicAssert.IsTrue(state.TryZone(i, out row));
 				KingdomStockPair pair;
-				Assert.IsTrue(row.Stocks.TryGet(kind, out pair));
+				ClassicAssert.IsTrue(row.Stocks.TryGet(kind, out pair));
 				total += pair.Level - row.OwedOf(kind);
 			}
 			return total;

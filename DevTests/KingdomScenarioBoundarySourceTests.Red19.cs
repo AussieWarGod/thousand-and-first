@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -24,7 +25,7 @@ namespace ThousandAndFirst.Tests
 		private static string Section(string source, string start, string end)
 		{
 			int begin = source.IndexOf(start, StringComparison.Ordinal);
-			Assert.Greater(begin, -1, start);
+			ClassicAssert.Greater(begin, -1, start);
 			int stop = source.IndexOf(end, begin + start.Length, StringComparison.Ordinal);
 			if (stop < 0) stop = source.Length;
 			return source.Substring(begin, stop - begin);
@@ -110,8 +111,8 @@ namespace ThousandAndFirst.Tests
 			string run = Read("Harness/KingdomScenarioRun.cs");
 			int publish = run.IndexOf("TryPublishMeasured", StringComparison.Ordinal);
 			int sign = run.IndexOf("TrySignAcceptance", StringComparison.Ordinal);
-			Assert.Greater(publish, -1, "the measured stamp must be published");
-			Assert.Greater(sign, publish, "publication must precede signing");
+			ClassicAssert.Greater(publish, -1, "the measured stamp must be published");
+			ClassicAssert.Greater(sign, publish, "publication must precede signing");
 			StringAssert.Contains("This run is NOT green", run);
 			StringAssert.Contains("no replay", run);
 		}
@@ -139,17 +140,17 @@ namespace ThousandAndFirst.Tests
 				writes += Occurrences(source,
 					"SetStringGameState(KingdomScenarioProvenanceRules.ProvenanceState");
 			}
-			Assert.AreEqual(1, writes, "exactly one provenance write across the whole harness tree");
+			ClassicAssert.AreEqual(1, writes, "exactly one provenance write across the whole harness tree");
 			string authority = Read("Harness/KingdomScenarioStampAuthority.cs");
 			string realizer = Read("Harness/KingdomScenarioRealizer.cs");
-			Assert.AreEqual(1, Occurrences(authority,
+			ClassicAssert.AreEqual(1, Occurrences(authority,
 				"SetStringGameState(KingdomScenarioProvenanceRules.ProvenanceState"),
 				"the one write must live in the shared authority");
 			// Read-only fixture owner checks are not publishers. Require the shared writer's
 			// own ordered readback instead of forbidding safe readers elsewhere in the tree.
 			string writer = Section(authority, "internal static bool TryWriteProvenance(",
 				"/// <summary>Raw key-presence shape");
-			Assert.AreEqual(1, System.Text.RegularExpressions.Regex.Matches(writer,
+			ClassicAssert.AreEqual(1, System.Text.RegularExpressions.Regex.Matches(writer,
 				@"KingdomScenarioDurableState\.ProvesExactText\(\s*"
 				+ @"KingdomScenarioProvenanceRules\.ProvenanceState\s*,\s*wire\s*\)").Count,
 				"the sole provenance writer must read back its exact value once");
@@ -306,7 +307,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < Terms.Length; i++)
 			{
 				int found = Source.IndexOf(Terms[i], offset, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(found, 0, "missing ordered source term: " + Terms[i]);
+				ClassicAssert.GreaterOrEqual(found, 0, "missing ordered source term: " + Terms[i]);
 				offset = found + Terms[i].Length;
 			}
 		}

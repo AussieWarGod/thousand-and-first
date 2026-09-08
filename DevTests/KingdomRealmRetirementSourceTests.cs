@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -152,8 +153,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int indexedCut = player.IndexOf("charters[0].ActivatedAbilityID",
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(completeCut, 0);
-			Assert.Greater(indexedCut, completeCut,
+			ClassicAssert.GreaterOrEqual(completeCut, 0);
+			ClassicAssert.Greater(indexedCut, completeCut,
 				"typed Charter and command cardinality must be proved before indexing");
 			string proof = Read("Core/KingdomIdentityFenceRuntime.RemovalProof.cs");
 			StringAssert.DoesNotContain("TryWriteRaw", proof);
@@ -211,7 +212,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.DoesNotContain("Repair", construction);
 			string drive = Read("Core/KingdomRealmRetirementGround.Drive.cs");
 			AssertBefore(drive, "PublishPreMutationDisclosures", "TryApply(System, plan");
-			Assert.AreEqual(3, Occurrences(drive, "PublishPreMutationDisclosures"),
+			ClassicAssert.AreEqual(3, Occurrences(drive, "PublishPreMutationDisclosures"),
 				"cleaned legacy receipts must publish missing prior-unknown previews on revisit");
 			StringAssert.Contains("Plan.ObjectPreviewRecords", drive);
 			AssertBefore(drive, "TryApply(System, plan", "PublishObjectCompletions");

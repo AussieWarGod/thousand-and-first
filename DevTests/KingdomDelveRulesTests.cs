@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -36,16 +37,16 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AShaftIsOneStratumStraightDown()
 		{
-			Assert.IsTrue(KingdomDelveRules.IsShaftPair(Zone(1, 1, 10), Zone(1, 1, 11)));
+			ClassicAssert.IsTrue(KingdomDelveRules.IsShaftPair(Zone(1, 1, 10), Zone(1, 1, 11)));
 		}
 
 		[Test]
 		public void TheCanonicalFootChangesOnlyTheStratum()
 		{
 			string foot;
-			Assert.IsTrue(KingdomDelveRules.TryFootZoneId(Zone(1, 1, 10), out foot));
-			Assert.AreEqual(Zone(1, 1, 11), foot);
-			Assert.IsTrue(KingdomDelveRules.IsShaftPair(Zone(1, 1, 10), foot));
+			ClassicAssert.IsTrue(KingdomDelveRules.TryFootZoneId(Zone(1, 1, 10), out foot));
+			ClassicAssert.AreEqual(Zone(1, 1, 11), foot);
+			ClassicAssert.IsTrue(KingdomDelveRules.IsShaftPair(Zone(1, 1, 10), foot));
 		}
 
 		[TestCase("JoppaWorld.11.22.1.1.010")]
@@ -56,28 +57,28 @@ namespace ThousandAndFirst.Tests
 		public void AFootIdIsNeverGuessed(string head)
 		{
 			string foot;
-			Assert.IsFalse(KingdomDelveRules.TryFootZoneId(head, out foot));
-			Assert.IsNull(foot);
+			ClassicAssert.IsFalse(KingdomDelveRules.TryFootZoneId(head, out foot));
+			ClassicAssert.IsNull(foot);
 		}
 
 		[Test]
 		public void AShaftNeverSkipsAStratum()
 		{
-			Assert.IsFalse(KingdomDelveRules.IsShaftPair(Zone(1, 1, 10), Zone(1, 1, 12)),
+			ClassicAssert.IsFalse(KingdomDelveRules.IsShaftPair(Zone(1, 1, 10), Zone(1, 1, 12)),
 				"two strata down is two shafts, and the middle one has to be cut first");
 		}
 
 		[Test]
 		public void AShaftNeverGoesUpAndAcross()
 		{
-			Assert.IsFalse(KingdomDelveRules.IsShaftPair(Zone(1, 1, 10), Zone(2, 1, 11)));
-			Assert.IsFalse(KingdomDelveRules.IsShaftPair(Zone(1, 1, 10), Zone(2, 2, 11)));
+			ClassicAssert.IsFalse(KingdomDelveRules.IsShaftPair(Zone(1, 1, 10), Zone(2, 1, 11)));
+			ClassicAssert.IsFalse(KingdomDelveRules.IsShaftPair(Zone(1, 1, 10), Zone(2, 2, 11)));
 		}
 
 		[Test]
 		public void AShaftIsNotSunkUpwards()
 		{
-			Assert.IsFalse(KingdomDelveRules.IsShaftPair(Zone(1, 1, 11), Zone(1, 1, 10)),
+			ClassicAssert.IsFalse(KingdomDelveRules.IsShaftPair(Zone(1, 1, 11), Zone(1, 1, 10)),
 				"the head is the shallower end, always");
 		}
 
@@ -86,13 +87,13 @@ namespace ThousandAndFirst.Tests
 		{
 			// A stair up the inside of a tower is a different building in a set nobody has
 			// written. If this ever passes, the sky arrived through the delve's back door.
-			Assert.IsFalse(KingdomDelveRules.IsShaftPair(Zone(1, 1, 9), Zone(1, 1, 10)));
+			ClassicAssert.IsFalse(KingdomDelveRules.IsShaftPair(Zone(1, 1, 9), Zone(1, 1, 10)));
 		}
 
 		[Test]
 		public void ADifferentWorldIsNotUnderThisOne()
 		{
-			Assert.IsFalse(KingdomDelveRules.IsShaftPair(Zone(1, 1, 10), "OtherWorld.11.22.1.1.11"));
+			ClassicAssert.IsFalse(KingdomDelveRules.IsShaftPair(Zone(1, 1, 10), "OtherWorld.11.22.1.1.11"));
 		}
 
 		[TestCase(null)]
@@ -102,8 +103,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase("not a zone at all")]
 		public void AMalformedIdRefusesTheShaftRatherThanGuessingAtIt(string bad)
 		{
-			Assert.IsFalse(KingdomDelveRules.IsShaftPair(bad, Zone(1, 1, 11)));
-			Assert.IsFalse(KingdomDelveRules.IsShaftPair(Zone(1, 1, 10), bad));
+			ClassicAssert.IsFalse(KingdomDelveRules.IsShaftPair(bad, Zone(1, 1, 11)));
+			ClassicAssert.IsFalse(KingdomDelveRules.IsShaftPair(Zone(1, 1, 10), bad));
 		}
 
 		[TestCase(10, 11, true, true)]
@@ -118,7 +119,7 @@ namespace ThousandAndFirst.Tests
 			// The graph has already named the direction off coordinates it carries, so it asks this
 			// rather than re-deriving the geometry from a zone id. One sentence, two callers: if
 			// these ever disagree, a carrier walks down a shaft the catalogue says is not there.
-			Assert.AreEqual(expected, KingdomDelveRules.ShaftJoinsStrata(head, foot, cut));
+			ClassicAssert.AreEqual(expected, KingdomDelveRules.ShaftJoinsStrata(head, foot, cut));
 		}
 
 		// ==================================================================================
@@ -128,14 +129,14 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RockUnderNoShaftIsJoinedToNothing()
 		{
-			Assert.IsFalse(KingdomDelveRules.ShaftJoins(Zone(1, 1, 10), Zone(1, 1, 11), null));
-			Assert.IsFalse(KingdomDelveRules.ShaftJoins(Zone(1, 1, 10), Zone(1, 1, 11), List(Zone(2, 1, 10))));
+			ClassicAssert.IsFalse(KingdomDelveRules.ShaftJoins(Zone(1, 1, 10), Zone(1, 1, 11), null));
+			ClassicAssert.IsFalse(KingdomDelveRules.ShaftJoins(Zone(1, 1, 10), Zone(1, 1, 11), List(Zone(2, 1, 10))));
 		}
 
 		[Test]
 		public void AFinishedShaftJoinsItsTwoEnds()
 		{
-			Assert.IsTrue(KingdomDelveRules.ShaftJoins(Zone(1, 1, 10), Zone(1, 1, 11), List(Zone(1, 1, 10))));
+			ClassicAssert.IsTrue(KingdomDelveRules.ShaftJoins(Zone(1, 1, 10), Zone(1, 1, 11), List(Zone(1, 1, 10))));
 		}
 
 		[Test]
@@ -143,7 +144,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// The delve is recorded against the zone it STANDS in, never the one it opens. If
 			// this ever passes, the two lists were read the wrong way round.
-			Assert.IsFalse(KingdomDelveRules.ShaftJoins(Zone(1, 1, 10), Zone(1, 1, 11), List(Zone(1, 1, 11))));
+			ClassicAssert.IsFalse(KingdomDelveRules.ShaftJoins(Zone(1, 1, 10), Zone(1, 1, 11), List(Zone(1, 1, 11))));
 		}
 
 		[TestCase("delve", true)]
@@ -155,7 +156,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("", false)]
 		public void TheDesignThatOpensGroundIsKnownByItsKey(string key, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomDelveRules.IsDelve(key));
+			ClassicAssert.AreEqual(expected, KingdomDelveRules.IsDelve(key));
 		}
 
 		// ==================================================================================
@@ -165,8 +166,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void NothingClaimedIsNothingReached()
 		{
-			Assert.AreEqual(0, KingdomDelveRules.ReachedZones(null, null).Count);
-			Assert.AreEqual(0, KingdomDelveRules.ReachedZones(List(), List()).Count);
+			ClassicAssert.AreEqual(0, KingdomDelveRules.ReachedZones(null, null).Count);
+			ClassicAssert.AreEqual(0, KingdomDelveRules.ReachedZones(List(), List()).Count);
 		}
 
 		[Test]
@@ -176,9 +177,9 @@ namespace ThousandAndFirst.Tests
 			// pave the wilderness to reach its own second parasang.
 			List<string> claimed = List(Zone(1, 1, 10), Zone(2, 2, 10));
 			List<string> reached = KingdomDelveRules.ReachedZones(claimed, null);
-			Assert.AreEqual(2, reached.Count);
-			Assert.IsTrue(reached.Contains(Zone(1, 1, 10)));
-			Assert.IsTrue(reached.Contains(Zone(2, 2, 10)));
+			ClassicAssert.AreEqual(2, reached.Count);
+			ClassicAssert.IsTrue(reached.Contains(Zone(1, 1, 10)));
+			ClassicAssert.IsTrue(reached.Contains(Zone(2, 2, 10)));
 		}
 
 		[Test]
@@ -186,19 +187,19 @@ namespace ThousandAndFirst.Tests
 		{
 			List<string> claimed = List(Zone(1, 1, 10), Zone(1, 1, 11));
 			List<string> reached = KingdomDelveRules.ReachedZones(claimed, null);
-			Assert.AreEqual(1, reached.Count);
-			Assert.AreEqual(Zone(1, 1, 10), reached[0]);
+			ClassicAssert.AreEqual(1, reached.Count);
+			ClassicAssert.AreEqual(Zone(1, 1, 10), reached[0]);
 			List<string> waiting = KingdomDelveRules.UnreachedZones(claimed, null);
-			Assert.AreEqual(1, waiting.Count);
-			Assert.AreEqual(Zone(1, 1, 11), waiting[0]);
+			ClassicAssert.AreEqual(1, waiting.Count);
+			ClassicAssert.AreEqual(Zone(1, 1, 11), waiting[0]);
 		}
 
 		[Test]
 		public void AShaftMakesTheRockBelowItReached()
 		{
 			List<string> claimed = List(Zone(1, 1, 10), Zone(1, 1, 11));
-			Assert.IsTrue(KingdomDelveRules.Reaches(Zone(1, 1, 11), claimed, List(Zone(1, 1, 10))));
-			Assert.AreEqual(0, KingdomDelveRules.UnreachedZones(claimed, List(Zone(1, 1, 10))).Count);
+			ClassicAssert.IsTrue(KingdomDelveRules.Reaches(Zone(1, 1, 11), claimed, List(Zone(1, 1, 10))));
+			ClassicAssert.AreEqual(0, KingdomDelveRules.UnreachedZones(claimed, List(Zone(1, 1, 10))).Count);
 		}
 
 		[Test]
@@ -207,7 +208,7 @@ namespace ThousandAndFirst.Tests
 			// One shaft opens a stratum, not a single parasang of it: underground, sideways is
 			// walking, and walking is free.
 			List<string> claimed = List(Zone(1, 1, 10), Zone(1, 1, 11), Zone(2, 1, 11));
-			Assert.IsTrue(KingdomDelveRules.Reaches(Zone(2, 1, 11), claimed, List(Zone(1, 1, 10))));
+			ClassicAssert.IsTrue(KingdomDelveRules.Reaches(Zone(2, 1, 11), claimed, List(Zone(1, 1, 10))));
 		}
 
 		[Test]
@@ -216,15 +217,15 @@ namespace ThousandAndFirst.Tests
 			// The claim may be taken across a corner and it is legal ground. Nobody can carry a
 			// load through the corner, which is the call the routing graph already makes.
 			List<string> claimed = List(Zone(1, 1, 10), Zone(1, 1, 11), Zone(2, 2, 11));
-			Assert.IsFalse(KingdomDelveRules.Reaches(Zone(2, 2, 11), claimed, List(Zone(1, 1, 10))));
+			ClassicAssert.IsFalse(KingdomDelveRules.Reaches(Zone(2, 2, 11), claimed, List(Zone(1, 1, 10))));
 		}
 
 		[Test]
 		public void ASecondStratumWantsASecondShaft()
 		{
 			List<string> claimed = List(Zone(1, 1, 10), Zone(1, 1, 11), Zone(1, 1, 12));
-			Assert.IsFalse(KingdomDelveRules.Reaches(Zone(1, 1, 12), claimed, List(Zone(1, 1, 10))));
-			Assert.IsTrue(KingdomDelveRules.Reaches(Zone(1, 1, 12), claimed, List(Zone(1, 1, 10), Zone(1, 1, 11))));
+			ClassicAssert.IsFalse(KingdomDelveRules.Reaches(Zone(1, 1, 12), claimed, List(Zone(1, 1, 10))));
+			ClassicAssert.IsTrue(KingdomDelveRules.Reaches(Zone(1, 1, 12), claimed, List(Zone(1, 1, 10), Zone(1, 1, 11))));
 		}
 
 		[Test]
@@ -234,8 +235,8 @@ namespace ThousandAndFirst.Tests
 			// the bottom of the world by declaring it.
 			List<string> claimed = List(Zone(1, 1, 10), Zone(1, 1, 11), Zone(1, 1, 12));
 			List<string> reached = KingdomDelveRules.ReachedZones(claimed, List(Zone(1, 1, 11)));
-			Assert.AreEqual(1, reached.Count);
-			Assert.AreEqual(Zone(1, 1, 10), reached[0]);
+			ClassicAssert.AreEqual(1, reached.Count);
+			ClassicAssert.AreEqual(Zone(1, 1, 10), reached[0]);
 		}
 
 		[Test]
@@ -244,22 +245,22 @@ namespace ThousandAndFirst.Tests
 			// The seed is the SHALLOWEST ground held, not the surface, so no state of the world
 			// leaves a realm unable to reach anything at all.
 			List<string> claimed = List(Zone(1, 1, 11), Zone(2, 1, 11));
-			Assert.AreEqual(2, KingdomDelveRules.ReachedZones(claimed, null).Count);
+			ClassicAssert.AreEqual(2, KingdomDelveRules.ReachedZones(claimed, null).Count);
 		}
 
 		[Test]
 		public void GroundTheRealmDoesNotHoldIsNeverReachedHoweverNearItLies()
 		{
 			List<string> claimed = List(Zone(1, 1, 10));
-			Assert.IsFalse(KingdomDelveRules.Reaches(Zone(2, 1, 10), claimed, null));
-			Assert.IsFalse(KingdomDelveRules.Reaches(null, claimed, null));
+			ClassicAssert.IsFalse(KingdomDelveRules.Reaches(Zone(2, 1, 10), claimed, null));
+			ClassicAssert.IsFalse(KingdomDelveRules.Reaches(null, claimed, null));
 		}
 
 		[Test]
 		public void AZoneNamedTwiceIsOneZone()
 		{
 			List<string> claimed = List(Zone(1, 1, 10), Zone(1, 1, 10));
-			Assert.AreEqual(1, KingdomDelveRules.ReachedZones(claimed, null).Count);
+			ClassicAssert.AreEqual(1, KingdomDelveRules.ReachedZones(claimed, null).Count);
 		}
 
 		[Test]
@@ -267,8 +268,8 @@ namespace ThousandAndFirst.Tests
 		{
 			List<string> claimed = List(Zone(1, 1, 10), "not a zone", Zone(1, 1, 11));
 			List<string> reached = KingdomDelveRules.ReachedZones(claimed, List(Zone(1, 1, 10)));
-			Assert.AreEqual(2, reached.Count);
-			Assert.IsTrue(reached.Contains(Zone(1, 1, 11)));
+			ClassicAssert.AreEqual(2, reached.Count);
+			ClassicAssert.IsTrue(reached.Contains(Zone(1, 1, 11)));
 		}
 
 		[Test]
@@ -278,11 +279,11 @@ namespace ThousandAndFirst.Tests
 			List<string> delved = List(Zone(1, 1, 10));
 			List<string> first = KingdomDelveRules.ReachedZones(claimed, delved);
 			List<string> second = KingdomDelveRules.ReachedZones(claimed, delved);
-			Assert.AreEqual(first.Count, second.Count);
+			ClassicAssert.AreEqual(first.Count, second.Count);
 			for (int i = 0; i < first.Count; i++)
 			{
-				Assert.AreEqual(first[i], second[i]);
-				Assert.AreEqual(claimed[i], first[i], "the answer is written in the order the claims were");
+				ClassicAssert.AreEqual(first[i], second[i]);
+				ClassicAssert.AreEqual(claimed[i], first[i], "the answer is written in the order the claims were");
 			}
 		}
 
@@ -293,49 +294,49 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AnUnfoundedRealmSinksNothing()
 		{
-			Assert.AreEqual(KingdomDelveRules.DelveVerdict.NothingFoundedYet,
+			ClassicAssert.AreEqual(KingdomDelveRules.DelveVerdict.NothingFoundedYet,
 				KingdomDelveRules.JudgeDelve(false, Zone(1, 1, 10), List(Zone(1, 1, 10), Zone(1, 1, 11)), null));
 		}
 
 		[Test]
 		public void AShaftIsSunkThroughTheCitysOwnFloor()
 		{
-			Assert.AreEqual(KingdomDelveRules.DelveVerdict.GroundIsNotOurs,
+			ClassicAssert.AreEqual(KingdomDelveRules.DelveVerdict.GroundIsNotOurs,
 				KingdomDelveRules.JudgeDelve(true, Zone(2, 1, 10), List(Zone(1, 1, 10), Zone(1, 1, 11)), null));
 		}
 
 		[Test]
 		public void AShaftWantsSomewhereToGo()
 		{
-			Assert.AreEqual(KingdomDelveRules.DelveVerdict.NoGroundBelow,
+			ClassicAssert.AreEqual(KingdomDelveRules.DelveVerdict.NoGroundBelow,
 				KingdomDelveRules.JudgeDelve(true, Zone(1, 1, 10), List(Zone(1, 1, 10)), null));
 		}
 
 		[Test]
 		public void RockClaimedSidewaysIsNotUnderTheGroundYouAreStandingOn()
 		{
-			Assert.AreEqual(KingdomDelveRules.DelveVerdict.NoGroundBelow,
+			ClassicAssert.AreEqual(KingdomDelveRules.DelveVerdict.NoGroundBelow,
 				KingdomDelveRules.JudgeDelve(true, Zone(1, 1, 10), List(Zone(1, 1, 10), Zone(2, 1, 11)), null));
 		}
 
 		[Test]
 		public void AShaftIsSunkFromGroundTheCrewCanAlreadyStandOn()
 		{
-			Assert.AreEqual(KingdomDelveRules.DelveVerdict.GroundIsUnreached,
+			ClassicAssert.AreEqual(KingdomDelveRules.DelveVerdict.GroundIsUnreached,
 				KingdomDelveRules.JudgeDelve(true, Zone(1, 1, 11), List(Zone(1, 1, 10), Zone(1, 1, 11), Zone(1, 1, 12)), null));
 		}
 
 		[Test]
 		public void OneHoleInOneFloorIsOneHoleInOneFloor()
 		{
-			Assert.AreEqual(KingdomDelveRules.DelveVerdict.AlreadyDelved,
+			ClassicAssert.AreEqual(KingdomDelveRules.DelveVerdict.AlreadyDelved,
 				KingdomDelveRules.JudgeDelve(true, Zone(1, 1, 10), List(Zone(1, 1, 10), Zone(1, 1, 11)), List(Zone(1, 1, 10))));
 		}
 
 		[Test]
 		public void TheSecondShaftIsAllowedOnceTheFirstIsCut()
 		{
-			Assert.AreEqual(KingdomDelveRules.DelveVerdict.Allowed,
+			ClassicAssert.AreEqual(KingdomDelveRules.DelveVerdict.Allowed,
 				KingdomDelveRules.JudgeDelve(true, Zone(1, 1, 11),
 					List(Zone(1, 1, 10), Zone(1, 1, 11), Zone(1, 1, 12)), List(Zone(1, 1, 10))));
 		}
@@ -343,7 +344,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheFirstShaftIsAllowedFromTheSurfaceOverClaimedRock()
 		{
-			Assert.AreEqual(KingdomDelveRules.DelveVerdict.Allowed,
+			ClassicAssert.AreEqual(KingdomDelveRules.DelveVerdict.Allowed,
 				KingdomDelveRules.JudgeDelve(true, Zone(1, 1, 10), List(Zone(1, 1, 10), Zone(1, 1, 11)), null));
 		}
 
@@ -359,23 +360,23 @@ namespace ThousandAndFirst.Tests
 		public void EveryRefusalSaysSomethingAndTellsTheFounderWhatToDo(KingdomDelveRules.DelveVerdict verdict)
 		{
 			string said = KingdomDelveRules.DelveRefusal(verdict, "Kavvat");
-			Assert.IsNotNull(said);
-			Assert.Greater(said.Length, 30, "a refusal that only says no teaches nothing");
-			Assert.IsTrue(said.EndsWith("."), "the founder is spoken to in sentences");
+			ClassicAssert.IsNotNull(said);
+			ClassicAssert.Greater(said.Length, 30, "a refusal that only says no teaches nothing");
+			ClassicAssert.IsTrue(said.EndsWith("."), "the founder is spoken to in sentences");
 		}
 
 		[Test]
 		public void APermittedShaftIsToldNothing()
 		{
-			Assert.AreEqual("", KingdomDelveRules.DelveRefusal(KingdomDelveRules.DelveVerdict.Allowed, "Kavvat"));
+			ClassicAssert.AreEqual("", KingdomDelveRules.DelveRefusal(KingdomDelveRules.DelveVerdict.Allowed, "Kavvat"));
 		}
 
 		[Test]
 		public void ARefusalNamesTheCityAndAnUnnamedOneIsStillASentence()
 		{
-			Assert.IsTrue(KingdomDelveRules.DelveRefusal(KingdomDelveRules.DelveVerdict.NoGroundBelow, "Kavvat")
+			ClassicAssert.IsTrue(KingdomDelveRules.DelveRefusal(KingdomDelveRules.DelveVerdict.NoGroundBelow, "Kavvat")
 				.Contains("{{C|Kavvat}}"));
-			Assert.IsTrue(KingdomDelveRules.DelveRefusal(KingdomDelveRules.DelveVerdict.NoGroundBelow, null)
+			ClassicAssert.IsTrue(KingdomDelveRules.DelveRefusal(KingdomDelveRules.DelveVerdict.NoGroundBelow, null)
 				.Contains("the settlement"));
 		}
 
@@ -383,35 +384,35 @@ namespace ThousandAndFirst.Tests
 		public void TheRefusalForUnworkableRockNamesTheBuildingThatLiftsIt()
 		{
 			string said = KingdomDelveRules.RefuseUnreached("Kavvat", "fungal vault");
-			Assert.IsTrue(said.Contains("delve"), "a refusal that does not name the fix is a stall in silence");
-			Assert.IsTrue(said.Contains("fungal vault"), "the founder is told what was refused, not only that something was");
+			ClassicAssert.IsTrue(said.Contains("delve"), "a refusal that does not name the fix is a stall in silence");
+			ClassicAssert.IsTrue(said.Contains("fungal vault"), "the founder is told what was refused, not only that something was");
 		}
 
 		[Test]
 		public void TheRefusalForUnworkableRockStillReadsWithNothingNamed()
 		{
 			string said = KingdomDelveRules.RefuseUnreached(null, null);
-			Assert.IsTrue(said.Contains("the settlement"));
-			Assert.IsTrue(said.Contains("delve"));
+			ClassicAssert.IsTrue(said.Contains("the settlement"));
+			ClassicAssert.IsTrue(said.Contains("delve"));
 		}
 
 		[Test]
 		public void TheShaftSaysWhatItOpened()
 		{
 			string said = KingdomDelveRules.ShaftOpens("Kavvat");
-			Assert.IsTrue(said.Contains("{{C|Kavvat}}"));
-			Assert.IsTrue(said.Contains("delve"));
+			ClassicAssert.IsTrue(said.Contains("{{C|Kavvat}}"));
+			ClassicAssert.IsTrue(said.Contains("delve"));
 		}
 
 		[Test]
 		public void GroundWaitingOnAShaftSaysSoOnceHoweverMuchOfItThereIs()
 		{
-			Assert.IsNull(KingdomDelveRules.UnreachedNote("Kavvat", 0));
-			Assert.IsNull(KingdomDelveRules.UnreachedNote("Kavvat", -1));
+			ClassicAssert.IsNull(KingdomDelveRules.UnreachedNote("Kavvat", 0));
+			ClassicAssert.IsNull(KingdomDelveRules.UnreachedNote("Kavvat", -1));
 			string one = KingdomDelveRules.UnreachedNote("Kavvat", 1);
-			Assert.IsTrue(one.Contains("one parasang"));
-			Assert.IsTrue(one.Contains("delve"));
-			Assert.IsTrue(KingdomDelveRules.UnreachedNote("Kavvat", 3).Contains("3 parasangs"));
+			ClassicAssert.IsTrue(one.Contains("one parasang"));
+			ClassicAssert.IsTrue(one.Contains("delve"));
+			ClassicAssert.IsTrue(KingdomDelveRules.UnreachedNote("Kavvat", 3).Contains("3 parasangs"));
 		}
 
 		// ==================================================================================
@@ -422,8 +423,8 @@ namespace ThousandAndFirst.Tests
 		public void AShaftCostsThreeOrdinaryHops()
 		{
 			// The level hop the routing graph is written in is forty cells, half a zone's width.
-			Assert.AreEqual(120, KingdomDelveRules.ShaftHopCells(40));
-			Assert.AreEqual(3, KingdomDelveRules.ShaftHopMultiplier);
+			ClassicAssert.AreEqual(120, KingdomDelveRules.ShaftHopCells(40));
+			ClassicAssert.AreEqual(3, KingdomDelveRules.ShaftHopMultiplier);
 		}
 
 		[Test]
@@ -433,7 +434,7 @@ namespace ThousandAndFirst.Tests
 			// ceilinged, and this is the half of it the haul pays.
 			for (int hop = 1; hop <= 200; hop++)
 			{
-				Assert.Greater(KingdomDelveRules.ShaftHopCells(hop), hop);
+				ClassicAssert.Greater(KingdomDelveRules.ShaftHopCells(hop), hop);
 			}
 		}
 
@@ -442,7 +443,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(-40)]
 		public void ANonPositiveHopIsNeverANegativeDistance(int hop)
 		{
-			Assert.AreEqual(0, KingdomDelveRules.ShaftHopCells(hop));
+			ClassicAssert.AreEqual(0, KingdomDelveRules.ShaftHopCells(hop));
 		}
 	}
 }

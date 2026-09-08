@@ -2,6 +2,7 @@
 using System;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -24,12 +25,12 @@ namespace ThousandAndFirst.Tests
 				"Method(\"ExactFoundingHeartRetirementProof\", typeof(bool), typeof(Zone), contextType, typeof(string))",
 				"Method(\"FindGraveyardTombstone\", typeof(KingdomPhysicalLookupState), typeof(string), typeof(GameObject).MakeByRefType())",
 				"Method(\"TryLoadedPlotTombstones\", typeof(bool), typeof(List<GameObject>).MakeByRefType())");
-			Assert.AreEqual(4, Regex.Matches(run, @"\bMethod\s*\(").Count);
+			ClassicAssert.AreEqual(4, Regex.Matches(run, @"\bMethod\s*\(").Count);
 			Ordered(Between(source, "private static MethodInfo Method(", "private static void Check("),
 				"typeof(KingdomPlots).GetMethod(name, Hidden, null, arguments, null)",
 				"Check(method != null && method.ReturnType == result", "return method");
-			Assert.IsFalse(Regex.IsMatch(source, @"\bcatch\s*(?:\(|\{)|\bfinally\s*\{"));
-			Assert.IsFalse(Regex.IsMatch(source,
+			ClassicAssert.IsFalse(Regex.IsMatch(source, @"\bcatch\s*(?:\(|\{)|\bfinally\s*\{"));
+			ClassicAssert.IsFalse(Regex.IsMatch(source,
 				@"\b(?:Recover\w*|Audit\w*|Advance|Ensure\w*|Destroy\w*|Obliterate\w*|Pool\w*|Release\w*|GetZone|LoadZone|SetValue)\s*\("));
 		}
 
@@ -46,7 +47,7 @@ namespace ThousandAndFirst.Tests
 				"foreach (string kind in kinds)", "current = \"retirement-\" + kind + \"-refused\"",
 				"new KingdomFoundingHeartRetirementFault(world, predecessor, final)",
 				"fault.VerifyBaseline()", "fault.Install(kind)", "fault.VerifyInstalled()");
-			Assert.AreEqual(1, Regex.Matches(source, @"\bpassed\s*\+\+").Count);
+			ClassicAssert.AreEqual(1, Regex.Matches(source, @"\bpassed\s*\+\+").Count);
 		}
 
 		[Test]
@@ -88,7 +89,7 @@ namespace ThousandAndFirst.Tests
 				".Append(current).Append(\"=FAIL \")", "finally { r_TAF_FoundingHeartMintProbe.Callback = null; }",
 				"ok = !failed && passed == KingdomFoundingHeartLifecycleProvider.ExpectedCases",
 				"(ok ? 0 : 1)");
-			Assert.AreEqual(1, Regex.Matches(run, @"\bfailed\s*=\s*false\b").Count);
+			ClassicAssert.AreEqual(1, Regex.Matches(run, @"\bfailed\s*=\s*false\b").Count);
 		}
 
 		[Test]
@@ -107,7 +108,7 @@ namespace ThousandAndFirst.Tests
 			Ordered(Between(source, "internal void VerifyInstalled(", "internal void VerifyAndRestore("),
 				"Snapshot.VerifyInjection(IsQueue ? Queue : Snapshot.OriginalQueue", "if (IsQueue && Queue != null)",
 				"Queue.Count == QueueRows.Length", "ReferenceEquals(Queue[i], QueueRows[i])");
-			Assert.IsFalse(Regex.IsMatch(source, @"\.Graveyard\.Add\s*\(|\b(?:Clear|Destroy\w*|Obliterate\w*|Pool\w*|Release\w*)\s*\("));
+			ClassicAssert.IsFalse(Regex.IsMatch(source, @"\.Graveyard\.Add\s*\(|\b(?:Clear|Destroy\w*|Obliterate\w*|Pool\w*|Release\w*)\s*\("));
 		}
 
 		[Test]
@@ -131,7 +132,7 @@ namespace ThousandAndFirst.Tests
 				"!KingdomNativeRegressionContext.HasAnyState(Snapshot.World.Game, ScratchKey)",
 				"Snapshot.World.Game.ObjectGameState.Add(ScratchKey, LiveBody)");
 			Contains(source, "Retained.Add(this)", "if (LiveState != null) LiveState.Verify()");
-			Assert.IsFalse(Regex.IsMatch(source, @"\bPredecessor(?:\.Body)?\.(?:IDIfAssigned|Live|Flags|_BaseID)\s*=(?!=)"));
+			ClassicAssert.IsFalse(Regex.IsMatch(source, @"\bPredecessor(?:\.Body)?\.(?:IDIfAssigned|Live|Flags|_BaseID)\s*=(?!=)"));
 		}
 
 		[Test]
@@ -149,7 +150,7 @@ namespace ThousandAndFirst.Tests
 			Contains(Between(source, "internal void VerifyInstalled(", "internal void VerifyAndRestore("),
 				"Installed && !Restored", "Strings.Verify(Snapshot.Predecessor.Body.Property)",
 				"Ints.Verify(Snapshot.Predecessor.Body.IntProperty)");
-			Assert.IsFalse(Regex.IsMatch(source, @"\bfinally\s*\{|\bFailed\s*=\s*false\b|\b(?:Clear|Destroy|Obliterate|Pool|Release)\s*\("));
+			ClassicAssert.IsFalse(Regex.IsMatch(source, @"\bfinally\s*\{|\bFailed\s*=\s*false\b|\b(?:Clear|Destroy|Obliterate|Pool|Release)\s*\("));
 			StringAssert.DoesNotContain(".Remove(", source.Replace("ObjectGameState.Remove(ScratchKey)", ""));
 		}
 
@@ -183,7 +184,7 @@ namespace ThousandAndFirst.Tests
 			Contains(Between(source, "private sealed class QueueState", "private static GameObject[] BoundedRoster("),
 				"owner.Objects.Count <= 65536", "MaxCount = owner.MaxCount", "ReferenceEquals(Owner.Objects, expected)",
 				"Owner.MaxCount == MaxCount && Queue.Count == Rows.Length", "ReferenceEquals(Queue[i], Rows[i])");
-			Assert.IsFalse(Regex.IsMatch(source, @"\b(?:GetZone|LoadZone|FetchZone|Pool\w*|Release\w*|Clear|Destroy\w*)\s*\("));
+			ClassicAssert.IsFalse(Regex.IsMatch(source, @"\b(?:GetZone|LoadZone|FetchZone|Pool\w*|Release\w*|Clear|Destroy\w*)\s*\("));
 		}
 
 		[Test]
@@ -219,9 +220,9 @@ namespace ThousandAndFirst.Tests
 		private static string Compact(string value) { return Regex.Replace(value, @"\s+", ""); }
 		private static string Between(string source, string start, string end)
 		{
-			int first = source.IndexOf(start, StringComparison.Ordinal); Assert.GreaterOrEqual(first, 0, start);
+			int first = source.IndexOf(start, StringComparison.Ordinal); ClassicAssert.GreaterOrEqual(first, 0, start);
 			int last = source.IndexOf(end, first + start.Length, StringComparison.Ordinal);
-			Assert.Greater(last, first, end); return source.Substring(first, last - first);
+			ClassicAssert.Greater(last, first, end); return source.Substring(first, last - first);
 		}
 		private static void Contains(string source, params string[] tokens)
 		{
@@ -233,7 +234,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string token in tokens)
 			{
 				string expected = Compact(token); int at = compact.IndexOf(expected, cursor, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(at, cursor, token); cursor = at + expected.Length;
+				ClassicAssert.GreaterOrEqual(at, cursor, token); cursor = at + expected.Length;
 			}
 		}
 	}

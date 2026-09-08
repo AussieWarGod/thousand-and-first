@@ -1,5 +1,6 @@
 ﻿#if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 using ThousandAndFirst.Simulation.City;
 using ThousandAndFirst.Simulation.Kernel;
@@ -29,7 +30,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityState state;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
+			ClassicAssert.IsTrue(KingdomCityState.TryCreate(KingdomCityRules.SchemaVersion, KingdomCityRules.RulesVersion,
 				"taf:city:kavvat", 0L, default(KingdomStocks), zones, null, null, null, out state, out fault), fault.ToString());
 			return state;
 		}
@@ -41,13 +42,13 @@ namespace ThousandAndFirst.Tests
 		public void TheCitysStocksAreTheSumOfItsZoneRows()
 		{
 			KingdomStocks stocks;
-			Assert.IsTrue(KingdomCityRules.TryCityStocks(City(
+			ClassicAssert.IsTrue(KingdomCityRules.TryCityStocks(City(
 				Zone("a", 100L, 40L, 100L, 5L, 20L),
 				Zone("b", 200L, 11L, 60L, 2L, 12L)), out stocks));
-			Assert.AreEqual(51L, stocks.Water.Level);
-			Assert.AreEqual(160L, stocks.Water.Capacity);
-			Assert.AreEqual(7L, stocks.Food.Level);
-			Assert.AreEqual(32L, stocks.Food.Capacity);
+			ClassicAssert.AreEqual(51L, stocks.Water.Level);
+			ClassicAssert.AreEqual(160L, stocks.Water.Capacity);
+			ClassicAssert.AreEqual(7L, stocks.Food.Level);
+			ClassicAssert.AreEqual(32L, stocks.Food.Capacity);
 		}
 
 		/// <summary>A zone nobody has ever stood in contributes nothing. Nothing is invented for
@@ -56,10 +57,10 @@ namespace ThousandAndFirst.Tests
 		public void AZoneNobodyHasStoodInIsNotCounted()
 		{
 			KingdomStocks stocks;
-			Assert.IsTrue(KingdomCityRules.TryCityStocks(City(
+			ClassicAssert.IsTrue(KingdomCityRules.TryCityStocks(City(
 				Zone("a", 100L, 40L, 100L, 0L, 0L),
 				Zone("b", 0L, 999L, 999L, 999L, 999L)), out stocks));
-			Assert.AreEqual(40L, stocks.Water.Level);
+			ClassicAssert.AreEqual(40L, stocks.Water.Level);
 		}
 
 		// ---- The signed counter (§3.5, §3.9; W0 finding (d)) ----------------------------------
@@ -75,17 +76,17 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomZoneRow row = new KingdomZoneRow("a", 0, 100L, default(KingdomStocks), 0, 0, 0, 0, -30, 12, 0);
 			KingdomCatchUpCounter counter = KingdomCityRules.CounterFor(row);
-			Assert.AreEqual(KingdomCatchUpRules.WeightThirds(KingdomUnitWeight.Medium), counter.LandThirds);
-			Assert.AreEqual(KingdomCatchUpRules.WeightThirds(KingdomUnitWeight.Medium), counter.DrawThirds);
-			Assert.AreEqual(0, counter.Net, "the net of a landing and a draw of the same weight is zero, which is exactly why one net figure is not enough");
-			Assert.AreEqual(6, counter.OwedThirds, "two units are owed even though the net is nothing");
-			Assert.IsFalse(counter.IsSettled);
+			ClassicAssert.AreEqual(KingdomCatchUpRules.WeightThirds(KingdomUnitWeight.Medium), counter.LandThirds);
+			ClassicAssert.AreEqual(KingdomCatchUpRules.WeightThirds(KingdomUnitWeight.Medium), counter.DrawThirds);
+			ClassicAssert.AreEqual(0, counter.Net, "the net of a landing and a draw of the same weight is zero, which is exactly why one net figure is not enough");
+			ClassicAssert.AreEqual(6, counter.OwedThirds, "two units are owed even though the net is nothing");
+			ClassicAssert.IsFalse(counter.IsSettled);
 		}
 
 		[Test]
 		public void ASettledZoneOwesNothing()
 		{
-			Assert.IsTrue(KingdomCityRules.CounterFor(Zone("a", 100L, 5L, 10L, 0L, 0L)).IsSettled);
+			ClassicAssert.IsTrue(KingdomCityRules.CounterFor(Zone("a", 100L, 5L, 10L, 0L, 0L)).IsSettled);
 		}
 
 		[Test]
@@ -94,8 +95,8 @@ namespace ThousandAndFirst.Tests
 			KingdomCatchUpCounter counter = KingdomCityRules.CityCounter(City(
 				Zone("a", 100L, 5L, 10L, 0L, 0L, -4),
 				Zone("b", 100L, 5L, 10L, 0L, 0L, -9)));
-			Assert.AreEqual(6, counter.DrawThirds);
-			Assert.AreEqual(0, counter.LandThirds);
+			ClassicAssert.AreEqual(6, counter.DrawThirds);
+			ClassicAssert.AreEqual(0, counter.LandThirds);
 		}
 
 		// ---- The carry (§1.2(a) + §3.9) -------------------------------------------------------
@@ -112,11 +113,11 @@ namespace ThousandAndFirst.Tests
 			long[] moved = new long[state.ZoneCount];
 			long total;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityRules.TryPlanTransfer(state, "seat", KingdomStockKind.Water, 25L, 100L, moved, out total, out fault), fault.ToString());
-			Assert.AreEqual(0L, moved[0], "the seated zone is never a source");
-			Assert.AreEqual(20L, moved[1], "the oldest dedication goes first");
-			Assert.AreEqual(5L, moved[2]);
-			Assert.AreEqual(25L, total);
+			ClassicAssert.IsTrue(KingdomCityRules.TryPlanTransfer(state, "seat", KingdomStockKind.Water, 25L, 100L, moved, out total, out fault), fault.ToString());
+			ClassicAssert.AreEqual(0L, moved[0], "the seated zone is never a source");
+			ClassicAssert.AreEqual(20L, moved[1], "the oldest dedication goes first");
+			ClassicAssert.AreEqual(5L, moved[2]);
+			ClassicAssert.AreEqual(25L, total);
 		}
 
 		/// <summary>Nothing is created. What the rows do not hold is not moved, and the shortfall
@@ -130,8 +131,8 @@ namespace ThousandAndFirst.Tests
 			long[] moved = new long[state.ZoneCount];
 			long total;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityRules.TryPlanTransfer(state, "seat", KingdomStockKind.Water, 500L, 500L, moved, out total, out fault));
-			Assert.AreEqual(7L, total);
+			ClassicAssert.IsTrue(KingdomCityRules.TryPlanTransfer(state, "seat", KingdomStockKind.Water, 500L, 500L, moved, out total, out fault));
+			ClassicAssert.AreEqual(7L, total);
 		}
 
 		/// <summary>Capped by the room the near vessels actually have: water with nowhere to go is
@@ -145,8 +146,8 @@ namespace ThousandAndFirst.Tests
 			long[] moved = new long[state.ZoneCount];
 			long total;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityRules.TryPlanTransfer(state, "seat", KingdomStockKind.Water, 90L, 6L, moved, out total, out fault));
-			Assert.AreEqual(6L, total);
+			ClassicAssert.IsTrue(KingdomCityRules.TryPlanTransfer(state, "seat", KingdomStockKind.Water, 90L, 6L, moved, out total, out fault));
+			ClassicAssert.AreEqual(6L, total);
 		}
 
 		/// <summary>A zone already owing a draw has that much of its level spoken for: the vessels
@@ -160,8 +161,8 @@ namespace ThousandAndFirst.Tests
 			long[] moved = new long[state.ZoneCount];
 			long total;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityRules.TryPlanTransfer(state, "seat", KingdomStockKind.Water, 30L, 100L, moved, out total, out fault));
-			Assert.AreEqual(5L, total);
+			ClassicAssert.IsTrue(KingdomCityRules.TryPlanTransfer(state, "seat", KingdomStockKind.Water, 30L, 100L, moved, out total, out fault));
+			ClassicAssert.AreEqual(5L, total);
 		}
 
 		[Test]
@@ -173,8 +174,8 @@ namespace ThousandAndFirst.Tests
 			long[] moved = new long[state.ZoneCount];
 			long total;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityRules.TryPlanTransfer(state, "seat", KingdomStockKind.Water, 50L, 100L, moved, out total, out fault));
-			Assert.AreEqual(0L, total);
+			ClassicAssert.IsTrue(KingdomCityRules.TryPlanTransfer(state, "seat", KingdomStockKind.Water, 50L, 100L, moved, out total, out fault));
+			ClassicAssert.AreEqual(0L, total);
 		}
 
 		[TestCase(0L)]
@@ -185,8 +186,8 @@ namespace ThousandAndFirst.Tests
 			long[] moved = new long[state.ZoneCount];
 			long total;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityRules.TryPlanTransfer(state, "seat", KingdomStockKind.Water, demand, 100L, moved, out total, out fault));
-			Assert.AreEqual(0L, total);
+			ClassicAssert.IsTrue(KingdomCityRules.TryPlanTransfer(state, "seat", KingdomStockKind.Water, demand, 100L, moved, out total, out fault));
+			ClassicAssert.AreEqual(0L, total);
 		}
 
 		[Test]
@@ -195,10 +196,10 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState state = City(Zone("seat", 100L, 0L, 100L, 0L, 0L), Zone("far", 100L, 50L, 100L, 0L, 0L));
 			long total;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomCityRules.TryPlanTransfer(state, "seat", KingdomStockKind.Water, 10L, 100L, new long[1], out total, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidIndex, fault);
-			Assert.IsFalse(KingdomCityRules.TryPlanTransfer(null, "seat", KingdomStockKind.Water, 10L, 100L, new long[2], out total, out fault));
-			Assert.AreEqual(KingdomCityFault.NullArgument, fault);
+			ClassicAssert.IsFalse(KingdomCityRules.TryPlanTransfer(state, "seat", KingdomStockKind.Water, 10L, 100L, new long[1], out total, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidIndex, fault);
+			ClassicAssert.IsFalse(KingdomCityRules.TryPlanTransfer(null, "seat", KingdomStockKind.Water, 10L, 100L, new long[2], out total, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.NullArgument, fault);
 		}
 
 		// ---- I1 across the carry (§0.0(g), §3.5) ----------------------------------------------
@@ -209,9 +210,9 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < state.ZoneCount; i++)
 			{
 				KingdomZoneRow row;
-				Assert.IsTrue(state.TryZone(i, out row));
+				ClassicAssert.IsTrue(state.TryZone(i, out row));
 				KingdomStockPair pair;
-				Assert.IsTrue(row.Stocks.TryGet(kind, out pair));
+				ClassicAssert.IsTrue(row.Stocks.TryGet(kind, out pair));
 				total += pair.Level;
 			}
 			return total;
@@ -223,7 +224,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < state.ZoneCount; i++)
 			{
 				KingdomZoneRow row;
-				Assert.IsTrue(state.TryZone(i, out row));
+				ClassicAssert.IsTrue(state.TryZone(i, out row));
 				total += row.OwedOf(kind);
 			}
 			return total;
@@ -245,15 +246,15 @@ namespace ThousandAndFirst.Tests
 			long[] moved = new long[state.ZoneCount];
 			long total;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityRules.TryPlanTransfer(state, "seat", KingdomStockKind.Water, 25L, 100L, moved, out total, out fault));
+			ClassicAssert.IsTrue(KingdomCityRules.TryPlanTransfer(state, "seat", KingdomStockKind.Water, 25L, 100L, moved, out total, out fault));
 
 			KingdomCityState after;
 			long applied;
-			Assert.IsTrue(KingdomCityRules.TryApplyTransfer(state, KingdomStockKind.Water, moved, total, out after, out applied, out fault), fault.ToString());
-			Assert.AreEqual(25L, applied);
-			Assert.AreEqual(15L, Held(after, KingdomStockKind.Water), "the far row gave up what was carried");
-			Assert.AreEqual(-25L, Owed(after, KingdomStockKind.Water), "and owes its own vessels exactly that");
-			Assert.AreEqual(groundBefore, Held(after, KingdomStockKind.Water) - Owed(after, KingdomStockKind.Water),
+			ClassicAssert.IsTrue(KingdomCityRules.TryApplyTransfer(state, KingdomStockKind.Water, moved, total, out after, out applied, out fault), fault.ToString());
+			ClassicAssert.AreEqual(25L, applied);
+			ClassicAssert.AreEqual(15L, Held(after, KingdomStockKind.Water), "the far row gave up what was carried");
+			ClassicAssert.AreEqual(-25L, Owed(after, KingdomStockKind.Water), "and owes its own vessels exactly that");
+			ClassicAssert.AreEqual(groundBefore, Held(after, KingdomStockKind.Water) - Owed(after, KingdomStockKind.Water),
 				"model total == ground total + counter-owed must hold across the carry");
 		}
 
@@ -268,13 +269,13 @@ namespace ThousandAndFirst.Tests
 			long[] moved = new long[state.ZoneCount];
 			long total;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityRules.TryPlanTransfer(state, "seat", KingdomStockKind.Water, 30L, 100L, moved, out total, out fault));
+			ClassicAssert.IsTrue(KingdomCityRules.TryPlanTransfer(state, "seat", KingdomStockKind.Water, 30L, 100L, moved, out total, out fault));
 			KingdomCityState after;
 			long applied;
-			Assert.IsTrue(KingdomCityRules.TryApplyTransfer(state, KingdomStockKind.Water, moved, 11L, out after, out applied, out fault));
-			Assert.AreEqual(11L, applied);
-			Assert.AreEqual(29L, Held(after, KingdomStockKind.Water));
-			Assert.AreEqual(-11L, Owed(after, KingdomStockKind.Water));
+			ClassicAssert.IsTrue(KingdomCityRules.TryApplyTransfer(state, KingdomStockKind.Water, moved, 11L, out after, out applied, out fault));
+			ClassicAssert.AreEqual(11L, applied);
+			ClassicAssert.AreEqual(29L, Held(after, KingdomStockKind.Water));
+			ClassicAssert.AreEqual(-11L, Owed(after, KingdomStockKind.Water));
 		}
 
 		[Test]
@@ -284,9 +285,9 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState after;
 			long applied;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityRules.TryApplyTransfer(state, KingdomStockKind.Water, new long[2] { 0L, 20L }, 0L, out after, out applied, out fault));
-			Assert.AreSame(state, after);
-			Assert.AreEqual(0L, applied);
+			ClassicAssert.IsTrue(KingdomCityRules.TryApplyTransfer(state, KingdomStockKind.Water, new long[2] { 0L, 20L }, 0L, out after, out applied, out fault));
+			ClassicAssert.AreSame(state, after);
+			ClassicAssert.AreEqual(0L, applied);
 		}
 
 		[Test]
@@ -296,10 +297,10 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState after;
 			long applied;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomCityRules.TryApplyTransfer(state, KingdomStockKind.Water, new long[1], 5L, out after, out applied, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidIndex, fault);
-			Assert.IsFalse(KingdomCityRules.TryApplyTransfer(state, KingdomStockKind.Water, null, 5L, out after, out applied, out fault));
-			Assert.AreEqual(KingdomCityFault.NullArgument, fault);
+			ClassicAssert.IsFalse(KingdomCityRules.TryApplyTransfer(state, KingdomStockKind.Water, new long[1], 5L, out after, out applied, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidIndex, fault);
+			ClassicAssert.IsFalse(KingdomCityRules.TryApplyTransfer(state, KingdomStockKind.Water, null, 5L, out after, out applied, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.NullArgument, fault);
 		}
 
 		// ---- The drain at reify (§3.9, I4) -----------------------------------------------------
@@ -312,7 +313,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(-4, int.MaxValue)]
 		public void AnUncountedContainerSortsLastInTheDrain(int stamped, int expected)
 		{
-			Assert.AreEqual(expected, KingdomCityRules.DrainOrdinal(stamped));
+			ClassicAssert.AreEqual(expected, KingdomCityRules.DrainOrdinal(stamped));
 		}
 
 		/// <summary>
@@ -334,16 +335,16 @@ namespace ThousandAndFirst.Tests
 			long[] drawn = new long[4];
 			long shortfall;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomDrainRules.TryApportion(vessels, 4, KingdomStockKind.Water, 45L, drawn, out shortfall, out fault), fault.ToString());
-			Assert.AreEqual(20L, drawn[2], "the oldest dedication goes first");
-			Assert.AreEqual(25L, drawn[1], "then the next oldest");
-			Assert.AreEqual(0L, drawn[3], "a drain may never launder brine into the books");
-			Assert.AreEqual(0L, drawn[0], "the uncounted vessel is only reached after every counted one");
-			Assert.AreEqual(0L, shortfall);
+			ClassicAssert.IsTrue(KingdomDrainRules.TryApportion(vessels, 4, KingdomStockKind.Water, 45L, drawn, out shortfall, out fault), fault.ToString());
+			ClassicAssert.AreEqual(20L, drawn[2], "the oldest dedication goes first");
+			ClassicAssert.AreEqual(25L, drawn[1], "then the next oldest");
+			ClassicAssert.AreEqual(0L, drawn[3], "a drain may never launder brine into the books");
+			ClassicAssert.AreEqual(0L, drawn[0], "the uncounted vessel is only reached after every counted one");
+			ClassicAssert.AreEqual(0L, shortfall);
 
-			Assert.IsTrue(KingdomDrainRules.TryApportion(vessels, 4, KingdomStockKind.Water, 400L, drawn, out shortfall, out fault));
-			Assert.AreEqual(100L, drawn[0], "with the counted vessels dry, the uncounted one pays");
-			Assert.AreEqual(250L, shortfall, "and what nothing could cover is named, never forgiven");
+			ClassicAssert.IsTrue(KingdomDrainRules.TryApportion(vessels, 4, KingdomStockKind.Water, 400L, drawn, out shortfall, out fault));
+			ClassicAssert.AreEqual(100L, drawn[0], "with the counted vessels dry, the uncounted one pays");
+			ClassicAssert.AreEqual(250L, shortfall, "and what nothing could cover is named, never forgiven");
 			StringAssert.Contains("250 drams", KingdomCityRules.ShortfallNote(-250, 0));
 		}
 
@@ -354,14 +355,14 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomZoneRow row = new KingdomZoneRow("a", 0, 100L, default(KingdomStocks), 0, 0, 0, 0, -9, 0, 0);
 			KingdomCatchUpCounter counter = KingdomCityRules.CounterFor(row);
-			Assert.AreEqual(3, counter.DrawThirds);
+			ClassicAssert.AreEqual(3, counter.DrawThirds);
 			KingdomCatchUpCounter next;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCatchUpRules.TrySettle(counter, KingdomUnitDirection.Draw, KingdomUnitWeight.Medium, out next, out fault));
-			Assert.IsTrue(next.IsSettled);
-			Assert.IsFalse(KingdomCatchUpRules.TrySettle(next, KingdomUnitDirection.Draw, KingdomUnitWeight.Medium, out next, out fault),
+			ClassicAssert.IsTrue(KingdomCatchUpRules.TrySettle(counter, KingdomUnitDirection.Draw, KingdomUnitWeight.Medium, out next, out fault));
+			ClassicAssert.IsTrue(next.IsSettled);
+			ClassicAssert.IsFalse(KingdomCatchUpRules.TrySettle(next, KingdomUnitDirection.Draw, KingdomUnitWeight.Medium, out next, out fault),
 				"a debt already paid cannot be paid again");
-			Assert.IsTrue(KingdomCityRules.CounterFor(row.WithOwed(0, 0, 0)).IsSettled);
+			ClassicAssert.IsTrue(KingdomCityRules.CounterFor(row.WithOwed(0, 0, 0)).IsSettled);
 		}
 
 		// ---- The reckoning (§2.3, §0.0(a)) ----------------------------------------------------
@@ -370,7 +371,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomAdvanceOutcome<KingdomCityState> outcome;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomAdvanceRules.TryRun(
+			ClassicAssert.IsTrue(KingdomAdvanceRules.TryRun(
 				new KingdomCityAdvanceable(KingdomRules.TicksPerDay, waterRates, null),
 				state,
 				state.ProcessedThroughTick,
@@ -393,9 +394,9 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState state = City(Zone("a", 100L, 10L, 100L, 0L, 0L), Zone("b", 100L, 10L, 100L, 0L, 0L));
 			KingdomAdvanceOutcome<KingdomCityState> day = Run(state, null, 1L);
 			KingdomAdvanceOutcome<KingdomCityState> season = Run(state, null, 90L);
-			Assert.AreEqual(day.Steps, season.Steps);
-			Assert.AreEqual(day.RowVisits, season.RowVisits);
-			Assert.AreEqual(2L * state.RowCount, day.RowVisits, "one pass is one propose and one apply over every row");
+			ClassicAssert.AreEqual(day.Steps, season.Steps);
+			ClassicAssert.AreEqual(day.RowVisits, season.RowVisits);
+			ClassicAssert.AreEqual(2L * state.RowCount, day.RowVisits, "one pass is one propose and one apply over every row");
 		}
 
 		/// <summary>
@@ -408,11 +409,11 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState state = City(Zone("a", 100L, 0L, 100L, 0L, 0L));
 			KingdomAdvanceOutcome<KingdomCityState> ninety = Run(state, new int[1] { 50 }, 90L);
 			KingdomAdvanceOutcome<KingdomCityState> nineHundred = Run(state, new int[1] { 50 }, 900L);
-			Assert.AreEqual(ninety.Steps, nineHundred.Steps);
-			Assert.AreEqual(ninety.RowVisits, nineHundred.RowVisits);
+			ClassicAssert.AreEqual(ninety.Steps, nineHundred.Steps);
+			ClassicAssert.AreEqual(ninety.RowVisits, nineHundred.RowVisits);
 			KingdomZoneRow row;
-			Assert.IsTrue(nineHundred.State.TryZone(0, out row));
-			Assert.AreEqual(100L, row.Stocks.Water.Level, "a stock integrates to its ceiling and clamps there");
+			ClassicAssert.IsTrue(nineHundred.State.TryZone(0, out row));
+			ClassicAssert.AreEqual(100L, row.Stocks.Water.Level, "a stock integrates to its ceiling and clamps there");
 		}
 
 		/// <summary>A stock running down stops at empty, and stopping is a breakpoint rather than
@@ -423,9 +424,9 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState state = City(Zone("a", 100L, 60L, 100L, 0L, 0L));
 			KingdomAdvanceOutcome<KingdomCityState> outcome = Run(state, new int[1] { -20 }, 90L);
 			KingdomZoneRow row;
-			Assert.IsTrue(outcome.State.TryZone(0, out row));
-			Assert.AreEqual(0L, row.Stocks.Water.Level);
-			Assert.IsFalse(outcome.Overflowed, "three days of draining is not a breakpoint overflow");
+			ClassicAssert.IsTrue(outcome.State.TryZone(0, out row));
+			ClassicAssert.AreEqual(0L, row.Stocks.Water.Level);
+			ClassicAssert.IsFalse(outcome.Overflowed, "three days of draining is not a breakpoint overflow");
 		}
 
 		/// <summary>The model is advanced by whole units consumed with the remainder kept, never
@@ -437,9 +438,9 @@ namespace ThousandAndFirst.Tests
 			KingdomAdvanceOutcome<KingdomCityState> first = Run(state, new int[1] { 10 }, 3L);
 			KingdomAdvanceOutcome<KingdomCityState> second = Run(first.State, new int[1] { 10 }, 0L);
 			KingdomZoneRow after;
-			Assert.IsTrue(second.State.TryZone(0, out after));
-			Assert.AreEqual(30L, after.Stocks.Water.Level);
-			Assert.AreEqual(first.ProcessedThroughTick, second.ProcessedThroughTick);
+			ClassicAssert.IsTrue(second.State.TryZone(0, out after));
+			ClassicAssert.AreEqual(30L, after.Stocks.Water.Level);
+			ClassicAssert.AreEqual(first.ProcessedThroughTick, second.ProcessedThroughTick);
 		}
 
 		[Test]
@@ -448,11 +449,11 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState state = City(Zone("a", 100L, 0L, 100L, 0L, 0L));
 			KingdomCityState advanced;
 			KingdomCityFault fault;
-			Assert.IsTrue(state.TryWithProcessedThroughTick(5000L, out advanced, out fault));
+			ClassicAssert.IsTrue(state.TryWithProcessedThroughTick(5000L, out advanced, out fault));
 			KingdomAdvanceOutcome<KingdomCityState> outcome;
-			Assert.IsFalse(KingdomAdvanceRules.TryRun(
+			ClassicAssert.IsFalse(KingdomAdvanceRules.TryRun(
 				new KingdomCityAdvanceable(KingdomRules.TicksPerDay, null, null), advanced, 5000L, 4000L, out outcome, out fault));
-			Assert.AreEqual(KingdomCityFault.ClockRegression, fault);
+			ClassicAssert.AreEqual(KingdomCityFault.ClockRegression, fault);
 		}
 
 		// ---- W6: the rates live on the rows, and one clock bills them (§7.4, I1) --------------
@@ -466,7 +467,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomAdvanceOutcome<KingdomCityState> outcome;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomAdvanceRules.TryRun(
+			ClassicAssert.IsTrue(KingdomAdvanceRules.TryRun(
 				new KingdomCityAdvanceable(KingdomRules.TicksPerDay, null, null),
 				state, fromTick, toTick, out outcome, out fault), fault.ToString());
 			return outcome;
@@ -486,13 +487,13 @@ namespace ThousandAndFirst.Tests
 			KingdomAdvanceOutcome<KingdomCityState> outcome = RunFrom(state, 0L, 10L * KingdomRules.TicksPerDay);
 			KingdomZoneRow a;
 			KingdomZoneRow b;
-			Assert.IsTrue(outcome.State.TryZone(0, out a));
-			Assert.IsTrue(outcome.State.TryZone(1, out b));
-			Assert.AreEqual(120L, a.Stocks.Water.Level);
-			Assert.AreEqual(0L, a.Stocks.Food.Level,
+			ClassicAssert.IsTrue(outcome.State.TryZone(0, out a));
+			ClassicAssert.IsTrue(outcome.State.TryZone(1, out b));
+			ClassicAssert.AreEqual(120L, a.Stocks.Water.Level);
+			ClassicAssert.AreEqual(0L, a.Stocks.Food.Level,
 				"fields and mills own physical food; an old row rate cannot mint it");
-			Assert.AreEqual(0L, b.Stocks.Water.Level, "a zone with no water works makes no water");
-			Assert.AreEqual(0L, b.Stocks.Food.Level);
+			ClassicAssert.AreEqual(0L, b.Stocks.Water.Level, "a zone with no water works makes no water");
+			ClassicAssert.AreEqual(0L, b.Stocks.Food.Level);
 		}
 
 		// ---- The third factor: the keepers' method on the book's own rates (§8.2) -------------
@@ -501,7 +502,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomAdvanceOutcome<KingdomCityState> outcome;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomAdvanceRules.TryRun(
+			ClassicAssert.IsTrue(KingdomAdvanceRules.TryRun(
 				new KingdomCityAdvanceable(KingdomRules.TicksPerDay, waterRates, null, method),
 				state, fromTick, toTick, out outcome, out fault), fault.ToString());
 			return outcome;
@@ -524,12 +525,12 @@ namespace ThousandAndFirst.Tests
 			foreach (int method in new int[2] { KingdomProductionRules.BaselineMethodPercent, KingdomResearchRules.MethodPercent(0) })
 			{
 				KingdomCityState after = RunMethoded(state, null, 0L, horizon, method).State;
-				Assert.AreEqual(Held(before, KingdomStockKind.Water), Held(after, KingdomStockKind.Water),
+				ClassicAssert.AreEqual(Held(before, KingdomStockKind.Water), Held(after, KingdomStockKind.Water),
 					"the baseline method moved the water a season makes");
-				Assert.AreEqual(Held(before, KingdomStockKind.Food), Held(after, KingdomStockKind.Food),
+				ClassicAssert.AreEqual(Held(before, KingdomStockKind.Food), Held(after, KingdomStockKind.Food),
 					"the baseline method moved the food a season makes");
-				Assert.AreEqual(Owed(before, KingdomStockKind.Water), Owed(after, KingdomStockKind.Water));
-				Assert.AreEqual(Owed(before, KingdomStockKind.Food), Owed(after, KingdomStockKind.Food));
+				ClassicAssert.AreEqual(Owed(before, KingdomStockKind.Water), Owed(after, KingdomStockKind.Water));
+				ClassicAssert.AreEqual(Owed(before, KingdomStockKind.Food), Owed(after, KingdomStockKind.Food));
 			}
 		}
 
@@ -542,13 +543,13 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityState state = City(Making("a", 0L, 1000L, 0L, 1000L, 12, 3));
 			KingdomZoneRow row;
-			Assert.IsTrue(RunMethoded(state, null, 0L, 10L * KingdomRules.TicksPerDay, 150).State.TryZone(0, out row));
+			ClassicAssert.IsTrue(RunMethoded(state, null, 0L, 10L * KingdomRules.TicksPerDay, 150).State.TryZone(0, out row));
 			// Twelve drams a day becomes eighteen. Food remains zero because physical field and
 			// mill transactions are the only production authority.
-			Assert.AreEqual(180L, row.Stocks.Water.Level);
-			Assert.AreEqual(0L, row.Stocks.Food.Level);
-			Assert.AreEqual(1000L, row.Stocks.Water.Capacity, "method is a rate and never a vessel");
-			Assert.AreEqual(1000L, row.Stocks.Food.Capacity);
+			ClassicAssert.AreEqual(180L, row.Stocks.Water.Level);
+			ClassicAssert.AreEqual(0L, row.Stocks.Food.Level);
+			ClassicAssert.AreEqual(1000L, row.Stocks.Water.Capacity, "method is a rate and never a vessel");
+			ClassicAssert.AreEqual(1000L, row.Stocks.Food.Capacity);
 		}
 
 		/// <summary>
@@ -566,15 +567,15 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCityState making = City(Making("a", 0L, 1000L, 0L, 1000L, 12, 3));
 			KingdomZoneRow made;
-			Assert.IsTrue(RunMethoded(making, null, 0L, 10L * KingdomRules.TicksPerDay, method).State.TryZone(0, out made));
-			Assert.GreaterOrEqual(made.Stocks.Water.Level, 120L, "no path through the tree makes a realm that abstained produce less");
+			ClassicAssert.IsTrue(RunMethoded(making, null, 0L, 10L * KingdomRules.TicksPerDay, method).State.TryZone(0, out made));
+			ClassicAssert.GreaterOrEqual(made.Stocks.Water.Level, 120L, "no path through the tree makes a realm that abstained produce less");
 
 			// A span short enough that the draw has NOT finished, so a method that leaked onto a
 			// negative rate would show as a lower level rather than hiding behind the empty clamp.
 			KingdomCityState drinking = City(Zone("a", 100L, 60L, 100L, 0L, 0L));
 			KingdomZoneRow drunk;
-			Assert.IsTrue(RunMethoded(drinking, new int[1] { -20 }, 0L, 2L * KingdomRules.TicksPerDay, method).State.TryZone(0, out drunk));
-			Assert.AreEqual(20L, drunk.Stocks.Water.Level, "a draw is a draw at every method there is");
+			ClassicAssert.IsTrue(RunMethoded(drinking, new int[1] { -20 }, 0L, 2L * KingdomRules.TicksPerDay, method).State.TryZone(0, out drunk));
+			ClassicAssert.AreEqual(20L, drunk.Stocks.Water.Level, "a draw is a draw at every method there is");
 		}
 
 		/// <summary>
@@ -594,10 +595,10 @@ namespace ThousandAndFirst.Tests
 			// Zone a fills its thousand-dram capacity on day 80 and makes nothing after it; zone b
 			// is nowhere near its ceiling and runs the whole season. That is the breakpoint doing
 			// real work, which is what a rate finally gives §2.3 to bite on.
-			Assert.AreEqual(1185L, Held(outcome.State, KingdomStockKind.Water), "a full store stops making, and b runs on");
-			Assert.AreEqual(groundWater, Held(outcome.State, KingdomStockKind.Water) - Owed(outcome.State, KingdomStockKind.Water),
+			ClassicAssert.AreEqual(1185L, Held(outcome.State, KingdomStockKind.Water), "a full store stops making, and b runs on");
+			ClassicAssert.AreEqual(groundWater, Held(outcome.State, KingdomStockKind.Water) - Owed(outcome.State, KingdomStockKind.Water),
 				"model total == ground total + counter-owed must hold across production");
-			Assert.AreEqual(groundFood, Held(outcome.State, KingdomStockKind.Food) - Owed(outcome.State, KingdomStockKind.Food));
+			ClassicAssert.AreEqual(groundFood, Held(outcome.State, KingdomStockKind.Food) - Owed(outcome.State, KingdomStockKind.Food));
 		}
 
 		/// <summary>
@@ -620,13 +621,13 @@ namespace ThousandAndFirst.Tests
 			split = RunFrom(split, split.ProcessedThroughTick, horizon).State;
 			KingdomZoneRow one;
 			KingdomZoneRow many;
-			Assert.IsTrue(whole.State.TryZone(0, out one));
-			Assert.IsTrue(split.TryZone(0, out many));
-			Assert.AreEqual(390L, one.Stocks.Water.Level, "thirty whole days at thirteen");
-			Assert.AreEqual(one.Stocks.Water.Level, many.Stocks.Water.Level, "a slice may not cost or gain the city a day");
-			Assert.AreEqual(one.Stocks.Food.Level, many.Stocks.Food.Level);
-			Assert.AreEqual(one.OwedWater, many.OwedWater);
-			Assert.AreEqual(one.OwedFood, many.OwedFood);
+			ClassicAssert.IsTrue(whole.State.TryZone(0, out one));
+			ClassicAssert.IsTrue(split.TryZone(0, out many));
+			ClassicAssert.AreEqual(390L, one.Stocks.Water.Level, "thirty whole days at thirteen");
+			ClassicAssert.AreEqual(one.Stocks.Water.Level, many.Stocks.Water.Level, "a slice may not cost or gain the city a day");
+			ClassicAssert.AreEqual(one.Stocks.Food.Level, many.Stocks.Food.Level);
+			ClassicAssert.AreEqual(one.OwedWater, many.OwedWater);
+			ClassicAssert.AreEqual(one.OwedFood, many.OwedFood);
 		}
 
 		/// <summary>Reckoning the same span twice produces nothing the second time, which is what
@@ -639,10 +640,10 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState twice = RunFrom(once, once.ProcessedThroughTick, 9L * KingdomRules.TicksPerDay).State;
 			KingdomZoneRow first;
 			KingdomZoneRow second;
-			Assert.IsTrue(once.TryZone(0, out first));
-			Assert.IsTrue(twice.TryZone(0, out second));
-			Assert.AreEqual(first.Stocks.Water.Level, second.Stocks.Water.Level);
-			Assert.AreEqual(first.OwedWater, second.OwedWater);
+			ClassicAssert.IsTrue(once.TryZone(0, out first));
+			ClassicAssert.IsTrue(twice.TryZone(0, out second));
+			ClassicAssert.AreEqual(first.Stocks.Water.Level, second.Stocks.Water.Level);
+			ClassicAssert.AreEqual(first.OwedWater, second.OwedWater);
 		}
 
 		/// <summary>A full store is a real breakpoint now, so a producing city spends more than one
@@ -654,13 +655,13 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState state = City(Making("a", 0L, 100L, 0L, 100L, 25, 0));
 			KingdomAdvanceOutcome<KingdomCityState> season = RunFrom(state, 0L, 90L * KingdomRules.TicksPerDay);
 			KingdomAdvanceOutcome<KingdomCityState> forever = RunFrom(state, 0L, 900L * KingdomRules.TicksPerDay);
-			Assert.AreEqual(season.Steps, forever.Steps);
-			Assert.AreEqual(season.RowVisits, forever.RowVisits);
-			Assert.IsFalse(forever.Overflowed);
+			ClassicAssert.AreEqual(season.Steps, forever.Steps);
+			ClassicAssert.AreEqual(season.RowVisits, forever.RowVisits);
+			ClassicAssert.IsFalse(forever.Overflowed);
 			KingdomZoneRow row;
-			Assert.IsTrue(forever.State.TryZone(0, out row));
-			Assert.AreEqual(100L, row.Stocks.Water.Level);
-			Assert.AreEqual(100, row.OwedWater, "the claim stops where the room does");
+			ClassicAssert.IsTrue(forever.State.TryZone(0, out row));
+			ClassicAssert.AreEqual(100L, row.Stocks.Water.Level);
+			ClassicAssert.AreEqual(100, row.OwedWater, "the claim stops where the room does");
 		}
 
 		// ---- W6: nearest-holder sourcing, live on the carry (§3.10(1), I6) --------------------
@@ -686,10 +687,10 @@ namespace ThousandAndFirst.Tests
 			long[] moved = new long[3];
 			long total;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityRules.TryPlanTransfer(state, Seat, KingdomStockKind.Water, 20L, 100L, moved, out total, out fault), fault.ToString());
-			Assert.AreEqual(20L, total);
-			Assert.AreEqual(0L, moved[1], "the far quarter is not opened while the next ground has plenty");
-			Assert.AreEqual(20L, moved[2]);
+			ClassicAssert.IsTrue(KingdomCityRules.TryPlanTransfer(state, Seat, KingdomStockKind.Water, 20L, 100L, moved, out total, out fault), fault.ToString());
+			ClassicAssert.AreEqual(20L, total);
+			ClassicAssert.AreEqual(0L, moved[1], "the far quarter is not opened while the next ground has plenty");
+			ClassicAssert.AreEqual(20L, moved[2]);
 		}
 
 		/// <summary>And when the near ground cannot cover it, the far one is reached for — nearest
@@ -704,10 +705,10 @@ namespace ThousandAndFirst.Tests
 			long[] moved = new long[3];
 			long total;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityRules.TryPlanTransfer(state, Seat, KingdomStockKind.Water, 20L, 100L, moved, out total, out fault));
-			Assert.AreEqual(20L, total);
-			Assert.AreEqual(5L, moved[2]);
-			Assert.AreEqual(15L, moved[1]);
+			ClassicAssert.IsTrue(KingdomCityRules.TryPlanTransfer(state, Seat, KingdomStockKind.Water, 20L, 100L, moved, out total, out fault));
+			ClassicAssert.AreEqual(20L, total);
+			ClassicAssert.AreEqual(5L, moved[2]);
+			ClassicAssert.AreEqual(15L, moved[1]);
 		}
 
 		/// <summary>The zone graph is composed from zone ids alone, which is why it may be built at
@@ -719,9 +720,9 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState state = City(Zone(Seat, 100L, 0L, 100L, 0L, 0L), Zone(Near, 100L, 0L, 100L, 0L, 0L), Zone(Far, 100L, 0L, 100L, 0L, 0L));
 			int[] cells = new int[3];
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityRules.TryZoneDistances(state, Seat, cells, out fault), fault.ToString());
-			Assert.AreEqual(0, cells[0], "the seat is no distance from itself");
-			Assert.Greater(cells[2], cells[1], "the diagonal quarter is further than the one next door");
+			ClassicAssert.IsTrue(KingdomCityRules.TryZoneDistances(state, Seat, cells, out fault), fault.ToString());
+			ClassicAssert.AreEqual(0, cells[0], "the seat is no distance from itself");
+			ClassicAssert.Greater(cells[2], cells[1], "the diagonal quarter is further than the one next door");
 		}
 
 		/// <summary>A malformed zone id degrades the ROUTING and never refuses the carry: every
@@ -733,13 +734,13 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState state = City(Zone("seat", 100L, 0L, 100L, 0L, 0L), Zone("far", 100L, 60L, 100L, 0L, 0L));
 			int[] cells = new int[2];
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityRules.TryZoneDistances(state, "seat", cells, out fault), fault.ToString());
-			Assert.AreEqual(0, cells[0]);
-			Assert.AreEqual(0, cells[1]);
+			ClassicAssert.IsTrue(KingdomCityRules.TryZoneDistances(state, "seat", cells, out fault), fault.ToString());
+			ClassicAssert.AreEqual(0, cells[0]);
+			ClassicAssert.AreEqual(0, cells[1]);
 			long[] moved = new long[2];
 			long total;
-			Assert.IsTrue(KingdomCityRules.TryPlanTransfer(state, "seat", KingdomStockKind.Water, 20L, 100L, moved, out total, out fault));
-			Assert.AreEqual(20L, total);
+			ClassicAssert.IsTrue(KingdomCityRules.TryPlanTransfer(state, "seat", KingdomStockKind.Water, 20L, 100L, moved, out total, out fault));
+			ClassicAssert.AreEqual(20L, total);
 		}
 
 		/// <summary>The reckon job is what actually crosses the executor, so its boundary is what
@@ -749,7 +750,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomComputeRefusal refusal;
 			string offender;
-			Assert.IsTrue(KingdomComputeSeam.TryValidateBoundary(typeof(KingdomReckonInput), typeof(KingdomCityState), out refusal, out offender),
+			ClassicAssert.IsTrue(KingdomComputeSeam.TryValidateBoundary(typeof(KingdomReckonInput), typeof(KingdomCityState), out refusal, out offender),
 				"the reckon boundary is not clean: " + refusal + " at " + offender);
 		}
 
@@ -764,15 +765,15 @@ namespace ThousandAndFirst.Tests
 			KingdomComputeResult<KingdomCityState> result = executor.Submit(
 				new KingdomReckonInput(state, 90L * KingdomRules.TicksPerDay),
 				new KingdomReckonJob("taf:city:kavvat", new KingdomCityAdvanceable(KingdomRules.TicksPerDay, null, null)));
-			Assert.AreEqual(KingdomComputeStatus.Ok, result.Status);
-			Assert.AreEqual(90L * KingdomRules.TicksPerDay, result.Value.ProcessedThroughTick);
-			Assert.AreEqual(KingdomBudgetLane.Reckon, result.Receipt.Lane);
-			Assert.AreEqual(600L, result.Receipt.Microseconds);
-			Assert.AreEqual(1, result.Receipt.Counters.BreakpointSteps);
-			Assert.AreEqual(2L * state.RowCount, result.Receipt.Counters.RowVisits);
-			Assert.AreEqual(0, result.Receipt.Counters.Draws, "not one draw anywhere in a reckoning");
-			Assert.AreEqual(KingdomBudgetVerdict.Within, result.Receipt.Verdict);
-			Assert.AreEqual(1, journal.Count);
+			ClassicAssert.AreEqual(KingdomComputeStatus.Ok, result.Status);
+			ClassicAssert.AreEqual(90L * KingdomRules.TicksPerDay, result.Value.ProcessedThroughTick);
+			ClassicAssert.AreEqual(KingdomBudgetLane.Reckon, result.Receipt.Lane);
+			ClassicAssert.AreEqual(600L, result.Receipt.Microseconds);
+			ClassicAssert.AreEqual(1, result.Receipt.Counters.BreakpointSteps);
+			ClassicAssert.AreEqual(2L * state.RowCount, result.Receipt.Counters.RowVisits);
+			ClassicAssert.AreEqual(0, result.Receipt.Counters.Draws, "not one draw anywhere in a reckoning");
+			ClassicAssert.AreEqual(KingdomBudgetVerdict.Within, result.Receipt.Verdict);
+			ClassicAssert.AreEqual(1, journal.Count);
 		}
 
 		/// <summary>The receipt line the log-watcher greps for, in §6.5's own shape, with the tag
@@ -784,9 +785,9 @@ namespace ThousandAndFirst.Tests
 				KingdomBudgetLane.Reckon, "taf:city:kavvat", 1400L,
 				new KingdomComputeCounters(41, 4756L, 118, 0, 0L), 118L,
 				KingdomBudgetVerdict.Within, KingdomBudgetVerdict.Within);
-			Assert.AreEqual("perf reckon label=taf:city:kavvat steps=41 rows=4756 draws=118 ms=1.4",
+			ClassicAssert.AreEqual("perf reckon label=taf:city:kavvat steps=41 rows=4756 draws=118 ms=1.4",
 				KingdomBudgetRules.FormatReceiptBody(receipt));
-			Assert.AreEqual(KingdomBudgetRules.LogPrefix + KingdomBudgetRules.FormatReceiptBody(receipt),
+			ClassicAssert.AreEqual(KingdomBudgetRules.LogPrefix + KingdomBudgetRules.FormatReceiptBody(receipt),
 				KingdomBudgetRules.FormatReceipt(receipt));
 		}
 
@@ -804,17 +805,17 @@ namespace ThousandAndFirst.Tests
 			KernelSeed128 later;
 			KernelSeed128 elsewhere;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityRules.TryMintSeed(1234, "Kavvat", 5000L, out first, out fault));
-			Assert.IsTrue(KingdomCityRules.TryMintSeed(1234, "Kavvat", 5000L, out again, out fault));
-			Assert.IsTrue(KingdomCityRules.TryMintSeed(1234, "Ptoh", 5000L, out other, out fault));
-			Assert.IsTrue(KingdomCityRules.TryMintSeed(1234, "Kavvat", 5001L, out later, out fault));
-			Assert.IsTrue(KingdomCityRules.TryMintSeed(9999, "Kavvat", 5000L, out elsewhere, out fault));
-			Assert.IsTrue(first.Equals(again), "the same realm must mint the same seed twice");
-			Assert.IsFalse(first.Equals(other), "two realms in one world must not share a seed");
-			Assert.IsFalse(first.Equals(later));
-			Assert.IsFalse(first.Equals(elsewhere));
-			Assert.AreNotEqual(0UL, first.High);
-			Assert.AreNotEqual(first.High, first.Low, "the two halves must be separated by their own basis");
+			ClassicAssert.IsTrue(KingdomCityRules.TryMintSeed(1234, "Kavvat", 5000L, out first, out fault));
+			ClassicAssert.IsTrue(KingdomCityRules.TryMintSeed(1234, "Kavvat", 5000L, out again, out fault));
+			ClassicAssert.IsTrue(KingdomCityRules.TryMintSeed(1234, "Ptoh", 5000L, out other, out fault));
+			ClassicAssert.IsTrue(KingdomCityRules.TryMintSeed(1234, "Kavvat", 5001L, out later, out fault));
+			ClassicAssert.IsTrue(KingdomCityRules.TryMintSeed(9999, "Kavvat", 5000L, out elsewhere, out fault));
+			ClassicAssert.IsTrue(first.Equals(again), "the same realm must mint the same seed twice");
+			ClassicAssert.IsFalse(first.Equals(other), "two realms in one world must not share a seed");
+			ClassicAssert.IsFalse(first.Equals(later));
+			ClassicAssert.IsFalse(first.Equals(elsewhere));
+			ClassicAssert.AreNotEqual(0UL, first.High);
+			ClassicAssert.AreNotEqual(first.High, first.Low, "the two halves must be separated by their own basis");
 		}
 
 		[Test]
@@ -822,10 +823,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KernelSeed128 seed;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomCityRules.TryMintSeed(1, null, 0L, out seed, out fault));
-			Assert.AreEqual(KingdomCityFault.NullArgument, fault);
-			Assert.IsFalse(KingdomCityRules.TryMintSeed(1, "Kavvat", -1L, out seed, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidTick, fault);
+			ClassicAssert.IsFalse(KingdomCityRules.TryMintSeed(1, null, 0L, out seed, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.NullArgument, fault);
+			ClassicAssert.IsFalse(KingdomCityRules.TryMintSeed(1, "Kavvat", -1L, out seed, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidTick, fault);
 		}
 
 		// ---- Districts, ids, and the lines the founder reads -----------------------------------
@@ -836,23 +837,23 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < KingdomRules.Districts.Length; i++)
 			{
 				int code = KingdomCityRules.DistrictCode(KingdomRules.Districts[i]);
-				Assert.AreNotEqual(KingdomCityRules.NoDistrict, code, KingdomRules.Districts[i] + " has no code");
-				Assert.AreEqual(KingdomRules.Districts[i], KingdomCityRules.DistrictKey(code));
+				ClassicAssert.AreNotEqual(KingdomCityRules.NoDistrict, code, KingdomRules.Districts[i] + " has no code");
+				ClassicAssert.AreEqual(KingdomRules.Districts[i], KingdomCityRules.DistrictKey(code));
 			}
-			Assert.AreEqual(KingdomCityRules.NoDistrict, KingdomCityRules.DistrictCode("scriptorium-of-nowhere"));
-			Assert.AreEqual(KingdomCityRules.NoDistrict, KingdomCityRules.DistrictCode(null));
-			Assert.IsNull(KingdomCityRules.DistrictKey(KingdomCityRules.NoDistrict));
-			Assert.IsNull(KingdomCityRules.DistrictKey(9999));
+			ClassicAssert.AreEqual(KingdomCityRules.NoDistrict, KingdomCityRules.DistrictCode("scriptorium-of-nowhere"));
+			ClassicAssert.AreEqual(KingdomCityRules.NoDistrict, KingdomCityRules.DistrictCode(null));
+			ClassicAssert.IsNull(KingdomCityRules.DistrictKey(KingdomCityRules.NoDistrict));
+			ClassicAssert.IsNull(KingdomCityRules.DistrictKey(9999));
 		}
 
 		[Test]
 		public void AStableIdIsStableNonNegativeAndDistinct()
 		{
-			Assert.AreEqual(KingdomCityRules.StableId("taf:work:cistern"), KingdomCityRules.StableId("taf:work:cistern"));
-			Assert.AreNotEqual(KingdomCityRules.StableId("taf:work:cistern"), KingdomCityRules.StableId("taf:work:granary"));
-			Assert.GreaterOrEqual(KingdomCityRules.StableId("taf:work:cistern"), 0);
-			Assert.AreEqual(0, KingdomCityRules.StableId(null));
-			Assert.AreEqual(0, KingdomCityRules.StableId(""));
+			ClassicAssert.AreEqual(KingdomCityRules.StableId("taf:work:cistern"), KingdomCityRules.StableId("taf:work:cistern"));
+			ClassicAssert.AreNotEqual(KingdomCityRules.StableId("taf:work:cistern"), KingdomCityRules.StableId("taf:work:granary"));
+			ClassicAssert.GreaterOrEqual(KingdomCityRules.StableId("taf:work:cistern"), 0);
+			ClassicAssert.AreEqual(0, KingdomCityRules.StableId(null));
+			ClassicAssert.AreEqual(0, KingdomCityRules.StableId(""));
 		}
 
 		/// <summary>The ground wins for anything physical, and the difference is attributed and
@@ -860,7 +861,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AReconcileSaysNothingWhenTheBooksAndTheStoresAgree()
 		{
-			Assert.IsNull(KingdomCityRules.ReconcileNote(0L, 0L));
+			ClassicAssert.IsNull(KingdomCityRules.ReconcileNote(0L, 0L));
 		}
 
 		[TestCase(-12L, 0L, "12 drams fewer")]
@@ -870,7 +871,7 @@ namespace ThousandAndFirst.Tests
 		public void AReconcileNamesWhatMovedAndWhichWay(long water, long food, string expected)
 		{
 			string note = KingdomCityRules.ReconcileNote(water, food);
-			Assert.IsNotNull(note);
+			ClassicAssert.IsNotNull(note);
 			StringAssert.Contains(expected, note);
 		}
 
@@ -878,7 +879,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AShortfallIsNamedRatherThanForgiven()
 		{
-			Assert.IsNull(KingdomCityRules.ShortfallNote(0, 0));
+			ClassicAssert.IsNull(KingdomCityRules.ShortfallNote(0, 0));
 			StringAssert.Contains("9 drams", KingdomCityRules.ShortfallNote(-9, 0));
 			StringAssert.Contains("no room", KingdomCityRules.ShortfallNote(4, 0));
 		}
@@ -936,10 +937,10 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState after;
 			long applied;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomCityRules.TryApplyTransfer(state, KingdomStockKind.Water, moved, 4000000000L, out after, out applied, out fault));
-			Assert.AreEqual(KingdomCityFault.ArithmeticOverflow, fault);
-			Assert.AreSame(state, after, "a refused carry must leave the book byte-identical");
-			Assert.AreEqual(0L, applied);
+			ClassicAssert.IsFalse(KingdomCityRules.TryApplyTransfer(state, KingdomStockKind.Water, moved, 4000000000L, out after, out applied, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.ArithmeticOverflow, fault);
+			ClassicAssert.AreSame(state, after, "a refused carry must leave the book byte-identical");
+			ClassicAssert.AreEqual(0L, applied);
 		}
 
 		/// <summary>The boundary the check is written at: a carry that lands the debt exactly on
@@ -955,11 +956,11 @@ namespace ThousandAndFirst.Tests
 			KingdomCityState after;
 			long applied;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityRules.TryApplyTransfer(state, KingdomStockKind.Water, moved, 5L, out after, out applied, out fault), fault.ToString());
-			Assert.AreEqual(5L, applied);
+			ClassicAssert.IsTrue(KingdomCityRules.TryApplyTransfer(state, KingdomStockKind.Water, moved, 5L, out after, out applied, out fault), fault.ToString());
+			ClassicAssert.AreEqual(5L, applied);
 			KingdomZoneRow far;
-			Assert.IsTrue(after.TryZone(1, out far));
-			Assert.AreEqual(int.MinValue, far.OwedWater);
+			ClassicAssert.IsTrue(after.TryZone(1, out far));
+			ClassicAssert.AreEqual(int.MinValue, far.OwedWater);
 		}
 
 		[Test]
@@ -967,8 +968,8 @@ namespace ThousandAndFirst.Tests
 		{
 			StringAssert.Contains("oldest casks first", KingdomCityRules.CarryNote(KingdomStockKind.Water, 12L, "Kavvat"));
 			StringAssert.Contains("pantries", KingdomCityRules.CarryNote(KingdomStockKind.Food, 3L, "Kavvat"));
-			Assert.IsNull(KingdomCityRules.CarryNote(KingdomStockKind.Water, 0L, "Kavvat"));
-			Assert.IsNull(KingdomCityRules.CarryNote(KingdomStockKind.Materials, 5L, "Kavvat"));
+			ClassicAssert.IsNull(KingdomCityRules.CarryNote(KingdomStockKind.Water, 0L, "Kavvat"));
+			ClassicAssert.IsNull(KingdomCityRules.CarryNote(KingdomStockKind.Materials, 5L, "Kavvat"));
 		}
 	}
 }

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 using ThousandAndFirst.Harness;
 
@@ -52,17 +53,17 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomScenarioVerbAdmission admission =
 				KingdomScenarioVerbProviderRules.Admit(List(Claim("mod.a", "A", "probe", "sweep")));
-			Assert.AreEqual(2, admission.ByVerb.Count);
-			Assert.AreEqual(0, admission.ByVerb["probe"]);
-			Assert.AreEqual(0, admission.ByVerb["sweep"]);
-			Assert.AreEqual(0, admission.Refusals.Count);
+			ClassicAssert.AreEqual(2, admission.ByVerb.Count);
+			ClassicAssert.AreEqual(0, admission.ByVerb["probe"]);
+			ClassicAssert.AreEqual(0, admission.ByVerb["sweep"]);
+			ClassicAssert.AreEqual(0, admission.Refusals.Count);
 		}
 
 		[Test]
 		public void NothingIsAdmittedFromAnEmptyOrNullRoster()
 		{
-			Assert.AreEqual(0, KingdomScenarioVerbProviderRules.Admit(null).ByVerb.Count);
-			Assert.AreEqual(0,
+			ClassicAssert.AreEqual(0, KingdomScenarioVerbProviderRules.Admit(null).ByVerb.Count);
+			ClassicAssert.AreEqual(0,
 				KingdomScenarioVerbProviderRules.Admit(List()).ByVerb.Count);
 		}
 
@@ -74,9 +75,9 @@ namespace ThousandAndFirst.Tests
 			claim.Constructed = false;
 			KingdomScenarioVerbAdmission admission =
 				KingdomScenarioVerbProviderRules.Admit(List(claim));
-			Assert.AreEqual(0, admission.ByVerb.Count);
-			Assert.IsTrue(Names(admission.Refusals, KingdomScenarioVerbProviderRules.CodeThrew));
-			Assert.IsTrue(Names(admission.Refusals, "mod.a"));
+			ClassicAssert.AreEqual(0, admission.ByVerb.Count);
+			ClassicAssert.IsTrue(Names(admission.Refusals, KingdomScenarioVerbProviderRules.CodeThrew));
+			ClassicAssert.IsTrue(Names(admission.Refusals, "mod.a"));
 		}
 
 		/// <summary>Version drift is a loud refusal, because a silently inactive verb reads as ours.</summary>
@@ -87,8 +88,8 @@ namespace ThousandAndFirst.Tests
 			claim.ApiVersion = KingdomScenarioVerbApi.Version + 1;
 			KingdomScenarioVerbAdmission admission =
 				KingdomScenarioVerbProviderRules.Admit(List(claim));
-			Assert.AreEqual(0, admission.ByVerb.Count);
-			Assert.IsTrue(Names(admission.Refusals, KingdomScenarioVerbProviderRules.CodeVersion));
+			ClassicAssert.AreEqual(0, admission.ByVerb.Count);
+			ClassicAssert.IsTrue(Names(admission.Refusals, KingdomScenarioVerbProviderRules.CodeVersion));
 		}
 
 		[Test]
@@ -96,7 +97,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomScenarioVerbAdmission admission =
 				KingdomScenarioVerbProviderRules.Admit(List(Claim("mod.a", "A")));
-			Assert.IsTrue(Names(admission.Refusals, KingdomScenarioVerbProviderRules.CodeEmpty));
+			ClassicAssert.IsTrue(Names(admission.Refusals, KingdomScenarioVerbProviderRules.CodeEmpty));
 		}
 
 		[TestCase("Probe")]
@@ -110,8 +111,8 @@ namespace ThousandAndFirst.Tests
 				List(Claim("mod.a", "A", "probe", Name)));
 			// Partial admission would leave a provider half-live, which is the silent half-state
 			// the harness refuses everywhere else.
-			Assert.AreEqual(0, admission.ByVerb.Count);
-			Assert.IsTrue(Names(admission.Refusals,
+			ClassicAssert.AreEqual(0, admission.ByVerb.Count);
+			ClassicAssert.IsTrue(Names(admission.Refusals,
 				KingdomScenarioVerbProviderRules.CodeMalformed));
 		}
 
@@ -128,9 +129,9 @@ namespace ThousandAndFirst.Tests
 				string reserved = KingdomScenarioVerbApi.Reserved[i];
 				KingdomScenarioVerbAdmission admission = KingdomScenarioVerbProviderRules.Admit(
 					List(Claim("mod.a", "A", "probe", reserved)));
-				Assert.AreEqual(0, admission.ByVerb.Count, reserved);
-				Assert.IsFalse(admission.ByVerb.ContainsKey(reserved), reserved);
-				Assert.IsTrue(Names(admission.Refusals,
+				ClassicAssert.AreEqual(0, admission.ByVerb.Count, reserved);
+				ClassicAssert.IsFalse(admission.ByVerb.ContainsKey(reserved), reserved);
+				ClassicAssert.IsTrue(Names(admission.Refusals,
 					KingdomScenarioVerbProviderRules.CodeReserved), reserved);
 			}
 		}
@@ -140,8 +141,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomScenarioVerbAdmission admission = KingdomScenarioVerbProviderRules.Admit(
 				List(Claim("mod.a", "A", "probe", "probe")));
-			Assert.AreEqual(0, admission.ByVerb.Count);
-			Assert.IsTrue(Names(admission.Refusals,
+			ClassicAssert.AreEqual(0, admission.ByVerb.Count);
+			ClassicAssert.IsTrue(Names(admission.Refusals,
 				KingdomScenarioVerbProviderRules.CodeDuplicate));
 		}
 
@@ -154,14 +155,14 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomScenarioVerbAdmission admission = KingdomScenarioVerbProviderRules.Admit(
 				List(Claim("mod.a", "A", "probe", "alpha"), Claim("mod.b", "B", "probe", "beta")));
-			Assert.IsFalse(admission.ByVerb.ContainsKey("probe"));
+			ClassicAssert.IsFalse(admission.ByVerb.ContainsKey("probe"));
 			// The uncontested names on both sides survive: a collision is about one name.
-			Assert.AreEqual(0, admission.ByVerb["alpha"]);
-			Assert.AreEqual(1, admission.ByVerb["beta"]);
-			Assert.IsTrue(Names(admission.Refusals,
+			ClassicAssert.AreEqual(0, admission.ByVerb["alpha"]);
+			ClassicAssert.AreEqual(1, admission.ByVerb["beta"]);
+			ClassicAssert.IsTrue(Names(admission.Refusals,
 				KingdomScenarioVerbProviderRules.CodeCollision));
-			Assert.IsTrue(Names(admission.Refusals, "mod.a"));
-			Assert.IsTrue(Names(admission.Refusals, "mod.b"));
+			ClassicAssert.IsTrue(Names(admission.Refusals, "mod.a"));
+			ClassicAssert.IsTrue(Names(admission.Refusals, "mod.b"));
 		}
 
 		[Test]
@@ -170,11 +171,11 @@ namespace ThousandAndFirst.Tests
 			KingdomScenarioVerbAdmission admission = KingdomScenarioVerbProviderRules.Admit(
 				List(Claim("mod.a", "A", "probe"), Claim("mod.b", "B", "probe"),
 					Claim("mod.c", "C", "probe")));
-			Assert.AreEqual(0, admission.ByVerb.Count);
-			Assert.AreEqual(1, admission.Refusals.Count);
-			Assert.IsTrue(Names(admission.Refusals, "mod.a"));
-			Assert.IsTrue(Names(admission.Refusals, "mod.b"));
-			Assert.IsTrue(Names(admission.Refusals, "mod.c"));
+			ClassicAssert.AreEqual(0, admission.ByVerb.Count);
+			ClassicAssert.AreEqual(1, admission.Refusals.Count);
+			ClassicAssert.IsTrue(Names(admission.Refusals, "mod.a"));
+			ClassicAssert.IsTrue(Names(admission.Refusals, "mod.b"));
+			ClassicAssert.IsTrue(Names(admission.Refusals, "mod.c"));
 		}
 
 		/// <summary>Two providers inside ONE mod are still told apart, so a collision names both.</summary>
@@ -183,9 +184,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomScenarioVerbAdmission admission = KingdomScenarioVerbProviderRules.Admit(
 				List(Claim("mod.a", "First", "probe"), Claim("mod.a", "Second", "probe")));
-			Assert.AreEqual(0, admission.ByVerb.Count);
-			Assert.IsTrue(Names(admission.Refusals, "mod.a/First"));
-			Assert.IsTrue(Names(admission.Refusals, "mod.a/Second"));
+			ClassicAssert.AreEqual(0, admission.ByVerb.Count);
+			ClassicAssert.IsTrue(Names(admission.Refusals, "mod.a/First"));
+			ClassicAssert.IsTrue(Names(admission.Refusals, "mod.a/Second"));
 		}
 
 		[Test]
@@ -196,16 +197,16 @@ namespace ThousandAndFirst.Tests
 				many.Add(Claim("mod." + i, "T", "verb" + i));
 			KingdomScenarioVerbAdmission admission =
 				KingdomScenarioVerbProviderRules.Admit(many);
-			Assert.AreEqual(0, admission.ByVerb.Count);
-			Assert.IsTrue(Names(admission.Refusals,
+			ClassicAssert.AreEqual(0, admission.ByVerb.Count);
+			ClassicAssert.IsTrue(Names(admission.Refusals,
 				KingdomScenarioVerbProviderRules.CodeOverCap));
 
 			KingdomScenarioVerbClaim greedy = Claim("mod.a", "A");
 			for (int i = 0; i <= KingdomScenarioVerbProviderRules.MaxVerbsPerProvider; i++)
 				greedy.Verbs.Add("verb" + i);
 			admission = KingdomScenarioVerbProviderRules.Admit(List(greedy));
-			Assert.AreEqual(0, admission.ByVerb.Count);
-			Assert.IsTrue(Names(admission.Refusals,
+			ClassicAssert.AreEqual(0, admission.ByVerb.Count);
+			ClassicAssert.IsTrue(Names(admission.Refusals,
 				KingdomScenarioVerbProviderRules.CodeOverCap));
 		}
 
@@ -218,14 +219,14 @@ namespace ThousandAndFirst.Tests
 			rows.Add(Claim("mod.a", "A", "probe"));
 			KingdomScenarioVerbAdmission admission =
 				KingdomScenarioVerbProviderRules.Admit(rows);
-			Assert.AreEqual(1, admission.ByVerb["probe"]);
+			ClassicAssert.AreEqual(1, admission.ByVerb["probe"]);
 		}
 
 		/// <summary>Every refusal carries its stable code first, so a host binds to the code.</summary>
 		[Test]
 		public void EveryRefusalLineLeadsWithItsCode()
 		{
-			Assert.AreEqual("[taf-scenario-verb-collision] mod.a: because",
+			ClassicAssert.AreEqual("[taf-scenario-verb-collision] mod.a: because",
 				KingdomScenarioVerbProviderRules.Line(
 					KingdomScenarioVerbProviderRules.CodeCollision, "mod.a", "because"));
 		}

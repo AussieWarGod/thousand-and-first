@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -12,31 +13,31 @@ namespace ThousandAndFirst.Tests
 		[TestCase(4097, false)]
 		public void ManifestCardinalityIsBoundedBeforeMutation(int count, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomUpgradeContentRules.ManifestCardinalityValid(count));
+			ClassicAssert.AreEqual(expected, KingdomUpgradeContentRules.ManifestCardinalityValid(count));
 		}
 
 		[Test]
 		public void ManifestSlotsReconcileMovedPendingAndFutureItems()
 		{
-			Assert.AreEqual(KingdomHandoverManifestSlot.Destination,
+			ClassicAssert.AreEqual(KingdomHandoverManifestSlot.Destination,
 				KingdomUpgradeContentRules.ExpectedSlot(0, 3, 1, -1, 0));
-			Assert.AreEqual(KingdomHandoverManifestSlot.Source,
+			ClassicAssert.AreEqual(KingdomHandoverManifestSlot.Source,
 				KingdomUpgradeContentRules.ExpectedSlot(1, 3, 1, -1, 0));
-			Assert.AreEqual(KingdomHandoverManifestSlot.Pending,
+			ClassicAssert.AreEqual(KingdomHandoverManifestSlot.Pending,
 				KingdomUpgradeContentRules.ExpectedSlot(1, 3, 1, 1, 2));
-			Assert.AreEqual(KingdomHandoverManifestSlot.Source,
+			ClassicAssert.AreEqual(KingdomHandoverManifestSlot.Source,
 				KingdomUpgradeContentRules.ExpectedSlot(2, 3, 1, 1, 2));
-			Assert.AreEqual(KingdomHandoverManifestSlot.Invalid,
+			ClassicAssert.AreEqual(KingdomHandoverManifestSlot.Invalid,
 				KingdomUpgradeContentRules.ExpectedSlot(1, 3, 0, 1, 2));
 		}
 
 		[Test]
 		public void LiquidAdmissionRejectsOpenAndCallbackSensitiveEndpoints()
 		{
-			Assert.IsTrue(KingdomUpgradeContentRules.LiquidEndpointSafe(16, false, false));
-			Assert.IsFalse(KingdomUpgradeContentRules.LiquidEndpointSafe(-1, false, false));
-			Assert.IsFalse(KingdomUpgradeContentRules.LiquidEndpointSafe(16, true, false));
-			Assert.IsFalse(KingdomUpgradeContentRules.LiquidEndpointSafe(16, false, true));
+			ClassicAssert.IsTrue(KingdomUpgradeContentRules.LiquidEndpointSafe(16, false, false));
+			ClassicAssert.IsFalse(KingdomUpgradeContentRules.LiquidEndpointSafe(-1, false, false));
+			ClassicAssert.IsFalse(KingdomUpgradeContentRules.LiquidEndpointSafe(16, true, false));
+			ClassicAssert.IsFalse(KingdomUpgradeContentRules.LiquidEndpointSafe(16, false, true));
 		}
 	}
 }

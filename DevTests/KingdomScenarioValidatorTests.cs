@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Harness;
 
 namespace ThousandAndFirst.Tests
@@ -72,7 +73,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomScenarioPlan plan;
 			string failure;
-			Assert.IsTrue(KingdomScenarioRules.TryPlan(definition, selection, Digest, Seed,
+			ClassicAssert.IsTrue(KingdomScenarioRules.TryPlan(definition, selection, Digest, Seed,
 				out plan, out failure), failure);
 			return plan;
 		}
@@ -94,7 +95,7 @@ namespace ThousandAndFirst.Tests
 				string.Join("; ", KingdomScenarioRowValidator.Findings(definition)));
 			KingdomScenarioPlan plan;
 			string failure;
-			Assert.IsFalse(KingdomScenarioRules.TryPlan(definition, Facing("north"), Digest, Seed,
+			ClassicAssert.IsFalse(KingdomScenarioRules.TryPlan(definition, Facing("north"), Digest, Seed,
 				out plan, out failure));
 		}
 
@@ -130,13 +131,13 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < broken.Count; i++)
 			{
 				KingdomScenarioDefinition row = broken[i];
-				Assert.IsFalse(KingdomScenarioRowValidator.Valid(row), "row " + i);
-				Assert.IsNull(KingdomScenarioDigests.Canonical(row), "canonical row " + i);
-				Assert.IsNull(KingdomScenarioDigests.Registry(
+				ClassicAssert.IsFalse(KingdomScenarioRowValidator.Valid(row), "row " + i);
+				ClassicAssert.IsNull(KingdomScenarioDigests.Canonical(row), "canonical row " + i);
+				ClassicAssert.IsNull(KingdomScenarioDigests.Registry(
 					new List<KingdomScenarioDefinition> { row }), "digest row " + i);
 				KingdomScenarioPlan plan;
 				string failure;
-				Assert.IsFalse(KingdomScenarioRules.TryPlan(row, Facing("north"), Digest, Seed, out plan,
+				ClassicAssert.IsFalse(KingdomScenarioRules.TryPlan(row, Facing("north"), Digest, Seed, out plan,
 					out failure), "plan row " + i);
 			}
 		}
@@ -150,9 +151,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomScenarioPlan plan;
 			string failure;
-			Assert.IsFalse(KingdomScenarioRules.TryPlan(Sound(), Facing("north"), Digest, seed,
+			ClassicAssert.IsFalse(KingdomScenarioRules.TryPlan(Sound(), Facing("north"), Digest, seed,
 				out plan, out failure));
-			Assert.IsNotEmpty(failure);
+			ClassicAssert.IsNotEmpty(failure);
 		}
 
 		/// <summary>No requested seed is a lawful plan: it simply claims no determinism.</summary>
@@ -161,9 +162,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomScenarioPlan plan;
 			string failure;
-			Assert.IsTrue(KingdomScenarioRules.TryPlan(Sound(), Facing("north"), Digest, null,
+			ClassicAssert.IsTrue(KingdomScenarioRules.TryPlan(Sound(), Facing("north"), Digest, null,
 				out plan, out failure), failure);
-			Assert.IsNull(plan.Seed);
+			ClassicAssert.IsNull(plan.Seed);
 		}
 
 		[Test]
@@ -175,9 +176,9 @@ namespace ThousandAndFirst.Tests
 				definition.Steps.Add(Step(KingdomScenarioVerb.ProveCatalogue, "Catalogue", "architecture"));
 			KingdomScenarioPlan plan;
 			string failure;
-			Assert.IsFalse(KingdomScenarioRules.TryPlan(definition, Facing("north"), Digest, Seed,
+			ClassicAssert.IsFalse(KingdomScenarioRules.TryPlan(definition, Facing("north"), Digest, Seed,
 				out plan, out failure));
-			Assert.IsNotEmpty(failure);
+			ClassicAssert.IsNotEmpty(failure);
 		}
 
 		// ----- Validate totality -------------------------------------------------------------
@@ -196,7 +197,7 @@ namespace ThousandAndFirst.Tests
 			};
 			IList<string> findings = KingdomScenarioRules.Validate(
 				new List<KingdomScenarioDefinition> { broken, null });
-			Assert.Greater(findings.Count, 3, string.Join("; ", findings));
+			ClassicAssert.Greater(findings.Count, 3, string.Join("; ", findings));
 		}
 
 		[Test]
@@ -235,32 +236,32 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ValidateFlagsAnEmptyRoster()
 		{
-			Assert.IsNotEmpty(KingdomScenarioRules.Validate(null));
-			Assert.IsNotEmpty(KingdomScenarioRules.Validate(new List<KingdomScenarioDefinition>()));
+			ClassicAssert.IsNotEmpty(KingdomScenarioRules.Validate(null));
+			ClassicAssert.IsNotEmpty(KingdomScenarioRules.Validate(new List<KingdomScenarioDefinition>()));
 		}
 		// ----- Canonical / Digest totality ---------------------------------------------------
 
 		[Test]
 		public void CanonicalReturnsNullRatherThanThrowingOnMalformedRows()
 		{
-			Assert.IsNull(KingdomScenarioDigests.Canonical(null));
-			Assert.IsNull(KingdomScenarioDigests.Canonical(new KingdomScenarioDefinition
+			ClassicAssert.IsNull(KingdomScenarioDigests.Canonical(null));
+			ClassicAssert.IsNull(KingdomScenarioDigests.Canonical(new KingdomScenarioDefinition
 			{
 				Key = "BAD KEY"
 			}));
 			KingdomScenarioDefinition nullStep = Sound();
 			nullStep.Steps[0] = null;
-			Assert.IsNull(KingdomScenarioDigests.Canonical(nullStep));
+			ClassicAssert.IsNull(KingdomScenarioDigests.Canonical(nullStep));
 			KingdomScenarioDefinition nullArgs = Sound();
 			nullArgs.Steps[0].Arguments = null;
-			Assert.IsNull(KingdomScenarioDigests.Canonical(nullArgs));
+			ClassicAssert.IsNull(KingdomScenarioDigests.Canonical(nullArgs));
 		}
 
 		[Test]
 		public void DigestReturnsNullWhenAnyRowCannotBeCanonicalized()
 		{
-			Assert.IsNull(KingdomScenarioDigests.Registry(null));
-			Assert.IsNull(KingdomScenarioDigests.Registry(
+			ClassicAssert.IsNull(KingdomScenarioDigests.Registry(null));
+			ClassicAssert.IsNull(KingdomScenarioDigests.Registry(
 				new List<KingdomScenarioDefinition> { Sound(), null }));
 		}
 
@@ -274,10 +275,10 @@ namespace ThousandAndFirst.Tests
 				new List<KingdomScenarioDefinition> { a, b });
 			string reversed = KingdomScenarioDigests.Registry(
 				new List<KingdomScenarioDefinition> { b, a });
-			Assert.AreEqual(forward, reversed);
+			ClassicAssert.AreEqual(forward, reversed);
 			KingdomScenarioDefinition changed = Sound();
 			changed.AuthorityClass = "architecture-stamper-changed";
-			Assert.AreNotEqual(KingdomScenarioDigests.Registry(
+			ClassicAssert.AreNotEqual(KingdomScenarioDigests.Registry(
 				new List<KingdomScenarioDefinition> { a }),
 				KingdomScenarioDigests.Registry(new List<KingdomScenarioDefinition> { changed }));
 		}
@@ -288,7 +289,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomScenarioDefinition truthy = Sound();
 			truthy.SyntheticRaw = "true";
-			Assert.AreNotEqual(
+			ClassicAssert.AreNotEqual(
 				KingdomScenarioDigests.Registry(new List<KingdomScenarioDefinition> { Sound() }),
 				KingdomScenarioDigests.Registry(new List<KingdomScenarioDefinition> { truthy }));
 		}

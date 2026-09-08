@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -27,38 +28,38 @@ namespace ThousandAndFirst.Tests
 			int[] heights = new int[] { 4, 6, 10, 18 };
 			for (int i = 0; i < sizes.Length; i++)
 			{
-				Assert.IsTrue(KingdomArchitectureRules.TryCanonicalDimensions(
+				ClassicAssert.IsTrue(KingdomArchitectureRules.TryCanonicalDimensions(
 					sizes[i], out int width, out int height));
-				Assert.AreEqual(widths[i], width);
-				Assert.AreEqual(heights[i], height);
-				Assert.IsTrue(KingdomPlotRules.TryDimensions(plotSizes[i],
+				ClassicAssert.AreEqual(widths[i], width);
+				ClassicAssert.AreEqual(heights[i], height);
+				ClassicAssert.IsTrue(KingdomPlotRules.TryDimensions(plotSizes[i],
 					out int plotWidth, out int plotHeight));
-				Assert.AreEqual(plotWidth, width, "architecture reads plot width authority");
-				Assert.AreEqual(plotHeight, height, "architecture reads plot height authority");
-				Assert.AreEqual(0, width % 2);
-				Assert.AreEqual(0, height % 2);
-				Assert.IsTrue(KingdomArchitectureRules.TryDimensions(sizes[i],
+				ClassicAssert.AreEqual(plotWidth, width, "architecture reads plot width authority");
+				ClassicAssert.AreEqual(plotHeight, height, "architecture reads plot height authority");
+				ClassicAssert.AreEqual(0, width % 2);
+				ClassicAssert.AreEqual(0, height % 2);
+				ClassicAssert.IsTrue(KingdomArchitectureRules.TryDimensions(sizes[i],
 					ArchitectureFacing.East, out int eastWidth, out int eastHeight));
-				Assert.AreEqual(height, eastWidth);
-				Assert.AreEqual(width, eastHeight);
+				ClassicAssert.AreEqual(height, eastWidth);
+				ClassicAssert.AreEqual(width, eastHeight);
 			}
-			Assert.IsFalse(KingdomArchitectureRules.TryCanonicalDimensions(
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryCanonicalDimensions(
 				(ArchitectureLotSize)99, out _, out _));
 		}
 
 		[Test]
 		public void ArchitectureCaps_AreDerivedFromTheExactXlEnvelope()
 		{
-			Assert.AreEqual(KingdomPlotRules.HugeWidth * KingdomPlotRules.HugeHeight,
+			ClassicAssert.AreEqual(KingdomPlotRules.HugeWidth * KingdomPlotRules.HugeHeight,
 				KingdomArchitectureRules.MaxMapArea);
-			Assert.AreEqual(KingdomArchitectureRules.MaxMapArea * 2,
+			ClassicAssert.AreEqual(KingdomArchitectureRules.MaxMapArea * 2,
 				KingdomArchitectureRules.MaxPlacements,
 				"receipt admits ground plus one feature per cell on average");
-			Assert.AreEqual(1024, KingdomArchitectureRules.MaxPoseRecords);
-			Assert.AreEqual(12 * 1024, KingdomArchitectureRules.MaxSnapshotPayloadBytes);
+			ClassicAssert.AreEqual(1024, KingdomArchitectureRules.MaxPoseRecords);
+			ClassicAssert.AreEqual(12 * 1024, KingdomArchitectureRules.MaxSnapshotPayloadBytes);
 			int exactTextEnvelope = "a4||".Length + 64
 				+ 4 * ((KingdomArchitectureRules.MaxSnapshotPayloadBytes + 3) / 3);
-			Assert.AreEqual(exactTextEnvelope, KingdomArchitectureRules.MaxSnapshotChars);
+			ClassicAssert.AreEqual(exactTextEnvelope, KingdomArchitectureRules.MaxSnapshotChars);
 		}
 
 		[Test]
@@ -66,26 +67,26 @@ namespace ThousandAndFirst.Tests
 		{
 			foreach (ArchitectureFacing facing in Enum.GetValues(typeof(ArchitectureFacing)))
 			{
-				Assert.IsTrue(KingdomArchitectureRules.TryWorldDimensions(6, 4, facing,
+				ClassicAssert.IsTrue(KingdomArchitectureRules.TryWorldDimensions(6, 4, facing,
 					out int worldWidth, out int worldHeight));
-				Assert.AreEqual(facing == ArchitectureFacing.East || facing == ArchitectureFacing.West
+				ClassicAssert.AreEqual(facing == ArchitectureFacing.East || facing == ArchitectureFacing.West
 					? 4 : 6, worldWidth);
-				Assert.AreEqual(facing == ArchitectureFacing.East || facing == ArchitectureFacing.West
+				ClassicAssert.AreEqual(facing == ArchitectureFacing.East || facing == ArchitectureFacing.West
 					? 6 : 4, worldHeight);
 				for (int v = 0; v < 4; v++)
 					for (int u = 0; u < 6; u++)
 					{
-						Assert.IsTrue(KingdomArchitectureRules.TryToWorld(-20, 37, 6, 4,
+						ClassicAssert.IsTrue(KingdomArchitectureRules.TryToWorld(-20, 37, 6, 4,
 							facing, u, v, out int x, out int y));
-						Assert.IsTrue(KingdomArchitectureRules.TryToCanonical(-20, 37, 6, 4,
+						ClassicAssert.IsTrue(KingdomArchitectureRules.TryToCanonical(-20, 37, 6, 4,
 							facing, x, y, out int roundU, out int roundV));
-						Assert.AreEqual(u, roundU);
-						Assert.AreEqual(v, roundV);
+						ClassicAssert.AreEqual(u, roundU);
+						ClassicAssert.AreEqual(v, roundV);
 					}
 			}
-			Assert.IsFalse(KingdomArchitectureRules.TryToWorld(int.MaxValue, 0, 6, 4,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryToWorld(int.MaxValue, 0, 6, 4,
 				ArchitectureFacing.North, 5, 0, out _, out _));
-			Assert.IsFalse(KingdomArchitectureRules.TryToCanonical(0, 0, 6, 4,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryToCanonical(0, 0, 6, 4,
 				ArchitectureFacing.North, 6, 0, out _, out _));
 		}
 
@@ -103,16 +104,16 @@ namespace ThousandAndFirst.Tests
 			string[] expected = new string[] { "bench-e", "bench-s", "bench-w", "bench-n" };
 			foreach (ArchitectureFacing facing in Enum.GetValues(typeof(ArchitectureFacing)))
 			{
-				Assert.IsTrue(KingdomArchitectureRules.TryResolvePose(poses, "bench", true,
+				ClassicAssert.IsTrue(KingdomArchitectureRules.TryResolvePose(poses, "bench", true,
 					ArchitectureFacing.East, facing, out string concrete, out string failure), failure);
-				Assert.AreEqual(expected[(int)facing], concrete);
+				ClassicAssert.AreEqual(expected[(int)facing], concrete);
 			}
-			Assert.IsTrue(KingdomArchitectureRules.TryResolvePose(new List<ArchitecturePoseDraft>
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryResolvePose(new List<ArchitecturePoseDraft>
 			{
 				new ArchitecturePoseDraft { Blueprint = "wall", Mode = ArchitecturePoseMode.Connected }
 			}, "wall", false, ArchitectureFacing.North, ArchitectureFacing.West,
 				out string connected, out string connectedFailure), connectedFailure);
-			Assert.AreEqual("wall", connected);
+			ClassicAssert.AreEqual("wall", connected);
 		}
 
 		[Test]
@@ -120,21 +121,21 @@ namespace ThousandAndFirst.Tests
 		{
 			ArchitecturePoseDraft invariant = new ArchitecturePoseDraft
 				{ Blueprint = "bed", Mode = ArchitecturePoseMode.Invariant };
-			Assert.IsTrue(KingdomArchitectureRules.TryResolvePose(
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryResolvePose(
 				new List<ArchitecturePoseDraft> { invariant }, "missing", false,
 				ArchitectureFacing.North, ArchitectureFacing.North,
 				out string undeclared, out string failure), failure);
-			Assert.AreEqual("missing", undeclared, "undeclared vanilla scenery is invariant");
-			Assert.IsFalse(KingdomArchitectureRules.TryResolvePose(
+			ClassicAssert.AreEqual("missing", undeclared, "undeclared vanilla scenery is invariant");
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryResolvePose(
 				new List<ArchitecturePoseDraft> { invariant }, "missing", true,
 				ArchitectureFacing.North, ArchitectureFacing.North, out _, out failure));
 			StringAssert.Contains("requires an exact cardinal", failure);
-			Assert.IsFalse(KingdomArchitectureRules.TryResolvePose(
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryResolvePose(
 				new List<ArchitecturePoseDraft> { invariant, invariant }, "bed", false,
 				ArchitectureFacing.North, ArchitectureFacing.North, out _, out failure));
 			StringAssert.Contains("duplicate", failure);
 			invariant.North = "bed-n";
-			Assert.IsFalse(KingdomArchitectureRules.TryResolvePose(
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryResolvePose(
 				new List<ArchitecturePoseDraft> { invariant }, "bed", false,
 				ArchitectureFacing.North, ArchitectureFacing.North, out _, out failure));
 			StringAssert.Contains("incoherent directional siblings", failure);
@@ -143,13 +144,13 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CardinalPoseIdentityRequiresExplicitReviewForEveryTafSemanticFixture()
 		{
-			Assert.IsFalse(KingdomArchitectureRules.CardinalPoseIdentityAllowed(
+			ClassicAssert.IsFalse(KingdomArchitectureRules.CardinalPoseIdentityAllowed(
 				"r_KingdomUnlistedVisualFixture"));
-			Assert.IsFalse(KingdomArchitectureRules.CardinalPoseIdentityAllowed("r_KingdomBench"));
-			Assert.IsFalse(KingdomArchitectureRules.CardinalPoseIdentityAllowed("StairsDown"));
-			Assert.IsFalse(KingdomArchitectureRules.CardinalPoseIdentityAllowed("StairsUp"));
-			Assert.IsTrue(KingdomArchitectureRules.CardinalPoseIdentityAllowed("Bed"));
-			Assert.IsTrue(KingdomArchitectureRules.CardinalPoseIdentityAllowed("OtherMod_Workbench"));
+			ClassicAssert.IsFalse(KingdomArchitectureRules.CardinalPoseIdentityAllowed("r_KingdomBench"));
+			ClassicAssert.IsFalse(KingdomArchitectureRules.CardinalPoseIdentityAllowed("StairsDown"));
+			ClassicAssert.IsFalse(KingdomArchitectureRules.CardinalPoseIdentityAllowed("StairsUp"));
+			ClassicAssert.IsTrue(KingdomArchitectureRules.CardinalPoseIdentityAllowed("Bed"));
+			ClassicAssert.IsTrue(KingdomArchitectureRules.CardinalPoseIdentityAllowed("OtherMod_Workbench"));
 		}
 
 		[Test]
@@ -166,16 +167,16 @@ namespace ThousandAndFirst.Tests
 			glyph.HasObjectOrientation = true;
 			glyph.ObjectOrientation = ArchitectureFacing.East;
 			request.Facing = ArchitectureFacing.South;
-			Assert.IsTrue(KingdomArchitectureRules.TryCompile(request,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryCompile(request,
 				out ArchitectureLayoutSnapshot snapshot, out string failure), failure);
-			Assert.AreEqual("Bed W",
+			ClassicAssert.AreEqual("Bed W",
 				FindPlacement(snapshot, ArchitectureLayer.Object, 3, 2).Blueprint);
-			Assert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(snapshot,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(snapshot,
 				out string encoded, out failure), failure);
 			StringAssert.StartsWith("a4|", encoded);
-			Assert.IsTrue(KingdomArchitectureRules.TryDecodeSnapshot(encoded,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryDecodeSnapshot(encoded,
 				out ArchitectureLayoutSnapshot roundTrip, out failure), failure);
-			Assert.AreEqual("Bed W",
+			ClassicAssert.AreEqual("Bed W",
 				FindPlacement(roundTrip, ArchitectureLayer.Object, 3, 2).Blueprint,
 				"a4 freezes the audited concrete sibling without a schema change");
 
@@ -197,7 +198,7 @@ namespace ThousandAndFirst.Tests
 			AssertCompileFails(request, "refuses unaudited raw fixture pose declarations");
 
 			request = Request();
-			Assert.IsTrue(KingdomArchitectureRules.TryCreatePoseRegistry(
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryCreatePoseRegistry(
 				new List<ArchitecturePoseDraft>(), new string[] { "Bed" },
 				out ArchitecturePoseRegistry poisoned, out string failure), failure);
 			request.PoseRegistry = poisoned;
@@ -214,11 +215,11 @@ namespace ThousandAndFirst.Tests
 			};
 			ArchitecturePoseRegistry registry = Registry(authored);
 			authored.East = "mutated after freeze";
-			Assert.IsTrue(KingdomArchitectureRules.TryResolvePose(registry, "Bed", true,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryResolvePose(registry, "Bed", true,
 				ArchitectureFacing.East, ArchitectureFacing.North,
 				out string concrete, out string failure), failure);
-			Assert.AreEqual("Bed E", concrete);
-			Assert.IsFalse(KingdomArchitectureRules.TryCreatePoseRegistry(
+			ClassicAssert.AreEqual("Bed E", concrete);
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryCreatePoseRegistry(
 				new List<ArchitecturePoseDraft> { authored }, new string[] { "Bed" },
 				out _, out failure));
 			StringAssert.Contains("overlapping", failure);
@@ -265,13 +266,13 @@ namespace ThousandAndFirst.Tests
 			bed.ObjectOrientation = ArchitectureFacing.East;
 			request.Facing = ArchitectureFacing.East;
 
-			Assert.IsTrue(KingdomArchitectureRules.TryCompile(request,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryCompile(request,
 				out ArchitectureLayoutSnapshot snapshot, out string failure), failure);
-			Assert.AreEqual("Dirt Axis EW",
+			ClassicAssert.AreEqual("Dirt Axis EW",
 				FindPlacement(snapshot, ArchitectureLayer.Ground, 0, 0).Blueprint);
-			Assert.AreEqual("Mud Wall N",
+			ClassicAssert.AreEqual("Mud Wall N",
 				FindPlacement(snapshot, ArchitectureLayer.Structure, 0, 0).Blueprint);
-			Assert.AreEqual("Bed S",
+			ClassicAssert.AreEqual("Bed S",
 				FindPlacement(snapshot, ArchitectureLayer.Object, 3, 2).Blueprint);
 
 			request = Request();
@@ -283,15 +284,15 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TypedSet_UsesDurableFoldedTypeAndExactSize()
 		{
-			Assert.IsTrue(KingdomArchitectureRules.TryClassifySetChange(" Housing ",
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryClassifySetChange(" Housing ",
 				ArchitectureLotSize.Small, "HOUSING", ArchitectureLotSize.Small,
 				out ArchitectureSetChange same));
-			Assert.AreEqual(ArchitectureSetChange.SameSet, same);
-			Assert.IsTrue(KingdomArchitectureRules.TryClassifySetChange("housing",
+			ClassicAssert.AreEqual(ArchitectureSetChange.SameSet, same);
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryClassifySetChange("housing",
 				ArchitectureLotSize.Small, "housing", ArchitectureLotSize.Medium,
 				out ArchitectureSetChange restake));
-			Assert.AreEqual(ArchitectureSetChange.Restake, restake);
-			Assert.IsFalse(KingdomArchitectureRules.TryClassifySetChange("", ArchitectureLotSize.Small,
+			ClassicAssert.AreEqual(ArchitectureSetChange.Restake, restake);
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryClassifySetChange("", ArchitectureLotSize.Small,
 				"housing", ArchitectureLotSize.Small, out _));
 		}
 
@@ -309,13 +310,13 @@ namespace ThousandAndFirst.Tests
 			};
 			ArchitectureSelectionContext context = new ArchitectureSelectionContext
 				{ Style = "Barathrumite", Terrain = "SALT", Stage = 2, Tech = 1 };
-			Assert.IsTrue(KingdomArchitectureRules.TrySelectVariant(variants, context,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TrySelectVariant(variants, context,
 				out ArchitectureVariantDraft selected, out string failure), failure);
-			Assert.AreEqual("a-specific", selected.Key);
+			ClassicAssert.AreEqual("a-specific", selected.Key);
 			variants.Reverse();
-			Assert.IsTrue(KingdomArchitectureRules.TrySelectVariant(variants, context,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TrySelectVariant(variants, context,
 				out selected, out failure), failure);
-			Assert.AreEqual("a-specific", selected.Key);
+			ClassicAssert.AreEqual("a-specific", selected.Key);
 		}
 
 		[Test]
@@ -333,9 +334,9 @@ namespace ThousandAndFirst.Tests
 				Stage = 2,
 				Tech = 1
 			};
-			Assert.IsTrue(KingdomArchitectureRules.TrySelectVariant(variants, context,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TrySelectVariant(variants, context,
 				out ArchitectureVariantDraft selected, out string failure), failure);
-			Assert.AreEqual("stair", selected.Key);
+			ClassicAssert.AreEqual("stair", selected.Key);
 		}
 
 		[Test]
@@ -353,19 +354,19 @@ namespace ThousandAndFirst.Tests
 			{
 				Stratum = KingdomZoningRules.StratumOfGround(false), Stage = 2, Tech = 1
 			};
-			Assert.IsTrue(KingdomArchitectureRules.TrySelectVariant(variants, surface,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TrySelectVariant(variants, surface,
 				out ArchitectureVariantDraft selected, out string failure), failure);
-			Assert.AreEqual("fallback", selected.Key);
-			Assert.AreEqual("surface-map", selected.MapKey);
+			ClassicAssert.AreEqual("fallback", selected.Key);
+			ClassicAssert.AreEqual("surface-map", selected.MapKey);
 
 			ArchitectureSelectionContext underground = new ArchitectureSelectionContext
 			{
 				Stratum = KingdomZoningRules.StratumOfGround(true), Stage = 2, Tech = 1
 			};
-			Assert.IsTrue(KingdomArchitectureRules.TrySelectVariant(variants, underground,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TrySelectVariant(variants, underground,
 				out selected, out failure), failure);
-			Assert.AreEqual("deep", selected.Key);
-			Assert.AreEqual("deepend-delve-deep-m0", selected.MapKey);
+			ClassicAssert.AreEqual("deep", selected.Key);
+			ClassicAssert.AreEqual("deepend-delve-deep-m0", selected.MapKey);
 		}
 
 		[Test]
@@ -378,13 +379,13 @@ namespace ThousandAndFirst.Tests
 			};
 			ArchitectureSelectionContext changed = new ArchitectureSelectionContext
 				{ Creed = "Mechanimists", Stage = 3, Tech = 2 };
-			Assert.IsTrue(KingdomArchitectureRules.TrySelectVariant(variants, changed,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TrySelectVariant(variants, changed,
 				out ArchitectureVariantDraft fresh, out string failure), failure);
-			Assert.AreEqual("new-creed", fresh.Key, "new commissions use current facts");
-			Assert.IsTrue(KingdomArchitectureRules.TrySelectFrozenSuccessorVariant(variants,
+			ClassicAssert.AreEqual("new-creed", fresh.Key, "new commissions use current facts");
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TrySelectFrozenSuccessorVariant(variants,
 				"fallback", out ArchitectureVariantDraft successor, out failure), failure);
-			Assert.AreEqual("fallback", successor.Key, "paid fabric keeps receipt identity");
-			Assert.IsFalse(KingdomArchitectureRules.TrySelectFrozenSuccessorVariant(variants,
+			ClassicAssert.AreEqual("fallback", successor.Key, "paid fabric keeps receipt identity");
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TrySelectFrozenSuccessorVariant(variants,
 				"missing", out _, out failure));
 			StringAssert.Contains("exact frozen variant", failure);
 		}
@@ -401,16 +402,16 @@ namespace ThousandAndFirst.Tests
 				}),
 				Variant("fallback", 0, null)
 			};
-			Assert.IsTrue(KingdomArchitectureRules.TrySelectVariant(variants,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TrySelectVariant(variants,
 				new ArchitectureSelectionContext { Style = "eater", Stage = 3, Tech = 2 },
 				out ArchitectureVariantDraft selected, out string failure), failure);
-			Assert.AreEqual("fallback", selected.Key);
-			Assert.IsTrue(KingdomArchitectureRules.TrySelectVariant(variants,
+			ClassicAssert.AreEqual("fallback", selected.Key);
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TrySelectVariant(variants,
 				new ArchitectureSelectionContext { Style = "water", Stage = 3, Tech = 2 },
 				out selected, out failure), failure);
-			Assert.AreEqual("conditional", selected.Key);
+			ClassicAssert.AreEqual("conditional", selected.Key);
 			variants.RemoveAt(1);
-			Assert.IsFalse(KingdomArchitectureRules.TryValidateVariants(variants, out failure));
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryValidateVariants(variants, out failure));
 			StringAssert.Contains("fallback", failure);
 		}
 
@@ -437,21 +438,21 @@ namespace ThousandAndFirst.Tests
 				Stage = 2,
 				Tech = 1
 			};
-			Assert.IsTrue(KingdomArchitectureRules.TrySelectVariant(variants, context,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TrySelectVariant(variants, context,
 				out ArchitectureVariantDraft selected, out string failure), failure);
-			Assert.AreEqual("identity", selected.Key,
+			ClassicAssert.AreEqual("identity", selected.Key,
 				"identity dimensions add specificity before ordinal key breaks a true tie");
 
 			context.Bodies = new List<string> { "robot", "wet-bodied" };
-			Assert.IsTrue(KingdomArchitectureRules.TrySelectVariant(variants, context,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TrySelectVariant(variants, context,
 				out selected, out failure), failure);
-			Assert.AreEqual("fallback", selected.Key,
+			ClassicAssert.AreEqual("fallback", selected.Key,
 				"any explicitly excluded live fact refuses the bounded set-valued selector");
 
 			context.Bodies = new List<string>();
-			Assert.IsTrue(KingdomArchitectureRules.TrySelectVariant(variants, context,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TrySelectVariant(variants, context,
 				out selected, out failure), failure);
-			Assert.AreEqual("fallback", selected.Key,
+			ClassicAssert.AreEqual("fallback", selected.Key,
 				"named body positives cannot match an empty live roster");
 		}
 
@@ -461,16 +462,16 @@ namespace ThousandAndFirst.Tests
 			ArchitectureCompileRequest request = Request();
 			ArchitecturePlanDraft plan = new ArchitecturePlanDraft { Key = "housing-plan" };
 			plan.Bindings.Add(request.Binding);
-			Assert.IsTrue(KingdomArchitectureRules.TryValidatePlan(plan, out string failure), failure);
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryValidatePlan(plan, out string failure), failure);
 
 			ArchitectureBindingDraft duplicate = Binding("second", "HOUSING", ArchitectureLotSize.Small);
 			duplicate.Tiers.Add(Tier("other", 0));
 			plan.Bindings.Add(duplicate);
-			Assert.IsFalse(KingdomArchitectureRules.TryValidatePlan(plan, out failure));
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryValidatePlan(plan, out failure));
 			plan.Bindings.RemoveAt(1);
 
 			request.Binding.Tiers.Add(Tier("other", request.Tier.Level));
-			Assert.IsFalse(KingdomArchitectureRules.TryValidatePlan(plan, out failure));
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryValidatePlan(plan, out failure));
 			StringAssert.Contains("level", failure);
 		}
 
@@ -481,30 +482,30 @@ namespace ThousandAndFirst.Tests
 			ArchitecturePlanDraft plan = new ArchitecturePlanDraft { Key = "housing-plan" };
 			plan.Bindings.Add(request.Binding);
 			request.Binding.Frontage = ArchitectureFrontage.Road;
-			Assert.IsTrue(KingdomArchitectureRules.TryValidatePlan(plan, out string failure), failure);
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryValidatePlan(plan, out string failure), failure);
 			request.Binding.Frontage = (ArchitectureFrontage)99;
-			Assert.IsFalse(KingdomArchitectureRules.TryValidatePlan(plan, out failure));
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryValidatePlan(plan, out failure));
 		}
 
 		[Test]
 		public void Compiler_MaterialisesAuthoredLayersAndSemanticAnchors()
 		{
 			ArchitectureCompileRequest request = Request();
-			Assert.IsTrue(KingdomArchitectureRules.TryCompile(request,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryCompile(request,
 				out ArchitectureLayoutSnapshot snapshot, out string failure), failure);
-			Assert.AreEqual(6, snapshot.Width);
-			Assert.AreEqual(4, snapshot.Height);
-			Assert.AreEqual(24, snapshot.Cells.Count);
-			Assert.AreEqual(2, snapshot.MainX);
-			Assert.AreEqual(1, snapshot.MainY);
-			Assert.AreEqual(1, CountAnchorRole(snapshot, "main"));
-			Assert.AreEqual(1, CountAnchorRole(snapshot, "entrance:public"));
-			Assert.AreEqual(1, CountAnchorRole(snapshot, "function:dwelling"));
-			Assert.AreEqual(1, CountAnchorRole(snapshot, "fixture:storage"));
-			Assert.AreEqual(1, CountAnchorRole(snapshot, "sleep:bed"));
-			Assert.IsNotNull(FindPlacement(snapshot, ArchitectureLayer.Object, 1, 2));
-			Assert.IsNotNull(FindPlacement(snapshot, ArchitectureLayer.Object, 3, 2));
-			Assert.IsNull(FindPlacement(snapshot, ArchitectureLayer.Object, 2, 1),
+			ClassicAssert.AreEqual(6, snapshot.Width);
+			ClassicAssert.AreEqual(4, snapshot.Height);
+			ClassicAssert.AreEqual(24, snapshot.Cells.Count);
+			ClassicAssert.AreEqual(2, snapshot.MainX);
+			ClassicAssert.AreEqual(1, snapshot.MainY);
+			ClassicAssert.AreEqual(1, CountAnchorRole(snapshot, "main"));
+			ClassicAssert.AreEqual(1, CountAnchorRole(snapshot, "entrance:public"));
+			ClassicAssert.AreEqual(1, CountAnchorRole(snapshot, "function:dwelling"));
+			ClassicAssert.AreEqual(1, CountAnchorRole(snapshot, "fixture:storage"));
+			ClassicAssert.AreEqual(1, CountAnchorRole(snapshot, "sleep:bed"));
+			ClassicAssert.IsNotNull(FindPlacement(snapshot, ArchitectureLayer.Object, 1, 2));
+			ClassicAssert.IsNotNull(FindPlacement(snapshot, ArchitectureLayer.Object, 3, 2));
+			ClassicAssert.IsNull(FindPlacement(snapshot, ArchitectureLayer.Object, 2, 1),
 				"$building is main behavior metadata, not disposable scenery");
 			StringAssert.StartsWith("fixture:storage@", FindPlacement(snapshot,
 				ArchitectureLayer.Object, 1, 2).StatefulAnchor);
@@ -515,12 +516,12 @@ namespace ThousandAndFirst.Tests
 		{
 			ArchitectureCompileRequest request = Request();
 			request.Map.Rows[2] = "#ssb_#";
-			Assert.IsTrue(KingdomArchitectureRules.TryCompile(request,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryCompile(request,
 				out ArchitectureLayoutSnapshot snapshot, out string failure), failure);
-			Assert.AreEqual(2, CountAnchorRole(snapshot, "fixture:storage"));
+			ClassicAssert.AreEqual(2, CountAnchorRole(snapshot, "fixture:storage"));
 			ArchitecturePlacement first = FindPlacement(snapshot, ArchitectureLayer.Object, 1, 2);
 			ArchitecturePlacement second = FindPlacement(snapshot, ArchitectureLayer.Object, 2, 2);
-			Assert.AreNotEqual(first.StatefulAnchor, second.StatefulAnchor);
+			ClassicAssert.AreNotEqual(first.StatefulAnchor, second.StatefulAnchor);
 			StringAssert.EndsWith("@1,2", first.StatefulAnchor);
 			StringAssert.EndsWith("@2,2", second.StatefulAnchor);
 		}
@@ -532,13 +533,13 @@ namespace ThousandAndFirst.Tests
 			ArchitectureGlyphDraft storage = request.Map.Glyphs.Find(g => g.Character == 's');
 			storage.Anchors.Add("benefit:larder-main");
 			storage.Anchors.Add("light:store");
-			Assert.IsTrue(KingdomArchitectureRules.TryCompile(request,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryCompile(request,
 				out ArchitectureLayoutSnapshot snapshot, out string failure), failure);
 			ArchitecturePlacement placement = FindPlacement(snapshot,
 				ArchitectureLayer.Object, 1, 2);
 			StringAssert.StartsWith("benefit:larder-main@", placement.StatefulAnchor);
-			Assert.AreEqual(1, CountAnchorRole(snapshot, "fixture:storage"));
-			Assert.AreEqual(1, CountAnchorRole(snapshot, "light:store"));
+			ClassicAssert.AreEqual(1, CountAnchorRole(snapshot, "fixture:storage"));
+			ClassicAssert.AreEqual(1, CountAnchorRole(snapshot, "light:store"));
 
 			request = Request();
 			storage = request.Map.Glyphs.Find(g => g.Character == 's');
@@ -557,10 +558,10 @@ namespace ThousandAndFirst.Tests
 		{
 			ArchitectureCompileRequest request = Request();
 			request.Map.Rows[3] = "##+###";
-			Assert.IsTrue(KingdomArchitectureRules.TryCompile(request,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryCompile(request,
 				out ArchitectureLayoutSnapshot snapshot, out string failure), failure);
-			Assert.AreEqual(2, CountAnchorRole(snapshot, "entrance:public"));
-			Assert.AreNotEqual(FindAnchor(snapshot, "entrance:public", 0).Key,
+			ClassicAssert.AreEqual(2, CountAnchorRole(snapshot, "entrance:public"));
+			ClassicAssert.AreNotEqual(FindAnchor(snapshot, "entrance:public", 0).Key,
 				FindAnchor(snapshot, "entrance:public", 1).Key);
 		}
 
@@ -582,22 +583,22 @@ namespace ThousandAndFirst.Tests
 					request.Map.Glyphs[i].HasCover = true;
 					request.Map.Glyphs[i].Cover = ArchitectureCover.Open;
 				}
-			Assert.IsTrue(KingdomArchitectureRules.TryCompile(request,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryCompile(request,
 				out ArchitectureLayoutSnapshot snapshot, out string failure), failure);
-			Assert.AreEqual(1, snapshot.FootprintX);
-			Assert.AreEqual(4, snapshot.FootprintWidth);
-			Assert.AreEqual(ArchitectureClaim.Yard, FindCell(snapshot, 0, 0).Claim);
-			Assert.AreEqual(ArchitectureCover.Walled, FindCell(snapshot, 0, 0).Cover,
+			ClassicAssert.AreEqual(1, snapshot.FootprintX);
+			ClassicAssert.AreEqual(4, snapshot.FootprintWidth);
+			ClassicAssert.AreEqual(ArchitectureClaim.Yard, FindCell(snapshot, 0, 0).Claim);
+			ClassicAssert.AreEqual(ArchitectureCover.Walled, FindCell(snapshot, 0, 0).Cover,
 				"covered yard remains legal outside building footprint");
-			Assert.IsFalse(KingdomArchitectureRules.ContainsFootprintCell(snapshot, 0, 0));
-			Assert.IsTrue(KingdomArchitectureRules.ContainsFootprintCell(snapshot,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.ContainsFootprintCell(snapshot, 0, 0));
+			ClassicAssert.IsTrue(KingdomArchitectureRules.ContainsFootprintCell(snapshot,
 				snapshot.MainX, snapshot.MainY));
-			Assert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(snapshot,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(snapshot,
 				out string encoded, out failure), failure);
-			Assert.IsTrue(KingdomArchitectureRules.TryDecodeSnapshot(encoded,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryDecodeSnapshot(encoded,
 				out ArchitectureLayoutSnapshot decoded, out failure), failure);
-			Assert.AreEqual(ArchitectureClaim.Yard, FindCell(decoded, 0, 0).Claim);
-			Assert.AreEqual(ArchitectureClaim.Building, FindCell(decoded, 2, 1).Claim);
+			ClassicAssert.AreEqual(ArchitectureClaim.Yard, FindCell(decoded, 0, 0).Claim);
+			ClassicAssert.AreEqual(ArchitectureClaim.Building, FindCell(decoded, 2, 1).Claim);
 		}
 
 		[Test]
@@ -632,31 +633,31 @@ namespace ThousandAndFirst.Tests
 		{
 			ArchitectureLayoutSnapshot snapshot = Compile();
 			snapshot.BaseRoof = KingdomPlotRules.RoofState.Soft;
-			Assert.IsFalse(KingdomArchitectureRules.TryEncodeSnapshot(snapshot,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryEncodeSnapshot(snapshot,
 				out _, out string failure));
 			StringAssert.Contains("soft catalogue roof", failure);
 
 			for (int i = 0; i < snapshot.Cells.Count; i++)
 				snapshot.Cells[i].Cover = ArchitectureCover.Soft;
-			Assert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(snapshot,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(snapshot,
 				out _, out failure), failure);
 
 			snapshot.BaseRoof = KingdomPlotRules.RoofState.Carved;
-			Assert.IsFalse(KingdomArchitectureRules.TryEncodeSnapshot(snapshot,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryEncodeSnapshot(snapshot,
 				out _, out failure));
 			StringAssert.Contains("no local natural", failure);
 			for (int i = 0; i < snapshot.Cells.Count; i++)
 				snapshot.Cells[i].Cover = ArchitectureCover.Natural;
-			Assert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(snapshot,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(snapshot,
 				out _, out failure), failure);
 
 			snapshot.BaseRoof = KingdomPlotRules.RoofState.Open;
-			Assert.IsFalse(KingdomArchitectureRules.TryEncodeSnapshot(snapshot,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryEncodeSnapshot(snapshot,
 				out _, out failure));
 			StringAssert.Contains("open catalogue roof", failure);
 			for (int i = 0; i < snapshot.Cells.Count; i++)
 				snapshot.Cells[i].Cover = ArchitectureCover.Walled;
-			Assert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(snapshot,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(snapshot,
 				out _, out failure), failure
 					?? "an aggregate open plot may contain a local enclosed subwork");
 		}
@@ -696,11 +697,11 @@ namespace ThousandAndFirst.Tests
 
 			request = Request();
 			request.Map.Glyphs.Find(g => g.Character == 's').StatefulObject = false;
-			Assert.IsTrue(KingdomArchitectureRules.TryCompile(request,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryCompile(request,
 				out ArchitectureLayoutSnapshot replaceable, out string functionalFailure),
 				functionalFailure);
-			Assert.AreEqual(1, CountAnchorRole(replaceable, "fixture:storage"));
-			Assert.IsNull(FindPlacement(replaceable, ArchitectureLayer.Object, 1, 2)
+			ClassicAssert.AreEqual(1, CountAnchorRole(replaceable, "fixture:storage"));
+			ClassicAssert.IsNull(FindPlacement(replaceable, ArchitectureLayer.Object, 1, 2)
 				.StatefulAnchor, "semantic function does not silently create upgrade custody");
 
 			request = Request();
@@ -709,7 +710,7 @@ namespace ThousandAndFirst.Tests
 
 			ArchitectureLayoutSnapshot snapshot = Compile();
 			FindCell(snapshot, 0, 0).Claim = ArchitectureClaim.Unclaimed;
-			Assert.IsFalse(KingdomArchitectureRules.TryValidateTopology(snapshot, null,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryValidateTopology(snapshot, null,
 				out string failure));
 			StringAssert.Contains("placement", failure);
 		}
@@ -721,14 +722,14 @@ namespace ThousandAndFirst.Tests
 			ArchitectureAnchor entrance = FindAnchor(snapshot, "entrance:public", 0);
 			entrance.X = 2;
 			entrance.Y = 2;
-			Assert.IsFalse(KingdomArchitectureRules.TryValidateTopology(snapshot, null,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryValidateTopology(snapshot, null,
 				out string failure));
 			StringAssert.Contains("boundary", failure);
 
 			snapshot = Compile();
 			FindCell(snapshot, 1, 1).Passability = ArchitecturePassability.Blocked;
 			FindCell(snapshot, 2, 2).Passability = ArchitecturePassability.Blocked;
-			Assert.IsFalse(KingdomArchitectureRules.TryValidateTopology(snapshot, null,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryValidateTopology(snapshot, null,
 				out failure));
 			StringAssert.Contains("unreachable", failure);
 		}
@@ -739,45 +740,45 @@ namespace ThousandAndFirst.Tests
 			ArchitectureLayoutSnapshot snapshot = Compile();
 			snapshot.Placements[0].Knowledge = "masonry";
 			snapshot.Placements[0].Power = "grid";
-			Assert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(snapshot,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(snapshot,
 				out string first, out string failure), failure);
-			Assert.IsTrue(KingdomArchitectureRules.TrySnapshotHash(snapshot,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TrySnapshotHash(snapshot,
 				out string hash, out failure), failure);
-			Assert.AreEqual(64, hash.Length);
-			Assert.IsTrue(first.EndsWith("|" + hash, StringComparison.Ordinal));
+			ClassicAssert.AreEqual(64, hash.Length);
+			ClassicAssert.IsTrue(first.EndsWith("|" + hash, StringComparison.Ordinal));
 			StringAssert.StartsWith("a4|", first);
 			snapshot.Cells.Reverse();
 			snapshot.Anchors.Reverse();
 			snapshot.Placements.Reverse();
-			Assert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(snapshot,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(snapshot,
 				out string shuffled, out failure), failure);
-			Assert.AreEqual(first, shuffled);
-			Assert.IsTrue(KingdomArchitectureRules.TryDecodeSnapshot(first,
+			ClassicAssert.AreEqual(first, shuffled);
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryDecodeSnapshot(first,
 				out ArchitectureLayoutSnapshot decoded, out failure), failure);
-			Assert.AreEqual(snapshot.PlanKey, decoded.PlanKey);
-			Assert.AreEqual(snapshot.Cells.Count, decoded.Cells.Count);
-			Assert.AreEqual(snapshot.Placements.Count, decoded.Placements.Count);
-			Assert.AreEqual(snapshot.Anchors.Count, decoded.Anchors.Count);
-			Assert.AreEqual("mud", decoded.Placements[0].Material);
-			Assert.AreEqual("hands", decoded.Placements[0].MinTech);
-			Assert.AreEqual("masonry", decoded.Placements[0].Knowledge);
-			Assert.AreEqual("grid", decoded.Placements[0].Power);
-			Assert.AreEqual(ArchitectureTransitionMode.None,
+			ClassicAssert.AreEqual(snapshot.PlanKey, decoded.PlanKey);
+			ClassicAssert.AreEqual(snapshot.Cells.Count, decoded.Cells.Count);
+			ClassicAssert.AreEqual(snapshot.Placements.Count, decoded.Placements.Count);
+			ClassicAssert.AreEqual(snapshot.Anchors.Count, decoded.Anchors.Count);
+			ClassicAssert.AreEqual("mud", decoded.Placements[0].Material);
+			ClassicAssert.AreEqual("hands", decoded.Placements[0].MinTech);
+			ClassicAssert.AreEqual("masonry", decoded.Placements[0].Knowledge);
+			ClassicAssert.AreEqual("grid", decoded.Placements[0].Power);
+			ClassicAssert.AreEqual(ArchitectureTransitionMode.None,
 				decoded.IncomingTransitionMode);
-			Assert.AreEqual(snapshot.FootprintX, decoded.FootprintX);
-			Assert.AreEqual(snapshot.FootprintY, decoded.FootprintY);
-			Assert.AreEqual(snapshot.FootprintWidth, decoded.FootprintWidth);
-			Assert.AreEqual(snapshot.FootprintHeight, decoded.FootprintHeight);
-			Assert.AreEqual(KingdomPlotRules.RoofState.Walled, decoded.BaseRoof);
-			Assert.IsFalse(decoded.Placements[0].Natural);
-			Assert.IsFalse(decoded.Placements[0].ExistingAuthority);
-			Assert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(decoded,
+			ClassicAssert.AreEqual(snapshot.FootprintX, decoded.FootprintX);
+			ClassicAssert.AreEqual(snapshot.FootprintY, decoded.FootprintY);
+			ClassicAssert.AreEqual(snapshot.FootprintWidth, decoded.FootprintWidth);
+			ClassicAssert.AreEqual(snapshot.FootprintHeight, decoded.FootprintHeight);
+			ClassicAssert.AreEqual(KingdomPlotRules.RoofState.Walled, decoded.BaseRoof);
+			ClassicAssert.IsFalse(decoded.Placements[0].Natural);
+			ClassicAssert.IsFalse(decoded.Placements[0].ExistingAuthority);
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(decoded,
 				out string second, out failure), failure);
-			Assert.AreEqual(first, second);
+			ClassicAssert.AreEqual(first, second);
 			decoded.BaseRoof = KingdomPlotRules.RoofState.Open;
-			Assert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(decoded,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(decoded,
 				out string changedRoof, out failure), failure);
-			Assert.AreNotEqual(first, changedRoof, "catalogue roof is frozen hash authority");
+			ClassicAssert.AreNotEqual(first, changedRoof, "catalogue roof is frozen hash authority");
 		}
 
 		[Test]
@@ -785,29 +786,29 @@ namespace ThousandAndFirst.Tests
 		{
 			int largestBoundedEncoding = "a4||".Length + 64
 				+ 4 * ((KingdomArchitectureRules.MaxSnapshotPayloadBytes + 2) / 3);
-			Assert.LessOrEqual(largestBoundedEncoding,
+			ClassicAssert.LessOrEqual(largestBoundedEncoding,
 				KingdomArchitectureRules.MaxSnapshotChars,
 				"the outer character cap must admit every payload the binary cap admits");
-			Assert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(Compile(),
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(Compile(),
 				out string encoded, out string failure), failure);
 			string tamperedHash = encoded.Substring(0, encoded.Length - 1)
 				+ (encoded[encoded.Length - 1] == '0' ? "1" : "0");
-			Assert.IsFalse(KingdomArchitectureRules.TryDecodeSnapshot(tamperedHash,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryDecodeSnapshot(tamperedHash,
 				out _, out failure));
 			StringAssert.Contains("hash", failure);
 			string future = "a5" + encoded.Substring(2);
-			Assert.IsFalse(KingdomArchitectureRules.TryDecodeSnapshot(future,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryDecodeSnapshot(future,
 				out _, out failure));
 			StringAssert.Contains("version", failure);
-			Assert.IsFalse(KingdomArchitectureRules.TryDecodeSnapshot(
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryDecodeSnapshot(
 				new string('x', KingdomArchitectureRules.MaxSnapshotChars + 1), out _, out failure));
 			string oversizedPayload = "a4|" + Convert.ToBase64String(
 				new byte[KingdomArchitectureRules.MaxSnapshotPayloadBytes + 1])
 				+ "|" + new string('0', 64);
-			Assert.LessOrEqual(oversizedPayload.Length,
+			ClassicAssert.LessOrEqual(oversizedPayload.Length,
 				KingdomArchitectureRules.MaxSnapshotChars,
 				"this case must reach the binary bound rather than stop at the outer string bound");
-			Assert.IsFalse(KingdomArchitectureRules.TryDecodeSnapshot(oversizedPayload,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryDecodeSnapshot(oversizedPayload,
 				out _, out failure));
 			StringAssert.Contains("byte bound", failure);
 		}
@@ -817,7 +818,7 @@ namespace ThousandAndFirst.Tests
 		{
 			ArchitectureLayoutSnapshot snapshot = Compile();
 			snapshot.Cells[0].Claim = ArchitectureClaim.LegacyClaimed;
-			Assert.IsFalse(KingdomArchitectureRules.TryEncodeSnapshot(snapshot,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryEncodeSnapshot(snapshot,
 				out _, out string failure));
 			StringAssert.Contains("legacy", failure);
 		}
@@ -836,17 +837,17 @@ namespace ThousandAndFirst.Tests
 			UseLegacyClaims(legacy);
 			MethodInfo legacyWriter = typeof(KingdomArchitectureRules).GetMethod(
 				"TryEncodeSnapshotVersion", BindingFlags.NonPublic | BindingFlags.Static);
-			Assert.IsNotNull(legacyWriter);
+			ClassicAssert.IsNotNull(legacyWriter);
 			object[] args = new object[] { legacy, 1, null, null };
-			Assert.IsTrue((bool)legacyWriter.Invoke(null, args), args[3] as string);
+			ClassicAssert.IsTrue((bool)legacyWriter.Invoke(null, args), args[3] as string);
 			string encoded = (string)args[2];
 			StringAssert.StartsWith("a1|", encoded);
-			Assert.IsTrue(KingdomArchitectureRules.TryDecodeSnapshot(encoded,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryDecodeSnapshot(encoded,
 				out ArchitectureLayoutSnapshot decoded, out string failure), failure);
-			Assert.IsNull(decoded.Placements[0].Material);
-			Assert.IsFalse(KingdomArchitectureRules.TryEncodeSnapshot(decoded,
+			ClassicAssert.IsNull(decoded.Placements[0].Material);
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryEncodeSnapshot(decoded,
 				out _, out failure));
-			Assert.IsNotEmpty(failure);
+			ClassicAssert.IsNotEmpty(failure);
 		}
 
 		[Test]
@@ -854,15 +855,15 @@ namespace ThousandAndFirst.Tests
 		{
 			ArchitectureLayoutSnapshot target = Compile();
 			target.IncomingTransitionMode = ArchitectureTransitionMode.Renovate;
-			Assert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(target,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(target,
 				out string renovate, out string failure), failure);
 			target.IncomingTransitionMode = ArchitectureTransitionMode.Additive;
-			Assert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(target,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(target,
 				out string additive, out failure), failure);
-			Assert.AreNotEqual(renovate, additive, "incoming edge is hash authority");
-			Assert.IsTrue(KingdomArchitectureRules.TryDecodeSnapshot(renovate,
+			ClassicAssert.AreNotEqual(renovate, additive, "incoming edge is hash authority");
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryDecodeSnapshot(renovate,
 				out ArchitectureLayoutSnapshot decoded, out failure), failure);
-			Assert.AreEqual(ArchitectureTransitionMode.Renovate,
+			ClassicAssert.AreEqual(ArchitectureTransitionMode.Renovate,
 				decoded.IncomingTransitionMode);
 
 			ArchitectureLayoutSnapshot old = Compile();
@@ -870,37 +871,37 @@ namespace ThousandAndFirst.Tests
 			MethodInfo writer = typeof(KingdomArchitectureRules).GetMethod(
 				"TryEncodeSnapshotVersion", BindingFlags.NonPublic | BindingFlags.Static);
 			object[] args = new object[] { old, 2, null, null };
-			Assert.IsTrue((bool)writer.Invoke(null, args), args[3] as string);
+			ClassicAssert.IsTrue((bool)writer.Invoke(null, args), args[3] as string);
 			string a2 = (string)args[2];
 			StringAssert.StartsWith("a2|", a2);
-			Assert.IsTrue(KingdomArchitectureRules.TryDecodeSnapshot(a2,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryDecodeSnapshot(a2,
 				out decoded, out failure), failure);
-			Assert.AreEqual(ArchitectureTransitionMode.None,
+			ClassicAssert.AreEqual(ArchitectureTransitionMode.None,
 				decoded.IncomingTransitionMode);
-			Assert.AreEqual(ArchitectureClaim.LegacyClaimed,
+			ClassicAssert.AreEqual(ArchitectureClaim.LegacyClaimed,
 				decoded.Cells.Find(cell => KingdomArchitectureRules.IsClaimed(cell.Claim)).Claim);
-			Assert.IsFalse(KingdomArchitectureRules.IsCurrentSnapshotEncoding(a2));
+			ClassicAssert.IsFalse(KingdomArchitectureRules.IsCurrentSnapshotEncoding(a2));
 
 			ArchitectureLayoutSnapshot transitional = Compile();
 			transitional.IncomingTransitionMode = ArchitectureTransitionMode.Renovate;
 			UseLegacyClaims(transitional);
 			args = new object[] { transitional, 3, null, null };
-			Assert.IsTrue((bool)writer.Invoke(null, args), args[3] as string);
+			ClassicAssert.IsTrue((bool)writer.Invoke(null, args), args[3] as string);
 			string a3 = (string)args[2];
 			StringAssert.StartsWith("a3|", a3);
-			Assert.IsTrue(KingdomArchitectureRules.TryDecodeSnapshot(a3,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryDecodeSnapshot(a3,
 				out decoded, out failure), failure);
-			Assert.AreEqual(ArchitectureTransitionMode.Renovate,
+			ClassicAssert.AreEqual(ArchitectureTransitionMode.Renovate,
 				decoded.IncomingTransitionMode);
-			Assert.AreEqual(0, decoded.FootprintX);
-			Assert.AreEqual(0, decoded.FootprintY);
-			Assert.AreEqual(decoded.Width, decoded.FootprintWidth);
-			Assert.AreEqual(decoded.Height, decoded.FootprintHeight);
-			Assert.AreEqual((KingdomPlotRules.RoofState)byte.MaxValue, decoded.BaseRoof);
-			Assert.IsTrue(KingdomArchitectureRules.IsManagedSnapshotEncoding(a3));
-			Assert.IsFalse(KingdomArchitectureRules.IsLatestSnapshotEncoding(a3));
-			Assert.IsTrue(KingdomArchitectureRules.IsLatestSnapshotEncoding(renovate));
-			Assert.IsTrue(KingdomArchitectureRules.IsManagedSnapshotEncoding(renovate));
+			ClassicAssert.AreEqual(0, decoded.FootprintX);
+			ClassicAssert.AreEqual(0, decoded.FootprintY);
+			ClassicAssert.AreEqual(decoded.Width, decoded.FootprintWidth);
+			ClassicAssert.AreEqual(decoded.Height, decoded.FootprintHeight);
+			ClassicAssert.AreEqual((KingdomPlotRules.RoofState)byte.MaxValue, decoded.BaseRoof);
+			ClassicAssert.IsTrue(KingdomArchitectureRules.IsManagedSnapshotEncoding(a3));
+			ClassicAssert.IsFalse(KingdomArchitectureRules.IsLatestSnapshotEncoding(a3));
+			ClassicAssert.IsTrue(KingdomArchitectureRules.IsLatestSnapshotEncoding(renovate));
+			ClassicAssert.IsTrue(KingdomArchitectureRules.IsManagedSnapshotEncoding(renovate));
 		}
 
 		[Test]
@@ -909,23 +910,23 @@ namespace ThousandAndFirst.Tests
 			ArchitectureCompileRequest firstRequest = Request();
 			ArchitectureCompileRequest secondRequest = Request();
 			secondRequest.BuildingBlueprint = "Successor Dwelling";
-			Assert.IsTrue(KingdomArchitectureRules.TryCompile(firstRequest,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryCompile(firstRequest,
 				out ArchitectureLayoutSnapshot first, out string failure), failure);
-			Assert.IsTrue(KingdomArchitectureRules.TryCompile(secondRequest,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryCompile(secondRequest,
 				out ArchitectureLayoutSnapshot second, out failure), failure);
-			Assert.IsNull(FindPlacement(first, ArchitectureLayer.Object, first.MainX, first.MainY));
-			Assert.IsNull(FindPlacement(second, ArchitectureLayer.Object, second.MainX, second.MainY));
-			Assert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(first,
+			ClassicAssert.IsNull(FindPlacement(first, ArchitectureLayer.Object, first.MainX, first.MainY));
+			ClassicAssert.IsNull(FindPlacement(second, ArchitectureLayer.Object, second.MainX, second.MainY));
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(first,
 				out string firstReceipt, out failure), failure);
-			Assert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(second,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(second,
 				out string secondReceipt, out failure), failure);
-			Assert.AreEqual(firstReceipt, secondReceipt);
+			ClassicAssert.AreEqual(firstReceipt, secondReceipt);
 			second.IncomingTransitionMode = ArchitectureTransitionMode.Renovate;
-			Assert.IsTrue(KingdomArchitectureRules.TryBuildDelta(first, second,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryBuildDelta(first, second,
 				ArchitectureTransitionMode.Renovate,
 				out ArchitectureLayoutDelta delta, out failure), failure);
-			Assert.AreEqual(0, delta.Added.Count);
-			Assert.AreEqual(0, delta.Removed.Count);
+			ClassicAssert.AreEqual(0, delta.Added.Count);
+			ClassicAssert.AreEqual(0, delta.Removed.Count);
 		}
 
 		[Test]
@@ -939,14 +940,14 @@ namespace ThousandAndFirst.Tests
 			ArchitecturePlacement wall = FindPlacement(after, ArchitectureLayer.Structure, 0, 0);
 			wall.Blueprint = "Brick Wall";
 			FindCell(after, 0, 0).Cover = ArchitectureCover.Soft;
-			Assert.IsTrue(KingdomArchitectureRules.TryBuildDelta(before, after,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryBuildDelta(before, after,
 				out ArchitectureLayoutDelta delta, out string failure), failure);
-			Assert.AreEqual(1, delta.Removed.Count);
-			Assert.AreEqual("Mud Wall", delta.Removed[0].Blueprint);
-			Assert.AreEqual(1, delta.Added.Count);
-			Assert.AreEqual("Brick Wall", delta.Added[0].Blueprint);
-			Assert.AreEqual(1, delta.Cells.Count);
-			Assert.Greater(delta.Retained.Count, 0);
+			ClassicAssert.AreEqual(1, delta.Removed.Count);
+			ClassicAssert.AreEqual("Mud Wall", delta.Removed[0].Blueprint);
+			ClassicAssert.AreEqual(1, delta.Added.Count);
+			ClassicAssert.AreEqual("Brick Wall", delta.Added[0].Blueprint);
+			ClassicAssert.AreEqual(1, delta.Cells.Count);
+			ClassicAssert.Greater(delta.Retained.Count, 0);
 		}
 
 		[Test]
@@ -956,27 +957,27 @@ namespace ThousandAndFirst.Tests
 			ArchitectureLayoutSnapshot changed = Clone(before);
 			FindPlacement(changed, ArchitectureLayer.Structure, 0, 0).Blueprint = "Brick Wall";
 			changed.IncomingTransitionMode = ArchitectureTransitionMode.Additive;
-			Assert.IsFalse(KingdomArchitectureRules.TryBuildDelta(before, changed,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryBuildDelta(before, changed,
 				out _, out string failure));
 			StringAssert.Contains("additive", failure);
 
 			changed.IncomingTransitionMode = ArchitectureTransitionMode.Renovate;
-			Assert.IsFalse(KingdomArchitectureRules.TryBuildDelta(before, changed,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryBuildDelta(before, changed,
 				ArchitectureTransitionMode.Additive, out _, out failure));
 			StringAssert.Contains("frozen successor", failure);
-			Assert.IsTrue(KingdomArchitectureRules.TryBuildDelta(before, changed,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryBuildDelta(before, changed,
 				out ArchitectureLayoutDelta renovated, out failure), failure);
-			Assert.AreEqual(1, renovated.Removed.Count);
-			Assert.AreEqual(1, renovated.Added.Count);
+			ClassicAssert.AreEqual(1, renovated.Removed.Count);
+			ClassicAssert.AreEqual(1, renovated.Added.Count);
 
 			changed.IncomingTransitionMode = ArchitectureTransitionMode.Replacement;
-			Assert.IsFalse(KingdomArchitectureRules.TryBuildDelta(before, changed,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryBuildDelta(before, changed,
 				out _, out failure));
 			StringAssert.Contains("strike", failure);
 			StringAssert.Contains("commission", failure);
 
 			changed.IncomingTransitionMode = ArchitectureTransitionMode.None;
-			Assert.IsFalse(KingdomArchitectureRules.TryBuildDelta(before, changed,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryBuildDelta(before, changed,
 				out _, out failure));
 			StringAssert.Contains("no authored", failure);
 		}
@@ -990,25 +991,25 @@ namespace ThousandAndFirst.Tests
 				8, 6, 3, 1);
 
 			medium.IncomingTransitionMode = ArchitectureTransitionMode.Additive;
-			Assert.IsFalse(KingdomArchitectureRules.TryBuildDelta(small, medium,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryBuildDelta(small, medium,
 				out _, out string failure));
 			StringAssert.Contains("additive-expand", failure);
 
 			medium.IncomingTransitionMode = ArchitectureTransitionMode.AdditiveExpand;
-			Assert.IsTrue(KingdomArchitectureRules.TryBuildDelta(small, medium,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryBuildDelta(small, medium,
 				out ArchitectureLayoutDelta extension, out failure), failure);
-			Assert.AreEqual(0, extension.Removed.Count);
-			Assert.Greater(extension.Added.Count, 0);
+			ClassicAssert.AreEqual(0, extension.Removed.Count);
+			ClassicAssert.Greater(extension.Added.Count, 0);
 
 			FindPlacement(medium, ArchitectureLayer.Ground, 1, 1).Blueprint = "Wood Floor";
-			Assert.IsFalse(KingdomArchitectureRules.TryBuildDelta(small, medium,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryBuildDelta(small, medium,
 				out _, out failure));
 			StringAssert.Contains("additive", failure);
 
 			medium.IncomingTransitionMode = ArchitectureTransitionMode.RenovateExpand;
-			Assert.IsTrue(KingdomArchitectureRules.TryBuildDelta(small, medium,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryBuildDelta(small, medium,
 				out ArchitectureLayoutDelta hybrid, out failure), failure);
-			Assert.Greater(hybrid.Removed.Count, 0);
+			ClassicAssert.Greater(hybrid.Removed.Count, 0);
 		}
 
 		[Test]
@@ -1025,7 +1026,7 @@ namespace ThousandAndFirst.Tests
 			before.FootprintX = 1;
 			before.FootprintWidth = 4;
 			expanded.IncomingTransitionMode = ArchitectureTransitionMode.Additive;
-			Assert.IsTrue(KingdomArchitectureRules.TryBuildDelta(before, expanded,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryBuildDelta(before, expanded,
 				out _, out string failure), failure);
 
 			ArchitectureLayoutSnapshot standing = Compile();
@@ -1035,7 +1036,7 @@ namespace ThousandAndFirst.Tests
 			shrunk.FootprintWidth = 5;
 			for (int i = 0; i < shrunk.Cells.Count; i++)
 				if (shrunk.Cells[i].X == 0) shrunk.Cells[i].Claim = ArchitectureClaim.Yard;
-			Assert.IsFalse(KingdomArchitectureRules.TryBuildDelta(standing, shrunk,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryBuildDelta(standing, shrunk,
 				out _, out failure));
 			StringAssert.Contains("shrinks or shifts", failure);
 		}
@@ -1047,12 +1048,12 @@ namespace ThousandAndFirst.Tests
 			ArchitectureLayoutSnapshot after = Clone(before);
 			after.IncomingTransitionMode = ArchitectureTransitionMode.Additive;
 			after.BaseRoof = KingdomPlotRules.RoofState.Open;
-			Assert.IsFalse(KingdomArchitectureRules.TryBuildDelta(before, after,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryBuildDelta(before, after,
 				out _, out string failure));
 			StringAssert.Contains("weakens", failure);
 
 			after.IncomingTransitionMode = ArchitectureTransitionMode.Renovate;
-			Assert.IsTrue(KingdomArchitectureRules.TryBuildDelta(before, after,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryBuildDelta(before, after,
 				out _, out failure), failure);
 		}
 
@@ -1069,7 +1070,7 @@ namespace ThousandAndFirst.Tests
 			ArchitectureCellState newOpen = FindCell(medium, 0, 1);
 			newOpen.Claim = ArchitectureClaim.Unclaimed;
 			medium.Placements.RemoveAll(p => p.X == 0 && p.Y == 1);
-			Assert.IsTrue(KingdomArchitectureRules.TryBuildDelta(small, medium,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryBuildDelta(small, medium,
 				out _, out string failure), failure);
 
 			// Cropping even placement-free predecessor fabric is still forbidden.
@@ -1084,7 +1085,7 @@ namespace ThousandAndFirst.Tests
 			ArchitectureLayoutSnapshot shiftedMedium = HeartSnapshot(2,
 				ArchitectureLotSize.Medium, 8, 6, 1, 1);
 			shiftedMedium.IncomingTransitionMode = ArchitectureTransitionMode.AdditiveExpand;
-			Assert.IsFalse(KingdomArchitectureRules.TryBuildDelta(sparseSmall, shiftedMedium,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryBuildDelta(sparseSmall, shiftedMedium,
 				out _, out failure));
 			StringAssert.Contains("crops", failure);
 		}
@@ -1098,7 +1099,7 @@ namespace ThousandAndFirst.Tests
 			after.IncomingTransitionMode = ArchitectureTransitionMode.Additive;
 			ArchitectureCellState cell = FindCell(after, 2, 1);
 			cell.Cover = ArchitectureCover.Soft;
-			Assert.IsFalse(KingdomArchitectureRules.TryBuildDelta(before, after,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryBuildDelta(before, after,
 				out _, out string failure));
 			StringAssert.Contains("without new fabric", failure);
 
@@ -1107,7 +1108,7 @@ namespace ThousandAndFirst.Tests
 				Layer = ArchitectureLayer.Structure, X = 2, Y = 1, Slot = "s:02:01",
 				Blueprint = "Canvas Roof", Material = "mud", MinTech = "hands"
 			});
-			Assert.IsTrue(KingdomArchitectureRules.TryBuildDelta(before, after,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryBuildDelta(before, after,
 				out _, out failure), failure);
 
 			ArchitectureLayoutSnapshot strongBefore = Compile();
@@ -1119,7 +1120,7 @@ namespace ThousandAndFirst.Tests
 				Layer = ArchitectureLayer.Object, X = 0, Y = 0, Slot = "o:00:00",
 				Blueprint = "Wall Pennant", Material = "mud", MinTech = "hands"
 			});
-			Assert.IsFalse(KingdomArchitectureRules.TryBuildDelta(strongBefore, weakened,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryBuildDelta(strongBefore, weakened,
 				out _, out failure));
 			StringAssert.Contains("weakens", failure);
 		}
@@ -1135,21 +1136,21 @@ namespace ThousandAndFirst.Tests
 			ArchitectureAnchor main = FindAnchor(movedMain, "main", 0);
 			main.X = 3;
 			main.Y = 1;
-			Assert.IsFalse(KingdomArchitectureRules.TryBuildDelta(before, movedMain,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryBuildDelta(before, movedMain,
 				out _, out string failure));
 			StringAssert.Contains("main", failure);
 
 			ArchitectureLayoutSnapshot removed = Clone(before);
 			removed.IncomingTransitionMode = ArchitectureTransitionMode.Renovate;
 			removed.Placements.Remove(FindPlacement(removed, ArchitectureLayer.Object, 1, 2));
-			Assert.IsFalse(KingdomArchitectureRules.TryBuildDelta(before, removed,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryBuildDelta(before, removed,
 				out _, out failure));
 			StringAssert.Contains("registered handover", failure);
 
 			ArchitectureLayoutSnapshot changed = Clone(before);
 			changed.IncomingTransitionMode = ArchitectureTransitionMode.Renovate;
 			FindPlacement(changed, ArchitectureLayer.Object, 1, 2).Blueprint = "Metal Chest";
-			Assert.IsFalse(KingdomArchitectureRules.TryBuildDelta(before, changed,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryBuildDelta(before, changed,
 				out _, out failure));
 			StringAssert.Contains("registered handover", failure);
 		}
@@ -1168,14 +1169,14 @@ namespace ThousandAndFirst.Tests
 				Slot = "o:02:02", Material = "mud", MinTech = "hands",
 				StatefulAnchor = "fixture:table@2,2"
 			});
-			Assert.IsTrue(KingdomArchitectureRules.TryBuildDelta(before, after,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryBuildDelta(before, after,
 				out ArchitectureLayoutDelta delta, out string failure), failure);
-			Assert.AreEqual(1, delta.Added.Count);
+			ClassicAssert.AreEqual(1, delta.Added.Count);
 
 			after = Clone(before);
 			after.IncomingTransitionMode = ArchitectureTransitionMode.Renovate;
 			after.LotType = "water";
-			Assert.IsFalse(KingdomArchitectureRules.TryBuildDelta(before, after,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryBuildDelta(before, after,
 				out _, out failure));
 			StringAssert.Contains("typed lot", failure);
 		}
@@ -1188,25 +1189,25 @@ namespace ThousandAndFirst.Tests
 			ArchitectureLayoutSnapshot medium = HeartSnapshot(2, ArchitectureLotSize.Medium,
 				8, 6, 3, 1);
 			FindPlacement(medium, ArchitectureLayer.Ground, 1, 1).Blueprint = "Wood Floor";
-			Assert.IsTrue(KingdomArchitectureRules.TryBuildDelta(small, medium,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryBuildDelta(small, medium,
 				out ArchitectureLayoutDelta delta, out string failure), failure);
-			Assert.Greater(delta.Removed.Count, 0,
+			ClassicAssert.Greater(delta.Removed.Count, 0,
 				"a larger heart may lawfully rebuild prior stateless fabric");
-			Assert.AreEqual(delta.Retained.Count, delta.RetainedAfter.Count);
-			Assert.Greater(delta.Retained.Count, 0);
-			Assert.Greater(delta.Added.Count, 0);
+			ClassicAssert.AreEqual(delta.Retained.Count, delta.RetainedAfter.Count);
+			ClassicAssert.Greater(delta.Retained.Count, 0);
+			ClassicAssert.Greater(delta.Added.Count, 0);
 			ArchitecturePlacement oldBasin = small.Placements.Find(p => p.ExistingAuthority);
 			int basinIndex = delta.Retained.IndexOf(oldBasin);
-			Assert.GreaterOrEqual(basinIndex, 0);
-			Assert.IsTrue(delta.RetainedAfter[basinIndex].ExistingAuthority);
-			Assert.AreEqual("fixture:first-basin@2,1", oldBasin.StatefulAnchor);
-			Assert.AreEqual("fixture:first-basin@3,2",
+			ClassicAssert.GreaterOrEqual(basinIndex, 0);
+			ClassicAssert.IsTrue(delta.RetainedAfter[basinIndex].ExistingAuthority);
+			ClassicAssert.AreEqual("fixture:first-basin@2,1", oldBasin.StatefulAnchor);
+			ClassicAssert.AreEqual("fixture:first-basin@3,2",
 				delta.RetainedAfter[basinIndex].StatefulAnchor);
 
 			ArchitectureLayoutSnapshot skipped = HeartSnapshot(3, ArchitectureLotSize.Large,
 				12, 10, 5, 3);
 			skipped.IncomingTransitionMode = ArchitectureTransitionMode.Renovate;
-			Assert.IsFalse(KingdomArchitectureRules.TryBuildDelta(small, skipped,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryBuildDelta(small, skipped,
 				out _, out failure));
 			StringAssert.Contains("renovate-expand", failure);
 
@@ -1214,13 +1215,13 @@ namespace ThousandAndFirst.Tests
 			moved.MainX = 4;
 			ArchitectureAnchor main = FindAnchor(moved, "main", 0);
 			main.X = 4;
-			Assert.IsFalse(KingdomArchitectureRules.TryBuildDelta(small, moved,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryBuildDelta(small, moved,
 				out _, out failure));
 			StringAssert.Contains("protected anchor", failure);
 
 			ArchitectureLayoutSnapshot ordinary = Clone(medium);
 			ordinary.LotType = "housing";
-			Assert.IsFalse(KingdomArchitectureRules.TryBuildDelta(small, ordinary,
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryBuildDelta(small, ordinary,
 				out _, out failure));
 			StringAssert.Contains("typed lot", failure);
 		}
@@ -1232,10 +1233,10 @@ namespace ThousandAndFirst.Tests
 				ArchitectureLotSize.Huge, 20, 18, 9, 7);
 			ArchitectureLayoutSnapshot arcology = HeartSnapshot(5,
 				ArchitectureLotSize.Huge, 20, 18, 9, 7);
-			Assert.IsTrue(KingdomArchitectureRules.TryBuildDelta(court, arcology,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryBuildDelta(court, arcology,
 				out ArchitectureLayoutDelta delta, out string failure), failure);
-			Assert.AreEqual(0, delta.Removed.Count);
-			Assert.AreEqual(delta.Retained.Count, delta.RetainedAfter.Count);
+			ClassicAssert.AreEqual(0, delta.Removed.Count);
+			ClassicAssert.AreEqual(delta.Retained.Count, delta.RetainedAfter.Count);
 		}
 
 		[Test]
@@ -1249,9 +1250,9 @@ namespace ThousandAndFirst.Tests
 			ArchitectureCellState retainedCell = FindCell(medium, 1, 1);
 
 			retainedCell.Cover = ArchitectureCover.Soft;
-			Assert.IsTrue(KingdomArchitectureRules.TryBuildDelta(small, medium,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryBuildDelta(small, medium,
 				out ArchitectureLayoutDelta enclosed, out string failure), failure);
-			Assert.IsTrue(enclosed.Cells.Exists(delegate(ArchitectureCellDelta change)
+			ClassicAssert.IsTrue(enclosed.Cells.Exists(delegate(ArchitectureCellDelta change)
 			{
 				return change.Before == oldCell && change.After == retainedCell
 					&& change.Before.Cover == ArchitectureCover.Open
@@ -1260,14 +1261,14 @@ namespace ThousandAndFirst.Tests
 
 			medium = HeartSnapshot(2, ArchitectureLotSize.Medium, 8, 6, 3, 1);
 			FindCell(medium, 1, 1).Cover = ArchitectureCover.Walled;
-			Assert.IsTrue(KingdomArchitectureRules.TryBuildDelta(small, medium,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryBuildDelta(small, medium,
 				out _, out failure), failure);
 
 			small = HeartSnapshot(1, ArchitectureLotSize.Small, 6, 4, 2, 0);
 			medium = HeartSnapshot(2, ArchitectureLotSize.Medium, 8, 6, 3, 1);
 			FindCell(small, 0, 0).Cover = ArchitectureCover.Soft;
 			FindCell(medium, 1, 1).Cover = ArchitectureCover.Walled;
-			Assert.IsTrue(KingdomArchitectureRules.TryBuildDelta(small, medium,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryBuildDelta(small, medium,
 				out _, out failure), failure);
 		}
 
@@ -1283,9 +1284,9 @@ namespace ThousandAndFirst.Tests
 			before.Cover = ArchitectureCover.Walled;
 			after.Cover = ArchitectureCover.Natural;
 			after.Passability = ArchitecturePassability.Adjacent;
-			Assert.IsTrue(KingdomArchitectureRules.TryBuildDelta(small, medium,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryBuildDelta(small, medium,
 				out ArchitectureLayoutDelta renovated, out string failure), failure);
-			Assert.IsTrue(renovated.Cells.Exists(delegate(ArchitectureCellDelta change)
+			ClassicAssert.IsTrue(renovated.Cells.Exists(delegate(ArchitectureCellDelta change)
 			{
 				return change.Before == before && change.After == after;
 			}));
@@ -1295,7 +1296,7 @@ namespace ThousandAndFirst.Tests
 			after.Claim = ArchitectureClaim.Unclaimed;
 			medium.Placements.RemoveAll(delegate(ArchitecturePlacement placement)
 				{ return placement.X == 1 && placement.Y == 1; });
-			Assert.IsTrue(KingdomArchitectureRules.TryBuildDelta(
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryBuildDelta(
 				HeartSnapshot(1, ArchitectureLotSize.Small, 6, 4, 2, 0), medium,
 				out _, out failure), failure);
 		}
@@ -1305,19 +1306,19 @@ namespace ThousandAndFirst.Tests
 		{
 			ArchitectureLabourProgress partial = KingdomArchitectureRules.AdvanceLabour(
 				100, 200, 100, 50, 50);
-			Assert.AreEqual(25, partial.WorkedTicks);
-			Assert.AreEqual(75, partial.RemainingTicks);
-			Assert.AreEqual(200, partial.NextTick);
-			Assert.IsFalse(partial.Complete);
+			ClassicAssert.AreEqual(25, partial.WorkedTicks);
+			ClassicAssert.AreEqual(75, partial.RemainingTicks);
+			ClassicAssert.AreEqual(200, partial.NextTick);
+			ClassicAssert.IsFalse(partial.Complete);
 
 			ArchitectureLabourProgress idle = KingdomArchitectureRules.AdvanceLabour(
 				100, 200, 10, 0, 100);
-			Assert.AreEqual(0, idle.WorkedTicks);
-			Assert.AreEqual(200, idle.NextTick);
+			ClassicAssert.AreEqual(0, idle.WorkedTicks);
+			ClassicAssert.AreEqual(200, idle.NextTick);
 			ArchitectureLabourProgress resumed = KingdomArchitectureRules.AdvanceLabour(
 				idle.NextTick, 210, idle.RemainingTicks, 100, 100);
-			Assert.AreEqual(10, resumed.WorkedTicks);
-			Assert.AreEqual(210, resumed.CompletionTick);
+			ClassicAssert.AreEqual(10, resumed.WorkedTicks);
+			ClassicAssert.AreEqual(210, resumed.CompletionTick);
 		}
 
 		[Test]
@@ -1325,17 +1326,17 @@ namespace ThousandAndFirst.Tests
 		{
 			ArchitectureLabourProgress quantised = KingdomArchitectureRules.AdvanceLabour(
 				100, 102, 1, 50, 100);
-			Assert.IsTrue(quantised.Complete);
-			Assert.AreEqual(102, quantised.CompletionTick);
+			ClassicAssert.IsTrue(quantised.Complete);
+			ClassicAssert.AreEqual(102, quantised.CompletionTick);
 			ArchitectureLabourProgress clamped = KingdomArchitectureRules.AdvanceLabour(
 				0, 100, 100, 900, 900);
-			Assert.IsTrue(clamped.Complete);
-			Assert.AreEqual(100, clamped.CompletionTick);
+			ClassicAssert.IsTrue(clamped.Complete);
+			ClassicAssert.AreEqual(100, clamped.CompletionTick);
 			ArchitectureLabourProgress huge = KingdomArchitectureRules.AdvanceLabour(
 				0, long.MaxValue, long.MaxValue, 100, 100);
-			Assert.IsTrue(huge.Complete);
-			Assert.AreEqual(long.MaxValue, huge.WorkedTicks);
-			Assert.AreEqual(long.MaxValue, huge.CompletionTick);
+			ClassicAssert.IsTrue(huge.Complete);
+			ClassicAssert.AreEqual(long.MaxValue, huge.WorkedTicks);
+			ClassicAssert.AreEqual(long.MaxValue, huge.CompletionTick);
 		}
 
 		private static ArchitectureVariantDraft Variant(string key, int priority,
@@ -1420,7 +1421,7 @@ namespace ThousandAndFirst.Tests
 		private static ArchitecturePoseRegistry Registry(
 			params ArchitecturePoseDraft[] Poses)
 		{
-			Assert.IsTrue(KingdomArchitectureRules.TryCreatePoseRegistry(Poses, null,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryCreatePoseRegistry(Poses, null,
 				out ArchitecturePoseRegistry result, out string failure), failure);
 			return result;
 		}
@@ -1448,7 +1449,7 @@ namespace ThousandAndFirst.Tests
 
 		private static ArchitectureLayoutSnapshot Compile()
 		{
-			Assert.IsTrue(KingdomArchitectureRules.TryCompile(Request(),
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryCompile(Request(),
 				out ArchitectureLayoutSnapshot snapshot, out string failure), failure);
 			return snapshot;
 		}
@@ -1506,16 +1507,16 @@ namespace ThousandAndFirst.Tests
 				CatalogueRoof = KingdomPlotRules.RoofState.Open,
 				Facing = ArchitectureFacing.North
 			};
-			Assert.IsTrue(KingdomArchitectureRules.TryCompile(request,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryCompile(request,
 				out ArchitectureLayoutSnapshot snapshot, out string failure), failure);
 			return snapshot;
 		}
 
 		private static ArchitectureLayoutSnapshot Clone(ArchitectureLayoutSnapshot source)
 		{
-			Assert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(source,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryEncodeSnapshot(source,
 				out string encoded, out string failure), failure);
-			Assert.IsTrue(KingdomArchitectureRules.TryDecodeSnapshot(encoded,
+			ClassicAssert.IsTrue(KingdomArchitectureRules.TryDecodeSnapshot(encoded,
 				out ArchitectureLayoutSnapshot clone, out failure), failure);
 			return clone;
 		}
@@ -1529,7 +1530,7 @@ namespace ThousandAndFirst.Tests
 
 		private static void AssertCompileFails(ArchitectureCompileRequest request, string fragment)
 		{
-			Assert.IsFalse(KingdomArchitectureRules.TryCompile(request, out _, out string failure));
+			ClassicAssert.IsFalse(KingdomArchitectureRules.TryCompile(request, out _, out string failure));
 			StringAssert.Contains(fragment, failure);
 		}
 

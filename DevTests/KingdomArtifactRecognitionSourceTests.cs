@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -75,9 +76,9 @@ namespace ThousandAndFirst.Tests
 		private static string Method(string Source, string Signature)
 		{
 			int start = Source.IndexOf(Signature, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, "missing method: " + Signature);
+			ClassicAssert.GreaterOrEqual(start, 0, "missing method: " + Signature);
 			int open = Source.IndexOf('{', start + Signature.Length);
-			Assert.GreaterOrEqual(open, 0, "missing method body: " + Signature);
+			ClassicAssert.GreaterOrEqual(open, 0, "missing method body: " + Signature);
 			int depth = 0;
 			for (int i = open; i < Source.Length; i++)
 			{
@@ -107,7 +108,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("case KingdomCharterAction.RecognizeArtifact: "
 				+ "KingdomArtifactRecognitionCharterRuntime.Open(System, ParentObject); break;",
 				part);
-			Assert.AreEqual(1, Occurrences(part,
+			ClassicAssert.AreEqual(1, Occurrences(part,
 				"KingdomArtifactRecognitionCharterRuntime.Open("),
 				"D6 has exactly one Charter entry point");
 
@@ -142,16 +143,16 @@ namespace ThousandAndFirst.Tests
 			string choose = Read(Engine[1]);
 			string commit = Read(Engine[2]);
 			string charter = open + choose + commit;
-			Assert.AreEqual(1, Occurrences(charter, "TryReadAuthority("),
+			ClassicAssert.AreEqual(1, Occurrences(charter, "TryReadAuthority("),
 				"the Charter conversation may open section one exactly once");
-			Assert.AreEqual(0, Occurrences(commit, "TryReadAuthority("),
+			ClassicAssert.AreEqual(0, Occurrences(commit, "TryReadAuthority("),
 				"the commit shard must not take a fresh lease");
-			Assert.AreEqual(0, Occurrences(choose, "TryReadAuthority("));
-			Assert.AreEqual(0, Occurrences(charter, "TryReadSection("),
+			ClassicAssert.AreEqual(0, Occurrences(choose, "TryReadAuthority("));
+			ClassicAssert.AreEqual(0, Occurrences(charter, "TryReadSection("),
 				"only the lease seam may name the section API");
 
 			string report = Method(commit, "private static void Report(Ground Ground,");
-			Assert.AreEqual(1, Occurrences(commit, "TryReadBackRow("),
+			ClassicAssert.AreEqual(1, Occurrences(commit, "TryReadBackRow("),
 				"the only re-read is the post-commit readback");
 			StringAssert.Contains("TryReadBackRow(", report);
 
@@ -160,7 +161,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("TrySnapshotNearby(Ground.Founder", body);
 			StringAssert.Contains("Plan.Source.SnapshotDigest", body);
 			StringAssert.Contains("ProveResident(Ground, Plan.AttributedResidentId", body);
-			Assert.Less(body.IndexOf("SnapshotDigest", StringComparison.Ordinal),
+			ClassicAssert.Less(body.IndexOf("SnapshotDigest", StringComparison.Ordinal),
 				body.IndexOf("TryCommitPlanned", StringComparison.Ordinal),
 				"the object is re-proved before anything is offered");
 		}
@@ -173,14 +174,14 @@ namespace ThousandAndFirst.Tests
 		public void OnlyAnAcceptedRowMarksTheGovernanceScope()
 		{
 			string family = Family();
-			Assert.AreEqual(1, Occurrences(family, "KingdomGovernanceScope.Commit("),
+			ClassicAssert.AreEqual(1, Occurrences(family, "KingdomGovernanceScope.Commit("),
 				"exactly one governance commit in the whole D6 family");
-			Assert.AreEqual(0, Occurrences(family, "UseEnergy"),
+			ClassicAssert.AreEqual(0, Occurrences(family, "UseEnergy"),
 				"D6 must never charge energy directly");
 			string commit = Read(Engine[2]);
 			StringAssert.Contains("if (outcome == KingdomArtifactRecognitionOutcome.Recorded)\n"
 				+ "\t\t\t\tKingdomGovernanceScope.Commit(\"recognize artifact\");", commit);
-			Assert.Less(commit.IndexOf("TryCommitPlanned", StringComparison.Ordinal),
+			ClassicAssert.Less(commit.IndexOf("TryCommitPlanned", StringComparison.Ordinal),
 				commit.IndexOf("KingdomGovernanceScope.Commit(", StringComparison.Ordinal),
 				"the scope is marked only after the durable commit returned");
 		}
@@ -222,7 +223,7 @@ namespace ThousandAndFirst.Tests
 			{
 				string source = CodeOnly(Read(owned[f]));
 				for (int i = 0; i < forbidden.Length; i++)
-					Assert.AreEqual(0, Occurrences(source, forbidden[i]),
+					ClassicAssert.AreEqual(0, Occurrences(source, forbidden[i]),
 						owned[f] + " must never name " + forbidden[i]);
 			}
 		}
@@ -240,9 +241,9 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("MaxNearbyChoices = 64", selection);
 			StringAssert.Contains("Another nearby object claims the selected object's exact "
 				+ "identity.", selection);
-			Assert.AreEqual(2, Occurrences(selection, ".GetObjects()"),
+			ClassicAssert.AreEqual(2, Occurrences(selection, ".GetObjects()"),
 				"exactly two bounded ground reads: the picker and the identity uniqueness proof");
-			Assert.AreEqual(2, Occurrences(selection, "GetLocalAdjacentCells()"));
+			ClassicAssert.AreEqual(2, Occurrences(selection, "GetLocalAdjacentCells()"));
 			StringAssert.Contains("Cell.cs", selection);
 			StringAssert.Contains("GameObject.cs", selection);
 		}
@@ -261,7 +262,7 @@ namespace ThousandAndFirst.Tests
 			int scan = rules.IndexOf("Book.Rows[i].Source.ObjectId != Snapshot.ObjectId",
 				StringComparison.Ordinal);
 			int add = rules.IndexOf("candidate.Rows.Add(Receipt)", StringComparison.Ordinal);
-			Assert.Less(scan, add, "the subject scan must run before a row is derived or added");
+			ClassicAssert.Less(scan, add, "the subject scan must run before a row is derived or added");
 			StringAssert.Contains("{ Receipt = null; return false; }", rules);
 		}
 
@@ -279,9 +280,9 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("artifacts.RealmId, exactRealmId", service);
 			StringAssert.Contains("artifacts.Recognitions.Rows", service);
 			string reliquary = Method(service, "private static bool TryReliquary(");
-			Assert.AreEqual(0, Occurrences(reliquary, "Inventory"));
-			Assert.AreEqual(0, Occurrences(reliquary, "Standing"));
-			Assert.AreEqual(0, Occurrences(reliquary, "GetObjects"));
+			ClassicAssert.AreEqual(0, Occurrences(reliquary, "Inventory"));
+			ClassicAssert.AreEqual(0, Occurrences(reliquary, "Standing"));
+			ClassicAssert.AreEqual(0, Occurrences(reliquary, "GetObjects"));
 			StringAssert.Contains("SettlementIdForOwnedZone(zoneId) != context.SettlementId",
 				reliquary);
 		}
@@ -306,11 +307,11 @@ namespace ThousandAndFirst.Tests
 			for (int f = 0; f < owned.Count; f++)
 			{
 				string source = CodeOnly(Read(owned[f]));
-				Assert.AreEqual(0, minting.Matches(source).Count,
+				ClassicAssert.AreEqual(0, minting.Matches(source).Count,
 					owned[f] + " reads GameObject.ID, which mints an identity and writes the save");
-				Assert.AreEqual(0, Occurrences(source, "BaseID"),
+				ClassicAssert.AreEqual(0, Occurrences(source, "BaseID"),
 					owned[f] + " must not touch the native id sequence");
-				Assert.AreEqual(0, Occurrences(source, "GameObjectIDSequence"));
+				ClassicAssert.AreEqual(0, Occurrences(source, "GameObjectIDSequence"));
 			}
 			string selection = Read("Experience/KingdomArtifactRecognitionSelectionRuntime.cs");
 			StringAssert.Contains("string engineId = Selected.IDIfAssigned;", selection);
@@ -336,17 +337,17 @@ namespace ThousandAndFirst.Tests
 				+ "KingdomCivicMemorySectionLease Lease,");
 			int capacity = recognize.IndexOf("MaxRows", StringComparison.Ordinal);
 			int selection = recognize.IndexOf("TryCollectNearby", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(capacity, 0, "a full register is still disclosed");
-			Assert.Greater(capacity, selection,
+			ClassicAssert.GreaterOrEqual(capacity, 0, "a full register is still disclosed");
+			ClassicAssert.Greater(capacity, selection,
 				"capacity may only be reported, never returned on, before selection");
-			Assert.AreEqual(0, Occurrences(recognize, "Popup.Show(\"This realm has already kept"),
+			ClassicAssert.AreEqual(0, Occurrences(recognize, "Popup.Show(\"This realm has already kept"),
 				"the early capacity refusal must be gone");
 			StringAssert.Contains("only something the city has already recorded can be confirmed",
 				recognize);
 			string rules = Read("Core/KingdomArtifactRecognitionRules.cs");
 			int subject = rules.IndexOf("SameSubject(Book.Rows[i]", StringComparison.Ordinal);
 			int cap = rules.IndexOf("Book.Rows.Count >= MaxRows", StringComparison.Ordinal);
-			Assert.Less(subject, cap,
+			ClassicAssert.Less(subject, cap,
 				"the subject retry is answered before capacity is consulted");
 		}
 
@@ -363,9 +364,9 @@ namespace ThousandAndFirst.Tests
 				"OwnerId", "LocationId", "DeedId", "DeedText", "AttributedResidentId",
 				"AttributionName" })
 				StringAssert.Contains(field, same, "SameSubject must compare " + field);
-			Assert.AreEqual(0, Occurrences(same, "SnapshotDigest"),
+			ClassicAssert.AreEqual(0, Occurrences(same, "SnapshotDigest"),
 				"the digest carries the tick and must not decide a retry");
-			Assert.AreEqual(0, Occurrences(same, "ObservedTick"));
+			ClassicAssert.AreEqual(0, Occurrences(same, "ObservedTick"));
 			StringAssert.Contains("Snapshot.ObservedTick >= Book.Rows[i].Source.ObservedTick",
 				rules, "only a later reading of the same facts is tolerated");
 		}
@@ -385,7 +386,7 @@ namespace ThousandAndFirst.Tests
 			List<string> owned = new List<string>(Engine);
 			owned.AddRange(Pure);
 			for (int f = 0; f < owned.Count; f++)
-				Assert.AreEqual(0, Occurrences(CodeOnly(Read(owned[f])), "SeatName"),
+				ClassicAssert.AreEqual(0, Occurrences(CodeOnly(Read(owned[f])), "SeatName"),
 					owned[f] + " names the seat instead of the ground's own settlement");
 
 			string open = Read(Engine[0]);
@@ -396,13 +397,13 @@ namespace ThousandAndFirst.Tests
 				resolver);
 			StringAssert.Contains("string.IsNullOrWhiteSpace(resolved)", resolver);
 			StringAssert.Contains("no name of its own", resolver);
-			Assert.AreEqual(0, Occurrences(resolver, "DisplayName"),
+			ClassicAssert.AreEqual(0, Occurrences(resolver, "DisplayName"),
 				"a settlement name is never inferred from zone or realm display text");
-			Assert.AreEqual(0, Occurrences(resolver, "ZoneID"));
+			ClassicAssert.AreEqual(0, Occurrences(resolver, "ZoneID"));
 			StringAssert.Contains("ground.SettlementName", open);
 
 			string ground = Method(open, "private static bool TryGround(");
-			Assert.Less(ground.IndexOf("TrySettlementName", StringComparison.Ordinal),
+			ClassicAssert.Less(ground.IndexOf("TrySettlementName", StringComparison.Ordinal),
 				ground.IndexOf("Result = new Ground", StringComparison.Ordinal),
 				"an unnameable city must refuse before a Ground is ever built");
 
@@ -425,7 +426,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < owned.Count; i++)
 			{
 				int lines = Read(owned[i]).Split('\n').Length;
-				Assert.Less(lines, 300, owned[i] + " is " + lines + " physical lines");
+				ClassicAssert.Less(lines, 300, owned[i] + " is " + lines + " physical lines");
 			}
 		}
 
@@ -453,7 +454,7 @@ namespace ThousandAndFirst.Tests
 					bool control = c < ' ' || (c >= '\u0080' && c <= '\u009f') || c == '\u007f';
 					bool format = char.GetUnicodeCategory(c)
 						== System.Globalization.UnicodeCategory.Format;
-					Assert.IsFalse(control || format, owned[f] + " carries U+"
+					ClassicAssert.IsFalse(control || format, owned[f] + " carries U+"
 						+ ((int)c).ToString("X4") + " raw at offset " + i);
 				}
 			}
@@ -467,7 +468,7 @@ namespace ThousandAndFirst.Tests
 		public void TheFamilyNeverCallsAnIntegrityCheckAnAuthentication()
 		{
 			string family = Family();
-			Assert.AreEqual(0, Regex.Matches(family, "authenticat", RegexOptions.IgnoreCase).Count,
+			ClassicAssert.AreEqual(0, Regex.Matches(family, "authenticat", RegexOptions.IgnoreCase).Count,
 				"digests verify integrity; owners are validated");
 		}
 	}

@@ -2,6 +2,7 @@
 using System;
 
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -32,11 +33,11 @@ namespace ThousandAndFirst.Tests
 		public void TopLevelAndNestedDeclarationsHaveOneOwner()
 		{
 			string source = KingdomPhysicalHappeningsLogicalSource.Read();
-			Assert.AreEqual(1, Count(source, "internal enum KingdomPhysicalQueueResult"));
-			Assert.AreEqual(1, Count(source, "internal sealed class KingdomHappeningMoveTo"));
-			Assert.AreEqual(9, Count(source, "internal static partial class KingdomPhysicalHappenings"));
-			Assert.AreEqual(1, Count(source, "private enum SinkLane"));
-			Assert.AreEqual(1, Count(source, "private sealed class Evidence"));
+			ClassicAssert.AreEqual(1, Count(source, "internal enum KingdomPhysicalQueueResult"));
+			ClassicAssert.AreEqual(1, Count(source, "internal sealed class KingdomHappeningMoveTo"));
+			ClassicAssert.AreEqual(9, Count(source, "internal static partial class KingdomPhysicalHappenings"));
+			ClassicAssert.AreEqual(1, Count(source, "private enum SinkLane"));
+			ClassicAssert.AreEqual(1, Count(source, "private sealed class Evidence"));
 			StringAssert.DoesNotContain("internal static class KingdomPhysicalHappenings", source);
 		}
 
@@ -46,7 +47,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < markers.Length; i++)
 			{
 				int next = source.IndexOf(markers[i], position + 1, StringComparison.Ordinal);
-				Assert.Greater(next, position, markers[i]);
+				ClassicAssert.Greater(next, position, markers[i]);
 				position = next;
 			}
 		}

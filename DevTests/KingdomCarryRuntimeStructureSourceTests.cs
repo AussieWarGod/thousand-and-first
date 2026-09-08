@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -19,10 +20,10 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void LogicalAuthorityRetainsEveryDeclarationInOriginalOrder()
 		{
-			Assert.AreEqual(5, KingdomCarryRuntimeLogicalSource.FileCount);
+			ClassicAssert.AreEqual(5, KingdomCarryRuntimeLogicalSource.FileCount);
 			string source = KingdomCarryRuntimeLogicalSource.Read();
-			Assert.AreEqual(5, Count(source, "internal static partial class KingdomCarryRuntime"));
-			Assert.AreEqual(1, Count(source, "private sealed class CarryWorld"));
+			ClassicAssert.AreEqual(5, Count(source, "internal static partial class KingdomCarryRuntime"));
+			ClassicAssert.AreEqual(1, Count(source, "private sealed class CarryWorld"));
 			AssertOrdered(source, "internal sealed class PlantPlan", "internal static bool HasOpenOrLegacy(",
 				"internal static bool TryPreparePlant(", "internal static bool PublishPlant(",
 				"internal static bool Drive(", "private static bool SettlePickups(",
@@ -42,7 +43,7 @@ namespace ThousandAndFirst.Tests
 			{
 				string source = TestMain.ReadRepositoryText(ProductionFiles[i]);
 				int lines = source.Replace("\r\n", "\n").Split('\n').Length;
-				Assert.Less(lines, 300, ProductionFiles[i]);
+				ClassicAssert.Less(lines, 300, ProductionFiles[i]);
 			}
 		}
 
@@ -64,7 +65,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < tokens.Length; i++)
 			{
 				int next = source.IndexOf(tokens[i], cursor + 1, StringComparison.Ordinal);
-				Assert.Greater(next, cursor, tokens[i]);
+				ClassicAssert.Greater(next, cursor, tokens[i]);
 				cursor = next;
 			}
 		}

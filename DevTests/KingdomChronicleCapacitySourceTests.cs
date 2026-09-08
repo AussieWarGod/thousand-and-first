@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -15,7 +16,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string token in tokens)
 			{
 				int found = source.IndexOf(token, start, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(found, start, "Missing or out-of-order source boundary: " + token);
+				ClassicAssert.GreaterOrEqual(found, start, "Missing or out-of-order source boundary: " + token);
 				start = found + token.Length;
 			}
 		}

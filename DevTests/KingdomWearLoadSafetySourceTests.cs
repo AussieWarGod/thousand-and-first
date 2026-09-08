@@ -2,6 +2,7 @@
 using System;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -226,7 +227,7 @@ namespace ThousandAndFirst.Tests
 		private static string Method(string path, string signature)
 		{
 			string text = Source(path); int start = text.IndexOf(signature, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, signature);
+			ClassicAssert.GreaterOrEqual(start, 0, signature);
 			int open = text.IndexOf('{', start), depth = 0;
 			for (int i = open; i < text.Length; i++)
 			{
@@ -242,7 +243,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string needle in needles)
 			{
 				int at = source.IndexOf(needle, prior + 1, StringComparison.Ordinal);
-				Assert.Greater(at, prior, needle); prior = at;
+				ClassicAssert.Greater(at, prior, needle); prior = at;
 			}
 		}
 	}

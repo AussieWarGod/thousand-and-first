@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -22,13 +23,13 @@ namespace ThousandAndFirst.Tests
 		public void ReversedClaimsKeepExactCapAndTagAttribution()
 		{
 			var a1 = Claim("a", 2, "quiet"); var b1 = Claim("b", 2, "quiet");
-			Assert.IsTrue(Allocate(new[] { a1, b1 }, out var failure), failure);
+			ClassicAssert.IsTrue(Allocate(new[] { a1, b1 }, out var failure), failure);
 			var a2 = Claim("a", 2, "quiet"); var b2 = Claim("b", 2, "quiet");
-			Assert.IsTrue(Allocate(new[] { b2, a2 }, out failure), failure);
-			Assert.AreEqual(2, a1.Credited[0].Amount);
-			Assert.AreEqual(1, b1.Credited[0].Amount);
-			Assert.AreEqual(2, a2.Credited[0].Amount);
-			Assert.AreEqual(1, b2.Credited[0].Amount);
+			ClassicAssert.IsTrue(Allocate(new[] { b2, a2 }, out failure), failure);
+			ClassicAssert.AreEqual(2, a1.Credited[0].Amount);
+			ClassicAssert.AreEqual(1, b1.Credited[0].Amount);
+			ClassicAssert.AreEqual(2, a2.Credited[0].Amount);
+			ClassicAssert.AreEqual(1, b2.Credited[0].Amount);
 			CollectionAssert.AreEqual(new[] { "quiet" }, a1.CreditedTags);
 			Assert.That(b1.CreditedTags, Is.Empty);
 			CollectionAssert.AreEqual(a1.CreditedTags, a2.CreditedTags);
@@ -53,10 +54,10 @@ namespace ThousandAndFirst.Tests
 		{
 			var lowA = Claim("same|operation|050", 0, "quiet");
 			var highA = Claim("same|operation|100", 0, "quiet");
-			Assert.IsTrue(Allocate(new[] { highA, lowA }, out var failure), failure);
+			ClassicAssert.IsTrue(Allocate(new[] { highA, lowA }, out var failure), failure);
 			var lowB = Claim("same|operation|050", 0, "quiet");
 			var highB = Claim("same|operation|100", 0, "quiet");
-			Assert.IsTrue(Allocate(new[] { lowB, highB }, out failure), failure);
+			ClassicAssert.IsTrue(Allocate(new[] { lowB, highB }, out failure), failure);
 			CollectionAssert.AreEqual(new[] { "quiet" }, lowA.CreditedTags);
 			CollectionAssert.AreEqual(lowA.CreditedTags, lowB.CreditedTags);
 			Assert.That(highA.CreditedTags, Is.Empty);
@@ -72,9 +73,9 @@ namespace ThousandAndFirst.Tests
 			KingdomBenefitProviderDeclaration second = Declaration(
 				new KindAmount("roof", 2), new KindAmount("spirit", 1));
 			second.Provides.AddRange(new[] { "dark", "quiet" });
-			Assert.IsTrue(KingdomBenefitProviderRules.TryNormalize(first, out first, out _));
-			Assert.IsTrue(KingdomBenefitProviderRules.TryNormalize(second, out second, out _));
-			Assert.AreEqual(KingdomBenefitAllocationRules.DeclarationKey(first),
+			ClassicAssert.IsTrue(KingdomBenefitProviderRules.TryNormalize(first, out first, out _));
+			ClassicAssert.IsTrue(KingdomBenefitProviderRules.TryNormalize(second, out second, out _));
+			ClassicAssert.AreEqual(KingdomBenefitAllocationRules.DeclarationKey(first),
 				KingdomBenefitAllocationRules.DeclarationKey(second));
 		}
 
@@ -84,11 +85,11 @@ namespace ThousandAndFirst.Tests
 			string identity = "<anonymous:bed@4,5>#provider:taf:bed:type";
 			var lowA = Inspection(identity, "same", 1);
 			var highA = Inspection(identity, "same", 2);
-			Assert.IsTrue(KingdomBenefitAllocationRules.TryOrderInspections(
+			ClassicAssert.IsTrue(KingdomBenefitAllocationRules.TryOrderInspections(
 				new[] { highA, lowA }, out var orderedA, out var failure), failure);
 			var lowB = Inspection(identity, "same", 1);
 			var highB = Inspection(identity, "same", 2);
-			Assert.IsTrue(KingdomBenefitAllocationRules.TryOrderInspections(
+			ClassicAssert.IsTrue(KingdomBenefitAllocationRules.TryOrderInspections(
 				new[] { lowB, highB }, out var orderedB, out failure), failure);
 			CollectionAssert.AreEqual(Snapshot(orderedA), Snapshot(orderedB));
 			CollectionAssert.AreEqual(new[] { identity + ":instance-0001",
@@ -101,24 +102,24 @@ namespace ThousandAndFirst.Tests
 		public void OversizeRosterReturnsBeforeIndexOrEnumeration()
 		{
 			var hostile = new OverBoundClaims();
-			Assert.IsFalse(KingdomBenefitAllocationRules.TryAllocate(
+			ClassicAssert.IsFalse(KingdomBenefitAllocationRules.TryAllocate(
 				new[] { new KindAmount("roof", 3) }, Array.Empty<string>(), hostile,
 				out _, out var failure));
 			StringAssert.Contains("over-bound", failure);
-			Assert.AreEqual(0, hostile.Reads);
-			Assert.IsFalse(hostile.Enumerated);
+			ClassicAssert.AreEqual(0, hostile.Reads);
+			ClassicAssert.IsFalse(hostile.Enumerated);
 		}
 
 		[Test]
 		public void BoundedThrowingRosterFailsClosedWithoutEnumeration()
 		{
 			var hostile = new ThrowingClaims();
-			Assert.IsFalse(KingdomBenefitAllocationRules.TryAllocate(
+			ClassicAssert.IsFalse(KingdomBenefitAllocationRules.TryAllocate(
 				new[] { new KindAmount("roof", 3) }, Array.Empty<string>(), hostile,
 				out _, out var failure));
 			StringAssert.Contains("InvalidOperationException", failure);
-			Assert.AreEqual(1, hostile.Reads);
-			Assert.IsFalse(hostile.Enumerated);
+			ClassicAssert.AreEqual(1, hostile.Reads);
+			ClassicAssert.IsFalse(hostile.Enumerated);
 		}
 
 		[Test]
@@ -128,14 +129,14 @@ namespace ThousandAndFirst.Tests
 			sound.Credited.Add(new KindAmount("sentinel", 7));
 			var malformed = Claim("b", 1);
 			malformed.ActiveAmounts.Add(new KindAmount("roof", 2));
-			Assert.IsFalse(KingdomBenefitAllocationRules.TryAllocate(
+			ClassicAssert.IsFalse(KingdomBenefitAllocationRules.TryAllocate(
 				new[] { new KindAmount("roof", 3) }, Array.Empty<string>(),
 				new[] { sound, malformed },
 				out _, out var failure));
 			StringAssert.Contains("duplicated", failure);
-			Assert.AreEqual("sentinel", sound.Credited[0].Kind);
-			Assert.AreEqual(7, sound.Credited[0].Amount);
-			Assert.AreEqual("roof", sound.ActiveAmounts[0].Kind);
+			ClassicAssert.AreEqual("sentinel", sound.Credited[0].Kind);
+			ClassicAssert.AreEqual(7, sound.Credited[0].Amount);
+			ClassicAssert.AreEqual("roof", sound.ActiveAmounts[0].Kind);
 		}
 
 		[Test]
@@ -214,7 +215,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < Terms.Length; i++)
 			{
 				int at = Text.IndexOf(Terms[i], StringComparison.Ordinal);
-				Assert.Greater(at, prior, Terms[i]); prior = at;
+				ClassicAssert.Greater(at, prior, Terms[i]); prior = at;
 			}
 		}
 

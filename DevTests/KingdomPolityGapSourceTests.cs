@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -39,7 +40,7 @@ namespace ThousandAndFirst.Tests
 			string harm = Read("KingdomPolityDiplomacyRules.WitnessedHarm.cs");
 			StringAssert.Contains("TryRecordWitnessedEnvoyHarm", harm);
 			StringAssert.Contains("KingdomPolityRules.Clone(Ledger)", harm);
-			Assert.AreEqual(3, Count(harm, "KingdomPolityAuthority.Commit("),
+			ClassicAssert.AreEqual(3, Count(harm, "KingdomPolityAuthority.Commit("),
 				"initial, correspondence recovery, and capacity recovery each own one CAS");
 			string harmRuntime = Read("KingdomPolityVisitInteraction.Harm.cs");
 			StringAssert.Contains("TryRecordWitnessedEnvoyHarm", harmRuntime);
@@ -63,11 +64,11 @@ namespace ThousandAndFirst.Tests
 			string trespass = Read("KingdomPolityConflictRules.TrespassGrievance.cs");
 			foreach (string source in new[] { decline, trespass })
 			{
-				Assert.AreEqual(1, Count(source, "KingdomPolityAuthority.Commit("));
+				ClassicAssert.AreEqual(1, Count(source, "KingdomPolityAuthority.Commit("));
 				StringAssert.Contains("KingdomPolityRules.Clone(Ledger)", source);
 				StringAssert.Contains("TryDeriveExactGrievance(candidate", source);
 				StringAssert.Contains("MaxGrievances", source);
-				Assert.Less(source.IndexOf("TryDeriveExactGrievance(candidate",
+				ClassicAssert.Less(source.IndexOf("TryDeriveExactGrievance(candidate",
 					StringComparison.Ordinal), source.IndexOf("KingdomPolityAuthority.Commit(",
 					StringComparison.Ordinal));
 			}
@@ -88,7 +89,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("IDIfAssigned", snapshot);
 			StringAssert.DoesNotContain("Item.ID;", snapshot);
 			StringAssert.DoesNotContain("actor?.ID;", snapshot);
-			Assert.AreEqual(1, Count(snapshot, "IsTakeable()"),
+			ClassicAssert.AreEqual(1, Count(snapshot, "IsTakeable()"),
 				"takeability is initial eligibility, never leased reproval");
 			StringAssert.Contains("RequireNearby && !Item.IsTakeable()", snapshot);
 			StringAssert.Contains("Item.Holder != null", snapshot);
@@ -148,7 +149,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < files.Length; i++)
 			{
 				int lines = Read(files[i]).Split(new[] { '\n' }).Length;
-				Assert.Less(lines, 300, files[i] + " exceeds the production line cap");
+				ClassicAssert.Less(lines, 300, files[i] + " exceeds the production line cap");
 			}
 		}
 

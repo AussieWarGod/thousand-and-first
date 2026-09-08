@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -20,7 +21,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(typeof(KingdomPolityNamedFigureRecord))]
 		public void ShapeOnlyPreservesPreAdapterInstanceFieldsTypesOrderAndDefaults(Type type)
 		{
-			Assert.IsTrue(Attribute.IsDefined(type, typeof(SerializableAttribute)), type.FullName);
+			ClassicAssert.IsTrue(Attribute.IsDefined(type, typeof(SerializableAttribute)), type.FullName);
 			FieldInfo[] fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public
 				| BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
 			Array.Sort(fields, (left, right) => left.MetadataToken.CompareTo(right.MetadataToken));
@@ -28,8 +29,8 @@ namespace ThousandAndFirst.Tests
 			string[] actual = new string[fields.Length];
 			for (int i = 0; i < fields.Length; i++)
 			{
-				Assert.IsTrue(fields[i].IsPublic && !fields[i].IsInitOnly, fields[i].Name);
-				Assert.IsFalse(Attribute.IsDefined(fields[i], typeof(NonSerializedAttribute)), fields[i].Name);
+				ClassicAssert.IsTrue(fields[i].IsPublic && !fields[i].IsInitOnly, fields[i].Name);
+				ClassicAssert.IsFalse(Attribute.IsDefined(fields[i], typeof(NonSerializedAttribute)), fields[i].Name);
 				actual[i] = TypeName(fields[i].FieldType) + " " + fields[i].Name
 					+ "=" + DefaultValue(fields[i].GetValue(value));
 			}
@@ -49,9 +50,9 @@ namespace ThousandAndFirst.Tests
 				+ "#if!TAF_TESTS:IComposite#endif{", Compact(source));
 			string body = Block(source, declaration);
 			StringAssert.Contains("#if!TAF_TESTSpublicboolWantFieldReflection=>false;", Compact(body));
-			Assert.AreEqual("Writer.WriteNamedFields(this,typeof(" + type.Name + "));",
+			ClassicAssert.AreEqual("Writer.WriteNamedFields(this,typeof(" + type.Name + "));",
 				Compact(Block(body, "public void Write(SerializationWriter Writer)")));
-			Assert.AreEqual("Reader.ReadNamedFields(this,typeof(" + type.Name + "));",
+			ClassicAssert.AreEqual("Reader.ReadNamedFields(this,typeof(" + type.Name + "));",
 				Compact(Block(body, "public void Read(SerializationReader Reader)")));
 			StringAssert.DoesNotContain("Normalize", body,
 				"Adding a serializer must not erase or rewrite in-flight evidence.");
@@ -145,9 +146,9 @@ namespace ThousandAndFirst.Tests
 		private static string Block(string source, string signature)
 		{
 			int at = source.IndexOf(signature, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(at, 0, signature);
+			ClassicAssert.GreaterOrEqual(at, 0, signature);
 			int start = source.IndexOf('{', at);
-			Assert.GreaterOrEqual(start, 0, signature);
+			ClassicAssert.GreaterOrEqual(start, 0, signature);
 			int depth = 1;
 			for (int i = start + 1; i < source.Length; i++)
 			{
@@ -164,7 +165,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string marker in markers)
 			{
 				int at = source.IndexOf(marker, after, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(at, after, marker);
+				ClassicAssert.GreaterOrEqual(at, after, marker);
 				after = at + marker.Length;
 			}
 		}

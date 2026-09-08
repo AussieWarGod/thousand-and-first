@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -31,7 +32,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void OneExactHouseAndItsPhysicalFixtureProduceOneGood()
 		{
-			Assert.AreEqual(1, KingdomYardGoodsRules.ExactStandingHouseholds(
+			ClassicAssert.AreEqual(1, KingdomYardGoodsRules.ExactStandingHouseholds(
 				new List<KingdomYardGoodsRules.HouseholdEvidence> { House() },
 				new List<KingdomYardGoodsRules.FixtureEvidence> { Fixture() }));
 		}
@@ -41,25 +42,25 @@ namespace ThousandAndFirst.Tests
 		{
 			List<KingdomYardGoodsRules.HouseholdEvidence> houses =
 				new List<KingdomYardGoodsRules.HouseholdEvidence> { House() };
-			Assert.AreEqual(0, KingdomYardGoodsRules.ExactStandingHouseholds(houses,
+			ClassicAssert.AreEqual(0, KingdomYardGoodsRules.ExactStandingHouseholds(houses,
 				new List<KingdomYardGoodsRules.FixtureEvidence>()));
 			KingdomYardGoodsRules.FixtureEvidence moved = Fixture(); moved.InYard = false;
-			Assert.AreEqual(0, KingdomYardGoodsRules.ExactStandingHouseholds(houses,
+			ClassicAssert.AreEqual(0, KingdomYardGoodsRules.ExactStandingHouseholds(houses,
 				new List<KingdomYardGoodsRules.FixtureEvidence> { moved }));
-			Assert.AreEqual(0, KingdomYardGoodsRules.ExactStandingHouseholds(houses,
+			ClassicAssert.AreEqual(0, KingdomYardGoodsRules.ExactStandingHouseholds(houses,
 				new List<KingdomYardGoodsRules.FixtureEvidence> { Fixture("lot-2") }));
 			KingdomYardGoodsRules.FixtureEvidence support = Fixture(); support.FeedsGoods = false;
-			Assert.AreEqual(0, KingdomYardGoodsRules.ExactStandingHouseholds(houses,
+			ClassicAssert.AreEqual(0, KingdomYardGoodsRules.ExactStandingHouseholds(houses,
 				new List<KingdomYardGoodsRules.FixtureEvidence> { support }));
 		}
 
 		[Test]
 		public void DuplicateHouseOrFixtureAuthorityFailsClosed()
 		{
-			Assert.AreEqual(0, KingdomYardGoodsRules.ExactStandingHouseholds(
+			ClassicAssert.AreEqual(0, KingdomYardGoodsRules.ExactStandingHouseholds(
 				new List<KingdomYardGoodsRules.HouseholdEvidence> { House(), House() },
 				new List<KingdomYardGoodsRules.FixtureEvidence> { Fixture() }));
-			Assert.AreEqual(0, KingdomYardGoodsRules.ExactStandingHouseholds(
+			ClassicAssert.AreEqual(0, KingdomYardGoodsRules.ExactStandingHouseholds(
 				new List<KingdomYardGoodsRules.HouseholdEvidence> { House() },
 				new List<KingdomYardGoodsRules.FixtureEvidence> { Fixture(), Fixture() }));
 		}
@@ -70,7 +71,7 @@ namespace ThousandAndFirst.Tests
 			Action<KingdomYardGoodsRules.HouseholdEvidence> rejects = delegate(
 				KingdomYardGoodsRules.HouseholdEvidence house)
 			{
-				Assert.AreEqual(0, KingdomYardGoodsRules.ExactStandingHouseholds(
+				ClassicAssert.AreEqual(0, KingdomYardGoodsRules.ExactStandingHouseholds(
 					new List<KingdomYardGoodsRules.HouseholdEvidence> { house },
 					new List<KingdomYardGoodsRules.FixtureEvidence> { Fixture() }));
 			};
@@ -92,9 +93,9 @@ namespace ThousandAndFirst.Tests
 				houses.Add(House("lot-" + i));
 				fixtures.Add(Fixture("lot-" + i));
 			}
-			Assert.AreEqual(KingdomYardGoodsRules.MaxHouseholdsPerCaravan,
+			ClassicAssert.AreEqual(KingdomYardGoodsRules.MaxHouseholdsPerCaravan,
 				KingdomYardGoodsRules.ExactStandingHouseholds(houses, fixtures));
-			Assert.AreEqual(0, KingdomYardGoodsRules.ExactStandingHouseholds(
+			ClassicAssert.AreEqual(0, KingdomYardGoodsRules.ExactStandingHouseholds(
 				new List<KingdomYardGoodsRules.HouseholdEvidence> { House("LOT-1") },
 				new List<KingdomYardGoodsRules.FixtureEvidence> { Fixture("lot-1") }));
 		}
@@ -108,13 +109,13 @@ namespace ThousandAndFirst.Tests
 		public void IncomeFreezesOneDramPerExactHouseholdWithinCap(int Base, int Houses,
 			int Expected)
 		{
-			Assert.AreEqual(Expected, KingdomYardGoodsRules.IncomePerCycle(Base, Houses));
+			ClassicAssert.AreEqual(Expected, KingdomYardGoodsRules.IncomePerCycle(Base, Houses));
 		}
 
 		[Test]
 		public void IncomeSaturatesInsteadOfOverflowing()
 		{
-			Assert.AreEqual(int.MaxValue,
+			ClassicAssert.AreEqual(int.MaxValue,
 				KingdomYardGoodsRules.IncomePerCycle(int.MaxValue, 4));
 		}
 
@@ -138,12 +139,12 @@ namespace ThousandAndFirst.Tests
 				PlotId = "lot-1", YardKey = "vinelattice",
 				Blueprint = "r_KingdomVineLattice", Standing = true,
 				InYard = true, Unbroken = true };
-			Assert.AreEqual(1, KingdomYardGoodsRules.ExactPhysicalFood(house,
+			ClassicAssert.AreEqual(1, KingdomYardGoodsRules.ExactPhysicalFood(house,
 				new List<KingdomYardGoodsRules.FoodFixtureEvidence> { fixture }));
-			Assert.AreEqual(0, KingdomYardGoodsRules.ExactPhysicalFood(house,
+			ClassicAssert.AreEqual(0, KingdomYardGoodsRules.ExactPhysicalFood(house,
 				new List<KingdomYardGoodsRules.FoodFixtureEvidence>()), "removed fixture");
 			fixture.Unbroken = false;
-			Assert.AreEqual(0, KingdomYardGoodsRules.ExactPhysicalFood(house,
+			ClassicAssert.AreEqual(0, KingdomYardGoodsRules.ExactPhysicalFood(house,
 				new List<KingdomYardGoodsRules.FoodFixtureEvidence> { fixture }), "broken fixture");
 		}
 
@@ -158,14 +159,14 @@ namespace ThousandAndFirst.Tests
 				PlotId = "lot-1", YardKey = "vinelattice",
 				Blueprint = "r_KingdomVineLattice", Standing = true,
 				InYard = false, Unbroken = true };
-			Assert.AreEqual(0, KingdomYardGoodsRules.ExactPhysicalFood(house,
+			ClassicAssert.AreEqual(0, KingdomYardGoodsRules.ExactPhysicalFood(house,
 				new List<KingdomYardGoodsRules.FoodFixtureEvidence> { fixture }), "wrong yard");
 			fixture.InYard = true;
-			Assert.AreEqual(0, KingdomYardGoodsRules.ExactPhysicalFood(house,
+			ClassicAssert.AreEqual(0, KingdomYardGoodsRules.ExactPhysicalFood(house,
 				new List<KingdomYardGoodsRules.FoodFixtureEvidence> { fixture, fixture }),
 				"duplicate authority");
 			house.FoodCap = KingdomYardRules.MaxShadePerWork + 1;
-			Assert.AreEqual(0, KingdomYardGoodsRules.ExactPhysicalFood(house,
+			ClassicAssert.AreEqual(0, KingdomYardGoodsRules.ExactPhysicalFood(house,
 				new List<KingdomYardGoodsRules.FoodFixtureEvidence> { fixture }), "over-cap spec");
 		}
 	}
@@ -181,15 +182,15 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int end = trade.IndexOf("private static bool TryProjectionRow(", start,
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0);
-			Assert.Greater(end, start);
+			ClassicAssert.GreaterOrEqual(start, 0);
+			ClassicAssert.Greater(end, start);
 			string prepare = trade.Substring(start, end - start);
 			StringAssert.Contains("KingdomSurvey Survey", prepare);
 			StringAssert.Contains("KingdomYardGoods.ExactStandingHouseholds(Survey)", prepare);
 			StringAssert.Contains("KingdomYardGoodsRules.IncomePerCycle(", prepare);
 			StringAssert.Contains("operation.IncomePerCycle = incomePerCycle", prepare);
 			StringAssert.Contains("operation.RequestedWater = water", prepare);
-			Assert.Less(prepare.IndexOf("KingdomYardGoods.ExactStandingHouseholds(Survey)",
+			ClassicAssert.Less(prepare.IndexOf("KingdomYardGoods.ExactStandingHouseholds(Survey)",
 				StringComparison.Ordinal), prepare.IndexOf("KingdomTradeRules.NewOperation(",
 				StringComparison.Ordinal));
 			StringAssert.Contains("Z,\n\t\t\t\tsurvey, now", trade);
@@ -204,8 +205,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomYards.YardWorkProperty", runtime);
 			StringAssert.Contains("KingdomPlots.PlotIdProperty", runtime);
 			StringAssert.Contains("StandsInMatchingYard", runtime);
-			Assert.IsFalse(runtime.Contains("GetObjects("));
-			Assert.IsFalse(runtime.Contains("KingdomSurvey.Take("));
+			ClassicAssert.IsFalse(runtime.Contains("GetObjects("));
+			ClassicAssert.IsFalse(runtime.Contains("KingdomSurvey.Take("));
 		}
 	}
 }

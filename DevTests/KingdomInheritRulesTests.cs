@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -28,8 +29,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomInheritPlan plan;
 			KingdomInheritFault fault;
-			Assert.IsTrue(KingdomInheritRules.TryNormalize(Keys, X, Y, Conditions, out plan, out fault), fault.ToString());
-			Assert.AreEqual(KingdomInheritFault.None, fault);
+			ClassicAssert.IsTrue(KingdomInheritRules.TryNormalize(Keys, X, Y, Conditions, out plan, out fault), fault.ToString());
+			ClassicAssert.AreEqual(KingdomInheritFault.None, fault);
 			return plan;
 		}
 
@@ -38,8 +39,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomInheritPlan plan;
 			KingdomInheritFault fault;
-			Assert.IsTrue(KingdomInheritRules.TryApplyState(Source, State, InterregnumRoll, out plan, out fault), fault.ToString());
-			Assert.AreEqual(KingdomInheritFault.None, fault);
+			ClassicAssert.IsTrue(KingdomInheritRules.TryApplyState(Source, State, InterregnumRoll, out plan, out fault), fault.ToString());
+			ClassicAssert.AreEqual(KingdomInheritFault.None, fault);
 			return plan;
 		}
 
@@ -81,11 +82,11 @@ namespace ThousandAndFirst.Tests
 			string actual;
 			int width;
 			int height;
-			Assert.IsTrue(KingdomInheritRules.TryResolveBlueprint(Key, out actual));
-			Assert.AreEqual(Blueprint, actual);
-			Assert.IsTrue(KingdomInheritRules.TryFootprint(Key, out width, out height));
-			Assert.AreEqual(Width, width);
-			Assert.AreEqual(Height, height);
+			ClassicAssert.IsTrue(KingdomInheritRules.TryResolveBlueprint(Key, out actual));
+			ClassicAssert.AreEqual(Blueprint, actual);
+			ClassicAssert.IsTrue(KingdomInheritRules.TryFootprint(Key, out width, out height));
+			ClassicAssert.AreEqual(Width, width);
+			ClassicAssert.AreEqual(Height, height);
 		}
 
 		[TestCase("r_KingdomTent", "tent")]
@@ -97,8 +98,8 @@ namespace ThousandAndFirst.Tests
 		public void LiveBlueprintMapsToCanonicalBaseSemanticKey(string Blueprint, string Expected)
 		{
 			string key;
-			Assert.IsTrue(KingdomInheritRules.TrySemanticKeyForBlueprint(Blueprint, out key));
-			Assert.AreEqual(Expected, key);
+			ClassicAssert.IsTrue(KingdomInheritRules.TrySemanticKeyForBlueprint(Blueprint, out key));
+			ClassicAssert.AreEqual(Expected, key);
 		}
 
 		[TestCase(null)]
@@ -108,8 +109,8 @@ namespace ThousandAndFirst.Tests
 		public void UnknownBlueprintNeverBecomesASealSemanticKey(string Blueprint)
 		{
 			string key;
-			Assert.IsFalse(KingdomInheritRules.TrySemanticKeyForBlueprint(Blueprint, out key));
-			Assert.IsNull(key);
+			ClassicAssert.IsFalse(KingdomInheritRules.TrySemanticKeyForBlueprint(Blueprint, out key));
+			ClassicAssert.IsNull(key);
 		}
 
 		[Test]
@@ -117,7 +118,7 @@ namespace ThousandAndFirst.Tests
 		{
 			FieldInfo field = typeof(KingdomInheritRules).GetField("Definitions", BindingFlags.Static | BindingFlags.NonPublic);
 			Array definitions = (Array)field.GetValue(null);
-			Assert.AreEqual(107, definitions.Length, "104 current TAF catalogue designs plus three bounded inheritance markers");
+			ClassicAssert.AreEqual(107, definitions.Length, "104 current TAF catalogue designs plus three bounded inheritance markers");
 			HashSet<string> keys = new HashSet<string>(StringComparer.Ordinal);
 			for (int i = 0; i < definitions.Length; i++)
 			{
@@ -127,16 +128,16 @@ namespace ThousandAndFirst.Tests
 				string blueprint = (string)type.GetField("Blueprint", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(definition);
 				int width = (int)type.GetField("Width", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(definition);
 				int height = (int)type.GetField("Height", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(definition);
-				Assert.IsTrue(keys.Add(key), "duplicate semantic key " + key);
-				Assert.IsTrue(KingdomInheritRules.IsStableSemanticKey(key), key);
+				ClassicAssert.IsTrue(keys.Add(key), "duplicate semantic key " + key);
+				ClassicAssert.IsTrue(KingdomInheritRules.IsStableSemanticKey(key), key);
 				StringAssert.StartsWith("r_Kingdom", blueprint, key);
-				Assert.Greater(width, 0, key);
-				Assert.Greater(height, 0, key);
-				Assert.LessOrEqual(width, 20, key);
-				Assert.LessOrEqual(height, 18, key);
+				ClassicAssert.Greater(width, 0, key);
+				ClassicAssert.Greater(height, 0, key);
+				ClassicAssert.LessOrEqual(width, 20, key);
+				ClassicAssert.LessOrEqual(height, 18, key);
 				string resolved;
-				Assert.IsTrue(KingdomInheritRules.TryResolveBlueprint(key, out resolved), key);
-				Assert.AreEqual(blueprint, resolved, key);
+				ClassicAssert.IsTrue(KingdomInheritRules.TryResolveBlueprint(key, out resolved), key);
+				ClassicAssert.AreEqual(blueprint, resolved, key);
 			}
 		}
 
@@ -151,8 +152,8 @@ namespace ThousandAndFirst.Tests
 		public void ArbitraryBlueprintAndClrAndPathValuesNeverResolve(string Key)
 		{
 			string blueprint;
-			Assert.IsFalse(KingdomInheritRules.TryResolveBlueprint(Key, out blueprint));
-			Assert.IsNull(blueprint);
+			ClassicAssert.IsFalse(KingdomInheritRules.TryResolveBlueprint(Key, out blueprint));
+			ClassicAssert.IsNull(blueprint);
 		}
 
 		[TestCase("tent", true)]
@@ -165,7 +166,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(null, false)]
 		public void StableTokenGrammarIsNarrow(string Key, bool Expected)
 		{
-			Assert.AreEqual(Expected, KingdomInheritRules.IsStableSemanticKey(Key));
+			ClassicAssert.AreEqual(Expected, KingdomInheritRules.IsStableSemanticKey(Key));
 		}
 
 		[TestCase("removed_optional_work")]
@@ -175,14 +176,14 @@ namespace ThousandAndFirst.Tests
 		public void UnknownOrNonTafContentDegradesLocallyToMemory(string Key)
 		{
 			KingdomInheritPlan plan = Normalize(new[] { Key, "palisade" }, new[] { 10, 20 }, new[] { 10, 10 }, new[] { 80, 90 });
-			Assert.AreEqual(2, plan.Count);
-			Assert.AreEqual(KingdomInheritRules.MemoryKey, plan.WorkAt(0).Key);
-			Assert.AreEqual(0, plan.WorkAt(0).Condition);
-			Assert.AreEqual(KingdomInheritWorkState.Memory, plan.WorkAt(0).State);
+			ClassicAssert.AreEqual(2, plan.Count);
+			ClassicAssert.AreEqual(KingdomInheritRules.MemoryKey, plan.WorkAt(0).Key);
+			ClassicAssert.AreEqual(0, plan.WorkAt(0).Condition);
+			ClassicAssert.AreEqual(KingdomInheritWorkState.Memory, plan.WorkAt(0).State);
 			string blueprint;
-			Assert.IsTrue(KingdomInheritRules.TryResolveBlueprint(plan.WorkAt(0).Key, out blueprint));
-			Assert.AreEqual("r_KingdomCairn", blueprint);
-			Assert.AreEqual("palisade", plan.WorkAt(1).Key);
+			ClassicAssert.IsTrue(KingdomInheritRules.TryResolveBlueprint(plan.WorkAt(0).Key, out blueprint));
+			ClassicAssert.AreEqual("r_KingdomCairn", blueprint);
+			ClassicAssert.AreEqual("palisade", plan.WorkAt(1).Key);
 		}
 
 		[Test]
@@ -191,7 +192,7 @@ namespace ThousandAndFirst.Tests
 			string[] keys = new[] { "palisade", "rampart", "heartbasin" };
 			KingdomInheritPlan near = Normalize(keys, new[] { 4, 12, 20 }, new[] { 3, 4, 9 }, new[] { 80, 70, 60 });
 			KingdomInheritPlan far = Normalize(keys, new[] { 500004, 500012, 500020 }, new[] { -499997, -499996, -499991 }, new[] { 80, 70, 60 });
-			Assert.AreEqual(PlanBytes(near), PlanBytes(far));
+			ClassicAssert.AreEqual(PlanBytes(near), PlanBytes(far));
 		}
 
 		[Test]
@@ -201,7 +202,7 @@ namespace ThousandAndFirst.Tests
 				new[] { "palisade", "rampart", "heartbasin" }, new[] { 0, 10, 20 }, new[] { 0, 2, 4 }, new[] { 30, 40, 50 });
 			KingdomInheritPlan reverse = Normalize(
 				new[] { "heartbasin", "rampart", "palisade" }, new[] { 20, 10, 0 }, new[] { 4, 2, 0 }, new[] { 50, 40, 30 });
-			Assert.AreEqual(PlanBytes(forward), PlanBytes(reverse));
+			ClassicAssert.AreEqual(PlanBytes(forward), PlanBytes(reverse));
 		}
 
 		[Test]
@@ -211,10 +212,10 @@ namespace ThousandAndFirst.Tests
 				new[] { 10, 10, 10 }, new[] { 10, 10, 10 }, new[] { 90, 80, 20 });
 			KingdomInheritPlan second = Normalize(new[] { "palisade", "rampart", "palisade" },
 				new[] { 10, 10, 10 }, new[] { 10, 10, 10 }, new[] { 20, 90, 80 });
-			Assert.AreEqual(1, first.Count);
-			Assert.AreEqual("palisade", first.WorkAt(0).Key, "ordinal key chooses exact-cell survivor");
-			Assert.AreEqual(20, first.WorkAt(0).Condition, "lower condition fails closed when duplicate copies disagree");
-			Assert.AreEqual(PlanBytes(first), PlanBytes(second));
+			ClassicAssert.AreEqual(1, first.Count);
+			ClassicAssert.AreEqual("palisade", first.WorkAt(0).Key, "ordinal key chooses exact-cell survivor");
+			ClassicAssert.AreEqual(20, first.WorkAt(0).Condition, "lower condition fails closed when duplicate copies disagree");
+			ClassicAssert.AreEqual(PlanBytes(first), PlanBytes(second));
 		}
 
 		[Test]
@@ -231,8 +232,8 @@ namespace ThousandAndFirst.Tests
 			}
 			KingdomInheritPlan plan;
 			KingdomInheritFault fault;
-			Assert.IsFalse(KingdomInheritRules.TryNormalize(keys, x, y, condition, out plan, out fault));
-			Assert.AreEqual(KingdomInheritFault.TooManyWorks, fault);
+			ClassicAssert.IsFalse(KingdomInheritRules.TryNormalize(keys, x, y, condition, out plan, out fault));
+			ClassicAssert.AreEqual(KingdomInheritFault.TooManyWorks, fault);
 		}
 
 		[Test]
@@ -240,10 +241,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomInheritPlan plan;
 			KingdomInheritFault fault;
-			Assert.IsFalse(KingdomInheritRules.TryNormalize(null, null, null, null, out plan, out fault));
-			Assert.AreEqual(KingdomInheritFault.NullInput, fault);
-			Assert.IsFalse(KingdomInheritRules.TryNormalize(new[] { "tent" }, new int[0], new[] { 0 }, new[] { 50 }, out plan, out fault));
-			Assert.AreEqual(KingdomInheritFault.RowCountMismatch, fault);
+			ClassicAssert.IsFalse(KingdomInheritRules.TryNormalize(null, null, null, null, out plan, out fault));
+			ClassicAssert.AreEqual(KingdomInheritFault.NullInput, fault);
+			ClassicAssert.IsFalse(KingdomInheritRules.TryNormalize(new[] { "tent" }, new int[0], new[] { 0 }, new[] { 50 }, out plan, out fault));
+			ClassicAssert.AreEqual(KingdomInheritFault.RowCountMismatch, fault);
 		}
 
 		[TestCase("r_KingdomTent", 0, 0, 50, (int)KingdomInheritFault.InvalidKey)]
@@ -255,8 +256,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomInheritPlan plan;
 			KingdomInheritFault fault;
-			Assert.IsFalse(KingdomInheritRules.TryNormalize(new[] { Key }, new[] { X }, new[] { Y }, new[] { Condition }, out plan, out fault));
-			Assert.AreEqual((KingdomInheritFault)Expected, fault);
+			ClassicAssert.IsFalse(KingdomInheritRules.TryNormalize(new[] { Key }, new[] { X }, new[] { Y }, new[] { Condition }, out plan, out fault));
+			ClassicAssert.AreEqual((KingdomInheritFault)Expected, fault);
 		}
 
 		[Test]
@@ -267,8 +268,8 @@ namespace ThousandAndFirst.Tests
 			{
 				KingdomInheritPlan plan;
 				KingdomInheritFault fault;
-				Assert.IsFalse(KingdomInheritRules.TryNormalize(new[] { "tent" }, new[] { values[i] }, new[] { values[1 - i] }, new[] { 50 }, out plan, out fault));
-				Assert.AreEqual(KingdomInheritFault.CoordinateOutOfRange, fault);
+				ClassicAssert.IsFalse(KingdomInheritRules.TryNormalize(new[] { "tent" }, new[] { values[i] }, new[] { values[1 - i] }, new[] { 50 }, out plan, out fault));
+				ClassicAssert.AreEqual(KingdomInheritFault.CoordinateOutOfRange, fault);
 			}
 		}
 
@@ -277,9 +278,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomInheritPlan plan;
 			KingdomInheritFault fault;
-			Assert.IsFalse(KingdomInheritRules.TryNormalize(new[] { "palisade", "palisade" },
+			ClassicAssert.IsFalse(KingdomInheritRules.TryNormalize(new[] { "palisade", "palisade" },
 				new[] { -1000000, 1000000 }, new[] { 0, 0 }, new[] { 50, 50 }, out plan, out fault));
-			Assert.AreEqual(KingdomInheritFault.RelativeRange, fault);
+			ClassicAssert.AreEqual(KingdomInheritFault.RelativeRange, fault);
 		}
 
 		[Test]
@@ -287,24 +288,24 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomInheritPlan plan;
 			KingdomInheritFault fault;
-			Assert.IsTrue(KingdomInheritRules.TryNormalize(new[] { "house", "house" },
+			ClassicAssert.IsTrue(KingdomInheritRules.TryNormalize(new[] { "house", "house" },
 				new[] { 10, 11 }, new[] { 10, 10 }, new[] { 100, 100 }, out plan, out fault),
 				fault.ToString());
-			Assert.AreEqual(2, plan.Count);
-			Assert.AreEqual(KingdomInheritRules.MemoryKey, plan.WorkAt(0).Key);
-			Assert.AreEqual(KingdomInheritRules.MemoryKey, plan.WorkAt(1).Key);
-			Assert.AreEqual(0, plan.WorkAt(0).X);
-			Assert.AreEqual(1, plan.WorkAt(1).X);
+			ClassicAssert.AreEqual(2, plan.Count);
+			ClassicAssert.AreEqual(KingdomInheritRules.MemoryKey, plan.WorkAt(0).Key);
+			ClassicAssert.AreEqual(KingdomInheritRules.MemoryKey, plan.WorkAt(1).Key);
+			ClassicAssert.AreEqual(0, plan.WorkAt(0).X);
+			ClassicAssert.AreEqual(1, plan.WorkAt(1).X);
 		}
 
 		[Test]
 		public void NormalizedEnvelopeIncludesWholeAsymmetricFootprint()
 		{
 			KingdomInheritPlan plan = Normalize(new[] { "house" }, new[] { 17 }, new[] { 9 }, new[] { 70 });
-			Assert.AreEqual(8, plan.Width);
-			Assert.AreEqual(6, plan.Height);
-			Assert.AreEqual(3, plan.WorkAt(0).X);
-			Assert.AreEqual(2, plan.WorkAt(0).Y);
+			ClassicAssert.AreEqual(8, plan.Width);
+			ClassicAssert.AreEqual(6, plan.Height);
+			ClassicAssert.AreEqual(3, plan.WorkAt(0).X);
+			ClassicAssert.AreEqual(2, plan.WorkAt(0).Y);
 		}
 
 		[Test]
@@ -315,16 +316,16 @@ namespace ThousandAndFirst.Tests
 			KingdomInheritPlacement first;
 			KingdomInheritPlacement second;
 			KingdomInheritFault fault;
-			Assert.IsTrue(KingdomInheritRules.TryFit(plan, 80, 25, out first, out fault), fault.ToString());
-			Assert.IsTrue(KingdomInheritRules.TryFit(plan, 80, 25, out second, out fault), fault.ToString());
-			Assert.AreEqual(PlacementBytes(first), PlacementBytes(second));
+			ClassicAssert.IsTrue(KingdomInheritRules.TryFit(plan, 80, 25, out first, out fault), fault.ToString());
+			ClassicAssert.IsTrue(KingdomInheritRules.TryFit(plan, 80, 25, out second, out fault), fault.ToString());
+			ClassicAssert.AreEqual(PlacementBytes(first), PlacementBytes(second));
 			for (int i = 0; i < first.Count; i++)
 			{
 				KingdomInheritWork work = first.WorkAt(i);
-				Assert.GreaterOrEqual(work.X, KingdomInheritRules.SafeMargin);
-				Assert.Less(work.X, KingdomInheritRules.TargetWidth - KingdomInheritRules.SafeMargin);
-				Assert.GreaterOrEqual(work.Y, KingdomInheritRules.SafeMargin);
-				Assert.Less(work.Y, KingdomInheritRules.TargetHeight - KingdomInheritRules.SafeMargin);
+				ClassicAssert.GreaterOrEqual(work.X, KingdomInheritRules.SafeMargin);
+				ClassicAssert.Less(work.X, KingdomInheritRules.TargetWidth - KingdomInheritRules.SafeMargin);
+				ClassicAssert.GreaterOrEqual(work.Y, KingdomInheritRules.SafeMargin);
+				ClassicAssert.Less(work.Y, KingdomInheritRules.TargetHeight - KingdomInheritRules.SafeMargin);
 			}
 		}
 
@@ -333,22 +334,22 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomInheritPlan plan = Normalize(new[] { "palisade", "palisade" },
 				new[] { 0, 75 }, new[] { 0, 20 }, new[] { 100, 100 });
-			Assert.AreEqual(76, plan.Width);
-			Assert.AreEqual(21, plan.Height);
-			Assert.AreEqual(KingdomInheritRules.SafeMargin, KingdomInheritRules.WorkMargin);
+			ClassicAssert.AreEqual(76, plan.Width);
+			ClassicAssert.AreEqual(21, plan.Height);
+			ClassicAssert.AreEqual(KingdomInheritRules.SafeMargin, KingdomInheritRules.WorkMargin);
 
 			KingdomInheritPlacement placement;
 			KingdomInheritFault fault;
-			Assert.IsTrue(KingdomInheritRules.TryFit(plan, 80, 25, out placement, out fault),
+			ClassicAssert.IsTrue(KingdomInheritRules.TryFit(plan, 80, 25, out placement, out fault),
 				fault.ToString());
-			Assert.AreEqual(3, placement.Count, "two works plus the unconditional founder cairn");
-			Assert.AreEqual(2, placement.WorkAt(0).X);
-			Assert.AreEqual(2, placement.WorkAt(0).Y);
-			Assert.AreEqual(77, placement.WorkAt(1).X);
-			Assert.AreEqual(22, placement.WorkAt(1).Y);
-			Assert.AreNotEqual(placement.CairnX + "," + placement.CairnY,
+			ClassicAssert.AreEqual(3, placement.Count, "two works plus the unconditional founder cairn");
+			ClassicAssert.AreEqual(2, placement.WorkAt(0).X);
+			ClassicAssert.AreEqual(2, placement.WorkAt(0).Y);
+			ClassicAssert.AreEqual(77, placement.WorkAt(1).X);
+			ClassicAssert.AreEqual(22, placement.WorkAt(1).Y);
+			ClassicAssert.AreNotEqual(placement.CairnX + "," + placement.CairnY,
 				placement.WorkAt(0).X + "," + placement.WorkAt(0).Y);
-			Assert.AreNotEqual(placement.CairnX + "," + placement.CairnY,
+			ClassicAssert.AreNotEqual(placement.CairnX + "," + placement.CairnY,
 				placement.WorkAt(1).X + "," + placement.WorkAt(1).Y);
 		}
 
@@ -358,13 +359,13 @@ namespace ThousandAndFirst.Tests
 			KingdomInheritPlacement placement;
 			KingdomInheritFault fault;
 			KingdomInheritPlan one = Normalize(new[] { "palisade" }, new[] { 0 }, new[] { 0 }, new[] { 50 });
-			Assert.IsFalse(KingdomInheritRules.TryFit(one, 81, 25, out placement, out fault));
-			Assert.AreEqual(KingdomInheritFault.ImpossibleFootprint, fault);
+			ClassicAssert.IsFalse(KingdomInheritRules.TryFit(one, 81, 25, out placement, out fault));
+			ClassicAssert.AreEqual(KingdomInheritFault.ImpossibleFootprint, fault);
 
 			KingdomInheritPlan tall = Normalize(new[] { "palisade", "palisade" },
 				new[] { 0, 0 }, new[] { 0, 21 }, new[] { 50, 50 });
-			Assert.IsFalse(KingdomInheritRules.TryFit(tall, 80, 25, out placement, out fault));
-			Assert.AreEqual(KingdomInheritFault.ImpossibleFootprint, fault);
+			ClassicAssert.IsFalse(KingdomInheritRules.TryFit(tall, 80, 25, out placement, out fault));
+			ClassicAssert.AreEqual(KingdomInheritFault.ImpossibleFootprint, fault);
 		}
 
 		[TestCase(KingdomRules.InheritedState.Held, (int)KingdomInheritWorkState.Standing, 80)]
@@ -376,9 +377,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomInheritPlan source = Normalize(new[] { "palisade" }, new[] { 10 }, new[] { 10 }, new[] { 100 });
 			KingdomInheritPlan inherited = Apply(source, State, 50);
-			Assert.AreEqual(1, inherited.Count);
-			Assert.AreEqual((KingdomInheritWorkState)ExpectedState, inherited.WorkAt(0).State);
-			Assert.AreEqual(ExpectedCondition, inherited.WorkAt(0).Condition);
+			ClassicAssert.AreEqual(1, inherited.Count);
+			ClassicAssert.AreEqual((KingdomInheritWorkState)ExpectedState, inherited.WorkAt(0).State);
+			ClassicAssert.AreEqual(ExpectedCondition, inherited.WorkAt(0).Condition);
 		}
 
 		[Test]
@@ -400,21 +401,21 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < faded.Count; i++)
 			{
 				KingdomInheritWork work = faded.WorkAt(i);
-				Assert.AreEqual("palisade", work.Key);
+				ClassicAssert.AreEqual("palisade", work.Key);
 				if (work.State == KingdomInheritWorkState.Standing)
 				{
 					sound++;
-					Assert.LessOrEqual(work.Condition, KingdomInheritRules.FadedStandingConditionCeiling);
+					ClassicAssert.LessOrEqual(work.Condition, KingdomInheritRules.FadedStandingConditionCeiling);
 				}
 				else
 				{
 					derelict++;
-					Assert.AreEqual(KingdomInheritWorkState.Derelict, work.State);
-					Assert.LessOrEqual(work.Condition, KingdomInheritRules.FadedDerelictConditionCeiling);
+					ClassicAssert.AreEqual(KingdomInheritWorkState.Derelict, work.State);
+					ClassicAssert.LessOrEqual(work.Condition, KingdomInheritRules.FadedDerelictConditionCeiling);
 				}
 			}
-			Assert.AreEqual(5, derelict);
-			Assert.AreEqual(15, sound);
+			ClassicAssert.AreEqual(5, derelict);
+			ClassicAssert.AreEqual(15, sound);
 		}
 
 		[Test]
@@ -432,13 +433,13 @@ namespace ThousandAndFirst.Tests
 			}
 			KingdomInheritPlan source = Normalize(keys, x, y, condition);
 			KingdomInheritPlan abandoned = Apply(source, KingdomRules.InheritedState.Abandoned, 99);
-			Assert.IsTrue(KingdomRules.AllWorksSurvive(KingdomRules.InheritedState.Abandoned));
-			Assert.AreEqual(source.Count, abandoned.Count);
+			ClassicAssert.IsTrue(KingdomRules.AllWorksSurvive(KingdomRules.InheritedState.Abandoned));
+			ClassicAssert.AreEqual(source.Count, abandoned.Count);
 			for (int i = 0; i < abandoned.Count; i++)
 			{
-				Assert.AreEqual("palisade", abandoned.WorkAt(i).Key);
-				Assert.AreEqual(KingdomInheritWorkState.Derelict, abandoned.WorkAt(i).State);
-				Assert.LessOrEqual(abandoned.WorkAt(i).Condition, KingdomInheritRules.AbandonedDerelictConditionCeiling);
+				ClassicAssert.AreEqual("palisade", abandoned.WorkAt(i).Key);
+				ClassicAssert.AreEqual(KingdomInheritWorkState.Derelict, abandoned.WorkAt(i).State);
+				ClassicAssert.LessOrEqual(abandoned.WorkAt(i).Condition, KingdomInheritRules.AbandonedDerelictConditionCeiling);
 			}
 		}
 
@@ -473,20 +474,20 @@ namespace ThousandAndFirst.Tests
 				if (work.State == KingdomInheritWorkState.Derelict)
 				{
 					standing++;
-					Assert.AreEqual("palisade", work.Key);
-					Assert.LessOrEqual(work.Condition, KingdomInheritRules.RuinsDerelictConditionCeiling);
+					ClassicAssert.AreEqual("palisade", work.Key);
+					ClassicAssert.LessOrEqual(work.Condition, KingdomInheritRules.RuinsDerelictConditionCeiling);
 				}
 				else
 				{
 					rubble++;
-					Assert.AreEqual(KingdomInheritWorkState.Rubble, work.State);
-					Assert.AreEqual(KingdomInheritRules.RubbleKey, work.Key);
-					Assert.AreEqual(0, work.Condition);
+					ClassicAssert.AreEqual(KingdomInheritWorkState.Rubble, work.State);
+					ClassicAssert.AreEqual(KingdomInheritRules.RubbleKey, work.Key);
+					ClassicAssert.AreEqual(0, work.Condition);
 				}
 			}
-			Assert.AreEqual(expectedStanding, standing);
-			Assert.AreEqual(keys.Length - expectedStanding, rubble);
-			Assert.AreEqual(keys.Length, ruins.Count, "rubble stays in place so the street silhouette remains legible");
+			ClassicAssert.AreEqual(expectedStanding, standing);
+			ClassicAssert.AreEqual(keys.Length - expectedStanding, rubble);
+			ClassicAssert.AreEqual(keys.Length, ruins.Count, "rubble stays in place so the street silhouette remains legible");
 		}
 
 		[Test]
@@ -515,7 +516,7 @@ namespace ThousandAndFirst.Tests
 					{
 						if (ruins.WorkAt(i).State == KingdomInheritWorkState.Derelict) standing++;
 					}
-					Assert.AreEqual(expected, standing, count + " works, roll " + roll);
+					ClassicAssert.AreEqual(expected, standing, count + " works, roll " + roll);
 				}
 			}
 		}
@@ -540,7 +541,7 @@ namespace ThousandAndFirst.Tests
 				{
 					if (inherited.WorkAt(i).State == KingdomInheritWorkState.Rubble) anyRubble = true;
 				}
-				Assert.AreEqual(KingdomRules.AllWorksSurvive(states[s]), !anyRubble, states[s].ToString());
+				ClassicAssert.AreEqual(KingdomRules.AllWorksSurvive(states[s]), !anyRubble, states[s].ToString());
 			}
 		}
 
@@ -554,16 +555,16 @@ namespace ThousandAndFirst.Tests
 				KingdomInheritPlan faded = Apply(source, KingdomRules.InheritedState.Faded);
 				KingdomInheritPlan abandoned = Apply(source, KingdomRules.InheritedState.Abandoned);
 				KingdomInheritPlan ruins = Apply(source, KingdomRules.InheritedState.Ruins);
-				Assert.AreEqual(1, held.Count);
-				Assert.AreEqual(1, faded.Count);
-				Assert.AreEqual(1, abandoned.Count);
-				Assert.AreEqual(1, ruins.Count);
-				Assert.LessOrEqual(faded.WorkAt(0).Condition, held.WorkAt(0).Condition);
-				Assert.LessOrEqual(abandoned.WorkAt(0).Condition, faded.WorkAt(0).Condition);
-				Assert.LessOrEqual(ruins.WorkAt(0).Condition, abandoned.WorkAt(0).Condition);
-				Assert.GreaterOrEqual((int)faded.WorkAt(0).State, (int)held.WorkAt(0).State);
-				Assert.GreaterOrEqual((int)abandoned.WorkAt(0).State, (int)faded.WorkAt(0).State);
-				Assert.GreaterOrEqual((int)ruins.WorkAt(0).State, (int)abandoned.WorkAt(0).State);
+				ClassicAssert.AreEqual(1, held.Count);
+				ClassicAssert.AreEqual(1, faded.Count);
+				ClassicAssert.AreEqual(1, abandoned.Count);
+				ClassicAssert.AreEqual(1, ruins.Count);
+				ClassicAssert.LessOrEqual(faded.WorkAt(0).Condition, held.WorkAt(0).Condition);
+				ClassicAssert.LessOrEqual(abandoned.WorkAt(0).Condition, faded.WorkAt(0).Condition);
+				ClassicAssert.LessOrEqual(ruins.WorkAt(0).Condition, abandoned.WorkAt(0).Condition);
+				ClassicAssert.GreaterOrEqual((int)faded.WorkAt(0).State, (int)held.WorkAt(0).State);
+				ClassicAssert.GreaterOrEqual((int)abandoned.WorkAt(0).State, (int)faded.WorkAt(0).State);
+				ClassicAssert.GreaterOrEqual((int)ruins.WorkAt(0).State, (int)abandoned.WorkAt(0).State);
 			}
 		}
 
@@ -581,10 +582,10 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < states.Length; i++)
 			{
 				KingdomInheritPlan inherited = Apply(source, states[i]);
-				Assert.AreEqual(1, inherited.Count);
-				Assert.AreEqual(KingdomInheritRules.MemoryKey, inherited.WorkAt(0).Key);
-				Assert.AreEqual(KingdomInheritWorkState.Memory, inherited.WorkAt(0).State);
-				Assert.AreEqual(0, inherited.WorkAt(0).Condition);
+				ClassicAssert.AreEqual(1, inherited.Count);
+				ClassicAssert.AreEqual(KingdomInheritRules.MemoryKey, inherited.WorkAt(0).Key);
+				ClassicAssert.AreEqual(KingdomInheritWorkState.Memory, inherited.WorkAt(0).State);
+				ClassicAssert.AreEqual(0, inherited.WorkAt(0).Condition);
 			}
 		}
 
@@ -593,14 +594,14 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomInheritPlacement placement;
 			KingdomInheritFault fault;
-			Assert.IsTrue(KingdomInheritRules.TryPrepare(new string[0], new int[0], new int[0], new int[0],
+			ClassicAssert.IsTrue(KingdomInheritRules.TryPrepare(new string[0], new int[0], new int[0], new int[0],
 				KingdomRules.InheritedState.Ruins, 99, out placement, out fault), fault.ToString());
-			Assert.AreEqual(1, placement.Count);
-			Assert.AreEqual(KingdomInheritRules.FounderCairnKey, placement.WorkAt(0).Key);
-			Assert.AreEqual(KingdomInheritWorkState.Memory, placement.WorkAt(0).State);
-			Assert.AreEqual(placement.CairnX, placement.HeartX);
-			Assert.AreEqual(placement.CairnY, placement.HeartY);
-			Assert.IsTrue(placement.EntryX == 0 || placement.EntryX == 79 || placement.EntryY == 0 || placement.EntryY == 24);
+			ClassicAssert.AreEqual(1, placement.Count);
+			ClassicAssert.AreEqual(KingdomInheritRules.FounderCairnKey, placement.WorkAt(0).Key);
+			ClassicAssert.AreEqual(KingdomInheritWorkState.Memory, placement.WorkAt(0).State);
+			ClassicAssert.AreEqual(placement.CairnX, placement.HeartX);
+			ClassicAssert.AreEqual(placement.CairnY, placement.HeartY);
+			ClassicAssert.IsTrue(placement.EntryX == 0 || placement.EntryX == 79 || placement.EntryY == 0 || placement.EntryY == 24);
 		}
 
 		[Test]
@@ -608,7 +609,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomInheritPlacement placement;
 			KingdomInheritFault fault;
-			Assert.IsTrue(KingdomInheritRules.TryPrepare(new[] { "heartbasin", "heartmoot", "palisade" },
+			ClassicAssert.IsTrue(KingdomInheritRules.TryPrepare(new[] { "heartbasin", "heartmoot", "palisade" },
 				new[] { 10, 35, 60 }, new[] { 10, 10, 10 }, new[] { 100, 100, 100 },
 				KingdomRules.InheritedState.Held, 50, out placement, out fault), fault.ToString());
 			KingdomInheritWork moot = null;
@@ -616,9 +617,9 @@ namespace ThousandAndFirst.Tests
 			{
 				if (placement.WorkAt(i).Key == "heartmoot") moot = placement.WorkAt(i);
 			}
-			Assert.IsNotNull(moot);
-			Assert.AreEqual(moot.X, placement.HeartX);
-			Assert.AreEqual(moot.Y, placement.HeartY);
+			ClassicAssert.IsNotNull(moot);
+			ClassicAssert.AreEqual(moot.X, placement.HeartX);
+			ClassicAssert.AreEqual(moot.Y, placement.HeartY);
 		}
 
 		[Test]
@@ -637,7 +638,7 @@ namespace ThousandAndFirst.Tests
 					keptHeart = true;
 				}
 			}
-			Assert.IsTrue(keptHeart);
+			ClassicAssert.IsTrue(keptHeart);
 		}
 
 		[Test]
@@ -645,14 +646,14 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomInheritPlacement placement;
 			KingdomInheritFault fault;
-			Assert.IsTrue(KingdomInheritRules.TryPrepare(new[] { "palisade" }, new[] { 0 }, new[] { 0 }, new[] { 70 },
+			ClassicAssert.IsTrue(KingdomInheritRules.TryPrepare(new[] { "palisade" }, new[] { 0 }, new[] { 0 }, new[] { 70 },
 				KingdomRules.InheritedState.Held, 50, out placement, out fault));
-			Assert.AreEqual(KingdomInheritRules.RemainingEngineChecks, placement.RemainingEngineChecks);
-			Assert.IsTrue((placement.RemainingEngineChecks & KingdomInheritEngineCheck.Terrain) != 0);
-			Assert.IsTrue((placement.RemainingEngineChecks & KingdomInheritEngineCheck.ExistingObjects) != 0);
-			Assert.IsTrue((placement.RemainingEngineChecks & KingdomInheritEngineCheck.ConnectionCell) != 0);
-			Assert.IsTrue((placement.RemainingEngineChecks & KingdomInheritEngineCheck.Stairs) != 0);
-			Assert.IsTrue((placement.RemainingEngineChecks & KingdomInheritEngineCheck.EntryToHeartPath) != 0);
+			ClassicAssert.AreEqual(KingdomInheritRules.RemainingEngineChecks, placement.RemainingEngineChecks);
+			ClassicAssert.IsTrue((placement.RemainingEngineChecks & KingdomInheritEngineCheck.Terrain) != 0);
+			ClassicAssert.IsTrue((placement.RemainingEngineChecks & KingdomInheritEngineCheck.ExistingObjects) != 0);
+			ClassicAssert.IsTrue((placement.RemainingEngineChecks & KingdomInheritEngineCheck.ConnectionCell) != 0);
+			ClassicAssert.IsTrue((placement.RemainingEngineChecks & KingdomInheritEngineCheck.Stairs) != 0);
+			ClassicAssert.IsTrue((placement.RemainingEngineChecks & KingdomInheritEngineCheck.EntryToHeartPath) != 0);
 		}
 
 		[Test]
@@ -674,9 +675,9 @@ namespace ThousandAndFirst.Tests
 				KingdomInheritPlacement first;
 				KingdomInheritPlacement second;
 				KingdomInheritFault fault;
-				Assert.IsTrue(KingdomInheritRules.TryPrepare(keys, x, y, condition, states[state], 73, out first, out fault), fault.ToString());
-				Assert.IsTrue(KingdomInheritRules.TryPrepare(keys, x, y, condition, states[state], 73, out second, out fault), fault.ToString());
-				Assert.AreEqual(PlacementBytes(first), PlacementBytes(second), states[state].ToString());
+				ClassicAssert.IsTrue(KingdomInheritRules.TryPrepare(keys, x, y, condition, states[state], 73, out first, out fault), fault.ToString());
+				ClassicAssert.IsTrue(KingdomInheritRules.TryPrepare(keys, x, y, condition, states[state], 73, out second, out fault), fault.ToString());
+				ClassicAssert.AreEqual(PlacementBytes(first), PlacementBytes(second), states[state].ToString());
 			}
 		}
 
@@ -689,8 +690,8 @@ namespace ThousandAndFirst.Tests
 			{
 				KingdomInheritPlan plan;
 				KingdomInheritFault fault;
-				Assert.IsFalse(KingdomInheritRules.TryApplyState(source, State(invalid[i]), 50, out plan, out fault));
-				Assert.AreEqual(KingdomInheritFault.InvalidState, fault);
+				ClassicAssert.IsFalse(KingdomInheritRules.TryApplyState(source, State(invalid[i]), 50, out plan, out fault));
+				ClassicAssert.AreEqual(KingdomInheritFault.InvalidState, fault);
 			}
 		}
 
@@ -703,28 +704,28 @@ namespace ThousandAndFirst.Tests
 			KingdomInheritPlan source = Normalize(new[] { "palisade" }, new[] { 0 }, new[] { 0 }, new[] { 50 });
 			KingdomInheritPlan plan;
 			KingdomInheritFault fault;
-			Assert.IsFalse(KingdomInheritRules.TryApplyState(source, KingdomRules.InheritedState.Held,
+			ClassicAssert.IsFalse(KingdomInheritRules.TryApplyState(source, KingdomRules.InheritedState.Held,
 				InterregnumRoll, out plan, out fault));
-			Assert.AreEqual(KingdomInheritFault.InterregnumRollOutOfRange, fault);
+			ClassicAssert.AreEqual(KingdomInheritFault.InterregnumRollOutOfRange, fault);
 		}
 
 		[Test]
 		public void PersistedEnumsAndDtoMetadataRemainExactAcrossSourceFamilies()
 		{
-			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomInheritWorkState)));
-			Assert.AreEqual(0, (int)KingdomInheritWorkState.Standing);
-			Assert.AreEqual(1, (int)KingdomInheritWorkState.Derelict);
-			Assert.AreEqual(2, (int)KingdomInheritWorkState.Rubble);
-			Assert.AreEqual(3, (int)KingdomInheritWorkState.Memory);
+			ClassicAssert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomInheritWorkState)));
+			ClassicAssert.AreEqual(0, (int)KingdomInheritWorkState.Standing);
+			ClassicAssert.AreEqual(1, (int)KingdomInheritWorkState.Derelict);
+			ClassicAssert.AreEqual(2, (int)KingdomInheritWorkState.Rubble);
+			ClassicAssert.AreEqual(3, (int)KingdomInheritWorkState.Memory);
 
-			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomInheritFault)));
+			ClassicAssert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomInheritFault)));
 			int[] faults = new int[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 };
 			Array faultValues = Enum.GetValues(typeof(KingdomInheritFault));
-			Assert.AreEqual(faults.Length, faultValues.Length);
+			ClassicAssert.AreEqual(faults.Length, faultValues.Length);
 			for (int i = 0; i < faults.Length; i++)
-				Assert.AreEqual(faults[i], Convert.ToInt32(faultValues.GetValue(i)));
+				ClassicAssert.AreEqual(faults[i], Convert.ToInt32(faultValues.GetValue(i)));
 
-			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomInheritEngineCheck)));
+			ClassicAssert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomInheritEngineCheck)));
 			CollectionAssert.AreEqual(new int[] { 0, 1, 2, 4, 8, 16 }, new int[]
 			{
 				(int)KingdomInheritEngineCheck.None,
@@ -735,9 +736,9 @@ namespace ThousandAndFirst.Tests
 				(int)KingdomInheritEngineCheck.EntryToHeartPath
 			});
 
-			Assert.AreEqual("ThousandAndFirst.KingdomInheritWork", typeof(KingdomInheritWork).FullName);
-			Assert.AreEqual("ThousandAndFirst.KingdomInheritPlan", typeof(KingdomInheritPlan).FullName);
-			Assert.AreEqual("ThousandAndFirst.KingdomInheritPlacement", typeof(KingdomInheritPlacement).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomInheritWork", typeof(KingdomInheritWork).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomInheritPlan", typeof(KingdomInheritPlan).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomInheritPlacement", typeof(KingdomInheritPlacement).FullName);
 			AssertDeclaredFields(typeof(KingdomInheritWork), "Key", "X", "Y", "Condition", "State",
 				"ArchitectureSnapshot", "ArchitectureHash");
 			AssertDeclaredFields(typeof(KingdomInheritPlan), "_works", "Width", "Height");
@@ -764,7 +765,7 @@ namespace ThousandAndFirst.Tests
 					Type fieldType = fields[i].FieldType;
 					bool safe = fieldType == typeof(string) || fieldType == typeof(int) || fieldType.IsEnum
 						|| fieldType == typeof(KingdomInheritWork[]);
-					Assert.IsTrue(safe, dtoTypes[t].Name + "." + fields[i].Name + " carries " + fieldType.FullName);
+					ClassicAssert.IsTrue(safe, dtoTypes[t].Name + "." + fields[i].Name + " carries " + fieldType.FullName);
 				}
 			}
 		}
@@ -779,11 +780,11 @@ namespace ThousandAndFirst.Tests
 				string line = KingdomInheritRules.FailureLine(fault);
 				if (fault == KingdomInheritFault.None)
 				{
-					Assert.AreEqual("", line);
+					ClassicAssert.AreEqual("", line);
 				}
 				else
 				{
-					Assert.IsNotEmpty(line, fault.ToString());
+					ClassicAssert.IsNotEmpty(line, fault.ToString());
 				}
 			}
 		}

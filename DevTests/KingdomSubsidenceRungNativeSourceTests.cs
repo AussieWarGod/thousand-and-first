@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -19,9 +20,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CompletedSummaryIncludesTheFinalNamedDepartureNotOnlyRetiredSteps()
 		{
-			Assert.AreEqual(2, Enumerable.Range(0, 10).Count(i => KingdomSubsidenceRules.TellsDeparture(i, 15)));
-			Assert.AreEqual(3, Enumerable.Range(0, 15).Count(i => KingdomSubsidenceRules.TellsDeparture(i, 15)));
-			Assert.AreEqual(3, KingdomSubsidenceRules.NamedDepartures(15));
+			ClassicAssert.AreEqual(2, Enumerable.Range(0, 10).Count(i => KingdomSubsidenceRules.TellsDeparture(i, 15)));
+			ClassicAssert.AreEqual(3, Enumerable.Range(0, 15).Count(i => KingdomSubsidenceRules.TellsDeparture(i, 15)));
+			ClassicAssert.AreEqual(3, KingdomSubsidenceRules.NamedDepartures(15));
 			Contains(Read(Checks), "KingdomSubsidenceRules.NamedDepartures(15)");
 		}
 
@@ -29,9 +30,9 @@ namespace ThousandAndFirst.Tests
 		public void FixtureCandidateStreamsVaryBeforeLongOwnerPrefixTruncation()
 		{
 			string owner = new string('a', 200);
-			Assert.AreEqual(KingdomSubsidenceRules.WorkStream(owner + ":0"),
+			ClassicAssert.AreEqual(KingdomSubsidenceRules.WorkStream(owner + ":0"),
 				KingdomSubsidenceRules.WorkStream(owner + ":1"), "negative control must share the truncated prefix");
-			Assert.AreNotEqual(KingdomSubsidenceRules.WorkStream("native-rung-hut:0:" + owner),
+			ClassicAssert.AreNotEqual(KingdomSubsidenceRules.WorkStream("native-rung-hut:0:" + owner),
 				KingdomSubsidenceRules.WorkStream("native-rung-hut:1:" + owner));
 			Contains(Read(Fixture), "\"native-rung-hut:\" + i.ToString(CultureInfo.InvariantCulture) + \":\" + Realm");
 		}
@@ -44,7 +45,7 @@ namespace ThousandAndFirst.Tests
 				"VERBS=subsidence-rung-check", "subsidence-rung-check:OK~cases=6 passed=6 failed=0");
 			string source = Read(Checks);
 			int branch = source.IndexOf("if (DeathPrepared)", StringComparison.Ordinal);
-			Assert.Greater(branch, 0);
+			ClassicAssert.Greater(branch, 0);
 			string[] shared = PassedCases(source.Substring(0, branch));
 			string[] wear = PassedCases(Between(source, "current = \"actual-wear-after-synthetic-authority-cut\";", "catch (Exception error)"));
 			string[] death = PassedCases(Read(Death));
@@ -54,8 +55,8 @@ namespace ThousandAndFirst.Tests
 				"production-rung-recovery-and-retirement", "same-tick-no-rung-replay" }, wear);
 			CollectionAssert.AreEqual(new[] { "unrelated-engine-death", "selected-engine-death",
 				"prepared-death-recovery-no-replay" }, death);
-			Assert.AreEqual(6, shared.Concat(wear).Distinct().Count());
-			Assert.AreEqual(6, shared.Concat(death).Distinct().Count());
+			ClassicAssert.AreEqual(6, shared.Concat(wear).Distinct().Count());
+			ClassicAssert.AreEqual(6, shared.Concat(death).Distinct().Count());
 			string deathBranch = Between(source, "if (DeathPrepared)", "current = \"actual-wear-after-synthetic-authority-cut\";");
 			Ordered(deathBranch, "current = \"prepared-roof-native-deaths\";",
 				"KingdomResidentDeathNativeChecks.Run(fixture, plan, results, ref passed);", "else");
@@ -99,7 +100,7 @@ namespace ThousandAndFirst.Tests
 				"fixture.Wear.IncidentPhase == (int)KingdomWearIncidentPhase.MutationIntent",
 				"fixture.Wear.IncidentId == stepId && !Roof(fixture).RoofStanding",
 				"parent-intent=seeded; wear-write=production", "construction-and-assignment=seeded");
-			Assert.IsFalse(Regex.IsMatch(Read(Checks), @"\bfixture\.Wear\.Wear\s*=(?!=)"));
+			ClassicAssert.IsFalse(Regex.IsMatch(Read(Checks), @"\bfixture\.Wear\.Wear\s*=(?!=)"));
 		}
 
 		[Test]
@@ -115,7 +116,7 @@ namespace ThousandAndFirst.Tests
 				"Prefix(system.OutsiderEntries, outsiderPrefix)", "copies == 1", "Fixture.Wear.IncidentId == null",
 				"Fixture.Wear.LastCompletedIncidentId == Plan.StepId", "ReferenceEquals(Fixture.Wear.ParentObject, work)",
 				"roof.RoofStanding && roof.Reached == Plan.DueTick");
-			Assert.AreEqual(2, Regex.Matches(Read(Checks), @"VerifyEffects\(fixture, plan\);").Count);
+			ClassicAssert.AreEqual(2, Regex.Matches(Read(Checks), @"VerifyEffects\(fixture, plan\);").Count);
 		}
 
 		[Test]
@@ -128,10 +129,10 @@ namespace ThousandAndFirst.Tests
 			foreach (string path in new[] { Checks, Provider, Fault, Fixture, Death })
 			{
 				string source = Read(path);
-				Assert.Less(source.Split('\n').Length - (source.EndsWith("\n", StringComparison.Ordinal) ? 1 : 0), 300, path);
+				ClassicAssert.Less(source.Split('\n').Length - (source.EndsWith("\n", StringComparison.Ordinal) ? 1 : 0), 300, path);
 				StringAssert.DoesNotContain(".Destroy(", source);
 				StringAssert.DoesNotContain(".Obliterate(", source);
-				Assert.IsFalse(Regex.IsMatch(source, @"\bGame\.TimeTicks\s*=(?!=)"));
+				ClassicAssert.IsFalse(Regex.IsMatch(source, @"\bGame\.TimeTicks\s*=(?!=)"));
 			}
 		}
 
@@ -160,7 +161,7 @@ namespace ThousandAndFirst.Tests
 				"VERBS=subsidence-rung-death-check", "subsidence-rung-death-check:OK~cases=6 passed=6 failed=0");
 			string original = Read("Tools/personas/subsidence-rung-native-checks.persona");
 			string diagnostics = persona.Split('\n').Single(line => line.StartsWith("LOG_EXPECT=", StringComparison.Ordinal));
-			Assert.AreEqual(original.Split('\n').Single(line => line.StartsWith("LOG_EXPECT=", StringComparison.Ordinal)), diagnostics);
+			ClassicAssert.AreEqual(original.Split('\n').Single(line => line.StartsWith("LOG_EXPECT=", StringComparison.Ordinal)), diagnostics);
 			StringAssert.DoesNotContain("TAF_LOG_ALLOW", persona);
 		}
 
@@ -184,7 +185,7 @@ namespace ThousandAndFirst.Tests
 				"!g.HasObjectGameState(f.Key)", "!g.HasBooleanGameState(f.Key)", "!g.HasStringGameState(f.Key)",
 				"KingdomResidentDeathCodec.TryDecode(wire", "encoded == wire",
 				"journal.Realm == f.Realm && journal.Settlement == f.Settlement");
-			Assert.AreEqual(1, Regex.Matches(source, @"\bbody\.Die\(").Count);
+			ClassicAssert.AreEqual(1, Regex.Matches(source, @"\bbody\.Die\(").Count);
 			StringAssert.DoesNotContain("KingdomResidentDeathRuntime.Record(", source);
 		}
 
@@ -211,7 +212,7 @@ namespace ThousandAndFirst.Tests
 				"Same(s.Ledger.Notes.ToArray(), notes)");
 			StringAssert.DoesNotContain("TryResumeRung(", source);
 			StringAssert.DoesNotContain("TryPublishWitnessedDeath(", source);
-			Assert.IsFalse(Regex.IsMatch(source, @"\.SubsidenceModel\s*=(?!=)|\.Population\s*=(?!=)|\.TimeTicks\s*=(?!=)"));
+			ClassicAssert.IsFalse(Regex.IsMatch(source, @"\.SubsidenceModel\s*=(?!=)|\.Population\s*=(?!=)|\.TimeTicks\s*=(?!=)"));
 		}
 
 		[Test]
@@ -245,9 +246,9 @@ namespace ThousandAndFirst.Tests
 		private static string Between(string Source, string Start, string End)
 		{
 			int first = Source.IndexOf(Start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(first, 0, Start);
+			ClassicAssert.GreaterOrEqual(first, 0, Start);
 			int last = Source.IndexOf(End, first + Start.Length, StringComparison.Ordinal);
-			Assert.Greater(last, first, End);
+			ClassicAssert.Greater(last, first, End);
 			return Source.Substring(first, last - first);
 		}
 
@@ -262,7 +263,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string token in Tokens)
 			{
 				int at = Source.IndexOf(token, cursor, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(at, cursor, token);
+				ClassicAssert.GreaterOrEqual(at, cursor, token);
 				cursor = at + token.Length;
 			}
 		}

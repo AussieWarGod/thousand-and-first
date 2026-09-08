@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 using ThousandAndFirst.Harness;
 
@@ -125,11 +126,11 @@ namespace ThousandAndFirst.Tests
 			KingdomScenarioDefinition row = Row();
 			row.Parameters = counted;
 			IList<string> findings = KingdomScenarioRowValidator.Findings(row);
-			Assert.IsNotEmpty(findings);
-			Assert.LessOrEqual(counted.HighestIndexRead,
+			ClassicAssert.IsNotEmpty(findings);
+			ClassicAssert.LessOrEqual(counted.HighestIndexRead,
 				KingdomScenarioRowValidator.MaxParameters,
 				"the over-cap parameter list was walked past its own cap");
-			Assert.IsFalse(counted.Enumerated, "an over-cap parameter list was enumerated whole");
+			ClassicAssert.IsFalse(counted.Enumerated, "an over-cap parameter list was enumerated whole");
 		}
 
 		[Test]
@@ -143,8 +144,8 @@ namespace ThousandAndFirst.Tests
 			KingdomScenarioDefinition row = Row();
 			row.Parameters.Add(parameter);
 			IList<string> findings = KingdomScenarioRowValidator.Findings(row);
-			Assert.IsNotEmpty(findings);
-			Assert.LessOrEqual(counted.HighestIndexRead,
+			ClassicAssert.IsNotEmpty(findings);
+			ClassicAssert.LessOrEqual(counted.HighestIndexRead,
 				KingdomScenarioRowValidator.MaxDomainValues,
 				"the over-cap domain was walked past its own cap");
 		}
@@ -159,8 +160,8 @@ namespace ThousandAndFirst.Tests
 			KingdomScenarioDefinition row = Row();
 			row.Steps = counted;
 			IList<string> findings = KingdomScenarioRowValidator.Findings(row);
-			Assert.IsNotEmpty(findings);
-			Assert.LessOrEqual(counted.HighestIndexRead, KingdomScenarioRowValidator.MaxSteps,
+			ClassicAssert.IsNotEmpty(findings);
+			ClassicAssert.LessOrEqual(counted.HighestIndexRead, KingdomScenarioRowValidator.MaxSteps,
 				"the over-cap step list was walked past its own cap");
 		}
 
@@ -173,8 +174,8 @@ namespace ThousandAndFirst.Tests
 			CountingList<KingdomScenarioDefinition> counted =
 				new CountingList<KingdomScenarioDefinition>(hostile);
 			IList<string> findings = KingdomScenarioRules.Validate(counted);
-			Assert.IsNotEmpty(findings);
-			Assert.AreEqual(-1, counted.HighestIndexRead,
+			ClassicAssert.IsNotEmpty(findings);
+			ClassicAssert.AreEqual(-1, counted.HighestIndexRead,
 				"an over-cap registry was indexed at all");
 		}
 

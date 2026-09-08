@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -49,11 +50,11 @@ namespace ThousandAndFirst.Tests
 		public void PersonaSealsOneNativeDeathCaseInAnIsolatedFoundingScript()
 		{
 			string source = Read("Tools/personas/raid-death-native-check.persona");
-			Assert.AreEqual("founding-first-city", Setting(source, "REQUEST"));
-			Assert.AreEqual("8.22@40,12", Setting(source, "START"));
-			Assert.AreEqual("raid-death-native-check", Setting(source, "VERBS"));
-			Assert.AreEqual("stagedigest;raid-death-native-check;stagedigest", Setting(source, "SCRIPT"));
-			Assert.AreEqual("stagedigest:OK~founded=false,raid-death-native-check:OK~cases=1 passed=1 failed=0,"
+			ClassicAssert.AreEqual("founding-first-city", Setting(source, "REQUEST"));
+			ClassicAssert.AreEqual("8.22@40,12", Setting(source, "START"));
+			ClassicAssert.AreEqual("raid-death-native-check", Setting(source, "VERBS"));
+			ClassicAssert.AreEqual("stagedigest;raid-death-native-check;stagedigest", Setting(source, "SCRIPT"));
+			ClassicAssert.AreEqual("stagedigest:OK~founded=false,raid-death-native-check:OK~cases=1 passed=1 failed=0,"
 				+ "stagedigest:OK~founded=true,COMPLETE", Setting(source, "EXPECT"));
 			StringAssert.Contains("save/load remain unsigned", source);
 		}
@@ -112,14 +113,14 @@ namespace ThousandAndFirst.Tests
 		{
 			string[] rows = source.Split('\n').Select(row => row.Trim())
 				.Where(row => row.StartsWith(key + "=", StringComparison.Ordinal)).ToArray();
-			Assert.AreEqual(1, rows.Length); return rows[0].Substring(key.Length + 1);
+			ClassicAssert.AreEqual(1, rows.Length); return rows[0].Substring(key.Length + 1);
 		}
 		private static string Method(string source, string signature)
 		{
 			int start = source.IndexOf(signature, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, signature);
+			ClassicAssert.GreaterOrEqual(start, 0, signature);
 			int open = source.IndexOf('{', start), depth = 0;
-			Assert.GreaterOrEqual(open, 0, signature);
+			ClassicAssert.GreaterOrEqual(open, 0, signature);
 			for (int i = open; i < source.Length; i++)
 			{
 				if (source[i] == '{') depth++;
@@ -133,7 +134,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string token in tokens)
 			{
 				int at = source.IndexOf(token, cursor, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(at, cursor, "Missing or reordered: " + token); cursor = at + token.Length;
+				ClassicAssert.GreaterOrEqual(at, cursor, "Missing or reordered: " + token); cursor = at + token.Length;
 			}
 		}
 	}

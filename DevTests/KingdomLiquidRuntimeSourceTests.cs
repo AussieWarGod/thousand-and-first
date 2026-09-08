@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -38,23 +39,23 @@ namespace ThousandAndFirst.Tests
 			XElement crossing = Blueprint(document, "r_KingdomLiquidCrossing");
 			XElement waterTap = Blueprint(document, "r_KingdomWaterTap");
 			XElement brineTap = Blueprint(document, "r_KingdomBrineTap");
-			Assert.AreEqual("Furniture", (string)water.Attribute("Inherits"));
-			Assert.AreEqual("r_KingdomWaterMain", (string)brine.Attribute("Inherits"));
-			Assert.AreEqual("Furniture", (string)crossing.Attribute("Inherits"));
-			Assert.AreEqual("Furniture", (string)waterTap.Attribute("Inherits"));
-			Assert.AreEqual("r_KingdomWaterTap", (string)brineTap.Attribute("Inherits"));
-			Assert.AreEqual("EW", (string)Part(water, "r_KingdomLiquidConduit").Attribute("Joins"));
-			Assert.AreEqual("EW", (string)Part(brine, "r_KingdomLiquidConduit").Attribute("Joins"));
-			Assert.AreEqual("EW", (string)Part(waterTap, "r_KingdomLiquidTap").Attribute("Joins"));
-			Assert.AreEqual("EW", (string)Part(brineTap, "r_KingdomLiquidTap").Attribute("Joins"));
-			Assert.AreEqual("NSEW", (string)Part(crossing,
+			ClassicAssert.AreEqual("Furniture", (string)water.Attribute("Inherits"));
+			ClassicAssert.AreEqual("r_KingdomWaterMain", (string)brine.Attribute("Inherits"));
+			ClassicAssert.AreEqual("Furniture", (string)crossing.Attribute("Inherits"));
+			ClassicAssert.AreEqual("Furniture", (string)waterTap.Attribute("Inherits"));
+			ClassicAssert.AreEqual("r_KingdomWaterTap", (string)brineTap.Attribute("Inherits"));
+			ClassicAssert.AreEqual("EW", (string)Part(water, "r_KingdomLiquidConduit").Attribute("Joins"));
+			ClassicAssert.AreEqual("EW", (string)Part(brine, "r_KingdomLiquidConduit").Attribute("Joins"));
+			ClassicAssert.AreEqual("EW", (string)Part(waterTap, "r_KingdomLiquidTap").Attribute("Joins"));
+			ClassicAssert.AreEqual("EW", (string)Part(brineTap, "r_KingdomLiquidTap").Attribute("Joins"));
+			ClassicAssert.AreEqual("NSEW", (string)Part(crossing,
 				"r_KingdomLiquidCrossover").Attribute("Pairs"));
-			Assert.AreEqual("196", (string)Part(water, "Render").Attribute("RenderString"));
-			Assert.AreEqual("205", (string)Part(brine, "Render").Attribute("RenderString"));
-			Assert.AreEqual("216", (string)Part(crossing, "Render").Attribute("RenderString"));
-			Assert.IsNull(Part(water, "Render").Attribute("Tile"));
-			Assert.IsNull(Part(brine, "Render").Attribute("Tile"));
-			Assert.IsNull(Part(crossing, "Render").Attribute("Tile"));
+			ClassicAssert.AreEqual("196", (string)Part(water, "Render").Attribute("RenderString"));
+			ClassicAssert.AreEqual("205", (string)Part(brine, "Render").Attribute("RenderString"));
+			ClassicAssert.AreEqual("216", (string)Part(crossing, "Render").Attribute("RenderString"));
+			ClassicAssert.IsNull(Part(water, "Render").Attribute("Tile"));
+			ClassicAssert.IsNull(Part(brine, "Render").Attribute("Tile"));
+			ClassicAssert.IsNull(Part(crossing, "Render").Attribute("Tile"));
 		}
 
 		[Test]
@@ -64,11 +65,11 @@ namespace ThousandAndFirst.Tests
 				"Simulation/City/KingdomConduitPart.cs");
 			string visual = TestMain.ReadRepositoryText(
 				"Simulation/City/KingdomConduitPart.Visual.cs");
-			Assert.AreEqual(new string[] { "Liquid", "Joins", "RefusalAnnounced" },
+			ClassicAssert.AreEqual(new string[] { "Liquid", "Joins", "RefusalAnnounced" },
 				DeclaredFields(ClassBlock(declarations, "r_KingdomLiquidConduit")));
-			Assert.AreEqual(new string[] { "Pairs" },
+			ClassicAssert.AreEqual(new string[] { "Pairs" },
 				DeclaredFields(ClassBlock(declarations, "r_KingdomLiquidCrossover")));
-			Assert.AreEqual(new string[] { "Liquid", "Joins", "RefusalAnnounced" },
+			ClassicAssert.AreEqual(new string[] { "Liquid", "Joins", "RefusalAnnounced" },
 				DeclaredFields(ClassBlock(declarations, "r_KingdomLiquidTap")));
 			StringAssert.DoesNotContain("public string ", visual);
 			StringAssert.DoesNotContain("public bool ", visual);
@@ -88,14 +89,14 @@ namespace ThousandAndFirst.Tests
 			foreach (string command in new string[] { "r_ConfigureLiquidMain",
 				"r_ConfigureLiquidTap", "r_ConfigureLiquidCrossing" })
 				StringAssert.Contains(command, part);
-			Assert.GreaterOrEqual(Occurrences(part, "E.Actor != null && E.Actor.IsPlayer()"), 5);
-			Assert.AreEqual(3, Occurrences(part, "E.RenderString = ((char)"));
-			Assert.AreEqual(3, Occurrences(part, "E.Tile = null;"));
-			Assert.AreEqual(3, Occurrences(part, "GetShortDescriptionEvent E"));
+			ClassicAssert.GreaterOrEqual(Occurrences(part, "E.Actor != null && E.Actor.IsPlayer()"), 5);
+			ClassicAssert.AreEqual(3, Occurrences(part, "E.RenderString = ((char)"));
+			ClassicAssert.AreEqual(3, Occurrences(part, "E.Tile = null;"));
+			ClassicAssert.AreEqual(3, Occurrences(part, "GetShortDescriptionEvent E"));
 			StringAssert.Contains("Popup.PickOption", interaction);
 			StringAssert.Contains("DeclarationReadsBack", interaction);
 			StringAssert.Contains("CrossingReadsBack", interaction);
-			Assert.AreEqual(3, Occurrences(interaction,
+			ClassicAssert.AreEqual(3, Occurrences(interaction,
 				"KingdomNetworks.MarkTopologyChanged();"));
 			StringAssert.DoesNotContain("MarkTopologyChanged", part);
 			string visualRules = TestMain.ReadRepositoryText(
@@ -111,10 +112,10 @@ namespace ThousandAndFirst.Tests
 			string cases = TestMain.ReadRepositoryText(
 				"Debug/KingdomArchitectureGalleryWishes.VisualCases.cs");
 			StringAssert.Contains("for (int mask = 0; mask < 16; mask++)", cases);
-			Assert.AreEqual(2, Occurrences(cases, "for (int mask = 0; mask < 16; mask++)"));
-			Assert.AreEqual(2, Occurrences(cases, "AddLineCase(result"));
-			Assert.AreEqual(2, Occurrences(cases, "AddTapCase(result"));
-			Assert.AreEqual(2, Occurrences(cases, "Kind = VisualCaseKind.Objects, Width = 7, Height = 7"));
+			ClassicAssert.AreEqual(2, Occurrences(cases, "for (int mask = 0; mask < 16; mask++)"));
+			ClassicAssert.AreEqual(2, Occurrences(cases, "AddLineCase(result"));
+			ClassicAssert.AreEqual(2, Occurrences(cases, "AddTapCase(result"));
+			ClassicAssert.AreEqual(2, Occurrences(cases, "Kind = VisualCaseKind.Objects, Width = 7, Height = 7"));
 			StringAssert.Contains("(mask % 4) * 2, (mask / 4) * 2, joins", cases);
 			HashSet<string> matrixRoles = new HashSet<string>(StringComparer.Ordinal);
 			HashSet<string> matrixCells = new HashSet<string>(StringComparer.Ordinal);
@@ -122,29 +123,29 @@ namespace ThousandAndFirst.Tests
 			{
 				int x = (mask % 4) * 2;
 				int y = (mask / 4) * 2;
-				Assert.IsTrue(matrixRoles.Add("mask-" + mask.ToString("D2")));
-				Assert.IsTrue(matrixCells.Add(x + "," + y));
+				ClassicAssert.IsTrue(matrixRoles.Add("mask-" + mask.ToString("D2")));
+				ClassicAssert.IsTrue(matrixCells.Add(x + "," + y));
 				Assert.That(x, Is.InRange(0, 6));
 				Assert.That(y, Is.InRange(0, 6));
 			}
 
 			string crossing = MethodBlock(cases, "private static void AddLiquidCrossingCase",
 				"private static VisualPlacement At");
-			Assert.AreEqual(10, Occurrences(crossing, "item.Placements.Add"));
+			ClassicAssert.AreEqual(10, Occurrences(crossing, "item.Placements.Add"));
 			StringAssert.Contains("Width = 9, Height = 3", crossing);
 			StringAssert.Contains("1, 1, \"NSEW\"", crossing);
 			StringAssert.Contains("7, 1, \"EWNS\"", crossing);
 			MatchCollection placed = Regex.Matches(crossing,
 				"At\\(\"([^\"]+)\", \"[^\"]+\",(?:\\s*)?([0-9]+), ([0-9]+), \"[^\"]+\"\\)");
-			Assert.AreEqual(10, placed.Count);
+			ClassicAssert.AreEqual(10, placed.Count);
 			HashSet<string> roles = new HashSet<string>(StringComparer.Ordinal);
 			HashSet<string> cells = new HashSet<string>(StringComparer.Ordinal);
 			foreach (Match placement in placed)
 			{
 				int x = int.Parse(placement.Groups[2].Value);
 				int y = int.Parse(placement.Groups[3].Value);
-				Assert.IsTrue(roles.Add(placement.Groups[1].Value));
-				Assert.IsTrue(cells.Add(x + "," + y));
+				ClassicAssert.IsTrue(roles.Add(placement.Groups[1].Value));
+				ClassicAssert.IsTrue(cells.Add(x + "," + y));
 				Assert.That(x, Is.InRange(0, 8));
 				Assert.That(y, Is.InRange(0, 2));
 			}
@@ -207,7 +208,7 @@ namespace ThousandAndFirst.Tests
 			})
 			{
 				int lines = TestMain.ReadRepositoryText(path).Split('\n').Length;
-				Assert.Less(lines, 300, path);
+				ClassicAssert.Less(lines, 300, path);
 			}
 		}
 
@@ -220,9 +221,9 @@ namespace ThousandAndFirst.Tests
 		private static string ClassBlock(string Source, string Name)
 		{
 			int start = Source.IndexOf("class " + Name, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, Name);
+			ClassicAssert.GreaterOrEqual(start, 0, Name);
 			int open = Source.IndexOf('{', start);
-			Assert.Greater(open, start, Name);
+			ClassicAssert.Greater(open, start, Name);
 			int depth = 0;
 			for (int i = open; i < Source.Length; i++)
 			{
@@ -237,9 +238,9 @@ namespace ThousandAndFirst.Tests
 		private static string MethodBlock(string Source, string Start, string End)
 		{
 			int start = Source.IndexOf(Start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, Start);
+			ClassicAssert.GreaterOrEqual(start, 0, Start);
 			int end = Source.IndexOf(End, start + Start.Length, StringComparison.Ordinal);
-			Assert.Greater(end, start, End);
+			ClassicAssert.Greater(end, start, End);
 			return Source.Substring(start, end - start);
 		}
 
@@ -257,7 +258,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string term in Terms)
 			{
 				int next = Source.IndexOf(term, at + 1, StringComparison.Ordinal);
-				Assert.Greater(next, at, term);
+				ClassicAssert.Greater(next, at, term);
 				at = next;
 			}
 		}
@@ -276,7 +277,7 @@ namespace ThousandAndFirst.Tests
 				names.Add(Metadata.GetString(Metadata.GetMethodDefinition(handle).Name));
 			foreach (PropertyDefinitionHandle handle in type.GetProperties())
 				names.Add(Metadata.GetString(Metadata.GetPropertyDefinition(handle).Name));
-			foreach (string member in Members) Assert.IsTrue(names.Contains(member),
+			foreach (string member in Members) ClassicAssert.IsTrue(names.Contains(member),
 				Namespace + "." + Name + "." + member);
 		}
 

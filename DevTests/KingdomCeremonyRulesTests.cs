@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -14,8 +15,8 @@ namespace ThousandAndFirst.Tests
 		public void CeremonyAbiKeepsAuthorityAndNestedPatternDtosExact()
 		{
 			Type authority = typeof(KingdomCeremonyRules);
-			Assert.AreEqual("ThousandAndFirst.KingdomCeremonyRules", authority.FullName);
-			Assert.IsTrue(authority.IsPublic && authority.IsAbstract && authority.IsSealed);
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomCeremonyRules", authority.FullName);
+			ClassicAssert.IsTrue(authority.IsPublic && authority.IsAbstract && authority.IsSealed);
 
 			AssertNestedFields(typeof(KingdomCeremonyRules.BuildingKnowledge),
 				"ThousandAndFirst.KingdomCeremonyRules+BuildingKnowledge",
@@ -25,19 +26,19 @@ namespace ThousandAndFirst.Tests
 				new[] { "BuildingKey", "LearnName", "Label" });
 
 			KingdomCeremonyRules.BuildingKnowledge knowledge = new KingdomCeremonyRules.BuildingKnowledge();
-			Assert.IsNull(knowledge.Key);
-			Assert.IsNull(knowledge.Knowledge);
-			Assert.IsNull(knowledge.Label);
+			ClassicAssert.IsNull(knowledge.Key);
+			ClassicAssert.IsNull(knowledge.Knowledge);
+			ClassicAssert.IsNull(knowledge.Label);
 			KingdomCeremonyRules.ForeignDesign design = new KingdomCeremonyRules.ForeignDesign();
-			Assert.IsNull(design.BuildingKey);
-			Assert.IsNull(design.LearnName);
-			Assert.IsNull(design.Label);
+			ClassicAssert.IsNull(design.BuildingKey);
+			ClassicAssert.IsNull(design.LearnName);
+			ClassicAssert.IsNull(design.Label);
 
 			FieldInfo categories = authority.GetField("TasteCategories",
 				BindingFlags.Public | BindingFlags.Static);
-			Assert.IsNotNull(categories);
-			Assert.AreEqual(typeof(string[]), categories.FieldType);
-			Assert.IsTrue(categories.IsInitOnly);
+			ClassicAssert.IsNotNull(categories);
+			ClassicAssert.AreEqual(typeof(string[]), categories.FieldType);
+			ClassicAssert.IsTrue(categories.IsInitOnly);
 			CollectionAssert.AreEqual(new[]
 			{
 				"food", "storage", "civic", "craft", "power", "faith", "memorial",
@@ -49,16 +50,16 @@ namespace ThousandAndFirst.Tests
 		public void LogicalSourceKeepsOneOrderedPartialAuthorityAndNestedDtos()
 		{
 			string source = LogicalSource();
-			Assert.AreEqual(5, Count(source, "public static partial class KingdomCeremonyRules"));
-			Assert.AreEqual(1, Count(source, "public sealed class BuildingKnowledge"));
-			Assert.AreEqual(1, Count(source, "public sealed class ForeignDesign"));
-			Assert.Less(source.IndexOf("public static string SurveyorsPlanText", StringComparison.Ordinal),
+			ClassicAssert.AreEqual(5, Count(source, "public static partial class KingdomCeremonyRules"));
+			ClassicAssert.AreEqual(1, Count(source, "public sealed class BuildingKnowledge"));
+			ClassicAssert.AreEqual(1, Count(source, "public sealed class ForeignDesign"));
+			ClassicAssert.Less(source.IndexOf("public static string SurveyorsPlanText", StringComparison.Ordinal),
 				source.IndexOf("public static bool IsAttended", StringComparison.Ordinal));
-			Assert.Less(source.IndexOf("public static bool IsAttended", StringComparison.Ordinal),
+			ClassicAssert.Less(source.IndexOf("public static bool IsAttended", StringComparison.Ordinal),
 				source.IndexOf("public static List<int> ChooseTastes", StringComparison.Ordinal));
-			Assert.Less(source.IndexOf("public static List<int> ChooseTastes", StringComparison.Ordinal),
+			ClassicAssert.Less(source.IndexOf("public static List<int> ChooseTastes", StringComparison.Ordinal),
 				source.IndexOf("public static void ChooseLeaderTraits", StringComparison.Ordinal));
-			Assert.Less(source.IndexOf("public static void ChooseLeaderTraits", StringComparison.Ordinal),
+			ClassicAssert.Less(source.IndexOf("public static void ChooseLeaderTraits", StringComparison.Ordinal),
 				source.IndexOf("public static List<ForeignDesign> ForeignDesigns", StringComparison.Ordinal));
 		}
 
@@ -77,15 +78,15 @@ namespace ThousandAndFirst.Tests
 		public void SurveyorsPlanText_EachKnownFamilyHasItsOwnDistinctTemplate(string category, string expectedFragment)
 		{
 			string text = KingdomCeremonyRules.SurveyorsPlanText(category, "the granary", GrowthStage.Steading, null);
-			Assert.IsTrue(text.Contains(expectedFragment), "expected '" + expectedFragment + "' in: " + text);
-			Assert.IsTrue(text.Contains("the granary"));
+			ClassicAssert.IsTrue(text.Contains(expectedFragment), "expected '" + expectedFragment + "' in: " + text);
+			ClassicAssert.IsTrue(text.Contains("the granary"));
 		}
 
 		[Test]
 		public void SurveyorsPlanText_UnknownCategoryFallsBackToPlainStakesNeverFiller()
 		{
 			string text = KingdomCeremonyRules.SurveyorsPlanText("a-third-party-category-nobody-wrote", "the odd house", GrowthStage.Camp, "marble");
-			Assert.AreEqual("The plan for the odd house is staked: plain stakes in the ground, and nothing more written yet.", text);
+			ClassicAssert.AreEqual("The plan for the odd house is staked: plain stakes in the ground, and nothing more written yet.", text);
 		}
 
 		[Test]
@@ -93,29 +94,29 @@ namespace ThousandAndFirst.Tests
 		{
 			string lower = KingdomCeremonyRules.SurveyorsPlanText("food", "hall", GrowthStage.Camp, null);
 			string upper = KingdomCeremonyRules.SurveyorsPlanText("FOOD", "hall", GrowthStage.Camp, null);
-			Assert.AreEqual(lower, upper);
+			ClassicAssert.AreEqual(lower, upper);
 		}
 
 		[Test]
 		public void SurveyorsPlanText_MissingBuildingNameFallsBackToTheWork()
 		{
-			Assert.IsTrue(KingdomCeremonyRules.SurveyorsPlanText("civic", null, GrowthStage.Camp, null).Contains("the work"));
-			Assert.IsTrue(KingdomCeremonyRules.SurveyorsPlanText("civic", "", GrowthStage.Camp, null).Contains("the work"));
+			ClassicAssert.IsTrue(KingdomCeremonyRules.SurveyorsPlanText("civic", null, GrowthStage.Camp, null).Contains("the work"));
+			ClassicAssert.IsTrue(KingdomCeremonyRules.SurveyorsPlanText("civic", "", GrowthStage.Camp, null).Contains("the work"));
 		}
 
 		[Test]
 		public void SurveyorsPlanText_MissingMaterialFallsBackToPlainStockNeverBlank()
 		{
 			string text = KingdomCeremonyRules.SurveyorsPlanText("housing", "the hut", GrowthStage.Camp, null);
-			Assert.IsTrue(text.Contains("plain stock"));
+			ClassicAssert.IsTrue(text.Contains("plain stock"));
 		}
 
 		[Test]
 		public void SurveyorsPlanText_GivenMaterialIsCarriedVerbatim()
 		{
 			string text = KingdomCeremonyRules.SurveyorsPlanText("housing", "the hut", GrowthStage.Camp, "marble");
-			Assert.IsTrue(text.Contains("marble"));
-			Assert.IsFalse(text.Contains("plain stock"));
+			ClassicAssert.IsTrue(text.Contains("marble"));
+			ClassicAssert.IsFalse(text.Contains("plain stock"));
 		}
 
 		[TestCase(GrowthStage.Camp, "a camp's")]
@@ -126,7 +127,7 @@ namespace ThousandAndFirst.Tests
 		public void SurveyorsPlanText_TierSlotNamesEachStageDistinctly(GrowthStage tier, string expectedFragment)
 		{
 			string text = KingdomCeremonyRules.SurveyorsPlanText("civic", "the hall", tier, null);
-			Assert.IsTrue(text.Contains(expectedFragment), "expected '" + expectedFragment + "' in: " + text);
+			ClassicAssert.IsTrue(text.Contains(expectedFragment), "expected '" + expectedFragment + "' in: " + text);
 		}
 
 		[Test]
@@ -137,7 +138,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string category in categories)
 			{
 				string text = KingdomCeremonyRules.SurveyorsPlanText(category, "the work", GrowthStage.Camp, null);
-				Assert.IsTrue(seen.Add(text), "category '" + category + "' duplicated another family's template");
+				ClassicAssert.IsTrue(seen.Add(text), "category '" + category + "' duplicated another family's template");
 			}
 		}
 
@@ -150,7 +151,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(1000L, 900L, true)]
 		public void IsAttended_FollowsTheOneDayGraceBoundaryExactly(long completeTick, long nowTicks, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomCeremonyRules.IsAttended(completeTick, nowTicks));
+			ClassicAssert.AreEqual(expected, KingdomCeremonyRules.IsAttended(completeTick, nowTicks));
 		}
 
 		// --- Raising ceremony prose ---------------------------------------------------------------
@@ -159,62 +160,62 @@ namespace ThousandAndFirst.Tests
 		public void RaisingAttendedChronicle_NoOneFoundStillSharesTheWater()
 		{
 			string text = KingdomCeremonyRules.RaisingAttendedChronicle("granary", "Nivvun Ut", new List<string>(), null);
-			Assert.IsTrue(text.Contains("the water shared"));
-			Assert.IsFalse(text.Contains("standing by"));
+			ClassicAssert.IsTrue(text.Contains("the water shared"));
+			ClassicAssert.IsFalse(text.Contains("standing by"));
 		}
 
 		[Test]
 		public void RaisingAttendedChronicle_OnePresentIsNamedAlone()
 		{
 			string text = KingdomCeremonyRules.RaisingAttendedChronicle("granary", "Nivvun Ut", new List<string> { "Aeru" }, null);
-			Assert.IsTrue(text.Contains("with Aeru standing by"));
+			ClassicAssert.IsTrue(text.Contains("with Aeru standing by"));
 		}
 
 		[Test]
 		public void RaisingAttendedChronicle_TwoPresentAreJoinedWithAnd()
 		{
 			string text = KingdomCeremonyRules.RaisingAttendedChronicle("granary", "Nivvun Ut", new List<string> { "Aeru", "Voss" }, null);
-			Assert.IsTrue(text.Contains("Aeru and Voss"));
+			ClassicAssert.IsTrue(text.Contains("Aeru and Voss"));
 		}
 
 		[Test]
 		public void RaisingAttendedChronicle_ThreeOrMorePresentNameTwoAndOthers()
 		{
 			string text = KingdomCeremonyRules.RaisingAttendedChronicle("granary", "Nivvun Ut", new List<string> { "Aeru", "Voss", "Kest" }, null);
-			Assert.IsTrue(text.Contains("Aeru, Voss, and others"));
-			Assert.IsFalse(text.Contains("Kest"));
+			ClassicAssert.IsTrue(text.Contains("Aeru, Voss, and others"));
+			ClassicAssert.IsFalse(text.Contains("Kest"));
 		}
 
 		[Test]
 		public void RaisingAttendedChronicle_QuotesThePlanWhenGiven()
 		{
 			string text = KingdomCeremonyRules.RaisingAttendedChronicle("granary", "Nivvun Ut", null, "The plan for the granary is staked.");
-			Assert.IsTrue(text.Contains("true to the plan staked there: \"The plan for the granary is staked.\""));
+			ClassicAssert.IsTrue(text.Contains("true to the plan staked there: \"The plan for the granary is staked.\""));
 		}
 
 		[Test]
 		public void RaisingAttendedChronicle_OmitsTheQuoteClauseWhenNoPlanWasStaked()
 		{
 			string text = KingdomCeremonyRules.RaisingAttendedChronicle("granary", "Nivvun Ut", null, null);
-			Assert.IsFalse(text.Contains("true to the plan"));
+			ClassicAssert.IsFalse(text.Contains("true to the plan"));
 		}
 
 		[Test]
 		public void RaisingUnattendedChronicle_NeverNamesCrewAndStillQuotesThePlan()
 		{
 			string withPlan = KingdomCeremonyRules.RaisingUnattendedChronicle("granary", "Nivvun Ut", "quoted text");
-			Assert.IsTrue(withPlan.Contains("before anyone came home to see it"));
-			Assert.IsTrue(withPlan.Contains("\"quoted text\""));
+			ClassicAssert.IsTrue(withPlan.Contains("before anyone came home to see it"));
+			ClassicAssert.IsTrue(withPlan.Contains("\"quoted text\""));
 			string withoutPlan = KingdomCeremonyRules.RaisingUnattendedChronicle("granary", "Nivvun Ut", null);
-			Assert.IsFalse(withoutPlan.Contains("true to the plan"));
+			ClassicAssert.IsFalse(withoutPlan.Contains("true to the plan"));
 		}
 
 		[Test]
 		public void RaisingLedgerNote_NamesTheBuildingAndFlagsItAsWhileAway()
 		{
 			string note = KingdomCeremonyRules.RaisingLedgerNote("granary");
-			Assert.IsTrue(note.Contains("granary"));
-			Assert.IsTrue(note.Contains("while you were away"));
+			ClassicAssert.IsTrue(note.Contains("granary"));
+			ClassicAssert.IsTrue(note.Contains("while you were away"));
 		}
 
 		[Test]
@@ -222,8 +223,8 @@ namespace ThousandAndFirst.Tests
 		{
 			string alone = KingdomCeremonyRules.RaisingAttendedMessage("granary", new List<string>());
 			string withCrew = KingdomCeremonyRules.RaisingAttendedMessage("granary", new List<string> { "Aeru" });
-			Assert.AreNotEqual(alone, withCrew);
-			Assert.IsTrue(withCrew.Contains("Aeru"));
+			ClassicAssert.AreNotEqual(alone, withCrew);
+			ClassicAssert.IsTrue(withCrew.Contains("Aeru"));
 		}
 
 		// --- Notable tastes -------------------------------------------------------------------
@@ -233,9 +234,9 @@ namespace ThousandAndFirst.Tests
 		{
 			string met = KingdomCeremonyRules.TasteLine(0, true);
 			string unmet = KingdomCeremonyRules.TasteLine(0, false);
-			Assert.AreNotEqual(met, unmet);
-			Assert.IsTrue(met.Contains("finds it here already"));
-			Assert.IsTrue(unmet.Contains("has not found it here yet"));
+			ClassicAssert.AreNotEqual(met, unmet);
+			ClassicAssert.IsTrue(met.Contains("finds it here already"));
+			ClassicAssert.IsTrue(unmet.Contains("has not found it here yet"));
 		}
 
 		[Test]
@@ -244,9 +245,9 @@ namespace ThousandAndFirst.Tests
 			// TasteIndex 1 ("storage") is deliberately picked over 0: its own statement text
 			// happens to be free of "never"/"fail" words the met/default suffix must also avoid.
 			string unmet = KingdomCeremonyRules.TasteLine(1, false).ToLowerInvariant();
-			Assert.IsFalse(unmet.Contains("never"));
-			Assert.IsFalse(unmet.Contains("fail"));
-			Assert.IsFalse(unmet.Contains("penalt"));
+			ClassicAssert.IsFalse(unmet.Contains("never"));
+			ClassicAssert.IsFalse(unmet.Contains("fail"));
+			ClassicAssert.IsFalse(unmet.Contains("penalt"));
 		}
 
 		[Test]
@@ -261,51 +262,51 @@ namespace ThousandAndFirst.Tests
 		{
 			string one = KingdomCeremonyRules.TasteChronicle("Aeru", new List<int> { 0 }, new List<bool> { true });
 			string two = KingdomCeremonyRules.TasteChronicle("Aeru", new List<int> { 0, 1 }, new List<bool> { true, false });
-			Assert.IsTrue(one.Contains("states a taste"));
-			Assert.IsTrue(two.Contains("states two tastes"));
+			ClassicAssert.IsTrue(one.Contains("states a taste"));
+			ClassicAssert.IsTrue(two.Contains("states two tastes"));
 		}
 
 		[Test]
 		public void TasteChronicle_NamesTheHolder()
 		{
 			string text = KingdomCeremonyRules.TasteChronicle("Aeru", new List<int> { 0 }, new List<bool> { false });
-			Assert.IsTrue(text.StartsWith("Aeru"));
+			ClassicAssert.IsTrue(text.StartsWith("Aeru"));
 		}
 
 		[Test]
 		public void TasteShade_EmptyIsZero()
 		{
-			Assert.AreEqual(0, KingdomCeremonyRules.TasteShade(new List<bool>()));
+			ClassicAssert.AreEqual(0, KingdomCeremonyRules.TasteShade(new List<bool>()));
 		}
 
 		[Test]
 		public void TasteShade_OneUnmetIsZero()
 		{
-			Assert.AreEqual(0, KingdomCeremonyRules.TasteShade(new List<bool> { false }));
+			ClassicAssert.AreEqual(0, KingdomCeremonyRules.TasteShade(new List<bool> { false }));
 		}
 
 		[Test]
 		public void TasteShade_OneMetIsOneShadeUnit()
 		{
-			Assert.AreEqual(KingdomCeremonyRules.TasteShadeAmount, KingdomCeremonyRules.TasteShade(new List<bool> { true }));
+			ClassicAssert.AreEqual(KingdomCeremonyRules.TasteShadeAmount, KingdomCeremonyRules.TasteShade(new List<bool> { true }));
 		}
 
 		[Test]
 		public void TasteShade_TwoMetIsTwoShadeUnits()
 		{
-			Assert.AreEqual(KingdomCeremonyRules.TasteShadeAmount * 2, KingdomCeremonyRules.TasteShade(new List<bool> { true, true }));
+			ClassicAssert.AreEqual(KingdomCeremonyRules.TasteShadeAmount * 2, KingdomCeremonyRules.TasteShade(new List<bool> { true, true }));
 		}
 
 		[Test]
 		public void TasteShade_MixedCountsOnlyTheMetOne()
 		{
-			Assert.AreEqual(KingdomCeremonyRules.TasteShadeAmount, KingdomCeremonyRules.TasteShade(new List<bool> { true, false }));
+			ClassicAssert.AreEqual(KingdomCeremonyRules.TasteShadeAmount, KingdomCeremonyRules.TasteShade(new List<bool> { true, false }));
 		}
 
 		[Test]
 		public void TasteShade_NullMetIsZeroNotAThrow()
 		{
-			Assert.AreEqual(0, KingdomCeremonyRules.TasteShade(null));
+			ClassicAssert.AreEqual(0, KingdomCeremonyRules.TasteShade(null));
 		}
 
 		// --- Addendum 4 re-basing: a taste is a tag in the shared vocabulary -------------------
@@ -313,14 +314,14 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TasteTag_IsTheCategoryInTheSharedNamespace()
 		{
-			Assert.AreEqual(KingdomQolRules.Namespace + "food", KingdomCeremonyRules.TasteTag(0));
+			ClassicAssert.AreEqual(KingdomQolRules.Namespace + "food", KingdomCeremonyRules.TasteTag(0));
 		}
 
 		[Test]
 		public void TasteTag_OutOfRangeFallsBackToIndexZeroLikeEveryOtherTasteAccessor()
 		{
-			Assert.AreEqual(KingdomCeremonyRules.TasteTag(0), KingdomCeremonyRules.TasteTag(-1));
-			Assert.AreEqual(KingdomCeremonyRules.TasteTag(0), KingdomCeremonyRules.TasteTag(999));
+			ClassicAssert.AreEqual(KingdomCeremonyRules.TasteTag(0), KingdomCeremonyRules.TasteTag(-1));
+			ClassicAssert.AreEqual(KingdomCeremonyRules.TasteTag(0), KingdomCeremonyRules.TasteTag(999));
 		}
 
 		[Test]
@@ -330,7 +331,7 @@ namespace ThousandAndFirst.Tests
 			// building offers are the SAME token, so the shared match engine can compare them.
 			for (int i = 0; i < KingdomCeremonyRules.TasteCategories.Length; i++)
 			{
-				Assert.AreEqual(KingdomCeremonyRules.TasteTag(i),
+				ClassicAssert.AreEqual(KingdomCeremonyRules.TasteTag(i),
 					KingdomCeremonyRules.CategoryTag(KingdomCeremonyRules.TasteCategories[i]),
 					"taste " + KingdomCeremonyRules.TasteCategories[i] + " and its category do not name the same tag");
 			}
@@ -339,15 +340,15 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CategoryTag_FoldsCaseAndWhitespace()
 		{
-			Assert.AreEqual(KingdomCeremonyRules.CategoryTag("food"), KingdomCeremonyRules.CategoryTag("  FOOD  "));
+			ClassicAssert.AreEqual(KingdomCeremonyRules.CategoryTag("food"), KingdomCeremonyRules.CategoryTag("  FOOD  "));
 		}
 
 		[Test]
 		public void CategoryTag_NoCategoryAtAllOffersNothing()
 		{
-			Assert.IsNull(KingdomCeremonyRules.CategoryTag(null));
-			Assert.IsNull(KingdomCeremonyRules.CategoryTag(""));
-			Assert.IsNull(KingdomCeremonyRules.CategoryTag("   "));
+			ClassicAssert.IsNull(KingdomCeremonyRules.CategoryTag(null));
+			ClassicAssert.IsNull(KingdomCeremonyRules.CategoryTag(""));
+			ClassicAssert.IsNull(KingdomCeremonyRules.CategoryTag("   "));
 		}
 
 		[TestCase(0)]
@@ -358,22 +359,22 @@ namespace ThousandAndFirst.Tests
 		{
 			string[] offer = new string[1] { KingdomCeremonyRules.CategoryTag(KingdomCeremonyRules.TasteCategories[tasteIndex]) };
 			List<bool> met = KingdomCeremonyRules.TastesMet(new List<int> { tasteIndex }, offer);
-			Assert.AreEqual(1, met.Count);
-			Assert.IsTrue(met[0], "taste " + KingdomCeremonyRules.TasteCategories[tasteIndex] + " was not met by its own category");
+			ClassicAssert.AreEqual(1, met.Count);
+			ClassicAssert.IsTrue(met[0], "taste " + KingdomCeremonyRules.TasteCategories[tasteIndex] + " was not met by its own category");
 		}
 
 		[Test]
 		public void TastesMet_ADifferentCategoryStandingThereMeetsNothing()
 		{
 			string[] offer = new string[1] { KingdomCeremonyRules.CategoryTag("storage") };
-			Assert.IsFalse(KingdomCeremonyRules.TastesMet(new List<int> { 0 }, offer)[0], "a granary is not a table");
+			ClassicAssert.IsFalse(KingdomCeremonyRules.TastesMet(new List<int> { 0 }, offer)[0], "a granary is not a table");
 		}
 
 		[Test]
 		public void TastesMet_ASettlementWithNothingStandingMeetsNothing()
 		{
-			Assert.IsFalse(KingdomCeremonyRules.TastesMet(new List<int> { 0 }, null)[0]);
-			Assert.IsFalse(KingdomCeremonyRules.TastesMet(new List<int> { 0 }, new string[0])[0]);
+			ClassicAssert.IsFalse(KingdomCeremonyRules.TastesMet(new List<int> { 0 }, null)[0]);
+			ClassicAssert.IsFalse(KingdomCeremonyRules.TastesMet(new List<int> { 0 }, new string[0])[0]);
 		}
 
 		[Test]
@@ -381,16 +382,16 @@ namespace ThousandAndFirst.Tests
 		{
 			string[] offer = new string[1] { KingdomCeremonyRules.CategoryTag("housing") };
 			List<bool> met = KingdomCeremonyRules.TastesMet(new List<int> { 0, 7 }, offer);
-			Assert.AreEqual(2, met.Count);
-			Assert.IsFalse(met[0], "food is not met");
-			Assert.IsTrue(met[1], "housing is");
+			ClassicAssert.AreEqual(2, met.Count);
+			ClassicAssert.IsFalse(met[0], "food is not met");
+			ClassicAssert.IsTrue(met[1], "housing is");
 		}
 
 		[Test]
 		public void TastesMet_NoTastesStatedIsAnEmptyListAndNeverNull()
 		{
-			Assert.AreEqual(0, KingdomCeremonyRules.TastesMet(null, new string[0]).Count);
-			Assert.AreEqual(0, KingdomCeremonyRules.TastesMet(new List<int>(), new string[0]).Count);
+			ClassicAssert.AreEqual(0, KingdomCeremonyRules.TastesMet(null, new string[0]).Count);
+			ClassicAssert.AreEqual(0, KingdomCeremonyRules.TastesMet(new List<int>(), new string[0]).Count);
 		}
 
 		[Test]
@@ -403,9 +404,9 @@ namespace ThousandAndFirst.Tests
 				KingdomCeremonyRules.CategoryTag("food"),
 				KingdomCeremonyRules.CategoryTag("housing")
 			};
-			Assert.AreEqual(2 * KingdomCeremonyRules.TasteShadeAmount,
+			ClassicAssert.AreEqual(2 * KingdomCeremonyRules.TasteShadeAmount,
 				KingdomCeremonyRules.TasteShade(KingdomCeremonyRules.TastesMet(new List<int> { 0, 7 }, offer)));
-			Assert.AreEqual(0, KingdomCeremonyRules.TasteShade(KingdomCeremonyRules.TastesMet(new List<int> { 0, 7 }, new string[0])));
+			ClassicAssert.AreEqual(0, KingdomCeremonyRules.TasteShade(KingdomCeremonyRules.TastesMet(new List<int> { 0, 7 }, new string[0])));
 		}
 
 		[Test]
@@ -422,15 +423,15 @@ namespace ThousandAndFirst.Tests
 			for (ulong ordinal = 0uL; ordinal < 40uL; ordinal++)
 			{
 				List<int> tastes = KingdomCeremonyRules.ChooseTastes("taf:settlement:sweep", ordinal);
-				Assert.IsTrue(tastes.Count == 1 || tastes.Count == 2, "count was " + tastes.Count);
+				ClassicAssert.IsTrue(tastes.Count == 1 || tastes.Count == 2, "count was " + tastes.Count);
 				foreach (int index in tastes)
 				{
-					Assert.GreaterOrEqual(index, 0);
-					Assert.Less(index, KingdomCeremonyRules.TasteCategories.Length);
+					ClassicAssert.GreaterOrEqual(index, 0);
+					ClassicAssert.Less(index, KingdomCeremonyRules.TasteCategories.Length);
 				}
 				if (tastes.Count == 2)
 				{
-					Assert.AreNotEqual(tastes[0], tastes[1]);
+					ClassicAssert.AreNotEqual(tastes[0], tastes[1]);
 				}
 			}
 		}
@@ -450,8 +451,8 @@ namespace ThousandAndFirst.Tests
 			int virtueA, flawA, virtueB, flawB;
 			KingdomCeremonyRules.ChooseLeaderTraits("taf:settlement:example", 900uL, out virtueA, out flawA);
 			KingdomCeremonyRules.ChooseLeaderTraits("taf:settlement:example", 900uL, out virtueB, out flawB);
-			Assert.AreEqual(virtueA, virtueB);
-			Assert.AreEqual(flawA, flawB);
+			ClassicAssert.AreEqual(virtueA, virtueB);
+			ClassicAssert.AreEqual(flawA, flawB);
 		}
 
 		[Test]
@@ -461,10 +462,10 @@ namespace ThousandAndFirst.Tests
 			{
 				int virtue, flaw;
 				KingdomCeremonyRules.ChooseLeaderTraits("taf:settlement:sweep", ordinal, out virtue, out flaw);
-				Assert.GreaterOrEqual(virtue, 0);
-				Assert.GreaterOrEqual(flaw, 0);
-				Assert.IsFalse(string.IsNullOrEmpty(KingdomCeremonyRules.VirtueText(virtue)));
-				Assert.IsFalse(string.IsNullOrEmpty(KingdomCeremonyRules.FlawText(flaw)));
+				ClassicAssert.GreaterOrEqual(virtue, 0);
+				ClassicAssert.GreaterOrEqual(flaw, 0);
+				ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomCeremonyRules.VirtueText(virtue)));
+				ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomCeremonyRules.FlawText(flaw)));
 			}
 		}
 
@@ -473,8 +474,8 @@ namespace ThousandAndFirst.Tests
 		{
 			int virtue, flaw;
 			KingdomCeremonyRules.ChooseLeaderTraits("", 0uL, out virtue, out flaw);
-			Assert.AreEqual(0, virtue);
-			Assert.AreEqual(0, flaw);
+			ClassicAssert.AreEqual(0, virtue);
+			ClassicAssert.AreEqual(0, flaw);
 		}
 
 		[Test]
@@ -490,21 +491,21 @@ namespace ThousandAndFirst.Tests
 		public void LeaderTraitChronicle_NeverOmitsTheFlawEvenThoughItIsNamedAfterTheVirtue()
 		{
 			string text = KingdomCeremonyRules.LeaderTraitChronicle("the water-keeper", "Aeru", "Nivvun Ut", 0, 0);
-			Assert.IsTrue(text.Contains("Aeru"));
-			Assert.IsTrue(text.Contains("the water-keeper"));
-			Assert.IsTrue(text.Contains("Nivvun Ut"));
-			Assert.IsTrue(text.Contains(KingdomCeremonyRules.VirtueText(0)));
-			Assert.IsTrue(text.Contains(KingdomCeremonyRules.FlawText(0)));
-			Assert.IsTrue(text.Contains(" -- but "));
+			ClassicAssert.IsTrue(text.Contains("Aeru"));
+			ClassicAssert.IsTrue(text.Contains("the water-keeper"));
+			ClassicAssert.IsTrue(text.Contains("Nivvun Ut"));
+			ClassicAssert.IsTrue(text.Contains(KingdomCeremonyRules.VirtueText(0)));
+			ClassicAssert.IsTrue(text.Contains(KingdomCeremonyRules.FlawText(0)));
+			ClassicAssert.IsTrue(text.Contains(" -- but "));
 		}
 
 		[Test]
 		public void LeaderShade_IsNetPositiveAndSmall()
 		{
 			int shade = KingdomCeremonyRules.LeaderShade();
-			Assert.AreEqual(KingdomCeremonyRules.VirtueShadeAmount - KingdomCeremonyRules.FlawShadeAmount, shade);
-			Assert.Greater(shade, 0);
-			Assert.LessOrEqual(shade, 3);
+			ClassicAssert.AreEqual(KingdomCeremonyRules.VirtueShadeAmount - KingdomCeremonyRules.FlawShadeAmount, shade);
+			ClassicAssert.Greater(shade, 0);
+			ClassicAssert.LessOrEqual(shade, 3);
 		}
 
 		// --- The pattern-book: candidate filtering ---------------------------------------------
@@ -520,9 +521,9 @@ namespace ThousandAndFirst.Tests
 				new KingdomCeremonyRules.BuildingKnowledge { Key = "r_GatedByMachine", Knowledge = "machine:solar condenser" }
 			};
 			List<KingdomCeremonyRules.ForeignDesign> found = KingdomCeremonyRules.ForeignDesigns(entries, new List<string>());
-			Assert.AreEqual(1, found.Count);
-			Assert.AreEqual("r_YdRoofline", found[0].BuildingKey);
-			Assert.AreEqual("yd-freehold", found[0].LearnName);
+			ClassicAssert.AreEqual(1, found.Count);
+			ClassicAssert.AreEqual("r_YdRoofline", found[0].BuildingKey);
+			ClassicAssert.AreEqual("yd-freehold", found[0].LearnName);
 		}
 
 		[Test]
@@ -533,7 +534,7 @@ namespace ThousandAndFirst.Tests
 				new KingdomCeremonyRules.BuildingKnowledge { Key = "r_YdRoofline", Knowledge = "pattern:yd-freehold" }
 			};
 			List<string> roster = new List<string> { "pattern:yd-freehold" };
-			Assert.AreEqual(0, KingdomCeremonyRules.ForeignDesigns(entries, roster).Count);
+			ClassicAssert.AreEqual(0, KingdomCeremonyRules.ForeignDesigns(entries, roster).Count);
 		}
 
 		[Test]
@@ -546,7 +547,7 @@ namespace ThousandAndFirst.Tests
 				new KingdomCeremonyRules.BuildingKnowledge { Key = "r_YdRoofline", Knowledge = "pattern:yd-freehold" }
 			};
 			List<string> roster = new List<string> { "disk:yd-freehold" };
-			Assert.AreEqual(1, KingdomCeremonyRules.ForeignDesigns(entries, roster).Count);
+			ClassicAssert.AreEqual(1, KingdomCeremonyRules.ForeignDesigns(entries, roster).Count);
 		}
 
 		[Test]
@@ -557,7 +558,7 @@ namespace ThousandAndFirst.Tests
 				new KingdomCeremonyRules.BuildingKnowledge { Key = "r_First", Knowledge = "pattern:hindren-weave-hall" },
 				new KingdomCeremonyRules.BuildingKnowledge { Key = "r_Second", Knowledge = "pattern:hindren-weave-hall" }
 			};
-			Assert.AreEqual(1, KingdomCeremonyRules.ForeignDesigns(entries, new List<string>()).Count);
+			ClassicAssert.AreEqual(1, KingdomCeremonyRules.ForeignDesigns(entries, new List<string>()).Count);
 		}
 
 		[Test]
@@ -569,15 +570,15 @@ namespace ThousandAndFirst.Tests
 				new KingdomCeremonyRules.BuildingKnowledge { Key = "r_A", Knowledge = "pattern:apple" }
 			};
 			List<KingdomCeremonyRules.ForeignDesign> found = KingdomCeremonyRules.ForeignDesigns(entries, new List<string>());
-			Assert.AreEqual("apple", found[0].LearnName);
-			Assert.AreEqual("zebra", found[1].LearnName);
+			ClassicAssert.AreEqual("apple", found[0].LearnName);
+			ClassicAssert.AreEqual("zebra", found[1].LearnName);
 		}
 
 		[Test]
 		public void ForeignDesigns_EmptyOrNullEntriesYieldsNoCandidates()
 		{
-			Assert.AreEqual(0, KingdomCeremonyRules.ForeignDesigns(null, new List<string>()).Count);
-			Assert.AreEqual(0, KingdomCeremonyRules.ForeignDesigns(new List<KingdomCeremonyRules.BuildingKnowledge>(), new List<string>()).Count);
+			ClassicAssert.AreEqual(0, KingdomCeremonyRules.ForeignDesigns(null, new List<string>()).Count);
+			ClassicAssert.AreEqual(0, KingdomCeremonyRules.ForeignDesigns(new List<KingdomCeremonyRules.BuildingKnowledge>(), new List<string>()).Count);
 		}
 
 		// --- The pattern-book: the draws themselves --------------------------------------------
@@ -587,13 +588,13 @@ namespace ThousandAndFirst.Tests
 		{
 			bool first = KingdomCeremonyRules.ShouldOfferPattern("taf:settlement:example", 77uL);
 			bool second = KingdomCeremonyRules.ShouldOfferPattern("taf:settlement:example", 77uL);
-			Assert.AreEqual(first, second);
+			ClassicAssert.AreEqual(first, second);
 		}
 
 		[Test]
 		public void ShouldOfferPattern_InvalidSettlementIdFailsClosed()
 		{
-			Assert.IsFalse(KingdomCeremonyRules.ShouldOfferPattern("", 0uL));
+			ClassicAssert.IsFalse(KingdomCeremonyRules.ShouldOfferPattern("", 0uL));
 		}
 
 		[Test]
@@ -610,8 +611,8 @@ namespace ThousandAndFirst.Tests
 			}
 			// Not an exact binomial check (that would be flaky); just confirms the draw is neither
 			// always-on nor always-off, which a mutated "return true"/"return false" would produce.
-			Assert.Greater(offered, 0);
-			Assert.Less(offered, trials);
+			ClassicAssert.Greater(offered, 0);
+			ClassicAssert.Less(offered, trials);
 		}
 
 		[Test]
@@ -622,8 +623,8 @@ namespace ThousandAndFirst.Tests
 				for (int step = 0; step < 3; step++)
 				{
 					int index = KingdomCeremonyRules.PickPatternIndex("taf:settlement:sweep", 12uL, step, remaining);
-					Assert.GreaterOrEqual(index, 0);
-					Assert.Less(index, remaining);
+					ClassicAssert.GreaterOrEqual(index, 0);
+					ClassicAssert.Less(index, remaining);
 				}
 			}
 		}
@@ -631,14 +632,14 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PickPatternIndex_ZeroOrNegativeRemainingReturnsZeroWithoutThrowing()
 		{
-			Assert.AreEqual(0, KingdomCeremonyRules.PickPatternIndex("taf:settlement:sweep", 12uL, 0, 0));
-			Assert.AreEqual(0, KingdomCeremonyRules.PickPatternIndex("taf:settlement:sweep", 12uL, 0, -3));
+			ClassicAssert.AreEqual(0, KingdomCeremonyRules.PickPatternIndex("taf:settlement:sweep", 12uL, 0, 0));
+			ClassicAssert.AreEqual(0, KingdomCeremonyRules.PickPatternIndex("taf:settlement:sweep", 12uL, 0, -3));
 		}
 
 		[Test]
 		public void PickPatternIndex_InvalidSettlementIdFallsBackToZero()
 		{
-			Assert.AreEqual(0, KingdomCeremonyRules.PickPatternIndex("", 0uL, 0, 3));
+			ClassicAssert.AreEqual(0, KingdomCeremonyRules.PickPatternIndex("", 0uL, 0, 3));
 		}
 
 		// ==================================================================================
@@ -650,7 +651,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// This proves old chronicle/tool vocabulary remains deterministic. Live capacity never
 			// reads this score; civic-office authority is title-only.
-			Assert.AreEqual((2 * KingdomCeremonyRules.TasteShadeAmount) + KingdomCeremonyRules.LeaderShade() + 2,
+			ClassicAssert.AreEqual((2 * KingdomCeremonyRules.TasteShadeAmount) + KingdomCeremonyRules.LeaderShade() + 2,
 				KingdomCeremonyRules.NotableShade(new List<bool> { true, true }, 2));
 		}
 
@@ -659,23 +660,23 @@ namespace ThousandAndFirst.Tests
 		{
 			// Unmet tastes are not a penalty (the brief rejects the penalty half outright), so a
 			// notable who found nothing here is still worth their virtue net of their flaw.
-			Assert.AreEqual(KingdomCeremonyRules.LeaderShade(),
+			ClassicAssert.AreEqual(KingdomCeremonyRules.LeaderShade(),
 				KingdomCeremonyRules.NotableShade(new List<bool> { false, false }, 0));
-			Assert.AreEqual(KingdomCeremonyRules.LeaderShade(), KingdomCeremonyRules.NotableShade(null, 0));
+			ClassicAssert.AreEqual(KingdomCeremonyRules.LeaderShade(), KingdomCeremonyRules.NotableShade(null, 0));
 		}
 
 		[Test]
 		public void HistoricalNotableScoreTreatsNegativePreferenceAsNone()
 		{
-			Assert.AreEqual(KingdomCeremonyRules.LeaderShade(), KingdomCeremonyRules.NotableShade(null, -9));
+			ClassicAssert.AreEqual(KingdomCeremonyRules.LeaderShade(), KingdomCeremonyRules.NotableShade(null, -9));
 		}
 
 		[Test]
 		public void HistoricalNotableScoreNeverExceedsItsVocabularyCeiling()
 		{
-			Assert.AreEqual(KingdomCeremonyRules.MaxNotableShade,
+			ClassicAssert.AreEqual(KingdomCeremonyRules.MaxNotableShade,
 				KingdomCeremonyRules.NotableShade(new List<bool> { true, true, true, true }, 99));
-			Assert.AreEqual(5, KingdomCeremonyRules.MaxNotableShade,
+			ClassicAssert.AreEqual(5, KingdomCeremonyRules.MaxNotableShade,
 				"two tastes, a virtue net of a flaw, and two Prefers: texture, not a lever");
 		}
 
@@ -687,22 +688,22 @@ namespace ThousandAndFirst.Tests
 			for (ulong ordinal = 1uL; ordinal < 40uL && widest.Count < KingdomCeremonyRules.MaxTastesStated; ordinal++)
 			{
 				List<int> drawn = KingdomCeremonyRules.ChooseTastes("taf:settlement:sweep", ordinal);
-				Assert.LessOrEqual(drawn.Count, KingdomCeremonyRules.MaxTastesStated,
+				ClassicAssert.LessOrEqual(drawn.Count, KingdomCeremonyRules.MaxTastesStated,
 					"no notable may state more tastes than the ceiling counts");
 				if (drawn.Count > widest.Count)
 				{
 					widest = drawn;
 				}
 			}
-			Assert.AreEqual(KingdomCeremonyRules.MaxTastesStated, widest.Count,
+			ClassicAssert.AreEqual(KingdomCeremonyRules.MaxTastesStated, widest.Count,
 				"the draw must be able to reach the ceiling, or the ceiling is fiction");
 		}
 
 		[Test]
 		public void HistoricalShadeClauseSaysNothingForZero()
 		{
-			Assert.AreEqual("", KingdomCeremonyRules.ShadeClause(0));
-			Assert.AreEqual("", KingdomCeremonyRules.ShadeClause(-2));
+			ClassicAssert.AreEqual("", KingdomCeremonyRules.ShadeClause(0));
+			ClassicAssert.AreEqual("", KingdomCeremonyRules.ShadeClause(-2));
 		}
 
 		[Test]
@@ -715,15 +716,15 @@ namespace ThousandAndFirst.Tests
 
 		private static void AssertNestedFields(Type type, string fullName, string[] names)
 		{
-			Assert.AreEqual(fullName, type.FullName);
-			Assert.IsTrue(type.IsNestedPublic);
-			Assert.AreEqual(typeof(KingdomCeremonyRules), type.DeclaringType);
+			ClassicAssert.AreEqual(fullName, type.FullName);
+			ClassicAssert.IsTrue(type.IsNestedPublic);
+			ClassicAssert.AreEqual(typeof(KingdomCeremonyRules), type.DeclaringType);
 			FieldInfo[] fields = type.GetFields(BindingFlags.Instance | BindingFlags.Public);
 			Array.Sort(fields, (a, b) => a.MetadataToken.CompareTo(b.MetadataToken));
 			CollectionAssert.AreEqual(names, Array.ConvertAll(fields, field => field.Name));
 			CollectionAssert.AreEqual(new[] { typeof(string), typeof(string), typeof(string) },
 				Array.ConvertAll(fields, field => field.FieldType));
-			foreach (FieldInfo field in fields) Assert.IsFalse(field.IsInitOnly, field.Name);
+			foreach (FieldInfo field in fields) ClassicAssert.IsFalse(field.IsInitOnly, field.Name);
 		}
 
 		private static string LogicalSource()

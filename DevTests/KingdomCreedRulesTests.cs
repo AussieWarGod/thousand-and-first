@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -10,10 +11,10 @@ namespace ThousandAndFirst.Tests
 	{
 		private static void AssertPublicIntEnum(Type type, params string[] expected)
 		{
-			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(type), type.Name + " backing type");
-			Assert.AreEqual("ThousandAndFirst." + type.Name, type.FullName);
-			Assert.IsTrue(type.IsPublic, type.Name + " accessibility changed");
-			Assert.IsFalse(type.IsNested, type.Name + " became nested");
+			ClassicAssert.AreEqual(typeof(int), Enum.GetUnderlyingType(type), type.Name + " backing type");
+			ClassicAssert.AreEqual("ThousandAndFirst." + type.Name, type.FullName);
+			ClassicAssert.IsTrue(type.IsPublic, type.Name + " accessibility changed");
+			ClassicAssert.IsFalse(type.IsNested, type.Name + " became nested");
 			string[] names = Enum.GetNames(type);
 			string[] actual = new string[names.Length];
 			for (int i = 0; i < names.Length; i++)
@@ -30,27 +31,27 @@ namespace ThousandAndFirst.Tests
 				"NoClash=2", "DissentHolds=3");
 			AssertPublicIntEnum(typeof(RejoinVerdict), "Allowed=0", "NothingSeceded=1",
 				"RealmIsFull=2", "NotOnTheirGround=3", "ClashStillLive=4", "StandingTooLow=5");
-			Assert.AreEqual("ThousandAndFirst.KingdomCreedRules", typeof(KingdomCreedRules).FullName);
-			Assert.IsTrue(typeof(KingdomCreedRules).IsPublic);
-			Assert.IsTrue(typeof(KingdomCreedRules).IsAbstract && typeof(KingdomCreedRules).IsSealed);
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomCreedRules", typeof(KingdomCreedRules).FullName);
+			ClassicAssert.IsTrue(typeof(KingdomCreedRules).IsPublic);
+			ClassicAssert.IsTrue(typeof(KingdomCreedRules).IsAbstract && typeof(KingdomCreedRules).IsSealed);
 
-			Assert.AreEqual(100, KingdomCreedRules.OrdinaryWeight);
-			Assert.AreEqual(8, KingdomCreedRules.AffinityPerResident);
-			Assert.AreEqual(60, KingdomCreedRules.DeclaredBonus);
-			Assert.AreEqual(3, KingdomCreedRules.MinBelievers);
-			Assert.AreEqual(33, KingdomCreedRules.DominantSharePercent);
-			Assert.AreEqual(3, KingdomCreedRules.MaxKeptCreeds);
-			Assert.AreEqual('|', KingdomCreedRules.KeptSeparator);
-			Assert.AreEqual(25, KingdomCreedRules.HostilityPerDissentPoint);
-			Assert.AreEqual(100, KingdomCreedRules.DissentBreaking);
-			Assert.AreEqual(70, KingdomCreedRules.DissentRupture);
-			Assert.AreEqual(45, KingdomCreedRules.DissentQuarrel);
-			Assert.AreEqual(20, KingdomCreedRules.DissentMuttering);
-			Assert.AreEqual(3, KingdomCreedRules.RiteCooldownDays);
-			Assert.AreEqual(9, KingdomCreedRules.SecessionWindowDays);
-			Assert.AreEqual(12, KingdomCreedRules.MealEase);
-			Assert.AreEqual(20, KingdomCreedRules.DeclarationShock);
-			Assert.AreEqual(-150, KingdomCreedRules.DeclarationStandingCost);
+			ClassicAssert.AreEqual(100, KingdomCreedRules.OrdinaryWeight);
+			ClassicAssert.AreEqual(8, KingdomCreedRules.AffinityPerResident);
+			ClassicAssert.AreEqual(60, KingdomCreedRules.DeclaredBonus);
+			ClassicAssert.AreEqual(3, KingdomCreedRules.MinBelievers);
+			ClassicAssert.AreEqual(33, KingdomCreedRules.DominantSharePercent);
+			ClassicAssert.AreEqual(3, KingdomCreedRules.MaxKeptCreeds);
+			ClassicAssert.AreEqual('|', KingdomCreedRules.KeptSeparator);
+			ClassicAssert.AreEqual(25, KingdomCreedRules.HostilityPerDissentPoint);
+			ClassicAssert.AreEqual(100, KingdomCreedRules.DissentBreaking);
+			ClassicAssert.AreEqual(70, KingdomCreedRules.DissentRupture);
+			ClassicAssert.AreEqual(45, KingdomCreedRules.DissentQuarrel);
+			ClassicAssert.AreEqual(20, KingdomCreedRules.DissentMuttering);
+			ClassicAssert.AreEqual(3, KingdomCreedRules.RiteCooldownDays);
+			ClassicAssert.AreEqual(9, KingdomCreedRules.SecessionWindowDays);
+			ClassicAssert.AreEqual(12, KingdomCreedRules.MealEase);
+			ClassicAssert.AreEqual(20, KingdomCreedRules.DeclarationShock);
+			ClassicAssert.AreEqual(-150, KingdomCreedRules.DeclarationStandingCost);
 		}
 
 		// ---- what pulls a settler toward a creed -------------------------------------------
@@ -69,7 +70,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(5000, 40)]
 		public void StandingWeightStepsWithVanillaAttitude(int standing, int expected)
 		{
-			Assert.AreEqual(expected, KingdomCreedRules.StandingWeight(standing));
+			ClassicAssert.AreEqual(expected, KingdomCreedRules.StandingWeight(standing));
 		}
 
 		[Test]
@@ -77,8 +78,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// Not "rarely" — zero. A zero weight is skipped outright by the draw, so this is the
 			// difference between a hostile faction never appearing and appearing occasionally.
-			Assert.AreEqual(0, KingdomCreedRules.CreedWeight(KingdomExileRules.RegardDisliked, 0, Declared: false));
-			Assert.AreEqual(KingdomCreedRules.AffinityPerResident * 4,
+			ClassicAssert.AreEqual(0, KingdomCreedRules.CreedWeight(KingdomExileRules.RegardDisliked, 0, Declared: false));
+			ClassicAssert.AreEqual(KingdomCreedRules.AffinityPerResident * 4,
 				KingdomCreedRules.CreedWeight(KingdomExileRules.RegardDisliked, 4, Declared: false),
 				"believers already here still pull, but the faction's own standing adds nothing");
 		}
@@ -91,7 +92,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(0, -3, false, 10)]
 		public void CreedWeightComposesItsThreeInputs(int standing, int alreadyHere, bool declared, int expected)
 		{
-			Assert.AreEqual(expected, KingdomCreedRules.CreedWeight(standing, alreadyHere, declared));
+			ClassicAssert.AreEqual(expected, KingdomCreedRules.CreedWeight(standing, alreadyHere, declared));
 		}
 
 		[Test]
@@ -100,18 +101,18 @@ namespace ThousandAndFirst.Tests
 			// The design promise: creed is a minority colour that accumulates. A faction the realm
 			// has merely met must not out-pull "holds with nobody in particular" on day one.
 			int fresh = KingdomCreedRules.CreedWeight(0, 0, Declared: false);
-			Assert.Less(fresh, KingdomCreedRules.OrdinaryWeight);
+			ClassicAssert.Less(fresh, KingdomCreedRules.OrdinaryWeight);
 			int beloved = KingdomCreedRules.CreedWeight(KingdomExileRules.RegardLoved, 0, Declared: false);
-			Assert.Less(beloved, KingdomCreedRules.OrdinaryWeight, "even a beloved faction starts as a minority");
+			ClassicAssert.Less(beloved, KingdomCreedRules.OrdinaryWeight, "even a beloved faction starts as a minority");
 		}
 
 		[Test]
 		public void TotalWeightCountsTheOrdinarySettlerAndSkipsDeadCandidates()
 		{
-			Assert.AreEqual(KingdomCreedRules.OrdinaryWeight, KingdomCreedRules.TotalWeight(null));
-			Assert.AreEqual(KingdomCreedRules.OrdinaryWeight, KingdomCreedRules.TotalWeight(new int[0]));
-			Assert.AreEqual(KingdomCreedRules.OrdinaryWeight + 30, KingdomCreedRules.TotalWeight(new int[3] { 10, 0, 20 }));
-			Assert.AreEqual(KingdomCreedRules.OrdinaryWeight + 10, KingdomCreedRules.TotalWeight(new int[2] { 10, -5 }));
+			ClassicAssert.AreEqual(KingdomCreedRules.OrdinaryWeight, KingdomCreedRules.TotalWeight(null));
+			ClassicAssert.AreEqual(KingdomCreedRules.OrdinaryWeight, KingdomCreedRules.TotalWeight(new int[0]));
+			ClassicAssert.AreEqual(KingdomCreedRules.OrdinaryWeight + 30, KingdomCreedRules.TotalWeight(new int[3] { 10, 0, 20 }));
+			ClassicAssert.AreEqual(KingdomCreedRules.OrdinaryWeight + 10, KingdomCreedRules.TotalWeight(new int[2] { 10, -5 }));
 		}
 
 		[Test]
@@ -120,7 +121,7 @@ namespace ThousandAndFirst.Tests
 			int[] weights = new int[2] { 40, 60 };
 			for (int roll = 0; roll < KingdomCreedRules.OrdinaryWeight; roll++)
 			{
-				Assert.AreEqual(-1, KingdomCreedRules.DrawCreed(weights, roll), "roll " + roll);
+				ClassicAssert.AreEqual(-1, KingdomCreedRules.DrawCreed(weights, roll), "roll " + roll);
 			}
 		}
 
@@ -130,7 +131,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(199, 1)]
 		public void DrawCreedBandsAreContiguousAndOrdered(int roll, int expected)
 		{
-			Assert.AreEqual(expected, KingdomCreedRules.DrawCreed(new int[2] { 40, 60 }, roll));
+			ClassicAssert.AreEqual(expected, KingdomCreedRules.DrawCreed(new int[2] { 40, 60 }, roll));
 		}
 
 		[Test]
@@ -139,7 +140,7 @@ namespace ThousandAndFirst.Tests
 			int[] weights = new int[3] { 0, 50, 0 };
 			for (int roll = KingdomCreedRules.OrdinaryWeight; roll < KingdomCreedRules.TotalWeight(weights); roll++)
 			{
-				Assert.AreEqual(1, KingdomCreedRules.DrawCreed(weights, roll), "roll " + roll);
+				ClassicAssert.AreEqual(1, KingdomCreedRules.DrawCreed(weights, roll), "roll " + roll);
 			}
 		}
 
@@ -147,9 +148,9 @@ namespace ThousandAndFirst.Tests
 		public void DrawCreedTreatsAnImpossibleRollAsOrdinaryRatherThanThrowing()
 		{
 			int[] weights = new int[1] { 50 };
-			Assert.AreEqual(-1, KingdomCreedRules.DrawCreed(weights, 9999));
-			Assert.AreEqual(-1, KingdomCreedRules.DrawCreed(weights, -1));
-			Assert.AreEqual(-1, KingdomCreedRules.DrawCreed(null, 0));
+			ClassicAssert.AreEqual(-1, KingdomCreedRules.DrawCreed(weights, 9999));
+			ClassicAssert.AreEqual(-1, KingdomCreedRules.DrawCreed(weights, -1));
+			ClassicAssert.AreEqual(-1, KingdomCreedRules.DrawCreed(null, 0));
 		}
 
 		[Test]
@@ -168,9 +169,9 @@ namespace ThousandAndFirst.Tests
 				else if (drawn == 2) { third++; }
 				else { Assert.Fail("a zero-weight candidate was drawn at roll " + roll); }
 			}
-			Assert.AreEqual(KingdomCreedRules.OrdinaryWeight, ordinary);
-			Assert.AreEqual(11, first);
-			Assert.AreEqual(7, third);
+			ClassicAssert.AreEqual(KingdomCreedRules.OrdinaryWeight, ordinary);
+			ClassicAssert.AreEqual(11, first);
+			ClassicAssert.AreEqual(7, third);
 		}
 
 		// ---- what a city believes -----------------------------------------------------------
@@ -178,17 +179,17 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ACityWithNoResidentsHasNoCreed()
 		{
-			Assert.IsNull(KingdomCreedRules.DominantCreed(Counts(), 0));
-			Assert.IsNull(KingdomCreedRules.DominantCreed(null, 10));
-			Assert.IsNull(KingdomCreedRules.DominantCreed(Counts("Templar", 5), 0),
+			ClassicAssert.IsNull(KingdomCreedRules.DominantCreed(Counts(), 0));
+			ClassicAssert.IsNull(KingdomCreedRules.DominantCreed(null, 10));
+			ClassicAssert.IsNull(KingdomCreedRules.DominantCreed(Counts("Templar", 5), 0),
 				"a tally that outlived its people names nobody");
 		}
 
 		[Test]
 		public void ATieForDominanceLeavesTheCityMixed()
 		{
-			Assert.IsNull(KingdomCreedRules.DominantCreed(Counts("Templar", 4, "Barathrumites", 4), 8));
-			Assert.IsNull(KingdomCreedRules.DominantCreed(Counts("Templar", 5, "Barathrumites", 5, "Joppa", 1), 11));
+			ClassicAssert.IsNull(KingdomCreedRules.DominantCreed(Counts("Templar", 4, "Barathrumites", 4), 8));
+			ClassicAssert.IsNull(KingdomCreedRules.DominantCreed(Counts("Templar", 5, "Barathrumites", 5, "Joppa", 1), 11));
 		}
 
 		[Test]
@@ -196,8 +197,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// The tie rule is what makes this order-independent. If it were relaxed to >=, the
 			// answer would depend on Dictionary enumeration order, which is not a contract.
-			Assert.IsNull(KingdomCreedRules.DominantCreed(Counts("Aaa", 4, "Zzz", 4), 8));
-			Assert.IsNull(KingdomCreedRules.DominantCreed(Counts("Zzz", 4, "Aaa", 4), 8));
+			ClassicAssert.IsNull(KingdomCreedRules.DominantCreed(Counts("Aaa", 4, "Zzz", 4), 8));
+			ClassicAssert.IsNull(KingdomCreedRules.DominantCreed(Counts("Zzz", 4, "Aaa", 4), 8));
 		}
 
 		[TestCase(2, 4, null)]
@@ -207,28 +208,28 @@ namespace ThousandAndFirst.Tests
 		{
 			// 3 of 9 is exactly a third and passes; 3 of 10 is under and fails; 2 of 4 is half the
 			// city and still fails, because two people are not a faction.
-			Assert.AreEqual(expected, KingdomCreedRules.DominantCreed(Counts("Templar", believers), population));
+			ClassicAssert.AreEqual(expected, KingdomCreedRules.DominantCreed(Counts("Templar", believers), population));
 		}
 
 		[Test]
 		public void TheMinimumBelieverFloorIsExactlyWhereItSays()
 		{
-			Assert.IsNull(KingdomCreedRules.DominantCreed(Counts("Templar", KingdomCreedRules.MinBelievers - 1), KingdomCreedRules.MinBelievers - 1));
-			Assert.AreEqual("Templar", KingdomCreedRules.DominantCreed(Counts("Templar", KingdomCreedRules.MinBelievers), KingdomCreedRules.MinBelievers));
+			ClassicAssert.IsNull(KingdomCreedRules.DominantCreed(Counts("Templar", KingdomCreedRules.MinBelievers - 1), KingdomCreedRules.MinBelievers - 1));
+			ClassicAssert.AreEqual("Templar", KingdomCreedRules.DominantCreed(Counts("Templar", KingdomCreedRules.MinBelievers), KingdomCreedRules.MinBelievers));
 		}
 
 		[Test]
 		public void NonPositiveAndUnnamedTalliesAreIgnored()
 		{
-			Assert.IsNull(KingdomCreedRules.DominantCreed(Counts("Templar", 0, "Joppa", -4), 10));
-			Assert.AreEqual("Joppa", KingdomCreedRules.DominantCreed(Counts("", 9, "Joppa", 4), 10),
+			ClassicAssert.IsNull(KingdomCreedRules.DominantCreed(Counts("Templar", 0, "Joppa", -4), 10));
+			ClassicAssert.AreEqual("Joppa", KingdomCreedRules.DominantCreed(Counts("", 9, "Joppa", 4), 10),
 				"an empty key is not a creed and must not win");
 		}
 
 		[Test]
 		public void ALeaderNeedsOnlyAPluralityNotAMajority()
 		{
-			Assert.AreEqual("Templar", KingdomCreedRules.DominantCreed(Counts("Templar", 4, "Joppa", 3, "Girsh", 2), 12));
+			ClassicAssert.AreEqual("Templar", KingdomCreedRules.DominantCreed(Counts("Templar", 4, "Joppa", 3, "Girsh", 2), 12));
 		}
 
 		// ---- how badly two creeds are at odds ------------------------------------------------
@@ -239,15 +240,15 @@ namespace ThousandAndFirst.Tests
 			// The engine answers 100 for a faction's feeling about itself. That warmth is not the
 			// cities' to claim, and more importantly it must not be read as hostility's opposite
 			// and then negated somewhere.
-			Assert.AreEqual(0, KingdomCreedRules.Hostility(100, 100, SameCreed: true));
-			Assert.AreEqual(0, KingdomCreedRules.Hostility(-100, -100, SameCreed: true));
+			ClassicAssert.AreEqual(0, KingdomCreedRules.Hostility(100, 100, SameCreed: true));
+			ClassicAssert.AreEqual(0, KingdomCreedRules.Hostility(-100, -100, SameCreed: true));
 		}
 
 		[Test]
 		public void CreedsTheEngineHasNoFeelingBetweenAreAtPeace()
 		{
-			Assert.AreEqual(0, KingdomCreedRules.Hostility(0, 0, SameCreed: false));
-			Assert.AreEqual(0, KingdomCreedRules.DissentPerDay(KingdomCreedRules.Hostility(0, 0, SameCreed: false)));
+			ClassicAssert.AreEqual(0, KingdomCreedRules.Hostility(0, 0, SameCreed: false));
+			ClassicAssert.AreEqual(0, KingdomCreedRules.DissentPerDay(KingdomCreedRules.Hostility(0, 0, SameCreed: false)));
 		}
 
 		[TestCase(100, 100, 0)]
@@ -264,7 +265,7 @@ namespace ThousandAndFirst.Tests
 			// Qud's feelings are not symmetric: the Barathrumites hold the Templar at -100 while
 			// the Templar return -50. A design that averaged, or that read one direction, would
 			// halve the game's own fault line.
-			Assert.AreEqual(expected, KingdomCreedRules.Hostility(aboutTheOther, back, SameCreed: false));
+			ClassicAssert.AreEqual(expected, KingdomCreedRules.Hostility(aboutTheOther, back, SameCreed: false));
 		}
 
 		// ---- the arithmetic of falling out ---------------------------------------------------
@@ -280,7 +281,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// The floor is load-bearing: a great many faction pairs sit at a general -20 or -10,
 			// and none of those may ever become a countdown.
-			Assert.AreEqual(expected, KingdomCreedRules.DissentPerDay(hostility));
+			ClassicAssert.AreEqual(expected, KingdomCreedRules.DissentPerDay(hostility));
 		}
 
 		[TestCase(0, 100, 0, 0)]
@@ -292,14 +293,14 @@ namespace ThousandAndFirst.Tests
 		[TestCase(-5, 0, 3, 0)]
 		public void DissentAccruesPerAttendedDayAndClamps(int dissent, int hostility, int days, int expected)
 		{
-			Assert.AreEqual(expected, KingdomCreedRules.AccrueDissent(dissent, hostility, days));
+			ClassicAssert.AreEqual(expected, KingdomCreedRules.AccrueDissent(dissent, hostility, days));
 		}
 
 		[Test]
 		public void ANegativeOrZeroDayCountChangesNothing()
 		{
-			Assert.AreEqual(40, KingdomCreedRules.AccrueDissent(40, 100, 0));
-			Assert.AreEqual(40, KingdomCreedRules.AccrueDissent(40, 100, -7));
+			ClassicAssert.AreEqual(40, KingdomCreedRules.AccrueDissent(40, 100, 0));
+			ClassicAssert.AreEqual(40, KingdomCreedRules.AccrueDissent(40, 100, -7));
 		}
 
 		[Test]
@@ -309,8 +310,8 @@ namespace ThousandAndFirst.Tests
 			// real elapsed days (Addendum 8 clause 1) rather than the three the absence cap used
 			// to forgive, so a season away really is a season of quarrelling.
 			int aSeason = KingdomRules.ElapsedDays(KingdomRules.TicksPerDay * 90);
-			Assert.AreEqual(90, aSeason, "the clock is uncapped");
-			Assert.Greater(KingdomCreedRules.AccrueDissent(0, 100, aSeason),
+			ClassicAssert.AreEqual(90, aSeason, "the clock is uncapped");
+			ClassicAssert.Greater(KingdomCreedRules.AccrueDissent(0, 100, aSeason),
 				KingdomCreedRules.AccrueDissent(0, 100, 3),
 				"absence is no longer forgiven here");
 		}
@@ -326,12 +327,12 @@ namespace ThousandAndFirst.Tests
 			// away a thousand come home to exactly the same realm, told in the same words.
 			int ninety = KingdomCreedRules.AccrueDissent(0, 100, 90);
 			int aThousand = KingdomCreedRules.AccrueDissent(0, 100, 1000);
-			Assert.AreEqual(KingdomCreedRules.DissentBreaking, ninety);
-			Assert.AreEqual(ninety, aThousand, "nothing accrues past the breaking point");
-			Assert.AreEqual(CityTemper.Secession, KingdomCreedRules.ClassifyTemper(aThousand));
-			Assert.Greater(KingdomCreedRules.SecessionWindowDays, 0,
+			ClassicAssert.AreEqual(KingdomCreedRules.DissentBreaking, ninety);
+			ClassicAssert.AreEqual(ninety, aThousand, "nothing accrues past the breaking point");
+			ClassicAssert.AreEqual(CityTemper.Secession, KingdomCreedRules.ClassifyTemper(aThousand));
+			ClassicAssert.Greater(KingdomCreedRules.SecessionWindowDays, 0,
 				"and reaching it costs the founder nothing until the window has run from their warning");
-			Assert.IsFalse(KingdomBrinkRules.WindowSpent(BrinkKind.City, KingdomBrinkRules.Unwarned, 9000L * KingdomRules.TicksPerDay),
+			ClassicAssert.IsFalse(KingdomBrinkRules.WindowSpent(BrinkKind.City, KingdomBrinkRules.Unwarned, 9000L * KingdomRules.TicksPerDay),
 				"a realm nobody was warned about must never lose a city, however long the absence");
 		}
 
@@ -341,9 +342,9 @@ namespace ThousandAndFirst.Tests
 			// Four points a day times an uncapped day count is a number an int cannot hold, and a
 			// dissent that wrapped negative would read as concord -- a realm at the breaking point
 			// silently reported as being at peace.
-			Assert.AreEqual(KingdomCreedRules.DissentBreaking, KingdomCreedRules.AccrueDissent(0, 100, int.MaxValue));
-			Assert.AreEqual(KingdomCreedRules.DissentBreaking, KingdomCreedRules.AccrueDissent(99, 100, int.MaxValue));
-			Assert.AreEqual(0, KingdomCreedRules.AccrueDissent(0, 20, int.MaxValue),
+			ClassicAssert.AreEqual(KingdomCreedRules.DissentBreaking, KingdomCreedRules.AccrueDissent(0, 100, int.MaxValue));
+			ClassicAssert.AreEqual(KingdomCreedRules.DissentBreaking, KingdomCreedRules.AccrueDissent(99, 100, int.MaxValue));
+			ClassicAssert.AreEqual(0, KingdomCreedRules.AccrueDissent(0, 20, int.MaxValue),
 				"and ordinary dislike still buys nothing at all, however long it is left");
 		}
 
@@ -354,7 +355,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(0, -1, 0)]
 		public void LeversMoveDissentWithinItsBounds(int dissent, int delta, int expected)
 		{
-			Assert.AreEqual(expected, KingdomCreedRules.ApplyDissent(dissent, delta));
+			ClassicAssert.AreEqual(expected, KingdomCreedRules.ApplyDissent(dissent, delta));
 		}
 
 		// ---- the ladder the founder watches --------------------------------------------------
@@ -370,7 +371,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(100, CityTemper.Secession)]
 		public void TemperBoundariesAreExactlyWhereTheConstantsSay(int dissent, CityTemper expected)
 		{
-			Assert.AreEqual(expected, KingdomCreedRules.ClassifyTemper(dissent));
+			ClassicAssert.AreEqual(expected, KingdomCreedRules.ClassifyTemper(dissent));
 		}
 
 		[Test]
@@ -385,14 +386,14 @@ namespace ThousandAndFirst.Tests
 				KingdomCreedRules.ClassifyTemper(KingdomCreedRules.DissentQuarrel),
 				KingdomCreedRules.ClassifyTemper(KingdomCreedRules.DissentRupture)
 			};
-			Assert.AreEqual(CityTemper.Concord, seen[0]);
-			Assert.AreEqual(CityTemper.Muttering, seen[1]);
-			Assert.AreEqual(CityTemper.Quarrel, seen[2]);
-			Assert.AreEqual(CityTemper.Rupture, seen[3]);
+			ClassicAssert.AreEqual(CityTemper.Concord, seen[0]);
+			ClassicAssert.AreEqual(CityTemper.Muttering, seen[1]);
+			ClassicAssert.AreEqual(CityTemper.Quarrel, seen[2]);
+			ClassicAssert.AreEqual(CityTemper.Rupture, seen[3]);
 			for (int i = 1; i < seen.Length; i++)
 			{
-				Assert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.TemperSpeech(seen[i], "Nesh", "Basra")), seen[i] + " must say something");
-				Assert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.TemperChronicle(seen[i], "Nesh", "Basra")), seen[i] + " must write something");
+				ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.TemperSpeech(seen[i], "Nesh", "Basra")), seen[i] + " must say something");
+				ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.TemperChronicle(seen[i], "Nesh", "Basra")), seen[i] + " must write something");
 			}
 		}
 
@@ -408,9 +409,9 @@ namespace ThousandAndFirst.Tests
 			{
 				dissent = KingdomCreedRules.AccrueDissent(dissent, 100, 1);
 				days++;
-				Assert.Less(days, 100, "the ladder must terminate");
+				ClassicAssert.Less(days, 100, "the ladder must terminate");
 			}
-			Assert.GreaterOrEqual(days, 7);
+			ClassicAssert.GreaterOrEqual(days, 7);
 			// Addendum 10(a) put the window into the same unit as this span, and the derivation it
 			// ordered (three attended passes x the cadence) makes it NINE days against this span's
 			// eight. The old "one rung under" relation was between two different units and does
@@ -423,11 +424,11 @@ namespace ThousandAndFirst.Tests
 			{
 				dissentFromMuttering = KingdomCreedRules.AccrueDissent(dissentFromMuttering, 100, 1);
 				fromTheFirstMuttering++;
-				Assert.Less(fromTheFirstMuttering, 200, "the ladder must terminate");
+				ClassicAssert.Less(fromTheFirstMuttering, 200, "the ladder must terminate");
 			}
-			Assert.Greater(fromTheFirstMuttering, KingdomCreedRules.SecessionWindowDays,
+			ClassicAssert.Greater(fromTheFirstMuttering, KingdomCreedRules.SecessionWindowDays,
 				"the warning ladder must be longer than the window it ends in");
-			Assert.GreaterOrEqual(days + KingdomCreedRules.SecessionWindowDays, 14,
+			ClassicAssert.GreaterOrEqual(days + KingdomCreedRules.SecessionWindowDays, 14,
 				"a fortnight of visible warning between the loudest tier and losing the city");
 		}
 
@@ -437,17 +438,17 @@ namespace ThousandAndFirst.Tests
 			// The gap the whole package existed to close: reaching the breaking point used to BE
 			// the secession. Now it is a brink, and the brink's own arithmetic -- world time from
 			// the day the word reaches the founder -- decides when the city actually walks.
-			Assert.AreEqual(KingdomBrinkRules.CityBrinkWindowDays, KingdomCreedRules.SecessionWindowDays);
-			Assert.AreEqual(KingdomBrinkRules.InCohabitationDays(KingdomBrinkRules.CityBrinkWindowPasses),
+			ClassicAssert.AreEqual(KingdomBrinkRules.CityBrinkWindowDays, KingdomCreedRules.SecessionWindowDays);
+			ClassicAssert.AreEqual(KingdomBrinkRules.InCohabitationDays(KingdomBrinkRules.CityBrinkWindowPasses),
 				KingdomCreedRules.SecessionWindowDays, "the window stopped being its old rope restated");
 			long told = 300L * KingdomRules.TicksPerDay;
 			int days = 0;
 			while (!KingdomBrinkRules.WindowSpent(BrinkKind.City, told, told + days * KingdomRules.TicksPerDay))
 			{
 				days++;
-				Assert.Less(days, 200, "the window must terminate");
+				ClassicAssert.Less(days, 200, "the window must terminate");
 			}
-			Assert.AreEqual(KingdomCreedRules.SecessionWindowDays, days,
+			ClassicAssert.AreEqual(KingdomCreedRules.SecessionWindowDays, days,
 				"a whole window of world-days after the day the word went out, and not one fewer");
 		}
 
@@ -457,7 +458,7 @@ namespace ThousandAndFirst.Tests
 			// The Secession rung of TemperSpeech is deliberately silent -- until the brink there
 			// was nothing to say at that tier, because the city was already gone. This is the
 			// sentence that fills it, and it must carry all three facts a founder can act on.
-			Assert.AreEqual("", KingdomCreedRules.TemperSpeech(CityTemper.Secession, "Nesh", "Basra"));
+			ClassicAssert.AreEqual("", KingdomCreedRules.TemperSpeech(CityTemper.Secession, "Nesh", "Basra"));
 			string line = KingdomCreedRules.SecessionBrinkSpeech("Basra", "Nesh", 31, 9);
 			StringAssert.Contains("Basra", line);
 			StringAssert.Contains("Nesh", line);
@@ -481,39 +482,39 @@ namespace ThousandAndFirst.Tests
 		{
 			StringAssert.Contains("One day", KingdomCreedRules.SecessionBrinkSpeech("Basra", "Nesh", 2, 1));
 			StringAssert.Contains("no more time", KingdomCreedRules.SecessionBrinkSpeech("Basra", "Nesh", 2, 0));
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.SecessionBrinkSpeech(null, null, 0, 2)));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.SecessionBrinkSpeech(null, null, 0, 2)));
 		}
 
 		[Test]
 		public void AWorseningSpeaksOnceAndJitterSaysNothingFurther()
 		{
 			CityTemper spoken = CityTemper.Concord;
-			Assert.IsTrue(KingdomCreedRules.ShouldSpeak(CityTemper.Muttering, spoken));
+			ClassicAssert.IsTrue(KingdomCreedRules.ShouldSpeak(CityTemper.Muttering, spoken));
 			spoken = KingdomCreedRules.RememberedTemper(CityTemper.Muttering, spoken);
-			Assert.AreEqual(CityTemper.Muttering, spoken);
-			Assert.IsFalse(KingdomCreedRules.ShouldSpeak(CityTemper.Muttering, spoken));
+			ClassicAssert.AreEqual(CityTemper.Muttering, spoken);
+			ClassicAssert.IsFalse(KingdomCreedRules.ShouldSpeak(CityTemper.Muttering, spoken));
 			// Slipping back one tier and worsening again says nothing: the ladder is not re-armed.
 			spoken = KingdomCreedRules.RememberedTemper(CityTemper.Quarrel, spoken);
-			Assert.IsFalse(KingdomCreedRules.ShouldSpeak(CityTemper.Muttering, spoken));
-			Assert.IsTrue(KingdomCreedRules.ShouldSpeak(CityTemper.Rupture, spoken));
+			ClassicAssert.IsFalse(KingdomCreedRules.ShouldSpeak(CityTemper.Muttering, spoken));
+			ClassicAssert.IsTrue(KingdomCreedRules.ShouldSpeak(CityTemper.Rupture, spoken));
 		}
 
 		[Test]
 		public void MendingItAllTheWayReArmsTheLadder()
 		{
 			CityTemper spoken = KingdomCreedRules.RememberedTemper(CityTemper.Rupture, CityTemper.Concord);
-			Assert.AreEqual(CityTemper.Rupture, spoken);
+			ClassicAssert.AreEqual(CityTemper.Rupture, spoken);
 			spoken = KingdomCreedRules.RememberedTemper(CityTemper.Concord, spoken);
-			Assert.AreEqual(CityTemper.Concord, spoken, "easing it to nothing must forget what was said");
-			Assert.IsTrue(KingdomCreedRules.ShouldSpeak(CityTemper.Muttering, spoken));
+			ClassicAssert.AreEqual(CityTemper.Concord, spoken, "easing it to nothing must forget what was said");
+			ClassicAssert.IsTrue(KingdomCreedRules.ShouldSpeak(CityTemper.Muttering, spoken));
 		}
 
 		[Test]
 		public void ConcordIsNeverSpokenOf()
 		{
-			Assert.IsFalse(KingdomCreedRules.ShouldSpeak(CityTemper.Concord, CityTemper.Concord));
-			Assert.IsTrue(string.IsNullOrEmpty(KingdomCreedRules.TemperSpeech(CityTemper.Concord, "Nesh", "Basra")));
-			Assert.IsTrue(string.IsNullOrEmpty(KingdomCreedRules.TemperChronicle(CityTemper.Concord, "Nesh", "Basra")));
+			ClassicAssert.IsFalse(KingdomCreedRules.ShouldSpeak(CityTemper.Concord, CityTemper.Concord));
+			ClassicAssert.IsTrue(string.IsNullOrEmpty(KingdomCreedRules.TemperSpeech(CityTemper.Concord, "Nesh", "Basra")));
+			ClassicAssert.IsTrue(string.IsNullOrEmpty(KingdomCreedRules.TemperChronicle(CityTemper.Concord, "Nesh", "Basra")));
 		}
 
 		// ---- the levers ----------------------------------------------------------------------
@@ -521,8 +522,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ThereIsNoRiteToSellAFounderWhoseCitiesAreAtPeace()
 		{
-			Assert.AreEqual(0, KingdomCreedRules.RiteCost(CityTemper.Concord));
-			Assert.AreEqual(0, KingdomCreedRules.RiteEase(CityTemper.Concord));
+			ClassicAssert.AreEqual(0, KingdomCreedRules.RiteCost(CityTemper.Concord));
+			ClassicAssert.AreEqual(0, KingdomCreedRules.RiteEase(CityTemper.Concord));
 		}
 
 		[TestCase(CityTemper.Muttering, 20, 15)]
@@ -531,8 +532,8 @@ namespace ThousandAndFirst.Tests
 		[TestCase(CityTemper.Secession, 80, 25)]
 		public void TheRiteCostsMoreAndBuysProportionallyLessTheLongerItIsLeft(CityTemper temper, int cost, int ease)
 		{
-			Assert.AreEqual(cost, KingdomCreedRules.RiteCost(temper));
-			Assert.AreEqual(ease, KingdomCreedRules.RiteEase(temper));
+			ClassicAssert.AreEqual(cost, KingdomCreedRules.RiteCost(temper));
+			ClassicAssert.AreEqual(ease, KingdomCreedRules.RiteEase(temper));
 		}
 
 		[Test]
@@ -541,7 +542,7 @@ namespace ThousandAndFirst.Tests
 			// The design claim, checked rather than asserted in prose: a founder who pours every
 			// time the rite comes off cooldown gains ground against a flat -100, at a price.
 			int gainedOverACooldown = KingdomCreedRules.DissentPerDay(100) * KingdomCreedRules.RiteCooldownDays;
-			Assert.Greater(KingdomCreedRules.RiteEase(CityTemper.Rupture), gainedOverACooldown,
+			ClassicAssert.Greater(KingdomCreedRules.RiteEase(CityTemper.Rupture), gainedOverACooldown,
 				"a lever that cannot outpace the accrual is not a lever, it is a delay");
 		}
 
@@ -549,18 +550,18 @@ namespace ThousandAndFirst.Tests
 		public void TheRiteCooldownIsMeasuredInWholeDays()
 		{
 			long day = KingdomRules.TicksPerDay;
-			Assert.IsTrue(KingdomCreedRules.RiteReady(0L, 0L), "a rite never held is always ready");
-			Assert.IsFalse(KingdomCreedRules.RiteReady(1000L, 1000L));
-			Assert.IsFalse(KingdomCreedRules.RiteReady(1000L, 1000L + KingdomCreedRules.RiteCooldownDays * day - 1L));
-			Assert.IsTrue(KingdomCreedRules.RiteReady(1000L, 1000L + KingdomCreedRules.RiteCooldownDays * day));
+			ClassicAssert.IsTrue(KingdomCreedRules.RiteReady(0L, 0L), "a rite never held is always ready");
+			ClassicAssert.IsFalse(KingdomCreedRules.RiteReady(1000L, 1000L));
+			ClassicAssert.IsFalse(KingdomCreedRules.RiteReady(1000L, 1000L + KingdomCreedRules.RiteCooldownDays * day - 1L));
+			ClassicAssert.IsTrue(KingdomCreedRules.RiteReady(1000L, 1000L + KingdomCreedRules.RiteCooldownDays * day));
 		}
 
 		[Test]
 		public void TheDeclarationCostsSomethingInBothDirections()
 		{
-			Assert.Greater(KingdomCreedRules.DeclarationShock, 0, "picking a side must sting the side not picked");
-			Assert.Less(KingdomCreedRules.DeclarationStandingCost, 0, "the slighted faction must actually think less of the realm");
-			Assert.Greater(KingdomCreedRules.DeclaredBonus, 0, "and it must actually change who walks in");
+			ClassicAssert.Greater(KingdomCreedRules.DeclarationShock, 0, "picking a side must sting the side not picked");
+			ClassicAssert.Less(KingdomCreedRules.DeclarationStandingCost, 0, "the slighted faction must actually think less of the realm");
+			ClassicAssert.Greater(KingdomCreedRules.DeclaredBonus, 0, "and it must actually change who walks in");
 		}
 
 		// ---- a city leaving --------------------------------------------------------------------
@@ -568,9 +569,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ARealmOfOneCityNeverEncountersAnyOfThis()
 		{
-			Assert.AreEqual(SecessionVerdict.OneCity, KingdomCreedRules.JudgeSecession(1, 100, 100, Forced: false));
-			Assert.AreEqual(SecessionVerdict.OneCity, KingdomCreedRules.JudgeSecession(0, 100, 100, Forced: false));
-			Assert.AreEqual(SecessionVerdict.OneCity, KingdomCreedRules.JudgeSecession(1, 100, 100, Forced: true),
+			ClassicAssert.AreEqual(SecessionVerdict.OneCity, KingdomCreedRules.JudgeSecession(1, 100, 100, Forced: false));
+			ClassicAssert.AreEqual(SecessionVerdict.OneCity, KingdomCreedRules.JudgeSecession(0, 100, 100, Forced: false));
+			ClassicAssert.AreEqual(SecessionVerdict.OneCity, KingdomCreedRules.JudgeSecession(1, 100, 100, Forced: true),
 				"not even the debug path may break a realm that has nothing to break");
 		}
 
@@ -580,7 +581,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(25, 100, SecessionVerdict.Warranted)]
 		public void SecessionNeedsBothALiveClashAndAFullMeasureOfDissent(int hostility, int dissent, SecessionVerdict expected)
 		{
-			Assert.AreEqual(expected, KingdomCreedRules.JudgeSecession(KingdomSettlement.MaxSettlements, hostility, dissent, Forced: false));
+			ClassicAssert.AreEqual(expected, KingdomCreedRules.JudgeSecession(KingdomSettlement.MaxSettlements, hostility, dissent, Forced: false));
 		}
 
 		[Test]
@@ -588,14 +589,14 @@ namespace ThousandAndFirst.Tests
 		{
 			// This is the declaration lever's whole payoff: change what a city believes and the
 			// accrued dissent becomes a scar rather than a countdown.
-			Assert.AreEqual(SecessionVerdict.NoClash,
+			ClassicAssert.AreEqual(SecessionVerdict.NoClash,
 				KingdomCreedRules.JudgeSecession(KingdomSettlement.MaxSettlements, 0, KingdomCreedRules.DissentBreaking, Forced: false));
 		}
 
 		[Test]
 		public void TheDebugPathSkipsTheDissentRequirementAndNothingElse()
 		{
-			Assert.AreEqual(SecessionVerdict.Warranted, KingdomCreedRules.JudgeSecession(KingdomSettlement.MaxSettlements, 0, 0, Forced: true));
+			ClassicAssert.AreEqual(SecessionVerdict.Warranted, KingdomCreedRules.JudgeSecession(KingdomSettlement.MaxSettlements, 0, 0, Forced: true));
 		}
 
 		[TestCase(-50, -100, 10, 10, true)]
@@ -605,7 +606,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(-100, -100, 7, 7, true)]
 		public void TheUnhappierCityWalksAndOnATieTheSmallerOneDoes(int seatAboutAway, int awayAboutSeat, int seatPop, int awayPop, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomCreedRules.AwayIsTheLeaver(seatAboutAway, awayAboutSeat, seatPop, awayPop));
+			ClassicAssert.AreEqual(expected, KingdomCreedRules.AwayIsTheLeaver(seatAboutAway, awayAboutSeat, seatPop, awayPop));
 		}
 
 		[Test]
@@ -615,7 +616,7 @@ namespace ThousandAndFirst.Tests
 			// on which city the founder happened to walk into.
 			for (int i = 0; i < 5; i++)
 			{
-				Assert.IsFalse(KingdomCreedRules.AwayIsTheLeaver(-100, -50, 4, 9));
+				ClassicAssert.IsFalse(KingdomCreedRules.AwayIsTheLeaver(-100, -50, 4, 9));
 			}
 		}
 
@@ -624,7 +625,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ThereIsNothingToTakeBackWhenNobodyLeft()
 		{
-			Assert.AreEqual(RejoinVerdict.NothingSeceded, KingdomCreedRules.JudgeRejoin(false, 1, true, 0, 0));
+			ClassicAssert.AreEqual(RejoinVerdict.NothingSeceded, KingdomCreedRules.JudgeRejoin(false, 1, true, 0, 0));
 		}
 
 		[TestCase(true, 3, true, 0, 0, RejoinVerdict.RealmIsFull)]
@@ -638,7 +639,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(true, 1, true, 0, 0, RejoinVerdict.Allowed)]
 		public void RejoinRefusalsAreCheckedInTheOrderTheFounderWouldMeetThem(bool seceded, int cities, bool onTheirGround, int hostility, int standing, RejoinVerdict expected)
 		{
-			Assert.AreEqual(expected, KingdomCreedRules.JudgeRejoin(seceded, cities, onTheirGround, hostility, standing));
+			ClassicAssert.AreEqual(expected, KingdomCreedRules.JudgeRejoin(seceded, cities, onTheirGround, hostility, standing));
 		}
 
 		[Test]
@@ -646,8 +647,8 @@ namespace ThousandAndFirst.Tests
 		{
 			// The same city, the same standing, the same ground; the only difference is whether the
 			// founder actually changed what the two cities believe.
-			Assert.AreEqual(RejoinVerdict.ClashStillLive, KingdomCreedRules.JudgeRejoin(true, 1, true, 100, 0));
-			Assert.AreEqual(RejoinVerdict.Allowed, KingdomCreedRules.JudgeRejoin(true, 1, true, 0, 0));
+			ClassicAssert.AreEqual(RejoinVerdict.ClashStillLive, KingdomCreedRules.JudgeRejoin(true, 1, true, 100, 0));
+			ClassicAssert.AreEqual(RejoinVerdict.Allowed, KingdomCreedRules.JudgeRejoin(true, 1, true, 0, 0));
 		}
 
 		[Test]
@@ -659,7 +660,7 @@ namespace ThousandAndFirst.Tests
 			{
 				bool accrues = KingdomCreedRules.DissentPerDay(hostility) > 0;
 				bool blocked = KingdomCreedRules.JudgeRejoin(true, 1, true, hostility, 0) == RejoinVerdict.ClashStillLive;
-				Assert.AreEqual(accrues, blocked, "hostility " + hostility);
+				ClassicAssert.AreEqual(accrues, blocked, "hostility " + hostility);
 			}
 		}
 
@@ -684,20 +685,20 @@ namespace ThousandAndFirst.Tests
 			foreach (RejoinVerdict verdict in AllRejoinVerdicts)
 			{
 				string refusal = KingdomCreedRules.RejoinRefusal(verdict, "Basra", "the Putus Templar");
-				if (verdict == RejoinVerdict.Allowed) { Assert.IsTrue(string.IsNullOrEmpty(refusal)); }
-				else { Assert.IsFalse(string.IsNullOrEmpty(refusal), verdict.ToString()); }
+				if (verdict == RejoinVerdict.Allowed) { ClassicAssert.IsTrue(string.IsNullOrEmpty(refusal)); }
+				else { ClassicAssert.IsFalse(string.IsNullOrEmpty(refusal), verdict.ToString()); }
 			}
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.SecessionTelling("Basra", "Nesh", "the Putus Templar")));
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.SecessionRumour("Basra", "Hameh")));
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.SecessionNotice("Basra", "Nesh", "the Putus Templar", 7)));
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.RejoinTelling("Basra")));
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.RejoinRumour("Basra", "Hameh")));
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.RejoinNotice("Basra", "Yad")));
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.RiteTelling("Nesh", "Basra", 80)));
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.DeclarationTelling("Yad", "the Putus Templar")));
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.RecantTelling("Yad")));
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.DeclarationNotice("the Putus Templar", "the Barathrumites")));
-			Assert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.DeclarationNotice("the Putus Templar", null)));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.SecessionTelling("Basra", "Nesh", "the Putus Templar")));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.SecessionRumour("Basra", "Hameh")));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.SecessionNotice("Basra", "Nesh", "the Putus Templar", 7)));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.RejoinTelling("Basra")));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.RejoinRumour("Basra", "Hameh")));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.RejoinNotice("Basra", "Yad")));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.RiteTelling("Nesh", "Basra", 80)));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.DeclarationTelling("Yad", "the Putus Templar")));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.RecantTelling("Yad")));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.DeclarationNotice("the Putus Templar", "the Barathrumites")));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(KingdomCreedRules.DeclarationNotice("the Putus Templar", null)));
 		}
 
 		[Test]
@@ -720,9 +721,9 @@ namespace ThousandAndFirst.Tests
 			};
 			for (int i = 0; i < prose.Length; i++)
 			{
-				Assert.IsFalse(string.IsNullOrEmpty(prose[i]), "prose " + i);
-				Assert.IsFalse(prose[i].Contains("  "), "prose " + i + " has a hole where a name should be: " + prose[i]);
-				Assert.IsFalse(prose[i].Contains("{{C|}}"), "prose " + i + " coloured an empty name: " + prose[i]);
+				ClassicAssert.IsFalse(string.IsNullOrEmpty(prose[i]), "prose " + i);
+				ClassicAssert.IsFalse(prose[i].Contains("  "), "prose " + i + " has a hole where a name should be: " + prose[i]);
+				ClassicAssert.IsFalse(prose[i].Contains("{{C|}}"), "prose " + i + " coloured an empty name: " + prose[i]);
 			}
 		}
 
@@ -730,8 +731,8 @@ namespace ThousandAndFirst.Tests
 		public void AMixedCityIsDescribedAsSomethingRatherThanAsAFailure()
 		{
 			string mixed = KingdomCreedRules.CreedClause(null);
-			Assert.IsFalse(string.IsNullOrEmpty(mixed));
-			Assert.AreNotEqual(mixed, KingdomCreedRules.CreedClause("the Putus Templar"));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(mixed));
+			ClassicAssert.AreNotEqual(mixed, KingdomCreedRules.CreedClause("the Putus Templar"));
 		}
 
 		[Test]
@@ -740,10 +741,10 @@ namespace ThousandAndFirst.Tests
 			foreach (CityTemper temper in AllTempers)
 			{
 				string report = KingdomCreedRules.TemperReport(temper, 42, "Nesh", "Basra", "the Putus Templar", null);
-				Assert.IsTrue(report.Contains("Nesh"), temper.ToString());
-				Assert.IsTrue(report.Contains("Basra"), temper.ToString());
-				Assert.IsTrue(report.Contains("42"), temper + " must show how far along it is");
-				Assert.IsTrue(report.Contains(KingdomCreedRules.DissentBreaking.ToString()), temper + " must show what it is counting toward");
+				ClassicAssert.IsTrue(report.Contains("Nesh"), temper.ToString());
+				ClassicAssert.IsTrue(report.Contains("Basra"), temper.ToString());
+				ClassicAssert.IsTrue(report.Contains("42"), temper + " must show how far along it is");
+				ClassicAssert.IsTrue(report.Contains(KingdomCreedRules.DissentBreaking.ToString()), temper + " must show what it is counting toward");
 			}
 		}
 
@@ -754,8 +755,8 @@ namespace ThousandAndFirst.Tests
 			foreach (CityTemper temper in AllTempers)
 			{
 				string name = KingdomCreedRules.TemperName(temper);
-				Assert.IsFalse(string.IsNullOrEmpty(name), temper.ToString());
-				Assert.IsFalse(seen.Contains(name), "two tempers share the name " + name);
+				ClassicAssert.IsFalse(string.IsNullOrEmpty(name), temper.ToString());
+				ClassicAssert.IsFalse(seen.Contains(name), "two tempers share the name " + name);
 				seen.Add(name);
 			}
 		}

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.DevTests
 {
@@ -40,7 +41,7 @@ namespace ThousandAndFirst.DevTests
 			Assert.That(KingdomBodyHistoryTransactions.TryPrepare(null, Realm, evidence,
 				out KingdomBodyHistoryPreparation first, out string failure), Is.True, failure);
 			Assert.That(first.AlreadyDurable, Is.False);
-			Assert.IsNotNull(first.ReplacementPayload);
+			ClassicAssert.IsNotNull(first.ReplacementPayload);
 			Assert.That(first.ReplacementPayload.Length, Is.GreaterThan(0));
 			byte[] durable = (byte[])first.ReplacementPayload.Clone();
 
@@ -73,11 +74,11 @@ namespace ThousandAndFirst.DevTests
 			Assert.That(KingdomBodyHistoryTransactions.TryPrepare(futureBytes, Realm,
 				Evidence(0), out _, out KingdomBodyHistoryPreparationBlock futureBlock,
 				out failure), Is.False);
-			Assert.AreEqual(KingdomBodyHistoryPreparationBlock.OpaqueFuture, futureBlock);
+			ClassicAssert.AreEqual(KingdomBodyHistoryPreparationBlock.OpaqueFuture, futureBlock);
 			KingdomLabBodyHistoryPhase futurePhase =
 				KingdomLabBodyHistoryContractRules.AfterFailure(futureBlock);
-			Assert.AreEqual(KingdomLabBodyHistoryPhase.OmittedPreservingMemory, futurePhase);
-			Assert.IsTrue(KingdomLabBodyHistoryContractRules.AllowsPhysicalCleanup(futurePhase));
+			ClassicAssert.AreEqual(KingdomLabBodyHistoryPhase.OmittedPreservingMemory, futurePhase);
+			ClassicAssert.IsTrue(KingdomLabBodyHistoryContractRules.AllowsPhysicalCleanup(futurePhase));
 
 			KingdomBodyHistoryBook full = new KingdomBodyHistoryBook();
 			for (int i = 0; i < KingdomBodyHistoryRules.MaxRows; i++)
@@ -92,8 +93,8 @@ namespace ThousandAndFirst.DevTests
 				Evidence(99), out _, out KingdomBodyHistoryPreparationBlock capBlock,
 				out failure), Is.False);
 			StringAssert.Contains("capacity", failure);
-			Assert.AreEqual(KingdomBodyHistoryPreparationBlock.Capacity, capBlock);
-			Assert.IsTrue(KingdomLabBodyHistoryContractRules.AllowsPhysicalCleanup(
+			ClassicAssert.AreEqual(KingdomBodyHistoryPreparationBlock.Capacity, capBlock);
+			ClassicAssert.IsTrue(KingdomLabBodyHistoryContractRules.AllowsPhysicalCleanup(
 				KingdomLabBodyHistoryContractRules.AfterFailure(capBlock)));
 			CollectionAssert.AreEqual(exact, capped);
 			Assert.That(KingdomBodyHistoryCodec.Decode(capped).Book.Rows.Count,
@@ -103,19 +104,19 @@ namespace ThousandAndFirst.DevTests
 		[Test]
 		public void LegacyPhysicalJobsStayExplicitAndBoundJobsUpgradeWithoutInventingIdentity()
 		{
-			Assert.IsTrue(KingdomLabBodyHistoryContractRules.TryResolveLoaded(0,
+			ClassicAssert.IsTrue(KingdomLabBodyHistoryContractRules.TryResolveLoaded(0,
 				(int)KingdomLabBodyHistoryPhase.LegacyPhysicalOnly, false,
 				out int version, out KingdomLabBodyHistoryPhase phase));
-			Assert.AreEqual(0, version);
-			Assert.AreEqual(KingdomLabBodyHistoryPhase.LegacyPhysicalOnly, phase);
-			Assert.IsTrue(KingdomLabBodyHistoryContractRules.AllowsPhysicalCleanup(phase));
-			Assert.IsTrue(KingdomLabBodyHistoryContractRules.TryResolveLoaded(0,
+			ClassicAssert.AreEqual(0, version);
+			ClassicAssert.AreEqual(KingdomLabBodyHistoryPhase.LegacyPhysicalOnly, phase);
+			ClassicAssert.IsTrue(KingdomLabBodyHistoryContractRules.AllowsPhysicalCleanup(phase));
+			ClassicAssert.IsTrue(KingdomLabBodyHistoryContractRules.TryResolveLoaded(0,
 				(int)KingdomLabBodyHistoryPhase.LegacyPhysicalOnly, true,
 				out version, out phase));
-			Assert.AreEqual(KingdomBodyHistoryRules.LabContractVersion, version);
-			Assert.AreEqual(KingdomLabBodyHistoryPhase.Pending, phase);
-			Assert.IsFalse(KingdomLabBodyHistoryContractRules.AllowsPhysicalCleanup(phase));
-			Assert.IsFalse(KingdomLabBodyHistoryContractRules.TryResolveLoaded(
+			ClassicAssert.AreEqual(KingdomBodyHistoryRules.LabContractVersion, version);
+			ClassicAssert.AreEqual(KingdomLabBodyHistoryPhase.Pending, phase);
+			ClassicAssert.IsFalse(KingdomLabBodyHistoryContractRules.AllowsPhysicalCleanup(phase));
+			ClassicAssert.IsFalse(KingdomLabBodyHistoryContractRules.TryResolveLoaded(
 				KingdomBodyHistoryRules.LabContractVersion,
 				(int)KingdomLabBodyHistoryPhase.Pending, false, out _, out _));
 		}
@@ -124,7 +125,7 @@ namespace ThousandAndFirst.DevTests
 		public void FrozenNonceKeepsOwnerStableAcrossRetry()
 		{
 			string nonce = "0123456789abcdef0123456789abcdef";
-			Assert.IsTrue(KingdomBodyHistoryRules.ValidEffectNonce(nonce));
+			ClassicAssert.IsTrue(KingdomBodyHistoryRules.ValidEffectNonce(nonce));
 			string first = KingdomBodyHistoryRules.CompletedLabProcedureReceiptId(
 				"game", Realm, "5", "0", "life", "hall", "patient", "job", "key",
 				"fingerprint", nonce, "4", "2");
@@ -134,9 +135,9 @@ namespace ThousandAndFirst.DevTests
 			string changed = KingdomBodyHistoryRules.CompletedLabProcedureReceiptId(
 				"game", Realm, "5", "0", "life", "hall", "patient", "job", "key",
 				"fingerprint", "1123456789abcdef0123456789abcdef", "4", "2");
-			Assert.AreEqual(first, retry);
-			Assert.AreNotEqual(first, changed);
-			Assert.IsTrue(KingdomBodyHistoryRules.ValidCompletedLabOwner(first));
+			ClassicAssert.AreEqual(first, retry);
+			ClassicAssert.AreNotEqual(first, changed);
+			ClassicAssert.IsTrue(KingdomBodyHistoryRules.ValidCompletedLabOwner(first));
 		}
 
 		[Test]
@@ -144,7 +145,7 @@ namespace ThousandAndFirst.DevTests
 		{
 			KingdomLiveAnatomySnapshot anatomy = Anatomy(
 				"taf:ruler-life:current", "taf:object:current");
-			Assert.IsTrue(KingdomBodyHistoryViewRules.TryComposeWithoutHistory(anatomy,
+			ClassicAssert.IsTrue(KingdomBodyHistoryViewRules.TryComposeWithoutHistory(anatomy,
 				"section unavailable", out string view, out string failure), failure);
 			StringAssert.Contains("Current anatomy: left hand", view);
 			StringAssert.Contains("history: unavailable", view);

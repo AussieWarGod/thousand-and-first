@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -17,9 +18,9 @@ namespace ThousandAndFirst.Tests
 		public void LogicalLoaderKeepsDeclarationAbiAndAuthorityOrder()
 		{
 			string source = Loader();
-			Assert.AreEqual(1, Occurrences(source,
+			ClassicAssert.AreEqual(1, Occurrences(source,
 				"public sealed class KingdomArchitectureFault"));
-			Assert.AreEqual(1, Occurrences(source,
+			ClassicAssert.AreEqual(1, Occurrences(source,
 				"public sealed class KingdomArchitectureMapping"));
 			Ordered(source,
 				"public sealed class KingdomArchitectureFault",
@@ -55,7 +56,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < terms.Length; i++)
 			{
 				int next = source.IndexOf(terms[i], cursor + 1, StringComparison.Ordinal);
-				Assert.Greater(next, cursor, terms[i]);
+				ClassicAssert.Greater(next, cursor, terms[i]);
 				cursor = next;
 			}
 		}
@@ -70,7 +71,7 @@ namespace ThousandAndFirst.Tests
 				source);
 			StringAssert.Contains("public const int Schema = 1;", source);
 			StringAssert.Contains("string schema = Xml.GetAttribute(\"Schema\")", source);
-			Assert.IsFalse(source.Contains("YieldXMLStreamsWithRoot(\"kingdomarchitectures\")"));
+			ClassicAssert.IsFalse(source.Contains("YieldXMLStreamsWithRoot(\"kingdomarchitectures\")"));
 		}
 
 		[Test]
@@ -132,9 +133,9 @@ namespace ThousandAndFirst.Tests
 
 			int rowGuard = source.IndexOf("if (rowBlock)", StringComparison.Ordinal);
 			int replace = source.IndexOf("map.Rows = rows;", rowGuard, StringComparison.Ordinal);
-			Assert.Greater(rowGuard, 0);
-			Assert.Greater(replace, rowGuard);
-			Assert.IsFalse(source.Contains("map.Rows.AddRange"),
+			ClassicAssert.Greater(rowGuard, 0);
+			ClassicAssert.Greater(replace, rowGuard);
+			ClassicAssert.IsFalse(source.Contains("map.Rows.AddRange"),
 				"later row blocks must never splice into an older declaration");
 		}
 
@@ -151,7 +152,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("frozen.Roof = spec.Roof;", source);
 			StringAssert.Contains("CatalogueFootprintWidth = building.FootprintWidth", source);
 			StringAssert.Contains("CatalogueRoof = building.Roof", source);
-			Assert.IsFalse(source.Contains("expected building, yard, claimed, or a boolean"));
+			ClassicAssert.IsFalse(source.Contains("expected building, yard, claimed, or a boolean"));
 		}
 
 		[Test]
@@ -161,24 +162,24 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains(
 				"public static void Reload(IEnumerable<KingdomRules.BuildEntry> Buildings)", source);
 			StringAssert.Contains("FreezeBuildings(next, Buildings);", source);
-			Assert.AreEqual(1, Occurrences(source, "LoadXml(next);"),
+			ClassicAssert.AreEqual(1, Occurrences(source, "LoadXml(next);"),
 				"a reload must enumerate every merge stream exactly once");
 			StringAssert.Contains("state = next;", source);
 			StringAssert.Contains("does not exist in the frozen KingdomBuildings view", source);
 			StringAssert.Contains("authored binding size is smaller than its merged Plot minimum", source);
 			StringAssert.Contains("architecture Type does not match its merged Category", source);
-			Assert.IsFalse(source.Contains("KingdomData.TryGetBuilding"));
-			Assert.IsFalse(source.Contains("KingdomData.Buildings"));
+			ClassicAssert.IsFalse(source.Contains("KingdomData.TryGetBuilding"));
+			ClassicAssert.IsFalse(source.Contains("KingdomData.Buildings"));
 
 			int resolve = source.IndexOf("public static bool TryResolve(", StringComparison.Ordinal);
 			int parsing = source.IndexOf("// --- Attribute parsing and validation", resolve,
 				StringComparison.Ordinal);
-			Assert.Greater(resolve, 0);
-			Assert.Greater(parsing, resolve);
+			ClassicAssert.Greater(resolve, 0);
+			ClassicAssert.Greater(parsing, resolve);
 			string frozenPath = source.Substring(resolve, parsing - resolve);
-			Assert.IsFalse(frozenPath.Contains("KingdomData"));
-			Assert.IsFalse(frozenPath.Contains("KingdomPlots"));
-			Assert.IsFalse(frozenPath.Contains("GameObjectFactory"));
+			ClassicAssert.IsFalse(frozenPath.Contains("KingdomData"));
+			ClassicAssert.IsFalse(frozenPath.Contains("KingdomPlots"));
+			ClassicAssert.IsFalse(frozenPath.Contains("GameObjectFactory"));
 			StringAssert.Contains("TryEncodeSnapshot", frozenPath);
 			StringAssert.Contains("TryDecodeSnapshot", frozenPath);
 		}
@@ -195,8 +196,8 @@ namespace ThousandAndFirst.Tests
 				source);
 			StringAssert.Contains("usedPalettes, out record)) IndexRecord(State, record);", source);
 			StringAssert.Contains("plot design has no valid authored architecture mapping", source);
-			Assert.IsFalse(source.Contains("GenericRectangle"));
-			Assert.IsFalse(source.Contains("GenericShell"));
+			ClassicAssert.IsFalse(source.Contains("GenericRectangle"));
+			ClassicAssert.IsFalse(source.Contains("GenericShell"));
 		}
 
 		[Test]
@@ -214,7 +215,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("ExactRecordKey(BuildKey, type, ActualLotSize)", source);
 			StringAssert.Contains("records.Count != 1", source);
 			StringAssert.Contains("if (building.LotSize > Binding.Size)", source);
-			Assert.IsFalse(source.Contains("building.LotSize != Binding.Size"));
+			ClassicAssert.IsFalse(source.Contains("building.LotSize != Binding.Size"));
 			StringAssert.Contains("The requested size is identity, not a", source);
 			StringAssert.Contains("missing larger map always refuses", source);
 		}
@@ -229,7 +230,7 @@ namespace ThousandAndFirst.Tests
 				"State.Records.ContainsKey(ExactRecordKey(", source);
 			StringAssert.Contains(
 				"declared minimum lot has no exact valid authored architecture mapping", source);
-			Assert.IsFalse(source.Contains("for (int value = (int)building.LotSize;"));
+			ClassicAssert.IsFalse(source.Contains("for (int value = (int)building.LotSize;"));
 		}
 
 		[Test]
@@ -250,16 +251,16 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int helper = source.IndexOf("private static bool TryUniqueRecord(", successor,
 				StringComparison.Ordinal);
-			Assert.Greater(successor, 0);
-			Assert.Greater(helper, successor);
+			ClassicAssert.Greater(successor, 0);
+			ClassicAssert.Greater(helper, successor);
 			string frozenPath = source.Substring(successor, helper - successor);
 			StringAssert.Contains("LoadState frozen = state;", frozenPath);
 			StringAssert.Contains("TrySelectVariant(record.Tier.Variants, Context", frozenPath);
 			StringAssert.Contains("record.Tier.Variants, PredecessorVariantKey", frozenPath);
 			StringAssert.Contains("CompileFrozen(frozen, record, variant, Facing", frozenPath);
-			Assert.IsFalse(frozenPath.Contains("KingdomData"));
-			Assert.IsFalse(frozenPath.Contains("KingdomPlots"));
-			Assert.IsFalse(frozenPath.Contains("GameObjectFactory"));
+			ClassicAssert.IsFalse(frozenPath.Contains("KingdomData"));
+			ClassicAssert.IsFalse(frozenPath.Contains("KingdomPlots"));
+			ClassicAssert.IsFalse(frozenPath.Contains("GameObjectFactory"));
 		}
 
 		[Test]
@@ -288,8 +289,8 @@ namespace ThousandAndFirst.Tests
 				StringAssert.Contains("Has(Raw, \"" + name + "\")", source);
 				StringAssert.Contains("Optional(Raw, \"" + name + "\")", source);
 			}
-			Assert.IsFalse(source.Contains("CultureArchitecture"));
-			Assert.IsFalse(source.Contains("BodyArchitecture"));
+			ClassicAssert.IsFalse(source.Contains("CultureArchitecture"));
+			ClassicAssert.IsFalse(source.Contains("BodyArchitecture"));
 		}
 
 		[Test]

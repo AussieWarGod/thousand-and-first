@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -12,15 +13,15 @@ namespace ThousandAndFirst.Tests
 
 		private static KingdomSubsidenceStepBook Admitted()
 		{
-			Assert.IsTrue(KingdomSubsidenceStepCodec.TryDecode("ss1:new", out KingdomSubsidenceStepBook fresh));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryAdmit(fresh, Realm, Settlement,
+			ClassicAssert.IsTrue(KingdomSubsidenceStepCodec.TryDecode("ss1:new", out KingdomSubsidenceStepBook fresh));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryAdmit(fresh, Realm, Settlement,
 				out KingdomSubsidenceStepBook admitted));
 			return admitted;
 		}
 
 		private static KingdomSubsidenceStepBook Begin(int storage = 512, string binding = "roof")
 		{
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryBegin(Admitted(), Anchor, Due,
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryBegin(Admitted(), Anchor, Due,
 				GrowthStage.City, 5, out KingdomSubsidenceStepBook book, storage, binding));
 			return book;
 		}
@@ -43,20 +44,20 @@ namespace ThousandAndFirst.Tests
 		{
 			departure.OperationId = KingdomResidentDepartureRules.Id(departure.RealmId,
 				departure.SettlementId, departure.ResidentId, departure.BodyObjectId, departure.PreparedTick);
-			Assert.IsTrue(KingdomResidentDepartureRules.Valid(departure));
+			ClassicAssert.IsTrue(KingdomResidentDepartureRules.Valid(departure));
 		}
 
 		private static string Wire(KingdomSubsidenceStepBook book)
 		{
-			Assert.IsTrue(KingdomSubsidenceStepCodec.TryEncode(book, out string wire));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepCodec.TryEncode(book, out string wire));
 			return wire;
 		}
 
 		private static KingdomSubsidenceStepBook RoundTrip(KingdomSubsidenceStepBook book)
 		{
 			string wire = Wire(book);
-			Assert.IsTrue(KingdomSubsidenceStepCodec.TryDecode(wire, out KingdomSubsidenceStepBook decoded));
-			Assert.AreEqual(wire, Wire(decoded));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepCodec.TryDecode(wire, out KingdomSubsidenceStepBook decoded));
+			ClassicAssert.AreEqual(wire, Wire(decoded));
 			return decoded;
 		}
 
@@ -71,9 +72,9 @@ namespace ThousandAndFirst.Tests
 
 		private static void RefusesWire(KingdomSubsidenceStepBook corrupt)
 		{
-			Assert.IsFalse(KingdomSubsidenceStepRules.Valid(corrupt));
-			Assert.IsFalse(KingdomSubsidenceStepCodec.TryEncode(corrupt, out string wire));
-			Assert.IsNull(wire);
+			ClassicAssert.IsFalse(KingdomSubsidenceStepRules.Valid(corrupt));
+			ClassicAssert.IsFalse(KingdomSubsidenceStepCodec.TryEncode(corrupt, out string wire));
+			ClassicAssert.IsNull(wire);
 		}
 
 		[Test]
@@ -82,20 +83,20 @@ namespace ThousandAndFirst.Tests
 			KingdomSubsidenceStepBook book = Begin();
 			KingdomResidentDepartureOperation departure = Departure();
 			KingdomResidentDepartureOperation original = departure.Copy();
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(book, departure, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(book, departure, out book));
 			departure.ResidentId = 8; departure.BodyObjectId = "changed-body";
 			departure.ZoneId = "changed-zone"; departure.PreparedTick++;
 			book = RoundTrip(book);
-			Assert.AreEqual(original.OperationId, book.Active.PendingDepartureId);
-			Assert.AreEqual(original.ResidentId, book.Active.PendingIdentity.ResidentId);
-			Assert.AreEqual(original.BodyObjectId, book.Active.PendingIdentity.BodyObjectId);
-			Assert.AreEqual(original.ZoneId, book.Active.PendingIdentity.ZoneId);
-			Assert.AreEqual(original.PreparedTick, book.Active.PendingIdentity.PreparedTick);
-			Assert.IsTrue(book.Active.PendingIdentity.Matches(original));
-			Assert.IsFalse(book.Active.PendingIdentity.Matches(departure));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(book, original,
+			ClassicAssert.AreEqual(original.OperationId, book.Active.PendingDepartureId);
+			ClassicAssert.AreEqual(original.ResidentId, book.Active.PendingIdentity.ResidentId);
+			ClassicAssert.AreEqual(original.BodyObjectId, book.Active.PendingIdentity.BodyObjectId);
+			ClassicAssert.AreEqual(original.ZoneId, book.Active.PendingIdentity.ZoneId);
+			ClassicAssert.AreEqual(original.PreparedTick, book.Active.PendingIdentity.PreparedTick);
+			ClassicAssert.IsTrue(book.Active.PendingIdentity.Matches(original));
+			ClassicAssert.IsFalse(book.Active.PendingIdentity.Matches(departure));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(book, original,
 				out KingdomSubsidenceStepBook repeated));
-			Assert.AreSame(book, repeated);
+			ClassicAssert.AreSame(book, repeated);
 		}
 
 		[TestCase("realm")]
@@ -110,10 +111,10 @@ namespace ThousandAndFirst.Tests
 			if (changed == "settlement") departure.SettlementId = KingdomIdentityRules.SettlementPrefix + new string('d', 64);
 			if (changed == "phase") departure.Phase = (int)KingdomResidentDeparturePhase.RolesPrepared;
 			Rehash(departure);
-			Assert.IsFalse(KingdomSubsidenceStepRules.TryAssociate(book, departure,
+			ClassicAssert.IsFalse(KingdomSubsidenceStepRules.TryAssociate(book, departure,
 				out KingdomSubsidenceStepBook refused));
-			Assert.IsNull(refused);
-			Assert.AreEqual(before, Wire(book));
+			ClassicAssert.IsNull(refused);
+			ClassicAssert.AreEqual(before, Wire(book));
 		}
 
 		[Test]
@@ -124,10 +125,10 @@ namespace ThousandAndFirst.Tests
 			KingdomResidentDepartureOperation departure = Departure();
 			departure.PreparedTick = Due - 1;
 			Rehash(departure);
-			Assert.IsFalse(KingdomSubsidenceStepRules.TryAssociate(book, departure,
+			ClassicAssert.IsFalse(KingdomSubsidenceStepRules.TryAssociate(book, departure,
 				out KingdomSubsidenceStepBook refused));
-			Assert.IsNull(refused);
-			Assert.AreEqual(before, Wire(book));
+			ClassicAssert.IsNull(refused);
+			ClassicAssert.AreEqual(before, Wire(book));
 		}
 
 		[Test]
@@ -137,18 +138,18 @@ namespace ThousandAndFirst.Tests
 			KingdomResidentDepartureOperation departure = Departure();
 			departure.PreparedTick = Due + 100;
 			Rehash(departure);
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(book, departure, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(book, departure, out book));
 			string before = Wire(book);
-			Assert.IsFalse(KingdomSubsidenceStepRules.TryCancel(book, departure.PreparedTick - 1,
+			ClassicAssert.IsFalse(KingdomSubsidenceStepRules.TryCancel(book, departure.PreparedTick - 1,
 				4, out KingdomSubsidenceStepBook refused));
-			Assert.IsNull(refused);
+			ClassicAssert.IsNull(refused);
 			RefusesWire(book.With(book.Active.Copy(cancelRequested: true,
 				cancelTick: departure.PreparedTick - 1, cancelToken: 4), book.Sequence));
-			Assert.AreEqual(before, Wire(book));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryCancel(book, departure.PreparedTick, 4, out book));
+			ClassicAssert.AreEqual(before, Wire(book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryCancel(book, departure.PreparedTick, 4, out book));
 			book = RoundTrip(book);
-			Assert.AreEqual(departure.PreparedTick, book.Active.CancelTick);
-			Assert.AreEqual(departure.PreparedTick, book.Active.PendingIdentity.PreparedTick);
+			ClassicAssert.AreEqual(departure.PreparedTick, book.Active.CancelTick);
+			ClassicAssert.AreEqual(departure.PreparedTick, book.Active.PendingIdentity.PreparedTick);
 		}
 
 		[TestCase("resident")]
@@ -157,7 +158,7 @@ namespace ThousandAndFirst.Tests
 		public void PendingTupleCannotDisagreeWithItsDepartureHash(string changed)
 		{
 			KingdomSubsidenceStepBook book = Begin();
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(book, Departure(), out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(book, Departure(), out book));
 			string before = Wire(book);
 			KingdomSubsidenceDepartureIdentity held = book.Active.PendingIdentity;
 			KingdomSubsidenceDepartureIdentity corrupt = new KingdomSubsidenceDepartureIdentity(
@@ -165,7 +166,7 @@ namespace ThousandAndFirst.Tests
 				changed == "body" ? "another-body" : held.BodyObjectId, held.ZoneId,
 				changed == "tick" ? held.PreparedTick + 1 : held.PreparedTick);
 			RefusesWire(book.With(book.Active.Copy(pendingIdentity: corrupt), book.Sequence));
-			Assert.AreEqual(before, Wire(book));
+			ClassicAssert.AreEqual(before, Wire(book));
 		}
 
 		[Test]
@@ -173,16 +174,16 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomSubsidenceStepBook book = Begin();
 			KingdomResidentDepartureOperation departure = Departure();
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(book, departure, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(book, departure, out book));
 			book = RoundTrip(book);
 			string before = Wire(book);
 			departure.ZoneId = "JoppaWorld.12.24.1.1.11";
-			Assert.IsTrue(KingdomResidentDepartureRules.Valid(departure));
-			Assert.AreEqual(book.Active.PendingDepartureId, departure.OperationId);
-			Assert.IsFalse(KingdomSubsidenceStepRules.TryAssociate(book, departure,
+			ClassicAssert.IsTrue(KingdomResidentDepartureRules.Valid(departure));
+			ClassicAssert.AreEqual(book.Active.PendingDepartureId, departure.OperationId);
+			ClassicAssert.IsFalse(KingdomSubsidenceStepRules.TryAssociate(book, departure,
 				out KingdomSubsidenceStepBook refused));
-			Assert.IsNull(refused);
-			Assert.AreEqual(before, Wire(book));
+			ClassicAssert.IsNull(refused);
+			ClassicAssert.AreEqual(before, Wire(book));
 		}
 
 		[Test]
@@ -199,7 +200,7 @@ namespace ThousandAndFirst.Tests
 		public void PendingIdWithoutItsTupleCannotBeSerialized()
 		{
 			KingdomSubsidenceStepBook book = Begin();
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(book, Departure(), out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(book, Departure(), out book));
 			RefusesWire(book.With(Rebuild(book.Active, book.Active.PendingDepartureId, null,
 				book.Active.StorageCapacity, book.Active.BindingSupport), book.Sequence));
 		}
@@ -212,26 +213,26 @@ namespace ThousandAndFirst.Tests
 			KingdomSubsidenceStepBook book = Begin(storage, binding);
 			string id = book.Active.Id;
 			KingdomResidentDepartureOperation departure = Departure();
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(book, departure, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(book, departure, out book));
 			book = RoundTrip(book);
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryCredit(book, departure.OperationId, GrowthStage.City, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryCredit(book, departure.OperationId, GrowthStage.City, out book));
 			book = RoundTrip(book);
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryReleaseRetired(book, departure.OperationId, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryReleaseRetired(book, departure.OperationId, out book));
 			book = RoundTrip(book);
-			Assert.AreEqual(id, book.Active.Id);
-			Assert.AreEqual(storage, book.Active.StorageCapacity);
-			Assert.AreEqual(binding, book.Active.BindingSupport);
-			Assert.AreEqual("", book.Active.PendingDepartureId);
-			Assert.IsNull(book.Active.PendingIdentity);
-			Assert.AreEqual(1, book.Active.Completed);
+			ClassicAssert.AreEqual(id, book.Active.Id);
+			ClassicAssert.AreEqual(storage, book.Active.StorageCapacity);
+			ClassicAssert.AreEqual(binding, book.Active.BindingSupport);
+			ClassicAssert.AreEqual("", book.Active.PendingDepartureId);
+			ClassicAssert.IsNull(book.Active.PendingIdentity);
+			ClassicAssert.AreEqual(1, book.Active.Completed);
 		}
 
 		[Test]
 		public void ChangingFrozenInputsChangesStepIdentityAndCannotReuseOldId()
 		{
 			KingdomSubsidenceStepBook original = Begin(512, "water");
-			Assert.AreNotEqual(original.Active.Id, Begin(513, "water").Active.Id);
-			Assert.AreNotEqual(original.Active.Id, Begin(512, "roof").Active.Id);
+			ClassicAssert.AreNotEqual(original.Active.Id, Begin(513, "water").Active.Id);
+			ClassicAssert.AreNotEqual(original.Active.Id, Begin(512, "roof").Active.Id);
 			RefusesWire(original.With(Rebuild(original.Active, "", null, 513, "water"), original.Sequence));
 			RefusesWire(original.With(Rebuild(original.Active, "", null, 512, "roof"), original.Sequence));
 		}
@@ -244,40 +245,40 @@ namespace ThousandAndFirst.Tests
 			KingdomResidentDepartureOperation departure = Departure();
 			departure.PreparedTick = Due + 500;
 			Rehash(departure);
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(book, departure, out book));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(book, departure, out book));
 			if (credited)
 			{
-				Assert.IsTrue(KingdomSubsidenceStepRules.TryCredit(book, departure.OperationId, GrowthStage.City, out book));
-				Assert.IsTrue(KingdomSubsidenceStepRules.TryReleaseRetired(book, departure.OperationId, out book));
+				ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryCredit(book, departure.OperationId, GrowthStage.City, out book));
+				ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryReleaseRetired(book, departure.OperationId, out book));
 			}
-			else Assert.IsTrue(KingdomSubsidenceStepRules.TryReleaseRolledBack(book, departure.OperationId, out book));
+			else ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryReleaseRolledBack(book, departure.OperationId, out book));
 			book = RoundTrip(book);
-			Assert.IsNull(book.Active.PendingIdentity);
-			Assert.AreEqual(Due + 500, book.Active.LastActivityTick);
-			Assert.IsFalse(KingdomSubsidenceStepRules.TryCancel(book, Due + 100, 2, out KingdomSubsidenceStepBook _));
+			ClassicAssert.IsNull(book.Active.PendingIdentity);
+			ClassicAssert.AreEqual(Due + 500, book.Active.LastActivityTick);
+			ClassicAssert.IsFalse(KingdomSubsidenceStepRules.TryCancel(book, Due + 100, 2, out KingdomSubsidenceStepBook _));
 			RefusesWire(book.With(book.Active.Copy(cancelRequested: true, cancelTick: Due + 100,
 				cancelToken: 2, phase: KingdomSubsidenceStepPhase.Settling), book.Sequence));
 			departure.PreparedTick = Due + 100; departure.ResidentId++;
 			Rehash(departure);
-			Assert.IsFalse(KingdomSubsidenceStepRules.TryAssociate(book, departure, out KingdomSubsidenceStepBook _));
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryCancel(book, Due + 500, 2, out book));
-			Assert.AreEqual(Due + 500, RoundTrip(book).Active.CancelTick);
+			ClassicAssert.IsFalse(KingdomSubsidenceStepRules.TryAssociate(book, departure, out KingdomSubsidenceStepBook _));
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryCancel(book, Due + 500, 2, out book));
+			ClassicAssert.AreEqual(Due + 500, RoundTrip(book).Active.CancelTick);
 		}
 
 		[Test]
 		public void OverdueBeginRetainsItsActualObservationTick()
 		{
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryBegin(Admitted(), Anchor, Due + 500,
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryBegin(Admitted(), Anchor, Due + 500,
 				GrowthStage.City, 5, out KingdomSubsidenceStepBook book, 512, "roof"));
 			book = RoundTrip(book);
-			Assert.AreEqual(Due + 500, book.Active.LastActivityTick);
+			ClassicAssert.AreEqual(Due + 500, book.Active.LastActivityTick);
 			KingdomResidentDepartureOperation departure = Departure();
 			departure.PreparedTick = Due + 499; Rehash(departure);
-			Assert.IsFalse(KingdomSubsidenceStepRules.TryAssociate(book, departure, out KingdomSubsidenceStepBook _));
-			Assert.IsFalse(KingdomSubsidenceStepRules.TryCancel(book, Due + 499, 2, out KingdomSubsidenceStepBook _));
+			ClassicAssert.IsFalse(KingdomSubsidenceStepRules.TryAssociate(book, departure, out KingdomSubsidenceStepBook _));
+			ClassicAssert.IsFalse(KingdomSubsidenceStepRules.TryCancel(book, Due + 499, 2, out KingdomSubsidenceStepBook _));
 			departure.PreparedTick = Due + 500; Rehash(departure);
-			Assert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(book, departure, out book));
-			Assert.AreEqual(Due + 500, RoundTrip(book).Active.PendingIdentity.PreparedTick);
+			ClassicAssert.IsTrue(KingdomSubsidenceStepRules.TryAssociate(book, departure, out book));
+			ClassicAssert.AreEqual(Due + 500, RoundTrip(book).Active.PendingIdentity.PreparedTick);
 		}
 
 		[TestCase(-1, "water")]
@@ -289,10 +290,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomSubsidenceStepBook admitted = Admitted();
 			string before = Wire(admitted);
-			Assert.IsFalse(KingdomSubsidenceStepRules.TryBegin(admitted, Anchor, Due, GrowthStage.City,
+			ClassicAssert.IsFalse(KingdomSubsidenceStepRules.TryBegin(admitted, Anchor, Due, GrowthStage.City,
 				5, out KingdomSubsidenceStepBook refused, storage, binding));
-			Assert.IsNull(refused);
-			Assert.AreEqual(before, Wire(admitted));
+			ClassicAssert.IsNull(refused);
+			ClassicAssert.AreEqual(before, Wire(admitted));
 			KingdomSubsidenceStepBook begun = Begin();
 			RefusesWire(begun.With(Rebuild(begun.Active, "", null, storage, binding), begun.Sequence));
 		}

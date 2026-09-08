@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -135,7 +136,7 @@ namespace ThousandAndFirst.Tests
 		public void PublicSurface_IsThinGuardedFacade()
 		{
 			string source = Facade;
-			Assert.Less(source.Split('\n').Length, 240);
+			ClassicAssert.Less(source.Split('\n').Length, 240);
 			StringAssert.Contains("KingdomPetitionLifecycle.OnSettlementPass", source);
 			StringAssert.Contains("KingdomPetitionLifecycle.Issue", source);
 			StringAssert.Contains("KingdomPetitionLifecycle.Accept", source);
@@ -150,8 +151,8 @@ namespace ThousandAndFirst.Tests
 		{
 			int a = source.IndexOf(start, StringComparison.Ordinal);
 			int b = source.IndexOf(end, a + start.Length, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(a, 0, start);
-			Assert.Greater(b, a, end);
+			ClassicAssert.GreaterOrEqual(a, 0, start);
+			ClassicAssert.Greater(b, a, end);
 			return source.Substring(a, b - a);
 		}
 	}

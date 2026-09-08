@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 using ThousandAndFirst.Harness;
 
@@ -51,8 +52,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AWellFormedCaptureDigests()
 		{
-			Assert.AreEqual(64, Digest(Capture()).Length);
-			Assert.AreEqual(Digest(Capture()), Digest(Capture()));
+			ClassicAssert.AreEqual(64, Digest(Capture()).Length);
+			ClassicAssert.AreEqual(Digest(Capture()), Digest(Capture()));
 		}
 
 		[Test]
@@ -63,7 +64,7 @@ namespace ThousandAndFirst.Tests
 			{
 				IDictionary<string, string> altered = Capture();
 				altered[keys[i]] = "moved";
-				Assert.AreNotEqual(Digest(Capture()), Digest(altered), keys[i]);
+				ClassicAssert.AreNotEqual(Digest(Capture()), Digest(altered), keys[i]);
 			}
 		}
 
@@ -82,8 +83,8 @@ namespace ThousandAndFirst.Tests
 			a[SecondKey()] = "y";
 			b[FirstKey()] = "x" + SecondKey() + "y";
 			b[SecondKey()] = "";
-			Assert.AreNotEqual(Digest(a), Digest(b));
-			Assert.IsNotNull(Digest(a));
+			ClassicAssert.AreNotEqual(Digest(a), Digest(b));
+			ClassicAssert.IsNotNull(Digest(a));
 		}
 
 		[TestCase("1:x")]
@@ -96,8 +97,8 @@ namespace ThousandAndFirst.Tests
 			IDictionary<string, string> b = Capture();
 			a[FirstKey()] = spelling;
 			b[SecondKey()] = spelling;
-			Assert.AreNotEqual(Digest(a), Digest(b));
-			Assert.IsNotNull(Digest(a));
+			ClassicAssert.AreNotEqual(Digest(a), Digest(b));
+			ClassicAssert.IsNotNull(Digest(a));
 		}
 
 		/// <summary>The separators the previous grammar joined with are refused outright.</summary>
@@ -110,7 +111,7 @@ namespace ThousandAndFirst.Tests
 		{
 			IDictionary<string, string> captured = Capture();
 			captured[FirstKey()] = hostile;
-			Assert.IsNull(Digest(captured));
+			ClassicAssert.IsNull(Digest(captured));
 		}
 
 		/// <summary>
@@ -122,13 +123,13 @@ namespace ThousandAndFirst.Tests
 		{
 			IDictionary<string, string> high = Capture();
 			high[FirstKey()] = "a\uD800b";
-			Assert.IsNull(Digest(high));
+			ClassicAssert.IsNull(Digest(high));
 			IDictionary<string, string> low = Capture();
 			low[FirstKey()] = "a\uDC00b";
-			Assert.IsNull(Digest(low));
+			ClassicAssert.IsNull(Digest(low));
 			IDictionary<string, string> paired = Capture();
 			paired[FirstKey()] = "a\uD83D\uDE00b";
-			Assert.IsNotNull(Digest(paired), "a well-formed pair is an ordinary value");
+			ClassicAssert.IsNotNull(Digest(paired), "a well-formed pair is an ordinary value");
 		}
 
 		[Test]
@@ -136,7 +137,7 @@ namespace ThousandAndFirst.Tests
 		{
 			IDictionary<string, string> captured = Capture();
 			captured[FirstKey()] = new string('v', KingdomScenarioAnchorRules.MaxFieldChars + 1);
-			Assert.IsNull(Digest(captured));
+			ClassicAssert.IsNull(Digest(captured));
 		}
 
 		// ----- exact arity ------------------------------------------------------------------------
@@ -146,7 +147,7 @@ namespace ThousandAndFirst.Tests
 		{
 			IDictionary<string, string> captured = Capture();
 			captured.Remove(FirstKey());
-			Assert.IsNull(Digest(captured));
+			ClassicAssert.IsNull(Digest(captured));
 		}
 
 		[Test]
@@ -154,14 +155,14 @@ namespace ThousandAndFirst.Tests
 		{
 			IDictionary<string, string> captured = Capture();
 			captured["architecture.invented.key"] = "v";
-			Assert.IsNull(Digest(captured));
+			ClassicAssert.IsNull(Digest(captured));
 		}
 
 		[Test]
 		public void AnEmptyOrNullCaptureRefuses()
 		{
-			Assert.IsNull(Digest(new Dictionary<string, string>(StringComparer.Ordinal)));
-			Assert.IsNull(Digest(null));
+			ClassicAssert.IsNull(Digest(new Dictionary<string, string>(StringComparer.Ordinal)));
+			ClassicAssert.IsNull(Digest(null));
 		}
 
 		[Test]
@@ -169,9 +170,9 @@ namespace ThousandAndFirst.Tests
 		{
 			string digest;
 			string failure;
-			Assert.IsFalse(KingdomScenarioAnchorRules.TryDigest("invented", Capture(), out digest,
+			ClassicAssert.IsFalse(KingdomScenarioAnchorRules.TryDigest("invented", Capture(), out digest,
 				out failure));
-			Assert.IsNotEmpty(failure);
+			ClassicAssert.IsNotEmpty(failure);
 		}
 	}
 }

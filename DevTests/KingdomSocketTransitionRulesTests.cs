@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -14,7 +15,7 @@ namespace ThousandAndFirst.Tests
 		public void LogicalAuthorityPreservesEnginePartAndNestedDeclarationOrder()
 		{
 			string source = KingdomSocketLogicalSource.Read();
-			Assert.AreEqual(15, KingdomSocketLogicalSource.FileCount);
+			ClassicAssert.AreEqual(15, KingdomSocketLogicalSource.FileCount);
 			AssertOrdered(source,
 				"[Serializable]",
 				"public class r_KingdomSocket : IPart",
@@ -46,8 +47,8 @@ namespace ThousandAndFirst.Tests
 				"public static bool Redress(",
 				"public static void OpenConvert(",
 				"public static void OpenRedress(");
-			Assert.IsFalse(source.Contains("partial class r_KingdomSocket"));
-			Assert.IsFalse(source.Contains("private static void LeaveSocket("));
+			ClassicAssert.IsFalse(source.Contains("partial class r_KingdomSocket"));
+			ClassicAssert.IsFalse(source.Contains("private static void LeaveSocket("));
 		}
 
 		[Test]
@@ -90,7 +91,7 @@ namespace ThousandAndFirst.Tests
 			AssertOrdered(successor, "GameObject.Create(SocketBlueprint)",
 				"part.LastDesignKey = Intent.BuildKey", "KingdomPlots.StampRect(marker, rect)",
 				"TryStampSocketLot(marker, Intent", "KingdomConstruction.UpdateOutput(ref Job");
-			Assert.AreEqual(1, Count(socket, "GameObject.Create(SocketBlueprint)"));
+			ClassicAssert.AreEqual(1, Count(socket, "GameObject.Create(SocketBlueprint)"));
 		}
 
 		[Test]
@@ -122,17 +123,17 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ParseFreezesDirectionalTypedDelta()
 		{
-			Assert.IsTrue(KingdomSocketTransitionRules.TryParse("shed-to-post", "toolshed",
+			ClassicAssert.IsTrue(KingdomSocketTransitionRules.TryParse("shed-to-post", "toolshed",
 				"chargingpost", " CRAFT ", "M", "renovate", "12", "scrap:2", "900",
 				out KingdomSocketTransition transition, out string failure), failure);
-			Assert.AreEqual("toolshed", transition.FromBuildKey);
-			Assert.AreEqual("chargingpost", transition.ToBuildKey);
-			Assert.AreEqual("craft", transition.LotType);
-			Assert.AreEqual(ArchitectureLotSize.Medium, transition.LotSize);
-			Assert.AreEqual(ArchitectureTransitionMode.Renovate, transition.Mode);
-			Assert.AreEqual(12, transition.WaterDrams);
-			Assert.AreEqual(900L, transition.WorkTicks);
-			Assert.AreEqual(2, transition.Materials.Get(KingdomMaterial.Scrap));
+			ClassicAssert.AreEqual("toolshed", transition.FromBuildKey);
+			ClassicAssert.AreEqual("chargingpost", transition.ToBuildKey);
+			ClassicAssert.AreEqual("craft", transition.LotType);
+			ClassicAssert.AreEqual(ArchitectureLotSize.Medium, transition.LotSize);
+			ClassicAssert.AreEqual(ArchitectureTransitionMode.Renovate, transition.Mode);
+			ClassicAssert.AreEqual(12, transition.WaterDrams);
+			ClassicAssert.AreEqual(900L, transition.WorkTicks);
+			ClassicAssert.AreEqual(2, transition.Materials.Get(KingdomMaterial.Scrap));
 		}
 
 		[Test]
@@ -150,24 +151,24 @@ namespace ThousandAndFirst.Tests
 			};
 			for (int i = 0; i < keys.Length; i++)
 			{
-				Assert.IsTrue(KingdomArchitectureTransitionRules.TryParseMode(keys[i],
+				ClassicAssert.IsTrue(KingdomArchitectureTransitionRules.TryParseMode(keys[i],
 					out ArchitectureTransitionMode parsed));
-				Assert.AreEqual(modes[i], parsed);
-				Assert.AreEqual(keys[i], KingdomArchitectureTransitionRules.ModeKey(parsed));
+				ClassicAssert.AreEqual(modes[i], parsed);
+				ClassicAssert.AreEqual(keys[i], KingdomArchitectureTransitionRules.ModeKey(parsed));
 			}
-			Assert.IsFalse(KingdomArchitectureTransitionRules.TryParseMode("expand", out _));
-			Assert.IsFalse(KingdomArchitectureTransitionRules.ValidTierMode(0,
+			ClassicAssert.IsFalse(KingdomArchitectureTransitionRules.TryParseMode("expand", out _));
+			ClassicAssert.IsFalse(KingdomArchitectureTransitionRules.ValidTierMode(0,
 				ArchitectureTransitionMode.Renovate));
-			Assert.IsTrue(KingdomArchitectureTransitionRules.ValidTierMode(0,
+			ClassicAssert.IsTrue(KingdomArchitectureTransitionRules.ValidTierMode(0,
 				ArchitectureTransitionMode.None));
-			Assert.IsFalse(KingdomArchitectureTransitionRules.ValidTierMode(1,
+			ClassicAssert.IsFalse(KingdomArchitectureTransitionRules.ValidTierMode(1,
 				ArchitectureTransitionMode.None));
 
-			Assert.IsTrue(KingdomSocketTransitionRules.TryParse("replace", "a", "b",
+			ClassicAssert.IsTrue(KingdomSocketTransitionRules.TryParse("replace", "a", "b",
 				"craft", "S", "replacement", "1", "scrap:1", "1",
 				out KingdomSocketTransition replacement, out string failure), failure);
-			Assert.AreEqual(ArchitectureTransitionMode.Replacement, replacement.Mode);
-			Assert.IsFalse(KingdomSocketTransitionRules.TryParse("none", "a", "b",
+			ClassicAssert.AreEqual(ArchitectureTransitionMode.Replacement, replacement.Mode);
+			ClassicAssert.IsFalse(KingdomSocketTransitionRules.TryParse("none", "a", "b",
 				"craft", "S", "none", "1", "scrap:1", "1", out _, out failure));
 		}
 
@@ -178,35 +179,35 @@ namespace ThousandAndFirst.Tests
 				ArchitectureLotSize.Small);
 			string reverse = KingdomSocketTransitionRules.IndexKey("b", "a", "craft",
 				ArchitectureLotSize.Small);
-			Assert.AreNotEqual(forward, reverse);
+			ClassicAssert.AreNotEqual(forward, reverse);
 		}
 
 		[Test]
 		public void FixedLotAuthoritySeparatesOrdinaryPreflightAndDurableRetry()
 		{
-			Assert.IsTrue(KingdomSocketTransitionRules.AuthorizesFixedLotTransition(
+			ClassicAssert.IsTrue(KingdomSocketTransitionRules.AuthorizesFixedLotTransition(
 				SamePlan: true, SameBinding: true, SameType: true, SameSize: true,
 				SameRect: true, SameFacing: true, SameMainRoot: true, ExactLotIdentity: true,
 				AllowPlanChange: false, DurableRouteAuthority: false),
 				"ordinary upgrades stay inside their frozen plan and binding");
-			Assert.IsFalse(KingdomSocketTransitionRules.AuthorizesFixedLotTransition(
+			ClassicAssert.IsFalse(KingdomSocketTransitionRules.AuthorizesFixedLotTransition(
 				SamePlan: false, SameBinding: false, SameType: true, SameSize: true,
 				SameRect: true, SameFacing: true, SameMainRoot: true, ExactLotIdentity: true,
 				AllowPlanChange: false, DurableRouteAuthority: false));
-			Assert.IsFalse(KingdomSocketTransitionRules.AuthorizesFixedLotTransition(
+			ClassicAssert.IsFalse(KingdomSocketTransitionRules.AuthorizesFixedLotTransition(
 				SamePlan: true, SameBinding: false, SameType: true, SameSize: true,
 				SameRect: true, SameFacing: true, SameMainRoot: true, ExactLotIdentity: true,
 				AllowPlanChange: false, DurableRouteAuthority: false));
-			Assert.IsFalse(KingdomSocketTransitionRules.AuthorizesFixedLotTransition(
+			ClassicAssert.IsFalse(KingdomSocketTransitionRules.AuthorizesFixedLotTransition(
 				SamePlan: false, SameBinding: true, SameType: true, SameSize: true,
 				SameRect: true, SameFacing: true, SameMainRoot: true, ExactLotIdentity: true,
 				AllowPlanChange: false, DurableRouteAuthority: false));
-			Assert.IsTrue(KingdomSocketTransitionRules.AuthorizesFixedLotTransition(
+			ClassicAssert.IsTrue(KingdomSocketTransitionRules.AuthorizesFixedLotTransition(
 				SamePlan: false, SameBinding: false, SameType: true, SameSize: true,
 				SameRect: true, SameFacing: true, SameMainRoot: true, ExactLotIdentity: true,
 				AllowPlanChange: true, DurableRouteAuthority: false),
 				"only the declaration-owning preflight may use transient authority");
-			Assert.IsTrue(KingdomSocketTransitionRules.AuthorizesFixedLotTransition(
+			ClassicAssert.IsTrue(KingdomSocketTransitionRules.AuthorizesFixedLotTransition(
 				SamePlan: false, SameBinding: false, SameType: true, SameSize: true,
 				SameRect: true, SameFacing: true, SameMainRoot: true, ExactLotIdentity: true,
 				AllowPlanChange: false, DurableRouteAuthority: true),
@@ -221,7 +222,7 @@ namespace ThousandAndFirst.Tests
 			{
 				bool[] exact = { true, true, true, true, true, true };
 				exact[changed] = false;
-				Assert.IsFalse(KingdomSocketTransitionRules.AuthorizesFixedLotTransition(
+				ClassicAssert.IsFalse(KingdomSocketTransitionRules.AuthorizesFixedLotTransition(
 					SamePlan: false, SameBinding: false, SameType: exact[0],
 					SameSize: exact[1], SameRect: exact[2], SameFacing: exact[3],
 					SameMainRoot: exact[4], ExactLotIdentity: exact[5],
@@ -232,18 +233,18 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void RouteMatchRefusesWrongDeclarationTypeOrSize()
 		{
-			Assert.IsTrue(KingdomSocketTransitionRules.TryParse("tent-to-hut-s", "tent",
+			ClassicAssert.IsTrue(KingdomSocketTransitionRules.TryParse("tent-to-hut-s", "tent",
 				"hut", "housing", "S", "renovate", "4", "timber:4,mud:2", "1350",
 				out KingdomSocketTransition route, out string failure), failure);
-			Assert.IsTrue(KingdomSocketTransitionRules.MatchesRoute(route, "tent", "hut",
+			ClassicAssert.IsTrue(KingdomSocketTransitionRules.MatchesRoute(route, "tent", "hut",
 				"housing", ArchitectureLotSize.Small));
-			Assert.IsFalse(KingdomSocketTransitionRules.MatchesRoute(route, "tentrow", "hut",
+			ClassicAssert.IsFalse(KingdomSocketTransitionRules.MatchesRoute(route, "tentrow", "hut",
 				"housing", ArchitectureLotSize.Small));
-			Assert.IsFalse(KingdomSocketTransitionRules.MatchesRoute(route, "tent", "mudhut",
+			ClassicAssert.IsFalse(KingdomSocketTransitionRules.MatchesRoute(route, "tent", "mudhut",
 				"housing", ArchitectureLotSize.Small));
-			Assert.IsFalse(KingdomSocketTransitionRules.MatchesRoute(route, "tent", "hut",
+			ClassicAssert.IsFalse(KingdomSocketTransitionRules.MatchesRoute(route, "tent", "hut",
 				"craft", ArchitectureLotSize.Small));
-			Assert.IsFalse(KingdomSocketTransitionRules.MatchesRoute(route, "tent", "hut",
+			ClassicAssert.IsFalse(KingdomSocketTransitionRules.MatchesRoute(route, "tent", "hut",
 				"housing", ArchitectureLotSize.Medium));
 		}
 
@@ -251,18 +252,18 @@ namespace ThousandAndFirst.Tests
 		public void ExactDeclarationAuthorityCoversEveryFieldAndDeepSnapshotsDetach()
 		{
 			Type declarationType = typeof(KingdomSocketTransition);
-			Assert.AreEqual(0, declarationType.GetFields(System.Reflection.BindingFlags.Public
+			ClassicAssert.AreEqual(0, declarationType.GetFields(System.Reflection.BindingFlags.Public
 				| System.Reflection.BindingFlags.Instance).Length);
 			string[] immutable = { "Key", "FromBuildKey", "ToBuildKey", "LotType", "LotSize", "Mode",
 				"WaterDrams", "Materials", "WorkTicks" };
 			for (int i = 0; i < immutable.Length; i++)
 			{
 				System.Reflection.PropertyInfo property = declarationType.GetProperty(immutable[i]);
-				Assert.IsNotNull(property, immutable[i]);
-				Assert.IsNull(property.GetSetMethod(), immutable[i] + " exposes a public setter");
+				ClassicAssert.IsNotNull(property, immutable[i]);
+				ClassicAssert.IsNull(property.GetSetMethod(), immutable[i] + " exposes a public setter");
 			}
 			KingdomSocketTransition original = ParsedRoute();
-			Assert.IsTrue(KingdomSocketTransitionRules.TryDeclarationDigest(original,
+			ClassicAssert.IsTrue(KingdomSocketTransitionRules.TryDeclarationDigest(original,
 				out string originalDigest));
 			string[] names = { "key", "from", "to", "type", "size", "mode", "water", "materials", "ticks" };
 			KingdomSocketTransition[] changed =
@@ -279,20 +280,20 @@ namespace ThousandAndFirst.Tests
 			};
 			for (int i = 0; i < changed.Length; i++)
 			{
-				Assert.IsFalse(KingdomSocketTransitionRules.MatchesRoute(original, changed[i]),
+				ClassicAssert.IsFalse(KingdomSocketTransitionRules.MatchesRoute(original, changed[i]),
 					names[i]);
-				Assert.IsTrue(KingdomSocketTransitionRules.TryDeclarationDigest(changed[i],
+				ClassicAssert.IsTrue(KingdomSocketTransitionRules.TryDeclarationDigest(changed[i],
 					out string changedDigest), names[i]);
-				Assert.AreNotEqual(originalDigest, changedDigest, names[i]);
+				ClassicAssert.AreNotEqual(originalDigest, changedDigest, names[i]);
 			}
-			Assert.IsTrue(KingdomSocketTransitionRules.TrySnapshot(original,
+			ClassicAssert.IsTrue(KingdomSocketTransitionRules.TrySnapshot(original,
 				out KingdomSocketTransition snapshot));
 			KingdomMaterialTally exposed = snapshot.Materials;
 			exposed.Set(KingdomMaterial.Timber, 99);
-			Assert.IsTrue(KingdomSocketTransitionRules.MatchesRoute(original, snapshot));
-			Assert.AreEqual(4, original.Materials.Get(KingdomMaterial.Timber),
+			ClassicAssert.IsTrue(KingdomSocketTransitionRules.MatchesRoute(original, snapshot));
+			ClassicAssert.AreEqual(4, original.Materials.Get(KingdomMaterial.Timber),
 				"mutating a detached preview must not alter registry authority");
-			Assert.AreEqual(4, snapshot.Materials.Get(KingdomMaterial.Timber),
+			ClassicAssert.AreEqual(4, snapshot.Materials.Get(KingdomMaterial.Timber),
 				"a declaration never exposes its internal material snapshot");
 		}
 
@@ -300,16 +301,16 @@ namespace ThousandAndFirst.Tests
 		public void ReceiptRefusesEverySchemaLastPublicationCut()
 		{
 			KingdomSocketTransitionReceiptShape receipt = ReceiptValuesOnly();
-			Assert.IsFalse(ReceiptAuthorizes(receipt, out _), "cut 0: schema invalidated");
+			ClassicAssert.IsFalse(ReceiptAuthorizes(receipt, out _), "cut 0: schema invalidated");
 			for (int cut = 0; cut < 5; cut++)
 			{
 				SetPublishedString(ref receipt, cut);
-				Assert.IsFalse(ReceiptAuthorizes(receipt, out _), "cut " + (cut + 1));
+				ClassicAssert.IsFalse(ReceiptAuthorizes(receipt, out _), "cut " + (cut + 1));
 			}
 			receipt.SchemaHasInt = true;
 			receipt.Schema = KingdomSocketTransitionRules.ReceiptSchema;
-			Assert.IsTrue(ReceiptAuthorizes(receipt, out bool legacy));
-			Assert.IsFalse(legacy);
+			ClassicAssert.IsTrue(ReceiptAuthorizes(receipt, out bool legacy));
+			ClassicAssert.IsFalse(legacy);
 		}
 
 		[Test]
@@ -319,11 +320,11 @@ namespace ThousandAndFirst.Tests
 			{
 				KingdomSocketTransitionReceiptShape receipt = CurrentReceipt();
 				ApplyShapeFault(ref receipt, fault);
-				Assert.IsFalse(ReceiptAuthorizes(receipt, out _), "shape fault " + fault);
+				ClassicAssert.IsFalse(ReceiptAuthorizes(receipt, out _), "shape fault " + fault);
 			}
 			KingdomSocketTransitionReceiptShape unknown = CurrentReceipt();
 			unknown.Schema = 99;
-			Assert.IsFalse(ReceiptAuthorizes(unknown, out _), "unknown schema");
+			ClassicAssert.IsFalse(ReceiptAuthorizes(unknown, out _), "unknown schema");
 		}
 
 		[Test]
@@ -333,7 +334,7 @@ namespace ThousandAndFirst.Tests
 			{
 				KingdomSocketTransitionReceiptShape receipt = CurrentReceipt();
 				ApplyValueForgery(ref receipt, field);
-				Assert.IsFalse(ReceiptAuthorizes(receipt, out _), "forged field " + field);
+				ClassicAssert.IsFalse(ReceiptAuthorizes(receipt, out _), "forged field " + field);
 			}
 		}
 
@@ -344,12 +345,12 @@ namespace ThousandAndFirst.Tests
 			legacyReceipt.Schema = KingdomSocketTransitionRules.LegacyReceiptSchema;
 			legacyReceipt.DeclarationHasString = false;
 			legacyReceipt.DeclarationDigest = null;
-			Assert.IsTrue(ReceiptAuthorizes(legacyReceipt, out bool legacy));
-			Assert.IsTrue(legacy);
+			ClassicAssert.IsTrue(ReceiptAuthorizes(legacyReceipt, out bool legacy));
+			ClassicAssert.IsTrue(legacy);
 
 			legacyReceipt.DeclarationHasString = true;
 			legacyReceipt.DeclarationDigest = ExpectedDeclarationDigest;
-			Assert.IsFalse(ReceiptAuthorizes(legacyReceipt, out _),
+			ClassicAssert.IsFalse(ReceiptAuthorizes(legacyReceipt, out _),
 				"schema 1 may not expose a schema 2 declaration field");
 		}
 
@@ -361,9 +362,9 @@ namespace ThousandAndFirst.Tests
 		public void MalformedOrSelfRouteRefuses(string from, string to, string type,
 			string size, string water, string materials, string ticks)
 		{
-			Assert.IsFalse(KingdomSocketTransitionRules.TryParse("route", from, to, type,
+			ClassicAssert.IsFalse(KingdomSocketTransitionRules.TryParse("route", from, to, type,
 				size, "renovate", water, materials, ticks, out _, out string failure));
-			Assert.IsFalse(string.IsNullOrEmpty(failure));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(failure));
 		}
 
 		[Test]
@@ -379,16 +380,16 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void PlanQuoteUsesOnlyDeclaredDeltaAndNoStrike()
 		{
-			Assert.IsTrue(KingdomSocketTransitionRules.TryParse("quote", "a", "b", "craft",
+			ClassicAssert.IsTrue(KingdomSocketTransitionRules.TryParse("quote", "a", "b", "craft",
 				"S", "renovate", "7", "scrap:3", "450", out KingdomSocketTransition transition,
 				out string failure), failure);
 			KingdomSocketRules.ConversionQuote quote = KingdomSocketRules.AssessPlanChange(
 				transition);
-			Assert.AreEqual(0, quote.StrikeEffort);
-			Assert.AreEqual(0, quote.Salvage.Total());
-			Assert.AreEqual(7, quote.NewDrams);
-			Assert.AreEqual(3, quote.NetMaterials.Get(KingdomMaterial.Scrap));
-			Assert.AreEqual(450L, quote.WorkTicks);
+			ClassicAssert.AreEqual(0, quote.StrikeEffort);
+			ClassicAssert.AreEqual(0, quote.Salvage.Total());
+			ClassicAssert.AreEqual(7, quote.NewDrams);
+			ClassicAssert.AreEqual(3, quote.NetMaterials.Get(KingdomMaterial.Scrap));
+			ClassicAssert.AreEqual(450L, quote.WorkTicks);
 		}
 
 		[Test]
@@ -405,7 +406,7 @@ namespace ThousandAndFirst.Tests
 			routes.Load(Path.Combine(TestMain.RepositoryRoot, "Architecture",
 				"KingdomArchitectureTransitions.xml"));
 			XmlNodeList declared = routes.SelectNodes("/KingdomArchitectureTransitions/transition");
-			Assert.AreEqual(24, declared.Count);
+			ClassicAssert.AreEqual(24, declared.Count);
 			HashSet<string> mappings = new HashSet<string>(StringComparer.Ordinal);
 			foreach (string file in Directory.GetFiles(Path.Combine(TestMain.RepositoryRoot,
 				"Architecture"), "KingdomArchitectures*.xml"))
@@ -431,28 +432,28 @@ namespace ThousandAndFirst.Tests
 				string from = route.GetAttribute("From");
 				string to = route.GetAttribute("To");
 				string identity = from + ">" + to + ":" + route.GetAttribute("Size");
-				Assert.IsTrue(identities.Add(identity), identity);
-				Assert.IsFalse(identities.Contains(to + ">" + from + ":"
+				ClassicAssert.IsTrue(identities.Add(identity), identity);
+				ClassicAssert.IsFalse(identities.Contains(to + ">" + from + ":"
 					+ route.GetAttribute("Size")), "undeclared reverse became present: " + identity);
 				XmlElement target = byKey[to];
 				string mappingSuffix = ":" + route.GetAttribute("Type") + ":"
 					+ route.GetAttribute("Size");
-				Assert.IsTrue(mappings.Contains(from + mappingSuffix), identity + " source mapping");
-				Assert.IsTrue(mappings.Contains(to + mappingSuffix), identity + " target mapping");
-				Assert.Less(int.Parse(route.GetAttribute("Water")),
+				ClassicAssert.IsTrue(mappings.Contains(from + mappingSuffix), identity + " source mapping");
+				ClassicAssert.IsTrue(mappings.Contains(to + mappingSuffix), identity + " target mapping");
+				ClassicAssert.Less(int.Parse(route.GetAttribute("Water")),
 					int.Parse(target.GetAttribute("Cost")), identity + " water");
-				Assert.Less(MaterialTotal(route.GetAttribute("Materials")),
+				ClassicAssert.Less(MaterialTotal(route.GetAttribute("Materials")),
 					MaterialTotal(target.GetAttribute("Materials")), identity + " materials");
-				Assert.Less(long.Parse(route.GetAttribute("Ticks")),
+				ClassicAssert.Less(long.Parse(route.GetAttribute("Ticks")),
 					long.Parse(target.GetAttribute("Ticks")), identity + " labour");
 			}
 			for (int pair = 0; pair < pairs.GetLength(0); pair++)
 				for (int size = 0; size < sizes.Length; size++)
-					Assert.IsTrue(identities.Contains(pairs[pair, 0] + ">" + pairs[pair, 1]
+					ClassicAssert.IsTrue(identities.Contains(pairs[pair, 0] + ">" + pairs[pair, 1]
 						+ ":" + sizes[size]), "missing exact route");
-			Assert.AreEqual("all,!common,!eater", byKey["hut"].GetAttribute("Styles"));
-			Assert.AreEqual("common", byKey["mudhut"].GetAttribute("Styles"));
-			Assert.AreEqual("eater", byKey["blockhut"].GetAttribute("Styles"));
+			ClassicAssert.AreEqual("all,!common,!eater", byKey["hut"].GetAttribute("Styles"));
+			ClassicAssert.AreEqual("common", byKey["mudhut"].GetAttribute("Styles"));
+			ClassicAssert.AreEqual("eater", byKey["blockhut"].GetAttribute("Styles"));
 			AssertEveryDeclaredTargetVariantRetainsSourceStatefulFixtures(declared);
 		}
 
@@ -465,11 +466,11 @@ namespace ThousandAndFirst.Tests
 				"KingdomArchitectureTransitions.xml"));
 			XmlNodeList declared = routes.SelectNodes(
 				"/KingdomArchitectureTransitions/transition");
-			Assert.AreEqual(24, declared.Count);
+			ClassicAssert.AreEqual(24, declared.Count);
 			int exercised = 0;
 			foreach (XmlElement route in declared)
 			{
-				Assert.IsTrue(KingdomSocketTransitionRules.TryParse(route.GetAttribute("Key"),
+				ClassicAssert.IsTrue(KingdomSocketTransitionRules.TryParse(route.GetAttribute("Key"),
 					route.GetAttribute("From"), route.GetAttribute("To"),
 					route.GetAttribute("Type"), route.GetAttribute("Size"),
 					route.GetAttribute("Mode"),
@@ -480,20 +481,20 @@ namespace ThousandAndFirst.Tests
 					parsed.LotType, parsed.LotSize);
 				List<ArchitectureCorpusCase> targets = CorpusCases(corpus, parsed.ToBuildKey,
 					parsed.LotType, parsed.LotSize);
-				Assert.IsNotEmpty(sources, parsed.Key + " source");
-				Assert.IsNotEmpty(targets, parsed.Key + " target");
+				ClassicAssert.IsNotEmpty(sources, parsed.Key + " source");
+				ClassicAssert.IsNotEmpty(targets, parsed.Key + " target");
 				for (int i = 0; i < sources.Count; i++)
 					for (int j = 0; j < targets.Count; j++)
 					{
-						Assert.AreNotEqual(sources[i].PlanKey, targets[j].PlanKey,
+						ClassicAssert.AreNotEqual(sources[i].PlanKey, targets[j].PlanKey,
 							parsed.Key + " must exercise the cross-plan path");
-						Assert.IsFalse(KingdomSocketTransitionRules.AuthorizesFixedLotTransition(
+						ClassicAssert.IsFalse(KingdomSocketTransitionRules.AuthorizesFixedLotTransition(
 							SamePlan: false,
 							SameBinding: sources[i].Binding.Key == targets[j].Binding.Key,
 							SameType: true, SameSize: true, SameRect: true, SameFacing: true,
 							SameMainRoot: true, ExactLotIdentity: true,
 							AllowPlanChange: false, DurableRouteAuthority: false), parsed.Key);
-						Assert.IsTrue(KingdomSocketTransitionRules.AuthorizesFixedLotTransition(
+						ClassicAssert.IsTrue(KingdomSocketTransitionRules.AuthorizesFixedLotTransition(
 							SamePlan: false,
 							SameBinding: sources[i].Binding.Key == targets[j].Binding.Key,
 							SameType: true, SameSize: true, SameRect: true, SameFacing: true,
@@ -502,7 +503,7 @@ namespace ThousandAndFirst.Tests
 					}
 				exercised++;
 			}
-			Assert.AreEqual(24, exercised);
+			ClassicAssert.AreEqual(24, exercised);
 		}
 
 		[Test]
@@ -515,10 +516,10 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("ExecutePreparedConvert(System, zone, target, conversion", socket);
 			StringAssert.Contains("[change: \" + transition.WaterDrams", socket);
 			StringAssert.Contains("!KingdomSocketTransitions.TryGet(currentKey, entry.Key", socket);
-			Assert.Less(socket.IndexOf("TryPrepareConvert(System, zone, target, chosen.Key, skinKey",
+			ClassicAssert.Less(socket.IndexOf("TryPrepareConvert(System, zone, target, chosen.Key, skinKey",
 				StringComparison.Ordinal), socket.IndexOf("Popup.PickOption(Title: \"Preview exact change:",
 				StringComparison.Ordinal));
-			Assert.Less(socket.IndexOf("Popup.PickOption(Title: \"Preview exact change:",
+			ClassicAssert.Less(socket.IndexOf("Popup.PickOption(Title: \"Preview exact change:",
 				StringComparison.Ordinal), socket.IndexOf("ExecutePreparedConvert(System, zone, target, conversion",
 				StringComparison.Ordinal));
 		}
@@ -617,7 +618,7 @@ namespace ThousandAndFirst.Tests
 			string Size = "S", string Mode = "renovate", string Water = "4", string Materials = "timber:4,mud:2",
 			string Ticks = "1350")
 		{
-			Assert.IsTrue(KingdomSocketTransitionRules.TryParse(Key, From, To, Type, Size,
+			ClassicAssert.IsTrue(KingdomSocketTransitionRules.TryParse(Key, From, To, Type, Size,
 				Mode, Water, Materials, Ticks,
 				out KingdomSocketTransition route, out string failure), failure);
 			return route;
@@ -787,9 +788,9 @@ namespace ThousandAndFirst.Tests
 					+ route.GetAttribute("Size");
 				string sourceKey = route.GetAttribute("From") + suffix;
 				string targetKey = route.GetAttribute("To") + suffix;
-				Assert.IsTrue(layouts.TryGetValue(sourceKey, out List<LayoutFixture> sources),
+				ClassicAssert.IsTrue(layouts.TryGetValue(sourceKey, out List<LayoutFixture> sources),
 					sourceKey);
-				Assert.IsTrue(layouts.TryGetValue(targetKey, out List<LayoutFixture> targets),
+				ClassicAssert.IsTrue(layouts.TryGetValue(targetKey, out List<LayoutFixture> targets),
 					targetKey);
 				foreach (LayoutFixture source in sources)
 				{
@@ -800,7 +801,7 @@ namespace ThousandAndFirst.Tests
 						string context = route.GetAttribute("Key") + " target variant " + target.Name;
 						CollectionAssert.IsSubsetOf(retained,
 							StatefulFixtureSignatures(target, maps, palettes), context);
-						Assert.AreEqual(sourceMain, MainCoordinate(target, maps), context + " main");
+						ClassicAssert.AreEqual(sourceMain, MainCoordinate(target, maps), context + " main");
 					}
 				}
 			}
@@ -862,7 +863,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < Needles.Length; i++)
 			{
 				int next = Source.IndexOf(Needles[i], previous + 1, StringComparison.Ordinal);
-				Assert.Greater(next, previous, "missing or out of order: " + Needles[i]);
+				ClassicAssert.Greater(next, previous, "missing or out of order: " + Needles[i]);
 				previous = next;
 			}
 		}
@@ -870,9 +871,9 @@ namespace ThousandAndFirst.Tests
 		private static string Between(string Source, string Start, string End)
 		{
 			int first = Source.IndexOf(Start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(first, 0, "missing source boundary: " + Start);
+			ClassicAssert.GreaterOrEqual(first, 0, "missing source boundary: " + Start);
 			int last = Source.IndexOf(End, first + Start.Length, StringComparison.Ordinal);
-			Assert.Greater(last, first, "missing source boundary: " + End);
+			ClassicAssert.Greater(last, first, "missing source boundary: " + End);
 			return Source.Substring(first, last - first);
 		}
 

@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -101,7 +102,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomArchitectureRules.MaxSnapshotChars", source);
 			StringAssert.Contains("KingdomArchitectureRules.MaxKeyChars", source);
 			StringAssert.Contains("public sealed class KingdomArchitectureIntent", source);
-			Assert.IsFalse(source.Contains(": IPart"));
+			ClassicAssert.IsFalse(source.Contains(": IPart"));
 		}
 
 		[Test]
@@ -123,10 +124,10 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomArchitecture.TryResolve(BuildKey, mapping.TypeKey,", prepare);
 			StringAssert.Contains("mapping.LotSize, context, facing", prepare);
 			StringAssert.Contains("MatchesMapping(snapshot, mapping)", prepare);
-			Assert.IsFalse(exact.Contains("SetIntProperty"));
-			Assert.IsFalse(exact.Contains("SetStringProperty"));
-			Assert.IsFalse(prepare.Contains("SetIntProperty"));
-			Assert.IsFalse(prepare.Contains("SetStringProperty"));
+			ClassicAssert.IsFalse(exact.Contains("SetIntProperty"));
+			ClassicAssert.IsFalse(exact.Contains("SetStringProperty"));
+			ClassicAssert.IsFalse(prepare.Contains("SetIntProperty"));
+			ClassicAssert.IsFalse(prepare.Contains("SetStringProperty"));
 
 			string context = Between(source,
 				"private static bool TrySelectionContext(",
@@ -190,7 +191,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomArchitecture.TryResolve(BuildKey, Mapping.TypeKey", road);
 			StringAssert.Contains("TryPhysicalRoadIngressScore(Z, Rect, resolved", road);
 			StringAssert.Contains("if (score > bestScore)", road);
-			Assert.IsFalse(road.Contains("score >= bestScore"),
+			ClassicAssert.IsFalse(road.Contains("score >= bestScore"),
 				"equal road scores must retain fixed N/E/S/W candidate order");
 			StringAssert.Contains("no authored public entrance connected to existing road evidence", road);
 
@@ -221,11 +222,11 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomRoads.ReadTally(Z)", frozen);
 			StringAssert.Contains("KingdomRoadRules.WearAt(worn.Traffic)", frozen);
 			StringAssert.Contains("KingdomRoadRules.WearState.Untouched", frozen);
-			Assert.IsFalse(ingress.Contains("Math.Abs"));
-			Assert.IsFalse(ingress.ToLowerInvariant().Contains("nearest"));
-			Assert.IsFalse(source.Contains("GenericRectangle"),
+			ClassicAssert.IsFalse(ingress.Contains("Math.Abs"));
+			ClassicAssert.IsFalse(ingress.ToLowerInvariant().Contains("nearest"));
+			ClassicAssert.IsFalse(source.Contains("GenericRectangle"),
 				"runtime must not invent a fallback map");
-			Assert.IsFalse(source.Contains("GenericShell"),
+			ClassicAssert.IsFalse(source.Contains("GenericShell"),
 				"runtime must not invent a fallback shell");
 		}
 
@@ -266,8 +267,8 @@ namespace ThousandAndFirst.Tests
 				"KingdomArchitectureRules.AnchorRole(placement.StatefulAnchor)", basin);
 			StringAssert.Contains("!= \"fixture:first-basin\"", basin);
 			StringAssert.Contains("basinX != RiteX || basinY != RiteY", basin);
-			Assert.IsFalse(successor.Contains("GrowInPlace"));
-			Assert.IsFalse(successor.Contains("Generic"));
+			ClassicAssert.IsFalse(successor.Contains("GrowInPlace"));
+			ClassicAssert.IsFalse(successor.Contains("Generic"));
 		}
 
 		[Test]
@@ -285,12 +286,12 @@ namespace ThousandAndFirst.Tests
 			int schemaWrite = freeze.IndexOf(
 				"Target.SetIntProperty(SchemaProperty, ReceiptSchema);",
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(validate, 0);
-			Assert.Greater(prefix, validate);
-			Assert.Greater(firstMutation, validate);
-			Assert.Greater(firstMutation, prefix);
-			Assert.Greater(schemaWrite, firstMutation);
-			Assert.AreEqual(schemaWrite,
+			ClassicAssert.GreaterOrEqual(validate, 0);
+			ClassicAssert.Greater(prefix, validate);
+			ClassicAssert.Greater(firstMutation, validate);
+			ClassicAssert.Greater(firstMutation, prefix);
+			ClassicAssert.Greater(schemaWrite, firstMutation);
+			ClassicAssert.AreEqual(schemaWrite,
 				freeze.LastIndexOf("Target.Set", StringComparison.Ordinal),
 				"schema must be final property write");
 			StringAssert.Contains("TryReadExactFrozen(Target, Intent", freeze);
@@ -368,19 +369,19 @@ namespace ThousandAndFirst.Tests
 			string source = Runtime();
 			string durable = source.Substring(source.IndexOf(
 				"// --- Durable named receipt", StringComparison.Ordinal));
-			Assert.IsFalse(durable.Contains("KingdomArchitecture.TryGetMapping"));
-			Assert.IsFalse(durable.Contains("KingdomArchitecture.TryResolve"));
-			Assert.IsFalse(durable.Contains("KingdomData"));
-			Assert.IsFalse(durable.Contains("GameObjectFactory"));
-			Assert.IsFalse(durable.Contains("KingdomPlots"));
+			ClassicAssert.IsFalse(durable.Contains("KingdomArchitecture.TryGetMapping"));
+			ClassicAssert.IsFalse(durable.Contains("KingdomArchitecture.TryResolve"));
+			ClassicAssert.IsFalse(durable.Contains("KingdomData"));
+			ClassicAssert.IsFalse(durable.Contains("GameObjectFactory"));
+			ClassicAssert.IsFalse(durable.Contains("KingdomPlots"));
 
 			string copy = Between(source,
 				"public static bool TryCopyFrozen(",
 				"public static bool TryValidate(");
 			int read = copy.IndexOf("TryRead(Source, out intent", StringComparison.Ordinal);
 			int freeze = copy.IndexOf("TryFreeze(Target, intent", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(read, 0);
-			Assert.Greater(freeze, read);
+			ClassicAssert.GreaterOrEqual(read, 0);
+			ClassicAssert.Greater(freeze, read);
 
 			string transforms = Between(source,
 				"public static bool TryWorldCell(",
@@ -409,9 +410,9 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("canonical != Payload", codec);
 			StringAssert.Contains("Payload.StartsWith(\"v1|\"", codec);
 			StringAssert.Contains("private static bool TryDecodeLegacyPlotPayload", codec);
-			Assert.IsFalse(source.Contains("internal static string EncodePlotPayload("),
+			ClassicAssert.IsFalse(source.Contains("internal static string EncodePlotPayload("),
 				"no current path may write the legacy payload");
-			Assert.IsFalse(source.Contains("return \"v1|\""),
+			ClassicAssert.IsFalse(source.Contains("return \"v1|\""),
 				"v1 is compatibility input only");
 		}
 
@@ -430,7 +431,7 @@ namespace ThousandAndFirst.Tests
 				"ReservePayment(Z, Entry.Key)", "KingdomConstruction.NewJob(System, Z");
 			StringAssert.Contains("KingdomConstructionRoute.PlotCommission, mainCell", commission);
 			StringAssert.Contains("null, Entry.Key, payload", commission);
-			Assert.IsFalse(commission.Contains("Z.GetCell(rect.CenterX, rect.CenterY)"));
+			ClassicAssert.IsFalse(commission.Contains("Z.GetCell(rect.CenterX, rect.CenterY)"));
 
 			string preparePlan = Between(plot, "internal static bool TryPreparePlan(",
 				"public static bool StakeFromPlan(KingdomSystem System, GameObject Marker, KingdomRules.BuildEntry Entry)");
@@ -491,24 +492,24 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Valid works are",
 				Between(source, "private static KingdomPhysicalLookupState FindConstructionResult(",
 					"public static int CountBuilt("));
-			Assert.IsFalse(retry.Contains("KingdomArchitectureRuntime.TryPrepare"));
-			Assert.IsFalse(retry.Contains("KingdomArchitecture.TryResolve"));
+			ClassicAssert.IsFalse(retry.Contains("KingdomArchitectureRuntime.TryPrepare"));
+			ClassicAssert.IsFalse(retry.Contains("KingdomArchitecture.TryResolve"));
 
 			string projection = Between(source, "private static bool ProjectPlot(",
 				"internal static bool ProjectOnRect(");
 			StringAssert.Contains("TryDecodePlotPayload(Job.Payload", projection);
 			StringAssert.Contains("!SamePlotSkin(paidSkin, SkinKey)", projection);
 			StringAssert.Contains("architecture.MainWorldX", projection);
-			Assert.IsFalse(projection.Contains("KingdomArchitectureRuntime.TryPrepare"));
-			Assert.IsFalse(projection.Contains("KingdomArchitecture.TryResolve"));
+			ClassicAssert.IsFalse(projection.Contains("KingdomArchitectureRuntime.TryPrepare"));
+			ClassicAssert.IsFalse(projection.Contains("KingdomArchitecture.TryResolve"));
 
 			string planned = Between(source,
 				"public static bool StakeFromPlan(KingdomSystem System, GameObject Marker,\n\t\t\tKingdomRules.BuildEntry Entry, KingdomConstructionJob Job,",
 				"private static bool HeartGrowRefused(");
 			StringAssert.Contains("TryDecodePlotPayload(current.Payload", planned);
-			Assert.IsFalse(planned.Contains("TryFindRect("));
-			Assert.IsFalse(planned.Contains("KingdomArchitectureRuntime.TryPrepare"));
-			Assert.IsFalse(planned.Contains("KingdomArchitecture.TryResolve"));
+			ClassicAssert.IsFalse(planned.Contains("TryFindRect("));
+			ClassicAssert.IsFalse(planned.Contains("KingdomArchitectureRuntime.TryPrepare"));
+			ClassicAssert.IsFalse(planned.Contains("KingdomArchitecture.TryResolve"));
 		}
 
 		[Test]
@@ -521,8 +522,8 @@ namespace ThousandAndFirst.Tests
 				"KingdomArchitectureRuntime.TryRead(parent", "GameObject.Create(entry.Blueprint)",
 				"KingdomArchitectureRuntime.TryCopyFrozen(parent, building",
 				"cell.AddObject(building)", "ExactFinalBuilding(building");
-			Assert.IsFalse(finish.Contains("KingdomArchitectureRuntime.TryPrepare"));
-			Assert.IsFalse(finish.Contains("KingdomArchitecture.TryResolve"));
+			ClassicAssert.IsFalse(finish.Contains("KingdomArchitectureRuntime.TryPrepare"));
+			ClassicAssert.IsFalse(finish.Contains("KingdomArchitecture.TryResolve"));
 
 			string exact = Between(source, "private static bool ExactFinalBuilding(",
 				"private static bool ClearGround(");
@@ -546,7 +547,7 @@ namespace ThousandAndFirst.Tests
 				"KingdomArchitectureRuntime.TryPrepare(System, Z, context.TargetRect",
 				"KingdomArchitectureStamper.TryPreflightRestake(System, Z, Building",
 				"KingdomPlots.TryEncodePlotPayload(context.TargetRect");
-			Assert.IsFalse(prepareConvert.Contains("ReserveExactWater"));
+			ClassicAssert.IsFalse(prepareConvert.Contains("ReserveExactWater"));
 
 			string convert = Between(source, "private static bool ExecutePreparedConvert(",
 				"private static bool ProjectConvertOrder(");
@@ -558,15 +559,15 @@ namespace ThousandAndFirst.Tests
 				"KingdomConstruction.NewJob(System, Z");
 			StringAssert.Contains("KingdomConstructionRoute.SocketConvert, mainCell", convert);
 			StringAssert.Contains("context.NewEntry.Key, payload", convert);
-			Assert.IsFalse(convert.Contains("KingdomArchitectureRuntime.TryPrepare"));
-			Assert.IsFalse(convert.Contains("KingdomArchitecture.TryResolve"));
+			ClassicAssert.IsFalse(convert.Contains("KingdomArchitectureRuntime.TryPrepare"));
+			ClassicAssert.IsFalse(convert.Contains("KingdomArchitecture.TryResolve"));
 
 			string prepareBuild = Between(source, "private static bool TryPrepareSocketBuild(",
 				"private static bool ExecuteSocketBuild(");
 			AssertOrdered(prepareBuild, "KingdomZoning.Permits(System, Z.ZoneID, entry",
 				"KingdomPlots.TryPreparePlotPayload(System, Z, rect",
 				"Prepared = new PreparedSocketBuild");
-			Assert.IsFalse(prepareBuild.Contains("ReserveExactWater"));
+			ClassicAssert.IsFalse(prepareBuild.Contains("ReserveExactWater"));
 			string build = Between(source, "private static bool ExecuteSocketBuild(",
 				"public static bool Redress(");
 			AssertOrdered(build, "KingdomArchitectureStamper.TryPreflight(System, Z, architecture",
@@ -580,19 +581,19 @@ namespace ThousandAndFirst.Tests
 				"internal static void InspectConstruction(");
 			StringAssert.Contains("KingdomPlots.TryDecodePlotPayload(Job.Payload", retry);
 			StringAssert.Contains("KingdomPlots.ProjectOnRect(System, Z, rect", retry);
-			Assert.IsFalse(retry.Contains("KingdomArchitectureRuntime.TryPrepare"));
+			ClassicAssert.IsFalse(retry.Contains("KingdomArchitectureRuntime.TryPrepare"));
 			StringAssert.Contains("Valid works are",
 				Between(source, "private static KingdomPhysicalLookupState FindSocketResult(",
 					"private static void ContinueSocketBuild("));
-			Assert.IsFalse(source.Contains("internal static string EncodePlotPayload("));
+			ClassicAssert.IsFalse(source.Contains("internal static string EncodePlotPayload("));
 		}
 
 		private static string Between(string Source, string Start, string End)
 		{
 			int start = Source.IndexOf(Start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, "missing source boundary: " + Start);
+			ClassicAssert.GreaterOrEqual(start, 0, "missing source boundary: " + Start);
 			int end = Source.IndexOf(End, start + Start.Length, StringComparison.Ordinal);
-			Assert.Greater(end, start, "missing source boundary: " + End);
+			ClassicAssert.Greater(end, start, "missing source boundary: " + End);
 			return Source.Substring(start, end - start);
 		}
 
@@ -602,7 +603,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < Terms.Length; i++)
 			{
 				int found = Source.IndexOf(Terms[i], previous + 1, StringComparison.Ordinal);
-				Assert.Greater(found, previous, "missing or out-of-order source term: " + Terms[i]);
+				ClassicAssert.Greater(found, previous, "missing or out-of-order source term: " + Terms[i]);
 				previous = found;
 			}
 		}

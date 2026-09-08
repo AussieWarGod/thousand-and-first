@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -42,9 +43,9 @@ namespace ThousandAndFirst.Tests
 		private static string Between(string source, string from, string to)
 		{
 			int start = source.IndexOf(from, StringComparison.Ordinal);
-			Assert.Greater(start, -1, from);
+			ClassicAssert.Greater(start, -1, from);
 			int end = source.IndexOf(to, start + from.Length, StringComparison.Ordinal);
-			Assert.Greater(end, start, to);
+			ClassicAssert.Greater(end, start, to);
 			return source.Substring(start, end - start);
 		}
 
@@ -55,7 +56,7 @@ namespace ThousandAndFirst.Tests
 			{
 				int next = source.IndexOf(terms[i], cursor + 1,
 					StringComparison.Ordinal);
-				Assert.Greater(next, cursor, terms[i]);
+				ClassicAssert.Greater(next, cursor, terms[i]);
 				cursor = next;
 			}
 		}
@@ -247,10 +248,10 @@ namespace ThousandAndFirst.Tests
 				string source = Source(EffectShards[i]);
 				for (int j = 0; j < forbidden.Length; j++)
 					StringAssert.DoesNotContain(forbidden[j], source, EffectShards[i]);
-				Assert.Less(source.Split('\n').Length, 301,
+				ClassicAssert.Less(source.Split('\n').Length, 301,
 					EffectShards[i] + " exceeds 300 physical lines");
 				for (int j = 0; j < source.Length; j++)
-					Assert.LessOrEqual((int)source[j], 127,
+					ClassicAssert.LessOrEqual((int)source[j], 127,
 						EffectShards[i] + " contains non-ASCII source");
 			}
 		}

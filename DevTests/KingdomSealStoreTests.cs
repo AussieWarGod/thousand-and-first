@@ -5,6 +5,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -168,20 +169,20 @@ namespace ThousandAndFirst.Tests
 			{
 				KingdomSealStore store = new KingdomSealStore(root);
 				string failure;
-				Assert.IsTrue(store.TryStage(StageRecord("dynasty", "legacy-a", "game-a", 1, 1), out failure), failure);
-				Assert.IsTrue(store.TryStage(StageRecord("dynasty", "legacy-a", "game-a", 1, 2), out failure), failure);
-				Assert.IsFalse(store.TryStage(StageRecord("dynasty", "legacy-a", "game-a", 1, 1), out failure));
+				ClassicAssert.IsTrue(store.TryStage(StageRecord("dynasty", "legacy-a", "game-a", 1, 1), out failure), failure);
+				ClassicAssert.IsTrue(store.TryStage(StageRecord("dynasty", "legacy-a", "game-a", 1, 2), out failure), failure);
+				ClassicAssert.IsFalse(store.TryStage(StageRecord("dynasty", "legacy-a", "game-a", 1, 1), out failure));
 
 				KingdomSealRecord read = store.ReadStage("game-a");
-				Assert.IsNotNull(read);
-				Assert.AreEqual(2, read.Revision);
-				Assert.AreEqual("legacy-a", read.LegacyId);
+				ClassicAssert.IsNotNull(read);
+				ClassicAssert.AreEqual(2, read.Revision);
+				ClassicAssert.AreEqual("legacy-a", read.LegacyId);
 
 				KingdomSealRecord retired = KingdomSealRules.WithRetirement(
 					StageRecord("dynasty", "legacy-a", "game-a", 1, 2));
-				Assert.IsTrue(store.TryStage(retired, out failure), failure);
-				Assert.IsFalse(store.TryStage(StageRecord("dynasty", "legacy-a", "game-a", 1, 4), out failure));
-				Assert.AreEqual(KingdomSealStatus.Retired, store.ReadStage("game-a").Status);
+				ClassicAssert.IsTrue(store.TryStage(retired, out failure), failure);
+				ClassicAssert.IsFalse(store.TryStage(StageRecord("dynasty", "legacy-a", "game-a", 1, 4), out failure));
+				ClassicAssert.AreEqual(KingdomSealStatus.Retired, store.ReadStage("game-a").Status);
 			}
 			finally
 			{
@@ -210,10 +211,10 @@ namespace ThousandAndFirst.Tests
 				}
 				int refused;
 				List<string> origins = store.StagedOrigins(out refused);
-				Assert.AreEqual(0, refused);
-				Assert.AreEqual(100, origins.Count);
-				Assert.IsTrue(origins.Contains("game-0"));
-				Assert.IsTrue(origins.Contains("game-99"));
+				ClassicAssert.AreEqual(0, refused);
+				ClassicAssert.AreEqual(100, origins.Count);
+				ClassicAssert.IsTrue(origins.Contains("game-0"));
+				ClassicAssert.IsTrue(origins.Contains("game-99"));
 			}
 			finally
 			{
@@ -232,9 +233,9 @@ namespace ThousandAndFirst.Tests
 				Directory.CreateDirectory(malformedStages);
 				File.WriteAllText(Path.Combine(malformedStages, "game-bad.x.seal"), "bad");
 				int refused;
-				Assert.AreEqual(0, new KingdomSealStore(malformedRoot)
+				ClassicAssert.AreEqual(0, new KingdomSealStore(malformedRoot)
 					.StagedOrigins(out refused).Count);
-				Assert.AreEqual(1, refused);
+				ClassicAssert.AreEqual(1, refused);
 
 				KingdomSealStore overflow = new KingdomSealStore(overflowRoot);
 				Directory.CreateDirectory(Path.Combine(overflowRoot, KingdomSealStore.StagesFolder));
@@ -246,7 +247,7 @@ namespace ThousandAndFirst.Tests
 						StageRecord("dynasty", "legacy-" + (i / 2), origin, 1, 1).Compose());
 				}
 				overflow.StagedOrigins(out refused);
-				Assert.Greater(refused, 0);
+				ClassicAssert.Greater(refused, 0);
 			}
 			finally
 			{
@@ -272,7 +273,7 @@ namespace ThousandAndFirst.Tests
 				}
 				int refused;
 				new KingdomSealStore(knownRoot).StagedOrigins(out refused);
-				Assert.Greater(refused, 0);
+				ClassicAssert.Greater(refused, 0);
 
 				KingdomSealStore unknown = new KingdomSealStore(unknownRoot);
 				string unknownStages = Path.Combine(unknownRoot, KingdomSealStore.StagesFolder);
@@ -288,8 +289,8 @@ namespace ThousandAndFirst.Tests
 					File.WriteAllText(Path.Combine(unknownStages, "foreign-" + i + ".junk"), "");
 				}
 				List<string> origins = unknown.StagedOrigins(out refused);
-				Assert.AreEqual(100, origins.Count);
-				Assert.AreEqual(200, refused);
+				ClassicAssert.AreEqual(100, origins.Count);
+				ClassicAssert.AreEqual(200, refused);
 			}
 			finally
 			{
@@ -308,16 +309,16 @@ namespace ThousandAndFirst.Tests
 				KingdomSealRecord previous = StageRecord("dynasty", "legacy-one", "game-same", 1, 2);
 				KingdomSealRecord successor = StageRecord("dynasty", "legacy-two", "game-same", 2, 3);
 				string failure;
-				Assert.IsTrue(store.TryStage(previous, out failure), failure);
-				Assert.IsTrue(store.TryAdvanceGeneration(previous, successor, out failure), failure);
+				ClassicAssert.IsTrue(store.TryStage(previous, out failure), failure);
+				ClassicAssert.IsTrue(store.TryAdvanceGeneration(previous, successor, out failure), failure);
 				KingdomSealRecord recaptured = KingdomSealRules.Copy(successor);
 				recaptured.SettlementName = "mutated after handoff";
-				Assert.IsFalse(store.TryAdvanceGeneration(previous, recaptured, out failure));
-				Assert.IsTrue(store.TryAdvanceGeneration(previous, successor, out failure), failure);
-				Assert.AreEqual(successor.Compose(), ReadRecord(store.StagePath("game-same", 'a')).Compose());
-				Assert.AreEqual(successor.Compose(), ReadRecord(store.StagePath("game-same", 'b')).Compose());
-				Assert.AreEqual("legacy-two", store.ReadStage("game-same").LegacyId);
-				Assert.IsFalse(store.TryStage(StageRecord("dynasty", "legacy-three", "game-same", 3, 4), out failure));
+				ClassicAssert.IsFalse(store.TryAdvanceGeneration(previous, recaptured, out failure));
+				ClassicAssert.IsTrue(store.TryAdvanceGeneration(previous, successor, out failure), failure);
+				ClassicAssert.AreEqual(successor.Compose(), ReadRecord(store.StagePath("game-same", 'a')).Compose());
+				ClassicAssert.AreEqual(successor.Compose(), ReadRecord(store.StagePath("game-same", 'b')).Compose());
+				ClassicAssert.AreEqual("legacy-two", store.ReadStage("game-same").LegacyId);
+				ClassicAssert.IsFalse(store.TryStage(StageRecord("dynasty", "legacy-three", "game-same", 3, 4), out failure));
 			}
 			finally
 			{
@@ -335,17 +336,17 @@ namespace ThousandAndFirst.Tests
 				KingdomSealRecord successor = StageRecord("dynasty", "legacy-two", "game-same", 2, 3);
 				KingdomSealStore normal = new KingdomSealStore(root);
 				string failure;
-				Assert.IsTrue(normal.TryStage(previous, out failure), failure);
+				ClassicAssert.IsTrue(normal.TryStage(previous, out failure), failure);
 
 				KingdomSealStore failing = new KingdomSealStore(root, new FailingReplaceFileOps());
-				Assert.IsFalse(failing.TryAdvanceGeneration(previous, successor, out failure));
-				Assert.AreEqual("legacy-two", normal.ReadStage("game-same").LegacyId);
+				ClassicAssert.IsFalse(failing.TryAdvanceGeneration(previous, successor, out failure));
+				ClassicAssert.AreEqual("legacy-two", normal.ReadStage("game-same").LegacyId);
 				KingdomSealRecord recaptured = KingdomSealRules.Copy(successor);
 				recaptured.SettlementName = "mutated after partial write";
-				Assert.IsFalse(normal.TryAdvanceGeneration(previous, recaptured, out failure));
-				Assert.IsTrue(normal.TryAdvanceGeneration(previous, successor, out failure), failure);
-				Assert.AreEqual(successor.Compose(), ReadRecord(normal.StagePath("game-same", 'a')).Compose());
-				Assert.AreEqual(successor.Compose(), ReadRecord(normal.StagePath("game-same", 'b')).Compose());
+				ClassicAssert.IsFalse(normal.TryAdvanceGeneration(previous, recaptured, out failure));
+				ClassicAssert.IsTrue(normal.TryAdvanceGeneration(previous, successor, out failure), failure);
+				ClassicAssert.AreEqual(successor.Compose(), ReadRecord(normal.StagePath("game-same", 'a')).Compose());
+				ClassicAssert.AreEqual(successor.Compose(), ReadRecord(normal.StagePath("game-same", 'b')).Compose());
 			}
 			finally
 			{
@@ -365,15 +366,15 @@ namespace ThousandAndFirst.Tests
 				Directory.CreateDirectory(Path.Combine(root, KingdomSealStore.StagesFolder));
 				File.WriteAllText(normal.StagePath("game-same", 'b'), previous.Compose());
 				string failure;
-				Assert.IsFalse(new KingdomSealStore(root, new FailingReplaceFileOps())
+				ClassicAssert.IsFalse(new KingdomSealStore(root, new FailingReplaceFileOps())
 					.TryAdvanceGeneration(previous, successor, out failure));
 
 				KingdomSealRecord recaptured = KingdomSealRules.Copy(successor);
 				recaptured.SettlementName = "same version, different facts";
-				Assert.IsFalse(normal.TryAdvanceGeneration(previous, recaptured, out failure));
-				Assert.IsTrue(normal.TryAdvanceGeneration(previous, successor, out failure), failure);
-				Assert.AreEqual(successor.Compose(), ReadRecord(normal.StagePath("game-same", 'a')).Compose());
-				Assert.AreEqual(successor.Compose(), ReadRecord(normal.StagePath("game-same", 'b')).Compose());
+				ClassicAssert.IsFalse(normal.TryAdvanceGeneration(previous, recaptured, out failure));
+				ClassicAssert.IsTrue(normal.TryAdvanceGeneration(previous, successor, out failure), failure);
+				ClassicAssert.AreEqual(successor.Compose(), ReadRecord(normal.StagePath("game-same", 'a')).Compose());
+				ClassicAssert.AreEqual(successor.Compose(), ReadRecord(normal.StagePath("game-same", 'b')).Compose());
 			}
 			finally
 			{
@@ -391,18 +392,18 @@ namespace ThousandAndFirst.Tests
 				KingdomSealRecord successor = StageRecord("dynasty", "legacy-two", "game-same", 2, 3);
 				KingdomSealStore normal = new KingdomSealStore(root);
 				string failure;
-				Assert.IsTrue(normal.TryStage(previous, out failure), failure);
-				Assert.IsFalse(new KingdomSealStore(root, new FailingReplaceFileOps())
+				ClassicAssert.IsTrue(normal.TryStage(previous, out failure), failure);
+				ClassicAssert.IsFalse(new KingdomSealStore(root, new FailingReplaceFileOps())
 					.TryAdvanceGeneration(previous, successor, out failure));
 
 				KingdomSealRecord durable = normal.ReadStage("game-same");
 				KingdomSealRecord recaptured = KingdomSealRules.Copy(durable);
 				recaptured.SettlementName = "changed after reload";
-				Assert.IsFalse(normal.TryCompleteGenerationAdvance(recaptured, out failure));
-				Assert.IsTrue(normal.TryCompleteGenerationAdvance(durable, out failure), failure);
-				Assert.IsTrue(normal.TryCompleteGenerationAdvance(durable, out failure), failure);
-				Assert.AreEqual(durable.Compose(), ReadRecord(normal.StagePath("game-same", 'a')).Compose());
-				Assert.AreEqual(durable.Compose(), ReadRecord(normal.StagePath("game-same", 'b')).Compose());
+				ClassicAssert.IsFalse(normal.TryCompleteGenerationAdvance(recaptured, out failure));
+				ClassicAssert.IsTrue(normal.TryCompleteGenerationAdvance(durable, out failure), failure);
+				ClassicAssert.IsTrue(normal.TryCompleteGenerationAdvance(durable, out failure), failure);
+				ClassicAssert.AreEqual(durable.Compose(), ReadRecord(normal.StagePath("game-same", 'a')).Compose());
+				ClassicAssert.AreEqual(durable.Compose(), ReadRecord(normal.StagePath("game-same", 'b')).Compose());
 			}
 			finally
 			{
@@ -424,10 +425,10 @@ namespace ThousandAndFirst.Tests
 				newer.WrittenTick = 99;
 				File.WriteAllText(store.StagePath("game-same", 'a'), older.Compose());
 				File.WriteAllText(store.StagePath("game-same", 'b'), newer.Compose());
-				Assert.IsNull(store.ReadStage("game-same"));
+				ClassicAssert.IsNull(store.ReadStage("game-same"));
 				string failure;
-				Assert.IsFalse(store.TryCompleteGenerationAdvance(newer, out failure));
-				Assert.IsFalse(store.TryRestoreLivingGeneration(older, out failure));
+				ClassicAssert.IsFalse(store.TryCompleteGenerationAdvance(newer, out failure));
+				ClassicAssert.IsFalse(store.TryRestoreLivingGeneration(older, out failure));
 			}
 			finally
 			{
@@ -445,7 +446,7 @@ namespace ThousandAndFirst.Tests
 				KingdomSealRecord successorA = StageRecord("dynasty", "legacy-two-a", "game-same", 2, 3);
 				KingdomSealRecord successorB = StageRecord("dynasty", "legacy-two-b", "game-same", 2, 3);
 				string failure;
-				Assert.IsTrue(new KingdomSealStore(root).TryStage(previous, out failure), failure);
+				ClassicAssert.IsTrue(new KingdomSealStore(root).TryStage(previous, out failure), failure);
 				ManualResetEventSlim start = new ManualResetEventSlim(false);
 				bool first = false;
 				bool second = false;
@@ -463,8 +464,8 @@ namespace ThousandAndFirst.Tests
 				});
 				start.Set();
 				Task.WaitAll(a, b);
-				Assert.AreEqual(1, (first ? 1 : 0) + (second ? 1 : 0));
-				Assert.AreEqual(first ? "legacy-two-a" : "legacy-two-b",
+				ClassicAssert.AreEqual(1, (first ? 1 : 0) + (second ? 1 : 0));
+				ClassicAssert.AreEqual(first ? "legacy-two-a" : "legacy-two-b",
 					new KingdomSealStore(root).ReadStage("game-same").LegacyId);
 			}
 			finally
@@ -483,26 +484,26 @@ namespace ThousandAndFirst.Tests
 				KingdomSealRecord living = StageRecord("dynasty", "legacy-one", "game-same", 1, 1);
 				KingdomSealRecord retired = KingdomSealRules.WithRetirement(living);
 				string failure;
-				Assert.IsTrue(store.TryStage(living, out failure), failure);
-				Assert.IsTrue(store.TryStage(retired, out failure), failure);
+				ClassicAssert.IsTrue(store.TryStage(living, out failure), failure);
+				ClassicAssert.IsTrue(store.TryStage(retired, out failure), failure);
 
-				Assert.IsFalse(store.TryAdvanceGeneration(retired,
+				ClassicAssert.IsFalse(store.TryAdvanceGeneration(retired,
 					StageRecord("dynasty", "legacy-one", "game-same", 2, 3), out failure));
-				Assert.IsFalse(store.TryAdvanceGeneration(retired,
+				ClassicAssert.IsFalse(store.TryAdvanceGeneration(retired,
 					StageRecord("dynasty", "legacy-three", "game-same", 3, 3), out failure));
-				Assert.IsFalse(store.TryAdvanceGeneration(retired,
+				ClassicAssert.IsFalse(store.TryAdvanceGeneration(retired,
 					StageRecord("dynasty", "legacy-two", "game-same", 2, 4), out failure));
-				Assert.IsFalse(store.TryAdvanceGeneration(retired,
+				ClassicAssert.IsFalse(store.TryAdvanceGeneration(retired,
 					StageRecord("other", "legacy-two", "game-same", 2, 3), out failure));
-				Assert.IsFalse(store.TryAdvanceGeneration(retired,
+				ClassicAssert.IsFalse(store.TryAdvanceGeneration(retired,
 					StageRecord("dynasty", "legacy-two", "game-other", 2, 3), out failure));
 				KingdomSealRecord terminal = KingdomSealRules.WithTerminalCause(living, "fell", "combat", 9);
-				Assert.IsFalse(store.TryAdvanceGeneration(terminal,
+				ClassicAssert.IsFalse(store.TryAdvanceGeneration(terminal,
 					StageRecord("dynasty", "legacy-two", "game-same", 2, 3), out failure));
 
 				KingdomSealRecord successor = StageRecord("dynasty", "legacy-two", "game-same", 2, 3);
-				Assert.IsTrue(store.TryAdvanceGeneration(retired, successor, out failure), failure);
-				Assert.AreEqual(2, store.ReadStage("game-same").Generation);
+				ClassicAssert.IsTrue(store.TryAdvanceGeneration(retired, successor, out failure), failure);
+				ClassicAssert.AreEqual(2, store.ReadStage("game-same").Generation);
 			}
 			finally
 			{
@@ -520,12 +521,12 @@ namespace ThousandAndFirst.Tests
 				KingdomSealRecord saved = StageRecord("dynasty", "legacy-one", "game-same", 1, 2);
 				KingdomSealRecord successor = StageRecord("dynasty", "legacy-two", "game-same", 2, 3);
 				string failure;
-				Assert.IsTrue(store.TryStage(saved, out failure), failure);
-				Assert.IsTrue(store.TryAdvanceGeneration(saved, successor, out failure), failure);
-				Assert.IsTrue(store.TryRestoreLivingGeneration(saved, out failure), failure);
-				Assert.IsTrue(store.TryRestoreLivingGeneration(saved, out failure), failure);
-				Assert.AreEqual(saved.Compose(), ReadRecord(store.StagePath("game-same", 'a')).Compose());
-				Assert.AreEqual(saved.Compose(), ReadRecord(store.StagePath("game-same", 'b')).Compose());
+				ClassicAssert.IsTrue(store.TryStage(saved, out failure), failure);
+				ClassicAssert.IsTrue(store.TryAdvanceGeneration(saved, successor, out failure), failure);
+				ClassicAssert.IsTrue(store.TryRestoreLivingGeneration(saved, out failure), failure);
+				ClassicAssert.IsTrue(store.TryRestoreLivingGeneration(saved, out failure), failure);
+				ClassicAssert.AreEqual(saved.Compose(), ReadRecord(store.StagePath("game-same", 'a')).Compose());
+				ClassicAssert.AreEqual(saved.Compose(), ReadRecord(store.StagePath("game-same", 'b')).Compose());
 			}
 			finally
 			{
@@ -543,18 +544,18 @@ namespace ThousandAndFirst.Tests
 				KingdomSealRecord saved = StageRecord("dynasty", "legacy-one", "game-same", 1, 2);
 				KingdomSealRecord successor = StageRecord("dynasty", "legacy-two", "game-same", 2, 3);
 				string failure;
-				Assert.IsTrue(normal.TryStage(saved, out failure), failure);
-				Assert.IsTrue(normal.TryAdvanceGeneration(saved, successor, out failure), failure);
+				ClassicAssert.IsTrue(normal.TryStage(saved, out failure), failure);
+				ClassicAssert.IsTrue(normal.TryAdvanceGeneration(saved, successor, out failure), failure);
 
 				KingdomSealStore failing = new KingdomSealStore(root, new FailingReplaceFileOps(2));
-				Assert.IsFalse(failing.TryRestoreLivingGeneration(saved, out failure));
-				Assert.AreEqual("legacy-two", normal.ReadStage("game-same").LegacyId);
-				Assert.IsTrue(normal.TryRestoreLivingGeneration(saved, out failure), failure);
+				ClassicAssert.IsFalse(failing.TryRestoreLivingGeneration(saved, out failure));
+				ClassicAssert.AreEqual("legacy-two", normal.ReadStage("game-same").LegacyId);
+				ClassicAssert.IsTrue(normal.TryRestoreLivingGeneration(saved, out failure), failure);
 
 				KingdomSealRecord terminal = KingdomSealRules.WithTerminalCause(saved, "fell", "combat", 9);
-				Assert.IsTrue(normal.TryStage(terminal, out failure), failure);
-				Assert.IsFalse(normal.TryRestoreLivingGeneration(saved, out failure));
-				Assert.AreEqual(KingdomSealStatus.Terminal, normal.ReadStage("game-same").Status);
+				ClassicAssert.IsTrue(normal.TryStage(terminal, out failure), failure);
+				ClassicAssert.IsFalse(normal.TryRestoreLivingGeneration(saved, out failure));
+				ClassicAssert.AreEqual(KingdomSealStatus.Terminal, normal.ReadStage("game-same").Status);
 			}
 			finally
 			{
@@ -573,20 +574,20 @@ namespace ThousandAndFirst.Tests
 				KingdomSealRecord saved = StageRecord("dynasty", "legacy-one", "game-same", 1, 2);
 				string failure;
 				KingdomSealStore newer = new KingdomSealStore(newerRoot);
-				Assert.IsTrue(newer.TryStage(StageRecord("dynasty", "legacy-four", "game-same", 4, 8), out failure), failure);
-				Assert.IsTrue(newer.TryRestoreLivingGeneration(saved, out failure), failure);
-				Assert.AreEqual(saved.Compose(), ReadRecord(newer.StagePath("game-same", 'a')).Compose());
-				Assert.AreEqual(saved.Compose(), ReadRecord(newer.StagePath("game-same", 'b')).Compose());
+				ClassicAssert.IsTrue(newer.TryStage(StageRecord("dynasty", "legacy-four", "game-same", 4, 8), out failure), failure);
+				ClassicAssert.IsTrue(newer.TryRestoreLivingGeneration(saved, out failure), failure);
+				ClassicAssert.AreEqual(saved.Compose(), ReadRecord(newer.StagePath("game-same", 'a')).Compose());
+				ClassicAssert.AreEqual(saved.Compose(), ReadRecord(newer.StagePath("game-same", 'b')).Compose());
 
 				KingdomSealStore collision = new KingdomSealStore(collisionRoot);
-				Assert.IsTrue(collision.TryStage(StageRecord("dynasty", "legacy-other", "game-same", 1, 2), out failure), failure);
-				Assert.IsFalse(collision.TryRestoreLivingGeneration(saved, out failure));
+				ClassicAssert.IsTrue(collision.TryStage(StageRecord("dynasty", "legacy-other", "game-same", 1, 2), out failure), failure);
+				ClassicAssert.IsFalse(collision.TryRestoreLivingGeneration(saved, out failure));
 
 				KingdomSealStore malformed = new KingdomSealStore(malformedRoot);
-				Assert.IsTrue(malformed.TryStage(StageRecord("dynasty", "legacy-three", "game-same", 3, 6), out failure), failure);
+				ClassicAssert.IsTrue(malformed.TryStage(StageRecord("dynasty", "legacy-three", "game-same", 3, 6), out failure), failure);
 				File.WriteAllText(malformed.StagePath("game-same", 'b'),
 					StageRecord("dynasty", "legacy-five", "game-same", 5, 8).Compose());
-				Assert.IsFalse(malformed.TryRestoreLivingGeneration(saved, out failure));
+				ClassicAssert.IsFalse(malformed.TryRestoreLivingGeneration(saved, out failure));
 			}
 			finally
 			{
@@ -609,24 +610,24 @@ namespace ThousandAndFirst.Tests
 				KingdomSealRecord successor = StageRecord("dynasty", "legacy-next", "game-same", 2, 4);
 				KingdomSealStore normal = new KingdomSealStore(root);
 				string failure;
-				Assert.IsTrue(normal.TryStage(living, out failure), failure);
-				Assert.IsTrue(normal.TryStage(retired, out failure), failure);
-				Assert.IsTrue(normal.TryWriteLegacy(promoted, out failure), failure);
-				Assert.IsFalse(new KingdomSealStore(root, new FailingReplaceFileOps(2))
+				ClassicAssert.IsTrue(normal.TryStage(living, out failure), failure);
+				ClassicAssert.IsTrue(normal.TryStage(retired, out failure), failure);
+				ClassicAssert.IsTrue(normal.TryWriteLegacy(promoted, out failure), failure);
+				ClassicAssert.IsFalse(new KingdomSealStore(root, new FailingReplaceFileOps(2))
 					.TryAdvanceGeneration(retired, successor, out failure));
-				Assert.AreEqual("legacy-next", normal.ReadStage("game-same").LegacyId);
+				ClassicAssert.AreEqual("legacy-next", normal.ReadStage("game-same").LegacyId);
 
 				KingdomSealLineage saved = new KingdomSealLineage(retired.LineageId,
 					retired.LegacyId, retired.OriginGameId, retired.Generation, retired.Revision);
-				Assert.IsTrue(normal.TryRestoreRetiredGeneration(saved, out failure), failure);
-				Assert.IsTrue(normal.TryRestoreRetiredGeneration(saved, out failure), failure);
-				Assert.AreEqual(retired.Compose(), ReadRecord(normal.StagePath("game-same", 'a')).Compose());
-				Assert.AreEqual(retired.Compose(), ReadRecord(normal.StagePath("game-same", 'b')).Compose());
+				ClassicAssert.IsTrue(normal.TryRestoreRetiredGeneration(saved, out failure), failure);
+				ClassicAssert.IsTrue(normal.TryRestoreRetiredGeneration(saved, out failure), failure);
+				ClassicAssert.AreEqual(retired.Compose(), ReadRecord(normal.StagePath("game-same", 'a')).Compose());
+				ClassicAssert.AreEqual(retired.Compose(), ReadRecord(normal.StagePath("game-same", 'b')).Compose());
 
 				KingdomSealStore noProof = new KingdomSealStore(noProofRoot);
-				Assert.IsTrue(noProof.TryStage(living, out failure), failure);
-				Assert.IsTrue(noProof.TryStage(retired, out failure), failure);
-				Assert.IsFalse(noProof.TryRestoreRetiredGeneration(saved, out failure));
+				ClassicAssert.IsTrue(noProof.TryStage(living, out failure), failure);
+				ClassicAssert.IsTrue(noProof.TryStage(retired, out failure), failure);
+				ClassicAssert.IsFalse(noProof.TryRestoreRetiredGeneration(saved, out failure));
 			}
 			finally
 			{
@@ -645,18 +646,18 @@ namespace ThousandAndFirst.Tests
 				string failure;
 				KingdomSealRecord founder = PromotedRecord("dynasty", "legacy-founder", "game-founder", 0, 1);
 				KingdomSealRecord heir = PromotedRecord("dynasty", "legacy-heir", "game-heir", 1, 1);
-				Assert.IsTrue(store.TryWriteLegacy(founder, out failure), failure);
-				Assert.IsTrue(store.TryWriteLegacy(heir, out failure), failure);
-				Assert.IsTrue(File.Exists(store.LegacyPath("legacy-founder")));
-				Assert.IsTrue(File.Exists(store.LegacyPath("legacy-heir")));
-				Assert.IsFalse(File.Exists(store.LegacyPath("dynasty")));
+				ClassicAssert.IsTrue(store.TryWriteLegacy(founder, out failure), failure);
+				ClassicAssert.IsTrue(store.TryWriteLegacy(heir, out failure), failure);
+				ClassicAssert.IsTrue(File.Exists(store.LegacyPath("legacy-founder")));
+				ClassicAssert.IsTrue(File.Exists(store.LegacyPath("legacy-heir")));
+				ClassicAssert.IsFalse(File.Exists(store.LegacyPath("dynasty")));
 
 				int refused;
 				List<KingdomSealRecord> records = store.ReadLegacies(out refused);
-				Assert.AreEqual(0, refused);
-				Assert.AreEqual(2, records.Count);
-				Assert.AreEqual("dynasty", records[0].LineageId);
-				Assert.AreEqual("dynasty", records[1].LineageId);
+				ClassicAssert.AreEqual(0, refused);
+				ClassicAssert.AreEqual(2, records.Count);
+				ClassicAssert.AreEqual("dynasty", records[0].LineageId);
+				ClassicAssert.AreEqual("dynasty", records[1].LineageId);
 			}
 			finally
 			{
@@ -689,17 +690,17 @@ namespace ThousandAndFirst.Tests
 				});
 				start.Set();
 				Task.WaitAll(a, b);
-				Assert.AreEqual(1, (first ? 1 : 0) + (second ? 1 : 0));
+				ClassicAssert.AreEqual(1, (first ? 1 : 0) + (second ? 1 : 0));
 
 				KingdomSealStore store = new KingdomSealStore(root);
 				int refused;
 				List<KingdomSealRecord> records = store.ReadLegacies(out refused);
-				Assert.AreEqual(0, refused);
-				Assert.AreEqual(1, records.Count);
+				ClassicAssert.AreEqual(0, refused);
+				ClassicAssert.AreEqual(1, records.Count);
 				KingdomSealRecord winner = first ? one : two;
 				string retryFailure;
-				Assert.IsTrue(store.TryWriteLegacy(winner, out retryFailure), retryFailure);
-				Assert.AreEqual(winner.OriginGameId, records[0].OriginGameId);
+				ClassicAssert.IsTrue(store.TryWriteLegacy(winner, out retryFailure), retryFailure);
+				ClassicAssert.AreEqual(winner.OriginGameId, records[0].OriginGameId);
 			}
 			finally
 			{
@@ -722,20 +723,20 @@ namespace ThousandAndFirst.Tests
 					string failure;
 					return new KingdomSealStore(root, blocking).TryWriteLegacy(one, out failure);
 				});
-				Assert.IsTrue(blocking.Entered.Wait(TimeSpan.FromSeconds(5)),
+				ClassicAssert.IsTrue(blocking.Entered.Wait(TimeSpan.FromSeconds(5)),
 					"first writer never reached its atomic install");
 
 				string secondFailure;
-				Assert.IsFalse(new KingdomSealStore(root).TryWriteLegacy(two, out secondFailure));
+				ClassicAssert.IsFalse(new KingdomSealStore(root).TryWriteLegacy(two, out secondFailure));
 				StringAssert.Contains("publication lock", secondFailure);
 
 				blocking.Release.Set();
-				Assert.IsTrue(first.Wait(TimeSpan.FromSeconds(5)),
+				ClassicAssert.IsTrue(first.Wait(TimeSpan.FromSeconds(5)),
 					"first writer did not leave its atomic install");
-				Assert.IsTrue(first.GetAwaiter().GetResult());
+				ClassicAssert.IsTrue(first.GetAwaiter().GetResult());
 				KingdomSealRecord stored = ReadRecord(
 					new KingdomSealStore(root).LegacyPath("legacy-gate"));
-				Assert.AreEqual(one.OriginGameId, stored.OriginGameId);
+				ClassicAssert.AreEqual(one.OriginGameId, stored.OriginGameId);
 			}
 			finally
 			{
@@ -764,34 +765,34 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ReceiptDeclarationsAndCanonicalWireStayExact()
 		{
-			Assert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomSealReceiptState)));
-			Assert.AreEqual("0:Reserved,1:Committed,2:Declined",
+			ClassicAssert.AreEqual(typeof(int), Enum.GetUnderlyingType(typeof(KingdomSealReceiptState)));
+			ClassicAssert.AreEqual("0:Reserved,1:Committed,2:Declined",
 				string.Join(",", Array.ConvertAll((KingdomSealReceiptState[])Enum.GetValues(
 					typeof(KingdomSealReceiptState)), value => ((int)value) + ":" + value)));
 
 			Type receiptType = typeof(KingdomSealReceipt);
-			Assert.IsTrue(receiptType.IsNotPublic);
-			Assert.IsTrue(receiptType.IsSealed);
+			ClassicAssert.IsTrue(receiptType.IsNotPublic);
+			ClassicAssert.IsTrue(receiptType.IsSealed);
 			string[] fields = new string[]
 				{ "LineageId", "LegacyId", "TargetGameId", "State", "WrittenTick" };
 			Type[] fieldTypes = new Type[]
 				{ typeof(string), typeof(string), typeof(string), typeof(KingdomSealReceiptState), typeof(long) };
-			Assert.AreEqual(fields.Length, receiptType.GetFields(
+			ClassicAssert.AreEqual(fields.Length, receiptType.GetFields(
 				System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public).Length);
 			for (int i = 0; i < fields.Length; i++)
 			{
 				System.Reflection.FieldInfo field = receiptType.GetField(fields[i],
 					System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
-				Assert.IsNotNull(field, fields[i]);
-				Assert.AreEqual(fieldTypes[i], field.FieldType, fields[i]);
+				ClassicAssert.IsNotNull(field, fields[i]);
+				ClassicAssert.AreEqual(fieldTypes[i], field.FieldType, fields[i]);
 			}
 
 			KingdomSealReceipt defaults = new KingdomSealReceipt();
-			Assert.AreEqual("", defaults.LineageId);
-			Assert.AreEqual("", defaults.LegacyId);
-			Assert.AreEqual("", defaults.TargetGameId);
-			Assert.AreEqual(KingdomSealReceiptState.Reserved, defaults.State);
-			Assert.AreEqual(0L, defaults.WrittenTick);
+			ClassicAssert.AreEqual("", defaults.LineageId);
+			ClassicAssert.AreEqual("", defaults.LegacyId);
+			ClassicAssert.AreEqual("", defaults.TargetGameId);
+			ClassicAssert.AreEqual(KingdomSealReceiptState.Reserved, defaults.State);
+			ClassicAssert.AreEqual(0L, defaults.WrittenTick);
 
 			KingdomSealReceipt receipt = new KingdomSealReceipt
 			{
@@ -802,21 +803,21 @@ namespace ThousandAndFirst.Tests
 				WrittenTick = 1
 			};
 			const string expected = "taf-seal 6\nsha256 41e278d968db5766d26f22cdda991100d8c35734eefd1c551922a2c6c23911df\nlength 105\n{\"kind\":\"receipt\",\"lineage\":\"dynasty\",\"legacy\":\"legacy\",\"target\":\"target\",\"state\":\"reserved\",\"written\":1}\n";
-			Assert.AreEqual(expected, receipt.Compose());
+			ClassicAssert.AreEqual(expected, receipt.Compose());
 
 			KingdomSealReceipt parsed;
 			const string schemaFive = "taf-seal 5\nsha256 41e278d968db5766d26f22cdda991100d8c35734eefd1c551922a2c6c23911df\nlength 105\n{\"kind\":\"receipt\",\"lineage\":\"dynasty\",\"legacy\":\"legacy\",\"target\":\"target\",\"state\":\"reserved\",\"written\":1}\n";
-			Assert.IsTrue(KingdomSealReceipt.TryParse(schemaFive, out parsed));
-			Assert.AreEqual(schemaFive, parsed.Compose());
+			ClassicAssert.IsTrue(KingdomSealReceipt.TryParse(schemaFive, out parsed));
+			ClassicAssert.AreEqual(schemaFive, parsed.Compose());
 			const string schemaFour = "taf-seal 4\nsha256 41e278d968db5766d26f22cdda991100d8c35734eefd1c551922a2c6c23911df\nlength 105\n{\"kind\":\"receipt\",\"lineage\":\"dynasty\",\"legacy\":\"legacy\",\"target\":\"target\",\"state\":\"reserved\",\"written\":1}\n";
-			Assert.IsTrue(KingdomSealReceipt.TryParse(schemaFour,
+			ClassicAssert.IsTrue(KingdomSealReceipt.TryParse(schemaFour,
 				out KingdomSealReceipt schemaFourParsed));
-			Assert.AreEqual(schemaFour, schemaFourParsed.Compose());
-			Assert.AreEqual("dynasty", parsed.LineageId);
-			Assert.AreEqual("legacy", parsed.LegacyId);
-			Assert.AreEqual("target", parsed.TargetGameId);
-			Assert.AreEqual(KingdomSealReceiptState.Reserved, parsed.State);
-			Assert.AreEqual(1L, parsed.WrittenTick);
+			ClassicAssert.AreEqual(schemaFour, schemaFourParsed.Compose());
+			ClassicAssert.AreEqual("dynasty", parsed.LineageId);
+			ClassicAssert.AreEqual("legacy", parsed.LegacyId);
+			ClassicAssert.AreEqual("target", parsed.TargetGameId);
+			ClassicAssert.AreEqual(KingdomSealReceiptState.Reserved, parsed.State);
+			ClassicAssert.AreEqual(1L, parsed.WrittenTick);
 		}
 
 		[Test]
@@ -826,16 +827,16 @@ namespace ThousandAndFirst.Tests
 			KingdomSealBody emptyTarget = ReceiptBody("receipt", "", false);
 			KingdomSealBody wrongWritten = ReceiptBody("receipt", "target", true);
 			KingdomSealReceipt receipt;
-			Assert.IsFalse(KingdomSealReceipt.TryParse(KingdomSealFormat.Compose(
+			ClassicAssert.IsFalse(KingdomSealReceipt.TryParse(KingdomSealFormat.Compose(
 				KingdomSealRecord.CurrentSchema, wrongKind), out receipt));
-			Assert.IsFalse(KingdomSealReceipt.TryParse(KingdomSealFormat.Compose(
+			ClassicAssert.IsFalse(KingdomSealReceipt.TryParse(KingdomSealFormat.Compose(
 				KingdomSealRecord.CurrentSchema, emptyTarget), out receipt));
-			Assert.IsFalse(KingdomSealReceipt.TryParse(KingdomSealFormat.Compose(
+			ClassicAssert.IsFalse(KingdomSealReceipt.TryParse(KingdomSealFormat.Compose(
 				KingdomSealRecord.CurrentSchema, wrongWritten), out receipt));
-			Assert.IsTrue(KingdomSealReceipt.ValidId("safe-ID_2"));
-			Assert.IsFalse(KingdomSealReceipt.ValidId("unsafe.id"));
-			Assert.IsFalse(KingdomSealReceipt.ValidId("unsafe:id"));
-			Assert.IsFalse(KingdomSealReceipt.ValidId("trailing."));
+			ClassicAssert.IsTrue(KingdomSealReceipt.ValidId("safe-ID_2"));
+			ClassicAssert.IsFalse(KingdomSealReceipt.ValidId("unsafe.id"));
+			ClassicAssert.IsFalse(KingdomSealReceipt.ValidId("unsafe:id"));
+			ClassicAssert.IsFalse(KingdomSealReceipt.ValidId("trailing."));
 		}
 
 		[Test]
@@ -846,16 +847,16 @@ namespace ThousandAndFirst.Tests
 			{
 				KingdomSealStore store = new KingdomSealStore(root);
 				string failure;
-				Assert.IsFalse(store.TryStage(
+				ClassicAssert.IsFalse(store.TryStage(
 					StageRecord("dynasty", "legacy-safe", "game.aliased", 1, 1), out failure));
-				Assert.IsFalse(store.TryWriteLegacy(
+				ClassicAssert.IsFalse(store.TryWriteLegacy(
 					PromotedRecord("dynasty", "legacy.aliased", "game-safe", 1, 1), out failure));
 
 				KingdomSealRecord safe = PromotedRecord("dynasty", "legacy-safe", "game-safe", 1, 1);
-				Assert.IsTrue(store.TryWriteLegacy(safe, out failure), failure);
+				ClassicAssert.IsTrue(store.TryWriteLegacy(safe, out failure), failure);
 				KingdomSealReceipt receipt;
 				KingdomSealReservationLease lease;
-				Assert.IsFalse(store.TryClaimReservation(safe, "target:stream", 1,
+				ClassicAssert.IsFalse(store.TryClaimReservation(safe, "target:stream", 1,
 					out receipt, out lease, out failure));
 			}
 			finally
@@ -876,9 +877,9 @@ namespace ThousandAndFirst.Tests
 				Directory.CreateDirectory(rootTarget);
 				if (!TryDirectoryLink(rootLink, rootTarget)) return;
 				string failure;
-				Assert.IsFalse(new KingdomSealStore(rootLink).TryStage(
+				ClassicAssert.IsFalse(new KingdomSealStore(rootLink).TryStage(
 					StageRecord("dynasty", "legacy", "game", 1, 1), out failure));
-				Assert.IsFalse(Directory.Exists(Path.Combine(rootTarget,
+				ClassicAssert.IsFalse(Directory.Exists(Path.Combine(rootTarget,
 					KingdomSealStore.StagesFolder)));
 				DeleteLink(rootLink);
 
@@ -892,23 +893,23 @@ namespace ThousandAndFirst.Tests
 					Directory.CreateDirectory(root);
 					Directory.CreateDirectory(target);
 					string link = Path.Combine(root, folders[i]);
-					Assert.IsTrue(TryDirectoryLink(link, target));
+					ClassicAssert.IsTrue(TryDirectoryLink(link, target));
 					KingdomSealStore store = new KingdomSealStore(root);
 					if (folders[i] == KingdomSealStore.StagesFolder)
 					{
-						Assert.IsFalse(store.TryStage(StageRecord("dynasty", "legacy", "game", 1, 1),
+						ClassicAssert.IsFalse(store.TryStage(StageRecord("dynasty", "legacy", "game", 1, 1),
 							out failure));
 					}
 					else if (folders[i] == KingdomSealStore.LegaciesFolder)
 					{
-						Assert.IsFalse(store.TryWriteLegacy(PromotedRecord("dynasty", "legacy", "game", 1, 1),
+						ClassicAssert.IsFalse(store.TryWriteLegacy(PromotedRecord("dynasty", "legacy", "game", 1, 1),
 							out failure));
 					}
 					else
 					{
 						int refused;
 						store.ReadReceipts(out refused);
-						if (folders[i] == KingdomSealStore.ReceiptsFolder) Assert.Greater(refused, 0);
+						if (folders[i] == KingdomSealStore.ReceiptsFolder) ClassicAssert.Greater(refused, 0);
 						else
 						{
 							KingdomSealRecord legacy = PromotedRecord("dynasty", "legacy", "game", 1, 1);
@@ -916,11 +917,11 @@ namespace ThousandAndFirst.Tests
 							File.WriteAllText(store.LegacyPath("legacy"), legacy.Compose());
 							KingdomSealReceipt receipt;
 							KingdomSealReservationLease lease;
-							Assert.IsFalse(store.TryClaimReservation(legacy, "target", 1,
+							ClassicAssert.IsFalse(store.TryClaimReservation(legacy, "target", 1,
 								out receipt, out lease, out failure));
 						}
 					}
-					Assert.AreEqual(0, Directory.GetFileSystemEntries(target).Length);
+					ClassicAssert.AreEqual(0, Directory.GetFileSystemEntries(target).Length);
 					DeleteLink(link);
 					DeleteRoot(root);
 					DeleteRoot(target);
@@ -957,37 +958,37 @@ namespace ThousandAndFirst.Tests
 				string failure;
 				Directory.CreateDirectory(Path.Combine(root, KingdomSealStore.StagesFolder));
 				string stage = store.StagePath("game-stage", 'a');
-				Assert.IsTrue(TryFileLink(stage, target));
-				Assert.IsFalse(store.TryStage(StageRecord("dynasty", "legacy-stage", "game-stage", 1, 1),
+				ClassicAssert.IsTrue(TryFileLink(stage, target));
+				ClassicAssert.IsFalse(store.TryStage(StageRecord("dynasty", "legacy-stage", "game-stage", 1, 1),
 					out failure));
-				Assert.IsNull(store.ReadStage("game-stage"));
+				ClassicAssert.IsNull(store.ReadStage("game-stage"));
 				int refused;
 				store.StagedOrigins(out refused);
-				Assert.Greater(refused, 0);
+				ClassicAssert.Greater(refused, 0);
 				DeleteLink(stage);
 
 				string stageLock = Path.Combine(root, KingdomSealStore.StagesFolder,
 					".journal-game-lock.lock");
-				Assert.IsTrue(TryFileLink(stageLock, target));
-				Assert.IsFalse(store.TryStage(StageRecord("dynasty", "legacy-lock", "game-lock", 1, 1),
+				ClassicAssert.IsTrue(TryFileLink(stageLock, target));
+				ClassicAssert.IsFalse(store.TryStage(StageRecord("dynasty", "legacy-lock", "game-lock", 1, 1),
 					out failure));
 				DeleteLink(stageLock);
 
 				Directory.CreateDirectory(Path.Combine(root, KingdomSealStore.LegaciesFolder));
 				string legacyLeaf = store.LegacyPath("legacy-leaf");
-				Assert.IsTrue(TryFileLink(legacyLeaf, target));
-				Assert.IsFalse(store.TryWriteLegacy(PromotedRecord("dynasty", "legacy-leaf", "game", 1, 1),
+				ClassicAssert.IsTrue(TryFileLink(legacyLeaf, target));
+				ClassicAssert.IsFalse(store.TryWriteLegacy(PromotedRecord("dynasty", "legacy-leaf", "game", 1, 1),
 					out failure));
 				DeleteLink(legacyLeaf);
 
 				KingdomSealRecord legacy = PromotedRecord("dynasty", "legacy-good", "game", 1, 1);
-				Assert.IsTrue(store.TryWriteLegacy(legacy, out failure), failure);
+				ClassicAssert.IsTrue(store.TryWriteLegacy(legacy, out failure), failure);
 				Directory.CreateDirectory(Path.Combine(root, KingdomSealStore.ReceiptsFolder));
 				string receiptLeaf = store.ReceiptPath("legacy-good", "target-receipt");
-				Assert.IsTrue(TryFileLink(receiptLeaf, target));
+				ClassicAssert.IsTrue(TryFileLink(receiptLeaf, target));
 				KingdomSealReceipt receipt;
 				KingdomSealReservationLease lease;
-				Assert.IsFalse(store.TryClaimReservation(legacy, "target-receipt", 1,
+				ClassicAssert.IsFalse(store.TryClaimReservation(legacy, "target-receipt", 1,
 					out receipt, out lease, out failure));
 				DeleteLink(receiptLeaf);
 
@@ -995,21 +996,21 @@ namespace ThousandAndFirst.Tests
 				// The preceding claim safely created the ordinary persistent mutex leaf before it
 				// rejected the redirected receipt. Remove that regular test-owned leaf so this
 				// next case can independently replace the same pathname with a hostile link.
-				Assert.IsTrue(File.Exists(receiptLock));
-				Assert.IsFalse((File.GetAttributes(receiptLock) & FileAttributes.ReparsePoint) != 0);
+				ClassicAssert.IsTrue(File.Exists(receiptLock));
+				ClassicAssert.IsFalse((File.GetAttributes(receiptLock) & FileAttributes.ReparsePoint) != 0);
 				File.Delete(receiptLock);
-				Assert.IsTrue(TryFileLink(receiptLock, target));
-				Assert.IsFalse(store.TryClaimReservation(legacy, "target-lock", 1,
+				ClassicAssert.IsTrue(TryFileLink(receiptLock, target));
+				ClassicAssert.IsFalse(store.TryClaimReservation(legacy, "target-lock", 1,
 					out receipt, out lease, out failure));
 				DeleteLink(receiptLock);
 
 				Directory.CreateDirectory(Path.Combine(root, KingdomSealStore.ClaimsFolder));
 				string claimLeaf = Path.Combine(root, KingdomSealStore.ClaimsFolder,
 					Path.GetFileName(store.ReceiptPath("legacy-good", "target-live")) + ".live");
-				Assert.IsTrue(TryFileLink(claimLeaf, target));
-				Assert.IsFalse(store.TryClaimReservation(legacy, "target-live", 1,
+				ClassicAssert.IsTrue(TryFileLink(claimLeaf, target));
+				ClassicAssert.IsFalse(store.TryClaimReservation(legacy, "target-live", 1,
 					out receipt, out lease, out failure));
-				Assert.AreEqual("untouched", File.ReadAllText(target));
+				ClassicAssert.AreEqual("untouched", File.ReadAllText(target));
 				DeleteLink(claimLeaf);
 			}
 			finally
@@ -1038,17 +1039,17 @@ namespace ThousandAndFirst.Tests
 				File.WriteAllText(store.ReceiptPath("legacy-filename", "target-body"), receipt.Compose());
 				File.WriteAllText(Path.Combine(root, KingdomSealStore.ReceiptsFolder, "bad-tuple.receipt"), receipt.Compose());
 				int refused;
-				Assert.AreEqual(0, store.ReadReceipts(out refused).Count);
-				Assert.AreEqual(2, refused);
+				ClassicAssert.AreEqual(0, store.ReadReceipts(out refused).Count);
+				ClassicAssert.AreEqual(2, refused);
 
 				KingdomSealRecord legacy = PromotedRecord("dynasty", "legacy-new", "game-new", 1, 1);
 				string failure;
-				Assert.IsTrue(store.TryWriteLegacy(legacy, out failure), failure);
+				ClassicAssert.IsTrue(store.TryWriteLegacy(legacy, out failure), failure);
 				KingdomSealReceipt claimed;
 				KingdomSealReservationLease lease;
-				Assert.IsFalse(store.TryClaimReservation(legacy, "target-new", 1,
+				ClassicAssert.IsFalse(store.TryClaimReservation(legacy, "target-new", 1,
 					out claimed, out lease, out failure));
-				Assert.IsTrue(failure.Length > 0);
+				ClassicAssert.IsTrue(failure.Length > 0);
 			}
 			finally
 			{
@@ -1069,8 +1070,8 @@ namespace ThousandAndFirst.Tests
 					File.WriteAllText(Path.Combine(receipts, "malformed-" + i + ".receipt"), "not a seal");
 				}
 				int refused;
-				Assert.AreEqual(0, new KingdomSealStore(root).ReadReceipts(out refused).Count);
-				Assert.Greater(refused, KingdomSealStore.MaxFilesScanned);
+				ClassicAssert.AreEqual(0, new KingdomSealStore(root).ReadReceipts(out refused).Count);
+				ClassicAssert.Greater(refused, KingdomSealStore.MaxFilesScanned);
 			}
 			finally
 			{
@@ -1086,7 +1087,7 @@ namespace ThousandAndFirst.Tests
 			{
 				KingdomSealRecord legacy = PromotedRecord("dynasty", "legacy-claim", "game-origin", 1, 1);
 				string failure;
-				Assert.IsTrue(new KingdomSealStore(root).TryWriteLegacy(legacy, out failure), failure);
+				ClassicAssert.IsTrue(new KingdomSealStore(root).TryWriteLegacy(legacy, out failure), failure);
 				ManualResetEventSlim start = new ManualResetEventSlim(false);
 				bool first = false;
 				bool second = false;
@@ -1110,20 +1111,20 @@ namespace ThousandAndFirst.Tests
 				});
 				start.Set();
 				Task.WaitAll(a, b);
-				Assert.AreEqual(1, (first ? 1 : 0) + (second ? 1 : 0));
+				ClassicAssert.AreEqual(1, (first ? 1 : 0) + (second ? 1 : 0));
 
 				string winner = first ? "target-one" : "target-two";
 				string loser = first ? "target-two" : "target-one";
 				(first ? firstLease : secondLease).Dispose();
 				KingdomSealReceipt retried;
 				KingdomSealReservationLease retryLease;
-				Assert.IsTrue(new KingdomSealStore(root).TryClaimReservation(legacy, winner, 2,
+				ClassicAssert.IsTrue(new KingdomSealStore(root).TryClaimReservation(legacy, winner, 2,
 					out retried, out retryLease, out failure), failure);
-				Assert.AreEqual(KingdomSealReceiptState.Reserved, retried.State);
+				ClassicAssert.AreEqual(KingdomSealReceiptState.Reserved, retried.State);
 				KingdomSealReservationLease loserLease;
-				Assert.IsFalse(new KingdomSealStore(root).TryClaimReservation(legacy, loser, 2,
+				ClassicAssert.IsFalse(new KingdomSealStore(root).TryClaimReservation(legacy, loser, 2,
 					out retried, out loserLease, out failure));
-				Assert.AreEqual(1, new KingdomSealStore(root).ReadReceipts().Count);
+				ClassicAssert.AreEqual(1, new KingdomSealStore(root).ReadReceipts().Count);
 				retryLease.Dispose();
 			}
 			finally
@@ -1141,26 +1142,26 @@ namespace ThousandAndFirst.Tests
 				KingdomSealStore store = new KingdomSealStore(root);
 				KingdomSealRecord legacy = PromotedRecord("dynasty", "legacy-used", "game-origin", 1, 1);
 				string failure;
-				Assert.IsTrue(store.TryWriteLegacy(legacy, out failure), failure);
+				ClassicAssert.IsTrue(store.TryWriteLegacy(legacy, out failure), failure);
 				KingdomSealReceipt reserved;
 				KingdomSealReservationLease lease;
-				Assert.IsTrue(store.TryClaimReservation(legacy, "target", 1,
+				ClassicAssert.IsTrue(store.TryClaimReservation(legacy, "target", 1,
 					out reserved, out lease, out failure), failure);
-				Assert.IsFalse(store.SpentLegacyIds().Contains("legacy-used"));
+				ClassicAssert.IsFalse(store.SpentLegacyIds().Contains("legacy-used"));
 
 				KingdomSealReceipt requested = CopyReceipt(reserved, KingdomSealReceiptState.Committed, 2);
-				Assert.IsFalse(store.TryWriteReceipt(requested, out failure));
+				ClassicAssert.IsFalse(store.TryWriteReceipt(requested, out failure));
 				KingdomSealReceipt committed;
-				Assert.IsTrue(store.TryCommitReservation(reserved, lease, 2,
+				ClassicAssert.IsTrue(store.TryCommitReservation(reserved, lease, 2,
 					out committed, out failure), failure);
-				Assert.IsFalse(lease.IsHeld);
+				ClassicAssert.IsFalse(lease.IsHeld);
 				KingdomSealReceipt inspected;
-				Assert.IsTrue(store.TryInspectReceipt(reserved, out inspected, out failure), failure);
-				Assert.AreEqual(committed.Compose(), inspected.Compose());
-				Assert.IsTrue(store.SpentLegacyIds().Contains("legacy-used"));
-				Assert.IsFalse(store.SpentLegacyIds().Contains("dynasty"));
-				Assert.IsFalse(store.TryWriteReceipt(CopyReceipt(reserved, KingdomSealReceiptState.Reserved, 3), out failure));
-				Assert.AreEqual(KingdomSealReceiptState.Committed, store.ReadReceipts()[0].State);
+				ClassicAssert.IsTrue(store.TryInspectReceipt(reserved, out inspected, out failure), failure);
+				ClassicAssert.AreEqual(committed.Compose(), inspected.Compose());
+				ClassicAssert.IsTrue(store.SpentLegacyIds().Contains("legacy-used"));
+				ClassicAssert.IsFalse(store.SpentLegacyIds().Contains("dynasty"));
+				ClassicAssert.IsFalse(store.TryWriteReceipt(CopyReceipt(reserved, KingdomSealReceiptState.Reserved, 3), out failure));
+				ClassicAssert.AreEqual(KingdomSealReceiptState.Committed, store.ReadReceipts()[0].State);
 			}
 			finally
 			{
@@ -1177,26 +1178,26 @@ namespace ThousandAndFirst.Tests
 				KingdomSealStore store = new KingdomSealStore(root);
 				KingdomSealRecord legacy = PromotedRecord("dynasty", "legacy-release", "game-origin", 1, 1);
 				string failure;
-				Assert.IsTrue(store.TryWriteLegacy(legacy, out failure), failure);
+				ClassicAssert.IsTrue(store.TryWriteLegacy(legacy, out failure), failure);
 				KingdomSealReceipt reserved;
 				KingdomSealReservationLease lease;
-				Assert.IsTrue(store.TryClaimReservation(legacy, "target-one", 1,
+				ClassicAssert.IsTrue(store.TryClaimReservation(legacy, "target-one", 1,
 					out reserved, out lease, out failure), failure);
-				Assert.IsFalse(store.TryReleaseReservation(
+				ClassicAssert.IsFalse(store.TryReleaseReservation(
 					CopyReceipt(reserved, KingdomSealReceiptState.Reserved, 2), lease, out failure));
-				Assert.IsTrue(store.TryReleaseReservation(reserved, lease, out failure), failure);
-				Assert.IsTrue(store.TryReleaseReservation(reserved, out failure), failure);
-				Assert.AreEqual(0, store.ReadReceipts().Count);
+				ClassicAssert.IsTrue(store.TryReleaseReservation(reserved, lease, out failure), failure);
+				ClassicAssert.IsTrue(store.TryReleaseReservation(reserved, out failure), failure);
+				ClassicAssert.AreEqual(0, store.ReadReceipts().Count);
 
 				KingdomSealReceipt reclaimed;
 				KingdomSealReservationLease reclaimedLease;
-				Assert.IsTrue(store.TryClaimReservation(legacy, "target-two", 3,
+				ClassicAssert.IsTrue(store.TryClaimReservation(legacy, "target-two", 3,
 					out reclaimed, out reclaimedLease, out failure), failure);
 				KingdomSealReceipt committed;
-				Assert.IsTrue(store.TryCommitReservation(reclaimed, reclaimedLease, 4,
+				ClassicAssert.IsTrue(store.TryCommitReservation(reclaimed, reclaimedLease, 4,
 					out committed, out failure), failure);
-				Assert.IsFalse(store.TryReleaseReservation(reclaimed, out failure));
-				Assert.AreEqual(KingdomSealReceiptState.Committed, store.ReadReceipts()[0].State);
+				ClassicAssert.IsFalse(store.TryReleaseReservation(reclaimed, out failure));
+				ClassicAssert.AreEqual(KingdomSealReceiptState.Committed, store.ReadReceipts()[0].State);
 			}
 			finally
 			{
@@ -1213,30 +1214,30 @@ namespace ThousandAndFirst.Tests
 				KingdomSealStore store = new KingdomSealStore(root);
 				KingdomSealRecord legacy = PromotedRecord("dynasty", "legacy-live", "game-origin", 1, 1);
 				string failure;
-				Assert.IsTrue(store.TryWriteLegacy(legacy, out failure), failure);
+				ClassicAssert.IsTrue(store.TryWriteLegacy(legacy, out failure), failure);
 				KingdomSealReceipt reserved;
 				KingdomSealReservationLease lease;
-				Assert.IsTrue(store.TryClaimReservation(legacy, "target-live", 1,
+				ClassicAssert.IsTrue(store.TryClaimReservation(legacy, "target-live", 1,
 					out reserved, out lease, out failure), failure);
 
 				bool released;
-				Assert.IsTrue(store.TryReleaseAbandonedReservation(reserved,
+				ClassicAssert.IsTrue(store.TryReleaseAbandonedReservation(reserved,
 					out released, out failure), failure);
-				Assert.IsFalse(released);
-				Assert.AreEqual(1, store.ReadReceipts().Count);
-				Assert.IsFalse(store.TryReleaseReservation(reserved, out failure));
+				ClassicAssert.IsFalse(released);
+				ClassicAssert.AreEqual(1, store.ReadReceipts().Count);
+				ClassicAssert.IsFalse(store.TryReleaseReservation(reserved, out failure));
 
 				lease.Dispose();
-				Assert.IsTrue(store.TryReleaseAbandonedReservation(reserved,
+				ClassicAssert.IsTrue(store.TryReleaseAbandonedReservation(reserved,
 					out released, out failure), failure);
-				Assert.IsTrue(released);
-				Assert.AreEqual(0, store.ReadReceipts().Count);
+				ClassicAssert.IsTrue(released);
+				ClassicAssert.AreEqual(0, store.ReadReceipts().Count);
 
 				KingdomSealReceipt reclaimed;
 				KingdomSealReservationLease reclaimedLease;
-				Assert.IsTrue(store.TryClaimReservation(legacy, "target-next", 2,
+				ClassicAssert.IsTrue(store.TryClaimReservation(legacy, "target-next", 2,
 					out reclaimed, out reclaimedLease, out failure), failure);
-				Assert.IsTrue(store.TryReleaseReservation(reclaimed, reclaimedLease,
+				ClassicAssert.IsTrue(store.TryReleaseReservation(reclaimed, reclaimedLease,
 					out failure), failure);
 			}
 			finally
@@ -1254,24 +1255,24 @@ namespace ThousandAndFirst.Tests
 				KingdomSealStore normal = new KingdomSealStore(root);
 				KingdomSealRecord legacy = PromotedRecord("dynasty", "legacy-safe", "game-origin", 1, 1);
 				string failure;
-				Assert.IsTrue(normal.TryWriteLegacy(legacy, out failure), failure);
+				ClassicAssert.IsTrue(normal.TryWriteLegacy(legacy, out failure), failure);
 				KingdomSealReceipt reserved;
 				KingdomSealReservationLease lease;
-				Assert.IsTrue(normal.TryClaimReservation(legacy, "target", 1,
+				ClassicAssert.IsTrue(normal.TryClaimReservation(legacy, "target", 1,
 					out reserved, out lease, out failure), failure);
 
 				KingdomSealStore failing = new KingdomSealStore(root, new FailingReplaceFileOps());
 				KingdomSealReceipt committed;
-				Assert.IsFalse(failing.TryCommitReservation(reserved, lease, 2,
+				ClassicAssert.IsFalse(failing.TryCommitReservation(reserved, lease, 2,
 					out committed, out failure));
 				List<KingdomSealReceipt> receipts = normal.ReadReceipts();
-				Assert.AreEqual(1, receipts.Count);
-				Assert.AreEqual(KingdomSealReceiptState.Reserved, receipts[0].State);
-				Assert.AreEqual("target", receipts[0].TargetGameId);
-				Assert.IsTrue(lease.IsHeld);
-				Assert.IsTrue(normal.TryCommitReservation(reserved, lease, 2,
+				ClassicAssert.AreEqual(1, receipts.Count);
+				ClassicAssert.AreEqual(KingdomSealReceiptState.Reserved, receipts[0].State);
+				ClassicAssert.AreEqual("target", receipts[0].TargetGameId);
+				ClassicAssert.IsTrue(lease.IsHeld);
+				ClassicAssert.IsTrue(normal.TryCommitReservation(reserved, lease, 2,
 					out committed, out failure), failure);
-				Assert.AreEqual(KingdomSealReceiptState.Committed, normal.ReadReceipts()[0].State);
+				ClassicAssert.AreEqual(KingdomSealReceiptState.Committed, normal.ReadReceipts()[0].State);
 			}
 			finally
 			{
@@ -1355,7 +1356,7 @@ namespace ThousandAndFirst.Tests
 			KingdomSealRecord record;
 			KingdomSealFault fault;
 			string detail;
-			Assert.IsTrue(KingdomSealRecord.TryParse(File.ReadAllText(path), out record, out fault, out detail), detail);
+			ClassicAssert.IsTrue(KingdomSealRecord.TryParse(File.ReadAllText(path), out record, out fault, out detail), detail);
 			return record;
 		}
 	}

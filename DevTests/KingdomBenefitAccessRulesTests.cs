@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -11,30 +12,30 @@ namespace ThousandAndFirst.Tests
 		public void ExplicitIngressOpensWholeZoneDesignation()
 		{
 			List<KingdomBenefitCell> cells = Square(3, 3, 1, 0);
-			Assert.IsTrue(KingdomBenefitAccessRules.TryReachable(cells,
+			ClassicAssert.IsTrue(KingdomBenefitAccessRules.TryReachable(cells,
 				(x, y) => x >= 0 && x < 3 && y >= 0 && y < 3, out HashSet<long> reached));
-			Assert.AreEqual(9, reached.Count);
+			ClassicAssert.AreEqual(9, reached.Count);
 		}
 
 		[Test]
 		public void BlockedIngressAndBlockedOutsideFailClosed()
 		{
 			List<KingdomBenefitCell> cells = Square(3, 3, 1, 0);
-			Assert.IsTrue(KingdomBenefitAccessRules.TryReachable(cells,
+			ClassicAssert.IsTrue(KingdomBenefitAccessRules.TryReachable(cells,
 				(x, y) => x >= 0 && x < 3 && y >= 0 && y < 3 && !(x == 1 && y == 0),
 				out HashSet<long> reached));
-			Assert.AreEqual(0, reached.Count);
+			ClassicAssert.AreEqual(0, reached.Count);
 		}
 
 		[Test]
 		public void SolidDividerLeavesProviderSideUnreachable()
 		{
 			List<KingdomBenefitCell> cells = Square(3, 3, 0, 1);
-			Assert.IsTrue(KingdomBenefitAccessRules.TryReachable(cells,
+			ClassicAssert.IsTrue(KingdomBenefitAccessRules.TryReachable(cells,
 				(x, y) => x >= 0 && x < 3 && y >= 0 && y < 3 && x != 1,
 				out HashSet<long> reached));
-			Assert.IsTrue(reached.Contains(KingdomDesignationRules.Pack(0, 1)));
-			Assert.IsFalse(reached.Contains(KingdomDesignationRules.Pack(2, 1)));
+			ClassicAssert.IsTrue(reached.Contains(KingdomDesignationRules.Pack(0, 1)));
+			ClassicAssert.IsFalse(reached.Contains(KingdomDesignationRules.Pack(2, 1)));
 		}
 
 		[Test]
@@ -42,9 +43,9 @@ namespace ThousandAndFirst.Tests
 		{
 			List<KingdomBenefitCell> duplicate = Square(2, 2, 0, 0);
 			duplicate.Add(duplicate[0]);
-			Assert.IsFalse(KingdomBenefitAccessRules.TryReachable(duplicate,
+			ClassicAssert.IsFalse(KingdomBenefitAccessRules.TryReachable(duplicate,
 				(x, y) => true, out HashSet<long> ignored));
-			Assert.IsFalse(KingdomBenefitAccessRules.TryReachable(Square(2, 2, 0, 0),
+			ClassicAssert.IsFalse(KingdomBenefitAccessRules.TryReachable(Square(2, 2, 0, 0),
 				(x, y) => throw new InvalidOperationException(), out ignored));
 		}
 

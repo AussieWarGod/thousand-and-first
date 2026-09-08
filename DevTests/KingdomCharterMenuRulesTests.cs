@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -54,8 +55,8 @@ namespace ThousandAndFirst.Tests
 
 		private static string BraceBlockAt(string Text, int OpenBrace)
 		{
-			Assert.GreaterOrEqual(OpenBrace, 0, "opening brace absent");
-			Assert.AreEqual('{', Text[OpenBrace], "block must start at an opening brace");
+			ClassicAssert.GreaterOrEqual(OpenBrace, 0, "opening brace absent");
+			ClassicAssert.AreEqual('{', Text[OpenBrace], "block must start at an opening brace");
 			int depth = 0;
 			for (int i = OpenBrace; i < Text.Length; i++)
 			{
@@ -90,9 +91,9 @@ namespace ThousandAndFirst.Tests
 		public void CharterPartKeepsEngineAbiAndExactActionRouteOrder()
 		{
 			string root = Source(Path.Combine("Core", "KingdomCharterPart.cs"));
-			Assert.IsTrue(Regex.IsMatch(root,
+			ClassicAssert.IsTrue(Regex.IsMatch(root,
 				@"\[Serializable\]\s*public sealed partial class KingdomCharterPart\s*:\s*IPart"));
-			Assert.AreEqual(1, Occurrences(root,
+			ClassicAssert.AreEqual(1, Occurrences(root,
 				"public Guid ActivatedAbilityID = Guid.Empty;"));
 
 			string[] engineOrder = new string[]
@@ -105,17 +106,17 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < engineOrder.Length; i++)
 			{
 				int next = root.IndexOf(engineOrder[i], cursor + 1, StringComparison.Ordinal);
-				Assert.Greater(next, cursor, engineOrder[i]);
+				ClassicAssert.Greater(next, cursor, engineOrder[i]);
 				cursor = next;
 			}
 
 			string register = Method(root, engineOrder[0]);
-			Assert.Less(register.IndexOf("Registrar.Register(COMMAND);", StringComparison.Ordinal),
+			ClassicAssert.Less(register.IndexOf("Registrar.Register(COMMAND);", StringComparison.Ordinal),
 				register.IndexOf("base.Register(Object, Registrar);", StringComparison.Ordinal));
 			string fire = Method(root, engineOrder[1]);
-			Assert.Less(fire.IndexOf("OpenMenu();", StringComparison.Ordinal),
+			ClassicAssert.Less(fire.IndexOf("OpenMenu();", StringComparison.Ordinal),
 				fire.IndexOf("KingdomSeal.TryStageSemanticSnapshot", StringComparison.Ordinal));
-			Assert.Less(fire.IndexOf("KingdomSeal.TryStageSemanticSnapshot", StringComparison.Ordinal),
+			ClassicAssert.Less(fire.IndexOf("KingdomSeal.TryStageSemanticSnapshot", StringComparison.Ordinal),
 				fire.IndexOf("return base.FireEvent(E);", StringComparison.Ordinal));
 
 			string run = Method(root,
@@ -124,7 +125,7 @@ namespace ThousandAndFirst.Tests
 				@"case\s+KingdomCharterAction\.(\w+)\s*:");
 			string[] actions = new string[cases.Count];
 			for (int i = 0; i < cases.Count; i++) actions[i] = cases[i].Groups[1].Value;
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				"HearPetition,Status,Homecoming,ChronicleAndDynasty,OutsiderChronicle,Standings,SettlerRoll,StandingPolicy,DesignateDistrict,CommissionBuilding,AnswerThreat,DedicateStores,StrikeTradeCharter,SendManifest,ShareMeal,CertifyMachine,SetWaterDetail,ManagePlans,AdoptBuilding,ReleaseAdoption,ManageCreed,KeepersKnowledge,WorksAndTrades,NameBuilding,GroundWork,StrikeBuilding,PostPrice,ConvertPlot,RedressBuilding,ConsecrateShrine,ShareWater,ClaimGround,CityBook,TechMap,CityAsks,SalvageExpedition,DesignateProperty,ManageNamedCook,ManageCivicOffice,DedicateRemembrance,FirstGuestCorrespondence,FirstFeastPractice,PracticeAndVocation,CivicKnowledge,BodyHistory,GuestFeastRecord,CivicCommitments,RecognizeArtifact,FixedWitnessWorks,InspectBuildingBenefits,TrafficRecords",
 				string.Join(",", actions));
 		}
@@ -133,8 +134,8 @@ namespace ThousandAndFirst.Tests
 		public void RootKeepsStatusFirstAndOffersSevenClearChapters()
 		{
 			KingdomCharterMenuRoute[] root = KingdomCharterMenuRules.RootEntries();
-			Assert.AreEqual(KingdomCharterRouteKind.Action, root[0].Kind);
-			Assert.AreEqual(KingdomCharterAction.Status, root[0].Action);
+			ClassicAssert.AreEqual(KingdomCharterRouteKind.Action, root[0].Kind);
+			ClassicAssert.AreEqual(KingdomCharterAction.Status, root[0].Action);
 
 			int chapters = 0;
 			HashSet<KingdomCharterChapter> unique = new HashSet<KingdomCharterChapter>();
@@ -142,10 +143,10 @@ namespace ThousandAndFirst.Tests
 			{
 				if (root[i].Kind != KingdomCharterRouteKind.Chapter) continue;
 				chapters++;
-				Assert.IsTrue(unique.Add(root[i].Chapter), "chapter repeated: " + root[i].Chapter);
+				ClassicAssert.IsTrue(unique.Add(root[i].Chapter), "chapter repeated: " + root[i].Chapter);
 			}
-			Assert.AreEqual(7, chapters);
-			Assert.AreEqual(Enum.GetValues(typeof(KingdomCharterChapter)).Length, unique.Count);
+			ClassicAssert.AreEqual(7, chapters);
+			ClassicAssert.AreEqual(Enum.GetValues(typeof(KingdomCharterChapter)).Length, unique.Count);
 		}
 
 		[Test]
@@ -159,12 +160,12 @@ namespace ThousandAndFirst.Tests
 			}
 
 			Array actions = Enum.GetValues(typeof(KingdomCharterAction));
-			Assert.AreEqual(51, actions.Length, "the routing contract must account for every shipped verb");
-			Assert.AreEqual(actions.Length, counts.Count);
+			ClassicAssert.AreEqual(51, actions.Length, "the routing contract must account for every shipped verb");
+			ClassicAssert.AreEqual(actions.Length, counts.Count);
 			foreach (KingdomCharterAction action in actions)
 			{
-				Assert.IsTrue(counts.ContainsKey(action), "missing route: " + action);
-				Assert.AreEqual(1, counts[action], "route must be unique: " + action);
+				ClassicAssert.IsTrue(counts.ContainsKey(action), "missing route: " + action);
+				ClassicAssert.AreEqual(1, counts[action], "route must be unique: " + action);
 			}
 		}
 
@@ -176,7 +177,7 @@ namespace ThousandAndFirst.Tests
 			KingdomCharterMenuRoute conversion = Array.Find(routes,
 				row => row.Kind == KingdomCharterRouteKind.Action
 					&& row.Action == KingdomCharterAction.ConvertPlot);
-			Assert.AreEqual("Change what stands on a lot", conversion.Label);
+			ClassicAssert.AreEqual("Change what stands on a lot", conversion.Label);
 
 			string source = KingdomSocketLogicalSource.Read();
 			StringAssert.Contains("Change what stands on a lot, at ", source);
@@ -201,13 +202,13 @@ namespace ThousandAndFirst.Tests
 			foreach (KingdomCharterChapter chapter in Enum.GetValues(typeof(KingdomCharterChapter)))
 			{
 				KingdomCharterMenuRoute[] routes = KingdomCharterMenuRules.ChapterEntries(chapter);
-				Assert.Greater(routes.Length, 1, chapter.ToString());
+				ClassicAssert.Greater(routes.Length, 1, chapter.ToString());
 				for (int i = 0; i < routes.Length - 1; i++)
 				{
-					Assert.AreEqual(KingdomCharterRouteKind.Action, routes[i].Kind,
+					ClassicAssert.AreEqual(KingdomCharterRouteKind.Action, routes[i].Kind,
 						chapter + " row " + i);
 				}
-				Assert.AreEqual(KingdomCharterRouteKind.Back, routes[routes.Length - 1].Kind);
+				ClassicAssert.AreEqual(KingdomCharterRouteKind.Back, routes[routes.Length - 1].Kind);
 			}
 		}
 
@@ -238,13 +239,13 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomCharterMenuRoute[] root = KingdomCharterMenuRules.RootEntries();
 			root[0] = KingdomCharterMenuRoute.Back();
-			Assert.AreEqual(KingdomCharterAction.Status,
+			ClassicAssert.AreEqual(KingdomCharterAction.Status,
 				KingdomCharterMenuRules.RootEntries()[0].Action);
 
 			KingdomCharterMenuRoute[] chapter = KingdomCharterMenuRules.ChapterEntries(
 				KingdomCharterChapter.PeopleAndBelief);
 			chapter[0] = KingdomCharterMenuRoute.Back();
-			Assert.AreEqual(KingdomCharterAction.HearPetition,
+			ClassicAssert.AreEqual(KingdomCharterAction.HearPetition,
 				KingdomCharterMenuRules.ChapterEntries(
 					KingdomCharterChapter.PeopleAndBelief)[0].Action);
 		}
@@ -257,7 +258,7 @@ namespace ThousandAndFirst.Tests
 		public void FoundedWhenUsesDaysNotEngineTicks(long founded, long now, long ticksPerDay,
 			string expected)
 		{
-			Assert.AreEqual(expected, KingdomCharterMenuRules.FoundedWhen(founded, now, ticksPerDay));
+			ClassicAssert.AreEqual(expected, KingdomCharterMenuRules.FoundedWhen(founded, now, ticksPerDay));
 		}
 
 		[TestCase(0L, 10L, 100L, "not yet scheduled")]
@@ -271,7 +272,7 @@ namespace ThousandAndFirst.Tests
 		public void DueWhenKeepsScheduleTruthWithoutEngineTicks(long due, long now,
 			long ticksPerDay, string expected)
 		{
-			Assert.AreEqual(expected, KingdomCharterMenuRules.DueWhen(due, now, ticksPerDay));
+			ClassicAssert.AreEqual(expected, KingdomCharterMenuRules.DueWhen(due, now, ticksPerDay));
 		}
 
 		[Test]
@@ -340,27 +341,27 @@ namespace ThousandAndFirst.Tests
 			MatchCollection cases = Regex.Matches(run,
 				@"case\s+KingdomCharterAction\.(\w+)\s*:\s*(.*?)\s*break\s*;",
 				RegexOptions.Singleline);
-			Assert.AreEqual(51, expected.Count);
-			Assert.AreEqual(expected.Count, cases.Count, "RunAction case count");
+			ClassicAssert.AreEqual(51, expected.Count);
+			ClassicAssert.AreEqual(expected.Count, cases.Count, "RunAction case count");
 
 			HashSet<string> seen = new HashSet<string>(StringComparer.Ordinal);
 			for (int i = 0; i < cases.Count; i++)
 			{
 				string action = cases[i].Groups[1].Value;
-				Assert.IsTrue(seen.Add(action), "duplicate RunAction case: " + action);
-				Assert.IsTrue(expected.ContainsKey(action), "unexpected RunAction case: " + action);
-				Assert.AreEqual(Normalize(expected[action]),
+				ClassicAssert.IsTrue(seen.Add(action), "duplicate RunAction case: " + action);
+				ClassicAssert.IsTrue(expected.ContainsKey(action), "unexpected RunAction case: " + action);
+				ClassicAssert.AreEqual(Normalize(expected[action]),
 					Normalize(cases[i].Groups[2].Value), "wrong handler: " + action);
 			}
 			foreach (string action in expected.Keys)
-				Assert.IsTrue(seen.Contains(action), "missing RunAction case: " + action);
+				ClassicAssert.IsTrue(seen.Contains(action), "missing RunAction case: " + action);
 
 			// Each full handler token occurs once in the whole method, not merely once among
 			// regex captures. An extra call before/after the switch therefore cannot hide.
 			string normalizedRun = Normalize(run);
 			foreach (KeyValuePair<string, string> row in expected)
 			{
-				Assert.AreEqual(1, Occurrences(normalizedRun, Normalize(row.Value)),
+				ClassicAssert.AreEqual(1, Occurrences(normalizedRun, Normalize(row.Value)),
 					"whole-method handler total: " + row.Key);
 			}
 
@@ -373,12 +374,12 @@ namespace ThousandAndFirst.Tests
 				RegexOptions.Singleline);
 			for (int i = innerCases.Count - 1; i >= 0; i--)
 				switchInner = switchInner.Remove(innerCases[i].Index, innerCases[i].Length);
-			Assert.AreEqual("", Normalize(switchInner),
+			ClassicAssert.AreEqual("", Normalize(switchInner),
 				"switch may contain only the 51 pinned case bodies");
 
 			string skeleton = run.Remove(switchOpen, switchBlock.Length)
 				.Insert(switchOpen, "{ CASES }");
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				"private bool RunAction(KingdomSystem System, KingdomCharterAction Action) { if (!ExternalOwnershipActionAllowed(System, Action, out string externalFailure)) { Popup.Show(\"Civic work is paused on this ground: \" + externalFailure); return false; } if (!KingdomMaster.NewWorkAllowed(System) && !KingdomCharterMenuRules.AvailableWhileSimulationPaused(Action)) { Popup.Show(\"Settlement simulation is paused by the master option. Records and committed recovery remain available; resume the realm before ordering new work.\"); return false; } KingdomGovernanceScope action = KingdomGovernanceScope.Begin(ParentObject); try { switch (Action) { CASES } } finally { action.Dispose(); } return action.Committed; }",
 				Normalize(skeleton),
 				"only ownership and zero-energy master gates may sit outside the pinned switch");
@@ -397,17 +398,17 @@ namespace ThousandAndFirst.Tests
 
 			// Complete, accepted routing methods. These are intentionally independent pins:
 			// a pre-loop root return or pre-cancel energy call must change this contract.
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				"c51c37ef71100d06291aa5a66498d05db5fbca79472a65abf81552d98b90ca69",
 				Sha256(Normalize(open)), "complete OpenMenu routing contract");
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				"044e867e93e7e460e50f50aa882094f09027b3413caf3ffd4249163609c7fec9",
 				Sha256(Normalize(chapter)), "complete OpenChapter routing contract");
 
-			Assert.AreEqual(1, Occurrences(part, "KingdomGovernanceScope.Begin("),
+			ClassicAssert.AreEqual(1, Occurrences(part, "KingdomGovernanceScope.Begin("),
 				"only RunAction may open governance/energy accounting in CharterPart");
-			Assert.AreEqual(1, Occurrences(run, "KingdomGovernanceScope.Begin(ParentObject)"));
-			Assert.AreEqual(0, Regex.Matches(part, @"\.\s*UseEnergy\s*\(").Count,
+			ClassicAssert.AreEqual(1, Occurrences(run, "KingdomGovernanceScope.Begin(ParentObject)"));
+			ClassicAssert.AreEqual(0, Regex.Matches(part, @"\.\s*UseEnergy\s*\(").Count,
 				"CharterPart must never directly charge energy; RunAction's scope owns charging");
 			StringAssert.DoesNotContain("KingdomGovernanceScope.Begin(", open);
 			StringAssert.DoesNotContain("KingdomGovernanceScope.Begin(", chapter);
@@ -416,9 +417,9 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomGovernanceScope.Begin(ParentObject)", run);
 			StringAssert.Contains("action.Dispose();", run);
 
-			Assert.Greater(Occurrences(part, "KingdomGovernanceScope.Commit("), 0,
+			ClassicAssert.Greater(Occurrences(part, "KingdomGovernanceScope.Commit("), 0,
 				"Charter action handlers must retain their governed durable commits");
-			Assert.AreEqual(0, Occurrences(run, "KingdomGovernanceScope.Commit("),
+			ClassicAssert.AreEqual(0, Occurrences(run, "KingdomGovernanceScope.Commit("),
 				"RunAction opens scope then dispatches; only handlers may mark it committed");
 			int scopeClass = governance.IndexOf("public sealed class KingdomGovernanceScope",
 				StringComparison.Ordinal);
@@ -429,28 +430,28 @@ namespace ThousandAndFirst.Tests
 			MatchCollection committedGuards = Regex.Matches(dispose,
 				@"if\s*\(\s*!Committed\s*\)\s*(\{[^{}]*\})",
 				RegexOptions.Singleline);
-			Assert.AreEqual(1, committedGuards.Count,
+			ClassicAssert.AreEqual(1, committedGuards.Count,
 				"Dispose needs one exact top-level not-committed guard");
-			Assert.AreEqual("if (!Committed) { return; }",
+			ClassicAssert.AreEqual("if (!Committed) { return; }",
 				Normalize(committedGuards[0].Value));
 			int uncommitted = committedGuards[0].Index;
 			int energy = dispose.IndexOf("Actor.UseEnergy(", StringComparison.Ordinal);
-			Assert.AreEqual(1, BraceDepthAt(dispose, uncommitted),
+			ClassicAssert.AreEqual(1, BraceDepthAt(dispose, uncommitted),
 				"not-committed return must dominate at Dispose top level");
-			Assert.AreEqual(1, BraceDepthAt(dispose, energy),
+			ClassicAssert.AreEqual(1, BraceDepthAt(dispose, energy),
 				"energy call must remain at Dispose top level behind the guard");
-			Assert.Greater(energy, uncommitted + committedGuards[0].Length,
+			ClassicAssert.Greater(energy, uncommitted + committedGuards[0].Length,
 				"the sole energy call remains behind a committed action scope");
-			Assert.AreEqual(1, Occurrences(dispose, "Actor.UseEnergy("));
-			Assert.AreEqual(1, Occurrences(governance, "Actor.UseEnergy("));
+			ClassicAssert.AreEqual(1, Occurrences(dispose, "Actor.UseEnergy("));
+			ClassicAssert.AreEqual(1, Occurrences(governance, "Actor.UseEnergy("));
 
 			MatchCollection finalies = Regex.Matches(run,
 				@"finally\s*(\{[^{}]*\})", RegexOptions.Singleline);
-			Assert.AreEqual(1, finalies.Count);
-			Assert.AreEqual("{ action.Dispose(); }",
+			ClassicAssert.AreEqual(1, finalies.Count);
+			ClassicAssert.AreEqual("{ action.Dispose(); }",
 				Normalize(finalies[0].Groups[1].Value),
 				"RunAction must dispose its scope in its exact finally block");
-			Assert.AreEqual(1, Occurrences(run, "action.Dispose();"));
+			ClassicAssert.AreEqual(1, Occurrences(run, "action.Dispose();"));
 
 			string normalizedOpen = Normalize(open);
 			StringAssert.Contains(
@@ -459,7 +460,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains(
 				"if (route.Kind == KingdomCharterRouteKind.Chapter) { if (OpenChapter(system, route.Chapter)) { return; } } else if (route.Kind == KingdomCharterRouteKind.Action && RunAction(system, route.Action))",
 				normalizedOpen, "chapter navigation must not fall through to RunAction");
-			Assert.AreEqual(1, Occurrences(open, "RunAction("));
+			ClassicAssert.AreEqual(1, Occurrences(open, "RunAction("));
 
 			string normalizedChapter = Normalize(chapter);
 			StringAssert.Contains(
@@ -468,9 +469,9 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains(
 				"if (routes[pick].Kind == KingdomCharterRouteKind.Action && RunAction(System, routes[pick].Action))",
 				normalizedChapter, "only Action routes may reach RunAction");
-			Assert.Less(chapter.IndexOf("KingdomCharterRouteKind.Back", StringComparison.Ordinal),
+			ClassicAssert.Less(chapter.IndexOf("KingdomCharterRouteKind.Back", StringComparison.Ordinal),
 				chapter.IndexOf("RunAction(", StringComparison.Ordinal));
-			Assert.AreEqual(1, Occurrences(chapter, "RunAction("));
+			ClassicAssert.AreEqual(1, Occurrences(chapter, "RunAction("));
 		}
 
 		[Test]
@@ -504,7 +505,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomJointCivicViewRuntime.TryRead(System, zone, moot, enclave", open);
 			StringAssert.Contains("if (!KingdomHostedArcology.TryReadAuthorityIdentityForJointView",
 				enclave, "the locator must not consume out values from a failed native read");
-			Assert.AreEqual(2, Occurrences(loaded, "Zone.FindObjectByID("));
+			ClassicAssert.AreEqual(2, Occurrences(loaded, "Zone.FindObjectByID("));
 			StringAssert.DoesNotContain("GameObject.FindByID", loaded);
 			StringAssert.DoesNotContain("ZoneManager", loaded);
 			StringAssert.DoesNotContain("GetZone(", loaded);
@@ -528,13 +529,13 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int humanBook = player.IndexOf("KingdomTradeBook book = System?.TradeBook;",
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(branch, 0);
-			Assert.Greater(humanBook, branch, "Detailed must branch before player wording");
-			Assert.AreEqual(1, Occurrences(player, "TradeDiagnosticStatus(System)"));
+			ClassicAssert.GreaterOrEqual(branch, 0);
+			ClassicAssert.Greater(humanBook, branch, "Detailed must branch before player wording");
+			ClassicAssert.AreEqual(1, Occurrences(player, "TradeDiagnosticStatus(System)"));
 
 			// SHA is over the complete whitespace-normalized wish-only diagnostic method,
 			// including its rich-text escaping boundary. Deleting or changing a row must fail.
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				"567da419746866e04f49df509a9c3e16a3f26468b0bf00b53445e00afe214d98",
 				Sha256(Normalize(diagnostic)), "complete old Detailed diagnostic body");
 
@@ -552,9 +553,9 @@ namespace ThousandAndFirst.Tests
 				if (found > 0) callerPath = path;
 				callers += found;
 			}
-			Assert.AreEqual(1, callers,
+			ClassicAssert.AreEqual(1, callers,
 				"production must have exactly one true Detailed TradeStatus caller");
-			Assert.AreEqual(Path.Combine(root, "Debug",
+			ClassicAssert.AreEqual(Path.Combine(root, "Debug",
 				"KingdomWishes.DumpDelvesAndRaids.cs"), callerPath);
 		}
 
@@ -577,9 +578,9 @@ namespace ThousandAndFirst.Tests
 			KingdomCharterMenuRoute row = Array.Find(routes,
 				candidate => candidate.Kind == KingdomCharterRouteKind.Action
 					&& candidate.Action == Action);
-			Assert.IsNotNull(row, Chapter + " / " + Action);
-			Assert.AreEqual(Label, row.Label);
-			Assert.AreEqual(Hotkey, row.Hotkey);
+			ClassicAssert.IsNotNull(row, Chapter + " / " + Action);
+			ClassicAssert.AreEqual(Label, row.Label);
+			ClassicAssert.AreEqual(Hotkey, row.Hotkey);
 		}
 
 		private static void AssertMenu(KingdomCharterMenuRoute[] Routes, bool ExpectBack)
@@ -588,12 +589,12 @@ namespace ThousandAndFirst.Tests
 			int backs = 0;
 			for (int i = 0; i < Routes.Length; i++)
 			{
-				Assert.IsFalse(string.IsNullOrWhiteSpace(Routes[i].Label), "blank label at " + i);
-				Assert.IsTrue(hotkeys.Add(char.ToLowerInvariant(Routes[i].Hotkey)),
+				ClassicAssert.IsFalse(string.IsNullOrWhiteSpace(Routes[i].Label), "blank label at " + i);
+				ClassicAssert.IsTrue(hotkeys.Add(char.ToLowerInvariant(Routes[i].Hotkey)),
 					"duplicate hotkey " + Routes[i].Hotkey);
 				if (Routes[i].Kind == KingdomCharterRouteKind.Back) backs++;
 			}
-			Assert.AreEqual(ExpectBack ? 1 : 0, backs);
+			ClassicAssert.AreEqual(ExpectBack ? 1 : 0, backs);
 		}
 	}
 }

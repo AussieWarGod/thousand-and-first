@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -16,8 +17,8 @@ namespace ThousandAndFirst.Tests
 		public void PartAndNestedDeclarationAbiRemainExact()
 		{
 			string source = Upgrade();
-			Assert.AreEqual(15, Count(source, "public partial class r_KingdomImprovement"));
-			Assert.AreEqual(21, Count(source, "public static partial class KingdomUpgrade"));
+			ClassicAssert.AreEqual(15, Count(source, "public partial class r_KingdomImprovement"));
+			ClassicAssert.AreEqual(21, Count(source, "public static partial class KingdomUpgrade"));
 			StringAssert.Contains(
 				"[Serializable]\n\tpublic partial class r_KingdomImprovement : IPart", source);
 			string part = Between(source,
@@ -156,7 +157,7 @@ namespace ThousandAndFirst.Tests
 				"if (exact) KingdomConstruction.Quarantine(ref job, Failure)");
 			string handover = Between(source, "public static void HandOver(",
 				"private static bool ExactHandoverEndpointsAfterCallback(");
-			Assert.GreaterOrEqual(Count(handover, "FailExactHandover("), 6);
+			ClassicAssert.GreaterOrEqual(Count(handover, "FailExactHandover("), 6);
 			AssertOrdered(handover, "HandoverFlagsValid()", "TryPublishHandoverEndpoints(",
 				"KingdomConstruction.TryFind(receipt",
 				"KingdomConstruction.Owns(ownerSystem", "TryReadImprovementArchitecture(",
@@ -191,30 +192,30 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void HandoverStateMachinesCoverEveryDurableMutationCut()
 		{
-			Assert.AreEqual(1, AdvanceLiquid(1, LiquidTopology.Before));
-			Assert.AreEqual(2, AdvanceLiquid(1, LiquidTopology.Drained));
-			Assert.AreEqual(2, AdvanceLiquid(2, LiquidTopology.Drained));
-			Assert.AreEqual(3, AdvanceLiquid(2, LiquidTopology.Settled));
-			Assert.AreEqual(3, AdvanceLiquid(3, LiquidTopology.Settled));
-			Assert.AreEqual(-1, AdvanceLiquid(1, LiquidTopology.Settled));
-			Assert.AreEqual(-1, AdvanceLiquid(2, LiquidTopology.Before));
-			Assert.AreEqual(-1, AdvanceLiquid(3, LiquidTopology.Foreign));
+			ClassicAssert.AreEqual(1, AdvanceLiquid(1, LiquidTopology.Before));
+			ClassicAssert.AreEqual(2, AdvanceLiquid(1, LiquidTopology.Drained));
+			ClassicAssert.AreEqual(2, AdvanceLiquid(2, LiquidTopology.Drained));
+			ClassicAssert.AreEqual(3, AdvanceLiquid(2, LiquidTopology.Settled));
+			ClassicAssert.AreEqual(3, AdvanceLiquid(3, LiquidTopology.Settled));
+			ClassicAssert.AreEqual(-1, AdvanceLiquid(1, LiquidTopology.Settled));
+			ClassicAssert.AreEqual(-1, AdvanceLiquid(2, LiquidTopology.Before));
+			ClassicAssert.AreEqual(-1, AdvanceLiquid(3, LiquidTopology.Foreign));
 
-			Assert.AreEqual(0, AdvanceCleanup(0, false, true, true));
-			Assert.AreEqual(2, AdvanceCleanup(1, true, true, true));
-			Assert.AreEqual(2, AdvanceCleanup(1, false, true, true));
-			Assert.AreEqual(3, AdvanceCleanup(2, false, true, true));
-			Assert.AreEqual(0, AdvanceCleanup(3, false, true, false));
-			Assert.AreEqual(-1, AdvanceCleanup(1, true, false, true));
-			Assert.AreEqual(-1, AdvanceCleanup(1, true, true, false));
-			Assert.AreEqual(-1, AdvanceCleanup(3, true, true, true));
+			ClassicAssert.AreEqual(0, AdvanceCleanup(0, false, true, true));
+			ClassicAssert.AreEqual(2, AdvanceCleanup(1, true, true, true));
+			ClassicAssert.AreEqual(2, AdvanceCleanup(1, false, true, true));
+			ClassicAssert.AreEqual(3, AdvanceCleanup(2, false, true, true));
+			ClassicAssert.AreEqual(0, AdvanceCleanup(3, false, true, false));
+			ClassicAssert.AreEqual(-1, AdvanceCleanup(1, true, false, true));
+			ClassicAssert.AreEqual(-1, AdvanceCleanup(1, true, true, false));
+			ClassicAssert.AreEqual(-1, AdvanceCleanup(3, true, true, true));
 
-			Assert.AreEqual(RemovalCut.Pending, AdvanceRemoval(RemovalCut.None, true, true));
-			Assert.AreEqual(RemovalCut.Pending, AdvanceRemoval(RemovalCut.Pending, true, true));
-			Assert.AreEqual(RemovalCut.Removed, AdvanceRemoval(RemovalCut.Pending, false, true));
-			Assert.AreEqual(RemovalCut.Complete, AdvanceRemoval(RemovalCut.Removed, false, true));
-			Assert.AreEqual(RemovalCut.Invalid, AdvanceRemoval(RemovalCut.Pending, false, false));
-			Assert.AreEqual(RemovalCut.Invalid, AdvanceRemoval(RemovalCut.None, false, true));
+			ClassicAssert.AreEqual(RemovalCut.Pending, AdvanceRemoval(RemovalCut.None, true, true));
+			ClassicAssert.AreEqual(RemovalCut.Pending, AdvanceRemoval(RemovalCut.Pending, true, true));
+			ClassicAssert.AreEqual(RemovalCut.Removed, AdvanceRemoval(RemovalCut.Pending, false, true));
+			ClassicAssert.AreEqual(RemovalCut.Complete, AdvanceRemoval(RemovalCut.Removed, false, true));
+			ClassicAssert.AreEqual(RemovalCut.Invalid, AdvanceRemoval(RemovalCut.Pending, false, false));
+			ClassicAssert.AreEqual(RemovalCut.Invalid, AdvanceRemoval(RemovalCut.None, false, true));
 		}
 
 		[Test]
@@ -429,9 +430,9 @@ namespace ThousandAndFirst.Tests
 		private static string Between(string source, string start, string end)
 		{
 			int first = source.IndexOf(start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(first, 0, "missing source boundary: " + start);
+			ClassicAssert.GreaterOrEqual(first, 0, "missing source boundary: " + start);
 			int last = source.IndexOf(end, first + start.Length, StringComparison.Ordinal);
-			Assert.Greater(last, first, "missing source boundary: " + end);
+			ClassicAssert.Greater(last, first, "missing source boundary: " + end);
 			return source.Substring(first, last - first);
 		}
 
@@ -441,7 +442,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < terms.Length; i++)
 			{
 				int found = source.IndexOf(terms[i], offset, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(found, 0, "missing ordered source term: " + terms[i]);
+				ClassicAssert.GreaterOrEqual(found, 0, "missing ordered source term: " + terms[i]);
 				offset = found + terms[i].Length;
 			}
 		}

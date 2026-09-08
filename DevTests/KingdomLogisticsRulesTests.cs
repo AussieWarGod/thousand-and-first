@@ -3,6 +3,7 @@ using System;
 using System.IO;
 using System.Reflection;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
@@ -17,22 +18,22 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void LogisticsAbiKeepsEnumTypesAndReadonlyRowShapes()
 		{
-			Assert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomScalarReceiptAction)));
+			ClassicAssert.AreEqual(typeof(byte), Enum.GetUnderlyingType(typeof(KingdomScalarReceiptAction)));
 			CollectionAssert.AreEqual(new[] { "Refuse", "Apply", "AlreadyApplied", "ContinueFood", "Interference" },
 				Enum.GetNames(typeof(KingdomScalarReceiptAction)));
-			Assert.AreEqual(0, (byte)KingdomScalarReceiptAction.Refuse);
-			Assert.AreEqual(1, (byte)KingdomScalarReceiptAction.Apply);
-			Assert.AreEqual(2, (byte)KingdomScalarReceiptAction.AlreadyApplied);
-			Assert.AreEqual(3, (byte)KingdomScalarReceiptAction.ContinueFood);
-			Assert.AreEqual(4, (byte)KingdomScalarReceiptAction.Interference);
-			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomScalarReceiptAction", typeof(KingdomScalarReceiptAction).FullName);
-			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomScalarReceiptRules", typeof(KingdomScalarReceiptRules).FullName);
-			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomHolderRow", typeof(KingdomHolderRow).FullName);
-			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomTripPlan", typeof(KingdomTripPlan).FullName);
-			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomLogisticsRequest", typeof(KingdomLogisticsRequest).FullName);
-			Assert.AreEqual("ThousandAndFirst.Simulation.City.KingdomLogisticsSnapshotPlan", typeof(KingdomLogisticsSnapshotPlan).FullName);
-			Assert.IsFalse(typeof(KingdomScalarReceiptAction).IsPublic);
-			Assert.IsTrue(typeof(KingdomScalarReceiptRules).IsAbstract && typeof(KingdomScalarReceiptRules).IsSealed);
+			ClassicAssert.AreEqual(0, (byte)KingdomScalarReceiptAction.Refuse);
+			ClassicAssert.AreEqual(1, (byte)KingdomScalarReceiptAction.Apply);
+			ClassicAssert.AreEqual(2, (byte)KingdomScalarReceiptAction.AlreadyApplied);
+			ClassicAssert.AreEqual(3, (byte)KingdomScalarReceiptAction.ContinueFood);
+			ClassicAssert.AreEqual(4, (byte)KingdomScalarReceiptAction.Interference);
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.City.KingdomScalarReceiptAction", typeof(KingdomScalarReceiptAction).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.City.KingdomScalarReceiptRules", typeof(KingdomScalarReceiptRules).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.City.KingdomHolderRow", typeof(KingdomHolderRow).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.City.KingdomTripPlan", typeof(KingdomTripPlan).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.City.KingdomLogisticsRequest", typeof(KingdomLogisticsRequest).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.Simulation.City.KingdomLogisticsSnapshotPlan", typeof(KingdomLogisticsSnapshotPlan).FullName);
+			ClassicAssert.IsFalse(typeof(KingdomScalarReceiptAction).IsPublic);
+			ClassicAssert.IsTrue(typeof(KingdomScalarReceiptRules).IsAbstract && typeof(KingdomScalarReceiptRules).IsSealed);
 
 			AssertFields(typeof(KingdomHolderRow), true,
 				new[] { "HolderId", "ZoneIndex", "WorkSlot", "DedicationOrdinal", "Holds", "Amount" },
@@ -49,46 +50,46 @@ namespace ThousandAndFirst.Tests
 
 			KingdomLogisticsRequest request = new KingdomLogisticsRequest(1, 2, 3, 4, 5,
 				KingdomStockKind.Water, 6, 7, new[] { 3, 5 }, 2);
-			Assert.AreEqual(KingdomDeliveryCargoAuthority.ScalarStock, request.CargoAuthority);
-			Assert.IsNull(request.OwnerOperationId);
+			ClassicAssert.AreEqual(KingdomDeliveryCargoAuthority.ScalarStock, request.CargoAuthority);
+			ClassicAssert.IsNull(request.OwnerOperationId);
 		}
 
 		[Test]
 		public void ScalarReceiptRecoveryKeepsExactVerdictTransitions()
 		{
 			KingdomScalarReceiptAction action;
-			Assert.IsTrue(KingdomScalarReceiptRules.TryRecover(KingdomStockKind.Water, 10L, 2,
+			ClassicAssert.IsTrue(KingdomScalarReceiptRules.TryRecover(KingdomStockKind.Water, 10L, 2,
 				10L, true, 0, out action));
-			Assert.AreEqual(KingdomScalarReceiptAction.Apply, action);
-			Assert.IsTrue(KingdomScalarReceiptRules.TryRecover(KingdomStockKind.Water, 10L, 2,
+			ClassicAssert.AreEqual(KingdomScalarReceiptAction.Apply, action);
+			ClassicAssert.IsTrue(KingdomScalarReceiptRules.TryRecover(KingdomStockKind.Water, 10L, 2,
 				12L, true, 0, out action));
-			Assert.AreEqual(KingdomScalarReceiptAction.AlreadyApplied, action);
-			Assert.IsTrue(KingdomScalarReceiptRules.TryRecover(KingdomStockKind.Food, 10L, 3,
+			ClassicAssert.AreEqual(KingdomScalarReceiptAction.AlreadyApplied, action);
+			ClassicAssert.IsTrue(KingdomScalarReceiptRules.TryRecover(KingdomStockKind.Food, 10L, 3,
 				11L, true, 1, out action));
-			Assert.AreEqual(KingdomScalarReceiptAction.ContinueFood, action);
-			Assert.IsTrue(KingdomScalarReceiptRules.TryRecover(KingdomStockKind.Food, 10L, 3,
+			ClassicAssert.AreEqual(KingdomScalarReceiptAction.ContinueFood, action);
+			ClassicAssert.IsTrue(KingdomScalarReceiptRules.TryRecover(KingdomStockKind.Food, 10L, 3,
 				13L, true, 3, out action));
-			Assert.AreEqual(KingdomScalarReceiptAction.AlreadyApplied, action);
-			Assert.IsTrue(KingdomScalarReceiptRules.TryRecover(KingdomStockKind.Food, 10L, 3,
+			ClassicAssert.AreEqual(KingdomScalarReceiptAction.AlreadyApplied, action);
+			ClassicAssert.IsTrue(KingdomScalarReceiptRules.TryRecover(KingdomStockKind.Food, 10L, 3,
 				10L, false, 0, out action));
-			Assert.AreEqual(KingdomScalarReceiptAction.Interference, action);
+			ClassicAssert.AreEqual(KingdomScalarReceiptAction.Interference, action);
 		}
 
 		[Test]
 		public void LogicalSourceKeepsOneOrderedPlanningAuthority()
 		{
 			string source = LogicalSource();
-			Assert.AreEqual(4, Count(source, "internal static partial class KingdomLogisticsRules"));
-			Assert.AreEqual(1, Count(source, "internal static class KingdomScalarReceiptRules"));
-			Assert.AreEqual(1, Count(source, "internal readonly struct KingdomHolderRow"));
-			Assert.AreEqual(1, Count(source, "internal readonly struct KingdomTripPlan"));
-			Assert.AreEqual(1, Count(source, "internal readonly struct KingdomLogisticsRequest"));
-			Assert.AreEqual(1, Count(source, "internal sealed class KingdomLogisticsSnapshotPlan"));
-			Assert.Less(source.IndexOf("internal static bool TryNearestHolder", StringComparison.Ordinal),
+			ClassicAssert.AreEqual(4, Count(source, "internal static partial class KingdomLogisticsRules"));
+			ClassicAssert.AreEqual(1, Count(source, "internal static class KingdomScalarReceiptRules"));
+			ClassicAssert.AreEqual(1, Count(source, "internal readonly struct KingdomHolderRow"));
+			ClassicAssert.AreEqual(1, Count(source, "internal readonly struct KingdomTripPlan"));
+			ClassicAssert.AreEqual(1, Count(source, "internal readonly struct KingdomLogisticsRequest"));
+			ClassicAssert.AreEqual(1, Count(source, "internal sealed class KingdomLogisticsSnapshotPlan"));
+			ClassicAssert.Less(source.IndexOf("internal static bool TryNearestHolder", StringComparison.Ordinal),
 				source.IndexOf("internal static bool TryPlanSnapshot", StringComparison.Ordinal));
-			Assert.Less(source.IndexOf("internal static bool TryPlanSnapshot", StringComparison.Ordinal),
+			ClassicAssert.Less(source.IndexOf("internal static bool TryPlanSnapshot", StringComparison.Ordinal),
 				source.IndexOf("internal static bool TryPlanTrip", StringComparison.Ordinal));
-			Assert.Less(source.IndexOf("internal static bool TryPlanTrip", StringComparison.Ordinal),
+			ClassicAssert.Less(source.IndexOf("internal static bool TryPlanTrip", StringComparison.Ordinal),
 				source.IndexOf("private static bool Eligible", StringComparison.Ordinal));
 		}
 
@@ -102,7 +103,7 @@ namespace ThousandAndFirst.Tests
 			int chosen;
 			KingdomCityFault fault;
 			bool found = KingdomLogisticsRules.TryNearestHolder(holders, holders.Length, distances, kind, out chosen, out fault);
-			Assert.AreEqual(KingdomCityFault.None, fault);
+			ClassicAssert.AreEqual(KingdomCityFault.None, fault);
 			return found ? holders[chosen].HolderId : -1;
 		}
 
@@ -121,7 +122,7 @@ namespace ThousandAndFirst.Tests
 				Holder(1, 0, 0, KingdomStockKind.Water, 900L),
 				Holder(2, 1, 9, KingdomStockKind.Water, 12L)
 			};
-			Assert.AreEqual(2, Nearest(holders, new int[2] { 240, 40 }, KingdomStockKind.Water));
+			ClassicAssert.AreEqual(2, Nearest(holders, new int[2] { 240, 40 }, KingdomStockKind.Water));
 		}
 
 		/// <summary>A container of the right kind that is EMPTY is not a holder. §3.10(1) binds to
@@ -135,7 +136,7 @@ namespace ThousandAndFirst.Tests
 				Holder(1, 0, 0, KingdomStockKind.Water, 0L),
 				Holder(2, 1, 1, KingdomStockKind.Water, 5L)
 			};
-			Assert.AreEqual(2, Nearest(holders, new int[2] { 0, 400 }, KingdomStockKind.Water));
+			ClassicAssert.AreEqual(2, Nearest(holders, new int[2] { 0, 400 }, KingdomStockKind.Water));
 		}
 
 		[Test]
@@ -146,8 +147,8 @@ namespace ThousandAndFirst.Tests
 				Holder(1, 0, 0, KingdomStockKind.Food, 99L),
 				Holder(2, 1, 1, KingdomStockKind.Water, 5L)
 			};
-			Assert.AreEqual(2, Nearest(holders, new int[2] { 0, 400 }, KingdomStockKind.Water));
-			Assert.AreEqual(1, Nearest(holders, new int[2] { 0, 400 }, KingdomStockKind.Food));
+			ClassicAssert.AreEqual(2, Nearest(holders, new int[2] { 0, 400 }, KingdomStockKind.Water));
+			ClassicAssert.AreEqual(1, Nearest(holders, new int[2] { 0, 400 }, KingdomStockKind.Food));
 		}
 
 		[Test]
@@ -158,8 +159,8 @@ namespace ThousandAndFirst.Tests
 				Holder(1, 0, 0, KingdomStockKind.Water, 50L),
 				Holder(2, 1, 1, KingdomStockKind.Water, 50L)
 			};
-			Assert.AreEqual(2, Nearest(holders, new int[2] { KingdomLogisticsRules.NoRoute, 800 }, KingdomStockKind.Water));
-			Assert.AreEqual(-1, Nearest(holders, new int[2] { KingdomLogisticsRules.NoRoute, KingdomLogisticsRules.NoRoute }, KingdomStockKind.Water));
+			ClassicAssert.AreEqual(2, Nearest(holders, new int[2] { KingdomLogisticsRules.NoRoute, 800 }, KingdomStockKind.Water));
+			ClassicAssert.AreEqual(-1, Nearest(holders, new int[2] { KingdomLogisticsRules.NoRoute, KingdomLogisticsRules.NoRoute }, KingdomStockKind.Water));
 		}
 
 		/// <summary>
@@ -175,13 +176,13 @@ namespace ThousandAndFirst.Tests
 				Holder(7, 0, 0, KingdomStockKind.Food, 10L),
 				Holder(3, 1, 9, KingdomStockKind.Food, 10L)
 			};
-			Assert.AreEqual(3, Nearest(byId, new int[2] { 120, 120 }, KingdomStockKind.Food));
+			ClassicAssert.AreEqual(3, Nearest(byId, new int[2] { 120, 120 }, KingdomStockKind.Food));
 			KingdomHolderRow[] byOrdinal = new KingdomHolderRow[2]
 			{
 				Holder(5, 0, 4, KingdomStockKind.Food, 10L),
 				Holder(5, 1, 1, KingdomStockKind.Food, 10L)
 			};
-			Assert.AreEqual(5, Nearest(byOrdinal, new int[2] { 120, 120 }, KingdomStockKind.Food));
+			ClassicAssert.AreEqual(5, Nearest(byOrdinal, new int[2] { 120, 120 }, KingdomStockKind.Food));
 		}
 
 		/// <summary>
@@ -202,17 +203,17 @@ namespace ThousandAndFirst.Tests
 			int[] distances = new int[3] { 600, 80, 240 };
 			int chosen;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomLogisticsRules.TryNearestHolder(holders, 3, distances, KingdomStockKind.Water, out chosen, out fault));
+			ClassicAssert.IsTrue(KingdomLogisticsRules.TryNearestHolder(holders, 3, distances, KingdomStockKind.Water, out chosen, out fault));
 
 			bool held;
 			int offender;
-			Assert.IsTrue(KingdomLogisticsRules.TryNoNearerHolder(holders, 3, distances, KingdomStockKind.Water, holders[chosen].HolderId, out held, out offender, out fault));
-			Assert.IsTrue(held, "the planner's own choice must satisfy the assertion the planner exists for");
-			Assert.AreEqual(-1, offender);
+			ClassicAssert.IsTrue(KingdomLogisticsRules.TryNoNearerHolder(holders, 3, distances, KingdomStockKind.Water, holders[chosen].HolderId, out held, out offender, out fault));
+			ClassicAssert.IsTrue(held, "the planner's own choice must satisfy the assertion the planner exists for");
+			ClassicAssert.AreEqual(-1, offender);
 
-			Assert.IsTrue(KingdomLogisticsRules.TryNoNearerHolder(holders, 3, distances, KingdomStockKind.Water, 1, out held, out offender, out fault));
-			Assert.IsFalse(held, "walking to the far store past two nearer ones is the pathology, and it must be caught");
-			Assert.AreEqual(2, offender, "and the check names WHICH one was nearer");
+			ClassicAssert.IsTrue(KingdomLogisticsRules.TryNoNearerHolder(holders, 3, distances, KingdomStockKind.Water, 1, out held, out offender, out fault));
+			ClassicAssert.IsFalse(held, "walking to the far store past two nearer ones is the pathology, and it must be caught");
+			ClassicAssert.AreEqual(2, offender, "and the check names WHICH one was nearer");
 		}
 
 		/// <summary>A fetch bound to a holder that is not in the index, or is not holding what it
@@ -224,8 +225,8 @@ namespace ThousandAndFirst.Tests
 			bool held;
 			int offender;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomLogisticsRules.TryNoNearerHolder(holders, 1, new int[1] { 40 }, KingdomStockKind.Water, 99, out held, out offender, out fault));
-			Assert.IsFalse(held);
+			ClassicAssert.IsTrue(KingdomLogisticsRules.TryNoNearerHolder(holders, 1, new int[1] { 40 }, KingdomStockKind.Water, 99, out held, out offender, out fault));
+			ClassicAssert.IsFalse(held);
 		}
 
 		// ---- (4) Capacity-bound batching ------------------------------------------------------
@@ -253,7 +254,7 @@ namespace ThousandAndFirst.Tests
 				between[i * ids.Length + j] = System.Math.Abs(dest[i] - dest[j]) * 10;
 			KingdomLogisticsSnapshotPlan plan;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomLogisticsRules.TryPlanSnapshot(requests, ids.Length, between,
+			ClassicAssert.IsTrue(KingdomLogisticsRules.TryPlanSnapshot(requests, ids.Length, between,
 				capacity, out plan, out fault), fault.ToString());
 			for (int i = 0; i < trip.Length; i++) trip[i] = plan.TripIndexes[i];
 			return plan;
@@ -265,29 +266,29 @@ namespace ThousandAndFirst.Tests
 		public void ThreeSmallLoadsForOneGroundBecomeOneTrip()
 		{
 			int[] trip = new int[3];
-			Assert.AreEqual(1, Batch(new int[3] { 1, 2, 3 }, new int[3] { 2, 2, 2 }, new long[3] { 3L, 4L, 2L }, 12L, trip).TripCount);
-			Assert.AreEqual(0, trip[0]);
-			Assert.AreEqual(0, trip[1]);
-			Assert.AreEqual(0, trip[2]);
+			ClassicAssert.AreEqual(1, Batch(new int[3] { 1, 2, 3 }, new int[3] { 2, 2, 2 }, new long[3] { 3L, 4L, 2L }, 12L, trip).TripCount);
+			ClassicAssert.AreEqual(0, trip[0]);
+			ClassicAssert.AreEqual(0, trip[1]);
+			ClassicAssert.AreEqual(0, trip[2]);
 		}
 
 		[Test]
 		public void LoadsForDifferentGroundNeverShareATrip()
 		{
 			int[] trip = new int[3];
-			Assert.AreEqual(2, Batch(new int[3] { 1, 2, 3 }, new int[3] { 2, 5, 2 }, new long[3] { 3L, 4L, 2L }, 12L, trip).TripCount);
-			Assert.AreEqual(trip[0], trip[2]);
-			Assert.AreNotEqual(trip[0], trip[1]);
+			ClassicAssert.AreEqual(2, Batch(new int[3] { 1, 2, 3 }, new int[3] { 2, 5, 2 }, new long[3] { 3L, 4L, 2L }, 12L, trip).TripCount);
+			ClassicAssert.AreEqual(trip[0], trip[2]);
+			ClassicAssert.AreNotEqual(trip[0], trip[1]);
 		}
 
 		[Test]
 		public void ALoadThatWillNotFitOpensTheNextTripRatherThanOverloadingTheCarrier()
 		{
 			int[] trip = new int[3];
-			Assert.AreEqual(2, Batch(new int[3] { 1, 2, 3 }, new int[3] { 2, 2, 2 }, new long[3] { 8L, 8L, 3L }, 12L, trip).TripCount);
-			Assert.AreEqual(0, trip[0]);
-			Assert.AreEqual(1, trip[1]);
-			Assert.AreEqual(0, trip[2], "the third fits back on the first, which still has room");
+			ClassicAssert.AreEqual(2, Batch(new int[3] { 1, 2, 3 }, new int[3] { 2, 2, 2 }, new long[3] { 8L, 8L, 3L }, 12L, trip).TripCount);
+			ClassicAssert.AreEqual(0, trip[0]);
+			ClassicAssert.AreEqual(1, trip[1]);
+			ClassicAssert.AreEqual(0, trip[2], "the third fits back on the first, which still has room");
 		}
 
 		[Test]
@@ -305,7 +306,7 @@ namespace ThousandAndFirst.Tests
 				loads[i] = 1L;
 			}
 			int[] trip = new int[count];
-			Assert.AreEqual(2, Batch(ids, dest, loads, 1000L, trip).TripCount);
+			ClassicAssert.AreEqual(2, Batch(ids, dest, loads, 1000L, trip).TripCount);
 			int onFirst = 0;
 			for (int i = 0; i < count; i++)
 			{
@@ -314,7 +315,7 @@ namespace ThousandAndFirst.Tests
 					onFirst++;
 				}
 			}
-			Assert.AreEqual(stops, onFirst, "the stop cap is a constant, not an aspiration");
+			ClassicAssert.AreEqual(stops, onFirst, "the stop cap is a constant, not an aspiration");
 		}
 
 		/// <summary>The planner only ever looks at the first &le; 16 open jobs (&sect;3.10(4)), so a
@@ -333,8 +334,8 @@ namespace ThousandAndFirst.Tests
 				loads[i] = 1L;
 			}
 			int[] trip = new int[count];
-			Assert.AreEqual(KingdomLogisticsRules.MaxJobsConsidered, Batch(ids, dest, loads, 10L, trip).TripCount);
-			Assert.AreEqual(-1, trip[count - 1], "a job beyond the cap is left for the next slice, never half-planned");
+			ClassicAssert.AreEqual(KingdomLogisticsRules.MaxJobsConsidered, Batch(ids, dest, loads, 10L, trip).TripCount);
+			ClassicAssert.AreEqual(-1, trip[count - 1], "a job beyond the cap is left for the next slice, never half-planned");
 		}
 
 		/// <summary>
@@ -350,7 +351,7 @@ namespace ThousandAndFirst.Tests
 			long[] loads = new long[6] { 5L, 7L, 4L, 6L, 6L, 1L };
 			int[] trip = new int[6];
 			KingdomLogisticsSnapshotPlan plan = Batch(ids, dest, loads, 12L, trip);
-			Assert.Greater(plan.TripCount, 0);
+			ClassicAssert.Greater(plan.TripCount, 0);
 		}
 
 		[Test]
@@ -361,17 +362,17 @@ namespace ThousandAndFirst.Tests
 			KingdomCityFault fault;
 			KingdomLogisticsRequest[] requests = Requests(new int[2] { 1, 2 },
 				new int[2] { 3, 3 }, new long[2] { 4L, 5L });
-			Assert.IsTrue(KingdomLogisticsRules.TryNoTwoHalfEmptyTrips(requests, 2,
+			ClassicAssert.IsTrue(KingdomLogisticsRules.TryNoTwoHalfEmptyTrips(requests, 2,
 				new int[2] { 0, 1 }, new long[2] { 4L, 5L }, new int[2] { 1, 1 },
 				new int[2] { 0, 1 }, 2, 12L, out held, out offender, out fault));
-			Assert.IsFalse(held);
-			Assert.AreEqual(1, offender);
+			ClassicAssert.IsFalse(held);
+			ClassicAssert.AreEqual(1, offender);
 			// Two FULL trips to the same ground are not the pathology: one carrier could not have
 			// done it.
-			Assert.IsTrue(KingdomLogisticsRules.TryNoTwoHalfEmptyTrips(requests, 2,
+			ClassicAssert.IsTrue(KingdomLogisticsRules.TryNoTwoHalfEmptyTrips(requests, 2,
 				new int[2] { 0, 1 }, new long[2] { 9L, 8L }, new int[2] { 1, 1 },
 				new int[2] { 0, 1 }, 2, 12L, out held, out offender, out fault));
-			Assert.IsTrue(held);
+			ClassicAssert.IsTrue(held);
 		}
 
 		// ---- The route itself: nearest-neighbour, then 2-opt ----------------------------------
@@ -399,7 +400,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomTripPlan plan;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomLogisticsRules.TryPlanTrip(between, count, out plan, out fault), fault.ToString());
+			ClassicAssert.IsTrue(KingdomLogisticsRules.TryPlanTrip(between, count, out plan, out fault), fault.ToString());
 			return plan;
 		}
 
@@ -409,8 +410,8 @@ namespace ThousandAndFirst.Tests
 		public void TheRouteWalksTheSquareInsteadOfCrossingIt()
 		{
 			KingdomTripPlan plan = Plan(Square(), 4);
-			Assert.AreEqual(4, plan.StopCount);
-			Assert.AreEqual(30, plan.Cells, "0 -> (10,0) -> (10,10) -> (0,10), which is three sides");
+			ClassicAssert.AreEqual(4, plan.StopCount);
+			ClassicAssert.AreEqual(30, plan.Cells, "0 -> (10,0) -> (10,10) -> (0,10), which is three sides");
 		}
 
 		/// <summary>Determinism, which is what makes step 90j reproduce after a reload: routing is
@@ -424,11 +425,11 @@ namespace ThousandAndFirst.Tests
 			for (int again = 0; again < 8; again++)
 			{
 				KingdomTripPlan repeat = Plan(between, 4);
-				Assert.AreEqual(first.Cells, repeat.Cells);
-				Assert.AreEqual(first.Operations, repeat.Operations);
+				ClassicAssert.AreEqual(first.Cells, repeat.Cells);
+				ClassicAssert.AreEqual(first.Operations, repeat.Operations);
 				for (int i = 0; i < 4; i++)
 				{
-					Assert.AreEqual(first.Order[i], repeat.Order[i]);
+					ClassicAssert.AreEqual(first.Order[i], repeat.Order[i]);
 				}
 			}
 		}
@@ -454,11 +455,11 @@ namespace ThousandAndFirst.Tests
 				}
 			}
 			KingdomTripPlan plan = Plan(between, stops);
-			Assert.AreEqual(stops, plan.StopCount);
+			ClassicAssert.AreEqual(stops, plan.StopCount);
 			KingdomBudgetVerdict verdict = KingdomBudgetRules.JudgeCount(KingdomBudgetLane.RoutePlan, plan.Operations);
-			Assert.AreEqual(KingdomBudgetVerdict.Within, verdict,
+			ClassicAssert.AreEqual(KingdomBudgetVerdict.Within, verdict,
 				"a full trip cost " + plan.Operations + " ops, which is outside the lane it is budgeted in");
-			Assert.LessOrEqual(plan.Operations, 1000, "§0.0 prices the whole slice's planning at ≲ 1,000 int ops");
+			ClassicAssert.LessOrEqual(plan.Operations, 1000, "§0.0 prices the whole slice's planning at ≲ 1,000 int ops");
 		}
 
 		[Test]
@@ -466,31 +467,31 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomTripPlan plan;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomLogisticsRules.TryPlanTrip(new int[400], KingdomLogisticsRules.MaxStopsPerTrip + 1, out plan, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidIndex, fault);
-			Assert.IsFalse(KingdomLogisticsRules.TryPlanTrip(new int[4], 3, out plan, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidIndex, fault);
+			ClassicAssert.IsFalse(KingdomLogisticsRules.TryPlanTrip(new int[400], KingdomLogisticsRules.MaxStopsPerTrip + 1, out plan, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidIndex, fault);
+			ClassicAssert.IsFalse(KingdomLogisticsRules.TryPlanTrip(new int[4], 3, out plan, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidIndex, fault);
 		}
 
 		[Test]
 		public void AnEmptySliceCostsNothingAndIsNotAFault()
 		{
 			KingdomTripPlan plan = Plan(new int[1], 0);
-			Assert.AreEqual(0, plan.StopCount);
-			Assert.AreEqual(0, plan.Cells);
-			Assert.AreEqual(0, plan.Operations);
+			ClassicAssert.AreEqual(0, plan.StopCount);
+			ClassicAssert.AreEqual(0, plan.Cells);
+			ClassicAssert.AreEqual(0, plan.Operations);
 		}
 
 		private static void AssertFields(Type type, bool valueType, string[] names, Type[] types)
 		{
-			Assert.IsFalse(type.IsPublic, type.FullName);
-			Assert.AreEqual(valueType, type.IsValueType, type.FullName);
+			ClassicAssert.IsFalse(type.IsPublic, type.FullName);
+			ClassicAssert.AreEqual(valueType, type.IsValueType, type.FullName);
 			FieldInfo[] fields = type.GetFields(BindingFlags.Instance | BindingFlags.NonPublic);
 			Array.Sort(fields, (a, b) => a.MetadataToken.CompareTo(b.MetadataToken));
 			CollectionAssert.AreEqual(names, Array.ConvertAll(fields, field => field.Name), type.FullName);
 			CollectionAssert.AreEqual(types, Array.ConvertAll(fields, field => field.FieldType), type.FullName);
 			foreach (FieldInfo field in fields)
-				Assert.IsTrue(field.IsAssembly && field.IsInitOnly, type.FullName + "." + field.Name);
+				ClassicAssert.IsTrue(field.IsAssembly && field.IsInitOnly, type.FullName + "." + field.Name);
 		}
 
 		private static string LogicalSource()

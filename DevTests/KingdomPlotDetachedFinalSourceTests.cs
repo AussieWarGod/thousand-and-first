@@ -2,6 +2,7 @@
 using System;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -114,7 +115,7 @@ namespace ThousandAndFirst.Tests
 			string source = Read("Growth/KingdomPlot2.31b.FinishOutputCustody.cs");
 			int start = source.IndexOf("private static bool PreparedPlotFinalOutput(",
 				StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0);
+			ClassicAssert.GreaterOrEqual(start, 0);
 			return source.Substring(start);
 		}
 
@@ -126,9 +127,9 @@ namespace ThousandAndFirst.Tests
 		private static string Between(string source, string start, string end)
 		{
 			int first = source.IndexOf(start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(first, 0, start);
+			ClassicAssert.GreaterOrEqual(first, 0, start);
 			int last = source.IndexOf(end, first + start.Length, StringComparison.Ordinal);
-			Assert.Greater(last, first, end);
+			ClassicAssert.Greater(last, first, end);
 			return source.Substring(first, last - first);
 		}
 
@@ -138,7 +139,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string term in terms)
 			{
 				int at = source.IndexOf(term, cursor, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(at, cursor, term);
+				ClassicAssert.GreaterOrEqual(at, cursor, term);
 				cursor = at + term.Length;
 			}
 		}

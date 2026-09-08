@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
@@ -21,7 +22,7 @@ namespace ThousandAndFirst.Tests
 		{
 			int[] order = new int[vessels.Length];
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomDrainRules.TryOrder(vessels, vessels.Length, order, out fault), fault.ToString());
+			ClassicAssert.IsTrue(KingdomDrainRules.TryOrder(vessels, vessels.Length, order, out fault), fault.ToString());
 			int[] ids = new int[vessels.Length];
 			for (int i = 0; i < vessels.Length; i++)
 			{
@@ -66,12 +67,12 @@ namespace ThousandAndFirst.Tests
 		public void ANullOrOverlongOrderIsRefused()
 		{
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomDrainRules.TryOrder(null, 0, new int[1], out fault));
-			Assert.AreEqual(KingdomCityFault.NullArgument, fault);
-			Assert.IsFalse(KingdomDrainRules.TryOrder(new KingdomVesselRow[1], 1, null, out fault));
-			Assert.AreEqual(KingdomCityFault.NullArgument, fault);
-			Assert.IsFalse(KingdomDrainRules.TryOrder(new KingdomVesselRow[1], 2, new int[2], out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidIndex, fault);
+			ClassicAssert.IsFalse(KingdomDrainRules.TryOrder(null, 0, new int[1], out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.NullArgument, fault);
+			ClassicAssert.IsFalse(KingdomDrainRules.TryOrder(new KingdomVesselRow[1], 1, null, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.NullArgument, fault);
+			ClassicAssert.IsFalse(KingdomDrainRules.TryOrder(new KingdomVesselRow[1], 2, new int[2], out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidIndex, fault);
 		}
 
 		/// <summary>The founder who opens the cistern after a season finds exactly the model's
@@ -83,11 +84,11 @@ namespace ThousandAndFirst.Tests
 			long[] drawn = new long[3];
 			long shortfall;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomDrainRules.TryApportion(vessels, 3, KingdomStockKind.Water, 90L, drawn, out shortfall, out fault));
-			Assert.AreEqual(0L, shortfall);
-			Assert.AreEqual(40L, drawn[1], "the oldest cask was not drained first");
-			Assert.AreEqual(30L, drawn[2]);
-			Assert.AreEqual(20L, drawn[0], "the newest dedication is the reserve and went last");
+			ClassicAssert.IsTrue(KingdomDrainRules.TryApportion(vessels, 3, KingdomStockKind.Water, 90L, drawn, out shortfall, out fault));
+			ClassicAssert.AreEqual(0L, shortfall);
+			ClassicAssert.AreEqual(40L, drawn[1], "the oldest cask was not drained first");
+			ClassicAssert.AreEqual(30L, drawn[2]);
+			ClassicAssert.AreEqual(20L, drawn[0], "the newest dedication is the reserve and went last");
 		}
 
 		[Test]
@@ -97,10 +98,10 @@ namespace ThousandAndFirst.Tests
 			long[] drawn = new long[2];
 			long shortfall;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomDrainRules.TryApportion(vessels, 2, KingdomStockKind.Water, 100L, drawn, out shortfall, out fault));
-			Assert.AreEqual(85L, shortfall);
-			Assert.AreEqual(10L, drawn[0]);
-			Assert.AreEqual(5L, drawn[1]);
+			ClassicAssert.IsTrue(KingdomDrainRules.TryApportion(vessels, 2, KingdomStockKind.Water, 100L, drawn, out shortfall, out fault));
+			ClassicAssert.AreEqual(85L, shortfall);
+			ClassicAssert.AreEqual(10L, drawn[0]);
+			ClassicAssert.AreEqual(5L, drawn[1]);
 		}
 
 		/// <summary>Qud's salt pools are water-600,salt-400. A drain may never launder brine into
@@ -112,10 +113,10 @@ namespace ThousandAndFirst.Tests
 			long[] drawn = new long[2];
 			long shortfall;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomDrainRules.TryApportion(vessels, 2, KingdomStockKind.Water, 50L, drawn, out shortfall, out fault));
-			Assert.AreEqual(0L, drawn[0], "brine was drunk");
-			Assert.AreEqual(50L, drawn[1]);
-			Assert.AreEqual(0L, shortfall);
+			ClassicAssert.IsTrue(KingdomDrainRules.TryApportion(vessels, 2, KingdomStockKind.Water, 50L, drawn, out shortfall, out fault));
+			ClassicAssert.AreEqual(0L, drawn[0], "brine was drunk");
+			ClassicAssert.AreEqual(50L, drawn[1]);
+			ClassicAssert.AreEqual(0L, shortfall);
 		}
 
 		/// <summary>The fresh-water rule is a water rule. A larder is not brine and is not skipped
@@ -130,9 +131,9 @@ namespace ThousandAndFirst.Tests
 			long[] drawn = new long[1];
 			long shortfall;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomDrainRules.TryApportion(vessels, 1, KingdomStockKind.Food, 30L, drawn, out shortfall, out fault));
-			Assert.AreEqual(30L, drawn[0]);
-			Assert.AreEqual(0L, shortfall);
+			ClassicAssert.IsTrue(KingdomDrainRules.TryApportion(vessels, 1, KingdomStockKind.Food, 30L, drawn, out shortfall, out fault));
+			ClassicAssert.AreEqual(30L, drawn[0]);
+			ClassicAssert.AreEqual(0L, shortfall);
 		}
 
 		[Test]
@@ -146,9 +147,9 @@ namespace ThousandAndFirst.Tests
 			long[] drawn = new long[2];
 			long shortfall;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomDrainRules.TryApportion(vessels, 2, KingdomStockKind.Water, 40L, drawn, out shortfall, out fault));
-			Assert.AreEqual(0L, drawn[0]);
-			Assert.AreEqual(40L, drawn[1]);
+			ClassicAssert.IsTrue(KingdomDrainRules.TryApportion(vessels, 2, KingdomStockKind.Water, 40L, drawn, out shortfall, out fault));
+			ClassicAssert.AreEqual(0L, drawn[0]);
+			ClassicAssert.AreEqual(40L, drawn[1]);
 		}
 
 		[Test]
@@ -158,11 +159,11 @@ namespace ThousandAndFirst.Tests
 			long[] drawn = new long[1];
 			long shortfall;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomDrainRules.TryApportion(vessels, 1, KingdomStockKind.Water, 0L, drawn, out shortfall, out fault));
-			Assert.AreEqual(0L, drawn[0]);
-			Assert.AreEqual(0L, shortfall);
-			Assert.IsFalse(KingdomDrainRules.TryApportion(vessels, 1, KingdomStockKind.Water, -1L, drawn, out shortfall, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidRate, fault);
+			ClassicAssert.IsTrue(KingdomDrainRules.TryApportion(vessels, 1, KingdomStockKind.Water, 0L, drawn, out shortfall, out fault));
+			ClassicAssert.AreEqual(0L, drawn[0]);
+			ClassicAssert.AreEqual(0L, shortfall);
+			ClassicAssert.IsFalse(KingdomDrainRules.TryApportion(vessels, 1, KingdomStockKind.Water, -1L, drawn, out shortfall, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidRate, fault);
 		}
 
 		/// <summary>The same demand over the same vessels apportions identically, every time. That
@@ -175,13 +176,13 @@ namespace ThousandAndFirst.Tests
 			long[] second = new long[4];
 			long shortfall;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomDrainRules.TryApportion(vessels, 4, KingdomStockKind.Water, 60L, first, out shortfall, out fault));
-			Assert.IsTrue(KingdomDrainRules.TryApportion(vessels, 4, KingdomStockKind.Water, 60L, second, out shortfall, out fault));
+			ClassicAssert.IsTrue(KingdomDrainRules.TryApportion(vessels, 4, KingdomStockKind.Water, 60L, first, out shortfall, out fault));
+			ClassicAssert.IsTrue(KingdomDrainRules.TryApportion(vessels, 4, KingdomStockKind.Water, 60L, second, out shortfall, out fault));
 			CollectionAssert.AreEqual(first, second);
-			Assert.AreEqual(25L, first[1], "vessel 1, dedicated first, was not drained first");
-			Assert.AreEqual(25L, first[3], "vessel 2 tied on dedication and lost the lower-id tiebreak");
-			Assert.AreEqual(10L, first[2]);
-			Assert.AreEqual(0L, first[0]);
+			ClassicAssert.AreEqual(25L, first[1], "vessel 1, dedicated first, was not drained first");
+			ClassicAssert.AreEqual(25L, first[3], "vessel 2 tied on dedication and lost the lower-id tiebreak");
+			ClassicAssert.AreEqual(10L, first[2]);
+			ClassicAssert.AreEqual(0L, first[0]);
 		}
 
 		[Test]
@@ -189,10 +190,10 @@ namespace ThousandAndFirst.Tests
 		{
 			long shortfall;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomDrainRules.TryApportion(null, 0, KingdomStockKind.Water, 1L, new long[1], out shortfall, out fault));
-			Assert.AreEqual(KingdomCityFault.NullArgument, fault);
-			Assert.IsFalse(KingdomDrainRules.TryApportion(new KingdomVesselRow[1], 1, KingdomStockKind.Water, 1L, null, out shortfall, out fault));
-			Assert.AreEqual(KingdomCityFault.NullArgument, fault);
+			ClassicAssert.IsFalse(KingdomDrainRules.TryApportion(null, 0, KingdomStockKind.Water, 1L, new long[1], out shortfall, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.NullArgument, fault);
+			ClassicAssert.IsFalse(KingdomDrainRules.TryApportion(new KingdomVesselRow[1], 1, KingdomStockKind.Water, 1L, null, out shortfall, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.NullArgument, fault);
 		}
 	}
 }

@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 using ThousandAndFirst.Simulation.City;
 
@@ -27,7 +28,7 @@ namespace ThousandAndFirst.Tests
 		{
 			int[] order = new int[demands.Length];
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomFlowRules.TryBrownoutOrder(demands, demands.Length, order, out fault), fault.ToString());
+			ClassicAssert.IsTrue(KingdomFlowRules.TryBrownoutOrder(demands, demands.Length, order, out fault), fault.ToString());
 			return order;
 		}
 
@@ -35,14 +36,14 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomFlowSolution solution;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomFlowRules.TrySolve(supplyPerDay, demands, demands.Length, Order(demands),
+			ClassicAssert.IsTrue(KingdomFlowRules.TrySolve(supplyPerDay, demands, demands.Length, Order(demands),
 				level, capacity, throughput, days, out solution, out fault), fault.ToString());
 			return solution;
 		}
 
 		private static void AssertConserved(KingdomFlowSolution s)
 		{
-			Assert.AreEqual(s.Generated + s.Discharged, s.Delivered + s.Charged + s.Spilled,
+			ClassicAssert.AreEqual(s.Generated + s.Discharged, s.Delivered + s.Charged + s.Spilled,
 				"flow conservation broke: something was made or lost that the solve cannot account for");
 		}
 
@@ -70,9 +71,9 @@ namespace ThousandAndFirst.Tests
 		public void SurplusWithNoStoreSpillsAndSaysSo()
 		{
 			KingdomFlowSolution s = Solve(10000L, Demands(Want(1, KingdomWorkTier.Industry, 4000)), 0L, 0L, 0L, 1L);
-			Assert.AreEqual(4000L, s.Delivered);
-			Assert.AreEqual(0L, s.Charged);
-			Assert.AreEqual(6000L, s.Spilled);
+			ClassicAssert.AreEqual(4000L, s.Delivered);
+			ClassicAssert.AreEqual(0L, s.Charged);
+			ClassicAssert.AreEqual(6000L, s.Spilled);
 			AssertConserved(s);
 		}
 
@@ -82,8 +83,8 @@ namespace ThousandAndFirst.Tests
 		public void AStoreIsNeverABucketThatFillsInAnInstant()
 		{
 			KingdomFlowSolution s = Solve(50000L, Demands(), 0L, 24000L, 12000L, 1L);
-			Assert.AreEqual(12000L, s.Charged, "a day's pour is a day's pour");
-			Assert.AreEqual(38000L, s.Spilled);
+			ClassicAssert.AreEqual(12000L, s.Charged, "a day's pour is a day's pour");
+			ClassicAssert.AreEqual(38000L, s.Spilled);
 			AssertConserved(s);
 		}
 
@@ -99,10 +100,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomFlowDemand[] want = Demands(Want(1, KingdomWorkTier.Industry, 4000));
 			KingdomFlowSolution s = Solve(0L, want, 12000L, 24000L, 12000L, 1L);
-			Assert.AreEqual(0, s.Stopped, "the store could cover it and nothing should have stopped");
-			Assert.AreEqual(4000L, s.Delivered);
-			Assert.AreEqual(4000L, s.Discharged);
-			Assert.IsFalse(s.Brownout);
+			ClassicAssert.AreEqual(0, s.Stopped, "the store could cover it and nothing should have stopped");
+			ClassicAssert.AreEqual(4000L, s.Delivered);
+			ClassicAssert.AreEqual(4000L, s.Discharged);
+			ClassicAssert.IsFalse(s.Brownout);
 			AssertConserved(s);
 		}
 
@@ -113,9 +114,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomFlowDemand[] want = Demands(Want(1, KingdomWorkTier.Industry, 4000), Want(2, KingdomWorkTier.Watch, 4000));
 			KingdomFlowSolution s = Solve(0L, want, 4000L, 24000L, 12000L, 1L);
-			Assert.AreEqual(4000L, s.Shortfall);
-			Assert.AreEqual(1, s.Stopped);
-			Assert.IsTrue(s.Brownout);
+			ClassicAssert.AreEqual(4000L, s.Shortfall);
+			ClassicAssert.AreEqual(1, s.Stopped);
+			ClassicAssert.IsTrue(s.Brownout);
 			AssertConserved(s);
 		}
 
@@ -137,12 +138,12 @@ namespace ThousandAndFirst.Tests
 				Want(50, KingdomWorkTier.Refining, 100),
 				Want(60, KingdomWorkTier.Industry, 100));
 			int[] order = Order(want);
-			Assert.AreEqual(KingdomWorkTier.Industry, want[order[0]].Tier);
-			Assert.AreEqual(KingdomWorkTier.Refining, want[order[1]].Tier);
-			Assert.AreEqual(KingdomWorkTier.Amenity, want[order[2]].Tier);
-			Assert.AreEqual(KingdomWorkTier.Food, want[order[3]].Tier);
-			Assert.AreEqual(KingdomWorkTier.Water, want[order[4]].Tier);
-			Assert.AreEqual(KingdomWorkTier.Watch, want[order[5]].Tier);
+			ClassicAssert.AreEqual(KingdomWorkTier.Industry, want[order[0]].Tier);
+			ClassicAssert.AreEqual(KingdomWorkTier.Refining, want[order[1]].Tier);
+			ClassicAssert.AreEqual(KingdomWorkTier.Amenity, want[order[2]].Tier);
+			ClassicAssert.AreEqual(KingdomWorkTier.Food, want[order[3]].Tier);
+			ClassicAssert.AreEqual(KingdomWorkTier.Water, want[order[4]].Tier);
+			ClassicAssert.AreEqual(KingdomWorkTier.Watch, want[order[5]].Tier);
 		}
 
 		/// <summary>
@@ -154,9 +155,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void LodgingStopsAfterIndustryAndBeforeFood()
 		{
-			Assert.AreEqual(KingdomWorkTier.Amenity, KingdomFlowRules.TierOfCategory("housing"));
-			Assert.Greater((int)KingdomFlowRules.TierOfCategory("housing"), (int)KingdomFlowRules.TierOfCategory("craft"));
-			Assert.Less((int)KingdomFlowRules.TierOfCategory("housing"), (int)KingdomFlowRules.TierOfCategory("food"));
+			ClassicAssert.AreEqual(KingdomWorkTier.Amenity, KingdomFlowRules.TierOfCategory("housing"));
+			ClassicAssert.Greater((int)KingdomFlowRules.TierOfCategory("housing"), (int)KingdomFlowRules.TierOfCategory("craft"));
+			ClassicAssert.Less((int)KingdomFlowRules.TierOfCategory("housing"), (int)KingdomFlowRules.TierOfCategory("food"));
 		}
 
 		/// <summary>A category the catalogue does not know — a third party's own, arriving through
@@ -167,7 +168,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("teleportarium")]
 		public void AnUnknownCategoryLandsOnTheMiddleRung(string category)
 		{
-			Assert.AreEqual(KingdomWorkTier.Amenity, KingdomFlowRules.TierOfCategory(category));
+			ClassicAssert.AreEqual(KingdomWorkTier.Amenity, KingdomFlowRules.TierOfCategory(category));
 		}
 
 		/// <summary>Within one rung the higher work id goes first. Stable, stored, reload-proof,
@@ -180,9 +181,9 @@ namespace ThousandAndFirst.Tests
 				Want(9, KingdomWorkTier.Industry, 100),
 				Want(5, KingdomWorkTier.Industry, 100));
 			int[] order = Order(want);
-			Assert.AreEqual(9, want[order[0]].WorkId);
-			Assert.AreEqual(5, want[order[1]].WorkId);
-			Assert.AreEqual(3, want[order[2]].WorkId);
+			ClassicAssert.AreEqual(9, want[order[0]].WorkId);
+			ClassicAssert.AreEqual(5, want[order[1]].WorkId);
+			ClassicAssert.AreEqual(3, want[order[2]].WorkId);
 		}
 
 		/// <summary>Ordering the same set twice gives the same answer, and ordering a shuffle of it
@@ -199,7 +200,7 @@ namespace ThousandAndFirst.Tests
 			int[] b = Order(other);
 			for (int i = 0; i < a.Length; i++)
 			{
-				Assert.AreEqual(one[a[i]].WorkId, other[b[i]].WorkId, "the ladder depended on array order");
+				ClassicAssert.AreEqual(one[a[i]].WorkId, other[b[i]].WorkId, "the ladder depended on array order");
 			}
 		}
 
@@ -211,9 +212,9 @@ namespace ThousandAndFirst.Tests
 			KingdomFlowDemand[] want = Demands(Want(1, KingdomWorkTier.Industry, 4000), Want(2, KingdomWorkTier.Watch, 4000));
 			// Short by a single unit: one whole work still goes.
 			KingdomFlowSolution s = Solve(7999L, want, 0L, 0L, 0L, 1L);
-			Assert.AreEqual(1, s.Stopped);
-			Assert.AreEqual(4000L, s.Delivered);
-			Assert.AreEqual(3999L, s.Spilled, "what the stopped work would have drunk is spare, and with no store it spills");
+			ClassicAssert.AreEqual(1, s.Stopped);
+			ClassicAssert.AreEqual(4000L, s.Delivered);
+			ClassicAssert.AreEqual(3999L, s.Spilled, "what the stopped work would have drunk is spare, and with no store it spills");
 			AssertConserved(s);
 		}
 
@@ -224,8 +225,8 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomFlowDemand[] want = Demands(Want(1, KingdomWorkTier.Industry, 4000), Want(2, KingdomWorkTier.Watch, 4000));
 			KingdomFlowSolution s = Solve(0L, want, 0L, 0L, 0L, 1L);
-			Assert.AreEqual(2, s.Stopped);
-			Assert.AreEqual(0L, s.Delivered);
+			ClassicAssert.AreEqual(2, s.Stopped);
+			ClassicAssert.AreEqual(0L, s.Delivered);
 			AssertConserved(s);
 		}
 
@@ -242,10 +243,10 @@ namespace ThousandAndFirst.Tests
 			KingdomFlowDemand[] want = Demands(Want(1, KingdomWorkTier.Industry, 1000));
 			KingdomFlowSolution one = Solve(2400L, want, 0L, 240000L, 120000L, 1L);
 			KingdomFlowSolution season = Solve(2400L, want, 0L, 240000L, 120000L, 90L);
-			Assert.AreEqual(one.Generated * 90L, season.Generated);
-			Assert.AreEqual(one.Delivered * 90L, season.Delivered);
-			Assert.AreEqual(one.Charged * 90L, season.Charged);
-			Assert.AreEqual(one.Stopped, season.Stopped);
+			ClassicAssert.AreEqual(one.Generated * 90L, season.Generated);
+			ClassicAssert.AreEqual(one.Delivered * 90L, season.Delivered);
+			ClassicAssert.AreEqual(one.Charged * 90L, season.Charged);
+			ClassicAssert.AreEqual(one.Stopped, season.Stopped);
 			AssertConserved(season);
 		}
 
@@ -264,9 +265,9 @@ namespace ThousandAndFirst.Tests
 			KingdomFlowSolution whole = Solve(2400L, want, 0L, capacity, throughput, 10L);
 			KingdomFlowSolution first = Solve(2400L, want, 0L, capacity, throughput, 4L);
 			KingdomFlowSolution second = Solve(2400L, want, first.Charged, capacity, throughput, 6L);
-			Assert.AreEqual(whole.Generated, first.Generated + second.Generated);
-			Assert.AreEqual(whole.Delivered, first.Delivered + second.Delivered);
-			Assert.AreEqual(whole.Charged, first.Charged + second.Charged);
+			ClassicAssert.AreEqual(whole.Generated, first.Generated + second.Generated);
+			ClassicAssert.AreEqual(whole.Delivered, first.Delivered + second.Delivered);
+			ClassicAssert.AreEqual(whole.Charged, first.Charged + second.Charged);
 		}
 
 		/// <summary>The store's fill and empty are proposed as breakpoints through the SAME
@@ -277,17 +278,17 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomBreakpoint fills;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomFlowRules.TryStoreCrossing(0L, 1000L, 100L, Day, 5000L, out fills, out fault), fault.ToString());
-			Assert.AreEqual(KingdomBreakpointKind.StockFull, fills.Kind);
-			Assert.AreEqual(5000L + 10L * Day, fills.Tick);
+			ClassicAssert.IsTrue(KingdomFlowRules.TryStoreCrossing(0L, 1000L, 100L, Day, 5000L, out fills, out fault), fault.ToString());
+			ClassicAssert.AreEqual(KingdomBreakpointKind.StockFull, fills.Kind);
+			ClassicAssert.AreEqual(5000L + 10L * Day, fills.Tick);
 			KingdomBreakpoint empties;
-			Assert.IsTrue(KingdomFlowRules.TryStoreCrossing(500L, 1000L, -100L, Day, 0L, out empties, out fault), fault.ToString());
-			Assert.AreEqual(KingdomBreakpointKind.StockEmpty, empties.Kind);
-			Assert.AreEqual(5L * Day, empties.Tick);
+			ClassicAssert.IsTrue(KingdomFlowRules.TryStoreCrossing(500L, 1000L, -100L, Day, 0L, out empties, out fault), fault.ToString());
+			ClassicAssert.AreEqual(KingdomBreakpointKind.StockEmpty, empties.Kind);
+			ClassicAssert.AreEqual(5L * Day, empties.Tick);
 			// A level going nowhere proposes nothing, and says so with false and no fault.
 			KingdomBreakpoint still;
-			Assert.IsFalse(KingdomFlowRules.TryStoreCrossing(500L, 1000L, 0L, Day, 0L, out still, out fault));
-			Assert.AreEqual(KingdomCityFault.None, fault);
+			ClassicAssert.IsFalse(KingdomFlowRules.TryStoreCrossing(500L, 1000L, 0L, Day, 0L, out still, out fault));
+			ClassicAssert.AreEqual(KingdomCityFault.None, fault);
 		}
 
 		// ---- Refusals -------------------------------------------------------------------------
@@ -300,9 +301,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomFlowSolution solution;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomFlowRules.TrySolve(long.MaxValue / 2L, new KingdomFlowDemand[0], 0, new int[0],
+			ClassicAssert.IsFalse(KingdomFlowRules.TrySolve(long.MaxValue / 2L, new KingdomFlowDemand[0], 0, new int[0],
 				0L, 0L, 0L, 1000L, out solution, out fault));
-			Assert.AreEqual(KingdomCityFault.ArithmeticOverflow, fault);
+			ClassicAssert.AreEqual(KingdomCityFault.ArithmeticOverflow, fault);
 		}
 
 		/// <summary>A store holding more than it can hold is a refusal, not a clamp: the solve is
@@ -312,9 +313,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomFlowSolution solution;
 			KingdomCityFault fault;
-			Assert.IsFalse(KingdomFlowRules.TrySolve(0L, new KingdomFlowDemand[0], 0, new int[0],
+			ClassicAssert.IsFalse(KingdomFlowRules.TrySolve(0L, new KingdomFlowDemand[0], 0, new int[0],
 				2000L, 1000L, 500L, 1L, out solution, out fault));
-			Assert.AreEqual(KingdomCityFault.InvalidCapacity, fault);
+			ClassicAssert.AreEqual(KingdomCityFault.InvalidCapacity, fault);
 		}
 
 		/// <summary>Zero days is a no-op and not a fault: reckoning twice at the same tick must
@@ -323,9 +324,9 @@ namespace ThousandAndFirst.Tests
 		public void ZeroDaysMovesNothingAndIsNotAFault()
 		{
 			KingdomFlowSolution s = Solve(2400L, Demands(Want(1, KingdomWorkTier.Industry, 1000)), 500L, 1000L, 500L, 0L);
-			Assert.AreEqual(0L, s.Generated);
-			Assert.AreEqual(0L, s.Delivered);
-			Assert.AreEqual(0, s.Stopped);
+			ClassicAssert.AreEqual(0L, s.Generated);
+			ClassicAssert.AreEqual(0L, s.Delivered);
+			ClassicAssert.AreEqual(0, s.Stopped);
 		}
 
 		// ---- The power lane's one-accounting proof --------------------------------------------
@@ -343,7 +344,7 @@ namespace ThousandAndFirst.Tests
 		public void ChargeForDaysIsExactlyWhatTheFlowSolveGenerates(int daily, int days)
 		{
 			KingdomFlowSolution s = Solve(daily, new KingdomFlowDemand[0], 0L, 0L, 0L, days);
-			Assert.AreEqual(KingdomPowerRules.ChargeForDays(daily, days), s.Generated);
+			ClassicAssert.AreEqual(KingdomPowerRules.ChargeForDays(daily, days), s.Generated);
 		}
 
 		/// <summary>
@@ -363,7 +364,7 @@ namespace ThousandAndFirst.Tests
 			int perDay = 100000;
 			KingdomFlowSolution s = Solve(perDay, new KingdomFlowDemand[0], stored, capacity,
 				KingdomPowerRules.ThroughputForDays(capacity, 1), days);
-			Assert.AreEqual(KingdomPowerRules.Absorbable(perDay * days, stored, capacity, days), s.Charged);
+			ClassicAssert.AreEqual(KingdomPowerRules.Absorbable(perDay * days, stored, capacity, days), s.Charged);
 			AssertConserved(s);
 		}
 
@@ -381,8 +382,8 @@ namespace ThousandAndFirst.Tests
 			int releasable = KingdomPowerRules.Releasable(stored, capacity, 1);
 			KingdomFlowDemand[] want = Demands(Want(1, KingdomWorkTier.Industry, releasable));
 			KingdomFlowSolution s = Solve(0L, want, stored, capacity, KingdomPowerRules.ThroughputForDays(capacity, 1), 1L);
-			Assert.AreEqual(0, s.Stopped, "the store could cover exactly this demand, so nothing should have gone quiet");
-			Assert.AreEqual(releasable, s.Discharged);
+			ClassicAssert.AreEqual(0, s.Stopped, "the store could cover exactly this demand, so nothing should have gone quiet");
+			ClassicAssert.AreEqual(releasable, s.Discharged);
 			AssertConserved(s);
 		}
 
@@ -394,9 +395,9 @@ namespace ThousandAndFirst.Tests
 			int releasable = KingdomPowerRules.Releasable(12000, 24000, 1);
 			KingdomFlowDemand[] want = Demands(Want(1, KingdomWorkTier.Industry, releasable), Want(2, KingdomWorkTier.Watch, 1));
 			KingdomFlowSolution s = Solve(0L, want, 12000, 24000, KingdomPowerRules.ThroughputForDays(24000, 1), 1L);
-			Assert.AreEqual(1L, s.Shortfall);
-			Assert.AreEqual(1, s.Stopped);
-			Assert.AreEqual(KingdomWorkTier.Industry, want[Order(want)[0]].Tier, "the forge goes before the watch");
+			ClassicAssert.AreEqual(1L, s.Shortfall);
+			ClassicAssert.AreEqual(1, s.Stopped);
+			ClassicAssert.AreEqual(KingdomWorkTier.Industry, want[Order(want)[0]].Tier, "the forge goes before the watch");
 			AssertConserved(s);
 		}
 
@@ -415,7 +416,7 @@ namespace ThousandAndFirst.Tests
 			}
 			KingdomCityState state;
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomCityState.TryCreate(1, 1, "seat", 100L, default(KingdomStocks), rows,
+			ClassicAssert.IsTrue(KingdomCityState.TryCreate(1, 1, "seat", 100L, default(KingdomStocks), rows,
 				new KingdomWorkRow[0], new KingdomResidentRow[0], new KingdomClockRow[0], out state, out fault), fault.ToString());
 			return state;
 		}
@@ -423,7 +424,7 @@ namespace ThousandAndFirst.Tests
 		private static void Downhill(KingdomCityState state, int[] members, long budget, out int from, out int to, out long amount)
 		{
 			KingdomCityFault fault;
-			Assert.IsTrue(KingdomFlowRules.TryChooseDownhill(state, KingdomStockKind.Water, members, members.Length, budget,
+			ClassicAssert.IsTrue(KingdomFlowRules.TryChooseDownhill(state, KingdomStockKind.Water, members, members.Length, budget,
 				out from, out to, out amount, out fault), fault.ToString());
 		}
 
@@ -437,9 +438,9 @@ namespace ThousandAndFirst.Tests
 			int to;
 			long amount;
 			Downhill(state, new int[2] { 0, 1 }, 10000L, out from, out to, out amount);
-			Assert.AreEqual(0, from);
-			Assert.AreEqual(1, to);
-			Assert.AreEqual(500L, amount, "two vessels of equal size level at half the difference");
+			ClassicAssert.AreEqual(0, from);
+			ClassicAssert.AreEqual(1, to);
+			ClassicAssert.AreEqual(500L, amount, "two vessels of equal size level at half the difference");
 		}
 
 		/// <summary>Capacities differ, and the line levels the FILL rather than the contents: a
@@ -452,9 +453,9 @@ namespace ThousandAndFirst.Tests
 			int to;
 			long amount;
 			Downhill(state, new int[2] { 0, 1 }, 10000L, out from, out to, out amount);
-			Assert.AreEqual(225L, amount);
+			ClassicAssert.AreEqual(225L, amount);
 			// 75/300 and 225/900 are both one quarter.
-			Assert.AreEqual((300L - amount) * 900L, amount * 300L, "the two ends did not come to the same fill");
+			ClassicAssert.AreEqual((300L - amount) * 900L, amount * 300L, "the two ends did not come to the same fill");
 		}
 
 		/// <summary>A line already level runs nothing, and a line running uphill runs nothing. Both
@@ -466,9 +467,9 @@ namespace ThousandAndFirst.Tests
 			int to;
 			long amount;
 			Downhill(Zones(500L, 1000L, 500L, 1000L), new int[2] { 0, 1 }, 10000L, out from, out to, out amount);
-			Assert.AreEqual(0L, amount);
+			ClassicAssert.AreEqual(0L, amount);
 			Downhill(Zones(0L, 1000L, 0L, 1000L), new int[2] { 0, 1 }, 10000L, out from, out to, out amount);
-			Assert.AreEqual(0L, amount);
+			ClassicAssert.AreEqual(0L, amount);
 		}
 
 		/// <summary>The line's own bottleneck is the ceiling: a narrow main takes longer to level
@@ -481,7 +482,7 @@ namespace ThousandAndFirst.Tests
 			int to;
 			long amount;
 			Downhill(state, new int[2] { 0, 1 }, 60L, out from, out to, out amount);
-			Assert.AreEqual(60L, amount);
+			ClassicAssert.AreEqual(60L, amount);
 		}
 
 		/// <summary>A zone on the line with no vessels for this kind holds nothing on it, and that
@@ -494,9 +495,9 @@ namespace ThousandAndFirst.Tests
 			int to;
 			long amount;
 			Downhill(state, new int[3] { 0, 1, 2 }, 10000L, out from, out to, out amount);
-			Assert.AreEqual(0, from);
-			Assert.AreEqual(2, to);
-			Assert.AreEqual(500L, amount);
+			ClassicAssert.AreEqual(0, from);
+			ClassicAssert.AreEqual(2, to);
+			ClassicAssert.AreEqual(500L, amount);
 		}
 
 		/// <summary>One zone is not a network. Nothing runs and nothing refuses.</summary>
@@ -507,8 +508,8 @@ namespace ThousandAndFirst.Tests
 			int to;
 			long amount;
 			Downhill(Zones(1000L, 1000L), new int[1] { 0 }, 10000L, out from, out to, out amount);
-			Assert.AreEqual(-1, from);
-			Assert.AreEqual(0L, amount);
+			ClassicAssert.AreEqual(-1, from);
+			ClassicAssert.AreEqual(0L, amount);
 		}
 
 		// ---- The telling ----------------------------------------------------------------------
@@ -521,7 +522,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("crank mill", KingdomFlowRules.BrownoutNotice("crank mill"));
 			StringAssert.Contains("crank mill", KingdomFlowRules.BrownoutTelling("crank mill", "Kavvat"));
 			StringAssert.Contains("Kavvat", KingdomFlowRules.BrownoutTelling("crank mill", "Kavvat"));
-			Assert.IsNotEmpty(KingdomFlowRules.BrownoutNotice(null), "a nameless work still owes the founder a sentence");
+			ClassicAssert.IsNotEmpty(KingdomFlowRules.BrownoutNotice(null), "a nameless work still owes the founder a sentence");
 		}
 
 		/// <summary>The ladder line is composed from the enum in the enum's own order, so the
@@ -534,7 +535,7 @@ namespace ThousandAndFirst.Tests
 			for (int tier = 0; tier <= (int)KingdomWorkTier.Watch; tier++)
 			{
 				int found = line.IndexOf(KingdomFlowRules.TierName((KingdomWorkTier)tier), System.StringComparison.Ordinal);
-				Assert.Greater(found, at, "the ladder line got out of step with the ladder");
+				ClassicAssert.Greater(found, at, "the ladder line got out of step with the ladder");
 				at = found;
 			}
 		}

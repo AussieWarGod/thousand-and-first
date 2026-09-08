@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Harness;
 
 namespace ThousandAndFirst.Tests
@@ -29,34 +30,34 @@ namespace ThousandAndFirst.Tests
 			Fixture fixture = new Fixture { Work = Work(quarantined: flag), Roof = Roof(roofStanding: flag) };
 			KingdomSubsidenceRungSaveSnapshot expected = fixture.Snapshot();
 			string wire = Wire(expected);
-			Assert.IsTrue(wire.StartsWith(Prefix, StringComparison.Ordinal));
-			Assert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.MatchesPrefix(wire));
-			Assert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.TryDecode(wire, out KingdomSubsidenceRungSaveSnapshot actual));
-			Assert.AreEqual(expected.GameId, actual.GameId); Assert.AreEqual(expected.ZoneId, actual.ZoneId);
-			Assert.AreEqual(expected.StepWire, actual.StepWire); Assert.AreEqual(expected.RungWire, actual.RungWire);
-			Assert.AreEqual(expected.StepId, actual.StepId); Assert.AreEqual(expected.TellingDigest, actual.TellingDigest);
-			Assert.AreEqual(expected.Now, actual.Now); Assert.AreEqual(expected.AnchorTick, actual.AnchorTick);
-			Assert.AreEqual(expected.DueTick, actual.DueTick); Assert.AreEqual(expected.Sequence, actual.Sequence);
-			Assert.AreEqual(expected.LastSubsidenceTick, actual.LastSubsidenceTick);
-			Assert.AreEqual(expected.LedgerDepartures, actual.LedgerDepartures);
-			Assert.AreEqual(expected.Population, actual.Population); Assert.AreEqual(expected.Stage, actual.Stage);
-			Assert.AreEqual(expected.ChronicleCount, actual.ChronicleCount); Assert.AreEqual(expected.OutsiderCount, actual.OutsiderCount);
+			ClassicAssert.IsTrue(wire.StartsWith(Prefix, StringComparison.Ordinal));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.MatchesPrefix(wire));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.TryDecode(wire, out KingdomSubsidenceRungSaveSnapshot actual));
+			ClassicAssert.AreEqual(expected.GameId, actual.GameId); ClassicAssert.AreEqual(expected.ZoneId, actual.ZoneId);
+			ClassicAssert.AreEqual(expected.StepWire, actual.StepWire); ClassicAssert.AreEqual(expected.RungWire, actual.RungWire);
+			ClassicAssert.AreEqual(expected.StepId, actual.StepId); ClassicAssert.AreEqual(expected.TellingDigest, actual.TellingDigest);
+			ClassicAssert.AreEqual(expected.Now, actual.Now); ClassicAssert.AreEqual(expected.AnchorTick, actual.AnchorTick);
+			ClassicAssert.AreEqual(expected.DueTick, actual.DueTick); ClassicAssert.AreEqual(expected.Sequence, actual.Sequence);
+			ClassicAssert.AreEqual(expected.LastSubsidenceTick, actual.LastSubsidenceTick);
+			ClassicAssert.AreEqual(expected.LedgerDepartures, actual.LedgerDepartures);
+			ClassicAssert.AreEqual(expected.Population, actual.Population); ClassicAssert.AreEqual(expected.Stage, actual.Stage);
+			ClassicAssert.AreEqual(expected.ChronicleCount, actual.ChronicleCount); ClassicAssert.AreEqual(expected.OutsiderCount, actual.OutsiderCount);
 			AssertWork(expected.Work, actual.Work); AssertRoof(expected.Roof, actual.Roof);
-			Assert.AreEqual(35, actual.ResidentIds.Count); Assert.AreEqual(15, actual.AbsentResidentIds.Count);
+			ClassicAssert.AreEqual(35, actual.ResidentIds.Count); ClassicAssert.AreEqual(15, actual.AbsentResidentIds.Count);
 			CollectionAssert.AreEqual(expected.ResidentIds, actual.ResidentIds);
 			CollectionAssert.AreEqual(expected.ObjectIds, actual.ObjectIds);
 			CollectionAssert.AreEqual(expected.AbsentResidentIds, actual.AbsentResidentIds);
 			CollectionAssert.AreEqual(expected.AbsentObjectIds, actual.AbsentObjectIds);
-			Assert.AreEqual(wire, Wire(actual));
+			ClassicAssert.AreEqual(wire, Wire(actual));
 		}
 
 		[Test]
 		public void CurrentEnvelopeBindsVersionTwoToSs5WithoutChangingTheRungSchema()
 		{
 			string wire = Wire(new Fixture().Snapshot()); byte[] bytes = Bytes(wire);
-			Assert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.MatchesCurrentPrefix(wire));
-			Assert.AreEqual(0x52535401, ReadInt(bytes, 0)); Assert.AreEqual(2, ReadInt(bytes, 4));
-			Assert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.TryDecode(wire, out var snapshot));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.MatchesCurrentPrefix(wire));
+			ClassicAssert.AreEqual(0x52535401, ReadInt(bytes, 0)); ClassicAssert.AreEqual(2, ReadInt(bytes, 4));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.TryDecode(wire, out var snapshot));
 			StringAssert.StartsWith("ss5:", snapshot.StepWire); StringAssert.StartsWith("sr2:", snapshot.RungWire);
 		}
 
@@ -67,11 +68,11 @@ namespace ThousandAndFirst.Tests
 			byte[] bytes = Bytes(Wire(new Fixture().Snapshot()));
 			bytes = ReplaceText(bytes, Offsets(bytes)["StepWire"], Encoding.UTF8.GetBytes("ss4:" + StepWire.Substring(4)));
 			PutInteger(bytes, 4, 1, 4); string historical = "taf-rung-save-v1:" + Convert.ToBase64String(bytes);
-			Assert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.MatchesPrefix(historical));
-			Assert.IsFalse(KingdomSubsidenceRungSaveSnapshotCodec.MatchesCurrentPrefix(historical));
-			Assert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.TryDecode(historical, out var snapshot));
-			Assert.AreEqual("ss4:" + StepWire.Substring(4), snapshot.StepWire);
-			Assert.AreEqual(historical, Wire(snapshot)); Assert.AreEqual("sr2:opaque-native-owner-must-validate", snapshot.RungWire);
+			ClassicAssert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.MatchesPrefix(historical));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungSaveSnapshotCodec.MatchesCurrentPrefix(historical));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.TryDecode(historical, out var snapshot));
+			ClassicAssert.AreEqual("ss4:" + StepWire.Substring(4), snapshot.StepWire);
+			ClassicAssert.AreEqual(historical, Wire(snapshot)); ClassicAssert.AreEqual("sr2:opaque-native-owner-must-validate", snapshot.RungWire);
 		}
 
 		[TestCase("prefix")] [TestCase("version")] [TestCase("step")]
@@ -91,13 +92,13 @@ namespace ThousandAndFirst.Tests
 			string before = Wire(value);
 			fixture.ResidentIds[0] = 101; fixture.ObjectIds[0] = "changed-survivor";
 			fixture.AbsentResidentIds[0] = 102; fixture.AbsentObjectIds[0] = "changed-absent";
-			Assert.AreEqual(1, value.ResidentIds[0]); Assert.AreEqual("body-1", value.ObjectIds[0]);
-			Assert.AreEqual(36, value.AbsentResidentIds[0]); Assert.AreEqual("body-36", value.AbsentObjectIds[0]);
+			ClassicAssert.AreEqual(1, value.ResidentIds[0]); ClassicAssert.AreEqual("body-1", value.ObjectIds[0]);
+			ClassicAssert.AreEqual(36, value.AbsentResidentIds[0]); ClassicAssert.AreEqual("body-36", value.AbsentObjectIds[0]);
 			Assert.Throws<NotSupportedException>(() => ((IList<int>)value.ResidentIds)[0] = 101);
 			Assert.Throws<NotSupportedException>(() => ((IList<string>)value.ObjectIds)[0] = "changed-survivor");
 			Assert.Throws<NotSupportedException>(() => ((IList<int>)value.AbsentResidentIds)[0] = 102);
 			Assert.Throws<NotSupportedException>(() => ((IList<string>)value.AbsentObjectIds)[0] = "changed-absent");
-			Assert.AreEqual(before, Wire(value));
+			ClassicAssert.AreEqual(before, Wire(value));
 		}
 
 		[Test]
@@ -106,12 +107,12 @@ namespace ThousandAndFirst.Tests
 			KingdomSubsidenceRungSaveSnapshot value = new Fixture { Work = Work(plotId: "", designStamp: null,
 				incidentId: null, lastCompletedIncidentId: null, incidentLine: null) }.Snapshot();
 			string wire = Wire(value); byte[] bytes = Bytes(wire); Dictionary<string, int> offsets = Offsets(bytes);
-			Assert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.TryDecode(wire, out KingdomSubsidenceRungSaveSnapshot read));
-			Assert.AreEqual("", read.Work.PlotId); Assert.IsNull(read.Work.DesignStamp); Assert.IsNull(read.Work.IncidentId);
-			Assert.IsNull(read.Work.LastCompletedIncidentId); Assert.IsNull(read.Work.IncidentLine);
-			Assert.AreEqual(0, ReadInt(bytes, offsets["PlotId"]));
-			foreach (string field in NullableTextFields) Assert.AreEqual(-1, ReadInt(bytes, offsets[field]), field);
-			Assert.AreEqual(wire, Wire(read));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.TryDecode(wire, out KingdomSubsidenceRungSaveSnapshot read));
+			ClassicAssert.AreEqual("", read.Work.PlotId); ClassicAssert.IsNull(read.Work.DesignStamp); ClassicAssert.IsNull(read.Work.IncidentId);
+			ClassicAssert.IsNull(read.Work.LastCompletedIncidentId); ClassicAssert.IsNull(read.Work.IncidentLine);
+			ClassicAssert.AreEqual(0, ReadInt(bytes, offsets["PlotId"]));
+			foreach (string field in NullableTextFields) ClassicAssert.AreEqual(-1, ReadInt(bytes, offsets[field]), field);
+			ClassicAssert.AreEqual(wire, Wire(read));
 			foreach (string field in NullableTextFields) Refuses(TextField(field, ""));
 			Refuses(TextField("PlotId", null));
 		}
@@ -126,10 +127,10 @@ namespace ThousandAndFirst.Tests
 			if (field == "AbsentResidentIds") fixture.AbsentResidentIds = null;
 			if (field == "AbsentObjectIds") fixture.AbsentObjectIds = null;
 			KingdomSubsidenceRungSaveSnapshot value = fixture.Snapshot();
-			if (field == "ResidentIds") Assert.IsNull(value.ResidentIds);
-			if (field == "ObjectIds") Assert.IsNull(value.ObjectIds);
-			if (field == "AbsentResidentIds") Assert.IsNull(value.AbsentResidentIds);
-			if (field == "AbsentObjectIds") Assert.IsNull(value.AbsentObjectIds);
+			if (field == "ResidentIds") ClassicAssert.IsNull(value.ResidentIds);
+			if (field == "ObjectIds") ClassicAssert.IsNull(value.ObjectIds);
+			if (field == "AbsentResidentIds") ClassicAssert.IsNull(value.AbsentResidentIds);
+			if (field == "AbsentObjectIds") ClassicAssert.IsNull(value.AbsentObjectIds);
 			Refuses(value);
 		}
 
@@ -174,7 +175,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string prefix = field == "StepWire" ? "ss5:" : field == "RungWire" ? "sr2:" : "";
 			KingdomSubsidenceRungSaveSnapshot value = TextField(field, prefix + new string('x', maximum - prefix.Length));
-			Assert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.TryDecode(Wire(value), out _));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.TryDecode(Wire(value), out _));
 			Refuses(TextField(field, prefix + new string('x', maximum - prefix.Length + 1)));
 		}
 
@@ -185,7 +186,7 @@ namespace ThousandAndFirst.Tests
 			{
 				string body = new string('x', length); Fixture fixture = new Fixture { Roof = Roof(bodyObjectId: body) };
 				fixture.ObjectIds[0] = body;
-				if (length == 512) Assert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.TryDecode(Wire(fixture.Snapshot()), out _));
+				if (length == 512) ClassicAssert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.TryDecode(Wire(fixture.Snapshot()), out _));
 				else Refuses(fixture.Snapshot());
 			}
 		}
@@ -204,8 +205,8 @@ namespace ThousandAndFirst.Tests
 			Fixture fixture = new Fixture { Step = "ss5:opaque-\U0001F9EA", Rung = "sr2:opaque-\u0800" };
 			fixture.ObjectIds[1] = "BODY-1"; fixture.ObjectIds[2] = "body-\U0001F9EA";
 			fixture.AbsentObjectIds[0] = "body-e\u0301"; fixture.AbsentObjectIds[1] = "body-\u00E9";
-			Assert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.TryDecode(Wire(fixture.Snapshot()), out KingdomSubsidenceRungSaveSnapshot read));
-			Assert.AreEqual(fixture.Step, read.StepWire); Assert.AreEqual(fixture.Rung, read.RungWire);
+			ClassicAssert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.TryDecode(Wire(fixture.Snapshot()), out KingdomSubsidenceRungSaveSnapshot read));
+			ClassicAssert.AreEqual(fixture.Step, read.StepWire); ClassicAssert.AreEqual(fixture.Rung, read.RungWire);
 			CollectionAssert.AreEqual(fixture.ObjectIds, read.ObjectIds); CollectionAssert.AreEqual(fixture.AbsentObjectIds, read.AbsentObjectIds);
 		}
 
@@ -252,8 +253,8 @@ namespace ThousandAndFirst.Tests
 			Refuses(new Fixture { AnchorTick = 60002, DueTick = 60001 }.Snapshot());
 			KingdomSubsidenceRungSaveSnapshot value = new Fixture { AnchorTick = 60001, DueTick = 60001,
 				Roof = Roof(reached: 60001, warned: 0) }.Snapshot();
-			Assert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.TryDecode(Wire(value), out KingdomSubsidenceRungSaveSnapshot read));
-			Assert.AreEqual(60001, read.AnchorTick); Assert.AreEqual(0, read.Roof.Warned);
+			ClassicAssert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.TryDecode(Wire(value), out KingdomSubsidenceRungSaveSnapshot read));
+			ClassicAssert.AreEqual(60001, read.AnchorTick); ClassicAssert.AreEqual(0, read.Roof.Warned);
 		}
 
 		[TestCase(0)] [TestCase(34)] [TestCase(36)]
@@ -304,7 +305,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(1)] [TestCase(17)] [TestCase(35)]
 		public void AnyExactSurvivingRoofPairCanRoundTrip(int resident)
 		{
-			Assert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.TryDecode(
+			ClassicAssert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.TryDecode(
 				Wire(new Fixture { Roof = Roof(residentId: resident, bodyObjectId: "body-" + resident) }.Snapshot()), out _));
 		}
 
@@ -319,14 +320,14 @@ namespace ThousandAndFirst.Tests
 		[TestCase("taf-rung-save-v1:", true)] [TestCase("taf-rung-save-v1:!broken", true)]
 		public void PrefixClassificationRecognizesTheClaimIndependentlyOfPayloadValidity(string wire, bool claimed)
 		{
-			Assert.AreEqual(claimed, KingdomSubsidenceRungSaveSnapshotCodec.MatchesPrefix(wire));
+			ClassicAssert.AreEqual(claimed, KingdomSubsidenceRungSaveSnapshotCodec.MatchesPrefix(wire));
 		}
 
 		[Test]
 		public void OversizedClaimStillMatchesThisVariantButDecodeRefuses()
 		{
 			string wire = Prefix + new string('A', KingdomSubsidenceRungSaveSnapshotCodec.MaxWireChars);
-			Assert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.MatchesPrefix(wire)); RefusesWire(wire);
+			ClassicAssert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.MatchesPrefix(wire)); RefusesWire(wire);
 		}
 
 		[Test]
@@ -352,7 +353,7 @@ namespace ThousandAndFirst.Tests
 			string wire = Wire(new Fixture().Snapshot()); RefusesWire(wire.Insert(Prefix.Length + 4, "\n"));
 			for (int extra = 1; extra <= 3 && !wire.EndsWith("=", StringComparison.Ordinal); extra++)
 				wire = Wire(new Fixture { Step = StepWire + new string('x', extra) }.Snapshot());
-			Assert.IsTrue(wire.EndsWith("=", StringComparison.Ordinal));
+			ClassicAssert.IsTrue(wire.EndsWith("=", StringComparison.Ordinal));
 			const string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 			int at = wire.Length - (wire.EndsWith("==", StringComparison.Ordinal) ? 3 : 2);
 			char[] chars = wire.ToCharArray(); chars[at] = alphabet[alphabet.IndexOf(chars[at]) + 1];
@@ -416,8 +417,8 @@ namespace ThousandAndFirst.Tests
 		public void Utf8ByteBudgetCanRejectAnOtherwiseBoundedModelWithoutPartialWire()
 		{
 			Fixture fixture = new Fixture { Step = "ss5:" + new string('\u0800', KingdomSubsidenceRungSaveSnapshotCodec.MaxStepWireChars - 4) };
-			Assert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.Valid(fixture.Snapshot()));
-			Assert.IsFalse(KingdomSubsidenceRungSaveSnapshotCodec.TryEncode(fixture.Snapshot(), out string wire)); Assert.IsNull(wire);
+			ClassicAssert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.Valid(fixture.Snapshot()));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungSaveSnapshotCodec.TryEncode(fixture.Snapshot(), out string wire)); ClassicAssert.IsNull(wire);
 		}
 
 		private sealed class Fixture
@@ -516,25 +517,25 @@ namespace ThousandAndFirst.Tests
 		}
 		private static void AssertWork(KingdomSubsidenceRungSaveWork expected, KingdomSubsidenceRungSaveWork actual)
 		{
-			Assert.AreEqual(expected.ObjectId, actual.ObjectId); Assert.AreEqual(expected.Blueprint, actual.Blueprint);
-			Assert.AreEqual(expected.PlotId, actual.PlotId); Assert.AreEqual(expected.DesignStamp, actual.DesignStamp);
-			Assert.AreEqual(expected.X, actual.X); Assert.AreEqual(expected.Y, actual.Y); Assert.AreEqual(expected.PartCopies, actual.PartCopies);
-			Assert.AreEqual(expected.BeforeWear, actual.BeforeWear); Assert.AreEqual(expected.AfterWear, actual.AfterWear);
-			Assert.AreEqual(expected.IncidentPhase, actual.IncidentPhase); Assert.AreEqual(expected.IncidentId, actual.IncidentId);
-			Assert.AreEqual(expected.IncidentCause, actual.IncidentCause); Assert.AreEqual(expected.IncidentBeforeWear, actual.IncidentBeforeWear);
-			Assert.AreEqual(expected.IncidentAfterWear, actual.IncidentAfterWear); Assert.AreEqual(expected.Wear, actual.Wear);
-			Assert.AreEqual(expected.LastCause, actual.LastCause); Assert.AreEqual(expected.LastCompletedIncidentId, actual.LastCompletedIncidentId);
-			Assert.AreEqual(expected.IncidentLine, actual.IncidentLine); Assert.AreEqual(expected.IncidentMessageState, actual.IncidentMessageState);
-			Assert.AreEqual(expected.Quarantined, actual.Quarantined);
+			ClassicAssert.AreEqual(expected.ObjectId, actual.ObjectId); ClassicAssert.AreEqual(expected.Blueprint, actual.Blueprint);
+			ClassicAssert.AreEqual(expected.PlotId, actual.PlotId); ClassicAssert.AreEqual(expected.DesignStamp, actual.DesignStamp);
+			ClassicAssert.AreEqual(expected.X, actual.X); ClassicAssert.AreEqual(expected.Y, actual.Y); ClassicAssert.AreEqual(expected.PartCopies, actual.PartCopies);
+			ClassicAssert.AreEqual(expected.BeforeWear, actual.BeforeWear); ClassicAssert.AreEqual(expected.AfterWear, actual.AfterWear);
+			ClassicAssert.AreEqual(expected.IncidentPhase, actual.IncidentPhase); ClassicAssert.AreEqual(expected.IncidentId, actual.IncidentId);
+			ClassicAssert.AreEqual(expected.IncidentCause, actual.IncidentCause); ClassicAssert.AreEqual(expected.IncidentBeforeWear, actual.IncidentBeforeWear);
+			ClassicAssert.AreEqual(expected.IncidentAfterWear, actual.IncidentAfterWear); ClassicAssert.AreEqual(expected.Wear, actual.Wear);
+			ClassicAssert.AreEqual(expected.LastCause, actual.LastCause); ClassicAssert.AreEqual(expected.LastCompletedIncidentId, actual.LastCompletedIncidentId);
+			ClassicAssert.AreEqual(expected.IncidentLine, actual.IncidentLine); ClassicAssert.AreEqual(expected.IncidentMessageState, actual.IncidentMessageState);
+			ClassicAssert.AreEqual(expected.Quarantined, actual.Quarantined);
 		}
 		private static void AssertRoof(KingdomSubsidenceRungSaveRoof expected, KingdomSubsidenceRungSaveRoof actual)
 		{
-			Assert.AreEqual(expected.ResidentId, actual.ResidentId); Assert.AreEqual(expected.BodyObjectId, actual.BodyObjectId);
-			Assert.AreEqual(expected.Carrier.ResidentId, actual.Carrier.ResidentId); Assert.AreEqual(expected.Carrier.ObjectId, actual.Carrier.ObjectId);
-			Assert.AreEqual(expected.Carrier.Key, actual.Carrier.Key);
-			Assert.AreEqual(expected.HomeWorkId, actual.HomeWorkId); Assert.AreEqual(expected.Standing, actual.Standing);
-			Assert.AreEqual(expected.ZoneId, actual.ZoneId); Assert.AreEqual(expected.RoofStanding, actual.RoofStanding);
-			Assert.AreEqual(expected.Reached, actual.Reached); Assert.AreEqual(expected.Warned, actual.Warned);
+			ClassicAssert.AreEqual(expected.ResidentId, actual.ResidentId); ClassicAssert.AreEqual(expected.BodyObjectId, actual.BodyObjectId);
+			ClassicAssert.AreEqual(expected.Carrier.ResidentId, actual.Carrier.ResidentId); ClassicAssert.AreEqual(expected.Carrier.ObjectId, actual.Carrier.ObjectId);
+			ClassicAssert.AreEqual(expected.Carrier.Key, actual.Carrier.Key);
+			ClassicAssert.AreEqual(expected.HomeWorkId, actual.HomeWorkId); ClassicAssert.AreEqual(expected.Standing, actual.Standing);
+			ClassicAssert.AreEqual(expected.ZoneId, actual.ZoneId); ClassicAssert.AreEqual(expected.RoofStanding, actual.RoofStanding);
+			ClassicAssert.AreEqual(expected.Reached, actual.Reached); ClassicAssert.AreEqual(expected.Warned, actual.Warned);
 		}
 		private static int[] Ids(int first, int count)
 		{
@@ -546,17 +547,17 @@ namespace ThousandAndFirst.Tests
 		}
 		private static string Wire(KingdomSubsidenceRungSaveSnapshot value)
 		{
-			Assert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.Valid(value));
-			Assert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.TryEncode(value, out string wire)); return wire;
+			ClassicAssert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.Valid(value));
+			ClassicAssert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.TryEncode(value, out string wire)); return wire;
 		}
 		private static void Refuses(KingdomSubsidenceRungSaveSnapshot value)
 		{
-			Assert.IsFalse(KingdomSubsidenceRungSaveSnapshotCodec.Valid(value));
-			Assert.IsFalse(KingdomSubsidenceRungSaveSnapshotCodec.TryEncode(value, out string wire)); Assert.IsNull(wire);
+			ClassicAssert.IsFalse(KingdomSubsidenceRungSaveSnapshotCodec.Valid(value));
+			ClassicAssert.IsFalse(KingdomSubsidenceRungSaveSnapshotCodec.TryEncode(value, out string wire)); ClassicAssert.IsNull(wire);
 		}
 		private static void RefusesWire(string wire)
 		{
-			Assert.IsFalse(KingdomSubsidenceRungSaveSnapshotCodec.TryDecode(wire, out KingdomSubsidenceRungSaveSnapshot value)); Assert.IsNull(value);
+			ClassicAssert.IsFalse(KingdomSubsidenceRungSaveSnapshotCodec.TryDecode(wire, out KingdomSubsidenceRungSaveSnapshot value)); ClassicAssert.IsNull(value);
 		}
 		private static void RefusesIntegerFrame(string field, int value)
 		{
@@ -602,7 +603,7 @@ namespace ThousandAndFirst.Tests
 				TextOffset(reader, offsets, "RoofZoneId"); FixedOffset(stream, offsets, "RoofStanding", 1);
 				FixedOffset(stream, offsets, "Reached", 8); FixedOffset(stream, offsets, "Warned", 8);
 				BodyOffsets(reader, offsets, "Survivor", 35, 1); BodyOffsets(reader, offsets, "Absent", 15, 0);
-				Assert.AreEqual(stream.Length, stream.Position, "fixture layout must account for every byte");
+				ClassicAssert.AreEqual(stream.Length, stream.Position, "fixture layout must account for every byte");
 			}
 			return offsets;
 		}
@@ -617,7 +618,7 @@ namespace ThousandAndFirst.Tests
 		}
 		private static void BodyOffsets(BinaryReader reader, Dictionary<string, int> offsets, string group, int count, int selected)
 		{
-			offsets.Add(group + "Count", (int)reader.BaseStream.Position); Assert.AreEqual(count, reader.ReadInt32());
+			offsets.Add(group + "Count", (int)reader.BaseStream.Position); ClassicAssert.AreEqual(count, reader.ReadInt32());
 			for (int i = 0; i < count; i++)
 			{
 				if (i == selected) offsets.Add(group + "Id", (int)reader.BaseStream.Position);

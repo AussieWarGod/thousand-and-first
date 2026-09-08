@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using Basis = ThousandAndFirst.KingdomRealmHashBasisRules;
 using Codec = ThousandAndFirst.KingdomArchivedSettlementCodec;
 using Outcome = ThousandAndFirst.KingdomRealmHashBasisRules.BasisOutcome;
@@ -88,9 +89,9 @@ namespace ThousandAndFirst.Tests
 			RecordingHasher hasher = new RecordingHasher(Agreeing(pinned));
 			Outcome outcome = Basis.Select(Expected(), pinned, hasher.Compute,
 				out int basis, out string reason);
-			Assert.AreEqual(Outcome.Selected, outcome);
-			Assert.AreEqual(pinned, basis); Assert.IsNull(reason);
-			Assert.AreEqual(Basis.CanonicalHashLength, Expected().Length);
+			ClassicAssert.AreEqual(Outcome.Selected, outcome);
+			ClassicAssert.AreEqual(pinned, basis); ClassicAssert.IsNull(reason);
+			ClassicAssert.AreEqual(Basis.CanonicalHashLength, Expected().Length);
 			CollectionAssert.AreEqual(new[] { pinned }, hasher.Order());
 		}
 
@@ -103,8 +104,8 @@ namespace ThousandAndFirst.Tests
 				Agreeing(Descending(Basis.MaxVersion, Basis.MinVersion)));
 			Outcome outcome = Basis.Select(Digest(201), pinned, hasher.Compute,
 				out int basis, out string reason);
-			Assert.AreEqual(Outcome.PinnedMismatch, outcome);
-			Assert.AreEqual(Basis.Unresolved, basis); Assert.IsNotNull(reason);
+			ClassicAssert.AreEqual(Outcome.PinnedMismatch, outcome);
+			ClassicAssert.AreEqual(Basis.Unresolved, basis); ClassicAssert.IsNotNull(reason);
 			CollectionAssert.AreEqual(new[] { pinned }, hasher.Order());
 		}
 
@@ -114,8 +115,8 @@ namespace ThousandAndFirst.Tests
 			RecordingHasher hasher = new RecordingHasher(new Dictionary<int, string>());
 			Outcome outcome = Basis.Select(Expected(), pinned, hasher.Compute,
 				out int basis, out string reason);
-			Assert.AreEqual(Outcome.ComputationFailure, outcome);
-			Assert.AreEqual(Basis.Unresolved, basis); Assert.IsNotNull(reason);
+			ClassicAssert.AreEqual(Outcome.ComputationFailure, outcome);
+			ClassicAssert.AreEqual(Basis.Unresolved, basis); ClassicAssert.IsNotNull(reason);
 			CollectionAssert.AreEqual(new[] { pinned }, hasher.Order());
 		}
 
@@ -125,8 +126,8 @@ namespace ThousandAndFirst.Tests
 			RecordingHasher hasher = new RecordingHasher(Agreeing(12), 12);
 			Outcome outcome = Basis.Select(Expected(), 12, hasher.Compute,
 				out int basis, out string reason);
-			Assert.AreEqual(Outcome.ComputationFailure, outcome);
-			Assert.AreEqual(Basis.Unresolved, basis);
+			ClassicAssert.AreEqual(Outcome.ComputationFailure, outcome);
+			ClassicAssert.AreEqual(Basis.Unresolved, basis);
 			StringAssert.Contains("InvalidOperationException", reason);
 			StringAssert.DoesNotContain("hasher failed at version", reason);
 			CollectionAssert.AreEqual(new[] { 12 }, hasher.Order());
@@ -138,8 +139,8 @@ namespace ThousandAndFirst.Tests
 			RecordingHasher hasher = new RecordingHasher(Disagreeing());
 			Outcome outcome = Basis.Select(Expected(), Basis.Unresolved, hasher.Compute,
 				out int basis, out string reason);
-			Assert.AreEqual(Outcome.NoMatch, outcome);
-			Assert.AreEqual(Basis.Unresolved, basis); Assert.IsNotNull(reason);
+			ClassicAssert.AreEqual(Outcome.NoMatch, outcome);
+			ClassicAssert.AreEqual(Basis.Unresolved, basis); ClassicAssert.IsNotNull(reason);
 			CollectionAssert.AreEqual(Basis.SearchOrder(), hasher.Order());
 		}
 
@@ -149,8 +150,8 @@ namespace ThousandAndFirst.Tests
 			RecordingHasher hasher = new RecordingHasher(Agreeing(matching));
 			Outcome outcome = Basis.Select(Expected(), Basis.Unresolved, hasher.Compute,
 				out int basis, out string reason);
-			Assert.AreEqual(Outcome.Selected, outcome);
-			Assert.AreEqual(matching, basis); Assert.IsNull(reason);
+			ClassicAssert.AreEqual(Outcome.Selected, outcome);
+			ClassicAssert.AreEqual(matching, basis); ClassicAssert.IsNull(reason);
 			CollectionAssert.AreEqual(Basis.SearchOrder(), hasher.Order());
 		}
 
@@ -160,8 +161,8 @@ namespace ThousandAndFirst.Tests
 			RecordingHasher hasher = new RecordingHasher(Agreeing(first, second));
 			Outcome outcome = Basis.Select(Expected(), Basis.Unresolved, hasher.Compute,
 				out int basis, out string reason);
-			Assert.AreEqual(Outcome.MultipleMatches, outcome);
-			Assert.AreEqual(Basis.Unresolved, basis); Assert.IsNotNull(reason);
+			ClassicAssert.AreEqual(Outcome.MultipleMatches, outcome);
+			ClassicAssert.AreEqual(Basis.Unresolved, basis); ClassicAssert.IsNotNull(reason);
 			CollectionAssert.AreEqual(Basis.SearchOrder(), hasher.Order());
 		}
 
@@ -172,8 +173,8 @@ namespace ThousandAndFirst.Tests
 			Dictionary<int, string> answers = new Dictionary<int, string> { { 3, Expected() } };
 			Outcome outcome = Basis.Select(Expected(), Basis.Unresolved,
 				new RecordingHasher(answers).Compute, out int basis, out string reason);
-			Assert.AreEqual(Outcome.Selected, outcome);
-			Assert.AreEqual(3, basis); Assert.IsNull(reason);
+			ClassicAssert.AreEqual(Outcome.Selected, outcome);
+			ClassicAssert.AreEqual(3, basis); ClassicAssert.IsNull(reason);
 		}
 
 		[Test]
@@ -182,8 +183,8 @@ namespace ThousandAndFirst.Tests
 			RecordingHasher hasher = new RecordingHasher(Agreeing(19, 1), 15);
 			Outcome outcome = Basis.Select(Expected(), Basis.Unresolved, hasher.Compute,
 				out int basis, out string reason);
-			Assert.AreEqual(Outcome.ComputationFailure, outcome);
-			Assert.AreEqual(Basis.Unresolved, basis);
+			ClassicAssert.AreEqual(Outcome.ComputationFailure, outcome);
+			ClassicAssert.AreEqual(Basis.Unresolved, basis);
 			StringAssert.Contains("InvalidOperationException", reason);
 			CollectionAssert.AreEqual(new[] { 19, 18, 17, 16, 15 }, hasher.Order());
 		}
@@ -194,8 +195,8 @@ namespace ThousandAndFirst.Tests
 			Dictionary<int, string> answers = Disagreeing(); answers[7] = "NOTAHASH";
 			Outcome outcome = Basis.Select(Expected(), stored,
 				new RecordingHasher(answers).Compute, out int basis, out string reason);
-			Assert.AreEqual(Outcome.ComputationFailure, outcome);
-			Assert.AreEqual(Basis.Unresolved, basis); Assert.IsNotNull(reason);
+			ClassicAssert.AreEqual(Outcome.ComputationFailure, outcome);
+			ClassicAssert.AreEqual(Basis.Unresolved, basis); ClassicAssert.IsNotNull(reason);
 		}
 
 		[TestCase(-1)] [TestCase(20)] [TestCase(int.MinValue)] [TestCase(int.MaxValue)]
@@ -204,8 +205,8 @@ namespace ThousandAndFirst.Tests
 			RecordingHasher hasher = new RecordingHasher(Agreeing(19));
 			Outcome outcome = Basis.Select(Expected(), stored, hasher.Compute,
 				out int basis, out string reason);
-			Assert.AreEqual(Outcome.Malformed, outcome);
-			Assert.AreEqual(Basis.Unresolved, basis); Assert.IsNotNull(reason);
+			ClassicAssert.AreEqual(Outcome.Malformed, outcome);
+			ClassicAssert.AreEqual(Basis.Unresolved, basis); ClassicAssert.IsNotNull(reason);
 			CollectionAssert.IsEmpty(hasher.Order());
 		}
 
@@ -221,8 +222,8 @@ namespace ThousandAndFirst.Tests
 			RecordingHasher hasher = new RecordingHasher(Agreeing(19));
 			Outcome outcome = Basis.Select(persisted, Basis.Unresolved, hasher.Compute,
 				out int basis, out string reason);
-			Assert.AreEqual(Outcome.Malformed, outcome);
-			Assert.AreEqual(Basis.Unresolved, basis); Assert.IsNotNull(reason);
+			ClassicAssert.AreEqual(Outcome.Malformed, outcome);
+			ClassicAssert.AreEqual(Basis.Unresolved, basis); ClassicAssert.IsNotNull(reason);
 			CollectionAssert.IsEmpty(hasher.Order());
 		}
 
@@ -231,8 +232,8 @@ namespace ThousandAndFirst.Tests
 		{
 			Outcome outcome = Basis.Select(Expected(), stored, null,
 				out int basis, out string reason);
-			Assert.AreEqual(Outcome.ComputationFailure, outcome);
-			Assert.AreEqual(Basis.Unresolved, basis); Assert.IsNotNull(reason);
+			ClassicAssert.AreEqual(Outcome.ComputationFailure, outcome);
+			ClassicAssert.AreEqual(Basis.Unresolved, basis); ClassicAssert.IsNotNull(reason);
 		}
 
 		[Test]
@@ -241,10 +242,10 @@ namespace ThousandAndFirst.Tests
 			int[] order = Basis.SearchOrder();
 			CollectionAssert.AreEqual(
 				Descending(Codec.CurrentVersion, Codec.LegacyVersion), order);
-			Assert.AreEqual(19, order.Length); Assert.AreEqual(19, order[0]);
-			Assert.AreEqual(1, order[order.Length - 1]);
+			ClassicAssert.AreEqual(19, order.Length); ClassicAssert.AreEqual(19, order[0]);
+			ClassicAssert.AreEqual(1, order[order.Length - 1]);
 			order[0] = -1;
-			Assert.AreEqual(19, Basis.SearchOrder()[0]);
+			ClassicAssert.AreEqual(19, Basis.SearchOrder()[0]);
 		}
 
 		[Test]
@@ -272,8 +273,8 @@ namespace ThousandAndFirst.Tests
 		{
 			Outcome outcome = Basis.Select(Persisted, Stored, Hasher.Compute,
 				out int basis, out string reason);
-			Assert.AreEqual(Basis.Unresolved, basis, "a refusal must not hand back a basis");
-			Assert.IsNotNull(reason);
+			ClassicAssert.AreEqual(Basis.Unresolved, basis, "a refusal must not hand back a basis");
+			ClassicAssert.IsNotNull(reason);
 			return outcome;
 		}
 
@@ -286,25 +287,25 @@ namespace ThousandAndFirst.Tests
 		private static KingdomSettlement MigratedFromHistoricalV18(out byte[] Historical)
 		{
 			KingdomSettlement source = new KingdomSettlement { LastSubsidenceTick = 9876L };
-			Assert.IsTrue(Codec.TryEncodeExpeditionResultV18ForTests(source, out Historical,
+			ClassicAssert.IsTrue(Codec.TryEncodeExpeditionResultV18ForTests(source, out Historical,
 				out string failure), failure);
-			Assert.IsTrue(Codec.TryDecode(Historical, out KingdomSettlement migrated,
+			ClassicAssert.IsTrue(Codec.TryDecode(Historical, out KingdomSettlement migrated,
 				out int future, out failure), failure);
-			Assert.AreEqual(0, future);
-			Assert.AreEqual(Storage.LegacyWire, migrated.City.SubsidenceModel); return migrated;
+			ClassicAssert.AreEqual(0, future);
+			ClassicAssert.AreEqual(Storage.LegacyWire, migrated.City.SubsidenceModel); return migrated;
 		}
 
 		[Test]
 		public void CurrentSchemaDelegatesToTheUnchangedCurrentWriter()
 		{
 			KingdomSettlement value = new KingdomSettlement { LastSubsidenceTick = 4242L };
-			Assert.IsTrue(Codec.TryEncode(value, out byte[] expected, out string failure),
+			ClassicAssert.IsTrue(Codec.TryEncode(value, out byte[] expected, out string failure),
 				failure);
-			Assert.IsTrue(Codec.TryEncodeVersion(value, Codec.CurrentVersion, out byte[] actual,
+			ClassicAssert.IsTrue(Codec.TryEncodeVersion(value, Codec.CurrentVersion, out byte[] actual,
 				out failure), failure);
 			CollectionAssert.AreEqual(expected, actual);
-			Assert.AreEqual(19, BitConverter.ToInt32(actual, 4));
-			Assert.AreEqual(Storage.FreshWire, value.City.SubsidenceModel);
+			ClassicAssert.AreEqual(19, BitConverter.ToInt32(actual, 4));
+			ClassicAssert.AreEqual(Storage.FreshWire, value.City.SubsidenceModel);
 		}
 
 		[TestCase(0)] [TestCase(-1)] [TestCase(20)] [TestCase(int.MinValue)]
@@ -312,21 +313,21 @@ namespace ThousandAndFirst.Tests
 		public void SchemaOutsideTheAcceptedSetIsRefusedWithoutBytes(int schema)
 		{
 			KingdomSettlement value = new KingdomSettlement { LastSubsidenceTick = 4242L };
-			Assert.IsFalse(Codec.TryEncodeVersion(value, schema, out byte[] bytes,
+			ClassicAssert.IsFalse(Codec.TryEncodeVersion(value, schema, out byte[] bytes,
 				out string failure));
-			Assert.IsNull(bytes); Assert.IsNotNull(failure);
-			Assert.AreEqual(4242L, value.LastSubsidenceTick);
+			ClassicAssert.IsNull(bytes); ClassicAssert.IsNotNull(failure);
+			ClassicAssert.AreEqual(4242L, value.LastSubsidenceTick);
 		}
 
 		[Test]
 		public void HistoricalProjectionReproducesTheHistoricalWireExactly()
 		{
 			KingdomSettlement migrated = MigratedFromHistoricalV18(out byte[] historical);
-			Assert.IsTrue(Codec.TryEncodeVersion(migrated, Codec.ExpeditionResultVersion,
+			ClassicAssert.IsTrue(Codec.TryEncodeVersion(migrated, Codec.ExpeditionResultVersion,
 				out byte[] projected, out string failure), failure);
 			CollectionAssert.AreEqual(historical, projected);
-			Assert.AreEqual(18, BitConverter.ToInt32(projected, 4));
-			Assert.AreEqual(9876L, migrated.LastSubsidenceTick);
+			ClassicAssert.AreEqual(18, BitConverter.ToInt32(projected, 4));
+			ClassicAssert.AreEqual(9876L, migrated.LastSubsidenceTick);
 		}
 
 		[Test]
@@ -334,10 +335,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomSettlement migrated = MigratedFromHistoricalV18(out byte[] historical);
 			migrated.LastSubsidenceTick++;
-			Assert.IsTrue(Codec.TryEncodeVersion(migrated, Codec.ExpeditionResultVersion,
+			ClassicAssert.IsTrue(Codec.TryEncodeVersion(migrated, Codec.ExpeditionResultVersion,
 				out byte[] projected, out string failure), failure);
 			CollectionAssert.AreNotEqual(historical, projected);
-			Assert.AreEqual(9877L, migrated.LastSubsidenceTick);
+			ClassicAssert.AreEqual(9877L, migrated.LastSubsidenceTick);
 		}
 
 		[Test]
@@ -345,30 +346,30 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomSettlement migrated = MigratedFromHistoricalV18(out byte[] _);
 			migrated.City.SubsidenceModel = Storage.FreshWire;
-			Assert.IsTrue(migrated.City.HasValidSubsidenceStorage());
-			Assert.IsFalse(Codec.TryEncodeVersion(migrated, Codec.ExpeditionResultVersion,
+			ClassicAssert.IsTrue(migrated.City.HasValidSubsidenceStorage());
+			ClassicAssert.IsFalse(Codec.TryEncodeVersion(migrated, Codec.ExpeditionResultVersion,
 				out byte[] projected, out string failure));
-			Assert.IsNull(projected); Assert.IsNotNull(failure);
-			Assert.AreEqual(Storage.FreshWire, migrated.City.SubsidenceModel);
+			ClassicAssert.IsNull(projected); ClassicAssert.IsNotNull(failure);
+			ClassicAssert.AreEqual(Storage.FreshWire, migrated.City.SubsidenceModel);
 			// The unproved test-only writer still emits those bytes; the production seam is the
 			// only path that refuses to publish a wire which would lose the live value.
-			Assert.IsTrue(Codec.TryEncodeExpeditionResultV18ForTests(migrated,
+			ClassicAssert.IsTrue(Codec.TryEncodeExpeditionResultV18ForTests(migrated,
 				out byte[] unproved, out failure), failure);
-			Assert.IsNotNull(unproved);
+			ClassicAssert.IsNotNull(unproved);
 		}
 
 		[TestCase(false)] [TestCase(true)]
 		public void ProjectionSurvivesACurrentResaveWithoutChangingTheOldBytes(bool nullSeat)
 		{
 			KingdomSettlement value = nullSeat ? null : MigratedFromHistoricalV18(out byte[] _);
-			Assert.IsTrue(Codec.TryEncodeVersion(value, Codec.ExpeditionResultVersion,
+			ClassicAssert.IsTrue(Codec.TryEncodeVersion(value, Codec.ExpeditionResultVersion,
 				out byte[] before, out string failure), failure);
-			Assert.IsTrue(Codec.TryEncode(value, out byte[] saved, out failure), failure);
-			Assert.AreEqual(19, BitConverter.ToInt32(saved, 4));
-			Assert.IsTrue(Codec.TryDecode(saved, out value, out int future, out failure),
+			ClassicAssert.IsTrue(Codec.TryEncode(value, out byte[] saved, out failure), failure);
+			ClassicAssert.AreEqual(19, BitConverter.ToInt32(saved, 4));
+			ClassicAssert.IsTrue(Codec.TryDecode(saved, out value, out int future, out failure),
 				failure);
-			Assert.AreEqual(0, future);
-			Assert.IsTrue(Codec.TryEncodeVersion(value, Codec.ExpeditionResultVersion,
+			ClassicAssert.AreEqual(0, future);
+			ClassicAssert.IsTrue(Codec.TryEncodeVersion(value, Codec.ExpeditionResultVersion,
 				out byte[] after, out failure), failure);
 			CollectionAssert.AreEqual(before, after);
 		}
@@ -382,19 +383,19 @@ namespace ThousandAndFirst.Tests
 				out string failure);
 			if (projected)
 			{
-				Assert.IsNotNull(bytes);
-				Assert.AreEqual(schema, BitConverter.ToInt32(bytes, 4));
-				Assert.IsTrue(Codec.TryDecode(bytes, out KingdomSettlement round,
+				ClassicAssert.IsNotNull(bytes);
+				ClassicAssert.AreEqual(schema, BitConverter.ToInt32(bytes, 4));
+				ClassicAssert.IsTrue(Codec.TryDecode(bytes, out KingdomSettlement round,
 					out int future, out string proof), proof);
-				Assert.AreEqual(0, future);
-				Assert.IsTrue(Codec.ExactGraph(migrated, round, out proof), proof);
+				ClassicAssert.AreEqual(0, future);
+				ClassicAssert.IsTrue(Codec.ExactGraph(migrated, round, out proof), proof);
 			}
 			else
 			{
-				Assert.IsNull(bytes); Assert.IsNotNull(failure);
+				ClassicAssert.IsNull(bytes); ClassicAssert.IsNotNull(failure);
 			}
-			Assert.AreEqual(9876L, migrated.LastSubsidenceTick);
-			Assert.AreEqual(Storage.LegacyWire, migrated.City.SubsidenceModel);
+			ClassicAssert.AreEqual(9876L, migrated.LastSubsidenceTick);
+			ClassicAssert.AreEqual(Storage.LegacyWire, migrated.City.SubsidenceModel);
 		}
 	}
 }

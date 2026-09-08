@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst.Tests;
 
 namespace ThousandAndFirst.DevTests
@@ -18,12 +19,12 @@ namespace ThousandAndFirst.DevTests
 			StringAssert.Contains("Selected.Blueprint", source);
 			StringAssert.Contains("Selected.ShortDisplayNameStripped", source);
 			StringAssert.Contains("Selected.Physics?.Owner", source);
-			Assert.IsFalse(source.Contains("Inventory"));
-			Assert.IsFalse(source.Contains("GetObjects"));
-			Assert.IsFalse(source.Contains("TakeObject"));
-			Assert.IsFalse(source.Contains("RemoveObject"));
-			Assert.IsFalse(source.Contains("Physics.Owner ="));
-			Assert.IsFalse(source.Contains("Journal"));
+			ClassicAssert.IsFalse(source.Contains("Inventory"));
+			ClassicAssert.IsFalse(source.Contains("GetObjects"));
+			ClassicAssert.IsFalse(source.Contains("TakeObject"));
+			ClassicAssert.IsFalse(source.Contains("RemoveObject"));
+			ClassicAssert.IsFalse(source.Contains("Physics.Owner ="));
+			ClassicAssert.IsFalse(source.Contains("Journal"));
 		}
 
 		[Test]
@@ -36,8 +37,8 @@ namespace ThousandAndFirst.DevTests
 			StringAssert.Contains("CommerceValue = 0", witness);
 			StringAssert.Contains("CommerceValue = 0", recognition);
 			StringAssert.Contains("CustodyClaimed = false", recognition);
-			Assert.IsFalse((witness + recognition).Contains("Journal"));
-			Assert.IsFalse((witness + recognition).Contains("Inventory"));
+			ClassicAssert.IsFalse((witness + recognition).Contains("Journal"));
+			ClassicAssert.IsFalse((witness + recognition).Contains("Inventory"));
 		}
 
 		[Test]
@@ -65,18 +66,18 @@ namespace ThousandAndFirst.DevTests
 				StringComparison.Ordinal);
 			int capture = physical.IndexOf("CaptureClosedWitness(system, operation, nowTick)",
 				clear, StringComparison.Ordinal);
-			Assert.Greater(capture, clear, "only a committed close may become an O5 source");
+			ClassicAssert.Greater(capture, clear, "only a committed close may become an O5 source");
 			StringAssert.Contains("KingdomWorkKind.Construction", physical);
 			StringAssert.Contains("RestorationSettled", physical);
 			StringAssert.Contains("TryPreparePlanned", runtime);
 			StringAssert.Contains("TryReadBackRow", runtime);
 			StringAssert.Contains("TryAttachPrepared", runtime);
 			StringAssert.Contains("TryObserve", runtime);
-			Assert.Less(runtime.IndexOf("TryReadBackRow", StringComparison.Ordinal),
+			ClassicAssert.Less(runtime.IndexOf("TryReadBackRow", StringComparison.Ordinal),
 				runtime.IndexOf("TryAttachPrepared", StringComparison.Ordinal));
-			Assert.IsFalse((physical + runtime).Contains("Journal"));
-			Assert.IsFalse(runtime.Contains("Inventory"));
-			Assert.IsFalse(runtime.Contains("AddObject"));
+			ClassicAssert.IsFalse((physical + runtime).Contains("Journal"));
+			ClassicAssert.IsFalse(runtime.Contains("Inventory"));
+			ClassicAssert.IsFalse(runtime.Contains("AddObject"));
 		}
 
 		[Test]
@@ -99,10 +100,10 @@ namespace ThousandAndFirst.DevTests
 			int idOnly = recovery.IndexOf("ExactObjectLoaded", loss, StringComparison.Ordinal);
 			int fresh = recovery.IndexOf("TryReadBackRow", idOnly, StringComparison.Ordinal);
 			int detach = recovery.IndexOf("TryDetach", fresh, StringComparison.Ordinal);
-			Assert.Greater(loss, receiptMiss);
-			Assert.Greater(idOnly, loss);
-			Assert.Greater(fresh, idOnly);
-			Assert.Greater(detach, fresh);
+			ClassicAssert.Greater(loss, receiptMiss);
+			ClassicAssert.Greater(idOnly, loss);
+			ClassicAssert.Greater(fresh, idOnly);
+			ClassicAssert.Greater(detach, fresh);
 			StringAssert.Contains("TryFindUnique", readback);
 			StringAssert.Contains("Duplicate physical identity", readback);
 			StringAssert.Contains("MarkerOwnsReceipt", readback);
@@ -118,17 +119,17 @@ namespace ThousandAndFirst.DevTests
 				StringComparison.Ordinal);
 			int divergedDetach = recovery.IndexOf("TryDetach", divergedFresh,
 				StringComparison.Ordinal);
-			Assert.Greater(divergedLoss, diverged);
-			Assert.Greater(divergedFresh, divergedLoss);
-			Assert.Greater(divergedDetach, divergedFresh);
+			ClassicAssert.Greater(divergedLoss, diverged);
+			ClassicAssert.Greater(divergedFresh, divergedLoss);
+			ClassicAssert.Greater(divergedDetach, divergedFresh);
 			int owns = readback.IndexOf("if (!MarkerOwnsReceipt", StringComparison.Ordinal);
 			int remove = readback.IndexOf("carrier.RemovePart(marker)", owns,
 				StringComparison.Ordinal);
-			Assert.Greater(remove, owns,
+			ClassicAssert.Greater(remove, owns,
 				"foreign or unauthenticated marker must refuse before removal");
-			Assert.IsFalse((recovery + readback).Contains("MoveTo"));
-			Assert.IsFalse((recovery + readback).Contains("AddObject"));
-			Assert.IsFalse((recovery + readback).Contains("RemoveObject"));
+			ClassicAssert.IsFalse((recovery + readback).Contains("MoveTo"));
+			ClassicAssert.IsFalse((recovery + readback).Contains("AddObject"));
+			ClassicAssert.IsFalse((recovery + readback).Contains("RemoveObject"));
 		}
 	}
 }

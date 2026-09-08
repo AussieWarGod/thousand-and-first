@@ -2,6 +2,7 @@
 using System;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -57,7 +58,7 @@ namespace ThousandAndFirst.Tests
 			Contains(heart, "Heart.GetPart<r_KingdomWear>() == null", "WearCopies(Heart) == 0",
 				"KingdomSubsidenceRungSaveShape.TryMatch(", "CompanionPublishedIntent",
 				"CompanionPublishedReleased");
-			Assert.IsFalse(Regex.IsMatch(heart, @"\.(?:AddPart|RequirePart|RemovePart|Destroy|Obliterate)\s*\("));
+			ClassicAssert.IsFalse(Regex.IsMatch(heart, @"\.(?:AddPart|RequirePart|RemovePart|Destroy|Obliterate)\s*\("));
 		}
 
 		[Test]
@@ -178,10 +179,10 @@ namespace ThousandAndFirst.Tests
 				Read(HeartAuthority) };
 			foreach (string body in observation)
 			{
-				Assert.IsFalse(Regex.IsMatch(body, @"\b(?:TryReconcile|AuditFoundingHeartReservations|RecoverFoundingHeart|EnsureFoundingHeartProjection|VerifyReconciled|TryVerifyComplete|Quarantine\w*|Prepare|Capture|TryPublish|Set\w*GameState|Remove\w*GameState|Set\w*Property|Remove\w*Property|AddPart|RemovePart|RequirePart)\s*\("));
-				Assert.IsFalse(Regex.IsMatch(body, @"\b(?:Owner|owner)\.(?:Game|System|Ledger|Zone)\.[\w.]+\s*=(?!=)"));
-				Assert.IsFalse(Regex.IsMatch(body, @"\b(?:Final|final|Body|body)\.[\w.]+(?:\[[^\]]*\])?\s*=(?!=)"));
-				Assert.IsFalse(Regex.IsMatch(body, @"\.(?:Clear|Reset|Destroy|Obliterate)\s*\("));
+				ClassicAssert.IsFalse(Regex.IsMatch(body, @"\b(?:TryReconcile|AuditFoundingHeartReservations|RecoverFoundingHeart|EnsureFoundingHeartProjection|VerifyReconciled|TryVerifyComplete|Quarantine\w*|Prepare|Capture|TryPublish|Set\w*GameState|Remove\w*GameState|Set\w*Property|Remove\w*Property|AddPart|RemovePart|RequirePart)\s*\("));
+				ClassicAssert.IsFalse(Regex.IsMatch(body, @"\b(?:Owner|owner)\.(?:Game|System|Ledger|Zone)\.[\w.]+\s*=(?!=)"));
+				ClassicAssert.IsFalse(Regex.IsMatch(body, @"\b(?:Final|final|Body|body)\.[\w.]+(?:\[[^\]]*\])?\s*=(?!=)"));
+				ClassicAssert.IsFalse(Regex.IsMatch(body, @"\.(?:Clear|Reset|Destroy|Obliterate)\s*\("));
 				StringAssert.DoesNotContain("KingdomScenarioCompletedHeart.Complete(", body);
 				StringAssert.DoesNotContain("KingdomPlots.Advance(", body);
 			}
@@ -273,7 +274,7 @@ namespace ThousandAndFirst.Tests
 				"ReferenceEquals(__instance, The.Player)", "system.City.SubsidenceModel == snapshot.StepWire",
 				"KingdomScenarioSaveAuthorityChecks.VerifyExact(system, zone)", "Bodies.Add(body)", "WitnessedGame = game",
 				"KingdomScenarioJournal.Append(\"LOAD-PREACTIVATION\", true");
-			Assert.IsFalse(Regex.IsMatch(prefix, @"\b(?:VerifyReconciled|TryReconcile|AuditFoundingHeartReservations|RecoverFoundingHeart|Prepare)\s*\("));
+			ClassicAssert.IsFalse(Regex.IsMatch(prefix, @"\b(?:VerifyReconciled|TryReconcile|AuditFoundingHeartReservations|RecoverFoundingHeart|Prepare)\s*\("));
 			Ordered(Between(source, "internal static string VerifyRecovered(", "private static void VerifyAfter("),
 				"Failure == null && Attempts == 1 && ReferenceEquals(WitnessedGame, Game)",
 				"KingdomScenarioSaveAuthorityChecks.VerifyReconciled(system, zone)", "KingdomSubsidenceStepRuntime.TryBeforePass(");
@@ -333,7 +334,7 @@ namespace ThousandAndFirst.Tests
 				"if (!Barrier.TryClaim()) return true", "SavesAPI.HasSavedGameInfo()",
 				"KingdomScenarioLoadMenuPatch.Installed(target)", "Keyboard.PushMouseEvent(\"Pick:Continue\")", "return true");
 			string start = Between(Read(Load), "internal static bool TryStart()", "internal static bool Dispatch(");
-			Assert.IsFalse(start.Contains("Load()") || start.Contains("Task.Run") || start.Contains("Barrier.Start"));
+			ClassicAssert.IsFalse(start.Contains("Load()") || start.Contains("Task.Run") || start.Contains("Barrier.Start"));
 			Ordered(Read(Menu), "if (AutostartConsumed || Menu == null) return",
 				"if (KingdomScenarioLoadEntry.TryStart()) { AutostartConsumed = true; return; }",
 				"if (!KingdomScenarioScript.Present()) return", "selected.Invoke(Menu, new object[] { Row })");
@@ -352,7 +353,7 @@ namespace ThousandAndFirst.Tests
 				"Barrier.Claimed && Thread.CurrentThread == XRLCore.CoreThread", "Result = Barrier.Start(Load)",
 				"catch (Exception error) { Result = Barrier.Pending; Refuse(error); }", "return false");
 			Contains(source, "private static async Task Load()", "await The.UiContext", "Task.Run(() => XRLGame.LoadGame(");
-			Assert.IsFalse(source.Contains("async void") || source.Contains(".Wait(") || source.Contains(".Running ="));
+			ClassicAssert.IsFalse(source.Contains("async void") || source.Contains(".Wait(") || source.Contains(".Running ="));
 		}
 
 		[Test]
@@ -413,8 +414,8 @@ namespace ThousandAndFirst.Tests
 			Contains(load, "wear.IncidentLine == Plan.Works[0].ReleaseBefore.Line",
 				"KingdomSubsidenceRungReleaseCut.Writes == (Snapshot.Work.IncidentLine == null ? 1 : 2)",
 				"KingdomSubsidenceRungReleaseCut.Fields == (Snapshot.Work.IncidentLine == null ? \"2\" : \"2,3\")");
-			Assert.IsFalse(save.Contains("wear.IncidentLine != null"));
-			Assert.IsFalse(load.Contains("wear.IncidentLine != null"));
+			ClassicAssert.IsFalse(save.Contains("wear.IncidentLine != null"));
+			ClassicAssert.IsFalse(load.Contains("wear.IncidentLine != null"));
 		}
 
 		[Test]
@@ -428,7 +429,7 @@ namespace ThousandAndFirst.Tests
 			Ordered(Read(Witness), "if (!KingdomScenarioLoadEntry.Armed || __0 != \"GameRestored\") return",
 				"try", "if (!ReferenceEquals(__instance, The.Player)) return", "Attempts++",
 				"WitnessedGame = game", "\"LOAD-PREACTIVATION\", true");
-			Assert.IsFalse(Read(Witness).Contains("HarmonyPatch(typeof(AfterGameLoadedEvent)"));
+			ClassicAssert.IsFalse(Read(Witness).Contains("HarmonyPatch(typeof(AfterGameLoadedEvent)"));
 		}
 
 		[Test]
@@ -439,12 +440,12 @@ namespace ThousandAndFirst.Tests
 				"internal static class KingdomScenarioLoadReaderWitness", "[HarmonyPrefix]",
 				"internal static void Prefix(SerializationReader __instance)");
 			int start = source.IndexOf("internal static class KingdomScenarioLoadReaderWitness", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0);
+			ClassicAssert.GreaterOrEqual(start, 0);
 			string reader = source.Substring(start);
 			Ordered(reader, "if (!KingdomScenarioLoadEntry.Armed || !ReferenceEquals(__instance.Cache, FastSerialization.SharedCache)) return",
 				"Releases++", "HadErrors |= __instance.Errors != 0");
-			Assert.IsFalse(Regex.IsMatch(reader, @"\b__instance\.(?:Errors|Cache)\s*=(?!=)"));
-			Assert.IsFalse(Regex.IsMatch(reader, @"\b(?:Clear|ReleaseShared)\s*\("));
+			ClassicAssert.IsFalse(Regex.IsMatch(reader, @"\b__instance\.(?:Errors|Cache)\s*=(?!=)"));
+			ClassicAssert.IsFalse(Regex.IsMatch(reader, @"\b(?:Clear|ReleaseShared)\s*\("));
 		}
 
 		[Test]
@@ -531,22 +532,22 @@ namespace ThousandAndFirst.Tests
 				if (path == Load)
 				{
 					const string command = "Keyboard.PushMouseEvent(\"Pick:Continue\")";
-					Assert.AreEqual(1, Regex.Matches(source, Regex.Escape(command)).Count);
+					ClassicAssert.AreEqual(1, Regex.Matches(source, Regex.Escape(command)).Count);
 					source = source.Replace(command, "");
 				}
-				Assert.IsFalse(Regex.IsMatch(source, @"\b(?:Continue(?:Menu)?|SaveManagement|RestoreMods\w*|TryRestoreModsAndLoadAsync|RunGame|PushMouseEvent)\s*\("), path);
-				Assert.IsFalse(Regex.IsMatch(source, @"\.(?:Destroy|Obliterate)\s*\("), path);
-				Assert.IsFalse(Regex.IsMatch(source, @"\b(?:Game|game)\.TimeTicks\s*=(?!=)"), path);
+				ClassicAssert.IsFalse(Regex.IsMatch(source, @"\b(?:Continue(?:Menu)?|SaveManagement|RestoreMods\w*|TryRestoreModsAndLoadAsync|RunGame|PushMouseEvent)\s*\("), path);
+				ClassicAssert.IsFalse(Regex.IsMatch(source, @"\.(?:Destroy|Obliterate)\s*\("), path);
+				ClassicAssert.IsFalse(Regex.IsMatch(source, @"\b(?:Game|game)\.TimeTicks\s*=(?!=)"), path);
 			}
 		}
 
 		[Test]
 		public void SourceContract_ProductionCompilationAndRuntimeInventoryExcludeHarness()
 		{
-			Assert.IsFalse(Regex.IsMatch(Read("manifest.json"), @"Harness", RegexOptions.IgnoreCase));
+			ClassicAssert.IsFalse(Regex.IsMatch(Read("manifest.json"), @"Harness", RegexOptions.IgnoreCase));
 			Match exclusions = Regex.Match(Read("Tools/stage.sh"), @"(?m)^EXCLUDE_DIRS=\(([^)]*)\)");
-			Assert.IsTrue(exclusions.Success, "runtime exclusions missing");
-			Assert.IsTrue(Regex.IsMatch(exclusions.Groups[1].Value, @"(?:^|\s)Harness(?:\s|$)"));
+			ClassicAssert.IsTrue(exclusions.Success, "runtime exclusions missing");
+			ClassicAssert.IsTrue(Regex.IsMatch(exclusions.Groups[1].Value, @"(?:^|\s)Harness(?:\s|$)"));
 			Contains(Read("Tools/portable-check.sh"), "\"Harness/\"", "development-only path entered runtime inventory");
 		}
 
@@ -556,9 +557,9 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = Compact(Source), start = Compact(Start), end = Compact(End);
 			int first = source.IndexOf(start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(first, 0, Start);
+			ClassicAssert.GreaterOrEqual(first, 0, Start);
 			int last = source.IndexOf(end, first + start.Length, StringComparison.Ordinal);
-			Assert.Greater(last, first, End);
+			ClassicAssert.Greater(last, first, End);
 			MatchCollection characters = Regex.Matches(Source, @"\S");
 			return Source.Substring(characters[first].Index, characters[last].Index - characters[first].Index);
 		}
@@ -575,7 +576,7 @@ namespace ThousandAndFirst.Tests
 			{
 				string expected = Compact(token);
 				int at = source.IndexOf(expected, cursor, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(at, cursor, token);
+				ClassicAssert.GreaterOrEqual(at, cursor, token);
 				cursor = at + expected.Length;
 			}
 		}

@@ -2,6 +2,7 @@
 using System;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -22,7 +23,7 @@ namespace ThousandAndFirst.Tests
 			string exact = Method(Prefix + "Execution.cs", "private static bool ExecutionExact(");
 			Ordered(exact, "OptionExact(frame)", "frame.Game.TimeTicks == now",
 				"KingdomSubsidenceExecutionClockRules.TryValidate(now, frame.System.LastSubsidenceTick, frame.Owner.Step, out _)");
-			Assert.IsFalse(Regex.IsMatch(Code(Prefix + "Execution.cs"),
+			ClassicAssert.IsFalse(Regex.IsMatch(Code(Prefix + "Execution.cs"),
 				@"\b(?:LastSubsidenceTick|TimeTicks)\s*(?:=(?!=)|\+=|-=|\+\+|--)"));
 		}
 
@@ -110,7 +111,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = Code(path);
 			int start = source.IndexOf(signature, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(start, 0, path + ": " + signature);
+			ClassicAssert.GreaterOrEqual(start, 0, path + ": " + signature);
 			int open = source.IndexOf('{', start), depth = 0;
 			for (int i = open; i < source.Length; i++)
 			{
@@ -126,7 +127,7 @@ namespace ThousandAndFirst.Tests
 			foreach (string token in tokens)
 			{
 				int at = source.IndexOf(token, cursor, StringComparison.Ordinal);
-				Assert.GreaterOrEqual(at, cursor, "Missing or reordered: " + token);
+				ClassicAssert.GreaterOrEqual(at, cursor, "Missing or reordered: " + token);
 				cursor = at + token.Length;
 			}
 		}

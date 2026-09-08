@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -24,9 +25,9 @@ namespace ThousandAndFirst.Tests
 			string source = TestMain.ReadRepositoryText(
 				Path.Combine("Raids", "KingdomRaids.05.AttackLaunchAndResume.cs"));
 			int at = source.IndexOf("private static void LaunchRaid(", StringComparison.Ordinal);
-			Assert.GreaterOrEqual(at, 0, "LaunchRaid");
+			ClassicAssert.GreaterOrEqual(at, 0, "LaunchRaid");
 			int until = source.IndexOf("private static void ResumeOpen(", at, StringComparison.Ordinal);
-			Assert.Greater(until, at, "ResumeOpen");
+			ClassicAssert.Greater(until, at, "ResumeOpen");
 			return source.Substring(at, until - at);
 		}
 
@@ -57,33 +58,33 @@ namespace ThousandAndFirst.Tests
 			int publish = launch.IndexOf("TryPublish(", StringComparison.Ordinal);
 			int advance = launch.IndexOf("AdvancePhase(", StringComparison.Ordinal);
 			int resume = launch.IndexOf("ResumeOpen(system, zone)", StringComparison.Ordinal);
-			Assert.Greater(lastProjection, 0, "PrepareProjection");
-			Assert.Greater(publish, 0, "TryPublish");
-			Assert.Greater(advance, 0, "AdvancePhase");
-			Assert.Greater(resume, 0, "ResumeOpen(system, zone)");
-			Assert.Greater(publish, lastProjection,
+			ClassicAssert.Greater(lastProjection, 0, "PrepareProjection");
+			ClassicAssert.Greater(publish, 0, "TryPublish");
+			ClassicAssert.Greater(advance, 0, "AdvancePhase");
+			ClassicAssert.Greater(resume, 0, "ResumeOpen(system, zone)");
+			ClassicAssert.Greater(publish, lastProjection,
 				"the last PrepareProjection must precede publication");
-			Assert.Greater(advance, publish, "publication must precede the phase advance");
-			Assert.Greater(resume, advance, "the phase advance must precede ResumeOpen");
+			ClassicAssert.Greater(advance, publish, "publication must precede the phase advance");
+			ClassicAssert.Greater(resume, advance, "the phase advance must precede ResumeOpen");
 		}
 
 		[Test]
 		public void ProjectionBlueprintComesFromTheFrozenRosterNotALiveBody()
 		{
 			string launch = LaunchSlice();
-			Assert.IsFalse(launch.Contains("bodies["),
+			ClassicAssert.IsFalse(launch.Contains("bodies["),
 				"no live body array may survive in LaunchRaid");
 			int blueprint = launch.IndexOf("KingdomRaidProfiles.Blueprint(profile, frozenStage",
 				StringComparison.Ordinal);
-			Assert.Greater(blueprint, 0, "Blueprint(profile, frozenStage");
+			ClassicAssert.Greater(blueprint, 0, "Blueprint(profile, frozenStage");
 			int loopStart = launch.LastIndexOf("for (int i = 0; i < party; i++)", blueprint,
 				StringComparison.Ordinal);
 			int nextProjection = launch.IndexOf("PrepareProjection(", blueprint,
 				StringComparison.Ordinal);
-			Assert.Greater(loopStart, 0, "the projection-preparation loop");
-			Assert.Less(loopStart, nextProjection,
+			ClassicAssert.Greater(loopStart, 0, "the projection-preparation loop");
+			ClassicAssert.Less(loopStart, nextProjection,
 				"the projection-preparation loop must precede PrepareProjection(");
-			Assert.Greater(nextProjection, blueprint,
+			ClassicAssert.Greater(nextProjection, blueprint,
 				"the frozen roster blueprint must feed PrepareProjection, not a bodies[] read");
 			StringAssert.Contains("op, i, objectId, blueprint,", launch,
 				"PrepareProjection's LaunchRaid call must pass op, i, objectId, blueprint in this exact order");
@@ -95,7 +96,7 @@ namespace ThousandAndFirst.Tests
 		private static KingdomLifecycleBook Book(string settlementId)
 		{
 			KingdomLifecycleBook book = new KingdomLifecycleBook();
-			Assert.IsTrue(KingdomLifecycleRules.BindSettlementIdentity(book, settlementId, false,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.BindSettlementIdentity(book, settlementId, false,
 				null, new List<string>()));
 			return book;
 		}
@@ -116,7 +117,7 @@ namespace ThousandAndFirst.Tests
 		private static KingdomRaidLedger Apply(KingdomRaidLedger before,
 			KingdomLifecycleOperation operation)
 		{
-			Assert.IsTrue(KingdomRaidIncidentRules.TryApply(before, operation,
+			ClassicAssert.IsTrue(KingdomRaidIncidentRules.TryApply(before, operation,
 				out KingdomRaidLedger after), operation.Action.ToString());
 			return after;
 		}
@@ -162,7 +163,7 @@ namespace ThousandAndFirst.Tests
 
 			incident.State = KingdomRaidIncidentState.FightCommitted;
 			incident.Response = KingdomRaidResponse.Fight;
-			Assert.IsTrue(KingdomRaidIncidentRules.ValidLedger(book.RaidLedger));
+			ClassicAssert.IsTrue(KingdomRaidIncidentRules.ValidLedger(book.RaidLedger));
 			return incident;
 		}
 
@@ -178,7 +179,7 @@ namespace ThousandAndFirst.Tests
 			blueprint = "Snapjaw";
 			KingdomLifecycleOperation op = KingdomLifecycleRules.PrepareOperation(book,
 				KingdomLifecycleLane.Raid, KingdomLifecycleAction.RaidAttack, 20L);
-			Assert.NotNull(op, "PrepareOperation");
+			ClassicAssert.NotNull(op, "PrepareOperation");
 			op.ZoneId = incident.TargetZoneId;
 			op.ObjectId = incident.Id;
 			op.Faction = incident.AttackerFactionId;
@@ -195,21 +196,21 @@ namespace ThousandAndFirst.Tests
 				KingdomLifecycleProjection projection = KingdomLifecycleRules.RaidRuntimeAdapter
 					.PrepareProjection(book, op, i, KingdomLifecycleRules.ChildId(op.Id, "raider", i),
 						blueprint, op.ZoneId, i, 0);
-				Assert.NotNull(projection, "PrepareProjection " + i);
+				ClassicAssert.NotNull(projection, "PrepareProjection " + i);
 			}
 			op.Outbox = KingdomLifecycleRules.PrepareOutbox(op, "chronicle", "ledger", "message",
 				"deed", "guestbook");
-			Assert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.PrepareLeases(book, op),
+			ClassicAssert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.PrepareLeases(book, op),
 				"PrepareLeases");
-			Assert.IsTrue(KingdomLifecycleRules.TryPublish(book, op), "TryPublish");
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
+			ClassicAssert.IsTrue(KingdomLifecycleRules.TryPublish(book, op), "TryPublish");
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op,
 				KingdomLifecyclePhase.ProjectionIntent, 20L), "AdvancePhase");
 			return op;
 		}
 
 		// The real AllProjectionsProved lives in XRL-coupled Raids/09.cs and is root-owned
 		// native evidence; it is not re-implemented here. The per-projection
-		// Assert.AreEqual(Prepared, projection.State) loop below and the Assert.AreEqual(0,
+		// ClassicAssert.AreEqual(Prepared, projection.State) loop below and the ClassicAssert.AreEqual(0,
 		// op.Spawned) assertion are the proof for this engine-free slice.
 
 		[Test]
@@ -221,10 +222,10 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleOperation op = PublishFrozenAttack(book, incident, PartySize,
 				out blueprint);
 
-			Assert.AreSame(op, book.Raid);
-			Assert.AreEqual(KingdomLifecyclePhase.ProjectionIntent, op.Phase);
-			Assert.AreEqual(PartySize, op.Projections.Count);
-			Assert.AreEqual(0, op.Spawned);
+			ClassicAssert.AreSame(op, book.Raid);
+			ClassicAssert.AreEqual(KingdomLifecyclePhase.ProjectionIntent, op.Phase);
+			ClassicAssert.AreEqual(PartySize, op.Projections.Count);
+			ClassicAssert.AreEqual(0, op.Spawned);
 			// The operation's Phase is ProjectionIntent, but no projection has been through
 			// BeginProjection yet -- each one is still exactly as PrepareProjection left it
 			// (State == Prepared). ResumeAttackProjections (09.cs) is what later drives
@@ -233,9 +234,9 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < PartySize; i++)
 			{
 				KingdomLifecycleProjection projection = op.Projections[i];
-				Assert.AreEqual(KingdomLifecyclePhysicalState.Prepared, projection.State);
-				Assert.AreEqual(blueprint, projection.Blueprint);
-				Assert.AreEqual(KingdomLifecycleRules.ChildId(op.Id, "raider", i),
+				ClassicAssert.AreEqual(KingdomLifecyclePhysicalState.Prepared, projection.State);
+				ClassicAssert.AreEqual(blueprint, projection.Blueprint);
+				ClassicAssert.AreEqual(KingdomLifecycleRules.ChildId(op.Id, "raider", i),
 					projection.ObjectId);
 			}
 		}
@@ -254,13 +255,13 @@ namespace ThousandAndFirst.Tests
 			// RaidProjectionIntentRetriesOnlyAfterExactAbsenceProof; only the CommitProjection
 			// half is new coverage here.
 			KingdomLifecycleProjection exact = op.Projections[1];
-			Assert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.BeginProjection(
+			ClassicAssert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.BeginProjection(
 				book, op, exact, 0, 0));
 			int spawnedBefore = op.Spawned;
-			Assert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.CommitProjection(
+			ClassicAssert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.CommitProjection(
 				book, op, exact, 1, 1, exact.Blueprint, exact.ZoneId, exact.X, exact.Y));
-			Assert.AreEqual(KingdomLifecyclePhysicalState.Proved, exact.State);
-			Assert.AreEqual(spawnedBefore + exact.Count, op.Spawned,
+			ClassicAssert.AreEqual(KingdomLifecyclePhysicalState.Proved, exact.State);
+			ClassicAssert.AreEqual(spawnedBefore + exact.Count, op.Spawned,
 				"one id and one marker must commit exactly once");
 		}
 
@@ -273,54 +274,54 @@ namespace ThousandAndFirst.Tests
 			KingdomLifecycleOperation op = PublishFrozenAttack(book, incident, PartySize,
 				out string blueprint);
 			string planHash = op.PlanHash;
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "published authority");
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "published authority");
 			foreach (KingdomLifecycleProjection projection in op.Projections)
 			{
-				Assert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.BeginProjection(
+				ClassicAssert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.BeginProjection(
 					book, op, projection, 0, 0), "BeginProjection");
-				Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "projection intent authority");
-				Assert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.CommitProjection(book, op,
+				ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "projection intent authority");
+				ClassicAssert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.CommitProjection(book, op,
 					projection, 1, 1, blueprint, projection.ZoneId, projection.X, projection.Y),
 					"CommitProjection");
-				Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "projection proof authority");
+				ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "projection proof authority");
 			}
 			AdvanceWithAuthority(book, op, KingdomLifecyclePhase.Projected);
 			AdvanceWithAuthority(book, op, KingdomLifecyclePhase.WaterIntent);
 			AdvanceWithAuthority(book, op, KingdomLifecyclePhase.WaterSettled);
 			AdvanceWithAuthority(book, op, KingdomLifecyclePhase.DomainIntent);
-			Assert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.ProveDomain(book, op), "ProveDomain");
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "domain proof authority");
+			ClassicAssert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.ProveDomain(book, op), "ProveDomain");
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "domain proof authority");
 			AdvanceWithAuthority(book, op, KingdomLifecyclePhase.DomainSettled);
 			AdvanceWithAuthority(book, op, KingdomLifecyclePhase.EffectIntent);
-			Assert.IsFalse(KingdomLifecycleRules.RaidRuntimeAdapter.BeginEffect(book, op, false));
-			Assert.AreEqual(KingdomLifecyclePhysicalState.Prepared, op.EffectState);
-			Assert.AreEqual(0, op.PlunderProved);
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "refused contact authority");
-			Assert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.BeginEffect(book, op, true), "BeginEffect");
-			Assert.AreEqual(KingdomLifecyclePhysicalState.Intent, op.EffectState);
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "effect intent authority");
-			Assert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.CommitEffect(book, op, true, plunder),
+			ClassicAssert.IsFalse(KingdomLifecycleRules.RaidRuntimeAdapter.BeginEffect(book, op, false));
+			ClassicAssert.AreEqual(KingdomLifecyclePhysicalState.Prepared, op.EffectState);
+			ClassicAssert.AreEqual(0, op.PlunderProved);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "refused contact authority");
+			ClassicAssert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.BeginEffect(book, op, true), "BeginEffect");
+			ClassicAssert.AreEqual(KingdomLifecyclePhysicalState.Intent, op.EffectState);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "effect intent authority");
+			ClassicAssert.IsTrue(KingdomLifecycleRules.RaidRuntimeAdapter.CommitEffect(book, op, true, plunder),
 				"CommitEffect");
-			Assert.AreEqual(KingdomLifecyclePhysicalState.Proved, op.EffectState);
-			Assert.AreEqual(plunder, op.PlunderProved);
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "effect proof authority");
-			Assert.AreEqual(planHash, op.PlanHash);
-			Assert.AreSame(op, book.Raid);
-			Assert.IsFalse(KingdomLifecycleRules.RaidRuntimeAdapter.BeginEffect(book, op, true), "no second begin");
-			Assert.IsFalse(KingdomLifecycleRules.RaidRuntimeAdapter.CommitEffect(book, op, true, plunder), "no second commit");
-			Assert.AreEqual(plunder, op.PlunderProved);
+			ClassicAssert.AreEqual(KingdomLifecyclePhysicalState.Proved, op.EffectState);
+			ClassicAssert.AreEqual(plunder, op.PlunderProved);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "effect proof authority");
+			ClassicAssert.AreEqual(planHash, op.PlanHash);
+			ClassicAssert.AreSame(op, book.Raid);
+			ClassicAssert.IsFalse(KingdomLifecycleRules.RaidRuntimeAdapter.BeginEffect(book, op, true), "no second begin");
+			ClassicAssert.IsFalse(KingdomLifecycleRules.RaidRuntimeAdapter.CommitEffect(book, op, true, plunder), "no second commit");
+			ClassicAssert.AreEqual(plunder, op.PlunderProved);
 			AdvanceWithAuthority(book, op, KingdomLifecyclePhase.EffectsSettled);
-			Assert.IsTrue(KingdomRaidIncidentRules.ValidLedger(book.RaidLedger));
-			Assert.IsNull(op.Fault);
+			ClassicAssert.IsTrue(KingdomRaidIncidentRules.ValidLedger(book.RaidLedger));
+			ClassicAssert.IsNull(op.Fault);
 		}
 
 		private static void AdvanceWithAuthority(KingdomLifecycleBook book,
 			KingdomLifecycleOperation op, KingdomLifecyclePhase phase)
 		{
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "before " + phase);
-			Assert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op, phase, 20L), "advance " + phase);
-			Assert.AreEqual(phase, op.Phase);
-			Assert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "after " + phase);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "before " + phase);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.AdvancePhase(book, op, phase, 20L), "advance " + phase);
+			ClassicAssert.AreEqual(phase, op.Phase);
+			ClassicAssert.IsTrue(KingdomLifecycleRules.CanOwnAuthority(book), "after " + phase);
 		}
 	}
 }

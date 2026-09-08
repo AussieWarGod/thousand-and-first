@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -18,9 +19,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void LogicalAuthorityRetainsEveryDeclarationInOriginalOrder()
 		{
-			Assert.AreEqual(4, KingdomCeremonyLogicalSource.FileCount);
+			ClassicAssert.AreEqual(4, KingdomCeremonyLogicalSource.FileCount);
 			string source = KingdomCeremonyLogicalSource.Read();
-			Assert.AreEqual(4, Count(source, "public static partial class KingdomCeremony"));
+			ClassicAssert.AreEqual(4, Count(source, "public static partial class KingdomCeremony"));
 			AssertOrdered(source, "public static bool Enabled", "public static void StakePlan(",
 				"public static void OnBuildingRaised(", "public static bool EnsureBuildingRaised(",
 				"public static bool DispatchPending(", "public static bool EnsureRoadPaved(",
@@ -37,7 +38,7 @@ namespace ThousandAndFirst.Tests
 			{
 				string source = TestMain.ReadRepositoryText(ProductionFiles[i]);
 				int lines = source.Replace("\r\n", "\n").Split('\n').Length;
-				Assert.Less(lines, 300, ProductionFiles[i]);
+				ClassicAssert.Less(lines, 300, ProductionFiles[i]);
 			}
 		}
 
@@ -59,7 +60,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < tokens.Length; i++)
 			{
 				int next = source.IndexOf(tokens[i], cursor + 1, StringComparison.Ordinal);
-				Assert.Greater(next, cursor, tokens[i]);
+				ClassicAssert.Greater(next, cursor, tokens[i]);
 				cursor = next;
 			}
 		}

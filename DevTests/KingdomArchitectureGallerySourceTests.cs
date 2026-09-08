@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -133,7 +134,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < Terms.Length; i++)
 			{
 				int next = Source.IndexOf(Terms[i], at + 1, StringComparison.Ordinal);
-				Assert.Greater(next, at, "missing or out-of-order source term: " + Terms[i]);
+				ClassicAssert.Greater(next, at, "missing or out-of-order source term: " + Terms[i]);
 				at = next;
 			}
 		}

@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -59,7 +60,7 @@ namespace ThousandAndFirst.Tests
 				"KingdomResidentDeparturePhase.CitizenshipRemoved, KingdomResidentDeparturePhase.CarriersRemoved)");
 			string attempt = body.Substring(body.IndexOf("try { KingdomResidents.TryCompleteDepartureCarriers", StringComparison.Ordinal));
 			attempt = attempt.Substring(0, attempt.IndexOf("bool credited =", StringComparison.Ordinal));
-			Assert.IsFalse(Regex.IsMatch(attempt, @"\breturn\b"), "Carrier attempt must reach exact post-state credit.");
+			ClassicAssert.IsFalse(Regex.IsMatch(attempt, @"\breturn\b"), "Carrier attempt must reach exact post-state credit.");
 			Has(body, "if (!KingdomSubsidenceStepRuntime.TryCredit(System, Body, operation, out Failure)) return false;");
 		}
 

@@ -1,6 +1,7 @@
 ﻿#if TAF_TESTS
 using System;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -91,7 +92,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < terms.Length; i++)
 			{
 				int next = source.IndexOf(terms[i], cursor + 1, StringComparison.Ordinal);
-				Assert.Greater(next, cursor, terms[i]);
+				ClassicAssert.Greater(next, cursor, terms[i]);
 				cursor = next;
 			}
 		}
@@ -100,7 +101,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Judge_EverythingInPlaceIsAHost()
 		{
-			Assert.AreEqual(CitizenRiteVerdict.Host,
+			ClassicAssert.AreEqual(CitizenRiteVerdict.Host,
 				KingdomCitizenRiteRules.Judge(true, true, true, true, true));
 		}
 
@@ -113,7 +114,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(true, true, true, true, false, CitizenRiteVerdict.UnknownLiquid)]
 		public void Judge_OrderIsFrozen(bool founded, bool citizen, bool body, bool faction, bool liquid, CitizenRiteVerdict expected)
 		{
-			Assert.AreEqual(expected, KingdomCitizenRiteRules.Judge(founded, citizen, body, faction, liquid));
+			ClassicAssert.AreEqual(expected, KingdomCitizenRiteRules.Judge(founded, citizen, body, faction, liquid));
 		}
 
 		/// <summary>The two fatal verdicts announce, and every other verdict is silent. STANDARDS
@@ -126,7 +127,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(CitizenRiteVerdict.UnknownLiquid, true)]
 		public void BlockedLine_SpeaksOnlyForTheBlockingVerdicts(CitizenRiteVerdict verdict, bool speaks)
 		{
-			Assert.AreEqual(speaks, !string.IsNullOrEmpty(KingdomCitizenRiteRules.BlockedLine(verdict, "Kavvat", "brainbrine")));
+			ClassicAssert.AreEqual(speaks, !string.IsNullOrEmpty(KingdomCitizenRiteRules.BlockedLine(verdict, "Kavvat", "brainbrine")));
 		}
 
 		/// <summary>A blocked line names the city and, for a bad liquid, the liquid — the two facts
@@ -159,8 +160,8 @@ namespace ThousandAndFirst.Tests
 			string stranger = KingdomCitizenRiteRules.Greeting("Kavvat", 0);
 			string settling = KingdomCitizenRiteRules.Greeting("Kavvat", 1);
 			string settled = KingdomCitizenRiteRules.Greeting("Kavvat", KingdomCitizenRiteRules.SettledDays);
-			Assert.AreNotEqual(stranger, settling);
-			Assert.AreNotEqual(settling, settled);
+			ClassicAssert.AreNotEqual(stranger, settling);
+			ClassicAssert.AreNotEqual(settling, settled);
 			StringAssert.Contains("Kavvat", stranger);
 			StringAssert.Contains("Kavvat", settled);
 		}
@@ -186,7 +187,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(-3, 0)]
 		public void Band_HasARungPerGreeting(int sharedDays, int expected)
 		{
-			Assert.AreEqual(expected, KingdomCitizenRiteRules.Band(sharedDays));
+			ClassicAssert.AreEqual(expected, KingdomCitizenRiteRules.Band(sharedDays));
 		}
 
 		/// <summary>Every band has its own line, and no two share one. A band that mapped two rungs
@@ -194,9 +195,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Greeting_IsOnePerBand()
 		{
-			Assert.AreEqual(KingdomCitizenRiteRules.Greeting("Kavvat", 0), KingdomCitizenRiteRules.Greeting("Kavvat", -1));
-			Assert.AreNotEqual(KingdomCitizenRiteRules.Greeting("Kavvat", 0), KingdomCitizenRiteRules.Greeting("Kavvat", 1));
-			Assert.AreEqual(KingdomCitizenRiteRules.Greeting("Kavvat", 1),
+			ClassicAssert.AreEqual(KingdomCitizenRiteRules.Greeting("Kavvat", 0), KingdomCitizenRiteRules.Greeting("Kavvat", -1));
+			ClassicAssert.AreNotEqual(KingdomCitizenRiteRules.Greeting("Kavvat", 0), KingdomCitizenRiteRules.Greeting("Kavvat", 1));
+			ClassicAssert.AreEqual(KingdomCitizenRiteRules.Greeting("Kavvat", 1),
 				KingdomCitizenRiteRules.Greeting("Kavvat", KingdomCitizenRiteRules.SettledDays - 1));
 		}
 
@@ -204,7 +205,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Farewell_IsQudsOwn()
 		{
-			Assert.AreEqual("Live and drink.", KingdomCitizenRiteRules.Farewell());
+			ClassicAssert.AreEqual("Live and drink.", KingdomCitizenRiteRules.Farewell());
 		}
 
 		// ---- The chronicle as a tradable secret (W5's remainder, W6) --------------------------
@@ -219,12 +220,12 @@ namespace ThousandAndFirst.Tests
 		{
 			string id;
 			string text;
-			Assert.IsTrue(KingdomCitizenRiteRules.TryTradableSecret(RealmA, "Travelers claim that the well ran dry.", out id, out text));
+			ClassicAssert.IsTrue(KingdomCitizenRiteRules.TryTradableSecret(RealmA, "Travelers claim that the well ran dry.", out id, out text));
 			string again;
 			string sameText;
-			Assert.IsTrue(KingdomCitizenRiteRules.TryTradableSecret(RealmA, "Travelers claim that the well ran dry.", out again, out sameText));
-			Assert.AreEqual(id, again);
-			Assert.AreEqual(text, sameText);
+			ClassicAssert.IsTrue(KingdomCitizenRiteRules.TryTradableSecret(RealmA, "Travelers claim that the well ran dry.", out again, out sameText));
+			ClassicAssert.AreEqual(id, again);
+			ClassicAssert.AreEqual(text, sameText);
 		}
 
 		/// <summary>Two realms telling the same thing are two secrets, because they are about two
@@ -235,9 +236,9 @@ namespace ThousandAndFirst.Tests
 			string a;
 			string b;
 			string text;
-			Assert.IsTrue(KingdomCitizenRiteRules.TryTradableSecret(RealmA, "Travelers claim that the well ran dry.", out a, out text));
-			Assert.IsTrue(KingdomCitizenRiteRules.TryTradableSecret(RealmB, "Travelers claim that the well ran dry.", out b, out text));
-			Assert.AreNotEqual(a, b);
+			ClassicAssert.IsTrue(KingdomCitizenRiteRules.TryTradableSecret(RealmA, "Travelers claim that the well ran dry.", out a, out text));
+			ClassicAssert.IsTrue(KingdomCitizenRiteRules.TryTradableSecret(RealmB, "Travelers claim that the well ran dry.", out b, out text));
+			ClassicAssert.AreNotEqual(a, b);
 		}
 
 		/// <summary>The text that travels is the OUTSIDER register's line, handed through unaltered:
@@ -247,8 +248,8 @@ namespace ThousandAndFirst.Tests
 		{
 			string id;
 			string text;
-			Assert.IsTrue(KingdomCitizenRiteRules.TryTradableSecret(RealmA, "Some deny that Kavvat took in a hundred settlers.", out id, out text));
-			Assert.AreEqual("Some deny that Kavvat took in a hundred settlers.", text);
+			ClassicAssert.IsTrue(KingdomCitizenRiteRules.TryTradableSecret(RealmA, "Some deny that Kavvat took in a hundred settlers.", out id, out text));
+			ClassicAssert.AreEqual("Some deny that Kavvat took in a hundred settlers.", text);
 			StringAssert.StartsWith("taf:chronicle:" + RealmA + ":", id);
 		}
 
@@ -257,10 +258,10 @@ namespace ThousandAndFirst.Tests
 		{
 			string id;
 			string text;
-			Assert.IsFalse(KingdomCitizenRiteRules.TryTradableSecret("", "a line", out id, out text));
-			Assert.AreEqual("", id);
-			Assert.IsFalse(KingdomCitizenRiteRules.TryTradableSecret(RealmA, "", out id, out text));
-			Assert.IsFalse(KingdomCitizenRiteRules.TryTradableSecret(null, null, out id, out text));
+			ClassicAssert.IsFalse(KingdomCitizenRiteRules.TryTradableSecret("", "a line", out id, out text));
+			ClassicAssert.AreEqual("", id);
+			ClassicAssert.IsFalse(KingdomCitizenRiteRules.TryTradableSecret(RealmA, "", out id, out text));
+			ClassicAssert.IsFalse(KingdomCitizenRiteRules.TryTradableSecret(null, null, out id, out text));
 		}
 
 		[Test]
@@ -268,10 +269,10 @@ namespace ThousandAndFirst.Tests
 		{
 			string id;
 			string text;
-			Assert.IsFalse(KingdomCitizenRiteRules.TryTradableSecret(
+			ClassicAssert.IsFalse(KingdomCitizenRiteRules.TryTradableSecret(
 				"taf_kingdom_kavvat", "a line", out id, out text));
-			Assert.AreEqual("", id);
-			Assert.AreEqual("", text);
+			ClassicAssert.AreEqual("", id);
+			ClassicAssert.AreEqual("", text);
 		}
 
 		/// <summary>
@@ -283,10 +284,10 @@ namespace ThousandAndFirst.Tests
 		public void TheSecretIsTaggedInVanillasOwnInterestVocabulary()
 		{
 			string[] tags = KingdomCitizenRiteRules.SecretTags();
-			Assert.AreEqual(2, tags.Length);
+			ClassicAssert.AreEqual(2, tags.Length);
 			CollectionAssert.Contains(tags, "gossip");
 			CollectionAssert.Contains(tags, "settlement");
-			Assert.AreEqual("Gossip", KingdomCitizenRiteRules.SecretCategory);
+			ClassicAssert.AreEqual("Gossip", KingdomCitizenRiteRules.SecretCategory);
 		}
 	}
 }

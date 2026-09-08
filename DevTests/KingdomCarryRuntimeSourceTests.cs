@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -18,9 +19,9 @@ namespace ThousandAndFirst.Tests
 		private static string Slice(string source, string start, string end)
 		{
 			int at = source.IndexOf(start, StringComparison.Ordinal);
-			Assert.GreaterOrEqual(at, 0, start);
+			ClassicAssert.GreaterOrEqual(at, 0, start);
 			int until = source.IndexOf(end, at + start.Length, StringComparison.Ordinal);
-			Assert.Greater(until, at, end);
+			ClassicAssert.Greater(until, at, end);
 			return source.Substring(at, until - at);
 		}
 
@@ -32,13 +33,13 @@ namespace ThousandAndFirst.Tests
 				(string)x.Attribute("Name") == "r_KingdomCarrySign");
 			XElement craft = sign.Elements("part").Single(x =>
 				(string)x.Attribute("Name") == "TinkerItem");
-			Assert.AreEqual("true", (string)craft.Attribute("CanBuild"));
-			Assert.AreEqual("1", (string)craft.Attribute("BuildTier"));
-			Assert.AreEqual("00", (string)craft.Attribute("Bits"));
-			Assert.AreEqual("1", (string)craft.Attribute("NumberMade"));
+			ClassicAssert.AreEqual("true", (string)craft.Attribute("CanBuild"));
+			ClassicAssert.AreEqual("1", (string)craft.Attribute("BuildTier"));
+			ClassicAssert.AreEqual("00", (string)craft.Attribute("Bits"));
+			ClassicAssert.AreEqual("1", (string)craft.Attribute("NumberMade"));
 
 			XDocument populations = XDocument.Parse(Source("PopulationTables.xml"));
-			Assert.GreaterOrEqual(populations.Descendants("object").Count(x =>
+			ClassicAssert.GreaterOrEqual(populations.Descendants("object").Count(x =>
 				(string)x.Attribute("Blueprint") == "r_KingdomCarrySign"), 2);
 		}
 
@@ -64,7 +65,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("!FounderOwned(item) || item.IsOwned()", eligibility);
 			StringAssert.Contains("item.OwnedByPlayer", runtime);
 			StringAssert.Contains("DroppedByPlayer", runtime);
-			Assert.IsFalse(runtime.Contains("TryMaterialOf"),
+			ClassicAssert.IsFalse(runtime.Contains("TryMaterialOf"),
 				"exact carry accepts arbitrary eligible GameObjects, not material buckets");
 		}
 
@@ -76,15 +77,15 @@ namespace ThousandAndFirst.Tests
 				"/// <summary>Compatibility resolver for v5 saves only.");
 			int consent = action.IndexOf("Popup.ShowYesNo", StringComparison.Ordinal);
 			int publish = action.IndexOf("KingdomCarryRuntime.PublishPlant", StringComparison.Ordinal);
-			Assert.Greater(consent, 0);
-			Assert.Greater(publish, consent);
+			ClassicAssert.Greater(consent, 0);
+			ClassicAssert.Greater(publish, consent);
 
 			string runtime = KingdomCarryRuntimeLogicalSource.Read();
 			string prepare = Slice(runtime, "internal static bool TryPreparePlant(",
 				"/// <summary>After consent");
-			Assert.IsFalse(prepare.Contains("TryPrepareManifestReservation"));
-			Assert.IsFalse(prepare.Contains("TryPublishCarry"));
-			Assert.IsFalse(prepare.Contains("Destroy("));
+			ClassicAssert.IsFalse(prepare.Contains("TryPrepareManifestReservation"));
+			ClassicAssert.IsFalse(prepare.Contains("TryPublishCarry"));
+			ClassicAssert.IsFalse(prepare.Contains("Destroy("));
 			string commit = Slice(runtime, "internal static bool PublishPlant(",
 				"internal static bool Drive(");
 			AssertOrdered(commit, "TryPrepareManifestReservation",
@@ -102,10 +103,10 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("ReferenceEquals(accepted, item)", move);
 			StringAssert.Contains("NoStack: true", move);
 			StringAssert.Contains("return item;", move);
-			Assert.IsFalse(move.Contains("Destroy("));
-			Assert.IsFalse(move.Contains("Obliterate("));
-			Assert.IsFalse(move.Contains("GameObject.Create"));
-			Assert.IsFalse(move.Contains("KingdomMaterials.Deliver"));
+			ClassicAssert.IsFalse(move.Contains("Destroy("));
+			ClassicAssert.IsFalse(move.Contains("Obliterate("));
+			ClassicAssert.IsFalse(move.Contains("GameObject.Create"));
+			ClassicAssert.IsFalse(move.Contains("KingdomMaterials.Deliver"));
 
 			string central = KingdomCentralLogisticsLogicalSource.Read();
 			string arrival = Slice(central,
@@ -113,9 +114,9 @@ namespace ThousandAndFirst.Tests
 				"internal static bool TryAcknowledgeManifestPickup(");
 			StringAssert.Contains("SystemLongDistanceMoveTo", arrival);
 			StringAssert.Contains("binding.ObjectId", arrival);
-			Assert.IsFalse(arrival.Contains("GameObject.Create"));
-			Assert.IsFalse(arrival.Contains("Destroy("));
-			Assert.IsFalse(arrival.Contains("Obliterate("));
+			ClassicAssert.IsFalse(arrival.Contains("GameObject.Create"));
+			ClassicAssert.IsFalse(arrival.Contains("Destroy("));
+			ClassicAssert.IsFalse(arrival.Contains("Obliterate("));
 		}
 
 		[Test]
@@ -140,8 +141,8 @@ namespace ThousandAndFirst.Tests
 			string cell = Slice(move,
 				"else if (targetTopology == KingdomLifecycleTopology.Cell)",
 				"else return null;");
-			Assert.AreEqual(2, Count(inventory, protectedEvidence));
-			Assert.AreEqual(2, Count(cell, protectedEvidence));
+			ClassicAssert.AreEqual(2, Count(inventory, protectedEvidence));
+			ClassicAssert.AreEqual(2, Count(cell, protectedEvidence));
 			AssertOrdered(inventory, protectedEvidence,
 				"owner.Inventory.AddObject(item, null, Silent: true, NoStack: true)",
 				protectedEvidence);
@@ -150,7 +151,7 @@ namespace ThousandAndFirst.Tests
 
 			string observation = Slice(runtime, "private void AddAt(",
 				"private Observation ObjectObservation(");
-			Assert.AreEqual(2, Count(observation, protectedEvidence));
+			ClassicAssert.AreEqual(2, Count(observation, protectedEvidence));
 			StringAssert.DoesNotContain(".SetIntProperty(",
 				eligibility + sign + move + observation);
 			StringAssert.DoesNotContain(".SetStringProperty(",
@@ -187,8 +188,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("SetExactCarryDestinationSafety(book, op, false, now)", projection);
 			StringAssert.Contains("ProveExactCarryDestination(book,\n\t\t\t\t\top, source, output, false",
 				runtime);
-			Assert.IsFalse(runtime.Contains("output, true"));
-			Assert.IsFalse(runtime.Contains("lost: true"));
+			ClassicAssert.IsFalse(runtime.Contains("output, true"));
+			ClassicAssert.IsFalse(runtime.Contains("lost: true"));
 		}
 
 		[Test]
@@ -197,9 +198,9 @@ namespace ThousandAndFirst.Tests
 			string guestbook = KingdomGuestbookLogicalSource.Read();
 			string action = Slice(guestbook, "public static void AttemptPlantCarrySign(",
 				"/// <summary>Compatibility resolver for v5 saves only.");
-			Assert.IsFalse(action.Contains("KingdomMaterials.Deliver"));
-			Assert.IsFalse(action.Contains("Destroy("));
-			Assert.IsFalse(action.Contains("Obliterate("));
+			ClassicAssert.IsFalse(action.Contains("KingdomMaterials.Deliver"));
+			ClassicAssert.IsFalse(action.Contains("Destroy("));
+			ClassicAssert.IsFalse(action.Contains("Obliterate("));
 			StringAssert.Contains("ResolveLegacyHaulIfDue", guestbook);
 			StringAssert.Contains("if (manifest.Total() <= 0) return;", guestbook);
 		}
@@ -237,7 +238,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < values.Length; i++)
 			{
 				int at = source.IndexOf(values[i], cursor + 1, StringComparison.Ordinal);
-				Assert.Greater(at, cursor, values[i]);
+				ClassicAssert.Greater(at, cursor, values[i]);
 				cursor = at;
 			}
 		}

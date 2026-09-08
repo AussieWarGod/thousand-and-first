@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System.Collections.Generic;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 using Candidate = ThousandAndFirst.KingdomLodgingRules.LodgingCandidate;
 using Reason = ThousandAndFirst.KingdomLodgingRules.UnhousedReason;
@@ -24,7 +25,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void NestedDeclarationsKeepTheirPersistedAndPublicAbi()
 		{
-			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(Quarters)));
+			ClassicAssert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(Quarters)));
 			CollectionAssert.AreEqual(new int[4] { 0, 1, 2, 3 }, new int[4]
 			{
 				(int)Quarters.Packed,
@@ -32,7 +33,7 @@ namespace ThousandAndFirst.Tests
 				(int)Quarters.Roomed,
 				(int)Quarters.Private
 			});
-			Assert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(Reason)));
+			ClassicAssert.AreEqual(typeof(int), System.Enum.GetUnderlyingType(typeof(Reason)));
 			CollectionAssert.AreEqual(new int[6] { 0, 1, 2, 3, 4, 5 }, new int[6]
 			{
 				(int)Reason.Housed,
@@ -43,16 +44,16 @@ namespace ThousandAndFirst.Tests
 				(int)Reason.Condemned
 			});
 
-			Assert.AreEqual("ThousandAndFirst.KingdomLodgingRules+LodgingCandidate", typeof(Candidate).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomLodgingRules+LodgingCandidate", typeof(Candidate).FullName);
 			System.Reflection.FieldInfo[] candidateFields = typeof(Candidate).GetFields();
 			CollectionAssert.AreEqual(new string[3] { "PlotId", "Capacity", "Occupants" },
 				new string[3] { candidateFields[0].Name, candidateFields[1].Name, candidateFields[2].Name });
 			CollectionAssert.AreEqual(new System.Type[3] { typeof(string), typeof(int), typeof(int) },
 				new System.Type[3] { candidateFields[0].FieldType, candidateFields[1].FieldType, candidateFields[2].FieldType });
-			Assert.IsTrue(candidateFields[0].IsInitOnly && candidateFields[1].IsInitOnly && candidateFields[2].IsInitOnly);
+			ClassicAssert.IsTrue(candidateFields[0].IsInitOnly && candidateFields[1].IsInitOnly && candidateFields[2].IsInitOnly);
 			System.Reflection.ConstructorInfo[] candidateConstructors =
 				typeof(Candidate).GetConstructors();
-			Assert.AreEqual(1, candidateConstructors.Length);
+			ClassicAssert.AreEqual(1, candidateConstructors.Length);
 			System.Reflection.ParameterInfo[] candidateParameters =
 				candidateConstructors[0].GetParameters();
 			CollectionAssert.AreEqual(new System.Type[3] { typeof(string), typeof(int), typeof(int) },
@@ -62,7 +63,7 @@ namespace ThousandAndFirst.Tests
 					candidateParameters[2].ParameterType
 				});
 
-			Assert.AreEqual("ThousandAndFirst.KingdomLodgingRules+ArrivalHome", typeof(KingdomLodgingRules.ArrivalHome).FullName);
+			ClassicAssert.AreEqual("ThousandAndFirst.KingdomLodgingRules+ArrivalHome", typeof(KingdomLodgingRules.ArrivalHome).FullName);
 			System.Reflection.FieldInfo[] homeFields = typeof(KingdomLodgingRules.ArrivalHome).GetFields();
 			CollectionAssert.AreEqual(new string[4] { "Provides", "Capacity", "Occupants", "OccupantsRefuse" },
 				new string[4] { homeFields[0].Name, homeFields[1].Name, homeFields[2].Name, homeFields[3].Name });
@@ -73,12 +74,12 @@ namespace ThousandAndFirst.Tests
 			{
 				homeFields[0].FieldType, homeFields[1].FieldType, homeFields[2].FieldType, homeFields[3].FieldType
 			});
-			for (int i = 0; i < homeFields.Length; i++) Assert.IsTrue(homeFields[i].IsInitOnly);
+			for (int i = 0; i < homeFields.Length; i++) ClassicAssert.IsTrue(homeFields[i].IsInitOnly);
 
 			System.Reflection.ParameterInfo[] diagnose = typeof(KingdomLodgingRules).GetMethod("Diagnose").GetParameters();
-			Assert.AreEqual(true, diagnose[4].DefaultValue);
+			ClassicAssert.AreEqual(true, diagnose[4].DefaultValue);
 			System.Reflection.ParameterInfo[] arrivals = typeof(KingdomLodgingRules).GetMethod("AnyWouldTake").GetParameters();
-			Assert.AreEqual(false, arrivals[3].DefaultValue);
+			ClassicAssert.AreEqual(false, arrivals[3].DefaultValue);
 		}
 
 		[Test]
@@ -114,10 +115,10 @@ namespace ThousandAndFirst.Tests
 			int physicalRoof = source.IndexOf(
 				"Benefits.AmountForRoot(Home.IDIfAssigned, \"roof\")", exactCells,
 				System.StringComparison.Ordinal);
-			Assert.GreaterOrEqual(authored, 0);
-			Assert.Greater(declared, authored);
-			Assert.Greater(exactCells, declared);
-			Assert.Greater(physicalRoof, exactCells);
+			ClassicAssert.GreaterOrEqual(authored, 0);
+			ClassicAssert.Greater(declared, authored);
+			ClassicAssert.Greater(exactCells, declared);
+			ClassicAssert.Greater(physicalRoof, exactCells);
 		}
 
 		// --- ParseTags: comma list -> trimmed, non-empty tokens ------------------------------
@@ -125,8 +126,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ParseTags_NullAndEmptyBothYieldAnEmptyNonNullList()
 		{
-			Assert.AreEqual(0, KingdomLodgingRules.ParseTags(null).Count);
-			Assert.AreEqual(0, KingdomLodgingRules.ParseTags("").Count);
+			ClassicAssert.AreEqual(0, KingdomLodgingRules.ParseTags(null).Count);
+			ClassicAssert.AreEqual(0, KingdomLodgingRules.ParseTags("").Count);
 		}
 
 		[Test]
@@ -141,7 +142,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Intersects_IsCaseInsensitiveAndOrderIndependent()
 		{
-			Assert.IsTrue(KingdomLodgingRules.Intersects(Tags("Fungal"), Tags("water", "fungal")));
+			ClassicAssert.IsTrue(KingdomLodgingRules.Intersects(Tags("Fungal"), Tags("water", "fungal")));
 		}
 
 		[TestCase(0, 2)]
@@ -152,13 +153,13 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < aCount; i++) a.Add("x" + i);
 			List<string> b = new List<string>();
 			for (int i = 0; i < bCount; i++) b.Add("y" + i);
-			Assert.IsFalse(KingdomLodgingRules.Intersects(a, b));
+			ClassicAssert.IsFalse(KingdomLodgingRules.Intersects(a, b));
 		}
 
 		[Test]
 		public void Intersects_NoSharedTagIsFalse()
 		{
-			Assert.IsFalse(KingdomLodgingRules.Intersects(Tags("charge"), Tags("water", "sky")));
+			ClassicAssert.IsFalse(KingdomLodgingRules.Intersects(Tags("charge"), Tags("water", "sky")));
 		}
 
 		// --- MeetsNeeds: the hard Needs-vs-Provides gate ----------------------------------------
@@ -166,29 +167,29 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void MeetsNeeds_NoNeedsIsAlwaysMet()
 		{
-			Assert.IsTrue(KingdomLodgingRules.MeetsNeeds(new List<string>(), new List<string>()));
-			Assert.IsTrue(KingdomLodgingRules.MeetsNeeds(new List<string>(), Tags("charge")));
-			Assert.IsTrue(KingdomLodgingRules.MeetsNeeds(null, null));
+			ClassicAssert.IsTrue(KingdomLodgingRules.MeetsNeeds(new List<string>(), new List<string>()));
+			ClassicAssert.IsTrue(KingdomLodgingRules.MeetsNeeds(new List<string>(), Tags("charge")));
+			ClassicAssert.IsTrue(KingdomLodgingRules.MeetsNeeds(null, null));
 		}
 
 		[Test]
 		public void MeetsNeeds_ANeedWithNoProvidesAtAllIsUnmet()
 		{
-			Assert.IsFalse(KingdomLodgingRules.MeetsNeeds(Tags("charge"), new List<string>()));
-			Assert.IsFalse(KingdomLodgingRules.MeetsNeeds(Tags("charge"), null));
+			ClassicAssert.IsFalse(KingdomLodgingRules.MeetsNeeds(Tags("charge"), new List<string>()));
+			ClassicAssert.IsFalse(KingdomLodgingRules.MeetsNeeds(Tags("charge"), null));
 		}
 
 		[Test]
 		public void MeetsNeeds_EveryNeedMustAppearInProvides()
 		{
-			Assert.IsTrue(KingdomLodgingRules.MeetsNeeds(Tags("charge", "roof"), Tags("roof", "charge", "water")));
-			Assert.IsFalse(KingdomLodgingRules.MeetsNeeds(Tags("charge", "roof"), Tags("roof", "water")), "the second need, charge, is not provided");
+			ClassicAssert.IsTrue(KingdomLodgingRules.MeetsNeeds(Tags("charge", "roof"), Tags("roof", "charge", "water")));
+			ClassicAssert.IsFalse(KingdomLodgingRules.MeetsNeeds(Tags("charge", "roof"), Tags("roof", "water")), "the second need, charge, is not provided");
 		}
 
 		[Test]
 		public void MeetsNeeds_IsCaseInsensitive()
 		{
-			Assert.IsTrue(KingdomLodgingRules.MeetsNeeds(Tags("Charge"), Tags("charge")));
+			ClassicAssert.IsTrue(KingdomLodgingRules.MeetsNeeds(Tags("Charge"), Tags("charge")));
 		}
 
 		// --- HasFreeBed --------------------------------------------------------------------------
@@ -199,7 +200,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(2, 3, false)]
 		public void HasFreeBed_StrictlyLessThanCapacity(int capacity, int occupants, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomLodgingRules.HasFreeBed(capacity, occupants));
+			ClassicAssert.AreEqual(expected, KingdomLodgingRules.HasFreeBed(capacity, occupants));
 		}
 
 		// --- Conflicts: creed hostility and Refuses, both directions ---------------------------
@@ -207,37 +208,37 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Conflicts_ZeroHostilityAndNoRefusesIsNoConflict()
 		{
-			Assert.IsFalse(KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), 0));
+			ClassicAssert.IsFalse(KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), 0));
 		}
 
 		[Test]
 		public void Conflicts_AnyHostilityAboveTheFloorConflicts()
 		{
-			Assert.IsTrue(KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), 1));
+			ClassicAssert.IsTrue(KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), 1));
 		}
 
 		[Test]
 		public void Conflicts_HostilityAtTheFloorDoesNotConflict()
 		{
-			Assert.IsFalse(KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), KingdomLodgingRules.CreedRefusalHostilityFloor));
+			ClassicAssert.IsFalse(KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), KingdomLodgingRules.CreedRefusalHostilityFloor));
 		}
 
 		[Test]
 		public void Conflicts_ARefusesATagBCarriesInSelfTagsConflicts()
 		{
-			Assert.IsTrue(KingdomLodgingRules.Conflicts(Tags("fungal"), Tags(), Tags(), Tags("fungal"), 0));
+			ClassicAssert.IsTrue(KingdomLodgingRules.Conflicts(Tags("fungal"), Tags(), Tags(), Tags("fungal"), 0));
 		}
 
 		[Test]
 		public void Conflicts_BRefusingAAlsoConflictsEvenWhenAIsSilent()
 		{
-			Assert.IsTrue(KingdomLodgingRules.Conflicts(Tags(), Tags("loud"), Tags("loud"), Tags(), 0), "a refusal only one side states is still a refusal");
+			ClassicAssert.IsTrue(KingdomLodgingRules.Conflicts(Tags(), Tags("loud"), Tags("loud"), Tags(), 0), "a refusal only one side states is still a refusal");
 		}
 
 		[Test]
 		public void Conflicts_ARefusesATagNeitherSideCarriesDoesNotConflict()
 		{
-			Assert.IsFalse(KingdomLodgingRules.Conflicts(Tags("fungal"), Tags(), Tags(), Tags("dry"), 0));
+			ClassicAssert.IsFalse(KingdomLodgingRules.Conflicts(Tags("fungal"), Tags(), Tags(), Tags("dry"), 0));
 		}
 
 		// --- ChooseIndex: fewest free beds first, plot id as a stable tiebreak -----------------
@@ -245,15 +246,15 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ChooseIndex_EmptyListReturnsMinusOne()
 		{
-			Assert.AreEqual(-1, KingdomLodgingRules.ChooseIndex(new List<Candidate>()));
-			Assert.AreEqual(-1, KingdomLodgingRules.ChooseIndex(null));
+			ClassicAssert.AreEqual(-1, KingdomLodgingRules.ChooseIndex(new List<Candidate>()));
+			ClassicAssert.AreEqual(-1, KingdomLodgingRules.ChooseIndex(null));
 		}
 
 		[Test]
 		public void ChooseIndex_SingleCandidateWins()
 		{
 			List<Candidate> candidates = new List<Candidate> { new Candidate("hut@1.1", 2, 0) };
-			Assert.AreEqual(0, KingdomLodgingRules.ChooseIndex(candidates));
+			ClassicAssert.AreEqual(0, KingdomLodgingRules.ChooseIndex(candidates));
 		}
 
 		[Test]
@@ -264,7 +265,7 @@ namespace ThousandAndFirst.Tests
 				new Candidate("empty@0.0", 4, 0), // 4 free
 				new Candidate("nearlyFull@1.0", 4, 3) // 1 free
 			};
-			Assert.AreEqual(1, KingdomLodgingRules.ChooseIndex(candidates));
+			ClassicAssert.AreEqual(1, KingdomLodgingRules.ChooseIndex(candidates));
 		}
 
 		[Test]
@@ -275,7 +276,7 @@ namespace ThousandAndFirst.Tests
 				new Candidate("zzz@9.9", 2, 0),
 				new Candidate("aaa@0.0", 2, 0)
 			};
-			Assert.AreEqual(1, KingdomLodgingRules.ChooseIndex(candidates), "aaa sorts before zzz");
+			ClassicAssert.AreEqual(1, KingdomLodgingRules.ChooseIndex(candidates), "aaa sorts before zzz");
 		}
 
 		[Test]
@@ -288,7 +289,7 @@ namespace ThousandAndFirst.Tests
 			};
 			int first = KingdomLodgingRules.ChooseIndex(candidates);
 			int second = KingdomLodgingRules.ChooseIndex(candidates);
-			Assert.AreEqual(first, second);
+			ClassicAssert.AreEqual(first, second);
 		}
 
 		[Test]
@@ -299,7 +300,7 @@ namespace ThousandAndFirst.Tests
 				new Candidate("fine@0.0", 1, 0),
 				new Candidate("house@1.0", 4, 0)
 			};
-			Assert.AreEqual(1, KingdomLodgingRules.ChooseOrdinaryIndex(candidates,
+			ClassicAssert.AreEqual(1, KingdomLodgingRules.ChooseOrdinaryIndex(candidates,
 				new List<bool> { true, false }),
 				"the fine house's smaller capacity must not make it ordinary lodging's first choice");
 		}
@@ -312,7 +313,7 @@ namespace ThousandAndFirst.Tests
 				new Candidate("fine@1.0", 2, 0),
 				new Candidate("fine@0.0", 1, 0)
 			};
-			Assert.AreEqual(1, KingdomLodgingRules.ChooseOrdinaryIndex(candidates,
+			ClassicAssert.AreEqual(1, KingdomLodgingRules.ChooseOrdinaryIndex(candidates,
 				new List<bool> { true, true }));
 		}
 
@@ -326,7 +327,7 @@ namespace ThousandAndFirst.Tests
 				new Candidate("house-a@1.0", 4, 3),
 				new Candidate("terrace@3.0", 5, 3)
 			};
-			Assert.AreEqual(2, KingdomLodgingRules.ChooseOrdinaryIndex(candidates,
+			ClassicAssert.AreEqual(2, KingdomLodgingRules.ChooseOrdinaryIndex(candidates,
 				new List<bool> { true, false, false, false }));
 		}
 
@@ -338,11 +339,11 @@ namespace ThousandAndFirst.Tests
 				new Candidate("fine@0.0", 1, 0),
 				new Candidate("house@1.0", 4, 0)
 			};
-			Assert.AreEqual(KingdomLodgingRules.ChooseIndex(candidates),
+			ClassicAssert.AreEqual(KingdomLodgingRules.ChooseIndex(candidates),
 				KingdomLodgingRules.ChooseOrdinaryIndex(candidates, null));
-			Assert.AreEqual(KingdomLodgingRules.ChooseIndex(candidates),
+			ClassicAssert.AreEqual(KingdomLodgingRules.ChooseIndex(candidates),
 				KingdomLodgingRules.ChooseOrdinaryIndex(candidates, new List<bool> { true }));
-			Assert.AreEqual(-1, KingdomLodgingRules.ChooseOrdinaryIndex(null, null));
+			ClassicAssert.AreEqual(-1, KingdomLodgingRules.ChooseOrdinaryIndex(null, null));
 		}
 
 		// --- Diagnose: the priority order a founder should hear reasons in ---------------------
@@ -350,34 +351,34 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Diagnose_NoRoofAtAllOutranksEverything()
 		{
-			Assert.AreEqual(Reason.NoRoofAtAll, KingdomLodgingRules.Diagnose(false, false, false, false));
-			Assert.AreEqual(Reason.NoRoofAtAll, KingdomLodgingRules.Diagnose(false, true, true, true));
+			ClassicAssert.AreEqual(Reason.NoRoofAtAll, KingdomLodgingRules.Diagnose(false, false, false, false));
+			ClassicAssert.AreEqual(Reason.NoRoofAtAll, KingdomLodgingRules.Diagnose(false, true, true, true));
 		}
 
 		[Test]
 		public void Diagnose_NeedsUnmetOutranksFullAndRefused()
 		{
-			Assert.AreEqual(Reason.NeedsUnmet, KingdomLodgingRules.Diagnose(true, false, false, false));
-			Assert.AreEqual(Reason.NeedsUnmet, KingdomLodgingRules.Diagnose(true, false, true, true));
+			ClassicAssert.AreEqual(Reason.NeedsUnmet, KingdomLodgingRules.Diagnose(true, false, false, false));
+			ClassicAssert.AreEqual(Reason.NeedsUnmet, KingdomLodgingRules.Diagnose(true, false, true, true));
 		}
 
 		[Test]
 		public void Diagnose_FullOutranksRefused()
 		{
-			Assert.AreEqual(Reason.Full, KingdomLodgingRules.Diagnose(true, true, false, false));
-			Assert.AreEqual(Reason.Full, KingdomLodgingRules.Diagnose(true, true, false, true));
+			ClassicAssert.AreEqual(Reason.Full, KingdomLodgingRules.Diagnose(true, true, false, false));
+			ClassicAssert.AreEqual(Reason.Full, KingdomLodgingRules.Diagnose(true, true, false, true));
 		}
 
 		[Test]
 		public void Diagnose_RefusedIsLastWhenEverythingElseIsTrue()
 		{
-			Assert.AreEqual(Reason.Refused, KingdomLodgingRules.Diagnose(true, true, true, false));
+			ClassicAssert.AreEqual(Reason.Refused, KingdomLodgingRules.Diagnose(true, true, true, false));
 		}
 
 		[Test]
 		public void Diagnose_AllTrueReadsHoused()
 		{
-			Assert.AreEqual(Reason.Housed, KingdomLodgingRules.Diagnose(true, true, true, true));
+			ClassicAssert.AreEqual(Reason.Housed, KingdomLodgingRules.Diagnose(true, true, true, true));
 		}
 
 		// --- UnhousedLine: named once, per 7b, never a pronoun guess ---------------------------
@@ -405,20 +406,20 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void MatchedTag_ReturnsTheFirstNeedTheHomeAlsoProvides()
 		{
-			Assert.AreEqual("charge", KingdomLodgingRules.MatchedTag(Tags("charge", "roof"), Tags("roof", "charge")));
+			ClassicAssert.AreEqual("charge", KingdomLodgingRules.MatchedTag(Tags("charge", "roof"), Tags("roof", "charge")));
 		}
 
 		[Test]
 		public void MatchedTag_NoOverlapReturnsNull()
 		{
-			Assert.IsNull(KingdomLodgingRules.MatchedTag(Tags("charge"), Tags("water")));
+			ClassicAssert.IsNull(KingdomLodgingRules.MatchedTag(Tags("charge"), Tags("water")));
 		}
 
 		[Test]
 		public void MatchedTag_NullEitherSideReturnsNull()
 		{
-			Assert.IsNull(KingdomLodgingRules.MatchedTag(null, Tags("water")));
-			Assert.IsNull(KingdomLodgingRules.MatchedTag(Tags("water"), null));
+			ClassicAssert.IsNull(KingdomLodgingRules.MatchedTag(null, Tags("water")));
+			ClassicAssert.IsNull(KingdomLodgingRules.MatchedTag(Tags("water"), null));
 		}
 
 		// --- HomeSuffix: genotype/tag colour when the derivation gives it, plain otherwise ------
@@ -426,26 +427,26 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void HomeSuffix_KnownTagAddsItsOwnClause()
 		{
-			Assert.AreEqual("sleeps in the charging shed, by the charging post", KingdomLodgingRules.HomeSuffix("charging shed", "charge"));
+			ClassicAssert.AreEqual("sleeps in the charging shed, by the charging post", KingdomLodgingRules.HomeSuffix("charging shed", "charge"));
 		}
 
 		[Test]
 		public void HomeSuffix_UnknownOrAbsentTagIsPlain()
 		{
-			Assert.AreEqual("sleeps in the timber hut", KingdomLodgingRules.HomeSuffix("timber hut", null));
-			Assert.AreEqual("sleeps in the timber hut", KingdomLodgingRules.HomeSuffix("timber hut", "some-unrecognised-tag"));
+			ClassicAssert.AreEqual("sleeps in the timber hut", KingdomLodgingRules.HomeSuffix("timber hut", null));
+			ClassicAssert.AreEqual("sleeps in the timber hut", KingdomLodgingRules.HomeSuffix("timber hut", "some-unrecognised-tag"));
 		}
 
 		[Test]
 		public void HomeSuffix_EmptyBuildingNameFallsBackToARoof()
 		{
-			Assert.AreEqual("sleeps under a roof", KingdomLodgingRules.HomeSuffix("", null));
+			ClassicAssert.AreEqual("sleeps under a roof", KingdomLodgingRules.HomeSuffix("", null));
 		}
 
 		[Test]
 		public void HomeSuffix_IsCaseInsensitiveOnTheTag()
 		{
-			Assert.AreEqual("sleeps in the hut, under open sky", KingdomLodgingRules.HomeSuffix("hut", "SKY"));
+			ClassicAssert.AreEqual("sleeps in the hut, under open sky", KingdomLodgingRules.HomeSuffix("hut", "SKY"));
 		}
 
 		// ==================================================================================
@@ -469,8 +470,8 @@ namespace ThousandAndFirst.Tests
 		public void AnyWouldTake_AHomeThatMeetsEveryNeedTakesTheArrival()
 		{
 			Reason reason;
-			Assert.IsTrue(KingdomLodgingRules.AnyWouldTake(Homes(Home(2, 0, false, "taf:charge")), Tags("taf:charge"), out reason));
-			Assert.AreEqual(Reason.Housed, reason);
+			ClassicAssert.IsTrue(KingdomLodgingRules.AnyWouldTake(Homes(Home(2, 0, false, "taf:charge")), Tags("taf:charge"), out reason));
+			ClassicAssert.AreEqual(Reason.Housed, reason);
 		}
 
 		[Test]
@@ -480,45 +481,45 @@ namespace ThousandAndFirst.Tests
 			// all for the settler who needs one, and a bed tally could never say so. A mutation
 			// that puts the bed count back in charge fails here.
 			Reason reason;
-			Assert.IsFalse(KingdomLodgingRules.AnyWouldTake(
+			ClassicAssert.IsFalse(KingdomLodgingRules.AnyWouldTake(
 				Homes(Home(10, 0, false), Home(10, 0, false, "taf:damp")), Tags("taf:charge"), out reason));
-			Assert.AreEqual(Reason.NeedsUnmet, reason);
+			ClassicAssert.AreEqual(Reason.NeedsUnmet, reason);
 		}
 
 		[Test]
 		public void AnyWouldTake_AHomeThatMeetsTheNeedButIsFullIsNotRoom()
 		{
 			Reason reason;
-			Assert.IsFalse(KingdomLodgingRules.AnyWouldTake(Homes(Home(2, 2, false, "taf:charge")), Tags("taf:charge"), out reason));
-			Assert.AreEqual(Reason.Full, reason);
+			ClassicAssert.IsFalse(KingdomLodgingRules.AnyWouldTake(Homes(Home(2, 2, false, "taf:charge")), Tags("taf:charge"), out reason));
+			ClassicAssert.AreEqual(Reason.Full, reason);
 		}
 
 		[Test]
 		public void AnyWouldTake_AHomeWithRoomAndAnOccupantWhoRefusesThemIsNotRoom()
 		{
 			Reason reason;
-			Assert.IsFalse(KingdomLodgingRules.AnyWouldTake(Homes(Home(2, 1, true, "taf:charge")), Tags("taf:charge"), out reason));
-			Assert.AreEqual(Reason.Refused, reason);
+			ClassicAssert.IsFalse(KingdomLodgingRules.AnyWouldTake(Homes(Home(2, 1, true, "taf:charge")), Tags("taf:charge"), out reason));
+			ClassicAssert.AreEqual(Reason.Refused, reason);
 		}
 
 		[Test]
 		public void AnyWouldTake_NoHousingAtAllIsNamedAsNoRoofRatherThanAsARefusal()
 		{
 			Reason reason;
-			Assert.IsFalse(KingdomLodgingRules.AnyWouldTake(Homes(), Tags(), out reason));
-			Assert.AreEqual(Reason.NoRoofAtAll, reason);
-			Assert.IsFalse(KingdomLodgingRules.AnyWouldTake(null, Tags(), out reason));
-			Assert.AreEqual(Reason.NoRoofAtAll, reason);
+			ClassicAssert.IsFalse(KingdomLodgingRules.AnyWouldTake(Homes(), Tags(), out reason));
+			ClassicAssert.AreEqual(Reason.NoRoofAtAll, reason);
+			ClassicAssert.IsFalse(KingdomLodgingRules.AnyWouldTake(null, Tags(), out reason));
+			ClassicAssert.AreEqual(Reason.NoRoofAtAll, reason);
 		}
 
 		[Test]
 		public void AnyWouldTake_OneAcceptableHomeAmongManyRefusalsStillTakesThem()
 		{
 			Reason reason;
-			Assert.IsTrue(KingdomLodgingRules.AnyWouldTake(
+			ClassicAssert.IsTrue(KingdomLodgingRules.AnyWouldTake(
 				Homes(Home(1, 1, false, "taf:charge"), Home(2, 0, true, "taf:charge"), Home(1, 0, false, "taf:charge")),
 				Tags("taf:charge"), out reason));
-			Assert.AreEqual(Reason.Housed, reason);
+			ClassicAssert.AreEqual(Reason.Housed, reason);
 		}
 
 		[Test]
@@ -527,17 +528,17 @@ namespace ThousandAndFirst.Tests
 			// The unauthored catalogue, which is every design that shipped before this vocabulary:
 			// no Provides anywhere, and arrivals go on arriving exactly as they always did.
 			Reason reason;
-			Assert.IsTrue(KingdomLodgingRules.AnyWouldTake(Homes(Home(1, 0, false)), Tags(), out reason));
-			Assert.IsTrue(KingdomLodgingRules.AnyWouldTake(Homes(Home(1, 0, false)), null, out reason));
+			ClassicAssert.IsTrue(KingdomLodgingRules.AnyWouldTake(Homes(Home(1, 0, false)), Tags(), out reason));
+			ClassicAssert.IsTrue(KingdomLodgingRules.AnyWouldTake(Homes(Home(1, 0, false)), null, out reason));
 		}
 
 		[Test]
 		public void ArrivalRefusedChronicle_NamesTheRealReasonAndNotABedCount()
 		{
 			string line = KingdomLodgingRules.ArrivalRefusedChronicle("Kavvat", Reason.NeedsUnmet);
-			Assert.IsTrue(line.Contains("Kavvat"), "the settlement is named");
-			Assert.IsTrue(line.Contains("no home they would take"), "the ruling's own words: " + line);
-			Assert.IsFalse(line.Contains("bed"), "a bed count is exactly what this replaces: " + line);
+			ClassicAssert.IsTrue(line.Contains("Kavvat"), "the settlement is named");
+			ClassicAssert.IsTrue(line.Contains("no home they would take"), "the ruling's own words: " + line);
+			ClassicAssert.IsFalse(line.Contains("bed"), "a bed count is exactly what this replaces: " + line);
 		}
 
 		[Test]
@@ -547,24 +548,24 @@ namespace ThousandAndFirst.Tests
 			string needs = KingdomLodgingRules.ArrivalRefusedChronicle("Kavvat", Reason.NeedsUnmet);
 			string full = KingdomLodgingRules.ArrivalRefusedChronicle("Kavvat", Reason.Full);
 			string refused = KingdomLodgingRules.ArrivalRefusedChronicle("Kavvat", Reason.Refused);
-			Assert.AreNotEqual(noRoof, needs);
-			Assert.AreNotEqual(needs, full);
-			Assert.AreNotEqual(full, refused);
-			Assert.AreNotEqual(needs, refused);
+			ClassicAssert.AreNotEqual(noRoof, needs);
+			ClassicAssert.AreNotEqual(needs, full);
+			ClassicAssert.AreNotEqual(full, refused);
+			ClassicAssert.AreNotEqual(needs, refused);
 		}
 
 		[Test]
 		public void ArrivalRefusedNote_TellsTheFounderWhatToGoAndDo()
 		{
-			Assert.IsTrue(KingdomLodgingRules.ArrivalRefusedNote(Reason.NeedsUnmet).Contains("Commission housing"));
-			Assert.IsTrue(KingdomLodgingRules.ArrivalRefusedNote(Reason.NoRoofAtAll).Contains("Commission housing"));
+			ClassicAssert.IsTrue(KingdomLodgingRules.ArrivalRefusedNote(Reason.NeedsUnmet).Contains("Commission housing"));
+			ClassicAssert.IsTrue(KingdomLodgingRules.ArrivalRefusedNote(Reason.NoRoofAtAll).Contains("Commission housing"));
 		}
 
 		[Test]
 		public void ArrivalRefusedChronicle_ABlankSettlementNameStillReadsAsASentence()
 		{
-			Assert.IsTrue(KingdomLodgingRules.ArrivalRefusedChronicle(null, Reason.NeedsUnmet).Contains("the settlement"));
-			Assert.IsTrue(KingdomLodgingRules.ArrivalRefusedChronicle("   ", Reason.NeedsUnmet).Contains("the settlement"));
+			ClassicAssert.IsTrue(KingdomLodgingRules.ArrivalRefusedChronicle(null, Reason.NeedsUnmet).Contains("the settlement"));
+			ClassicAssert.IsTrue(KingdomLodgingRules.ArrivalRefusedChronicle("   ", Reason.NeedsUnmet).Contains("the settlement"));
 		}
 
 		// --- The grace: world-days from the warning, and nothing else -------------------
@@ -575,8 +576,8 @@ namespace ThousandAndFirst.Tests
 			// Addendum 10(a): the rope did not change length, the unit did. Two attended passes at
 			// the cadence a present founder was always assumed to keep is six days of world time,
 			// so somebody who comes home every third day sees exactly what they always saw.
-			Assert.AreEqual(6, KingdomLodgingRules.GraceDays, "the ruling says six world-days from the warning");
-			Assert.AreEqual(KingdomBrinkRules.InCohabitationDays(KingdomBrinkRules.RoofBrinkWindowPasses),
+			ClassicAssert.AreEqual(6, KingdomLodgingRules.GraceDays, "the ruling says six world-days from the warning");
+			ClassicAssert.AreEqual(KingdomBrinkRules.InCohabitationDays(KingdomBrinkRules.RoofBrinkWindowPasses),
 				KingdomLodgingRules.GraceDays, "the roof window stopped being a restatement of its old self");
 		}
 
@@ -584,9 +585,9 @@ namespace ThousandAndFirst.Tests
 		public void TheDayTheWordGoesOutIsNeverTheDayTheyGo()
 		{
 			long warned = 40L * KingdomRules.TicksPerDay;
-			Assert.IsFalse(KingdomBrinkRules.WindowSpent(BrinkKind.Roof, warned, warned),
+			ClassicAssert.IsFalse(KingdomBrinkRules.WindowSpent(BrinkKind.Roof, warned, warned),
 				"the day a loss is announced on is not the day they leave on");
-			Assert.AreEqual(KingdomLodgingRules.GraceDays, KingdomBrinkRules.DaysLeft(BrinkKind.Roof, warned, warned),
+			ClassicAssert.AreEqual(KingdomLodgingRules.GraceDays, KingdomBrinkRules.DaysLeft(BrinkKind.Roof, warned, warned),
 				"the whole grace is in front of the founder on the day they are told");
 		}
 
@@ -597,7 +598,7 @@ namespace ThousandAndFirst.Tests
 		public void TheGraceRunsOutAtExactlySixWorldDaysAndNotBefore(int daysAway, bool expected)
 		{
 			long warned = 40L * KingdomRules.TicksPerDay;
-			Assert.AreEqual(expected,
+			ClassicAssert.AreEqual(expected,
 				KingdomBrinkRules.WindowSpent(BrinkKind.Roof, warned, warned + daysAway * KingdomRules.TicksPerDay));
 		}
 
@@ -609,9 +610,9 @@ namespace ThousandAndFirst.Tests
 			// absence still cannot do is take somebody the founder was never told about.
 			long warned = 40L * KingdomRules.TicksPerDay;
 			long sixDaysAway = warned + KingdomLodgingRules.GraceDays * KingdomRules.TicksPerDay;
-			Assert.IsTrue(KingdomBrinkRules.WindowSpent(BrinkKind.Roof, warned, sixDaysAway),
+			ClassicAssert.IsTrue(KingdomBrinkRules.WindowSpent(BrinkKind.Roof, warned, sixDaysAway),
 				"staying away must not hold a warned settler at the door forever");
-			Assert.IsFalse(KingdomBrinkRules.WindowSpent(BrinkKind.Roof, KingdomBrinkRules.Unwarned, sixDaysAway + 9000L * KingdomRules.TicksPerDay),
+			ClassicAssert.IsFalse(KingdomBrinkRules.WindowSpent(BrinkKind.Roof, KingdomBrinkRules.Unwarned, sixDaysAway + 9000L * KingdomRules.TicksPerDay),
 				"and a settler nobody was warned about must never leave, however long the absence");
 		}
 
@@ -622,24 +623,24 @@ namespace ThousandAndFirst.Tests
 		{
 			// The cause both registers carry. The drought's own clause is KingdomGrowth's default
 			// and must not be what a housing departure is written down as.
-			Assert.IsTrue(KingdomLodgingRules.DepartureCause.Contains("roof"));
-			Assert.IsFalse(KingdomLodgingRules.DepartureCause.Contains("cistern"));
-			Assert.IsFalse(KingdomLodgingRules.DepartureCause.Contains("wetter"));
+			ClassicAssert.IsTrue(KingdomLodgingRules.DepartureCause.Contains("roof"));
+			ClassicAssert.IsFalse(KingdomLodgingRules.DepartureCause.Contains("cistern"));
+			ClassicAssert.IsFalse(KingdomLodgingRules.DepartureCause.Contains("wetter"));
 		}
 
 		[Test]
 		public void LeavingLine_NamesThePersonAndSaysTheyAreGoing()
 		{
 			string line = KingdomLodgingRules.LeavingLine("Vashti");
-			Assert.IsTrue(line.StartsWith("Vashti"), line);
-			Assert.IsTrue(line.Contains("leaving"), line);
+			ClassicAssert.IsTrue(line.StartsWith("Vashti"), line);
+			ClassicAssert.IsTrue(line.Contains("leaving"), line);
 		}
 
 		[Test]
 		public void LeavingLine_ANamelessSettlerStillReadsAsASentence()
 		{
-			Assert.IsTrue(KingdomLodgingRules.LeavingLine(null).StartsWith("a settler"));
-			Assert.IsTrue(KingdomLodgingRules.LeavingLine("").StartsWith("a settler"));
+			ClassicAssert.IsTrue(KingdomLodgingRules.LeavingLine(null).StartsWith("a settler"));
+			ClassicAssert.IsTrue(KingdomLodgingRules.LeavingLine("").StartsWith("a settler"));
 		}
 
 		// --- The shipped vocabulary reads in prose ---------------------------------------
@@ -649,11 +650,11 @@ namespace ThousandAndFirst.Tests
 		{
 			// The catalogue ships taf:charge, not charge. A flavour table that only knew the bare
 			// words would silently stop colouring every line in the game.
-			Assert.AreEqual("sleeps in the charging shed, by the charging post",
+			ClassicAssert.AreEqual("sleeps in the charging shed, by the charging post",
 				KingdomLodgingRules.HomeSuffix("charging shed", KingdomQolRules.TagCharge));
-			Assert.AreEqual("sleeps in the reservoir yard, by the water",
+			ClassicAssert.AreEqual("sleeps in the reservoir yard, by the water",
 				KingdomLodgingRules.HomeSuffix("reservoir yard", KingdomQolRules.TagOpenWater));
-			Assert.AreEqual("sleeps in the cellar, in the damp dark",
+			ClassicAssert.AreEqual("sleeps in the cellar, in the damp dark",
 				KingdomLodgingRules.HomeSuffix("cellar", KingdomQolRules.TagDamp));
 		}
 
@@ -675,7 +676,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(1, 1000, Quarters.Private)]
 		public void ClosenessFromDensity_EachRungBoundaryIsExact(int beds, int cells, Quarters expected)
 		{
-			Assert.AreEqual(expected, KingdomLodgingRules.ClosenessFromDensity(cells, beds));
+			ClassicAssert.AreEqual(expected, KingdomLodgingRules.ClosenessFromDensity(cells, beds));
 		}
 
 		[TestCase(3, 11, Quarters.Packed)]
@@ -689,7 +690,7 @@ namespace ThousandAndFirst.Tests
 			// The thresholds are multiplied out rather than the density divided down, so a rung
 			// boundary never lands on a rounding direction. Three beds move every boundary to
 			// exactly three times where one bed put it.
-			Assert.AreEqual(expected, KingdomLodgingRules.ClosenessFromDensity(cells, beds));
+			ClassicAssert.AreEqual(expected, KingdomLodgingRules.ClosenessFromDensity(cells, beds));
 		}
 
 		[TestCase(0, 0)]
@@ -701,7 +702,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// A roof the registry cannot measure is one cell with a bunk in it, not a manor. The
 			// safe answer to a gate with no arithmetic behind it is the strict one.
-			Assert.AreEqual(Quarters.Packed, KingdomLodgingRules.ClosenessFromDensity(cells, beds));
+			ClassicAssert.AreEqual(Quarters.Packed, KingdomLodgingRules.ClosenessFromDensity(cells, beds));
 		}
 
 		// --- The shipped catalogue, design by design ------------------------------------------
@@ -723,7 +724,7 @@ namespace ThousandAndFirst.Tests
 			// Addendum 4c's own examples: tent and bunk row Packed, hut Close, stone house Roomed,
 			// fine house and manor Private -- all four derived from the arithmetic and none of them
 			// declared.
-			Assert.AreEqual(expected, KingdomLodgingRules.ClosenessFromDensity(cells, beds), design);
+			ClassicAssert.AreEqual(expected, KingdomLodgingRules.ClosenessFromDensity(cells, beds), design);
 		}
 
 		[TestCase("housecourt", 48, 18, Quarters.Packed)]
@@ -734,8 +735,8 @@ namespace ThousandAndFirst.Tests
 			// ground and measure tighter than the single stone house whose walls they repeat. This
 			// is why they are the only two entries in the catalogue carrying a Closeness override,
 			// and this test is the evidence that the override is needed rather than decorative.
-			Assert.AreEqual(derived, KingdomLodgingRules.ClosenessFromDensity(cells, beds), design);
-			Assert.AreNotEqual(Quarters.Roomed, derived, design + " would not need an override if the arithmetic already agreed");
+			ClassicAssert.AreEqual(derived, KingdomLodgingRules.ClosenessFromDensity(cells, beds), design);
+			ClassicAssert.AreNotEqual(Quarters.Roomed, derived, design + " would not need an override if the arithmetic already agreed");
 		}
 
 		[Test]
@@ -745,10 +746,10 @@ namespace ThousandAndFirst.Tests
 			// declaration, and only measure when there is none. The override wins over an
 			// arithmetic that says Packed.
 			Quarters declared;
-			Assert.IsTrue(KingdomLodgingRules.TryParseCloseness("Roomed", out declared));
-			Assert.AreEqual(Quarters.Roomed, declared);
-			Assert.AreEqual(Quarters.Packed, KingdomLodgingRules.ClosenessFromDensity(48, 18), "the housecourt's own arithmetic");
-			Assert.AreNotEqual(KingdomLodgingRules.ClosenessFromDensity(48, 18), declared, "and the declaration is what the design gets");
+			ClassicAssert.IsTrue(KingdomLodgingRules.TryParseCloseness("Roomed", out declared));
+			ClassicAssert.AreEqual(Quarters.Roomed, declared);
+			ClassicAssert.AreEqual(Quarters.Packed, KingdomLodgingRules.ClosenessFromDensity(48, 18), "the housecourt's own arithmetic");
+			ClassicAssert.AreNotEqual(KingdomLodgingRules.ClosenessFromDensity(48, 18), declared, "and the declaration is what the design gets");
 		}
 
 		// --- Parsing the attribute -------------------------------------------------------------
@@ -760,8 +761,8 @@ namespace ThousandAndFirst.Tests
 		public void TryParseCloseness_FoldsCaseAndSurroundingWhitespace(string raw, Quarters expected)
 		{
 			Quarters parsed;
-			Assert.IsTrue(KingdomLodgingRules.TryParseCloseness(raw, out parsed), raw);
-			Assert.AreEqual(expected, parsed);
+			ClassicAssert.IsTrue(KingdomLodgingRules.TryParseCloseness(raw, out parsed), raw);
+			ClassicAssert.AreEqual(expected, parsed);
 		}
 
 		[TestCase(null)]
@@ -772,18 +773,18 @@ namespace ThousandAndFirst.Tests
 		public void TryParseCloseness_AnythingElseIsRefusedSoTheCallerFallsBackToMeasuring(string raw)
 		{
 			Quarters parsed;
-			Assert.IsFalse(KingdomLodgingRules.TryParseCloseness(raw, out parsed), raw ?? "null");
+			ClassicAssert.IsFalse(KingdomLodgingRules.TryParseCloseness(raw, out parsed), raw ?? "null");
 		}
 
 		[Test]
 		public void ClosenessNames_AreTheEnumInRungOrderSoTheParseAndTheEnumCannotDrift()
 		{
-			Assert.AreEqual(4, KingdomLodgingRules.ClosenessNames.Length);
+			ClassicAssert.AreEqual(4, KingdomLodgingRules.ClosenessNames.Length);
 			for (int i = 0; i < KingdomLodgingRules.ClosenessNames.Length; i++)
 			{
 				Quarters parsed;
-				Assert.IsTrue(KingdomLodgingRules.TryParseCloseness(KingdomLodgingRules.ClosenessNames[i], out parsed));
-				Assert.AreEqual((Quarters)i, parsed, KingdomLodgingRules.ClosenessNames[i]);
+				ClassicAssert.IsTrue(KingdomLodgingRules.TryParseCloseness(KingdomLodgingRules.ClosenessNames[i], out parsed));
+				ClassicAssert.AreEqual((Quarters)i, parsed, KingdomLodgingRules.ClosenessNames[i]);
 			}
 		}
 
@@ -795,7 +796,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Quarters.Private, 75)] // = Roomed, Addendum 4d: marble never houses enemies a stone house refused
 		public void RefusalHostility_IsTheRulingsOwnFourThresholds(Quarters quarters, int expected)
 		{
-			Assert.AreEqual(expected, KingdomLodgingRules.RefusalHostility(quarters));
+			ClassicAssert.AreEqual(expected, KingdomLodgingRules.RefusalHostility(quarters));
 		}
 
 		[Test]
@@ -803,11 +804,11 @@ namespace ThousandAndFirst.Tests
 		{
 			// The whole of Addendum 4c in one assertion: no rung ever tolerates less than a
 			// tighter one. A mutation that swaps two rungs fails here.
-			Assert.Less(KingdomLodgingRules.RefusalHostility(Quarters.Packed), KingdomLodgingRules.RefusalHostility(Quarters.Close));
-			Assert.Less(KingdomLodgingRules.RefusalHostility(Quarters.Close), KingdomLodgingRules.RefusalHostility(Quarters.Roomed));
+			ClassicAssert.Less(KingdomLodgingRules.RefusalHostility(Quarters.Packed), KingdomLodgingRules.RefusalHostility(Quarters.Close));
+			ClassicAssert.Less(KingdomLodgingRules.RefusalHostility(Quarters.Close), KingdomLodgingRules.RefusalHostility(Quarters.Roomed));
 			// Addendum 4d: Private EQUALS Roomed — walls between beds are the last tolerance
 			// architecture buys; marble adds quality, never permission.
-			Assert.AreEqual(KingdomLodgingRules.RefusalHostility(Quarters.Roomed), KingdomLodgingRules.RefusalHostility(Quarters.Private));
+			ClassicAssert.AreEqual(KingdomLodgingRules.RefusalHostility(Quarters.Roomed), KingdomLodgingRules.RefusalHostility(Quarters.Private));
 		}
 
 		[Test]
@@ -817,11 +818,11 @@ namespace ThousandAndFirst.Tests
 			// floor -- any enmity at all refuses -- and the roomiest restates the single
 			// CohabitHostility the vocabulary shipped with, which used to be applied to every roof
 			// in the settlement and now applies only where everybody has a door of their own.
-			Assert.AreEqual(KingdomLodgingRules.CreedRefusalHostilityFloor + 1, KingdomLodgingRules.PackedRefusalHostility);
+			ClassicAssert.AreEqual(KingdomLodgingRules.CreedRefusalHostilityFloor + 1, KingdomLodgingRules.PackedRefusalHostility);
 			// Addendum 4d: Private equals Roomed — marble never houses enemies a stone house
 			// refused. The old assertion pinned Private to the superseded flat floor (100), which
 			// is exactly the gap the ruling closed.
-			Assert.AreEqual(KingdomLodgingRules.RoomedRefusalHostility, KingdomLodgingRules.PrivateRefusalHostility);
+			ClassicAssert.AreEqual(KingdomLodgingRules.RoomedRefusalHostility, KingdomLodgingRules.PrivateRefusalHostility);
 		}
 
 		[TestCase(Quarters.Packed, 0, false)]
@@ -834,7 +835,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Quarters.Private, 75, true)] // Addendum 4d: Private refuses exactly where Roomed does
 		public void Conflicts_EachRungRefusesAtItsOwnThresholdAndCarriesOneShortOfIt(Quarters quarters, int hostility, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), hostility, quarters));
+			ClassicAssert.AreEqual(expected, KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), hostility, quarters));
 		}
 
 		[TestCase(Quarters.Packed, true)]
@@ -846,7 +847,7 @@ namespace ThousandAndFirst.Tests
 			// The standing -50 fifty-three faction pairs hold toward everyone they have not
 			// troubled to name. This is the case the ruling is about: a mixed city cannot bunk
 			// together and can live in stone.
-			Assert.AreEqual(expected, KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), 50, quarters));
+			ClassicAssert.AreEqual(expected, KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), 50, quarters));
 		}
 
 		[TestCase(Quarters.Packed)]
@@ -856,7 +857,7 @@ namespace ThousandAndFirst.Tests
 		public void Conflicts_TheFlatHundredFaultLineRefusesAtEveryRungIncludingTheRoomiest(Quarters quarters)
 		{
 			// The Templar and the Girsh do not share a manor either.
-			Assert.IsTrue(KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), 100, quarters));
+			ClassicAssert.IsTrue(KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), 100, quarters));
 		}
 
 		[TestCase(Quarters.Packed)]
@@ -868,7 +869,7 @@ namespace ThousandAndFirst.Tests
 			// Same creed reads as zero hostility (KingdomCreedRules.Hostility short-circuits it),
 			// and zero clears every rung of the ladder. Believers of one creed are never kept apart
 			// by these quarters or any other.
-			Assert.IsFalse(KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), 0, quarters));
+			ClassicAssert.IsFalse(KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), 0, quarters));
 		}
 
 		[TestCase(Quarters.Packed)]
@@ -880,8 +881,8 @@ namespace ThousandAndFirst.Tests
 			// The ladder scales the creed half and nothing else. A Refuses names a thing about the
 			// other person that a wall does not fix -- so it fires with zero hostility, in a manor,
 			// and in both directions.
-			Assert.IsTrue(KingdomLodgingRules.Conflicts(Tags("taf:damp"), Tags(), Tags(), Tags("taf:damp"), 0, quarters), "A refuses B");
-			Assert.IsTrue(KingdomLodgingRules.Conflicts(Tags(), Tags("taf:damp"), Tags("taf:damp"), Tags(), 0, quarters), "B refuses A");
+			ClassicAssert.IsTrue(KingdomLodgingRules.Conflicts(Tags("taf:damp"), Tags(), Tags(), Tags("taf:damp"), 0, quarters), "A refuses B");
+			ClassicAssert.IsTrue(KingdomLodgingRules.Conflicts(Tags(), Tags("taf:damp"), Tags("taf:damp"), Tags(), 0, quarters), "B refuses A");
 		}
 
 		[TestCase(0)]
@@ -892,7 +893,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// A caller that has not said what the quarters were gets Packed, which is the only safe
 			// reading and is also exactly the rule the five-argument form has always applied.
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), hostility, Quarters.Packed),
 				KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), hostility));
 		}
@@ -948,10 +949,10 @@ namespace ThousandAndFirst.Tests
 			// never join; the same five fill a stone house. This is the consequence the addendum
 			// calls intended -- a diverse city must build better housing to exist.
 			int[][] mixed = FiveMixedBelievers(50);
-			Assert.AreEqual(1, SeatedInOneHome(Quarters.Packed, mixed), "the bunk row seats one of the five");
-			Assert.AreEqual(1, SeatedInOneHome(Quarters.Close, mixed), "and so does the hut");
-			Assert.AreEqual(5, SeatedInOneHome(Quarters.Roomed, mixed), "the stone house takes all five");
-			Assert.AreEqual(5, SeatedInOneHome(Quarters.Private, mixed), "and so does the fine house");
+			ClassicAssert.AreEqual(1, SeatedInOneHome(Quarters.Packed, mixed), "the bunk row seats one of the five");
+			ClassicAssert.AreEqual(1, SeatedInOneHome(Quarters.Close, mixed), "and so does the hut");
+			ClassicAssert.AreEqual(5, SeatedInOneHome(Quarters.Roomed, mixed), "the stone house takes all five");
+			ClassicAssert.AreEqual(5, SeatedInOneHome(Quarters.Private, mixed), "and so does the fine house");
 		}
 
 		[TestCase(Quarters.Packed)]
@@ -960,7 +961,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(Quarters.Private)]
 		public void FiveBelieversOfOneCreedShareAnythingIncludingTheBunkhouse(Quarters quarters)
 		{
-			Assert.AreEqual(5, SeatedInOneHome(quarters, FiveMixedBelievers(0)));
+			ClassicAssert.AreEqual(5, SeatedInOneHome(quarters, FiveMixedBelievers(0)));
 		}
 
 		[Test]
@@ -968,7 +969,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// Roomier housing answers the ambient grudge and does not answer hatred. Nothing the
 			// founder builds puts the Templar and the Girsh in one household.
-			Assert.AreEqual(1, SeatedInOneHome(Quarters.Private, FiveMixedBelievers(100)));
+			ClassicAssert.AreEqual(1, SeatedInOneHome(Quarters.Private, FiveMixedBelievers(100)));
 		}
 
 		// --- Composition with Addendum 4b: the refused never join ---------------------------
@@ -982,10 +983,10 @@ namespace ThousandAndFirst.Tests
 			bool refusedInABunkRow = KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), 50, Quarters.Packed);
 			bool refusedInAHouse = KingdomLodgingRules.Conflicts(Tags(), Tags(), Tags(), Tags(), 50, Quarters.Roomed);
 			Reason reason;
-			Assert.IsFalse(KingdomLodgingRules.AnyWouldTake(Homes(Home(3, 1, refusedInABunkRow)), Tags(), out reason));
-			Assert.AreEqual(Reason.Refused, reason, "and it is named as a refusal, never as a bed count");
-			Assert.IsTrue(KingdomLodgingRules.AnyWouldTake(Homes(Home(3, 1, refusedInAHouse)), Tags(), out reason));
-			Assert.AreEqual(Reason.Housed, reason);
+			ClassicAssert.IsFalse(KingdomLodgingRules.AnyWouldTake(Homes(Home(3, 1, refusedInABunkRow)), Tags(), out reason));
+			ClassicAssert.AreEqual(Reason.Refused, reason, "and it is named as a refusal, never as a bed count");
+			ClassicAssert.IsTrue(KingdomLodgingRules.AnyWouldTake(Homes(Home(3, 1, refusedInAHouse)), Tags(), out reason));
+			ClassicAssert.AreEqual(Reason.Housed, reason);
 		}
 
 		// --- Naming the quarters (STANDARDS 7b) ---------------------------------------------
@@ -998,7 +999,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// A founder acts on walls, not on a word this mod invented. The rung names never reach
 			// the player.
-			Assert.AreEqual(expected, KingdomLodgingRules.QuartersPhrase(quarters));
+			ClassicAssert.AreEqual(expected, KingdomLodgingRules.QuartersPhrase(quarters));
 		}
 
 		[Test]
@@ -1017,7 +1018,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// Naming the quarters says nothing at all about a settlement with no roof standing, or
 			// one whose every bed is taken. Only a refusal is about the room.
-			Assert.AreEqual(
+			ClassicAssert.AreEqual(
 				KingdomLodgingRules.UnhousedLine("Vashti", reason),
 				KingdomLodgingRules.UnhousedLine("Vashti", reason, Quarters.Roomed));
 		}
@@ -1025,9 +1026,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void Roomier_KeepsTheBestQuartersThatStillRefusedSoTheFounderKnowsWhatToBeat()
 		{
-			Assert.AreEqual(Quarters.Roomed, KingdomLodgingRules.Roomier(Quarters.Packed, Quarters.Roomed));
-			Assert.AreEqual(Quarters.Roomed, KingdomLodgingRules.Roomier(Quarters.Roomed, Quarters.Close));
-			Assert.AreEqual(Quarters.Private, KingdomLodgingRules.Roomier(Quarters.Private, Quarters.Private));
+			ClassicAssert.AreEqual(Quarters.Roomed, KingdomLodgingRules.Roomier(Quarters.Packed, Quarters.Roomed));
+			ClassicAssert.AreEqual(Quarters.Roomed, KingdomLodgingRules.Roomier(Quarters.Roomed, Quarters.Close));
+			ClassicAssert.AreEqual(Quarters.Private, KingdomLodgingRules.Roomier(Quarters.Private, Quarters.Private));
 		}
 
 		// --- Condemnation: the wear past which a house stops being a roof ----------------------
@@ -1039,8 +1040,8 @@ namespace ThousandAndFirst.Tests
 			// left, and RuinStandingCeilingPercent is the MOST of an abandoned settlement ever
 			// still up after a generation of nobody. The line is where a lived-in house has no
 			// more of itself left than that.
-			Assert.AreEqual(100 - KingdomRules.RuinStandingCeilingPercent, KingdomLodgingRules.CondemnedWearPercent);
-			Assert.AreEqual(KingdomRules.RuinStandingCeilingPercent,
+			ClassicAssert.AreEqual(100 - KingdomRules.RuinStandingCeilingPercent, KingdomLodgingRules.CondemnedWearPercent);
+			ClassicAssert.AreEqual(KingdomRules.RuinStandingCeilingPercent,
 				KingdomMaterialRules.ConditionPercent(KingdomLodgingRules.CondemnedWearPercent),
 				"the threshold stopped meaning what the ruin ceiling means");
 		}
@@ -1051,9 +1052,9 @@ namespace ThousandAndFirst.Tests
 			// It has to be strictly under MaxWearPercent, or condemnation would be a synonym for
 			// "as damaged as anything ever gets" and no house could ever be badly used and still
 			// keep the rain off. It also has to be above zero, or a scratch would empty a city.
-			Assert.Less(KingdomLodgingRules.CondemnedWearPercent, KingdomMaterialRules.MaxWearPercent);
-			Assert.Greater(KingdomLodgingRules.CondemnedWearPercent, 0);
-			Assert.AreEqual("half-wrecked", KingdomMaterialRules.ConditionWord(KingdomLodgingRules.CondemnedWearPercent),
+			ClassicAssert.Less(KingdomLodgingRules.CondemnedWearPercent, KingdomMaterialRules.MaxWearPercent);
+			ClassicAssert.Greater(KingdomLodgingRules.CondemnedWearPercent, 0);
+			ClassicAssert.AreEqual("half-wrecked", KingdomMaterialRules.ConditionWord(KingdomLodgingRules.CondemnedWearPercent),
 				"the settlement's own vocabulary stopped agreeing with the threshold");
 		}
 
@@ -1068,7 +1069,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// The constant names the FIRST wear that is too much, not the last that is tolerable,
 			// so the threshold itself condemns.
-			Assert.AreEqual(expected, KingdomLodgingRules.IsCondemned(wear));
+			ClassicAssert.AreEqual(expected, KingdomLodgingRules.IsCondemned(wear));
 		}
 
 		[Test]
@@ -1076,9 +1077,9 @@ namespace ThousandAndFirst.Tests
 		{
 			// The half of the rule that does nothing, and has to: a knocked-about hut houses its
 			// people exactly as it did, so a subsidence that scuffs a home records no brink.
-			Assert.IsFalse(KingdomLodgingRules.IsCondemned(1));
-			Assert.IsFalse(KingdomLodgingRules.IsCondemned(KingdomLodgingRules.CondemnedWearPercent - 1));
-			Assert.AreEqual("badly used", KingdomMaterialRules.ConditionWord(KingdomLodgingRules.CondemnedWearPercent - 1));
+			ClassicAssert.IsFalse(KingdomLodgingRules.IsCondemned(1));
+			ClassicAssert.IsFalse(KingdomLodgingRules.IsCondemned(KingdomLodgingRules.CondemnedWearPercent - 1));
+			ClassicAssert.AreEqual("badly used", KingdomMaterialRules.ConditionWord(KingdomLodgingRules.CondemnedWearPercent - 1));
 		}
 
 		[Test]
@@ -1088,8 +1089,8 @@ namespace ThousandAndFirst.Tests
 			// threshold, so a condemnation is lifted by putting the roof back on and never by
 			// waiting -- which is what makes the roof brink an arrestable window rather than a
 			// countdown.
-			Assert.IsFalse(KingdomLodgingRules.IsCondemned(0), "a mended house was still condemned");
-			Assert.Greater(KingdomMaterialRules.RepairEffort(100, KingdomLodgingRules.CondemnedWearPercent), 0,
+			ClassicAssert.IsFalse(KingdomLodgingRules.IsCondemned(0), "a mended house was still condemned");
+			ClassicAssert.Greater(KingdomMaterialRules.RepairEffort(100, KingdomLodgingRules.CondemnedWearPercent), 0,
 				"mending a condemned house costs nothing");
 		}
 
@@ -1099,9 +1100,9 @@ namespace ThousandAndFirst.Tests
 			// A half-wrecked house answers nobody's needs and has no beds worth counting, so
 			// "the roofs here have fallen in" is the truest of the reasons whenever it holds --
 			// and the only one the founder answers with a mending rather than a commission.
-			Assert.AreEqual(Reason.Condemned, KingdomLodgingRules.Diagnose(true, false, false, false, false));
-			Assert.AreEqual(Reason.Condemned, KingdomLodgingRules.Diagnose(true, true, true, true, false));
-			Assert.AreEqual(Reason.NoRoofAtAll, KingdomLodgingRules.Diagnose(false, true, true, true, false),
+			ClassicAssert.AreEqual(Reason.Condemned, KingdomLodgingRules.Diagnose(true, false, false, false, false));
+			ClassicAssert.AreEqual(Reason.Condemned, KingdomLodgingRules.Diagnose(true, true, true, true, false));
+			ClassicAssert.AreEqual(Reason.NoRoofAtAll, KingdomLodgingRules.Diagnose(false, true, true, true, false),
 				"a settlement with nothing built was told its roofs had fallen in");
 		}
 
@@ -1110,10 +1111,10 @@ namespace ThousandAndFirst.Tests
 		{
 			// The four-argument form is every caller that predates condemnation. It must answer
 			// exactly what it always answered.
-			Assert.AreEqual(Reason.NeedsUnmet, KingdomLodgingRules.Diagnose(true, false, false, false));
-			Assert.AreEqual(Reason.Full, KingdomLodgingRules.Diagnose(true, true, false, false));
-			Assert.AreEqual(Reason.Refused, KingdomLodgingRules.Diagnose(true, true, true, false));
-			Assert.AreEqual(Reason.Housed, KingdomLodgingRules.Diagnose(true, true, true, true));
+			ClassicAssert.AreEqual(Reason.NeedsUnmet, KingdomLodgingRules.Diagnose(true, false, false, false));
+			ClassicAssert.AreEqual(Reason.Full, KingdomLodgingRules.Diagnose(true, true, false, false));
+			ClassicAssert.AreEqual(Reason.Refused, KingdomLodgingRules.Diagnose(true, true, true, false));
+			ClassicAssert.AreEqual(Reason.Housed, KingdomLodgingRules.Diagnose(true, true, true, true));
 		}
 
 		[Test]
@@ -1125,7 +1126,7 @@ namespace ThousandAndFirst.Tests
 			string line = KingdomLodgingRules.UnhousedLine("Aeru", Reason.Condemned);
 			StringAssert.Contains("Aeru", line);
 			StringAssert.Contains("Mend", line);
-			Assert.AreNotEqual(KingdomLodgingRules.UnhousedLine("Aeru", Reason.NoRoofAtAll), line);
+			ClassicAssert.AreNotEqual(KingdomLodgingRules.UnhousedLine("Aeru", Reason.NoRoofAtAll), line);
 		}
 
 		// --- The honest roof brink a condemning ruin pre-records --------------------------------
@@ -1139,13 +1140,13 @@ namespace ThousandAndFirst.Tests
 			// and the founder would be told a comfortable lie.
 			long breakpoint = KingdomRules.TicksPerDay * 40;
 			long noticed = breakpoint + KingdomRules.TicksPerDay * 60;
-			Assert.AreEqual(60, KingdomBrinkRules.DaysStood(breakpoint, noticed),
+			ClassicAssert.AreEqual(60, KingdomBrinkRules.DaysStood(breakpoint, noticed),
 				"the brink stopped carrying the honest elapsed");
-			Assert.AreEqual(0, KingdomBrinkRules.DaysStood(noticed, noticed),
+			ClassicAssert.AreEqual(0, KingdomBrinkRules.DaysStood(noticed, noticed),
 				"a loss found at the pass it happened on read as older than it was");
 			string honest = KingdomLodgingRules.LeavingLine("Aeru", KingdomBrinkRules.DaysStood(breakpoint, noticed));
 			StringAssert.Contains("60 days", honest);
-			Assert.AreNotEqual(KingdomLodgingRules.LeavingLine("Aeru", 0), honest,
+			ClassicAssert.AreNotEqual(KingdomLodgingRules.LeavingLine("Aeru", 0), honest,
 				"the dated line read the same as the undated one");
 		}
 
@@ -1156,20 +1157,20 @@ namespace ThousandAndFirst.Tests
 			// brink, and the window runs from the WARNING rather than from the crossing, so a
 			// settler stranded sixty days ago and one stranded tonight both get the whole of
 			// GraceDays once the founder has actually been told.
-			Assert.AreEqual(KingdomLodgingRules.GraceDays,
+			ClassicAssert.AreEqual(KingdomLodgingRules.GraceDays,
 				KingdomBrinkRules.WindowDays(BrinkKind.Roof),
 				"the roof window stopped being the lodging window");
 			long breakpoint = 100L * KingdomRules.TicksPerDay;
 			long toldSixtyDaysLater = breakpoint + 60L * KingdomRules.TicksPerDay;
-			Assert.AreEqual(KingdomLodgingRules.GraceDays,
+			ClassicAssert.AreEqual(KingdomLodgingRules.GraceDays,
 				KingdomBrinkRules.DaysLeft(BrinkKind.Roof, toldSixtyDaysLater, toldSixtyDaysLater),
 				"the sixty days nobody was watching must not have eaten any of the grace");
 			for (int i = 0; i < KingdomLodgingRules.GraceDays; i++)
 			{
-				Assert.IsFalse(KingdomBrinkRules.WindowSpent(BrinkKind.Roof, toldSixtyDaysLater, toldSixtyDaysLater + i * KingdomRules.TicksPerDay),
+				ClassicAssert.IsFalse(KingdomBrinkRules.WindowSpent(BrinkKind.Roof, toldSixtyDaysLater, toldSixtyDaysLater + i * KingdomRules.TicksPerDay),
 					"the window ran out early");
 			}
-			Assert.IsTrue(KingdomBrinkRules.WindowSpent(BrinkKind.Roof, toldSixtyDaysLater,
+			ClassicAssert.IsTrue(KingdomBrinkRules.WindowSpent(BrinkKind.Roof, toldSixtyDaysLater,
 				toldSixtyDaysLater + KingdomLodgingRules.GraceDays * KingdomRules.TicksPerDay), "the window never ran out");
 		}
 
@@ -1181,11 +1182,11 @@ namespace ThousandAndFirst.Tests
 			// had never built anything, which is the wrong remedy told as a lie.
 			List<KingdomLodgingRules.ArrivalHome> none = new List<KingdomLodgingRules.ArrivalHome>();
 			Reason reason;
-			Assert.IsFalse(KingdomLodgingRules.AnyWouldTake(none, new List<string>(), out reason, AnyCondemnedRoof: true));
-			Assert.AreEqual(Reason.Condemned, reason);
+			ClassicAssert.IsFalse(KingdomLodgingRules.AnyWouldTake(none, new List<string>(), out reason, AnyCondemnedRoof: true));
+			ClassicAssert.AreEqual(Reason.Condemned, reason);
 			StringAssert.Contains("Mend", KingdomLodgingRules.ArrivalRefusedNote(reason));
-			Assert.IsFalse(KingdomLodgingRules.AnyWouldTake(none, new List<string>(), out reason));
-			Assert.AreEqual(Reason.NoRoofAtAll, reason, "a settlement with nothing built stopped reading as one");
+			ClassicAssert.IsFalse(KingdomLodgingRules.AnyWouldTake(none, new List<string>(), out reason));
+			ClassicAssert.AreEqual(Reason.NoRoofAtAll, reason, "a settlement with nothing built stopped reading as one");
 		}
 
 		[Test]
@@ -1198,8 +1199,8 @@ namespace ThousandAndFirst.Tests
 				new KingdomLodgingRules.ArrivalHome(new List<string>(), 2, 0, false)
 			};
 			Reason reason;
-			Assert.IsTrue(KingdomLodgingRules.AnyWouldTake(one, new List<string>(), out reason, AnyCondemnedRoof: true));
-			Assert.AreEqual(Reason.Housed, reason);
+			ClassicAssert.IsTrue(KingdomLodgingRules.AnyWouldTake(one, new List<string>(), out reason, AnyCondemnedRoof: true));
+			ClassicAssert.AreEqual(Reason.Housed, reason);
 		}
 	}
 }

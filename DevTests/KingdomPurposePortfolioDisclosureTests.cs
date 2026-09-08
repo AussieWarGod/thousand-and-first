@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -45,7 +46,7 @@ namespace ThousandAndFirst.Tests
 		private static int At(string source, string term)
 		{
 			int found = source.IndexOf(term, StringComparison.Ordinal);
-			Assert.Greater(found, -1, term);
+			ClassicAssert.Greater(found, -1, term);
 			return found;
 		}
 
@@ -78,7 +79,7 @@ namespace ThousandAndFirst.Tests
 			KingdomPurposeKind Destination)
 		{
 			KingdomPurposePortfolioRecipe recipe;
-			Assert.IsTrue(KingdomPurposePortfolioRules.TryRecipe(Source, Destination, out recipe),
+			ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryRecipe(Source, Destination, out recipe),
 				Source + ">" + Destination);
 			return recipe;
 		}
@@ -89,16 +90,16 @@ namespace ThousandAndFirst.Tests
 			int carrying = 0;
 			foreach (KingdomPurposePortfolioRecipe row in KingdomPurposePortfolioRules.AllRecipes())
 			{
-				Assert.GreaterOrEqual(row.CarriedFood, 0, row.CargoKey);
-				Assert.LessOrEqual(row.CarriedFood, row.FoodServings, row.CargoKey);
+				ClassicAssert.GreaterOrEqual(row.CarriedFood, 0, row.CargoKey);
+				ClassicAssert.LessOrEqual(row.CarriedFood, row.FoodServings, row.CargoKey);
 				if (row.CarriedFood <= 0) continue;
 				carrying++;
-				Assert.AreEqual(KingdomPurposeKind.Harvest, row.Source, row.CargoKey);
-				Assert.AreEqual(8, row.FoodServings, row.CargoKey);
-				Assert.AreEqual(6, row.CarriedFood, row.CargoKey);
-				Assert.AreEqual(2, row.FoodServings - row.CarriedFood, row.CargoKey);
+				ClassicAssert.AreEqual(KingdomPurposeKind.Harvest, row.Source, row.CargoKey);
+				ClassicAssert.AreEqual(8, row.FoodServings, row.CargoKey);
+				ClassicAssert.AreEqual(6, row.CarriedFood, row.CargoKey);
+				ClassicAssert.AreEqual(2, row.FoodServings - row.CarriedFood, row.CargoKey);
 			}
-			Assert.AreEqual(2, carrying,
+			ClassicAssert.AreEqual(2, carrying,
 				"exactly the two Harvest-sourced rows carry provision; the disclosure numbers are read from them");
 		}
 
@@ -127,7 +128,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.DoesNotContain("6of8food", open);
 			string surfaces = Squash(Read(OpenPath)) + Squash(Read(InteractionPath))
 				+ Squash(Read(PairingPath));
-			Assert.AreEqual(1, Count(surfaces, "lostincarriage."),
+			ClassicAssert.AreEqual(1, Count(surfaces, "lostincarriage."),
 				"one carriage phrase serves every consent and status surface; no prompt writes its own");
 		}
 
@@ -152,7 +153,7 @@ namespace ThousandAndFirst.Tests
 
 			KingdomPurposePortfolioRecipe carriesNothing = row.Copy();
 			carriesNothing.CarriedFood = 0;
-			Assert.AreEqual("", CarriageLine("Provision carried", carriesNothing,
+			ClassicAssert.AreEqual("", CarriageLine("Provision carried", carriesNothing,
 				KingdomPurposeKind.Forge),
 				"retiring a row's carry must retire its carriage prose, not print an eight-serving loss");
 			StringAssert.Contains(", 8 food",
@@ -165,10 +166,10 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomPurposePortfolioRecipe consumesOnly = Row(KingdomPurposeKind.Flesh,
 				KingdomPurposeKind.Harvest);
-			Assert.AreEqual(4, consumesOnly.FoodServings);
-			Assert.AreEqual(0, consumesOnly.CarriedFood,
+			ClassicAssert.AreEqual(4, consumesOnly.FoodServings);
+			ClassicAssert.AreEqual(0, consumesOnly.CarriedFood,
 				"the Flesh rows declare no carry; their food is consumed by the operation");
-			Assert.AreEqual("", CarriageLine("Provision carried", consumesOnly,
+			ClassicAssert.AreEqual("", CarriageLine("Provision carried", consumesOnly,
 				KingdomPurposeKind.Harvest),
 				"a row that carries nothing must not claim transport loss");
 
@@ -184,9 +185,9 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomPurposePortfolioRecipe dry = Row(KingdomPurposeKind.Deep,
 				KingdomPurposeKind.Forge);
-			Assert.AreEqual(0, dry.FoodServings);
-			Assert.AreEqual("", CarriageLine("Provision carried", dry, KingdomPurposeKind.Forge));
-			Assert.AreEqual("}}.", ConsentFood(dry, KingdomPurposeKind.Forge));
+			ClassicAssert.AreEqual(0, dry.FoodServings);
+			ClassicAssert.AreEqual("", CarriageLine("Provision carried", dry, KingdomPurposeKind.Forge));
+			ClassicAssert.AreEqual("}}.", ConsentFood(dry, KingdomPurposeKind.Forge));
 		}
 
 		[Test]
@@ -235,9 +236,9 @@ namespace ThousandAndFirst.Tests
 			int delivered = At(open, "!= KingdomPurposeOperationPhase.Delivered");
 			int landed = At(open, "\"Provision landed\"");
 			int accessor = At(open, "TryPurposeProvisionLanded(Pair.Operation");
-			Assert.Less(accessor, landed,
+			ClassicAssert.Less(accessor, landed,
 				"a landing claim is only reachable through the discriminator, never from the phase alone");
-			Assert.Greater(accessor, delivered,
+			ClassicAssert.Greater(accessor, delivered,
 				"the discriminator is consulted only once the operation is delivered");
 			StringAssert.Contains(
 				"Whether that provision reached the destination larders is proved by those stores, not by this receipt.",
@@ -263,7 +264,7 @@ namespace ThousandAndFirst.Tests
 			for (int i = 0; i < parameters.Length; i++)
 			{
 				string parameter = parameters[i].Trim();
-				Assert.IsTrue(parameter.StartsWith("out ", StringComparison.Ordinal)
+				ClassicAssert.IsTrue(parameter.StartsWith("out ", StringComparison.Ordinal)
 					|| parameter.StartsWith("KingdomPurposeOperationReceipt ",
 						StringComparison.Ordinal),
 					"status must not be able to ask the discriminator to change anything: " + parameter);
@@ -306,7 +307,7 @@ namespace ThousandAndFirst.Tests
 				"the bootstrap row's material debit is the voice being matched");
 
 			foreach (KingdomPurposePortfolioRecipe row in KingdomPurposePortfolioRules.AllRecipes())
-				Assert.IsFalse(string.IsNullOrEmpty(Materials(row.MaterialClaim)),
+				ClassicAssert.IsFalse(string.IsNullOrEmpty(Materials(row.MaterialClaim)),
 					row.CargoKey + " declares materials that consent must name");
 
 			KingdomPurposePortfolioRecipe returnRow = Row(KingdomPurposeKind.Forge,
@@ -314,7 +315,7 @@ namespace ThousandAndFirst.Tests
 			string named = Materials(returnRow.MaterialClaim);
 			StringAssert.Contains("2", named);
 			StringAssert.Contains("4", named);
-			Assert.AreNotEqual(Materials(Row(KingdomPurposeKind.Deep,
+			ClassicAssert.AreNotEqual(Materials(Row(KingdomPurposeKind.Deep,
 				KingdomPurposeKind.Forge).MaterialClaim), named,
 				"a Deep-first pair's two rows debit different materials, so hiding one hides a real cost");
 		}
@@ -327,12 +328,12 @@ namespace ThousandAndFirst.Tests
 				int debited;
 				int landed;
 				int lost;
-				Assert.IsTrue(KingdomPurposePortfolioRules.TryCarriedFood(row.Source,
+				ClassicAssert.IsTrue(KingdomPurposePortfolioRules.TryCarriedFood(row.Source,
 					row.Destination, out debited, out landed, out lost), row.CargoKey);
 				string rendered = CarriageLine("Provision carried", row, row.Destination);
 				if (landed <= 0)
 				{
-					Assert.AreEqual("", rendered, row.CargoKey);
+					ClassicAssert.AreEqual("", rendered, row.CargoKey);
 					continue;
 				}
 				StringAssert.Contains("{{C|" + landed + " of " + debited + " food}}", rendered,

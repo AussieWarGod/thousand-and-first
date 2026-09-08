@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -26,8 +27,8 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int firstSplit = rules.IndexOf("Text.Split('\\n')", parser,
 				StringComparison.Ordinal);
-			Assert.Greater(rawCap, parser);
-			Assert.Greater(firstSplit, rawCap,
+			ClassicAssert.Greater(rawCap, parser);
+			ClassicAssert.Greater(firstSplit, rawCap,
 				"raw state must be bounded before any row-array allocation");
 
 			int rowParser = rules.IndexOf("TryParseV3Row", firstSplit,
@@ -36,16 +37,16 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int fieldSplit = rules.IndexOf("Line.Split('|')", separatorCap,
 				StringComparison.Ordinal);
-			Assert.Greater(separatorCap, rowParser);
-			Assert.Greater(fieldSplit, separatorCap);
+			ClassicAssert.Greater(separatorCap, rowParser);
+			ClassicAssert.Greater(fieldSplit, separatorCap);
 
 			int decoder = rules.IndexOf("private static bool Decode", StringComparison.Ordinal);
 			int encodedCap = rules.IndexOf("Value.Length > MaxEncodedChars", decoder,
 				StringComparison.Ordinal);
 			int base64 = rules.IndexOf("Convert.FromBase64String", decoder,
 				StringComparison.Ordinal);
-			Assert.Greater(encodedCap, decoder);
-			Assert.Greater(base64, encodedCap,
+			ClassicAssert.Greater(encodedCap, decoder);
+			ClassicAssert.Greater(base64, encodedCap,
 				"encoded text must be bounded before base64 allocation");
 		}
 
@@ -62,8 +63,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("if (PublicationAllowed(OwnerExact)) ReportFault(Fault, Context, PlayerVisible);",
 				TestMain.ReadRepositoryText("Chronicle/KingdomChronicle.At.cs"));
 			StringAssert.Contains("no replay receipt was discarded", shell);
-			Assert.IsFalse(shell.Contains("rows.RemoveAt("));
-			Assert.IsFalse(shell.Contains("Rows.RemoveAt("));
+			ClassicAssert.IsFalse(shell.Contains("rows.RemoveAt("));
+			ClassicAssert.IsFalse(shell.Contains("Rows.RemoveAt("));
 			StringAssert.Contains("if (separators > MaxReceipts)", rules);
 		}
 
@@ -73,7 +74,7 @@ namespace ThousandAndFirst.Tests
 			string telling = Source(Path.Combine("Chronicle", "KingdomChronicle.Telling.cs"));
 			string rules = Source(Path.Combine("Chronicle",
 				"KingdomChronicleReceiptRules.cs"));
-			Assert.AreEqual(2, Count(telling,
+			ClassicAssert.AreEqual(2, Count(telling,
 				"KingdomChronicleReceiptRules.AppendBounded("));
 			StringAssert.DoesNotContain("RemoveAt(0)", telling);
 			StringAssert.Contains("Values.RemoveAt(Values.Count > 1 ? 1 : 0)", rules);
@@ -91,9 +92,9 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("WriteField(bytes, Fields[i])", rules);
 			StringAssert.Contains("taf-chronicle-fingerprint-v3", rules);
 			StringAssert.Contains("taf-chronicle-list-v3:", rules);
-			Assert.IsFalse(rules.Contains("14695981039346656037"));
-			Assert.IsFalse(shell.Contains("14695981039346656037"));
-			Assert.IsFalse(shell.Contains("private static void Fold"));
+			ClassicAssert.IsFalse(rules.Contains("14695981039346656037"));
+			ClassicAssert.IsFalse(shell.Contains("14695981039346656037"));
+			ClassicAssert.IsFalse(shell.Contains("private static void Fold"));
 		}
 
 		[Test]
@@ -112,10 +113,10 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int append = shell.IndexOf("AppendBounded(Values, value)", persistIntent,
 				StringComparison.Ordinal);
-			Assert.Greater(action, delivery);
-			Assert.Greater(confirm, action, "exact after confirms first");
-			Assert.Greater(persistIntent, intent, "intent persists before append");
-			Assert.Greater(append, persistIntent);
+			ClassicAssert.Greater(action, delivery);
+			ClassicAssert.Greater(confirm, action, "exact after confirms first");
+			ClassicAssert.Greater(persistIntent, intent, "intent persists before append");
+			ClassicAssert.Greater(append, persistIntent);
 			StringAssert.Contains("KingdomChronicleListAction.MarkLost",
 				Source(Path.Combine("Chronicle", "KingdomChronicleReceiptRules.cs")));
 			StringAssert.Contains("return LoseList", shell.Substring(delivery,
@@ -144,12 +145,12 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int callback = shell.IndexOf("JournalAPI.AddAccomplishment", skipped,
 				StringComparison.Ordinal);
-			Assert.Greater(observed, attempting);
-			Assert.Greater(recovered, observed);
-			Assert.Greater(option, recovered,
+			ClassicAssert.Greater(observed, attempting);
+			ClassicAssert.Greater(recovered, observed);
+			ClassicAssert.Greater(option, recovered,
 				"reloaded Attempting must settle from exact ID before option/callback path");
-			Assert.Greater(skipped, option);
-			Assert.Greater(callback, skipped,
+			ClassicAssert.Greater(skipped, option);
+			ClassicAssert.Greater(callback, skipped,
 				"option-off Skipped must persist without calling journal API");
 			StringAssert.Contains("journal-intent", shell.Substring(skipped,
 				callback - skipped));
@@ -175,8 +176,8 @@ namespace ThousandAndFirst.Tests
 				"KingdomChronicleReceiptRules.cs"));
 			StringAssert.Contains("return \"tc|\" + job + \"|\" + Encode(coordinate)", rules);
 			StringAssert.Contains("TryConstructionIdentity", rules);
-			Assert.IsFalse(rules.Contains("Bloom"));
-			Assert.IsFalse(rules.Contains("BitArray"));
+			ClassicAssert.IsFalse(rules.Contains("Bloom"));
+			ClassicAssert.IsFalse(rules.Contains("BitArray"));
 			int legacy = shell.IndexOf("receipt != null && receipt.LegacyBlocked",
 				StringComparison.Ordinal);
 			int construction = shell.IndexOf("TryConstructionIdentity(EventId", legacy,
@@ -187,9 +188,9 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			int refuse = shell.IndexOf("return false;", genericRefusal,
 				StringComparison.Ordinal);
-			Assert.Greater(settle, construction);
-			Assert.Greater(genericRefusal, settle);
-			Assert.Greater(refuse, genericRefusal);
+			ClassicAssert.Greater(settle, construction);
+			ClassicAssert.Greater(genericRefusal, settle);
+			ClassicAssert.Greater(refuse, genericRefusal);
 		}
 
 		[Test]
@@ -205,8 +206,8 @@ namespace ThousandAndFirst.Tests
 			int refusal = shell.IndexOf("return false;", parse, StringComparison.Ordinal);
 			int migrationWrite = shell.IndexOf("legacy-migration", refusal,
 				StringComparison.Ordinal);
-			Assert.Greater(refusal, parse);
-			Assert.Greater(migrationWrite, refusal,
+			ClassicAssert.Greater(refusal, parse);
+			ClassicAssert.Greater(migrationWrite, refusal,
 				"parse failure returns before any registry migration write");
 		}
 

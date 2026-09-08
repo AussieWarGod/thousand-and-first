@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -27,8 +28,8 @@ namespace ThousandAndFirst.Tests
 		{
 			int[] spokes = KingdomMirrorGateRules.HubSpokeIndices(Hubbed(), Hub);
 			CollectionAssert.AreEqual(new[] { 1, 2 }, spokes);
-			Assert.AreEqual(0, KingdomMirrorGateRules.HubSpokeIndices(Hubbed(), Stray).Length);
-			Assert.AreEqual(0, KingdomMirrorGateRules.HubSpokeIndices(Hubbed(), "missing").Length);
+			ClassicAssert.AreEqual(0, KingdomMirrorGateRules.HubSpokeIndices(Hubbed(), Stray).Length);
+			ClassicAssert.AreEqual(0, KingdomMirrorGateRules.HubSpokeIndices(Hubbed(), "missing").Length);
 		}
 
 		[Test]
@@ -36,10 +37,10 @@ namespace ThousandAndFirst.Tests
 		{
 			string text = Hub + "^Kavvat^" + North + "|" + North
 				+ "^Ossuary Reach^" + Hub + "|" + South + "^ossuary reach^" + Hub;
-			Assert.IsFalse(KingdomMirrorGateRules.TryParseRegister(text,
+			ClassicAssert.IsFalse(KingdomMirrorGateRules.TryParseRegister(text,
 				out KingdomGateRow[] rows, out int dropped));
-			Assert.AreEqual(1, dropped);
-			Assert.AreEqual(2, rows.Length);
+			ClassicAssert.AreEqual(1, dropped);
+			ClassicAssert.AreEqual(2, rows.Length);
 			CollectionAssert.AreEqual(new[] { 1 },
 				KingdomMirrorGateRules.HubSpokeIndices(rows, Hub));
 		}
@@ -50,17 +51,17 @@ namespace ThousandAndFirst.Tests
 			KingdomGateRow[] rows = Hubbed();
 			KingdomGateVerdict verdict = KingdomMirrorGateRules.TrySelectHubDestination(
 				rows, Hub, South, out KingdomGateRow[] next, out string previous);
-			Assert.AreEqual(KingdomGateVerdict.Joined, verdict);
-			Assert.AreEqual(North, previous);
-			Assert.AreEqual(South, KingdomMirrorGateRules.PartnerOf(next, Hub));
-			Assert.AreEqual(Hub, KingdomMirrorGateRules.PartnerOf(next, North));
-			Assert.AreEqual(Hub, KingdomMirrorGateRules.PartnerOf(next, South));
-			Assert.AreEqual("", KingdomMirrorGateRules.PartnerOf(next, Stray));
-			Assert.AreEqual(North, rows[0].Partner, "copy-on-write preserves the frozen register");
+			ClassicAssert.AreEqual(KingdomGateVerdict.Joined, verdict);
+			ClassicAssert.AreEqual(North, previous);
+			ClassicAssert.AreEqual(South, KingdomMirrorGateRules.PartnerOf(next, Hub));
+			ClassicAssert.AreEqual(Hub, KingdomMirrorGateRules.PartnerOf(next, North));
+			ClassicAssert.AreEqual(Hub, KingdomMirrorGateRules.PartnerOf(next, South));
+			ClassicAssert.AreEqual("", KingdomMirrorGateRules.PartnerOf(next, Stray));
+			ClassicAssert.AreEqual(North, rows[0].Partner, "copy-on-write preserves the frozen register");
 			for (int i = 0; i < rows.Length; i++)
 			{
-				Assert.AreEqual(rows[i].Key, next[i].Key);
-				Assert.AreEqual(rows[i].City, next[i].City);
+				ClassicAssert.AreEqual(rows[i].Key, next[i].Key);
+				ClassicAssert.AreEqual(rows[i].City, next[i].City);
 			}
 		}
 
@@ -68,29 +69,29 @@ namespace ThousandAndFirst.Tests
 		public void SelectionIsIdempotentAndDoesNotMintAnotherAuthority()
 		{
 			KingdomGateRow[] rows = Hubbed();
-			Assert.AreEqual(KingdomGateVerdict.Joined,
+			ClassicAssert.AreEqual(KingdomGateVerdict.Joined,
 				KingdomMirrorGateRules.TrySelectHubDestination(rows, Hub, North,
 					out KingdomGateRow[] next, out string previous));
-			Assert.AreSame(rows, next);
-			Assert.AreEqual(North, previous);
+			ClassicAssert.AreSame(rows, next);
+			ClassicAssert.AreEqual(North, previous);
 		}
 
 		[Test]
 		public void UnknownSelfAndNonSpokeDestinationsFailWithoutMutation()
 		{
 			KingdomGateRow[] rows = Hubbed();
-			Assert.AreEqual(KingdomGateVerdict.RefusedUnkeyed,
+			ClassicAssert.AreEqual(KingdomGateVerdict.RefusedUnkeyed,
 				KingdomMirrorGateRules.TrySelectHubDestination(rows, Hub, "missing",
 					out KingdomGateRow[] missing, out string _));
-			Assert.AreSame(rows, missing);
-			Assert.AreEqual(KingdomGateVerdict.RefusedNamed,
+			ClassicAssert.AreSame(rows, missing);
+			ClassicAssert.AreEqual(KingdomGateVerdict.RefusedNamed,
 				KingdomMirrorGateRules.TrySelectHubDestination(rows, Hub, Hub,
 					out KingdomGateRow[] self, out string _));
-			Assert.AreSame(rows, self);
-			Assert.AreEqual(KingdomGateVerdict.RefusedUnkeyed,
+			ClassicAssert.AreSame(rows, self);
+			ClassicAssert.AreEqual(KingdomGateVerdict.RefusedUnkeyed,
 				KingdomMirrorGateRules.TrySelectHubDestination(rows, Hub, Stray,
 					out KingdomGateRow[] stray, out string _));
-			Assert.AreSame(rows, stray);
+			ClassicAssert.AreSame(rows, stray);
 		}
 
 		[Test]
@@ -99,18 +100,18 @@ namespace ThousandAndFirst.Tests
 			KingdomGateRow[] rows = Hubbed();
 			KingdomMirrorGateRules.TrySelectHubDestination(rows, Hub, South,
 				out KingdomGateRow[] selected, out string _);
-			Assert.AreEqual(KingdomGateVerdict.Joined,
+			ClassicAssert.AreEqual(KingdomGateVerdict.Joined,
 				KingdomMirrorGateRules.TryHub(selected, "Kavvat", out KingdomGateRow[] next,
 					out int rekeyed, out string hubKey));
-			Assert.AreEqual(Hub, hubKey);
-			Assert.AreEqual(South, KingdomMirrorGateRules.PartnerOf(next, Hub));
-			Assert.AreEqual(Hub, KingdomMirrorGateRules.PartnerOf(next, Stray),
+			ClassicAssert.AreEqual(Hub, hubKey);
+			ClassicAssert.AreEqual(South, KingdomMirrorGateRules.PartnerOf(next, Hub));
+			ClassicAssert.AreEqual(Hub, KingdomMirrorGateRules.PartnerOf(next, Stray),
 				"reconciliation still turns every previously unkeyed spoke toward the hub");
-			Assert.AreEqual(1, rekeyed);
+			ClassicAssert.AreEqual(1, rekeyed);
 			for (int i = 0; i < selected.Length; i++)
 			{
-				Assert.AreEqual(selected[i].Key, next[i].Key);
-				Assert.AreEqual(selected[i].City, next[i].City);
+				ClassicAssert.AreEqual(selected[i].Key, next[i].Key);
+				ClassicAssert.AreEqual(selected[i].City, next[i].City);
 			}
 		}
 
@@ -184,8 +185,8 @@ namespace ThousandAndFirst.Tests
 				"Growth/KingdomMaterials.08.StrikeOrdering.cs");
 			int strikeGuard = strike.IndexOf("KingdomMirrorGate.TryPreflightRemoval",
 				System.StringComparison.Ordinal);
-			Assert.GreaterOrEqual(strikeGuard, 0);
-			Assert.Less(strikeGuard, strike.IndexOf("KingdomConstruction.NewJob",
+			ClassicAssert.GreaterOrEqual(strikeGuard, 0);
+			ClassicAssert.Less(strikeGuard, strike.IndexOf("KingdomConstruction.NewJob",
 				System.StringComparison.Ordinal));
 
 			string convert = TestMain.ReadRepositoryText(
@@ -198,11 +199,11 @@ namespace ThousandAndFirst.Tests
 				"KingdomMirrorGate.TryPreflightRemoval", System.StringComparison.Ordinal);
 			int lastContinuationGuard = continuation.LastIndexOf(
 				"KingdomMirrorGate.TryPreflightRemoval", System.StringComparison.Ordinal);
-			Assert.Less(firstContinuationGuard, continuation.IndexOf(
+			ClassicAssert.Less(firstContinuationGuard, continuation.IndexOf(
 				"RemoveStrikePlotPart", System.StringComparison.Ordinal));
-			Assert.Greater(lastContinuationGuard, firstContinuationGuard,
+			ClassicAssert.Greater(lastContinuationGuard, firstContinuationGuard,
 				"callback-capable target/link work must be followed by a fresh register proof");
-			Assert.Less(lastContinuationGuard, continuation.IndexOf(
+			ClassicAssert.Less(lastContinuationGuard, continuation.IndexOf(
 				"RemoveStrikePredecessor", System.StringComparison.Ordinal));
 
 			string runtime = TestMain.ReadRepositoryText(
@@ -211,7 +212,7 @@ namespace ThousandAndFirst.Tests
 				System.StringComparison.Ordinal);
 			int condemned = runtime.IndexOf("KingdomMaterials.HasActiveStrikeReceipt",
 				System.StringComparison.Ordinal);
-			Assert.Greater(condemned, release,
+			ClassicAssert.Greater(condemned, release,
 				"an already-keyed condemned arch must remain releasable");
 		}
 
@@ -226,10 +227,10 @@ namespace ThousandAndFirst.Tests
 			int refused = register.IndexOf("if (future)", System.StringComparison.Ordinal);
 			int untouched = register.IndexOf("if (dropped <= 0)", System.StringComparison.Ordinal);
 			int repair = register.IndexOf("Write(rows);", System.StringComparison.Ordinal);
-			Assert.Greater(refused, 0);
-			Assert.Less(refused, untouched,
+			ClassicAssert.Greater(refused, 0);
+			ClassicAssert.Less(refused, untouched,
 				"a newer build's register is refused before anything is counted as damage");
-			Assert.Less(untouched, repair,
+			ClassicAssert.Less(untouched, repair,
 				"a register with nothing dropped is returned before the rewrite");
 			StringAssert.Contains("KingdomMirrorGateRules.FutureVersionLine", register);
 			StringAssert.DoesNotContain("LegacyRegisterText", register,
@@ -240,7 +241,7 @@ namespace ThousandAndFirst.Tests
 				System.StringComparison.Ordinal));
 			StringAssert.Contains("out bool future", write);
 			StringAssert.Contains("return false;", write);
-			Assert.AreEqual(2, Count(register, "if (!Write(next))"),
+			ClassicAssert.AreEqual(2, Count(register, "if (!Write(next))"),
 				"every write in the register lane is guarded and announces nothing when refused");
 
 			string destination = TestMain.ReadRepositoryText(

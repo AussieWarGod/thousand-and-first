@@ -2,6 +2,7 @@
 using System;
 using System.IO;
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -13,22 +14,22 @@ namespace ThousandAndFirst.Tests
 		[TestCase("  ", "\t")]
 		public void AbsentPairPreservesOpenLegacyCatalogue(string faction, string standing)
 		{
-			Assert.IsTrue(KingdomZoningRules.TryParseCovenantAttributes("hut", faction, standing,
+			ClassicAssert.IsTrue(KingdomZoningRules.TryParseCovenantAttributes("hut", faction, standing,
 				out CovenantGate gate, out string error));
-			Assert.IsNull(error);
-			Assert.IsTrue(gate.IsOpen);
-			Assert.IsTrue(KingdomZoningRules.JudgeCovenant(gate, int.MinValue).Permitted);
+			ClassicAssert.IsNull(error);
+			ClassicAssert.IsTrue(gate.IsOpen);
+			ClassicAssert.IsTrue(KingdomZoningRules.JudgeCovenant(gate, int.MinValue).Permitted);
 		}
 
 		[Test]
 		public void CompletePairFreezesFactionAndThreshold()
 		{
-			Assert.IsTrue(KingdomZoningRules.TryParseCovenantAttributes("reliquary",
+			ClassicAssert.IsTrue(KingdomZoningRules.TryParseCovenantAttributes("reliquary",
 				"  Mechanimists  ", " 250 ", out CovenantGate gate, out string error));
-			Assert.IsNull(error);
-			Assert.AreEqual("Mechanimists", gate.Faction);
-			Assert.AreEqual(250, gate.MinStanding);
-			Assert.IsFalse(gate.IsOpen);
+			ClassicAssert.IsNull(error);
+			ClassicAssert.AreEqual("Mechanimists", gate.Faction);
+			ClassicAssert.AreEqual(250, gate.MinStanding);
+			ClassicAssert.IsFalse(gate.IsOpen);
 		}
 
 		[TestCase("Mechanimists", null)]
@@ -39,10 +40,10 @@ namespace ThousandAndFirst.Tests
 		[TestCase("Mechani\nmists", "250")]
 		public void MalformedPairsFailLoudly(string faction, string standing)
 		{
-			Assert.IsFalse(KingdomZoningRules.TryParseCovenantAttributes("foreignwork",
+			ClassicAssert.IsFalse(KingdomZoningRules.TryParseCovenantAttributes("foreignwork",
 				faction, standing, out CovenantGate gate, out string error));
-			Assert.IsTrue(gate.IsOpen);
-			Assert.IsFalse(string.IsNullOrEmpty(error));
+			ClassicAssert.IsTrue(gate.IsOpen);
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(error));
 			StringAssert.Contains("building foreignwork", error);
 		}
 
@@ -50,7 +51,7 @@ namespace ThousandAndFirst.Tests
 		public void OversizedFactionKeyIsRejectedBeforeRegistryLookup()
 		{
 			string oversized = new string('x', KingdomZoningRules.CovenantFactionMaxLength + 1);
-			Assert.IsFalse(KingdomZoningRules.TryParseCovenantAttributes("work", oversized, "0",
+			ClassicAssert.IsFalse(KingdomZoningRules.TryParseCovenantAttributes("work", oversized, "0",
 				out _, out string error));
 			StringAssert.Contains("overlong", error);
 		}
@@ -60,21 +61,21 @@ namespace ThousandAndFirst.Tests
 		{
 			CovenantGate gate = new CovenantGate("Consortium", 400);
 			ZoningJudgement below = KingdomZoningRules.JudgeCovenant(gate, 399);
-			Assert.AreEqual(ZoningVerdict.RefusedCovenantStanding, below.Verdict);
-			Assert.AreEqual("Consortium", below.Detail);
+			ClassicAssert.AreEqual(ZoningVerdict.RefusedCovenantStanding, below.Verdict);
+			ClassicAssert.AreEqual("Consortium", below.Detail);
 			StringAssert.Contains("400", below.Note);
-			Assert.IsTrue(KingdomZoningRules.JudgeCovenant(gate, 400).Permitted);
-			Assert.IsTrue(KingdomZoningRules.JudgeCovenant(gate, 900).Permitted);
-			Assert.AreEqual(13, (int)ZoningVerdict.RefusedCovenantStanding,
+			ClassicAssert.IsTrue(KingdomZoningRules.JudgeCovenant(gate, 400).Permitted);
+			ClassicAssert.IsTrue(KingdomZoningRules.JudgeCovenant(gate, 900).Permitted);
+			ClassicAssert.AreEqual(13, (int)ZoningVerdict.RefusedCovenantStanding,
 				"published verdict ordinals may only be appended");
 		}
 
 		[Test]
 		public void CovenantAttributesAreLiveMergeGatesNotSpentOrStampedState()
 		{
-			Assert.AreEqual(MergeReach.Read,
+			ClassicAssert.AreEqual(MergeReach.Read,
 				KingdomMergeRules.Classify(KingdomMergeRules.AttrCovenant));
-			Assert.AreEqual(MergeReach.Read,
+			ClassicAssert.AreEqual(MergeReach.Read,
 				KingdomMergeRules.Classify(KingdomMergeRules.AttrMinStanding));
 		}
 
@@ -92,8 +93,8 @@ namespace ThousandAndFirst.Tests
 			int judge = zoning.IndexOf("private static ZoningJudgement JudgeAt", StringComparison.Ordinal);
 			int covenant = zoning.IndexOf("JudgeCovenant(", judge, StringComparison.Ordinal);
 			int ordinary = zoning.IndexOf("KingdomZoningRules.Judge(GateFor", judge, StringComparison.Ordinal);
-			Assert.Greater(covenant, judge);
-			Assert.Greater(ordinary, covenant, "covenant must refuse before plot/knowledge gates");
+			ClassicAssert.Greater(covenant, judge);
+			ClassicAssert.Greater(ordinary, covenant, "covenant must refuse before plot/knowledge gates");
 			StringAssert.Contains("case ZoningVerdict.RefusedCovenantStanding:", zoning);
 		}
 

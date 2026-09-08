@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 using ThousandAndFirst;
 
 namespace ThousandAndFirst.Tests
@@ -18,7 +19,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(true, true, true, true, KingdomLocusRules.KeeperMood.Thirsty)]
 		public void ClassifyMood_PicksWorstFirst(bool dryStreak, bool raidIncoming, bool recentlyRaided, bool grew, KingdomLocusRules.KeeperMood expected)
 		{
-			Assert.AreEqual(expected, KingdomLocusRules.ClassifyMood(dryStreak, raidIncoming, recentlyRaided, grew));
+			ClassicAssert.AreEqual(expected, KingdomLocusRules.ClassifyMood(dryStreak, raidIncoming, recentlyRaided, grew));
 		}
 
 		[Test]
@@ -27,7 +28,7 @@ namespace ThousandAndFirst.Tests
 			// If any single condition were inverted here the thirsty branch would stop firing;
 			// this pins thirst as the true top of the precedence order, not an artefact of the
 			// paired cases above.
-			Assert.AreEqual(KingdomLocusRules.KeeperMood.Thirsty, KingdomLocusRules.ClassifyMood(true, true, true, true));
+			ClassicAssert.AreEqual(KingdomLocusRules.KeeperMood.Thirsty, KingdomLocusRules.ClassifyMood(true, true, true, true));
 		}
 
 		// ---- Recent raid window ----
@@ -40,7 +41,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(4000L, 4000L + KingdomLocusRules.RecentRaidWindowTicks * 10, false)]
 		public void WasRecentlyRaided_RespectsWindowAndNeverFiresWithoutARaid(long lastRaidTick, long timeTicks, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomLocusRules.WasRecentlyRaided(lastRaidTick, timeTicks));
+			ClassicAssert.AreEqual(expected, KingdomLocusRules.WasRecentlyRaided(lastRaidTick, timeTicks));
 		}
 
 		// ---- Keeper selection ----
@@ -48,28 +49,28 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void SelectKeeper_EmptyCandidateListYieldsNull()
 		{
-			Assert.IsNull(KingdomLocusRules.SelectKeeper(new System.Collections.Generic.List<string>(), null));
+			ClassicAssert.IsNull(KingdomLocusRules.SelectKeeper(new System.Collections.Generic.List<string>(), null));
 		}
 
 		[Test]
 		public void SelectKeeper_NoCurrentKeeperPicksFirstCandidate()
 		{
 			System.Collections.Generic.List<string> candidates = new System.Collections.Generic.List<string> { "a", "b", "c" };
-			Assert.AreEqual("a", KingdomLocusRules.SelectKeeper(candidates, null));
+			ClassicAssert.AreEqual("a", KingdomLocusRules.SelectKeeper(candidates, null));
 		}
 
 		[Test]
 		public void SelectKeeper_KeepsCurrentKeeperEvenWhenNotFirst()
 		{
 			System.Collections.Generic.List<string> candidates = new System.Collections.Generic.List<string> { "a", "b", "c" };
-			Assert.AreEqual("b", KingdomLocusRules.SelectKeeper(candidates, "b"));
+			ClassicAssert.AreEqual("b", KingdomLocusRules.SelectKeeper(candidates, "b"));
 		}
 
 		[Test]
 		public void SelectKeeper_FallsBackToFirstWhenCurrentKeeperHasLeft()
 		{
 			System.Collections.Generic.List<string> candidates = new System.Collections.Generic.List<string> { "a", "b", "c" };
-			Assert.AreEqual("a", KingdomLocusRules.SelectKeeper(candidates, "gone"));
+			ClassicAssert.AreEqual("a", KingdomLocusRules.SelectKeeper(candidates, "gone"));
 		}
 
 		// ---- Staffed-locus ambient vocabulary and bounds ----
@@ -79,30 +80,30 @@ namespace ThousandAndFirst.Tests
 		{
 			CollectionAssert.AreEqual(new[] { "None", "ShareNews", "KeepCompany" },
 				System.Enum.GetNames(typeof(KingdomLocusRules.AmbientUse)));
-			Assert.AreEqual(2, KingdomLocusRules.AmbientUseCount);
-			Assert.AreEqual(KingdomLocusRules.AmbientUse.ShareNews,
+			ClassicAssert.AreEqual(2, KingdomLocusRules.AmbientUseCount);
+			ClassicAssert.AreEqual(KingdomLocusRules.AmbientUse.ShareNews,
 				KingdomLocusRules.AmbientUseFor(1));
-			Assert.AreEqual(KingdomLocusRules.AmbientUse.KeepCompany,
+			ClassicAssert.AreEqual(KingdomLocusRules.AmbientUse.KeepCompany,
 				KingdomLocusRules.AmbientUseFor(2));
-			Assert.AreEqual(KingdomLocusRules.AmbientUse.None,
+			ClassicAssert.AreEqual(KingdomLocusRules.AmbientUse.None,
 				KingdomLocusRules.AmbientUseFor(0));
-			Assert.IsTrue(KingdomLocusRules.Cue(
+			ClassicAssert.IsTrue(KingdomLocusRules.Cue(
 				KingdomLocusRules.AmbientUse.ShareNews).Exists);
-			Assert.IsTrue(KingdomLocusRules.Cue(
+			ClassicAssert.IsTrue(KingdomLocusRules.Cue(
 				KingdomLocusRules.AmbientUse.KeepCompany).Exists);
-			Assert.IsFalse(KingdomLocusRules.Cue(KingdomLocusRules.AmbientUse.None).Exists);
+			ClassicAssert.IsFalse(KingdomLocusRules.Cue(KingdomLocusRules.AmbientUse.None).Exists);
 		}
 
 		[Test]
 		public void AmbientThrottleNeverBanksOrCatchesUp()
 		{
-			Assert.IsTrue(KingdomLocusRules.MayUse(false, 0L, 0L));
-			Assert.IsFalse(KingdomLocusRules.MayUse(true, 100L,
+			ClassicAssert.IsTrue(KingdomLocusRules.MayUse(false, 0L, 0L));
+			ClassicAssert.IsFalse(KingdomLocusRules.MayUse(true, 100L,
 				100L + KingdomLocusRules.AmbientThrottleTicks - 1L));
-			Assert.IsTrue(KingdomLocusRules.MayUse(true, 100L,
+			ClassicAssert.IsTrue(KingdomLocusRules.MayUse(true, 100L,
 				100L + KingdomLocusRules.AmbientThrottleTicks));
-			Assert.IsFalse(KingdomLocusRules.MayUse(true, 100L, 99L));
-			Assert.IsFalse(KingdomLocusRules.MayUse(false, 0L, -1L));
+			ClassicAssert.IsFalse(KingdomLocusRules.MayUse(true, 100L, 99L));
+			ClassicAssert.IsFalse(KingdomLocusRules.MayUse(false, 0L, -1L));
 		}
 
 		[Test]
@@ -112,37 +113,37 @@ namespace ThousandAndFirst.Tests
 				(authority, resident, same, keeper, post, staged, player, led, distance) =>
 					KingdomLocusRules.MayClaim(authority, resident, same, keeper, post,
 						staged, player, led, distance, false, 0L, 100L);
-			Assert.IsTrue(claim(true, true, true, false, false, false, false, false, 2));
-			Assert.IsFalse(claim(false, true, true, false, false, false, false, false, 2));
-			Assert.IsFalse(claim(true, false, true, false, false, false, false, false, 2));
-			Assert.IsFalse(claim(true, true, false, false, false, false, false, false, 2));
-			Assert.IsFalse(claim(true, true, true, true, false, false, false, false, 2));
-			Assert.IsFalse(claim(true, true, true, false, true, false, false, false, 2));
-			Assert.IsFalse(claim(true, true, true, false, false, true, false, false, 2));
-			Assert.IsFalse(claim(true, true, true, false, false, false, true, false, 2));
-			Assert.IsFalse(claim(true, true, true, false, false, false, false, true, 2));
-			Assert.IsFalse(claim(true, true, true, false, false, false, false, false, 3));
+			ClassicAssert.IsTrue(claim(true, true, true, false, false, false, false, false, 2));
+			ClassicAssert.IsFalse(claim(false, true, true, false, false, false, false, false, 2));
+			ClassicAssert.IsFalse(claim(true, false, true, false, false, false, false, false, 2));
+			ClassicAssert.IsFalse(claim(true, true, false, false, false, false, false, false, 2));
+			ClassicAssert.IsFalse(claim(true, true, true, true, false, false, false, false, 2));
+			ClassicAssert.IsFalse(claim(true, true, true, false, true, false, false, false, 2));
+			ClassicAssert.IsFalse(claim(true, true, true, false, false, true, false, false, 2));
+			ClassicAssert.IsFalse(claim(true, true, true, false, false, false, true, false, 2));
+			ClassicAssert.IsFalse(claim(true, true, true, false, false, false, false, true, 2));
+			ClassicAssert.IsFalse(claim(true, true, true, false, false, false, false, false, 3));
 		}
 
 		[Test]
 		public void FirstExactCityBookGroundIsTheOnlyLocusAuthority()
 		{
-			Assert.AreEqual(41, KingdomLocusRules.SelectLocusWork(
+			ClassicAssert.AreEqual(41, KingdomLocusRules.SelectLocusWork(
 				new[] { 7, 41, 29 }, new[] { "r_Field", "r_KingdomBench",
 					"r_KingdomBench" }, "r_KingdomBench"));
-			Assert.AreEqual(29, KingdomLocusRules.SelectLocusWork(
+			ClassicAssert.AreEqual(29, KingdomLocusRules.SelectLocusWork(
 				new[] { 7, 29 }, new[] { "r_Field", "r_KingdomBench" },
 				"r_KingdomBench"));
-			Assert.AreEqual(0, KingdomLocusRules.SelectLocusWork(
+			ClassicAssert.AreEqual(0, KingdomLocusRules.SelectLocusWork(
 				new[] { 41, 41 }, new[] { "r_KingdomBench", "r_KingdomBench" },
 				"r_KingdomBench"));
-			Assert.AreEqual(0, KingdomLocusRules.SelectLocusWork(
+			ClassicAssert.AreEqual(0, KingdomLocusRules.SelectLocusWork(
 				new[] { 41, 41 }, new[] { "r_KingdomBench", "r_Field" },
 				"r_KingdomBench"));
-			Assert.AreEqual(0, KingdomLocusRules.SelectLocusWork(
+			ClassicAssert.AreEqual(0, KingdomLocusRules.SelectLocusWork(
 				new[] { 41 }, new[] { "r_Field", "r_KingdomBench" },
 				"r_KingdomBench"));
-			Assert.AreEqual(0, KingdomLocusRules.SelectLocusWork(null, null,
+			ClassicAssert.AreEqual(0, KingdomLocusRules.SelectLocusWork(null, null,
 				"r_KingdomBench"));
 		}
 
@@ -154,7 +155,7 @@ namespace ThousandAndFirst.Tests
 			{
 				string text = KingdomLocusRules.BenchDescription(state,
 					state == KingdomLocusRules.KeeperServiceState.Ready ? "Ashwe" : null);
-				Assert.IsFalse(string.IsNullOrWhiteSpace(text), state.ToString());
+				ClassicAssert.IsFalse(string.IsNullOrWhiteSpace(text), state.ToString());
 			}
 			StringAssert.Contains("No owned gathering ground",
 				KingdomLocusRules.BenchDescription(
@@ -177,19 +178,19 @@ namespace ThousandAndFirst.Tests
 		[TestCase(1001L, 1000L, true)]
 		public void GuestShouldArrive_TripsAtTheDueTickNotBeforeIt(long timeTicks, long nextGuestTick, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomLocusRules.GuestShouldArrive(timeTicks, nextGuestTick));
+			ClassicAssert.AreEqual(expected, KingdomLocusRules.GuestShouldArrive(timeTicks, nextGuestTick));
 		}
 
 		[Test]
 		public void NextGuestDueTick_AddsTheFullInterval()
 		{
-			Assert.AreEqual(5000L + KingdomLocusRules.GuestIntervalTicks, KingdomLocusRules.NextGuestDueTick(5000L));
+			ClassicAssert.AreEqual(5000L + KingdomLocusRules.GuestIntervalTicks, KingdomLocusRules.NextGuestDueTick(5000L));
 		}
 
 		[Test]
 		public void GuestDepartTickFor_AddsTheFullPatience()
 		{
-			Assert.AreEqual(2000L + KingdomLocusRules.GuestPatienceTicks, KingdomLocusRules.GuestDepartTickFor(2000L));
+			ClassicAssert.AreEqual(2000L + KingdomLocusRules.GuestPatienceTicks, KingdomLocusRules.GuestDepartTickFor(2000L));
 		}
 
 		[TestCase(5000L, 0L, false)]
@@ -199,7 +200,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(5001L, 5000L, true)]
 		public void GuestShouldDepartUnattended_NeverFiresWithoutATrackedGuest(long timeTicks, long departTick, bool expected)
 		{
-			Assert.AreEqual(expected, KingdomLocusRules.GuestShouldDepartUnattended(timeTicks, departTick));
+			ClassicAssert.AreEqual(expected, KingdomLocusRules.GuestShouldDepartUnattended(timeTicks, departTick));
 		}
 
 		// ---- Flavor text: distinct per branch, and never loses the settlement's name ----
@@ -209,7 +210,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string text = KingdomLocusRules.BenchDescription(false, null);
 			StringAssert.DoesNotContain("null", text);
-			Assert.IsFalse(string.IsNullOrEmpty(text));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(text));
 		}
 
 		[Test]
@@ -228,7 +229,7 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomLocusRules.KeeperSpeech speech = KingdomLocusRules.KeeperSpeechFor(mood, "Tamsketh");
 			StringAssert.Contains("Tamsketh", speech.Answer);
-			Assert.AreEqual(KingdomLocusRules.KeeperQuestion, speech.Question);
+			ClassicAssert.AreEqual(KingdomLocusRules.KeeperQuestion, speech.Question);
 		}
 
 		[Test]
@@ -236,7 +237,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string greeted = KingdomLocusRules.GuestChronicleLine(true, "Tamsketh");
 			string ignored = KingdomLocusRules.GuestChronicleLine(false, "Tamsketh");
-			Assert.AreNotEqual(greeted, ignored);
+			ClassicAssert.AreNotEqual(greeted, ignored);
 			StringAssert.Contains("Tamsketh", greeted);
 			StringAssert.Contains("Tamsketh", ignored);
 		}
@@ -249,8 +250,8 @@ namespace ThousandAndFirst.Tests
 			// Load-bearing, not a coincidence. It is what makes KingdomRules.PassagesThrough's
 			// "at most one still at the gate" true of this clock, and it is what an existing
 			// guest blocking the next one used to buy by accident.
-			Assert.Less(KingdomLocusRules.GuestPatienceTicks, KingdomLocusRules.GuestIntervalTicks);
-			Assert.Greater(KingdomLocusRules.GuestPatienceTicks, 0L);
+			ClassicAssert.Less(KingdomLocusRules.GuestPatienceTicks, KingdomLocusRules.GuestIntervalTicks);
+			ClassicAssert.Greater(KingdomLocusRules.GuestPatienceTicks, 0L);
 		}
 
 		[Test]
@@ -264,8 +265,8 @@ namespace ThousandAndFirst.Tests
 			long now = due + KingdomRules.TicksPerDay * 200;
 			KingdomRules.Passages passages = KingdomRules.PassagesThrough(
 				due, now, KingdomLocusRules.GuestIntervalTicks, KingdomLocusRules.GuestPatienceTicks);
-			Assert.Greater(passages.Departed, 60, "two hundred days at a three-day cadence is not one traveller");
-			Assert.AreEqual(0L, passages.StandingSince, "somebody was left waiting at the gate for a season");
+			ClassicAssert.Greater(passages.Departed, 60, "two hundred days at a three-day cadence is not one traveller");
+			ClassicAssert.AreEqual(0L, passages.StandingSince, "somebody was left waiting at the gate for a season");
 		}
 
 		[Test]
@@ -277,9 +278,9 @@ namespace ThousandAndFirst.Tests
 			long due = KingdomLocusRules.GuestIntervalTicks;
 			KingdomRules.Passages passages = KingdomRules.PassagesThrough(
 				due, due + 60L, KingdomLocusRules.GuestIntervalTicks, KingdomLocusRules.GuestPatienceTicks);
-			Assert.AreEqual(due, passages.StandingSince);
-			Assert.AreEqual(0, passages.Departed);
-			Assert.AreEqual(due + KingdomLocusRules.GuestPatienceTicks, KingdomLocusRules.GuestDepartTickFor(passages.StandingSince),
+			ClassicAssert.AreEqual(due, passages.StandingSince);
+			ClassicAssert.AreEqual(0, passages.Departed);
+			ClassicAssert.AreEqual(due + KingdomLocusRules.GuestPatienceTicks, KingdomLocusRules.GuestDepartTickFor(passages.StandingSince),
 				"their patience was restarted at the homecoming instead of at their arrival");
 		}
 
@@ -289,7 +290,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(9, "the last of them 9 days before you saw it")]
 		public void PassageWhen_DatesAgainstTheDayTheFounderIsBeingTold(int daysAgo, string expected)
 		{
-			Assert.AreEqual(expected, KingdomLocusRules.PassageWhen(daysAgo));
+			ClassicAssert.AreEqual(expected, KingdomLocusRules.PassageWhen(daysAgo));
 		}
 
 		[Test]
@@ -303,7 +304,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Nothing was lost", many);
 			string one = KingdomLocusRules.PassagesLedgerNote(1, 2);
 			StringAssert.Contains("A traveller", one);
-			Assert.IsFalse(one.Contains("1 travellers"), "the singular case read as a plural");
+			ClassicAssert.IsFalse(one.Contains("1 travellers"), "the singular case read as a plural");
 		}
 
 		[Test]
@@ -311,9 +312,9 @@ namespace ThousandAndFirst.Tests
 		{
 			// STANDARDS 7b's "not applicable" case: an absence with no traffic in it is not news,
 			// and the null is the caller's signal to stay quiet rather than say "0 travellers".
-			Assert.IsNull(KingdomLocusRules.PassagesLedgerNote(0, 4));
-			Assert.IsNull(KingdomLocusRules.PassagesLedgerNote(-2, 4));
-			Assert.IsNull(KingdomLocusRules.PassagesChronicleLine(0, "Tamsketh", 4));
+			ClassicAssert.IsNull(KingdomLocusRules.PassagesLedgerNote(0, 4));
+			ClassicAssert.IsNull(KingdomLocusRules.PassagesLedgerNote(-2, 4));
+			ClassicAssert.IsNull(KingdomLocusRules.PassagesChronicleLine(0, "Tamsketh", 4));
 		}
 
 		[Test]
@@ -324,8 +325,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("4 travellers", line);
 			StringAssert.Contains("6 days before you saw it", line);
 			// An unanswered gate is a missed pleasantry, never a fault logged against the founder.
-			Assert.IsFalse(line.Contains("failed"), "the register started blaming somebody");
-			Assert.IsFalse(line.Contains("lost"), "the register started counting a loss");
+			ClassicAssert.IsFalse(line.Contains("failed"), "the register started blaming somebody");
+			ClassicAssert.IsFalse(line.Contains("lost"), "the register started counting a loss");
 		}
 
 		[Test]
@@ -338,8 +339,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Aeru", dated);
 			StringAssert.Contains("12 days before you saw it", dated);
 			StringAssert.Contains("Nothing was lost", dated);
-			Assert.AreEqual(KingdomLocusRules.GuestLedgerNote("Aeru"), KingdomLocusRules.GuestLedgerNote("Aeru", 0));
-			Assert.AreEqual(KingdomLocusRules.GuestLedgerNote("Aeru"), KingdomLocusRules.GuestLedgerNote("Aeru", -5));
+			ClassicAssert.AreEqual(KingdomLocusRules.GuestLedgerNote("Aeru"), KingdomLocusRules.GuestLedgerNote("Aeru", 0));
+			ClassicAssert.AreEqual(KingdomLocusRules.GuestLedgerNote("Aeru"), KingdomLocusRules.GuestLedgerNote("Aeru", -5));
 			StringAssert.Contains("a day before you saw it", KingdomLocusRules.GuestLedgerNote("Aeru", 1));
 		}
 
@@ -350,20 +351,20 @@ namespace ThousandAndFirst.Tests
 		{
 			KingdomLocusRules.PilgrimAccrual one = KingdomLocusRules.AccruePilgrim(
 				0, KingdomLocusRules.PilgrimState.None);
-			Assert.AreEqual(1, one.Loudness);
-			Assert.AreEqual(KingdomLocusRules.PilgrimState.None, one.State);
-			Assert.IsFalse(one.Minted);
+			ClassicAssert.AreEqual(1, one.Loudness);
+			ClassicAssert.AreEqual(KingdomLocusRules.PilgrimState.None, one.State);
+			ClassicAssert.IsFalse(one.Minted);
 
 			KingdomLocusRules.PilgrimAccrual two = KingdomLocusRules.AccruePilgrim(
 				one.Loudness, one.State);
-			Assert.AreEqual(2, two.Loudness);
-			Assert.IsFalse(two.Minted);
+			ClassicAssert.AreEqual(2, two.Loudness);
+			ClassicAssert.IsFalse(two.Minted);
 
 			KingdomLocusRules.PilgrimAccrual three = KingdomLocusRules.AccruePilgrim(
 				two.Loudness, two.State);
-			Assert.AreEqual(0, three.Loudness);
-			Assert.AreEqual(KingdomLocusRules.PilgrimState.Waiting, three.State);
-			Assert.IsTrue(three.Minted);
+			ClassicAssert.AreEqual(0, three.Loudness);
+			ClassicAssert.AreEqual(KingdomLocusRules.PilgrimState.Waiting, three.State);
+			ClassicAssert.IsTrue(three.Minted);
 		}
 
 		[TestCase(KingdomLocusRules.PilgrimState.Waiting)]
@@ -372,21 +373,21 @@ namespace ThousandAndFirst.Tests
 			KingdomLocusRules.PilgrimState state)
 		{
 			KingdomLocusRules.PilgrimAccrual result = KingdomLocusRules.AccruePilgrim(2, state);
-			Assert.AreEqual(state, result.State);
-			Assert.AreEqual(2, result.Loudness);
-			Assert.IsFalse(result.Minted);
+			ClassicAssert.AreEqual(state, result.State);
+			ClassicAssert.AreEqual(2, result.Loudness);
+			ClassicAssert.IsFalse(result.Minted);
 		}
 
 		[Test]
 		public void PilgrimWindowHasTravelThenOneExactPatienceSpan()
 		{
 			long cause = 5000L;
-			Assert.IsTrue(KingdomLocusRules.TryPilgrimWindow(cause,
+			ClassicAssert.IsTrue(KingdomLocusRules.TryPilgrimWindow(cause,
 				out long arrival, out long depart));
-			Assert.AreEqual(cause + KingdomLocusRules.PilgrimTravelTicks, arrival);
-			Assert.AreEqual(arrival + KingdomLocusRules.GuestPatienceTicks, depart);
-			Assert.IsFalse(KingdomLocusRules.TryPilgrimWindow(0L, out _, out _));
-			Assert.IsFalse(KingdomLocusRules.TryPilgrimWindow(long.MaxValue, out _, out _));
+			ClassicAssert.AreEqual(cause + KingdomLocusRules.PilgrimTravelTicks, arrival);
+			ClassicAssert.AreEqual(arrival + KingdomLocusRules.GuestPatienceTicks, depart);
+			ClassicAssert.IsFalse(KingdomLocusRules.TryPilgrimWindow(0L, out _, out _));
+			ClassicAssert.IsFalse(KingdomLocusRules.TryPilgrimWindow(long.MaxValue, out _, out _));
 		}
 
 		[Test]
@@ -396,9 +397,9 @@ namespace ThousandAndFirst.Tests
 				new string('q', KingdomLocusRules.MaxPilgrimCauseChars * 2));
 			StringAssert.Contains("Ides of Nivvun Ut", cause);
 			StringAssert.Contains("Tamsketh", cause);
-			Assert.LessOrEqual(cause.Length, KingdomLocusRules.MaxPilgrimCauseChars);
-			Assert.IsFalse(cause.Contains("\n"));
-			Assert.IsNull(KingdomLocusRules.PilgrimCause(null, "Tamsketh", "starapple"));
+			ClassicAssert.LessOrEqual(cause.Length, KingdomLocusRules.MaxPilgrimCauseChars);
+			ClassicAssert.IsFalse(cause.Contains("\n"));
+			ClassicAssert.IsNull(KingdomLocusRules.PilgrimCause(null, "Tamsketh", "starapple"));
 		}
 
 		[Test]
@@ -413,7 +414,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains(cause, greeted);
 			StringAssert.Contains("given water", greeted);
 			StringAssert.Contains("unmet", missed);
-			Assert.AreNotEqual(greeted, missed);
+			ClassicAssert.AreNotEqual(greeted, missed);
 		}
 
 		[Test]

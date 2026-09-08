@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using NUnit.Framework;
+using NUnit.Framework.Legacy;
 
 namespace ThousandAndFirst.Tests
 {
@@ -8,9 +9,9 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ThirtyServicedDaysAreRequiredExactly()
 		{
-			Assert.AreEqual((long)KingdomBountyRules.ManningSeasonDays
+			ClassicAssert.AreEqual((long)KingdomBountyRules.ManningSeasonDays
 				* KingdomRules.TicksPerDay, KingdomBountyManningRules.RequiredTicks);
-			Assert.AreEqual(30, KingdomBountyManningRules.RemainingDays(0L));
+			ClassicAssert.AreEqual(30, KingdomBountyManningRules.RemainingDays(0L));
 		}
 
 		[Test]
@@ -26,8 +27,8 @@ namespace ThousandAndFirst.Tests
 				daily = KingdomBountyManningRules.Accrue(daily, checkpoint, next, true, true);
 				checkpoint = next;
 			}
-			Assert.AreEqual(KingdomBountyManningRules.RequiredTicks, one);
-			Assert.AreEqual(one, daily);
+			ClassicAssert.AreEqual(KingdomBountyManningRules.RequiredTicks, one);
+			ClassicAssert.AreEqual(one, daily);
 		}
 
 		[TestCase(false, true)]
@@ -35,32 +36,32 @@ namespace ThousandAndFirst.Tests
 		[TestCase(false, false)]
 		public void MissingAssignmentOrExactEndpointCreditsNothing(bool Assigned, bool Exact)
 		{
-			Assert.AreEqual(17L, KingdomBountyManningRules.Accrue(17L, 1L,
+			ClassicAssert.AreEqual(17L, KingdomBountyManningRules.Accrue(17L, 1L,
 				1L + 400L * KingdomRules.TicksPerDay, Assigned, Exact));
 		}
 
 		[Test]
 		public void ServiceAndForecastSaturateWithoutWrapping()
 		{
-			Assert.AreEqual(KingdomBountyManningRules.RequiredTicks,
+			ClassicAssert.AreEqual(KingdomBountyManningRules.RequiredTicks,
 				KingdomBountyManningRules.ClampServed(long.MaxValue));
-			Assert.AreEqual(0L, KingdomBountyManningRules.RemainingTicks(long.MaxValue));
-			Assert.AreEqual(long.MaxValue, KingdomBountyManningRules.ForecastDueTick(
+			ClassicAssert.AreEqual(0L, KingdomBountyManningRules.RemainingTicks(long.MaxValue));
+			ClassicAssert.AreEqual(long.MaxValue, KingdomBountyManningRules.ForecastDueTick(
 				long.MaxValue - 1L, 0L, true));
-			Assert.AreEqual(0L, KingdomBountyManningRules.ForecastDueTick(5L, 0L, false));
+			ClassicAssert.AreEqual(0L, KingdomBountyManningRules.ForecastDueTick(5L, 0L, false));
 		}
 
 		[Test]
 		public void RegressedClockIsRefusedWithoutAuthorizingARewoundCheckpoint()
 		{
 			long served;
-			Assert.IsFalse(KingdomBountyManningRules.TryAccrue(17L, 100L, 90L,
+			ClassicAssert.IsFalse(KingdomBountyManningRules.TryAccrue(17L, 100L, 90L,
 				true, true, out served));
-			Assert.AreEqual(17L, served);
-			Assert.IsTrue(KingdomBountyManningRules.TryAccrue(served, 100L, 110L,
+			ClassicAssert.AreEqual(17L, served);
+			ClassicAssert.IsTrue(KingdomBountyManningRules.TryAccrue(served, 100L, 110L,
 				true, true, out served));
-			Assert.AreEqual(27L, served);
-			Assert.IsFalse(KingdomBountyManningRules.TryAccrue(-1L, 0L, 1L,
+			ClassicAssert.AreEqual(27L, served);
+			ClassicAssert.IsFalse(KingdomBountyManningRules.TryAccrue(-1L, 0L, 1L,
 				false, false, out served));
 		}
 
