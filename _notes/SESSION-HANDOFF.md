@@ -2,8 +2,8 @@
 
 ## Current unreleased city sight over the Kingdom Quickstart tent rows
 
-3055 staged sources;432,836 physical lines;1420 direct-XRL;zero cap failures;3086 generated
-cold-stage files. Exact inventory `2a6a2fa22549729b3d35ad2f44cf2ae523091a3c1c999540af9bd2667ddade16`.
+3055 staged sources;432,929 physical lines;1420 direct-XRL;zero cap failures;3086 generated
+cold-stage files. Exact inventory `775a00449c261509328411b494bf6190218d462b130223d6ad0766a6ac8d8b16`.
 Quickstart stakes two `tentrow` lots at founding, west of the supply column at (21,9)-(26,12) and
 (21,13)-(26,16); six beds between them, receiptless, free, and never debited. No receipt phase,
 option, grant or verifier change. The receipt wire is versioned: a receipt this version mints
@@ -11,13 +11,21 @@ carries the shelter obligation under tag `q2`, the shipped `q1` shape is still w
 byte for byte, and only a `q2` receipt owes a stake — so a pre-existing `q1` save resumed at any
 phase, Reserved included, keeps old behaviour and never stakes on ground the old narrower mask
 never bared. Codec and source-contract cases prove that; no native resumed save does.
-City sight is now taken from a postfix on `BeforeRenderEvent.Send`
-(`Growth/KingdomCitySightRenderSeam.cs`) rather than from the part's own second-pass turn, so the
-honest snapshot is read behind `Blackout`'s light removal, which `Zone.AddVisibility` gates on.
-Structure, doc freshness, architecture and the Tools suite pass; engine-free suites pass13,903
-main/5,192 Portable,zero skips on Linux .NET9.0.306, and Roslyn 9.0.306 on Linux compiles the
-staged baseline (3051), compatibility (3055), dev-harness baseline (3200) and dev-harness
-compatibility (3204) sets clean. NOT run:
+City sight is now taken at the engine's own `Zone.Render` call — a flag armed by a prefix on
+`XRLCore.RenderBaseToBuffer` and spent by a prefix on `Zone.Render(ScreenBuffer)`
+(`Growth/KingdomCitySightRenderSeam.cs`) — rather than from the part's own second-pass turn, so
+the honest snapshot is read behind `Blackout`'s light removal, which `Zone.AddVisibility` gates
+on. The seat before it, a Harmony postfix on the render dispatch's static entry, crashed the game
+in unattended native runs: the re-hosted engine method threw `NullReferenceException` out of
+itself on the first drawn frame in three of four launches (`Send_Patch1`, native dump naming the
+walk over its own second-pass handler list). Evidence:
+`Tools/PortableOutput/player-claimed-light-native-check*.log` and
+`player-first-guest-native-check*.log`. That seat is now a forbidden string in the source
+contract.
+Structure, doc freshness, architecture and the Tools suite pass; engine-free suites pass13,909
+main/5,198 Portable,zero skips on Linux .NET9.0.306, and Roslyn 9.0.306 on Linux compiles the
+staged baseline (3051), compatibility (3055), dev-harness baseline (3205) and dev-harness
+compatibility (3209) sets clean. NOT run:
 the installed-ABI source step, the Windows gate, the developer boot matrix and any native run.
 The 1,700-tick raising figure is a reading of `KingdomPlotRules.RaiseTicks`, not of a plot clock.
 Public0.3.1 unchanged. Never direct-push main/tag, bypass, or self-approve.

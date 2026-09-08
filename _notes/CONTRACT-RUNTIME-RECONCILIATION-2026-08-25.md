@@ -3,14 +3,17 @@
 ## Current city-sight census over the Kingdom Quickstart tent rows — 2026-09-08
 
 3055 production C# files;3,086 cold-install files in the generated inventory;
-432,836 physical lines,1420 direct-XRL,zero cap failures. Exact digest
-`2a6a2fa22549729b3d35ad2f44cf2ae523091a3c1c999540af9bd2667ddade16`.
+432,929 physical lines,1420 direct-XRL,zero cap failures. Exact digest
+`775a00449c261509328411b494bf6190218d462b130223d6ad0766a6ac8d8b16`.
 The quickstart bootstrap stakes two receiptless `tentrow` lots between the founding proof and the
 receipt's first advance, one search per lot before either is staked; nothing here stamps
-completion. On top of that, city sight's projection is taken from a postfix on
-`BeforeRenderEvent.Send`, behind every native second-pass contributor including `Blackout`.
-Staged baseline (3051 sources), staged compatibility (3055), dev-harness baseline (3200) and
-dev-harness compatibility (3204) compiles bind
+completion. On top of that, city sight's projection is taken at the engine's own `Zone.Render`
+call, armed by a prefix on `XRLCore.RenderBaseToBuffer`, behind every native second-pass
+contributor including `Blackout`. The earlier seat — a Harmony postfix on the render dispatch's
+static entry — crashed the game in unattended native runs and is now forbidden by the source
+contract.
+Staged baseline (3051 sources), staged compatibility (3055), dev-harness baseline (3205) and
+dev-harness compatibility (3209) compiles bind
 this digest, run on Linux with the SDK Roslyn against the installed managed assemblies rather than
 through `Tools/gate.sh`; no Windows gate or native evidence binds it.
 

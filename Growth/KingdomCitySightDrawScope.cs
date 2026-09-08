@@ -20,12 +20,18 @@ namespace ThousandAndFirst
 	/// can outlive at most the draw it was taken for. It returns <c>void</c>, so it neither
 	/// swallows nor rewrites whatever the renderer was already throwing; the restore it calls is a
 	/// no-op when nothing is outstanding, which is every frame this mod took no part in.
+	///
+	/// It closes the frame's arming as well, and does that first, so the flag
+	/// <see cref="KingdomCitySightRenderSeam"/> arms at the head of the frame cannot survive it.
+	/// A frame the engine abandons before the draw (:2520-2522) is exactly that case: nothing was
+	/// projected, and an arming left standing would be spent by whatever drew that zone next.
 	/// </summary>
 	[HarmonyPatch(typeof(XRLCore), nameof(XRLCore.RenderBaseToBuffer))]
 	internal static class KingdomCitySightDrawScope
 	{
 		private static void Finalizer()
 		{
+			KingdomCitySightRenderSeam.Disarm();
 			KingdomClaimedGroundLight.RestoreHonestVisibility();
 		}
 	}

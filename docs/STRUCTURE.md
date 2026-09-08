@@ -21,10 +21,10 @@ python3 Tools/check-structure.py --release
 ## Current isolated draft census
 
 The render-only city sight over the Kingdom Quickstart tent rows reports 3055 staged
-production C# files and 432,836 physical lines.
+production C# files and 432,929 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`2a6a2fa22549729b3d35ad2f44cf2ae523091a3c1c999540af9bd2667ddade16`. The census reports
+`775a00449c261509328411b494bf6190218d462b130223d6ad0766a6ac8d8b16`. The census reports
 1420 files with direct `XRL` imports; 0 of those exceed the line limit.
 
 The delta over the merged tent-row census is two added and two modified production sources and no
@@ -33,7 +33,7 @@ the additions; the claimed-ground light part and the settlement event file are t
 All four
 compile modes are clean under Roslyn 9.0.306 on Linux against the licensed Managed references with
 warnings as errors: staged baseline (3051 sources), staged compatibility (3055), dev-harness
-baseline (3200) and dev-harness compatibility (3204). The installed-Hearthpyre source step, the
+baseline (3205) and dev-harness compatibility (3209). The installed-Hearthpyre source step, the
 Windows gate and any native run did not run for this delta. The exact-inventory semantic review in `docs/STRUCTURE_REVIEW.json` binds
 an earlier digest and is therefore open for it.
 

@@ -17,12 +17,13 @@ namespace XRL.World.ZoneParts
 	///
 	/// City sight rides on top of that, under its own checkbox: for the drawn frame only, the
 	/// claimed zone is shown whole, so citizens behind their own walls are drawn doing what they
-	/// are doing. It is an eye, never a rule. The honest visibility map is read once the WHOLE
-	/// render dispatch has returned, from
-	/// <see cref="ThousandAndFirst.KingdomCitySightRenderSeam"/> &mdash; a postfix on
-	/// <c>BeforeRenderEvent.Send</c>, which comes back only after pass 1 has reached every zone
-	/// part and every object AND the engine has walked its own second pass
-	/// (D/XRL/World/BeforeRenderEvent.cs:40-61). The restore only ever closes cells the projection
+	/// are doing. It is an eye, never a rule. The honest visibility map is read immediately before
+	/// the engine draws the zone, from
+	/// <see cref="ThousandAndFirst.KingdomCitySightRenderSeam"/> &mdash; a flag armed at the head
+	/// of the drawn frame and spent on the engine's own <c>Zone.Render</c> call
+	/// (D/XRL/Core/XRLCore.cs:2524), which the engine reaches only once the whole render dispatch,
+	/// its own second pass, the founder's visibility reckoning and the wizard whole-map toggle
+	/// have all run (:2507-2518). The restore only ever closes cells the projection
 	/// itself opened, so every predicate that reads <c>Cell.IsVisible()</c> &mdash; reify
 	/// ordering, death witness, hostile perception, rest, autoexplore, targeting, Look &mdash;
 	/// still runs on ordinary line of sight, and no sight another hand granted or took away is
@@ -109,12 +110,12 @@ namespace XRL.World.ZoneParts
 		}
 
 		/// <summary>Open the claimed zone for the frame about to be drawn, and only for it. Reached
-		/// from <see cref="ThousandAndFirst.KingdomCitySightRenderSeam"/> once the render dispatch
-		/// has returned, so the map read here is the one every native contributor &mdash; light
-		/// and visibility alike &mdash; has already finished writing. The gates the pass-1 light
-		/// stands on are asked again here rather than inherited: this is a fresh entry from
-		/// outside the dispatch, and a checkbox or a founder that changed since is a projection
-		/// that must not be taken.</summary>
+		/// from <see cref="ThousandAndFirst.KingdomCitySightRenderSeam"/> on the engine's own
+		/// <c>Zone.Render</c> call, so the map read here is the one every native contributor
+		/// &mdash; light and visibility alike &mdash; has already finished writing. The gates the
+		/// pass-1 light stands on are asked again here rather than inherited: this is a fresh
+		/// entry from outside the dispatch, and a checkbox or a founder that changed since is a
+		/// projection that must not be taken.</summary>
 		internal void ProjectCitySight()
 		{
 			if (!ThousandAndFirst.KingdomClaimedGround.Enabled) return;
@@ -122,22 +123,25 @@ namespace XRL.World.ZoneParts
 			// One projection per frame, whatever the dispatch does. A second would read the already
 			// opened map as the honest one and leave the zone open for good.
 			if (HonestVisibility != null) return;
-			// The load-bearing line. GameManager.bDraw is the engine's debug render-step tracer
-			// (public static int bDraw = 0 at D/GameManager.cs:270, reset at XRLCore.cs:3502, read
-			// only by debug step gates), so ordinary play never reaches 11 and this return is a
-			// hazard guard rather than a routine skip. On such a frame the engine abandons the draw
-			// before it renders and before it runs the after-render callbacks
+			// GameManager.bDraw is the engine's debug render-step tracer (public static int
+			// bDraw = 0 at D/GameManager.cs:270, reset at XRLCore.cs:3502, read only by debug step
+			// gates), so ordinary play never reaches 11. On such a frame the engine abandons the
+			// draw before it renders and before it runs the after-render callbacks
 			// (D/XRL/Core/XRLCore.cs:2520-2522, ahead of Render at :2524 and the callback loop at
-			// :2525), so a projection taken here would never be put back, and the between-frames
+			// :2525), so a projection taken there would never be put back, and the between-frames
 			// hostile check that rest and autoexplore lean on adds visibility WITHOUT clearing
 			// first (D/XRL/World/GameObject.cs:11586-11588). A whole turn would then run on an
 			// opened map: rest broken by a hostile three rooms away, autoexplore pathing into
-			// unwalked interiors.
+			// unwalked interiors. The seam this is reached from now sits at :2524, BEHIND that
+			// abandon, so the engine takes the decision first; the guard stays because the seam's
+			// flag can also be spent by a nested draw of the armed zone, which the engine's own
+			// return never reached.
 			if (GameManager.bDraw == 11) return;
-			// Wizard whole-map sight opens the zone for itself immediately after this dispatch
-			// (D/XRL/Core/XRLCore.cs:2514-2518). That is a deliberate engine decision made AFTER
-			// any snapshot this part could take, so the projection stands aside rather than
-			// closing the map back over it.
+			// Wizard whole-map sight opens the zone for itself at D/XRL/Core/XRLCore.cs:2514-2518,
+			// which the engine reaches BEFORE the Render this projection hangs off (:2524). The
+			// map is already open and already the wizard's decision by the time this runs: a
+			// snapshot taken over it would read all-true and close nothing, but standing aside
+			// says so plainly and keeps the projection out of a sight it did not grant.
 			XRLCore core = XRLCore.Core;
 			if (core != null && core.VisAllToggle) return;
 			if (ParentZone == null || The.Player == null) return;
@@ -151,16 +155,21 @@ namespace XRL.World.ZoneParts
 			// and 4463-4470), so a guard placed after it would guard nothing.
 			bool[] live = ParentZone.VisibilityMap;
 			if (live == null) return;
-			// Exactly the reckoning the engine is about to make for itself
-			// (D/XRL/Core/XRLCore.cs:2511-2512), taken early so the honest answer can be kept. It
-			// reads the light map on its way &mdash; a cell further off than a neighbour is only
-			// opened where GetLight(i, j) > 1 (D/XRL/World/Zone.cs:5084-5100) &mdash; which is why
-			// this runs after the dispatch and not inside it. Blackout REMOVES light from the
-			// engine's own second pass (D/XRL/World/Parts/Blackout.cs:47-67), and it hangs on an
-			// object, so it is queued behind every zone part (D/XRL/World/Zone.cs:7632-7677): a
-			// snapshot taken from a zone part's turn in that pass would answer with light a
-			// Blackout was about to take away, and the subtractive restore would keep those cells
-			// open into the turn that follows.
+			// The founder's own reckoning, repeated. The engine makes it for itself at
+			// D/XRL/Core/XRLCore.cs:2511-2512, which it reaches before the Render this projection
+			// hangs off (:2524), so on that path this adds nothing new: AddVisibility only ever
+			// OPENS cells and never closes one (D/XRL/World/Zone.cs:5084-5100), and the same
+			// centre and radius twice is the same set. It is kept because the snapshot must not
+			// depend on which branch reached the draw &mdash; the world-map branch
+			// (D/XRL/Core/XRLCore.cs:2469-2479) draws with no such reckoning at all &mdash; and
+			// because it is the line that states what the honest map is. It reads the light map on
+			// its way: a cell further off than a neighbour is only opened where
+			// GetLight(i, j) > 1, which is why this runs at the draw and not inside the dispatch.
+			// Blackout REMOVES light from the engine's own second pass
+			// (D/XRL/World/Parts/Blackout.cs:47-67), and it hangs on an object, so it is queued
+			// behind every zone part (D/XRL/World/Zone.cs:7632-7677): a snapshot taken from a zone
+			// part's turn in that pass would answer with light a Blackout was about to take away,
+			// and the subtractive restore would keep those cells open into the turn that follows.
 			ParentZone.AddVisibility(cell.X, cell.Y, The.Player.GetVisibilityRadius());
 			HonestVisibility = (bool[])live.Clone();
 			ProjectedZone = ParentZone;

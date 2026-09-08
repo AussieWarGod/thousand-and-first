@@ -66,8 +66,8 @@ published arrival debt/opportunities, open Prepared/Intent/Proved clock leases, 
 continuation and field-clock evidence; successful results round-trip canonically. Stale
 owners, contradictory unbacked clocks, disabled states and overflow remain tested refusals.
 No fixture callback witness establishes actual physical creation, ordinary play or save/load.
-Current production digest `2a6a2fa22549729b3d35ad2f44cf2ae523091a3c1c999540af9bd2667ddade16`
-passes the exact structural gate. For that digest the engine-free suites pass13,903 main/5,192
+Current production digest `775a00449c261509328411b494bf6190218d462b130223d6ad0766a6ac8d8b16`
+passes the exact structural gate. For that digest the engine-free suites pass13,909 main/5,198
 Portable cases,zero skips, on Linux under the CI-pinned SDK9.0.306. The retained
 `d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0` digest carried13,834 main/5,123
 Portable cases, zero skips. The retained
@@ -91,7 +91,7 @@ Staged compatibility compilation runs across 3055 production C# sources, staged 
 cold-install inventory contains 3086 files. Neither count proves subscriber delivery.
 The Kingdom Quickstart tent-row delta inside this census, and the render-only city sight merged on
 top of it, compiled clean in all four modes — staged baseline (3051 sources), staged compatibility
-(3055), dev-harness baseline (3200) and dev-harness compatibility (3204) — run on Linux with the
+(3055), dev-harness baseline (3205) and dev-harness compatibility (3209) — run on Linux with the
 SDK Roslyn against the installed managed assemblies rather than through `Tools/gate.sh`; the
 installed-ABI source step, the Windows gate and the developer boot matrix are outstanding for it,
 and every timing claim about the staked rows remains a reading of `KingdomPlotRules.RaiseTicks`.

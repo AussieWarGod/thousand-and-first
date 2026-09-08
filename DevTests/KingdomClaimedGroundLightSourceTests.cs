@@ -132,13 +132,15 @@ namespace ThousandAndFirst.Tests
 
 		/// <summary>
 		/// Zone parts are dispatched before the cells and the objects standing on them, and the
-		/// engine's second pass walks the AfterHandlers a pass-1 handler queued itself into, in
+		/// engine's second pass walks the handler list a pass-1 handler queued itself into, in
 		/// the order they were queued. A zone part therefore cannot reach the END of that pass:
 		/// Blackout is an object part, so it is always queued behind, and what it does there is
-		/// remove the light Zone.AddVisibility gates distant cells on. The projection is taken
-		/// after the whole dispatch has returned instead, from a postfix on BeforeRenderEvent.Send
-		/// — the part queues nothing at all — and it stands down entirely where a later engine
-		/// decision would be overwritten.
+		/// remove the light Zone.AddVisibility gates distant cells on. The projection is taken at
+		/// the engine's own draw instead — a flag armed by a prefix on XRLCore.RenderBaseToBuffer
+		/// and spent by a prefix on Zone.Render, which the engine reaches only after the whole
+		/// dispatch, its own second pass, the founder's reckoning and the wizard toggle have run —
+		/// and it stands down entirely where a later engine decision would be overwritten. The
+		/// render dispatch itself is deliberately NOT patched: re-hosting it crashed the game.
 		/// </summary>
 		[Test]
 		public void TheSnapshotIsTakenAfterEveryNativeVisibilityContributor()
@@ -156,11 +158,23 @@ namespace ThousandAndFirst.Tests
 
 			string seam = Source(SeamFile);
 			StringAssert.Contains(
-				"[HarmonyPatch(typeof(BeforeRenderEvent), nameof(BeforeRenderEvent.Send))]", seam);
-			StringAssert.Contains("private static void Postfix(Zone Z)", seam);
+				"[HarmonyPatch(typeof(XRLCore), nameof(XRLCore.RenderBaseToBuffer))]", seam,
+				"the frame is armed from the method that owns the whole draw");
+			StringAssert.Contains(
+				"[HarmonyPatch(typeof(Zone), nameof(Zone.Render), new Type[] { typeof(ScreenBuffer) })]",
+				seam,
+				"and spent on the one-argument overload RenderBaseToBuffer calls, never the "
+					+ "sub-rectangle overload");
+			StringAssert.Contains("private static void Prefix(XRLCore __instance)", seam);
+			StringAssert.Contains("private static void Prefix(Zone __instance)", seam);
+			StringAssert.DoesNotContain("private static bool Prefix", seam,
+				"a prefix that can skip the engine's own draw is not a seam, it is a rewrite");
+			StringAssert.Contains("if (!KingdomCitySightRenderSeam.SpendOn(__instance)) return;",
+				seam,
+				"the engine's other Zone.Render call sites arm nothing, so they project nothing");
+			ClassicAssert.AreEqual(2, Regex.Matches(seam, Regex.Escape("ArmedZone = null;")).Count,
+				"the arming is single shot: spent at the draw, and dropped by the draw scope");
 			StringAssert.Contains("ProjectCitySight()", seam);
-			StringAssert.DoesNotContain("Prefix", seam,
-				"a prefix would run before the dispatch, which is worse than the seat it replaced");
 			StringAssert.Contains("Blackout", seam,
 				"the seam names the native second-pass contributor it must come back behind");
 			foreach (string forbidden in ForbiddenEverywhere)
@@ -169,8 +183,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("core.VisAllToggle) return;", part);
 			ClassicAssert.Less(part.IndexOf("core.VisAllToggle) return;", StringComparison.Ordinal),
 				part.IndexOf("ParentZone.VisAll()", StringComparison.Ordinal),
-				"the wizard toggle opens the map itself immediately after this dispatch, so a "
-					+ "projection that would be closed back over it is never taken");
+				"the wizard toggle has already opened the map by the time the draw is reached, so "
+					+ "a projection that would be closed back over it is never taken");
 			StringAssert.Contains("if (HonestVisibility != null) return;", part);
 			ClassicAssert.Less(
 				part.IndexOf("if (HonestVisibility != null) return;", StringComparison.Ordinal),
@@ -195,6 +209,15 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("private static void Finalizer()", scope);
 			StringAssert.Contains(
 				"KingdomClaimedGroundLight.RestoreHonestVisibility();", scope);
+			StringAssert.Contains("KingdomCitySightRenderSeam.Disarm();", scope,
+				"a frame the engine abandons before the draw must not leave the seam armed for "
+					+ "whatever renders that zone next");
+			ClassicAssert.Less(
+				scope.IndexOf("KingdomCitySightRenderSeam.Disarm();", StringComparison.Ordinal),
+				scope.IndexOf("KingdomClaimedGroundLight.RestoreHonestVisibility();",
+					StringComparison.Ordinal),
+				"the arming is dropped first, so even a restore that threw cannot leave it "
+					+ "standing");
 			StringAssert.DoesNotContain("Exception Finalizer", scope,
 				"a finalizer that returns an Exception rewrites what the renderer threw");
 			StringAssert.DoesNotContain("catch", scope,
@@ -288,28 +311,29 @@ namespace ThousandAndFirst.Tests
 		/// own second pass, where Blackout removes the light Zone.AddVisibility gates every cell
 		/// further off than a neighbour on. Taken from inside that pass, the honest snapshot holds
 		/// cells the Blackout was about to darken, and the subtractive restore — which never
-		/// closes a cell the snapshot held open — leaves them visible into the next turn. Taken
-		/// after the dispatch, the snapshot is exactly the sight an unprojected frame would have
-		/// left. The seat is read out of the shipped source, so moving the projection back into
-		/// AfterHandlers fails here rather than passing quietly.
+		/// closes a cell the snapshot held open — leaves them visible into the next turn. Taken at
+		/// the engine's own draw, the snapshot is exactly the sight an unprojected frame would
+		/// have left. The seat is read out of the shipped source, so moving the projection back
+		/// inside the dispatch fails here rather than passing quietly.
 		/// </summary>
 		[Test]
 		public void TheHonestSnapshotSurvivesABlackoutStandingInTheZone()
 		{
 			bool queuedIntoTheSecondPass = Source(PartFile).Contains("E.AfterHandlers.Add");
-			bool afterDispatch = Source(SeamFile).Contains(
-				"[HarmonyPatch(typeof(BeforeRenderEvent), nameof(BeforeRenderEvent.Send))]");
+			bool atTheDraw = Source(SeamFile).Contains(
+				"[HarmonyPatch(typeof(Zone), nameof(Zone.Render), new Type[] { typeof(ScreenBuffer) })]");
 			ClassicAssert.IsFalse(queuedIntoTheSecondPass,
 				"the part must not queue itself ahead of Blackout");
-			ClassicAssert.IsTrue(afterDispatch, "the projection is taken after the dispatch");
+			ClassicAssert.IsTrue(atTheDraw,
+				"the projection is taken at the engine's own draw");
 
-			bool[] honestFrame = RenderModelFrame(project: false, afterDispatch: true);
+			bool[] honestFrame = RenderModelFrame(project: false, atTheDraw: true);
 			CollectionAssert.AreEqual(honestFrame,
-				RenderModelFrame(project: true, afterDispatch: afterDispatch),
+				RenderModelFrame(project: true, atTheDraw: atTheDraw),
 				"city sight may show the frame whole and still leave behind exactly the sight the "
 					+ "founder honestly had");
 			CollectionAssert.AreNotEqual(honestFrame,
-				RenderModelFrame(project: true, afterDispatch: false),
+				RenderModelFrame(project: true, atTheDraw: false),
 				"the model has to catch the seat this moved away from, or it pins nothing");
 		}
 
@@ -322,9 +346,9 @@ namespace ThousandAndFirst.Tests
 		/// <summary>One drawn frame of the engine's own order, reduced to the row that matters:
 		/// clear both maps (D/XRL/Core/XRLCore.cs:2505-2506), pass 1 (zone parts, then objects),
 		/// the second pass in queue order, the engine's own player reckoning (:2511-2512), the
-		/// draw, then this mod's after-render restore. Returns the visibility map the frame leaves
-		/// behind, which is what the turn after it reads.</summary>
-		private static bool[] RenderModelFrame(bool project, bool afterDispatch)
+		/// draw at :2524, then this mod's after-render restore. Returns the visibility map the
+		/// frame leaves behind, which is what the turn after it reads.</summary>
+		private static bool[] RenderModelFrame(bool project, bool atTheDraw)
 		{
 			int[] light = new int[ModelWidth];
 			bool[] visible = new bool[ModelWidth];
@@ -332,7 +356,7 @@ namespace ThousandAndFirst.Tests
 			// Pass 1, zone parts ahead of objects: the claimed-ground light, LightLevel.Light.
 			for (int i = 0; i < ModelWidth; i++)
 				light[i] = 200;
-			if (project && !afterDispatch)
+			if (project && !atTheDraw)
 				honest = ModelProject(light, visible);
 			// Blackout's second-pass turn: RemoveLight to LightLevel.Blackout, which is 0 and so
 			// below the > 1 AddVisibility asks for (D/XRL/World/Parts/Blackout.cs:58-65).
@@ -340,9 +364,10 @@ namespace ThousandAndFirst.Tests
 				if ((i - ModelBlackoutX) * (i - ModelBlackoutX)
 					<= ModelBlackoutRadius * ModelBlackoutRadius && light[i] < 210)
 					light[i] = 0;
-			if (project && afterDispatch)
-				honest = ModelProject(light, visible);
+			// The engine's own player reckoning, which it makes BEFORE the draw the seam sits on.
 			ModelAddVisibility(light, visible);
+			if (project && atTheDraw)
+				honest = ModelProject(light, visible);
 			if (honest != null)
 				for (int i = 0; i < ModelWidth; i++)
 					if (!honest[i])
@@ -381,10 +406,16 @@ namespace ThousandAndFirst.Tests
 		/// sight opens the visibility map: remembered floor is one-way and is owned by the
 		/// projection's single activation-time reveal, so nothing on the render path writes it.
 		/// <c>GetZone(</c> stays because no claim is ever thawed to be lit, and the two whole-map
-		/// tiers stay because the light is lamplight, not second sight.</summary>
+		/// tiers stay because the light is lamplight, not second sight. The last two are the seat
+		/// that crashed the game: patching the render dispatch's static entry made Harmony re-host
+		/// it, and the re-hosted copy threw NullReferenceException out of itself on the first
+		/// drawn frame in three of four unattended launches (Send_Patch1, the native dump naming
+		/// the walk over its own second-pass handler list). Neither the patch target nor that list
+		/// may appear in a shipped source again.</summary>
 		private static readonly string[] ForbiddenEverywhere = new string[]
 		{
-			"GetZone(", "LightAll", "LightLevel.Omniscient", "SetExplored"
+			"GetZone(", "LightAll", "LightLevel.Omniscient", "SetExplored",
+			"BeforeRenderEvent.Send", "AfterHandlers"
 		};
 
 		/// <summary>Additionally forbidden on the activation path. Opening the map is a property of
@@ -393,7 +424,7 @@ namespace ThousandAndFirst.Tests
 		private static readonly string[] Forbidden = new string[]
 		{
 			"GetZone(", "LightAll", "LightLevel.Omniscient", "SetExplored",
-			"AddVisibility", "VisAll"
+			"BeforeRenderEvent.Send", "AfterHandlers", "AddVisibility", "VisAll"
 		};
 
 		private static string Source(string relative)

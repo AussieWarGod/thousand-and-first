@@ -51,18 +51,18 @@ below it.
   Ordinary founding is untouched. Public 0.3.1 is unchanged.
 
 > **Current unreleased census — exact structural gate passed.** Current 3055-file census is line-cap green:
-> 432,836 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> 432,929 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1420 files, 0 of them over the line limit. Inventory SHA-256:
-> `2a6a2fa22549729b3d35ad2f44cf2ae523091a3c1c999540af9bd2667ddade16`.
+> `775a00449c261509328411b494bf6190218d462b130223d6ad0766a6ac8d8b16`.
 > The generated cold-install inventory contains 3086 files; no new subscription claim.
 > The city-sight delta over the merged `dev` tent-row census is two added and two modified
 > production sources: the render-scope finalizer and the render seam that owns the projection are
 > the additions; the claimed-ground light part and the settlement event file are the
 > modifications. All four compile modes are clean on Linux with the SDK Roslyn against the
 > installed managed assemblies rather than through `Tools/gate.sh`: staged baseline (3051 sources),
-> staged compatibility (3055), dev-harness baseline (3200) and dev-harness compatibility (3204).
-> Both engine-free suites run green there (13,903 main/5,192
+> staged compatibility (3055), dev-harness baseline (3205) and dev-harness compatibility (3209).
+> Both engine-free suites run green there (13,909 main/5,198
 > Portable,zero skips) and the repository audit passes.
 > NOT run for it: the installed-Hearthpyre source step, the
 > Windows gate, the developer boot matrix and any native in-game run. The 1,700-tick raising figure

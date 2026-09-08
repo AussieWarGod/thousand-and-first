@@ -1515,15 +1515,16 @@ one-way, because unsetting those bits would erase legitimately walked ground.
 | `KingdomClaimedGround.Enabled` / `OptionId` | Gate `r_TAF_OptionClaimedGroundLight`, default **Yes**. Read at attachment and again on every frame, so switching it off darkens the zone immediately and removes the part on the next visit. |
 | `KingdomClaimedGround.ReconcileZone(KingdomSystem, Zone)` | One activation of one claimed zone: attach or restamp the light, then `Zone.ExploreAll()` once. Every refusal revokes instead of returning &mdash; ground the seat does not claim, ground two settlements both answer for, the option switched off, and a realm the master gate has stopped all take the part off. |
 | `KingdomClaimedGround.RemoveZone(Zone)` | Take the part off. The revocation path for secession, exile, a lost claim, and the option switched off. |
-| `XRL.World.ZoneParts.KingdomClaimedGroundLight` | The part itself: `BeforeRenderEvent` pass 1 → `ParentZone.AddLight(LightLevel.Light)` while `ParentZone.HasObject(The.Player)`. It adds itself to no `AfterHandlers` list. Named-field save, registered in `KingdomRemovalCoverage.CustomZoneParts`. |
-| `ThousandAndFirst.KingdomCitySightRenderSeam` | Harmony postfix on `BeforeRenderEvent.Send`: the one seat the city-sight projection is taken from, after the whole render dispatch (and so after `Blackout`) has returned. |
+| `XRL.World.ZoneParts.KingdomClaimedGroundLight` | The part itself: `BeforeRenderEvent` pass 1 → `ParentZone.AddLight(LightLevel.Light)` while `ParentZone.HasObject(The.Player)`. It queues itself into no second-pass handler list. Named-field save, registered in `KingdomRemovalCoverage.CustomZoneParts`. |
+| `ThousandAndFirst.KingdomCitySightRenderSeam` | The one seat the city-sight projection is taken from: a flag armed by a Harmony prefix on `XRLCore.RenderBaseToBuffer` and spent by a Harmony prefix on `Zone.Render(ScreenBuffer)`, so the projection lands immediately before the engine draws the zone — after the whole render dispatch (and so after `Blackout`), after the founder's own visibility reckoning, and after the wizard whole-map toggle. Both prefixes return `void`, so neither can skip or rewrite the engine's own work. The render dispatch's static entry is deliberately *not* patched: a Harmony postfix there made the engine re-host the method, and the re-hosted copy threw `NullReferenceException` out of itself on the first drawn frame in three of four unattended launches. |
 
 **City sight: your citizens through your own walls.** The same part carries a second, separately
 gated behaviour (`r_TAF_OptionCitySight`, default **Yes**) that opens the claimed zone for the drawn
-frame only. The part queues nothing into `BeforeRenderEvent.AfterHandlers`: the projection is taken
-from `ThousandAndFirst.KingdomCitySightRenderSeam`, a Harmony postfix on `BeforeRenderEvent.Send`,
-which returns only after pass 1 has reached every zone part and every object **and** the engine has
-walked its own second pass. Coming back behind that second pass is the point. `Blackout` is the one
+frame only. The part queues nothing into the render dispatch's second pass: the projection is taken
+from `ThousandAndFirst.KingdomCitySightRenderSeam`, which arms a flag at the head of the drawn
+frame and spends it on the engine's own `Zone.Render` call, reached only after pass 1 has touched
+every zone part and every object **and** the engine has walked its own second pass. Coming behind
+that second pass is the point. `Blackout` is the one
 native part that acts there, and what it does is *remove* light; `Zone.AddVisibility` opens a cell
 further off than a neighbour only where the light map still reads above `LightLevel.None`. Blackout
 hangs on an object, and objects are dispatched behind zone parts, so a zone part that queued itself
@@ -1545,8 +1546,8 @@ map, because the between-frames hostile check adds visibility without clearing f
 still outstanding at the head of the next `BeforeRenderEvent` is *discarded* rather than restored,
 because the engine has already cleared that map. And `KingdomSystem`'s `EndTurnEvent` handler
 restores ahead of every gate it owns, so no turn can begin projected. The wizard `VisAll` toggle
-stands the projection down entirely, because the engine opens the map for itself immediately after
-this dispatch and an honest close would undo that. A projection already outstanding is never taken
+stands the projection down entirely, because the engine has already opened the map for itself by
+the time the draw is reached and an honest close would undo that. A projection already outstanding is never taken
 twice in one frame, because the second reading would take the opened map for the honest one. And the
 Harmony finalizer on `XRLCore.RenderBaseToBuffer` closes the zone on every exit from the draw —
 ordinary return, debug early return, or a thrown render — because the engine's own callback loop has
