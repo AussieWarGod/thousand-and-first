@@ -15,7 +15,8 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)][string]$Root,
-    [string]$Game
+    [string]$Game,
+    [switch]$OwnAttended
 )
 
 $ErrorActionPreference = 'Stop'
@@ -281,13 +282,28 @@ $arguments = @(
 Write-Host "Launching: $Game $($arguments -join ' ')"
 . (Join-Path $PSScriptRoot 'scenario-process.ps1')
 Assert-TafScenarioIdle -Game $Game
+# Cross-version source/old-reader probes must retain exact process ownership even though no
+# AutoRunner script is lawful there. This option never bypasses the closed seal above, starts
+# no world, and is limited to the dedicated, sealed observer markers.
+if ($OwnAttended) {
+    $sourceMarker = Test-Path -LiteralPath (Join-Path $localRoot 'upgrade-save-request.txt') -PathType Leaf
+    $readerMarker = Test-Path -LiteralPath (Join-Path $localRoot 'taf-downgrade-request.txt') -PathType Leaf
+    $stageMarker = Test-Path -LiteralPath (Join-Path $localRoot 'upgrade-stage-source.txt') -PathType Leaf
+    if ((@($sourceMarker, $readerMarker, $stageMarker) | Where-Object { $_ }).Count -ne 1 -or
+        (Test-Path -LiteralPath (Join-Path $localRoot 'scenario-script.txt'))) {
+        throw 'OwnAttended requires exactly one sealed cross-version observer marker and no script.'
+    }
+    if (@(Get-Process | Where-Object { $_.ProcessName -in @('CoQ', 'CavesOfQud') }).Count -ne 0) {
+        throw 'A Qud process is already running; owned attended launch refused.'
+    }
+}
 # A scripted profile runs itself, so its window must never steal the operator's focus.
 # Minimizing is NOT safe - Unity may pause a minimized player and stall the runner - so the
 # window is instead launched detached and, once it exists, moved to the bottom-right screen
 # edge WITHOUT activation. It keeps rendering and the script keeps running; the operator's
 # foreground window keeps the focus. Attended profiles (no sealed script) launch normally.
 $scriptPath = Join-Path $localRoot 'scenario-script.txt'
-if (Test-Path -LiteralPath $scriptPath) {
+if ((Test-Path -LiteralPath $scriptPath) -or $OwnAttended) {
     $process = Start-TafOwnedScenarioProcess -Root $rootPath -Game $Game
     $handedOff = $false
     try {
