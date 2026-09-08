@@ -34,7 +34,9 @@ below it.
 > `440a4d85ebbe8c0ee650481ee600d9d120ac23f99b3d486a6e980c2bdc9fd348`.
 > The generated cold-install inventory contains 3080 files; no new subscription claim.
 > Linux dotnet 9.0.306 against the licensed install runs the full source suite green at 13,716
-> cases and the portable kernel at 5,093 cases, zero skips in both. This digest carries no
+> cases and the portable kernel at 5,093 cases, zero skips in both, and compiles the staged
+> tree clean in both ordinary modes: baseline 3045 sources, compatibility 3049 plus the
+> tracked Hearthpyre 2.2.3 ABI stub, warnings as errors. This digest carries no
 > human semantic review and no native in-game run: the exact-inventory human semantic review
 > remains a release blocker, and the first-guest beat is source- and suite-verified only.
 
