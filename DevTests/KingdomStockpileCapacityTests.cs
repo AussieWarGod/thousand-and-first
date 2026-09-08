@@ -186,7 +186,7 @@ namespace ThousandAndFirst.Tests
 				"if (Container.GetIntProperty(KingdomRules.StockpileFullAnnouncedProperty) == 1)",
 				"return 0;",
 				"Container.SetIntProperty(KingdomRules.StockpileFullAnnouncedProperty, 1);",
-				"MessageQueue.AddPlayerMessage(\"The \" + Container.ShortDisplayName");
+				"MessageQueue.AddPlayerMessage(\"{{K|The \" + Container.ShortDisplayName");
 			StringAssert.Contains(
 				"will not take another bundle; it holds all the keepers can account for.", spoken);
 		}
@@ -345,7 +345,8 @@ namespace ThousandAndFirst.Tests
 				"Nothing already in a store is ever moved, released, or uncounted", modding);
 			// The founder must be warned BEFORE dedicating a loot chest: anything worth bits
 			// occupies stockpile room, which is most loot.
-			StringAssert.Contains("a dedicated stockpile is a poor loot chest", modding);
+			StringAssert.Contains("anything vanilla can take apart into bits", modding);
+			StringAssert.Contains("junk in it is counted against the capacity", modding);
 		}
 
 		private static string PutSource()

@@ -2,8 +2,8 @@
 
 ## Current unreleased stockpile unit capacity
 
-3055 staged sources;432,655 physical lines;1419 direct-XRL;zero cap failures;3086 generated
-cold-stage files. Exact inventory `220c4e618a228787dbfe7c6ad8cf66d354d6eab8289a0d5c05b42fdbf9857af8`.
+3055 staged sources;432,658 physical lines;1419 direct-XRL;zero cap failures;3086 generated
+cold-stage files. Exact inventory `6ce61a18804652df07b4c7ba7988feb65dde276e3403d39e0413eb2d41be3a78`.
 A dedicated stockpile now holds a stated number of material units (32 by default, off the new
 `r_KingdomStockpileCapacity` blueprint tag when one is declared); counting stays whole and only
 intake refuses, so no standing save reads lower than it did. Three added production sources,

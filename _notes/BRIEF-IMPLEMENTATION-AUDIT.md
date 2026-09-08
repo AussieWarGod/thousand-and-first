@@ -2,9 +2,9 @@
 
 ## Current stockpile-capacity census — 2026-09-08
 
-**3055** production C# files,432,655 physical lines,1419 direct-XRL,zero cap failures;
+**3055** production C# files,432,658 physical lines,1419 direct-XRL,zero cap failures;
 3086 generated cold-install files. Exact digest
-`220c4e618a228787dbfe7c6ad8cf66d354d6eab8289a0d5c05b42fdbf9857af8`.
+`6ce61a18804652df07b4c7ba7988feb65dde276e3403d39e0413eb2d41be3a78`.
 A dedicated stockpile now states how many material units it holds; counting stays whole and only
 intake refuses. Three added production sources, three modified, one regenerated roster. Roslyn
 9.0.306 on Linux compiled the staged baseline (3051 sources) and compatibility (3055 sources)

@@ -75,14 +75,14 @@ the next, and spills the remainder to the ground exactly as it already did when 
 existed. A full store says so once and stops saying it when it has room again. No saved field,
 wire format, option or public API changes; the new state is one object int property.
 
-Census after the stockpile-capacity change:3055 staged C# files;432,655 physical lines;3086 files
+Census after the stockpile-capacity change:3055 staged C# files;432,658 physical lines;3086 files
 in the generated cold-install inventory. Staged compilation covers3055 sources, baseline and
 compatibility symbols, run here by Roslyn 9.0.306 on Linux against the licensed Managed references
 with warnings as errors (baseline compiles3051 of them; the optional-mod bridge is
 compatibility-only, and the tracked Hearthpyre 2.2.3 ABI stub compiles clean first). The
 dev-harness modes and the Windows gate did not run for this census.
 Direct `XRL` imports: 1419 files, 0 over the line limit.
-Inventory SHA-256: `220c4e618a228787dbfe7c6ad8cf66d354d6eab8289a0d5c05b42fdbf9857af8`.
+Inventory SHA-256: `6ce61a18804652df07b4c7ba7988feb65dde276e3403d39e0413eb2d41be3a78`.
 No native game run was made for this change; every player-facing claim above is unproven natively.
 
 ## Retained unreleased empty-camp legacy and native water regression

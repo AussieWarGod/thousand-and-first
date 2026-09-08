@@ -21,10 +21,10 @@ python3 Tools/check-structure.py --release
 ## Current isolated draft census
 
 The stockpile unit capacity over the empty-camp legacy correction reports 3055 staged production
-C# files and 432,655 physical lines.
+C# files and 432,658 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`220c4e618a228787dbfe7c6ad8cf66d354d6eab8289a0d5c05b42fdbf9857af8`. The census reports
+`6ce61a18804652df07b4c7ba7988feb65dde276e3403d39e0413eb2d41be3a78`. The census reports
 1419 files with direct `XRL` imports; 0 of those exceed the line limit.
 
 The delta over the retained draft below is three added production sources — the capacity
