@@ -38,24 +38,30 @@ the current bytes; those receipts are pending and are not claimed here.
 
 Workflow **authored, not yet exercised.** `.github/workflows/release.yml` adds a tag-triggered
 Steam Workshop release lane under the author ruling of 2026-09-08 recorded in
-[RELEASING.md](RELEASING.md#author-ruling-2026-09-08--automated-release-lane-and-the-doctrine-it-amends).
+[RELEASING.md](RELEASING.md#author-ruling-2026-09-08--automated-release-lane-and-the-doctrine-it-amends);
+pushing an annotated `v*`/`staging-v*` tag now runs the whole lane unattended — gate, package,
+plan, publisher `check`, one `-Submit`, the polled `-Verify`, and, only on
+`SubscribedInstallationVerified`, one `-Finalize` from the same run directory with the recorded
+plan, `PLAN_SHA` and `RECEIPT_SHA`. Both environments' required reviewers were removed, so the
+admin-only tag ruleset is the approval and no job waits for a human.
 No pipeline release has run; every claim below is a configuration fact, not a release result.
 
-Verified against the GitHub API on 2026-09-08:
+Verified against the GitHub API on 2026-09-08, amended for the reviewer removal of 2026-09-09:
 
 | Setting | State |
 | --- | --- |
-| Environment `steam-workshop` | required reviewer + branch/tag policy; deployment tag pattern `v*` |
-| Environment `steam-workshop-staging` | required reviewer + branch/tag policy; deployment tag pattern `staging-v*` |
+| Environment `steam-workshop` | **no required reviewers**; branch/tag policy only, deployment tag pattern `v*` |
+| Environment `steam-workshop-staging` | **no required reviewers**; branch/tag policy only, deployment tag pattern `staging-v*` |
 | Tag ruleset "release tags" | active; restricts creation, update and deletion of `refs/tags/v*` and `refs/tags/staging-v*`; bypass limited to the repository admin role |
 | Fork pull-request workflows | approval required for all external contributors |
 | Workflow permissions | read-only; pull-request approval by Actions disabled |
 | Repository secrets for the lane | none, by design; no Steam credential exists in GitHub |
 | Self-hosted runners | **0 registered.** The `taf-steam` runner is not installed yet, so the pipeline cannot run |
 
-Two environment settings are still open: `can_admins_bypass` is `true` on both environments and
-should be turned off so the approval cannot be skipped, and the "prevent self-review" option must
-stay off, because the sole collaborator both pushes the tag and approves the deployment.
+The two open environment-approval settings are moot now that neither environment has a required
+reviewer: there is no approval for `can_admins_bypass` to skip and no review for "prevent
+self-review" to block. The tag ruleset carries the whole gate, so its admin-only bypass list is
+the setting to keep audited.
 
 Open before the first pipeline release: register and start the `taf-steam` runner per the runbook
 in [RELEASING.md](RELEASING.md#steam-host-runner-runbook); rule on the merge method for release
