@@ -43,7 +43,10 @@ try {
         $sizes.Add([long]$rowRead.size)
         $hashes.Add([string]$rowRead.sha256)
     }
-    $destination = $null
+    # PowerShell marshals a bare $null into a .NET [string] parameter as "", so Inspect (which
+    # REQUIRES a null destination) was refused as destination_invalid. [NullString]::Value is the
+    # documented way to pass a genuine null string across that boundary.
+    $destination = [NullString]::Value
     if ($null -ne $parsed.destination) { $destination = [string]$parsed.destination }
     $result = $session.Run($Mode, [string]$parsed.schema, [string]$parsed.source, $destination,
         $roots, $paths.ToArray(), $sizes.ToArray(), $hashes.ToArray(), $directories, $selected)
