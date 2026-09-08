@@ -21,10 +21,10 @@ python3 Tools/check-structure.py --release
 ## Current isolated draft census
 
 The stockpile unit capacity over the Kingdom Quickstart tent rows reports 3056 staged production
-C# files and 433,213 physical lines.
+C# files and 433,239 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`36f75a7f2421919a3fdb0fac8d5bb18d9174c2b58788addbff127723153ccc21`. The census reports
+`4f006f327ef59e0c36e65ea11fad27b5b508d8946bffa9ed8770a147fe3dde79`. The census reports
 1420 files with direct `XRL` imports; 0 of those exceed the line limit.
 
 The stockpile delta is three added production sources — the capacity constants

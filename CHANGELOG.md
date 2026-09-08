@@ -206,10 +206,10 @@ below it.
   `docs/STATUS.md`.
 
 > **Current unreleased census — exact structural gate passed.** Current 3056-file census is line-cap green:
-> 433,213 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> 433,239 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1420 files, 0 of them over the line limit. Inventory SHA-256:
-> `36f75a7f2421919a3fdb0fac8d5bb18d9174c2b58788addbff127723153ccc21`.
+> `4f006f327ef59e0c36e65ea11fad27b5b508d8946bffa9ed8770a147fe3dde79`.
 > The generated cold-install inventory contains 3087 files; no new subscription claim.
 > It covers the stockpile unit capacity above the retained Kingdom Quickstart tent rows merged
 > from `dev` and the empty-camp legacy correction below them: three

@@ -2,9 +2,9 @@
 
 ## Current stockpile-capacity census — 2026-09-08
 
-**3056** production C# files,433,213 physical lines,1420 direct-XRL,zero cap failures;
+**3056** production C# files,433,239 physical lines,1420 direct-XRL,zero cap failures;
 3087 generated cold-install files. Exact digest
-`36f75a7f2421919a3fdb0fac8d5bb18d9174c2b58788addbff127723153ccc21`.
+`4f006f327ef59e0c36e65ea11fad27b5b508d8946bffa9ed8770a147fe3dde79`.
 A dedicated stockpile now states how many material units it holds; counting stays whole and only
 intake refuses. The delivery proves the destination and its room after every engine callback, the
 stamping of a stack count included, and proves the bundle standing in that exact store before it

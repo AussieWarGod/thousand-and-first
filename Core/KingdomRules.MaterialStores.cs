@@ -28,20 +28,32 @@ namespace ThousandAndFirst
 		/// </summary>
 		public const string StockpileFullAnnouncedProperty = "KingdomStockpileFullAnnounced";
 
+		/// <summary>Stockpiles one settlement's keepers can account for on one ground. Mirrors
+		/// <see cref="MaxDedicatedLarders"/>: a separate cap from water and from food, because
+		/// these are separate accounts kept by separate people.</summary>
+		public const int MaxStockpiles = 8;
+
 		/// <summary>What a stockpile with no declared capacity holds. A chest the founder walked
 		/// up to and dedicated: one early building bill's worth of stone, not a programme's.
 		/// <para>
 		/// This number is a floor the catalogue leans on, and it is the rung that moves if a
 		/// grander design is ever written. A settlement keeps at most
-		/// <see cref="KingdomMaterials.MaxStockpiles"/> stores on one ground, and a bill is paid
-		/// out of ONE reading of everything those stores hold, so a cap set too low would not make
-		/// a design expensive &mdash; it would make it impossible, permanently and silently. The
-		/// pin is <see cref="KingdomMaterials.MaxReachableStockpileUnits"/> against the grandest
-		/// bill in <c>RuntimeData/KingdomBuildings.xml</c>, asserted in
+		/// <see cref="MaxStockpiles"/> stores on one ground, and a bill is paid out of ONE reading
+		/// of everything those stores hold, so a cap set too low would not make a design expensive
+		/// &mdash; it would make it impossible, permanently and silently. The pin is
+		/// <see cref="MaxReachableStockpileUnits"/> against the grandest bill in
+		/// <c>RuntimeData/KingdomBuildings.xml</c>, asserted in
 		/// <c>KingdomStockpileCapacityTests</c>.
 		/// </para>
 		/// </summary>
 		public const int DefaultStockpileCapacity = 48;
+
+		/// <summary>The most material one ground can hold when the founder has only ever walked up
+		/// to chests and dedicated them: every store the keepers will account for, each at the size
+		/// a container that declares nothing gets. The catalogue's grandest single bill must fit
+		/// inside this number or that design can never be commissioned at all; a commissioned store
+		/// declaring a rung of the ladder only ever raises the real ceiling above it.</summary>
+		public const int MaxReachableStockpileUnits = MaxStockpiles * DefaultStockpileCapacity;
 
 		/// <summary>A dry shelf or rack: the smallest thing worth dedicating, and deliberately the
 		/// same size as the chest a founder walked up to and dedicated by hand. Declared by the

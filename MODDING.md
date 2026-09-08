@@ -327,9 +327,9 @@ The shipped stores declare a ladder, and every rung is a named constant in
 | `StoreyardCapacity` | 192 | the granary |
 | `StorehallCapacity` | 384 | the Granary-Colossus |
 
-A settlement keeps at most eight stockpiles on one ground (`KingdomMaterials.MaxStockpiles`), and
+A settlement keeps at most eight stockpiles on one ground (`KingdomRules.MaxStockpiles`), and
 a bill is paid out of **one** reading of everything those stores hold — so the reachable hold with
-hand-dedicated chests alone, `KingdomMaterials.MaxReachableStockpileUnits` (384), is held above the
+hand-dedicated chests alone, `KingdomRules.MaxReachableStockpileUnits` (384), is held above the
 grandest bill in the shipped catalogue by a test. Price a design above it and nobody can ever raise
 it; commission a store further up the ladder and the real ceiling rises with it.
 

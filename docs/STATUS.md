@@ -85,19 +85,20 @@ people's handlers, so the destination and its room are proved after the creation
 the stamp, and the bundle is proved standing in that exact store with the count it was stamped
 with before a single unit is counted. No saved field, wire format or option changes, and the public API
 changes are additive only (`KingdomSurvey.StockCapacityOf`/`StockHeldIn`,
-`KingdomMaterials.StockpileRoom`/`FullStockpiles`/`StockRoomClause`/`MaxReachableStockpileUnits`,
-`KingdomRules.StockpileCapacity` and the named capacity constants); the new state is one object int
+`KingdomMaterials.StockpileRoom`/`FullStockpiles`/`StockRoomClause`,
+`KingdomRules.StockpileCapacity`/`MaxStockpiles`/`MaxReachableStockpileUnits` and the named
+capacity constants); the new state is one object int
 property.
 
 Census after the stockpile-capacity change over the merged Kingdom Quickstart tent rows:3056
-staged C# files;433,213 physical lines;3087 files
+staged C# files;433,239 physical lines;3087 files
 in the generated cold-install inventory. Staged compilation covers3056 sources, baseline and
 compatibility symbols, run here by Roslyn 9.0.306 on Linux against the licensed Managed references
 with warnings as errors (baseline compiles3052 of them; the optional-mod bridge is
 compatibility-only, and the tracked Hearthpyre 2.2.3 ABI stub compiles clean first). The
 dev-harness modes and the Windows gate did not run for this census.
 Direct `XRL` imports: 1420 files, 0 over the line limit.
-Inventory SHA-256: `36f75a7f2421919a3fdb0fac8d5bb18d9174c2b58788addbff127723153ccc21`.
+Inventory SHA-256: `4f006f327ef59e0c36e65ea11fad27b5b508d8946bffa9ed8770a147fe3dde79`.
 No native game run was made for this change; every player-facing claim above is unproven natively.
 
 ## Retained unreleased Kingdom Quickstart tent rows

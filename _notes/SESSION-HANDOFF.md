@@ -2,8 +2,8 @@
 
 ## Current unreleased stockpile unit capacity over the Kingdom Quickstart tent rows
 
-3056 staged sources;433,213 physical lines;1420 direct-XRL;zero cap failures;3087 generated
-cold-stage files. Exact inventory `36f75a7f2421919a3fdb0fac8d5bb18d9174c2b58788addbff127723153ccc21`.
+3056 staged sources;433,239 physical lines;1420 direct-XRL;zero cap failures;3087 generated
+cold-stage files. Exact inventory `4f006f327ef59e0c36e65ea11fad27b5b508d8946bffa9ed8770a147fe3dde79`.
 A dedicated stockpile now holds a stated number of material units (32 by default, off the new
 `r_KingdomStockpileCapacity` blueprint tag when one is declared); counting stays whole and only
 intake refuses, so no standing save reads lower than it did. The delivery remembers nothing across

@@ -47,8 +47,9 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.AreEqual(96, KingdomRules.StorehouseCapacity);
 			ClassicAssert.AreEqual(192, KingdomRules.StoreyardCapacity);
 			ClassicAssert.AreEqual(384, KingdomRules.StorehallCapacity);
-			ClassicAssert.AreEqual(8 * KingdomRules.DefaultStockpileCapacity,
-				KingdomMaterials.MaxReachableStockpileUnits);
+			ClassicAssert.AreEqual(8, KingdomRules.MaxStockpiles);
+			ClassicAssert.AreEqual(KingdomRules.MaxStockpiles * KingdomRules.DefaultStockpileCapacity,
+				KingdomRules.MaxReachableStockpileUnits);
 		}
 
 		[Test]
@@ -497,7 +498,8 @@ namespace ThousandAndFirst.Tests
 		/// <summary>
 		/// The cap must never make a shipped design impossible to raise. A bill is covered out of
 		/// ONE reading of everything the stores hold (<c>KingdomMaterials.CanPay</c>), and the
-		/// founder may only ever dedicate <c>MaxStockpiles</c> of them, so the ceiling a founder
+		/// founder may only ever dedicate <see cref="KingdomRules.MaxStockpiles"/> of them, so
+		/// the ceiling a founder
 		/// reaches with ordinary chests alone has to clear the grandest bill in the catalogue
 		/// &mdash; materials, the rare finds that must be standing beside them, and the
 		/// bit-bearing stock that occupies the same room.
@@ -507,7 +509,7 @@ namespace ThousandAndFirst.Tests
 		{
 			int worst = LargestCatalogueBillUnits();
 			ClassicAssert.Greater(worst, 0, "the catalogue must have priced something");
-			ClassicAssert.GreaterOrEqual(KingdomMaterials.MaxReachableStockpileUnits, worst,
+			ClassicAssert.GreaterOrEqual(KingdomRules.MaxReachableStockpileUnits, worst,
 				"eight hand-dedicated stores at the default size cannot hold the "
 				+ worst + "-unit bill, so that design could never be commissioned");
 		}
