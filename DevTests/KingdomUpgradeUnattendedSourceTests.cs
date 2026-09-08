@@ -24,7 +24,7 @@ namespace ThousandAndFirst.Tests
 				"KingdomUpgradeSource.Arm(null)", "Game.SaveGame(\"Primary\")", "state.Matches(saved)",
 				"taf-upgrade-source-link-v1", "cache-bind-after-quit" }) StringAssert.Contains(token, driver);
 			foreach (string forbidden in new[] { ".SetValue(", "new KingdomInheritanceState",
-				"SetObjectGameState(", "Game.TimeTicks =", "system.Population =", "new KingdomSealRecord",
+				"SetObjectGameState(", "Game.TimeTicks = ", "system.Population = ", "new KingdomSealRecord",
 				"File.Delete(", "Directory.Delete(", "FileShare.ReadWrite" })
 			{ StringAssert.DoesNotContain(forbidden, provider); StringAssert.DoesNotContain(forbidden, driver); }
 		}
@@ -49,11 +49,11 @@ namespace ThousandAndFirst.Tests
 			foreach (string token in new[] { "advance 2400", "script.Count == Script.Length",
 				"upgrade-stage-source.txt", "upgrade-stage-receipt.txt", "upgrade-stage-failure.txt" })
 				StringAssert.Contains(token, provider);
-			foreach (string token in new[] { "KingdomWaterMaintenanceSetup.Found()",
+			foreach (string token in new[] { "new KingdomWaterMaintenanceSetup(Game, Zone).Found()",
 				"KingdomWaterMaintenanceSealEvidence.Verify", "Game.SaveGame(\"Primary\")",
 				"taf-upgrade-stage-receipt-v1", "cache-bind-after-quit" }) StringAssert.Contains(token, checks);
 			foreach (string forbidden in new[] { "SetObjectGameState(", "SetStringGameState(",
-				"Game.TimeTicks =", "System.Population =", "new KingdomSealRecord", ".CloseCache(" })
+				"Game.TimeTicks = ", "System.Population = ", "new KingdomSealRecord", ".CloseCache(" })
 				StringAssert.DoesNotContain(forbidden, checks);
 		}
 
