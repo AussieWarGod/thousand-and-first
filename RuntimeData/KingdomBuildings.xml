@@ -609,6 +609,15 @@
     cistern court is its own design, storage stores and producers produce (Addendum 11(a)), and
     a rung that held drams could never grow into a hall without spilling them.
 
+    THE FIRST BASIN IS THE EXCEPTION, and it is not a rung. Nothing the heart RAISES stores
+    water; the basin does, because it is the one ExistingAuthority placement in the whole
+    ladder - adopted rather than built, never struck, and never in delta.Removed - so its
+    drams cannot spill when the rung around it is rebuilt. Its capacity is code-side and grows
+    with the rung standing over it (KingdomPlotRules.HeartBasinCapacityForRung: 16/48/160/512/1024),
+    which is why r_KingdomFirstBasin still authors MaxVolume="16" and no store dedication: an
+    authored mark would put the Debug gallery's photographic copy into a real settlement's
+    water accounts.
+
     The arcology gateway is the fifth heart rung. It rebuilds the surface court as the protected
     transfer atrium for the real parasang-wide, multi-storey shell. The first basin remains exact;
     other static court fabric may be renovated rather than entombed. Hosted floors belong to the

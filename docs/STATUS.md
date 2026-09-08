@@ -143,15 +143,37 @@ which unblocks exile for any realm at profile revision2 or above. Schema0/1
 bytes remain unchanged; older0.3.1 readers reject schema2,so any next public package needs
 a new version. Public0.3.1/main/tag are unchanged.
 
-Retained empty-camp census after merging `dev`:3052 staged C# files;432,259 physical lines;3083 files in
-the generated cold-install inventory. Direct `XRL` imports: 1417 files, 0 over the line limit.
-Inventory SHA-256: `c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`.
-Complete canonical parent comparison of this branch's own delta proves3045 unchanged/four
-modified/no additions or removals against integration parent2be6b00; the three added and
-seven modified C# sources plus one option row merged from `dev` carry their own review chain. Root and
-independent reviewer read the complete four-file delta and affected boundaries; the exact
-structural release gate passes and the exact-inventory human semantic review is open against
-this merged digest. This is source review,not functional acceptance.
+Current census after merging `dev` (the Kingdom Quickstart tent rows and the first-basin water
+store included) and the stockpile unit capacity: 3059 staged C# files; 433,954
+physical lines; 3090 files in the generated cold-install inventory. Staged compilation covers 3059
+sources, baseline and compatibility symbols (baseline compiles 3055 of them; the optional-mod
+bridge is compatibility-only). Direct `XRL` imports: 1423 files, 0 over the line limit.
+Inventory SHA-256: `5db8f7381ade172c6b0b34925a111f4d4c28f32da77cf0be266914aa53e77674`.
+The seal lane's OWN delta &mdash; four modified production sources, no additions or removals
+&mdash; was proved against integration parent2be6b00 (3045 unchanged) and read in full by root
+and an independent reviewer; the three added and seven modified C# sources plus one option row
+merged from `dev` carry their own review chain. The first-basin water store is a further
+three added production sources (`Growth/KingdomPlotHeartRules.Loader.cs`,
+`Growth/KingdomWaterDebit.OpenReservations.cs` and `Growth/KingdomLab.Commission.Settle.cs`) and
+twenty-one modified ones: the founding-heart
+identity and marks shards, the plot-effects furnishing shard, the zone-activation events shard,
+the heart rules table, the civic-container envelope note, the survey capture sweep, the ground
+reading, the ground-protection law, the four water-debit shards,
+the generated removal-coverage table, and the seven water callers that can refund after their own
+callbacks (construction funding, sowing, annexe enrolment, the lab commission, the lab retry
+funding lane and its two removal lanes). Root and an independent AI reviewer read that delta;
+every required finding from the review pass is addressed on this branch. The Kingdom Quickstart
+tent rows merged from `dev` are one added and six modified production sources on top of it and
+carry their own review chain; the retained3052-source digest
+`c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c` they were measured against is
+not restated here. The exact structural
+release gate passes and the exact-inventory human semantic review is open against this merged
+digest. The stockpile unit capacity on top of all of it is three added production sources
+(`Core/KingdomRules.MaterialStores.cs`, `Growth/KingdomSurvey.11.MaterialStores.cs` and
+`Growth/KingdomMaterials.StockpileRoom.cs`), six modified and the regenerated removal-coverage
+roster; Roslyn 9.0.306 on Linux compiled the staged baseline and compatibility sets clean on the
+merged tree and both engine-free suites run green there (13,980 main / 5,193 Portable, zero
+skips). This is source review,not functional acceptance.
 
 Focused38898 passed149 cases,zero skips. That receipt predates the seventh
 KingdomWaterMaintenanceNativeSourceTests case and is retained as measured. The branch adds

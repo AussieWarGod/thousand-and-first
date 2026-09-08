@@ -125,6 +125,51 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
+		/// How many drams the first basin holds at each rung, one-based: sixteen at the rite
+		/// ground, forty-eight at the waterstone, a hundred and sixty at the moot, five hundred
+		/// and twelve at the court, a thousand and twenty-four at the arcology.
+		/// <para>
+		/// The basin is the settlement's FIRST water store and, at a camp, its only one. The
+		/// ladder is therefore tuned against the stage gates it feeds: sixteen is exactly the
+		/// Steading capacity gate, so five settlers drinking from a basin can become a steading
+		/// without a cask rack, which is the whole reason a camp has a store at all. Every rung
+		/// below the top then stands SHORT of the next gate &mdash; 48 under Village's 64, 160
+		/// under Town's 256, 512 under City's 1024 &mdash; so the basin always helps a settlement
+		/// climb and never climbs it alone.
+		/// </para>
+		/// <para>
+		/// It is tuned against the leak law as well. A store at the wear ceiling loses its
+		/// capacity divided by fifty every day, so a neglected basin at each rung sheds less than
+		/// the daily water bill of the rung that holds it: a leak thins the cushion the settlement
+		/// keeps and can never outrun what the settlement makes.
+		/// </para>
+		/// </summary>
+		/// <param name="Rung">The heart's rung, one-based, as
+		/// <see cref="HeartRungOf"/> reads it.</param>
+		/// <returns>Zero off the ladder, which is every design but the heart's five. Nothing off
+		/// the ladder ever has a water capacity reckoned from here, and a zero is never written
+		/// onto a vessel: the reconciler treats it as "not applicable" and leaves the vessel
+		/// exactly as it found it.</returns>
+		public static int HeartBasinCapacityForRung(int Rung)
+		{
+			switch (Rung)
+			{
+				case 1:
+					return 16;
+				case 2:
+					return 48;
+				case 3:
+					return 160;
+				case 4:
+					return 512;
+				case 5:
+					return 1024;
+				default:
+					return 0;
+			}
+		}
+
+		/// <summary>
 		/// The whole ground the heart is surveyed for at the founding rite: the final rung's plot,
 		/// centred on the rite ground and slid whole until it lies inside the zone's interior.
 		/// Nothing is claimed, spent, or reserved by this &mdash; it is the founder's ambition

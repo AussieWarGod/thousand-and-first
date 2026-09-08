@@ -137,6 +137,12 @@ namespace ThousandAndFirst
 					+ "nothing was spent.");
 				return;
 			}
+			// The window opens BEFORE the commit and closes in the finally below. The roll, the
+			// enrolment part, the licences and the standing batch between them are real engine
+			// callbacks, and the catch may still roll this receipt back afterwards. Rollback
+			// re-proves each bound vessel's MaxVolume, so a basin widening landing in that span
+			// would refuse the compensation for good.
+			debit.BeginCompensationWindow();
 			try
 			{
 				if (!debit.Commit())
@@ -262,6 +268,11 @@ namespace ThousandAndFirst
 					: "The enrolment could not restore every exact snapshot. Civic work is "
 						+ "quarantined; inspect the rolls, body, standings, and stores.");
 				return;
+			}
+			finally
+			{
+				// Closed on EVERY exit, enrolled or refused: the hold must not outlive the ceremony.
+				debit.EndCompensationWindow();
 			}
 
 			// External faction mirrors and authored telling happen after the durable core. A broken

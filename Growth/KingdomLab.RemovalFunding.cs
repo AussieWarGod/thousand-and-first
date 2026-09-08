@@ -132,42 +132,55 @@ namespace ThousandAndFirst
 						+ "}} drams. The receipt was unchanged.");
 					return;
 				}
-				KingdomLabOwnedTargetState preCommit = KingdomProcedures.ClassifyOwned(Actor,
-					snapshot, out ignored);
-				if (preCommit != KingdomLabOwnedTargetState.Present)
+				// Opened BEFORE the commit and closed in the finally below: the classification after
+				// the commit may still send this receipt to Rollback, and Rollback re-proves each
+				// bound vessel's MaxVolume before it restores a dram.
+				debit.BeginCompensationWindow();
+				try
 				{
-					debit.Rollback();
-					if (preCommit == KingdomLabOwnedTargetState.Absent
-						&& Job.WaterPaid == 0 && Job.WaterLost == 0)
+					KingdomLabOwnedTargetState preCommit = KingdomProcedures.ClassifyOwned(Actor,
+						snapshot, out ignored);
+					if (preCommit != KingdomLabOwnedTargetState.Present)
 					{
-						ArchiveCleanAbsentRemoval(Actor, Job, Procedure, snapshot);
-					}
-					else
-					{
-						Job.State = KingdomLabRemovalPhase.Quarantined;
-						Job.Fault = "The exact target changed after water reservation but before commit. Nothing was charged or touched.";
-					}
-					return;
-				}
-				debit.Commit();
-				KingdomLabOwnedTargetState afterCommit = KingdomProcedures.ClassifyOwned(Actor,
-					snapshot, out ignored);
-				if (afterCommit != KingdomLabOwnedTargetState.Present)
-				{
-					bool compensated = debit.Rollback();
-					MergeRemovalWater(Job, debit);
-					if (afterCommit == KingdomLabOwnedTargetState.Absent && compensated
-						&& Job.WaterPaid == 0 && Job.WaterLost == 0 && !Job.WaterQuarantined)
-					{
-						ArchiveCleanAbsentRemoval(Actor, Job, Procedure, snapshot);
+						debit.Rollback();
+						if (preCommit == KingdomLabOwnedTargetState.Absent
+							&& Job.WaterPaid == 0 && Job.WaterLost == 0)
+						{
+							ArchiveCleanAbsentRemoval(Actor, Job, Procedure, snapshot);
+						}
+						else
+						{
+							Job.State = KingdomLabRemovalPhase.Quarantined;
+							Job.Fault = "The exact target changed after water reservation but before commit. Nothing was charged or touched.";
+						}
 						return;
 					}
-					Job.State = KingdomLabRemovalPhase.Quarantined;
-					Job.Fault = "The exact target changed during retry water callbacks. Compensation was measured; no replacement was touched.";
-					EnsureRemovalGovernance(Job);
-					return;
+					debit.Commit();
+					KingdomLabOwnedTargetState afterCommit = KingdomProcedures.ClassifyOwned(Actor,
+						snapshot, out ignored);
+					if (afterCommit != KingdomLabOwnedTargetState.Present)
+					{
+						bool compensated = debit.Rollback();
+						MergeRemovalWater(Job, debit);
+						if (afterCommit == KingdomLabOwnedTargetState.Absent && compensated
+							&& Job.WaterPaid == 0 && Job.WaterLost == 0 && !Job.WaterQuarantined)
+						{
+							ArchiveCleanAbsentRemoval(Actor, Job, Procedure, snapshot);
+							return;
+						}
+						Job.State = KingdomLabRemovalPhase.Quarantined;
+						Job.Fault = "The exact target changed during retry water callbacks. Compensation was measured; no replacement was touched.";
+						EnsureRemovalGovernance(Job);
+						return;
+					}
+					MergeRemovalWater(Job, debit);
 				}
-				MergeRemovalWater(Job, debit);
+				finally
+				{
+					// Closed before the removal itself runs below, which must be free to widen whatever
+					// this receipt drained.
+					debit.EndCompensationWindow();
+				}
 			}
 			Job.State = KingdomLabRules.RemovalFundingPhase(Job.WaterOwed,
 				Job.WaterPaid, Job.WaterQuarantined);
