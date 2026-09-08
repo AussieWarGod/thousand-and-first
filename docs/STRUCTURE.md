@@ -21,11 +21,12 @@ python3 Tools/check-structure.py --release
 ## Current isolated draft census
 
 The empty-camp legacy correction over the camp-guide topic tree, the claimed-ground light and the
-first-settler legibility change together report 3052 staged production C# files and 432,259
+first-settler legibility change and the bounty fetch correction together report 3052 staged
+production C# files and 432,357
 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`. The census reports
+`92afcee66c28d9e7a3277dea7f197307fc61c14706ca0f08e8c7f9e23b6d3126`. The census reports
 1417 files with direct `XRL` imports; 0 of those exceed the line limit.
 
 The delta over the retained draft below is four modified production sources and no additions or

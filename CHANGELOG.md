@@ -12,6 +12,18 @@ below it.
 
 ### Fixed
 
+- A completed bounty fetch carry is now credited instead of being quarantined. The
+  post-add witness in `Quests/KingdomBounty.Transfer.cs` re-proved the source-minus
+  condition with its detached-holder clause after the destination add, but the engine's
+  `Inventory.AddObject` assigns the destination as the moved object's holder before the
+  callback returns, so that clause and the arrival's own destination-holder clause could
+  never hold together. Every successful default fetch delivery therefore quarantined
+  before its credit and completion. The detached holder is now the removal step's proof
+  alone; the arrival proves destination ownership. Source-proven against the shipped code
+  and covered by executable rule cases; a native persona
+  (`Tools/run-personas.sh bounty-fetch-native-check`) has been added for the in-game
+  proof and has **not** been run yet.
+
 - A realm whose residents map to no canonical body can now stage and seal its legacy. In
   0.3.1 the automatic daily seal stage of such a realm failed closed ("current polity
   profile lacks canonical seal-safe phenotype provenance") and no legacy was ever recorded.
@@ -84,10 +96,10 @@ below it.
   `docs/STATUS.md`.
 
 > **Current unreleased census — exact structural gate passed.** Current 3052-file census is line-cap green:
-> 432,259 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> 432,357 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1417 files, 0 of them over the line limit. Inventory SHA-256:
-> `c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`.
+> `92afcee66c28d9e7a3277dea7f197307fc61c14706ca0f08e8c7f9e23b6d3126`.
 > The generated cold-install inventory contains 3083 files; no new subscription claim.
 > Root and independent AI reviewer read all four changed production sources and affected
 > boundaries; unchanged sources inherit the complete canonical parent review chain. This

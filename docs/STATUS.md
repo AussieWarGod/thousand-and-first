@@ -30,6 +30,8 @@ ON. Required checks (repository-audit, plus the full pure and portable test lane
 required conversation resolution all remain. The `dev` integration branch now exists on origin, is the repository default branch, created at `6f73974` and currently at `736d28c`. It is protected with the same three required checks, linear history, required conversation resolution and no force-push/deletion, but with `enforce_admins` off and without the strict up-to-date requirement, so the branch model in
 [RELEASING.md](RELEASING.md#branch-model) is in force rather than proposed: feature work targets `dev` and `main` receives release merges. Earlier sections below record the pre-merge state at their own checkpoints and are not restated here.
 
+A source-proven bounty fetch defect is fixed on `dev`: the post-add transfer witness could never be satisfied, so every completed fetch carry quarantined before its credit; executable rule cases and the `bounty-fetch-native-check` persona are added, and that persona has not been run.
+
 Annotated `v0.3.1` still targets `a46b5ad`; `main` is now one squash commit ahead of that tag.
 Public0.3.1 and its published bytes are unchanged. Windows and native lanes are being re-run for
 the current bytes; those receipts are pending and are not claimed here.
@@ -75,9 +77,9 @@ which unblocks exile for any realm at profile revision2 or above. Schema0/1
 bytes remain unchanged; older0.3.1 readers reject schema2,so any next public package needs
 a new version. Public0.3.1/main/tag are unchanged.
 
-Current census after merging `dev`:3052 staged C# files;432,259 physical lines;3083 files in
+Current census after merging `dev` and the bounty fetch correction:3052 staged C# files;432,357 physical lines;3083 files in
 the generated cold-install inventory. Direct `XRL` imports: 1417 files, 0 over the line limit.
-Inventory SHA-256: `c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`.
+Inventory SHA-256: `92afcee66c28d9e7a3277dea7f197307fc61c14706ca0f08e8c7f9e23b6d3126`.
 Complete canonical parent comparison of this branch's own delta proves3045 unchanged/four
 modified/no additions or removals against integration parent2be6b00; the three added and
 seven modified C# sources plus one option row merged from `dev` carry their own review chain. Root and
