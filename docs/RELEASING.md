@@ -51,7 +51,10 @@ Mitigations in force for the accepted residual risk:
 - A tag ruleset restricts creation, update and deletion of `v*` and `staging-v*` to repository
   admins, so no other credential can forge a trigger.
 - Both GitHub Environments carry a required human reviewer and a deployment **tag** policy
-  (`v*` and `staging-v*` respectively), and the public lane takes two separate approvals.
+  (`v*` and `staging-v*` respectively), and the public lane takes two separate approvals. One
+  privileged job is deliberately outside that gate: `verify` declares no environment, so it takes
+  no approval. It runs `-Verify`, which observes one subscribed installation and writes no
+  installation or finalization record, and it only runs after an approved `publish` has succeeded.
 - No Steam credential and no repository secret exist for the workflow to leak; the signed-in Steam
   client is ambient state of the operator's own desktop session.
 - The privileged jobs use no third-party actions, check nothing out on the Steam host, upload
@@ -422,7 +425,11 @@ Order of a full 0.3.x release:
 
 1. Bump `manifest.json` to the new patch, fold every `Unreleased` section into one
    `## [<version>] — YYYY-MM-DD (Alpha)` heading, and complete the private canonicalization
-   commit on `dev` (`workshop.json` Visibility `"0"`, WorkshopId `3796495680`).
+   commit on `dev` (`workshop.json` Visibility `"0"`, WorkshopId `3796495680`). If any C# source
+   changed since the last review, commit a refreshed `docs/STRUCTURE_REVIEW.json` naming the human
+   reviewer, so `python3 Tools/check-structure.py --release` exits 0. Both lanes run that command
+   on the hosted runner within seconds of the tag push, and stage 11 of the licensed gate runs it
+   again on the Steam host; a stale review stops the release before any approval is spent.
 2. Push `staging-v<version>` on that commit. Approve `steam-workshop-staging` when the run waits.
    The pipeline gates, packages `--test`, plans, checks and submits to the staging item.
 3. Human: `-Finalize` from the retained run directory, then the section-4 subscribed smoke, then
@@ -430,9 +437,15 @@ Order of a full 0.3.x release:
    `candidateCommit`.
 4. Public flip commit: canonicalize Alpha metadata, status line, changelog heading and a fresh
    `docs/ALPHA_CANDIDATE.json`. Open the release pull request from `dev` to `main` and merge it
-   **with a merge commit** (see "Branch model").
-5. Tag the resulting `main` commit with an annotated `v<version>` carrying a body, and push it.
-   Approve `public-confirm`, then approve `publish`. Never cancel a running `publish` job.
+   **with a merge commit**, once the author has enabled merge commits for release pull requests —
+   no currently enabled merge method preserves the `candidateCommit` ancestry, so read
+   "Release pull requests require a merge commit" below before running this step.
+5. Tag the resulting `main` commit with an annotated `v<version>` carrying a body, and push it,
+   **immediately** after the merge and before anything else lands on `main`: the public lane
+   compares the tagged commit against the `origin/main` tip as the job reads it, not as it stood at
+   trigger time, so a push to `main` while a release run is queued behind the concurrency group
+   turns a legitimate release into a refusal. Approve `public-confirm`, then approve `publish`.
+   Never cancel a running `publish` job.
 6. Human: `-Finalize`, then the complete section-6 post-upload checklist.
 
 The pipeline stops at `SubmittedUnverified`. That is not delivery, and `-Finalize` is deliberately
@@ -684,8 +697,11 @@ in under that **same** Windows account; licensed Caves of Qud at
 `Tools/WorkshopSteam/sdk.lock.json`; .NET SDK 9.0.306 on the Windows PATH as `dotnet.exe`; a WSL2
 Ubuntu default distro under that same Windows account holding the gate toolchain; the registry root
 `C:\taf-workshop-state.dRBivM`; and both Workshop items subscribed on this client, because
-`-Verify` and `-Finalize` read a subscribed installation. Do **not** create a service account and
-do not plan to run the runner as a Windows service.
+`-Verify` and `-Finalize` read a subscribed installation. The runner account also needs **write
+access at the `C:` drive root**: stage 5 of `Tools/release-check.sh` changes directory to `/mnt/c`,
+and stage 8 creates and removes its boundary fixtures (`/mnt/c/taf-smoke.*` and
+`/mnt/c/taf-smoke.junction*`) there. Do **not** create a service account and do not plan to run the
+runner as a Windows service.
 
 1. **Create the run roots.** In PowerShell: `New-Item -ItemType Directory -Path 'C:\taf-release'`.
    Inside WSL: `mkdir -p ~/taf-release`. The run root must sit on a local, non-network drive with
@@ -757,7 +773,14 @@ do not plan to run the runner as a Windows service.
     WSL. Keep the run directory of every *submitted* attempt until its `-Finalize` has succeeded,
     because finalization needs the identical plan, package, receipt and paths. Delete only fully
     finalized or never-submitted run directories. Never touch the registry root.
-14. **Finalize by hand** from the retained run directory once Steam has delivered the update: run
+14. **The `verify` job may go red, and that is not a failed release.** It polls `-Verify` for up
+    to 20 minutes after submit, but Steam builds and delivers the new bytes on its own schedule and
+    may take longer. If it exhausts that budget, the submission still stands and no record was
+    written. Re-run **only that job** — "Re-run failed jobs" — once Steam reports the update live.
+    Never use "Re-run all jobs": that re-takes the environment approval, re-burns the multi-hour
+    licensed gate, and then stops at the retained-attempt fence. Verifying by hand from the
+    retained run directory is equally valid.
+15. **Finalize by hand** from the retained run directory once Steam has delivered the update: run
     the launcher named in `inputs\launcher-win.txt` with the same `-PlanPath`, `-PlanSHA`,
     `-ItemId`, `-ChangeNotePath` and `-ReceiptSHA` from `inputs\handoff.env`, a **new empty**
     `-EvidenceRoot`, and `-Finalize`. Success is exit 0 with `SubscribedInstallationVerified`,

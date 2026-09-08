@@ -114,8 +114,6 @@ jobs:
           fi
           # actions/checkout can leave an annotated tag as a lightweight ref; refetch tags by force.
           git fetch --force --tags --no-recurse-submodules --quiet origin
-          git fetch --no-tags --quiet origin '+refs/heads/main:refs/remotes/origin/main'
-          git fetch --no-tags --quiet origin '+refs/heads/dev:refs/remotes/origin/dev'
 
           if [[ "$TAG" =~ ^v0\.3\.(0|[1-9][0-9]*)$ ]]; then
             LANE=public; MODE=alpha; ITEM="$PUBLIC_ITEM"; ENVIRONMENT=steam-workshop
@@ -139,10 +137,14 @@ jobs:
           # Public: the tagged commit must BE the release-only branch tip, not merely an ancestor of
           # it, so an older main commit that still carries the new manifest version cannot be tagged
           # by mistake. Staging: the private-metadata commit lives on the dev integration branch.
+          # Each lane fetches only the branch it is judged against, so a rename or removal of the
+          # integration branch can never fail a public release for an unrelated reason.
           if [ "$LANE" = "public" ]; then
+            git fetch --no-tags --quiet origin '+refs/heads/main:refs/remotes/origin/main'
             MAIN_TIP="$(git rev-parse origin/main)"
             [ "$COMMIT" = "$MAIN_TIP" ] || { echo "public tag $TAG points at $COMMIT but origin/main tip is $MAIN_TIP; the public lane releases the main tip only" >&2; exit 2; }
           else
+            git fetch --no-tags --quiet origin '+refs/heads/dev:refs/remotes/origin/dev'
             git merge-base --is-ancestor "$COMMIT" origin/dev || { echo "staging tag $TAG is not reachable from origin/dev" >&2; exit 2; }
           fi
 
@@ -272,6 +274,13 @@ jobs:
           # then the audit itself.
           git diff --check "$(git hash-object -t tree /dev/null)" HEAD
           ./Tools/portable-check.sh
+          # portable-check.sh runs check-structure.py in --report mode only, and workshop-package.sh
+          # gates the structural review behind its non-test modes, so without this line the STAGING
+          # lane would pass every hosted check, take an environment approval, occupy the attended
+          # Steam host and only fail at stage 11 of the multi-hour licensed gate. This is the same
+          # command Tools/release-check.sh stage 11 runs there; it is pure Python, needs no licensed
+          # data, and costs seconds. Refresh docs/STRUCTURE_REVIEW.json when C# sources change.
+          python3 Tools/check-structure.py --release
 
       - name: reproduce the package from HEAD blobs and record the receipt digest
         id: package
@@ -537,7 +546,17 @@ jobs:
           mkdir -p "$BUILD_PARENT"
           chmod 700 "$BUILD_PARENT"
           BUILD_PKG="$BUILD_PARENT/$NAME"
-          ./Tools/workshop-package.sh "--$TAF_MODE" "$BUILD_PKG"
+          # The packager's own success block prints "root:" and "hashes:" as absolute ext4 paths
+          # under $HOME, and its refusal paths name the same ancestors on stderr. Capture BOTH
+          # streams to a file and publish only a digest, exactly as 02-gate.sh does for the gate:
+          # this public step log must never carry the maintainer's WSL account name, and the
+          # redaction pass at the end of this job rewrites files under the host run directory only,
+          # never anything already written to a GitHub step log.
+          ./Tools/workshop-package.sh "--$TAF_MODE" "$BUILD_PKG" > "$RUN_WSL/logs/package.log" 2>&1 || {
+            echo "packaging failed; read $RUN_WSL/logs/package.log on the Steam host" >&2; exit 2; }
+          grep -qxF "WORKSHOP PACKAGE CLEAN" "$RUN_WSL/logs/package.log" || {
+            echo "packager did not print its clean marker" >&2; exit 2; }
+          echo "package: log sha256 $(sha256sum "$RUN_WSL/logs/package.log" | cut -d" " -f1)"
           BUILD_RECEIPT_SHA="$(sha256sum "$BUILD_PKG.sha256" | cut -d" " -f1)"
           [ "$BUILD_RECEIPT_SHA" = "$TAF_EXPECTED_RECEIPT_SHA" ] || { echo "ext4 receipt digest $BUILD_RECEIPT_SHA differs from the hosted reproduction $TAF_EXPECTED_RECEIPT_SHA" >&2; exit 2; }
 
@@ -546,6 +565,9 @@ jobs:
           [ ! -e "$DEST_PKG" ] && [ ! -e "$DEST_PKG.sha256" ] || { echo "native package destination already exists" >&2; exit 2; }
           cp -R -- "$BUILD_PKG" "$DEST_PKG"
           cp -- "$BUILD_PKG.sha256" "$DEST_PKG.sha256"
+          # Flush before verifying, so the checks below read what DrvFs actually holds rather than
+          # what the 9p page cache still remembers from the copy that just finished.
+          sync
 
           COPY_RECEIPT_SHA="$(sha256sum "$DEST_PKG.sha256" | cut -d" " -f1)"
           [ "$COPY_RECEIPT_SHA" = "$TAF_EXPECTED_RECEIPT_SHA" ] || { echo "copied receipt digest $COPY_RECEIPT_SHA differs from the hosted reproduction" >&2; exit 2; }
@@ -771,9 +793,9 @@ jobs:
             $t = [regex]::Replace($t, '(?i)(\bSteam[ \t]{0,8}ID[ \t]{0,8}[:=][ \t]{0,8})[0-9]{1,20}(?![0-9])', '${1}[REDACTED]')
             $t = [regex]::Replace($t, '\b7656119[0-9]{10}\b', '[REDACTED-STEAMID64]')
             $t = [regex]::Replace($t, '(?i)([A-Za-z]):\\Users\\[^\\\r\n"'']+', '${1}:\Users\[REDACTED]')
-            $t = [regex]::Replace($t, '(?i)/mnt/([a-z])/Users/[^/\r\n"'' ]+', '/mnt/${1}/Users/[REDACTED]')
+            $t = [regex]::Replace($t, '(?i)/mnt/([a-z])/Users/[^/\r\n"'']+', '/mnt/${1}/Users/[REDACTED]')
             $t = [regex]::Replace($t, '(?i)\\\\wsl(\$|\.localhost)\\[^\\\r\n]+\\home\\[^\\\r\n]+', '\\wsl.localhost\[REDACTED]\home\[REDACTED]')
-            $t = [regex]::Replace($t, '/home/[^/\r\n"'' ]+', '/home/[REDACTED]')
+            $t = [regex]::Replace($t, '/home/[^/\r\n"'']+', '/home/[REDACTED]')
             [IO.File]::WriteAllText($_.FullName, $t, $utf8)
           }
           $count = (Get-ChildItem -LiteralPath $art -Recurse -File | Measure-Object).Count
@@ -789,7 +811,9 @@ jobs:
     needs: [release-checks, publish]
     if: ${{ !cancelled() && needs.publish.result == 'success' }}
     runs-on: [self-hosted, windows, taf-steam]
-    timeout-minutes: 30
+    # 20-minute polling budget, plus one in-flight launcher run (each mode recompiles its helper
+    # inside a 210-second budget), plus redaction. Raise both together or neither.
+    timeout-minutes: 40
     defaults:
       run:
         shell: powershell
@@ -804,34 +828,58 @@ jobs:
           if ([string]::IsNullOrWhiteSpace($run) -or -not (Test-Path -LiteralPath $run -PathType Container)) {
             throw "publish run directory is missing: '$run'"
           }
-          $evidence = Join-Path $run "evidence-verify-$env:GITHUB_RUN_ATTEMPT"
-          if (Test-Path -LiteralPath $evidence) { throw "verification evidence directory already exists: $evidence" }
-          New-Item -ItemType Directory -Path $evidence | Out-Null
           $launcher = (Get-Content -LiteralPath (Join-Path $run 'inputs\launcher-win.txt') -Raw).Trim()
           $handoff = ConvertFrom-StringData (Get-Content -LiteralPath (Join-Path $run 'inputs\handoff.env') -Raw)
           $quote = { param($s) '"' + $s + '"' }
-          $argLine = @('-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File', (& $quote $launcher),
-            '-QudRoot', (& $quote $env:TAF_QUD_ROOT_WIN),
-            '-PlanPath', (& $quote (Join-Path $run 'inputs\plan.json')), '-PlanSHA', $handoff.PLAN_SHA,
-            '-ItemId', $env:TAF_ITEM,
-            '-ChangeNotePath', (& $quote (Join-Path $run 'inputs\change-note.md')),
-            '-ReceiptSHA', $handoff.RECEIPT_SHA,
-            '-EvidenceRoot', (& $quote $evidence), '-Verify') -join ' '
-          $out = Join-Path $run "logs\launcher-verify-$env:GITHUB_RUN_ATTEMPT.stdout"
-          $err = Join-Path $run "logs\launcher-verify-$env:GITHUB_RUN_ATTEMPT.stderr"
-          $proc = Start-Process -FilePath 'powershell.exe' -ArgumentList $argLine -NoNewWindow -Wait -PassThru `
-            -RedirectStandardOutput $out -RedirectStandardError $err
-          $report = $null
-          $reportPath = Join-Path $evidence 'upload.stdout'
-          if (Test-Path -LiteralPath $reportPath) {
-            $json = Get-Content -LiteralPath $reportPath | Where-Object { $_ -match '^\s*\{' } | Select-Object -Last 1
-            if ($json) { $report = $json | ConvertFrom-Json }
+
+          # -Verify reads the locally SUBSCRIBED installation. Steam has NOT built and delivered the
+          # new bytes at the moment SUBMIT returns, so a single immediate attempt reports a failed
+          # workflow run for every genuine release - on a lane whose doctrine is "do not re-run this
+          # workflow for that tag", with "Re-run all jobs" one click from "Re-run failed jobs".
+          # Poll instead, on a bounded budget. This is safe to repeat: PUBLISHING.md records that
+          # -Verify writes no installation or finalization records, and each attempt gets its own
+          # fresh empty -EvidenceRoot as the launcher requires.
+          $budget = New-TimeSpan -Minutes 20
+          $interval = New-TimeSpan -Seconds 120
+          $started = Get-Date
+          $attempt = 0
+          $status = '<no report>'
+          $exitCode = -1
+          $passed = $false
+          while (-not $passed) {
+            $attempt++
+            $evidence = Join-Path $run "evidence-verify-$env:GITHUB_RUN_ATTEMPT-$attempt"
+            if (Test-Path -LiteralPath $evidence) { throw "verification evidence directory already exists: $evidence" }
+            New-Item -ItemType Directory -Path $evidence | Out-Null
+            $argLine = @('-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File', (& $quote $launcher),
+              '-QudRoot', (& $quote $env:TAF_QUD_ROOT_WIN),
+              '-PlanPath', (& $quote (Join-Path $run 'inputs\plan.json')), '-PlanSHA', $handoff.PLAN_SHA,
+              '-ItemId', $env:TAF_ITEM,
+              '-ChangeNotePath', (& $quote (Join-Path $run 'inputs\change-note.md')),
+              '-ReceiptSHA', $handoff.RECEIPT_SHA,
+              '-EvidenceRoot', (& $quote $evidence), '-Verify') -join ' '
+            $out = Join-Path $run "logs\launcher-verify-$env:GITHUB_RUN_ATTEMPT-$attempt.stdout"
+            $err = Join-Path $run "logs\launcher-verify-$env:GITHUB_RUN_ATTEMPT-$attempt.stderr"
+            $proc = Start-Process -FilePath 'powershell.exe' -ArgumentList $argLine -NoNewWindow -Wait -PassThru `
+              -RedirectStandardOutput $out -RedirectStandardError $err
+            $report = $null
+            $reportPath = Join-Path $evidence 'upload.stdout'
+            if (Test-Path -LiteralPath $reportPath) {
+              $json = Get-Content -LiteralPath $reportPath | Where-Object { $_ -match '^\s*\{' } | Select-Object -Last 1
+              if ($json) { $report = $json | ConvertFrom-Json }
+            }
+            $status = if ($report) { $report.status } else { '<no report>' }
+            $exitCode = $proc.ExitCode
+            $passed = ($exitCode -eq 0 -and $status -eq 'SubscribedInstallationVerified')
+            Write-Host "verify attempt ${attempt}: exit $exitCode status $status"
+            if ($passed) { break }
+            if (((Get-Date) - $started) + $interval -ge $budget) { break }
+            Start-Sleep -Seconds ([int]$interval.TotalSeconds)
           }
-          $status = if ($report) { $report.status } else { '<no report>' }
-          Write-Host "verify: exit $($proc.ExitCode) status $status"
-          [IO.File]::AppendAllText($env:GITHUB_STEP_SUMMARY, "## -Verify`n`n- exit $($proc.ExitCode), status ``$status``. One subscribed client only; freshTransferVerified and releaseReady stay false by design.`n")
-          if ($proc.ExitCode -ne 0 -or $status -ne 'SubscribedInstallationVerified') {
-            throw "Installed verification did not pass (exit $($proc.ExitCode), $status). The submission still stands and no record was written; re-run this job after Steam has delivered the update, or verify by hand from the retained run directory."
+          $waited = [int]((Get-Date) - $started).TotalMinutes
+          [IO.File]::AppendAllText($env:GITHUB_STEP_SUMMARY, "## -Verify`n`n- exit $exitCode, status ``$status`` after $attempt attempt(s) over ~$waited min. One subscribed client only; freshTransferVerified and releaseReady stay false by design.`n")
+          if (-not $passed) {
+            throw "Installed verification did not pass within the $($budget.TotalMinutes)-minute budget (last: exit $exitCode, $status). Steam may simply not have delivered the update yet. The submission still stands and NO record was written. Re-run ONLY this job (Re-run failed jobs) once Steam reports the update live - never Re-run all jobs, which would re-take the environment approval, re-burn the licensed gate, and stop at the retained-attempt fence. Verifying by hand from the retained run directory is equally valid."
           }
 
       - name: redact the verification evidence into the host run directory (no upload)
@@ -845,15 +893,20 @@ jobs:
           }
           $art = Join-Path $run 'artifact'
           New-Item -ItemType Directory -Path $art -Force | Out-Null
-          $evidence = Join-Path $run "evidence-verify-$env:GITHUB_RUN_ATTEMPT"
+          # The verify step polls, so there is one evidence directory and one stdout/stderr pair per
+          # polling attempt. Collect them all; a failed run's last attempt is the interesting one.
           $sources = @()
-          foreach ($f in @('upload.stdout','upload.stderr','build.log')) {
-            $p = Join-Path $evidence $f
-            if (Test-Path -LiteralPath $p -PathType Leaf) { $sources += $p }
+          Get-ChildItem -LiteralPath $run -Directory -Filter "evidence-verify-$env:GITHUB_RUN_ATTEMPT-*" -ErrorAction SilentlyContinue | ForEach-Object {
+            foreach ($f in @('upload.stdout','upload.stderr','build.log')) {
+              $p = Join-Path $_.FullName $f
+              if (Test-Path -LiteralPath $p -PathType Leaf) { $sources += $p }
+            }
           }
-          foreach ($f in @("launcher-verify-$env:GITHUB_RUN_ATTEMPT.stdout", "launcher-verify-$env:GITHUB_RUN_ATTEMPT.stderr")) {
-            $p = Join-Path $run ('logs\' + $f)
-            if (Test-Path -LiteralPath $p -PathType Leaf) { $sources += $p }
+          $logs = Join-Path $run 'logs'
+          if (Test-Path -LiteralPath $logs -PathType Container) {
+            Get-ChildItem -LiteralPath $logs -File -Filter "launcher-verify-$env:GITHUB_RUN_ATTEMPT-*" -ErrorAction SilentlyContinue | ForEach-Object {
+              $sources += $_.FullName
+            }
           }
           $utf8 = New-Object Text.UTF8Encoding($false)
           foreach ($src in $sources) {
@@ -861,10 +914,11 @@ jobs:
             $t = [regex]::Replace($t, '(?i)(\bSteam[ \t]{0,8}ID[ \t]{0,8}[:=][ \t]{0,8})[0-9]{1,20}(?![0-9])', '${1}[REDACTED]')
             $t = [regex]::Replace($t, '\b7656119[0-9]{10}\b', '[REDACTED-STEAMID64]')
             $t = [regex]::Replace($t, '(?i)([A-Za-z]):\\Users\\[^\\\r\n"'']+', '${1}:\Users\[REDACTED]')
-            $t = [regex]::Replace($t, '(?i)/mnt/([a-z])/Users/[^/\r\n"'' ]+', '/mnt/${1}/Users/[REDACTED]')
+            $t = [regex]::Replace($t, '(?i)/mnt/([a-z])/Users/[^/\r\n"'']+', '/mnt/${1}/Users/[REDACTED]')
             $t = [regex]::Replace($t, '(?i)\\\\wsl(\$|\.localhost)\\[^\\\r\n]+\\home\\[^\\\r\n]+', '\\wsl.localhost\[REDACTED]\home\[REDACTED]')
-            $t = [regex]::Replace($t, '/home/[^/\r\n"'' ]+', '/home/[REDACTED]')
-            $dst = Join-Path $art ("verify-$env:GITHUB_RUN_ATTEMPT-" + [IO.Path]::GetFileName($src))
+            $t = [regex]::Replace($t, '/home/[^/\r\n"'']+', '/home/[REDACTED]')
+            # Prefix with the containing directory so per-attempt upload.stdout files cannot collide.
+            $dst = Join-Path $art ([IO.Path]::GetFileName([IO.Path]::GetDirectoryName($src)) + '-' + [IO.Path]::GetFileName($src))
             [IO.File]::WriteAllText($dst, $t, $utf8)
           }
           Write-Host "redacted $($sources.Count) verification files under $art"

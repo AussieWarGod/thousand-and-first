@@ -28,9 +28,10 @@ policy, enforced by the required status checks, linear history and `enforce_admi
 ON. Required checks (repository-audit, plus the full pure and portable test lanes on
 `ubuntu-latest` and `windows-latest`, strict), linear history, no force-push, no deletion and
 required conversation resolution all remain. `dev` now exists on origin, is the repository default
-branch, and is protected with the same three required checks, linear history and no
-force-push/deletion, but with `enforce_admins` off and without the strict up-to-date requirement,
-so the branch model in [RELEASING.md](RELEASING.md#branch-model) is in force rather than proposed.
+branch, and is protected with the same three required checks, linear history, required
+conversation resolution and no force-push/deletion, but with `enforce_admins` off and without the
+strict up-to-date requirement, so the branch model in
+[RELEASING.md](RELEASING.md#branch-model) is in force rather than proposed.
 Earlier sections below record the pre-merge state at their own checkpoints and are not restated
 here.
 

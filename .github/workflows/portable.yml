@@ -1,6 +1,8 @@
 name: Portable checks
 
-on:
+# Quoted so a YAML 1.1 loader reads the key as the string "on" rather than the boolean True,
+# matching .github/workflows/release.yml.
+"on":
   push:
     # Release tags run .github/workflows/release.yml, which repeats this exact job as its
     # `portable-tests` matrix. Skipping them here avoids a duplicate run on every tag push.
