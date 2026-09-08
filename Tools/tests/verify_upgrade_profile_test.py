@@ -79,7 +79,9 @@ class VerifyUpgradeProfileTest(unittest.TestCase):
     def test_retained_source_and_approved_producer_are_not_optional(self):
         source = (TOOLS / "verify-upgrade-profile.py").read_text()
         for token in ('parser.add_argument("--source", required=True',
-                      'authenticate_source(args.repo, args.source, source_mode, source_pin)',
+                      'authenticate_source(args.repo, args.source, source_mode, source_pin,',
+                      'game=args.game',
+                      'after_state.get("donorAuthority") == source_state.get("donorAuthority")',
                       'source_config["probe"] == (args.source_probe_pin or args.candidate)',
                       'source_snapshot == extra["scenario-load-snapshot.txt"]',
                       'source_request == extra["scenario-load.txt"]',

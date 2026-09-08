@@ -1,0 +1,11 @@
+# Only prepare-upgrade-profile.py stage-source seals the candidate marker and native receipts.
+# Kept outside the ordinary persona matrix: its source marker is dedicated sealed input.
+# Actual founding, ordinary advance, canonical automatic stage, then real Primary save.
+DESCRIPTION=current empty-camp schema-2 stage and save for an isolated old-reader check
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;upgrade-stage-setup;advance 2400;upgrade-stage-save;stagedigest
+VERBS=upgrade-stage-setup,upgrade-stage-save
+EXPECT=stagedigest:OK~founded=false,upgrade-stage-setup:OK~native-upgrade-stage phase=setup,advance:OK,upgrade-stage-save:OK~native-upgrade-stage cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
+SET=upgrade,native-regression
+TIMEOUT=600
