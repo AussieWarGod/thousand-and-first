@@ -101,7 +101,7 @@ namespace ThousandAndFirst.Harness
 				&& StoreWater.Volume == StoredDrams && KingdomLiquids.HasFreshWater(StoreWater),
 				"the fixture store did not receive its exact fresh water");
 			Require(Store.GetIntProperty("KingdomStores") == 1
-				&& ReferenceEquals(Store.CurrentZone, Zone)
+				&& ReferenceEquals(Store.CurrentZone, Zone) && !string.IsNullOrEmpty(Store.IDIfAssigned)
 				&& !KingdomMaterials.IsStockpile(Store) && StoredDrams > KingdomBountyRules.MaxPrice,
 				"the funded store is not a dedicated vessel that can cover the posted price");
 		}
@@ -174,7 +174,8 @@ namespace ThousandAndFirst.Harness
 			data.PileId = Pile.ID;
 			Pile.SetStringProperty(KingdomBounty.FetchMarkProperty, Notice.ID);
 			Require(Pile.GetStringProperty(KingdomBounty.FetchMarkProperty) == NoticeId
-				&& data.PileId == PileId && !string.IsNullOrEmpty(NoticeId),
+				&& data.PileId == PileId && !string.IsNullOrEmpty(NoticeId)
+				&& !string.IsNullOrEmpty(PileId) && !string.IsNullOrEmpty(DestinationId),
 				"the fetch mark did not bind the exact notice");
 			Require(!data.LifecycleQuarantined && data.TransferPhase == 0 && data.TransferredUnits == 0
 				&& string.IsNullOrEmpty(data.WorkerName) && data.DueTick == 0L && !data.Done
@@ -183,16 +184,27 @@ namespace ThousandAndFirst.Harness
 				"the staked notice already carries worker, transfer, payment or completion state");
 		}
 
+		// One exact, unstacked row in one exact container, mirroring the shipped stockpile grant
+		// (KingdomQuickstartBootstrap.TryPrepareMaterial). NoStack is passed because Stacker's
+		// AddedToInventoryEvent handler otherwise merges a stackable row into a neighbour and
+		// obliterates the body this fixture holds. The engine's return value proves nothing on its
+		// own: Inventory.AddObject hands the same reference back un-added for an untakeable,
+		// graveyard or invalid object, so the custody is re-read from the object and from the
+		// container's own row list afterwards.
 		private GameObject Stow(GameObject container, string blueprint, int wanted,
 			out string id, out int count)
 		{
 			GameObject item = Create(blueprint);
 			if (wanted > 1 && item.GetPart<Stacker>() != null) item.Count = wanted;
-			Require(ReferenceEquals(container.Inventory.AddObject(item, Silent: true, NoStack: true), item),
-				"fixture stow substituted the stowed object");
+			Require(item.Count == wanted, "a stowed stack cannot carry its exact count");
+			GameObject accepted = container.Inventory.AddObject(item, null, Silent: true, NoStack: true);
+			Require(ReferenceEquals(accepted, item), "fixture stow substituted the stowed object");
 			id = item.IDIfAssigned; count = item.Count;
-			Require(!string.IsNullOrEmpty(id) && count > 0 && item.InInventory == container
-				&& item.CurrentCell == null, "fixture stow lacks exact container custody");
+			Require(!string.IsNullOrEmpty(id) && id == item.ID && count == wanted,
+				"fixture stow lost the stowed identity or count");
+			Require(ReferenceEquals(item.InInventory, container) && item.CurrentCell == null
+				&& container.Inventory.Objects.Contains(item),
+				"fixture stow lacks exact container custody");
 			return item;
 		}
 
@@ -202,6 +214,16 @@ namespace ThousandAndFirst.Harness
 			Require(GameObject.Validate(result) && result.Blueprint == blueprint
 				&& result.CurrentCell == null && result.InInventory == null && Owned.Count < 16,
 				"factory returned foreign identity or custody: " + blueprint);
+			// Nothing in the engine's factory, cell placement, inventory or lookup path ever writes
+			// the durable "id" property: GameObject.ID mints it on first read, while IDIfAssigned
+			// and IDMatch only read it back. An unminted body is invisible to the shipped pass -
+			// KingdomBounty.Carry breaks off the haul when the item, the pile or the stockpile
+			// reads an empty IDIfAssigned, TryPaymentPlan refuses a store with no id, and this
+			// fixture's own observers compare recorded ids - so every fixture-owned body mints its
+			// identity here, once, before anything reads it.
+			string id = result.ID;
+			Require(!string.IsNullOrEmpty(id) && result.IDIfAssigned == id,
+				"factory body did not keep its own minted identity: " + blueprint);
 			Owned.Add(result);
 			return result;
 		}
