@@ -37,27 +37,32 @@ below it.
   reason. It never stamps completion and never publishes a receipt it did not measure. The lots
   are staked before the stores are granted, so that refusal also costs that world its casks,
   larder, materials chest and advisor, not just a row.
-- No new receipt field and no receipt wire change; the reservation is an owned object property
-  registered in the removal-coverage allowlist. Saves whose receipt has already advanced past
-  Reserved never run this branch: they keep their old behaviour and simply have no rows, and the
-  completion notice counts the claims standing on the ground rather than trusting the branch, so
-  it never promises one. A pre-existing save still at the Reserved phase does run the branch, on
-  ground the old narrower prepared-ground mask never bared; that resume is untested, and a
-  preflight refusal there would stop its bootstrap for good. Ordinary founding is untouched.
-  Public 0.3.1 is unchanged.
+- The obligation to stake is versioned onto the receipt rather than assumed of every save. A
+  receipt minted by this version carries a shelter obligation and is written under the wire tag
+  `q2`; the shipped `q1` shape is still written and still read, byte for byte, and the tag is
+  inside the digest, so no edit promotes an old receipt in place. Only a `q2` receipt owes its
+  founding pass a stake.
+- A pre-existing `q1` save therefore continues exactly as it did, at the Reserved phase as at any
+  later one: no stake is attempted on the 48 lot cells the older prepared-ground mask never bared,
+  so a preflight refusal there cannot cost that world its casks, larder, materials chest or
+  advisor. Such a save simply has no rows, and the completion notice counts the claims standing on
+  the ground rather than trusting the branch that ran, so it never promises one. The reservation on
+  a staked lot remains an owned object property registered in the removal-coverage allowlist.
+  Ordinary founding is untouched. Public 0.3.1 is unchanged.
 
 > **Current unreleased census — exact structural gate passed.** Current 3053-file census is line-cap green:
-> 432,564 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> 432,593 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1418 files, 0 of them over the line limit. Inventory SHA-256:
-> `f5571291a26a1bd1db608f0d1c3f79ed296569bddce4979208cb564f8c22df63`.
+> `d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0`.
 > The generated cold-install inventory contains 3084 files; no new subscription claim.
-> The tent-row delta over the merged `dev` census below is one added and four modified production
+> The tent-row delta over the merged `dev` census below is one added and six modified production
 > sources: the quickstart bootstrap's shelter partial, the quickstart rules, the bootstrap, the camp
-> builder and the generated removal coverage. It compiled clean in the staged baseline (3049
-> sources) and staged compatibility (3053 sources) modes only, on Linux with the SDK Roslyn against
-> the installed managed assemblies rather than through `Tools/gate.sh`; both engine-free suites run
-> green there (13,831 main/5,120 Portable,zero skips) and the repository audit passes.
+> builder, the generated removal coverage, the quickstart receipt model and its wire codec. It
+> compiled clean in the staged baseline (3049 sources) and staged compatibility (3053 sources)
+> modes only, on Linux with the SDK Roslyn against the installed managed assemblies rather than
+> through `Tools/gate.sh`; both engine-free suites run green there (13,834 main/5,123 Portable,zero
+> skips) and the repository audit passes.
 > NOT run for it: the two dev-harness compile modes, the installed-Hearthpyre source step, the
 > Windows gate, the developer boot matrix and any native in-game run. The 1,700-tick raising figure
 > is a reading of the raising rule, not of a running plot clock. The exact-inventory human semantic

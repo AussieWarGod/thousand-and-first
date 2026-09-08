@@ -302,6 +302,81 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void AnOldShapeReceiptKeepsItsExactWireAndOwesNoShelterStake()
+		{
+			// A v0.3.1 world was built with the narrower prepared-ground mask, so its 48 shelter
+			// cells were never bared and the authored-ground preflight may lawfully refuse a stake
+			// there. Such a save resumed at Reserved must continue exactly as it did, or it loses
+			// its casks, larder, materials chest and advisor to a roof it was never promised.
+			string wire = LegacyReservedWire("marsh", "JoppaWorld.8.22.1.1.10");
+			Assert.That(KingdomQuickstartRules.TryDecode(wire,
+				out KingdomQuickstartReceipt old), Is.True);
+			Assert.That(old.Phase, Is.EqualTo(KingdomQuickstartPhase.Reserved));
+			Assert.That(old.ProfileKey, Is.EqualTo("marsh"));
+			ClassicAssert.IsFalse(old.ShelterObligation);
+			// Re-encoded byte for byte: an old save that resumes and advances keeps writing the
+			// shape its own version wrote, and never acquires the obligation on the way through.
+			Assert.That(KingdomQuickstartRules.Encode(old), Is.EqualTo(wire));
+			KingdomQuickstartReceipt founded = Advance(old, KingdomQuickstartPhase.Founded,
+				"Watervine");
+			ClassicAssert.IsFalse(founded.ShelterObligation);
+			StringAssert.StartsWith("q1|", KingdomQuickstartRules.Encode(founded));
+			// The tag is inside the digest, so no edit can promote an old receipt in place.
+			Assert.That(KingdomQuickstartRules.TryDecode("q2" + wire.Substring(2), out _),
+				Is.False);
+		}
+
+		[Test]
+		public void AReceiptThisVersionMintsCarriesTheShelterObligationThroughEveryPhase()
+		{
+			Assert.That(KingdomQuickstartRules.TryCreateReceipt("canyon",
+				"JoppaWorld.14.17.1.1.10", out KingdomQuickstartReceipt receipt), Is.True);
+			ClassicAssert.IsTrue(receipt.ShelterObligation);
+			string wire = KingdomQuickstartRules.Encode(receipt);
+			StringAssert.StartsWith("q2|", wire);
+			Assert.That(wire, Is.Not.EqualTo(LegacyReservedWire("canyon",
+				"JoppaWorld.14.17.1.1.10")));
+			Assert.That(KingdomQuickstartRules.TryDecode(wire,
+				out KingdomQuickstartReceipt decoded), Is.True);
+			ClassicAssert.IsTrue(decoded.ShelterObligation);
+			receipt = Advance(decoded, KingdomQuickstartPhase.Founded, "Watervine");
+			receipt = Advance(receipt, KingdomQuickstartPhase.WaterStocked, "water-id");
+			ClassicAssert.IsTrue(receipt.ShelterObligation);
+			Assert.That(KingdomQuickstartRules.TryDecode(
+				KingdomQuickstartRules.Encode(receipt),
+				out KingdomQuickstartReceipt advanced), Is.True);
+			ClassicAssert.IsTrue(advanced.ShelterObligation);
+			// One phase's identity is frozen per advance; the obligation is not one of them and
+			// cannot be gained or shed by advancing.
+			Assert.That(advanced.WaterObjectId, Is.EqualTo("water-id"));
+		}
+
+		[Test]
+		public void TheFoundingStakeIsOwedOnlyByReceiptsMintedWithTheBaredLots()
+		{
+			string bootstrap = TestMain.ReadRepositoryText(
+				"World/KingdomQuickstartBootstrap.cs");
+			int guard = bootstrap.IndexOf("if (receipt.ShelterObligation",
+				StringComparison.Ordinal);
+			int stake = bootstrap.IndexOf("TryStakeShelter(system, zone, out Failure)",
+				StringComparison.Ordinal);
+			Assert.That(guard, Is.GreaterThanOrEqualTo(0));
+			Assert.That(stake, Is.GreaterThan(guard));
+			// The obligation is minted with the receipt, next to the mask that bares the ground.
+			string rules = TestMain.ReadRepositoryText("Core/KingdomQuickstartRules.cs");
+			int create = rules.IndexOf("public static bool TryCreateReceipt(",
+				StringComparison.Ordinal);
+			Assert.That(create, Is.GreaterThanOrEqualTo(0));
+			StringAssert.Contains("ShelterObligation = true", rules.Substring(create));
+			// The old tag is still written and still read, and the two tags are distinct.
+			string codec = TestMain.ReadRepositoryText("Core/KingdomQuickstartReceiptCodec.cs");
+			StringAssert.Contains("LegacyWireTag = \"q1\"", codec);
+			StringAssert.Contains("ShelterWireTag = \"q2\"", codec);
+			StringAssert.Contains("Receipt.ShelterObligation ? ShelterWireTag : LegacyWireTag",
+				codec);
+		}
+
+		[Test]
 		public void GrantMarkerIsStableAcrossPublicationAndBoundToRoleAndGround()
 		{
 			KingdomQuickstartRules.TryCreateReceipt("marsh", "JoppaWorld.8.22.1.1.10",
@@ -652,6 +727,29 @@ namespace ThousandAndFirst.Tests
 			Assert.That(KingdomQuickstartRules.TryAdvance(current, next, value, advisor,
 				out KingdomQuickstartReceipt advanced), Is.True, next.ToString());
 			return advanced;
+		}
+
+		/// <summary>
+		/// One v0.3.1 Reserved receipt, rebuilt from the shipped ten-field body and its own
+		/// SHA-256 rather than through the current encoder, so this fixture cannot agree with a
+		/// mistake in the code it exists to constrain.
+		/// </summary>
+		private static string LegacyReservedWire(string profile, string zone)
+		{
+			string body = "q1|" + Field(profile) + "|" + Field(zone) + "|0|" + Field("")
+				+ "|" + Field("") + "|" + Field("") + "|" + Field("") + "|0|" + Field("");
+			byte[] digest;
+			using (var sha = System.Security.Cryptography.SHA256.Create())
+				digest = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(body));
+			var text = new System.Text.StringBuilder(64);
+			foreach (byte value in digest)
+				text.Append(value.ToString("x2", System.Globalization.CultureInfo.InvariantCulture));
+			return body + "|" + text;
+		}
+
+		private static string Field(string value)
+		{
+			return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(value ?? ""));
 		}
 
 		private static int Count(string text, string fragment)

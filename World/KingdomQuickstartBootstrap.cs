@@ -147,7 +147,12 @@ namespace ThousandAndFirst
 				if (!VerifyFounded(system, zone, profile, out Failure)) return false;
 				// Two tent-row lots, staked on the founded ground before the receipt moves: without
 				// a standing roof nobody joins, and nothing commissioned rises while nobody has.
-				if (!TryStakeShelter(system, zone, out Failure)) return false;
+				// Only a receipt minted by this version carries that obligation. A receipt written
+				// before the lots existed resumes here on ground the older prepared-ground mask
+				// never bared, where the authored-ground preflight may lawfully refuse; its water,
+				// larder, materials and advisor must not be lost to a roof it was never promised.
+				if (receipt.ShelterObligation
+					&& !TryStakeShelter(system, zone, out Failure)) return false;
 				string crop = KingdomData.CropForStyle(system.Style);
 				if (string.IsNullOrEmpty(crop)
 					|| GameObjectFactory.Factory.GetBlueprintIfExists(crop) == null)

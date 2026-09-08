@@ -157,7 +157,10 @@ namespace ThousandAndFirst
 			{
 				ProfileKey = profile.Key,
 				ZoneId = profile.ZoneId,
-				Phase = KingdomQuickstartPhase.Reserved
+				Phase = KingdomQuickstartPhase.Reserved,
+				// This version bares the shelter lots when it builds the world, so a receipt it
+				// mints owes them a stake. Older receipts carry no such obligation and get none.
+				ShelterObligation = true
 			};
 			return Valid(Receipt);
 		}

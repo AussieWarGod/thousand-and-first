@@ -66,9 +66,11 @@ published arrival debt/opportunities, open Prepared/Intent/Proved clock leases, 
 continuation and field-clock evidence; successful results round-trip canonically. Stale
 owners, contradictory unbacked clocks, disabled states and overflow remain tested refusals.
 No fixture callback witness establishes actual physical creation, ordinary play or save/load.
-Current production digest `f5571291a26a1bd1db608f0d1c3f79ed296569bddce4979208cb564f8c22df63`
-passes the exact structural gate. For that digest the engine-free suites pass13,831 main/5,120
+Current production digest `d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0`
+passes the exact structural gate. For that digest the engine-free suites pass13,834 main/5,123
 Portable cases,zero skips, on Linux under the CI-pinned SDK9.0.306. The retained
+`f5571291a26a1bd1db608f0d1c3f79ed296569bddce4979208cb564f8c22df63` digest carried13,831 main/5,120
+Portable cases, zero skips. The retained
 `dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96` digest carried13,731 main/5,109
 Portable cases, zero skips, and Roslyn 9.0.306 on Linux compiled its staged baseline and staged
 compatibility sets clean against the licensed Managed references with warnings as errors. The
@@ -90,6 +92,10 @@ staged compatibility modes only, run on Linux with the SDK Roslyn against the in
 assemblies rather than through `Tools/gate.sh`; the two dev-harness modes, the installed-ABI
 source step, the Windows gate and the developer boot matrix are outstanding for it, and every
 timing claim about the staked rows remains a reading of `KingdomPlotRules.RaiseTicks`.
+The receipt wire tag that decides the founding stake is covered by codec cases only: an old-shape
+`q1` Reserved receipt decodes with no shelter obligation, re-encodes to the same bytes, keeps that
+answer through an advance, and refuses a tag edited in place. No native resumed pre-existing save
+witnesses it.
 [Native/focused evidence](/mnt/c/taf-master-growth-native.sP00c6/README.md).
 
 ## Retained real-turn recovery validation

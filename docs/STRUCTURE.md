@@ -21,15 +21,16 @@ python3 Tools/check-structure.py --release
 ## Current isolated draft census
 
 The Kingdom Quickstart tent rows over the empty-camp legacy correction report 3053 staged
-production C# files and 432,564 physical lines.
+production C# files and 432,593 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`f5571291a26a1bd1db608f0d1c3f79ed296569bddce4979208cb564f8c22df63`. The census reports
+`d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0`. The census reports
 1418 files with direct `XRL` imports; 0 of those exceed the line limit.
 
-The delta over the retained draft below is one added and four modified production sources and no
+The delta over the retained draft below is one added and six modified production sources and no
 removals: the quickstart bootstrap's shelter partial is the addition; the quickstart rules, the
-bootstrap, the camp builder and the generated removal coverage are the modifications. The staged
+bootstrap, the camp builder, the generated removal coverage, the quickstart receipt model and its
+wire codec are the modifications. The staged
 baseline (3049 sources) and staged compatibility (3053 sources) sets compile clean under Roslyn
 9.0.306 on Linux against the licensed Managed references with warnings as errors; the two
 dev-harness modes, the installed-Hearthpyre source step, the Windows gate and any native run did

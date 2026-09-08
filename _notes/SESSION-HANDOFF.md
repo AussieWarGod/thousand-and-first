@@ -2,16 +2,17 @@
 
 ## Current unreleased Kingdom Quickstart tent rows
 
-3053 staged sources;432,564 physical lines;1418 direct-XRL;zero cap failures;3084 generated
-cold-stage files. Exact inventory `f5571291a26a1bd1db608f0d1c3f79ed296569bddce4979208cb564f8c22df63`.
+3053 staged sources;432,593 physical lines;1418 direct-XRL;zero cap failures;3084 generated
+cold-stage files. Exact inventory `d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0`.
 Quickstart stakes two `tentrow` lots at founding, west of the supply column at (21,9)-(26,12) and
 (21,13)-(26,16); six beds between them, receiptless, free, and never debited. No receipt phase,
-wire, option, grant or verifier change; saves whose receipt already advanced past Reserved never
-run this branch and keep old behaviour, while a pre-existing save resumed at Reserved does run it
-on ground the old narrower mask never bared — untested, and a preflight refusal there would stop
-that bootstrap permanently.
-Structure, doc freshness, architecture and the Tools suite pass; engine-free suites pass13,831
-main/5,120 Portable,zero skips on Linux .NET9.0.306, and Roslyn 9.0.306 on Linux compiles the
+option, grant or verifier change. The receipt wire is versioned: a receipt this version mints
+carries the shelter obligation under tag `q2`, the shipped `q1` shape is still written and read
+byte for byte, and only a `q2` receipt owes a stake — so a pre-existing `q1` save resumed at any
+phase, Reserved included, keeps old behaviour and never stakes on ground the old narrower mask
+never bared. Codec and source-contract cases prove that; no native resumed save does.
+Structure, doc freshness, architecture and the Tools suite pass; engine-free suites pass13,834
+main/5,123 Portable,zero skips on Linux .NET9.0.306, and Roslyn 9.0.306 on Linux compiles the
 staged baseline (3049) and compatibility (3053) sets clean. NOT run: the two dev-harness modes,
 the installed-ABI source step, the Windows gate, the developer boot matrix and any native run.
 The 1,700-tick raising figure is a reading of `KingdomPlotRules.RaiseTicks`, not of a plot clock.

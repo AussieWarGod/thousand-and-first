@@ -31,6 +31,7 @@ Two tent rows are staked at founding, granted free: the stores above are unchang
 
 ## Safety and compatibility
 
+- A world started before this version keeps the opening it was given. Its receipt is the older shape, so no tent-row lots are staked for it and nothing it already holds is put at risk by the new ones.
 - The selected parasang is reserved before dynamic villages, lairs, or encounters claim it. Only the heart apron, supply approach, and the two shelter lots are prepared; the rest of the wilderness remains intact. Nearby danger is still possible.
 - Creatures, loose items, and liquid-bearing objects on required cells are relocated when safe. Stairs or an unsafe preparation result stop the bootstrap.
 - Kingdom Quickstart never offers legacy realm inheritance in the same world. Use another supported mode to test inheritance.
