@@ -688,7 +688,11 @@ What the machine asserts:
   on unclaimed ground attaches nothing and dispatches nothing. After a real founding and a second
   real activation, exactly one `KingdomClaimedGroundLight` stands with the seat's own
   `SettlementId`; after real rendered frames no cell reads below `LightLevel.Light`
-  (`Zone.GetLight`, `Cell.IsLit`), and no live zone outside `ClaimedZones` carries the part.
+  (`Zone.GetLight`, `Cell.IsLit`), and no live zone outside `ClaimedZones` carries the part. The
+  frames come from **`yield-frames 3`**, not from `advance`: see the frame-yield paragraph in the
+  unattended-runner section below for why an advance renders nothing at all, and for the one stall
+  state the primitive cannot cover. The check refuses unless the part's own `BeforeRenderEvent`
+  dispatch was bracketed at least once, so a run that drew no frame fails loudly.
 - **Guide.** The production advisor creator builds a real guide; its authored
   `ConversationScript.Blueprint` must carry the house farewell first and then the five pinned
   topics in `Core/KingdomQuickstartGuideRules.cs` order, each opening its own answer node with the
@@ -895,9 +899,10 @@ Running it (unattended - no keyboard beyond starting the game):
    edited. The script is written **before** the seal on purpose: an unattended run must execute
    sealed content, so a script dropped in afterwards fails the launcher's closed inventory.
    `TAF_SCENARIO_SCRIPT="ground flatten realize status"` chooses the verbs;
-   `TAF_SCENARIO_SCRIPT=none` seals no script and prepares an attended profile. One verb takes an
-   argument — `advance <turns>` — written as two shell words that `Tools/scenario_profile.py` folds
-   into one sealed line, refusing a count outside `1..10000`:
+   `TAF_SCENARIO_SCRIPT=none` seals no script and prepares an attended profile. Two verbs take an
+   argument — `advance <turns>` and `yield-frames <frames>` — written as two shell words that
+   `Tools/scenario_profile.py` folds into one sealed line, refusing a count outside `1..10000`
+   and `1..240` respectively:
    `TAF_SCENARIO_SCRIPT="flatten realize advance 1200 status"`.
    `TAF_REQUEST="arch-gallery-slice;facing=south"` chooses the request — the scenario key and its
    declared parameters, **without a seed**. The seed stays this script's to freeze, because it is
@@ -1027,6 +1032,41 @@ the code, never to the wording: `taf-advance-malformed-count`, `taf-advance-coun
 (the cap is 10000 per line), `taf-advance-no-driver`, `taf-advance-no-live-game`,
 `taf-advance-already-running`, `taf-advance-stalled`, `taf-advance-lost-player`.
 
+**`yield-frames <frames>`** is the one verb that spans **rendered frames**, for state that only a
+drawn frame produces — lighting, visibility, anything whose production code answers
+`BeforeRenderEvent`. It exists because `advance` structurally **cannot** deliver a frame: the
+per-frame dispatch lives inside `XRLCore.PlayerTurn`, `ActionManager.RunSegment` enters
+`PlayerTurn` only while the player still holds 1000 energy, and `advance` spends that energy on
+purpose so the engine never gets there. Two native runs proved it — a 2400-turn advance moved the
+clock in about four seconds and rendered **zero** frames. The engine's attended long waits do not
+help either: `RenderBase` returns early for `AutoAct.Setting` `"r"`, `"z"` and `"."`, which is
+every rest and CmdWaitN.
+
+The mechanism is a deliberate omission: `yield-frames` arms a counter and returns **without
+spending the action opportunity**, so `RunSegment` walks on into `PlayerTurn`, whose loop is the
+ordinary idle render loop a human sees while standing still — render a frame, `Keyboard.IdleWait()`
+for the throttle interval, render again. Two seams put the script back in control, both public
+engine extension points with nothing replaced: a **void Harmony postfix on
+`BeforeRenderEvent.Send`** counts the dispatch the observer actually cares about (only for the
+zone the yield armed on, so another zone's frame is never miscounted), and a callback registered
+through `XRLCore.RegisterOnEndPlayerTurnCallback` — one call per `PlayerTurn` iteration, on the
+game thread — spends the opportunity with the same `PassTurn()` `CmdWait` makes once the count is
+met. Energy below the threshold ends `PlayerTurn`'s loop and `RunSegment`'s, and the next segment
+brings the `BeginTakeActionEvent` the runner resumes on: the **same** continuation `advance`
+already uses. Rows are `yield-frames` (armed) and the bookkeeping `yield-frames-complete`, which
+names the count actually observed. Reason codes: `taf-frames-malformed-count`,
+`taf-frames-count-out-of-range` (the cap is 240 per line), `taf-frames-no-driver`,
+`taf-frames-no-live-game`, `taf-frames-already-running`, `taf-frames-advance-pending`,
+`taf-frames-stalled`, `taf-frames-lost-player`.
+
+**What it cannot cover.** A wall-clock deadline (120s) catches a render loop that stalls — the
+engine parks `PlayerTurn` on `while (!GameManager.focused)`, so a window that loses focus mid-run
+is a real stall — and an idle-opportunity counter catches a segment loop that never enters
+`PlayerTurn` at all. Neither seam can reach a `RunSegment` inner loop that both skips `PlayerTurn`
+and never spends the turn: nothing fires there, so only the persona's own `TIMEOUT` ends it. That
+is a visible timeout, never a silent pass. **This primitive has not yet run natively**; it is
+registered and compiled, and nothing here is evidence of a pass.
+
 `OK` and `REFUSED` come from each verb's own boolean, never from matching its prose. `REFUSED`
 means the verb declined to act; an ineligible verdict, an unhealthy roster, and an empty anchor
 store are **answers**, so they journal `OK`. The journal write is fail-open: a write that fails is
@@ -1040,7 +1080,8 @@ the seal closed, and no assertion re-reads the profile after the game starts.
 **Manual wish path (fallback).** Nothing above removes it. Prepare with
 `TAF_SCENARIO_SCRIPT=none`, or just keep using the wish in any profile: `kingdom:scenario` with
 `list`, `status`, `realize`, `anchor`, `ground`, `flatten`, `frame`, `stagedigest`, `resourcedigest`,
-`standingdigest`, `advance <turns>`, `arcology <entry|teaching|terrace|ward>`, or
+`standingdigest`, `advance <turns>`, `yield-frames <frames>`,
+`arcology <entry|teaching|terrace|ward>`, or
 `capture <anchor-id> <scenario-key>`. Verbs, text, and journal rows are identical either way -
 `Harness/KingdomScenarioWishes.cs` adds exactly one thing to the shared entry, the popup. That
 split is what makes the harness scriptable at all: a verb that blocked on a keypress could never
@@ -1319,8 +1360,9 @@ public sealed class MyProbes : IKingdomScenarioVerbProvider
 - **Sealing a third-party verb** needs it named for the profile that will run it:
   `TAF_SCENARIO_EXTRA_VERBS="myprobe,other"` on `Tools/prepare-scenario.sh`, or `VERBS=myprobe` in
   a persona. The base sealable set stays closed.
-- **Sealed third-party verbs take no argument yet.** `advance <turns>` is still the only counted
-  verb the script grammar folds into one line, so a provider verb is sealed as a bare name. Typed
+- **Sealed third-party verbs take no argument yet.** `advance <turns>` and
+  `yield-frames <frames>` are the only counted verbs the script grammar folds into one line, so a
+  provider verb is sealed as a bare name. Typed
   at the wish, `kingdom:scenario myprobe some argument` reaches `RunScenarioVerb` with
   `Argument = "some argument"` as normal — the limit is the sealed-script grammar, not the
   contract.

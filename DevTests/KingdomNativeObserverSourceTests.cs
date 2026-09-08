@@ -55,7 +55,11 @@ namespace ThousandAndFirst.Tests
 				StringAssert.Contains(token, provider);
 			foreach (string token in new[] { "__result", "return false;", "[HarmonyTranspiler]",
 				"__state" }) StringAssert.DoesNotContain(token, provider);
-			StringAssert.Contains("\"advance 2400\"", provider);
+			// The sealed script waits on RENDERED FRAMES, never on turns: the per-frame dispatch
+			// this observer brackets lives inside XRLCore.PlayerTurn, which an advance exists to
+			// keep the engine out of, so an advance here would bracket nothing at all.
+			StringAssert.Contains("\"yield-frames 3\"", provider);
+			StringAssert.DoesNotContain("advance ", provider);
 		}
 
 		/// <summary>The guide is built by the production creator and afterwards only read.</summary>

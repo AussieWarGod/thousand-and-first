@@ -10,7 +10,10 @@ namespace ThousandAndFirst.Harness
 {
 	/// <summary>
 	/// Unattended replacement for the attended claimed-ground light walk. Two verbs: the setup
-	/// founds and activates, the check reads the light the real render dispatch left behind.
+	/// founds and activates, the check reads the light the real render dispatch left behind. The
+	/// frames between them come from <see cref="KingdomScenarioFrames" />, which yields the action
+	/// opportunity back to <c>XRLCore.PlayerTurn</c>'s own idle render loop rather than pretending
+	/// a turn pump renders anything.
 	/// </summary>
 	[KingdomScenarioVerbProvider]
 	public sealed class KingdomClaimedLightNativeProvider : IKingdomScenarioVerbProvider
@@ -18,7 +21,7 @@ namespace ThousandAndFirst.Harness
 		internal const string SetupVerb = "claimed-light-setup";
 		internal const string CheckVerb = "claimed-light-check";
 		internal const string Receipt = "r_TAF_ScenarioClaimedLightNative_v1";
-		private static readonly string[] Script = { "stagedigest", SetupVerb, "advance 2400",
+		private static readonly string[] Script = { "stagedigest", SetupVerb, "yield-frames 3",
 			CheckVerb, "stagedigest" };
 
 		public int ScenarioVerbApiVersion { get { return KingdomScenarioVerbApi.Version; } }
@@ -72,6 +75,7 @@ namespace ThousandAndFirst.Harness
 				&& ReferenceEquals(The.ZoneManager?.ActiveZone, Zone) && MessageQueue.Enabled
 				&& KingdomMaster.ConfiguredEnabled && KingdomClaimedGround.Enabled
 				&& !KingdomSurvey.HasBoundPass && !KingdomScenarioAdvance.Pending
+				&& !KingdomScenarioFrames.Pending
 				&& !(Game.GetSystem<KingdomSystem>()?.Founded ?? false)
 				&& KingdomClaimedLightNativeChecks.Vacant
 				&& !KingdomNativeRegressionContext.HasQuickstartState(Game)

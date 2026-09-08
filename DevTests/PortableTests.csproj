@@ -1362,6 +1362,7 @@
 	<Compile Include="KingdomScenarioRuntimeSourceTests.cs" />
 	<Compile Include="KingdomScenarioLauncherSourceTests.cs" />
 	<Compile Include="KingdomScenarioVerbProviderRulesTests.cs" />
+	<Compile Include="KingdomScenarioFrameYieldSourceTests.cs" />
 	<Compile Include="KingdomScenarioPersonaSourceTests.cs" />
 	<Compile Include="KingdomScenarioPresenceSourceTests.cs" />
 	<Compile Include="KingdomScenarioStateShapeTests.cs" />

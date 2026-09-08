@@ -16,7 +16,7 @@ namespace ThousandAndFirst.Harness
 	/// made by a real founding, the attachment by the engine's own <c>Zone.Activated()</c> - the
 	/// same entry <c>Qud/API/JournalAPI.cs:82</c> uses - and the light by the real per-frame
 	/// <c>BeforeRenderEvent</c> dispatch the runtime already performs while the persona's
-	/// <c>advance</c> lets frames render.
+	/// <c>yield-frames</c> hands the engine back its own render loop.
 	/// </para>
 	/// <para>
 	/// WHAT THE LIGHT ASSERTION IS. <c>Zone.AddLight</c> with <c>LightLevel.Light</c> mixes every cell
@@ -145,6 +145,7 @@ namespace ThousandAndFirst.Harness
 				Require(Phase == 1 && !Done, "claimed-light check is not repeatable");
 				Require(Fault == null, "the render observer faulted: " + Fault);
 				Require(!KingdomScenarioAdvance.Pending, "turns are still owed");
+				Require(!KingdomScenarioFrames.Pending, "frames are still owed");
 				Require(Brackets > 0,
 					"the claimed-ground light never ran its real BeforeRenderEvent dispatch");
 				Require(Dispatches == Brackets,
@@ -167,7 +168,8 @@ namespace ThousandAndFirst.Harness
 				Armed = false;
 				Done = true;
 				Phase = 2;
-				Evidence.Append("\nrender-dispatches=").Append(Brackets)
+				Evidence.Append("\nengine-frames=").Append(KingdomScenarioFrames.Observations)
+					.Append("; render-dispatches=").Append(Brackets)
 					.Append("; cells-the-part-raised-at-its-own-dispatch=").Append(Deficit)
 					.Append("; every-cell-at-or-above-Light=true; foreign-claimed-light-parts=0");
 			}
