@@ -2,7 +2,9 @@
 from __future__ import annotations
 
 import ast
+import contextlib
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path
@@ -210,6 +212,39 @@ class UpgradeProfileStateTest(unittest.TestCase):
                         self.assertIn("timeout", [kw.arg for kw in call.keywords],
                                      f"{node.name}() has an unbounded subprocess.run call")
         self.assertEqual(checked, 4, "expected wslpath+powershell.exe calls in native() and stopped_source()")
+
+
+class CleanLogTest(unittest.TestCase):
+    """clean_log() must share upgrade_profile_witnesses' TAF-only contract, not a local copy."""
+
+    def log(self, root, raw: bytes) -> None:
+        (root / "Player.log").write_bytes(raw)
+
+    def test_third_party_modwarn_is_retained_and_never_refuses(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.log(root, b"[TAF] loaded\nMODWARN [Pets of Harvest Dawn] - Mod defining manual load "
+                            b"order, please convert it to use the Dependencies field.\n")
+            buffer = io.StringIO()
+            with mock.patch.object(host.subprocess, "run") as run, contextlib.redirect_stdout(buffer):
+                digest = host.clean_log(root)
+            run.assert_called_once()
+            self.assertEqual(digest, host.fs.digest(root / "Player.log"))
+            self.assertIn("MODWARN [Pets of Harvest Dawn]", buffer.getvalue())
+
+    def test_taf_tagged_modwarn_refuses_before_the_shell_check_runs(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.log(root, b"[TAF] loaded\nMODWARN [The Thousand and First] - refused\n")
+            with mock.patch.object(host.subprocess, "run") as run:
+                with self.assertRaisesRegex(ValueError, "Thousand and First diagnostic"):
+                    host.clean_log(root)
+            run.assert_not_called()
+
+    def test_shares_the_taf_diagnostic_contract_not_a_copy(self):
+        source = (TOOLS / "prepare-upgrade-profile.py").read_text()
+        self.assertIn("from upgrade_profile_witnesses import diagnostics", source)
+        self.assertNotIn('MOD(?:ERROR|WARN)', source)
 
 
 if __name__ == "__main__":
