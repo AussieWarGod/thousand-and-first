@@ -145,7 +145,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = TestMain.ReadRepositoryText("Harness/KingdomDowngradeProbe.cs");
 			foreach (string token in new[] { "[HarmonyPatch(typeof(MainMenu), \"Show\", new Type[] { })]",
-				"[HarmonyPostfix]", "Interlocked.Exchange(ref Consumed, 1)", "The.Game == null",
+				"[HarmonyPostfix, HarmonyPriority(Priority.Last)]", "Interlocked.Exchange(ref Consumed, 1)", "The.Game == null",
 				"KingdomDowngradeRequest.FileName", "old-runtime-authority=host-inventory",
 				"scenario-script.txt", "scenario-load.txt", "scenario-load-snapshot.txt",
 				"KingdomSealRecord.TryParse(texts[i]", "fault == KingdomSealFault.OutOfBounds",

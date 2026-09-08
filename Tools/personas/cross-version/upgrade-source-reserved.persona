@@ -1,0 +1,12 @@
+# Only prepare-upgrade-profile.py source owns the retained-donor input and old overlays.
+# Kept outside the ordinary persona matrix: it requires authenticated donor history.
+# Fresh old world starts with import off; real Initialize opts in and reserves the copied legacy.
+# This deliberately live Reserved fixture is not ordinary inherited embark/site installation.
+DESCRIPTION=old-version genuine Reserved inheritance captured in a new playable world
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;upgrade-source-reserved;stagedigest
+VERBS=upgrade-source-reserved
+EXPECT=stagedigest:OK~founded=false,upgrade-source-reserved:OK~upgrade source cases=1 passed=1 failed=0,stagedigest:OK~founded=false,COMPLETE
+SET=upgrade,native-regression
+TIMEOUT=600

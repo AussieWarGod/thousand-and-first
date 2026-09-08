@@ -135,6 +135,28 @@ below it.
   Maintainer tooling only, with no player-visible or runtime effect. The native protocol
   itself has NOT been run; this entry claims the tooling and its checks, not a
   cross-version compatibility verdict.
+- Tools/tests + Harness: unattended source legs for that cross-version protocol. The v1 source,
+  stage-source and downgrade legs needed a human to found, promote, retire, import and wish; the
+  new sealed recipes reach those exact states with no input and no focus. Four fixed personas under
+  `Tools/personas/cross-version/` drive old-source overlays built from the same pinned `v0.3.1`
+  Git blobs (`git ls-tree`/`git cat-file` at commit `a46b5ad`, never a checkout or worktree). The
+  donor reaches a promoted legacy through real founding, a real one-resident census and a real seal
+  opt-in taken after that census, surfacing rather than hiding the old empty-profile diagnostic; the
+  inheritor receives the donor's entire `Synced` history and lets the unchanged production
+  `Initialize()` cut the Reserved receipt and lease; the stage leg founds an empty camp, runs
+  `advance 2400` and saves. The old-reader probe is claimed at the real main menu before auto-start
+  and asserts the exact `profile_schema` 2 out-of-bounds refusal per slot, with native `ReadStage`
+  absence required to match the accepted-sibling inventory exactly. New `Tools/run-upgrade-profile.py`
+  is an owned runner: fresh admission, a 600-second bound, a receipt-only stop of its exact owned
+  process, then a post-stop native verdict. A timeout, partial output, changed receipt, refused row
+  or any diagnostic stays failed evidence and never licenses a guessed cleanup or PASS; the stop is
+  not graceful-Quit evidence. `detached-transition` is refused outright instead of falling back to an
+  attended recipe. Protocol and exact commands are in
+  [docs/CROSS_VERSION_UNATTENDED.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/CROSS_VERSION_UNATTENDED.md).
+  614 tooling tests and the four-mode compile gate pass; licensed suites pass 13,896 main and 5,186
+  Portable cases with zero skips. Maintainer tooling and developer tests only, with no production,
+  save-format or player-visible change. The native protocol itself has NOT been run for this change;
+  this entry claims the tooling, its pins and its gates, not a cross-version compatibility verdict.
 - A controlled native water-maintenance scenario proves upkeep billing, one drought
   departure, loyal-core retention, refill and paid recovery with exact Chronicle
   delivery. Water scarcity itself is not new here; it shipped in 0.3.1 code and this

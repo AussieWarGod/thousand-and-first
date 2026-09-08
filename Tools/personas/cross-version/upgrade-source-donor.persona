@@ -1,0 +1,12 @@
+# Only prepare-upgrade-profile.py source-donor owns this old-runtime overlay recipe.
+# Kept outside the ordinary persona matrix: it requires a pinned old runtime.
+# Real opt-in, founding, enrolled/censused synthetic resident, retirement and Primary save.
+# Developer save provenance only; no ordinary Charter UI or graceful Quit claim.
+DESCRIPTION=old-version native retired donor with canonical promoted legacy and full saved history
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;upgrade-source-donor;stagedigest
+VERBS=upgrade-source-donor
+EXPECT=stagedigest:OK~founded=false,upgrade-source-donor:OK~upgrade source cases=1 passed=1 failed=0,stagedigest:OK,COMPLETE
+SET=upgrade,native-regression
+TIMEOUT=600
