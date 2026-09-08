@@ -8,6 +8,66 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
+## Unreleased — Kingdom Quickstart tent rows
+
+- Kingdom Quickstart now stakes two settlers' tent rows at founding, west of the supply
+  column at (21,9)-(26,12) and (21,13)-(26,16), between the founding proof and the receipt's
+  first advance. Without a standing roof nobody joins a settlement, and nothing commissioned
+  rises while the population is zero, so the mode previously opened on a camp that could not
+  proceed.
+- The lots are keyed to the catalogue's `tentrow` design rather than `tent`: 5x2 footprint,
+  three roofs apiece, so the pair is six beds and the first arrivals are not refused for want
+  of room. They are granted free and never debited: opening water, meals and materials are
+  unchanged, and the founding stays unpriced.
+- They are staked, not built. Each stake is receiptless, so the lot keeps the shipped calendar
+  clock the first heart uses. By the raising rule each row is 1,700 ticks — 1,200 for the
+  design and 500 for the enclosure round a 5x2 footprint — against 1,200 ticks to the day, so
+  the rows stand about a day and a half in, at day boundaries spent on claimed ground, with no
+  settler labour. That figure is read from the rule, not yet from a running plot clock.
+- The prepared-ground mask widens by those 48 cells so the camp builder bares both lots; the
+  authored-ground preflight refuses a lot holding a creature, an item, or open liquid. Each lot
+  is searched before it is staked, so a save cut between the two resumes by staking only the
+  one that is missing.
+- Idempotency uses a shelter-only string property and the staked rectangle, never the
+  quickstart grant marker: the grant recovery scan reads every object in the zone and would
+  refuse a foreign value there, aborting every later grant phase on the same boot. An unmarked
+  object is adopted only when it carries our own design key, so a foreign plot stamped on a
+  reserved rectangle is refused before anything is written to it.
+- If zoning or the authored-ground preflight refuses a lot, the bootstrap stops with that
+  reason. It never stamps completion and never publishes a receipt it did not measure. The lots
+  are staked before the stores are granted, so that refusal also costs that world its casks,
+  larder, materials chest and advisor, not just a row.
+- The obligation to stake is versioned onto the receipt rather than assumed of every save. A
+  receipt minted by this version carries a shelter obligation and is written under the wire tag
+  `q2`; the shipped `q1` shape is still written and still read, byte for byte, and the tag is
+  inside the digest, so no edit promotes an old receipt in place. Only a `q2` receipt owes its
+  founding pass a stake.
+- A pre-existing `q1` save therefore continues exactly as it did, at the Reserved phase as at any
+  later one: no stake is attempted on the 48 lot cells the older prepared-ground mask never bared,
+  so a preflight refusal there cannot cost that world its casks, larder, materials chest or
+  advisor. Such a save simply has no rows, and the completion notice counts the claims standing on
+  the ground rather than trusting the branch that ran, so it never promises one. The reservation on
+  a staked lot remains an owned object property registered in the removal-coverage allowlist.
+  Ordinary founding is untouched. Public 0.3.1 is unchanged.
+
+> **Current unreleased census — exact structural gate passed.** Current 3053-file census is line-cap green:
+> 432,593 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
+> imports occur in 1418 files, 0 of them over the line limit. Inventory SHA-256:
+> `d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0`.
+> The generated cold-install inventory contains 3084 files; no new subscription claim.
+> The tent-row delta over the merged `dev` census below is one added and six modified production
+> sources: the quickstart bootstrap's shelter partial, the quickstart rules, the bootstrap, the camp
+> builder, the generated removal coverage, the quickstart receipt model and its wire codec. It
+> compiled clean in the staged baseline (3049 sources) and staged compatibility (3053 sources)
+> modes only, on Linux with the SDK Roslyn against the installed managed assemblies rather than
+> through `Tools/gate.sh`; both engine-free suites run green there (13,834 main/5,123 Portable,zero
+> skips) and the repository audit passes.
+> NOT run for it: the two dev-harness compile modes, the installed-Hearthpyre source step, the
+> Windows gate, the developer boot matrix and any native in-game run. The 1,700-tick raising figure
+> is a reading of the raising rule, not of a running plot clock. The exact-inventory human semantic
+> review is open against this digest; this is not Beta sign-off.
+
 ## Unreleased — empty-camp legacy correction
 
 ### Added
@@ -105,8 +165,8 @@ below it.
   separately gated. Retained failures and bounded native scope are recorded in
   `docs/STATUS.md`.
 
-> **Current unreleased census — exact structural gate passed.** Current 3053-file census is line-cap green:
-> 432,460 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> **Retained empty-camp merge census — exact structural gate passed.** That 3052-file census was line-cap green:
+> 432,259 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1418 files, 0 of them over the line limit. Inventory SHA-256:
 > `050328383519c937a74ae81d1daf6af4543d80f23c3d4682a243e4a4cbca2d64`.
