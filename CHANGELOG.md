@@ -50,21 +50,21 @@ below it.
   a staked lot remains an owned object property registered in the removal-coverage allowlist.
   Ordinary founding is untouched. Public 0.3.1 is unchanged.
 
-> **Current unreleased census — exact structural gate passed.** Current 3055-file census is line-cap green:
-> 433,231 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> **Current unreleased census — exact structural gate passed.** Current 3056-file census is line-cap green:
+> 433,308 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
-> imports occur in 1420 files, 0 of them over the line limit. Inventory SHA-256:
-> `f559d70b5006ceeb5d6cc2d5380c2dd38cd5a0068d56d68e5a2554a99afadaaf`.
-> The generated cold-install inventory contains 3086 files; no new subscription claim.
+> imports occur in 1421 files, 0 of them over the line limit. Inventory SHA-256:
+> `5160ed08e19734f315ebe8c7fe2ab4e5e7e1bb6bc632ae97a0c511d1f40cd325`.
+> The generated cold-install inventory contains 3087 files; no new subscription claim.
 > This digest is the Kingdom Quickstart tent rows merged with the first-basin water store retained
 > below; each delta carries its own review chain and neither is restated for the other.
 > The tent-row delta over the retained first-basin census below is one added and six modified production
 > sources: the quickstart bootstrap's shelter partial, the quickstart rules, the bootstrap, the camp
 > builder, the generated removal coverage, the quickstart receipt model and its wire codec. The
-> merged tree compiles clean in the staged baseline (3051 sources), staged compatibility
-> (3055 sources) and both dev-harness modes, on Linux with the SDK Roslyn against the installed
+> merged tree compiles clean in the staged baseline (3052 sources), staged compatibility
+> (3056 sources) and both dev-harness modes, on Linux with the SDK Roslyn against the installed
 > managed assemblies rather than through `Tools/gate.sh`; both engine-free suites run green there
-> (13,919 main/5,187 Portable,zero skips) and the repository audit passes.
+> (13,925 main/5,193 Portable,zero skips) and the repository audit passes.
 > NOT run for it: the installed-Hearthpyre source step, the
 > Windows gate, the developer boot matrix and any native in-game run. The 1,700-tick raising figure
 > is a reading of the raising rule, not of a running plot clock. The exact-inventory human semantic
@@ -109,8 +109,9 @@ below it.
   accounts and the unsettled-arrival-leg hold would have been read from the departed city's
   growth book, missing a leg the destination city was holding; a foreign, seceded or exiled
   realm's standing heart could also have been dedicated as the seated settlement's water
-  store. The reconciler now refuses unclaimed ground itself, so no caller can reach one of
-  those hearts by asking at the wrong moment.
+  store. Both reconciler entries now refuse unclaimed ground themselves — including the one a
+  finished rung uses, which resolves the seated realm rather than the realm that owns the
+  ground — so no caller can reach one of those hearts by asking at the wrong moment.
 - A committed water receipt whose caller may still compensate it now keeps its per-vessel
   hold until that caller closes the window. The hall's commission commits the water, runs the
   bit-debit callbacks and only then decides whether to roll back; the hold was dropped at
@@ -119,7 +120,10 @@ below it.
   interruption into water the founder could never get back. The window is opt-in and never
   inferred from a commit: a caller that commits and then finishes its own work, such as a
   construction whose completed rung widens the very basin it drained, must not hold that
-  vessel or the rung it paid for could never widen anything.
+  vessel or the rung it paid for could never widen anything. Every caller that can refund
+  after its own callbacks closes that window in a `finally`, so a throw inside the span cannot
+  leave an abandoned receipt holding a vessel; the hall's commission settle span moved into
+  `Growth/KingdomLab.Commission.Settle.cs` to make room for one.
 
 ### Compatibility
 
@@ -150,7 +154,7 @@ below it.
 - Full suites pass 13,826 main and 5,116 Portable cases, zero skips, up from 13,735 and
   5,109 on the `dev` integration branch. 501 tooling tests pass. With the first-basin water
   store merged over the Kingdom Quickstart tent rows, the Linux Roslyn 9.0.306 run of the
-  same suites passes 13,919 main and 5,187 Portable cases, zero skips (this count is from
+  same suites passes 13,925 main and 5,193 Portable cases, zero skips (this count is from
   Linux, not from the licensed Windows run above): 21 new cases covering the capacity ladder
   against the stage gates and the leak law,
   the relic-slot dedication and the gallery's exclusion from it, the existing-authority stamp
@@ -186,6 +190,28 @@ below it.
   Maintainer tooling only, with no player-visible or runtime effect. The native protocol
   itself has NOT been run; this entry claims the tooling and its checks, not a
   cross-version compatibility verdict.
+- Tools/tests + Harness: unattended source legs for that cross-version protocol. The v1 source,
+  stage-source and downgrade legs needed a human to found, promote, retire, import and wish; the
+  new sealed recipes reach those exact states with no input and no focus. Four fixed personas under
+  `Tools/personas/cross-version/` drive old-source overlays built from the same pinned `v0.3.1`
+  Git blobs (`git ls-tree`/`git cat-file` at commit `a46b5ad`, never a checkout or worktree). The
+  donor reaches a promoted legacy through real founding, a real one-resident census and a real seal
+  opt-in taken after that census, surfacing rather than hiding the old empty-profile diagnostic; the
+  inheritor receives the donor's entire `Synced` history and lets the unchanged production
+  `Initialize()` cut the Reserved receipt and lease; the stage leg founds an empty camp, runs
+  `advance 2400` and saves. The old-reader probe is claimed at the real main menu before auto-start
+  and asserts the exact `profile_schema` 2 out-of-bounds refusal per slot, with native `ReadStage`
+  absence required to match the accepted-sibling inventory exactly. New `Tools/run-upgrade-profile.py`
+  is an owned runner: fresh admission, a 600-second bound, a receipt-only stop of its exact owned
+  process, then a post-stop native verdict. A timeout, partial output, changed receipt, refused row
+  or any diagnostic stays failed evidence and never licenses a guessed cleanup or PASS; the stop is
+  not graceful-Quit evidence. `detached-transition` is refused outright instead of falling back to an
+  attended recipe. Protocol and exact commands are in
+  [docs/CROSS_VERSION_UNATTENDED.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/CROSS_VERSION_UNATTENDED.md).
+  614 tooling tests and the four-mode compile gate pass; licensed suites pass 13,896 main and 5,186
+  Portable cases with zero skips. Maintainer tooling and developer tests only, with no production,
+  save-format or player-visible change. The native protocol itself has NOT been run for this change;
+  this entry claims the tooling, its pins and its gates, not a cross-version compatibility verdict.
 - A controlled native water-maintenance scenario proves upkeep billing, one drought
   departure, loyal-core retention, refill and paid recovery with exact Chronicle
   delivery. Water scarcity itself is not new here; it shipped in 0.3.1 code and this

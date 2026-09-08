@@ -22,11 +22,11 @@ python3 Tools/check-structure.py --release
 
 The first-basin water store over the Kingdom Quickstart tent rows, the empty-camp legacy
 correction, the camp-guide topic tree, the claimed-ground light and the first-settler legibility
-change together report 3055 staged production C# files and 433,231 physical lines.
+change together report 3056 staged production C# files and 433,308 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`f559d70b5006ceeb5d6cc2d5380c2dd38cd5a0068d56d68e5a2554a99afadaaf`. The census reports
-1420 files with direct `XRL` imports; 0 of those exceed the line limit.
+`5160ed08e19734f315ebe8c7fe2ab4e5e7e1bb6bc632ae97a0c511d1f40cd325`. The census reports
+1421 files with direct `XRL` imports; 0 of those exceed the line limit.
 
 The delta over the retained tent-row draft below is three ADDED production sources
 (`Growth/KingdomPlotHeartRules.Loader.cs`, `Growth/KingdomWaterDebit.OpenReservations.cs`,

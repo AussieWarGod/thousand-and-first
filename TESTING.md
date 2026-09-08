@@ -37,8 +37,8 @@ schema refusals,unresolved cohort denial,revision-aware exile and retained found
 receipts are covered. Four checked-in seals written by writer code byte-identical to tag
 `v0.3.1` live in `DevTests/Fixtures/SealProfile`; their SHA-256s are pinned in
 `DevTests/KingdomSealProfileHistoricalFixtureTests.cs` and are never regenerated.
-Current3055-source production digest
-`f559d70b5006ceeb5d6cc2d5380c2dd38cd5a0068d56d68e5a2554a99afadaaf`
+Current3056-source production digest
+`5160ed08e19734f315ebe8c7fe2ab4e5e7e1bb6bc632ae97a0c511d1f40cd325`
 passes the structural gate; its exact-inventory human semantic review is open after the `dev`
 merge. The Windows suites that pass13,826 main/5,116 Portable cases,zero skips,up from
 13,735/5,109 on the `dev` integration branch, ran on the retained3052-source digest
@@ -85,9 +85,9 @@ baseline and dev-harness compatibility compiles. The shared `DevTests/refs.rsp` 
 `-langversion:latest`, so those compiles are not pinned to C# 7.3; `LangVersion` 7.3 is pinned
 only in `DevTests/Engine*/Probe.csproj` and `Tools/WorkshopSteam/*.csproj`. Retained sections
 below keep their original wording as written at their own checkpoints.
-Staged compatibility compilation runs across 3055 production C# sources, staged baseline across
-3051 (the optional-mod bridge is a compatibility-only source); the generated
-cold-install inventory contains 3086 files. Neither count proves subscriber delivery.
+Staged compatibility compilation runs across 3056 production C# sources, staged baseline across
+3052 (the optional-mod bridge is a compatibility-only source); the generated
+cold-install inventory contains 3087 files. Neither count proves subscriber delivery.
 The Kingdom Quickstart tent-row delta inside this census compiled clean in the staged baseline and
 staged compatibility modes only, run on Linux with the SDK Roslyn against the installed managed
 assemblies rather than through `Tools/gate.sh`; the two dev-harness modes, the installed-ABI

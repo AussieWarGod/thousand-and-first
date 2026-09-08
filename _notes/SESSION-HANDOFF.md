@@ -2,8 +2,8 @@
 
 ## Current unreleased first-basin water store over the Quickstart tent rows
 
-3055 staged sources;433,231 physical lines;1420 direct-XRL;zero cap failures;3086 generated
-cold-stage files. Exact inventory `f559d70b5006ceeb5d6cc2d5380c2dd38cd5a0068d56d68e5a2554a99afadaaf`.
+3056 staged sources;433,308 physical lines;1421 direct-XRL;zero cap failures;3087 generated
+cold-stage files. Exact inventory `5160ed08e19734f315ebe8c7fe2ab4e5e7e1bb6bc632ae97a0c511d1f40cd325`.
 The founding heart's first basin becomes the settlement's first water store: dedicated in code at
 the relic slot, capacity 16/48/160/512/1024 by rung, raised only and never lowered, skipped with
 one ledger line while an open water debit is bound to that vessel, an unsettled arrival water leg

@@ -106,22 +106,24 @@ bytes remain unchanged; older0.3.1 readers reject schema2,so any next public pac
 a new version. Public0.3.1/main/tag are unchanged.
 
 Current census after merging `dev` (the Kingdom Quickstart tent rows included) and the first-basin
-water store:3055 staged C# files;433,231
-physical lines;3086 files in the generated cold-install inventory. Staged compilation covers3055
-sources, baseline and compatibility symbols (baseline compiles3051 of them; the optional-mod
-bridge is compatibility-only). Direct `XRL` imports: 1420 files, 0 over the line limit.
-Inventory SHA-256: `f559d70b5006ceeb5d6cc2d5380c2dd38cd5a0068d56d68e5a2554a99afadaaf`.
+water store:3056 staged C# files;433,308
+physical lines;3087 files in the generated cold-install inventory. Staged compilation covers3056
+sources, baseline and compatibility symbols (baseline compiles3052 of them; the optional-mod
+bridge is compatibility-only). Direct `XRL` imports: 1421 files, 0 over the line limit.
+Inventory SHA-256: `5160ed08e19734f315ebe8c7fe2ab4e5e7e1bb6bc632ae97a0c511d1f40cd325`.
 The seal lane's OWN delta &mdash; four modified production sources, no additions or removals
 &mdash; was proved against integration parent2be6b00 (3045 unchanged) and read in full by root
 and an independent reviewer; the three added and seven modified C# sources plus one option row
 merged from `dev` carry their own review chain. The first-basin water store is a further
-two added production sources (`Growth/KingdomPlotHeartRules.Loader.cs` and
-`Growth/KingdomWaterDebit.OpenReservations.cs`) and eighteen modified ones: the founding-heart
+three added production sources (`Growth/KingdomPlotHeartRules.Loader.cs`,
+`Growth/KingdomWaterDebit.OpenReservations.cs` and `Growth/KingdomLab.Commission.Settle.cs`) and
+twenty-one modified ones: the founding-heart
 identity and marks shards, the plot-effects furnishing shard, the zone-activation events shard,
-the heart rules table, the ground reading, the ground-protection law, the four water-debit shards,
-the generated removal-coverage table, and the six water callers that can refund after their own
-callbacks (construction funding, sowing, annexe enrolment, the lab commission and its two removal
-lanes). Root and an independent AI reviewer read that delta;
+the heart rules table, the civic-container envelope note, the survey capture sweep, the ground
+reading, the ground-protection law, the four water-debit shards,
+the generated removal-coverage table, and the seven water callers that can refund after their own
+callbacks (construction funding, sowing, annexe enrolment, the lab commission, the lab retry
+funding lane and its two removal lanes). Root and an independent AI reviewer read that delta;
 every required finding from the review pass is addressed on this branch. The Kingdom Quickstart
 tent rows merged from `dev` are one added and six modified production sources on top of it and
 carry their own review chain; the retained3052-source digest

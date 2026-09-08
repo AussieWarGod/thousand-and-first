@@ -2,9 +2,9 @@
 
 ## Current first-basin water-store over Quickstart tent-row census — 2026-09-09
 
-**3055** production C# files,433,231 physical lines,1420 direct-XRL,zero cap failures;
-3086 generated cold-install files. Exact digest
-`f559d70b5006ceeb5d6cc2d5380c2dd38cd5a0068d56d68e5a2554a99afadaaf`.
+**3056** production C# files,433,308 physical lines,1421 direct-XRL,zero cap failures;
+3087 generated cold-install files. Exact digest
+`5160ed08e19734f315ebe8c7fe2ab4e5e7e1bb6bc632ae97a0c511d1f40cd325`.
 The founding heart's first basin is the settlement's first water store, with a per-rung capacity
 raised and never lowered, and every water caller that can refund after its own callbacks now holds
 its vessels across them. No receipt phase, wire, option, grant or verifier predicate changes.

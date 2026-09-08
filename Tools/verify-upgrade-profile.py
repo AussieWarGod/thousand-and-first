@@ -16,14 +16,14 @@ import sys
 
 import scenario_profile
 from upgrade_profile_inputs import CONFIG, OLD_PIN, SHA, local_inputs, parse_config, require, sha
-from upgrade_profile_state import authenticate_source, capture, fs, inventory, native, native_plan, windows
+from upgrade_profile_state import (authenticate_source, capture, capture_stage, fs, inventory,
+                                   native, native_plan, windows)
+from upgrade_profile_witnesses import diagnostics
 
 _spec = importlib.util.spec_from_file_location("taf_upgrade_host", Path(__file__).with_name("prepare-upgrade-profile.py"))
 assert _spec and _spec.loader
 host = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(host)
-DIAGNOSTIC = re.compile(rb"\b(?:MODWARN|MODERROR|WARN(?:ING)?|ERROR|FATAL|REFUSED)\b|\b(?:[\w.]+)?Exception\b"
-                        rb"|^\s*(?:at\s|---)", re.IGNORECASE)
 
 
 def journal(raw: bytes, config: dict, game_id: str) -> None:
@@ -100,18 +100,23 @@ def verify(args) -> str:
     host.stopped(args.source, args.game)
     source_mode = "source" if config["mode"] == "upgrade" else "stage-source"
     source_pin = OLD_PIN if config["mode"] == "upgrade" else args.candidate
-    source_config, source_state = authenticate_source(args.repo, args.source, source_mode, source_pin)
+    source_config, source_state = authenticate_source(args.repo, args.source, source_mode, source_pin,
+                                                       game=args.game)
     require(source_config["probe"] == (args.source_probe_pin or args.candidate),
             "retained source observer pin was not explicitly approved")
     source_log_hash = host.clean_log(args.source)
     require(source_config["seed"] == config["seed"], "source and destination preparation seeds differ")
     if config["mode"] == "upgrade":
-        source_snapshot, source_request, _ = capture(args.source, source_config, source_state)
+        source_snapshot, source_request, source_witness = capture(args.source, source_config, source_state)
         require(source_config["case"] == config["case"] and source_snapshot == extra["scenario-load-snapshot.txt"]
                 and source_request == extra["scenario-load.txt"], "destination inputs are not the retained old native capture")
     else:
+        stage_witness = (capture_stage(args.source, source_config, source_state)
+                         if source_config["schema"] == "taf-upgrade-profile-v2" else None)
         request_rows = extra["taf-downgrade-request.txt"].decode("ascii").split("\n")
         require(len(request_rows) == 8, "downgrade request framing differs")
+        require(stage_witness is None or stage_witness["origin"] == request_rows[2],
+                "old-reader request does not select its unattended source's observed stage")
         source_rows = {row["path"]: row for row in source_state["files"]}
         expected_slots = []
         for slot in "ab":
@@ -128,8 +133,10 @@ def verify(args) -> str:
     native("Inspect", native_plan(args.root, None, ["Local", "Synced"], files, dirs))
     log_hash = host.clean_log(args.root)
     raw_log = fs.read_bytes(args.root / "Player.log", 64 * 1024**2)
-    for line in raw_log.replace(b"\r\n", b"\n").split(b"\n"):
-        require(not DIAGNOSTIC.search(line), "unexpected native diagnostic: " + line.decode("utf-8", errors="replace")[:500])
+    # TAF-only contract (upgrade_profile_witnesses.diagnostics), same as host.clean_log() above:
+    # only a MODERROR/MODWARN naming The Thousand and First ever refuses here. A third party's
+    # own MODWARN/MODERROR is retained below and folded into the verdict, never fatal on its own.
+    retained = diagnostics(raw_log)
     if config["mode"] == "upgrade":
         request = extra["scenario-load.txt"].decode("ascii").split("\n")
         require(len(request) == 7 and request[0] == "taf-scenario-load-v1" and request[-1] == ""
@@ -143,15 +150,23 @@ def verify(args) -> str:
         verdict = "NATIVE OLD-READER PASS: read-stage=" + result + "; newer-save-loaded=false"
     host.stopped(args.root, args.game)
     host.stopped(args.source, args.game)
-    after_config, after_state = authenticate_source(args.repo, args.source, source_mode, source_pin)
+    after_config, after_state = authenticate_source(args.repo, args.source, source_mode, source_pin,
+                                                     game=args.game)
     require(after_config == source_config and after_state["files"] == source_state["files"]
             and after_state["directories"] == source_state["directories"]
+            and after_state.get("donorAuthority") == source_state.get("donorAuthority")
             and fs.digest(args.source / "Player.log") == source_log_hash, "retained source changed during terminal proof")
     if config["mode"] == "upgrade":
-        after_snapshot, after_request, _ = capture(args.source, after_config, after_state)
-        require(after_snapshot == source_snapshot and after_request == source_request,
+        after_snapshot, after_request, after_witness = capture(args.source, after_config, after_state)
+        require(after_snapshot == source_snapshot and after_request == source_request
+                and after_witness == source_witness,
                 "retained native source capture changed during terminal proof")
+    elif stage_witness is not None:
+        require(capture_stage(args.source, after_config, after_state) == stage_witness,
+                "retained native stage capture changed during terminal proof")
     require(fs.digest(args.root / "Player.log") == log_hash, "terminal native log changed")
+    if retained:
+        verdict += "; retained non-TAF diagnostics: " + " | ".join(retained)
     return verdict + "; candidate=" + args.candidate + "; ordinary-ui-acceptance=false"
 
 
