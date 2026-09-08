@@ -79,16 +79,27 @@ class VerifyUpgradeProfileTest(unittest.TestCase):
     def test_retained_source_and_approved_producer_are_not_optional(self):
         source = (TOOLS / "verify-upgrade-profile.py").read_text()
         for token in ('parser.add_argument("--source", required=True',
-                      'authenticate_source(args.repo, args.source, source_mode, source_pin)',
+                      'authenticate_source(args.repo, args.source, source_mode, source_pin,',
+                      'game=args.game',
+                      'after_state.get("donorAuthority") == source_state.get("donorAuthority")',
                       'source_config["probe"] == (args.source_probe_pin or args.candidate)',
                       'source_snapshot == extra["scenario-load-snapshot.txt"]',
                       'source_request == extra["scenario-load.txt"]',
                       'request_rows[5:7] == expected_slots', 'after_snapshot == source_snapshot'):
             self.assertIn(token, source)
 
-    def test_all_mod_warnings_and_runtime_failures_refuse(self):
-        for raw in (b"MODWARN [Pets] message", b"MODERROR [TAF] problem", b"InvalidOperationException: x", b"FATAL crash", b"native REFUSED"):
-            self.assertIsNotNone(verdict.DIAGNOSTIC.search(raw))
+    def test_third_party_modwarn_is_retained_and_never_refuses(self):
+        self.assertEqual(verdict.diagnostics(b"INFO clean\nMODWARN [Pets of Harvest Dawn] - notice\n"),
+                         ["MODWARN [Pets of Harvest Dawn] - notice"])
+
+    def test_taf_tagged_modwarn_refuses(self):
+        with self.assertRaisesRegex(ValueError, "Thousand and First diagnostic"):
+            verdict.diagnostics(b"INFO clean\nMODWARN [The Thousand and First] - refused\n")
+
+    def test_shares_the_taf_diagnostic_contract_not_a_copy(self):
+        source = (TOOLS / "verify-upgrade-profile.py").read_text()
+        self.assertIn("from upgrade_profile_witnesses import diagnostics", source)
+        self.assertNotIn("DIAGNOSTIC = re.compile", source)
 
 
 if __name__ == "__main__":

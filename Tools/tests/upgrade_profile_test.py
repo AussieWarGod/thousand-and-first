@@ -1,7 +1,10 @@
 """Synthetic host contracts only. No test result here is native upgrade acceptance."""
 from __future__ import annotations
 
+import ast
+import contextlib
 import importlib.util
+import io
 import json
 import os
 from pathlib import Path
@@ -50,7 +53,8 @@ class FakeCommit:
 class UpgradeProfileInputTest(unittest.TestCase):
     def config(self, mode="source"):
         return inputs.configuration(mode, inputs.OLD_PIN if mode in ("source", "downgrade") else CURRENT,
-                                    CURRENT, "reader" if mode in ("downgrade", "stage-source") else "inheritance", "#123")
+                                    CURRENT, "reader" if mode in ("downgrade", "stage-source") else "inheritance", "#123",
+                                    schema=inputs.PROFILE_V1)
 
     def test_old_runtime_pin_not_a_version_label(self):
         for pin in ("v0.3.1", "dev", "a" * 40):
@@ -141,7 +145,8 @@ class UpgradeProfileStateTest(unittest.TestCase):
                                  ["Synced", "Synced/Saves"])
 
     def fixture(self, root):
-        config = inputs.configuration("source", inputs.OLD_PIN, CURRENT, "inheritance", "#123")
+        config = inputs.configuration("source", inputs.OLD_PIN, CURRENT, "inheritance", "#123",
+                                      schema=inputs.PROFILE_V1)
         save = root / "Synced/Saves" / GAME
         save.mkdir(parents=True)
         payloads = {"Primary.sav.gz": b"synthetic-not-a-native-save", "Cache.db": b"post-quit-cache",
@@ -191,6 +196,55 @@ class UpgradeProfileStateTest(unittest.TestCase):
         self.assertLess(text.index("Assert-ClosedSeal -"), text.index("if ($OwnAttended)"))
         self.assertIn("@('CoQ', 'CavesOfQud')", text)
         self.assertIn("Start-TafOwnedScenarioProcess -Root $rootPath -Game $Game", text)
+
+    def test_external_wslpath_and_powershell_calls_are_bounded(self):
+        # A hung wslpath/powershell.exe helper must not block the unattended runner forever
+        # (native() copies state; stopped_source() gates the stop-proof step on it).
+        tree = ast.parse((TOOLS / "upgrade_profile_state.py").read_text())
+        checked = 0
+        for node in ast.walk(tree):
+            if isinstance(node, ast.FunctionDef) and node.name in ("native", "stopped_source"):
+                for call in ast.walk(node):
+                    if (isinstance(call, ast.Call) and isinstance(call.func, ast.Attribute)
+                            and call.func.attr == "run" and isinstance(call.func.value, ast.Name)
+                            and call.func.value.id == "subprocess"):
+                        checked += 1
+                        self.assertIn("timeout", [kw.arg for kw in call.keywords],
+                                     f"{node.name}() has an unbounded subprocess.run call")
+        self.assertEqual(checked, 4, "expected wslpath+powershell.exe calls in native() and stopped_source()")
+
+
+class CleanLogTest(unittest.TestCase):
+    """clean_log() must share upgrade_profile_witnesses' TAF-only contract, not a local copy."""
+
+    def log(self, root, raw: bytes) -> None:
+        (root / "Player.log").write_bytes(raw)
+
+    def test_third_party_modwarn_is_retained_and_never_refuses(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.log(root, b"[TAF] loaded\nMODWARN [Pets of Harvest Dawn] - Mod defining manual load "
+                            b"order, please convert it to use the Dependencies field.\n")
+            buffer = io.StringIO()
+            with mock.patch.object(host.subprocess, "run") as run, contextlib.redirect_stdout(buffer):
+                digest = host.clean_log(root)
+            run.assert_called_once()
+            self.assertEqual(digest, host.fs.digest(root / "Player.log"))
+            self.assertIn("MODWARN [Pets of Harvest Dawn]", buffer.getvalue())
+
+    def test_taf_tagged_modwarn_refuses_before_the_shell_check_runs(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.log(root, b"[TAF] loaded\nMODWARN [The Thousand and First] - refused\n")
+            with mock.patch.object(host.subprocess, "run") as run:
+                with self.assertRaisesRegex(ValueError, "Thousand and First diagnostic"):
+                    host.clean_log(root)
+            run.assert_not_called()
+
+    def test_shares_the_taf_diagnostic_contract_not_a_copy(self):
+        source = (TOOLS / "prepare-upgrade-profile.py").read_text()
+        self.assertIn("from upgrade_profile_witnesses import diagnostics", source)
+        self.assertNotIn('MOD(?:ERROR|WARN)', source)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,11 @@
 # Native cross-version developer evidence
 
+**New runs use the unattended v2 protocol in [CROSS_VERSION_UNATTENDED.md](CROSS_VERSION_UNATTENDED.md).**
+All test legs must run without input or focus. The attended v1 commands below are retained only
+to explain historical provenance; do not execute them as new tests. New preparation refuses an
+unsupported detached-transition source instead of falling back to attended setup. Original v1
+input recipes remain readable only for explicitly approved retained source evidence.
+
 This protocol separates old-save provenance, exact transport, actual current-reader observation,
 and old-reader fallback. Preparation does **not** prove compatibility. No tool publishes a release,
 launches a game during preparation, repairs a source, or deletes/reseals a partial destination.
