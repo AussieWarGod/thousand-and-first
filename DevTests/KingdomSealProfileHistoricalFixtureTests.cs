@@ -80,7 +80,11 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.IsFalse(KingdomSealRecord.TryParse(damaged, out KingdomSealRecord _,
 				out fault, out detail));
 			ClassicAssert.AreEqual(KingdomSealFault.OutOfBounds, fault);
-			ClassicAssert.IsNotEmpty(detail);
+			// The schema-three case must prove it reached the widened ReadInt bound itself, not
+			// some earlier refusal that happens to share the fault code.
+			if (damage == "schema-three")
+				StringAssert.Contains("'profile_schema' is 3, outside 0 to 2", detail);
+			else ClassicAssert.IsNotEmpty(detail);
 		}
 
 		[Test]
@@ -178,7 +182,7 @@ namespace ThousandAndFirst.Tests
 		// a schema-2 record on 0.3.1 is the profile bound at Core/KingdomSealRecord.Profile.cs:13,
 		// which read [0, CurrentLegacyProfileSchema] at tag v0.3.1.
 		[Test]
-		public void CommittedUnresolvedSealPassesTheOuterGateButNotTheHistoricalProfileBound()
+		public void CommittedUnresolvedSealPassesTheOuterGateAtSchemaTwo()
 		{
 			KingdomSealRecord record = EmptyCampProfileFixture.Record();
 			KingdomPolityLedger ledger = EmptyCampProfileFixture.Published(record);

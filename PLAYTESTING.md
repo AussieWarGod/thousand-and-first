@@ -131,7 +131,10 @@ residents map to no canonical body — an empty camp, or a settlement whose resi
 all non-canonical species — writes a legacy seal with `profile_schema` 2. The outer seal
 format is unchanged (`taf-seal 6`), but 0.3.1 cannot read that value: it treats such a
 legacy seal on disk as absent, and loading a newer save whose pending inheritance was
-built from one clears that reservation and marks the state RepairRequired. No downgrade
+built from one clears that reservation and marks the state RepairRequired. A third case
+costs more: if you roll back mid-exile, the legacy snapshot travelling inside the
+realm transition also carries `profile_schema` 2, and 0.3.1's transition validator judges
+the whole in-flight transition torn rather than only refusing the profile. No downgrade
 writer is provided, because the record cannot be re-encoded for 0.3.1 without inventing a
 body pool the realm never had or dropping its technology band and provenance. Back up the
 save and keep the matching package before updating.

@@ -35,10 +35,14 @@ below it.
   carries `profile_schema` 2 — a realm that had no canonical body when it was staged,
   promoted, reserved or exiled — is not readable by 0.3.1. 0.3.1 treats such a legacy
   seal as absent, and loading a 0.3.2 save whose pending inheritance was built from one
-  clears that reservation (RepairRequired). No downgrade writer is provided: schema 2
-  cannot be expressed as schema 1 without inventing bodies, or as schema 0 without
-  dropping technology and provenance, and this project never fabricates. Back up saves
-  before updating; see PLAYTESTING.md, "Upgrade, rollback, and uninstall".
+  clears that reservation (RepairRequired). A third surface: an exile left in flight
+  carries its legacy snapshot inside the realm transition, and 0.3.1's transition
+  validator (`Polity/KingdomPolityRules.ValidationRealmTransition.cs:28`) rejects that
+  snapshot at `profile_schema` 2, so the whole in-flight transition reads as torn. No
+  downgrade writer is provided: schema 2 cannot be expressed as schema 1 without
+  inventing bodies, or as schema 0 without dropping technology and provenance, and this
+  project never fabricates. Back up saves before updating; see PLAYTESTING.md, "Upgrade,
+  rollback, and uninstall".
 
 ### Tests
 
@@ -47,8 +51,9 @@ below it.
   byte-exact recompose, transition copy, saved reservation shape, widened/mixed refusals,
   reader-bound source pin) and 2 exile cases (a canonical-body revised realm, and a pin
   that a profile revision never re-cuts the current realm foundation receipt).
-- Full suites pass 13,806 main and 5,100 Portable cases, zero skips, up from 13,715 and
-  5,093 on the integration branch. All four compile modes and 501 tooling tests pass.
+- Full suites pass 13,826 main and 5,116 Portable cases, zero skips, up from 13,735 and
+  5,109 on the `dev` integration branch. 501 tooling tests pass. The four-mode compile
+  gate passed the pre-merge bytes and was not re-run for the merged tree.
 - A controlled native water-maintenance scenario proves upkeep billing, one drought
   departure, loyal-core retention, refill and paid recovery with exact Chronicle
   delivery. Water scarcity itself is not new here; it shipped in 0.3.1 code and this
@@ -57,12 +62,16 @@ below it.
   separately gated. Retained failures and bounded native scope are recorded in
   `docs/STATUS.md`.
 
-> **Current unreleased census — exact structural gate passed.** Current 3049-file census is line-cap green:
-> 431,913 physical lines,zero files at or above300,1415 direct-XRL imports. Inventory SHA-256:
-> `5070e0e1a9093ec9725cc428d18118da8bf5818d478e460b6cda3410c384c4c7`.
-> The generated cold-install inventory contains 3080 files; no new subscription claim.
+> **Current unreleased census — exact structural gate passed.** Current 3052-file census is line-cap green:
+> 432,259 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
+> imports occur in 1417 files, 0 of them over the line limit. Inventory SHA-256:
+> `c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`.
+> The generated cold-install inventory contains 3083 files; no new subscription claim.
 > Root and independent AI reviewer read all four changed production sources and affected
-> boundaries; unchanged sources inherit the complete canonical parent review chain.
+> boundaries; unchanged sources inherit the complete canonical parent review chain. This
+> digest covers the merge with `dev`, so the exact-inventory human semantic review is open
+> against it and the Windows compile gate has not re-run for the merged bytes.
 
 ## Retained unreleased — master pause/resume correction, the claimed-ground light, and first-settler legibility
 

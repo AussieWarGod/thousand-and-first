@@ -37,12 +37,14 @@ schema refusals,unresolved cohort denial,revision-aware exile and retained found
 receipts are covered. Four checked-in seals written by writer code byte-identical to tag
 `v0.3.1` live in `DevTests/Fixtures/SealProfile`; their SHA-256s are pinned in
 `DevTests/KingdomSealProfileHistoricalFixtureTests.cs` and are never regenerated.
-Current3049-source production digest
-`5070e0e1a9093ec9725cc428d18118da8bf5818d478e460b6cda3410c384c4c7`
-passes structural review. Final Windows suites pass13,806 main/5,100 Portable cases,zero
-skips,up from13,715/5,093 on the integration branch;
+Current3052-source production digest
+`c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`
+passes the structural gate; its exact-inventory human semantic review is open after the `dev`
+merge. Final Windows suites on the merged tree pass13,826 main/5,116 Portable cases,zero
+skips,up from13,735/5,109 on the `dev` integration branch;
 canonical39198 passes ordinary3045/3049 and developer3182/3186 with137 Harness files,all four
-modes plus installed source/ABI. Complete ordinary/developer source comparisons pass.
+modes plus installed source/ABI on the pre-merge bytes,and is not restated for the merged tree.
+Complete ordinary/developer source comparisons pass for the bytes it ran on.
 Repository25818 passes501 tooling tests plus inventory,docs,architecture and XML audits.
 Older10882 compilation and superseded44659 managed evidence are not relabeled. First10865
 run failed only the Harness line limit; one blank line was removed before both final reruns.

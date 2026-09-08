@@ -49,12 +49,15 @@ which unblocks exile for any realm at profile revision2 or above. Schema0/1
 bytes remain unchanged; older0.3.1 readers reject schema2,so any next public package needs
 a new version. Public0.3.1/main/tag are unchanged.
 
-Current census:3049 staged C# files;431,913 physical lines;3080 files in the generated
-cold-install inventory. Direct `XRL` imports: 1415 files, 0 over the line limit.
-Inventory SHA-256: `5070e0e1a9093ec9725cc428d18118da8bf5818d478e460b6cda3410c384c4c7`.
-Complete canonical parent comparison proves3045 unchanged/four modified/no additions or
-removals. Root and independent reviewer read the complete delta and affected boundaries;
-the exact structural release gate passes. This is source review,not functional acceptance.
+Current census after merging `dev`:3052 staged C# files;432,259 physical lines;3083 files in
+the generated cold-install inventory. Direct `XRL` imports: 1417 files, 0 over the line limit.
+Inventory SHA-256: `c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`.
+Complete canonical parent comparison of this branch's own delta proves3045 unchanged/four
+modified/no additions or removals against integration parent2be6b00; the three added and
+seven modified C# sources plus one option row merged from `dev` carry their own review chain. Root and
+independent reviewer read the complete four-file delta and affected boundaries; the exact
+structural release gate passes and the exact-inventory human semantic review is open against
+this merged digest. This is source review,not functional acceptance.
 
 Focused38898 passed149 cases,zero skips. That receipt predates the seventh
 KingdomWaterMaintenanceNativeSourceTests case and is retained as measured. The branch adds
@@ -65,12 +68,13 @@ pinned SHA-256s; they prove the forward read is an identity — schema0/1 parse,
 byte-for-byte,survive a transition copy and validate as a saved reservation shape. Earlier
 full managed44659 was intentionally superseded after two imported-cohort fixture failures;
 it has no full-suite verdict. Earlier four-mode10882 passes only its earlier source bytes.
-Final licensed Windows suites passed13,806 main and5,100 Portable cases,zero skips,up from
-13,715/5,093 on the integration branch;
+Final licensed Windows suites on the merged tree passed13,826 main and5,116 Portable cases,
+zero skips,up from13,735/5,109 on the `dev` integration branch;
 both normal Rebuilds had zero warnings/errors. Canonical39198 TERMINAL0 passed all four
 C#7.3 modes:ordinary3045/3049,developer3182/3186,137 Harness files,plus installed Hearthpyre
-2.2.3 source/ABI. Exact comparison proves every ordinary/developer source matches current
-bytes. Repository25818 passed501 tests/89.477s plus cold inventory,docs,architecture and XML.
+2.2.3 source/ABI on the pre-merge bytes; the seal-lane production sources are unchanged since
+that run,and the sources merged from `dev` carry `dev`'s own compile receipts. Exact comparison
+proved every ordinary/developer source matched the bytes it ran on. Repository25818 passed501 tests/89.477s plus cold inventory,docs,architecture and XML.
 The first10865 managed run retained13794 passes/one Harness line-limit failure; removing
 one blank line closed it before the final native and full-suite reruns. No guard was weakened.
 
