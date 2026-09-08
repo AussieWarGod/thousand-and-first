@@ -117,6 +117,12 @@ namespace ThousandAndFirst.Harness
 				Require(KingdomCitizenship.TryEnroll(system, body,
 					KingdomCitizenshipEnrollmentReason.Arrival, tick, out string failure), failure);
 				Require(KingdomCitizenship.BelongsTo(system, body), "enrollment lost citizenship authority");
+				// Production's roster gate (KingdomResidents.Enrollable) requires KingdomBorn == 1;
+				// TryEnroll does not set it, so a fixture body must carry its own born provenance
+				// before TryEnsureRow, exactly as the subsidence, water and upgrade fixtures do.
+				body.SetIntProperty("KingdomBorn", 1);
+				Require(body.GetIntProperty("KingdomBorn") == 1,
+					"fixture born provenance did not persist");
 				string name = "bounty fixture settler " + (i + 1);
 				body.GiveProperName(name, Force: true);
 				body.SetStringProperty("KingdomName", name);
