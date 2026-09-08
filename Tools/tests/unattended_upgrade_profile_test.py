@@ -185,7 +185,30 @@ class NativeSourceReceiptTest(unittest.TestCase):
             with self.subTest(artifact=artifact), tempfile.TemporaryDirectory() as temporary:
                 root = Path(temporary)
                 config, frozen = self.fixture(root)
-                (root / artifact).write_bytes(b"MODERROR old defect\n")
+                (root / artifact).write_bytes(b"MODERROR [The Thousand and First] old defect\n")
+                with self.assertRaises(ValueError):
+                    witnesses.capture_donor(root, config, frozen)
+
+    def test_third_party_diagnostic_is_retained_never_refused(self):
+        # The installed Pets of Harvest Dawn pack's own MODWARN (emitted at mod discovery, see
+        # upgrade_profile_inputs.local_inputs) must never refuse a native capture -- only a
+        # MODERROR/MODWARN naming The Thousand and First does (Tools/check-player-log.sh's
+        # contract). A TAF MODWARN and a TAF MODERROR both still refuse.
+        pets = (b"INFO - native script completed\n"
+                b"MODWARN [Pets of Harvest Dawn] - Mod defining manual load order, "
+                b"please convert it to use the Dependencies field.\n")
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            config, frozen = self.fixture(root)
+            (root / "Player.log").write_bytes(pets)
+            witness = witnesses.capture_donor(root, config, frozen)
+            self.assertEqual(witness["logSha256"], inputs.sha(pets))
+        for tagged in (b"MODWARN [The Thousand and First] - refused\n",
+                       b"MODERROR [The Thousand and First] - refused\n"):
+            with self.subTest(tagged=tagged), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                config, frozen = self.fixture(root)
+                (root / "Player.log").write_bytes(b"INFO - native script completed\n" + tagged)
                 with self.assertRaises(ValueError):
                     witnesses.capture_donor(root, config, frozen)
 
@@ -266,3 +289,37 @@ class CrossVersionPersonaRosterTest(unittest.TestCase):
                 found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
                 self.assertTrue(found["REQUEST"])
                 self.assertTrue(found["SCRIPT_WORDS"])
+
+
+class DiagnosticContractTest(unittest.TestCase):
+    """Tools/check-player-log.sh's TAF-only failure contract, mirrored for the upgrade runner."""
+
+    PETS_LOAD_ORDER = (b"MODWARN [Pets of Harvest Dawn] - Mod defining manual load order, "
+                        b"please convert it to use the Dependencies field.")
+    PETS_XML = (b"MODWARN [Pets of Harvest Dawn] - XmlDataHelper:: <...>/PetsPack1/"
+                b"Freehold_Pet_Ercolano/PopulationTables.xml line 4 char 6")
+
+    def test_pets_pack_modwarn_is_retained_and_never_refuses(self):
+        raw = b"INFO clean\n" + self.PETS_LOAD_ORDER + b"\n" + self.PETS_XML + b"\n"
+        retained = witnesses.diagnostics(raw)
+        self.assertEqual(retained, [self.PETS_LOAD_ORDER.decode(), self.PETS_XML.decode()])
+
+    def test_taf_modwarn_refuses(self):
+        raw = b"INFO clean\nMODWARN [The Thousand and First] - something bad happened\n"
+        with self.assertRaisesRegex(ValueError, "Thousand and First diagnostic"):
+            witnesses.diagnostics(raw)
+
+    def test_taf_moderror_refuses(self):
+        raw = b"INFO clean\nMODERROR [The Thousand and First] - refused\n"
+        with self.assertRaisesRegex(ValueError, "Thousand and First diagnostic"):
+            witnesses.diagnostics(raw)
+
+    def test_taf_exception_stack_frame_refuses_but_similarly_named_mod_does_not(self):
+        with self.assertRaisesRegex(ValueError, "Thousand and First diagnostic"):
+            witnesses.diagnostics(b"   at ThousandAndFirst.Foo.Bar() line 12\n")
+        self.assertEqual(witnesses.diagnostics(
+            b"MODWARN [The Thousand and First Helper] - not us\n"),
+            ["MODWARN [The Thousand and First Helper] - not us"])
+
+    def test_clean_log_retains_nothing(self):
+        self.assertEqual(witnesses.diagnostics(b"INFO - Enabled mods: The Thousand and First\n"), [])

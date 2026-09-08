@@ -11,6 +11,7 @@ namespace ThousandAndFirst.Tests
 			"Growth/KingdomWaterDebit.Commit.cs",
 			"Growth/KingdomWaterDebit.RollbackAndVerification.cs",
 			"Growth/KingdomWaterDebit.ReservationVerification.cs",
+			"Growth/KingdomWaterDebit.OpenReservations.cs",
 			"Growth/KingdomWaterDebit.ClaimsAndHelpers.cs"
 		};
 

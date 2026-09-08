@@ -27,23 +27,32 @@ below it.
   bootstrap with the message it stopped with before, rather than staking a lot the settlement will
   not admit.
 
-> **Current unreleased census — exact structural gate passed.** Current 3054-file census is line-cap green:
-> 432,733 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> **Current unreleased census — exact structural gate passed.** Current 3062-file census is line-cap green:
+> 434,436 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
-> imports occur in 1418 files, 0 of them over the line limit. Inventory SHA-256:
-> `5f22a97d1fbfcefcbe7f28f7e0a0211ad558a6cf0fbb22eba78b22f1bb46f325`.
-> The generated cold-install inventory contains 3085 files; no new subscription claim.
-> The shelter-ingress delta over the tent-row census below is one added and one modified production
-> source: the quickstart rules' new shelter partial, and the quickstart rules themselves. All four
-> `Tools/gate.sh` modes compile clean on this tree — staged baseline (3050 sources), staged
+> imports occur in 1425 files, 0 of them over the line limit. Inventory SHA-256:
+> `ff13330463a990edbef95c2ae35e0e552691f2f8e0f86a525dc873bd61f7c202`.
+> The generated cold-install inventory contains 3093 files; no new subscription claim.
+> This digest is the shelter ingress merged over the render-only city sight, the stockpile unit
+> capacity, the first-basin water store and the Kingdom Quickstart tent rows retained below; each
+> delta carries its own review chain and none is restated for the others.
+> The shelter-ingress delta over the city-sight census below is one added and one modified production
+> source: the quickstart rules' new shelter partial, and the quickstart rules themselves. Before the
+> merge, all four
+> `Tools/gate.sh` modes compiled clean on that delta's own bytes — staged baseline (3050 sources), staged
 > compatibility (3054), dev-harness baseline (3204) and dev-harness compatibility (3208) — together
-> with the installed-Hearthpyre source and ABI step. Both engine-free suites run green (13,905
-> main/5,193 Portable,zero skips) and the Tools suite passes 615 tests.
+> with the installed-Hearthpyre source and ABI step, and both engine-free suites ran green there (13,905
+> main/5,193 Portable, zero skips).
+> On the merged tree the staged baseline (3058 sources) and staged compatibility (3062 sources plus
+> the tracked Hearthpyre 2.2.3 ABI stub) compile clean under Roslyn 9.0.306 on Linux against the
+> installed managed assemblies rather than through `Tools/gate.sh`; both engine-free suites run green
+> there (13,987 main/5,199 Portable, zero skips) and the 627-test tooling suite passes.
 > The six-profile Quickstart boot matrix at seed `#43101` ran natively on these bytes: marsh,
 > canyon and dunes with advisor yes and no all reach checker `verdict=PASS` with two
 > `[TAF] plot staked: tentrow` rows apiece and a strict-clean Player.log, and `quickstart-save
 > marsh yes` plus its separate cold load pass with unchanged heart, stock and IDs.
-> NOT run for it: the Windows gate, ordinary play, graceful Quit and Steam delivery. The
+> NOT run for the merged tree: the two dev-harness modes, the installed-Hearthpyre source step, the
+> Windows gate, ordinary play, graceful Quit and Steam delivery. The
 > 1,700-tick raising figure is still a reading of the raising rule, not of a running plot clock.
 > The exact-inventory human semantic review is open against this digest; this is not Beta sign-off.
 
@@ -88,26 +97,83 @@ below it.
   the ground rather than trusting the branch that ran, so it never promises one. The reservation on
   a staked lot remains an owned object property registered in the removal-coverage allowlist.
   Ordinary founding is untouched. Public 0.3.1 is unchanged.
+- Inside a zone your seat claims you now see every citizen and what they are doing, walls or
+  no walls. This is the eye only: the rules, rest, autoexplore and Look still use ordinary line
+  of sight, and invisible creatures stay invisible at every one of the six light tiers that
+  would reveal them (Darkvision 10, Dimvision 15, Interpolight 210, Radar 228, LitRadar 232,
+  Omniscient 255) — the claimed ground is lit to 200, which is none of them. Three honest
+  oddities follow: a creature you are already targeting through a wall keeps its lock and never
+  triggers "you have lost sight of", you hear what is drawn, and Look will refuse a cell you can
+  plainly see. The shipped option text names the retained lock rather than claiming targeting is
+  untouched. Creatures you see this way count as seen, so they register in the bestiary — and
+  `Seen()` also records the blueprint and registers a `Worshippable`-tagged object with the
+  factions, which is the one place a drawing-only projection writes state that outlives the
+  frame. New option `r_TAF_OptionCitySight`, default Yes; switching it off closes the walls on
+  the next frame. Existing saves need nothing: the projection is one frame of drawing state,
+  never persisted, and a save made while it is on loads identically with it off.
+- The projection is taken from a flag armed by a Harmony prefix on
+  `XRLCore.RenderBaseToBuffer` and spent by a prefix on `Zone.Render(ScreenBuffer)`, so it lands
+  behind every native light and visibility contributor and makes no visibility reckoning of its
+  own — the engine has already made the founder's before the draw, so repeating it could open no
+  further cell while costing a whole-zone line-of-sight sweep on the render thread every frame.
+  A Harmony finalizer on the same method closes the projection on every exit from the draw,
+  including a thrown one, and the prefix body is wrapped like every other Harmony body here.
+- City sight adds 6 source-contract cases: the one-drawn-frame projection shape (the
+  non-rendering-frame early return ordered before the whole-zone reveal, the honest snapshot
+  taken before it and with no reckoning of its own, one after-render restore, no explored-map
+  write, all six invisibility tiers named), the two backstops (an outstanding projection dropped
+  at the head of the next frame, restored ahead of every gate at end of turn), the render seam
+  and its Zone.Render seat, the draw-scope finalizer that closes a thrown frame, a render model, run rather than read, that fails if the projection moves back inside the dispatch behind a `Blackout`, and a
+  repo-wide sweep asserting the crashing patch target (`BeforeRenderEvent.Send`) appears in no
+  staged source. Suites pass 13,910 main and 5,199 Portable cases, zero skips; 627 tooling tests
+  pass. The staged baseline (3,051 sources) and compatibility (3,055 sources) compile modes were
+  re-run clean with warnings-as-errors on these bytes, along with both dev-harness overlay
+  modes.
 
-> **Retained tent-row census — exact structural gate passed.** That 3053-file census was line-cap green:
-> 432,593 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> **Retained city-sight census — exact structural gate passed.** That 3061-file census was line-cap green:
+> 434,296 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
-> imports occur in 1418 files, 0 of them over the line limit. Inventory SHA-256:
-> `d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0`.
-> The generated cold-install inventory contains 3084 files; no new subscription claim.
-> The tent-row delta over the merged `dev` census below is one added and six modified production
-> sources: the quickstart bootstrap's shelter partial, the quickstart rules, the bootstrap, the camp
-> builder, the generated removal coverage, the quickstart receipt model and its wire codec. It
-> compiled clean in the staged baseline (3049 sources) and staged compatibility (3053 sources)
-> modes only, on Linux with the SDK Roslyn against the installed managed assemblies rather than
-> through `Tools/gate.sh`; both engine-free suites run green there (13,834 main/5,123 Portable,zero
-> skips) and the repository audit passes.
-> NOT run for it: the two dev-harness compile modes, the installed-Hearthpyre source step, the
+> imports occur in 1425 files, 0 of them over the line limit. Inventory SHA-256:
+> `7147169b7ccb8d2142d9791bd5faec8405eb305e33bca7a9b9feb9c3948c5a1e`.
+> The generated cold-install inventory contains 3092 files; no new subscription claim.
+> This digest is the render-only city sight merged over the stockpile unit capacity, the
+> first-basin water store and the Kingdom Quickstart tent rows retained below; each delta carries
+> its own review chain and none is restated for the others.
+> The city-sight delta over the merged stockpile census is two added and two modified
+> production sources: the render-scope finalizer and the render seam that owns the projection are
+> the additions; the claimed-ground light part and the settlement event file are the
+> modifications. Merging the city-sight end-of-turn backstop with the basin-capacity zone-activation
+> guard put `Core/KingdomSystem.z20.Events.cs` at 305 physical lines, so the merge reflowed those two
+> comment blocks wider — every word and engine citation kept, no code or statement order changed —
+> and the shard is back at 299.
+> The merged tree compiles clean in the staged baseline (3057 sources) and staged compatibility
+> (3061 sources plus the tracked Hearthpyre 2.2.3 ABI stub), on Linux with the SDK Roslyn 9.0.306
+> against the installed
+> managed assemblies rather than through `Tools/gate.sh`; both engine-free suites run green there
+> (13,986 main/5,199 Portable, zero skips) and the 627-test tooling suite passes.
+> NOT run for it: the installed-Hearthpyre source step, the two dev-harness modes, the
 > Windows gate, the developer boot matrix and any native in-game run. The 1,700-tick raising figure
 > is a reading of the raising rule, not of a running plot clock. The exact-inventory human semantic
 > review is open against this digest; this is not Beta sign-off.
 
-## Unreleased — empty-camp legacy correction
+## Unreleased — empty-camp legacy correction and stockpile capacity
+
+### Added
+
+- The first basin is the settlement's first water store: 16 drams at the rite ground, 48 at
+  the waterstone, 160 at the moot, 512 at the court, 1024 at the arcology. It ships empty —
+  the rite's 8 drams are the cost, not a deposit — and its capacity is only ever raised,
+  never lowered, so drams already in it can never spill when the rung around it is rebuilt.
+  A camp of five drinking from it can now become a steading without a cask rack. The
+  dedication is stamped in code at the founding-heart relic slot rather than authored on the
+  blueprint, so the Debug architecture gallery's photographic copy of the same basin stays
+  out of every settlement's water accounts. A widening that would land underneath an open
+  water debit bound to that basin, an unsettled arrival water leg drawing from it, or a
+  routed-input construction lease holding it, is skipped and said once in the ledger, then
+  taken when that clears. For an existing save: a standing basin is dedicated and brought up
+  to what its rung is worth on load or on the first activation of its settlement zone, and
+  from then on it permanently occupies one of the settlement's 24 dedicated-vessel slots,
+  which is one fewer cask or rack the charter will count.
 
 ### Fixed
 
@@ -123,6 +189,51 @@ below it.
   recomputing it from the latest profile revision, so a realm whose profile was revised
   after founding can still be exiled. That covers any realm at profile revision 2 or
   above, not only an empty camp. The original foundation receipt is never rewritten.
+- The first basin's capacity reconciliation now runs only AFTER the seat exchange, and only
+  on ground the seated settlement claims. Walking into a second city activated that zone
+  before the seat moved, so the dedication would have landed in the departed city's water
+  accounts and the unsettled-arrival-leg hold would have been read from the departed city's
+  growth book, missing a leg the destination city was holding; a foreign, seceded or exiled
+  realm's standing heart could also have been dedicated as the seated settlement's water
+  store. Both reconciler entries now refuse unclaimed ground themselves — including the one a
+  finished rung uses, which resolves the seated realm rather than the realm that owns the
+  ground — so no caller can reach one of those hearts by asking at the wrong moment.
+- A committed water receipt whose caller may still compensate it now keeps its per-vessel
+  hold until that caller closes the window. The hall's commission commits the water, runs the
+  bit-debit callbacks and only then decides whether to roll back; the hold was dropped at
+  commit, so a basin widened inside that span made the rollback refuse — it re-proves
+  `MaxVolume == OriginalMaxVolume` before it restores a dram — turning a recoverable
+  interruption into water the founder could never get back. The window is opt-in and never
+  inferred from a commit: a caller that commits and then finishes its own work, such as a
+  construction whose completed rung widens the very basin it drained, must not hold that
+  vessel or the rung it paid for could never widen anything. Every caller that can refund
+  after its own callbacks closes that window in a `finally`, so a throw inside the span cannot
+  leave an abandoned receipt holding a vessel; the hall's commission settle span moved into
+  `Growth/KingdomLab.Commission.Settle.cs` to make room for one.
+
+### Added
+
+- A stockpile now holds a stated number of material units — 48 for a chest dedicated by
+  hand, declared on the blueprint for built stores, which run from 48 for a fixture shelf
+  through 64 for a locker, 96 for the civic larder and a purpose's own stores, 192 for the
+  granary to 384 for the Granary-Colossus. Eight hand-dedicated stores hold 384 units
+  between them, which is more than the grandest single bill in the catalogue, so no design
+  the mod ships is ever made impossible to raise by the cap. A full store refuses the next
+  delivery, which then goes to the next store with room or is stacked on the ground;
+  nothing you already put in a chest is ever uncounted, moved or lost. Every way the
+  settlement takes material in respects it: its own deliveries, clearance payout, strike
+  salvage and a bounty porter all pick a store with room. The keepers say a store is full
+  once, and stop saying it the moment there is room again. Note what fills a store: a
+  stockpile holds everything the settlement can spend — materials, rare finds, and
+  anything that can be taken apart for bits, which is most loot — so a chest you dedicate
+  as a stockpile is a poor loot chest. Never weight: the reports keep printing units, now
+  with the room beside the tally (`18 of 48 units`). An over-cap stockpile in a standing
+  save reads exactly what it read before. The hold is physical rather than spendable: a
+  stack a live work has reserved is still standing in the chest and still counts against
+  the room, so the room never jumps when a reservation is taken or released. A delivery
+  counts only what a store actually received: the bundle it makes is proved standing in
+  that exact store, of that material, carrying the count it was stamped with, before a
+  single unit is written down.
 
 ### Compatibility
 
@@ -151,8 +262,39 @@ below it.
   reader-bound source pin) and 2 exile cases (a canonical-body revised realm, and a pin
   that a profile revision never re-cuts the current realm foundation receipt).
 - Full suites pass 13,826 main and 5,116 Portable cases, zero skips, up from 13,735 and
-  5,109 on the `dev` integration branch. 501 tooling tests pass. The four-mode compile
-  gate passed the pre-merge bytes and was not re-run for the merged tree.
+  5,109 on the `dev` integration branch. 501 tooling tests pass. With the first-basin water
+  store merged over the Kingdom Quickstart tent rows, the Linux Roslyn 9.0.306 run of the
+  same suites passes 13,925 main and 5,193 Portable cases, zero skips (this count is from
+  Linux, not from the licensed Windows run above): 21 new cases covering the capacity ladder
+  against the stage gates and the leak law,
+  the relic-slot dedication and the gallery's exclusion from it, the existing-authority stamp
+  the survey sweep respects, the raise-only reconciler, the announce-once hold and its three
+  distinct hold sources, the per-vessel open-reservation registry, the unsettled arrival water
+  leg, the basin's unchanged bare-ground reading and un-strikeable refusal, the seat-then-
+  claim order the reconciliation is asked in, the committed receipt that keeps its vessel
+  hold across a caller's compensation window, one adversary contract per caller that can refund
+  after its own callbacks (the window opens before the commit, closes inside an enclosing
+  finally, opens exactly once and has no refund below it), the construction and sowing spans
+  themselves, the hall commission's compensate-before-every-exit invariant, the proof that a
+  finished rung is still free to widen the basin its funding drained, and the loader's attribute
+  pair and no-thaw contract. The staged and dev-harness baseline and compatibility compiles were
+  re-run on the merged tree; the installed-ABI source step and the Windows gate were not.
+- The stockpile unit capacity adds 53 cases in `DevTests/KingdomStockpileCapacityTests.cs`:
+  the capacity fallback and the named ladder, the tag identities, both counting paths
+  staying capacity-blind, the physical hold, room never going negative, a delivery filling
+  to room then walking on then spilling, a full store never being emptied, fullness said
+  once and taken back, the porter, the status line and its physical-aware empty branch,
+  every settlement-owned intake path choosing a store with room, a settlement out of room
+  never reported as a missing blueprint, the modder documentation, the materials
+  roster count, the destination and its room being re-proved after every engine callback
+  (the stamping of a stack count included, which is itself a callback seam), the one-room
+  adversary in numbers, the stamped bundle being refused outright when its store fills
+  while the stamp runs, only what a store actually gained ever being counted, and the
+  landing proof with its narrower withdrawal (only a bundle that reached nobody).
+  Measured on this branch with `dev` merged (which brought the cross-version profile
+  tooling, the Kingdom Quickstart tent rows and the first-basin water store): full suites
+  pass 13,980 main and 5,193 Portable cases, zero skips, and 627 tooling tests pass. Both
+  staged compile modes are clean with warnings as errors.
 - Tools: the smoke launcher accepts every seal schema the game reads (4..6) and the full
   legacy store layout; it previously refused progressed profiles. Maintainer tooling only,
   with no player-visible or runtime effect.
@@ -204,16 +346,41 @@ below it.
   separately gated. Retained failures and bounded native scope are recorded in
   `docs/STATUS.md`.
 
-> **Retained empty-camp merge census — exact structural gate passed.** That 3052-file census was line-cap green:
-> 432,259 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> **Retained stockpile-capacity census — exact structural gate passed.** That 3056-file census was line-cap green:
+> 433,239 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
-> imports occur in 1417 files, 0 of them over the line limit. Inventory SHA-256:
-> `c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`.
-> The generated cold-install inventory contains 3083 files; no new subscription claim.
-> Root and independent AI reviewer read all four changed production sources and affected
+> imports occur in 1420 files, 0 of them over the line limit. Inventory SHA-256:
+> `4f006f327ef59e0c36e65ea11fad27b5b508d8946bffa9ed8770a147fe3dde79`.
+> The generated cold-install inventory contains 3087 files; no new subscription claim.
+> It covers the stockpile unit capacity above the retained Kingdom Quickstart tent rows merged
+> from `dev` and the empty-camp legacy correction below them: three
+> added production sources (the capacity constants, the survey's material-store reads and the
+> stockpile-room rules, which own the room, the intake that respects it and that intake's proofs),
+> six modified (the delivery, the status line, the porter carry, the clearance payout's
+> destination choice, the strike salvage's destination choice and the yard's nothing-landed
+> fault line) and the regenerated removal-coverage roster. Roslyn 9.0.306 on Linux compiled the staged baseline
+> (3052 sources) and staged compatibility (3056 sources plus the tracked Hearthpyre 2.2.3 ABI
+> stub) sets clean against the licensed Managed references, warnings as errors. The two
+> dev-harness modes did not run for this delta and no native run was made; it no longer binds the
+> current bytes, which the census at the top of this file carries.
+>
+> The earlier `c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c` digest bound the
+> empty-camp legacy merge with `dev` at 3052 files and 432,259 physical lines; it no longer binds
+> the current bytes. Root and independent AI reviewer read all four production sources changed in
+> that delta and their affected boundaries; unchanged sources inherit the complete canonical
+> parent review chain.
+
+> **Retained first-basin water-store census — exact structural gate passed.** That 3054-file census was line-cap green:
+> 432,819 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
+> imports occur in 1419 files, 0 of them over the line limit. Inventory SHA-256:
+> `bb8531b8c45a7a57f4a9bcfc1c86576a095e37b872e3b1ede82f446ade729e94`.
+> The generated cold-install inventory contains 3085 files; no new subscription claim.
+> Root and independent AI reviewer read the seal lane's four changed production sources and
+> the first-basin water store's two added and twelve modified ones, and affected
 > boundaries; unchanged sources inherit the complete canonical parent review chain. This
-> digest covers the merge with `dev`, so the exact-inventory human semantic review is open
-> against it and the Windows compile gate has not re-run for the merged bytes.
+> digest covers that merge with `dev`, so the exact-inventory human semantic review is open
+> against it and the Windows compile gate has not re-run for those merged bytes.
 
 ## Retained unreleased — master pause/resume correction, the claimed-ground light, and first-settler legibility
 

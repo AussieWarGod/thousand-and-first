@@ -103,116 +103,131 @@ namespace ThousandAndFirst
 				Updated = Job;
 				return AcceptedResult(Job, NewJob);
 			}
-			bool waterCommitted = Water.Commit();
-			KingdomConstructionClaims measured;
-			if (!KingdomConstructionRules.TryApplyWaterAttempt(beforeWater, Water.Amount,
-				Water.Spent, Water.Outstanding, Water.Lost, Water.MeasurementExact, out measured))
+			// The window opens BEFORE the commit and closes in the finally below. Everything
+			// between them -- the WaterSettled and MaterialPending publishes and the material
+			// commit's own object callbacks -- can run before this method decides to compensate,
+			// and Rollback re-proves every bound vessel's MaxVolume before it restores a dram. A
+			// basin widening landing in that span would refuse the compensation for good.
+			Water.BeginCompensationWindow();
+			try
 			{
-				Job.Claims.Exact = false;
-				TransitionAndPublish(ref Job, KingdomConstructionPhase.InspectionRequired,
-					"The exact water receipt could not be reconciled.", out _);
-				Material.Cancel();
-				Updated = Job;
-				Failure = Water.Failure ?? "The exact water receipt could not be reconciled.";
-				return KingdomConstructionStartResult.Outstanding;
-			}
-			Job.Claims = measured;
-			KingdomConstructionPhase waterPhase = Water.MeasurementExact
-				? KingdomConstructionPhase.WaterSettled
-				: KingdomConstructionPhase.InspectionRequired;
-			if (!TransitionAndPublish(ref Job, waterPhase, Water.Failure, out Failure))
-			{
-				Material.Cancel();
-				Updated = Job;
-				return KingdomConstructionStartResult.Outstanding;
-			}
-			if (!waterCommitted)
-			{
-				Material.Cancel();
-				Updated = Job;
-				Failure = Water.Failure;
-				if (Water.MeasurementExact && Water.Spent == 0 && NewJob)
+				bool waterCommitted = Water.Commit();
+				KingdomConstructionClaims measured;
+				if (!KingdomConstructionRules.TryApplyWaterAttempt(beforeWater, Water.Amount,
+					Water.Spent, Water.Outstanding, Water.Lost, Water.MeasurementExact, out measured))
+				{
+					Job.Claims.Exact = false;
+					TransitionAndPublish(ref Job, KingdomConstructionPhase.InspectionRequired,
+						"The exact water receipt could not be reconciled.", out _);
+					Material.Cancel();
+					Updated = Job;
+					Failure = Water.Failure ?? "The exact water receipt could not be reconciled.";
+					return KingdomConstructionStartResult.Outstanding;
+				}
+				Job.Claims = measured;
+				KingdomConstructionPhase waterPhase = Water.MeasurementExact
+					? KingdomConstructionPhase.WaterSettled
+					: KingdomConstructionPhase.InspectionRequired;
+				if (!TransitionAndPublish(ref Job, waterPhase, Water.Failure, out Failure))
+				{
+					Material.Cancel();
+					Updated = Job;
+					return KingdomConstructionStartResult.Outstanding;
+				}
+				if (!waterCommitted)
+				{
+					Material.Cancel();
+					Updated = Job;
+					Failure = Water.Failure;
+					if (Water.MeasurementExact && Water.Spent == 0 && NewJob)
+					{
+						TransitionAndPublish(ref Job, KingdomConstructionPhase.Compensated, Failure, out _);
+						Updated = Job;
+						return KingdomConstructionStartResult.Refused;
+					}
+					return KingdomConstructionStartResult.Outstanding;
+				}
+
+				if (!TransitionAndPublish(ref Job, KingdomConstructionPhase.MaterialPending, null, out Failure))
+				{
+					Material.Cancel();
+					Updated = Job;
+					return KingdomConstructionStartResult.Outstanding;
+				}
+				KingdomMaterialDebitResult result = Material.Commit();
+				KingdomConstructionClaims materialMeasured;
+				if (!KingdomConstructionRules.TryApplyMaterial(Job.Claims, result, out materialMeasured))
+				{
+					Job.Claims.Exact = false;
+					TransitionAndPublish(ref Job, KingdomConstructionPhase.InspectionRequired,
+						"The material receipt could not be reconciled.", out _);
+					Updated = Job;
+					Failure = result.Failure ?? "The material receipt could not be reconciled.";
+					return KingdomConstructionStartResult.Outstanding;
+				}
+				Job.Claims = materialMeasured;
+				if (result.Exact)
+				{
+					if (!TransitionAndPublish(ref Job, KingdomConstructionPhase.Funded, null, out Failure))
+					{
+						Updated = Job;
+						return KingdomConstructionStartResult.Outstanding;
+					}
+					Updated = Job;
+					return KingdomConstructionStartResult.Funded;
+				}
+				Failure = result.Failure;
+				if (!result.Clean)
+				{
+					// Both partial outcomes carry an exact spent/outstanding split. Retry only that
+					// persisted outstanding claim; quarantine outcomes that cannot prove such a split.
+					TransitionAndPublish(ref Job, result.Partial
+						? KingdomConstructionPhase.Outstanding : KingdomConstructionPhase.InspectionRequired,
+						Failure, out _);
+					Updated = Job;
+					return KingdomConstructionStartResult.Outstanding;
+				}
+
+				// This attempt took no material. Return only this attempt's water into its exact vessels.
+				if (!TransitionAndPublish(ref Job, KingdomConstructionPhase.CompensationPending,
+					Failure, out _))
+				{
+					Updated = Job;
+					return KingdomConstructionStartResult.Outstanding;
+				}
+				bool rolledBack = Water.Rollback();
+				KingdomConstructionClaims afterRollback;
+				if (!KingdomConstructionRules.TryApplyWaterAttempt(beforeWater, Water.Amount,
+					Water.Spent, Water.Outstanding, Water.Lost, Water.MeasurementExact, out afterRollback))
+				{
+					Job.Claims.Exact = false;
+				}
+				else
+				{
+					// Keep material accounting already merged; this clean result added zero to it.
+					afterRollback.MaterialSpent = Job.Claims.MaterialSpent;
+					afterRollback.MaterialOutstanding = Job.Claims.MaterialOutstanding;
+					afterRollback.MaterialLost = Job.Claims.MaterialLost;
+					Job.Claims = afterRollback;
+				}
+				if (rolledBack && Water.MeasurementExact && NewJob)
 				{
 					TransitionAndPublish(ref Job, KingdomConstructionPhase.Compensated, Failure, out _);
 					Updated = Job;
 					return KingdomConstructionStartResult.Refused;
 				}
-				return KingdomConstructionStartResult.Outstanding;
-			}
-
-			if (!TransitionAndPublish(ref Job, KingdomConstructionPhase.MaterialPending, null, out Failure))
-			{
-				Material.Cancel();
-				Updated = Job;
-				return KingdomConstructionStartResult.Outstanding;
-			}
-			KingdomMaterialDebitResult result = Material.Commit();
-			KingdomConstructionClaims materialMeasured;
-			if (!KingdomConstructionRules.TryApplyMaterial(Job.Claims, result, out materialMeasured))
-			{
-				Job.Claims.Exact = false;
-				TransitionAndPublish(ref Job, KingdomConstructionPhase.InspectionRequired,
-					"The material receipt could not be reconciled.", out _);
-				Updated = Job;
-				Failure = result.Failure ?? "The material receipt could not be reconciled.";
-				return KingdomConstructionStartResult.Outstanding;
-			}
-			Job.Claims = materialMeasured;
-			if (result.Exact)
-			{
-				if (!TransitionAndPublish(ref Job, KingdomConstructionPhase.Funded, null, out Failure))
-				{
-					Updated = Job;
-					return KingdomConstructionStartResult.Outstanding;
-				}
-				Updated = Job;
-				return KingdomConstructionStartResult.Funded;
-			}
-			Failure = result.Failure;
-			if (!result.Clean)
-			{
-				// Both partial outcomes carry an exact spent/outstanding split. Retry only that
-				// persisted outstanding claim; quarantine outcomes that cannot prove such a split.
-				TransitionAndPublish(ref Job, result.Partial
+				TransitionAndPublish(ref Job, Water.MeasurementExact
 					? KingdomConstructionPhase.Outstanding : KingdomConstructionPhase.InspectionRequired,
-					Failure, out _);
+					Failure ?? Water.Failure, out _);
 				Updated = Job;
 				return KingdomConstructionStartResult.Outstanding;
 			}
-
-			// This attempt took no material. Return only this attempt's water into its exact vessels.
-			if (!TransitionAndPublish(ref Job, KingdomConstructionPhase.CompensationPending,
-				Failure, out _))
+			finally
 			{
-				Updated = Job;
-				return KingdomConstructionStartResult.Outstanding;
+				// Closed on EVERY exit, including the funded one: the hold must not outlive this
+				// method, or the rung this funding paid for could never widen the basin it drained.
+				Water.EndCompensationWindow();
 			}
-			bool rolledBack = Water.Rollback();
-			KingdomConstructionClaims afterRollback;
-			if (!KingdomConstructionRules.TryApplyWaterAttempt(beforeWater, Water.Amount,
-				Water.Spent, Water.Outstanding, Water.Lost, Water.MeasurementExact, out afterRollback))
-			{
-				Job.Claims.Exact = false;
-			}
-			else
-			{
-				// Keep material accounting already merged; this clean result added zero to it.
-				afterRollback.MaterialSpent = Job.Claims.MaterialSpent;
-				afterRollback.MaterialOutstanding = Job.Claims.MaterialOutstanding;
-				afterRollback.MaterialLost = Job.Claims.MaterialLost;
-				Job.Claims = afterRollback;
-			}
-			if (rolledBack && Water.MeasurementExact && NewJob)
-			{
-				TransitionAndPublish(ref Job, KingdomConstructionPhase.Compensated, Failure, out _);
-				Updated = Job;
-				return KingdomConstructionStartResult.Refused;
-			}
-			TransitionAndPublish(ref Job, Water.MeasurementExact
-				? KingdomConstructionPhase.Outstanding : KingdomConstructionPhase.InspectionRequired,
-				Failure ?? Water.Failure, out _);
-			Updated = Job;
-			return KingdomConstructionStartResult.Outstanding;
 		}
 
 		private static KingdomConstructionStartResult AcceptedResult(KingdomConstructionJob Job, bool NewJob)

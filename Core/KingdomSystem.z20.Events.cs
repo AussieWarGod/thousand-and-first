@@ -49,6 +49,12 @@ namespace ThousandAndFirst
 		/// </summary>
 		public override bool HandleEvent(EndTurnEvent E)
 		{
+			// City sight is a one-frame projection restored by the engine's own after-render pass. This is the backstop, and it is deliberately ahead of every
+			// gate below: a turn must never begin on an opened visibility map, whatever the master option or ownership say. A zone part could receive EndTurnEvent
+			// (ActionManager.ProcessSingleTurn dispatches it to every cached zone, D/XRL/Core/ActionManager.cs:439-450), but the system is the earlier and safer
+			// seat: EndTurnEvent.Send(game) runs at ActionManager.cs:1650, before ProcessSingleTurn at :1651, and that pass skips Suspended/Stale zones, so a
+			// zone-part backstop would fire later and not at all for a zone suspended with a projection outstanding.
+			XRL.World.ZoneParts.KingdomClaimedGroundLight.RestoreHonestVisibility();
 			XRLGame game = The.Game;
 			if (game == null) return base.HandleEvent(E);
 			KingdomBounty.ObserveManningGlobalOption(this, game.TimeTicks);
@@ -221,6 +227,18 @@ namespace ThousandAndFirst
 				if (E.Zone != null && KingdomCreed.SecededHolds(this, E.Zone.ZoneID))
 				{
 					XRL.Messages.MessageQueue.AddPlayerMessage("{{K|This ground isn't yours to keep anymore. (Charter: how your cities hold each other)}}");
+				}
+			});
+			// AFTER the seat, and gated on the seated realm's own claim. The reconciliation dedicates a store into the SEATED settlement's accounts and reads that
+			// settlement's unsettled growth water legs, so asking before the exchange would answer for the city the founder just left: a second city's basin could
+			// be dedicated and widened against the wrong ledger, and a hold the destination city is holding would be missed. A stranger's, a seceded city's or an
+			// exiled realm's ground is not in ClaimedZones and is therefore never reconciled at all.
+			Guard("heart basin capacity", delegate
+			{
+				if (E.Zone != null && ClaimedZones != null
+					&& ClaimedZones.Contains(E.Zone.ZoneID))
+				{
+					KingdomPlots.ReconcileBasinCapacity(this, E.Zone);
 				}
 			});
 			Guard("semantic activation", delegate

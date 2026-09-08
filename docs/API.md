@@ -1515,7 +1515,71 @@ one-way, because unsetting those bits would erase legitimately walked ground.
 | `KingdomClaimedGround.Enabled` / `OptionId` | Gate `r_TAF_OptionClaimedGroundLight`, default **Yes**. Read at attachment and again on every frame, so switching it off darkens the zone immediately and removes the part on the next visit. |
 | `KingdomClaimedGround.ReconcileZone(KingdomSystem, Zone)` | One activation of one claimed zone: attach or restamp the light, then `Zone.ExploreAll()` once. Every refusal revokes instead of returning &mdash; ground the seat does not claim, ground two settlements both answer for, the option switched off, and a realm the master gate has stopped all take the part off. |
 | `KingdomClaimedGround.RemoveZone(Zone)` | Take the part off. The revocation path for secession, exile, a lost claim, and the option switched off. |
-| `XRL.World.ZoneParts.KingdomClaimedGroundLight` | The part itself: `BeforeRenderEvent` → `ParentZone.AddLight(LightLevel.Light)` while `ParentZone.HasObject(The.Player)`. Named-field save, registered in `KingdomRemovalCoverage.CustomZoneParts`. |
+| `XRL.World.ZoneParts.KingdomClaimedGroundLight` | The part itself: `BeforeRenderEvent` pass 1 → `ParentZone.AddLight(LightLevel.Light)` while `ParentZone.HasObject(The.Player)`. It queues itself into no second-pass handler list. Named-field save, registered in `KingdomRemovalCoverage.CustomZoneParts`. |
+| `ThousandAndFirst.KingdomCitySightRenderSeam` | The one seat the city-sight projection is taken from: a flag armed by a Harmony prefix on `XRLCore.RenderBaseToBuffer` and spent by a Harmony prefix on `Zone.Render(ScreenBuffer)`, so the projection lands immediately before the engine draws the zone — after the whole render dispatch (and so after `Blackout`), after the founder's own visibility reckoning, and after the wizard whole-map toggle. Both prefixes return `void`, so neither can skip or rewrite the engine's own work. The render dispatch's static entry is deliberately *not* patched: a Harmony postfix there made the engine re-host the method, and the re-hosted copy threw `NullReferenceException` out of itself on the first drawn frame in three of four unattended launches. The `Zone.Render` prefix body is wrapped in `try`/`catch` like every other Harmony body in this mod, so a projection that faults is logged and skipped rather than carried into the engine's frame. |
+
+**City sight: your citizens through your own walls.** The same part carries a second, separately
+gated behaviour (`r_TAF_OptionCitySight`, default **Yes**) that opens the claimed zone for the drawn
+frame only. The part queues nothing into the render dispatch's second pass: the projection is taken
+from `ThousandAndFirst.KingdomCitySightRenderSeam`, which arms a flag at the head of the drawn
+frame and spends it on the engine's own `Zone.Render` call, reached only after pass 1 has touched
+every zone part and every object **and** the engine has walked its own second pass. Coming behind
+that second pass is the point. `Blackout` is the one
+native part that acts there, and what it does is *remove* light; `Zone.AddVisibility` opens a cell
+further off than a neighbour only where the light map still reads above `LightLevel.None`. Blackout
+hangs on an object, and objects are dispatched behind zone parts, so a zone part that queued itself
+would always take its turn ahead of it — and a snapshot taken there would call cells honestly
+visible that a `Blackout` was about to darken, which the subtractive close then leaves open. From
+outside the dispatch the projection re-reads both checkboxes and the founder's presence rather than
+inheriting the pass-1 light's decision. It makes no visibility reckoning of its own: the engine's
+own `AddVisibility` for the founder (D/XRL/Core/XRLCore.cs:2511-2512) has already run by the time
+the draw is reached, and repeating the same centre and radius could open no further cell while
+costing a whole-zone line-of-sight sweep on the render thread every frame. It snapshots what the
+frame decided, calls `Zone.VisAll()`, and closes the zone again
+from a single `XRLCore.RegisterAfterRenderCallback` in the same frame, under a Harmony finalizer on
+`XRLCore.RenderBaseToBuffer` that guarantees the close even on a frame that throws. The close is subtractive: only cells the projection itself opened are shut, so sight another
+hand granted or took away after the snapshot is left alone. Nothing is
+persisted: the snapshot is a `[NonSerialized]` static, and `ExploredMap` is never written, so
+remembered floor stays owned by `ReconcileZone`'s one-shot `Zone.ExploreAll()`.
+
+Six guards make it an eye and not a rule. A frame with `GameManager.bDraw == 11` is abandoned by
+the engine before it renders and before after-render callbacks run, so the projection is not taken
+at all — otherwise a whole turn of rest, autoexplore and the lost-sight check would run on an opened
+map, because the between-frames hostile check adds visibility without clearing first. A projection
+still outstanding at the head of the next `BeforeRenderEvent` is *discarded* rather than restored,
+because the engine has already cleared that map. And `KingdomSystem`'s `EndTurnEvent` handler
+restores ahead of every gate it owns, so no turn can begin projected. The wizard `VisAll` toggle
+stands the projection down entirely, because the engine has already opened the map for itself by
+the time the draw is reached and an honest close would undo that. A projection already outstanding is never taken
+twice in one frame, because the second reading would take the opened map for the honest one. And the
+Harmony finalizer on `XRLCore.RenderBaseToBuffer` closes the zone on every exit from the draw —
+ordinary return, debug early return, or a thrown render — because the engine's own callback loop has
+no `finally` and stops at the first callback that throws.
+
+Consequences worth knowing: `Cell.Render` sets `CludgeTargetRendered` for a drawn sidebar target, so
+"You have lost sight of X" will not fire while X is drawn through a wall — the engine's lost-sight
+drop gates on that flag before it asks `IsVisible()`, so a creature you had already locked keeps its
+lock, and the shipped option text says so rather than claiming targeting is untouched;
+`RenderSoundEvent` fires for drawn objects; `Look` still refuses a cell ordinary sight does not
+reach; and `Cell.Render` calls `Seen()` on every drawn object, so bestiary registration fills from
+citizens seen this way.
+
+That last call outlives the frame twice over. `GameObject.Seen()` records the blueprint in the game's
+saved `BlueprintsSeen` set, and it also calls `Factions.RegisterWorshippable(this)`, so a
+`Worshippable`-tagged object drawn through a wall writes faction state that is saved too. Both are
+narrow — `BlueprintsSeen` is read by the disguise check and by wishing, and the worshippable
+registration needs the tag — but they are persistent state caused by a render-only projection.
+"Nothing is persisted" above describes the projection's own snapshot, not everything a projected
+draw sets in motion.
+
+Light stays at 200, which is none of the six tiers the Invisibility mutation reveals at (Darkvision 10,
+Dimvision 15, Interpolight 210, Radar 228, LitRadar 232, Omniscient 255).
+
+| Member | Contract |
+|---|---|
+| `KingdomClaimedGroundLight.CitySightOptionId` / `CitySightEnabled` | Gate `r_TAF_OptionCitySight`, default **Yes**, read per frame so switching it off closes the walls on the next frame. |
+| `KingdomClaimedGroundLight.RestoreHonestVisibility()` (internal, not callable by other mods) | Clears only the cells the projection opened, in the exact zone the snapshot was taken from, and never touches `ExploredMap`. It never sets a cell visible, so it cannot write one frame's sight into another or overwrite blindness applied after the snapshot. A no-op with nothing outstanding, so the draw scope, the after-render callback and the end-of-turn backstop can all call it. Documented for readers of the render path only: the member is `internal static`, so it is not part of the supported external surface. |
+| `ThousandAndFirst.KingdomCitySightDrawScope` (internal) | Harmony finalizer on `XRLCore.RenderBaseToBuffer`: the `finally` the engine does not write. Returns `void`, so a thrown render keeps its own exception; its only effect is the subtractive close, so a projection can outlive at most the draw it was taken for. |
 
 ## The city has a history — happenings, ambience, and what the creeds make of you
 

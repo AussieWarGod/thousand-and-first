@@ -20,62 +20,117 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
-The Kingdom Quickstart shelter ingress over the tent rows reports 3054 staged
-production C# files and 432,733 physical lines.
+The Kingdom Quickstart shelter ingress over the render-only city sight, the stockpile unit
+capacity, the first-basin water store and the Kingdom Quickstart tent rows reports 3062 staged
+production C# files and 434,436 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`5f22a97d1fbfcefcbe7f28f7e0a0211ad558a6cf0fbb22eba78b22f1bb46f325`. The census reports
-1418 files with direct `XRL` imports; 0 of those exceed the line limit.
+`ff13330463a990edbef95c2ae35e0e552691f2f8e0f86a525dc873bd61f7c202`. The census reports
+1425 files with direct `XRL` imports; 0 of those exceed the line limit.
 
-The delta over the retained draft below is one added and one modified production source and no
+The shelter-ingress delta over the retained city-sight draft below is one added and one modified
+production source and no
 removals: the quickstart rules' shelter partial is the addition and the quickstart rules the
-modification. All four `Tools/gate.sh` modes compile clean under Roslyn on this machine — staged
+modification. Before the merge, all four `Tools/gate.sh` modes compiled clean on that delta's own
+bytes under Roslyn on this machine — staged
 baseline (3050 sources), staged compatibility (3054), dev-harness baseline (3204) and dev-harness
 compatibility (3208) — with the installed-Hearthpyre source and ABI step, against the licensed
 Managed references with warnings as errors. The six-profile native Quickstart boot matrix at seed
-`#43101` passes on these bytes, as do `quickstart-save marsh yes` and its cold load; the Windows
-gate did not run. The exact-inventory semantic review in `docs/STRUCTURE_REVIEW.json` binds an
-earlier digest and is therefore open for it.
+`#43101` passes on those bytes, as do `quickstart-save marsh yes` and its cold load; the Windows
+gate did not run. On the merged tree the staged baseline (3058 sources) and staged compatibility
+(3062 sources plus the tracked Hearthpyre 2.2.3 ABI stub) sets compile clean under Roslyn 9.0.306
+on Linux; the two dev-harness modes, the installed-Hearthpyre source step, the Windows gate and any
+native run did not run for the merged bytes. The exact-inventory semantic review in
+`docs/STRUCTURE_REVIEW.json` binds an earlier digest and is therefore open for it.
 
-## Retained Kingdom Quickstart tent-row census
+## Retained city-sight census
 
-The Kingdom Quickstart tent rows over the empty-camp legacy correction report 3053 staged
-production C# files and 432,593 physical lines.
-Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
-1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0`. The census reports
-1418 files with direct `XRL` imports; 0 of those exceed the line limit.
-
-The delta over the retained draft below is one added and six modified production sources and no
-removals: the quickstart bootstrap's shelter partial is the addition; the quickstart rules, the
-bootstrap, the camp builder, the generated removal coverage, the quickstart receipt model and its
-wire codec are the modifications. The staged
-baseline (3049 sources) and staged compatibility (3053 sources) sets compile clean under Roslyn
-9.0.306 on Linux against the licensed Managed references with warnings as errors; the two
-dev-harness modes, the installed-Hearthpyre source step, the Windows gate and any native run did
-not run for this delta. The exact-inventory semantic review in `docs/STRUCTURE_REVIEW.json` binds
-an earlier digest and is therefore open for it.
-
-## Retained empty-camp legacy census
-
-The empty-camp legacy correction over the camp-guide topic tree, the claimed-ground light and the
-first-settler legibility change together report 3052 staged production C# files and 432,259
+The render-only city sight over the stockpile unit capacity, the first-basin water store, the
+Kingdom Quickstart tent rows, the empty-camp legacy correction, the camp-guide topic tree, the
+claimed-ground light and the first-settler legibility change together reported 3061 staged
+production C# files and 434,296
 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`. The census reports
-1417 files with direct `XRL` imports; 0 of those exceed the line limit.
+`7147169b7ccb8d2142d9791bd5faec8405eb305e33bca7a9b9feb9c3948c5a1e`. The census reports
+1425 files with direct `XRL` imports; 0 of those exceed the line limit.
 
-The delta over the retained draft below is four modified production sources and no additions or
-removals: the seal profile reader/writer, the polity realm-legacy facts writer, the refound-import
-reader and the realm-exile rule. Root and independent AI reviewer read the four-file delta and
-affected seal,profile,foundation,import and exile boundaries. Explicit committed-unresolved
+The city-sight delta over the merged stockpile census is two added and two modified production
+sources and no removals: the render-scope finalizer (`Growth/KingdomCitySightDrawScope.cs`) and the
+render seam that owns the projection (`Growth/KingdomCitySightRenderSeam.cs`) are the additions;
+the claimed-ground light part and the settlement event file are the modifications. Merging the
+city-sight end-of-turn backstop with the basin-capacity zone-activation guard put
+`Core/KingdomSystem.z20.Events.cs` at 305 physical lines, over the strict cap; the merge reflowed
+those two comment blocks wider — every word and engine citation kept, no code and no statement
+order changed, so every source test that pins ordering in that shard is untouched — and it is back
+at 299. The staged baseline (3057 sources) and staged compatibility (3061 sources plus the tracked
+Hearthpyre 2.2.3 ABI stub) sets compile clean under Roslyn 9.0.306 on Linux against the licensed
+Managed references with warnings as errors; the two dev-harness modes, the installed-Hearthpyre
+source step, the Windows gate and any native run did not run for it.
+
+The stockpile delta beneath it was three added production sources — the
+capacity constants (`Core/KingdomRules.MaterialStores.cs`), the survey's material-store reads
+(`Growth/KingdomSurvey.11.MaterialStores.cs`) and the stockpile-room rules
+(`Growth/KingdomMaterials.StockpileRoom.cs`, which owns the room, the intake that respects it and
+that intake's proofs) — six modified (the delivery, the status line, the porter carry, the
+clearance payout's destination choice, the strike salvage's destination choice and the yard's
+nothing-landed fault line), and the regenerated removal-coverage roster. Each new file owns one
+responsibility and no saved format, wire or public API changes for that delta. The staged baseline
+(3055 sources) and staged compatibility (3059 sources plus the tracked Hearthpyre 2.2.3 ABI stub)
+sets compile clean under Roslyn 9.0.306 on Linux against the licensed Managed references with
+warnings as errors; the two dev-harness modes, the installed-Hearthpyre source step, the Windows
+gate and any native run did not run for it.
+
+The first-basin delta beneath it was three ADDED production sources
+(`Growth/KingdomPlotHeartRules.Loader.cs`, `Growth/KingdomWaterDebit.OpenReservations.cs`,
+`Growth/KingdomLab.Commission.Settle.cs`) and twenty-one modified ones. The first-basin water store
+owns the three additions plus the founding-heart
+identity and marks shards, the plot-effects furnishing shard, the zone-activation events shard,
+the heart rules table, the civic-container envelope note, the survey capture sweep, the ground
+reading, the ground-protection law, the four water-debit shards,
+the generated removal-coverage table, and the seven water callers that can refund after their own
+callbacks: construction funding, sowing, annexe enrolment, the lab commission, the lab retry
+funding lane and its two removal lanes. Root and an independent AI reviewer read that delta and
+every required finding it raised is addressed here. The seal lane beneath it contributed four
+modified production sources and no additions or removals: the seal profile reader/writer, the
+polity realm-legacy facts writer, the refound-import reader and the realm-exile rule. Root and
+independent AI reviewer read that four-file delta and affected seal,profile,foundation,import and
+exile boundaries. Explicit committed-unresolved
 profile schema2 preserves real technology and provenance without inventing bodies; existing
 immutable foundation observation owns exile admission. Old schema0/1 encodings remain unchanged.
 New schema2 needs a new public version and is not downgrade-readable by0.3.1.
 [Review evidence](STRUCTURE_REVIEW_0_3_1.md) records the reviewed reasoning; the exact-inventory
 semantic review in `docs/STRUCTURE_REVIEW.json` binds an earlier digest and is therefore open for
 this delta. Automated and native acceptance remain separately scoped. Public0.3.1 is unchanged.
+
+## Retained Kingdom Quickstart tent-row census
+
+The Kingdom Quickstart tent rows over the empty-camp legacy correction reported 3053 staged
+production C# files and 432,593 physical lines.
+Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
+1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
+`d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0`. The census reports
+1418 files with direct `XRL` imports; 0 of those exceed the line limit.
+
+The delta over the retained draft below was one added and six modified production sources and no
+removals: the quickstart bootstrap's shelter partial is the addition; the quickstart rules, the
+bootstrap, the camp builder, the generated removal coverage, the quickstart receipt model and its
+wire codec are the modifications. The staged
+baseline (3049 sources) and staged compatibility (3053 sources) sets compiled clean under Roslyn
+9.0.306 on Linux against the licensed Managed references with warnings as errors; the two
+dev-harness modes, the installed-Hearthpyre source step, the Windows gate and any native run did
+not run for that delta. The exact-inventory semantic review in `docs/STRUCTURE_REVIEW.json` binds
+an earlier digest and is therefore open for it.
+
+## Retained empty-camp legacy census
+
+The empty-camp legacy correction over the camp-guide topic tree, the claimed-ground light and the
+first-settler legibility change together reported 3052 staged production C# files and 432,259
+physical lines.
+Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
+1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
+`c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`. The census reports
+1417 files with direct `XRL` imports; 0 of those exceed the line limit.
 
 ## Retained camp-guide, claimed-ground and first-guest census
 

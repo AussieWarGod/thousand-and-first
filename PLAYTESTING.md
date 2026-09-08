@@ -112,6 +112,13 @@ without spending it. This slower route is useful for economy and compatibility t
   neighbour and confirm ordinary darkness. The checkbox is
   "your claimed ground is lit while you stand on it" (`r_TAF_OptionClaimedGroundLight`, on by
   default); switching it off should darken the zone at once. Explored floor stays explored.
+- Standing in a claimed zone by day: citizens inside their own buildings should be drawn and
+  animating through the walls. The checkbox is "see your citizens through your own walls"
+  (`r_TAF_OptionCitySight`, on by default); switching it off should close the walls on the next
+  frame. Then check that the eye did not become a rule — rest must NOT be interrupted by a hostile
+  three rooms away, autoexplore must not path into interiors you never walked, Look should still
+  refuse a cell ordinary sight does not reach, and an invisible creature must stay undrawn. Save and
+  cold-load in a claimed zone and confirm nothing about the projection persisted.
 
 [TESTING.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/TESTING.md) is the
 exhaustive maintainer protocol. Alpha testers may submit a

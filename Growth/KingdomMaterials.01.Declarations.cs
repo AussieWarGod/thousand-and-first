@@ -120,10 +120,11 @@ namespace ThousandAndFirst
 			new string[8] { "Gemstone", "Rough Agate", "Rough Topaz", "Rough Jasper", "Rough Amethyst", "Rough Sapphire", "Rough Emerald", "Rough Peridot" }
 		};
 
-		/// <summary>Stockpiles one settlement's keepers can account for on one ground. Mirrors
-		/// <c>KingdomRules.MaxDedicatedLarders</c>: a separate cap from water and from food,
-		/// because these are separate accounts kept by separate people.</summary>
-		public const int MaxStockpiles = 8;
+		/// <summary>Stockpiles one settlement's keepers can account for on one ground. The number
+		/// itself lives beside the capacity ladder it bounds, in
+		/// <see cref="KingdomRules.MaxStockpiles"/>, so the ceiling the catalogue is checked
+		/// against can be read in one place.</summary>
+		public const int MaxStockpiles = KingdomRules.MaxStockpiles;
 
 		/// <summary>Whether the material economy resolves at all. Rides the growth toggle rather
 		/// than adding a switch of its own: materials are what growth costs.</summary>

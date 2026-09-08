@@ -173,6 +173,7 @@ namespace ThousandAndFirst.DevTests
 				"Growth/KingdomLab.BodyHistoryCommit.cs",
 				"Growth/KingdomLab.BodyHistoryDelivery.cs",
 				"Growth/KingdomLab.Commission.cs",
+				"Growth/KingdomLab.Commission.Settle.cs",
 				"Growth/KingdomLab.cs",
 				"Growth/KingdomLab.Application.cs",
 				"Growth/KingdomLab.Semantic.cs",
