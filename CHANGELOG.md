@@ -8,7 +8,16 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-## Unreleased — a chest in the tent
+## Unreleased — a chest in the tent (DO NOT MERGE — blocked)
+
+> **Status: blocked on an author decision.** The change below is complete and every static gate
+> and the Portable suite pass, but `KingdomSocketTransitionRulesTests`
+> `.ShippedEarlyHousingRoutesCoverEveryExactSizeAndStayCheaper` refuses it: an early-housing
+> renovation must retain every stateful fixture of its source exactly, and `tent` renovates into
+> `hut`, `mudhut` and `blockhut`. Giving the tent a timber chest therefore requires the same chest
+> in `housing-timber-hands`, `housing-mud-hands` and `housing-rubble-hands`, which means paying a
+> timber in the mud-brick and block huts — styles whose whole point is that they raise what the
+> salt flat and the ruin field give. That is a style decision, not a mechanical fix.
 
 - The canvas housing palette's storage slot is an empty timber chest instead of a reed basket,
   and the settler's tent pays the one timber it needs (`canvas:2,timber:1`); the staked
