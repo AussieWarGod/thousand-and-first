@@ -25,8 +25,8 @@ namespace ThousandAndFirst
 		/// </summary>
 		public const string ShelterMarkerProperty = "KingdomQuickstartShelter";
 
-		/// <summary>Catalogue key of the one lot the quickstart stakes at founding.</summary>
-		public const string ShelterBuildKey = "tent";
+		/// <summary>Catalogue key of the lots the quickstart stakes at founding.</summary>
+		public const string ShelterBuildKey = "tentrow";
 
 		public const int StartCellX = 40;
 		public const int StartCellY = 12;
@@ -39,14 +39,17 @@ namespace ThousandAndFirst
 		public const int AdvisorCellX = 28;
 		public const int AdvisorCellY = 16;
 
-		// The shelter lot: one Small plot (6x4) west of the supply column, clear of the reserved
-		// role cells at x=28, of the founder's start cell, and of the heart's extreme survey
-		// (which begins at x=31 on an 80-wide zone), so the tent is never marked yielding and
-		// never contends with a heart rung for its ground.
-		public const int ShelterX1 = 21;
-		public const int ShelterY1 = 9;
-		public const int ShelterX2 = 26;
-		public const int ShelterY2 = 12;
+		// The shelter lots: two Small plots (6x4) stacked west of the supply column, clear of the
+		// reserved role cells at x=28, of the founder's start cell, and of the heart's extreme
+		// survey (which begins at x=31 on an 80-wide zone), so neither row is ever marked yielding
+		// and neither contends with a heart rung for its ground. Two tent rows carry three beds
+		// each, six in all, so arrivals are not refused for want of room on the day the rows
+		// finish.
+		private static readonly KingdomPlotRules.PlotRect[] ShelterLots =
+		{
+			new KingdomPlotRules.PlotRect(21, 9, 26, 12),
+			new KingdomPlotRules.PlotRect(21, 13, 26, 16)
+		};
 
 		public const int StarterWaterDrams = 24;
 		public const int StarterFoodServings = 12;
@@ -67,6 +70,21 @@ namespace ThousandAndFirst
 				"JoppaWorld.6.17.1.1.10", "Saltwake", "TerrainSaltdunes", 6, 17)
 		};
 
+		/// <summary>How many shelter lots the founding pass stakes.</summary>
+		public static int ShelterLotCount
+		{
+			get { return ShelterLots.Length; }
+		}
+
+		/// <summary>
+		/// One reserved shelter lot, by index. <c>PlotRect</c> is a value, so a caller reads a
+		/// copy and no caller can move the reservation this authority declares.
+		/// </summary>
+		public static KingdomPlotRules.PlotRect ShelterLot(int Index)
+		{
+			return ShelterLots[Index];
+		}
+
 		public static int ProfileCount
 		{
 			get { return Profiles.Length; }
@@ -80,9 +98,11 @@ namespace ThousandAndFirst
 			// North heartbasin: rite (40,12), rect (38,11)-(43,14), doors (40/41,14),
 			// margin Y=15 and authored lane endpoints Y=16.
 			bool heartLanes = X >= 40 && X <= 41 && Y == 16;
-			// The shelter lot is bared with the rest of the camp, because the authored-ground
+			// Both shelter lots are bared with the rest of the camp, because the authored-ground
 			// preflight refuses a lot holding a creature, an item, or open liquid.
-			bool shelter = X >= ShelterX1 && X <= ShelterX2 && Y >= ShelterY1 && Y <= ShelterY2;
+			bool shelter = false;
+			for (int i = 0; i < ShelterLots.Length; i++)
+				if (ShelterLots[i].Contains(X, Y)) shelter = true;
 			return apron || supply || approach || heartLanes || shelter;
 		}
 

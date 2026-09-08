@@ -98,10 +98,11 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void PreparedGroundIsApronSupplyApproachHeartIngressAndTheShelterLot()
+		public void PreparedGroundIsApronSupplyApproachHeartIngressAndTheTwoShelterLots()
 		{
 			int endpoints = 0;
 			int shelterCells = 0;
+			int prepared = 0;
 			for (int y = -1; y <= 25; y++)
 				for (int x = -1; x <= 80; x++)
 				{
@@ -109,37 +110,81 @@ namespace ThousandAndFirst.Tests
 						|| (x >= 27 && x <= 30 && y >= 9 && y <= 17)
 						|| (x >= 29 && x <= 37 && y >= 11 && y <= 13);
 					bool endpoint = (x == 40 || x == 41) && y == 16;
-					bool shelter = x >= 21 && x <= 26 && y >= 9 && y <= 12;
+					bool shelter = x >= 21 && x <= 26 && y >= 9 && y <= 16;
 					ClassicAssert.AreEqual(camp || endpoint || shelter,
 						KingdomQuickstartRules.RequiresPreparedGround(x, y), x + "," + y);
 					if (endpoint && !camp) endpoints++;
 					if (shelter && !camp && !endpoint) shelterCells++;
+					if (camp || endpoint || shelter) prepared++;
 				}
 			ClassicAssert.AreEqual(2, endpoints);
-			ClassicAssert.AreEqual(24, shelterCells);
-			ClassicAssert.AreEqual(21, KingdomQuickstartRules.ShelterX1);
-			ClassicAssert.AreEqual(9, KingdomQuickstartRules.ShelterY1);
-			ClassicAssert.AreEqual(26, KingdomQuickstartRules.ShelterX2);
-			ClassicAssert.AreEqual(12, KingdomQuickstartRules.ShelterY2);
-			// One Small plot (6x4), west of the supply column, clear of every reserved role cell,
-			// of the founder's start cell, and of the heart's extreme survey (which begins at 31).
-			ClassicAssert.AreEqual(6, KingdomQuickstartRules.ShelterX2 - KingdomQuickstartRules.ShelterX1 + 1);
-			ClassicAssert.AreEqual(4, KingdomQuickstartRules.ShelterY2 - KingdomQuickstartRules.ShelterY1 + 1);
-			foreach (int roleY in new[] { 10, 12, 14, 16 })
-				ClassicAssert.IsFalse(KingdomQuickstartRules.ShelterX1 <= 28
-					&& 28 <= KingdomQuickstartRules.ShelterX2
-					&& KingdomQuickstartRules.ShelterY1 <= roleY
-					&& roleY <= KingdomQuickstartRules.ShelterY2, "role cell 28," + roleY);
-			ClassicAssert.IsFalse(KingdomQuickstartRules.ShelterX1 <= KingdomQuickstartRules.StartCellX
-				&& KingdomQuickstartRules.StartCellX <= KingdomQuickstartRules.ShelterX2
-				&& KingdomQuickstartRules.ShelterY1 <= KingdomQuickstartRules.StartCellY
-				&& KingdomQuickstartRules.StartCellY <= KingdomQuickstartRules.ShelterY2);
-			Assert.That(KingdomQuickstartRules.ShelterX2, Is.LessThan(31));
+			// Two 6x4 lots, stacked: the mask widens by exactly 48 cells and by nothing else.
+			ClassicAssert.AreEqual(48, shelterCells);
+			ClassicAssert.AreEqual(102 + 2 + 48, prepared);
+			ClassicAssert.AreEqual(2, KingdomQuickstartRules.ShelterLotCount);
+			KingdomPlotRules.PlotRect first = KingdomQuickstartRules.ShelterLot(0);
+			KingdomPlotRules.PlotRect second = KingdomQuickstartRules.ShelterLot(1);
+			ClassicAssert.AreEqual(21, first.X1);
+			ClassicAssert.AreEqual(9, first.Y1);
+			ClassicAssert.AreEqual(26, first.X2);
+			ClassicAssert.AreEqual(12, first.Y2);
+			ClassicAssert.AreEqual(21, second.X1);
+			ClassicAssert.AreEqual(13, second.Y1);
+			ClassicAssert.AreEqual(26, second.X2);
+			ClassicAssert.AreEqual(16, second.Y2);
+			// Each lot is one Small plot (6x4), west of the supply column, clear of every reserved
+			// role cell, of the founder's start cell, of the heart rect and of the heart's extreme
+			// survey (which begins at 31). The two never overlap each other.
+			for (int i = 0; i < KingdomQuickstartRules.ShelterLotCount; i++)
+			{
+				KingdomPlotRules.PlotRect lot = KingdomQuickstartRules.ShelterLot(i);
+				ClassicAssert.AreEqual(6, lot.Width, "lot " + i + " width");
+				ClassicAssert.AreEqual(4, lot.Height, "lot " + i + " height");
+				Assert.That(lot.X2, Is.LessThan(31), "lot " + i + " heart survey edge");
+				foreach (int roleY in new[] { 10, 12, 14, 16 })
+					ClassicAssert.IsFalse(lot.Contains(28, roleY), "lot " + i + " role cell 28," + roleY);
+				ClassicAssert.IsFalse(lot.Contains(KingdomQuickstartRules.StartCellX,
+					KingdomQuickstartRules.StartCellY), "lot " + i + " start cell");
+				for (int x = 27; x <= 30; x++)
+					for (int y = 9; y <= 17; y++)
+						ClassicAssert.IsFalse(lot.Contains(x, y), "lot " + i + " supply " + x + "," + y);
+				for (int x = 29; x <= 37; x++)
+					for (int y = 11; y <= 13; y++)
+						ClassicAssert.IsFalse(lot.Contains(x, y), "lot " + i + " approach " + x + "," + y);
+				for (int x = 38; x <= 43; x++)
+					for (int y = 11; y <= 14; y++)
+						ClassicAssert.IsFalse(lot.Contains(x, y), "lot " + i + " heart " + x + "," + y);
+			}
+			for (int x = first.X1; x <= first.X2; x++)
+				for (int y = first.Y1; y <= first.Y2; y++)
+					ClassicAssert.IsFalse(second.Contains(x, y), "lots overlap at " + x + "," + y);
 			foreach (int outside in new[] { int.MinValue, int.MaxValue })
 			{
 				ClassicAssert.IsFalse(KingdomQuickstartRules.RequiresPreparedGround(outside, 12));
 				ClassicAssert.IsFalse(KingdomQuickstartRules.RequiresPreparedGround(40, outside));
 			}
+		}
+
+		[Test]
+		public void TheShelterLotsAreKeyedToTheTentRowAndCarrySixBeds()
+		{
+			// The re-key is the whole point of the second lot: "tent" is a 3x2 design carrying one
+			// roof, "tentrow" is the 5x2 design carrying three, so two lots are six beds and the
+			// first arrivals are not refused for want of room.
+			ClassicAssert.AreEqual("tentrow", KingdomQuickstartRules.ShelterBuildKey);
+			string rules = TestMain.ReadRepositoryText("Core/KingdomQuickstartRules.cs");
+			StringAssert.Contains("\"tentrow\"", rules);
+			StringAssert.DoesNotContain("\"tent\"", rules);
+			string catalogue = TestMain.ReadRepositoryText("RuntimeData/KingdomBuildings.xml");
+			int row = catalogue.IndexOf("Key=\"tentrow\"", StringComparison.Ordinal);
+			Assert.That(row, Is.GreaterThanOrEqualTo(0));
+			string entry = catalogue.Substring(row, catalogue.IndexOf("/>", row,
+				StringComparison.Ordinal) - row);
+			StringAssert.Contains("Plot=\"S\"", entry);
+			StringAssert.Contains("Footprint=\"5x2\"", entry);
+			StringAssert.Contains("Ticks=\"1200\"", entry);
+			StringAssert.Contains("Carries=\"roof:3\"", entry);
+			StringAssert.DoesNotContain("Roof=", entry);
 		}
 
 		[Test]
@@ -178,25 +223,32 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void CompletionNoticeNamesTheTentOnlyWhenAShelterActuallyStands()
+		public void CompletionNoticeNamesTheTentRowsOnlyWhenAClaimActuallyStands()
 		{
 			string bootstrap = TestMain.ReadRepositoryText(
 				"World/KingdomQuickstartBootstrap.cs");
-			// The tent sentence is a conditional arm read from the ground, never from the branch
-			// that ran: a save cut past the Reserved phase resumes straight to Complete with no
-			// lot staked anywhere, and must not be told a tent is waiting for it.
-			StringAssert.Contains("out bool ShelterStanding, out string Failure", bootstrap);
-			StringAssert.Contains("ShelterStanding = TryFindShelter(zone, out GameObject shelter, out _)",
-				bootstrap);
-			int guard = bootstrap.IndexOf("+ (shelterStanding", StringComparison.Ordinal);
-			int sentence = bootstrap.IndexOf("A settler's tent lot is staked west of them.",
-				StringComparison.Ordinal);
+			// The tent-row sentence is a conditional arm counted off the ground, never off the
+			// branch that ran: a save cut past the Reserved phase resumes straight to Complete with
+			// no lot staked anywhere, and must not be told a row is waiting for it.
+			StringAssert.Contains("out int ShelterLots, out string Failure", bootstrap);
+			StringAssert.Contains("ShelterLots = ShelterLotsClaimed(zone);", bootstrap);
+			int guard = bootstrap.IndexOf("+ (shelterLots > 0", StringComparison.Ordinal);
+			int sentence = bootstrap.IndexOf("\" tent-row lot\"", StringComparison.Ordinal);
 			Assert.That(guard, Is.GreaterThanOrEqualTo(0));
 			Assert.That(sentence, Is.GreaterThan(guard));
-			ClassicAssert.AreEqual(sentence, bootstrap.LastIndexOf(
-				"A settler's tent lot is staked west of them.", StringComparison.Ordinal));
+			ClassicAssert.AreEqual(sentence, bootstrap.LastIndexOf("\" tent-row lot\"",
+				StringComparison.Ordinal));
+			// The count is said, not assumed, so one surviving row never reads as two.
+			StringAssert.Contains("(shelterLots == 1 ? \" is\" : \"s are\")", bootstrap);
 			// The timing the docs promise, and no flatter claim than the calendar can keep.
 			StringAssert.Contains("not by nightfall", bootstrap);
+
+			string shelter = TestMain.ReadRepositoryText(
+				"World/KingdomQuickstartBootstrap.Shelter.cs");
+			// The count is read per reserved lot, so a resume that finds only the second row
+			// staked reports one, and staking is never inferred from the receipt phase.
+			StringAssert.Contains("private static int ShelterLotsClaimed(Zone Zone)", shelter);
+			StringAssert.Contains("i < KingdomQuickstartRules.ShelterLotCount", shelter);
 		}
 
 		[Test]

@@ -1,6 +1,20 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current unreleased camp-guide topic tree
+## Current unreleased Kingdom Quickstart tent rows
+
+3053 staged sources;432,557 physical lines;1418 direct-XRL;zero cap failures;3084 generated
+cold-stage files. Exact inventory `a7d35c2ca056c4fdf7478cc58d0460b55df0fb7c20fc3a62ecd050607e467180`.
+Quickstart stakes two `tentrow` lots at founding, west of the supply column at (21,9)-(26,12) and
+(21,13)-(26,16); six beds between them, receiptless, free, and never debited. No receipt phase,
+wire, option, grant or verifier change; existing saves are past the branch and keep old behaviour.
+Structure, doc freshness, architecture and the Tools suite pass; engine-free suites pass13,831
+main/5,120 Portable,zero skips on Linux .NET9.0.306, and Roslyn 9.0.306 on Linux compiles the
+staged baseline (3049) and compatibility (3053) sets clean. NOT run: the two dev-harness modes,
+the installed-ABI source step, the Windows gate, the developer boot matrix and any native run.
+The 1,700-tick raising figure is a reading of `KingdomPlotRules.RaiseTicks`, not of a plot clock.
+Public0.3.1 unchanged. Never direct-push main/tag, bypass, or self-approve.
+
+## Retained unreleased camp-guide topic tree
 
 3052 staged sources;432,178 physical lines;1417 direct-XRL;zero cap failures;3083 generated
 cold-stage files. Exact inventory `dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`.

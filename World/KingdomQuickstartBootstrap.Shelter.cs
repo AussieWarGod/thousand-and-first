@@ -7,11 +7,12 @@ namespace ThousandAndFirst
 	public static partial class KingdomQuickstartBootstrap
 	{
 		/// <summary>
-		/// Stakes the single quickstart shelter lot on the founding pass, once, and proves it.
+		/// Stakes the quickstart's two shelter lots on the founding pass, once each, and proves
+		/// them.
 		/// <para>
-		/// Nothing here finishes a building. The lot is staked receiptless, which keeps it on the
-		/// shipped schema-zero calendar, so the tent rises on the settlement's own attended passes
-		/// over the first days rather than the moment the founder arrives.
+		/// Nothing here finishes a building. The lots are staked receiptless, which keeps them on
+		/// the shipped schema-zero calendar, so the rows rise on the settlement's own attended
+		/// passes over the first days rather than the moment the founder arrives.
 		/// </para>
 		/// <para>
 		/// The stake runs inside <c>RunCore</c> only, after the founding is measured and before the
@@ -27,11 +28,6 @@ namespace ThousandAndFirst
 				Failure = "The quickstart shelter needed a founded realm standing on its own reserved ground.";
 				return false;
 			}
-			GameObject standing;
-			if (!TryFindShelter(Zone, out standing, out Failure)) return false;
-			if (standing != null)
-				return MarkShelter(standing, out Failure) && VerifyShelter(Zone, standing, out Failure);
-
 			KingdomRules.BuildEntry entry;
 			KingdomPlotRules.PlotSpec spec;
 			if (!KingdomData.TryGetBuilding(KingdomQuickstartRules.ShelterBuildKey, out entry)
@@ -40,41 +36,68 @@ namespace ThousandAndFirst
 				Failure = "The quickstart shelter design is absent from the merged building catalogue.";
 				return false;
 			}
-			KingdomPlotRules.PlotRect lot = ShelterRect();
 			int width;
 			int height;
-			if (!KingdomPlotRules.TryDimensions(spec.Size, out width, out height)
-				|| lot.Width != width || lot.Height != height)
+			if (!KingdomPlotRules.TryDimensions(spec.Size, out width, out height))
 			{
-				Failure = "The reserved quickstart shelter lot no longer matches the catalogue's plot tier.";
+				Failure = "The quickstart shelter design declared no plot tier of its own.";
 				return false;
 			}
+			for (int i = 0; i < KingdomQuickstartRules.ShelterLotCount; i++)
+				if (!TryStakeShelterLot(System, Zone, KingdomQuickstartRules.ShelterLot(i),
+					entry, spec, width, height, out Failure))
+					return false;
+			return true;
+		}
+
+		/// <summary>
+		/// One lot: adopt whatever already stands on it, or stake it. Read before write, per lot,
+		/// so a cut after the first row is staked resumes by staking only the second.
+		/// </summary>
+		private static bool TryStakeShelterLot(KingdomSystem System, Zone Zone,
+			KingdomPlotRules.PlotRect Lot, KingdomRules.BuildEntry Entry,
+			KingdomPlotRules.PlotSpec Spec, int Width, int Height, out string Failure)
+		{
+			Failure = "";
+			if (Lot.Width != Width || Lot.Height != Height)
+			{
+				Failure = "The reserved quickstart shelter lot at " + ShelterCoordinates(Lot)
+					+ " no longer matches the catalogue's plot tier.";
+				return false;
+			}
+			GameObject standing;
+			if (!TryFindShelter(Zone, Lot, out standing, out Failure)) return false;
+			if (standing != null)
+				return MarkShelter(standing, out Failure)
+					&& VerifyShelter(Zone, Lot, standing, out Failure);
+
 			// Zoning and the authored-ground preflight are the two judgements the direct stake still
 			// makes, and either may refuse. A refusal stops the bootstrap with its reason rather than
 			// leaving a half-claimed lot or a promise the settlement never took up.
-			GameObject works = KingdomPlots.Stake(System, Zone, lot, entry, spec,
-				new KingdomPlots.GroundGrid(Zone), ShelterSkinKey(System, entry),
+			GameObject works = KingdomPlots.Stake(System, Zone, Lot, Entry, Spec,
+				new KingdomPlots.GroundGrid(Zone), ShelterSkinKey(System, Entry),
 				KingdomPlotRules.IsUnderground(Zone.Z));
 			if (works == null)
 			{
 				Failure = "The settlement refused the quickstart shelter lot at "
-					+ ShelterCoordinates() + "; no ground was staked.";
+					+ ShelterCoordinates(Lot) + "; no ground was staked.";
 				return false;
 			}
-			return MarkShelter(works, out Failure) && VerifyShelter(Zone, works, out Failure);
+			return MarkShelter(works, out Failure) && VerifyShelter(Zone, Lot, works, out Failure);
 		}
 
 		/// <summary>
-		/// The one shelter already standing on this ground, or null. The stamped rectangle is read
-		/// as well as the marker, because the marker is written after the stake: a cut between the
-		/// two must find the lot, not stake a second one.
+		/// The one claim already standing on this lot, or null. The stamped rectangle attributes an
+		/// object to its lot, because the marker is written after the stake: a cut between the two
+		/// must find that row, not stake a second one on top of it.
 		/// <para>
 		/// An unmarked object is adopted only when it also carries our own design key, so a foreign
 		/// plot that happens to be stamped on this rectangle is never marked before it is refused.
 		/// The bootstrap proves custody before it writes, as every other grant path here does.
 		/// </para>
 		/// </summary>
-		private static bool TryFindShelter(Zone Zone, out GameObject Shelter, out string Failure)
+		private static bool TryFindShelter(Zone Zone, KingdomPlotRules.PlotRect Lot,
+			out GameObject Shelter, out string Failure)
 		{
 			Shelter = null;
 			Failure = "";
@@ -85,10 +108,11 @@ namespace ThousandAndFirst
 				GameObject item = objects[i];
 				if (!GameObject.Validate(item)) continue;
 				KingdomPlotRules.PlotRect rect;
+				if (!KingdomPlots.TryReadStampedRect(item, out rect)
+					|| !SameShelterRect(rect, Lot)) continue;
 				if (!item.HasStringProperty(KingdomQuickstartRules.ShelterMarkerProperty)
-					&& !(KingdomPlots.TryReadStampedRect(item, out rect) && SameShelterRect(rect)
-						&& string.Equals(item.GetStringProperty(KingdomUpgrade.BuildKeyProperty, ""),
-							KingdomQuickstartRules.ShelterBuildKey, StringComparison.Ordinal)))
+					&& !string.Equals(item.GetStringProperty(KingdomUpgrade.BuildKeyProperty, ""),
+						KingdomQuickstartRules.ShelterBuildKey, StringComparison.Ordinal))
 					continue;
 				matches++;
 				Shelter = item;
@@ -96,10 +120,31 @@ namespace ThousandAndFirst
 			if (matches > 1)
 			{
 				Shelter = null;
-				Failure = "The reserved quickstart shelter lot carried more than one claim.";
+				Failure = "The reserved quickstart shelter lot at " + ShelterCoordinates(Lot)
+					+ " carried more than one claim.";
 				return false;
 			}
 			return true;
+		}
+
+		/// <summary>
+		/// How many reserved lots carry a claim right now, read off the ground rather than off the
+		/// branch that ran. A save cut past the Reserved phase resumes straight through to Complete
+		/// without staking anything, so the completion notice may only name what actually stands.
+		/// </summary>
+		private static int ShelterLotsClaimed(Zone Zone)
+		{
+			if (Zone == null) return 0;
+			int claimed = 0;
+			for (int i = 0; i < KingdomQuickstartRules.ShelterLotCount; i++)
+			{
+				GameObject standing;
+				string ignored;
+				if (TryFindShelter(Zone, KingdomQuickstartRules.ShelterLot(i), out standing,
+					out ignored) && standing != null)
+					claimed++;
+			}
+			return claimed;
 		}
 
 		/// <summary>
@@ -133,10 +178,11 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// Measures the claim without inventing its completion: ground, design, rectangle and
-		/// reservation are proved here, and whether the tent has RISEN remains the settlement
+		/// reservation are proved here, and whether the row has RISEN remains the settlement
 		/// calendar's answer.
 		/// </summary>
-		private static bool VerifyShelter(Zone Zone, GameObject Shelter, out string Failure)
+		private static bool VerifyShelter(Zone Zone, KingdomPlotRules.PlotRect Lot,
+			GameObject Shelter, out string Failure)
 		{
 			Failure = "";
 			if (!GameObject.Validate(Shelter) || Shelter.CurrentZone != Zone)
@@ -151,10 +197,10 @@ namespace ThousandAndFirst
 				return false;
 			}
 			KingdomPlotRules.PlotRect rect;
-			if (!KingdomPlots.TryReadStampedRect(Shelter, out rect) || !SameShelterRect(rect))
+			if (!KingdomPlots.TryReadStampedRect(Shelter, out rect) || !SameShelterRect(rect, Lot))
 			{
 				Failure = "The quickstart shelter claim did not stand on its reserved rectangle at "
-					+ ShelterCoordinates() + ".";
+					+ ShelterCoordinates(Lot) + ".";
 				return false;
 			}
 			if (string.IsNullOrEmpty(Shelter.GetStringProperty(
@@ -174,27 +220,16 @@ namespace ThousandAndFirst
 			return skin == null ? null : skin.Key;
 		}
 
-		private static KingdomPlotRules.PlotRect ShelterRect()
+		private static bool SameShelterRect(KingdomPlotRules.PlotRect Rect,
+			KingdomPlotRules.PlotRect Lot)
 		{
-			return new KingdomPlotRules.PlotRect(
-				KingdomQuickstartRules.ShelterX1, KingdomQuickstartRules.ShelterY1,
-				KingdomQuickstartRules.ShelterX2, KingdomQuickstartRules.ShelterY2);
+			return Rect.X1 == Lot.X1 && Rect.Y1 == Lot.Y1
+				&& Rect.X2 == Lot.X2 && Rect.Y2 == Lot.Y2;
 		}
 
-		private static bool SameShelterRect(KingdomPlotRules.PlotRect Rect)
+		private static string ShelterCoordinates(KingdomPlotRules.PlotRect Lot)
 		{
-			return Rect.X1 == KingdomQuickstartRules.ShelterX1
-				&& Rect.Y1 == KingdomQuickstartRules.ShelterY1
-				&& Rect.X2 == KingdomQuickstartRules.ShelterX2
-				&& Rect.Y2 == KingdomQuickstartRules.ShelterY2;
-		}
-
-		private static string ShelterCoordinates()
-		{
-			return "(" + KingdomQuickstartRules.ShelterX1 + ","
-				+ KingdomQuickstartRules.ShelterY1 + ")-("
-				+ KingdomQuickstartRules.ShelterX2 + ","
-				+ KingdomQuickstartRules.ShelterY2 + ")";
+			return "(" + Lot.X1 + "," + Lot.Y1 + ")-(" + Lot.X2 + "," + Lot.Y2 + ")";
 		}
 
 	}

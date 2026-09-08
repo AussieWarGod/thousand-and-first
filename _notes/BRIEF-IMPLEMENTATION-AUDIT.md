@@ -1,6 +1,17 @@
 # Brief-to-implementation audit
 
-## Current camp-guide topic census — 2026-09-08
+## Current Kingdom Quickstart tent-row census — 2026-09-08
+
+**3053** production C# files,432,557 physical lines,1418 direct-XRL,zero cap failures;
+3084 generated cold-install files. Exact digest
+`a7d35c2ca056c4fdf7478cc58d0460b55df0fb7c20fc3a62ecd050607e467180`.
+One added source (the bootstrap's shelter partial) and four modified. Structure, doc freshness,
+architecture and the Tools suite pass. Engine-free suites pass13,831 main/5,120 Portable,zero
+skips on Linux .NET9.0.306, and Roslyn 9.0.306 on Linux compiled the staged baseline (3049
+sources) and compatibility (3053 sources) sets clean. No native run, dev-harness mode,
+installed-ABI source step, Windows gate or exact-inventory human semantic review binds it.
+
+## Retained camp-guide topic census — 2026-09-08
 
 **3052** production C# files,432,178 physical lines,1417 direct-XRL,zero cap failures;
 3083 generated cold-install files. Exact digest

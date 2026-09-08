@@ -26,8 +26,8 @@ namespace ThousandAndFirst
 			try
 			{
 				bool completedNow;
-				bool shelterStanding;
-				if (!RunCore(Game, out completedNow, out shelterStanding,
+				int shelterLots;
+				if (!RunCore(Game, out completedNow, out shelterLots,
 					out Failure)) return false;
 				if (completedNow)
 					Popup.Show("{{W|Your kingdom stands.}} The founder's casks hold "
@@ -35,10 +35,12 @@ namespace ThousandAndFirst
 						+ "holds " + KingdomQuickstartRules.StarterFoodServings
 						+ " meals, and the materials chest holds only what you can see. None of "
 						+ "these stores produces replacements."
-						+ (shelterStanding
-							? " A settler's tent lot is staked west of them. It rises over the"
-								+ " first days, not by nightfall, and only at the day boundaries"
-								+ " you spend on this claimed ground."
+						+ (shelterLots > 0
+							? " " + shelterLots + " tent-row lot"
+								+ (shelterLots == 1 ? " is" : "s are") + " staked west of them,"
+								+ " three beds apiece once they stand. They rise over the first"
+								+ " days, not by nightfall, and only at the day boundaries you"
+								+ " spend on this claimed ground."
 							: ""));
 				return true;
 			}
@@ -56,10 +58,10 @@ namespace ThousandAndFirst
 		}
 
 		private static bool RunCore(XRLGame Game, out bool CompletedNow,
-			out bool ShelterStanding, out string Failure)
+			out int ShelterLots, out string Failure)
 		{
 			CompletedNow = false;
-			ShelterStanding = false;
+			ShelterLots = 0;
 			Failure = "";
 			if (GrantQuarantined(Game))
 			{
@@ -143,8 +145,8 @@ namespace ThousandAndFirst
 					}
 				}
 				if (!VerifyFounded(system, zone, profile, out Failure)) return false;
-				// One shelter lot, staked on the founded ground before the receipt moves: without a
-				// standing roof nobody joins, and nothing commissioned rises while nobody has.
+				// Two tent-row lots, staked on the founded ground before the receipt moves: without
+				// a standing roof nobody joins, and nothing commissioned rises while nobody has.
 				if (!TryStakeShelter(system, zone, out Failure)) return false;
 				string crop = KingdomData.CropForStyle(system.Style);
 				if (string.IsNullOrEmpty(crop)
@@ -227,9 +229,8 @@ namespace ThousandAndFirst
 			CompletedNow = true;
 			// Read the ground, not the branch that ran. A save cut past the Reserved phase resumes
 			// straight through to Complete without ever staking a lot, so the completion notice may
-			// only name the tent when a shelter claim is actually standing here.
-			ShelterStanding = TryFindShelter(zone, out GameObject shelter, out _)
-				&& shelter != null;
+			// only name the tent rows a claim is actually standing on here.
+			ShelterLots = ShelterLotsClaimed(zone);
 			return true;
 		}
 

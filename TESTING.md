@@ -65,9 +65,11 @@ published arrival debt/opportunities, open Prepared/Intent/Proved clock leases, 
 continuation and field-clock evidence; successful results round-trip canonically. Stale
 owners, contradictory unbacked clocks, disabled states and overflow remain tested refusals.
 No fixture callback witness establishes actual physical creation, ordinary play or save/load.
-Current production digest `dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`
-passes the exact structural gate. For this digest the engine-free suites passed13,731 main/5,109
-Portable cases, zero skips, and Roslyn 9.0.306 on Linux compiled the staged baseline and staged
+Current production digest `a7d35c2ca056c4fdf7478cc58d0460b55df0fb7c20fc3a62ecd050607e467180`
+passes the exact structural gate. For that digest the engine-free suites pass13,831 main/5,120
+Portable cases,zero skips, on Linux under the CI-pinned SDK9.0.306. The retained
+`dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96` digest carried13,731 main/5,109
+Portable cases, zero skips, and Roslyn 9.0.306 on Linux compiled its staged baseline and staged
 compatibility sets clean against the licensed Managed references with warnings as errors. The
 Windows1814 run of13,715 main/5,093 Portable cases and Canonical53744's four modes
 (ordinary3045/3049,developer3177/3181,132 Harness files,plus installed Hearthpyre ABI) belong to
@@ -79,9 +81,14 @@ baseline and dev-harness compatibility compiles. The shared `DevTests/refs.rsp` 
 `-langversion:latest`, so those compiles are not pinned to C# 7.3; `LangVersion` 7.3 is pinned
 only in `DevTests/Engine*/Probe.csproj` and `Tools/WorkshopSteam/*.csproj`. Retained sections
 below keep their original wording as written at their own checkpoints.
-Staged compatibility compilation runs across 3052 production C# sources, staged baseline across
-3048 (the optional-mod bridge is a compatibility-only source); the generated
-cold-install inventory contains 3083 files. Neither count proves subscriber delivery.
+Staged compatibility compilation runs across 3053 production C# sources, staged baseline across
+3049 (the optional-mod bridge is a compatibility-only source); the generated
+cold-install inventory contains 3084 files. Neither count proves subscriber delivery.
+The Kingdom Quickstart tent-row delta inside this census compiled clean in the staged baseline and
+staged compatibility modes only, run on Linux with the SDK Roslyn against the installed managed
+assemblies rather than through `Tools/gate.sh`; the two dev-harness modes, the installed-ABI
+source step, the Windows gate and the developer boot matrix are outstanding for it, and every
+timing claim about the staked rows remains a reading of `KingdomPlotRules.RaiseTicks`.
 [Native/focused evidence](/mnt/c/taf-master-growth-native.sP00c6/README.md).
 
 ## Retained real-turn recovery validation
