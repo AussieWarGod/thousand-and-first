@@ -77,7 +77,7 @@ below it.
   at the head of the next frame, restored ahead of every gate at end of turn), the render seam
   and its Zone.Render seat, the draw-scope finalizer that closes a thrown frame, a render model, run rather than read, that fails if the projection moves back inside the dispatch behind a `Blackout`, and a
   repo-wide sweep asserting the crashing patch target (`BeforeRenderEvent.Send`) appears in no
-  staged source. Suites pass 13,910 main and 5,199 Portable cases, zero skips; 615 tooling tests
+  staged source. Suites pass 13,910 main and 5,199 Portable cases, zero skips; 627 tooling tests
   pass. The staged baseline (3,051 sources) and compatibility (3,055 sources) compile modes were
   re-run clean with warnings-as-errors on these bytes, along with both dev-harness overlay
   modes.
