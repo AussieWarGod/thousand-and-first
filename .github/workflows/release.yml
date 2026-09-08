@@ -115,6 +115,8 @@ jobs:
           # actions/checkout can leave an annotated tag as a lightweight ref; refetch tags by force.
           git fetch --force --tags --no-recurse-submodules --quiet origin
 
+          # This regex syntactically admits v0.3.0 too; the version floor that refuses
+          # releasing 0.3.0 again is enforced below by the [ "$VERSION" != "0.3.0" ] check.
           if [[ "$TAG" =~ ^v0\.3\.(0|[1-9][0-9]*)$ ]]; then
             LANE=public; MODE=alpha; ITEM="$PUBLIC_ITEM"; ENVIRONMENT=steam-workshop
             VERSION="${TAG#v}"
@@ -231,6 +233,16 @@ jobs:
           [ "${#FIELDS[@]}" -eq 3 ] || { echo "workshop_metadata.py fields returned ${#FIELDS[@]} lines, expected 3" >&2; exit 2; }
           python3 Tools/workshop_metadata.py preview "${FIELDS[2]}"
           python3 Tools/workshop_metadata.py workshop "$MODE" manifest.json workshop.json
+          # The "workshop" subcommand above is a no-op success when workshop.json is absent in
+          # test mode (validate_workshop returns None for the staging lane's local tooling), so
+          # the automated lane refuses explicitly here instead of dying on an unhandled
+          # FileNotFoundError from the read below. See docs/RELEASING.md "Two public package
+          # lanes": the automated lane requires workshop.json even where local --test tooling
+          # tolerates its absence.
+          if [ ! -f workshop.json ]; then
+            echo "workshop.json is missing; the automated $LANE lane refuses to proceed without it" >&2
+            exit 1
+          fi
           python3 - "$LANE" "$ITEM" <<'PY'
           import json
           import sys
