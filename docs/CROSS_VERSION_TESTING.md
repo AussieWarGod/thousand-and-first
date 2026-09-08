@@ -6,7 +6,7 @@ launches a game during preparation, repairs a source, or deletes/reseals a parti
 
 Pinned source production: tag `v0.3.1`, commit
 `a46b5ada5197cc50d5afcfe5d6c1df7836a76b7e`. Native observer ordering is restricted to engine
-`2.0.211.51` / save format408. Candidate must be a full immutable commit containing these tools
+`2.0.211.51` / save format 408. Candidate must be a full immutable commit containing these tools
 and observers. A dirty worktree or a manifest version string is not runtime provenance.
 
 ## Root checks before native runs
@@ -146,11 +146,11 @@ python3 Tools/verify-upgrade-profile.py --candidate "$TAF_UPGRADE_PIN" \
 ```
 
 Expected result is source-dependent, not blanket stage absence. At the old pin,
-`Core/KingdomSealRecord.Profile.cs:10–14` bounds profile_schema to0..1;
-`KingdomSealRecord.Utilities.cs` reports OutOfBounds for2. `KingdomSealStore.Stage.cs` ReadSlot
+`Core/KingdomSealRecord.Profile.cs:10–14` bounds profile_schema to 0..1;
+`KingdomSealRecord.Utilities.cs` reports OutOfBounds for 2. `KingdomSealStore.Stage.cs` ReadSlot
 returns null for that input, while ReadStage retains an independently valid old sibling through
 Best. Thus both rejected/absent slots mean absent; a valid old sibling means that sibling survives.
-The probe also requires actual empty-camp fields: schema6/profile_schema2, living, stage0, people0,
+The probe also requires actual empty-camp fields: schema 6 / profile_schema 2, living, stage 0, people 0,
 canonical_body=[unresolved], valid technology and provenance commitments. It proves stored shape
 and actual old-reader behavior, not that a newer saved world can safely be downgraded.
 
@@ -168,7 +168,7 @@ without deleting anything. Never discard history to make a copy pass.
 
 Native copy holds ordinary single-link input handles and directory identities, hashes every file
 before/copy/readback/after, and rechecks whole membership. Two endpoint checks include both CoQ
-and CavesOfQud. Native helper has a120-second caller timeout; failed partial destinations and
+and CavesOfQud. Native helper has a 120-second caller timeout; failed partial destinations and
 plan files stay available for diagnosis. Neither hashes nor a leftover `.live` confer process
 ownership. The single closed Local seal is written only after all inputs and state are complete.
 These are bounded developer save/reader checks, not ordinary UI acceptance or a release gate.
