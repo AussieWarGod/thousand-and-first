@@ -1,6 +1,18 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
-## Current first-basin water-store over Quickstart tent-row census — 2026-09-09
+## Current stockpile-capacity over first-basin water-store census — 2026-09-09
+
+3059 production C# files; 3,090 cold-install files in the generated inventory;
+433,954 physical lines, 1423 direct-XRL, zero cap failures. Exact digest
+`5db8f7381ade172c6b0b34925a111f4d4c28f32da77cf0be266914aa53e77674`.
+A dedicated stockpile declares its size in material units off a new blueprint tag; the two
+counting paths never read it, so the settlement ledger and every purpose-local debit view agree
+by construction and an over-cap standing save reads exactly what it read before. Only intake
+refuses, and intake counts the outcome it proved rather than the call it made. No receipt phase,
+wire, option, grant or verifier predicate changes. Roslyn 9.0.306 on Linux compiled the staged
+baseline (3055 sources) and compatibility (3059 sources) sets clean.
+No native, dev-harness or human semantic-review evidence binds this digest.
+## Retained first-basin water-store over Quickstart tent-row census — 2026-09-09
 
 3056 production C# files;3,087 cold-install files in the generated inventory;
 433,308 physical lines,1421 direct-XRL,zero cap failures. Exact digest

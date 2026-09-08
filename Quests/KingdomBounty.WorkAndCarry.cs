@@ -98,17 +98,32 @@ namespace ThousandAndFirst
 			}
 			KingdomMaterials.MaterialStock stock = KingdomMaterials.Stock(Z);
 			GameObject container = null;
+			bool anyStore = false;
 			for (int i = 0; i < stock.Stockpiles.Count; i++)
 			{
-				if (stock.Stockpiles[i].Inventory != null && stock.Stockpiles[i] != pile)
+				if (stock.Stockpiles[i].Inventory == null || stock.Stockpiles[i] == pile)
 				{
-					container = stock.Stockpiles[i];
-					break;
+					continue;
 				}
+				anyStore = true;
+				// Room, spoken: a porter turned away by a full store is the exact moment the
+				// founder should hear that the store is full, and it is said once (STANDARDS 7b).
+				if (KingdomMaterials.StockpileRoomSpoken(stock.Stockpiles[i]) < 1)
+				{
+					continue;
+				}
+				container = stock.Stockpiles[i];
+				break;
 			}
 			if (container == null)
 			{
-				Announce(System, Data, BountyBlock.NowhereToCarry);
+				// A settlement with stores that are merely FULL has not been told to dedicate a
+				// container - it has already been told, store by store, that they will take no
+				// more. Only genuine absence gets the dedicate-a-container line.
+				if (!anyStore)
+				{
+					Announce(System, Data, BountyBlock.NowhereToCarry);
+				}
 				return;
 			}
 			if (pile == null || pile.Inventory == null)
@@ -121,6 +136,20 @@ namespace ThousandAndFirst
 			{
 				if ((BountyTransferPhase)Data.TransferPhase == BountyTransferPhase.None)
 				{
+					// Room is re-read before every bundle, not once at the door. A carried stack
+					// is indivisible here, so the last bundle in may take the store past its
+					// stated size by that stack; nothing after it is bound, and the store reports
+					// itself full from then on. The settlement's OWN deliveries (MaterialStock.Put)
+					// split to the exact room, which is why that path never overshoots at all.
+					if (KingdomMaterials.StockpileRoom(container) < 1)
+					{
+						// The store filled under the porter's hands. Say so once, and never fall
+						// through to PileEmpty with nothing carried: that block is PERMANENT, and
+						// a full store is not an empty pile.
+						KingdomMaterials.StockpileRoomSpoken(container);
+						if (Data.TransferredUnits <= 0) return;
+						break;
+					}
 					GameObject next = null;
 					for (int i = 0; i < pile.Inventory.Objects.Count; i++)
 					{

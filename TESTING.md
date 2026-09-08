@@ -85,9 +85,13 @@ baseline and dev-harness compatibility compiles. The shared `DevTests/refs.rsp` 
 `-langversion:latest`, so those compiles are not pinned to C# 7.3; `LangVersion` 7.3 is pinned
 only in `DevTests/Engine*/Probe.csproj` and `Tools/WorkshopSteam/*.csproj`. Retained sections
 below keep their original wording as written at their own checkpoints.
-Staged compatibility compilation runs across 3056 production C# sources, staged baseline across
-3052 (the optional-mod bridge is a compatibility-only source); the generated
-cold-install inventory contains 3087 files. Neither count proves subscriber delivery.
+Staged compatibility compilation runs across 3059 production C# sources, staged baseline across
+3055 (the optional-mod bridge is a compatibility-only source); the generated
+cold-install inventory contains 3090 files. Neither count proves subscriber delivery.
+The receipts named above were measured at the earlier 3052/3048/3083 census, before the Kingdom
+Quickstart tent rows, the first-basin water store and the stockpile unit capacity added production
+sources; the engine-free suites were re-run on the current bytes and their counts are recorded in
+`CHANGELOG.md`.
 The Kingdom Quickstart tent-row delta inside this census compiled clean in the staged baseline and
 staged compatibility modes only, run on Linux with the SDK Roslyn against the installed managed
 assemblies rather than through `Tools/gate.sh`; the two dev-harness modes, the installed-ABI

@@ -50,27 +50,31 @@ below it.
   a staked lot remains an owned object property registered in the removal-coverage allowlist.
   Ordinary founding is untouched. Public 0.3.1 is unchanged.
 
-> **Current unreleased census — exact structural gate passed.** Current 3056-file census is line-cap green:
-> 433,308 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> **Current unreleased census — exact structural gate passed.** Current 3059-file census is line-cap green:
+> 433,954 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
-> imports occur in 1421 files, 0 of them over the line limit. Inventory SHA-256:
-> `5160ed08e19734f315ebe8c7fe2ab4e5e7e1bb6bc632ae97a0c511d1f40cd325`.
-> The generated cold-install inventory contains 3087 files; no new subscription claim.
-> This digest is the Kingdom Quickstart tent rows merged with the first-basin water store retained
-> below; each delta carries its own review chain and neither is restated for the other.
-> The tent-row delta over the retained first-basin census below is one added and six modified production
+> imports occur in 1423 files, 0 of them over the line limit. Inventory SHA-256:
+> `5db8f7381ade172c6b0b34925a111f4d4c28f32da77cf0be266914aa53e77674`.
+> The generated cold-install inventory contains 3090 files; no new subscription claim.
+> This digest is the stockpile unit capacity merged over the Kingdom Quickstart tent rows and the
+> first-basin water store retained below; each delta carries its own review chain and none is
+> restated for the others.
+> The stockpile delta over the retained tent-row and first-basin censuses below is three added and
+> six modified production sources plus the regenerated removal-coverage roster; the tent-row delta
+> under it was one added and six modified production
 > sources: the quickstart bootstrap's shelter partial, the quickstart rules, the bootstrap, the camp
 > builder, the generated removal coverage, the quickstart receipt model and its wire codec. The
-> merged tree compiles clean in the staged baseline (3052 sources), staged compatibility
-> (3056 sources) and both dev-harness modes, on Linux with the SDK Roslyn against the installed
+> merged tree compiles clean in the staged baseline (3055 sources) and staged compatibility
+> (3059 sources plus the tracked Hearthpyre 2.2.3 ABI stub), on Linux with the SDK Roslyn 9.0.306
+> against the installed
 > managed assemblies rather than through `Tools/gate.sh`; both engine-free suites run green there
-> (13,925 main/5,193 Portable,zero skips) and the repository audit passes.
-> NOT run for it: the installed-Hearthpyre source step, the
+> (13,980 main/5,193 Portable, zero skips) and the 627-test tooling suite passes.
+> NOT run for it: the installed-Hearthpyre source step, the two dev-harness modes, the
 > Windows gate, the developer boot matrix and any native in-game run. The 1,700-tick raising figure
 > is a reading of the raising rule, not of a running plot clock. The exact-inventory human semantic
 > review is open against this digest; this is not Beta sign-off.
 
-## Unreleased — empty-camp legacy correction
+## Unreleased — empty-camp legacy correction and stockpile capacity
 
 ### Added
 
@@ -125,6 +129,30 @@ below it.
   leave an abandoned receipt holding a vessel; the hall's commission settle span moved into
   `Growth/KingdomLab.Commission.Settle.cs` to make room for one.
 
+### Added
+
+- A stockpile now holds a stated number of material units — 48 for a chest dedicated by
+  hand, declared on the blueprint for built stores, which run from 48 for a fixture shelf
+  through 64 for a locker, 96 for the civic larder and a purpose's own stores, 192 for the
+  granary to 384 for the Granary-Colossus. Eight hand-dedicated stores hold 384 units
+  between them, which is more than the grandest single bill in the catalogue, so no design
+  the mod ships is ever made impossible to raise by the cap. A full store refuses the next
+  delivery, which then goes to the next store with room or is stacked on the ground;
+  nothing you already put in a chest is ever uncounted, moved or lost. Every way the
+  settlement takes material in respects it: its own deliveries, clearance payout, strike
+  salvage and a bounty porter all pick a store with room. The keepers say a store is full
+  once, and stop saying it the moment there is room again. Note what fills a store: a
+  stockpile holds everything the settlement can spend — materials, rare finds, and
+  anything that can be taken apart for bits, which is most loot — so a chest you dedicate
+  as a stockpile is a poor loot chest. Never weight: the reports keep printing units, now
+  with the room beside the tally (`18 of 48 units`). An over-cap stockpile in a standing
+  save reads exactly what it read before. The hold is physical rather than spendable: a
+  stack a live work has reserved is still standing in the chest and still counts against
+  the room, so the room never jumps when a reservation is taken or released. A delivery
+  counts only what a store actually received: the bundle it makes is proved standing in
+  that exact store, of that material, carrying the count it was stamped with, before a
+  single unit is written down.
+
 ### Compatibility
 
 - Reading older data: 0.3.2 reads every 0.3.0/0.3.1 seal and save unchanged.
@@ -169,6 +197,22 @@ below it.
   finished rung is still free to widen the basin its funding drained, and the loader's attribute
   pair and no-thaw contract. The staged and dev-harness baseline and compatibility compiles were
   re-run on the merged tree; the installed-ABI source step and the Windows gate were not.
+- The stockpile unit capacity adds 53 cases in `DevTests/KingdomStockpileCapacityTests.cs`:
+  the capacity fallback and the named ladder, the tag identities, both counting paths
+  staying capacity-blind, the physical hold, room never going negative, a delivery filling
+  to room then walking on then spilling, a full store never being emptied, fullness said
+  once and taken back, the porter, the status line and its physical-aware empty branch,
+  every settlement-owned intake path choosing a store with room, a settlement out of room
+  never reported as a missing blueprint, the modder documentation, the materials
+  roster count, the destination and its room being re-proved after every engine callback
+  (the stamping of a stack count included, which is itself a callback seam), the one-room
+  adversary in numbers, the stamped bundle being refused outright when its store fills
+  while the stamp runs, only what a store actually gained ever being counted, and the
+  landing proof with its narrower withdrawal (only a bundle that reached nobody).
+  Measured on this branch with `dev` merged (which brought the cross-version profile
+  tooling, the Kingdom Quickstart tent rows and the first-basin water store): full suites
+  pass 13,980 main and 5,193 Portable cases, zero skips, and 627 tooling tests pass. Both
+  staged compile modes are clean with warnings as errors.
 - Tools: the smoke launcher accepts every seal schema the game reads (4..6) and the full
   legacy store layout; it previously refused progressed profiles. Maintainer tooling only,
   with no player-visible or runtime effect.
@@ -219,6 +263,30 @@ below it.
   departure line; the Chronicle receipt is the durable record. Save/load remains
   separately gated. Retained failures and bounded native scope are recorded in
   `docs/STATUS.md`.
+
+> **Retained stockpile-capacity census — exact structural gate passed.** That 3056-file census was line-cap green:
+> 433,239 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
+> imports occur in 1420 files, 0 of them over the line limit. Inventory SHA-256:
+> `4f006f327ef59e0c36e65ea11fad27b5b508d8946bffa9ed8770a147fe3dde79`.
+> The generated cold-install inventory contains 3087 files; no new subscription claim.
+> It covers the stockpile unit capacity above the retained Kingdom Quickstart tent rows merged
+> from `dev` and the empty-camp legacy correction below them: three
+> added production sources (the capacity constants, the survey's material-store reads and the
+> stockpile-room rules, which own the room, the intake that respects it and that intake's proofs),
+> six modified (the delivery, the status line, the porter carry, the clearance payout's
+> destination choice, the strike salvage's destination choice and the yard's nothing-landed
+> fault line) and the regenerated removal-coverage roster. Roslyn 9.0.306 on Linux compiled the staged baseline
+> (3052 sources) and staged compatibility (3056 sources plus the tracked Hearthpyre 2.2.3 ABI
+> stub) sets clean against the licensed Managed references, warnings as errors. The two
+> dev-harness modes did not run for this delta and no native run was made; it no longer binds the
+> current bytes, which the census at the top of this file carries.
+>
+> The earlier `c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c` digest bound the
+> empty-camp legacy merge with `dev` at 3052 files and 432,259 physical lines; it no longer binds
+> the current bytes. Root and independent AI reviewer read all four production sources changed in
+> that delta and their affected boundaries; unchanged sources inherit the complete canonical
+> parent review chain.
 
 > **Retained first-basin water-store census — exact structural gate passed.** That 3054-file census was line-cap green:
 > 432,819 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,

@@ -1,6 +1,22 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current unreleased first-basin water store over the Quickstart tent rows
+## Current unreleased stockpile unit capacity over the first-basin water store
+
+3059 staged sources; 433,954 physical lines; 1423 direct-XRL; zero cap failures; 3090 generated
+cold-stage files. Exact inventory `5db8f7381ade172c6b0b34925a111f4d4c28f32da77cf0be266914aa53e77674`.
+A dedicated stockpile now holds a stated number of material units (32 by default, off the new
+`r_KingdomStockpileCapacity` blueprint tag when one is declared); counting stays whole and only
+intake refuses, so no standing save reads lower than it did. The delivery remembers nothing across
+an engine callback: creating the bundle, stamping its count (`Stacker.StackCount`, which sends
+`StackCountChangedEvent`) and inserting it each run other people's handlers, so the destination and
+its room are proved after the creation and again after the stamp, and the bundle is proved standing
+in that exact store with its stamped count before a unit is counted. Three added production
+sources, three modified, one regenerated removal-coverage roster; no receipt, wire, option, grant
+or verifier change. Roslyn 9.0.306 on Linux compiles the staged baseline (3055) and compatibility
+(3059) sets clean, warnings as errors, and both engine-free suites run green there (13,980 main /
+5,193 Portable, zero skips). No native run, no dev-harness mode and no
+exact-inventory human semantic review bind this digest.
+## Retained unreleased first-basin water store over the Quickstart tent rows
 
 3056 staged sources;433,308 physical lines;1421 direct-XRL;zero cap failures;3087 generated
 cold-stage files. Exact inventory `5160ed08e19734f315ebe8c7fe2ab4e5e7e1bb6bc632ae97a0c511d1f40cd325`.

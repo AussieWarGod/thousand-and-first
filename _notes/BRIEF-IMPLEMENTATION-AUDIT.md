@@ -1,6 +1,19 @@
 # Brief-to-implementation audit
 
-## Current first-basin water-store over Quickstart tent-row census — 2026-09-09
+## Current stockpile-capacity over first-basin water-store census — 2026-09-09
+
+**3059** production C# files, 433,954 physical lines, 1423 direct-XRL, zero cap failures;
+3090 generated cold-install files. Exact digest
+`5db8f7381ade172c6b0b34925a111f4d4c28f32da77cf0be266914aa53e77674`.
+A dedicated stockpile now states how many material units it holds; counting stays whole and only
+intake refuses. The delivery proves the destination and its room after every engine callback, the
+stamping of a stack count included, and proves the bundle standing in that exact store before it
+counts a unit. Three added production sources, three modified, one regenerated roster, over the
+first-basin and tent-row censuses retained below. Roslyn 9.0.306 on Linux compiled the staged
+baseline (3055 sources) and compatibility (3059 sources) sets clean, warnings as errors, and both
+engine-free suites run green there (13,980 main / 5,193 Portable, zero skips). No native run,
+dev-harness mode or exact-inventory human semantic review binds it.
+## Retained first-basin water-store over Quickstart tent-row census — 2026-09-09
 
 **3056** production C# files,433,308 physical lines,1421 direct-XRL,zero cap failures;
 3087 generated cold-install files. Exact digest

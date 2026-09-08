@@ -20,15 +20,29 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
-The first-basin water store over the Kingdom Quickstart tent rows, the empty-camp legacy
-correction, the camp-guide topic tree, the claimed-ground light and the first-settler legibility
-change together report 3056 staged production C# files and 433,308 physical lines.
+The stockpile unit capacity over the first-basin water store, the Kingdom Quickstart tent rows,
+the empty-camp legacy correction, the camp-guide topic tree, the claimed-ground light and the
+first-settler legibility change together report 3059 staged production C# files and 433,954
+physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`5160ed08e19734f315ebe8c7fe2ab4e5e7e1bb6bc632ae97a0c511d1f40cd325`. The census reports
-1421 files with direct `XRL` imports; 0 of those exceed the line limit.
+`5db8f7381ade172c6b0b34925a111f4d4c28f32da77cf0be266914aa53e77674`. The census reports
+1423 files with direct `XRL` imports; 0 of those exceed the line limit.
 
-The delta over the retained tent-row draft below is three ADDED production sources
+The stockpile delta over the retained first-basin draft is three added production sources — the
+capacity constants (`Core/KingdomRules.MaterialStores.cs`), the survey's material-store reads
+(`Growth/KingdomSurvey.11.MaterialStores.cs`) and the stockpile-room rules
+(`Growth/KingdomMaterials.StockpileRoom.cs`, which owns the room, the intake that respects it and
+that intake's proofs) — six modified (the delivery, the status line, the porter carry, the
+clearance payout's destination choice, the strike salvage's destination choice and the yard's
+nothing-landed fault line), and the regenerated removal-coverage roster. Each new file owns one
+responsibility and no saved format, wire or public API changes for that delta. The staged baseline
+(3055 sources) and staged compatibility (3059 sources plus the tracked Hearthpyre 2.2.3 ABI stub)
+sets compile clean under Roslyn 9.0.306 on Linux against the licensed Managed references with
+warnings as errors; the two dev-harness modes, the installed-Hearthpyre source step, the Windows
+gate and any native run did not run for it.
+
+The first-basin delta beneath it was three ADDED production sources
 (`Growth/KingdomPlotHeartRules.Loader.cs`, `Growth/KingdomWaterDebit.OpenReservations.cs`,
 `Growth/KingdomLab.Commission.Settle.cs`) and twenty-one modified ones. The first-basin water store
 owns the three additions plus the founding-heart

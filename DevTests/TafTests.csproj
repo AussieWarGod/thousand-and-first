@@ -822,10 +822,12 @@
 	<Compile Include="KingdomLiquidVisualRulesTests.cs" />
 	<Compile Include="KingdomLiquidRuntimeSourceTests.cs" />
     <Compile Include="KingdomFlowRulesTests.cs" />
+	<Compile Include="KingdomStockpileCapacityTests.cs" />
     <Compile Include="..\Core\KingdomRules.cs" />
 	<Compile Include="..\Core\KingdomRules.Dish.cs" />
 	<Compile Include="..\Core\KingdomRules.Meals.cs" />
 	<Compile Include="..\Core\KingdomRules.FoodIndustry.cs" />
+	<Compile Include="..\Core\KingdomRules.MaterialStores.cs" />
 	<Compile Include="..\Core\KingdomRules.Population.cs" />
 	<Compile Include="..\Core\KingdomRules.InheritanceSeal.cs" />
 	<Compile Include="..\Core\KingdomRules.InheritanceResolution.cs" />
