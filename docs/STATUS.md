@@ -51,16 +51,20 @@ completion once and unchanged repeat. Strict raw log/15journalrows and receipt-o
 stop pass. Comparison83480 matches all3181 production/Harness C# bytes. This is actual
 engine-turn coverage in a synthetic fixture, not ordinary play or save/load acceptance.
 
-Current census:3049 staged C# files;431,893 physical lines;3080 files in the generated
-cold-install inventory. Canonical compilation covers3049 sources, baseline and compatibility symbols.
-Inventory SHA-256: `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
+Current census:3050 staged C# files;432,114 physical lines;3081 files in the generated
+cold-install inventory. Canonical compilation covers3050 sources, baseline and compatibility symbols.
+Direct `XRL` imports: 1416 files, 0 over the line limit.
+Inventory SHA-256: `1a26a79fe4bcdb53957b7682d7fb858c2c08ad101c183e10f8b14795a4e20642`.
+The Kingdom Quickstart shelter delta inside this census has NOT been compiled or run natively:
+the staged four-mode gate and the developer boot matrix remain outstanding for it, and every
+timing claim about the staked tent remains a source reading.
 
 Focused86313 passes38 engine-free cases, including modern/historical open-arrival clock
 cuts through retirement, candidate continuation, canonical round-trips, exact child ownership,
 recorded debt, pause overlap and arithmetic refusal. Candidate fixtures use supported
 semantic version1; no production guard was relaxed to pass them. Four source-wiring cases
-support the75th persona. Structural release gate passes exact3049-source digest
-`a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
+support the75th persona. Structural release gate passes exact3050-source digest
+`1a26a79fe4bcdb53957b7682d7fb858c2c08ad101c183e10f8b14795a4e20642`.
 Independent source/native/test review found no Required issue. Full licensed Windows1814
 passed13,715 main and5,093 Portable cases,zero skips; normal rebuilds had zero warnings/errors.
 Canonical53744 passed all four C#7.3 modes: ordinary3045/3049,developer3177/3181,132 Harness

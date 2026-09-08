@@ -20,6 +20,16 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
+The Kingdom Quickstart shelter lot reports3050 staged production C# files,432,114 physical
+lines,zero at or above300,and1416 files with direct `XRL` imports. Exact inventory:
+`1a26a79fe4bcdb53957b7682d7fb858c2c08ad101c183e10f8b14795a4e20642`.
+The complete canonical parent/current comparison enumerates3049 unchanged,two modified,
+one added,no removals. The added source is the bootstrap's shelter partial; the modified
+sources are the quickstart rules and the bootstrap itself. No compile or native evidence
+binds this digest yet.
+
+## Retained master-growth resume census
+
 The master-growth resume correction reports3049 staged production C# files,431,893 physical lines,
 zero at or above300,and1415 direct-XRL files. Exact inventory:
 `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.

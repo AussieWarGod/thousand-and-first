@@ -61,8 +61,11 @@ The v0.3 Alpha target adds a separate **Kingdom Quickstart** game mode:
 4. Confirm a small civic heart is founded through the normal founding transaction and finite,
    physical charter supplies are present. They are starter objects, not free production or a
    citizen grant.
-5. Open the **Charter** ability and follow its current offers. Save, quit to desktop, reload, and
-   revisit the heart before expanding the test.
+5. Confirm one staked settler's tent lot stands west of the supply column, around (21,9)-(26,12).
+   It is a staked plot, not a finished building: it rises on the settlement calendar over the
+   first days, with no citizens and nothing spent from the chest. Report the day it finishes.
+6. Open the **Charter** ability and follow its current offers. Save, quit to desktop, reload, and
+   revisit the heart and the tent lot before expanding the test.
 
 An optional passive charter advisor is controlled by a Mods option before world creation. The
 advisor grants no labour, civic support, defence, or loot. Changing that option later does not

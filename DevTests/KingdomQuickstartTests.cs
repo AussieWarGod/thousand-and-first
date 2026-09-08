@@ -98,26 +98,83 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void PreparedGroundAddsOnlyTheTwoMissingHeartIngressEndpoints()
+		public void PreparedGroundIsApronSupplyApproachHeartIngressAndTheShelterLot()
 		{
-			int added = 0;
+			int endpoints = 0;
+			int shelterCells = 0;
 			for (int y = -1; y <= 25; y++)
 				for (int x = -1; x <= 80; x++)
 				{
-					bool previous = (x >= 37 && x <= 44 && y >= 10 && y <= 15)
+					bool camp = (x >= 37 && x <= 44 && y >= 10 && y <= 15)
 						|| (x >= 27 && x <= 30 && y >= 9 && y <= 17)
 						|| (x >= 29 && x <= 37 && y >= 11 && y <= 13);
 					bool endpoint = (x == 40 || x == 41) && y == 16;
-					ClassicAssert.AreEqual(previous || endpoint,
+					bool shelter = x >= 21 && x <= 26 && y >= 9 && y <= 12;
+					ClassicAssert.AreEqual(camp || endpoint || shelter,
 						KingdomQuickstartRules.RequiresPreparedGround(x, y), x + "," + y);
-					if (endpoint && !previous) added++;
+					if (endpoint && !camp) endpoints++;
+					if (shelter && !camp && !endpoint) shelterCells++;
 				}
-			ClassicAssert.AreEqual(2, added);
+			ClassicAssert.AreEqual(2, endpoints);
+			ClassicAssert.AreEqual(24, shelterCells);
+			ClassicAssert.AreEqual(21, KingdomQuickstartRules.ShelterX1);
+			ClassicAssert.AreEqual(9, KingdomQuickstartRules.ShelterY1);
+			ClassicAssert.AreEqual(26, KingdomQuickstartRules.ShelterX2);
+			ClassicAssert.AreEqual(12, KingdomQuickstartRules.ShelterY2);
+			// One Small plot (6x4), west of the supply column, clear of every reserved role cell,
+			// of the founder's start cell, and of the heart's extreme survey (which begins at 31).
+			ClassicAssert.AreEqual(6, KingdomQuickstartRules.ShelterX2 - KingdomQuickstartRules.ShelterX1 + 1);
+			ClassicAssert.AreEqual(4, KingdomQuickstartRules.ShelterY2 - KingdomQuickstartRules.ShelterY1 + 1);
+			foreach (int roleY in new[] { 10, 12, 14, 16 })
+				ClassicAssert.IsFalse(KingdomQuickstartRules.ShelterX1 <= 28
+					&& 28 <= KingdomQuickstartRules.ShelterX2
+					&& KingdomQuickstartRules.ShelterY1 <= roleY
+					&& roleY <= KingdomQuickstartRules.ShelterY2, "role cell 28," + roleY);
+			ClassicAssert.IsFalse(KingdomQuickstartRules.ShelterX1 <= KingdomQuickstartRules.StartCellX
+				&& KingdomQuickstartRules.StartCellX <= KingdomQuickstartRules.ShelterX2
+				&& KingdomQuickstartRules.ShelterY1 <= KingdomQuickstartRules.StartCellY
+				&& KingdomQuickstartRules.StartCellY <= KingdomQuickstartRules.ShelterY2);
+			Assert.That(KingdomQuickstartRules.ShelterX2, Is.LessThan(31));
 			foreach (int outside in new[] { int.MinValue, int.MaxValue })
 			{
 				ClassicAssert.IsFalse(KingdomQuickstartRules.RequiresPreparedGround(outside, 12));
 				ClassicAssert.IsFalse(KingdomQuickstartRules.RequiresPreparedGround(40, outside));
 			}
+		}
+
+		[Test]
+		public void ShelterIsStakedOnTheCalendarAfterFoundingAndNeverWearsTheGrantMarker()
+		{
+			string shelter = TestMain.ReadRepositoryText(
+				"World/KingdomQuickstartBootstrap.Shelter.cs");
+			StringAssert.Contains("KingdomPlots.Stake(", shelter);
+			StringAssert.Contains("KingdomData.TryGetBuilding(KingdomQuickstartRules.ShelterBuildKey", shelter);
+			StringAssert.Contains("KingdomPlots.TryGetSpec(entry.Key, out spec)", shelter);
+			StringAssert.Contains("new KingdomPlots.GroundGrid(Zone)", shelter);
+			StringAssert.Contains("KingdomPlotRules.IsUnderground(Zone.Z)", shelter);
+			StringAssert.Contains("KingdomQuickstartRules.ShelterMarkerProperty", shelter);
+			// The grant recovery scan reads every object in the zone and refuses any wearing the
+			// grant marker with a value it did not mint, so the shelter must never carry it.
+			StringAssert.DoesNotContain("GrantMarkerProperty", shelter);
+			// Nothing here invents completion or drives the plot clock.
+			StringAssert.DoesNotContain("KingdomPlots.Advance(", shelter);
+			StringAssert.DoesNotContain("SetIntProperty(\"KingdomBuilt\"", shelter);
+			StringAssert.DoesNotContain("PlotWorkSchemaProperty", shelter);
+			StringAssert.DoesNotContain("Popup", shelter);
+
+			string bootstrap = TestMain.ReadRepositoryText(
+				"World/KingdomQuickstartBootstrap.cs");
+			int founded = bootstrap.IndexOf("if (!VerifyFounded(system, zone, profile, out Failure)) return false;",
+				StringComparison.Ordinal);
+			int stake = bootstrap.IndexOf("TryStakeShelter(system, zone, out Failure)",
+				StringComparison.Ordinal);
+			int advance = bootstrap.IndexOf("KingdomQuickstartPhase.Founded, crop",
+				StringComparison.Ordinal);
+			Assert.That(founded, Is.GreaterThanOrEqualTo(0));
+			Assert.That(stake, Is.GreaterThan(founded));
+			Assert.That(advance, Is.GreaterThan(stake));
+			ClassicAssert.AreEqual(stake, bootstrap.LastIndexOf("TryStakeShelter(system, zone, out Failure)",
+				StringComparison.Ordinal));
 		}
 
 		[Test]

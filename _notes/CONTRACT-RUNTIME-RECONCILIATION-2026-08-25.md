@@ -1,6 +1,15 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
-## Current master-growth resume census — 2026-09-07
+## Current Kingdom Quickstart shelter census — 2026-09-08
+
+3050 production C# files;3,081 cold-install files in the generated inventory;
+432,114 physical lines,1416 direct-XRL,zero cap failures. Exact digest
+`1a26a79fe4bcdb53957b7682d7fb858c2c08ad101c183e10f8b14795a4e20642`.
+The quickstart bootstrap stakes one shelter lot between the founding proof and the receipt's
+first advance; the lot is receiptless, so nothing here stamps completion. No compile or
+native evidence binds this digest.
+
+## Retained master-growth resume census — 2026-09-07
 
 3049 production C# files;3,080 cold-install files in the generated inventory;
 431,893 physical lines,1415 direct-XRL,zero cap failures. Exact digest

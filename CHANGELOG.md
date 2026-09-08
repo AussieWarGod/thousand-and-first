@@ -8,6 +8,26 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
+## Unreleased — Kingdom Quickstart shelter lot
+
+- Kingdom Quickstart now stakes one settler's tent lot at founding, west of the supply
+  column at (21,9)-(26,12), between the founding proof and the receipt's first advance.
+  Without a standing roof nobody joins a settlement, and nothing commissioned rises while
+  the population is zero, so the mode previously opened on a camp that could not proceed.
+- The lot is granted free: opening water, meals and materials are unchanged. It is staked,
+  not built. The stake is receiptless, so the lot keeps the shipped calendar clock the first
+  heart uses and finishes over the first days, not by nightfall, with no settler labour.
+- The prepared-ground mask widens by those 24 cells so the camp builder bares them; the
+  authored-ground preflight refuses a lot holding a creature, an item, or open liquid.
+- Idempotency uses a shelter-only string property and the staked rectangle, never the
+  quickstart grant marker: the grant recovery scan reads every object in the zone and would
+  refuse a foreign value there, aborting every later grant phase on the same boot.
+- If zoning or the authored-ground preflight refuses the lot, the bootstrap stops with that
+  reason. It never stamps completion and never publishes a receipt it did not measure.
+- No new persisted field and no receipt wire change. Existing Quickstart saves are already
+  past the Reserved phase, so the branch never runs for them: they keep their old behaviour
+  and simply have no tent. Ordinary founding is untouched. Public 0.3.1 is unchanged.
+
 ## Unreleased — master pause/resume correction
 
 - Master resume now validates a complete growth schedule before publishing it. Fresh
@@ -20,10 +40,11 @@ below it.
   Native regression and four-mode compilation pass. Full licensed suites pass13,715 main
   and5,093 Portable cases,zero skips; repository audit passes501 tooling tests.
 
-> **Current unreleased census — exact structural gate passed.** Current 3049-file census is line-cap green:
-> 431,893 physical lines,zero files at or above300,1415 direct-XRL imports. Inventory SHA-256:
-> `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
-> The generated cold-install inventory contains 3080 files; no new subscription claim.
+> **Current unreleased census — exact structural gate passed.** Current 3050-file census is line-cap green:
+> 432,114 physical lines,zero files at or above300; direct `XRL`
+> imports occur in 1416 files, 0 of them over the line limit. Inventory SHA-256:
+> `1a26a79fe4bcdb53957b7682d7fb858c2c08ad101c183e10f8b14795a4e20642`.
+> The generated cold-install inventory contains 3081 files; no new subscription claim.
 > Root and independent AI reviewer inspected the complete five-source delta. Native scope
 > and remaining gates are recorded in `docs/STATUS.md`; this is not Beta sign-off.
 

@@ -32,7 +32,8 @@ namespace ThousandAndFirst
 						+ KingdomQuickstartRules.StarterWaterDrams + " drams of water, the larder "
 						+ "holds " + KingdomQuickstartRules.StarterFoodServings
 						+ " meals, and the materials chest holds only what you can see. None of "
-						+ "these stores produces replacements.");
+						+ "these stores produces replacements. A settler's tent is staked west of "
+						+ "them; it rises on the settlement's own calendar within the first days.");
 				return true;
 			}
 			catch (Exception ex)
@@ -135,6 +136,9 @@ namespace ThousandAndFirst
 					}
 				}
 				if (!VerifyFounded(system, zone, profile, out Failure)) return false;
+				// One shelter lot, staked on the founded ground before the receipt moves: without a
+				// standing roof nobody joins, and nothing commissioned rises while nobody has.
+				if (!TryStakeShelter(system, zone, out Failure)) return false;
 				string crop = KingdomData.CropForStyle(system.Style);
 				if (string.IsNullOrEmpty(crop)
 					|| GameObjectFactory.Factory.GetBlueprintIfExists(crop) == null)

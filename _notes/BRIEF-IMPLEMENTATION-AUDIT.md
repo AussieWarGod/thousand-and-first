@@ -1,6 +1,14 @@
 # Brief-to-implementation audit
 
-## Current master-growth resume census — 2026-09-07
+## Current Kingdom Quickstart shelter census — 2026-09-08
+
+**3050** production C# files,432,114 physical lines,1416 direct-XRL,zero cap failures;
+3081 generated cold-install files. Exact digest
+`1a26a79fe4bcdb53957b7682d7fb858c2c08ad101c183e10f8b14795a4e20642`.
+One added source (the bootstrap's shelter partial) and two modified. Structure, doc
+freshness and the Tools suite pass; compilation and native evidence are outstanding.
+
+## Retained master-growth resume census — 2026-09-07
 
 **3049** production C# files,431,893 physical lines,1415 direct-XRL,zero cap failures;
 3080 generated cold-install files. Exact digest

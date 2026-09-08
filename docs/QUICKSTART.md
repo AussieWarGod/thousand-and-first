@@ -11,15 +11,17 @@ Kingdom Quickstart is an optional new-game mode for testing or learning The Thou
    - **Reedwake** — salt marsh.
    - **Riftside** — desert canyon.
    - **Saltwake** — salt dunes.
-5. Enter the world. After placement, the ordinary founding transaction creates the first heart and city identity.
+5. Enter the world. After placement, the ordinary founding transaction creates the first heart and city identity, and one settler's tent lot is staked west of the supply column.
 
 Each successful camp physically contains 24 drams of fresh water in dedicated casks, 12 style-appropriate meals in a larder, and a chest containing 1 mud, 3 brush, and 4 timber. These are finite objects and items. They grant no hidden production and replenish only through ordinary settlement work.
 
 The optional named camp guide explains this opening inventory. The guide is passive and immobile, carries no stock, awards no experience, provides no labour, staffing, support, or defence, and is not a citizen.
 
+One settler's tent is staked at founding, granted free: the stores above are unchanged. It is staked, not standing. The lot is receiptless, so it keeps the same calendar clock the first heart uses and advances at day boundaries — expect the tent within the first days, not by nightfall, and expect no settler to build it. Until a roof stands nobody joins, so this one lot is the opening the mode did not have before. Nothing else is commissioned for you, and nothing commissioned rises while the population is zero.
+
 ## Safety and compatibility
 
-- The selected parasang is reserved before dynamic villages, lairs, or encounters claim it. Only the heart apron and supply approach are prepared; the rest of the wilderness remains intact. Nearby danger is still possible.
+- The selected parasang is reserved before dynamic villages, lairs, or encounters claim it. Only the heart apron, supply approach, and shelter lot are prepared; the rest of the wilderness remains intact. Nearby danger is still possible.
 - Creatures, loose items, and liquid-bearing objects on required cells are relocated when safe. Stairs or an unsafe preparation result stop the bootstrap.
 - Kingdom Quickstart never offers legacy realm inheritance in the same world. Use another supported mode to test inheritance.
 - The bootstrap stores a checksummed, phase-by-phase receipt containing the exact physical object identities. Each cask, larder, chest, and included guide is completely prepared off-map, receives a profile/ground/role-bound reservation mark, and then enters the zone in one visible placement. A save or callback cut can therefore leave only no object or one exact, fully prepared object; load, zone-activation, and bounded end-turn wakes adopt that object before advancing the receipt and never place a second one.
@@ -30,4 +32,4 @@ The optional named camp guide explains this opening inventory. The guide is pass
   recovery. Its only mutable member is explicitly non-serialized; the checksummed game-state
   receipt above remains the sole durable authority. Quickstart adds no custom player part.
 
-This alpha flow does not promise a combat-free start, staffed production, citizens, custom Quickstart art, or compatibility with saves created before the mode existed.
+This alpha flow does not promise a combat-free start, staffed production, citizens, a finished tent on the first night, custom Quickstart art, or compatibility with saves created before the mode existed. If the settlement refuses the shelter lot, the bootstrap stops and says so rather than promising a roof it did not stake.

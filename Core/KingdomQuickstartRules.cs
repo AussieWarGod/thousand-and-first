@@ -17,6 +17,17 @@ namespace ThousandAndFirst
 		public const string AdvisorOption = "r_TAF_OptionQuickstartAdvisor";
 		public const string GrantMarkerProperty = "r_TAF_QuickstartGrant_v1";
 
+		/// <summary>
+		/// The quickstart shelter's own reservation. Deliberately NOT
+		/// <see cref="GrantMarkerProperty"/>: the grant recovery scan reads every object in the
+		/// zone and refuses any that wears the grant marker with a value it did not mint, so a
+		/// staked lot carrying that property would abort every later grant phase on the same boot.
+		/// </summary>
+		public const string ShelterMarkerProperty = "KingdomQuickstartShelter";
+
+		/// <summary>Catalogue key of the one lot the quickstart stakes at founding.</summary>
+		public const string ShelterBuildKey = "tent";
+
 		public const int StartCellX = 40;
 		public const int StartCellY = 12;
 		public const int WaterCellX = 28;
@@ -27,6 +38,15 @@ namespace ThousandAndFirst
 		public const int StockpileCellY = 14;
 		public const int AdvisorCellX = 28;
 		public const int AdvisorCellY = 16;
+
+		// The shelter lot: one Small plot (6x4) west of the supply column, clear of the reserved
+		// role cells at x=28, of the founder's start cell, and of the heart's extreme survey
+		// (which begins at x=31 on an 80-wide zone), so the tent is never marked yielding and
+		// never contends with a heart rung for its ground.
+		public const int ShelterX1 = 21;
+		public const int ShelterY1 = 9;
+		public const int ShelterX2 = 26;
+		public const int ShelterY2 = 12;
 
 		public const int StarterWaterDrams = 24;
 		public const int StarterFoodServings = 12;
@@ -60,7 +80,10 @@ namespace ThousandAndFirst
 			// North heartbasin: rite (40,12), rect (38,11)-(43,14), doors (40/41,14),
 			// margin Y=15 and authored lane endpoints Y=16.
 			bool heartLanes = X >= 40 && X <= 41 && Y == 16;
-			return apron || supply || approach || heartLanes;
+			// The shelter lot is bared with the rest of the camp, because the authored-ground
+			// preflight refuses a lot holding a creature, an item, or open liquid.
+			bool shelter = X >= ShelterX1 && X <= ShelterX2 && Y >= ShelterY1 && Y <= ShelterY2;
+			return apron || supply || approach || heartLanes || shelter;
 		}
 
 		public static bool IsMode(string GameMode)

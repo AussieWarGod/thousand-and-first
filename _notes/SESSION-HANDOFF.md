@@ -1,6 +1,18 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current unreleased master-growth resume correction
+## Current unreleased Kingdom Quickstart shelter lot
+
+3050 staged sources;432,114 physical lines;1416 direct-XRL;zero cap failures;3081 generated
+cold-stage files. Exact inventory `1a26a79fe4bcdb53957b7682d7fb858c2c08ad101c183e10f8b14795a4e20642`.
+Quickstart now stakes one settler's tent lot at founding, west of the supply column, so the
+mode no longer opens on a roofless camp nobody can join. No receipt wire or persisted field
+changes; existing saves are past the branch and keep old behaviour. Structure, doc freshness
+and the Tools suite pass. NOT compiled and NOT run natively: the staged four-mode gate needs
+Windows, and the developer boot matrix and every timing claim about the tent are outstanding.
+Public0.3.1 unchanged. Main PR6 still REVIEW_REQUIRED; never direct-push main/tag, bypass,
+or self-approve it.
+
+## Retained unreleased master-growth resume correction
 
 3049 staged sources;431,893 physical lines;1415 direct-XRL;zero cap failures;3080 generated
 cold-stage files. Exact inventory `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
