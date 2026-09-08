@@ -847,7 +847,15 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains(
 				"ended up somewhere the keepers cannot account for; the rest of the load is", modding);
 			StringAssert.Contains(
-				"only one standing in no inventory and no cell is withdrawn", modding);
+				"only one standing in no inventory, no cell, no equipment slot and no implant"
+				+ " socket is withdrawn", modding);
+			// The two laws a mod author's own handler will actually meet: a vetoed destruction is
+			// not a withdrawal, and the ground is proved off the cell rather than off the call.
+			StringAssert.Contains("`Obliterate` returns `false` for a refused destroy", modding);
+			StringAssert.Contains(
+				"`Cell.AddObject` hands your object back even when `Physics.EnterCell`", modding);
+			StringAssert.Contains(
+				"Nothing is created at all when there is no\nground to set it down on.", modding);
 			// The guide quotes the line the founder actually sees, so the two must not drift.
 			string spoken = "ended up somewhere the keepers cannot account for; the rest of the load";
 			StringAssert.Contains(spoken, modding);
