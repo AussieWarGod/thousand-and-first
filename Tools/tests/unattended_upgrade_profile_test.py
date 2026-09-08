@@ -1,6 +1,7 @@
 """Synthetic transport/receipt laws only; these tests never claim a native run."""
 from __future__ import annotations
 
+import importlib.util
 import json
 from pathlib import Path
 import sys
@@ -236,3 +237,32 @@ class NativeSourceReceiptTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class CrossVersionPersonaRosterTest(unittest.TestCase):
+    """The four sealed recipes sit outside flat persona discovery, so pin them here instead.
+
+    Tools/tests/persona_matrix_test.py globs Tools/personas/*.persona only. Without this pin a
+    fifth file dropped into cross-version/ would be inert, and a renamed one would silently stop
+    being reachable through upgrade_profile_inputs.PERSONAS.
+    """
+
+    directory = TOOLS / "personas" / "cross-version"
+
+    def personas(self):
+        return sorted(self.directory.glob("*.persona"))
+
+    def test_roster_is_exactly_the_four_names_the_recipes_resolve(self):
+        self.assertEqual(4, len(self.personas()))
+        self.assertEqual(set(inputs.PERSONAS.values()), {p.stem for p in self.personas()})
+
+    def test_every_cross_version_persona_parses_and_declares_its_verbs(self):
+        spec = importlib.util.spec_from_file_location(
+            "persona_matrix", TOOLS / "personas" / "persona_matrix.py")
+        matrix = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(matrix)
+        for path in self.personas():
+            with self.subTest(persona=path.name):
+                found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
+                self.assertTrue(found["REQUEST"])
+                self.assertTrue(found["SCRIPT_WORDS"])
