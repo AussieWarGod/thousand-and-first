@@ -80,18 +80,19 @@ architecture with the same `KingdomRoadRules.TryAuthoredLane` the stake walks an
 The heart-ingress endpoints are unchanged and refusal is still fail-closed with the same message.
 
 Current census after merging `dev` (the Kingdom Quickstart tent rows, the first-basin water store,
-the stockpile unit capacity and the render-only city sight included) and the shelter ingress: 3062
-staged C# files; 434,436 physical lines; 3093 files in the generated
-cold-install inventory. Staged compilation covers 3062 sources, baseline and compatibility symbols
-(baseline compiles 3058 of them; the optional-mod bridge is compatibility-only), run here by Roslyn
+the stockpile unit capacity, the render-only city sight and the shelter ingress included) and the
+stockpile deposit custody fix: 3065
+staged C# files; 434,811 physical lines; 3096 files in the generated
+cold-install inventory. Staged compilation covers 3065 sources, baseline and compatibility symbols
+(baseline compiles 3061 of them; the optional-mod bridge is compatibility-only), run here by Roslyn
 9.0.306 on Linux against the licensed Managed references with warnings as
-errors. Direct `XRL` imports: 1425 files, 0 over the line limit.
-Inventory SHA-256: `ff13330463a990edbef95c2ae35e0e552691f2f8e0f86a525dc873bd61f7c202`.
+errors. Direct `XRL` imports: 1426 files, 0 over the line limit.
+Inventory SHA-256: `111a5d07c49a2c7acebb0cd276c3a1fc8562b3ba8a0756fec1963b7d3f87d70b`.
 Before the merge, all four `Tools/gate.sh` modes compiled clean on the shelter-ingress delta's own
 bytes — staged baseline (3050 sources), staged compatibility (3054), dev-harness baseline (3204)
 and dev-harness compatibility (3208) — with the installed-Hearthpyre source and ABI step, and the
 engine-free suites passed13,905 main/5,193 Portable cases,zero skips there with 615 Tools tests.
-On the merged tree the engine-free suites pass 13,987 main / 5,199 Portable cases, zero
+On the merged tree the engine-free suites pass 14,003 main / 5,199 Portable cases, zero
 skips, and the Tools suite passes 627 tests. The six-profile Quickstart boot matrix at seed `#43101` ran natively on these bytes and all
 six reach checker `verdict=PASS`, each with two `[TAF] plot staked: tentrow` rows and a
 strict-clean Player.log; `quickstart-save marsh yes` and its separate cold load also pass, with

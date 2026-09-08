@@ -1,4 +1,4 @@
-﻿# Extending The Thousand and First
+# Extending The Thousand and First
 
 > Adding content? Stay in this file — the XML registries need no code.
 > Writing code against the mod? See [docs/API.md](docs/API.md) for the supported API and its
@@ -346,6 +346,16 @@ A chest the player overfilled by hand keeps everything in it and
 the reports keep counting all of it; it simply stops being chosen as a destination, and says so
 once: *"The chest will not take another bundle; it holds all the keepers can account for."* The
 status report prints the room beside the tally, as `18 of 48 units`.
+
+**A delivery never makes the same material twice.** Creating a bundle, stamping its count
+(`Stacker.StackCount`, which sends `StackCountChangedEvent`) and inserting it all run other
+people's handlers, so a handler of yours may carry the bundle into another inventory mid-delivery.
+When that happens the settlement stops the whole delivery rather than creating the remainder
+somewhere else, credits only what the store itself provably gained, and says so once: *"A bundle
+bound for the chest ended up somewhere the keepers cannot account for; the rest of the load is
+held rather than made a second time."* The saying is taken back by the next delivery that lands in
+that store proved. A bundle your handler is holding is never destroyed to resolve the ambiguity —
+only one standing in no inventory and no cell is withdrawn.
 
 **What fills a stockpile is wider than "materials".** A store's hold is everything the settlement
 can spend: ordinary materials, rare finds, **and anything vanilla can take apart into bits** —

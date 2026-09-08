@@ -147,6 +147,24 @@ namespace ThousandAndFirst
 			/// <returns>Units that went on the ground instead of into a stockpile.</returns>
 			public int Put(KingdomMaterial Material, int Units, Cell Fallback)
 			{
+				KingdomDepositCustody custody;
+				return Put(Material, Units, Fallback, out custody);
+			}
+
+			/// <summary>
+			/// The same delivery, reporting how it ended. A caller that must not mistake a held
+			/// load for a wiring fault reads the custody rather than the spill. Internal: the
+			/// supported public shape stays the three-argument delivery.
+			/// </summary>
+			/// <param name="Custody">Settled when every bundle this delivery made is accounted
+			/// for. Unproved means a bundle it made is standing somewhere it cannot prove it
+			/// owns: the load stopped there, only what was proved deposited was credited, and
+			/// nothing was made a second time anywhere.</param>
+			/// <returns>Units that went on the ground instead of into a stockpile.</returns>
+			internal int Put(KingdomMaterial Material, int Units, Cell Fallback,
+				out KingdomDepositCustody Custody)
+			{
+				Custody = KingdomDepositCustody.Settled;
 				if (Units <= 0)
 				{
 					return 0;
@@ -171,7 +189,20 @@ namespace ThousandAndFirst
 					{
 						continue;
 					}
-					placed += Deposit(Zone, container, blueprint, room, ref remaining);
+					KingdomDepositOutcome outcome = Deposit(Zone, container, blueprint, room,
+						ref remaining);
+					placed += outcome.Placed;
+					if (outcome.Refused)
+					{
+						// A bundle this delivery made is standing somewhere it cannot prove it
+						// owns, which means real material is already out there. Minting the rest
+						// into the next store or onto the ground would put the same units in the
+						// world twice, so the whole delivery stops here: only what was PROVED
+						// deposited is credited, and the founder has been told once.
+						Custody = outcome.Custody;
+						Tally.Add(Material, placed + spilled);
+						return spilled;
+					}
 				}
 				while (remaining > 0)
 				{
@@ -212,6 +243,18 @@ namespace ThousandAndFirst
 			/// ground.</summary>
 			public int PutAll(KingdomMaterialTally Yield, Cell Fallback)
 			{
+				KingdomDepositCustody custody;
+				return PutAll(Yield, Fallback, out custody);
+			}
+
+			/// <summary>The same tally, reporting how it ended. One material whose custody could
+			/// not be proved stops the whole tally: the store is already holding something this
+			/// settlement cannot account for, and the next material would be made into the same
+			/// uncertainty.</summary>
+			internal int PutAll(KingdomMaterialTally Yield, Cell Fallback,
+				out KingdomDepositCustody Custody)
+			{
+				Custody = KingdomDepositCustody.Settled;
 				int spilled = 0;
 				if (Yield == null)
 				{
@@ -220,7 +263,13 @@ namespace ThousandAndFirst
 				for (int i = 0; i < KingdomMaterialRules.MaterialCount; i++)
 				{
 					KingdomMaterial material = (KingdomMaterial)i;
-					spilled += Put(material, Yield.Get(material), Fallback);
+					KingdomDepositCustody custody;
+					spilled += Put(material, Yield.Get(material), Fallback, out custody);
+					if (custody != KingdomDepositCustody.Settled)
+					{
+						Custody = custody;
+						return spilled;
+					}
 				}
 				return spilled;
 			}

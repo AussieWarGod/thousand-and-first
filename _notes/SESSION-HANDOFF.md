@@ -1,6 +1,26 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current unreleased Kingdom Quickstart shelter ingress
+## Current unreleased stockpile deposit custody
+
+3065 staged sources; 434,811 physical lines; 1426 direct-XRL; zero cap failures; 3096 generated
+cold-stage files. Exact inventory `111a5d07c49a2c7acebb0cd276c3a1fc8562b3ba8a0756fec1963b7d3f87d70b`.
+Two physical custody defects in the merged stockpile-capacity deposit are fixed. A bundle an
+insertion callback moved elsewhere was preserved and counted as zero, so `MaterialStock.Put` made
+the units a second time in the next store or on the ground; and a bundle a stack-count handler had
+already carried off was obliterated whenever the stamp proof failed. The deposit law now lives
+engine-free in `Core/KingdomDepositEngine.cs` behind `Core/IKingdomDepositHost.cs`: unproved
+custody stops the whole `Put`, only what a store provably gained is credited, a body is withdrawn
+only when proved ownerless, and the founder is told once. Counting stays whole, intake is still the
+only refusal (ruling 5), the catch-up envelope is untouched and old saves read as before. It sits
+over the Kingdom Quickstart shelter ingress retained below. Structure, doc freshness and the Tools
+suite (627) pass; engine-free suites pass 14,003 main / 5,199 Portable, zero skips, and Roslyn
+9.0.306 on Linux compiles the staged baseline (3061) and compatibility (3065) sets clean. The two
+new deposit regressions were confirmed to fail against the pre-fix behaviour. NOT run for these
+bytes: the two dev-harness modes, the installed-ABI source step, the Windows gate, the native
+Quickstart boot matrix, ordinary play, graceful Quit and Steam delivery. Public 0.3.1 unchanged.
+Never direct-push main/tag, bypass, or self-approve.
+
+## Retained unreleased Kingdom Quickstart shelter ingress
 
 3062 staged sources; 434,436 physical lines; 1425 direct-XRL; zero cap failures; 3093 generated
 cold-stage files. Exact inventory `ff13330463a990edbef95c2ae35e0e552691f2f8e0f86a525dc873bd61f7c202`.

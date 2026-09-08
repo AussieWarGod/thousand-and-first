@@ -20,13 +20,13 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
-The Kingdom Quickstart shelter ingress over the render-only city sight, the stockpile unit
-capacity, the first-basin water store and the Kingdom Quickstart tent rows reports 3062 staged
-production C# files and 434,436 physical lines.
+The stockpile deposit custody fix over the Kingdom Quickstart shelter ingress, the render-only
+city sight, the stockpile unit capacity, the first-basin water store and the Kingdom Quickstart
+tent rows reports 3065 staged production C# files and 434,811 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`ff13330463a990edbef95c2ae35e0e552691f2f8e0f86a525dc873bd61f7c202`. The census reports
-1425 files with direct `XRL` imports; 0 of those exceed the line limit.
+`111a5d07c49a2c7acebb0cd276c3a1fc8562b3ba8a0756fec1963b7d3f87d70b`. The census reports
+1426 files with direct `XRL` imports; 0 of those exceed the line limit.
 
 The shelter-ingress delta over the retained city-sight draft below is one added and one modified
 production source and no
@@ -42,6 +42,16 @@ gate did not run. On the merged tree the staged baseline (3058 sources) and stag
 on Linux; the two dev-harness modes, the installed-Hearthpyre source step, the Windows gate and any
 native run did not run for the merged bytes. The exact-inventory semantic review in
 `docs/STRUCTURE_REVIEW.json` binds an earlier digest and is therefore open for it.
+
+The custody delta over that shelter-ingress draft is three added and four modified production
+sources and no removals: the engine-free deposit law `Core/KingdomDepositEngine.cs`, its seam
+`Core/IKingdomDepositHost.cs` and the GameObject implementation
+`Growth/KingdomMaterials.StockpileDeposit.cs` are the additions; the stockpile room shard, the
+material stock, the material-store rules and the settlement-pass yards are the modifications. On
+those bytes the staged baseline (3061 sources) and staged compatibility (3065 sources plus the
+tracked Hearthpyre 2.2.3 ABI stub) compile clean under Roslyn 9.0.306 on Linux; the two
+dev-harness modes, the installed-Hearthpyre source step, the Windows gate and any native run did
+not run for them.
 
 ## Retained city-sight census
 

@@ -253,15 +253,16 @@ namespace ThousandAndFirst
 				return;
 			}
 			int before = stock.Tally.Get(refined);
-			int spilled = stock.Put(refined, made, Yard.CurrentCell);
+			int spilled = stock.Put(refined, made, Yard.CurrentCell, out KingdomDepositCustody custody);
 			if (stock.Tally.Get(refined) <= before)
 			{
 				// Loud rather than quiet: the raw stock is already gone, so an item blueprint that
 				// does not exist has eaten it. This is a wiring fault in the mod's own files and
-				// nobody's fault in the game, and it must not read as a yard having a slow day.
+				// nobody's fault in the game. A held load is neither, and the custody reading is what
+				// keeps all three apart; none may read as a yard having a slow day.
 				ReportNothingLanded(stock, Yard.CurrentCell, "the " + KingdomMaterialRules.YardName(kind)
 					+ " made " + made + " " + KingdomMaterialRules.MaterialName(refined),
-					BlueprintFor(refined));
+					BlueprintFor(refined), custody);
 				return;
 			}
 			string madeLine = made + " " + KingdomMaterialRules.MaterialName(refined);

@@ -8,6 +8,59 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
+## Unreleased — Stockpile deposit custody
+
+### Fixed
+
+- A stockpile delivery that could not prove where its bundle went used to create the material
+  again. When an insertion callback moved the bundle into another inventory, the salvage path
+  preserved the body and returned zero, so the units stayed outstanding and `MaterialStock.Put`
+  made them a second time in the next store or on the ground: the same stone stood in the world
+  twice. An unproved deposit now stops the whole delivery. Only what the store provably gained is
+  credited, nothing is created for the remainder, and the founder is told once.
+- A bundle a stack-count handler had already carried into somebody else's inventory used to be
+  obliterated whenever the stamp proof failed. `item.Count = batch` is `Stacker.StackCount`, which
+  sends `StackCountChangedEvent`, so a handler runs between the room proof and the insertion; a
+  handler that both took the bundle and filled the store made the proof fail and the delivery then
+  destroyed goods it did not own. A bundle is now withdrawn only when it is proved to belong to
+  nobody — in no inventory and in no cell — and otherwise left exactly where it stands.
+- The refining yard no longer reads a held load as a missing item blueprint. `Put` reports how the
+  delivery ended, and `ReportNothingLanded` keeps a wiring fault, a settlement out of room, and a
+  load held for unprovable custody apart from one another.
+
+### Changed
+
+- The deposit law moved out of the engine-facing shard into `Core/KingdomDepositEngine.cs` behind
+  `Core/IKingdomDepositHost.cs`, so it can be driven against handlers that relocate, fill, or
+  destroy the bundle mid-callback. `Growth/KingdomMaterials.StockpileDeposit.cs` is the only piece
+  that touches a `GameObject`. Counting stays whole and intake is still the only thing refused
+  (ruling 5); no capacity, catch-up envelope, or stored item is touched, and a standing save reads
+  exactly what it read before.
+
+> **Current unreleased census — exact structural gate passed.** Current 3065-file census is line-cap green:
+> 434,811 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
+> imports occur in 1426 files, 0 of them over the line limit. Inventory SHA-256:
+> `111a5d07c49a2c7acebb0cd276c3a1fc8562b3ba8a0756fec1963b7d3f87d70b`.
+> The generated cold-install inventory contains 3096 files; no new subscription claim.
+> This digest is the stockpile deposit custody fix merged over the Kingdom Quickstart shelter
+> ingress, the render-only city sight, the stockpile unit capacity, the first-basin water store and
+> the Kingdom Quickstart tent rows retained below; each delta carries its own review chain and none
+> is restated for the others.
+> The custody delta over the shelter-ingress census below is three added and four modified
+> production sources: the engine-free deposit law, its host seam, the GameObject implementation of
+> that seam, and the room, stock, rules and yard shards that route through it.
+> On these bytes the staged baseline (3061 sources) and staged compatibility (3065 sources plus the
+> tracked Hearthpyre 2.2.3 ABI stub) compile clean under Roslyn 9.0.306 on Linux against the
+> installed managed assemblies rather than through `Tools/gate.sh`; both engine-free suites run
+> green there (14,003 main/5,199 Portable, zero skips) and the 627-test tooling suite passes. The
+> two new deposit regressions were confirmed to FAIL against the pre-fix behaviour before the fix
+> was kept.
+> NOT run for this delta: the two dev-harness modes, the installed-Hearthpyre source step, the
+> Windows gate, the native Quickstart boot matrix (last run on the shelter-ingress bytes below),
+> ordinary play, graceful Quit and Steam delivery.
+> The exact-inventory human semantic review is open against this digest; this is not Beta sign-off.
+
 ## Unreleased — Kingdom Quickstart shelter ingress
 
 - The two tent-row lots staked at founding are now staked on every shipped profile. The stake's
@@ -27,7 +80,7 @@ below it.
   bootstrap with the message it stopped with before, rather than staking a lot the settlement will
   not admit.
 
-> **Current unreleased census — exact structural gate passed.** Current 3062-file census is line-cap green:
+> **Retained shelter-ingress census — exact structural gate passed.** That 3062-file census was line-cap green:
 > 434,436 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1425 files, 0 of them over the line limit. Inventory SHA-256:
