@@ -143,12 +143,13 @@ which unblocks exile for any realm at profile revision2 or above. Schema0/1
 bytes remain unchanged; older0.3.1 readers reject schema2,so any next public package needs
 a new version. Public0.3.1/main/tag are unchanged.
 
-Current census after merging `dev` (the Kingdom Quickstart tent rows and the first-basin water
-store included) and the stockpile unit capacity: 3059 staged C# files; 433,954
-physical lines; 3090 files in the generated cold-install inventory. Staged compilation covers 3059
-sources, baseline and compatibility symbols (baseline compiles 3055 of them; the optional-mod
-bridge is compatibility-only). Direct `XRL` imports: 1423 files, 0 over the line limit.
-Inventory SHA-256: `5db8f7381ade172c6b0b34925a111f4d4c28f32da77cf0be266914aa53e77674`.
+Current census after merging `dev` (the Kingdom Quickstart tent rows, the first-basin water store
+and the stockpile unit capacity included) and the render-only city sight: 3061 staged C# files;
+434,296
+physical lines; 3092 files in the generated cold-install inventory. Staged compilation covers 3061
+sources, baseline and compatibility symbols (baseline compiles 3057 of them; the optional-mod
+bridge is compatibility-only). Direct `XRL` imports: 1425 files, 0 over the line limit.
+Inventory SHA-256: `7147169b7ccb8d2142d9791bd5faec8405eb305e33bca7a9b9feb9c3948c5a1e`.
 The seal lane's OWN delta &mdash; four modified production sources, no additions or removals
 &mdash; was proved against integration parent2be6b00 (3045 unchanged) and read in full by root
 and an independent reviewer; the three added and seven modified C# sources plus one option row
@@ -173,7 +174,20 @@ digest. The stockpile unit capacity on top of all of it is three added productio
 `Growth/KingdomMaterials.StockpileRoom.cs`), six modified and the regenerated removal-coverage
 roster; Roslyn 9.0.306 on Linux compiled the staged baseline and compatibility sets clean on the
 merged tree and both engine-free suites run green there (13,980 main / 5,193 Portable, zero
-skips). This is source review,not functional acceptance.
+skips). The render-only city sight on top of all of it is two added production sources
+(`Growth/KingdomCitySightDrawScope.cs` and `Growth/KingdomCitySightRenderSeam.cs`) and two
+modified — the claimed-ground light part and the settlement system's event file, which now carries
+both the end-of-turn restore backstop and the basin-capacity zone-activation guard. The review-response
+passes rewrote the projection's seat and close: the part now queues nothing into the render
+dispatch's second pass, and the projection is taken at the engine's own `Zone.Render` call, armed by
+a prefix on `XRLCore.RenderBaseToBuffer`, so it comes behind `Blackout`'s own second-pass light
+removal, which `Zone.AddVisibility` reads. An unattended native pass on the seat before that one — a
+Harmony postfix on the render dispatch's static entry — crashed the game: the re-hosted engine
+method threw `NullReferenceException` out of itself on the first drawn frame in three of four
+launches. That seat is now a forbidden string in the source contract. Merging the two additions put
+`Core/KingdomSystem.z20.Events.cs` at 305 physical lines, over the strict cap; the merge reflowed
+their two comment blocks wider, keeping every word and engine citation and moving no code, and the
+shard is back at 299. This is source review,not functional acceptance.
 
 Focused38898 passed149 cases,zero skips. That receipt predates the seventh
 KingdomWaterMaintenanceNativeSourceTests case and is retained as measured. The branch adds

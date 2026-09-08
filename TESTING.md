@@ -67,9 +67,11 @@ published arrival debt/opportunities, open Prepared/Intent/Proved clock leases, 
 continuation and field-clock evidence; successful results round-trip canonically. Stale
 owners, contradictory unbacked clocks, disabled states and overflow remain tested refusals.
 No fixture callback witness establishes actual physical creation, ordinary play or save/load.
-Current production digest `d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0`
-passes the exact structural gate. For that digest the engine-free suites pass13,834 main/5,123
+Current production digest `6cf0107a0f3a919282aea20237c25dec63be268ab27fd1836a696b4a40d979c1`
+passes the exact structural gate. For that digest the engine-free suites pass13,910 main/5,199
 Portable cases,zero skips, on Linux under the CI-pinned SDK9.0.306. The retained
+`d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0` digest carried13,834 main/5,123
+Portable cases, zero skips. The retained
 `f5571291a26a1bd1db608f0d1c3f79ed296569bddce4979208cb564f8c22df63` digest carried13,831 main/5,120
 Portable cases, zero skips. The retained
 `dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96` digest carried13,731 main/5,109
@@ -85,11 +87,12 @@ baseline and dev-harness compatibility compiles. The shared `DevTests/refs.rsp` 
 `-langversion:latest`, so those compiles are not pinned to C# 7.3; `LangVersion` 7.3 is pinned
 only in `DevTests/Engine*/Probe.csproj` and `Tools/WorkshopSteam/*.csproj`. Retained sections
 below keep their original wording as written at their own checkpoints.
-Staged compatibility compilation runs across 3059 production C# sources, staged baseline across
-3055 (the optional-mod bridge is a compatibility-only source); the generated
-cold-install inventory contains 3090 files. Neither count proves subscriber delivery.
+Staged compatibility compilation runs across 3061 production C# sources, staged baseline across
+3057 (the optional-mod bridge is a compatibility-only source); the generated
+cold-install inventory contains 3092 files. Neither count proves subscriber delivery.
 The receipts named above were measured at the earlier 3052/3048/3083 census, before the Kingdom
-Quickstart tent rows, the first-basin water store and the stockpile unit capacity added production
+Quickstart tent rows, the first-basin water store, the stockpile unit capacity and the render-only
+city sight added production
 sources; the engine-free suites were re-run on the current bytes and their counts are recorded in
 `CHANGELOG.md`.
 The Kingdom Quickstart tent-row delta inside this census compiled clean in the staged baseline and
@@ -97,6 +100,10 @@ staged compatibility modes only, run on Linux with the SDK Roslyn against the in
 assemblies rather than through `Tools/gate.sh`; the two dev-harness modes, the installed-ABI
 source step, the Windows gate and the developer boot matrix are outstanding for it, and every
 timing claim about the staked rows remains a reading of `KingdomPlotRules.RaiseTicks`.
+The render-only city-sight delta merged on top of it compiled clean in the staged baseline and
+staged compatibility modes on the merged tree; the four-mode figures recorded for it before the
+merge (dev-harness baseline 3205, dev-harness compatibility 3209) were measured at the earlier
+3055/3051 census and are not restated for these bytes.
 The receipt wire tag that decides the founding stake is covered by codec cases only: an old-shape
 `q1` Reserved receipt decodes with no shelter obligation, re-encodes to the same bytes, keeps that
 answer through an advance, and refuses a tag edited in place. No native resumed pre-existing save
