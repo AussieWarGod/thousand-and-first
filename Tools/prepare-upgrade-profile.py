@@ -19,6 +19,7 @@ from upgrade_profile_inputs import (OLD_PIN, PROFILE_V2, configuration, json_byt
                                     recipe_request, require, sha)
 from upgrade_profile_state import (ID, authenticate_source, capture, capture_donor, capture_stage,
                                    fs, inventory, native, native_plan, stopped_source, windows)
+from upgrade_profile_witnesses import diagnostics
 
 
 def stopped(source: Path, game: Path) -> None:
@@ -30,7 +31,13 @@ def clean_log(source: Path) -> str:
     path = source / "Player.log"
     before = fs.digest(path)
     raw = fs.read_bytes(path, fs.MAX_FILE)
-    require(raw and not re.search(rb"(?m)^MOD(?:ERROR|WARN)\b", raw), "native log contains MODERROR/MODWARN")
+    require(raw, "native log is missing or empty")
+    # TAF-only contract (upgrade_profile_witnesses.diagnostics): only a MODERROR/MODWARN naming
+    # The Thousand and First, or an exception/stack frame naming it, ever refuses here. A third
+    # party's own MODWARN/MODERROR is retained for the report below, never fatal on its own.
+    retained = diagnostics(raw)
+    if retained:
+        print("Retained non-TAF diagnostics in " + str(path) + ": " + " | ".join(retained))
     env = dict(os.environ, TAF_LOG_ALLOW="")
     subprocess.run(["bash", str(Path(__file__).with_name("check-player-log.sh")), str(path)],
                    env=env, check=True)
