@@ -87,14 +87,23 @@ baseline and dev-harness compatibility compiles. The shared `DevTests/refs.rsp` 
 `-langversion:latest`, so those compiles are not pinned to C# 7.3; `LangVersion` 7.3 is pinned
 only in `DevTests/Engine*/Probe.csproj` and `Tools/WorkshopSteam/*.csproj`. Retained sections
 below keep their original wording as written at their own checkpoints.
-Staged compatibility compilation runs across 3061 production C# sources, staged baseline across
-3057 (the optional-mod bridge is a compatibility-only source); the generated
-cold-install inventory contains 3092 files. Neither count proves subscriber delivery.
+Staged compatibility compilation runs across 3062 production C# sources, staged baseline across
+3058 (the optional-mod bridge is a compatibility-only source); the generated
+cold-install inventory contains 3093 files. Neither count proves subscriber delivery.
 The receipts named above were measured at the earlier 3052/3048/3083 census, before the Kingdom
-Quickstart tent rows, the first-basin water store, the stockpile unit capacity and the render-only
-city sight added production
+Quickstart tent rows, the first-basin water store, the stockpile unit capacity, the render-only
+city sight and the shelter ingress added production
 sources; the engine-free suites were re-run on the current bytes and their counts are recorded in
 `CHANGELOG.md`.
+The Kingdom Quickstart shelter-ingress delta inside this census compiled clean in all four
+`Tools/gate.sh` modes on its own pre-merge bytes — staged baseline, staged compatibility and both
+dev-harness profiles — with
+the installed-Hearthpyre source and ABI step; the Windows gate did not run for it. Its
+prepared-ground widening is proved natively: the six-profile Quickstart boot matrix at seed
+`#43101` passes with two `[TAF] plot staked: tentrow` rows in every boot, and `quickstart-save
+marsh yes` with its separate cold load passes with unchanged heart, stock and IDs. Ordinary play,
+graceful Quit and Steam delivery remain outside it. On the merged tree only the staged baseline and
+staged compatibility modes were re-run.
 The Kingdom Quickstart tent-row delta inside this census compiled clean in the staged baseline and
 staged compatibility modes only, run on Linux with the SDK Roslyn against the installed managed
 assemblies rather than through `Tools/gate.sh`; the two dev-harness modes, the installed-ABI

@@ -1,6 +1,26 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current unreleased city sight over the stockpile unit capacity
+## Current unreleased Kingdom Quickstart shelter ingress
+
+3062 staged sources; 434,436 physical lines; 1425 direct-XRL; zero cap failures; 3093 generated
+cold-stage files. Exact inventory `ff13330463a990edbef95c2ae35e0e552691f2f8e0f86a525dc873bd61f7c202`.
+The camp now bares each shelter lot's authored ingress route as well as the lot itself: the stake's
+public-ingress preflight walks that route and refuses an unbared cell, which is why only the dunes
+founded. Four cells are added — (23,8) and (23,7) north of lot A, (24,17) and (24,18) south of
+lot B — and nothing else changes. Heart-ingress endpoints, lot rectangles, receipt wire and refusal
+message are untouched. It sits over the render-only city sight, the stockpile unit capacity and the
+first-basin water store retained below. On the merged tree structure, doc freshness and the Tools
+suite (627) pass; engine-free suites pass 13,987 main / 5,199 Portable, zero skips, and
+Roslyn 9.0.306 on Linux compiles the staged baseline (3058) and compatibility (3062) sets clean.
+On the delta's own pre-merge bytes all four `Tools/gate.sh` modes plus the
+installed-Hearthpyre source/ABI step compiled clean (3050/3054/3204/3208), the engine-free suites
+passed13,905 main/5,193 Portable,zero skips, and the six-profile native
+boot matrix at seed `#43101` passed with two `plot staked: tentrow` rows per boot, as did
+`quickstart-save marsh yes` and its cold load. NOT run for the merged tree: the two dev-harness
+modes, the installed-ABI source step, the Windows gate, ordinary play, graceful
+Quit and Steam delivery. Public0.3.1 unchanged. Never direct-push main/tag, bypass, or self-approve.
+
+## Retained unreleased city sight over the stockpile unit capacity
 
 3061 staged sources; 434,296 physical lines; 1425 direct-XRL; zero cap failures; 3092 generated
 cold-stage files. Exact inventory `7147169b7ccb8d2142d9791bd5faec8405eb305e33bca7a9b9feb9c3948c5a1e`.

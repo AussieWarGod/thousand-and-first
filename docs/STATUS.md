@@ -63,6 +63,44 @@ pull requests, since the currently enabled squash-only merge rewrites the receip
 that the packager requires as an ancestor of the tagged `main` commit; and run the first
 `staging-v0.3.2` release, recording its run id, attempt number and finalization SHA here.
 
+## Unreleased Kingdom Quickstart shelter ingress
+
+The two tent-row lots staked at founding now stake on every shipped profile. `KingdomPlots.Stake`
+runs the authored public-ingress preflight
+(`Growth/KingdomArchitectureRuntime.RoadIngress.cs`), which walks each lot's DoorToLane route and
+refuses any route cell that is not physically walkable. The camp bared the two lot rectangles only,
+so the single exterior cell each route leaves by stood in unbared wilderness: the marsh refused lot
+B at (21,13)-(26,16) for (24,17) and the canyon refused lot A at (21,9)-(26,12) for (23,8). Only
+the dunes founded, because its ground happened to be bare at both. The prepared-ground mask now
+also bares each route's reserved road margin and the lane endpoint one cell beyond it — (23,8) and
+(23,7) north of lot A, (24,17) and (24,18) south of lot B — so the mask widens by exactly four
+cells. Those cells are declared beside the lots because the quickstart's ground authority is
+engine-free; `DevTests/KingdomQuickstartShelterIngressTests.cs` recomputes them from the shipped
+architecture with the same `KingdomRoadRules.TryAuthoredLane` the stake walks and fails on drift.
+The heart-ingress endpoints are unchanged and refusal is still fail-closed with the same message.
+
+Current census after merging `dev` (the Kingdom Quickstart tent rows, the first-basin water store,
+the stockpile unit capacity and the render-only city sight included) and the shelter ingress: 3062
+staged C# files; 434,436 physical lines; 3093 files in the generated
+cold-install inventory. Staged compilation covers 3062 sources, baseline and compatibility symbols
+(baseline compiles 3058 of them; the optional-mod bridge is compatibility-only), run here by Roslyn
+9.0.306 on Linux against the licensed Managed references with warnings as
+errors. Direct `XRL` imports: 1425 files, 0 over the line limit.
+Inventory SHA-256: `ff13330463a990edbef95c2ae35e0e552691f2f8e0f86a525dc873bd61f7c202`.
+Before the merge, all four `Tools/gate.sh` modes compiled clean on the shelter-ingress delta's own
+bytes — staged baseline (3050 sources), staged compatibility (3054), dev-harness baseline (3204)
+and dev-harness compatibility (3208) — with the installed-Hearthpyre source and ABI step, and the
+engine-free suites passed13,905 main/5,193 Portable cases,zero skips there with 615 Tools tests.
+On the merged tree the engine-free suites pass 13,987 main / 5,199 Portable cases, zero
+skips, and the Tools suite passes 627 tests. The six-profile Quickstart boot matrix at seed `#43101` ran natively on these bytes and all
+six reach checker `verdict=PASS`, each with two `[TAF] plot staked: tentrow` rows and a
+strict-clean Player.log; `quickstart-save marsh yes` and its separate cold load also pass, with
+unchanged heart, stock and IDs and no bootstrap replay.
+NOT RUN for the merged tree: the two dev-harness modes, the installed-Hearthpyre source step, the
+Windows gate, ordinary play, graceful Quit and Steam delivery. The
+1,700-tick figure remains a reading of the raising rule, not of a running plot clock. No human
+exact-inventory semantic review binds this digest.
+
 ## Unreleased stockpile unit capacity
 
 A dedicated stockpile now declares how many material units it holds — 48 for a chest the founder

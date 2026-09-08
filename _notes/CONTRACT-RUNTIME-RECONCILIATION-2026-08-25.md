@@ -1,6 +1,20 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
-## Current city-sight over stockpile-capacity census — 2026-09-09
+## Current Kingdom Quickstart shelter-ingress census — 2026-09-09
+
+3062 production C# files; 3,093 cold-install files in the generated inventory;
+434,436 physical lines, 1425 direct-XRL, zero cap failures. Exact digest
+`ff13330463a990edbef95c2ae35e0e552691f2f8e0f86a525dc873bd61f7c202`.
+The camp bares each shelter lot's authored DoorToLane route as well as the lot, so the stake's
+public-ingress preflight finds walkable ground on every profile rather than only on the dunes;
+nothing here invents a completion and a route cell that cannot be bared still stops the bootstrap.
+All four `Tools/gate.sh` modes (3050/3054/3204/3208) plus the installed-Hearthpyre source/ABI step
+bound the delta's own pre-merge digest, and the six-profile native Quickstart boot matrix at seed
+`#43101` passed on it together with `quickstart-save marsh yes` and its cold load. On the merged
+tree Roslyn 9.0.306 on Linux compiled the staged baseline (3058 sources) and compatibility (3062
+sources) sets clean; no dev-harness mode, Windows gate or native evidence binds these merged bytes.
+
+## Retained city-sight over stockpile-capacity census — 2026-09-09
 
 3061 production C# files; 3,092 cold-install files in the generated inventory;
 434,296 physical lines, 1425 direct-XRL, zero cap failures. Exact digest

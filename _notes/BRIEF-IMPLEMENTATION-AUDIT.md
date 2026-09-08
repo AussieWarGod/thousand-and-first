@@ -1,6 +1,22 @@
 # Brief-to-implementation audit
 
-## Current city-sight over stockpile-capacity census — 2026-09-09
+## Current Kingdom Quickstart shelter-ingress census — 2026-09-09
+
+**3062** production C# files, 434,436 physical lines, 1425 direct-XRL, zero cap failures;
+3093 generated cold-install files. Exact digest
+`ff13330463a990edbef95c2ae35e0e552691f2f8e0f86a525dc873bd61f7c202`.
+One added source (the quickstart rules' shelter partial) and one modified, over the city-sight
+census retained below. Structure, doc freshness and the Tools suite (627 tests) pass, and on the
+merged tree the engine-free suites pass 13,987 main / 5,199 Portable, zero skips, with the
+staged baseline (3058 sources) and compatibility (3062 sources) sets compiling clean under Roslyn
+9.0.306 on Linux. On the delta's own pre-merge bytes all four `Tools/gate.sh` modes compiled clean
+(baseline 3050, compatibility 3054, dev-harness 3204/3208) with the installed-Hearthpyre
+source/ABI step, the engine-free suites passed13,905 main/5,193 Portable,zero skips, and the
+six-profile native Quickstart boot matrix at seed `#43101` passed, with `quickstart-save marsh yes`
+and its cold load. No Windows gate, ordinary-play acceptance or exact-inventory human semantic
+review binds the merged digest, and the dev-harness modes did not re-run for it.
+
+## Retained city-sight over stockpile-capacity census — 2026-09-09
 
 **3061** production C# files, 434,296 physical lines, 1425 direct-XRL, zero cap failures;
 3092 generated cold-install files. Exact digest

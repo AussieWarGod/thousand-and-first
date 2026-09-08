@@ -8,6 +8,54 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
+## Unreleased — Kingdom Quickstart shelter ingress
+
+- The two tent-row lots staked at founding are now staked on every shipped profile. The stake's
+  authored public-ingress preflight walks each lot's DoorToLane route and refuses a route cell that
+  is not physically walkable; the camp bared the lot rectangles only, so on the marsh and in the
+  canyon the one cell each route leaves by was unbared wilderness and the settlement refused the
+  lot. The dunes happened to be bare there, which is why only that profile founded.
+- The prepared-ground mask now also bares the exterior cells of each lot's route: the reserved road
+  margin and the lane endpoint one cell beyond it. Lot A is posed facing south and leaves north
+  through (23,8) and (23,7); lot B is posed facing north and leaves south through (24,17) and
+  (24,18). The mask widens by exactly four cells and by nothing else.
+- Those four cells are declared beside the lots rather than derived at runtime, because the
+  quickstart's ground authority is engine-free and may not read the plot machinery. A new test
+  recomputes them from the shipped architecture with the same `KingdomRoadRules.TryAuthoredLane`
+  the stake walks, and fails on any drift between the two.
+- Refusal is still fail-closed and still names the lot: a route cell that cannot be bared stops the
+  bootstrap with the message it stopped with before, rather than staking a lot the settlement will
+  not admit.
+
+> **Current unreleased census — exact structural gate passed.** Current 3062-file census is line-cap green:
+> 434,436 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
+> imports occur in 1425 files, 0 of them over the line limit. Inventory SHA-256:
+> `ff13330463a990edbef95c2ae35e0e552691f2f8e0f86a525dc873bd61f7c202`.
+> The generated cold-install inventory contains 3093 files; no new subscription claim.
+> This digest is the shelter ingress merged over the render-only city sight, the stockpile unit
+> capacity, the first-basin water store and the Kingdom Quickstart tent rows retained below; each
+> delta carries its own review chain and none is restated for the others.
+> The shelter-ingress delta over the city-sight census below is one added and one modified production
+> source: the quickstart rules' new shelter partial, and the quickstart rules themselves. Before the
+> merge, all four
+> `Tools/gate.sh` modes compiled clean on that delta's own bytes — staged baseline (3050 sources), staged
+> compatibility (3054), dev-harness baseline (3204) and dev-harness compatibility (3208) — together
+> with the installed-Hearthpyre source and ABI step, and both engine-free suites ran green there (13,905
+> main/5,193 Portable, zero skips).
+> On the merged tree the staged baseline (3058 sources) and staged compatibility (3062 sources plus
+> the tracked Hearthpyre 2.2.3 ABI stub) compile clean under Roslyn 9.0.306 on Linux against the
+> installed managed assemblies rather than through `Tools/gate.sh`; both engine-free suites run green
+> there (13,987 main/5,199 Portable, zero skips) and the 627-test tooling suite passes.
+> The six-profile Quickstart boot matrix at seed `#43101` ran natively on these bytes: marsh,
+> canyon and dunes with advisor yes and no all reach checker `verdict=PASS` with two
+> `[TAF] plot staked: tentrow` rows apiece and a strict-clean Player.log, and `quickstart-save
+> marsh yes` plus its separate cold load pass with unchanged heart, stock and IDs.
+> NOT run for the merged tree: the two dev-harness modes, the installed-Hearthpyre source step, the
+> Windows gate, ordinary play, graceful Quit and Steam delivery. The
+> 1,700-tick raising figure is still a reading of the raising rule, not of a running plot clock.
+> The exact-inventory human semantic review is open against this digest; this is not Beta sign-off.
+
 ## Unreleased — Kingdom Quickstart tent rows
 
 - Kingdom Quickstart now stakes two settlers' tent rows at founding, west of the supply
@@ -82,7 +130,7 @@ below it.
   re-run clean with warnings-as-errors on these bytes, along with both dev-harness overlay
   modes.
 
-> **Current unreleased census — exact structural gate passed.** Current 3061-file census is line-cap green:
+> **Retained city-sight census — exact structural gate passed.** That 3061-file census was line-cap green:
 > 434,296 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1425 files, 0 of them over the line limit. Inventory SHA-256:
