@@ -8,7 +8,7 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-## Unreleased — master pause/resume correction, and the claimed-ground light
+## Unreleased — master pause/resume correction, the claimed-ground light, and first-settler legibility
 
 - Master resume now validates a complete growth schedule before publishing it. Fresh
   growth no longer receives a positive deadline with a zero interval; established growth
@@ -40,15 +40,31 @@ below it.
 - No receipt phase, wire, save field, option, grant or advisor verifier predicate changes.
   A guide is built once, with the world: existing Quickstart saves keep the one-node guide,
   and only worlds created after this change get the topics. Public0.3.1 is unchanged.
+- The first guest now announces itself. Publishing the first-guest correspondence writes one
+  player message naming the kingdom and pointing at the Charter, said once per opportunity because
+  a standing candidate makes the next arrival pass return before it reaches that publication.
+- The durable half is presentation, not a ledger note: an unanswered first guest is now said by the
+  Charter/Status next-need line, so it survives a save and cannot be dropped the way a ledger note
+  is once twelve notes stand. It is said alongside the settlement's ordinary want, never instead of
+  it, so deferring a guest cannot silence a settlement running out of water.
+- The stale housing advice is replaced. With no roof at all the line names the settler's tent and
+  its bill in the material name the rest of the interface uses (brush, not the catalogue's
+  `canvas`), and promises only what a roof buys: the first guest's citizenship gate never reads
+  lodging, so a roof buys cover now and the arrival after this one.
+- One rules-layer predicate, `GrowthFirstGuestAwaitsAnswer`, now backs the Charter label, the
+  next-need line and the correspondence guard, binding both the candidate phase and the choice
+  state so a quarantined candidate cannot read as a standing question. No save format, option, or
+  arrival-interval change.
 
 > **Current unreleased census — exact structural gate passed.** Current 3052-file census is line-cap green:
-> 432,178 physical lines,zero files at or above300; direct `XRL`
+> 432,239 physical lines,zero files at or above300; direct `XRL`
 > imports occur in 1417 files, 0 of them over the line limit. Inventory SHA-256:
-> `dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`.
+> `cf01fcc9993de9cee88d8ec6dc17dd8111eb37375f546d08850ac957fb372cad`.
 > The generated cold-install inventory contains 3083 files; no new subscription claim.
-> Engine-free suites pass13,731 main and5,109 Portable cases,zero skips, and the repository
+> Engine-free suites pass13,735 main and5,109 Portable cases,zero skips, and the repository
 > tooling suites pass501 tests. Roslyn 9.0.306 on Linux compiled the
-> staged baseline (3048 sources) and staged compatibility (3052 sources) sets clean against the
+> staged baseline (3048 sources) and staged compatibility (3052 sources plus the tracked
+> Hearthpyre 2.2.3 ABI stub) sets clean against the
 > licensed Managed references, warnings as errors. The two dev-harness modes, the Windows gate and
 > any native run did NOT happen for this delta, and the exact-inventory human semantic review is
 > open against the new digest. This is not Beta sign-off.

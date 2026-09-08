@@ -1,4 +1,5 @@
 ﻿using System;
+using XRL.Messages;
 using XRL.World;
 
 namespace ThousandAndFirst
@@ -63,6 +64,14 @@ namespace ThousandAndFirst
 					KingdomRules.DramsPerArrival);
 			if (candidate == null || !KingdomLifecycleRules.TryPublishGrowthArrivalCandidate(
 				growth, candidate)) return ArrivalResult.Failed;
+			// Publication is the one moment this correspondence opens: a standing candidate makes
+			// the next pass return before it reaches here (Growth/KingdomGrowth.ArrivalStart.cs),
+			// so the founder is told once and never again. Transient by design — the durable half
+			// of the same signal is the next-need line in Core/KingdomReportsPeople.cs, which
+			// survives a save.
+			MessageQueue.AddPlayerMessage("{{W|A traveller writes to "
+				+ KingdomPresentation.Rich(system.KingdomDisplayName) + ".}} "
+				+ "{{K|(Charter: read the first guest's correspondence)}}");
 			return ArrivalResult.Deferred;
 		}
 	}
