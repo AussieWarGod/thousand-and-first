@@ -1,0 +1,11 @@
+# Synthetic citizens and dedicated liquids; actual upkeep through real engine turns.
+# Warm up an empty founded camp before enrollment; do not fabricate clock checkpoints.
+# Personal fresh water and dedicated brine remain controls; refill uses a real liquid transfer.
+DESCRIPTION=real-turn water bills cause one departure, retain loyal core and recover after refill
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;water-maintenance-setup;advance 2400;water-maintenance-enroll;advance 1200;water-maintenance-check;advance 1200;water-maintenance-check;advance 1200;water-maintenance-refill;advance 1200;water-maintenance-check;stagedigest
+VERBS=water-maintenance-setup,water-maintenance-enroll,water-maintenance-check,water-maintenance-refill
+EXPECT=stagedigest:OK~founded=false,water-maintenance-setup:OK~native-water-maintenance phase=0,advance:OK,water-maintenance-enroll:OK~native-water-maintenance phase=1,advance:OK,water-maintenance-check:OK~native-water-maintenance phase=2,advance:OK,water-maintenance-check:OK~native-water-maintenance phase=3,advance:OK,water-maintenance-refill:OK~native-water-maintenance phase=4,advance:OK,water-maintenance-check:OK~native-water-maintenance cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
+SET=water,scarcity,native-regression
+TIMEOUT=600

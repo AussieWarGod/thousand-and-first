@@ -33,12 +33,9 @@ namespace ThousandAndFirst
 				current.Lifecycle != KingdomPolityLifecycle.Active ||
 				current.ProjectedFactionId != Facts.FactionId ||
 				currentProjection.Phase != KingdomPolityProjectionPhase.Committed ||
-				!ExactFoundationReceipt(currentProjection, FoundationProjection(current.PolityId,
-					current.ProjectedFactionId, ProfileExpressionDigest(currentProfile),
-					currentProjection.PreparedTick, true)))
+				!TryObserveCurrentFoundation(Ledger, Facts.RealmId, Facts.FactionId, out Failure))
 				return Refuse(Result, "current polity has no exact active foundation", out Failure);
-			if (Facts.Legacy.ProfileSchema !=
-				KingdomPolityProfileRules.CurrentLegacyProfileSchema ||
+			if (!KingdomPolityProfileRules.IsCommittedLegacyProfileSchema(Facts.Legacy.ProfileSchema) ||
 				!KingdomPolityProfileRules.MatchesLegacyProfileSource(Facts.Legacy, currentProfile))
 				return Refuse(Result, "realm exile seal lacks exact current profile provenance",
 					out Failure);

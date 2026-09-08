@@ -57,12 +57,20 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void UnresolvedCurrentBodyFailsClosedInsteadOfGuessingFromStage()
+		public void UnresolvedCurrentBodyCommitsWithoutGuessingFromStage()
 		{
 			KingdomPolityLedger ledger = Published(new List<string> { "unknown species" }, 8);
-			ClassicAssert.IsFalse(KingdomSealProfileCaptureRules.TryCapture(ledger, Realm,
-				new KingdomSealRecord(), out long _, out string failure));
-			StringAssert.Contains("lacks canonical", failure);
+			KingdomSealRecord record = new KingdomSealRecord();
+			ClassicAssert.IsTrue(KingdomSealProfileCaptureRules.TryCapture(ledger, Realm,
+				record, out long revision, out string failure), failure);
+			ClassicAssert.AreEqual(KingdomPolityProfileRules.CommittedUnresolvedLegacyProfileSchema,
+				record.ProfileSchema);
+			ClassicAssert.AreEqual(8, record.TechnologyBand);
+			CollectionAssert.AreEqual(new[] { "unresolved" }, record.CanonicalBodyKeys);
+			ClassicAssert.IsTrue(KingdomPolityRules.Digest(record.SourceProfileDigest));
+			ClassicAssert.IsTrue(KingdomPolityRules.Digest(record.ProfileProvenanceDigest));
+			ClassicAssert.IsTrue(KingdomSealProfileCaptureRules.StillMatches(ledger, Realm,
+				record, revision, out failure), failure);
 		}
 
 		[Test]

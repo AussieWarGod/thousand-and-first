@@ -20,6 +20,27 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
+The empty-camp legacy correction over the camp-guide topic tree, the claimed-ground light and the
+first-settler legibility change together report 3052 staged production C# files and 432,259
+physical lines.
+Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
+1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
+`c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c`. The census reports
+1417 files with direct `XRL` imports; 0 of those exceed the line limit.
+
+The delta over the retained draft below is four modified production sources and no additions or
+removals: the seal profile reader/writer, the polity realm-legacy facts writer, the refound-import
+reader and the realm-exile rule. Root and independent AI reviewer read the four-file delta and
+affected seal,profile,foundation,import and exile boundaries. Explicit committed-unresolved
+profile schema2 preserves real technology and provenance without inventing bodies; existing
+immutable foundation observation owns exile admission. Old schema0/1 encodings remain unchanged.
+New schema2 needs a new public version and is not downgrade-readable by0.3.1.
+[Review evidence](STRUCTURE_REVIEW_0_3_1.md) records the reviewed reasoning; the exact-inventory
+semantic review in `docs/STRUCTURE_REVIEW.json` binds an earlier digest and is therefore open for
+this delta. Automated and native acceptance remain separately scoped. Public0.3.1 is unchanged.
+
+## Retained camp-guide, claimed-ground and first-guest census
+
 The camp-guide topic tree, the claimed-ground light and the first-settler legibility change
 together report 3052 staged production C# files and 432,239 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
