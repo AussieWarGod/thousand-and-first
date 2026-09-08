@@ -1136,6 +1136,7 @@
 	<Compile Include="KingdomNetworkPurityRulesTests.cs" />
 	<Compile Include="KingdomPactVesselSourceTests.cs" />
 	<Compile Include="KingdomRemovalCoverageSourceTests.cs" />
+	<Compile Include="KingdomClaimedGroundLightSourceTests.cs" />
 	<Compile Include="KingdomRemovalCoverageTests.cs" />
 		<Compile Include="KingdomSaveGuardSourceTests.cs" />
 		<Compile Include="KingdomSaveSystemRosterRulesTests.cs" />
