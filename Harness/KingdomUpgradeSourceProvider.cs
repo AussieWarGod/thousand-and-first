@@ -102,7 +102,7 @@ namespace ThousandAndFirst.Harness
 				&& Resident._BaseID == BaseId && BaseId > 0 && Resident.IDIfAssigned == BodyId
 				&& Resident.Physics != null && Resident.Physics.CurrentCell == null && Resident.Physics.InInventory == null
 				&& Resident.Brain != null && Resident.Body != null && Resident.Inventory != null && Resident.Count == 1
-				&& Resident.GetReference("Equipped") == null && Resident.GetReference("Implantee") == null
+				&& Resident.Equipped == null && Resident.Implantee == null
 				&& !Resident.IsPlayer() && !Resident.IsPlayerLed() && Resident.IsAlive, "foreign factory return or occupied original");
 			ResidentPhysics = Resident.Physics; ResidentBrain = Resident.Brain;
 			ResidentBody = Resident.Body; ResidentInventory = Resident.Inventory;
@@ -145,7 +145,7 @@ namespace ThousandAndFirst.Harness
 				&& Resident.IDIfAssigned == BodyId && ReferenceEquals(Resident.Physics, ResidentPhysics)
 				&& ReferenceEquals(ResidentPhysics.ParentObject, Resident) && ReferenceEquals(ResidentPhysics.CurrentCell, ResidentCell)
 				&& ReferenceEquals(ResidentCell.ParentZone, Attempt.Zone) && ResidentPhysics.InInventory == null
-				&& Resident.GetReference("Equipped") == null && Resident.GetReference("Implantee") == null,
+				&& Resident.Equipped == null && Resident.Implantee == null,
 				"donor original body custody changed");
 			int refs = 0, ids = 0;
 			for (int y = 0; y < Attempt.Zone.Height; y++) for (int x = 0; x < Attempt.Zone.Width; x++)
@@ -158,8 +158,8 @@ namespace ThousandAndFirst.Harness
 			PartsExact();
 			Check(GameObject.Validate(Resident) && Resident.Blueprint == "NPC" && Resident._BaseID == BaseId
 				&& Resident.IDIfAssigned == BodyId && Resident.Count == 1 && ResidentPhysics.CurrentCell == null
-				&& ResidentPhysics.InInventory == null && Resident.GetReference("Equipped") == null
-				&& Resident.GetReference("Implantee") == null, "original donor allocation lost unplaced custody");
+				&& ResidentPhysics.InInventory == null && Resident.Equipped == null
+				&& Resident.Implantee == null, "original donor allocation lost unplaced custody");
 		}
 		private static void PartsExact()
 		{
@@ -168,7 +168,7 @@ namespace ThousandAndFirst.Harness
 			foreach (IPart part in new IPart[] { ResidentPhysics, ResidentBrain, ResidentBody, ResidentInventory })
 			{
 				int found = 0;
-				foreach (IPart row in Resident.Parts) if (ReferenceEquals(row, part)) found++;
+				foreach (IPart row in Resident.PartsList) if (ReferenceEquals(row, part)) found++;
 				Check(part != null && ReferenceEquals(part.ParentObject, Resident) && found == 1, "donor part is not uniquely parented");
 			}
 		}
