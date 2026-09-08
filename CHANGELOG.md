@@ -120,6 +120,10 @@ below it.
   next-need line and the correspondence guard, binding both the candidate phase and the choice
   state so a quarantined candidate cannot read as a standing question. No save format, option, or
   arrival-interval change.
+- Maintainer tooling only, with no player-visible or runtime effect: a tag-triggered Steam Workshop
+  release workflow now runs the exact tagged licensed gate, package, plan and one publisher submit
+  on an attended host, with the change note taken from the annotated tag's message body. Publishing
+  still stops at "submitted, unverified"; finalization and every human release check are unchanged.
 
 > **Retained unreleased camp-guide, claimed-ground and first-guest census — exact structural gate passed.** Its3052-file census is line-cap green:
 > 432,239 physical lines,zero files at or above300; direct `XRL`

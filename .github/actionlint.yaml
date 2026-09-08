@@ -1,0 +1,6 @@
+# actionlint cannot know a repository's self-hosted runner labels, so declare the one this
+# project uses. `taf-steam` is the label of the attended Steam-host runner described in
+# docs/RELEASING.md; only .github/workflows/release.yml targets it.
+self-hosted-runner:
+  labels:
+    - taf-steam

@@ -1,0 +1,924 @@
+name: Steam Workshop release
+
+# Tag-triggered Alpha release lane, deployed under the author ruling of 2026-09-08 that amends
+# the "Self-hosted runner security" doctrine in docs/RELEASING.md for exactly this workflow shape.
+# The amendment, its mitigations and the adoption-gate status live in docs/RELEASING.md; the
+# operator runbook lives in the same document under "Steam host runner runbook".
+#
+#   v0.3.N              -> PUBLIC item 3794797472  : package --alpha, plan --mode alpha, TWO approvals
+#   staging-v0.3.N      -> PRIVATE item 3796495680 : package --test,  plan --mode test,  ONE approval
+#   staging-v0.3.N-K    -> same private lane, K = re-candidate ordinal (private admits equal patch)
+#
+# Both lanes are restricted to the 0.3.x Alpha grammar. A Beta lane needs a deliberate change here.
+#
+# The hosted jobs prove the tag (annotated tag object; public tag commit EQUALS the origin/main tip,
+# staging tag commit reachable from origin/dev; tag version == manifest version == candidate record),
+# extract and bound the change note from the ANNOTATED TAG MESSAGE BODY, run the Linux repository
+# audit and both portable suites, and reproduce the package receipt from HEAD blobs.
+#
+# The Steam-host jobs are gated by a GitHub Environment with a required human reviewer and run the
+# repository's own release tooling at the exact tagged commit from a fresh WSL clone. They use NO
+# third-party actions: nothing is checked out and nothing is uploaded on that machine. Evidence
+# stays in the host run directory; the step log prints stage names, exit codes and SHA-256 digests
+# only, and gate output is written to files rather than tee-d to this public log.
+#
+# The job never holds a Steam credential: the signed-in Steam client is ambient state of the
+# runner's interactive desktop session. Every refusal fails the job, nothing retries, and a
+# cancelled run is never safe.
+
+"on":
+  push:
+    tags:
+      - 'v*'
+      - 'staging-v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Annotated tag to release. Must equal the ref this dispatch targets: gh workflow run release.yml --ref <tag> -f tag=<tag> -f expected_commit=<sha>'
+        required: true
+        type: string
+      expected_commit:
+        description: 'Full 40-hex commit SHA that <tag>^{commit} must resolve to'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+# One release at a time and NEVER cancelled: cancelling publish kills the launcher child mid-submit
+# and leaves an uncertain retained attempt that only a human can reconcile.
+#
+# Known consequence: a run still QUEUED behind a running release is cancelled when a third tag
+# arrives, because GitHub keeps at most one pending run per concurrency group. A silently vanished
+# queued run is not a failure; dispatch its tag again once the host is free.
+concurrency:
+  group: steam-workshop-release
+  cancel-in-progress: false
+
+env:
+  PUBLIC_ITEM: '3794797472'
+  STAGING_ITEM: '3796495680'
+  # Steam-host layout. The publisher's registry root C:\taf-workshop-state.dRBivM is compiled into
+  # the release registry and deliberately lives outside this tree.
+  TAF_RELEASE_ROOT_WIN: 'C:\taf-release'
+  TAF_RELEASE_ROOT_WSL: '/mnt/c/taf-release'
+  TAF_QUD_ROOT_WIN: 'F:\SteamLibrary\steamapps\common\Caves of Qud'
+  TAF_QUD_ROOT_WSL: '/mnt/f/SteamLibrary/steamapps/common/Caves of Qud'
+  # release-check stage 10 runs `Tools/stage.sh deploy` as a dry run, and that call validates a
+  # live deployment target: an ordinary directory whose manifest.json declares r_ThousandAndFirst.
+  # The least invasive precondition is a dedicated dry-run target that is NOT the game's live Mods
+  # folder, so the gate never depends on a local mod copy competing with the subscribed Workshop
+  # item. Create it once per host (see the runbook in docs/RELEASING.md); preflight fails closed.
+  TAF_LIVE_MOD_WIN: 'C:\taf-release\live-mod\ThousandAndFirst'
+  TAF_LIVE_MOD_WSL: '/mnt/c/taf-release/live-mod/ThousandAndFirst'
+
+jobs:
+  release-checks:
+    name: hosted release checks (tag, lineage, metadata, note, package reproduction)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      lane: ${{ steps.tag.outputs.lane }}
+      mode: ${{ steps.tag.outputs.mode }}
+      item: ${{ steps.tag.outputs.item }}
+      version: ${{ steps.tag.outputs.version }}
+      tag: ${{ steps.tag.outputs.tag }}
+      tag_object: ${{ steps.tag.outputs.tag_object }}
+      commit: ${{ steps.tag.outputs.commit }}
+      environment: ${{ steps.tag.outputs.environment }}
+      note_sha256: ${{ steps.note.outputs.note_sha256 }}
+      note_bytes: ${{ steps.note.outputs.note_bytes }}
+      receipt_sha256: ${{ steps.package.outputs.receipt_sha256 }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: resolve lane and prove the tag (annotated, on the lane branch, version == manifest)
+        id: tag
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_NAME: ${{ github.ref_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          INPUT_TAG: ${{ inputs.tag }}
+          INPUT_COMMIT: ${{ inputs.expected_commit }}
+        run: |
+          set -euo pipefail
+          [ "$REF_TYPE" = "tag" ] || { echo "release workflow must run on a tag ref, got '$REF_TYPE'" >&2; exit 2; }
+          TAG="$REF_NAME"
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            [ "$INPUT_TAG" = "$TAG" ] || { echo "dispatch input tag '$INPUT_TAG' differs from ref '$TAG'" >&2; exit 2; }
+            [[ "$INPUT_COMMIT" =~ ^[0-9a-f]{40}$ ]] || { echo "expected_commit must be 40 lowercase hex" >&2; exit 2; }
+          fi
+          # actions/checkout can leave an annotated tag as a lightweight ref; refetch tags by force.
+          git fetch --force --tags --no-recurse-submodules --quiet origin
+
+          if [[ "$TAG" =~ ^v0\.3\.(0|[1-9][0-9]*)$ ]]; then
+            LANE=public; MODE=alpha; ITEM="$PUBLIC_ITEM"; ENVIRONMENT=steam-workshop
+            VERSION="${TAG#v}"
+          elif [[ "$TAG" =~ ^staging-v0\.3\.(0|[1-9][0-9]*)(-[1-9][0-9]*)?$ ]]; then
+            LANE=staging; MODE=test; ITEM="$STAGING_ITEM"; ENVIRONMENT=steam-workshop-staging
+            VERSION="${TAG#staging-v}"; VERSION="${VERSION%%-*}"
+          else
+            echo "tag '$TAG' is not a release tag (v0.3.N or staging-v0.3.N[-K]); refusing" >&2; exit 2
+          fi
+          [ "$VERSION" != "0.3.0" ] || { echo "0.3.0 is the published first Alpha; never re-release it" >&2; exit 2; }
+
+          [ "$(git cat-file -t "refs/tags/$TAG")" = "tag" ] || { echo "tag $TAG must be an annotated tag object, not a lightweight ref" >&2; exit 2; }
+          TAG_OBJECT="$(git rev-parse "refs/tags/$TAG")"
+          COMMIT="$(git rev-parse "refs/tags/$TAG^{commit}")"
+          [ "$(git rev-parse HEAD)" = "$COMMIT" ] || { echo "checked-out HEAD is not the tag's commit" >&2; exit 2; }
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            [ "$INPUT_COMMIT" = "$COMMIT" ] || { echo "expected_commit $INPUT_COMMIT != tag commit $COMMIT" >&2; exit 2; }
+          fi
+
+          # Public: the tagged commit must BE the release-only branch tip, not merely an ancestor of
+          # it, so an older main commit that still carries the new manifest version cannot be tagged
+          # by mistake. Staging: the private-metadata commit lives on the dev integration branch.
+          # Each lane fetches only the branch it is judged against, so a rename or removal of the
+          # integration branch can never fail a public release for an unrelated reason.
+          if [ "$LANE" = "public" ]; then
+            git fetch --no-tags --quiet origin '+refs/heads/main:refs/remotes/origin/main'
+            MAIN_TIP="$(git rev-parse origin/main)"
+            [ "$COMMIT" = "$MAIN_TIP" ] || { echo "public tag $TAG points at $COMMIT but origin/main tip is $MAIN_TIP; the public lane releases the main tip only" >&2; exit 2; }
+          else
+            git fetch --no-tags --quiet origin '+refs/heads/dev:refs/remotes/origin/dev'
+            git merge-base --is-ancestor "$COMMIT" origin/dev || { echo "staging tag $TAG is not reachable from origin/dev" >&2; exit 2; }
+          fi
+
+          MANIFEST_VERSION="$(python3 Tools/workshop_metadata.py fields manifest.json | sed -n '1p')"
+          [ "$MANIFEST_VERSION" = "$VERSION" ] || { echo "manifest.json version $MANIFEST_VERSION != tag version $VERSION" >&2; exit 2; }
+
+          {
+            echo "lane=$LANE"; echo "mode=$MODE"; echo "item=$ITEM"; echo "version=$VERSION"
+            echo "tag=$TAG"; echo "tag_object=$TAG_OBJECT"; echo "commit=$COMMIT"; echo "environment=$ENVIRONMENT"
+          } >> "$GITHUB_OUTPUT"
+          {
+            echo "## Release lane: $LANE"
+            echo "- tag \`$TAG\` (object \`$TAG_OBJECT\`) -> commit \`$COMMIT\`"
+            echo "- version \`$VERSION\`, package mode \`--$MODE\`, Workshop item \`$ITEM\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: extract and bound the change note from the annotated tag message body
+        id: note
+        shell: bash
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          set -euo pipefail
+          # The Workshop changelist is the tag MESSAGE BODY. The tag subject is the release title
+          # and is never sent. CHANGELOG.md is not the note: its first section is far past the
+          # publisher's 7999-byte ceiling for both shipped releases.
+          #
+          # This canonicalisation is duplicated on the Steam host (03-package-plan.sh writes the
+          # same bytes from its own clone) and the two are cross-checked by SHA-256, so any drift
+          # between the copies fails the run closed instead of shipping a different note.
+          NOTE_FILE="${RUNNER_TEMP}/change-note.md"
+          NOTE_SHA="$(python3 - "$TAG" "$NOTE_FILE" <<'PY'
+          import hashlib
+          import subprocess
+          import sys
+
+          tag, destination = sys.argv[1], sys.argv[2]
+          raw = subprocess.run(
+              ["git", "for-each-ref", "--format=%(contents:body)", f"refs/tags/{tag}"],
+              check=True, capture_output=True).stdout
+          try:
+              body = raw.decode("utf-8")
+          except UnicodeDecodeError as error:
+              raise SystemExit(f"tag body is not strict UTF-8: {error}")
+          body = body.rstrip("\n")
+          if not body:
+              raise SystemExit(
+                  f"annotated tag {tag} has an empty message body, and that body IS the Workshop "
+                  "changelist. Retag with: git tag -a <tag> -m '<release title>' -m '<player note>'")
+          if "-----BEGIN PGP SIGNATURE-----" in body:
+              raise SystemExit("signed-tag payload is not admitted as a change note")
+          bad = sorted({ord(ch) for ch in body if (ord(ch) < 0x20 and ch != "\n") or ord(ch) == 0x7F})
+          if bad:
+              raise SystemExit("tag body carries control characters other than LF: "
+                               + ", ".join(f"U+{code:04X}" for code in bad))
+          note = (body + "\n").encode("utf-8")
+          if not 1 <= len(note) <= 7999:
+              raise SystemExit(f"change note is {len(note)} bytes; the publisher admits 1..7999")
+          with open(destination, "wb") as stream:
+              stream.write(note)
+          print(hashlib.sha256(note).hexdigest())
+          PY
+          )"
+          NOTE_BYTES="$(wc -c < "$NOTE_FILE")"
+          {
+            echo "note_sha256=$NOTE_SHA"
+            echo "note_bytes=$NOTE_BYTES"
+          } >> "$GITHUB_OUTPUT"
+          {
+            echo "- change note: $NOTE_BYTES bytes taken from the \`$TAG\` message body,"
+            echo "  SHA-256 \`$NOTE_SHA\`. The Steam host must reproduce that digest from its own clone."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: lane metadata and candidate record
+        shell: bash
+        env:
+          LANE: ${{ steps.tag.outputs.lane }}
+          MODE: ${{ steps.tag.outputs.mode }}
+          ITEM: ${{ steps.tag.outputs.item }}
+          VERSION: ${{ steps.tag.outputs.version }}
+        run: |
+          set -euo pipefail
+          readarray -t FIELDS < <(python3 Tools/workshop_metadata.py fields manifest.json)
+          [ "${#FIELDS[@]}" -eq 3 ] || { echo "workshop_metadata.py fields returned ${#FIELDS[@]} lines, expected 3" >&2; exit 2; }
+          python3 Tools/workshop_metadata.py preview "${FIELDS[2]}"
+          python3 Tools/workshop_metadata.py workshop "$MODE" manifest.json workshop.json
+          python3 - "$LANE" "$ITEM" <<'PY'
+          import json
+          import sys
+
+          lane, item = sys.argv[1], int(sys.argv[2])
+          data = json.load(open("workshop.json", encoding="utf-8"))
+          want = "2" if lane == "public" else "0"
+          if data["WorkshopId"] != item:
+              raise SystemExit(f"workshop.json WorkshopId {data['WorkshopId']} != lane item {item}")
+          if data["Visibility"] != want:
+              raise SystemExit(f"workshop.json Visibility {data['Visibility']!r} != {want!r} for the {lane} lane")
+          PY
+          if [ "$LANE" = "public" ]; then
+            python3 Tools/workshop_metadata.py alpha-candidate \
+              manifest.json preview.png workshop.json docs/ALPHA_CANDIDATE.json \
+              README.md CHANGELOG.md >/dev/null
+            python3 - "$VERSION" "$PUBLIC_ITEM" "$STAGING_ITEM" <<'PY'
+          import json
+          import subprocess
+          import sys
+
+          version, public_item, staging_item = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
+          record = json.load(open("docs/ALPHA_CANDIDATE.json", encoding="utf-8"))
+          if record["releaseVersion"] != version:
+              raise SystemExit(f"candidate record releaseVersion {record['releaseVersion']} != {version}")
+          if record["workshopId"] != public_item or record["privateWorkshopId"] != staging_item:
+              raise SystemExit("candidate record item ids differ from the lane constants")
+          head = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+          if record["candidateCommit"] == head:
+              raise SystemExit("candidateCommit must be the earlier receipt-binding commit, not the tagged commit")
+          subprocess.check_call(["git", "merge-base", "--is-ancestor", record["candidateCommit"], head])
+          PY
+          fi
+
+      - name: portable repository audit (whitespace, inventory, docs, structure, tooling tests)
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Same contract as portable.yml's `repository-audit` job, which no longer runs on tag
+          # pushes: the whole-tree whitespace check it performs when there is no `before` SHA,
+          # then the audit itself.
+          git diff --check "$(git hash-object -t tree /dev/null)" HEAD
+          ./Tools/portable-check.sh
+          # portable-check.sh runs check-structure.py in --report mode only, and workshop-package.sh
+          # gates the structural review behind its non-test modes, so without this line the STAGING
+          # lane would pass every hosted check, take an environment approval, occupy the attended
+          # Steam host and only fail at stage 11 of the multi-hour licensed gate. This is the same
+          # command Tools/release-check.sh stage 11 runs there; it is pure Python, needs no licensed
+          # data, and costs seconds. Refresh docs/STRUCTURE_REVIEW.json when C# sources change.
+          python3 Tools/check-structure.py --release
+
+      - name: reproduce the package from HEAD blobs and record the receipt digest
+        id: package
+        shell: bash
+        env:
+          MODE: ${{ steps.tag.outputs.mode }}
+          VERSION: ${{ steps.tag.outputs.version }}
+        run: |
+          set -euo pipefail
+          [ -z "$(git status --porcelain=v1 --untracked-files=all)" ] || { git status --short; echo "hosted tree is not clean after the audits" >&2; exit 2; }
+          DEST="${RUNNER_TEMP}/TAF-${VERSION}-${MODE}"
+          ./Tools/workshop-package.sh "--${MODE}" "$DEST"
+          RECEIPT_SHA="$(sha256sum "${DEST}.sha256" | cut -d' ' -f1)"
+          echo "receipt_sha256=$RECEIPT_SHA" >> "$GITHUB_OUTPUT"
+          {
+            echo "- hosted package receipt SHA-256 \`$RECEIPT_SHA\` over $(wc -l < "${DEST}.sha256") files"
+            echo "- the Steam host must reproduce this exact digest before any Steam call"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  portable-tests:
+    # Same contract as .github/workflows/portable.yml, repeated here so the release run is
+    # self-contained on a tag push (portable.yml ignores v* and staging-v* tags for that reason).
+    # The skip allowlist is portability evidence only; the zero-skip licensed gate runs on the
+    # Steam host inside the publish job.
+    name: full pure + portable tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    env:
+      TAF_REPO_ROOT: ${{ github.workspace }}
+      NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 9.0.306
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.NUGET_PACKAGES }}
+          key: ${{ runner.os }}-nuget-${{ hashFiles('DevTests/TafTests.csproj', 'DevTests/PortableTests.csproj', 'DevTests/packages.lock.json') }}
+      - run: dotnet restore DevTests/TafTests.csproj --locked-mode
+      - name: run full source suite with exact licensed-data skip allowlist
+        env:
+          TAF_ALLOWED_SKIPS: >-
+            KingdomCreedContentTests.Installed21151CensusIsAnExactThirtyThreeAndChiliadAddsNone;
+            KingdomGatehouseNativeTests.GateRootRetainsVanillaDoorPartAndOwnsOnlyTopology;
+            KingdomInheritanceSpatialNativeTests.ReconstructedStreetUsesVanillaPassableDirtPath;
+            KingdomPolityExpressionNativeTests.EveryResolvedEngineKeyExistsInInstalledQud;
+            KingdomFounderHistoryRulesTests.InstalledQudHasBroadRelicAndDungeonConsumersOfGlobalHistory;
+            KingdomFrontierWallSourceTests.InstalledVanillaParentsProvideExactPaintedWallVocabulary;
+            KingdomGatehouseNativeTests.V2FormsUseOnlyVerifiedWallsAndFunctionalWatchWrappers;
+            KingdomLiquidRuntimeSourceTests.InstalledEngineStillProvidesChosenRenderAndInteractionSeams;
+            KingdomQuickstartTests.InstalledQudGroundAndCarrierBlueprintsMatchTheContract;
+            KingdomShopStockSourceTests.InstalledQudGroundsPhysicalSourceMarketSinkAndEmptyTrade
+        run: dotnet run --project DevTests/TafTests.csproj --no-restore -v q --nologo
+      - run: dotnet restore DevTests/PortableTests.csproj --locked-mode
+      - name: run portable kernel with exact licensed-data skip allowlist
+        env:
+          TAF_ALLOWED_SKIPS: >-
+            KingdomPolityExpressionNativeTests.EveryResolvedEngineKeyExistsInInstalledQud;
+            KingdomFounderHistoryRulesTests.InstalledQudHasBroadRelicAndDungeonConsumersOfGlobalHistory;
+            KingdomQuickstartTests.InstalledQudGroundAndCarrierBlueprintsMatchTheContract;
+            KingdomShopStockSourceTests.InstalledQudGroundsPhysicalSourceMarketSinkAndEmptyTrade
+        run: dotnet run --project DevTests/PortableTests.csproj --no-restore -v q --nologo
+
+  public-confirm:
+    # docs/RELEASING.md requires a second approval for Public visibility. This hosted job does
+    # nothing but wait for a distinct approval on the same environment before the Steam host runs.
+    name: second approval for PUBLIC visibility
+    needs: [release-checks, portable-tests]
+    if: ${{ needs.release-checks.outputs.lane == 'public' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: steam-workshop
+    steps:
+      - name: record what this approval covers
+        shell: bash
+        env:
+          TAG: ${{ needs.release-checks.outputs.tag }}
+          COMMIT: ${{ needs.release-checks.outputs.commit }}
+          VERSION: ${{ needs.release-checks.outputs.version }}
+          ITEM: ${{ needs.release-checks.outputs.item }}
+          RECEIPT: ${{ needs.release-checks.outputs.receipt_sha256 }}
+          NOTE: ${{ needs.release-checks.outputs.note_sha256 }}
+        run: |
+          {
+            echo "## Second approval granted for PUBLIC item $ITEM"
+            echo "- tag \`$TAG\` -> commit \`$COMMIT\`, version \`$VERSION\`"
+            echo "- package receipt SHA-256 \`$RECEIPT\`, change note SHA-256 \`$NOTE\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  publish:
+    name: Steam host - gate, package, plan, check, submit (${{ needs.release-checks.outputs.lane }})
+    needs: [release-checks, portable-tests, public-confirm]
+    if: ${{ !cancelled() && needs.release-checks.result == 'success' && needs.portable-tests.result == 'success' && (needs.public-confirm.result == 'success' || (needs.release-checks.outputs.lane == 'staging' && needs.public-confirm.result == 'skipped')) }}
+    runs-on: [self-hosted, windows, taf-steam]
+    environment: ${{ needs.release-checks.outputs.environment }}
+    # 240 minutes is an UNVERIFIED ceiling: the licensed gate's wall time has never been recorded.
+    # Measure it on the first staging run and adjust before trusting it. A timeout that lands
+    # mid-submit is uncertain, not a clean failure.
+    timeout-minutes: 240
+    defaults:
+      run:
+        shell: powershell
+    env:
+      TAF_TAG: ${{ needs.release-checks.outputs.tag }}
+      TAF_TAG_OBJECT: ${{ needs.release-checks.outputs.tag_object }}
+      TAF_COMMIT: ${{ needs.release-checks.outputs.commit }}
+      TAF_LANE: ${{ needs.release-checks.outputs.lane }}
+      TAF_MODE: ${{ needs.release-checks.outputs.mode }}
+      TAF_ITEM: ${{ needs.release-checks.outputs.item }}
+      TAF_VERSION: ${{ needs.release-checks.outputs.version }}
+      TAF_EXPECTED_RECEIPT_SHA: ${{ needs.release-checks.outputs.receipt_sha256 }}
+      TAF_EXPECTED_NOTE_SHA: ${{ needs.release-checks.outputs.note_sha256 }}
+      TAF_RUN: run-${{ github.run_id }}-${{ github.run_attempt }}
+      TAF_REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
+      # release-check.sh reads TAF_QUD_ROOT; stage.sh reads TAF_LIVE_MOD. WSLENV forwards these
+      # Windows variables into every wsl.exe child by name; WSL_UTF8 keeps wsl.exe output UTF-8.
+      TAF_QUD_ROOT: /mnt/f/SteamLibrary/steamapps/common/Caves of Qud
+      TAF_LIVE_MOD: /mnt/c/taf-release/live-mod/ThousandAndFirst
+      WSLENV: TAF_TAG:TAF_TAG_OBJECT:TAF_COMMIT:TAF_LANE:TAF_MODE:TAF_ITEM:TAF_VERSION:TAF_EXPECTED_RECEIPT_SHA:TAF_EXPECTED_NOTE_SHA:TAF_RUN:TAF_REPO_URL:TAF_QUD_ROOT:TAF_LIVE_MOD:TAF_RELEASE_ROOT_WSL
+      WSL_UTF8: '1'
+    outputs:
+      run_dir_win: ${{ steps.preflight.outputs.run_dir_win }}
+    steps:
+      - name: preflight the Steam host (Steam, registry root, game root, dry-run target, run dir)
+        id: preflight
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if (-not (Get-Process -Name steam -ErrorAction SilentlyContinue)) {
+            throw 'Steam client is not running in this desktop session; failing closed before any release work.'
+          }
+          if (-not (Test-Path -LiteralPath 'C:\taf-workshop-state.dRBivM' -PathType Container)) {
+            throw 'Compiled registry root C:\taf-workshop-state.dRBivM does not exist.'
+          }
+          if (-not (Test-Path -LiteralPath $env:TAF_QUD_ROOT_WIN -PathType Container)) {
+            throw "Qud root missing: $env:TAF_QUD_ROOT_WIN"
+          }
+          if (-not (Get-Command dotnet.exe -CommandType Application -ErrorAction SilentlyContinue)) {
+            throw 'dotnet.exe is not on PATH; the launcher recompiles its helper on every invocation.'
+          }
+          $liveManifest = Join-Path $env:TAF_LIVE_MOD_WIN 'manifest.json'
+          if (-not (Test-Path -LiteralPath $env:TAF_LIVE_MOD_WIN -PathType Container) -or -not (Test-Path -LiteralPath $liveManifest -PathType Leaf)) {
+            throw "release-check stage 10 runs Tools/stage.sh deploy as a dry run and needs a validated deployment target. Create $env:TAF_LIVE_MOD_WIN as an ordinary directory holding a copy of the repository manifest.json (see the runner runbook in docs/RELEASING.md). Do not point it at the game's live Mods folder."
+          }
+          if ((Get-Content -LiteralPath $liveManifest -Raw) -notmatch 'r_ThousandAndFirst') {
+            throw "Dry-run deployment target $env:TAF_LIVE_MOD_WIN has a manifest.json that does not declare r_ThousandAndFirst; stage.sh refuses it."
+          }
+          $run = Join-Path $env:TAF_RELEASE_ROOT_WIN $env:TAF_RUN
+          if (Test-Path -LiteralPath $run) { throw "Run directory already exists: $run" }
+          foreach ($d in @('inputs','package','logs','artifact','evidence-probe','evidence-check','evidence-probe2','evidence-submit')) {
+            New-Item -ItemType Directory -Path (Join-Path $run $d) -Force | Out-Null
+          }
+          [IO.File]::AppendAllText($env:GITHUB_OUTPUT, "run_dir_win=$run`n")
+          [IO.File]::AppendAllText($env:GITHUB_STEP_SUMMARY, "## Steam host run directory`n`n``$run`` - retained on the host; evidence, logs and inputs live there.`n")
+
+      - name: materialise the WSL step scripts (LF, UTF-8, no BOM)
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $run = Join-Path $env:TAF_RELEASE_ROOT_WIN $env:TAF_RUN
+          $utf8 = New-Object Text.UTF8Encoding($false)
+          $clone = @'
+          set -euo pipefail
+          for tool in git python3 sha256sum find cp wslpath; do
+            command -v "$tool" >/dev/null 2>&1 || { echo "WSL toolchain is missing $tool" >&2; exit 2; }
+          done
+          RUN_WSL="$TAF_RELEASE_ROOT_WSL/$TAF_RUN"
+          SRC="$HOME/taf-release/$TAF_RUN/src"
+          [ ! -e "$HOME/taf-release/$TAF_RUN" ] || { echo "WSL run directory already exists for this run id" >&2; exit 2; }
+          mkdir -p "$HOME/taf-release/$TAF_RUN"
+          git clone --quiet "$TAF_REPO_URL" "$SRC"
+          cd "$SRC"
+          git fetch --force --tags --quiet origin
+          [ "$(git cat-file -t "refs/tags/$TAF_TAG")" = "tag" ] || { echo "tag $TAF_TAG is not an annotated tag object" >&2; exit 2; }
+          [ "$(git rev-parse "refs/tags/$TAF_TAG")" = "$TAF_TAG_OBJECT" ] || { echo "tag object differs from the hosted job" >&2; exit 2; }
+          [ "$(git rev-parse "refs/tags/$TAF_TAG^{commit}")" = "$TAF_COMMIT" ] || { echo "tag commit differs from the hosted job" >&2; exit 2; }
+          git checkout --quiet --detach "$TAF_COMMIT"
+          [ "$(git rev-parse HEAD)" = "$TAF_COMMIT" ] || { echo "HEAD is not the tagged commit" >&2; exit 2; }
+          [ -z "$(git status --porcelain=v1 --untracked-files=all)" ] || { echo "fresh clone is not clean" >&2; exit 2; }
+          printf '%s\n' "$SRC" > "$RUN_WSL/inputs/src-wsl.txt"
+          wslpath -w "$SRC/Tools/workshop-steam-upload.ps1" > "$RUN_WSL/inputs/launcher-win.txt"
+          wslpath -w "$SRC/Tools/workshop-steam-probe.ps1" > "$RUN_WSL/inputs/probe-win.txt"
+          echo "clone ok: tag object $TAF_TAG_OBJECT -> commit $TAF_COMMIT, tree clean"
+          '@
+          $gate = @'
+          set -uo pipefail
+          # -e arrives from the wsl.exe invocation; clear it so a stage exit code can be captured,
+          # reported as a number and turned into a controlled failure. Gate OUTPUT never reaches
+          # this workflow's public step log: it names the WSL user's home and the Windows profile.
+          set +e
+          RUN_WSL="$TAF_RELEASE_ROOT_WSL/$TAF_RUN"
+          SRC="$(cat "$RUN_WSL/inputs/src-wsl.txt")" || exit 2
+          cd "$SRC" || exit 2
+          [ "$(git rev-parse HEAD)" = "$TAF_COMMIT" ] || { echo "HEAD moved before the gate" >&2; exit 2; }
+          run_stage() {
+            stage_name="$1"; log="$RUN_WSL/logs/$2"; marker="$3"; shift 3
+            "$@" > "$log" 2>&1
+            status=$?
+            echo "$stage_name: exit $status, log sha256 $(sha256sum "$log" | cut -d" " -f1)"
+            if [ "$status" -ne 0 ]; then
+              echo "$stage_name failed; read $log on the Steam host" >&2
+              return "$status"
+            fi
+            if ! grep -qxF "$marker" "$log"; then
+              echo "$stage_name did not print its clean marker" >&2
+              return 2
+            fi
+            return 0
+          }
+          run_stage "portable-check" "portable-check.log" "PORTABLE REPOSITORY AUDIT CLEAN" ./Tools/portable-check.sh || exit $?
+          run_stage "release-check --$TAF_MODE" "release-check.log" "AUTOMATED RELEASE PRECHECK CLEAN" ./Tools/release-check.sh "--$TAF_MODE" || exit $?
+          echo "licensed gate clean; full output retained under $RUN_WSL/logs on the Steam host"
+          '@
+          $note = @'
+          import hashlib
+          import subprocess
+          import sys
+
+          tag, destination = sys.argv[1], sys.argv[2]
+          raw = subprocess.run(
+              ["git", "for-each-ref", "--format=%(contents:body)", f"refs/tags/{tag}"],
+              check=True, capture_output=True).stdout
+          try:
+              body = raw.decode("utf-8")
+          except UnicodeDecodeError as error:
+              raise SystemExit(f"tag body is not strict UTF-8: {error}")
+          body = body.rstrip("\n")
+          if not body:
+              raise SystemExit(f"annotated tag {tag} has an empty message body")
+          if "-----BEGIN PGP SIGNATURE-----" in body:
+              raise SystemExit("signed-tag payload is not admitted as a change note")
+          bad = sorted({ord(ch) for ch in body if (ord(ch) < 0x20 and ch != "\n") or ord(ch) == 0x7F})
+          if bad:
+              raise SystemExit("tag body carries control characters other than LF: "
+                               + ", ".join(f"U+{code:04X}" for code in bad))
+          note = (body + "\n").encode("utf-8")
+          if not 1 <= len(note) <= 7999:
+              raise SystemExit(f"change note is {len(note)} bytes; the publisher admits 1..7999")
+          with open(destination, "wb") as stream:
+              stream.write(note)
+          print(hashlib.sha256(note).hexdigest())
+          '@
+          $package = @'
+          set -euo pipefail
+          RUN_WSL="$TAF_RELEASE_ROOT_WSL/$TAF_RUN"
+          SRC="$(cat "$RUN_WSL/inputs/src-wsl.txt")"
+          cd "$SRC"
+          [ "$(git rev-parse HEAD)" = "$TAF_COMMIT" ] || { echo "HEAD moved after the gate" >&2; exit 2; }
+          [ -z "$(git status --porcelain=v1 --untracked-files=all)" ] || { echo "tree is not clean after the gate" >&2; exit 2; }
+
+          # workshop-package.sh refuses every /mnt/<drive> destination on this host: DrvFs reports
+          # 777 without metadata, so its shared-writable-ancestor, 700 scratch and 644/755 file-mode
+          # assertions cannot hold there. Build on ext4, then make a VERIFIED native copy - which is
+          # what the 0.3.1 release actually did - because the launcher only accepts /mnt/<drive>
+          # plan paths and Steam must read the package from a native drive.
+          NAME="TAF-$TAF_VERSION-$TAF_MODE"
+          BUILD_PARENT="$HOME/taf-release/$TAF_RUN/pkg"
+          mkdir -p "$BUILD_PARENT"
+          chmod 700 "$BUILD_PARENT"
+          BUILD_PKG="$BUILD_PARENT/$NAME"
+          # The packager's own success block prints "root:" and "hashes:" as absolute ext4 paths
+          # under $HOME, and its refusal paths name the same ancestors on stderr. Capture BOTH
+          # streams to a file and publish only a digest, exactly as 02-gate.sh does for the gate:
+          # this public step log must never carry the maintainer's WSL account name, and the
+          # redaction pass at the end of this job rewrites files under the host run directory only,
+          # never anything already written to a GitHub step log.
+          ./Tools/workshop-package.sh "--$TAF_MODE" "$BUILD_PKG" > "$RUN_WSL/logs/package.log" 2>&1 || {
+            echo "packaging failed; read $RUN_WSL/logs/package.log on the Steam host" >&2; exit 2; }
+          grep -qxF "WORKSHOP PACKAGE CLEAN" "$RUN_WSL/logs/package.log" || {
+            echo "packager did not print its clean marker" >&2; exit 2; }
+          echo "package: log sha256 $(sha256sum "$RUN_WSL/logs/package.log" | cut -d" " -f1)"
+          BUILD_RECEIPT_SHA="$(sha256sum "$BUILD_PKG.sha256" | cut -d" " -f1)"
+          [ "$BUILD_RECEIPT_SHA" = "$TAF_EXPECTED_RECEIPT_SHA" ] || { echo "ext4 receipt digest $BUILD_RECEIPT_SHA differs from the hosted reproduction $TAF_EXPECTED_RECEIPT_SHA" >&2; exit 2; }
+
+          DEST_PARENT="$RUN_WSL/package"
+          DEST_PKG="$DEST_PARENT/$NAME"
+          [ ! -e "$DEST_PKG" ] && [ ! -e "$DEST_PKG.sha256" ] || { echo "native package destination already exists" >&2; exit 2; }
+          cp -R -- "$BUILD_PKG" "$DEST_PKG"
+          cp -- "$BUILD_PKG.sha256" "$DEST_PKG.sha256"
+          # Flush before verifying, so the checks below read what DrvFs actually holds rather than
+          # what the 9p page cache still remembers from the copy that just finished.
+          sync
+
+          COPY_RECEIPT_SHA="$(sha256sum "$DEST_PKG.sha256" | cut -d" " -f1)"
+          [ "$COPY_RECEIPT_SHA" = "$TAF_EXPECTED_RECEIPT_SHA" ] || { echo "copied receipt digest $COPY_RECEIPT_SHA differs from the hosted reproduction" >&2; exit 2; }
+          ( cd "$BUILD_PKG" && find -P . -type f -printf "%P\n" | LC_ALL=C sort ) > "$RUN_WSL/logs/inventory-ext4.txt"
+          ( cd "$DEST_PKG" && find -P . -type f -printf "%P\n" | LC_ALL=C sort ) > "$RUN_WSL/logs/inventory-native.txt"
+          cmp -s "$RUN_WSL/logs/inventory-ext4.txt" "$RUN_WSL/logs/inventory-native.txt" || { echo "native copy inventory differs from the ext4 build" >&2; exit 2; }
+          ( cd "$DEST_PKG" && LC_ALL=C sha256sum -c --quiet "$DEST_PKG.sha256" ) || { echo "native copy failed its own receipt verification" >&2; exit 2; }
+          COPY_FILES="$(wc -l < "$RUN_WSL/logs/inventory-native.txt")"
+          RECEIPT_ROWS="$(wc -l < "$DEST_PKG.sha256")"
+          [ "$COPY_FILES" -eq "$RECEIPT_ROWS" ] || { echo "native copy holds $COPY_FILES files against $RECEIPT_ROWS receipt rows" >&2; exit 2; }
+
+          python3 Tools/workshop_upload_plan.py --package "$DEST_PKG" --receipt "$DEST_PKG.sha256" \
+            --mode "$TAF_MODE" --expected-item "$TAF_ITEM" --expected-version "$TAF_VERSION" \
+            > "$RUN_WSL/inputs/plan.json"
+          PLAN_SHA="$(sha256sum "$RUN_WSL/inputs/plan.json" | cut -d" " -f1)"
+
+          # Change note = the annotated tag MESSAGE BODY, canonicalised exactly as the hosted job
+          # did. A digest mismatch means the two copies of that logic have drifted: fail closed.
+          NOTE_SHA="$(python3 "$RUN_WSL/inputs/change-note.py" "$TAF_TAG" "$RUN_WSL/inputs/change-note.md")"
+          [ "$NOTE_SHA" = "$TAF_EXPECTED_NOTE_SHA" ] || { echo "change note digest $NOTE_SHA differs from the hosted extraction $TAF_EXPECTED_NOTE_SHA" >&2; exit 2; }
+
+          cp -- "$DEST_PKG.sha256" "$RUN_WSL/logs/"
+          printf 'PLAN_SHA=%s\nRECEIPT_SHA=%s\n' "$PLAN_SHA" "$COPY_RECEIPT_SHA" > "$RUN_WSL/inputs/handoff.env"
+          echo "package $NAME: $COPY_FILES files, receipt $COPY_RECEIPT_SHA, plan $PLAN_SHA, note $NOTE_SHA"
+          '@
+          $inputs = Join-Path $run 'inputs'
+          foreach ($pair in @(@('01-clone.sh', $clone), @('02-gate.sh', $gate), @('03-package-plan.sh', $package), @('change-note.py', $note))) {
+            $text = ($pair[1] -replace "`r`n", "`n").TrimEnd() + "`n"
+            [IO.File]::WriteAllText((Join-Path $inputs $pair[0]), $text, $utf8)
+          }
+          Get-ChildItem -LiteralPath $inputs -File | ForEach-Object {
+            Write-Host ("{0} sha256 {1}" -f $_.Name, (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant())
+          }
+
+      - name: fresh WSL clone at the tag; prove tag object, commit and cleanliness
+        shell: cmd
+        run: |
+          wsl.exe -e bash -eo pipefail "%TAF_RELEASE_ROOT_WSL%/%TAF_RUN%/inputs/01-clone.sh"
+          if errorlevel 1 exit /b 1
+
+      - name: read-only Steam probe of the lane item (no attempt, no mutation)
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $run = Join-Path $env:TAF_RELEASE_ROOT_WIN $env:TAF_RUN
+          $probe = (Get-Content -LiteralPath (Join-Path $run 'inputs\probe-win.txt') -Raw).Trim()
+          $quote = { param($s) '"' + $s + '"' }
+          $argLine = @('-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File', (& $quote $probe),
+            '-QudRoot', (& $quote $env:TAF_QUD_ROOT_WIN), '-ItemId', $env:TAF_ITEM,
+            '-EvidenceRoot', (& $quote (Join-Path $run 'evidence-probe'))) -join ' '
+          $out = Join-Path $run 'logs\probe.stdout'
+          $err = Join-Path $run 'logs\probe.stderr'
+          $proc = Start-Process -FilePath 'powershell.exe' -ArgumentList $argLine -NoNewWindow -Wait -PassThru `
+            -RedirectStandardOutput $out -RedirectStandardError $err
+          $json = Get-Content -LiteralPath $out | Where-Object { $_ -match '^\s*\{' } | Select-Object -Last 1
+          if ($proc.ExitCode -ne 0 -or -not $json) {
+            throw "Steam probe exit $($proc.ExitCode) (3 not initialized, 4 login/licence, 5 app mismatch, 6 query, 7 not found). No attempt was created. Failing closed."
+          }
+          $report = $json | ConvertFrom-Json
+          if ($report.ownerMatch -ne $true -or $report.itemMatch -ne $true) {
+            throw "Steam probe: ownerMatch=$($report.ownerMatch) itemMatch=$($report.itemMatch). The signed-in account does not own item $env:TAF_ITEM."
+          }
+          Write-Host "probe ok: item $($report.item) visibility=$($report.visibility) manifest_version=$($report.manifest_version)"
+
+      - name: exact tagged licensed gate (portable-check, release-check --mode); output to files only
+        shell: cmd
+        run: |
+          wsl.exe -e bash -eo pipefail "%TAF_RELEASE_ROOT_WSL%/%TAF_RUN%/inputs/02-gate.sh"
+          if errorlevel 1 exit /b 1
+
+      - name: immutable package on ext4, verified native copy, upload plan and change note
+        shell: cmd
+        run: |
+          wsl.exe -e bash -eo pipefail "%TAF_RELEASE_ROOT_WSL%/%TAF_RUN%/inputs/03-package-plan.sh"
+          if errorlevel 1 exit /b 1
+
+      - name: publisher CHECK (creates no attempt) - must report checked_not_submitted
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $run = Join-Path $env:TAF_RELEASE_ROOT_WIN $env:TAF_RUN
+          $launcher = (Get-Content -LiteralPath (Join-Path $run 'inputs\launcher-win.txt') -Raw).Trim()
+          $handoff = ConvertFrom-StringData (Get-Content -LiteralPath (Join-Path $run 'inputs\handoff.env') -Raw)
+          $quote = { param($s) '"' + $s + '"' }
+          $argLine = @('-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File', (& $quote $launcher),
+            '-QudRoot', (& $quote $env:TAF_QUD_ROOT_WIN),
+            '-PlanPath', (& $quote (Join-Path $run 'inputs\plan.json')), '-PlanSHA', $handoff.PLAN_SHA,
+            '-ItemId', $env:TAF_ITEM,
+            '-ChangeNotePath', (& $quote (Join-Path $run 'inputs\change-note.md')),
+            '-ReceiptSHA', $handoff.RECEIPT_SHA,
+            '-EvidenceRoot', (& $quote (Join-Path $run 'evidence-check'))) -join ' '
+          $proc = Start-Process -FilePath 'powershell.exe' -ArgumentList $argLine -NoNewWindow -Wait -PassThru `
+            -RedirectStandardOutput (Join-Path $run 'logs\launcher-check.stdout') `
+            -RedirectStandardError (Join-Path $run 'logs\launcher-check.stderr')
+          $status = '<no report>'
+          $reportPath = Join-Path $run 'evidence-check\upload.stdout'
+          if (Test-Path -LiteralPath $reportPath) {
+            $json = Get-Content -LiteralPath $reportPath | Where-Object { $_ -match '^\s*\{' } | Select-Object -Last 1
+            if ($json) { $status = ($json | ConvertFrom-Json).status }
+          }
+          Write-Host "publisher check: exit $($proc.ExitCode) status $status"
+          if ($proc.ExitCode -ne 0 -or $status -ne 'checked_not_submitted') {
+            $hint = switch ($proc.ExitCode) {
+              2 { 'refused: argument, note, plan, receipt or package refusal. No attempt exists.' }
+              3 { 'check_refused: package or remote authority not ready. No attempt exists.' }
+              6 { 'state_root_refused: nothing was read or written.' }
+              7 { 'attempt_retained: an unfinalized attempt fences this item. Run -Finalize by hand for the previous release from its retained run directory before tagging again.' }
+              8 { 'lock_abandoned_uncertain: the item mutex was abandoned. Reconcile by hand; see Tools/WorkshopSteam/PUBLISHING.md.' }
+              default { 'launcher-level failure outside the publisher exit table.' }
+            }
+            throw "CHECK refused - $hint Failing closed."
+          }
+
+      - name: re-prove the Steam session immediately before SUBMIT (second process and probe)
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $run = Join-Path $env:TAF_RELEASE_ROOT_WIN $env:TAF_RUN
+          if (-not (Get-Process -Name steam -ErrorAction SilentlyContinue)) {
+            throw 'Steam client vanished between CHECK and SUBMIT; not submitting. No attempt was created.'
+          }
+          $probe = (Get-Content -LiteralPath (Join-Path $run 'inputs\probe-win.txt') -Raw).Trim()
+          $quote = { param($s) '"' + $s + '"' }
+          $argLine = @('-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File', (& $quote $probe),
+            '-QudRoot', (& $quote $env:TAF_QUD_ROOT_WIN), '-ItemId', $env:TAF_ITEM,
+            '-EvidenceRoot', (& $quote (Join-Path $run 'evidence-probe2'))) -join ' '
+          $out = Join-Path $run 'logs\probe2.stdout'
+          $err = Join-Path $run 'logs\probe2.stderr'
+          $proc = Start-Process -FilePath 'powershell.exe' -ArgumentList $argLine -NoNewWindow -Wait -PassThru `
+            -RedirectStandardOutput $out -RedirectStandardError $err
+          $json = Get-Content -LiteralPath $out | Where-Object { $_ -match '^\s*\{' } | Select-Object -Last 1
+          if ($proc.ExitCode -ne 0 -or -not $json) {
+            throw "Pre-submit Steam probe exit $($proc.ExitCode); not submitting. This read-only check exists because SUBMIT creates its attempt directory BEFORE the SDK is initialised, so a dead Steam session at that moment leaves an empty attempt that permanently fences the item."
+          }
+          $report = $json | ConvertFrom-Json
+          if ($report.ownerMatch -ne $true -or $report.itemMatch -ne $true) {
+            throw "Pre-submit probe: ownerMatch=$($report.ownerMatch) itemMatch=$($report.itemMatch); not submitting."
+          }
+          Write-Host "pre-submit probe ok: item $($report.item)"
+
+      - name: publisher SUBMIT (one attempt; never retried) - must report SubmittedUnverified
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $run = Join-Path $env:TAF_RELEASE_ROOT_WIN $env:TAF_RUN
+          $launcher = (Get-Content -LiteralPath (Join-Path $run 'inputs\launcher-win.txt') -Raw).Trim()
+          $handoff = ConvertFrom-StringData (Get-Content -LiteralPath (Join-Path $run 'inputs\handoff.env') -Raw)
+          $quote = { param($s) '"' + $s + '"' }
+          $argLine = @('-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File', (& $quote $launcher),
+            '-QudRoot', (& $quote $env:TAF_QUD_ROOT_WIN),
+            '-PlanPath', (& $quote (Join-Path $run 'inputs\plan.json')), '-PlanSHA', $handoff.PLAN_SHA,
+            '-ItemId', $env:TAF_ITEM,
+            '-ChangeNotePath', (& $quote (Join-Path $run 'inputs\change-note.md')),
+            '-ReceiptSHA', $handoff.RECEIPT_SHA,
+            '-EvidenceRoot', (& $quote (Join-Path $run 'evidence-submit')), '-Submit') -join ' '
+          $proc = Start-Process -FilePath 'powershell.exe' -ArgumentList $argLine -NoNewWindow -Wait -PassThru `
+            -RedirectStandardOutput (Join-Path $run 'logs\launcher-submit.stdout') `
+            -RedirectStandardError (Join-Path $run 'logs\launcher-submit.stderr')
+          $report = $null
+          $reportPath = Join-Path $run 'evidence-submit\upload.stdout'
+          if (Test-Path -LiteralPath $reportPath) {
+            $json = Get-Content -LiteralPath $reportPath | Where-Object { $_ -match '^\s*\{' } | Select-Object -Last 1
+            if ($json) { $report = $json | ConvertFrom-Json }
+          }
+          $status = if ($report) { $report.status } else { '<no report>' }
+          $meta = if ($report) { $report.metadataMatches } else { $null }
+          $attempt = if ($report) { $report.attempt } else { '<unknown>' }
+          Write-Host "publisher submit: exit $($proc.ExitCode) status $status metadataMatches=$meta attempt=$attempt"
+          $summary = "## Publisher SUBMIT`n`n- exit $($proc.ExitCode), status ``$status``, metadataMatches=$meta`n- attempt ``$attempt```n"
+          if ($proc.ExitCode -eq 0 -and $status -eq 'SubmittedUnverified' -and $meta -eq $true) {
+            $summary += "- SubmittedUnverified is NOT delivery. Human steps remain: -Finalize from this run directory, subscribed-byte check, signed-out listing inspection, load/save/reload smoke, announcement.`n"
+            [IO.File]::AppendAllText($env:GITHUB_STEP_SUMMARY, $summary)
+          } else {
+            $hint = switch ($proc.ExitCode) {
+              2 { 'refused before submission; no attempt was created.' }
+              3 { 'check_refused before submission; no attempt was created.' }
+              4 { 'NeedsUser: the SDK needs the operator, for example the Workshop legal agreement. The attempt is retained. Accept in the Steam UI, then reconcile the retained attempt by hand.' }
+              5 { 'Uncertain/Rejected: the submission MAY have reached Steam. The attempt is retained.' }
+              7 { 'attempt_retained: an unfinalized attempt already fences this item.' }
+              8 { 'lock_abandoned_uncertain: the item mutex was abandoned by an earlier holder.' }
+              10 { 'cleanup_uncertain: the proven outcome is retained under outcomeStatus.' }
+              default { 'launcher-level failure or the 210-second helper timeout: treat as uncertain. An attempt directory may exist.' }
+            }
+            $summary += "- **FAILED CLOSED**: $hint`n"
+            $summary += "- Do NOT re-run this workflow for this tag. ``submit`` creates its attempt directory before the SDK is initialised, so a refusal at or after that point leaves a retained - possibly EMPTY - attempt. An empty or partial retained attempt fences the item: every later check, submit, -Verify and -Finalize refuses it, and no tool in this repository clears it. Reconcile it by hand; the exit table and the retained-attempt rules are in ``Tools/WorkshopSteam/PUBLISHING.md``.`n"
+            [IO.File]::AppendAllText($env:GITHUB_STEP_SUMMARY, $summary)
+            throw "SUBMIT did not succeed - $hint Reconcile by hand; do not re-run."
+          }
+
+      - name: collect and redact retained evidence into the host run directory (no upload)
+        if: ${{ always() }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $run = Join-Path $env:TAF_RELEASE_ROOT_WIN $env:TAF_RUN
+          if (-not (Test-Path -LiteralPath $run -PathType Container)) {
+            Write-Host "run directory was never created; nothing to collect"
+            exit 0
+          }
+          $art = Join-Path $run 'artifact'
+          New-Item -ItemType Directory -Path $art -Force | Out-Null
+          # Text only. Never copy out/ or obj/: they hold local copies of the Steamworks SDK
+          # binaries, which are not redistributed.
+          foreach ($ev in @('evidence-probe','evidence-probe2','evidence-check','evidence-submit')) {
+            $src = Join-Path $run $ev
+            if (-not (Test-Path -LiteralPath $src -PathType Container)) { continue }
+            $dst = Join-Path $art $ev
+            New-Item -ItemType Directory -Path $dst -Force | Out-Null
+            foreach ($f in @('upload.stdout','upload.stderr','probe.stdout','probe.stderr','build.log','sdk.lock.json')) {
+              $p = Join-Path $src $f
+              if (Test-Path -LiteralPath $p -PathType Leaf) { Copy-Item -LiteralPath $p -Destination (Join-Path $dst $f) -Force }
+            }
+          }
+          $logs = Join-Path $run 'logs'
+          if (Test-Path -LiteralPath $logs -PathType Container) {
+            Get-ChildItem -LiteralPath $logs -File | ForEach-Object {
+              Copy-Item -LiteralPath $_.FullName -Destination (Join-Path $art $_.Name) -Force
+            }
+          }
+          $inputs = Join-Path $run 'inputs'
+          foreach ($f in @('plan.json','change-note.md','handoff.env','launcher-win.txt','probe-win.txt')) {
+            $p = Join-Path $inputs $f
+            if (Test-Path -LiteralPath $p -PathType Leaf) { Copy-Item -LiteralPath $p -Destination (Join-Path $art $f) -Force }
+          }
+          $utf8 = New-Object Text.UTF8Encoding($false)
+          Get-ChildItem -LiteralPath $art -Recurse -File | ForEach-Object {
+            $t = [IO.File]::ReadAllText($_.FullName)
+            $t = [regex]::Replace($t, '(?i)(\bSteam[ \t]{0,8}ID[ \t]{0,8}[:=][ \t]{0,8})[0-9]{1,20}(?![0-9])', '${1}[REDACTED]')
+            $t = [regex]::Replace($t, '\b7656119[0-9]{10}\b', '[REDACTED-STEAMID64]')
+            $t = [regex]::Replace($t, '(?i)([A-Za-z]):\\Users\\[^\\\r\n"'']+', '${1}:\Users\[REDACTED]')
+            $t = [regex]::Replace($t, '(?i)/mnt/([a-z])/Users/[^/\r\n"'']+', '/mnt/${1}/Users/[REDACTED]')
+            $t = [regex]::Replace($t, '(?i)\\\\wsl(\$|\.localhost)\\[^\\\r\n]+\\home\\[^\\\r\n]+', '\\wsl.localhost\[REDACTED]\home\[REDACTED]')
+            $t = [regex]::Replace($t, '/home/[^/\r\n"'']+', '/home/[REDACTED]')
+            [IO.File]::WriteAllText($_.FullName, $t, $utf8)
+          }
+          $count = (Get-ChildItem -LiteralPath $art -Recurse -File | Measure-Object).Count
+          Write-Host "redacted $count evidence files under the host run directory (raw originals retained beside them)"
+          [IO.File]::AppendAllText($env:GITHUB_STEP_SUMMARY, "## Evidence`n`n- $count redacted text files under ``$art`` on the Steam host. Nothing is uploaded from that machine.`n")
+
+  verify:
+    # Post-upload observation only. -Verify reads one subscribed installation and writes NO
+    # installation or finalization records, so this job is safe to re-run once Steam has delivered
+    # the update. -Finalize stays a human step from the retained run directory: it writes immutable
+    # records, needs the identical plan/package/paths, and its failure poisons the item's history.
+    name: post-upload installed verification (-Verify, writes no records)
+    needs: [release-checks, publish]
+    if: ${{ !cancelled() && needs.publish.result == 'success' }}
+    runs-on: [self-hosted, windows, taf-steam]
+    # 20-minute polling budget, plus one in-flight launcher run (each mode recompiles its helper
+    # inside a 210-second budget), plus redaction. Raise both together or neither.
+    timeout-minutes: 40
+    defaults:
+      run:
+        shell: powershell
+    env:
+      TAF_ITEM: ${{ needs.release-checks.outputs.item }}
+      TAF_RUN_DIR: ${{ needs.publish.outputs.run_dir_win }}
+    steps:
+      - name: verify one subscribed installation against the submitted package
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $run = $env:TAF_RUN_DIR
+          if ([string]::IsNullOrWhiteSpace($run) -or -not (Test-Path -LiteralPath $run -PathType Container)) {
+            throw "publish run directory is missing: '$run'"
+          }
+          $launcher = (Get-Content -LiteralPath (Join-Path $run 'inputs\launcher-win.txt') -Raw).Trim()
+          $handoff = ConvertFrom-StringData (Get-Content -LiteralPath (Join-Path $run 'inputs\handoff.env') -Raw)
+          $quote = { param($s) '"' + $s + '"' }
+
+          # -Verify reads the locally SUBSCRIBED installation. Steam has NOT built and delivered the
+          # new bytes at the moment SUBMIT returns, so a single immediate attempt reports a failed
+          # workflow run for every genuine release - on a lane whose doctrine is "do not re-run this
+          # workflow for that tag", with "Re-run all jobs" one click from "Re-run failed jobs".
+          # Poll instead, on a bounded budget. This is safe to repeat: PUBLISHING.md records that
+          # -Verify writes no installation or finalization records, and each attempt gets its own
+          # fresh empty -EvidenceRoot as the launcher requires.
+          $budget = New-TimeSpan -Minutes 20
+          $interval = New-TimeSpan -Seconds 120
+          $started = Get-Date
+          $attempt = 0
+          $status = '<no report>'
+          $exitCode = -1
+          $passed = $false
+          while (-not $passed) {
+            $attempt++
+            $evidence = Join-Path $run "evidence-verify-$env:GITHUB_RUN_ATTEMPT-$attempt"
+            if (Test-Path -LiteralPath $evidence) { throw "verification evidence directory already exists: $evidence" }
+            New-Item -ItemType Directory -Path $evidence | Out-Null
+            $argLine = @('-NoProfile','-NonInteractive','-ExecutionPolicy','Bypass','-File', (& $quote $launcher),
+              '-QudRoot', (& $quote $env:TAF_QUD_ROOT_WIN),
+              '-PlanPath', (& $quote (Join-Path $run 'inputs\plan.json')), '-PlanSHA', $handoff.PLAN_SHA,
+              '-ItemId', $env:TAF_ITEM,
+              '-ChangeNotePath', (& $quote (Join-Path $run 'inputs\change-note.md')),
+              '-ReceiptSHA', $handoff.RECEIPT_SHA,
+              '-EvidenceRoot', (& $quote $evidence), '-Verify') -join ' '
+            $out = Join-Path $run "logs\launcher-verify-$env:GITHUB_RUN_ATTEMPT-$attempt.stdout"
+            $err = Join-Path $run "logs\launcher-verify-$env:GITHUB_RUN_ATTEMPT-$attempt.stderr"
+            $proc = Start-Process -FilePath 'powershell.exe' -ArgumentList $argLine -NoNewWindow -Wait -PassThru `
+              -RedirectStandardOutput $out -RedirectStandardError $err
+            $report = $null
+            $reportPath = Join-Path $evidence 'upload.stdout'
+            if (Test-Path -LiteralPath $reportPath) {
+              $json = Get-Content -LiteralPath $reportPath | Where-Object { $_ -match '^\s*\{' } | Select-Object -Last 1
+              if ($json) { $report = $json | ConvertFrom-Json }
+            }
+            $status = if ($report) { $report.status } else { '<no report>' }
+            $exitCode = $proc.ExitCode
+            $passed = ($exitCode -eq 0 -and $status -eq 'SubscribedInstallationVerified')
+            Write-Host "verify attempt ${attempt}: exit $exitCode status $status"
+            if ($passed) { break }
+            if (((Get-Date) - $started) + $interval -ge $budget) { break }
+            Start-Sleep -Seconds ([int]$interval.TotalSeconds)
+          }
+          $waited = [int]((Get-Date) - $started).TotalMinutes
+          [IO.File]::AppendAllText($env:GITHUB_STEP_SUMMARY, "## -Verify`n`n- exit $exitCode, status ``$status`` after $attempt attempt(s) over ~$waited min. One subscribed client only; freshTransferVerified and releaseReady stay false by design.`n")
+          if (-not $passed) {
+            throw "Installed verification did not pass within the $($budget.TotalMinutes)-minute budget (last: exit $exitCode, $status). Steam may simply not have delivered the update yet. The submission still stands and NO record was written. Re-run ONLY this job (Re-run failed jobs) once Steam reports the update live - never Re-run all jobs, which would re-take the environment approval, re-burn the licensed gate, and stop at the retained-attempt fence. Verifying by hand from the retained run directory is equally valid."
+          }
+
+      - name: redact the verification evidence into the host run directory (no upload)
+        if: ${{ always() }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $run = $env:TAF_RUN_DIR
+          if ([string]::IsNullOrWhiteSpace($run) -or -not (Test-Path -LiteralPath $run -PathType Container)) {
+            Write-Host "publish run directory is unavailable; nothing to redact"
+            exit 0
+          }
+          $art = Join-Path $run 'artifact'
+          New-Item -ItemType Directory -Path $art -Force | Out-Null
+          # The verify step polls, so there is one evidence directory and one stdout/stderr pair per
+          # polling attempt. Collect them all; a failed run's last attempt is the interesting one.
+          $sources = @()
+          Get-ChildItem -LiteralPath $run -Directory -Filter "evidence-verify-$env:GITHUB_RUN_ATTEMPT-*" -ErrorAction SilentlyContinue | ForEach-Object {
+            foreach ($f in @('upload.stdout','upload.stderr','build.log')) {
+              $p = Join-Path $_.FullName $f
+              if (Test-Path -LiteralPath $p -PathType Leaf) { $sources += $p }
+            }
+          }
+          $logs = Join-Path $run 'logs'
+          if (Test-Path -LiteralPath $logs -PathType Container) {
+            Get-ChildItem -LiteralPath $logs -File -Filter "launcher-verify-$env:GITHUB_RUN_ATTEMPT-*" -ErrorAction SilentlyContinue | ForEach-Object {
+              $sources += $_.FullName
+            }
+          }
+          $utf8 = New-Object Text.UTF8Encoding($false)
+          foreach ($src in $sources) {
+            $t = [IO.File]::ReadAllText($src)
+            $t = [regex]::Replace($t, '(?i)(\bSteam[ \t]{0,8}ID[ \t]{0,8}[:=][ \t]{0,8})[0-9]{1,20}(?![0-9])', '${1}[REDACTED]')
+            $t = [regex]::Replace($t, '\b7656119[0-9]{10}\b', '[REDACTED-STEAMID64]')
+            $t = [regex]::Replace($t, '(?i)([A-Za-z]):\\Users\\[^\\\r\n"'']+', '${1}:\Users\[REDACTED]')
+            $t = [regex]::Replace($t, '(?i)/mnt/([a-z])/Users/[^/\r\n"'']+', '/mnt/${1}/Users/[REDACTED]')
+            $t = [regex]::Replace($t, '(?i)\\\\wsl(\$|\.localhost)\\[^\\\r\n]+\\home\\[^\\\r\n]+', '\\wsl.localhost\[REDACTED]\home\[REDACTED]')
+            $t = [regex]::Replace($t, '/home/[^/\r\n"'']+', '/home/[REDACTED]')
+            # Prefix with the containing directory so per-attempt upload.stdout files cannot collide.
+            $dst = Join-Path $art ([IO.Path]::GetFileName([IO.Path]::GetDirectoryName($src)) + '-' + [IO.Path]::GetFileName($src))
+            [IO.File]::WriteAllText($dst, $t, $utf8)
+          }
+          Write-Host "redacted $($sources.Count) verification files under $art"

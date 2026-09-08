@@ -27,15 +27,41 @@ entirely (the sole collaborator can never approve their own PR); PR-based integr
 policy, enforced by the required status checks, linear history and `enforce_admins`, which is now
 ON. Required checks (repository-audit, plus the full pure and portable test lanes on
 `ubuntu-latest` and `windows-latest`, strict), linear history, no force-push, no deletion and
-required conversation resolution all remain. The `dev` integration branch now exists on
-origin, created at `6f73974` and currently at `736d28c`, so the branch model in
-[RELEASING.md](RELEASING.md#branch-model) is in force: feature work targets `dev` and `main`
-receives release merges. Earlier
-sections below record the pre-merge state at their own checkpoints and are not restated here.
+required conversation resolution all remain. The `dev` integration branch now exists on origin, is the repository default branch, created at `6f73974` and currently at `736d28c`. It is protected with the same three required checks, linear history, required conversation resolution and no force-push/deletion, but with `enforce_admins` off and without the strict up-to-date requirement, so the branch model in
+[RELEASING.md](RELEASING.md#branch-model) is in force rather than proposed: feature work targets `dev` and `main` receives release merges. Earlier sections below record the pre-merge state at their own checkpoints and are not restated here.
 
 Annotated `v0.3.1` still targets `a46b5ad`; `main` is now one squash commit ahead of that tag.
 Public0.3.1 and its published bytes are unchanged. Windows and native lanes are being re-run for
 the current bytes; those receipts are pending and are not claimed here.
+
+## Automated release lane
+
+Workflow **authored, not yet exercised.** `.github/workflows/release.yml` adds a tag-triggered
+Steam Workshop release lane under the author ruling of 2026-09-08 recorded in
+[RELEASING.md](RELEASING.md#author-ruling-2026-09-08--automated-release-lane-and-the-doctrine-it-amends).
+No pipeline release has run; every claim below is a configuration fact, not a release result.
+
+Verified against the GitHub API on 2026-09-08:
+
+| Setting | State |
+| --- | --- |
+| Environment `steam-workshop` | required reviewer + branch/tag policy; deployment tag pattern `v*` |
+| Environment `steam-workshop-staging` | required reviewer + branch/tag policy; deployment tag pattern `staging-v*` |
+| Tag ruleset "release tags" | active; restricts creation, update and deletion of `refs/tags/v*` and `refs/tags/staging-v*`; bypass limited to the repository admin role |
+| Fork pull-request workflows | approval required for all external contributors |
+| Workflow permissions | read-only; pull-request approval by Actions disabled |
+| Repository secrets for the lane | none, by design; no Steam credential exists in GitHub |
+| Self-hosted runners | **0 registered.** The `taf-steam` runner is not installed yet, so the pipeline cannot run |
+
+Two environment settings are still open: `can_admins_bypass` is `true` on both environments and
+should be turned off so the approval cannot be skipped, and the "prevent self-review" option must
+stay off, because the sole collaborator both pushes the tag and approves the deployment.
+
+Open before the first pipeline release: register and start the `taf-steam` runner per the runbook
+in [RELEASING.md](RELEASING.md#steam-host-runner-runbook); rule on the merge method for release
+pull requests, since the currently enabled squash-only merge rewrites the receipt-binding commit
+that the packager requires as an ancestor of the tagged `main` commit; and run the first
+`staging-v0.3.2` release, recording its run id, attempt number and finalization SHA here.
 
 ## Unreleased empty-camp legacy and native water regression
 
