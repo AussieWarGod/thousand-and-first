@@ -21,20 +21,23 @@ published arrival debt/opportunities, open Prepared/Intent/Proved clock leases, 
 continuation and field-clock evidence; successful results round-trip canonically. Stale
 owners, contradictory unbacked clocks, disabled states and overflow remain tested refusals.
 No fixture callback witness establishes actual physical creation, ordinary play or save/load.
-Current production digest `81cde5ba52c3f5b75adf1df39ca0e9aecadb2a42e4a632501d1165918e2f98ae`
-passes the exact structural gate. Full Windows1814 passed13,715 main/5,093 Portable cases,
-zero skips. Canonical53744 passed all four modes: ordinary3045/3049,developer3177/3181,
-132 Harness files,plus installed Hearthpyre ABI. Repository71120 passed501 tooling tests
+Current production digest `fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`
+passes the exact structural gate. For this digest the engine-free suites passed13,720 main/5,098
+Portable cases, zero skips, and Roslyn 9.0.306 on Linux compiled the staged baseline and staged
+compatibility sets clean against the licensed Managed references with warnings as errors. The
+Windows1814 run of13,715 main/5,093 Portable cases and Canonical53744's four modes
+(ordinary3045/3049,developer3177/3181,132 Harness files,plus installed Hearthpyre ABI) belong to
+the retained `a3a9c8dd` digest, NOT to this one: the two dev-harness modes and the Windows gate did
+not run here. Repository71120 passed501 tooling tests
 and all repository audits. Hosted integration checks remain separate.
 "All four modes" names `Tools/gate.sh`'s staged baseline, staged compatibility, dev-harness
 baseline and dev-harness compatibility compiles. The shared `DevTests/refs.rsp` sets
 `-langversion:latest`, so those compiles are not pinned to C# 7.3; `LangVersion` 7.3 is pinned
 only in `DevTests/Engine*/Probe.csproj` and `Tools/WorkshopSteam/*.csproj`. Retained sections
 below keep their original wording as written at their own checkpoints.
-Canonical compilation runs across 3050 production C# sources; the generated
-cold-install inventory contains 3081 files. Neither count proves subscriber delivery.
-The four-mode canonical run above covered the 3049-source inventory that preceded the camp
-guide topics; that source addition has engine-free Linux suite evidence only.
+Staged compatibility compilation runs across 3051 production C# sources, staged baseline across
+3047 (the optional-mod bridge is a compatibility-only source); the generated
+cold-install inventory contains 3082 files. Neither count proves subscriber delivery.
 [Native/focused evidence](/mnt/c/taf-master-growth-native.sP00c6/README.md).
 
 ## Retained real-turn recovery validation
@@ -696,7 +699,6 @@ save/reload, destruction-veto callback, ordinary-play anchor, or compatibility m
 | QSB3 | Reject or move a fresh food/material child during insertion; repeat with a callback throwing before and after placement | Known fresh roots and children are cleaned up by exact reference, including moved/rejected children; unknown factory custody fences retry |
 | QSB4 | Insert foreign contents during a failed attempt, or refuse destruction; save/reload and re-enter | Foreign objects survive untouched; `r_TAF_QuickstartQuarantine_v1` persists and replacement grants remain forbidden, including after attended removal/reinstallation |
 | QSB5 | Interrupt receipt publication after exact grant verification, then reload | The verified physical grant survives; recovery publishes its existing identity without allocating replacements |
-| QSB6 | With the advisor enabled, talk to the camp guide: read the opening line, open each of the five topics, return to the opening from each, then end with the farewell; save, reload, and talk again | Five topics, in the fixed order, each answering and returning; no answer promises an arrival, hands, or a completed building; the same graph survives reload and the advisor still verifies |
 
 QSB2 water-capacity case passed natively on 2026-09-07 at13:53UTC. The real `CreateWater`
 receives an entered-cell capacity64→32 fault, refuses verification and removes its original

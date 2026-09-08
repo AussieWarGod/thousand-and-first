@@ -56,7 +56,7 @@ namespace ThousandAndFirst
 
 		public static readonly string[] CustomZoneParts = new string[]
 		{
-			"KingdomAssentingWardAuthority"
+			"KingdomAssentingWardAuthority", "KingdomClaimedGroundLight"
 		};
 
 		public static readonly string[] CustomGameStateSingletons = new string[]

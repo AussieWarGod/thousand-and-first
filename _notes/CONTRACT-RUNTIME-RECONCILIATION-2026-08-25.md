@@ -10,7 +10,17 @@ file; no receipt phase, wire, option, grant or verifier predicate changes, and e
 keep the one-node guide. Engine-free suites pass13722 main/5100 Portable,zero skips on Linux
 .NET9.0.306. No native, four-mode compile or human semantic-review evidence binds this digest.
 
-## Current master-growth resume census — 2026-09-07
+## Current claimed-ground light census — 2026-09-08
+
+3051 production C# files;3,082 cold-install files in the generated inventory;
+432,024 physical lines,1417 direct-XRL,zero cap failures. Exact digest
+`fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`.
+Presentation only: a mod-owned zone part raises the founder's own claimed zone to the torch
+light tier per rendered frame and remembers its floor once per activation. No wire, no saved
+field, no new completion authority. The staged baseline and compatibility sets compile clean under
+Roslyn 9.0.306 on Linux; the dev-harness modes, the Windows gate and any native run did not.
+
+## Retained master-growth resume census — 2026-09-07
 
 3049 production C# files;3,080 cold-install files in the generated inventory;
 431,893 physical lines,1415 direct-XRL,zero cap failures. Exact digest
