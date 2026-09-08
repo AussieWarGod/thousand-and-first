@@ -20,10 +20,10 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
-The claimed-ground light reports 3051 staged production C# files and 432,014 physical lines.
+The claimed-ground light reports 3051 staged production C# files and 432,024 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`79b3f18874f4cd1270f145f2e6f857c6c4fce521bf65687fea5dc3552a999af0`. The census reports
+`fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`. The census reports
 1417 files with direct `XRL` imports; 0 of those exceed the line limit.
 
 The delta over the retained draft below is two added production files &mdash; a mod-owned

@@ -28,9 +28,15 @@ namespace XRL.World.ZoneParts
 			// Presentation only, and only where the founder actually is: a claimed zone the founder
 			// is not standing in pays nothing at all. The option is read here as well as at the
 			// activation that attaches the part, so switching it off goes dark on the next frame
-			// instead of waiting for the visit that removes the part.
+			// instead of waiting for the visit that removes the part. The founder is checked for
+			// existence first because this runs on the render dispatch: the engine sends
+			// BeforeRenderEvent before it touches the player itself (D/XRL/Core/XRLCore.cs:2507),
+			// and Zone.HasObject dereferences what it is handed (D/XRL/World/Zone.cs:3365-3368),
+			// so a frame drawn with no player must be a frame this part does nothing on rather
+			// than a null reference thrown out of the renderer.
 			if (ParentZone != null
 				&& ThousandAndFirst.KingdomClaimedGround.Enabled
+				&& The.Player != null
 				&& ParentZone.HasObject(The.Player))
 				ParentZone.AddLight(LightLevel.Light);
 			return base.HandleEvent(E);

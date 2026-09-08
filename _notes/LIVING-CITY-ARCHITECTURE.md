@@ -1602,9 +1602,11 @@ own surfaces classify as seen.
 
 **Where it is decided.** `ThousandAndFirst.KingdomClaimedGround.ReconcileZone` runs in the one
 semantic activation guard, after the ward and before the attended settlement pass. Ground that is
-not in `ClaimedZones`, ground two settlements both answer for, and the option switched off all take
-the part off instead; secession, exile and a claim let go therefore revoke the light on the next
-visit. No claim is ever thawed to be lit — the current zone only.
+not in `ClaimedZones`, ground two settlements both answer for, the option switched off, and a realm
+the master gate has stopped all take the part off instead; secession, exile and a claim let go
+therefore revoke the light on the next visit. A standing light is a standing effect rather than
+queued work, which is why a stopped realm loses it here instead of keeping it until something else
+changes. No claim is ever thawed to be lit — the current zone only.
 
 **What it costs, and what it cannot take back.** The budget row in §0.0 is the contract: at most
 2,000 cell light-mixes per rendered frame, and only in the zone the founder occupies. The part is

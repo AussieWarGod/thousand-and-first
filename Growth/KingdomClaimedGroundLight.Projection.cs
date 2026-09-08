@@ -21,11 +21,16 @@ namespace ThousandAndFirst
 		public static bool Enabled => Options.GetOption(OptionId, "Yes") != "No";
 
 		/// <summary>One activation of one zone the seat claims. Attaches the light when the option
-		/// stands and the realm may still take work, and revokes it in every other case.</summary>
+		/// stands and the realm may still take work, and revokes it in every other case: a claim
+		/// the seat no longer holds, ground two settlements both answer for, the option switched
+		/// off, and a realm the master gate has stopped. A standing light is a standing effect,
+		/// not queued work, so a stopped realm loses it here rather than keeping it until the
+		/// option or the claim happens to change.</summary>
 		internal static void ReconcileZone(KingdomSystem System, Zone Zone)
 		{
 			if (System == null || Zone == null) return;
-			if (!Enabled || System.ClaimedZones == null
+			if (!Enabled || !KingdomMaster.NewWorkAllowed(System)
+				|| System.ClaimedZones == null
 				|| !System.ClaimedZones.Contains(Zone.ZoneID))
 			{
 				RemoveZone(Zone);
@@ -39,7 +44,6 @@ namespace ThousandAndFirst
 				RemoveZone(Zone);
 				return;
 			}
-			if (!KingdomMaster.NewWorkAllowed(System)) return;
 			KingdomClaimedGroundLight light = Zone.GetPart<KingdomClaimedGroundLight>();
 			if (light == null)
 			{

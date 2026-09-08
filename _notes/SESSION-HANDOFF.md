@@ -2,12 +2,14 @@
 
 ## Current unreleased claimed-ground light
 
-3051 staged sources;432,014 physical lines;1417 direct-XRL;zero cap failures;3082 generated
-cold-stage files. Exact inventory `79b3f18874f4cd1270f145f2e6f857c6c4fce521bf65687fea5dc3552a999af0`.
+3051 staged sources;432,024 physical lines;1417 direct-XRL;zero cap failures;3082 generated
+cold-stage files. Exact inventory `fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`.
 A mod-owned zone part lights the claimed zone the founder stands in, gated on the new
 `r_TAF_OptionClaimedGroundLight` (default Yes) and revoked from the same activation guard.
-Engine-free suites pass 13,719 main cases; doc-freshness, structure, architecture and the
-Tools suites pass. No compile, no native run and no Windows gate ran for this delta.
+Engine-free suites pass 13,720 main and 5,098 Portable cases, zero skips; doc-freshness,
+structure, architecture and the Tools suites pass. Roslyn 9.0.306 on Linux compiles the staged
+baseline and compatibility sets clean. No dev-harness mode, no native run and no Windows gate ran
+for this delta.
 
 ## Retained unreleased master-growth resume correction
 

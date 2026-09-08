@@ -29,13 +29,15 @@ below it.
   saved field, wire or public API change, and a save loaded without the mod is dark again.
 
 > **Current unreleased census — exact structural gate passed.** Current 3051-file census is line-cap green:
-> 432,014 physical lines,zero files at or above300; direct `XRL`
+> 432,024 physical lines,zero files at or above300; direct `XRL`
 > imports occur in 1417 files, 0 of them over the line limit. Inventory SHA-256:
-> `79b3f18874f4cd1270f145f2e6f857c6c4fce521bf65687fea5dc3552a999af0`.
+> `fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`.
 > The generated cold-install inventory contains 3082 files; no new subscription claim.
-> Engine-free suites and the repository tooling suites pass. No compile, native run or
-> Windows gate ran for this delta, and the exact-inventory human semantic review is open
-> against the new digest. This is not Beta sign-off.
+> Engine-free suites and the repository tooling suites pass. Roslyn 9.0.306 on Linux compiled the
+> staged baseline (3047 sources) and staged compatibility (3051 sources) sets clean against the
+> licensed Managed references, warnings as errors. The two dev-harness modes, the Windows gate and
+> any native run did NOT happen for this delta, and the exact-inventory human semantic review is
+> open against the new digest. This is not Beta sign-off.
 
 > **Retained unreleased master-resume census — exact structural gate passed.** Its3049-file census is line-cap green:
 > 431,893 physical lines,zero files at or above300,1415 direct-XRL imports. Inventory SHA-256:
