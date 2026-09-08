@@ -50,10 +50,11 @@ tools described below.
 
 `v*` and `staging-v*` tags are release triggers reserved to the maintainer and restricted by a
 repository tag ruleset. Contributors never push tags. Pushing one starts the Steam Workshop
-release pipeline against the maintainer's own machine, so a pull request must never add or edit a
-workflow that targets the `taf-steam` runner label. Fork pull-request workflows require maintainer
-approval and never run on that host. The full procedure is in
-[docs/RELEASING.md](docs/RELEASING.md).
+release pipeline against the maintainer's own machine, so an outside-contributor pull request must
+never add or edit a workflow that targets the `taf-steam` runner label; the maintainer lands such
+workflow changes only through their own reviewed pull request with the required checks. Fork
+pull-request workflows require maintainer approval and never run on that host. The full procedure
+is in [docs/RELEASING.md](docs/RELEASING.md).
 
 ## Local checks
 

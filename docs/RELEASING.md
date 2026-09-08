@@ -732,7 +732,10 @@ runner as a Windows service.
 5. **Mint a one-hour registration token** from any machine with `gh`:
    `gh api -X POST repos/AussieWarGod/thousand-and-first/actions/runners/registration-token --jq .token`.
    Never store it anywhere durable.
-6. **Configure interactively**, with no `--runasservice` and no `--windowslogonaccount`:
+6. **Configure the runner (non-interactive `config.cmd`, run from the desktop session):** the
+   runner must **run** in the author's interactive desktop session — never as a Windows service —
+   but this one-time `config.cmd` step itself is non-interactive: `--unattended` supplies every
+   answer, with no `--runasservice` and no `--windowslogonaccount`:
    `.\config.cmd --url https://github.com/AussieWarGod/thousand-and-first --token <TOKEN> --name taf-steam-gamingpc --labels taf-steam --work _work --unattended --replace`.
    The `self-hosted`, `windows` and `x64` labels are added automatically; the workflow targets
    `[self-hosted, windows, taf-steam]`. `--ephemeral` would accept exactly one job, and a release
