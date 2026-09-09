@@ -5,17 +5,28 @@ Kingdom Quickstart is an optional new-game mode for testing or learning The Thou
 ## Start a world
 
 1. Before creating the world, set **The Thousand and First: place a benefit-free camp guide...** to Yes or No. The choice is read during world creation; changing it later does not add or remove the guide.
+1. Before creating the world, set **The Thousand and First: found new Kingdom Quickstart worlds with four settlers already on the roll** to Yes or No. This choice is also read during world creation, and it is frozen there: turning it on later never gives an existing world founders, and turning it off later never takes a cohort away from one that has them.
 2. Choose **New Game**, then **Kingdom Quickstart**.
 3. Build a character normally.
 4. Choose one reviewed holding camp:
    - **Reedwake** — salt marsh.
    - **Riftside** — desert canyon.
    - **Saltwake** — salt dunes.
-5. Enter the world. After placement, the ordinary founding transaction creates the first heart and city identity, and two tent-row lots are staked west of the supply column.
+5. Enter the world. After placement, the ordinary founding transaction creates the first heart and city identity, two tent-row lots are staked west of the supply column, and — with the founders option on — four founding citizens are placed on the approach.
 
 Each successful camp physically contains 24 drams of fresh water in dedicated casks, 12 style-appropriate meals in a larder, and a chest containing 1 mud, 3 brush, and 4 timber. These are finite objects and items. They grant no hidden production and replenish only through ordinary settlement work.
 
 The optional named camp guide explains this opening inventory and answers five fixed questions: how the place was founded and what ground is held, how anything gets built, water and the stores, whether anyone will come, and petitions and raiders. Every answer returns to the opening, and the guide says plainly that he is not on the roll and is not counted, that hands come off the roll, and that nobody new stays unless a roof stands with room left in it. He never states how many people the settlement currently counts, so the guide stays accurate however a camp is seeded. The guide is passive and immobile, carries no stock, awards no experience, provides no labour, staffing, support, or defence, and is not a citizen.
+
+## The four founders
+
+With the founders option on, a new world is founded with four settlers already standing on the approach east of the supply column: a hand, a drifter, a tinker and a physicker, named in one culture per camp. They are enrolled as citizens under a `Founding` reason that only this bootstrap can emit — the ordinary founding rite still enrols nobody — and they are on the roll at turn 1, so the settlement has labour before the first traveller is due.
+
+- **They arrive together or not at all.** Their bodies and every piece of gear they carry are raised inside one custody scope, so a failure anywhere takes all four and all their gear back off the map and leaves the world exactly as it was; the next load retries from a clean slate.
+- **They sleep rough at first.** A home is a bed only once its roof stands, and the two tent rows take about a day and a half. Four unhoused settlers against a six-day grace is comfortable, but the charter will say so plainly, and the first attended pass will warn about each of them by name.
+- **They drink.** Four settlers at a camp drink 4 drams a day, so the 24 drams you start with last six days. Four is below the five living residents the water ladder wants, so the camp stage does not change on their account; the first arrival is what moves it.
+- **The first traveller is later, not sooner.** The clock is 3600 ticks plus 600 for every settler already living there, so with four founders the first guest is due at 6000 ticks rather than 3600.
+- **A short party is said once.** If a named founder cannot be found when the irreversible half runs — only reachable through a crash mid-seed — the world says so once, keeps whoever did arrive, and never retries. It never quietly stands at one, two or three founders without telling you.
 
 ## What happens next
 
@@ -32,6 +43,7 @@ Two tent rows are staked at founding, granted free: the stores above are unchang
 ## Safety and compatibility
 
 - A world started before this version keeps the opening it was given. Its receipt is the older shape, so no tent-row lots are staked for it and nothing it already holds is put at risk by the new ones.
+- A world founded before founders existed never gains them. Its receipt decodes with no cohort, re-encodes byte for byte as it was written, and reports itself finished on every load, zone activation and end-turn wake. A world founded with the founders option off is written the same way and is indistinguishable from it.
 - The selected parasang is reserved before dynamic villages, lairs, or encounters claim it. Only the heart apron, supply approach, the two shelter lots, and the two-cell approach each lot's door opens onto are prepared; the rest of the wilderness remains intact. Nearby danger is still possible.
 - Creatures, loose items, and liquid-bearing objects on required cells are relocated when safe. Stairs or an unsafe preparation result stop the bootstrap.
 - Kingdom Quickstart never offers legacy realm inheritance in the same world. Use another supported mode to test inheritance.
@@ -44,4 +56,4 @@ Two tent rows are staked at founding, granted free: the stores above are unchang
   recovery. Its only mutable member is explicitly non-serialized; the checksummed game-state
   receipt above remains the sole durable authority. Quickstart adds no custom player part.
 
-This alpha flow does not promise a combat-free start, staffed production, citizens, a finished tent on the first night, custom Quickstart art, or compatibility with saves created before the mode existed. If zoning or the authored-ground preflight refuses a shelter lot, the bootstrap stops there and says so rather than promising a roof it did not stake; because the lots are staked before the stores are granted, that refusal also means no casks, larder, materials chest or advisor for that world.
+This alpha flow does not promise a combat-free start, staffed production, a finished tent on the first night, custom Quickstart art, or compatibility with saves created before the mode existed. If zoning or the authored-ground preflight refuses a shelter lot, the bootstrap stops there and says so rather than promising a roof it did not stake; because the lots are staked before the stores are granted, that refusal also means no casks, larder, materials chest or advisor for that world.

@@ -10,6 +10,24 @@ below it.
 
 ## Unreleased — Beta gap report
 
+### Added
+
+- Kingdom Quickstart now founds a world with four founding citizens — a hand, a drifter, a tinker
+  and a physicker of one culture per camp — enrolled under a new `Founding` reason that only this
+  bootstrap can emit, on the roll and able to work at turn 1, standing on the approach. They arrive
+  together or not at all: the bodies and all their gear are raised inside one custody scope, so a
+  failure anywhere takes all four back off the map and the next load retries from a clean slate.
+  They sleep rough until the two tent rows stand (about a day and a half) against a six-day grace,
+  and the completion notice and the charter both say so. Four at a camp drink 4 drams a day, so the
+  opening 24 drams last six days, and the first traveller is due at 6000 ticks rather than 3600.
+  A save cut part-way through the irreversible half resumes founder by founder and completes to
+  exactly four, with the roll and the origin tally at four and not eight; a named founder that
+  cannot be found afterwards is announced once and never retried, and the world says it is short
+  rather than quietly standing at one, two or three. A world founded before this change, or founded
+  with the new option off, decodes with no cohort, re-encodes byte for byte as it was written, is
+  finished on every wake, and never gains founders. New option `r_TAF_OptionQuickstartFounders`,
+  default Yes, read once when the world is made and frozen there.
+
 ### Docs
 
 - Landed the 2026-09-09 Beta gap report (`docs/BETA-GAP-REPORT-2026-09-09.md`), re-read against the
