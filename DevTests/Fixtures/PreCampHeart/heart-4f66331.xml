@@ -12,10 +12,15 @@
   palette, map, plan, pose and catalogue row stays current, which is exactly the mixed world an
   old save loads into.
 
+  The root tag is deliberately NOT <KingdomArchitectures>: every tool that enumerates authored
+  architecture walks the whole checkout for that tag (Tools/gallery_cases.py:77-86), and a
+  fixture that answered to it would be counted as a ninth shipped stream and double every heart
+  case in the gallery census. This file is read by exactly one caller, by path.
+
   If the heart maps are ever REPLACED again, this file stays as it is: it records a shipped
   past, not an intention.
 -->
-<KingdomArchitectures>
+<KingdomArchitecturesBaselineFixture>
   <palette Key="civic-heart-natural">
     <slot Key="ground" Blueprint="DirtFloor" Role="rite-ground" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="path" Blueprint="DirtPath" Role="trodden-ring" Material="mud" MinTech="hands" Natural="yes" />
@@ -298,4 +303,4 @@
       </tier>
     </binding>
   </plan>
-</KingdomArchitectures>
+</KingdomArchitecturesBaselineFixture>
