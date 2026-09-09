@@ -27,19 +27,30 @@ TAF_DIAGNOSTIC = re.compile(
     rb"|(?i:^[ \t]*(?:at|---).*thousandandfirst[.:])")
 
 
-# A retained non-TAF diagnostic line is decoded (UTF-8, replacement on error) and cut to this many
+# A retained diagnostic line is decoded (UTF-8, replacement on error) and cut to this many
 # characters before being folded into the caller's report -- it is not kept verbatim.
 RETAINED_LINE_MAX_CHARS = 500
 
+# Lenient tag-only match for the verdict LABEL below -- distinct from the fatal contract above.
+# A retained "[TAF] ... refused (...)" line names this mod but is correctly non-fatal because
+# "refused" is deliberately not one of TAF_DIAGNOSTIC's fatal keywords; label_retained() uses
+# this to report such a line as TAF-tagged non-fatal rather than mislabeling it as a third
+# party's diagnostic.
+TAF_TAGGED = re.compile(r"(?i:\[taf\]|thousandandfirst|the thousand and first)")
+
 
 def diagnostics(raw: bytes) -> list[str]:
-    """Enforce the TAF-only contract over a whole Player.log; return retained non-TAF lines.
+    """Enforce the TAF-only contract over a whole Player.log; return retained diagnostic lines.
 
-    Raises on the first TAF-tagged MODERROR/MODWARN or TAF exception/stack frame. Any other
-    diagnostic-shaped line (a third party's own MODWARN/MODERROR/WARN/ERROR/Exception) is
-    collected here -- decoded (UTF-8, replacement on error) and truncated to
-    RETAINED_LINE_MAX_CHARS characters, not verbatim -- for the caller to fold into its report;
-    it is never fatal. A line matching neither diagnostic pattern is never decoded.
+    Raises on the first TAF-tagged MODERROR/MODWARN or TAF exception/stack frame -- that is the
+    only thing this contract treats as fatal. Every other diagnostic-shaped line is collected
+    here -- decoded (UTF-8, replacement on error) and truncated to RETAINED_LINE_MAX_CHARS
+    characters, not verbatim -- for the caller to fold into its report; it is never fatal. This
+    includes lines that name this mod but aren't one of the two fatal shapes above (for example
+    a "[TAF] ... refused (...)" line: ours, but not a MODERROR/MODWARN/exception/stack frame),
+    as well as a genuine third party's own MODWARN/MODERROR/WARN/ERROR/Exception. Callers use
+    label_retained() below to report the two groups distinctly rather than lumping both under
+    "non-TAF". A line matching neither diagnostic pattern is never decoded.
     """
     retained = []
     for line in raw.replace(b"\r\n", b"\n").split(b"\n"):
@@ -50,6 +61,26 @@ def diagnostics(raw: bytes) -> list[str]:
         require(not is_taf, "native log reported a Thousand and First diagnostic: " + text)
         retained.append(text)
     return retained
+
+
+def label_retained(retained: list[str]) -> str:
+    """Render retained diagnostic lines as a verdict-string suffix.
+
+    Splits retained lines by whether each is TAF-tagged (ours, e.g. a "[TAF] ... refused" line
+    -- retained because it is non-fatal by disposition, not because it belongs to a third
+    party) or a genuine third-party diagnostic, and labels each group accordingly. Returns ""
+    when there is nothing retained.
+    """
+    if not retained:
+        return ""
+    tagged = [line for line in retained if TAF_TAGGED.search(line)]
+    other = [line for line in retained if not TAF_TAGGED.search(line)]
+    suffix = ""
+    if tagged:
+        suffix += "; retained TAF-tagged non-fatal diagnostics: " + " | ".join(tagged)
+    if other:
+        suffix += "; retained non-TAF diagnostics: " + " | ".join(other)
+    return suffix
 
 
 def source_log(source: Path) -> str:
