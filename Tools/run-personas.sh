@@ -107,7 +107,7 @@ load_persona() {
 	path="$(persona_path "$1")"
 	[ -f "$path" ] || die "no such persona: $1 ($path)"
 	P_REQUEST=""; P_SCRIPT=""; P_START=""; P_CHECK=""; P_TIMEOUT=""; P_VERBS=""; P_DESC=""
-	P_SET=""; P_GATE=0; P_LOG_EXPECT=""
+	P_SET=""; P_GATE=0; P_LOG_EXPECT=""; P_RELOAD=""
 	fields="$(python3 "$MATRIX" fields "$path")" || die "persona $1 is malformed"
 	while IFS=$'\t' read -r key value; do
 		case "$key" in
@@ -120,6 +120,7 @@ load_persona() {
 			description) P_DESC="$value" ;;
 			set) P_SET="$value" ;;
 			log_expect) P_LOG_EXPECT="$value" ;;
+			reload) P_RELOAD="$value" ;;
 		esac
 	done <<< "$fields"
 	[ -n "$P_REQUEST" ] || die "persona $1 declares no request"
@@ -223,6 +224,17 @@ run_persona() {
 	VERDICT=FAIL
 	DETAIL=""
 	load_persona "$persona"
+	if [ -n "$P_RELOAD" ]; then
+		if [ "$LIFECYCLE_BROKEN" = 1 ]; then DETAIL="previous ownership failure requires inspection"; return; fi
+		if DETAIL="$(python3 "$REPO/Tools/run-persona-reload.py" "$(persona_path "$persona")" \
+			--game "$GAME" --report-dir "$REPORT_DIR")"; then
+			VERDICT=PASS
+		else
+			# The helper owns exact-profile cleanup; no later persona may assume it succeeded.
+			LIFECYCLE_BROKEN=1
+		fi
+		return
+	fi
 	timeout="${TAF_PERSONA_TIMEOUT:-${P_TIMEOUT:-300}}"
 	artifact="$persona"
 	[ "$attempt" -le 1 ] || artifact="$persona-retry$attempt"
