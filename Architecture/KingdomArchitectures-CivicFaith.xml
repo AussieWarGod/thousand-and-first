@@ -102,7 +102,7 @@
          rite-relative cell in every rung above this one; the canvas and the fire are
          ordinary fabric and are struck when the walls go up. -->
     <slot Key="canvas" Blueprint="r_KingdomStructureCanvasWall" Role="camp-canvas" Material="canvas" MinTech="hands" Natural="no" />
-    <slot Key="hearth" Blueprint="r_KingdomCivicCampfire" Role="heat" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="hearth" Blueprint="r_KingdomCivicCampfireCamp" Role="heat" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="store" Blueprint="r_KingdomHeartStockpile" Role="storage" Material="timber" MinTech="hands" Natural="no" />
   </palette>
 
@@ -113,7 +113,7 @@
     <slot Key="basin" Blueprint="r_KingdomFirstBasin" Role="first-basin" Material="scrap" MinTech="hands" Natural="no" />
     <slot Key="ritestone" Blueprint="r_KingdomStructureLimestone" Role="retained-rite-stone" Material="stone" MinTech="hands" Natural="yes" />
     <slot Key="benefit-heartwaterstone-main" Blueprint="r_KingdomWaterstoneRite" Role="physical-benefit-heartwaterstone-main" Material="stone" MinTech="hands" Natural="no" />
-    <slot Key="hearth" Blueprint="r_KingdomCivicCampfire" Role="heat" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="hearth" Blueprint="r_KingdomCivicCampfireCamp" Role="heat" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="store" Blueprint="r_KingdomHeartStockpile" Role="storage" Material="timber" MinTech="hands" Natural="no" />
   </palette>
 

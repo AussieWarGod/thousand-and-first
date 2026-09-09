@@ -22,8 +22,13 @@ namespace ThousandAndFirst.Tests
 		private const string StoreRole = "fixture:storage";
 		private const string HearthRole = "fixture:hearth";
 		private const string StoreBlueprint = "r_KingdomHeartStockpile";
-		private const string HearthBlueprint = "r_KingdomCivicCampfire";
+		private const string HearthBlueprint = "r_KingdomCivicCampfireCamp";
+		private const string HearthSelfOnlyTag = "CampfireHeatSelfOnly";
 		private const string CanvasBlueprint = "r_KingdomStructureCanvasWall";
+		/// <summary>The four heart palettes and five heart maps as they stood on dev at
+		/// 4f66331, the commit before this change. A save founded before the camp decodes to
+		/// these, so every pre-change claim in this suite is proved against them.</summary>
+		private const string Baseline = "DevTests/Fixtures/PreCampHeart/heart-4f66331.xml";
 
 		/// <summary>Build key, map key, palette key, the claim the store cell declares at that
 		/// rung, and the cover it declares. Yard and open under canvas; building and walled from
@@ -157,10 +162,13 @@ namespace ThousandAndFirst.Tests
 				int[] hearth = Single(map, HearthRole);
 				ArchitectureGlyphDraft glyph = At(map, hearth[0], hearth[1]);
 				ClassicAssert.AreEqual("$hearth", glyph.Object, Rungs[i][0]);
-				// The vanilla Campfire part heats the objects standing on ITS OWN cell every
-				// turn and nothing beyond it. So the fire's cell must carry no other fabric,
-				// and nobody may be stood on it: the canvas one cell away is safe by geometry,
-				// not by any tag on the blueprint (no such tag exists in the engine).
+				// The vanilla Campfire part heats every OTHER object standing on its own cell
+				// each turn (D/XRL/World/Parts/Campfire.cs:168, engine 2.0.211.51) unless the
+				// blueprint carries CampfireHeatSelfOnly, which the same line reads; :166 still
+				// warms the fire itself and :139 stops it claiming heat radiation. The camp fire
+				// carries that tag, so a citizen or a dropped bundle sharing the cell is never
+				// heated and the canvas ring a cell away can never catch. Pass="adjacent" is an
+				// architecture use contract, not an engine exclusion, so it is not the guard.
 				ClassicAssert.IsNull(glyph.Structure, Rungs[i][0] + " hearth carries a structure");
 				ClassicAssert.AreEqual(ArchitecturePassability.Adjacent, glyph.Passability,
 					Rungs[i][0] + " hearth cell must be used from beside it");
@@ -170,6 +178,23 @@ namespace ThousandAndFirst.Tests
 				ClassicAssert.AreEqual(HearthBlueprint, slot.Blueprint, Rungs[i][0]);
 				ClassicAssert.AreEqual("timber", slot.Material, Rungs[i][0]);
 			}
+			// The tag is the whole of the safety answer, so it is pinned on the blueprint the
+			// two camp rungs actually name.
+			XDocument blueprints = XDocument.Parse(
+				TestMain.ReadRepositoryText("RuntimeData/ObjectBlueprints.xml"));
+			XElement fire = blueprints.Root.Elements("object").Single(value =>
+				(string)value.Attribute("Name") == HearthBlueprint);
+			ClassicAssert.AreEqual("r_KingdomCivicCampfire", (string)fire.Attribute("Inherits"),
+				"the camp fire must stay the civic wrapper, tag and all");
+			ClassicAssert.IsTrue(fire.Elements("tag").Any(value =>
+				(string)value.Attribute("Name") == HearthSelfOnlyTag),
+				"the camp fire must carry " + HearthSelfOnlyTag);
+			// And the ordinary civic campfire must NOT carry it: every other hearth in the
+			// catalogue still warms what stands with it.
+			ClassicAssert.IsFalse(blueprints.Root.Elements("object").Single(value =>
+				(string)value.Attribute("Name") == "r_KingdomCivicCampfire")
+				.Elements("tag").Any(value =>
+					(string)value.Attribute("Name") == HearthSelfOnlyTag));
 			// A4: the waterstone palette had no hearth slot at all, so a fire re-laid there had
 			// nothing to resolve against and the tier refused.
 			ClassicAssert.IsNotNull(Slot(corpus, "civic-heart-stone", "hearth"));
@@ -217,7 +242,7 @@ namespace ThousandAndFirst.Tests
 				foreach (ArchitectureFacing facing in Enum.GetValues(typeof(ArchitectureFacing)))
 				{
 					ArchitectureLayoutDelta delta = Delta(corpus, Rungs[i][0], Rungs[i + 1][0],
-						facing, false);
+						facing);
 					ClassicAssert.AreEqual(1, delta.Retained.Count(value =>
 						KingdomArchitectureRules.AnchorRole(value.StatefulAnchor) == StoreRole),
 						Rungs[i][0] + "->" + Rungs[i + 1][0] + " " + facing);
@@ -234,27 +259,88 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AHeartFoundedBeforeThisChangeRaisesItsStoreAtItsNextImprovement()
 		{
-			ArchitectureCorpus corpus = KingdomArchitectureCorpusFixture.Load();
+			// The BEFORE side is the shipped 4f66331 map compiled whole - old glyphs, old
+			// claims, old palette - not the new map with the store deleted out of it. The
+			// AFTER side is the successor exactly as this change ships it. That pair is what a
+			// save founded before the camp actually presents to the upgrade machinery.
+			ArchitectureCorpus old = KingdomArchitectureCorpusFixture.Load();
+			KingdomArchitectureCorpusFixture.Overlay(old, Baseline);
+			ArchitectureCorpus current = KingdomArchitectureCorpusFixture.Load();
 			Dictionary<string, KingdomMaterialTally> bills = TransitionBills();
 			for (int i = 0; i + 1 < Rungs.Length; i++)
 			{
-				// The pre-change fixture: the standing rung exactly as it is authored today,
-				// minus the store it did not have. This is what a save founded before this
-				// update decodes to at rungs 1-4.
-				ArchitectureLayoutDelta delta = Delta(corpus, Rungs[i][0], Rungs[i + 1][0],
-					ArchitectureFacing.North, true);
-				List<ArchitecturePlacement> added = delta.Added.Where(value =>
-					value.Blueprint == StoreBlueprint).ToList();
-				ClassicAssert.AreEqual(1, added.Count,
-					Rungs[i][0] + "->" + Rungs[i + 1][0] + " must add the missing store");
-				// And the bill that transition charges must carry the store's own material, or
-				// TryPlacementClaim refuses the added placement and the upgrade cannot finish.
-				KingdomMaterialTally bill = bills[Rungs[i][0]];
-				KingdomMaterial material;
-				ClassicAssert.IsTrue(KingdomMaterialRules.TryParseMaterial(added[0].Material,
-					out material), added[0].Material);
-				ClassicAssert.Greater(bill.Get(material), 0, Rungs[i][0] + "->" + Rungs[i + 1][0]
-					+ " has no " + added[0].Material + " for the store it must add");
+				foreach (ArchitectureFacing facing in Enum.GetValues(typeof(ArchitectureFacing)))
+				{
+					ArchitectureLayoutSnapshot before = Compile(old, Rungs[i][0], facing);
+					ClassicAssert.AreEqual(0, before.Placements.Count(value =>
+						value.Blueprint == StoreBlueprint),
+						"the " + Rungs[i][0] + " baseline must have no store at all");
+					ArchitectureLayoutSnapshot after = Compile(current, Rungs[i + 1][0], facing);
+					ClassicAssert.IsTrue(KingdomArchitectureRules.TryBuildDelta(before, after,
+						out ArchitectureLayoutDelta delta, out string failure),
+						Rungs[i][0] + "->" + Rungs[i + 1][0] + " " + facing + ": " + failure);
+					ClassicAssert.AreEqual(1, delta.Added.Count(value =>
+						value.Blueprint == StoreBlueprint),
+						Rungs[i][0] + "->" + Rungs[i + 1][0] + " must add the missing store");
+					// And the bill that transition charges must cover EVERY added placement,
+					// not only the store: TryPlacementClaim refuses any added, non-natural,
+					// non-existing-authority piece whose material is absent from the paid claim,
+					// and one refusal stops the whole improvement.
+					KingdomMaterialTally bill = bills[Rungs[i][0]];
+					for (int p = 0; p < delta.Added.Count; p++)
+					{
+						ArchitecturePlacement added = delta.Added[p];
+						if (added.Natural || added.ExistingAuthority) continue;
+						ClassicAssert.IsTrue(KingdomMaterialRules.TryParseMaterial(added.Material,
+							out KingdomMaterial material), added.Material);
+						ClassicAssert.Greater(bill.Get(material), 0, Rungs[i][0] + "->"
+							+ Rungs[i + 1][0] + " cannot pay for added " + added.Slot
+							+ " (" + added.Material + ")");
+					}
+					// Nothing protected is struck to make room for it, so nothing a founder
+					// filled is emptied, quarantined or handed back.
+					ClassicAssert.AreEqual(0, delta.Removed.Count(value =>
+						!string.IsNullOrEmpty(value.StatefulAnchor) || value.ExistingAuthority),
+						Rungs[i][0] + "->" + Rungs[i + 1][0] + " strikes protected state");
+				}
+			}
+		}
+
+		[Test]
+		public void AnImprovementBegunBeforeThisChangeFinishesStorelessAndTheStoreArrivesNextRung()
+		{
+			// The frozen payload a mid-flight job carries is the OLD successor. Compile that
+			// pair and the store is nowhere in it: the job finishes exactly as it was priced.
+			// The rung after it is where the store lands, which is the honest sentence the
+			// CHANGELOG and Save-compat notes make.
+			ArchitectureCorpus old = KingdomArchitectureCorpusFixture.Load();
+			KingdomArchitectureCorpusFixture.Overlay(old, Baseline);
+			ArchitectureCorpus current = KingdomArchitectureCorpusFixture.Load();
+			for (int i = 0; i + 1 < Rungs.Length; i++)
+			{
+				ArchitectureLayoutSnapshot frozenBefore = Compile(old, Rungs[i][0],
+					ArchitectureFacing.North);
+				ArchitectureLayoutSnapshot frozenAfter = Compile(old, Rungs[i + 1][0],
+					ArchitectureFacing.North);
+				ClassicAssert.IsTrue(KingdomArchitectureRules.TryBuildDelta(frozenBefore,
+					frozenAfter, out ArchitectureLayoutDelta inFlight, out string failure),
+					Rungs[i][0] + "->" + Rungs[i + 1][0] + ": " + failure);
+				ClassicAssert.AreEqual(0, inFlight.Added.Count(value =>
+					value.Blueprint == StoreBlueprint),
+					"a job already begun must finish storeless on its frozen plan");
+				ClassicAssert.AreEqual(0, inFlight.Removed.Count(value =>
+					!string.IsNullOrEmpty(value.StatefulAnchor) || value.ExistingAuthority),
+					"a frozen job strikes no protected state either");
+				if (i + 2 >= Rungs.Length) continue;
+				// One rung later, from the storeless heart that job left standing.
+				ArchitectureLayoutSnapshot nextAfter = Compile(current, Rungs[i + 2][0],
+					ArchitectureFacing.North);
+				ClassicAssert.IsTrue(KingdomArchitectureRules.TryBuildDelta(frozenAfter, nextAfter,
+					out ArchitectureLayoutDelta nextDelta, out failure),
+					Rungs[i + 1][0] + "->" + Rungs[i + 2][0] + ": " + failure);
+				ClassicAssert.AreEqual(1, nextDelta.Added.Count(value =>
+					value.Blueprint == StoreBlueprint),
+					"the store must arrive at the rung after the one the job finished");
 			}
 		}
 
@@ -283,8 +369,16 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.AreEqual("1", (string)mark.Attribute("Value"));
 			XElement capacity = store.Elements("tag").Single(value =>
 				(string)value.Attribute("Name") == KingdomRules.StockpileCapacityTag);
-			ClassicAssert.AreEqual(KingdomRules.DefaultStockpileCapacity.ToString(),
-				(string)capacity.Attribute("Value"));
+			// 48 by ruling, stated as a number rather than borrowed from the default: the camp
+			// store is the first rung of the shipped ladder (48/64/96/192/384) and must never be
+			// SMALLER than a chest a founder walked up to and dedicated by hand. The plan asked
+			// for 32; that would have made the settlement's only store the meanest container in
+			// the game. The equality below is a coincidence worth knowing about, not the source
+			// of the number, so both are asserted.
+			ClassicAssert.AreEqual("48", (string)capacity.Attribute("Value"));
+			ClassicAssert.AreEqual(48, KingdomRules.ShelfCapacity);
+			ClassicAssert.AreEqual(48, KingdomRules.DefaultStockpileCapacity,
+				"if the default ever moves, the camp store keeps its own declared 48");
 			ClassicAssert.AreEqual("false",
 				(string)store.Elements("part").Single(value =>
 					(string)value.Attribute("Name") == "Physics").Attribute("Takeable"));
@@ -345,20 +439,23 @@ namespace ThousandAndFirst.Tests
 			return result;
 		}
 
-		private static ArchitectureLayoutDelta Delta(ArchitectureCorpus corpus, string beforeKey,
-			string afterKey, ArchitectureFacing facing, bool StripStore)
+		private static ArchitectureLayoutSnapshot Compile(ArchitectureCorpus corpus, string key,
+			ArchitectureFacing facing)
 		{
 			ClassicAssert.IsTrue(KingdomArchitectureRules.TryCompile(
-				KingdomArchitectureCorpusFixture.Request(corpus, Case(corpus, beforeKey), facing),
-				out ArchitectureLayoutSnapshot before, out string failure), beforeKey + ": " + failure);
-			ClassicAssert.IsTrue(KingdomArchitectureRules.TryCompile(
-				KingdomArchitectureCorpusFixture.Request(corpus, Case(corpus, afterKey), facing),
-				out ArchitectureLayoutSnapshot after, out failure), afterKey + ": " + failure);
-			if (StripStore)
-				ClassicAssert.AreEqual(1, before.Placements.RemoveAll(value =>
-					value.Blueprint == StoreBlueprint), beforeKey + " had no store to strip");
+				KingdomArchitectureCorpusFixture.Request(corpus, Case(corpus, key), facing),
+				out ArchitectureLayoutSnapshot snapshot, out string failure),
+				key + " " + facing + ": " + failure);
+			return snapshot;
+		}
+
+		private static ArchitectureLayoutDelta Delta(ArchitectureCorpus corpus, string beforeKey,
+			string afterKey, ArchitectureFacing facing)
+		{
+			ArchitectureLayoutSnapshot before = Compile(corpus, beforeKey, facing);
+			ArchitectureLayoutSnapshot after = Compile(corpus, afterKey, facing);
 			ClassicAssert.IsTrue(KingdomArchitectureRules.TryBuildDelta(before, after,
-				out ArchitectureLayoutDelta delta, out failure),
+				out ArchitectureLayoutDelta delta, out string failure),
 				beforeKey + "->" + afterKey + " " + facing + ": " + failure);
 			return delta;
 		}

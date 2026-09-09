@@ -157,6 +157,15 @@
     <part Name="Physics" Weight="30" Takeable="false" FlameTemperature="10000" Organic="true" />
     <part Name="Campfire" ExtinguishBlueprint="Campfire Remains" />
   </object>
+  <!-- The camp's cooking fire. CampfireHeatSelfOnly is read by the vanilla part twice
+       (D/XRL/World/Parts/Campfire.cs:139 and :168, engine 2.0.211.51): the EndTurn branch at
+       :168 heats the OTHER objects standing on the fire's cell only when the tag is absent,
+       while :166 still warms the fire itself, and :139 stops it claiming heat radiation. A
+       camp is a ring of canvas one cell away with citizens walking past it all day; the fire
+       must warm its own hearthstone and nothing else, whatever ends up sharing the cell. -->
+  <object Name="r_KingdomCivicCampfireCamp" Inherits="r_KingdomCivicCampfire">
+    <tag Name="CampfireHeatSelfOnly" />
+  </object>
   <object Name="r_KingdomCivicBookshelf" Inherits="Bookshelf">
     <removebuilder Name="RandomTile" />
     <removepart Name="PackagePush2" />

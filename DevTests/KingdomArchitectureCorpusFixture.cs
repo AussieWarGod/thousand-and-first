@@ -97,6 +97,29 @@ namespace ThousandAndFirst.Tests
 			};
 		}
 
+		/// <summary>
+		/// Replace named palettes and maps with an earlier revision's definitions, so a test can
+		/// compile a genuine BEFORE snapshot of a shipped map instead of the current map with a
+		/// placement deleted out of it. Everything the fixture does not name - plans, bindings,
+		/// tiers, poses, the catalogue - stays current, which is the mixed world an old save
+		/// actually loads into.
+		/// </summary>
+		internal static void Overlay(ArchitectureCorpus corpus, string RepositoryRelativePath)
+		{
+			XDocument document = XDocument.Load(Path.Combine(TestMain.RepositoryRoot,
+				RepositoryRelativePath.Replace('/', Path.DirectorySeparatorChar)));
+			foreach (XElement raw in document.Root.Elements("palette"))
+			{
+				ArchitecturePaletteDraft palette = Palette(raw);
+				corpus.Palettes[palette.Key] = palette;
+			}
+			foreach (XElement raw in document.Root.Elements("map"))
+			{
+				ArchitectureMapDraft map = Map(raw);
+				corpus.Maps[map.Key] = map;
+			}
+		}
+
 		private static ArchitecturePoseDraft Pose(XElement raw)
 		{
 			if (!KingdomArchitectureRules.TryParsePoseMode(Text(raw, "Mode"),

@@ -14,8 +14,9 @@ below it.
 
 - The rite ground is now a camp. A horseshoe of seven canvas cells stands round the basin, a
   cooking fire burns beside it, and one dry stockpile holds 48 units of what the settlement has
-  cut and carried. The fire heats the objects on its own hearthstone and nothing beyond it, which
-  is why canvas may stand a cell away; its cell is used from the side and never stood on. The
+  cut and carried. The camp's fire warms its own hearthstone and nothing else — not even what is
+  standing on the same cell — so the canvas ring can never catch and nobody who walks through the
+  fire is burned by it. Every other hearth in the catalogue is unchanged. The
   horseshoe opens south onto the approach the rite already declared, because the heart's Small
   6x4 plot cannot hold a closed ring, the rite, the fire and the store at once. The store sits on
   a yard cell just outside the frozen 4x4 footprint, which is lawful; widening the footprint is
