@@ -15,28 +15,39 @@ namespace ThousandAndFirst
 		// looks at must not be the thing that moved the bundle.
 
 		/// <summary>
-		/// The count standing on one object, taken RAW. <c>GameObject.Count</c> reaches
-		/// <c>Stacker.Number</c>, which repairs a nonpositive count by assigning one and sends
-		/// <c>StackCountChangedEvent</c> for it; the <c>StackCount</c> getter beside it simply
-		/// returns the field. A delivery's proofs read the field, so the last thing it looks at
-		/// before destroying or inserting a body can never be the thing that moved it.
+		/// The count standing on one object, taken RAW and NOT normalised. <c>GameObject.Count</c>
+		/// reaches <c>Stacker.Number</c>, which repairs a nonpositive count by assigning one and
+		/// sends <c>StackCountChangedEvent</c> for it; the <c>StackCount</c> getter beside it
+		/// simply returns the field. A delivery's proofs read the field, so the last thing it
+		/// looks at before destroying or inserting a body can never be the thing that moved it.
 		/// <para>
-		/// A broken count still READS as one, exactly as the repair intends &mdash; it is simply
-		/// not written back by this delivery. A thing that does not stack is one thing.
+		/// A malformed count comes back AS IT IS &mdash; zero, or negative. This is the reading a
+		/// PROOF uses, and a proof must be able to fail: the engine's own stacking adds the
+		/// incoming <c>StackCount</c> to the stack it merges into, so a body carrying minus one
+		/// would take a unit OUT of a stack already lying there. A thing that does not stack is
+		/// one thing.
 		/// </para>
 		/// </summary>
-		internal static int RawCountOf(GameObject Item)
+		internal static int RawPhysicalCountOf(GameObject Item)
 		{
 			if (Item == null)
 			{
 				return 0;
 			}
 			Stacker stacker = Item.Stacker;
-			if (stacker == null)
-			{
-				return 1;
-			}
-			int raw = stacker.StackCount;
+			return (stacker == null) ? 1 : stacker.StackCount;
+		}
+
+		/// <summary>
+		/// What one thing standing in a store OCCUPIES, for a census. Here, and only here, a
+		/// malformed count reads as one: a broken stack is still a thing lying in the chest taking
+		/// up a place, and the engine's own repair would make it one the moment anybody asked. It
+		/// is not written back, and it is NOT a proof that anything may be inserted &mdash; that
+		/// is <see cref="RawPhysicalCountOf"/>, which lets a malformed body fail.
+		/// </summary>
+		internal static int RawCensusCountOf(GameObject Item)
+		{
+			int raw = RawPhysicalCountOf(Item);
 			return (raw > 0) ? raw : 1;
 		}
 
@@ -66,7 +77,6 @@ namespace ThousandAndFirst
 		private static int RawStockHeldIn(GameObject Container)
 		{
 			int held = 0;
-			KingdomBitTally bits = new KingdomBitTally();
 			List<GameObject> objects = Container.Inventory.Objects;
 			for (int i = 0; i < objects.Count; i++)
 			{
@@ -75,10 +85,16 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
+				// Eligibility only, and callback-free: TryMaterialOf and TryExoticOf read a tag
+				// and a blueprint, and UnitBits asks what ONE of a thing is worth, which is a
+				// part lookup and a bit-cost table. TryBitsOf beside it multiplies that by the
+				// thing's ORDINARY count, which repairs a nonpositive one and dispatches for it
+				// -- inside a walk, where the handler can move a row already counted, or the row
+				// the walk is standing on, and leave this number describing no store that exists.
 				if (TryMaterialOf(item, out _) || TryExoticOf(item, out _)
-					|| TryBitsOf(item, bits))
+					|| !UnitBits(item).IsEmpty())
 				{
-					held += RawCountOf(item);
+					held += RawCensusCountOf(item);
 				}
 			}
 			return held;
@@ -128,7 +144,7 @@ namespace ThousandAndFirst
 		/// itself: it exists, and its OWN custody names this destination.
 		/// </para>
 		/// <para>
-		/// The whole pass is callback-free: <see cref="RawCountOf"/> reads the field, and custody
+		/// The whole pass is callback-free: <see cref="RawCensusCountOf"/> reads the field, and custody
 		/// is three field reads and an int property. Nothing inside the walk can dispatch, so no
 		/// row's reading can move an earlier row out from under a count already taken, and the
 		/// number that comes back describes the store as it stood at one instant.
@@ -150,7 +166,7 @@ namespace ThousandAndFirst
 				{
 					continue;
 				}
-				held += RawCountOf(item);
+				held += RawCensusCountOf(item);
 			}
 			return held;
 		}

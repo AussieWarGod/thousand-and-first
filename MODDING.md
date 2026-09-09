@@ -371,8 +371,19 @@ moves the bundle, and a census cannot move an earlier row after that row's units
 total. Your handler on a count read still runs when the settlement counts ordinarily, everywhere
 else; it simply cannot be the thing that licences a destruction. Every batch's count is proved
 before insertion, including a batch of one: a factory callback that leaves a stack of two where the
-delivery wanted one is refused rather than placed. A broken count still READS as one, exactly as
-the repair intends, and is never written back by the delivery.
+delivery wanted one is refused rather than placed.
+
+A broken count is read two different ways on purpose. In a CENSUS it reads as one, exactly as the
+repair intends: a stack whose count is zero is still a thing lying in the chest taking up a place,
+and the delivery never writes the field back. As a bundle offered for INSERTION it reads as it
+stands, so a proof built on it can fail: the engine's own stacking adds the incoming
+`Stacker.StackCount` to whatever it merges into, so a body carrying minus one would take a unit out
+of a stack already lying there. A malformed original is refused before it reaches a destination.
+
+The raw hold classifies a bits-bearing thing by what ONE of it is worth (`UnitBits`), never by
+`TryBitsOf`, which multiplies that by the thing's ordinary count and so repairs and dispatches from
+inside the walk — where a handler could raise a row the walk had already counted and leave the
+room reading describing no store that exists.
 
 **A held clearance stake stays held.** If a cleared ground's yield cannot be proved into the
 stockpiles, the stake is marked (`KingdomClearanceHeldUnproved`) and every later pass refuses to

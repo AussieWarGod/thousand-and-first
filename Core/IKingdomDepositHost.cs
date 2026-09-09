@@ -57,10 +57,17 @@ namespace ThousandAndFirst
 		/// </summary>
 		void Stamp(object Bundle, int Count);
 
-		/// <summary>The count standing on the bundle, taken raw off the field. This is the count
-		/// every batch is finally proved against, including a batch of one. There is deliberately
-		/// no ordinary counterpart: nothing this delivery does needs a count badly enough to
-		/// repair one and dispatch for it.</summary>
+		/// <summary>
+		/// The count standing on the bundle, taken raw off the field and NOT normalised. This is
+		/// the count every batch is finally proved against, including a batch of one, and it must
+		/// be able to fail: a malformed body carrying zero or minus one is not a bundle of one
+		/// unit, and the engine's own stacking adds the incoming count to whatever it merges
+		/// into, so inserting it would take a unit OUT of a stack already standing there.
+		/// <para>
+		/// There is deliberately no ordinary counterpart: nothing this delivery does needs a
+		/// count badly enough to repair one and dispatch for it.
+		/// </para>
+		/// </summary>
 		int RawCountOf(object Bundle);
 
 		/// <summary>Whether the bundle still exists at all.</summary>

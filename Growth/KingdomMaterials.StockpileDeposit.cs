@@ -99,7 +99,7 @@ namespace ThousandAndFirst
 
 			public int RawCountOf(object Bundle)
 			{
-				return KingdomMaterials.RawCountOf(Bundle as GameObject);
+				return KingdomMaterials.RawPhysicalCountOf(Bundle as GameObject);
 			}
 
 			public bool Alive(object Bundle)

@@ -58,7 +58,18 @@ below it.
   earlier row after that row's units are already in the total. The order is now raw observe,
   decide, mutate — an ordinary reading may only be taken as advice, before a raw re-observation —
   and the deposit path counts through `Stacker.StackCount`, which repairs nothing and sends
-  nothing. A broken count still reads as one and is never written back.
+  nothing. A broken count still reads as one where it is a CENSUS, because a stack whose count is
+  zero is still a thing taking up a place, and it is never written back.
+- The raw hold no longer classifies bits through `TryBitsOf`, which multiplies what one of a thing
+  is worth by that thing's ordinary count and so repairs and dispatches from inside the walk. It
+  reads `UnitBits` instead, which asks a part and a bit-cost table and reaches nobody. A handler
+  fired mid-census could otherwise raise a row the walk had already counted, and leave a positive
+  room reading standing in front of a full store.
+- A census fallback is no longer mistaken for proof that a body may be inserted. A malformed
+  original carrying zero or minus one used to pass a batch-of-one proof; the engine's own stacking
+  adds the incoming count to the stack it merges into, so it would have taken a unit OUT of what
+  was already lying there before the delivery noticed the missing gain. The insertion proof now
+  reads the field as it stands and refuses a malformed body outright.
 - Every batch proves its count before insertion, not only a stamped one. A creation handler that
   left an exclusively held stack of two where the delivery wanted one used to be inserted whole:
   two units into a destination paid for one, and on open ground an ordinary merge then clamped the
@@ -95,10 +106,10 @@ below it.
   exactly what it read before.
 
 > **Current unreleased census — exact structural gate passed.** Current 3068-file census is line-cap green:
-> 435,515 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> 435,538 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1429 files, 0 of them over the line limit. Inventory SHA-256:
-> `f778b470cb8a6ebeb1f1cc103249345ae19745b09eba8c918768254fda576abe`.
+> `3cfe76c38704930c03d2923e400d05155cbcbf96b9ad8b31ad90304cc8fea6c0`.
 > The generated cold-install inventory contains 3099 files; no new subscription claim.
 > This digest is the stockpile deposit custody fix merged over `dev` at `862f14d` (the unattended
 > native observers, the Workshop listing wording, the automatic Workshop attempt finalisation, the
@@ -116,7 +127,7 @@ below it.
 > On these bytes the staged baseline (3064 sources) and staged compatibility (3068 sources plus the
 > tracked Hearthpyre 2.2.3 ABI stub) compile clean under Roslyn 9.0.306 on Linux against the
 > installed managed assemblies rather than through `Tools/gate.sh`; both engine-free suites run
-> green there (14,056 main/5,215 Portable, zero skips) and the 627-test tooling suite passes. The
+> green there (14,061 main/5,215 Portable, zero skips) and the 627-test tooling suite passes. The
 > two new deposit regressions were confirmed to FAIL against the pre-fix behaviour before the fix
 > was kept.
 > NOT run for this delta: the two dev-harness modes, the installed-Hearthpyre source step, the

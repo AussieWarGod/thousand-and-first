@@ -155,7 +155,7 @@ namespace ThousandAndFirst
 			GameObject Accepted, string Blueprint, int Batch)
 		{
 			return ReferenceEquals(Accepted, Item) && GameObject.Validate(Item)
-				&& Item.Blueprint == Blueprint && RawCountOf(Item) == Batch
+				&& Item.Blueprint == Blueprint && RawPhysicalCountOf(Item) == Batch
 				&& GameObject.Validate(Container) && Container.Inventory != null
 				&& IsStockpile(Container)
 				&& Item.Physics != null && ReferenceEquals(Item.Physics.InInventory, Container)

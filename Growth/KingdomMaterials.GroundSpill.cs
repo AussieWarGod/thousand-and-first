@@ -92,7 +92,7 @@ namespace ThousandAndFirst
 
 			public int RawCountOf(object Bundle)
 			{
-				return KingdomMaterials.RawCountOf(Bundle as GameObject);
+				return KingdomMaterials.RawPhysicalCountOf(Bundle as GameObject);
 			}
 
 			public bool Alive(object Bundle)
@@ -150,7 +150,7 @@ namespace ThousandAndFirst
 			{
 				GameObject item = Bundle as GameObject;
 				return ReferenceEquals(Accepted, item) && GameObject.Validate(item)
-					&& item.Blueprint == Blueprint && RawCountOf(item) == Batch
+					&& item.Blueprint == Blueprint && RawPhysicalCountOf(item) == Batch
 					&& Ground != null && ReferenceEquals(item.CurrentCell, Ground)
 					&& item.Holder == null && Ground.Objects.Contains(item);
 			}

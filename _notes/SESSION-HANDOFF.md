@@ -2,8 +2,8 @@
 
 ## Current unreleased stockpile deposit custody
 
-3068 staged sources; 435,515 physical lines; 1429 direct-XRL; zero cap failures; 3099 generated
-cold-stage files. Exact inventory `f778b470cb8a6ebeb1f1cc103249345ae19745b09eba8c918768254fda576abe`.
+3068 staged sources; 435,538 physical lines; 1429 direct-XRL; zero cap failures; 3099 generated
+cold-stage files. Exact inventory `3cfe76c38704930c03d2923e400d05155cbcbf96b9ad8b31ad90304cc8fea6c0`.
 Twenty-two custody findings from three review passes on PR #84 are fixed, over the two physical defects first found in the merged stockpile-capacity deposit. A bundle an
 insertion callback moved elsewhere was preserved and counted as zero, so `MaterialStock.Put` made
 the units a second time in the next store or on the ground; and a bundle a stack-count handler had
@@ -13,7 +13,7 @@ custody stops the whole `Put`, only what a store provably gained is credited, a 
 only when proved held by nobody AND provably destroyed, custody is proved before every mutation, a vanished bundle is credited only by the destination's own gain IN THAT MATERIAL, the landing proof requires the destination to still be dedicated stock, the overflow path runs the same law, a throwing handler keeps what was proved, and every caller that writes a receipt reads the custody first. Reading is treated as a callback and every final proof reads RAW off Stacker.StackCount (Count repairs and dispatches; room and hold censuses walk and ask), every batch proves its count including a batch of one, the gain readers count only members whose own custody names the destination, the uncertainty saying cannot cost the delivery its proved units, and a clearance stake whose yield went unproved is durably held rather than merely announced. The founder is told once. Counting stays whole, intake is still the
 only refusal (ruling 5), the catch-up envelope is untouched and old saves read as before. It sits over `dev` at `862f14d` (native observers, Workshop wording, Workshop CI, the Fetch
 carry-completion fix and the cross-version persona REQUEST wording) and over the Kingdom Quickstart shelter ingress retained below. Structure, doc freshness and the Tools
-suite (627) pass; engine-free suites pass 14,056 main / 5,215 Portable, zero skips, and Roslyn
+suite (627) pass; engine-free suites pass 14,061 main / 5,215 Portable, zero skips, and Roslyn
 9.0.306 on Linux compiles the staged baseline (3064) and compatibility (3068) sets clean. The two
 new deposit regressions were confirmed to fail against the pre-fix behaviour. NOT run for these
 bytes: the two dev-harness modes, the installed-ABI source step, the Windows gate, the native

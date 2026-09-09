@@ -374,14 +374,25 @@ namespace ThousandAndFirst.Tests
 				raw);
 			// The raw count primitive reads the FIELD. Stacker.Number repairs a nonpositive count
 			// and sends StackCountChangedEvent for it; StackCount simply returns _StackCount.
-			AssertOrdered(Between(raw, "internal static int RawCountOf(GameObject Item)",
-					"internal static int DepositRawRoomNow("),
+			// The PROOF read is the field, not normalised, so a malformed body can fail it; the
+			// CENSUS fallback beside it reads a broken resident as the one place it takes, and
+			// writes nothing back. Stacker.Number repairs and sends; StackCount returns the field.
+			AssertOrdered(Between(raw, "internal static int RawPhysicalCountOf(GameObject Item)",
+					"internal static int RawCensusCountOf("),
 				"Stacker stacker = Item.Stacker;",
-				"return 1;",
-				"int raw = stacker.StackCount;",
+				"return (stacker == null) ? 1 : stacker.StackCount;");
+			AssertOrdered(Between(raw, "internal static int RawCensusCountOf(",
+					"internal static int DepositRawRoomNow("),
+				"int raw = RawPhysicalCountOf(Item);",
 				"return (raw > 0) ? raw : 1;");
+			// The raw hold classifies bits by what ONE of a thing is worth. TryBitsOf beside it
+			// scales that by the thing's ORDINARY count, which repairs and dispatches inside the
+			// walk, and would let a handler raise a row the walk had already counted.
+			StringAssert.Contains("|| !UnitBits(item).IsEmpty())", raw);
+			ClassicAssert.AreEqual(0, Occurrences(raw, "TryBitsOf("),
+				"the raw census must not classify through a count-scaled reader");
 			StringAssert.Contains("internal static int DepositRawRoomNow(GameObject Container)", raw);
-			StringAssert.Contains("held += RawCountOf(item);", raw);
+			StringAssert.Contains("held += RawCensusCountOf(item);", raw);
 			// The gain census counts PROVED members only, in ONE callback-free pass. Cell.AddObject
 			// appends to the cell it was asked about even when the entry callbacks moved the body
 			// elsewhere first, so a destination's list can hold a dead entry; and a census that
@@ -391,7 +402,7 @@ namespace ThousandAndFirst.Tests
 				"if (!GameObject.Validate(item) || item.Blueprint != Blueprint",
 				"|| !StandsIn(item, Container, Ground))",
 				"continue;",
-				"held += RawCountOf(item);");
+				"held += RawCensusCountOf(item);");
 			AssertOrdered(Between(raw, "private static bool StandsIn(", "\t}\n}"),
 				"if (Container != null)",
 				"return Item.Physics != null",
@@ -423,8 +434,8 @@ namespace ThousandAndFirst.Tests
 				ClassicAssert.AreEqual(1, Occurrences(seam, "item.Count"),
 					"a seam names an ordinary count once, to STAMP it");
 				StringAssert.Contains("item.Count = Count;", seam);
-				StringAssert.Contains("return KingdomMaterials.RawCountOf(Bundle as GameObject);",
-					seam);
+				StringAssert.Contains(
+					"return KingdomMaterials.RawPhysicalCountOf(Bundle as GameObject);", seam);
 			}
 			string host = TestMain.ReadRepositoryText(HostFile);
 			StringAssert.Contains("return DepositRoomNow(Container);", host);
@@ -492,7 +503,7 @@ namespace ThousandAndFirst.Tests
 				"How many of a stock's");
 			AssertOrdered(landed,
 				"ReferenceEquals(Accepted, Item) && GameObject.Validate(Item)",
-				"Item.Blueprint == Blueprint && RawCountOf(Item) == Batch",
+				"Item.Blueprint == Blueprint && RawPhysicalCountOf(Item) == Batch",
 				"GameObject.Validate(Container) && Container.Inventory != null",
 				// Eligibility is part of the proof, not a thing the room reader alone guards: a
 				// handler can release the dedication and leave exact membership intact.

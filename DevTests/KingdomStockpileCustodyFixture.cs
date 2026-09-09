@@ -24,6 +24,11 @@ namespace ThousandAndFirst.Tests
 		internal bool Alive = true;
 
 		internal string Holder;
+
+		/// <summary>A resident worth bits and nothing else. The ordinary census classifies such a
+		/// row by asking it its count, which repairs and dispatches; the raw census asks only what
+		/// ONE of it is worth, which reaches nobody.</summary>
+		internal bool BitsOnly;
 	}
 
 	/// <summary>
@@ -120,8 +125,15 @@ namespace ThousandAndFirst.Tests
 		/// than a scalar and a row's own reading can be made to move another row.</summary>
 		internal readonly List<FakeBundle> Residents = new List<FakeBundle>();
 
-		/// <summary>Runs inside an EVENTFUL census, once per counted row.</summary>
+		/// <summary>Runs inside an EVENTFUL census, once per counted bits-only row.</summary>
 		internal Action<FakeStore, FakeBundle> OnRowRead;
+
+		/// <summary>Whether the destination stacks an arriving body into a compatible resident,
+		/// which is what open ground does by default.</summary>
+		internal bool MergesOnEntry;
+
+		/// <summary>How many times a row handler ran from inside a census.</summary>
+		internal int RowHookRuns;
 
 		/// <summary>Insertions actually attempted, so a test can prove a foreign-held body was
 		/// never handed to the destination at all.</summary>
@@ -139,17 +151,42 @@ namespace ThousandAndFirst.Tests
 			// A census totals what it walked, and a handler it fired during the walk changes the
 			// store AFTERWARDS. So the number it returns can already be out of date by the time
 			// the caller has it, which is the whole reason a raw re-observation follows.
-			int room = Capacity - Held;
+			int room = Capacity - Held - CensusOccupancy();
 			if (OnRoomRead != null && Working != null) OnRoomRead(this, Working);
 			return (room > 0) ? room : 0;
 		}
 
-		/// <summary>The RAW reading. It runs no hook and changes nothing.</summary>
+		/// <summary>The RAW reading. It runs no hook and changes nothing, and a destination that
+		/// has lost its dedication has no room at all, exactly as the seam reports.</summary>
 		public int RawRoomNow()
 		{
 			RawRoomReads++;
-			int room = Capacity - Held;
+			if (!Dedicated)
+			{
+				return 0;
+			}
+			int room = Capacity - Held - CensusOccupancy();
 			return (room > 0) ? room : 0;
+		}
+
+		/// <summary>What the residents occupy, counted the way the seam's raw census counts: a
+		/// malformed count is one thing lying in the chest, read but never written back.</summary>
+		private int CensusOccupancy()
+		{
+			int held = 0;
+			for (int i = 0; i < Residents.Count; i++)
+			{
+				FakeBundle resident = Residents[i];
+				if (resident.Alive && resident.Holder == "store") held += CensusCount(resident);
+			}
+			return held;
+		}
+
+		/// <summary>The census fallback: nonpositive reads as one, and the field is not touched.
+		/// </summary>
+		internal static int CensusCount(FakeBundle Resident)
+		{
+			return (Resident.RawCount > 0) ? Resident.RawCount : 1;
 		}
 
 		/// <summary>
@@ -161,13 +198,11 @@ namespace ThousandAndFirst.Tests
 		public int RawMaterialHeldNow()
 		{
 			RawMaterialReads++;
-			int held = 0;
-			for (int i = 0; i < Residents.Count; i++)
+			if (!Dedicated)
 			{
-				FakeBundle resident = Residents[i];
-				if (resident.Alive && resident.Holder == "store") held += resident.RawCount;
+				return 0;
 			}
-			return held + MaterialHeld;
+			return CensusOccupancy() + MaterialHeld;
 		}
 
 		/// <summary>The census as it would be if every row were asked its count the ordinary way:
@@ -181,8 +216,19 @@ namespace ThousandAndFirst.Tests
 			{
 				FakeBundle resident = Residents[i];
 				if (!resident.Alive || resident.Holder != "store") continue;
-				held += resident.RawCount;
-				if (OnRowRead != null) OnRowRead(this, resident);
+				held += CensusCount(resident);
+				// A bits-only row is classified by asking it its ORDINARY count, which repairs a
+				// nonpositive one and dispatches for it -- inside the walk, where the handler can
+				// change a row already counted.
+				if (resident.BitsOnly)
+				{
+					if (resident.RawCount <= 0) resident.RawCount = 1;
+					if (OnRowRead != null)
+					{
+						RowHookRuns++;
+						OnRowRead(this, resident);
+					}
+				}
 			}
 			if (OnMaterialRead != null && Working != null) OnMaterialRead(this, Working);
 			return held + MaterialHeld;
@@ -209,12 +255,12 @@ namespace ThousandAndFirst.Tests
 			if (OnStamp != null) OnStamp(this, bundle);
 		}
 
-		/// <summary>The RAW count: the field, no repair, no hook.</summary>
+		/// <summary>The RAW count: the field, no repair, no hook, and NOT normalised. A malformed
+		/// body comes back as it is, so a proof built on it can fail.</summary>
 		public int RawCountOf(object Bundle)
 		{
 			RawCountReads++;
-			FakeBundle bundle = (FakeBundle)Bundle;
-			return (bundle.RawCount > 0) ? bundle.RawCount : 1;
+			return ((FakeBundle)Bundle).RawCount;
 		}
 
 		/// <summary>The count as the engine ordinarily reports it: a nonpositive raw count is
@@ -263,6 +309,20 @@ namespace ThousandAndFirst.Tests
 			}
 			Insertions++;
 			if (OnInsert != null) return OnInsert(this, bundle);
+			if (MergesOnEntry)
+			{
+				// The engine's own stacking: the incoming body's ACTUAL StackCount is added to a
+				// compatible stack already lying there, and the incoming body is retired. A
+				// malformed count therefore takes units OUT of what was already standing.
+				for (int i = 0; i < Residents.Count; i++)
+				{
+					FakeBundle resident = Residents[i];
+					if (!resident.Alive || resident.Holder != "store") continue;
+					resident.RawCount += bundle.RawCount;
+					bundle.Alive = false;
+					return null;
+				}
+			}
 			bundle.Holder = "store";
 			Held += bundle.Count;
 			MaterialHeld += bundle.Count;

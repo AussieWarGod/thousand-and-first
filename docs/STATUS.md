@@ -90,17 +90,17 @@ The heart-ingress endpoints are unchanged and refusal is still fail-closed with 
 Current census after merging `dev` (the Kingdom Quickstart tent rows, the first-basin water store,
 the stockpile unit capacity, the render-only city sight and the shelter ingress included) and the
 stockpile deposit custody fix: 3068
-staged C# files; 435,515 physical lines; 3099 files in the generated
+staged C# files; 435,538 physical lines; 3099 files in the generated
 cold-install inventory. Staged compilation covers 3068 sources, baseline and compatibility symbols
 (baseline compiles 3064 of them; the optional-mod bridge is compatibility-only), run here by Roslyn
 9.0.306 on Linux against the licensed Managed references with warnings as
 errors. Direct `XRL` imports: 1429 files, 0 over the line limit.
-Inventory SHA-256: `f778b470cb8a6ebeb1f1cc103249345ae19745b09eba8c918768254fda576abe`.
+Inventory SHA-256: `3cfe76c38704930c03d2923e400d05155cbcbf96b9ad8b31ad90304cc8fea6c0`.
 Before the merge, all four `Tools/gate.sh` modes compiled clean on the shelter-ingress delta's own
 bytes — staged baseline (3050 sources), staged compatibility (3054), dev-harness baseline (3204)
 and dev-harness compatibility (3208) — with the installed-Hearthpyre source and ABI step, and the
 engine-free suites passed13,905 main/5,193 Portable cases,zero skips there with 615 Tools tests.
-On the merged tree the engine-free suites pass 14,056 main / 5,215 Portable cases, zero
+On the merged tree the engine-free suites pass 14,061 main / 5,215 Portable cases, zero
 skips, and the Tools suite passes 627 tests.
 The six-profile Quickstart boot matrix at seed `#43101` ran natively on the SHELTER-INGRESS bytes,
 not on these: all six reached checker `verdict=PASS`, each with two `[TAF] plot staked: tentrow`

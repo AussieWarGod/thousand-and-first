@@ -298,21 +298,127 @@ namespace ThousandAndFirst.Tests
 				"a broken count reads as one and is never written back");
 		}
 
-		/// <summary>A resident whose raw count is nonpositive still COUNTS as one for the gain,
-		/// exactly as the repair intends, without the delivery writing anything.</summary>
+		/// <summary>
+		/// A census fallback is not a proof. A resident whose raw count is nonpositive OCCUPIES
+		/// one place, exactly as the repair would make it, and the field is never written back;
+		/// but the same body read as a bundle to be inserted comes back AS IT IS, so a proof
+		/// built on it can fail. Reading the two the same way is what would let a malformed body
+		/// pass a batch-of-one proof.
+		/// </summary>
 		[Test]
-		public void ABrokenResidentCountReadsAsOneWithoutBeingRepaired()
+		public void ACensusFallbackIsNotAProofOfAnInsertableCount()
 		{
 			FakeStore store = new FakeStore { Capacity = 64 };
 			FakeBundle broken = new FakeBundle { RawCount = 0, Holder = "store" };
 			store.Residents.Add(broken);
 
-			ClassicAssert.AreEqual(0, store.RawMaterialHeldNow(),
-				"the fake's census sums the raw field, and the engine never asks for more");
-			ClassicAssert.AreEqual(0, broken.RawCount);
-			ClassicAssert.AreEqual(1, store.RawCountOf(broken),
-				"a raw count of a broken body reads as one");
-			ClassicAssert.AreEqual(0, broken.RawCount, "and is still not written back");
+			ClassicAssert.AreEqual(1, store.RawMaterialHeldNow(),
+				"a broken resident is still one thing lying in the chest");
+			ClassicAssert.AreEqual(0, broken.RawCount, "and the field is not written back");
+			ClassicAssert.AreEqual(0, store.RawCountOf(broken),
+				"but a body offered for insertion is proved on the field as it stands");
+			ClassicAssert.AreEqual(63, store.RawRoomNow(), "and it takes up its place");
+		}
+
+		/// <summary>
+		/// A malformed original is refused BEFORE the insertion. The engine's own stacking adds
+		/// the incoming body's actual count to the stack it merges into, so a body carrying zero
+		/// delivers nothing and one carrying minus one takes a unit OUT of what was already lying
+		/// there &mdash; and the delivery would only notice afterwards, with the damage done.
+		/// </summary>
+		[TestCase(0)]
+		[TestCase(-1)]
+		public void AMalformedSingletonIsRefusedBeforeItCanBeMergedAway(int raw)
+		{
+			FakeStore store = new FakeStore { Capacity = 64, MergesOnEntry = true };
+			FakeBundle resident = new FakeBundle { RawCount = 5, Holder = "store" };
+			store.Residents.Add(resident);
+			store.OnCreate = (host, bundle) => { bundle.RawCount = raw; };
+
+			KingdomDepositOutcome outcome = KingdomDepositEngine.Fill(store, 1, 1);
+
+			ClassicAssert.AreEqual(0, store.Insertions, "nothing malformed reaches the store");
+			ClassicAssert.AreEqual(5, resident.RawCount,
+				"and the stack already lying there is untouched");
+			ClassicAssert.AreEqual(0, outcome.Placed);
+			ClassicAssert.AreEqual(1, store.Discarded.Count);
+			ClassicAssert.AreEqual(KingdomDepositCustody.Settled, outcome.Custody);
+		}
+
+		/// <summary>The control: a well-formed bundle merging into a compatible stack really does
+		/// deliver, and is paid out of what the store gained.</summary>
+		[Test]
+		public void AWellFormedBundleThatMergesIsPaidOutOfTheStoresGain()
+		{
+			FakeStore store = new FakeStore
+			{
+				Capacity = 64, Stackable = false, MergesOnEntry = true
+			};
+			FakeBundle resident = new FakeBundle { RawCount = 5, Holder = "store" };
+			store.Residents.Add(resident);
+
+			KingdomDepositOutcome outcome = KingdomDepositEngine.Fill(store, 1, 1);
+
+			ClassicAssert.AreEqual(KingdomDepositCustody.Settled, outcome.Custody);
+			ClassicAssert.AreEqual(1, outcome.Placed);
+			ClassicAssert.AreEqual(6, resident.RawCount);
+		}
+
+		/// <summary>
+		/// A bits-only resident is classified by the ORDINARY census by asking it its count, which
+		/// repairs a nonpositive one and dispatches for it &mdash; from inside the walk, where the
+		/// handler can raise a row the walk has already counted and leave the total describing a
+		/// store that is really full. The raw census asks only what one of a thing is worth, so
+		/// that handler never runs and the room proof describes the store as it stands.
+		/// </summary>
+		[Test]
+		public void ABitsOnlyResidentCannotRearmACountRepairInsideTheRoomProof()
+		{
+			FakeStore store = new FakeStore { Capacity = 4 };
+			FakeBundle rowA = new FakeBundle { RawCount = 1, Holder = "store" };
+			FakeBundle rowB = new FakeBundle { RawCount = 1, Holder = "store", BitsOnly = true };
+			store.Residents.Add(rowA);
+			store.Residents.Add(rowB);
+			store.OnStamp = (host, bundle) => { rowB.RawCount = 0; };
+			store.OnRowRead = (host, resident) => { rowA.RawCount = 3; };
+
+			KingdomDepositOutcome outcome = KingdomDepositEngine.Fill(store, 2, 2);
+
+			ClassicAssert.AreEqual(0, store.MaterialReads,
+				"the ordinary census was never taken, so its repair never ran");
+			ClassicAssert.AreEqual(0, store.RowHookRuns,
+				"and no row handler ran from inside a room proof");
+			ClassicAssert.AreEqual(1, rowA.RawCount, "no counted row was raised behind the walk");
+			ClassicAssert.AreEqual(0, rowB.RawCount, "the broken row was not written back either");
+			// The broken row still takes the one place it takes, so two units is exactly the room
+			// there was, and the store ends at its stated size rather than over it.
+			ClassicAssert.AreEqual(KingdomDepositCustody.Settled, outcome.Custody);
+			ClassicAssert.AreEqual(2, outcome.Placed);
+			ClassicAssert.AreEqual(0, store.RawRoomNow(), "the store is exactly full, never over");
+		}
+
+		/// <summary>Losing the dedication takes the gain with it: a destination the settlement no
+		/// longer counts holds nothing it can be paid for, so a vanished bundle earns nothing and
+		/// the delivery stops.</summary>
+		[Test]
+		public void AVanishedBundleEarnsNothingFromADestinationThatLostItsDedication()
+		{
+			FakeStore store = new FakeStore { Capacity = 64 };
+			store.OnInsert = (host, bundle) =>
+			{
+				bundle.Alive = false;
+				host.MaterialHeld += 4;
+				host.Dedicated = false;
+				return null;
+			};
+
+			KingdomDepositOutcome outcome = KingdomDepositEngine.Fill(store, 4, 4);
+
+			ClassicAssert.AreEqual(KingdomDepositCustody.Unproved, outcome.Custody);
+			ClassicAssert.AreEqual(0, outcome.Placed,
+				"a store the settlement no longer counts cannot pay for a landing");
+			ClassicAssert.AreEqual(1, store.Created.Count);
+			ClassicAssert.AreEqual(1, store.Sayings);
 		}
 
 		// --- Every batch proves its count --------------------------------------------------------
