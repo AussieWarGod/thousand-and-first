@@ -25,7 +25,7 @@ city sight, the stockpile unit capacity, the first-basin water store and the Kin
 tent rows reports 3068 staged production C# files and 435,538 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`3cfe76c38704930c03d2923e400d05155cbcbf96b9ad8b31ad90304cc8fea6c0`. The census reports
+`93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa` (the 0.3.2 KingdomReleaseInfo.cs version-literal bump over that digest, no other change). The census reports
 1429 files with direct `XRL` imports; 0 of those exceed the line limit.
 
 The shelter-ingress delta over the retained city-sight draft below is one added and one modified

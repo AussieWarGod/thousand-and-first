@@ -8,7 +8,7 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-## Unreleased — Stockpile deposit custody
+## [0.3.2] — 2026-09-09 (Alpha)
 
 ### Fixed
 
@@ -109,7 +109,7 @@ below it.
 > 435,538 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1429 files, 0 of them over the line limit. Inventory SHA-256:
-> `3cfe76c38704930c03d2923e400d05155cbcbf96b9ad8b31ad90304cc8fea6c0`.
+> `93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa` (the 0.3.2 KingdomReleaseInfo.cs version-literal bump over that digest, no other change).
 > The generated cold-install inventory contains 3099 files; no new subscription claim.
 > This digest is the stockpile deposit custody fix merged over `dev` at `862f14d` (the unattended
 > native observers, the Workshop listing wording, the automatic Workshop attempt finalisation, the
@@ -135,7 +135,7 @@ below it.
 > ordinary play, graceful Quit and Steam delivery.
 > The exact-inventory human semantic review is open against this digest; this is not Beta sign-off.
 
-## Unreleased — Workshop listing copy: drop single-player boilerplate
+### Changed
 
 - Removed the redundant "Single-player only" / "no multiplayer or user-moderation surface"
   sentence from the Workshop listing and README (author ruling, issue #51). Steam Workshop mods
@@ -147,7 +147,7 @@ below it.
   `Tools/tests/workshop_metadata_test.py` now assert the shortened sentence rather than merely
   dropping the old assertion. No manifest, version, or C# source change.
 
-## Unreleased — Kingdom Quickstart shelter ingress
+### Fixed
 
 - The two tent-row lots staked at founding are now staked on every shipped profile. The stake's
   authored public-ingress preflight walks each lot's DoorToLane route and refuses a route cell that
@@ -195,7 +195,7 @@ below it.
 > 1,700-tick raising figure is still a reading of the raising rule, not of a running plot clock.
 > The exact-inventory human semantic review is open against this digest; this is not Beta sign-off.
 
-## Unreleased — Kingdom Quickstart tent rows
+### Added
 
 - Kingdom Quickstart now stakes two settlers' tent rows at founding, west of the supply
   column at (21,9)-(26,12) and (21,13)-(26,16), between the founding proof and the receipt's
@@ -294,8 +294,6 @@ below it.
 > Windows gate, the developer boot matrix and any native in-game run. The 1,700-tick raising figure
 > is a reading of the raising rule, not of a running plot clock. The exact-inventory human semantic
 > review is open against this digest; this is not Beta sign-off.
-
-## Unreleased — empty-camp legacy correction and stockpile capacity
 
 ### Added
 
@@ -533,8 +531,6 @@ below it.
 > digest covers that merge with `dev`, so the exact-inventory human semantic review is open
 > against it and the Windows compile gate has not re-run for those merged bytes.
 
-## Retained unreleased — master pause/resume correction, the claimed-ground light, and first-settler legibility
-
 - Master resume now validates a complete growth schedule before publishing it. Fresh
   growth no longer receives a positive deadline with a zero interval; established growth
   retains consistent arrival debt, opportunities and open clock leases.
@@ -661,8 +657,6 @@ below it.
 > `f9815fff2a1cf4389ecd42b733645b0611b31bbc8b58c96fae7d1636099e81b1`. This does not amend the
 > tagged v0.3.0 bytes or their historical evidence. It does not sign the later isolated subsidence
 > draft; see `docs/STATUS.md` for that unfinished integration and its separate evidence.
-
-## [Unreleased]
 
 - Add a real-engine last-raider destruction-veto regression: cancelled destruction and
   zone activation preserve pending authority; genuine death retry resolves once with
