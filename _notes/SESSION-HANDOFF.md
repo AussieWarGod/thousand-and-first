@@ -1,5 +1,15 @@
 # Session handoff — current v1.0 test-candidate work
 
+## Current unreleased brush-forage duty (T-forage-1)
+
+3071 staged sources; 435,861 physical lines; 1430 direct-XRL; zero cap failures; 3102 generated
+cold-stage files. Exact inventory `6b61edc029d78cc010ed151f68fe8512770fe3d84db23453c488fc649bfc78cf`.
+Three new production files over the retained stockpile deposit custody census below:
+`Growth/KingdomMaterials.00.r_KingdomForage.cs`, `Growth/KingdomMaterialRules.Forage.cs`,
+`Growth/KingdomMaterials.16.ForageWork.cs`. The forage ceiling counts brush a routed delivery has
+already claimed toward its twelve-unit cap (`ForageCeilingHeld`, a raw custody census over
+`Growth/KingdomMaterials.RawObservation.cs`), consistent with the stockpile capacity rule.
+
 ## Current unreleased stockpile deposit custody
 
 3068 staged sources; 435,538 physical lines; 1429 direct-XRL; zero cap failures; 3099 generated

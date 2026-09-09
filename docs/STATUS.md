@@ -122,14 +122,16 @@ architecture with the same `KingdomRoadRules.TryAuthoredLane` the stake walks an
 The heart-ingress endpoints are unchanged and refusal is still fail-closed with the same message.
 
 Current census after merging `dev` (the Kingdom Quickstart tent rows, the first-basin water store,
-the stockpile unit capacity, the render-only city sight and the shelter ingress included) and the
-stockpile deposit custody fix: 3068
-staged C# files; 435,538 physical lines; 3099 files in the generated
-cold-install inventory. Staged compilation covers 3068 sources, baseline and compatibility symbols
-(baseline compiles 3064 of them; the optional-mod bridge is compatibility-only), run here by Roslyn
+the stockpile unit capacity, the render-only city sight, the shelter ingress and the stockpile
+deposit custody fix included) and the brush-forage duty (T-forage-1): 3071
+staged C# files; 435,861 physical lines; 3102 files in the generated
+cold-install inventory. Staged compilation covers 3071 sources, baseline and compatibility symbols
+(the optional-mod bridge is compatibility-only), run here by Roslyn
 9.0.306 on Linux against the licensed Managed references with warnings as
-errors. Direct `XRL` imports: 1429 files, 0 over the line limit.
-Inventory SHA-256: `93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa` (this digest differs from the previous one solely because of the 0.3.2 KingdomReleaseInfo.cs version-literal bump; no other change).
+errors. Direct `XRL` imports: 1430 files, 0 over the line limit.
+Inventory SHA-256: `6b61edc029d78cc010ed151f68fe8512770fe3d84db23453c488fc649bfc78cf` (three new
+production files: `Growth/KingdomMaterials.00.r_KingdomForage.cs`,
+`Growth/KingdomMaterialRules.Forage.cs`, `Growth/KingdomMaterials.16.ForageWork.cs`).
 Before the merge, all four `Tools/gate.sh` modes compiled clean on the shelter-ingress delta's own
 bytes — staged baseline (3050 sources), staged compatibility (3054), dev-harness baseline (3204)
 and dev-harness compatibility (3208) — with the installed-Hearthpyre source and ABI step, and the

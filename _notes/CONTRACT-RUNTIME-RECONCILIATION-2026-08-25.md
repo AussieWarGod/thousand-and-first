@@ -1,5 +1,14 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
+## Current brush-forage duty census (T-forage-1) — 2026-09-10
+
+3071 production C# files; 3,102 cold-install files in the generated inventory;
+435,861 physical lines, 1430 direct-XRL, zero cap failures. Exact digest
+`6b61edc029d78cc010ed151f68fe8512770fe3d84db23453c488fc649bfc78cf`.
+The standing forage duty cuts wild scrub for brush, fourth in the settlement pass's
+one-gang-one-job queue, hard-bounded by a twelve-unit ceiling that now counts brush a routed
+delivery has already claimed (root's ruling), not just the available-only tally.
+
 ## Current stockpile deposit custody census — 2026-09-09
 
 3068 production C# files; 3,099 cold-install files in the generated inventory;
