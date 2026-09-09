@@ -8,6 +8,14 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
+## Unreleased — Brush forage
+
+- Camps cut wild scrub for brush after higher-priority orders. Up to three free hands cut
+  one bundle per day within twelve paces of the rite, stopping at twelve stored bundles even
+  after a long absence. Trees, walls, food, plots, owned plants and untaken wild seeds remain
+  untouched. Competing work cannot bank forage days; exhaustion and blocked custody are reported.
+  New heart-local state attaches lazily without adding fields to shipped parts.
+
 ## Unreleased — Beta gap report
 
 ### Docs

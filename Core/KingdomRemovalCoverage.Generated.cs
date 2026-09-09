@@ -9,7 +9,7 @@ namespace ThousandAndFirst
 		{
 			"KingdomCharterPart", "r_FounderBasin", "r_KingdomAdoptionRecovery", "r_KingdomArcology", "r_KingdomArcologyZoneAnchor", "r_KingdomAssentingMoot", "r_KingdomAssentingMootMember",
 			"r_KingdomBecomingAnnexe", "r_KingdomBenefitProvider", "r_KingdomButcherSlab", "r_KingdomCarrySign", "r_KingdomChimericTheatre", "r_KingdomCitizenLegacy", "r_KingdomCitizenRiteProjection",
-			"r_KingdomCitizenship", "r_KingdomClearance", "r_KingdomCrownHall", "r_KingdomEnrolled", "r_KingdomFirstGuestBody", "r_KingdomFounderKnowledge", "r_KingdomFounderRemains",
+			"r_KingdomCitizenship", "r_KingdomClearance", "r_KingdomCrownHall", "r_KingdomEnrolled", "r_KingdomFirstGuestBody", "r_KingdomForage", "r_KingdomFounderKnowledge", "r_KingdomFounderRemains",
 			"r_KingdomFounderShrine", "r_KingdomGatehouse", "r_KingdomGatehouseProjectionV1Pending", "r_KingdomGatehouseProjectionV2", "r_KingdomGraftingHall", "r_KingdomGuest", "r_KingdomHandCrankedVisual",
 			"r_KingdomImprovement", "r_KingdomInheritedFabric", "r_KingdomInquiry", "r_KingdomLabCivicFriction", "r_KingdomLabEffectLedger", "r_KingdomLabJob", "r_KingdomLabRecord", "r_KingdomLabRemovalJob",
 			"r_KingdomLegendaryMarketProjection", "r_KingdomLiquidConduit", "r_KingdomLiquidCrossover", "r_KingdomLiquidTap", "r_KingdomLocusAmbient", "r_KingdomMarketHandoffSourceProjection",

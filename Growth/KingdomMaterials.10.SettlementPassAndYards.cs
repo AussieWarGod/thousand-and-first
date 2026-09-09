@@ -85,6 +85,10 @@ namespace ThousandAndFirst
 			{
 				WorkYard(System, Z, yards[i], KingdomMaterialRules.AverageStat(strength), KingdomMaterialRules.AverageStat(intelligence), method, timeTicks);
 			}
+			GameObject forageHeart = ForageHeart(Survey);
+			r_KingdomForage forage = forageHeart?.RequirePart<r_KingdomForage>();
+			int forageDays = forage == null ? 0
+				: KingdomMaterialRules.ForageDays(ref forage.LastWorkedTick, timeTicks);
 			if (strike != null)
 			{
 				WorkStrike(System, Z, strike, hands, timeTicks);
@@ -93,7 +97,9 @@ namespace ThousandAndFirst
 			if (stake != null)
 			{
 				WorkClearance(System, Z, stakeObject, stake, hands, timeTicks);
+				return;
 			}
+			if (forage != null) WorkForage(System, Z, Survey, forageHeart, forage, hands, forageDays);
 		}
 
 		/// <summary>Tick a yard last turned raw stock into refined, written as a string for the
