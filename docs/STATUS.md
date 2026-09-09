@@ -1,8 +1,8 @@
 # Current implementation and release evidence
 
-**Snapshot:** 2026-09-08
+**Snapshot:** 2026-09-09
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
-**Current public version:** 0.3.1 public Alpha playtest, published and installed verification complete
+**Next public version (in prep, not yet published):** 0.3.2 public Alpha playtest, in release-prep on `dev`
 **Published manifest:** 0.3.1; one subscribed client verified, broader Beta work remains open
 
 The public Alpha is [Steam Workshop item
@@ -95,13 +95,18 @@ cold-install inventory. Staged compilation covers 3068 sources, baseline and com
 (baseline compiles 3064 of them; the optional-mod bridge is compatibility-only), run here by Roslyn
 9.0.306 on Linux against the licensed Managed references with warnings as
 errors. Direct `XRL` imports: 1429 files, 0 over the line limit.
-Inventory SHA-256: `3cfe76c38704930c03d2923e400d05155cbcbf96b9ad8b31ad90304cc8fea6c0`.
+Inventory SHA-256: `93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa` (this digest differs from the previous one solely because of the 0.3.2 KingdomReleaseInfo.cs version-literal bump; no other change).
 Before the merge, all four `Tools/gate.sh` modes compiled clean on the shelter-ingress delta's own
 bytes — staged baseline (3050 sources), staged compatibility (3054), dev-harness baseline (3204)
 and dev-harness compatibility (3208) — with the installed-Hearthpyre source and ABI step, and the
 engine-free suites passed13,905 main/5,193 Portable cases,zero skips there with 615 Tools tests.
-On the merged tree the engine-free suites pass 14,061 main / 5,215 Portable cases, zero
-skips, and the Tools suite passes 627 tests.
+On the merged tree, the licensed Windows suites (`DevTests/test.ps1`, the licensed Managed
+references, skips forbidden) were run locally on this branch, immediately before the fix commit,
+and report ALL GREEN: 14,061 TafTests cases and 5,215 PortableTests cases, zero skipped, of
+14,061/5,215 discovered, and the Tools suite passes 627 tests. Hosted CI for this branch has no
+game bytes and is not zero-skip: GitHub Actions run 34302511689 (head `a64d090`) reports 14,051
+passed/10 skipped and 5,211 passed/4 skipped; its SUCCESS verdict is a distinct, weaker check than
+the licensed local result above.
 The six-profile Quickstart boot matrix at seed `#43101` ran natively on the SHELTER-INGRESS bytes,
 not on these: all six reached checker `verdict=PASS`, each with two `[TAF] plot staked: tentrow`
 rows and a strict-clean Player.log, and `quickstart-save marsh yes` and its separate cold load
