@@ -12,9 +12,11 @@ below it.
 
 - Camps cut wild scrub for brush after higher-priority orders. Up to three free hands cut
   one bundle per day within twelve paces of the rite, stopping at twelve stored bundles even
-  after a long absence. Trees, walls, food, plots, owned plants and untaken wild seeds remain
-  untouched. Competing work cannot bank forage days; exhaustion and blocked custody are reported.
-  New heart-local state attaches lazily without adding fields to shipped parts.
+  after a long absence — counting brush already claimed by a routed delivery toward that
+  twelve, the same rule a stockpile's own capacity already keeps. Trees, walls, food, plots,
+  owned plants and untaken wild seeds remain untouched. Competing work cannot bank forage
+  days; exhaustion and blocked custody are reported. New heart-local state attaches lazily
+  without adding fields to shipped parts.
 
 ## Unreleased — Beta gap report
 

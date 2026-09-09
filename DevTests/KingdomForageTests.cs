@@ -117,6 +117,66 @@ namespace ThousandAndFirst.Tests
 			Assert.That(source.IndexOf("ObserveRemovedFromActive", StringComparison.Ordinal),
 				Is.LessThan(source.IndexOf("stock.Put(", StringComparison.Ordinal)));
 		}
+
+		// --- Ceiling ruling: reserved brush counts, same as the stockpile capacity rule --------
+		//
+		// MaterialStock.Tally is available-only: TallyAvailableHeld
+		// (Growth/KingdomMaterials.05.StockpileAndPaymentGates.cs) skips anything
+		// KingdomConstructionInputLeaseAuthority has already leased to a routed construction
+		// job. The frozen plan's ceiling read Tally directly, which would let forage re-cut
+		// brush a delivery had already claimed the moment that delivery landed. The ruling: the
+		// ceiling must count physically-held brush whether or not it is reserved, exactly as a
+		// stockpile's own capacity counts a reserved unit as occupying its space
+		// (DevTests/KingdomStockpileCapacityTests.cs, ruling 5). ForageCeilingHeld re-counts the
+		// dedicated containers directly with the callback-free RawObservation census
+		// (DepositMaterialHeldNow / RawCensusCountOf) instead of trusting the lease-filtered
+		// Tally. Each assertion below is its own test so a regression back to the
+		// available-only reading fails loudly and separately at every call site.
+
+		[Test]
+		public void CeilingHelperExistsAndCensusesRawRatherThanEventfulCount()
+		{
+			string source = Read("Growth/KingdomMaterials.16.ForageWork.cs");
+			Assert.That(source, Does.Contain("private static int ForageCeilingHeld(MaterialStock Stock)"));
+			Assert.That(source, Does.Contain("DepositMaterialHeldNow(Stock.Stockpiles[i], blueprint)"));
+			Assert.That(source, Does.Contain("BlueprintFor(KingdomMaterial.Brush)"));
+			Assert.That(source, Does.Not.Contain("held.Count"));
+			Assert.That(source, Does.Not.Contain(".Objects.Count"));
+		}
+
+		[Test]
+		public void PreCheckCeilingReadsRawCensusNotAvailableOnlyTally()
+		{
+			string source = Read("Growth/KingdomMaterials.16.ForageWork.cs");
+			Assert.That(source, Does.Contain("int held = ForageCeilingHeld(stock);"));
+			Assert.That(source, Does.Not.Contain("int held = stock.Tally.Get(KingdomMaterial.Brush);"));
+		}
+
+		[Test]
+		public void PerPlantLoopBreakReadsRawCensusNotAvailableOnlyTally()
+		{
+			string source = Read("Growth/KingdomMaterials.16.ForageWork.cs");
+			Assert.That(source, Does.Contain(
+				"if (ForageCeilingHeld(stock) >= KingdomMaterialRules.ForageCeilingUnits) break;"));
+			Assert.That(source, Does.Not.Contain(
+				"if (stock.Tally.Get(KingdomMaterial.Brush) >= KingdomMaterialRules.ForageCeilingUnits) break;"));
+		}
+
+		[Test]
+		public void StatusLineReportsRawCensusNotAvailableOnlyTally()
+		{
+			string source = Read("Growth/KingdomMaterials.16.ForageWork.cs");
+			Assert.That(source, Does.Contain("ForageCeilingHeld(Stock(Z)) + \" bundles stored\""));
+			Assert.That(source, Does.Not.Contain("Stock(Z).Tally.Get(KingdomMaterial.Brush) + \" bundles stored\""));
+		}
+
+		[Test]
+		public void NoRemainingCallSiteReadsBrushOffTheAvailableOnlyTally()
+		{
+			string source = Read("Growth/KingdomMaterials.16.ForageWork.cs");
+			Assert.That(source, Does.Not.Contain("Tally.Get(KingdomMaterial.Brush)"),
+				"the ceiling must never read the lease-filtered Tally directly for Brush");
+		}
 	}
 }
 #endif

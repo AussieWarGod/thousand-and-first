@@ -69,6 +69,35 @@ namespace ThousandAndFirst
 				System.Ledger.Note("{{r|" + Reason + "}}");
 		}
 
+		/// <summary>
+		/// Physical brush standing in the dedicated stockpiles right now, raw and counting a
+		/// unit a construction job has already routed exactly as it counts an unrouted one.
+		/// <c>MaterialStock.Tally</c> is available-only &mdash; <c>TallyAvailableHeld</c> skips
+		/// anything <c>KingdomConstructionInputLeaseAuthority</c> has leased to a job &mdash; and
+		/// the ceiling promise is "twelve bundles stored", the same promise a stockpile's own
+		/// capacity keeps by counting a reserved unit as occupying its space. Reading Tally here
+		/// would let forage re-cut brush a delivery had already claimed, growing the pile past
+		/// twelve the moment that delivery lands. So this walks the same dedicated containers
+		/// <see cref="Stock"/> already found and re-counts the material blueprint directly with
+		/// <see cref="DepositMaterialHeldNow"/>, which reads <c>item.Blueprint</c> and
+		/// <see cref="RawCensusCountOf"/> and never asks an object anything that can answer back
+		/// &mdash; no ordinary <c>Count</c>, no dispatch, no lease filter.
+		/// </summary>
+		private static int ForageCeilingHeld(MaterialStock Stock)
+		{
+			if (Stock == null)
+			{
+				return 0;
+			}
+			string blueprint = BlueprintFor(KingdomMaterial.Brush);
+			int held = 0;
+			for (int i = 0; i < Stock.Stockpiles.Count; i++)
+			{
+				held += DepositMaterialHeldNow(Stock.Stockpiles[i], blueprint);
+			}
+			return held;
+		}
+
 		private static void WorkForage(KingdomSystem System, Zone Z, KingdomSurvey Survey,
 			GameObject Heart, r_KingdomForage State, int Hands, int Days)
 		{
@@ -93,7 +122,7 @@ namespace ThousandAndFirst
 				ForageBlocked(System, State, "The brush duty cannot prove the stores' commitments. Nothing is cut.");
 				return;
 			}
-			int held = stock.Tally.Get(KingdomMaterial.Brush);
+			int held = ForageCeilingHeld(stock);
 			bool enough = held >= KingdomMaterialRules.ForageCeilingUnits;
 			if (KingdomMaterialRules.ForageAnnounce(ref State.EnoughAnnounced, enough))
 				System.Ledger.Note("The stockpiles hold brush enough; the scrub is left standing.");
@@ -131,7 +160,7 @@ namespace ThousandAndFirst
 					ForageBlocked(System, State, "The brush duty lost its heart or stock authority. Nothing more is cut.");
 					return;
 				}
-				if (stock.Tally.Get(KingdomMaterial.Brush) >= KingdomMaterialRules.ForageCeilingUnits) break;
+				if (ForageCeilingHeld(stock) >= KingdomMaterialRules.ForageCeilingUnits) break;
 				if (!ForageCandidate(item, plant.Cell, Survey) || item.ID != plant.Id) continue;
 				if (!KingdomOrdinaryCustody.TryProveEmpty(item, out _))
 				{
@@ -191,7 +220,7 @@ namespace ThousandAndFirst
 			bool held = heart.GetPart<r_KingdomForage>()?.Held == true;
 			return "\nbrush: " + KingdomMaterialRules.ForageHands(KingdomMaterialRules.FreeHands(
 				System.Population, System.AssignedCrew)) + " hands within " + KingdomMaterialRules.ForageRadius
-				+ " paces; " + Stock(Z).Tally.Get(KingdomMaterial.Brush) + " bundles stored"
+				+ " paces; " + ForageCeilingHeld(Stock(Z)) + " bundles stored"
 				+ (held ? "; held for inspection" : "; cutting waits on higher-priority orders");
 		}
 	}
