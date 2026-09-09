@@ -327,7 +327,7 @@ class DiagnosticContractTest(unittest.TestCase):
     def test_retained_taf_tagged_refused_line_is_labeled_taf_not_non_taf(self):
         # Regression for #86: a retained "[TAF] ... refused" line names this mod (via its
         # KingdomLog "[TAF] " prefix) but is correctly non-fatal -- "refused" is not one of
-        # TAF_DIAGNOSTIC's fatal keywords. The verdict label must say so is TAF-tagged, not
+        # TAF_DIAGNOSTIC's fatal keywords. The verdict label must say it is TAF-tagged, not
         # claim it is a third party's "non-TAF" diagnostic.
         taf_refused = ("[TAF] hosted reach overlay refused (hosted departure authority is absent)",
                        "[TAF] architecture: ground layer refused: a living occupant moved onto "
