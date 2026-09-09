@@ -44,8 +44,7 @@ namespace ThousandAndFirst
 	/// <para>
 	/// SUSPENDS AND RESUMES. <c>advance</c> and <c>yield-frames</c> make a script span turns and
 	/// rendered frames, so the verb list and a cursor live across events (see
-	/// <see cref="KingdomScenarioAdvance" />, <see cref="KingdomScenarioFrames" />). Both suspend
-	/// through this one seam and only one may be pending. The cursor is session state: the durable
+	/// <see cref="KingdomScenarioAdvance" />, <see cref="KingdomScenarioFrames" />); travel shares this seam. Only one pump may be pending. The cursor is session state: the durable
 	/// one-shot below already forbids a replay after a reload, so a script interrupted by a save
 	/// does not resume, and the journal's last row says where it stopped.
 	/// </para>
@@ -163,6 +162,8 @@ namespace ThousandAndFirst
 		private void Step()
 		{
 			bool faulted;
+			if (KingdomScenarioTravelDriver.Pump(out bool travelFault)) return;
+			if (travelFault) { Abandon("travel"); return; }
 			if (KingdomScenarioAdvance.Pending)
 			{
 				if (KingdomScenarioAdvance.Pump(out faulted)) return;
@@ -170,8 +171,7 @@ namespace ThousandAndFirst
 			}
 			else if (KingdomScenarioFrames.Pending)
 			{
-				// Unlike the advance pump this one has NOT spent the opportunity, and must not:
-				// the unspent energy is what carries the engine into its own render loop.
+				// Unspent energy carries a frame yield into the engine's render loop.
 				if (KingdomScenarioFrames.Pump(out faulted)) return;
 				if (faulted) { Abandon("frame yield"); return; }
 			}
@@ -247,7 +247,7 @@ namespace ThousandAndFirst
 						+ ": " + verb);
 					return;
 				}
-				if (KingdomScenarioAdvance.Pending || KingdomScenarioFrames.Pending) return;
+				if (KingdomScenarioAdvance.Pending || KingdomScenarioFrames.Pending || KingdomScenarioTravel.Pending) return;
 			}
 			Finish(CompleteRow, true, Verbs.Count + " verb(s) ran without a refusal");
 		}
@@ -255,6 +255,7 @@ namespace ThousandAndFirst
 		/// <summary>Closes the run: one final row, then the popup bracket is released.</summary>
 		private void Finish(string Row, bool Ok, string Message)
 		{
+			KingdomScenarioTravelDriver.Stop();
 			Verbs = null;
 			Cursor = 0;
 			KingdomScenarioJournal.Append(Row, Ok, Message);

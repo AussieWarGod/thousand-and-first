@@ -2081,6 +2081,8 @@
 	<Compile Include="..\Harness\KingdomScenarioRowValidator.cs" />
 	<Compile Include="..\Harness\KingdomScenarioRules.cs" />
 	<Compile Include="..\Harness\KingdomScenarioLoadRules.cs" />
+	<Compile Include="..\Harness\KingdomScenarioTravelRules.cs" />
+	<Compile Include="KingdomScenarioTravelRulesTests.cs" />
 	<Compile Include="..\Harness\KingdomScenarioSaveSnapshot.cs" />
 	<Compile Include="..\Harness\KingdomSubsidenceRungSaveSnapshot.cs" />
     <Compile Include="..\Harness\KingdomSubsidenceRungSaveSnapshotCodec.cs" />
