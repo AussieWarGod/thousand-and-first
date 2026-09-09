@@ -35,6 +35,7 @@ FROZEN_SOURCE_CITATION_DOCUMENTS = frozenset(
         "_notes/ASSIGNMENT-LOG.md",
         "_notes/ARCOLOGY-AUTHORED-INTERIOR-PLAN.md",
         "_notes/ARCHITECTURE-POLISH-DISK-AUDIT.md",
+        "_notes/CITY-IMPLEMENTATION-PLAN-v4-2026-09-09.md",
         "_notes/CLOCK-REWORK-CHANGE-MAP.md",
         "_notes/CODEX-ENGINE-TRUTH-BATCH-1-ANSWERS.md",
         "_notes/COVERAGE-GAP-MAP.md",

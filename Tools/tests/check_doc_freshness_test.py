@@ -365,6 +365,10 @@ class DocumentationFreshnessTests(unittest.TestCase):
             CHECKER.FROZEN_SOURCE_CITATION_DOCUMENTS,
         )
         self.assertIn(
+            "_notes/CITY-IMPLEMENTATION-PLAN-v4-2026-09-09.md",
+            CHECKER.FROZEN_SOURCE_CITATION_DOCUMENTS,
+        )
+        self.assertIn(
             "_notes/ARCHITECTURE-POLISH-DISK-AUDIT.md",
             CHECKER.FROZEN_SOURCE_CITATION_DOCUMENTS,
         )
