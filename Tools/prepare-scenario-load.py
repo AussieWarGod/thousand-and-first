@@ -169,43 +169,103 @@ def write_new(path: Path, data: bytes) -> None:
     require(digest(path, max(len(data), 1)) == hashlib.sha256(data).hexdigest(), "destination readback changed")
 
 
-DIR_FD_SUPPORTED = os.open in os.supports_dir_fd and hasattr(os, "O_DIRECTORY") and hasattr(os, "O_NOFOLLOW")
+DIR_FD_SUPPORTED = (os.open in os.supports_dir_fd and os.mkdir in os.supports_dir_fd
+                    and hasattr(os, "O_DIRECTORY") and hasattr(os, "O_NOFOLLOW"))
+DIR_FLAGS = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
 
 
-def open_validated_directory(path: Path) -> int:
-    """Open `path` as a directory file descriptor that anchors every later create to THIS inode.
+def open_validated_root(path: Path) -> int:
+    """Open `path` BY NAME as a directory file descriptor -- the ONE place below this point a
+    directory is opened by resolving more than one path component in a single call.
 
-    O_NOFOLLOW|O_DIRECTORY is atomic at the syscall level: if `path` is, or has just become, a
-    symlink or a non-directory, the open itself fails -- there is no window between "check" and
-    "open" for a swap to slip through, unlike a bare lstat-then-open-by-path. The st_dev/st_ino
-    comparison against a fresh lstat immediately before the open additionally refuses the narrower
-    case of the name being deleted and replaced by a DIFFERENT real directory in that instant.
+    Reserved for anchoring a walk's ROOT, at a point where every ancestor of `path` was already
+    proven live moments earlier by directory(), and `path` itself was just created (or freshly
+    reproven) by this same single-threaded process with no other actor able to run in between.
+    O_NOFOLLOW|O_DIRECTORY still makes the final component atomic; the st_dev/st_ino comparison
+    against a fresh lstat immediately before the open additionally refuses the name having been
+    deleted and replaced by a DIFFERENT real directory in that instant.
 
-    Every subsequent create goes through os.open(name, ..., dir_fd=this) rather than a full path,
-    so once this fd is open, renaming, deleting, or resymlinking the NAME `path` afterwards cannot
-    redirect a create anywhere else: the fd is bound to the inode, not the name.
+    Every directory BELOW this root is opened one component at a time via open_directory_chain, so
+    an ancestor swapped in after THIS call returns cannot redirect any of those lower opens: they
+    never resolve a multi-component path again.
     """
     validated = path.lstat()
-    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
-    fd = os.open(path, flags)
+    fd = os.open(path, DIR_FLAGS)
     try:
         opened = os.fstat(fd)
         require(opened.st_dev == validated.st_dev and opened.st_ino == validated.st_ino,
-                "destination directory identity changed between validation and open: " + str(path))
+                "root directory identity changed between validation and open: " + str(path))
     except BaseException:
         os.close(fd)
         raise
     return fd
 
 
+def open_directory_chain(root_fd: int, components: tuple[str, ...]) -> int:
+    """From an already-open, already-anchored `root_fd`, open each of `components` one at a time,
+    every step relative to the fd the PREVIOUS step returned -- never a multi-component path.
+
+    O_NOFOLLOW|O_DIRECTORY makes each single-component open atomic: it fails immediately if that
+    one name is, or has become, a symlink or non-directory. Because every step's fd is bound to
+    the inode the previous step already opened, swapping an INTERMEDIATE ancestor's NAME for a
+    symlink after this walk has passed it changes nothing: there is no remaining path string for
+    that swap to poison, only fds already bound to real inodes. Always returns a fd this caller
+    owns and must close, even when `components` is empty (a dup of `root_fd`, so callers never need
+    to special-case "no fd was opened, don't close root_fd twice").
+    """
+    if not components:
+        return os.dup(root_fd)
+    fd = root_fd
+    owned = False
+    try:
+        for name in components:
+            next_fd = os.open(name, DIR_FLAGS, dir_fd=fd)
+            if owned:
+                os.close(fd)
+            fd, owned = next_fd, True
+        return fd
+    except BaseException:
+        if owned:
+            os.close(fd)
+        raise
+
+
+def make_directory_tree(root: Path, source_root: Path) -> dict[Path, int]:
+    """Anchor `root` (already just created by the caller) and create/open every subdirectory of
+    `source_root`'s tree beneath it via dir_fd-relative mkdir+open, one component at a time.
+
+    Returns every directory's fd keyed by its path relative to `root` (the root itself keyed by
+    Path(".")). No directory below `root` is ever created or opened by resolving a multi-component
+    path: each is created with os.mkdir(name, dir_fd=parent_fd) and opened with
+    os.open(name, ..., dir_fd=parent_fd), where parent_fd is the fd this same walk already opened
+    for its immediate parent -- see open_directory_chain's docstring for why that closes the gap a
+    bare per-file `directory()` walk-by-name cannot. Callers must close every returned fd.
+    """
+    require(DIR_FD_SUPPORTED, "this platform cannot anchor directory custody with O_NOFOLLOW|O_DIRECTORY+dir_fd")
+    directory_fds: dict[Path, int] = {Path("."): open_validated_root(root)}
+    try:
+        for current, directories, _ in os.walk(source_root, followlinks=False):
+            relative_current = Path(current).relative_to(source_root)
+            parent_fd = directory_fds[relative_current]
+            for child in sorted(directories):
+                os.mkdir(child, dir_fd=parent_fd)
+                directory_fds[relative_current / child] = open_directory_chain(parent_fd, (child,))
+        return directory_fds
+    except BaseException:
+        for fd in directory_fds.values():
+            os.close(fd)
+        raise
+
+
 def copy_new(source: Path, destination: Path, expected: str, limit: int, dir_fd: int | None = None) -> None:
     """Exclusive create, flush, fsync, then an independent readback hash proof.
 
-    `dir_fd`, when given, anchors the create to an already-open, already-validated directory file
-    descriptor (see open_validated_directory) instead of re-resolving `destination`'s parent by
-    name: the create can then never be redirected by a directory-name swap that happens after the
-    caller opened that fd, because dir_fd-relative opens operate on the fd's inode, not the path.
-    Every caller without a dir_fd keeps the original per-file `directory(destination.parent)` walk.
+    `dir_fd`, when given, anchors the create to an already-open, already fully path-anchored
+    directory file descriptor (see make_directory_tree/open_directory_chain) instead of resolving
+    `destination`'s parent by name: the create can then never be redirected by a directory-name
+    swap -- of the leaf OR any intermediate ancestor -- because dir_fd-relative opens operate on
+    the fd's inode, not any path string. Every caller without a dir_fd keeps the original per-file
+    `directory(destination.parent)` walk-by-name.
     """
     flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW
     if dir_fd is None:
@@ -220,46 +280,34 @@ def copy_new(source: Path, destination: Path, expected: str, limit: int, dir_fd:
     require(copied == expected and digest(destination, limit) == expected, "copy differs from frozen source: " + str(source))
 
 
-def copy_new_files(pairs: list[tuple[Path, Path, str]], limit: int, workers: int = MAX_COPY_WORKERS) -> None:
+def copy_new_files(pairs: list[tuple[Path, Path, str, int]], limit: int, workers: int = MAX_COPY_WORKERS) -> None:
     """Bounded local-only parallel fan-out of copy_new, one worker thread per file at a time.
 
     Every guard copy_new performs -- exclusive create, flush, fsync, independent readback hash --
-    runs unchanged for every file. Each distinct destination directory is validated by the caller
-    (directory(), full ancestor chain) and then opened here EXACTLY ONCE, before any worker starts,
-    as a custody-anchoring file descriptor (see open_validated_directory); every worker creates its
-    file relative to that fd, so a directory-name swap injected after this function starts cannot
-    redirect any worker's write outside the validated tree (see copy_new's dir_fd doc). This never
+    runs unchanged for every file. Each pair already carries the dir_fd of its fully path-anchored
+    parent directory (see make_directory_tree): this function performs no directory validation or
+    opening of its own, it only fans copy_new out across workers and joins them. This never
     launches a process and never touches a network path.
 
-    Every directory fd is closed, and every future is joined (ThreadPoolExecutor.shutdown waits for
-    all of them) before this function returns or raises, so a failure in one worker can never leave
-    another worker still running, or a directory fd still open, when the caller moves on. On any
-    failure, every file's outcome is still awaited, the first error is re-raised, and prepare()
-    therefore never reaches the sealing phase: whatever partial destination bytes exist stay
-    exactly as ordinary serial failure would have left them.
+    Every future is joined (ThreadPoolExecutor.shutdown waits for all of them) before this function
+    returns or raises, so a failure in one worker can never leave another worker still running when
+    the caller moves on. On any failure, every file's outcome is still awaited, the first error is
+    re-raised, and prepare() therefore never reaches the sealing phase: whatever partial
+    destination bytes exist stay exactly as ordinary serial failure would have left them.
     """
     if not pairs:
         return
-    require(DIR_FD_SUPPORTED, "this platform cannot anchor directory custody with O_NOFOLLOW|O_DIRECTORY+dir_fd")
-    directory_fds: dict[Path, int] = {}
-    try:
-        for parent in sorted({destination.parent for _, destination, _ in pairs}):
-            directory(parent)
-            directory_fds[parent] = open_validated_directory(parent)
-        errors: list[BaseException] = []
-        with concurrent.futures.ThreadPoolExecutor(max_workers=min(workers, len(pairs))) as pool:
-            futures = [pool.submit(copy_new, source, destination, expected, limit, directory_fds[destination.parent])
-                       for source, destination, expected in pairs]
-            for future in concurrent.futures.as_completed(futures):
-                try:
-                    future.result()
-                except BaseException as error:
-                    errors.append(error)
-        if errors:
-            raise errors[0]
-    finally:
-        for fd in directory_fds.values():
-            os.close(fd)
+    errors: list[BaseException] = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=min(workers, len(pairs))) as pool:
+        futures = [pool.submit(copy_new, source, destination, expected, limit, dir_fd)
+                   for source, destination, expected, dir_fd in pairs]
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                future.result()
+            except BaseException as error:
+                errors.append(error)
+    if errors:
+        raise errors[0]
 
 
 def request_text(raw: bytes) -> str:
@@ -371,15 +419,20 @@ def prepare(source: Path, destination: Path, assert_stopped: Callable[[Path], No
         if not destination_seal.exists(): destination_seal.mkdir()
         target_local = destination / "Local"
         target_local.mkdir()
-        for current, directories, _ in os.walk(local, followlinks=False):
-            for child in sorted(directories):
-                (target_local / (Path(current) / child).relative_to(local)).mkdir()
-    with timer.measure("local-copy", {"files": len(files), "bytes": sum(os.path.getsize(path) for path in files)}):
-        pairs = [(path, target_local / path.relative_to(local),
-                  expected[scenario_profile.normalize(str(path.relative_to(local)))]) for path in files]
-        # copy_new_files validates and dir_fd-anchors every distinct destination directory exactly
-        # once, before any worker starts (see its docstring and open_validated_directory).
-        copy_new_files(pairs, MAX_LOCAL_FILE)
+        # Every subdirectory below target_local is created AND opened one path component at a time,
+        # relative to its own already-anchored parent fd -- never by resolving a multi-component
+        # path -- so a swap of any intermediate ancestor's NAME during the copy phase below cannot
+        # redirect a worker's write (see make_directory_tree/open_directory_chain docstrings).
+        directory_fds = make_directory_tree(target_local, local)
+    try:
+        with timer.measure("local-copy", {"files": len(files), "bytes": sum(os.path.getsize(path) for path in files)}):
+            pairs = [(path, target_local / path.relative_to(local),
+                      expected[scenario_profile.normalize(str(path.relative_to(local)))],
+                      directory_fds[path.relative_to(local).parent]) for path in files]
+            copy_new_files(pairs, MAX_LOCAL_FILE)
+    finally:
+        for fd in directory_fds.values():
+            os.close(fd)
     with timer.measure("post-copy-target-inventory"):
         require(scenario_profile.inventory(str(target_local)) == expected, "copied Local differs from original closed inventory")
         write_new(target_local / "scenario-load.txt", load_request)

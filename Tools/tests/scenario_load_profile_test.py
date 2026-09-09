@@ -146,31 +146,43 @@ class ScenarioLoadProfileTest(unittest.TestCase):
                 self.assertEqual(sha((self.seal / "profile.sha256").read_bytes()), evidence["sourceHashes"][".seal/profile.sha256"])
                 self.assertEqual(evidence, json.loads((self.destination / "load-source-evidence.json").read_bytes()))
 
-    def test_destination_ancestor_is_validated_once_per_directory_before_any_worker_starts(self):
+    def test_every_destination_directory_is_opened_exactly_once_before_any_worker_starts(self):
         self.fixture()
         for index in range(load.MAX_COPY_WORKERS * 3):
             (self.mod / ("Core/Many%d.cs" % index)).write_bytes(("class Many%d {}" % index).encode("ascii"))
         with contextlib.redirect_stdout(io.StringIO()):
             load.scenario_profile.seal(str(self.local), str(self.seal / "profile.sha256"))
-        real_directory, real_copy_new = load.directory, load.copy_new
+        real_open_root, real_open_chain, real_copy_new = (
+            load.open_validated_root, load.open_directory_chain, load.copy_new)
         events = []
-        def directory_spy(path):
-            events.append(("directory", path))
-            real_directory(path)
+        def open_root_spy(path):
+            events.append(("open_root", path))
+            return real_open_root(path)
+        def open_chain_spy(root_fd, components):
+            events.append(("open_chain", components))
+            return real_open_chain(root_fd, components)
         def copy_new_spy(source, destination, expected, limit, dir_fd=None):
             events.append(("copy", destination))
             real_copy_new(source, destination, expected, limit, dir_fd)
-        with mock.patch.object(load, "directory", side_effect=directory_spy), \
+        with mock.patch.object(load, "open_validated_root", side_effect=open_root_spy), \
+             mock.patch.object(load, "open_directory_chain", side_effect=open_chain_spy), \
              mock.patch.object(load, "copy_new", side_effect=copy_new_spy):
             load.prepare(self.source, self.destination, self.stopped)
-        target_local_dir = self.destination / "Local"
-        first_copy_index = next(index for index, (kind, _) in enumerate(events) if kind == "copy")
-        # Every fixture file lands directly in Local/, so the pre-fan-out validation for that one
-        # directory must appear exactly once, strictly before the first worker's copy_new call --
-        # not once per file, which would show up interleaved with (and outnumbering) the copies.
-        before_any_copy = [path for kind, path in events[:first_copy_index]
-                            if kind == "directory" and path == target_local_dir]
-        self.assertEqual([target_local_dir], before_any_copy)
+        first_copy_index = next(index for index, event in enumerate(events) if event[0] == "copy")
+        opens_before_any_copy = [event for event in events[:first_copy_index] if event[0] != "copy"]
+        opens_after = [event for event in events[first_copy_index:] if event[0] != "copy"]
+        # Every directory open (root anchor + every one-component descent) happens strictly before
+        # the first worker's copy_new call -- not interleaved with copies, and never repeated once
+        # per file. Exactly one open per unique directory: one root, one chain-open per
+        # subdirectory (Mods, Mods/ThousandAndFirst, Mods/ThousandAndFirst/Harness,
+        # Mods/ThousandAndFirst/Core, Empty) -- five subdirectories in this fixture.
+        self.assertEqual([], opens_after)
+        self.assertEqual(1, sum(1 for kind, _ in opens_before_any_copy if kind == "open_root"))
+        chain_opens = [components for kind, components in opens_before_any_copy if kind == "open_chain"]
+        self.assertEqual(5, len(chain_opens))
+        self.assertEqual(len(chain_opens), len(set(chain_opens)))
+        for components in chain_opens:
+            self.assertEqual(1, len(components))  # one path component at a time, never more
 
     def test_phase_timings_are_recorded_in_order_and_never_gate_success(self):
         self.fixture()
@@ -336,7 +348,7 @@ class ScenarioLoadProfileTest(unittest.TestCase):
         self.assertFalse((self.destination_seal / "request.txt").exists())
         self.assertFalse((self.destination / "load-source-evidence.json").exists())
 
-    def test_destination_directory_symlink_swap_after_preflight_cannot_escape_via_dir_fd(self):
+    def test_leaf_directory_symlink_swap_after_its_own_open_cannot_escape_via_dir_fd(self):
         self.fixture()
         for index in range(load.MAX_COPY_WORKERS * 2):
             (self.mod / ("Core/Swap%d.cs" % index)).write_bytes(("class Swap%d {}" % index).encode("ascii"))
@@ -344,27 +356,24 @@ class ScenarioLoadProfileTest(unittest.TestCase):
             load.scenario_profile.seal(str(self.local), str(self.seal / "profile.sha256"))
         outside = self.base / ("outside-escape" + str(self.number))
         outside.mkdir()
-        # Swap the LEAF "Core" directory specifically (it directly holds many copied files and has
-        # no descendant directory that a later, unrelated directory() ancestor-chain walk would
-        # independently catch): swapping the Local root instead would be masked, because every
-        # OTHER unique parent under Local (Harness, Core) walks Local as one of its own ancestors
-        # on its own turn and would refuse on that unrelated path, hiding whether dir_fd anchoring
-        # itself did anything. Core has no such descendant, so nothing else notices the swap early.
+        # Swap the LEAF "Core" directory specifically, right after ITS OWN open_directory_chain
+        # call: it directly holds many copied files and has no descendant directory, so nothing
+        # else in this walk would independently notice the swap first.
         target_core = self.destination / "Local/Mods/ThousandAndFirst/Core"
-        real_open_validated_directory = load.open_validated_directory
+        real_open_chain = load.open_directory_chain
         swapped = []
-        def swap_after_open(path):
-            # The directory fd this returns is already open and anchored to the ORIGINAL inode
-            # (see open_validated_directory's docstring). Deleting and resymlinking the NAME right
-            # after simulates an attacker winning the exact race this fix closes: every worker that
+        def swap_after_open(root_fd, components):
+            # The fd this returns is already open and anchored to the ORIGINAL inode (see
+            # open_directory_chain's docstring). Deleting and resymlinking the NAME right after
+            # simulates an attacker winning the exact race this fix closes: every worker that
             # submits after this point still only holds (and creates through) that original fd.
-            fd = real_open_validated_directory(path)
-            if path == target_core and not swapped:
-                shutil.rmtree(path)
-                path.symlink_to(outside, target_is_directory=True)
-                swapped.append(path)
+            fd = real_open_chain(root_fd, components)
+            if components == ("Core",) and not swapped:
+                shutil.rmtree(target_core)
+                target_core.symlink_to(outside, target_is_directory=True)
+                swapped.append(target_core)
             return fd
-        with mock.patch.object(load, "open_validated_directory", side_effect=swap_after_open):
+        with mock.patch.object(load, "open_directory_chain", side_effect=swap_after_open):
             # A later phase (e.g. scenario_profile.inventory's own by-name walk) correctly refuses
             # once "Core" is a symlink -- that is defense in depth, not the property under test.
             # The property under test is what happens to the in-flight Core workers themselves.
@@ -375,6 +384,43 @@ class ScenarioLoadProfileTest(unittest.TestCase):
         # hijacked "Core" name was ever written into the attacker-controlled directory, regardless
         # of how the rest of prepare() reacts afterward.
         self.assertEqual([], list(outside.iterdir()))
+
+    def test_intermediate_ancestor_symlink_swap_after_its_own_open_cannot_escape_via_dir_fd(self):
+        self.fixture()
+        for index in range(load.MAX_COPY_WORKERS * 2):
+            (self.mod / ("Core/Swap%d.cs" % index)).write_bytes(("class Swap%d {}" % index).encode("ascii"))
+        with contextlib.redirect_stdout(io.StringIO()):
+            load.scenario_profile.seal(str(self.local), str(self.seal / "profile.sha256"))
+        outside = self.base / ("outside-escape" + str(self.number))
+        # A REAL "Core" directory at the position an attacker would want it: if anything below the
+        # swapped ancestor ever re-resolved "Core" by a full path instead of by the fd this walk
+        # already holds, the lookup would silently succeed against this decoy and leak files here.
+        (outside / "Core").mkdir(parents=True)
+        # Swap "ThousandAndFirst" -- an INTERMEDIATE ancestor of both Core and Harness, not a leaf
+        # -- right after its OWN open_directory_chain call returns, before Core or Harness (its
+        # children) are created. This is the exact gap the leaf-only test above cannot exercise:
+        # both children are opened AFTER this swap, by resolving one component ("Core"/"Harness")
+        # relative to the fd this call already returned, never by re-walking "ThousandAndFirst"'s
+        # NAME again.
+        target_intermediate = self.destination / "Local/Mods/ThousandAndFirst"
+        real_open_chain = load.open_directory_chain
+        swapped = []
+        def swap_after_open(root_fd, components):
+            fd = real_open_chain(root_fd, components)
+            if components == ("ThousandAndFirst",) and not swapped:
+                shutil.rmtree(target_intermediate)
+                target_intermediate.symlink_to(outside, target_is_directory=True)
+                swapped.append(target_intermediate)
+            return fd
+        with mock.patch.object(load, "open_directory_chain", side_effect=swap_after_open):
+            with self.assertRaises((ValueError, OSError)):
+                load.prepare(self.source, self.destination, self.stopped)
+        self.assertEqual([target_intermediate], swapped)
+        # The decoy "Core" inside the attacker-controlled "outside" tree must stay completely
+        # empty: every create for Core/Harness (children of the swapped name) still resolves
+        # through the fd this walk already held for the TRUE "ThousandAndFirst" directory.
+        self.assertEqual([], list((outside / "Core").iterdir()))
+        self.assertEqual(["Core"], [p.name for p in outside.iterdir()])
 
     def test_one_bad_local_file_among_many_refuses_sealing_but_joins_every_worker(self):
         self.fixture()
@@ -443,7 +489,12 @@ class ScenarioLoadProfileTest(unittest.TestCase):
 
 
 class CopyNewFilesTest(unittest.TestCase):
-    """Direct contracts for the bounded parallel fan-out, independent of the full profile."""
+    """Direct contracts for the bounded parallel fan-out, independent of the full profile.
+
+    Pairs carry a real dir_fd opened via open_validated_root/open_directory_chain, exactly as
+    prepare()'s make_directory_tree would hand them to copy_new_files -- these tests never pass
+    None here, that path belongs to the three serial save-file copies only.
+    """
 
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory(prefix="taf-copy-new-files-test.")
@@ -453,20 +504,22 @@ class CopyNewFilesTest(unittest.TestCase):
         self.dest_dir = self.base / "dest"
         self.source_dir.mkdir()
         self.dest_dir.mkdir()
+        self.dest_fd = load.open_validated_root(self.dest_dir)
+        self.addCleanup(lambda: os.close(self.dest_fd))
 
-    def make_pairs(self, count):
+    def make_pairs(self, count, dir_fd=None):
         pairs = []
         for index in range(count):
             content = ("payload-%d" % index).encode("ascii")
             source = self.source_dir / ("file-%03d.bin" % index)
             source.write_bytes(content)
-            pairs.append((source, self.dest_dir / source.name, sha(content)))
+            pairs.append((source, self.dest_dir / source.name, sha(content), dir_fd if dir_fd is not None else self.dest_fd))
         return pairs
 
     def test_copies_every_pair_with_matching_inventory_more_files_than_workers(self):
         pairs = self.make_pairs(load.MAX_COPY_WORKERS * 3 + 1)
         load.copy_new_files(pairs, load.MAX_LOCAL_FILE)
-        for source, destination, expected in pairs:
+        for source, destination, expected, _ in pairs:
             self.assertEqual(source.read_bytes(), destination.read_bytes())
             self.assertEqual(expected, sha(destination.read_bytes()))
         source_inventory = load.scenario_profile.inventory(str(self.source_dir))
@@ -485,8 +538,11 @@ class CopyNewFilesTest(unittest.TestCase):
             return real_executor(max_workers=max_workers, **kwargs)
         few_pairs = self.make_pairs(2)
         (self.dest_dir / "many").mkdir()
-        many_pairs = [(source, self.dest_dir / "many" / destination.name, expected)
-                      for source, destination, expected in self.make_pairs(load.MAX_COPY_WORKERS * 5)]
+        many_fd = load.open_directory_chain(self.dest_fd, ("many",))
+        self.addCleanup(lambda: os.close(many_fd))
+        many_pairs = self.make_pairs(load.MAX_COPY_WORKERS * 5, dir_fd=many_fd)
+        many_pairs = [(source, self.dest_dir / "many" / destination.name, expected, dir_fd)
+                      for source, destination, expected, dir_fd in many_pairs]
         with mock.patch.object(load.concurrent.futures, "ThreadPoolExecutor", side_effect=spy):
             load.copy_new_files(few_pairs, load.MAX_LOCAL_FILE)
             load.copy_new_files(many_pairs, load.MAX_LOCAL_FILE)
@@ -494,13 +550,13 @@ class CopyNewFilesTest(unittest.TestCase):
 
     def test_one_failing_worker_is_reported_after_every_worker_is_joined(self):
         pairs = self.make_pairs(load.MAX_COPY_WORKERS * 4)
-        bad_source, bad_destination, _ = pairs[len(pairs) // 2]
-        pairs[len(pairs) // 2] = (bad_source, bad_destination, "0" * 64)  # wrong expected hash
+        bad_source, bad_destination, _, bad_dir_fd = pairs[len(pairs) // 2]
+        pairs[len(pairs) // 2] = (bad_source, bad_destination, "0" * 64, bad_dir_fd)  # wrong hash
         with self.assertRaisesRegex(ValueError, "copy differs from frozen source"):
             load.copy_new_files(pairs, load.MAX_LOCAL_FILE)
         # Every OTHER worker still ran to completion (was joined) before the failure propagated:
         # ThreadPoolExecutor's context manager waits for every submitted future either way.
-        completed = [destination for _, destination, _ in pairs if destination != bad_destination]
+        completed = [destination for _, destination, _, _ in pairs if destination != bad_destination]
         for destination in completed:
             self.assertTrue(destination.exists(), "sibling worker output missing: " + str(destination))
         # The module's stated contract is "refusals retain any partial destination, no cleanup
@@ -511,11 +567,11 @@ class CopyNewFilesTest(unittest.TestCase):
 
     def test_source_read_failure_in_one_worker_does_not_abort_siblings(self):
         pairs = self.make_pairs(load.MAX_COPY_WORKERS * 2)
-        missing_source, missing_destination, expected = pairs[0]
+        missing_source, missing_destination, expected, _ = pairs[0]
         missing_source.unlink()
         with self.assertRaises(OSError):
             load.copy_new_files(pairs, load.MAX_LOCAL_FILE)
-        for source, destination, _ in pairs[1:]:
+        for source, destination, _, _ in pairs[1:]:
             self.assertTrue(destination.exists(), "sibling worker output missing: " + str(destination))
 
 
