@@ -2,7 +2,7 @@
 
 **Snapshot:** 2026-09-09
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
-**Current public version:** 0.3.2 public Alpha playtest, in release-prep on `dev` (not yet published)
+**Next public version (in prep, not yet published):** 0.3.2 public Alpha playtest, in release-prep on `dev`
 **Published manifest:** 0.3.1; one subscribed client verified, broader Beta work remains open
 
 The public Alpha is [Steam Workshop item
@@ -95,7 +95,7 @@ cold-install inventory. Staged compilation covers 3068 sources, baseline and com
 (baseline compiles 3064 of them; the optional-mod bridge is compatibility-only), run here by Roslyn
 9.0.306 on Linux against the licensed Managed references with warnings as
 errors. Direct `XRL` imports: 1429 files, 0 over the line limit.
-Inventory SHA-256: `93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa` (the 0.3.2 KingdomReleaseInfo.cs version-literal bump over that digest, no other change).
+Inventory SHA-256: `93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa` (this digest differs from the previous one solely because of the 0.3.2 KingdomReleaseInfo.cs version-literal bump; no other change).
 Before the merge, all four `Tools/gate.sh` modes compiled clean on the shelter-ingress delta's own
 bytes — staged baseline (3050 sources), staged compatibility (3054), dev-harness baseline (3204)
 and dev-harness compatibility (3208) — with the installed-Hearthpyre source and ABI step, and the
