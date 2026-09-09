@@ -33,6 +33,7 @@ _notes/*
 !_notes/V1-POLITY-SCOPE.md
 !_notes/balance-sim.py
 !_notes/balance-sim-output.txt
+!_notes/CITY-IMPLEMENTATION-PLAN-v4-2026-09-09.md
 Tools/last-deploy-receipt.txt
 __pycache__/
 *.py[cod]
