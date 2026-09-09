@@ -131,7 +131,36 @@ below it.
   (ruling 5); no capacity, catch-up envelope, or stored item is touched, and a standing save reads
   exactly what it read before.
 
-> **Current unreleased census — exact structural gate passed.** Current 3068-file census is line-cap green:
+> **Current unreleased census — exact structural gate passed.** Current 3072-file census is line-cap green:
+> 436,251 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
+> imports occur in 1432 files, 0 of them over the line limit. Inventory SHA-256:
+> `cc7beb34524d8e756c5ff44e302a8e32a8d65798a1f4610a9b311f186d963ed7`.
+> The generated cold-install inventory contains 3103 files; no new subscription claim.
+> This digest is the Kingdom Quickstart founding cohort over the stockpile deposit custody census
+> retained below, and over every delta retained beneath that; each carries its own review chain and
+> none is restated for the others.
+> The founding-cohort delta over the custody census below is four added and nine modified production
+> sources and no regenerated roster (it declares no new property or blueprint): the quickstart
+> rules' founders partial, the bootstrap's receipt partial split out of the bootstrap itself to stay
+> under the line cap, and the two bootstrap founders partials are the additions; the quickstart
+> models, rules, codec, citizenship rules, bootstrap, recovery, verification and lifecycle shards
+> and the two harness gates are the modifications.
+> On these bytes ALL FOUR compile modes are clean — staged baseline (3068 sources), staged
+> compatibility (3072 plus the tracked Hearthpyre 2.2.3 ABI stub), dev-harness baseline (3235) and
+> dev-harness compatibility (3239) — under Roslyn 9.0.318 on Linux against the installed managed
+> assemblies, through a reproduction of `Tools/gate.sh` rather than the Windows gate itself. The
+> engine-free suites pass ALL GREEN: 14,088 TafTests cases and 5,242 PortableTests cases, zero
+> skipped, of 14,088/5,242 discovered; the 627-test tooling suite passes. Sixteen guard mutations
+> were run against the new rules and fourteen were caught by a failing case; the two survivors are
+> recorded as redundant with the wire digest and the validity ladder that already refuse them.
+> NOT run for this delta: the Windows gate itself, the installed-Hearthpyre source step, the
+> licensed Windows suite driver, the native Quickstart boot matrix, ordinary play, graceful Quit and
+> Steam delivery. The six-profile boot matrix at seed `#43101` is OWED before merge, because this
+> delta changes what Quickstart does at boot.
+> The exact-inventory human semantic review is open against this digest; this is not Beta sign-off.
+
+> **Retained stockpile deposit custody census — exact structural gate passed.** That 3068-file census was line-cap green:
 > 435,538 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1429 files, 0 of them over the line limit. Inventory SHA-256:

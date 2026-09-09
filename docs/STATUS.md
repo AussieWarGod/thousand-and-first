@@ -105,6 +105,35 @@ subscribed client verified, `freshTransferVerified=false` and `releaseReady=fals
 explicit, and manual subscribe-and-smoke-test plus the Discord/community announcement remain
 outstanding (operator follow-up, not pipeline scope).
 
+## Unreleased Kingdom Quickstart founding cohort
+
+Kingdom Quickstart now founds a new world with four founding citizens on the approach, enrolled
+under a new `Founding` reason only that bootstrap can emit and on the roll at turn 1. The cohort is
+raised in two stages split at the reversibility boundary: one custody scope for four bodies and all
+their gear, a publish that names the exact four before any irreversible write, then a forward-only
+idempotent half. The receipt carries a durable founders disposition and the four identities on a new
+sixteen-field wire form; a receipt written before this change, or written with the new option off,
+stays on the old eleven-field form, re-encodes byte for byte and is terminal on every wake, so no
+existing world can gain founders.
+
+Current census on these bytes: 3072
+staged C# files; 436,251 physical lines; 3103 files in the generated
+cold-install inventory. Staged compilation covers 3072 sources, baseline and compatibility symbols
+(baseline compiles 3068 of them; the optional-mod bridge is compatibility-only), run here by Roslyn
+9.0.318 on Linux against the licensed Managed references with warnings as
+errors. Direct `XRL` imports: 1432 files, 0 over the line limit.
+Inventory SHA-256: `cc7beb34524d8e756c5ff44e302a8e32a8d65798a1f4610a9b311f186d963ed7`.
+All four compile modes are clean on these bytes — staged baseline (3068 sources), staged
+compatibility (3072), dev-harness baseline (3235) and dev-harness compatibility (3239) — through the
+Linux Roslyn reproduction of `Tools/gate.sh` rather than the Windows gate, which did NOT run here.
+The engine-free suites pass 14,088 TafTests and 5,242 PortableTests cases, zero skipped, and the
+Tools suite passes 627 tests.
+NOT RUN for these bytes: the Windows gate, the licensed Windows suite driver, any native run,
+ordinary play, graceful Quit and Steam delivery. In particular the six-profile Quickstart boot
+matrix at seed `#43101` has NOT been re-run on these bytes and must be, before merge, because this
+changes what Quickstart does at boot; earlier matrix results sign earlier bytes only. No human
+exact-inventory semantic review binds this digest.
+
 ## Unreleased Kingdom Quickstart shelter ingress
 
 The two tent-row lots staked at founding now stake on every shipped profile. `KingdomPlots.Stake`
@@ -121,7 +150,7 @@ engine-free; `DevTests/KingdomQuickstartShelterIngressTests.cs` recomputes them 
 architecture with the same `KingdomRoadRules.TryAuthoredLane` the stake walks and fails on drift.
 The heart-ingress endpoints are unchanged and refusal is still fail-closed with the same message.
 
-Current census after merging `dev` (the Kingdom Quickstart tent rows, the first-basin water store,
+Retained census after merging `dev` (the Kingdom Quickstart tent rows, the first-basin water store,
 the stockpile unit capacity, the render-only city sight and the shelter ingress included) and the
 stockpile deposit custody fix: 3068
 staged C# files; 435,538 physical lines; 3099 files in the generated

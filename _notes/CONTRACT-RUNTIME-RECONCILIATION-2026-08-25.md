@@ -1,6 +1,17 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
-## Current stockpile deposit custody census — 2026-09-09
+## Current Kingdom Quickstart founding-cohort census — 2026-09-10
+
+3072 production C# files; 3,103 cold-install files in the generated inventory;
+436,251 physical lines, 1432 direct-XRL, zero cap failures. Exact digest
+`cc7beb34524d8e756c5ff44e302a8e32a8d65798a1f4610a9b311f186d963ed7`.
+Quickstart's founding cohort is split at the reversibility boundary: one grant scope for four bodies
+and all their gear, a publish that names the exact four, then a forward-only idempotent enrolment
+under an append-only `Founding` reason. Old receipts keep their exact bytes and are terminal.
+Roslyn 9.0.318 on Linux compiled all four modes clean on these bytes, and the engine-free suites
+passed 14,088 main / 5,242 Portable with zero skips; no Windows gate or native evidence binds them.
+
+## Retained stockpile deposit custody census — 2026-09-09
 
 3068 production C# files; 3,099 cold-install files in the generated inventory;
 435,538 physical lines, 1429 direct-XRL, zero cap failures. Exact digest
