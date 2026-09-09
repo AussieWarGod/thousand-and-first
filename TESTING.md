@@ -1,9 +1,9 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
-The current public Alpha manifest is `0.3.2`, prepared on `dev` ahead of the public Workshop
-upload; `0.3.1` remains the last tagged release published with one subscribed installation
-verified. Working-tree changes do not inherit that tagged release's receipts. The unreleased
-working tree still carries `0.3.2`; any next public release requires a new version.
+The current public Alpha manifest is `0.3.2`, published to the public Workshop item and
+verified with one subscribed installation (2026-09-09); `0.3.1` was the prior tagged release.
+Working-tree changes do not inherit that tagged release's receipts. Any next public release
+requires a new version.
 A future v1.0 test-candidate claim requires its exact tree—not any historical
 Alpha receipt—to pass every applicable automated, native, human, compatibility, structure, and
 subscribed-package gate named here.
