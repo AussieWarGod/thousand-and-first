@@ -160,7 +160,7 @@ namespace ThousandAndFirst
 			{
 				return 0;
 			}
-			return CountBlueprint(Container.Inventory.Objects, Blueprint);
+			return CountBlueprint(Container.Inventory.Objects, Blueprint, Container, null);
 		}
 
 		/// <summary>The same reading for open ground, which has no capacity and no designation:
@@ -168,12 +168,30 @@ namespace ThousandAndFirst
 		internal static int GroundMaterialHeldNow(Cell Ground, string Blueprint)
 		{
 			return (Ground != null && !string.IsNullOrEmpty(Blueprint))
-				? CountBlueprint(Ground.Objects, Blueprint) : 0;
+				? CountBlueprint(Ground.Objects, Blueprint, null, Ground) : 0;
 		}
 
-		/// <summary>Units of one blueprint in a list of objects, counting a stack of twenty as
-		/// twenty and a thing with no count at all as one.</summary>
-		private static int CountBlueprint(IReadOnlyList<GameObject> Objects, string Blueprint)
+		/// <summary>
+		/// Units of one blueprint PROVED to be standing in an exact destination, counting a stack
+		/// of twenty as twenty and a thing with no count at all as one.
+		/// <para>
+		/// Membership of the destination's own list is not the proof, because a list can hold a
+		/// body that is no longer there. <c>Cell.AddObject</c> runs <c>Physics.EnterCell</c>
+		/// BEFORE it appends, and a handler on the environmental update inside it may move the
+		/// object to another cell; the append then happens anyway, and the cell-entry stacking
+		/// that follows merges the body into a stack in the cell it actually reached and
+		/// obliterates it. The requested cell is left holding a dead entry, and counting that
+		/// entry would pay this delivery for a landing somewhere else. So each entry answers for
+		/// itself: it exists, and its OWN custody names this destination.
+		/// </para>
+		/// <para>
+		/// Reading a count is itself eventful (<c>Stacker.Number</c> repairs a nonpositive count
+		/// and dispatches), which is exactly why the caller proves custody again afterwards. It is
+		/// asked only of an entry already proved to be standing here.
+		/// </para>
+		/// </summary>
+		private static int CountBlueprint(IReadOnlyList<GameObject> Objects, string Blueprint,
+			GameObject Container, Cell Ground)
 		{
 			int held = 0;
 			if (Objects == null)
@@ -183,13 +201,29 @@ namespace ThousandAndFirst
 			for (int i = 0; i < Objects.Count; i++)
 			{
 				GameObject item = Objects[i];
-				if (item == null || item.Blueprint != Blueprint)
+				if (!GameObject.Validate(item) || item.Blueprint != Blueprint
+					|| !StandsIn(item, Container, Ground))
 				{
 					continue;
 				}
 				held += (item.Count > 0) ? item.Count : 1;
 			}
 			return held;
+		}
+
+		/// <summary>Whether one object's OWN custody names the exact destination being read. A
+		/// container is named by the physics inventory back-reference and no cell; a cell by the
+		/// object's current cell and no holder of any kind.</summary>
+		private static bool StandsIn(GameObject Item, GameObject Container, Cell Ground)
+		{
+			if (Container != null)
+			{
+				return Item.Physics != null
+					&& ReferenceEquals(Item.Physics.InInventory, Container)
+					&& Item.CurrentCell == null;
+			}
+			return Ground != null && ReferenceEquals(Item.CurrentCell, Ground)
+				&& Item.Holder == null;
 		}
 
 		/// <summary>

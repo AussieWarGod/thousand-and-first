@@ -151,18 +151,43 @@ namespace ThousandAndFirst
 					Blueprint, Batch);
 			}
 
-			/// <summary>Said once, in the founder's own words: a bundle went somewhere the
-			/// keepers cannot account for, so the rest of the delivery is held rather than
-			/// made a second time.</summary>
+			/// <summary>
+			/// Said once, in the founder's own words: a bundle went somewhere the keepers cannot
+			/// account for, so the rest of the delivery is held rather than made a second time.
+			/// <para>
+			/// The log line goes first and is built out of raw strings only, because everything
+			/// below it can run somebody else's code: a display name is assembled by handlers,
+			/// and the room and hold readings walk objects and ask each one its count. A
+			/// diagnostic must never be the reason a delivery loses the units it proved.
+			/// </para>
+			/// </summary>
 			public void AnnounceUncertainCustody()
 			{
-				string store = GameObject.Validate(Container)
-					? Container.ShortDisplayName : "stockpile";
-				MessageQueue.AddPlayerMessage("{{K|A bundle bound for the " + store
+				KingdomLog.Log("materials: deposit custody unproved, blueprint=" + Blueprint
+					+ " store=" + StoreLabel());
+				MessageQueue.AddPlayerMessage("{{K|A bundle bound for the " + StoreName()
 					+ " ended up somewhere the keepers cannot account for; the rest of the load"
 					+ " is held rather than made a second time.}}");
-				KingdomLog.Log("materials: deposit custody unproved, blueprint=" + Blueprint
-					+ " room=" + RoomNow() + " held=" + MaterialHeldNow());
+			}
+
+			/// <summary>The store's blueprint id, which is a plain field and reaches nobody.
+			/// </summary>
+			private string StoreLabel()
+			{
+				return GameObject.Validate(Container) ? (Container.Blueprint ?? "?") : "gone";
+			}
+
+			/// <summary>The store's name as the founder reads it, and its blueprint id when the
+			/// name cannot be had: <c>ShortDisplayName</c> is assembled by display handlers, and
+			/// one of them throwing may not cost the delivery its accounting.</summary>
+			private string StoreName()
+			{
+				if (!GameObject.Validate(Container))
+				{
+					return "stockpile";
+				}
+				try { return Container.ShortDisplayName; }
+				catch { return Container.Blueprint ?? "stockpile"; }
 			}
 		}
 	}

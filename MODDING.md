@@ -360,6 +360,21 @@ and only when the destruction is not vetoed: `Obliterate` returns `false` for a 
 and a `BeforeDestroyObjectEvent` handler may move the body before refusing, so the settlement reads
 the body again afterwards and stops rather than assuming it won.
 
+**Reading is a callback too.** `GameObject.Count` reaches `Stacker.Number`, which repairs a
+nonpositive count by assigning one and dispatching `StackCountChangedEvent`; a store's room and its
+hold are both counted by walking objects and asking each of them the same question. So the
+settlement proves custody again after every one of those readings and before the next thing it
+does, and a handler that relocates the bundle from inside a read stops the delivery instead of
+having the bundle destroyed or inserted out from under it. Every batch's count is proved before
+insertion, including a batch of one: a factory callback that leaves a stack of two where the
+delivery wanted one is refused rather than placed.
+
+**A held clearance stake stays held.** If a cleared ground's yield cannot be proved into the
+stockpiles, the stake is marked (`KingdomClearanceHeldUnproved`) and every later pass refuses to
+clear, issue, or remove anything there until somebody settles it by hand. Without that the next
+pass would find the ground already cleared, harvest nothing, settle an empty delivery, issue the
+ground mud and take the stake away, and the uncertainty would quietly disappear.
+
 The ground is a destination like any other. Overflow set down at the founder's feet is proved the
 same way and paid the same way: `Cell.AddObject` hands your object back even when `Physics.EnterCell`
 refused it, so the cell is read instead of the call, and a stack already lying there that absorbs

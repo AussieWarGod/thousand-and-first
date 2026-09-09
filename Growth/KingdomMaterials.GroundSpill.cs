@@ -136,24 +136,28 @@ namespace ThousandAndFirst
 
 			/// <summary>Proof that the exact bundle is lying in the exact cell with the count it
 			/// was stamped with. Cell.AddObject returns what it was handed even when the cell
-			/// refused entry, so the returned reference proves nothing on its own and the cell is
-			/// read instead.</summary>
+			/// refused entry, and it appends to the REQUESTED cell's list even when the entry
+			/// callbacks moved the body somewhere else first, so neither the returned reference
+			/// nor list membership proves anything on its own: the body's own cell is read.
+			/// </summary>
 			public bool Landed(object Bundle, object Accepted, int Batch)
 			{
 				GameObject item = Bundle as GameObject;
 				return ReferenceEquals(Accepted, item) && GameObject.Validate(item)
 					&& item.Blueprint == Blueprint && item.Count == Batch
 					&& Ground != null && ReferenceEquals(item.CurrentCell, Ground)
-					&& Ground.Objects.Contains(item);
+					&& item.Holder == null && Ground.Objects.Contains(item);
 			}
 
+			/// <summary>The log line is written FIRST and off raw strings only: the founder's
+			/// message and the hold reading both reach handlers, and a diagnostic that throws
+			/// must not be the reason a delivery loses its accounting.</summary>
 			public void AnnounceUncertainCustody()
 			{
+				KingdomLog.Log("materials: spill custody unproved, blueprint=" + Blueprint);
 				MessageQueue.AddPlayerMessage("{{K|A bundle set down for want of a stockpile"
 					+ " ended up somewhere the keepers cannot account for; the rest of the load"
 					+ " is held rather than made a second time.}}");
-				KingdomLog.Log("materials: spill custody unproved, blueprint=" + Blueprint
-					+ " held=" + MaterialHeldNow());
 			}
 		}
 	}

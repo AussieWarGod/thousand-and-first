@@ -77,16 +77,48 @@ namespace ThousandAndFirst.Tests
 		/// <summary>Insertions before the one that throws. Negative never throws.</summary>
 		internal int ThrowOnInsertAfter = -1;
 
-		private int Insertions;
+		/// <summary>True makes the saying itself throw, as a display handler can: naming a store
+		/// reaches <c>GetDisplayNameEvent</c>.</summary>
+		internal bool ThrowOnAnnounce;
+
+		/// <summary>
+		/// READS are callbacks too, and these model that. Native <c>GameObject.Count</c> reaches
+		/// <c>Stacker.Number</c>, which repairs a nonpositive count by assigning one and
+		/// dispatching <c>StackCountChangedEvent</c>; a room or material census walks objects and
+		/// asks every one of them the same question. Each hook runs inside the corresponding read.
+		/// </summary>
+		internal Action<FakeStore, FakeBundle> OnCountRead;
+
+		/// <summary>Runs inside a room census. <see cref="RoomReads"/> tells one from the next.
+		/// </summary>
+		internal Action<FakeStore, FakeBundle> OnRoomRead;
+
+		/// <summary>Runs inside a material census.</summary>
+		internal Action<FakeStore, FakeBundle> OnMaterialRead;
+
+		internal int RoomReads;
+
+		internal int MaterialReads;
+
+		/// <summary>Insertions actually attempted, so a test can prove a foreign-held body was
+		/// never handed to the destination at all.</summary>
+		internal int Insertions;
+
+		/// <summary>The bundle the fill is working on, so a read hook can reach it.</summary>
+		private FakeBundle Working;
 
 		public int RoomNow()
 		{
+			RoomReads++;
+			if (OnRoomRead != null && Working != null) OnRoomRead(this, Working);
 			int room = Capacity - Held;
 			return (room > 0) ? room : 0;
 		}
 
 		public int MaterialHeldNow()
 		{
+			MaterialReads++;
+			if (OnMaterialRead != null && Working != null) OnMaterialRead(this, Working);
 			return MaterialHeld;
 		}
 
@@ -94,6 +126,7 @@ namespace ThousandAndFirst.Tests
 		{
 			FakeBundle bundle = new FakeBundle();
 			Created.Add(bundle);
+			Working = bundle;
 			if (OnCreate != null) OnCreate(this, bundle);
 			return bundle;
 		}
@@ -112,7 +145,9 @@ namespace ThousandAndFirst.Tests
 
 		public int CountOf(object Bundle)
 		{
-			return ((FakeBundle)Bundle).Count;
+			FakeBundle bundle = (FakeBundle)Bundle;
+			if (OnCountRead != null) OnCountRead(this, bundle);
+			return bundle.Count;
 		}
 
 		public bool Alive(object Bundle)
@@ -177,6 +212,10 @@ namespace ThousandAndFirst.Tests
 		public void AnnounceUncertainCustody()
 		{
 			Sayings++;
+			if (ThrowOnAnnounce)
+			{
+				throw new InvalidOperationException("a display handler threw while naming a store");
+			}
 		}
 
 		/// <summary>Units physically standing anywhere at all, so a duplication shows up as a

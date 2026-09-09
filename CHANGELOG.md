@@ -1,4 +1,4 @@
-﻿# Changelog
+# Changelog
 
 All notable changes to The Thousand and First. Versions are semantic: patch for fixes,
 minor for additive API and content, major for breaking changes. Supported API is defined in
@@ -49,6 +49,29 @@ below it.
   nothing is created, where a body used to be made only to be destroyed.
 - A handler that throws inside a callback no longer discards what the delivery had already proved.
   The fill returns the proved units with an uncertain custody instead of unwinding past the caller.
+- Reading is treated as a callback, because it is one. `GameObject.Count` reaches
+  `Stacker.Number`, which repairs a nonpositive count by assigning one and dispatching
+  `StackCountChangedEvent`, and a room or material census walks objects and asks each of them the
+  same question. Custody is proved again after every such reading and before the next mutation, so
+  a handler that relocates the bundle from inside a read can no longer be followed by a
+  destruction or an insertion of a body somebody else is holding.
+- Every batch proves its count before insertion, not only a stamped one. A creation handler that
+  left an exclusively held stack of two where the delivery wanted one used to be inserted whole:
+  two units into a destination paid for one, and on open ground an ordinary merge then clamped the
+  gain back to one and settled a delivery that had actually placed two.
+- The gain readers count only members whose OWN custody names the destination.
+  `Cell.AddObject` runs `Physics.EnterCell` before it appends, so a handler on the environmental
+  update inside it can move the body to another cell; the append happens anyway, the cell-entry
+  stacking then merges the body into a stack in the cell it really reached and obliterates it, and
+  the requested cell is left holding a dead entry that used to be counted as a landing.
+- Saying that a delivery is uncertain can no longer cost it the units it proved. A store's display
+  name is assembled by handlers, so the diagnostic itself can throw; the outcome is now built
+  regardless, the once-only flag is set before the saying, the log line is written first off raw
+  strings, and the name falls back to the store's blueprint id.
+- A clearance stake whose yield could not be proved home is now DURABLY held rather than merely
+  announced. The ground it stood on is already cleared, so the next eligible pass used to find an
+  empty yield, settle it, issue the ground mud and remove the stake — and the inspection hold the
+  founder had been told about simply evaporated.
 - Every settlement-owned caller that writes a receipt now reads the custody first. The clearance
   stake no longer stamps its one-shot ground yield as issued after a refusal (which forfeited the
   mud permanently and in silence) and no longer chronicles a yield nothing was credited for; the
@@ -68,22 +91,24 @@ below it.
   exactly what it read before.
 
 > **Current unreleased census — exact structural gate passed.** Current 3067-file census is line-cap green:
-> 435,151 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> 435,284 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1428 files, 0 of them over the line limit. Inventory SHA-256:
-> `2c2b3c81ee2a50f204aebca207e5a01b76f855bb86b9a3fdeb5393d489d681bc`.
+> `3251dd8615c08ad4f7235bfb009a3f7fb3f21ba44fac2d7bf2e7bc80575df6a2`.
 > The generated cold-install inventory contains 3098 files; no new subscription claim.
 > This digest is the stockpile deposit custody fix merged over the Kingdom Quickstart shelter
 > ingress, the render-only city sight, the stockpile unit capacity, the first-basin water store and
 > the Kingdom Quickstart tent rows retained below; each delta carries its own review chain and none
 > is restated for the others.
-> The custody delta over the shelter-ingress census below is three added and four modified
-> production sources: the engine-free deposit law, its host seam, the GameObject implementation of
-> that seam, and the room, stock, rules and yard shards that route through it.
+> The custody delta over the shelter-ingress census below is five added and nine modified
+> production sources, plus the regenerated removal-coverage roster: the engine-free deposit law and
+> its host seam, the GameObject implementations of that seam for a store and for open ground, and
+> the yard shard split out of the settlement pass are the additions; the room, stock, declarations,
+> rules, settlement-pass, clearance, infrastructure and carry-sign shards are the modifications.
 > On these bytes the staged baseline (3063 sources) and staged compatibility (3067 sources plus the
 > tracked Hearthpyre 2.2.3 ABI stub) compile clean under Roslyn 9.0.306 on Linux against the
 > installed managed assemblies rather than through `Tools/gate.sh`; both engine-free suites run
-> green there (14,019 main/5,199 Portable, zero skips) and the 627-test tooling suite passes. The
+> green there (14,026 main/5,199 Portable, zero skips) and the 627-test tooling suite passes. The
 > two new deposit regressions were confirmed to FAIL against the pre-fix behaviour before the fix
 > was kept.
 > NOT run for this delta: the two dev-harness modes, the installed-Hearthpyre source step, the

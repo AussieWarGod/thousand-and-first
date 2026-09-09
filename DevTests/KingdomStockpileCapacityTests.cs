@@ -258,14 +258,30 @@ namespace ThousandAndFirst.Tests
 			// a refusal forfeits the mud permanently and in silence.
 			string clearance = TestMain.ReadRepositoryText(
 				"Growth/KingdomMaterials.14.ClearanceWork.cs");
+			// And the hold is DURABLE, not an announcement. The ground is already cleared when a
+			// yield delivery is refused, so an unheld later pass would harvest nothing, settle an
+			// empty delivery, issue the ground mud and remove the stake -- and the uncertainty
+			// would evaporate. The fence is read before any mutation the pass performs.
+			AssertOrdered(clearance,
+				"private static void WorkClearance(",
+				"if (StakeObject.GetIntProperty(ClearanceHeldProperty) == 1)",
+				"return;",
+				"if (Order.LastWorkedTick <= 0)");
+			ClassicAssert.AreEqual(2, Occurrences(clearance,
+				"StakeObject.SetIntProperty(ClearanceHeldProperty, 1);"),
+				"both custody refusals must write the durable hold");
+			StringAssert.Contains("public const string ClearanceHeldProperty",
+				TestMain.ReadRepositoryText("Growth/KingdomMaterials.01.Declarations.cs"));
 			AssertOrdered(clearance,
 				"int spilled = stock.PutAll(yield, stakeCell, out KingdomDepositCustody yieldCustody);",
 				"if (yieldCustody != KingdomDepositCustody.Settled)",
+				"StakeObject.SetIntProperty(ClearanceHeldProperty, 1);",
 				"Order.BlockedAnnounced = true;",
 				"return;",
 				"StakeObject.SetIntProperty(ClearanceGroundPhaseProperty, 1);",
 				"try { spilled += stock.Put(KingdomMaterial.Mud, mud, stakeCell, out mudCustody); }",
 				"if (mudCustody != KingdomDepositCustody.Settled)",
+				"StakeObject.SetIntProperty(ClearanceHeldProperty, 1);",
 				"Order.BlockedAnnounced = true;",
 				"return;",
 				"StakeObject.SetIntProperty(ClearanceGroundPhaseProperty, 2);",
@@ -299,24 +315,30 @@ namespace ThousandAndFirst.Tests
 			string room = TestMain.ReadRepositoryText(RoomFile);
 			AssertOrdered(DepositSource(),
 				"object bundle = Host.Create();",
+				// Reading the room walks and counts objects, so it is taken BEFORE the fence.
+				"bool stacks = Host.Stacks(bundle);",
+				"int live = Host.RoomNow();",
 				"if (!Host.HeldByNobody(bundle))",
 				"return Refuse(Host, Placed);",
-				"int batch = KingdomRules.DepositBatch(remaining, room, Host.RoomNow(),",
-				"Host.Stacks(bundle));",
+				"int batch = KingdomRules.DepositBatch(remaining, room, live, stacks);",
 				"if (batch < 1)",
 				"if (!Host.Discard(bundle))",
 				"return Refuse(Host, Placed);",
 				"break;",
 				"if (batch > 1)",
 				"Host.Stamp(bundle, batch);",
+				// EVERY batch is proved, and both reads are fenced before the decision they feed.
+				"int carried = Host.CountOf(bundle);",
+				"int roomNow = Host.RoomNow();",
 				"if (!Host.HeldByNobody(bundle))",
 				"return Refuse(Host, Placed);",
-				"if (!KingdomRules.DepositStampHolds(batch, Host.CountOf(bundle),",
-				"Host.RoomNow()))",
+				"if (!KingdomRules.DepositStampHolds(batch, carried, roomNow))",
 				"if (!Host.Discard(bundle))",
 				"return Refuse(Host, Placed);",
 				"break;",
 				"int held = Host.MaterialHeldNow();",
+				"if (!Host.HeldByNobody(bundle))",
+				"return Refuse(Host, Placed);",
 				"object accepted = Host.Insert(bundle);",
 				"if (Host.Landed(bundle, accepted, batch))",
 				"Placed += batch;",
@@ -348,6 +370,33 @@ namespace ThousandAndFirst.Tests
 				room);
 			StringAssert.Contains("internal static int DepositMaterialHeldNow(GameObject Container, string Blueprint)",
 				room);
+			// The gain reader counts PROVED members only. Cell.AddObject appends to the cell it was
+			// asked about even when the entry callbacks moved the body elsewhere first, so a
+			// destination's own list can hold a dead entry that landed somewhere else entirely.
+			AssertOrdered(Between(room, "private static int CountBlueprint(",
+					"private static bool StandsIn("),
+				"if (!GameObject.Validate(item) || item.Blueprint != Blueprint",
+				"|| !StandsIn(item, Container, Ground))",
+				"continue;",
+				"held += (item.Count > 0) ? item.Count : 1;");
+			AssertOrdered(Between(room, "private static bool StandsIn(",
+					"internal static bool DepositLanded("),
+				"if (Container != null)",
+				"return Item.Physics != null",
+				"&& ReferenceEquals(Item.Physics.InInventory, Container)",
+				"&& Item.CurrentCell == null;",
+				"return Ground != null && ReferenceEquals(Item.CurrentCell, Ground)",
+				"&& Item.Holder == null;");
+			// The readers take no list membership for custody at all. The landing proof below may
+			// ALSO ask the list, because there it is an extra clause on top of the body's own
+			// inventory back-reference and can only ever make that proof stricter.
+			ClassicAssert.AreEqual(0, Occurrences(
+				Between(room, "internal static int DepositMaterialHeldNow(",
+					"internal static bool DepositLanded("),
+				"Objects.Contains("),
+				"the gain readers must not take list membership for custody");
+			StringAssert.Contains("ReferenceEquals(Item.Physics.InInventory, Container)",
+				Between(room, "internal static bool DepositLanded(", "How many of a stock's"));
 			string host = TestMain.ReadRepositoryText(HostFile);
 			StringAssert.Contains("return DepositRoomNow(Container);", host);
 			StringAssert.Contains("return DepositMaterialHeldNow(Container, Blueprint);", host);
@@ -463,6 +512,35 @@ namespace ThousandAndFirst.Tests
 				ClassicAssert.AreEqual(0, Occurrences(seam, "item.InInventory == null"),
 					"inventory alone is not a custody proof; equipment clears it");
 			}
+			// Saying so may never cost the delivery its accounting: the outcome is built either
+			// way, and the once flag is set BEFORE the saying so a throwing display handler
+			// cannot turn one uncertainty into a line said at every delivery afterwards.
+			AssertOrdered(Between(law, "private static KingdomDepositOutcome Refuse(",
+					"private static KingdomDepositOutcome Settle("),
+				"try",
+				"if (!Host.CustodyAnnounced)",
+				"Host.CustodyAnnounced = true;",
+				"Host.AnnounceUncertainCustody();",
+				"catch (Exception)",
+				"return new KingdomDepositOutcome(Placed, KingdomDepositCustody.Unproved);");
+			AssertOrdered(Between(law, "private static KingdomDepositOutcome Settle(", "\t}\n}"),
+				"try",
+				"if (Placed > 0 && Host.CustodyAnnounced)",
+				"Host.CustodyAnnounced = false;",
+				"catch (Exception)",
+				"return new KingdomDepositOutcome(Placed, KingdomDepositCustody.Settled);");
+			// And the seam writes its log off raw strings before it reaches a display handler, and
+			// falls back to the blueprint id when the name cannot be had at all.
+			AssertOrdered(Between(TestMain.ReadRepositoryText(HostFile),
+					"public void AnnounceUncertainCustody()", "\t}\n}"),
+				"KingdomLog.Log(\"materials: deposit custody unproved, blueprint=\" + Blueprint",
+				"+ \" store=\" + StoreLabel());",
+				"MessageQueue.AddPlayerMessage(",
+				"private string StoreLabel()",
+				"return GameObject.Validate(Container) ? (Container.Blueprint ?? \"?\") : \"gone\";",
+				"private string StoreName()",
+				"try { return Container.ShortDisplayName; }",
+				"catch { return Container.Blueprint ?? \"stockpile\"; }");
 			// A store that can no longer carry the saying is still not said twice.
 			AssertOrdered(Between(TestMain.ReadRepositoryText(HostFile),
 					"public bool CustodyAnnounced", "public int RoomNow()"),
@@ -871,7 +949,7 @@ namespace ThousandAndFirst.Tests
 		{
 			return Between(TestMain.ReadRepositoryText(LawFile),
 				"private static KingdomDepositOutcome Run(IKingdomDepositHost Host",
-				"/// <summary>Stops the delivery and says so once");
+				"/// Stops the delivery and says so once (STANDARDS 7b).");
 		}
 
 		private static string PutSource()

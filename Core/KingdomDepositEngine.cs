@@ -56,6 +56,15 @@ namespace ThousandAndFirst
 	/// would then exist twice. Anything unproved stops the delivery outright, and what could not
 	/// be proved deposited is never credited.
 	/// </para>
+	/// <para>
+	/// READING is not free either, which is why the proof is taken again and again rather than
+	/// once. Asking a bundle for its count reaches <c>Stacker.Number</c>, which REPAIRS a
+	/// nonpositive count by assigning one and dispatching <c>StackCountChangedEvent</c>; and a
+	/// destination's room and material hold are both counted by walking objects and asking each
+	/// of them the same question. So every reading here is treated as a callback, and custody is
+	/// proved again after the last of them and before the next mutation &mdash; never carried
+	/// across one.
+	/// </para>
 	/// </summary>
 	internal static class KingdomDepositEngine
 	{
@@ -103,15 +112,15 @@ namespace ThousandAndFirst
 				{
 					break;
 				}
-				// Creation has already run its callbacks. Two things are proved before the bundle
-				// is touched again: that this delivery is still the only party that could be
-				// holding it, and that the destination has the room the batch is about to claim.
+				// Creation has already run its callbacks, and so does the room census below, so
+				// both readings are taken first and custody is proved after the last of them.
+				bool stacks = Host.Stacks(bundle);
+				int live = Host.RoomNow();
 				if (!Host.HeldByNobody(bundle))
 				{
 					return Refuse(Host, Placed);
 				}
-				int batch = KingdomRules.DepositBatch(remaining, room, Host.RoomNow(),
-					Host.Stacks(bundle));
+				int batch = KingdomRules.DepositBatch(remaining, room, live, stacks);
 				if (batch < 1)
 				{
 					// Nothing is placed and nothing is counted; the units stay to deliver and go
@@ -125,27 +134,34 @@ namespace ThousandAndFirst
 				if (batch > 1)
 				{
 					Host.Stamp(bundle, batch);
-					// The stamp ran the engine's stack-count handlers. Custody is proved again
-					// before the insertion, because inserting a body takes it out of whoever is
-					// holding it; and a destination filled to its last unit while the stamp ran
-					// refuses the bundle rather than being paid for it out of the older number.
-					if (!Host.HeldByNobody(bundle))
+				}
+				// EVERY batch is proved, not only a stamped one: a creation handler can leave a
+				// stack of two standing where the delivery only ever wanted one, and inserting it
+				// would put two units into a destination paid for one. The count and the room are
+				// both read here, both can dispatch, and custody is proved after both of them and
+				// before anything is destroyed or inserted on the strength of either.
+				int carried = Host.CountOf(bundle);
+				int roomNow = Host.RoomNow();
+				if (!Host.HeldByNobody(bundle))
+				{
+					return Refuse(Host, Placed);
+				}
+				if (!KingdomRules.DepositStampHolds(batch, carried, roomNow))
+				{
+					if (!Host.Discard(bundle))
 					{
 						return Refuse(Host, Placed);
 					}
-					if (!KingdomRules.DepositStampHolds(batch, Host.CountOf(bundle),
-						Host.RoomNow()))
-					{
-						if (!Host.Discard(bundle))
-						{
-							return Refuse(Host, Placed);
-						}
-						break;
-					}
+					break;
 				}
 				// What the destination holds OF THIS MATERIAL going in, so what it gained can be
-				// told from what the insertion returned.
+				// told from what the insertion returned. This walks and counts objects too, so
+				// custody is proved once more before the insertion itself.
 				int held = Host.MaterialHeldNow();
+				if (!Host.HeldByNobody(bundle))
+				{
+					return Refuse(Host, Placed);
+				}
 				object accepted = Host.Insert(bundle);
 				if (Host.Landed(bundle, accepted, batch))
 				{
@@ -182,24 +198,50 @@ namespace ThousandAndFirst
 			return Settle(Host, Placed);
 		}
 
-		/// <summary>Stops the delivery and says so once (STANDARDS 7b).</summary>
+		/// <summary>
+		/// Stops the delivery and says so once (STANDARDS 7b).
+		/// <para>
+		/// SAYING SO MUST NEVER COST THE DELIVERY ITS ACCOUNTING. Naming a store reaches display
+		/// handlers, and a handler that throws while the delivery is already reporting a fault
+		/// would otherwise unwind past the caller and take the proved units with it &mdash; the
+		/// one thing this whole file exists to keep hold of. So the outcome is built either way,
+		/// and the once flag is set BEFORE the saying, so a throwing handler cannot turn one
+		/// uncertainty into a line said at every delivery afterwards. This is the one place in
+		/// the mod where a swallowed exception is correct, and it is swallowed at the narrowest
+		/// possible point: the diagnostic, never the decision.
+		/// </para>
+		/// </summary>
 		private static KingdomDepositOutcome Refuse(IKingdomDepositHost Host, int Placed)
 		{
-			if (!Host.CustodyAnnounced)
+			try
 			{
-				Host.CustodyAnnounced = true;
-				Host.AnnounceUncertainCustody();
+				if (!Host.CustodyAnnounced)
+				{
+					Host.CustodyAnnounced = true;
+					Host.AnnounceUncertainCustody();
+				}
+			}
+			catch (Exception)
+			{
 			}
 			return new KingdomDepositOutcome(Placed, KingdomDepositCustody.Unproved);
 		}
 
 		/// <summary>Ends a fill that accounted for everything it made, and takes back an earlier
-		/// uncertainty about this destination once a delivery has landed in it proved.</summary>
+		/// uncertainty about this destination once a delivery has landed in it proved. Taking the
+		/// saying back is a diagnostic too, and may not cost the delivery its accounting.
+		/// </summary>
 		private static KingdomDepositOutcome Settle(IKingdomDepositHost Host, int Placed)
 		{
-			if (Placed > 0 && Host.CustodyAnnounced)
+			try
 			{
-				Host.CustodyAnnounced = false;
+				if (Placed > 0 && Host.CustodyAnnounced)
+				{
+					Host.CustodyAnnounced = false;
+				}
+			}
+			catch (Exception)
+			{
 			}
 			return new KingdomDepositOutcome(Placed, KingdomDepositCustody.Settled);
 		}

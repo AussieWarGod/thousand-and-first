@@ -189,6 +189,118 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.AreEqual(1, store.Sayings);
 		}
 
+		// --- Reading is a callback too -----------------------------------------------------------
+
+		/// <summary>
+		/// Asking a bundle its count is not a quiet read. Native <c>GameObject.Count</c> reaches
+		/// <c>Stacker.Number</c>, which REPAIRS a nonpositive count by assigning one and
+		/// dispatching <c>StackCountChangedEvent</c>, so a stamp handler that leaves the raw count
+		/// at zero arms a second handler inside the very next read. If custody is not proved again
+		/// after that read, the failed count proof reaches the withdrawal and destroys a body
+		/// somebody else is now holding.
+		/// </summary>
+		[Test]
+		public void ACountReadThatRelocatesTheBundleIsNeverFollowedByADestruction()
+		{
+			FakeStore store = new FakeStore { Capacity = 8 };
+			store.OnStamp = (host, bundle) => { host.Held = host.Capacity; };
+			store.OnCountRead = FakeStore.CarryOff;
+
+			KingdomDepositOutcome outcome = KingdomDepositEngine.Fill(store, 4, 4);
+
+			ClassicAssert.AreEqual(KingdomDepositCustody.Unproved, outcome.Custody);
+			ClassicAssert.AreEqual(0, outcome.Placed);
+			ClassicAssert.AreEqual(0, store.Discarded.Count,
+				"a body the count read handed to somebody else is never destroyed");
+			ClassicAssert.IsTrue(store.Created[0].Alive);
+			ClassicAssert.AreEqual(0, store.Insertions);
+			ClassicAssert.AreEqual(1, store.Sayings);
+		}
+
+		/// <summary>A room census walks the destination's objects and asks each one its count, so
+		/// it is a callback too. One that relocates the bundle must stop the delivery before the
+		/// insertion, which would otherwise take the body out of whoever is holding it.</summary>
+		[Test]
+		public void ARoomCensusThatRelocatesTheBundleStopsBeforeTheInsertion()
+		{
+			FakeStore store = new FakeStore { Capacity = 64 };
+			store.OnRoomRead = (host, bundle) =>
+			{
+				if (host.RoomReads >= 2) FakeStore.CarryOff(host, bundle);
+			};
+
+			KingdomDepositOutcome outcome = KingdomDepositEngine.Fill(store, 4, 4);
+
+			ClassicAssert.AreEqual(KingdomDepositCustody.Unproved, outcome.Custody);
+			ClassicAssert.AreEqual(0, outcome.Placed);
+			ClassicAssert.AreEqual(0, store.Insertions, "nothing is handed to the destination");
+			ClassicAssert.AreEqual(0, store.Discarded.Count);
+			ClassicAssert.IsTrue(store.Created[0].Alive);
+		}
+
+		/// <summary>And the material census read immediately before the insertion is the last
+		/// callback of all; custody is proved after it too.</summary>
+		[Test]
+		public void AMaterialCensusThatRelocatesTheBundleStopsBeforeTheInsertion()
+		{
+			FakeStore store = new FakeStore { Capacity = 64 };
+			store.OnMaterialRead = FakeStore.CarryOff;
+
+			KingdomDepositOutcome outcome = KingdomDepositEngine.Fill(store, 4, 4);
+
+			ClassicAssert.AreEqual(KingdomDepositCustody.Unproved, outcome.Custody);
+			ClassicAssert.AreEqual(0, outcome.Placed);
+			ClassicAssert.AreEqual(0, store.Insertions);
+			ClassicAssert.AreEqual(0, store.Discarded.Count);
+			ClassicAssert.IsTrue(store.Created[0].Alive);
+		}
+
+		// --- Every batch proves its count --------------------------------------------------------
+
+		/// <summary>
+		/// A batch of ONE is proved like any other. A creation handler can leave an exclusively
+		/// held stack of two standing where the delivery only ever wanted one; inserting it would
+		/// put two units into a destination paid for one, and on open ground an ordinary merge
+		/// would retire the body and clamp the gain back to one, settling a delivery that actually
+		/// placed two.
+		/// </summary>
+		[Test]
+		public void ASingletonBatchProvesItsCountBeforeAnythingIsInserted()
+		{
+			FakeStore store = new FakeStore { Capacity = 1 };
+			store.OnCreate = (host, bundle) => { bundle.Count = 2; };
+
+			KingdomDepositOutcome outcome = KingdomDepositEngine.Fill(store, 1, 1);
+
+			ClassicAssert.AreEqual(KingdomDepositCustody.Settled, outcome.Custody,
+				"the bundle was ours and was withdrawn cleanly");
+			ClassicAssert.AreEqual(0, outcome.Placed);
+			ClassicAssert.AreEqual(0, store.Insertions,
+				"a stack of two is never handed to a destination paid for one");
+			ClassicAssert.AreEqual(1, store.Discarded.Count);
+			ClassicAssert.AreEqual(0, store.MaterialHeld);
+			ClassicAssert.AreEqual(0, store.Sayings);
+		}
+
+		/// <summary>The same proof when the miscount cannot be withdrawn: a vetoed destruction of
+		/// a two-unit body leaves it standing, so the delivery refuses rather than walking on and
+		/// making the units again.</summary>
+		[Test]
+		public void ASingletonMiscountThatCannotBeWithdrawnRefuses()
+		{
+			FakeStore store = new FakeStore { Capacity = 1 };
+			store.OnCreate = (host, bundle) => { bundle.Count = 2; };
+			store.OnDiscard = (host, bundle) => false;
+
+			KingdomDepositOutcome outcome = KingdomDepositEngine.Fill(store, 1, 1);
+
+			ClassicAssert.AreEqual(KingdomDepositCustody.Unproved, outcome.Custody);
+			ClassicAssert.AreEqual(0, outcome.Placed);
+			ClassicAssert.AreEqual(0, store.Insertions);
+			ClassicAssert.AreEqual(2, store.UnitsInTheWorld());
+			ClassicAssert.AreEqual(1, store.Sayings);
+		}
+
 		// --- Withdrawal is vetoable ------------------------------------------------------------
 
 		/// <summary>Destruction can be refused. A store with no room left withdraws the bundle it
@@ -452,6 +564,49 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.AreEqual(KingdomDepositCustody.Unproved, outcome.Custody);
 			ClassicAssert.AreEqual(1, outcome.Placed, "the first bundle really did land");
 			ClassicAssert.AreEqual(1, store.MaterialHeld);
+			ClassicAssert.AreEqual(1, store.Sayings);
+		}
+
+		/// <summary>
+		/// A diagnostic that throws must not cost the delivery its accounting. Naming a store
+		/// reaches display handlers, so the saying itself can throw &mdash; and it is said from
+		/// inside the fault path, where an escape would unwind past the caller and take the units
+		/// this fill had already PROVED with it.
+		/// </summary>
+		[Test]
+		public void AThrowingAnnouncementNeverCostsTheDeliveryItsProvedUnits()
+		{
+			FakeStore store = new FakeStore
+			{
+				Capacity = 8, Stackable = false, ThrowOnInsertAfter = 1, ThrowOnAnnounce = true
+			};
+
+			KingdomDepositOutcome outcome = KingdomDepositEngine.Fill(store, 5, 3);
+
+			ClassicAssert.AreEqual(KingdomDepositCustody.Unproved, outcome.Custody);
+			ClassicAssert.AreEqual(1, outcome.Placed, "the first bundle really did land");
+			ClassicAssert.AreEqual(1, store.MaterialHeld);
+			ClassicAssert.AreEqual(1, store.Sayings);
+			ClassicAssert.IsTrue(store.Announced,
+				"the once flag is set before the saying, so a throwing handler cannot repeat it");
+		}
+
+		/// <summary>And a throwing saying is still said only once across deliveries.</summary>
+		[Test]
+		public void AThrowingAnnouncementStillSaysItOnlyOnce()
+		{
+			FakeStore store = new FakeStore { Capacity = 8, ThrowOnAnnounce = true };
+			store.OnInsert = (host, bundle) =>
+			{
+				FakeStore.CarryOff(host, bundle);
+				return null;
+			};
+
+			KingdomDepositOutcome first = KingdomDepositEngine.Fill(store, 4, 4);
+			KingdomDepositOutcome second = KingdomDepositEngine.Fill(store, 4, 4);
+
+			ClassicAssert.AreEqual(KingdomDepositCustody.Unproved, first.Custody);
+			ClassicAssert.AreEqual(KingdomDepositCustody.Unproved, second.Custody);
 			ClassicAssert.AreEqual(1, store.Sayings);
 		}
 

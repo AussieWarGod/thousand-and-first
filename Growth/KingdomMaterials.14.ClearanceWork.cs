@@ -29,6 +29,20 @@ namespace ThousandAndFirst
 
 		private static void WorkClearance(KingdomSystem System, Zone Z, GameObject StakeObject, r_KingdomClearance Order, int Hands, long TimeTicks)
 		{
+			if (StakeObject.GetIntProperty(ClearanceHeldProperty) == 1)
+			{
+				// A previous pass could not prove where this stake's yield went. The ground it
+				// stood on is already cleared, so an unheld pass would find nothing to harvest,
+				// settle an empty delivery, issue the ground mud and remove the stake -- and the
+				// uncertainty the founder was told about would evaporate along with it. The hold
+				// is durable and refuses every further mutation until somebody lifts it.
+				if (!Order.BlockedAnnounced)
+				{
+					Order.BlockedAnnounced = true;
+					System.Ledger.Note("{{r|The clearance stake is held: part of its yield ended somewhere the keepers cannot account for. Nothing more is cleared, issued or removed here until it is settled by hand.}}");
+				}
+				return;
+			}
 			if (Order.LastWorkedTick <= 0)
 			{
 				Order.LastWorkedTick = TimeTicks;
@@ -137,7 +151,10 @@ namespace ThousandAndFirst
 				// A bundle of the cleared yield is standing somewhere the keepers cannot account
 				// for. The stake is held rather than removed: nothing more is issued, and the
 				// chronicle below is not reached, so the settlement is never told it grew richer
-				// by a tally nothing was credited for.
+				// by a tally nothing was credited for. The hold is written onto the stake, not
+				// merely announced, because the ground is already cleared and the next pass would
+				// otherwise find an empty yield and complete the order.
+				StakeObject.SetIntProperty(ClearanceHeldProperty, 1);
 				Order.BlockedAnnounced = true;
 				System.Ledger.Note("{{r|The cleared yield could not be proved into the stockpiles. The stake is held for inspection rather than issuing it twice.}}");
 				return;
@@ -186,6 +203,7 @@ namespace ThousandAndFirst
 					// Stamping the phase here would read as "issued" for ever after and forfeit
 					// the mud in silence; the phase stays at 1 and the stake is held for
 					// inspection exactly as an interrupted callback leaves it.
+					StakeObject.SetIntProperty(ClearanceHeldProperty, 1);
 					Order.BlockedAnnounced = true;
 					System.Ledger.Note("{{r|The clearance ground yield could not be proved into the stockpiles. The stake is held for inspection rather than issuing mud twice.}}");
 					return;

@@ -2,18 +2,18 @@
 
 ## Current unreleased stockpile deposit custody
 
-3067 staged sources; 435,151 physical lines; 1428 direct-XRL; zero cap failures; 3098 generated
-cold-stage files. Exact inventory `2c2b3c81ee2a50f204aebca207e5a01b76f855bb86b9a3fdeb5393d489d681bc`.
-Sixteen custody findings from two independent reviews of PR #84 are fixed, over the two physical defects first found in the merged stockpile-capacity deposit. A bundle an
+3067 staged sources; 435,284 physical lines; 1428 direct-XRL; zero cap failures; 3098 generated
+cold-stage files. Exact inventory `3251dd8615c08ad4f7235bfb009a3f7fb3f21ba44fac2d7bf2e7bc80575df6a2`.
+Twenty-two custody findings from three review passes on PR #84 are fixed, over the two physical defects first found in the merged stockpile-capacity deposit. A bundle an
 insertion callback moved elsewhere was preserved and counted as zero, so `MaterialStock.Put` made
 the units a second time in the next store or on the ground; and a bundle a stack-count handler had
 already carried off was obliterated whenever the stamp proof failed. The deposit law now lives
 engine-free in `Core/KingdomDepositEngine.cs` behind `Core/IKingdomDepositHost.cs`: unproved
 custody stops the whole `Put`, only what a store provably gained is credited, a body is withdrawn
-only when proved held by nobody AND provably destroyed, custody is proved before every mutation, a vanished bundle is credited only by the destination's own gain IN THAT MATERIAL, the landing proof requires the destination to still be dedicated stock, the overflow path runs the same law, a throwing handler keeps what was proved, and every caller that writes a receipt reads the custody first. The founder is told once. Counting stays whole, intake is still the
+only when proved held by nobody AND provably destroyed, custody is proved before every mutation, a vanished bundle is credited only by the destination's own gain IN THAT MATERIAL, the landing proof requires the destination to still be dedicated stock, the overflow path runs the same law, a throwing handler keeps what was proved, and every caller that writes a receipt reads the custody first. Reading is treated as a callback (Count repairs and dispatches; room and hold censuses walk and ask), every batch proves its count including a batch of one, the gain readers count only members whose own custody names the destination, the uncertainty saying cannot cost the delivery its proved units, and a clearance stake whose yield went unproved is durably held rather than merely announced. The founder is told once. Counting stays whole, intake is still the
 only refusal (ruling 5), the catch-up envelope is untouched and old saves read as before. It sits
 over the Kingdom Quickstart shelter ingress retained below. Structure, doc freshness and the Tools
-suite (627) pass; engine-free suites pass 14,019 main / 5,199 Portable, zero skips, and Roslyn
+suite (627) pass; engine-free suites pass 14,026 main / 5,199 Portable, zero skips, and Roslyn
 9.0.306 on Linux compiles the staged baseline (3063) and compatibility (3067) sets clean. The two
 new deposit regressions were confirmed to fail against the pre-fix behaviour. NOT run for these
 bytes: the two dev-harness modes, the installed-ABI source step, the Windows gate, the native
