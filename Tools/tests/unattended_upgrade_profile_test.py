@@ -323,3 +323,30 @@ class DiagnosticContractTest(unittest.TestCase):
 
     def test_clean_log_retains_nothing(self):
         self.assertEqual(witnesses.diagnostics(b"INFO - Enabled mods: The Thousand and First\n"), [])
+
+    def test_retained_taf_tagged_refused_line_is_labeled_taf_not_non_taf(self):
+        # Regression for #86: a retained "[TAF] ... refused" line names this mod (via its
+        # KingdomLog "[TAF] " prefix) but is correctly non-fatal -- "refused" is not one of
+        # TAF_DIAGNOSTIC's fatal keywords. The verdict label must say so is TAF-tagged, not
+        # claim it is a third party's "non-TAF" diagnostic.
+        taf_refused = ("[TAF] hosted reach overlay refused (hosted departure authority is absent)",
+                       "[TAF] architecture: ground layer refused: a living occupant moved onto "
+                       "layout slot g:02:01")
+        label = witnesses.label_retained(list(taf_refused))
+        self.assertIn("retained TAF-tagged non-fatal diagnostics: " + " | ".join(taf_refused), label)
+        self.assertNotIn("non-TAF", label)
+
+    def test_retained_third_party_line_keeps_the_non_taf_label(self):
+        third_party = witnesses.diagnostics(b"INFO clean\n" + self.PETS_LOAD_ORDER + b"\n")
+        label = witnesses.label_retained(third_party)
+        self.assertEqual(label, "; retained non-TAF diagnostics: " + self.PETS_LOAD_ORDER.decode())
+
+    def test_retained_mixed_lines_get_both_labels(self):
+        mixed = ["[TAF] hosted reach overlay refused (hosted departure authority is absent)",
+                 self.PETS_LOAD_ORDER.decode()]
+        label = witnesses.label_retained(mixed)
+        self.assertIn("retained TAF-tagged non-fatal diagnostics: [TAF] hosted reach overlay refused", label)
+        self.assertIn("retained non-TAF diagnostics: " + self.PETS_LOAD_ORDER.decode(), label)
+
+    def test_label_retained_returns_empty_string_when_nothing_retained(self):
+        self.assertEqual(witnesses.label_retained([]), "")
