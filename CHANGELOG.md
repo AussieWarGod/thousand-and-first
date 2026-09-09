@@ -126,10 +126,15 @@ below it.
 > carry-sign shards are the modifications.
 > On these bytes the staged baseline (3064 sources) and staged compatibility (3068 sources plus the
 > tracked Hearthpyre 2.2.3 ABI stub) compile clean under Roslyn 9.0.306 on Linux against the
-> installed managed assemblies rather than through `Tools/gate.sh`; both engine-free suites run
-> green there (14,061 main/5,215 Portable, zero skips) and the 627-test tooling suite passes. The
-> two new deposit regressions were confirmed to FAIL against the pre-fix behaviour before the fix
-> was kept.
+> installed managed assemblies rather than through `Tools/gate.sh`. Separately, the licensed
+> Windows suites (`DevTests/test.ps1`, the licensed Managed references, skips forbidden) were run
+> locally on this branch, immediately before the fix commit, and report ALL GREEN: 14,061 TafTests
+> cases and 5,215 PortableTests cases, zero skipped, of 14,061/5,215 discovered; the 627-test
+> tooling suite passes. Hosted CI has no game bytes and is a distinct, weaker check, never
+> zero-skip: GitHub Actions run 34302511689 (head `a64d090`) reports 14,051 passed/10 skipped and
+> 5,211 passed/4 skipped; its SUCCESS verdict does not stand in for the licensed local zero-skip
+> result above. The two new deposit regressions were confirmed to FAIL against the pre-fix
+> behaviour before the fix was kept.
 > NOT run for this delta: the two dev-harness modes, the installed-Hearthpyre source step, the
 > Windows gate, the native Quickstart boot matrix (last run on the shelter-ingress bytes below),
 > ordinary play, graceful Quit and Steam delivery.
