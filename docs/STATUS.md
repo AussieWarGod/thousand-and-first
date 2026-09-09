@@ -3,8 +3,8 @@
 **Snapshot:** 2026-09-09
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
 **Next public version:** none scheduled beyond 0.3.2
-**Published manifest:** 0.3.2 public Alpha playtest; private staging verified, public
-tag/upload pending — see [Public 0.3.2](#public-032) below
+**Working candidate manifest:** 0.3.2 public Alpha playtest; private staging verified,
+public Workshop upload not yet run — see [Public 0.3.2](#public-032) below
 
 The public Alpha is [Steam Workshop item
 3794797472](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472). Rows marked retained
@@ -37,7 +37,11 @@ Annotated `v0.3.1` still targets `a46b5ad`; `main` is now one squash commit ahea
 Public0.3.1 and its published bytes are unchanged. Windows and native lanes are being re-run for
 the current bytes; those receipts are pending and are not claimed here.
 
-## Automated release lane
+## Automated release lane (historical, 2026-09-08)
+
+The paragraphs and table below describe the lane as it stood on 2026-09-08, before it was ever
+exercised. They are retained for the settings audit they record, not as current status; see
+"Automated release lane — current, 2026-09-09" below for what actually happened.
 
 Workflow **authored, not yet exercised.** `.github/workflows/release.yml` adds a tag-triggered
 Steam Workshop release lane under the author ruling of 2026-09-08 recorded in
@@ -71,6 +75,25 @@ in [RELEASING.md](RELEASING.md#steam-host-runner-runbook); rule on the merge met
 pull requests, since the currently enabled squash-only merge rewrites the receipt-binding commit
 that the packager requires as an ancestor of the tagged `main` commit; and run the first
 `staging-v0.3.2` release, recording its run id, attempt number and finalization SHA here.
+
+## Automated release lane — current, 2026-09-09
+
+The three items left open above are resolved. Self-hosted runner `taf-steam-gamingpc` is
+registered and online. The merge-method ruling is decided: merge commits are enabled and
+main's linear-history requirement is off, so a release pull request's receipt-binding commit
+survives as an ancestor of the tagged `main` commit (author ruling).
+
+The first pipeline release has run: `staging-v0.3.2-1` triggered run `34327428688`, which
+succeeded through gate, package, plan, `check`, `-Submit` and the polled `-Verify`
+(`SubscribedInstallationVerified`). `finalize` did not run on that attempt because of the
+`if: success()` guard bug described under "Public 0.3.2" below; finalization was completed by
+hand from the retained run directory against private item 3796495680 attempt `0003`. The guard
+is fixed in #92 (`323a288`), an ancestor of this branch, so a future staging or public tag no
+longer needs the by-hand fallback for that failure mode.
+
+The evidence limits from the historical section still hold exactly as stated: this is one
+subscribed client, `freshTransferVerified=false`, `releaseReady=false` remain explicit, and
+the public v0.3.2 Workshop submission itself has not run yet — see "Public 0.3.2" below.
 
 ## Unreleased Kingdom Quickstart shelter ingress
 
@@ -572,12 +595,13 @@ Public0.3.1 remains the separately published checkpoint below; this correction i
 ## Public 0.3.2
 
 Staging tag `staging-v0.3.2-1` at `6e67fb346f9553bcf4dcfa4d148ec6a9164f1541` triggered run
-`34327428688` attempt `1` against private item3796495680 attempt `0003`. Submission reports
-`SubmittedUnverified` at09:44 UTC; a verify job then polled and reported
-`SubscribedInstallationVerified`. The workflow's own `finalize` job did not run: its `if:
-success()` guard evaluates false when the public-confirm job is skipped on a staging tag, so
-finalization was completed by hand from the retained run directory (runbook step 15), not by
-the pipeline. A fix PR for that guard is pending.
+`34327428688` attempt `1` against private item 3796495680 attempt `0003`. Submission reports
+`SubmittedUnverified` at 09:44 UTC; a verify job then polled and reported
+`SubscribedInstallationVerified`. The workflow's own `finalize` job did not run on this
+attempt: its `if: success()` guard evaluated false because the public-confirm job is skipped
+on a staging tag, so finalization was completed by hand from the retained run directory
+(runbook step 15), not by the pipeline. That guard is now fixed: PR #92 merged as commit
+`323a288`, an ancestor of this branch.
 
 | Binding | SHA-256 |
 | --- | --- |
