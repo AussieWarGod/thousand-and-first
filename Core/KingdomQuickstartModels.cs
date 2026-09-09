@@ -32,7 +32,32 @@ namespace ThousandAndFirst
 		FoodStocked = 3,
 		MaterialsStocked = 4,
 		AdvisorResolved = 5,
-		Complete = 6
+		Complete = 6,
+		/// <summary>
+		/// Four founding citizens stand on the approach, enrolled and on the roll. Reachable only
+		/// from <see cref="Complete"/>, and only for a receipt whose founders disposition is
+		/// <see cref="KingdomQuickstartFoundersDisposition.Seeding"/>.
+		/// </summary>
+		FoundersSeeded = 7
+	}
+
+	/// <summary>
+	/// Durable state of the founding cohort WITHIN the <see cref="KingdomQuickstartPhase.Complete"/>
+	/// phase. Phase alone cannot carry it: a phase advances exactly one step and only forward, while
+	/// the cohort needs a state that survives a crash between its reversible and irreversible halves.
+	/// <para>
+	/// <see cref="Omitted"/> is what a world written before founders existed decodes as, and what a
+	/// world founded with the option off is stamped with before its receipt is ever published. Both
+	/// are terminal, both encode on the old wire, and neither can ever gain founders.
+	/// </para>
+	/// </summary>
+	public enum KingdomQuickstartFoundersDisposition : byte
+	{
+		Omitted = 0,
+		Pending = 1,
+		Seeding = 2,
+		Seeded = 3,
+		Faulted = 4
 	}
 
 	public enum KingdomQuickstartAdvisorDisposition : byte
@@ -78,9 +103,19 @@ namespace ThousandAndFirst
 		/// </summary>
 		public bool ShelterObligation;
 
+		/// <summary>Durable state of the founding cohort. See the enum for what each value means.</summary>
+		public KingdomQuickstartFoundersDisposition FoundersDisposition;
+
+		/// <summary>
+		/// The exact four founder bodies, by object id, in index order. Empty for every disposition
+		/// that has no cohort; four non-empty, distinct identities for every disposition that does.
+		/// The array itself is fixed so no caller can shrink, grow or alias the cohort.
+		/// </summary>
+		public readonly string[] FounderObjectIds = { "", "", "", "" };
+
 		public KingdomQuickstartReceipt Copy()
 		{
-			return new KingdomQuickstartReceipt
+			KingdomQuickstartReceipt copy = new KingdomQuickstartReceipt
 			{
 				ProfileKey = ProfileKey,
 				ZoneId = ZoneId,
@@ -91,8 +126,12 @@ namespace ThousandAndFirst
 				StockpileObjectId = StockpileObjectId,
 				AdvisorDisposition = AdvisorDisposition,
 				AdvisorObjectId = AdvisorObjectId,
-				ShelterObligation = ShelterObligation
+				ShelterObligation = ShelterObligation,
+				FoundersDisposition = FoundersDisposition
 			};
+			for (int i = 0; i < FounderObjectIds.Length; i++)
+				copy.FounderObjectIds[i] = FounderObjectIds[i] ?? "";
+			return copy;
 		}
 	}
 }
