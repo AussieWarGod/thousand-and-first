@@ -22,11 +22,11 @@ python3 Tools/check-structure.py --release
 
 The stockpile deposit custody fix over the Kingdom Quickstart shelter ingress, the render-only
 city sight, the stockpile unit capacity, the first-basin water store and the Kingdom Quickstart
-tent rows reports 3067 staged production C# files and 435,382 physical lines.
+tent rows reports 3068 staged production C# files and 435,515 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`d0bfec405c828bf79c90459bc9944bd164c3263f2f2f845b688ed9825a6e6398`. The census reports
-1428 files with direct `XRL` imports; 0 of those exceed the line limit.
+`f778b470cb8a6ebeb1f1cc103249345ae19745b09eba8c918768254fda576abe`. The census reports
+1429 files with direct `XRL` imports; 0 of those exceed the line limit.
 
 The shelter-ingress delta over the retained city-sight draft below is one added and one modified
 production source and no
@@ -48,7 +48,7 @@ sources and no removals: the engine-free deposit law `Core/KingdomDepositEngine.
 `Core/IKingdomDepositHost.cs` and the GameObject implementation
 `Growth/KingdomMaterials.StockpileDeposit.cs` are the additions; the stockpile room shard, the
 material stock, the material-store rules and the settlement-pass yards are the modifications. On
-those bytes the staged baseline (3063 sources) and staged compatibility (3067 sources plus the
+those bytes the staged baseline (3064 sources) and staged compatibility (3068 sources plus the
 tracked Hearthpyre 2.2.3 ABI stub) compile clean under Roslyn 9.0.306 on Linux; the two
 dev-harness modes, the installed-Hearthpyre source step, the Windows gate and any native run did
 not run for them.

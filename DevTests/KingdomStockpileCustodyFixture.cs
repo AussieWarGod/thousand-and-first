@@ -11,7 +11,15 @@ namespace ThousandAndFirst.Tests
 	/// the real seam; here any non-null holder is somebody else.</summary>
 	internal sealed class FakeBundle
 	{
-		internal int Count = 1;
+		/// <summary>The raw field, which is what a stamp writes and what a raw read returns.
+		/// A nonpositive value is what arms the native count repair.</summary>
+		internal int RawCount = 1;
+
+		internal int Count
+		{
+			get { return RawCount; }
+			set { RawCount = value; }
+		}
 
 		internal bool Alive = true;
 
@@ -100,6 +108,21 @@ namespace ThousandAndFirst.Tests
 
 		internal int MaterialReads;
 
+		internal int CountReads;
+
+		internal int RawRoomReads;
+
+		internal int RawMaterialReads;
+
+		internal int RawCountReads;
+
+		/// <summary>What is already standing in the store, so a census is a walk over rows rather
+		/// than a scalar and a row's own reading can be made to move another row.</summary>
+		internal readonly List<FakeBundle> Residents = new List<FakeBundle>();
+
+		/// <summary>Runs inside an EVENTFUL census, once per counted row.</summary>
+		internal Action<FakeStore, FakeBundle> OnRowRead;
+
 		/// <summary>Insertions actually attempted, so a test can prove a foreign-held body was
 		/// never handed to the destination at all.</summary>
 		internal int Insertions;
@@ -107,19 +130,62 @@ namespace ThousandAndFirst.Tests
 		/// <summary>The bundle the fill is working on, so a read hook can reach it.</summary>
 		private FakeBundle Working;
 
+		/// <summary>The ORDINARY reading, which dispatches. The engine may take it as advice, so
+		/// its hook is allowed to change the pending bundle's count, fill the store, or carry the
+		/// bundle off &mdash; and the raw proofs further down must still catch all three.</summary>
 		public int RoomNow()
 		{
 			RoomReads++;
+			// A census totals what it walked, and a handler it fired during the walk changes the
+			// store AFTERWARDS. So the number it returns can already be out of date by the time
+			// the caller has it, which is the whole reason a raw re-observation follows.
+			int room = Capacity - Held;
 			if (OnRoomRead != null && Working != null) OnRoomRead(this, Working);
+			return (room > 0) ? room : 0;
+		}
+
+		/// <summary>The RAW reading. It runs no hook and changes nothing.</summary>
+		public int RawRoomNow()
+		{
+			RawRoomReads++;
 			int room = Capacity - Held;
 			return (room > 0) ? room : 0;
 		}
 
-		public int MaterialHeldNow()
+		/// <summary>
+		/// The RAW census: one pass over the residents, each counted off its own raw field, with
+		/// no hook anywhere inside it. <see cref="EventfulCensus"/> is the reading this replaced,
+		/// and a test asserts the engine never takes it: a census that dispatches can move an
+		/// earlier row after its count has already been added to the total.
+		/// </summary>
+		public int RawMaterialHeldNow()
+		{
+			RawMaterialReads++;
+			int held = 0;
+			for (int i = 0; i < Residents.Count; i++)
+			{
+				FakeBundle resident = Residents[i];
+				if (resident.Alive && resident.Holder == "store") held += resident.RawCount;
+			}
+			return held + MaterialHeld;
+		}
+
+		/// <summary>The census as it would be if every row were asked its count the ordinary way:
+		/// row N's read may move row N-1 out of the store AFTER its units have been counted. The
+		/// engine must never reach this.</summary>
+		internal int EventfulCensus()
 		{
 			MaterialReads++;
+			int held = 0;
+			for (int i = 0; i < Residents.Count; i++)
+			{
+				FakeBundle resident = Residents[i];
+				if (!resident.Alive || resident.Holder != "store") continue;
+				held += resident.RawCount;
+				if (OnRowRead != null) OnRowRead(this, resident);
+			}
 			if (OnMaterialRead != null && Working != null) OnMaterialRead(this, Working);
-			return MaterialHeld;
+			return held + MaterialHeld;
 		}
 
 		public object Create()
@@ -143,11 +209,22 @@ namespace ThousandAndFirst.Tests
 			if (OnStamp != null) OnStamp(this, bundle);
 		}
 
-		public int CountOf(object Bundle)
+		/// <summary>The RAW count: the field, no repair, no hook.</summary>
+		public int RawCountOf(object Bundle)
 		{
+			RawCountReads++;
 			FakeBundle bundle = (FakeBundle)Bundle;
-			if (OnCountRead != null) OnCountRead(this, bundle);
-			return bundle.Count;
+			return (bundle.RawCount > 0) ? bundle.RawCount : 1;
+		}
+
+		/// <summary>The count as the engine ordinarily reports it: a nonpositive raw count is
+		/// REPAIRED to one and the hook runs for it. The engine must never reach this.</summary>
+		internal int EventfulCountOf(FakeBundle Bundle)
+		{
+			CountReads++;
+			if (Bundle.RawCount <= 0) Bundle.RawCount = 1;
+			if (OnCountRead != null) OnCountRead(this, Bundle);
+			return Bundle.RawCount;
 		}
 
 		public bool Alive(object Bundle)

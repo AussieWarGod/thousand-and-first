@@ -54,11 +54,18 @@ namespace ThousandAndFirst
 			/// stopped being a destination and takes nothing.</summary>
 			public int RoomNow()
 			{
+				return RawRoomNow();
+			}
+
+			/// <summary>Open ground counts nothing to say how much it will take, so its ordinary
+			/// and raw readings are the same reading.</summary>
+			public int RawRoomNow()
+			{
 				return (Ground != null && Ground.ParentZone != null
 					&& (Z == null || ReferenceEquals(Ground.ParentZone, Z))) ? Bound : 0;
 			}
 
-			public int MaterialHeldNow()
+			public int RawMaterialHeldNow()
 			{
 				return GroundMaterialHeldNow(Ground, Blueprint);
 			}
@@ -83,10 +90,9 @@ namespace ThousandAndFirst
 				}
 			}
 
-			public int CountOf(object Bundle)
+			public int RawCountOf(object Bundle)
 			{
-				GameObject item = Bundle as GameObject;
-				return (item != null) ? item.Count : 0;
+				return KingdomMaterials.RawCountOf(Bundle as GameObject);
 			}
 
 			public bool Alive(object Bundle)
@@ -144,7 +150,7 @@ namespace ThousandAndFirst
 			{
 				GameObject item = Bundle as GameObject;
 				return ReferenceEquals(Accepted, item) && GameObject.Validate(item)
-					&& item.Blueprint == Blueprint && item.Count == Batch
+					&& item.Blueprint == Blueprint && RawCountOf(item) == Batch
 					&& Ground != null && ReferenceEquals(item.CurrentCell, Ground)
 					&& item.Holder == null && Ground.Objects.Contains(item);
 			}

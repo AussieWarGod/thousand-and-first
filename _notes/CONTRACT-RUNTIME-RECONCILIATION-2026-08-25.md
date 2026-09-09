@@ -2,14 +2,14 @@
 
 ## Current stockpile deposit custody census — 2026-09-09
 
-3067 production C# files; 3,098 cold-install files in the generated inventory;
-435,382 physical lines, 1428 direct-XRL, zero cap failures. Exact digest
-`d0bfec405c828bf79c90459bc9944bd164c3263f2f2f845b688ed9825a6e6398`.
+3068 production C# files; 3,099 cold-install files in the generated inventory;
+435,515 physical lines, 1429 direct-XRL, zero cap failures. Exact digest
+`f778b470cb8a6ebeb1f1cc103249345ae19745b09eba8c918768254fda576abe`.
 A deposit that cannot prove where its bundle went now stops the whole delivery rather than making
 the material a second time, and a body a callback is holding is never obliterated to resolve the
 ambiguity. The law is engine-free and the GameObject seam is the only piece that touches one.
-Roslyn 9.0.306 on Linux compiled the staged baseline (3063 sources) and compatibility (3067
-sources) sets clean on these bytes, and the engine-free suites passed 14,053 main / 5,215 Portable
+Roslyn 9.0.306 on Linux compiled the staged baseline (3064 sources) and compatibility (3068
+sources) sets clean on these bytes, and the engine-free suites passed 14,056 main / 5,215 Portable
 with zero skips; no dev-harness mode, Windows gate or native evidence binds them.
 
 ## Retained Kingdom Quickstart shelter-ingress census — 2026-09-09

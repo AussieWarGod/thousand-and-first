@@ -130,100 +130,15 @@ namespace ThousandAndFirst
 			return outcome;
 		}
 
-		/// <summary>Room in an exact destination that is still a dedicated stockpile, proved
-		/// fresh after a callback rather than remembered. Anything else has no room at all: a
-		/// store another handler destroyed, took the inventory off, or released mid-delivery
-		/// has stopped being a destination, and the delivery walks on rather than putting
-		/// material somewhere the settlement no longer counts.</summary>
+		/// <summary>Room in an exact destination that is still a dedicated stockpile, as the
+		/// settlement ORDINARILY counts it. Advice: it walks the store and asks every object its
+		/// count, which is how the settlement counts everywhere else, and how a delivery decides
+		/// how much to ask for. Anything that has stopped being a destination has no room at all.
+		/// </summary>
 		internal static int DepositRoomNow(GameObject Container)
 		{
 			return (GameObject.Validate(Container) && Container.Inventory != null
 				&& IsStockpile(Container)) ? StockpileRoom(Container) : 0;
-		}
-
-		/// <summary>
-		/// Units of ONE blueprint standing in an exact destination right now, and nothing at all
-		/// once it has stopped being a destination. Read either side of an insertion, this is how
-		/// the delivery learns what a store actually gained when the bundle it made stopped being
-		/// the thing the units arrived in.
-		/// <para>
-		/// Deliberately NARROWER than the room reading beside it. Room is whole-occupancy, because
-		/// everything in a chest takes up the space it takes up; but a gain is evidence about ONE
-		/// material, and a handler that retires the timber and drops an equal count of stone would
-		/// otherwise pay this delivery in full for timber that never arrived.
-		/// </para>
-		/// </summary>
-		internal static int DepositMaterialHeldNow(GameObject Container, string Blueprint)
-		{
-			if (!GameObject.Validate(Container) || Container.Inventory == null
-				|| !IsStockpile(Container) || string.IsNullOrEmpty(Blueprint))
-			{
-				return 0;
-			}
-			return CountBlueprint(Container.Inventory.Objects, Blueprint, Container, null);
-		}
-
-		/// <summary>The same reading for open ground, which has no capacity and no designation:
-		/// units of one blueprint standing in an exact cell right now.</summary>
-		internal static int GroundMaterialHeldNow(Cell Ground, string Blueprint)
-		{
-			return (Ground != null && !string.IsNullOrEmpty(Blueprint))
-				? CountBlueprint(Ground.Objects, Blueprint, null, Ground) : 0;
-		}
-
-		/// <summary>
-		/// Units of one blueprint PROVED to be standing in an exact destination, counting a stack
-		/// of twenty as twenty and a thing with no count at all as one.
-		/// <para>
-		/// Membership of the destination's own list is not the proof, because a list can hold a
-		/// body that is no longer there. <c>Cell.AddObject</c> runs <c>Physics.EnterCell</c>
-		/// BEFORE it appends, and a handler on the environmental update inside it may move the
-		/// object to another cell; the append then happens anyway, and the cell-entry stacking
-		/// that follows merges the body into a stack in the cell it actually reached and
-		/// obliterates it. The requested cell is left holding a dead entry, and counting that
-		/// entry would pay this delivery for a landing somewhere else. So each entry answers for
-		/// itself: it exists, and its OWN custody names this destination.
-		/// </para>
-		/// <para>
-		/// Reading a count is itself eventful (<c>Stacker.Number</c> repairs a nonpositive count
-		/// and dispatches), which is exactly why the caller proves custody again afterwards. It is
-		/// asked only of an entry already proved to be standing here.
-		/// </para>
-		/// </summary>
-		private static int CountBlueprint(IReadOnlyList<GameObject> Objects, string Blueprint,
-			GameObject Container, Cell Ground)
-		{
-			int held = 0;
-			if (Objects == null)
-			{
-				return 0;
-			}
-			for (int i = 0; i < Objects.Count; i++)
-			{
-				GameObject item = Objects[i];
-				if (!GameObject.Validate(item) || item.Blueprint != Blueprint
-					|| !StandsIn(item, Container, Ground))
-				{
-					continue;
-				}
-				held += (item.Count > 0) ? item.Count : 1;
-			}
-			return held;
-		}
-
-		/// <summary>Whether one object's OWN custody names the exact destination being read. A
-		/// container is named by the physics inventory back-reference and no cell; a cell by the
-		/// object's current cell and no holder of any kind.</summary>
-		private static bool StandsIn(GameObject Item, GameObject Container, Cell Ground)
-		{
-			if (Container != null)
-			{
-				return Item.Physics != null
-					&& ReferenceEquals(Item.Physics.InInventory, Container)
-					&& Item.CurrentCell == null;
-			}
-			return Ground != null && ReferenceEquals(Item.CurrentCell, Ground)
-				&& Item.Holder == null;
 		}
 
 		/// <summary>
@@ -240,7 +155,7 @@ namespace ThousandAndFirst
 			GameObject Accepted, string Blueprint, int Batch)
 		{
 			return ReferenceEquals(Accepted, Item) && GameObject.Validate(Item)
-				&& Item.Blueprint == Blueprint && Item.Count == Batch
+				&& Item.Blueprint == Blueprint && RawCountOf(Item) == Batch
 				&& GameObject.Validate(Container) && Container.Inventory != null
 				&& IsStockpile(Container)
 				&& Item.Physics != null && ReferenceEquals(Item.Physics.InInventory, Container)

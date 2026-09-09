@@ -360,14 +360,19 @@ and only when the destruction is not vetoed: `Obliterate` returns `false` for a 
 and a `BeforeDestroyObjectEvent` handler may move the body before refusing, so the settlement reads
 the body again afterwards and stops rather than assuming it won.
 
-**Reading is a callback too.** `GameObject.Count` reaches `Stacker.Number`, which repairs a
-nonpositive count by assigning one and dispatching `StackCountChangedEvent`; a store's room and its
-hold are both counted by walking objects and asking each of them the same question. So the
-settlement proves custody again after every one of those readings and before the next thing it
-does, and a handler that relocates the bundle from inside a read stops the delivery instead of
-having the bundle destroyed or inserted out from under it. Every batch's count is proved before
-insertion, including a batch of one: a factory callback that leaves a stack of two where the
-delivery wanted one is refused rather than placed.
+**Reading is a callback too, so a delivery reads raw.** `GameObject.Count` reaches
+`Stacker.Number`, which repairs a nonpositive count by assigning one and dispatching
+`StackCountChangedEvent`; a store's room and its hold are both counted by walking objects and
+asking each of them that same question. A delivery may take such a reading as ADVICE — it decides
+how much to ask for — but every final proof, immediately before it destroys or inserts anything and
+before it credits anything, reads the raw field instead (`Stacker.StackCount`, which repairs
+nothing and sends nothing). The last thing a delivery looks at can then never be the thing that
+moves the bundle, and a census cannot move an earlier row after that row's units are already in the
+total. Your handler on a count read still runs when the settlement counts ordinarily, everywhere
+else; it simply cannot be the thing that licences a destruction. Every batch's count is proved
+before insertion, including a batch of one: a factory callback that leaves a stack of two where the
+delivery wanted one is refused rather than placed. A broken count still READS as one, exactly as
+the repair intends, and is never written back by the delivery.
 
 **A held clearance stake stays held.** If a cleared ground's yield cannot be proved into the
 stockpiles, the stake is marked (`KingdomClearanceHeldUnproved`) and every later pass refuses to

@@ -57,13 +57,18 @@ namespace ThousandAndFirst
 	/// be proved deposited is never credited.
 	/// </para>
 	/// <para>
-	/// READING is not free either, which is why the proof is taken again and again rather than
-	/// once. Asking a bundle for its count reaches <c>Stacker.Number</c>, which REPAIRS a
-	/// nonpositive count by assigning one and dispatching <c>StackCountChangedEvent</c>; and a
-	/// destination's room and material hold are both counted by walking objects and asking each
-	/// of them the same question. So every reading here is treated as a callback, and custody is
-	/// proved again after the last of them and before the next mutation &mdash; never carried
-	/// across one.
+	/// READING is not free either. Asking a bundle for its count reaches <c>Stacker.Number</c>,
+	/// which REPAIRS a nonpositive count by assigning one and dispatching
+	/// <c>StackCountChangedEvent</c>; and a destination's room and hold are counted by walking
+	/// objects and asking each of them that same question. Proving custody after such a read is
+	/// not enough, because the read may have changed the count or the room instead of the holder,
+	/// and because the read's own write lands on a body somebody else may already have taken.
+	/// </para>
+	/// <para>
+	/// So the order is RAW OBSERVE, DECIDE, MUTATE. An ordinary reading may be taken as ADVICE
+	/// &mdash; it decides how much to ask for &mdash; but every FINAL proof, immediately before a
+	/// mutation and before any credit, is a raw one: the field itself, no repair, no send. The
+	/// last thing a delivery looks at can then never be the thing that moves the bundle.
 	/// </para>
 	/// </summary>
 	internal static class KingdomDepositEngine
@@ -112,8 +117,10 @@ namespace ThousandAndFirst
 				{
 					break;
 				}
-				// Creation has already run its callbacks, and so does the room census below, so
-				// both readings are taken first and custody is proved after the last of them.
+				// Creation has already run its callbacks, and the ordinary room census below runs
+				// more of them. That census is ADVICE: it decides how much this delivery asks
+				// for, and custody is proved after it, but nothing is destroyed or inserted on
+				// the strength of it. The proofs that licence those come further down, raw.
 				bool stacks = Host.Stacks(bundle);
 				int live = Host.RoomNow();
 				if (!Host.HeldByNobody(bundle))
@@ -135,13 +142,15 @@ namespace ThousandAndFirst
 				{
 					Host.Stamp(bundle, batch);
 				}
-				// EVERY batch is proved, not only a stamped one: a creation handler can leave a
-				// stack of two standing where the delivery only ever wanted one, and inserting it
-				// would put two units into a destination paid for one. The count and the room are
-				// both read here, both can dispatch, and custody is proved after both of them and
-				// before anything is destroyed or inserted on the strength of either.
-				int carried = Host.CountOf(bundle);
-				int roomNow = Host.RoomNow();
+				// The final proof of the batch, and every reading in it is RAW. EVERY batch is
+				// proved, not only a stamped one: a creation handler can leave a stack of two
+				// standing where the delivery only ever wanted one, and inserting it would put
+				// two units into a destination paid for one. Nothing in this group can move the
+				// bundle, change its count, or fill the destination, so no reading here can
+				// invalidate another and the custody proof beside them stays true until the
+				// mutation that follows it.
+				int roomNow = Host.RawRoomNow();
+				int carried = Host.RawCountOf(bundle);
 				if (!Host.HeldByNobody(bundle))
 				{
 					return Refuse(Host, Placed);
@@ -155,13 +164,10 @@ namespace ThousandAndFirst
 					break;
 				}
 				// What the destination holds OF THIS MATERIAL going in, so what it gained can be
-				// told from what the insertion returned. This walks and counts objects too, so
-				// custody is proved once more before the insertion itself.
-				int held = Host.MaterialHeldNow();
-				if (!Host.HeldByNobody(bundle))
-				{
-					return Refuse(Host, Placed);
-				}
+				// told from what the insertion returned. Raw, because it is half of a CREDIT: a
+				// census that repaired a resident's count as it walked could move that resident,
+				// or another, and pay this delivery for a landing that happened somewhere else.
+				int held = Host.RawMaterialHeldNow();
 				object accepted = Host.Insert(bundle);
 				if (Host.Landed(bundle, accepted, batch))
 				{
@@ -186,7 +192,7 @@ namespace ThousandAndFirst
 				// covering the whole batch settles it: a bundle that vanished leaving less behind
 				// took the remainder somewhere this delivery cannot read.
 				int landed = KingdomRules.DepositLandedUnits(batch, false, held,
-					Host.MaterialHeldNow());
+					Host.RawMaterialHeldNow());
 				Placed += landed;
 				remaining -= landed;
 				room -= landed;

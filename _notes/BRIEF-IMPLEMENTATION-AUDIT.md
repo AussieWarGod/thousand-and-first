@@ -2,13 +2,13 @@
 
 ## Current stockpile deposit custody census — 2026-09-09
 
-**3067** production C# files, 435,382 physical lines, 1428 direct-XRL, zero cap failures;
-3098 generated cold-install files. Exact digest
-`d0bfec405c828bf79c90459bc9944bd164c3263f2f2f845b688ed9825a6e6398`.
+**3068** production C# files, 435,515 physical lines, 1429 direct-XRL, zero cap failures;
+3099 generated cold-install files. Exact digest
+`f778b470cb8a6ebeb1f1cc103249345ae19745b09eba8c918768254fda576abe`.
 Three added sources (the engine-free deposit law, its seam, and the GameObject host that
 implements it) and four modified, over the shelter-ingress census retained below. Structure, doc
-freshness and the Tools suite (627 tests) pass, and the engine-free suites pass 14,053 main /
-5,215 Portable, zero skips, with the staged baseline (3063 sources) and compatibility (3067
+freshness and the Tools suite (627 tests) pass, and the engine-free suites pass 14,056 main /
+5,215 Portable, zero skips, with the staged baseline (3064 sources) and compatibility (3068
 sources) sets compiling clean under Roslyn 9.0.306 on Linux. The two new deposit regressions were
 confirmed to fail against the pre-fix behaviour before the fix was kept. No dev-harness mode,
 Windows gate, native run, ordinary-play acceptance or exact-inventory human semantic review binds

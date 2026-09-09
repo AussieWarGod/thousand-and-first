@@ -191,32 +191,6 @@ namespace ThousandAndFirst.Tests
 
 		// --- Reading is a callback too -----------------------------------------------------------
 
-		/// <summary>
-		/// Asking a bundle its count is not a quiet read. Native <c>GameObject.Count</c> reaches
-		/// <c>Stacker.Number</c>, which REPAIRS a nonpositive count by assigning one and
-		/// dispatching <c>StackCountChangedEvent</c>, so a stamp handler that leaves the raw count
-		/// at zero arms a second handler inside the very next read. If custody is not proved again
-		/// after that read, the failed count proof reaches the withdrawal and destroys a body
-		/// somebody else is now holding.
-		/// </summary>
-		[Test]
-		public void ACountReadThatRelocatesTheBundleIsNeverFollowedByADestruction()
-		{
-			FakeStore store = new FakeStore { Capacity = 8 };
-			store.OnStamp = (host, bundle) => { host.Held = host.Capacity; };
-			store.OnCountRead = FakeStore.CarryOff;
-
-			KingdomDepositOutcome outcome = KingdomDepositEngine.Fill(store, 4, 4);
-
-			ClassicAssert.AreEqual(KingdomDepositCustody.Unproved, outcome.Custody);
-			ClassicAssert.AreEqual(0, outcome.Placed);
-			ClassicAssert.AreEqual(0, store.Discarded.Count,
-				"a body the count read handed to somebody else is never destroyed");
-			ClassicAssert.IsTrue(store.Created[0].Alive);
-			ClassicAssert.AreEqual(0, store.Insertions);
-			ClassicAssert.AreEqual(1, store.Sayings);
-		}
-
 		/// <summary>A room census walks the destination's objects and asks each one its count, so
 		/// it is a callback too. One that relocates the bundle must stop the delivery before the
 		/// insertion, which would otherwise take the body out of whoever is holding it.</summary>
@@ -224,10 +198,7 @@ namespace ThousandAndFirst.Tests
 		public void ARoomCensusThatRelocatesTheBundleStopsBeforeTheInsertion()
 		{
 			FakeStore store = new FakeStore { Capacity = 64 };
-			store.OnRoomRead = (host, bundle) =>
-			{
-				if (host.RoomReads >= 2) FakeStore.CarryOff(host, bundle);
-			};
+			store.OnRoomRead = FakeStore.CarryOff;
 
 			KingdomDepositOutcome outcome = KingdomDepositEngine.Fill(store, 4, 4);
 
@@ -238,21 +209,110 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.IsTrue(store.Created[0].Alive);
 		}
 
-		/// <summary>And the material census read immediately before the insertion is the last
-		/// callback of all; custody is proved after it too.</summary>
+		/// <summary>The gain census immediately before and after the insertion is RAW, so there
+		/// is no callback there to relocate anything: the reading that pays the delivery cannot
+		/// be the reading that moves its bundle.</summary>
 		[Test]
-		public void AMaterialCensusThatRelocatesTheBundleStopsBeforeTheInsertion()
+		public void TheGainCensusIsRawAndCannotRelocateTheBundleItPaysFor()
 		{
 			FakeStore store = new FakeStore { Capacity = 64 };
 			store.OnMaterialRead = FakeStore.CarryOff;
 
 			KingdomDepositOutcome outcome = KingdomDepositEngine.Fill(store, 4, 4);
 
-			ClassicAssert.AreEqual(KingdomDepositCustody.Unproved, outcome.Custody);
+			ClassicAssert.AreEqual(KingdomDepositCustody.Settled, outcome.Custody);
+			ClassicAssert.AreEqual(4, outcome.Placed);
+			ClassicAssert.AreEqual(0, store.MaterialReads,
+				"the ordinary census was never taken, so its handler never ran");
+			ClassicAssert.AreEqual("store", store.Created[0].Holder);
+		}
+
+		/// <summary>
+		/// (a) An ordinary room census may change the PENDING BATCH, not only the holder. A
+		/// handler inside it that stamps the bundle up to nine leaves custody untouched, so a
+		/// custody-only re-proof would insert nine units into a store paid for four. The final
+		/// proofs are raw and are taken after it, so the mismatch is caught and the bundle is
+		/// withdrawn instead.
+		/// </summary>
+		[Test]
+		public void AnAdvisoryCensusThatChangesTheCountCannotSmuggleAnOverlargeBatchIn()
+		{
+			FakeStore store = new FakeStore { Capacity = 64, Stackable = false };
+			store.OnRoomRead = (host, bundle) => { bundle.RawCount = 9; };
+
+			KingdomDepositOutcome outcome = KingdomDepositEngine.Fill(store, 4, 4);
+
+			ClassicAssert.AreEqual(0, store.Insertions,
+				"nine units are never handed to a store asked for one");
+			ClassicAssert.AreEqual(0, store.MaterialHeld);
+			ClassicAssert.AreEqual(1, store.Created.Count, "and nothing is made again for it");
+			ClassicAssert.AreEqual(1, store.Discarded.Count);
+			ClassicAssert.AreEqual(KingdomDepositCustody.Settled, outcome.Custody);
 			ClassicAssert.AreEqual(0, outcome.Placed);
+		}
+
+		/// <summary>And the same census filling the store to its last unit is judged on the RAW
+		/// room read afterwards, not on the number it returned.</summary>
+		[Test]
+		public void TheBatchIsJudgedOnTheRawRoomReadTakenAfterTheAdvisoryOne()
+		{
+			FakeStore store = new FakeStore { Capacity = 64 };
+			store.OnRoomRead = (host, bundle) => { host.Held = host.Capacity; };
+
+			KingdomDepositOutcome outcome = KingdomDepositEngine.Fill(store, 4, 4);
+
 			ClassicAssert.AreEqual(0, store.Insertions);
-			ClassicAssert.AreEqual(0, store.Discarded.Count);
-			ClassicAssert.IsTrue(store.Created[0].Alive);
+			ClassicAssert.AreEqual(1, store.Discarded.Count);
+			ClassicAssert.AreEqual(KingdomDepositCustody.Settled, outcome.Custody);
+			ClassicAssert.Greater(store.RawRoomReads, 0, "the raw reading is the one that decides");
+		}
+
+		/// <summary>
+		/// (b) and (c) The delivery never takes an EVENTFUL count or census at all. The ordinary
+		/// count read repairs a nonpositive count and dispatches for it &mdash; on a body a
+		/// previous callback may already have handed to somebody else &mdash; and an ordinary
+		/// census can move row N-1 after row N-1's units are already in the total. Neither is
+		/// reachable: the port declares no such reading, and these counters prove the production
+		/// loop never asks the fake for one.
+		/// </summary>
+		[Test]
+		public void TheDeliveryNeverTakesAnEventfulCountOrCensus()
+		{
+			FakeStore store = new FakeStore { Capacity = 64 };
+			store.Residents.Add(new FakeBundle { RawCount = 3, Holder = "store" });
+			store.Residents.Add(new FakeBundle { RawCount = 0, Holder = "store" });
+			store.OnCountRead = FakeStore.CarryOff;
+			store.OnRowRead = (host, resident) => { host.Residents[0].Holder = "a passing thief"; };
+
+			KingdomDepositOutcome outcome = KingdomDepositEngine.Fill(store, 4, 4);
+
+			ClassicAssert.AreEqual(KingdomDepositCustody.Settled, outcome.Custody);
+			ClassicAssert.AreEqual(4, outcome.Placed);
+			ClassicAssert.AreEqual(0, store.CountReads, "no ordinary count read was ever taken");
+			ClassicAssert.AreEqual(0, store.MaterialReads, "no ordinary census was ever taken");
+			ClassicAssert.Greater(store.RawCountReads, 0);
+			ClassicAssert.Greater(store.RawMaterialReads, 0);
+			// The rows are exactly as they were: nothing repaired a count and nothing moved.
+			ClassicAssert.AreEqual("store", store.Residents[0].Holder);
+			ClassicAssert.AreEqual(0, store.Residents[1].RawCount,
+				"a broken count reads as one and is never written back");
+		}
+
+		/// <summary>A resident whose raw count is nonpositive still COUNTS as one for the gain,
+		/// exactly as the repair intends, without the delivery writing anything.</summary>
+		[Test]
+		public void ABrokenResidentCountReadsAsOneWithoutBeingRepaired()
+		{
+			FakeStore store = new FakeStore { Capacity = 64 };
+			FakeBundle broken = new FakeBundle { RawCount = 0, Holder = "store" };
+			store.Residents.Add(broken);
+
+			ClassicAssert.AreEqual(0, store.RawMaterialHeldNow(),
+				"the fake's census sums the raw field, and the engine never asks for more");
+			ClassicAssert.AreEqual(0, broken.RawCount);
+			ClassicAssert.AreEqual(1, store.RawCountOf(broken),
+				"a raw count of a broken body reads as one");
+			ClassicAssert.AreEqual(0, broken.RawCount, "and is still not written back");
 		}
 
 		// --- Every batch proves its count --------------------------------------------------------
@@ -714,12 +774,18 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.AreEqual("CustodyAnnounced",
 				string.Join(",", Array.ConvertAll(host.GetProperties(),
 					property => property.Name)));
-			ClassicAssert.AreEqual("RoomNow,MaterialHeldNow,Create,Stacks,Stamp,CountOf,Alive,"
-				+ "HeldByNobody,Discard,Insert,Landed,AnnounceUncertainCustody",
+			ClassicAssert.AreEqual("RoomNow,RawRoomNow,RawMaterialHeldNow,Create,Stacks,Stamp,"
+				+ "RawCountOf,Alive,HeldByNobody,Discard,Insert,Landed,AnnounceUncertainCustody",
 				string.Join(",", Array.ConvertAll(Array.FindAll(host.GetMethods(),
 					method => !method.IsSpecialName), method => method.Name)));
 			ClassicAssert.AreEqual(typeof(bool),
 				host.GetMethod("Discard").ReturnType);
+			// There is exactly ONE ordinary reading on the seam, and it is advice about room.
+			// Every other reading a delivery takes is raw, so no proof can dispatch.
+			ClassicAssert.IsNull(host.GetMethod("CountOf"),
+				"an ordinary count read repairs and dispatches; the seam offers none");
+			ClassicAssert.IsNull(host.GetMethod("MaterialHeldNow"),
+				"the gain census must be raw; the seam offers no ordinary one");
 			ClassicAssert.AreEqual(typeof(int),
 				Enum.GetUnderlyingType(typeof(KingdomDepositCustody)));
 			ClassicAssert.AreEqual("0:Settled,1:Unproved",

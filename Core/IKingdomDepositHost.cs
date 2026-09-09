@@ -12,16 +12,40 @@ namespace ThousandAndFirst
 	/// </summary>
 	internal interface IKingdomDepositHost
 	{
-		/// <summary>Room in the exact destination right now, and zero once it has stopped being
-		/// a destination at all.</summary>
+		// Two kinds of reading live here, and the difference is the whole of the law above.
+		//
+		// An ORDINARY reading is whatever the engine ordinarily does, and the engine dispatches:
+		// asking an object its count reaches Stacker.Number, which REPAIRS a nonpositive count by
+		// assigning one and sending StackCountChangedEvent, and a census asks that of every object
+		// it walks. Such a reading is a callback, and may only ever be taken as ADVICE, before a
+		// raw re-observation.
+		//
+		// A RAW reading takes the field and nothing else -- Stacker.StackCount reads _StackCount
+		// with no repair and no send. Every FINAL proof, immediately before a mutation and before
+		// any credit, must be raw, so the last thing a delivery looks at cannot itself be the
+		// thing that moves the bundle.
+
+		/// <summary>Room in the exact destination, as the settlement ordinarily counts it. ADVICE
+		/// ONLY: this walks and asks, so it dispatches. It decides how much to ASK for, never
+		/// what to do with a body.</summary>
 		int RoomNow();
 
-		/// <summary>Units OF THE MATERIAL THIS DELIVERY IS MAKING standing in the exact
-		/// destination right now. Read either side of an insertion, its difference is the only
-		/// evidence a bundle that stopped existing actually delivered anything. It must not be a
-		/// whole-occupancy reading: a handler that retires timber and drops an equal weight of
-		/// stone would otherwise pay the delivery for timber that never arrived.</summary>
-		int MaterialHeldNow();
+		/// <summary>Room in the exact destination, taken raw, and zero once it has stopped being a
+		/// destination at all. This is the reading a batch is finally judged against.</summary>
+		int RawRoomNow();
+
+		/// <summary>
+		/// Units OF THE MATERIAL THIS DELIVERY IS MAKING standing in the exact destination right
+		/// now, taken raw. Read either side of an insertion, its difference is the only evidence a
+		/// bundle that stopped existing actually delivered anything, so it is a CREDIT proof and
+		/// must not dispatch.
+		/// <para>
+		/// It must not be a whole-occupancy reading either: a handler that retires timber and
+		/// drops an equal weight of stone would otherwise pay the delivery for timber that never
+		/// arrived.
+		/// </para>
+		/// </summary>
+		int RawMaterialHeldNow();
 
 		/// <summary>One bundle of the material, or null when nothing could be made.</summary>
 		object Create();
@@ -33,8 +57,11 @@ namespace ThousandAndFirst
 		/// </summary>
 		void Stamp(object Bundle, int Count);
 
-		/// <summary>The count now standing on the bundle, read back after a stamp.</summary>
-		int CountOf(object Bundle);
+		/// <summary>The count standing on the bundle, taken raw off the field. This is the count
+		/// every batch is finally proved against, including a batch of one. There is deliberately
+		/// no ordinary counterpart: nothing this delivery does needs a count badly enough to
+		/// repair one and dispatch for it.</summary>
+		int RawCountOf(object Bundle);
 
 		/// <summary>Whether the bundle still exists at all.</summary>
 		bool Alive(object Bundle);
@@ -67,7 +94,7 @@ namespace ThousandAndFirst
 
 		/// <summary>Whether this exact bundle is proved standing in this exact destination
 		/// carrying the count it was stamped with, with the destination still eligible to hold
-		/// settlement stock.</summary>
+		/// settlement stock. A CREDIT proof: every reading it takes must be raw.</summary>
 		bool Landed(object Bundle, object Accepted, int Batch);
 
 		/// <summary>Whether the founder has already been told a delivery to this destination

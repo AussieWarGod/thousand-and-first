@@ -19,6 +19,7 @@ namespace ThousandAndFirst.Tests
 		private const string RoomFile = "Growth/KingdomMaterials.StockpileRoom.cs";
 		private const string HostFile = "Growth/KingdomMaterials.StockpileDeposit.cs";
 		private const string GroundFile = "Growth/KingdomMaterials.GroundSpill.cs";
+		private const string RawFile = "Growth/KingdomMaterials.RawObservation.cs";
 		private const string YardFile = "Growth/KingdomMaterials.10b.YardWork.cs";
 		private const string LawFile = "Core/KingdomDepositEngine.cs";
 		private const string StockFile = "Growth/KingdomMaterials.04.MaterialStock.cs";
@@ -327,18 +328,18 @@ namespace ThousandAndFirst.Tests
 				"break;",
 				"if (batch > 1)",
 				"Host.Stamp(bundle, batch);",
-				// EVERY batch is proved, and both reads are fenced before the decision they feed.
-				"int carried = Host.CountOf(bundle);",
-				"int roomNow = Host.RoomNow();",
+				// EVERY batch is proved, and every reading in the final proof is RAW: nothing in
+				// that group can dispatch, so no reading there can invalidate another and the
+				// custody proof beside them stays true until the mutation that follows it.
+				"int roomNow = Host.RawRoomNow();",
+				"int carried = Host.RawCountOf(bundle);",
 				"if (!Host.HeldByNobody(bundle))",
 				"return Refuse(Host, Placed);",
 				"if (!KingdomRules.DepositStampHolds(batch, carried, roomNow))",
 				"if (!Host.Discard(bundle))",
 				"return Refuse(Host, Placed);",
 				"break;",
-				"int held = Host.MaterialHeldNow();",
-				"if (!Host.HeldByNobody(bundle))",
-				"return Refuse(Host, Placed);",
+				"int held = Host.RawMaterialHeldNow();",
 				"object accepted = Host.Insert(bundle);",
 				"if (Host.Landed(bundle, accepted, batch))",
 				"Placed += batch;",
@@ -349,7 +350,7 @@ namespace ThousandAndFirst.Tests
 				"return Refuse(Host, Placed);",
 				"break;",
 				"int landed = KingdomRules.DepositLandedUnits(batch, false, held,",
-				"Host.MaterialHeldNow());",
+				"Host.RawMaterialHeldNow());",
 				"Placed += landed;",
 				"remaining -= landed;",
 				"room -= landed;",
@@ -368,19 +369,30 @@ namespace ThousandAndFirst.Tests
 				"GameObject.Validate(Container) && Container.Inventory != null", room);
 			StringAssert.Contains("&& IsStockpile(Container)) ? StockpileRoom(Container) : 0;",
 				room);
+			string raw = TestMain.ReadRepositoryText(RawFile);
 			StringAssert.Contains("internal static int DepositMaterialHeldNow(GameObject Container, string Blueprint)",
-				room);
-			// The gain reader counts PROVED members only. Cell.AddObject appends to the cell it was
-			// asked about even when the entry callbacks moved the body elsewhere first, so a
-			// destination's own list can hold a dead entry that landed somewhere else entirely.
-			AssertOrdered(Between(room, "private static int CountBlueprint(",
+				raw);
+			// The raw count primitive reads the FIELD. Stacker.Number repairs a nonpositive count
+			// and sends StackCountChangedEvent for it; StackCount simply returns _StackCount.
+			AssertOrdered(Between(raw, "internal static int RawCountOf(GameObject Item)",
+					"internal static int DepositRawRoomNow("),
+				"Stacker stacker = Item.Stacker;",
+				"return 1;",
+				"int raw = stacker.StackCount;",
+				"return (raw > 0) ? raw : 1;");
+			StringAssert.Contains("internal static int DepositRawRoomNow(GameObject Container)", raw);
+			StringAssert.Contains("held += RawCountOf(item);", raw);
+			// The gain census counts PROVED members only, in ONE callback-free pass. Cell.AddObject
+			// appends to the cell it was asked about even when the entry callbacks moved the body
+			// elsewhere first, so a destination's list can hold a dead entry; and a census that
+			// dispatched could move an earlier row after its units were already in the total.
+			AssertOrdered(Between(raw, "private static int CountBlueprint(",
 					"private static bool StandsIn("),
 				"if (!GameObject.Validate(item) || item.Blueprint != Blueprint",
 				"|| !StandsIn(item, Container, Ground))",
 				"continue;",
-				"held += (item.Count > 0) ? item.Count : 1;");
-			AssertOrdered(Between(room, "private static bool StandsIn(",
-					"internal static bool DepositLanded("),
+				"held += RawCountOf(item);");
+			AssertOrdered(Between(raw, "private static bool StandsIn(", "\t}\n}"),
 				"if (Container != null)",
 				"return Item.Physics != null",
 				"&& ReferenceEquals(Item.Physics.InInventory, Container)",
@@ -390,15 +402,33 @@ namespace ThousandAndFirst.Tests
 			// The readers take no list membership for custody at all. The landing proof below may
 			// ALSO ask the list, because there it is an extra clause on top of the body's own
 			// inventory back-reference and can only ever make that proof stricter.
-			ClassicAssert.AreEqual(0, Occurrences(
-				Between(room, "internal static int DepositMaterialHeldNow(",
-					"internal static bool DepositLanded("),
-				"Objects.Contains("),
+			ClassicAssert.AreEqual(0, Occurrences(raw, "Objects.Contains("),
 				"the gain readers must not take list membership for custody");
 			StringAssert.Contains("ReferenceEquals(Item.Physics.InInventory, Container)",
 				Between(room, "internal static bool DepositLanded(", "How many of a stock's"));
+			// Nothing on the deposit path READS an object's ordinary count. The observation shard
+			// and the law never touch one at all; each seam names it exactly once, and that once
+			// is the stamp, which is a write.
+			foreach (string seam in new[] { raw, room, TestMain.ReadRepositoryText(LawFile) })
+			{
+				ClassicAssert.AreEqual(0, Occurrences(seam, "item.Count")
+					+ Occurrences(seam, "Item.Count"),
+					"the deposit path must not read an ordinary count");
+			}
+			foreach (string seam in new[]
+			{
+				TestMain.ReadRepositoryText(HostFile), TestMain.ReadRepositoryText(GroundFile)
+			})
+			{
+				ClassicAssert.AreEqual(1, Occurrences(seam, "item.Count"),
+					"a seam names an ordinary count once, to STAMP it");
+				StringAssert.Contains("item.Count = Count;", seam);
+				StringAssert.Contains("return KingdomMaterials.RawCountOf(Bundle as GameObject);",
+					seam);
+			}
 			string host = TestMain.ReadRepositoryText(HostFile);
 			StringAssert.Contains("return DepositRoomNow(Container);", host);
+			StringAssert.Contains("return DepositRawRoomNow(Container);", host);
 			StringAssert.Contains("return DepositMaterialHeldNow(Container, Blueprint);", host);
 			StringAssert.Contains("item.Count = Count;", host);
 			StringAssert.Contains("return GameObject.Create(Blueprint);", host);
@@ -462,7 +492,7 @@ namespace ThousandAndFirst.Tests
 				"How many of a stock's");
 			AssertOrdered(landed,
 				"ReferenceEquals(Accepted, Item) && GameObject.Validate(Item)",
-				"Item.Blueprint == Blueprint && Item.Count == Batch",
+				"Item.Blueprint == Blueprint && RawCountOf(Item) == Batch",
 				"GameObject.Validate(Container) && Container.Inventory != null",
 				// Eligibility is part of the proof, not a thing the room reader alone guards: a
 				// handler can release the dedication and leave exact membership intact.
@@ -481,7 +511,7 @@ namespace ThousandAndFirst.Tests
 			// batch stops the delivery rather than letting the caller create the shortfall again.
 			AssertOrdered(Between(law, "// The bundle went into this", "return Settle(Host, Placed);"),
 				"int landed = KingdomRules.DepositLandedUnits(batch, false, held,",
-				"Host.MaterialHeldNow());",
+				"Host.RawMaterialHeldNow());",
 				"if (landed < batch)",
 				"return Refuse(Host, Placed);");
 			foreach (string source in new[]
@@ -754,7 +784,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheMaterialsRosterCountsTheNewShard()
 		{
-			ClassicAssert.AreEqual(22, KingdomMaterialsLogicalSource.FileCount);
+			ClassicAssert.AreEqual(23, KingdomMaterialsLogicalSource.FileCount);
 			StringAssert.Contains("public static int StockpileRoom(GameObject Container)",
 				KingdomMaterialsLogicalSource.Read());
 		}

@@ -1,4 +1,4 @@
-﻿# Changelog
+# Changelog
 
 All notable changes to The Thousand and First. Versions are semantic: patch for fixes,
 minor for additive API and content, major for breaking changes. Supported API is defined in
@@ -49,12 +49,16 @@ below it.
   nothing is created, where a body used to be made only to be destroyed.
 - A handler that throws inside a callback no longer discards what the delivery had already proved.
   The fill returns the proved units with an uncertain custody instead of unwinding past the caller.
-- Reading is treated as a callback, because it is one. `GameObject.Count` reaches
-  `Stacker.Number`, which repairs a nonpositive count by assigning one and dispatching
-  `StackCountChangedEvent`, and a room or material census walks objects and asks each of them the
-  same question. Custody is proved again after every such reading and before the next mutation, so
-  a handler that relocates the bundle from inside a read can no longer be followed by a
-  destruction or an insertion of a body somebody else is holding.
+- Reading is treated as a callback, because it is one, and every final proof now reads RAW.
+  `GameObject.Count` reaches `Stacker.Number`, which repairs a nonpositive count by assigning one
+  and dispatching `StackCountChangedEvent`, and a room or material census walks objects and asks
+  each of them that same question. Proving custody after such a reading was not enough: the
+  reading can change the count or the room while leaving the holder alone, its own write lands on
+  a body a previous callback may already have taken, and a census that dispatches can move an
+  earlier row after that row's units are already in the total. The order is now raw observe,
+  decide, mutate — an ordinary reading may only be taken as advice, before a raw re-observation —
+  and the deposit path counts through `Stacker.StackCount`, which repairs nothing and sends
+  nothing. A broken count still reads as one and is never written back.
 - Every batch proves its count before insertion, not only a stamped one. A creation handler that
   left an exclusively held stack of two where the delivery wanted one used to be inserted whole:
   two units into a destination paid for one, and on open ground an ordinary merge then clamped the
@@ -90,12 +94,12 @@ below it.
   (ruling 5); no capacity, catch-up envelope, or stored item is touched, and a standing save reads
   exactly what it read before.
 
-> **Current unreleased census — exact structural gate passed.** Current 3067-file census is line-cap green:
-> 435,382 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> **Current unreleased census — exact structural gate passed.** Current 3068-file census is line-cap green:
+> 435,515 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
-> imports occur in 1428 files, 0 of them over the line limit. Inventory SHA-256:
-> `d0bfec405c828bf79c90459bc9944bd164c3263f2f2f845b688ed9825a6e6398`.
-> The generated cold-install inventory contains 3098 files; no new subscription claim.
+> imports occur in 1429 files, 0 of them over the line limit. Inventory SHA-256:
+> `f778b470cb8a6ebeb1f1cc103249345ae19745b09eba8c918768254fda576abe`.
+> The generated cold-install inventory contains 3099 files; no new subscription claim.
 > This digest is the stockpile deposit custody fix merged over `dev` at `862f14d` (the unattended
 > native observers, the Workshop listing wording, the automatic Workshop attempt finalisation, the
 > Fetch carry-completion fix and the cross-version persona REQUEST wording; only the Fetch fix
@@ -103,15 +107,16 @@ below it.
 > render-only city sight, the stockpile unit capacity, the first-basin water store and the Kingdom
 > Quickstart tent rows retained below; each delta carries its own review chain and none
 > is restated for the others.
-> The custody delta over the shelter-ingress census below is five added and nine modified
+> The custody delta over the shelter-ingress census below is six added and nine modified
 > production sources, plus the regenerated removal-coverage roster: the engine-free deposit law and
-> its host seam, the GameObject implementations of that seam for a store and for open ground, and
-> the yard shard split out of the settlement pass are the additions; the room, stock, declarations,
-> rules, settlement-pass, clearance, infrastructure and carry-sign shards are the modifications.
-> On these bytes the staged baseline (3063 sources) and staged compatibility (3067 sources plus the
+> its host seam, the GameObject implementations of that seam for a store and for open ground, the
+> callback-free observation shard, and the yard shard split out of the settlement pass are the
+> additions; the room, stock, declarations, rules, settlement-pass, clearance, infrastructure and
+> carry-sign shards are the modifications.
+> On these bytes the staged baseline (3064 sources) and staged compatibility (3068 sources plus the
 > tracked Hearthpyre 2.2.3 ABI stub) compile clean under Roslyn 9.0.306 on Linux against the
 > installed managed assemblies rather than through `Tools/gate.sh`; both engine-free suites run
-> green there (14,053 main/5,215 Portable, zero skips) and the 627-test tooling suite passes. The
+> green there (14,056 main/5,215 Portable, zero skips) and the 627-test tooling suite passes. The
 > two new deposit regressions were confirmed to FAIL against the pre-fix behaviour before the fix
 > was kept.
 > NOT run for this delta: the two dev-harness modes, the installed-Hearthpyre source step, the
@@ -270,7 +275,7 @@ below it.
 > comment blocks wider — every word and engine citation kept, no code or statement order changed —
 > and the shard is back at 299.
 > The merged tree compiles clean in the staged baseline (3057 sources) and staged compatibility
-> (3063 sources plus the tracked Hearthpyre 2.2.3 ABI stub), on Linux with the SDK Roslyn 9.0.306
+> (3064 sources plus the tracked Hearthpyre 2.2.3 ABI stub), on Linux with the SDK Roslyn 9.0.306
 > against the installed
 > managed assemblies rather than through `Tools/gate.sh`; both engine-free suites run green there
 > (13,986 main/5,215 Portable, zero skips) and the 627-test tooling suite passes.

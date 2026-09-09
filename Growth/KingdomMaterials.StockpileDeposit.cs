@@ -60,12 +60,19 @@ namespace ThousandAndFirst
 				}
 			}
 
+			/// <summary>Advice only: the ordinary reading, which walks the store and asks.
+			/// </summary>
 			public int RoomNow()
 			{
 				return DepositRoomNow(Container);
 			}
 
-			public int MaterialHeldNow()
+			public int RawRoomNow()
+			{
+				return DepositRawRoomNow(Container);
+			}
+
+			public int RawMaterialHeldNow()
 			{
 				return DepositMaterialHeldNow(Container, Blueprint);
 			}
@@ -90,10 +97,9 @@ namespace ThousandAndFirst
 				}
 			}
 
-			public int CountOf(object Bundle)
+			public int RawCountOf(object Bundle)
 			{
-				GameObject item = Bundle as GameObject;
-				return (item != null) ? item.Count : 0;
+				return KingdomMaterials.RawCountOf(Bundle as GameObject);
 			}
 
 			public bool Alive(object Bundle)
