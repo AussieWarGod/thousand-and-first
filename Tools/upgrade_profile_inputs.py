@@ -194,10 +194,14 @@ def recipe(repo: Path, config: dict, probe: Commit | None = None) -> tuple[bytes
 
 def recipe_request(repo: Path, config: dict) -> str:
     selected = recipe(repo, config)
-    request = selected[1]["REQUEST"] if selected else "arch-gallery-slice;facing=north"
-    if ";facing=" not in request:
-        request += ";facing=north"
-    return request + ";seed=" + config["seed"]
+    # The persona's REQUEST is used VERBATIM, exactly as Tools/run-personas.sh uses it. Every
+    # declared scenario parameter is required and no undeclared one is tolerated
+    # (Harness/KingdomScenarioRules.cs TryBind), so a facing this recipe adds on its own is a
+    # boot refusal for any scenario that declares none: `founding-first-city` refused with
+    # "Scenario founding-first-city declares no parameter 'facing'." on the first native donor
+    # run. Personas that need a facing carry it themselves, as the arch-* matrix already does.
+    return (selected[1]["REQUEST"] if selected else "arch-gallery-slice;facing=north") \
+        + ";seed=" + config["seed"]
 
 
 def donor_wire(config: dict, witness: dict | None) -> bytes:
