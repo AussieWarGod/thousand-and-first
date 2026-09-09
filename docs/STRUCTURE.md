@@ -18,6 +18,18 @@ python3 Tools/check-structure.py --report
 python3 Tools/check-structure.py --release
 ```
 
+## Current isolated draft census — harness test-ground faction strip (issue #90)
+
+The harness test-ground faction-strip fix (Harness-only: `Harness/KingdomScenarioTestGround.cs`,
+`Harness/KingdomScenarioFoundingStep.cs`, and one constant-visibility widening in
+`Core/KingdomFoundingTransaction.00Core.cs`) reports 3068 staged production C# files and
+435,541 physical lines.
+Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
+1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
+`3788bf9581303f86482a29eb79a36b0af167998c5308e9a5306934f756c2b9fc` (moves only because two
+existing `private` constants widened to `internal`; no value or production guard changed). The
+census reports 1429 files with direct `XRL` imports; 0 of those exceed the line limit.
+
 ## Current isolated draft census
 
 The stockpile deposit custody fix over the Kingdom Quickstart shelter ingress, the render-only

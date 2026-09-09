@@ -172,6 +172,7 @@
 	<Compile Include="KingdomFoundingHeartReservationRuntimeSourceTests.cs" />
 	<Compile Include="KingdomFoundingHeartNativeSourceTests.cs" />
 	<Compile Include="KingdomFoundingHeartLifecycleSourceTests.cs" />
+	<Compile Include="KingdomScenarioTestGroundFactionStripSourceTests.cs" />
 	<Compile Include="KingdomFoundingHeartRetirementNativeSourceTests.cs" />
 	<Compile Include="KingdomFoundingHeartRecordedRemovalTests.cs" />
 	<Compile Include="KingdomFoundingHeartRecordedRemovalSourceTests.cs" />

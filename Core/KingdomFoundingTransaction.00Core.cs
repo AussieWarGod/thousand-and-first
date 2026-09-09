@@ -28,8 +28,11 @@ namespace ThousandAndFirst
 		internal const string SiteReservationProperty = "r_TAF_FoundingSiteAuthority_v1";
 		private const string SiteReservationNameProperty = "r_TAF_FoundingSiteName_v1";
 		private const string SiteReservationVocationProperty = "r_TAF_FoundingSiteVocation_v1";
-		private const string SiteReservationVillageProperty = "r_TAF_FoundingSiteVillage_v1";
-		private const string SiteReservationDisplayProperty = "r_TAF_FoundingSiteDisplay_v1";
+		// internal, not private: the dev-only harness Strip/Restrip (Harness/KingdomScenarioTestGround.cs)
+		// clears these two by name so a re-stripped ground never carries a stale village charter
+		// bookkeeping pair forward into the next attempt. No guard reads these differently for it.
+		internal const string SiteReservationVillageProperty = "r_TAF_FoundingSiteVillage_v1";
+		internal const string SiteReservationDisplayProperty = "r_TAF_FoundingSiteDisplay_v1";
 		private const string SiteReservationTickProperty = "r_TAF_FoundingSiteTick_v1";
 		private const string SecondChronicleProperty = "r_TAF_SecondFoundingChronicle";
 		private const string SecondChronicleStageProperty = "r_TAF_SecondFoundingChronicleStage";

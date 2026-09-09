@@ -16,6 +16,30 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
+## Unreleased harness test-ground faction strip (issue #90)
+
+The dev-only scenario test ground's `Strip`/`Restrip` (`Harness/KingdomScenarioTestGround.cs`) now
+also clears the worldgen `faction` zone property and the village-charter bookkeeping pair
+(`SiteReservationVillageProperty` / `SiteReservationDisplayProperty`) a prior founding attempt on
+the same zone can leave behind, so a re-stripped ground is born-clean again rather than still
+answering as foreign or mid-charter. The harness first-city founding step
+(`Harness/KingdomScenarioFoundingStep.cs`) gained a read-only foreign-faction precondition mirroring
+`KingdomRules.GroundIsForeignFaction` — the SAME predicate `Core/KingdomFounding.04.Claims.cs`
+guards publication with — refusing before the production transaction runs rather than
+publish-then-refuse. Harness-only; no production founding guard changed. The one shipped touch is
+`Core/KingdomFoundingTransaction.00Core.cs` widening two existing site-reservation constants from
+`private` to `internal` so the harness can reference them by name; no value or guard changed.
+
+Current census: 3068
+staged C# files; 435,541 physical lines; 3099 files in the generated
+cold-install inventory; zero files at or above 300; direct `XRL`
+imports occur in 1429 files, 0 of them over the line limit. Inventory SHA-256:
+`3788bf9581303f86482a29eb79a36b0af167998c5308e9a5306934f756c2b9fc` (moves only because of the
+constant-visibility widening above). Native acceptance owed: first-guest-native-check and
+found-first-city persona reruns, plus one run with `TAF_PERSONA_SEED='#165939435'` (the originally
+failing seed), expecting a clean harness refusal or a village-free ground, never the
+publish-then-refuse path.
+
 ## Current repository integration state — PR #6 merged, main protection updated
 
 Documentation/hardening PR #6, "Post-0.3.1 Alpha hardening and release closeout", was

@@ -40,6 +40,15 @@ namespace XRL.World.ZoneBuilders
 	/// invents no new notion of what counts as ground.
 	/// </para>
 	/// <para>
+	/// ALSO CLEARS: the zone-level <c>"faction"</c> property worldgen paints on a village zone, and
+	/// the <see cref="ThousandAndFirst.KingdomFoundingTransaction.SiteReservationVillageProperty"/> /
+	/// <see cref="ThousandAndFirst.KingdomFoundingTransaction.SiteReservationDisplayProperty"/> village
+	/// charter bookkeeping pair a prior founding attempt on this same zone can leave behind. Object
+	/// removal alone left a zone that still answered as foreign or as mid-charter, which is not
+	/// born-clean: <c>BuildZone</c> would ship a ground worldgen already claimed, and
+	/// <c>Restrip</c> would arm the tester over one a failed prior attempt claimed.
+	/// </para>
+	/// <para>
 	/// DETERMINISTIC AND DEV-ONLY. It removes; it never places or rolls. Under the sealed seed the
 	/// generated zone is the same zone every time, so what this strips is the same every time. The
 	/// file lives in <c>Harness/</c>, which the shipped manifest does not select and
@@ -114,6 +123,14 @@ namespace XRL.World.ZoneBuilders
 						if (gone || !GameObject.Validate(item)) removed++;
 					}
 				}
+			// Object removal alone is not born-clean: worldgen paints ownership onto the ZONE, not
+			// onto any object in it, and a prior founding attempt on this same zone can leave its
+			// village charter target behind the same way. Both are cleared unconditionally -
+			// RemoveZoneProperty is a no-op when the key was never set, so an ordinary wilderness
+			// zone with neither pays nothing for this.
+			Z.RemoveZoneProperty("faction");
+			Z.RemoveZoneProperty(KingdomFoundingTransaction.SiteReservationVillageProperty);
+			Z.RemoveZoneProperty(KingdomFoundingTransaction.SiteReservationDisplayProperty);
 			Removed = removed;
 			KeptStairs = keptStairs;
 			KeptBare = keptBare;
