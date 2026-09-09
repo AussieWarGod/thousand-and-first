@@ -88,8 +88,8 @@ namespace ThousandAndFirst.Harness
 		/// already reserved, so this proves the exact live authority instead of an Empty slate.</summary>
 		internal void Armed()
 		{
-			Owner(); Check(Inheritance != null && Supported(Inheritance.Phase),
-				"reserved source requires a live boot-armed supported inheritance phase");
+			Owner(); Check(Inheritance != null && Inheritance.Phase == KingdomInheritancePhase.Reserved,
+				"reserved source requires the exact live boot-armed Reserved phase");
 			KingdomUpgradeState.ValidateInheritance(Inheritance, GameId);
 			Check((string)Field("FailureDetail") == "", "nonempty inheritance field FailureDetail");
 			foreach (string name in "FailureAnnounced ReleasePending RecoveryDisabled RetryAuthorized".Split(' '))
@@ -102,16 +102,9 @@ namespace ThousandAndFirst.Harness
 				"boot-armed reservation receipt does not target this source within its own clock");
 			if (ReservedTick < 0L) ReservedTick = receipt.WrittenTick;
 			Check(receipt.WrittenTick == ReservedTick, "boot-armed reservation tick changed");
-			if (Inheritance.Phase != KingdomInheritancePhase.Reserved) return;
 			Check(Field("ReservationLease") is KingdomSealReservationLease lease && lease.IsHeld && lease.Matches(receipt)
 				&& ReferenceEquals(KingdomInheritanceLeaseOwner.Get(GameId, receipt), lease),
 				"boot-armed Reserved state does not hold its own live process-local lease");
-		}
-		private static bool Supported(KingdomInheritancePhase phase)
-		{
-			return phase == KingdomInheritancePhase.Reserved || phase == KingdomInheritancePhase.SiteSelected
-				|| phase == KingdomInheritancePhase.WorldValidated || phase == KingdomInheritancePhase.Installed
-				|| phase == KingdomInheritancePhase.Committed;
 		}
 		private object Field(string name)
 		{ FieldInfo f = typeof(KingdomInheritanceState).GetField(name, Private); Check(f != null, "missing old inheritance field " + name); return f.GetValue(Inheritance); }
@@ -187,7 +180,7 @@ namespace ThousandAndFirst.Harness
 			KingdomUpgradeState state = new KingdomUpgradeState(Game, "inheritance");
 			KingdomUpgradeSource.Arm(null);
 			Check(SourceField("Fault") == null && (bool)SourceField("Armed"), "actual source arm refused");
-			state.Exact(); Save(); state.Exact();
+			state.Exact(); Armed(); Save(); state.Exact(); Armed();
 			Check(SourceField("Fault") == null && (bool)SourceField("Completed") && !(bool)SourceField("Armed"), "actual source capture failed");
 			string snapshot = KingdomUpgradeFiles.Read(Path.Combine(Root, KingdomUpgradeSnapshotCodec.SnapshotFile), KingdomUpgradeSnapshotCodec.MaxWireChars);
 			Check(KingdomUpgradeSnapshotCodec.TryDecode(snapshot, out var saved), "source snapshot cannot decode"); state.Matches(saved);

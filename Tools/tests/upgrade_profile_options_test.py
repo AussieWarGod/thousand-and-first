@@ -150,6 +150,14 @@ class UpgradeProfileOptionsTest(unittest.TestCase):
             with self.subTest(key=key), self.assertRaises(ValueError):
                 options.validate_options(config("source"), birth, wrong)
 
+    def test_reserved_source_rejects_unchanged_map_in_native_writer_format(self):
+        birth, _ = fixture("source")
+        native = NATIVE_PREFIX + b',\n"r_TAF_OptionLegacyImport":"Yes"\n}'
+        self.assertNotEqual(birth, native)
+        self.assertEqual(options._read(birth), options._read(native))
+        with self.assertRaisesRegex(ValueError, "no operational option writes"):
+            options.validate_options(config("source"), birth, native)
+
     def test_no_input_mutation_and_bounds(self):
         value = config("source")
         prior = copy.deepcopy(value)

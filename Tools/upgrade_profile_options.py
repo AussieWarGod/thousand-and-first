@@ -56,6 +56,8 @@ def validate_options(config: dict, birth: bytes, observed: bytes) -> None:
         # The v2 inheritor is born opted in and writes no option at all: 0.3.1's own boot must arm
         # the reservation before its roster marker is committed (upgrade_profile_inputs.local_inputs).
         require(initial.get(IMPORT) == "Yes", "the v2 inheritor must be born with legacy import enabled")
+        require(observed == birth, "the reserved source permits no operational option writes")
+        return
     elif mode == "source-donor":
         require(initial.get(IMPORT) == "No", "old donor must be born with legacy import disabled")
         expected[SEAL] = "Yes"

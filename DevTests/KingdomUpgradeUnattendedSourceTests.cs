@@ -66,6 +66,11 @@ namespace ThousandAndFirst.Tests
 			string options = Read("Tools/upgrade_profile_options.py");
 			StringAssert.Contains("the v2 inheritor must be born with legacy import enabled", options);
 			StringAssert.Contains("old donor must be born with legacy import disabled", options);
+			StringAssert.Contains("Inheritance.Phase == KingdomInheritancePhase.Reserved", driver);
+			StringAssert.DoesNotContain("Supported(Inheritance.Phase)", driver);
+			StringAssert.DoesNotContain("if (Inheritance.Phase != KingdomInheritancePhase.Reserved) return", driver);
+			StringAssert.Contains("state.Exact(); Armed(); Save(); state.Exact(); Armed();", driver);
+			StringAssert.Contains("the reserved source permits no operational option writes", options);
 		}
 
 		[Test]
