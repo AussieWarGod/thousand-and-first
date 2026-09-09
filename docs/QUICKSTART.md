@@ -32,7 +32,7 @@ Two tent rows are staked at founding, granted free: the stores above are unchang
 ## Safety and compatibility
 
 - A world started before this version keeps the opening it was given. Its receipt is the older shape, so no tent-row lots are staked for it and nothing it already holds is put at risk by the new ones.
-- The selected parasang is reserved before dynamic villages, lairs, or encounters claim it. Only the heart apron, supply approach, and the two shelter lots are prepared; the rest of the wilderness remains intact. Nearby danger is still possible.
+- The selected parasang is reserved before dynamic villages, lairs, or encounters claim it. Only the heart apron, supply approach, the two shelter lots, and the two-cell approach each lot's door opens onto are prepared; the rest of the wilderness remains intact. Nearby danger is still possible.
 - Creatures, loose items, and liquid-bearing objects on required cells are relocated when safe. Stairs or an unsafe preparation result stop the bootstrap.
 - Kingdom Quickstart never offers legacy realm inheritance in the same world. Use another supported mode to test inheritance.
 - The bootstrap stores a checksummed, phase-by-phase receipt containing the exact physical object identities. Each cask, larder, chest, and included guide is completely prepared off-map, receives a profile/ground/role-bound reservation mark, and then enters the zone in one visible placement. A save or callback cut can therefore leave only no object or one exact, fully prepared object; load, zone-activation, and bounded end-turn wakes adopt that object before advancing the receipt and never place a second one.

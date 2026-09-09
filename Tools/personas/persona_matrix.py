@@ -44,6 +44,7 @@ BOOKKEEPING = frozenset(
         "SCRIPT-BEGIN",
         "advance-progress",
         "advance-complete",
+        "yield-frames-complete",
         # A third-party verb provider the admission law refused. It describes the PROFILE a run was
         # launched into, not a step the script asked for, so a persona must not go red because
         # somebody else's mod shipped a broken provider. `Tools/run-personas.sh` surfaces these
@@ -71,6 +72,14 @@ SCRIPT_VERBS = (
 COUNTED_VERB = "advance"
 MAX_ADVANCE_TURNS = 10000
 
+# The second counted verb. `yield-frames <frames>` hands the engine back its own render loop, which
+# an advance never does: advance keeps the engine out of XRLCore.PlayerTurn on purpose, and that is
+# exactly where the per-frame BeforeRenderEvent dispatch lives. Must equal
+# KingdomScenarioFrames.MaxFrames and scenario_profile.MAX_YIELD_FRAMES.
+FRAMES_VERB = "yield-frames"
+MAX_YIELD_FRAMES = 240
+COUNTED_VERBS = {COUNTED_VERB: MAX_ADVANCE_TURNS, FRAMES_VERB: MAX_YIELD_FRAMES}
+
 # Names the runtime dispatches itself, which no third-party provider may claim. Must equal
 # Harness/KingdomScenarioVerbProvider.cs KingdomScenarioVerbApi.Reserved.
 RESERVED_VERBS = (
@@ -90,6 +99,7 @@ RESERVED_VERBS = (
     "stagedigest",
     "standingdigest",
     "status",
+    "yield-frames",
 )
 
 # The alphabet KingdomScenarioRules.SafeToken admits, restated so a persona is refused here
@@ -276,25 +286,30 @@ def script_words(script: str, name: str, extra: tuple[str, ...] = ()) -> list[st
         if not step:
             fail("%s SCRIPT declares an empty verb" % name)
         parts = step.split()
-        if parts[0] == COUNTED_VERB:
+        if parts[0] in COUNTED_VERBS:
+            bound = COUNTED_VERBS[parts[0]]
             if len(parts) != 2:
-                fail("%s SCRIPT step %r needs exactly 'advance <turns>'" % (name, step))
+                fail(
+                    "%s SCRIPT step %r needs exactly '%s <count>'"
+                    % (name, step, parts[0])
+                )
             count = parts[1]
             if not count.isdigit() or not count.isascii():
                 fail(
-                    "%s SCRIPT advance count must be decimal digits: %r" % (name, count)
+                    "%s SCRIPT %s count must be decimal digits: %r"
+                    % (name, parts[0], count)
                 )
-            if not 1 <= int(count) <= MAX_ADVANCE_TURNS:
+            if not 1 <= int(count) <= bound:
                 fail(
-                    "%s SCRIPT advance count %s is outside 1..%d"
-                    % (name, count, MAX_ADVANCE_TURNS)
+                    "%s SCRIPT %s count %s is outside 1..%d"
+                    % (name, parts[0], count, bound)
                 )
         elif len(parts) != 1 or (
             parts[0] not in SCRIPT_VERBS and parts[0] not in extra
         ):
             fail(
                 "%s SCRIPT step %r is not a sealable verb; the set is %s, advance <turns>, "
-                "plus any name this persona declares under VERBS"
+                "yield-frames <frames>, plus any name this persona declares under VERBS"
                 % (name, step, ", ".join(SCRIPT_VERBS))
             )
         words.extend(parts)
@@ -329,7 +344,7 @@ def parse_expect(
                 "%s EXPECT item %r is not '<verb>:OK' or '<verb>:REFUSED'"
                 % (name, item)
             )
-        if verb not in SCRIPT_VERBS and verb != COUNTED_VERB and verb not in extra:
+        if verb not in SCRIPT_VERBS and verb not in COUNTED_VERBS and verb not in extra:
             fail("%s EXPECT item %r names an unsealable verb" % (name, item))
         parsed.append((verb, outcome, wanted.strip()))
     return parsed

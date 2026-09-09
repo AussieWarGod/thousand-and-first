@@ -102,6 +102,7 @@ namespace ThousandAndFirst.Tests
 		{
 			int endpoints = 0;
 			int shelterCells = 0;
+			int ingressCells = 0;
 			int prepared = 0;
 			for (int y = -1; y <= 25; y++)
 				for (int x = -1; x <= 80; x++)
@@ -111,16 +112,25 @@ namespace ThousandAndFirst.Tests
 						|| (x >= 29 && x <= 37 && y >= 11 && y <= 13);
 					bool endpoint = (x == 40 || x == 41) && y == 16;
 					bool shelter = x >= 21 && x <= 26 && y >= 9 && y <= 16;
-					ClassicAssert.AreEqual(camp || endpoint || shelter,
+					// Lot A faces south (its threshold stands on its northern edge), lot B faces
+					// north; each route leaves through one reserved margin cell and one lane
+					// endpoint beyond it.
+					bool ingress = (x == 23 && (y == 8 || y == 7))
+						|| (x == 24 && (y == 17 || y == 18));
+					ClassicAssert.AreEqual(camp || endpoint || shelter || ingress,
 						KingdomQuickstartRules.RequiresPreparedGround(x, y), x + "," + y);
 					if (endpoint && !camp) endpoints++;
 					if (shelter && !camp && !endpoint) shelterCells++;
-					if (camp || endpoint || shelter) prepared++;
+					if (ingress && !camp && !endpoint && !shelter) ingressCells++;
+					if (camp || endpoint || shelter || ingress) prepared++;
 				}
 			ClassicAssert.AreEqual(2, endpoints);
-			// Two 6x4 lots, stacked: the mask widens by exactly 48 cells and by nothing else.
+			// Two 6x4 lots, stacked, and the four exterior cells their authored routes walk: the
+			// mask widens by exactly 48 + 4 cells and by nothing else.
 			ClassicAssert.AreEqual(48, shelterCells);
-			ClassicAssert.AreEqual(102 + 2 + 48, prepared);
+			ClassicAssert.AreEqual(4, ingressCells);
+			ClassicAssert.AreEqual(4, KingdomQuickstartRules.ShelterIngressCellCount);
+			ClassicAssert.AreEqual(102 + 2 + 48 + 4, prepared);
 			ClassicAssert.AreEqual(2, KingdomQuickstartRules.ShelterLotCount);
 			KingdomPlotRules.PlotRect first = KingdomQuickstartRules.ShelterLot(0);
 			KingdomPlotRules.PlotRect second = KingdomQuickstartRules.ShelterLot(1);

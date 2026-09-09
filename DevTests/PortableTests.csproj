@@ -220,6 +220,7 @@
     <Compile Include="..\Core\KingdomCreedKindRules.cs" />
     <Compile Include="..\Core\KingdomQuickstartModels.cs" />
     <Compile Include="..\Core\KingdomQuickstartRules.cs" />
+    <Compile Include="..\Core\KingdomQuickstartRules.Shelter.cs" />
     <Compile Include="..\Core\KingdomQuickstartGuideRules.cs" />
     <Compile Include="..\Core\KingdomQuickstartGrantScope.cs" />
     <Compile Include="..\Core\KingdomRealmChronicleIntentRules.cs" />
@@ -1364,6 +1365,7 @@
 	<Compile Include="KingdomScenarioRuntimeSourceTests.cs" />
 	<Compile Include="KingdomScenarioLauncherSourceTests.cs" />
 	<Compile Include="KingdomScenarioVerbProviderRulesTests.cs" />
+	<Compile Include="KingdomScenarioFrameYieldSourceTests.cs" />
 	<Compile Include="KingdomScenarioPersonaSourceTests.cs" />
 	<Compile Include="KingdomScenarioPresenceSourceTests.cs" />
 	<Compile Include="KingdomScenarioStateShapeTests.cs" />

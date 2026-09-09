@@ -39,18 +39,6 @@ namespace ThousandAndFirst
 		public const int AdvisorCellX = 28;
 		public const int AdvisorCellY = 16;
 
-		// The shelter lots: two Small plots (6x4) stacked west of the supply column, clear of the
-		// reserved role cells at x=28, of the founder's start cell, and of the heart's extreme
-		// survey (which begins at x=31 on an 80-wide zone), so neither row is ever marked yielding
-		// and neither contends with a heart rung for its ground. Two tent rows carry three beds
-		// each, six in all, so arrivals are not refused for want of room on the day the rows
-		// finish.
-		private static readonly KingdomPlotRules.PlotRect[] ShelterLots =
-		{
-			new KingdomPlotRules.PlotRect(21, 9, 26, 12),
-			new KingdomPlotRules.PlotRect(21, 13, 26, 16)
-		};
-
 		public const int StarterWaterDrams = 24;
 		public const int StarterFoodServings = 12;
 		public const int StarterMud = 1;
@@ -70,24 +58,6 @@ namespace ThousandAndFirst
 				"JoppaWorld.6.17.1.1.10", "Saltwake", "TerrainSaltdunes", 6, 17)
 		};
 
-		/// <summary>How many shelter lots the founding pass stakes.</summary>
-		public static int ShelterLotCount
-		{
-			get { return ShelterLots.Length; }
-		}
-
-		/// <summary>
-		/// One reserved shelter lot, by index. <c>PlotRect</c> is a value, so a caller reads a
-		/// copy and no caller can move the reservation this authority declares.
-		/// </summary>
-		public static KingdomPlotRules.PlotRect ShelterLot(int Index)
-		{
-			if (Index < 0 || Index >= ShelterLots.Length)
-				throw new ArgumentOutOfRangeException("Index", "The quickstart reserves "
-					+ ShelterLots.Length + " shelter lots.");
-			return ShelterLots[Index];
-		}
-
 		public static int ProfileCount
 		{
 			get { return Profiles.Length; }
@@ -101,16 +71,10 @@ namespace ThousandAndFirst
 			// North heartbasin: rite (40,12), rect (38,11)-(43,14), doors (40/41,14),
 			// margin Y=15 and authored lane endpoints Y=16.
 			bool heartLanes = X >= 40 && X <= 41 && Y == 16;
-			// Both shelter lots are bared with the rest of the camp, because the authored-ground
-			// preflight refuses a lot holding a creature, an item, or open liquid.
-			bool shelter = false;
-			for (int i = 0; i < ShelterLots.Length; i++)
-				if (ShelterLots[i].Contains(X, Y))
-				{
-					shelter = true;
-					break;
-				}
-			return apron || supply || approach || heartLanes || shelter;
+			// Both shelter lots are bared with the rest of the camp, and so is every exterior cell
+			// of the route the stake's own public-ingress preflight walks off each lot's authored
+			// threshold (KingdomQuickstartRules.RequiresShelterGround).
+			return apron || supply || approach || heartLanes || RequiresShelterGround(X, Y);
 		}
 
 		public static bool IsMode(string GameMode)

@@ -109,10 +109,20 @@ Sequence and the pipeline's acceptance rules:
 4. Launcher with `-Submit`. The pipeline requires exit 0, `SubmittedUnverified` and
    `metadataMatches=true`. Every other exit code is mapped to its meaning from the table below and
    fails the job.
-5. A separate job runs `-Verify` afterwards. It writes no records, so re-running it is safe.
+5. A separate job polls `-Verify` afterwards. It writes no records, so re-running it is safe.
+6. A final job runs `-Finalize`, and **only** if step 5 reported exit 0 with
+   `SubscribedInstallationVerified`. It reuses the same run directory: the plan path, `PLAN_SHA`,
+   item, change note and `RECEIPT_SHA` are read back from that run's recorded handoff file and
+   passed verbatim — never rebuilt, re-planned or recomputed — and the retained plan is re-hashed
+   only to prove its bytes did not move. Evidence goes to a fresh `evidence-finalize-<attempt>`
+   directory. The pipeline requires exit 0, `SubscribedInstallationVerified`,
+   `attemptFinalized=true` and a non-null `finalizationSHA`; every other exit code is mapped to its
+   meaning from the table below and fails the job.
 
-The pipeline never retries and never runs `-Finalize`; finalization stays an operator step from the
-retained run directory. `-Inspect` is not used by the pipeline: its exit 7 is informational.
+The pipeline never retries. Finalization is automatic because the tag push is the approval, but it
+remains one-shot: the job never retries, a cancelled run is never safe, and running `-Finalize` by
+hand from the retained run directory is the fallback when that job cannot run or fails closed.
+`-Inspect` is not used by the pipeline: its exit 7 is informational.
 
 Two consequences worth stating plainly. **CI attempts consume the same 64-attempt lifetime ceiling
 per item** as hand-run ones. And **a Qud update that changes either SDK DLL fails every pipeline
