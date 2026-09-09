@@ -2,8 +2,9 @@
 
 **Snapshot:** 2026-09-09
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
-**Next public version (in prep, not yet published):** 0.3.2 public Alpha playtest, in release-prep on `dev`
-**Published manifest:** 0.3.1; one subscribed client verified, broader Beta work remains open
+**Next public version:** none scheduled beyond 0.3.2
+**Working candidate manifest:** 0.3.2 public Alpha playtest; private staging verified,
+public Workshop upload not yet run — see [Public 0.3.2](#public-032) below
 
 The public Alpha is [Steam Workshop item
 3794797472](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472). Rows marked retained
@@ -36,7 +37,11 @@ Annotated `v0.3.1` still targets `a46b5ad`; `main` is now one squash commit ahea
 Public0.3.1 and its published bytes are unchanged. Windows and native lanes are being re-run for
 the current bytes; those receipts are pending and are not claimed here.
 
-## Automated release lane
+## Automated release lane (historical, 2026-09-08)
+
+The paragraphs and table below describe the lane as it stood on 2026-09-08, before it was ever
+exercised. They are retained for the settings audit they record, not as current status; see
+"Automated release lane — current, 2026-09-09" below for what actually happened.
 
 Workflow **authored, not yet exercised.** `.github/workflows/release.yml` adds a tag-triggered
 Steam Workshop release lane under the author ruling of 2026-09-08 recorded in
@@ -70,6 +75,25 @@ in [RELEASING.md](RELEASING.md#steam-host-runner-runbook); rule on the merge met
 pull requests, since the currently enabled squash-only merge rewrites the receipt-binding commit
 that the packager requires as an ancestor of the tagged `main` commit; and run the first
 `staging-v0.3.2` release, recording its run id, attempt number and finalization SHA here.
+
+## Automated release lane — current, 2026-09-09
+
+The three items left open above are resolved. Self-hosted runner `taf-steam-gamingpc` is
+registered and online. The merge-method ruling is decided: merge commits are enabled and
+main's linear-history requirement is off, so a release pull request's receipt-binding commit
+survives as an ancestor of the tagged `main` commit (author ruling).
+
+The first pipeline release has run: `staging-v0.3.2-1` triggered run `34327428688`, which
+succeeded through gate, package, plan, `check`, `-Submit` and the polled `-Verify`
+(`SubscribedInstallationVerified`). `finalize` did not run on that attempt because of the
+`if: success()` guard bug described under "Public 0.3.2" below; finalization was completed by
+hand from the retained run directory against private item 3796495680 attempt `0003`. The guard
+is fixed in #92 (`323a288`), an ancestor of this branch, so a future staging or public tag no
+longer needs the by-hand fallback for that failure mode.
+
+The evidence limits from the historical section still hold exactly as stated: this is one
+subscribed client, `freshTransferVerified=false`, `releaseReady=false` remain explicit, and
+the public v0.3.2 Workshop submission itself has not run yet — see "Public 0.3.2" below.
 
 ## Unreleased Kingdom Quickstart shelter ingress
 
@@ -567,6 +591,31 @@ evidence only; ordinary play and save/load remain untested. Earlier native failu
 retained. The receipt keeps its original Harness hash; later blank-line cleanup is not a
 second native run. [Native evidence](/mnt/c/taf-raid-contact-fixed.Dcjzs3/README.md).
 Public0.3.1 remains the separately published checkpoint below; this correction is unreleased.
+
+## Public 0.3.2
+
+Staging tag `staging-v0.3.2-1` at `6e67fb346f9553bcf4dcfa4d148ec6a9164f1541` triggered run
+`34327428688` attempt `1` against private item 3796495680 attempt `0003`. Submission reports
+`SubmittedUnverified` at 09:44 UTC; a verify job then polled and reported
+`SubscribedInstallationVerified`. The workflow's own `finalize` job did not run on this
+attempt: its `if: success()` guard evaluated false because the public-confirm job is skipped
+on a staging tag, so finalization was completed by hand from the retained run directory
+(runbook step 15), not by the pipeline. That guard is now fixed: PR #92 merged as commit
+`323a288`, an ancestor of this branch.
+
+| Binding | SHA-256 |
+| --- | --- |
+| Upload plan (`PLAN_SHA`) | `0876fc06d1e7ef6d756717ab693e95af8cad985d8882e9b98a8d89e9781844e2` |
+| Private package receipt (`RECEIPT_SHA`) | `afecafb9493e20bab3bf8859820bcbfd1e465f8233958d7551fcf26b029725da` |
+| Installed canonical inventory | `408e3a0244c16ff88f85c3060c1e15fa5bf9d6cc7e65bac82c327b95cff5f0ef` |
+| Hand-run finalization | `86339d9380b10c5dcbf9a82ddecf9bae70f75e930717c85a69bebd7baf12652c` |
+
+This proves one client's private-staging subscribed bytes, not all subscribers or gameplay
+acceptance. `freshTransferVerified=false` and `releaseReady=false` remain explicit. **The
+public v0.3.2 Workshop upload has NOT happened yet.** This section only records the private
+staging candidate and its by-hand finalization; the receipt above is bound at commit
+`d00a532fcc71c98992867c23f0b381bd6ea30696` (`candidateCommit`), and this section gains its
+public submission, verification and finalization IDs only after the public `v0.3.2` tag runs.
 
 ## Public 0.3.1 — published and finalized
 
