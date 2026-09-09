@@ -1120,6 +1120,136 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void BoundFetchTransfer_ProvesTheDetachedHolderOnceAndTheArrivalAfterTheAdd()
+		{
+			string transfer = ReadRepoSource("Quests/KingdomBounty.Transfer.cs");
+			// The removal step is the ONLY step that may demand a detached holder, because
+			// Inventory.AddObject assigns the destination before the add callback returns.
+			// Re-demanding it afterwards made the arrival proof unsatisfiable, so every
+			// successful carry quarantined instead of being credited.
+			ClassicAssert.AreEqual(1, Count(transfer, "!InventoryMinusExact(sourceFrame, item, units)"));
+			ClassicAssert.AreEqual(1, Count(transfer,
+				"!InventoryMinusListExact(sourceFrame, item, units)"));
+			ClassicAssert.AreEqual(1, Count(transfer,
+				"!InventoryPlusExact(destinationFrame, item, units)"));
+			AssertOrdered(transfer,
+				"private static bool InventoryMinusListExact(",
+				"private static bool InventoryMinusExact(",
+				"TransferOwnerExact(BountyTransferPhase.RemoveIntent",
+				"private static bool InventoryPlusExact(",
+				"TransferOwnerExact(BountyTransferPhase.AddIntent",
+				"Data.TransferPhase = (int)BountyTransferPhase.RemoveIntent",
+				"!InventoryMinusExact(sourceFrame, item, units)",
+				"destinationFrame.Part.AddObject(item, Silent: true, NoStack: true)",
+				"!InventoryMinusListExact(sourceFrame, item, units)",
+				"!InventoryPlusExact(destinationFrame, item, units)",
+				"Data.TransferredUnits = totalBefore + units");
+			StringAssert.DoesNotContain("Removed.InInventory != null", transfer);
+		}
+
+		[Test]
+		public void FetchHolderLaw_AcceptsADetachedRemovalAndAnArrivalHeldByTheDestination()
+		{
+			ClassicAssert.IsTrue(KingdomBountyRules.TransferOwnerExact(
+				BountyTransferPhase.RemoveIntent, BountyTransferLocation.Detached));
+			ClassicAssert.IsTrue(KingdomBountyRules.TransferOwnerExact(
+				BountyTransferPhase.AddIntent, BountyTransferLocation.DestinationOnly));
+		}
+
+		[Test]
+		public void FetchHolderLaw_RefusesADetachedOrForeignHolderAfterTheAdd()
+		{
+			// The shipped defect: the arrival proof demanded the detached holder the engine
+			// had already replaced, so a completed carry could never satisfy it.
+			ClassicAssert.IsFalse(KingdomBountyRules.TransferOwnerExact(
+				BountyTransferPhase.AddIntent, BountyTransferLocation.Detached));
+			ClassicAssert.IsFalse(KingdomBountyRules.TransferOwnerExact(
+				BountyTransferPhase.AddIntent, BountyTransferLocation.Elsewhere));
+			ClassicAssert.IsFalse(KingdomBountyRules.TransferOwnerExact(
+				BountyTransferPhase.AddIntent, BountyTransferLocation.SourceOnly));
+			ClassicAssert.IsFalse(KingdomBountyRules.TransferOwnerExact(
+				BountyTransferPhase.RemoveIntent, BountyTransferLocation.Elsewhere));
+			ClassicAssert.IsFalse(KingdomBountyRules.TransferOwnerExact(
+				BountyTransferPhase.RemoveIntent, BountyTransferLocation.DestinationOnly));
+			foreach (BountyTransferPhase phase in new[] { BountyTransferPhase.None,
+				BountyTransferPhase.Bound, BountyTransferPhase.Detached,
+				BountyTransferPhase.Arrived, BountyTransferPhase.Quarantined })
+			{
+				foreach (BountyTransferLocation holder in
+					Enum.GetValues(typeof(BountyTransferLocation)))
+				{
+					ClassicAssert.IsFalse(KingdomBountyRules.TransferOwnerExact(phase, holder),
+						phase + "/" + holder);
+				}
+			}
+		}
+
+		[Test]
+		public void FetchSubtractionLaw_AcceptsOneExactCarryAndNamesTheDroppedSlot()
+		{
+			string[] captured = { "item-a", "item-b", "item-c" };
+			int[] capturedCounts = { 4, 7, 2 };
+			string[] observed = { "item-a", "item-c" };
+			int[] observedCounts = { 4, 2 };
+			int removed;
+			ClassicAssert.IsTrue(KingdomBountyRules.TransferRowsMinus(captured, capturedCounts,
+				observed, observedCounts, "item-b", 7, out removed));
+			ClassicAssert.AreEqual(1, removed);
+			ClassicAssert.AreEqual(Sum(capturedCounts) - 7, Sum(observedCounts),
+				"the carried units are exactly what the source lost");
+			int removedFirst;
+			ClassicAssert.IsTrue(KingdomBountyRules.TransferRowsMinus(captured, capturedCounts,
+				new[] { "item-b", "item-c" }, new[] { 7, 2 }, "item-a", 4, out removedFirst));
+			ClassicAssert.AreEqual(0, removedFirst);
+		}
+
+		[Test]
+		public void FetchSubtractionLaw_RefusesAMutatedRemainingListOrCount()
+		{
+			string[] captured = { "item-a", "item-b", "item-c" };
+			int[] capturedCounts = { 4, 7, 2 };
+			int removed;
+			ClassicAssert.IsFalse(KingdomBountyRules.TransferRowsMinus(captured, capturedCounts,
+				new[] { "item-c", "item-a" }, new[] { 2, 4 }, "item-b", 7, out removed),
+				"a reordered remainder is not a subtraction");
+			ClassicAssert.AreEqual(-1, removed);
+			ClassicAssert.IsFalse(KingdomBountyRules.TransferRowsMinus(captured, capturedCounts,
+				new[] { "item-a", "item-c" }, new[] { 4, 3 }, "item-b", 7, out removed),
+				"a surviving row whose count moved is not a subtraction");
+			ClassicAssert.IsFalse(KingdomBountyRules.TransferRowsMinus(captured, capturedCounts,
+				new[] { "item-a", "item-c", "item-d" }, new[] { 4, 2, 1 }, "item-b", 7,
+				out removed), "an added row is not a subtraction");
+			ClassicAssert.IsFalse(KingdomBountyRules.TransferRowsMinus(captured, capturedCounts,
+				new[] { "item-a" }, new[] { 4 }, "item-b", 7, out removed),
+				"two rows lost is not one subtraction");
+			ClassicAssert.IsFalse(KingdomBountyRules.TransferRowsMinus(captured, capturedCounts,
+				new[] { "item-a", "item-c" }, new[] { 4, 2 }, "item-b", 6, out removed),
+				"the moved row must carry the credited units");
+			ClassicAssert.IsFalse(KingdomBountyRules.TransferRowsMinus(captured, capturedCounts,
+				new[] { "item-a", "item-b" }, new[] { 4, 7 }, "item-d", 1, out removed),
+				"a moved identity the capture never held is refused");
+		}
+
+		[Test]
+		public void FetchSubtractionLaw_RefusesADuplicateMovedIdentity()
+		{
+			string[] captured = { "item-a", "item-b", "item-a" };
+			int[] capturedCounts = { 4, 7, 4 };
+			int removed;
+			ClassicAssert.IsFalse(KingdomBountyRules.TransferRowsMinus(captured, capturedCounts,
+				new[] { "item-b", "item-a" }, new[] { 7, 4 }, "item-a", 4, out removed),
+				"which occurrence left is not decidable, so no subtraction is proved");
+			ClassicAssert.AreEqual(-1, removed);
+		}
+
+		private static int Sum(int[] Rows)
+		{
+			int total = 0;
+			for (int i = 0; i < Rows.Length; i++) total += Rows[i];
+			return total;
+		}
+
+		[Test]
 		public void BountySource_WiresLiveFramesBeforeExactPaymentAndOneShotTerminalCleanup()
 		{
 			string source = KingdomBountyLogicalSource.Read();

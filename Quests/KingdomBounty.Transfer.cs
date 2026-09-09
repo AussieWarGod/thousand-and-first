@@ -71,38 +71,17 @@ namespace ThousandAndFirst
 				&& ReferenceEquals(Frame.Part.Objects, Frame.List);
 		}
 
-		private static bool InventoryOriginalExact(InventoryFrame Frame)
+		/// <summary>
+		/// Every captured slot except the one at SkipIndex, still in order and still the same
+		/// object: same reference, identity, count, holder and detached cell. Pass -1 to skip
+		/// nothing. Callers prove the list length first, so the walk cannot run off the end.
+		/// </summary>
+		private static bool SlotsExact(InventoryFrame Frame, int SkipIndex)
 		{
-			if (!InventoryHeaderExact(Frame) || Frame.List.Count != Frame.Items.Length) return false;
-			for (int i = 0; i < Frame.Items.Length; i++)
-			{
-				GameObject item = Frame.Items[i];
-				if (!ReferenceEquals(Frame.List[i], item) || !GameObject.Validate(item)
-					|| item.IDIfAssigned != Frame.ItemIds[i] || item.Count != Frame.Counts[i]
-					|| item.InInventory != Frame.Owner
-					|| item.CurrentCell != null) return false;
-			}
-			return true;
-		}
-
-		private static bool InventoryMinusExact(InventoryFrame Frame, GameObject Removed,
-			int Units)
-		{
-			if (!InventoryHeaderExact(Frame) || !GameObject.Validate(Removed)
-				|| Removed.Count != Units || Removed.InInventory != null
-				|| Removed.CurrentCell != null || Frame.List.Contains(Removed)) return false;
-			int removedIndex = -1;
-			for (int i = 0; i < Frame.Items.Length; i++)
-				if (ReferenceEquals(Frame.Items[i], Removed))
-				{
-					if (removedIndex >= 0) return false;
-					removedIndex = i;
-				}
-			if (removedIndex < 0 || Frame.List.Count != Frame.Items.Length - 1) return false;
 			int current = 0;
 			for (int i = 0; i < Frame.Items.Length; i++)
 			{
-				if (i == removedIndex) continue;
+				if (i == SkipIndex) continue;
 				GameObject item = Frame.Items[i];
 				if (!ReferenceEquals(Frame.List[current++], item) || !GameObject.Validate(item)
 					|| item.IDIfAssigned != Frame.ItemIds[i] || item.Count != Frame.Counts[i]
@@ -112,20 +91,80 @@ namespace ThousandAndFirst
 			return true;
 		}
 
+		/// <summary>The rows the live list carries right now, for the pure subtraction law.</summary>
+		private static bool ObservedRows(InventoryFrame Frame, out string[] Ids, out int[] Counts)
+		{
+			Ids = new string[Frame.List.Count];
+			Counts = new int[Frame.List.Count];
+			for (int i = 0; i < Frame.List.Count; i++)
+			{
+				GameObject item = Frame.List[i];
+				if (!GameObject.Validate(item) || string.IsNullOrEmpty(item.IDIfAssigned)) return false;
+				Ids[i] = item.IDIfAssigned;
+				Counts[i] = item.Count;
+			}
+			return true;
+		}
+
+		/// <summary>Where a moved object's holder sits relative to one captured frame.</summary>
+		private static BountyTransferLocation FrameOwnerLocation(GameObject Item,
+			InventoryFrame Frame, BountyTransferLocation Held)
+		{
+			if (!GameObject.Validate(Item) || Frame == null) return BountyTransferLocation.Missing;
+			GameObject holder = Item.InInventory;
+			if (holder == null) return BountyTransferLocation.Detached;
+			return (holder == Frame.Owner) ? Held : BountyTransferLocation.Elsewhere;
+		}
+
+		private static bool InventoryOriginalExact(InventoryFrame Frame)
+		{
+			return InventoryHeaderExact(Frame) && Frame.List.Count == Frame.Items.Length
+				&& SlotsExact(Frame, -1);
+		}
+
+		/// <summary>
+		/// The source list lost exactly the moved object and nothing else: values by the pure
+		/// subtraction law, references and holders by the slot walk.
+		///
+		/// The moved object's OWN holder is deliberately not decided here. Inventory.AddObject
+		/// assigns the destination as that holder before it returns, so this witness stays
+		/// provable after the add; the detached holder is the removal step's proof alone and
+		/// lives in InventoryMinusExact below.
+		/// </summary>
+		private static bool InventoryMinusListExact(InventoryFrame Frame, GameObject Removed,
+			int Units)
+		{
+			if (!InventoryHeaderExact(Frame) || !GameObject.Validate(Removed)
+				|| Removed.Count != Units || Removed.CurrentCell != null
+				|| Frame.List.Contains(Removed)) return false;
+			string[] ids;
+			int[] counts;
+			int removedIndex;
+			if (!ObservedRows(Frame, out ids, out counts)
+				|| !KingdomBountyRules.TransferRowsMinus(Frame.ItemIds, Frame.Counts, ids, counts,
+					Removed.IDIfAssigned, Units, out removedIndex)) return false;
+			return ReferenceEquals(Frame.Items[removedIndex], Removed)
+				&& SlotsExact(Frame, removedIndex);
+		}
+
+		/// <summary>The source-minus witness plus the detached holder the removal step proves.</summary>
+		private static bool InventoryMinusExact(InventoryFrame Frame, GameObject Removed,
+			int Units)
+		{
+			return InventoryMinusListExact(Frame, Removed, Units)
+				&& KingdomBountyRules.TransferOwnerExact(BountyTransferPhase.RemoveIntent,
+					FrameOwnerLocation(Removed, Frame, BountyTransferLocation.SourceOnly));
+		}
+
 		private static bool InventoryPlusExact(InventoryFrame Frame, GameObject Added,
 			int Units)
 		{
 			if (!InventoryHeaderExact(Frame) || !GameObject.Validate(Added)
-				|| Added.Count != Units || Added.InInventory != Frame.Owner
-				|| Added.CurrentCell != null || Frame.List.Count != Frame.Items.Length + 1) return false;
-			for (int i = 0; i < Frame.Items.Length; i++)
-			{
-				GameObject item = Frame.Items[i];
-				if (!ReferenceEquals(Frame.List[i], item) || !GameObject.Validate(item)
-					|| item.IDIfAssigned != Frame.ItemIds[i] || item.Count != Frame.Counts[i]
-					|| item.InInventory != Frame.Owner
-					|| item.CurrentCell != null) return false;
-			}
+				|| Added.Count != Units || Added.CurrentCell != null
+				|| !KingdomBountyRules.TransferOwnerExact(BountyTransferPhase.AddIntent,
+					FrameOwnerLocation(Added, Frame, BountyTransferLocation.DestinationOnly))
+				|| Frame.List.Count != Frame.Items.Length + 1
+				|| !SlotsExact(Frame, -1)) return false;
 			return ReferenceEquals(Frame.List[Frame.Items.Length], Added);
 		}
 
@@ -222,7 +261,7 @@ namespace ThousandAndFirst
 				sourceId, destinationId, units, totalBefore, creditedBefore)
 				|| item.IDIfAssigned != itemId
 				|| !NoticeBindingExact(Notice, Data, Z, noticeCell)
-				|| !InventoryMinusExact(sourceFrame, item, units)
+				|| !InventoryMinusListExact(sourceFrame, item, units)
 				|| !InventoryPlusExact(destinationFrame, item, units)
 				|| !KingdomConstructionInputLeaseAuthority
 					.TryObjectGraphAvailableForOrdinaryTransfer(item, out _))

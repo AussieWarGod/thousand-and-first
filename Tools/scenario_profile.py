@@ -211,12 +211,19 @@ SCRIPT_VERBS = (
     "status",
 )
 
-# The one verb that takes an argument. `advance <turns>` runs game turns with no player input, for
-# behaviour that only happens on a clock (settlement simulation ticks on turns). The bound below
-# must equal KingdomScenarioAdvance.MaxTurns: sealing a count the runtime refuses would spend a
-# whole non-retryable profile discovering a disagreement between this file and that one.
+# The verbs that take an argument. `advance <turns>` runs game turns with no player input, for
+# behaviour that only happens on a clock (settlement simulation ticks on turns). `yield-frames
+# <frames>` hands the engine back its own render loop, for state only a rendered frame produces -
+# an advance renders nothing at all, because it deliberately keeps the engine out of the very
+# XRLCore.PlayerTurn loop the per-frame BeforeRenderEvent dispatch lives in. Each bound below must
+# equal the runtime constant beside it (KingdomScenarioAdvance.MaxTurns,
+# KingdomScenarioFrames.MaxFrames): sealing a count the runtime refuses would spend a whole
+# non-retryable profile discovering a disagreement between this file and that one.
 COUNTED_VERB = "advance"
 MAX_ADVANCE_TURNS = 10000
+FRAMES_VERB = "yield-frames"
+MAX_YIELD_FRAMES = 240
+COUNTED_VERBS = {COUNTED_VERB: MAX_ADVANCE_TURNS, FRAMES_VERB: MAX_YIELD_FRAMES}
 
 # These commands are not AutoRunner/provider verbs. They select real production embark options
 # before generation; the save variant additionally requests a real save after the boot checks.
@@ -250,13 +257,15 @@ RESERVED_VERBS = (
     "stagedigest",
     "standingdigest",
     "status",
+    "yield-frames",
 )
 
 SCRIPT_HEADER = (
     "# Sealed developer scenario script. One kingdom:scenario verb per line, executed once by\n"
     "# ThousandAndFirst.KingdomScenarioAutoRunner on the first player action opportunity in the\n"
-    "# built world. 'advance <turns>' suspends the script for that many game turns and then\n"
-    "# resumes at the next line. Execution stops at the first REFUSED verb. Results land in the\n"
+    "# built world. 'advance <turns>' suspends the script for that many game turns and\n"
+    "# 'yield-frames <frames>' for that many real rendered frames, then each resumes at the next\n"
+    "# line. Execution stops at the first REFUSED verb. Results land in the\n"
     "# profile root's scenario-journal.tsv.\n"
     "# Written by Tools/prepare-scenario.sh BEFORE the profile seal, so this file is sealed content.\n"
 )
@@ -352,24 +361,23 @@ def parse_script(tokens: list[str], extra: tuple[str, ...] = ()) -> list[str]:
     while index < len(tokens):
         verb = tokens[index]
         index += 1
-        if verb == COUNTED_VERB:
+        if verb in COUNTED_VERBS:
+            bound = COUNTED_VERBS[verb]
             if index >= len(tokens):
-                fail("script verb 'advance' needs a turn count, as 'advance 1200'")
+                fail("script verb %r needs a count, as '%s 1200'" % (verb, verb))
             count = tokens[index]
             index += 1
             if not count.isdigit() or not count.isascii():
-                fail("advance turn count must be decimal digits only: " + repr(count))
+                fail("%s count must be decimal digits only: %s" % (verb, repr(count)))
             value = int(count)
-            if value < 1 or value > MAX_ADVANCE_TURNS:
-                fail(
-                    "advance turn count %d is outside 1..%d"
-                    % (value, MAX_ADVANCE_TURNS)
-                )
-            lines.append("%s %d" % (COUNTED_VERB, value))
+            if value < 1 or value > bound:
+                fail("%s count %d is outside 1..%d" % (verb, value, bound))
+            lines.append("%s %d" % (verb, value))
             continue
         if verb not in SCRIPT_VERBS and verb not in extra:
             fail(
-                "unknown scenario script verb %r; the sealed set is %s, advance <turns>"
+                "unknown scenario script verb %r; the sealed set is %s, advance <turns>, "
+                "yield-frames <frames>"
                 "%s"
                 % (
                     verb,

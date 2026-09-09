@@ -1,6 +1,36 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
-## Current stockpile-capacity over first-basin water-store census — 2026-09-09
+## Current Kingdom Quickstart shelter-ingress census — 2026-09-09
+
+3062 production C# files; 3,093 cold-install files in the generated inventory;
+434,436 physical lines, 1425 direct-XRL, zero cap failures. Exact digest
+`ff13330463a990edbef95c2ae35e0e552691f2f8e0f86a525dc873bd61f7c202`.
+The camp bares each shelter lot's authored DoorToLane route as well as the lot, so the stake's
+public-ingress preflight finds walkable ground on every profile rather than only on the dunes;
+nothing here invents a completion and a route cell that cannot be bared still stops the bootstrap.
+All four `Tools/gate.sh` modes (3050/3054/3204/3208) plus the installed-Hearthpyre source/ABI step
+bound the delta's own pre-merge digest, and the six-profile native Quickstart boot matrix at seed
+`#43101` passed on it together with `quickstart-save marsh yes` and its cold load. On the merged
+tree Roslyn 9.0.306 on Linux compiled the staged baseline (3058 sources) and compatibility (3062
+sources) sets clean; no dev-harness mode, Windows gate or native evidence binds these merged bytes.
+
+## Retained city-sight over stockpile-capacity census — 2026-09-09
+
+3061 production C# files; 3,092 cold-install files in the generated inventory;
+434,296 physical lines, 1425 direct-XRL, zero cap failures. Exact digest
+`7147169b7ccb8d2142d9791bd5faec8405eb305e33bca7a9b9feb9c3948c5a1e`.
+City sight's projection is taken at the engine's own `Zone.Render` call, armed by a prefix on
+`XRLCore.RenderBaseToBuffer`, behind every native second-pass contributor including `Blackout`.
+The earlier seat — a Harmony postfix on the render dispatch's static entry — crashed the game in
+unattended native runs and is now forbidden by the source contract. Merging its end-of-turn restore
+backstop with the basin-capacity zone-activation guard put `Core/KingdomSystem.z20.Events.cs` at 305
+physical lines, over the strict cap; the merge reflowed those two comment blocks wider, keeping
+every word and engine citation and moving no code, and the shard is back at 299. Roslyn 9.0.306 on
+Linux compiled the staged baseline (3057 sources) and compatibility (3061 sources) sets clean, run
+against the installed managed assemblies rather than through `Tools/gate.sh`. No dev-harness mode,
+Windows gate or native evidence binds this digest.
+
+## Retained stockpile-capacity over first-basin water-store census — 2026-09-09
 
 3059 production C# files; 3,090 cold-install files in the generated inventory;
 433,954 physical lines, 1423 direct-XRL, zero cap failures. Exact digest
@@ -12,6 +42,7 @@ refuses, and intake counts the outcome it proved rather than the call it made. N
 wire, option, grant or verifier predicate changes. Roslyn 9.0.306 on Linux compiled the staged
 baseline (3055 sources) and compatibility (3059 sources) sets clean.
 No native, dev-harness or human semantic-review evidence binds this digest.
+
 ## Retained first-basin water-store over Quickstart tent-row census — 2026-09-09
 
 3056 production C# files;3,087 cold-install files in the generated inventory;
@@ -39,7 +70,7 @@ through `Tools/gate.sh`; no dev-harness mode, Windows gate or native evidence bo
 
 ## Retained camp-guide topic census — 2026-09-08
 
-3052 production C# files;3,083 cold-install files in the generated inventory;
+3053 production C# files;3,084 cold-install files in the generated inventory;
 432,178 physical lines,1417 direct-XRL,zero cap failures. Exact digest
 `dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`.
 The optional Quickstart guide gains five fixed information topics from one engine-free words

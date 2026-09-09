@@ -13,10 +13,9 @@ namespace ThousandAndFirst
 	/// <para>
 	/// SEAM. Registered from the scenario mode in <c>Harness/EmbarkModules.xml</c> as
 	/// <c>&lt;gamesystem Class="ThousandAndFirst.KingdomScenarioAutoRunner"/&gt;</c>, the same way
-	/// the mode already registers <c>ThousandAndFirst.KingdomSuccession</c>.
-	/// <c>QudGamemodeModule.bootGame</c> hands each declared class to <c>XRLGame.AddSystem</c>,
-	/// which resolves it through <c>ModManager.CreateInstance</c>, so a mod type registered by name
-	/// is reached.
+	/// the mode registers <c>ThousandAndFirst.KingdomSuccession</c>. <c>QudGamemodeModule.bootGame</c>
+	/// hands each declared class to <c>XRLGame.AddSystem</c>, which resolves it through
+	/// <c>ModManager.CreateInstance</c>, so a mod type registered by name is reached.
 	/// </para>
 	/// <para>
 	/// TWO SEAMS, ONE RUN. <see cref="OnAdded" /> is the PRIMER and <c>BeginTakeActionEvent</c> is
@@ -27,11 +26,10 @@ namespace ThousandAndFirst
 	/// Qud." popup on <c>GameStarting</c>. That earliness is load-bearing and was learned live:
 	/// priming on <c>ZoneActivatedEvent</c> instead still let a village arrival announcement through,
 	/// because <c>VillageSurface</c> reveals fire off zone build and cell entry, both of which
-	/// precede it. That event is kept below only as a fallback. The script itself still waits for the
+	/// precede it; that event is kept below only as a fallback. The script itself waits for the
 	/// first player action opportunity, the first moment the world is genuinely playable:
-	/// <c>ActionManager.RunSegment</c> fires <c>BeginTakeActionEvent</c> before it ever reaches
-	/// <c>XRLCore.PlayerTurn</c>'s input wait, and anything earlier would run scenario verbs against
-	/// a half-built world.
+	/// <c>RunSegment</c> fires <c>BeginTakeActionEvent</c> before it reaches <c>PlayerTurn</c>'s
+	/// input wait, and anything earlier would run verbs against a half-built world.
 	/// </para>
 	/// <para>
 	/// POPUPS, UNDER A SEALED SCRIPT ONLY. The primer raises the engine's own <c>Popup.Suppress</c>,
@@ -39,16 +37,17 @@ namespace ThousandAndFirst
 	/// <c>ShowBlockSpace</c> path already honours by routing the message to
 	/// <c>MessageQueue.AddPlayerMessage</c> and returning <c>Keys.Space</c> - the engine's own
 	/// auto-acknowledge, and exactly the key an operator was pressing. Nothing is lost: every
-	/// suppressed message is in the player's message log. It is raised ONLY when a sealed script is
-	/// present, so the attended path keeps every popup, and it is lowered again the moment the run
-	/// ends by any route. The later vanilla opening-story popup has its own narrow, exception-safe
-	/// sealed-profile bracket in <c>KingdomScenarioOpeningStoryPatch</c>.
+	/// suppressed message is in the player's message log. It is raised ONLY under a sealed script,
+	/// lowered the moment the run ends by any route. The later vanilla opening-story popup has its
+	/// own narrow, exception-safe sealed-profile bracket in <c>KingdomScenarioOpeningStoryPatch</c>.
 	/// </para>
 	/// <para>
-	/// SUSPENDS AND RESUMES. <c>advance</c> makes a script span turns, so the verb list and a cursor
-	/// live across events (see <see cref="KingdomScenarioAdvance" />). The cursor is session state:
-	/// the durable one-shot below already forbids a replay after a reload, so a script interrupted
-	/// by a save simply does not resume, and the journal's last row says where it stopped.
+	/// SUSPENDS AND RESUMES. <c>advance</c> and <c>yield-frames</c> make a script span turns and
+	/// rendered frames, so the verb list and a cursor live across events (see
+	/// <see cref="KingdomScenarioAdvance" />, <see cref="KingdomScenarioFrames" />). Both suspend
+	/// through this one seam and only one may be pending. The cursor is session state: the durable
+	/// one-shot below already forbids a replay after a reload, so a script interrupted by a save
+	/// does not resume, and the journal's last row says where it stopped.
 	/// </para>
 	/// <para>
 	/// Never auto-quits or prevents player actions. Without a sealed script it writes no journal,
@@ -101,17 +100,17 @@ namespace ThousandAndFirst
 		public override bool WantFieldReflection => false;
 
 		/// <summary>
-		/// Announces the turn pump for <c>advance</c> and raises the popup bracket.
-		/// <c>XRLGame.AddSystem</c> calls this exactly once per game, before any boot event, which
-		/// is both the earliest point a popup can be suppressed and where any state a previous game
-		/// in this process left behind is cleared. It is deliberately NOT done in
-		/// <see cref="RegisterPlayer" />: the engine calls that method for unregistration too, so a
-		/// side effect there would fire on both.
+		/// Announces the turn pump for <c>advance</c> and the render loop for <c>yield-frames</c>,
+		/// and raises the popup bracket. <c>XRLGame.AddSystem</c> calls this once per game, before
+		/// any boot event: the earliest point a popup can be suppressed, and where state a previous
+		/// game in this process left behind is cleared. Deliberately NOT in
+		/// <see cref="RegisterPlayer" />, which the engine also calls for unregistration.
 		/// </summary>
 		public override void OnAdded()
 		{
 			base.OnAdded();
 			KingdomScenarioAdvance.ArmDriver();
+			KingdomScenarioFrames.ArmDriver();
 			Prime("IGameSystem.OnAdded, before the boot sequence");
 		}
 
@@ -129,7 +128,7 @@ namespace ThousandAndFirst
 		/// <summary>
 		/// Fallback primer, for the case where <see cref="OnAdded" /> could not read the sealed
 		/// script - a game restored rather than booted, say. It cannot catch a popup that already
-		/// fired during zone build, which is exactly why it is not the primary seam.
+		/// fired during zone build, which is why it is not the primary seam.
 		/// </summary>
 		public override bool HandleEvent(ZoneActivatedEvent E)
 		{
@@ -159,23 +158,22 @@ namespace ThousandAndFirst
 			return base.HandleEvent(E);
 		}
 
-		/// <summary>
-		/// One action opportunity. Starts the script on the first one, resumes it after a wait, and
-		/// otherwise does nothing at all.
-		/// </summary>
+		/// <summary>One action opportunity. Starts the script on the first one, resumes it after a
+		/// wait or a yield, and otherwise does nothing at all.</summary>
 		private void Step()
 		{
+			bool faulted;
 			if (KingdomScenarioAdvance.Pending)
 			{
-				bool faulted;
 				if (KingdomScenarioAdvance.Pump(out faulted)) return;
-				// A wait armed by the attended wish carries no script, and abandoning it is
-				// already journalled under its own reason code; only a scripted run stops here.
-				if (faulted)
-				{
-					if (Verbs != null) Finish(StoppedRow, false, "the advance was abandoned");
-					return;
-				}
+				if (faulted) { Abandon("advance"); return; }
+			}
+			else if (KingdomScenarioFrames.Pending)
+			{
+				// Unlike the advance pump this one has NOT spent the opportunity, and must not:
+				// the unspent energy is what carries the engine into its own render loop.
+				if (KingdomScenarioFrames.Pump(out faulted)) return;
+				if (faulted) { Abandon("frame yield"); return; }
 			}
 			else if (!ScriptConsidered)
 			{
@@ -187,10 +185,16 @@ namespace ThousandAndFirst
 			if (Verbs != null) Continue();
 		}
 
-		/// <summary>
-		/// Reads the sealed script and opens the run. Returns false when there is nothing to run,
-		/// which is the ordinary attended case as well as a refusal.
-		/// </summary>
+		/// <summary>Stops a scripted run whose suspension was abandoned. A wait or yield armed by
+		/// the attended wish carries no script, and its own reason code is already journalled, so
+		/// only a scripted run stops here.</summary>
+		private void Abandon(string What)
+		{
+			if (Verbs != null) Finish(StoppedRow, false, "the " + What + " was abandoned");
+		}
+
+		/// <summary>Reads the sealed script and opens the run. Returns false when there is nothing
+		/// to run, which is the ordinary attended case as well as a refusal.</summary>
 		private bool Begin()
 		{
 			if (!KingdomScenarioScript.Present()) { Release(); return false; }
@@ -213,13 +217,11 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		/// <summary>
-		/// Executes verbs through the SAME entry the wish uses, so an unattended run and an attended
-		/// one produce identical verbs, identical text, and identical journal rows. Stops on the
-		/// first refusal: a scenario's steps are ordered, and running <c>realize</c> after
-		/// <c>flatten</c> refused would stage onto ground nobody prepared. Returns to the caller as
-		/// soon as a verb arms a wait, which is what lets the game loop actually run the turns.
-		/// </summary>
+		/// <summary>Executes verbs through the SAME entry the wish uses, so an unattended run and an
+		/// attended one produce identical verbs, text, and journal rows. Stops on the first refusal:
+		/// a scenario's steps are ordered, and running <c>realize</c> after <c>flatten</c> refused
+		/// would stage onto ground nobody prepared. Returns to the caller as soon as a verb arms a
+		/// wait or a yield, which is what lets the game loop actually run.</summary>
 		private void Continue()
 		{
 			while (Cursor < Verbs.Count)
@@ -245,7 +247,7 @@ namespace ThousandAndFirst
 						+ ": " + verb);
 					return;
 				}
-				if (KingdomScenarioAdvance.Pending) return;
+				if (KingdomScenarioAdvance.Pending || KingdomScenarioFrames.Pending) return;
 			}
 			Finish(CompleteRow, true, Verbs.Count + " verb(s) ran without a refusal");
 		}
@@ -259,10 +261,8 @@ namespace ThousandAndFirst
 			Release();
 		}
 
-		/// <summary>
-		/// Lowers the suppression this runner raised, and only that. The flag is the engine's own
-		/// global, so it is never cleared blindly - an unrelated caller's bracket must survive.
-		/// </summary>
+		/// <summary>Lowers the suppression this runner raised, and only that. The flag is the
+		/// engine's own global, so an unrelated caller's bracket must survive.</summary>
 		private void Release()
 		{
 			if (!SuppressedPopups) return;

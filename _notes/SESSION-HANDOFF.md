@@ -1,6 +1,52 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current unreleased stockpile unit capacity over the first-basin water store
+## Current unreleased Kingdom Quickstart shelter ingress
+
+3062 staged sources; 434,436 physical lines; 1425 direct-XRL; zero cap failures; 3093 generated
+cold-stage files. Exact inventory `ff13330463a990edbef95c2ae35e0e552691f2f8e0f86a525dc873bd61f7c202`.
+The camp now bares each shelter lot's authored ingress route as well as the lot itself: the stake's
+public-ingress preflight walks that route and refuses an unbared cell, which is why only the dunes
+founded. Four cells are added — (23,8) and (23,7) north of lot A, (24,17) and (24,18) south of
+lot B — and nothing else changes. Heart-ingress endpoints, lot rectangles, receipt wire and refusal
+message are untouched. It sits over the render-only city sight, the stockpile unit capacity and the
+first-basin water store retained below. On the merged tree structure, doc freshness and the Tools
+suite (627) pass; engine-free suites pass 13,987 main / 5,199 Portable, zero skips, and
+Roslyn 9.0.306 on Linux compiles the staged baseline (3058) and compatibility (3062) sets clean.
+On the delta's own pre-merge bytes all four `Tools/gate.sh` modes plus the
+installed-Hearthpyre source/ABI step compiled clean (3050/3054/3204/3208), the engine-free suites
+passed13,905 main/5,193 Portable,zero skips, and the six-profile native
+boot matrix at seed `#43101` passed with two `plot staked: tentrow` rows per boot, as did
+`quickstart-save marsh yes` and its cold load. NOT run for the merged tree: the two dev-harness
+modes, the installed-ABI source step, the Windows gate, ordinary play, graceful
+Quit and Steam delivery. Public0.3.1 unchanged. Never direct-push main/tag, bypass, or self-approve.
+
+## Retained unreleased city sight over the stockpile unit capacity
+
+3061 staged sources; 434,296 physical lines; 1425 direct-XRL; zero cap failures; 3092 generated
+cold-stage files. Exact inventory `7147169b7ccb8d2142d9791bd5faec8405eb305e33bca7a9b9feb9c3948c5a1e`.
+City sight is taken at the engine's own `Zone.Render` call — a flag armed by a prefix on
+`XRLCore.RenderBaseToBuffer` and spent by a prefix on `Zone.Render(ScreenBuffer)`
+(`Growth/KingdomCitySightRenderSeam.cs`) — rather than from the part's own second-pass turn, so
+the honest snapshot is read behind `Blackout`'s light removal, which `Zone.AddVisibility` gates
+on. The seat before it, a Harmony postfix on the render dispatch's static entry, crashed the game
+in unattended native runs: the re-hosted engine method threw `NullReferenceException` out of
+itself on the first drawn frame in three of four launches (`Send_Patch1`, native dump naming the
+walk over its own second-pass handler list). Evidence:
+`Tools/PortableOutput/player-claimed-light-native-check*.log` and
+`player-first-guest-native-check*.log`. That seat is now a forbidden string in the source
+contract. Merging its end-of-turn restore backstop with the basin-capacity zone-activation guard
+put `Core/KingdomSystem.z20.Events.cs` at 305 physical lines, over the strict cap; the merge
+reflowed those two comment blocks wider, keeping every word and engine citation and moving no code
+or statement order, and the shard is back at 299.
+Structure, doc freshness, architecture and the Tools suite pass; engine-free suites pass 13,986
+main / 5,199 Portable, zero skips on Linux .NET9.0.306, and Roslyn 9.0.306 on Linux compiles the
+staged baseline (3057) and compatibility (3061) sets clean. NOT run:
+the two dev-harness modes, the installed-ABI source step, the Windows gate, the developer boot
+matrix and any native run.
+The 1,700-tick raising figure is a reading of `KingdomPlotRules.RaiseTicks`, not of a plot clock.
+Public0.3.1 unchanged. Never direct-push main/tag, bypass, or self-approve.
+
+## Retained unreleased stockpile unit capacity over the first-basin water store
 
 3059 staged sources; 433,954 physical lines; 1423 direct-XRL; zero cap failures; 3090 generated
 cold-stage files. Exact inventory `5db8f7381ade172c6b0b34925a111f4d4c28f32da77cf0be266914aa53e77674`.
@@ -52,12 +98,10 @@ carries the shelter obligation under tag `q2`, the shipped `q1` shape is still w
 byte for byte, and only a `q2` receipt owes a stake — so a pre-existing `q1` save resumed at any
 phase, Reserved included, keeps old behaviour and never stakes on ground the old narrower mask
 never bared. Codec and source-contract cases prove that; no native resumed save does.
-The 1,700-tick raising figure is a reading of `KingdomPlotRules.RaiseTicks`, not of a plot clock.
-Public0.3.1 unchanged. Never direct-push main/tag, bypass, or self-approve.
 
 ## Retained unreleased camp-guide topic tree
 
-3052 staged sources;432,178 physical lines;1417 direct-XRL;zero cap failures;3083 generated
+3053 staged sources;432,178 physical lines;1417 direct-XRL;zero cap failures;3083 generated
 cold-stage files. Exact inventory `dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`.
 One engine-free words file (`Core/KingdomQuickstartGuideRules.cs`) and a five-topic root-option
 loop on the optional Quickstart guide; no receipt, wire, option, grant or verifier change.
