@@ -478,13 +478,13 @@ namespace ThousandAndFirst.Tests
 			int guard = enrolment.IndexOf(
 				"string.IsNullOrEmpty(Body.GetStringProperty(\"KingdomOrigin\"))",
 				StringComparison.Ordinal);
-			int tally = enrolment.IndexOf("System.OriginCounts[Receipt.ProfileKey]",
+			int reconcile = enrolment.IndexOf("ReconcileFounderOrigins(System, Zone, Receipt);",
 				StringComparison.Ordinal);
 			Assert.That(guard, Is.GreaterThanOrEqualTo(0));
-			Assert.That(tally, Is.GreaterThan(guard));
+			Assert.That(reconcile, Is.GreaterThan(guard));
 			// The roll row binds on the body's zone, so it is last.
 			Assert.That(enrolment.IndexOf("KingdomResidents.TryEnsureRow(",
-				StringComparison.Ordinal), Is.GreaterThan(tally));
+				StringComparison.Ordinal), Is.GreaterThan(reconcile));
 			// Every path out of the irreversible half either publishes or is already terminal.
 			StringAssert.Contains("KingdomQuickstartFoundersDisposition.Faulted", enrolment);
 			StringAssert.Contains("KingdomQuickstartPhase.FoundersSeeded", enrolment);
@@ -499,7 +499,7 @@ namespace ThousandAndFirst.Tests
 				StringComparison.Ordinal);
 			// The boot pass raises the cohort only after the rows are staked and every store is
 			// verified. (The earlier occurrence is the resume branch, which stakes nothing.)
-			int cohort = bootstrap.LastIndexOf("TryRunFounders(Game, system, zone, ref receipt",
+			int cohort = bootstrap.LastIndexOf("RunFounders(Game, system, zone, ref receipt",
 				StringComparison.Ordinal);
 			Assert.That(stake, Is.GreaterThanOrEqualTo(0));
 			Assert.That(cohort, Is.GreaterThan(stake));
@@ -507,7 +507,7 @@ namespace ThousandAndFirst.Tests
 			int verify = bootstrap.LastIndexOf("VerifyComplete(system, zone, receipt, out Failure)",
 				StringComparison.Ordinal);
 			Assert.That(verify, Is.GreaterThanOrEqualTo(0));
-			Assert.That(bootstrap.LastIndexOf("TryRunFounders(", StringComparison.Ordinal),
+			Assert.That(bootstrap.LastIndexOf("RunFounders(", StringComparison.Ordinal),
 				Is.GreaterThan(verify));
 			// The guide is untouched: it still knows exactly its five rule-shaped topics, and it
 			// still never states the size of the roll, which is why four founders cannot make it
@@ -539,9 +539,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("role >= 4 && !seeded", boot);
 			string codec = TestMain.ReadRepositoryText(
 				"Harness/KingdomQuickstartSaveSnapshotCodec.cs");
-			StringAssert.Contains("receipt.Phase < KingdomQuickstartPhase.Complete", codec);
-			StringAssert.DoesNotContain(
-				"receipt.Phase != KingdomQuickstartPhase.Complete", codec);
+			StringAssert.Contains("!KingdomQuickstartRules.IsTerminal(receipt)", codec);
 		}
 
 		[Test]
@@ -553,12 +551,146 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("already on your roll and able to work. Until a row stands",
 				bootstrap);
 			StringAssert.Contains("they sleep rough, and the charter will say so.", bootstrap);
+			// One wording, two places it can be said: with the completion notice, or on its own
+			// when a later wake is what raised the cohort.
+			Assert.That(Count(bootstrap, "FoundersArrived(founders)"), Is.EqualTo(2));
+			StringAssert.Contains("{{W|Your founding party has arrived.}}", bootstrap);
+			string refusal = TestMain.ReadRepositoryText(
+				"World/KingdomQuickstartBootstrap.Founders.Recovery.cs");
+			StringAssert.Contains("{{W|Your founding party is not whole.}}", refusal);
+			StringAssert.Contains(
+				"Every store the quickstart grants is standing and unaffected; only the ",
+				refusal);
 			string enrolment = TestMain.ReadRepositoryText(
 				"World/KingdomQuickstartBootstrap.Founders.Enrollment.cs");
-			StringAssert.Contains("{{W|Your founding party is short.}}", enrolment);
-			StringAssert.Contains("is not here, and the settlement will not invent a replacement.",
-				enrolment);
+			StringAssert.Contains("was not here when the roll was written, and the ", enrolment);
 			StringAssert.Contains("This is not retried.", enrolment);
+			// The fault is NOT announced where it is published: one path says everything, so a
+			// refused cohort can never produce two popups on the same wake.
+			StringAssert.DoesNotContain("Popup.Show", enrolment);
+		}
+
+		[Test]
+		public void ARefusedCohortNeverFailsTheBootstrapAndSaysSoExactlyOnce()
+		{
+			string bootstrap = TestMain.ReadRepositoryText(
+				"World/KingdomQuickstartBootstrap.cs");
+			// RunFounders returns nothing to test: the stores are all standing and verified before
+			// a founder is raised, so a refusal must not cost the founder the completion notice or
+			// be reported as "stopped before granting any further stock", which would not be true.
+			StringAssert.Contains("RunFounders(Game, system, zone, ref receipt, out Founders);",
+				bootstrap);
+			StringAssert.DoesNotContain("|| !RunFounders(", bootstrap);
+			StringAssert.DoesNotContain("&& RunFounders(", bootstrap);
+			string founders = TestMain.ReadRepositoryText(
+				"World/KingdomQuickstartBootstrap.Founders.cs");
+			StringAssert.Contains("private static void RunFounders(", founders);
+			// Every refusal arm ends in the one announce-once path.
+			Assert.That(Count(founders, "AnnounceFoundersOnce("), Is.EqualTo(6));
+			string refusal = TestMain.ReadRepositoryText(
+				"World/KingdomQuickstartBootstrap.Founders.Recovery.cs");
+			// The announce-once flag, and the block it is keyed to: any published progress changes
+			// the wire and therefore clears it; a refusal that republishes the same bytes keeps it.
+			StringAssert.Contains("private static string FoundersAnnouncedWire", refusal);
+			StringAssert.Contains(
+				"if (string.Equals(wire, FoundersAnnouncedWire, StringComparison.Ordinal)) return;",
+				refusal);
+			Assert.That(Count(refusal, "Popup.Show"), Is.EqualTo(1));
+		}
+
+		[Test]
+		public void TheCommitToPublishGapIsRecoveredFromTheGroundAndNeverStagesASecondCohort()
+		{
+			string founders = TestMain.ReadRepositoryText(
+				"World/KingdomQuickstartBootstrap.Founders.cs");
+			// The scope commits four placed bodies BEFORE the fence publishes their ids. A lost
+			// write, or a save cut across that instant, leaves four live marked unnamed bodies.
+			// So the ground is read FIRST, on every wake that owes a cohort, and a new cohort is
+			// staged only when the ground holds none.
+			int observe = founders.IndexOf("TryObserveFounders(Zone, Receipt, out standing",
+				StringComparison.Ordinal);
+			int stage = founders.IndexOf("TryStageFounderBodies(Game, Zone, Receipt, out cohort",
+				StringComparison.Ordinal);
+			int fence = founders.IndexOf(
+				"KingdomQuickstartFoundersDisposition.Seeding, ids, out failure)",
+				StringComparison.Ordinal);
+			Assert.That(observe, Is.GreaterThanOrEqualTo(0));
+			Assert.That(stage, Is.GreaterThan(observe));
+			Assert.That(fence, Is.GreaterThan(stage));
+			// Four found: adopt those exact four. Anything between one and three, or a cohort that
+			// no longer proves itself, fences the world rather than completing or replacing it.
+			StringAssert.Contains(
+				"if (found == KingdomQuickstartRules.FounderCount) cohort = standing;", founders);
+			int quarantine = founders.IndexOf("QuarantineGrant(Game,", StringComparison.Ordinal);
+			Assert.That(quarantine, Is.GreaterThan(observe));
+			Assert.That(quarantine, Is.LessThan(stage));
+			// A failed fence publish does NOT destroy the cohort: it is recoverable by the scan
+			// above, and destroying it would throw four good bodies away for a transient write.
+			StringAssert.DoesNotContain("TryUnwindCommittedCohort", founders);
+
+			string recovery = TestMain.ReadRepositoryText(
+				"World/KingdomQuickstartBootstrap.Founders.Recovery.cs");
+			// The scan counts occurrences, not distinct references: one reservation worn twice is
+			// not a second proof, and it refuses rather than picking one.
+			StringAssert.Contains("A founder reservation was worn by more than one body.",
+				recovery);
+			// An adopted cohort is proved WITHOUT pinning the cell — it may have stood through
+			// turns before its publication was recovered, and a founder walks — while Stage A's
+			// own verification, in the call that placed them, does pin it.
+			StringAssert.Contains("private static bool VerifyFounderCohort(", recovery);
+			StringAssert.Contains("was not on its own reserved cell", founders);
+			StringAssert.DoesNotContain("ExactRole(", recovery);
+		}
+
+		[Test]
+		public void TheOriginTallyIsDerivedFromTheFoundersRatherThanCountedAsTheyAreWritten()
+		{
+			string enrolment = TestMain.ReadRepositoryText(
+				"World/KingdomQuickstartBootstrap.Founders.Enrollment.cs");
+			// An increment beside a property write has a gap: an interruption between them makes
+			// the retry see the property, skip the counter, and lose that count forever.
+			StringAssert.DoesNotContain("origins + 1", enrolment);
+			StringAssert.Contains("ReconcileFounderOrigins(System, Zone, Receipt);", enrolment);
+			StringAssert.Contains("if (recorded < carried) System.OriginCounts["
+				+ "Receipt.ProfileKey] = carried;", enrolment);
+			int write = enrolment.IndexOf(
+				"Body.SetStringProperty(\"KingdomOrigin\", Receipt.ProfileKey)",
+				StringComparison.Ordinal);
+			int reconcile = enrolment.IndexOf("ReconcileFounderOrigins(System, Zone, Receipt);",
+				StringComparison.Ordinal);
+			Assert.That(write, Is.GreaterThanOrEqualTo(0));
+			Assert.That(reconcile, Is.GreaterThan(write));
+		}
+
+		[Test]
+		public void TheSaveSnapshotCodecAdmitsOnlyAFinishedNonFaultedReceipt()
+		{
+			string codec = TestMain.ReadRepositoryText(
+				"Harness/KingdomQuickstartSaveSnapshotCodec.cs");
+			// The same predicate the native boot uses, so the two gates cannot drift: a receipt
+			// that still owes, is part-way through, or has faulted its cohort is not a world the
+			// harness may snapshot, save or load.
+			StringAssert.Contains("!KingdomQuickstartRules.IsTerminal(receipt)", codec);
+			StringAssert.Contains("receipt.FoundersDisposition == "
+				+ "KingdomQuickstartFoundersDisposition.Faulted", codec);
+			StringAssert.DoesNotContain("receipt.Phase < KingdomQuickstartPhase.Complete", codec);
+			StringAssert.DoesNotContain("receipt.Phase != KingdomQuickstartPhase.Complete", codec);
+		}
+
+		[Test]
+		public void FourFoundersPutTheFirstTravellerAtSixThousandTicks()
+		{
+			// The arrival clock is 3600 plus 600 for every settler already living there, so the
+			// cohort moves the first guest from three in-game days to five. The docs say 6000; this
+			// is where that number comes from.
+			Assert.That(KingdomRules.ArrivalIntervalTicks(0), Is.EqualTo(3600L));
+			Assert.That(KingdomRules.ArrivalIntervalTicks(
+				KingdomQuickstartRules.FounderCount), Is.EqualTo(6000L));
+			// And the number the player is told matches the rule, not a copied constant.
+			string quickstart = TestMain.ReadRepositoryText("docs/QUICKSTART.md");
+			StringAssert.Contains("due at 6000 ticks rather than 3600", quickstart);
+			StringAssert.Contains("6000 ticks rather than 3600",
+				TestMain.ReadRepositoryText("CHANGELOG.md"));
 		}
 
 		// ---- fixtures ------------------------------------------------------------------------

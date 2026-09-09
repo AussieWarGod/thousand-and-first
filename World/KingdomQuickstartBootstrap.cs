@@ -43,11 +43,12 @@ namespace ThousandAndFirst
 								+ " first days, not by nightfall, and only at the day boundaries"
 								+ " you spend on this claimed ground."
 							: "")
-						+ (founders > 0
-							? " " + founders + " founding citizens stand on the approach,"
-								+ " already on your roll and able to work. Until a row stands"
-								+ " they sleep rough, and the charter will say so."
-							: ""));
+						+ (founders > 0 ? FoundersArrived(founders) : ""));
+				else if (founders > 0)
+					// The cohort was raised on a later wake, after the completion notice had already been
+					// given. It is still the once-only arrival of four named citizens, and the founder is
+					// told about it exactly where it happened.
+					Popup.Show("{{W|Your founding party has arrived.}}" + FoundersArrived(founders));
 				return true;
 			}
 			catch (Exception ex)
@@ -61,6 +62,14 @@ namespace ThousandAndFirst
 			{
 				Volatile.Write(ref Active, 0);
 			}
+		}
+
+		/// <summary>The arrival sentence, said in exactly one wording wherever it is said.</summary>
+		private static string FoundersArrived(int Founders)
+		{
+			return " " + Founders + " founding citizens stand on the approach,"
+				+ " already on your roll and able to work. Until a row stands"
+				+ " they sleep rough, and the charter will say so.";
 		}
 
 		private static bool RunCore(XRLGame Game, out bool CompletedNow,
@@ -147,8 +156,13 @@ namespace ThousandAndFirst
 			// founding cohort, which may be owed, half-seeded, done, refused or faulted; the one
 			// terminal predicate decides which of those still wants a wake.
 			if (receipt.Phase >= KingdomQuickstartPhase.Complete)
-				return VerifyComplete(system, zone, receipt, out Failure)
-					&& TryRunFounders(Game, system, zone, ref receipt, out Failure);
+			{
+				if (!VerifyComplete(system, zone, receipt, out Failure)) return false;
+				// A refused cohort never fails the bootstrap: every store is already standing, and
+				// RunFounders says what went wrong itself, once.
+				RunFounders(Game, system, zone, ref receipt, out Founders);
+				return true;
+			}
 
 			if (receipt.Phase == KingdomQuickstartPhase.Reserved)
 			{
@@ -248,10 +262,8 @@ namespace ThousandAndFirst
 			if (receipt.Phase == KingdomQuickstartPhase.AdvisorResolved)
 				if (!Advance(Game, ref receipt, KingdomQuickstartPhase.Complete, "",
 					KingdomQuickstartAdvisorDisposition.Unresolved, out Failure)) return false;
-			if (!VerifyComplete(system, zone, receipt, out Failure)
-				|| !TryRunFounders(Game, system, zone, ref receipt, out Failure)) return false;
-			Founders = receipt.Phase == KingdomQuickstartPhase.FoundersSeeded
-				? KingdomQuickstartRules.FounderCount : 0;
+			if (!VerifyComplete(system, zone, receipt, out Failure)) return false;
+			RunFounders(Game, system, zone, ref receipt, out Founders);
 			CompletedNow = true;
 			// Read the ground, not the branch that ran. A save cut past the Reserved phase resumes
 			// straight through to Complete without ever staking a lot, so the completion notice may

@@ -1,7 +1,6 @@
 using System;
 using ThousandAndFirst.Simulation.City;
 using XRL;
-using XRL.UI;
 using XRL.World;
 
 namespace ThousandAndFirst
@@ -24,8 +23,9 @@ namespace ThousandAndFirst
 					|| !ReceiptOwns(body, Receipt.FounderObjectIds[i]))
 				{
 					// Neither completable nor reversible: the world holds one to three enrolled
-					// founders and cannot honestly be given the rest or relieved of these. Say so
-					// once and stop. Faulted is terminal, so this cannot be reached twice.
+					// founders and cannot honestly be given the rest or relieved of these. Publish
+					// the fault, then let the ONE announce-once path say it. Faulted is terminal,
+					// so no later wake reaches this at all.
 					string faulted;
 					if (!Restate(Game, ref Receipt,
 						KingdomQuickstartFoundersDisposition.Faulted, null, out faulted))
@@ -33,11 +33,12 @@ namespace ThousandAndFirst
 						Failure = faulted;
 						return false;
 					}
-					AnnounceFoundersFault(i);
-					Failure = "A named founder was missing or foreign; the cohort was faulted.";
+					Failure = "Founder " + i + " was not here when the roll was written, and the "
+						+ "settlement will not invent a replacement. Those who did arrive are on "
+						+ "your roll and stay there. This is not retried.";
 					return false;
 				}
-				if (!TryEnrolFounder(System, body, Receipt, i, out Failure)) return false;
+				if (!TryEnrolFounder(System, Zone, body, Receipt, i, out Failure)) return false;
 			}
 			// One publish closes the cohort. Population reads four off the roll from here with no
 			// seeder bookkeeping of its own.
@@ -51,7 +52,7 @@ namespace ThousandAndFirst
 		/// birth mark, origin, then the roll row (which binds on the body's current zone and so
 		/// must come last).
 		/// </summary>
-		private static bool TryEnrolFounder(KingdomSystem System, GameObject Body,
+		private static bool TryEnrolFounder(KingdomSystem System, Zone Zone, GameObject Body,
 			KingdomQuickstartReceipt Receipt, int Index, out string Failure)
 		{
 			Failure = "";
@@ -69,15 +70,14 @@ namespace ThousandAndFirst
 				return false;
 			}
 			Body.SetIntProperty("KingdomBorn", 1);
-			// The origin tally is the one counter here that cannot be re-added, so it is written
-			// exactly once, behind the property that proves it was written.
 			if (string.IsNullOrEmpty(Body.GetStringProperty("KingdomOrigin")))
-			{
 				Body.SetStringProperty("KingdomOrigin", Receipt.ProfileKey);
-				int origins;
-				System.OriginCounts.TryGetValue(Receipt.ProfileKey, out origins);
-				System.OriginCounts[Receipt.ProfileKey] = origins + 1;
-			}
+			// The tally is DERIVED from the founders that carry the origin, never incremented as
+			// each one is written. An increment beside a property write has a gap: an interruption
+			// between the two would make the retry see the property, skip the counter, and lose
+			// that count forever. Recomputing is idempotent by construction, so it is correct on
+			// the first pass, on a resumed pass, and on a pass that ends in a fault.
+			ReconcileFounderOrigins(System, Zone, Receipt);
 			KingdomCityBook book;
 			int residentId;
 			if (!KingdomResidents.TryEnsureRow(System, Body, out book, out residentId))
@@ -89,16 +89,24 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Said once, at the single transition into the terminal Faulted state, so the founder is
-		/// told the truth about a roll that is short rather than watching it silently stay short.
+		/// Sets this camp's origin tally to the number of founders that provably carry its origin.
+		/// Never lowers a tally somebody else raised: it only ever closes a shortfall its own
+		/// founders account for.
 		/// </summary>
-		private static void AnnounceFoundersFault(int Index)
+		private static void ReconcileFounderOrigins(KingdomSystem System, Zone Zone,
+			KingdomQuickstartReceipt Receipt)
 		{
-			MetricsManager.LogError("ThousandAndFirst quickstart founders: founder " + Index
-				+ " was missing or foreign; the cohort was faulted.");
-			Popup.Show("{{W|Your founding party is short.}} One of the four who set out with you "
-				+ "is not here, and the settlement will not invent a replacement. Those who did "
-				+ "arrive are on your roll and stay there. This is not retried.");
+			int carried = 0;
+			for (int i = 0; i < KingdomQuickstartRules.FounderCount; i++)
+			{
+				GameObject body = Zone?.FindObjectByID(Receipt.FounderObjectIds[i]);
+				if (GameObject.Validate(body) && string.Equals(
+					body.GetStringProperty("KingdomOrigin"), Receipt.ProfileKey,
+					StringComparison.Ordinal)) carried++;
+			}
+			int recorded;
+			System.OriginCounts.TryGetValue(Receipt.ProfileKey, out recorded);
+			if (recorded < carried) System.OriginCounts[Receipt.ProfileKey] = carried;
 		}
 	}
 }

@@ -47,50 +47,95 @@ namespace ThousandAndFirst
 		/// <summary>
 		/// The one entry point. Reads the receipt, not the branch that called it, so the boot pass
 		/// and every later wake run exactly the same code.
+		/// <para>
+		/// It CANNOT fail the bootstrap. Every store the quickstart grants is already standing and
+		/// verified before a founder is raised, so a refused cohort must not cost the founder the
+		/// once-only completion notice, nor be reported as "stopped before granting any further
+		/// stock" &#8212; which would not be true. A refusal announces itself once, here, and the
+		/// caller carries on. <paramref name="SeededNow"/> is four only when THIS call closed the
+		/// cohort, so the arrival is announced exactly once whichever wake does it.
+		/// </para>
 		/// </summary>
-		private static bool TryRunFounders(XRLGame Game, KingdomSystem System, Zone Zone,
-			ref KingdomQuickstartReceipt Receipt, out string Failure)
+		private static void RunFounders(XRLGame Game, KingdomSystem System, Zone Zone,
+			ref KingdomQuickstartReceipt Receipt, out int SeededNow)
 		{
-			Failure = "";
+			SeededNow = 0;
+			string failure;
 			switch (Receipt.FoundersDisposition)
 			{
 			case KingdomQuickstartFoundersDisposition.Omitted:
 			case KingdomQuickstartFoundersDisposition.Faulted:
 				// Terminal. Omitted never owed a cohort; Faulted said so once and is done.
-				return true;
+				return;
 			case KingdomQuickstartFoundersDisposition.Seeded:
-				return VerifyFounders(Zone, Receipt, out Failure);
+				if (!VerifyFounders(Zone, Receipt, out failure))
+					AnnounceFoundersOnce(Game, Receipt, failure);
+				return;
 			case KingdomQuickstartFoundersDisposition.Pending:
 				GameObject[] cohort;
-				string staged;
-				if (!TryStageFounderBodies(Game, Zone, Receipt, out cohort, out staged))
+				// READ THE GROUND BEFORE MAKING ANYTHING. The scope commits four placed bodies
+				// before the fence publishes their ids, so a lost write or a save cut across that
+				// instant leaves four live, marked, unnamed bodies. Their reservations are minted
+				// from the receipt's own frozen ground and never needed publishing, so they are a
+				// complete witness on their own.
+				GameObject[] standing;
+				int found;
+				if (!TryObserveFounders(Zone, Receipt, out standing, out found, out failure)
+					|| (found != 0 && found != KingdomQuickstartRules.FounderCount)
+					|| (found != 0 && !VerifyFounderCohort(Zone, standing, Receipt, out failure)))
 				{
-					// Stage A unwound whole. Restating Pending with the ids cleared is a no-op on
-					// an already-Pending receipt, and that is the point: the world is exactly as it
-					// was, so the next load or zone activation retries from a clean slate.
-					string cleared;
-					if (!Restate(Game, ref Receipt,
-						KingdomQuickstartFoundersDisposition.Pending, null, out cleared))
+					// One to three bodies, a duplicated reservation, or a cohort that no longer
+					// proves itself: custody cannot be settled either way. Fence the world so no
+					// replacement can ever be minted, and never stage a second cohort over an
+					// unproved one.
+					QuarantineGrant(Game, Guid.NewGuid().ToString("N"));
+					AnnounceFoundersOnce(Game, Receipt,
+						"The founding cohort could not be proved on the ground: "
+							+ (string.IsNullOrEmpty(failure) ? "an incomplete party" : failure));
+					return;
+				}
+				if (found == KingdomQuickstartRules.FounderCount) cohort = standing;
+				else
+				{
+					string staged;
+					if (!TryStageFounderBodies(Game, Zone, Receipt, out cohort, out staged))
 					{
-						Failure = cleared;
-						return false;
+						// Stage A unwound whole. Restating Pending with the ids cleared is a no-op
+						// on an already-Pending receipt, and that is the point: the world is
+						// exactly as it was, so the next wake retries from a clean slate.
+						string cleared;
+						if (!Restate(Game, ref Receipt,
+							KingdomQuickstartFoundersDisposition.Pending, null, out cleared))
+							staged = staged + "; " + cleared;
+						AnnounceFoundersOnce(Game, Receipt,
+							"The founding cohort could not be raised whole: " + staged);
+						return;
 					}
-					MetricsManager.LogError("ThousandAndFirst quickstart founders: " + staged);
-					Failure = "The founding cohort could not be raised whole: " + staged;
-					return false;
 				}
 				string[] ids = new string[KingdomQuickstartRules.FounderCount];
 				for (int i = 0; i < ids.Length; i++) ids[i] = cohort[i].IDIfAssigned;
 				if (!Restate(Game, ref Receipt,
-					KingdomQuickstartFoundersDisposition.Seeding, ids, out Failure)) return false;
+					KingdomQuickstartFoundersDisposition.Seeding, ids, out failure))
+				{
+					// The four are committed and placed but unnamed. They are NOT unwound: they
+					// wear their own reservations, so the observation above adopts these exact four
+					// on the next wake instead of making four more. Destroying them here would
+					// throw away a recoverable cohort for a transient write.
+					AnnounceFoundersOnce(Game, Receipt,
+						"The founding cohort could not be published: " + failure);
+					return;
+				}
 				break;
 			case KingdomQuickstartFoundersDisposition.Seeding:
 				break;
 			default:
-				Failure = "The quickstart receipt carried no lawful founders disposition.";
-				return false;
+				AnnounceFoundersOnce(Game, Receipt,
+					"The quickstart receipt carried no lawful founders disposition.");
+				return;
 			}
-			return TryEnrolFounders(Game, System, Zone, ref Receipt, out Failure);
+			if (TryEnrolFounders(Game, System, Zone, ref Receipt, out failure))
+				SeededNow = KingdomQuickstartRules.FounderCount;
+			else AnnounceFoundersOnce(Game, Receipt, failure);
 		}
 
 		/// <summary>
@@ -171,84 +216,25 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// Stage A's own verification: four exact bodies, each on its own reserved cell, each
-		/// wearing its own indexed reservation, each with an identity, and no two the same.
+		/// wearing its own indexed reservation, each with an identity, and no two the same. The
+		/// cell is pinned here and ONLY here, because this runs in the same call that placed them.
 		/// </summary>
 		private static bool VerifyFounderPlacement(Zone Zone, GameObject[] Cohort,
 			KingdomQuickstartReceipt Receipt, out string Failure)
 		{
-			Failure = "";
-			if (Cohort == null || Cohort.Length != KingdomQuickstartRules.FounderCount)
-			{
-				Failure = "the founding cohort was not four bodies";
-				return false;
-			}
+			if (!VerifyFounderCohort(Zone, Cohort, Receipt, out Failure)) return false;
 			for (int i = 0; i < Cohort.Length; i++)
 			{
 				int x, y;
 				if (!KingdomQuickstartRules.TryFounderCell(i, out x, out y)
-					|| !ExactRole(Zone, Cohort[i], FounderBlueprints[i], x, y)
-					|| !FounderIsExact(Zone, Cohort[i], Receipt, i))
+					|| !ExactRole(Zone, Cohort[i], FounderBlueprints[i], x, y))
 				{
-					Failure = "founder " + i + " was not an exact placed body";
-					return false;
-				}
-				for (int j = 0; j < i; j++)
-					if (ReferenceEquals(Cohort[i], Cohort[j])
-						|| string.Equals(Cohort[i].IDIfAssigned, Cohort[j].IDIfAssigned,
-							StringComparison.Ordinal))
-					{
-						Failure = "two founders were the same body";
-						return false;
-					}
-			}
-			return true;
-		}
-
-		/// <summary>
-		/// What a founder must be at every later boundary. Deliberately does NOT pin the cell: a
-		/// founder is a citizen, and a citizen walks. Identity, blueprint, zone and reservation are
-		/// what prove they are still the exact four the receipt named.
-		/// </summary>
-		private static bool FounderIsExact(Zone Zone, GameObject Body,
-			KingdomQuickstartReceipt Receipt, int Index)
-		{
-			return GameObject.Validate(Body) && Zone != null && Body.CurrentZone == Zone
-				&& Body.IsCreature && !Body.IsPlayer() && !Body.IsPlayerLed()
-				&& !string.IsNullOrEmpty(Body.IDIfAssigned)
-				&& string.Equals(Body.Blueprint, FounderBlueprints[Index],
-					StringComparison.Ordinal)
-				&& ExactMarker(Body, KingdomQuickstartRules.FounderMarker(Receipt, Index));
-		}
-
-		/// <summary>Every founder the receipt names still stands, is enrolled, and is on the roll.</summary>
-		private static bool VerifyFounders(Zone Zone, KingdomQuickstartReceipt Receipt,
-			out string Failure)
-		{
-			Failure = "";
-			for (int i = 0; i < KingdomQuickstartRules.FounderCount; i++)
-			{
-				GameObject body = Zone?.FindObjectByID(Receipt.FounderObjectIds[i]);
-				if (!FounderIsExact(Zone, body, Receipt, i)
-					|| !ReceiptOwns(body, Receipt.FounderObjectIds[i])
-					|| body.GetIntProperty("KingdomCitizen") != 1
-					|| body.GetIntProperty("KingdomBorn") != 1
-					|| string.IsNullOrEmpty(body.GetStringProperty("KingdomName"))
-					|| !string.Equals(body.GetStringProperty("KingdomOrigin"),
-						Receipt.ProfileKey, StringComparison.Ordinal))
-				{
-					Failure = "A seeded founder was missing, foreign, or off the roll.";
+					Failure = "founder " + i + " was not on its own reserved cell";
 					return false;
 				}
 			}
 			return true;
 		}
 
-		/// <summary>The authored name of founder <paramref name="Index"/> in this profile's culture.</summary>
-		private static string FounderName(string ProfileKey, int Index)
-		{
-			int culture = string.Equals(ProfileKey, "marsh", StringComparison.Ordinal) ? 0
-				: string.Equals(ProfileKey, "canyon", StringComparison.Ordinal) ? 1 : 2;
-			return FounderNames[culture][Index];
-		}
 	}
 }
