@@ -27,7 +27,8 @@ namespace ThousandAndFirst
 			{
 				bool completedNow;
 				int shelterLots;
-				if (!RunCore(Game, out completedNow, out shelterLots,
+				int founders;
+				if (!RunCore(Game, out completedNow, out shelterLots, out founders,
 					out Failure)) return false;
 				if (completedNow)
 					Popup.Show("{{W|Your kingdom stands.}} The founder's casks hold "
@@ -41,6 +42,11 @@ namespace ThousandAndFirst
 								+ " three beds to a row once it stands. Raising runs over the"
 								+ " first days, not by nightfall, and only at the day boundaries"
 								+ " you spend on this claimed ground."
+							: "")
+						+ (founders > 0
+							? " " + founders + " founding citizens stand on the approach,"
+								+ " already on your roll and able to work. Until a row stands"
+								+ " they sleep rough, and the charter will say so."
 							: ""));
 				return true;
 			}
@@ -58,10 +64,11 @@ namespace ThousandAndFirst
 		}
 
 		private static bool RunCore(XRLGame Game, out bool CompletedNow,
-			out int ShelterLots, out string Failure)
+			out int ShelterLots, out int Founders, out string Failure)
 		{
 			CompletedNow = false;
 			ShelterLots = 0;
+			Founders = 0;
 			Failure = "";
 			if (GrantQuarantined(Game))
 			{
@@ -118,7 +125,14 @@ namespace ThousandAndFirst
 					Failure = "The bounded heart apron or supply path was not safely prepared: " + groundFailure + ".";
 					return false;
 				}
+				// The founders option is read ONCE, here, before the receipt is ever published,
+				// and frozen for the life of the world. An option-off world is stamped Omitted,
+				// which encodes on the old wire and is terminal at Complete on every later wake:
+				// it can never be re-attempted, and turning the option on later cannot seed it.
 				if (!KingdomQuickstartRules.TryCreateReceipt(profile.Key, zone.ZoneID,
+					Options.GetOption(KingdomQuickstartRules.FoundersOption, "Yes") != "No"
+						? KingdomQuickstartFoundersDisposition.Pending
+						: KingdomQuickstartFoundersDisposition.Omitted,
 					out receipt) || !Publish(Game, receipt, out Failure)) return false;
 			}
 			else if (!KingdomQuickstartRules.TryDecode(raw, out receipt)
@@ -129,8 +143,12 @@ namespace ThousandAndFirst
 				return false;
 			}
 
-			if (receipt.Phase == KingdomQuickstartPhase.Complete)
-				return VerifyComplete(system, zone, receipt, out Failure);
+			// A receipt at Complete or above has every store it will ever get. What is left is the
+			// founding cohort, which may be owed, half-seeded, done, refused or faulted; the one
+			// terminal predicate decides which of those still wants a wake.
+			if (receipt.Phase >= KingdomQuickstartPhase.Complete)
+				return VerifyComplete(system, zone, receipt, out Failure)
+					&& TryRunFounders(Game, system, zone, ref receipt, out Failure);
 
 			if (receipt.Phase == KingdomQuickstartPhase.Reserved)
 			{
@@ -230,54 +248,15 @@ namespace ThousandAndFirst
 			if (receipt.Phase == KingdomQuickstartPhase.AdvisorResolved)
 				if (!Advance(Game, ref receipt, KingdomQuickstartPhase.Complete, "",
 					KingdomQuickstartAdvisorDisposition.Unresolved, out Failure)) return false;
-			if (!VerifyComplete(system, zone, receipt, out Failure)) return false;
+			if (!VerifyComplete(system, zone, receipt, out Failure)
+				|| !TryRunFounders(Game, system, zone, ref receipt, out Failure)) return false;
+			Founders = receipt.Phase == KingdomQuickstartPhase.FoundersSeeded
+				? KingdomQuickstartRules.FounderCount : 0;
 			CompletedNow = true;
 			// Read the ground, not the branch that ran. A save cut past the Reserved phase resumes
 			// straight through to Complete without ever staking a lot, so the completion notice may
 			// only name the tent rows a claim is actually standing on here.
 			ShelterLots = ShelterLotsClaimed(zone);
-			return true;
-		}
-
-		private static bool Publish(XRLGame Game, KingdomQuickstartReceipt Receipt,
-			out string Failure)
-		{
-			Failure = "";
-			string encoded = KingdomQuickstartRules.Encode(Receipt);
-			if (Game == null || encoded == null)
-			{
-				Failure = "The quickstart receipt could not be encoded.";
-				return false;
-			}
-			Game.SetStringGameState(KingdomQuickstartRules.ReceiptState, encoded);
-			string observed = Game.GetStringGameState(KingdomQuickstartRules.ReceiptState,
-				null);
-			KingdomQuickstartReceipt read;
-			if (!string.Equals(observed, encoded, StringComparison.Ordinal)
-				|| !KingdomQuickstartRules.TryDecode(observed, out read)
-				|| !string.Equals(KingdomQuickstartRules.Encode(read), encoded,
-					StringComparison.Ordinal))
-			{
-				Failure = "The quickstart receipt did not publish exactly.";
-				return false;
-			}
-			return true;
-		}
-
-		private static bool Advance(XRLGame Game, ref KingdomQuickstartReceipt Receipt,
-			KingdomQuickstartPhase Next, string Value,
-			KingdomQuickstartAdvisorDisposition Advisor, out string Failure)
-		{
-			Failure = "";
-			KingdomQuickstartReceipt advanced;
-			if (!KingdomQuickstartRules.TryAdvance(Receipt, Next, Value, Advisor,
-				out advanced) || !Publish(Game, advanced, out Failure))
-			{
-				if (string.IsNullOrEmpty(Failure))
-					Failure = "The quickstart receipt refused a non-monotone phase.";
-				return false;
-			}
-			Receipt = advanced;
 			return true;
 		}
 
