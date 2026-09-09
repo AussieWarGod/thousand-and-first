@@ -96,9 +96,11 @@ below it.
 > imports occur in 1428 files, 0 of them over the line limit. Inventory SHA-256:
 > `3251dd8615c08ad4f7235bfb009a3f7fb3f21ba44fac2d7bf2e7bc80575df6a2`.
 > The generated cold-install inventory contains 3098 files; no new subscription claim.
-> This digest is the stockpile deposit custody fix merged over the Kingdom Quickstart shelter
-> ingress, the render-only city sight, the stockpile unit capacity, the first-basin water store and
-> the Kingdom Quickstart tent rows retained below; each delta carries its own review chain and none
+> This digest is the stockpile deposit custody fix merged over `dev` at `e918538` (the unattended
+> native observers, the Workshop listing wording and the automatic Workshop attempt finalisation,
+> none of which adds a production C# source), and over the Kingdom Quickstart shelter ingress, the
+> render-only city sight, the stockpile unit capacity, the first-basin water store and the Kingdom
+> Quickstart tent rows retained below; each delta carries its own review chain and none
 > is restated for the others.
 > The custody delta over the shelter-ingress census below is five added and nine modified
 > production sources, plus the regenerated removal-coverage roster: the engine-free deposit law and
