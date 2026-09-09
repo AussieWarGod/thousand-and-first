@@ -13,24 +13,19 @@ below it.
 ### Fixed
 
 - The dev-only scenario test ground's `Strip`/`Restrip` cleared only the zone's interior objects, so
-  a re-stripped ground could still carry worldgen's `faction` zone property or a prior founding
-  attempt's village-charter bookkeeping pair forward into the next attempt — not born-clean. Both are
-  now cleared unconditionally alongside the object sweep
+  a re-stripped ground could still carry worldgen's `faction` zone property forward into the next
+  attempt — not born-clean. `Strip` now also clears `"faction"`, but ONLY once it has proved no
+  founding-attempt site reservation stands on the zone: a prior attempt's reservation (authority,
+  name, vocation, village-charter target, tick) is production state a resumed or cleaned-up attempt
+  still reads, and erasing any proper subset of it would silently change what the reservation means
+  rather than make the ground clean. When one is pending, `Strip` now refuses whole and touches
+  nothing, and `BuildZone`/`Restrip` carry that refusal into their journal row
   (`Harness/KingdomScenarioTestGround.cs`). The harness first-city founding step also gained a
   read-only foreign-faction precondition, mirroring `KingdomRules.GroundIsForeignFaction` — the SAME
   predicate `Core/KingdomFounding.04.Claims.cs` guards publication with — so a foreign zone is refused
   before the production transaction ever runs rather than publish-then-refuse
-  (`Harness/KingdomScenarioFoundingStep.cs`). Harness-only; no production founding guard changed.
-  Refs #90.
-
-> **Current unreleased census — exact structural gate passed.** Current 3068-file census is line-cap
-> green: 435,541 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
-> 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
-> imports occur in 1429 files, 0 of them over the line limit. Inventory SHA-256:
-> `3788bf9581303f86482a29eb79a36b0af167998c5308e9a5306934f756c2b9fc` (this digest moves only because
-> `Core/KingdomFoundingTransaction.00Core.cs` widened two existing site-reservation constants from
-> `private` to `internal` for the harness fix above; no production guard or value changed).
-> The generated cold-install inventory contains 3099 files; no new subscription claim.
+  (`Harness/KingdomScenarioFoundingStep.cs`). Harness-only; no production source changed and the
+  structural census is unchanged. Refs #90.
 
 ### Docs
 

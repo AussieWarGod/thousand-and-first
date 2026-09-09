@@ -15,22 +15,53 @@ namespace ThousandAndFirst.Tests
 	{
 		private const string TestGround = "Harness/KingdomScenarioTestGround.cs";
 		private const string FoundingStep = "Harness/KingdomScenarioFoundingStep.cs";
-		private const string Core = "Core/KingdomFoundingTransaction.00Core.cs";
 
 		[Test]
-		public void SourceContract_StripClearsWorldgenFactionAndVillageBookkeepingZoneProperties()
+		public void SourceContract_StripRefusesWholeWhenASiteReservationIsPendingAndTouchesNothing()
 		{
 			string source = Read(TestGround);
 			string strip = Between(source,
-				"internal static void Strip(Zone Z, out int Removed, out int KeptStairs, out int KeptBare)",
+				"internal static bool Strip(Zone Z, out int Removed, out int KeptStairs, out int KeptBare,",
 				"private static string Describe(");
-			// The clearing must happen after the object-removal loop and before the out
-			// parameters are assigned, so BuildZone and Restrip both see it on every call.
-			Ordered(strip, "if (gone || !GameObject.Validate(item)) removed++;",
+			Contains(source,
+				"internal const string ReservationPendingCode = \"taf-scenario-testground-reservation-pending\";");
+			// The reservation check must be the FIRST thing Strip does - before the object loop,
+			// before "faction" is ever touched - so a refusal never leaves a half-stripped zone or
+			// a half-erased reservation.
+			Ordered(strip, "Failure = null;",
+				"if (KingdomFoundingTransaction.HasSiteReservation(Z))",
+				"Failure = \"[\" + ReservationPendingCode + \"] a founding-attempt site reservation \"",
+				"return false;",
+				"for (int y = 1; y < Z.Height - 1; y++)",
+				"if (gone || !GameObject.Validate(item)) removed++;",
 				"Z.RemoveZoneProperty(\"faction\");",
-				"Z.RemoveZoneProperty(KingdomFoundingTransaction.SiteReservationVillageProperty);",
-				"Z.RemoveZoneProperty(KingdomFoundingTransaction.SiteReservationDisplayProperty);",
-				"Removed = removed;");
+				"Removed = removed;",
+				"return true;");
+			// The whole reservation family is checked (HasSiteReservation), never a hand-rolled
+			// subset of it - that is exactly the partial-erasure bug this guards against.
+			ClassicAssert.AreEqual(1,
+				Regex.Matches(strip, @"KingdomFoundingTransaction\.HasSiteReservation\s*\(").Count,
+				"Strip must gate on the SAME whole-reservation predicate production reads, never "
+					+ "duplicate or narrow it");
+			StringAssert.DoesNotContain("SiteReservationVillageProperty", strip);
+			StringAssert.DoesNotContain("SiteReservationDisplayProperty", strip);
+		}
+
+		[Test]
+		public void SourceContract_BuildZoneAndRestripPropagateStripsRefusalIntoTheJournalRow()
+		{
+			string source = Read(TestGround);
+			Ordered(Between(source, "public bool BuildZone(Zone Z)", "internal static void Restrip("),
+				"bool ok = Strip(Z, out int removed, out int keptStairs, out int keptBare,",
+				"out string failure);",
+				"KingdomScenarioJournal.Append(BuiltRow, ok,",
+				"ok ? Describe(Z, removed, keptStairs, keptBare) : failure);",
+				"return ok;");
+			Ordered(Between(source, "internal static void Restrip(", "internal static bool Strip("),
+				"bool ok = Strip(Z, out int removed, out int keptStairs, out int keptBare,",
+				"out string failure);",
+				"KingdomScenarioJournal.Append(RestripRow, ok,",
+				"ok ? Describe(Z, removed, keptStairs, keptBare) : failure);");
 		}
 
 		[Test]
@@ -62,18 +93,6 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void SourceContract_VillageBookkeepingPropertiesAreVisibleToTheHarnessAndUnchangedInValue()
-		{
-			// The strip needs the exact keys a founding attempt's site reservation writes so a
-			// re-stripped ground never carries a stale village charter forward. Bumped from
-			// private to internal for the harness only - the values and every production guard
-			// that reads them are untouched.
-			Contains(Read(Core),
-				"internal const string SiteReservationVillageProperty = \"r_TAF_FoundingSiteVillage_v1\";",
-				"internal const string SiteReservationDisplayProperty = \"r_TAF_FoundingSiteDisplay_v1\";");
-		}
-
-		[Test]
 		public void SourceContract_BornCleanPromiseDocstringIsPinned()
 		{
 			string source = Read(TestGround);
@@ -81,12 +100,14 @@ namespace ThousandAndFirst.Tests
 				"Dev-only born-clean test ground: the scenario's starting zone is generated normally and then",
 				"stripped, so a persona starts on flat bare passable ground instead of on whatever worldgen",
 				"happened to paint there.");
-			// The promise now names what else must be born-clean beyond the object sweep, so a
-			// reader (and a future edit) can see the zone-property half of the guarantee without
-			// re-deriving it from the Strip body.
+			// The promise now names both halves of the guarantee: the zone-property clear AND the
+			// refusal to ever partially erase a pending reservation, so a reader (and a future
+			// edit) can see them without re-deriving either from the Strip body.
 			Contains(source,
-				"ALSO CLEARS: the zone-level <c>\"faction\"</c> property worldgen paints on a village zone",
-				"charter bookkeeping pair a prior founding attempt on this same zone can leave behind");
+				"ALSO CLEARS the zone-level <c>\"faction\"</c> property worldgen paints on a village zone",
+				"NEVER TOUCHES A PENDING SITE RESERVATION",
+				"the strip refuses whole rather",
+				"than partially erase");
 		}
 
 		private static string Read(string path) { return TestMain.ReadRepositoryText(path); }
