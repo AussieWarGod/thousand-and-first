@@ -30,6 +30,8 @@ ON. Required checks (repository-audit, plus the full pure and portable test lane
 required conversation resolution all remain. The `dev` integration branch now exists on origin, is the repository default branch, created at `6f73974` and currently at `736d28c`. It is protected with the same three required checks, linear history, required conversation resolution and no force-push/deletion, but with `enforce_admins` off and without the strict up-to-date requirement, so the branch model in
 [RELEASING.md](RELEASING.md#branch-model) is in force rather than proposed: feature work targets `dev` and `main` receives release merges. Earlier sections below record the pre-merge state at their own checkpoints and are not restated here.
 
+A source-proven bounty fetch defect is fixed on `dev`: the post-add transfer witness could never be satisfied, so every completed fetch carry quarantined before its credit; executable rule cases and the `bounty-fetch-native-check` persona are added, and that persona has not been run.
+
 Annotated `v0.3.1` still targets `a46b5ad`; `main` is now one squash commit ahead of that tag.
 Public0.3.1 and its published bytes are unchanged. Windows and native lanes are being re-run for
 the current bytes; those receipts are pending and are not claimed here.
@@ -170,7 +172,7 @@ cold-install inventory. Staged compilation covers3053 sources, baseline and comp
 run here by Roslyn 9.0.306 on Linux against the licensed Managed references with warnings as errors
 (baseline compiles 3049 of them; the optional-mod bridge is compatibility-only).
 Direct `XRL` imports: 1418 files, 0 over the line limit.
-Inventory SHA-256: `d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0`.
+Inventory SHA-256: `bbb155eee372977f1977e275268523c1650a4fa69786e985700287c20eac42bc`.
 NOT RUN for this delta: the two dev-harness compile modes, the installed-Hearthpyre source/ABI
 step, `Tools/gate.sh` itself, the Windows gate, the developer boot matrix and any native in-game
 run. The 1,700-tick figure is a reading of the raising rule, not of a running plot clock; the
@@ -178,6 +180,10 @@ second lot's preparation on the marsh, canyon and dunes profiles is unproven. A 
 resumed at the Reserved phase now skips the stake by its own `q1` wire tag, which is proved by
 source-contract and codec cases rather than by a native resumed save. No human exact-inventory
 semantic review binds this digest.
+
+Merged on top of that digest on `fix/bounty-fetch-transfer`: the bounty-fetch transfer correction
+(two production sources, three Harness observers, one persona and two pure suites). No census,
+inventory digest or staged compile count above was recomputed for those merged bytes.
 
 ## Retained unreleased empty-camp legacy and native water regression
 

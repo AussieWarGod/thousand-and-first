@@ -7,6 +7,25 @@ A future v1.0 test-candidate claim requires its exact tree—not any historical
 Alpha receipt—to pass every applicable automated, native, human, compatibility, structure, and
 subscribed-package gate named here.
 
+## Current bounty fetch carry validation
+
+`Tools/run-personas.sh bounty-fetch-native-check` stakes one real Fetch notice over a marked
+pile holding two classified stacks and two unclassified sentinels, with a dedicated destination
+stockpile, a real dedicated water store funded before the clock moves, and no haul hook, then
+lets real engine turns post it, have it read and taken, carry it, complete it and pay it.
+Read-only observers bound to that exact game, realm, ground and notice data part require the
+exact moved identities and counts, the source subtraction down to its untouched sentinels,
+destination ownership, the credited sum, an accepted worker the realm's own book names,
+execution no earlier than the notice's own due tick, the exact posted price paid once out of
+the funded store, and no quarantine after payment. The revisit leg is **same-process**: it runs
+further ordinary turns in the same session and requires no repeat credit, payment or movement.
+It is not cold-load evidence and does not claim to be. A reload is the separate operator route
+described under the scenario load checks below (`Tools/prepare-scenario-load.py`, then
+`Tools/verify-scenario-load.py`); this persona neither performs it nor stands in for it.
+**This persona has not been run.** The correction it exists to witness is source-proven only:
+the post-add witness in `Quests/KingdomBounty.Transfer.cs` demanded a detached holder the engine
+had already replaced, so every completed fetch carry quarantined before its credit.
+
 ## Current empty-camp and native water validation
 
 `Tools/run-personas.sh water-maintenance-native-check` uses a fresh sealed founding request,
