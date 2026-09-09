@@ -2,17 +2,17 @@
 
 ## Current Kingdom Quickstart founding-cohort census — 2026-09-10
 
-**3072** production C# files, 436,251 physical lines, 1432 direct-XRL, zero cap failures;
-3103 generated cold-install files. Exact digest
-`cc7beb34524d8e756c5ff44e302a8e32a8d65798a1f4610a9b311f186d963ed7`.
-Four added sources (the quickstart rules' founders partial, the bootstrap receipt partial split out
-of the bootstrap, and the two bootstrap founders partials) and nine modified, over the deposit
+**3073** production C# files, 436,443 physical lines, 1433 direct-XRL, zero cap failures;
+3104 generated cold-install files. Exact digest
+`2001d4d9c4c38abe929495e36984a9ae62c85069e4287afc3d34081c52b1e756`.
+Five added sources (the quickstart rules' founders partial, the bootstrap receipt partial split out
+of the bootstrap, and the three bootstrap founders partials) and nine modified, over the deposit
 custody census retained below. Structure, doc freshness and the Tools suite (627 tests) pass, the
-engine-free suites pass 14,088 main / 5,242 Portable with zero skips, and all four compile modes are
-clean under Roslyn 9.0.318 on Linux — staged baseline (3068), staged compatibility (3072),
-dev-harness baseline (3235), dev-harness compatibility (3239). Sixteen guard mutations were run
-against the new rules; fourteen were caught by a failing case and two are documented as redundant
-with the digest and the validity ladder. No Windows gate, native run, ordinary-play acceptance or
+engine-free suites pass 14,094 main / 5,248 Portable with zero skips, and all four compile modes are
+clean under Roslyn 9.0.318 on Linux — staged baseline (3069), staged compatibility (3073),
+dev-harness baseline (3236), dev-harness compatibility (3240). Twenty-two guard mutations were run
+against the new rules; twenty-one were caught by a failing case and one is documented as redundant
+with the wire digest. No Windows gate, native run, ordinary-play acceptance or
 exact-inventory human semantic review binds this digest, and the six-profile Quickstart boot matrix
 is owed before merge.
 

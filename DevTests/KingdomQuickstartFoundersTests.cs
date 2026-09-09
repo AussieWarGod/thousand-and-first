@@ -582,6 +582,13 @@ namespace ThousandAndFirst.Tests
 				bootstrap);
 			StringAssert.DoesNotContain("|| !RunFounders(", bootstrap);
 			StringAssert.DoesNotContain("&& RunFounders(", bootstrap);
+			// And nothing after it refuses either: from the last founders call to the end of the
+			// boot pass there is no way out but success.
+			int last = bootstrap.LastIndexOf(
+				"RunFounders(Game, system, zone, ref receipt, out Founders);",
+				StringComparison.Ordinal);
+			Assert.That(last, Is.GreaterThanOrEqualTo(0));
+			StringAssert.DoesNotContain("return false", bootstrap.Substring(last));
 			string founders = TestMain.ReadRepositoryText(
 				"World/KingdomQuickstartBootstrap.Founders.cs");
 			StringAssert.Contains("private static void RunFounders(", founders);
@@ -621,6 +628,13 @@ namespace ThousandAndFirst.Tests
 			// no longer proves itself, fences the world rather than completing or replacing it.
 			StringAssert.Contains(
 				"if (found == KingdomQuickstartRules.FounderCount) cohort = standing;", founders);
+			// One, two or three bodies is neither "nothing was committed" nor "a cohort to adopt".
+			// Completing it would enrol a short party; replacing it would leave orphans.
+			StringAssert.Contains(
+				"|| (found != 0 && found != KingdomQuickstartRules.FounderCount)", founders);
+			StringAssert.Contains(
+				"|| (found != 0 && !VerifyFounderCohort(Zone, standing, Receipt, out failure))",
+				founders);
 			int quarantine = founders.IndexOf("QuarantineGrant(Game,", StringComparison.Ordinal);
 			Assert.That(quarantine, Is.GreaterThan(observe));
 			Assert.That(quarantine, Is.LessThan(stage));

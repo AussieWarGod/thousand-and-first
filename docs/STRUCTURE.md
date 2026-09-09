@@ -23,17 +23,17 @@ python3 Tools/check-structure.py --release
 The Kingdom Quickstart founding cohort over the stockpile deposit custody fix, the Kingdom
 Quickstart shelter ingress, the render-only city sight, the stockpile unit capacity, the
 first-basin water store and the Kingdom Quickstart
-tent rows reports 3072 staged production C# files and 436,251 physical lines.
+tent rows reports 3073 staged production C# files and 436,443 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`cc7beb34524d8e756c5ff44e302a8e32a8d65798a1f4610a9b311f186d963ed7`. The census reports
-1432 files with direct `XRL` imports; 0 of those exceed the line limit.
+`2001d4d9c4c38abe929495e36984a9ae62c85069e4287afc3d34081c52b1e756`. The census reports
+1433 files with direct `XRL` imports; 0 of those exceed the line limit.
 
-The founding-cohort delta over the retained draft below is four added production sources and no
+The founding-cohort delta over the retained draft below is five added production sources and no
 removals: the quickstart rules' founders partial, the bootstrap's receipt partial split out of the
-bootstrap itself, and the two bootstrap founders partials. All four `Tools/gate.sh` modes compiled
-clean on these bytes through the Linux Roslyn reproduction — staged baseline (3068 sources), staged
-compatibility (3072), dev-harness baseline (3235) and dev-harness compatibility (3239).
+bootstrap itself, and the three bootstrap founders partials. All four `Tools/gate.sh` modes compiled
+clean on these bytes through the Linux Roslyn reproduction — staged baseline (3069 sources), staged
+compatibility (3073), dev-harness baseline (3236) and dev-harness compatibility (3240).
 
 The shelter-ingress delta over the retained city-sight draft below is one added and one modified
 production source and no

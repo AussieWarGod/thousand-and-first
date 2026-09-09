@@ -21,9 +21,15 @@ below it.
   and the completion notice and the charter both say so. Four at a camp drink 4 drams a day, so the
   opening 24 drams last six days, and the first traveller is due at 6000 ticks rather than 3600.
   A save cut part-way through the irreversible half resumes founder by founder and completes to
-  exactly four, with the roll and the origin tally at four and not eight; a named founder that
-  cannot be found afterwards is announced once and never retried, and the world says it is short
-  rather than quietly standing at one, two or three. A world founded before this change, or founded
+  exactly four, with the roll and the origin tally at four and not eight; the tally is derived from
+  the founders that carry the origin rather than counted as each is written, so an interruption
+  between the two cannot lose a count. A save cut in the gap between the four bodies being placed
+  and their identities being published is recovered from the ground: each founder wears a
+  reservation minted from the camp's own frozen ground, so a wake adopts four that are already
+  standing rather than raising four more, and refuses outright — once, and permanently — on a party
+  that is neither four nor none. A named founder that cannot be found afterwards is announced once
+  and never retried, and the world says it is short rather than quietly standing at one, two or
+  three. A refused cohort never costs the founder the stores or the completion notice. A world founded before this change, or founded
   with the new option off, decodes with no cohort, re-encodes byte for byte as it was written, is
   finished on every wake, and never gains founders. New option `r_TAF_OptionQuickstartFounders`,
   default Yes, read once when the world is made and frozen there.
@@ -131,29 +137,29 @@ below it.
   (ruling 5); no capacity, catch-up envelope, or stored item is touched, and a standing save reads
   exactly what it read before.
 
-> **Current unreleased census — exact structural gate passed.** Current 3072-file census is line-cap green:
-> 436,251 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> **Current unreleased census — exact structural gate passed.** Current 3073-file census is line-cap green:
+> 436,443 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
-> imports occur in 1432 files, 0 of them over the line limit. Inventory SHA-256:
-> `cc7beb34524d8e756c5ff44e302a8e32a8d65798a1f4610a9b311f186d963ed7`.
-> The generated cold-install inventory contains 3103 files; no new subscription claim.
+> imports occur in 1433 files, 0 of them over the line limit. Inventory SHA-256:
+> `2001d4d9c4c38abe929495e36984a9ae62c85069e4287afc3d34081c52b1e756`.
+> The generated cold-install inventory contains 3104 files; no new subscription claim.
 > This digest is the Kingdom Quickstart founding cohort over the stockpile deposit custody census
 > retained below, and over every delta retained beneath that; each carries its own review chain and
 > none is restated for the others.
-> The founding-cohort delta over the custody census below is four added and nine modified production
+> The founding-cohort delta over the custody census below is five added and nine modified production
 > sources and no regenerated roster (it declares no new property or blueprint): the quickstart
 > rules' founders partial, the bootstrap's receipt partial split out of the bootstrap itself to stay
-> under the line cap, and the two bootstrap founders partials are the additions; the quickstart
+> under the line cap, and the three bootstrap founders partials are the additions; the quickstart
 > models, rules, codec, citizenship rules, bootstrap, recovery, verification and lifecycle shards
 > and the two harness gates are the modifications.
-> On these bytes ALL FOUR compile modes are clean — staged baseline (3068 sources), staged
-> compatibility (3072 plus the tracked Hearthpyre 2.2.3 ABI stub), dev-harness baseline (3235) and
-> dev-harness compatibility (3239) — under Roslyn 9.0.318 on Linux against the installed managed
+> On these bytes ALL FOUR compile modes are clean — staged baseline (3069 sources), staged
+> compatibility (3073 plus the tracked Hearthpyre 2.2.3 ABI stub), dev-harness baseline (3236) and
+> dev-harness compatibility (3240) — under Roslyn 9.0.318 on Linux against the installed managed
 > assemblies, through a reproduction of `Tools/gate.sh` rather than the Windows gate itself. The
-> engine-free suites pass ALL GREEN: 14,088 TafTests cases and 5,242 PortableTests cases, zero
-> skipped, of 14,088/5,242 discovered; the 627-test tooling suite passes. Sixteen guard mutations
-> were run against the new rules and fourteen were caught by a failing case; the two survivors are
-> recorded as redundant with the wire digest and the validity ladder that already refuse them.
+> engine-free suites pass ALL GREEN: 14,094 TafTests cases and 5,248 PortableTests cases, zero
+> skipped, of 14,094/5,248 discovered; the 627-test tooling suite passes. Twenty-two guard mutations
+> were run against the new rules and twenty-one were caught by a failing case; the one survivor is
+> recorded as redundant with the wire digest, which already refuses it.
 > NOT run for this delta: the Windows gate itself, the installed-Hearthpyre source step, the
 > licensed Windows suite driver, the native Quickstart boot matrix, ordinary play, graceful Quit and
 > Steam delivery. The six-profile boot matrix at seed `#43101` is OWED before merge, because this

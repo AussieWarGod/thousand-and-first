@@ -116,17 +116,17 @@ sixteen-field wire form; a receipt written before this change, or written with t
 stays on the old eleven-field form, re-encodes byte for byte and is terminal on every wake, so no
 existing world can gain founders.
 
-Current census on these bytes: 3072
-staged C# files; 436,251 physical lines; 3103 files in the generated
-cold-install inventory. Staged compilation covers 3072 sources, baseline and compatibility symbols
-(baseline compiles 3068 of them; the optional-mod bridge is compatibility-only), run here by Roslyn
+Current census on these bytes: 3073
+staged C# files; 436,443 physical lines; 3104 files in the generated
+cold-install inventory. Staged compilation covers 3073 sources, baseline and compatibility symbols
+(baseline compiles 3069 of them; the optional-mod bridge is compatibility-only), run here by Roslyn
 9.0.318 on Linux against the licensed Managed references with warnings as
-errors. Direct `XRL` imports: 1432 files, 0 over the line limit.
-Inventory SHA-256: `cc7beb34524d8e756c5ff44e302a8e32a8d65798a1f4610a9b311f186d963ed7`.
-All four compile modes are clean on these bytes — staged baseline (3068 sources), staged
-compatibility (3072), dev-harness baseline (3235) and dev-harness compatibility (3239) — through the
+errors. Direct `XRL` imports: 1433 files, 0 over the line limit.
+Inventory SHA-256: `2001d4d9c4c38abe929495e36984a9ae62c85069e4287afc3d34081c52b1e756`.
+All four compile modes are clean on these bytes — staged baseline (3069 sources), staged
+compatibility (3073), dev-harness baseline (3236) and dev-harness compatibility (3240) — through the
 Linux Roslyn reproduction of `Tools/gate.sh` rather than the Windows gate, which did NOT run here.
-The engine-free suites pass 14,088 TafTests and 5,242 PortableTests cases, zero skipped, and the
+The engine-free suites pass 14,094 TafTests and 5,248 PortableTests cases, zero skipped, and the
 Tools suite passes 627 tests.
 NOT RUN for these bytes: the Windows gate, the licensed Windows suite driver, any native run,
 ordinary play, graceful Quit and Steam delivery. In particular the six-profile Quickstart boot

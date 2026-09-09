@@ -107,9 +107,9 @@ baseline and dev-harness compatibility compiles. The shared `DevTests/refs.rsp` 
 `-langversion:latest`, so those compiles are not pinned to C# 7.3; `LangVersion` 7.3 is pinned
 only in `DevTests/Engine*/Probe.csproj` and `Tools/WorkshopSteam/*.csproj`. Retained sections
 below keep their original wording as written at their own checkpoints.
-Staged compatibility compilation runs across 3072 production C# sources, staged baseline across
-3068 (the optional-mod bridge is a compatibility-only source); the generated
-cold-install inventory contains 3103 files. Neither count proves subscriber delivery.
+Staged compatibility compilation runs across 3073 production C# sources, staged baseline across
+3069 (the optional-mod bridge is a compatibility-only source); the generated
+cold-install inventory contains 3104 files. Neither count proves subscriber delivery.
 That census is the Kingdom Quickstart founding cohort's; the counts one paragraph down and the
 receipts named above were measured before it. The six-profile Quickstart boot matrix has NOT been
 re-run on these bytes and is owed, because the cohort changes what Quickstart does at boot.
