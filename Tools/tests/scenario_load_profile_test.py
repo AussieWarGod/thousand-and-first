@@ -179,10 +179,15 @@ class ScenarioLoadProfileTest(unittest.TestCase):
         self.assertEqual([], opens_after)
         self.assertEqual(1, sum(1 for kind, _ in opens_before_any_copy if kind == "open_root"))
         chain_opens = [components for kind, components in opens_before_any_copy if kind == "open_chain"]
-        self.assertEqual(5, len(chain_opens))
-        self.assertEqual(len(chain_opens), len(set(chain_opens)))
-        for components in chain_opens:
-            self.assertEqual(1, len(components))  # one path component at a time, never more
+        # open_validated_root itself now walks from "/" via ONE open_directory_chain call carrying
+        # every component of target_local's absolute path (see its docstring); make_directory_tree
+        # then opens each of the five subdirectories with its OWN single-component call. Both are
+        # real open_directory_chain calls; they are told apart here only by component count.
+        root_anchor_calls = [c for c in chain_opens if len(c) > 1]
+        subdirectory_calls = [c for c in chain_opens if len(c) == 1]
+        self.assertEqual(1, len(root_anchor_calls))
+        self.assertEqual(5, len(subdirectory_calls))
+        self.assertEqual(len(subdirectory_calls), len(set(subdirectory_calls)))
 
     def test_phase_timings_are_recorded_in_order_and_never_gate_success(self):
         self.fixture()
@@ -421,6 +426,41 @@ class ScenarioLoadProfileTest(unittest.TestCase):
         # through the fd this walk already held for the TRUE "ThousandAndFirst" directory.
         self.assertEqual([], list((outside / "Core").iterdir()))
         self.assertEqual(["Core"], [p.name for p in outside.iterdir()])
+
+    def test_ancestor_of_root_symlink_swap_before_root_open_is_refused_with_zero_outside_writes(self):
+        self.fixture()
+        for index in range(load.MAX_COPY_WORKERS * 2):
+            (self.mod / ("Core/Swap%d.cs" % index)).write_bytes(("class Swap%d {}" % index).encode("ascii"))
+        with contextlib.redirect_stdout(io.StringIO()):
+            load.scenario_profile.seal(str(self.local), str(self.seal / "profile.sha256"))
+        outside = self.base / ("outside-escape" + str(self.number))
+        # A REAL "Local" directory at the position a by-name reopen of target_local would have
+        # found it before this fix's from-"/" walk existed -- if the fix were insufficient, this
+        # decoy would silently absorb the whole copy instead of the walk refusing outright.
+        (outside / "Local").mkdir(parents=True)
+        real_open_validated_root = load.open_validated_root
+        swapped = []
+        def swap_before_root_open(path):
+            if not swapped:
+                # Simulates ANOTHER PROCESS winning the race between the earlier directory()
+                # ancestor proof (inside empty_destination, on `destination`'s own parent chain)
+                # and this call: swap `destination` itself -- an ANCESTOR of target_local, not
+                # target_local's own name, and not something any leaf/intermediate-inside-Local
+                # test above touches -- for a symlink pointing at a tree with a matching decoy
+                # "Local". target_local (created moments earlier, still empty) is removed with it.
+                shutil.rmtree(self.destination)
+                self.destination.symlink_to(outside, target_is_directory=True)
+                swapped.append(self.destination)
+            return real_open_validated_root(path)
+        with mock.patch.object(load, "open_validated_root", side_effect=swap_before_root_open):
+            with self.assertRaises((ValueError, OSError)):
+                load.prepare(self.source, self.destination, self.stopped)
+        self.assertEqual([self.destination], swapped)
+        # Walking from "/" makes the swapped `destination` name itself just another single
+        # component with its own O_NOFOLLOW|O_DIRECTORY check: the walk refuses AT that component,
+        # before ever attempting to open "Local" beneath it, so nothing was ever written anywhere,
+        # and the decoy "Local" planted to match stays completely untouched.
+        self.assertEqual([], list((outside / "Local").iterdir()))
 
     def test_one_bad_local_file_among_many_refuses_sealing_but_joins_every_worker(self):
         self.fixture()

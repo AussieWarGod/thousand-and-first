@@ -175,30 +175,36 @@ DIR_FLAGS = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
 
 
 def open_validated_root(path: Path) -> int:
-    """Open `path` BY NAME as a directory file descriptor -- the ONE place below this point a
-    directory is opened by resolving more than one path component in a single call.
+    """Anchor `path` as a directory file descriptor by walking EVERY component of its absolute
+    path, starting from the filesystem root -- never a by-name open of `path` itself.
 
-    Reserved for anchoring a walk's ROOT, at a point where every ancestor of `path` was already
-    proven live moments earlier by directory(), and `path` itself was just created (or freshly
-    reproven) by this same single-threaded process with no other actor able to run in between.
-    O_NOFOLLOW|O_DIRECTORY still makes the final component atomic; the st_dev/st_ino comparison
-    against a fresh lstat immediately before the open additionally refuses the name having been
-    deleted and replaced by a DIFFERENT real directory in that instant.
+    An earlier version of this function opened `path` directly (a multi-component path) on the
+    theory that every ancestor had just been proven by directory() with "no other actor able to
+    run in between". That theory is false against another PROCESS: nothing stops a second actor
+    from swapping any ancestor of `path` -- including `path`'s own parent -- for a symlink in the
+    instant between that proof and this open, and a bare os.open(path, O_NOFOLLOW) only guards
+    the FINAL component; every ancestor above it is still resolved by name and would silently
+    follow such a swap.
 
-    Every directory BELOW this root is opened one component at a time via open_directory_chain, so
-    an ancestor swapped in after THIS call returns cannot redirect any of those lower opens: they
-    never resolve a multi-component path again.
+    The fix: open "/" (which cannot be a symlink or swapped by any local actor -- it is the root
+    of the filesystem namespace) and then walk path.parts[1:] one component at a time via
+    open_directory_chain, which opens each name relative to the fd the PREVIOUS component's open
+    returned. Every single component, including what used to be "just an ancestor", now gets its
+    own atomic O_NOFOLLOW|O_DIRECTORY check; there is no remaining path string, at any depth, for
+    a swap at any point before or during this call to poison. If any component is, or has become,
+    a symlink or non-directory, this raises instead of silently resolving through it.
+
+    Every directory BELOW this root is opened the same way, one component at a time, via
+    open_directory_chain (see make_directory_tree), so this function is the ONLY remaining place
+    this module resolves more than one path component per syscall, and it does so entirely via
+    single-component dir_fd-relative opens chained from "/" -- never a multi-component name.
     """
-    validated = path.lstat()
-    fd = os.open(path, DIR_FLAGS)
+    require(path.is_absolute(), "root anchor path must be absolute: " + str(path))
+    root_fd = os.open(os.sep, DIR_FLAGS)
     try:
-        opened = os.fstat(fd)
-        require(opened.st_dev == validated.st_dev and opened.st_ino == validated.st_ino,
-                "root directory identity changed between validation and open: " + str(path))
-    except BaseException:
-        os.close(fd)
-        raise
-    return fd
+        return open_directory_chain(root_fd, path.parts[1:])
+    finally:
+        os.close(root_fd)
 
 
 def open_directory_chain(root_fd: int, components: tuple[str, ...]) -> int:
