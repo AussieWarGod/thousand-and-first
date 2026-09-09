@@ -40,10 +40,10 @@ below it.
   not admit.
 
 > **Current unreleased census — exact structural gate passed.** Current 3062-file census is line-cap green:
-> 434,436 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> 434,534 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1425 files, 0 of them over the line limit. Inventory SHA-256:
-> `ff13330463a990edbef95c2ae35e0e552691f2f8e0f86a525dc873bd61f7c202`.
+> `290ba13d9099d6eff03476243c1cc3c25ab2a5123ec16b6df94e74b414413df7`.
 > The generated cold-install inventory contains 3093 files; no new subscription claim.
 > This digest is the shelter ingress merged over the render-only city sight, the stockpile unit
 > capacity, the first-basin water store and the Kingdom Quickstart tent rows retained below; each
@@ -188,6 +188,18 @@ below it.
   which is one fewer cask or rack the charter will count.
 
 ### Fixed
+
+- A completed bounty fetch carry is now credited instead of being quarantined. The
+  post-add witness in `Quests/KingdomBounty.Transfer.cs` re-proved the source-minus
+  condition with its detached-holder clause after the destination add, but the engine's
+  `Inventory.AddObject` assigns the destination as the moved object's holder before the
+  callback returns, so that clause and the arrival's own destination-holder clause could
+  never hold together. Every successful default fetch delivery therefore quarantined
+  before its credit and completion. The detached holder is now the removal step's proof
+  alone; the arrival proves destination ownership. Source-proven against the shipped code
+  and covered by executable rule cases; a native persona
+  (`Tools/run-personas.sh bounty-fetch-native-check`) has been added for the in-game
+  proof and has **not** been run yet.
 
 - A realm whose residents map to no canonical body can now stage and seal its legacy. In
   0.3.1 the automatic daily seal stage of such a realm failed closed ("current polity

@@ -382,6 +382,7 @@
     <Compile Include="KingdomRaidRecoveryTurnNativeSourceTests.cs" />
     <Compile Include="KingdomRaidMasterTurnNativeSourceTests.cs" />
     <Compile Include="KingdomWaterMaintenanceNativeSourceTests.cs" />
+    <Compile Include="KingdomBountyFetchNativeSourceTests.cs" />
     <Compile Include="KingdomRaidLaunchOrderTests.cs" />
     <Compile Include="KingdomRaidOutboxRulesTests.cs" />
     <Compile Include="KingdomRaidOutboxRulesTests.Fixtures.cs" />

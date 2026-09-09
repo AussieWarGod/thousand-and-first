@@ -88,5 +88,64 @@ namespace ThousandAndFirst
 			return BountyTransferAction.Quarantine;
 		}
 
+		/// <summary>
+		/// Pure holder law for one exact fetch move witness.
+		///
+		/// The engine's Inventory.AddObject assigns the destination as the moved object's holder
+		/// before it returns, so a witness taken after the add can only ever read the
+		/// destination. A detached holder is the removal step's proof and only the removal
+		/// step's: demanding it again after the add is unsatisfiable, and quarantined every
+		/// carry that had in fact arrived, before it could be credited.
+		/// </summary>
+		public static bool TransferOwnerExact(BountyTransferPhase Phase,
+			BountyTransferLocation Holder)
+		{
+			if (Phase == BountyTransferPhase.RemoveIntent)
+			{
+				return Holder == BountyTransferLocation.Detached;
+			}
+			if (Phase == BountyTransferPhase.AddIntent)
+			{
+				return Holder == BountyTransferLocation.DestinationOnly;
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Pure row law for one exact subtraction: the observed rows are the captured rows with
+		/// exactly one occurrence of the moved identity dropped, and every surviving row keeps
+		/// its order, identity and count. A repeated or absent moved identity is refused, so an
+		/// ambiguous list can never be read as a subtraction.
+		/// </summary>
+		public static bool TransferRowsMinus(string[] CapturedIds, int[] CapturedCounts,
+			string[] ObservedIds, int[] ObservedCounts, string MovedId, int MovedUnits,
+			out int RemovedIndex)
+		{
+			RemovedIndex = -1;
+			if (CapturedIds == null || CapturedCounts == null || ObservedIds == null
+				|| ObservedCounts == null || string.IsNullOrEmpty(MovedId) || MovedUnits <= 0
+				|| CapturedIds.Length != CapturedCounts.Length
+				|| ObservedIds.Length != ObservedCounts.Length
+				|| ObservedIds.Length != CapturedIds.Length - 1) return false;
+			int found = -1;
+			for (int i = 0; i < CapturedIds.Length; i++)
+			{
+				if (CapturedIds[i] != MovedId) continue;
+				if (found >= 0) return false;
+				found = i;
+			}
+			if (found < 0 || CapturedCounts[found] != MovedUnits) return false;
+			int current = 0;
+			for (int i = 0; i < CapturedIds.Length; i++)
+			{
+				if (i == found) continue;
+				if (ObservedIds[current] != CapturedIds[i]
+					|| ObservedCounts[current] != CapturedCounts[i]) return false;
+				current++;
+			}
+			RemovedIndex = found;
+			return true;
+		}
+
 	}
 }
