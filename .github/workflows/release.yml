@@ -960,7 +960,7 @@ jobs:
     # the fallback when this job cannot run.
     name: finalize the submitted attempt (-Finalize, writes immutable records)
     needs: [release-checks, publish, verify]
-    if: ${{ success() && needs.publish.result == 'success' && needs.verify.result == 'success' && needs.verify.outputs.status == 'SubscribedInstallationVerified' }}
+    if: ${{ !cancelled() && needs.release-checks.result == 'success' && needs.publish.result == 'success' && needs.verify.result == 'success' && needs.verify.outputs.status == 'SubscribedInstallationVerified' }}
     runs-on: [self-hosted, windows, taf-steam]
     # One launcher run: a helper recompile inside its 210-second budget, one installed
     # verification, one record write, then redaction. There is no polling loop and no retry.
