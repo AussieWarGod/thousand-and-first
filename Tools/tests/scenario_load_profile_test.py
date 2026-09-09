@@ -11,6 +11,7 @@ import importlib.util
 import io
 import json
 import os
+import shutil
 from pathlib import Path
 import sys
 import tempfile
@@ -156,9 +157,9 @@ class ScenarioLoadProfileTest(unittest.TestCase):
         def directory_spy(path):
             events.append(("directory", path))
             real_directory(path)
-        def copy_new_spy(source, destination, expected, limit, validate_parent=True):
+        def copy_new_spy(source, destination, expected, limit, dir_fd=None):
             events.append(("copy", destination))
-            real_copy_new(source, destination, expected, limit, validate_parent)
+            real_copy_new(source, destination, expected, limit, dir_fd)
         with mock.patch.object(load, "directory", side_effect=directory_spy), \
              mock.patch.object(load, "copy_new", side_effect=copy_new_spy):
             load.prepare(self.source, self.destination, self.stopped)
@@ -179,7 +180,7 @@ class ScenarioLoadProfileTest(unittest.TestCase):
         phases = timings["phases"]
         expected_names = ["preflight-and-stop-authority", "source-validation", "destination-setup",
                            "local-copy", "post-copy-target-inventory", "save-copy", "source-reproof",
-                           "seal-and-evidence-write"]
+                           "seal-computation"]
         self.assertEqual(expected_names, [phase["phase"] for phase in phases])
         for phase in phases:
             self.assertGreaterEqual(phase["seconds"], 0)
@@ -301,8 +302,8 @@ class ScenarioLoadProfileTest(unittest.TestCase):
         self.fixture()
         original = load.copy_new
         changed = []
-        def copy_then_change(source, destination, expected, limit, validate_parent=True):
-            original(source, destination, expected, limit, validate_parent)
+        def copy_then_change(source, destination, expected, limit, dir_fd=None):
+            original(source, destination, expected, limit, dir_fd)
             if source == self.save / "Cache.db":
                 (self.save / "Primary.sav.gz").write_bytes(b"external concurrent change")
                 changed.append(self.before())
@@ -315,6 +316,66 @@ class ScenarioLoadProfileTest(unittest.TestCase):
         self.assertFalse((self.destination / "load-source-evidence.json").exists())
         self.assertFalse((self.destination / "load-phase-timings.json").exists())
 
+    def test_timings_write_failure_leaves_no_seal_or_evidence_behind(self):
+        self.fixture()
+        before = self.before()
+        real_write_new = load.write_new
+        def flaky_write_new(path, data):
+            if path.name == "load-phase-timings.json":
+                raise OSError("synthetic disk error writing phase timings")
+            real_write_new(path, data)
+        with mock.patch.object(load, "write_new", side_effect=flaky_write_new):
+            with self.assertRaisesRegex(OSError, "synthetic disk error"):
+                load.prepare(self.source, self.destination, self.stopped)
+        self.assertEqual(before, self.before())
+        # The timings write happens BEFORE the seal/request/evidence writes precisely so that its
+        # own failure refuses the whole profile instead of leaving an already-sealed destination
+        # behind a refusal that would look like the load itself failed.
+        self.assertFalse((self.destination / "load-phase-timings.json").exists())
+        self.assertFalse((self.destination_seal / "profile.sha256").exists())
+        self.assertFalse((self.destination_seal / "request.txt").exists())
+        self.assertFalse((self.destination / "load-source-evidence.json").exists())
+
+    def test_destination_directory_symlink_swap_after_preflight_cannot_escape_via_dir_fd(self):
+        self.fixture()
+        for index in range(load.MAX_COPY_WORKERS * 2):
+            (self.mod / ("Core/Swap%d.cs" % index)).write_bytes(("class Swap%d {}" % index).encode("ascii"))
+        with contextlib.redirect_stdout(io.StringIO()):
+            load.scenario_profile.seal(str(self.local), str(self.seal / "profile.sha256"))
+        outside = self.base / ("outside-escape" + str(self.number))
+        outside.mkdir()
+        # Swap the LEAF "Core" directory specifically (it directly holds many copied files and has
+        # no descendant directory that a later, unrelated directory() ancestor-chain walk would
+        # independently catch): swapping the Local root instead would be masked, because every
+        # OTHER unique parent under Local (Harness, Core) walks Local as one of its own ancestors
+        # on its own turn and would refuse on that unrelated path, hiding whether dir_fd anchoring
+        # itself did anything. Core has no such descendant, so nothing else notices the swap early.
+        target_core = self.destination / "Local/Mods/ThousandAndFirst/Core"
+        real_open_validated_directory = load.open_validated_directory
+        swapped = []
+        def swap_after_open(path):
+            # The directory fd this returns is already open and anchored to the ORIGINAL inode
+            # (see open_validated_directory's docstring). Deleting and resymlinking the NAME right
+            # after simulates an attacker winning the exact race this fix closes: every worker that
+            # submits after this point still only holds (and creates through) that original fd.
+            fd = real_open_validated_directory(path)
+            if path == target_core and not swapped:
+                shutil.rmtree(path)
+                path.symlink_to(outside, target_is_directory=True)
+                swapped.append(path)
+            return fd
+        with mock.patch.object(load, "open_validated_directory", side_effect=swap_after_open):
+            # A later phase (e.g. scenario_profile.inventory's own by-name walk) correctly refuses
+            # once "Core" is a symlink -- that is defense in depth, not the property under test.
+            # The property under test is what happens to the in-flight Core workers themselves.
+            with self.assertRaises((ValueError, OSError)):
+                load.prepare(self.source, self.destination, self.stopped)
+        self.assertEqual([target_core], swapped)
+        # The actual security property: not one byte from any of the many files destined for the
+        # hijacked "Core" name was ever written into the attacker-controlled directory, regardless
+        # of how the rest of prepare() reacts afterward.
+        self.assertEqual([], list(outside.iterdir()))
+
     def test_one_bad_local_file_among_many_refuses_sealing_but_joins_every_worker(self):
         self.fixture()
         # Widen past a single worker's share so the fan-out actually spans multiple threads.
@@ -326,10 +387,10 @@ class ScenarioLoadProfileTest(unittest.TestCase):
         bad_file = self.mod / "Core/Extra1.cs"
         real_copy_new = load.copy_new
         completed = []
-        def flaky(source, destination, expected, limit, validate_parent=True):
+        def flaky(source, destination, expected, limit, dir_fd=None):
             if source == bad_file:
                 raise ValueError("synthetic single-worker failure")
-            real_copy_new(source, destination, expected, limit, validate_parent)
+            real_copy_new(source, destination, expected, limit, dir_fd)
             completed.append(destination)
         with mock.patch.object(load, "copy_new", side_effect=flaky):
             with self.assertRaisesRegex(ValueError, "synthetic single-worker failure"):
@@ -348,12 +409,12 @@ class ScenarioLoadProfileTest(unittest.TestCase):
                 before = self.before()
                 original = load.copy_new
                 injected = []
-                def inject(source, destination, expected, limit, validate_parent=True):
+                def inject(source, destination, expected, limit, dir_fd=None):
                     if not injected and (race == "occupied-copy" or source == self.save / "Cache.db"):
                         path = destination if race == "occupied-copy" else self.destination / "Local/Injected.cs"
                         path.write_bytes(b"foreign bytes retained")
                         injected.append(path)
-                    original(source, destination, expected, limit, validate_parent)
+                    original(source, destination, expected, limit, dir_fd)
                 with mock.patch.object(load, "copy_new", side_effect=inject):
                     with self.assertRaises((ValueError, FileExistsError)):
                         load.prepare(self.source, self.destination, self.stopped)

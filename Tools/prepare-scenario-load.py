@@ -169,20 +169,51 @@ def write_new(path: Path, data: bytes) -> None:
     require(digest(path, max(len(data), 1)) == hashlib.sha256(data).hexdigest(), "destination readback changed")
 
 
-def copy_new(source: Path, destination: Path, expected: str, limit: int, validate_parent: bool = True) -> None:
+DIR_FD_SUPPORTED = os.open in os.supports_dir_fd and hasattr(os, "O_DIRECTORY") and hasattr(os, "O_NOFOLLOW")
+
+
+def open_validated_directory(path: Path) -> int:
+    """Open `path` as a directory file descriptor that anchors every later create to THIS inode.
+
+    O_NOFOLLOW|O_DIRECTORY is atomic at the syscall level: if `path` is, or has just become, a
+    symlink or a non-directory, the open itself fails -- there is no window between "check" and
+    "open" for a swap to slip through, unlike a bare lstat-then-open-by-path. The st_dev/st_ino
+    comparison against a fresh lstat immediately before the open additionally refuses the narrower
+    case of the name being deleted and replaced by a DIFFERENT real directory in that instant.
+
+    Every subsequent create goes through os.open(name, ..., dir_fd=this) rather than a full path,
+    so once this fd is open, renaming, deleting, or resymlinking the NAME `path` afterwards cannot
+    redirect a create anywhere else: the fd is bound to the inode, not the name.
+    """
+    validated = path.lstat()
+    flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+    fd = os.open(path, flags)
+    try:
+        opened = os.fstat(fd)
+        require(opened.st_dev == validated.st_dev and opened.st_ino == validated.st_ino,
+                "destination directory identity changed between validation and open: " + str(path))
+    except BaseException:
+        os.close(fd)
+        raise
+    return fd
+
+
+def copy_new(source: Path, destination: Path, expected: str, limit: int, dir_fd: int | None = None) -> None:
     """Exclusive create, flush, fsync, then an independent readback hash proof.
 
-    `validate_parent=False` skips the destination ancestor walk here because the caller (the
-    bounded parallel fan-out below) already ran `directory()` on every distinct destination
-    directory once, before any worker started. That is provably equivalent to checking on every
-    call: these directories were created moments earlier by this same single-threaded process,
-    workers only ever write regular files (never create/rename/relink a directory), and nothing
-    else touches this throwaway profile tree while the fan-out runs. Every serial caller (the
-    three named save artifacts) keeps the original per-file check.
+    `dir_fd`, when given, anchors the create to an already-open, already-validated directory file
+    descriptor (see open_validated_directory) instead of re-resolving `destination`'s parent by
+    name: the create can then never be redirected by a directory-name swap that happens after the
+    caller opened that fd, because dir_fd-relative opens operate on the fd's inode, not the path.
+    Every caller without a dir_fd keeps the original per-file `directory(destination.parent)` walk.
     """
-    if validate_parent:
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW
+    if dir_fd is None:
         directory(destination.parent)
-    with destination.open("xb") as target:
+        handle = os.open(destination, flags)
+    else:
+        handle = os.open(destination.name, flags, dir_fd=dir_fd)
+    with os.fdopen(handle, "wb") as target:
         copied = read_stream(source, limit, target.write)
         target.flush()
         os.fsync(target.fileno())
@@ -193,30 +224,42 @@ def copy_new_files(pairs: list[tuple[Path, Path, str]], limit: int, workers: int
     """Bounded local-only parallel fan-out of copy_new, one worker thread per file at a time.
 
     Every guard copy_new performs -- exclusive create, flush, fsync, independent readback hash --
-    runs unchanged for every file; only the per-file destination ancestor recheck is hoisted out
-    (see copy_new's validate_parent docstring). This never launches a process, never touches a
-    network path, and workers only write regular files under directories the caller already
-    validated.
+    runs unchanged for every file. Each distinct destination directory is validated by the caller
+    (directory(), full ancestor chain) and then opened here EXACTLY ONCE, before any worker starts,
+    as a custody-anchoring file descriptor (see open_validated_directory); every worker creates its
+    file relative to that fd, so a directory-name swap injected after this function starts cannot
+    redirect any worker's write outside the validated tree (see copy_new's dir_fd doc). This never
+    launches a process and never touches a network path.
 
-    Every future is joined (ThreadPoolExecutor.shutdown waits for all of them) before this
-    function returns or raises, so a failure in one worker can never leave another worker still
-    running when the caller moves on. On any failure, every file's outcome is still awaited, the
-    first error is re-raised, and prepare() therefore never reaches the sealing phase: whatever
-    partial destination bytes exist stay exactly as ordinary serial failure would have left them.
+    Every directory fd is closed, and every future is joined (ThreadPoolExecutor.shutdown waits for
+    all of them) before this function returns or raises, so a failure in one worker can never leave
+    another worker still running, or a directory fd still open, when the caller moves on. On any
+    failure, every file's outcome is still awaited, the first error is re-raised, and prepare()
+    therefore never reaches the sealing phase: whatever partial destination bytes exist stay
+    exactly as ordinary serial failure would have left them.
     """
     if not pairs:
         return
-    errors: list[BaseException] = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=min(workers, len(pairs))) as pool:
-        futures = [pool.submit(copy_new, source, destination, expected, limit, False)
-                   for source, destination, expected in pairs]
-        for future in concurrent.futures.as_completed(futures):
-            try:
-                future.result()
-            except BaseException as error:
-                errors.append(error)
-    if errors:
-        raise errors[0]
+    require(DIR_FD_SUPPORTED, "this platform cannot anchor directory custody with O_NOFOLLOW|O_DIRECTORY+dir_fd")
+    directory_fds: dict[Path, int] = {}
+    try:
+        for parent in sorted({destination.parent for _, destination, _ in pairs}):
+            directory(parent)
+            directory_fds[parent] = open_validated_directory(parent)
+        errors: list[BaseException] = []
+        with concurrent.futures.ThreadPoolExecutor(max_workers=min(workers, len(pairs))) as pool:
+            futures = [pool.submit(copy_new, source, destination, expected, limit, directory_fds[destination.parent])
+                       for source, destination, expected in pairs]
+            for future in concurrent.futures.as_completed(futures):
+                try:
+                    future.result()
+                except BaseException as error:
+                    errors.append(error)
+        if errors:
+            raise errors[0]
+    finally:
+        for fd in directory_fds.values():
+            os.close(fd)
 
 
 def request_text(raw: bytes) -> str:
@@ -334,10 +377,8 @@ def prepare(source: Path, destination: Path, assert_stopped: Callable[[Path], No
     with timer.measure("local-copy", {"files": len(files), "bytes": sum(os.path.getsize(path) for path in files)}):
         pairs = [(path, target_local / path.relative_to(local),
                   expected[scenario_profile.normalize(str(path.relative_to(local)))]) for path in files]
-        # Validate every distinct destination directory exactly once, before any worker starts:
-        # see copy_new's validate_parent docstring for why re-checking per file proves nothing more.
-        for parent in sorted({destination.parent for _, destination, _ in pairs}):
-            directory(parent)
+        # copy_new_files validates and dir_fd-anchors every distinct destination directory exactly
+        # once, before any worker starts (see its docstring and open_validated_directory).
         copy_new_files(pairs, MAX_LOCAL_FILE)
     with timer.measure("post-copy-target-inventory"):
         require(scenario_profile.inventory(str(target_local)) == expected, "copied Local differs from original closed inventory")
@@ -360,18 +401,22 @@ def prepare(source: Path, destination: Path, assert_stopped: Callable[[Path], No
                 "source save inventory changed during copy")
         for name, before in hashes.items():
             require(digest(save / name) == before, "source save file changed during copy: " + name)
-    with timer.measure("seal-and-evidence-write"):
+    with timer.measure("seal-computation"):
         inventory = scenario_profile.inventory(str(target_local))
         target_expected = dict(expected)
         target_expected["scenario-load.txt"] = hashlib.sha256(load_request).hexdigest()
         target_expected["scenario-load-snapshot.txt"] = hashlib.sha256(snapshot).hexdigest()
         require(inventory == target_expected, "destination Local acquired unproved content during copy")
         seal = scenario_profile.SEAL_HEADER + "\n" + "".join(inventory[key] + "  " + key + "\n" for key in sorted(inventory))
-        write_new(destination_seal / "profile.sha256", seal.encode("utf-8"))
-        write_new(destination_seal / "request.txt", request_bytes)
-        write_new(destination / "load-source-evidence.json", (json.dumps(evidence, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8"))
+    # Written BEFORE the seal/request/evidence below, deliberately: this file's own write can fail
+    # (disk error, readback mismatch) like any write_new call, and when it does, prepare() must
+    # raise with NO seal on disk yet -- exactly like every other pre-seal refusal already tested --
+    # rather than leave an already-sealed profile behind a refusal that looks like the load failed.
     timings = {"schema": "taf-scenario-load-phase-timings-v1", "phases": timer.phases}
     write_new(destination / "load-phase-timings.json", (json.dumps(timings, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8"))
+    write_new(destination_seal / "profile.sha256", seal.encode("utf-8"))
+    write_new(destination_seal / "request.txt", request_bytes)
+    write_new(destination / "load-source-evidence.json", (json.dumps(evidence, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8"))
     return evidence
 
 
