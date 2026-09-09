@@ -86,6 +86,16 @@ namespace ThousandAndFirst
 		public const string ClearanceGroundPhaseProperty = "KingdomClearanceGroundPhase";
 
 		/// <summary>
+		/// Set on a clearance stake once a delivery of its yield ended somewhere the keepers could
+		/// not account for. A DURABLE hold, not an announcement: the ground is already cleared, so
+		/// the next eligible pass would find an empty yield, settle it, issue the ground mud and
+		/// remove the stake, and the uncertainty the founder was told about would simply
+		/// evaporate. Every further mutation of a held stake is refused until somebody clears
+		/// this by hand.
+		/// </summary>
+		public const string ClearanceHeldProperty = "KingdomClearanceHeldUnproved";
+
+		/// <summary>
 		/// Item blueprints the settlement stores each material as, indexed by
 		/// <see cref="KingdomMaterial"/>. Scrap is vanilla's own <c>Scrap Metal</c>, because scrap
 		/// metal is already a real item in this game and a second one would be a lie; the rest are

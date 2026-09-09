@@ -28,6 +28,12 @@ namespace ThousandAndFirst
 		/// </summary>
 		public const string StockpileFullAnnouncedProperty = "KingdomStockpileFullAnnounced";
 
+		/// <summary>Set on a dedicated stockpile once the founder has been told a delivery to it
+		/// ended somewhere the keepers could not account for. Cleared by the next delivery that
+		/// lands in it proved, so the saying follows the same once-only shape as the full-store
+		/// saying beside it (STANDARDS 7b).</summary>
+		public const string StockpileCustodyAnnouncedProperty = "KingdomStockpileCustodyUnproved";
+
 		/// <summary>Stockpiles one settlement's keepers can account for on one ground. Mirrors
 		/// <see cref="MaxDedicatedLarders"/>: a separate cap from water and from food, because
 		/// these are separate accounts kept by separate people.</summary>

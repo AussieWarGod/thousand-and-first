@@ -163,6 +163,19 @@ namespace ThousandAndFirst
 		/// <returns>Units that ended up on the ground rather than in a stockpile.</returns>
 		public static int Deliver(KingdomSystem System, Zone Z, KingdomMaterialTally Carried)
 		{
+			return Deliver(System, Z, Carried, out _);
+		}
+
+		/// <summary>The same delivery, reporting how it ended. A charter whose load could not be
+		/// proved home has NOT arrived, and a caller that goes on to write "delivered" into the
+		/// chronicle would be writing a receipt for material nobody can find.</summary>
+		/// <param name="Custody">Settled when every bundle is accounted for; Unproved when one is
+		/// standing somewhere the keepers cannot read, in which case the load stopped there.
+		/// </param>
+		internal static int Deliver(KingdomSystem System, Zone Z, KingdomMaterialTally Carried,
+			out KingdomDepositCustody Custody)
+		{
+			Custody = KingdomDepositCustody.Settled;
 			if (Carried == null || Carried.IsEmpty() || Z == null)
 			{
 				return 0;
@@ -170,10 +183,20 @@ namespace ThousandAndFirst
 			MaterialStock stock = Stock(Z);
 			Cell founderCell = The.Player?.CurrentCell;
 			Cell fallback = (founderCell != null && founderCell.ParentZone == Z) ? founderCell : Z.GetCell(Z.Width / 2, Z.Height / 2);
-			int spilled = stock.PutAll(Carried, fallback);
+			int spilled = stock.PutAll(Carried, fallback, out Custody);
 			if (spilled > 0 && System != null)
 			{
 				System.Ledger.Note("{{r|" + spilled + " loads came under charter with no stockpile to go in, and were set down on the ground.}}");
+			}
+			if (Custody != KingdomDepositCustody.Settled)
+			{
+				// Nothing is minted for the remainder, so it must not vanish from the books
+				// as well: the charter is held and said aloud rather than quietly written off.
+				KingdomLog.Log("materials: charter delivery held, custody unproved");
+				if (System != null)
+				{
+					System.Ledger.Note("{{r|Part of the charter load ended somewhere the keepers cannot account for. The rest is held rather than issued twice; nothing was made again for it.}}");
+				}
 			}
 			return spilled;
 		}

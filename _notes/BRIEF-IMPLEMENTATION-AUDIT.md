@@ -1,6 +1,20 @@
 # Brief-to-implementation audit
 
-## Current Kingdom Quickstart shelter-ingress census — 2026-09-09
+## Current stockpile deposit custody census — 2026-09-09
+
+**3068** production C# files, 435,538 physical lines, 1429 direct-XRL, zero cap failures;
+3099 generated cold-install files. Exact digest
+`3cfe76c38704930c03d2923e400d05155cbcbf96b9ad8b31ad90304cc8fea6c0`.
+Three added sources (the engine-free deposit law, its seam, and the GameObject host that
+implements it) and four modified, over the shelter-ingress census retained below. Structure, doc
+freshness and the Tools suite (627 tests) pass, and the engine-free suites pass 14,061 main /
+5,215 Portable, zero skips, with the staged baseline (3064 sources) and compatibility (3068
+sources) sets compiling clean under Roslyn 9.0.306 on Linux. The two new deposit regressions were
+confirmed to fail against the pre-fix behaviour before the fix was kept. No dev-harness mode,
+Windows gate, native run, ordinary-play acceptance or exact-inventory human semantic review binds
+this digest.
+
+## Retained Kingdom Quickstart shelter-ingress census — 2026-09-09
 
 **3062** production C# files, 434,436 physical lines, 1425 direct-XRL, zero cap failures;
 3093 generated cold-install files. Exact digest

@@ -1,4 +1,4 @@
-﻿# Changelog
+# Changelog
 
 All notable changes to The Thousand and First. Versions are semantic: patch for fixes,
 minor for additive API and content, major for breaking changes. Supported API is defined in
@@ -7,6 +7,133 @@ minor for additive API and content, major for breaking changes. Supported API is
 Historical entries preserve the claim made at that point. The latest version entry, `VISION.md`, and
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
+
+## Unreleased — Stockpile deposit custody
+
+### Fixed
+
+- A stockpile delivery that could not prove where its bundle went used to create the material
+  again. When an insertion callback moved the bundle into another inventory, the salvage path
+  preserved the body and returned zero, so the units stayed outstanding and `MaterialStock.Put`
+  made them a second time in the next store or on the ground: the same stone stood in the world
+  twice. An unproved deposit now stops the whole delivery. Only what the store provably gained is
+  credited, nothing is created for the remainder, and the founder is told once.
+- A bundle a stack-count handler had already carried into somebody else's inventory used to be
+  obliterated whenever the stamp proof failed. `item.Count = batch` is `Stacker.StackCount`, which
+  sends `StackCountChangedEvent`, so a handler runs between the room proof and the insertion; a
+  handler that both took the bundle and filled the store made the proof fail and the delivery then
+  destroyed goods it did not own. A bundle is now withdrawn only when it is proved to belong to
+  nobody — in no inventory and in no cell — and otherwise left exactly where it stands.
+- The refining yard no longer reads a held load as a missing item blueprint. `Put` reports how the
+  delivery ended, and `ReportNothingLanded` keeps a wiring fault, a settlement out of room, and a
+  load held for unprovable custody apart from one another.
+- Withdrawal is no longer assumed to succeed. `GameObject.Obliterate` is vetoable, and a
+  `BeforeDestroyObjectEvent` handler may move the body before it refuses, so every withdrawal is
+  read back off the body and an unproved one stops the delivery instead of leaving the units to be
+  made again elsewhere.
+- Custody is proved before every mutation, not only room and count. A creation or stack-count
+  handler that carried the bundle off while the store still had room used to pass the old proof
+  outright, and the insertion would then have taken the body out of whoever was holding it.
+- A bundle that stopped existing BEFORE its insertion is no longer treated as safely withdrawn:
+  nothing distinguishes "this delivery destroyed it" from "a handler merged its units away", so it
+  refuses rather than leaving the whole batch to be minted again.
+- Credit for a vanished bundle is now read per material rather than off whole occupancy. A handler
+  that retired the timber and dropped an equal count of stone left the store just as full and used
+  to be paid in full for timber that never arrived.
+- The landing proof now requires the destination to still be dedicated settlement stock. A handler
+  that cleared the dedication left exact inventory membership intact and still took full credit.
+- The overflow path is no longer its own unproved loop. It stamps a count that fires
+  `StackCountChangedEvent`, and `Cell.AddObject` returns the object it was handed even when
+  `Physics.EnterCell` refused it, so a refusing cell or a taking handler used to mint ledger units.
+  Ground now runs the same law through the same seam and is paid on proof; with no ground at all
+  nothing is created, where a body used to be made only to be destroyed.
+- A handler that throws inside a callback no longer discards what the delivery had already proved.
+  The fill returns the proved units with an uncertain custody instead of unwinding past the caller.
+- Reading is treated as a callback, because it is one, and every final proof now reads RAW.
+  `GameObject.Count` reaches `Stacker.Number`, which repairs a nonpositive count by assigning one
+  and dispatching `StackCountChangedEvent`, and a room or material census walks objects and asks
+  each of them that same question. Proving custody after such a reading was not enough: the
+  reading can change the count or the room while leaving the holder alone, its own write lands on
+  a body a previous callback may already have taken, and a census that dispatches can move an
+  earlier row after that row's units are already in the total. The order is now raw observe,
+  decide, mutate — an ordinary reading may only be taken as advice, before a raw re-observation —
+  and the deposit path counts through `Stacker.StackCount`, which repairs nothing and sends
+  nothing. A broken count still reads as one where it is a CENSUS, because a stack whose count is
+  zero is still a thing taking up a place, and it is never written back.
+- The raw hold no longer classifies bits through `TryBitsOf`, which multiplies what one of a thing
+  is worth by that thing's ordinary count and so repairs and dispatches from inside the walk. It
+  reads `UnitBits` instead, which asks a part and a bit-cost table and reaches nobody. A handler
+  fired mid-census could otherwise raise a row the walk had already counted, and leave a positive
+  room reading standing in front of a full store.
+- A census fallback is no longer mistaken for proof that a body may be inserted. A malformed
+  original carrying zero or minus one used to pass a batch-of-one proof; the engine's own stacking
+  adds the incoming count to the stack it merges into, so it would have taken a unit OUT of what
+  was already lying there before the delivery noticed the missing gain. The insertion proof now
+  reads the field as it stands and refuses a malformed body outright.
+- Every batch proves its count before insertion, not only a stamped one. A creation handler that
+  left an exclusively held stack of two where the delivery wanted one used to be inserted whole:
+  two units into a destination paid for one, and on open ground an ordinary merge then clamped the
+  gain back to one and settled a delivery that had actually placed two.
+- The gain readers count only members whose OWN custody names the destination.
+  `Cell.AddObject` runs `Physics.EnterCell` before it appends, so a handler on the environmental
+  update inside it can move the body to another cell; the append happens anyway, the cell-entry
+  stacking then merges the body into a stack in the cell it really reached and obliterates it, and
+  the requested cell is left holding a dead entry that used to be counted as a landing.
+- Saying that a delivery is uncertain can no longer cost it the units it proved. A store's display
+  name is assembled by handlers, so the diagnostic itself can throw; the outcome is now built
+  regardless, the once-only flag is set before the saying, the log line is written first off raw
+  strings, and the name falls back to the store's blueprint id.
+- A clearance stake whose yield could not be proved home is now DURABLY held rather than merely
+  announced. The ground it stood on is already cleared, so the next eligible pass used to find an
+  empty yield, settle it, issue the ground mud and remove the stake — and the inspection hold the
+  founder had been told about simply evaporated.
+- Every settlement-owned caller that writes a receipt now reads the custody first. The clearance
+  stake no longer stamps its one-shot ground yield as issued after a refusal (which forfeited the
+  mud permanently and in silence) and no longer chronicles a yield nothing was credited for; the
+  refining yard reads the short raw return before starting a second delivery and does not report a
+  run it could not prove home; and a charter whose load was held is said in the ledger instead of
+  reading as an ordinary zero-spill success with a "delivered" line in the chronicle.
+
+### Changed
+
+- The deposit law moved out of the engine-facing shard into `Core/KingdomDepositEngine.cs` behind
+  `Core/IKingdomDepositHost.cs`, so it can be driven against handlers that relocate, fill, veto a
+  destruction, or merge the bundle away mid-callback.
+  `Growth/KingdomMaterials.StockpileDeposit.cs` and `Growth/KingdomMaterials.GroundSpill.cs` are
+  the only pieces that touch a `GameObject`, and the yard work moved into
+  `Growth/KingdomMaterials.10b.YardWork.cs` to stay under the line cap. Counting stays whole and intake is still the only thing refused
+  (ruling 5); no capacity, catch-up envelope, or stored item is touched, and a standing save reads
+  exactly what it read before.
+
+> **Current unreleased census — exact structural gate passed.** Current 3068-file census is line-cap green:
+> 435,538 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
+> imports occur in 1429 files, 0 of them over the line limit. Inventory SHA-256:
+> `3cfe76c38704930c03d2923e400d05155cbcbf96b9ad8b31ad90304cc8fea6c0`.
+> The generated cold-install inventory contains 3099 files; no new subscription claim.
+> This digest is the stockpile deposit custody fix merged over `dev` at `862f14d` (the unattended
+> native observers, the Workshop listing wording, the automatic Workshop attempt finalisation, the
+> Fetch carry-completion fix and the cross-version persona REQUEST wording; only the Fetch fix
+> touches a production C# source, and it adds no new one), and over the Kingdom Quickstart shelter ingress, the
+> render-only city sight, the stockpile unit capacity, the first-basin water store and the Kingdom
+> Quickstart tent rows retained below; each delta carries its own review chain and none
+> is restated for the others.
+> The custody delta over the shelter-ingress census below is six added and nine modified
+> production sources, plus the regenerated removal-coverage roster: the engine-free deposit law and
+> its host seam, the GameObject implementations of that seam for a store and for open ground, the
+> callback-free observation shard, and the yard shard split out of the settlement pass are the
+> additions; the room, stock, declarations, rules, settlement-pass, clearance, infrastructure and
+> carry-sign shards are the modifications.
+> On these bytes the staged baseline (3064 sources) and staged compatibility (3068 sources plus the
+> tracked Hearthpyre 2.2.3 ABI stub) compile clean under Roslyn 9.0.306 on Linux against the
+> installed managed assemblies rather than through `Tools/gate.sh`; both engine-free suites run
+> green there (14,061 main/5,215 Portable, zero skips) and the 627-test tooling suite passes. The
+> two new deposit regressions were confirmed to FAIL against the pre-fix behaviour before the fix
+> was kept.
+> NOT run for this delta: the two dev-harness modes, the installed-Hearthpyre source step, the
+> Windows gate, the native Quickstart boot matrix (last run on the shelter-ingress bytes below),
+> ordinary play, graceful Quit and Steam delivery.
+> The exact-inventory human semantic review is open against this digest; this is not Beta sign-off.
 
 ## Unreleased — Workshop listing copy: drop single-player boilerplate
 
@@ -39,7 +166,7 @@ below it.
   bootstrap with the message it stopped with before, rather than staking a lot the settlement will
   not admit.
 
-> **Current unreleased census — exact structural gate passed.** Current 3062-file census is line-cap green:
+> **Retained shelter-ingress census — exact structural gate passed.** That 3062-file census was line-cap green:
 > 434,534 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1425 files, 0 of them over the line limit. Inventory SHA-256:
@@ -58,7 +185,7 @@ below it.
 > On the merged tree the staged baseline (3058 sources) and staged compatibility (3062 sources plus
 > the tracked Hearthpyre 2.2.3 ABI stub) compile clean under Roslyn 9.0.306 on Linux against the
 > installed managed assemblies rather than through `Tools/gate.sh`; both engine-free suites run green
-> there (13,987 main/5,199 Portable, zero skips) and the 627-test tooling suite passes.
+> there (13,987 main/5,215 Portable, zero skips) and the 627-test tooling suite passes.
 > The six-profile Quickstart boot matrix at seed `#43101` ran natively on these bytes: marsh,
 > canyon and dunes with advisor yes and no all reach checker `verdict=PASS` with two
 > `[TAF] plot staked: tentrow` rows apiece and a strict-clean Player.log, and `quickstart-save
@@ -137,7 +264,7 @@ below it.
   at the head of the next frame, restored ahead of every gate at end of turn), the render seam
   and its Zone.Render seat, the draw-scope finalizer that closes a thrown frame, a render model, run rather than read, that fails if the projection moves back inside the dispatch behind a `Blackout`, and a
   repo-wide sweep asserting the crashing patch target (`BeforeRenderEvent.Send`) appears in no
-  staged source. Suites pass 13,910 main and 5,199 Portable cases, zero skips; 627 tooling tests
+  staged source. Suites pass 13,910 main and 5,215 Portable cases, zero skips; 627 tooling tests
   pass. The staged baseline (3,051 sources) and compatibility (3,055 sources) compile modes were
   re-run clean with warnings-as-errors on these bytes, along with both dev-harness overlay
   modes.
@@ -159,10 +286,10 @@ below it.
 > comment blocks wider — every word and engine citation kept, no code or statement order changed —
 > and the shard is back at 299.
 > The merged tree compiles clean in the staged baseline (3057 sources) and staged compatibility
-> (3061 sources plus the tracked Hearthpyre 2.2.3 ABI stub), on Linux with the SDK Roslyn 9.0.306
+> (3064 sources plus the tracked Hearthpyre 2.2.3 ABI stub), on Linux with the SDK Roslyn 9.0.306
 > against the installed
 > managed assemblies rather than through `Tools/gate.sh`; both engine-free suites run green there
-> (13,986 main/5,199 Portable, zero skips) and the 627-test tooling suite passes.
+> (13,986 main/5,215 Portable, zero skips) and the 627-test tooling suite passes.
 > NOT run for it: the installed-Hearthpyre source step, the two dev-harness modes, the
 > Windows gate, the developer boot matrix and any native in-game run. The 1,700-tick raising figure
 > is a reading of the raising rule, not of a running plot clock. The exact-inventory human semantic

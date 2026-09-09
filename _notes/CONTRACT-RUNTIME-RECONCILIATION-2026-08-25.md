@@ -1,6 +1,18 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
-## Current Kingdom Quickstart shelter-ingress census — 2026-09-09
+## Current stockpile deposit custody census — 2026-09-09
+
+3068 production C# files; 3,099 cold-install files in the generated inventory;
+435,538 physical lines, 1429 direct-XRL, zero cap failures. Exact digest
+`3cfe76c38704930c03d2923e400d05155cbcbf96b9ad8b31ad90304cc8fea6c0`.
+A deposit that cannot prove where its bundle went now stops the whole delivery rather than making
+the material a second time, and a body a callback is holding is never obliterated to resolve the
+ambiguity. The law is engine-free and the GameObject seam is the only piece that touches one.
+Roslyn 9.0.306 on Linux compiled the staged baseline (3064 sources) and compatibility (3068
+sources) sets clean on these bytes, and the engine-free suites passed 14,061 main / 5,215 Portable
+with zero skips; no dev-harness mode, Windows gate or native evidence binds them.
+
+## Retained Kingdom Quickstart shelter-ingress census — 2026-09-09
 
 3062 production C# files; 3,093 cold-install files in the generated inventory;
 434,436 physical lines, 1425 direct-XRL, zero cap failures. Exact digest
