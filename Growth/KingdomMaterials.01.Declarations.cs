@@ -86,6 +86,16 @@ namespace ThousandAndFirst
 		public const string ClearanceGroundPhaseProperty = "KingdomClearanceGroundPhase";
 
 		/// <summary>
+		/// Set on a clearance stake once a delivery of its yield ended somewhere the keepers could
+		/// not account for. A DURABLE hold, not an announcement: the ground is already cleared, so
+		/// the next eligible pass would find an empty yield, settle it, issue the ground mud and
+		/// remove the stake, and the uncertainty the founder was told about would simply
+		/// evaporate. Every further mutation of a held stake is refused until somebody clears
+		/// this by hand.
+		/// </summary>
+		public const string ClearanceHeldProperty = "KingdomClearanceHeldUnproved";
+
+		/// <summary>
 		/// Item blueprints the settlement stores each material as, indexed by
 		/// <see cref="KingdomMaterial"/>. Scrap is vanilla's own <c>Scrap Metal</c>, because scrap
 		/// metal is already a real item in this game and a second one would be a lie; the rest are
@@ -120,10 +130,11 @@ namespace ThousandAndFirst
 			new string[8] { "Gemstone", "Rough Agate", "Rough Topaz", "Rough Jasper", "Rough Amethyst", "Rough Sapphire", "Rough Emerald", "Rough Peridot" }
 		};
 
-		/// <summary>Stockpiles one settlement's keepers can account for on one ground. Mirrors
-		/// <c>KingdomRules.MaxDedicatedLarders</c>: a separate cap from water and from food,
-		/// because these are separate accounts kept by separate people.</summary>
-		public const int MaxStockpiles = 8;
+		/// <summary>Stockpiles one settlement's keepers can account for on one ground. The number
+		/// itself lives beside the capacity ladder it bounds, in
+		/// <see cref="KingdomRules.MaxStockpiles"/>, so the ceiling the catalogue is checked
+		/// against can be read in one place.</summary>
+		public const int MaxStockpiles = KingdomRules.MaxStockpiles;
 
 		/// <summary>Whether the material economy resolves at all. Rides the growth toggle rather
 		/// than adding a switch of its own: materials are what growth costs.</summary>

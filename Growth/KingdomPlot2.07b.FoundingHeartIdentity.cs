@@ -239,5 +239,22 @@ namespace ThousandAndFirst
 			return Slot == KingdomFoundingHeartRules.RelicSlot
 				? HeartRelicProperty : HeartStakeProperty;
 		}
+
+		/// <summary>
+		/// Whether the object this slot creates is the settlement's own water store. Only the
+		/// relic slot is: the first basin holds the settlement's water from the rite onward, and
+		/// the four survey stakes are signs that hold nothing.
+		/// <para>
+		/// The dedication is stamped HERE, in code, and never authored on
+		/// <c>r_KingdomFirstBasin</c>. That is the whole point of it: the Debug architecture
+		/// gallery builds a synthetic basin from the same blueprint to photograph a heart tier,
+		/// and a blueprint-side mark would put that prop into a real settlement's water accounts.
+		/// The gallery never runs this path, so it never gets the mark.
+		/// </para>
+		/// </summary>
+		private static bool FoundingHeartSlotStores(int Slot)
+		{
+			return Slot == KingdomFoundingHeartRules.RelicSlot;
+		}
 	}
 }

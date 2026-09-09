@@ -4,7 +4,7 @@ Found a faction in Caves of Qud, raise settlements from reserved ground, and gov
 after you leave. Water, food, labour, materials, roads, trade, threats, civic memory, and physical
 works remain part of the same world instead of becoming a detached management screen.
 
-**Status: 0.3.1 public Alpha playtest.**
+**Status: 0.3.2 public Alpha playtest.**
 Alpha playtest. Back up saves before updating.
 Current evidence and remaining test limits live in
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/STATUS.md);
@@ -34,8 +34,6 @@ or full historical-save compatibility; see
   and no requirement to visit on a fixed real-world schedule.
 - Optional cross-world legacy. Layout and history may carry only when enabled before world
   creation; items, liquids, charge, and actor identity do not.
-
-The mod remains single-player. It does not add multiplayer or a user-moderation surface.
 
 ## Supported environment
 

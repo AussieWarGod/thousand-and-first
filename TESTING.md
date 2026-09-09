@@ -1,13 +1,79 @@
-﻿# The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
+# The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
-The current public Alpha manifest is `0.3.1`, published with one subscribed installation
+The current public Alpha manifest is `0.3.2`, prepared on `dev` ahead of the public Workshop
+upload; `0.3.1` remains the last tagged release published with one subscribed installation
 verified. Working-tree changes do not inherit that tagged release's receipts. The unreleased
-working tree still carries `0.3.1`; any next public release requires a new version.
+working tree still carries `0.3.2`; any next public release requires a new version.
 A future v1.0 test-candidate claim requires its exact tree—not any historical
 Alpha receipt—to pass every applicable automated, native, human, compatibility, structure, and
 subscribed-package gate named here.
 
-## Current master-growth resume validation
+## Current bounty fetch carry validation
+
+`Tools/run-personas.sh bounty-fetch-native-check` stakes one real Fetch notice over a marked
+pile holding two classified stacks and two unclassified sentinels, with a dedicated destination
+stockpile, a real dedicated water store funded before the clock moves, and no haul hook, then
+lets real engine turns post it, have it read and taken, carry it, complete it and pay it.
+Read-only observers bound to that exact game, realm, ground and notice data part require the
+exact moved identities and counts, the source subtraction down to its untouched sentinels,
+destination ownership, the credited sum, an accepted worker the realm's own book names,
+execution no earlier than the notice's own due tick, the exact posted price paid once out of
+the funded store, and no quarantine after payment. The revisit leg is **same-process**: it runs
+further ordinary turns in the same session and requires no repeat credit, payment or movement.
+It is not cold-load evidence and does not claim to be. A reload is the separate operator route
+described under the scenario load checks below (`Tools/prepare-scenario-load.py`, then
+`Tools/verify-scenario-load.py`); this persona neither performs it nor stands in for it.
+**This persona has not been run.** The correction it exists to witness is source-proven only:
+the post-add witness in `Quests/KingdomBounty.Transfer.cs` demanded a detached holder the engine
+had already replaced, so every completed fetch carry quarantined before its credit.
+
+## Current empty-camp and native water validation
+
+`Tools/run-personas.sh water-maintenance-native-check` uses a fresh sealed founding request,
+actual empty-camp warmup,synthetic dedication/citizenship,then four real1200-turn intervals.
+Read-only observers require native upkeep,one drought departure,loyal-core retention and an
+actual donor transfer followed by paid recovery. They do not force clocks,heartbeat results,
+departure accounting or body removal. Unmarked ground water is not a carried-inventory test.
+
+Native16504 passed actual automatic empty-camp schema2 staging and canonical roundtrip,
+then failed a bad summary assertion after proving original departure/body/journal retirement.
+Notes=12/exact-notes=0 matches the existing ordinary-note cap. Durable Chronicle proof must
+use the exact RecordOnce fingerprint,canonical unmigrated five-table registry and Delivered
+official/outsider sinks with journal Skipped; terminal/Lost is insufficient. Summary omission
+must be reported separately,not repaired or relabeled as founder notification by the fixture.
+All failed attempts remain retained. Final native45930 passed the whole drought/refill route
+at21:15:32.107UTC,seed1012037,profile4r3WC1:4800 real observed EndTurns,three dry bills,
+one exact original departure,two loyal residents,actual16-dram transfer then paid recovery.
+Automatic empty-camp schema2 stage/roundtrip and durable Delivered/Delivered/Skipped
+Chronicle proof pass; summary omission remains explicit. Strict raw log/96journalrows,
+receipt-ownedPID21008 stop and all3186 exact C# source bytes pass. Save/load remains unsigned.
+
+Focused38898 passed149 main cases,zero skips. That receipt predates the seventh
+KingdomWaterMaintenanceNativeSourceTests case and is retained as measured, not restated.
+The current branch adds91 cases in total:73 seal/schema/exile regressions,7 native-source
+wiring cases,9 historical seal-fixture cases and2 exile cases (a canonical-body revised
+realm and a foundation-receipt pin). Historical schema0/1 byte oracles,invalid/torn/mixed
+schema refusals,unresolved cohort denial,revision-aware exile and retained foundation
+receipts are covered. Four checked-in seals written by writer code byte-identical to tag
+`v0.3.1` live in `DevTests/Fixtures/SealProfile`; their SHA-256s are pinned in
+`DevTests/KingdomSealProfileHistoricalFixtureTests.cs` and are never regenerated.
+Current3056-source production digest
+`5160ed08e19734f315ebe8c7fe2ab4e5e7e1bb6bc632ae97a0c511d1f40cd325`
+passes the structural gate; its exact-inventory human semantic review is open after the `dev`
+merge. The Windows suites that pass13,826 main/5,116 Portable cases,zero skips,up from
+13,735/5,109 on the `dev` integration branch, ran on the retained3052-source digest
+`c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c` and are not restated for the
+current one;
+canonical39198 passes ordinary3045/3049 and developer3182/3186 with137 Harness files,all four
+modes plus installed source/ABI on the pre-merge bytes,and is not restated for the merged tree.
+Complete ordinary/developer source comparisons pass for the bytes it ran on.
+Repository25818 passes501 tooling tests plus inventory,docs,architecture and XML audits.
+Older10882 compilation and superseded44659 managed evidence are not relabeled. First10865
+run failed only the Harness line limit; one blank line was removed before both final reruns.
+Schema2 needs a new public version and cannot be read by older0.3.1. Public0.3.1 is unchanged.
+[Final and retained diagnostic evidence](/mnt/c/taf-water-final-lines.lRva1h/README.md).
+
+## Retained master-growth resume validation
 
 `Tools/run-personas.sh raid-master-turn-native-check` seals actual setup, master No,
 `advance 1`, master Yes, `advance 2`, and post-turn verification. Diagnostic36966
@@ -21,18 +87,59 @@ published arrival debt/opportunities, open Prepared/Intent/Proved clock leases, 
 continuation and field-clock evidence; successful results round-trip canonically. Stale
 owners, contradictory unbacked clocks, disabled states and overflow remain tested refusals.
 No fixture callback witness establishes actual physical creation, ordinary play or save/load.
-Current production digest `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`
-passes the exact structural gate. Full Windows1814 passed13,715 main/5,093 Portable cases,
-zero skips. Canonical53744 passed all four modes: ordinary3045/3049,developer3177/3181,
-132 Harness files,plus installed Hearthpyre ABI. Repository71120 passed501 tooling tests
+Current production digest `6cf0107a0f3a919282aea20237c25dec63be268ab27fd1836a696b4a40d979c1`
+passes the exact structural gate. For that digest the engine-free suites pass13,910 main/5,199
+Portable cases,zero skips, on Linux under the CI-pinned SDK9.0.306. The retained
+`d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0` digest carried13,834 main/5,123
+Portable cases, zero skips. The retained
+`f5571291a26a1bd1db608f0d1c3f79ed296569bddce4979208cb564f8c22df63` digest carried13,831 main/5,120
+Portable cases, zero skips. The retained
+`dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96` digest carried13,731 main/5,109
+Portable cases, zero skips, and Roslyn 9.0.306 on Linux compiled its staged baseline and staged
+compatibility sets clean against the licensed Managed references with warnings as errors. The
+Windows1814 run of13,715 main/5,093 Portable cases and Canonical53744's four modes
+(ordinary3045/3049,developer3177/3181,132 Harness files,plus installed Hearthpyre ABI) belong to
+the retained `a3a9c8dd` digest, NOT to this one: the two dev-harness modes and the Windows gate did
+not run here. Repository71120 passed501 tooling tests
 and all repository audits. Hosted integration checks remain separate.
 "All four modes" names `Tools/gate.sh`'s staged baseline, staged compatibility, dev-harness
 baseline and dev-harness compatibility compiles. The shared `DevTests/refs.rsp` sets
 `-langversion:latest`, so those compiles are not pinned to C# 7.3; `LangVersion` 7.3 is pinned
 only in `DevTests/Engine*/Probe.csproj` and `Tools/WorkshopSteam/*.csproj`. Retained sections
 below keep their original wording as written at their own checkpoints.
-Canonical compilation runs across 3049 production C# sources; the generated
-cold-install inventory contains 3080 files. Neither count proves subscriber delivery.
+Staged compatibility compilation runs across 3068 production C# sources, staged baseline across
+3064 (the optional-mod bridge is a compatibility-only source); the generated
+cold-install inventory contains 3099 files. Neither count proves subscriber delivery.
+The receipts named above were measured at the earlier 3052/3048/3083 census, before the Kingdom
+Quickstart tent rows, the first-basin water store, the stockpile unit capacity, the render-only
+city sight and the shelter ingress added production
+sources; the engine-free suites were re-run on the current bytes and their counts are recorded in
+`CHANGELOG.md`.
+The Kingdom Quickstart shelter-ingress delta inside this census compiled clean in all four
+`Tools/gate.sh` modes on its own pre-merge bytes — staged baseline, staged compatibility and both
+dev-harness profiles — with
+the installed-Hearthpyre source and ABI step; the Windows gate did not run for it. Its
+prepared-ground widening is proved natively: the six-profile Quickstart boot matrix at seed
+`#43101` passes with two `[TAF] plot staked: tentrow` rows in every boot, and `quickstart-save
+marsh yes` with its separate cold load passes with unchanged heart, stock and IDs. Ordinary play,
+graceful Quit and Steam delivery remain outside it. On the merged tree only the staged baseline and
+staged compatibility modes were re-run.
+The Kingdom Quickstart tent-row delta inside this census compiled clean in the staged baseline and
+staged compatibility modes only, run on Linux with the SDK Roslyn against the installed managed
+assemblies rather than through `Tools/gate.sh`; the two dev-harness modes, the installed-ABI
+source step, the Windows gate and the developer boot matrix are outstanding for it, and every
+timing claim about the staked rows remains a reading of `KingdomPlotRules.RaiseTicks`.
+The render-only city-sight delta merged on top of it compiled clean in the staged baseline and
+staged compatibility modes on the merged tree; the four-mode figures recorded for it before the
+merge (dev-harness baseline 3205, dev-harness compatibility 3209) were measured at the earlier
+3055/3051 census and are not restated for these bytes.
+The receipt wire tag that decides the founding stake is covered by codec cases only: an old-shape
+`q1` Reserved receipt decodes with no shelter obligation, re-encodes to the same bytes, keeps that
+answer through an advance, and refuses a tag edited in place. No native resumed pre-existing save
+witnesses it.
+The first-basin water-store delta inside this census compiled clean in the staged baseline, staged
+compatibility and both dev-harness modes on the same Linux SDK Roslyn; the installed-ABI source
+step, the Windows gate, the developer boot matrix and any native run are outstanding for it too.
 [Native/focused evidence](/mnt/c/taf-master-growth-native.sP00c6/README.md).
 
 ## Retained real-turn recovery validation
@@ -620,6 +727,49 @@ sequence has the bounded native evidence below; ordinary raids and save/load rep
 remain unsigned. Separate contact case 28b.2 also has bounded native evidence below;
 neither earlier launch pass supplied that proof or closes the remaining gates.
 
+## Unattended observers for the attended light / guide / first-guest steps
+
+Three personas replace the human-eyes observations the pinned native protocol still asks for on
+the claimed-ground light, the camp guide's topics, and the first guest's correspondence. They are
+**registered, not yet run**: no native receipt exists for any of them, and nothing here is
+evidence of a pass.
+
+| Persona | Command | Attended step it replaces |
+| --- | --- | --- |
+| [`claimed-light-native-check`](Tools/personas/claimed-light-native-check.persona) | `Tools/run-personas.sh claimed-light-native-check` | walking the held zone to see it lit, and reading part cardinality and `SettlementId` by eye |
+| [`guide-topics-native-check`](Tools/personas/guide-topics-native-check.persona) | `Tools/run-personas.sh guide-topics-native-check` | talking through all five topics in order, comparing each rendered answer, and checking every return to Start |
+| [`first-guest-native-check`](Tools/personas/first-guest-native-check.persona) | `Tools/run-personas.sh first-guest-native-check` | reading the opening message once, and reading the Charter next-need ordering by eye |
+
+What the machine asserts:
+
+- **Light.** The same zone is the negative control before it is claimed: a real `Zone.Activated()`
+  on unclaimed ground attaches nothing and dispatches nothing. After a real founding and a second
+  real activation, exactly one `KingdomClaimedGroundLight` stands with the seat's own
+  `SettlementId`; after real rendered frames no cell reads below `LightLevel.Light`
+  (`Zone.GetLight`, `Cell.IsLit`), and no live zone outside `ClaimedZones` carries the part. The
+  frames come from **`yield-frames 3`**, not from `advance`: see the frame-yield paragraph in the
+  unattended-runner section below for why an advance renders nothing at all, and for the one stall
+  state the primitive cannot cover. The check refuses unless the part's own `BeforeRenderEvent`
+  dispatch was bracketed at least once, so a run that drew no frame fails loudly.
+- **Guide.** The production advisor creator builds a real guide; its authored
+  `ConversationScript.Blueprint` must carry the house farewell first and then the five pinned
+  topics in `Core/KingdomQuickstartGuideRules.cs` order, each opening its own answer node with the
+  pinned answer and exactly one `I have more to ask.` choice back to `Start`.
+- **First guest.** A founded, watered, roofless camp runs the real arrival cadence over real
+  turns. The opening line is counted as the engine writes it and must be written exactly once
+  across two due passes, the candidate must still await an answer, no ledger note may appear, and
+  `KingdomReports.NextNeed` must put the guest line ahead of the camp's still-present roofless
+  want.
+
+What stays human-only: rendered pixels and rendered dialogue; line-of-sight through walls;
+attribution of the light at night as against ambient `Daylight`, which can reach the same tier on
+its own — the persona asserts coverage and reports the deficit the part's own dispatch closed;
+the option-toggle and claim-loss cases; every old-save case; and every save-then-cold-load pair.
+The runner has no reload leg: `Tools/prepare-scenario-load.py` and
+`Tools/verify-scenario-rung-load.py` are a separate two-profile operator route with its own
+snapshot codec and load witness, not something a `.persona` can express, so a save/load pair for
+the light and the first guest is blocked on that route rather than hosted here.
+
 ## Beta Quickstart cleanup — native seams and open acceptance
 
 Use disposable development profiles and controlled fault injection; never alter an ordinary save
@@ -694,6 +844,7 @@ save/reload, destruction-veto callback, ordinary-play anchor, or compatibility m
 | QSB3 | Reject or move a fresh food/material child during insertion; repeat with a callback throwing before and after placement | Known fresh roots and children are cleaned up by exact reference, including moved/rejected children; unknown factory custody fences retry |
 | QSB4 | Insert foreign contents during a failed attempt, or refuse destruction; save/reload and re-enter | Foreign objects survive untouched; `r_TAF_QuickstartQuarantine_v1` persists and replacement grants remain forbidden, including after attended removal/reinstallation |
 | QSB5 | Interrupt receipt publication after exact grant verification, then reload | The verified physical grant survives; recovery publishes its existing identity without allocating replacements |
+| QSB6 | With the advisor enabled, talk to the camp guide: read the opening line, open each of the five topics, return to the opening from each, then end with the farewell; save, reload, and talk again | Five topics, in the fixed order, each answering and returning; no answer promises an arrival, hands, or a completed building, and none states how many people the settlement counts; the same graph survives reload and the advisor still verifies. Record where the farewell sits in the choice list: the engine appends root options after it, so it is expected to read first |
 
 QSB2 water-capacity case passed natively on 2026-09-07 at13:53UTC. The real `CreateWater`
 receives an entered-cell capacity64→32 fault, refuses verification and removes its original
@@ -806,9 +957,10 @@ Running it (unattended - no keyboard beyond starting the game):
    edited. The script is written **before** the seal on purpose: an unattended run must execute
    sealed content, so a script dropped in afterwards fails the launcher's closed inventory.
    `TAF_SCENARIO_SCRIPT="ground flatten realize status"` chooses the verbs;
-   `TAF_SCENARIO_SCRIPT=none` seals no script and prepares an attended profile. One verb takes an
-   argument — `advance <turns>` — written as two shell words that `Tools/scenario_profile.py` folds
-   into one sealed line, refusing a count outside `1..10000`:
+   `TAF_SCENARIO_SCRIPT=none` seals no script and prepares an attended profile. Two verbs take an
+   argument — `advance <turns>` and `yield-frames <frames>` — written as two shell words that
+   `Tools/scenario_profile.py` folds into one sealed line, refusing a count outside `1..10000`
+   and `1..240` respectively:
    `TAF_SCENARIO_SCRIPT="flatten realize advance 1200 status"`.
    `TAF_REQUEST="arch-gallery-slice;facing=south"` chooses the request — the scenario key and its
    declared parameters, **without a seed**. The seed stays this script's to freeze, because it is
@@ -938,6 +1090,86 @@ the code, never to the wording: `taf-advance-malformed-count`, `taf-advance-coun
 (the cap is 10000 per line), `taf-advance-no-driver`, `taf-advance-no-live-game`,
 `taf-advance-already-running`, `taf-advance-stalled`, `taf-advance-lost-player`.
 
+**`yield-frames <frames>`** is the one verb that spans **rendered frames**, for state that only a
+drawn frame produces — lighting, visibility, anything whose production code answers the engine's
+per-frame dispatch. It exists because `advance` structurally **cannot** deliver a frame: the render
+path lives inside `XRLCore.PlayerTurn`, `ActionManager.RunSegment` enters `PlayerTurn` only while
+the player still holds 1000 energy, and `advance` spends that energy on purpose so the engine never
+gets there. Two native runs proved it — a 2400-turn advance moved the clock in about four seconds
+and rendered **zero** frames. The engine's attended long waits do not help either: `RenderBase`
+returns early for `AutoAct.Setting` `"r"`, `"z"` and `"."`, which is every rest and CmdWaitN.
+
+The mechanism is a deliberate omission: `yield-frames` arms a counter and returns **without
+spending the action opportunity**, so `RunSegment` walks on into `PlayerTurn`, whose loop is the
+ordinary idle render loop a human sees while standing still — render a frame, `Keyboard.IdleWait()`
+for the throttle interval, render again. Two seams put the script back in control, both void
+observers with nothing replaced: a **Harmony postfix on `XRLCore.RenderBaseToBuffer`** counts one
+real **drawn** frame per call (only for the zone the yield armed on, so another zone's frame is
+never miscounted, and only when `GameManager.bDraw` is zero, because a suppressed draw drew
+nothing), and a callback registered through `XRLCore.RegisterOnEndPlayerTurnCallback` — one call
+per `PlayerTurn` iteration, on the game thread — spends the opportunity with the same `PassTurn()`
+`CmdWait` makes once the count is met. Energy below the threshold ends `PlayerTurn`'s loop and
+`RunSegment`'s, and the next segment brings the `BeginTakeActionEvent` the runner resumes on: the
+**same** continuation `advance` already uses. Rows are `yield-frames` (armed) and the bookkeeping
+`yield-frames-complete`, which names the count actually observed. Reason codes:
+`taf-frames-malformed-count`, `taf-frames-count-out-of-range` (the cap is 240 per line),
+`taf-frames-no-driver`, `taf-frames-no-live-game`, `taf-frames-already-running`,
+`taf-frames-advance-pending`, `taf-frames-stalled`, `taf-frames-lost-player`,
+`taf-frames-window-unfocused`, `taf-frames-no-frame-seam`.
+
+**The frame seam is installed lazily, and never on `BeforeRenderEvent.Send`.** The first design
+postfixed that method, and Harmony's rewrite of it read the type's own `static readonly Instance`
+as null: native runs died at `RunGame: NullReferenceException` in `BeforeRenderEvent.Send_Patch1`,
+from the very first draw `XRLCore.RunGame` performs. Because Qud calls `Harmony.PatchAll` on a mod
+assembly at load, that crash hit **every** persona, including ones that never yield a frame, so the
+observer now carries no Harmony attribute at all: `KingdomScenarioFrames.Run` installs the postfix
+on the first `yield-frames` of the process and nowhere else, and a run that never yields is an
+unpatched run. An install that fails refuses the verb (`taf-frames-no-frame-seam`) instead of
+arming a yield nothing would count.
+
+**Focus is asserted, not waited for.** `PlayerTurn` parks its whole energy loop on
+`while (!GameManager.focused && Game.Running) Thread.Sleep(200)` (`D/XRL/Core/XRLCore.cs:756`) at
+the **head** of the loop — upstream of the end-of-turn callbacks (`:2374`), of `RenderBase`
+(`:2387`, `:2392`) and of `Keyboard.IdleWait()` (`:2408`) — and `Tools/run-scenario.ps1` launches a
+scripted profile **without activation** on purpose, so the operator keeps their foreground window.
+Refusing on that (the previous design) refused every unattended persona, which is the only way a
+render-dependent observer ever runs. `Harness/KingdomScenarioFocus.cs` therefore **asserts the
+engine's own flag** for the duration of a hold, and the verb no longer refuses an unfocused window.
+
+That is safe because `GameManager.focused` (`D/GameManager.cs:404`, over the field `_focused` at
+`:118`) has **exactly one reader in the whole engine** — that park. Input is gated by a *different*
+flag, `XRLCore.bThreadFocus` (`D/XRL/Core/XRLCore.cs:223`), which `Keyboard.kbhit()`
+(`D/ConsoleLib/Console/Keyboard.cs:940`), `Keyboard.GetNextKey` (`:1015`) and the mouse paths in
+`GameManager` (`:1162`, `:1259`, `:1807`, `:2157`, `:3100`) all consult. The override **never**
+writes `bThreadFocus`, so every input gate stays shut while the render loop runs — it can neither
+send nor accept a keystroke or a click. The setter's one side effect runs in the safe direction: a
+false→true transition calls `Keyboard.ClearInput()` and `Keyboard.ClearMouseEvents()` and sets
+`mouseDisable` (`D/GameManager.cs:412-416`), which **discards** pending input.
+
+The flag's only writers are Unity's two message handlers, `GameManager.OnApplicationFocus(bool)`
+(`D/GameManager.cs:1912`) and `GameManager.OnApplicationPause(bool)` (`:1918`). Both take a
+**postfix** that re-asserts the flag while a hold stands, so a focus event arriving mid-yield
+cannot re-park the loop; `OnApplicationFocus`'s own `bThreadFocus` write is left exactly as the
+engine made it. The property *getter* is deliberately not the patch target: it is a one-line static
+field read and `PlayerTurn` is JITted long before any yield arms, so an inlined read would never
+see the patch and the override would fail **silently**. Writing the property instead lands in
+`_focused`, which an inlined getter reads too. The hold is raised only when a **sealed script is
+present**, installs its two postfixes lazily on the first hold (no Harmony attribute, for the
+`PatchAll` reason above), and on release hands the flag back to `XRLCore.bThreadFocus` — the
+engine's own last focus signal, a field this harness never writes.
+
+**Fail-closed.** The verb reads the flag **back** after the override writes it and refuses
+(`taf-frames-window-unfocused`) when it did not take, because the park sits upstream of every seam
+a pending yield could otherwise be failed from. Once the loop runs, the proof the override took is
+a real drawn frame: the wall-clock deadline (120s) is evaluated inside the frame seam *and* in the
+resume seam, which fires every `PlayerTurn` iteration, and an idle-opportunity counter catches a
+segment loop that never enters `PlayerTurn` at all. (`advance` never meets the park at all:
+spending the energy keeps `RunSegment` out of `PlayerTurn`, which is why turns advanced unattended
+long before frames did.) A `RunSegment` inner loop that both skips `PlayerTurn` and never spends the
+turn reaches no seam either: only the persona's `TIMEOUT` ends it. That is a visible timeout, never
+a silent pass. **This primitive has not yet run natively to a pass**; the `BeforeRenderEvent`
+design is the only thing that has run, and it crashed — nothing here is evidence of a pass.
+
 `OK` and `REFUSED` come from each verb's own boolean, never from matching its prose. `REFUSED`
 means the verb declined to act; an ineligible verdict, an unhealthy roster, and an empty anchor
 store are **answers**, so they journal `OK`. The journal write is fail-open: a write that fails is
@@ -951,7 +1183,8 @@ the seal closed, and no assertion re-reads the profile after the game starts.
 **Manual wish path (fallback).** Nothing above removes it. Prepare with
 `TAF_SCENARIO_SCRIPT=none`, or just keep using the wish in any profile: `kingdom:scenario` with
 `list`, `status`, `realize`, `anchor`, `ground`, `flatten`, `frame`, `stagedigest`, `resourcedigest`,
-`standingdigest`, `advance <turns>`, `arcology <entry|teaching|terrace|ward>`, or
+`standingdigest`, `advance <turns>`, `yield-frames <frames>`,
+`arcology <entry|teaching|terrace|ward>`, or
 `capture <anchor-id> <scenario-key>`. Verbs, text, and journal rows are identical either way -
 `Harness/KingdomScenarioWishes.cs` adds exactly one thing to the shared entry, the popup. That
 split is what makes the harness scriptable at all: a verb that blocked on a keypress could never
@@ -1230,8 +1463,9 @@ public sealed class MyProbes : IKingdomScenarioVerbProvider
 - **Sealing a third-party verb** needs it named for the profile that will run it:
   `TAF_SCENARIO_EXTRA_VERBS="myprobe,other"` on `Tools/prepare-scenario.sh`, or `VERBS=myprobe` in
   a persona. The base sealable set stays closed.
-- **Sealed third-party verbs take no argument yet.** `advance <turns>` is still the only counted
-  verb the script grammar folds into one line, so a provider verb is sealed as a bare name. Typed
+- **Sealed third-party verbs take no argument yet.** `advance <turns>` and
+  `yield-frames <frames>` are the only counted verbs the script grammar folds into one line, so a
+  provider verb is sealed as a bare name. Typed
   at the wish, `kingdom:scenario myprobe some argument` reaches `RunScenarioVerb` with
   `Argument = "some argument"` as normal — the limit is the sealed-script grammar, not the
   contract.

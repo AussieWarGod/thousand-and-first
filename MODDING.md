@@ -1,4 +1,4 @@
-﻿# Extending The Thousand and First
+# Extending The Thousand and First
 
 > Adding content? Stay in this file — the XML registries need no code.
 > Writing code against the mod? See [docs/API.md](docs/API.md) for the supported API and its
@@ -297,6 +297,114 @@ To make your own item count as one of the nine, tag its blueprint:
   <tag Name="r_KingdomMaterial" Value="timber" />
 </object>
 ```
+
+**How much a stockpile holds is declared on the blueprint**, in **units** — not weight and not
+inventory slots, for the same reason a pantry declares servings rather than shelf space: a
+material is one stacked object whose count *is* the unit count, and this mod reads an item's
+weight nowhere.
+
+```xml
+<object Name="MyMod_TimberRack" Inherits="Chest">
+  <tag Name="r_KingdomStockpileCapacity" Value="96" />
+</object>
+```
+
+A dedicated container that declares nothing gets `KingdomRules.DefaultStockpileCapacity` (48) —
+never zero, because a store that could hold nothing would refuse every delivery the settlement
+ever earned and look, from outside, like a broken haul. This is a **separate account** from
+`r_KingdomLarderCapacity`: one chest may be a larder and a stockpile at once, and "how many
+servings" and "how many units of stone" are two questions with two answers.
+
+The shipped stores declare a ladder, and every rung is a named constant in
+`Core/KingdomRules.MaterialStores.cs` — pick one rather than inventing a loose number:
+
+| Rung | Units | Declared by |
+| --- | --- | --- |
+| `DefaultStockpileCapacity` | 48 | any chest the founder dedicates by hand |
+| `ShelfCapacity` | 48 | the timber and metal fixture shelves |
+| `LockerCapacity` | 64 | the scrap locker and the scrap service bank |
+| `StorehouseCapacity` | 96 | the civic larder, and a purpose's own input and output stores |
+| `StoreyardCapacity` | 192 | the granary |
+| `StorehallCapacity` | 384 | the Granary-Colossus |
+
+A settlement keeps at most eight stockpiles on one ground (`KingdomRules.MaxStockpiles`), and
+a bill is paid out of **one** reading of everything those stores hold — so the reachable hold with
+hand-dedicated chests alone, `KingdomRules.MaxReachableStockpileUnits` (384), is held above the
+grandest bill in the shipped catalogue by a test. Price a design above it and nobody can ever raise
+it; commission a store further up the ladder and the real ceiling rises with it.
+
+**The limit refuses intake; it never truncates a count.** The settlement's own delivery fills the
+first store with room, walks on to the next, and drops whatever is left on the ground exactly as
+it already does when no stockpile exists at all. A porter carrying a marked pile in re-reads the
+room before every bundle, and stops when the store is full. Clearance payout and strike salvage
+choose the first dedicated store **with room** and otherwise lay the material on the ground where
+the work stands, so every settlement-owned intake path respects the stated size. A carried stack, a single clearance payout and a single
+strike salvage are all indivisible: the bundle that finds room may take a store past its stated
+size by that one stack, and nothing after it is bound.
+**Nothing already in a store is ever moved, released, or uncounted.**
+A chest the player overfilled by hand keeps everything in it and
+the reports keep counting all of it; it simply stops being chosen as a destination, and says so
+once: *"The chest will not take another bundle; it holds all the keepers can account for."* The
+status report prints the room beside the tally, as `18 of 48 units`.
+
+**A delivery never makes the same material twice.** Creating a bundle, stamping its count
+(`Stacker.StackCount`, which sends `StackCountChangedEvent`) and inserting it all run other
+people's handlers, so a handler of yours may carry the bundle into another inventory mid-delivery.
+When that happens the settlement stops the whole delivery rather than creating the remainder
+somewhere else, credits only what the store itself provably gained, and says so once: *"A bundle
+bound for the chest ended up somewhere the keepers cannot account for; the rest of the load is
+held rather than made a second time."* The saying is taken back by the next delivery that lands in
+that store proved. A bundle your handler is holding is never destroyed to resolve the ambiguity —
+only one standing in no inventory, no cell, no equipment slot and no implant socket is withdrawn,
+and only when the destruction is not vetoed: `Obliterate` returns `false` for a refused destroy,
+and a `BeforeDestroyObjectEvent` handler may move the body before refusing, so the settlement reads
+the body again afterwards and stops rather than assuming it won.
+
+**Reading is a callback too, so a delivery reads raw.** `GameObject.Count` reaches
+`Stacker.Number`, which repairs a nonpositive count by assigning one and dispatching
+`StackCountChangedEvent`; a store's room and its hold are both counted by walking objects and
+asking each of them that same question. A delivery may take such a reading as ADVICE — it decides
+how much to ask for — but every final proof, immediately before it destroys or inserts anything and
+before it credits anything, reads the raw field instead (`Stacker.StackCount`, which repairs
+nothing and sends nothing). The last thing a delivery looks at can then never be the thing that
+moves the bundle, and a census cannot move an earlier row after that row's units are already in the
+total. Your handler on a count read still runs when the settlement counts ordinarily, everywhere
+else; it simply cannot be the thing that licences a destruction. Every batch's count is proved
+before insertion, including a batch of one: a factory callback that leaves a stack of two where the
+delivery wanted one is refused rather than placed.
+
+A broken count is read two different ways on purpose. In a CENSUS it reads as one, exactly as the
+repair intends: a stack whose count is zero is still a thing lying in the chest taking up a place,
+and the delivery never writes the field back. As a bundle offered for INSERTION it reads as it
+stands, so a proof built on it can fail: the engine's own stacking adds the incoming
+`Stacker.StackCount` to whatever it merges into, so a body carrying minus one would take a unit out
+of a stack already lying there. A malformed original is refused before it reaches a destination.
+
+The raw hold classifies a bits-bearing thing by what ONE of it is worth (`UnitBits`), never by
+`TryBitsOf`, which multiplies that by the thing's ordinary count and so repairs and dispatches from
+inside the walk — where a handler could raise a row the walk had already counted and leave the
+room reading describing no store that exists.
+
+**A held clearance stake stays held.** If a cleared ground's yield cannot be proved into the
+stockpiles, the stake is marked (`KingdomClearanceHeldUnproved`) and every later pass refuses to
+clear, issue, or remove anything there until somebody settles it by hand. Without that the next
+pass would find the ground already cleared, harvest nothing, settle an empty delivery, issue the
+ground mud and take the stake away, and the uncertainty would quietly disappear.
+
+The ground is a destination like any other. Overflow set down at the founder's feet is proved the
+same way and paid the same way: `Cell.AddObject` hands your object back even when `Physics.EnterCell`
+refused it, so the cell is read instead of the call, and a stack already lying there that absorbs
+the bundle is paid for out of what the cell gained. Nothing is created at all when there is no
+ground to set it down on.
+
+**What fills a stockpile is wider than "materials".** A store's hold is everything the settlement
+can spend: ordinary materials, rare finds, **and anything vanilla can take apart into bits** —
+which is most ordinary loot, a spare rifle included, because the settlement spends bits too. Only
+a thing worth no bits and no material at all takes up no room. So a dedicated stockpile is a poor
+loot chest: junk in it is counted against the capacity, and material deliveries will spill onto
+the ground once it is full. The hold is **physical, not spendable**: a stack a work has reserved
+or a porter has marked as cargo is still standing in the store, so it still counts against the
+capacity and the room never jumps when a reservation is taken or released.
 
 A charter may carry material as well as water, per caravan. Charter entries live under
 `<kingdomdeals Schema="1">` in `KingdomDeals.xml`:

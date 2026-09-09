@@ -17,6 +17,17 @@ namespace ThousandAndFirst
 		public const string AdvisorOption = "r_TAF_OptionQuickstartAdvisor";
 		public const string GrantMarkerProperty = "r_TAF_QuickstartGrant_v1";
 
+		/// <summary>
+		/// The quickstart shelter's own reservation. Deliberately NOT
+		/// <see cref="GrantMarkerProperty"/>: the grant recovery scan reads every object in the
+		/// zone and refuses any that wears the grant marker with a value it did not mint, so a
+		/// staked lot carrying that property would abort every later grant phase on the same boot.
+		/// </summary>
+		public const string ShelterMarkerProperty = "KingdomQuickstartShelter";
+
+		/// <summary>Catalogue key of the lots the quickstart stakes at founding.</summary>
+		public const string ShelterBuildKey = "tentrow";
+
 		public const int StartCellX = 40;
 		public const int StartCellY = 12;
 		public const int WaterCellX = 28;
@@ -60,7 +71,10 @@ namespace ThousandAndFirst
 			// North heartbasin: rite (40,12), rect (38,11)-(43,14), doors (40/41,14),
 			// margin Y=15 and authored lane endpoints Y=16.
 			bool heartLanes = X >= 40 && X <= 41 && Y == 16;
-			return apron || supply || approach || heartLanes;
+			// Both shelter lots are bared with the rest of the camp, and so is every exterior cell
+			// of the route the stake's own public-ingress preflight walks off each lot's authored
+			// threshold (KingdomQuickstartRules.RequiresShelterGround).
+			return apron || supply || approach || heartLanes || RequiresShelterGround(X, Y);
 		}
 
 		public static bool IsMode(string GameMode)
@@ -107,7 +121,10 @@ namespace ThousandAndFirst
 			{
 				ProfileKey = profile.Key,
 				ZoneId = profile.ZoneId,
-				Phase = KingdomQuickstartPhase.Reserved
+				Phase = KingdomQuickstartPhase.Reserved,
+				// This version bares the shelter lots when it builds the world, so a receipt it
+				// mints owes them a stake. Older receipts carry no such obligation and get none.
+				ShelterObligation = true
 			};
 			return Valid(Receipt);
 		}

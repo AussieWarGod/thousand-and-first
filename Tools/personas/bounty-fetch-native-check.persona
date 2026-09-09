@@ -1,0 +1,17 @@
+# A real posted fetch notice, read and taken by real settlers on real engine turns.
+# Two classified stacks are the load; two unclassified sentinels must not move at all.
+# Only the stake's own durable posting fields are synthetic: the pass, the acceptance, the
+# carry, the credit, the payment and the completion are all the shipped code, with no haul
+# hook installed. The realm holds a real dedicated store, so the posted price is really drawn.
+# Revisit is SAME-PROCESS: it runs further ordinary turns in this same session and proves no
+# repeat credit, payment or movement. It is NOT cold-load evidence and does not claim to be;
+# a reload is the separate operator route (Tools/prepare-scenario-load.py, then
+# Tools/verify-scenario-load.py), which this persona neither performs nor stands in for.
+DESCRIPTION=an accepted fetch carry completes, credits and pays once instead of quarantining every delivery
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;bounty-fetch-setup;advance 7200;bounty-fetch-check;advance 1200;bounty-fetch-revisit;stagedigest
+VERBS=bounty-fetch-setup,bounty-fetch-check,bounty-fetch-revisit
+EXPECT=stagedigest:OK~founded=false,bounty-fetch-setup:OK~native-bounty-fetch phase=0,advance:OK,bounty-fetch-check:OK~native-bounty-fetch cases=13 passed=13 failed=0,advance:OK,bounty-fetch-revisit:OK~native-bounty-fetch cases=6 passed=6 failed=0,stagedigest:OK~founded=true,COMPLETE
+SET=quests,bounty,native-regression
+TIMEOUT=1200

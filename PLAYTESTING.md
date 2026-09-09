@@ -63,10 +63,29 @@ The v0.3 Alpha target adds a separate **Kingdom Quickstart** game mode:
    citizen grant.
 5. Open the **Charter** ability and follow its current offers. Save, quit to desktop, reload, and
    revisit the heart before expanding the test.
+6. Note the roll the camp starts with, then leave the clock to run. The next traveller is due 3600
+   ticks after founding plus 600 for each settler already living there — three in-game days from an
+   empty roll — and the settlement pass that publishes an arrival runs only while you stand on
+   claimed ground.
+7. When that traveller writes, one message says so and the Charter header keeps saying it under
+   **Next need** until you answer. Open **Charter** and read the first guest's correspondence,
+   then **Admit this person through Growth**.
+8. Walk to the admitted guest and choose **Welcome as citizen**. They stay whether or not a roof
+   stands — that decision reads population, support, and water, never lodging. With no roof
+   standing, the **Next need** line names the settler's tent (3 drams, 2 brush) — the opening
+   chest's 3 brush pays it — and warns that the settler sleeps in the open and the arrival
+   after them will not stay at all. Report the whole chain, including exactly where it stalls.
 
 An optional passive charter advisor is controlled by a Mods option before world creation. The
 advisor grants no labour, civic support, defence, or loot. Changing that option later does not
 retroactively spawn or remove one. Kingdom Quickstart never imports a prior realm.
+
+Talk to the advisor: besides the opening inventory line it offers five fixed questions covering
+founding and held ground, commissioning and materials and hands, water and the stores, who may
+arrive and why a roof comes first, and petitions and raiders. Each answer returns to the opening,
+and Live and drink. ends the conversation. It is information only; nothing in it is a promise that
+anyone will join, that hands will appear, or that anything commissioned will rise before there
+are free hands to raise it. The guide never states the roll's current size. A world created before this change keeps the single-line advisor.
 
 If the tagged v0.3 Alpha does not show this mode after the required restart, report a loader or
 package bug instead of using debug wishes to conceal it.
@@ -88,6 +107,18 @@ without spending it. This slower route is useful for economy and compatibility t
 - Food storage or crops, one named citizen's home/work relationship, and one road connection.
 - A second city, trade route, rival cohort, inherited realm, or hosted arcology only after the
   small founding loop is stable.
+- Standing in a claimed zone at night: the settlement should read as lit ground with dark
+  building interiors, and the minimap should hold the whole zone. Walk into an unclaimed
+  neighbour and confirm ordinary darkness. The checkbox is
+  "your claimed ground is lit while you stand on it" (`r_TAF_OptionClaimedGroundLight`, on by
+  default); switching it off should darken the zone at once. Explored floor stays explored.
+- Standing in a claimed zone by day: citizens inside their own buildings should be drawn and
+  animating through the walls. The checkbox is "see your citizens through your own walls"
+  (`r_TAF_OptionCitySight`, on by default); switching it off should close the walls on the next
+  frame. Then check that the eye did not become a rule — rest must NOT be interrupted by a hostile
+  three rooms away, autoexplore must not path into interiors you never walked, Look should still
+  refuse a cell ordinary sight does not reach, and an invisible creature must stay undrawn. Save and
+  cold-load in a claimed zone and confirm nothing about the projection persisted.
 
 [TESTING.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/TESTING.md) is the
 exhaustive maintainer protocol. Alpha testers may submit a
@@ -101,6 +132,19 @@ enabled.
 
 To roll back, restore the backed-up save and its matching mod package together. Loading a newer
 save with older mod code is not a supported rollback.
+
+The next release carries one specific rollback hazard. From that release a realm whose
+residents map to no canonical body — an empty camp, or a settlement whose residents are
+all non-canonical species — writes a legacy seal with `profile_schema` 2. The outer seal
+format is unchanged (`taf-seal 6`), but 0.3.1 cannot read that value: it treats such a
+legacy seal on disk as absent, and loading a newer save whose pending inheritance was
+built from one clears that reservation and marks the state RepairRequired. A third case
+costs more: if you roll back mid-exile, the legacy snapshot travelling inside the
+realm transition also carries `profile_schema` 2, and 0.3.1's transition validator judges
+the whole in-flight transition torn rather than only refusing the profile. No downgrade
+writer is provided, because the record cannot be re-encoded for 0.3.1 without inventing a
+body pool the realm never had or dropping its technology band and provenance. Back up the
+save and keep the matching package before updating.
 
 To uninstall:
 

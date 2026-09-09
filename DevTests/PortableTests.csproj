@@ -136,10 +136,20 @@
 	<Compile Include="KingdomEducationPostObservationTests.cs" />
 	<Compile Include="KingdomEducationPostObservationSourceTests.cs" />
 	<Compile Include="KingdomQuickstartTests.cs" />
+	<Compile Include="KingdomQuickstartGuideRulesTests.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartBootRequest.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartSaveSnapshot.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartSaveSnapshotCodec.cs" />
 	<Compile Include="KingdomQuickstartSaveSnapshotTests.cs" />
+	<Compile Include="..\Harness\KingdomUpgradeSnapshot.cs" />
+	<Compile Include="..\Harness\KingdomUpgradeSnapshotCodec.cs" />
+	<Compile Include="..\Harness\KingdomUpgradeGraph.cs" />
+	<Compile Include="..\Harness\KingdomDowngradeRequest.cs" />
+	<Compile Include="..\Harness\KingdomDowngradeFiles.cs" />
+	<Compile Include="KingdomUpgradeSnapshotTests.cs" />
+	<Compile Include="KingdomUpgradeNativeSourceTests.cs" />
+	<Compile Include="KingdomUpgradeUnattendedSourceTests.cs" />
+	<Compile Include="KingdomDowngradeRequestTests.cs" />
 	<Compile Include="KingdomQuickstartRoundtripSourceTests.cs" />
 	<Compile Include="KingdomQuickstartGrantScopeTests.cs" />
     <Compile Include="KingdomQuickstartStockRulesTests.cs" />
@@ -210,6 +220,8 @@
     <Compile Include="..\Core\KingdomCreedKindRules.cs" />
     <Compile Include="..\Core\KingdomQuickstartModels.cs" />
     <Compile Include="..\Core\KingdomQuickstartRules.cs" />
+    <Compile Include="..\Core\KingdomQuickstartRules.Shelter.cs" />
+    <Compile Include="..\Core\KingdomQuickstartGuideRules.cs" />
     <Compile Include="..\Core\KingdomQuickstartGrantScope.cs" />
     <Compile Include="..\Core\KingdomRealmChronicleIntentRules.cs" />
     <Compile Include="..\Polity\KingdomPolityAmbientModels.cs" />
@@ -369,6 +381,8 @@
     <Compile Include="KingdomRaidRecoveryGuardsNativeSourceTests.cs" />
     <Compile Include="KingdomRaidRecoveryTurnNativeSourceTests.cs" />
     <Compile Include="KingdomRaidMasterTurnNativeSourceTests.cs" />
+    <Compile Include="KingdomWaterMaintenanceNativeSourceTests.cs" />
+    <Compile Include="KingdomBountyFetchNativeSourceTests.cs" />
     <Compile Include="KingdomRaidLaunchOrderTests.cs" />
     <Compile Include="KingdomRaidOutboxRulesTests.cs" />
     <Compile Include="KingdomRaidOutboxRulesTests.Fixtures.cs" />
@@ -1136,6 +1150,7 @@
 	<Compile Include="KingdomNetworkPurityRulesTests.cs" />
 	<Compile Include="KingdomPactVesselSourceTests.cs" />
 	<Compile Include="KingdomRemovalCoverageSourceTests.cs" />
+	<Compile Include="KingdomClaimedGroundLightSourceTests.cs" />
 	<Compile Include="KingdomRemovalCoverageTests.cs" />
 		<Compile Include="KingdomSaveGuardSourceTests.cs" />
 		<Compile Include="KingdomSaveSystemRosterRulesTests.cs" />
@@ -1350,6 +1365,7 @@
 	<Compile Include="KingdomScenarioRuntimeSourceTests.cs" />
 	<Compile Include="KingdomScenarioLauncherSourceTests.cs" />
 	<Compile Include="KingdomScenarioVerbProviderRulesTests.cs" />
+	<Compile Include="KingdomScenarioFrameYieldSourceTests.cs" />
 	<Compile Include="KingdomScenarioPersonaSourceTests.cs" />
 	<Compile Include="KingdomScenarioPresenceSourceTests.cs" />
 	<Compile Include="KingdomScenarioStateShapeTests.cs" />

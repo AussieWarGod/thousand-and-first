@@ -21,11 +21,14 @@ git clone https://github.com/YOUR-ACCOUNT/thousand-and-first.git
 cd thousand-and-first
 git remote add upstream https://github.com/AussieWarGod/thousand-and-first.git
 git fetch upstream
-git switch -c type/short-topic upstream/main
+git switch -c type/short-topic upstream/dev
 ```
 
 Replace `YOUR-ACCOUNT` with your GitHub account. Never force-push another contributor's branch or
 rewrite shared release tags.
+
+`dev` is the default integration branch and the base for every pull request. `main` is
+release-only.
 
 No submodules or vendored game files are required for documentation and checkout-only checks.
 Python 3 is needed for XML/art audits. Code tests use the exact .NET SDK `9.0.306` pinned by
@@ -40,8 +43,18 @@ tools described below.
 3. Add pure rule tests for every boundary and failure mode the change introduces.
 4. Extend [TESTING.md](TESTING.md) when behavior needs in-game proof.
 5. Run every applicable check below and record exact results in the pull request.
-6. Rebase or merge current `main`; do not resolve state-schema conflicts by choosing one
+6. Rebase or merge current `dev`; do not resolve state-schema conflicts by choosing one
    side wholesale.
+
+## Releases
+
+`v*` and `staging-v*` tags are release triggers reserved to the maintainer and restricted by a
+repository tag ruleset. Contributors never push tags. Pushing one starts the Steam Workshop
+release pipeline against the maintainer's own machine, so an outside-contributor pull request must
+never add or edit a workflow that targets the `taf-steam` runner label; the maintainer lands such
+workflow changes only through their own reviewed pull request with the required checks. Fork
+pull-request workflows require maintainer approval and never run on that host. The full procedure
+is in [docs/RELEASING.md](docs/RELEASING.md).
 
 ## Local checks
 

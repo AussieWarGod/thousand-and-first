@@ -35,6 +35,8 @@ namespace ThousandAndFirst
 					if (!UnplacedFoundingHeartOutput(created, FoundingHeartSlotBlueprint(Slot))
 						|| !fence.Current) return false;
 					created.SetIntProperty(FoundingHeartSlotMark(Slot), 1);
+					if (FoundingHeartSlotStores(Slot))
+						created.SetIntProperty("KingdomStores", 1);
 					if (!PreparedFoundingHeartMarkShape(created, Slot)) return false;
 					if (!fence.Current || !StageFoundingHeartIdentity(created, plan, Slot)
 						|| !PreparedFoundingHeartMark(created, plan, Slot)

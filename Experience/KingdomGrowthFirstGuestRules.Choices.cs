@@ -42,6 +42,21 @@ namespace ThousandAndFirst
 			return true;
 		}
 
+		/// <summary>
+		/// True while the founder still owes this first guest a reply. Both terms matter: a
+		/// quarantined candidate keeps its ChoiceState but refuses every choice below, so reading
+		/// the state alone would name a debt no menu can pay. Every surface that says a guest is
+		/// waiting reads this one predicate, so none of them can disagree with the rules.
+		/// </summary>
+		public static bool GrowthFirstGuestAwaitsAnswer(KingdomGrowthArrivalCandidate Candidate)
+		{
+			KingdomGrowthFirstGuestOpportunity guest = Candidate?.FirstGuest;
+			return guest != null
+				&& Candidate.Phase == KingdomGrowthArrivalCandidatePhase.AwaitingChoice
+				&& (guest.ChoiceState == KingdomGrowthFirstGuestChoiceState.AwaitingChoice
+					|| guest.ChoiceState == KingdomGrowthFirstGuestChoiceState.Deferred);
+		}
+
 		public static bool TryDeferGrowthFirstGuest(KingdomGrowthBook Book,
 			KingdomGrowthArrivalCandidate Candidate, long Tick)
 		{

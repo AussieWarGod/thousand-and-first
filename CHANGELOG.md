@@ -1,4 +1,4 @@
-﻿# Changelog
+# Changelog
 
 All notable changes to The Thousand and First. Versions are semantic: patch for fixes,
 minor for additive API and content, major for breaking changes. Supported API is defined in
@@ -8,7 +8,533 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-## Unreleased — master pause/resume correction
+## [0.3.2] — 2026-09-09 (Alpha)
+
+### Fixed
+
+- A stockpile delivery that could not prove where its bundle went used to create the material
+  again. When an insertion callback moved the bundle into another inventory, the salvage path
+  preserved the body and returned zero, so the units stayed outstanding and `MaterialStock.Put`
+  made them a second time in the next store or on the ground: the same stone stood in the world
+  twice. An unproved deposit now stops the whole delivery. Only what the store provably gained is
+  credited, nothing is created for the remainder, and the founder is told once.
+- A bundle a stack-count handler had already carried into somebody else's inventory used to be
+  obliterated whenever the stamp proof failed. `item.Count = batch` is `Stacker.StackCount`, which
+  sends `StackCountChangedEvent`, so a handler runs between the room proof and the insertion; a
+  handler that both took the bundle and filled the store made the proof fail and the delivery then
+  destroyed goods it did not own. A bundle is now withdrawn only when it is proved to belong to
+  nobody — in no inventory and in no cell — and otherwise left exactly where it stands.
+- The refining yard no longer reads a held load as a missing item blueprint. `Put` reports how the
+  delivery ended, and `ReportNothingLanded` keeps a wiring fault, a settlement out of room, and a
+  load held for unprovable custody apart from one another.
+- Withdrawal is no longer assumed to succeed. `GameObject.Obliterate` is vetoable, and a
+  `BeforeDestroyObjectEvent` handler may move the body before it refuses, so every withdrawal is
+  read back off the body and an unproved one stops the delivery instead of leaving the units to be
+  made again elsewhere.
+- Custody is proved before every mutation, not only room and count. A creation or stack-count
+  handler that carried the bundle off while the store still had room used to pass the old proof
+  outright, and the insertion would then have taken the body out of whoever was holding it.
+- A bundle that stopped existing BEFORE its insertion is no longer treated as safely withdrawn:
+  nothing distinguishes "this delivery destroyed it" from "a handler merged its units away", so it
+  refuses rather than leaving the whole batch to be minted again.
+- Credit for a vanished bundle is now read per material rather than off whole occupancy. A handler
+  that retired the timber and dropped an equal count of stone left the store just as full and used
+  to be paid in full for timber that never arrived.
+- The landing proof now requires the destination to still be dedicated settlement stock. A handler
+  that cleared the dedication left exact inventory membership intact and still took full credit.
+- The overflow path is no longer its own unproved loop. It stamps a count that fires
+  `StackCountChangedEvent`, and `Cell.AddObject` returns the object it was handed even when
+  `Physics.EnterCell` refused it, so a refusing cell or a taking handler used to mint ledger units.
+  Ground now runs the same law through the same seam and is paid on proof; with no ground at all
+  nothing is created, where a body used to be made only to be destroyed.
+- A handler that throws inside a callback no longer discards what the delivery had already proved.
+  The fill returns the proved units with an uncertain custody instead of unwinding past the caller.
+- Reading is treated as a callback, because it is one, and every final proof now reads RAW.
+  `GameObject.Count` reaches `Stacker.Number`, which repairs a nonpositive count by assigning one
+  and dispatching `StackCountChangedEvent`, and a room or material census walks objects and asks
+  each of them that same question. Proving custody after such a reading was not enough: the
+  reading can change the count or the room while leaving the holder alone, its own write lands on
+  a body a previous callback may already have taken, and a census that dispatches can move an
+  earlier row after that row's units are already in the total. The order is now raw observe,
+  decide, mutate — an ordinary reading may only be taken as advice, before a raw re-observation —
+  and the deposit path counts through `Stacker.StackCount`, which repairs nothing and sends
+  nothing. A broken count still reads as one where it is a CENSUS, because a stack whose count is
+  zero is still a thing taking up a place, and it is never written back.
+- The raw hold no longer classifies bits through `TryBitsOf`, which multiplies what one of a thing
+  is worth by that thing's ordinary count and so repairs and dispatches from inside the walk. It
+  reads `UnitBits` instead, which asks a part and a bit-cost table and reaches nobody. A handler
+  fired mid-census could otherwise raise a row the walk had already counted, and leave a positive
+  room reading standing in front of a full store.
+- A census fallback is no longer mistaken for proof that a body may be inserted. A malformed
+  original carrying zero or minus one used to pass a batch-of-one proof; the engine's own stacking
+  adds the incoming count to the stack it merges into, so it would have taken a unit OUT of what
+  was already lying there before the delivery noticed the missing gain. The insertion proof now
+  reads the field as it stands and refuses a malformed body outright.
+- Every batch proves its count before insertion, not only a stamped one. A creation handler that
+  left an exclusively held stack of two where the delivery wanted one used to be inserted whole:
+  two units into a destination paid for one, and on open ground an ordinary merge then clamped the
+  gain back to one and settled a delivery that had actually placed two.
+- The gain readers count only members whose OWN custody names the destination.
+  `Cell.AddObject` runs `Physics.EnterCell` before it appends, so a handler on the environmental
+  update inside it can move the body to another cell; the append happens anyway, the cell-entry
+  stacking then merges the body into a stack in the cell it really reached and obliterates it, and
+  the requested cell is left holding a dead entry that used to be counted as a landing.
+- Saying that a delivery is uncertain can no longer cost it the units it proved. A store's display
+  name is assembled by handlers, so the diagnostic itself can throw; the outcome is now built
+  regardless, the once-only flag is set before the saying, the log line is written first off raw
+  strings, and the name falls back to the store's blueprint id.
+- A clearance stake whose yield could not be proved home is now DURABLY held rather than merely
+  announced. The ground it stood on is already cleared, so the next eligible pass used to find an
+  empty yield, settle it, issue the ground mud and remove the stake — and the inspection hold the
+  founder had been told about simply evaporated.
+- Every settlement-owned caller that writes a receipt now reads the custody first. The clearance
+  stake no longer stamps its one-shot ground yield as issued after a refusal (which forfeited the
+  mud permanently and in silence) and no longer chronicles a yield nothing was credited for; the
+  refining yard reads the short raw return before starting a second delivery and does not report a
+  run it could not prove home; and a charter whose load was held is said in the ledger instead of
+  reading as an ordinary zero-spill success with a "delivered" line in the chronicle.
+
+### Changed
+
+- The deposit law moved out of the engine-facing shard into `Core/KingdomDepositEngine.cs` behind
+  `Core/IKingdomDepositHost.cs`, so it can be driven against handlers that relocate, fill, veto a
+  destruction, or merge the bundle away mid-callback.
+  `Growth/KingdomMaterials.StockpileDeposit.cs` and `Growth/KingdomMaterials.GroundSpill.cs` are
+  the only pieces that touch a `GameObject`, and the yard work moved into
+  `Growth/KingdomMaterials.10b.YardWork.cs` to stay under the line cap. Counting stays whole and intake is still the only thing refused
+  (ruling 5); no capacity, catch-up envelope, or stored item is touched, and a standing save reads
+  exactly what it read before.
+
+> **Current unreleased census — exact structural gate passed.** Current 3068-file census is line-cap green:
+> 435,538 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
+> imports occur in 1429 files, 0 of them over the line limit. Inventory SHA-256:
+> `93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa` (this digest differs from the previous one solely because of the 0.3.2 KingdomReleaseInfo.cs version-literal bump; no other change).
+> The generated cold-install inventory contains 3099 files; no new subscription claim.
+> This digest is the stockpile deposit custody fix merged over `dev` at `862f14d` (the unattended
+> native observers, the Workshop listing wording, the automatic Workshop attempt finalisation, the
+> Fetch carry-completion fix and the cross-version persona REQUEST wording; only the Fetch fix
+> touches a production C# source, and it adds no new one), and over the Kingdom Quickstart shelter ingress, the
+> render-only city sight, the stockpile unit capacity, the first-basin water store and the Kingdom
+> Quickstart tent rows retained below; each delta carries its own review chain and none
+> is restated for the others.
+> The custody delta over the shelter-ingress census below is six added and nine modified
+> production sources, plus the regenerated removal-coverage roster: the engine-free deposit law and
+> its host seam, the GameObject implementations of that seam for a store and for open ground, the
+> callback-free observation shard, and the yard shard split out of the settlement pass are the
+> additions; the room, stock, declarations, rules, settlement-pass, clearance, infrastructure and
+> carry-sign shards are the modifications.
+> On these bytes the staged baseline (3064 sources) and staged compatibility (3068 sources plus the
+> tracked Hearthpyre 2.2.3 ABI stub) compile clean under Roslyn 9.0.306 on Linux against the
+> installed managed assemblies rather than through `Tools/gate.sh`. Separately, the licensed
+> Windows suites (`DevTests/test.ps1`, the licensed Managed references, skips forbidden) were run
+> locally on this branch, immediately before the fix commit, and report ALL GREEN: 14,061 TafTests
+> cases and 5,215 PortableTests cases, zero skipped, of 14,061/5,215 discovered; the 627-test
+> tooling suite passes. Hosted CI has no game bytes and is a distinct, weaker check, never
+> zero-skip: GitHub Actions run 34302511689 (head `a64d090`) reports 14,051 passed/10 skipped and
+> 5,211 passed/4 skipped; its SUCCESS verdict does not stand in for the licensed local zero-skip
+> result above. The two new deposit regressions were confirmed to FAIL against the pre-fix
+> behaviour before the fix was kept.
+> NOT run for this delta: the two dev-harness modes, the installed-Hearthpyre source step, the
+> Windows gate, the native Quickstart boot matrix (last run on the shelter-ingress bytes below),
+> ordinary play, graceful Quit and Steam delivery.
+> The exact-inventory human semantic review is open against this digest; this is not Beta sign-off.
+
+### Changed
+
+- Removed the redundant "Single-player only" / "no multiplayer or user-moderation surface"
+  sentence from the Workshop listing and README (author ruling, issue #51). Steam Workshop mods
+  for a single-player game already carry that property; the line described no behavior a player
+  needed to plan around.
+- Updated together: the `Tools/workshop_metadata.py` description generator, the
+  `docs/WORKSHOP-DESCRIPTION-TEMPLATES.md` template, the regenerated `workshop.json` Description
+  field, and `README.md`. The assertion pins in `Tools/test-workshop-package.sh` and
+  `Tools/tests/workshop_metadata_test.py` now assert the shortened sentence rather than merely
+  dropping the old assertion. No manifest, version, or C# source change.
+
+### Fixed
+
+- The two tent-row lots staked at founding are now staked on every shipped profile. The stake's
+  authored public-ingress preflight walks each lot's DoorToLane route and refuses a route cell that
+  is not physically walkable; the camp bared the lot rectangles only, so on the marsh and in the
+  canyon the one cell each route leaves by was unbared wilderness and the settlement refused the
+  lot. The dunes happened to be bare there, which is why only that profile founded.
+- The prepared-ground mask now also bares the exterior cells of each lot's route: the reserved road
+  margin and the lane endpoint one cell beyond it. Lot A is posed facing south and leaves north
+  through (23,8) and (23,7); lot B is posed facing north and leaves south through (24,17) and
+  (24,18). The mask widens by exactly four cells and by nothing else.
+- Those four cells are declared beside the lots rather than derived at runtime, because the
+  quickstart's ground authority is engine-free and may not read the plot machinery. A new test
+  recomputes them from the shipped architecture with the same `KingdomRoadRules.TryAuthoredLane`
+  the stake walks, and fails on any drift between the two.
+- Refusal is still fail-closed and still names the lot: a route cell that cannot be bared stops the
+  bootstrap with the message it stopped with before, rather than staking a lot the settlement will
+  not admit.
+
+> **Retained shelter-ingress census — exact structural gate passed.** That 3062-file census was line-cap green:
+> 434,534 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
+> imports occur in 1425 files, 0 of them over the line limit. Inventory SHA-256:
+> `290ba13d9099d6eff03476243c1cc3c25ab2a5123ec16b6df94e74b414413df7`.
+> The generated cold-install inventory contains 3093 files; no new subscription claim.
+> This digest is the shelter ingress merged over the render-only city sight, the stockpile unit
+> capacity, the first-basin water store and the Kingdom Quickstart tent rows retained below; each
+> delta carries its own review chain and none is restated for the others.
+> The shelter-ingress delta over the city-sight census below is one added and one modified production
+> source: the quickstart rules' new shelter partial, and the quickstart rules themselves. Before the
+> merge, all four
+> `Tools/gate.sh` modes compiled clean on that delta's own bytes — staged baseline (3050 sources), staged
+> compatibility (3054), dev-harness baseline (3204) and dev-harness compatibility (3208) — together
+> with the installed-Hearthpyre source and ABI step, and both engine-free suites ran green there (13,905
+> main/5,193 Portable, zero skips).
+> On the merged tree the staged baseline (3058 sources) and staged compatibility (3062 sources plus
+> the tracked Hearthpyre 2.2.3 ABI stub) compile clean under Roslyn 9.0.306 on Linux against the
+> installed managed assemblies rather than through `Tools/gate.sh`; both engine-free suites run green
+> there (13,987 main/5,215 Portable, zero skips) and the 627-test tooling suite passes.
+> The six-profile Quickstart boot matrix at seed `#43101` ran natively on these bytes: marsh,
+> canyon and dunes with advisor yes and no all reach checker `verdict=PASS` with two
+> `[TAF] plot staked: tentrow` rows apiece and a strict-clean Player.log, and `quickstart-save
+> marsh yes` plus its separate cold load pass with unchanged heart, stock and IDs.
+> NOT run for the merged tree: the two dev-harness modes, the installed-Hearthpyre source step, the
+> Windows gate, ordinary play, graceful Quit and Steam delivery. The
+> 1,700-tick raising figure is still a reading of the raising rule, not of a running plot clock.
+> The exact-inventory human semantic review is open against this digest; this is not Beta sign-off.
+
+### Added
+
+- Kingdom Quickstart now stakes two settlers' tent rows at founding, west of the supply
+  column at (21,9)-(26,12) and (21,13)-(26,16), between the founding proof and the receipt's
+  first advance. Without a standing roof nobody joins a settlement, and nothing commissioned
+  rises while the population is zero, so the mode previously opened on a camp that could not
+  proceed.
+- The lots are keyed to the catalogue's `tentrow` design rather than `tent`: 5x2 footprint,
+  three roofs apiece, so the pair is six beds and the first arrivals are not refused for want
+  of room. They are granted free and never debited: opening water, meals and materials are
+  unchanged, and the founding stays unpriced.
+- They are staked, not built. Each stake is receiptless, so the lot keeps the shipped calendar
+  clock the first heart uses. By the raising rule each row is 1,700 ticks — 1,200 for the
+  design and 500 for the enclosure round a 5x2 footprint — against 1,200 ticks to the day, so
+  the rows stand about a day and a half in, at day boundaries spent on claimed ground, with no
+  settler labour. That figure is read from the rule, not yet from a running plot clock.
+- The prepared-ground mask widens by those 48 cells so the camp builder bares both lots; the
+  authored-ground preflight refuses a lot holding a creature, an item, or open liquid. Each lot
+  is searched before it is staked, so a save cut between the two resumes by staking only the
+  one that is missing.
+- Idempotency uses a shelter-only string property and the staked rectangle, never the
+  quickstart grant marker: the grant recovery scan reads every object in the zone and would
+  refuse a foreign value there, aborting every later grant phase on the same boot. An unmarked
+  object is adopted only when it carries our own design key, so a foreign plot stamped on a
+  reserved rectangle is refused before anything is written to it.
+- If zoning or the authored-ground preflight refuses a lot, the bootstrap stops with that
+  reason. It never stamps completion and never publishes a receipt it did not measure. The lots
+  are staked before the stores are granted, so that refusal also costs that world its casks,
+  larder, materials chest and advisor, not just a row.
+- The obligation to stake is versioned onto the receipt rather than assumed of every save. A
+  receipt minted by this version carries a shelter obligation and is written under the wire tag
+  `q2`; the shipped `q1` shape is still written and still read, byte for byte, and the tag is
+  inside the digest, so no edit promotes an old receipt in place. Only a `q2` receipt owes its
+  founding pass a stake.
+- A pre-existing `q1` save therefore continues exactly as it did, at the Reserved phase as at any
+  later one: no stake is attempted on the 48 lot cells the older prepared-ground mask never bared,
+  so a preflight refusal there cannot cost that world its casks, larder, materials chest or
+  advisor. Such a save simply has no rows, and the completion notice counts the claims standing on
+  the ground rather than trusting the branch that ran, so it never promises one. The reservation on
+  a staked lot remains an owned object property registered in the removal-coverage allowlist.
+  Ordinary founding is untouched. Public 0.3.1 is unchanged.
+- Inside a zone your seat claims you now see every citizen and what they are doing, walls or
+  no walls. This is the eye only: the rules, rest, autoexplore and Look still use ordinary line
+  of sight, and invisible creatures stay invisible at every one of the six light tiers that
+  would reveal them (Darkvision 10, Dimvision 15, Interpolight 210, Radar 228, LitRadar 232,
+  Omniscient 255) — the claimed ground is lit to 200, which is none of them. Three honest
+  oddities follow: a creature you are already targeting through a wall keeps its lock and never
+  triggers "you have lost sight of", you hear what is drawn, and Look will refuse a cell you can
+  plainly see. The shipped option text names the retained lock rather than claiming targeting is
+  untouched. Creatures you see this way count as seen, so they register in the bestiary — and
+  `Seen()` also records the blueprint and registers a `Worshippable`-tagged object with the
+  factions, which is the one place a drawing-only projection writes state that outlives the
+  frame. New option `r_TAF_OptionCitySight`, default Yes; switching it off closes the walls on
+  the next frame. Existing saves need nothing: the projection is one frame of drawing state,
+  never persisted, and a save made while it is on loads identically with it off.
+- The projection is taken from a flag armed by a Harmony prefix on
+  `XRLCore.RenderBaseToBuffer` and spent by a prefix on `Zone.Render(ScreenBuffer)`, so it lands
+  behind every native light and visibility contributor and makes no visibility reckoning of its
+  own — the engine has already made the founder's before the draw, so repeating it could open no
+  further cell while costing a whole-zone line-of-sight sweep on the render thread every frame.
+  A Harmony finalizer on the same method closes the projection on every exit from the draw,
+  including a thrown one, and the prefix body is wrapped like every other Harmony body here.
+- City sight adds 6 source-contract cases: the one-drawn-frame projection shape (the
+  non-rendering-frame early return ordered before the whole-zone reveal, the honest snapshot
+  taken before it and with no reckoning of its own, one after-render restore, no explored-map
+  write, all six invisibility tiers named), the two backstops (an outstanding projection dropped
+  at the head of the next frame, restored ahead of every gate at end of turn), the render seam
+  and its Zone.Render seat, the draw-scope finalizer that closes a thrown frame, a render model, run rather than read, that fails if the projection moves back inside the dispatch behind a `Blackout`, and a
+  repo-wide sweep asserting the crashing patch target (`BeforeRenderEvent.Send`) appears in no
+  staged source. Suites pass 13,910 main and 5,215 Portable cases, zero skips; 627 tooling tests
+  pass. The staged baseline (3,051 sources) and compatibility (3,055 sources) compile modes were
+  re-run clean with warnings-as-errors on these bytes, along with both dev-harness overlay
+  modes.
+
+> **Retained city-sight census — exact structural gate passed.** That 3061-file census was line-cap green:
+> 434,296 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
+> imports occur in 1425 files, 0 of them over the line limit. Inventory SHA-256:
+> `7147169b7ccb8d2142d9791bd5faec8405eb305e33bca7a9b9feb9c3948c5a1e`.
+> The generated cold-install inventory contains 3092 files; no new subscription claim.
+> This digest is the render-only city sight merged over the stockpile unit capacity, the
+> first-basin water store and the Kingdom Quickstart tent rows retained below; each delta carries
+> its own review chain and none is restated for the others.
+> The city-sight delta over the merged stockpile census is two added and two modified
+> production sources: the render-scope finalizer and the render seam that owns the projection are
+> the additions; the claimed-ground light part and the settlement event file are the
+> modifications. Merging the city-sight end-of-turn backstop with the basin-capacity zone-activation
+> guard put `Core/KingdomSystem.z20.Events.cs` at 305 physical lines, so the merge reflowed those two
+> comment blocks wider — every word and engine citation kept, no code or statement order changed —
+> and the shard is back at 299.
+> The merged tree compiles clean in the staged baseline (3057 sources) and staged compatibility
+> (3064 sources plus the tracked Hearthpyre 2.2.3 ABI stub), on Linux with the SDK Roslyn 9.0.306
+> against the installed
+> managed assemblies rather than through `Tools/gate.sh`; both engine-free suites run green there
+> (13,986 main/5,215 Portable, zero skips) and the 627-test tooling suite passes.
+> NOT run for it: the installed-Hearthpyre source step, the two dev-harness modes, the
+> Windows gate, the developer boot matrix and any native in-game run. The 1,700-tick raising figure
+> is a reading of the raising rule, not of a running plot clock. The exact-inventory human semantic
+> review is open against this digest; this is not Beta sign-off.
+
+### Added
+
+- The first basin is the settlement's first water store: 16 drams at the rite ground, 48 at
+  the waterstone, 160 at the moot, 512 at the court, 1024 at the arcology. It ships empty —
+  the rite's 8 drams are the cost, not a deposit — and its capacity is only ever raised,
+  never lowered, so drams already in it can never spill when the rung around it is rebuilt.
+  A camp of five drinking from it can now become a steading without a cask rack. The
+  dedication is stamped in code at the founding-heart relic slot rather than authored on the
+  blueprint, so the Debug architecture gallery's photographic copy of the same basin stays
+  out of every settlement's water accounts. A widening that would land underneath an open
+  water debit bound to that basin, an unsettled arrival water leg drawing from it, or a
+  routed-input construction lease holding it, is skipped and said once in the ledger, then
+  taken when that clears. For an existing save: a standing basin is dedicated and brought up
+  to what its rung is worth on load or on the first activation of its settlement zone, and
+  from then on it permanently occupies one of the settlement's 24 dedicated-vessel slots,
+  which is one fewer cask or rack the charter will count.
+
+### Fixed
+
+- A completed bounty fetch carry is now credited instead of being quarantined. The
+  post-add witness in `Quests/KingdomBounty.Transfer.cs` re-proved the source-minus
+  condition with its detached-holder clause after the destination add, but the engine's
+  `Inventory.AddObject` assigns the destination as the moved object's holder before the
+  callback returns, so that clause and the arrival's own destination-holder clause could
+  never hold together. Every successful default fetch delivery therefore quarantined
+  before its credit and completion. The detached holder is now the removal step's proof
+  alone; the arrival proves destination ownership. Source-proven against the shipped code
+  and covered by executable rule cases; a native persona
+  (`Tools/run-personas.sh bounty-fetch-native-check`) has been added for the in-game
+  proof and has **not** been run yet.
+
+- A realm whose residents map to no canonical body can now stage and seal its legacy. In
+  0.3.1 the automatic daily seal stage of such a realm failed closed ("current polity
+  profile lacks canonical seal-safe phenotype provenance") and no legacy was ever recorded.
+  This covers an empty camp (population 0) and also a populated settlement whose residents
+  are all non-canonical species. The seal now carries an explicit committed-unresolved
+  profile (`profile_schema` 2): the real technology band and both provenance digests, a
+  body pool of exactly `unresolved`, and no species, gear or NPCs inferred from stage,
+  style or origin.
+- Realm exile now proves the original (revision 1) foundation receipt instead of
+  recomputing it from the latest profile revision, so a realm whose profile was revised
+  after founding can still be exiled. That covers any realm at profile revision 2 or
+  above, not only an empty camp. The original foundation receipt is never rewritten.
+- The first basin's capacity reconciliation now runs only AFTER the seat exchange, and only
+  on ground the seated settlement claims. Walking into a second city activated that zone
+  before the seat moved, so the dedication would have landed in the departed city's water
+  accounts and the unsettled-arrival-leg hold would have been read from the departed city's
+  growth book, missing a leg the destination city was holding; a foreign, seceded or exiled
+  realm's standing heart could also have been dedicated as the seated settlement's water
+  store. Both reconciler entries now refuse unclaimed ground themselves — including the one a
+  finished rung uses, which resolves the seated realm rather than the realm that owns the
+  ground — so no caller can reach one of those hearts by asking at the wrong moment.
+- A committed water receipt whose caller may still compensate it now keeps its per-vessel
+  hold until that caller closes the window. The hall's commission commits the water, runs the
+  bit-debit callbacks and only then decides whether to roll back; the hold was dropped at
+  commit, so a basin widened inside that span made the rollback refuse — it re-proves
+  `MaxVolume == OriginalMaxVolume` before it restores a dram — turning a recoverable
+  interruption into water the founder could never get back. The window is opt-in and never
+  inferred from a commit: a caller that commits and then finishes its own work, such as a
+  construction whose completed rung widens the very basin it drained, must not hold that
+  vessel or the rung it paid for could never widen anything. Every caller that can refund
+  after its own callbacks closes that window in a `finally`, so a throw inside the span cannot
+  leave an abandoned receipt holding a vessel; the hall's commission settle span moved into
+  `Growth/KingdomLab.Commission.Settle.cs` to make room for one.
+
+### Added
+
+- A stockpile now holds a stated number of material units — 48 for a chest dedicated by
+  hand, declared on the blueprint for built stores, which run from 48 for a fixture shelf
+  through 64 for a locker, 96 for the civic larder and a purpose's own stores, 192 for the
+  granary to 384 for the Granary-Colossus. Eight hand-dedicated stores hold 384 units
+  between them, which is more than the grandest single bill in the catalogue, so no design
+  the mod ships is ever made impossible to raise by the cap. A full store refuses the next
+  delivery, which then goes to the next store with room or is stacked on the ground;
+  nothing you already put in a chest is ever uncounted, moved or lost. Every way the
+  settlement takes material in respects it: its own deliveries, clearance payout, strike
+  salvage and a bounty porter all pick a store with room. The keepers say a store is full
+  once, and stop saying it the moment there is room again. Note what fills a store: a
+  stockpile holds everything the settlement can spend — materials, rare finds, and
+  anything that can be taken apart for bits, which is most loot — so a chest you dedicate
+  as a stockpile is a poor loot chest. Never weight: the reports keep printing units, now
+  with the room beside the tally (`18 of 48 units`). An over-cap stockpile in a standing
+  save reads exactly what it read before. The hold is physical rather than spendable: a
+  stack a live work has reserved is still standing in the chest and still counts against
+  the room, so the room never jumps when a reservation is taken or released. A delivery
+  counts only what a store actually received: the bundle it makes is proved standing in
+  that exact store, of that material, carrying the count it was stamped with, before a
+  single unit is written down.
+
+### Compatibility
+
+- Reading older data: 0.3.2 reads every 0.3.0/0.3.1 seal and save unchanged.
+  `profile_schema` 0 and 1 keep their bytes, digest domains and meaning; nothing is
+  rewritten on load. Seals produced by writer code byte-identical to the 0.3.1 tag are
+  checked in as the regression fixture (`DevTests/Fixtures/SealProfile`).
+- Rolling back: the outer seal format stays `taf-seal 6`, but any seal or save that
+  carries `profile_schema` 2 — a realm that had no canonical body when it was staged,
+  promoted, reserved or exiled — is not readable by 0.3.1. 0.3.1 treats such a legacy
+  seal as absent, and loading a 0.3.2 save whose pending inheritance was built from one
+  clears that reservation (RepairRequired). A third surface: an exile left in flight
+  carries its legacy snapshot inside the realm transition, and 0.3.1's transition
+  validator (`Polity/KingdomPolityRules.ValidationRealmTransition.cs:28`) rejects that
+  snapshot at `profile_schema` 2, so the whole in-flight transition reads as torn. No
+  downgrade writer is provided: schema 2 cannot be expressed as schema 1 without
+  inventing bodies, or as schema 0 without dropping technology and provenance, and this
+  project never fabricates. Back up saves before updating; see PLAYTESTING.md, "Upgrade,
+  rollback, and uninstall".
+
+### Tests
+
+- 91 new cases: 73 seal/schema/exile regressions, 7 native-source wiring cases, 9
+  historical-fixture cases over checked-in 0.3.1-writer seals (schema 0/1 identity read,
+  byte-exact recompose, transition copy, saved reservation shape, widened/mixed refusals,
+  reader-bound source pin) and 2 exile cases (a canonical-body revised realm, and a pin
+  that a profile revision never re-cuts the current realm foundation receipt).
+- Full suites pass 13,826 main and 5,116 Portable cases, zero skips, up from 13,735 and
+  5,109 on the `dev` integration branch. 501 tooling tests pass. With the first-basin water
+  store merged over the Kingdom Quickstart tent rows, the Linux Roslyn 9.0.306 run of the
+  same suites passes 13,925 main and 5,193 Portable cases, zero skips (this count is from
+  Linux, not from the licensed Windows run above): 21 new cases covering the capacity ladder
+  against the stage gates and the leak law,
+  the relic-slot dedication and the gallery's exclusion from it, the existing-authority stamp
+  the survey sweep respects, the raise-only reconciler, the announce-once hold and its three
+  distinct hold sources, the per-vessel open-reservation registry, the unsettled arrival water
+  leg, the basin's unchanged bare-ground reading and un-strikeable refusal, the seat-then-
+  claim order the reconciliation is asked in, the committed receipt that keeps its vessel
+  hold across a caller's compensation window, one adversary contract per caller that can refund
+  after its own callbacks (the window opens before the commit, closes inside an enclosing
+  finally, opens exactly once and has no refund below it), the construction and sowing spans
+  themselves, the hall commission's compensate-before-every-exit invariant, the proof that a
+  finished rung is still free to widen the basin its funding drained, and the loader's attribute
+  pair and no-thaw contract. The staged and dev-harness baseline and compatibility compiles were
+  re-run on the merged tree; the installed-ABI source step and the Windows gate were not.
+- The stockpile unit capacity adds 53 cases in `DevTests/KingdomStockpileCapacityTests.cs`:
+  the capacity fallback and the named ladder, the tag identities, both counting paths
+  staying capacity-blind, the physical hold, room never going negative, a delivery filling
+  to room then walking on then spilling, a full store never being emptied, fullness said
+  once and taken back, the porter, the status line and its physical-aware empty branch,
+  every settlement-owned intake path choosing a store with room, a settlement out of room
+  never reported as a missing blueprint, the modder documentation, the materials
+  roster count, the destination and its room being re-proved after every engine callback
+  (the stamping of a stack count included, which is itself a callback seam), the one-room
+  adversary in numbers, the stamped bundle being refused outright when its store fills
+  while the stamp runs, only what a store actually gained ever being counted, and the
+  landing proof with its narrower withdrawal (only a bundle that reached nobody).
+  Measured on this branch with `dev` merged (which brought the cross-version profile
+  tooling, the Kingdom Quickstart tent rows and the first-basin water store): full suites
+  pass 13,980 main and 5,193 Portable cases, zero skips, and 627 tooling tests pass. Both
+  staged compile modes are clean with warnings as errors.
+- Tools: the smoke launcher accepts every seal schema the game reads (4..6) and the full
+  legacy store layout; it previously refused progressed profiles. Maintainer tooling only,
+  with no player-visible or runtime effect.
+- Tools/tests: a cross-version upgrade/downgrade profile copier and its native observers.
+  `Tools/prepare-upgrade-profile.py` builds sealed developer profiles whose runtime comes
+  only from pinned Git blobs (`git ls-tree` / `git cat-file` at the `v0.3.1` tag commit
+  `a46b5ad` or at a named candidate commit), never from a worktree or a checkout, so an
+  actual 0.3.1 save can be produced and then transported into a current-runtime profile.
+  The Win32 copy helper holds single-link handles and hashes every file before, on copy,
+  on readback and after, refusing rather than deleting on any mismatch; only `Synced` is
+  ever copied, so no old runtime reaches an upgrade profile. Three Harness overlays
+  observe the old save, the current load before repair and normalization, and the old
+  reader's `profile_schema` 2 refusal at the main menu; each is gated by the sealed
+  scenario marker and by a `taf-scenario`/`taf-smoke` profile root, and Harness ships in
+  no player build. `run-scenario.ps1 -OwnAttended` adds an owned, receipt-bearing,
+  unfocused launch for the marker-only observer profiles; it runs after the existing
+  closed-seal assertion and relaxes nothing. Protocol and exact commands are in
+  [docs/CROSS_VERSION_TESTING.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/CROSS_VERSION_TESTING.md).
+  Maintainer tooling only, with no player-visible or runtime effect. The native protocol
+  itself has NOT been run; this entry claims the tooling and its checks, not a
+  cross-version compatibility verdict.
+- Tools/tests + Harness: unattended source legs for that cross-version protocol. The v1 source,
+  stage-source and downgrade legs needed a human to found, promote, retire, import and wish; the
+  new sealed recipes reach those exact states with no input and no focus. Four fixed personas under
+  `Tools/personas/cross-version/` drive old-source overlays built from the same pinned `v0.3.1`
+  Git blobs (`git ls-tree`/`git cat-file` at commit `a46b5ad`, never a checkout or worktree). The
+  donor reaches a promoted legacy through real founding, a real one-resident census and a real seal
+  opt-in taken after that census, surfacing rather than hiding the old empty-profile diagnostic; the
+  inheritor receives the donor's entire `Synced` history and lets the unchanged production
+  `Initialize()` cut the Reserved receipt and lease; the stage leg founds an empty camp, runs
+  `advance 2400` and saves. The old-reader probe is claimed at the real main menu before auto-start
+  and asserts the exact `profile_schema` 2 out-of-bounds refusal per slot, with native `ReadStage`
+  absence required to match the accepted-sibling inventory exactly. New `Tools/run-upgrade-profile.py`
+  is an owned runner: fresh admission, a 600-second bound, a receipt-only stop of its exact owned
+  process, then a post-stop native verdict. A timeout, partial output, changed receipt, refused row
+  or any diagnostic stays failed evidence and never licenses a guessed cleanup or PASS; the stop is
+  not graceful-Quit evidence. `detached-transition` is refused outright instead of falling back to an
+  attended recipe. Protocol and exact commands are in
+  [docs/CROSS_VERSION_UNATTENDED.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/CROSS_VERSION_UNATTENDED.md).
+  614 tooling tests and the four-mode compile gate pass; licensed suites pass 13,896 main and 5,186
+  Portable cases with zero skips. Maintainer tooling and developer tests only, with no production,
+  save-format or player-visible change. The native protocol itself has NOT been run for this change;
+  this entry claims the tooling, its pins and its gates, not a cross-version compatibility verdict.
+- A controlled native water-maintenance scenario proves upkeep billing, one drought
+  departure, loyal-core retention, refill and paid recovery with exact Chronicle
+  delivery. Water scarcity itself is not new here; it shipped in 0.3.1 code and this
+  change only adds the native proof. Known gap: the ordinary 12-note summary can omit the
+  departure line; the Chronicle receipt is the durable record. Save/load remains
+  separately gated. Retained failures and bounded native scope are recorded in
+  `docs/STATUS.md`.
+
+> **Retained stockpile-capacity census — exact structural gate passed.** That 3056-file census was line-cap green:
+> 433,239 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
+> imports occur in 1420 files, 0 of them over the line limit. Inventory SHA-256:
+> `4f006f327ef59e0c36e65ea11fad27b5b508d8946bffa9ed8770a147fe3dde79`.
+> The generated cold-install inventory contains 3087 files; no new subscription claim.
+> It covers the stockpile unit capacity above the retained Kingdom Quickstart tent rows merged
+> from `dev` and the empty-camp legacy correction below them: three
+> added production sources (the capacity constants, the survey's material-store reads and the
+> stockpile-room rules, which own the room, the intake that respects it and that intake's proofs),
+> six modified (the delivery, the status line, the porter carry, the clearance payout's
+> destination choice, the strike salvage's destination choice and the yard's nothing-landed
+> fault line) and the regenerated removal-coverage roster. Roslyn 9.0.306 on Linux compiled the staged baseline
+> (3052 sources) and staged compatibility (3056 sources plus the tracked Hearthpyre 2.2.3 ABI
+> stub) sets clean against the licensed Managed references, warnings as errors. The two
+> dev-harness modes did not run for this delta and no native run was made; it no longer binds the
+> current bytes, which the census at the top of this file carries.
+>
+> The earlier `c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c` digest bound the
+> empty-camp legacy merge with `dev` at 3052 files and 432,259 physical lines; it no longer binds
+> the current bytes. Root and independent AI reviewer read all four production sources changed in
+> that delta and their affected boundaries; unchanged sources inherit the complete canonical
+> parent review chain.
+
+> **Retained first-basin water-store census — exact structural gate passed.** That 3054-file census was line-cap green:
+> 432,819 physical lines,zero files at or above300: 0 files exceed 300, 0 exceed 1,000,
+> 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
+> imports occur in 1419 files, 0 of them over the line limit. Inventory SHA-256:
+> `bb8531b8c45a7a57f4a9bcfc1c86576a095e37b872e3b1ede82f446ade729e94`.
+> The generated cold-install inventory contains 3085 files; no new subscription claim.
+> Root and independent AI reviewer read the seal lane's four changed production sources and
+> the first-basin water store's two added and twelve modified ones, and affected
+> boundaries; unchanged sources inherit the complete canonical parent review chain. This
+> digest covers that merge with `dev`, so the exact-inventory human semantic review is open
+> against it and the Windows compile gate has not re-run for those merged bytes.
 
 - Master resume now validates a complete growth schedule before publishing it. Fresh
   growth no longer receives a positive deadline with a zero interval; established growth
@@ -19,8 +545,61 @@ below it.
   arrival recovery, stale ownership, canonical save payloads and arithmetic refusal.
   Native regression and four-mode compilation pass. Full licensed suites pass13,715 main
   and5,093 Portable cases,zero skips; repository audit passes501 tooling tests.
+- Claimed ground now reads at a glance. While you stand in a zone your seat claims, a
+  mod-owned zone part lights the whole zone to the torch tier once per rendered frame and
+  remembers its floor once per visit. Walls still stop sight, interiors behind them stay
+  dark, and nothing hidden is revealed: this is lamplight, not omniscience or x-ray sight.
+- New option `r_TAF_OptionClaimedGroundLight`, default Yes. Losing the claim, seceding,
+  being exiled, or switching the option off takes the part off on the next visit; explored
+  floor stays explored, because unsetting it would erase legitimately walked ground. No
+  saved field, wire or public API change, and a save loaded without the mod is dark again.
+- Reed-at-Dawn and the other camp guides now answer five fixed questions as well as giving
+  the opening inventory: founding and claimed ground; commissioning, materials and hands;
+  water and the stores; who may arrive and what a roof has to do with it; petitions and raids.
+  The words live in one engine-free file and are proved without a game.
+- The guide says in his own voice that he is not on the roll and passes through, that hands
+  come off the roll, and that nobody new stays unless a roof stands with room left under it.
+  He never states the roll's current size, so every word stays true whether or not a camp is
+  seeded with founding settlers. No answer promises an arrival, a pair of hands or a finished
+  building, because the settlement refuses all three until a roof stands with room under it
+  and somebody lives there.
+- No receipt phase, wire, save field, option, grant or advisor verifier predicate changes.
+  A guide is built once, with the world: existing Quickstart saves keep the one-node guide,
+  and only worlds created after this change get the topics. Public0.3.1 is unchanged.
+- The first guest now announces itself. Publishing the first-guest correspondence writes one
+  player message naming the kingdom and pointing at the Charter, said once per opportunity because
+  a standing candidate makes the next arrival pass return before it reaches that publication.
+- The durable half is presentation, not a ledger note: an unanswered first guest is now said by the
+  Charter/Status next-need line, so it survives a save and cannot be dropped the way a ledger note
+  is once twelve notes stand. It is said alongside the settlement's ordinary want, never instead of
+  it, so deferring a guest cannot silence a settlement running out of water.
+- The stale housing advice is replaced. With no roof at all the line names the settler's tent and
+  its bill in the material name the rest of the interface uses (brush, not the catalogue's
+  `canvas`), and promises only what a roof buys: the first guest's citizenship gate never reads
+  lodging, so a roof buys cover now and the arrival after this one.
+- One rules-layer predicate, `GrowthFirstGuestAwaitsAnswer`, now backs the Charter label, the
+  next-need line and the correspondence guard, binding both the candidate phase and the choice
+  state so a quarantined candidate cannot read as a standing question. No save format, option, or
+  arrival-interval change.
+- Maintainer tooling only, with no player-visible or runtime effect: a tag-triggered Steam Workshop
+  release workflow now runs the exact tagged licensed gate, package, plan and one publisher submit
+  on an attended host, with the change note taken from the annotated tag's message body. Publishing
+  still stops at "submitted, unverified"; finalization and every human release check are unchanged.
 
-> **Current unreleased census — exact structural gate passed.** Current 3049-file census is line-cap green:
+> **Retained unreleased camp-guide, claimed-ground and first-guest census — exact structural gate passed.** Its3052-file census is line-cap green:
+> 432,239 physical lines,zero files at or above300; direct `XRL`
+> imports occur in 1417 files, 0 of them over the line limit. Inventory SHA-256:
+> `cf01fcc9993de9cee88d8ec6dc17dd8111eb37375f546d08850ac957fb372cad`.
+> The generated cold-install inventory contains 3083 files; no new subscription claim.
+> Engine-free suites pass13,735 main and5,109 Portable cases,zero skips, and the repository
+> tooling suites pass501 tests. Roslyn 9.0.306 on Linux compiled the
+> staged baseline (3048 sources) and staged compatibility (3052 sources plus the tracked
+> Hearthpyre 2.2.3 ABI stub) sets clean against the
+> licensed Managed references, warnings as errors. The two dev-harness modes, the Windows gate and
+> any native run did NOT happen for this delta, and the exact-inventory human semantic review is
+> open against the new digest. This is not Beta sign-off.
+
+> **Retained unreleased master-resume census — exact structural gate passed.** Its3049-file census is line-cap green:
 > 431,893 physical lines,zero files at or above300,1415 direct-XRL imports. Inventory SHA-256:
 > `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
 > The generated cold-install inventory contains 3080 files; no new subscription claim.
@@ -83,8 +662,6 @@ below it.
 > `f9815fff2a1cf4389ecd42b733645b0611b31bbc8b58c96fae7d1636099e81b1`. This does not amend the
 > tagged v0.3.0 bytes or their historical evidence. It does not sign the later isolated subsidence
 > draft; see `docs/STATUS.md` for that unfinished integration and its separate evidence.
-
-## [Unreleased]
 
 - Add a real-engine last-raider destruction-veto regression: cancelled destruction and
   zone activation preserve pending authority; genuine death retry resolves once with

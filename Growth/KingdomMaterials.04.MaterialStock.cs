@@ -127,15 +127,44 @@ namespace ThousandAndFirst
 			/// Puts real items into the stockpiles, and onto the ground when there is nowhere
 			/// else for them. Material is never held in the abstract: what the settlement earned
 			/// exists somewhere a founder can walk to and pick up.
+			/// <para>
+			/// A stockpile takes only what it has room for
+			/// (<see cref="KingdomMaterials.StockpileRoom"/>). The delivery fills the first store
+			/// with room, moves to the next, and spills whatever is left exactly as it already
+			/// spills when no stockpile exists at all. Nothing already inside a full store is
+			/// moved, released, or uncounted &mdash; intake is the only thing that is ever
+			/// refused (ruling 5).
+			/// </para>
 			/// </summary>
 			/// <param name="Material">Which material.</param>
 			/// <param name="Units">How many units. Zero and negative do nothing.</param>
 			/// <param name="Fallback">Cell the overflow is dropped in when no stockpile can take
 			/// it. Null discards the overflow rather than losing track of it, and is only ever
-			/// passed by a caller with no ground to drop on.</param>
+			/// passed by a caller with no ground to drop on. Note the capacity widened that path:
+			/// before it, a dedicated container always absorbed the delivery, and now a null
+			/// Fallback discards whenever every store is full as well as when none is dedicated.
+			/// </param>
 			/// <returns>Units that went on the ground instead of into a stockpile.</returns>
 			public int Put(KingdomMaterial Material, int Units, Cell Fallback)
 			{
+				KingdomDepositCustody custody;
+				return Put(Material, Units, Fallback, out custody);
+			}
+
+			/// <summary>
+			/// The same delivery, reporting how it ended. A caller that must not mistake a held
+			/// load for a wiring fault reads the custody rather than the spill. Internal: the
+			/// supported public shape stays the three-argument delivery.
+			/// </summary>
+			/// <param name="Custody">Settled when every bundle this delivery made is accounted
+			/// for. Unproved means a bundle it made is standing somewhere it cannot prove it
+			/// owns: the load stopped there, only what was proved deposited was credited, and
+			/// nothing was made a second time anywhere.</param>
+			/// <returns>Units that went on the ground instead of into a stockpile.</returns>
+			internal int Put(KingdomMaterial Material, int Units, Cell Fallback,
+				out KingdomDepositCustody Custody)
+			{
+				Custody = KingdomDepositCustody.Settled;
 				if (Units <= 0)
 				{
 					return 0;
@@ -145,65 +174,60 @@ namespace ThousandAndFirst
 				{
 					return 0;
 				}
-				GameObject container = null;
-				for (int i = 0; i < Stockpiles.Count; i++)
-				{
-					if (Stockpiles[i].Inventory != null)
-					{
-						container = Stockpiles[i];
-						break;
-					}
-				}
 				int placed = 0;
 				int spilled = 0;
 				int remaining = Units;
-				while (remaining > 0)
+				for (int i = 0; i < Stockpiles.Count && remaining > 0; i++)
 				{
-					GameObject item = GameObject.Create(blueprint);
-					if (item == null)
+					GameObject container = Stockpiles[i];
+					if (container == null || container.Inventory == null)
 					{
-						break;
+						continue;
 					}
-					int batch = 1;
-					if (item.HasPart("Stacker") && remaining > 1)
+					int room = StockpileRoomSpoken(container);
+					if (room < 1)
 					{
-						batch = remaining;
-						item.Count = batch;
+						continue;
 					}
-					if (container != null)
+					KingdomDepositOutcome outcome = Deposit(Zone, container, blueprint, room,
+						ref remaining);
+					placed += outcome.Placed;
+					if (outcome.Refused)
 					{
-						GameObject accepted = null;
-						// A deposit must never merge into an exact stack another durable receipt
-						// owns. NoStack keeps both identities observable across engine callbacks.
-						try { accepted = container.Inventory.AddObject(item, null,
-							Silent: true, NoStack: true); }
-						catch
-						{
-							KingdomSurvey.ObserveCurrentTopologyInActive(Zone, container);
-							KingdomSurvey.ObserveAddResultInActive(Zone, item, accepted);
-							throw;
-						}
-						KingdomSurvey.ObserveChangedInActive(Zone, container);
-						KingdomSurvey.ObserveAddResultInActive(Zone, item, accepted);
-						placed += batch;
+						// A bundle this delivery made is standing somewhere it cannot prove it
+						// owns, which means real material is already out there. Minting the rest
+						// into the next store or onto the ground would put the same units in the
+						// world twice, so the whole delivery stops here: only what was PROVED
+						// deposited is credited, and the founder has been told once.
+						Custody = outcome.Custody;
+						Tally.Add(Material, placed + spilled);
+						return spilled;
 					}
-					else if (Fallback != null)
+				}
+				if (remaining > 0 && Fallback == null)
+				{
+					// No ground to set it down on. Nothing is made at all: creating a body only
+					// to destroy it runs two sets of other people's callbacks over an object this
+					// delivery never wanted, which is precisely how custody is lost.
+					KingdomLog.Log("materials: " + remaining + " units of "
+						+ KingdomMaterialRules.MaterialName(Material)
+						+ " had nowhere to go and were never made");
+					remaining = 0;
+				}
+				if (remaining > 0)
+				{
+					// Ground is a destination like any other, and is paid on the same proof.
+					KingdomDepositOutcome overflow = KingdomDepositEngine.Fill(
+						new GroundSpillHost(Zone, Fallback, blueprint, remaining), remaining,
+						remaining);
+					spilled += overflow.Placed;
+					remaining -= overflow.Placed;
+					if (overflow.Refused)
 					{
-						GameObject accepted;
-						try { accepted = Fallback.AddObject(item); }
-						catch
-						{
-							KingdomSurvey.ObserveAddResultInActive(Zone, item, null);
-							throw;
-						}
-						KingdomSurvey.ObserveAddResultInActive(Zone, item, accepted);
-						spilled += batch;
+						Custody = overflow.Custody;
+						Tally.Add(Material, placed + spilled);
+						return spilled;
 					}
-					else
-					{
-						item.Obliterate();
-					}
-					remaining -= batch;
 				}
 				Tally.Add(Material, placed + spilled);
 				return spilled;
@@ -213,6 +237,18 @@ namespace ThousandAndFirst
 			/// ground.</summary>
 			public int PutAll(KingdomMaterialTally Yield, Cell Fallback)
 			{
+				KingdomDepositCustody custody;
+				return PutAll(Yield, Fallback, out custody);
+			}
+
+			/// <summary>The same tally, reporting how it ended. One material whose custody could
+			/// not be proved stops the whole tally: the store is already holding something this
+			/// settlement cannot account for, and the next material would be made into the same
+			/// uncertainty.</summary>
+			internal int PutAll(KingdomMaterialTally Yield, Cell Fallback,
+				out KingdomDepositCustody Custody)
+			{
+				Custody = KingdomDepositCustody.Settled;
 				int spilled = 0;
 				if (Yield == null)
 				{
@@ -221,7 +257,13 @@ namespace ThousandAndFirst
 				for (int i = 0; i < KingdomMaterialRules.MaterialCount; i++)
 				{
 					KingdomMaterial material = (KingdomMaterial)i;
-					spilled += Put(material, Yield.Get(material), Fallback);
+					KingdomDepositCustody custody;
+					spilled += Put(material, Yield.Get(material), Fallback, out custody);
+					if (custody != KingdomDepositCustody.Settled)
+					{
+						Custody = custody;
+						return spilled;
+					}
 				}
 				return spilled;
 			}

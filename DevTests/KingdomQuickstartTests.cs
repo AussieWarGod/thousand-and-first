@@ -98,26 +98,193 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void PreparedGroundAddsOnlyTheTwoMissingHeartIngressEndpoints()
+		public void PreparedGroundIsApronSupplyApproachHeartIngressAndTheTwoShelterLots()
 		{
-			int added = 0;
+			int endpoints = 0;
+			int shelterCells = 0;
+			int ingressCells = 0;
+			int prepared = 0;
 			for (int y = -1; y <= 25; y++)
 				for (int x = -1; x <= 80; x++)
 				{
-					bool previous = (x >= 37 && x <= 44 && y >= 10 && y <= 15)
+					bool camp = (x >= 37 && x <= 44 && y >= 10 && y <= 15)
 						|| (x >= 27 && x <= 30 && y >= 9 && y <= 17)
 						|| (x >= 29 && x <= 37 && y >= 11 && y <= 13);
 					bool endpoint = (x == 40 || x == 41) && y == 16;
-					ClassicAssert.AreEqual(previous || endpoint,
+					bool shelter = x >= 21 && x <= 26 && y >= 9 && y <= 16;
+					// Lot A faces south (its threshold stands on its northern edge), lot B faces
+					// north; each route leaves through one reserved margin cell and one lane
+					// endpoint beyond it.
+					bool ingress = (x == 23 && (y == 8 || y == 7))
+						|| (x == 24 && (y == 17 || y == 18));
+					ClassicAssert.AreEqual(camp || endpoint || shelter || ingress,
 						KingdomQuickstartRules.RequiresPreparedGround(x, y), x + "," + y);
-					if (endpoint && !previous) added++;
+					if (endpoint && !camp) endpoints++;
+					if (shelter && !camp && !endpoint) shelterCells++;
+					if (ingress && !camp && !endpoint && !shelter) ingressCells++;
+					if (camp || endpoint || shelter || ingress) prepared++;
 				}
-			ClassicAssert.AreEqual(2, added);
+			ClassicAssert.AreEqual(2, endpoints);
+			// Two 6x4 lots, stacked, and the four exterior cells their authored routes walk: the
+			// mask widens by exactly 48 + 4 cells and by nothing else.
+			ClassicAssert.AreEqual(48, shelterCells);
+			ClassicAssert.AreEqual(4, ingressCells);
+			ClassicAssert.AreEqual(4, KingdomQuickstartRules.ShelterIngressCellCount);
+			ClassicAssert.AreEqual(102 + 2 + 48 + 4, prepared);
+			ClassicAssert.AreEqual(2, KingdomQuickstartRules.ShelterLotCount);
+			KingdomPlotRules.PlotRect first = KingdomQuickstartRules.ShelterLot(0);
+			KingdomPlotRules.PlotRect second = KingdomQuickstartRules.ShelterLot(1);
+			ClassicAssert.AreEqual(21, first.X1);
+			ClassicAssert.AreEqual(9, first.Y1);
+			ClassicAssert.AreEqual(26, first.X2);
+			ClassicAssert.AreEqual(12, first.Y2);
+			ClassicAssert.AreEqual(21, second.X1);
+			ClassicAssert.AreEqual(13, second.Y1);
+			ClassicAssert.AreEqual(26, second.X2);
+			ClassicAssert.AreEqual(16, second.Y2);
+			// Each lot is one Small plot (6x4), west of the supply column, clear of every reserved
+			// role cell, of the founder's start cell, of the heart rect and of the heart's extreme
+			// survey (which begins at 31). The two never overlap each other.
+			for (int i = 0; i < KingdomQuickstartRules.ShelterLotCount; i++)
+			{
+				KingdomPlotRules.PlotRect lot = KingdomQuickstartRules.ShelterLot(i);
+				ClassicAssert.AreEqual(6, lot.Width, "lot " + i + " width");
+				ClassicAssert.AreEqual(4, lot.Height, "lot " + i + " height");
+				Assert.That(lot.X2, Is.LessThan(31), "lot " + i + " heart survey edge");
+				foreach (int roleY in new[] { 10, 12, 14, 16 })
+					ClassicAssert.IsFalse(lot.Contains(28, roleY), "lot " + i + " role cell 28," + roleY);
+				ClassicAssert.IsFalse(lot.Contains(KingdomQuickstartRules.StartCellX,
+					KingdomQuickstartRules.StartCellY), "lot " + i + " start cell");
+				for (int x = 27; x <= 30; x++)
+					for (int y = 9; y <= 17; y++)
+						ClassicAssert.IsFalse(lot.Contains(x, y), "lot " + i + " supply " + x + "," + y);
+				for (int x = 29; x <= 37; x++)
+					for (int y = 11; y <= 13; y++)
+						ClassicAssert.IsFalse(lot.Contains(x, y), "lot " + i + " approach " + x + "," + y);
+				for (int x = 38; x <= 43; x++)
+					for (int y = 11; y <= 14; y++)
+						ClassicAssert.IsFalse(lot.Contains(x, y), "lot " + i + " heart " + x + "," + y);
+			}
+			for (int x = first.X1; x <= first.X2; x++)
+				for (int y = first.Y1; y <= first.Y2; y++)
+					ClassicAssert.IsFalse(second.Contains(x, y), "lots overlap at " + x + "," + y);
 			foreach (int outside in new[] { int.MinValue, int.MaxValue })
 			{
 				ClassicAssert.IsFalse(KingdomQuickstartRules.RequiresPreparedGround(outside, 12));
 				ClassicAssert.IsFalse(KingdomQuickstartRules.RequiresPreparedGround(40, outside));
 			}
+		}
+
+		[Test]
+		public void TheShelterLotsAreKeyedToTheTentRowAndCarrySixBeds()
+		{
+			// The re-key is the whole point of the second lot: "tent" is a 3x2 design carrying one
+			// roof, "tentrow" is the 5x2 design carrying three, so two lots are six beds and the
+			// first arrivals are not refused for want of room.
+			ClassicAssert.AreEqual("tentrow", KingdomQuickstartRules.ShelterBuildKey);
+			string rules = TestMain.ReadRepositoryText("Core/KingdomQuickstartRules.cs");
+			int key = rules.IndexOf("public const string ShelterBuildKey",
+				StringComparison.Ordinal);
+			Assert.That(key, Is.GreaterThanOrEqualTo(0));
+			// Scoped to the declaration, so an unrelated "tent" elsewhere in the file never
+			// fails this contract, and the key itself still cannot slip back to the 3x2 design.
+			string declaration = rules.Substring(key,
+				rules.IndexOf('\n', key) - key);
+			StringAssert.Contains("\"tentrow\"", declaration);
+			StringAssert.DoesNotContain("\"tent\"", declaration);
+			string catalogue = TestMain.ReadRepositoryText("RuntimeData/KingdomBuildings.xml");
+			int row = catalogue.IndexOf("Key=\"tentrow\"", StringComparison.Ordinal);
+			Assert.That(row, Is.GreaterThanOrEqualTo(0));
+			string entry = catalogue.Substring(row, catalogue.IndexOf("/>", row,
+				StringComparison.Ordinal) - row);
+			StringAssert.Contains("Plot=\"S\"", entry);
+			StringAssert.Contains("Footprint=\"5x2\"", entry);
+			StringAssert.Contains("Ticks=\"1200\"", entry);
+			StringAssert.Contains("Carries=\"roof:3\"", entry);
+			StringAssert.DoesNotContain("Roof=", entry);
+		}
+
+		[Test]
+		public void ShelterIsStakedOnTheCalendarAfterFoundingAndNeverWearsTheGrantMarker()
+		{
+			string shelter = TestMain.ReadRepositoryText(
+				"World/KingdomQuickstartBootstrap.Shelter.cs");
+			StringAssert.Contains("KingdomPlots.Stake(", shelter);
+			StringAssert.Contains("KingdomData.TryGetBuilding(KingdomQuickstartRules.ShelterBuildKey", shelter);
+			StringAssert.Contains("KingdomPlots.TryGetSpec(entry.Key, out spec)", shelter);
+			StringAssert.Contains("new KingdomPlots.GroundGrid(Zone)", shelter);
+			StringAssert.Contains("KingdomPlotRules.IsUnderground(Zone.Z)", shelter);
+			StringAssert.Contains("KingdomQuickstartRules.ShelterMarkerProperty", shelter);
+			// The grant recovery scan reads every object in the zone and refuses any wearing the
+			// grant marker with a value it did not mint, so the shelter must never carry it.
+			StringAssert.DoesNotContain("GrantMarkerProperty", shelter);
+			// Nothing here invents completion or drives the plot clock.
+			StringAssert.DoesNotContain("KingdomPlots.Advance(", shelter);
+			StringAssert.DoesNotContain("SetIntProperty(\"KingdomBuilt\"", shelter);
+			StringAssert.DoesNotContain("PlotWorkSchemaProperty", shelter);
+			StringAssert.DoesNotContain("Popup", shelter);
+
+			string bootstrap = TestMain.ReadRepositoryText(
+				"World/KingdomQuickstartBootstrap.cs");
+			int founded = bootstrap.IndexOf("if (!VerifyFounded(system, zone, profile, out Failure)) return false;",
+				StringComparison.Ordinal);
+			int stake = bootstrap.IndexOf("TryStakeShelter(system, zone, out Failure)",
+				StringComparison.Ordinal);
+			int advance = bootstrap.IndexOf("KingdomQuickstartPhase.Founded, crop",
+				StringComparison.Ordinal);
+			Assert.That(founded, Is.GreaterThanOrEqualTo(0));
+			Assert.That(stake, Is.GreaterThan(founded));
+			Assert.That(advance, Is.GreaterThan(stake));
+			ClassicAssert.AreEqual(stake, bootstrap.LastIndexOf("TryStakeShelter(system, zone, out Failure)",
+				StringComparison.Ordinal));
+		}
+
+		[Test]
+		public void CompletionNoticeNamesTheTentRowsOnlyWhenAClaimActuallyStands()
+		{
+			string bootstrap = TestMain.ReadRepositoryText(
+				"World/KingdomQuickstartBootstrap.cs");
+			// The tent-row sentence is a conditional arm counted off the ground, never off the
+			// branch that ran: a save cut past the Reserved phase resumes straight to Complete with
+			// no lot staked anywhere, and must not be told a row is waiting for it.
+			StringAssert.Contains("out int ShelterLots, out string Failure", bootstrap);
+			StringAssert.Contains("ShelterLots = ShelterLotsClaimed(zone);", bootstrap);
+			int guard = bootstrap.IndexOf("+ (shelterLots > 0", StringComparison.Ordinal);
+			int sentence = bootstrap.IndexOf("\" tent-row lot\"", StringComparison.Ordinal);
+			Assert.That(guard, Is.GreaterThanOrEqualTo(0));
+			Assert.That(sentence, Is.GreaterThan(guard));
+			ClassicAssert.AreEqual(sentence, bootstrap.LastIndexOf("\" tent-row lot\"",
+				StringComparison.Ordinal));
+			// The count is said, not assumed, so one surviving row never reads as two.
+			StringAssert.Contains("(shelterLots == 1 ? \" is\" : \"s are\")", bootstrap);
+			// The timing the docs promise, and no flatter claim than the calendar can keep.
+			StringAssert.Contains("not by nightfall", bootstrap);
+
+			string shelter = TestMain.ReadRepositoryText(
+				"World/KingdomQuickstartBootstrap.Shelter.cs");
+			// The count is read per reserved lot, so a resume that finds only the second row
+			// staked reports one, and staking is never inferred from the receipt phase.
+			StringAssert.Contains("private static int ShelterLotsClaimed(Zone Zone)", shelter);
+			StringAssert.Contains("i < KingdomQuickstartRules.ShelterLotCount", shelter);
+		}
+
+		[Test]
+		public void ShelterAdoptionProvesTheDesignBeforeItWritesAnyReservation()
+		{
+			string shelter = TestMain.ReadRepositoryText(
+				"World/KingdomQuickstartBootstrap.Shelter.cs");
+			int find = shelter.IndexOf("private static bool TryFindShelter(",
+				StringComparison.Ordinal);
+			int mark = shelter.IndexOf("private static bool MarkShelter(",
+				StringComparison.Ordinal);
+			Assert.That(find, Is.GreaterThanOrEqualTo(0));
+			Assert.That(mark, Is.GreaterThan(find));
+			string finder = shelter.Substring(find, mark - find);
+			// An unmarked object is adopted only when it also carries our own design key, so a
+			// foreign plot stamped on the reserved rectangle is refused before MarkShelter can
+			// write our reservation onto it. Prove custody, then write.
+			StringAssert.Contains("KingdomUpgrade.BuildKeyProperty", finder);
+			StringAssert.Contains("KingdomQuickstartRules.ShelterBuildKey", finder);
 		}
 
 		[Test]
@@ -142,6 +309,81 @@ namespace ThousandAndFirst.Tests
 			char replacement = wire[wire.Length - 1] == '0' ? '1' : '0';
 			Assert.That(KingdomQuickstartRules.TryDecode(
 				wire.Substring(0, wire.Length - 1) + replacement, out _), Is.False);
+		}
+
+		[Test]
+		public void AnOldShapeReceiptKeepsItsExactWireAndOwesNoShelterStake()
+		{
+			// A v0.3.1 world was built with the narrower prepared-ground mask, so its 48 shelter
+			// cells were never bared and the authored-ground preflight may lawfully refuse a stake
+			// there. Such a save resumed at Reserved must continue exactly as it did, or it loses
+			// its casks, larder, materials chest and advisor to a roof it was never promised.
+			string wire = LegacyReservedWire("marsh", "JoppaWorld.8.22.1.1.10");
+			Assert.That(KingdomQuickstartRules.TryDecode(wire,
+				out KingdomQuickstartReceipt old), Is.True);
+			Assert.That(old.Phase, Is.EqualTo(KingdomQuickstartPhase.Reserved));
+			Assert.That(old.ProfileKey, Is.EqualTo("marsh"));
+			ClassicAssert.IsFalse(old.ShelterObligation);
+			// Re-encoded byte for byte: an old save that resumes and advances keeps writing the
+			// shape its own version wrote, and never acquires the obligation on the way through.
+			Assert.That(KingdomQuickstartRules.Encode(old), Is.EqualTo(wire));
+			KingdomQuickstartReceipt founded = Advance(old, KingdomQuickstartPhase.Founded,
+				"Watervine");
+			ClassicAssert.IsFalse(founded.ShelterObligation);
+			StringAssert.StartsWith("q1|", KingdomQuickstartRules.Encode(founded));
+			// The tag is inside the digest, so no edit can promote an old receipt in place.
+			Assert.That(KingdomQuickstartRules.TryDecode("q2" + wire.Substring(2), out _),
+				Is.False);
+		}
+
+		[Test]
+		public void AReceiptThisVersionMintsCarriesTheShelterObligationThroughEveryPhase()
+		{
+			Assert.That(KingdomQuickstartRules.TryCreateReceipt("canyon",
+				"JoppaWorld.14.17.1.1.10", out KingdomQuickstartReceipt receipt), Is.True);
+			ClassicAssert.IsTrue(receipt.ShelterObligation);
+			string wire = KingdomQuickstartRules.Encode(receipt);
+			StringAssert.StartsWith("q2|", wire);
+			Assert.That(wire, Is.Not.EqualTo(LegacyReservedWire("canyon",
+				"JoppaWorld.14.17.1.1.10")));
+			Assert.That(KingdomQuickstartRules.TryDecode(wire,
+				out KingdomQuickstartReceipt decoded), Is.True);
+			ClassicAssert.IsTrue(decoded.ShelterObligation);
+			receipt = Advance(decoded, KingdomQuickstartPhase.Founded, "Watervine");
+			receipt = Advance(receipt, KingdomQuickstartPhase.WaterStocked, "water-id");
+			ClassicAssert.IsTrue(receipt.ShelterObligation);
+			Assert.That(KingdomQuickstartRules.TryDecode(
+				KingdomQuickstartRules.Encode(receipt),
+				out KingdomQuickstartReceipt advanced), Is.True);
+			ClassicAssert.IsTrue(advanced.ShelterObligation);
+			// One phase's identity is frozen per advance; the obligation is not one of them and
+			// cannot be gained or shed by advancing.
+			Assert.That(advanced.WaterObjectId, Is.EqualTo("water-id"));
+		}
+
+		[Test]
+		public void TheFoundingStakeIsOwedOnlyByReceiptsMintedWithTheBaredLots()
+		{
+			string bootstrap = TestMain.ReadRepositoryText(
+				"World/KingdomQuickstartBootstrap.cs");
+			int guard = bootstrap.IndexOf("if (receipt.ShelterObligation",
+				StringComparison.Ordinal);
+			int stake = bootstrap.IndexOf("TryStakeShelter(system, zone, out Failure)",
+				StringComparison.Ordinal);
+			Assert.That(guard, Is.GreaterThanOrEqualTo(0));
+			Assert.That(stake, Is.GreaterThan(guard));
+			// The obligation is minted with the receipt, next to the mask that bares the ground.
+			string rules = TestMain.ReadRepositoryText("Core/KingdomQuickstartRules.cs");
+			int create = rules.IndexOf("public static bool TryCreateReceipt(",
+				StringComparison.Ordinal);
+			Assert.That(create, Is.GreaterThanOrEqualTo(0));
+			StringAssert.Contains("ShelterObligation = true", rules.Substring(create));
+			// The old tag is still written and still read, and the two tags are distinct.
+			string codec = TestMain.ReadRepositoryText("Core/KingdomQuickstartReceiptCodec.cs");
+			StringAssert.Contains("LegacyWireTag = \"q1\"", codec);
+			StringAssert.Contains("ShelterWireTag = \"q2\"", codec);
+			StringAssert.Contains("Receipt.ShelterObligation ? ShelterWireTag : LegacyWireTag",
+				codec);
 		}
 
 		[Test]
@@ -289,6 +531,7 @@ namespace ThousandAndFirst.Tests
 				+ TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.StockVerification.cs")
 				+ TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.Advisor.cs")
 				+ TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.Recovery.cs")
+				+ TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.Shelter.cs")
 				+ TestMain.ReadRepositoryText(
 					"World/KingdomQuickstartBootstrap.Verification.cs");
 			StringAssert.Contains("KingdomFoundingTransaction.TryFoundFirstWithoutWater", bootstrap);
@@ -306,6 +549,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("brain.Mobile = false", bootstrap);
 			StringAssert.Contains("advisor.RequirePart<NoXPGain>()", bootstrap);
 			StringAssert.DoesNotContain("SetIntProperty(\"KingdomBuilt\", 1", bootstrap);
+			StringAssert.Contains("addSimpleRootInformationOption(advisor", bootstrap);
 			string camp = TestMain.ReadRepositoryText("World/KingdomQuickstartCampBuilder.cs");
 			StringAssert.Contains("KingdomPlots.ReadObject", camp);
 			StringAssert.Contains("SystemLongDistanceMoveTo", camp);
@@ -493,6 +737,29 @@ namespace ThousandAndFirst.Tests
 			Assert.That(KingdomQuickstartRules.TryAdvance(current, next, value, advisor,
 				out KingdomQuickstartReceipt advanced), Is.True, next.ToString());
 			return advanced;
+		}
+
+		/// <summary>
+		/// One v0.3.1 Reserved receipt, rebuilt from the shipped ten-field body and its own
+		/// SHA-256 rather than through the current encoder, so this fixture cannot agree with a
+		/// mistake in the code it exists to constrain.
+		/// </summary>
+		private static string LegacyReservedWire(string profile, string zone)
+		{
+			string body = "q1|" + Field(profile) + "|" + Field(zone) + "|0|" + Field("")
+				+ "|" + Field("") + "|" + Field("") + "|" + Field("") + "|0|" + Field("");
+			byte[] digest;
+			using (var sha = System.Security.Cryptography.SHA256.Create())
+				digest = sha.ComputeHash(System.Text.Encoding.UTF8.GetBytes(body));
+			var text = new System.Text.StringBuilder(64);
+			foreach (byte value in digest)
+				text.Append(value.ToString("x2", System.Globalization.CultureInfo.InvariantCulture));
+			return body + "|" + text;
+		}
+
+		private static string Field(string value)
+		{
+			return Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(value ?? ""));
 		}
 
 		private static int Count(string text, string fragment)

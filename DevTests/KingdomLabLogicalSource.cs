@@ -37,6 +37,7 @@ namespace ThousandAndFirst.Tests
 			"Growth/KingdomLab.VatReceipts.cs",
 			"Growth/KingdomLab.Slate.cs",
 			"Growth/KingdomLab.Commission.cs",
+			"Growth/KingdomLab.Commission.Settle.cs",
 			"Growth/KingdomLab.Semantic.cs",
 			"Growth/KingdomLab.Funding.cs",
 			"Growth/KingdomLab.Application.cs",

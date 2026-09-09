@@ -1,6 +1,147 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current unreleased master-growth resume correction
+## Current unreleased stockpile deposit custody
+
+3068 staged sources; 435,538 physical lines; 1429 direct-XRL; zero cap failures; 3099 generated
+cold-stage files. Exact inventory `3cfe76c38704930c03d2923e400d05155cbcbf96b9ad8b31ad90304cc8fea6c0`.
+Twenty-two custody findings from three review passes on PR #84 are fixed, over the two physical defects first found in the merged stockpile-capacity deposit. A bundle an
+insertion callback moved elsewhere was preserved and counted as zero, so `MaterialStock.Put` made
+the units a second time in the next store or on the ground; and a bundle a stack-count handler had
+already carried off was obliterated whenever the stamp proof failed. The deposit law now lives
+engine-free in `Core/KingdomDepositEngine.cs` behind `Core/IKingdomDepositHost.cs`: unproved
+custody stops the whole `Put`, only what a store provably gained is credited, a body is withdrawn
+only when proved held by nobody AND provably destroyed, custody is proved before every mutation, a vanished bundle is credited only by the destination's own gain IN THAT MATERIAL, the landing proof requires the destination to still be dedicated stock, the overflow path runs the same law, a throwing handler keeps what was proved, and every caller that writes a receipt reads the custody first. Reading is treated as a callback and every final proof reads RAW off Stacker.StackCount (Count repairs and dispatches; room and hold censuses walk and ask), every batch proves its count including a batch of one, the gain readers count only members whose own custody names the destination, the uncertainty saying cannot cost the delivery its proved units, and a clearance stake whose yield went unproved is durably held rather than merely announced. The founder is told once. Counting stays whole, intake is still the
+only refusal (ruling 5), the catch-up envelope is untouched and old saves read as before. It sits over `dev` at `862f14d` (native observers, Workshop wording, Workshop CI, the Fetch
+carry-completion fix and the cross-version persona REQUEST wording) and over the Kingdom Quickstart shelter ingress retained below. Structure, doc freshness and the Tools
+suite (627) pass; engine-free suites pass 14,061 main / 5,215 Portable, zero skips, and Roslyn
+9.0.306 on Linux compiles the staged baseline (3064) and compatibility (3068) sets clean. The two
+new deposit regressions were confirmed to fail against the pre-fix behaviour. NOT run for these
+bytes: the two dev-harness modes, the installed-ABI source step, the Windows gate, the native
+Quickstart boot matrix, ordinary play, graceful Quit and Steam delivery. Public 0.3.1 unchanged.
+Never direct-push main/tag, bypass, or self-approve.
+
+## Retained unreleased Kingdom Quickstart shelter ingress
+
+3062 staged sources; 434,436 physical lines; 1425 direct-XRL; zero cap failures; 3093 generated
+cold-stage files. Exact inventory `ff13330463a990edbef95c2ae35e0e552691f2f8e0f86a525dc873bd61f7c202`.
+The camp now bares each shelter lot's authored ingress route as well as the lot itself: the stake's
+public-ingress preflight walks that route and refuses an unbared cell, which is why only the dunes
+founded. Four cells are added — (23,8) and (23,7) north of lot A, (24,17) and (24,18) south of
+lot B — and nothing else changes. Heart-ingress endpoints, lot rectangles, receipt wire and refusal
+message are untouched. It sits over the render-only city sight, the stockpile unit capacity and the
+first-basin water store retained below. On the merged tree structure, doc freshness and the Tools
+suite (627) pass; engine-free suites pass 13,987 main / 5,199 Portable, zero skips, and
+Roslyn 9.0.306 on Linux compiles the staged baseline (3058) and compatibility (3062) sets clean.
+On the delta's own pre-merge bytes all four `Tools/gate.sh` modes plus the
+installed-Hearthpyre source/ABI step compiled clean (3050/3054/3204/3208), the engine-free suites
+passed13,905 main/5,193 Portable,zero skips, and the six-profile native
+boot matrix at seed `#43101` passed with two `plot staked: tentrow` rows per boot, as did
+`quickstart-save marsh yes` and its cold load. NOT run for the merged tree: the two dev-harness
+modes, the installed-ABI source step, the Windows gate, ordinary play, graceful
+Quit and Steam delivery. Public0.3.1 unchanged. Never direct-push main/tag, bypass, or self-approve.
+
+## Retained unreleased city sight over the stockpile unit capacity
+
+3061 staged sources; 434,296 physical lines; 1425 direct-XRL; zero cap failures; 3092 generated
+cold-stage files. Exact inventory `7147169b7ccb8d2142d9791bd5faec8405eb305e33bca7a9b9feb9c3948c5a1e`.
+City sight is taken at the engine's own `Zone.Render` call — a flag armed by a prefix on
+`XRLCore.RenderBaseToBuffer` and spent by a prefix on `Zone.Render(ScreenBuffer)`
+(`Growth/KingdomCitySightRenderSeam.cs`) — rather than from the part's own second-pass turn, so
+the honest snapshot is read behind `Blackout`'s light removal, which `Zone.AddVisibility` gates
+on. The seat before it, a Harmony postfix on the render dispatch's static entry, crashed the game
+in unattended native runs: the re-hosted engine method threw `NullReferenceException` out of
+itself on the first drawn frame in three of four launches (`Send_Patch1`, native dump naming the
+walk over its own second-pass handler list). Evidence:
+`Tools/PortableOutput/player-claimed-light-native-check*.log` and
+`player-first-guest-native-check*.log`. That seat is now a forbidden string in the source
+contract. Merging its end-of-turn restore backstop with the basin-capacity zone-activation guard
+put `Core/KingdomSystem.z20.Events.cs` at 305 physical lines, over the strict cap; the merge
+reflowed those two comment blocks wider, keeping every word and engine citation and moving no code
+or statement order, and the shard is back at 299.
+Structure, doc freshness, architecture and the Tools suite pass; engine-free suites pass 13,986
+main / 5,199 Portable, zero skips on Linux .NET9.0.306, and Roslyn 9.0.306 on Linux compiles the
+staged baseline (3057) and compatibility (3061) sets clean. NOT run:
+the two dev-harness modes, the installed-ABI source step, the Windows gate, the developer boot
+matrix and any native run.
+The 1,700-tick raising figure is a reading of `KingdomPlotRules.RaiseTicks`, not of a plot clock.
+Public0.3.1 unchanged. Never direct-push main/tag, bypass, or self-approve.
+
+## Retained unreleased stockpile unit capacity over the first-basin water store
+
+3059 staged sources; 433,954 physical lines; 1423 direct-XRL; zero cap failures; 3090 generated
+cold-stage files. Exact inventory `5db8f7381ade172c6b0b34925a111f4d4c28f32da77cf0be266914aa53e77674`.
+A dedicated stockpile now holds a stated number of material units (32 by default, off the new
+`r_KingdomStockpileCapacity` blueprint tag when one is declared); counting stays whole and only
+intake refuses, so no standing save reads lower than it did. The delivery remembers nothing across
+an engine callback: creating the bundle, stamping its count (`Stacker.StackCount`, which sends
+`StackCountChangedEvent`) and inserting it each run other people's handlers, so the destination and
+its room are proved after the creation and again after the stamp, and the bundle is proved standing
+in that exact store with its stamped count before a unit is counted. Three added production
+sources, three modified, one regenerated removal-coverage roster; no receipt, wire, option, grant
+or verifier change. Roslyn 9.0.306 on Linux compiles the staged baseline (3055) and compatibility
+(3059) sets clean, warnings as errors, and both engine-free suites run green there (13,980 main /
+5,193 Portable, zero skips). No native run, no dev-harness mode and no
+exact-inventory human semantic review bind this digest.
+## Retained unreleased first-basin water store over the Quickstart tent rows
+
+3056 staged sources;433,308 physical lines;1421 direct-XRL;zero cap failures;3087 generated
+cold-stage files. Exact inventory `5160ed08e19734f315ebe8c7fe2ab4e5e7e1bb6bc632ae97a0c511d1f40cd325`.
+The founding heart's first basin becomes the settlement's first water store: dedicated in code at
+the relic slot, capacity 16/48/160/512/1024 by rung, raised only and never lowered, skipped with
+one ledger line while an open water debit is bound to that vessel, an unsettled arrival water leg
+draws from it, or a routed-input lease holds it, and reconciled once on load and on zone activation
+for worlds built before it. The catch-up resolves the basin only through the anchored-component
+lookup, which needs an a3|/a4| managed layout receipt on the heart's owner: a heart whose owner
+carries an a2 or absent snapshot is NOT reconciled until its next rung restamps the layout. The
+reconciliation is asked only AFTER the seat exchange and only for ground the seated settlement
+claims, and the reconciler refuses unclaimed ground itself, so a second, foreign, seceded or
+exiled city's heart can never be dedicated into the wrong ledger or measured against the wrong
+growth book. A committed water receipt keeps its per-vessel hold while its caller's declared
+compensation window is open, and every caller that can refund AFTER its own callbacks now opens
+that window before its commit and closes it in an enclosing finally: construction funding across
+the material commit, sowing across the laid rows and the spent seed, annexe enrolment across the
+roll and the standing batch, and the lab's commission and its two removal lanes. The window never
+outlives the method that took it, so a finished rung is still free to widen the basin its funding
+drained. No saved field, wire format, option or verifier predicate changes. Roslyn 9.0.306 on Linux
+compiles the staged and dev-harness baseline and compatibility sets clean. No native run,
+installed-ABI source step, Windows gate and no exact-inventory human semantic review bind this
+digest.
+
+## Retained unreleased Kingdom Quickstart tent rows
+
+3053 staged sources;432,593 physical lines;1418 direct-XRL;zero cap failures;3084 generated
+cold-stage files. Exact inventory `d0f0e0cc12d931557082d09ff97316fb3d8125ff8bd1f0aa6e1c60baff94cfb0`.
+Quickstart stakes two `tentrow` lots at founding, west of the supply column at (21,9)-(26,12) and
+(21,13)-(26,16); six beds between them, receiptless, free, and never debited. No receipt phase,
+option, grant or verifier change. The receipt wire is versioned: a receipt this version mints
+carries the shelter obligation under tag `q2`, the shipped `q1` shape is still written and read
+byte for byte, and only a `q2` receipt owes a stake — so a pre-existing `q1` save resumed at any
+phase, Reserved included, keeps old behaviour and never stakes on ground the old narrower mask
+never bared. Codec and source-contract cases prove that; no native resumed save does.
+
+## Retained unreleased camp-guide topic tree
+
+3053 staged sources;432,178 physical lines;1417 direct-XRL;zero cap failures;3083 generated
+cold-stage files. Exact inventory `dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`.
+One engine-free words file (`Core/KingdomQuickstartGuideRules.cs`) and a five-topic root-option
+loop on the optional Quickstart guide; no receipt, wire, option, grant or verifier change.
+Engine-free suites pass13731 main/5109 Portable,zero skips on Linux .NET9.0.306, and Roslyn
+9.0.306 on Linux compiles the staged baseline (3048) and compatibility (3052) sets clean. No
+native run, no dev-harness mode and no exact-inventory human semantic review bind this digest;
+the master-growth digest below keeps its own review. Existing saves keep the one-node guide.
+
+## Retained unreleased claimed-ground light
+
+3051 staged sources;432,024 physical lines;1417 direct-XRL;zero cap failures;3082 generated
+cold-stage files. Exact inventory `fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`.
+A mod-owned zone part lights the claimed zone the founder stands in, gated on the new
+`r_TAF_OptionClaimedGroundLight` (default Yes) and revoked from the same activation guard.
+Engine-free suites pass 13,720 main and 5,098 Portable cases, zero skips; doc-freshness,
+structure, architecture and the Tools suites pass. Roslyn 9.0.306 on Linux compiles the staged
+baseline and compatibility sets clean. No dev-harness mode, no native run and no Windows gate ran
+for this delta.
+
+## Retained unreleased master-growth resume correction
 
 3049 staged sources;431,893 physical lines;1415 direct-XRL;zero cap failures;3080 generated
 cold-stage files. Exact inventory `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.

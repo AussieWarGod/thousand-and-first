@@ -646,6 +646,16 @@ namespace ThousandAndFirst.Tests
 			Dictionary<string, int> expected = new Dictionary<string, int>
 			{
 				{ "Growth/KingdomMaterials.03.StockClassification.cs", 2 },
+				// The physical hold of a stockpile is a CUSTODY read, not a spend-eligibility
+				// one: a stack a purpose reservation or a porter's cargo mark has withdrawn from
+				// the ordinary classifier is still standing in the chest taking up its room, and
+				// reading it with the ordinary classifier would empty an unmoved stack out of the
+				// room count and let the store be overfilled by exactly that much.
+				{ "Growth/KingdomSurvey.11.MaterialStores.cs", 1 },
+				// The deposit path reads the SAME custody vocabulary, off the same classifier,
+				// but counts each thing raw: its answer licences a destruction or an insertion,
+				// and the ordinary count read repairs a nonpositive count and dispatches for it.
+				{ "Growth/KingdomMaterials.RawObservation.cs", 1 },
 				{ "Growth/KingdomPurpose.03.CargoIdentityAndEscrow.cs", 1 },
 				{ "Growth/KingdomPurposePortfolio.ConstructionCargo.cs", 1 },
 				{ "Growth/KingdomPurposePortfolio.EffectDebitEvidence.cs", 2 },

@@ -1,9 +1,10 @@
 # Current implementation and release evidence
 
-**Snapshot:** 2026-09-07
+**Snapshot:** 2026-09-09
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
-**Current public version:** 0.3.1 public Alpha playtest, published and installed verification complete
-**Published manifest:** 0.3.1; one subscribed client verified, broader Beta work remains open
+**Next public version:** none scheduled beyond 0.3.2
+**Working candidate manifest:** 0.3.2 public Alpha playtest; private staging verified,
+public Workshop upload not yet run — see [Public 0.3.2](#public-032) below
 
 The public Alpha is [Steam Workshop item
 3794797472](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472). Rows marked retained
@@ -27,13 +28,314 @@ entirely (the sole collaborator can never approve their own PR); PR-based integr
 policy, enforced by the required status checks, linear history and `enforce_admins`, which is now
 ON. Required checks (repository-audit, plus the full pure and portable test lanes on
 `ubuntu-latest` and `windows-latest`, strict), linear history, no force-push, no deletion and
-required conversation resolution all remain. No `dev` branch exists
-yet, so the branch model in [RELEASING.md](RELEASING.md#branch-model) is still a proposal. Earlier
-sections below record the pre-merge state at their own checkpoints and are not restated here.
+required conversation resolution all remain. The `dev` integration branch now exists on origin, is the repository default branch, created at `6f73974` and currently at `736d28c`. It is protected with the same three required checks, linear history, required conversation resolution and no force-push/deletion, but with `enforce_admins` off and without the strict up-to-date requirement, so the branch model in
+[RELEASING.md](RELEASING.md#branch-model) is in force rather than proposed: feature work targets `dev` and `main` receives release merges. Earlier sections below record the pre-merge state at their own checkpoints and are not restated here.
+
+A source-proven bounty fetch defect is fixed on `dev`: the post-add transfer witness could never be satisfied, so every completed fetch carry quarantined before its credit; executable rule cases and the `bounty-fetch-native-check` persona are added, and that persona has not been run.
 
 Annotated `v0.3.1` still targets `a46b5ad`; `main` is now one squash commit ahead of that tag.
 Public0.3.1 and its published bytes are unchanged. Windows and native lanes are being re-run for
 the current bytes; those receipts are pending and are not claimed here.
+
+## Automated release lane (historical, 2026-09-08)
+
+The paragraphs and table below describe the lane as it stood on 2026-09-08, before it was ever
+exercised. They are retained for the settings audit they record, not as current status; see
+"Automated release lane — current, 2026-09-09" below for what actually happened.
+
+Workflow **authored, not yet exercised.** `.github/workflows/release.yml` adds a tag-triggered
+Steam Workshop release lane under the author ruling of 2026-09-08 recorded in
+[RELEASING.md](RELEASING.md#author-ruling-2026-09-08--automated-release-lane-and-the-doctrine-it-amends);
+pushing an annotated `v*`/`staging-v*` tag now runs the whole lane unattended — gate, package,
+plan, publisher `check`, one `-Submit`, the polled `-Verify`, and, only on
+`SubscribedInstallationVerified`, one `-Finalize` from the same run directory with the recorded
+plan, `PLAN_SHA` and `RECEIPT_SHA`. Both environments' required reviewers were removed, so the
+admin-only tag ruleset is the approval and no job waits for a human.
+No pipeline release has run; every claim below is a configuration fact, not a release result.
+
+Verified against the GitHub API on 2026-09-08, amended for the reviewer removal of 2026-09-09:
+
+| Setting | State |
+| --- | --- |
+| Environment `steam-workshop` | **no required reviewers**; branch/tag policy only, deployment tag pattern `v*` |
+| Environment `steam-workshop-staging` | **no required reviewers**; branch/tag policy only, deployment tag pattern `staging-v*` |
+| Tag ruleset "release tags" | active; restricts creation, update and deletion of `refs/tags/v*` and `refs/tags/staging-v*`; bypass limited to the repository admin role |
+| Fork pull-request workflows | approval required for all external contributors |
+| Workflow permissions | read-only; pull-request approval by Actions disabled |
+| Repository secrets for the lane | none, by design; no Steam credential exists in GitHub |
+| Self-hosted runners | **0 registered.** The `taf-steam` runner is not installed yet, so the pipeline cannot run |
+
+The two open environment-approval settings are moot now that neither environment has a required
+reviewer: there is no approval for `can_admins_bypass` to skip and no review for "prevent
+self-review" to block. The tag ruleset carries the whole gate, so its admin-only bypass list is
+the setting to keep audited.
+
+Open before the first pipeline release: register and start the `taf-steam` runner per the runbook
+in [RELEASING.md](RELEASING.md#steam-host-runner-runbook); rule on the merge method for release
+pull requests, since the currently enabled squash-only merge rewrites the receipt-binding commit
+that the packager requires as an ancestor of the tagged `main` commit; and run the first
+`staging-v0.3.2` release, recording its run id, attempt number and finalization SHA here.
+
+## Automated release lane — current, 2026-09-09
+
+The three items left open above are resolved. Self-hosted runner `taf-steam-gamingpc` is
+registered and online. The merge-method ruling is decided: merge commits are enabled and
+main's linear-history requirement is off, so a release pull request's receipt-binding commit
+survives as an ancestor of the tagged `main` commit (author ruling).
+
+The first pipeline release has run: `staging-v0.3.2-1` triggered run `34327428688`, which
+succeeded through gate, package, plan, `check`, `-Submit` and the polled `-Verify`
+(`SubscribedInstallationVerified`). `finalize` did not run on that attempt because of the
+`if: success()` guard bug described under "Public 0.3.2" below; finalization was completed by
+hand from the retained run directory against private item 3796495680 attempt `0003`. The guard
+is fixed in #92 (`323a288`), an ancestor of this branch, so a future staging or public tag no
+longer needs the by-hand fallback for that failure mode.
+
+The evidence limits from the historical section still hold exactly as stated: this is one
+subscribed client, `freshTransferVerified=false`, `releaseReady=false` remain explicit, and
+the public v0.3.2 Workshop submission itself has not run yet — see "Public 0.3.2" below.
+
+## Unreleased Kingdom Quickstart shelter ingress
+
+The two tent-row lots staked at founding now stake on every shipped profile. `KingdomPlots.Stake`
+runs the authored public-ingress preflight
+(`Growth/KingdomArchitectureRuntime.RoadIngress.cs`), which walks each lot's DoorToLane route and
+refuses any route cell that is not physically walkable. The camp bared the two lot rectangles only,
+so the single exterior cell each route leaves by stood in unbared wilderness: the marsh refused lot
+B at (21,13)-(26,16) for (24,17) and the canyon refused lot A at (21,9)-(26,12) for (23,8). Only
+the dunes founded, because its ground happened to be bare at both. The prepared-ground mask now
+also bares each route's reserved road margin and the lane endpoint one cell beyond it — (23,8) and
+(23,7) north of lot A, (24,17) and (24,18) south of lot B — so the mask widens by exactly four
+cells. Those cells are declared beside the lots because the quickstart's ground authority is
+engine-free; `DevTests/KingdomQuickstartShelterIngressTests.cs` recomputes them from the shipped
+architecture with the same `KingdomRoadRules.TryAuthoredLane` the stake walks and fails on drift.
+The heart-ingress endpoints are unchanged and refusal is still fail-closed with the same message.
+
+Current census after merging `dev` (the Kingdom Quickstart tent rows, the first-basin water store,
+the stockpile unit capacity, the render-only city sight and the shelter ingress included) and the
+stockpile deposit custody fix: 3068
+staged C# files; 435,538 physical lines; 3099 files in the generated
+cold-install inventory. Staged compilation covers 3068 sources, baseline and compatibility symbols
+(baseline compiles 3064 of them; the optional-mod bridge is compatibility-only), run here by Roslyn
+9.0.306 on Linux against the licensed Managed references with warnings as
+errors. Direct `XRL` imports: 1429 files, 0 over the line limit.
+Inventory SHA-256: `93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa` (this digest differs from the previous one solely because of the 0.3.2 KingdomReleaseInfo.cs version-literal bump; no other change).
+Before the merge, all four `Tools/gate.sh` modes compiled clean on the shelter-ingress delta's own
+bytes — staged baseline (3050 sources), staged compatibility (3054), dev-harness baseline (3204)
+and dev-harness compatibility (3208) — with the installed-Hearthpyre source and ABI step, and the
+engine-free suites passed13,905 main/5,193 Portable cases,zero skips there with 615 Tools tests.
+On the merged tree, the licensed Windows suites (`DevTests/test.ps1`, the licensed Managed
+references, skips forbidden) were run locally on this branch, immediately before the fix commit,
+and report ALL GREEN: 14,061 TafTests cases and 5,215 PortableTests cases, zero skipped, of
+14,061/5,215 discovered, and the Tools suite passes 627 tests. Hosted CI for this branch has no
+game bytes and is not zero-skip: GitHub Actions run 34302511689 (head `a64d090`) reports 14,051
+passed/10 skipped and 5,211 passed/4 skipped; its SUCCESS verdict is a distinct, weaker check than
+the licensed local result above.
+The six-profile Quickstart boot matrix at seed `#43101` ran natively on the SHELTER-INGRESS bytes,
+not on these: all six reached checker `verdict=PASS`, each with two `[TAF] plot staked: tentrow`
+rows and a strict-clean Player.log, and `quickstart-save marsh yes` and its separate cold load
+passed there with unchanged heart, stock and IDs and no bootstrap replay. Those results are
+retained for that checkpoint and are NOT claimed for the custody bytes, which have had no native
+run at all.
+NOT RUN for the merged tree: the two dev-harness modes, the installed-Hearthpyre source step, the
+Windows gate, any native run, ordinary play, graceful Quit and Steam delivery. The
+1,700-tick figure remains a reading of the raising rule, not of a running plot clock. No human
+exact-inventory semantic review binds this digest.
+
+## Unreleased stockpile unit capacity
+
+A dedicated stockpile now declares how many material units it holds — 48 for a chest the founder
+dedicated by hand, off the new `r_KingdomStockpileCapacity` blueprint tag for anything that
+declares one, and the shipped stores declare a ladder of it: 48 for a fixture shelf, 64 for a
+locker or service bank, 96 for the civic larder and a purpose's own input and output stores, 192
+for the granary and 384 for the Granary-Colossus. The default is a floor the catalogue leans on:
+eight hand-dedicated stores at that size hold 384 units, which is held above the grandest single
+bill in `RuntimeData/KingdomBuildings.xml` (the arcology, 308 units of material, rare finds and
+bit-bearing stock standing at once) by test, so no shipped design is priced beyond what a
+settlement can ever stand up. Counting is unchanged and stays whole: `Stock()` and `StockForExactContainer()`
+never read a capacity, so the settlement ledger and every purpose-local debit view agree by
+construction and an over-cap stockpile standing in an old save reads exactly what it read before.
+What the capacity changes is intake only: a delivery fills the first store with room, walks on to
+the next, and spills the remainder to the ground exactly as it already did when no stockpile
+existed. A full store says so once and stops saying it when it has room again. Nothing is
+remembered across a callback: creating the bundle, stamping its count (which is
+`Stacker.StackCount`, and sends `StackCountChangedEvent`) and inserting it each run other
+people's handlers, so the destination and its room are proved after the creation and again after
+the stamp, and the bundle is proved standing in that exact store with the count it was stamped
+with before a single unit is counted. No saved field, wire format or option changes, and the public API
+changes are additive only (`KingdomSurvey.StockCapacityOf`/`StockHeldIn`,
+`KingdomMaterials.StockpileRoom`/`FullStockpiles`/`StockRoomClause`,
+`KingdomRules.StockpileCapacity`/`MaxStockpiles`/`MaxReachableStockpileUnits` and the named
+capacity constants); the new state is one object int
+property.
+
+Census after the stockpile-capacity change over the merged Kingdom Quickstart tent rows:3056
+staged C# files;433,239 physical lines;3087 files
+in the generated cold-install inventory. Staged compilation covers3056 sources, baseline and
+compatibility symbols, run here by Roslyn 9.0.306 on Linux against the licensed Managed references
+with warnings as errors (baseline compiles3052 of them; the optional-mod bridge is
+compatibility-only, and the tracked Hearthpyre 2.2.3 ABI stub compiles clean first). The
+dev-harness modes and the Windows gate did not run for this census.
+Direct `XRL` imports: 1420 files, 0 over the line limit.
+Inventory SHA-256: `4f006f327ef59e0c36e65ea11fad27b5b508d8946bffa9ed8770a147fe3dde79`.
+No native game run was made for this change; every player-facing claim above is unproven natively.
+
+## Retained unreleased Kingdom Quickstart tent rows
+
+Kingdom Quickstart stakes two `tentrow` lots at founding, west of the supply column at
+(21,9)-(26,12) and (21,13)-(26,16), between the founding proof and the receipt's first advance.
+The pair carries six beds (`Carries="roof:3"` per row), granted free and never debited. Each stake
+is receiptless, so the lots keep the shipped schema-zero calendar: by `KingdomPlotRules.RaiseTicks`
+each row is 1,700 ticks — 1,200 design plus 500 enclosure for the ten edge cells of a 5x2
+footprint — against 1,200 ticks to the day. The prepared-ground mask widens by 48 cells so the camp
+builder bares both lots; each lot is searched before it is staked, so a cut between the two resumes
+by staking only the missing one. No receipt phase changes. The receipt gains one versioned field:
+a receipt this version mints carries the shelter obligation and encodes under the wire tag `q2`,
+while the shipped `q1` shape is still written and read byte for byte and the tag sits inside the
+digest. Only a `q2` receipt owes a stake, so a pre-existing `q1` save keeps its old behaviour at
+every phase, Reserved included, and the completion notice counts the claims standing on the ground
+rather than trusting the branch that ran.
+
+That census:3053 staged C# files;432,593 physical lines;3084 files in the generated
+cold-install inventory. Staged compilation covers3053 sources, baseline and compatibility symbols,
+run here by Roslyn 9.0.306 on Linux against the licensed Managed references with warnings as errors
+(baseline compiles 3049 of them; the optional-mod bridge is compatibility-only).
+Direct `XRL` imports: 1418 files, 0 over the line limit.
+Inventory SHA-256: `bbb155eee372977f1977e275268523c1650a4fa69786e985700287c20eac42bc`.
+NOT RUN for this delta: the two dev-harness compile modes, the installed-Hearthpyre source/ABI
+step, `Tools/gate.sh` itself, the Windows gate, the developer boot matrix and any native in-game
+run. The 1,700-tick figure is a reading of the raising rule, not of a running plot clock; the
+second lot's preparation on the marsh, canyon and dunes profiles is unproven. A pre-existing save
+resumed at the Reserved phase now skips the stake by its own `q1` wire tag, which is proved by
+source-contract and codec cases rather than by a native resumed save. No human exact-inventory
+semantic review binds this digest.
+
+Merged on top of that digest on `fix/bounty-fetch-transfer`: the bounty-fetch transfer correction
+(two production sources, three Harness observers, one persona and two pure suites). No census,
+inventory digest or staged compile count above was recomputed for those merged bytes.
+
+## Retained unreleased empty-camp legacy and native water regression
+
+An actual empty-camp heartbeat exposed rejected automatic legacy staging: no living body
+evidence exists yet. Explicit committed-unresolved profile schema2 now retains real technology
+and provenance without inventing species,gear or NPC authority. The same refusal applied to
+any realm whose residents map to no canonical body,not only a population-0 camp: a settled
+population of only non-canonical species reached the identical refusal. New exile also
+proves the original foundation receipt independently of the later current-profile revision,
+which unblocks exile for any realm at profile revision2 or above. Schema0/1
+bytes remain unchanged; older0.3.1 readers reject schema2,so any next public package needs
+a new version. Public0.3.1/main/tag are unchanged.
+
+Current census after merging `dev` (the Kingdom Quickstart tent rows, the first-basin water store
+and the stockpile unit capacity included) and the render-only city sight: 3061 staged C# files;
+434,296
+physical lines; 3092 files in the generated cold-install inventory. Staged compilation covers 3061
+sources, baseline and compatibility symbols (baseline compiles 3057 of them; the optional-mod
+bridge is compatibility-only). Direct `XRL` imports: 1425 files, 0 over the line limit.
+Inventory SHA-256: `7147169b7ccb8d2142d9791bd5faec8405eb305e33bca7a9b9feb9c3948c5a1e`.
+The seal lane's OWN delta &mdash; four modified production sources, no additions or removals
+&mdash; was proved against integration parent2be6b00 (3045 unchanged) and read in full by root
+and an independent reviewer; the three added and seven modified C# sources plus one option row
+merged from `dev` carry their own review chain. The first-basin water store is a further
+three added production sources (`Growth/KingdomPlotHeartRules.Loader.cs`,
+`Growth/KingdomWaterDebit.OpenReservations.cs` and `Growth/KingdomLab.Commission.Settle.cs`) and
+twenty-one modified ones: the founding-heart
+identity and marks shards, the plot-effects furnishing shard, the zone-activation events shard,
+the heart rules table, the civic-container envelope note, the survey capture sweep, the ground
+reading, the ground-protection law, the four water-debit shards,
+the generated removal-coverage table, and the seven water callers that can refund after their own
+callbacks (construction funding, sowing, annexe enrolment, the lab commission, the lab retry
+funding lane and its two removal lanes). Root and an independent AI reviewer read that delta;
+every required finding from the review pass is addressed on this branch. The Kingdom Quickstart
+tent rows merged from `dev` are one added and six modified production sources on top of it and
+carry their own review chain; the retained3052-source digest
+`c226862245f18d7b9fffadf7abc39b1d571462d1f26de6f665045f8ceaea412c` they were measured against is
+not restated here. The exact structural
+release gate passes and the exact-inventory human semantic review is open against this merged
+digest. The stockpile unit capacity on top of all of it is three added production sources
+(`Core/KingdomRules.MaterialStores.cs`, `Growth/KingdomSurvey.11.MaterialStores.cs` and
+`Growth/KingdomMaterials.StockpileRoom.cs`), six modified and the regenerated removal-coverage
+roster; Roslyn 9.0.306 on Linux compiled the staged baseline and compatibility sets clean on the
+merged tree and both engine-free suites run green there (13,980 main / 5,193 Portable, zero
+skips). The render-only city sight on top of all of it is two added production sources
+(`Growth/KingdomCitySightDrawScope.cs` and `Growth/KingdomCitySightRenderSeam.cs`) and two
+modified — the claimed-ground light part and the settlement system's event file, which now carries
+both the end-of-turn restore backstop and the basin-capacity zone-activation guard. The review-response
+passes rewrote the projection's seat and close: the part now queues nothing into the render
+dispatch's second pass, and the projection is taken at the engine's own `Zone.Render` call, armed by
+a prefix on `XRLCore.RenderBaseToBuffer`, so it comes behind `Blackout`'s own second-pass light
+removal, which `Zone.AddVisibility` reads. An unattended native pass on the seat before that one — a
+Harmony postfix on the render dispatch's static entry — crashed the game: the re-hosted engine
+method threw `NullReferenceException` out of itself on the first drawn frame in three of four
+launches. That seat is now a forbidden string in the source contract. Merging the two additions put
+`Core/KingdomSystem.z20.Events.cs` at 305 physical lines, over the strict cap; the merge reflowed
+their two comment blocks wider, keeping every word and engine citation and moving no code, and the
+shard is back at 299. This is source review,not functional acceptance.
+
+Focused38898 passed149 cases,zero skips. That receipt predates the seventh
+KingdomWaterMaintenanceNativeSourceTests case and is retained as measured. The branch adds
+91 cases in total:73 seal/schema/exile regressions,7 native-source wiring cases,9
+historical seal-fixture cases and2 exile cases. Four seals written by writer code
+byte-identical to tag `v0.3.1` are checked in at `DevTests/Fixtures/SealProfile` with
+pinned SHA-256s; they prove the forward read is an identity — schema0/1 parse,recompose
+byte-for-byte,survive a transition copy and validate as a saved reservation shape. Earlier
+full managed44659 was intentionally superseded after two imported-cohort fixture failures;
+it has no full-suite verdict. Earlier four-mode10882 passes only its earlier source bytes.
+Final licensed Windows suites on the merged tree passed13,826 main and5,116 Portable cases,
+zero skips,up from13,735/5,109 on the `dev` integration branch;
+both normal Rebuilds had zero warnings/errors. Canonical39198 TERMINAL0 passed all four
+C#7.3 modes:ordinary3045/3049,developer3182/3186,137 Harness files,plus installed Hearthpyre
+2.2.3 source/ABI on the pre-merge bytes; the seal-lane production sources are unchanged since
+that run,and the sources merged from `dev` carry `dev`'s own compile receipts. Exact comparison
+proved every ordinary/developer source matched the bytes it ran on. Repository25818 passed501 tests/89.477s plus cold inventory,docs,architecture and XML.
+The first10865 managed run retained13794 passes/one Harness line-limit failure; removing
+one blank line closed it before the final native and full-suite reruns. No guard was weakened.
+
+Native16504,seed1012037,profileiyqatG,proved an actual automatic schema2 empty-camp stage,
+canonical record roundtrip,partial physical upkeep and the original drought departure body,
+roster,tally and journal retirement. It failed the summary-note assertion:12 ordinary notes
+already occupied the bounded list,so exact departure notes=0. The12-entry cap is intentional;
+the corrected fixture proves exact durable Chronicle delivery separately. This diagnostic
+does not sign the later whole-run pass. Original failed attempts and receipt-owned stops are retained
+in [diagnostic evidence](/mnt/c/taf-water-departure-diagnostic.pdomed/README.md).
+Final native45930 TERMINAL0 passed at21:15:32.107UTC,seed1012037,profile4r3WC1:
+actual automatic empty-camp schema2 stage/roundtrip;4800 observed EndTurns;three dry bills,
+one exact original departure,two loyal residents;actual16-dram donor transfer then paid
+recovery. Exact canonical Chronicle receipt proves Delivered official/outsider and Skipped
+journal. All3186 current C# files match that profile; strict raw log/96journalrows and exact
+receipt-ownedPID21008 stop pass. Synthetic dedication/enrollment remain declared. This does
+not test carried inventory,current Chronicle-list membership or ordinary rendered play.
+[Final evidence and retained failures](/mnt/c/taf-water-final-lines.lRva1h/README.md).
+Open visibility gap: ordinary summary saturation can hide the departure there; a Chronicle
+receipt does not prove founder notification. No ordinary-play or save/load acceptance.
+
+## Unreleased first-settler legibility
+
+Publishing the first-guest correspondence now writes one player message naming the kingdom and
+pointing at the Charter. A standing candidate makes the next arrival pass return before it
+reaches that publication, so the message is said once per opportunity and never repeated.
+
+The durable half is presentation, not a ledger note: an unanswered first guest is now said by the
+Charter/Status next-need line, alongside the settlement's ordinary want rather than instead of it,
+so a deferred guest cannot silence a settlement running out of water. One rules-layer predicate,
+`KingdomLifecycleRules.GrowthFirstGuestAwaitsAnswer`, backs the Charter label, the next-need line
+and the correspondence guard, and it binds both the candidate phase and the choice state, so no
+surface can name a debt the rules would refuse to settle. The stale housing advice is corrected:
+with no roof at all the line names the settler's tent and its bill, and promises only what a roof
+actually buys, because the first guest's citizenship gate never reads lodging. No saved fields,
+formats, options or arrival intervals change; public0.3.1 is unchanged.
+
+Current census:3052 staged C# files;432,239 physical lines;3083 files in the generated
+cold-install inventory. Staged compilation covers3052 sources, baseline and compatibility symbols,
+run here by Roslyn 9.0.306 on Linux against the licensed Managed references with warnings as errors
+(baseline compiles 3048 of them; the optional-mod bridge is compatibility-only, and the
+tracked Hearthpyre 2.2.3 ABI stub compiles clean first). The dev-harness modes and the Windows gate did
+not run for this census.
+Inventory SHA-256: `cf01fcc9993de9cee88d8ec6dc17dd8111eb37375f546d08850ac957fb372cad`.
+Direct `XRL` imports: 1417 files, 0 over the line limit.
+Linux dotnet 9.0.306 against the licensed install passes the full source suite at 13,735 cases and
+the portable kernel at 5,109 cases, zero skips in both, and passes the doc, structure and
+tooling audits. No native in-game run and no human semantic review bind this digest.
 
 ## Unreleased master-growth resume correction, case28d.5
 
@@ -51,16 +353,26 @@ completion once and unchanged repeat. Strict raw log/15journalrows and receipt-o
 stop pass. Comparison83480 matches all3181 production/Harness C# bytes. This is actual
 engine-turn coverage in a synthetic fixture, not ordinary play or save/load acceptance.
 
-Current census:3049 staged C# files;431,893 physical lines;3080 files in the generated
-cold-install inventory. Canonical compilation covers3049 sources, baseline and compatibility symbols.
-Inventory SHA-256: `a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
+Retained camp-guide census:3052 staged C# files;432,178 physical lines;3083 files in the generated
+cold-install inventory. Staged compilation covered3052 sources, baseline and compatibility symbols,
+run here by Roslyn 9.0.306 on Linux against the licensed Managed references with warnings as errors
+(baseline compiled 3048 of them; the optional-mod bridge is compatibility-only). The dev-harness
+modes and the Windows gate did not run for that census.
+Inventory SHA-256: `dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`.
+Direct `XRL` imports: 1417 files, 0 over the line limit.
+
+Retained master-growth census:3049 staged C# files;431,893 physical lines;3080 files in the
+generated cold-install inventory. Canonical compilation covers3049 sources, baseline and
+compatibility symbols. Inventory SHA-256:
+`a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`. Every native, Windows-suite,
+four-mode compile and review result in this section binds that digest, not the current one.
 
 Focused86313 passes38 engine-free cases, including modern/historical open-arrival clock
 cuts through retirement, candidate continuation, canonical round-trips, exact child ownership,
 recorded debt, pause overlap and arithmetic refusal. Candidate fixtures use supported
 semantic version1; no production guard was relaxed to pass them. Four source-wiring cases
-support the75th persona. Structural release gate passes exact3049-source digest
-`a3a9c8dd8ea36962475266e7005ccc6fcdd352b3bfd3d9c4675beb47b51be2b9`.
+support the75th persona. Structural release gate passes exact3052-source digest
+`dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`.
 Independent source/native/test review found no Required issue. Full licensed Windows1814
 passed13,715 main and5,093 Portable cases,zero skips; normal rebuilds had zero warnings/errors.
 Canonical53744 passed all four C#7.3 modes: ordinary3045/3049,developer3177/3181,132 Harness
@@ -279,6 +591,31 @@ evidence only; ordinary play and save/load remain untested. Earlier native failu
 retained. The receipt keeps its original Harness hash; later blank-line cleanup is not a
 second native run. [Native evidence](/mnt/c/taf-raid-contact-fixed.Dcjzs3/README.md).
 Public0.3.1 remains the separately published checkpoint below; this correction is unreleased.
+
+## Public 0.3.2
+
+Staging tag `staging-v0.3.2-1` at `6e67fb346f9553bcf4dcfa4d148ec6a9164f1541` triggered run
+`34327428688` attempt `1` against private item 3796495680 attempt `0003`. Submission reports
+`SubmittedUnverified` at 09:44 UTC; a verify job then polled and reported
+`SubscribedInstallationVerified`. The workflow's own `finalize` job did not run on this
+attempt: its `if: success()` guard evaluated false because the public-confirm job is skipped
+on a staging tag, so finalization was completed by hand from the retained run directory
+(runbook step 15), not by the pipeline. That guard is now fixed: PR #92 merged as commit
+`323a288`, an ancestor of this branch.
+
+| Binding | SHA-256 |
+| --- | --- |
+| Upload plan (`PLAN_SHA`) | `0876fc06d1e7ef6d756717ab693e95af8cad985d8882e9b98a8d89e9781844e2` |
+| Private package receipt (`RECEIPT_SHA`) | `afecafb9493e20bab3bf8859820bcbfd1e465f8233958d7551fcf26b029725da` |
+| Installed canonical inventory | `408e3a0244c16ff88f85c3060c1e15fa5bf9d6cc7e65bac82c327b95cff5f0ef` |
+| Hand-run finalization | `86339d9380b10c5dcbf9a82ddecf9bae70f75e930717c85a69bebd7baf12652c` |
+
+This proves one client's private-staging subscribed bytes, not all subscribers or gameplay
+acceptance. `freshTransferVerified=false` and `releaseReady=false` remain explicit. **The
+public v0.3.2 Workshop upload has NOT happened yet.** This section only records the private
+staging candidate and its by-hand finalization; the receipt above is bound at commit
+`d00a532fcc71c98992867c23f0b381bd6ea30696` (`candidateCommit`), and this section gains its
+public submission, verification and finalization IDs only after the public `v0.3.2` tag runs.
 
 ## Public 0.3.1 — published and finalized
 

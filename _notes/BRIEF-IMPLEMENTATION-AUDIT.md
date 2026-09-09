@@ -1,6 +1,109 @@
 # Brief-to-implementation audit
 
-## Current master-growth resume census — 2026-09-07
+## Current stockpile deposit custody census — 2026-09-09
+
+**3068** production C# files, 435,538 physical lines, 1429 direct-XRL, zero cap failures;
+3099 generated cold-install files. Exact digest
+`3cfe76c38704930c03d2923e400d05155cbcbf96b9ad8b31ad90304cc8fea6c0`.
+Three added sources (the engine-free deposit law, its seam, and the GameObject host that
+implements it) and four modified, over the shelter-ingress census retained below. Structure, doc
+freshness and the Tools suite (627 tests) pass, and the engine-free suites pass 14,061 main /
+5,215 Portable, zero skips, with the staged baseline (3064 sources) and compatibility (3068
+sources) sets compiling clean under Roslyn 9.0.306 on Linux. The two new deposit regressions were
+confirmed to fail against the pre-fix behaviour before the fix was kept. No dev-harness mode,
+Windows gate, native run, ordinary-play acceptance or exact-inventory human semantic review binds
+this digest.
+
+## Retained Kingdom Quickstart shelter-ingress census — 2026-09-09
+
+**3062** production C# files, 434,436 physical lines, 1425 direct-XRL, zero cap failures;
+3093 generated cold-install files. Exact digest
+`ff13330463a990edbef95c2ae35e0e552691f2f8e0f86a525dc873bd61f7c202`.
+One added source (the quickstart rules' shelter partial) and one modified, over the city-sight
+census retained below. Structure, doc freshness and the Tools suite (627 tests) pass, and on the
+merged tree the engine-free suites pass 13,987 main / 5,199 Portable, zero skips, with the
+staged baseline (3058 sources) and compatibility (3062 sources) sets compiling clean under Roslyn
+9.0.306 on Linux. On the delta's own pre-merge bytes all four `Tools/gate.sh` modes compiled clean
+(baseline 3050, compatibility 3054, dev-harness 3204/3208) with the installed-Hearthpyre
+source/ABI step, the engine-free suites passed13,905 main/5,193 Portable,zero skips, and the
+six-profile native Quickstart boot matrix at seed `#43101` passed, with `quickstart-save marsh yes`
+and its cold load. No Windows gate, ordinary-play acceptance or exact-inventory human semantic
+review binds the merged digest, and the dev-harness modes did not re-run for it.
+
+## Retained city-sight over stockpile-capacity census — 2026-09-09
+
+**3061** production C# files, 434,296 physical lines, 1425 direct-XRL, zero cap failures;
+3092 generated cold-install files. Exact digest
+`7147169b7ccb8d2142d9791bd5faec8405eb305e33bca7a9b9feb9c3948c5a1e`.
+Two added sources (the render-scope finalizer and the render seam) and two modified over the
+merged stockpile census. Merging city sight's end-of-turn restore backstop with the basin-capacity
+zone-activation guard put `Core/KingdomSystem.z20.Events.cs` at 305 physical lines, over the strict
+cap; the merge reflowed those two comment blocks wider, keeping every word and engine citation and
+moving no code, and the shard is back at 299. Structure, doc freshness, architecture and the Tools
+suite pass. Engine-free suites pass 13,986 main / 5,199 Portable, zero
+skips on Linux .NET9.0.306, and Roslyn 9.0.306 on Linux compiled the staged
+baseline (3057 sources) and compatibility (3061 sources) sets clean. No native run, dev-harness
+mode, installed-ABI source step, Windows gate or exact-inventory human semantic review binds it.
+
+## Retained stockpile-capacity over first-basin water-store census — 2026-09-09
+
+**3059** production C# files, 433,954 physical lines, 1423 direct-XRL, zero cap failures;
+3090 generated cold-install files. Exact digest
+`5db8f7381ade172c6b0b34925a111f4d4c28f32da77cf0be266914aa53e77674`.
+A dedicated stockpile now states how many material units it holds; counting stays whole and only
+intake refuses. The delivery proves the destination and its room after every engine callback, the
+stamping of a stack count included, and proves the bundle standing in that exact store before it
+counts a unit. Three added production sources, three modified, one regenerated roster, over the
+first-basin and tent-row censuses retained below. Roslyn 9.0.306 on Linux compiled the staged
+baseline (3055 sources) and compatibility (3059 sources) sets clean, warnings as errors, and both
+engine-free suites run green there (13,980 main / 5,193 Portable, zero skips). No native run,
+dev-harness mode or exact-inventory human semantic review binds it.
+## Retained first-basin water-store over Quickstart tent-row census — 2026-09-09
+
+**3056** production C# files,433,308 physical lines,1421 direct-XRL,zero cap failures;
+3087 generated cold-install files. Exact digest
+`5160ed08e19734f315ebe8c7fe2ab4e5e7e1bb6bc632ae97a0c511d1f40cd325`.
+The founding heart's first basin is the settlement's first water store, with a per-rung capacity
+raised and never lowered, and every water caller that can refund after its own callbacks now holds
+its vessels across them. No receipt phase, wire, option, grant or verifier predicate changes.
+Roslyn 9.0.306 on Linux compiled the staged and dev-harness baseline and compatibility sets clean.
+No native run, installed-ABI source step, Windows gate or exact-inventory human semantic review
+binds it.
+
+## Retained Kingdom Quickstart tent-row census — 2026-09-08
+
+**3053** production C# files,432,564 physical lines,1418 direct-XRL,zero cap failures;
+3084 generated cold-install files. Exact digest
+`f5571291a26a1bd1db608f0d1c3f79ed296569bddce4979208cb564f8c22df63`.
+One added source (the bootstrap's shelter partial) and four modified. Structure, doc freshness,
+architecture and the Tools suite passed. Engine-free suites passed13,831 main/5,120 Portable,zero
+skips on Linux .NET9.0.306, and Roslyn 9.0.306 on Linux compiled the staged baseline (3049
+sources) and compatibility (3053 sources) sets clean. That checkpoint is not restated for the
+merged digest above.
+
+## Retained camp-guide topic census — 2026-09-08
+
+**3053** production C# files,432,178 physical lines,1417 direct-XRL,zero cap failures;
+3083 generated cold-install files. Exact digest
+`dcab3931d57df58aeaf3f0dee894acdec54d261a4e5f85d94cb369d8a1c73e96`.
+One engine-free words file plus a five-topic root-option loop on the optional Quickstart guide.
+Engine-free suites pass13731 main/5109 Portable,zero skips on Linux .NET9.0.306, and Roslyn
+9.0.306 on Linux compiled the staged baseline (3048 sources) and compatibility (3052 sources)
+sets clean. No native run, dev-harness mode or exact-inventory human semantic review binds it.
+
+## Retained claimed-ground light census — 2026-09-08
+
+**3051** production C# files,432,024 physical lines,1417 direct-XRL,zero cap failures;
+3082 generated cold-install files. Exact digest
+`fca337fa0b3642f0e4e485df3a015cbbd66b2a9c5d94cd8fd5d204c3e3f86f54`.
+Two added production files (a mod-owned `IZonePart` and its projection), one modified event
+shard, one removal-registry line, one option row and documentation. No wire or API change.
+Engine-free suites and the repository tooling suites pass; Roslyn 9.0.306 on Linux compiled the
+staged baseline (3047 sources) and staged compatibility (3051 sources) sets clean, warnings as
+errors. No dev-harness mode, no Windows gate and no native run happened for this delta, and the
+exact-inventory semantic review is open against the new digest.
+
+## Retained master-growth resume census — 2026-09-07
 
 **3049** production C# files,431,893 physical lines,1415 direct-XRL,zero cap failures;
 3080 generated cold-install files. Exact digest

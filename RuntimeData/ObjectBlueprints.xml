@@ -250,6 +250,7 @@
   </object>
   <object Name="r_KingdomFixtureShelfTimber" Inherits="r_KingdomCivicBookshelf">
     <tag Name="InventoryPopulationTable" Value="*delete" />
+    <tag Name="r_KingdomStockpileCapacity" Value="48" />
     <part Name="Render" Tile="Items/sw_bookshelf1.bmp" />
   </object>
   <object Name="r_KingdomFixtureBasketEmpty" Inherits="Woven Basket">
@@ -298,20 +299,24 @@
        hydraulic pressure, generated charge, loot population, or hazard enters an authored map. -->
   <object Name="r_KingdomPurposeInputStore" Inherits="r_KingdomFixtureShelfMetal">
     <part Name="Render" DisplayName="purpose input rack" ColorString="&amp;c" DetailColor="W" />
+    <tag Name="r_KingdomStockpileCapacity" Value="96" />
     <intproperty Name="KingdomStockpile" Value="1" />
   </object>
   <object Name="r_KingdomPurposeOutputStore" Inherits="r_KingdomFixtureShelfMetal">
     <part Name="Render" DisplayName="purpose output rack" ColorString="&amp;C" DetailColor="Y" />
+    <tag Name="r_KingdomStockpileCapacity" Value="96" />
     <intproperty Name="KingdomStockpile" Value="1" />
   </object>
   <object Name="r_KingdomPurposeInputBasket" Inherits="r_KingdomFixtureBasketEmpty">
     <part Name="Render" DisplayName="purpose input basket" ColorString="&amp;y" DetailColor="W" />
     <part Name="Physics" Takeable="false" />
+    <tag Name="r_KingdomStockpileCapacity" Value="96" />
     <intproperty Name="KingdomStockpile" Value="1" />
   </object>
   <object Name="r_KingdomPurposeOutputBasket" Inherits="r_KingdomFixtureBasketEmpty">
     <part Name="Render" DisplayName="purpose output basket" ColorString="&amp;Y" DetailColor="G" />
     <part Name="Physics" Takeable="false" />
+    <tag Name="r_KingdomStockpileCapacity" Value="96" />
     <intproperty Name="KingdomStockpile" Value="1" />
   </object>
   <object Name="r_KingdomPurposeBoreHead" Inherits="Furniture">
@@ -626,6 +631,7 @@
   </object>
   <object Name="r_KingdomFixtureShelfMetal" Inherits="BaseBookshelf">
     <tag Name="InventoryPopulationTable" Value="*delete" />
+    <tag Name="r_KingdomStockpileCapacity" Value="48" />
     <part Name="Render" DisplayName="worked-metal record rack" Tile="Items/sw_bookshelf1.bmp" ColorString="&amp;c" TileColor="&amp;c" DetailColor="C" />
     <part Name="Description" Short="Shallow metal shelves hold sealed rolls and procedure books where damp hands cannot reach them." />
     <part Name="Physics" Organic="false" Weight="160" Takeable="false" />
@@ -633,6 +639,7 @@
   </object>
   <object Name="r_KingdomFixtureLockerScrap" Inherits="RustLocker">
     <tag Name="InventoryPopulationTable" Value="*delete" />
+    <tag Name="r_KingdomStockpileCapacity" Value="64" />
     <part Name="Inventory" />
     <part Name="Render" DisplayName="recovered-parts locker" ColorString="&amp;r" DetailColor="y" />
     <part Name="Description" Short="A rust-chewed locker bolted beneath the bench. Its labelled drawers are real storage, but construction leaves them empty." />
@@ -642,6 +649,7 @@
   <object Name="r_KingdomFixtureServiceBankScrap" Inherits="Multicabinet">
     <removebuilder Name="RandomTile" />
     <tag Name="InventoryPopulationTable" Value="*delete" />
+    <tag Name="r_KingdomStockpileCapacity" Value="64" />
     <part Name="Inventory" />
     <part Name="Render" DisplayName="recovered mirror service bank" Tile="Items/sw_multi_cabinet_1.bmp" ColorString="&amp;r" TileColor="&amp;y" DetailColor="c" Occluding="false" />
     <part Name="Description" Short="Recovered drawers and open relay housings line the gate route. The cabinets are usable storage, empty when commissioned, and low enough to pass." />
@@ -923,6 +931,7 @@
     <part Name="Description" Short="A communal chest with a slatted lid, cool air moving through the gaps. What is put in here feeds the settlement, not just whoever finds it first." />
     <part Name="Physics" Takeable="false" Organic="true" />
     <tag Name="r_KingdomLarderCapacity" Value="64" />
+    <tag Name="r_KingdomStockpileCapacity" Value="96" />
     <stat Name="Hitpoints" Value="80" />
   </object>
   <!-- Declares no Tile of our own: the r_KingdomPlot part (Growth/KingdomPlot.cs) reuses the
@@ -1254,6 +1263,7 @@
     <part Name="Description" Short="Raised on staddle stones with a lid that keeps the vermin honest. What is in here is the difference between a bad year and a bad story." />
     <part Name="Physics" Takeable="false" Organic="true" Weight="3000" />
     <tag Name="r_KingdomLarderCapacity" Value="288" />
+    <tag Name="r_KingdomStockpileCapacity" Value="192" />
     <stat Name="Hitpoints" Value="260" />
   </object>
   <!-- The food lane's large and grand rungs. Both inherit r_KingdomField for its already-wired
@@ -1684,6 +1694,7 @@
     <part Name="Physics" Takeable="false" Weight="50000" Organic="true" />
     <part Name="r_KingdomPurposeWork" />
     <tag Name="r_KingdomLarderCapacity" Value="384" />
+    <tag Name="r_KingdomStockpileCapacity" Value="384" />
     <stat Name="Hitpoints" Value="900" />
   </object>
 

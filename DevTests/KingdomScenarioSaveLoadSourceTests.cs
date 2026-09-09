@@ -139,7 +139,7 @@ namespace ThousandAndFirst.Tests
 				"if (Value == null) { Text.Append(\"-1:\"); return; }",
 				"Wire.Length != Header.Length + 131", "lines.Length == 4", "lines[3] == \"\"",
 				"PrimarySHA protects this saved baseline; the external snapshot does not independently",
-				"record.ProfileSchema == KingdomPolityProfileRules.CurrentLegacyProfileSchema");
+				"KingdomPolityProfileRules.IsCommittedLegacyProfileSchema(record.ProfileSchema)");
 			Ordered(source, "internal static void Capture(", "!KingdomNativeRegressionContext.HasAnyState(",
 				"string wire = CurrentWire(owner)", "owner.Game.SetStringGameState(StateKey, wire)",
 				"VerifyExact(System, Zone)");
@@ -156,7 +156,7 @@ namespace ThousandAndFirst.Tests
 				"private static string CurrentWire(");
 			Ordered(canonical, "Owner.Check()", "KingdomSealRecord record = new KingdomSealRecord()",
 				"Require(KingdomSealProfileCaptureRules.TryCapture(Owner.Ledger, Owner.Realm, record, out Revision, out failure)",
-				"Require(record.ProfileSchema == KingdomPolityProfileRules.CurrentLegacyProfileSchema",
+				"Require(KingdomPolityProfileRules.IsCommittedLegacyProfileSchema(record.ProfileSchema)",
 				"Owner.Check()", "return record");
 			string current = Between(source, "private static string CurrentWire(", "private static string HeartDigest(");
 			Ordered(current, "Owner.Check()", "KingdomSealRecord record = CanonicalProfile(Owner, out revision)",
@@ -387,7 +387,8 @@ namespace ThousandAndFirst.Tests
 				"Armed = true", "XRLGame.LoadGame(");
 			Contains(source, "Math.Max(KingdomScenarioSaveSnapshotCodec.MaxWireChars, "
 				+ "Math.Max(KingdomSubsidenceRungSaveSnapshotCodec.MaxWireChars, "
-				+ "KingdomQuickstartSaveSnapshotCodec.MaxWireChars))",
+				+ "Math.Max(KingdomQuickstartSaveSnapshotCodec.MaxWireChars, "
+				+ "KingdomUpgradeSnapshotCodec.MaxWireChars)))",
 				"string route = RungSnapshot == null ? KingdomScenarioLoadWitness.VerifyRecovered(loaded, Snapshot)",
 				": KingdomSubsidenceRungLoadWitness.VerifyRecovered(loaded, RungSnapshot)");
 			Ordered(source, "finally", "if (RungSnapshot != null) KingdomSubsidenceRungReleaseCut.Disarm()",

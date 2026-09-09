@@ -1,0 +1,11 @@
+# Only prepare-upgrade-profile.py downgrade supplies the exact copied slot request.
+# Kept outside the ordinary persona matrix: no world may be created by this recipe.
+# The sealed script is claimed at the actual main menu, never by in-world AutoRunner.
+# Dedicated verify-upgrade-profile.py report/log proof replaces generic persona completion.
+DESCRIPTION=unattended actual old parser rejection and valid-sibling fallback without creating a game
+REQUEST=arch-gallery-slice;facing=north
+SCRIPT=upgrade-downgrade-check
+VERBS=upgrade-downgrade-check
+EXPECT=upgrade-downgrade-check:OK,COMPLETE
+SET=upgrade,native-regression
+TIMEOUT=600
