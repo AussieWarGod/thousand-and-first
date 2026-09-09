@@ -4,7 +4,7 @@
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
 **Next public version:** none scheduled beyond 0.3.2
 **Working candidate manifest:** 0.3.2 public Alpha playtest; private staging verified,
-public Workshop upload not yet run — see [Public 0.3.2](#public-032) below
+public Workshop upload complete and finalized — see [Public 0.3.2](#public-032) below
 
 The public Alpha is [Steam Workshop item
 3794797472](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472). Rows marked retained
@@ -93,9 +93,15 @@ hand from the retained run directory against private item 3796495680 attempt `00
 is fixed in #92 (`323a288`), an ancestor of this branch, so a future staging or public tag no
 longer needs the by-hand fallback for that failure mode.
 
+The public `v0.3.2` release has since run and completed fully automatically end to end,
+including `-Finalize`: run `34341601300` attempt `1` went gate, package, plan, `check`,
+`-Submit`, the polled `-Verify` and `-Finalize` without any by-hand fallback step — the #92
+guard fix held. See "Public 0.3.2" below for the run's IDs and bindings.
+
 The evidence limits from the historical section still hold exactly as stated: this is one
-subscribed client, `freshTransferVerified=false`, `releaseReady=false` remain explicit, and
-the public v0.3.2 Workshop submission itself has not run yet — see "Public 0.3.2" below.
+subscribed client verified, `freshTransferVerified=false` and `releaseReady=false` remain
+explicit, and manual subscribe-and-smoke-test plus the Discord/community announcement remain
+outstanding (operator follow-up, not pipeline scope).
 
 ## Unreleased Kingdom Quickstart shelter ingress
 
@@ -613,11 +619,48 @@ on a staging tag, so finalization was completed by hand from the retained run di
 | Hand-run finalization | `86339d9380b10c5dcbf9a82ddecf9bae70f75e930717c85a69bebd7baf12652c` |
 
 This proves one client's private-staging subscribed bytes, not all subscribers or gameplay
-acceptance. `freshTransferVerified=false` and `releaseReady=false` remain explicit. **The
-public v0.3.2 Workshop upload has NOT happened yet.** This section only records the private
-staging candidate and its by-hand finalization; the receipt above is bound at commit
-`d00a532fcc71c98992867c23f0b381bd6ea30696` (`candidateCommit`), and this section gains its
-public submission, verification and finalization IDs only after the public `v0.3.2` tag runs.
+acceptance. `freshTransferVerified=false` and `releaseReady=false` remain explicit. The
+receipt above is bound at commit `d00a532fcc71c98992867c23f0b381bd6ea30696` (`candidateCommit`).
+The public `v0.3.2` publication that followed is recorded below.
+
+### Public 0.3.2 — published and finalized
+
+Tag `v0.3.2` at `8c80a0bf2825b3e2ba4f485b51f707841890a83f` (tag object `79381bc4…`, the merge of
+release PR #94) triggered public run `34341601300` attempt `1`, which ran gate, the hosted
+release checks, both-OS test lanes, `public-confirm` and `publish` fully automatically end to
+end, including `-Finalize` — no by-hand fallback step was needed this time. Public item
+3794797472 retained attempt `0002`; package 3099 files.
+
+Timeline (UTC, 2026-09-09): `check` 11:56:20Z reports `checked_not_submitted`; `-Submit`
+12:16:26Z reports `SubmittedUnverified`, `metadataMatches=true`; `-Verify` 12:26:42Z reports
+`SubscribedInstallationVerified`; `-Finalize` 12:36:57Z exits `0` with
+`status=SubscribedInstallationVerified`, `attemptFinalized=true` — automatic, not a by-hand
+finalization.
+
+| Binding | SHA-256 |
+| --- | --- |
+| Upload plan (`PLAN_SHA`) | `6e52f26068fca76c1f617587d91846bccaa2342972b12d476e7428f6fa08d4bd` |
+| Public package receipt (`RECEIPT_SHA`) | `63deb452055ea211dd0a9381b0a7003b9e7c56f054affd9df7c6c4267a158673` |
+| Installed canonical inventory (3099 rows) | `55f35fc53f28eed394794edf86a49429815d359346396090164480e1e344c9db` |
+| Installation observation | `feb3c651432576ed15f8b888bef2ea86291804a2f4ae2b7dec027250a4809156` |
+| Attempt `0002` finalization | `b9783beb8ad45a2b3aa601e4aa6595d549cff772cc574416263825a46a3aacb1` |
+
+This proves one subscribed client's installed public bytes, not all subscribers or gameplay
+acceptance. `freshTransferVerified=false` and `releaseReady=false` remain explicit. Manual
+subscribe-and-play smoke testing and the community/Discord announcement are the remaining
+outstanding operator steps; the automated pipeline's job ends at finalization.
+
+`docs/PRIVATE_PACKAGE_RECEIPT.sha256` intentionally still holds the private package's per-file
+receipt (schema 2, `privatePackageReceiptSha256` — SHA-256 `afecafb9…725da`), unaffected by this
+public release; neither the private nor the public receipt is bundled in the mod itself. Both
+Workshop item histories are now complete with no unfinalized attempt: public item 3794797472
+attempts `0001`-`0002`, private item 3796495680 attempts `0001`-`0003`.
+
+A signed-out HTTPS fetch of the public listing confirmed the Alpha title, description and all
+Workshop tags render with no sign-in wall (the description does not itself carry a version
+string, matching the 0.3.1 precedent). Retained `public-page.html` SHA-256
+`8fb54228b37023d89a4e24da09201e4b5e29e7a28211909fb218e9133a339d37`. This is HTML inspection,
+not a pixel capture; the file itself is not committed.
 
 ## Public 0.3.1 — published and finalized
 

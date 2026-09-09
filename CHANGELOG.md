@@ -688,6 +688,14 @@ below it.
   quarantine. These are synthetic component checks, not ordinary raid or save/load acceptance.
   Full licensed Windows suites pass; see `docs/STATUS.md` for exact scope and open gates.
 
+### Published
+
+Published 2026-09-09 to Steam Workshop item
+[3794797472](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472) via the
+automated tag-triggered release pipeline, run `34341601300` attempt `1`, public attempt `0002`.
+Every stage including `-Finalize` ran unattended end to end. One subscribed client installation
+was verified; exact bindings and remaining evidence limits are in `docs/STATUS.md`.
+
 ## [0.3.1] — 2026-09-07 (Alpha)
 
 Automated evidence below retains its stated scope and does not establish ordinary play or
