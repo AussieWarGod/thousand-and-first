@@ -2,8 +2,9 @@
 
 **Snapshot:** 2026-09-09
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
-**Next public version (in prep, not yet published):** 0.3.2 public Alpha playtest, in release-prep on `dev`
-**Published manifest:** 0.3.1; one subscribed client verified, broader Beta work remains open
+**Next public version:** none scheduled beyond 0.3.2
+**Published manifest:** 0.3.2 public Alpha playtest; private staging verified, public
+tag/upload pending — see [Public 0.3.2](#public-032) below
 
 The public Alpha is [Steam Workshop item
 3794797472](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472). Rows marked retained
@@ -567,6 +568,30 @@ evidence only; ordinary play and save/load remain untested. Earlier native failu
 retained. The receipt keeps its original Harness hash; later blank-line cleanup is not a
 second native run. [Native evidence](/mnt/c/taf-raid-contact-fixed.Dcjzs3/README.md).
 Public0.3.1 remains the separately published checkpoint below; this correction is unreleased.
+
+## Public 0.3.2
+
+Staging tag `staging-v0.3.2-1` at `6e67fb346f9553bcf4dcfa4d148ec6a9164f1541` triggered run
+`34327428688` attempt `1` against private item3796495680 attempt `0003`. Submission reports
+`SubmittedUnverified` at09:44 UTC; a verify job then polled and reported
+`SubscribedInstallationVerified`. The workflow's own `finalize` job did not run: its `if:
+success()` guard evaluates false when the public-confirm job is skipped on a staging tag, so
+finalization was completed by hand from the retained run directory (runbook step 15), not by
+the pipeline. A fix PR for that guard is pending.
+
+| Binding | SHA-256 |
+| --- | --- |
+| Upload plan (`PLAN_SHA`) | `0876fc06d1e7ef6d756717ab693e95af8cad985d8882e9b98a8d89e9781844e2` |
+| Private package receipt (`RECEIPT_SHA`) | `afecafb9493e20bab3bf8859820bcbfd1e465f8233958d7551fcf26b029725da` |
+| Installed canonical inventory | `408e3a0244c16ff88f85c3060c1e15fa5bf9d6cc7e65bac82c327b95cff5f0ef` |
+| Hand-run finalization | `86339d9380b10c5dcbf9a82ddecf9bae70f75e930717c85a69bebd7baf12652c` |
+
+This proves one client's private-staging subscribed bytes, not all subscribers or gameplay
+acceptance. `freshTransferVerified=false` and `releaseReady=false` remain explicit. **The
+public v0.3.2 Workshop upload has NOT happened yet.** This section only records the private
+staging candidate and its by-hand finalization; the receipt above is bound at commit
+`d00a532fcc71c98992867c23f0b381bd6ea30696` (`candidateCommit`), and this section gains its
+public submission, verification and finalization IDs only after the public `v0.3.2` tag runs.
 
 ## Public 0.3.1 — published and finalized
 

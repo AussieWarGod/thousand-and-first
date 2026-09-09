@@ -5,8 +5,7 @@ after you leave. Water, food, labour, materials, roads, trade, threats, civic me
 works remain part of the same world instead of becoming a detached management screen.
 
 **Status: 0.3.2 public Alpha playtest.**
-0.3.2 is a release candidate in preparation on `dev` and is not yet published; 0.3.1 remains
-the last tagged release published with one subscribed installation verified.
+0.3.2 is the current public Alpha, released 2026-09-09.
 Alpha playtest. Back up saves before updating.
 Current evidence and remaining test limits live in
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/STATUS.md);
