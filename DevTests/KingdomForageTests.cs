@@ -129,7 +129,8 @@ namespace ThousandAndFirst.Tests
 		// stockpile's own capacity counts a reserved unit as occupying its space
 		// (DevTests/KingdomStockpileCapacityTests.cs, ruling 5). ForageCeilingHeld re-counts the
 		// dedicated containers directly with the callback-free RawObservation census
-		// (DepositMaterialHeldNow / RawCensusCountOf) instead of trusting the lease-filtered
+		// (StandsIn / RawCensusCountOf), saturating before either nested sum can overflow,
+		// instead of trusting the lease-filtered
 		// Tally. Each assertion below is its own test so a regression back to the
 		// available-only reading fails loudly and separately at every call site.
 
@@ -138,10 +139,31 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = Read("Growth/KingdomMaterials.16.ForageWork.cs");
 			Assert.That(source, Does.Contain("private static int ForageCeilingHeld(MaterialStock Stock)"));
-			Assert.That(source, Does.Contain("DepositMaterialHeldNow(Stock.Stockpiles[i], blueprint)"));
+			Assert.That(source, Does.Contain("StandsIn(item, container, null)"));
+			Assert.That(source, Does.Contain("KingdomMaterialRules.AddForageHeld(held, RawCensusCountOf(item))"));
+			Assert.That(source, Does.Not.Contain("DepositMaterialHeldNow(Stock.Stockpiles[i], blueprint)"));
 			Assert.That(source, Does.Contain("BlueprintFor(KingdomMaterial.Brush)"));
 			Assert.That(source, Does.Not.Contain("held.Count"));
 			Assert.That(source, Does.Not.Contain(".Objects.Count"));
+		}
+
+		[TestCase(0, 1, 1)]
+		[TestCase(5, 7, 12)]
+		[TestCase(12, 20, 32)]
+		[TestCase(int.MaxValue, int.MaxValue, int.MaxValue)]
+		[TestCase(int.MaxValue - 1, 2, int.MaxValue)]
+		[TestCase(-1, 1, int.MaxValue)]
+		[TestCase(1, -1, int.MaxValue)]
+		public void PhysicalForageCensusCannotWrap(int held, int count, int expected)
+			=> Assert.That(KingdomMaterialRules.AddForageHeld(held, count), Is.EqualTo(expected));
+
+		[Test]
+		public void TwoHugeStacksNeverReopenTheForageCeiling()
+		{
+			int held = KingdomMaterialRules.AddForageHeld(0, int.MaxValue);
+			held = KingdomMaterialRules.AddForageHeld(held, int.MaxValue);
+			Assert.That(held, Is.GreaterThanOrEqualTo(KingdomMaterialRules.ForageCeilingUnits));
+			Assert.That(KingdomMaterialRules.ForageUnits(3, 90, held), Is.EqualTo(0));
 		}
 
 		[Test]

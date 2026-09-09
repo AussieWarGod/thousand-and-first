@@ -10,6 +10,9 @@ below it.
 
 ## Unreleased — Brush forage
 
+- Huge retained brush stacks cannot wrap the forage census below its ceiling. Raw custody
+  counting saturates before addition overflows, without changing delivery-credit accounting.
+
 - Camps cut wild scrub for brush after higher-priority orders. Up to three free hands cut
   one bundle per day within twelve paces of the rite, stopping at twelve stored bundles even
   after a long absence — counting brush already claimed by a routed delivery toward that
@@ -124,10 +127,10 @@ below it.
   exactly what it read before.
 
 > **Current unreleased census — exact structural gate passed.** Current 3071-file census is line-cap green:
-> 435,861 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> 435,876 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1430 files, 0 of them over the line limit. Inventory SHA-256:
-> `6b61edc029d78cc010ed151f68fe8512770fe3d84db23453c488fc649bfc78cf` (three new production files
+> `797cadfbd6c58fadd6747f80b627a20b8a910d2e2a54af8f10dbbcc71cfceb4e` (three new production files
 > from the brush-forage duty, T-forage-1).
 > The generated cold-install inventory contains 3102 files; no new subscription claim.
 > This digest is the stockpile deposit custody fix merged over `dev` at `862f14d` (the unattended

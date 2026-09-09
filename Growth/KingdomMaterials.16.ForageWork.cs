@@ -79,7 +79,7 @@ namespace ThousandAndFirst
 		/// would let forage re-cut brush a delivery had already claimed, growing the pile past
 		/// twelve the moment that delivery lands. So this walks the same dedicated containers
 		/// <see cref="Stock"/> already found and re-counts the material blueprint directly with
-		/// <see cref="DepositMaterialHeldNow"/>, which reads <c>item.Blueprint</c> and
+		/// raw custody and blueprint reads, plus
 		/// <see cref="RawCensusCountOf"/> and never asks an object anything that can answer back
 		/// &mdash; no ordinary <c>Count</c>, no dispatch, no lease filter.
 		/// </summary>
@@ -93,7 +93,14 @@ namespace ThousandAndFirst
 			int held = 0;
 			for (int i = 0; i < Stock.Stockpiles.Count; i++)
 			{
-				held += DepositMaterialHeldNow(Stock.Stockpiles[i], blueprint);
+				GameObject container = Stock.Stockpiles[i];
+				if (!GameObject.Validate(container) || container.Inventory == null || !IsStockpile(container)) continue;
+				foreach (GameObject item in container.Inventory.Objects)
+				{
+					if (!GameObject.Validate(item) || item.Blueprint != blueprint || !StandsIn(item, container, null)) continue;
+					held = KingdomMaterialRules.AddForageHeld(held, RawCensusCountOf(item));
+					if (held == int.MaxValue) return held;
+				}
 			}
 			return held;
 		}

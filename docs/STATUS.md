@@ -124,12 +124,12 @@ The heart-ingress endpoints are unchanged and refusal is still fail-closed with 
 Current census after merging `dev` (the Kingdom Quickstart tent rows, the first-basin water store,
 the stockpile unit capacity, the render-only city sight, the shelter ingress and the stockpile
 deposit custody fix included) and the brush-forage duty (T-forage-1): 3071
-staged C# files; 435,861 physical lines; 3102 files in the generated
+staged C# files; 435,876 physical lines; 3102 files in the generated
 cold-install inventory. Staged compilation covers 3071 sources, baseline and compatibility symbols
 (the optional-mod bridge is compatibility-only), run here by Roslyn
 9.0.306 on Linux against the licensed Managed references with warnings as
 errors. Direct `XRL` imports: 1430 files, 0 over the line limit.
-Inventory SHA-256: `6b61edc029d78cc010ed151f68fe8512770fe3d84db23453c488fc649bfc78cf` (three new
+Inventory SHA-256: `797cadfbd6c58fadd6747f80b627a20b8a910d2e2a54af8f10dbbcc71cfceb4e` (three new
 production files: `Growth/KingdomMaterials.00.r_KingdomForage.cs`,
 `Growth/KingdomMaterialRules.Forage.cs`, `Growth/KingdomMaterials.16.ForageWork.cs`).
 Before the merge, all four `Tools/gate.sh` modes compiled clean on the shelter-ingress delta's own

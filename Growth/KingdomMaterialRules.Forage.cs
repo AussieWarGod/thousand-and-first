@@ -9,6 +9,14 @@ namespace ThousandAndFirst
 		public const int ForageRadius = 12;
 		public const int ForageCeilingUnits = 12;
 
+		/// <summary>Bounded physical census, not an exact delivery-credit measurement.
+		/// Malformed or unrepresentable totals fail closed against the forage ceiling.</summary>
+		internal static int AddForageHeld(int Held, int Count)
+		{
+			if (Held < 0 || Count < 0 || Count > int.MaxValue - Held) return int.MaxValue;
+			return Held + Count;
+		}
+
 		[Flags]
 		public enum ForageFacts
 		{
