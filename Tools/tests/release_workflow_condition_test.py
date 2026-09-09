@@ -6,20 +6,35 @@ On the first staging run (34327428688) `finalize` was skipped because its `if` u
 staging) did not itself succeed. Fixed in #92 by mirroring the explicit
 `!cancelled() && needs.<job>.result == 'success'` form used by `publish`/`verify`.
 
-The checker below parses each condition into its top-level `&&` conjuncts (respecting
-parentheses, so an OR-grouped alternative stays one conjunct) rather than substring-matching
-the whole condition string. For every job whose transitive `needs` include `public-confirm`
-it requires: an `if` is present at all; `!cancelled()` is one of the conjuncts; an explicit
-`needs.<dep>.result == 'success'` conjunct for every direct dependency that is itself on the
-`public-confirm` chain (`dep == public-confirm` or `public-confirm` in `dep`'s own transitive
-needs); and, for `finalize` specifically, an exact
-`needs.verify.outputs.status == 'SubscribedInstallationVerified'` conjunct. A condition that
-merely lacks the literal substring `success()` -- e.g. a bare `!cancelled()` with every
-dependency-success conjunct silently dropped -- must still fail.
+The checker parses each condition into its top-level `&&` conjuncts (respecting parentheses,
+so an OR-grouped alternative stays one conjunct) and requires each required conjunct to match
+EXACTLY (after whitespace normalization) -- never merely "contains" or "is a substring of".
+Substring/containment matching is not enough: `(needs.publish.result == 'success' || true)` or
+`needs.verify.outputs.status == 'SubscribedInstallationVerified' || true` both CONTAIN the
+required text while making the whole conjunct vacuously true, silently admitting a failed
+dependency. Exact-conjunct matching (with exactly one allowlisted alternative form, for the
+public-confirm staging-skip case) rejects both.
+
+For every job whose transitive `needs` include `public-confirm` the checker requires:
+  (a) an `if` is present at all;
+  (b) `!cancelled()` is a top-level conjunct, verbatim;
+  (c) an EXACT `needs.<dep>.result == 'success'` conjunct for every direct dependency that is
+      itself on the `public-confirm` chain -- with one allowlisted alternative form for
+      `dep == public-confirm` itself, matching release.yml's staging-skip OR-expression
+      exactly: `(needs.public-confirm.result == 'success' || (needs.release-checks.outputs.lane
+      == 'staging' && needs.public-confirm.result == 'skipped'))`;
+  (d) an EXACT `needs.release-checks.result == 'success'` / `needs.portable-tests.result ==
+      'success'` conjunct for the specific jobs release.yml already gates on those non-chain
+      dependencies (`publish` on both, `finalize` on release-checks) -- `verify` is
+      deliberately NOT required to re-check `release-checks` in its own `if`, matching the
+      real workflow, since by the time `verify` runs `publish` has already required it;
+  (e) `finalize` names an EXACT `needs.verify.outputs.status ==
+      'SubscribedInstallationVerified'` conjunct.
 """
 
 from __future__ import annotations
 
+import re
 import unittest
 from pathlib import Path
 from typing import Any
@@ -27,6 +42,26 @@ from typing import Any
 import yaml
 
 WORKFLOW_PATH = Path(__file__).resolve().parents[2] / ".github" / "workflows" / "release.yml"
+
+# Per-job pin of the non-chain dependency successes release.yml's real `if` conditions already
+# require, in addition to whatever the generic on-chain rule (see dependency_gate_violations)
+# demands. This is a pin, not a derivation from `needs:` -- `verify` also directly `needs:
+# release-checks` but its `if` deliberately never re-checks it, so "present in `needs:`" is not
+# a safe proxy for "must appear in `if`".
+REQUIRED_NON_CHAIN_SUCCESS_DEPS: dict[str, tuple[str, ...]] = {
+    "publish": ("release-checks", "portable-tests"),
+    "finalize": ("release-checks",),
+}
+
+_WHITESPACE_RUN = re.compile(r"\s+")
+
+
+def normalize_conjunct(conjunct: str) -> str:
+    """Collapse internal whitespace runs to a single space and strip. Exact-match comparisons
+    below run on this normalized form so incidental formatting differences don't matter, while
+    everything structural (parens, operators, an appended `|| true`) still must match exactly.
+    """
+    return _WHITESPACE_RUN.sub(" ", conjunct).strip()
 
 
 def load_workflow(path: Path) -> dict[str, Any]:
@@ -103,20 +138,33 @@ def top_level_conjuncts(condition: str) -> list[str]:
     return [c for c in conjuncts if c]
 
 
+def exact_success_conjunct(dep: str) -> str:
+    return normalize_conjunct(f"needs.{dep}.result == 'success'")
+
+
+def staging_skip_alternative(gate_job: str) -> str:
+    """The one allowlisted alternative to a plain success conjunct for `gate_job` itself,
+    matching release.yml's staging-skip OR-expression exactly (whitespace-normalized)."""
+    return normalize_conjunct(
+        f"(needs.{gate_job}.result == 'success' || "
+        f"(needs.release-checks.outputs.lane == 'staging' && needs.{gate_job}.result == 'skipped'))"
+    )
+
+
+EXACT_STATUS_CONJUNCT = normalize_conjunct(
+    "needs.verify.outputs.status == 'SubscribedInstallationVerified'"
+)
+
+
 def dependency_gate_violations(jobs: dict[str, Any], gate_job: str) -> list[str]:
     """Return one violation message per contract breach for every job gated on `gate_job`.
 
-    Checked per job `name` whose transitive `needs` include `gate_job`:
-      (a) an `if` condition is present at all -- a job silently added to the chain with no
-          `if` runs unconditionally once its needs are satisfied, which is exactly the
-          "ran when it shouldn't have" failure mode this contract exists to prevent.
-      (b) `!cancelled()` is one of the top-level conjuncts.
-      (c) for every job `dep` in `name`'s DIRECT `needs` that is itself on the `gate_job`
-          chain (`dep == gate_job`, or `gate_job` is in `dep`'s own transitive needs), some
-          conjunct contains the exact text `needs.<dep>.result == 'success'`. This is what a
-          bare `success()` -- or a `!cancelled()`-only condition -- silently drops.
-      (d) `finalize` specifically also names `needs.verify.outputs.status ==
-          'SubscribedInstallationVerified'` in some conjunct.
+    Every required conjunct below is matched EXACTLY (after whitespace normalization) against
+    the job's top-level conjuncts -- never by substring/containment -- so an OR-true injection
+    such as `(needs.publish.result == 'success' || true)` or
+    `needs.verify.outputs.status == 'SubscribedInstallationVerified' || true` is rejected: it
+    contains the required text but is not equal to it, and it vacuously satisfies the
+    dependency instead of actually gating on it.
     """
     violations: list[str] = []
     for name in jobs_gated_on(jobs, gate_job):
@@ -125,23 +173,31 @@ def dependency_gate_violations(jobs: dict[str, Any], gate_job: str) -> list[str]
         if not raw_condition:
             violations.append(f"job '{name}' has no `if` condition while gated on '{gate_job}'")
             continue
-        conjuncts = top_level_conjuncts(str(raw_condition))
-        if not any(c == "!cancelled()" for c in conjuncts):
+        conjuncts = [normalize_conjunct(c) for c in top_level_conjuncts(str(raw_condition))]
+
+        if "!cancelled()" not in conjuncts:
             violations.append(f"job '{name}' is missing a top-level !cancelled() conjunct")
-        for dep in _needs_list(job):
-            on_chain = dep == gate_job or gate_job in transitive_needs(jobs, dep)
-            if not on_chain:
-                continue
-            required = f"needs.{dep}.result == 'success'"
-            if not any(required in c for c in conjuncts):
+
+        required_deps: list[str] = [
+            dep for dep in _needs_list(job)
+            if dep == gate_job or gate_job in transitive_needs(jobs, dep)
+        ]
+        required_deps += [
+            dep for dep in REQUIRED_NON_CHAIN_SUCCESS_DEPS.get(name, ())
+            if dep in _needs_list(job) and dep not in required_deps
+        ]
+        for dep in required_deps:
+            allowed = {exact_success_conjunct(dep)}
+            if dep == gate_job:
+                allowed.add(staging_skip_alternative(gate_job))
+            if not any(c in allowed for c in conjuncts):
                 violations.append(
-                    f"job '{name}' is missing an explicit {required} conjunct for its "
-                    f"dependency '{dep}', which is on the '{gate_job}' chain"
+                    f"job '{name}' has no exact conjunct for dependency '{dep}' "
+                    f"(expected one of: {sorted(allowed)!r})"
                 )
-        if name == "finalize":
-            required_status = "needs.verify.outputs.status == 'SubscribedInstallationVerified'"
-            if not any(required_status in c for c in conjuncts):
-                violations.append(f"job 'finalize' is missing an exact {required_status} conjunct")
+
+        if name == "finalize" and EXACT_STATUS_CONJUNCT not in conjuncts:
+            violations.append(f"job 'finalize' has no exact {EXACT_STATUS_CONJUNCT!r} conjunct")
     return violations
 
 
@@ -189,7 +245,6 @@ class ReleaseWorkflowConditionTests(unittest.TestCase):
         self.jobs = self.workflow["jobs"]
 
     def test_public_confirm_is_a_real_gate_with_dependents(self) -> None:
-        # The regression only matters if jobs actually depend (transitively) on public-confirm.
         gated = jobs_gated_on(self.jobs, "public-confirm")
         self.assertIn("publish", gated)
         self.assertIn("verify", gated)
@@ -222,11 +277,9 @@ class ReleaseWorkflowConditionTests(unittest.TestCase):
         """Construct the pre-#92 finalize condition text and confirm the guard rejects it."""
         jobs = scaffold(finalize={"if": "${{ success() }}"})
         violations = dependency_gate_violations(jobs, "public-confirm")
-        # A bare success() supplies none of the required conjuncts: !cancelled() is absent,
-        # every dependency-success conjunct is absent, and the verify-status conjunct is absent.
         self.assertTrue(any("finalize" in v and "!cancelled()" in v for v in violations))
-        self.assertTrue(any("finalize" in v and "needs.publish.result" in v for v in violations))
-        self.assertTrue(any("finalize" in v and "needs.verify.result" in v for v in violations))
+        self.assertTrue(any("finalize" in v and "'publish'" in v for v in violations))
+        self.assertTrue(any("finalize" in v and "'verify'" in v for v in violations))
         self.assertTrue(any("finalize" in v and "SubscribedInstallationVerified" in v for v in violations))
 
     def test_synthetic_fixed_condition_passes_the_check(self) -> None:
@@ -243,15 +296,15 @@ class ReleaseWorkflowConditionTests(unittest.TestCase):
                 violations = dependency_gate_violations(jobs, "public-confirm")
                 for dep in deps:
                     self.assertTrue(
-                        any(name in v and f"needs.{dep}.result" in v for v in violations),
-                        f"expected a missing needs.{dep}.result violation for {name}: {violations}",
+                        any(name in v and f"'{dep}'" in v for v in violations),
+                        f"expected a missing exact conjunct violation for {name}/{dep}: {violations}",
                     )
 
     def test_dependency_conjuncts_only_missing_cancelled_fails(self) -> None:
         """The mirror case: every dependency-success conjunct present but !cancelled() dropped."""
         jobs = scaffold(verify={"if": "${{ needs.publish.result == 'success' }}"})
         violations = dependency_gate_violations(jobs, "public-confirm")
-        self.assertTrue(any(v == "job 'verify' is missing a top-level !cancelled() conjunct" for v in violations))
+        self.assertIn("job 'verify' is missing a top-level !cancelled() conjunct", violations)
 
     def test_missing_if_condition_entirely_fails(self) -> None:
         """A new job transitively gated on public-confirm with no `if` at all must fail --
@@ -262,8 +315,7 @@ class ReleaseWorkflowConditionTests(unittest.TestCase):
         self.assertIn("job 'notify' has no `if` condition while gated on 'public-confirm'", violations)
 
     def test_dropped_dependency_conjunct_on_publish_fails(self) -> None:
-        """publish's needs.public-confirm.result == 'success' term (embedded in the
-        staging-skip OR alternative) removed, everything else intact."""
+        """publish's public-confirm alternative dropped, everything else intact."""
         jobs = scaffold(publish={
             "if": (
                 "${{ !cancelled() && needs.release-checks.result == 'success' && "
@@ -271,32 +323,21 @@ class ReleaseWorkflowConditionTests(unittest.TestCase):
             ),
         })
         violations = dependency_gate_violations(jobs, "public-confirm")
-        self.assertIn(
-            "job 'publish' is missing an explicit needs.public-confirm.result == 'success' "
-            "conjunct for its dependency 'public-confirm', which is on the 'public-confirm' chain",
-            violations,
-        )
+        self.assertTrue(any("publish" in v and "'public-confirm'" in v for v in violations))
 
     def test_dropped_dependency_conjunct_on_verify_fails(self) -> None:
         jobs = scaffold(verify={"if": "${{ !cancelled() }}"})
         violations = dependency_gate_violations(jobs, "public-confirm")
-        self.assertIn(
-            "job 'verify' is missing an explicit needs.publish.result == 'success' conjunct "
-            "for its dependency 'publish', which is on the 'public-confirm' chain",
-            violations,
-        )
+        self.assertTrue(any("verify" in v and "'publish'" in v for v in violations))
 
     def test_finalize_missing_publish_or_verify_conjunct_fails(self) -> None:
         jobs = scaffold(finalize={
-            "if": "${{ !cancelled() && needs.verify.result == 'success' && "
+            "if": "${{ !cancelled() && needs.release-checks.result == 'success' && "
+                  "needs.verify.result == 'success' && "
                   "needs.verify.outputs.status == 'SubscribedInstallationVerified' }}",
         })
         violations = dependency_gate_violations(jobs, "public-confirm")
-        self.assertIn(
-            "job 'finalize' is missing an explicit needs.publish.result == 'success' conjunct "
-            "for its dependency 'publish', which is on the 'public-confirm' chain",
-            violations,
-        )
+        self.assertTrue(any("finalize" in v and "'publish'" in v for v in violations))
 
     def test_finalize_wrong_status_string_fails(self) -> None:
         jobs = scaffold(finalize={
@@ -305,11 +346,7 @@ class ReleaseWorkflowConditionTests(unittest.TestCase):
                   "needs.verify.outputs.status == 'Verified' }}",
         })
         violations = dependency_gate_violations(jobs, "public-confirm")
-        self.assertIn(
-            "job 'finalize' is missing an exact needs.verify.outputs.status == "
-            "'SubscribedInstallationVerified' conjunct",
-            violations,
-        )
+        self.assertTrue(any("finalize" in v and "exact" in v and "conjunct" in v for v in violations))
 
     def test_finalize_missing_status_string_entirely_fails(self) -> None:
         jobs = scaffold(finalize={
@@ -317,10 +354,75 @@ class ReleaseWorkflowConditionTests(unittest.TestCase):
                   "needs.publish.result == 'success' && needs.verify.result == 'success' }}",
         })
         violations = dependency_gate_violations(jobs, "public-confirm")
-        self.assertIn(
-            "job 'finalize' is missing an exact needs.verify.outputs.status == "
-            "'SubscribedInstallationVerified' conjunct",
-            violations,
+        self.assertTrue(any("finalize" in v and "exact" in v and "conjunct" in v for v in violations))
+
+    def test_or_true_on_a_dependency_conjunct_fails(self) -> None:
+        """`(needs.publish.result == 'success' || true)` CONTAINS the required text but is
+        vacuously true regardless of publish's actual result -- a substring-matching checker
+        would wrongly accept it. verify must still reject it."""
+        jobs = scaffold(verify={
+            "if": "${{ !cancelled() && (needs.publish.result == 'success' || true) }}",
+        })
+        violations = dependency_gate_violations(jobs, "public-confirm")
+        self.assertTrue(
+            any("verify" in v and "'publish'" in v for v in violations),
+            f"expected verify to reject the OR-true publish conjunct: {violations}",
+        )
+
+    def test_or_true_on_the_finalize_status_conjunct_fails(self) -> None:
+        """`needs.verify.outputs.status == 'SubscribedInstallationVerified' || true` likewise
+        contains the required status string while being vacuously true."""
+        jobs = scaffold(finalize={
+            "if": "${{ !cancelled() && needs.release-checks.result == 'success' && "
+                  "needs.publish.result == 'success' && needs.verify.result == 'success' && "
+                  "(needs.verify.outputs.status == 'SubscribedInstallationVerified' || true) }}",
+        })
+        violations = dependency_gate_violations(jobs, "public-confirm")
+        self.assertTrue(
+            any("finalize" in v and "exact" in v and "conjunct" in v for v in violations),
+            f"expected finalize to reject the OR-true status conjunct: {violations}",
+        )
+
+    def test_dropped_release_checks_conjunct_on_publish_fails(self) -> None:
+        jobs = scaffold(publish={
+            "if": (
+                "${{ !cancelled() && needs.portable-tests.result == 'success' && "
+                "(needs.public-confirm.result == 'success' || "
+                "(needs.release-checks.outputs.lane == 'staging' && "
+                "needs.public-confirm.result == 'skipped')) }}"
+            ),
+        })
+        violations = dependency_gate_violations(jobs, "public-confirm")
+        self.assertTrue(
+            any("publish" in v and "'release-checks'" in v for v in violations),
+            f"expected publish to require release-checks success: {violations}",
+        )
+
+    def test_dropped_portable_tests_conjunct_on_publish_fails(self) -> None:
+        jobs = scaffold(publish={
+            "if": (
+                "${{ !cancelled() && needs.release-checks.result == 'success' && "
+                "(needs.public-confirm.result == 'success' || "
+                "(needs.release-checks.outputs.lane == 'staging' && "
+                "needs.public-confirm.result == 'skipped')) }}"
+            ),
+        })
+        violations = dependency_gate_violations(jobs, "public-confirm")
+        self.assertTrue(
+            any("publish" in v and "'portable-tests'" in v for v in violations),
+            f"expected publish to require portable-tests success: {violations}",
+        )
+
+    def test_dropped_release_checks_conjunct_on_finalize_fails(self) -> None:
+        jobs = scaffold(finalize={
+            "if": "${{ !cancelled() && needs.publish.result == 'success' && "
+                  "needs.verify.result == 'success' && "
+                  "needs.verify.outputs.status == 'SubscribedInstallationVerified' }}",
+        })
+        violations = dependency_gate_violations(jobs, "public-confirm")
+        self.assertTrue(
+            any("finalize" in v and "'release-checks'" in v for v in violations),
+            f"expected finalize to require release-checks success: {violations}",
         )
 
 
