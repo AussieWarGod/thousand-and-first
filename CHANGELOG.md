@@ -91,14 +91,15 @@ below it.
   exactly what it read before.
 
 > **Current unreleased census — exact structural gate passed.** Current 3067-file census is line-cap green:
-> 435,284 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> 435,382 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1428 files, 0 of them over the line limit. Inventory SHA-256:
-> `3251dd8615c08ad4f7235bfb009a3f7fb3f21ba44fac2d7bf2e7bc80575df6a2`.
+> `d0bfec405c828bf79c90459bc9944bd164c3263f2f2f845b688ed9825a6e6398`.
 > The generated cold-install inventory contains 3098 files; no new subscription claim.
-> This digest is the stockpile deposit custody fix merged over `dev` at `e918538` (the unattended
-> native observers, the Workshop listing wording and the automatic Workshop attempt finalisation,
-> none of which adds a production C# source), and over the Kingdom Quickstart shelter ingress, the
+> This digest is the stockpile deposit custody fix merged over `dev` at `862f14d` (the unattended
+> native observers, the Workshop listing wording, the automatic Workshop attempt finalisation, the
+> Fetch carry-completion fix and the cross-version persona REQUEST wording; only the Fetch fix
+> touches a production C# source, and it adds no new one), and over the Kingdom Quickstart shelter ingress, the
 > render-only city sight, the stockpile unit capacity, the first-basin water store and the Kingdom
 > Quickstart tent rows retained below; each delta carries its own review chain and none
 > is restated for the others.
@@ -110,7 +111,7 @@ below it.
 > On these bytes the staged baseline (3063 sources) and staged compatibility (3067 sources plus the
 > tracked Hearthpyre 2.2.3 ABI stub) compile clean under Roslyn 9.0.306 on Linux against the
 > installed managed assemblies rather than through `Tools/gate.sh`; both engine-free suites run
-> green there (14,026 main/5,199 Portable, zero skips) and the 627-test tooling suite passes. The
+> green there (14,053 main/5,215 Portable, zero skips) and the 627-test tooling suite passes. The
 > two new deposit regressions were confirmed to FAIL against the pre-fix behaviour before the fix
 > was kept.
 > NOT run for this delta: the two dev-harness modes, the installed-Hearthpyre source step, the
@@ -168,7 +169,7 @@ below it.
 > On the merged tree the staged baseline (3058 sources) and staged compatibility (3062 sources plus
 > the tracked Hearthpyre 2.2.3 ABI stub) compile clean under Roslyn 9.0.306 on Linux against the
 > installed managed assemblies rather than through `Tools/gate.sh`; both engine-free suites run green
-> there (13,987 main/5,199 Portable, zero skips) and the 627-test tooling suite passes.
+> there (13,987 main/5,215 Portable, zero skips) and the 627-test tooling suite passes.
 > The six-profile Quickstart boot matrix at seed `#43101` ran natively on these bytes: marsh,
 > canyon and dunes with advisor yes and no all reach checker `verdict=PASS` with two
 > `[TAF] plot staked: tentrow` rows apiece and a strict-clean Player.log, and `quickstart-save
@@ -247,7 +248,7 @@ below it.
   at the head of the next frame, restored ahead of every gate at end of turn), the render seam
   and its Zone.Render seat, the draw-scope finalizer that closes a thrown frame, a render model, run rather than read, that fails if the projection moves back inside the dispatch behind a `Blackout`, and a
   repo-wide sweep asserting the crashing patch target (`BeforeRenderEvent.Send`) appears in no
-  staged source. Suites pass 13,910 main and 5,199 Portable cases, zero skips; 627 tooling tests
+  staged source. Suites pass 13,910 main and 5,215 Portable cases, zero skips; 627 tooling tests
   pass. The staged baseline (3,051 sources) and compatibility (3,055 sources) compile modes were
   re-run clean with warnings-as-errors on these bytes, along with both dev-harness overlay
   modes.
@@ -272,7 +273,7 @@ below it.
 > (3063 sources plus the tracked Hearthpyre 2.2.3 ABI stub), on Linux with the SDK Roslyn 9.0.306
 > against the installed
 > managed assemblies rather than through `Tools/gate.sh`; both engine-free suites run green there
-> (13,986 main/5,199 Portable, zero skips) and the 627-test tooling suite passes.
+> (13,986 main/5,215 Portable, zero skips) and the 627-test tooling suite passes.
 > NOT run for it: the installed-Hearthpyre source step, the two dev-harness modes, the
 > Windows gate, the developer boot matrix and any native in-game run. The 1,700-tick raising figure
 > is a reading of the raising rule, not of a running plot clock. The exact-inventory human semantic
