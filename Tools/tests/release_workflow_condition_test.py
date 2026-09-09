@@ -15,6 +15,15 @@ required text while making the whole conjunct vacuously true, silently admitting
 dependency. Exact-conjunct matching (with exactly one allowlisted alternative form, for the
 public-confirm staging-skip case) rejects both.
 
+`&&` binds tighter than `||` (as in JS), so a top-level (unparenthesized) `||` anywhere in
+the condition changes what the required `&&` operands actually gate: `!cancelled() &&
+needs.publish.result == 'success' && false || true` parses as
+`(!cancelled() && needs.publish.result == 'success' && false) || true` -- always true --
+even though splitting naively on `&&` alone would still show every required conjunct present.
+The checker rejects any such top-level `||` outright; the one allowed `||` is the
+public-confirm staging-skip alternative, which is always fully parenthesized and therefore
+never at depth 0.
+
 For every job whose transitive `needs` include `public-confirm` the checker requires:
   (a) an `if` is present at all;
   (b) `!cancelled()` is a top-level conjunct, verbatim;
@@ -101,6 +110,38 @@ def jobs_gated_on(jobs: dict[str, Any], gate_job: str) -> list[str]:
     ]
 
 
+def strip_template_wrapper(condition: str) -> str:
+    """Strip a surrounding `${{ ... }}` wrapper if present."""
+    expr = condition.strip()
+    if expr.startswith("${{") and expr.endswith("}}"):
+        expr = expr[3:-2].strip()
+    return expr
+
+
+def has_unparenthesized_top_level_or(condition: str) -> bool:
+    """True if `condition` contains a `||` at parenthesis depth 0.
+
+    `&&` binds tighter than `||` in GitHub Actions expressions (as in JS), so
+    `A && B && false || true` parses as `(A && B && false) || true` -- an always-true
+    condition -- even though splitting naively on top-level `&&` would still show `B` as one
+    of the operands. The one allowed `||` is the staging-skip alternative, which is always
+    fully parenthesized and therefore sits at depth >= 1, never depth 0.
+    """
+    expr = strip_template_wrapper(condition)
+    depth = 0
+    i = 0
+    while i < len(expr):
+        char = expr[i]
+        if char == "(":
+            depth += 1
+        elif char == ")":
+            depth -= 1
+        elif depth == 0 and expr[i : i + 2] == "||":
+            return True
+        i += 1
+    return False
+
+
 def top_level_conjuncts(condition: str) -> list[str]:
     """Split a GitHub Actions `if:` expression into its top-level `&&` operands.
 
@@ -108,10 +149,12 @@ def top_level_conjuncts(condition: str) -> list[str]:
     depth, so an OR-grouped alternative such as
     `(needs.public-confirm.result == 'success' || (... && needs.public-confirm.result ==
     'skipped'))` stays a single conjunct instead of being torn apart by the `&&` inside it.
+
+    Callers MUST check has_unparenthesized_top_level_or() first: a top-level `||` changes
+    `&&`'s precedence (see that function's docstring), so naively splitting on `&&` alone can
+    make an always-true expression look like it still contains every required operand.
     """
-    expr = condition.strip()
-    if expr.startswith("${{") and expr.endswith("}}"):
-        expr = expr[3:-2].strip()
+    expr = strip_template_wrapper(condition)
     conjuncts: list[str] = []
     depth = 0
     current: list[str] = []
@@ -172,6 +215,13 @@ def dependency_gate_violations(jobs: dict[str, Any], gate_job: str) -> list[str]
         raw_condition = job.get("if")
         if not raw_condition:
             violations.append(f"job '{name}' has no `if` condition while gated on '{gate_job}'")
+            continue
+        if has_unparenthesized_top_level_or(str(raw_condition)):
+            violations.append(
+                f"job '{name}' has an unparenthesized top-level || in its if condition -- "
+                f"&& binds tighter than ||, so this can make the whole condition vacuously "
+                f"true regardless of the required conjuncts"
+            )
             continue
         conjuncts = [normalize_conjunct(c) for c in top_level_conjuncts(str(raw_condition))]
 
@@ -411,6 +461,21 @@ class ReleaseWorkflowConditionTests(unittest.TestCase):
         self.assertTrue(
             any("publish" in v and "'portable-tests'" in v for v in violations),
             f"expected publish to require portable-tests success: {violations}",
+        )
+
+    def test_unparenthesized_top_level_or_bypasses_everything_and_is_rejected(self) -> None:
+        """`&&` binds tighter than `||`, so `!cancelled() && needs.publish.result ==
+        'success' && false || true` parses as `(!cancelled() && ... && false) || true` --
+        always true -- even though naive `&&`-only splitting would still show every required
+        operand present as its own conjunct. This must be rejected outright, not conjunct-
+        checked as if it were a well-formed AND chain."""
+        jobs = scaffold(verify={
+            "if": "${{ !cancelled() && needs.publish.result == 'success' && false || true }}",
+        })
+        violations = dependency_gate_violations(jobs, "public-confirm")
+        self.assertTrue(
+            any("verify" in v and "unparenthesized top-level ||" in v for v in violations),
+            f"expected verify to reject the top-level || bypass: {violations}",
         )
 
     def test_dropped_release_checks_conjunct_on_finalize_fails(self) -> None:
