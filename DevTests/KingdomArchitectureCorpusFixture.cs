@@ -118,6 +118,15 @@ namespace ThousandAndFirst.Tests
 				ArchitectureMapDraft map = Map(raw);
 				corpus.Maps[map.Key] = map;
 			}
+			foreach (XElement raw in document.Root.Elements("plan"))
+			{
+				// Tier requirements belong to the old build as much as its rows do: a map that
+				// predates a required anchor cannot be compiled against the tier that demands
+				// it, and pretending otherwise would test a world that never shipped.
+				string planKey = Text(raw, "Key");
+				corpus.Cases.RemoveAll(item => item.PlanKey == planKey);
+				AddPlan(corpus, raw);
+			}
 		}
 
 		private static ArchitecturePoseDraft Pose(XElement raw)

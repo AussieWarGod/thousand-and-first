@@ -139,7 +139,7 @@ below it.
 > 435,538 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1429 files, 0 of them over the line limit. Inventory SHA-256:
-> `8f485126cf6ca6621661f09070a51af05bd6ca0a3e60c821e69cdaeebad8bd4b` (this digest differs from the previous one solely because of the camp heart's authored architecture, catalogue and blueprint bytes, the regenerated removal coverage and its new DevTests file; no staged production C# source was added or removed, and the 3068-file census is unchanged).
+> `d6e107c2ad2a4105eb68cb515c98c7deceaeaff2c40b6a7af3b88a664a4c3b42` (this digest differs from the previous one solely because of the camp heart's authored architecture, catalogue and blueprint bytes, the regenerated removal coverage and its new DevTests file; no staged production C# source was added or removed, and the 3068-file census is unchanged).
 > The generated cold-install inventory contains 3099 files; no new subscription claim.
 > This digest is the stockpile deposit custody fix merged over `dev` at `862f14d` (the unattended
 > native observers, the Workshop listing wording, the automatic Workshop attempt finalisation, the

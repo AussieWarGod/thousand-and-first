@@ -5,10 +5,12 @@
   The four heart palettes and five heart maps exactly as they stood on dev at 4f66331, the
   commit before the camp landed. A settlement founded before that build decodes to THESE
   definitions, so a test that wants to prove what a pre-change save does at its next
-  improvement must compile these, not the current maps with a placement deleted. Overlaid
-  onto the live corpus by KingdomArchitectureCorpusFixture.Overlay; every other palette, map,
-  plan, pose and catalogue row stays current, which is exactly the mixed world an old save
-  loads into.
+  improvement must compile these, not the current maps with a placement deleted. Overlaid onto
+  the live corpus by KingdomArchitectureCorpusFixture.Overlay, together with the civic-heart
+  plan: its tier requirements belong to the old build as much as its rows do, and a map that
+  predates a required anchor cannot be compiled against the tier that demands it. Every other
+  palette, map, plan, pose and catalogue row stays current, which is exactly the mixed world an
+  old save loads into.
 
   If the heart maps are ever REPLACED again, this file stays as it is: it records a shipped
   past, not an intention.
@@ -234,4 +236,66 @@
     <row Cells="MsssssssmmmmsssssssM" />
     <row Cells="MAAAMAAMA++AMAAMAAAM" />
   </map>
+
+  <plan Key="civic-heart">
+    <binding Key="civic-s-heart" Type="civic" Size="S" Facing="heart">
+      <tier Key="heartbasin" BuildKey="heartbasin" Level="0" Map="civic-heartbasin-s0" Palette="civic-heart-natural">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:settlement-heart" Min="1" />
+        <require Role="fixture:first-basin" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+    <binding Key="civic-m-heart" Type="civic" Size="M" Facing="heart">
+      <tier Key="heartwaterstone" BuildKey="heartwaterstone" Level="1" Transition="renovate-expand" Map="civic-heartwaterstone-m1" Palette="civic-heart-stone">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:settlement-heart" Min="1" />
+        <require Role="fixture:first-basin" Min="1" />
+        <require Role="function:water-queue" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+    <binding Key="civic-l-heart" Type="civic" Size="L" Facing="heart">
+      <tier Key="heartmoot" BuildKey="heartmoot" Level="2" Transition="renovate-expand" Map="civic-heartmoot-l2" Palette="civic-heart-moot">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="2" />
+        <require Role="function:settlement-heart" Min="1" />
+        <require Role="fixture:first-basin" Min="1" />
+        <require Role="function:water-queue" Min="1" />
+        <require Role="seat:moot1" Min="1" />
+        <require Role="seat:moot2" Min="1" />
+        <require Role="light:moot" Min="2" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+    <binding Key="civic-xl-heart" Type="civic" Size="XL" Facing="heart">
+      <tier Key="heartcourt" BuildKey="heartcourt" Level="3" Transition="renovate-expand" Map="civic-heartcourt-xl3" Palette="civic-heart-court">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="2" />
+        <require Role="function:settlement-heart" Min="1" />
+        <require Role="fixture:first-basin" Min="1" />
+        <require Role="function:water-queue" Min="1" />
+        <require Role="seat:moot1" Min="1" />
+        <require Role="seat:moot2" Min="1" />
+        <require Role="light:moot" Min="2" />
+        <require Role="light:gate" Min="2" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+      <tier Key="arcology" BuildKey="arcology" Level="4" Transition="renovate" Map="civic-arcology-xl4" Palette="civic-heart-court">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="2" />
+        <require Role="function:settlement-heart" Min="1" />
+        <require Role="function:arcology-gateway" Min="1" />
+        <require Role="fixture:first-basin" Min="1" />
+        <require Role="function:water-queue" Min="1" />
+        <require Role="seat:moot1" Min="1" />
+        <require Role="seat:moot2" Min="1" />
+        <require Role="light:moot" Min="2" />
+        <require Role="light:gate" Min="2" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
 </KingdomArchitectures>
