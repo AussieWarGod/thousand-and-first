@@ -28,7 +28,9 @@ entirely (the sole collaborator can never approve their own PR); PR-based integr
 policy, enforced by the required status checks, linear history and `enforce_admins`, which is now
 ON. Required checks (repository-audit, plus the full pure and portable test lanes on
 `ubuntu-latest` and `windows-latest`, strict), linear history, no force-push, no deletion and
-required conversation resolution all remain. The `dev` integration branch now exists on origin, is the repository default branch, created at `6f73974` and currently at `736d28c`. It is protected with the same three required checks, linear history, required conversation resolution and no force-push/deletion, but with `enforce_admins` off and without the strict up-to-date requirement, so the branch model in
+required conversation resolution all remain. (Per issue #91, the `windows-latest` leg now runs
+only on pushes to `main` and on `v*`/`staging-v*` tags — not on pull requests — and was dropped
+from both branches' required status checks accordingly.) The `dev` integration branch now exists on origin, is the repository default branch, created at `6f73974` and currently at `736d28c`. It is protected with the same three required checks, linear history, required conversation resolution and no force-push/deletion, but with `enforce_admins` off and without the strict up-to-date requirement, so the branch model in
 [RELEASING.md](RELEASING.md#branch-model) is in force rather than proposed: feature work targets `dev` and `main` receives release merges. Earlier sections below record the pre-merge state at their own checkpoints and are not restated here.
 
 A source-proven bounty fetch defect is fixed on `dev`: the post-add transfer witness could never be satisfied, so every completed fetch carry quarantined before its credit; executable rule cases and the `bounty-fetch-native-check` persona are added, and that persona has not been run.
