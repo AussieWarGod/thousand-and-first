@@ -137,12 +137,30 @@ class ScenarioLoadProfileTest(unittest.TestCase):
                 self.assertEqual(self.saved_snapshot, (target / "scenario-load-snapshot.txt").read_bytes())
                 self.assertEqual(inventory, load.scenario_profile.read_seal(str(self.destination_seal / "profile.sha256")))
                 self.assertEqual(self.request, (self.destination_seal / "request.txt").read_bytes())
-                self.assertEqual({"Local", "Save", "Synced", "load-source-evidence.json"}, {p.name for p in self.destination.iterdir()})
+                self.assertEqual({"Local", "Save", "Synced", "load-source-evidence.json", "load-phase-timings.json"},
+                                 {p.name for p in self.destination.iterdir()})
                 self.assertIs(evidence["processAuthority"], False)
                 for name in ("process-ownership.json", "scenario-save-receipt.txt"):
                     self.assertEqual(sha((self.source / name).read_bytes()), evidence["sourceHashes"][name])
                 self.assertEqual(sha((self.seal / "profile.sha256").read_bytes()), evidence["sourceHashes"][".seal/profile.sha256"])
                 self.assertEqual(evidence, json.loads((self.destination / "load-source-evidence.json").read_bytes()))
+
+    def test_phase_timings_are_recorded_in_order_and_never_gate_success(self):
+        self.fixture()
+        load.prepare(self.source, self.destination, self.stopped)
+        timings = json.loads((self.destination / "load-phase-timings.json").read_bytes())
+        self.assertEqual("taf-scenario-load-phase-timings-v1", timings["schema"])
+        phases = timings["phases"]
+        expected_names = ["preflight-and-stop-authority", "source-validation", "destination-setup",
+                           "local-copy", "post-copy-target-inventory", "save-copy", "source-reproof",
+                           "seal-and-evidence-write"]
+        self.assertEqual(expected_names, [phase["phase"] for phase in phases])
+        for phase in phases:
+            self.assertGreaterEqual(phase["seconds"], 0)
+            self.assertLessEqual(phase["beginISO"], phase["endISO"])
+        local_copy = next(phase for phase in phases if phase["phase"] == "local-copy")
+        self.assertEqual(len(load.scenario_profile.inventory(str(self.local))), local_copy["files"])
+        self.assertGreaterEqual(local_copy["bytes"], 0)
 
     def test_occupied_destination_or_seal_refuses_without_overwrite(self):
         for which in ("destination", "destination_seal"):
@@ -269,6 +287,7 @@ class ScenarioLoadProfileTest(unittest.TestCase):
         self.assertTrue((self.destination / "Synced/Saves" / self.game_id / "Cache.db").exists())
         self.assertFalse((self.destination_seal / "profile.sha256").exists())
         self.assertFalse((self.destination / "load-source-evidence.json").exists())
+        self.assertFalse((self.destination / "load-phase-timings.json").exists())
 
     def test_unproved_destination_injection_is_not_sealed_or_overwritten(self):
         for race in ("extra", "occupied-copy"):
@@ -289,6 +308,7 @@ class ScenarioLoadProfileTest(unittest.TestCase):
                 self.assertEqual(before, self.before())
                 self.assertEqual(b"foreign bytes retained", injected[0].read_bytes())
                 self.assertFalse((self.destination_seal / "profile.sha256").exists())
+                self.assertFalse((self.destination / "load-phase-timings.json").exists())
 
     def test_cli_has_exact_root_domain_and_always_uses_real_stopped_verifier(self):
         for root in ("/tmp/taf-scenario.A", "/mnt/c/taf-scenario.A/", "/mnt/c/taf-scenario.A/../taf-scenario.B", "/mnt/c/taf-scenario.a-b"):

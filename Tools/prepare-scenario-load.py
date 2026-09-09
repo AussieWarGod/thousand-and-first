@@ -9,11 +9,13 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 import re
 import stat
 import subprocess
 import sys
+import time
 from typing import Callable
 
 import scenario_profile
@@ -29,6 +31,46 @@ MAX_SNAPSHOT = 4 * 1024 * 1024
 MAX_FILES = 16384
 MAX_TREE_BYTES = 2 * 1024 * 1024 * 1024
 SAVE_FILES = ("Primary.sav.gz", "Primary.json", "Cache.db")
+
+
+def _iso(moment: float) -> str:
+    return datetime.fromtimestamp(moment, timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+
+
+class PhaseTimer:
+    """Diagnostic-only wall-clock phase durations for the load-profile copier.
+
+    Recorded phases are pure observation: they never gate sealing, never change which bytes are
+    read or written, and are not consulted by any guard in this module or by
+    check-quickstart-results.py. The list is written once, after every safety predicate below has
+    already passed, as an additive JSON evidence file beside load-source-evidence.json.
+    """
+
+    def __init__(self) -> None:
+        self.phases: list[dict] = []
+
+    def measure(self, name: str, counters: dict | None = None) -> "_PhaseScope":
+        return _PhaseScope(self, name, counters if counters is not None else {})
+
+
+class _PhaseScope:
+    def __init__(self, timer: PhaseTimer, name: str, counters: dict) -> None:
+        self._timer, self._name, self.counters = timer, name, counters
+
+    def __enter__(self) -> dict:
+        self._began = time.time()
+        return self.counters
+
+    def __exit__(self, exc_type, exc, tb) -> bool:
+        ended = time.time()
+        self._timer.phases.append({
+            "phase": self._name,
+            "beginISO": _iso(self._began),
+            "endISO": _iso(ended),
+            "seconds": round(ended - self._began, 6),
+            **self.counters,
+        })
+        return False
 
 
 def require(condition: bool, message: str) -> None:
@@ -176,97 +218,112 @@ def prepare(source: Path, destination: Path, assert_stopped: Callable[[Path], No
 
     Production main additionally requires the exact /mnt/c root domain and always supplies
     the real Windows verifier. There is no CLI skip flag or alternate process authority.
+
+    Wall-clock phase timings are recorded via PhaseTimer purely for diagnosis (see its
+    docstring): every guard, flush, readback and inventory below runs exactly as before.
     """
+    timer = PhaseTimer()
     require(ROOT_NAME.fullmatch(source.name) and ROOT_NAME.fullmatch(destination.name)
             and source.parent == destination.parent and source.name.lower() != destination.name.lower(),
             "source/destination must be distinct canonical sibling scenario roots")
-    directory(source)
-    source_seal, destination_seal = Path(str(source) + ".seal"), Path(str(destination) + ".seal")
-    directory(source_seal)
-    empty_destination(destination)
-    empty_destination(destination_seal)
-    ownership = read_bytes(source / "process-ownership.json", 16384)
-    ownership_shape(ownership, source)
-    assert_stopped(source)  # Before reading save/cache bytes or creating ANY output.
-    tree_files(source, MAX_FILE)
-    profile_seal = source_seal / "profile.sha256"
-    seal_bytes = read_bytes(profile_seal, 4 * 1024 * 1024)
-    request_bytes = read_bytes(source_seal / "request.txt", 1024)
-    request = request_text(request_bytes)
-    local = source / "Local"
-    files = tree_files(local, MAX_LOCAL_FILE)
-    expected = scenario_profile.read_seal(str(profile_seal))
-    require(scenario_profile.inventory(str(local)) == expected, "source Local differs from its closed seal")
-    require(read_bytes(local / "scenario-script.txt", MAX_LOCAL_FILE), "source has no sealed script")
-    embark = read_bytes(local / "Mods/ThousandAndFirst/Harness/EmbarkModules.xml", MAX_LOCAL_FILE).decode("utf-8")
-    marker = 'Name="r_TAF_ScenarioRequest_v1" Value="'
-    require(embark.count(marker) == 1 and embark.split(marker)[1].split('"', 1)[0] == request,
-            "sealed request and source embark overlay disagree")
-    require(not os.path.lexists(local / "scenario-load.txt") and not os.path.lexists(local / "scenario-load-snapshot.txt"),
-            "source already carries a load request")
-    receipt = read_bytes(source / "scenario-save-receipt.txt", 512)
-    lines = receipt.decode("ascii").split("\n")
-    require(len(lines) == 6 and lines[-1] == "" and lines[0] == "taf-scenario-save-v1"
-            and GUID.fullmatch(lines[1]) and all(SHA.fullmatch(line) for line in lines[2:5]), "malformed five-line save receipt")
-    game_id = lines[1]
-    snapshot = read_bytes(source / "scenario-save-snapshot.txt", MAX_SNAPSHOT)
-    require(snapshot and hashlib.sha256(snapshot).hexdigest() == lines[4], "save snapshot hash mismatch")
-    saves = source / "Synced/Saves"
-    directory(saves)
-    require(sorted(path.name for path in saves.iterdir()) == [game_id], "source must contain exactly the named save directory")
-    save = saves / game_id
-    directory(save)
-    children = {path.name for path in save.iterdir()}
-    require(set(SAVE_FILES) <= children <= set(SAVE_FILES) | {"Primary.sav.gz.bak"}, "save has missing files, WAL/SHM, or unexpected artifacts")
-    hashes = {name: digest(save / name) for name in children}
-    require(all((save / name).stat().st_size > 0 for name in SAVE_FILES), "save artifacts must not be empty")
-    require(hashes[SAVE_FILES[0]] == lines[2] and hashes[SAVE_FILES[1]] == lines[3], "primary/info save hash mismatch")
-    load_request = ("taf-scenario-load-v1\n" + game_id + "\n" + lines[2] + "\n" + lines[3]
-                    + "\n" + hashes["Cache.db"] + "\n" + lines[4] + "\n").encode("ascii")
-    frozen = {source / "process-ownership.json": ownership, profile_seal: seal_bytes,
-              source_seal / "request.txt": request_bytes, source / "scenario-save-receipt.txt": receipt,
-              source / "scenario-save-snapshot.txt": snapshot}
-    evidence = {"schema": "taf-scenario-load-source-v1", "sourceRoot": str(source), "gameId": game_id,
-                "processAuthority": False, "sourceHashes": {str(path.relative_to(source)) if path.is_relative_to(source)
-                    else ".seal/" + path.name: hashlib.sha256(data).hexdigest() for path, data in frozen.items()},
-                "saveHashes": {name: hashes[name] for name in SAVE_FILES}}
-    empty_destination(destination); empty_destination(destination_seal)
-    if not destination.exists(): destination.mkdir()
-    if not destination_seal.exists(): destination_seal.mkdir()
-    target_local = destination / "Local"
-    target_local.mkdir()
-    for current, directories, _ in os.walk(local, followlinks=False):
-        for child in sorted(directories):
-            (target_local / (Path(current) / child).relative_to(local)).mkdir()
-    for path in files:
-        copy_new(path, target_local / path.relative_to(local), expected[scenario_profile.normalize(str(path.relative_to(local)))], MAX_LOCAL_FILE)
-    require(scenario_profile.inventory(str(target_local)) == expected, "copied Local differs from original closed inventory")
-    write_new(target_local / "scenario-load.txt", load_request)
-    write_new(target_local / "scenario-load-snapshot.txt", snapshot)
-    (destination / "Save").mkdir()
-    (destination / "Synced").mkdir()
-    (destination / "Synced/Saves").mkdir()
-    target_save = destination / "Synced/Saves" / game_id
-    target_save.mkdir()
-    for name in SAVE_FILES:
-        copy_new(save / name, target_save / name, hashes[name], MAX_FILE)
-    for path, data in frozen.items():
-        require(read_bytes(path, max(len(data), 1)) == data, "source receipt/seal/snapshot changed during copy")
-    require(scenario_profile.inventory(str(local)) == expected, "source Local changed during copy")
-    tree_files(source, MAX_FILE)
-    require(sorted(path.name for path in saves.iterdir()) == [game_id] and {path.name for path in save.iterdir()} == children,
-            "source save inventory changed during copy")
-    for name, before in hashes.items():
-        require(digest(save / name) == before, "source save file changed during copy: " + name)
-    inventory = scenario_profile.inventory(str(target_local))
-    target_expected = dict(expected)
-    target_expected["scenario-load.txt"] = hashlib.sha256(load_request).hexdigest()
-    target_expected["scenario-load-snapshot.txt"] = hashlib.sha256(snapshot).hexdigest()
-    require(inventory == target_expected, "destination Local acquired unproved content during copy")
-    seal = scenario_profile.SEAL_HEADER + "\n" + "".join(inventory[key] + "  " + key + "\n" for key in sorted(inventory))
-    write_new(destination_seal / "profile.sha256", seal.encode("utf-8"))
-    write_new(destination_seal / "request.txt", request_bytes)
-    write_new(destination / "load-source-evidence.json", (json.dumps(evidence, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8"))
+    with timer.measure("preflight-and-stop-authority"):
+        directory(source)
+        source_seal, destination_seal = Path(str(source) + ".seal"), Path(str(destination) + ".seal")
+        directory(source_seal)
+        empty_destination(destination)
+        empty_destination(destination_seal)
+        ownership = read_bytes(source / "process-ownership.json", 16384)
+        ownership_shape(ownership, source)
+        assert_stopped(source)  # Before reading save/cache bytes or creating ANY output.
+    with timer.measure("source-validation") as counters:
+        tree_files(source, MAX_FILE)
+        profile_seal = source_seal / "profile.sha256"
+        seal_bytes = read_bytes(profile_seal, 4 * 1024 * 1024)
+        request_bytes = read_bytes(source_seal / "request.txt", 1024)
+        request = request_text(request_bytes)
+        local = source / "Local"
+        files = tree_files(local, MAX_LOCAL_FILE)
+        expected = scenario_profile.read_seal(str(profile_seal))
+        require(scenario_profile.inventory(str(local)) == expected, "source Local differs from its closed seal")
+        require(read_bytes(local / "scenario-script.txt", MAX_LOCAL_FILE), "source has no sealed script")
+        embark = read_bytes(local / "Mods/ThousandAndFirst/Harness/EmbarkModules.xml", MAX_LOCAL_FILE).decode("utf-8")
+        marker = 'Name="r_TAF_ScenarioRequest_v1" Value="'
+        require(embark.count(marker) == 1 and embark.split(marker)[1].split('"', 1)[0] == request,
+                "sealed request and source embark overlay disagree")
+        require(not os.path.lexists(local / "scenario-load.txt") and not os.path.lexists(local / "scenario-load-snapshot.txt"),
+                "source already carries a load request")
+        receipt = read_bytes(source / "scenario-save-receipt.txt", 512)
+        lines = receipt.decode("ascii").split("\n")
+        require(len(lines) == 6 and lines[-1] == "" and lines[0] == "taf-scenario-save-v1"
+                and GUID.fullmatch(lines[1]) and all(SHA.fullmatch(line) for line in lines[2:5]), "malformed five-line save receipt")
+        game_id = lines[1]
+        snapshot = read_bytes(source / "scenario-save-snapshot.txt", MAX_SNAPSHOT)
+        require(snapshot and hashlib.sha256(snapshot).hexdigest() == lines[4], "save snapshot hash mismatch")
+        saves = source / "Synced/Saves"
+        directory(saves)
+        require(sorted(path.name for path in saves.iterdir()) == [game_id], "source must contain exactly the named save directory")
+        save = saves / game_id
+        directory(save)
+        children = {path.name for path in save.iterdir()}
+        require(set(SAVE_FILES) <= children <= set(SAVE_FILES) | {"Primary.sav.gz.bak"}, "save has missing files, WAL/SHM, or unexpected artifacts")
+        hashes = {name: digest(save / name) for name in children}
+        require(all((save / name).stat().st_size > 0 for name in SAVE_FILES), "save artifacts must not be empty")
+        require(hashes[SAVE_FILES[0]] == lines[2] and hashes[SAVE_FILES[1]] == lines[3], "primary/info save hash mismatch")
+        load_request = ("taf-scenario-load-v1\n" + game_id + "\n" + lines[2] + "\n" + lines[3]
+                        + "\n" + hashes["Cache.db"] + "\n" + lines[4] + "\n").encode("ascii")
+        frozen = {source / "process-ownership.json": ownership, profile_seal: seal_bytes,
+                  source_seal / "request.txt": request_bytes, source / "scenario-save-receipt.txt": receipt,
+                  source / "scenario-save-snapshot.txt": snapshot}
+        evidence = {"schema": "taf-scenario-load-source-v1", "sourceRoot": str(source), "gameId": game_id,
+                    "processAuthority": False, "sourceHashes": {str(path.relative_to(source)) if path.is_relative_to(source)
+                        else ".seal/" + path.name: hashlib.sha256(data).hexdigest() for path, data in frozen.items()},
+                    "saveHashes": {name: hashes[name] for name in SAVE_FILES}}
+        counters["localFiles"] = len(files)
+    with timer.measure("destination-setup"):
+        empty_destination(destination); empty_destination(destination_seal)
+        if not destination.exists(): destination.mkdir()
+        if not destination_seal.exists(): destination_seal.mkdir()
+        target_local = destination / "Local"
+        target_local.mkdir()
+        for current, directories, _ in os.walk(local, followlinks=False):
+            for child in sorted(directories):
+                (target_local / (Path(current) / child).relative_to(local)).mkdir()
+    with timer.measure("local-copy", {"files": len(files), "bytes": sum(os.path.getsize(path) for path in files)}):
+        for path in files:
+            copy_new(path, target_local / path.relative_to(local), expected[scenario_profile.normalize(str(path.relative_to(local)))], MAX_LOCAL_FILE)
+    with timer.measure("post-copy-target-inventory"):
+        require(scenario_profile.inventory(str(target_local)) == expected, "copied Local differs from original closed inventory")
+        write_new(target_local / "scenario-load.txt", load_request)
+        write_new(target_local / "scenario-load-snapshot.txt", snapshot)
+    with timer.measure("save-copy"):
+        (destination / "Save").mkdir()
+        (destination / "Synced").mkdir()
+        (destination / "Synced/Saves").mkdir()
+        target_save = destination / "Synced/Saves" / game_id
+        target_save.mkdir()
+        for name in SAVE_FILES:
+            copy_new(save / name, target_save / name, hashes[name], MAX_FILE)
+    with timer.measure("source-reproof"):
+        for path, data in frozen.items():
+            require(read_bytes(path, max(len(data), 1)) == data, "source receipt/seal/snapshot changed during copy")
+        require(scenario_profile.inventory(str(local)) == expected, "source Local changed during copy")
+        tree_files(source, MAX_FILE)
+        require(sorted(path.name for path in saves.iterdir()) == [game_id] and {path.name for path in save.iterdir()} == children,
+                "source save inventory changed during copy")
+        for name, before in hashes.items():
+            require(digest(save / name) == before, "source save file changed during copy: " + name)
+    with timer.measure("seal-and-evidence-write"):
+        inventory = scenario_profile.inventory(str(target_local))
+        target_expected = dict(expected)
+        target_expected["scenario-load.txt"] = hashlib.sha256(load_request).hexdigest()
+        target_expected["scenario-load-snapshot.txt"] = hashlib.sha256(snapshot).hexdigest()
+        require(inventory == target_expected, "destination Local acquired unproved content during copy")
+        seal = scenario_profile.SEAL_HEADER + "\n" + "".join(inventory[key] + "  " + key + "\n" for key in sorted(inventory))
+        write_new(destination_seal / "profile.sha256", seal.encode("utf-8"))
+        write_new(destination_seal / "request.txt", request_bytes)
+        write_new(destination / "load-source-evidence.json", (json.dumps(evidence, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8"))
+    timings = {"schema": "taf-scenario-load-phase-timings-v1", "phases": timer.phases}
+    write_new(destination / "load-phase-timings.json", (json.dumps(timings, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8"))
     return evidence
 
 
