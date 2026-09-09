@@ -12,9 +12,14 @@ anything not checkable read-only.
 ## What 0.3.2 changed since the draft
 
 - **Tagged and published.** Staging run `34327428688` finalized green; the public Workshop run
-  `34341601300` ("Release 0.3.2 Alpha", PR #94) was **still in progress** at the time of writing —
-  its conclusion is **unverified**. Finalize-after-verify was fixed by PR #92; the public flip landed
-  in PR #93.
+  `34341601300` ("Release 0.3.2 Alpha", PR #94) was **still in progress** at the time of writing
+  (10:46Z snapshot) — its conclusion was **unverified**. Finalize-after-verify was fixed by PR #92;
+  the public flip landed in PR #93.
+  **Post-release update (2026-09-09, later than the snapshot above):** public run `34341601300`
+  completed with automatic finalization — `-Verify` 12:26Z reports `SubscribedInstallationVerified`,
+  `-Finalize` 12:36Z exits `0` with `status=SubscribedInstallationVerified`, `attemptFinalized=true`;
+  public item 3794797472 retained attempt `0002` (`docs/STATUS.md`, "Public 0.3.2 — published and
+  finalized").
 - **Native proofs on the candidate bytes.** Six-profile Quickstart boot/save/cold-load matrix **6/6**
   at seed `#43101` (`DevTests/QUICKSTART-BOOT-TESTS.md`, rows canyon/dunes/marsh × advisor yes/no);
   five unattended personas green — `found-first-city`, `claimed-light-native-check`,
