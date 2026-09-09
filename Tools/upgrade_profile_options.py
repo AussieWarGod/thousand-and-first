@@ -52,9 +52,13 @@ def validate_options(config: dict, birth: bytes, observed: bytes) -> None:
         require(observed == birth, "this recipe permits no operational option writes")
         return
     expected = dict(initial)
-    if mode in ("source", "source-donor"):
-        require(initial.get(IMPORT) == "No", "old source must be born with legacy import disabled")
-        expected[IMPORT if mode == "source" else SEAL] = "Yes"
+    if mode == "source":
+        # The v2 inheritor is born opted in and writes no option at all: 0.3.1's own boot must arm
+        # the reservation before its roster marker is committed (upgrade_profile_inputs.local_inputs).
+        require(initial.get(IMPORT) == "Yes", "the v2 inheritor must be born with legacy import enabled")
+    elif mode == "source-donor":
+        require(initial.get(IMPORT) == "No", "old donor must be born with legacy import disabled")
+        expected[SEAL] = "Yes"
     elif mode == "stage-source":
         expected[GROWTH] = "No"
         expected[RAIDS] = "No"

@@ -20,7 +20,7 @@ namespace ThousandAndFirst.Tests
 				"using ThousandAndFirst.Simulation.City;", "KingdomPolityProfileRuntime.TryReconcile", "KingdomSeal.TryFoundingCompleted" })
 				StringAssert.Contains(token, provider);
 			foreach (string token in new[] { "KingdomSeal.TryRetireGeneration", "PromoteRetirement(stage)",
-				"Inheritance.Initialize()", "KingdomInheritancePhase.Reserved", "lease.IsHeld",
+				"KingdomInheritancePhase.Reserved", "lease.IsHeld",
 				"KingdomUpgradeSource.Arm(null)", "Game.SaveGame(\"Primary\")", "state.Matches(saved)",
 				"taf-upgrade-source-link-v1", "cache-bind-after-quit" }) StringAssert.Contains(token, driver);
 			foreach (string forbidden in new[] { ".SetValue(", "new KingdomInheritanceState",
@@ -39,6 +39,33 @@ namespace ThousandAndFirst.Tests
 				"ReferenceEquals(KingdomInheritanceLeaseOwner.Get(GameId, receipt), lease)",
 				"KingdomUpgradeFiles.New" }) StringAssert.Contains(token, source);
 			StringAssert.DoesNotContain(".SaveGame(", Read("Harness/KingdomUpgradeSource.cs"));
+		}
+
+		/// <summary>Issue #87. The 0.3.1 save-system roster marker is committed by a
+		/// [PlayerMutator], which QudGameBootModule.BootGame runs strictly after every
+		/// IGameStateSingleton.Initialize. An inheritor that opts in and initializes afterwards
+		/// therefore carries an Inheritance carrier the marker never recorded, and 0.3.1's own
+		/// SaveSystems prefix refuses the write. The opt-in must be the birth option instead.
+		/// </summary>
+		[Test]
+		public void ReservedInheritorIsBornOptedInAndNeverArmsImportItself()
+		{
+			string driver = Read("Harness/KingdomUpgradeSourceDriver.cs");
+			string provider = Read("Harness/KingdomUpgradeSourceProvider.cs");
+			foreach (string forbidden in new[] { "SetOption(\"r_TAF_OptionLegacyImport\"",
+				"Inheritance.Initialize()" })
+			{ StringAssert.DoesNotContain(forbidden, driver); StringAssert.DoesNotContain(forbidden, provider); }
+			foreach (string token in new[] { "internal void Armed()",
+				"Options.GetOption(\"r_TAF_OptionLegacyImport\", \"No\") == \"Yes\"",
+				"0.3.1 boot did not claim the exact copied donor legacy for this source",
+				"boot-armed Reserved state does not hold its own live process-local lease",
+				"if (verb == KingdomUpgradeSourceProvider.ReservedVerb) Armed(); else Pristine();" })
+				StringAssert.Contains(token, driver);
+			StringAssert.Contains("(verb == ReservedVerb ? \"Yes\" : \"No\")", provider);
+			StringAssert.Contains("reserved source requires legacy import enabled at birth", provider);
+			string options = Read("Tools/upgrade_profile_options.py");
+			StringAssert.Contains("the v2 inheritor must be born with legacy import enabled", options);
+			StringAssert.Contains("old donor must be born with legacy import disabled", options);
 		}
 
 		[Test]
