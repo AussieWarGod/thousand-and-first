@@ -10,6 +10,27 @@ below it.
 
 ## Unreleased — Beta gap report
 
+### Added
+
+- The rite ground is now a camp. A horseshoe of seven canvas cells stands round the basin, a
+  cooking fire burns beside it, and one dry stockpile holds 48 units of what the settlement has
+  cut and carried. The fire heats the objects on its own hearthstone and nothing beyond it, which
+  is why canvas may stand a cell away; its cell is used from the side and never stood on. The
+  horseshoe opens south onto the approach the rite already declared, because the heart's Small
+  6x4 plot cannot hold a closed ring, the rite, the fire and the store at once. The store sits on
+  a yard cell just outside the frozen 4x4 footprint, which is lawful; widening the footprint is
+  not. The founding bill (canvas:4, timber:2) is the rite's own gift and is charged to nobody:
+  heart rungs are refused by every commission path.
+- The stockpile rides every heart rung at the same rite-relative cell — under canvas at the rite
+  ground and the waterstone, inside the walls at the moot, the great court and the arcology — so
+  what is in it is never moved, emptied or re-founded when the settlement builds over it. It
+  counts toward the eight stores the keepers will account for.
+- Each heart rung now asks for one more timber than the rung below it (2/3/20/21/22), so a
+  settlement founded before this change raises its store at **the next improvement it begins
+  after this update**, with the timber for it already in that transition's bill. An improvement
+  already under way finishes to the plan it was paid for: storeless, on the old bill, with the
+  store arriving one rung later. Nothing is re-priced, refunded or quarantined at any point.
+
 ### Docs
 
 - Landed the 2026-09-09 Beta gap report (`docs/BETA-GAP-REPORT-2026-09-09.md`), re-read against the
@@ -117,7 +138,7 @@ below it.
 > 435,538 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1429 files, 0 of them over the line limit. Inventory SHA-256:
-> `93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa` (this digest differs from the previous one solely because of the 0.3.2 KingdomReleaseInfo.cs version-literal bump; no other change).
+> `8f485126cf6ca6621661f09070a51af05bd6ca0a3e60c821e69cdaeebad8bd4b` (this digest differs from the previous one solely because of the camp heart's authored architecture, catalogue and blueprint bytes, the regenerated removal coverage and its new DevTests file; no staged production C# source was added or removed, and the 3068-file census is unchanged).
 > The generated cold-install inventory contains 3099 files; no new subscription claim.
 > This digest is the stockpile deposit custody fix merged over `dev` at `862f14d` (the unattended
 > native observers, the Workshop listing wording, the automatic Workshop attempt finalisation, the

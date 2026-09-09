@@ -618,6 +618,17 @@
     authored mark would put the Debug gallery's photographic copy into a real settlement's
     water accounts.
 
+    THE RITE GROUND IS A CAMP, AND IT IS CHARGED TO NOBODY. Rung 1 declares canvas:4 and
+    timber:2 - the horseshoe of canvas round the basin, the cooking fire, and one dry store -
+    but no founder ever pays it: heart rungs are refused by every commission path
+    (KingdomZoning.Offered, KingdomPlot2.Commission), so the declared Materials are read only
+    as the exact claim the authored placements are proved against. Every rung above it asks for
+    ONE MORE TIMBER than the rung below (2/3/20/21/22) for exactly one reason: a heart founded
+    before the store existed adds it as delta.Added at whichever transition that save takes
+    next, and an added, non-natural placement is refused unless its material is present in the
+    paid claim. Do not trim the timber back to what the fixtures "look like" they cost - at
+    rungs 1 and 2 the same timber funds the fire beside the store as well.
+
     The arcology gateway is the fifth heart rung. It rebuilds the surface court as the protected
     transfer atrium for the real parasang-wide, multi-storey shell. The first basin remains exact;
     other static court fabric may be renovated rather than entombed. Hosted floors belong to the
@@ -626,13 +637,13 @@
   <building Key="heartbasin" DisplayName="the rite ground (a ring of trodden earth, and the basin in the middle of it)" Blueprint="r_KingdomRiteGround"
             Cost="0" Ticks="600" Styles="all" Category="civic" Plot="S" Open="yes"
             Footprint="4x4" Roof="Open"
-            Carries="spirit:1"
-            UpgradesTo="heartwaterstone" UpgradeMaterials="stone:24" />
+            Materials="canvas:4,timber:2" Carries="spirit:1"
+            UpgradesTo="heartwaterstone" UpgradeMaterials="stone:24,timber:1" />
   <building Key="heartwaterstone" DisplayName="the waterstone (a kerb laid around the rite ground, and the queue at dusk)" Blueprint="r_KingdomWaterstone"
             Cost="18" Ticks="3000" Styles="all" Category="civic" Plot="M" Open="yes" MinStage="Steading"
             Footprint="8x6" Roof="Open"
-            Materials="stone:24" Carries="spirit:2,order:1"
-            UpgradesTo="heartmoot" UpgradeMaterials="timber:20,stone:2,shapedtimber:6">
+            Materials="stone:24,timber:3" Carries="spirit:2,order:1"
+            UpgradesTo="heartmoot" UpgradeMaterials="timber:17,stone:2,shapedtimber:6">
     <skin Key="verdant" Style="verdant" ColorString="&amp;g" DetailColor="G" />
     <skin Key="fungal" Style="fungal" ColorString="&amp;m" DetailColor="M" />
     <skin Key="moonstair" Style="moonstair" ColorString="&amp;c" DetailColor="C" />
@@ -643,7 +654,7 @@
             Footprint="12x10" Roof="Walled"
             Materials="timber:20,stone:26,shapedtimber:6" Staff="2" Manning="scaled" Carries="spirit:4,order:3"
             Contents="r_KingdomFurnishings_Civic"
-            UpgradesTo="heartcourt" UpgradeMaterials="stone:64,shapedstone:24,marble:18,workedmetal:8">
+            UpgradesTo="heartcourt" UpgradeMaterials="timber:1,stone:64,shapedstone:24,marble:18,workedmetal:8">
     <skin Key="verdant" Style="verdant" ColorString="&amp;g" DetailColor="G" />
     <skin Key="eater" Style="eater" ColorString="&amp;r" DetailColor="K" />
     <skin Key="bleached" ColorString="&amp;Y" DetailColor="W" />
@@ -651,10 +662,10 @@
   <building Key="heartcourt" DisplayName="the great court (shaped stone closed around the moot hall, which stands inside it yet)" Blueprint="r_KingdomGreatCourt"
             Cost="96" Ticks="12000" Styles="all" Category="civic" Plot="XL" MinStage="City" MinTech="foundry"
             Footprint="20x18" Roof="Walled"
-            Materials="timber:20,stone:90,shapedtimber:6,shapedstone:24,marble:18,workedmetal:8" Bits="0034"
+            Materials="timber:21,stone:90,shapedtimber:6,shapedstone:24,marble:18,workedmetal:8" Bits="0034"
             Staff="3" Manning="scaled" Carries="spirit:8,order:6,learning:2"
             Contents="r_KingdomFurnishings_Civic"
-            UpgradesTo="arcology" UpgradeMaterials="stone:40,shapedstone:22,marble:8,workedmetal:30,scrap:32">
+            UpgradesTo="arcology" UpgradeMaterials="timber:1,stone:40,shapedstone:22,marble:8,workedmetal:30,scrap:32">
     <skin Key="verdant" Style="verdant" ColorString="&amp;G" DetailColor="g" />
     <skin Key="fungal" Style="fungal" ColorString="&amp;M" DetailColor="m" />
     <skin Key="moonstair" Style="moonstair" ColorString="&amp;C" DetailColor="c" />
@@ -1402,7 +1413,7 @@
             Cost="190" Ticks="22800" Styles="all" Category="civic" Plot="XL" MinStage="City"
             MinZones="4" MinTech="arclight" Knowledge="node:arclight"
             Capital="yes" Megastructure="yes" Footprint="20x18" Roof="Walled"
-            Materials="timber:20,stone:130,shapedtimber:6,shapedstone:46,marble:26,workedmetal:38,scrap:32" Bits="00346" Exotics="ingot:3,gem:2"
+            Materials="timber:22,stone:130,shapedtimber:6,shapedstone:46,marble:26,workedmetal:38,scrap:32" Bits="00346" Exotics="ingot:3,gem:2"
             Staff="4" Manning="scaled" Carries="order:4,luxury:4"
             Contents="r_KingdomFurnishings_Dwelling" />
 

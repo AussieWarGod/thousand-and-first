@@ -129,7 +129,7 @@ cold-install inventory. Staged compilation covers 3068 sources, baseline and com
 (baseline compiles 3064 of them; the optional-mod bridge is compatibility-only), run here by Roslyn
 9.0.306 on Linux against the licensed Managed references with warnings as
 errors. Direct `XRL` imports: 1429 files, 0 over the line limit.
-Inventory SHA-256: `93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa` (this digest differs from the previous one solely because of the 0.3.2 KingdomReleaseInfo.cs version-literal bump; no other change).
+Inventory SHA-256: `8f485126cf6ca6621661f09070a51af05bd6ca0a3e60c821e69cdaeebad8bd4b` (this digest differs from the previous one solely because of the camp heart's authored architecture, catalogue and blueprint bytes, the regenerated removal coverage and its new DevTests file; no staged production C# source was added or removed, and the 3068-file census is unchanged).
 Before the merge, all four `Tools/gate.sh` modes compiled clean on the shelter-ingress delta's own
 bytes — staged baseline (3050 sources), staged compatibility (3054), dev-harness baseline (3204)
 and dev-harness compatibility (3208) — with the installed-Hearthpyre source and ABI step, and the

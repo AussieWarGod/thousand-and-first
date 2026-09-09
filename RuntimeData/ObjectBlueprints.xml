@@ -319,6 +319,23 @@
     <tag Name="r_KingdomStockpileCapacity" Value="96" />
     <intproperty Name="KingdomStockpile" Value="1" />
   </object>
+  <!-- The camp's dry store. Inherits the vanilla Chest wholesale (Container, Inventory, tile)
+       for the same reason r_KingdomLarder does: STANDARDS.md requires art for anything that
+       carries its own, and reusing an already-wired vanilla tile is the surest way to owe none.
+       It is a stockpile from the moment it is placed - the settlement never has to walk up to
+       it and dedicate it - and it declares the capacity a container that says nothing would
+       have got anyway (KingdomRules.DefaultStockpileCapacity), stated out loud so a later
+       change to that default cannot silently resize the founding's one store. -->
+  <object Name="r_KingdomHeartStockpile" Inherits="Chest">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="camp stockpile" />
+    <part Name="Description" Short="A lidded timber chest set down beside the fire, its lid scored with the tally of what the settlement has cut and carried. What is put in here is the settlement's, not whoever opens it first." />
+    <part Name="Physics" Takeable="false" Organic="true" />
+    <tag Name="InventoryPopulationTable" Value="*delete" />
+    <tag Name="r_KingdomStockpileCapacity" Value="48" />
+    <intproperty Name="KingdomStockpile" Value="1" />
+    <stat Name="Hitpoints" Value="80" />
+  </object>
   <object Name="r_KingdomPurposeBoreHead" Inherits="Furniture">
     <stag Name="Contemporary" />
     <part Name="Render" DisplayName="protected bore head" Tile="Creatures/natural-weapon-drill.bmp" RenderString="004" ColorString="&amp;K" TileColor="&amp;c" DetailColor="w" />
