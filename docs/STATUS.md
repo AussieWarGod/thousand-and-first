@@ -5,6 +5,8 @@
 **Next public version:** none scheduled beyond 0.3.2
 **Working candidate manifest:** 0.3.2 public Alpha playtest; private staging verified,
 public Workshop upload complete and finalized — see [Public 0.3.2](#public-032) below
+**Beta gates:** issues #58–#70 are all still open; the full gap analysis against the shipped
+0.3.2 bytes is [docs/BETA-GAP-REPORT-2026-09-09.md](BETA-GAP-REPORT-2026-09-09.md).
 
 The public Alpha is [Steam Workshop item
 3794797472](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472). Rows marked retained

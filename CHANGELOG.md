@@ -8,6 +8,14 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
+## Unreleased — Beta gap report
+
+### Docs
+
+- Landed the 2026-09-09 Beta gap report (`docs/BETA-GAP-REPORT-2026-09-09.md`), re-read against the
+  shipped 0.3.2 bytes: gates #58–#70 remain open, and the report sizes each gap and lists open
+  decisions for the author. Docs-only; no source, tooling, package, or release bytes change.
+
 ## [0.3.2] — 2026-09-09 (Alpha)
 
 ### Fixed
