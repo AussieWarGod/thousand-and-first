@@ -165,7 +165,6 @@ class WorkshopMetadataTests(unittest.TestCase):
             "Later game builds are unverified. No dependency is required.",
             "Optional exact-version Hearthpyre 2.2.3 integration is included when Hearthpyre loads first; "
             "native compatibility remains unverified.",
-            "Single-player only.",
             "Back up saves before every Alpha install or update.",
             "Keep only one enabled copy of the mod; a local install plus a Workshop subscription can load the wrong one.",
             "[url=https://github.com/AussieWarGod/thousand-and-first/issues/new/choose]GitHub issue forms[/url]",

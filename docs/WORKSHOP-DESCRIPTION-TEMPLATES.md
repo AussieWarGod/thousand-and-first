@@ -61,7 +61,7 @@ Cross-world legacy is opt-in and must be enabled before world creation. It may c
 [b]Alpha, compatibility, and support[/b]
 This is a public Alpha playtest. Expect bugs, rough edges, balance changes, and incomplete visual or compatibility coverage. This listing stays Alpha; Beta and Release will be separate Workshop items.
 
-Built for Caves of Qud v1.0.5, core build 2.0.211.51. Later game builds are unverified. No dependency is required. Optional exact-version Hearthpyre 2.2.3 integration is included when Hearthpyre loads first; native compatibility remains unverified. Single-player only.
+Built for Caves of Qud v1.0.5, core build 2.0.211.51. Later game builds are unverified. No dependency is required. Optional exact-version Hearthpyre 2.2.3 integration is included when Hearthpyre loads first; native compatibility remains unverified.
 
 Back up saves before every Alpha install or update. Keep only one enabled copy of the mod; a local install plus a Workshop subscription can load the wrong one.
 

@@ -19,8 +19,6 @@ namespace ThousandAndFirst.Harness
 	/// EXACTLY ONE JOURNAL ROW PER INVOCATION, written here rather than by either caller, so the
 	/// attended and unattended paths can never disagree about what was recorded. The row is written
 	/// AFTER the verb answers, because a refusal's own message is the thing worth recording.
-	/// </para>
-	/// <para>
 	/// OK vs REFUSED is taken from the verb's own boolean, never guessed from its text. The reports
 	/// below are OBSERVATIONS: an ineligible verdict, an unhealthy roster, and an empty anchor store
 	/// are answers, so they journal OK. REFUSED means the verb declined to act, and it is the only
@@ -32,7 +30,8 @@ namespace ThousandAndFirst.Harness
 		internal const string Usage =
 			"Use {{W|kingdom:scenario}} with list, status, realize, anchor, ground, flatten, frame, "
 			+ "stagedigest, resourcedigest, standingdigest, "
-			+ "advance <turns>, arcology <entry|teaching|terrace|ward>, or capture "
+			+ "advance <turns>, yield-frames <frames>, "
+			+ "arcology <entry|teaching|terrace|ward>, or capture "
 			+ "<anchor-id> <scenario-key>[;param=value] "
 			+ "[at=<x>,<y>|id=<object-id>].";
 
@@ -45,11 +44,11 @@ namespace ThousandAndFirst.Harness
 
 		private const string ArcologyPrefix = KingdomScenarioHostedArcology.Verb + " ";
 
-		/// <summary>
-		/// Runs one verb and journals it. Returns the report; <paramref name="Ok"/> is false only
-		/// when the verb refused. A journal failure is fail-open: it is appended to the report as a
-		/// note and never changes the outcome.
-		/// </summary>
+		private const string FramesPrefix = KingdomScenarioFrames.Verb + " ";
+
+		/// <summary>Runs one verb and journals it. Returns the report; <paramref name="Ok"/> is
+		/// false only when the verb refused. A journal failure is fail-open: appended to the report
+		/// as a note, never changing the outcome.</summary>
 		internal static string Invoke(string Parameter, out bool Ok)
 		{
 			string raw = (Parameter ?? "").Trim();
@@ -60,10 +59,8 @@ namespace ThousandAndFirst.Harness
 				: message + "\n\n{{R|Journal row not written}}: " + note;
 		}
 
-		/// <summary>
-		/// The verb column: the first word, lowercased. Arguments are deliberately dropped - the
-		/// column names WHICH verb ran, and the message already carries what it was given.
-		/// </summary>
+		/// <summary>The verb column: the first word, lowercased. Arguments are deliberately dropped
+		/// - the column names WHICH verb ran, and the message carries what it was given.</summary>
 		internal static string Token(string Raw)
 		{
 			string raw = (Raw ?? "").Trim();
@@ -82,6 +79,10 @@ namespace ThousandAndFirst.Harness
 			// malformed-count code rather than falling through to a usage line that proves nothing.
 			if (Raw.StartsWith(AdvancePrefix, StringComparison.OrdinalIgnoreCase))
 				return KingdomScenarioAdvance.Run(Raw.Substring(AdvancePrefix.Length), out Ok);
+			// Same reading as advance: a bare `yield-frames` is refused by the verb's own
+			// malformed-count code rather than by a usage line that proves nothing.
+			if (Raw.StartsWith(FramesPrefix, StringComparison.OrdinalIgnoreCase))
+				return KingdomScenarioFrames.Run(Raw.Substring(FramesPrefix.Length), out Ok);
 			if (Raw.StartsWith(ArcologyPrefix, StringComparison.OrdinalIgnoreCase))
 				return KingdomScenarioHostedArcology.Run(
 					Raw.Substring(ArcologyPrefix.Length), out Ok);
@@ -90,6 +91,8 @@ namespace ThousandAndFirst.Harness
 				case "": return Help();
 				case KingdomScenarioAdvance.Verb:
 					return KingdomScenarioAdvance.Run("", out Ok);
+				case KingdomScenarioFrames.Verb:
+					return KingdomScenarioFrames.Run("", out Ok);
 				case KingdomScenarioHostedArcology.Verb:
 					return KingdomScenarioHostedArcology.Run("", out Ok);
 				case "list": return List();
@@ -167,6 +170,11 @@ namespace ThousandAndFirst.Harness
 				+ "It spends one turn per action opportunity through the engine's own pass, so "
 				+ "every system ticks; a row lands every " + KingdomScenarioAdvance.ProgressTurns
 				+ " turns and a scripted run resumes at its next verb afterwards.\n\n"
+				+ "{{W|yield-frames <frames>}} hands the engine back its own render loop until it "
+				+ "has drawn up to " + KingdomScenarioFrames.MaxFrames + " real frames, for state "
+				+ "only a rendered frame produces. It spends no turn: the unspent action "
+				+ "opportunity is what carries the engine into the render loop, and a "
+				+ KingdomScenarioFrames.CompleteRow + " row names the count actually observed.\n\n"
 				+ "Harness scope: a scenario skips the walk between production verbs. No verdict "
 				+ "taken in a scenario-built state signs native acceptance until independently "
 				+ "curated anchor evidence proves a green ordinary-play anchor for its authority "
@@ -217,15 +225,10 @@ namespace ThousandAndFirst.Harness
 				+ "\n\n" + Verdict(record);
 		}
 
-		/// <summary>
-		/// The current anchor verdict, recomputed from the DURABLE stamp.
-		/// <para>
-		/// Read from the save rather than from a run that may have ended sessions ago: after a
-		/// reload the only truth about what was compared is the published key-set digest, and a
-		/// status that reported the opening null state would keep saying nothing was compared long
-		/// after a run had compared it.
-		/// </para>
-		/// </summary>
+		/// <summary>The current anchor verdict, recomputed from the DURABLE stamp. Read from the
+		/// save rather than from a run that may have ended sessions ago: after a reload the only
+		/// truth about what was compared is the published key-set digest, and a status reporting
+		/// the opening null state would keep saying nothing was compared.</summary>
 		private static string Verdict(KingdomScenarioProvenance Record)
 		{
 			if (Record == null || Record.KeySetDigest == null)
@@ -260,11 +263,9 @@ namespace ThousandAndFirst.Harness
 			}
 		}
 
-		/// <summary>
-		/// Reads the curated anchor store. Deliberately read-only: an anchor is captured by a
-		/// reviewer from a state ordinary play reached, and the harness has no path that writes
-		/// one. Founding an anchor from inside a scenario-built game is exactly the self-signing
-		/// the ruling forbids.
+		/// <summary>Reads the curated anchor store. Deliberately read-only: an anchor is captured
+		/// by a reviewer from a state ordinary play reached, and the harness has no path that writes
+		/// one. Founding one inside a scenario-built game is the self-signing the ruling forbids.
 		/// </summary>
 		private static string Anchor()
 		{

@@ -1,4 +1,4 @@
-# Changelog
+﻿# Changelog
 
 All notable changes to The Thousand and First. Versions are semantic: patch for fixes,
 minor for additive API and content, major for breaking changes. Supported API is defined in
@@ -115,6 +115,18 @@ below it.
 > Windows gate, the native Quickstart boot matrix (last run on the shelter-ingress bytes below),
 > ordinary play, graceful Quit and Steam delivery.
 > The exact-inventory human semantic review is open against this digest; this is not Beta sign-off.
+
+## Unreleased — Workshop listing copy: drop single-player boilerplate
+
+- Removed the redundant "Single-player only" / "no multiplayer or user-moderation surface"
+  sentence from the Workshop listing and README (author ruling, issue #51). Steam Workshop mods
+  for a single-player game already carry that property; the line described no behavior a player
+  needed to plan around.
+- Updated together: the `Tools/workshop_metadata.py` description generator, the
+  `docs/WORKSHOP-DESCRIPTION-TEMPLATES.md` template, the regenerated `workshop.json` Description
+  field, and `README.md`. The assertion pins in `Tools/test-workshop-package.sh` and
+  `Tools/tests/workshop_metadata_test.py` now assert the shortened sentence rather than merely
+  dropping the old assertion. No manifest, version, or C# source change.
 
 ## Unreleased — Kingdom Quickstart shelter ingress
 

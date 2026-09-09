@@ -1,0 +1,9 @@
+# The production advisor creator builds a real guide; only its authored conversation graph is read.
+# No dialogue window is opened, the realm stays unfounded, and every advisor is disposed per case.
+DESCRIPTION=the camp guide offers five pinned topics in order, each answering and returning to Start
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;guide-topics-check;stagedigest
+VERBS=guide-topics-check
+EXPECT=stagedigest:OK~founded=false,guide-topics-check:OK~cases=3 passed=3 failed=0,stagedigest:OK~founded=false,COMPLETE
+SET=quickstart,native-regression
