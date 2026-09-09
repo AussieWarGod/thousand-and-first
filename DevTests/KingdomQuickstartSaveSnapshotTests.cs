@@ -171,7 +171,8 @@ namespace ThousandAndFirst.Tests
 		private static string Receipt(string key, bool advisor, int target = 6)
 		{
 			ClassicAssert.IsTrue(KingdomQuickstartRules.TryProfile(key, out KingdomQuickstartProfile profile));
-			ClassicAssert.IsTrue(KingdomQuickstartRules.TryCreateReceipt(key, profile.ZoneId, out KingdomQuickstartReceipt receipt));
+			ClassicAssert.IsTrue(KingdomQuickstartRules.TryCreateReceipt(key, profile.ZoneId,
+				KingdomQuickstartFoundersDisposition.Omitted, out KingdomQuickstartReceipt receipt));
 			string[] values = { "", "Starapple", "water-id", "larder-id", "materials-id", advisor ? "advisor-id" : "", "" };
 			for (int phase = 1; phase <= target; phase++)
 			{

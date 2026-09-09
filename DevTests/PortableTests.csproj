@@ -152,6 +152,7 @@
 	<Compile Include="KingdomDowngradeRequestTests.cs" />
 	<Compile Include="KingdomQuickstartRoundtripSourceTests.cs" />
 	<Compile Include="KingdomQuickstartGrantScopeTests.cs" />
+	<Compile Include="KingdomQuickstartFoundersTests.cs" />
     <Compile Include="KingdomQuickstartStockRulesTests.cs" />
     <Compile Include="..\Core\KingdomQuickstartStockRules.cs" />
     <Compile Include="ScenarioProcessPolicyTests.cs" />
@@ -221,6 +222,8 @@
     <Compile Include="..\Core\KingdomQuickstartModels.cs" />
     <Compile Include="..\Core\KingdomQuickstartRules.cs" />
     <Compile Include="..\Core\KingdomQuickstartRules.Shelter.cs" />
+    <Compile Include="..\Core\KingdomQuickstartRules.Founders.cs" />
+    <Compile Include="..\Core\KingdomCitizenshipRules.cs" />
     <Compile Include="..\Core\KingdomQuickstartGuideRules.cs" />
     <Compile Include="..\Core\KingdomQuickstartGrantScope.cs" />
     <Compile Include="..\Core\KingdomRealmChronicleIntentRules.cs" />

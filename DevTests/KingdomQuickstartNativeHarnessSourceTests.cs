@@ -55,7 +55,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void SixteenUniqueCaseIdsBindExactCreatorAndFaultCallbacks()
+		public void SeventeenUniqueCaseIdsBindExactCreatorAndFaultCallbacks()
 		{
 			string registrations = Method(Read(Creators), "internal static void NativeQuickstartChecks(")
 				+ Method(Read(Faults), "private static void NativeQuickstartFaults(");
@@ -67,6 +67,7 @@ namespace ThousandAndFirst.Tests
 				"creator-larder-recovery=NativeLarderCreator(Context)",
 				"creator-materials-recovery=NativeMaterialsCreator(Context)",
 				"creator-advisor-recovery=NativeAdvisorCreator(Context)",
+				"creator-founders-cohort=NativeFoundersCohort(Context)",
 				"creator-foreign-obstruction=NativeForeignObstruction(Context)",
 				"adapter-water-verification-refusal=NativeWaterFault(Context, \"verify\")",
 				"adapter-throw-before-placement=NativeWaterFault(Context, \"before\")",
@@ -82,10 +83,10 @@ namespace ThousandAndFirst.Tests
 			};
 			CollectionAssert.AreEqual(expected, matches.Cast<Match>().Select(m =>
 				m.Groups[1].Value + "=" + Flat(m.Groups[2].Value)).ToArray());
-			ClassicAssert.AreEqual(16, new HashSet<string>(matches.Cast<Match>()
+			ClassicAssert.AreEqual(17, new HashSet<string>(matches.Cast<Match>()
 				.Select(m => m.Groups[1].Value), StringComparer.Ordinal).Count);
 			StringAssert.Contains("NativeQuickstartFaults(Context);", registrations);
-			StringAssert.Contains("internal const int ExpectedCases = 16;", Read(Provider));
+			StringAssert.Contains("internal const int ExpectedCases = 17;", Read(Provider));
 		}
 
 		[TestCase("Water", "water", "VerifyWaterGrant", "Volume == 24")]
