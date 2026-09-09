@@ -88,6 +88,7 @@ see [LICENSE](LICENSE), [NOTICE](NOTICE), and [CODE_OF_CONDUCT.md](https://githu
 - [TESTING.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/TESTING.md) — authoritative native playtest protocol.
 - [docs/RELEASING.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/RELEASING.md) — private candidate, Alpha, full release, and Steam procedure.
 - [docs/ASSET_PROVENANCE.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/ASSET_PROVENANCE.md) — vanilla references, original art, and preview provenance.
+- [docs/BETA-GAP-REPORT-2026-09-09.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/BETA-GAP-REPORT-2026-09-09.md) — Beta gates #58–#70 gap analysis against the shipped 0.3.2 bytes.
 
 Caves of Qud is a trademark of Freehold Games, LLC. This is an unofficial community project, not
 affiliated with or endorsed by Freehold Games.
