@@ -38,7 +38,13 @@ For every job whose transitive `needs` include `public-confirm` the checker requ
       deliberately NOT required to re-check `release-checks` in its own `if`, matching the
       real workflow, since by the time `verify` runs `publish` has already required it;
   (e) `finalize` names an EXACT `needs.verify.outputs.status ==
-      'SubscribedInstallationVerified'` conjunct.
+      'SubscribedInstallationVerified'` conjunct;
+  (f) no `success()` call appears ANYWHERE in the condition, not just as the whole condition.
+      `success()` implicitly requires every transitive ancestor job (including `public-confirm`,
+      skipped by design on staging) to have succeeded -- this is the original #96 regression --
+      and that implicit requirement holds regardless of what other, correctly-formed conjuncts
+      are also present. `... && success()` appended to an otherwise-exact `if` is therefore
+      rejected even though every required conjunct is still there verbatim.
 """
 
 from __future__ import annotations
@@ -223,6 +229,15 @@ def dependency_gate_violations(jobs: dict[str, Any], gate_job: str) -> list[str]
                 f"true regardless of the required conjuncts"
             )
             continue
+        if "success()" in str(raw_condition):
+            violations.append(
+                f"job '{name}' uses success() somewhere in its if condition -- success() "
+                f"implicitly requires every transitive ancestor (including '{gate_job}', "
+                f"which is skipped by design on staging) to have succeeded, exactly the "
+                f"#96 regression, regardless of what other conjuncts are also present"
+            )
+            continue
+
         conjuncts = [normalize_conjunct(c) for c in top_level_conjuncts(str(raw_condition))]
 
         if "!cancelled()" not in conjuncts:
@@ -304,11 +319,16 @@ class ReleaseWorkflowConditionTests(unittest.TestCase):
         violations = dependency_gate_violations(self.jobs, "public-confirm")
         self.assertEqual(violations, [], "\n".join(violations))
 
-    def test_publish_and_verify_use_explicit_cancelled_and_result_form(self) -> None:
-        for name in ("publish", "verify"):
+    def test_every_public_confirm_chain_job_uses_explicit_cancelled_and_result_form(self) -> None:
+        """Generic over the whole public-confirm chain -- publish, verify, finalize, and any
+        future job added to it -- rather than a hardcoded pair, so a new chain job is covered
+        automatically instead of silently falling outside this check."""
+        gated = jobs_gated_on(self.jobs, "public-confirm")
+        self.assertTrue(gated)  # the assertion below is vacuous if the chain is ever empty
+        for name in gated:
             condition = str(self.jobs[name].get("if", ""))
             self.assertIn("!cancelled()", condition, f"{name}.if is missing !cancelled()")
-            self.assertNotIn("success()", condition, f"{name}.if uses bare success()")
+            self.assertNotIn("success()", condition, f"{name}.if uses success() somewhere")
 
     def test_finalize_names_the_verify_status_output(self) -> None:
         condition = str(self.jobs["finalize"].get("if", ""))
@@ -327,10 +347,7 @@ class ReleaseWorkflowConditionTests(unittest.TestCase):
         """Construct the pre-#92 finalize condition text and confirm the guard rejects it."""
         jobs = scaffold(finalize={"if": "${{ success() }}"})
         violations = dependency_gate_violations(jobs, "public-confirm")
-        self.assertTrue(any("finalize" in v and "!cancelled()" in v for v in violations))
-        self.assertTrue(any("finalize" in v and "'publish'" in v for v in violations))
-        self.assertTrue(any("finalize" in v and "'verify'" in v for v in violations))
-        self.assertTrue(any("finalize" in v and "SubscribedInstallationVerified" in v for v in violations))
+        self.assertTrue(any("finalize" in v and "success()" in v for v in violations), violations)
 
     def test_synthetic_fixed_condition_passes_the_check(self) -> None:
         """The #92 fix form for finalize must pass the same guard."""
@@ -476,6 +493,27 @@ class ReleaseWorkflowConditionTests(unittest.TestCase):
         self.assertTrue(
             any("verify" in v and "unparenthesized top-level ||" in v for v in violations),
             f"expected verify to reject the top-level || bypass: {violations}",
+        )
+
+    def test_success_appended_to_an_otherwise_valid_finalize_condition_fails(self) -> None:
+        """`&& success()` appended to an otherwise-exact finalize `if` leaves every required
+        conjunct present verbatim, so a checker that only verifies required conjuncts exist
+        would wrongly accept it. success() implicitly re-requires every transitive ancestor
+        (public-confirm included) to have succeeded -- exactly the original #96 regression --
+        so its mere presence anywhere in the condition must be rejected on its own."""
+        jobs = scaffold(finalize={"if": GOOD_FINALIZE_IF.replace(" }}", " && success() }}")})
+        violations = dependency_gate_violations(jobs, "public-confirm")
+        self.assertTrue(
+            any("finalize" in v and "success()" in v for v in violations),
+            f"expected finalize to reject the appended success(): {violations}",
+        )
+
+    def test_success_appended_to_an_otherwise_valid_verify_condition_fails(self) -> None:
+        jobs = scaffold(verify={"if": GOOD_VERIFY_IF.replace(" }}", " && success() }}")})
+        violations = dependency_gate_violations(jobs, "public-confirm")
+        self.assertTrue(
+            any("verify" in v and "success()" in v for v in violations),
+            f"expected verify to reject the appended success(): {violations}",
         )
 
     def test_dropped_release_checks_conjunct_on_finalize_fails(self) -> None:
