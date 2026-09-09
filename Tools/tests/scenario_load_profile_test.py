@@ -145,6 +145,32 @@ class ScenarioLoadProfileTest(unittest.TestCase):
                 self.assertEqual(sha((self.seal / "profile.sha256").read_bytes()), evidence["sourceHashes"][".seal/profile.sha256"])
                 self.assertEqual(evidence, json.loads((self.destination / "load-source-evidence.json").read_bytes()))
 
+    def test_destination_ancestor_is_validated_once_per_directory_before_any_worker_starts(self):
+        self.fixture()
+        for index in range(load.MAX_COPY_WORKERS * 3):
+            (self.mod / ("Core/Many%d.cs" % index)).write_bytes(("class Many%d {}" % index).encode("ascii"))
+        with contextlib.redirect_stdout(io.StringIO()):
+            load.scenario_profile.seal(str(self.local), str(self.seal / "profile.sha256"))
+        real_directory, real_copy_new = load.directory, load.copy_new
+        events = []
+        def directory_spy(path):
+            events.append(("directory", path))
+            real_directory(path)
+        def copy_new_spy(source, destination, expected, limit, validate_parent=True):
+            events.append(("copy", destination))
+            real_copy_new(source, destination, expected, limit, validate_parent)
+        with mock.patch.object(load, "directory", side_effect=directory_spy), \
+             mock.patch.object(load, "copy_new", side_effect=copy_new_spy):
+            load.prepare(self.source, self.destination, self.stopped)
+        target_local_dir = self.destination / "Local"
+        first_copy_index = next(index for index, (kind, _) in enumerate(events) if kind == "copy")
+        # Every fixture file lands directly in Local/, so the pre-fan-out validation for that one
+        # directory must appear exactly once, strictly before the first worker's copy_new call --
+        # not once per file, which would show up interleaved with (and outnumbering) the copies.
+        before_any_copy = [path for kind, path in events[:first_copy_index]
+                            if kind == "directory" and path == target_local_dir]
+        self.assertEqual([target_local_dir], before_any_copy)
+
     def test_phase_timings_are_recorded_in_order_and_never_gate_success(self):
         self.fixture()
         load.prepare(self.source, self.destination, self.stopped)
@@ -275,8 +301,8 @@ class ScenarioLoadProfileTest(unittest.TestCase):
         self.fixture()
         original = load.copy_new
         changed = []
-        def copy_then_change(source, destination, expected, limit):
-            original(source, destination, expected, limit)
+        def copy_then_change(source, destination, expected, limit, validate_parent=True):
+            original(source, destination, expected, limit, validate_parent)
             if source == self.save / "Cache.db":
                 (self.save / "Primary.sav.gz").write_bytes(b"external concurrent change")
                 changed.append(self.before())
@@ -289,6 +315,32 @@ class ScenarioLoadProfileTest(unittest.TestCase):
         self.assertFalse((self.destination / "load-source-evidence.json").exists())
         self.assertFalse((self.destination / "load-phase-timings.json").exists())
 
+    def test_one_bad_local_file_among_many_refuses_sealing_but_joins_every_worker(self):
+        self.fixture()
+        # Widen past a single worker's share so the fan-out actually spans multiple threads.
+        for index in range(load.MAX_COPY_WORKERS * 3):
+            (self.mod / ("Core/Extra%d.cs" % index)).write_bytes(("class Extra%d {}" % index).encode("ascii"))
+        with contextlib.redirect_stdout(io.StringIO()):
+            load.scenario_profile.seal(str(self.local), str(self.seal / "profile.sha256"))
+        before = self.before()
+        bad_file = self.mod / "Core/Extra1.cs"
+        real_copy_new = load.copy_new
+        completed = []
+        def flaky(source, destination, expected, limit, validate_parent=True):
+            if source == bad_file:
+                raise ValueError("synthetic single-worker failure")
+            real_copy_new(source, destination, expected, limit, validate_parent)
+            completed.append(destination)
+        with mock.patch.object(load, "copy_new", side_effect=flaky):
+            with self.assertRaisesRegex(ValueError, "synthetic single-worker failure"):
+                load.prepare(self.source, self.destination, self.stopped)
+        self.assertEqual(before, self.before())
+        self.assertFalse((self.destination_seal / "profile.sha256").exists())
+        self.assertFalse((self.destination / "load-source-evidence.json").exists())
+        self.assertFalse((self.destination / "load-phase-timings.json").exists())
+        # Every sibling worker still ran to completion (was joined) despite the one failure.
+        self.assertGreater(len(completed), load.MAX_COPY_WORKERS)
+
     def test_unproved_destination_injection_is_not_sealed_or_overwritten(self):
         for race in ("extra", "occupied-copy"):
             with self.subTest(race=race):
@@ -296,12 +348,12 @@ class ScenarioLoadProfileTest(unittest.TestCase):
                 before = self.before()
                 original = load.copy_new
                 injected = []
-                def inject(source, destination, expected, limit):
+                def inject(source, destination, expected, limit, validate_parent=True):
                     if not injected and (race == "occupied-copy" or source == self.save / "Cache.db"):
                         path = destination if race == "occupied-copy" else self.destination / "Local/Injected.cs"
                         path.write_bytes(b"foreign bytes retained")
                         injected.append(path)
-                    original(source, destination, expected, limit)
+                    original(source, destination, expected, limit, validate_parent)
                 with mock.patch.object(load, "copy_new", side_effect=inject):
                     with self.assertRaises((ValueError, FileExistsError)):
                         load.prepare(self.source, self.destination, self.stopped)
@@ -325,6 +377,85 @@ class ScenarioLoadProfileTest(unittest.TestCase):
             self.assertEqual("WIN:" + str(TOOLS / "assert-scenario-source-stopped.ps1"), command[5])
             self.assertEqual(["-Root", "WIN:/mnt/c/taf-scenario.Source", "-Game", r"F:\SteamLibrary\steamapps\common\Caves of Qud\CoQ.exe"], command[6:])
             self.assertTrue(run.call_args.kwargs["check"])
+
+
+
+
+class CopyNewFilesTest(unittest.TestCase):
+    """Direct contracts for the bounded parallel fan-out, independent of the full profile."""
+
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory(prefix="taf-copy-new-files-test.")
+        self.addCleanup(self.temporary.cleanup)
+        self.base = Path(self.temporary.name)
+        self.source_dir = self.base / "source"
+        self.dest_dir = self.base / "dest"
+        self.source_dir.mkdir()
+        self.dest_dir.mkdir()
+
+    def make_pairs(self, count):
+        pairs = []
+        for index in range(count):
+            content = ("payload-%d" % index).encode("ascii")
+            source = self.source_dir / ("file-%03d.bin" % index)
+            source.write_bytes(content)
+            pairs.append((source, self.dest_dir / source.name, sha(content)))
+        return pairs
+
+    def test_copies_every_pair_with_matching_inventory_more_files_than_workers(self):
+        pairs = self.make_pairs(load.MAX_COPY_WORKERS * 3 + 1)
+        load.copy_new_files(pairs, load.MAX_LOCAL_FILE)
+        for source, destination, expected in pairs:
+            self.assertEqual(source.read_bytes(), destination.read_bytes())
+            self.assertEqual(expected, sha(destination.read_bytes()))
+        source_inventory = load.scenario_profile.inventory(str(self.source_dir))
+        dest_inventory = load.scenario_profile.inventory(str(self.dest_dir))
+        self.assertEqual(source_inventory, dest_inventory)
+
+    def test_empty_pairs_is_a_noop(self):
+        load.copy_new_files([], load.MAX_LOCAL_FILE)
+        self.assertEqual([], list(self.dest_dir.iterdir()))
+
+    def test_worker_count_is_bounded_and_never_exceeds_pair_count(self):
+        seen = []
+        real_executor = load.concurrent.futures.ThreadPoolExecutor
+        def spy(max_workers=None, **kwargs):
+            seen.append(max_workers)
+            return real_executor(max_workers=max_workers, **kwargs)
+        few_pairs = self.make_pairs(2)
+        (self.dest_dir / "many").mkdir()
+        many_pairs = [(source, self.dest_dir / "many" / destination.name, expected)
+                      for source, destination, expected in self.make_pairs(load.MAX_COPY_WORKERS * 5)]
+        with mock.patch.object(load.concurrent.futures, "ThreadPoolExecutor", side_effect=spy):
+            load.copy_new_files(few_pairs, load.MAX_LOCAL_FILE)
+            load.copy_new_files(many_pairs, load.MAX_LOCAL_FILE)
+        self.assertEqual([2, load.MAX_COPY_WORKERS], seen)
+
+    def test_one_failing_worker_is_reported_after_every_worker_is_joined(self):
+        pairs = self.make_pairs(load.MAX_COPY_WORKERS * 4)
+        bad_source, bad_destination, _ = pairs[len(pairs) // 2]
+        pairs[len(pairs) // 2] = (bad_source, bad_destination, "0" * 64)  # wrong expected hash
+        with self.assertRaisesRegex(ValueError, "copy differs from frozen source"):
+            load.copy_new_files(pairs, load.MAX_LOCAL_FILE)
+        # Every OTHER worker still ran to completion (was joined) before the failure propagated:
+        # ThreadPoolExecutor's context manager waits for every submitted future either way.
+        completed = [destination for _, destination, _ in pairs if destination != bad_destination]
+        for destination in completed:
+            self.assertTrue(destination.exists(), "sibling worker output missing: " + str(destination))
+        # The module's stated contract is "refusals retain any partial destination, no cleanup
+        # mode": the bytes were faithfully copied from source, only the (deliberately wrong)
+        # expected hash supplied by this test made copy_new's readback proof fail afterward.
+        self.assertTrue(bad_destination.exists())
+        self.assertEqual(bad_source.read_bytes(), bad_destination.read_bytes())
+
+    def test_source_read_failure_in_one_worker_does_not_abort_siblings(self):
+        pairs = self.make_pairs(load.MAX_COPY_WORKERS * 2)
+        missing_source, missing_destination, expected = pairs[0]
+        missing_source.unlink()
+        with self.assertRaises(OSError):
+            load.copy_new_files(pairs, load.MAX_LOCAL_FILE)
+        for source, destination, _ in pairs[1:]:
+            self.assertTrue(destination.exists(), "sibling worker output missing: " + str(destination))
 
 
 if __name__ == "__main__":

@@ -6,6 +6,7 @@ Refusals retain any partial destination; there is no cleanup or overwrite mode.
 """
 from __future__ import annotations
 
+import concurrent.futures
 import hashlib
 import json
 import os
@@ -31,6 +32,7 @@ MAX_SNAPSHOT = 4 * 1024 * 1024
 MAX_FILES = 16384
 MAX_TREE_BYTES = 2 * 1024 * 1024 * 1024
 SAVE_FILES = ("Primary.sav.gz", "Primary.json", "Cache.db")
+MAX_COPY_WORKERS = 4  # Bounded local-only fan-out; never spawns a process, never touches Windows.
 
 
 def _iso(moment: float) -> str:
@@ -167,13 +169,54 @@ def write_new(path: Path, data: bytes) -> None:
     require(digest(path, max(len(data), 1)) == hashlib.sha256(data).hexdigest(), "destination readback changed")
 
 
-def copy_new(source: Path, destination: Path, expected: str, limit: int) -> None:
-    directory(destination.parent)
+def copy_new(source: Path, destination: Path, expected: str, limit: int, validate_parent: bool = True) -> None:
+    """Exclusive create, flush, fsync, then an independent readback hash proof.
+
+    `validate_parent=False` skips the destination ancestor walk here because the caller (the
+    bounded parallel fan-out below) already ran `directory()` on every distinct destination
+    directory once, before any worker started. That is provably equivalent to checking on every
+    call: these directories were created moments earlier by this same single-threaded process,
+    workers only ever write regular files (never create/rename/relink a directory), and nothing
+    else touches this throwaway profile tree while the fan-out runs. Every serial caller (the
+    three named save artifacts) keeps the original per-file check.
+    """
+    if validate_parent:
+        directory(destination.parent)
     with destination.open("xb") as target:
         copied = read_stream(source, limit, target.write)
         target.flush()
         os.fsync(target.fileno())
     require(copied == expected and digest(destination, limit) == expected, "copy differs from frozen source: " + str(source))
+
+
+def copy_new_files(pairs: list[tuple[Path, Path, str]], limit: int, workers: int = MAX_COPY_WORKERS) -> None:
+    """Bounded local-only parallel fan-out of copy_new, one worker thread per file at a time.
+
+    Every guard copy_new performs -- exclusive create, flush, fsync, independent readback hash --
+    runs unchanged for every file; only the per-file destination ancestor recheck is hoisted out
+    (see copy_new's validate_parent docstring). This never launches a process, never touches a
+    network path, and workers only write regular files under directories the caller already
+    validated.
+
+    Every future is joined (ThreadPoolExecutor.shutdown waits for all of them) before this
+    function returns or raises, so a failure in one worker can never leave another worker still
+    running when the caller moves on. On any failure, every file's outcome is still awaited, the
+    first error is re-raised, and prepare() therefore never reaches the sealing phase: whatever
+    partial destination bytes exist stay exactly as ordinary serial failure would have left them.
+    """
+    if not pairs:
+        return
+    errors: list[BaseException] = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=min(workers, len(pairs))) as pool:
+        futures = [pool.submit(copy_new, source, destination, expected, limit, False)
+                   for source, destination, expected in pairs]
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                future.result()
+            except BaseException as error:
+                errors.append(error)
+    if errors:
+        raise errors[0]
 
 
 def request_text(raw: bytes) -> str:
@@ -289,8 +332,13 @@ def prepare(source: Path, destination: Path, assert_stopped: Callable[[Path], No
             for child in sorted(directories):
                 (target_local / (Path(current) / child).relative_to(local)).mkdir()
     with timer.measure("local-copy", {"files": len(files), "bytes": sum(os.path.getsize(path) for path in files)}):
-        for path in files:
-            copy_new(path, target_local / path.relative_to(local), expected[scenario_profile.normalize(str(path.relative_to(local)))], MAX_LOCAL_FILE)
+        pairs = [(path, target_local / path.relative_to(local),
+                  expected[scenario_profile.normalize(str(path.relative_to(local)))]) for path in files]
+        # Validate every distinct destination directory exactly once, before any worker starts:
+        # see copy_new's validate_parent docstring for why re-checking per file proves nothing more.
+        for parent in sorted({destination.parent for _, destination, _ in pairs}):
+            directory(parent)
+        copy_new_files(pairs, MAX_LOCAL_FILE)
     with timer.measure("post-copy-target-inventory"):
         require(scenario_profile.inventory(str(target_local)) == expected, "copied Local differs from original closed inventory")
         write_new(target_local / "scenario-load.txt", load_request)
