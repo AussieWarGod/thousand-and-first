@@ -155,6 +155,15 @@ class ScenarioLoadProfileTest(unittest.TestCase):
         real_open_root, real_open_chain, real_copy_new = (
             load.open_validated_root, load.open_directory_chain, load.copy_new)
         events = []
+        real_tree, real_copies = load.make_directory_tree, load.copy_new_files
+        def tree_spy(*args):
+            events.clear()
+            return real_tree(*args)
+        def copies_spy(*args):
+            try:
+                return real_copies(*args)
+            finally:
+                events.append(("end_parallel", None))
         def open_root_spy(path):
             events.append(("open_root", path))
             return real_open_root(path)
@@ -166,8 +175,11 @@ class ScenarioLoadProfileTest(unittest.TestCase):
             real_copy_new(source, destination, expected, limit, dir_fd)
         with mock.patch.object(load, "open_validated_root", side_effect=open_root_spy), \
              mock.patch.object(load, "open_directory_chain", side_effect=open_chain_spy), \
-             mock.patch.object(load, "copy_new", side_effect=copy_new_spy):
+             mock.patch.object(load, "copy_new", side_effect=copy_new_spy), \
+             mock.patch.object(load, "make_directory_tree", side_effect=tree_spy), \
+             mock.patch.object(load, "copy_new_files", side_effect=copies_spy):
             load.prepare(self.source, self.destination, self.stopped)
+        events = events[:events.index(("end_parallel", None))]
         first_copy_index = next(index for index, event in enumerate(events) if event[0] == "copy")
         opens_before_any_copy = [event for event in events[:first_copy_index] if event[0] != "copy"]
         opens_after = [event for event in events[first_copy_index:] if event[0] != "copy"]
@@ -441,7 +453,7 @@ class ScenarioLoadProfileTest(unittest.TestCase):
         real_open_validated_root = load.open_validated_root
         swapped = []
         def swap_before_root_open(path):
-            if not swapped:
+            if path == self.destination / "Local" and not swapped:
                 # Simulates ANOTHER PROCESS winning the race between the earlier directory()
                 # ancestor proof (inside empty_destination, on `destination`'s own parent chain)
                 # and this call: swap `destination` itself -- an ANCESTOR of target_local, not
@@ -613,6 +625,37 @@ class CopyNewFilesTest(unittest.TestCase):
             load.copy_new_files(pairs, load.MAX_LOCAL_FILE)
         for source, destination, _, _ in pairs[1:]:
             self.assertTrue(destination.exists(), "sibling worker output missing: " + str(destination))
+
+
+class AnchoredDestinationWritesTest(unittest.TestCase):
+    def test_every_output_kind_refuses_swapped_ancestor_without_outside_write(self):
+        for kind in ("directory", "receipt", "save"):
+            with self.subTest(kind=kind), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary)
+                ancestor, outside = root / "ancestor", root / "outside"
+                parent = ancestor / "parent"
+                parent.mkdir(parents=True)
+                (outside / "parent").mkdir(parents=True)
+                source = root / "source"
+                source.write_bytes(b"sealed bytes")
+                real_open = load.open_validated_root
+                swapped = []
+                def swap(path):
+                    if path == parent and not swapped:
+                        ancestor.rename(root / "retained")
+                        ancestor.symlink_to(outside, target_is_directory=True)
+                        swapped.append(True)
+                    return real_open(path)
+                with mock.patch.object(load, "open_validated_root", side_effect=swap):
+                    with self.assertRaises((ValueError, OSError)):
+                        if kind == "directory":
+                            load.create_directory(parent / "new")
+                        elif kind == "receipt":
+                            load.write_new(parent / "new", b"receipt")
+                        else:
+                            load.copy_new(source, parent / "new", sha(b"sealed bytes"), 100)
+                self.assertEqual([True], swapped)
+                self.assertEqual([], list((outside / "parent").iterdir()))
 
 
 if __name__ == "__main__":

@@ -161,8 +161,12 @@ def empty_destination(path: Path) -> None:
 
 
 def write_new(path: Path, data: bytes) -> None:
-    directory(path.parent)
-    with path.open("xb") as target:
+    parent = open_validated_root(path.parent)
+    try:
+        handle = os.open(path.name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, dir_fd=parent)
+    finally:
+        os.close(parent)
+    with os.fdopen(handle, "wb") as target:
         target.write(data)
         target.flush()
         os.fsync(target.fileno())
@@ -172,6 +176,25 @@ def write_new(path: Path, data: bytes) -> None:
 DIR_FD_SUPPORTED = (os.open in os.supports_dir_fd and os.mkdir in os.supports_dir_fd
                     and hasattr(os, "O_DIRECTORY") and hasattr(os, "O_NOFOLLOW"))
 DIR_FLAGS = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+
+
+def create_directory(path: Path, allow_empty: bool = False) -> None:
+    """Create only beneath an anchored parent; existing roots must remain owned and empty."""
+    parent = open_validated_root(path.parent)
+    try:
+        try:
+            os.mkdir(path.name, dir_fd=parent)
+        except FileExistsError:
+            if not allow_empty:
+                raise
+        child = open_directory_chain(parent, (path.name,))
+        try:
+            require(os.fstat(child).st_uid == os.getuid(), "destination is not owned by this user")
+            require(not os.listdir(child), "destination is occupied: " + str(path))
+        finally:
+            os.close(child)
+    finally:
+        os.close(parent)
 
 
 def open_validated_root(path: Path) -> int:
@@ -199,6 +222,7 @@ def open_validated_root(path: Path) -> int:
     this module resolves more than one path component per syscall, and it does so entirely via
     single-component dir_fd-relative opens chained from "/" -- never a multi-component name.
     """
+    require(DIR_FD_SUPPORTED, "this platform cannot anchor directory custody")
     require(path.is_absolute(), "root anchor path must be absolute: " + str(path))
     root_fd = os.open(os.sep, DIR_FLAGS)
     try:
@@ -270,13 +294,15 @@ def copy_new(source: Path, destination: Path, expected: str, limit: int, dir_fd:
     directory file descriptor (see make_directory_tree/open_directory_chain) instead of resolving
     `destination`'s parent by name: the create can then never be redirected by a directory-name
     swap -- of the leaf OR any intermediate ancestor -- because dir_fd-relative opens operate on
-    the fd's inode, not any path string. Every caller without a dir_fd keeps the original per-file
-    `directory(destination.parent)` walk-by-name.
+    the fd's inode, not any path string. Callers without a dir_fd acquire an anchored parent too.
     """
     flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW
     if dir_fd is None:
-        directory(destination.parent)
-        handle = os.open(destination, flags)
+        parent = open_validated_root(destination.parent)
+        try:
+            handle = os.open(destination.name, flags, dir_fd=parent)
+        finally:
+            os.close(parent)
     else:
         handle = os.open(destination.name, flags, dir_fd=dir_fd)
     with os.fdopen(handle, "wb") as target:
@@ -421,10 +447,10 @@ def prepare(source: Path, destination: Path, assert_stopped: Callable[[Path], No
         counters["localFiles"] = len(files)
     with timer.measure("destination-setup"):
         empty_destination(destination); empty_destination(destination_seal)
-        if not destination.exists(): destination.mkdir()
-        if not destination_seal.exists(): destination_seal.mkdir()
+        create_directory(destination, allow_empty=True)
+        create_directory(destination_seal, allow_empty=True)
         target_local = destination / "Local"
-        target_local.mkdir()
+        create_directory(target_local)
         # Every subdirectory below target_local is created AND opened one path component at a time,
         # relative to its own already-anchored parent fd -- never by resolving a multi-component
         # path -- so a swap of any intermediate ancestor's NAME during the copy phase below cannot
@@ -444,11 +470,11 @@ def prepare(source: Path, destination: Path, assert_stopped: Callable[[Path], No
         write_new(target_local / "scenario-load.txt", load_request)
         write_new(target_local / "scenario-load-snapshot.txt", snapshot)
     with timer.measure("save-copy"):
-        (destination / "Save").mkdir()
-        (destination / "Synced").mkdir()
-        (destination / "Synced/Saves").mkdir()
+        create_directory(destination / "Save")
+        create_directory(destination / "Synced")
+        create_directory(destination / "Synced/Saves")
         target_save = destination / "Synced/Saves" / game_id
-        target_save.mkdir()
+        create_directory(target_save)
         for name in SAVE_FILES:
             copy_new(save / name, target_save / name, hashes[name], MAX_FILE)
     with timer.measure("source-reproof"):

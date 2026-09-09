@@ -10,6 +10,13 @@ below it.
 
 ## Unreleased — Beta gap report
 
+### Fixed
+
+- Developer cold-load preparation anchors all destination writes, including directory creation,
+  saved-game copies and receipt files, through no-follow directory handles. An ancestor symlink
+  swap cannot redirect writes outside the intended tree; independent readback and seal checks
+  still refuse changed paths. This changes test tooling only, not ordinary saves or mod content.
+
 ### Docs
 
 - Landed the 2026-09-09 Beta gap report (`docs/BETA-GAP-REPORT-2026-09-09.md`), re-read against the
