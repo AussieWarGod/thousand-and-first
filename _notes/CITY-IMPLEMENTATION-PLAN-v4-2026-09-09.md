@@ -1,12 +1,15 @@
 > **Provenance note (added 2026-09-10):** this is the frozen "City implementation plan v4 —
 > camp, storage, founders, sight" design document from 2026-09-09. The working copy lived only
 > in a scratch location and was lost to an environment rebuild. It was recovered verbatim from
-> a preserved agent tool-result transcript and verified byte-for-byte against the original:
-> `sha256sum` = `6deedb98ad9b11d3043c0f2f5ae2d758d5fd9ac67ec9b3386c1f6caca7f84585` (752 lines),
-> matching the digest recorded at the time the plan was frozen. Retained here so the design
-> record is not lost again. Ticket numbers (T-camp, T-storage-2, T-founders, etc.) refer to
-> GitHub issues opened from this plan; cross-check against the issue tracker for current status,
-> since implementation may have since diverged from this frozen spec.
+> a preserved agent tool-result transcript. **This header is not part of that recovery**: the
+> plan body below (everything after the `---` divider, 752 lines) was verified byte-for-byte
+> against the original file before this header was prepended — `sha256sum` of the 752-line
+> plan body alone is `6deedb98ad9b11d3043c0f2f5ae2d758d5fd9ac67ec9b3386c1f6caca7f84585`, matching
+> the digest recorded at the time the plan was frozen. The digest does not cover this note file
+> as a whole (764 lines including this header). Retained here so the design record is not lost
+> again. Ticket numbers (T-camp, T-storage-2, T-founders, etc.) refer to GitHub issues opened
+> from this plan; cross-check against the issue tracker for current status, since implementation
+> may have since diverged from this frozen spec.
 
 ---
 
