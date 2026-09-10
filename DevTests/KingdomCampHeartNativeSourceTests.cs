@@ -15,6 +15,7 @@ namespace ThousandAndFirst.Tests
 		private const string Phases = "Harness/KingdomCampHeartNativeChecksPhases.cs";
 		private const string Reads = "Harness/KingdomCampHeartNativeReads.cs";
 		private const string Bill = "Harness/KingdomCampHeartNativeBill.cs";
+		private const string Claim = "Harness/KingdomCampHeartNativeClaim.cs";
 		private const string Persona = "Tools/personas/camp-heart-native-checks.persona";
 		private static string Read(string path) => TestMain.ReadRepositoryText(path);
 
@@ -35,7 +36,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void NoShardEverDrivesTheUpgradeItself()
 		{
-			foreach (string path in new[] { Provider, Checks, Fixture, Phases, Reads, Bill })
+			foreach (string path in new[] { Provider, Checks, Fixture, Phases, Reads, Bill, Claim })
 			{
 				string text = Read(path);
 				foreach (string forbidden in new[] { "KingdomUpgrade.Begin(",
@@ -182,6 +183,47 @@ namespace ThousandAndFirst.Tests
 			Assert.That(bill, Does.Not.Contain(">= Units"));
 			// Absence from the store is only ever claimed as absence from the store.
 			Assert.That(Read(Reads), Does.Contain("ABSENT FROM THE DEDICATED STORE"));
+		}
+
+		[Test]
+		public void ARealCommissionIsPutToTheSettlementAndTheHeartGroundIsNeverTaken()
+		{
+			string claim = Read(Claim);
+			foreach (string token in new[] {
+				"KingdomPlots.Commission(System, Zone, entry, null,",
+				"KingdomPlots.ReadPlots(Zone)",
+				"Require(!KingdomPlotRules.Overlaps(laid,",
+				"KingdomPlotRules.Reserved(heart)",
+				"taf-camp-claim-took-heart-ground",
+				"Require(KingdomPlotRules.CrowdsExisting(overStore, standing),",
+				"taf-camp-claim-store-not-crowded",
+				"taf-camp-claim-staked-on-refusal",
+				"RequireStoreIdentity();", "taf-camp-claim-fire-disturbed" })
+				Assert.That(claim, Does.Contain(token), token);
+			Assert.That(Read(Phases), Does.Contain("RequireHeartGroundNeverTaken(standing);"));
+		}
+
+		[Test]
+		public void NoStockpileSpecificRefusalReasonIsEverClaimed()
+		{
+			string claim = Read(Claim);
+			// #107's "refuses for stockpile reason" is deliberately NOT asserted: production
+			// records no such reason on this path. The refusal text is recorded verbatim and
+			// never required to name the store.
+			Assert.That(claim, Does.Contain("NO STOCKPILE-SPECIFIC REASON IS CLAIMED"));
+			Assert.That(claim, Does.Contain("KingdomScenarioRules.Bounded(failure)"));
+			foreach (string forbidden in new[] { "RefuseObstruction", "camp stockpile\"",
+				"Does.Contain(\"stockpile\")" })
+				Assert.That(claim, Does.Not.Contain(forbidden), forbidden);
+			// The founder-facing answer when nothing fits is RefuseRoom, and that literal lives
+			// where the siting path emits it, not in the harness.
+			string siting = Read("Growth/KingdomPlot2.08.Siting.cs");
+			Assert.That(siting, Does.Contain("Refusal = KingdomPlotRules.RefuseRoom(staked);"));
+			Assert.That(siting, Does.Contain(
+				"if (KingdomPlotRules.CrowdsExisting(rect, laid)) continue;"));
+			Assert.That(Read(Checks),
+				Does.Contain("stockpile-refusal-reason-claimed=false"));
+			Assert.That(Read(Phases), Does.Contain("stockpile-reason-claimed=false"));
 		}
 
 		[Test]

@@ -134,6 +134,7 @@ namespace ThousandAndFirst.Harness
 				Require(Offset(fire.CurrentCell) == Offset(FireCell),
 					"taf-camp-fire-moved: the camp fire left its rite-relative cell: "
 						+ Offset(FireCell) + " -> " + Offset(fire.CurrentCell));
+				RequireHeartGroundNeverTaken(standing);
 				Evidence.Append("\nphase2 tick=").Append(Game.TimeTicks)
 					.Append("; standing=").Append(standing.IDIfAssigned)
 					.Append("; key=").Append(KingdomUpgrade.DesignKeyOf(standing))
@@ -146,7 +147,9 @@ namespace ThousandAndFirst.Harness
 					.Append("; fire=").Append(fire.IDIfAssigned)
 					.Append('@').Append(Offset(fire.CurrentCell))
 					.Append("; zone rung read=").Append(KingdomPlots.HeartRung(Zone))
-					.Append("; basin capacity read=").Append(BasinCapacity(standing));
+					.Append("; basin capacity read=").Append(BasinCapacity(standing))
+					.Append("; real commission outcome=").Append(ClaimOutcome)
+					.Append("; stockpile-reason-claimed=false");
 			}
 
 			/// <summary>The bodies in Present whose identity appears in Wanted, in Wanted's own

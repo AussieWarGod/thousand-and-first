@@ -63,28 +63,33 @@ the opposite order, which is exactly what refused the forage seam's first native
 2026-09-10.
 
 Evidence on these bytes: canonical `Tools/gate.sh --keep` printed all four COMPILE CLEAN lines —
-staged baseline 3074, staged compatibility 3078, dev-harness baseline 3259, dev-harness
-compatibility 3263 — plus installed Hearthpyre ABI clean. Licensed managed suites ran with zero
-skips: TafTests 14,259 and PortableTests 5,399. The full portable repository audit, the
+staged baseline 3074, staged compatibility 3078, dev-harness baseline 3260, dev-harness
+compatibility 3264 — plus installed Hearthpyre ABI clean. Licensed managed suites ran with zero
+skips: TafTests 14,261 and PortableTests 5,401. The full portable repository audit, the
 documentation freshness check, 766 Tools tests, the removal-coverage generator check and the
-architecture XML reference check all pass. Nineteen source mutations of the seam's custody
+architecture XML reference check all pass. Twenty-four source mutations of the seam's custody
 predicates — dropped raw-count, holder, blueprint, missing-identity, duplicate-identity, duplicate
 listing, spent-unit and truncation checks, a folded blueprint comparer, a dropped born stamp and
 an inverted place/publish order, a dropped player-led clause, a forgiven overcharge, a forgiven
 extra charged kind, a forgiven short charge, a downgraded incomplete-census guard, a neutralised
 contradictory-custody guard, a loosened holder field check, an identity-string body comparison and
-an inexact water bill — each fail only the focused cases that cover them, and the restored source
-passes all twenty-nine.
+an inexact water bill, a heart-ground overlap forgiven, a store cell no longer crowded out and a
+dropped verbatim refusal reason — each fail only the focused cases that cover them, and the
+restored source passes all thirty-one.
 
 This is a source, compile and registration claim only. **No native run of this persona has been
 made**, so it signs nothing about actual Caves of Qud behaviour yet; the recipe for the operator is
 `Tools/run-personas.sh camp-heart-native-checks`. PR #107 native cases 1, 3, 4, 5 and 6 remain
-owed, and two of them are blocked on author rulings recorded on the pull request rather than on
-work: case 3 (raise the moot) because nothing on the improvement route advances the zone's
-`r_TAF_HeartRung`, which `KingdomArchitectureRuntime.TryPrepareSuccessor` requires to equal the
-standing rung before it will accrete rung 2 to rung 3; and case 6 because the production plot-claim
-path drops a rect that crowds an existing plot silently, before any ground is read, so no
-stockpile-named refusal is reachable there.
+owed. Case 6 is answered here as far as the production plot-claim path reaches: a real commission
+is put to the settlement while the heart stands, the commissioned plot never lands on the heart's
+reserved rect, the production crowding predicate refuses the exact rect covering the camp store's
+cell, and the store and fire are untouched — but **no stockpile-specific refusal reason is
+claimed**, because the siting path drops a crowding rect with a bare `continue` and no recorded
+reason before any ground is read, and the founder-facing answer when nothing fits is
+`KingdomPlotRules.RefuseRoom`. Case 3 (raise the moot) is a suspected production defect under
+review: nothing on the improvement route advances the zone's `r_TAF_HeartRung`, which
+`KingdomArchitectureRuntime.TryPrepareSuccessor` requires to equal the standing rung before it will
+accrete rung 2 to rung 3.
 
 Native fixture recovery: matched seed `#121783523` measured 50 settlers/citizens/roll rows,
 two stores, 1,936 drams capacity and zero water. The previous fixture incorrectly required one

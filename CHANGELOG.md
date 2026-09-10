@@ -36,7 +36,17 @@ below it.
   directions, so neither an ordinary drink nor an overcharge can pass as the bill. The
   settlement-wide readings use the production unbound-recovery observation, which publishes
   nothing, refuses during a bound pass, and refuses a partial index rather than under-reporting. Harness, persona and DevTests only; no
-  production source changed. Cases 1, 3, 4, 5 and 6 of #107 remain owed.
+  production source changed.
+
+- The same seam now also answers PR #107's native case 6 as far as the production plot-claim path
+  reaches: a REAL commission is put to the settlement while the camp heart stands, and the heart's
+  ground is proved untakeable — the commissioned plot never lands on the heart's reserved rect, the
+  production crowding predicate refuses the exact rect that would cover the camp store's own cell,
+  and the store and fire are untouched by the attempt. **No stockpile-specific refusal reason is
+  claimed.** #107's wording "refuses for stockpile reason" is deliberately not asserted, because
+  production records no such reason here: the siting path drops a crowding rect with a bare
+  `continue` and no recorded reason before the ground is ever read, and the founder-facing answer
+  when nothing fits is `KingdomPlotRules.RefuseRoom`. Cases 1, 3, 4 and 5 of #107 remain owed.
 
 - Kingdom Quickstart now founds a world with four founding citizens — a hand, a drifter, a tinker
   and a physicker of one culture per camp — enrolled under a new `Founding` reason that only this

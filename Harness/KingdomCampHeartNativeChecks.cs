@@ -55,6 +55,7 @@ namespace ThousandAndFirst.Harness
 				+ "; synthetic-camp=true; synthetic-residents=true; synthetic-store-contents=true"
 				+ "; synthetic-drams=true; synthetic-born-provenance=true"
 				+ "; improvement-notice-premarked=true"
+				+ "; stockpile-refusal-reason-claimed=false"
 				+ "; ordinary-acceptance=false; charter=untested; save-load=untested"
 				+ Retained.Evidence;
 		}
