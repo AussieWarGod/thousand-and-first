@@ -1527,9 +1527,9 @@ def _locate_matches(
                     # aside mid-scan. Only the release context below, where a held
                     # descriptor has already proved st_nlink == 0, may tolerate this.
                     raise RetainedEntry(
-                        f"identity search is ambiguous: {entry.name} disappeared "
-                        f"while searching for {expected}, so that identity cannot be "
-                        "proved absent"
+                        "identity search is ambiguous: "
+                        f"{_display_name(entry.name)} disappeared while searching for "
+                        f"{expected}, so that identity cannot be proved absent"
                     ) from vanished
                 continue
             if not _entry_matches(status, expected, kind):
@@ -1537,6 +1537,19 @@ def _locate_matches(
             _safe_name(entry.name)
             matches.append((entry.name.encode("utf-8"), entry.name, identity(status)))
     return tuple((name, entry_id) for _encoded, name, entry_id in sorted(matches))
+
+
+def _display_name(value: str) -> str:
+    """Escape a name that has NOT passed _safe_name, for safe emission to a log.
+
+    _safe_name rejects control characters and disallowed Unicode, but it only runs on an
+    entry that survived stat(). A name reported in a failure path before that check is
+    attacker-influenced text going straight into operator logs and CI output, so it is
+    escaped to printable ASCII first: ascii() renders a newline as \n and any non-ASCII
+    codepoint as an escape, and quotes the result so its extent is unambiguous.
+    """
+
+    return ascii(value)
 
 
 def _render_matches(matches: Sequence[tuple[str, str]]) -> str:

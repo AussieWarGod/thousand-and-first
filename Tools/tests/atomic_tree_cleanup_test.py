@@ -334,6 +334,50 @@ class CleanupIdentityPinTest(unittest.TestCase):
         )
         self.assertEqual(self.parent.entries(), [])
 
+    def test_vanishing_entry_name_is_escaped_in_the_refusal(self) -> None:
+        """A disappearing entry's name reaches logs before _safe_name can reject it.
+
+        _locate_matches applies _safe_name only after a successful stat(), so the
+        ambiguity refusal is the one place an unvalidated name is interpolated. It must
+        be escaped: a raw newline would forge log lines, and raw control or disallowed
+        Unicode would corrupt CI output.
+        """
+        expected = self.parent.make_directory("victim")
+
+        for hostile in ("evil\nINJECTED: forged log line", "bell\x07ctrl", "we\u202eird"):
+            with self.subTest(name=hostile):
+
+                class VanishingEntry:
+                    name = hostile
+
+                    def stat(inner, **keywords):
+                        raise FileNotFoundError(2, "No such file or directory", hostile)
+
+                class Scan:
+                    def __enter__(inner):
+                        return iter([VanishingEntry()])
+
+                    def __exit__(inner, *arguments):
+                        return False
+
+                with mock.patch.object(publish.os, "scandir", return_value=Scan()):
+                    with self.assertRaises(publish.RetainedEntry) as raised:
+                        publish._locate_matches(self.parent.fd, expected, "directory")
+
+                message = str(raised.exception)
+                self.assertIn("identity search is ambiguous", message)
+                self.assertIn(ascii(hostile), message)
+                self.assertNotIn(hostile, message)
+                self.assertNotIn("\n", message)
+                self.assertEqual(
+                    message, message.encode("ascii", "strict").decode("ascii")
+                )
+                for character in message:
+                    self.assertTrue(
+                        character.isprintable(),
+                        f"unprintable {character!r} reached the refusal message",
+                    )
+
     def test_root_review_renamed_owned_directory_is_not_absent_success(self) -> None:
         """Root review negative: the admitted identity moved aside is still retained."""
         expected = self.parent.make_directory("victim")
