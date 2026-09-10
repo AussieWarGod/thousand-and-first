@@ -2,14 +2,16 @@
 
 ## Current Kingdom Quickstart founding-cohort census — 2026-09-10
 
-3073 production C# files; 3,104 cold-install files in the generated inventory;
-436,443 physical lines, 1433 direct-XRL, zero cap failures. Exact digest
-`2001d4d9c4c38abe929495e36984a9ae62c85069e4287afc3d34081c52b1e756`.
+3078 production C# files; 3,109 cold-install files in the generated inventory;
+436,999 physical lines, 1434 direct-XRL, zero cap failures. Exact digest
+`3aa112eccece1111e1ac4800a827e5851722be7a9bf154ae2bf65f6b66f697b4`.
 Quickstart's founding cohort is split at the reversibility boundary: one grant scope for four bodies
 and all their gear, a publish that names the exact four, then a forward-only idempotent enrolment
 under an append-only `Founding` reason. Old receipts keep their exact bytes and are terminal.
-Roslyn 9.0.318 on Linux compiled all four modes clean on these bytes, and the engine-free suites
-passed 14,094 main / 5,248 Portable with zero skips; no Windows gate or native evidence binds them.
+Each founder is counted into the shared origin tally by adding one under a durable identity-bound
+obligation; mixed state is refused in the open rather than inferred from a counter other arrivals
+move. The canonical gate compiled all four modes clean on these bytes, and the engine-free suites
+passed 14,132 main / 5,286 Portable with zero skips; no native evidence binds them.
 
 ## Retained stockpile deposit custody census — 2026-09-09
 

@@ -23,17 +23,19 @@ python3 Tools/check-structure.py --release
 The Kingdom Quickstart founding cohort over the stockpile deposit custody fix, the Kingdom
 Quickstart shelter ingress, the render-only city sight, the stockpile unit capacity, the
 first-basin water store and the Kingdom Quickstart
-tent rows reports 3073 staged production C# files and 436,457 physical lines.
+tent rows reports 3078 staged production C# files and 436,999 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`7b7533da6d794ec11f537143e0575a58b4b150cb4efd0089d7d1f5a802ad1c40`. The census reports
-1433 files with direct `XRL` imports; 0 of those exceed the line limit.
+`3aa112eccece1111e1ac4800a827e5851722be7a9bf154ae2bf65f6b66f697b4`. The census reports
+1434 files with direct `XRL` imports; 0 of those exceed the line limit.
 
-The founding-cohort delta over the retained draft below is five added production sources and no
+The founding-cohort delta over the retained draft below is ten added production sources and no
 removals: the quickstart rules' founders partial, the bootstrap's receipt partial split out of the
-bootstrap itself, and the three bootstrap founders partials. All four `Tools/gate.sh` modes compiled
-clean on these bytes through the Linux Roslyn reproduction — staged baseline (3069 sources), staged
-compatibility (3073), dev-harness baseline (3236) and dev-harness compatibility (3240).
+bootstrap itself, the three bootstrap founders partials, and the five the founder origin accounting
+adds — its models, its bounded versioned codec, its host seam, its engine-free transaction, and the
+one adapter that knows what a body and a settlement are. All four `Tools/gate.sh` modes compiled
+clean on these bytes through the canonical gate itself — staged baseline (3074 sources), staged
+compatibility (3078), dev-harness baseline (3241) and dev-harness compatibility (3245).
 
 The shelter-ingress delta over the retained city-sight draft below is one added and one modified
 production source and no

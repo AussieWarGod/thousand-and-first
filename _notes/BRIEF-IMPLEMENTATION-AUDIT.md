@@ -2,17 +2,18 @@
 
 ## Current Kingdom Quickstart founding-cohort census — 2026-09-10
 
-**3073** production C# files, 436,443 physical lines, 1433 direct-XRL, zero cap failures;
-3104 generated cold-install files. Exact digest
-`2001d4d9c4c38abe929495e36984a9ae62c85069e4287afc3d34081c52b1e756`.
-Five added sources (the quickstart rules' founders partial, the bootstrap receipt partial split out
-of the bootstrap, and the three bootstrap founders partials) and nine modified, over the deposit
+**3078** production C# files, 436,999 physical lines, 1434 direct-XRL, zero cap failures;
+3109 generated cold-install files. Exact digest
+`3aa112eccece1111e1ac4800a827e5851722be7a9bf154ae2bf65f6b66f697b4`.
+Ten added sources (the quickstart rules' founders partial, the bootstrap receipt partial split out
+of the bootstrap, the three bootstrap founders partials, and the founder origin accounting's models,
+codec, host seam, engine and adapter) and ten modified, over the deposit
 custody census retained below. Structure, doc freshness and the Tools suite (627 tests) pass, the
-engine-free suites pass 14,094 main / 5,248 Portable with zero skips, and all four compile modes are
-clean under Roslyn 9.0.318 on Linux — staged baseline (3069), staged compatibility (3073),
-dev-harness baseline (3236), dev-harness compatibility (3240). Twenty-two guard mutations were run
-against the new rules; twenty-one were caught by a failing case and one is documented as redundant
-with the wire digest. No Windows gate, native run, ordinary-play acceptance or
+engine-free suites pass 14,132 main / 5,286 Portable with zero skips, and all four compile modes are
+clean under the canonical gate — staged baseline (3074), staged compatibility (3078),
+dev-harness baseline (3241), dev-harness compatibility (3245). Thirty-one guard mutations were run
+against the new rules; twenty-nine were caught by a failing case and two are documented as redundant
+with the wire digest and the codec floor that already refuse them. No native run, ordinary-play acceptance or
 exact-inventory human semantic review binds this digest, and the six-profile Quickstart boot matrix
 is owed before merge.
 

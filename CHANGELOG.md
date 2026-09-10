@@ -146,31 +146,32 @@ below it.
   (ruling 5); no capacity, catch-up envelope, or stored item is touched, and a standing save reads
   exactly what it read before.
 
-> **Current unreleased census — exact structural gate passed.** Current 3073-file census is line-cap green:
-> 436,457 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> **Current unreleased census — exact structural gate passed.** Current 3078-file census is line-cap green:
+> 436,999 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
-> imports occur in 1433 files, 0 of them over the line limit. Inventory SHA-256:
-> `7b7533da6d794ec11f537143e0575a58b4b150cb4efd0089d7d1f5a802ad1c40`.
-> The generated cold-install inventory contains 3104 files; no new subscription claim.
+> imports occur in 1434 files, 0 of them over the line limit. Inventory SHA-256:
+> `3aa112eccece1111e1ac4800a827e5851722be7a9bf154ae2bf65f6b66f697b4`.
+> The generated cold-install inventory contains 3109 files; no new subscription claim.
 > This digest is the Kingdom Quickstart founding cohort over the stockpile deposit custody census
 > retained below, and over every delta retained beneath that; each carries its own review chain and
 > none is restated for the others.
-> The founding-cohort delta over the custody census below is five added and nine modified production
-> sources and no regenerated roster (it declares no new property or blueprint): the quickstart
-> rules' founders partial, the bootstrap's receipt partial split out of the bootstrap itself to stay
-> under the line cap, and the three bootstrap founders partials are the additions; the quickstart
-> models, rules, codec, citizenship rules, bootstrap, recovery, verification and lifecycle shards
-> and the two harness gates are the modifications.
-> On these bytes ALL FOUR compile modes are clean — staged baseline (3069 sources), staged
-> compatibility (3073 plus the tracked Hearthpyre 2.2.3 ABI stub), dev-harness baseline (3236) and
-> dev-harness compatibility (3240) — under Roslyn 9.0.318 on Linux against the installed managed
-> assemblies, through a reproduction of `Tools/gate.sh` rather than the Windows gate itself. The
-> engine-free suites pass ALL GREEN: 14,094 TafTests cases and 5,248 PortableTests cases, zero
-> skipped, of 14,094/5,248 discovered; the 627-test tooling suite passes. Twenty-two guard mutations
-> were run against the new rules and twenty-one were caught by a failing case; the one survivor is
-> recorded as redundant with the wire digest, which already refuses it.
-> NOT run for this delta: the Windows gate itself, the installed-Hearthpyre source step, the
-> licensed Windows suite driver, the native Quickstart boot matrix, ordinary play, graceful Quit and
+> The founding-cohort delta over the custody census below is ten added and ten modified production
+> sources, and it regenerates the removal-coverage roster for the one object property the founder
+> origin accounting owns: the quickstart rules' founders partial, the bootstrap's receipt partial
+> split out of the bootstrap itself to stay under the line cap, the three bootstrap founders
+> partials, and the accounting's models, bounded versioned codec, host seam, engine-free
+> transaction and adapter are the additions; the quickstart models, rules, codec, citizenship
+> rules, bootstrap, recovery, verification, enrolment and lifecycle shards and the two harness
+> gates are the modifications.
+> On these bytes ALL FOUR compile modes are clean — staged baseline (3074 sources), staged
+> compatibility (3078 plus the tracked Hearthpyre 2.2.3 ABI stub), dev-harness baseline (3241) and
+> dev-harness compatibility (3245) — through the canonical `Tools/gate.sh` itself, with its
+> installed-Hearthpyre source and ABI step. The
+> engine-free suites pass ALL GREEN: 14,132 TafTests cases and 5,286 PortableTests cases, zero
+> skipped, of 14,132/5,286 discovered; the 627-test tooling suite passes. Thirty-one guard mutations
+> were run against the new rules and twenty-nine were caught by a failing case; the two survivors
+> are recorded as redundant with the wire digest and the codec floor that already refuse them.
+> NOT run for this delta: the native Quickstart boot matrix, ordinary play, graceful Quit and
 > Steam delivery. The six-profile boot matrix at seed `#43101` is OWED before merge, because this
 > delta changes what Quickstart does at boot.
 > The exact-inventory human semantic review is open against this digest; this is not Beta sign-off.
