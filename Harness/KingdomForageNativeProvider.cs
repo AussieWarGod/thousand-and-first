@@ -7,7 +7,8 @@ namespace ThousandAndFirst.Harness
 {
 	/// <summary>
 	/// Native-check seam for the brush-forage duty (T-forage-1, issue #44). The setup founds a
-	/// real camp (the #107 heart stockpile is the store the cut brush lands in), enrolls four
+	/// real camp and completes rung one with a synthetic calendar argument, stocks 400 drams,
+	/// then enrolls four
 	/// real residents, and plants one object per exclusion category plus three eligible wild
 	/// plants. Every following check reads outcomes the REAL settlement-pass cadence produced on
 	/// real turns the persona's <c>advance</c> spends -- this seam never calls the private

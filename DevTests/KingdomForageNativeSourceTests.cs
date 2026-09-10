@@ -56,6 +56,26 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void CompletedCampAndDedicatedWaterPrecedeResidentsAndStockObservation()
+		{
+			string body = Method(Read(Checks), "internal void Start()");
+			int found = body.IndexOf("KingdomNativeCampFounding.Found(", StringComparison.Ordinal);
+			int complete = body.IndexOf("KingdomScenarioCompletedHeart.Complete(Game, System, Zone)", StringComparison.Ordinal);
+			int water = body.IndexOf("KingdomNativeCampFounding.Dedicate(Game, Zone, System, 400,", StringComparison.Ordinal);
+			int enroll = body.IndexOf("EnrollFour();", StringComparison.Ordinal);
+			int stock = body.IndexOf("KingdomMaterials.Stock(Zone)", StringComparison.Ordinal);
+			Assert.That(found, Is.GreaterThanOrEqualTo(0));
+			Assert.That(complete, Is.GreaterThan(found));
+			Assert.That(water, Is.GreaterThan(complete));
+			Assert.That(enroll, Is.GreaterThan(water));
+			Assert.That(stock, Is.GreaterThan(enroll));
+			Assert.That(body, Does.Contain("System.HeartRung == 1"));
+			Assert.That(Read(Checks), Does.Contain("synthetic-heart-calendar=true; synthetic-water-drams=400"));
+			Assert.That(Read(Phases), Does.Not.Contain("KingdomScenarioCompletedHeart.Complete("));
+			Assert.That(Read(Phases), Does.Not.Contain("KingdomNativeCampFounding.Dedicate("));
+		}
+
+		[Test]
 		public void EachExclusionSnapshotBindsIdentityCellZoneOwnerCountAndCustody()
 		{
 			string checks = Read(Checks);

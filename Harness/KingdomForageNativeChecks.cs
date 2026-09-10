@@ -42,6 +42,7 @@ namespace ThousandAndFirst.Harness
 			return (Complete ? "native-forage cases=1 passed=1 failed=0"
 				: "native-forage phase=" + Retained.Phase)
 				+ "; synthetic-camp=true; synthetic-plants=true; synthetic-reservation=true; synthetic-born-provenance=true"
+				+ "; synthetic-heart-calendar=true; synthetic-water-drams=400"
 				+ "; ordinary-acceptance=false; charter=untested; save-load=untested"
 				+ Retained.Evidence;
 		}
@@ -144,6 +145,11 @@ namespace ThousandAndFirst.Harness
 				System = KingdomNativeCampFounding.Found(Game, Zone, Require);
 				Require(System.Population == 0 && System.ClaimedZones.Contains(Zone.ZoneID),
 					"the real founding is not an empty claimed camp");
+				// Founding leaves staked works; the authored camp belongs to completed rung one.
+				// This existing helper uses a disclosed future calendar argument, not real elapsed time.
+				KingdomScenarioCompletedHeart.Complete(Game, System, Zone);
+				Require(System.HeartRung == 1, "the forage fixture requires completed camp ground");
+				KingdomNativeCampFounding.Dedicate(Game, Zone, System, 400, item => { }, Require);
 				EnrollFour();
 				Require(System.Population == 4, "enrollment did not reach population four");
 				Require(KingdomPlots.TryRiteGround(Zone, out RiteX, out RiteY),

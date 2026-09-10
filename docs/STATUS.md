@@ -27,6 +27,19 @@ private parent per worker avoids shared `/tmp` transaction-lock contention; all 
 locks and identity checks remain. Executable allocation fixtures also prove an invalid parent
 refuses before staging instead of falling back to shared storage. No gameplay bytes change.
 
+## Unreleased forage fixture setup corrections
+
+Two retained native setup failures are not gameplay passes: `1090fad`/`Xjw77z` lacked
+synthetic born provenance and placed residents after roster binding; `817ed99`/`8qnyHo`
+passed enrollment but sought the completed camp stockpile while the heart was still staked.
+Both receipt-owned processes were stopped and evidence retained.
+The follow-up uses the existing completed-heart helper before enrollment. Its future calendar
+argument is explicitly synthetic; the real game clock is not advanced or reset by setup.
+It also dedicates 400 synthetic fresh-water drams through the existing production check-in
+helper so the seven real-turn forage intervals do not begin with an empty water store.
+The authored stockpile and canvas remain required, never replaced by substitutes.
+No native gameplay, ordinary-play, save/load, or release acceptance is claimed by this setup fix.
+
 ## Unreleased founder boot verification
 
 Frozen founder head `22d3ce1ada9109e09d5bd0e123504fd307f748c4`, seed `#43101`,
