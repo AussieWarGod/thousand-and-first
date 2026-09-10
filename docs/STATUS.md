@@ -16,9 +16,10 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
-Cold-load transport hardening (PR #104): 25 executable filesystem tests pass, including ancestor
+Cold-load transport hardening (PR #104): 27 executable filesystem tests cover ancestor
 swaps for directory, receipt and save outputs. Replacing component-wise anchoring with a bare
-multi-component open fails all three new negatives. Full portable audit is clean; these synthetic
+multi-component open fails all three new negatives. Monotonic timing and strict worker bounds
+also have executable checks. All 27 focused tests and the full portable audit pass; these synthetic
 filesystem checks do not establish native cold-load or release acceptance.
 
 ## Current repository integration state — PR #6 merged, main protection updated

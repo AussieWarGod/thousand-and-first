@@ -597,7 +597,7 @@ class CopyNewFilesTest(unittest.TestCase):
                       for source, destination, expected, dir_fd in many_pairs]
         with mock.patch.object(load.concurrent.futures, "ThreadPoolExecutor", side_effect=spy):
             load.copy_new_files(few_pairs, load.MAX_LOCAL_FILE)
-            load.copy_new_files(many_pairs, load.MAX_LOCAL_FILE)
+            load.copy_new_files(many_pairs, load.MAX_LOCAL_FILE, workers=load.MAX_COPY_WORKERS * 3)
         self.assertEqual([2, load.MAX_COPY_WORKERS], seen)
 
     def test_one_failing_worker_is_reported_after_every_worker_is_joined(self):
@@ -628,6 +628,20 @@ class CopyNewFilesTest(unittest.TestCase):
 
 
 class AnchoredDestinationWritesTest(unittest.TestCase):
+    def test_duration_survives_backward_wall_clock_jump(self):
+        timer = load.PhaseTimer()
+        with mock.patch.object(load.time, "time", side_effect=[1000, 900]), \
+             mock.patch.object(load.time, "monotonic", side_effect=[10, 12.5]):
+            with timer.measure("copy"):
+                pass
+        self.assertEqual(2.5, timer.phases[0]["seconds"])
+        self.assertGreater(timer.phases[0]["beginISO"], timer.phases[0]["endISO"])
+
+    def test_invalid_worker_counts_refuse_even_empty_batches(self):
+        for workers in (0, -1, True, 1.5):
+            with self.subTest(workers=workers), self.assertRaisesRegex(ValueError, "positive integer"):
+                load.copy_new_files([], load.MAX_LOCAL_FILE, workers)
+
     def test_every_output_kind_refuses_swapped_ancestor_without_outside_write(self):
         for kind in ("directory", "receipt", "save"):
             with self.subTest(kind=kind), tempfile.TemporaryDirectory() as temporary:

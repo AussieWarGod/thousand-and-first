@@ -40,7 +40,7 @@ def _iso(moment: float) -> str:
 
 
 class PhaseTimer:
-    """Diagnostic-only wall-clock phase durations for the load-profile copier.
+    """Monotonic phase durations with wall-clock timestamps for the load-profile copier.
 
     Recorded phases are pure observation: they never gate sealing, never change which bytes are
     read or written, and are not consulted by any guard in this module or by
@@ -61,15 +61,17 @@ class _PhaseScope:
 
     def __enter__(self) -> dict:
         self._began = time.time()
+        self._started = time.monotonic()
         return self.counters
 
     def __exit__(self, exc_type, exc, tb) -> bool:
         ended = time.time()
+        elapsed = time.monotonic() - self._started
         self._timer.phases.append({
             "phase": self._name,
             "beginISO": _iso(self._began),
             "endISO": _iso(ended),
-            "seconds": round(ended - self._began, 6),
+            "seconds": round(elapsed, 6),
             **self.counters,
         })
         return False
@@ -327,16 +329,17 @@ def copy_new_files(pairs: list[tuple[Path, Path, str, int]], limit: int, workers
     re-raised, and prepare() therefore never reaches the sealing phase: whatever partial
     destination bytes exist stay exactly as ordinary serial failure would have left them.
     """
+    require(type(workers) is int and workers > 0, "worker count must be a positive integer")
     if not pairs:
         return
-    errors: list[BaseException] = []
-    with concurrent.futures.ThreadPoolExecutor(max_workers=min(workers, len(pairs))) as pool:
+    errors: list[Exception] = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=min(workers, MAX_COPY_WORKERS, len(pairs))) as pool:
         futures = [pool.submit(copy_new, source, destination, expected, limit, dir_fd)
                    for source, destination, expected, dir_fd in pairs]
         for future in concurrent.futures.as_completed(futures):
             try:
                 future.result()
-            except BaseException as error:
+            except Exception as error:
                 errors.append(error)
     if errors:
         raise errors[0]
