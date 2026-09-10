@@ -8,6 +8,27 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
+## Unreleased — 0.3.2 hotfix groundwork
+
+### Fixed
+
+- **Quickstart starter materials now take an engine identity when they are granted.** The starter
+  mud, brush and timber were created, counted and put into the camp materials chest without ever
+  being given one. `GameObject.IDIfAssigned` reads that identity without creating one, and the
+  attended construction-input observer reads it exactly that way and refuses an empty one. The
+  chest itself was always identified; its contents were not. Each fresh starter
+  stack now takes its identity once, at creation, before it is inserted, and the identity is
+  re-proved afterwards so a stack that changed on its way into the chest refuses instead of
+  settling. The observer is untouched: an observer that allocated identity would invent one for
+  anything it happened to look at. Nothing existing is cleared, recreated or minted, and no
+  serialized field, save key or wire format changes.
+
+  **This is a prerequisite, not the #142 fix.** The reported "cannot see the materials" symptom is
+  a separate scope cause being addressed elsewhere; the material-lease gate deliberately admits an
+  object with no identity for an ordinary local debit, so the absent identity never made the build
+  menu read zero. Nothing about the reported symptom is claimed here. An existing affected save is a separate recovery
+  question. Refs #142.
+
 ## [0.3.2] — 2026-09-09 (Alpha)
 
 ### Fixed
@@ -105,11 +126,11 @@ below it.
   (ruling 5); no capacity, catch-up envelope, or stored item is touched, and a standing save reads
   exactly what it read before.
 
-> **Current unreleased census — exact structural gate passed.** Current 3068-file census is line-cap green:
-> 435,538 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> **Current hotfix census (#142) — exact structural gate passed.** Current 3068-file census is line-cap green:
+> 435,554 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1429 files, 0 of them over the line limit. Inventory SHA-256:
-> `93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa` (this digest differs from the previous one solely because of the 0.3.2 KingdomReleaseInfo.cs version-literal bump; no other change).
+> `6989432e13313aa5cb7241f534f700224bef26a32816853fba7a899ee8fb82e5` (this digest differs from the shipped 0.3.2 one solely because of the #142 starter-material identity hotfix in World/KingdomQuickstartBootstrap.Materials.cs; no other production source changed).
 > The generated cold-install inventory contains 3099 files; no new subscription claim.
 > This digest is the stockpile deposit custody fix merged over `dev` at `862f14d` (the unattended
 > native observers, the Workshop listing wording, the automatic Workshop attempt finalisation, the
