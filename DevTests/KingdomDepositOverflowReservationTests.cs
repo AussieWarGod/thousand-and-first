@@ -57,33 +57,52 @@ namespace ThousandAndFirst.Tests
 				"three picks of one cell is exactly the defect and must not read as distinct");
 		}
 
-		/// <summary>Ground is a zone AND a cell. The same coordinates in another zone are
-		/// different ground, and must never collide with it.</summary>
-		[TestCase(0, 0)]
-		[TestCase(40, 12)]
-		[TestCase(79, 24)]
-		public void TheSameCoordinatesInAnotherZoneAreNeverTheSameGround(int x, int y)
+		/// <summary>
+		/// The key names a cell and nothing else, and it is INJECTIVE over every coordinate a zone
+		/// has: no two cells in the eighty-by-twenty-five grid share a key. That is the property a
+		/// hash could not have offered, and a colliding key is exactly the defect this helper
+		/// exists for &mdash; two cases handed the same ground.
+		/// </summary>
+		[Test]
+		public void EveryCellInAZoneKeysApartFromEveryOtherOne()
 		{
-			long here = KingdomDepositOverflowReservation.Key(1234, x, y);
-			long there = KingdomDepositOverflowReservation.Key(5678, x, y);
-			ClassicAssert.AreNotEqual(here, there);
-			ClassicAssert.AreEqual(here, KingdomDepositOverflowReservation.Key(1234, x, y),
-				"the same ground must key the same way twice");
-			ClassicAssert.IsTrue(
-				KingdomDepositOverflowReservation.AllDistinct(new[] { here, there }));
+			HashSet<long> keys = new HashSet<long>();
+			for (int y = 0; y < 25; y++)
+				for (int x = 0; x < 80; x++)
+					ClassicAssert.IsTrue(
+						keys.Add(KingdomDepositOverflowReservation.Key(x, y)),
+						"cell " + x + "," + y + " collided with an earlier cell");
+			ClassicAssert.AreEqual(2000, keys.Count);
 		}
 
-		/// <summary>Two different cells in one zone are different ground too.</summary>
-		[Test]
-		public void TwoCellsInOneZoneKeyApart()
+		/// <summary>Two cells that a naive packing would fold together stay apart, and the same
+		/// cell keys the same way twice.</summary>
+		[TestCase(3, 4, 4, 3)]
+		[TestCase(0, 1, 1, 0)]
+		[TestCase(65536, 0, 0, 65536)]
+		[TestCase(-1, 0, 0, -1)]
+		public void TransposedAndSignedCoordinatesNeverShareAKey(int ax, int ay, int bx, int by)
 		{
-			ClassicAssert.AreNotEqual(KingdomDepositOverflowReservation.Key(7, 3, 4),
-				KingdomDepositOverflowReservation.Key(7, 4, 3));
+			long a = KingdomDepositOverflowReservation.Key(ax, ay);
+			long b = KingdomDepositOverflowReservation.Key(bx, by);
+			ClassicAssert.AreNotEqual(a, b);
+			ClassicAssert.AreEqual(a, KingdomDepositOverflowReservation.Key(ax, ay),
+				"the same cell must key the same way twice");
+			ClassicAssert.IsTrue(KingdomDepositOverflowReservation.AllDistinct(new[] { a, b }));
+		}
+
+		/// <summary>Nothing to reserve from, and nothing to check.</summary>
+		[Test]
+		public void AbsentInputsAreRefusedRatherThanGuessed()
+		{
 			ClassicAssert.IsFalse(KingdomDepositOverflowReservation.AllDistinct(null));
 			List<long> taken = null;
 			long reserved;
 			ClassicAssert.IsFalse(
 				KingdomDepositOverflowReservation.TryReserve(taken, new[] { 1L }, out reserved));
+			ClassicAssert.IsFalse(KingdomDepositOverflowReservation.TryReserve(
+				new List<long>(), null, out reserved));
+			ClassicAssert.AreEqual(0L, reserved);
 		}
 	}
 }

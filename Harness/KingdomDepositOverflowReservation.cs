@@ -56,12 +56,21 @@ namespace ThousandAndFirst.Harness
 			return true;
 		}
 
-		/// <summary>One piece of ground as a single comparable number: the zone it belongs to and
-		/// the exact cell in it. Ground in another zone is never the same ground, however the
-		/// coordinates read.</summary>
-		internal static long Key(int ZoneHash, int X, int Y)
+		/// <summary>
+		/// One cell as a single comparable number, WITHIN ONE ZONE. Reservations never span zones
+		/// &mdash; the caller proves the cell belongs to its own frozen zone object before keying
+		/// it &mdash; so no zone identity is folded in here.
+		/// <para>
+		/// Deliberately no hash. A key built from <c>ZoneID.GetHashCode()</c> could not honestly
+		/// claim that two zones never collide, and a reservation that collides hands two cases the
+		/// same ground, which is the very defect this helper exists for. Within one zone the
+		/// coordinates ARE the identity, and this packing is injective over every coordinate a
+		/// zone has.
+		/// </para>
+		/// </summary>
+		internal static long Key(int X, int Y)
 		{
-			return ((long)ZoneHash << 32) ^ (uint)((X << 16) | (Y & 0xFFFF));
+			return ((long)X << 32) | (uint)Y;
 		}
 	}
 }

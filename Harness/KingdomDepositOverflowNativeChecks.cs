@@ -62,63 +62,96 @@ namespace ThousandAndFirst.Harness
 		}
 
 		/// <summary>
-		/// One standing body and everything about it a refused delivery must leave alone: which
-		/// body it is, what it is, how many units it carries RAW, and exactly where it stands.
+		/// One standing body and everything about it a refused delivery must leave alone.
 		/// <para>
-		/// "Where" is a zone, a cell AND a holder, all three, always. Cell coordinates alone are
-		/// not a place: the same coordinates in another zone are different ground, and a body
-		/// carried out of a chest into a cell at the chest's own coordinates would otherwise read
-		/// as unmoved. Recording only whichever of the two happens to be set would hide exactly
-		/// the move that matters.
+		/// The proof is REFERENCES, not text. A body's id, a zone's id and a container's id are
+		/// all strings the engine can hand to a different object: a replacement holder carrying
+		/// the same id, or a rebuilt zone with the same <c>ZoneID</c>, would pass a text
+		/// comparison while the body had in fact been re-homed. So the exact <c>Zone</c>,
+		/// <c>Cell</c> and holder objects are held here and re-proved with
+		/// <c>ReferenceEquals</c>; the strings survive only as journal diagnostics and are never
+		/// the proof.
+		/// </para>
+		/// <para>
+		/// Custody is also EXCLUSIVE, and admission checks it. A body stands in a cell or in a
+		/// container, never both and never neither, and it is admitted only in the mode the case
+		/// placed it in. A body with no assigned id, or carrying a nonpositive raw count, is not a
+		/// standing body at all and is refused before it can be snapshotted.
 		/// </para>
 		/// </summary>
 		private sealed class Body
 		{
 			internal readonly GameObject Item;
+			internal readonly Zone Zone;
+			internal readonly Cell Cell;
+			internal readonly GameObject Holder;
 			internal readonly string Id;
 			internal readonly string Blueprint;
 			internal readonly int RawCount;
-			internal readonly string ZoneId;
-			internal readonly string CellKey;
-			internal readonly string HolderId;
 
-			internal Body(GameObject Item)
+			private Body(GameObject Item, Zone Zone, Cell Cell, GameObject Holder)
 			{
 				this.Item = Item;
+				this.Zone = Zone;
+				this.Cell = Cell;
+				this.Holder = Holder;
 				Id = Item.IDIfAssigned;
 				Blueprint = Item.Blueprint;
 				RawCount = KingdomMaterials.RawPhysicalCountOf(Item);
-				ZoneId = ZoneOf(Item);
-				CellKey = CellOf(Item);
-				HolderId = HolderOf(Item);
 			}
 
-			/// <summary>The zone this body is really in: its own if it stands in a cell, and
-			/// otherwise the zone of whoever is holding it. A body nowhere at all reads as
-			/// nowhere, which is never equal to a zone.</summary>
-			internal static string ZoneOf(GameObject Item)
+			/// <summary>A body admitted as standing on EXACTLY this ground: in this cell, in this
+			/// cell's own zone, and in nobody's inventory.</summary>
+			internal static Body OnGround(GameObject Item, Cell Ground)
 			{
-				if (!GameObject.Validate(Item)) return "gone";
-				Zone own = Item.CurrentZone;
-				if (own != null) return own.ZoneID;
-				Zone held = Item.Physics?.InInventory?.CurrentZone;
-				return (held == null) ? "-" : held.ZoneID;
+				Admit(Item);
+				Require(Ground != null && Ground.ParentZone != null,
+					"a ground body was offered no cell to stand in");
+				Require(ReferenceEquals(Item.CurrentCell, Ground),
+					"a ground body does not stand in the exact cell it was placed in");
+				Require(Item.Physics != null && Item.Physics.InInventory == null,
+					"a ground body is also in somebody's inventory, which is mixed custody");
+				Require(ReferenceEquals(Item.CurrentZone, Ground.ParentZone),
+					"a ground body's zone is not the zone of the cell it stands in");
+				return new Body(Item, Ground.ParentZone, Ground, null);
 			}
 
-			internal static string CellOf(GameObject Item)
+			/// <summary>A body admitted as standing in EXACTLY this container: in its inventory,
+			/// in the container's own zone, and in no cell of its own.</summary>
+			internal static Body InStore(GameObject Item, GameObject Container)
 			{
-				if (!GameObject.Validate(Item)) return "gone";
-				Cell cell = Item.CurrentCell;
-				return (cell == null) ? "-" : (cell.X + "," + cell.Y);
+				Admit(Item);
+				Require(GameObject.Validate(Container) && Container.Inventory != null,
+					"a stored body was offered no container to stand in");
+				Require(Item.Physics != null
+					&& ReferenceEquals(Item.Physics.InInventory, Container),
+					"a stored body is not in the exact container it was placed in");
+				Require(Item.CurrentCell == null,
+					"a stored body also stands in a cell, which is mixed custody");
+				Zone zone = Container.CurrentZone;
+				Require(zone != null, "the container a stored body stands in is in no zone");
+				return new Body(Item, zone, null, Container);
 			}
 
-			internal static string HolderOf(GameObject Item)
+			/// <summary>What every standing body must be before anything is recorded about it.
+			/// </summary>
+			private static void Admit(GameObject Item)
 			{
-				if (!GameObject.Validate(Item)) return "gone";
-				GameObject holder = Item.Physics?.InInventory;
-				return (holder == null) ? "-" : holder.IDIfAssigned;
+				Require(GameObject.Validate(Item), "a body offered for snapshot does not exist");
+				Require(!string.IsNullOrEmpty(Item.IDIfAssigned),
+					"a body with no assigned id cannot be proved unchanged later");
+				Require(!string.IsNullOrEmpty(Item.Blueprint),
+					"a body with no blueprint cannot be proved unchanged later");
+				Require(KingdomMaterials.RawPhysicalCountOf(Item) > 0,
+					"a body carrying a nonpositive raw count is not a standing stack");
 			}
 
+			/// <summary>
+			/// The same body, the same stuff, the same count, and the SAME zone, cell and holder
+			/// objects. Every place check is by reference, so a replacement object wearing the
+			/// same id fails here; the exclusivity re-check catches a body that acquired a second
+			/// custody without losing the first.
+			/// </summary>
 			internal void RequireUnchanged(string What)
 			{
 				Require(GameObject.Validate(Item),
@@ -129,20 +162,31 @@ namespace ThousandAndFirst.Harness
 					What + " changed blueprint across a refused delivery");
 				Require(KingdomMaterials.RawPhysicalCountOf(Item) == RawCount,
 					What + " changed its raw count across a refused delivery");
-				Require(ZoneOf(Item) == ZoneId,
-					What + " changed zone across a refused delivery");
-				Require(CellOf(Item) == CellKey,
+				GameObject holder = Item.Physics?.InInventory;
+				Require(ReferenceEquals(Item.CurrentCell, Cell),
 					What + " changed cell across a refused delivery");
-				Require(HolderOf(Item) == HolderId,
+				Require(ReferenceEquals(holder, Holder),
 					What + " changed holder across a refused delivery");
+				Require((Cell == null) != (Holder == null),
+					What + " was snapshotted without exactly one custody");
+				Require((Item.CurrentCell == null) != (holder == null),
+					What + " no longer has exactly one custody");
+				Zone zone = (Item.CurrentCell != null)
+					? Item.CurrentZone : holder?.CurrentZone;
+				Require(ReferenceEquals(zone, Zone),
+					What + " changed zone across a refused delivery");
 			}
 
+			/// <summary>Journal text only. Never a proof: ids are strings the engine can hand to
+			/// another object.</summary>
 			internal string Evidence
 			{
 				get
 				{
-					return Id + "/" + Blueprint + "x" + RawCount + "@zone:" + ZoneId
-						+ "/cell:" + CellKey + "/in:" + HolderId;
+					return Id + "/" + Blueprint + "x" + RawCount + "@zone:"
+						+ (Zone == null ? "-" : Zone.ZoneID)
+						+ "/cell:" + (Cell == null ? "-" : (Cell.X + "," + Cell.Y))
+						+ "/in:" + (Holder == null ? "-" : Holder.IDIfAssigned);
 				}
 			}
 		}
@@ -224,6 +268,11 @@ namespace ThousandAndFirst.Harness
 				Cell cell = KingdomNativeCampFounding.Clear(Zone);
 				while (cell != null && Reserved.Contains(KeyOf(cell))) cell = NextBare(cell);
 				Require(cell != null, "no unreserved clear cell was available for a case");
+				// The key is scoped to THIS frame's one zone -- the reservation never leaves it --
+				// and the cell is proved to belong to that exact zone object before it is keyed,
+				// so no hash of a zone id stands between a reservation and the ground it names.
+				Require(ReferenceEquals(cell.ParentZone, Zone),
+					"a reserved cell belongs to a different zone than this frame's");
 				long key;
 				Require(KingdomDepositOverflowReservation.TryReserve(Reserved,
 					new[] { KeyOf(cell) }, out key) && key == KeyOf(cell),
@@ -231,8 +280,9 @@ namespace ThousandAndFirst.Harness
 				return cell;
 			}
 
-			/// <summary>The next bare cell after this one in the same scan order the shared
-			/// helper uses, so a reserved cell is stepped over rather than handed out twice.
+			/// <summary>The next cell after this one that is bare BY THE SAME PREDICATE the shared
+			/// helper uses, so a reserved cell is stepped over rather than handed out twice and
+			/// the space a case claims is as clear as the space the helper would have given it.
 			/// </summary>
 			private Cell NextBare(Cell After)
 			{
@@ -243,16 +293,28 @@ namespace ThousandAndFirst.Harness
 						Cell cell = Zone.GetCell(x, y);
 						if (cell == null) continue;
 						if (!past) { past = ReferenceEquals(cell, After); continue; }
-						if (cell.IsEmpty() && cell.IsPassable() && !cell.HasOpenLiquidVolume())
-							return cell;
+						if (Bare(cell)) return cell;
 					}
 				return null;
 			}
 
-			private long KeyOf(Cell Cell)
+			/// <summary>Exactly the predicate <c>KingdomNativeCampFounding.Clear</c> applies:
+			/// empty, passable, no open liquid, and every object standing in it a valid,
+			/// non-creature, bare piece of ground.</summary>
+			private static bool Bare(Cell Cell)
 			{
-				return KingdomDepositOverflowReservation.Key(
-					Zone.ZoneID.GetHashCode(), Cell.X, Cell.Y);
+				if (Cell == null || !Cell.IsEmpty() || !Cell.IsPassable()
+					|| Cell.HasOpenLiquidVolume()) return false;
+				foreach (GameObject row in Cell.Objects)
+					if (!GameObject.Validate(row) || row.IsCreature
+						|| KingdomPlots.ReadObject(row) != KingdomPlotRules.GroundKind.Bare)
+						return false;
+				return true;
+			}
+
+			private static long KeyOf(Cell Cell)
+			{
+				return KingdomDepositOverflowReservation.Key(Cell.X, Cell.Y);
 			}
 
 			private static void Require(bool Value, string Failure)

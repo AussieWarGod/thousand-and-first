@@ -16,8 +16,18 @@ namespace ThousandAndFirst.Tests
 		private const string Fixture = "Harness/KingdomDepositOverflowNativeFixture.cs";
 		private const string Cases = "Harness/KingdomDepositOverflowNativeCases.cs";
 		private const string Persona = "Tools/personas/deposit-overflow-native-check.persona";
+		private const string Reservation = "Harness/KingdomDepositOverflowReservation.cs";
 
 		private static string Read(string Path) { return TestMain.ReadRepositoryText(Path); }
+
+		private static string Between(string Source, string Start, string End)
+		{
+			int from = Source.IndexOf(Start, System.StringComparison.Ordinal);
+			Assert.That(from, Is.GreaterThanOrEqualTo(0), "missing source boundary: " + Start);
+			int to = Source.IndexOf(End, from, System.StringComparison.Ordinal);
+			Assert.That(to, Is.GreaterThan(from), "missing source boundary: " + End);
+			return Source.Substring(from, to - from);
+		}
 
 		private static int Occurrences(string Source, string Token)
 		{
@@ -110,23 +120,62 @@ namespace ThousandAndFirst.Tests
 				"each refused reading must be proved to hand back nothing");
 		}
 
-		/// <summary>A body is proved by identity, raw count and custody, not by a tally.</summary>
+		/// <summary>
+		/// A place is proved by REFERENCES, never by ids. A replacement holder carrying the same
+		/// id, or a rebuilt zone with the same <c>ZoneID</c>, would pass a text comparison while
+		/// the body had in fact been re-homed, so the exact zone, cell and holder objects are held
+		/// and re-proved with <c>ReferenceEquals</c>. The strings survive only as journal text.
+		/// </summary>
 		[Test]
-		public void AnUnchangedBodyIsProvedByIdentityRawCountAndCustody()
+		public void AnUnchangedBodyIsProvedByReferenceNotByAnyIdString()
 		{
 			string checks = Read(Checks);
-			// Zone, cell AND holder, all three, always. The same coordinates in another zone are
-			// different ground, and a body carried out of a chest into a cell at the chest's own
-			// coordinates would read as unmoved if only whichever field happened to be set were
-			// recorded.
 			foreach (string token in new[] { "Item.IDIfAssigned == Id",
 				"Item.Blueprint == Blueprint",
 				"KingdomMaterials.RawPhysicalCountOf(Item) == RawCount",
-				"ZoneOf(Item) == ZoneId", "CellOf(Item) == CellKey",
-				"HolderOf(Item) == HolderId", "GameObject.Validate(Item)" })
+				"ReferenceEquals(Item.CurrentCell, Cell)",
+				"ReferenceEquals(holder, Holder)",
+				"ReferenceEquals(zone, Zone)",
+				"internal readonly Zone Zone;", "internal readonly Cell Cell;",
+				"internal readonly GameObject Holder;" })
 				Assert.That(checks, Does.Contain(token), token);
-			Assert.That(checks, Does.Contain("Zone own = Item.CurrentZone;"),
-				"a body's place must be bound to the zone it is really in");
+			// The ONLY place a zone, cell or holder id may appear is the journal. If a comparison
+			// against one of those strings creeps back in, this catches it.
+			string proof = Between(checks, "internal void RequireUnchanged(string What)",
+				"/// <summary>Journal text only.");
+			foreach (string banned in new[] { "ZoneID ==", "IDIfAssigned == HolderId",
+				"CellKey", "HolderId", "ZoneId" })
+				Assert.That(proof, Does.Not.Contain(banned),
+					"a place must not be proved by a string: " + banned);
+		}
+
+		/// <summary>
+		/// Admission refuses anything that is not a standing body in exactly one custody: a body
+		/// in a cell AND an inventory, a body in neither, one with no assigned id or blueprint,
+		/// and one carrying a nonpositive raw count. Each case admits its bodies in the mode it
+		/// placed them in, against the exact cell or the exact container.
+		/// </summary>
+		[Test]
+		public void AdmissionRefusesMixedCustodyAndUnidentifiedOrEmptyBodies()
+		{
+			string checks = Read(Checks);
+			foreach (string token in new[] {
+				"ReferenceEquals(Item.CurrentCell, Ground)",
+				"Item.Physics != null && Item.Physics.InInventory == null",
+				"ReferenceEquals(Item.CurrentZone, Ground.ParentZone)",
+				"ReferenceEquals(Item.Physics.InInventory, Container)",
+				"Item.CurrentCell == null,",
+				"!string.IsNullOrEmpty(Item.IDIfAssigned)",
+				"!string.IsNullOrEmpty(Item.Blueprint)",
+				"KingdomMaterials.RawPhysicalCountOf(Item) > 0",
+				"(Cell == null) != (Holder == null)",
+				"(Item.CurrentCell == null) != (holder == null)" })
+				Assert.That(checks, Does.Contain(token), token);
+			string fixture = Read(Fixture);
+			Assert.That(fixture, Does.Contain("Body.OnGround(item, Cell)"));
+			Assert.That(fixture, Does.Contain("Body.InStore(item, Container)"));
+			Assert.That(checks, Does.Not.Contain("internal Body(GameObject Item)"),
+				"a body may only be admitted through a mode-checked factory");
 		}
 
 		/// <summary>Three ground cases need three DISTINCT cells, reserved before any of them is
@@ -146,8 +195,19 @@ namespace ThousandAndFirst.Tests
 				"!ReferenceEquals(PlainGround, OverflowGround)",
 				"!ReferenceEquals(BoundaryGround, OverflowGround)",
 				"while (cell != null && Reserved.Contains(KeyOf(cell))) cell = NextBare(cell);",
-				"KingdomDepositOverflowReservation.TryReserve(Reserved," })
+				"KingdomDepositOverflowReservation.TryReserve(Reserved,",
+				// The reservation must claim ground as clear as the shared helper would have,
+				// which means the SAME bare predicate, creature and ground-kind checks included.
+				"if (Bare(cell)) return cell;",
+				"KingdomPlots.ReadObject(row) != KingdomPlotRules.GroundKind.Bare",
+				"row.IsCreature",
+				// And the ground it keys must belong to this frame's own zone object, so no hash
+				// of a zone id stands between a reservation and the ground it names.
+				"ReferenceEquals(cell.ParentZone, Zone)",
+				"KingdomDepositOverflowReservation.Key(Cell.X, Cell.Y)" })
 				Assert.That(checks, Does.Contain(token), token);
+			Assert.That(Read(Reservation), Does.Not.Contain("GetHashCode"),
+				"ground identity must never be a hash: colliding keys hand two cases one cell");
 		}
 
 		/// <summary>The store is the fixture's own, made and dedicated through the production

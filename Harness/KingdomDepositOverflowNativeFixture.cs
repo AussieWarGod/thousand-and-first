@@ -64,7 +64,7 @@ namespace ThousandAndFirst.Harness
 					"the fixture stack did not come to rest in the cell it was placed in");
 				Require(KingdomMaterials.RawPhysicalCountOf(item) == RawCount,
 					"the fixture stack's raw count did not survive placement");
-				return new Body(item);
+				return Body.OnGround(item, Cell);
 			}
 
 			/// <summary>The same body, standing in the dedicated store's own inventory.</summary>
@@ -77,7 +77,7 @@ namespace ThousandAndFirst.Harness
 					"the fixture stack is not standing in the store's own custody");
 				Require(KingdomMaterials.RawPhysicalCountOf(item) == RawCount,
 					"the fixture stack's raw count did not survive the inventory add");
-				return new Body(item);
+				return Body.InStore(item, Container);
 			}
 
 			/// <summary>A body of the delivered blueprint carrying an exact raw count. The count
