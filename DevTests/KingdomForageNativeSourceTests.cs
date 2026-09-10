@@ -69,7 +69,7 @@ namespace ThousandAndFirst.Tests
 			Assert.That(water, Is.GreaterThan(complete));
 			Assert.That(enroll, Is.GreaterThan(water));
 			Assert.That(stock, Is.GreaterThan(enroll));
-			Assert.That(body, Does.Contain("System.HeartRung == 1"));
+			Assert.That(body, Does.Contain("KingdomPlots.HeartRung(Zone) == 1"));
 			Assert.That(Read(Checks), Does.Contain("synthetic-heart-calendar=true; synthetic-water-drams=400"));
 			Assert.That(Read(Phases), Does.Not.Contain("KingdomScenarioCompletedHeart.Complete("));
 			Assert.That(Read(Phases), Does.Not.Contain("KingdomNativeCampFounding.Dedicate("));
@@ -179,11 +179,15 @@ namespace ThousandAndFirst.Tests
 			string phases = Read(Phases);
 			Assert.That(phases, Does.Contain(
 				"KingdomForageNativeGeometry.CountContaining(System.Ledger.Notes, ExhaustionMarker)"));
-			foreach (string token in new[] { "notes == NotesBaseline + 1",
+			foreach (string token in new[] { "KingdomForageNativeGeometry.NewNotices(NotesBaseline, notes, 1)",
+				"KingdomForageNativeGeometry.NewNotices(NotesAfterFirstExhaustion, notes, 1)",
 				"notes == NotesAfterFirstExhaustion" })
 				Assert.That(CountOf(phases, token), Is.GreaterThanOrEqualTo(1), token);
-			// The baseline capture plus three distinct exhausted-interval phases each read it.
-			Assert.That(CountOf(phases, "NotesCount();"), Is.EqualTo(4));
+			Assert.That(CountOf(phases, "NotesCount();"), Is.EqualTo(5));
+			string setup = Method(Read(Checks), "internal void Start()");
+			Assert.That(setup, Does.Contain("NotesBaseline = NotesCount();"));
+			Assert.That(phases, Does.Not.Contain("NotesBaseline = NotesCount();"));
+			Assert.That(phases, Does.Not.Contain("Require(!state.NoBrushAnnounced,"));
 		}
 
 		[Test]

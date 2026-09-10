@@ -56,5 +56,9 @@ namespace ThousandAndFirst.Harness
 				if (Notes[i] != null && Notes[i].Contains(Marker)) found++;
 			return found;
 		}
+
+		/// <summary>Exact additional notices across an observed interval, without int overflow.</summary>
+		internal static bool NewNotices(int Before, int After, int Expected)
+			=> Before >= 0 && After >= 0 && Expected >= 0 && (long)After - Before == Expected;
 	}
 }

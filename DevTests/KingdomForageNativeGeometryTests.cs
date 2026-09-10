@@ -12,6 +12,21 @@ namespace ThousandAndFirst.Tests
 	/// notice is engine-free and runs here directly.</summary>
 	public class KingdomForageNativeGeometryTests
 	{
+		[TestCase(0, 0, 0, true)]
+		[TestCase(0, 1, 1, true)]
+		[TestCase(1, 2, 1, true)]
+		[TestCase(1, 1, 1, false)]
+		[TestCase(1, 3, 1, false)]
+		[TestCase(2, 1, 0, false)]
+		[TestCase(-1, 0, 1, false)]
+		[TestCase(int.MaxValue, int.MinValue, 1, false)]
+		[TestCase(0, 0, -1, false)]
+		public void ExactNoticeDeltaRejectsMissingRepeatedAndInvalidCounts(int before, int after,
+			int expected, bool matches)
+		{
+			Assert.That(KingdomForageNativeGeometry.NewNotices(before, after, expected), Is.EqualTo(matches));
+		}
+
 		[TestCase(5, 5, true)]
 		[TestCase(0, 0, true)]
 		[TestCase(10, 10, true)]

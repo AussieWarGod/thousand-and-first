@@ -58,8 +58,10 @@ namespace ThousandAndFirst.Harness
 					+ " brush, not exactly " + Eligible.Length + " for the plants physically removed");
 				Require(tally == TallyBefore + Eligible.Length, "available tally gained "
 					+ (tally - TallyBefore) + " brush, not exactly " + Eligible.Length);
-				NotesBaseline = NotesCount();
-				Require(NotesBaseline == 0, "an exhaustion notice already stands before any exhaustion");
+				int notes = NotesCount();
+				Require(KingdomForageNativeGeometry.NewNotices(NotesBaseline, notes, 0)
+					|| KingdomForageNativeGeometry.NewNotices(NotesBaseline, notes, 1),
+					"the first cutting interval emitted repeated or inconsistent exhaustion notices");
 				Phase = 3;
 				Evidence.Append("\nphase2 tick=").Append(Game.TimeTicks)
 					.Append("; cut=").Append(Eligible.Length).Append("; raw now=").Append(raw)
@@ -67,14 +69,14 @@ namespace ThousandAndFirst.Harness
 			}
 
 			/// <summary>Exhaustion: no candidates remain, so the once-only notice fires exactly
-			/// once. This is the FIRST of three checked intervals with no new plant.</summary>
+			/// once since setup. Its onset may precede this final observation.</summary>
 			private void Phase3(r_KingdomForage state)
 			{
 				Require(state.NoBrushAnnounced, "exhaustion did not announce with no candidates left");
 				Require(!state.EnoughAnnounced, "the ceiling announced before it was ever reached");
 				int notes = NotesCount();
-				Require(notes == NotesBaseline + 1, "exhaustion emitted " + (notes - NotesBaseline)
-					+ " notices on its first interval, not exactly one");
+				Require(KingdomForageNativeGeometry.NewNotices(NotesBaseline, notes, 1),
+					"exhaustion did not emit exactly one notice since setup");
 				NotesAfterFirstExhaustion = notes;
 				Phase = 4;
 				Evidence.Append("\nphase3 tick=").Append(Game.TimeTicks)
@@ -108,15 +110,19 @@ namespace ThousandAndFirst.Harness
 					.Append("; exhausted-third-interval=true; extra=").Append(EvidenceOf(ExtraPlant));
 			}
 
-			/// <summary>Re-arm: the new plant is cut and the exhaustion flag clears without a
-			/// fresh notice being required. Then the store is topped up to the ceiling with
+			/// <summary>Re-arm: a new plant is cut, then a second exhaustion notice proves the
+			/// intervening re-arm. The two-day interval need not end on the transient cleared flag.
+			/// Then the store is topped up to the ceiling with
 			/// RESERVED units -- marked with the real production marker, physically present,
 			/// but excluded from the available-only Tally -- so the next phase proves the
 			/// ceiling counts them anyway.</summary>
 			private void Phase6(r_KingdomForage state)
 			{
 				Require(!GameObject.Validate(ExtraPlant), "the re-armed plant was not cut");
-				Require(!state.NoBrushAnnounced, "exhaustion did not re-arm once a plant appeared");
+				int notes = NotesCount();
+				Require(state.NoBrushAnnounced
+					&& KingdomForageNativeGeometry.NewNotices(NotesAfterFirstExhaustion, notes, 1),
+					"a second exhaustion episode did not prove exactly one re-armed notice");
 				int raw = CensusBrushRaw(StockpileContainer);
 				int tally = KingdomMaterials.Stock(Zone).Tally.Get(KingdomMaterial.Brush);
 				int afterExtra = RawBefore + Eligible.Length + 1;
@@ -150,6 +156,7 @@ namespace ThousandAndFirst.Harness
 				Phase = 7;
 				Evidence.Append("\nphase6 tick=").Append(Game.TimeTicks)
 					.Append("; rearmed=true; reserved=").Append(ReservedTopUp)
+					.Append("; exhaustion-notices=").Append(notes)
 					.Append("; raw at ceiling=").Append(RawAtCeiling)
 					.Append("; tally at ceiling=").Append(TallyAtCeiling)
 					.Append("; final=").Append(EvidenceOf(FinalPlant));

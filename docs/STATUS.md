@@ -35,9 +35,13 @@ passed enrollment but sought the completed camp stockpile while the heart was st
 Both receipt-owned processes were stopped and evidence retained.
 The follow-up uses the existing completed-heart helper before enrollment. Its future calendar
 argument is explicitly synthetic; the real game clock is not advanced or reset by setup.
-It also dedicates 400 synthetic fresh-water drams through the existing production check-in
-helper so the seven real-turn forage intervals do not begin with an empty water store.
+It also dedicates 400 synthetic fresh-water drams through the existing harness helper, which
+drives production check-in, so the seven real-turn forage intervals start with stocked water.
 The authored stockpile and canvas remain required, never replaced by substitutes.
+The exhaustion baseline is captured before any turns. Two-day observation intervals may include
+both cutting and exhaustion; the fixture requires exactly one initial notice, no repeats over
+two further exhausted intervals, then exactly one new notice after the added plant is cut.
+That second episode proves re-arming without sampling a transient cleared announcement flag.
 No native gameplay, ordinary-play, save/load, or release acceptance is claimed by this setup fix.
 
 ## Unreleased founder boot verification

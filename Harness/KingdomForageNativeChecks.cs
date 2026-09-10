@@ -148,7 +148,7 @@ namespace ThousandAndFirst.Harness
 				// Founding leaves staked works; the authored camp belongs to completed rung one.
 				// This existing helper uses a disclosed future calendar argument, not real elapsed time.
 				KingdomScenarioCompletedHeart.Complete(Game, System, Zone);
-				Require(System.HeartRung == 1, "the forage fixture requires completed camp ground");
+				Require(KingdomPlots.HeartRung(Zone) == 1, "the forage fixture requires completed camp ground");
 				KingdomNativeCampFounding.Dedicate(Game, Zone, System, 400, item => { }, Require);
 				EnrollFour();
 				Require(System.Population == 4, "enrollment did not reach population four");
@@ -177,6 +177,8 @@ namespace ThousandAndFirst.Harness
 				CanvasSnap = new ExclusionSnapshot(canvas, "camp canvas",
 					item => item.GetTag("BodyType") == "ClothWall");
 				PlantExclusions();
+				NotesBaseline = NotesCount();
+				Require(NotesBaseline == 0, "exhaustion was already announced before the planted fixture ran");
 				Armed = true;
 				Phase = 1;
 				Evidence.Append("\nfounded tick=").Append(Game.TimeTicks)
