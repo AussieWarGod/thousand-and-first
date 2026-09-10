@@ -18,6 +18,14 @@ namespace ThousandAndFirst
 			KingdomRules.BuildEntry Entry, string SkinKey, KingdomPlotRules.PlotSize Stake,
 			KingdomPlotQuote Expected, out string Failure)
 		{
+			if (!KingdomSurvey.TryBindLocalOperation(Z, System, out var scope, out Failure)) return false;
+			using (scope) return CommissionInLocalPass(System, Z, Entry, SkinKey, Stake, Expected, out Failure);
+		}
+
+		private static bool CommissionInLocalPass(KingdomSystem System, Zone Z,
+			KingdomRules.BuildEntry Entry, string SkinKey, KingdomPlotRules.PlotSize Stake,
+			KingdomPlotQuote Expected, out string Failure)
+		{
 			Failure = null;
 			if (System == null || Z == null || Entry == null || !TryGetSpec(Entry.Key, out var spec))
 			{

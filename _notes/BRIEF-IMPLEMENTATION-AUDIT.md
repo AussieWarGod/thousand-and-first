@@ -1,6 +1,13 @@
 # Brief-to-implementation audit
 
-## Current stockpile deposit custody census — 2026-09-09
+## Current stock-operation hotfix census — 2026-09-10
+
+**3069** production C# files, 435,617 physical lines, 1430 direct-XRL, zero cap failures.
+3100 cold-install files. Scope-only ad0dd90: four compile profiles and full Taf 14,067
+zero skips passed; combined scope/identity/version gates pending;
+native commissioning remains open. Exact-inventory source review is current; see docs/STATUS.md.
+
+## Retained stockpile deposit custody census — 2026-09-09
 
 **3068** production C# files, 435,538 physical lines, 1429 direct-XRL, zero cap failures;
 3099 generated cold-install files. Exact digest

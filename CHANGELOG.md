@@ -8,6 +8,34 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
+## [0.3.3] — 2026-09-11 (Alpha candidate; not published)
+
+### Fixed
+
+- Construction menus can read dedicated material stockpiles outside the settlement's
+  background pass. Stock reads and commissions hold one scoped local survey through their
+  work, retaining the same protected-cargo, routed-lease and exact-custody checks. Previously
+  a fresh Kingdom Quickstart could report no timber while four timber sat in its camp chest.
+  This change adds no saved fields and does not replace or move existing goods.
+- Fresh Kingdom Quickstart material stacks now receive an engine identity before entering
+  their chest, re-proved after insertion. Routed construction-input observation needs these
+  identities; the chest already had one. Observers remain non-allocating. This closes a
+  separate prerequisite, not the cause of the menu's zero-stock reading. Existing materials
+  are not recreated or given identities by a blanket recovery pass.
+
+### Compatibility
+
+No serialized fields or receipt formats are changed by the stock-operation fix. Existing
+stock stays in place; no replacement supplies or blanket identity repair are performed.
+Back up saves before updating. Existing-save reload and downgrade compatibility are not
+claimed from the fresh-world regression.
+
+Current 3069-file census is line-cap green: 435,617 physical lines; direct `XRL`
+imports occur in 1430 files, 0 of them over the line limit. Inventory SHA-256:
+`249d3bb40ca34f57289770494e985a97e81cf42c2bae8f053fb6e14005b61d3d`.
+The generated cold-install inventory contains 3100 files. Exact-inventory source review is
+current; native successful commissioning remains open. Prior release receipts do not cover this delta.
+
 ## [0.3.2] — 2026-09-09 (Alpha)
 
 ### Fixed
@@ -105,11 +133,11 @@ below it.
   (ruling 5); no capacity, catch-up envelope, or stored item is touched, and a standing save reads
   exactly what it read before.
 
-> **Current unreleased census — exact structural gate passed.** Current 3068-file census is line-cap green:
+> **Retained 0.3.2 census — exact structural gate passed.** The 3068-file census is line-cap green:
 > 435,538 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1429 files, 0 of them over the line limit. Inventory SHA-256:
-> `93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa` (this digest differs from the previous one solely because of the 0.3.2 KingdomReleaseInfo.cs version-literal bump; no other change).
+> `93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa` (the shipped 0.3.2 inventory, before the #142 hotfix).
 > The generated cold-install inventory contains 3099 files; no new subscription claim.
 > This digest is the stockpile deposit custody fix merged over `dev` at `862f14d` (the unattended
 > native observers, the Workshop listing wording, the automatic Workshop attempt finalisation, the

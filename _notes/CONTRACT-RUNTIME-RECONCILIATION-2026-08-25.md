@@ -1,6 +1,13 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
-## Current stockpile deposit custody census — 2026-09-09
+## Current stock-operation hotfix census — 2026-09-10
+
+3069 production C# files; 3,100 cold-install files; 435,617 physical lines; 1430 direct-XRL;
+zero cap failures. Scope-only ad0dd90: four compile profiles and full Taf 14,067 zero skips
+passed; combined scope/identity/version gates pending. Native
+commissioning remains open; source review is current. docs/STATUS.md binds the current digest.
+
+## Retained stockpile deposit custody census — 2026-09-09
 
 3068 production C# files; 3,099 cold-install files in the generated inventory;
 435,538 physical lines, 1429 direct-XRL, zero cap failures. Exact digest

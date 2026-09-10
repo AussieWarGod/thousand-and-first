@@ -13,7 +13,8 @@ namespace ThousandAndFirst
 	public static partial class KingdomMaterials
 	{
 
-		/// <summary>Walks a zone once and reads every dedicated stockpile in it.</summary>
+		/// <summary>Reads dedicated stockpiles using one scoped active-zone survey.
+		/// An existing local pass is reused; inactive or conflicting ground refuses custody.</summary>
 		/// <param name="Z">Zone to read. Null yields an empty stock.</param>
 		public static MaterialStock Stock(Zone Z)
 		{
@@ -23,6 +24,13 @@ namespace ThousandAndFirst
 				return stock;
 			}
 			stock.Zone = Z;
+			if (!KingdomSurvey.TryBindLocalOperation(Z, null, out var scope,
+				out stock.InputLeaseFailure)) return stock;
+			using (scope) return StockInLocalPass(Z, stock);
+		}
+
+		private static MaterialStock StockInLocalPass(Zone Z, MaterialStock stock)
+		{
 			stock.InputLeaseAuthorityExact =
 				KingdomConstructionInputLeaseAuthority.TryCapture(
 					out stock.InputLeases, out stock.InputLeaseFailure);
@@ -46,6 +54,13 @@ namespace ThousandAndFirst
 		/// container. It shares the same routed-input authority snapshot as <see cref="Stock"/>
 		/// and never broadens a purpose-local debit to another stockpile.</summary>
 		internal static MaterialStock StockForExactContainer(Zone Z, GameObject Container)
+		{
+			if (!KingdomSurvey.TryBindLocalOperation(Z, null, out var scope,
+				out string failure)) return new MaterialStock { Zone = Z, InputLeaseFailure = failure };
+			using (scope) return StockForExactContainerInLocalPass(Z, Container);
+		}
+
+		private static MaterialStock StockForExactContainerInLocalPass(Zone Z, GameObject Container)
 		{
 			MaterialStock all = Stock(Z);
 			MaterialStock exact = new MaterialStock

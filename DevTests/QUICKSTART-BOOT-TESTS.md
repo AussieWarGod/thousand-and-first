@@ -146,3 +146,59 @@ Exit2 refuses missing, malformed or contradictory evidence. The checker does not
 fabricated journals or reimplement nested native heart/reservation semantics. Prove source
 process ownership/exit separately using the existing receipt-owned runner. Its synthetic tests
 prove only checker behavior; they are not actual boot or save/load tests.
+
+## Quickstart build (issue #142) — a separate, later proof, not the boot proof
+
+`quickstart-build <marsh|canyon|dunes> <yes|no>` is a third sibling of `quickstart-boot` and
+`quickstart-save`, using the identical `Tools/prepare-scenario.sh` invocation and the identical
+genuine production boot. It never redefines, reorders or relabels the boot proof: the build
+phase begins only after `Harness/KingdomQuickstartBootTest.cs` has already journaled an
+unmodified, unchanged `QUICKSTART-BOOT-COMPLETE` row.
+
+```bash
+TAF_REQUEST=founding-first-city \
+TAF_SCENARIO_SCRIPT='quickstart-build marsh no' \
+TAF_SCENARIO_QUICKSTART_ADVISOR=no \
+Tools/prepare-scenario.sh '' '#4242'
+```
+
+After boot, the harness drives the exact three-call production commissioning sequence the
+Charter UI itself drives for a plotted design (`Core/KingdomCharterPart.Commission.cs:70-105`):
+`KingdomPlots.TryQuoteCommission`, then the UI's own water/`KingdomMaterials.CanPay`
+pre-check, then `KingdomCommission.Commission` committing that exact quote — for the `"fire"`
+design (a real plotted `RuntimeData/KingdomBuildings.xml` entry, `Materials="timber:1"`,
+`Cost="2"`). No harness `BindPass`, no minted stock. A production refusal is journaled
+as a distinct, attributed terminal outcome rather than a harness error. The test is designed
+to catch the reported stock-scope defect; another refusal reason must be diagnosed on its own
+evidence. A successful run requires both production calls and all post-payment proofs to pass.
+
+Each step is its own journal row (`QUICKSTART-BUILD-QUOTE`, `QUICKSTART-BUILD-CANPAY`,
+`QUICKSTART-BUILD-COMMISSION`), present only as far as the sequence actually reached, followed
+by one terminal `QUICKSTART-BUILD-COMPLETE` naming which step (if any) refused. On success, the
+harness re-proves by exact object reference: the starter materials chest's own timber row drops
+from 4 to 3 raw units with every other row's reference and count unchanged, the receipted water
+cask's own `LiquidVolume` drops by the `"fire"` entry's exact `CostDrams`, and a new
+`KingdomConstructionJob` (absent before the call, present after, matched by exact
+settlement/zone/route/target, exact paid water and material claims, exact `Working` phase, and
+its own linked build output resolved by `FindExactId`) appears in the construction registry.
+`IDIfAssigned` is read for reporting only; an unassigned starter child id is never itself a
+refusal. No harness scope may be bound before or remain after any of the three calls.
+Production itself must bind the scoped stock/commission operations while they execute.
+
+Verify with the same checker, one more phase value:
+
+```bash
+python3 Tools/check-quickstart-results.py /mnt/c/taf-scenario.EXAMPLE --phase build
+```
+
+`quickstart-build` produces no save/load artifacts (same file-layout profile as `boot`). A
+refused build is a valid, well-formed `REFUSED`-outcome terminal row, not a checker crash.
+It still fails acceptance: the checker must return exit 2 and REFUSED, never PASS.
+
+Paid-claim checks use `KingdomQuickstartBuildClaims.CleanFirstPayment`, executed by pure tests
+in both test projects. Construction claims call physical net debit `Lost`, not additional
+waste: a fresh exact payment requires `Requested == Spent == Lost`, with zero outstanding
+water/material and `Exact == true`. Requiring zero Lost incorrectly rejected the first
+native fire commission after its physical debit and placement succeeded. Prior/retried jobs
+can legitimately have greater historical loss; this fixture accepts only a newly created job
+whose exact before/after stock proves no extra debit.

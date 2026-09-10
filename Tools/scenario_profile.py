@@ -229,7 +229,10 @@ COUNTED_VERBS = {COUNTED_VERB: MAX_ADVANCE_TURNS, FRAMES_VERB: MAX_YIELD_FRAMES}
 # before generation; the save variant additionally requests a real save after the boot checks.
 QUICKSTART_BOOT_VERB = "quickstart-boot"
 QUICKSTART_SAVE_VERB = "quickstart-save"
-QUICKSTART_VERBS = (QUICKSTART_BOOT_VERB, QUICKSTART_SAVE_VERB)
+# Sibling of boot/save: same genuine boot, plus a separate post-boot production commissioning
+# proof (Harness/KingdomQuickstartBuildTest.cs). Never changes boot/save grammar or behaviour.
+QUICKSTART_BUILD_VERB = "quickstart-build"
+QUICKSTART_VERBS = (QUICKSTART_BOOT_VERB, QUICKSTART_SAVE_VERB, QUICKSTART_BUILD_VERB)
 QUICKSTART_PROFILES = ("marsh", "canyon", "dunes")
 QUICKSTART_ADVISOR_ENV = "TAF_SCENARIO_QUICKSTART_ADVISOR"
 QUICKSTART_ADVISOR_OPTION = "r_TAF_OptionQuickstartAdvisor"
@@ -284,6 +287,14 @@ QUICKSTART_SAVE_SCRIPT_HEADER = (
     "# Written before the profile seal together with the matching PlayerOptions.json.\n"
 )
 
+QUICKSTART_BUILD_SCRIPT_HEADER = (
+    "# Sealed developer Quickstart build check, not an AutoRunner scenario script.\n"
+    "# Selects real Kingdom Quickstart; after production boot checks, drives one real production\n"
+    "# commissioning call from starter stock. A production refusal is a distinct, expected\n"
+    "# terminal outcome, not a harness error or a boot/save-load acceptance claim.\n"
+    "# Written before the profile seal together with the matching PlayerOptions.json.\n"
+)
+
 
 def parse_quickstart_boot(tokens: list[str]) -> str:
     """Require the sole exact boot command; return the native advisor option value."""
@@ -300,7 +311,7 @@ def parse_quickstart_command(tokens: list[str]) -> str:
         or tokens[1] not in QUICKSTART_PROFILES
         or tokens[2] not in ("yes", "no")
     ):
-        fail("Quickstart requires only '<quickstart-boot|quickstart-save> <marsh|canyon|dunes> <yes|no>'")
+        fail("Quickstart requires only '<quickstart-boot|quickstart-save|quickstart-build> <marsh|canyon|dunes> <yes|no>'")
     return "Yes" if tokens[2] == "yes" else "No"
 
 
@@ -413,6 +424,7 @@ def write_script(destination: str, verbs: list[str]) -> None:
         if not isinstance(options, dict) or options.get(QUICKSTART_ADVISOR_OPTION) != advisor:
             fail("Quickstart advisor differs from sibling PlayerOptions.json")
         header = (QUICKSTART_SAVE_SCRIPT_HEADER if verbs[0] == QUICKSTART_SAVE_VERB
+                  else QUICKSTART_BUILD_SCRIPT_HEADER if verbs[0] == QUICKSTART_BUILD_VERB
                   else QUICKSTART_SCRIPT_HEADER)
     elif (QUICKSTART_ADVISOR_ENV in os.environ
           or any(verb in os.environ.get("TAF_SCENARIO_SCRIPT", "").split()
