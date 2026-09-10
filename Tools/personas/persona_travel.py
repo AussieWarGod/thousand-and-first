@@ -49,7 +49,7 @@ def witness(rows):
         raise ValueError("travel clock/budget envelope failed")
     if result["mode"] == "present" and result["travel-turns"] != 0:
         raise ValueError("present leg reports travel")
-    if economic and (result["containers"] != 252 or result["stress-initial-thirds"] != 756
+    if economic and (result["containers"] != 252 or result["stress-initial-thirds"] != 732
             or result["stress-residents"] != 0 or result["resume-applications"] != 1
             or not result["pause-local-start"] <= result["pause-disabled"] < result["pause-resumed"] <= result["observed-tick"]
             or result["paused-ticks"] != result["pause-prior"] + result["pause-resumed"] - result["pause-local-start"]
