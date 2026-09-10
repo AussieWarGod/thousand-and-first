@@ -64,6 +64,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void NoShardEverDrivesTheUpgradeItself()
 		{
+			Assert.That(Read(Phases), Does.Contain("if (!Begun) RecordBlockedNotes();"));
+			Assert.That(Read(Phases), Does.Contain("List<string> notes = System.Ledger?.Notes;"));
 			foreach (string path in new[] { Provider, Checks, Fixture, Phases, Reads, Bill, Claim })
 			{
 				string text = Read(path);

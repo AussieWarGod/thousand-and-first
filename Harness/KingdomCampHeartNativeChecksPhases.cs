@@ -63,6 +63,19 @@ namespace ThousandAndFirst.Harness
 				}
 			}
 
+			private void RecordBlockedNotes()
+			{
+				List<string> notes = System.Ledger?.Notes;
+				Evidence.Append("\nblocked-ledger-notes=").Append(notes == null ? 0 : notes.Count);
+				if (notes == null) return;
+				for (int i = Math.Max(0, notes.Count - 16); i < notes.Count; i++)
+				{
+					string note = notes[i] ?? "(null)";
+					Evidence.Append("\nblocked-note=").Append(note.Length <= 1024
+						? note : note.Substring(0, 1024) + "[truncated]");
+				}
+			}
+
 			/// <summary>The real pass began and FUNDED the rung-2 improvement: the production
 			/// construction claim records the authored water and material as committed, the exact
 			/// bill units are absent from the dedicated store, and every unit the bill did not
@@ -76,9 +89,11 @@ namespace ThousandAndFirst.Harness
 				r_KingdomImprovement improvement = GameObject.Validate(Heart)
 					? Heart.GetPart<r_KingdomImprovement>() : null;
 				Begun = improvement != null && improvement.Working;
+				if (!Begun) RecordBlockedNotes();
 				Require(Begun, "taf-camp-improvement-absent: the real settlement pass never began "
 					+ "the heart's rung-2 improvement; announced-verdict="
-					+ (improvement == null ? "absent" : improvement.AnnouncedReason.ToString())
+					+ (improvement == null ? "absent"
+						: ((KingdomUpgradeRules.UpgradeVerdict)improvement.AnnouncedReason).ToString())
 					+ "; population=" + System.Population + "; assigned-crew=" + System.AssignedCrew);
 				RequireBillDebited();
 				List<GameObject> bodies;

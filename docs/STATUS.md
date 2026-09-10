@@ -65,6 +65,16 @@ portable 5,497 tests pass with zero skips. Eighteen focused checks pass; replaci
 allocation with a non-allocating lookup fails one source assertion, and restored code passes.
 Native proof remains pending; no production guard is weakened.
 
+Native `d1596b3` (`hVKs5q`, same seed) no longer logged the construction-input identity
+error. Stage reached Steading, but improvement refused with announced verdict 13
+(`NoGroundToGrow`), population six and assigned crew zero. Owned process stopped;
+failed profile/evidence retained. A diagnostic-only follow-up records up to 16 existing ledger
+notes (1024 characters each, truncation marked) when the unchanged begin assertion fails,
+and prints the verdict name. It never reassesses, clears, moves or stamps ground. Follow-up
+four-mode compile and audit pass (770 tool checks, six skips); main 14,347 / portable 5,497
+tests pass with zero skips. Eighteen focused source checks pass; dropping diagnostic capture
+fails one source assertion, restored code passes. Actual paid-upgrade proof remains pending.
+
 ## Unreleased camp-heart native seam (PR #107 native case 2)
 
 A dev-only scenario seam (`Harness/KingdomCampHeartNative*.cs`, persona
