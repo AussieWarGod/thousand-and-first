@@ -14,11 +14,26 @@ if ($null -eq $dotnetCommand) {
     exit 127
 }
 $dotnet = $dotnetCommand.Source
-& $dotnet restore $fullProject --locked-mode -v q --nologo
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-& $dotnet run --project $fullProject --no-restore -v q --nologo
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-& $dotnet restore $portableProject --locked-mode -v q --nologo
-if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-& $dotnet run --project $portableProject --no-restore -v q --nologo
-exit $LASTEXITCODE
+
+# Named-leg propagation (issue #134): a leg's restore or run step must fail the whole script
+# with a non-zero exit and name itself in the last log line, so a caller never has to infer
+# which of the two legs (if either) actually ran from ALL GREEN line counting alone. This does
+# not change the ALL GREEN lines the suites themselves print -- existing parsers still work.
+function Invoke-LicensedLeg {
+    param([string]$LegName, [string]$Project)
+
+    & $dotnet restore $Project --locked-mode -v q --nologo
+    if ($LASTEXITCODE -ne 0) {
+        Write-Output "LICENSED_LEG_FAILED=$LegName rc=$LASTEXITCODE step=restore"
+        exit $LASTEXITCODE
+    }
+    & $dotnet run --project $Project --no-restore -v q --nologo
+    if ($LASTEXITCODE -ne 0) {
+        Write-Output "LICENSED_LEG_FAILED=$LegName rc=$LASTEXITCODE step=run"
+        exit $LASTEXITCODE
+    }
+}
+
+Invoke-LicensedLeg -LegName "taf" -Project $fullProject
+Invoke-LicensedLeg -LegName "portable" -Project $portableProject
+exit 0
