@@ -6,6 +6,9 @@ Compare retained journals with `Tools/compare-travel-personas.py`. No native res
 claimed by authoring these recipes or by portable tests/compilation.
 
 The exact sealed recipe observes a real local growth pause, then a real master pause.
+Before either pause it requests a 1200-turn warm-up so ordinary daily reconciliation can
+initialize the home row and growth health. The oracle still refuses unhealthy or uninitialized
+authority; the fixture never writes health or schedule fields to manufacture admission.
 It restores growth configuration while master remains disabled, walks normally to an
 unclaimed parasang, waits 1200 game turns, and walks home. Home must no longer be cached
 before the return begins; there is no forced eviction or teleport fallback. The present

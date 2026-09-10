@@ -2,8 +2,11 @@
 
 `TAF_PERSONA_SEED='#123' Tools/run-personas.sh beta-travel-present beta-travel-away` prepares
 separate sealed profiles with the same explicit seed for comparison.
-The recipes found a first city at START=8.22@40,12, warm up one
-game turn, wait 1200 turns, return, drain 39 turns, yield one render frame, and check.
+The recipes found a first city at START=8.22@40,12, request a 1200-turn warm-up
+for ordinary daily reconciliation, then wait 1200 turns, return, request a 39-turn drain,
+yield one render frame, and check. Departure requires an initialized home row; no direct
+check-in or clock stamp substitutes for the warm-up. Warm-up completion may be observed later
+at an action opportunity; the actual elapsed count stays in the journal.
 
 The away leg uses ordinary westward `GameObject.Move`, one bounded step per action opportunity,
 until a different, nonclaimed surface parasang is reached. It returns east along the same route.

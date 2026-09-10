@@ -112,7 +112,21 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("if (!Active) return \"; pause-effects-proved=false\"",
 				TestMain.ReadRepositoryText("Harness/KingdomScenarioPauseController.cs"));
 			StringAssert.Contains("!The.ZoneManager.CachedZones.ContainsKey(Home)", source);
+			StringAssert.Contains("system.City.TryZoneRow(zone.ZoneID, out _)", source);
 			StringAssert.Contains("Player.Move(west ? \"W\" : \"E\", AllowDashing: false, DoConfirmations: false)", source);
+		}
+
+		[Test]
+		public void AllTravelRecipesWarmUpThroughRealDailyReconciliation()
+		{
+			ClassicAssert.AreEqual(1200, KingdomRules.TicksPerDay);
+			foreach (string name in new[] { "beta-travel-away", "beta-travel-present",
+				"beta-economic-away", "beta-economic-present" })
+				StringAssert.Contains("SCRIPT=stagedigest;realize;advance 1200;",
+					TestMain.ReadRepositoryText("Tools/personas/" + name + ".persona"));
+			foreach (string name in new[] { "KingdomScenarioTravelProvider", "KingdomScenarioPauseController" })
+				StringAssert.Contains("\"stagedigest\", \"realize\", \"advance 1200\"",
+					TestMain.ReadRepositoryText("Harness/" + name + ".cs"));
 		}
 
 		[Test]

@@ -47,6 +47,8 @@ namespace ThousandAndFirst.Harness
 				&& wx > 0, "requires an ordinary surface zone with a western parasang");
 			Require(!KingdomNativeRegressionContext.HasAnyState(game, Intent), "travel intent already exists");
 			Require(system.City != null && system.City.TryReadExact(out _, out _), "city book cannot be read exactly");
+			Require(system.City.TryZoneRow(zone.ZoneID, out _),
+				"home row missing before departure; ordinary settlement reconciliation has not initialized this fixture");
 			game.SetStringGameState(Intent, IsAway ? "away" : "present");
 			Require(KingdomScenarioDurableState.ProvesExactText(Intent, IsAway ? "away" : "present"), "intent did not persist");
 			Game = game; Player = player; PlayerId = player.ID; System = system; Book = system.City;

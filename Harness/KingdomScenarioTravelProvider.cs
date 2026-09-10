@@ -24,7 +24,7 @@ namespace ThousandAndFirst.Harness
 						&& plan.Key == "founding-first-city", why ?? "requires founding-first-city plan");
 					KingdomScenarioTravel.Seed = plan.Seed;
 					KingdomScenarioTravel.Require(KingdomScenarioScript.TryRead(out IList<string> script, out why), why);
-					string[] exact = { "stagedigest", "realize", "advance 1", Verb, "advance 1200",
+					string[] exact = { "stagedigest", "realize", "advance 1200", Verb, "advance 1200",
 						"beta-return", "advance 39", "yield-frames 1", "beta-check", "status" };
 					if (!KingdomScenarioPauseController.Recipe(script, Verb))
 					{

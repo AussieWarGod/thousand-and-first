@@ -18,7 +18,7 @@ def rows(mode="away", **changes):
                  "pause-effects-proved": "false", "full-envelope-stress": "false", "ordinary-acceptance": "false"})
     data.update(changes)
     result = [("stagedigest", "OK", "digest"), ("realize", "OK", "founded"),
-              ("advance-complete", "OK", "1 turn(s) elapsed of 1 requested"), ("beta-" + mode, "OK", "began")]
+              ("advance-complete", "OK", "1200 turn(s) elapsed of 1200 requested"), ("beta-" + mode, "OK", "began")]
     if mode == "away":
         result.append(("travel-out-complete", "OK", "normal-walk=true; steps=41"))
     result.extend([("advance-complete", "OK", "1200 turn(s) elapsed of 1200 requested"), ("beta-return", "OK", "return")])
@@ -48,6 +48,16 @@ def economic_rows(mode="away", **changes):
 
 
 class TravelTests(unittest.TestCase):
+    def test_warmup_requires_a_real_day_before_observation(self):
+        for fixture in (rows, economic_rows):
+            for elapsed, requested, valid in ((1200, 1200, True), (1201, 1200, True),
+                                               (1, 1, False), (1199, 1200, False),
+                                               (1200, 1, False)):
+                with self.subTest(fixture=fixture.__name__, elapsed=elapsed, requested=requested):
+                    journal = fixture()
+                    journal[2] = ("advance-complete", "OK", f"{elapsed} turn(s) elapsed of {requested} requested")
+                    self.assertEqual(not travel.assess(journal, "away", fixture is economic_rows), valid)
+
     def test_drain_completion_observation_can_overshoot_without_extending_deadline(self):
         for fixture in (rows, economic_rows):
             for mode in ("away", "present"):
