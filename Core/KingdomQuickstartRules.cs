@@ -110,13 +110,23 @@ namespace ThousandAndFirst
 			return false;
 		}
 
+		/// <summary>
+		/// Mints the one receipt a world ever gets. <paramref name="Founders"/> is decided by the
+		/// caller from its option BEFORE the receipt is published and is frozen here for the life of
+		/// the world: only <see cref="KingdomQuickstartFoundersDisposition.Omitted"/> (never seed)
+		/// and <see cref="KingdomQuickstartFoundersDisposition.Pending"/> (owe a cohort) may start
+		/// one. Core never reads an option itself.
+		/// </summary>
 		public static bool TryCreateReceipt(string ProfileKey, string ZoneId,
+			KingdomQuickstartFoundersDisposition Founders,
 			out KingdomQuickstartReceipt Receipt)
 		{
 			Receipt = null;
 			KingdomQuickstartProfile profile;
 			if (!TryProfile(ProfileKey, out profile)
-				|| !string.Equals(profile.ZoneId, ZoneId, StringComparison.Ordinal)) return false;
+				|| !string.Equals(profile.ZoneId, ZoneId, StringComparison.Ordinal)
+				|| (Founders != KingdomQuickstartFoundersDisposition.Omitted
+					&& Founders != KingdomQuickstartFoundersDisposition.Pending)) return false;
 			Receipt = new KingdomQuickstartReceipt
 			{
 				ProfileKey = profile.Key,
@@ -124,7 +134,8 @@ namespace ThousandAndFirst
 				Phase = KingdomQuickstartPhase.Reserved,
 				// This version bares the shelter lots when it builds the world, so a receipt it
 				// mints owes them a stake. Older receipts carry no such obligation and get none.
-				ShelterObligation = true
+				ShelterObligation = true,
+				FoundersDisposition = Founders
 			};
 			return Valid(Receipt);
 		}
@@ -178,6 +189,17 @@ namespace ThousandAndFirst
 				if (!string.IsNullOrEmpty(Value)
 					|| Advisor != KingdomQuickstartAdvisorDisposition.Unresolved) return false;
 				break;
+			case KingdomQuickstartPhase.FoundersSeeded:
+				// The only advance that closes the cohort, and it may only close one already
+				// standing: the four bodies were named by a Seeding restatement before any
+				// irreversible write, exactly as every other phase names its object before
+				// publishing it.
+				if (!string.IsNullOrEmpty(Value)
+					|| Advisor != KingdomQuickstartAdvisorDisposition.Unresolved
+					|| copy.FoundersDisposition
+						!= KingdomQuickstartFoundersDisposition.Seeding) return false;
+				copy.FoundersDisposition = KingdomQuickstartFoundersDisposition.Seeded;
+				break;
 			default:
 				return false;
 			}
@@ -198,7 +220,7 @@ namespace ThousandAndFirst
 			if (Target < KingdomQuickstartPhase.WaterStocked
 				|| Target > KingdomQuickstartPhase.AdvisorResolved
 				|| Current < KingdomQuickstartPhase.Founded
-				|| Current > KingdomQuickstartPhase.Complete
+				|| Current > KingdomQuickstartPhase.FoundersSeeded
 				|| Observation == KingdomQuickstartGrantObservation.ForeignOrMalformed)
 				return KingdomQuickstartRecoveryAction.Refuse;
 			if ((int)Current + 1 == (int)Target)
@@ -218,7 +240,7 @@ namespace ThousandAndFirst
 			if (Receipt == null || !TryProfile(Receipt.ProfileKey, out profile)
 				|| !string.Equals(Receipt.ZoneId, profile.ZoneId, StringComparison.Ordinal)
 				|| (int)Receipt.Phase < (int)KingdomQuickstartPhase.Reserved
-				|| (int)Receipt.Phase > (int)KingdomQuickstartPhase.Complete
+				|| (int)Receipt.Phase > (int)KingdomQuickstartPhase.FoundersSeeded
 				|| !Field(Receipt.FoodBlueprint) || !Field(Receipt.WaterObjectId)
 				|| !Field(Receipt.LarderObjectId) || !Field(Receipt.StockpileObjectId)
 				|| !Field(Receipt.AdvisorObjectId)) return false;
@@ -231,6 +253,7 @@ namespace ThousandAndFirst
 				|| water != !string.IsNullOrEmpty(Receipt.WaterObjectId)
 				|| food != !string.IsNullOrEmpty(Receipt.LarderObjectId)
 				|| materials != !string.IsNullOrEmpty(Receipt.StockpileObjectId)) return false;
+			if (!FoundersValid(Receipt)) return false;
 			if (!advisor)
 				return Receipt.AdvisorDisposition == KingdomQuickstartAdvisorDisposition.Unresolved
 					&& string.IsNullOrEmpty(Receipt.AdvisorObjectId);

@@ -1,6 +1,23 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current unreleased stockpile deposit custody
+## Current unreleased Kingdom Quickstart founding cohort
+
+3078 staged sources; 437,114 physical lines; 1434 direct-XRL; zero cap failures; 3109 generated
+cold-stage files. Exact inventory `e1ddecb76e357905d90bbc40ad8414b68efc38f2b532d19ec61d2df4a5053ce9`.
+Kingdom Quickstart founds a world with four founding citizens on the approach at turn 1, raised in
+one custody scope (zero-or-four), published by identity before any irreversible write, then enrolled
+forward-only and idempotently under a new `Founding` reason. The receipt gains a durable founders
+disposition and four ids on a sixteen-field wire; the old eleven-field form is byte-preserved and
+terminal, so no world made before this change, and no world made with the new option off, can gain
+founders. Each founder is counted into the shared per-profile origin tally by ADDING one under its
+own durable identity-bound obligation, so five prior citizens plus four founders is nine; mixed
+state after an interruption between the label and the increment is refused in the open, once, per
+obligation, as a stated safety policy rather than a recovery claim.
+Four compile modes, both engine-free suites (14,147 / 5,301, zero skips) and the Tools
+suite (627) are green. The six-profile boot matrix at seed `#43101` is OWED before merge, along with
+the `found-first-city`, `first-guest-native-check` and `guide-topics-native-check` personas.
+
+## Retained unreleased stockpile deposit custody
 
 3068 staged sources; 435,538 physical lines; 1429 direct-XRL; zero cap failures; 3099 generated
 cold-stage files. Exact inventory `3cfe76c38704930c03d2923e400d05155cbcbf96b9ad8b31ad90304cc8fea6c0`.
