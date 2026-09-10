@@ -33,8 +33,14 @@ three value failures; bypassing unpublished-receipt preservation causes three mo
 started masks or completed bits without started bits also preserve the prior stamp; bypassing
 both new consistency guards causes three value failures. The semantic suite is registered in both
 public test projects. At 76ab44d, all four canonical compile modes and the repository audit pass;
-main 14,287 and portable 5,451 tests pass with zero skips. Fresh native proof remains pending.
-Earlier failures remain retained; public Alpha is unchanged.
+main 14,287 and portable 5,451 tests pass with zero skips. Fresh native execution at that
+exact head (profile `8Kcqjp`, seed `#165939435`, `root-master128-native.QV5ZQ4`) reached
+the final larder assertion after completing `PauseController.Check()` and the 244-water loop.
+The complete pause oracle therefore passed by the executed call order; this is component
+evidence, not a positive final journal receipt. The overall economic persona remains RED:
+its larder assertion expects virtual food debt to create food, whereas production retires
+that legacy debt inert. A separate fixture correction must prove physical food conservation.
+Receipt-owned PID 28152 stopped; earlier failures remain retained. Public Alpha is unchanged.
 
 Canonical compile gates honor `TMPDIR` for independently allocated stage and dev trees. A
 private parent per worker avoids shared `/tmp` transaction-lock contention; all publication
