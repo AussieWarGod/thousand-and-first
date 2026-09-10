@@ -16,6 +16,11 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
+Canonical compile gates honor `TMPDIR` for independently allocated stage and dev trees. A
+private parent per worker avoids shared `/tmp` transaction-lock contention; all publication
+locks and identity checks remain. Executable allocation fixtures also prove an invalid parent
+refuses before staging instead of falling back to shared storage. No gameplay bytes change.
+
 ## Unreleased harness test-ground faction strip (issue #90)
 
 The dev-only scenario test ground's `Strip`/`Restrip` (`Harness/KingdomScenarioTestGround.cs`) now
@@ -36,10 +41,12 @@ Current census (unchanged by this PR): 3068
 staged C# files; 435,538 physical lines; 3099 files in the generated
 cold-install inventory; zero files at or above 300; direct `XRL`
 imports occur in 1429 files, 0 of them over the line limit. Inventory SHA-256:
-`93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa`. Native acceptance owed:
-first-guest-native-check and found-first-city persona reruns, plus one run with
-`TAF_PERSONA_SEED='#165939435'` (the originally failing seed), expecting a clean harness refusal or
-a village-free ground, never the publish-then-refuse path.
+`93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa`. Retained native acceptance
+at exact `a64289c`, original seed `#165939435`: found-first-city passed 11 rows and
+first-guest-native-check passed 135 rows, with both receipt-owned stops proved. Report:
+`root-harness105-native.JNJnVO/report.tsv`. Final merge-forward `1028bde` separately passed
+697 host tests, canonical four-mode compile/ABI and required CI before PR #105 merged; native
+evidence is not silently restamped to that later integration head.
 
 Developer reload cleanup reports both the original failure and a failed owned-process stop,
 retaining the original exception as its cause. Harmless shell fixtures cover exact helper

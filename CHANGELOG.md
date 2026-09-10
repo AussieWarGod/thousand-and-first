@@ -12,6 +12,8 @@ below it.
 
 ### Fixed
 
+- Canonical compile gates honor a private `TMPDIR` for both independently allocated trees,
+  allowing parallel workers to avoid the shared `/tmp` publication lock without bypassing it.
 - The dev-only scenario test ground's `Strip`/`Restrip` cleared only the zone's interior objects, so
   a re-stripped ground could still carry worldgen's `faction` zone property forward into the next
   attempt — not born-clean. `Strip` now also clears `"faction"`, but ONLY once it has proved no
