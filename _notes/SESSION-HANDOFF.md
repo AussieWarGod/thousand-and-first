@@ -1,6 +1,20 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current unreleased Kingdom Quickstart founding cohort
+## Current camp integration (#107 / #132 / #137)
+
+Integrated through dev `bcca3e5`; compile/audit and main14341/portable5491 pass, zero managed
+skips; native pending. Census3079/437201/1434,
+zero cap failures; inventory `304123d5ee1b31fa0b1369d5ad13c52888111f5c7563245f4fe4096c8ca38c70`.
+Earlier evidence below remains bound to its named checkpoints.
+
+## Retained roadless seal candidate (#131)
+
+3079 staged sources; 437,201 physical lines; 1434 direct-XRL; zero cap failures; 3110
+cold-install files. Inventory `ab4cf22e665900bd82593ad4f9805861da4458e60b918c59b1d3a0bb88b74617`.
+Four compile modes, audit, main 14,296/portable 5,460 tests pass (managed zero skips).
+Roadless-camp native passes at `0cfd8e7`; see docs/STATUS.md for exact scope and retained timeout.
+
+## Retained unreleased Kingdom Quickstart founding cohort
 
 3078 staged sources; 437,114 physical lines; 1434 direct-XRL; zero cap failures; 3109 generated
 cold-stage files. Exact inventory `e1ddecb76e357905d90bbc40ad8414b68efc38f2b532d19ec61d2df4a5053ce9`.

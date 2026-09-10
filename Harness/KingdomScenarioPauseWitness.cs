@@ -60,8 +60,8 @@ namespace ThousandAndFirst.Harness
 				&& Growth.ArrivalOpportunity == null && Growth.ArrivalDebtRanges.Count == 0
 				&& System.LifecycleBook.PlainGuest == null && System.LifecycleBook.NotableGuest == null,
 				"open work/debt owns a schedule lease outside this focused oracle");
-			Require(!System.SemanticPassActive && Growth.ArrivalOrdinalHighWater <= long.MaxValue,
-				"semantic pass or ordinal outside fixture bounds");
+			Require(System.NativeTravelSemanticPauseReady() && Growth.ArrivalOrdinalHighWater <= long.MaxValue,
+				"unfinished or unpublished semantic pass, or ordinal outside fixture bounds");
 			foreach (var field in Growth.FieldOps) Require(field.Operation == null, "field operation remains open");
 		}
 
@@ -113,7 +113,11 @@ namespace ThousandAndFirst.Harness
 			Require(City.ProcessedThroughTick == ResumeTick && System.LastWaterWorkTick == ResumeTick
 				&& System.LastSemanticTick == ResumeTick && City.WorkNextTicks.Count == Works
 				&& City.WorkRanThroughTicks.Count == Works && City.ClockKinds.Count == ClockKinds.Length,
-				"settlement resume clocks or row counts differ");
+				"settlement resume clocks or row counts differ: expected=" + ResumeTick
+				+ "; processed=" + City.ProcessedThroughTick + "; water=" + System.LastWaterWorkTick
+				+ "; semantic=" + System.LastSemanticTick + "; works=" + City.WorkNextTicks.Count
+				+ "/" + City.WorkRanThroughTicks.Count + "/" + Works
+				+ "; clocks=" + City.ClockKinds.Count + "/" + ClockKinds.Length);
 			for (int i = 0; i < Works; i++) Require(City.WorkRanThroughTicks[i] == ResumeTick
 				&& City.WorkNextTicks[i] == Expected.DayDeadline, "work schedule is not one full interval after resume");
 			for (int i = 0; i < ClockKinds.Length; i++) Require(City.ClockKinds[i] == ClockKinds[i]

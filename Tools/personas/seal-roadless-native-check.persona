@@ -1,0 +1,8 @@
+# Synthetic completed-heart calendar on a fresh, zero-population camp; no roads are fabricated.
+# Real daily polls must leave the stage untouched and announce pending topology only once.
+DESCRIPTION=roadless completed camp defers spatial sealing without publishing a proxy or logging corruption
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;seal-roadless-setup;advance 2400;seal-roadless-check;advance 2400;seal-roadless-check;stagedigest
+VERBS=seal-roadless-setup,seal-roadless-check
+EXPECT=stagedigest:OK~founded=false,seal-roadless-setup:OK~native-seal-roadless phase=1,advance:OK,seal-roadless-check:OK~native-seal-roadless phase=2,advance:OK,seal-roadless-check:OK~native-seal-roadless phase=3,stagedigest:OK~founded=true,COMPLETE

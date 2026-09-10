@@ -20,6 +20,8 @@
     <Compile Include="KingdomCampHeartNativeSourceTests.cs" />
     <Compile Include="..\Harness\KingdomCampHeartNativeCensus.cs" />
     <Compile Include="KingdomCampHeartNativeCensusTests.cs" />
+    <Compile Include="..\Core\KingdomSealPendingRules.cs" />
+    <Compile Include="KingdomSealPendingRulesTests.cs" />
     <Compile Include="KingdomRealmArchiveNestedWireSourceTests.cs" />
     <Compile Include="KingdomCityBookRefusalTests.cs" />
     <Compile Include="KingdomWearLoadSafetySourceTests.cs" />
@@ -1340,6 +1342,8 @@
 	<Compile Include="..\Harness\KingdomScenarioRules.cs" />
 	<Compile Include="..\Harness\KingdomScenarioLoadRules.cs" />
 	<Compile Include="..\Harness\KingdomScenarioTravelRules.cs" />
+	<Compile Include="..\Simulation\City\KingdomSemanticClockRules.cs" />
+	<Compile Include="KingdomSemanticClockRulesTests.cs" />
 	<Compile Include="KingdomScenarioTravelRulesTests.cs" />
 	<Compile Include="..\Harness\KingdomScenarioRefusal.cs" />
 	<Compile Include="KingdomScenarioRefusalTests.cs" />

@@ -385,6 +385,11 @@ modern arrivals retain a deferred restart; historical open work finishes before 
 Opaque/staged growth and pristine pre-founding lifecycle are not granted new authority.
 Seat and away mirrors use only the proved growth frontier. The master pause exception starts
 future full intervals; it does not materialize unobserved arrival backlog during resume.
+The semantic dispatch stamp reanchors to resume only when no active receipt remains unpublished.
+A completed published receipt may retain its active flag; that flag alone is not an open lease.
+Unfinished, unpublished or malformed active receipts retain their prior stamp, avoiding forged
+publication. A reanchored semantic clock next runs at the next absolute day boundary; scheduled
+work and arrival deadlines retain their respective full-interval rules.
 
 `NewWorkAllowed` is for explicit producer entry points. Reports and named committed-recovery
 surfaces use separate read/recovery paths. `AutomaticWorkAllowed` is stricter: an unobserved,

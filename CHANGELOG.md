@@ -10,6 +10,19 @@ below it.
 
 ## Unreleased — Beta gap report
 
+> **Current camp integration census (#107 / #132 / #137).** Current 3079-file census is line-cap green:
+> 437,201 physical lines; 1434 XRL-importing files; zero at or above 300.
+> Inventory SHA-256: `304123d5ee1b31fa0b1369d5ad13c52888111f5c7563245f4fe4096c8ca38c70`.
+> Combined-tree four-mode compile, audit, main 14,341/portable 5,491 tests pass (managed zero
+> skips). Camp native proof remains pending; prior checkpoints below are retained.
+
+> **Retained roadless seal census (#131).** Current 3079-file census is line-cap green:
+> 437,201 physical lines; zero files at or above 300; 1434 direct `XRL` importing files.
+> Inventory SHA-256: `ab4cf22e665900bd82593ad4f9805861da4458e60b918c59b1d3a0bb88b74617`.
+> The generated cold-install inventory contains 3110 files. All four compile modes pass;
+> audit and main 14,296/portable 5,460 tests pass (managed zero skips). The roadless-camp native
+> check passes at `0cfd8e7` after one retained startup timeout. Earlier census entries are retained evidence.
+
 ### Added
 
 - A dev-only native-check seam (`camp-heart-native-checks`) proves PR #107's owed native case 2:
@@ -97,6 +110,17 @@ below it.
   and the real founding receipt's dedicated 16-dram first basin. The old one-store assertion
   refused a correct 50-resident setup. Exact identities, dedication, placement and empty contents
   remain checked; production water capacity and accounting are unchanged.
+- A roadless completed camp now reports that its spatial seal is waiting for connected streets,
+  rather than treating that exact intermediate topology as corruption during daily/save polls.
+  Capture still refuses to publish: no new seal, old spatial fallback, fabricated street, or
+  weakened geometry validation. No saved fields or formats change. Bounded roadless native
+  verification passed under #131; terminal/recovery refusal semantics are unchanged.
+
+- Master resume now reanchors the semantic clock for a completed, published receipt even when
+  its durable active flag remains set. Unfinished, unpublished, or malformed active receipts
+  retain their old clock, so resuming never fabricates publication. The same rule serves the
+  seated settlement and away mirrors; no saved fields or formats change. Native component
+  verification is recorded in STATUS; overall economic fixture refusals remain retained.
 - Canonical compile gates honor a private `TMPDIR` for both independently allocated trees,
   allowing parallel workers to avoid the shared `/tmp` publication lock without bypassing it.
 - The dev-only scenario test ground's `Strip`/`Restrip` cleared only the zone's interior objects, so
@@ -274,7 +298,14 @@ below it.
   (ruling 5); no capacity, catch-up envelope, or stored item is touched, and a standing save reads
   exactly what it read before.
 
-> **Current unreleased census — exact structural gate passed.** Current 3078-file census is line-cap green:
+> **Current unreleased census — master semantic resume correction.** Current 3078-file census is line-cap green:
+> 437,136 physical lines; zero files at or above 300; 1434 direct `XRL` imports.
+> Inventory SHA-256: `f533203f98ed26e0ab95970b54b13fce26d6281988e36c9e3d20f6f870a82bb9`.
+> Three production files changed, no added sources or saved fields. At 76ab44d, canonical compile
+> modes and repository audit pass; main 14,287 and portable 5,451 tests pass, zero skipped.
+> Fresh native proof remains pending; retained founder evidence below does not sign this correction.
+
+> **Retained founding-cohort census — exact structural gate passed on those bytes.**
 > 437,114 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1434 files, 0 of them over the line limit. Inventory SHA-256:

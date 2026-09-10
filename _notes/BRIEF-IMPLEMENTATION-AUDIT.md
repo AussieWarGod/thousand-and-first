@@ -1,6 +1,20 @@
 # Brief-to-implementation audit
 
-## Current Kingdom Quickstart founding-cohort census — 2026-09-10
+## Current camp integration (#107 / #132 / #137) — 2026-09-10
+
+Integrated through dev `bcca3e5`; compile/audit and main14341/portable5491 pass, zero managed
+skips; native pending. Census3079/437201/1434,
+zero cap failures; inventory `304123d5ee1b31fa0b1369d5ad13c52888111f5c7563245f4fe4096c8ca38c70`.
+Earlier evidence below remains bound to its named checkpoints.
+
+## Retained roadless seal census (#131) — 2026-09-10
+
+**3079** production C# files, 437,201 physical lines, 1434 direct-XRL, zero cap failures;
+3110 cold-install files. Inventory `ab4cf22e665900bd82593ad4f9805861da4458e60b918c59b1d3a0bb88b74617`.
+Four compile modes, audit, main 14,296/portable 5,460 tests pass (managed zero skips).
+Roadless-camp native passes at `0cfd8e7` (bounded scope in docs/STATUS.md). No release approval inferred.
+
+## Retained Kingdom Quickstart founding-cohort census — 2026-09-10
 
 **3078** production C# files, 437,114 physical lines, 1434 direct-XRL, zero cap failures;
 3109 generated cold-install files. Exact digest

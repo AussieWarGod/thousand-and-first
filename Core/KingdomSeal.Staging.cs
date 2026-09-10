@@ -43,6 +43,7 @@ namespace ThousandAndFirst
 			FlushInProgress = false;
 			ReconcileInProgress = false;
 			LastFailureKey = null;
+			LastPendingKey = null;
 		}
 
 		private bool IsGenerationSealed => AuthorityEnabled && !string.IsNullOrEmpty(LegacyId)
@@ -59,7 +60,12 @@ namespace ThousandAndFirst
 		}
 
 		private bool TryFlushLiving(string Reason, bool ProbeEvenIfClean, out string Failure)
+			=> TryFlushLiving(Reason, ProbeEvenIfClean, out Failure, out _);
+
+		private bool TryFlushLiving(string Reason, bool ProbeEvenIfClean, out string Failure,
+			out KingdomInheritanceSpatialCaptureResult Spatial)
 		{
+			Spatial = KingdomInheritanceSpatialCaptureResult.Malformed;
 			Failure = "";
 			if (FlushInProgress)
 			{
@@ -119,7 +125,7 @@ namespace ThousandAndFirst
 
 				KingdomSealRecord probe;
 				if (!TryCapture(kingdom, LegacyId, Generation, baseRevision,
-					SafeTick(game.TimeTicks), out probe, out Failure))
+					SafeTick(game.TimeTicks), out probe, out Failure, out Spatial))
 				{
 					return false;
 				}
@@ -130,6 +136,7 @@ namespace ThousandAndFirst
 					Dirty = false;
 					DirtyReason = null;
 					LastFailureKey = null;
+					LastPendingKey = null;
 					return true;
 				}
 				int nextRevision;
@@ -140,7 +147,7 @@ namespace ThousandAndFirst
 				}
 				KingdomSealRecord next;
 				if (!TryCapture(kingdom, LegacyId, Generation, nextRevision,
-					SafeTick(game.TimeTicks), out next, out Failure))
+					SafeTick(game.TimeTicks), out next, out Failure, out Spatial))
 				{
 					return false;
 				}
@@ -153,6 +160,7 @@ namespace ThousandAndFirst
 				Dirty = false;
 				DirtyReason = null;
 				LastFailureKey = null;
+				LastPendingKey = null;
 				return true;
 			}
 			catch (Exception ex)

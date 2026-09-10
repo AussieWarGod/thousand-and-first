@@ -6,7 +6,7 @@ using ThousandAndFirst.Harness;
 namespace ThousandAndFirst.Tests
 {
 	/// <summary>
-	/// The helper itself, plus source-contract pins on the three verb-provider catch sites it
+	/// The helper itself, plus source-contract pins on the provider and observer catch sites it
 	/// serves: each site must call it with the site's own prefix rather than concatenate a
 	/// literal "prefix: " + error.Message, or a fix here can silently regress in one call site
 	/// while this suite still passes on the other two.
@@ -20,6 +20,7 @@ namespace ThousandAndFirst.Tests
 
 		[TestCase("plain refusal reason")]
 		[TestCase("")]
+		[TestCase(null)]
 		public void UnprefixedMessageGetsExactlyOneSitePrefix(string reason)
 		{
 			string result = KingdomScenarioRefusal.Message("taf-example-refused", reason);
@@ -59,6 +60,23 @@ namespace ThousandAndFirst.Tests
 			int count = 0, index = 0;
 			while ((index = text.IndexOf(token, index)) >= 0) { count++; index += token.Length; }
 			return count;
+		}
+
+		[Test]
+		public void TravelObserversRetainNonNullFaults()
+		{
+			string source = Read("Harness/KingdomScenarioTravelDriver.cs");
+			ClassicAssert.AreEqual(2, CountOccurrences(source,
+				"KingdomScenarioTravel.Fault = KingdomScenarioRefusal.Message(\"taf-travel-refused\", error.Message)"));
+			StringAssert.DoesNotContain("KingdomScenarioTravel.Fault = error.Message", source);
+			StringAssert.Contains("KingdomScenarioJournal.Append(\"travel-refused\", false, KingdomScenarioTravel.Fault)", source);
+		}
+
+		[Test]
+		public void TravelRethrowUsesTheSameIdempotentFormatter()
+		{
+			StringAssert.Contains("throw new InvalidOperationException(KingdomScenarioRefusal.Message(\"taf-travel-refused\", Reason))",
+				Read("Harness/KingdomScenarioTravel.cs"));
 		}
 
 		[Test]

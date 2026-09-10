@@ -43,7 +43,12 @@ namespace ThousandAndFirst
 		/// <summary>Stages the next coherent living snapshot after a semantic action. Safe to call
 		/// when no fact changed; canonical comparison suppresses a redundant revision.</summary>
 		public static bool TryStageSemanticSnapshot(string Reason, out string Failure)
+			=> TryStageSemanticSnapshot(Reason, out Failure, out _);
+
+		internal static bool TryStageSemanticSnapshot(string Reason, out string Failure,
+			out KingdomInheritanceSpatialCaptureResult Spatial)
 		{
+			Spatial = KingdomInheritanceSpatialCaptureResult.Malformed;
 			Failure = "";
 			try
 			{
@@ -63,7 +68,10 @@ namespace ThousandAndFirst
 					return false;
 				}
 				seal.MarkDirty(Reason);
-				return seal.TryFlushLiving(Reason, ProbeEvenIfClean: true, out Failure);
+				bool staged = seal.TryFlushLiving(Reason, ProbeEvenIfClean: true, out Failure, out Spatial);
+				if (!staged && Spatial == KingdomInheritanceSpatialCaptureResult.Pending)
+					seal.ReportCaptureFailure(Reason, Failure, Spatial);
+				return staged;
 			}
 			catch (Exception ex)
 			{
