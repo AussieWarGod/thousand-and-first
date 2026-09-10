@@ -212,7 +212,7 @@ if (Test-Path -LiteralPath $scriptPath -PathType Leaf) {
         Where-Object { $_.Trim() -ne '' -and -not $_.Trim().StartsWith('#') })
 }
 $quickstartBanner = $scriptVerbs.Count -eq 1 -and
-    $scriptVerbs[0] -cmatch '\Aquickstart-(boot|save) (marsh|canyon|dunes) (yes|no)\z'
+    $scriptVerbs[0] -cmatch '\Aquickstart-(boot|save|build) (marsh|canyon|dunes) (yes|no)\z'
 if ($quickstartBanner) {
     $quickstartPhase = $Matches[1]; $quickstartProfile = $Matches[2]; $quickstartAdvisor = $Matches[3]
 }
@@ -228,6 +228,9 @@ if ($quickstartBanner) {
         if ($quickstartPhase -ceq 'save') {
             Write-Host 'Requests a real Primary save after genuine boot checks, then parks before the first turn.'
             Write-Host 'The exact owned process must be stopped separately; cold-load is a separate check.'
+        } elseif ($quickstartPhase -ceq 'build') {
+            Write-Host 'After genuine boot checks, drives one real production commissioning call from starter stock.'
+            Write-Host 'A production refusal is a distinct, expected terminal outcome, not a harness error; no save/load proof.'
         } else {
             Write-Host 'Boot-only observation of production founding and grants; no save/load proof.'
         }

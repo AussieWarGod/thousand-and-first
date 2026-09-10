@@ -1,6 +1,14 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current roadless seal candidate (#131)
+## Current dev hotfix backmerge — 2026-09-11
+
+3080 staged sources; 437,399 physical lines; 1435 direct-XRL files; zero at or above 300 lines;
+3111 cold-install files. Inventory `6ebc095bd595e636c48079ba5c41c0cb3bb92f3af7741d99b05eeb8b81acc78d`.
+Combined-tree gates pending; isolated main hotfix native evidence does not sign dev features.
+The retained 0.3.3 semantic review binds main only, not this combined inventory.
+See docs/STATUS.md for scoped release evidence. Public Workshop remains 0.3.2.
+
+## Retained roadless seal candidate (#131)
 
 3079 staged sources; 437,201 physical lines; 1434 direct-XRL; zero cap failures; 3110
 cold-install files. Inventory `ab4cf22e665900bd82593ad4f9805861da4458e60b918c59b1d3a0bb88b74617`.

@@ -64,6 +64,30 @@ namespace ThousandAndFirst.Tests
 			Assert.That(request.Save, Is.True);
 		}
 
+		[TestCase("quickstart-build marsh yes", "marsh", true)]
+		[TestCase("quickstart-build marsh no", "marsh", false)]
+		[TestCase("quickstart-build canyon yes", "canyon", true)]
+		[TestCase("quickstart-build canyon no", "canyon", false)]
+		[TestCase("quickstart-build dunes yes", "dunes", true)]
+		[TestCase("quickstart-build dunes no", "dunes", false)]
+		public void BuildRequestPreservesExactSelectionAndDoesNotChangeBootOrSave(string Command, string Profile, bool Advisor)
+		{
+			Assert.That(Harness.KingdomQuickstartBootRequest.TryParse(new[] { Command }, out var request), Is.True);
+			Assert.That(request.ProfileKey, Is.EqualTo(Profile));
+			Assert.That(request.Advisor, Is.EqualTo(Advisor));
+			Assert.That(request.Command, Is.EqualTo(Command));
+			Assert.That(request.Build, Is.True);
+			Assert.That(request.Save, Is.False);
+		}
+
+		[TestCase("quickstart-boot marsh yes")]
+		[TestCase("quickstart-save marsh yes")]
+		public void NonBuildRequestsNeverSetTheBuildFlag(string Command)
+		{
+			Assert.That(Harness.KingdomQuickstartBootRequest.TryParse(new[] { Command }, out var request), Is.True);
+			Assert.That(request.Build, Is.False);
+		}
+
 		[TestCase(null)]
 		[TestCase("")]
 		[TestCase("quickstart-boot")]
@@ -81,6 +105,11 @@ namespace ThousandAndFirst.Tests
 		[TestCase("quickstart-save")]
 		[TestCase("quickstart-save marsh yes status")]
 		[TestCase("quickstart-save marsh 1")]
+		[TestCase("quickstart-build")]
+		[TestCase("quickstart-build marsh")]
+		[TestCase("quickstart-build Marsh yes")]
+		[TestCase("quickstart-build marsh 1")]
+		[TestCase("quickstart-build marsh yes status")]
 		public void BootRequestRefusesNoncanonicalCommands(string Command)
 		{
 			Assert.That(Harness.KingdomQuickstartBootRequest.TryParse(new[] { Command }, out var request), Is.False);

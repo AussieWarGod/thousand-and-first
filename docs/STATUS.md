@@ -1,12 +1,13 @@
 # Current implementation and release evidence
 
-**Snapshot:** 2026-09-10
+**Snapshot:** 2026-09-11
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
-**Next public version:** none scheduled beyond 0.3.2
-**Working candidate manifest:** 0.3.2 public Alpha playtest; private staging verified,
-public Workshop upload complete and finalized — see [Public 0.3.2](#public-032) below
-**Beta gates:** issues #58–#70 are all still open; the full gap analysis against the shipped
-0.3.2 bytes is [docs/BETA-GAP-REPORT-2026-09-09.md](BETA-GAP-REPORT-2026-09-09.md).
+**Next public version:** 0.3.3 stockpile hotfix in preparation; not published
+**Working candidate manifest:** 0.3.3 private Alpha candidate; not uploaded.
+Public Workshop remains the 0.3.2 public Alpha playtest, complete and finalized — see [Public 0.3.2](#public-032) below.
+**Dev integration:** main hotfix backmerged alongside unreleased beta work; not a release candidate.
+**Beta gates:** tracked in issues #58–#70 and the retained [gap report](BETA-GAP-REPORT-2026-09-09.md).
+Issue #68 was closed by the author; remaining heart endgame debt is tracked in #144.
 
 The public Alpha is [Steam Workshop item
 3794797472](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472). Rows marked retained
@@ -15,6 +16,15 @@ source, compile, or generator gate proves only that layer. Native Caves of Qud b
 only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
+
+## Current dev hotfix backmerge
+
+3080 staged C# files; 437,399 physical lines; cold-install inventory contains 3111 files.
+Compile inventory: 3080 sources, baseline and compatibility symbols (3076 baseline).
+Direct `XRL` imports: 1435 files, 0 over the line limit. Zero at or above 300 lines.
+Inventory SHA-256: `6ebc095bd595e636c48079ba5c41c0cb3bb92f3af7741d99b05eeb8b81acc78d`.
+Combined-tree gates pending. The isolated main candidate and native receipts below exclude dev's
+unfinished gameplay. The inherited semantic review binds main only, not this dev inventory.
 
 ## Native raw-delivery overflow evidence (#111 / #124 / #129)
 
@@ -251,7 +261,76 @@ multi-component open fails all three new negatives. Monotonic timing and strict 
 also have executable checks. All 27 focused tests and the full portable audit pass; these synthetic
 filesystem checks do not establish native cold-load or release acceptance.
 
-## Current repository integration state — PR #6 merged, main protection updated
+
+## Stockpile hotfix — issue #142
+
+**Fresh build regression PASS:** exact developer head `3cf2825ec94a8153c180faccb5c7bf33e464f4df`,
+seed `#43101`, marsh/no advisor. Genuine boot, UI-equivalent quote/CanPay/commission sequence,
+same-chest timber 4→3, exact cask debit, paid `Working`/`PlotWorks` job with exact linked works
+receipt and ground, and no leaked survey scope all passed. External sealed-profile/log checker
+returned PASS and driver exit 0. Evidence `hotfix142-native.epWuUn`; profile
+`/mnt/c/taf-scenario.nwgvHE`; owned PID 37016 stopped with profile/seal retained. This proves
+staking the paid fire plot, not completion, ordinary play, historical saves or Steam delivery.
+The six terrain/advisor save–cold-load pairs are running separately, not yet accepted here.
+The following descendant changes only portable test registration (12 existing pure source files),
+not the exercised runtime or harness. Full candidate release gates remain required.
+
+The integrated `0f78405` native build run passed genuine boot, quote, CanPay, commission,
+physical timber/water debit and clean paid-claim checks, then correctly failed acceptance at
+a faulty developer assertion: it expected `Projected`, while successful `ProjectPlot` explicitly
+finishes in `Working`. Root also found the remaining output assertion named `r_KingdomPlot`
+instead of the actual `r_KingdomPlotWorks` part. Both assertions are corrected without changing
+production state transitions. Retained evidence: `hotfix142-native.9GzK7k`, profile
+`/mnt/c/taf-scenario.aACZpW`, owned PID 30636 stopped. This partial run is not a native PASS.
+Full Windows tests on that head passed 14,111 cases with zero skips; portable compilation failed
+on a missing construction-rule dependency in its test project, tracked for correction before release.
+
+A genuine production Quickstart from the shipped 0.3.2 runtime reproduced the menu failure:
+`CanPay(zone, "fire")` reported one timber missing with four physical starter timber and no
+bound survey. Diagnostic commit `7adb3e46c6d13ff6f816bad9b74d5ea5f9a453e0`, seed `#43101`,
+marsh profile without advisor; the refusal is retained, not counted as acceptance.
+The earlier identity-only diagnostic also found unassigned starter-material identities;
+that is a separate routed-input prerequisite, not the cause of this local tally failure.
+
+The isolated hotfix binds/reuses one active local survey for stock reads and complete
+commission transactions. Custody and lease guards are unchanged. No saved fields or repair
+goods are introduced. The scope-only commit `ad0dd90` passes all four compile modes,
+14,067 full-suite cases and 5,215 portable cases, zero skipped. Independent source review
+found no blocking issue. Native diagnostic `9828b4c` proves CanPay succeeds with the
+original unidentified starter stacks, without assigning their identities or leaking a survey.
+The separate fresh-ID prerequisite `3500035` passes 14,067 full and 5,221 portable cases,
+zero skipped, and independent source review. Combined gates, actual successful debit and
+projection, and release delivery remain pending. No existing-save reload claim is made.
+
+Combined production/version checkpoint `4a0a231` passes 14,073 full and 5,221 portable
+cases, zero skipped. Integrated native `fe29ad3` (marsh/no advisor, seed `#43101`) reaches
+successful quote, CanPay and commission, spends exactly one timber and two drams, and stakes
+the fire plot. Its terminal check remains RED: the harness incorrectly required WaterLost
+zero, although construction claims record net physical debit there. A dev-only executed
+fully-paid-claim predicate corrects that assertion without changing production funding;
+fresh native acceptance is still required. The owned process was stopped and evidence retained.
+
+Retained isolated main hotfix census: 3069 staged C# files; 435,617 physical lines; 3100 files in the
+generated cold-install inventory. Scope-only compile inventory: 3069 sources, baseline and compatibility symbols
+(3065 baseline; developer profiles 3232/3236), including installed compatibility ABI checks.
+These compile receipts precede the fresh-ID and version integration; combined receipts are pending.
+Direct `XRL` imports: 1430 files, 0 over the line limit. Zero files at or above 300 lines.
+Inventory SHA-256: `249d3bb40ca34f57289770494e985a97e81cf42c2bae8f053fb6e14005b61d3d`.
+The exact-inventory structural review binds only that main inventory; see [0.3.3 review](STRUCTURE_REVIEW_0_3_3.md).
+This is source review, not native or release acceptance. Earlier censuses below are retained checkpoints.
+
+## Current repository release integration policy
+
+GitHub verified 2026-09-10: `dev` is the default branch; merge commits and squash are enabled,
+rebase merges disabled. Neither branch requires linear history. Both require repository-audit
+and the Ubuntu full/portable lane; `main` also enforces strict up-to-date checks and admin
+protection. `dev` retains non-strict checks and its existing admin bypass. Release promotion
+uses a merge commit to preserve candidate ancestry, never a squash. No settings were changed
+for the hotfix. See [release branch model](RELEASING.md#branch-model).
+
+## Retained integration checkpoint — PR #6, 2026-09-07
+
+The configuration below describes that historical checkpoint, not today's protection.
 
 Documentation/hardening PR #6, "Post-0.3.1 Alpha hardening and release closeout", was
 squash-merged to `main` as `be3f13a` at 2026-09-07T22:34:54Z by the author. Its branch
@@ -396,6 +475,53 @@ cells. Those cells are declared beside the lots because the quickstart's ground 
 engine-free; `DevTests/KingdomQuickstartShelterIngressTests.cs` recomputes them from the shipped
 architecture with the same `KingdomRoadRules.TryAuthoredLane` the stake walks and fails on drift.
 The heart-ingress endpoints are unchanged and refusal is still fail-closed with the same message.
+
+## Retained isolated identity prerequisite — 3500035 (refs #142)
+
+This section describes the separate prerequisite commit, not the combined scope fix above.
+
+A player reported on the shipped 0.3.2 build that no building could be commissioned because the
+starter materials in the camp chest were not seen (#142). Tracing that report in the shipped source
+found an identity gap, which this change closes, and a separate, more direct cause for the reported
+symptom, which it deliberately does not touch.
+
+**What is fixed here.** The starter stacks were created, counted and inserted without ever being
+given an engine identity. `GameObject.IDIfAssigned` (pinned engine
+`XRL/World/GameObject.cs:424-434`) reads that identity without creating one; `GameObject.ID`
+(`:436-452`) is the allocating read. The chest takes its identity through `RequireID()` in
+`TryPrepareGrant` (`World/KingdomQuickstartBootstrap.Recovery.cs:89`); its contents took none, and
+nothing else on the quickstart path asked for one.
+`Growth/KingdomConstruction.InputObservationRegistry.cs:138` reads holder and item identity the
+non-allocating way and `:151-162` refuses an empty one with "Attended construction-input source
+identity is absent or ambiguous". The fix is
+bounded to `World/KingdomQuickstartBootstrap.Materials.cs`: each fresh starter stack takes its
+identity exactly once, at creation, BEFORE insertion, re-proved after insertion. The observer is
+deliberately untouched — an observer that allocated identity would invent one for anything it
+looked at.
+
+**What this does NOT fix, and why the symptom is not claimed.** The reported #142 symptom has a
+separate scope cause, addressed elsewhere and not touched here. Two shipped-source readings say the
+identity gap cannot be it: the material-lease gate admits an object with no identity for an
+ordinary local debit (`Growth/KingdomConstructionInputLeaseAuthority.cs:66-72` treats an empty
+`IDIfAssigned` as "not leased"), and `ActiveLocalCustody` (`:171-181`) excludes EVERY item whenever
+no survey is bound, which `KingdomMaterials.Stock`
+(`Growth/KingdomMaterials.05.StockpileAndPaymentGates.cs:29`) can produce because it takes
+`ActiveFor ?? Take` without binding. So the absent identity never made the build menu read zero.
+This change is a separately routed prerequisite for the later construction-input observation.
+
+**Also recorded as evidence, not fixed here.** `TryPlaceGrant`
+(`World/KingdomQuickstartBootstrap.Recovery.cs:100-127`) places a grant and proves custody but
+publishes nothing into a bound survey, and no quickstart bootstrap shard touches `KingdomSurvey` at
+all. `KingdomSurvey` caches nothing per zone — `ActiveFor`
+(`Growth/KingdomSurvey.01.Capture.cs:174-178`) answers only the currently bound pass and `Take`
+(`:94-108`) builds a fresh index otherwise — so a fresh world, whose bootstrap runs at
+`BOOTEVENT_GAMESTARTING` with nothing bound, is unaffected. The resume path
+(`World/KingdomQuickstartLifecycle.cs:36-47`, waking on `ZoneActivated` and `EndTurn`) can land a
+grant inside a live pass, which is a real if narrower absence. No change is made for it here.
+
+**Not claimed:** no native reproduction and no native verification have been made, so this is a
+source, compile and host-suite claim only. End-to-end construction acceptance from quickstart stock
+is owed to the native lane.
 
 Retained census after merging `dev` (the Kingdom Quickstart tent rows, the first-basin water store,
 the stockpile unit capacity, the render-only city sight and the shelter ingress included) and the

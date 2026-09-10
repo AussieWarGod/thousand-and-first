@@ -59,9 +59,17 @@ namespace ThousandAndFirst
 		public static bool Commission(KingdomSystem System, string Key, string SkinKey,
 			KingdomPlotRules.PlotSize Stake, KingdomPlotQuote Expected, out string Failure)
 		{
+			if (!KingdomSurvey.TryBindLocalOperation(The.Player?.CurrentZone, System,
+				out var scope, out Failure)) return false;
+			using (scope) return CommissionInLocalPass(System, Key, SkinKey, Stake, Expected, out Failure);
+		}
+
+		private static bool CommissionInLocalPass(KingdomSystem System, string Key, string SkinKey,
+			KingdomPlotRules.PlotSize Stake, KingdomPlotQuote Expected, out string Failure)
+		{
 			Failure = null;
 			Zone zone = The.Player?.CurrentZone;
-			if (!System.Founded || zone == null || !System.ClaimedZones.Contains(zone.ZoneID))
+			if (System == null || !System.Founded || zone == null || !System.ClaimedZones.Contains(zone.ZoneID))
 			{
 				Failure = "Commissions are issued on the kingdom's own ground.";
 				return false;

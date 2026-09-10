@@ -18,7 +18,26 @@ python3 Tools/check-structure.py --report
 python3 Tools/check-structure.py --release
 ```
 
-## Current isolated draft census
+## Current dev hotfix backmerge census
+
+3080 staged production C# files; 437,399 physical lines; zero files at or above 300 lines.
+1435 files with direct `XRL` imports; 3111 cold-install files. Exact inventory:
+`6ebc095bd595e636c48079ba5c41c0cb3bb92f3af7741d99b05eeb8b81acc78d`.
+Combined-tree gates pending. The inherited semantic review binds the isolated main hotfix,
+not this combined dev tree; no native or release acceptance is inferred.
+
+## Retained isolated main stock-operation hotfix census
+
+3069 staged production C# files; 435,617 physical lines; zero files at or above 300 lines.
+1430 files with direct `XRL` imports; zero of these exceed the line cap. Exact inventory:
+`249d3bb40ca34f57289770494e985a97e81cf42c2bae8f053fb6e14005b61d3d`.
+One new local-operation scope helper and five modified production files over 0.3.2:
+three scope callers, fresh starter-material identity allocation and the release version literal.
+No saved fields or serialization formats change. The exact-inventory semantic review binds these main bytes;
+see [0.3.3 delta review](STRUCTURE_REVIEW_0_3_3.md). This source review does not replace native
+or release gates. Earlier censuses are retained checkpoints.
+
+## Retained isolated draft census
 
 The #129 dev-harness native checks merged over the roadless spatial capture correction — and so
 also over the master semantic resume correction, the Kingdom Quickstart founding cohort, the
