@@ -247,7 +247,8 @@ namespace ThousandAndFirst.Tests
 			// The tent-row sentence is a conditional arm counted off the ground, never off the
 			// branch that ran: a save cut past the Reserved phase resumes straight to Complete with
 			// no lot staked anywhere, and must not be told a row is waiting for it.
-			StringAssert.Contains("out int ShelterLots, out string Failure", bootstrap);
+			StringAssert.Contains("out int ShelterLots, out int Founders, out string Failure",
+				bootstrap);
 			StringAssert.Contains("ShelterLots = ShelterLotsClaimed(zone);", bootstrap);
 			int guard = bootstrap.IndexOf("+ (shelterLots > 0", StringComparison.Ordinal);
 			int sentence = bootstrap.IndexOf("\" tent-row lot\"", StringComparison.Ordinal);
@@ -291,7 +292,8 @@ namespace ThousandAndFirst.Tests
 		public void ReceiptIsExactMonotoneAndTamperEvident()
 		{
 			Assert.That(KingdomQuickstartRules.TryCreateReceipt("marsh",
-				"JoppaWorld.8.22.1.1.10", out KingdomQuickstartReceipt receipt), Is.True);
+				"JoppaWorld.8.22.1.1.10", KingdomQuickstartFoundersDisposition.Omitted,
+				out KingdomQuickstartReceipt receipt), Is.True);
 			Assert.That(KingdomQuickstartRules.TryAdvance(receipt,
 				KingdomQuickstartPhase.WaterStocked, "early", 0, out _), Is.False);
 			receipt = Advance(receipt, KingdomQuickstartPhase.Founded, "Watervine");
@@ -340,7 +342,8 @@ namespace ThousandAndFirst.Tests
 		public void AReceiptThisVersionMintsCarriesTheShelterObligationThroughEveryPhase()
 		{
 			Assert.That(KingdomQuickstartRules.TryCreateReceipt("canyon",
-				"JoppaWorld.14.17.1.1.10", out KingdomQuickstartReceipt receipt), Is.True);
+				"JoppaWorld.14.17.1.1.10", KingdomQuickstartFoundersDisposition.Omitted,
+				out KingdomQuickstartReceipt receipt), Is.True);
 			ClassicAssert.IsTrue(receipt.ShelterObligation);
 			string wire = KingdomQuickstartRules.Encode(receipt);
 			StringAssert.StartsWith("q2|", wire);
@@ -390,6 +393,7 @@ namespace ThousandAndFirst.Tests
 		public void GrantMarkerIsStableAcrossPublicationAndBoundToRoleAndGround()
 		{
 			KingdomQuickstartRules.TryCreateReceipt("marsh", "JoppaWorld.8.22.1.1.10",
+				KingdomQuickstartFoundersDisposition.Omitted,
 				out KingdomQuickstartReceipt receipt);
 			receipt = Advance(receipt, KingdomQuickstartPhase.Founded, "Watervine");
 			string water = KingdomQuickstartRules.GrantMarker(receipt,
@@ -402,6 +406,7 @@ namespace ThousandAndFirst.Tests
 			Assert.That(food, Is.Not.EqualTo(water));
 
 			KingdomQuickstartRules.TryCreateReceipt("canyon", "JoppaWorld.14.17.1.1.10",
+				KingdomQuickstartFoundersDisposition.Omitted,
 				out KingdomQuickstartReceipt other);
 			other = Advance(other, KingdomQuickstartPhase.Founded, "Watervine");
 			Assert.That(KingdomQuickstartRules.GrantMarker(other,
@@ -450,6 +455,7 @@ namespace ThousandAndFirst.Tests
 		public void OmittedAdvisorIsDurableAndCannotAcquireAnIdentity()
 		{
 			KingdomQuickstartRules.TryCreateReceipt("dunes", "JoppaWorld.6.17.1.1.10",
+				KingdomQuickstartFoundersDisposition.Omitted,
 				out KingdomQuickstartReceipt receipt);
 			receipt = Advance(receipt, KingdomQuickstartPhase.Founded, "Yuckwheat");
 			receipt = Advance(receipt, KingdomQuickstartPhase.WaterStocked, "water");
@@ -657,7 +663,11 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("AfterGameLoadedEvent.ID", lifecycle);
 			StringAssert.Contains("ZoneActivatedEvent.ID", lifecycle);
 			StringAssert.Contains("EndTurnEvent.ID", lifecycle);
-			StringAssert.Contains("receipt.Phase == KingdomQuickstartPhase.Complete", lifecycle);
+			// The wake's finished test is the one shared predicate, not a phase comparison: a
+			// Complete receipt that still owes or is part-way through its cohort is not finished.
+			StringAssert.Contains("KingdomQuickstartRules.IsTerminal(receipt)", lifecycle);
+			StringAssert.DoesNotContain("receipt.Phase == KingdomQuickstartPhase.Complete",
+				lifecycle);
 			StringAssert.Contains("RequireSystem<KingdomQuickstartLifecycle>()", embark);
 		}
 

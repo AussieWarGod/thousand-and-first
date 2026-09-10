@@ -108,9 +108,13 @@ Built zone before player placement, then bootstrap sees that same zone and the a
 at `(40,12)`. The observer records start-cell reachability before preparation and requires it
 afterward; this is not proof of safe escape or general traversal. Other checks require an
 initially absent Quickstart receipt, correct seed/profile/mode/options, exact founded heart,
-canonical Complete receipt, no quarantine, no scenario runner/request, single physical grant
+canonical finished receipt, no quarantine, no scenario runner/request, single physical grant
 identities, and initial quantities:24 drams,12 meals,1 mud/3 brush/4 timber. Advisor decision must
-match the sealed selection. Owner, receipt, quantities and terminal boot conditions are checked
+match the sealed selection. With the founders option on, the finished receipt is at the seeded
+phase with a seeded cohort, and the native roster additionally requires four founder bodies, each
+wearing its own indexed reservation, each with the identity the receipt names, and none of them
+duplicated; the charter must read four settlers at turn 1 and the day-1 seal must list four names.
+A receipt that owes or is part-way through a cohort is NOT finished and fails this check. Owner, receipt, quantities and terminal boot conditions are checked
 again before the final positive. Treat an absent journal row as unproved, never success.
 
 The `quickstart-boot` command proves boot only when actually executed. Save/cold-load uses the

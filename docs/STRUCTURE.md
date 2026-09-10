@@ -20,13 +20,22 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
-The stockpile deposit custody fix over the Kingdom Quickstart shelter ingress, the render-only
-city sight, the stockpile unit capacity, the first-basin water store and the Kingdom Quickstart
-tent rows reports 3068 staged production C# files and 435,538 physical lines.
+The Kingdom Quickstart founding cohort over the stockpile deposit custody fix, the Kingdom
+Quickstart shelter ingress, the render-only city sight, the stockpile unit capacity, the
+first-basin water store and the Kingdom Quickstart
+tent rows reports 3078 staged production C# files and 437,114 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa` (this digest differs from the previous one solely because of the 0.3.2 KingdomReleaseInfo.cs version-literal bump; no other change). The census reports
-1429 files with direct `XRL` imports; 0 of those exceed the line limit.
+`e1ddecb76e357905d90bbc40ad8414b68efc38f2b532d19ec61d2df4a5053ce9`. The census reports
+1434 files with direct `XRL` imports; 0 of those exceed the line limit.
+
+The founding-cohort delta over the retained draft below is ten added production sources and no
+removals: the quickstart rules' founders partial, the bootstrap's receipt partial split out of the
+bootstrap itself, the three bootstrap founders partials, and the five the founder origin accounting
+adds — its models, its bounded versioned codec, its host seam, its engine-free transaction, and the
+one adapter that knows what a body and a settlement are. All four `Tools/gate.sh` modes compiled
+clean on these bytes through the canonical gate itself — staged baseline (3074 sources), staged
+compatibility (3078), dev-harness baseline (3241) and dev-harness compatibility (3245).
 
 The shelter-ingress delta over the retained city-sight draft below is one added and one modified
 production source and no
