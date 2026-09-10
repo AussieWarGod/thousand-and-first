@@ -2,10 +2,12 @@
 
 ## Current stock-operation hotfix — issue #142
 
-3069 staged sources; 435,601 physical lines; 1430 direct-XRL; zero cap failures; 3100
-cold-install files. Full Taf 14,067 zero skips; all four compiles 3065/3069/3232/3236 passed.
+3069 staged sources; 435,617 physical lines; 1430 direct-XRL; zero cap failures; 3100
+cold-install files. Scope-only ad0dd90: full Taf 14,067 zero skips and all four compiles
+3065/3069/3232/3236 passed. Combined scope/identity/version gates remain pending.
 Native main-based quickstart reproduced four timber counted as zero outside a bound survey.
-Stock and commission scope implementation is under review; native success and release remain open.
+Scope and fresh-ID source reviews passed; native CanPay succeeded on original unidentified stock.
+Actual commissioned debit/projection and release remain open.
 Current digest and evidence: docs/STATUS.md. No save migration or replacement goods.
 
 ## Retained stockpile deposit custody

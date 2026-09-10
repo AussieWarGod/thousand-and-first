@@ -2,9 +2,10 @@
 
 ## Current stock-operation hotfix census — 2026-09-10
 
-**3069** production C# files, 435,601 physical lines, 1430 direct-XRL, zero cap failures.
-3100 cold-install files. Four compile profiles and full Taf 14,067 zero skips passed;
-native commissioning and semantic review remain open. Exact digest: docs/STATUS.md.
+**3069** production C# files, 435,617 physical lines, 1430 direct-XRL, zero cap failures.
+3100 cold-install files. Scope-only ad0dd90: four compile profiles and full Taf 14,067
+zero skips passed; combined scope/identity/version gates pending;
+native commissioning remains open. Exact-inventory source review is current; see docs/STATUS.md.
 
 ## Retained stockpile deposit custody census — 2026-09-09
 
