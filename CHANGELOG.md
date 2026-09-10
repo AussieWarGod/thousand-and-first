@@ -23,6 +23,9 @@ below it.
   own exit is a hand-off, not confirmed cleanup. Executable process-lifecycle tests (real child
   processes, real signals, no game launch) prove the disposal, the refusals, and the shell's
   forwarding and reporting.
+- Developer profile validation batches metadata checks four at a time, preserving every path,
+  link, size and closed-inventory check while reducing serialized filesystem overhead.
+
 - Repository audits ignore existing Python bytecode and disable new cache writes. Same-size,
   same-second mutation/restoration cycles therefore test current source, not a stale `.pyc`.
 - Developer cold-load preparation anchors all destination writes, including directory creation,

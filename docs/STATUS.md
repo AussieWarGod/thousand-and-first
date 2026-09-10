@@ -29,6 +29,19 @@ hand-off, not confirmed cleanup. Real child-process/real-signal tests (`Tools/te
 persona_reload_signal_test.py`) prove disposal, the refusals, and the shell's forwarding and
 reporting - host orchestration evidence only, not native reload or release acceptance.
 
+Developer profile metadata census uses batches of at most four read-only workers. Every existing
+per-file ancestor/link/size check remains; file/directory/total-byte bounds and both closed hash
+passes remain in force. A retained stopped 3,273-file profile measured 75.54 seconds before,
+10.03 seconds with batching, then 74.81 seconds on a warm original-code control. These are local
+phase timings, not a general platform guarantee or native acceptance. Refs #89.
+
+Retained native developer cold-reload evidence at PR #108 head `6ea5f38`: genuine marsh/advisor
+Quickstart at seed `#43101`, real save, receipt-owned stop, fresh descendant profile, strict
+save/load checks, unchanged save hashes and native stock/ID witnesses, then a second owned stop
+and final idle proof. Report `root-reload-native.hOChoP/report.tsv` passed one persona. This is
+same-version developer evidence, not historical saves, ordinary play, graceful quit or release
+acceptance; the later host-only census merge is not silently included in that native claim.
+
 Repository audits use a fresh empty Python cache lookup root with bytecode writes disabled.
 An executable timestamp-cache fixture proves that disabling writes alone still reads stale
 bytecode, while the isolated audit imports restored source. This strengthens host test fidelity;
