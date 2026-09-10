@@ -102,7 +102,7 @@ namespace ThousandAndFirst.Tests
 		public void PhysicalDemandNeverTurnsUnknownOrOverflowIntoZero(bool measured, int containers,
 			int bodies, int expected)
 		{
-			bool valid = KingdomScenarioTravelRules.TryPhysicalDemand(measured, containers, bodies, out int thirds);
+			bool valid = KingdomScenarioTravelRules.TryPhysicalDemand(measured, containers, bodies, false, out int thirds);
 			ClassicAssert.AreEqual(expected >= 0, valid);
 			ClassicAssert.AreEqual(expected, thirds);
 		}
@@ -112,9 +112,59 @@ namespace ThousandAndFirst.Tests
 		{
 			int weight = ThousandAndFirst.Simulation.City.KingdomCatchUpRules.WeightThirds(
 				ThousandAndFirst.Simulation.City.KingdomUnitWeight.Heavy);
-			ClassicAssert.IsTrue(KingdomScenarioTravelRules.TryPhysicalDemand(true, 3, 2, out int thirds));
+			ClassicAssert.IsTrue(KingdomScenarioTravelRules.TryPhysicalDemand(true, 3, 2, false, out int thirds));
 			ClassicAssert.AreEqual(3 + 2 * weight, thirds);
 		}
+
+		[Test]
+		public void BlockedDebtCannotMasqueradeAsZeroExecutableDemand()
+		{
+			ClassicAssert.IsFalse(KingdomScenarioTravelRules.TryPhysicalDemand(true, 0, 0, true, out int thirds));
+			ClassicAssert.AreEqual(-1, thirds);
+		}
+
+		[Test]
+		public void BookDebtNeverRestampsZeroAndLateSettlementRemainsLate()
+		{
+			ClassicAssert.IsTrue(KingdomScenarioTravelRules.TryObserveZero(100, -1, 110, 0, false, out long zero));
+			ClassicAssert.AreEqual(-1, zero);
+			ClassicAssert.IsTrue(KingdomScenarioTravelRules.TryObserveZero(100, zero, 140, 0, true, out zero));
+			ClassicAssert.AreEqual(140, zero);
+			ClassicAssert.IsFalse(KingdomScenarioTravelRules.Drained(100, zero, 0));
+		}
+
+		[Test]
+		public void NewBookOrPhysicalDebtInvalidatesAnEarlierZero()
+		{
+			foreach (bool settled in new[] { false, true })
+			{
+				ClassicAssert.IsTrue(KingdomScenarioTravelRules.TryObserveZero(100, 110, 120,
+					settled ? 3 : 0, settled, out long zero));
+				ClassicAssert.AreEqual(-1, zero);
+				ClassicAssert.IsTrue(KingdomScenarioTravelRules.TryObserveZero(100, zero, 140, 0, true, out zero));
+				ClassicAssert.IsFalse(KingdomScenarioTravelRules.Drained(100, zero, 0));
+			}
+		}
+
+		[TestCase(100, -1, 139, 0, true, 139)]
+		[TestCase(100, 139, 140, 0, true, 139)]
+		[TestCase(100, 139, 140, 1, true, -1)]
+		[TestCase(100, 139, 140, 0, false, -1)]
+		public void ZeroObservationKeepsOnlyUninterruptedProof(long first, long previous, long now,
+			int physical, bool settled, long expected)
+		{
+			ClassicAssert.IsTrue(KingdomScenarioTravelRules.TryObserveZero(first, previous, now, physical, settled, out long zero));
+			ClassicAssert.AreEqual(expected, zero);
+		}
+
+		[TestCase(-1, -1, 100, 0)]
+		[TestCase(100, -1, 99, 0)]
+		[TestCase(100, 99, 110, 0)]
+		[TestCase(100, 111, 110, 0)]
+		[TestCase(100, -2, 110, 0)]
+		[TestCase(100, -1, 110, -1)]
+		public void InvalidPhysicalObservationRefuses(long first, long previous, long now, int physical)
+			=> ClassicAssert.IsFalse(KingdomScenarioTravelRules.TryObserveZero(first, previous, now, physical, true, out _));
 
 		[TestCase(false, 0, null, 0, 7, 0, true)]
 		[TestCase(true, 100, "home", 7, 7, 100, true)]
@@ -146,6 +196,9 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = TestMain.ReadRepositoryText("Harness/KingdomCity.NativeTravelDemand.cs");
 			StringAssert.Contains("ContainerGround.Take(survey)", source);
+			StringAssert.Contains("KingdomSurvey.TryTakeUnboundRecovery(Zone, out var survey)", source);
+			StringAssert.DoesNotContain("KingdomSurvey.Take(", source);
+			StringAssert.Contains("receipt.WaterBlocked != 0 || receipt.FoodBlocked != 0 || receipt.MaterialsBlocked != 0", source);
 			StringAssert.Contains("KingdomContainerCatchUpRules.TryMeasure", source);
 			StringAssert.Contains("if (!measured) return false", source);
 			StringAssert.Contains("Posted(Zone, survey, KingdomStations.Index(Zone)).Count", source);
@@ -199,7 +252,9 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = TestMain.ReadRepositoryText("Harness/KingdomScenarioTravelDriver.cs");
 			StringAssert.Contains("[HarmonyPatch(typeof(KingdomCity), \"Receipt\")]", source);
-			StringAssert.Contains("if (owed != 0) KingdomScenarioTravel.ZeroTurn = -1", source);
+			StringAssert.Contains("KingdomScenarioTravelRules.TryObserveZero(", source);
+			StringAssert.Contains("owed, settled, out long zero", source);
+			StringAssert.Contains("if (KingdomSurvey.HasBoundPass) return", source);
 			StringAssert.Contains("KingdomScenarioTravel.RemainingDemand = owed", source);
 		}
 	}

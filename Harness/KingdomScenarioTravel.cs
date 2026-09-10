@@ -153,6 +153,7 @@ namespace ThousandAndFirst.Harness
 
 		internal static string Check()
 		{
+			Require(!KingdomSurvey.HasBoundPass, "final physical observation requires an unbound pass");
 			Observe();
 			Require(State == Phase.Draining && Player.CurrentZone.ZoneID == Home
 				&& KingdomScenarioTravelRules.DrainObservationReady(ArrivedTurn, Game.Turns),
@@ -164,7 +165,8 @@ namespace ThousandAndFirst.Harness
 				"physical catch-up within 39 turns was not proved by a post-return demand observation"
 				+ "; observed=" + ReturnDemandObserved + "; remaining=" + RemainingDemand
 				+ "; home-turn=" + FirstHomeTurn + "; zero-turn=" + ZeroTurn + "; owed=" + owed);
-			var survey = KingdomSurvey.Take(Player.CurrentZone, System);
+			Require(KingdomSurvey.TryTakeUnboundRecovery(Player.CurrentZone, out var survey),
+				"final container inventory is incomplete or bound");
 			Containers = survey.Stores.Count + survey.Larders.Count;
 			Require(Containers <= KingdomScenarioTravelRules.CivicEnvelope && KingdomRules.MaxCivicContainersPerZone == 252
 				&& KingdomCatchUpRules.WorstBacklogUnits == 312 && KingdomBudgetRules.ReifyUnitsPerTurn == 8,

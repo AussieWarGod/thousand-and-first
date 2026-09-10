@@ -61,15 +61,27 @@ namespace ThousandAndFirst.Harness
 			=> Arrived >= 0 && Observed >= Arrived && Observed - Arrived >= DrainTurns;
 
 		internal static bool TryPhysicalDemand(bool Measured, int ContainerThirds, int MisplacedBodies,
-			out int Thirds)
+			bool Blocked, out int Thirds)
 		{
 			Thirds = -1;
-			if (!Measured || ContainerThirds < 0 || MisplacedBodies < 0) return false;
+			if (!Measured || Blocked || ContainerThirds < 0 || MisplacedBodies < 0) return false;
 			long total = ContainerThirds + (long)MisplacedBodies *
 				ThousandAndFirst.Simulation.City.KingdomCatchUpRules.WeightThirds(
 					ThousandAndFirst.Simulation.City.KingdomUnitWeight.Heavy);
 			if (total > 936) return false;
 			Thirds = (int)total;
+			return true;
+		}
+
+		internal static bool TryObserveZero(long FirstHome, long PreviousZero, long Now, int PhysicalThirds,
+			bool BookSettled, out long Zero)
+		{
+			Zero = -1;
+			if (FirstHome < 0 || Now < FirstHome || PreviousZero < -1 || PreviousZero > Now
+				|| (PreviousZero >= 0 && PreviousZero < FirstHome)
+				|| PhysicalThirds < 0 || PhysicalThirds > 936) return false;
+			if (!BookSettled || PhysicalThirds != 0) return true;
+			Zero = PreviousZero < 0 ? Now : PreviousZero;
 			return true;
 		}
 

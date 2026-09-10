@@ -10,9 +10,11 @@ namespace ThousandAndFirst.Simulation.City
 		/// <summary>Developer-only physical observation, including already-settled ground
 		/// for which SpendTurn deliberately emits no receipt. No reification or publication.
 		/// Unlike the performance helper, a failed measurement is unknown, never zero.</summary>
-		internal static bool TryReadNativeTravelDemand(KingdomSystem System, Zone Zone, out int Thirds)
+		internal static bool TryReadNativeTravelDemand(KingdomSystem System, Zone Zone,
+			out int Thirds, out bool BookSettled)
 		{
 			Thirds = -1;
+			BookSettled = false;
 			var game = The.Game;
 			var book = System?.City;
 			if (game == null || System == null || !System.Founded || Zone == null || book == null
@@ -24,8 +26,7 @@ namespace ThousandAndFirst.Simulation.City
 				|| !IndexOf(state, Zone.ZoneID, out int index) || !state.TryZone(index, out var row)) return false;
 			long tick = game.TimeTicks;
 			if (!KingdomOrdinaryFoodAuthority.TryCapture(out _, out _)) return false;
-			KingdomSurvey survey = KingdomSurvey.Take(Zone, System);
-			if (survey == null) return false;
+			if (!KingdomSurvey.TryTakeUnboundRecovery(Zone, out var survey)) return false;
 			ContainerGround ground = ContainerGround.Take(survey);
 			bool measured = KingdomContainerCatchUpRules.TryMeasure(ground.Rows, ground.Rows.Length,
 				row.OwedWater, row.OwedFood, row.OwedMaterials, out var receipt, out _);
@@ -40,7 +41,9 @@ namespace ThousandAndFirst.Simulation.City
 				|| !book.TryZoneRow(Zone.ZoneID, out int current)
 				|| book.ZoneOwedWater[current] != row.OwedWater || book.ZoneOwedFood[current] != row.OwedFood
 				|| book.ZoneOwedMaterials[current] != row.OwedMaterials) return false;
-			return KingdomScenarioTravelRules.TryPhysicalDemand(measured, receipt.OwedThirds, bodies, out Thirds);
+			BookSettled = row.OwedWater == 0 && row.OwedFood == 0 && row.OwedMaterials == 0;
+			return KingdomScenarioTravelRules.TryPhysicalDemand(measured, receipt.OwedThirds, bodies,
+				receipt.WaterBlocked != 0 || receipt.FoodBlocked != 0 || receipt.MaterialsBlocked != 0, out Thirds);
 		}
 	}
 }

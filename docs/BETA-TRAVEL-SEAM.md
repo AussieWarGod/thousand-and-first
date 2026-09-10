@@ -22,12 +22,14 @@ The normal runner still owns strict log/MODERROR checks; no log exemptions are a
 
 The runtime observes shared reification spend (24 thirds/four heavy per turn), physical remaining
 demand receipts (936 thirds maximum), model/semantic clock monotonicity, growth mirror equality,
-and schedule deadline/ordinal continuity. A post-return physical-demand receipt must reach zero
+and schedule deadline/ordinal continuity. A post-return physical-demand observation must reach zero
 within 39 turns after first home entry and remain settled at the final check. Three model resource
 flags alone never prove physical drainage. Settled zones intentionally emit no spend receipt,
-so the developer observer also measures actual surveyed container rows and misplaced bodies
-without spending or publishing. Failed measurement is unknown, never zero. Every zero timestamp
-comes from that physical observation, including when a normal spend receipt triggers it.
+so the developer observer also measures actual container rows and misplaced bodies using a
+complete custody-only survey, outside bound semantic passes, without legacy migration or
+economic publication. Failed or capacity-blocked measurement is never zero. A zero timestamp
+requires both physical demand and the exact book row to be settled; new debt invalidates it.
+Every zero timestamp comes from that physical observation, including when a normal spend receipt triggers it.
 Missing demand evidence refuses, even in a quiet camp.
 The script requests a 39-turn drain wait; an action opportunity or real render yield may observe
 its completion later (for example, 40 elapsed turns). That later observation does not extend the
