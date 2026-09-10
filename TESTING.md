@@ -10,9 +10,9 @@ subscribed-package gate named here.
 
 ## Current roadless seal candidate (#131)
 
-Compatibility compilation runs across 3081 production C# sources (baseline 3077); developer
-profiles compile 3259/3263 inputs. All four modes pass. The generated
-cold-install inventory contains 3112 files. Main 14,309 and portable 5,467 tests pass with zero
+Compatibility compilation runs across 3082 production C# sources (baseline 3078); developer
+profiles compile 3260/3264 inputs. All four modes pass. The generated
+cold-install inventory contains 3113 files. Main 14,309 and portable 5,467 tests pass with zero
 skips; repository audit passes. The bounded roadless-camp native check passes at `0cfd8e7`
 (one startup timeout retained, single retry passes); see docs/STATUS.md for scope.
 older evidence below signs only its stated earlier bytes.

@@ -10,11 +10,11 @@ below it.
 
 ## Unreleased — Beta gap report
 
-> **Current heart rung settlement census (#138).** Current 3081-file census is line-cap green:
-> 437,358 physical lines; zero files at or above 300; direct `XRL`
-> imports occur in 1436 files, 0 of them over the line limit.
-> Inventory SHA-256: `dbb62f0500ed4bd0106399d447a5d76d47aa0fcb10622db8a10ca2dcfd812548`.
-> The generated cold-install inventory contains 3112 files. All four compile modes pass;
+> **Current heart rung settlement census (#138).** Current 3082-file census is line-cap green:
+> 437,399 physical lines; zero files at or above 300; direct `XRL`
+> imports occur in 1437 files, 0 of them over the line limit.
+> Inventory SHA-256: `09917087950cde3c906c89a1fb053ae23b02679dc16b0064c6966f24e2e41255`.
+> The generated cold-install inventory contains 3113 files. All four compile modes pass;
 > audit and main 14,309/portable 5,467 tests pass (managed zero skips). The roadless-camp native
 > check passes at `0cfd8e7` after one retained startup timeout. Earlier census entries are retained evidence.
 
@@ -34,7 +34,14 @@ below it.
   honestly lost rather than fired twice; and a rung is never stamped backward. The improvement
   route settles the rung BEFORE its receipt completes, so a rung that cannot settle exactly leaves
   the receipt non-terminal for the ordinary recovery path instead of closing the job over an
-  unwritten rung. No serialized field, save key, wire format or public API changes. Saves already
+  unwritten rung. Every callback boundary re-establishes the whole handover proof — exact successor
+  blueprint, a predecessor that stayed gone, an unduplicated removal proof, and carried contents
+  that still agree with the receipt they were counted into, with the existing legacy zero-content
+  carve-out lifted whole rather than re-derived — so a callback that leaves the root standing but
+  changes what the root IS refuses instead of settling. The last of those re-asks runs after the
+  basin widening and outside its guard, because the guard must keep swallowing an idempotent basin
+  failure while a torn endpoint must refuse. No serialized field, save key, wire format or public
+  API changes. Saves already
   stuck at a stale rung are a separate follow-up, not a silent migration here. Fixes #138.
 
 ### Added

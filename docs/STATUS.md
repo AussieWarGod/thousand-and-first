@@ -49,18 +49,34 @@ backward. The improvement route settles the rung BEFORE its receipt completes, s
 cannot settle exactly leaves the receipt non-terminal for the ordinary recovery path. The basin
 widens in the SAME pass, inside the existing guard, rather than waiting for the next activation.
 
+Every callback boundary the rung introduces re-establishes the WHOLE handover proof, not the cheap
+identity gate: the improvement handover's own predicate block and its settled-contents check —
+including the exact legacy zero-content carve-out — are lifted whole into
+`KingdomUpgrade.ExactImprovementHandoverProof` (`Growth/KingdomUpgrade.25b.HandoverProof.cs`) and
+passed as the delegate the shared helper re-asks after the ceremony and again after the basin
+reconciliation. The final re-ask sits OUTSIDE the basin guard on purpose: the guard must keep
+swallowing a basin failure, which the next load repeats idempotently, but a torn endpoint must
+refuse. A late refusal leaves the honest state behind it — the rung stamped, the ceremony marker
+settled — so the retry quarantines with the exact reason and never re-fires the ceremony.
+
+Evidence honesty for that contract. The shared helper and the handover proof are engine-typed, and
+both public test projects are deliberately Qud-free, so the callback-tear behaviour cannot be
+executed there: **it is source-pinned, not behaviourally proven.** What IS executed against real
+values is the direction rule (`KingdomPlotRules.RungMaySettle`) and the rung/capacity ladder. The
+behavioural proof of the tear contract is owed to the native lane along with the rung climb itself.
+
 No serialized field, save key, wire format or public API changes; no new property is written on any
 object class that did not already carry it. Saves already stuck at a stale rung are a separate
 follow-up, not a silent migration. **Native proof owed:** the camp seam's third phase, climbing
 rung 2 to rung 3 and reading `HeartRung(Z) == 2` after the waterstone and `== 3` after the moot.
 This is a source, compile and host-suite claim only.
 
-Current census: 3081 staged production C# files, 437,358 physical lines, none at or above 300.
-Direct `XRL` imports: 1436 files, 0 over the line limit. Inventory SHA-256:
-`dbb62f0500ed4bd0106399d447a5d76d47aa0fcb10622db8a10ca2dcfd812548`.
-The 3081 staged C# files produce a cold-install inventory of 3112 files. From these
-3081 sources, baseline and compatibility symbols select 3077 and 3081 ordinary inputs;
-the developer profiles compile 3259 and 3263 inputs. All four compile modes pass.
+Current census: 3082 staged production C# files, 437,399 physical lines, none at or above 300.
+Direct `XRL` imports: 1437 files, 0 over the line limit. Inventory SHA-256:
+`09917087950cde3c906c89a1fb053ae23b02679dc16b0064c6966f24e2e41255`.
+The 3082 staged C# files produce a cold-install inventory of 3113 files. From these
+3082 sources, baseline and compatibility symbols select 3078 and 3082 ordinary inputs;
+the developer profiles compile 3260 and 3264 inputs. All four compile modes pass.
 One engine-free classifier is new; no serialized field, save key, wire format, or public API
 changes. Four canonical compile modes and repository audit pass (770 checks, six platform skips).
 Main 14,296 and portable 5,460 tests pass with zero skips. Focused nine checks pass; removing

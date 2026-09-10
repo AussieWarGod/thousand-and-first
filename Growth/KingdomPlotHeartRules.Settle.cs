@@ -83,6 +83,13 @@ namespace ThousandAndFirst
 			{
 				ReconcileBasinCapacity(System, Building, Z);
 			});
+			// OUTSIDE the guard on purpose: the guard must keep swallowing a basin failure, which
+			// is one idempotent step the next load repeats, but a TORN ENDPOINT is not that. The
+			// basin's own widening refreshes the active survey, so the last callback is a callback
+			// too and the endpoint is proved once more before this says the rung settled. A
+			// refusal here leaves the honest state behind it: the rung is stamped, the ceremony
+			// marker is settled, so the retry quarantines without ever re-firing the ceremony.
+			if (!Prove()) return false;
 			return true;
 		}
 	}

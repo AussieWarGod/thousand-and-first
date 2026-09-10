@@ -36,13 +36,19 @@ namespace ThousandAndFirst
 		{
 			if (System == null || Z == null || Job == null
 				|| Job.Route != KingdomConstructionRoute.Improvement) return false;
+			// The cheap gate first, then the WHOLE handover proof as the delegate the helper
+			// re-asks after every callback. Not a parallel predicate: it is the very function the
+			// handover proved this successor with, carve-out and all.
 			return ExactImprovementHeartEndpoint(System, Z, Successor, Job)
 				&& KingdomPlots.TrySettleHeartRung(System, Z, Successor, Job.TargetKey,
-					() => ExactImprovementHeartEndpoint(System, Z, Successor, Job));
+					() => ExactImprovementHandoverProof(System, Z, Successor, Job, out _));
 		}
 
-		/// <summary>This successor, this job, this ground &mdash; asked the same way before and
-		/// after every callback the settlement makes about the rung.</summary>
+		/// <summary>The cheap pre-call gate: this successor, this job, this ground. It is what
+		/// refuses before any work starts; the full handover proof
+		/// (<c>ExactImprovementHandoverProof</c>) is what the settlement helper re-asks after
+		/// every callback, because a callback can leave the root exactly where it was and still
+		/// have changed what the root IS.</summary>
 		private static bool ExactImprovementHeartEndpoint(KingdomSystem System, Zone Z,
 			GameObject Successor, KingdomConstructionJob Job)
 		{

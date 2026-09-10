@@ -17,6 +17,7 @@ namespace ThousandAndFirst.Tests
 		private const string Plot = "Growth/KingdomPlot2.34.EffectsAndFurnishing.cs";
 		private const string Caller = "Growth/KingdomUpgrade.26.HeartRung.cs";
 		private const string Handover = "Growth/KingdomUpgrade.25.HandoverRemoval.cs";
+		private const string Proof = "Growth/KingdomUpgrade.25b.HandoverProof.cs";
 		private static string Read(string path) => TestMain.ReadRepositoryText(path);
 
 		private static void Ordered(string source, params string[] tokens)
@@ -132,6 +133,74 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void TheWholeHandoverProofIsOneFunctionAndTheFirstEvaluationDidNotMove()
+		{
+			// Lifted whole, carve-out included, so the post-callback re-ask is the identical
+			// question rather than a weaker parallel predicate.
+			string proof = Read(Proof);
+			foreach (string token in new[] {
+				"private static bool ExactImprovementHandoverProof(KingdomSystem System, Zone Z,",
+				"KingdomConstruction.FindGlobalPredecessorAuthority(Job, Successor, out _)",
+				"!= KingdomPhysicalLookupState.Absent",
+				"r_KingdomScaffold.IsExactSuccessor(Successor, Z,",
+				"Z.GetCell(Job.X, Job.Y), Job, entry.Blueprint)",
+				"Successor.HasIntProperty(r_KingdomScaffold.RemovalProofProperty)",
+				"!ExactRecoverableRemovalReceipt(Job)",
+				"bool legacyZeroContent = !ExactRemovalReceipt(Job)",
+				"r_KingdomImprovement.VerifySettledHandoverContentCustody(Successor,",
+				"settledItems != Job.PhysicalIndex",
+				"settledLiquid != Job.PhysicalAmount" })
+				Assert.That(proof, Does.Contain(token), token);
+			// The handover still asks it exactly where the block always stood: before the
+			// FinalRemoved commit.
+			Ordered(Read(Handover),
+				"if (!ExactImprovementHandoverProof(System, Z, Successor, Job, out Failure)) return false;",
+				"KingdomPhysicalPhase.FinalRemovalPending",
+				"KingdomPhysicalPhase.FinalRemoved");
+			// And it is not re-derived anywhere: one copy, one carve-out.
+			Assert.That(Read(Handover), Does.Not.Contain("bool legacyZeroContent"));
+			Assert.That(Read(Caller), Does.Not.Contain("VerifySettledHandoverContentCustody"));
+		}
+
+		[Test]
+		public void EveryCallbackBoundaryReAsksTheWholeProofNotJustTheCheapGate()
+		{
+			string caller = Read(Caller);
+			// The cheap endpoint gate refuses before any work; the delegate the helper re-asks
+			// after each callback is the WHOLE handover proof.
+			Ordered(caller, "return ExactImprovementHeartEndpoint(System, Z, Successor, Job)",
+				"KingdomPlots.TrySettleHeartRung(System, Z, Successor, Job.TargetKey,",
+				"() => ExactImprovementHandoverProof(System, Z, Successor, Job, out _));");
+			string settle = Read(Settle);
+			// Boundary one: the ceremony. Boundary two: the basin. Both re-ask, and the second
+			// sits OUTSIDE the guard so a swallowed basin failure still cannot settle a torn root.
+			Ordered(settle, "KingdomCeremonyHeart.OnRungRaised(System, Z, TargetKey, true);",
+				"if (!Prove()) return false;",
+				"KingdomSystem.Guard(\"heart basin capacity\", delegate",
+				"ReconcileBasinCapacity(System, Building, Z);",
+				"});",
+				"if (!Prove()) return false;",
+				"return true;");
+		}
+
+		[Test]
+		public void ALateRefusalLeavesTheHonestStateAndNeverRefiresTheCeremony()
+		{
+			string settle = Read(Settle);
+			// By the final Prove the rung is stamped and the marker is settled, so the retry that
+			// follows a refusal quarantines without firing the ceremony a second time.
+			int marker = settle.LastIndexOf("Building.SetIntProperty(HeartEffectProperty, 2);",
+				StringComparison.Ordinal);
+			int last = settle.LastIndexOf("if (!Prove()) return false;", StringComparison.Ordinal);
+			Assert.That(marker, Is.GreaterThan(0));
+			Assert.That(last, Is.GreaterThan(marker),
+				"the final endpoint proof runs after the marker is settled");
+			Assert.That(settle, Does.Contain("Z.SetZoneProperty(HeartRungProperty, wire);"));
+			Assert.That(Read(Handover), Does.Contain(
+				"Failure = \"The raised heart rung could not settle its exact effects.\";"));
+		}
+
+		[Test]
 		public void TheImprovementEndpointProvesTheExactSuccessorJobAndGround()
 		{
 			string caller = Read(Caller);
@@ -146,10 +215,11 @@ namespace ThousandAndFirst.Tests
 				"Successor.GetStringProperty(BuildKeyProperty) == Job.TargetKey",
 				"r_KingdomScaffold.HasRemovalProof(Successor, Job.SubjectId)" })
 				Assert.That(caller, Does.Contain(token), token);
-			// Proved before the helper runs AND passed in to be re-asked after the callback.
-			Ordered(caller, "return ExactImprovementHeartEndpoint(System, Z, Successor, Job)",
-				"KingdomPlots.TrySettleHeartRung(System, Z, Successor, Job.TargetKey,",
-				"() => ExactImprovementHeartEndpoint(System, Z, Successor, Job));");
+			// The cheap gate is proved before the helper runs; what the helper re-asks after each
+			// callback is the whole handover proof, pinned by
+			// EveryCallbackBoundaryReAsksTheWholeProofNotJustTheCheapGate.
+			Assert.That(caller, Does.Contain(
+				"return ExactImprovementHeartEndpoint(System, Z, Successor, Job)"));
 		}
 
 	}
