@@ -3,8 +3,8 @@
 **Snapshot:** 2026-09-09
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
 **Next public version:** 0.3.3 stockpile hotfix in preparation; not published
-**Working candidate manifest:** 0.3.2 public Alpha playtest; private staging verified,
-public Workshop upload complete and finalized — see [Public 0.3.2](#public-032) below
+**Working candidate manifest:** 0.3.3 private Alpha candidate; not uploaded.
+Public Workshop remains 0.3.2, complete and finalized — see [Public 0.3.2](#public-032) below.
 
 The public Alpha is [Steam Workshop item
 3794797472](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472). Rows marked retained

@@ -8,7 +8,7 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-## [Unreleased]
+## [0.3.3] — 2026-09-11 (Alpha candidate; not published)
 
 ### Fixed
 
@@ -17,6 +17,13 @@ below it.
   work, retaining the same protected-cargo, routed-lease and exact-custody checks. Previously
   a fresh Kingdom Quickstart could report no timber while four timber sat in its camp chest.
   This change adds no saved fields and does not replace or move existing goods.
+
+### Compatibility
+
+No serialized fields or receipt formats are changed by the stock-operation fix. Existing
+stock stays in place; no replacement supplies or blanket identity repair are performed.
+Back up saves before updating. Existing-save reload and downgrade compatibility are not
+claimed from the fresh-world regression.
 
 Current 3069-file census is line-cap green: 435,601 physical lines; direct `XRL`
 imports occur in 1430 files, 0 of them over the line limit. Inventory SHA-256:
