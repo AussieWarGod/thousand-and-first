@@ -41,7 +41,14 @@ namespace ThousandAndFirst.Tests
 			"Growth/KingdomUpgrade.23.Menu.cs",
 			"Growth/KingdomUpgrade.24.HandoverContents.cs",
 			"Growth/KingdomUpgrade.25.HandoverRemoval.cs",
-			"Growth/KingdomUpgrade.cs"
+			"Growth/KingdomUpgrade.cs",
+			// #138: APPENDED, deliberately at the end. This concatenation feeds nine test files,
+			// several of which assert whole-of-KingdomUpgrade NEGATIVES, so a shard left out is
+			// production code hidden from those checks. Appending moves no existing text, so every
+			// Between(...) window and every AssertOrdered over the shards above stays valid;
+			// neither new shard carries any of their anchors.
+			"Growth/KingdomUpgrade.25b.HandoverProof.cs",
+			"Growth/KingdomUpgrade.26.HeartRung.cs"
 		};
 
 		internal static string Read()
