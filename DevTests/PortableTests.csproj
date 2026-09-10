@@ -172,6 +172,7 @@
 	<Compile Include="KingdomFoundingHeartReservationRuntimeSourceTests.cs" />
 	<Compile Include="KingdomFoundingHeartNativeSourceTests.cs" />
 	<Compile Include="KingdomFoundingHeartLifecycleSourceTests.cs" />
+	<Compile Include="KingdomScenarioTestGroundFactionStripSourceTests.cs" />
 	<Compile Include="KingdomFoundingHeartRetirementNativeSourceTests.cs" />
 	<Compile Include="KingdomFoundingHeartRecordedRemovalTests.cs" />
 	<Compile Include="KingdomFoundingHeartRecordedRemovalSourceTests.cs" />
@@ -1327,6 +1328,14 @@
 	<Compile Include="..\Harness\KingdomScenarioRowValidator.cs" />
 	<Compile Include="..\Harness\KingdomScenarioRules.cs" />
 	<Compile Include="..\Harness\KingdomScenarioLoadRules.cs" />
+	<Compile Include="..\Harness\KingdomScenarioTravelRules.cs" />
+	<Compile Include="KingdomScenarioTravelRulesTests.cs" />
+	<Compile Include="..\Harness\KingdomScenarioRefusal.cs" />
+	<Compile Include="KingdomScenarioRefusalTests.cs" />
+	<Compile Include="..\Harness\KingdomScenarioReload.cs" />
+	<Compile Include="KingdomScenarioReloadTests.cs" />
+	<Compile Include="..\Harness\KingdomScenarioPauseOracle.cs" />
+	<Compile Include="KingdomScenarioPauseOracleTests.cs" />
 	<Compile Include="..\Harness\KingdomScenarioSaveSnapshot.cs" />
 	<Compile Include="..\Harness\KingdomSubsidenceRungSaveSnapshot.cs" />
     <Compile Include="..\Harness\KingdomSubsidenceRungSaveSnapshotCodec.cs" />

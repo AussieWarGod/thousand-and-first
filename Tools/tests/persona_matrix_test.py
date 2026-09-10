@@ -563,7 +563,7 @@ class ShippedPersonaTest(unittest.TestCase):
         return cases
 
     def test_every_persona_parses(self):
-        self.assertEqual(80, len(self.personas()))
+        self.assertEqual(85, len(self.personas()))
         for path in self.personas():
             found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
             self.assertTrue(found["REQUEST"])
@@ -701,6 +701,12 @@ class ShippedPersonaTest(unittest.TestCase):
         """A persona whose EXPECT does not name the verbs it seals could never go green."""
         for path in self.personas():
             found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
+            if found.get("RELOAD"):
+                self.assertEqual(found["RELOAD"], "quickstart")
+                self.assertEqual(found["EXPECT"], "RELOAD-COMPLETE")
+                self.assertTrue(found["SCRIPT_WORDS"].startswith("quickstart-save "))
+                self.assertTrue(matrix.assess(found, "", path.name), "journal alone must refuse")
+                continue  # Host workflow has two strictly checked journals, never a script replay.
             extra = tuple(v for v in found["VERBS"].split(",") if v)
             expected = [
                 verb

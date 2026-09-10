@@ -123,7 +123,7 @@ class RouteWiringTest(unittest.TestCase):
     def test_a_derived_dev_tree_fails_the_audit(self):
         problems = self.audit(
             GATE.replace(
-                'DEV="$(mktemp -d /tmp/taf-devharness.XXXXXX)"', 'DEV="$STAGE.dev"', 1
+                'DEV="$(mktemp -d -t taf-devharness.XXXXXX)"', 'DEV="$STAGE.dev"', 1
             )
         )
         self.assertTrue(
@@ -257,7 +257,7 @@ class RouteWiringTest(unittest.TestCase):
                                + GATE[GATE.index("\n}", pre) + 2:],
             "inventory digest dropped": GATE.replace("--inventory-digest", "--list-harness"),
             "derived dev tree": GATE.replace(
-                'DEV="$(mktemp -d /tmp/taf-devharness.XXXXXX)"', 'DEV="$STAGE.dev"'),
+                'DEV="$(mktemp -d -t taf-devharness.XXXXXX)"', 'DEV="$STAGE.dev"'),
         }
 
     def test_every_known_neutralisation_class_fires(self):

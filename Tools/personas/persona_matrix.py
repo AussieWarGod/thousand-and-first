@@ -20,6 +20,7 @@ extra one. A matrix whose green means "at least this happened" is not a matrix.
 from __future__ import annotations
 
 import json
+import importlib.util
 import os
 import re
 import sys
@@ -45,6 +46,8 @@ BOOKKEEPING = frozenset(
         "advance-progress",
         "advance-complete",
         "yield-frames-complete",
+        "travel-out-complete",
+        "travel-return-complete",
         # A third-party verb provider the admission law refused. It describes the PROFILE a run was
         # launched into, not a step the script asked for, so a persona must not go red because
         # somebody else's mod shipped a broken provider. `Tools/run-personas.sh` surfaces these
@@ -64,6 +67,7 @@ SCRIPT_VERBS = (
     "light",
     "list",
     "realize",
+    "reload",
     "resourcedigest",
     "stagedigest",
     "standingdigest",
@@ -95,6 +99,7 @@ RESERVED_VERBS = (
     "light",
     "list",
     "realize",
+    "reload",
     "resourcedigest",
     "stagedigest",
     "standingdigest",
@@ -107,7 +112,7 @@ RESERVED_VERBS = (
 VERB_ALPHABET = "abcdefghijklmnopqrstuvwxyz" + "0123456789" + "-."
 
 OUTCOMES = ("OK", "REFUSED")
-CHECKS = ("status-digest-stable",)
+CHECKS = ("status-digest-stable", "travel-away", "travel-present", "travel-economic-away", "travel-economic-present")
 
 REQUIRED_KEYS = ("REQUEST", "SCRIPT", "EXPECT")
 OPTIONAL_KEYS = ("START", "CHECK", "TIMEOUT", "DESCRIPTION", "VERBS", "SET", "LOG_EXPECT")
@@ -159,6 +164,19 @@ def parse_manifest(text: str, name: str) -> dict:
         )
     extra = parse_verbs(found.get("VERBS", ""), name)
     found["VERBS"] = ",".join(extra)
+    if found["SCRIPT"].startswith("reload-descendant "):
+        parts = found["SCRIPT"].split()
+        if (len(parts) != 4 or parts[:2] != ["reload-descendant", "quickstart"]
+                or parts[2] not in ("marsh", "canyon", "dunes") or parts[3] not in ("yes", "no")):
+            fail(name + " reload requires exactly: reload-descendant quickstart <marsh|canyon|dunes> <yes|no>")
+        if (found["EXPECT"] != "RELOAD-COMPLETE" or found["REQUEST"] != "founding-first-city"
+                or any(found.get(key) for key in ("START", "CHECK", "VERBS", "LOG_EXPECT"))):
+            fail(name + " reload requires founding-first-city, EXPECT=RELOAD-COMPLETE and no overrides")
+        found["SCRIPT_WORDS"] = "quickstart-save " + " ".join(parts[2:])
+        found["RELOAD"] = "quickstart"
+        found["TIMEOUT"] = str(parse_timeout(found.get("TIMEOUT", ""), name))
+        found["SET"] = ",".join(parse_set(found.get("SET", ""), name))
+        return found
     found["SCRIPT_WORDS"] = " ".join(script_words(found["SCRIPT"], name, extra))
     parse_expect(found["EXPECT"], name, extra)
     check = found.get("CHECK", "")
@@ -452,11 +470,20 @@ def status_digest_stable(rows: list[tuple[str, str, str]]) -> list[str]:
 
 
 def assess(manifest: dict, journal: str, name: str) -> list[str]:
+    if manifest.get("RELOAD"):
+        return ["reload requires both strict Quickstart checks and receipt-owned process workflow; journal alone is insufficient"]
     rows = significant(read_journal(journal))
     extra = tuple(v for v in manifest.get("VERBS", "").split(",") if v)
     problems = match(parse_expect(manifest["EXPECT"], name, extra), rows)
     if manifest.get("CHECK") == "status-digest-stable":
         problems.extend(status_digest_stable(rows))
+    if manifest.get("CHECK", "").startswith("travel-"):
+        spec = importlib.util.spec_from_file_location("taf_persona_travel", os.path.join(os.path.dirname(__file__), "persona_travel.py"))
+        travel = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(travel)
+        mode = manifest["CHECK"][len("travel-"):]
+        economic = mode.startswith("economic-")
+        problems.extend(travel.assess(read_journal(journal), mode.removeprefix("economic-"), require_economic=economic))
     return problems
 
 
@@ -490,6 +517,7 @@ def main(argv: list[str]) -> int:
             "DESCRIPTION",
             "SET",
             "LOG_EXPECT",
+            "RELOAD",
         ):
             print("%s\t%s" % (key.lower(), manifest.get(key, "")))
         return 0

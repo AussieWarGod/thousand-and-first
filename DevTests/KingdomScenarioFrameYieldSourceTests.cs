@@ -236,7 +236,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Abandon(\"frame yield\")", runner);
 			StringAssert.Contains("was abandoned", runner);
 			StringAssert.Contains(
-				"if (KingdomScenarioAdvance.Pending || KingdomScenarioFrames.Pending) return;",
+				"if (KingdomScenarioAdvance.Pending || KingdomScenarioFrames.Pending || KingdomScenarioTravel.Pending) return;",
 				runner);
 		}
 
