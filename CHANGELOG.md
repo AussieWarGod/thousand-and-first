@@ -10,6 +10,13 @@ below it.
 
 ## Unreleased — Beta gap report
 
+### Fixed
+
+- The native subsidence/founding-heart fixture now proves both its empty 1,920-dram reservoir
+  and the real founding receipt's dedicated 16-dram first basin. The old one-store assertion
+  refused a correct 50-resident setup. Exact identities, dedication, placement and empty contents
+  remain checked; production water capacity and accounting are unchanged.
+
 ### Added
 
 - The rite ground is now a camp. A horseshoe of seven canvas cells stands round the basin, a
