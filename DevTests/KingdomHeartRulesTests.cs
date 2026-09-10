@@ -416,6 +416,32 @@ namespace ThousandAndFirst.Tests
 		{
 			ClassicAssert.AreEqual(Expected, KingdomCeremonyHeartRules.IsAccomplishment(Rung));
 		}
+
+		// Issue #138: the rung a design key names and the drams that rung is worth are the two
+		// numbers the shared settlement helper turns a finished job into. Pinned per rung so a
+		// ladder edit cannot silently move the waterstone's 48 drams.
+		[TestCase("heartbasin", 1, 16)]
+		[TestCase("heartwaterstone", 2, 48)]
+		[TestCase("heartmoot", 3, 160)]
+		[TestCase("heartcourt", 4, 512)]
+		[TestCase("arcology", 5, 1024)]
+		public void EveryRungKeyMapsToItsRungAndItsBasinCapacity(string key, int rung, int drams)
+		{
+			ClassicAssert.AreEqual(rung, KingdomPlotRules.HeartRungOf(key));
+			ClassicAssert.AreEqual(drams, KingdomPlotRules.HeartBasinCapacityForRung(rung));
+			ClassicAssert.AreEqual(key, KingdomPlotRules.HeartKeyForRung(rung));
+		}
+
+		[Test]
+		public void ADesignOffTheLadderHasNoRungAndNoBasinCapacity()
+		{
+			ClassicAssert.AreEqual(0, KingdomPlotRules.HeartRungOf("hut"));
+			ClassicAssert.AreEqual(0, KingdomPlotRules.HeartRungOf(null));
+			ClassicAssert.AreEqual(0, KingdomPlotRules.HeartBasinCapacityForRung(0));
+			ClassicAssert.AreEqual(0, KingdomPlotRules.HeartBasinCapacityForRung(6));
+			ClassicAssert.IsNull(KingdomPlotRules.HeartKeyForRung(0));
+			ClassicAssert.IsNull(KingdomPlotRules.HeartKeyForRung(6));
+		}
 	}
 }
 #endif

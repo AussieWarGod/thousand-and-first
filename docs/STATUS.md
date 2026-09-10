@@ -29,12 +29,38 @@ malformed geometry and exceptions remain errors. The notice may recur after load
 An empty or interior-road-only camp can remain pending indefinitely; no timeout invents corruption.
 Terminal and recovery callers retain their existing fail-closed refusal behavior.
 
-Current census: 3079 staged production C# files, 437,201 physical lines, 1434 files importing
-`XRL`, none at or above 300. Inventory SHA-256:
-`ab4cf22e665900bd82593ad4f9805861da4458e60b918c59b1d3a0bb88b74617`.
-The 3079 staged C# files produce a cold-install inventory of 3110 files. From these
-3079 sources, baseline and compatibility symbols select 3075 and 3079 ordinary inputs;
-the developer profiles compile 3257 and 3261 inputs. All four compile modes pass.
+## Unreleased heart rung settlement seam (issue #138)
+
+Every rung of the heart above the first climbs through the ordinary improvement machinery — the
+plot commissioner refuses to commission one and zoning never offers one — but the zone's standing
+rung (`r_TAF_HeartRung`) was written only by the plot route. A settlement that raised its rite
+ground into a waterstone therefore kept a zone stamped at rung one, so the rung above it was
+refused for not accreting from its standing rung and the first basin stayed at sixteen drams
+instead of widening to forty-eight.
+
+The at-most-once rung effects now live in one shared settlement helper
+(`Growth/KingdomPlotHeartRules.Settle.cs`) that both routes call: the plot route from
+`Growth/KingdomPlot2.34.EffectsAndFurnishing.cs`, and the improvement handover from
+`Growth/KingdomUpgrade.26.HeartRung.cs`, called by
+`Growth/KingdomUpgrade.25.HandoverRemoval.cs`. Each route supplies its OWN exact endpoint and
+custody proof, re-asked after the ceremony callback; the 0/1/2 attempted/lost marker is unchanged,
+so an interrupted ceremony is honestly lost rather than fired twice; and a rung is never stamped
+backward. The improvement route settles the rung BEFORE its receipt completes, so a rung that
+cannot settle exactly leaves the receipt non-terminal for the ordinary recovery path. The basin
+widens in the SAME pass, inside the existing guard, rather than waiting for the next activation.
+
+No serialized field, save key, wire format or public API changes; no new property is written on any
+object class that did not already carry it. Saves already stuck at a stale rung are a separate
+follow-up, not a silent migration. **Native proof owed:** the camp seam's third phase, climbing
+rung 2 to rung 3 and reading `HeartRung(Z) == 2` after the waterstone and `== 3` after the moot.
+This is a source, compile and host-suite claim only.
+
+Current census: 3081 staged production C# files, 437,323 physical lines, none at or above 300.
+Direct `XRL` imports: 1436 files, 0 over the line limit. Inventory SHA-256:
+`aac744afa4c72481dbb144a550e34a51cb0c94d1cdf3c271583fd83fdc05cb72`.
+The 3081 staged C# files produce a cold-install inventory of 3112 files. From these
+3081 sources, baseline and compatibility symbols select 3077 and 3081 ordinary inputs;
+the developer profiles compile 3259 and 3263 inputs. All four compile modes pass.
 One engine-free classifier is new; no serialized field, save key, wire format, or public API
 changes. Four canonical compile modes and repository audit pass (770 checks, six platform skips).
 Main 14,296 and portable 5,460 tests pass with zero skips. Focused nine checks pass; removing

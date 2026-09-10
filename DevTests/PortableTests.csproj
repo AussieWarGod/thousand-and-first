@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <Compile Include="TestMain.cs" />
+    <Compile Include="KingdomHeartRungSettleTests.cs" />
     <Compile Include="..\Core\KingdomSealPendingRules.cs" />
     <Compile Include="KingdomSealPendingRulesTests.cs" />
     <Compile Include="KingdomRealmArchiveNestedWireSourceTests.cs" />

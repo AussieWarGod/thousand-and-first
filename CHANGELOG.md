@@ -10,12 +10,32 @@ below it.
 
 ## Unreleased — Beta gap report
 
-> **Current roadless seal census (#131).** Current 3079-file census is line-cap green:
-> 437,201 physical lines; zero files at or above 300; 1434 direct `XRL` importing files.
-> Inventory SHA-256: `ab4cf22e665900bd82593ad4f9805861da4458e60b918c59b1d3a0bb88b74617`.
-> The generated cold-install inventory contains 3110 files. All four compile modes pass;
-> audit and main 14,296/portable 5,460 tests pass (managed zero skips). The roadless-camp native
+> **Current heart rung settlement census (#138).** Current 3081-file census is line-cap green:
+> 437,323 physical lines; zero files at or above 300; direct `XRL`
+> imports occur in 1436 files, 0 of them over the line limit.
+> Inventory SHA-256: `aac744afa4c72481dbb144a550e34a51cb0c94d1cdf3c271583fd83fdc05cb72`.
+> The generated cold-install inventory contains 3112 files. All four compile modes pass;
+> audit and main 14,309/portable 5,467 tests pass (managed zero skips). The roadless-camp native
 > check passes at `0cfd8e7` after one retained startup timeout. Earlier census entries are retained evidence.
+
+### Fixed
+
+- **The heart's rungs now rise by the route they are meant to rise by.** Every rung of the heart
+  above the first climbs through the ordinary improvement machinery — the plot commissioner refuses
+  to commission one, and zoning never offers one — but the zone's standing rung was written only by
+  the plot route. A settlement that raised its rite ground into a waterstone therefore kept a zone
+  still stamped at rung one: the rung above it was refused for not accreting from its standing
+  rung, and the first basin stayed at sixteen drams instead of widening to forty-eight. The at-most-
+  once rung effects now live in one shared settlement helper that both routes call, so the
+  improvement handover stamps the rung, tells the chronicle once, and widens the basin exactly as
+  the plot route always did. Each route brings its OWN exact endpoint and custody proof, re-asked
+  after the ceremony callback, so a callback that moved or replaced the building refuses rather
+  than settling; the 0/1/2 attempted/lost marker is unchanged, so an interrupted ceremony is
+  honestly lost rather than fired twice; and a rung is never stamped backward. The improvement
+  route settles the rung BEFORE its receipt completes, so a rung that cannot settle exactly leaves
+  the receipt non-terminal for the ordinary recovery path instead of closing the job over an
+  unwritten rung. No serialized field, save key, wire format or public API changes. Saves already
+  stuck at a stale rung are a separate follow-up, not a silent migration here. Fixes #138.
 
 ### Added
 

@@ -2,9 +2,9 @@
 
 ## Current roadless seal census (#131) — 2026-09-10
 
-**3079** production C# files, 437,201 physical lines, 1434 direct-XRL, zero cap failures;
-3110 cold-install files. Inventory `ab4cf22e665900bd82593ad4f9805861da4458e60b918c59b1d3a0bb88b74617`.
-Four compile modes, audit, main 14,296/portable 5,460 tests pass (managed zero skips).
+**3081** production C# files, 437,323 physical lines, 1436 direct-XRL, zero cap failures;
+3112 cold-install files. Inventory `aac744afa4c72481dbb144a550e34a51cb0c94d1cdf3c271583fd83fdc05cb72`.
+Four compile modes, audit, main 14,309/portable 5,467 tests pass (managed zero skips).
 Roadless-camp native passes at `0cfd8e7` (bounded scope in docs/STATUS.md). No release approval inferred.
 
 ## Retained Kingdom Quickstart founding-cohort census — 2026-09-10
