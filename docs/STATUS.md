@@ -35,7 +35,10 @@ release acceptance are not claimed. Earlier failed native runs remain retained a
 At this exercised head: all four canonical compile modes and installed compatibility ABI pass;
 14329 Taf and 5481 Portable cases pass with zero skips; repository audit passes and CI
 34463125382 passes both jobs. The evidence update and subsequent integration of dev's #133
-fixture do not reattribute the native run to different bytes; merged-tree verification is pending.
+fixture do not reattribute the native run to different bytes. Merged-tree verification passes:
+3075/3079/3264/3268 canonical compile inputs, installed compatibility ABI, repository audit,
+14336 Taf and 5488 Portable cases with zero skips. Production and overflow fixture bytes are
+unchanged from the exercised head.
 
 ## Unreleased economic food-conservation fixture (#133)
 
