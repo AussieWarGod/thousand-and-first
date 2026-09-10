@@ -16,6 +16,11 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
+Developer reload cleanup reports both the original failure and a failed owned-process stop,
+retaining the original exception as its cause. Harmless shell fixtures cover exact helper
+arguments, helper refusal blocking later personas, and prior ownership failure blocking reload.
+These checks are host orchestration evidence only, not native reload or release acceptance.
+
 ## Current repository integration state — PR #6 merged, main protection updated
 
 Documentation/hardening PR #6, "Post-0.3.1 Alpha hardening and release closeout", was

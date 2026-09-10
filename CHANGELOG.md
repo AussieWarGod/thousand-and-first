@@ -10,6 +10,12 @@ below it.
 
 ## Unreleased — Beta gap report
 
+### Fixed
+
+- Developer reload failures retain the original exception as their cause and report both errors
+  when receipt-owned cleanup also refuses. No later persona may assume cleanup succeeded.
+  Shell lifecycle fixtures exercise reload argument routing and stop the matrix after refusal.
+
 ### Docs
 
 - Landed the 2026-09-09 Beta gap report (`docs/BETA-GAP-REPORT-2026-09-09.md`), re-read against the

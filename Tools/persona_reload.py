@@ -21,6 +21,7 @@ def execute(backend, location: str, advisor: str) -> dict:
     source = backend.fresh("save")
     backend.prepare(source, location, advisor)
     active = None
+    failure = None
     try:
         active = source  # A failed launch may still own a process; cleanup must prove its disposition.
         backend.launch(source, "save")
@@ -55,9 +56,18 @@ def execute(backend, location: str, advisor: str) -> dict:
                     source=str(source), destination=str(destination), gameId=saved["gameId"],
                     sameProfileDirectory=False, scriptResumed=False, gracefulQuit=False,
                     ordinaryAcceptance=False, releaseAcceptance=False)
+    except BaseException as error:
+        failure = error
+        raise
     finally:
         if active is not None:
-            backend.stop(active, "failure")
+            try:
+                backend.stop(active, "failure")
+            except BaseException as cleanup:
+                if failure is None:
+                    raise
+                raise RuntimeError("reload failed: " + str(failure)
+                                   + "; owned-process cleanup also failed: " + str(cleanup)) from failure
 
 
 class NativeBackend:
