@@ -1,6 +1,22 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current unreleased brush-forage duty (T-forage-1)
+## Current unreleased test-only forage native-check seam
+
+3081 staged sources; 437,479 physical lines; 1435 direct-XRL; zero cap failures; 3112 generated
+cold-stage files. Exact inventory `cadae7b6d3f4346a1a2d1b79ce186635789dd377ff568743ea05e0e0decd3f87`.
+Merges the Kingdom Quickstart founding cohort with the forage native-check Harness seam
+(`Harness/KingdomForageNativeProvider.cs`, `KingdomForageNativeChecks.cs`,
+`KingdomForageNativeChecksPhases.cs`, `KingdomForageNativeFixture.cs`,
+`KingdomForageNativeGeometry.cs` — dev-only; no production source added or removed). The seam
+proves the forage duty's real settlement-pass cadence (never a direct `WorkForage` call): removal
+paired with a direct raw census stock gain, six exclusion categories bound by exact id/cell/
+zone/owner/count and re-verified after cutting and again after the ceiling, the twelve-unit
+ceiling counting real reserved units (marked with the production
+`KingdomConstruction.InputMarkerProperty`) proved by direct census rather than arithmetic, and the
+once-only exhaustion notice witnessed by a real ledger count across three exhausted intervals
+before it re-arms.
+
+## Retained unreleased brush-forage duty (T-forage-1)
 
 3071 staged sources; 435,861 physical lines; 1430 direct-XRL; zero cap failures; 3102 generated
 cold-stage files. Exact inventory `6b61edc029d78cc010ed151f68fe8512770fe3d84db23453c488fc649bfc78cf`.
@@ -10,7 +26,24 @@ Three new production files over the retained stockpile deposit custody census be
 already claimed toward its twelve-unit cap (`ForageCeilingHeld`, a raw custody census over
 `Growth/KingdomMaterials.RawObservation.cs`), consistent with the stockpile capacity rule.
 
-## Current unreleased stockpile deposit custody
+## Retained unreleased Kingdom Quickstart founding cohort
+
+3078 staged sources; 437,114 physical lines; 1434 direct-XRL; zero cap failures; 3109 generated
+cold-stage files. Exact inventory `e1ddecb76e357905d90bbc40ad8414b68efc38f2b532d19ec61d2df4a5053ce9`.
+Kingdom Quickstart founds a world with four founding citizens on the approach at turn 1, raised in
+one custody scope (zero-or-four), published by identity before any irreversible write, then enrolled
+forward-only and idempotently under a new `Founding` reason. The receipt gains a durable founders
+disposition and four ids on a sixteen-field wire; the old eleven-field form is byte-preserved and
+terminal, so no world made before this change, and no world made with the new option off, can gain
+founders. Each founder is counted into the shared per-profile origin tally by ADDING one under its
+own durable identity-bound obligation, so five prior citizens plus four founders is nine; mixed
+state after an interruption between the label and the increment is refused in the open, once, per
+obligation, as a stated safety policy rather than a recovery claim.
+Four compile modes, both engine-free suites (14,147 / 5,301, zero skips) and the Tools
+suite (627) are green. The six-profile boot matrix at seed `#43101` is OWED before merge, along with
+the `found-first-city`, `first-guest-native-check` and `guide-topics-native-check` personas.
+
+## Retained unreleased stockpile deposit custody
 
 3068 staged sources; 435,538 physical lines; 1429 direct-XRL; zero cap failures; 3099 generated
 cold-stage files. Exact inventory `3cfe76c38704930c03d2923e400d05155cbcbf96b9ad8b31ad90304cc8fea6c0`.

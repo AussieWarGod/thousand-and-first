@@ -107,9 +107,14 @@ baseline and dev-harness compatibility compiles. The shared `DevTests/refs.rsp` 
 `-langversion:latest`, so those compiles are not pinned to C# 7.3; `LangVersion` 7.3 is pinned
 only in `DevTests/Engine*/Probe.csproj` and `Tools/WorkshopSteam/*.csproj`. Retained sections
 below keep their original wording as written at their own checkpoints.
-Staged compatibility compilation runs across 3071 production C# sources (the optional-mod bridge
-is a compatibility-only source, added by the brush-forage duty T-forage-1); the generated
-cold-install inventory contains 3102 files. Neither count proves subscriber delivery.
+Staged compatibility compilation runs across 3081 production C# sources, staged baseline across
+3077 (the optional-mod bridge is a compatibility-only source, added by the brush-forage duty
+T-forage-1); the generated cold-install inventory contains 3112 files. Neither count proves
+subscriber delivery. This census merges the Kingdom Quickstart founding cohort with the test-only
+forage native-check seam (Harness/DevTests/Tools only; no production source added or removed);
+the counts one paragraph down and the receipts named above were measured before either. The
+six-profile Quickstart boot matrix has NOT been re-run on these bytes and is owed, because the
+founding cohort changes what Quickstart does at boot.
 The receipts named above were measured at the earlier 3052/3048/3083 census, before the Kingdom
 Quickstart tent rows, the first-basin water store, the stockpile unit capacity, the render-only
 city sight and the shelter ingress added production

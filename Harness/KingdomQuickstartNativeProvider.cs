@@ -11,7 +11,7 @@ namespace ThousandAndFirst.Harness
 	{
 		internal const string Verb = "quickstart-check";
 		internal const string Receipt = "r_TAF_ScenarioQuickstartChecks_v1";
-		internal const int ExpectedCases = 16;
+		internal const int ExpectedCases = 17;
 		public int ScenarioVerbApiVersion { get { return KingdomScenarioVerbApi.Version; } }
 		public IEnumerable<string> ScenarioVerbs { get { return new[] { Verb }; } }
 

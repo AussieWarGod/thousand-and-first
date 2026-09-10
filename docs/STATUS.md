@@ -1,6 +1,6 @@
 # Current implementation and release evidence
 
-**Snapshot:** 2026-09-09
+**Snapshot:** 2026-09-10
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
 **Next public version:** none scheduled beyond 0.3.2
 **Working candidate manifest:** 0.3.2 public Alpha playtest; private staging verified,
@@ -26,6 +26,21 @@ Canonical compile gates honor `TMPDIR` for independently allocated stage and dev
 private parent per worker avoids shared `/tmp` transaction-lock contention; all publication
 locks and identity checks remain. Executable allocation fixtures also prove an invalid parent
 refuses before staging instead of falling back to shared storage. No gameplay bytes change.
+
+## Unreleased founder boot verification
+
+Frozen founder head `22d3ce1ada9109e09d5bd0e123504fd307f748c4`, seed `#43101`,
+passed all six genuine Quickstart boot configurations and their strict offline checks.
+Receipt-owned process stops were proved for every passing profile: marsh `qsXI6d` / `Okzu1F`,
+canyon `CX2MVF` / `wqlJqU`, and dunes `8iHgSo` / `np6Mln` (advisor yes / no).
+Combined evidence: `root-founders-boot-continuation.PSuQs0/combined-results.json`.
+The first canyon/advisor attempt, `PG03vf`, timed out before AUTOSTART; its failure and
+owned stop remain retained in `root-founders-boot-matrix.mBz10p/canyon-yes`. One fresh retry
+passed. The original failed attempt is not reported as a pass.
+
+These are boot-only results, not founder save/cold-load, ordinary-play, or release acceptance.
+Later integration of the landed reload orchestration and harness-ground correction does not
+restamp this evidence to different source bytes; that integration requires fresh gates.
 
 ## Unreleased harness test-ground faction strip (issue #90)
 
@@ -79,6 +94,18 @@ save/load checks, unchanged save hashes and native stock/ID witnesses, then a se
 and final idle proof. Report `root-reload-native.hOChoP/report.tsv` passed one persona. This is
 same-version developer evidence, not historical saves, ordinary play, graceful quit or release
 acceptance; the later host-only census merge is not silently included in that native claim.
+
+Private staging cleanup runs its admission, removal and post-removal proof inside one helper
+process. The descriptor the removal already opens on the sequestered entry — taken after the
+sequester rename, not on the original name — is held across the removal, deletion is proved
+positively by that descriptor reporting zero links, and the exact-identity search runs while it is
+still open, so a match can only be a genuine second link. Measured locally: on ext4 the freed inode
+was recycled by the first subsequent creation once unreferenced, and 2,000 creations never recycled
+it while the descriptor was held. The same proof was measured to hold on a WSL 9p/drvfs parent for
+file entries; drvfs directory removal remains blocked before this code by the pre-existing
+permission seal, unchanged from the prior revision. A filesystem that cannot witness a released
+inode is refused by name with no fallback. This is host staging tooling only — not native gameplay,
+ordinary-save or release acceptance. Refs #115.
 
 Repository audits use a fresh empty Python cache lookup root with bytecode writes disabled.
 An executable timestamp-cache fixture proves that disabling writes alone still reads stale
@@ -193,6 +220,47 @@ subscribed client verified, `freshTransferVerified=false` and `releaseReady=fals
 explicit, and manual subscribe-and-smoke-test plus the Discord/community announcement remain
 outstanding (operator follow-up, not pipeline scope).
 
+## Unreleased Kingdom Quickstart founding cohort
+
+Kingdom Quickstart now founds a new world with four founding citizens on the approach, enrolled
+under a new `Founding` reason only that bootstrap can emit and on the roll at turn 1. The cohort is
+raised in two stages split at the reversibility boundary: one custody scope for four bodies and all
+their gear, a publish that names the exact four before any irreversible write, then a forward-only
+idempotent half. The receipt carries a durable founders disposition and the four identities on a new
+sixteen-field wire form; a receipt written before this change, or written with the new option off,
+stays on the old eleven-field form, re-encodes byte for byte and is terminal on every wake, so no
+existing world can gain founders. An append-only Raising disposition now fences the attempt
+before any factory. After that fence, an empty ground is ambiguous and cannot authorize a new
+cohort; only exact four-body adoption or a proved complete unwind may progress. The origin-tally
+repair is now in: each founder is counted into the settlement's shared per-profile tally by ADDING
+one under its own durable, identity-bound obligation — bound to the exact body, profile and owning
+city and proved so on every read, prepared before any mutation, completed only after both the label
+and the tally are measured. Five unrelated same-origin citizens plus four founders is nine. Where an
+interruption falls between the label and the increment the outcome cannot be told from a tally that
+ordinary arrivals also move, so counter equality never authorises completion and mixed state is
+refused in the open, once, per obligation. That is a stated safety policy, not a claim of fully
+automatic forward recovery. The native founders boot matrix is still owed.
+
+Current census on these bytes: 3078
+staged C# files; 437,114 physical lines; 3109 files in the generated
+cold-install inventory. Staged compilation covers 3078 sources, baseline and compatibility symbols
+(baseline compiles 3074 of them; the optional-mod bridge is compatibility-only), run here by Roslyn
+9.0.306 through the canonical Windows gate against the licensed Managed references with warnings as
+errors. Direct `XRL` imports: 1434 files, 0 over the line limit.
+Inventory SHA-256: `e1ddecb76e357905d90bbc40ad8414b68efc38f2b532d19ec61d2df4a5053ce9`.
+All four compile modes are clean on these bytes — staged baseline (3074 sources), staged
+compatibility (3078), dev-harness baseline (3241) and dev-harness compatibility (3245) — through the
+canonical `Tools/gate.sh`, including the installed Hearthpyre ABI check.
+The engine-free suites pass 14,147 TafTests and 5,301 PortableTests cases, zero skipped, and the
+Tools suite passes 627 tests.
+An intentional replacement-authority mutation fails two assertions; restoring the attempt fence
+restores the required refusal. These are managed recovery tests, not native save-cut proof.
+NOT RUN for these bytes: the licensed Windows suite driver, any native run,
+ordinary play, graceful Quit and Steam delivery. In particular the six-profile Quickstart boot
+matrix at seed `#43101` has NOT been re-run on these bytes and must be, before merge, because this
+changes what Quickstart does at boot; earlier matrix results sign earlier bytes only. No human
+exact-inventory semantic review binds this digest.
+
 ## Unreleased Kingdom Quickstart shelter ingress
 
 The two tent-row lots staked at founding now stake on every shipped profile. `KingdomPlots.Stake`
@@ -209,19 +277,21 @@ engine-free; `DevTests/KingdomQuickstartShelterIngressTests.cs` recomputes them 
 architecture with the same `KingdomRoadRules.TryAuthoredLane` the stake walks and fails on drift.
 The heart-ingress endpoints are unchanged and refusal is still fail-closed with the same message.
 
-Current census after merging `dev` (the Kingdom Quickstart tent rows, the first-basin water store,
-the stockpile unit capacity, the render-only city sight, the shelter ingress and the stockpile
-deposit custody fix included) and the brush-forage duty (T-forage-1): 3071
-staged C# files; 435,903 physical lines; 3102 files in the generated
-cold-install inventory. Staged compilation covers 3071 sources, baseline and compatibility symbols
+Current census after merging `dev` (the founding-cohort census, the Kingdom Quickstart tent rows,
+the first-basin water store, the stockpile unit capacity, the render-only city sight, the shelter
+ingress and the stockpile deposit custody fix included) and the test-only forage native-check
+seam (Harness/DevTests/Tools only; no production source added or removed): 3081
+staged C# files; 437,479 physical lines; 3112 files in the generated
+cold-install inventory. Staged compilation covers 3081 sources, baseline and compatibility symbols
 (the optional-mod bridge is compatibility-only), run here by Roslyn
 9.0.306 on Linux against the licensed Managed references with warnings as
-errors. Direct `XRL` imports: 1430 files, 0 over the line limit.
-Inventory SHA-256: `4e4f52c0c6ef80783e04b1a6e164d2339bda53cd3b3a27a0b276669e55d9237b` (merge of the brush-forage duty's three new production files
+errors. Direct `XRL` imports: 1435 files, 0 over the line limit.
+Inventory SHA-256: `cadae7b6d3f4346a1a2d1b79ce186635789dd377ff568743ea05e0e0decd3f87` (retains the
+brush-forage duty's three new production files
 — `Growth/KingdomMaterials.00.r_KingdomForage.cs`, `Growth/KingdomMaterialRules.Forage.cs`,
-`Growth/KingdomMaterials.16.ForageWork.cs` — with the camp heart's authored architecture,
-catalogue and blueprint bytes, its regenerated removal coverage and its new DevTests file;
-restamped below from a fresh `check-structure.py --json` on the merged tree).
+`Growth/KingdomMaterials.16.ForageWork.cs` — and the camp heart's authored architecture,
+catalogue and blueprint bytes; adds `dev`'s founding-cohort production sources and the test-only
+forage native-check Harness/DevTests files, which do not change the staged production census).
 Before the merge, all four `Tools/gate.sh` modes compiled clean on the shelter-ingress delta's own
 bytes — staged baseline (3050 sources), staged compatibility (3054), dev-harness baseline (3204)
 and dev-harness compatibility (3208) — with the installed-Hearthpyre source and ABI step, and the

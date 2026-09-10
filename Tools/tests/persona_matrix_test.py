@@ -47,9 +47,7 @@ P0_HOUSING_PERSONAS = {
     "arch-housing-blockyard-xl.persona": "arch-housing-blockyard-xl;facing=north",
 }
 P0_HOUSING_SCRIPT = "flatten;realize;advance 300;frame;status"
-P0_HOUSING_EXPECT = (
-    "flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE"
-)
+P0_HOUSING_EXPECT = "flatten:OK,realize:OK,advance:OK,frame:OK,status:OK,COMPLETE"
 
 HUT_CARDINAL_PERSONAS = {
     "arch-housing-hut-m.persona": "arch-housing-hut-m;facing=north",
@@ -160,11 +158,34 @@ class ExpectedLogTest(unittest.TestCase):
         self.assertEqual(["Error [.*]", "尾"], json.loads(found["LOG_EXPECT"]))
 
     def test_malformed_shapes_duplicates_and_nonprintable_lines_are_refused(self):
-        bad = ["", "null", "{}", "[]", '"line"', "[1]", "[null]", "[[]]",
-               '[""]', '["same","same"]', '["a",]']
-        bad.extend(json.dumps(["before" + char + "after"]) for char in (
-            "\n", "\r", "\t", "\0", "\x1f", "\x7f", "\x85", "\u2028", "\ud800", "\udfff"
-        ))
+        bad = [
+            "",
+            "null",
+            "{}",
+            "[]",
+            '"line"',
+            "[1]",
+            "[null]",
+            "[[]]",
+            '[""]',
+            '["same","same"]',
+            '["a",]',
+        ]
+        bad.extend(
+            json.dumps(["before" + char + "after"])
+            for char in (
+                "\n",
+                "\r",
+                "\t",
+                "\0",
+                "\x1f",
+                "\x7f",
+                "\x85",
+                "\u2028",
+                "\ud800",
+                "\udfff",
+            )
+        )
         for value in bad:
             with self.subTest(value=value), self.assertRaises(SystemExit):
                 matrix.parse_manifest(GREEN + "LOG_EXPECT=" + value + "\n", "x")
@@ -176,11 +197,15 @@ class ExpectedLogTest(unittest.TestCase):
             with self.subTest(lines=lines), self.assertRaises(SystemExit):
                 self.manifest(lines)
         with self.assertRaises(SystemExit):
-            matrix.parse_manifest(GREEN + 'LOG_EXPECT=["x",' + " " * 8192 + '"y"]\n', "x")
+            matrix.parse_manifest(
+                GREEN + 'LOG_EXPECT=["x",' + " " * 8192 + '"y"]\n', "x"
+            )
 
     def test_matching_is_literal_and_requires_the_complete_line(self):
         line = r"expected [a-z]+.* (x)? ^$ \\"
-        raw = ("prefix " + line + "\n" + line + " suffix\n" + line + "\nother\n").encode()
+        raw = (
+            "prefix " + line + "\n" + line + " suffix\n" + line + "\nother\n"
+        ).encode()
         self.assertEqual(
             ("prefix " + line + "\n" + line + " suffix\nother\n").encode(),
             matrix.expected_log(self.manifest([line]), raw, "x"),
@@ -190,73 +215,133 @@ class ExpectedLogTest(unittest.TestCase):
 
     def test_only_crlf_and_exact_expected_records_change(self):
         for raw, expected in (
-            (b"one\r\nEXPECTED\r\n\r\ntwo\rlone\xff\x00\n", b"one\n\ntwo\rlone\xff\x00\n"),
+            (
+                b"one\r\nEXPECTED\r\n\r\ntwo\rlone\xff\x00\n",
+                b"one\n\ntwo\rlone\xff\x00\n",
+            ),
             (b"one\nEXPECTED", b"one\n"),
             (b"EXPECTED\none", b"one"),
             (b"EXPECTED", b""),
         ):
             with self.subTest(raw=raw):
-                self.assertEqual(expected, matrix.expected_log(self.manifest(["EXPECTED"]), raw, "x"))
+                self.assertEqual(
+                    expected, matrix.expected_log(self.manifest(["EXPECTED"]), raw, "x")
+                )
 
-    def test_cli_refuses_missing_duplicate_or_undeclared_expectations_without_stdout(self):
+    def test_cli_refuses_missing_duplicate_or_undeclared_expectations_without_stdout(
+        self,
+    ):
         cases = (
             (GREEN, b"EXPECTED\n"),
-            (GREEN + 'LOG_EXPECT=[]\n', b"EXPECTED\n"),
+            (GREEN + "LOG_EXPECT=[]\n", b"EXPECTED\n"),
             (GREEN + 'LOG_EXPECT=["EXPECTED"]\n', b"other\n"),
             (GREEN + 'LOG_EXPECT=["EXPECTED"]\n', b"EXPECTED\r\nEXPECTED\n"),
             (GREEN + 'LOG_EXPECT=["EXPECTED","SECOND"]\n', b"EXPECTED\n"),
-            (GREEN + 'LOG_EXPECT=["EXPECTED"]\n', b"EXPECTED\nMODERROR [Foreign] new\n"),
+            (
+                GREEN + 'LOG_EXPECT=["EXPECTED"]\n',
+                b"EXPECTED\nMODERROR [Foreign] new\n",
+            ),
         )
         with tempfile.TemporaryDirectory() as directory:
-            persona, log = pathlib.Path(directory) / "x.persona", pathlib.Path(directory) / "Player.log"
+            persona, log = (
+                pathlib.Path(directory) / "x.persona",
+                pathlib.Path(directory) / "Player.log",
+            )
             for text, raw in cases:
                 with self.subTest(text=text, raw=raw):
                     persona.write_text(text, encoding="utf-8")
                     log.write_bytes(raw)
                     result = subprocess.run(
-                        [sys.executable, str(SPEC.origin), "expected-log", str(persona), str(log)],
-                        capture_output=True, check=False,
+                        [
+                            sys.executable,
+                            str(SPEC.origin),
+                            "expected-log",
+                            str(persona),
+                            str(log),
+                        ],
+                        capture_output=True,
+                        check=False,
                     )
                     self.assertNotEqual(0, result.returncode)
                     self.assertEqual(b"", result.stdout)
                     self.assertTrue(result.stderr.startswith(b"persona: "))
                     self.assertEqual(raw, log.read_bytes())
 
-    def test_cli_exports_canonical_fields_preserves_raw_and_retains_unlisted_stack_frame(self):
+    def test_cli_exports_canonical_fields_preserves_raw_and_retains_unlisted_stack_frame(
+        self,
+    ):
         with tempfile.TemporaryDirectory() as directory:
-            persona, log = pathlib.Path(directory) / "x.persona", pathlib.Path(directory) / "Player.log"
-            persona.write_text(GREEN + 'LOG_EXPECT= [ "MODERROR [The Thousand and First] expected" ]\n', encoding="utf-8")
-            raw = (b"[TAF] loaded\r\nMODERROR [The Thousand and First] expected\r\n"
-                   b"  at ThousandAndFirst.Unlisted.Call ()\r\nforeign exception\rlone\xff\n")
+            persona, log = (
+                pathlib.Path(directory) / "x.persona",
+                pathlib.Path(directory) / "Player.log",
+            )
+            persona.write_text(
+                GREEN
+                + 'LOG_EXPECT= [ "MODERROR [The Thousand and First] expected" ]\n',
+                encoding="utf-8",
+            )
+            raw = (
+                b"[TAF] loaded\r\nMODERROR [The Thousand and First] expected\r\n"
+                b"  at ThousandAndFirst.Unlisted.Call ()\r\nforeign exception\rlone\xff\n"
+            )
             log.write_bytes(raw)
             command = [sys.executable, str(SPEC.origin)]
-            fields = subprocess.run(command + ["fields", str(persona)], capture_output=True, check=True)
-            self.assertIn(b'log_expect\t["MODERROR [The Thousand and First] expected"]\n', fields.stdout)
-            result = subprocess.run(command + ["expected-log", str(persona), str(log)], capture_output=True, check=True)
-            self.assertEqual(b"[TAF] loaded\n  at ThousandAndFirst.Unlisted.Call ()\nforeign exception\rlone\xff\n", result.stdout)
+            fields = subprocess.run(
+                command + ["fields", str(persona)], capture_output=True, check=True
+            )
+            self.assertIn(
+                b'log_expect\t["MODERROR [The Thousand and First] expected"]\n',
+                fields.stdout,
+            )
+            result = subprocess.run(
+                command + ["expected-log", str(persona), str(log)],
+                capture_output=True,
+                check=True,
+            )
+            self.assertEqual(
+                b"[TAF] loaded\n  at ThousandAndFirst.Unlisted.Call ()\nforeign exception\rlone\xff\n",
+                result.stdout,
+            )
             self.assertEqual(raw, log.read_bytes())
             derivative = pathlib.Path(directory) / "Player.checked.log"
             derivative.write_bytes(result.stdout)
             strict = subprocess.run(
                 ["bash", str(ROOT / "Tools" / "check-player-log.sh"), str(derivative)],
-                capture_output=True, check=False,
+                capture_output=True,
+                check=False,
                 env={**os.environ, "TAF_LOG_ALLOW": "", "TMPDIR": directory},
             )
             self.assertNotEqual(0, strict.returncode)
             self.assertIn(b"SMOKE LOG FAILED", strict.stderr)
             self.assertIn(b"ThousandAndFirst.Unlisted.Call", strict.stderr)
             persona.write_text(GREEN, encoding="utf-8")
-            fields = subprocess.run(command + ["fields", str(persona)], capture_output=True, check=True)
+            fields = subprocess.run(
+                command + ["fields", str(persona)], capture_output=True, check=True
+            )
             self.assertIn(b"log_expect\t\n", fields.stdout)
 
     def test_expected_mode_refuses_every_unmatched_mod_error_or_warning(self):
-        manifest = self.manifest(["MODERROR [The Thousand and First] expected", "MODWARN [Fixture] expected"])
-        expected = b"MODERROR [The Thousand and First] expected\nMODWARN [Fixture] expected\n"
-        self.assertEqual(b"[TAF] loaded\n", matrix.expected_log(manifest, b"[TAF] loaded\n" + expected, "x"))
+        manifest = self.manifest(
+            ["MODERROR [The Thousand and First] expected", "MODWARN [Fixture] expected"]
+        )
+        expected = (
+            b"MODERROR [The Thousand and First] expected\nMODWARN [Fixture] expected\n"
+        )
+        self.assertEqual(
+            b"[TAF] loaded\n",
+            matrix.expected_log(manifest, b"[TAF] loaded\n" + expected, "x"),
+        )
         for marker in (b"MODERROR", b"MODWARN"):
             for title in (b"The Thousand and First", b"Foreign Mod"):
-                with self.subTest(marker=marker, title=title), self.assertRaises(SystemExit):
-                    matrix.expected_log(manifest, expected + marker + b" [" + title + b"] unexpected\n", "x")
+                with (
+                    self.subTest(marker=marker, title=title),
+                    self.assertRaises(SystemExit),
+                ):
+                    matrix.expected_log(
+                        manifest,
+                        expected + marker + b" [" + title + b"] unexpected\n",
+                        "x",
+                    )
 
 
 class ScriptGrammarTest(unittest.TestCase):
@@ -563,7 +648,7 @@ class ShippedPersonaTest(unittest.TestCase):
         return cases
 
     def test_every_persona_parses(self):
-        self.assertEqual(82, len(self.personas()))
+        self.assertEqual(86, len(self.personas()))
         for path in self.personas():
             found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
             self.assertTrue(found["REQUEST"])
@@ -572,24 +657,33 @@ class ShippedPersonaTest(unittest.TestCase):
     def test_prepared_death_persona_declares_its_own_sealable_no_argument_verb(self):
         directory = ROOT / "Tools" / "personas"
         name = "subsidence-rung-death-native-checks.persona"
-        found = matrix.parse_manifest((directory / name).read_text(encoding="utf-8"), name)
+        found = matrix.parse_manifest(
+            (directory / name).read_text(encoding="utf-8"), name
+        )
         wear = matrix.parse_manifest(
-            (directory / "subsidence-rung-native-checks.persona").read_text(encoding="utf-8"),
+            (directory / "subsidence-rung-native-checks.persona").read_text(
+                encoding="utf-8"
+            ),
             "subsidence-rung-native-checks.persona",
         )
         self.assertEqual("founding-first-city", found["REQUEST"])
         self.assertEqual("8.22@40,12", found["START"])
         self.assertEqual("subsidence-rung-death-check", found["VERBS"])
-        self.assertEqual("stagedigest;subsidence-rung-death-check;stagedigest", found["SCRIPT"])
+        self.assertEqual(
+            "stagedigest;subsidence-rung-death-check;stagedigest", found["SCRIPT"]
+        )
         self.assertEqual(
             ["stagedigest", "subsidence-rung-death-check", "stagedigest"],
             profile.parse_script(found["SCRIPT_WORDS"].split(), (found["VERBS"],)),
         )
         self.assertEqual(
             "stagedigest:OK~founded=false,subsidence-rung-death-check:OK~cases=6 passed=6 failed=0,"
-            "stagedigest:OK~founded=true,COMPLETE", found["EXPECT"],
+            "stagedigest:OK~founded=true,COMPLETE",
+            found["EXPECT"],
         )
-        self.assertEqual("stagedigest;subsidence-rung-check;stagedigest", wear["SCRIPT"])
+        self.assertEqual(
+            "stagedigest;subsidence-rung-check;stagedigest", wear["SCRIPT"]
+        )
         self.assertEqual("subsidence-rung-check", wear["VERBS"])
         self.assertEqual(wear["LOG_EXPECT"], found["LOG_EXPECT"])
         self.assertNotIn("TAF_LOG_ALLOW", found)
@@ -597,18 +691,25 @@ class ShippedPersonaTest(unittest.TestCase):
     def test_rung_save_persona_is_a_separate_first_leg(self):
         directory = ROOT / "Tools" / "personas"
         name = "subsidence-rung-save-native-check.persona"
-        found = matrix.parse_manifest((directory / name).read_text(encoding="utf-8"), name)
+        found = matrix.parse_manifest(
+            (directory / name).read_text(encoding="utf-8"), name
+        )
         older = matrix.parse_manifest(
-            (directory / "subsidence-save-native-check.persona").read_text(encoding="utf-8"),
+            (directory / "subsidence-save-native-check.persona").read_text(
+                encoding="utf-8"
+            ),
             "subsidence-save-native-check.persona",
         )
         self.assertEqual("founding-first-city", found["REQUEST"])
         self.assertEqual("8.22@40,12", found["START"])
-        self.assertEqual("stagedigest;subsidence-rung-save-check;stagedigest", found["SCRIPT"])
+        self.assertEqual(
+            "stagedigest;subsidence-rung-save-check;stagedigest", found["SCRIPT"]
+        )
         self.assertEqual("subsidence-rung-save-check", found["VERBS"])
         self.assertEqual(
             "stagedigest:OK~founded=false,subsidence-rung-save-check:OK~cases=1 passed=1 failed=0,"
-            "stagedigest:OK~founded=true,COMPLETE", found["EXPECT"],
+            "stagedigest:OK~founded=true,COMPLETE",
+            found["EXPECT"],
         )
         self.assertEqual("growth,native-regression,save-load", found["SET"])
         self.assertEqual(older["LOG_EXPECT"], found["LOG_EXPECT"])
@@ -705,7 +806,9 @@ class ShippedPersonaTest(unittest.TestCase):
                 self.assertEqual(found["RELOAD"], "quickstart")
                 self.assertEqual(found["EXPECT"], "RELOAD-COMPLETE")
                 self.assertTrue(found["SCRIPT_WORDS"].startswith("quickstart-save "))
-                self.assertTrue(matrix.assess(found, "", path.name), "journal alone must refuse")
+                self.assertTrue(
+                    matrix.assess(found, "", path.name), "journal alone must refuse"
+                )
                 continue  # Host workflow has two strictly checked journals, never a script replay.
             extra = tuple(v for v in found["VERBS"].split(",") if v)
             expected = [

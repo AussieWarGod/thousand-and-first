@@ -20,16 +20,29 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
-The brush-forage duty (T-forage-1) over the stockpile deposit custody fix, the Kingdom Quickstart
-shelter ingress, the render-only city sight, the stockpile unit capacity, the first-basin water
-store and the Kingdom Quickstart tent rows reports 3071 staged production C# files and
-435,903 physical lines.
+The test-only forage native-check seam (Harness/DevTests/Tools only; no production source added
+or removed) over the Kingdom Quickstart founding cohort, the stockpile deposit custody fix, the
+Kingdom Quickstart shelter ingress, the render-only city sight, the stockpile unit capacity, the
+first-basin water store, the Kingdom Quickstart tent rows and the brush-forage duty (T-forage-1)
+reports 3081 staged production C# files and 437,479 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`4e4f52c0c6ef80783e04b1a6e164d2339bda53cd3b3a27a0b276669e55d9237b` (merge of the brush-forage duty, T-forage-1, with the camp heart's authored
-architecture, catalogue and blueprint bytes, its regenerated removal coverage and its new DevTests
-file; restamped below from a fresh `check-structure.py --json` on the merged tree). The census
-reports 1430 files with direct `XRL` imports; 0 of those exceed the line limit.
+`cadae7b6d3f4346a1a2d1b79ce186635789dd377ff568743ea05e0e0decd3f87`. The census
+reports 1435 files with direct `XRL` imports; 0 of those exceed the line limit.
+
+Retained: the brush-forage duty (T-forage-1) over the stockpile deposit custody fix, the Kingdom
+Quickstart shelter ingress, the render-only city sight, the stockpile unit capacity, the
+first-basin water store and the Kingdom Quickstart tent rows reported 3071 staged production C#
+files and 435,903 physical lines, digest
+`4e4f52c0c6ef80783e04b1a6e164d2339bda53cd3b3a27a0b276669e55d9237b`, 1430 direct `XRL` imports.
+
+The founding-cohort delta over the retained draft below is ten added production sources and no
+removals: the quickstart rules' founders partial, the bootstrap's receipt partial split out of the
+bootstrap itself, the three bootstrap founders partials, and the five the founder origin accounting
+adds — its models, its bounded versioned codec, its host seam, its engine-free transaction, and the
+one adapter that knows what a body and a settlement are. All four `Tools/gate.sh` modes compiled
+clean on these bytes through the canonical gate itself — staged baseline (3074 sources), staged
+compatibility (3078), dev-harness baseline (3241) and dev-harness compatibility (3245).
 
 The shelter-ingress delta over the retained city-sight draft below is one added and one modified
 production source and no

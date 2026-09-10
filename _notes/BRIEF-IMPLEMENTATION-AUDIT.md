@@ -1,6 +1,17 @@
 # Brief-to-implementation audit
 
-## Current brush-forage duty census (T-forage-1) — 2026-09-10
+## Current test-only forage native-check seam census — 2026-09-10
+
+**3081** production C# files, 437,479 physical lines, 1435 direct-XRL, zero cap failures;
+3112 generated cold-install files. Exact digest
+`cadae7b6d3f4346a1a2d1b79ce186635789dd377ff568743ea05e0e0decd3f87`.
+No production source added or removed: this merges the Kingdom Quickstart founding cohort with
+the dev-only forage native-check Harness seam (five new `Harness/KingdomForageNative*.cs` files
+plus their DevTests). The seam proves the forage duty's real settlement-pass cadence, direct-census
+removal/stock-gain and ceiling-with-reserved-units, six exclusion categories bound and re-verified
+twice, and the once-only exhaustion notice witnessed by a real ledger count.
+
+## Retained brush-forage duty census (T-forage-1) — 2026-09-10
 
 **3071** production C# files, 435,861 physical lines, 1430 direct-XRL, zero cap failures;
 3102 generated cold-install files. Exact digest
@@ -11,7 +22,25 @@ settlement-pass work) over the stockpile deposit custody census retained below. 
 census, `ForageCeilingHeld`, over the RawObservation helpers rather than the lease-filtered
 `MaterialStock.Tally`.
 
-## Current stockpile deposit custody census — 2026-09-09
+## Retained Kingdom Quickstart founding-cohort census — 2026-09-10
+
+**3078** production C# files, 437,114 physical lines, 1434 direct-XRL, zero cap failures;
+3109 generated cold-install files. Exact digest
+`e1ddecb76e357905d90bbc40ad8414b68efc38f2b532d19ec61d2df4a5053ce9`.
+Ten added sources (the quickstart rules' founders partial, the bootstrap receipt partial split out
+of the bootstrap, the three bootstrap founders partials, and the founder origin accounting's models,
+codec, host seam, engine and adapter) and ten modified, over the deposit
+custody census retained below. Structure, doc freshness and the Tools suite (627 tests) pass, the
+engine-free suites pass 14,147 main / 5,301 Portable with zero skips, and all four compile modes are
+clean under the canonical gate — staged baseline (3074), staged compatibility (3078),
+dev-harness baseline (3241), dev-harness compatibility (3245). Forty-one guard mutations were run
+against the new rules; thirty-six were caught by a failing case and five are documented, each with
+the guard that refuses its case first named. The identity filter and the strict encoder cover each
+other; removing both fails five cases. No native run, ordinary-play acceptance or
+exact-inventory human semantic review binds this digest, and the six-profile Quickstart boot matrix
+is owed before merge.
+
+## Retained stockpile deposit custody census — 2026-09-09
 
 **3068** production C# files, 435,538 physical lines, 1429 direct-XRL, zero cap failures;
 3099 generated cold-install files. Exact digest

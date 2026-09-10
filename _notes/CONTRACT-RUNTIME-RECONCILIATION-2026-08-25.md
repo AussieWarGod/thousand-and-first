@@ -1,6 +1,16 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
-## Current brush-forage duty census (T-forage-1) — 2026-09-10
+## Current test-only forage native-check seam census — 2026-09-10
+
+3081 production C# files; 3,112 cold-install files in the generated inventory;
+437,479 physical lines, 1435 direct-XRL, zero cap failures. Exact digest
+`cadae7b6d3f4346a1a2d1b79ce186635789dd377ff568743ea05e0e0decd3f87`.
+No production source added or removed: merges the Kingdom Quickstart founding cohort with the
+dev-only forage native-check Harness seam, which proves the forage duty's real settlement-pass
+cadence, direct-census removal/stock-gain/ceiling-with-reserved-units, six re-verified exclusion
+categories, and a once-only exhaustion notice witnessed by a real ledger count.
+
+## Retained brush-forage duty census (T-forage-1) — 2026-09-10
 
 3071 production C# files; 3,102 cold-install files in the generated inventory;
 435,861 physical lines, 1430 direct-XRL, zero cap failures. Exact digest
@@ -9,7 +19,20 @@ The standing forage duty cuts wild scrub for brush, fourth in the settlement pas
 one-gang-one-job queue, hard-bounded by a twelve-unit ceiling that now counts brush a routed
 delivery has already claimed (root's ruling), not just the available-only tally.
 
-## Current stockpile deposit custody census — 2026-09-09
+## Retained Kingdom Quickstart founding-cohort census — 2026-09-10
+
+3078 production C# files; 3,109 cold-install files in the generated inventory;
+437,114 physical lines, 1434 direct-XRL, zero cap failures. Exact digest
+`e1ddecb76e357905d90bbc40ad8414b68efc38f2b532d19ec61d2df4a5053ce9`.
+Quickstart's founding cohort is split at the reversibility boundary: one grant scope for four bodies
+and all their gear, a publish that names the exact four, then a forward-only idempotent enrolment
+under an append-only `Founding` reason. Old receipts keep their exact bytes and are terminal.
+Each founder is counted into the shared origin tally by adding one under a durable identity-bound
+obligation; mixed state is refused in the open rather than inferred from a counter other arrivals
+move. The canonical gate compiled all four modes clean on these bytes, and the engine-free suites
+passed 14,147 main / 5,301 Portable with zero skips; no native evidence binds them.
+
+## Retained stockpile deposit custody census — 2026-09-09
 
 3068 production C# files; 3,099 cold-install files in the generated inventory;
 435,538 physical lines, 1429 direct-XRL, zero cap failures. Exact digest

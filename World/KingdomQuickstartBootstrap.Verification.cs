@@ -39,7 +39,7 @@ namespace ThousandAndFirst
 			Failure = "";
 			KingdomQuickstartProfile profile;
 			if (!KingdomQuickstartRules.Valid(Receipt)
-				|| Receipt.Phase != KingdomQuickstartPhase.Complete
+				|| Receipt.Phase < KingdomQuickstartPhase.Complete
 				|| !KingdomQuickstartRules.TryProfile(Receipt.ProfileKey, out profile)
 				|| !VerifyFounded(System, Zone, profile, out Failure)
 				|| !VerifyWaterGrant(Zone, Zone.FindObjectByID(Receipt.WaterObjectId),
