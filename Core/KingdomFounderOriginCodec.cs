@@ -55,11 +55,15 @@ namespace ThousandAndFirst
 			if (fields.Length != FieldCount
 				|| !string.Equals(fields[0], Tag, StringComparison.Ordinal)) return false;
 			string body = string.Join("|", fields, 0, FieldCount - 1);
-			if (!string.Equals(Digest(body), fields[FieldCount - 1],
-				StringComparison.Ordinal)) return false;
 			KingdomFounderOriginReceipt decoded;
 			try
 			{
+				// The digest is taken INSIDE the refusal boundary. Hashing is itself an encoding
+				// step, and a raw wire is arbitrary text: a lone surrogate anywhere in the body
+				// makes the strict encoder throw, and a decoder that throws on a malformed reading
+				// is a decoder that cannot be asked about one. Every reading refuses; none raises.
+				if (!string.Equals(Digest(body), fields[FieldCount - 1],
+					StringComparison.Ordinal)) return false;
 				decoded = new KingdomFounderOriginReceipt(Text(fields[1]), Text(fields[2]),
 					Text(fields[3]),
 					int.Parse(fields[4], NumberStyles.AllowLeadingSign,
@@ -88,13 +92,20 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// A bounded, unambiguously encodable identity.
+		/// A bounded, unambiguously encodable identity. Two separate rules, for two separate
+		/// reasons, and it is worth keeping them apart.
 		/// <para>
-		/// Every character must survive a round trip through strict UTF-8 as itself. A control
-		/// character or an unpaired surrogate does not: the replacement-fallback encoder turns any
-		/// of them into U+FFFD, so two DIFFERENT bad identities encode to the SAME bytes and
-		/// therefore to the same digest. An identity that cannot be told apart from another one is
-		/// not an identity, so it is refused here, before it is ever written down.
+		/// An unpaired surrogate is not encodable at all. UTF-8 has no representation for one, so
+		/// the replacement-fallback encoder substitutes U+FFFD and two DIFFERENT malformed
+		/// identities become the SAME bytes and the same digest. An identity that cannot be told
+		/// apart from another one is not an identity, so it is refused before it is written down.
+		/// </para>
+		/// <para>
+		/// A control character is a different matter: it round-trips through UTF-8 perfectly well
+		/// and collides with nothing. It is refused by POLICY, not by encoding &#8212; a tab, a
+		/// newline or a NUL inside a field of a pipe-delimited, line-oriented wire is a value no
+		/// caller should be able to smuggle past a reader, and an object id that carries one is not
+		/// an id this settlement minted.
 		/// </para>
 		/// </summary>
 		private static bool Identity(string Value)

@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using System.Collections.Generic;
+using System.Text;
 using NUnit.Framework;
 using NUnit.Framework.Legacy;
 
@@ -407,12 +408,65 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.IsFalse(KingdomFounderOriginCodec.TryDecode("fo2" + wire.Substring(3),
 				out _), "a foreign tag");
 			ClassicAssert.IsFalse(KingdomFounderOriginCodec.TryDecode(null, out _));
-			// A hand-built wire whose base64 carries bytes that are not valid UTF-8 is refused:
-			// strict decoding throws rather than substituting U+FFFD, and even if it did not, the
-			// round-trip guard would catch the substitution.
-			string invalid = "fo1|" + Convert.ToBase64String(new byte[] { 0xC3, 0x28 })
-				+ wire.Substring(wire.IndexOf('|', 4));
-			ClassicAssert.IsFalse(KingdomFounderOriginCodec.TryDecode(invalid, out _));
+			// A hand-built wire whose base64 carries bytes that are not valid UTF-8, WITH a freshly
+			// computed digest over the malformed body. Without recomputing, this would only prove
+			// the digest check works; with it, the decoder's own strict reading is what refuses.
+			string malformed = "fo1|" + Convert.ToBase64String(new byte[] { 0xC3, 0x28 })
+				+ "|" + Convert.ToBase64String(Encoding.UTF8.GetBytes(Profile))
+				+ "|" + Convert.ToBase64String(Encoding.UTF8.GetBytes(City)) + "|0|1";
+			ClassicAssert.IsFalse(KingdomFounderOriginCodec.TryDecode(
+				malformed + "|" + Sha256Hex(malformed), out _));
+			// And the digest guard itself still works on the same body.
+			ClassicAssert.IsFalse(KingdomFounderOriginCodec.TryDecode(malformed + "|deadbeef",
+				out _));
+		}
+
+		[TestCase(0xD800)]
+		[TestCase(0xDBFF)]
+		[TestCase(0xDC00)]
+		[TestCase(0xDFFF)]
+		public void ARawWireCarryingALoneSurrogateIsRefusedAndNeverThrows(int codeUnit)
+		{
+			// Built at RUNTIME from an integer: a literal surrogate written into a [TestCase]
+			// attribute is normalised through attribute metadata into U+FFFD, so the test would
+			// pass while proving nothing about the case it names.
+			string lone = new string((char)codeUnit, 1);
+			ClassicAssert.IsTrue(char.IsSurrogate(lone[0]), "the fixture really is a surrogate");
+			// Hashing is itself an encoding step, so the digest must be taken inside the refusal
+			// boundary: a decoder that throws on a malformed reading cannot be asked about one.
+			string wire = "fo1|" + lone + "|cA==|Yw==|0|1|bad";
+			bool refused = false;
+			Assert.DoesNotThrow(() =>
+				refused = !KingdomFounderOriginCodec.TryDecode(wire, out _));
+			ClassicAssert.IsTrue(refused);
+			// The same lone surrogate as an identity is refused by Encode before it is written.
+			ClassicAssert.IsNull(KingdomFounderOriginCodec.Encode(
+				new KingdomFounderOriginReceipt(lone, Profile, City, 0,
+					KingdomFounderOriginState.Prepared)));
+			ClassicAssert.IsNull(KingdomFounderOriginCodec.Encode(
+				new KingdomFounderOriginReceipt("lead" + lone + "trail", Profile, City, 0,
+					KingdomFounderOriginState.Prepared)));
+		}
+
+		[TestCase(0x09)]
+		[TestCase(0x0A)]
+		[TestCase(0x0D)]
+		[TestCase(0x00)]
+		[TestCase(0x1B)]
+		[TestCase(0x7F)]
+		public void AControlCharacterIsRefusedByPolicyRatherThanByEncoding(int codeUnit)
+		{
+			// A control round-trips through UTF-8 perfectly well and collides with nothing; it is
+			// refused because a pipe-delimited, line-oriented wire is no place to smuggle one, and
+			// because an object id carrying one is not an id this settlement minted.
+			string control = new string((char)codeUnit, 1);
+			ClassicAssert.IsTrue(char.IsControl(control[0]));
+			ClassicAssert.AreEqual(control,
+				Encoding.UTF8.GetString(Encoding.UTF8.GetBytes(control)),
+				"a control is encodable; this is a policy refusal, not an encoding one");
+			ClassicAssert.IsNull(KingdomFounderOriginCodec.Encode(
+				new KingdomFounderOriginReceipt("body" + control, Profile, City, 0,
+					KingdomFounderOriginState.Prepared)));
 		}
 
 		[Test]
@@ -497,6 +551,19 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("it does not say the tally is short", quickstart);
 			StringAssert.Contains("SAFETY POLICY, not a claim of fully automatic forward recovery",
 				TestMain.ReadRepositoryText("Core/KingdomFounderOriginEngine.cs"));
+		}
+
+		private static string Sha256Hex(string value)
+		{
+			byte[] digest;
+			using (System.Security.Cryptography.SHA256 sha
+				= System.Security.Cryptography.SHA256.Create())
+				digest = sha.ComputeHash(Encoding.UTF8.GetBytes(value));
+			StringBuilder text = new StringBuilder(64);
+			foreach (byte piece in digest)
+				text.Append(piece.ToString("x2",
+					System.Globalization.CultureInfo.InvariantCulture));
+			return text.ToString();
 		}
 
 		// --- the fake world ----------------------------------------------------------------------
