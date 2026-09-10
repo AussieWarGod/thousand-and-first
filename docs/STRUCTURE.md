@@ -44,8 +44,10 @@ also over the master semantic resume correction, the Kingdom Quickstart founding
 stockpile deposit custody fix, the Kingdom Quickstart shelter ingress, the render-only city sight,
 the stockpile unit capacity, the first-basin water store and the Kingdom Quickstart tent rows —
 report 3079 staged production C# files and 437,354
-physical lines. The merge adds no production source over the roadless correction; the production
-delta this branch carries is the unmerged #124 raw-delivery-overflow fix it is built on.
+physical lines. The production delta over the merged `dev` baseline `6ba1969` is the #144 heart
+shared-XL transition fix and nothing else: two files, `Growth/KingdomPlotHeartRules.cs` for the
+pure endpoint rule and `Growth/KingdomArchitectureStamper.Transitions.cs` for the call that
+replaces the rung-number comparison.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
 `4cede35b696fbb25635d48cef283fd1981531f06a279f02e363898ca8ee82ea0`. The census reports

@@ -130,8 +130,10 @@ staged C# files; 437,354 physical lines; 0 exceed 300 physical lines, 0 are exac
 therefore 0 fail the strict cap; 0 exceed 1,000, 0 exceed 2,000, 0 exceed 5,000.
 Direct `XRL` imports: 1434 files, 0 over the line limit.
 Inventory SHA-256: `4cede35b696fbb25635d48cef283fd1981531f06a279f02e363898ca8ee82ea0`.
-The merge adds no production source over this correction; its production delta is the unmerged
-#124 raw-delivery-overflow fix the #129 branch is built on.
+The production delta against the merged `dev` baseline `6ba1969` is exactly two files:
+`Growth/KingdomPlotHeartRules.cs` gains the pure endpoint rule, and
+`Growth/KingdomArchitectureStamper.Transitions.cs` calls it in place of the rung-number
+comparison. Everything else in this delta is DevTests and documentation.
 
 Retained roadless seal census at its own bytes: 3079 staged production C# files, 437,201 physical
 lines, 1434 files importing
@@ -228,7 +230,7 @@ the structural census below is unchanged.
 
 Retained #129 checkpoint census (the raw delivery overflow fix and its dev-harness native
 checks): 3079
-staged C# files; 437,354 physical lines; 3109 files in the generated
+staged C# files; 437,320 physical lines; 3109 files in the generated
 cold-install inventory; zero files at or above 300; direct `XRL`
 imports occur in 1434 files, 0 of them over the line limit. Inventory SHA-256:
 `f9a9469102be2f0ca119056e08c884a56014b31439e71695852026f63bd02d17`. Retained native acceptance

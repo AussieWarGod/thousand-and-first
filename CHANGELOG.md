@@ -91,7 +91,7 @@ below it.
 
 ### Fixed
 
-- **The heart's last rung can be raised.** The great court and the arcology stand on the same XL
+- **Correct heartcourt-to-arcology tier validation.** The great court and the arcology stand on the same XL
   ground — the catalogue puts them in one binding and marks the arcology a renovation, not a
   growth — but the authored transition guard asked whether a lot's TIER equalled its RUNG NUMBER.
   That holds by coincidence for the first four rungs and is false by construction for the fifth,
@@ -100,8 +100,8 @@ below it.
   expected rects are already derived from, which leaves rungs one to four judged exactly as
   before and admits the one same-footprint renovation at the top. The endpoint half of that
   question is now one pure rule, `KingdomPlotRules.HeartRungEndpointsAdmit`, sitting beside the
-  ladder it reads and covered by ordinary value tests rather than only by a source pin. Every other proof the branch
-  made — owner, rung adjacency, plan, lot type, facing, fixed anchors, both rects, the plot/lot
+  ladder it reads and covered by ordinary value tests rather than only by a source pin. Every
+  other proof the branch made — owner, rung adjacency, plan, lot type, facing, fixed anchors, both rects, the plot/lot
   identity and both rite-basin custody checks — is unchanged and still made in the same order, and
   no heart-only bypass was added: a same-rect heart transition simply never reaches the ordinary
   envelope authority, because that call is already gated on the rects differing. Source-level
