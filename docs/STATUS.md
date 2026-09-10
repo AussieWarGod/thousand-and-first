@@ -37,7 +37,20 @@ Observers remain non-minting; the strict identity admission is not relaxed. The 
 persona disclose this setup allocation. Follow-up four-mode compile and audit pass; main 14,342
 and portable 5,492 tests pass with zero skips. Thirteen focused source checks pass; replacing
 the allocating getter with read-only lookup causes one source assertion failure, and restored
-code passes. Corrected native proof remains pending.
+code passes. Native `6d96098` (`k5pVWg`, same seed) passed setup with all 48
+assigned material identities, then refused because stage remained Camp after 600 turns.
+Setup tick 273927 was still 873 turns before the next absolute daily boundary at 274800.
+Owned process stopped and both failed native profiles remain retained.
+
+The cadence follow-up waits 1200 real turns before checking the paid start, then the
+existing 2400 turns for completion. Growth updates stage before the same semantic pass's
+improvement resolver automatically assesses and begins work; no fixture call starts it.
+The waterstone's 3000 authored ticks use the default 75% improvement duration (2250 ticks).
+Three total days remain below the six-day roof-warning window. Stage, payment, exact custody
+and completion assertions are unchanged. Follow-up four-mode compile and audit pass
+(770 tool checks, seven skips); main 14,346 and portable 5,496 tests pass with zero skips.
+Seventeen focused checks pass. Restoring the old persona interval fails three daily-boundary
+value cases and one script source assertion; restored code passes. Native proof remains pending.
 
 ## Unreleased camp-heart native seam (PR #107 native case 2)
 

@@ -1,6 +1,7 @@
 #if TAF_TESTS
 using System;
 using NUnit.Framework;
+using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
 {
@@ -28,9 +29,23 @@ namespace ThousandAndFirst.Tests
 				"internal const string SetupVerb = \"camp-heart-setup\";"));
 			Assert.That(provider, Does.Contain(
 				"internal const string CheckVerb = \"camp-heart-check\";"));
-			Assert.That(provider, Does.Contain("\"stagedigest\", SetupVerb, \"advance 600\","));
+			Assert.That(provider, Does.Contain("\"stagedigest\", SetupVerb, \"advance 1200\","));
 			Assert.That(provider, Does.Contain(
 				"KingdomCampHeartNativeChecks.Run(Verb, game, zone, out complete)"));
+		}
+
+		[TestCase(0)]
+		[TestCase(1)]
+		[TestCase(327)]
+		[TestCase(1199)]
+		public void FirstAdvanceCrossesDailyBoundaryAtEachSetupPhase(int Phase)
+		{
+			string script = Array.Find(Read(Persona).Split('\n'),
+				line => line.StartsWith("SCRIPT=", StringComparison.Ordinal));
+			int turns = int.Parse(script.Split(';')[2].Substring("advance ".Length));
+			long start = 273600L + Phase;
+			Assert.That(KingdomSemanticClockRules.AbsoluteBoundary(start + turns),
+				Is.GreaterThan(KingdomSemanticClockRules.AbsoluteBoundary(start)));
 		}
 
 		[Test]
@@ -247,7 +262,7 @@ namespace ThousandAndFirst.Tests
 			string persona = Read(Persona);
 			Assert.That(persona, Does.Contain("REQUEST=founding-first-city"));
 			Assert.That(persona, Does.Contain("VERBS=camp-heart-setup,camp-heart-check"));
-			Assert.That(persona, Does.Contain("SCRIPT=stagedigest;camp-heart-setup;advance 600;"
+			Assert.That(persona, Does.Contain("SCRIPT=stagedigest;camp-heart-setup;advance 1200;"
 				+ "camp-heart-check;advance 2400;camp-heart-check;stagedigest"));
 			Assert.That(persona, Does.Contain("EXPECT=stagedigest:OK~founded=false,"
 				+ "camp-heart-setup:OK~native-camp-heart phase=1,advance:OK,"
