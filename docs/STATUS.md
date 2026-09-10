@@ -99,11 +99,37 @@ malformed geometry and exceptions remain errors. The notice may recur after load
 An empty or interior-road-only camp can remain pending indefinitely; no timeout invents corruption.
 Terminal and recovery callers retain their existing fail-closed refusal behavior.
 
-Current census, with the #129 dev-harness native checks merged over this correction: 3079
-staged C# files; 437,320 physical lines; 0 exceed 300 physical lines, 0 are exactly 300, and
+## Unreleased heart shared-XL transition fix (issue #144)
+
+The great court and the arcology stand on the same XL ground: the catalogue puts them in one
+binding and marks the arcology `Transition="renovate"`, and `KingdomPlotRules.HeartSizeForRung`
+maps rungs four and five both to `Huge`. The authored transition guard, though, asked whether a
+lot's tier equalled its rung NUMBER — true by coincidence for rungs one to four, false by
+construction for rung five — so rung four to five refused every time, for a reason no ground,
+occupant or road could satisfy.
+
+The endpoint half of that guard is now one pure rule,
+`KingdomPlotRules.HeartRungEndpointsAdmit(beforeRung, afterRung, beforeTier, afterTier)`: adjacent
+rungs, each end on the tier the canonical mapping gives its own rung, both ends on the ladder.
+`KingdomArchitectureStamper.TryAuthorizedTransition` calls it with its own lot sizes. Rungs one to
+four are judged exactly as before; the one same-footprint renovation at the top is admitted.
+
+Every other proof the heart branch made is unchanged and still made in the same order — owner,
+plan, lot type, facing, fixed anchors, both expected rects, the plot/lot identity, and both
+rite-basin custody checks — and no heart-only bypass was added. A same-rect heart transition never
+reaches ordinary envelope authority because that call is already gated on the rects differing;
+no short-circuit was introduced.
+
+**Source-level only.** No native run was made and no rung 4 to 5 acceptance is claimed; paid
+renovation, rung settlement, save/cold-load and attended/away progression remain owed to the beta
+end-game suite.
+
+Current census, with the #144 heart shared-XL transition fix over the #129 dev-harness native
+checks: 3079
+staged C# files; 437,354 physical lines; 0 exceed 300 physical lines, 0 are exactly 300, and
 therefore 0 fail the strict cap; 0 exceed 1,000, 0 exceed 2,000, 0 exceed 5,000.
 Direct `XRL` imports: 1434 files, 0 over the line limit.
-Inventory SHA-256: `f9a9469102be2f0ca119056e08c884a56014b31439e71695852026f63bd02d17`.
+Inventory SHA-256: `4cede35b696fbb25635d48cef283fd1981531f06a279f02e363898ca8ee82ea0`.
 The merge adds no production source over this correction; its production delta is the unmerged
 #124 raw-delivery-overflow fix the #129 branch is built on.
 
@@ -202,7 +228,7 @@ the structural census below is unchanged.
 
 Retained #129 checkpoint census (the raw delivery overflow fix and its dev-harness native
 checks): 3079
-staged C# files; 437,320 physical lines; 3109 files in the generated
+staged C# files; 437,354 physical lines; 3109 files in the generated
 cold-install inventory; zero files at or above 300; direct `XRL`
 imports occur in 1434 files, 0 of them over the line limit. Inventory SHA-256:
 `f9a9469102be2f0ca119056e08c884a56014b31439e71695852026f63bd02d17`. Retained native acceptance

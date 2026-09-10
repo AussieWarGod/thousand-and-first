@@ -299,6 +299,85 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void TheHeartBranchAsksTheCanonicalRungTierMappingNotTheRungNumber()
+		{
+			// Issue #144: heartcourt and arcology share one XL binding, so rung five's tier is
+			// Huge, not five. Comparing a lot's tier to its rung NUMBER made rung four -> five
+			// unsatisfiable by construction; the guard now asks HeartSizeForRung, which is what
+			// TryHeartRectFor already derives the expected rects from.
+			string transition = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureStamper.Transitions.cs");
+			// The endpoint half is one pure rule, executably tested in KingdomHeartRulesTests;
+			// this pins that the runtime branch actually calls it with its own lot sizes.
+			StringAssert.Contains(
+				"KingdomPlotRules.HeartRungEndpointsAdmit(beforeRung, afterRung,", transition);
+			StringAssert.Contains("(int)Before.LotSize, (int)After.LotSize)", transition);
+			StringAssert.DoesNotContain("(int)Before.LotSize != beforeRung", transition);
+			StringAssert.DoesNotContain("(int)After.LotSize != afterRung", transition);
+			// And the rule itself asks the mapping, never the rung number.
+			string rules = TestMain.ReadRepositoryText("Growth/KingdomPlotHeartRules.cs");
+			string admit = Between(rules,
+				"public static bool HeartRungEndpointsAdmit(", "/// <summary>");
+			StringAssert.Contains("AfterRung == BeforeRung + 1", admit);
+			StringAssert.Contains("BeforeTier == (int)before && AfterTier == (int)after", admit);
+			StringAssert.Contains("before != PlotSize.None && after != PlotSize.None", admit);
+		}
+
+		[Test]
+		public void TheHeartBranchKeepsEveryOtherAccretionProofInItsExistingOrder()
+		{
+			// The fix replaces one clause. Every other proof the heart branch made must still be
+			// made, in the same order, and no blanket heart exception may appear beside them.
+			string transition = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureStamper.Transitions.cs");
+			string heart = Between(transition,
+				"KingdomPlotRules.PlotRect expectedBefore;",
+				"private static bool TryExactHeartBasin(");
+			AssertOrdered(heart,
+				"KingdomPlotRules.HeartRungEndpointsAdmit(beforeRung, afterRung,",
+				"Before.PlanKey != \"civic-heart\" || After.PlanKey != \"civic-heart\"",
+				"Before.LotType != \"civic\" || After.LotType != \"civic\"",
+				"Before.Facing != After.Facing",
+				"BeforeIntent.MainWorldX != AfterIntent.MainWorldX",
+				"BeforeIntent.MainWorldY != AfterIntent.MainWorldY",
+				"Owner.GetIntProperty(KingdomPlots.HeartPlotProperty) != 1",
+				"KingdomPlots.HeartRung(Z) != beforeRung",
+				"KingdomPlots.TryHeartRectFor(Z, beforeRung, out expectedBefore)",
+				"KingdomPlots.TryHeartRectFor(Z, afterRung, out expectedAfter)",
+				"SameRect(BeforeIntent.Rect, expectedBefore)",
+				"SameRect(AfterIntent.Rect, expectedAfter)",
+				"Owner.GetStringProperty(KingdomPlots.PlotIdProperty)",
+				"TryExactHeartBasin(Owner, Z, BeforeIntent, Before, out Failure)",
+				"TryHeartSnapshotBasin(AfterIntent, After, Z, out Failure)",
+				"HeartAccretion = true;");
+			// No same-rect shortcut and no heart-only bypass were added to this branch.
+			StringAssert.DoesNotContain("if (SameRect(BeforeIntent.Rect, AfterIntent.Rect)) return true",
+				heart);
+			// No rung-five special case in the code. ("arcology" is deliberately not forbidden:
+			// the clause's own comment names the catalogue binding that motivates the mapping.)
+			foreach (string forbidden in new[] { "beforeRung >= 4", "afterRung == 5",
+				"afterRung != 5", "beforeRung == 4 &&" })
+				StringAssert.DoesNotContain(forbidden, heart);
+		}
+
+		[Test]
+		public void ASameRectHeartRenovationNeverReachesOrdinaryEnvelopeAuthority()
+		{
+			// Rungs four and five share one rect, so the top rung is a same-footprint
+			// renovation. The envelope proof is already gated on the rects differing, so this
+			// change adds no new route into it; that gate is pinned here so it cannot be relaxed
+			// into an unconditional call beside the admitted transition.
+			string preflight = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureStamper.UpgradePreflight.cs");
+			AssertOrdered(preflight,
+				"TryAuthorizedTransition(Owner, Z, beforeIntent, before, Successor, after,",
+				"if (!SameRect(beforeIntent.Rect, Successor.Rect)",
+				"&& !TryProveEnvelopeGrowth(System, Z, Owner, null, Successor, false,");
+			StringAssert.DoesNotContain(
+				"TryProveEnvelopeGrowth(System, Z, Owner, null, Successor, true", preflight);
+		}
+
+		[Test]
 		public void PlanChangeAuthorityPrecedesDebitAndRebindsEveryPaidApplication()
 		{
 			string transition = TestMain.ReadRepositoryText(

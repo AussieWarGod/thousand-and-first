@@ -43,12 +43,12 @@ The #129 dev-harness native checks merged over the roadless spatial capture corr
 also over the master semantic resume correction, the Kingdom Quickstart founding cohort, the
 stockpile deposit custody fix, the Kingdom Quickstart shelter ingress, the render-only city sight,
 the stockpile unit capacity, the first-basin water store and the Kingdom Quickstart tent rows —
-report 3079 staged production C# files and 437,320
+report 3079 staged production C# files and 437,354
 physical lines. The merge adds no production source over the roadless correction; the production
 delta this branch carries is the unmerged #124 raw-delivery-overflow fix it is built on.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`f9a9469102be2f0ca119056e08c884a56014b31439e71695852026f63bd02d17`. The census reports
+`4cede35b696fbb25635d48cef283fd1981531f06a279f02e363898ca8ee82ea0`. The census reports
 1434 files with direct `XRL` imports; 0 of those exceed the line limit.
 
 The raw-delivery-overflow delta over the retained founding-cohort census below adds no production
