@@ -23,10 +23,10 @@ python3 Tools/check-structure.py --release
 The brush-forage duty (T-forage-1) over the stockpile deposit custody fix, the Kingdom Quickstart
 shelter ingress, the render-only city sight, the stockpile unit capacity, the first-basin water
 store and the Kingdom Quickstart tent rows reports 3071 staged production C# files and
-435,876 physical lines.
+435,903 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`797cadfbd6c58fadd6747f80b627a20b8a910d2e2a54af8f10dbbcc71cfceb4e`. The census reports
+`1f990b13abe80b98ec3ce022dc4ff3578fc998012261160e9a303840fa59ab72`. The census reports
 1430 files with direct `XRL` imports; 0 of those exceed the line limit.
 
 The shelter-ingress delta over the retained city-sight draft below is one added and one modified

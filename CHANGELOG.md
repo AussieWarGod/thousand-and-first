@@ -10,6 +10,8 @@ below it.
 
 ## Unreleased — Brush forage
 
+- Stale plot boundaries stop forage with an explicit authority warning, not a misleading scrub
+  exhaustion report. A healthy pass rearms blocked warnings even when no cut is needed or possible.
 - Huge retained brush stacks cannot wrap the forage census below its ceiling. Raw custody
   counting saturates before addition overflows, without changing delivery-credit accounting.
 
@@ -127,10 +129,10 @@ below it.
   exactly what it read before.
 
 > **Current unreleased census — exact structural gate passed.** Current 3071-file census is line-cap green:
-> 435,876 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> 435,903 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1430 files, 0 of them over the line limit. Inventory SHA-256:
-> `797cadfbd6c58fadd6747f80b627a20b8a910d2e2a54af8f10dbbcc71cfceb4e` (three new production files
+> `1f990b13abe80b98ec3ce022dc4ff3578fc998012261160e9a303840fa59ab72` (three new production files
 > from the brush-forage duty, T-forage-1).
 > The generated cold-install inventory contains 3102 files; no new subscription claim.
 > This digest is the stockpile deposit custody fix merged over `dev` at `862f14d` (the unattended

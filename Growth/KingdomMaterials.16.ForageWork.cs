@@ -41,6 +41,14 @@ namespace ThousandAndFirst
 			return false;
 		}
 
+		private static bool ForagePlotAuthorityExact(KingdomSurvey Survey, Zone Z)
+		{
+			foreach (GameObject root in Survey.ForagePlots)
+				if (!GameObject.Validate(root) || root.CurrentZone != Z
+					|| !KingdomPlots.TryReadRect(root, out _)) return false;
+			return true;
+		}
+
 		private static bool ForageCandidate(GameObject Item, Cell Cell, KingdomSurvey Survey)
 		{
 			if (!GameObject.Validate(Item) || Cell == null || Item.CurrentCell != Cell
@@ -105,13 +113,14 @@ namespace ThousandAndFirst
 			return held;
 		}
 
-		private static void WorkForage(KingdomSystem System, Zone Z, KingdomSurvey Survey,
+		/// <summary>True while an applicable block remains; false also covers healthy no-cut passes.</summary>
+		private static bool WorkForage(KingdomSystem System, Zone Z, KingdomSurvey Survey,
 			GameObject Heart, r_KingdomForage State, int Hands, int Days)
 		{
 			if (State.Held)
 			{
 				ForageBlocked(System, State, "The brush duty is held for inspection: an earlier removal or bundle could not be accounted for. Nothing is cut or issued again.");
-				return;
+				return true;
 			}
 			if (!GameObject.Validate(Heart) || Heart.CurrentZone != Z
 				|| Heart.GetPart<r_KingdomForage>() != State
@@ -121,13 +130,18 @@ namespace ThousandAndFirst
 				|| riteY < heartRect.Y1 || riteY > heartRect.Y2)
 			{
 				ForageBlocked(System, State, "The brush duty cannot prove the rite ground. Nothing is cut.");
-				return;
+				return true;
+			}
+			if (!ForagePlotAuthorityExact(Survey, Z))
+			{
+				ForageBlocked(System, State, "The brush duty cannot prove the plot boundaries. Nothing is cut.");
+				return true;
 			}
 			MaterialStock stock = Stock(Z);
 			if (!stock.InputLeaseAuthorityExact)
 			{
 				ForageBlocked(System, State, "The brush duty cannot prove the stores' commitments. Nothing is cut.");
-				return;
+				return true;
 			}
 			int held = ForageCeilingHeld(stock);
 			bool enough = held >= KingdomMaterialRules.ForageCeilingUnits;
@@ -135,7 +149,7 @@ namespace ThousandAndFirst
 				System.Ledger.Note("The stockpiles hold brush enough; the scrub is left standing.");
 			if (KingdomMaterialRules.ForageAnnounce(ref State.NoHandsAnnounced, Hands <= 0))
 				System.Ledger.Note("The camp has nobody free to cut scrub.");
-			if (enough || Hands <= 0 || Days <= 0) return;
+			if (enough || Hands <= 0 || Days <= 0) return false;
 			var plants = new List<ForagePlant>();
 			foreach (GameObject item in Survey.ForagePlants)
 			{
@@ -144,6 +158,11 @@ namespace ThousandAndFirst
 					|| KingdomMaterialRules.ForageDistance(cell.X, cell.Y, riteX, riteY)
 						> KingdomMaterialRules.ForageRadius || !ForageCandidate(item, cell, Survey)) continue;
 				plants.Add(new ForagePlant { Item = item, Cell = cell, Id = item.ID });
+			}
+			if (!ForagePlotAuthorityExact(Survey, Z))
+			{
+				ForageBlocked(System, State, "The brush duty lost the plot boundaries while surveying. Nothing is cut.");
+				return true;
 			}
 			if (KingdomMaterialRules.ForageAnnounce(ref State.NoBrushAnnounced, plants.Count == 0))
 				System.Ledger.Note("The scrub within " + KingdomMaterialRules.ForageRadius + " paces of "
@@ -165,14 +184,20 @@ namespace ThousandAndFirst
 					|| !System.Founded || !System.ClaimedZones.Contains(Z.ZoneID))
 				{
 					ForageBlocked(System, State, "The brush duty lost its heart or stock authority. Nothing more is cut.");
-					return;
+					return true;
 				}
 				if (ForageCeilingHeld(stock) >= KingdomMaterialRules.ForageCeilingUnits) break;
-				if (!ForageCandidate(item, plant.Cell, Survey) || item.ID != plant.Id) continue;
+				bool candidate = ForageCandidate(item, plant.Cell, Survey);
+				if (!ForagePlotAuthorityExact(Survey, Z))
+				{
+					ForageBlocked(System, State, "The brush duty lost the plot boundaries before cutting. Nothing more is cut.");
+					return true;
+				}
+				if (!candidate || item.ID != plant.Id) continue;
 				if (!KingdomOrdinaryCustody.TryProveEmpty(item, out _))
 				{
 					ForageBlocked(System, State, "A scrub plant now holds another object; it is left untouched.");
-					return;
+					return true;
 				}
 				State.Held = true;
 				bool gone = false;
@@ -182,7 +207,7 @@ namespace ThousandAndFirst
 				{
 					State.Held = gone || item.CurrentCell != plant.Cell;
 					ForageBlocked(System, State, "A scrub plant refused removal or changed custody. No brush was credited.");
-					return;
+					return true;
 				}
 				KingdomSurvey.ObserveRemovedFromActive(Z, item);
 				// A destroy callback may replace the heart or revoke the settlement's ground.
@@ -194,7 +219,7 @@ namespace ThousandAndFirst
 					|| !System.ClaimedZones.Contains(Z.ZoneID))
 				{
 					ForageBlocked(System, State, "The cut brush lost its heart or stock authority. The duty is held for inspection; no bundle was issued.");
-					return;
+					return true;
 				}
 				int spilled;
 				KingdomDepositCustody custody;
@@ -202,19 +227,20 @@ namespace ThousandAndFirst
 				catch
 				{
 					ForageBlocked(System, State, "The cut brush could not be accounted for. The duty is held for inspection rather than issuing it twice.");
-					return;
+					return true;
 				}
 				if (custody != KingdomDepositCustody.Settled)
 				{
 					ForageBlocked(System, State, "The cut brush's custody is unproved. The duty is held for inspection rather than issuing it twice.");
-					return;
+					return true;
 				}
 				State.Held = false;
 				State.BlockedAnnounced = false;
 				if (KingdomMaterialRules.ForageAnnounce(ref State.NoRoomAnnounced, spilled > 0))
 					System.Ledger.Note("The stockpiles will not take another bundle; it is stacked where it was cut.");
-				if (spilled > 0) return;
+				if (spilled > 0) return false;
 			}
+			return false;
 		}
 
 		/// <summary>Live physical store count; does not attach state or advance the duty.</summary>

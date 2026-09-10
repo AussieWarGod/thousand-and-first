@@ -16,6 +16,12 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
+Unreleased forage recovery checks: Taf14,106 / Portable5,260, zero skips; four Linux compile
+modes plus ABI pass. Focused forage tests45/45 and full portable audit pass. Reversing the
+healthy-pass warning rearm or the pre-cut plot-authority guard each fails its source-contract
+test; restored copies pass. Native forage behavior remains pending camp integration; these
+checks do not sign gameplay or a release.
+
 ## Current repository integration state — PR #6 merged, main protection updated
 
 Documentation/hardening PR #6, "Post-0.3.1 Alpha hardening and release closeout", was
@@ -124,12 +130,12 @@ The heart-ingress endpoints are unchanged and refusal is still fail-closed with 
 Current census after merging `dev` (the Kingdom Quickstart tent rows, the first-basin water store,
 the stockpile unit capacity, the render-only city sight, the shelter ingress and the stockpile
 deposit custody fix included) and the brush-forage duty (T-forage-1): 3071
-staged C# files; 435,876 physical lines; 3102 files in the generated
+staged C# files; 435,903 physical lines; 3102 files in the generated
 cold-install inventory. Staged compilation covers 3071 sources, baseline and compatibility symbols
 (the optional-mod bridge is compatibility-only), run here by Roslyn
 9.0.306 on Linux against the licensed Managed references with warnings as
 errors. Direct `XRL` imports: 1430 files, 0 over the line limit.
-Inventory SHA-256: `797cadfbd6c58fadd6747f80b627a20b8a910d2e2a54af8f10dbbcc71cfceb4e` (three new
+Inventory SHA-256: `1f990b13abe80b98ec3ce022dc4ff3578fc998012261160e9a303840fa59ab72` (three new
 production files: `Growth/KingdomMaterials.00.r_KingdomForage.cs`,
 `Growth/KingdomMaterialRules.Forage.cs`, `Growth/KingdomMaterials.16.ForageWork.cs`).
 Before the merge, all four `Tools/gate.sh` modes compiled clean on the shelter-ingress delta's own

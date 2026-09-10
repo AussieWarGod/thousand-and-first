@@ -88,6 +88,35 @@ namespace ThousandAndFirst.Tests
 		private static string Read(string path) => TestMain.ReadRepositoryText(path);
 
 		[Test]
+		public void HealthyNoCutPassRearmsBlockedAnnouncement()
+		{
+			string caller = Read("Growth/KingdomMaterials.10.SettlementPassAndYards.cs");
+			Assert.That(caller, Does.Contain("forage != null && !WorkForage(System, Z, Survey, forageHeart, forage, hands, forageDays)"));
+			Assert.That(caller, Does.Contain("KingdomMaterialRules.ForageAnnounce(ref forage.BlockedAnnounced, false)"));
+			string work = Read("Growth/KingdomMaterials.16.ForageWork.cs");
+			Assert.That(work, Does.Contain("if (enough || Hands <= 0 || Days <= 0) return false;"));
+			Assert.That(work, Does.Contain("if (spilled > 0) return false;"));
+			Assert.That(work, Does.Contain("Nothing is cut or issued again.\");\n\t\t\t\treturn true;"));
+		}
+
+		[Test]
+		public void StalePlotAuthorityCannotBeReportedAsExhaustedScrub()
+		{
+			string work = Read("Growth/KingdomMaterials.16.ForageWork.cs");
+			Assert.That(work, Does.Contain("private static bool ForagePlotAuthorityExact(KingdomSurvey Survey, Zone Z)"));
+			Assert.That(work, Does.Contain("!GameObject.Validate(root) || root.CurrentZone != Z"));
+			Assert.That(work, Does.Contain("!KingdomPlots.TryReadRect(root, out _)) return false;"));
+			Assert.That(work.Split(new[] { "if (!ForagePlotAuthorityExact(Survey, Z))" },
+				StringSplitOptions.None).Length - 1, Is.EqualTo(3));
+			int surveyed = work.IndexOf("lost the plot boundaries while surveying", StringComparison.Ordinal);
+			Assert.That(surveyed, Is.GreaterThan(work.IndexOf("foreach (GameObject item in Survey.ForagePlants)", StringComparison.Ordinal)));
+			Assert.That(surveyed, Is.LessThan(work.IndexOf("ref State.NoBrushAnnounced", StringComparison.Ordinal)));
+			int precut = work.IndexOf("lost the plot boundaries before cutting", StringComparison.Ordinal);
+			Assert.That(precut, Is.GreaterThan(work.IndexOf("bool candidate = ForageCandidate", StringComparison.Ordinal)));
+			Assert.That(precut, Is.LessThan(work.IndexOf("TryProveEmpty(item", StringComparison.Ordinal)));
+		}
+
+		[Test]
 		public void CheckpointPrecedesStrikeAndClearanceExcludesForage()
 		{
 			string source = Read("Growth/KingdomMaterials.10.SettlementPassAndYards.cs");

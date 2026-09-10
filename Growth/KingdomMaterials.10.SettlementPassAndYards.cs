@@ -99,7 +99,8 @@ namespace ThousandAndFirst
 				WorkClearance(System, Z, stakeObject, stake, hands, timeTicks);
 				return;
 			}
-			if (forage != null) WorkForage(System, Z, Survey, forageHeart, forage, hands, forageDays);
+			if (forage != null && !WorkForage(System, Z, Survey, forageHeart, forage, hands, forageDays))
+				KingdomMaterialRules.ForageAnnounce(ref forage.BlockedAnnounced, false);
 		}
 
 		/// <summary>Tick a yard last turned raw stock into refined, written as a string for the
