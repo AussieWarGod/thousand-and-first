@@ -18,7 +18,7 @@ namespace ThousandAndFirst.Harness
 			}
 			catch (Exception error)
 			{
-				KingdomScenarioTravel.Fault = error.Message;
+				KingdomScenarioTravel.Fault = KingdomScenarioRefusal.Message("taf-travel-refused", error.Message);
 				KingdomScenarioTravel.State = KingdomScenarioTravel.Phase.Failed;
 				KingdomScenarioJournal.Append("travel-refused", false, error.Message);
 				Faulted = true; return false;
@@ -55,17 +55,17 @@ namespace ThousandAndFirst.Harness
 			// time or turn the lack of an unbound observation into a zero receipt.
 			if (KingdomSurvey.HasBoundPass) return;
 			KingdomScenarioTravel.Require(KingdomCity.TryReadNativeTravelDemand(
-				KingdomScenarioTravel.System, The.Player?.CurrentZone, out int owed, out bool settled),
+				KingdomScenarioTravel.System, The.Player?.CurrentZone, out int physicalThirds, out bool settled),
 				"physical demand census unavailable or blocked; no zero proof");
 			KingdomScenarioTravel.Require(KingdomScenarioTravel.Fault == null, KingdomScenarioTravel.Fault);
 			KingdomScenarioTravel.DemandObserved = true;
 			KingdomScenarioTravel.ReturnDemandObserved = true;
-			KingdomScenarioTravel.PeakDemand = Math.Max(KingdomScenarioTravel.PeakDemand, owed);
-			KingdomScenarioTravel.RemainingDemand = owed;
+			KingdomScenarioTravel.PeakDemand = Math.Max(KingdomScenarioTravel.PeakDemand, physicalThirds);
+			KingdomScenarioTravel.RemainingDemand = physicalThirds;
 			if (KingdomScenarioTravel.FirstHomeTurn < 0) KingdomScenarioTravel.FirstHomeTurn = The.Game.Turns;
 			KingdomScenarioTravel.Require(KingdomScenarioTravelRules.TryObserveZero(
 				KingdomScenarioTravel.FirstHomeTurn, KingdomScenarioTravel.ZeroTurn, The.Game.Turns,
-				owed, settled, out long zero), "physical zero observation has invalid clocks");
+				physicalThirds, settled, out long zero), "physical zero observation has invalid clocks");
 			KingdomScenarioTravel.ZeroTurn = zero;
 		}
 
@@ -81,7 +81,10 @@ namespace ThousandAndFirst.Harness
 				// Re-prove the physical reading: the ordinary perf helper may report zero
 				// on a failed measurement, which is not sufficient evidence for this fixture.
 				try { ObserveGround(); }
-				catch (Exception error) { KingdomScenarioTravel.Fault = error.Message; }
+				catch (Exception error)
+				{
+					KingdomScenarioTravel.Fault = KingdomScenarioRefusal.Message("taf-travel-refused", error.Message);
+				}
 			}
 			if (owed < 0 || owed > 312 * 3) KingdomScenarioTravel.Fault = "physical demand exceeds 312-unit envelope";
 		}

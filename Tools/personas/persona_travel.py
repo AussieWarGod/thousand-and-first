@@ -81,7 +81,7 @@ def assess(rows, mode, require_economic=False):
         if (warmup is None or not 1200 <= int(warmup[1]) <= 9223372036854775807
                 or advances[1:-1] != [f"{n} turn(s) elapsed of {n} requested" for n in prefix]
                 or drain is None or not 39 <= int(drain[1]) <= 9223372036854775807):
-            raise ValueError("travel requires exact warmup/wait and a completed requested 39-turn drain advance")
+            raise ValueError("travel requires completed 1200-turn warmup, exact intervening waits, and completed requested 39-turn drain advance")
         names = [row[0] for row in rows]
         expected = ["realize", "advance-complete", "beta-" + mode]
         if economic:

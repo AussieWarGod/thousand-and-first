@@ -266,9 +266,9 @@ namespace ThousandAndFirst.Tests
 			string source = TestMain.ReadRepositoryText("Harness/KingdomScenarioTravelDriver.cs");
 			StringAssert.Contains("[HarmonyPatch(typeof(KingdomCity), \"Receipt\")]", source);
 			StringAssert.Contains("KingdomScenarioTravelRules.TryObserveZero(", source);
-			StringAssert.Contains("owed, settled, out long zero", source);
+			StringAssert.Contains("physicalThirds, settled, out long zero", source);
 			StringAssert.Contains("if (KingdomSurvey.HasBoundPass) return", source);
-			StringAssert.Contains("KingdomScenarioTravel.RemainingDemand = owed", source);
+			StringAssert.Contains("KingdomScenarioTravel.RemainingDemand = physicalThirds", source);
 		}
 	}
 }
