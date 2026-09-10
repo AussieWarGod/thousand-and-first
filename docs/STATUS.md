@@ -37,7 +37,18 @@ Inventory SHA-256: `77b1ebee200d1e49bae4b5f74aafd5cb81c91f4415202f38fb5162eefdd3
 The structural review binding remains open for this changed inventory. Earlier censuses below
 are retained checkpoints, not evidence for the hotfix.
 
-## Current repository integration state — PR #6 merged, main protection updated
+## Current repository release integration policy
+
+GitHub verified 2026-09-10: `dev` is the default branch; merge commits and squash are enabled,
+rebase merges disabled. Neither branch requires linear history. Both require repository-audit
+and the Ubuntu full/portable lane; `main` also enforces strict up-to-date checks and admin
+protection. `dev` retains non-strict checks and its existing admin bypass. Release promotion
+uses a merge commit to preserve candidate ancestry, never a squash. No settings were changed
+for the hotfix. See [release branch model](RELEASING.md#branch-model).
+
+## Retained integration checkpoint — PR #6, 2026-09-07
+
+The configuration below describes that historical checkpoint, not today's protection.
 
 Documentation/hardening PR #6, "Post-0.3.1 Alpha hardening and release closeout", was
 squash-merged to `main` as `be3f13a` at 2026-09-07T22:34:54Z by the author. Its branch

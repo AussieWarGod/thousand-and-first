@@ -553,12 +553,14 @@ This is the branch model **in force**, not a proposal. `dev` exists on origin, i
 the repository default branch; `main` is protected and release-only.
 
 - `dev` is the default integration branch. Feature branches and isolated worktrees target `dev`;
-  normal CI runs there and on pull requests. Its protection requires the three status checks
-  (`repository-audit` and both portable test lanes), linear history, no force-push and no deletion.
+  normal CI runs there and on pull requests. As verified through GitHub on 2026-09-10, protection
+  requires `repository-audit` and `full pure + portable tests (ubuntu-latest)`, no force-push
+  and no deletion. Linear history is not required; merge commits and squash are enabled.
   It is currently weaker than `main` in two respects — `enforce_admins` is off and the strict
   up-to-date requirement is off — which is a deliberate maintainer convenience, not an oversight.
-- `main` stays protected and release-only, with the same required checks plus strict up-to-date,
-  linear history and `enforce_admins` on.
+- `main` stays protected and release-only, with the same required checks plus strict up-to-date
+  and `enforce_admins` on. Linear history is not required. The release workflow still exercises
+  both supported hosted operating systems; that is separate from the integration requirements.
 - A release pull request moves one frozen, reviewed `dev` tree to `main` without changing package
   bytes. Direct pushes and force-pushes stay disabled.
 - Tag the exact resulting `main` commit with an annotated `v<version>` tag. The public lane of the
@@ -577,20 +579,24 @@ discharges the old precondition for flipping the default branch.
 
 #### Release pull requests require a merge commit
 
-**Open point for the author; the pipeline cannot work around it.** A release pull request from
+A release pull request from
 `dev` to `main` must preserve the exact commit SHAs of the frozen tree, because the packager's
 `--alpha` mode refuses unless the candidate record's `candidateCommit` — the receipt-binding commit
 created on `dev` — is an ancestor of the tagged `main` commit.
 
 GitHub's squash and rebase merge methods both rewrite commit SHAs, so either one breaks that
-ancestry. The repository is currently configured squash-only (`allow_merge_commit` and
-`allow_rebase_merge` are both false), and force-pushes are disabled on both branches, so **no
-currently enabled merge method preserves the binding**. Enabling merge commits for release pull
-requests is a repository-settings change and is left to the author; until it is made, a 0.3.x
-release must either be assembled directly on `main` through an ordinary pull request, or the
-candidate record must be regenerated on `main` after the receipt-binding commit has landed there.
-Note that enabling merge commits interacts with `main`'s linear-history rule, which must be
-reconsidered in the same decision.
+ancestry. Verified on 2026-09-10: `allow_merge_commit=true`, `allow_squash_merge=true`,
+`allow_rebase_merge=false`, and neither protected branch requires linear history. Use an ordinary
+merge commit for release and hotfix promotion; do not squash away a candidate's receipt binding.
+This records the existing repository configuration, not permission to alter its protection.
+
+An isolated hotfix may be assembled through ordinary PRs onto `main`, then back-merged through
+a PR into `dev` so its private-candidate commit is reachable there before a staging tag is pushed.
+Bind private installed evidence in a later commit, then make the public-only metadata flip and
+tag the exact resulting `main` tip. Every intermediate PR retains normal required checks.
+Unfinished `dev` features must not be merged into the isolated hotfix merely to gain staging
+ancestry; merge the hotfix outward instead. Never push a staging or public tag before that lane's
+proof is complete, and never treat an upload callback as installed-delivery verification.
 
 ### Uploader boundary
 
