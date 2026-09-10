@@ -1,0 +1,16 @@
+# Real founding on the #107 camp (canvas horseshoe, dedicated heart stockpile), four really
+# enrolled residents, and one planted object per exclusion category. Every check after setup reads
+# outcomes the REAL settlement-pass cadence produced on real turns this script's own `advance`
+# spends -- the seam never calls the private WorkForage directly. Synthetic setup only: the camp,
+# residents, plants, and the phase-4 routed-reservation marker are all harness-planted and
+# disclosed as such in every report line. Not ordinary play, not a rendered Charter, no cold-load
+# or general camp-acceptance claim. Depends on #107 (T-camp) for the stockpile and canvas; merge
+# after #107 and #109.
+DESCRIPTION=brush forage removes only eligible scrub, gains exact stock, respects the ceiling including reserved units, and exhaustion re-arms
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;forage-setup;advance 2400;forage-check;advance 2400;forage-check;advance 2400;forage-check;advance 2400;forage-check;advance 2400;forage-check;stagedigest
+VERBS=forage-setup,forage-check
+EXPECT=stagedigest:OK~founded=false,forage-setup:OK~native-forage phase=1,advance:OK,forage-check:OK~native-forage phase=2,advance:OK,forage-check:OK~native-forage phase=3,advance:OK,forage-check:OK~native-forage phase=4,advance:OK,forage-check:OK~native-forage phase=5,advance:OK,forage-check:OK~native-forage cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
+SET=forage,native-regression,test-only
+TIMEOUT=1800
