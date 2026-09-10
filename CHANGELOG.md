@@ -209,8 +209,11 @@ below it.
   `Tools/personas/deposit-overflow-native-check.persona`). Four cases: an ordinary delivered parcel
   into the store and onto bare ground; a real held stack at exactly `int.MaxValue` that still reads
   and still credits; and a total past `int.MaxValue` refusing on both hosts with zero credit and
-  every standing body proved unchanged by identity, blueprint, raw count, ZONE, cell and holder —
-  so the same coordinates in another zone can never read as unmoved. The store the suite delivers
+  every standing body proved unchanged by identity, blueprint, raw count and the exact zone, cell
+  and holder OBJECTS — compared by reference, never by id, so a replacement holder or a rebuilt
+  zone wearing the same id cannot read as unmoved. A body is admitted only in exactly one custody
+  (in a cell and nobody's inventory, or in the exact container and no cell), with an assigned id
+  and a positive raw count. The store the suite delivers
   into is the fixture's own chest, dedicated through the production check-in
   (`KingdomMaterials.DedicateStockpile`) rather than stamped, so this ticket takes no dependency on
   another ticket's heart stockpile. The three ground cases reserve three DISTINCT cells before any

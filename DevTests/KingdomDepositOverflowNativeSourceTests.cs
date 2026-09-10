@@ -17,6 +17,7 @@ namespace ThousandAndFirst.Tests
 		private const string Cases = "Harness/KingdomDepositOverflowNativeCases.cs";
 		private const string Persona = "Tools/personas/deposit-overflow-native-check.persona";
 		private const string Reservation = "Harness/KingdomDepositOverflowReservation.cs";
+		private const string BodyShard = "Harness/KingdomDepositOverflowNativeBody.cs";
 
 		private static string Read(string Path) { return TestMain.ReadRepositoryText(Path); }
 
@@ -129,7 +130,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AnUnchangedBodyIsProvedByReferenceNotByAnyIdString()
 		{
-			string checks = Read(Checks);
+			string checks = Read(BodyShard);
 			foreach (string token in new[] { "Item.IDIfAssigned == Id",
 				"Item.Blueprint == Blueprint",
 				"KingdomMaterials.RawPhysicalCountOf(Item) == RawCount",
@@ -158,7 +159,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AdmissionRefusesMixedCustodyAndUnidentifiedOrEmptyBodies()
 		{
-			string checks = Read(Checks);
+			string checks = Read(BodyShard);
 			foreach (string token in new[] {
 				"ReferenceEquals(Item.CurrentCell, Ground)",
 				"Item.Physics != null && Item.Physics.InInventory == null",
@@ -174,7 +175,7 @@ namespace ThousandAndFirst.Tests
 			string fixture = Read(Fixture);
 			Assert.That(fixture, Does.Contain("Body.OnGround(item, Cell)"));
 			Assert.That(fixture, Does.Contain("Body.InStore(item, Container)"));
-			Assert.That(checks, Does.Not.Contain("internal Body(GameObject Item)"),
+			Assert.That(Read(BodyShard), Does.Not.Contain("internal Body(GameObject Item)"),
 				"a body may only be admitted through a mode-checked factory");
 		}
 
