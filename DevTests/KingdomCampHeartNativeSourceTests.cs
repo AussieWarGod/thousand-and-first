@@ -227,6 +227,21 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void FreshMaterialIdentityIsAllocatedBeforeInsertionAndOnlyObservedAfterwards()
+		{
+			string source = Read(Fixture);
+			int mint = source.IndexOf("private void Mint(", StringComparison.Ordinal);
+			int allocate = source.IndexOf("string id = unit.ID;", mint, StringComparison.Ordinal);
+			int insert = source.IndexOf("Store.Inventory.AddObject(unit", mint, StringComparison.Ordinal);
+			int reproof = source.IndexOf("Require(unit.IDIfAssigned == id && !Ids.Contains(id)", mint, StringComparison.Ordinal);
+			Assert.That(allocate, Is.GreaterThan(mint));
+			Assert.That(insert, Is.GreaterThan(allocate));
+			Assert.That(reproof, Is.GreaterThan(insert));
+			Assert.That(System.Text.RegularExpressions.Regex.IsMatch(Read(Reads), @"\b(?:Item|item)\.ID\b"), Is.False);
+			Assert.That(Read(Checks), Does.Contain("synthetic-material-identities=true"));
+		}
+
+		[Test]
 		public void PersonaBracketsTheExactPhasesAndDisclosesEverySyntheticInput()
 		{
 			string persona = Read(Persona);

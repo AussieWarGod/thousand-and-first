@@ -195,12 +195,15 @@ namespace ThousandAndFirst.Harness
 				for (int i = 0; i < Units; i++)
 				{
 					GameObject unit = Create(blueprint);
+					// Allocate identity only for this fresh synthetic fixture body, before custody publication.
+					string id = unit.ID;
+					Require(!string.IsNullOrEmpty(id) && unit.IDIfAssigned == id,
+						"a fresh fixture unit did not acquire its engine identity");
 					GameObject accepted = Store.Inventory.AddObject(unit, null,
 						Silent: true, NoStack: true);
 					Require(ReferenceEquals(accepted, unit),
 						"a minted unit did not land as its own physical unit in the camp store");
-					string id = unit.IDIfAssigned;
-					Require(!string.IsNullOrEmpty(id) && !Ids.Contains(id),
+					Require(unit.IDIfAssigned == id && !Ids.Contains(id),
 						"a minted unit has no unique assigned identity");
 					Ids.Add(id);
 				}

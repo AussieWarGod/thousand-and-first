@@ -54,6 +54,7 @@ namespace ThousandAndFirst.Harness
 				: "native-camp-heart phase=" + Retained.Phase)
 				+ "; synthetic-camp=true; synthetic-residents=true; synthetic-store-contents=true"
 				+ "; synthetic-drams=true; synthetic-born-provenance=true"
+				+ "; synthetic-material-identities=true"
 				+ "; improvement-notice-premarked=true"
 				+ "; stockpile-refusal-reason-claimed=false"
 				+ "; ordinary-acceptance=false; charter=untested; save-load=untested"

@@ -29,6 +29,16 @@ Camp native proof remains pending. Earlier counts below sign only their named fr
 Paid-upgrade rung publication is a separate suspected defect;
 no rung-3 or general camp acceptance is claimed.
 
+First combined native `8c82521` (`j1Ck3c`, seed `#165939435`) refused in setup because a
+fresh material unit had no assigned identity; no upgrade phase ran. Owned process stopped,
+evidence retained. Follow-up explicitly allocates each owned synthetic material body's engine
+identity before inventory insertion, then re-proves the same assigned identity afterward.
+Observers remain non-minting; the strict identity admission is not relaxed. The report and
+persona disclose this setup allocation. Follow-up four-mode compile and audit pass; main 14,342
+and portable 5,492 tests pass with zero skips. Thirteen focused source checks pass; replacing
+the allocating getter with read-only lookup causes one source assertion failure, and restored
+code passes. Corrected native proof remains pending.
+
 ## Unreleased camp-heart native seam (PR #107 native case 2)
 
 A dev-only scenario seam (`Harness/KingdomCampHeartNative*.cs`, persona
