@@ -39,8 +39,8 @@ generated cold-install inventory. Scope-only compile inventory: 3069 sources, ba
 These compile receipts precede the fresh-ID and version integration; combined receipts are pending.
 Direct `XRL` imports: 1430 files, 0 over the line limit. Zero files at or above 300 lines.
 Inventory SHA-256: `249d3bb40ca34f57289770494e985a97e81cf42c2bae8f053fb6e14005b61d3d`.
-The structural review binding remains open for this changed inventory. Earlier censuses below
-are retained checkpoints, not evidence for the hotfix.
+The exact-inventory structural review is current; see [0.3.3 review](STRUCTURE_REVIEW_0_3_3.md).
+This is source review, not native or release acceptance. Earlier censuses below are retained checkpoints.
 
 ## Current repository release integration policy
 

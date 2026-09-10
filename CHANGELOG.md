@@ -33,8 +33,8 @@ claimed from the fresh-world regression.
 Current 3069-file census is line-cap green: 435,617 physical lines; direct `XRL`
 imports occur in 1430 files, 0 of them over the line limit. Inventory SHA-256:
 `249d3bb40ca34f57289770494e985a97e81cf42c2bae8f053fb6e14005b61d3d`.
-The generated cold-install inventory contains 3100 files. Semantic review and native
-successful commissioning remain open; prior release receipts do not cover this delta.
+The generated cold-install inventory contains 3100 files. Exact-inventory source review is
+current; native successful commissioning remains open. Prior release receipts do not cover this delta.
 
 ## [0.3.2] — 2026-09-09 (Alpha)
 

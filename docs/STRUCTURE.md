@@ -25,8 +25,9 @@ python3 Tools/check-structure.py --release
 `249d3bb40ca34f57289770494e985a97e81cf42c2bae8f053fb6e14005b61d3d`.
 One new local-operation scope helper and five modified production files over 0.3.2:
 three scope callers, fresh starter-material identity allocation and the release version literal.
-No saved fields or serialization formats change. The exact-inventory semantic review remains open; this census
-alone does not approve the transaction boundary. Earlier censuses are retained checkpoints.
+No saved fields or serialization formats change. The exact-inventory semantic review is current;
+see [0.3.3 delta review](STRUCTURE_REVIEW_0_3_3.md). This source review does not replace native
+or release gates. Earlier censuses are retained checkpoints.
 
 ## Retained isolated draft census
 
