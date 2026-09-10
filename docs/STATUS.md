@@ -34,8 +34,44 @@ stacks, NeverStack and allocated identities; ordinary reachability, Charter, sav
 release acceptance are not claimed. Earlier failed native runs remain retained as failures.
 At this exercised head: all four canonical compile modes and installed compatibility ABI pass;
 14329 Taf and 5481 Portable cases pass with zero skips; repository audit passes and CI
-34463125382 passes both jobs. This subsequent documentation-only change does not reattribute
-the native run to different bytes.
+34463125382 passes both jobs. The evidence update and subsequent integration of dev's #133
+fixture do not reattribute the native run to different bytes; merged-tree verification is pending.
+
+## Unreleased economic food-conservation fixture (#133)
+
+The dev-only economic fixture now expects 244 water deliveries / 732 budget thirds within
+the unchanged 252-container envelope and strict 39-turn quiet deadline. Eight larders retain
+their physical food while legacy food debt retires inert; production food behavior is unchanged.
+Observation refuses invalid, extra, missing, non-food or changed-blueprint bodies, nonpositive
+raw counts, contradictory inventory custody, and a larder moved from its recorded ground.
+IDs are read without allocation. Across real unloads this is durable ID/blueprint/count/custody
+evidence, not proof of the same CLR allocation; same-ID replacement remains ambiguous.
+
+Worker checkpoint `a0b384a` passed four canonical compile modes (3074/3078/3255/3259),
+installed compatibility ABI, repository audit (770 checks, six platform skips), and main
+14,294 / portable 5,458 tests with zero skips. Seven source mutation checks failed as intended.
+The root integration retains current dev through `bcca3e5`, including the roadless seal fix.
+Combined-tree four-mode compile passes (3075/3079/3258/3262), as do installed compatibility
+ABI and repository audit (770 checks, six platform skips). Main 14,303 and portable 5,467
+tests pass with zero skips. Native proof remains pending; earlier failed profiles are retained.
+No resident-stress, ordinary-play, save/load or release acceptance is claimed.
+
+Native economic-present at `53022df`, seed `#165939435`, passed 15 verbs / 63 journal rows
+in profile `mlKgm8`: drain 31 turns within 39, peak 24 thirds / zero heavy operations, no
+remaining demand, pause effects proved and stress budget 732. Strict Player.log passed;
+owned PID 28032 stopped, profile and evidence retained. Same-head economic-away `dZxP6D`
+passed 15 verbs / 65 rows with 269 actual travel turns and real unloaded absence. It also
+drained in 31 turns, peak 24 thirds / zero heavy operations, no remaining demand and pause
+effects proved. Strict Player.log passed; owned PID 33964 stopped and evidence retained.
+The matched developer comparison passes with zero deltas in containers, drain turns,
+measured demand, peak thirds and peak heavy operations. Equal total elapsed time is not
+claimed. This remains synthetic, zero-resident-stress evidence, not release acceptance.
+The follow-up uses production's existing `KingdomCatchUpRules.ThirdsPerUnit` constant rather
+than duplicating 3; the computed budget remains 732. Four-mode compile and audit pass;
+main 14,303 / portable 5,467 tests pass, zero skips. Seven focused source checks pass;
+substituting a local literal fails one source assertion, restored code passes.
+Native evidence above signs exact `53022df`; this constant-reference follow-up was not
+separately run natively.
 
 ## Unreleased roadless spatial capture correction (#131)
 

@@ -35,7 +35,7 @@ def economic_rows(mode="away", **changes):
     values = {"containers": "252", "pause-effects-proved": "true", "full-envelope-stress": "true",
               "pause-disabled": "100", "pause-resumed": "15000", "paused-ticks": "14930",
               "resume-arrival": "16200", "resume-applications": "1", "pause-local-start": "80",
-              "pause-prior": "10", "arrival-interval": "1200", "stress-initial-thirds": "756",
+              "pause-prior": "10", "arrival-interval": "1200", "stress-initial-thirds": "732",
               "stress-residents": "0", "synthetic-fixture": "true"}
     values.update(changes)
     result = rows(mode, **values)
@@ -132,7 +132,7 @@ class TravelTests(unittest.TestCase):
         for key, value in (("paused-ticks", "29830"), ("resume-arrival", "31100"),
                            ("resume-applications", "2"), ("pause-local-start", "101"),
                            ("pause-resumed", "100"), ("arrival-interval", "0"),
-                           ("containers", "251"), ("stress-initial-thirds", "753"),
+                           ("containers", "251"), ("stress-initial-thirds", "756"),  # the retired virtual-food-paid claim
                            ("stress-residents", "60"), ("synthetic-fixture", "false"),
                            ("pause-prior", "11"), ("full-envelope-stress", "false")):
             with self.subTest(key=key):

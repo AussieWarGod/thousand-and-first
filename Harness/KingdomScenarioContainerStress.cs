@@ -7,13 +7,27 @@ using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Harness
 {
-	/// <summary>Synthetic physical-capacity fixture, not 220 lawfully commissioned buildings.
-	/// Real containers each have one unit of room; controlled model debt must touch all 252.
-	/// Retains IDs only so the witness cannot keep the home zone cached.</summary>
+	/// <summary>
+	/// Synthetic physical-capacity fixture, not 220 lawfully commissioned buildings. Real
+	/// containers each have one unit of room; controlled model debt must touch every water
+	/// vessel. Food debt retires inert instead of landing on a container
+	/// (<c>Simulation/City/KingdomCity.z05.Reify.cs:41-61</c>, the physical-food ruling in
+	/// <c>docs/STATUS.md</c>'s "Food and water are separate physical flows" paragraph), so the
+	/// eight larders are proved CONSERVED -- exact identity, exact holder, exact raw count,
+	/// before and after -- never delivered a unit. Retains IDs only so the witness cannot keep
+	/// the home zone cached.
+	/// </summary>
 	[KingdomScenarioVerbProvider]
-	public sealed class KingdomScenarioContainerStress : IKingdomScenarioVerbProvider
+	public sealed partial class KingdomScenarioContainerStress : IKingdomScenarioVerbProvider
 	{
 		private const int WaterCount = 244, FoodCount = 8;
+		// LIVING-CITY-ARCHITECTURE 0.0(b) / Core/KingdomRules.cs MaxCivicContainersPerZone: 220
+		// commissioned root containers + 24 water + 8 food = 252 is the container ENVELOPE. This
+		// fixture keeps that physical envelope (244 water + 8 food = 252) unchanged; only the
+		// DEMANDED catch-up thirds shrinks, because food debt retires to zero before container
+		// catch-up ever measures it (z05.Reify.cs:41-53 runs before :56-61's TryMeasure), so its
+		// demand is always zero. 244 water containers * 3 thirds/medium unit = 732, not 252*3=756.
+		private const int InitialThirds = WaterCount * KingdomCatchUpRules.ThirdsPerUnit;
 		private static readonly List<string> WaterIds = new List<string>(), FoodIds = new List<string>();
 		private static XRLGame Game;
 		private static KingdomSystem System;
@@ -43,11 +57,22 @@ namespace ThousandAndFirst.Harness
 					&& state.ZoneCount == 1, "requires one exact founded home outside a survey pass");
 				Attempted = true; // Partial physical fixtures remain retained, never silently retried.
 				Populate(zone); SeedDebt(zone); Ready = true; Ok = true;
-				return "taf-container-stress-ready; containers=252; water=244; food=8; initial-thirds=756; synthetic=true; resident-stress=false";
+				return "taf-container-stress-ready; containers=252; water=244; food=8; initial-thirds="
+					+ InitialThirds + "; synthetic=true; resident-stress=false";
 			}
 			catch (Exception error) { return KingdomScenarioRefusal.Message("taf-container-stress-refused", error.Message); }
 		}
 
+		/// <summary>
+		/// Setup only -- not a conservation observation. <c>HeldIn</c> here is the ordinary,
+		/// dispatching read used only to size how much capacity remains to fill; the raw seam
+		/// (<see cref="KingdomMaterials.RawCensusCountOf"/>) is reserved for the conservation
+		/// proof in <c>FoodConservation.cs</c>. Likewise <c>item.ID</c> below intentionally MINTS
+		/// an identity for a container this fixture just created (<see cref="GameObject.Create"/>
+		/// gives back an unassigned object) so it can be retained and re-found by id after the
+		/// pause; this is the one legitimate assignment-time mint, distinct from every later
+		/// observation, which reads <c>IDIfAssigned</c> and refuses rather than mints.
+		/// </summary>
 		private static void Populate(Zone zone)
 		{
 			var survey = KingdomSurvey.Take(zone, System);
@@ -79,6 +104,7 @@ namespace ThousandAndFirst.Harness
 				Require((amount == 0 || survey.StoreFoodIn(item, amount, crop) == amount)
 					&& KingdomSurvey.HeldIn(item) == capacity - 1, "food population differs");
 				Require(!string.IsNullOrEmpty(item.ID) && ids.Add(item.ID), "container identity repeated"); FoodIds.Add(item.ID);
+				BindFoodBodies(item, crop);
 			}
 		}
 
@@ -112,7 +138,8 @@ namespace ThousandAndFirst.Harness
 			foreach (var liquid in survey.Stores) waterCapacity += liquid.MaxVolume;
 			var stocks = new KingdomStocks(new KingdomStockPair(waterCapacity, waterCapacity),
 				new KingdomStockPair(survey.FoodCapacity, survey.FoodCapacity), row.Stocks.Materials);
-			// The full virtual levels are backed by the explicitly controlled +1/container landing debt.
+			// FoodCount is seeded as LEGACY debt on purpose: the point of this fixture's food arm
+			// is to prove that debt retires inert (z05.Reify.cs:41-53), not to demand a delivery.
 			var nextRow = row.WithReading(Game.TimeTicks, stocks, row.Roofs, row.Defence, row.WaterCarry, row.FoodCarry)
 				.WithOwed(WaterCount, FoodCount, 0);
 			Require(state.TryWithZone(0, nextRow, out var next, out _) && next.TryWithStocks(stocks, out next, out _)
@@ -136,13 +163,11 @@ namespace ThousandAndFirst.Harness
 				Require(liquid != null && survey.Stores.Contains(liquid) && liquid.Volume == liquid.MaxVolume
 					&& KingdomLiquids.HasFreshWater(liquid), "a water container did not receive its owed unit");
 			}
-			foreach (string id in FoodIds)
-			{
-				var item = zone.FindObjectByID(id);
-				Require(item != null && survey.Larders.Contains(item)
-					&& KingdomSurvey.HeldIn(item) == KingdomSurvey.CapacityOf(item), "a larder did not receive its owed unit");
-			}
-			return "; full-envelope-stress=true; stress-initial-thirds=756; stress-residents=0; synthetic-fixture=true";
+			Require(System.City.TryReadExact(out var state, out _) && System.City.TryZoneRow(Home, out int row)
+				&& System.City.ZoneOwedFood[row] == 0, "legacy food debt did not retire inert");
+			VerifyFoodConserved(zone, "final");
+			return "; full-envelope-stress=true; stress-initial-thirds=" + InitialThirds
+				+ "; stress-residents=0; synthetic-fixture=true";
 		}
 
 		internal static void BeforeResume()
@@ -162,12 +187,7 @@ namespace ThousandAndFirst.Harness
 				Require(liquid != null && liquid.Volume == liquid.MaxVolume - 1 && KingdomLiquids.HasFreshWater(liquid),
 					"water debt landed or changed before return resume");
 			}
-			foreach (string id in FoodIds)
-			{
-				var item = zone.FindObjectByID(id);
-				Require(item != null && KingdomSurvey.HeldIn(item) == KingdomSurvey.CapacityOf(item) - 1,
-					"food debt landed or changed before return resume");
-			}
+			VerifyFoodConserved(zone, "pre-resume");
 			ReturnDebtProved = true;
 		}
 

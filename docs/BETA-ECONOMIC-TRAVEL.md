@@ -32,15 +32,29 @@ Open operations, earned arrival debt, unhealthy growth or unsupported authority 
 this is not a general proof of every leased-work recovery path.
 
 The fixture physically populates 244 water vessels and eight larders with exactly one unit
-of room each. It then explicitly seeds 244 water and eight food units of controlled model
-debt while master is off. Each container must receive its own unit through normal physical
-catch-up, retain its ID and finish full. Existing debt is never overwritten. Partial setup
-is retained and cannot retry. Objects are placed only in empty cells away from the travel
-row; no existing object is cleared or moved.
+of room each. It then explicitly seeds 244 units of controlled water model debt, plus eight
+units of controlled LEGACY food model debt, while master is off. Existing debt is never
+overwritten. Partial setup is retained and cannot retry. Objects are placed only in empty
+cells away from the travel row; no existing object is cleared or moved.
+
+**Water and food diverge from here, by production law.** Food-rate minting is retired
+(`Simulation/City/KingdomCity.z05.Reify.cs:41-61`; `docs/STATUS.md`'s "Food and water are
+separate physical flows" ruling): any owed food a zone carries into reification is retired to
+zero — the pantry is preserved exactly as its currently-spendable physical level, never paid
+onto a container — before container catch-up ever measures a food demand. Only the 244 water
+units are real catch-up demand. So each of the **244 water containers** must receive its own
+unit through normal physical catch-up, retain its ID, and finish full; the **eight larders'
+seeded debt must retire to zero while their physical food is CONSERVED exactly** — same body
+identities, same exact holder, same raw count, both before AND after the pause, proved by the
+raw census seam (`KingdomMaterials.RawCensusCountOf`,
+`Growth/KingdomMaterials.RawObservation.cs:48`) rather than the ordinary, dispatching
+`GameObject.Count`. No food is minted, deleted, or relocated by this fixture or by the
+reification it exercises.
 
 This is a **synthetic physical-capacity fixture**, not proof that 220 civic works were
-lawfully commissioned or that an ordinary player produced the debt. It exercises 252
-medium container moves (756 thirds), whose ideal minimum is 32 budgeted turns. The
+lawfully commissioned or that an ordinary player produced the debt. It exercises 244 water
+container moves (732 thirds) — not 252 moves/756 thirds, because the eight larders never
+generate catch-up demand — whose ideal minimum is 31 budgeted turns. The
 production admission ceiling remains **at most 39 turns from first home entry**; the recipe
 also requests a 39-turn advance after returning to the starting cell. Its completion may be
 observed later at an action opportunity or render yield; this does not extend the physical-observation-based
