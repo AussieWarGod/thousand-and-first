@@ -65,7 +65,12 @@ def assess(rows, mode, require_economic=False):
         economic = result["pause-effects-proved"] == "true"
         if require_economic and not economic:
             raise ValueError("economic persona cannot accept a continuity-only witness")
-        if result["mode"] != mode or any(row[1] != "OK" for row in rows):
+        # Provider admission describes the installed profile, not a failed scripted step.
+        # Keep these rows available for operator warnings, but exempt only their exact
+        # legal refusal outcome. Other bookkeeping and travel failures still refuse.
+        failed_outcome = any(outcome != "OK" and (verb, outcome) != ("VERB-REFUSED", "REFUSED")
+                             for verb, outcome, _message in rows)
+        if result["mode"] != mode or failed_outcome:
             raise ValueError("travel mode or a journal outcome differs")
         advances = [row[2] for row in rows if row[0] == "advance-complete"]
         if advances != [f"{n} turn(s) elapsed of {n} requested" for n in ((1, 1, 1, 1200, 39) if economic else (1, 1200, 39))]:

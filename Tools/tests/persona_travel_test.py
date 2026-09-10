@@ -48,6 +48,34 @@ def economic_rows(mode="away", **changes):
 
 
 class TravelTests(unittest.TestCase):
+    def test_provider_admission_refusal_is_not_a_travel_failure(self):
+        for fixture in (rows, economic_rows):
+            for mode in ("away", "present"):
+                with self.subTest(fixture=fixture.__name__, mode=mode):
+                    journal = [("VERB-REFUSED", "REFUSED", "unrelated provider admission")]
+                    journal += fixture(mode)
+                    self.assertEqual(travel.assess(journal, mode, fixture is economic_rows), [])
+
+    def test_provider_admission_refusals_do_not_break_a_matched_pair(self):
+        warning = ("VERB-REFUSED", "REFUSED", "unrelated provider admission")
+        for fixture in (rows, economic_rows):
+            with self.subTest(fixture=fixture.__name__):
+                try:
+                    result = travel.compare([warning] + fixture("present"),
+                                            [warning] + fixture("away"))
+                except ValueError as error:
+                    self.fail("provider admission warning refused a valid pair: " + str(error))
+                self.assertFalse(result["releaseAcceptance"])
+
+    def test_admission_exception_does_not_hide_other_failed_outcomes(self):
+        warning = ("VERB-REFUSED", "REFUSED", "unrelated provider admission")
+        for verb, outcome in (("VERB-REFUSED", "ERROR"), ("VERB-REFUSED", "FAILED"),
+                              ("AUTOSTART", "REFUSED"), ("advance-progress", "REFUSED"),
+                              ("travel-refused", "REFUSED"), ("mod-observer", "ERROR")):
+            with self.subTest(verb=verb, outcome=outcome):
+                self.assertTrue(travel.assess([warning] + rows()
+                                             + [(verb, outcome, "actual failure")], "away"))
+
     def test_economic_pair_proves_only_declared_scope(self):
         self.assertEqual(travel.assess(economic_rows(), "away", True), [])
         self.assertEqual(travel.assess(economic_rows("present"), "present", True), [])
