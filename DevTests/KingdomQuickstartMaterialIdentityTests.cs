@@ -8,8 +8,8 @@ namespace ThousandAndFirst.Tests
 	/// <summary>
 	/// Issue #142: the shipped quickstart's starter material stacks were created, counted and
 	/// inserted without ever being given an engine identity, and the construction-input observer
-	/// refuses an empty one — abandoning the whole observation, so every starter material became
-	/// invisible to building.
+	/// refuses an empty one, abandoning routed-input observation. Ordinary local stock permits
+	/// unassigned identities; its separate missing-survey defect caused the reported menu failure.
 	/// <para>
 	/// In the pinned engine (2.0.211.51) <c>GameObject.IDIfAssigned</c>
 	/// (<c>XRL/World/GameObject.cs:424-434</c>) reads the <c>"id"</c> property without allocating,
