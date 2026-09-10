@@ -27,7 +27,8 @@ namespace ThousandAndFirst.Harness
 		internal const string Receipt = "r_TAF_ScenarioForageNative_v1";
 		private static readonly string[] Script = { "stagedigest", SetupVerb, "advance 2400",
 			CheckVerb, "advance 2400", CheckVerb, "advance 2400", CheckVerb, "advance 2400",
-			CheckVerb, "advance 2400", CheckVerb, "stagedigest" };
+			CheckVerb, "advance 2400", CheckVerb, "advance 2400", CheckVerb, "advance 2400",
+			CheckVerb, "stagedigest" };
 
 		public int ScenarioVerbApiVersion { get { return KingdomScenarioVerbApi.Version; } }
 

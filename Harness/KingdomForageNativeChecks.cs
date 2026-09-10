@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using XRL;
 using XRL.World;
@@ -58,22 +59,81 @@ namespace ThousandAndFirst.Harness
 			KingdomForageNativeProvider.Require(Value, Failure);
 		}
 
+		/// <summary>One exclusion object's identity, position, custody and category fact,
+		/// bound at setup so a recheck proves EVERY fact individually rather than trusting a
+		/// single <c>Validate()</c>.</summary>
+		private sealed class ExclusionSnapshot
+		{
+			internal readonly GameObject Item;
+			internal readonly string Label;
+			internal readonly string Id;
+			internal readonly int X, Y;
+			internal readonly string ZoneId;
+			internal readonly string Owner;
+			internal readonly int Count;
+			internal readonly Func<GameObject, bool> Fact;
+
+			internal ExclusionSnapshot(GameObject Item, string Label, Func<GameObject, bool> Fact)
+			{
+				this.Item = Item; this.Label = Label; this.Fact = Fact;
+				Require(GameObject.Validate(Item),
+					Label + " fixture object failed to validate at setup");
+				Id = Item.IDIfAssigned;
+				Require(Item.CurrentCell != null,
+					Label + " fixture object has no cell at setup");
+				X = Item.CurrentCell.X; Y = Item.CurrentCell.Y;
+				Require(Item.CurrentZone != null,
+					Label + " fixture object has no zone at setup");
+				ZoneId = Item.CurrentZone.ZoneID;
+				Owner = Item.GetPart<Physics>()?.Owner;
+				Count = Item.Count;
+				Require(Fact(Item),
+					Label + " fixture object does not carry its exclusion fact at setup");
+			}
+		}
+
+		/// <summary>One reserved-marker brush unit's identity and the exact marker value it was
+		/// stamped with, bound at creation.</summary>
+		private sealed class ReservedBrush
+		{
+			internal readonly GameObject Item;
+			internal readonly string Id;
+			internal readonly string Marker;
+
+			internal ReservedBrush(GameObject Item, string Marker)
+			{
+				this.Item = Item; this.Marker = Marker;
+				Require(GameObject.Validate(Item),
+					"reserved brush failed to validate at creation");
+				Id = Item.IDIfAssigned;
+			}
+		}
+
 		private sealed partial class Frame
 		{
 			private readonly XRLGame Game;
 			private readonly Zone Zone;
 			private KingdomSystem System;
+			private KingdomSurvey Survey;
 			private GameObject Heart;
 			private int RiteX, RiteY;
 			private KingdomPlotRules.PlotRect HeartRect;
+			private readonly List<KingdomForageNativeGeometry.Rect> PlotRects = new();
+			private readonly HashSet<Cell> UsedOutdoorCells = new();
 			private GameObject StockpileContainer;
-			private GameObject Canvas;
 			private GameObject[] Eligible; // three eligible wild plants
-			private GameObject Tree, Owned, Food, Protected, PlotPlant, ExtraPlant, FinalPlant;
-			private int BrushBefore;
+			private ExclusionSnapshot TreeSnap, OwnedSnap, FoodSnap, ProtectedSnap, PlotSnap, CanvasSnap;
+			private GameObject ExtraPlant, FinalPlant;
+			private readonly List<ReservedBrush> Reserved = new();
+			private int RawBefore, TallyBefore;
+			private int NotesBaseline = -1, NotesAfterFirstExhaustion = -1;
+			private int RawAtCeiling, TallyAtCeiling;
 			internal bool Armed, Done;
 			internal int Phase;
 			internal readonly StringBuilder Evidence = new StringBuilder();
+
+			private const string ExhaustionMarker =
+				"is cut out. There is nothing left here to bind canvas from.";
 
 			internal Frame(XRLGame Game, Zone Zone) { this.Game = Game; this.Zone = Zone; }
 
@@ -88,22 +148,28 @@ namespace ThousandAndFirst.Harness
 				Require(System.Population == 4, "enrollment did not reach population four");
 				Require(KingdomPlots.TryRiteGround(Zone, out RiteX, out RiteY),
 					"the founded camp has no provable rite ground");
-				KingdomSurvey survey = KingdomSurvey.Take(Zone, System);
-				Require(survey != null, "the settlement could not be surveyed after founding");
-				foreach (GameObject item in survey.ForagePlots)
+				Survey = KingdomSurvey.Take(Zone, System);
+				Require(Survey != null, "the settlement could not be surveyed after founding");
+				foreach (GameObject item in Survey.ForagePlots)
 					if (GameObject.Validate(item)
 						&& item.GetIntProperty(KingdomPlots.HeartPlotProperty) == 1) Heart = item;
 				Require(Heart != null, "no heart plot root was found");
 				Require(KingdomPlots.TryReadRect(Heart, out HeartRect),
 					"the heart plot's rect could not be read");
+				CollectPlotRects();
 				KingdomMaterials.MaterialStock stock = KingdomMaterials.Stock(Zone);
 				Require(stock.Stockpiles.Count > 0,
 					"the #107 heart stockpile is missing -- forage has nowhere to deposit brush");
 				StockpileContainer = stock.Stockpiles[0];
-				Canvas = FindCanvas();
-				Require(Canvas != null,
+				GameObject canvas = FindCanvas();
+				Require(canvas != null,
 					"no camp canvas wall stands near the rite -- the #107 horseshoe is missing");
-				BrushBefore = stock.Tally.Get(KingdomMaterial.Brush);
+				RawBefore = CensusBrushRaw(StockpileContainer);
+				TallyBefore = stock.Tally.Get(KingdomMaterial.Brush);
+				Require(RawBefore == 0, "the fresh stockpile already holds physical brush: " + RawBefore);
+				Require(TallyBefore == 0, "the fresh stockpile's available tally is not zero: " + TallyBefore);
+				CanvasSnap = new ExclusionSnapshot(canvas, "camp canvas",
+					item => item.GetTag("BodyType") == "ClothWall");
 				PlantExclusions();
 				Armed = true;
 				Phase = 1;
@@ -111,14 +177,14 @@ namespace ThousandAndFirst.Harness
 					.Append("; population=").Append(System.Population)
 					.Append("; rite=(").Append(RiteX).Append(',').Append(RiteY).Append(')')
 					.Append("; stockpile=").Append(StockpileContainer.IDIfAssigned)
-					.Append("; canvas=").Append(Canvas.IDIfAssigned)
-					.Append("; brush before=").Append(BrushBefore)
+					.Append("; canvas=").Append(CanvasSnap.Id)
+					.Append("; raw before=").Append(RawBefore).Append("; tally before=").Append(TallyBefore)
 					.Append("; eligible=").Append(EvidenceOf(Eligible))
-					.Append("; tree=").Append(EvidenceOf(Tree))
-					.Append("; owned=").Append(EvidenceOf(Owned))
-					.Append("; food=").Append(EvidenceOf(Food))
-					.Append("; protected=").Append(EvidenceOf(Protected))
-					.Append("; plot=").Append(EvidenceOf(PlotPlant));
+					.Append("; tree=").Append(EvidenceOf(TreeSnap.Item))
+					.Append("; owned=").Append(EvidenceOf(OwnedSnap.Item))
+					.Append("; food=").Append(EvidenceOf(FoodSnap.Item))
+					.Append("; protected=").Append(EvidenceOf(ProtectedSnap.Item))
+					.Append("; plot=").Append(EvidenceOf(PlotSnap.Item));
 			}
 		}
 	}
