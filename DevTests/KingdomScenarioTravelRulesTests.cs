@@ -92,6 +92,69 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.IsFalse(KingdomScenarioTravelRules.Drained(100, 139, 1));
 		}
 
+		[TestCase(false, 0, 0, -1)]
+		[TestCase(true, 0, 0, 0)]
+		[TestCase(true, 756, 0, 756)]
+		[TestCase(true, -1, 0, -1)]
+		[TestCase(true, 0, -1, -1)]
+		[TestCase(true, 937, 0, -1)]
+		[TestCase(true, int.MaxValue, int.MaxValue, -1)]
+		public void PhysicalDemandNeverTurnsUnknownOrOverflowIntoZero(bool measured, int containers,
+			int bodies, int expected)
+		{
+			bool valid = KingdomScenarioTravelRules.TryPhysicalDemand(measured, containers, bodies, out int thirds);
+			ClassicAssert.AreEqual(expected >= 0, valid);
+			ClassicAssert.AreEqual(expected, thirds);
+		}
+
+		[Test]
+		public void PhysicalDemandIncludesActualHeavyBodies()
+		{
+			int weight = ThousandAndFirst.Simulation.City.KingdomCatchUpRules.WeightThirds(
+				ThousandAndFirst.Simulation.City.KingdomUnitWeight.Heavy);
+			ClassicAssert.IsTrue(KingdomScenarioTravelRules.TryPhysicalDemand(true, 3, 2, out int thirds));
+			ClassicAssert.AreEqual(3 + 2 * weight, thirds);
+		}
+
+		[TestCase(false, 0, null, 0, 7, 0, true)]
+		[TestCase(true, 100, "home", 7, 7, 100, true)]
+		[TestCase(true, 100, "home", 3, 7, 100, false)]
+		[TestCase(true, 100, "home", 7, 7, 99, false)]
+		[TestCase(true, 100, "home", 0, 7, 99, false)]
+		[TestCase(true, 0, "home", 7, 7, 100, false)]
+		[TestCase(true, 100, null, 7, 7, 100, false)]
+		[TestCase(true, 100, "home", 7, 0, 100, false)]
+		public void PauseAllowsPublishedReceiptButNotTornPass(bool active, long started, string bound,
+			long completed, long required, long published, bool expected)
+			=> ClassicAssert.AreEqual(expected, KingdomScenarioTravelRules.SemanticPauseReady(
+				active, started, bound, completed, required, published, "home"));
+
+		[Test]
+		public void PauseUsesProductionRequiredMaskAndPublicationLaw()
+		{
+			StringAssert.Contains("System.NativeTravelSemanticPauseReady()",
+				TestMain.ReadRepositoryText("Harness/KingdomScenarioPauseWitness.cs"));
+			string source = TestMain.ReadRepositoryText("Harness/KingdomSystem.NativeTravelObservation.cs");
+			StringAssert.Contains("SemanticPassCompletedMask, SemanticRequiredMask, LastSemanticTick", source);
+			StringAssert.Contains("!KingdomSurvey.HasBoundPass", source);
+		}
+
+		[Test]
+		public void QuietGroundUsesMeasuredPhysicalRowsNotAnInventedSpendReceipt()
+		{
+			string source = TestMain.ReadRepositoryText("Harness/KingdomCity.NativeTravelDemand.cs");
+			StringAssert.Contains("ContainerGround.Take(survey)", source);
+			StringAssert.Contains("KingdomContainerCatchUpRules.TryMeasure", source);
+			StringAssert.Contains("if (!measured) return false", source);
+			StringAssert.Contains("Posted(Zone, survey, KingdomStations.Index(Zone)).Count", source);
+			StringAssert.DoesNotContain("GroundDemandThirds(", source);
+			StringAssert.DoesNotContain("SpendTurn(", source);
+			StringAssert.DoesNotContain("Publish(", source);
+			StringAssert.DoesNotContain("Reify(", source);
+			StringAssert.Contains("KingdomScenarioTravelDemandObserver.ObserveGround()",
+				TestMain.ReadRepositoryText("Harness/KingdomScenarioTravel.cs"));
+		}
+
 		[TestCase(100, 3, 100, 3, true)]
 		[TestCase(100, 3, 200, 4, true)]
 		[TestCase(100, 3, 99, 4, false)]

@@ -59,5 +59,25 @@ namespace ThousandAndFirst.Harness
 		// requested wait. This is not the deadline: Drained still requires zero within 39.
 		internal static bool DrainObservationReady(long Arrived, long Observed)
 			=> Arrived >= 0 && Observed >= Arrived && Observed - Arrived >= DrainTurns;
+
+		internal static bool TryPhysicalDemand(bool Measured, int ContainerThirds, int MisplacedBodies,
+			out int Thirds)
+		{
+			Thirds = -1;
+			if (!Measured || ContainerThirds < 0 || MisplacedBodies < 0) return false;
+			long total = ContainerThirds + (long)MisplacedBodies *
+				ThousandAndFirst.Simulation.City.KingdomCatchUpRules.WeightThirds(
+					ThousandAndFirst.Simulation.City.KingdomUnitWeight.Heavy);
+			if (total > 936) return false;
+			Thirds = (int)total;
+			return true;
+		}
+
+		internal static bool SemanticPauseReady(bool Active, long Started, string Bound, long Completed,
+			long Required, long Published, string Requested)
+			=> !Active || (Started > 0 && Required > 0 && !string.IsNullOrEmpty(Bound)
+				&& ThousandAndFirst.Simulation.City.KingdomSemanticClockRules.ReceiptVerdict(
+					Active, Started, Bound, Completed, Required, Published, Requested)
+					== ThousandAndFirst.Simulation.City.KingdomSemanticPassReceiptVerdict.Start);
 	}
 }

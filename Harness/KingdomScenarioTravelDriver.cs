@@ -49,6 +49,21 @@ namespace ThousandAndFirst.Harness
 	[HarmonyPatch(typeof(KingdomCity), "Receipt")]
 	internal static class KingdomScenarioTravelDemandObserver
 	{
+		internal static void ObserveGround()
+		{
+			KingdomScenarioTravel.Require(KingdomCity.TryReadNativeTravelDemand(
+				KingdomScenarioTravel.System, The.Player?.CurrentZone, out int owed),
+				"physical demand census failed; unknown is not zero");
+			KingdomScenarioTravel.Require(KingdomScenarioTravel.Fault == null, KingdomScenarioTravel.Fault);
+			KingdomScenarioTravel.DemandObserved = true;
+			KingdomScenarioTravel.ReturnDemandObserved = true;
+			KingdomScenarioTravel.PeakDemand = Math.Max(KingdomScenarioTravel.PeakDemand, owed);
+			KingdomScenarioTravel.RemainingDemand = owed;
+			if (KingdomScenarioTravel.FirstHomeTurn < 0) KingdomScenarioTravel.FirstHomeTurn = The.Game.Turns;
+			if (owed != 0) KingdomScenarioTravel.ZeroTurn = -1;
+			else if (KingdomScenarioTravel.ZeroTurn < 0) KingdomScenarioTravel.ZeroTurn = The.Game.Turns;
+		}
+
 		internal static void Postfix(string zoneId, int owed)
 		{
 			if (!KingdomScenarioTravel.Active || zoneId != KingdomScenarioTravel.Home) return;
@@ -58,11 +73,10 @@ namespace ThousandAndFirst.Harness
 				|| KingdomScenarioTravel.State == KingdomScenarioTravel.Phase.Draining)
 				&& The.Player?.CurrentZone?.ZoneID == zoneId)
 			{
-				KingdomScenarioTravel.ReturnDemandObserved = true;
-				KingdomScenarioTravel.RemainingDemand = owed;
-				if (KingdomScenarioTravel.FirstHomeTurn < 0) KingdomScenarioTravel.FirstHomeTurn = The.Game.Turns;
-				if (owed != 0) KingdomScenarioTravel.ZeroTurn = -1;
-				else if (KingdomScenarioTravel.ZeroTurn < 0) KingdomScenarioTravel.ZeroTurn = The.Game.Turns;
+				// Re-prove the physical reading: the ordinary perf helper may report zero
+				// on a failed measurement, which is not sufficient evidence for this fixture.
+				try { ObserveGround(); }
+				catch (Exception error) { KingdomScenarioTravel.Fault = error.Message; }
 			}
 			if (owed < 0 || owed > 312 * 3) KingdomScenarioTravel.Fault = "physical demand exceeds 312-unit envelope";
 		}

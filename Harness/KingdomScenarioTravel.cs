@@ -147,6 +147,7 @@ namespace ThousandAndFirst.Harness
 				Require(Book.TryZoneRow(Home, out int row), "home row missing");
 				if (Book.ZoneOwedWater[row] != 0 || Book.ZoneOwedFood[row] != 0 || Book.ZoneOwedMaterials[row] != 0)
 					ZeroTurn = -1;
+				KingdomScenarioTravelDemandObserver.ObserveGround();
 			}
 		}
 
@@ -160,7 +161,9 @@ namespace ThousandAndFirst.Harness
 			int owed = Math.Abs(Book.ZoneOwedWater[row]) + Math.Abs(Book.ZoneOwedFood[row]) + Math.Abs(Book.ZoneOwedMaterials[row]);
 			Require(ReturnDemandObserved && RemainingDemand == 0
 				&& KingdomScenarioTravelRules.Drained(FirstHomeTurn, ZeroTurn, owed),
-				"physical catch-up within 39 turns was not proved by a post-return demand receipt");
+				"physical catch-up within 39 turns was not proved by a post-return demand observation"
+				+ "; observed=" + ReturnDemandObserved + "; remaining=" + RemainingDemand
+				+ "; home-turn=" + FirstHomeTurn + "; zero-turn=" + ZeroTurn + "; owed=" + owed);
 			var survey = KingdomSurvey.Take(Player.CurrentZone, System);
 			Containers = survey.Stores.Count + survey.Larders.Count;
 			Require(Containers <= KingdomScenarioTravelRules.CivicEnvelope && KingdomRules.MaxCivicContainersPerZone == 252
