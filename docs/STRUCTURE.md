@@ -20,6 +20,31 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
+The #129 dev-harness native checks merged over the roadless spatial capture correction — and so
+also over the master semantic resume correction, the Kingdom Quickstart founding cohort, the
+stockpile deposit custody fix, the Kingdom Quickstart shelter ingress, the render-only city sight,
+the stockpile unit capacity, the first-basin water store and the Kingdom Quickstart tent rows —
+report 3079 staged production C# files and 437,320
+physical lines. The merge adds no production source over the roadless correction; the production
+delta this branch carries is the unmerged #124 raw-delivery-overflow fix it is built on.
+Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
+1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
+`f9a9469102be2f0ca119056e08c884a56014b31439e71695852026f63bd02d17`. The census reports
+1434 files with direct `XRL` imports; 0 of those exceed the line limit.
+
+The raw-delivery-overflow delta over the retained founding-cohort census below adds no production
+source and removes none: it changes the deposit seam's two raw readings, both raw censuses, the
+deposit law's three refusal branches and one rule, and the rest of its lines are comments and
+documentation. The native-check delta on top of it adds no production source either — six
+DEV-HARNESS shards, one persona and two DevTests suites — so the staged production census above is
+byte-identical to the fix's own, and only the dev-harness inventory grows. All four
+`Tools/gate.sh` modes compiled clean on these merged bytes through the canonical gate — staged
+baseline (3075 sources), staged compatibility (3079), dev-harness baseline (3263) and dev-harness
+compatibility (3267) — with the installed-Hearthpyre source and ABI step clean, and the generated
+cold-install inventory contains 3110 files.
+
+## Retained roadless spatial capture census
+
 Roadless spatial capture correction (#131): 3079 staged production C# files; 437,201 physical
 lines; 1434 direct `XRL` importing files; zero at or above 300. Exact inventory SHA-256:
 `ab4cf22e665900bd82593ad4f9805861da4458e60b918c59b1d3a0bb88b74617`.

@@ -16,6 +16,30 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
+## Native raw-delivery overflow evidence (#111 / #124 / #129)
+
+Exact integrated head `2f90a5f85852a9be53afcd1a539fa8e1c01ddbba` passed
+`deposit-overflow-native-check`, seed `#165939435`, profile `W0JAK2`, on 2026-09-10.
+All four cases passed through the real adapters and deposit engine: ordinary store and ground
+holds each increased 0 to 3; an exact `int.MaxValue` ground stack remained unchanged while a
+separate two-unit parcel was credited; oversized store and ground totals refused as Unproved,
+with zero new credit/placement and unchanged body references, identities, raw counts and custody.
+The store's advisory room still wrapped (1894967341); correcting that public advisory census
+remains an open #111 follow-up, not evidence that overflow is safe in every API.
+
+The seven-verb script completed with 13 journal rows, strict Player.log validation passed,
+runner exit was zero, and owned PID 36732 stopped with its receipt. Evidence and profile remain
+retained under `root-overflow129-integrated-native.CcZZhl`. Setup explicitly used synthetic
+stacks, NeverStack and allocated identities; ordinary reachability, Charter, save/load and
+release acceptance are not claimed. Earlier failed native runs remain retained as failures.
+At this exercised head: all four canonical compile modes and installed compatibility ABI pass;
+14329 Taf and 5481 Portable cases pass with zero skips; repository audit passes and CI
+34463125382 passes both jobs. The evidence update and subsequent integration of dev's #133
+fixture do not reattribute the native run to different bytes. Merged-tree verification passes:
+3075/3079/3264/3268 canonical compile inputs, installed compatibility ABI, repository audit,
+14336 Taf and 5488 Portable cases with zero skips. Production and overflow fixture bytes are
+unchanged from the exercised head.
+
 ## Unreleased economic food-conservation fixture (#133)
 
 The dev-only economic fixture now expects 244 water deliveries / 732 budget thirds within
@@ -65,7 +89,16 @@ malformed geometry and exceptions remain errors. The notice may recur after load
 An empty or interior-road-only camp can remain pending indefinitely; no timeout invents corruption.
 Terminal and recovery callers retain their existing fail-closed refusal behavior.
 
-Current census: 3079 staged production C# files, 437,201 physical lines, 1434 files importing
+Current census, with the #129 dev-harness native checks merged over this correction: 3079
+staged C# files; 437,320 physical lines; 0 exceed 300 physical lines, 0 are exactly 300, and
+therefore 0 fail the strict cap; 0 exceed 1,000, 0 exceed 2,000, 0 exceed 5,000.
+Direct `XRL` imports: 1434 files, 0 over the line limit.
+Inventory SHA-256: `f9a9469102be2f0ca119056e08c884a56014b31439e71695852026f63bd02d17`.
+The merge adds no production source over this correction; its production delta is the unmerged
+#124 raw-delivery-overflow fix the #129 branch is built on.
+
+Retained roadless seal census at its own bytes: 3079 staged production C# files, 437,201 physical
+lines, 1434 files importing
 `XRL`, none at or above 300. Inventory SHA-256:
 `ab4cf22e665900bd82593ad4f9805861da4458e60b918c59b1d3a0bb88b74617`.
 The 3079 staged C# files produce a cold-install inventory of 3110 files. From these
@@ -157,11 +190,12 @@ foreign-faction precondition mirroring `KingdomRules.GroundIsForeignFaction` —
 transaction runs rather than publish-then-refuse. Harness-only: no production source changed and
 the structural census below is unchanged.
 
-Current census (unchanged by this PR): 3068
-staged C# files; 435,538 physical lines; 3099 files in the generated
+Retained #129 checkpoint census (the raw delivery overflow fix and its dev-harness native
+checks): 3079
+staged C# files; 437,320 physical lines; 3109 files in the generated
 cold-install inventory; zero files at or above 300; direct `XRL`
-imports occur in 1429 files, 0 of them over the line limit. Inventory SHA-256:
-`93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa`. Retained native acceptance
+imports occur in 1434 files, 0 of them over the line limit. Inventory SHA-256:
+`f9a9469102be2f0ca119056e08c884a56014b31439e71695852026f63bd02d17`. Retained native acceptance
 at exact `a64289c`, original seed `#165939435`: found-first-city passed 11 rows and
 first-guest-native-check passed 135 rows, with both receipt-owned stops proved. Report:
 `root-harness105-native.JNJnVO/report.tsv`. Final merge-forward `1028bde` separately passed
@@ -366,12 +400,12 @@ The heart-ingress endpoints are unchanged and refusal is still fail-closed with 
 Retained census after merging `dev` (the Kingdom Quickstart tent rows, the first-basin water store,
 the stockpile unit capacity, the render-only city sight and the shelter ingress included) and the
 stockpile deposit custody fix: 3068
-staged C# files; 435,538 physical lines; 3099 files in the generated
+staged C# files; 435,657 physical lines; 3099 files in the generated
 cold-install inventory. Staged compilation covers 3068 sources, baseline and compatibility symbols
 (baseline compiles 3064 of them; the optional-mod bridge is compatibility-only), run here by Roslyn
 9.0.306 on Linux against the licensed Managed references with warnings as
 errors. Direct `XRL` imports: 1429 files, 0 over the line limit.
-Inventory SHA-256: `93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa` (this digest differs from the previous one solely because of the 0.3.2 KingdomReleaseInfo.cs version-literal bump; no other change).
+Inventory SHA-256: `05cde60ae7fe770e8ddc8ee75c38bc4ea11fa37d6803ec982082e92fc2188ea2`.
 Before the merge, all four `Tools/gate.sh` modes compiled clean on the shelter-ingress delta's own
 bytes — staged baseline (3050 sources), staged compatibility (3054), dev-harness baseline (3204)
 and dev-harness compatibility (3208) — with the installed-Hearthpyre source and ABI step, and the

@@ -1,4 +1,4 @@
-#if TAF_TESTS
+﻿#if TAF_TESTS
 using System;
 using NUnit.Framework;
 using NUnit.Framework.Legacy;
@@ -868,6 +868,207 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.IsTrue(store.Announced, "nothing landed, so nothing is taken back");
 		}
 
+		// --- Totals that are not representable as an int ---------------------------------------
+		//
+		// A stack's count is the engine's own plain int field with no ceiling on it
+		// (Stacker._StackCount, read back by Reader.ReadInt32 and merged by unchecked int
+		// addition), so two honest stacks can total more than int.MaxValue. The censuses total in
+		// a long and refuse exactly when that total is not representable as an int; an unchecked
+		// sum instead comes back large and NEGATIVE, and a delivery believes it twice over: as
+		// room, where minus two thousand million reopens a full chest, and as a gain, where two
+		// wrapped readings agree mod 2^32 and pay for a landing nobody can see.
+
+		/// <summary>
+		/// A store whose contents do not total to a representable int has NO room reading, and the
+		/// batch is refused before anything is inserted. Two stacks of 1,200,000,000 total
+		/// 2,400,000,000; summed unchecked that is &minus;1,894,967,296, which would leave a
+		/// capacity-64 chest reporting 1,894,967,360 places free and admit the delivery past its
+		/// stated size. The parcel is already made, stamped and proved ownerless, so it is put
+		/// back rather than abandoned.
+		/// </summary>
+		[Test]
+		public void AStoreWhoseContentsExceedIntMaxValueHaveNoRoomAtAll()
+		{
+			FakeStore store = new FakeStore { Capacity = 64 };
+			store.Residents.Add(new FakeBundle { RawCount = 1200000000, Holder = "store" });
+			store.Residents.Add(new FakeBundle { RawCount = 1200000000, Holder = "store" });
+
+			KingdomDepositOutcome outcome = KingdomDepositEngine.Fill(store, 64, 1);
+
+			ClassicAssert.AreEqual(KingdomDepositCustody.Unproved, outcome.Custody);
+			ClassicAssert.AreEqual(0, outcome.Placed, "no room reading, so no batch is judged");
+			ClassicAssert.AreEqual(0, store.Insertions, "and nothing reached the store");
+			ClassicAssert.AreEqual(1, store.Created.Count, "no replacement is minted");
+			ClassicAssert.AreEqual(1, store.DiscardCalls,
+				"the delivery destroys the parcel it made itself, exactly once");
+			ClassicAssert.AreEqual(1, store.Discarded.Count);
+			ClassicAssert.IsFalse(store.Created[0].Alive, "nothing is left standing in nobody's hands");
+			ClassicAssert.AreEqual(1, store.Sayings, "and the founder is told once");
+		}
+
+		/// <summary>
+		/// The same on open ground, where room is a declared bound and never a census: the cell's
+		/// hold in the material is the ONLY reading on that path whose total can exceed
+		/// <c>int.MaxValue</c>, so the material check carries it alone. Room is one, and the
+		/// delivery still stops. The pre-insert reading gates EVERY landing on this parcel, the
+		/// exact-body one included, because it is taken before the insertion runs.
+		/// </summary>
+		[Test]
+		public void AGroundCellWhoseHoldExceedsIntMaxValueRefusesBeforeTheInsertion()
+		{
+			FakeStore ground = new FakeStore { Bound = 1, MergesOnEntry = true };
+			FakeBundle first = new FakeBundle { RawCount = 1200000000, Holder = "store" };
+			FakeBundle second = new FakeBundle { RawCount = 1200000000, Holder = "store" };
+			ground.Residents.Add(first);
+			ground.Residents.Add(second);
+
+			KingdomDepositOutcome outcome = KingdomDepositEngine.Fill(ground, 1, 1);
+
+			ClassicAssert.AreEqual(KingdomDepositCustody.Unproved, outcome.Custody);
+			ClassicAssert.AreEqual(1, ground.RawRoomNow(), "the bound is a whole number and holds");
+			ClassicAssert.AreEqual(0, outcome.Placed);
+			ClassicAssert.AreEqual(0, ground.Insertions, "nothing was handed to the cell");
+			ClassicAssert.AreEqual(1, ground.DiscardCalls,
+				"the delivery destroys the parcel it made itself");
+			ClassicAssert.IsFalse(ground.Created[0].Alive);
+			ClassicAssert.AreEqual(1200000000, first.RawCount, "and what was lying there is untouched");
+			ClassicAssert.AreEqual(1200000000, second.RawCount);
+			ClassicAssert.AreEqual(1, ground.Sayings);
+		}
+
+		/// <summary>
+		/// This is the AGGREGATE path, and only the aggregate path: the parcel stopped existing
+		/// inside the destination, so the only evidence for it is the difference between the hold
+		/// before and the hold after. A hold that was representable going in and is not coming out
+		/// is no such evidence, so nothing is credited for THIS parcel &mdash; a parcel proved
+		/// exact-body is credited on its own proof and never reaches here. The parcel is left
+		/// exactly where it is: this delivery no longer owns it, and destroying or withdrawing it
+		/// would obliterate goods the destination is now holding.
+		/// </summary>
+		[Test]
+		public void AHoldThatExceedsIntMaxValueDuringAnInsertionIsNotAGain()
+		{
+			FakeStore store = new FakeStore { Capacity = int.MaxValue };
+			store.Residents.Add(new FakeBundle { RawCount = 2147483000, Holder = "store" });
+			store.Residents.Add(new FakeBundle { RawCount = 600, Holder = "store" });
+			store.OnInsert = (host, bundle) =>
+			{
+				// The parcel goes in and stops existing, and a handler drops a hundred more units
+				// of the same material beside it: 2,147,483,700 units, which is not a whole count.
+				bundle.Alive = false;
+				host.Residents.Add(new FakeBundle { RawCount = 100, Holder = "store" });
+				return null;
+			};
+
+			KingdomDepositOutcome outcome = KingdomDepositEngine.Fill(store, 47, 1);
+
+			ClassicAssert.AreEqual(KingdomDepositCustody.Unproved, outcome.Custody);
+			// Unchecked, the two readings agree mod 2^32 and their difference is a tidy hundred,
+			// which would pay this delivery its whole batch for a landing it never read.
+			ClassicAssert.AreEqual(0, outcome.Placed,
+				"a hold that is not representable is not evidence of a gain");
+			ClassicAssert.AreEqual(1, store.Insertions);
+			ClassicAssert.AreEqual(0, store.DiscardCalls,
+				"a parcel already inside its destination is not this delivery's to destroy");
+			ClassicAssert.AreEqual(0, store.Discarded.Count);
+			ClassicAssert.AreEqual(1, store.Sayings);
+		}
+
+		/// <summary>
+		/// The wrapped-delta case, kept as a NEGATIVE. Stacks of 2,147,483,000 and 600 hold
+		/// 2,147,483,600 &mdash; representable &mdash; and a batch of 100 merging in takes the cell
+		/// to 2,147,483,700, which is not. Read unchecked, the two numbers differ by exactly the
+		/// batch and the delivery is paid in full. Agreement mod 2^32 is a coincidence, never a
+		/// proof of a landing, and the checked reading refuses it.
+		/// </summary>
+		[Test]
+		public void AGainThatOnlyAgreesModuloTheWordSizeIsNotAProofOfALanding()
+		{
+			FakeStore ground = new FakeStore { Bound = 100, MergesOnEntry = true };
+			FakeBundle stack = new FakeBundle { RawCount = 2147483000, Holder = "store" };
+			ground.Residents.Add(stack);
+			ground.Residents.Add(new FakeBundle { RawCount = 600, Holder = "store" });
+
+			KingdomDepositOutcome outcome = KingdomDepositEngine.Fill(ground, 100, 100);
+
+			ClassicAssert.AreEqual(KingdomDepositCustody.Unproved, outcome.Custody);
+			ClassicAssert.AreEqual(0, outcome.Placed, "no credit is minted from a wrapped pair");
+			ClassicAssert.AreEqual(2147483100, stack.RawCount,
+				"the units really did merge, and are left standing where they merged");
+			// The parcel's fate is UNPROVEN, not known-undelivered. Nothing here schedules a
+			// replacement and nothing may mint one: the delivery stops, the caller holds its load,
+			// and any further attempt is a fresh decision made against a fresh reading.
+			ClassicAssert.AreEqual(1, ground.Created.Count, "and no replacement is minted");
+			ClassicAssert.AreEqual(0, ground.DiscardCalls, "and nothing standing there is destroyed");
+			ClassicAssert.AreEqual(1, ground.Sayings);
+		}
+
+		/// <summary>The bound is representability itself and nothing is invented: a hold of exactly
+		/// <c>int.MaxValue</c> reads back, and an ordinary exact-body landing on top of it credits
+		/// as it always did. A ceiling below that would refuse a legitimately large modded
+		/// store.</summary>
+		[Test]
+		public void AHoldOfExactlyIntMaxValueStillReadsAndStillCredits()
+		{
+			FakeStore ground = new FakeStore { Bound = 1 };
+			ground.Residents.Add(new FakeBundle { RawCount = int.MaxValue, Holder = "store" });
+
+			ClassicAssert.AreEqual(int.MaxValue, ground.RawMaterialHeldNow());
+
+			KingdomDepositOutcome outcome = KingdomDepositEngine.Fill(ground, 1, 1);
+
+			ClassicAssert.AreEqual(KingdomDepositCustody.Settled, outcome.Custody);
+			ClassicAssert.AreEqual(1, outcome.Placed);
+			ClassicAssert.AreEqual(0, ground.Sayings);
+		}
+
+		/// <summary>
+		/// A refusal keeps what was already PROVED. The first parcel lands exact-body &mdash; the
+		/// same object, alive, carrying its stamped count, standing in this destination &mdash;
+		/// which is credited on its own proof and needs no before/after aggregate at all. Only
+		/// then does the destination's hold stop being representable, on each of the three
+		/// readings in turn. Every case stops the delivery and says so once, and none of them
+		/// takes back the unit already standing in the store.
+		/// </summary>
+		[TestCase("room")]
+		[TestCase("material-before")]
+		[TestCase("material-after")]
+		public void RootReviewOverflowKeepsEarlierProvedCredit(string failure)
+		{
+			FakeStore store = new FakeStore { Capacity = 64, Stackable = false };
+			if (failure != "room") store.Bound = 2;
+			Action overflow = () =>
+			{
+				store.Residents.Add(new FakeBundle { RawCount = 1200000000, Holder = "store" });
+				store.Residents.Add(new FakeBundle { RawCount = 1200000000, Holder = "store" });
+			};
+			store.OnInsert = (host, bundle) =>
+			{
+				if (host.Insertions == 1)
+				{
+					bundle.Holder = "store";
+					host.Held++;
+					host.MaterialHeld++;
+					if (failure != "material-after") overflow();
+					return bundle;
+				}
+				bundle.Alive = false;
+				overflow();
+				return null;
+			};
+
+			KingdomDepositOutcome outcome = KingdomDepositEngine.Fill(store, 2, 2);
+
+			ClassicAssert.AreEqual(KingdomDepositCustody.Unproved, outcome.Custody);
+			ClassicAssert.AreEqual(1, outcome.Placed, "earlier exact-body credit must survive");
+			ClassicAssert.AreEqual(2, store.Created.Count, "no replacement after refusal");
+			ClassicAssert.AreEqual(failure == "material-after" ? 2 : 1, store.Insertions);
+			ClassicAssert.AreEqual(failure == "material-after" ? 0 : 1, store.DiscardCalls);
+			ClassicAssert.IsTrue(store.Created[0].Alive);
+			ClassicAssert.AreEqual("store", store.Created[0].Holder);
+			ClassicAssert.AreEqual(1, store.Sayings);
+		}
+
 		// --- The seam itself ---------------------------------------------------------------------
 
 		/// <summary>An engine-free interface with exactly the operations the law needs, so nothing
@@ -880,8 +1081,9 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.AreEqual("CustodyAnnounced",
 				string.Join(",", Array.ConvertAll(host.GetProperties(),
 					property => property.Name)));
-			ClassicAssert.AreEqual("RoomNow,RawRoomNow,RawMaterialHeldNow,Create,Stacks,Stamp,"
-				+ "RawCountOf,Alive,HeldByNobody,Discard,Insert,Landed,AnnounceUncertainCustody",
+			ClassicAssert.AreEqual("RoomNow,TryRawRoomNow,TryRawMaterialHeldNow,Create,Stacks,"
+				+ "Stamp,RawCountOf,Alive,HeldByNobody,Discard,Insert,Landed,"
+				+ "AnnounceUncertainCustody",
 				string.Join(",", Array.ConvertAll(Array.FindAll(host.GetMethods(),
 					method => !method.IsSpecialName), method => method.Name)));
 			ClassicAssert.AreEqual(typeof(bool),
@@ -892,6 +1094,15 @@ namespace ThousandAndFirst.Tests
 				"an ordinary count read repairs and dispatches; the seam offers none");
 			ClassicAssert.IsNull(host.GetMethod("MaterialHeldNow"),
 				"the gain census must be raw; the seam offers no ordinary one");
+			// Both raw readings SUM raw stack counts, which are the engine's own unbounded int
+			// fields, so both can fail to be a whole number. The seam offers no reading that
+			// answers with a number either way: a caller cannot forget to ask whether it read.
+			ClassicAssert.IsNull(host.GetMethod("RawRoomNow"),
+				"a room reading that cannot fail would hand back a wrapped sum as room");
+			ClassicAssert.IsNull(host.GetMethod("RawMaterialHeldNow"),
+				"a gain reading that cannot fail would hand back a wrapped sum as evidence");
+			ClassicAssert.AreEqual(typeof(bool), host.GetMethod("TryRawRoomNow").ReturnType);
+			ClassicAssert.AreEqual(typeof(bool), host.GetMethod("TryRawMaterialHeldNow").ReturnType);
 			ClassicAssert.AreEqual(typeof(int),
 				Enum.GetUnderlyingType(typeof(KingdomDepositCustody)));
 			ClassicAssert.AreEqual("0:Settled,1:Unproved",

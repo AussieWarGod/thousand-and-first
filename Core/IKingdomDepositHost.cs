@@ -1,4 +1,4 @@
-namespace ThousandAndFirst
+﻿namespace ThousandAndFirst
 {
 	/// <summary>
 	/// Narrow deposit seam. Every engine callback a delivery cannot help running &mdash; creating
@@ -31,8 +31,17 @@ namespace ThousandAndFirst
 		int RoomNow();
 
 		/// <summary>Room in the exact destination, taken raw, and zero once it has stopped being a
-		/// destination at all. This is the reading a batch is finally judged against.</summary>
-		int RawRoomNow();
+		/// destination at all. This is the reading a batch is finally judged against.
+		/// <para>
+		/// It can FAIL, and failing is not the same as having no room. A destination's hold is
+		/// summed off raw stack counts, which are the engine's own unbounded <c>int</c> fields, so
+		/// two honest stacks can total more than <c>int.MaxValue</c>; the sum is taken in a
+		/// <c>long</c>, and a total that is not representable as an <c>int</c> is no room reading
+		/// at all, because a delivery that cannot read the room may not judge a batch against a
+		/// number it made up. False leaves <paramref name="Room"/> at nothing.
+		/// </para>
+		/// </summary>
+		bool TryRawRoomNow(out int Room);
 
 		/// <summary>
 		/// Units OF THE MATERIAL THIS DELIVERY IS MAKING standing in the exact destination right
@@ -44,8 +53,16 @@ namespace ThousandAndFirst
 		/// drops an equal weight of stone would otherwise pay the delivery for timber that never
 		/// arrived.
 		/// </para>
+		/// <para>
+		/// It can FAIL for the same reason the room reading can, and here failing matters more: a
+		/// wrapped pair of readings agrees mod 2^32, so their difference would look like an exact
+		/// gain and MINT credit for a landing that never happened. False is not a gain of nothing;
+		/// it is no evidence at all. This parcel is then credited nothing and the delivery stops
+		/// -- units already proved into the destination in the same fill keep their credit, and a
+		/// parcel proved exact-body is credited on that proof and never reaches this comparison.
+		/// </para>
 		/// </summary>
-		int RawMaterialHeldNow();
+		bool TryRawMaterialHeldNow(out int Held);
 
 		/// <summary>One bundle of the material, or null when nothing could be made.</summary>
 		object Create();
