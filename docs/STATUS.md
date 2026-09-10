@@ -50,7 +50,20 @@ Three total days remain below the six-day roof-warning window. Stage, payment, e
 and completion assertions are unchanged. Follow-up four-mode compile and audit pass
 (770 tool checks, seven skips); main 14,346 and portable 5,496 tests pass with zero skips.
 Seventeen focused checks pass. Restoring the old persona interval fails three daily-boundary
-value cases and one script source assertion; restored code passes. Native proof remains pending.
+value cases and one script source assertion; restored code passes.
+
+Native `cb2ca69` (`rZi0Sb`, same seed) reached Steading after 1200 real turns but refused
+because no improvement was working. The log reports an absent or ambiguous construction-input
+source identity. The construction observer reads water-source IDs before materials; the shared
+fixture dedication helper created its synthetic vessel without assigning an ID.
+The follow-up allocates that owned vessel's identity in the creation callback, before placement
+or dedication, then re-proves the exact returned body, assigned ID and zone. Observation paths
+still never allocate IDs. Missing-improvement diagnostics now include the existing announced
+verdict and assigned crew. Owned failed process stopped; profile/evidence retained. Follow-up
+four-mode compile and repository audit pass (770 tool checks, six skips); main 14,347 and
+portable 5,497 tests pass with zero skips. Eighteen focused checks pass; replacing setup ID
+allocation with a non-allocating lookup fails one source assertion, and restored code passes.
+Native proof remains pending; no production guard is weakened.
 
 ## Unreleased camp-heart native seam (PR #107 native case 2)
 

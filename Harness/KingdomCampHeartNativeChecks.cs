@@ -55,6 +55,7 @@ namespace ThousandAndFirst.Harness
 				+ "; synthetic-camp=true; synthetic-residents=true; synthetic-store-contents=true"
 				+ "; synthetic-drams=true; synthetic-born-provenance=true"
 				+ "; synthetic-material-identities=true"
+				+ "; synthetic-water-identity=true"
 				+ "; improvement-notice-premarked=true"
 				+ "; stockpile-refusal-reason-claimed=false"
 				+ "; ordinary-acceptance=false; charter=untested; save-load=untested"
@@ -121,8 +122,24 @@ namespace ThousandAndFirst.Harness
 				EnrollResidents();
 				Require(System.Population == ResidentCount,
 					"enrollment did not reach the fixture population");
-				KingdomNativeCampFounding.Dedicate(Game, Zone, System, DedicatedDrams,
-					delegate(GameObject item) { Owned.Add(item); }, RequirePair);
+				GameObject ownedVessel = null;
+				string waterId = null;
+				var water = KingdomNativeCampFounding.Dedicate(Game, Zone, System, DedicatedDrams,
+					delegate(GameObject item)
+					{
+						Owned.Add(item);
+						Require(GameObject.Validate(item) && item.CurrentCell == null
+							&& item.Physics != null && item.Physics.InInventory == null,
+							"the synthetic water vessel is not a fresh unplaced body");
+						ownedVessel = item;
+						waterId = item.ID;
+						Require(!string.IsNullOrEmpty(waterId) && item.IDIfAssigned == waterId,
+							"the synthetic water vessel has no stable assigned identity");
+					}, RequirePair);
+				Require(GameObject.Validate(ownedVessel) && water != null
+					&& ReferenceEquals(water.ParentObject, ownedVessel)
+					&& ownedVessel.IDIfAssigned == waterId && ownedVessel.CurrentZone == Zone,
+					"water dedication changed its exact body, assigned identity or ground");
 				BindHeart();
 				BindStoreAndFire();
 				MintStoreContents();

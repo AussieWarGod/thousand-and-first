@@ -77,7 +77,9 @@ namespace ThousandAndFirst.Harness
 					? Heart.GetPart<r_KingdomImprovement>() : null;
 				Begun = improvement != null && improvement.Working;
 				Require(Begun, "taf-camp-improvement-absent: the real settlement pass never began "
-					+ "the heart's rung-2 improvement");
+					+ "the heart's rung-2 improvement; announced-verdict="
+					+ (improvement == null ? "absent" : improvement.AnnouncedReason.ToString())
+					+ "; population=" + System.Population + "; assigned-crew=" + System.AssignedCrew);
 				RequireBillDebited();
 				List<GameObject> bodies;
 				List<KingdomCampHeartNativeCensus.Unit> present = ContentUnits(out bodies);

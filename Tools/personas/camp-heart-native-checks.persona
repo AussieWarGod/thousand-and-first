@@ -3,6 +3,7 @@
 # 400-dram reservoir. The camp store is then filled to its declared capacity with real material
 # objects: exactly the authored rung-2 bill (24 stone, 1 timber) plus 23 brush the bill does not
 # ask for. Setup explicitly allocates engine identities for its freshly created material bodies.
+# Its own synthetic water vessel also receives an identity before placement and dedication.
 # Everything after setup is the REAL settlement pass on the turns this script's own
 # `advance` spends -- the seam never calls KingdomUpgrade.Begin, KingdomPlots.Advance or
 # KingdomArchitectureStamper.TryApplyUpgrade. Synthetic setup only: the camp, the residents, the

@@ -49,6 +49,19 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void OwnWaterIdentityIsAllocatedBeforeDedicationReturnsAndReproved()
+		{
+			string source = Read(Checks);
+			int dedicate = source.IndexOf("var water = KingdomNativeCampFounding.Dedicate", StringComparison.Ordinal);
+			int allocate = source.IndexOf("waterId = item.ID;", StringComparison.Ordinal);
+			int returned = source.IndexOf("}, RequirePair);", dedicate, StringComparison.Ordinal);
+			Assert.That(allocate, Is.GreaterThan(dedicate));
+			Assert.That(allocate, Is.LessThan(returned));
+			Assert.That(source, Does.Contain("ownedVessel.IDIfAssigned == waterId"));
+			Assert.That(source, Does.Contain("synthetic-water-identity=true"));
+		}
+
+		[Test]
 		public void NoShardEverDrivesTheUpgradeItself()
 		{
 			foreach (string path in new[] { Provider, Checks, Fixture, Phases, Reads, Bill, Claim })
