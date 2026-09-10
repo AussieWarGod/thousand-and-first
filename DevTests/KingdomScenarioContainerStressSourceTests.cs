@@ -45,30 +45,82 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void ConservationBindsIdentityHolderAndRawCountNeverTheOrdinaryCount()
+		public void SetupTimeIdMintingAndOrdinaryHeldInAreDisclosedNotSilent()
 		{
-			string source = Read(Food);
+			string source = Read(Main);
 			foreach (string token in new[] {
-				"KingdomMaterials.RawCensusCountOf(item)",
-				"item.InInventory == Larder && item.CurrentCell == null",
-				"item.InInventory == larder && item.CurrentCell == null",
-				"observed.Count == expected.Count",
-				"observed.TryGetValue(row.Key, out int rawNow)",
-				"rawNow == row.Value" })
+				"Setup only -- not a conservation observation",
+				"item.ID</c> below intentionally MINTS",
+				"the one legitimate assignment-time mint, distinct from every later",
+				"observation, which reads <c>IDIfAssigned</c> and refuses rather than mints" })
 				Assert.That(source, Does.Contain(token), token);
-			// The proof must never be the ordinary, dispatching Count.
-			Assert.That(source, Does.Not.Contain("item.Count"));
 		}
 
 		[Test]
-		public void ConservationRefusesOnMintedDeletedOrRelocatedBodiesRatherThanGuessing()
+		public void ConservationNeverMintsAnIdentityAndUsesTheRawSeamNeverTheOrdinaryCount()
+		{
+			string source = Read(Food);
+			// IDIfAssigned everywhere an identity is read; the minting GameObject.ID getter
+			// ([decompile] XRL/World/GameObject.cs:436-449) must never appear as an observation.
+			foreach (string token in new[] { "item.IDIfAssigned", "Larder.IDIfAssigned" })
+				Assert.That(source, Does.Contain(token), token);
+			Assert.That(source, Does.Not.Contain("item.ID;"));
+			Assert.That(source, Does.Not.Contain("item.ID "));
+			Assert.That(source, Does.Not.Contain("item.ID)"));
+			foreach (string token in new[] {
+				"KingdomMaterials.RawCensusCountOf(item)",
+				"item.Physics != null && ReferenceEquals(item.Physics.InInventory, Larder)",
+				"item.Physics != null && ReferenceEquals(item.Physics.InInventory, larder)" })
+				Assert.That(source, Does.Contain(token), token);
+			// "raw > 0" must guard BOTH the bind-time and the re-verify-time raw read -- a
+			// single-site regression (one guard dropped, the phrase still present at the other
+			// call site) must still be caught, not hidden behind a bare substring-presence check.
+			int rawPositiveGuards = System.Text.RegularExpressions.Regex.Matches(source,
+				System.Text.RegularExpressions.Regex.Escape("raw > 0")).Count;
+			Assert.That(rawPositiveGuards, Is.EqualTo(2),
+				"expected exactly one 'raw > 0' guard in BindFoodBodies and one in VerifyFoodConserved");
+			// The proof must never be the ordinary, dispatching Count or HeldIn.
+			Assert.That(source, Does.Not.Contain("item.Count"));
+			Assert.That(source, Does.Not.Contain("KingdomSurvey.HeldIn"));
+		}
+
+		[Test]
+		public void ConservationRefusesRatherThanSkipsOrGuessesOnAnyUnknownCustody()
 		{
 			string source = Read(Food);
 			foreach (string token in new[] {
-				"minted or deleted",
-				"relocated or deleted",
-				"raw count changed",
+				// No silent skip: every object in a larder is classified or refused by name.
+				"an invalid object stands in the larder",
+				"an unexpected non-food object stands in the larder: blueprint=",
+				"an invalid object stands in a freshly populated larder",
+				"an unexpected non-food object stands in a freshly populated larder: blueprint=",
+				// Missing / extra bodies named individually, not a bare count mismatch.
+				"an extra, unbound food body stands in the larder: id=",
+				"a bound food body is missing -- relocated or deleted: id=",
+				"a bound food body's blueprint changed: id=",
+				"a bound food body's raw count changed: id=",
+				// The larder's own ground (zone/cell) and un-held custody are re-proved.
+				"the larder itself moved off its recorded ground",
+				"the larder itself is now held rather than standing on its own ground",
+				"the larder itself is held rather than standing on its own ground",
 				"custody no longer names this exact larder" })
+				Assert.That(source, Does.Contain(token), token);
+			// No silent continue/skip anywhere in the classification loops.
+			Assert.That(source, Does.Not.Contain("continue;"));
+		}
+
+		[Test]
+		public void CrossUnloadHonestyIsDisclosedNotJustCoded()
+		{
+			string source = Read(Food);
+			// No retained GameObject/Zone field crosses the away leg -- every lookup is fresh.
+			Assert.That(source, Does.Contain("zone.FindObjectByID(larderId)"));
+			Assert.That(source, Does.Not.Contain("private static GameObject"));
+			Assert.That(source, Does.Not.Contain("private static Zone"));
+			foreach (string token in new[] {
+				"reference is retained across the", "carry CLR reference identity across a reload",
+				"a same-id replacement during travel is ambiguous under this evidence",
+				"not a proven pass" })
 				Assert.That(source, Does.Contain(token), token);
 		}
 

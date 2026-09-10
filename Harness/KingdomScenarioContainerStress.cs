@@ -64,6 +64,16 @@ namespace ThousandAndFirst.Harness
 			catch (Exception error) { return KingdomScenarioRefusal.Message("taf-container-stress-refused", error.Message); }
 		}
 
+		/// <summary>
+		/// Setup only -- not a conservation observation. <c>HeldIn</c> here is the ordinary,
+		/// dispatching read used only to size how much capacity remains to fill; the raw seam
+		/// (<see cref="KingdomMaterials.RawCensusCountOf"/>) is reserved for the conservation
+		/// proof in <c>FoodConservation.cs</c>. Likewise <c>item.ID</c> below intentionally MINTS
+		/// an identity for a container this fixture just created (<see cref="GameObject.Create"/>
+		/// gives back an unassigned object) so it can be retained and re-found by id after the
+		/// pause; this is the one legitimate assignment-time mint, distinct from every later
+		/// observation, which reads <c>IDIfAssigned</c> and refuses rather than mints.
+		/// </summary>
 		private static void Populate(Zone zone)
 		{
 			var survey = KingdomSurvey.Take(zone, System);
