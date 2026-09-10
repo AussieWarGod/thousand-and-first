@@ -32,7 +32,10 @@ Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict
 The raw-delivery-overflow delta over the retained founding-cohort census below adds no production
 source and removes none: it changes the deposit seam's two raw readings, both raw censuses, the
 deposit law's three refusal branches and one rule, and the rest of its lines are comments and
-documentation.
+documentation. All four `Tools/gate.sh` modes compiled clean on these merged bytes through the
+canonical gate — staged baseline (3074 sources), staged compatibility (3078), dev-harness baseline
+(3252) and dev-harness compatibility (3256) — with the installed-Hearthpyre source and ABI step,
+and the generated cold-install inventory contains 3109 files.
 
 Retained: the Kingdom Quickstart founding cohort over the stockpile deposit custody fix, the Kingdom
 Quickstart shelter ingress, the render-only city sight, the stockpile unit capacity, the
