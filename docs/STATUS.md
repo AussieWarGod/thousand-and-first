@@ -16,6 +16,12 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
+Developer profile metadata census uses batches of at most four read-only workers. Every existing
+per-file ancestor/link/size check remains; file/directory/total-byte bounds and both closed hash
+passes remain in force. A retained stopped 3,273-file profile measured 75.54 seconds before,
+10.03 seconds with batching, then 74.81 seconds on a warm original-code control. These are local
+phase timings, not a general platform guarantee or native acceptance. Refs #89.
+
 Repository audits use a fresh empty Python cache lookup root with bytecode writes disabled.
 An executable timestamp-cache fixture proves that disabling writes alone still reads stale
 bytecode, while the isolated audit imports restored source. This strengthens host test fidelity;
