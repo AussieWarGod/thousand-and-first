@@ -20,7 +20,8 @@ below it.
   factory; an interrupted attempt with no bodies left on this ground never invents replacements.
   They sleep rough until the two tent rows stand (about a day and a half) against a six-day grace,
   and the completion notice and the charter both say so. Four at a camp drink 4 drams a day, so the
-  opening 24 drams last six days, and the first traveller is due at 6000 ticks rather than 3600.
+  opening 24 drams last six days, and the base arrival interval becomes 6000 ticks rather than 3600.
+  Actual arrival timing still follows the live cadence, district, and settlement policies.
   A save cut part-way through enrollment resumes by the exact published founder identities.
   Each founder is counted into the settlement's per-profile origin tally by ADDING one under its
   own durable, identity-bound obligation — bound to the exact body, profile and owning city and

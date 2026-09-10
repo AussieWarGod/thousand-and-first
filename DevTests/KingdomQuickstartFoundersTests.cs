@@ -756,17 +756,19 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void FourFoundersPutTheFirstTravellerAtSixThousandTicks()
+		public void FourFoundersIncreaseTheBaseArrivalInterval()
 		{
-			// The arrival clock is 3600 plus 600 for every settler already living there, so the
-			// cohort moves the first guest from three in-game days to five. The docs say 6000; this
-			// is where that number comes from.
+			// This proves the base formula, not a native first-arrival deadline. Founding
+			// publishes its clock before enrollment; the live cadence observes cohort changes,
+			// and district and policy modifiers also participate in the actual interval.
 			Assert.That(KingdomRules.ArrivalIntervalTicks(0), Is.EqualTo(3600L));
 			Assert.That(KingdomRules.ArrivalIntervalTicks(
 				KingdomQuickstartRules.FounderCount), Is.EqualTo(6000L));
-			// And the number the player is told matches the rule, not a copied constant.
+			// Player documentation must name the base interval rather than promise a deadline.
 			string quickstart = TestMain.ReadRepositoryText("docs/QUICKSTART.md");
-			StringAssert.Contains("due at 6000 ticks rather than 3600", quickstart);
+			StringAssert.Contains("base arrival interval", quickstart);
+			StringAssert.Contains("6000 ticks rather than 3600", quickstart);
+			StringAssert.DoesNotContain("due at 6000 ticks rather than 3600", quickstart);
 			StringAssert.Contains("6000 ticks rather than 3600",
 				TestMain.ReadRepositoryText("CHANGELOG.md"));
 		}
