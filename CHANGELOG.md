@@ -12,6 +12,32 @@ below it.
 
 ### Added
 
+- A dev-only native-check seam (`camp-heart-native-checks`) proves PR #107's owed native case 2:
+  the camp heart's dedicated stockpile keeps its exact object identity, its exact cell and every
+  physical unit the bill did not ask for across a REAL PAID climb from the rite ground to the
+  waterstone, and the cooking fire is re-laid on the same rite-relative cell. The fixture founds a
+  real camp, completes rung one through the production plot works, enrolls six real residents (each
+  standing on claimed ground and carrying a disclosed synthetic `KingdomBorn` provenance stamp
+  before its row is published, because production's roster gate requires one and citizenship
+  enrollment never sets it, with the published row then read back off the settlement's own book),
+  dedicates one real 400-dram reservoir, and fills the authored store to its declared forty-eight
+  units with real material objects — exactly the authored rung-2 bill (24 stone, 1 timber) plus 23
+  brush the bill never asks for, so the bill is drawn from the very store under test. Nothing after
+  setup is driven by the seam: the real settlement pass assesses the heart, begins the improvement,
+  commits the water and material debit, burns the labour and hands the rung over on the turns the
+  persona's own `advance` spends. Every retained unit is proved by its WHOLE custody — exact object
+  id, blueprint, the exact holder it was found in, and the raw stack count read through the
+  production raw-census seam, held BY REFERENCE across observations — so a matching total, a
+  replacement that reused the identity string, a moved unit or a changed stack all refuse; an
+  inventory row that is not a valid body held by that exact store with no cell of its own fails the
+  check rather than being skipped. Absence from the store is only ever claimed as absence from the
+  store: that the settlement SPENT the bill is proved separately from the production construction
+  job's own committed claim, compared EXACTLY against the authored catalogue cost in both
+  directions, so neither an ordinary drink nor an overcharge can pass as the bill. The
+  settlement-wide readings use the production unbound-recovery observation, which publishes
+  nothing, refuses during a bound pass, and refuses a partial index rather than under-reporting. Harness, persona and DevTests only; no
+  production source changed. Cases 1, 3, 4, 5 and 6 of #107 remain owed.
+
 - Kingdom Quickstart now founds a world with four founding citizens — a hand, a drifter, a tinker
   and a physicker of one culture per camp — enrolled under a new `Founding` reason that only this
   bootstrap can emit, on the roll and able to work at turn 1, standing on the approach. They arrive
@@ -242,7 +268,7 @@ below it.
 > 437,114 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1434 files, 0 of them over the line limit. Inventory SHA-256:
-> `e1ddecb76e357905d90bbc40ad8414b68efc38f2b532d19ec61d2df4a5053ce9`.
+> `a918f8e8bab3c1ca44118211d0667ce027f1a0ef77610074f298e2b8b49cb396`.
 > The generated cold-install inventory contains 3109 files; no new subscription claim.
 > This digest is the Kingdom Quickstart founding cohort over the stockpile deposit custody census
 > retained below, and over every delta retained beneath that; each carries its own review chain and

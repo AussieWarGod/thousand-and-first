@@ -26,8 +26,8 @@ first-basin water store and the Kingdom Quickstart
 tent rows reports 3078 staged production C# files and 437,114 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`__DIGEST__`. The census reports
-__XRL__ files with direct `XRL` imports; 0 of those exceed the line limit. This digest carries both
+`a918f8e8bab3c1ca44118211d0667ce027f1a0ef77610074f298e2b8b49cb396`. The census reports
+1434 files with direct `XRL` imports; 0 of those exceed the line limit. This digest carries both
 the camp heart's authored architecture, catalogue and blueprint bytes and the founding-cohort
 sources merged from `dev`; no staged production C# source is added or removed by this branch.
 

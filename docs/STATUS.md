@@ -16,6 +16,76 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
+## Unreleased camp-heart native seam (PR #107 native case 2)
+
+A dev-only scenario seam (`Harness/KingdomCampHeartNative*.cs`, persona
+`camp-heart-native-checks`) exists to answer one of PR #107's owed native cases: that the camp
+heart's dedicated stockpile, its contents and the cooking fire survive a real paid waterstone
+upgrade. The fixture is disclosed synthetic setup — a real founding, a real rung-1 completion, six
+really enrolled residents, one really dedicated 400-dram reservoir, forty-eight minted physical
+units in the authored store (exactly the authored rung-2 bill of 24 stone and 1 timber, plus 23
+brush the bill never asks for) and the founder's one-time improvement notice pre-marked as read.
+After setup the seam drives nothing: the real settlement pass assesses the heart, begins the
+improvement, commits the water and material debit, burns the labour and hands the rung over on the
+turns the persona's own `advance` spends. The seam never calls `KingdomUpgrade.Begin`,
+`KingdomPlots.Advance`, `KingdomArchitectureStamper.TryApplyUpgrade` or any gallery staging path,
+and a source-contract test refuses each of those names in every shard.
+
+Scope of the observation, stated exactly. Store contents are read RAW: the container's own object
+list, and per unit its exact identity, blueprint, exact holder and raw stack count through
+`KingdomMaterials.RawCensusCountOf` — never an eventful count and never a material tally. Custody
+is read from the body's own `Physics` fields: the holder must reference-equal this exact store
+object AND the cell must be null, because a body cannot be in a chest and on the ground at once.
+An inventory row that is not a valid body, carries no assigned identity, reports a nonpositive raw
+count, or contradicts itself fails with a `taf-` reason instead of being skipped, and the retained
+units are held BY REFERENCE across observations so a replacement that reused the identity string
+is refused even though every recorded field would match. Settlement-wide readings use
+`KingdomSurvey.TryTakeUnboundRecovery`, which is the production custody-only classification plus
+the two proofs a bare custody-only call does not make — no bound settlement pass, and every root
+in the zone actually classified — so a partial index refuses rather than under-reporting the
+ground. A unit's absence from the store is claimed only as absence from the store; that the
+settlement SPENT the authored bill is proved separately from the production construction job's
+own committed `Claims.WaterSpent` and `Claims.MaterialSpent`, compared EXACTLY against the
+authored catalogue cost in both directions — a short charge, an overcharge and a charged material
+the authored bill never names are all faults — so ordinary resident drinking can
+ never be read as a debit.
+
+Enrollment order is load-bearing and disclosed, and mirrors the reviewed forage seam. Each fixture
+body is enrolled into citizenship, re-proved to belong, stamped with a synthetic `KingdomBorn`
+provenance mark (production's roster gate `KingdomResidents.Enrollable` requires citizenship,
+`KingdomBorn == 1`, not-a-player and not-player-led, and `KingdomCitizenship.TryEnroll` supplies
+only the first), given a name, and PLACED on a claimed cell before
+`KingdomResidents.TryEnsureRow` publishes its row. The last two clauses of that gate are re-proved
+explicitly, and the published row is then read BACK through the book — a row at that resident id,
+exactly one such row on the roll, and that row bound to this zone. Nothing writes book state, and
+the born stamp and name are fixture facts rather than a real arrival. A source-order pin refuses
+the opposite order, which is exactly what refused the forage seam's first native run on
+2026-09-10.
+
+Evidence on these bytes: canonical `Tools/gate.sh --keep` printed all four COMPILE CLEAN lines —
+staged baseline 3074, staged compatibility 3078, dev-harness baseline 3259, dev-harness
+compatibility 3263 — plus installed Hearthpyre ABI clean. Licensed managed suites ran with zero
+skips: TafTests 14,259 and PortableTests 5,399. The full portable repository audit, the
+documentation freshness check, 766 Tools tests, the removal-coverage generator check and the
+architecture XML reference check all pass. Nineteen source mutations of the seam's custody
+predicates — dropped raw-count, holder, blueprint, missing-identity, duplicate-identity, duplicate
+listing, spent-unit and truncation checks, a folded blueprint comparer, a dropped born stamp and
+an inverted place/publish order, a dropped player-led clause, a forgiven overcharge, a forgiven
+extra charged kind, a forgiven short charge, a downgraded incomplete-census guard, a neutralised
+contradictory-custody guard, a loosened holder field check, an identity-string body comparison and
+an inexact water bill — each fail only the focused cases that cover them, and the restored source
+passes all twenty-nine.
+
+This is a source, compile and registration claim only. **No native run of this persona has been
+made**, so it signs nothing about actual Caves of Qud behaviour yet; the recipe for the operator is
+`Tools/run-personas.sh camp-heart-native-checks`. PR #107 native cases 1, 3, 4, 5 and 6 remain
+owed, and two of them are blocked on author rulings recorded on the pull request rather than on
+work: case 3 (raise the moot) because nothing on the improvement route advances the zone's
+`r_TAF_HeartRung`, which `KingdomArchitectureRuntime.TryPrepareSuccessor` requires to equal the
+standing rung before it will accrete rung 2 to rung 3; and case 6 because the production plot-claim
+path drops a rect that crowds an existing plot silently, before any ground is read, so no
+stockpile-named refusal is reachable there.
+
 Native fixture recovery: matched seed `#121783523` measured 50 settlers/citizens/roll rows,
 two stores, 1,936 drams capacity and zero water. The previous fixture incorrectly required one
 1,920-dram store, omitting the dedicated first basin. The corrected fixture proves the exact
@@ -65,11 +135,11 @@ foreign-faction precondition mirroring `KingdomRules.GroundIsForeignFaction` —
 transaction runs rather than publish-then-refuse. Harness-only: no production source changed and
 the structural census below is unchanged.
 
-Current census (unchanged by this PR): 3068
-staged C# files; 435,538 physical lines; 3099 files in the generated
+Current census: 3078
+staged C# files; 437,114 physical lines; 3109 files in the generated
 cold-install inventory; zero files at or above 300; direct `XRL`
-imports occur in 1429 files, 0 of them over the line limit. Inventory SHA-256:
-`93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa`. Retained native acceptance
+imports occur in 1434 files, 0 of them over the line limit. Inventory SHA-256:
+`a918f8e8bab3c1ca44118211d0667ce027f1a0ef77610074f298e2b8b49cb396`. Retained native acceptance
 at exact `a64289c`, original seed `#165939435`: found-first-city passed 11 rows and
 first-guest-native-check passed 135 rows, with both receipt-owned stops proved. Report:
 `root-harness105-native.JNJnVO/report.tsv`. Final merge-forward `1028bde` separately passed

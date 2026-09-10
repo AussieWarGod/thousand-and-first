@@ -18,6 +18,9 @@
 
   <ItemGroup>
     <Compile Include="TestMain.cs" />
+	<Compile Include="KingdomCampHeartNativeSourceTests.cs" />
+	<Compile Include="..\Harness\KingdomCampHeartNativeCensus.cs" />
+	<Compile Include="KingdomCampHeartNativeCensusTests.cs" />
     <Compile Include="KingdomRealmArchiveNestedWireSourceTests.cs" />
     <Compile Include="KingdomRealmHashBasisTests.cs" />
     <Compile Include="KingdomRealmCallbackBasisTests.cs" />
