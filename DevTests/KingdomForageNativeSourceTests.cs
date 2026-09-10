@@ -97,6 +97,23 @@ namespace ThousandAndFirst.Tests
 
 		/// <summary>The exact body of one method, from its signature line to the matching closing
 		/// brace at column zero indentation of the opening one.</summary>
+		[Test]
+		public void SyntheticResidentProvenanceAndGroundPrecedeRealRosterBinding()
+		{
+			string body = Method(Read(Fixture), "private void EnrollFour()");
+			int citizenship = body.IndexOf("KingdomCitizenship.TryEnroll(", System.StringComparison.Ordinal);
+			int born = body.IndexOf("body.SetIntProperty(\"KingdomBorn\", 1)", System.StringComparison.Ordinal);
+			int placed = body.IndexOf("cell.AddObject(body, NoStack: true)", System.StringComparison.Ordinal);
+			int roster = body.IndexOf("KingdomResidents.TryEnsureRow(", System.StringComparison.Ordinal);
+			Assert.That(citizenship, Is.GreaterThanOrEqualTo(0));
+			Assert.That(born, Is.GreaterThan(citizenship));
+			Assert.That(placed, Is.GreaterThan(born));
+			Assert.That(roster, Is.GreaterThan(placed));
+			Assert.That(body, Does.Contain("ReferenceEquals(book, System.City)"));
+			Assert.That(body, Does.Contain("ReferenceEquals(body.CurrentZone, Zone)"));
+			Assert.That(body, Does.Contain("Game.TimeTicks == tick"));
+		}
+
 		private static string Method(string source, string signature)
 		{
 			int start = source.IndexOf(signature, StringComparison.Ordinal);

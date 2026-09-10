@@ -41,7 +41,7 @@ namespace ThousandAndFirst.Harness
 			Complete = Retained.Done;
 			return (Complete ? "native-forage cases=1 passed=1 failed=0"
 				: "native-forage phase=" + Retained.Phase)
-				+ "; synthetic-camp=true; synthetic-plants=true; synthetic-reservation=true"
+				+ "; synthetic-camp=true; synthetic-plants=true; synthetic-reservation=true; synthetic-born-provenance=true"
 				+ "; ordinary-acceptance=false; charter=untested; save-load=untested"
 				+ Retained.Evidence;
 		}

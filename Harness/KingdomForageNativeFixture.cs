@@ -17,7 +17,8 @@ namespace ThousandAndFirst.Harness
 		{
 			/// <summary>Four real NPC residents, enrolled through the production citizenship and
 			/// roster APIs -- the same path <c>KingdomFirstGuestRuntime</c> uses for a genuine
-			/// arrival, not a stamped field.</summary>
+			/// arrival. Born provenance and names are explicit synthetic fixture inputs;
+			/// citizenship and roster authority still come from production APIs.</summary>
 			private void EnrollFour()
 			{
 				long tick = Game.TimeTicks;
@@ -31,15 +32,24 @@ namespace ThousandAndFirst.Harness
 					string failure;
 					Require(KingdomCitizenship.TryEnroll(System, body,
 						KingdomCitizenshipEnrollmentReason.Arrival, tick, out failure), failure);
-					KingdomCityBook book;
-					int id;
-					Require(KingdomResidents.TryEnsureRow(System, body, out book, out id)
-						&& id > 0, "native enrollment did not publish a row");
+					Require(KingdomCitizenship.BelongsTo(System, body), "fixture lost citizenship authority");
+					// TryEnroll does not supply the born provenance the resident roster requires.
+					body.SetIntProperty("KingdomBorn", 1);
+					Require(body.GetIntProperty("KingdomBorn") == 1, "synthetic born provenance did not persist");
+					string name = "forage fixture resident " + (i + 1);
+					body.GiveProperName(name, Force: true);
+					body.SetStringProperty("KingdomName", name);
 					Cell cell = KingdomNativeCampFounding.Clear(Zone);
 					Require(cell != null, "no clear cell for a fixture resident");
 					Require(ReferenceEquals(cell.AddObject(body, NoStack: true), body),
 						"native placement substituted a fixture resident");
+					Require(ReferenceEquals(body.CurrentZone, Zone) && ReferenceEquals(body.CurrentCell, cell),
+						"fixture resident lacks exact placed ground");
+					Require(KingdomResidents.TryEnsureRow(System, body, "native forage fixture", null, tick,
+						out KingdomCityBook book, out int id) && ReferenceEquals(book, System.City)
+						&& id > 0, "native enrollment did not publish exact row and binding");
 				}
+				Require(Game.TimeTicks == tick, "fixture enrollment advanced the world clock");
 			}
 
 			/// <summary>Every plot rect the plan currently declares (the heart's own, plus any

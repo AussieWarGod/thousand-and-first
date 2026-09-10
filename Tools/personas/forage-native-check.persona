@@ -2,7 +2,7 @@
 # enrolled residents, and one planted object per exclusion category. Every check after setup reads
 # outcomes the REAL settlement-pass cadence produced on real turns this script's own `advance`
 # spends -- the seam never calls the private WorkForage directly. Synthetic setup only: the camp,
-# residents, plants, and the phase-6 routed-reservation marker are all harness-planted and
+# residents (including born provenance and names), plants, and the phase-6 routed-reservation marker are all harness-planted and
 # disclosed as such in every report line. Not ordinary play, not a rendered Charter, no cold-load
 # or general camp-acceptance claim. Depends on #107 (T-camp) for the stockpile and canvas; merge
 # after #107 and #109.
