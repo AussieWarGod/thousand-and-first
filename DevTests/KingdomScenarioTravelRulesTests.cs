@@ -124,6 +124,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(true, 0, "home", 7, 7, 100, false)]
 		[TestCase(true, 100, null, 7, 7, 100, false)]
 		[TestCase(true, 100, "home", 7, 0, 100, false)]
+		[TestCase(true, 100, "home", -1, 7, 100, false)]
 		public void PauseAllowsPublishedReceiptButNotTornPass(bool active, long started, string bound,
 			long completed, long required, long published, bool expected)
 			=> ClassicAssert.AreEqual(expected, KingdomScenarioTravelRules.SemanticPauseReady(
@@ -137,6 +138,7 @@ namespace ThousandAndFirst.Tests
 			string source = TestMain.ReadRepositoryText("Harness/KingdomSystem.NativeTravelObservation.cs");
 			StringAssert.Contains("SemanticPassCompletedMask, SemanticRequiredMask, LastSemanticTick", source);
 			StringAssert.Contains("!KingdomSurvey.HasBoundPass", source);
+			StringAssert.Contains("ReferenceEquals(The.Game?.GetSystem<KingdomSystem>(), this)", source);
 		}
 
 		[Test]

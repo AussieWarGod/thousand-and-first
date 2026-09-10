@@ -75,7 +75,7 @@ namespace ThousandAndFirst.Harness
 
 		internal static bool SemanticPauseReady(bool Active, long Started, string Bound, long Completed,
 			long Required, long Published, string Requested)
-			=> !Active || (Started > 0 && Required > 0 && !string.IsNullOrEmpty(Bound)
+			=> !Active || (Started > 0 && Required > 0 && Completed >= 0 && !string.IsNullOrEmpty(Bound)
 				&& ThousandAndFirst.Simulation.City.KingdomSemanticClockRules.ReceiptVerdict(
 					Active, Started, Bound, Completed, Required, Published, Requested)
 					== ThousandAndFirst.Simulation.City.KingdomSemanticPassReceiptVerdict.Start);
