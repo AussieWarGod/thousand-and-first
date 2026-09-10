@@ -132,6 +132,40 @@ class ReloadTests(unittest.TestCase):
         with self.assertRaises(ValueError): execute(fake, "foreign", "yes")
         self.assertEqual(fake.events, [])
 
+    def test_cli_arms_a_kernel_parent_death_signal_before_running_and_never_forwards_a_raw_kill(self):
+        """A killed run-personas.sh must not orphan this host; see run-persona-reload.py's
+        arm_parent_death_signal() docstring. The runner side of that contract (no forwarded
+        kill, RELOAD_PID tracked only to report an interrupted reload) is pinned in
+        Tools/tests/scenario_process_source_test.py's blanket
+        test_scenario_lifecycle_has_no_name_kill_or_recursive_profile_wipe, which already
+        covers run-personas.sh; this test pins the CLI side of the same contract. Executable
+        proof that the mechanism actually disposes of an orphan, refuses on a failed prctl, and
+        that run-personas.sh's TERM path forwards and reports lives in
+        Tools/tests/persona_reload_signal_test.py; this is the source-wiring pin only."""
+        source = (TOOLS / "run-persona-reload.py").read_text(encoding="utf-8")
+        self.assertIn("_PR_SET_PDEATHSIG = 1", source)
+        self.assertIn("class ParentDeathSignalUnavailable(RuntimeError):", source)
+        armed = source.index("def arm_parent_death_signal")
+        environ_check = source.index('os.environ.get("TAF_RELOAD_PARENT_PID")', armed)
+        prctl = source.index(".prctl(_PR_SET_PDEATHSIG, signal.SIGTERM, 0, 0, 0)", armed)
+        recheck = source.index("if os.getppid() != expected_parent:", prctl)
+        self.assertGreater(prctl, environ_check,
+            "the pre-recorded parent must be checked before any arming is attempted")
+        self.assertGreater(recheck, prctl,
+            "getppid() must be re-checked after arming to catch a parent lost during the call")
+        main_block = source[source.index("def main():"):source.index("def interrupted(")]
+        handler = main_block.index("signal.signal(signal.SIGTERM, interrupted)")
+        arm_call = main_block.index("arm_parent_death_signal()")
+        manifest_load = main_block.index('load(str(args.persona))')
+        self.assertGreater(arm_call, handler,
+            "the explicit SIGTERM handler must be registered before the kernel is armed to send it")
+        self.assertGreater(manifest_load, arm_call,
+            "parent-death signal must be armed before any persona work runs")
+        self.assertNotIn('signal.signal(signal.SIGTERM, interrupted)',
+            source[source.index('if __name__ == "__main__":'):],
+            "signal registration belongs inside main()'s own try, not a bare pre-main call "
+            "main()'s except clause cannot see")
+
 
 if __name__ == "__main__":
     unittest.main()

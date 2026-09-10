@@ -21,6 +21,14 @@ retaining the original exception as its cause. Harmless shell fixtures cover exa
 arguments, helper refusal blocking later personas, and prior ownership failure blocking reload.
 These checks are host orchestration evidence only, not native reload or release acceptance.
 
+The cold-reload host arms a kernel parent-death signal (PR_SET_PDEATHSIG) so a killed
+run-personas.sh cannot orphan it, refusing explicitly on either arming race (parent already
+gone before or during the call) or a failed prctl, rather than a silent fallback.
+run-personas.sh's own TERM path still never sends a raw kill; it reports its own exit as a
+hand-off, not confirmed cleanup. Real child-process/real-signal tests (`Tools/tests/
+persona_reload_signal_test.py`) prove disposal, the refusals, and the shell's forwarding and
+reporting - host orchestration evidence only, not native reload or release acceptance.
+
 ## Current repository integration state — PR #6 merged, main protection updated
 
 Documentation/hardening PR #6, "Post-0.3.1 Alpha hardening and release closeout", was

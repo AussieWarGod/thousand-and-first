@@ -15,6 +15,14 @@ below it.
 - Developer reload failures retain the original exception as their cause and report both errors
   when receipt-owned cleanup also refuses. No later persona may assume cleanup succeeded.
   Shell lifecycle fixtures exercise reload argument routing and stop the matrix after refusal.
+- The cold-reload host arms a kernel parent-death signal so a killed run-personas.sh cannot
+  orphan it: two arming races (parent already gone before, or during, the arming call) refuse
+  explicitly rather than proceeding unprotected, and a failed prctl (missing libc, refused
+  syscall) refuses rather than a silent fallback. run-personas.sh itself still never sends a raw
+  kill to any process; it relies on the kernel-delivered signal and reports truthfully that its
+  own exit is a hand-off, not confirmed cleanup. Executable process-lifecycle tests (real child
+  processes, real signals, no game launch) prove the disposal, the refusals, and the shell's
+  forwarding and reporting.
 
 ### Docs
 
