@@ -52,7 +52,8 @@ namespace ThousandAndFirst
 			{
 				long semantic = Simulation.City.KingdomSemanticClockRules.MasterResumeDispatchTick(
 					source.SemanticPassActive, source.SemanticPassStartedTick, source.SemanticPassZoneId,
-					source.SemanticPassCompletedMask, KingdomSystem.SemanticRequiredMask, source.LastSemanticTick, now);
+					source.SemanticPassStartedMask, source.SemanticPassCompletedMask,
+					KingdomSystem.SemanticRequiredMask, source.LastSemanticTick, now);
 				return TryCreateCore(source.LastHeartbeatTick, source.LastFetchTick,
 					source.LastWaterWorkTick, source.LastFoodWorkTick, source.LastSubsidenceTick,
 					semantic, source.LastVisitTick,
@@ -68,7 +69,8 @@ namespace ThousandAndFirst
 				if (source == null) { plan = null; return false; }
 				long semantic = Simulation.City.KingdomSemanticClockRules.MasterResumeDispatchTick(
 					source.SemanticPassActive, source.SemanticPassStartedTick, source.SemanticPassZoneId,
-					source.SemanticPassCompletedMask, KingdomSystem.SemanticRequiredMask, source.LastSemanticTick, now);
+					source.SemanticPassStartedMask, source.SemanticPassCompletedMask,
+					KingdomSystem.SemanticRequiredMask, source.LastSemanticTick, now);
 				return TryCreateCore(source.LastHeartbeatTick, source.LastFetchTick,
 					source.LastWaterWorkTick, source.LastFoodWorkTick, source.LastSubsidenceTick,
 					semantic, source.LastVisitTick,

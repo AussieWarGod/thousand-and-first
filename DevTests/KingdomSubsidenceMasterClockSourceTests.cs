@@ -25,7 +25,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("long oldFood, long oldSubsidence, long semantic",
 				Code(Settlement));
 			ClassicAssert.AreEqual("semantic", arguments[5]);
-			StringAssert.Contains("KingdomSemanticClockRules.MasterResumeDispatchTick( source.SemanticPassActive, source.SemanticPassStartedTick, source.SemanticPassZoneId, source.SemanticPassCompletedMask, KingdomSystem.SemanticRequiredMask, source.LastSemanticTick, now)", body);
+			StringAssert.Contains("KingdomSemanticClockRules.MasterResumeDispatchTick( source.SemanticPassActive, source.SemanticPassStartedTick, source.SemanticPassZoneId, source.SemanticPassStartedMask, source.SemanticPassCompletedMask, KingdomSystem.SemanticRequiredMask, source.LastSemanticTick, now)", body);
 			ClassicAssert.IsFalse(Regex.IsMatch(body, @"\bsource\.LastSubsidenceTick\s*=(?!=)"),
 				"Capturing a resume plan must not replace the source checkpoint.");
 		}

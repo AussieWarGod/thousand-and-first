@@ -137,12 +137,21 @@ namespace ThousandAndFirst.Tests
 		public void MasterResumePreservesOnlyUnpublishedOrMalformedActiveReceipts(bool active,
 			long started, string zone, long completed, long required, long prior, long expected)
 			=> ClassicAssert.AreEqual(expected, KingdomSemanticClockRules.MasterResumeDispatchTick(
-				active, started, zone, completed, required, prior, 5100L));
+				active, started, zone, required, completed, required, prior, 5100L));
+
+		[TestCase(-1L, 7L, 2400L)]
+		[TestCase(3L, 7L, 2400L)]
+		[TestCase(0L, 7L, 2400L)]
+		[TestCase(7L, 7L, 5100L)]
+		public void MasterResumeNeverPublishesUnstartedOrNegativeStepMasks(long started,
+			long completed, long expected)
+			=> ClassicAssert.AreEqual(expected, KingdomSemanticClockRules.MasterResumeDispatchTick(
+				true, 2400L, "A", started, completed, 7L, 2400L, 5100L));
 
 		[Test]
 		public void PublishedMasterResumeCannotSpendPausedSemanticTimeOnNextWake()
 		{
-			long resumed = KingdomSemanticClockRules.MasterResumeDispatchTick(true, 2400, "A", 7, 7, 2400, 5100);
+			long resumed = KingdomSemanticClockRules.MasterResumeDispatchTick(true, 2400, "A", 7, 7, 7, 2400, 5100);
 			var state = KingdomSemanticClockRules.FromLastDispatchTick(resumed);
 			ClassicAssert.IsFalse(KingdomSemanticClockRules.Decide(state, 5101, false).ShouldDispatch);
 			ClassicAssert.IsTrue(KingdomSemanticClockRules.Decide(state, 6000, false).ShouldDispatch);

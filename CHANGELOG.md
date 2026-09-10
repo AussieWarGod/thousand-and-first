@@ -217,8 +217,8 @@ below it.
   exactly what it read before.
 
 > **Current unreleased census — master semantic resume correction.** Current 3078-file census is line-cap green:
-> 437,133 physical lines; zero files at or above 300; 1434 direct `XRL` imports.
-> Inventory SHA-256: `0f42e5f9086a02dc93e8916d10b22c17c700237da75ec077d1d97ea029042319`.
+> 437,136 physical lines; zero files at or above 300; 1434 direct `XRL` imports.
+> Inventory SHA-256: `f533203f98ed26e0ab95970b54b13fce26d6281988e36c9e3d20f6f870a82bb9`.
 > Three production files changed, no added sources or saved fields. Full compile and native
 > verification are pending for this correction; retained founder evidence below does not sign it.
 

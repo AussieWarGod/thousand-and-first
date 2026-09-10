@@ -25,11 +25,14 @@ completed published receipts. The correction uses the existing production receip
 seated and away settlements, preserving unfinished/unpublished/malformed active receipts and
 reanchoring completed publication. No oracle assertion or saved format is weakened.
 
-Current production census: 3078 staged C# files; 437,133 physical lines; 1434 direct `XRL`
+Current production census: 3078 staged C# files; 437,136 physical lines; 1434 direct `XRL`
 imports; no file at or above 300. Inventory SHA-256:
-`0f42e5f9086a02dc93e8916d10b22c17c700237da75ec077d1d97ea029042319`.
+`f533203f98ed26e0ab95970b54b13fce26d6281988e36c9e3d20f6f870a82bb9`.
 Focused semantic rules and seat/away wiring pass. Restoring the old active-flag rule causes
-three value failures; bypassing unpublished-receipt preservation causes three more. Full gates
+three value failures; bypassing unpublished-receipt preservation causes three more. Negative
+started masks or completed bits without started bits also preserve the prior stamp; bypassing
+that consistency guard causes three value failures. The semantic suite is registered in both
+public test projects. Full gates
 and new native proof are pending. Earlier failures remain retained; public Alpha is unchanged.
 
 Canonical compile gates honor `TMPDIR` for independently allocated stage and dev trees. A

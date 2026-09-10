@@ -20,10 +20,10 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
-The master semantic resume correction reports 3078 staged production C# files and 437,133
+The master semantic resume correction reports 3078 staged production C# files and 437,136
 physical lines. Zero are at or above 300; direct `XRL` imports occur in 1434 files, none over
 the cap. Exact staged source inventory digest:
-`0f42e5f9086a02dc93e8916d10b22c17c700237da75ec077d1d97ea029042319`.
+`f533203f98ed26e0ab95970b54b13fce26d6281988e36c9e3d20f6f870a82bb9`.
 Three existing production sources changed: the engine-free semantic clock rule, the master
 settlement plan, and the access level of the system's existing required-step mask. No new
 production source, serialized field, public API or compatibility dependency. Full gates and

@@ -1338,6 +1338,7 @@
 	<Compile Include="..\Harness\KingdomScenarioLoadRules.cs" />
 	<Compile Include="..\Harness\KingdomScenarioTravelRules.cs" />
 	<Compile Include="..\Simulation\City\KingdomSemanticClockRules.cs" />
+	<Compile Include="KingdomSemanticClockRulesTests.cs" />
 	<Compile Include="KingdomScenarioTravelRulesTests.cs" />
 	<Compile Include="..\Harness\KingdomScenarioRefusal.cs" />
 	<Compile Include="KingdomScenarioRefusalTests.cs" />
