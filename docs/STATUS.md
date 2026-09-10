@@ -16,6 +16,27 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
+## Native raw-delivery overflow evidence (#111 / #124 / #129)
+
+Exact integrated head `2f90a5f85852a9be53afcd1a539fa8e1c01ddbba` passed
+`deposit-overflow-native-check`, seed `#165939435`, profile `W0JAK2`, on 2026-09-10.
+All four cases passed through the real adapters and deposit engine: ordinary store and ground
+holds each increased 0 to 3; an exact `int.MaxValue` ground stack remained unchanged while a
+separate two-unit parcel was credited; oversized store and ground totals refused as Unproved,
+with zero new credit/placement and unchanged body references, identities, raw counts and custody.
+The store's advisory room still wrapped (1894967341); correcting that public advisory census
+remains an open #111 follow-up, not evidence that overflow is safe in every API.
+
+The seven-verb script completed with 13 journal rows, strict Player.log validation passed,
+runner exit was zero, and owned PID 36732 stopped with its receipt. Evidence and profile remain
+retained under `root-overflow129-integrated-native.CcZZhl`. Setup explicitly used synthetic
+stacks, NeverStack and allocated identities; ordinary reachability, Charter, save/load and
+release acceptance are not claimed. Earlier failed native runs remain retained as failures.
+At this exercised head: all four canonical compile modes and installed compatibility ABI pass;
+14329 Taf and 5481 Portable cases pass with zero skips; repository audit passes and CI
+34463125382 passes both jobs. This subsequent documentation-only change does not reattribute
+the native run to different bytes.
+
 ## Unreleased roadless spatial capture correction (#131)
 
 A completed camp can have a public entrance before population traffic has worn a connected
