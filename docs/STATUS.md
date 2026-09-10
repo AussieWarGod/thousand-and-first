@@ -1,6 +1,6 @@
 # Current implementation and release evidence
 
-**Snapshot:** 2026-09-09
+**Snapshot:** 2026-09-10
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
 **Next public version:** none scheduled beyond 0.3.2
 **Working candidate manifest:** 0.3.2 public Alpha playtest; private staging verified,
@@ -16,11 +16,78 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
+Canonical compile gates honor `TMPDIR` for independently allocated stage and dev trees. A
+private parent per worker avoids shared `/tmp` transaction-lock contention; all publication
+locks and identity checks remain. Executable allocation fixtures also prove an invalid parent
+refuses before staging instead of falling back to shared storage. No gameplay bytes change.
+
+## Unreleased founder boot verification
+
+Frozen founder head `22d3ce1ada9109e09d5bd0e123504fd307f748c4`, seed `#43101`,
+passed all six genuine Quickstart boot configurations and their strict offline checks.
+Receipt-owned process stops were proved for every passing profile: marsh `qsXI6d` / `Okzu1F`,
+canyon `CX2MVF` / `wqlJqU`, and dunes `8iHgSo` / `np6Mln` (advisor yes / no).
+Combined evidence: `root-founders-boot-continuation.PSuQs0/combined-results.json`.
+The first canyon/advisor attempt, `PG03vf`, timed out before AUTOSTART; its failure and
+owned stop remain retained in `root-founders-boot-matrix.mBz10p/canyon-yes`. One fresh retry
+passed. The original failed attempt is not reported as a pass.
+
+These are boot-only results, not founder save/cold-load, ordinary-play, or release acceptance.
+Later integration of the landed reload orchestration and harness-ground correction does not
+restamp this evidence to different source bytes; that integration requires fresh gates.
+
+## Unreleased harness test-ground faction strip (issue #90)
+
+The dev-only scenario test ground's `Strip`/`Restrip` (`Harness/KingdomScenarioTestGround.cs`) now
+also clears the worldgen `faction` zone property, so a re-stripped ground is born-clean again
+rather than still answering as foreign. `Strip` proves no founding-attempt site reservation stands
+on the zone first (`KingdomFoundingTransaction.HasSiteReservation`) and refuses whole, touching
+nothing, when one is pending — a prior attempt's reservation (authority, name, vocation,
+village-charter target, tick) is production state a resumed or cleaned-up attempt still reads, and
+erasing any proper subset of it would silently change what the reservation means rather than make
+the ground clean. `BuildZone`/`Restrip` carry that refusal into their journal row. The harness
+first-city founding step (`Harness/KingdomScenarioFoundingStep.cs`) gained a read-only
+foreign-faction precondition mirroring `KingdomRules.GroundIsForeignFaction` — the SAME predicate
+`Core/KingdomFounding.04.Claims.cs` guards publication with — refusing before the production
+transaction runs rather than publish-then-refuse. Harness-only: no production source changed and
+the structural census below is unchanged.
+
+Current census (unchanged by this PR): 3068
+staged C# files; 435,538 physical lines; 3099 files in the generated
+cold-install inventory; zero files at or above 300; direct `XRL`
+imports occur in 1429 files, 0 of them over the line limit. Inventory SHA-256:
+`93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa`. Retained native acceptance
+at exact `a64289c`, original seed `#165939435`: found-first-city passed 11 rows and
+first-guest-native-check passed 135 rows, with both receipt-owned stops proved. Report:
+`root-harness105-native.JNJnVO/report.tsv`. Final merge-forward `1028bde` separately passed
+697 host tests, canonical four-mode compile/ABI and required CI before PR #105 merged; native
+evidence is not silently restamped to that later integration head.
+
+Developer reload cleanup reports both the original failure and a failed owned-process stop,
+retaining the original exception as its cause. Harmless shell fixtures cover exact helper
+arguments, helper refusal blocking later personas, and prior ownership failure blocking reload.
+These checks are host orchestration evidence only, not native reload or release acceptance.
+
+The cold-reload host arms a kernel parent-death signal (PR_SET_PDEATHSIG) so a killed
+run-personas.sh cannot orphan it, refusing explicitly on either arming race (parent already
+gone before or during the call) or a failed prctl, rather than a silent fallback.
+run-personas.sh's own TERM path still never sends a raw kill; it reports its own exit as a
+hand-off, not confirmed cleanup. Real child-process/real-signal tests (`Tools/tests/
+persona_reload_signal_test.py`) prove disposal, the refusals, and the shell's forwarding and
+reporting - host orchestration evidence only, not native reload or release acceptance.
+
 Developer profile metadata census uses batches of at most four read-only workers. Every existing
 per-file ancestor/link/size check remains; file/directory/total-byte bounds and both closed hash
 passes remain in force. A retained stopped 3,273-file profile measured 75.54 seconds before,
 10.03 seconds with batching, then 74.81 seconds on a warm original-code control. These are local
 phase timings, not a general platform guarantee or native acceptance. Refs #89.
+
+Retained native developer cold-reload evidence at PR #108 head `6ea5f38`: genuine marsh/advisor
+Quickstart at seed `#43101`, real save, receipt-owned stop, fresh descendant profile, strict
+save/load checks, unchanged save hashes and native stock/ID witnesses, then a second owned stop
+and final idle proof. Report `root-reload-native.hOChoP/report.tsv` passed one persona. This is
+same-version developer evidence, not historical saves, ordinary play, graceful quit or release
+acceptance; the later host-only census merge is not silently included in that native claim.
 
 Repository audits use a fresh empty Python cache lookup root with bytecode writes disabled.
 An executable timestamp-cache fixture proves that disabling writes alone still reads stale

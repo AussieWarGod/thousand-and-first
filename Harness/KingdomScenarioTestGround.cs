@@ -40,6 +40,21 @@ namespace XRL.World.ZoneBuilders
 	/// invents no new notion of what counts as ground.
 	/// </para>
 	/// <para>
+	/// ALSO CLEARS the zone-level <c>"faction"</c> property worldgen paints on a village zone -
+	/// object removal alone left a zone that still answered as foreign, which is not born-clean:
+	/// <c>BuildZone</c> would ship a ground worldgen already claimed, and <c>Restrip</c> would arm
+	/// the tester over one still claimed.
+	/// </para>
+	/// <para>
+	/// NEVER TOUCHES A PENDING SITE RESERVATION. A prior founding attempt on this same zone can
+	/// leave <see cref="ThousandAndFirst.KingdomFoundingTransaction.HasSiteReservation"/> true -
+	/// its authority, name, vocation, village-charter target and tick are production state a
+	/// resumed or cleaned-up attempt still reads. Erasing only the village-charter half of that
+	/// set (or any other proper subset) would not make the ground clean; it would silently change
+	/// what the reservation MEANS to whatever reads it next. So the strip refuses whole rather
+	/// than partially erase: see <see cref="Strip"/>.
+	/// </para>
+	/// <para>
 	/// DETERMINISTIC AND DEV-ONLY. It removes; it never places or rolls. Under the sealed seed the
 	/// generated zone is the same zone every time, so what this strips is the same every time. The
 	/// file lives in <c>Harness/</c>, which the shipped manifest does not select and
@@ -54,12 +69,20 @@ namespace XRL.World.ZoneBuilders
 		/// <summary>Journal verb column for the second strip, taken as the runner arms.</summary>
 		internal const string RestripRow = "TESTGROUND-RESTRIP";
 
+		/// <summary>
+		/// A founding-attempt site reservation stands on this zone: the strip refuses whole rather
+		/// than partially erase production state a resumed or cleaned-up attempt still reads.
+		/// </summary>
+		internal const string ReservationPendingCode = "taf-scenario-testground-reservation-pending";
+
 		public bool BuildZone(Zone Z)
 		{
 			if (Z == null) return false;
-			Strip(Z, out int removed, out int keptStairs, out int keptBare);
-			KingdomScenarioJournal.Append(BuiltRow, true, Describe(Z, removed, keptStairs, keptBare));
-			return true;
+			bool ok = Strip(Z, out int removed, out int keptStairs, out int keptBare,
+				out string failure);
+			KingdomScenarioJournal.Append(BuiltRow, ok,
+				ok ? Describe(Z, removed, keptStairs, keptBare) : failure);
+			return ok;
 		}
 
 		/// <summary>
@@ -72,12 +95,35 @@ namespace XRL.World.ZoneBuilders
 		internal static void Restrip(Zone Z)
 		{
 			if (Z == null) return;
-			Strip(Z, out int removed, out int keptStairs, out int keptBare);
-			KingdomScenarioJournal.Append(RestripRow, true, Describe(Z, removed, keptStairs, keptBare));
+			bool ok = Strip(Z, out int removed, out int keptStairs, out int keptBare,
+				out string failure);
+			KingdomScenarioJournal.Append(RestripRow, ok,
+				ok ? Describe(Z, removed, keptStairs, keptBare) : failure);
 		}
 
-		internal static void Strip(Zone Z, out int Removed, out int KeptStairs, out int KeptBare)
+		/// <summary>
+		/// Strips the zone to bare ground, or refuses whole and touches nothing. Refuses when
+		/// <see cref="ThousandAndFirst.KingdomFoundingTransaction.HasSiteReservation"/> is true for
+		/// this zone: that reservation's authority, name, vocation, village-charter target and tick
+		/// are production state a resumed or cleaned-up founding attempt still reads, and clearing
+		/// any proper subset of it (the village-charter fields, say) would not make the ground
+		/// clean - it would silently change what the reservation means to whatever reads it next.
+		/// Checked BEFORE any object is touched, so a refusal never leaves a half-stripped zone.
+		/// </summary>
+		internal static bool Strip(Zone Z, out int Removed, out int KeptStairs, out int KeptBare,
+			out string Failure)
 		{
+			Removed = 0;
+			KeptStairs = 0;
+			KeptBare = 0;
+			Failure = null;
+			if (KingdomFoundingTransaction.HasSiteReservation(Z))
+			{
+				Failure = "[" + ReservationPendingCode + "] a founding-attempt site reservation "
+					+ "stands on this zone; the strip refuses rather than partially erase its "
+					+ "metadata";
+				return false;
+			}
 			int removed = 0;
 			int keptStairs = 0;
 			int keptBare = 0;
@@ -114,9 +160,14 @@ namespace XRL.World.ZoneBuilders
 						if (gone || !GameObject.Validate(item)) removed++;
 					}
 				}
+			// Object removal alone is not born-clean: worldgen paints ownership onto the ZONE, not
+			// onto any object in it. No site reservation stands here (checked above), so clearing
+			// this is never a partial erase of production state.
+			Z.RemoveZoneProperty("faction");
 			Removed = removed;
 			KeptStairs = keptStairs;
 			KeptBare = keptBare;
+			return true;
 		}
 
 		/// <summary>

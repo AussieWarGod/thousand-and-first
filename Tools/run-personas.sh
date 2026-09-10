@@ -107,7 +107,7 @@ load_persona() {
 	path="$(persona_path "$1")"
 	[ -f "$path" ] || die "no such persona: $1 ($path)"
 	P_REQUEST=""; P_SCRIPT=""; P_START=""; P_CHECK=""; P_TIMEOUT=""; P_VERBS=""; P_DESC=""
-	P_SET=""; P_GATE=0; P_LOG_EXPECT=""
+	P_SET=""; P_GATE=0; P_LOG_EXPECT=""; P_RELOAD=""
 	fields="$(python3 "$MATRIX" fields "$path")" || die "persona $1 is malformed"
 	while IFS=$'\t' read -r key value; do
 		case "$key" in
@@ -120,6 +120,7 @@ load_persona() {
 			description) P_DESC="$value" ;;
 			set) P_SET="$value" ;;
 			log_expect) P_LOG_EXPECT="$value" ;;
+			reload) P_RELOAD="$value" ;;
 		esac
 	done <<< "$fields"
 	[ -n "$P_REQUEST" ] || die "persona $1 declares no request"
@@ -169,6 +170,7 @@ ACTIVE_ROOT=""
 ACTIVE_LAUNCH=0
 ACTIVE_STOP_LOG=""
 LIFECYCLE_BROKEN=0
+RELOAD_PID=""
 
 stop_owned() {
 	[ -n "$ACTIVE_ROOT" ] && [ "$ACTIVE_LAUNCH" = 1 ] || return 0
@@ -197,7 +199,26 @@ on_exit() {
 }
 trap 'on_exit $?' EXIT
 trap 'exit 130' INT
-trap 'exit 143' TERM
+
+# A reload persona owns its own two-process workflow inside run-persona-reload.py, run as a
+# background job so its pid is known here. stop_owned cannot dispose it (it never touches
+# ACTIVE_ROOT/ACTIVE_LAUNCH). This script never signals a process it does not own by
+# identity-verified receipt (Tools/tests/scenario_process_source_test.py pins that for the
+# whole scenario lifecycle surface), so a bare TERM here is never forwarded by hand: the
+# helper arms its own kernel parent-death signal (run-persona-reload.py's
+# arm_parent_death_signal(), given this shell's own pid via TAF_RELOAD_PARENT_PID) so the
+# instant THIS process actually exits, the kernel delivers the same SIGTERM to it directly and
+# its own handler runs the exact-owned cleanup - not this trap, and not a kill line in this
+# file. This process exiting is therefore never reported as cleanup having completed: only
+# that it has been handed off to a mechanism this shell cannot itself confirm from here.
+on_term() {
+	if [ -n "$RELOAD_PID" ]; then
+		printf 'reload persona interrupted before this shell could confirm its outcome; the cold-reload host now owns its own exact-receipt cleanup independently of this exit; inspect %s/reload-* if a profile looks stale\n' \
+			"$REPORT_DIR" >&2
+	fi
+	exit 143
+}
+trap on_term TERM
 
 # Copy a live output through a same-directory temporary name. A retry gets its own target name, so
 # its evidence cannot erase the first attempt that caused it. The caller decides whether absence is
@@ -220,9 +241,37 @@ run_persona() {
 	local timeout waited terminal problems warnings capture_problem archive_problem artifact
 	local capture_temp capture_target prepare_log launch_log capture_log
 	local -a prepare_args
+	local reload_out reload_status
 	VERDICT=FAIL
 	DETAIL=""
 	load_persona "$persona"
+	if [ -n "$P_RELOAD" ]; then
+		if [ "$LIFECYCLE_BROKEN" = 1 ]; then DETAIL="previous ownership failure requires inspection"; return; fi
+		reload_out="$(mktemp)"
+		# Backgrounded (not `$(...)`) so RELOAD_PID is known to on_term: a bare TERM to this
+		# script must reach the helper's own SIGTERM handler and its exact-owned cleanup, never
+		# leave it running unattended after the matrix believes it has moved on.
+		# TAF_RELOAD_PARENT_PID is this shell's own pid, recorded before the fork below: the
+		# helper's arm_parent_death_signal() compares it against getppid() to catch a parent
+		# that is already gone before (or the instant during) arming, not only one that later
+		# sends a signal.
+		TAF_RELOAD_PARENT_PID="$$" python3 "$REPO/Tools/run-persona-reload.py" \
+			"$(persona_path "$persona")" \
+			--game "$GAME" --report-dir "$REPORT_DIR" > "$reload_out" &
+		RELOAD_PID=$!
+		wait "$RELOAD_PID"
+		reload_status=$?
+		RELOAD_PID=""
+		DETAIL="$(cat "$reload_out")"
+		rm -f "$reload_out"
+		if [ "$reload_status" -eq 0 ]; then
+			VERDICT=PASS
+		else
+			# The helper owns exact-profile cleanup; no later persona may assume it succeeded.
+			LIFECYCLE_BROKEN=1
+		fi
+		return
+	fi
 	timeout="${TAF_PERSONA_TIMEOUT:-${P_TIMEOUT:-300}}"
 	artifact="$persona"
 	[ "$attempt" -le 1 ] || artifact="$persona-retry$attempt"
