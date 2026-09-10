@@ -243,6 +243,15 @@ overwritten by kingdom systems without explicit designation:
 - Kingdom systems may destroy only objects they created and marked (`KingdomCitizen`,
   `KingdomBuilt`, `KingdomRaider`); wounds to anything else come only from ordinary
   simulation (combat, fire), never from scripted deletion.
+- A total that is not representable as an `int` is not a reading. Raw stock counts are summed off
+  the engine's own unbounded `int` fields, so an honest pair of large stacks can total past
+  `int.MaxValue`; the accumulator is a `long` and such a total is refused outright rather than
+  saturated, wrapped, or credited. What the refusal does is exact. BEFORE the insertion, the
+  delivery destroys the parcel it made itself — ownerless, and proved so immediately beforehand —
+  and stops; nothing already stored is touched, and units proved into the destination earlier in
+  the same fill stay credited. AFTER the insertion the parcel belongs to the destination, so
+  nothing is destroyed, withdrawn, or moved, and that parcel simply earns no credit. Either way
+  the delivery says so once (7b) and never mints a replacement for a parcel it could not read.
 - Preparing a save for removal is an attended, terminal, exact-owner transaction while this mod is
   still loaded. It visits only known ground through ordinary play, reports outstanding locators,
   preserves foreign/player custody, and writes its identity fence last. Never promise that an

@@ -1,4 +1,4 @@
-namespace ThousandAndFirst
+﻿namespace ThousandAndFirst
 {
 	public static partial class KingdomRules
 	{
@@ -172,6 +172,8 @@ namespace ThousandAndFirst
 		/// </param>
 		/// <param name="HeldAfter">What it physically holds after it, and after any withdrawal of
 		/// a bundle that reached nobody.</param>
+		/// <remarks>A negative hold on either side is not a hold; it counts as nothing gained.
+		/// </remarks>
 		/// <returns>Units to count as placed, never above the batch and never negative.</returns>
 		public static int DepositLandedUnits(int Batch, bool Proved, int HeldBefore, int HeldAfter)
 		{
@@ -182,6 +184,16 @@ namespace ThousandAndFirst
 			if (Proved)
 			{
 				return Batch;
+			}
+			if (HeldBefore < 0 || HeldAfter < 0)
+			{
+				// A store never holds a negative number of things, so a negative reading is not a
+				// hold at all -- it is what an unchecked sum of two honest stacks looks like once
+				// it has left the whole numbers. Subtracting one would pay this delivery in full
+				// for a landing nobody can see. The seam refuses such a reading before it ever
+				// gets here; this is the rule itself saying the same thing, so the arithmetic
+				// cannot be talked into a credit by a caller that reads its counts elsewhere.
+				return 0;
 			}
 			int gained = HeldAfter - HeldBefore;
 			return (gained < 1) ? 0 : ((gained < Batch) ? gained : Batch);

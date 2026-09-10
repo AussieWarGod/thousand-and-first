@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 
 namespace ThousandAndFirst
 {
@@ -149,10 +149,21 @@ namespace ThousandAndFirst
 				// bundle, change its count, or fill the destination, so no reading here can
 				// invalidate another and the custody proof beside them stays true until the
 				// mutation that follows it.
-				int roomNow = Host.RawRoomNow();
+				bool roomKnown = Host.TryRawRoomNow(out int roomNow);
 				int carried = Host.RawCountOf(bundle);
 				if (!Host.HeldByNobody(bundle))
 				{
+					return Refuse(Host, Placed);
+				}
+				if (!roomKnown)
+				{
+					// The destination's hold is not a whole number, so there is no room to judge
+					// this batch against. The parcel is real, stamped, and standing in nobody's
+					// hands -- the proof just above says so -- and leaving it there would be
+					// material minted and abandoned. It is put back exactly where a refused batch
+					// is put back, and the delivery stops either way: destruction is vetoable, and
+					// a veto handler may have moved the body before refusing.
+					Host.Discard(bundle);
 					return Refuse(Host, Placed);
 				}
 				if (!KingdomRules.DepositStampHolds(batch, carried, roomNow))
@@ -167,7 +178,15 @@ namespace ThousandAndFirst
 				// told from what the insertion returned. Raw, because it is half of a CREDIT: a
 				// census that repaired a resident's count as it walked could move that resident,
 				// or another, and pay this delivery for a landing that happened somewhere else.
-				int held = Host.RawMaterialHeldNow();
+				if (!Host.TryRawMaterialHeldNow(out int held))
+				{
+					// Half of a credit is missing before the insertion has even run. Nothing
+					// between the custody proof above and this reading dispatches, so the parcel
+					// is still this delivery's to put back; it goes back rather than into a
+					// destination whose gain could never afterwards be told.
+					Host.Discard(bundle);
+					return Refuse(Host, Placed);
+				}
 				object accepted = Host.Insert(bundle);
 				if (Host.Landed(bundle, accepted, batch))
 				{
@@ -191,8 +210,14 @@ namespace ThousandAndFirst
 				// destination itself gained IN THIS MATERIAL may be counted, and only a gain
 				// covering the whole batch settles it: a bundle that vanished leaving less behind
 				// took the remainder somewhere this delivery cannot read.
-				int landed = KingdomRules.DepositLandedUnits(batch, false, held,
-					Host.RawMaterialHeldNow());
+				if (!Host.TryRawMaterialHeldNow(out int heldAfter))
+				{
+					// The parcel is already inside the destination and this delivery no longer
+					// owns it, so nothing here is destroyed, withdrawn, or moved. What it cannot
+					// read it does not credit: no units are counted, and the delivery stops.
+					return Refuse(Host, Placed);
+				}
+				int landed = KingdomRules.DepositLandedUnits(batch, false, held, heldAfter);
 				Placed += landed;
 				remaining -= landed;
 				room -= landed;

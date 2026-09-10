@@ -37,11 +37,11 @@ foreign-faction precondition mirroring `KingdomRules.GroundIsForeignFaction` —
 transaction runs rather than publish-then-refuse. Harness-only: no production source changed and
 the structural census below is unchanged.
 
-Current census (unchanged by this PR): 3068
-staged C# files; 435,538 physical lines; 3099 files in the generated
+Current census: 3068
+staged C# files; 435,648 physical lines; 3099 files in the generated
 cold-install inventory; zero files at or above 300; direct `XRL`
 imports occur in 1429 files, 0 of them over the line limit. Inventory SHA-256:
-`93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa`. Retained native acceptance
+`b6556937a3c29126c98851331094c70ddcb7f5c4082010d8ca47da9742f16bef`. Retained native acceptance
 at exact `a64289c`, original seed `#165939435`: found-first-city passed 11 rows and
 first-guest-native-check passed 135 rows, with both receipt-owned stops proved. Report:
 `root-harness105-native.JNJnVO/report.tsv`. Final merge-forward `1028bde` separately passed
@@ -193,12 +193,12 @@ The heart-ingress endpoints are unchanged and refusal is still fail-closed with 
 Current census after merging `dev` (the Kingdom Quickstart tent rows, the first-basin water store,
 the stockpile unit capacity, the render-only city sight and the shelter ingress included) and the
 stockpile deposit custody fix: 3068
-staged C# files; 435,538 physical lines; 3099 files in the generated
+staged C# files; 435,648 physical lines; 3099 files in the generated
 cold-install inventory. Staged compilation covers 3068 sources, baseline and compatibility symbols
 (baseline compiles 3064 of them; the optional-mod bridge is compatibility-only), run here by Roslyn
 9.0.306 on Linux against the licensed Managed references with warnings as
 errors. Direct `XRL` imports: 1429 files, 0 over the line limit.
-Inventory SHA-256: `93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa` (this digest differs from the previous one solely because of the 0.3.2 KingdomReleaseInfo.cs version-literal bump; no other change).
+Inventory SHA-256: `b6556937a3c29126c98851331094c70ddcb7f5c4082010d8ca47da9742f16bef`.
 Before the merge, all four `Tools/gate.sh` modes compiled clean on the shelter-ingress delta's own
 bytes — staged baseline (3050 sources), staged compatibility (3054), dev-harness baseline (3204)
 and dev-harness compatibility (3208) — with the installed-Hearthpyre source and ABI step, and the

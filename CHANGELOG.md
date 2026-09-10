@@ -147,6 +147,34 @@ below it.
 
 ### Changed
 
+- A settlement delivery read its destination's room and its gain by summing raw stack counts into
+  an `int`. A stack's count is the engine's own plain `int` field with no ceiling on it
+  (`Stacker._StackCount`, read back by `Reader.ReadInt32` and merged by unchecked `int` addition),
+  so two honest stacks can total more than `int.MaxValue`. Summed unchecked, two stacks of
+  1,200,000,000 read back as −1,894,967,296: a full chest then reports 1,894,967,360 places free
+  and admits the delivery past its stated size, and a pair of wrapped gain readings agrees mod 2^32
+  and pays the delivery in full for a landing nobody can see. Both censuses now total in a `long`
+  and answer FALSE once the total is not representable as an `int`, and the deposit seam's two raw
+  readings answer with a
+  proof rather than a number (`Growth/KingdomMaterials.RawObservation.cs`,
+  `Core/IKingdomDepositHost.cs`, `Growth/KingdomMaterials.StockpileDeposit.cs`,
+  `Growth/KingdomMaterials.GroundSpill.cs`). The bound is representability itself — what an `int`
+  can hold — so a legitimately large modded store is never refused for being large, and nothing is
+  ever saturated into an exact-looking total. An unreadable room or an unreadable hold BEFORE the
+  insertion destroys the parcel this delivery made itself (behind the same held-by-nobody proof
+  every other withdrawal stands behind) and stops, leaving what was already proved into the store
+  in the same fill credited; an unreadable hold AFTER it destroys nothing and moves nothing,
+  because the parcel then belongs to the destination, and simply takes no credit for that parcel.
+  A parcel proved exact-body is credited on that proof alone and never depends on the before/after
+  comparison at all
+  (`Core/KingdomDepositEngine.cs`). `KingdomRules.DepositLandedUnits` also refuses a negative hold
+  on either side outright, so the arithmetic cannot be talked into a credit by a caller that takes
+  its counts elsewhere (`Core/KingdomRules.MaterialStores.cs`). Custody is reported as `Unproved`
+  and said once; no enum member, saved format, capacity, or stored item changed, and a standing
+  save reads exactly what it read before. The public advisory readings
+  `KingdomSurvey.StockHeldIn` and `KingdomMaterials.StockpileRoom` are deliberately NOT changed
+  here and remain a follow-up on #111. Refs #111.
+
 - The deposit law moved out of the engine-facing shard into `Core/KingdomDepositEngine.cs` behind
   `Core/IKingdomDepositHost.cs`, so it can be driven against handlers that relocate, fill, veto a
   destruction, or merge the bundle away mid-callback.
@@ -157,12 +185,12 @@ below it.
   exactly what it read before.
 
 > **Current unreleased census — exact structural gate passed.** Current 3068-file census is line-cap green:
-> 435,538 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> 435,648 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1429 files, 0 of them over the line limit. Inventory SHA-256:
-> `93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa` (this digest differs from the previous one solely because of the 0.3.2 KingdomReleaseInfo.cs version-literal bump; no other change).
+> `b6556937a3c29126c98851331094c70ddcb7f5c4082010d8ca47da9742f16bef`.
 > The generated cold-install inventory contains 3099 files; no new subscription claim.
-> This digest is the stockpile deposit custody fix merged over `dev` at `862f14d` (the unattended
+> This digest is the raw delivery overflow fix over the stockpile deposit custody fix merged over `dev` at `862f14d` (the unattended
 > native observers, the Workshop listing wording, the automatic Workshop attempt finalisation, the
 > Fetch carry-completion fix and the cross-version persona REQUEST wording; only the Fetch fix
 > touches a production C# source, and it adds no new one), and over the Kingdom Quickstart shelter ingress, the

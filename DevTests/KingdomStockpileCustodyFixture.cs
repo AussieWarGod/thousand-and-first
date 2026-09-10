@@ -1,4 +1,4 @@
-#if TAF_TESTS
+﻿#if TAF_TESTS
 using System;
 using System.Collections.Generic;
 using ThousandAndFirst;
@@ -58,6 +58,11 @@ namespace ThousandAndFirst.Tests
 		internal bool Dedicated = true;
 
 		internal bool Announced;
+
+		/// <summary>Set to model OPEN GROUND, whose room is a declared bound rather than a census
+		/// (<c>GroundSpill.cs</c>): the material reading is then the only overflow surface on the
+		/// path, and a test can prove the material check is load-bearing on its own.</summary>
+		internal int? Bound;
 
 		/// <summary>False models a destination that can no longer carry the saying &mdash; a store
 		/// a handler destroyed mid-fill. The host must still not say the same thing twice.
@@ -148,6 +153,13 @@ namespace ThousandAndFirst.Tests
 		public int RoomNow()
 		{
 			RoomReads++;
+			if (Bound.HasValue)
+			{
+				// Open ground answers its ordinary reading with the same declared bound, exactly
+				// as GroundSpillHost does.
+				if (OnRoomRead != null && Working != null) OnRoomRead(this, Working);
+				return Bound.Value;
+			}
 			// A census totals what it walked, and a handler it fired during the walk changes the
 			// store AFTERWARDS. So the number it returns can already be out of date by the time
 			// the caller has it, which is the whole reason a raw re-observation follows.
@@ -157,29 +169,62 @@ namespace ThousandAndFirst.Tests
 		}
 
 		/// <summary>The RAW reading. It runs no hook and changes nothing, and a destination that
-		/// has lost its dedication has no room at all, exactly as the seam reports.</summary>
-		public int RawRoomNow()
+		/// has lost its dedication has no room at all, exactly as the seam reports. It FAILS when
+		/// the residents do not total to a representable int, exactly as the seam's own census does
+		/// &mdash; and failing is not the same as having no room.</summary>
+		public bool TryRawRoomNow(out int Room)
 		{
 			RawRoomReads++;
+			Room = 0;
+			if (Bound.HasValue)
+			{
+				// Open ground: a declared bound, never a census, so this reading cannot fail.
+				Room = Bound.Value;
+				return true;
+			}
 			if (!Dedicated)
 			{
-				return 0;
+				return true;
 			}
-			int room = Capacity - Held - CensusOccupancy();
-			return (room > 0) ? room : 0;
+			if (!TryCensusOccupancy(out long occupied))
+			{
+				return false;
+			}
+			long room = Capacity - Held - occupied;
+			Room = (room > 0) ? (int)room : 0;
+			return true;
 		}
 
 		/// <summary>What the residents occupy, counted the way the seam's raw census counts: a
-		/// malformed count is one thing lying in the chest, read but never written back.</summary>
-		private int CensusOccupancy()
+		/// malformed count is one thing lying in the chest, read but never written back. A stack
+		/// count is the engine's own unbounded field, so the running total is a <c>long</c> and
+		/// there is no answer at all once the total exceeds <c>int.MaxValue</c>.</summary>
+		private bool TryCensusOccupancy(out long Held)
 		{
-			int held = 0;
+			long held = 0;
 			for (int i = 0; i < Residents.Count; i++)
 			{
 				FakeBundle resident = Residents[i];
-				if (resident.Alive && resident.Holder == "store") held += CensusCount(resident);
+				if (resident.Alive && resident.Holder == "store")
+				{
+					held += CensusCount(resident);
+					if (held > int.MaxValue)
+					{
+						Held = 0;
+						return false;
+					}
+				}
 			}
-			return held;
+			Held = held;
+			return true;
+		}
+
+		/// <summary>The whole-occupancy reading as a number, for the tests that assert on it
+		/// directly. Only ever called where the residents are known to be representable.</summary>
+		internal int CensusOccupancy()
+		{
+			TryCensusOccupancy(out long held);
+			return (int)held;
 		}
 
 		/// <summary>The census fallback: nonpositive reads as one, and the field is not touched.
@@ -195,14 +240,40 @@ namespace ThousandAndFirst.Tests
 		/// and a test asserts the engine never takes it: a census that dispatches can move an
 		/// earlier row after its count has already been added to the total.
 		/// </summary>
-		public int RawMaterialHeldNow()
+		public bool TryRawMaterialHeldNow(out int Held)
 		{
 			RawMaterialReads++;
+			Held = 0;
 			if (!Dedicated)
 			{
-				return 0;
+				return true;
 			}
-			return CensusOccupancy() + MaterialHeld;
+			if (!TryCensusOccupancy(out long occupied))
+			{
+				return false;
+			}
+			long held = occupied + MaterialHeld;
+			if (held > int.MaxValue)
+			{
+				return false;
+			}
+			Held = (int)held;
+			return true;
+		}
+
+		/// <summary>The same reading as a number, for the tests that assert on it directly.
+		/// </summary>
+		internal int RawMaterialHeldNow()
+		{
+			TryRawMaterialHeldNow(out int held);
+			return held;
+		}
+
+		/// <summary>The same for room, so the room controls read as they always did.</summary>
+		internal int RawRoomNow()
+		{
+			TryRawRoomNow(out int room);
+			return room;
 		}
 
 		/// <summary>The census as it would be if every row were asked its count the ordinary way:
@@ -284,8 +355,14 @@ namespace ThousandAndFirst.Tests
 			return bundle.Alive && bundle.Holder == null;
 		}
 
+		/// <summary>Destructions ATTEMPTED, whether or not a body was there to destroy. A parcel
+		/// already inside its destination is not this delivery's to touch, and the only way to see
+		/// that it was left alone is to count the attempt rather than the outcome.</summary>
+		internal int DiscardCalls;
+
 		public bool Discard(object Bundle)
 		{
+			DiscardCalls++;
 			FakeBundle bundle = (FakeBundle)Bundle;
 			if (OnDiscard != null)
 			{
