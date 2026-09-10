@@ -16,6 +16,17 @@ inferred from source or static automation.
 
 ## Stockpile hotfix — issue #142
 
+**Fresh build regression PASS:** exact developer head `3cf2825ec94a8153c180faccb5c7bf33e464f4df`,
+seed `#43101`, marsh/no advisor. Genuine boot, UI-equivalent quote/CanPay/commission sequence,
+same-chest timber 4→3, exact cask debit, paid `Working`/`PlotWorks` job with exact linked works
+receipt and ground, and no leaked survey scope all passed. External sealed-profile/log checker
+returned PASS and driver exit 0. Evidence `hotfix142-native.epWuUn`; profile
+`/mnt/c/taf-scenario.nwgvHE`; owned PID 37016 stopped with profile/seal retained. This proves
+staking the paid fire plot, not completion, ordinary play, historical saves or Steam delivery.
+The six terrain/advisor save–cold-load pairs are running separately, not yet accepted here.
+The following descendant changes only portable test registration (12 existing pure source files),
+not the exercised runtime or harness. Full candidate release gates remain required.
+
 The integrated `0f78405` native build run passed genuine boot, quote, CanPay, commission,
 physical timber/water debit and clean paid-claim checks, then correctly failed acceptance at
 a faulty developer assertion: it expected `Projected`, while successful `ProjectPlot` explicitly
