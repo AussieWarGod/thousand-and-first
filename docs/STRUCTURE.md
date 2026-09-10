@@ -20,14 +20,21 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
-The Kingdom Quickstart founding cohort over the stockpile deposit custody fix, the Kingdom
-Quickstart shelter ingress, the render-only city sight, the stockpile unit capacity, the
-first-basin water store and the Kingdom Quickstart
-tent rows reports 3078 staged production C# files and 437,114 physical lines.
+The test-only forage native-check seam (Harness/DevTests/Tools only; no production source added
+or removed) over the Kingdom Quickstart founding cohort, the stockpile deposit custody fix, the
+Kingdom Quickstart shelter ingress, the render-only city sight, the stockpile unit capacity, the
+first-basin water store, the Kingdom Quickstart tent rows and the brush-forage duty (T-forage-1)
+reports 3081 staged production C# files and 437,479 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`e1ddecb76e357905d90bbc40ad8414b68efc38f2b532d19ec61d2df4a5053ce9`. The census reports
-1434 files with direct `XRL` imports; 0 of those exceed the line limit.
+`cadae7b6d3f4346a1a2d1b79ce186635789dd377ff568743ea05e0e0decd3f87`. The census
+reports 1435 files with direct `XRL` imports; 0 of those exceed the line limit.
+
+Retained: the brush-forage duty (T-forage-1) over the stockpile deposit custody fix, the Kingdom
+Quickstart shelter ingress, the render-only city sight, the stockpile unit capacity, the
+first-basin water store and the Kingdom Quickstart tent rows reported 3071 staged production C#
+files and 435,903 physical lines, digest
+`4e4f52c0c6ef80783e04b1a6e164d2339bda53cd3b3a27a0b276669e55d9237b`, 1430 direct `XRL` imports.
 
 The founding-cohort delta over the retained draft below is ten added production sources and no
 removals: the quickstart rules' founders partial, the bootstrap's receipt partial split out of the

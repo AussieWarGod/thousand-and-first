@@ -46,6 +46,8 @@ namespace ThousandAndFirst
 			Publish(PlotRoots, Row, Row.PlotRoot, Add);
 			Publish(LayoutRoots, Row, Row.LayoutRoot, Add);
 			Publish(CropRows, Row, Row.CropRow, Add);
+			Publish(ForagePlants, Row, Row.ForagePlant, Add);
+			Publish(ForagePlots, Row, Row.ForagePlot, Add);
 			Publish(NetworkPieces, Row, Row.NetworkPiece, Add);
 			Publish(LabJobs, Row, Row.LabJob, Add);
 			Publish(VisualRoots, Row, Row.VisualRoot, Add);
@@ -235,6 +237,7 @@ namespace ThousandAndFirst
 				&& A.Clearance == B.Clearance && A.ConstructionRoot == B.ConstructionRoot
 				&& A.PlotRoot == B.PlotRoot && A.LayoutRoot == B.LayoutRoot
 				&& A.CropRow == B.CropRow && A.NetworkPiece == B.NetworkPiece
+				&& A.ForagePlant == B.ForagePlant && A.ForagePlot == B.ForagePlot
 				&& A.LabJob == B.LabJob && A.VisualRoot == B.VisualRoot
 				&& A.PlotPart == B.PlotPart
 				&& A.ArchitectureComponent == B.ArchitectureComponent

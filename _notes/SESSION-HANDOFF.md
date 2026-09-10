@@ -1,6 +1,32 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current unreleased Kingdom Quickstart founding cohort
+## Current unreleased test-only forage native-check seam
+
+3081 staged sources; 437,479 physical lines; 1435 direct-XRL; zero cap failures; 3112 generated
+cold-stage files. Exact inventory `cadae7b6d3f4346a1a2d1b79ce186635789dd377ff568743ea05e0e0decd3f87`.
+Merges the Kingdom Quickstart founding cohort with the forage native-check Harness seam
+(`Harness/KingdomForageNativeProvider.cs`, `KingdomForageNativeChecks.cs`,
+`KingdomForageNativeChecksPhases.cs`, `KingdomForageNativeFixture.cs`,
+`KingdomForageNativeGeometry.cs` — dev-only; no production source added or removed). The seam
+proves the forage duty's real settlement-pass cadence (never a direct `WorkForage` call): removal
+paired with a direct raw census stock gain, six exclusion categories bound by exact id/cell/
+zone/owner/count and re-verified after cutting and again after the ceiling, the twelve-unit
+ceiling counting real reserved units (marked with the production
+`KingdomConstruction.InputMarkerProperty`) proved by direct census rather than arithmetic, and the
+once-only exhaustion notice witnessed by a real ledger count across three exhausted intervals
+before it re-arms.
+
+## Retained unreleased brush-forage duty (T-forage-1)
+
+3071 staged sources; 435,861 physical lines; 1430 direct-XRL; zero cap failures; 3102 generated
+cold-stage files. Exact inventory `6b61edc029d78cc010ed151f68fe8512770fe3d84db23453c488fc649bfc78cf`.
+Three new production files over the retained stockpile deposit custody census below:
+`Growth/KingdomMaterials.00.r_KingdomForage.cs`, `Growth/KingdomMaterialRules.Forage.cs`,
+`Growth/KingdomMaterials.16.ForageWork.cs`. The forage ceiling counts brush a routed delivery has
+already claimed toward its twelve-unit cap (`ForageCeilingHeld`, a raw custody census over
+`Growth/KingdomMaterials.RawObservation.cs`), consistent with the stockpile capacity rule.
+
+## Retained unreleased Kingdom Quickstart founding cohort
 
 3078 staged sources; 437,114 physical lines; 1434 direct-XRL; zero cap failures; 3109 generated
 cold-stage files. Exact inventory `e1ddecb76e357905d90bbc40ad8414b68efc38f2b532d19ec61d2df4a5053ce9`.

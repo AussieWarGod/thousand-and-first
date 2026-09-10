@@ -1,6 +1,28 @@
 # Brief-to-implementation audit
 
-## Current Kingdom Quickstart founding-cohort census — 2026-09-10
+## Current test-only forage native-check seam census — 2026-09-10
+
+**3081** production C# files, 437,479 physical lines, 1435 direct-XRL, zero cap failures;
+3112 generated cold-install files. Exact digest
+`cadae7b6d3f4346a1a2d1b79ce186635789dd377ff568743ea05e0e0decd3f87`.
+No production source added or removed: this merges the Kingdom Quickstart founding cohort with
+the dev-only forage native-check Harness seam (five new `Harness/KingdomForageNative*.cs` files
+plus their DevTests). The seam proves the forage duty's real settlement-pass cadence, direct-census
+removal/stock-gain and ceiling-with-reserved-units, six exclusion categories bound and re-verified
+twice, and the once-only exhaustion notice witnessed by a real ledger count.
+
+## Retained brush-forage duty census (T-forage-1) — 2026-09-10
+
+**3071** production C# files, 435,861 physical lines, 1430 direct-XRL, zero cap failures;
+3102 generated cold-install files. Exact digest
+`6b61edc029d78cc010ed151f68fe8512770fe3d84db23453c488fc649bfc78cf`.
+Three added production sources (the heart-local forage part, its tunable rules, and the
+settlement-pass work) over the stockpile deposit custody census retained below. The ceiling ruling
+(reserved brush counts toward the twelve-unit cap) is implemented as a callback-free raw custody
+census, `ForageCeilingHeld`, over the RawObservation helpers rather than the lease-filtered
+`MaterialStock.Tally`.
+
+## Retained Kingdom Quickstart founding-cohort census — 2026-09-10
 
 **3078** production C# files, 437,114 physical lines, 1434 direct-XRL, zero cap failures;
 3109 generated cold-install files. Exact digest

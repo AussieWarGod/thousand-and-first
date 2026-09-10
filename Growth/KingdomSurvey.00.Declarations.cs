@@ -63,6 +63,8 @@ namespace ThousandAndFirst
 			internal bool PlotRoot;
 			internal bool LayoutRoot;
 			internal bool CropRow;
+			internal bool ForagePlant;
+			internal bool ForagePlot;
 			internal bool NetworkPiece;
 			internal bool LabJob;
 			internal bool VisualRoot;
@@ -157,6 +159,8 @@ namespace ThousandAndFirst
 		public readonly List<GameObject> LayoutRoots = new List<GameObject>();
 
 		public readonly List<GameObject> CropRows = new List<GameObject>();
+		public readonly List<GameObject> ForagePlants = new List<GameObject>();
+		public readonly List<GameObject> ForagePlots = new List<GameObject>();
 
 		public readonly List<GameObject> NetworkPieces = new List<GameObject>();
 

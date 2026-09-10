@@ -16,6 +16,12 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
+Unreleased forage recovery checks: Taf14,106 / Portable5,260, zero skips; four Linux compile
+modes plus ABI pass. Focused forage tests45/45 and full portable audit pass. Reversing the
+healthy-pass warning rearm or the pre-cut plot-authority guard each fails its source-contract
+test; restored copies pass. Native forage behavior remains pending camp integration; these
+checks do not sign gameplay or a release.
+
 Canonical compile gates honor `TMPDIR` for independently allocated stage and dev trees. A
 private parent per worker avoids shared `/tmp` transaction-lock contention; all publication
 locks and identity checks remain. Executable allocation fixtures also prove an invalid parent
@@ -105,6 +111,19 @@ Repository audits use a fresh empty Python cache lookup root with bytecode write
 An executable timestamp-cache fixture proves that disabling writes alone still reads stale
 bytecode, while the isolated audit imports restored source. This strengthens host test fidelity;
 it is not native gameplay, ordinary-save or release acceptance. Refs #113.
+
+Native fixture recovery: matched seed `#121783523` measured 50 settlers/citizens/roll rows,
+two stores, 1,936 drams capacity and zero water. The previous fixture incorrectly required one
+1,920-dram store, omitting the dedicated first basin. The corrected fixture proves the exact
+reservoir plus receipt-bound basin. Fresh canonical four-mode compilation, Taf14,075 and
+Portable5,215 (zero skips), and Tools627/full portable audit pass. Wrong-count and missing-relic-ID
+source mutants each fail; restored fixture passes. Native `founding-heart-native-checks` passes
+all seven cases at the same seed (profile `QDaXBR`, receipt-owned stop proved). This signs that
+scenario only, not terminal heart completion, ordinary-save compatibility or overall camp acceptance.
+The same gameplay/harness bytes also pass fresh first-city founding, 16 native Quickstart
+creator/custody cases and claimed lighting after rendered frames (profiles TAplen/cltpMo/TWubeD;
+all receipt-stopped). These do not sign actual Quickstart embark. Subsequent rite-ground display
+text and unused test-import cleanup do not alter gameplay; their text assertion is checked separately.
 
 Cold-load transport hardening (PR #104): 27 executable filesystem tests cover ancestor
 swaps for directory, receipt and save outputs. Replacing component-wise anchoring with a bare
@@ -258,15 +277,21 @@ engine-free; `DevTests/KingdomQuickstartShelterIngressTests.cs` recomputes them 
 architecture with the same `KingdomRoadRules.TryAuthoredLane` the stake walks and fails on drift.
 The heart-ingress endpoints are unchanged and refusal is still fail-closed with the same message.
 
-Retained census after merging `dev` (the Kingdom Quickstart tent rows, the first-basin water store,
-the stockpile unit capacity, the render-only city sight and the shelter ingress included) and the
-stockpile deposit custody fix: 3068
-staged C# files; 435,538 physical lines; 3099 files in the generated
-cold-install inventory. Staged compilation covers 3068 sources, baseline and compatibility symbols
-(baseline compiles 3064 of them; the optional-mod bridge is compatibility-only), run here by Roslyn
+Current census after merging `dev` (the founding-cohort census, the Kingdom Quickstart tent rows,
+the first-basin water store, the stockpile unit capacity, the render-only city sight, the shelter
+ingress and the stockpile deposit custody fix included) and the test-only forage native-check
+seam (Harness/DevTests/Tools only; no production source added or removed): 3081
+staged C# files; 437,479 physical lines; 3112 files in the generated
+cold-install inventory. Staged compilation covers 3081 sources, baseline and compatibility symbols
+(the optional-mod bridge is compatibility-only), run here by Roslyn
 9.0.306 on Linux against the licensed Managed references with warnings as
-errors. Direct `XRL` imports: 1429 files, 0 over the line limit.
-Inventory SHA-256: `93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa` (this digest differs from the previous one solely because of the 0.3.2 KingdomReleaseInfo.cs version-literal bump; no other change).
+errors. Direct `XRL` imports: 1435 files, 0 over the line limit.
+Inventory SHA-256: `cadae7b6d3f4346a1a2d1b79ce186635789dd377ff568743ea05e0e0decd3f87` (retains the
+brush-forage duty's three new production files
+— `Growth/KingdomMaterials.00.r_KingdomForage.cs`, `Growth/KingdomMaterialRules.Forage.cs`,
+`Growth/KingdomMaterials.16.ForageWork.cs` — and the camp heart's authored architecture,
+catalogue and blueprint bytes; adds `dev`'s founding-cohort production sources and the test-only
+forage native-check Harness/DevTests files, which do not change the staged production census).
 Before the merge, all four `Tools/gate.sh` modes compiled clean on the shelter-ingress delta's own
 bytes — staged baseline (3050 sources), staged compatibility (3054), dev-harness baseline (3204)
 and dev-harness compatibility (3208) — with the installed-Hearthpyre source and ABI step, and the

@@ -25,7 +25,7 @@ namespace ThousandAndFirst
 			"r_KingdomCitizenLegacy", "r_KingdomCitizenRiteProjection",
 			"r_KingdomCitizenship", "r_KingdomClearance",
 			"r_KingdomCrownHall", "r_KingdomEnrolled", "r_KingdomFirstGuestBody",
-			"r_KingdomFounderKnowledge",
+			"r_KingdomForage", "r_KingdomFounderKnowledge",
 			"r_KingdomFounderRemains", "r_KingdomFounderShrine", "r_KingdomGatehouse",
 			"r_KingdomGatehouseProjectionV1Pending", "r_KingdomGatehouseProjectionV2",
 			"r_KingdomGraftingHall", "r_KingdomGuest", "r_KingdomHandCrankedVisual",
