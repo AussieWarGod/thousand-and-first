@@ -131,6 +131,8 @@ namespace ThousandAndFirst.Harness
 				&& ReferenceEquals(Game.GetSystem<KingdomSystem>(), System) && ReferenceEquals(System.City, Book)
 				&& System.Founded && System.ClaimedZones.Contains(Home), "travel owner or founded home changed");
 			Require(Fault == null, Fault);
+			if (KingdomScenarioPauseController.Active)
+				Require(KingdomScenarioPauseWitness.Current.Fault == null, KingdomScenarioPauseWitness.Current.Fault);
 			Require(Book.TryReadExact(out _, out _) && KingdomScenarioTravelRules.Clock(Processed, Book.ProcessedThroughTick, Game.TimeTicks)
 				&& KingdomScenarioTravelRules.Clock(Semantic, System.LastSemanticTick, Game.TimeTicks), "city/semantic clock moved backwards or ahead");
 			Require(System.LastWaterWorkTick == Book.ProcessedThroughTick, "growth mirror diverged; possible duplicate day billing");
@@ -139,6 +141,7 @@ namespace ThousandAndFirst.Harness
 			if ((State == Phase.Returning || State == Phase.Draining) && Player.CurrentZone.ZoneID == Home)
 			{
 				if (FirstHomeTurn < 0) FirstHomeTurn = Game.Turns;
+				KingdomScenarioPauseController.AtHome();
 				Require(Book.TryZoneRow(Home, out int row), "home row missing");
 				if (Book.ZoneOwedWater[row] != 0 || Book.ZoneOwedFood[row] != 0 || Book.ZoneOwedMaterials[row] != 0)
 					ZeroTurn = -1;
@@ -167,7 +170,8 @@ namespace ThousandAndFirst.Harness
 				+ "; peak-thirds=" + PeakThirds + "; peak-heavy=" + PeakHeavy + "; measured-demand=" + PeakDemand
 				+ "; demand-observed=" + DemandObserved + "; processed=" + Processed + "; semantic=" + Semantic
 				+ "; growth-mirror=" + System.LastWaterWorkTick + "; schedule-observations=" + KingdomScenarioTravelSchedule.Observations
-				+ "; remaining-demand=" + RemainingDemand + "; pause-effects-proved=false; full-envelope-stress=false; ordinary-acceptance=false";
+				+ "; remaining-demand=" + RemainingDemand + KingdomScenarioPauseController.Check()
+				+ KingdomScenarioContainerStress.Check() + "; ordinary-acceptance=false";
 			State = Phase.Complete;
 			return result;
 		}

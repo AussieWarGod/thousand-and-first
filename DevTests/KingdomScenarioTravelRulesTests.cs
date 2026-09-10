@@ -83,12 +83,14 @@ namespace ThousandAndFirst.Tests
 			=> ClassicAssert.AreEqual(expected, KingdomScenarioTravelRules.Schedule(before, ordinal, after, nextOrdinal));
 
 		[Test]
-		public void RuntimeRequiresPhysicalEvidenceAndMakesNoPauseEffectClaim()
+		public void RuntimeRequiresPhysicalEvidenceAndExplicitPauseProof()
 		{
 			string source = TestMain.ReadRepositoryText("Harness/KingdomScenarioTravel.cs");
 			StringAssert.Contains("ReturnDemandObserved && RemainingDemand == 0", source);
 			StringAssert.Contains("KingdomScenarioTravelRules.Drained(FirstHomeTurn, ZeroTurn, owed)", source);
-			StringAssert.Contains("pause-effects-proved=false", source);
+			StringAssert.Contains("KingdomScenarioPauseController.Check()", source);
+			StringAssert.Contains("if (!Active) return \"; pause-effects-proved=false\"",
+				TestMain.ReadRepositoryText("Harness/KingdomScenarioPauseController.cs"));
 			StringAssert.Contains("!The.ZoneManager.CachedZones.ContainsKey(Home)", source);
 			StringAssert.Contains("Player.Move(west ? \"W\" : \"E\", AllowDashing: false, DoConfirmations: false)", source);
 		}

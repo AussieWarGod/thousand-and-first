@@ -2086,6 +2086,8 @@
 	<Compile Include="KingdomScenarioTravelRulesTests.cs" />
 	<Compile Include="..\Harness\KingdomScenarioReload.cs" />
 	<Compile Include="KingdomScenarioReloadTests.cs" />
+	<Compile Include="..\Harness\KingdomScenarioPauseOracle.cs" />
+	<Compile Include="KingdomScenarioPauseOracleTests.cs" />
 	<Compile Include="..\Harness\KingdomScenarioSaveSnapshot.cs" />
 	<Compile Include="..\Harness\KingdomSubsidenceRungSaveSnapshot.cs" />
     <Compile Include="..\Harness\KingdomSubsidenceRungSaveSnapshotCodec.cs" />

@@ -26,8 +26,13 @@ namespace ThousandAndFirst.Harness
 					KingdomScenarioTravel.Require(KingdomScenarioScript.TryRead(out IList<string> script, out why), why);
 					string[] exact = { "stagedigest", "realize", "advance 1", Verb, "advance 1200",
 						"beta-return", "advance 39", "yield-frames 1", "beta-check", "status" };
-					KingdomScenarioTravel.Require(script.Count == exact.Length, "requires exact travel persona");
-					for (int i = 0; i < exact.Length; i++) KingdomScenarioTravel.Require(script[i] == exact[i], "travel script differs");
+					if (!KingdomScenarioPauseController.Recipe(script, Verb))
+					{
+						KingdomScenarioTravel.Require(script.Count == exact.Length, "requires exact travel persona");
+						for (int i = 0; i < exact.Length; i++) KingdomScenarioTravel.Require(script[i] == exact[i], "travel script differs");
+					}
+					else KingdomScenarioTravel.Require(KingdomScenarioPauseController.Active, "pause recipe has no live witness");
+					KingdomScenarioPauseController.BeforeTravel();
 				}
 				string result;
 				switch (Verb)

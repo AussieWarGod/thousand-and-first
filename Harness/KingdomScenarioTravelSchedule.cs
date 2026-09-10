@@ -10,6 +10,16 @@ namespace ThousandAndFirst.Harness
 		private static readonly Dictionary<int, long> Next = new Dictionary<int, long>();
 		private static readonly Dictionary<int, int> Ordinal = new Dictionary<int, int>();
 		internal static int Observations;
+		private static bool Resumed;
+
+		internal static void Resume(KingdomScenarioPauseWitness Witness)
+		{
+			KingdomScenarioTravel.Require(!Resumed && ReferenceEquals(Witness, KingdomScenarioPauseWitness.Current)
+				&& ReferenceEquals(Witness.Game, The.Game) && Witness.Armed && Witness.Fault == null
+				&& Witness.ResumeApplications == 1, "schedule rebase lacks exact observed resume proof");
+			// Only the already-proved production reset may replace continuity's prior deadlines.
+			Next.Clear(); Ordinal.Clear(); Resumed = true; Observe(Witness.City);
+		}
 
 		internal static void Observe(KingdomCityBook Book)
 		{

@@ -7,6 +7,9 @@ KEYS = {"mode", "seed", "home", "observed-tick", "wait-turns", "travel-turns", "
         "drain-turns", "peak-thirds", "peak-heavy", "measured-demand", "demand-observed", "processed",
         "semantic", "growth-mirror", "schedule-observations", "remaining-demand", "pause-effects-proved",
         "full-envelope-stress", "ordinary-acceptance"}
+ECONOMIC_KEYS = {"pause-disabled", "pause-resumed", "paused-ticks", "resume-arrival", "resume-applications",
+                 "pause-local-start", "pause-prior", "arrival-interval", "stress-initial-thirds",
+                 "stress-residents", "synthetic-fixture"}
 
 
 def witness(rows):
@@ -19,15 +22,19 @@ def witness(rows):
         if not sep or key in result or not value:
             raise ValueError("travel witness field is empty, malformed or repeated")
         result[key] = value
-    if set(result) != KEYS or result["mode"] not in ("away", "present"):
+    economic = result.get("pause-effects-proved") == "true"
+    if set(result) != (KEYS | ECONOMIC_KEYS if economic else KEYS) or result["mode"] not in ("away", "present"):
         raise ValueError("travel witness schema differs")
     if not re.fullmatch(r"#-?[0-9]+", result["seed"]):
         raise ValueError("travel seed is not explicit")
     if not re.fullmatch(r"[^.\s]+\.[0-9]+\.[0-9]+\.[0-2]\.[0-2]\.10", result["home"]):
         raise ValueError("travel home is not an ordinary surface zone")
-    if any(result[key] != "false" for key in ("ordinary-acceptance", "full-envelope-stress", "pause-effects-proved")):
+    if (result["ordinary-acceptance"] != "false"
+            or result["full-envelope-stress"] != ("true" if economic else "false")
+            or result["pause-effects-proved"] != ("true" if economic else "false")
+            or economic and result["synthetic-fixture"] != "true"):
         raise ValueError("travel witness overclaims acceptance")
-    for key in KEYS - {"mode", "seed", "home", "demand-observed", "ordinary-acceptance", "full-envelope-stress", "pause-effects-proved"}:
+    for key in set(result) - {"mode", "seed", "home", "demand-observed", "ordinary-acceptance", "full-envelope-stress", "pause-effects-proved", "synthetic-fixture"}:
         if not re.fullmatch(r"0|[1-9][0-9]{0,18}", result[key]):
             raise ValueError("travel number is not bounded canonical decimal: " + key)
         result[key] = int(result[key])
@@ -42,26 +49,40 @@ def witness(rows):
         raise ValueError("travel clock/budget envelope failed")
     if result["mode"] == "present" and result["travel-turns"] != 0:
         raise ValueError("present leg reports travel")
+    if economic and (result["containers"] != 252 or result["stress-initial-thirds"] != 756
+            or result["stress-residents"] != 0 or result["resume-applications"] != 1
+            or not result["pause-local-start"] <= result["pause-disabled"] < result["pause-resumed"] <= result["observed-tick"]
+            or result["paused-ticks"] != result["pause-prior"] + result["pause-resumed"] - result["pause-local-start"]
+            or result["arrival-interval"] <= 0
+            or result["resume-arrival"] != result["pause-resumed"] + result["arrival-interval"]):
+        raise ValueError("independent pause arithmetic or populated-container evidence differs")
     return result
 
 
-def assess(rows, mode):
+def assess(rows, mode, require_economic=False):
     try:
         result = witness(rows)
+        economic = result["pause-effects-proved"] == "true"
+        if require_economic and not economic:
+            raise ValueError("economic persona cannot accept a continuity-only witness")
         if result["mode"] != mode or any(row[1] != "OK" for row in rows):
             raise ValueError("travel mode or a journal outcome differs")
         advances = [row[2] for row in rows if row[0] == "advance-complete"]
-        if advances != [f"{n} turn(s) elapsed of {n} requested" for n in (1, 1200, 39)]:
+        if advances != [f"{n} turn(s) elapsed of {n} requested" for n in ((1, 1, 1, 1200, 39) if economic else (1, 1200, 39))]:
             raise ValueError("travel requires exact completed warmup, wait and drain advances")
         names = [row[0] for row in rows]
         expected = ["advance-complete", "beta-" + mode]
+        if economic:
+            expected = ["advance-complete", "beta-local-pause", "advance-complete", "beta-master-pause",
+                        "advance-complete", "beta-stress", "beta-" + mode]
         if mode == "away":
             expected.append("travel-out-complete")
         expected += ["advance-complete", "beta-return"]
         if mode == "away":
             expected.append("travel-return-complete")
         expected += ["advance-complete", "yield-frames-complete", "beta-check", "SCRIPT-COMPLETE"]
-        relevant = set(expected) | {"beta-away", "beta-present", "travel-out-complete", "travel-return-complete"}
+        relevant = set(expected) | {"beta-away", "beta-present", "travel-out-complete", "travel-return-complete",
+                                    "beta-local-pause", "beta-master-pause", "beta-stress"}
         if [name for name in names if name in relevant] != expected:
             raise ValueError("travel phases and completed advances are out of order")
         if mode == "away":
@@ -100,7 +121,10 @@ def compare(present, away):
     for key in ("seed", "home", "wait-turns"):
         if left[key] != right[key]:
             raise ValueError("presence pair is not matched: " + key)
+    if left["pause-effects-proved"] != right["pause-effects-proved"]:
+        raise ValueError("presence pair mixes economic and continuity-only evidence")
     return {"scope": "developer-presence-pair", "seed": left["seed"], "home": left["home"],
             "waitTurns": left["wait-turns"], "awayTravelTurns": right["travel-turns"],
             "deltas": {key: right[key] - left[key] for key in ("containers", "drain-turns", "peak-thirds", "peak-heavy", "measured-demand")},
-            "equalTotalElapsedClaimed": False, "fullEnvelopeStress": False, "releaseAcceptance": False}
+            "equalTotalElapsedClaimed": False, "fullEnvelopeStress": left["full-envelope-stress"] == "true",
+            "residentStress": False, "releaseAcceptance": False}

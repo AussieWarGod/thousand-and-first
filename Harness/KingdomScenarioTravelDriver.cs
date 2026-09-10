@@ -27,6 +27,7 @@ namespace ThousandAndFirst.Harness
 
 		internal static void Stop()
 		{
+			KingdomScenarioPauseController.Stop();
 			if (KingdomScenarioTravel.Active) KingdomScenarioTravel.State = KingdomScenarioTravel.Phase.Failed;
 		}
 	}

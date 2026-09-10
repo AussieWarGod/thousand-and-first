@@ -31,7 +31,54 @@ def rows(mode="away", **changes):
     return result
 
 
+def economic_rows(mode="away", **changes):
+    values = {"containers": "252", "pause-effects-proved": "true", "full-envelope-stress": "true",
+              "pause-disabled": "100", "pause-resumed": "15000", "paused-ticks": "14930",
+              "resume-arrival": "16200", "resume-applications": "1", "pause-local-start": "80",
+              "pause-prior": "10", "arrival-interval": "1200", "stress-initial-thirds": "756",
+              "stress-residents": "0", "synthetic-fixture": "true"}
+    values.update(changes)
+    result = rows(mode, **values)
+    result[3:3] = [("beta-local-pause", "OK", "set"),
+                   ("advance-complete", "OK", "1 turn(s) elapsed of 1 requested"),
+                   ("beta-master-pause", "OK", "set"),
+                   ("advance-complete", "OK", "1 turn(s) elapsed of 1 requested"),
+                   ("beta-stress", "OK", "ready")]
+    return result
+
+
 class TravelTests(unittest.TestCase):
+    def test_economic_pair_proves_only_declared_scope(self):
+        self.assertEqual(travel.assess(economic_rows(), "away", True), [])
+        self.assertEqual(travel.assess(economic_rows("present"), "present", True), [])
+        result = travel.compare(economic_rows("present"), economic_rows())
+        self.assertTrue(result["fullEnvelopeStress"])
+        self.assertFalse(result["residentStress"])
+        self.assertFalse(result["releaseAcceptance"])
+
+    def test_economic_oracle_rejects_double_pause_and_shifted_deadline(self):
+        for key, value in (("paused-ticks", "29830"), ("resume-arrival", "31100"),
+                           ("resume-applications", "2"), ("pause-local-start", "101"),
+                           ("pause-resumed", "100"), ("arrival-interval", "0"),
+                           ("containers", "251"), ("stress-initial-thirds", "753"),
+                           ("stress-residents", "60"), ("synthetic-fixture", "false"),
+                           ("pause-prior", "11"), ("full-envelope-stress", "false")):
+            with self.subTest(key=key):
+                self.assertTrue(travel.assess(economic_rows(**{key: value}), "away", True))
+
+    def test_economic_recipe_cannot_accept_old_or_mixed_pair(self):
+        self.assertTrue(travel.assess(rows(), "away", True))
+        with self.assertRaises(ValueError):
+            travel.compare(rows("present"), economic_rows())
+
+    def test_economic_setup_steps_are_required_once_in_order(self):
+        for name in ("beta-local-pause", "beta-master-pause", "beta-stress"):
+            original = economic_rows()
+            selected = next(row for row in original if row[0] == name)
+            original.remove(selected)
+            self.assertTrue(travel.assess(original, "away", True))
+            self.assertTrue(travel.assess([selected] + original, "away", True))
+            self.assertTrue(travel.assess(economic_rows() + [selected], "away", True))
     def test_valid_pair_does_not_claim_equal_total_elapsed_or_release(self):
         result = travel.compare(rows("present"), rows())
         self.assertEqual(result["awayTravelTurns"], 82)

@@ -112,7 +112,7 @@ RESERVED_VERBS = (
 VERB_ALPHABET = "abcdefghijklmnopqrstuvwxyz" + "0123456789" + "-."
 
 OUTCOMES = ("OK", "REFUSED")
-CHECKS = ("status-digest-stable", "travel-away", "travel-present")
+CHECKS = ("status-digest-stable", "travel-away", "travel-present", "travel-economic-away", "travel-economic-present")
 
 REQUIRED_KEYS = ("REQUEST", "SCRIPT", "EXPECT")
 OPTIONAL_KEYS = ("START", "CHECK", "TIMEOUT", "DESCRIPTION", "VERBS", "SET", "LOG_EXPECT")
@@ -481,7 +481,9 @@ def assess(manifest: dict, journal: str, name: str) -> list[str]:
         spec = importlib.util.spec_from_file_location("taf_persona_travel", os.path.join(os.path.dirname(__file__), "persona_travel.py"))
         travel = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(travel)
-        problems.extend(travel.assess(read_journal(journal), manifest["CHECK"][len("travel-"):]))
+        mode = manifest["CHECK"][len("travel-"):]
+        economic = mode.startswith("economic-")
+        problems.extend(travel.assess(read_journal(journal), mode.removeprefix("economic-"), require_economic=economic))
     return problems
 
 
