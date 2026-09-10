@@ -18,7 +18,7 @@ namespace ThousandAndFirst.Harness
 
 		internal static bool Recipe(IList<string> script, string direction)
 		{
-			string[] exact = { "stagedigest", "realize", "advance 1200", "beta-local-pause", "advance 1",
+			string[] exact = { "stagedigest", "realize", "advance 1200", "beta-local-pause", "advance 1200",
 				"beta-master-pause", "advance 1", "beta-stress", direction, "advance 1200", "beta-return",
 				"advance 39", "yield-frames 1", "beta-check", "status" };
 			if (script == null || script.Count != exact.Length) return false;

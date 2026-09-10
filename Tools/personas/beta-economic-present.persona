@@ -1,7 +1,7 @@
 DESCRIPTION=matched present comparator with interval-union master pause oracle and synthetic 252-container physical drain
 REQUEST=founding-first-city
 START=8.22@40,12
-SCRIPT=stagedigest;realize;advance 1200;beta-local-pause;advance 1;beta-master-pause;advance 1;beta-stress;beta-present;advance 1200;beta-return;advance 39;yield-frames 1;beta-check;status
+SCRIPT=stagedigest;realize;advance 1200;beta-local-pause;advance 1200;beta-master-pause;advance 1;beta-stress;beta-present;advance 1200;beta-return;advance 39;yield-frames 1;beta-check;status
 VERBS=beta-local-pause,beta-master-pause,beta-stress,beta-present,beta-return,beta-check
 EXPECT=stagedigest:OK,realize:OK,advance:OK,beta-local-pause:OK,advance:OK,beta-master-pause:OK,advance:OK,beta-stress:OK,beta-present:OK,advance:OK,beta-return:OK,advance:OK,yield-frames:OK,beta-check:OK~taf-travel-checked,status:OK,COMPLETE
 CHECK=travel-economic-present

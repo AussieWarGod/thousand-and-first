@@ -73,7 +73,7 @@ def assess(rows, mode, require_economic=False):
         if result["mode"] != mode or failed_outcome:
             raise ValueError("travel mode or a journal outcome differs")
         advances = [row[2] for row in rows if row[0] == "advance-complete"]
-        prefix = (1, 1, 1200) if economic else (1200,)
+        prefix = (1200, 1, 1200) if economic else (1200,)
         warmup = re.fullmatch(r"([1-9][0-9]{0,18}) turn\(s\) elapsed of 1200 requested",
                               advances[0] if advances else "")
         drain = re.fullmatch(r"([1-9][0-9]{0,18}) turn\(s\) elapsed of 39 requested",

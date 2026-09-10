@@ -2,6 +2,7 @@
 using NUnit.Framework;
 using NUnit.Framework.Legacy;
 using ThousandAndFirst.Harness;
+using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
 {
@@ -269,6 +270,24 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("physicalThirds, settled, out long zero", source);
 			StringAssert.Contains("if (KingdomSurvey.HasBoundPass) return", source);
 			StringAssert.Contains("KingdomScenarioTravel.RemainingDemand = physicalThirds", source);
+		}
+
+		[TestCase(240328L, false)]
+		[TestCase(241199L, false)]
+		[TestCase(241200L, true)]
+		[TestCase(241527L, true)]
+		public void NativeLocalPauseWaitCrossesActualSemanticBoundary(long observed, bool due)
+			=> ClassicAssert.AreEqual(due, KingdomSemanticClockRules.Decide(
+				KingdomSemanticClockRules.FromLastDispatchTick(240001), observed, false).ShouldDispatch);
+
+		[Test]
+		public void EconomicLocalPauseWaitsForDailyReconciliation()
+		{
+			foreach (string mode in new[] { "present", "away" })
+				StringAssert.Contains("beta-local-pause;advance 1200;beta-master-pause;advance 1;",
+					TestMain.ReadRepositoryText("Tools/personas/beta-economic-" + mode + ".persona"));
+			StringAssert.Contains("\"beta-local-pause\", \"advance 1200\"",
+				TestMain.ReadRepositoryText("Harness/KingdomScenarioPauseController.cs"));
 		}
 	}
 }

@@ -9,6 +9,10 @@ The exact sealed recipe observes a real local growth pause, then a real master p
 Before either pause it requests a 1200-turn warm-up intended to allow ordinary daily reconciliation
 to initialize the home row and growth health. Native execution must prove admission; the oracle still refuses unhealthy or uninitialized
 authority; the fixture never writes health or schedule fields to manufacture admission.
+After disabling local growth, it spends another 1200 turns so the ordinary daily semantic
+pass can publish the local pause. A one-turn wait does not guarantee that reconciliation.
+Master disable is requested only after the actual local pause receipt is present; no clock
+or pause flag is stamped by the fixture. The following master observation still waits one turn.
 The semantic-pass guard distinguishes a completed, published durable receipt from unfinished
 work using the production receipt law. A retained `SemanticPassActive` flag alone is not proof
 that execution is still inside a pass. Incomplete or unpublished receipts still refuse.

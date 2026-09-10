@@ -40,7 +40,7 @@ def economic_rows(mode="away", **changes):
     values.update(changes)
     result = rows(mode, **values)
     result[3:3] = [("beta-local-pause", "OK", "set"),
-                   ("advance-complete", "OK", "1 turn(s) elapsed of 1 requested"),
+                   ("advance-complete", "OK", "1200 turn(s) elapsed of 1200 requested"),
                    ("beta-master-pause", "OK", "set"),
                    ("advance-complete", "OK", "1 turn(s) elapsed of 1 requested"),
                    ("beta-stress", "OK", "ready")]
@@ -48,6 +48,15 @@ def economic_rows(mode="away", **changes):
 
 
 class TravelTests(unittest.TestCase):
+    def test_local_pause_requires_daily_reconciliation_before_master_disable(self):
+        for mode in ("present", "away"):
+            for elapsed, requested, valid in ((1200, 1200, True), (1, 1, False),
+                                               (1199, 1200, False), (1200, 1, False)):
+                with self.subTest(mode=mode, elapsed=elapsed, requested=requested):
+                    journal = economic_rows(mode)
+                    journal[4] = ("advance-complete", "OK", f"{elapsed} turn(s) elapsed of {requested} requested")
+                    self.assertEqual(not valid, bool(travel.assess(journal, mode, True)))
+
     def test_warmup_requires_a_real_day_before_observation(self):
         for fixture in (rows, economic_rows):
             for elapsed, requested, valid in ((1200, 1200, True), (1201, 1200, True),
