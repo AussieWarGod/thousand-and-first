@@ -19,6 +19,13 @@ namespace ThousandAndFirst.Tests
 		private const string Request = "Harness/KingdomQuickstartBootRequest.cs";
 
 		[Test]
+		public void PaidJobUsesTheExecutedNetDebitClaimPredicate()
+		{
+			StringAssert.Contains("KingdomQuickstartBuildClaims.CleanFirstPayment(Job.Claims, CostDrams, Quote.MaterialClaim)", Read(Census));
+			StringAssert.DoesNotContain("Job.Claims.WaterLost != 0", Read(Census));
+		}
+
+		[Test]
 		public void DrivesTheExactThreeCallCommissioningSequenceInOrderCitingTheCharterUI()
 		{
 			string source = Read(Test);

@@ -194,3 +194,11 @@ python3 Tools/check-quickstart-results.py /mnt/c/taf-scenario.EXAMPLE --phase bu
 `quickstart-build` produces no save/load artifacts (same file-layout profile as `boot`). A
 refused build is a valid, well-formed `REFUSED`-outcome terminal row, not a checker crash.
 It still fails acceptance: the checker must return exit 2 and REFUSED, never PASS.
+
+Paid-claim checks use `KingdomQuickstartBuildClaims.CleanFirstPayment`, executed by pure tests
+in both test projects. Construction claims call physical net debit `Lost`, not additional
+waste: a fresh exact payment requires `Requested == Spent == Lost`, with zero outstanding
+water/material and `Exact == true`. Requiring zero Lost incorrectly rejected the first
+native fire commission after its physical debit and placement succeeded. Prior/retried jobs
+can legitimately have greater historical loss; this fixture accepts only a newly created job
+whose exact before/after stock proves no extra debit.

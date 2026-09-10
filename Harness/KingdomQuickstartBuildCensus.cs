@@ -250,11 +250,16 @@ namespace ThousandAndFirst
 				|| Job.Route != KingdomConstructionRoute.PlotCommission || Job.TargetKey != BuildKey)
 			{ Failure = "the new job's settlement, zone, route or target key is not exact"; return false; }
 			string expectedMaterial = Quote.MaterialClaim.ToClaimString();
-			if (Job.Claims == null || !Job.Claims.Exact
-				|| Job.Claims.WaterRequested != CostDrams || Job.Claims.WaterSpent != CostDrams || Job.Claims.WaterOutstanding != 0
-				|| Job.Claims.WaterLost != 0 || Job.Claims.MaterialRequested != expectedMaterial
-				|| Job.Claims.MaterialRequested != Job.Claims.MaterialSpent)
-			{ Failure = "the new job's paid water/material claims are not exactly funded against the committed quote"; return false; }
+			if (!KingdomQuickstartBuildClaims.CleanFirstPayment(Job.Claims, CostDrams, Quote.MaterialClaim))
+			{
+				Failure = "paid claims differ from quote: water requested/spent/outstanding/lost="
+					+ Job.Claims?.WaterRequested + "/" + Job.Claims?.WaterSpent + "/"
+					+ Job.Claims?.WaterOutstanding + "/" + Job.Claims?.WaterLost
+					+ "; material requested/spent/outstanding/lost=" + Job.Claims?.MaterialRequested
+					+ "/" + Job.Claims?.MaterialSpent + "/" + Job.Claims?.MaterialOutstanding
+					+ "/" + Job.Claims?.MaterialLost + "; expected=" + expectedMaterial;
+				return false;
+			}
 			if (Job.Phase != KingdomConstructionPhase.Projected || Job.Projection != KingdomConstructionProjection.PlotWorks)
 			{ Failure = "the new job is not in the exact projected plot-works state"; return false; }
 			if (string.IsNullOrEmpty(Job.OutputId)

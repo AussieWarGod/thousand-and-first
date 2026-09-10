@@ -33,6 +33,14 @@ The separate fresh-ID prerequisite `3500035` passes 14,067 full and 5,221 portab
 zero skipped, and independent source review. Combined gates, actual successful debit and
 projection, and release delivery remain pending. No existing-save reload claim is made.
 
+Combined production/version checkpoint `4a0a231` passes 14,073 full and 5,221 portable
+cases, zero skipped. Integrated native `fe29ad3` (marsh/no advisor, seed `#43101`) reaches
+successful quote, CanPay and commission, spends exactly one timber and two drams, and stakes
+the fire plot. Its terminal check remains RED: the harness incorrectly required WaterLost
+zero, although construction claims record net physical debit there. A dev-only executed
+fully-paid-claim predicate corrects that assertion without changing production funding;
+fresh native acceptance is still required. The owned process was stopped and evidence retained.
+
 Current hotfix census: 3069 staged C# files; 435,617 physical lines; 3100 files in the
 generated cold-install inventory. Scope-only compile inventory: 3069 sources, baseline and compatibility symbols
 (3065 baseline; developer profiles 3232/3236), including installed compatibility ABI checks.
