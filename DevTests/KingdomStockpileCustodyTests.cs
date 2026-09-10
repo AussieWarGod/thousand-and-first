@@ -899,7 +899,8 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.AreEqual(0, outcome.Placed, "no room reading, so no batch is judged");
 			ClassicAssert.AreEqual(0, store.Insertions, "and nothing reached the store");
 			ClassicAssert.AreEqual(1, store.Created.Count, "no replacement is minted");
-			ClassicAssert.AreEqual(1, store.DiscardCalls, "the made parcel is put back, exactly once");
+			ClassicAssert.AreEqual(1, store.DiscardCalls,
+				"the delivery destroys the parcel it made itself, exactly once");
 			ClassicAssert.AreEqual(1, store.Discarded.Count);
 			ClassicAssert.IsFalse(store.Created[0].Alive, "nothing is left standing in nobody's hands");
 			ClassicAssert.AreEqual(1, store.Sayings, "and the founder is told once");
@@ -927,7 +928,8 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.AreEqual(1, ground.RawRoomNow(), "the bound is a whole number and holds");
 			ClassicAssert.AreEqual(0, outcome.Placed);
 			ClassicAssert.AreEqual(0, ground.Insertions, "nothing was handed to the cell");
-			ClassicAssert.AreEqual(1, ground.DiscardCalls, "the made parcel is put back");
+			ClassicAssert.AreEqual(1, ground.DiscardCalls,
+				"the delivery destroys the parcel it made itself");
 			ClassicAssert.IsFalse(ground.Created[0].Alive);
 			ClassicAssert.AreEqual(1200000000, first.RawCount, "and what was lying there is untouched");
 			ClassicAssert.AreEqual(1200000000, second.RawCount);

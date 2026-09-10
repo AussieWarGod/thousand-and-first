@@ -35,9 +35,10 @@
 		/// <para>
 		/// It can FAIL, and failing is not the same as having no room. A destination's hold is
 		/// summed off raw stack counts, which are the engine's own unbounded <c>int</c> fields, so
-		/// two honest stacks can total more than a whole count holds; above that there is no room
-		/// reading at all, and a delivery that cannot read the room may not judge a batch against
-		/// a number it made up. False leaves <paramref name="Room"/> at nothing.
+		/// two honest stacks can total more than <c>int.MaxValue</c>; the sum is taken in a
+		/// <c>long</c>, and a total that is not representable as an <c>int</c> is no room reading
+		/// at all, because a delivery that cannot read the room may not judge a batch against a
+		/// number it made up. False leaves <paramref name="Room"/> at nothing.
 		/// </para>
 		/// </summary>
 		bool TryRawRoomNow(out int Room);
@@ -56,7 +57,9 @@
 		/// It can FAIL for the same reason the room reading can, and here failing matters more: a
 		/// wrapped pair of readings agrees mod 2^32, so their difference would look like an exact
 		/// gain and MINT credit for a landing that never happened. False is not a gain of nothing;
-		/// it is no evidence at all, and no evidence credits nothing and stops the delivery.
+		/// it is no evidence at all. This parcel is then credited nothing and the delivery stops
+		/// -- units already proved into the destination in the same fill keep their credit, and a
+		/// parcel proved exact-body is credited on that proof and never reaches this comparison.
 		/// </para>
 		/// </summary>
 		bool TryRawMaterialHeldNow(out int Held);

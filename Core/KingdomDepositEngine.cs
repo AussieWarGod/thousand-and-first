@@ -157,12 +157,15 @@ namespace ThousandAndFirst
 				}
 				if (!roomKnown)
 				{
-					// The destination's hold is not a whole number, so there is no room to judge
-					// this batch against. The parcel is real, stamped, and standing in nobody's
-					// hands -- the proof just above says so -- and leaving it there would be
-					// material minted and abandoned. It is put back exactly where a refused batch
-					// is put back, and the delivery stops either way: destruction is vetoable, and
-					// a veto handler may have moved the body before refusing.
+					// The destination's hold does not total to a value representable as an int,
+					// so there is no room to judge this batch against. The parcel is real,
+					// stamped, and standing in nobody's hands -- the proof just above says so --
+					// and leaving it there would be material minted and abandoned. So this
+					// delivery destroys the parcel IT created, which is the only body it owns;
+					// nothing already stored is touched, and units proved into this destination
+					// earlier in the same fill stay credited. Nothing is credited for this parcel.
+					// The delivery stops either way: destruction is vetoable, and a veto handler
+					// may have moved the body before refusing.
 					Host.Discard(bundle);
 					return Refuse(Host, Placed);
 				}

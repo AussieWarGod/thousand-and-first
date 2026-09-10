@@ -166,7 +166,8 @@ below it.
   in the same fill credited; an unreadable hold AFTER it destroys nothing and moves nothing,
   because the parcel then belongs to the destination, and simply takes no credit for that parcel.
   A parcel proved exact-body is credited on that proof alone and never depends on the before/after
-  comparison at all
+  comparison at all. Units left uncertain this way are UNPROVEN rather than known-undelivered:
+  no replacement is minted and nothing replays them automatically
   (`Core/KingdomDepositEngine.cs`). `KingdomRules.DepositLandedUnits` also refuses a negative hold
   on either side outright, so the arithmetic cannot be talked into a credit by a caller that takes
   its counts elsewhere (`Core/KingdomRules.MaterialStores.cs`). Custody is reported as `Unproved`
@@ -185,10 +186,10 @@ below it.
   exactly what it read before.
 
 > **Current unreleased census — exact structural gate passed.** Current 3068-file census is line-cap green:
-> 435,648 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> 435,657 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1429 files, 0 of them over the line limit. Inventory SHA-256:
-> `b6556937a3c29126c98851331094c70ddcb7f5c4082010d8ca47da9742f16bef`.
+> `05cde60ae7fe770e8ddc8ee75c38bc4ea11fa37d6803ec982082e92fc2188ea2`.
 > The generated cold-install inventory contains 3099 files; no new subscription claim.
 > This digest is the raw delivery overflow fix over the stockpile deposit custody fix merged over `dev` at `862f14d` (the unattended
 > native observers, the Workshop listing wording, the automatic Workshop attempt finalisation, the

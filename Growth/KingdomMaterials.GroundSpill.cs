@@ -60,7 +60,7 @@ namespace ThousandAndFirst
 
 			/// <summary>Open ground counts nothing to say how much it will take, so its ordinary
 			/// and raw readings are the same reading &mdash; a declared bound, never a census, so
-			/// this reading cannot leave the whole numbers and never fails.</summary>
+			/// this reading cannot run past <c>int.MaxValue</c> and never fails.</summary>
 			public bool TryRawRoomNow(out int Room)
 			{
 				Room = (Ground != null && Ground.ParentZone != null
@@ -69,7 +69,8 @@ namespace ThousandAndFirst
 			}
 
 			/// <summary>The cell's hold in this material, which IS a census, and so is the only
-			/// reading on the spill path that can fail to be a whole number.</summary>
+			/// reading on the spill path whose total can stop being representable as an
+			/// <c>int</c>.</summary>
 			public bool TryRawMaterialHeldNow(out int Held)
 			{
 				return TryGroundMaterialHeldNow(Ground, Blueprint, out Held);

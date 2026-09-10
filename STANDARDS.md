@@ -252,6 +252,7 @@ overwritten by kingdom systems without explicit designation:
   the same fill stay credited. AFTER the insertion the parcel belongs to the destination, so
   nothing is destroyed, withdrawn, or moved, and that parcel simply earns no credit. Either way
   the delivery says so once (7b) and never mints a replacement for a parcel it could not read.
+  Such units are left UNPROVEN rather than known-undelivered: nothing replays them automatically.
 - Preparing a save for removal is an attended, terminal, exact-owner transaction while this mod is
   still loaded. It visits only known ground through ordinary play, reports outstanding locators,
   preserves foreign/player custody, and writes its identity fence last. Never promise that an

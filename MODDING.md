@@ -345,12 +345,18 @@ size by that one stack, and nothing after it is bound.
 count is the engine's own plain `int` field with no ceiling on it, so two large stacks standing in
 one store can total more than `int.MaxValue`. The delivery's own censuses add up in a `long` and,
 past that, report no reading at all — not a large one, not zero, and never a saturated one. A
-delivery that cannot read the room does not judge a batch against it; a delivery that cannot read
-the destination's hold BEFORE the insertion puts back the parcel it just made and stops, and one
-that cannot read it AFTER the insertion leaves the parcel where it is and takes no credit for it.
-Units proved into the store earlier in the same delivery stay credited. The units it could not
-place stay to deliver, the founder is told once, and nothing already standing there is moved,
-destroyed, or uncounted.
+delivery that cannot read the room does not judge a batch against it. A delivery that cannot read
+the destination's hold BEFORE the insertion **destroys the parcel it created itself** — the only
+body it owns, proved held by nobody immediately beforehand — and stops, crediting nothing for that
+parcel; nothing already standing in the store is moved, destroyed, or uncounted, and units proved
+into the store earlier in the same delivery keep their credit. One that cannot read the hold AFTER
+the insertion leaves the parcel exactly where it is — it belongs to the destination by then — and
+likewise credits nothing for it.
+
+Those uncertain units are left **unproven, not known-undelivered**. The settlement does not
+automatically send them again: no replacement is ever minted for a parcel whose fate could not be
+read, and no retry is scheduled on the strength of a reading that failed. The founder is told
+once, and any later attempt is a fresh decision made against a fresh reading.
 
 Which proof is used matters. A parcel proved EXACT-BODY — the same object, alive, carrying its
 stamped count, standing in this exact store — is credited on that proof alone and needs no

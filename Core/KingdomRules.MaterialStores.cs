@@ -189,7 +189,8 @@
 			{
 				// A store never holds a negative number of things, so a negative reading is not a
 				// hold at all -- it is what an unchecked sum of two honest stacks looks like once
-				// it has left the whole numbers. Subtracting one would pay this delivery in full
+				// the true total stops being representable as an int. Subtracting one would pay
+				// this delivery in full
 				// for a landing nobody can see. The seam refuses such a reading before it ever
 				// gets here; this is the rule itself saying the same thing, so the arithmetic
 				// cannot be talked into a credit by a caller that reads its counts elsewhere.

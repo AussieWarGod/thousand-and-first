@@ -89,10 +89,10 @@ namespace ThousandAndFirst
 		/// The running total is a <c>long</c> because the rows are not. A stack's count is the
 		/// engine's own plain <c>int</c> field with no ceiling on it (<c>Stacker._StackCount</c>,
 		/// read back by <c>Reader.ReadInt32</c> and merged by unchecked <c>int</c> addition), so
-		/// two honest stacks can add up to more than an <c>int</c> holds. A wrapped sum would come
-		/// back large and NEGATIVE and reopen a full store's room; the bound here is therefore the
-		/// natural one &mdash; what a whole count can be &mdash; and not an invented ceiling that
-		/// would refuse a legitimately large modded store.
+		/// two honest stacks can add up to more than <c>int.MaxValue</c>. A wrapped sum would come
+		/// back large and NEGATIVE and reopen a full store's room; the bound here is therefore
+		/// representability itself &mdash; what an <c>int</c> can hold &mdash; and not an invented
+		/// ceiling that would refuse a legitimately large modded store.
 		/// </para>
 		/// </summary>
 		private static bool TryRawStockHeldIn(GameObject Container, out int Held)
@@ -139,9 +139,9 @@ namespace ThousandAndFirst
 		/// otherwise pay this delivery in full for timber that never arrived.
 		/// </para>
 		/// <para>
-		/// False means the destination's hold in this material is not a whole number, and there is
-		/// then no reading at all. A delivery may not treat that as nothing gained, because the
-		/// difference of two such readings is a CREDIT.
+		/// False means the destination's hold in this material does not total to a value
+		/// representable as an <c>int</c>, and there is then no reading at all. A delivery may not
+		/// treat that as nothing gained, because the difference of two such readings is a CREDIT.
 		/// </para>
 		/// </summary>
 		internal static bool TryDepositMaterialHeldNow(GameObject Container, string Blueprint,
@@ -160,7 +160,7 @@ namespace ThousandAndFirst
 		/// <summary>The same reading for open ground, which has no capacity and no designation:
 		/// units of one blueprint standing in an exact cell right now. Open ground declares a
 		/// bound rather than counting a capacity, so this is the ONLY place a spill's arithmetic
-		/// can leave the whole numbers.</summary>
+		/// can run past <c>int.MaxValue</c>.</summary>
 		internal static bool TryGroundMaterialHeldNow(Cell Ground, string Blueprint, out int Held)
 		{
 			Held = 0;
@@ -194,8 +194,9 @@ namespace ThousandAndFirst
 		/// The total is a <c>long</c> for the reason the room census is: a stack's count is the
 		/// engine's own unbounded <c>int</c> field, so two honest stacks can sum past what an
 		/// <c>int</c> holds, and a wrapped pair would agree mod 2^32 and MINT a credit for a
-		/// landing that did not happen. Above the whole numbers there is no answer, and a delivery
-		/// that has no answer credits nothing.
+		/// landing that did not happen. Once the true total stops being representable as an
+		/// <c>int</c> there is no answer, and a delivery that has no answer credits nothing for
+		/// the parcel in hand.
 		/// </para>
 		/// </summary>
 		private static bool TryCountBlueprint(IReadOnlyList<GameObject> Objects, string Blueprint,

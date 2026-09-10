@@ -345,8 +345,9 @@ namespace ThousandAndFirst.Tests
 				"return Refuse(Host, Placed);",
 				// A room total past int.MaxValue is not a room of nothing and not
 				// a room of everything. The parcel is already made, stamped, and proved ownerless
-				// by the fence just above, so it is put back before the delivery stops -- never
-				// destroyed without that proof, and never abandoned with it.
+				// by the fence just above, so the delivery destroys the parcel IT made before
+				// stopping -- never destroyed without that proof, and never abandoned with it.
+				// Units proved into this destination earlier in the same fill keep their credit.
 				"if (!roomKnown)",
 				"Host.Discard(bundle);",
 				"return Refuse(Host, Placed);",
