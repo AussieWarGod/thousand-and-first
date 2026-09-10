@@ -18,7 +18,16 @@ python3 Tools/check-structure.py --report
 python3 Tools/check-structure.py --release
 ```
 
-## Current isolated draft census
+## Current stock-operation hotfix census
+
+3069 staged production C# files; 435,601 physical lines; zero files at or above 300 lines.
+1430 files with direct `XRL` imports; zero of these exceed the line cap. Exact inventory:
+`77b1ebee200d1e49bae4b5f74aafd5cb81c91f4415202f38fb5162eefdd389c9`.
+One new local-operation scope helper and three modified production callers over 0.3.2.
+No serialization changes. The exact-inventory semantic review remains open; this census
+alone does not approve the transaction boundary. Earlier censuses are retained checkpoints.
+
+## Retained isolated draft census
 
 The stockpile deposit custody fix over the Kingdom Quickstart shelter ingress, the render-only
 city sight, the stockpile unit capacity, the first-basin water store and the Kingdom Quickstart

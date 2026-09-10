@@ -107,9 +107,9 @@ baseline and dev-harness compatibility compiles. The shared `DevTests/refs.rsp` 
 `-langversion:latest`, so those compiles are not pinned to C# 7.3; `LangVersion` 7.3 is pinned
 only in `DevTests/Engine*/Probe.csproj` and `Tools/WorkshopSteam/*.csproj`. Retained sections
 below keep their original wording as written at their own checkpoints.
-Staged compatibility compilation runs across 3068 production C# sources, staged baseline across
-3064 (the optional-mod bridge is a compatibility-only source); the generated
-cold-install inventory contains 3099 files. Neither count proves subscriber delivery.
+Current hotfix staged compatibility compilation runs across 3069 production C# sources, staged baseline across
+3065 (the optional-mod bridge is compatibility-only); the generated
+cold-install inventory contains 3100 files. Neither count proves subscriber delivery.
 The receipts named above were measured at the earlier 3052/3048/3083 census, before the Kingdom
 Quickstart tent rows, the first-basin water store, the stockpile unit capacity, the render-only
 city sight and the shelter ingress added production

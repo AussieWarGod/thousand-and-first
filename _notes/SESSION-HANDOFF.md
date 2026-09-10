@@ -1,6 +1,14 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current unreleased stockpile deposit custody
+## Current stock-operation hotfix — issue #142
+
+3069 staged sources; 435,601 physical lines; 1430 direct-XRL; zero cap failures; 3100
+cold-install files. Full Taf 14,067 zero skips; all four compiles 3065/3069/3232/3236 passed.
+Native main-based quickstart reproduced four timber counted as zero outside a bound survey.
+Stock and commission scope implementation is under review; native success and release remain open.
+Current digest and evidence: docs/STATUS.md. No save migration or replacement goods.
+
+## Retained stockpile deposit custody
 
 3068 staged sources; 435,538 physical lines; 1429 direct-XRL; zero cap failures; 3099 generated
 cold-stage files. Exact inventory `3cfe76c38704930c03d2923e400d05155cbcbf96b9ad8b31ad90304cc8fea6c0`.

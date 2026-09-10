@@ -8,6 +8,22 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
+## [Unreleased]
+
+### Fixed
+
+- Construction menus can read dedicated material stockpiles outside the settlement's
+  background pass. Stock reads and commissions hold one scoped local survey through their
+  work, retaining the same protected-cargo, routed-lease and exact-custody checks. Previously
+  a fresh Kingdom Quickstart could report no timber while four timber sat in its camp chest.
+  This change adds no saved fields and does not replace or move existing goods.
+
+Current 3069-file census is line-cap green: 435,601 physical lines; direct `XRL`
+imports occur in 1430 files, 0 of them over the line limit. Inventory SHA-256:
+`77b1ebee200d1e49bae4b5f74aafd5cb81c91f4415202f38fb5162eefdd389c9`.
+The generated cold-install inventory contains 3100 files. Semantic review and native
+successful commissioning remain open; prior release receipts do not cover this delta.
+
 ## [0.3.2] — 2026-09-09 (Alpha)
 
 ### Fixed

@@ -2,7 +2,7 @@
 
 **Snapshot:** 2026-09-09
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
-**Next public version:** none scheduled beyond 0.3.2
+**Next public version:** 0.3.3 stockpile hotfix in preparation; not published
 **Working candidate manifest:** 0.3.2 public Alpha playtest; private staging verified,
 public Workshop upload complete and finalized — see [Public 0.3.2](#public-032) below
 
@@ -13,6 +13,29 @@ source, compile, or generator gate proves only that layer. Native Caves of Qud b
 only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
+
+## Stockpile hotfix — issue #142
+
+A genuine production Quickstart from the shipped 0.3.2 runtime reproduced the menu failure:
+`CanPay(zone, "fire")` reported one timber missing with four physical starter timber and no
+bound survey. Diagnostic commit `7adb3e46c6d13ff6f816bad9b74d5ea5f9a453e0`, seed `#43101`,
+marsh profile without advisor; the refusal is retained, not counted as acceptance.
+The earlier identity-only diagnostic also found unassigned starter-material identities;
+that is a separate routed-input prerequisite, not the cause of this local tally failure.
+
+The isolated hotfix binds/reuses one active local survey for stock reads and complete
+commission transactions. Custody and lease guards are unchanged. No saved fields or repair
+goods are introduced. Six new source-contract cases pass in the full suite: 14,067 cases,
+zero skipped. Native successful debit and projection, independent review
+and release delivery remain unproved for this draft. No existing-save reload claim is made.
+
+Current hotfix census: 3069 staged C# files; 435,601 physical lines; 3100 files in the
+generated cold-install inventory. Compile passed: 3069 sources, baseline and compatibility symbols
+(3065 baseline; developer profiles 3232/3236), including installed compatibility ABI checks.
+Direct `XRL` imports: 1430 files, 0 over the line limit. Zero files at or above 300 lines.
+Inventory SHA-256: `77b1ebee200d1e49bae4b5f74aafd5cb81c91f4415202f38fb5162eefdd389c9`.
+The structural review binding remains open for this changed inventory. Earlier censuses below
+are retained checkpoints, not evidence for the hotfix.
 
 ## Current repository integration state — PR #6 merged, main protection updated
 
