@@ -129,6 +129,7 @@ namespace ThousandAndFirst
 				// Surveyed live for the same reason the pantry is: what the stockpiles hold is a fact
 				// about the ground the founder is standing on, not a field carried on the system.
 				.Append(currentClaimed ? ("\n" + KingdomMaterials.StockLine(currentZone)) : "")
+				.Append(currentClaimed ? KingdomMaterials.ForageStatus(System, currentZone) : "")
 				// The ways the settlement wore for itself, on the same terms as the stockpiles: a
 				// fact about the ground the founder is standing on, not a field on the system.
 				.Append(currentClaimed ? ("\n" + KingdomRoads.WornLine(currentZone)) : "")

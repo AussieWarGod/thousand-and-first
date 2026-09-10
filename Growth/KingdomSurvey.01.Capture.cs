@@ -261,6 +261,8 @@ namespace ThousandAndFirst
 				|| Item.GetPart<r_KingdomScaffold>() != null
 				|| Item.GetPart<r_KingdomRelocationFrame>() != null;
 			row.PlotRoot = KingdomPlots.TryReadRect(Item, out _);
+			row.ForagePlot = KingdomPlots.HasRectEvidence(Item);
+			row.ForagePlant = Item.HasTag("Plant") || Item.HasTag("LivePlant");
 			row.LayoutRoot = KingdomLayout.TryReadMark(Item, out _);
 			row.CropRow = !pendingImprovement && Item.GetIntProperty(KingdomCrops.RowProperty) == 1
 				&& !string.IsNullOrEmpty(Item.GetStringProperty(KingdomCrops.RowFieldProperty));

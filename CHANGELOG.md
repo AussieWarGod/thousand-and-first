@@ -8,6 +8,21 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
+## Unreleased — Brush forage
+
+- Stale plot boundaries stop forage with an explicit authority warning, not a misleading scrub
+  exhaustion report. A healthy pass rearms blocked warnings even when no cut is needed or possible.
+- Huge retained brush stacks cannot wrap the forage census below its ceiling. Raw custody
+  counting saturates before addition overflows, without changing delivery-credit accounting.
+
+- Camps cut wild scrub for brush after higher-priority orders. Up to three free hands cut
+  one bundle per day within twelve paces of the rite, stopping at twelve stored bundles even
+  after a long absence — counting brush already claimed by a routed delivery toward that
+  twelve, the same rule a stockpile's own capacity already keeps. Trees, walls, food, plots,
+  owned plants and untaken wild seeds remain untouched. Competing work cannot bank forage
+  days; exhaustion and blocked custody are reported. New heart-local state attaches lazily
+  without adding fields to shipped parts.
+
 ## Unreleased — Beta gap report
 
 ### Fixed
@@ -167,12 +182,13 @@ below it.
   (ruling 5); no capacity, catch-up envelope, or stored item is touched, and a standing save reads
   exactly what it read before.
 
-> **Current unreleased census — exact structural gate passed.** Current 3068-file census is line-cap green:
-> 435,538 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> **Current unreleased census — exact structural gate passed.** Current 3071-file census is line-cap green:
+> 435,903 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
-> imports occur in 1429 files, 0 of them over the line limit. Inventory SHA-256:
-> `93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa` (this digest differs from the previous one solely because of the 0.3.2 KingdomReleaseInfo.cs version-literal bump; no other change).
-> The generated cold-install inventory contains 3099 files; no new subscription claim.
+> imports occur in 1430 files, 0 of them over the line limit. Inventory SHA-256:
+> `1f990b13abe80b98ec3ce022dc4ff3578fc998012261160e9a303840fa59ab72` (three new production files
+> from the brush-forage duty, T-forage-1).
+> The generated cold-install inventory contains 3102 files; no new subscription claim.
 > This digest is the stockpile deposit custody fix merged over `dev` at `862f14d` (the unattended
 > native observers, the Workshop listing wording, the automatic Workshop attempt finalisation, the
 > Fetch carry-completion fix and the cross-version persona REQUEST wording; only the Fetch fix

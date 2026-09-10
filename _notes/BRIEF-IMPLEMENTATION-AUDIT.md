@@ -1,5 +1,16 @@
 # Brief-to-implementation audit
 
+## Current brush-forage duty census (T-forage-1) — 2026-09-10
+
+**3071** production C# files, 435,861 physical lines, 1430 direct-XRL, zero cap failures;
+3102 generated cold-install files. Exact digest
+`6b61edc029d78cc010ed151f68fe8512770fe3d84db23453c488fc649bfc78cf`.
+Three added production sources (the heart-local forage part, its tunable rules, and the
+settlement-pass work) over the stockpile deposit custody census retained below. The ceiling ruling
+(reserved brush counts toward the twelve-unit cap) is implemented as a callback-free raw custody
+census, `ForageCeilingHeld`, over the RawObservation helpers rather than the lease-filtered
+`MaterialStock.Tally`.
+
 ## Current stockpile deposit custody census — 2026-09-09
 
 **3068** production C# files, 435,538 physical lines, 1429 direct-XRL, zero cap failures;
