@@ -20,9 +20,11 @@ python3 Tools/check-structure.py --release
 
 ## Current dev hotfix backmerge census
 
-3080 staged production C# files; 437,399 physical lines; zero files at or above 300 lines.
+3080 staged production C# files; 437,405 physical lines; zero files at or above 300 lines.
 1435 files with direct `XRL` imports; 3111 cold-install files. Exact inventory:
-`6ebc095bd595e636c48079ba5c41c0cb3bb92f3af7741d99b05eeb8b81acc78d`.
+`c964d43923a5fa4284464d09029ef0b69a71bfe79b71185b3a25661c06149dca`. These figures include the
+#141 heart envelope authority correction replayed onto this backmerge; against base `3a287e4` its
+only production delta is `Growth/KingdomArchitectureStamper.EnvelopeGrowth.cs`.
 Combined-tree gates pending. The inherited semantic review binds the isolated main hotfix,
 not this combined dev tree; no native or release acceptance is inferred.
 

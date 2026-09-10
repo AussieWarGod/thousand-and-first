@@ -87,8 +87,14 @@ namespace ThousandAndFirst
 				return Failure != null ? false : Fail(
 					"plot-envelope growth needs exact owned settlement ground", out Failure);
 			if (SameRect(beforeIntent.Rect, Successor.Rect)) return true;
-			if (!TryAuthorizedEnvelopeExpansion(Owner, Z, beforeIntent, before, Successor,
-				after, out Failure)) return false;
+			// TryAuthorizedTransition dispatches: a heart answers to the founding authority, an
+			// ordinary differing rect still reaches TryAuthorizedEnvelopeExpansion inside it.
+			// Calling that expansion authority here refused every heart, rungs one to four.
+			if (!TryAuthorizedTransition(Owner, Z, beforeIntent, before, Successor, after,
+				false, out _, out Failure))
+			{
+				return false;
+			}
 			ArchitectureLayoutDelta delta;
 			if (!KingdomArchitectureRules.TryBuildDelta(before, after, out delta, out Failure))
 				return false;
