@@ -11,13 +11,10 @@ namespace ThousandAndFirst
 	/// the receipt publishing their identities, and what it says when the cohort cannot be
 	/// completed.
 	/// <para>
-	/// The gap is real and unavoidable: the scope commits when its verification passes, and the
-	/// publish happens after it returns. A failed write, or a save cut across that instant, leaves
-	/// four live, marked, unnamed bodies. The recovery is the shipped grant idiom rather than a
-	/// second durable fence: a founder's reservation is minted from the receipt's own frozen ground
-	/// (profile, zone, food, index) and needs no publication at all, so the ground itself is the
-	/// witness. A wake that owes a cohort READS THE GROUND FIRST and adopts what it finds; it
-	/// stages a new cohort only when it finds nothing at all.
+	/// Raising is published before the first factory. A lost identity publication may leave four
+	/// marked bodies, which an exact positive ground witness can recover. Zero observed bodies
+	/// after that fence is ambiguous: they may have left or died. Such an attempt is quarantined,
+	/// never replaced. Only a fresh Pending receipt or a proved complete unwind can authorize minting.
 	/// </para>
 	/// </summary>
 	public static partial class KingdomQuickstartBootstrap
@@ -53,8 +50,8 @@ namespace ThousandAndFirst
 		/// occurrences, not distinct references: a duplicated reservation is not a second proof.
 		/// <para>
 		/// Returns false only when the scan itself cannot be trusted &#8212; a malformed
-		/// reservation, or one index worn by two bodies. A clean scan reports 0 (nothing was ever
-		/// committed), four (a committed cohort whose publication was lost), or a number between,
+		/// reservation, or one index worn by two bodies. A clean scan reports 0 (nothing standing
+		/// here), four (a committed cohort whose publication was lost), or a number between,
 		/// which the caller refuses rather than completing or replacing.
 		/// </para>
 		/// </summary>

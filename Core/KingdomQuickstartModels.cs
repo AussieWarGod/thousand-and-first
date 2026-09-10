@@ -57,7 +57,8 @@ namespace ThousandAndFirst
 		Pending = 1,
 		Seeding = 2,
 		Seeded = 3,
-		Faulted = 4
+		Faulted = 4,
+		Raising = 5
 	}
 
 	public enum KingdomQuickstartAdvisorDisposition : byte

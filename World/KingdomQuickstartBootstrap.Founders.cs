@@ -14,9 +14,9 @@ namespace ThousandAndFirst
 	/// after the four are published by identity, and every step of it is idempotent per founder.
 	/// </para>
 	/// <para>
-	/// The publish between the stages is the durable fence. It names the exact four, so a wake
-	/// after a crash finds them without discovering ownership by walking the zone, and it changes
-	/// the wire, so the lifecycle's attempted-receipt guard cannot suppress the next wake.
+	/// A Raising receipt fences the attempt before any factory runs. The second publish names
+	/// the exact four before enrollment. A recovered attempt may adopt four exact marked bodies,
+	/// but an empty zone after Raising never proves that no bodies were committed elsewhere.
 	/// </para>
 	/// </summary>
 	public static partial class KingdomQuickstartBootstrap
@@ -72,19 +72,21 @@ namespace ThousandAndFirst
 					AnnounceFoundersOnce(Game, Receipt, failure);
 				return;
 			case KingdomQuickstartFoundersDisposition.Pending:
+			case KingdomQuickstartFoundersDisposition.Raising:
 				GameObject[] cohort;
 				// READ THE GROUND BEFORE MAKING ANYTHING. The scope commits four placed bodies
 				// before the fence publishes their ids, so a lost write or a save cut across that
 				// instant leaves four live, marked, unnamed bodies. Their reservations are minted
 				// from the receipt's own frozen ground and never needed publishing, so they are a
-				// complete witness on their own.
+				// positive witness only: absence after Raising cannot authorize replacement.
 				GameObject[] standing;
 				int found;
 				if (!TryObserveFounders(Zone, Receipt, out standing, out found, out failure)
 					|| (found != 0 && found != KingdomQuickstartRules.FounderCount)
+					|| (found == 0 && !KingdomQuickstartRules.CanRaiseFounderCohort(Receipt.FoundersDisposition, found))
 					|| (found != 0 && !VerifyFounderCohort(Zone, standing, Receipt, out failure)))
 				{
-					// One to three bodies, a duplicated reservation, or a cohort that no longer
+					// Zero after Raising, one to three bodies, a duplicated reservation, or a cohort that no longer
 					// proves itself: custody cannot be settled either way. Fence the world so no
 					// replacement can ever be minted, and never stage a second cohort over an
 					// unproved one.
@@ -97,14 +99,18 @@ namespace ThousandAndFirst
 				if (found == KingdomQuickstartRules.FounderCount) cohort = standing;
 				else
 				{
+					if (!Restate(Game, ref Receipt, KingdomQuickstartFoundersDisposition.Raising, null, out failure))
+					{
+						AnnounceFoundersOnce(Game, Receipt, "The founding attempt could not be fenced: " + failure);
+						return;
+					}
 					string staged;
 					if (!TryStageFounderBodies(Game, Zone, Receipt, out cohort, out staged))
 					{
-						// Stage A unwound whole. Restating Pending with the ids cleared is a no-op
-						// on an already-Pending receipt, and that is the point: the world is
-						// exactly as it was, so the next wake retries from a clean slate.
+						// Only the scope's exact completed unwind clears quarantine. Preserve Raising
+						// whenever cleanup is uncertain; a later empty-zone scan cannot clear it.
 						string cleared;
-						if (!Restate(Game, ref Receipt,
+						if (!GrantQuarantined(Game) && !Restate(Game, ref Receipt,
 							KingdomQuickstartFoundersDisposition.Pending, null, out cleared))
 							staged = staged + "; " + cleared;
 						AnnounceFoundersOnce(Game, Receipt,

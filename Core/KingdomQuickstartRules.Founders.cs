@@ -13,6 +13,10 @@ namespace ThousandAndFirst
 		/// <summary>How many founders a cohort is. Fixed: they arrive together or not at all.</summary>
 		public const int FounderCount = 4;
 
+		/// <summary>An empty ground proves no prior allocation only before the durable attempt fence.</summary>
+		internal static bool CanRaiseFounderCohort(KingdomQuickstartFoundersDisposition Disposition, int Found)
+			=> Disposition == KingdomQuickstartFoundersDisposition.Pending && Found == 0;
+
 		/// <summary>
 		/// Read once, at world creation, and never again. A world that decided it wants no founders
 		/// is stamped <see cref="KingdomQuickstartFoundersDisposition.Omitted"/> before its receipt
@@ -54,15 +58,16 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// The three lawful moves the cohort makes WITHIN <see cref="KingdomQuickstartPhase.Complete"/>,
+		/// The lawful moves the cohort makes WITHIN <see cref="KingdomQuickstartPhase.Complete"/>,
 		/// where an ordinary phase advance cannot reach.
 		/// <list type="bullet">
-		/// <item>Pending to Pending, ids cleared: a reversible first stage failed and unwound.</item>
-		/// <item>Pending to Seeding, naming four: the durable fence before the first irreversible write.</item>
+		/// <item>Pending to Raising: durable attempt fence before any factory.</item>
+		/// <item>Raising to Pending, ids cleared: only after a proved complete unwind.</item>
+		/// <item>Pending or Raising to Seeding, naming four: exact positive cohort proof.</item>
 		/// <item>Seeding to Faulted, keeping those four: a named body cannot be found and the
 		/// cohort can neither be completed nor reversed.</item>
 		/// </list>
-		/// <paramref name="Ids"/> is supplied only for the Seeding move; the other two name nobody
+		/// <paramref name="Ids"/> is supplied only for the Seeding move; the others name nobody
 		/// new, so passing ids to them is refused rather than ignored.
 		/// </summary>
 		public static bool TryRestateFounders(KingdomQuickstartReceipt Current,
@@ -71,16 +76,18 @@ namespace ThousandAndFirst
 		{
 			Restated = null;
 			if (!Valid(Current) || Current.Phase != KingdomQuickstartPhase.Complete) return false;
-			bool clear = Current.FoundersDisposition
-					== KingdomQuickstartFoundersDisposition.Pending
+			bool unclaimed = Current.FoundersDisposition == KingdomQuickstartFoundersDisposition.Pending
+				|| Current.FoundersDisposition == KingdomQuickstartFoundersDisposition.Raising;
+			bool clear = unclaimed
 				&& Disposition == KingdomQuickstartFoundersDisposition.Pending;
-			bool name = Current.FoundersDisposition
-					== KingdomQuickstartFoundersDisposition.Pending
+			bool raising = Current.FoundersDisposition == KingdomQuickstartFoundersDisposition.Pending
+				&& Disposition == KingdomQuickstartFoundersDisposition.Raising;
+			bool name = unclaimed
 				&& Disposition == KingdomQuickstartFoundersDisposition.Seeding;
 			bool fault = Current.FoundersDisposition
 					== KingdomQuickstartFoundersDisposition.Seeding
 				&& Disposition == KingdomQuickstartFoundersDisposition.Faulted;
-			if (!clear && !name && !fault) return false;
+			if (!clear && !raising && !name && !fault) return false;
 			if (name != (Ids != null)) return false;
 			KingdomQuickstartReceipt copy = Current.Copy();
 			copy.FoundersDisposition = Disposition;
@@ -128,6 +135,7 @@ namespace ThousandAndFirst
 			{
 			case KingdomQuickstartFoundersDisposition.Omitted:
 			case KingdomQuickstartFoundersDisposition.Pending:
+			case KingdomQuickstartFoundersDisposition.Raising:
 				cohort = false;
 				break;
 			case KingdomQuickstartFoundersDisposition.Seeding:
@@ -140,6 +148,8 @@ namespace ThousandAndFirst
 			}
 			if (!cohort)
 			{
+				if (Receipt.FoundersDisposition == KingdomQuickstartFoundersDisposition.Raising
+					&& Receipt.Phase != KingdomQuickstartPhase.Complete) return false;
 				for (int i = 0; i < FounderCount; i++)
 					if (!string.IsNullOrEmpty(ids[i])) return false;
 				return Receipt.Phase != KingdomQuickstartPhase.FoundersSeeded;

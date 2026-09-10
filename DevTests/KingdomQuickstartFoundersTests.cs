@@ -18,6 +18,47 @@ namespace ThousandAndFirst.Tests
 	{
 		private const string MarshZone = "JoppaWorld.8.22.1.1.10";
 
+		[TestCase(KingdomQuickstartFoundersDisposition.Pending, 0, true)]
+		[TestCase(KingdomQuickstartFoundersDisposition.Pending, 4, false)]
+		[TestCase(KingdomQuickstartFoundersDisposition.Raising, 0, false)]
+		[TestCase(KingdomQuickstartFoundersDisposition.Raising, 1, false)]
+		[TestCase(KingdomQuickstartFoundersDisposition.Raising, 4, false)]
+		[TestCase(KingdomQuickstartFoundersDisposition.Seeding, 0, false)]
+		public void EmptyGroundAfterAnAttemptNeverAuthorizesReplacement(
+			KingdomQuickstartFoundersDisposition disposition, int found, bool expected)
+			=> Assert.That(KingdomQuickstartRules.CanRaiseFounderCohort(disposition, found), Is.EqualTo(expected));
+
+		[Test]
+		public void RaisingFenceSurvivesRoundTripWithoutClaimingAnyBody()
+		{
+			var pending = Complete(Fresh(KingdomQuickstartFoundersDisposition.Pending));
+			Assert.That(KingdomQuickstartRules.TryRestateFounders(pending,
+				KingdomQuickstartFoundersDisposition.Raising, null, out var raising), Is.True);
+			string wire = KingdomQuickstartRules.Encode(raising);
+			Assert.That(KingdomQuickstartRules.TryDecode(wire, out var resumed), Is.True);
+			Assert.That(resumed.FoundersDisposition, Is.EqualTo(KingdomQuickstartFoundersDisposition.Raising));
+			Assert.That(resumed.FounderObjectIds.All(string.IsNullOrEmpty), Is.True);
+			Assert.That(KingdomQuickstartRules.CanRaiseFounderCohort(resumed.FoundersDisposition, 0), Is.False);
+			Assert.That(KingdomQuickstartRules.IsTerminal(resumed), Is.False);
+			Assert.That(KingdomQuickstartRules.TryRestateFounders(resumed,
+				KingdomQuickstartFoundersDisposition.Seeding, Ids(), out _), Is.True);
+			Assert.That(KingdomQuickstartRules.TryRestateFounders(resumed,
+				KingdomQuickstartFoundersDisposition.Pending, null, out var unwound), Is.True);
+			Assert.That(KingdomQuickstartRules.Encode(unwound), Is.EqualTo(KingdomQuickstartRules.Encode(pending)));
+		}
+
+		[Test]
+		public void RuntimePublishesAttemptBeforeFactoriesAndNeverClearsAQuarantine()
+		{
+			string source = TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.Founders.cs");
+			int fence = source.IndexOf("Restate(Game, ref Receipt, KingdomQuickstartFoundersDisposition.Raising", StringComparison.Ordinal);
+			Assert.That(fence, Is.GreaterThan(0));
+			Assert.That(source, Does.Contain("if (!Restate(Game, ref Receipt, KingdomQuickstartFoundersDisposition.Raising, null, out failure))"));
+			Assert.That(fence, Is.LessThan(source.IndexOf("if (!TryStageFounderBodies", StringComparison.Ordinal)));
+			Assert.That(source, Does.Contain("found == 0 && !KingdomQuickstartRules.CanRaiseFounderCohort(Receipt.FoundersDisposition, found)"));
+			Assert.That(source, Does.Contain("if (!GrantQuarantined(Game) && !Restate(Game, ref Receipt,"));
+		}
+
 		// ---- save compatibility: a world made before founders can never gain them ----------
 
 		[Test]
@@ -593,7 +634,7 @@ namespace ThousandAndFirst.Tests
 				"World/KingdomQuickstartBootstrap.Founders.cs");
 			StringAssert.Contains("private static void RunFounders(", founders);
 			// Every refusal arm ends in the one announce-once path.
-			Assert.That(Count(founders, "AnnounceFoundersOnce("), Is.EqualTo(6));
+			Assert.That(Count(founders, "AnnounceFoundersOnce("), Is.EqualTo(7));
 			string refusal = TestMain.ReadRepositoryText(
 				"World/KingdomQuickstartBootstrap.Founders.Recovery.cs");
 			// The announce-once flag, and the block it is keyed to: any published progress changes

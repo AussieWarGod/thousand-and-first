@@ -16,18 +16,18 @@ below it.
   and a physicker of one culture per camp — enrolled under a new `Founding` reason that only this
   bootstrap can emit, on the roll and able to work at turn 1, standing on the approach. They arrive
   together or not at all: the bodies and all their gear are raised inside one custody scope, so a
-  failure anywhere takes all four back off the map and the next load retries from a clean slate.
+  proved complete unwind permits a clean retry. A durable Raising receipt precedes the first
+  factory; an interrupted attempt with no bodies left on this ground never invents replacements.
   They sleep rough until the two tent rows stand (about a day and a half) against a six-day grace,
   and the completion notice and the charter both say so. Four at a camp drink 4 drams a day, so the
   opening 24 drams last six days, and the first traveller is due at 6000 ticks rather than 3600.
-  A save cut part-way through the irreversible half resumes founder by founder and completes to
-  exactly four, with the roll and the origin tally at four and not eight; the tally is derived from
-  the founders that carry the origin rather than counted as each is written, so an interruption
-  between the two cannot lose a count. A save cut in the gap between the four bodies being placed
+  A save cut part-way through enrollment resumes by the exact published founder identities.
+  Origin-tally reconciliation still needs its separately tracked additive-accounting repair
+  before this feature can merge. A save cut in the gap between the four bodies being placed
   and their identities being published is recovered from the ground: each founder wears a
   reservation minted from the camp's own frozen ground, so a wake adopts four that are already
   standing rather than raising four more, and refuses outright — once, and permanently — on a party
-  that is neither four nor none. A named founder that cannot be found afterwards is announced once
+  that is not exactly four after an attempt began. A named founder that cannot be found afterwards is announced once
   and never retried, and the world says it is short rather than quietly standing at one, two or
   three. A refused cohort never costs the founder the stores or the completion notice. A world founded before this change, or founded
   with the new option off, decodes with no cohort, re-encodes byte for byte as it was written, is
@@ -138,10 +138,10 @@ below it.
   exactly what it read before.
 
 > **Current unreleased census — exact structural gate passed.** Current 3073-file census is line-cap green:
-> 436,443 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> 436,457 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1433 files, 0 of them over the line limit. Inventory SHA-256:
-> `2001d4d9c4c38abe929495e36984a9ae62c85069e4287afc3d34081c52b1e756`.
+> `7b7533da6d794ec11f537143e0575a58b4b150cb4efd0089d7d1f5a802ad1c40`.
 > The generated cold-install inventory contains 3104 files; no new subscription claim.
 > This digest is the Kingdom Quickstart founding cohort over the stockpile deposit custody census
 > retained below, and over every delta retained beneath that; each carries its own review chain and

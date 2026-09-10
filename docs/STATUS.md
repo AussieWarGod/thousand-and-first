@@ -114,21 +114,27 @@ their gear, a publish that names the exact four before any irreversible write, t
 idempotent half. The receipt carries a durable founders disposition and the four identities on a new
 sixteen-field wire form; a receipt written before this change, or written with the new option off,
 stays on the old eleven-field form, re-encodes byte for byte and is terminal on every wake, so no
-existing world can gain founders.
+existing world can gain founders. An append-only Raising disposition now fences the attempt
+before any factory. After that fence, an empty ground is ambiguous and cannot authorize a new
+cohort; only exact four-body adoption or a proved complete unwind may progress. The origin-tally
+repair remains unresolved: max(recorded, founders) undercounts unrelated same-origin arrivals.
+PR #106 must not merge on attempt-fence tests alone.
 
 Current census on these bytes: 3073
-staged C# files; 436,443 physical lines; 3104 files in the generated
+staged C# files; 436,457 physical lines; 3104 files in the generated
 cold-install inventory. Staged compilation covers 3073 sources, baseline and compatibility symbols
 (baseline compiles 3069 of them; the optional-mod bridge is compatibility-only), run here by Roslyn
-9.0.318 on Linux against the licensed Managed references with warnings as
+9.0.306 through the canonical Windows gate against the licensed Managed references with warnings as
 errors. Direct `XRL` imports: 1433 files, 0 over the line limit.
-Inventory SHA-256: `2001d4d9c4c38abe929495e36984a9ae62c85069e4287afc3d34081c52b1e756`.
+Inventory SHA-256: `7b7533da6d794ec11f537143e0575a58b4b150cb4efd0089d7d1f5a802ad1c40`.
 All four compile modes are clean on these bytes — staged baseline (3069 sources), staged
 compatibility (3073), dev-harness baseline (3236) and dev-harness compatibility (3240) — through the
-Linux Roslyn reproduction of `Tools/gate.sh` rather than the Windows gate, which did NOT run here.
-The engine-free suites pass 14,094 TafTests and 5,248 PortableTests cases, zero skipped, and the
+canonical `Tools/gate.sh --keep`, including the installed Hearthpyre ABI check.
+The engine-free suites pass 14,102 TafTests and 5,256 PortableTests cases, zero skipped, and the
 Tools suite passes 627 tests.
-NOT RUN for these bytes: the Windows gate, the licensed Windows suite driver, any native run,
+An intentional replacement-authority mutation fails two assertions; restoring the attempt fence
+restores the required refusal. These are managed recovery tests, not native save-cut proof.
+NOT RUN for these bytes: the licensed Windows suite driver, any native run,
 ordinary play, graceful Quit and Steam delivery. In particular the six-profile Quickstart boot
 matrix at seed `#43101` has NOT been re-run on these bytes and must be, before merge, because this
 changes what Quickstart does at boot; earlier matrix results sign earlier bytes only. No human
