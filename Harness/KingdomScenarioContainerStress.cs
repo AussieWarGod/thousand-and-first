@@ -27,8 +27,7 @@ namespace ThousandAndFirst.Harness
 		// DEMANDED catch-up thirds shrinks, because food debt retires to zero before container
 		// catch-up ever measures it (z05.Reify.cs:41-53 runs before :56-61's TryMeasure), so its
 		// demand is always zero. 244 water containers * 3 thirds/medium unit = 732, not 252*3=756.
-		private const int ThirdsPerUnit = 3;
-		private const int InitialThirds = WaterCount * ThirdsPerUnit;
+		private const int InitialThirds = WaterCount * KingdomCatchUpRules.ThirdsPerUnit;
 		private static readonly List<string> WaterIds = new List<string>(), FoodIds = new List<string>();
 		private static XRLGame Game;
 		private static KingdomSystem System;

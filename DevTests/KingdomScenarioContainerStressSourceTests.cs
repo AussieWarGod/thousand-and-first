@@ -22,8 +22,8 @@ namespace ThousandAndFirst.Tests
 		public void BudgetIsDerivedFromWaterContainersOnlyNeverTheStaleEnvelopeTotal()
 		{
 			string source = Read(Main);
-			Assert.That(source, Does.Contain("private const int ThirdsPerUnit = 3;"));
-			Assert.That(source, Does.Contain("private const int InitialThirds = WaterCount * ThirdsPerUnit;"));
+			Assert.That(source, Does.Not.Contain("private const int ThirdsPerUnit"));
+			Assert.That(source, Does.Contain("private const int InitialThirds = WaterCount * KingdomCatchUpRules.ThirdsPerUnit;"));
 			Assert.That(source, Does.Contain("food=8; initial-thirds=\""));
 			Assert.That(source, Does.Contain("+ InitialThirds + \"; synthetic=true"));
 			Assert.That(source, Does.Contain("stress-initial-thirds=\" + InitialThirds"));

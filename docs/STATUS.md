@@ -35,6 +35,23 @@ ABI and repository audit (770 checks, six platform skips). Main 14,303 and porta
 tests pass with zero skips. Native proof remains pending; earlier failed profiles are retained.
 No resident-stress, ordinary-play, save/load or release acceptance is claimed.
 
+Native economic-present at `53022df`, seed `#165939435`, passed 15 verbs / 63 journal rows
+in profile `mlKgm8`: drain 31 turns within 39, peak 24 thirds / zero heavy operations, no
+remaining demand, pause effects proved and stress budget 732. Strict Player.log passed;
+owned PID 28032 stopped, profile and evidence retained. Same-head economic-away `dZxP6D`
+passed 15 verbs / 65 rows with 269 actual travel turns and real unloaded absence. It also
+drained in 31 turns, peak 24 thirds / zero heavy operations, no remaining demand and pause
+effects proved. Strict Player.log passed; owned PID 33964 stopped and evidence retained.
+The matched developer comparison passes with zero deltas in containers, drain turns,
+measured demand, peak thirds and peak heavy operations. Equal total elapsed time is not
+claimed. This remains synthetic, zero-resident-stress evidence, not release acceptance.
+The follow-up uses production's existing `KingdomCatchUpRules.ThirdsPerUnit` constant rather
+than duplicating 3; the computed budget remains 732. Four-mode compile and audit pass;
+main 14,303 / portable 5,467 tests pass, zero skips. Seven focused source checks pass;
+substituting a local literal fails one source assertion, restored code passes.
+Native evidence above signs exact `53022df`; this constant-reference follow-up was not
+separately run natively.
+
 ## Unreleased roadless spatial capture correction (#131)
 
 A completed camp can have a public entrance before population traffic has worn a connected
