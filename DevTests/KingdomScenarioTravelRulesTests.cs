@@ -214,6 +214,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("if (!measured) return false", source);
 			StringAssert.Contains("KingdomScenarioTravelRules.ContainerOnlyAdmission(System.Population", source);
 			StringAssert.Contains("book.ResidentIds.Count, citizens", source);
+			StringAssert.Contains("foreach (GameObject item in survey.LoadedObjects)", source);
 			StringAssert.Contains("item.GetIntProperty(\"KingdomCitizen\") != 0 || item.GetPart<r_KingdomCitizenship>() != null", source);
 			StringAssert.DoesNotContain("Posted(", source);
 			StringAssert.DoesNotContain("GroundDemandThirds(", source);

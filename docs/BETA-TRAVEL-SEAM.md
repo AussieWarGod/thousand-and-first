@@ -33,7 +33,8 @@ Every zero timestamp comes from that physical observation, including when a norm
 Missing demand evidence refuses, even in a quiet camp.
 This diagnostic is container-only: any settlement population, resident row, or physical
 citizenship marker/receipt refuses admission. Custody-only capture cannot classify resident
-postings, so an empty settlers list is never offered as proof of zero body demand. Resident
+postings; the marker scan covers the complete loaded index, including inventory-nested objects.
+An empty settlers list is never offered as proof of zero body demand. Resident
 stress remains untested.
 The script requests a 39-turn drain wait; an action opportunity or real render yield may observe
 its completion later (for example, 40 elapsed turns). That later observation does not extend the

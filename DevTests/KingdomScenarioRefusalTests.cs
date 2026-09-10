@@ -69,6 +69,14 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.AreEqual(2, CountOccurrences(source,
 				"KingdomScenarioTravel.Fault = KingdomScenarioRefusal.Message(\"taf-travel-refused\", error.Message)"));
 			StringAssert.DoesNotContain("KingdomScenarioTravel.Fault = error.Message", source);
+			StringAssert.Contains("KingdomScenarioJournal.Append(\"travel-refused\", false, KingdomScenarioTravel.Fault)", source);
+		}
+
+		[Test]
+		public void TravelRethrowUsesTheSameIdempotentFormatter()
+		{
+			StringAssert.Contains("throw new InvalidOperationException(KingdomScenarioRefusal.Message(\"taf-travel-refused\", Reason))",
+				Read("Harness/KingdomScenarioTravel.cs"));
 		}
 
 		[Test]

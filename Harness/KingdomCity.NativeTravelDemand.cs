@@ -35,7 +35,7 @@ namespace ThousandAndFirst.Simulation.City
 			// Custody-only capture does not classify realm residents. This fixture proves
 			// containers only: any citizen marker/receipt is a refusal, not an empty body list.
 			int citizens = 0;
-			foreach (GameObject item in survey.Objects)
+			foreach (GameObject item in survey.LoadedObjects)
 				if (item.GetIntProperty("KingdomCitizen") != 0 || item.GetPart<r_KingdomCitizenship>() != null)
 					citizens++;
 			if (!ReferenceEquals(The.Game, game) || game.TimeTicks != tick

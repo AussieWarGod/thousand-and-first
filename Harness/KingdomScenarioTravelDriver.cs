@@ -20,7 +20,7 @@ namespace ThousandAndFirst.Harness
 			{
 				KingdomScenarioTravel.Fault = KingdomScenarioRefusal.Message("taf-travel-refused", error.Message);
 				KingdomScenarioTravel.State = KingdomScenarioTravel.Phase.Failed;
-				KingdomScenarioJournal.Append("travel-refused", false, error.Message);
+				KingdomScenarioJournal.Append("travel-refused", false, KingdomScenarioTravel.Fault);
 				Faulted = true; return false;
 			}
 		}

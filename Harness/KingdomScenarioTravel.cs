@@ -28,7 +28,7 @@ namespace ThousandAndFirst.Harness
 
 		internal static void Require(bool Value, string Reason)
 		{
-			if (!Value) throw new InvalidOperationException("taf-travel-refused: " + Reason);
+			if (!Value) throw new InvalidOperationException(KingdomScenarioRefusal.Message("taf-travel-refused", Reason));
 		}
 
 		internal static string Begin(bool IsAway)
