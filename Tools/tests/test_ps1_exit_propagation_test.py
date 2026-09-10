@@ -141,9 +141,9 @@ class TestPs1RealExecutionTest(unittest.TestCase):
         stub.write_text(
             "#!/bin/sh\n"
             'case "$*" in\n'
-            "  *restore*) exit 0 ;;\n"
-            '  *"run --project"*TafTests*) echo "ALL GREEN: 1 cases passed, 0 skipped (1 discovered)"; exit 0 ;;\n'
-            '  *"run --project"*PortableTests*) echo "The application to execute does not exist: stub.dll"; exit 74 ;;\n'
+            "  restore\\ *) exit 0 ;;\n"
+            '  "run --project "*TafTests*) echo "ALL GREEN: 1 cases passed, 0 skipped (1 discovered)"; exit 0 ;;\n'
+            '  "run --project "*PortableTests*) echo "The application to execute does not exist: stub.dll"; exit 74 ;;\n'
             "  *) exit 0 ;;\n"
             "esac\n",
             encoding="utf-8",
