@@ -124,6 +124,40 @@ namespace ThousandAndFirst.Tests
 					required, 2400L, "A"));
 		}
 
+		[TestCase(false, 2400L, "A", 0L, 7L, 1200L, 5100L)]
+		[TestCase(true, 2400L, "A", 7L, 7L, 2400L, 5100L)]
+		[TestCase(true, 2400L, "A", 7L, 7L, 2401L, 5100L)]
+		[TestCase(true, 2400L, "A", 3L, 7L, 1200L, 1200L)]
+		[TestCase(true, 2400L, "A", 7L, 7L, 2399L, 2399L)]
+		[TestCase(true, 2400L, "A", 3L, 7L, 2400L, 2400L)]
+		[TestCase(true, 0L, "A", 7L, 7L, 1200L, 1200L)]
+		[TestCase(true, 2400L, null, 7L, 7L, 2400L, 2400L)]
+		[TestCase(true, 2400L, "A", -1L, 7L, 2400L, 2400L)]
+		[TestCase(true, 2400L, "A", 7L, 0L, 2400L, 2400L)]
+		public void MasterResumePreservesOnlyUnpublishedOrMalformedActiveReceipts(bool active,
+			long started, string zone, long completed, long required, long prior, long expected)
+			=> ClassicAssert.AreEqual(expected, KingdomSemanticClockRules.MasterResumeDispatchTick(
+				Active: active, StartedTick: started, BoundZoneId: zone, StartedMask: required,
+				CompletedMask: completed, RequiredMask: required, LastSemanticTick: prior, NowTick: 5100L));
+
+		[TestCase(-1L, 7L, 2400L)]
+		[TestCase(3L, 7L, 2400L)]
+		[TestCase(0L, 7L, 2400L)]
+		[TestCase(7L, 7L, 5100L)]
+		public void MasterResumeNeverPublishesUnstartedOrNegativeStepMasks(long started,
+			long completed, long expected)
+			=> ClassicAssert.AreEqual(expected, KingdomSemanticClockRules.MasterResumeDispatchTick(
+				true, 2400L, "A", started, completed, 7L, 2400L, 5100L));
+
+		[Test]
+		public void PublishedMasterResumeCannotSpendPausedSemanticTimeOnNextWake()
+		{
+			long resumed = KingdomSemanticClockRules.MasterResumeDispatchTick(true, 2400, "A", 7, 7, 7, 2400, 5100);
+			var state = KingdomSemanticClockRules.FromLastDispatchTick(resumed);
+			ClassicAssert.IsFalse(KingdomSemanticClockRules.Decide(state, 5101, false).ShouldDispatch);
+			ClassicAssert.IsTrue(KingdomSemanticClockRules.Decide(state, 6000, false).ShouldDispatch);
+		}
+
 		[Test]
 		public void InvalidOrPreDayTicksDoNotCreateCadenceWork()
 		{

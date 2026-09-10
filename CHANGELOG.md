@@ -56,6 +56,11 @@ below it.
 
 ### Fixed
 
+- Master resume now reanchors the semantic clock for a completed, published receipt even when
+  its durable active flag remains set. Unfinished, unpublished, or malformed active receipts
+  retain their old clock, so resuming never fabricates publication. The same rule serves the
+  seated settlement and away mirrors; no saved fields or formats change. Native verification
+  remains pending under issue #127; earlier economic fixture refusals remain retained.
 - Canonical compile gates honor a private `TMPDIR` for both independently allocated trees,
   allowing parallel workers to avoid the shared `/tmp` publication lock without bypassing it.
 - The dev-only scenario test ground's `Strip`/`Restrip` cleared only the zone's interior objects, so
@@ -211,7 +216,14 @@ below it.
   (ruling 5); no capacity, catch-up envelope, or stored item is touched, and a standing save reads
   exactly what it read before.
 
-> **Current unreleased census — exact structural gate passed.** Current 3078-file census is line-cap green:
+> **Current unreleased census — master semantic resume correction.** Current 3078-file census is line-cap green:
+> 437,136 physical lines; zero files at or above 300; 1434 direct `XRL` imports.
+> Inventory SHA-256: `f533203f98ed26e0ab95970b54b13fce26d6281988e36c9e3d20f6f870a82bb9`.
+> Three production files changed, no added sources or saved fields. At 76ab44d, canonical compile
+> modes and repository audit pass; main 14,287 and portable 5,451 tests pass, zero skipped.
+> Fresh native proof remains pending; retained founder evidence below does not sign this correction.
+
+> **Retained founding-cohort census — exact structural gate passed on those bytes.**
 > 437,114 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1434 files, 0 of them over the line limit. Inventory SHA-256:

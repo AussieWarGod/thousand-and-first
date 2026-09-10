@@ -132,6 +132,20 @@ namespace ThousandAndFirst.Simulation.City
 				: KingdomSemanticPassReceiptVerdict.RefuseDifferentGround;
 		}
 
+		/// <summary>Reanchors a completed published receipt after master pause, but never
+		/// turns an unfinished or malformed active receipt into a published one.</summary>
+		internal static long MasterResumeDispatchTick(bool Active, long StartedTick, string BoundZoneId,
+			long StartedMask, long CompletedMask, long RequiredMask, long LastSemanticTick, long NowTick)
+		{
+			if (!Active) return NowTick;
+			if (StartedTick <= 0L || string.IsNullOrEmpty(BoundZoneId) || StartedMask < 0L
+				|| CompletedMask < 0L || (CompletedMask & ~StartedMask) != 0L
+				|| RequiredMask <= 0L) return LastSemanticTick;
+			return ReceiptVerdict(Active, StartedTick, BoundZoneId, CompletedMask, RequiredMask,
+				LastSemanticTick, BoundZoneId) == KingdomSemanticPassReceiptVerdict.Start
+				? NowTick : LastSemanticTick;
+		}
+
 		private static KingdomSemanticClockDecision None(KingdomSemanticClockState State)
 		{
 			return new KingdomSemanticClockDecision(KingdomSemanticDispatchKind.None,
