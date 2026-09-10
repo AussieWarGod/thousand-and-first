@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <Compile Include="TestMain.cs" />
+    <Compile Include="KingdomDepositOverflowNativeSourceTests.cs" />
     <Compile Include="KingdomRealmArchiveNestedWireSourceTests.cs" />
     <Compile Include="KingdomCityBookRefusalTests.cs" />
     <Compile Include="KingdomWearLoadSafetySourceTests.cs" />

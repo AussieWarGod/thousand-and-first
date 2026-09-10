@@ -1,0 +1,20 @@
+# Real adapters over real bodies: StockpileDepositHost and GroundSpillHost driven through
+# KingdomDepositEngine.Fill in a really founded camp. Four cases -- an ordinary delivered parcel
+# into the store and onto bare ground, a real held stack at exactly int.MaxValue that still reads
+# and still credits, and a total past int.MaxValue refusing on the stockpile host and on the ground
+# host with zero credit and every standing body untouched.
+#
+# SYNTHETIC SETUP, DISCLOSED: the camp is founded by the harness, and every large stack is a
+# fixture body whose Stacker.StackCount the harness assigns directly (1,200,000,000 each, one at
+# exactly int.MaxValue) carrying NeverStack so the engine cannot merge two rows into one. The
+# engine PERMITS such a count (Stacker._StackCount is a plain int field with no ceiling); nothing
+# here claims ordinary play produces one. Not a rendered Charter, no save/load, no cold-load, and
+# no general camp-acceptance claim. Refs #111.
+DESCRIPTION=raw delivery censuses refuse a hold past int.MaxValue on both real hosts, credit nothing, and leave every standing body untouched
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;deposit-overflow-setup;deposit-overflow-check;deposit-overflow-check;deposit-overflow-check;deposit-overflow-check;stagedigest
+VERBS=deposit-overflow-setup,deposit-overflow-check
+EXPECT=stagedigest:OK~founded=false,deposit-overflow-setup:OK~native-deposit-overflow phase=1,deposit-overflow-check:OK~native-deposit-overflow phase=2,deposit-overflow-check:OK~native-deposit-overflow phase=3,deposit-overflow-check:OK~native-deposit-overflow phase=4,deposit-overflow-check:OK~native-deposit-overflow cases=4 passed=4 failed=0,stagedigest:OK~founded=true,COMPLETE
+SET=materials,native-regression,test-only
+TIMEOUT=1200

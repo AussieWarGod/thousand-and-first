@@ -202,6 +202,19 @@ below it.
 
 ### Changed
 
+- DEV-HARNESS ONLY: a native-check seam drives the raw delivery refusal through the REAL adapters
+  — `KingdomMaterials.StockpileDepositHost` and `KingdomMaterials.GroundSpillHost` — and the real
+  `KingdomDepositEngine.Fill`, over real bodies in a really founded camp
+  (`Harness/KingdomDepositOverflowNativeProvider.cs` and its checks, fixture and cases shards,
+  `Tools/personas/deposit-overflow-native-check.persona`). Four cases: an ordinary delivered parcel
+  into the store and onto bare ground; a real held stack at exactly `int.MaxValue` that still reads
+  and still credits; and a total past `int.MaxValue` refusing on both hosts with zero credit and
+  every standing body proved unchanged by identity, raw count and custody. The large stacks are
+  fixture bodies whose `Stacker.StackCount` the harness assigns directly and which carry
+  `NeverStack` so the engine cannot merge two rows into one; that synthetic setup is disclosed in
+  every report line, in the persona and in the PR. No production source, blueprint, or saved format
+  changes, and the run itself is still owed. Refs #111.
+
 - A settlement delivery read its destination's room and its gain by summing raw stack counts into
   an `int`. A stack's count is the engine's own plain `int` field with no ceiling on it
   (`Stacker._StackCount`, read back by `Reader.ReadInt32` and merged by unchecked `int` addition),
