@@ -17,16 +17,48 @@ namespace ThousandAndFirst
 
 		private const string LegacyWireTag = "q1";
 
+		/// <summary>
+		/// Wire tags of a receipt that carries a founding cohort. They are new tags rather than a
+		/// widened <c>q1</c>/<c>q2</c> because the founders form has five more fields: a wire
+		/// written before founders existed keeps its exact eleven fields and its exact bytes, and
+		/// no tag can be read as another. <c>q4</c> is <c>q3</c> plus the shelter obligation, the
+		/// same way <c>q2</c> is <c>q1</c> plus it.
+		/// </summary>
+		private const string FoundersWireTag = "q3";
+
+		private const string FoundersShelterWireTag = "q4";
+
+		private const int LegacyFieldCount = 11;
+
+		private const int FoundersFieldCount = 16;
+
+		/// <summary>
+		/// Emits the OLD eleven-field form if and only if the receipt carries no cohort, so every
+		/// receipt written before this version, and every world founded with the founders option
+		/// off, re-encodes byte for byte as it was read.
+		/// </summary>
 		public static string Encode(KingdomQuickstartReceipt Receipt)
 		{
 			if (!Valid(Receipt)) return null;
-			string body = (Receipt.ShelterObligation ? ShelterWireTag : LegacyWireTag)
+			bool founders = Receipt.FoundersDisposition
+				!= KingdomQuickstartFoundersDisposition.Omitted;
+			string tag = founders
+				? (Receipt.ShelterObligation ? FoundersShelterWireTag : FoundersWireTag)
+				: (Receipt.ShelterObligation ? ShelterWireTag : LegacyWireTag);
+			string body = tag
 				+ "|" + B64(Receipt.ProfileKey) + "|" + B64(Receipt.ZoneId)
 				+ "|" + ((int)Receipt.Phase).ToString(CultureInfo.InvariantCulture)
 				+ "|" + B64(Receipt.FoodBlueprint) + "|" + B64(Receipt.WaterObjectId)
 				+ "|" + B64(Receipt.LarderObjectId) + "|" + B64(Receipt.StockpileObjectId)
 				+ "|" + ((int)Receipt.AdvisorDisposition).ToString(
 					CultureInfo.InvariantCulture) + "|" + B64(Receipt.AdvisorObjectId);
+			if (founders)
+			{
+				body += "|" + ((int)Receipt.FoundersDisposition).ToString(
+					CultureInfo.InvariantCulture);
+				for (int i = 0; i < FounderCount; i++)
+					body += "|" + B64(Receipt.FounderObjectIds[i]);
+			}
 			return body + "|" + Digest(body);
 		}
 
@@ -35,10 +67,15 @@ namespace ThousandAndFirst
 			Receipt = null;
 			if (string.IsNullOrEmpty(Wire) || Wire.Length > MaximumWireLength) return false;
 			string[] fields = Wire.Split('|');
-			if (fields.Length != 11 || (fields[0] != LegacyWireTag
-				&& fields[0] != ShelterWireTag)) return false;
-			string body = string.Join("|", fields, 0, 10);
-			if (!string.Equals(Digest(body), fields[10], StringComparison.Ordinal)) return false;
+			bool founders = fields[0] == FoundersWireTag
+				|| fields[0] == FoundersShelterWireTag;
+			bool legacy = fields[0] == LegacyWireTag || fields[0] == ShelterWireTag;
+			if (!founders && !legacy) return false;
+			int count = founders ? FoundersFieldCount : LegacyFieldCount;
+			if (fields.Length != count) return false;
+			string body = string.Join("|", fields, 0, count - 1);
+			if (!string.Equals(Digest(body), fields[count - 1],
+				StringComparison.Ordinal)) return false;
 			try
 			{
 				Receipt = new KingdomQuickstartReceipt
@@ -56,7 +93,16 @@ namespace ThousandAndFirst
 					AdvisorObjectId = Text(fields[9]),
 					ShelterObligation = string.Equals(fields[0], ShelterWireTag,
 						StringComparison.Ordinal)
+						|| string.Equals(fields[0], FoundersShelterWireTag,
+							StringComparison.Ordinal),
+					FoundersDisposition = founders
+						? (KingdomQuickstartFoundersDisposition)int.Parse(fields[10],
+							NumberStyles.Integer, CultureInfo.InvariantCulture)
+						: KingdomQuickstartFoundersDisposition.Omitted
 				};
+				if (founders)
+					for (int i = 0; i < FounderCount; i++)
+						Receipt.FounderObjectIds[i] = Text(fields[11 + i]);
 			}
 			catch
 			{

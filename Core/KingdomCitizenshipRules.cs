@@ -36,7 +36,13 @@ namespace ThousandAndFirst
 		Arrival = 1,
 		GuestAdoption = 2,
 		LegacyObservation = 3,
-		Repair = 4
+		Repair = 4,
+		/// <summary>
+		/// The four citizens a Kingdom Quickstart world is founded with. Append-only, and emitted
+		/// by that one bootstrap alone: the ordinary founding rite enrols nobody, so no other path
+		/// may write it and a source test pins that it appears nowhere else.
+		/// </summary>
+		Founding = 5
 	}
 
 	public enum KingdomCitizenshipRemovalReason
@@ -166,7 +172,7 @@ namespace ThousandAndFirst
 		private static bool ValidEnrollmentReason(int value)
 		{
 			return value >= (int)KingdomCitizenshipEnrollmentReason.Arrival
-				&& value <= (int)KingdomCitizenshipEnrollmentReason.Repair;
+				&& value <= (int)KingdomCitizenshipEnrollmentReason.Founding;
 		}
 
 		private static bool ValidRemovalReason(int value)
