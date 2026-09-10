@@ -86,6 +86,17 @@ below it.
 - Developer profile validation batches metadata checks four at a time, preserving every path,
   link, size and closed-inventory check while reducing serialized filesystem overhead.
 
+- Private staging cleanup admits, removes and proves one entry inside a single helper process.
+  The previous protocol split those steps across processes, so the freed inode number could be
+  recycled by an unrelated concurrent directory before the post-removal identity search ran, and a
+  clean gate was refused. The descriptor the removal already opens on the sequestered entry is now
+  held across the removal, deletion is proved positively by that descriptor reporting zero links,
+  and the identity search runs while it is still open. Exact-identity admission, the exit-5 refusal
+  meaning and the identity search are unchanged; an entry whose name is gone while its identity is
+  still present elsewhere in the parent is refused rather than reported absent; probe cleanup is
+  identity-bound, never name-bound; and a filesystem that cannot witness a released inode is
+  refused by name with no fallback.
+
 - Repository audits ignore existing Python bytecode and disable new cache writes. Same-size,
   same-second mutation/restoration cycles therefore test current source, not a stale `.pyc`.
 - Developer cold-load preparation anchors all destination writes, including directory creation,
