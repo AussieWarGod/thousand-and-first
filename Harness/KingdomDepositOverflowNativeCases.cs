@@ -73,21 +73,35 @@ namespace ThousandAndFirst.Harness
 					.Append(outcome.Placed).Append("; body=").Append(Boundary.Evidence);
 			}
 
-			/// <summary>Case 3. Two real bodies in the dedicated store totalling 2,400,000,000.
-			/// The checked room census refuses; the ORDINARY advisory reading beside it still
-			/// reports room, because it sums unchecked and wraps to &minus;1,894,967,296 &mdash;
-			/// which is why the delivery reaches the store at all, and is the open follow-up on
-			/// this issue. The delivery grants no credit and leaves both bodies exactly as they
-			/// stood.</summary>
+			/// <summary>
+			/// Case 3. Two real bodies of 1,200,000,000 added to the dedicated store, ON TOP OF
+			/// whatever case 1 already delivered into it. The total is therefore the measured
+			/// baseline plus 2,400,000,000, never a bare 2,400,000,000, and the journal records
+			/// the baseline it actually read rather than asserting a number it did not measure.
+			/// <para>
+			/// The checked room census refuses. The ORDINARY advisory reading beside it still
+			/// reports room, which is why the delivery reaches the store at all and is the open
+			/// follow-up on this issue. That advisory number is a ROOM &mdash; capacity less an
+			/// unchecked hold &mdash; and is NOT the wrapped hold itself; the two are recorded
+			/// separately and never equated. The delivery grants no credit and leaves both bodies
+			/// exactly as they stood.
+			/// </para>
+			/// </summary>
 			private void StockpileOverflow()
 			{
+				// What the store already holds of this material, measured rather than assumed:
+				// case 1 delivered into this same store, so the fixture stacks land on top of a
+				// baseline and the totals below are that baseline plus what is added.
+				int baseline;
+				Require(KingdomMaterials.TryDepositMaterialHeldNow(Container, Blueprint,
+					out baseline), "the store's hold is not readable before the fixture stacks");
 				// One stack first, and the census is proved to COUNT it before a second is placed.
 				// That is the eligibility proof this fixture needs: not that a classifier says the
 				// body is material, but that the very reading under test already saw it.
 				Body first = PlaceInStore(1200000000);
 				int counted;
 				Require(KingdomMaterials.TryDepositMaterialHeldNow(Container, Blueprint,
-					out counted) && counted >= 1200000000,
+					out counted) && counted == baseline + 1200000000,
 					"the raw census did not count the first fixture stack");
 				StoreStacks = new[] { first, PlaceInStore(1200000000) };
 				int rowsBefore = StoreRows();
@@ -97,7 +111,12 @@ namespace ThousandAndFirst.Harness
 				Require(unread == 0, "a refused room reading must hand back nothing");
 				Require(!KingdomMaterials.TryDepositMaterialHeldNow(Container, Blueprint,
 					out unread), "a hold past int.MaxValue must have no reading either");
-				int advisory = KingdomMaterials.StockpileRoom(Container);
+				// The advisory ROOM the delivery walks on. It is capacity less an UNCHECKED hold,
+				// so it is a room reading and not the wrapped hold; the wrapped hold is not read
+				// here at all, and the two are never equated.
+				int advisoryRoom = KingdomMaterials.StockpileRoom(Container);
+				Require(advisoryRoom >= 1, "the advisory reading already refuses this store, so "
+					+ "the checked census would never be reached and the case proves nothing");
 				KingdomDepositCustody custody;
 				int spilled = KingdomMaterials.StockForExactContainer(Zone, Container)
 					.Put(KingdomMaterial.Brush, 1, null, out custody);
@@ -108,8 +127,10 @@ namespace ThousandAndFirst.Harness
 					"a refused delivery left a body standing in the store");
 				for (int i = 0; i < StoreStacks.Length; i++)
 					StoreStacks[i].RequireUnchanged("store stack " + i);
-				Evidence.Append("\ncase3 store overflow: advisory room=").Append(advisory)
-					.Append("; counted one=").Append(counted)
+				Evidence.Append("\ncase3 store overflow: baseline held=").Append(baseline)
+					.Append("; after one fixture stack=").Append(counted)
+					.Append("; then +1200000000 more, so the true hold is baseline+2400000000")
+					.Append("; advisory ROOM (not the wrapped hold)=").Append(advisoryRoom)
 					.Append("; custody=").Append(custody).Append("; rows=").Append(rowsBefore)
 					.Append("; bodies=").Append(StoreStacks[0].Evidence).Append(',')
 					.Append(StoreStacks[1].Evidence);

@@ -209,7 +209,14 @@ below it.
   `Tools/personas/deposit-overflow-native-check.persona`). Four cases: an ordinary delivered parcel
   into the store and onto bare ground; a real held stack at exactly `int.MaxValue` that still reads
   and still credits; and a total past `int.MaxValue` refusing on both hosts with zero credit and
-  every standing body proved unchanged by identity, raw count and custody. The large stacks are
+  every standing body proved unchanged by identity, blueprint, raw count, ZONE, cell and holder —
+  so the same coordinates in another zone can never read as unmoved. The store the suite delivers
+  into is the fixture's own chest, dedicated through the production check-in
+  (`KingdomMaterials.DedicateStockpile`) rather than stamped, so this ticket takes no dependency on
+  another ticket's heart stockpile. The three ground cases reserve three DISTINCT cells before any
+  of them is used, with a pure engine-free regression for the reservation itself
+  (`Harness/KingdomDepositOverflowReservation.cs`,
+  `DevTests/KingdomDepositOverflowReservationTests.cs`). The large stacks are
   fixture bodies whose `Stacker.StackCount` the harness assigns directly and which carry
   `NeverStack` so the engine cannot merge two rows into one; that synthetic setup is disclosed in
   every report line, in the persona and in the PR. No production source, blueprint, or saved format

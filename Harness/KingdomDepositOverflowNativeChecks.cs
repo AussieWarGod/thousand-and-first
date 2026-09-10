@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using XRL;
 using XRL.World;
@@ -60,52 +61,89 @@ namespace ThousandAndFirst.Harness
 			KingdomDepositOverflowNativeProvider.Require(Value, Failure);
 		}
 
-		/// <summary>One large stack, and the two counts that must be identical afterwards. A
-		/// refused delivery may not move, merge, renumber, or re-home anything already standing:
-		/// the body is proved by its own assigned id, its raw count, and where it stands.
+		/// <summary>
+		/// One standing body and everything about it a refused delivery must leave alone: which
+		/// body it is, what it is, how many units it carries RAW, and exactly where it stands.
+		/// <para>
+		/// "Where" is a zone, a cell AND a holder, all three, always. Cell coordinates alone are
+		/// not a place: the same coordinates in another zone are different ground, and a body
+		/// carried out of a chest into a cell at the chest's own coordinates would otherwise read
+		/// as unmoved. Recording only whichever of the two happens to be set would hide exactly
+		/// the move that matters.
+		/// </para>
 		/// </summary>
 		private sealed class Body
 		{
 			internal readonly GameObject Item;
 			internal readonly string Id;
+			internal readonly string Blueprint;
 			internal readonly int RawCount;
-			internal readonly string Where;
+			internal readonly string ZoneId;
+			internal readonly string CellKey;
+			internal readonly string HolderId;
 
 			internal Body(GameObject Item)
 			{
 				this.Item = Item;
 				Id = Item.IDIfAssigned;
+				Blueprint = Item.Blueprint;
 				RawCount = KingdomMaterials.RawPhysicalCountOf(Item);
-				Where = Place(Item);
+				ZoneId = ZoneOf(Item);
+				CellKey = CellOf(Item);
+				HolderId = HolderOf(Item);
 			}
 
-			/// <summary>Exactly where a body stands, as text: the cell it is in, or the container
-			/// whose inventory holds it. A body that moved reads differently.</summary>
-			internal static string Place(GameObject Item)
+			/// <summary>The zone this body is really in: its own if it stands in a cell, and
+			/// otherwise the zone of whoever is holding it. A body nowhere at all reads as
+			/// nowhere, which is never equal to a zone.</summary>
+			internal static string ZoneOf(GameObject Item)
+			{
+				if (!GameObject.Validate(Item)) return "gone";
+				Zone own = Item.CurrentZone;
+				if (own != null) return own.ZoneID;
+				Zone held = Item.Physics?.InInventory?.CurrentZone;
+				return (held == null) ? "-" : held.ZoneID;
+			}
+
+			internal static string CellOf(GameObject Item)
 			{
 				if (!GameObject.Validate(Item)) return "gone";
 				Cell cell = Item.CurrentCell;
-				if (cell != null) return "cell(" + cell.X + "," + cell.Y + ")";
+				return (cell == null) ? "-" : (cell.X + "," + cell.Y);
+			}
+
+			internal static string HolderOf(GameObject Item)
+			{
+				if (!GameObject.Validate(Item)) return "gone";
 				GameObject holder = Item.Physics?.InInventory;
-				return (holder == null) ? "nowhere" : ("in:" + holder.IDIfAssigned);
+				return (holder == null) ? "-" : holder.IDIfAssigned;
 			}
 
 			internal void RequireUnchanged(string What)
 			{
-				KingdomDepositOverflowNativeChecks.Require(GameObject.Validate(Item),
+				Require(GameObject.Validate(Item),
 					What + " stopped existing across a refused delivery");
-				KingdomDepositOverflowNativeChecks.Require(Item.IDIfAssigned == Id,
+				Require(Item.IDIfAssigned == Id,
 					What + " changed identity across a refused delivery");
-				KingdomDepositOverflowNativeChecks.Require(
-					KingdomMaterials.RawPhysicalCountOf(Item) == RawCount,
+				Require(Item.Blueprint == Blueprint,
+					What + " changed blueprint across a refused delivery");
+				Require(KingdomMaterials.RawPhysicalCountOf(Item) == RawCount,
 					What + " changed its raw count across a refused delivery");
-				KingdomDepositOverflowNativeChecks.Require(Place(Item) == Where,
-					What + " changed custody across a refused delivery");
+				Require(ZoneOf(Item) == ZoneId,
+					What + " changed zone across a refused delivery");
+				Require(CellOf(Item) == CellKey,
+					What + " changed cell across a refused delivery");
+				Require(HolderOf(Item) == HolderId,
+					What + " changed holder across a refused delivery");
 			}
 
 			internal string Evidence
 			{
-				get { return Id + "x" + RawCount + "@" + Where; }
+				get
+				{
+					return Id + "/" + Blueprint + "x" + RawCount + "@zone:" + ZoneId
+						+ "/cell:" + CellKey + "/in:" + HolderId;
+				}
 			}
 		}
 
@@ -117,6 +155,7 @@ namespace ThousandAndFirst.Harness
 			private GameObject Container;
 			private string Blueprint;
 			private Cell PlainGround, BoundaryGround, OverflowGround;
+			private readonly List<long> Reserved = new List<long>();
 			private Body Boundary;
 			private Body[] StoreStacks, GroundStacks;
 			internal bool Armed, Done;
@@ -125,8 +164,9 @@ namespace ThousandAndFirst.Harness
 
 			internal Frame(XRLGame Game, Zone Zone) { this.Game = Game; this.Zone = Zone; }
 
-			/// <summary>Real founding, the camp's own dedicated stockpile, and three separate bare
-			/// cells &mdash; one per ground case, so no case can inherit another's hold.</summary>
+			/// <summary>Real founding, one really DEDICATED stockpile of the fixture's own, and
+			/// three DISTINCT bare cells reserved up front &mdash; one per ground case, so no case
+			/// can inherit another's hold.</summary>
 			internal void Start()
 			{
 				System = KingdomNativeCampFounding.Found(Game, Zone, Require);
@@ -134,20 +174,23 @@ namespace ThousandAndFirst.Harness
 					"the real founding did not claim this ground");
 				Blueprint = KingdomMaterials.BlueprintFor(KingdomMaterial.Brush);
 				Require(!string.IsNullOrEmpty(Blueprint), "brush has no shipped blueprint");
-				KingdomMaterials.MaterialStock stock = KingdomMaterials.Stock(Zone);
-				Require(stock.Stockpiles.Count > 0,
-					"the founded camp dedicated no stockpile to deliver into");
-				Container = stock.Stockpiles[0];
-				Require(KingdomMaterials.IsStockpile(Container) && Container.Inventory != null,
-					"the camp's first store is not a dedicated container");
-				PlainGround = ClearCell();
-				BoundaryGround = ClearCell();
-				OverflowGround = ClearCell();
+				PlainGround = ReserveCell();
+				BoundaryGround = ReserveCell();
+				OverflowGround = ReserveCell();
+				Require(KingdomDepositOverflowReservation.AllDistinct(Reserved)
+					&& Reserved.Count == 3,
+					"the three ground cases did not reserve three distinct cells");
+				Require(!ReferenceEquals(PlainGround, BoundaryGround)
+					&& !ReferenceEquals(PlainGround, OverflowGround)
+					&& !ReferenceEquals(BoundaryGround, OverflowGround),
+					"two ground cases were handed the same cell");
+				DedicateStore();
 				Armed = true;
 				Phase = 1;
 				Evidence.Append("\nfounded tick=").Append(Game.TimeTicks)
+					.Append("; zone=").Append(Zone.ZoneID)
 					.Append("; blueprint=").Append(Blueprint)
-					.Append("; store=").Append(Container.IDIfAssigned)
+					.Append("; synthetic store=").Append(Container.IDIfAssigned)
 					.Append("; capacity=").Append(KingdomSurvey.StockCapacityOf(Container))
 					.Append("; plain=").Append(Where(PlainGround))
 					.Append("; boundary=").Append(Where(BoundaryGround))
@@ -172,11 +215,44 @@ namespace ThousandAndFirst.Harness
 				return (Cell == null) ? "-" : ("(" + Cell.X + "," + Cell.Y + ")");
 			}
 
-			private Cell ClearCell()
+			/// <summary>One bare cell nothing else has claimed. The reservation is remembered
+			/// BEFORE the ground is used, because every candidate is still empty at this point and
+			/// a "first bare cell" search would otherwise hand back the same cell every time.
+			/// </summary>
+			private Cell ReserveCell()
 			{
 				Cell cell = KingdomNativeCampFounding.Clear(Zone);
-				Require(cell != null, "no clear cell was available for a deposit-overflow case");
+				while (cell != null && Reserved.Contains(KeyOf(cell))) cell = NextBare(cell);
+				Require(cell != null, "no unreserved clear cell was available for a case");
+				long key;
+				Require(KingdomDepositOverflowReservation.TryReserve(Reserved,
+					new[] { KeyOf(cell) }, out key) && key == KeyOf(cell),
+					"the reservation refused a cell nothing had claimed");
 				return cell;
+			}
+
+			/// <summary>The next bare cell after this one in the same scan order the shared
+			/// helper uses, so a reserved cell is stepped over rather than handed out twice.
+			/// </summary>
+			private Cell NextBare(Cell After)
+			{
+				bool past = false;
+				for (int y = 1; y < Zone.Height - 1; y++)
+					for (int x = 1; x < Zone.Width - 1; x++)
+					{
+						Cell cell = Zone.GetCell(x, y);
+						if (cell == null) continue;
+						if (!past) { past = ReferenceEquals(cell, After); continue; }
+						if (cell.IsEmpty() && cell.IsPassable() && !cell.HasOpenLiquidVolume())
+							return cell;
+					}
+				return null;
+			}
+
+			private long KeyOf(Cell Cell)
+			{
+				return KingdomDepositOverflowReservation.Key(
+					Zone.ZoneID.GetHashCode(), Cell.X, Cell.Y);
 			}
 
 			private static void Require(bool Value, string Failure)

@@ -32,12 +32,12 @@ Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict
 The raw-delivery-overflow delta over the retained founding-cohort census below adds no production
 source and removes none: it changes the deposit seam's two raw readings, both raw censuses, the
 deposit law's three refusal branches and one rule, and the rest of its lines are comments and
-documentation. The native-check delta on top of it adds no production source either — four
-DEV-HARNESS shards, one persona and one DevTests suite — so the staged production census above is
+documentation. The native-check delta on top of it adds no production source either — five
+DEV-HARNESS shards, one persona and two DevTests suites — so the staged production census above is
 byte-identical to the fix's own, and only the dev-harness inventory grows. All four
 `Tools/gate.sh` modes compiled clean on these bytes through the canonical gate — staged baseline
-(3074 sources), staged compatibility (3078), dev-harness baseline (3256) and dev-harness
-compatibility (3260) — with the installed-Hearthpyre source and ABI step, and the generated
+(3074 sources), staged compatibility (3078), dev-harness baseline (3257) and dev-harness
+compatibility (3261) — with the installed-Hearthpyre source and ABI step, and the generated
 cold-install inventory contains 3109 files.
 
 Retained: the Kingdom Quickstart founding cohort over the stockpile deposit custody fix, the Kingdom

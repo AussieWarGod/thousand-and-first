@@ -22,6 +22,37 @@ namespace ThousandAndFirst.Harness
 	{
 		private sealed partial class Frame
 		{
+			/// <summary>
+			/// The store this suite delivers into, made and DEDICATED by the fixture through the
+			/// production check-in (<c>KingdomMaterials.DedicateStockpile</c>) rather than stamped
+			/// into place. The camp's own founding transaction on this branch dedicates no
+			/// container of its own, and #111 must not acquire a dependency on another ticket's
+			/// heart stockpile to have somewhere to deliver; so the ground is built here, through
+			/// the same call a founder's dedicate action makes, and disclosed as synthetic.
+			/// </summary>
+			private void DedicateStore()
+			{
+				GameObject chest = GameObject.Create("Chest");
+				Require(GameObject.Validate(chest) && chest.Inventory != null,
+					"the container blueprint produced nothing that holds things");
+				Cell seat = ReserveCell();
+				Require(ReferenceEquals(seat.AddObject(chest, NoStack: true), chest),
+					"native placement substituted the synthetic store");
+				string failure;
+				Require(KingdomMaterials.DedicateStockpile(System, Zone, chest, out failure),
+					failure ?? "the production check-in refused the synthetic store");
+				Require(KingdomMaterials.IsStockpile(chest),
+					"the production check-in left the synthetic store undedicated");
+				bool indexed = false;
+				foreach (GameObject store in KingdomMaterials.Stock(Zone).Stockpiles)
+					if (ReferenceEquals(store, chest)) indexed = true;
+				Require(indexed,
+					"the settlement's own stock reading does not see the synthetic store");
+				Require(KingdomSurvey.StockCapacityOf(chest) > 0,
+					"the synthetic store declares no capacity to deliver into");
+				Container = chest;
+			}
+
 			/// <summary>One real body of the delivered blueprint, standing in a cell, carrying an
 			/// exact raw count and refusing every merge.</summary>
 			private Body PlaceInCell(Cell Cell, int RawCount)

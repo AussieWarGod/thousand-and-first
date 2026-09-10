@@ -89,7 +89,7 @@ namespace ThousandAndFirst.Tests
 			string cases = Read(Cases);
 			foreach (string token in new[] {
 				"StoreStacks = new[] { first, PlaceInStore(1200000000) }",
-				"counted >= 1200000000",
+				"counted == baseline + 1200000000",
 				"!KingdomMaterials.TryDepositRawRoomNow(Container, out unread)",
 				"!KingdomMaterials.TryDepositMaterialHeldNow(Container, Blueprint,",
 				"custody == KingdomDepositCustody.Unproved",
@@ -115,10 +115,75 @@ namespace ThousandAndFirst.Tests
 		public void AnUnchangedBodyIsProvedByIdentityRawCountAndCustody()
 		{
 			string checks = Read(Checks);
+			// Zone, cell AND holder, all three, always. The same coordinates in another zone are
+			// different ground, and a body carried out of a chest into a cell at the chest's own
+			// coordinates would read as unmoved if only whichever field happened to be set were
+			// recorded.
 			foreach (string token in new[] { "Item.IDIfAssigned == Id",
+				"Item.Blueprint == Blueprint",
 				"KingdomMaterials.RawPhysicalCountOf(Item) == RawCount",
-				"Place(Item) == Where", "GameObject.Validate(Item)" })
+				"ZoneOf(Item) == ZoneId", "CellOf(Item) == CellKey",
+				"HolderOf(Item) == HolderId", "GameObject.Validate(Item)" })
 				Assert.That(checks, Does.Contain(token), token);
+			Assert.That(checks, Does.Contain("Zone own = Item.CurrentZone;"),
+				"a body's place must be bound to the zone it is really in");
+		}
+
+		/// <summary>Three ground cases need three DISTINCT cells, reserved before any of them is
+		/// used. Every candidate is still empty at reservation time, so a plain "first bare cell"
+		/// search hands back the same cell every call &mdash; which is exactly the defect this
+		/// asserts against.</summary>
+		[Test]
+		public void TheThreeGroundCasesReserveThreeDistinctCellsBeforeAnyOfThemIsUsed()
+		{
+			string checks = Read(Checks);
+			foreach (string token in new[] {
+				"PlainGround = ReserveCell();", "BoundaryGround = ReserveCell();",
+				"OverflowGround = ReserveCell();",
+				"KingdomDepositOverflowReservation.AllDistinct(Reserved)",
+				"Reserved.Count == 3",
+				"!ReferenceEquals(PlainGround, BoundaryGround)",
+				"!ReferenceEquals(PlainGround, OverflowGround)",
+				"!ReferenceEquals(BoundaryGround, OverflowGround)",
+				"while (cell != null && Reserved.Contains(KeyOf(cell))) cell = NextBare(cell);",
+				"KingdomDepositOverflowReservation.TryReserve(Reserved," })
+				Assert.That(checks, Does.Contain(token), token);
+		}
+
+		/// <summary>The store is the fixture's own, made and dedicated through the production
+		/// check-in rather than stamped, and #111 takes no dependency on another ticket's heart
+		/// stockpile to have somewhere to deliver.</summary>
+		[Test]
+		public void TheStoreIsRealDedicatedThroughTheProductionCheckInAndDisclosedAsSynthetic()
+		{
+			string fixture = Read(Fixture);
+			foreach (string token in new[] { "GameObject.Create(\"Chest\")",
+				"KingdomMaterials.DedicateStockpile(System, Zone, chest, out failure)",
+				"KingdomMaterials.IsStockpile(chest)",
+				"KingdomMaterials.Stock(Zone).Stockpiles",
+				"KingdomSurvey.StockCapacityOf(chest) > 0" })
+				Assert.That(fixture, Does.Contain(token), token);
+			Assert.That(fixture, Does.Not.Contain("SetIntProperty(KingdomMaterials.StockpileProperty"),
+				"a store is dedicated through the check-in, never stamped into place");
+			Assert.That(Read(Checks), Does.Contain("synthetic store="),
+				"the journal must disclose that the store is the fixture's own");
+		}
+
+		/// <summary>Case 3 lands on top of whatever case 1 delivered, so it measures its baseline
+		/// instead of asserting a bare 2,400,000,000; and the advisory number it records is a
+		/// ROOM, never the wrapped hold.</summary>
+		[Test]
+		public void CaseThreeMeasuresItsBaselineAndNeverConflatesRoomWithTheWrappedHold()
+		{
+			string cases = Read(Cases);
+			foreach (string token in new[] { "out baseline)",
+				"counted == baseline + 1200000000",
+				"int advisoryRoom = KingdomMaterials.StockpileRoom(Container);",
+				"advisoryRoom >= 1",
+				"baseline held=", "advisory ROOM (not the wrapped hold)=" })
+				Assert.That(cases, Does.Contain(token), token);
+			Assert.That(cases, Does.Not.Contain("totalling 2,400,000,000"),
+				"the store total is a measured baseline plus the fixture stacks, not a bare total");
 		}
 
 		/// <summary>The fixture's counts are assigned, and its bodies refuse every merge, so two
