@@ -50,9 +50,12 @@ namespace ThousandAndFirst
 			internal static bool TryCreate(KingdomSystem source, long now, long disabledAt,
 				out SettlementPlan plan)
 			{
+				long semantic = Simulation.City.KingdomSemanticClockRules.MasterResumeDispatchTick(
+					source.SemanticPassActive, source.SemanticPassStartedTick, source.SemanticPassZoneId,
+					source.SemanticPassCompletedMask, KingdomSystem.SemanticRequiredMask, source.LastSemanticTick, now);
 				return TryCreateCore(source.LastHeartbeatTick, source.LastFetchTick,
 					source.LastWaterWorkTick, source.LastFoodWorkTick, source.LastSubsidenceTick,
-					source.SemanticPassActive, source.LastSemanticTick, source.LastVisitTick,
+					semantic, source.LastVisitTick,
 					source.NextArrivalTick, source.NextGuestTick, source.GuestDepartTick,
 					source.NextNotableGuestTick, source.NotableGuestDepartTick, source.Population,
 					source.Gate, source.Stores, source.LifecycleBook, source.City, now, disabledAt,
@@ -63,9 +66,12 @@ namespace ThousandAndFirst
 				out SettlementPlan plan)
 			{
 				if (source == null) { plan = null; return false; }
+				long semantic = Simulation.City.KingdomSemanticClockRules.MasterResumeDispatchTick(
+					source.SemanticPassActive, source.SemanticPassStartedTick, source.SemanticPassZoneId,
+					source.SemanticPassCompletedMask, KingdomSystem.SemanticRequiredMask, source.LastSemanticTick, now);
 				return TryCreateCore(source.LastHeartbeatTick, source.LastFetchTick,
 					source.LastWaterWorkTick, source.LastFoodWorkTick, source.LastSubsidenceTick,
-					source.SemanticPassActive, source.LastSemanticTick, source.LastVisitTick,
+					semantic, source.LastVisitTick,
 					source.NextArrivalTick, source.NextGuestTick, source.GuestDepartTick,
 					source.NextNotableGuestTick, source.NotableGuestDepartTick, source.Population,
 					source.Gate, source.Stores, source.LifecycleBook, source.City, now, disabledAt,
@@ -73,7 +79,7 @@ namespace ThousandAndFirst
 			}
 
 			private static bool TryCreateCore(long oldHeartbeat, long oldFetch, long oldWater,
-				long oldFood, long oldSubsidence, bool semanticActive, long oldSemantic,
+				long oldFood, long oldSubsidence, long semantic,
 				long oldVisit, long oldArrival, long oldGuest, long oldGuestDepart,
 				long oldNotable, long oldNotableDepart, int population,
 				KingdomRules.GatePolicy gate, KingdomRules.StoresPolicy stores,
@@ -135,7 +141,7 @@ namespace ThousandAndFirst
 					lifecycle?.Growth?.FetchOp == null ? now : oldFetch,
 					now, lifecycle?.Growth?.MillOp == null ? now : oldFood,
 					oldSubsidence, // Only the subsidence option/step lane may settle debt and reanchor.
-					semanticActive ? oldSemantic : now, now, arrival, guest, guestDepart,
+					semantic, now, arrival, guest, guestDepart,
 					notable, notableDepart, now, now, now, extensionHappeningCursors,
 					extensionModel, workRan, workNext, clockNext, lifecyclePlan);
 				return true;

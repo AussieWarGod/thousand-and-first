@@ -293,7 +293,7 @@ namespace ThousandAndFirst
 		private const long SemanticStepConstruction = 1L << 19;
 		private const long SemanticStepExpeditions = 1L << 20;
 
-		private const long SemanticRequiredMask = (1L << 21) - 1L;
+		internal const long SemanticRequiredMask = (1L << 21) - 1L;
 
 	}
 }

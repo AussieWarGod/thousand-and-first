@@ -16,6 +16,22 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
+## Unreleased master semantic receipt resume correction (#127)
+
+Native economic-present at 570294a established real local/master pause and 252 synthetic
+containers, then refused the settlement resume-clock assertion. Source and independent review
+confirmed that the master plan preserved old semantic time for every active receipt, including
+completed published receipts. The correction uses the existing production receipt law for both
+seated and away settlements, preserving unfinished/unpublished/malformed active receipts and
+reanchoring completed publication. No oracle assertion or saved format is weakened.
+
+Current production census: 3078 staged C# files; 437,133 physical lines; 1434 direct `XRL`
+imports; no file at or above 300. Inventory SHA-256:
+`0f42e5f9086a02dc93e8916d10b22c17c700237da75ec077d1d97ea029042319`.
+Focused semantic rules and seat/away wiring pass. Restoring the old active-flag rule causes
+three value failures; bypassing unpublished-receipt preservation causes three more. Full gates
+and new native proof are pending. Earlier failures remain retained; public Alpha is unchanged.
+
 Canonical compile gates honor `TMPDIR` for independently allocated stage and dev trees. A
 private parent per worker avoids shared `/tmp` transaction-lock contention; all publication
 locks and identity checks remain. Executable allocation fixtures also prove an invalid parent
@@ -222,7 +238,7 @@ ordinary arrivals also move, so counter equality never authorises completion and
 refused in the open, once, per obligation. That is a stated safety policy, not a claim of fully
 automatic forward recovery. The native founders boot matrix is still owed.
 
-Current census on these bytes: 3078
+Retained census on the founding-cohort bytes: 3078
 staged C# files; 437,114 physical lines; 3109 files in the generated
 cold-install inventory. Staged compilation covers 3078 sources, baseline and compatibility symbols
 (baseline compiles 3074 of them; the optional-mod bridge is compatibility-only), run here by Roslyn

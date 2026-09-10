@@ -22,8 +22,10 @@ namespace ThousandAndFirst.Tests
 			string[] arguments = Arguments(body, "return TryCreateCore(");
 			ClassicAssert.Greater(arguments.Length, 5);
 			ClassicAssert.AreEqual("source.LastSubsidenceTick", arguments[4]);
-			StringAssert.Contains("long oldFood, long oldSubsidence, bool semanticActive",
+			StringAssert.Contains("long oldFood, long oldSubsidence, long semantic",
 				Code(Settlement));
+			ClassicAssert.AreEqual("semantic", arguments[5]);
+			StringAssert.Contains("KingdomSemanticClockRules.MasterResumeDispatchTick( source.SemanticPassActive, source.SemanticPassStartedTick, source.SemanticPassZoneId, source.SemanticPassCompletedMask, KingdomSystem.SemanticRequiredMask, source.LastSemanticTick, now)", body);
 			ClassicAssert.IsFalse(Regex.IsMatch(body, @"\bsource\.LastSubsidenceTick\s*=(?!=)"),
 				"Capturing a resume plan must not replace the source checkpoint.");
 		}
@@ -38,6 +40,7 @@ namespace ThousandAndFirst.Tests
 				"Heartbeat retains its own existing lease policy.");
 			ClassicAssert.AreEqual("oldSubsidence", arguments[5],
 				"The pending-step anchor must be passed unchanged for both heartbeat states.");
+			ClassicAssert.AreEqual("semantic", arguments[6]);
 			ClassicAssert.IsFalse(Regex.IsMatch(body, @"\boldSubsidence\s*(?:=(?!=)|\+=|-=|\+\+|--)"),
 				"A direct constructor argument must not hide an earlier reanchor.");
 			StringAssert.Contains("long foodWork, long subsidence, long semantic", Code(Settlement));
