@@ -74,6 +74,18 @@ and final idle proof. Report `root-reload-native.hOChoP/report.tsv` passed one p
 same-version developer evidence, not historical saves, ordinary play, graceful quit or release
 acceptance; the later host-only census merge is not silently included in that native claim.
 
+Private staging cleanup runs its admission, removal and post-removal proof inside one helper
+process. The descriptor the removal already opens on the sequestered entry — taken after the
+sequester rename, not on the original name — is held across the removal, deletion is proved
+positively by that descriptor reporting zero links, and the exact-identity search runs while it is
+still open, so a match can only be a genuine second link. Measured locally: on ext4 the freed inode
+was recycled by the first subsequent creation once unreferenced, and 2,000 creations never recycled
+it while the descriptor was held. The same proof was measured to hold on a WSL 9p/drvfs parent for
+file entries; drvfs directory removal remains blocked before this code by the pre-existing
+permission seal, unchanged from the prior revision. A filesystem that cannot witness a released
+inode is refused by name with no fallback. This is host staging tooling only — not native gameplay,
+ordinary-save or release acceptance. Refs #115.
+
 Repository audits use a fresh empty Python cache lookup root with bytecode writes disabled.
 An executable timestamp-cache fixture proves that disabling writes alone still reads stale
 bytecode, while the isolated audit imports restored source. This strengthens host test fidelity;
