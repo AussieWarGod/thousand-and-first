@@ -58,7 +58,7 @@ namespace ThousandAndFirst.Harness
 				else throw new InvalidOperationException("unknown pause verb");
 				Ok = true; return "taf-pause-option-set verb=" + Verb + "; tick=" + The.Game.TimeTicks;
 			}
-			catch (Exception error) { Stop(); return "taf-pause-refused: " + error.Message; }
+			catch (Exception error) { Stop(); return KingdomScenarioRefusal.Message("taf-pause-refused", error.Message); }
 		}
 
 		internal static void BeforeTravel()

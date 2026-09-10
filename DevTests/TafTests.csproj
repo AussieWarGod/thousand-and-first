@@ -2084,6 +2084,8 @@
 	<Compile Include="..\Harness\KingdomScenarioLoadRules.cs" />
 	<Compile Include="..\Harness\KingdomScenarioTravelRules.cs" />
 	<Compile Include="KingdomScenarioTravelRulesTests.cs" />
+	<Compile Include="..\Harness\KingdomScenarioRefusal.cs" />
+	<Compile Include="KingdomScenarioRefusalTests.cs" />
 	<Compile Include="..\Harness\KingdomScenarioReload.cs" />
 	<Compile Include="KingdomScenarioReloadTests.cs" />
 	<Compile Include="..\Harness\KingdomScenarioPauseOracle.cs" />

@@ -45,7 +45,7 @@ namespace ThousandAndFirst.Harness
 				Populate(zone); SeedDebt(zone); Ready = true; Ok = true;
 				return "taf-container-stress-ready; containers=252; water=244; food=8; initial-thirds=756; synthetic=true; resident-stress=false";
 			}
-			catch (Exception error) { return "taf-container-stress-refused: " + error.Message; }
+			catch (Exception error) { return KingdomScenarioRefusal.Message("taf-container-stress-refused", error.Message); }
 		}
 
 		private static void Populate(Zone zone)

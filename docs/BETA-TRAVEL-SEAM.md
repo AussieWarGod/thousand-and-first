@@ -7,7 +7,7 @@ game turn, wait 1200 turns, return, drain 39 turns, yield one render frame, and 
 
 The away leg uses ordinary westward `GameObject.Move`, one bounded step per action opportunity,
 until a different, nonclaimed surface parasang is reached. It returns east along the same route.
-Blocked movement, unexpected coordinates, more than240 steps each way, changed game/player/book
+Blocked movement, unexpected coordinates, more than 240 steps each way, changed game/player/book
 identity, or a home still cached at the return boundary explicitly refuse. No clearing, teleport,
 zone eviction, forced loading, or direct turn-clock write substitutes for those steps.
 
@@ -20,10 +20,10 @@ The normal runner still owns strict log/MODERROR checks; no log exemptions are a
 The runtime observes shared reification spend (24 thirds/four heavy per turn), physical remaining
 demand receipts (936 thirds maximum), model/semantic clock monotonicity, growth mirror equality,
 and schedule deadline/ordinal continuity. A post-return physical-demand receipt must reach zero
-within39 turns after first home entry and remain settled at the final check. Three model resource
+within 39 turns after first home entry and remain settled at the final check. Three model resource
 flags alone never prove physical drainage. Missing demand evidence refuses, even in a quiet camp.
 
-Limits: this small first-city fixture is not a252-container stress fixture. Schedule continuity
+Limits: this small first-city fixture is not a 252-container stress fixture. Schedule continuity
 does not prove all economic pause effects; `pause-effects-proved=false` is mandatory. The route
 is not general pathfinding. Native execution is required to establish whether engine cache
 lifetime and the chosen terrain can express this first recipe. No native success, full Beta

@@ -49,7 +49,7 @@ namespace ThousandAndFirst.Harness
 			{
 				KingdomScenarioTravel.Fault = error.Message;
 				KingdomScenarioTravel.State = KingdomScenarioTravel.Phase.Failed;
-				return "taf-travel-refused: " + error.Message;
+				return KingdomScenarioRefusal.Message("taf-travel-refused", error.Message);
 			}
 		}
 	}
