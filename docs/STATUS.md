@@ -25,6 +25,12 @@ source mutants each fail; restored fixture passes. Native `founding-heart-native
 all seven cases at the same seed (profile `QDaXBR`, receipt-owned stop proved). This signs that
 scenario only, not terminal heart completion, ordinary-save compatibility or overall camp acceptance.
 
+Cold-load transport hardening (PR #104): 27 executable filesystem tests cover ancestor
+swaps for directory, receipt and save outputs. Replacing component-wise anchoring with a bare
+multi-component open fails all three new negatives. Monotonic timing and strict worker bounds
+also have executable checks. All 27 focused tests and the full portable audit pass; these synthetic
+filesystem checks do not establish native cold-load or release acceptance.
+
 ## Current repository integration state — PR #6 merged, main protection updated
 
 Documentation/hardening PR #6, "Post-0.3.1 Alpha hardening and release closeout", was

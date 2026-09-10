@@ -16,6 +16,13 @@ below it.
   and the real founding receipt's dedicated 16-dram first basin. The old one-store assertion
   refused a correct 50-resident setup. Exact identities, dedication, placement and empty contents
   remain checked; production water capacity and accounting are unchanged.
+- Developer cold-load preparation anchors all destination writes, including directory creation,
+  saved-game copies and receipt files, through no-follow directory handles. An ancestor symlink
+  swap cannot redirect writes outside the intended tree; independent readback and seal checks
+  still refuse changed paths. This changes test tooling only, not ordinary saves or mod content.
+- Cold-load phase durations use a monotonic clock; wall-clock timestamps remain available for
+  correlation. Parallel copies reject invalid worker counts, cap concurrency, and propagate
+  process-control exceptions after joining submitted work.
 
 ### Added
 
