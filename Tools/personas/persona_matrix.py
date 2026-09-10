@@ -20,6 +20,7 @@ extra one. A matrix whose green means "at least this happened" is not a matrix.
 from __future__ import annotations
 
 import json
+import importlib.util
 import os
 import re
 import sys
@@ -45,6 +46,8 @@ BOOKKEEPING = frozenset(
         "advance-progress",
         "advance-complete",
         "yield-frames-complete",
+        "travel-out-complete",
+        "travel-return-complete",
         # A third-party verb provider the admission law refused. It describes the PROFILE a run was
         # launched into, not a step the script asked for, so a persona must not go red because
         # somebody else's mod shipped a broken provider. `Tools/run-personas.sh` surfaces these
@@ -109,7 +112,7 @@ RESERVED_VERBS = (
 VERB_ALPHABET = "abcdefghijklmnopqrstuvwxyz" + "0123456789" + "-."
 
 OUTCOMES = ("OK", "REFUSED")
-CHECKS = ("status-digest-stable",)
+CHECKS = ("status-digest-stable", "travel-away", "travel-present", "travel-economic-away", "travel-economic-present")
 
 REQUIRED_KEYS = ("REQUEST", "SCRIPT", "EXPECT")
 OPTIONAL_KEYS = ("START", "CHECK", "TIMEOUT", "DESCRIPTION", "VERBS", "SET", "LOG_EXPECT")
@@ -474,6 +477,13 @@ def assess(manifest: dict, journal: str, name: str) -> list[str]:
     problems = match(parse_expect(manifest["EXPECT"], name, extra), rows)
     if manifest.get("CHECK") == "status-digest-stable":
         problems.extend(status_digest_stable(rows))
+    if manifest.get("CHECK", "").startswith("travel-"):
+        spec = importlib.util.spec_from_file_location("taf_persona_travel", os.path.join(os.path.dirname(__file__), "persona_travel.py"))
+        travel = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(travel)
+        mode = manifest["CHECK"][len("travel-"):]
+        economic = mode.startswith("economic-")
+        problems.extend(travel.assess(read_journal(journal), mode.removeprefix("economic-"), require_economic=economic))
     return problems
 
 
