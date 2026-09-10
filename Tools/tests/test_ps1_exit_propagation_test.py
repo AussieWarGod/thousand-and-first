@@ -122,7 +122,13 @@ exit $LASTEXITCODE
 @unittest.skipUnless(shutil.which("pwsh"), "pwsh is not installed on this host")
 class TestPs1RealExecutionTest(unittest.TestCase):
     """Executes the real script under pwsh with a stub dotnet that fails only the portable
-    leg's run step, proving the propagation end-to-end rather than only in source shape."""
+    leg's run step, proving the propagation end-to-end rather than only in source shape.
+
+    The stub is keyed purely by call ORDER (1: taf restore, 2: taf run, 3: portable
+    restore, 4: portable run), not by parsing dotnet's argument text -- test.ps1 always
+    calls restore-then-run for taf, then restore-then-run for portable, in that fixed
+    order, so a counter file is a strictly more robust discriminator than pattern-matching
+    reconstructed argv text, which is sensitive to how a given shell/host quotes args."""
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix="taf-test-ps1-exit-test-")
@@ -137,13 +143,19 @@ class TestPs1RealExecutionTest(unittest.TestCase):
         )
         stub_dir = root / "stub-bin"
         stub_dir.mkdir()
+        counter_file = root / "call-count"
+        counter_file.write_text("0", encoding="utf-8")
         stub = stub_dir / "dotnet"
         stub.write_text(
             "#!/bin/sh\n"
-            'case "$*" in\n'
-            "  restore\\ *) exit 0 ;;\n"
-            '  "run --project "*TafTests*) echo "ALL GREEN: 1 cases passed, 0 skipped (1 discovered)"; exit 0 ;;\n'
-            '  "run --project "*PortableTests*) echo "The application to execute does not exist: stub.dll"; exit 74 ;;\n'
+            'n=$(cat "$TAF_STUB_COUNTER")\n'
+            "n=$((n + 1))\n"
+            'echo "$n" > "$TAF_STUB_COUNTER"\n'
+            'case "$n" in\n'
+            "  1) exit 0 ;;\n"
+            '  2) echo "ALL GREEN: 1 cases passed, 0 skipped (1 discovered)"; exit 0 ;;\n'
+            "  3) exit 0 ;;\n"
+            '  4) echo "The application to execute does not exist: stub.dll"; exit 74 ;;\n'
             "  *) exit 0 ;;\n"
             "esac\n",
             encoding="utf-8",
@@ -151,6 +163,7 @@ class TestPs1RealExecutionTest(unittest.TestCase):
         stub.chmod(stub.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
         self.env = dict(os.environ)
         self.env["PATH"] = str(stub_dir) + os.pathsep + self.env.get("PATH", "")
+        self.env["TAF_STUB_COUNTER"] = str(counter_file)
         self.env.pop("TAF_TEST_FILTER", None)
 
     def run_script(self):
@@ -165,9 +178,14 @@ class TestPs1RealExecutionTest(unittest.TestCase):
 
     def test_portable_leg_failure_exits_non_zero_and_names_the_leg(self):
         result = self.run_script()
-        self.assertNotEqual(0, result.returncode)
-        self.assertIn("LICENSED_LEG_FAILED=portable", result.stdout)
-        self.assertIn("ALL GREEN", result.stdout)
+        diagnostic = (
+            "returncode=" + str(result.returncode)
+            + "\n--- stdout ---\n" + result.stdout
+            + "\n--- stderr ---\n" + result.stderr
+        )
+        self.assertNotEqual(0, result.returncode, diagnostic)
+        self.assertIn("LICENSED_LEG_FAILED=portable", result.stdout, diagnostic)
+        self.assertIn("ALL GREEN", result.stdout, diagnostic)
 
 
 if __name__ == "__main__":
