@@ -21,6 +21,33 @@ private parent per worker avoids shared `/tmp` transaction-lock contention; all 
 locks and identity checks remain. Executable allocation fixtures also prove an invalid parent
 refuses before staging instead of falling back to shared storage. No gameplay bytes change.
 
+## Unreleased harness test-ground faction strip (issue #90)
+
+The dev-only scenario test ground's `Strip`/`Restrip` (`Harness/KingdomScenarioTestGround.cs`) now
+also clears the worldgen `faction` zone property, so a re-stripped ground is born-clean again
+rather than still answering as foreign. `Strip` proves no founding-attempt site reservation stands
+on the zone first (`KingdomFoundingTransaction.HasSiteReservation`) and refuses whole, touching
+nothing, when one is pending — a prior attempt's reservation (authority, name, vocation,
+village-charter target, tick) is production state a resumed or cleaned-up attempt still reads, and
+erasing any proper subset of it would silently change what the reservation means rather than make
+the ground clean. `BuildZone`/`Restrip` carry that refusal into their journal row. The harness
+first-city founding step (`Harness/KingdomScenarioFoundingStep.cs`) gained a read-only
+foreign-faction precondition mirroring `KingdomRules.GroundIsForeignFaction` — the SAME predicate
+`Core/KingdomFounding.04.Claims.cs` guards publication with — refusing before the production
+transaction runs rather than publish-then-refuse. Harness-only: no production source changed and
+the structural census below is unchanged.
+
+Current census (unchanged by this PR): 3068
+staged C# files; 435,538 physical lines; 3099 files in the generated
+cold-install inventory; zero files at or above 300; direct `XRL`
+imports occur in 1429 files, 0 of them over the line limit. Inventory SHA-256:
+`93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa`. Retained native acceptance
+at exact `a64289c`, original seed `#165939435`: found-first-city passed 11 rows and
+first-guest-native-check passed 135 rows, with both receipt-owned stops proved. Report:
+`root-harness105-native.JNJnVO/report.tsv`. Final merge-forward `1028bde` separately passed
+697 host tests, canonical four-mode compile/ABI and required CI before PR #105 merged; native
+evidence is not silently restamped to that later integration head.
+
 Developer reload cleanup reports both the original failure and a failed owned-process stop,
 retaining the original exception as its cause. Harmless shell fixtures cover exact helper
 arguments, helper refusal blocking later personas, and prior ownership failure blocking reload.
