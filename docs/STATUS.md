@@ -31,9 +31,10 @@ imports; no file at or above 300. Inventory SHA-256:
 Focused semantic rules and seat/away wiring pass. Restoring the old active-flag rule causes
 three value failures; bypassing unpublished-receipt preservation causes three more. Negative
 started masks or completed bits without started bits also preserve the prior stamp; bypassing
-that consistency guard causes three value failures. The semantic suite is registered in both
-public test projects. Full gates
-and new native proof are pending. Earlier failures remain retained; public Alpha is unchanged.
+both new consistency guards causes three value failures. The semantic suite is registered in both
+public test projects. At 76ab44d, all four canonical compile modes and the repository audit pass;
+main 14,287 and portable 5,451 tests pass with zero skips. Fresh native proof remains pending.
+Earlier failures remain retained; public Alpha is unchanged.
 
 Canonical compile gates honor `TMPDIR` for independently allocated stage and dev trees. A
 private parent per worker avoids shared `/tmp` transaction-lock contention; all publication

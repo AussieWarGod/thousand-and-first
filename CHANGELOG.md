@@ -219,8 +219,9 @@ below it.
 > **Current unreleased census — master semantic resume correction.** Current 3078-file census is line-cap green:
 > 437,136 physical lines; zero files at or above 300; 1434 direct `XRL` imports.
 > Inventory SHA-256: `f533203f98ed26e0ab95970b54b13fce26d6281988e36c9e3d20f6f870a82bb9`.
-> Three production files changed, no added sources or saved fields. Full compile and native
-> verification are pending for this correction; retained founder evidence below does not sign it.
+> Three production files changed, no added sources or saved fields. At 76ab44d, canonical compile
+> modes and repository audit pass; main 14,287 and portable 5,451 tests pass, zero skipped.
+> Fresh native proof remains pending; retained founder evidence below does not sign this correction.
 
 > **Retained founding-cohort census — exact structural gate passed on those bytes.**
 > 437,114 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,

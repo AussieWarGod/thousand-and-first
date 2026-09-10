@@ -137,7 +137,8 @@ namespace ThousandAndFirst.Tests
 		public void MasterResumePreservesOnlyUnpublishedOrMalformedActiveReceipts(bool active,
 			long started, string zone, long completed, long required, long prior, long expected)
 			=> ClassicAssert.AreEqual(expected, KingdomSemanticClockRules.MasterResumeDispatchTick(
-				active, started, zone, required, completed, required, prior, 5100L));
+				Active: active, StartedTick: started, BoundZoneId: zone, StartedMask: required,
+				CompletedMask: completed, RequiredMask: required, LastSemanticTick: prior, NowTick: 5100L));
 
 		[TestCase(-1L, 7L, 2400L)]
 		[TestCase(3L, 7L, 2400L)]
