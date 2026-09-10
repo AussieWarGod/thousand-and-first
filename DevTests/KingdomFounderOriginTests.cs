@@ -197,6 +197,21 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.AreEqual(5, world.Tally());
 		}
 
+		[Test]
+		public void ATallyThatMovesBetweenPreparationAndItsIncrementIsReProvedAndRefused()
+		{
+			// The before image is re-proved immediately before the mutation, so the last thing read
+			// before the write is the thing the write depends on. An arrival that lands in that
+			// instant makes the frozen image untrue, and an untrue image is refused rather than
+			// written through.
+			World world = new World();
+			world.SetTally(5);
+			world.MeddleAfter(1);           // somebody arrives the moment the obligation is taken
+			ClassicAssert.AreEqual(KingdomFounderOriginOutcome.Quarantined, world.Account("f"));
+			ClassicAssert.AreEqual(6, world.Tally(), "the arrival stands; the founder is refused");
+			ClassicAssert.IsFalse(world.HasOrigin("f"), "and no label was written on a bad image");
+		}
+
 		// --- foreign, corrupt and conflicting readings -------------------------------------------
 
 		[Test]
@@ -420,11 +435,24 @@ namespace ThousandAndFirst.Tests
 			private readonly Dictionary<string, Dictionary<string, string>> Bodies
 				= new Dictionary<string, Dictionary<string, string>>();
 			private int Budget = int.MaxValue;
+			private int MeddleAt = int.MaxValue;
+			private int Writes;
 
 			internal void SetTally(int value) { Tallies[Profile] = value; }
 			internal bool HasTally() { return Tallies.ContainsKey(Profile); }
 			internal int Tally() { int v; return Tallies.TryGetValue(Profile, out v) ? v : 0; }
 			internal void Cut(int writes) { Budget = writes - 1; }
+
+			/// <summary>An unrelated arrival is counted the instant after the given write, so the
+			/// shared tally moves underneath an attempt that is already in flight.</summary>
+			internal void MeddleAfter(int writes) { MeddleAt = writes; }
+
+			private void Wrote()
+			{
+				if (++Writes != MeddleAt) return;
+				int held;
+				Tallies[Profile] = (Tallies.TryGetValue(Profile, out held) ? held : 0) + 1;
+			}
 
 			private Dictionary<string, string> Body(string id)
 			{
@@ -503,12 +531,24 @@ namespace ThousandAndFirst.Tests
 					if (Where.Budget-- <= 0) throw new PowerCut();
 				}
 
+				private void Wrote() { Where.Wrote(); }
+
 				public bool HasReceipt() { return Where.HasReceipt(Id); }
 				public string RawReceipt() { return Where.Receipt(Id); }
-				public void WriteReceipt(string Wire) { Spend(); Where.PutReceipt(Id, Wire); }
+				public void WriteReceipt(string Wire)
+				{
+					Spend();
+					Where.PutReceipt(Id, Wire);
+					Wrote();
+				}
 				public bool HasOrigin() { return Where.HasOrigin(Id); }
 				public string RawOrigin() { return Where.Origin(Id); }
-				public void WriteOrigin(string Origin) { Spend(); Where.PutOrigin(Id, Origin); }
+				public void WriteOrigin(string Origin)
+				{
+					Spend();
+					Where.PutOrigin(Id, Origin);
+					Wrote();
+				}
 
 				public bool TryTally(string Profile, out int Count)
 				{
@@ -519,6 +559,7 @@ namespace ThousandAndFirst.Tests
 				{
 					Spend();
 					Where.Tallies[Profile] = Count;
+					Wrote();
 				}
 			}
 		}
