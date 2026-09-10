@@ -30,9 +30,9 @@ stock stays in place; no replacement supplies or blanket identity repair are per
 Back up saves before updating. Existing-save reload and downgrade compatibility are not
 claimed from the fresh-world regression.
 
-Current 3069-file census is line-cap green: 435,601 physical lines; direct `XRL`
+Current 3069-file census is line-cap green: 435,617 physical lines; direct `XRL`
 imports occur in 1430 files, 0 of them over the line limit. Inventory SHA-256:
-`77b1ebee200d1e49bae4b5f74aafd5cb81c91f4415202f38fb5162eefdd389c9`.
+`249d3bb40ca34f57289770494e985a97e81cf42c2bae8f053fb6e14005b61d3d`.
 The generated cold-install inventory contains 3100 files. Semantic review and native
 successful commissioning remain open; prior release receipts do not cover this delta.
 
@@ -133,11 +133,11 @@ successful commissioning remain open; prior release receipts do not cover this d
   (ruling 5); no capacity, catch-up envelope, or stored item is touched, and a standing save reads
   exactly what it read before.
 
-> **Current hotfix census (#142) — exact structural gate passed.** Current 3068-file census is line-cap green:
-> 435,554 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> **Retained 0.3.2 census — exact structural gate passed.** The 3068-file census is line-cap green:
+> 435,538 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1429 files, 0 of them over the line limit. Inventory SHA-256:
-> `6989432e13313aa5cb7241f534f700224bef26a32816853fba7a899ee8fb82e5` (this digest differs from the shipped 0.3.2 one solely because of the #142 starter-material identity hotfix in World/KingdomQuickstartBootstrap.Materials.cs; no other production source changed).
+> `93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa` (the shipped 0.3.2 inventory, before the #142 hotfix).
 > The generated cold-install inventory contains 3099 files; no new subscription claim.
 > This digest is the stockpile deposit custody fix merged over `dev` at `862f14d` (the unattended
 > native observers, the Workshop listing wording, the automatic Workshop attempt finalisation, the

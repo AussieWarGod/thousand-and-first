@@ -20,11 +20,12 @@ python3 Tools/check-structure.py --release
 
 ## Current stock-operation hotfix census
 
-3069 staged production C# files; 435,601 physical lines; zero files at or above 300 lines.
+3069 staged production C# files; 435,617 physical lines; zero files at or above 300 lines.
 1430 files with direct `XRL` imports; zero of these exceed the line cap. Exact inventory:
-`77b1ebee200d1e49bae4b5f74aafd5cb81c91f4415202f38fb5162eefdd389c9`.
-One new local-operation scope helper and three modified production callers over 0.3.2.
-No serialization changes. The exact-inventory semantic review remains open; this census
+`249d3bb40ca34f57289770494e985a97e81cf42c2bae8f053fb6e14005b61d3d`.
+One new local-operation scope helper and five modified production files over 0.3.2:
+three scope callers, fresh starter-material identity allocation and the release version literal.
+No saved fields or serialization formats change. The exact-inventory semantic review remains open; this census
 alone does not approve the transaction boundary. Earlier censuses are retained checkpoints.
 
 ## Retained isolated draft census

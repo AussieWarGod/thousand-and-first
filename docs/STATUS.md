@@ -1,10 +1,10 @@
 # Current implementation and release evidence
 
-**Snapshot:** 2026-09-09
+**Snapshot:** 2026-09-11
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
 **Next public version:** 0.3.3 stockpile hotfix in preparation; not published
 **Working candidate manifest:** 0.3.3 private Alpha candidate; not uploaded.
-Public Workshop remains 0.3.2, complete and finalized — see [Public 0.3.2](#public-032) below.
+Public Workshop remains the 0.3.2 public Alpha playtest, complete and finalized — see [Public 0.3.2](#public-032) below.
 
 The public Alpha is [Steam Workshop item
 3794797472](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472). Rows marked retained
@@ -25,15 +25,20 @@ that is a separate routed-input prerequisite, not the cause of this local tally 
 
 The isolated hotfix binds/reuses one active local survey for stock reads and complete
 commission transactions. Custody and lease guards are unchanged. No saved fields or repair
-goods are introduced. Six new source-contract cases pass in the full suite: 14,067 cases,
-zero skipped. Native successful debit and projection, independent review
-and release delivery remain unproved for this draft. No existing-save reload claim is made.
+goods are introduced. The scope-only commit `ad0dd90` passes all four compile modes,
+14,067 full-suite cases and 5,215 portable cases, zero skipped. Independent source review
+found no blocking issue. Native diagnostic `9828b4c` proves CanPay succeeds with the
+original unidentified starter stacks, without assigning their identities or leaking a survey.
+The separate fresh-ID prerequisite `3500035` passes 14,067 full and 5,221 portable cases,
+zero skipped, and independent source review. Combined gates, actual successful debit and
+projection, and release delivery remain pending. No existing-save reload claim is made.
 
-Current hotfix census: 3069 staged C# files; 435,601 physical lines; 3100 files in the
-generated cold-install inventory. Compile passed: 3069 sources, baseline and compatibility symbols
+Current hotfix census: 3069 staged C# files; 435,617 physical lines; 3100 files in the
+generated cold-install inventory. Scope-only compile inventory: 3069 sources, baseline and compatibility symbols
 (3065 baseline; developer profiles 3232/3236), including installed compatibility ABI checks.
+These compile receipts precede the fresh-ID and version integration; combined receipts are pending.
 Direct `XRL` imports: 1430 files, 0 over the line limit. Zero files at or above 300 lines.
-Inventory SHA-256: `77b1ebee200d1e49bae4b5f74aafd5cb81c91f4415202f38fb5162eefdd389c9`.
+Inventory SHA-256: `249d3bb40ca34f57289770494e985a97e81cf42c2bae8f053fb6e14005b61d3d`.
 The structural review binding remains open for this changed inventory. Earlier censuses below
 are retained checkpoints, not evidence for the hotfix.
 
@@ -153,7 +158,9 @@ engine-free; `DevTests/KingdomQuickstartShelterIngressTests.cs` recomputes them 
 architecture with the same `KingdomRoadRules.TryAuthoredLane` the stake walks and fails on drift.
 The heart-ingress endpoints are unchanged and refusal is still fail-closed with the same message.
 
-## Unreleased 0.3.2 hotfix groundwork — Quickstart starter-material identity (refs #142)
+## Retained isolated identity prerequisite — 3500035 (refs #142)
+
+This section describes the separate prerequisite commit, not the combined scope fix above.
 
 A player reported on the shipped 0.3.2 build that no building could be commissioned because the
 starter materials in the camp chest were not seen (#142). Tracing that report in the shipped source
