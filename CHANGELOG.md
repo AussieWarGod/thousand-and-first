@@ -43,6 +43,19 @@ below it.
   finished on every wake, and never gains founders. New option `r_TAF_OptionQuickstartFounders`,
   default Yes, read once when the world is made and frozen there.
 
+### Fixed
+
+- Repository audits ignore existing Python bytecode and disable new cache writes. Same-size,
+  same-second mutation/restoration cycles therefore test current source, not a stale `.pyc`.
+
+- Developer cold-load preparation anchors all destination writes, including directory creation,
+  saved-game copies and receipt files, through no-follow directory handles. An ancestor symlink
+  swap cannot redirect writes outside the intended tree; independent readback and seal checks
+  still refuse changed paths. This changes test tooling only, not ordinary saves or mod content.
+- Cold-load phase durations use a monotonic clock; wall-clock timestamps remain available for
+  correlation. Parallel copies reject invalid worker counts, cap concurrency, and propagate
+  process-control exceptions after joining submitted work.
+
 ### Docs
 
 - Landed the 2026-09-09 Beta gap report (`docs/BETA-GAP-REPORT-2026-09-09.md`), re-read against the

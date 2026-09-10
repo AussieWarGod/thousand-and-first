@@ -16,6 +16,17 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
+Repository audits use a fresh empty Python cache lookup root with bytecode writes disabled.
+An executable timestamp-cache fixture proves that disabling writes alone still reads stale
+bytecode, while the isolated audit imports restored source. This strengthens host test fidelity;
+it is not native gameplay, ordinary-save or release acceptance. Refs #113.
+
+Cold-load transport hardening (PR #104): 27 executable filesystem tests cover ancestor
+swaps for directory, receipt and save outputs. Replacing component-wise anchoring with a bare
+multi-component open fails all three new negatives. Monotonic timing and strict worker bounds
+also have executable checks. All 27 focused tests and the full portable audit pass; these synthetic
+filesystem checks do not establish native cold-load or release acceptance.
+
 ## Current repository integration state — PR #6 merged, main protection updated
 
 Documentation/hardening PR #6, "Post-0.3.1 Alpha hardening and release closeout", was
