@@ -92,6 +92,59 @@ def extract_leg_names(text):
     return names
 
 
+def write_dotnet_stub_files(stub_dir, cases_posix, cases_cmd):
+    """Writes the SAME call-numbered dispatch as both a POSIX shell script named
+    `dotnet` and a Windows `dotnet.cmd` batch file, so `pwsh` resolves exactly one
+    Application named `dotnet` on either host: on POSIX, `Get-Command dotnet
+    -CommandType Application` finds the executable-bit-set extensionless file; on
+    Windows, PATHEXT resolution finds `dotnet.cmd` (an extensionless file is never an
+    Application there, which is exactly PRRT_kwDOT9Vt7c6hA-dj). Both bodies encode
+    the identical fail_at/fail_message/fail_code dispatch, generated from one shared
+    case list, so the two platforms can never silently drift apart. The batch file
+    dispatches via `goto`, one label per call number, rather than parenthesised
+    `if (...)` blocks: this fixture's own fixed messages (the ALL GREEN text) contain
+    literal parentheses, which a parenthesised `if (...) (echo ...)` block cannot
+    contain unescaped without breaking cmd.exe's block-nesting parser -- goto/label
+    dispatch sidesteps that instead of requiring per-message escaping. Module-level
+    (not a TestPs1RealExecutionTest method) so the byte-level CRLF regression below can
+    exercise it without pwsh being installed."""
+    stub_dir.mkdir(exist_ok=True)
+    posix_stub = stub_dir / "dotnet"
+    posix_stub.write_text(
+        "#!/bin/sh\n"
+        'read -r n < "$TAF_STUB_COUNTER"\n'
+        "n=$((n + 1))\n"
+        'echo "$n" > "$TAF_STUB_COUNTER"\n'
+        'case "$n" in\n'
+        + "\n".join(cases_posix)
+        + "\n  *) exit 0 ;;\nesac\n",
+        encoding="utf-8",
+    )
+    posix_stub.chmod(posix_stub.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+    cmd_stub = stub_dir / "dotnet.cmd"
+    gotos = "\r\n".join("if %%N%%==%d goto n%d" % (n, n) for n in (1, 2, 3, 4))
+    labels = "".join(":n%d\r\n%s\r\n" % (n, body) for n, body in cases_cmd)
+    cmd_body = (
+        "@echo off\r\n"
+        'set /p N=<"%TAF_STUB_COUNTER%"\r\n'
+        "set /a N=%N%+1\r\n"
+        'echo %N% >"%TAF_STUB_COUNTER%"\r\n'
+        + gotos + "\r\n"
+        + "exit /b 0\r\n"
+        + labels
+    )
+    # newline="" disables Python's own universal-newline translation on write: every
+    # line ending here is the literal "\r\n" already embedded in `cmd_body`. Without
+    # it, a Windows-hosted Python (text mode, newline=None) would translate each "\n"
+    # it sees to the platform default "\r\n" TOO, doubling every "\r" already present
+    # into "\r\r\n" -- a form some cmd.exe parses tolerate and some do not, so this is
+    # not cosmetic. `open()` is used instead of `Path.write_text`'s own `newline=`
+    # parameter (Python 3.10+) so this keeps working on older interpreters.
+    with open(cmd_stub, "w", encoding="utf-8", newline="") as handle:
+        handle.write(cmd_body)
+    return cmd_stub
+
+
 class TestPs1ExitPropagationStructureTest(unittest.TestCase):
     def test_every_dotnet_invocation_propagates_a_named_leg_failure(self):
         problems = dotnet_invocations_without_named_leg_propagation(read_script())
@@ -128,6 +181,22 @@ class TestPs1ExitPropagationStructureTest(unittest.TestCase):
         leg_names = extract_leg_names(text)
         self.assertEqual(2, len(leg_names))
         self.assertEqual(1, len(set(leg_names)), "duplicate leg names must collapse to one")
+
+    def test_dotnet_cmd_stub_uses_bare_crlf_never_crcrlf(self):
+        # newline="" on the batch write must be preserved: a Windows-hosted Python in
+        # default text mode (newline=None) would translate every "\n" this fixture
+        # already writes as part of a literal "\r\n" into the platform default "\r\n"
+        # TOO, doubling every line ending into "\r\r\n". Checked on the raw bytes, not
+        # through a text-mode read, which would silently normalise the very defect this
+        # test exists to catch.
+        with tempfile.TemporaryDirectory(prefix="taf-dotnet-cmd-crlf-test-") as root:
+            stub_dir = Path(root) / "stub-bin"
+            cmd_stub = write_dotnet_stub_files(
+                stub_dir, ["  1) exit 0 ;;"], [(1, "exit /b 0")]
+            )
+            raw = cmd_stub.read_bytes()
+        self.assertIn(b"\r\n", raw)
+        self.assertNotIn(b"\r\r\n", raw)
 
     def test_script_ends_with_an_explicit_success_exit(self):
         text = read_script().rstrip()
@@ -199,46 +268,7 @@ class TestPs1RealExecutionTest(unittest.TestCase):
         self.env.pop("TAF_TEST_FILTER", None)
 
     def write_dotnet_stub(self, stub_dir, cases_posix, cases_cmd):
-        """Writes the SAME call-numbered dispatch as both a POSIX shell script named
-        `dotnet` and a Windows `dotnet.cmd` batch file, so `pwsh` resolves exactly one
-        Application named `dotnet` on either host: on POSIX, `Get-Command dotnet
-        -CommandType Application` finds the executable-bit-set extensionless file; on
-        Windows, PATHEXT resolution finds `dotnet.cmd` (an extensionless file is never an
-        Application there, which is exactly PRRT_kwDOT9Vt7c6hA-dj). Both bodies encode
-        the identical fail_at/fail_message/fail_code dispatch, generated from one shared
-        case list, so the two platforms can never silently drift apart. The batch file
-        dispatches via `goto`, one label per call number, rather than parenthesised
-        `if (...)` blocks: a stub message containing its own literal parentheses (the
-        real ALL GREEN text does) breaks cmd.exe's block-nesting parser, so a goto/label
-        dispatch is the only shape that stays correct for arbitrary message text."""
-        stub_dir.mkdir(exist_ok=True)
-        posix_stub = stub_dir / "dotnet"
-        posix_stub.write_text(
-            "#!/bin/sh\n"
-            'read -r n < "$TAF_STUB_COUNTER"\n'
-            "n=$((n + 1))\n"
-            'echo "$n" > "$TAF_STUB_COUNTER"\n'
-            'case "$n" in\n'
-            + "\n".join(cases_posix)
-            + "\n  *) exit 0 ;;\nesac\n",
-            encoding="utf-8",
-        )
-        posix_stub.chmod(posix_stub.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
-        cmd_stub = stub_dir / "dotnet.cmd"
-        gotos = "\r\n".join("if %%N%%==%d goto n%d" % (n, n) for n in (1, 2, 3, 4))
-        labels = "".join(
-            ":n%d\r\n%s\r\n" % (n, body) for n, body in cases_cmd
-        )
-        cmd_stub.write_text(
-            "@echo off\r\n"
-            'set /p N=<"%TAF_STUB_COUNTER%"\r\n'
-            "set /a N=%N%+1\r\n"
-            'echo %N% >"%TAF_STUB_COUNTER%"\r\n'
-            + gotos + "\r\n"
-            + "exit /b 0\r\n"
-            + labels,
-            encoding="utf-8",
-        )
+        write_dotnet_stub_files(stub_dir, cases_posix, cases_cmd)
 
     def make_stub(self, fail_at, fail_message, fail_code):
         """A dotnet stub that succeeds every call except call number `fail_at` (1-4, in
