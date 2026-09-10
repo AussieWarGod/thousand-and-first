@@ -25,8 +25,9 @@ lines; 1434 direct `XRL` importing files; zero at or above 300. Exact inventory 
 `ab4cf22e665900bd82593ad4f9805861da4458e60b918c59b1d3a0bb88b74617`.
 One small engine-free classifier is added. Existing internal capture/flush/reporting seams carry
 a typed pending result without serialized state or format changes. Four compile modes, audit,
-main 14,296/portable 5,460 tests pass (managed zero skips). Exact-inventory semantic review and
-native proof remain pending; this census is not release approval.
+main 14,296/portable 5,460 tests pass (managed zero skips). The bounded roadless-camp native
+check passes at `0cfd8e7`; exact-inventory release semantic review remains pending.
+This census is not release approval.
 
 ## Retained master semantic resume census
 

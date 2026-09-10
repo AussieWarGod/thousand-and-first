@@ -39,7 +39,7 @@ One engine-free classifier is new; no serialized field, save key, wire format, o
 changes. Four canonical compile modes and repository audit pass (770 checks, six platform skips).
 Main 14,296 and portable 5,460 tests pass with zero skips. Focused nine checks pass; removing
 the fault, no-entry, and zero-street guards causes one, one, and two value failures respectively.
-Restored code passes. Native proof remains pending.
+Restored code passes. The bounded native roadless-camp regression passes as recorded below.
 The new developer persona completes an empty camp with a disclosed synthetic calendar, then
 checks two real two-day intervals for unchanged stage/revision and one pending notice.
 No road floors are fabricated. Save/load and terminal-pending acceptance are not claimed.
@@ -48,7 +48,16 @@ Pending; no daily phases ran. The fixture had not checked its completed work int
 Follow-up uses a disclosed production survey/check-in before observation, with real work rows
 and unchanged time required. The observer now calls capture only, never a flush, and verifies
 the stage immediately before/after. Follow-up four-mode compile and audit pass; main 14,296
-and portable 5,460 tests pass with zero skips. Corrected native proof remains pending.
+and portable 5,460 tests pass with zero skips.
+
+Native `0cfd8e7`, seed `#165939435`: first profile `zdkmsq` timed out before any journal
+at the default 300 seconds; its owned process was stopped and evidence retained. The runner's
+single timeout-only retry `H5UoPk` passed all seven verbs / 63 journal rows. Setup proved typed
+Pending with zero notices; after each real 2400-turn interval capture remained Pending, the
+stage/revision remained byte-identical, and exactly one pending notice existed. Strict Player.log
+checks passed. Owned retry process was stopped; both profiles and logs remain retained.
+This proves this synthetic roadless-camp/daily-capture case, not ordinary-play, save/load,
+terminal, historical inheritance or release acceptance. Required CI also passed at `0cfd8e7`.
 
 ## Unreleased master semantic receipt resume correction (#127)
 

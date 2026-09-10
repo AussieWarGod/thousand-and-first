@@ -14,8 +14,8 @@ below it.
 > 437,201 physical lines; zero files at or above 300; 1434 direct `XRL` importing files.
 > Inventory SHA-256: `ab4cf22e665900bd82593ad4f9805861da4458e60b918c59b1d3a0bb88b74617`.
 > The generated cold-install inventory contains 3110 files. All four compile modes pass;
-> audit and main 14,296/portable 5,460 tests pass (managed zero skips). Native proof remains
-> pending. Earlier census entries are retained evidence.
+> audit and main 14,296/portable 5,460 tests pass (managed zero skips). The roadless-camp native
+> check passes at `0cfd8e7` after one retained startup timeout. Earlier census entries are retained evidence.
 
 ### Added
 
