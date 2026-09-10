@@ -181,7 +181,7 @@ class TestPs1RealExecutionTest(unittest.TestCase):
                 cases.append("  %d) exit 0 ;;" % n)
         stub.write_text(
             "#!/bin/sh\n"
-            'n=$(cat "$TAF_STUB_COUNTER")\n'
+            'read -r n < "$TAF_STUB_COUNTER"\n'
             "n=$((n + 1))\n"
             'echo "$n" > "$TAF_STUB_COUNTER"\n'
             'case "$n" in\n'
@@ -243,7 +243,7 @@ class TestPs1RealExecutionTest(unittest.TestCase):
         stub = stub_dir / "dotnet"
         stub.write_text(
             "#!/bin/sh\n"
-            'n=$(cat "$TAF_STUB_COUNTER")\n'
+            'read -r n < "$TAF_STUB_COUNTER"\n'
             "n=$((n + 1))\n"
             'echo "$n" > "$TAF_STUB_COUNTER"\n'
             'case "$n" in\n'
