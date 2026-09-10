@@ -75,6 +75,17 @@ four-mode compile and audit pass (770 tool checks, six skips); main 14,347 / por
 tests pass with zero skips. Eighteen focused source checks pass; dropping diagnostic capture
 fails one source assertion, restored code passes. Actual paid-upgrade proof remains pending.
 
+Native `fb9a9c0` (`qyq8GE`, same seed) still refused `NoGroundToGrow`.
+The captured ledger already held its maximum 12 notes, so it omitted the later upgrade
+explanation; no reason was recovered. Owned PID 39452 stopped, evidence retained.
+The next diagnostic reads the engine's existing message list instead (last 16 messages,
+256 characters each with marked truncation, bounded below the 8192-character journal limit),
+plus the player's current cell. It does not clear the ledger, reassess or mutate the world.
+Follow-up verification passed: all four canonical compile modes plus installed compatibility
+ABI, portable audit, 14347 Taf and 5497 Portable cases with zero skips. Eighteen focused
+source checks passed; reverting the message-list read to the capped ledger failed one source
+assertion, then restored code passed. Actual paid-upgrade proof remains pending.
+
 ## Unreleased camp-heart native seam (PR #107 native case 2)
 
 A dev-only scenario seam (`Harness/KingdomCampHeartNative*.cs`, persona

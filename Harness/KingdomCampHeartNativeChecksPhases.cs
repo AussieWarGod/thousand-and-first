@@ -63,16 +63,19 @@ namespace ThousandAndFirst.Harness
 				}
 			}
 
-			private void RecordBlockedNotes()
+			private void RecordBlockedMessages()
 			{
-				List<string> notes = System.Ledger?.Notes;
-				Evidence.Append("\nblocked-ledger-notes=").Append(notes == null ? 0 : notes.Count);
+				Cell player = The.Player?.CurrentCell;
+				Evidence.Append("\nblocked-player-cell=").Append(player == null ? "(absent)"
+					: player.X + "," + player.Y);
+				List<string> notes = Game.Player?.Messages?.Messages;
+				Evidence.Append("\nblocked-message-count=").Append(notes == null ? 0 : notes.Count);
 				if (notes == null) return;
 				for (int i = Math.Max(0, notes.Count - 16); i < notes.Count; i++)
 				{
 					string note = notes[i] ?? "(null)";
-					Evidence.Append("\nblocked-note=").Append(note.Length <= 1024
-						? note : note.Substring(0, 1024) + "[truncated]");
+					Evidence.Append("\nblocked-message=").Append(note.Length <= 256
+						? note : note.Substring(0, 256) + "[truncated]");
 				}
 			}
 
@@ -89,7 +92,7 @@ namespace ThousandAndFirst.Harness
 				r_KingdomImprovement improvement = GameObject.Validate(Heart)
 					? Heart.GetPart<r_KingdomImprovement>() : null;
 				Begun = improvement != null && improvement.Working;
-				if (!Begun) RecordBlockedNotes();
+				if (!Begun) RecordBlockedMessages();
 				Require(Begun, "taf-camp-improvement-absent: the real settlement pass never began "
 					+ "the heart's rung-2 improvement; announced-verdict="
 					+ (improvement == null ? "absent"
