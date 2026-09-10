@@ -10,8 +10,14 @@ below it.
 
 ## Unreleased — Beta gap report
 
-> **Current merged census — the #129 dev-harness native checks over the roadless seal
-> correction.** Current 3079-file census is line-cap green: 437,320 physical lines, zero files at
+Current 3080-file census is line-cap green: 437,399 physical lines; direct `XRL`
+imports occur in 1435 files, 0 of them over the line limit. Inventory SHA-256:
+`6ebc095bd595e636c48079ba5c41c0cb3bb92f3af7741d99b05eeb8b81acc78d`.
+The cold-install inventory contains 3111 files. This is the dev backmerge, not the isolated
+0.3.3 release package. Combined-tree gates and semantic review remain pending.
+
+> **Retained #129 merged census — the #129 dev-harness native checks over the roadless seal
+> correction.** That 3079-file census is line-cap green: 437,320 physical lines, zero files at
 > or above 300: 0 files exceed 300, 0 exceed 1,000, 0 exceed 2,000 and 0 exceed 5,000; direct
 > `XRL` imports occur in 1434 files, 0 of them over the line limit. Inventory SHA-256:
 > `f9a9469102be2f0ca119056e08c884a56014b31439e71695852026f63bd02d17`.
@@ -141,6 +147,34 @@ below it.
 - Landed the 2026-09-09 Beta gap report (`docs/BETA-GAP-REPORT-2026-09-09.md`), re-read against the
   shipped 0.3.2 bytes: gates #58–#70 remain open, and the report sizes each gap and lists open
   decisions for the author. Docs-only; no source, tooling, package, or release bytes change.
+
+## [0.3.3] — 2026-09-11 (Alpha candidate; not published)
+
+### Fixed
+
+- Construction menus can read dedicated material stockpiles outside the settlement's
+  background pass. Stock reads and commissions hold one scoped local survey through their
+  work, retaining the same protected-cargo, routed-lease and exact-custody checks. Previously
+  a fresh Kingdom Quickstart could report no timber while four timber sat in its camp chest.
+  This change adds no saved fields and does not replace or move existing goods.
+- Fresh Kingdom Quickstart material stacks now receive an engine identity before entering
+  their chest, re-proved after insertion. Routed construction-input observation needs these
+  identities; the chest already had one. Observers remain non-allocating. This closes a
+  separate prerequisite, not the cause of the menu's zero-stock reading. Existing materials
+  are not recreated or given identities by a blanket recovery pass.
+
+### Compatibility
+
+No serialized fields or receipt formats are changed by the stock-operation fix. Existing
+stock stays in place; no replacement supplies or blanket identity repair are performed.
+Back up saves before updating. Existing-save reload and downgrade compatibility are not
+claimed from the fresh-world regression.
+
+Isolated main candidate 3069-file census is line-cap green: 435,617 physical lines; direct `XRL`
+imports occur in 1430 files, 0 of them over the line limit. Inventory SHA-256:
+`249d3bb40ca34f57289770494e985a97e81cf42c2bae8f053fb6e14005b61d3d`.
+The generated cold-install inventory contains 3100 files. Exact-inventory source review is
+current for those main bytes; fresh commissioning passed at `3cf2825` (see docs/STATUS.md). Prior release receipts do not cover this delta.
 
 ## [0.3.2] — 2026-09-09 (Alpha)
 
@@ -336,13 +370,13 @@ below it.
 > delta changes what Quickstart does at boot.
 > The exact-inventory human semantic review is open against this digest; this is not Beta sign-off.
 
-> **Retained stockpile deposit custody census — exact structural gate passed.** That 3068-file census was line-cap green:
+> **Retained 0.3.2 census — exact structural gate passed.** The 3068-file census is line-cap green:
 > 435,538 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
-> imports occur in 1434 files, 0 of them over the line limit. Inventory SHA-256:
-> `f9a9469102be2f0ca119056e08c884a56014b31439e71695852026f63bd02d17`.
-> The generated cold-install inventory contains 3109 files; no new subscription claim.
-> This digest is the raw delivery overflow fix over the stockpile deposit custody fix merged over `dev` at `862f14d` (the unattended
+> imports occur in 1429 files, 0 of them over the line limit. Inventory SHA-256:
+> `93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa` (the shipped 0.3.2 inventory, before the #142 hotfix).
+> The generated cold-install inventory contains 3099 files; no new subscription claim.
+> This digest is the stockpile deposit custody fix merged over `dev` at `862f14d` (the unattended
 > native observers, the Workshop listing wording, the automatic Workshop attempt finalisation, the
 > Fetch carry-completion fix and the cross-version persona REQUEST wording; only the Fetch fix
 > touches a production C# source, and it adds no new one), and over the Kingdom Quickstart shelter ingress, the

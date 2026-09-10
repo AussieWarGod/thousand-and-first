@@ -116,6 +116,12 @@ baseline and dev-harness compatibility compiles. The shared `DevTests/refs.rsp` 
 `-langversion:latest`, so those compiles are not pinned to C# 7.3; `LangVersion` 7.3 is pinned
 only in `DevTests/Engine*/Probe.csproj` and `Tools/WorkshopSteam/*.csproj`. Retained sections
 below keep their original wording as written at their own checkpoints.
+Current dev backmerge compilation inventory runs across 3080 production C# sources,
+3076 baseline sources; cold-install inventory contains 3111 files.
+Combined-tree compile/test verification is pending; no prior receipt
+is reattributed. The isolated 0.3.3 release remains on main, without dev's founding cohort.
+
+Retained founding-cohort checkpoint:
 Staged compatibility compilation runs across 3078 production C# sources, staged baseline across
 3074 (the optional-mod bridge is a compatibility-only source); the generated
 cold-install inventory contains 3109 files. Neither count proves subscriber delivery.

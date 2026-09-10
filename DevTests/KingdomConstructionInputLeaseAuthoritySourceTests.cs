@@ -9,6 +9,43 @@ namespace ThousandAndFirst.Tests
 	public class KingdomConstructionInputLeaseAuthoritySourceTests
 	{
 		[Test]
+		public void ExplicitLocalOperationReusesPassAndRejectsForeignAuthority()
+		{
+			string scope = Read("Growth/KingdomSurvey.LocalOperation.cs");
+			Ordered(scope, "ReferenceEquals(The.ZoneManager?.ActiveZone, zone)",
+				"KingdomSurvey survey = ActiveFor(zone)", "survey == null && HasBoundPass",
+				"if (survey == null) survey = Take(zone, system)",
+				"!ReferenceEquals(ActiveFor(zone), survey)", "scope = survey.BindPass()");
+			StringAssert.DoesNotContain("GetObjects(", scope);
+			StringAssert.DoesNotContain("BoundSurvey =", scope);
+			StringAssert.DoesNotContain(".ID", scope);
+		}
+
+		[TestCase("Growth/KingdomCommission.cs", "CommissionInLocalPass")]
+		[TestCase("Growth/KingdomPlot2.10.Commission.cs", "CommissionInLocalPass")]
+		[TestCase("Growth/KingdomMaterials.05.StockpileAndPaymentGates.cs", "StockInLocalPass")]
+		[TestCase("Growth/KingdomMaterials.05.StockpileAndPaymentGates.cs", "StockForExactContainerInLocalPass")]
+		public void PublicLocalOperationsOwnDisposableScope(string path, string body)
+		{
+			string source = Read(path);
+			Ordered(source, "KingdomSurvey.TryBindLocalOperation(", "using (scope) return " + body);
+		}
+
+		[Test]
+		public void LocalScopesDoNotWeakenMaterialCustodyOrLeaseReproof()
+		{
+			string source = Read("Growth/KingdomConstructionInputLeaseAuthority.cs");
+			foreach (string guard in new[] { "ActiveLocalCustody(item)", "!IsLeased(snapshot, item)",
+				"KingdomOrdinaryCustody.TryProveEmpty(item, out _)", "!KingdomPurpose.HasProtectedCargoEvidence(item)",
+				"item.GetIntProperty(\"NeverStack\") == 0", "!item.IsImportant()",
+				"item.Equipped == null", "item.IsTakeable()", "!survey.TryLoaded(out loaded)",
+				"ReferenceEquals(loaded[i], item)" }) StringAssert.Contains(guard, source);
+			StringAssert.DoesNotContain("KingdomSurvey.Take", source);
+			StringAssert.Contains("CurrentLeaseAuthorityAllowsPlan()",
+				Read("Growth/KingdomMaterialDebit.Commit.cs"));
+		}
+
+		[Test]
 		public void OneFailClosedAuthorityUsesOnlyCurrentActiveWaterCustody()
 		{
 			string authority = Read("Growth/KingdomConstructionInputLeaseAuthority.cs");

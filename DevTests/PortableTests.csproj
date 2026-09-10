@@ -22,6 +22,7 @@
     <Compile Include="KingdomDepositOverflowNativeSourceTests.cs" />
     <Compile Include="KingdomDepositOverflowReservationTests.cs" />
     <Compile Include="..\Harness\KingdomDepositOverflowReservation.cs" />
+    <Compile Include="KingdomQuickstartMaterialIdentityTests.cs" />
     <Compile Include="KingdomRealmArchiveNestedWireSourceTests.cs" />
     <Compile Include="KingdomCityBookRefusalTests.cs" />
     <Compile Include="KingdomWearLoadSafetySourceTests.cs" />
@@ -143,6 +144,8 @@
 	<Compile Include="KingdomQuickstartTests.cs" />
 	<Compile Include="KingdomQuickstartGuideRulesTests.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartBootRequest.cs" />
+	<Compile Include="..\Harness\KingdomQuickstartBuildClaims.cs" />
+	<Compile Include="KingdomQuickstartBuildClaimsTests.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartSaveSnapshot.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartSaveSnapshotCodec.cs" />
 	<Compile Include="KingdomQuickstartSaveSnapshotTests.cs" />
@@ -870,6 +873,18 @@
 	<Compile Include="..\Growth\KingdomConstructionInput.CargoLine.cs" />
 	<Compile Include="..\Growth\KingdomConstructionInput.Child.cs" />
 	<Compile Include="..\Growth\KingdomConstructionInput.Receipt.cs" />
+	<Compile Include="..\Growth\KingdomConstructionJob.cs" />
+	<Compile Include="..\Growth\KingdomConstructionOutbox.cs" />
+	<Compile Include="..\Growth\KingdomPaidBuildReceipt.cs" />
+	<Compile Include="..\Growth\KingdomMaterialDebitResult.cs" />
+	<Compile Include="..\Growth\KingdomConstructionRules.cs" />
+	<Compile Include="..\Growth\KingdomConstructionRules.Transitions.cs" />
+	<Compile Include="..\Growth\KingdomConstructionRules.Canonical.cs" />
+	<Compile Include="..\Growth\KingdomConstructionRules.Funding.cs" />
+	<Compile Include="..\Growth\KingdomConstructionRules.Costs.cs" />
+	<Compile Include="..\Growth\KingdomConstructionRules.InputRegistry.cs" />
+	<Compile Include="..\Growth\KingdomConstructionRules.InputContract.cs" />
+	<Compile Include="..\Growth\KingdomConstructionRules.OutboxCas.cs" />
 	<Compile Include="..\Growth\KingdomConstructionClaims.cs" />
 	<Compile Include="..\Growth\KingdomConstructionInputRules.cs" />
 	<Compile Include="..\Growth\KingdomConstructionInputRules.Claims.cs" />

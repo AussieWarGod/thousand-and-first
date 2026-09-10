@@ -54,6 +54,10 @@ namespace ThousandAndFirst
 			return grant;
 		}
 
+		// A freshly created starter stack is given its engine identity once, here at creation and
+		// before insertion, because the routed construction-input observer requires holder and
+		// item IDIfAssigned and refuses an empty one. Not the #142 menu cause; see the tests and
+		// docs/STATUS.md for the engine reads and the separate scope finding.
 		private static bool TryPrepareMaterial(KingdomQuickstartGrantScope<GameObject> Scope,
 			GameObject Stockpile, KingdomMaterial Material, int Count, out string Failure)
 		{
@@ -66,12 +70,24 @@ namespace ThousandAndFirst
 				Failure = "A starter material blueprint did not create one ordinary item.";
 				return false;
 			}
+			string identity = item.ID;
+			if (string.IsNullOrEmpty(identity)
+				|| !string.Equals(item.IDIfAssigned, identity, StringComparison.Ordinal))
+			{
+				Failure = "A private starter material could not take an engine identity.";
+				return false;
+			}
 			item.Count = Count;
 			if (!KingdomMaterials.TryOrdinaryMaterialOf(item, out KingdomMaterial measured)
 				|| measured != Material || !ReferenceEquals(Stockpile.Inventory.AddObject(
 					item, null, Silent: true, NoStack: true), item))
 			{
 				Failure = "A private starter material did not enter its prepared chest exactly.";
+				return false;
+			}
+			if (!string.Equals(item.IDIfAssigned, identity, StringComparison.Ordinal))
+			{
+				Failure = "A private starter material changed identity entering its chest.";
 				return false;
 			}
 			return true;

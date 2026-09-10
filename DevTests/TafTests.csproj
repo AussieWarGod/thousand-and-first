@@ -23,6 +23,7 @@
     <Compile Include="KingdomDepositOverflowNativeSourceTests.cs" />
     <Compile Include="KingdomDepositOverflowReservationTests.cs" />
     <Compile Include="..\Harness\KingdomDepositOverflowReservation.cs" />
+    <Compile Include="KingdomQuickstartMaterialIdentityTests.cs" />
     <Compile Include="KingdomRealmArchiveNestedWireSourceTests.cs" />
     <Compile Include="KingdomRealmHashBasisTests.cs" />
     <Compile Include="KingdomRealmCallbackBasisTests.cs" />
@@ -494,6 +495,8 @@
     <Compile Include="KingdomQuickstartShelterIngressTests.cs" />
     <Compile Include="KingdomQuickstartGuideRulesTests.cs" />
     <Compile Include="..\Harness\KingdomQuickstartBootRequest.cs" />
+    <Compile Include="..\Harness\KingdomQuickstartBuildClaims.cs" />
+    <Compile Include="KingdomQuickstartBuildClaimsTests.cs" />
     <Compile Include="..\Harness\KingdomQuickstartSaveSnapshot.cs" />
     <Compile Include="..\Harness\KingdomQuickstartSaveSnapshotCodec.cs" />
     <Compile Include="KingdomQuickstartSaveSnapshotTests.cs" />
@@ -512,6 +515,7 @@
     <Compile Include="..\Core\KingdomQuickstartStockRules.cs" />
     <Compile Include="KingdomQuickstartNativeHarnessSourceTests.cs" />
     <Compile Include="KingdomQuickstartFoundersTests.cs" />
+    <Compile Include="KingdomQuickstartBuildSourceTests.cs" />
     <Compile Include="KingdomRaidOutboxNativeHarnessSourceTests.cs" />
     <Compile Include="ScenarioProcessPolicyTests.cs" />
     <Compile Include="TestMainDiscoveryRulesTests.cs" />
