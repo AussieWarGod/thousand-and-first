@@ -16,6 +16,31 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
+## Unreleased harness test-ground faction strip (issue #90)
+
+The dev-only scenario test ground's `Strip`/`Restrip` (`Harness/KingdomScenarioTestGround.cs`) now
+also clears the worldgen `faction` zone property, so a re-stripped ground is born-clean again
+rather than still answering as foreign. `Strip` proves no founding-attempt site reservation stands
+on the zone first (`KingdomFoundingTransaction.HasSiteReservation`) and refuses whole, touching
+nothing, when one is pending — a prior attempt's reservation (authority, name, vocation,
+village-charter target, tick) is production state a resumed or cleaned-up attempt still reads, and
+erasing any proper subset of it would silently change what the reservation means rather than make
+the ground clean. `BuildZone`/`Restrip` carry that refusal into their journal row. The harness
+first-city founding step (`Harness/KingdomScenarioFoundingStep.cs`) gained a read-only
+foreign-faction precondition mirroring `KingdomRules.GroundIsForeignFaction` — the SAME predicate
+`Core/KingdomFounding.04.Claims.cs` guards publication with — refusing before the production
+transaction runs rather than publish-then-refuse. Harness-only: no production source changed and
+the structural census below is unchanged.
+
+Current census (unchanged by this PR): 3068
+staged C# files; 435,538 physical lines; 3099 files in the generated
+cold-install inventory; zero files at or above 300; direct `XRL`
+imports occur in 1429 files, 0 of them over the line limit. Inventory SHA-256:
+`93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa`. Native acceptance owed:
+first-guest-native-check and found-first-city persona reruns, plus one run with
+`TAF_PERSONA_SEED='#165939435'` (the originally failing seed), expecting a clean harness refusal or
+a village-free ground, never the publish-then-refuse path.
+
 Developer reload cleanup reports both the original failure and a failed owned-process stop,
 retaining the original exception as its cause. Harmless shell fixtures cover exact helper
 arguments, helper refusal blocking later personas, and prior ownership failure blocking reload.

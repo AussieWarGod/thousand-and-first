@@ -12,6 +12,21 @@ below it.
 
 ### Fixed
 
+- The dev-only scenario test ground's `Strip`/`Restrip` cleared only the zone's interior objects, so
+  a re-stripped ground could still carry worldgen's `faction` zone property forward into the next
+  attempt — not born-clean. `Strip` now also clears `"faction"`, but ONLY once it has proved no
+  founding-attempt site reservation stands on the zone: a prior attempt's reservation (authority,
+  name, vocation, village-charter target, tick) is production state a resumed or cleaned-up attempt
+  still reads, and erasing any proper subset of it would silently change what the reservation means
+  rather than make the ground clean. When one is pending, `Strip` now refuses whole and touches
+  nothing, and `BuildZone`/`Restrip` carry that refusal into their journal row
+  (`Harness/KingdomScenarioTestGround.cs`). The harness first-city founding step also gained a
+  read-only foreign-faction precondition, mirroring `KingdomRules.GroundIsForeignFaction` — the SAME
+  predicate `Core/KingdomFounding.04.Claims.cs` guards publication with — so a foreign zone is refused
+  before the production transaction ever runs rather than publish-then-refuse
+  (`Harness/KingdomScenarioFoundingStep.cs`). Harness-only; no production source changed and the
+  structural census is unchanged. Refs #90.
+
 - Developer reload failures retain the original exception as their cause and report both errors
   when receipt-owned cleanup also refuses. No later persona may assume cleanup succeeded.
   Shell lifecycle fixtures exercise reload argument routing and stop the matrix after refusal.
