@@ -60,8 +60,8 @@ namespace ThousandAndFirst.Harness
 				&& Growth.ArrivalOpportunity == null && Growth.ArrivalDebtRanges.Count == 0
 				&& System.LifecycleBook.PlainGuest == null && System.LifecycleBook.NotableGuest == null,
 				"open work/debt owns a schedule lease outside this focused oracle");
-			Require(!System.SemanticPassActive && Growth.ArrivalOrdinalHighWater <= long.MaxValue,
-				"semantic pass or ordinal outside fixture bounds");
+			Require(System.NativeTravelSemanticPauseReady() && Growth.ArrivalOrdinalHighWater <= long.MaxValue,
+				"unfinished or unpublished semantic pass, or ordinal outside fixture bounds");
 			foreach (var field in Growth.FieldOps) Require(field.Operation == null, "field operation remains open");
 		}
 
