@@ -500,6 +500,7 @@
     <Compile Include="KingdomQuickstartStockRulesTests.cs" />
     <Compile Include="..\Core\KingdomQuickstartStockRules.cs" />
     <Compile Include="KingdomQuickstartNativeHarnessSourceTests.cs" />
+    <Compile Include="KingdomQuickstartBuildSourceTests.cs" />
     <Compile Include="KingdomRaidOutboxNativeHarnessSourceTests.cs" />
     <Compile Include="ScenarioProcessPolicyTests.cs" />
     <Compile Include="TestMainDiscoveryRulesTests.cs" />

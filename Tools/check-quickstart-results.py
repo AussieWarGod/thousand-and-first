@@ -60,7 +60,8 @@ def journal(raw: bytes, phase: str, command: str, seed: str, game_id: str | None
                 "journal timestamp is not exact UTC milliseconds")
         stamps.append(datetime.strptime(stamp, "%Y-%m-%dT%H:%M:%S.%fZ"))
         require(re.fullmatch(r"[A-Z][A-Z0-9-]{0,127}", verb), "invalid machine verb")
-        require(outcome == "OK", "journal contains REFUSED or an unknown outcome")
+        require(outcome == "OK" or (phase == "build" and outcome == "REFUSED"),
+                "journal contains REFUSED or an unknown outcome")
         require(len(message) <= 32768 and re.fullmatch(r"(?:[^\\\x00-\x1f\x7f]|\\[\\nrt])*", message),
                 "invalid journal message escaping or bound")
         require(len(persona_matrix.unescape(message).encode("utf-16-le")) // 2 <= 8192,
@@ -81,6 +82,49 @@ def journal(raw: bytes, phase: str, command: str, seed: str, game_id: str | None
     elif phase == "load":
         expected = [("LOAD-BEGIN", "exact sealed save; game-id=" + game_id + "; new-game=false; mod-restore=false"),
                     ("QUICKSTART-LOAD-PREACTIVATION", PREACTIVATION), ("QUICKSTART-LOAD-COMPLETE", LOAD_COMPLETE)]
+    elif phase == "build":
+        # Fixed boot rows (already in `expected`), a fixed BUILD-BEGIN row, then zero or more of
+        # the three production steps IN ORDER (each attempted step but the last must have
+        # succeeded; only the last-attempted one may be the refused one), then exactly one
+        # terminal COMPLETE row.
+        expected += [("QUICKSTART-BUILD-BEGIN", command + "; genuine-production-commission=true")]
+        require(len(rows) >= len(expected) + 2,
+                "build journal must carry the boot rows, a BEGIN row and a terminal row")
+        require([(verb, message) for verb, _, message in rows[:len(expected) - 1]]
+                == [(verb, message) for verb, message in expected[:-1]],
+                "journal has missing, duplicate, out-of-order, mixed-phase or contradictory boot evidence")
+        begin_verb, begin_ok, begin_message = rows[len(expected) - 1]
+        require((begin_verb, begin_ok, begin_message) == (expected[-1][0], "OK", expected[-1][1]),
+                "build journal's BEGIN row does not match the exact expected disclosure")
+        middle = rows[len(expected):-1]
+        step_verbs = ["QUICKSTART-BUILD-QUOTE", "QUICKSTART-BUILD-CANPAY", "QUICKSTART-BUILD-COMMISSION"]
+        require(len(middle) <= len(step_verbs), "build journal carries more step rows than the sequence defines")
+        require([verb for verb, _, _ in middle] == step_verbs[:len(middle)],
+                "build journal's step rows are out of order, duplicated, or torn")
+        for verb, ok, _ in middle[:-1]:
+            require(ok == "OK", "an earlier build step row is refused; only the last-attempted step may fail")
+        terminal_verb, terminal_ok, terminal_message = rows[-1]
+        require(terminal_verb == "QUICKSTART-BUILD-COMPLETE", "build journal's terminal row has the wrong verb")
+        success = command + ("; commissioned=true; timber-debit=exact; water-debit=exact"
+                              "; job-projected=true; survey-scope-clear=true; boot-only=false; build-refused=false")
+        step_names = {"QUICKSTART-BUILD-QUOTE": "quote", "QUICKSTART-BUILD-CANPAY": "canpay",
+                      "QUICKSTART-BUILD-COMMISSION": "commission"}
+        if terminal_ok == "OK":
+            require(len(middle) == len(step_verbs) and middle[-1][1] == "OK",
+                    "a full build success requires all three step rows, each OK")
+            require(terminal_message == success, "build success row does not match the exact expected disclosure")
+        else:
+            require(len(middle) >= 1 and middle[-1][1] != "OK",
+                    "a build refusal requires the last-attempted step row to itself be refused")
+            expected_step = step_names[middle[-1][0]]
+            refused_prefix = (command + "; build-refused=true; boot-only=false; step=" + expected_step
+                               + "; survey-scope-clear=")
+            require(terminal_message.startswith(refused_prefix + "True; refusal=")
+                    or terminal_message.startswith(refused_prefix + "False; refusal="),
+                    "build refusal row does not attribute the exact failed step")
+            require(terminal_message.rsplit("; refusal=", 1)[1] != "",
+                    "build refusal row carries no founder-facing reason")
+        return autostart
     require([(verb, message) for verb, _, message in rows] == expected,
             "journal has missing, duplicate, out-of-order, mixed-phase or contradictory evidence")
     return autostart
@@ -143,8 +187,8 @@ def verify_log(raw: bytes) -> None:
 
 
 def verify(root: Path, phase: str) -> dict:
-    require(phase in ("boot", "save", "load") and root.is_absolute() and files.ROOT_NAME.fullmatch(root.name),
-            "expected absolute taf-scenario.<alnum> root and boot/save/load phase")
+    require(phase in ("boot", "save", "load", "build") and root.is_absolute() and files.ROOT_NAME.fullmatch(root.name),
+            "expected absolute taf-scenario.<alnum> root and boot/save/load/build phase")
     files.directory(root)
     local, seal = root / "Local", Path(str(root) + ".seal")
     frozen = {}
@@ -169,7 +213,8 @@ def verify(root: Path, phase: str) -> dict:
     command = commands[0]
     tokens = command.split(" ")
     advisor = profile.parse_quickstart_command(tokens)
-    require(tokens[0] == ("quickstart-boot" if phase == "boot" else "quickstart-save"), "script/phase mismatch")
+    require(tokens[0] == {"boot": "quickstart-boot", "build": "quickstart-build"}.get(phase, "quickstart-save"),
+            "script/phase mismatch")
     options = json.loads(read(local / "PlayerOptions.json", 1048576), object_pairs_hook=unique_object)
     require(isinstance(options, dict) and options.get(profile.QUICKSTART_ADVISOR_OPTION) == advisor,
             "sealed script and PlayerOptions advisor disagree")
@@ -183,7 +228,7 @@ def verify(root: Path, phase: str) -> dict:
     load_path = local / "scenario-load.txt"
     require(phase == "load" or not any(os.path.lexists(local / name) for name in
             ("scenario-load.txt", "scenario-load-snapshot.txt")), "non-load profile contains a load request")
-    if phase != "boot":
+    if phase not in ("boot", "build"):
         receipt_path = load_path if phase == "load" else root / "scenario-save-receipt.txt"
         receipt = read(receipt_path, 512).decode("ascii").split("\n")
         count, header = (7, "taf-scenario-load-v1") if phase == "load" else (6, "taf-scenario-save-v1")
@@ -233,7 +278,7 @@ def verify(root: Path, phase: str) -> dict:
 
 def main(argv: list[str]) -> int:
     try:
-        require(len(argv) == 4 and argv[2] == "--phase", "usage: check-quickstart-results.py ROOT --phase boot|save|load")
+        require(len(argv) == 4 and argv[2] == "--phase", "usage: check-quickstart-results.py ROOT --phase boot|save|load|build")
         result = verify(Path(argv[1]), argv[3])
     except (OSError, ValueError, SystemExit, subprocess.SubprocessError) as error:
         print(json.dumps({"verdict": "REFUSED", "reason": str(error), "ordinaryAcceptance": False,

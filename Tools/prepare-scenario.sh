@@ -178,7 +178,7 @@ if [ -f "$LOCAL/scenario-script.txt" ]; then
 	while IFS= read -r BANNER_LINE; do
 		case "$BANNER_LINE" in ''|'#'*) continue ;; esac
 		BANNER_COMMANDS=$(( BANNER_COMMANDS + 1 ))
-		if [[ "$BANNER_LINE" =~ ^quickstart-(boot|save)\ (marsh|canyon|dunes)\ (yes|no)$ ]]; then
+		if [[ "$BANNER_LINE" =~ ^quickstart-(boot|save|build)\ (marsh|canyon|dunes)\ (yes|no)$ ]]; then
 			QUICKSTART_BANNER="${BASH_REMATCH[1]}"
 			QUICKSTART_PROFILE="${BASH_REMATCH[2]}"
 			QUICKSTART_ADVISOR="${BASH_REMATCH[3]}"
