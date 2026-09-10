@@ -55,6 +55,9 @@ below it.
 
 ### Fixed
 
+- Developer profile validation batches metadata checks four at a time, preserving every path,
+  link, size and closed-inventory check while reducing serialized filesystem overhead.
+
 - Repository audits ignore existing Python bytecode and disable new cache writes. Same-size,
   same-second mutation/restoration cycles therefore test current source, not a stale `.pyc`.
 

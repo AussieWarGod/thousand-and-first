@@ -33,6 +33,7 @@ MAX_FILES = 16384
 MAX_TREE_BYTES = 2 * 1024 * 1024 * 1024
 SAVE_FILES = ("Primary.sav.gz", "Primary.json", "Cache.db")
 MAX_COPY_WORKERS = 4  # Bounded local-only fan-out; never spawns a process, never touches Windows.
+MAX_CENSUS_WORKERS = 4  # Metadata-only batches; retain every existing per-path validation.
 
 
 def _iso(moment: float) -> str:
@@ -140,17 +141,22 @@ def tree_files(root: Path, limit: int) -> list[Path]:
     found: list[Path] = []
     total = 0
     directories = 0
-    for current, children, files in os.walk(root, followlinks=False):
-        directory(Path(current))
-        directories += len(children)
-        require(directories <= MAX_FILES, "too many source directories")
-        for child in children:
-            directory(Path(current) / child)
-        for name in files:
-            path = Path(current) / name
-            total += file_status(path, limit).st_size
-            found.append(path)
-            require(len(found) <= MAX_FILES and total <= MAX_TREE_BYTES, "source tree exceeds finite bound")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_CENSUS_WORKERS) as executor:
+        for current, children, names in os.walk(root, followlinks=False):
+            directory(Path(current))
+            directories += len(children)
+            require(directories <= MAX_FILES, "too many source directories")
+            for child in children:
+                directory(Path(current) / child)
+            for offset in range(0, len(names), MAX_CENSUS_WORKERS):
+                batch = [Path(current) / name for name in names[offset:offset + MAX_CENSUS_WORKERS]]
+                require(len(found) + len(batch) <= MAX_FILES, "source tree exceeds finite bound")
+                # At most one batch is outstanding, including when a validation refuses.
+                statuses = executor.map(lambda path: file_status(path, limit), batch)
+                for path, status in zip(batch, statuses):
+                    total += status.st_size
+                    found.append(path)
+                    require(total <= MAX_TREE_BYTES, "source tree exceeds finite bound")
     return sorted(found)
 
 
