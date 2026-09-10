@@ -12,6 +12,9 @@ below it.
 
 ### Fixed
 
+- Repository audits ignore existing Python bytecode and disable new cache writes. Same-size,
+  same-second mutation/restoration cycles therefore test current source, not a stale `.pyc`.
+
 - Developer cold-load preparation anchors all destination writes, including directory creation,
   saved-game copies and receipt files, through no-follow directory handles. An ancestor symlink
   swap cannot redirect writes outside the intended tree; independent readback and seal checks
