@@ -167,10 +167,10 @@ below it.
   exactly what it read before.
 
 > **Current unreleased census — exact structural gate passed.** Current 3078-file census is line-cap green:
-> 436,999 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> 437,103 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1434 files, 0 of them over the line limit. Inventory SHA-256:
-> `3aa112eccece1111e1ac4800a827e5851722be7a9bf154ae2bf65f6b66f697b4`.
+> `d06aa71c4207418936123781cfc7bdd26069f7f273f9301ef5e6a1ca712c7dd5`.
 > The generated cold-install inventory contains 3109 files; no new subscription claim.
 > This digest is the Kingdom Quickstart founding cohort over the stockpile deposit custody census
 > retained below, and over every delta retained beneath that; each carries its own review chain and
@@ -187,10 +187,11 @@ below it.
 > compatibility (3078 plus the tracked Hearthpyre 2.2.3 ABI stub), dev-harness baseline (3241) and
 > dev-harness compatibility (3245) — through the canonical `Tools/gate.sh` itself, with its
 > installed-Hearthpyre source and ABI step. The
-> engine-free suites pass ALL GREEN: 14,132 TafTests cases and 5,286 PortableTests cases, zero
-> skipped, of 14,132/5,286 discovered; the 627-test tooling suite passes. Thirty-one guard mutations
-> were run against the new rules and twenty-nine were caught by a failing case; the two survivors
-> are recorded as redundant with the wire digest and the codec floor that already refuse them.
+> engine-free suites pass ALL GREEN: 14,137 TafTests cases and 5,291 PortableTests cases, zero
+> skipped, of 14,137/5,291 discovered; the 670-test tooling suite passes. Thirty-six guard mutations
+> were run against the new rules and thirty-three were caught by a failing case; the three survivors
+> are recorded as redundant with the wire digest, the codec floor and the identity filter that
+> already refuse them.
 > NOT run for this delta: the native Quickstart boot matrix, ordinary play, graceful Quit and
 > Steam delivery. The six-profile boot matrix at seed `#43101` is OWED before merge, because this
 > delta changes what Quickstart does at boot.

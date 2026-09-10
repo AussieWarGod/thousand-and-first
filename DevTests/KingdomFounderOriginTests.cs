@@ -407,6 +407,12 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.IsFalse(KingdomFounderOriginCodec.TryDecode("fo2" + wire.Substring(3),
 				out _), "a foreign tag");
 			ClassicAssert.IsFalse(KingdomFounderOriginCodec.TryDecode(null, out _));
+			// A hand-built wire whose base64 carries bytes that are not valid UTF-8 is refused:
+			// strict decoding throws rather than substituting U+FFFD, and even if it did not, the
+			// round-trip guard would catch the substitution.
+			string invalid = "fo1|" + Convert.ToBase64String(new byte[] { 0xC3, 0x28 })
+				+ wire.Substring(wire.IndexOf('|', 4));
+			ClassicAssert.IsFalse(KingdomFounderOriginCodec.TryDecode(invalid, out _));
 		}
 
 		[Test]

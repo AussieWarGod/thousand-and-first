@@ -2,18 +2,18 @@
 
 ## Current Kingdom Quickstart founding-cohort census — 2026-09-10
 
-**3078** production C# files, 436,999 physical lines, 1434 direct-XRL, zero cap failures;
+**3078** production C# files, 437,103 physical lines, 1434 direct-XRL, zero cap failures;
 3109 generated cold-install files. Exact digest
-`3aa112eccece1111e1ac4800a827e5851722be7a9bf154ae2bf65f6b66f697b4`.
+`d06aa71c4207418936123781cfc7bdd26069f7f273f9301ef5e6a1ca712c7dd5`.
 Ten added sources (the quickstart rules' founders partial, the bootstrap receipt partial split out
 of the bootstrap, the three bootstrap founders partials, and the founder origin accounting's models,
 codec, host seam, engine and adapter) and ten modified, over the deposit
 custody census retained below. Structure, doc freshness and the Tools suite (627 tests) pass, the
-engine-free suites pass 14,132 main / 5,286 Portable with zero skips, and all four compile modes are
+engine-free suites pass 14,137 main / 5,291 Portable with zero skips, and all four compile modes are
 clean under the canonical gate — staged baseline (3074), staged compatibility (3078),
-dev-harness baseline (3241), dev-harness compatibility (3245). Thirty-one guard mutations were run
-against the new rules; twenty-nine were caught by a failing case and two are documented as redundant
-with the wire digest and the codec floor that already refuse them. No native run, ordinary-play acceptance or
+dev-harness baseline (3241), dev-harness compatibility (3245). Thirty-six guard mutations were run
+against the new rules; thirty-three were caught by a failing case and three are documented as
+redundant with the wire digest, the codec floor and the identity filter that already refuse them. No native run, ordinary-play acceptance or
 exact-inventory human semantic review binds this digest, and the six-profile Quickstart boot matrix
 is owed before merge.
 

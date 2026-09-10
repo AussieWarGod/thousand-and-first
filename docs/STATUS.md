@@ -138,16 +138,16 @@ refused in the open, once, per obligation. That is a stated safety policy, not a
 automatic forward recovery. The native founders boot matrix is still owed.
 
 Current census on these bytes: 3078
-staged C# files; 436,999 physical lines; 3109 files in the generated
+staged C# files; 437,103 physical lines; 3109 files in the generated
 cold-install inventory. Staged compilation covers 3078 sources, baseline and compatibility symbols
 (baseline compiles 3074 of them; the optional-mod bridge is compatibility-only), run here by Roslyn
 9.0.306 through the canonical Windows gate against the licensed Managed references with warnings as
 errors. Direct `XRL` imports: 1434 files, 0 over the line limit.
-Inventory SHA-256: `3aa112eccece1111e1ac4800a827e5851722be7a9bf154ae2bf65f6b66f697b4`.
+Inventory SHA-256: `d06aa71c4207418936123781cfc7bdd26069f7f273f9301ef5e6a1ca712c7dd5`.
 All four compile modes are clean on these bytes — staged baseline (3074 sources), staged
 compatibility (3078), dev-harness baseline (3241) and dev-harness compatibility (3245) — through the
 canonical `Tools/gate.sh`, including the installed Hearthpyre ABI check.
-The engine-free suites pass 14,132 TafTests and 5,286 PortableTests cases, zero skipped, and the
+The engine-free suites pass 14,137 TafTests and 5,291 PortableTests cases, zero skipped, and the
 Tools suite passes 627 tests.
 An intentional replacement-authority mutation fails two assertions; restoring the attempt fence
 restores the required refusal. These are managed recovery tests, not native save-cut proof.
