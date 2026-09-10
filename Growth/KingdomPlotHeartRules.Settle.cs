@@ -40,10 +40,19 @@ namespace ThousandAndFirst
 			if (Building.GetIntProperty(HeartPlotProperty) != 1) return true;
 			int rung = KingdomPlotRules.HeartRungOf(TargetKey);
 			if (rung <= 0) return true;
-			// A rung is never stamped backward. The ladder only accretes, and a lower rung
-			// finishing over a higher one is a receipt that describes ground which no longer
-			// stands; settling it would tell the settlement it had un-built its own heart.
-			if (rung < HeartRung(Z)) return false;
+			// A rung is never stamped backward: see KingdomPlotRules.RungMaySettle. A refusal here
+			// stops the receipt closing, and on the plot route it would otherwise stop it with no
+			// trace at all, so the one thing this branch does besides refuse is say which ground,
+			// which standing rung and which receipt could not agree.
+			int standing = HeartRung(Z);
+			if (!KingdomPlotRules.RungMaySettle(rung, standing))
+			{
+				KingdomLog.Log("heart rung: refused a receipt below the standing rung: zone "
+					+ Z.ZoneID + "; standing " + standing.ToString(CultureInfo.InvariantCulture)
+					+ "; receipt " + rung.ToString(CultureInfo.InvariantCulture)
+					+ "; design " + (TargetKey ?? "(none)"));
+				return false;
+			}
 			string wire = rung.ToString(CultureInfo.InvariantCulture);
 			Z.SetZoneProperty(HeartRungProperty, wire);
 			if (Z.GetZoneProperty(HeartRungProperty, null) != wire) return false;

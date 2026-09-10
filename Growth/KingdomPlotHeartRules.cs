@@ -240,5 +240,28 @@ namespace ThousandAndFirst
 			return true;
 		}
 
+		/// <summary>
+		/// Whether a finished receipt's rung may be settled over the rung already standing on the
+		/// ground. The ladder only accretes: a receipt naming a LOWER rung than the one standing
+		/// describes ground that no longer exists, and settling it would tell the settlement it
+		/// had un-built its own heart.
+		/// <para>
+		/// Deliberately not a plus-one rule. That the ladder climbs one rung at a time is gated
+		/// UPSTREAM, where both ends of the transition are known
+		/// (<c>KingdomArchitectureRuntime.TryPrepareSuccessor</c> admits accretion only when the
+		/// successor's rung is exactly the predecessor's plus one, and only when the zone already
+		/// stands at the predecessor's rung). By the time a receipt is being settled its
+		/// predecessor is gone, so re-deriving that gate here would guess at a number this
+		/// helper cannot see. What it CAN see, and all it judges, is the direction.
+		/// </para>
+		/// </summary>
+		/// <param name="Rung">The rung the finished receipt names, one-based.</param>
+		/// <param name="Standing">The rung the ground already stands at; zero before any rung.
+		/// </param>
+		public static bool RungMaySettle(int Rung, int Standing)
+		{
+			return Rung > 0 && Rung >= Standing;
+		}
+
 	}
 }

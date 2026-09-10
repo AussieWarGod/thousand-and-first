@@ -2,8 +2,8 @@
 
 ## Current roadless seal candidate (#131)
 
-3081 staged sources; 437,323 physical lines; 1436 direct-XRL; zero cap failures; 3112
-cold-install files. Inventory `aac744afa4c72481dbb144a550e34a51cb0c94d1cdf3c271583fd83fdc05cb72`.
+3081 staged sources; 437,358 physical lines; 1436 direct-XRL; zero cap failures; 3112
+cold-install files. Inventory `dbb62f0500ed4bd0106399d447a5d76d47aa0fcb10622db8a10ca2dcfd812548`.
 Four compile modes, audit, main 14,309/portable 5,467 tests pass (managed zero skips).
 Roadless-camp native passes at `0cfd8e7`; see docs/STATUS.md for exact scope and retained timeout.
 

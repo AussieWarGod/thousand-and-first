@@ -205,9 +205,9 @@ namespace ThousandAndFirst
 				Failure = "The completed successor could not refresh its active survey identity.";
 				return false;
 			}
-			// BEFORE Complete on purpose: a rung that cannot settle exactly must leave the
-			// receipt non-terminal so the next pass retries it through the ordinary recovery
-			// path, rather than closing the job over an unwritten rung.
+			// BEFORE Complete on purpose: a rung that cannot settle exactly leaves the receipt
+			// non-terminal, so the ordinary recovery path quarantines it with this exact reason
+			// rather than closing the job over an unwritten rung.
 			if (!TrySettleImprovementHeartRung(System, Z, Successor, Job))
 			{
 				Failure = "The raised heart rung could not settle its exact effects.";

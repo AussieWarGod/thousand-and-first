@@ -36,6 +36,9 @@ namespace ThousandAndFirst.Tests
 			string handover = Read(Handover);
 			Assert.That(handover, Does.Contain(
 				"TrySettleImprovementHeartRung(System, Z, Successor, Job)"));
+			// The comment says what the recovery path actually does with a refusal.
+			Assert.That(handover, Does.Contain("quarantines it with this exact reason"));
+			Assert.That(Read(Caller), Does.Contain("quarantines it with the caller's"));
 			// One shared helper: the improvement route must not re-implement the stamp.
 			foreach (string forbidden in new[] { "HeartRungProperty", "OnRungRaised",
 				"ReconcileBasinCapacity" })
@@ -110,7 +113,15 @@ namespace ThousandAndFirst.Tests
 		public void ARungIsNeverStampedBackwardAndNothingIsOwedOffTheLadder()
 		{
 			string settle = Read(Settle);
-			Assert.That(settle, Does.Contain("if (rung < HeartRung(Z)) return false;"));
+			Assert.That(settle, Does.Contain("KingdomPlotRules.RungMaySettle(rung, standing)"));
+			// The refusal is diagnosable: one log line naming the ground, the standing rung, the
+			// receipt's rung and the design, and nothing else on that branch.
+			Assert.That(settle, Does.Contain(
+				"KingdomLog.Log(\"heart rung: refused a receipt below the standing rung: zone \""));
+			foreach (string token in new[] { "+ Z.ZoneID", "standing ", "receipt ", "design " })
+				Assert.That(settle, Does.Contain(token), token);
+			foreach (string forbidden in new[] { "Ledger.Note", "MessageQueue", "SetIntProperty(\"r_TAF" })
+				Assert.That(settle, Does.Not.Contain(forbidden), forbidden);
 			Assert.That(settle, Does.Contain(
 				"if (Building.GetIntProperty(HeartPlotProperty) != 1) return true;"));
 			Assert.That(settle, Does.Contain("if (rung <= 0) return true;"));

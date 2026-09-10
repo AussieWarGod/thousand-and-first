@@ -27,7 +27,10 @@ namespace ThousandAndFirst
 		/// </para>
 		/// </summary>
 		/// <returns>False only when a rung was owed and could not be settled exactly. The caller
-		/// keeps its receipt non-terminal so the next settlement pass retries.</returns>
+		/// keeps its receipt non-terminal, and the recovery path quarantines it with the caller's
+		/// exact reason (a row that was already terminal before this seam existed is completed
+		/// with that reason as its diagnostic instead, because a terminal phase cannot be
+		/// quarantined).</returns>
 		internal static bool TrySettleImprovementHeartRung(KingdomSystem System, Zone Z,
 			GameObject Successor, KingdomConstructionJob Job)
 		{

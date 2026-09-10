@@ -55,9 +55,9 @@ follow-up, not a silent migration. **Native proof owed:** the camp seam's third 
 rung 2 to rung 3 and reading `HeartRung(Z) == 2` after the waterstone and `== 3` after the moot.
 This is a source, compile and host-suite claim only.
 
-Current census: 3081 staged production C# files, 437,323 physical lines, none at or above 300.
+Current census: 3081 staged production C# files, 437,358 physical lines, none at or above 300.
 Direct `XRL` imports: 1436 files, 0 over the line limit. Inventory SHA-256:
-`aac744afa4c72481dbb144a550e34a51cb0c94d1cdf3c271583fd83fdc05cb72`.
+`dbb62f0500ed4bd0106399d447a5d76d47aa0fcb10622db8a10ca2dcfd812548`.
 The 3081 staged C# files produce a cold-install inventory of 3112 files. From these
 3081 sources, baseline and compatibility symbols select 3077 and 3081 ordinary inputs;
 the developer profiles compile 3259 and 3263 inputs. All four compile modes pass.
