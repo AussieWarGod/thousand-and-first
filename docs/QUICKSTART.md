@@ -46,7 +46,7 @@ Two tent rows are staked at founding, granted free: the stores above are unchang
 
 ## Safety and compatibility
 
-- A world started before this version keeps the opening it was given. Its receipt is the older shape, so no tent-row lots are staked for it and nothing it already holds is put at risk by the new ones.
+- A world whose receipt predates the tent-row shelter obligation keeps its original opening: no tent-row lots are retroactively staked for that receipt. Older worlds whose receipts already carry the shelter obligation retain it; they are not treated as pre-shelter worlds merely because they predate founders.
 - A world founded before founders existed never gains them. Its receipt decodes with no cohort, re-encodes byte for byte as it was written, and reports itself finished on every load, zone activation and end-turn wake. A world founded with the founders option off is written the same way and is indistinguishable from it.
 - The selected parasang is reserved before dynamic villages, lairs, or encounters claim it. Only the heart apron, supply approach, the two shelter lots, and the two-cell approach each lot's door opens onto are prepared; the rest of the wilderness remains intact. Nearby danger is still possible.
 - Creatures, loose items, and liquid-bearing objects on required cells are relocated when safe. Stairs or an unsafe preparation result stop the bootstrap.
