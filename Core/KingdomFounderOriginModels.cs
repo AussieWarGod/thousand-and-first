@@ -16,12 +16,36 @@ namespace ThousandAndFirst
 		Completed = 2,
 
 		/// <summary>
-		/// The accounting cannot be settled either way and never will be. Terminal: this founder's
-		/// count is honestly missing from the tally, is said once, and is never retried. Reached
-		/// only from a state the world could not have produced without an interruption inside the
-		/// two-write block, or from a foreign or corrupt reading.
+		/// The accounting cannot be settled either way and never will be. Terminal, said once, and
+		/// never retried. Note what it does NOT claim: not that this founder is missing from the
+		/// tally. An interruption after the increment RETAINS it, and nothing left behind can tell
+		/// that case from one before it, so the tally is left exactly as it stands and described as
+		/// unresolved rather than as short. Reached only from a state the world could not have
+		/// produced without an interruption inside the two-write block, from a name held in the
+		/// wrong property table, or from a foreign or corrupt reading.
 		/// </summary>
 		Quarantined = 3
+	}
+
+	/// <summary>
+	/// Which of the engine's two property tables a name actually occupies. The tables are separate
+	/// dictionaries, so a name can be in the text one, the number one, NEITHER, or BOTH, and asking
+	/// only about the text table cannot tell "absent" apart from "present as a number".
+	/// </summary>
+	internal enum KingdomFounderPropertyShape
+	{
+		/// <summary>In neither table.</summary>
+		Absent = 0,
+
+		/// <summary>In the text table only, which is the only shape this accounting writes.
+		/// </summary>
+		Text = 1,
+
+		/// <summary>In the number table only. Not ours, and it is not treated as absent.</summary>
+		Number = 2,
+
+		/// <summary>In both tables at once. Ambiguous by construction.</summary>
+		Both = 3
 	}
 
 	/// <summary>What one accounting attempt did.</summary>

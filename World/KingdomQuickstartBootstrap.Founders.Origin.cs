@@ -36,10 +36,9 @@ namespace ThousandAndFirst
 
 			public string CityId { get; private set; }
 
-			public bool HasReceipt()
+			public KingdomFounderPropertyShape ReceiptShape()
 			{
-				return Body != null
-					&& Body.HasStringProperty(KingdomFounderOriginCodec.ReceiptProperty);
+				return Shape(KingdomFounderOriginCodec.ReceiptProperty);
 			}
 
 			public string RawReceipt()
@@ -57,9 +56,26 @@ namespace ThousandAndFirst
 					Body.SetStringProperty(KingdomFounderOriginCodec.ReceiptProperty, Wire);
 			}
 
-			public bool HasOrigin()
+			public KingdomFounderPropertyShape OriginShape()
 			{
-				return Body != null && Body.HasStringProperty(OriginProperty);
+				return Shape(OriginProperty);
+			}
+
+			/// <summary>
+			/// Which of the engine's two property dictionaries hold this name. They are separate
+			/// tables under one namespace, so a text-only question cannot tell an absent name from
+			/// one held as a number, and this accounting must never mistake the second for the
+			/// first.
+			/// </summary>
+			private KingdomFounderPropertyShape Shape(string Name)
+			{
+				if (Body == null) return KingdomFounderPropertyShape.Absent;
+				bool text = Body.HasStringProperty(Name);
+				bool number = Body.HasIntProperty(Name);
+				if (text && number) return KingdomFounderPropertyShape.Both;
+				if (number) return KingdomFounderPropertyShape.Number;
+				return text ? KingdomFounderPropertyShape.Text
+					: KingdomFounderPropertyShape.Absent;
 			}
 
 			public string RawOrigin()
@@ -107,8 +123,12 @@ namespace ThousandAndFirst
 				Reason = "the founder origin accounting had no settlement or body";
 				return KingdomFounderOriginOutcome.Quarantined;
 			}
+			// The canonical settlement identity, not the ground it happens to stand on: a later
+			// incarnation seated on the same first-claimed zone is a DIFFERENT settlement, and its
+			// tally is its own. Binding the location would let one incarnation's completed proof
+			// silence another's obligation.
 			return KingdomFounderOriginEngine.Account(new FounderOriginHost(Body,
-				System.OriginCounts, System.SettlementIdentityFirstClaimedZone),
+				System.OriginCounts, System.CurrentSettlementId),
 				Receipt.ProfileKey, out Reason);
 		}
 	}

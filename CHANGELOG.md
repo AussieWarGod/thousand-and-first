@@ -29,10 +29,17 @@ below it.
   raise it inside their own protocol, so five citizens already here plus four founders is nine.
   Where an interruption falls between the label and the increment, the outcome cannot be told from
   the tally — an unrelated arrival can leave it reading exactly what a finished count would have
-  left, and counter equality therefore never authorises completion — so that one founder's
-  contribution is refused in the open, once, and never retried. That is a deliberate safety policy
-  rather than a claim of fully automatic forward recovery: the world stays playable, the founder
-  stays on the roll, and the tally is honestly short by one instead of silently wrong either way. A save cut in the gap between the four bodies being placed
+  left, and counter equality therefore never authorises completion — so that founder's accounting
+  is declared unresolved in the open, once, and never retried. It is not declared SHORT: an
+  interruption after the increment retains it, and the two cases cannot be told apart afterwards,
+  so the tally is left exactly as it stands. That is a deliberate safety policy rather than a claim
+  of fully automatic forward recovery: the world stays playable and the founder is named, enrolled
+  and on the roll. Identities are bound to the canonical settlement, not to the ground it stands
+  on, so a later incarnation on the same first-claimed zone cannot inherit another's proof; a name
+  found in the engine's number-property table, or in both tables at once, stops the accounting
+  before any write and is left exactly where it stands as evidence; and identities must survive
+  strict UTF-8 unchanged, so a control character or an unpaired surrogate — which the replacement
+  encoder would fold into one indistinguishable value — is refused rather than written down. A save cut in the gap between the four bodies being placed
   and their identities being published is recovered from the ground: each founder wears a
   reservation minted from the camp's own frozen ground, so a wake adopts four that are already
   standing rather than raising four more, and refuses outright — once, and permanently — on a party

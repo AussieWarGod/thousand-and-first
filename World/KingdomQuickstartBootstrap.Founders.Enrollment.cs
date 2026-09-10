@@ -79,13 +79,6 @@ namespace ThousandAndFirst
 			string accounting;
 			KingdomFounderOriginOutcome counted = AccountFounderOrigin(System, Body, Receipt,
 				out accounting);
-			if (counted == KingdomFounderOriginOutcome.Quarantined)
-				// Terminal for this founder and said once. The settlement stays playable and the
-				// founder stays on the roll; only the origin tally is honestly short, and it says
-				// so rather than being guessed at.
-				AnnounceFoundersOnce(Game, Receipt, "Founder " + Index
-					+ "'s origin could not be counted safely (" + accounting + "). They stay on "
-					+ "your roll; the origin tally is short by one and will not be guessed at.");
 			KingdomCityBook book;
 			int residentId;
 			if (!KingdomResidents.TryEnsureRow(System, Body, out book, out residentId))
@@ -93,6 +86,15 @@ namespace ThousandAndFirst
 				Failure = "A founding citizen could not be put on the roll.";
 				return false;
 			}
+			// Said only once the roll row actually exists, and said without a number. The refusal
+			// means the accounting is UNRESOLVED, not that a count is missing: an interruption
+			// after the increment retains it, and this cannot tell that case from one before it.
+			// Claiming a deficit would be as much of a guess as claiming there is none.
+			if (counted == KingdomFounderOriginOutcome.Quarantined)
+				AnnounceFoundersOnce(Game, Receipt, "Founder " + Index
+					+ "'s origin accounting is unresolved (" + accounting + "). They are named, "
+					+ "enrolled and on your roll; only whether the origin tally already holds them "
+					+ "cannot be established, so it is left exactly as it stands and not retried.");
 			return true;
 		}
 	}

@@ -715,7 +715,14 @@ namespace ThousandAndFirst.Tests
 			string adapter = TestMain.ReadRepositoryText(
 				"World/KingdomQuickstartBootstrap.Founders.Origin.cs");
 			StringAssert.Contains("System.OriginCounts", adapter);
-			StringAssert.Contains("System.SettlementIdentityFirstClaimedZone", adapter);
+			// The canonical settlement identity, not the ground it stands on: a later incarnation
+			// on the same first-claimed zone is a different settlement with its own tally.
+			StringAssert.Contains("System.CurrentSettlementId", adapter);
+			StringAssert.DoesNotContain("SettlementIdentityFirstClaimedZone", adapter);
+			// Both property tables are asked about, so a number-table collision cannot read as
+			// absent and let this write its own value beside somebody else's.
+			StringAssert.Contains("Body.HasIntProperty(Name)", adapter);
+			StringAssert.Contains("KingdomFounderPropertyShape.Both", adapter);
 			// The law itself may not name an engine type, so it can be driven against an adversary.
 			foreach (string relative in new[]
 			{

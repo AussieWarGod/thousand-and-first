@@ -31,9 +31,10 @@ namespace ThousandAndFirst
 	/// That quarantine is a SAFETY POLICY, not a claim of fully automatic forward recovery. A
 	/// two-write pair across a body property and a shared aggregate cannot be recovered
 	/// automatically in every case, and this does not pretend otherwise: where it cannot prove
-	/// which side of the increment an interruption fell on, it says so, stops, and leaves the
-	/// settlement playable with one honest gap in a tally rather than a silent double count or a
-	/// silent undercount nobody is told about. The announcement is bounded to at most once per
+	/// which side of the increment an interruption fell on, it says so, stops, and leaves the tally
+	/// exactly as it stands rather than risking a silent double count. It does not claim the tally
+	/// is short: an interruption after the increment retains it, and the whole point is that the
+	/// two cases cannot be told apart afterwards. The announcement is bounded to at most once per
 	/// obligation, because the terminal state is written on the body it belongs to.
 	/// </para>
 	/// </summary>
@@ -58,8 +59,26 @@ namespace ThousandAndFirst
 				return KingdomFounderOriginOutcome.Quarantined;
 			}
 
+			// The two property tables are asked about BEFORE anything is written, and a name that
+			// is not purely ours is refused with its evidence left exactly where it stands. A
+			// number-table collision that read as "absent" would let this write its own value
+			// beside somebody else's and count the founder a second time.
+			KingdomFounderPropertyShape receiptShape = Host.ReceiptShape();
+			KingdomFounderPropertyShape originShape = Host.OriginShape();
+			if (receiptShape == KingdomFounderPropertyShape.Number
+				|| receiptShape == KingdomFounderPropertyShape.Both
+				|| originShape == KingdomFounderPropertyShape.Number
+				|| originShape == KingdomFounderPropertyShape.Both)
+			{
+				// Deliberately writes NOTHING, not even the terminal record: the wrong-typed value
+				// is the evidence, and overwriting it to make this attempt tidy would destroy the
+				// only thing that says what happened here.
+				Reason = "a founder accounting name was held in the wrong property table";
+				return KingdomFounderOriginOutcome.Quarantined;
+			}
+
 			KingdomFounderOriginReceipt held = null;
-			if (Host.HasReceipt())
+			if (receiptShape == KingdomFounderPropertyShape.Text)
 			{
 				if (!KingdomFounderOriginCodec.TryDecode(Host.RawReceipt(), out held))
 					return Quarantine(Host, shape, out Reason,
@@ -83,7 +102,7 @@ namespace ThousandAndFirst
 			// sufficient in exactly one direction: it is written immediately before the increment,
 			// so its ABSENCE proves the increment did not happen. Its presence proves nothing
 			// about the counter at all.
-			if (Host.HasOrigin())
+			if (originShape == KingdomFounderPropertyShape.Text)
 			{
 				string origin = Host.RawOrigin();
 				if (string.Equals(origin, Profile, StringComparison.Ordinal))
@@ -123,7 +142,7 @@ namespace ThousandAndFirst
 			Host.WriteTally(Profile, now + 1);
 
 			int after;
-			if (!Host.HasOrigin()
+			if (Host.OriginShape() != KingdomFounderPropertyShape.Text
 				|| !string.Equals(Host.RawOrigin(), Profile, StringComparison.Ordinal)
 				|| !Host.TryTally(Profile, out after) || after != now + 1)
 				return Quarantine(Host, shape, out Reason,
@@ -154,7 +173,7 @@ namespace ThousandAndFirst
 			if (wire == null) return false;
 			Host.WriteReceipt(wire);
 			KingdomFounderOriginReceipt read;
-			return Host.HasReceipt()
+			return Host.ReceiptShape() == KingdomFounderPropertyShape.Text
 				&& string.Equals(Host.RawReceipt(), wire, StringComparison.Ordinal)
 				&& KingdomFounderOriginCodec.TryDecode(Host.RawReceipt(), out read)
 				&& read.State == Receipt.State && read.Before == Receipt.Before

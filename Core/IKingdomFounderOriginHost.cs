@@ -19,6 +19,13 @@ namespace ThousandAndFirst
 	/// property explicitly set to the empty string are different facts, and the accounting refuses
 	/// the second rather than treating it as the first.
 	/// </para>
+	/// <para>
+	/// Presence is reported as a SHAPE, not a boolean, because the engine keeps text and number
+	/// properties in two separate tables under one namespace. A name present only in the number
+	/// table would read as absent to a text-only question, and the accounting would then write its
+	/// own value beside it and count the founder a second time. Every reading here therefore says
+	/// which tables the name is actually in.
+	/// </para>
 	/// </summary>
 	internal interface IKingdomFounderOriginHost
 	{
@@ -29,18 +36,18 @@ namespace ThousandAndFirst
 		/// </summary>
 		string CityId { get; }
 
-		/// <summary>Whether the body carries the accounting property at all.</summary>
-		bool HasReceipt();
+		/// <summary>Which tables the accounting property occupies.</summary>
+		KingdomFounderPropertyShape ReceiptShape();
 
 		/// <summary>The accounting property's exact text, taken raw. Meaningless unless
-		/// <see cref="HasReceipt"/>.</summary>
+		/// <see cref="ReceiptShape"/> is <see cref="KingdomFounderPropertyShape.Text"/>.</summary>
 		string RawReceipt();
 
 		/// <summary>Writes the accounting property. A direct write; it must not dispatch.</summary>
 		void WriteReceipt(string Wire);
 
-		/// <summary>Whether the body carries an origin label at all.</summary>
-		bool HasOrigin();
+		/// <summary>Which tables the origin label occupies.</summary>
+		KingdomFounderPropertyShape OriginShape();
 
 		/// <summary>The origin label's exact text, taken raw.</summary>
 		string RawOrigin();

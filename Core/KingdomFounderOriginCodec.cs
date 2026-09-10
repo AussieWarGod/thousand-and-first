@@ -32,6 +32,13 @@ namespace ThousandAndFirst
 		internal static string Encode(KingdomFounderOriginReceipt Receipt)
 		{
 			if (!Valid(Receipt)) return null;
+			try { return Framed(Receipt); }
+			catch (EncoderFallbackException) { return null; }
+			catch (ArgumentException) { return null; }
+		}
+
+		private static string Framed(KingdomFounderOriginReceipt Receipt)
+		{
 			string body = Tag + "|" + B64(Receipt.BodyId) + "|" + B64(Receipt.Profile)
 				+ "|" + B64(Receipt.CityId)
 				+ "|" + Receipt.Before.ToString(CultureInfo.InvariantCulture)
@@ -80,28 +87,53 @@ namespace ThousandAndFirst
 					|| Receipt.State == KingdomFounderOriginState.Quarantined);
 		}
 
+		/// <summary>
+		/// A bounded, unambiguously encodable identity.
+		/// <para>
+		/// Every character must survive a round trip through strict UTF-8 as itself. A control
+		/// character or an unpaired surrogate does not: the replacement-fallback encoder turns any
+		/// of them into U+FFFD, so two DIFFERENT bad identities encode to the SAME bytes and
+		/// therefore to the same digest. An identity that cannot be told apart from another one is
+		/// not an identity, so it is refused here, before it is ever written down.
+		/// </para>
+		/// </summary>
 		private static bool Identity(string Value)
 		{
-			return !string.IsNullOrWhiteSpace(Value) && Value.Length <= MaximumFieldLength
-				&& Value.IndexOf('|') < 0 && Value.IndexOf('\0') < 0
-				&& Value.IndexOf('\r') < 0 && Value.IndexOf('\n') < 0;
+			if (string.IsNullOrWhiteSpace(Value) || Value.Length > MaximumFieldLength
+				|| Value.IndexOf('|') >= 0) return false;
+			for (int i = 0; i < Value.Length; i++)
+			{
+				char letter = Value[i];
+				if (char.IsControl(letter)) return false;
+				if (char.IsHighSurrogate(letter))
+				{
+					if (i + 1 >= Value.Length || !char.IsLowSurrogate(Value[i + 1])) return false;
+					i++;
+					continue;
+				}
+				if (char.IsLowSurrogate(letter)) return false;
+			}
+			return true;
 		}
+
+		/// <summary>Throws rather than substituting U+FFFD, in both directions.</summary>
+		private static readonly UTF8Encoding Strict = new UTF8Encoding(false, true);
 
 		private static string B64(string Value)
 		{
-			return Convert.ToBase64String(Encoding.UTF8.GetBytes(Value ?? ""));
+			return Convert.ToBase64String(Strict.GetBytes(Value ?? ""));
 		}
 
 		private static string Text(string Value)
 		{
-			return Encoding.UTF8.GetString(Convert.FromBase64String(Value));
+			return Strict.GetString(Convert.FromBase64String(Value));
 		}
 
 		private static string Digest(string Value)
 		{
 			byte[] digest;
 			using (SHA256 sha = SHA256.Create())
-				digest = sha.ComputeHash(Encoding.UTF8.GetBytes(Value ?? ""));
+				digest = sha.ComputeHash(Strict.GetBytes(Value ?? ""));
 			StringBuilder text = new StringBuilder(64);
 			for (int i = 0; i < digest.Length; i++)
 				text.Append(digest[i].ToString("x2", CultureInfo.InvariantCulture));

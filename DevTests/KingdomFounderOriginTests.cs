@@ -320,6 +320,69 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.AreEqual(7, world.Tallies["canyon"]);
 		}
 
+		[TestCase("receipt")]
+		[TestCase("origin")]
+		public void ANameHeldInTheNumberTableIsNotAbsentAndStopsEverything(string which)
+		{
+			// Text and number properties are two separate tables under one namespace. Asking only
+			// the text table would read a number-table collision as "absent", write this
+			// accounting's own value beside it, and count the founder a second time.
+			string name = which == "receipt" ? KingdomFounderOriginCodec.ReceiptProperty
+				: "KingdomOrigin";
+			World world = new World();
+			world.SetTally(4);
+			world.PutNumber("f", name, 7);
+			ClassicAssert.AreEqual(KingdomFounderPropertyShape.Number, world.Shape("f", name));
+			ClassicAssert.AreEqual(KingdomFounderOriginOutcome.Quarantined, world.Account("f"));
+			ClassicAssert.AreEqual(4, world.Tally(), "nothing is counted");
+			ClassicAssert.IsFalse(world.HasOrigin("f"), "and no label is written");
+			// The wrong-typed value IS the evidence. It is left exactly where it stands, and this
+			// accounting does not even write its own terminal record beside it.
+			ClassicAssert.IsTrue(world.HasNumber("f", name));
+			ClassicAssert.IsFalse(world.HasReceipt("f"));
+		}
+
+		[TestCase("receipt")]
+		[TestCase("origin")]
+		public void ANameHeldInBothTablesIsAmbiguousAndStopsEverything(string which)
+		{
+			string name = which == "receipt" ? KingdomFounderOriginCodec.ReceiptProperty
+				: "KingdomOrigin";
+			World world = new World();
+			world.SetTally(4);
+			world.PutNumber("f", name, 7);
+			if (which == "receipt")
+			{
+				string wire = KingdomFounderOriginCodec.Encode(new KingdomFounderOriginReceipt(
+					"f", Profile, City, 4, KingdomFounderOriginState.Completed));
+				world.PutReceipt("f", wire);
+			}
+			else world.PutOrigin("f", Profile);
+			ClassicAssert.AreEqual(KingdomFounderPropertyShape.Both, world.Shape("f", name));
+			// Even a perfectly good completed receipt does not settle anything while the same name
+			// also stands in the other table: which of the two is the proof cannot be said.
+			ClassicAssert.AreEqual(KingdomFounderOriginOutcome.Quarantined, world.Account("f"));
+			ClassicAssert.AreEqual(4, world.Tally());
+			ClassicAssert.IsTrue(world.HasNumber("f", name), "the evidence is retained");
+		}
+
+		[Test]
+		public void TwoIncarnationsOnTheSameGroundCannotShareOneProof()
+		{
+			// The obligation binds the canonical settlement identity, not the ground it stands on.
+			// A later incarnation seated on the same first-claimed zone is a different settlement
+			// with its own tally, and one incarnation's completed proof must not silence the
+			// other's obligation.
+			World world = new World();
+			world.Settlement = "settlement-1";
+			ClassicAssert.AreEqual(KingdomFounderOriginOutcome.Applied, world.Account("f"));
+			ClassicAssert.AreEqual(1, world.Tally());
+			world.Settlement = "settlement-2";
+			ClassicAssert.AreEqual(KingdomFounderOriginOutcome.Quarantined, world.Account("f"),
+				"the first incarnation's proof is not this one's");
+			ClassicAssert.AreEqual(1, world.Tally());
+		}
+
 		// --- the wire ----------------------------------------------------------------------------
 
 		[Test]
@@ -356,7 +419,11 @@ namespace ThousandAndFirst.Tests
 				new KingdomFounderOriginReceipt("body", Profile, City, 0,
 					(KingdomFounderOriginState)9)), "an unknown state");
 			foreach (string bad in new[] { null, "", "   ", "has|pipe", "has\nnewline",
-				new string('x', 513) })
+				new string('x', 513),
+				// Root review: strict UTF-8. The replacement-fallback encoder turns EVERY one of
+				// these into U+FFFD, so two different bad identities would encode to the same
+				// bytes and the same digest - an identity that cannot be told from another one.
+				"has\ttab", "\ud800", "\udc00", "lead\ud800trail", "a\u0001b", "\u007f" })
 			{
 				ClassicAssert.IsNull(KingdomFounderOriginCodec.Encode(
 					new KingdomFounderOriginReceipt(bad, Profile, City, 0,
@@ -415,8 +482,13 @@ namespace ThousandAndFirst.Tests
 				+ "recovery", quickstart);
 			StringAssert.Contains("five people who were already here plus four founders is nine",
 				quickstart);
-			StringAssert.Contains("rather than a claim of fully automatic forward recovery",
+			StringAssert.Contains("of fully automatic forward recovery: the world stays playable",
 				TestMain.ReadRepositoryText("CHANGELOG.md"));
+			// And it does not overclaim in the other direction either: an unresolved accounting is
+			// not a proven shortfall, because an interruption after the increment retains it.
+			StringAssert.Contains("It is not declared SHORT",
+				TestMain.ReadRepositoryText("CHANGELOG.md"));
+			StringAssert.Contains("it does not say the tally is short", quickstart);
 			StringAssert.Contains("SAFETY POLICY, not a claim of fully automatic forward recovery",
 				TestMain.ReadRepositoryText("Core/KingdomFounderOriginEngine.cs"));
 		}
@@ -434,6 +506,11 @@ namespace ThousandAndFirst.Tests
 			internal readonly Dictionary<string, int> Tallies = new Dictionary<string, int>();
 			private readonly Dictionary<string, Dictionary<string, string>> Bodies
 				= new Dictionary<string, Dictionary<string, string>>();
+			// The engine keeps text and number properties in two separate tables under one
+			// namespace, so the fake body does too. A test can put a name in either, or in both.
+			private readonly Dictionary<string, Dictionary<string, int>> Numbers
+				= new Dictionary<string, Dictionary<string, int>>();
+			internal string Settlement = City;
 			private int Budget = int.MaxValue;
 			private int MeddleAt = int.MaxValue;
 			private int Writes;
@@ -471,6 +548,33 @@ namespace ThousandAndFirst.Tests
 			}
 
 			internal void PutOrigin(string id, string origin) { Body(id)["KingdomOrigin"] = origin; }
+
+			private Dictionary<string, int> Number(string id)
+			{
+				Dictionary<string, int> body;
+				if (!Numbers.TryGetValue(id, out body))
+				{
+					body = new Dictionary<string, int>();
+					Numbers[id] = body;
+				}
+				return body;
+			}
+
+			/// <summary>Puts a name in the NUMBER table, where a text-only question cannot see it.
+			/// </summary>
+			internal void PutNumber(string id, string name, int value) { Number(id)[name] = value; }
+
+			internal bool HasNumber(string id, string name) { return Number(id).ContainsKey(name); }
+
+			internal KingdomFounderPropertyShape Shape(string id, string name)
+			{
+				bool text = Body(id).ContainsKey(name);
+				bool number = Number(id).ContainsKey(name);
+				if (text && number) return KingdomFounderPropertyShape.Both;
+				if (number) return KingdomFounderPropertyShape.Number;
+				return text ? KingdomFounderPropertyShape.Text
+					: KingdomFounderPropertyShape.Absent;
+			}
 
 			internal bool HasReceipt(string id)
 			{
@@ -524,7 +628,7 @@ namespace ThousandAndFirst.Tests
 				internal Host(World where, string id) { Where = where; Id = id; }
 
 				public string BodyId { get { return Id; } }
-				public string CityId { get { return City; } }
+				public string CityId { get { return Where.Settlement; } }
 
 				private void Spend()
 				{
@@ -533,7 +637,10 @@ namespace ThousandAndFirst.Tests
 
 				private void Wrote() { Where.Wrote(); }
 
-				public bool HasReceipt() { return Where.HasReceipt(Id); }
+				public KingdomFounderPropertyShape ReceiptShape()
+				{
+					return Where.Shape(Id, KingdomFounderOriginCodec.ReceiptProperty);
+				}
 				public string RawReceipt() { return Where.Receipt(Id); }
 				public void WriteReceipt(string Wire)
 				{
@@ -541,7 +648,10 @@ namespace ThousandAndFirst.Tests
 					Where.PutReceipt(Id, Wire);
 					Wrote();
 				}
-				public bool HasOrigin() { return Where.HasOrigin(Id); }
+				public KingdomFounderPropertyShape OriginShape()
+				{
+					return Where.Shape(Id, "KingdomOrigin");
+				}
 				public string RawOrigin() { return Where.Origin(Id); }
 				public void WriteOrigin(string Origin)
 				{
