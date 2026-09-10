@@ -28,10 +28,17 @@ namespace ThousandAndFirst
 		internal sealed class StockSnapshot
 		{
 			internal readonly GameObject Stockpile;
+			internal readonly Inventory Inventory;
 			internal readonly List<GameObject> InventoryList;
+			internal readonly Cell GroundCell;
+			internal readonly Physics Physics;
 			internal readonly Row[] Rows;
-			internal StockSnapshot(GameObject stockpile, List<GameObject> list, Row[] rows)
-			{ Stockpile = stockpile; InventoryList = list; Rows = rows; }
+			internal StockSnapshot(GameObject stockpile, Inventory inventory, List<GameObject> list,
+				Cell cell, Physics physics, Row[] rows)
+			{
+				Stockpile = stockpile; Inventory = inventory; InventoryList = list;
+				GroundCell = cell; Physics = physics; Rows = rows;
+			}
 		}
 
 		internal sealed class WaterSnapshot
@@ -39,10 +46,11 @@ namespace ThousandAndFirst
 			internal readonly GameObject Cask;
 			internal readonly LiquidVolume Volume;
 			internal readonly Cell GroundCell;
+			internal readonly Physics Physics;
 			internal readonly int Drams;
 			internal readonly bool Fresh;
-			internal WaterSnapshot(GameObject cask, LiquidVolume volume, Cell cell, int drams, bool fresh)
-			{ Cask = cask; Volume = volume; GroundCell = cell; Drams = drams; Fresh = fresh; }
+			internal WaterSnapshot(GameObject cask, LiquidVolume volume, Cell cell, Physics physics, int drams, bool fresh)
+			{ Cask = cask; Volume = volume; GroundCell = cell; Physics = physics; Drams = drams; Fresh = fresh; }
 		}
 
 		/// <summary>Re-proves the stockpile by its OWN placed ground cell, its own reference, and
@@ -74,8 +82,18 @@ namespace ThousandAndFirst
 		{
 			Result = null;
 			Failure = "materials stockpile is not a real placed inventory holder";
-			if (!GameObject.Validate(Stockpile) || Stockpile.Inventory == null || Zone == null) return false;
-			List<GameObject> children = Stockpile.Inventory.Objects;
+			if (!GameObject.Validate(Stockpile) || Stockpile.Inventory == null || Zone == null
+				|| Stockpile.Physics == null || Stockpile.Physics._CurrentCell == null) return false;
+			// Eager capture, cask-style (WaterSnapshot): the Inventory part, its Objects list, the
+			// ground Cell and the Physics part are all read HERE, once, so a later comparison is
+			// between two objects each captured at their own moment -- never the same live
+			// reference re-read twice at the same instant, which would prove nothing.
+			Inventory inventory = Stockpile.Inventory;
+			Cell groundCell = Stockpile.Physics._CurrentCell;
+			Physics physics = Stockpile.Physics;
+			if (!ReferenceEquals(inventory.ParentObject, Stockpile))
+			{ Failure = "the stockpile's own Inventory part is not owned by the exact chest reference"; return false; }
+			List<GameObject> children = inventory.Objects;
 			if (children == null) { Failure = "materials stockpile inventory could not be read"; return false; }
 			var rows = new Row[children.Count];
 			var seenRefs = new HashSet<GameObject>();
@@ -118,7 +136,7 @@ namespace ThousandAndFirst
 					return false;
 				}
 			}
-			Result = new StockSnapshot(Stockpile, children, rows);
+			Result = new StockSnapshot(Stockpile, inventory, children, groundCell, physics, rows);
 			Failure = null;
 			return true;
 		}
@@ -127,10 +145,16 @@ namespace ThousandAndFirst
 		/// the chest itself was never replaced or relocated by the production commissioning.</summary>
 		internal static bool SameStockpile(StockSnapshot Before, StockSnapshot After, out string Failure)
 		{
+			// Every comparison here is between two objects each captured at ITS OWN snapshot
+			// moment (see TakeStock's eager capture) -- never the same live reference re-read
+			// twice at the same later instant, which would compare an object to itself and prove
+			// nothing about whether it moved or was replaced in between.
 			Failure = "stockpile identity or its own row list reference changed across commissioning";
 			if (!ReferenceEquals(Before.Stockpile, After.Stockpile)
+				|| !ReferenceEquals(Before.Inventory, After.Inventory)
+				|| !ReferenceEquals(Before.Physics, After.Physics)
 				|| !ReferenceEquals(Before.InventoryList, After.InventoryList)) return false;
-			if (!ReferenceEquals(Before.Stockpile.Physics?._CurrentCell, After.Stockpile.Physics?._CurrentCell))
+			if (!ReferenceEquals(Before.GroundCell, After.GroundCell))
 			{ Failure = "the stockpile's own ground cell changed across commissioning"; return false; }
 			Failure = null;
 			return true;
@@ -177,22 +201,24 @@ namespace ThousandAndFirst
 				return false;
 			if (!GameObject.Validate(cask) || cask.IDIfAssigned != WaterObjectId
 				|| cask.Physics == null || cask.Physics._CurrentCell == null
-				|| !ReferenceEquals(cask.Physics._CurrentCell.ParentZone, Zone))
-			{ Failure = "the resolved cask did not carry its own exact receipt id and ground placement"; return false; }
+				|| !ReferenceEquals(cask.Physics._CurrentCell.ParentZone, Zone)
+				|| cask.Physics._InInventory != null || cask.Physics._Equipped != null)
+			{ Failure = "the resolved cask did not carry its own exact receipt id and exclusive ground custody"; return false; }
 			LiquidVolume volume = cask.GetPart<LiquidVolume>();
 			if (volume == null || !ReferenceEquals(volume.ParentObject, cask))
 			{ Failure = "the receipted cask carries no exact LiquidVolume part"; return false; }
 			bool fresh = KingdomLiquids.HasFreshWater(volume);
 			if (!fresh) { Failure = "the receipted cask no longer carries fresh water"; return false; }
-			Result = new WaterSnapshot(cask, volume, cask.Physics._CurrentCell, volume.Volume, fresh);
+			Result = new WaterSnapshot(cask, volume, cask.Physics._CurrentCell, cask.Physics, volume.Volume, fresh);
 			Failure = null;
 			return true;
 		}
 
 		internal static bool ExactWaterDebit(WaterSnapshot Before, WaterSnapshot After, int ExpectedDrop, out string Failure)
 		{
-			Failure = "the receipted cask, its LiquidVolume part or its ground cell changed identity across commissioning";
+			Failure = "the receipted cask, its LiquidVolume/Physics part or its ground cell changed identity across commissioning";
 			if (!ReferenceEquals(Before.Cask, After.Cask) || !ReferenceEquals(Before.Volume, After.Volume)
+				|| !ReferenceEquals(Before.Physics, After.Physics)
 				|| !ReferenceEquals(Before.GroundCell, After.GroundCell)) return false;
 			if (!Before.Fresh || !After.Fresh) { Failure = "the cask's fresh-water classification did not hold"; return false; }
 			if (After.Drams != Before.Drams - ExpectedDrop)
@@ -235,7 +261,8 @@ namespace ThousandAndFirst
 				|| KingdomConstruction.FindExactId(Zone, Job.OutputId, out GameObject works) != KingdomPhysicalLookupState.Exact)
 			{ Failure = "the new job's linked build output could not be resolved by its exact id"; return false; }
 			if (!GameObject.Validate(works) || works.IDIfAssigned != Job.OutputId || !KingdomConstruction.HasReceipt(works, Job)
-				|| !works.HasPart("r_KingdomPlot") || works.Physics?._CurrentCell?.X != Job.X || works.Physics?._CurrentCell?.Y != Job.Y)
+				|| !works.HasPart("r_KingdomPlot") || works.Physics?._CurrentCell?.X != Job.X || works.Physics?._CurrentCell?.Y != Job.Y
+				|| !ReferenceEquals(works.Physics?._CurrentCell?.ParentZone, Zone))
 			{ Failure = "the new job's linked output does not carry its exact receipt, plot part and ground"; return false; }
 			Failure = null;
 			return true;

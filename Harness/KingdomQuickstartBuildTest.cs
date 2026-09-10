@@ -32,13 +32,21 @@ namespace ThousandAndFirst.Harness
 
 		internal static void Run(XRLGame Game, Zone Zone, string ObservedReceipt, string Command)
 		{
-			KingdomScenarioJournal.Append("QUICKSTART-BUILD-BEGIN", true,
-				Command + "; genuine-production-commission=true");
+			KingdomScenarioJournal.Append("QUICKSTART-BUILD-BEGIN", true, Command + "; boot-only=false"
+				+ "; genuine-production-commission=true");
 			string stopStep = TryRun(Game, Zone, ObservedReceipt, out string refusal, out bool refused);
-			bool ok = stopStep == null;
+			bool succeeded = stopStep == null;
+			// A live re-check immediately before the success message, AFTER all five
+			// census-after reads: the checks inside TryRun stop as soon as commissioning itself
+			// returns, so nothing downstream of that point has actually verified the scope is
+			// still clear until here. A leak found only now must never be reported as success.
+			if (succeeded && !KingdomQuickstartBuildCensus.SurveyScopeClear())
+			{ succeeded = false; refused = true; refusal = "a survey scope leaked after success"; stopStep = "post-success"; }
+			bool ok = succeeded;
 			string outcome = ok
 				? Command + "; commissioned=true; timber-debit=exact; water-debit=exact"
-					+ "; job-projected=true; survey-scope-clear=true; boot-only=false; build-refused=false"
+					+ "; job-projected=true; survey-scope-clear=" + KingdomQuickstartBuildCensus.SurveyScopeClear()
+					+ "; boot-only=false; build-refused=false"
 				: refused
 					? Command + "; build-refused=true; boot-only=false; step=" + stopStep
 						+ "; survey-scope-clear=" + KingdomQuickstartBuildCensus.SurveyScopeClear()
@@ -83,8 +91,8 @@ namespace ThousandAndFirst.Harness
 				// Step 1: quote (Core/KingdomCharterPart.Commission.cs:73-74).
 				bool quoted = KingdomPlots.TryQuoteCommission(system, Zone, entry, null,
 					KingdomPlotRules.PlotSize.None, out KingdomPlotQuote quote, out string quoteFailure);
-				KingdomScenarioJournal.Append("QUICKSTART-BUILD-QUOTE", quoted,
-					quoted ? "waterDrams=" + quote.WaterDrams : "quoteFailure=" + quoteFailure);
+				KingdomScenarioJournal.Append("QUICKSTART-BUILD-QUOTE", quoted, "boot-only=false; "
+					+ (quoted ? "waterDrams=" + quote.WaterDrams : "quoteFailure=" + quoteFailure));
 				if (!KingdomQuickstartBuildCensus.SurveyScopeClear())
 				{ Refusal = "a survey scope leaked out of the quote step"; return "authority"; }
 				if (!quoted)
@@ -98,8 +106,8 @@ namespace ThousandAndFirst.Harness
 					blocked = "water-short; stored=" + stored + "; needed=" + quote.WaterDrams;
 				else if (!KingdomMaterials.CanPay(Zone, BuildKey, out string materialBlocker))
 					blocked = "materials; blocker=" + materialBlocker;
-				KingdomScenarioJournal.Append("QUICKSTART-BUILD-CANPAY", blocked == null,
-					blocked == null ? "blocked=false" : "blocked=true; reason=" + blocked);
+				KingdomScenarioJournal.Append("QUICKSTART-BUILD-CANPAY", blocked == null, "boot-only=false; "
+					+ (blocked == null ? "blocked=false" : "blocked=true; reason=" + blocked));
 				if (!KingdomQuickstartBuildCensus.SurveyScopeClear())
 				{ Refusal = "a survey scope leaked out of the CanPay step"; return "authority"; }
 				if (blocked != null)
@@ -108,8 +116,8 @@ namespace ThousandAndFirst.Harness
 				// Step 3: commit the exact quote (:103-104).
 				bool commissioned = KingdomCommission.Commission(system, BuildKey, null,
 					KingdomPlotRules.PlotSize.None, quote, out string commissionFailure);
-				KingdomScenarioJournal.Append("QUICKSTART-BUILD-COMMISSION", commissioned,
-					commissioned ? "commissioned=true" : "commissionFailure=" + commissionFailure);
+				KingdomScenarioJournal.Append("QUICKSTART-BUILD-COMMISSION", commissioned, "boot-only=false; "
+					+ (commissioned ? "commissioned=true" : "commissionFailure=" + commissionFailure));
 				if (!KingdomQuickstartBuildCensus.SurveyScopeClear())
 				{ Refusal = "a survey scope leaked out of the production commissioning call"; return "authority"; }
 				if (!commissioned)
@@ -119,7 +127,13 @@ namespace ThousandAndFirst.Harness
 					return "commission";
 				}
 
-				if (!KingdomQuickstartBuildCensus.TakeStock(Zone, stockpile, false,
+				// Re-resolve by the receipt id again, post-commission: FindExactId's own
+				// duplicate-ID rejection means a new object minted with the same id during
+				// commissioning is caught HERE, before TakeStock ever runs against it.
+				if (!KingdomQuickstartBuildCensus.TryStockpile(Zone, receipt.StockpileObjectId,
+					out GameObject stockpileAfterCommission, out string reresolveFailure))
+				{ Refusal = reresolveFailure; return "census-after"; }
+				if (!KingdomQuickstartBuildCensus.TakeStock(Zone, stockpileAfterCommission, false,
 					out var stockAfter, out string afterFailure))
 				{ Refusal = afterFailure; return "census-after"; }
 				if (!KingdomQuickstartBuildCensus.SameStockpile(stockBefore, stockAfter, out string sameFailure))

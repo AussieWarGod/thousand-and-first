@@ -77,6 +77,80 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("build-refused=false", source);
 		}
 
+		[Test]
+		public void SameStockpileComparesEagerlyCapturedRefsNeverTheSameLiveObjectTwice()
+		{
+			string source = Read(Census);
+			string body = Flat(Method(source, "internal static bool SameStockpile("));
+			StringAssert.Contains("!ReferenceEquals(Before.GroundCell, After.GroundCell)", body);
+			StringAssert.Contains("!ReferenceEquals(Before.Inventory, After.Inventory)", body);
+			// The capture happens in TakeStock, not lazily via Stockpile.Physics at compare time.
+			string take = Flat(Method(source, "internal static bool TakeStock("));
+			StringAssert.Contains("Cell groundCell = Stockpile.Physics._CurrentCell;", take);
+			StringAssert.Contains("Inventory inventory = Stockpile.Inventory;", take);
+		}
+
+		[Test]
+		public void SuccessPathReChecksSurveyScopeLiveAfterCensusAfterBeforeReportingSuccess()
+		{
+			string source = Read(Test);
+			string body = Flat(Method(source, "internal static void Run("));
+			Ordered(body,
+				"string stopStep = TryRun(",
+				"if (succeeded && !KingdomQuickstartBuildCensus.SurveyScopeClear())",
+				"succeeded = false; refused = true; refusal = \"a survey scope leaked after success\";");
+		}
+
+		[Test]
+		public void IntermediateStepRowsCarryTheBootOnlyDisclosureToken()
+		{
+			string source = Read(Test);
+			foreach (string call in new[]
+			{
+				"Append(\"QUICKSTART-BUILD-QUOTE\", quoted, \"boot-only=false; \"",
+				"Append(\"QUICKSTART-BUILD-CANPAY\", blocked == null, \"boot-only=false; \"",
+				"Append(\"QUICKSTART-BUILD-COMMISSION\", commissioned, \"boot-only=false; \"",
+			})
+				StringAssert.Contains(call, source);
+		}
+
+		[Test]
+		public void CaskCustodyIsExclusiveGroundBothSnapshotsWithPhysicsRefCompared()
+		{
+			string source = Read(Census);
+			string tryWater = Flat(Method(source, "internal static bool TryWater("));
+			StringAssert.Contains("cask.Physics._InInventory != null || cask.Physics._Equipped != null", tryWater);
+			string debit = Flat(Method(source, "internal static bool ExactWaterDebit("));
+			StringAssert.Contains("!ReferenceEquals(Before.Physics, After.Physics)", debit);
+		}
+
+		[Test]
+		public void ChestIsReResolvedByReceiptIdAfterCommissionBeforeTakingItsAfterCensus()
+		{
+			string source = Read(Test);
+			string body = Flat(Method(source, "private static string TryRun("));
+			Ordered(body,
+				"KingdomCommission.Commission(system, BuildKey, null,",
+				"KingdomQuickstartBuildCensus.TryStockpile(Zone, receipt.StockpileObjectId,",
+				"out GameObject stockpileAfterCommission,",
+				"KingdomQuickstartBuildCensus.TakeStock(Zone, stockpileAfterCommission, false,");
+		}
+
+		[Test]
+		public void InventoryPartOwnershipIsCheckedAgainstTheExactChestReference()
+		{
+			string source = Read(Census);
+			StringAssert.Contains("!ReferenceEquals(inventory.ParentObject, Stockpile)", source);
+		}
+
+		[Test]
+		public void ProjectedOutputGroundZoneReferenceIsCheckedNotOnlyXY()
+		{
+			string source = Read(Census);
+			StringAssert.Contains(
+				"!ReferenceEquals(works.Physics?._CurrentCell?.ParentZone, Zone)", source);
+		}
+
 		private static string Read(string Path) { return TestMain.ReadRepositoryText(Path); }
 		private static string Flat(string Source) { return Regex.Replace(Source, @"\s+", " "); }
 
