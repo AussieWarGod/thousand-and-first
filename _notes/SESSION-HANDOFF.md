@@ -2,8 +2,8 @@
 
 ## Current unreleased Kingdom Quickstart founding cohort
 
-3078 staged sources; 437,103 physical lines; 1434 direct-XRL; zero cap failures; 3109 generated
-cold-stage files. Exact inventory `d06aa71c4207418936123781cfc7bdd26069f7f273f9301ef5e6a1ca712c7dd5`.
+3078 staged sources; 437,114 physical lines; 1434 direct-XRL; zero cap failures; 3109 generated
+cold-stage files. Exact inventory `e1ddecb76e357905d90bbc40ad8414b68efc38f2b532d19ec61d2df4a5053ce9`.
 Kingdom Quickstart founds a world with four founding citizens on the approach at turn 1, raised in
 one custody scope (zero-or-four), published by identity before any irreversible write, then enrolled
 forward-only and idempotently under a new `Founding` reason. The receipt gains a durable founders
@@ -13,7 +13,7 @@ founders. Each founder is counted into the shared per-profile origin tally by AD
 own durable identity-bound obligation, so five prior citizens plus four founders is nine; mixed
 state after an interruption between the label and the increment is refused in the open, once, per
 obligation, as a stated safety policy rather than a recovery claim.
-Four compile modes, both engine-free suites (14,137 / 5,291, zero skips) and the Tools
+Four compile modes, both engine-free suites (14,147 / 5,301, zero skips) and the Tools
 suite (627) are green. The six-profile boot matrix at seed `#43101` is OWED before merge, along with
 the `found-first-city`, `first-guest-native-check` and `guide-topics-native-check` personas.
 

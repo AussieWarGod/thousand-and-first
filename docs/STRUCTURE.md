@@ -23,10 +23,10 @@ python3 Tools/check-structure.py --release
 The Kingdom Quickstart founding cohort over the stockpile deposit custody fix, the Kingdom
 Quickstart shelter ingress, the render-only city sight, the stockpile unit capacity, the
 first-basin water store and the Kingdom Quickstart
-tent rows reports 3078 staged production C# files and 437,103 physical lines.
+tent rows reports 3078 staged production C# files and 437,114 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`d06aa71c4207418936123781cfc7bdd26069f7f273f9301ef5e6a1ca712c7dd5`. The census reports
+`e1ddecb76e357905d90bbc40ad8414b68efc38f2b532d19ec61d2df4a5053ce9`. The census reports
 1434 files with direct `XRL` imports; 0 of those exceed the line limit.
 
 The founding-cohort delta over the retained draft below is ten added production sources and no

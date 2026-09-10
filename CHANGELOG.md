@@ -38,8 +38,11 @@ below it.
   on, so a later incarnation on the same first-claimed zone cannot inherit another's proof; a name
   found in the engine's number-property table, or in both tables at once, stops the accounting
   before any write and is left exactly where it stands as evidence; and identities must survive
-  strict UTF-8 unchanged, so a control character or an unpaired surrogate — which the replacement
-  encoder would fold into one indistinguishable value — is refused rather than written down. A save cut in the gap between the four bodies being placed
+  strict UTF-8 unchanged, so an unpaired surrogate — which the replacement encoder would fold into
+  one indistinguishable value — is refused rather than written down, and a control character is
+  refused by policy because a pipe-delimited, line-oriented wire is no place to smuggle one. The
+  reader itself never raises: hashing is an encoding step, so the digest is taken inside the
+  refusal boundary and a raw wire carrying a lone surrogate is answered false rather than throwing. A save cut in the gap between the four bodies being placed
   and their identities being published is recovered from the ground: each founder wears a
   reservation minted from the camp's own frozen ground, so a wake adopts four that are already
   standing rather than raising four more, and refuses outright — once, and permanently — on a party
@@ -167,10 +170,10 @@ below it.
   exactly what it read before.
 
 > **Current unreleased census — exact structural gate passed.** Current 3078-file census is line-cap green:
-> 437,103 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> 437,114 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1434 files, 0 of them over the line limit. Inventory SHA-256:
-> `d06aa71c4207418936123781cfc7bdd26069f7f273f9301ef5e6a1ca712c7dd5`.
+> `e1ddecb76e357905d90bbc40ad8414b68efc38f2b532d19ec61d2df4a5053ce9`.
 > The generated cold-install inventory contains 3109 files; no new subscription claim.
 > This digest is the Kingdom Quickstart founding cohort over the stockpile deposit custody census
 > retained below, and over every delta retained beneath that; each carries its own review chain and
@@ -187,11 +190,12 @@ below it.
 > compatibility (3078 plus the tracked Hearthpyre 2.2.3 ABI stub), dev-harness baseline (3241) and
 > dev-harness compatibility (3245) — through the canonical `Tools/gate.sh` itself, with its
 > installed-Hearthpyre source and ABI step. The
-> engine-free suites pass ALL GREEN: 14,137 TafTests cases and 5,291 PortableTests cases, zero
-> skipped, of 14,137/5,291 discovered; the 670-test tooling suite passes. Thirty-six guard mutations
-> were run against the new rules and thirty-three were caught by a failing case; the three survivors
-> are recorded as redundant with the wire digest, the codec floor and the identity filter that
-> already refuse them.
+> engine-free suites pass ALL GREEN: 14,147 TafTests cases and 5,301 PortableTests cases, zero
+> skipped, of 14,147/5,301 discovered; the 670-test tooling suite passes. Forty-one guard mutations
+> were run against the new rules and thirty-six were caught by a failing case; the five survivors
+> are each recorded, with the guard that refuses the case first named in every one: the wire digest,
+> the codec floor, and the identity filter and the strict encoder, which cover each other so that
+> removing BOTH fails five cases.
 > NOT run for this delta: the native Quickstart boot matrix, ordinary play, graceful Quit and
 > Steam delivery. The six-profile boot matrix at seed `#43101` is OWED before merge, because this
 > delta changes what Quickstart does at boot.
