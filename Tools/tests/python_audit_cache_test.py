@@ -53,6 +53,7 @@ class AuditCacheTests(unittest.TestCase):
             self.assertEqual("new", observed["value"])
             self.assertTrue(observed["disabled"])
             self.assertIsNotNone(observed["prefix"])
+            self.assertTrue(Path(observed["prefix"]).name.startswith("taf-python-cache."))
             self.assertFalse(Path(observed["prefix"]).exists(), "empty lookup root must be cleaned")
 
 
