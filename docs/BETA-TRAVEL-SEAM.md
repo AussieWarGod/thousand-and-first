@@ -25,12 +25,16 @@ demand receipts (936 thirds maximum), model/semantic clock monotonicity, growth 
 and schedule deadline/ordinal continuity. A post-return physical-demand observation must reach zero
 within 39 turns after first home entry and remain settled at the final check. Three model resource
 flags alone never prove physical drainage. Settled zones intentionally emit no spend receipt,
-so the developer observer also measures actual container rows and misplaced bodies using a
+so the developer observer also measures actual container rows using a
 complete custody-only survey, outside bound semantic passes, without legacy migration or
 economic publication. Failed or capacity-blocked measurement is never zero. A zero timestamp
 requires both physical demand and the exact book row to be settled; new debt invalidates it.
 Every zero timestamp comes from that physical observation, including when a normal spend receipt triggers it.
 Missing demand evidence refuses, even in a quiet camp.
+This diagnostic is container-only: any settlement population, resident row, or physical
+citizenship marker/receipt refuses admission. Custody-only capture cannot classify resident
+postings, so an empty settlers list is never offered as proof of zero body demand. Resident
+stress remains untested.
 The script requests a 39-turn drain wait; an action opportunity or real render yield may observe
 its completion later (for example, 40 elapsed turns). That later observation does not extend the
 physical deadline: the retained zero-demand observation must still be within 39 turns of home entry.

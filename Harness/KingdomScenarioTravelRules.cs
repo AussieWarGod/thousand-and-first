@@ -73,6 +73,9 @@ namespace ThousandAndFirst.Harness
 			return true;
 		}
 
+		internal static bool ContainerOnlyAdmission(int Population, int ResidentRows, int CitizenBodies)
+			=> Population == 0 && ResidentRows == 0 && CitizenBodies == 0;
+
 		internal static bool TryObserveZero(long FirstHome, long PreviousZero, long Now, int PhysicalThirds,
 			bool BookSettled, out long Zero)
 		{

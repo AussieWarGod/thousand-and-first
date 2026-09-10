@@ -108,13 +108,23 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void PhysicalDemandIncludesActualHeavyBodies()
+		public void PhysicalDemandWeightsMisplacedBodyCount()
 		{
 			int weight = ThousandAndFirst.Simulation.City.KingdomCatchUpRules.WeightThirds(
 				ThousandAndFirst.Simulation.City.KingdomUnitWeight.Heavy);
 			ClassicAssert.IsTrue(KingdomScenarioTravelRules.TryPhysicalDemand(true, 3, 2, false, out int thirds));
 			ClassicAssert.AreEqual(3 + 2 * weight, thirds);
 		}
+
+		[TestCase(0, 0, 0, true)]
+		[TestCase(1, 0, 0, false)]
+		[TestCase(0, 1, 0, false)]
+		[TestCase(0, 0, 1, false)]
+		[TestCase(-1, 0, 0, false)]
+		[TestCase(0, -1, 0, false)]
+		[TestCase(0, 0, -1, false)]
+		public void ContainerOnlyFixtureCannotAcceptUnmeasuredResidents(int population, int rows, int bodies, bool expected)
+			=> ClassicAssert.AreEqual(expected, KingdomScenarioTravelRules.ContainerOnlyAdmission(population, rows, bodies));
 
 		[Test]
 		public void BlockedDebtCannotMasqueradeAsZeroExecutableDemand()
@@ -201,7 +211,10 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("receipt.WaterBlocked != 0 || receipt.FoodBlocked != 0 || receipt.MaterialsBlocked != 0", source);
 			StringAssert.Contains("KingdomContainerCatchUpRules.TryMeasure", source);
 			StringAssert.Contains("if (!measured) return false", source);
-			StringAssert.Contains("Posted(Zone, survey, KingdomStations.Index(Zone)).Count", source);
+			StringAssert.Contains("KingdomScenarioTravelRules.ContainerOnlyAdmission(System.Population", source);
+			StringAssert.Contains("book.ResidentIds.Count, citizens", source);
+			StringAssert.Contains("item.GetIntProperty(\"KingdomCitizen\") != 0 || item.GetPart<r_KingdomCitizenship>() != null", source);
+			StringAssert.DoesNotContain("Posted(", source);
 			StringAssert.DoesNotContain("GroundDemandThirds(", source);
 			StringAssert.DoesNotContain("SpendTurn(", source);
 			StringAssert.DoesNotContain("Publish(", source);

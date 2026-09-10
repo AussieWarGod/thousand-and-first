@@ -1,6 +1,7 @@
 using System;
 using XRL;
 using XRL.World;
+using XRL.World.Parts;
 using ThousandAndFirst.Harness;
 
 namespace ThousandAndFirst.Simulation.City
@@ -31,7 +32,12 @@ namespace ThousandAndFirst.Simulation.City
 			bool measured = KingdomContainerCatchUpRules.TryMeasure(ground.Rows, ground.Rows.Length,
 				row.OwedWater, row.OwedFood, row.OwedMaterials, out var receipt, out _);
 			if (!measured) return false;
-			int bodies = Posted(Zone, survey, KingdomStations.Index(Zone)).Count;
+			// Custody-only capture does not classify realm residents. This fixture proves
+			// containers only: any citizen marker/receipt is a refusal, not an empty body list.
+			int citizens = 0;
+			foreach (GameObject item in survey.Objects)
+				if (item.GetIntProperty("KingdomCitizen") != 0 || item.GetPart<r_KingdomCitizenship>() != null)
+					citizens++;
 			if (!ReferenceEquals(The.Game, game) || game.TimeTicks != tick
 				|| !ReferenceEquals(game.GetSystem<KingdomSystem>(), System)
 				|| !ReferenceEquals(System.City, book) || !ReferenceEquals(The.Player?.CurrentZone, Zone)
@@ -41,8 +47,10 @@ namespace ThousandAndFirst.Simulation.City
 				|| !book.TryZoneRow(Zone.ZoneID, out int current)
 				|| book.ZoneOwedWater[current] != row.OwedWater || book.ZoneOwedFood[current] != row.OwedFood
 				|| book.ZoneOwedMaterials[current] != row.OwedMaterials) return false;
+			if (!KingdomScenarioTravelRules.ContainerOnlyAdmission(System.Population,
+				book.ResidentIds.Count, citizens)) return false;
 			BookSettled = row.OwedWater == 0 && row.OwedFood == 0 && row.OwedMaterials == 0;
-			return KingdomScenarioTravelRules.TryPhysicalDemand(measured, receipt.OwedThirds, bodies,
+			return KingdomScenarioTravelRules.TryPhysicalDemand(measured, receipt.OwedThirds, 0,
 				receipt.WaterBlocked != 0 || receipt.FoodBlocked != 0 || receipt.MaterialsBlocked != 0, out Thirds);
 		}
 	}

@@ -44,6 +44,8 @@ physical deadline. It does not assert
 that a measured drain must take exactly 39 turns. The 60-resident component of the
 312-unit/936-third worst case is **not exercised**. Journal fields preserve those limits:
 `synthetic-fixture=true`, `stress-residents=0`, `ordinary-acceptance=false`.
+The physical observer refuses any population, resident rows, or citizen-marked bodies rather
+than inferring zero body demand from a custody-only survey. This is a container-only proof.
 
 Host checks reject incomplete/mixed economic witnesses, double-counted pause arithmetic,
 wrong deadlines, partial container counts, repeated resume, missing/out-of-order setup,
