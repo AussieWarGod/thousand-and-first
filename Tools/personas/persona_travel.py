@@ -73,12 +73,19 @@ def assess(rows, mode, require_economic=False):
         if result["mode"] != mode or failed_outcome:
             raise ValueError("travel mode or a journal outcome differs")
         advances = [row[2] for row in rows if row[0] == "advance-complete"]
-        if advances != [f"{n} turn(s) elapsed of {n} requested" for n in ((1, 1, 1, 1200, 39) if economic else (1, 1200, 39))]:
-            raise ValueError("travel requires exact completed warmup, wait and drain advances")
+        prefix = (1200, 1, 1200) if economic else (1200,)
+        warmup = re.fullmatch(r"([1-9][0-9]{0,18}) turn\(s\) elapsed of 1200 requested",
+                              advances[0] if advances else "")
+        drain = re.fullmatch(r"([1-9][0-9]{0,18}) turn\(s\) elapsed of 39 requested",
+                             advances[-1] if advances else "")
+        if (warmup is None or not 1200 <= int(warmup[1]) <= 9223372036854775807
+                or advances[1:-1] != [f"{n} turn(s) elapsed of {n} requested" for n in prefix]
+                or drain is None or not 39 <= int(drain[1]) <= 9223372036854775807):
+            raise ValueError("travel requires completed 1200-turn warmup, exact intervening waits, and completed requested 39-turn drain advance")
         names = [row[0] for row in rows]
-        expected = ["advance-complete", "beta-" + mode]
+        expected = ["realize", "advance-complete", "beta-" + mode]
         if economic:
-            expected = ["advance-complete", "beta-local-pause", "advance-complete", "beta-master-pause",
+            expected = ["realize", "advance-complete", "beta-local-pause", "advance-complete", "beta-master-pause",
                         "advance-complete", "beta-stress", "beta-" + mode]
         if mode == "away":
             expected.append("travel-out-complete")

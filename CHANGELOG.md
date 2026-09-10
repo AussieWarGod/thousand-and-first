@@ -10,6 +10,23 @@ below it.
 
 ## Unreleased — Beta gap report
 
+> **Current merged census — the #129 dev-harness native checks over the roadless seal
+> correction.** Current 3079-file census is line-cap green: 437,320 physical lines, zero files at
+> or above 300: 0 files exceed 300, 0 exceed 1,000, 0 exceed 2,000 and 0 exceed 5,000; direct
+> `XRL` imports occur in 1434 files, 0 of them over the line limit. Inventory SHA-256:
+> `f9a9469102be2f0ca119056e08c884a56014b31439e71695852026f63bd02d17`.
+> The merge adds NO production source over the roadless correction: the production delta it
+> carries is the unmerged #124 raw-delivery-overflow fix this branch is built on, and everything
+> else in it is dev-harness shards, DevTests and documentation. Every earlier census below is
+> retained at its own bytes and is not restated for this one.
+
+> **Retained roadless seal census (#131), at its own bytes.** That 3079-file census was line-cap green:
+> 437,201 physical lines; zero files at or above 300; 1434 direct `XRL` importing files.
+> Inventory SHA-256: `ab4cf22e665900bd82593ad4f9805861da4458e60b918c59b1d3a0bb88b74617`.
+> The generated cold-install inventory contains 3110 files. All four compile modes pass;
+> audit and main 14,296/portable 5,460 tests pass (managed zero skips). The roadless-camp native
+> check passes at `0cfd8e7` after one retained startup timeout. Earlier census entries are retained evidence.
+
 ### Added
 
 - Kingdom Quickstart now founds a world with four founding citizens — a hand, a drifter, a tinker
@@ -56,6 +73,17 @@ below it.
 
 ### Fixed
 
+- A roadless completed camp now reports that its spatial seal is waiting for connected streets,
+  rather than treating that exact intermediate topology as corruption during daily/save polls.
+  Capture still refuses to publish: no new seal, old spatial fallback, fabricated street, or
+  weakened geometry validation. No saved fields or formats change. Native verification is
+  pending under #131; terminal/recovery refusal semantics are unchanged.
+
+- Master resume now reanchors the semantic clock for a completed, published receipt even when
+  its durable active flag remains set. Unfinished, unpublished, or malformed active receipts
+  retain their old clock, so resuming never fabricates publication. The same rule serves the
+  seated settlement and away mirrors; no saved fields or formats change. Native component
+  verification is recorded in STATUS; overall economic fixture refusals remain retained.
 - Canonical compile gates honor a private `TMPDIR` for both independently allocated trees,
   allowing parallel workers to avoid the shared `/tmp` publication lock without bypassing it.
 - The dev-only scenario test ground's `Strip`/`Restrip` cleared only the zone's interior objects, so
@@ -267,9 +295,16 @@ below it.
   (ruling 5); no capacity, catch-up envelope, or stored item is touched, and a standing save reads
   exactly what it read before.
 
-> **Current unreleased census — exact structural gate passed.** Current 3078-file census is line-cap green:
-> 437,233 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
-> **Retained Kingdom Quickstart founding cohort census — exact structural gate passed.** That 3078-file census was line-cap green:
+> **Retained #129 checkpoint census — exact structural gate passed on those bytes.** That 3079-file census was line-cap green:
+> 437,320 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> **Retained master semantic resume census — exact structural gate passed on those bytes.** That 3078-file census was line-cap green:
+> 437,136 physical lines; zero files at or above 300; 1434 direct `XRL` imports.
+> Inventory SHA-256: `f533203f98ed26e0ab95970b54b13fce26d6281988e36c9e3d20f6f870a82bb9`.
+> Three production files changed, no added sources or saved fields. At 76ab44d, canonical compile
+> modes and repository audit pass; main 14,287 and portable 5,451 tests pass, zero skipped.
+> Fresh native proof remains pending; retained founder evidence below does not sign this correction.
+
+> **Retained founding-cohort census — exact structural gate passed on those bytes.**
 > 437,114 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1434 files, 0 of them over the line limit. Inventory SHA-256:
@@ -305,7 +340,7 @@ below it.
 > 435,538 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1434 files, 0 of them over the line limit. Inventory SHA-256:
-> `b7974fa73495aa30b07ab87ff9b459c390c949d1053172ed3776ecb40446c333`.
+> `f9a9469102be2f0ca119056e08c884a56014b31439e71695852026f63bd02d17`.
 > The generated cold-install inventory contains 3109 files; no new subscription claim.
 > This digest is the raw delivery overflow fix over the stockpile deposit custody fix merged over `dev` at `862f14d` (the unattended
 > native observers, the Workshop listing wording, the automatic Workshop attempt finalisation, the

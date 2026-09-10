@@ -18,7 +18,7 @@ def rows(mode="away", **changes):
                  "pause-effects-proved": "false", "full-envelope-stress": "false", "ordinary-acceptance": "false"})
     data.update(changes)
     result = [("stagedigest", "OK", "digest"), ("realize", "OK", "founded"),
-              ("advance-complete", "OK", "1 turn(s) elapsed of 1 requested"), ("beta-" + mode, "OK", "began")]
+              ("advance-complete", "OK", "1200 turn(s) elapsed of 1200 requested"), ("beta-" + mode, "OK", "began")]
     if mode == "away":
         result.append(("travel-out-complete", "OK", "normal-walk=true; steps=41"))
     result.extend([("advance-complete", "OK", "1200 turn(s) elapsed of 1200 requested"), ("beta-return", "OK", "return")])
@@ -40,7 +40,7 @@ def economic_rows(mode="away", **changes):
     values.update(changes)
     result = rows(mode, **values)
     result[3:3] = [("beta-local-pause", "OK", "set"),
-                   ("advance-complete", "OK", "1 turn(s) elapsed of 1 requested"),
+                   ("advance-complete", "OK", "1200 turn(s) elapsed of 1200 requested"),
                    ("beta-master-pause", "OK", "set"),
                    ("advance-complete", "OK", "1 turn(s) elapsed of 1 requested"),
                    ("beta-stress", "OK", "ready")]
@@ -48,6 +48,50 @@ def economic_rows(mode="away", **changes):
 
 
 class TravelTests(unittest.TestCase):
+    def test_local_pause_requires_daily_reconciliation_before_master_disable(self):
+        for mode in ("present", "away"):
+            for elapsed, requested, valid in ((1200, 1200, True), (1, 1, False),
+                                               (1199, 1200, False), (1200, 1, False)):
+                with self.subTest(mode=mode, elapsed=elapsed, requested=requested):
+                    journal = economic_rows(mode)
+                    journal[4] = ("advance-complete", "OK", f"{elapsed} turn(s) elapsed of {requested} requested")
+                    self.assertEqual(not valid, bool(travel.assess(journal, mode, True)))
+
+    def test_warmup_requires_a_real_day_before_observation(self):
+        for fixture in (rows, economic_rows):
+            for elapsed, requested, valid in ((1200, 1200, True), (1201, 1200, True),
+                                               (1, 1, False), (1199, 1200, False),
+                                               (1200, 1, False)):
+                with self.subTest(fixture=fixture.__name__, elapsed=elapsed, requested=requested):
+                    journal = fixture()
+                    journal[2] = ("advance-complete", "OK", f"{elapsed} turn(s) elapsed of {requested} requested")
+                    self.assertEqual(not travel.assess(journal, "away", fixture is economic_rows), valid)
+
+    def test_drain_completion_observation_can_overshoot_without_extending_deadline(self):
+        for fixture in (rows, economic_rows):
+            for mode in ("away", "present"):
+                with self.subTest(fixture=fixture.__name__, mode=mode):
+                    journal = fixture(mode, **{"drain-turns": "39"})
+                    journal = [(verb, outcome, "40 turn(s) elapsed of 39 requested"
+                                if verb == "advance-complete" and message.startswith("39 ") else message)
+                               for verb, outcome, message in journal]
+                    self.assertEqual(travel.assess(journal, mode, fixture is economic_rows), [])
+                    for key, value in (("drain-turns", "40"), ("remaining-demand", "1"),
+                                       ("demand-observed", "False")):
+                        bad = [(verb, outcome, message.replace(key + "=" +
+                               {"drain-turns": "39", "remaining-demand": "0", "demand-observed": "True"}[key],
+                               key + "=" + value)) for verb, outcome, message in journal]
+                        self.assertTrue(travel.assess(bad, mode, fixture is economic_rows))
+
+    def test_drain_completion_still_requires_requested_count_and_canonical_elapsed(self):
+        for message in ("38 turn(s) elapsed of 39 requested", "40 turn(s) elapsed of 40 requested",
+                        "040 turn(s) elapsed of 39 requested", "40 turn(s) elapsed of 39 requested extra",
+                        "9223372036854775808 turn(s) elapsed of 39 requested"):
+            with self.subTest(message=message):
+                journal = [(verb, outcome, message if verb == "advance-complete" and text.startswith("39 ")
+                            else text) for verb, outcome, text in rows()]
+                self.assertTrue(travel.assess(journal, "away"))
+
     def test_provider_admission_refusal_is_not_a_travel_failure(self):
         for fixture in (rows, economic_rows):
             for mode in ("away", "present"):

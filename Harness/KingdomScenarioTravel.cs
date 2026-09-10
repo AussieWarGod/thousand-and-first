@@ -28,7 +28,7 @@ namespace ThousandAndFirst.Harness
 
 		internal static void Require(bool Value, string Reason)
 		{
-			if (!Value) throw new InvalidOperationException("taf-travel-refused: " + Reason);
+			if (!Value) throw new InvalidOperationException(KingdomScenarioRefusal.Message("taf-travel-refused", Reason));
 		}
 
 		internal static string Begin(bool IsAway)
@@ -47,6 +47,8 @@ namespace ThousandAndFirst.Harness
 				&& wx > 0, "requires an ordinary surface zone with a western parasang");
 			Require(!KingdomNativeRegressionContext.HasAnyState(game, Intent), "travel intent already exists");
 			Require(system.City != null && system.City.TryReadExact(out _, out _), "city book cannot be read exactly");
+			Require(system.City.TryZoneRow(zone.ZoneID, out _),
+				"home row missing before departure; ordinary settlement reconciliation has not initialized this fixture");
 			game.SetStringGameState(Intent, IsAway ? "away" : "present");
 			Require(KingdomScenarioDurableState.ProvesExactText(Intent, IsAway ? "away" : "present"), "intent did not persist");
 			Game = game; Player = player; PlayerId = player.ID; System = system; Book = system.City;
@@ -145,20 +147,26 @@ namespace ThousandAndFirst.Harness
 				Require(Book.TryZoneRow(Home, out int row), "home row missing");
 				if (Book.ZoneOwedWater[row] != 0 || Book.ZoneOwedFood[row] != 0 || Book.ZoneOwedMaterials[row] != 0)
 					ZeroTurn = -1;
+				KingdomScenarioTravelDemandObserver.ObserveGround();
 			}
 		}
 
 		internal static string Check()
 		{
+			Require(!KingdomSurvey.HasBoundPass, "final physical observation requires an unbound pass");
 			Observe();
 			Require(State == Phase.Draining && Player.CurrentZone.ZoneID == Home
-				&& Game.Turns - ArrivedTurn == KingdomScenarioTravelRules.DrainTurns, "drain leg is not exactly 39 turns");
+				&& KingdomScenarioTravelRules.DrainObservationReady(ArrivedTurn, Game.Turns),
+				"drain observation precedes the requested 39 turns");
 			Require(Book.TryZoneRow(Home, out int row), "home row missing");
 			int owed = Math.Abs(Book.ZoneOwedWater[row]) + Math.Abs(Book.ZoneOwedFood[row]) + Math.Abs(Book.ZoneOwedMaterials[row]);
 			Require(ReturnDemandObserved && RemainingDemand == 0
 				&& KingdomScenarioTravelRules.Drained(FirstHomeTurn, ZeroTurn, owed),
-				"physical catch-up within 39 turns was not proved by a post-return demand receipt");
-			var survey = KingdomSurvey.Take(Player.CurrentZone, System);
+				"physical catch-up within 39 turns was not proved by a post-return demand observation"
+				+ "; observed=" + ReturnDemandObserved + "; remaining=" + RemainingDemand
+				+ "; home-turn=" + FirstHomeTurn + "; zero-turn=" + ZeroTurn + "; owed=" + owed);
+			Require(KingdomSurvey.TryTakeUnboundRecovery(Player.CurrentZone, out var survey),
+				"final container inventory is incomplete or bound");
 			Containers = survey.Stores.Count + survey.Larders.Count;
 			Require(Containers <= KingdomScenarioTravelRules.CivicEnvelope && KingdomRules.MaxCivicContainersPerZone == 252
 				&& KingdomCatchUpRules.WorstBacklogUnits == 312 && KingdomBudgetRules.ReifyUnitsPerTurn == 8,

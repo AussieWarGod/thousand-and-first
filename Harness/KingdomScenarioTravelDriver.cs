@@ -18,9 +18,9 @@ namespace ThousandAndFirst.Harness
 			}
 			catch (Exception error)
 			{
-				KingdomScenarioTravel.Fault = error.Message;
+				KingdomScenarioTravel.Fault = KingdomScenarioRefusal.Message("taf-travel-refused", error.Message);
 				KingdomScenarioTravel.State = KingdomScenarioTravel.Phase.Failed;
-				KingdomScenarioJournal.Append("travel-refused", false, error.Message);
+				KingdomScenarioJournal.Append("travel-refused", false, KingdomScenarioTravel.Fault);
 				Faulted = true; return false;
 			}
 		}
@@ -49,6 +49,26 @@ namespace ThousandAndFirst.Harness
 	[HarmonyPatch(typeof(KingdomCity), "Receipt")]
 	internal static class KingdomScenarioTravelDemandObserver
 	{
+		internal static void ObserveGround()
+		{
+			// A live semantic pass owns its survey. Defer rather than classify a second
+			// time or turn the lack of an unbound observation into a zero receipt.
+			if (KingdomSurvey.HasBoundPass) return;
+			KingdomScenarioTravel.Require(KingdomCity.TryReadNativeTravelDemand(
+				KingdomScenarioTravel.System, The.Player?.CurrentZone, out int physicalThirds, out bool settled),
+				"physical demand census unavailable or blocked; no zero proof");
+			KingdomScenarioTravel.Require(KingdomScenarioTravel.Fault == null, KingdomScenarioTravel.Fault);
+			KingdomScenarioTravel.DemandObserved = true;
+			KingdomScenarioTravel.ReturnDemandObserved = true;
+			KingdomScenarioTravel.PeakDemand = Math.Max(KingdomScenarioTravel.PeakDemand, physicalThirds);
+			KingdomScenarioTravel.RemainingDemand = physicalThirds;
+			if (KingdomScenarioTravel.FirstHomeTurn < 0) KingdomScenarioTravel.FirstHomeTurn = The.Game.Turns;
+			KingdomScenarioTravel.Require(KingdomScenarioTravelRules.TryObserveZero(
+				KingdomScenarioTravel.FirstHomeTurn, KingdomScenarioTravel.ZeroTurn, The.Game.Turns,
+				physicalThirds, settled, out long zero), "physical zero observation has invalid clocks");
+			KingdomScenarioTravel.ZeroTurn = zero;
+		}
+
 		internal static void Postfix(string zoneId, int owed)
 		{
 			if (!KingdomScenarioTravel.Active || zoneId != KingdomScenarioTravel.Home) return;
@@ -58,11 +78,13 @@ namespace ThousandAndFirst.Harness
 				|| KingdomScenarioTravel.State == KingdomScenarioTravel.Phase.Draining)
 				&& The.Player?.CurrentZone?.ZoneID == zoneId)
 			{
-				KingdomScenarioTravel.ReturnDemandObserved = true;
-				KingdomScenarioTravel.RemainingDemand = owed;
-				if (KingdomScenarioTravel.FirstHomeTurn < 0) KingdomScenarioTravel.FirstHomeTurn = The.Game.Turns;
-				if (owed != 0) KingdomScenarioTravel.ZeroTurn = -1;
-				else if (KingdomScenarioTravel.ZeroTurn < 0) KingdomScenarioTravel.ZeroTurn = The.Game.Turns;
+				// Re-prove the physical reading: the ordinary perf helper may report zero
+				// on a failed measurement, which is not sufficient evidence for this fixture.
+				try { ObserveGround(); }
+				catch (Exception error)
+				{
+					KingdomScenarioTravel.Fault = KingdomScenarioRefusal.Message("taf-travel-refused", error.Message);
+				}
 			}
 			if (owed < 0 || owed > 312 * 3) KingdomScenarioTravel.Fault = "physical demand exceeds 312-unit envelope";
 		}

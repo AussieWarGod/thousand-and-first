@@ -17,6 +17,8 @@
 
   <ItemGroup>
     <Compile Include="TestMain.cs" />
+    <Compile Include="..\Core\KingdomSealPendingRules.cs" />
+    <Compile Include="KingdomSealPendingRulesTests.cs" />
     <Compile Include="KingdomDepositOverflowNativeSourceTests.cs" />
     <Compile Include="KingdomDepositOverflowReservationTests.cs" />
     <Compile Include="..\Harness\KingdomDepositOverflowReservation.cs" />
@@ -1340,6 +1342,8 @@
 	<Compile Include="..\Harness\KingdomScenarioRules.cs" />
 	<Compile Include="..\Harness\KingdomScenarioLoadRules.cs" />
 	<Compile Include="..\Harness\KingdomScenarioTravelRules.cs" />
+	<Compile Include="..\Simulation\City\KingdomSemanticClockRules.cs" />
+	<Compile Include="KingdomSemanticClockRulesTests.cs" />
 	<Compile Include="KingdomScenarioTravelRulesTests.cs" />
 	<Compile Include="..\Harness\KingdomScenarioRefusal.cs" />
 	<Compile Include="KingdomScenarioRefusalTests.cs" />
