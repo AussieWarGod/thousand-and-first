@@ -60,6 +60,11 @@ below it.
 
 - Repository audits ignore existing Python bytecode and disable new cache writes. Same-size,
   same-second mutation/restoration cycles therefore test current source, not a stale `.pyc`.
+- The rite-ground catalogue description names its canvas horseshoe instead of the old bare ring.
+- The native subsidence/founding-heart fixture now proves both its empty 1,920-dram reservoir
+  and the real founding receipt's dedicated 16-dram first basin. The old one-store assertion
+  refused a correct 50-resident setup. Exact identities, dedication, placement and empty contents
+  remain checked; production water capacity and accounting are unchanged.
 - Developer cold-load preparation anchors all destination writes, including directory creation,
   saved-game copies and receipt files, through no-follow directory handles. An ancestor symlink
   swap cannot redirect writes outside the intended tree; independent readback and seal checks
@@ -67,6 +72,28 @@ below it.
 - Cold-load phase durations use a monotonic clock; wall-clock timestamps remain available for
   correlation. Parallel copies reject invalid worker counts, cap concurrency, and propagate
   process-control exceptions after joining submitted work.
+
+### Added
+
+- The rite ground is now a camp. A horseshoe of seven canvas cells stands round the basin, a
+  cooking fire burns beside it, and one dry stockpile holds 48 units of what the settlement has
+  cut and carried. The camp's fire warms its own hearthstone and nothing else — not even what is
+  standing on the same cell — so the canvas ring can never catch and nobody who walks through the
+  fire is burned by it. Every other hearth in the catalogue is unchanged. The
+  horseshoe opens south onto the approach the rite already declared, because the heart's Small
+  6x4 plot cannot hold a closed ring, the rite, the fire and the store at once. The store sits on
+  a yard cell just outside the frozen 4x4 footprint, which is lawful; widening the footprint is
+  not. The founding bill (canvas:4, timber:2) is the rite's own gift and is charged to nobody:
+  heart rungs are refused by every commission path.
+- The stockpile rides every heart rung at the same rite-relative cell — under canvas at the rite
+  ground and the waterstone, inside the walls at the moot, the great court and the arcology — so
+  what is in it is never moved, emptied or re-founded when the settlement builds over it. It
+  counts toward the eight stores the keepers will account for.
+- Each heart rung now asks for one more timber than the rung below it (2/3/20/21/22), so a
+  settlement founded before this change raises its store at **the next improvement it begins
+  after this update**, with the timber for it already in that transition's bill. An improvement
+  already under way finishes to the plan it was paid for: storeless, on the old bill, with the
+  store arriving one rung later. Nothing is re-priced, refunded or quarantined at any point.
 
 ### Docs
 
@@ -175,8 +202,10 @@ below it.
 > 435,903 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1430 files, 0 of them over the line limit. Inventory SHA-256:
-> `1f990b13abe80b98ec3ce022dc4ff3578fc998012261160e9a303840fa59ab72` (three new production files
-> from the brush-forage duty, T-forage-1).
+> `4e4f52c0c6ef80783e04b1a6e164d2339bda53cd3b3a27a0b276669e55d9237b` (merge of the brush-forage duty, T-forage-1, three new production files, with
+> the camp heart's authored architecture, catalogue and blueprint bytes, its regenerated removal
+> coverage and its new DevTests file; restamped below from a fresh `check-structure.py --json` on
+> the merged tree).
 > The generated cold-install inventory contains 3102 files; no new subscription claim.
 > This digest is the stockpile deposit custody fix merged over `dev` at `862f14d` (the unattended
 > native observers, the Workshop listing wording, the automatic Workshop attempt finalisation, the

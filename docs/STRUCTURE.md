@@ -26,8 +26,10 @@ store and the Kingdom Quickstart tent rows reports 3071 staged production C# fil
 435,903 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`1f990b13abe80b98ec3ce022dc4ff3578fc998012261160e9a303840fa59ab72`. The census reports
-1430 files with direct `XRL` imports; 0 of those exceed the line limit.
+`4e4f52c0c6ef80783e04b1a6e164d2339bda53cd3b3a27a0b276669e55d9237b` (merge of the brush-forage duty, T-forage-1, with the camp heart's authored
+architecture, catalogue and blueprint bytes, its regenerated removal coverage and its new DevTests
+file; restamped below from a fresh `check-structure.py --json` on the merged tree). The census
+reports 1430 files with direct `XRL` imports; 0 of those exceed the line limit.
 
 The shelter-ingress delta over the retained city-sight draft below is one added and one modified
 production source and no

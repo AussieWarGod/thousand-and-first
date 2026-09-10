@@ -85,6 +85,19 @@ An executable timestamp-cache fixture proves that disabling writes alone still r
 bytecode, while the isolated audit imports restored source. This strengthens host test fidelity;
 it is not native gameplay, ordinary-save or release acceptance. Refs #113.
 
+Native fixture recovery: matched seed `#121783523` measured 50 settlers/citizens/roll rows,
+two stores, 1,936 drams capacity and zero water. The previous fixture incorrectly required one
+1,920-dram store, omitting the dedicated first basin. The corrected fixture proves the exact
+reservoir plus receipt-bound basin. Fresh canonical four-mode compilation, Taf14,075 and
+Portable5,215 (zero skips), and Tools627/full portable audit pass. Wrong-count and missing-relic-ID
+source mutants each fail; restored fixture passes. Native `founding-heart-native-checks` passes
+all seven cases at the same seed (profile `QDaXBR`, receipt-owned stop proved). This signs that
+scenario only, not terminal heart completion, ordinary-save compatibility or overall camp acceptance.
+The same gameplay/harness bytes also pass fresh first-city founding, 16 native Quickstart
+creator/custody cases and claimed lighting after rendered frames (profiles TAplen/cltpMo/TWubeD;
+all receipt-stopped). These do not sign actual Quickstart embark. Subsequent rite-ground display
+text and unused test-import cleanup do not alter gameplay; their text assertion is checked separately.
+
 Cold-load transport hardening (PR #104): 27 executable filesystem tests cover ancestor
 swaps for directory, receipt and save outputs. Replacing component-wise anchoring with a bare
 multi-component open fails all three new negatives. Monotonic timing and strict worker bounds
@@ -204,9 +217,11 @@ cold-install inventory. Staged compilation covers 3071 sources, baseline and com
 (the optional-mod bridge is compatibility-only), run here by Roslyn
 9.0.306 on Linux against the licensed Managed references with warnings as
 errors. Direct `XRL` imports: 1430 files, 0 over the line limit.
-Inventory SHA-256: `1f990b13abe80b98ec3ce022dc4ff3578fc998012261160e9a303840fa59ab72` (three new
-production files: `Growth/KingdomMaterials.00.r_KingdomForage.cs`,
-`Growth/KingdomMaterialRules.Forage.cs`, `Growth/KingdomMaterials.16.ForageWork.cs`).
+Inventory SHA-256: `4e4f52c0c6ef80783e04b1a6e164d2339bda53cd3b3a27a0b276669e55d9237b` (merge of the brush-forage duty's three new production files
+— `Growth/KingdomMaterials.00.r_KingdomForage.cs`, `Growth/KingdomMaterialRules.Forage.cs`,
+`Growth/KingdomMaterials.16.ForageWork.cs` — with the camp heart's authored architecture,
+catalogue and blueprint bytes, its regenerated removal coverage and its new DevTests file;
+restamped below from a fresh `check-structure.py --json` on the merged tree).
 Before the merge, all four `Tools/gate.sh` modes compiled clean on the shelter-ingress delta's own
 bytes — staged baseline (3050 sources), staged compatibility (3054), dev-harness baseline (3204)
 and dev-harness compatibility (3208) — with the installed-Hearthpyre source and ABI step, and the
