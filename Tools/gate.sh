@@ -36,10 +36,11 @@ MANAGED_WIN="$(wslpath -w "$MANAGED")"
 # leak the first. Both paths are printed IMMEDIATELY - under --keep no trap is installed at all, and
 # an abort before the compiles finish would otherwise leave two /tmp trees nobody was told about.
 DEV=""
-STAGE="$(mktemp -d /tmp/taf-stage.XXXXXX)"
+# Honor a caller's private TMPDIR so independent gates need not share /tmp's parent lock.
+STAGE="$(mktemp -d -t taf-stage.XXXXXX)"
 cleanup() { rm -rf "$STAGE" "$DEV"; }
 [ "${1:-}" = "--keep" ] || trap cleanup EXIT
-DEV="$(mktemp -d /tmp/taf-devharness.XXXXXX)"
+DEV="$(mktemp -d -t taf-devharness.XXXXXX)"
 echo "staged tree: $STAGE"
 echo "dev profile: $DEV"
 

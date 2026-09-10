@@ -12,6 +12,8 @@ below it.
 
 ### Fixed
 
+- Canonical compile gates honor a private `TMPDIR` for both independently allocated trees,
+  allowing parallel workers to avoid the shared `/tmp` publication lock without bypassing it.
 - Developer reload failures retain the original exception as their cause and report both errors
   when receipt-owned cleanup also refuses. No later persona may assume cleanup succeeded.
   Shell lifecycle fixtures exercise reload argument routing and stop the matrix after refusal.

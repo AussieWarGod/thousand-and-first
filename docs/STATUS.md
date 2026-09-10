@@ -16,6 +16,11 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
+Canonical compile gates honor `TMPDIR` for independently allocated stage and dev trees. A
+private parent per worker avoids shared `/tmp` transaction-lock contention; all publication
+locks and identity checks remain. Executable allocation fixtures also prove an invalid parent
+refuses before staging instead of falling back to shared storage. No gameplay bytes change.
+
 Developer reload cleanup reports both the original failure and a failed owned-process stop,
 retaining the original exception as its cause. Harmless shell fixtures cover exact helper
 arguments, helper refusal blocking later personas, and prior ownership failure blocking reload.
