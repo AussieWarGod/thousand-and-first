@@ -10,6 +10,13 @@ below it.
 
 ## Unreleased — Beta gap report
 
+> **Current roadless seal census (#131).** Current 3079-file census is line-cap green:
+> 437,201 physical lines; zero files at or above 300; 1434 direct `XRL` importing files.
+> Inventory SHA-256: `ab4cf22e665900bd82593ad4f9805861da4458e60b918c59b1d3a0bb88b74617`.
+> The generated cold-install inventory contains 3110 files. All four compile modes pass;
+> audit and main 14,296/portable 5,460 tests pass (managed zero skips). The roadless-camp native
+> check passes at `0cfd8e7` after one retained startup timeout. Earlier census entries are retained evidence.
+
 ### Added
 
 - Kingdom Quickstart now founds a world with four founding citizens — a hand, a drifter, a tinker
@@ -56,11 +63,17 @@ below it.
 
 ### Fixed
 
+- A roadless completed camp now reports that its spatial seal is waiting for connected streets,
+  rather than treating that exact intermediate topology as corruption during daily/save polls.
+  Capture still refuses to publish: no new seal, old spatial fallback, fabricated street, or
+  weakened geometry validation. No saved fields or formats change. Native verification is
+  pending under #131; terminal/recovery refusal semantics are unchanged.
+
 - Master resume now reanchors the semantic clock for a completed, published receipt even when
   its durable active flag remains set. Unfinished, unpublished, or malformed active receipts
   retain their old clock, so resuming never fabricates publication. The same rule serves the
-  seated settlement and away mirrors; no saved fields or formats change. Native verification
-  remains pending under issue #127; earlier economic fixture refusals remain retained.
+  seated settlement and away mirrors; no saved fields or formats change. Native component
+  verification is recorded in STATUS; overall economic fixture refusals remain retained.
 - Canonical compile gates honor a private `TMPDIR` for both independently allocated trees,
   allowing parallel workers to avoid the shared `/tmp` publication lock without bypassing it.
 - The dev-only scenario test ground's `Strip`/`Restrip` cleared only the zone's interior objects, so

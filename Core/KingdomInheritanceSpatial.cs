@@ -114,8 +114,17 @@ namespace ThousandAndFirst
 				Record.WorkY, Record.WorkConditions, snapshots, hashes,
 				KingdomInheritanceSpatialRules.Width, KingdomInheritanceSpatialRules.Height,
 				entrySide, entryX, entryY, streetX, streetY, out fault))
+			{
+				if (KingdomSealPendingRules.RoadlessEntrance(
+					fault == KingdomInheritanceSpatialFault.PublicEntrance,
+					entrySide == KingdomInheritanceSpatialRules.NoEntry, streetX.Count))
+				{
+					Failure = "the public entrance has no witnessed street connection to the zone edge yet";
+					return KingdomInheritanceSpatialCaptureResult.Pending;
+				}
 				return Malformed("the witnessed architecture and street graph do not form a safe "
 					+ "spatial seal: " + fault, out Failure);
+			}
 
 			Record.SpatialVersion = KingdomInheritanceSpatialRules.SpatialVersion;
 			Record.SpatialWidth = KingdomInheritanceSpatialRules.Width;

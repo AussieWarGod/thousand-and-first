@@ -9,7 +9,8 @@ namespace ThousandAndFirst
 	{
 		Captured = 0,
 		Unavailable = 1,
-		Malformed = 2
+		Malformed = 2,
+		Pending = 3
 	}
 
 }

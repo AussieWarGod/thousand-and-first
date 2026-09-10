@@ -8,6 +8,15 @@ A future v1.0 test-candidate claim requires its exact tree—not any historical
 Alpha receipt—to pass every applicable automated, native, human, compatibility, structure, and
 subscribed-package gate named here.
 
+## Current roadless seal candidate (#131)
+
+Compatibility compilation runs across 3079 production C# sources (baseline 3075); developer
+profiles compile 3257/3261 inputs. All four modes pass. The generated
+cold-install inventory contains 3110 files. Main 14,296 and portable 5,460 tests pass with zero
+skips; repository audit passes. The bounded roadless-camp native check passes at `0cfd8e7`
+(one startup timeout retained, single retry passes); see docs/STATUS.md for scope.
+older evidence below signs only its stated earlier bytes.
+
 ## Current bounty fetch carry validation
 
 `Tools/run-personas.sh bounty-fetch-native-check` stakes one real Fetch notice over a marked

@@ -20,6 +20,17 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
+Roadless spatial capture correction (#131): 3079 staged production C# files; 437,201 physical
+lines; 1434 direct `XRL` importing files; zero at or above 300. Exact inventory SHA-256:
+`ab4cf22e665900bd82593ad4f9805861da4458e60b918c59b1d3a0bb88b74617`.
+One small engine-free classifier is added. Existing internal capture/flush/reporting seams carry
+a typed pending result without serialized state or format changes. Four compile modes, audit,
+main 14,296/portable 5,460 tests pass (managed zero skips). The bounded roadless-camp native
+check passes at `0cfd8e7`; exact-inventory release semantic review remains pending.
+This census is not release approval.
+
+## Retained master semantic resume census
+
 The master semantic resume correction reports 3078 staged production C# files and 437,136
 physical lines. Zero are at or above 300; direct `XRL` imports occur in 1434 files, none over
 the cap. Exact staged source inventory digest:
@@ -28,8 +39,8 @@ Three existing production sources changed: the engine-free semantic clock rule, 
 settlement plan, and the access level of the system's existing required-step mask. No new
 production source, serialized field, public API or compatibility dependency. At 76ab44d, all four
 canonical compile modes pass (3074/3078/3254/3258 sources), repository audit is clean, and main
-14,287/portable 5,451 tests pass with zero skips. Native resume proof remains pending; older
-evidence below is retained at its own inventory.
+14,287/portable 5,451 tests pass with zero skips. Native component proof is recorded in STATUS;
+the economic persona remains RED. Older evidence below is retained at its own inventory.
 
 ## Retained founding-cohort draft census
 
