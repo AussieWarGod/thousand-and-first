@@ -41,6 +41,23 @@ first-guest-native-check and found-first-city persona reruns, plus one run with
 `TAF_PERSONA_SEED='#165939435'` (the originally failing seed), expecting a clean harness refusal or
 a village-free ground, never the publish-then-refuse path.
 
+Developer profile metadata census uses batches of at most four read-only workers. Every existing
+per-file ancestor/link/size check remains; file/directory/total-byte bounds and both closed hash
+passes remain in force. A retained stopped 3,273-file profile measured 75.54 seconds before,
+10.03 seconds with batching, then 74.81 seconds on a warm original-code control. These are local
+phase timings, not a general platform guarantee or native acceptance. Refs #89.
+
+Repository audits use a fresh empty Python cache lookup root with bytecode writes disabled.
+An executable timestamp-cache fixture proves that disabling writes alone still reads stale
+bytecode, while the isolated audit imports restored source. This strengthens host test fidelity;
+it is not native gameplay, ordinary-save or release acceptance. Refs #113.
+
+Cold-load transport hardening (PR #104): 27 executable filesystem tests cover ancestor
+swaps for directory, receipt and save outputs. Replacing component-wise anchoring with a bare
+multi-component open fails all three new negatives. Monotonic timing and strict worker bounds
+also have executable checks. All 27 focused tests and the full portable audit pass; these synthetic
+filesystem checks do not establish native cold-load or release acceptance.
+
 ## Current repository integration state — PR #6 merged, main protection updated
 
 Documentation/hardening PR #6, "Post-0.3.1 Alpha hardening and release closeout", was
