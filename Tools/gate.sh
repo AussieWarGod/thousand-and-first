@@ -34,7 +34,7 @@ MANAGED_WIN="$(wslpath -w "$MANAGED")"
 # so recursively removing it would be removing somebody else's directory on a bad day.
 # Order matters: the trap is armed between the two allocations, so a failing second mktemp cannot
 # leak the first. Both paths are printed IMMEDIATELY - under --keep no trap is installed at all, and
-# an abort before the compiles finish would otherwise leave two /tmp trees nobody was told about.
+# an abort before the compiles finish would otherwise leave two temporary trees nobody was told about.
 DEV=""
 # Honor a caller's private TMPDIR so independent gates need not share /tmp's parent lock.
 STAGE="$(mktemp -d -t taf-stage.XXXXXX)"
