@@ -75,8 +75,18 @@ namespace ThousandAndFirst
 			KingdomQuickstartReceipt Receipt, KingdomQuickstartPhase Target,
 			out string Failure)
 		{
+			return TryPrepareMarked(Grant,
+				KingdomQuickstartRules.GrantMarker(Receipt, Target), out Failure);
+		}
+
+		/// <summary>
+		/// Writes one already-minted reservation onto a private, unmarked, unplaced object and
+		/// proves it stuck. The marker's meaning is the caller's; this only owns the writing.
+		/// </summary>
+		private static bool TryPrepareMarked(GameObject Grant, string Marker, out string Failure)
+		{
 			Failure = "";
-			string marker = KingdomQuickstartRules.GrantMarker(Receipt, Target);
+			string marker = Marker;
 			if (!GameObject.Validate(Grant) || string.IsNullOrEmpty(marker)
 				|| Grant.CurrentCell != null
 				|| Grant.HasIntProperty(KingdomQuickstartRules.GrantMarkerProperty)
@@ -131,7 +141,13 @@ namespace ThousandAndFirst
 		private static bool ExactGrantMarker(GameObject Grant,
 			KingdomQuickstartReceipt Receipt, KingdomQuickstartPhase Target)
 		{
-			string marker = KingdomQuickstartRules.GrantMarker(Receipt, Target);
+			return ExactMarker(Grant, KingdomQuickstartRules.GrantMarker(Receipt, Target));
+		}
+
+		/// <summary>One object in its zone wears this exact reservation, and it is that object.</summary>
+		private static bool ExactMarker(GameObject Grant, string Marker)
+		{
+			string marker = Marker;
 			if (!GameObject.Validate(Grant) || Grant.CurrentZone == null
 				|| string.IsNullOrEmpty(marker)
 				|| !Grant.HasStringProperty(KingdomQuickstartRules.GrantMarkerProperty)
@@ -156,6 +172,12 @@ namespace ThousandAndFirst
 				phase <= (int)KingdomQuickstartPhase.AdvisorResolved; phase++)
 				if (string.Equals(Marker, KingdomQuickstartRules.GrantMarker(Receipt,
 					(KingdomQuickstartPhase)phase), StringComparison.Ordinal)) return true;
+			// The four founder bodies wear an indexed reservation of the same family. They are
+			// minted only at Complete, past every grant phase this scan runs in, but the scan
+			// refuses ANY object wearing an unrecognised marker, so it must recognise them.
+			for (int index = 0; index < KingdomQuickstartRules.FounderCount; index++)
+				if (string.Equals(Marker, KingdomQuickstartRules.FounderMarker(Receipt, index),
+					StringComparison.Ordinal)) return true;
 			return false;
 		}
 

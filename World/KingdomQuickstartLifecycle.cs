@@ -7,6 +7,11 @@ namespace ThousandAndFirst
 	/// <summary>
 	/// Save-scoped wake for an interrupted quickstart. One unchanged receipt is attempted once;
 	/// measured progress publishes a new receipt and therefore authorizes the next attempt.
+	/// <para>
+	/// What counts as finished is <see cref="KingdomQuickstartRules.IsTerminal"/>, not a phase
+	/// comparison: a Complete receipt that still owes or is part-way through its founding cohort
+	/// is not done, and a Complete receipt whose founders were omitted or faulted is.
+	/// </para>
 	/// </summary>
 	[Serializable]
 	public sealed class KingdomQuickstartLifecycle : IPlayerSystem
@@ -56,7 +61,7 @@ namespace ThousandAndFirst
 				StringComparison.Ordinal)
 				|| !KingdomQuickstartRules.TryDecode(raw,
 					out KingdomQuickstartReceipt receipt)
-				|| receipt.Phase == KingdomQuickstartPhase.Complete) return;
+				|| KingdomQuickstartRules.IsTerminal(receipt)) return;
 			AttemptedReceipt = raw;
 			if (!KingdomQuickstartBootstrap.Run(game, out string failure))
 				MetricsManager.LogError("ThousandAndFirst quickstart recovery: "

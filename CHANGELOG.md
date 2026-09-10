@@ -10,6 +10,50 @@ below it.
 
 ## Unreleased — Beta gap report
 
+### Added
+
+- Kingdom Quickstart now founds a world with four founding citizens — a hand, a drifter, a tinker
+  and a physicker of one culture per camp — enrolled under a new `Founding` reason that only this
+  bootstrap can emit, on the roll and able to work at turn 1, standing on the approach. They arrive
+  together or not at all: the bodies and all their gear are raised inside one custody scope, so a
+  proved complete unwind permits a clean retry. A durable Raising receipt precedes the first
+  factory; an interrupted attempt with no bodies left on this ground never invents replacements.
+  They sleep rough until the two tent rows stand (about a day and a half) against a six-day grace,
+  and the completion notice and the charter both say so. Four at a camp drink 4 drams a day, so the
+  opening 24 drams last six days, and the base arrival interval becomes 6000 ticks rather than 3600.
+  Actual arrival timing still follows the live cadence, district, and settlement policies.
+  A save cut part-way through enrollment resumes by the exact published founder identities.
+  Each founder is counted into the settlement's per-profile origin tally by ADDING one under its
+  own durable, identity-bound obligation — bound to the exact body, profile and owning city and
+  proved so on every read, prepared before anything is mutated, and completed only after both the
+  origin label and the tally have been measured. That tally is shared with ordinary arrivals, which
+  raise it inside their own protocol, so five citizens already here plus four founders is nine.
+  Where an interruption falls between the label and the increment, the outcome cannot be told from
+  the tally — an unrelated arrival can leave it reading exactly what a finished count would have
+  left, and counter equality therefore never authorises completion — so that founder's accounting
+  is declared unresolved in the open, once, and never retried. It is not declared SHORT: an
+  interruption after the increment retains it, and the two cases cannot be told apart afterwards,
+  so the tally is left exactly as it stands. That is a deliberate safety policy rather than a claim
+  of fully automatic forward recovery: the world stays playable and the founder is named, enrolled
+  and on the roll. Identities are bound to the canonical settlement, not to the ground it stands
+  on, so a later incarnation on the same first-claimed zone cannot inherit another's proof; a name
+  found in the engine's number-property table, or in both tables at once, stops the accounting
+  before any write and is left exactly where it stands as evidence; and identities must survive
+  strict UTF-8 unchanged, so an unpaired surrogate — which the replacement encoder would fold into
+  one indistinguishable value — is refused rather than written down, and a control character is
+  refused by policy because a pipe-delimited, line-oriented wire is no place to smuggle one. The
+  reader itself never raises: hashing is an encoding step, so the digest is taken inside the
+  refusal boundary and a raw wire carrying a lone surrogate is answered false rather than throwing. A save cut in the gap between the four bodies being placed
+  and their identities being published is recovered from the ground: each founder wears a
+  reservation minted from the camp's own frozen ground, so a wake adopts four that are already
+  standing rather than raising four more, and refuses outright — once, and permanently — on a party
+  that is not exactly four after an attempt began. A named founder that cannot be found afterwards is announced once
+  and never retried, and the world says it is short rather than quietly standing at one, two or
+  three. A refused cohort never costs the founder the stores or the completion notice. A world founded before this change, or founded
+  with the new option off, decodes with no cohort, re-encodes byte for byte as it was written, is
+  finished on every wake, and never gains founders. New option `r_TAF_OptionQuickstartFounders`,
+  default Yes, read once when the world is made and frozen there.
+
 ### Fixed
 
 - Canonical compile gates honor a private `TMPDIR` for both independently allocated trees,
@@ -167,7 +211,39 @@ below it.
   (ruling 5); no capacity, catch-up envelope, or stored item is touched, and a standing save reads
   exactly what it read before.
 
-> **Current unreleased census — exact structural gate passed.** Current 3068-file census is line-cap green:
+> **Current unreleased census — exact structural gate passed.** Current 3078-file census is line-cap green:
+> 437,114 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
+> imports occur in 1434 files, 0 of them over the line limit. Inventory SHA-256:
+> `e1ddecb76e357905d90bbc40ad8414b68efc38f2b532d19ec61d2df4a5053ce9`.
+> The generated cold-install inventory contains 3109 files; no new subscription claim.
+> This digest is the Kingdom Quickstart founding cohort over the stockpile deposit custody census
+> retained below, and over every delta retained beneath that; each carries its own review chain and
+> none is restated for the others.
+> The founding-cohort delta over the custody census below is ten added and ten modified production
+> sources, and it regenerates the removal-coverage roster for the one object property the founder
+> origin accounting owns: the quickstart rules' founders partial, the bootstrap's receipt partial
+> split out of the bootstrap itself to stay under the line cap, the three bootstrap founders
+> partials, and the accounting's models, bounded versioned codec, host seam, engine-free
+> transaction and adapter are the additions; the quickstart models, rules, codec, citizenship
+> rules, bootstrap, recovery, verification, enrolment and lifecycle shards and the two harness
+> gates are the modifications.
+> On these bytes ALL FOUR compile modes are clean — staged baseline (3074 sources), staged
+> compatibility (3078 plus the tracked Hearthpyre 2.2.3 ABI stub), dev-harness baseline (3241) and
+> dev-harness compatibility (3245) — through the canonical `Tools/gate.sh` itself, with its
+> installed-Hearthpyre source and ABI step. The
+> engine-free suites pass ALL GREEN: 14,147 TafTests cases and 5,301 PortableTests cases, zero
+> skipped, of 14,147/5,301 discovered; the 670-test tooling suite passes. Forty-one guard mutations
+> were run against the new rules and thirty-six were caught by a failing case; the five survivors
+> are each recorded, with the guard that refuses the case first named in every one: the wire digest,
+> the codec floor, and the identity filter and the strict encoder, which cover each other so that
+> removing BOTH fails five cases.
+> NOT run for this delta: the native Quickstart boot matrix, ordinary play, graceful Quit and
+> Steam delivery. The six-profile boot matrix at seed `#43101` is OWED before merge, because this
+> delta changes what Quickstart does at boot.
+> The exact-inventory human semantic review is open against this digest; this is not Beta sign-off.
+
+> **Retained stockpile deposit custody census — exact structural gate passed.** That 3068-file census was line-cap green:
 > 435,538 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1429 files, 0 of them over the line limit. Inventory SHA-256:

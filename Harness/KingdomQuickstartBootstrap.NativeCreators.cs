@@ -14,6 +14,7 @@ namespace ThousandAndFirst
 			Context.Case("creator-larder-recovery", () => NativeLarderCreator(Context));
 			Context.Case("creator-materials-recovery", () => NativeMaterialsCreator(Context));
 			Context.Case("creator-advisor-recovery", () => NativeAdvisorCreator(Context));
+			Context.Case("creator-founders-cohort", () => NativeFoundersCohort(Context));
 			Context.Case("creator-foreign-obstruction", () => NativeForeignObstruction(Context));
 			NativeQuickstartFaults(Context);
 		}
@@ -27,6 +28,7 @@ namespace ThousandAndFirst
 			KingdomQuickstartPhase Target)
 		{
 			Context.Check(KingdomQuickstartRules.TryCreateReceipt("marsh", Context.Zone.ZoneID,
+				KingdomQuickstartFoundersDisposition.Pending,
 				out KingdomQuickstartReceipt receipt), "fixture zone must match the marsh profile");
 			for (int phase = (int)KingdomQuickstartPhase.Founded; phase < (int)Target; phase++)
 			{
@@ -173,6 +175,47 @@ namespace ThousandAndFirst
 				out failure) && ReferenceEquals(advisor, recovered)
 				&& disposition == KingdomQuickstartAdvisorDisposition.Included,
 				"unpublished advisor recovery must reuse the exact NPC");
+		}
+
+		/// <summary>
+		/// The reversible half of the founding cohort, against the engine: four bodies raised in
+		/// one scope, every one of them placed on its own reserved cell wearing its own indexed
+		/// reservation, and every one of them resolving back from the identity the fence would
+		/// publish. Their gear is tracked body-first so the context's reverse cleanup takes the
+		/// gear off before the body, which is the same order the scope's own rollback uses.
+		/// </summary>
+		private static void NativeFoundersCohort(KingdomNativeRegressionContext Context)
+		{
+			KingdomQuickstartReceipt receipt = NativeReceipt(Context, KingdomQuickstartPhase.AdvisorResolved);
+			Context.Check(KingdomQuickstartRules.TryAdvance(receipt, KingdomQuickstartPhase.AdvisorResolved,
+				"", KingdomQuickstartAdvisorDisposition.Omitted, out KingdomQuickstartReceipt resolved)
+				&& KingdomQuickstartRules.TryAdvance(resolved, KingdomQuickstartPhase.Complete, "",
+					KingdomQuickstartAdvisorDisposition.Unresolved, out receipt),
+				"fixture receipt must reach Complete owing a cohort");
+			Context.Check(receipt.FoundersDisposition == KingdomQuickstartFoundersDisposition.Pending
+				&& !KingdomQuickstartRules.IsTerminal(receipt), "a Complete receipt owing founders is not finished");
+			Context.Check(TryStageFounderBodies(Context.Game, Context.Zone, receipt,
+				out GameObject[] cohort, out string failure), failure);
+			for (int i = 0; i < cohort.Length; i++)
+			{
+				Context.Track(cohort[i]);
+				if (cohort[i].Inventory != null)
+					foreach (GameObject carried in cohort[i].Inventory.Objects) Context.Track(carried);
+				if (cohort[i].Body != null)
+					foreach (GameObject worn in cohort[i].Body.GetEquippedObjects()) Context.Track(worn);
+			}
+			Context.Check(VerifyFounderPlacement(Context.Zone, cohort, receipt, out failure), failure);
+			string[] ids = new string[KingdomQuickstartRules.FounderCount];
+			for (int i = 0; i < ids.Length; i++) ids[i] = cohort[i].IDIfAssigned;
+			Context.Check(KingdomQuickstartRules.TryRestateFounders(receipt,
+				KingdomQuickstartFoundersDisposition.Seeding, ids, out KingdomQuickstartReceipt seeding),
+				"the fence must name the exact four before any irreversible write");
+			for (int i = 0; i < ids.Length; i++)
+				Context.Check(ReferenceEquals(Context.Zone.FindObjectByID(ids[i]), cohort[i])
+					&& FounderIsExact(Context.Zone, cohort[i], seeding, i),
+					"a named founder must resolve back to the exact body it named");
+			Context.Check(!GrantQuarantined(Context.Game),
+				"a whole cohort must leave no quarantine behind");
 		}
 
 		private static void NativeForeignObstruction(KingdomNativeRegressionContext Context)

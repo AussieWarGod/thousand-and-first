@@ -1,6 +1,24 @@
 # Brief-to-implementation audit
 
-## Current stockpile deposit custody census — 2026-09-09
+## Current Kingdom Quickstart founding-cohort census — 2026-09-10
+
+**3078** production C# files, 437,114 physical lines, 1434 direct-XRL, zero cap failures;
+3109 generated cold-install files. Exact digest
+`e1ddecb76e357905d90bbc40ad8414b68efc38f2b532d19ec61d2df4a5053ce9`.
+Ten added sources (the quickstart rules' founders partial, the bootstrap receipt partial split out
+of the bootstrap, the three bootstrap founders partials, and the founder origin accounting's models,
+codec, host seam, engine and adapter) and ten modified, over the deposit
+custody census retained below. Structure, doc freshness and the Tools suite (627 tests) pass, the
+engine-free suites pass 14,147 main / 5,301 Portable with zero skips, and all four compile modes are
+clean under the canonical gate — staged baseline (3074), staged compatibility (3078),
+dev-harness baseline (3241), dev-harness compatibility (3245). Forty-one guard mutations were run
+against the new rules; thirty-six were caught by a failing case and five are documented, each with
+the guard that refuses its case first named. The identity filter and the strict encoder cover each
+other; removing both fails five cases. No native run, ordinary-play acceptance or
+exact-inventory human semantic review binds this digest, and the six-profile Quickstart boot matrix
+is owed before merge.
+
+## Retained stockpile deposit custody census — 2026-09-09
 
 **3068** production C# files, 435,538 physical lines, 1429 direct-XRL, zero cap failures;
 3099 generated cold-install files. Exact digest
