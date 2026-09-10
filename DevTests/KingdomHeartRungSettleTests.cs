@@ -168,8 +168,13 @@ namespace ThousandAndFirst.Tests
 			string caller = Read(Caller);
 			// The cheap endpoint gate refuses before any work; the delegate the helper re-asks
 			// after each callback is the WHOLE handover proof.
-			Ordered(caller, "return ExactImprovementHeartEndpoint(System, Z, Successor, Job)",
-				"KingdomPlots.TrySettleHeartRung(System, Z, Successor, Job.TargetKey,",
+			// Cheap gate -> FULL proof -> settle. The middle proof closes the window opened by the
+			// handover's own active.ObserveChanged reclassification, which can tear carried
+			// contents while leaving the root standing.
+			Ordered(caller,
+				"if (!ExactImprovementHeartEndpoint(System, Z, Successor, Job)) return false;",
+				"if (!ExactImprovementHandoverProof(System, Z, Successor, Job, out _)) return false;",
+				"return KingdomPlots.TrySettleHeartRung(System, Z, Successor, Job.TargetKey,",
 				"() => ExactImprovementHandoverProof(System, Z, Successor, Job, out _));");
 			string settle = Read(Settle);
 			// Boundary one: the ceremony. Boundary two: the basin. Both re-ask, and the second
@@ -219,7 +224,7 @@ namespace ThousandAndFirst.Tests
 			// callback is the whole handover proof, pinned by
 			// EveryCallbackBoundaryReAsksTheWholeProofNotJustTheCheapGate.
 			Assert.That(caller, Does.Contain(
-				"return ExactImprovementHeartEndpoint(System, Z, Successor, Job)"));
+				"if (!ExactImprovementHeartEndpoint(System, Z, Successor, Job)) return false;"));
 		}
 
 	}

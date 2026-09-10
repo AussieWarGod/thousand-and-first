@@ -20,10 +20,10 @@ python3 Tools/check-structure.py --release
 
 ## Current isolated draft census
 
-Heart rung settlement seam (#138): 3082 staged production C# files; 437,399 physical
+Heart rung settlement seam (#138): 3082 staged production C# files; 437,405 physical
 lines; zero at or above 300. The census reports
 1437 files with direct `XRL` imports; 0 of those exceed the line limit. Exact inventory SHA-256:
-`09917087950cde3c906c89a1fb053ae23b02679dc16b0064c6966f24e2e41255`.
+`40af1139cc9336140aca90a5db81c80aefb060a45635d57766b560c34c1753e4`.
 One small engine-free classifier is added. Existing internal capture/flush/reporting seams carry
 a typed pending result without serialized state or format changes. Four compile modes, audit,
 main 14,296/portable 5,460 tests pass (managed zero skips). The bounded roadless-camp native

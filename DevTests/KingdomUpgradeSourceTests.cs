@@ -13,6 +13,14 @@ namespace ThousandAndFirst.Tests
 			return KingdomUpgradeLogicalSource.Read();
 		}
 
+		/// <summary>#138: the improvement handover's recovery predicate block, lifted whole into
+		/// its own shard so the rung settlement can re-ask the identical question after every
+		/// callback. Pinned here rather than deleted.</summary>
+		private static string HandoverProof()
+		{
+			return TestMain.ReadRepositoryText("Growth/KingdomUpgrade.25b.HandoverProof.cs");
+		}
+
 		[Test]
 		public void PartAndNestedDeclarationAbiRemainExact()
 		{
@@ -184,9 +192,15 @@ namespace ThousandAndFirst.Tests
 				"TryPublishRemovalIntent(", "SetStringProperty(",
 				"RemovalProofProperty", "Predecessor.Destroy(",
 				"KingdomSurvey.ObserveCurrentTopologyInActive(",
-				"KingdomPhysicalLookupState.Absent", "KingdomPhysicalPhase.FinalRemoved",
+				// #138: the recovery predicate block moved WHOLE into
+				// ExactImprovementHandoverProof so the rung's post-callback re-ask is the same
+				// question. Its position in this flow did not move, and its contents are pinned
+				// against the extracted shard below.
+				"ExactImprovementHandoverProof(System, Z, Successor, Job, out Failure)",
+				"KingdomPhysicalPhase.FinalRemoved",
 				"TryRetirePendingUpgradeComponents(", "active.ObserveChanged(Successor)",
 				"KingdomConstruction.Complete(ref Job)", "r_KingdomScaffold.TellCompletion(");
+			AssertOrdered(HandoverProof(), "KingdomPhysicalLookupState.Absent");
 		}
 
 		[Test]
@@ -345,13 +359,18 @@ namespace ThousandAndFirst.Tests
 				"TryPublishRemovalIntent(", "Predecessor.Destroy(",
 				"FindGlobalPredecessorAuthority(job, Successor",
 				"GameObject.Validate(Predecessor)", "ImprovementRemovalAftermath(",
-				"TryRecoverAbsentHandover(", "FindGlobalPredecessorAuthority(Job, Successor",
+				"TryRecoverAbsentHandover(",
+				// #138: the recovery's own global-absence proof moved into the extracted shard,
+				// still ahead of the FinalRemoved commit and still the same call.
+				"ExactImprovementHandoverProof(System, Z, Successor, Job, out Failure)",
 				"KingdomPhysicalPhase.FinalRemoved");
+			AssertOrdered(HandoverProof(), "FindGlobalPredecessorAuthority(Job, Successor",
+				"KingdomPhysicalLookupState.Absent");
 			StringAssert.DoesNotContain("FindExactId(Successor.CurrentZone, predecessorId", removal);
 			StringAssert.DoesNotContain("FindExactId(Z, Job.SubjectId", removal);
 			StringAssert.Contains("aftermath != KingdomExactRemovalAction.ProvedAbsent", removal);
 			StringAssert.Contains("Improvement removal moved or ambiguously changed an endpoint", removal);
-			StringAssert.Contains("!ExactRecoverableRemovalReceipt(Job)", removal);
+			StringAssert.Contains("!ExactRecoverableRemovalReceipt(Job)", HandoverProof());
 			string legacy = Between(removal, "private static bool ExactRecoverableRemovalReceipt(",
 				"private static bool ExactPendingRemovalProof(");
 			StringAssert.Contains("Job.PhysicalPhase == KingdomPhysicalPhase.FinalRemoved", legacy);

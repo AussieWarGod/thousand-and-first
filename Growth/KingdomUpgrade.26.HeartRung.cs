@@ -36,12 +36,18 @@ namespace ThousandAndFirst
 		{
 			if (System == null || Z == null || Job == null
 				|| Job.Route != KingdomConstructionRoute.Improvement) return false;
-			// The cheap gate first, then the WHOLE handover proof as the delegate the helper
-			// re-asks after every callback. Not a parallel predicate: it is the very function the
-			// handover proved this successor with, carve-out and all.
-			return ExactImprovementHeartEndpoint(System, Z, Successor, Job)
-				&& KingdomPlots.TrySettleHeartRung(System, Z, Successor, Job.TargetKey,
-					() => ExactImprovementHandoverProof(System, Z, Successor, Job, out _));
+			// Cheap gate, then the WHOLE proof AGAIN before anything is stamped, then the same
+			// whole proof as the delegate the helper re-asks after every callback.
+			// The middle one is not redundant: between the handover's own first evaluation and
+			// this call the survey has reclassified the successor (active.ObserveChanged), and a
+			// reclassification can tear carried contents while leaving the root standing exactly
+			// where it was. Refusing here costs a rung stamp and a ceremony that should never
+			// have fired. Not a parallel predicate: it is the very function the handover proved
+			// this successor with, carve-out and all.
+			if (!ExactImprovementHeartEndpoint(System, Z, Successor, Job)) return false;
+			if (!ExactImprovementHandoverProof(System, Z, Successor, Job, out _)) return false;
+			return KingdomPlots.TrySettleHeartRung(System, Z, Successor, Job.TargetKey,
+				() => ExactImprovementHandoverProof(System, Z, Successor, Job, out _));
 		}
 
 		/// <summary>The cheap pre-call gate: this successor, this job, this ground. It is what

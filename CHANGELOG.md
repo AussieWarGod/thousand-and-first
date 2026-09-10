@@ -11,11 +11,11 @@ below it.
 ## Unreleased — Beta gap report
 
 > **Current heart rung settlement census (#138).** Current 3082-file census is line-cap green:
-> 437,399 physical lines; zero files at or above 300; direct `XRL`
+> 437,405 physical lines; zero files at or above 300; direct `XRL`
 > imports occur in 1437 files, 0 of them over the line limit.
-> Inventory SHA-256: `09917087950cde3c906c89a1fb053ae23b02679dc16b0064c6966f24e2e41255`.
+> Inventory SHA-256: `40af1139cc9336140aca90a5db81c80aefb060a45635d57766b560c34c1753e4`.
 > The generated cold-install inventory contains 3113 files. All four compile modes pass;
-> audit and main 14,309/portable 5,467 tests pass (managed zero skips). The roadless-camp native
+> audit and main 14,318/portable 5,470 tests pass (managed zero skips). The roadless-camp native
 > check passes at `0cfd8e7` after one retained startup timeout. Earlier census entries are retained evidence.
 
 ### Fixed
