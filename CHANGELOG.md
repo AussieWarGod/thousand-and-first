@@ -22,8 +22,17 @@ below it.
   and the completion notice and the charter both say so. Four at a camp drink 4 drams a day, so the
   opening 24 drams last six days, and the first traveller is due at 6000 ticks rather than 3600.
   A save cut part-way through enrollment resumes by the exact published founder identities.
-  Origin-tally reconciliation still needs its separately tracked additive-accounting repair
-  before this feature can merge. A save cut in the gap between the four bodies being placed
+  Each founder is counted into the settlement's per-profile origin tally by ADDING one under its
+  own durable, identity-bound obligation — bound to the exact body, profile and owning city and
+  proved so on every read, prepared before anything is mutated, and completed only after both the
+  origin label and the tally have been measured. That tally is shared with ordinary arrivals, which
+  raise it inside their own protocol, so five citizens already here plus four founders is nine.
+  Where an interruption falls between the label and the increment, the outcome cannot be told from
+  the tally — an unrelated arrival can leave it reading exactly what a finished count would have
+  left, and counter equality therefore never authorises completion — so that one founder's
+  contribution is refused in the open, once, and never retried. That is a deliberate safety policy
+  rather than a claim of fully automatic forward recovery: the world stays playable, the founder
+  stays on the roll, and the tally is honestly short by one instead of silently wrong either way. A save cut in the gap between the four bodies being placed
   and their identities being published is recovered from the ground: each founder wears a
   reservation minted from the camp's own frozen ground, so a wake adopts four that are already
   standing rather than raising four more, and refuses outright — once, and permanently — on a party

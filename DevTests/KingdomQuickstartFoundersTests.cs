@@ -514,18 +514,14 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains(
 				"string.IsNullOrEmpty(Body.GetStringProperty(\"KingdomName\"))", enrolment);
 			StringAssert.Contains("Body.GetIntProperty(\"KingdomCitizen\") != 1", enrolment);
-			StringAssert.Contains(
-				"string.IsNullOrEmpty(Body.GetStringProperty(\"KingdomOrigin\"))", enrolment);
-			int guard = enrolment.IndexOf(
-				"string.IsNullOrEmpty(Body.GetStringProperty(\"KingdomOrigin\"))",
+			// The origin label is no longer guarded here at all: it is written under the durable
+			// obligation that also raises the tally, because the two cannot be separated safely.
+			int accounting = enrolment.IndexOf("AccountFounderOrigin(System, Body, Receipt,",
 				StringComparison.Ordinal);
-			int reconcile = enrolment.IndexOf("ReconcileFounderOrigins(System, Zone, Receipt);",
-				StringComparison.Ordinal);
-			Assert.That(guard, Is.GreaterThanOrEqualTo(0));
-			Assert.That(reconcile, Is.GreaterThan(guard));
+			Assert.That(accounting, Is.GreaterThanOrEqualTo(0));
 			// The roll row binds on the body's zone, so it is last.
 			Assert.That(enrolment.IndexOf("KingdomResidents.TryEnsureRow(",
-				StringComparison.Ordinal), Is.GreaterThan(reconcile));
+				StringComparison.Ordinal), Is.GreaterThan(accounting));
 			// Every path out of the irreversible half either publishes or is already terminal.
 			StringAssert.Contains("KingdomQuickstartFoundersDisposition.Faulted", enrolment);
 			StringAssert.Contains("KingdomQuickstartPhase.FoundersSeeded", enrolment);
@@ -698,23 +694,43 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void TheOriginTallyIsDerivedFromTheFoundersRatherThanCountedAsTheyAreWritten()
+		public void TheOriginTallyIsAddedToUnderADurableObligationAndNeverTakenAsAMaximum()
 		{
 			string enrolment = TestMain.ReadRepositoryText(
 				"World/KingdomQuickstartBootstrap.Founders.Enrollment.cs");
-			// An increment beside a property write has a gap: an interruption between them makes
-			// the retry see the property, skip the counter, and lose that count forever.
-			StringAssert.DoesNotContain("origins + 1", enrolment);
-			StringAssert.Contains("ReconcileFounderOrigins(System, Zone, Receipt);", enrolment);
-			StringAssert.Contains("if (recorded < carried) System.OriginCounts["
-				+ "Receipt.ProfileKey] = carried;", enrolment);
-			int write = enrolment.IndexOf(
-				"Body.SetStringProperty(\"KingdomOrigin\", Receipt.ProfileKey)",
-				StringComparison.Ordinal);
-			int reconcile = enrolment.IndexOf("ReconcileFounderOrigins(System, Zone, Receipt);",
-				StringComparison.Ordinal);
-			Assert.That(write, Is.GreaterThanOrEqualTo(0));
-			Assert.That(reconcile, Is.GreaterThan(write));
+			// The tally is a SHARED aggregate: ordinary arrivals raise the same dictionary inside
+			// their own before/after protocol. A maximum over "founders marked" swallowed every
+			// citizen who was already here, and a derivation from the label cannot see them
+			// either. Only an additive increment under a per-founder obligation is correct.
+			StringAssert.DoesNotContain("ReconcileFounderOrigins", enrolment);
+			StringAssert.DoesNotContain("OriginCounts", enrolment);
+			StringAssert.Contains("AccountFounderOrigin(System, Body, Receipt,", enrolment);
+			// The behaviour itself is proved against a running adapter in
+			// KingdomFounderOriginTests, not here: this only pins that the call site is the one
+			// that owns it and that the refusal is visible.
+			StringAssert.Contains("KingdomFounderOriginOutcome.Quarantined", enrolment);
+			StringAssert.Contains("AnnounceFoundersOnce(Game, Receipt, \"Founder \" + Index",
+				enrolment);
+
+			string adapter = TestMain.ReadRepositoryText(
+				"World/KingdomQuickstartBootstrap.Founders.Origin.cs");
+			StringAssert.Contains("System.OriginCounts", adapter);
+			StringAssert.Contains("System.SettlementIdentityFirstClaimedZone", adapter);
+			// The law itself may not name an engine type, so it can be driven against an adversary.
+			foreach (string relative in new[]
+			{
+				"Core/KingdomFounderOriginEngine.cs", "Core/IKingdomFounderOriginHost.cs",
+				"Core/KingdomFounderOriginCodec.cs", "Core/KingdomFounderOriginModels.cs"
+			})
+			{
+				string law = TestMain.ReadRepositoryText(relative);
+				StringAssert.DoesNotContain("using XRL", law);
+				StringAssert.DoesNotContain("GameObject", law);
+			}
+			// And it adds; it never takes a maximum and never assigns a count of founders.
+			string engine = TestMain.ReadRepositoryText("Core/KingdomFounderOriginEngine.cs");
+			StringAssert.Contains("Host.WriteTally(Profile, now + 1);", engine);
+			StringAssert.DoesNotContain("Math.Max", engine);
 		}
 
 		[Test]

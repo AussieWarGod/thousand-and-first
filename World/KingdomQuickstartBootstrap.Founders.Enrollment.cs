@@ -38,7 +38,8 @@ namespace ThousandAndFirst
 						+ "your roll and stay there. This is not retried.";
 					return false;
 				}
-				if (!TryEnrolFounder(System, Zone, body, Receipt, i, out Failure)) return false;
+				if (!TryEnrolFounder(Game, System, Zone, body, Receipt, i, out Failure))
+					return false;
 			}
 			// One publish closes the cohort. Population reads four off the roll from here with no
 			// seeder bookkeeping of its own.
@@ -52,8 +53,8 @@ namespace ThousandAndFirst
 		/// birth mark, origin, then the roll row (which binds on the body's current zone and so
 		/// must come last).
 		/// </summary>
-		private static bool TryEnrolFounder(KingdomSystem System, Zone Zone, GameObject Body,
-			KingdomQuickstartReceipt Receipt, int Index, out string Failure)
+		private static bool TryEnrolFounder(XRLGame Game, KingdomSystem System, Zone Zone,
+			GameObject Body, KingdomQuickstartReceipt Receipt, int Index, out string Failure)
 		{
 			Failure = "";
 			if (string.IsNullOrEmpty(Body.GetStringProperty("KingdomName")))
@@ -70,14 +71,21 @@ namespace ThousandAndFirst
 				return false;
 			}
 			Body.SetIntProperty("KingdomBorn", 1);
-			if (string.IsNullOrEmpty(Body.GetStringProperty("KingdomOrigin")))
-				Body.SetStringProperty("KingdomOrigin", Receipt.ProfileKey);
-			// The tally is DERIVED from the founders that carry the origin, never incremented as
-			// each one is written. An increment beside a property write has a gap: an interruption
-			// between the two would make the retry see the property, skip the counter, and lose
-			// that count forever. Recomputing is idempotent by construction, so it is correct on
-			// the first pass, on a resumed pass, and on a pass that ends in a fault.
-			ReconcileFounderOrigins(System, Zone, Receipt);
+			// The origin label and the settlement's origin tally are written together, under one
+			// durable identity-bound obligation, and never inferred from each other. The label
+			// alone cannot say whether the shared tally already holds this founder, and the tally
+			// alone cannot either: ordinary arrivals raise it inside their own protocol, and one of
+			// them can coincidentally produce exactly the count this founder intended to leave.
+			string accounting;
+			KingdomFounderOriginOutcome counted = AccountFounderOrigin(System, Body, Receipt,
+				out accounting);
+			if (counted == KingdomFounderOriginOutcome.Quarantined)
+				// Terminal for this founder and said once. The settlement stays playable and the
+				// founder stays on the roll; only the origin tally is honestly short, and it says
+				// so rather than being guessed at.
+				AnnounceFoundersOnce(Game, Receipt, "Founder " + Index
+					+ "'s origin could not be counted safely (" + accounting + "). They stay on "
+					+ "your roll; the origin tally is short by one and will not be guessed at.");
 			KingdomCityBook book;
 			int residentId;
 			if (!KingdomResidents.TryEnsureRow(System, Body, out book, out residentId))
@@ -86,27 +94,6 @@ namespace ThousandAndFirst
 				return false;
 			}
 			return true;
-		}
-
-		/// <summary>
-		/// Sets this camp's origin tally to the number of founders that provably carry its origin.
-		/// Never lowers a tally somebody else raised: it only ever closes a shortfall its own
-		/// founders account for.
-		/// </summary>
-		private static void ReconcileFounderOrigins(KingdomSystem System, Zone Zone,
-			KingdomQuickstartReceipt Receipt)
-		{
-			int carried = 0;
-			for (int i = 0; i < KingdomQuickstartRules.FounderCount; i++)
-			{
-				GameObject body = Zone?.FindObjectByID(Receipt.FounderObjectIds[i]);
-				if (GameObject.Validate(body) && string.Equals(
-					body.GetStringProperty("KingdomOrigin"), Receipt.ProfileKey,
-					StringComparison.Ordinal)) carried++;
-			}
-			int recorded;
-			System.OriginCounts.TryGetValue(Receipt.ProfileKey, out recorded);
-			if (recorded < carried) System.OriginCounts[Receipt.ProfileKey] = carried;
 		}
 	}
 }
