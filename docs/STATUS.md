@@ -16,6 +16,16 @@ inferred from source or static automation.
 
 ## Stockpile hotfix — issue #142
 
+The integrated `0f78405` native build run passed genuine boot, quote, CanPay, commission,
+physical timber/water debit and clean paid-claim checks, then correctly failed acceptance at
+a faulty developer assertion: it expected `Projected`, while successful `ProjectPlot` explicitly
+finishes in `Working`. Root also found the remaining output assertion named `r_KingdomPlot`
+instead of the actual `r_KingdomPlotWorks` part. Both assertions are corrected without changing
+production state transitions. Retained evidence: `hotfix142-native.9GzK7k`, profile
+`/mnt/c/taf-scenario.aACZpW`, owned PID 30636 stopped. This partial run is not a native PASS.
+Full Windows tests on that head passed 14,111 cases with zero skips; portable compilation failed
+on a missing construction-rule dependency in its test project, tracked for correction before release.
+
 A genuine production Quickstart from the shipped 0.3.2 runtime reproduced the menu failure:
 `CanPay(zone, "fire")` reported one timber missing with four physical starter timber and no
 bound survey. Diagnostic commit `7adb3e46c6d13ff6f816bad9b74d5ea5f9a453e0`, seed `#43101`,

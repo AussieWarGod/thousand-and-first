@@ -260,13 +260,15 @@ namespace ThousandAndFirst
 					+ "/" + Job.Claims?.MaterialLost + "; expected=" + expectedMaterial;
 				return false;
 			}
-			if (Job.Phase != KingdomConstructionPhase.Projected || Job.Projection != KingdomConstructionProjection.PlotWorks)
-			{ Failure = "the new job is not in the exact projected plot-works state"; return false; }
+			// ProjectPlot finishes a successful stake with FinishProjection(..., true, true): Working.
+			if (Job.Phase != KingdomConstructionPhase.Working || Job.Projection != KingdomConstructionProjection.PlotWorks)
+			{ Failure = "the new job is not working plot works: " + Job.Phase + "/" + Job.Projection; return false; }
 			if (string.IsNullOrEmpty(Job.OutputId)
 				|| KingdomConstruction.FindExactId(Zone, Job.OutputId, out GameObject works) != KingdomPhysicalLookupState.Exact)
 			{ Failure = "the new job's linked build output could not be resolved by its exact id"; return false; }
+			r_KingdomPlotWorks part = GameObject.Validate(works) ? works.GetPart<r_KingdomPlotWorks>() : null;
 			if (!GameObject.Validate(works) || works.IDIfAssigned != Job.OutputId || !KingdomConstruction.HasReceipt(works, Job)
-				|| !works.HasPart("r_KingdomPlot") || works.Physics?._CurrentCell?.X != Job.X || works.Physics?._CurrentCell?.Y != Job.Y
+				|| part == null || part.DesignKey != BuildKey || works.Physics?._CurrentCell?.X != Job.X || works.Physics?._CurrentCell?.Y != Job.Y
 				|| !ReferenceEquals(works.Physics?._CurrentCell?.ParentZone, Zone))
 			{ Failure = "the new job's linked output does not carry its exact receipt, plot part and ground"; return false; }
 			Failure = null;

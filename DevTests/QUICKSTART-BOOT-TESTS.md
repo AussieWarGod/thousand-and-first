@@ -179,7 +179,7 @@ harness re-proves by exact object reference: the starter materials chest's own t
 from 4 to 3 raw units with every other row's reference and count unchanged, the receipted water
 cask's own `LiquidVolume` drops by the `"fire"` entry's exact `CostDrams`, and a new
 `KingdomConstructionJob` (absent before the call, present after, matched by exact
-settlement/zone/route/target, exact paid water and material claims, exact `Projected` phase, and
+settlement/zone/route/target, exact paid water and material claims, exact `Working` phase, and
 its own linked build output resolved by `FindExactId`) appears in the construction registry.
 `IDIfAssigned` is read for reporting only; an unassigned starter child id is never itself a
 refusal. No harness scope may be bound before or remain after any of the three calls.

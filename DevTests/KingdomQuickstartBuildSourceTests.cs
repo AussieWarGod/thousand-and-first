@@ -19,6 +19,22 @@ namespace ThousandAndFirst.Tests
 		private const string Request = "Harness/KingdomQuickstartBootRequest.cs";
 
 		[Test]
+		public void SuccessfulStakeRequiresWorkingPhaseAndActualPlotWorksPart()
+		{
+			string census = Read(Census);
+			StringAssert.Contains("Job.Phase != KingdomConstructionPhase.Working", census);
+			StringAssert.DoesNotContain("Job.Phase != KingdomConstructionPhase.Projected", census);
+			StringAssert.Contains("works.GetPart<r_KingdomPlotWorks>()", census);
+			StringAssert.Contains("part == null || part.DesignKey != BuildKey", census);
+			StringAssert.DoesNotContain("works.HasPart(\"r_KingdomPlot\")", census);
+			StringAssert.Contains("KingdomConstruction.FinishProjection(ref Updated, true, true)",
+				Read("Growth/KingdomPlot2.12.Projection.cs"));
+			StringAssert.Contains("Working ? KingdomConstructionPhase.Working : KingdomConstructionPhase.Complete",
+				Read("Growth/KingdomConstruction.Transitions.cs"));
+			StringAssert.Contains("<part Name=\"r_KingdomPlotWorks\" />", Read("RuntimeData/ObjectBlueprints.xml"));
+		}
+
+		[Test]
 		public void PaidJobUsesTheExecutedNetDebitClaimPredicate()
 		{
 			StringAssert.Contains("KingdomQuickstartBuildClaims.CleanFirstPayment(Job.Claims, CostDrams, Quote.MaterialClaim)", Read(Census));
