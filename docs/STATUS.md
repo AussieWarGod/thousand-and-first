@@ -16,11 +16,31 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
+Developer reload cleanup reports both the original failure and a failed owned-process stop,
+retaining the original exception as its cause. Harmless shell fixtures cover exact helper
+arguments, helper refusal blocking later personas, and prior ownership failure blocking reload.
+These checks are host orchestration evidence only, not native reload or release acceptance.
+
+The cold-reload host arms a kernel parent-death signal (PR_SET_PDEATHSIG) so a killed
+run-personas.sh cannot orphan it, refusing explicitly on either arming race (parent already
+gone before or during the call) or a failed prctl, rather than a silent fallback.
+run-personas.sh's own TERM path still never sends a raw kill; it reports its own exit as a
+hand-off, not confirmed cleanup. Real child-process/real-signal tests (`Tools/tests/
+persona_reload_signal_test.py`) prove disposal, the refusals, and the shell's forwarding and
+reporting - host orchestration evidence only, not native reload or release acceptance.
+
 Developer profile metadata census uses batches of at most four read-only workers. Every existing
 per-file ancestor/link/size check remains; file/directory/total-byte bounds and both closed hash
 passes remain in force. A retained stopped 3,273-file profile measured 75.54 seconds before,
 10.03 seconds with batching, then 74.81 seconds on a warm original-code control. These are local
 phase timings, not a general platform guarantee or native acceptance. Refs #89.
+
+Retained native developer cold-reload evidence at PR #108 head `6ea5f38`: genuine marsh/advisor
+Quickstart at seed `#43101`, real save, receipt-owned stop, fresh descendant profile, strict
+save/load checks, unchanged save hashes and native stock/ID witnesses, then a second owned stop
+and final idle proof. Report `root-reload-native.hOChoP/report.tsv` passed one persona. This is
+same-version developer evidence, not historical saves, ordinary play, graceful quit or release
+acceptance; the later host-only census merge is not silently included in that native claim.
 
 Repository audits use a fresh empty Python cache lookup root with bytecode writes disabled.
 An executable timestamp-cache fixture proves that disabling writes alone still reads stale
