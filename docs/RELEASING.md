@@ -451,7 +451,7 @@ Order of a full 0.3.x release:
 1. Bump `manifest.json` to the new patch, fold every `Unreleased` section into one
    `## [<version>] — YYYY-MM-DD (Alpha)` heading, and complete the private canonicalization
    commit on `dev` (`workshop.json` Visibility `"0"`, WorkshopId `3796495680`). If any C# source
-   changed since the last review, commit a refreshed `docs/STRUCTURE_REVIEW.json` naming the human
+   changed since the last review, commit a refreshed `docs/STRUCTURE_REVIEW.json` naming the author-authorized
    reviewer, so `python3 Tools/check-structure.py --release` exits 0. Both lanes run that command
    on the hosted runner within seconds of the tag push, and stage 11 of the licensed gate runs it
    again on the Steam host; a stale review stops the release before the licensed gate is burned.
@@ -462,9 +462,10 @@ Order of a full 0.3.x release:
    binding commit is `candidateCommit`.
 4. Public flip commit: canonicalize Alpha metadata, status line, changelog heading and a fresh
    `docs/ALPHA_CANDIDATE.json`. Open the release pull request from `dev` to `main` and merge it
-   **with a merge commit**, once the author has enabled merge commits for release pull requests —
-   no currently enabled merge method preserves the `candidateCommit` ancestry, so read
-   "Release pull requests require a merge commit" below before running this step.
+   **with a merge commit** to preserve `candidateCommit` ancestry. Merge commits are enabled
+   (verified 2026-09-10). For an isolated main-based hotfix, use the documented main PR and
+   normal backmerge to dev; never pull unfinished dev features into the hotfix merely to make
+   the candidate reachable. See "Release pull requests require a merge commit" below.
 5. Tag the resulting `main` commit with an annotated `v<version>` carrying a body, and push it,
    **immediately** after the merge and before anything else lands on `main`: the public lane
    compares the tagged commit against the `origin/main` tip as the job reads it, not as it stood at
