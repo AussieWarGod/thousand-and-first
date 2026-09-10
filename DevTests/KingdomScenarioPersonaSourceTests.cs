@@ -138,6 +138,22 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("RESERVED_VERBS", matrix);
 		}
 
+		/// <summary>
+		/// The reload dispatch line is not compiled into either DevTests project (the refusal it
+		/// routes to is pinned separately by KingdomScenarioReloadTests), so deleting the wiring in
+		/// <see cref="KingdomScenarioVerbs"/> would survive every other test. Pin it here.
+		/// </summary>
+		[Test]
+		public void ReloadTokenDispatchesToTheColdProcessRefusal()
+		{
+			string verbs = Read("Harness/KingdomScenarioVerbs.cs");
+			StringAssert.Contains("KingdomScenarioReload.Refuse(", verbs);
+			int reload = verbs.IndexOf("Token(Raw) == \"reload\"", StringComparison.Ordinal);
+			int refuse = verbs.IndexOf("KingdomScenarioReload.Refuse(", StringComparison.Ordinal);
+			ClassicAssert.Greater(reload, -1, "the reload token must be checked before dispatch");
+			ClassicAssert.Greater(refuse, reload, "the reload token must route to the refusal, not around it");
+		}
+
 		[Test]
 		public void ArcologyNavigationIsAttendedReservedAndCannotBecomeAPersonaVerb()
 		{

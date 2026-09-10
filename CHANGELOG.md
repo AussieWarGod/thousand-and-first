@@ -10,6 +10,60 @@ below it.
 
 ## Unreleased — Beta gap report
 
+### Fixed
+
+- Canonical compile gates honor a private `TMPDIR` for both independently allocated trees,
+  allowing parallel workers to avoid the shared `/tmp` publication lock without bypassing it.
+- The dev-only scenario test ground's `Strip`/`Restrip` cleared only the zone's interior objects, so
+  a re-stripped ground could still carry worldgen's `faction` zone property forward into the next
+  attempt — not born-clean. `Strip` now also clears `"faction"`, but ONLY once it has proved no
+  founding-attempt site reservation stands on the zone: a prior attempt's reservation (authority,
+  name, vocation, village-charter target, tick) is production state a resumed or cleaned-up attempt
+  still reads, and erasing any proper subset of it would silently change what the reservation means
+  rather than make the ground clean. When one is pending, `Strip` now refuses whole and touches
+  nothing, and `BuildZone`/`Restrip` carry that refusal into their journal row
+  (`Harness/KingdomScenarioTestGround.cs`). The harness first-city founding step also gained a
+  read-only foreign-faction precondition, mirroring `KingdomRules.GroundIsForeignFaction` — the SAME
+  predicate `Core/KingdomFounding.04.Claims.cs` guards publication with — so a foreign zone is refused
+  before the production transaction ever runs rather than publish-then-refuse
+  (`Harness/KingdomScenarioFoundingStep.cs`). Harness-only; no production source changed and the
+  structural census is unchanged. Refs #90.
+
+- Developer reload failures retain the original exception as their cause and report both errors
+  when receipt-owned cleanup also refuses. No later persona may assume cleanup succeeded.
+  Shell lifecycle fixtures exercise reload argument routing and stop the matrix after refusal.
+- The cold-reload host arms a kernel parent-death signal so a killed run-personas.sh cannot
+  orphan it: two arming races (parent already gone before, or during, the arming call) refuse
+  explicitly rather than proceeding unprotected, and a failed prctl (missing libc, refused
+  syscall) refuses rather than a silent fallback. run-personas.sh itself still never sends a raw
+  kill to any process; it relies on the kernel-delivered signal and reports truthfully that its
+  own exit is a hand-off, not confirmed cleanup. Executable process-lifecycle tests (real child
+  processes, real signals, no game launch) prove the disposal, the refusals, and the shell's
+  forwarding and reporting.
+- Developer profile validation batches metadata checks four at a time, preserving every path,
+  link, size and closed-inventory check while reducing serialized filesystem overhead.
+
+- Private staging cleanup admits, removes and proves one entry inside a single helper process.
+  The previous protocol split those steps across processes, so the freed inode number could be
+  recycled by an unrelated concurrent directory before the post-removal identity search ran, and a
+  clean gate was refused. The descriptor the removal already opens on the sequestered entry is now
+  held across the removal, deletion is proved positively by that descriptor reporting zero links,
+  and the identity search runs while it is still open. Exact-identity admission, the exit-5 refusal
+  meaning and the identity search are unchanged; an entry whose name is gone while its identity is
+  still present elsewhere in the parent is refused rather than reported absent; probe cleanup is
+  identity-bound, never name-bound; and a filesystem that cannot witness a released inode is
+  refused by name with no fallback.
+
+- Repository audits ignore existing Python bytecode and disable new cache writes. Same-size,
+  same-second mutation/restoration cycles therefore test current source, not a stale `.pyc`.
+- Developer cold-load preparation anchors all destination writes, including directory creation,
+  saved-game copies and receipt files, through no-follow directory handles. An ancestor symlink
+  swap cannot redirect writes outside the intended tree; independent readback and seal checks
+  still refuse changed paths. This changes test tooling only, not ordinary saves or mod content.
+- Cold-load phase durations use a monotonic clock; wall-clock timestamps remain available for
+  correlation. Parallel copies reject invalid worker counts, cap concurrency, and propagate
+  process-control exceptions after joining submitted work.
+
 ### Docs
 
 - Landed the 2026-09-09 Beta gap report (`docs/BETA-GAP-REPORT-2026-09-09.md`), re-read against the

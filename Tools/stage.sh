@@ -339,52 +339,40 @@ require_atomic_helper() {
 }
 
 cleanup_private_entry() {
+	# Admission, removal and post-proof all happen inside ONE helper process, which
+	# holds a descriptor on the admitted inode for the whole operation. Splitting
+	# them across processes let the removed inode number be recycled by an unrelated
+	# concurrent producer between the removal and the identity search, which was then
+	# reported as a retained exact identity (issue #115). Refusal semantics are
+	# unchanged: exit 5 still means "an exact identity was retained; nothing
+	# ambiguous was deleted", and a located match is never ignored.
 	local parent="$1" parent_id="$2" lock_fd="$3" name="$4" expected_kind="$5"
-	local expected_id="${6:-}" inspection="" actual_kind="" actual_id="" after="" locations=""
-	local remove_status=0
-	inspection="$(python3 "$ATOMIC_TREE" inspect --parent "$parent" --parent-id "$parent_id" \
-		--lock-fd "$lock_fd" --name "$name")" || {
-		echo "cleanup inspection failed; retained named entry: $parent/$name expected-id=${expected_id:-unknown}" >&2
-		return 5
-	}
-	[ "$inspection" != "absent" ] || return 0
-	IFS=$'\t' read -r actual_kind actual_id <<< "$inspection"
+	local expected_id="${6:-}" inspection="" actual_kind="" actual_id=""
+	local outcome="" status=0
 	if [ -z "$expected_id" ]; then
+		inspection="$(python3 "$ATOMIC_TREE" inspect --parent "$parent" --parent-id "$parent_id" \
+			--lock-fd "$lock_fd" --name "$name")" || {
+			echo "cleanup inspection failed; retained named entry: $parent/$name expected-id=unknown" >&2
+			return 5
+		}
+		[ "$inspection" != "absent" ] || return 0
+		IFS=$'\t' read -r actual_kind actual_id <<< "$inspection"
 		echo "cleanup ownership is unknown; retained $parent/$name id=${actual_id:-unknown} kind=${actual_kind:-unknown}" >&2
 		return 5
 	fi
-	if [ "$actual_kind" != "$expected_kind" ] \
-			|| [ "$actual_id" != "$expected_id" ]; then
-		echo "cleanup identity ambiguous; retained $parent/$name id=${actual_id:-unknown} kind=${actual_kind:-unknown}" >&2
-		return 5
-	fi
-	python3 "$ATOMIC_TREE" remove --kind "$expected_kind" --parent "$parent" \
+	outcome="$(python3 "$ATOMIC_TREE" cleanup --kind "$expected_kind" --parent "$parent" \
 		--parent-id "$parent_id" --lock-fd "$lock_fd" --name "$name" \
-		--expected-id "$actual_id" || remove_status=$?
-	after="$(python3 "$ATOMIC_TREE" inspect --parent "$parent" --parent-id "$parent_id" \
-		--lock-fd "$lock_fd" --name "$name")" || {
-		echo "cleanup post-inspection failed for $parent/$name id=$actual_id" >&2
-		return 5
-	}
-	locations="$(python3 "$ATOMIC_TREE" locate --kind "$expected_kind" \
-		--parent "$parent" --parent-id "$parent_id" --lock-fd "$lock_fd" \
-		--expected-id "$actual_id")" || {
-		echo "cleanup identity search failed; inspect $parent for id=$actual_id" >&2
-		return 5
-	}
-	if [ -n "$locations" ]; then
-		echo "cleanup retained exact identities under $parent:" >&2
-		printf '%s\n' "$locations" >&2
-		return 5
+		--expected-id "$expected_id")" || status=$?
+	if [ "$status" -ne 0 ]; then
+		echo "cleanup refused $parent/$name id=$expected_id kind=$expected_kind (status $status)" >&2
+		return "$status"
 	fi
-	[ "$after" = "absent" ] || {
-		echo "cleanup postcondition ambiguous; retained $parent/$name id=$actual_id" >&2
-		return 5
-	}
-	if [ "$remove_status" -ne 0 ]; then
-		echo "cleanup removed exact identity $actual_id, but helper returned status $remove_status" >&2
-		return "$remove_status"
-	fi
+	case "$outcome" in
+		absent|removed) return 0 ;;
+		*)
+			echo "cleanup outcome is ambiguous; retained $parent/$name id=$expected_id: ${outcome:-empty}" >&2
+			return 5 ;;
+	esac
 }
 
 refuse_recovery_entries() {

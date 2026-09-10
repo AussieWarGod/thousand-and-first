@@ -6,6 +6,13 @@ set -euo pipefail
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO"
 
+# Timestamp-based .pyc files can outlive same-size, same-second mutation/restoration cycles.
+# A fresh lookup root plus disabled writes makes every audit import read current source.
+taf_python_cache_root="$(mktemp -d -t taf-python-cache.XXXXXX)"
+export PYTHONPYCACHEPREFIX="$taf_python_cache_root"
+export PYTHONDONTWRITEBYTECODE=1
+trap 'rmdir -- "$taf_python_cache_root" 2>/dev/null || true' EXIT
+
 git diff --check
 "$REPO/Tools/stage.sh" verify
 python3 Tools/check-doc-freshness.py

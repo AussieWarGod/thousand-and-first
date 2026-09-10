@@ -67,6 +67,7 @@ SCRIPT_VERBS = (
     "light",
     "list",
     "realize",
+    "reload",
     "resourcedigest",
     "stagedigest",
     "standingdigest",
@@ -98,6 +99,7 @@ RESERVED_VERBS = (
     "light",
     "list",
     "realize",
+    "reload",
     "resourcedigest",
     "stagedigest",
     "standingdigest",
@@ -162,6 +164,19 @@ def parse_manifest(text: str, name: str) -> dict:
         )
     extra = parse_verbs(found.get("VERBS", ""), name)
     found["VERBS"] = ",".join(extra)
+    if found["SCRIPT"].startswith("reload-descendant "):
+        parts = found["SCRIPT"].split()
+        if (len(parts) != 4 or parts[:2] != ["reload-descendant", "quickstart"]
+                or parts[2] not in ("marsh", "canyon", "dunes") or parts[3] not in ("yes", "no")):
+            fail(name + " reload requires exactly: reload-descendant quickstart <marsh|canyon|dunes> <yes|no>")
+        if (found["EXPECT"] != "RELOAD-COMPLETE" or found["REQUEST"] != "founding-first-city"
+                or any(found.get(key) for key in ("START", "CHECK", "VERBS", "LOG_EXPECT"))):
+            fail(name + " reload requires founding-first-city, EXPECT=RELOAD-COMPLETE and no overrides")
+        found["SCRIPT_WORDS"] = "quickstart-save " + " ".join(parts[2:])
+        found["RELOAD"] = "quickstart"
+        found["TIMEOUT"] = str(parse_timeout(found.get("TIMEOUT", ""), name))
+        found["SET"] = ",".join(parse_set(found.get("SET", ""), name))
+        return found
     found["SCRIPT_WORDS"] = " ".join(script_words(found["SCRIPT"], name, extra))
     parse_expect(found["EXPECT"], name, extra)
     check = found.get("CHECK", "")
@@ -455,6 +470,8 @@ def status_digest_stable(rows: list[tuple[str, str, str]]) -> list[str]:
 
 
 def assess(manifest: dict, journal: str, name: str) -> list[str]:
+    if manifest.get("RELOAD"):
+        return ["reload requires both strict Quickstart checks and receipt-owned process workflow; journal alone is insufficient"]
     rows = significant(read_journal(journal))
     extra = tuple(v for v in manifest.get("VERBS", "").split(",") if v)
     problems = match(parse_expect(manifest["EXPECT"], name, extra), rows)
@@ -498,6 +515,7 @@ def main(argv: list[str]) -> int:
             "DESCRIPTION",
             "SET",
             "LOG_EXPECT",
+            "RELOAD",
         ):
             print("%s\t%s" % (key.lower(), manifest.get(key, "")))
         return 0
