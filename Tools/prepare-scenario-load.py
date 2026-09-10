@@ -6,14 +6,17 @@ Refusals retain any partial destination; there is no cleanup or overwrite mode.
 """
 from __future__ import annotations
 
+import concurrent.futures
 import hashlib
 import json
 import os
+from datetime import datetime, timezone
 from pathlib import Path
 import re
 import stat
 import subprocess
 import sys
+import time
 from typing import Callable
 
 import scenario_profile
@@ -29,6 +32,50 @@ MAX_SNAPSHOT = 4 * 1024 * 1024
 MAX_FILES = 16384
 MAX_TREE_BYTES = 2 * 1024 * 1024 * 1024
 SAVE_FILES = ("Primary.sav.gz", "Primary.json", "Cache.db")
+MAX_COPY_WORKERS = 4  # Bounded local-only fan-out; never spawns a process, never touches Windows.
+MAX_CENSUS_WORKERS = 4  # Metadata-only batches; retain every existing per-path validation.
+
+
+def _iso(moment: float) -> str:
+    return datetime.fromtimestamp(moment, timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+
+
+class PhaseTimer:
+    """Monotonic phase durations with wall-clock timestamps for the load-profile copier.
+
+    Recorded phases are pure observation: they never gate sealing, never change which bytes are
+    read or written, and are not consulted by any guard in this module or by
+    check-quickstart-results.py. The list is written once, after every safety predicate below has
+    already passed, as an additive JSON evidence file beside load-source-evidence.json.
+    """
+
+    def __init__(self) -> None:
+        self.phases: list[dict] = []
+
+    def measure(self, name: str, counters: dict | None = None) -> "_PhaseScope":
+        return _PhaseScope(self, name, counters if counters is not None else {})
+
+
+class _PhaseScope:
+    def __init__(self, timer: PhaseTimer, name: str, counters: dict) -> None:
+        self._timer, self._name, self.counters = timer, name, counters
+
+    def __enter__(self) -> dict:
+        self._began = time.time()
+        self._started = time.monotonic()
+        return self.counters
+
+    def __exit__(self, exc_type, exc, tb) -> bool:
+        ended = time.time()
+        elapsed = time.monotonic() - self._started
+        self._timer.phases.append({
+            "phase": self._name,
+            "beginISO": _iso(self._began),
+            "endISO": _iso(ended),
+            "seconds": round(elapsed, 6),
+            **self.counters,
+        })
+        return False
 
 
 def require(condition: bool, message: str) -> None:
@@ -94,17 +141,22 @@ def tree_files(root: Path, limit: int) -> list[Path]:
     found: list[Path] = []
     total = 0
     directories = 0
-    for current, children, files in os.walk(root, followlinks=False):
-        directory(Path(current))
-        directories += len(children)
-        require(directories <= MAX_FILES, "too many source directories")
-        for child in children:
-            directory(Path(current) / child)
-        for name in files:
-            path = Path(current) / name
-            total += file_status(path, limit).st_size
-            found.append(path)
-            require(len(found) <= MAX_FILES and total <= MAX_TREE_BYTES, "source tree exceeds finite bound")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=MAX_CENSUS_WORKERS) as executor:
+        for current, children, names in os.walk(root, followlinks=False):
+            directory(Path(current))
+            directories += len(children)
+            require(directories <= MAX_FILES, "too many source directories")
+            for child in children:
+                directory(Path(current) / child)
+            for offset in range(0, len(names), MAX_CENSUS_WORKERS):
+                batch = [Path(current) / name for name in names[offset:offset + MAX_CENSUS_WORKERS]]
+                require(len(found) + len(batch) <= MAX_FILES, "source tree exceeds finite bound")
+                # At most one batch is outstanding, including when a validation refuses.
+                statuses = executor.map(lambda path: file_status(path, limit), batch)
+                for path, status in zip(batch, statuses):
+                    total += status.st_size
+                    found.append(path)
+                    require(total <= MAX_TREE_BYTES, "source tree exceeds finite bound")
     return sorted(found)
 
 
@@ -117,21 +169,186 @@ def empty_destination(path: Path) -> None:
 
 
 def write_new(path: Path, data: bytes) -> None:
-    directory(path.parent)
-    with path.open("xb") as target:
+    parent = open_validated_root(path.parent)
+    try:
+        handle = os.open(path.name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, dir_fd=parent)
+    finally:
+        os.close(parent)
+    with os.fdopen(handle, "wb") as target:
         target.write(data)
         target.flush()
         os.fsync(target.fileno())
     require(digest(path, max(len(data), 1)) == hashlib.sha256(data).hexdigest(), "destination readback changed")
 
 
-def copy_new(source: Path, destination: Path, expected: str, limit: int) -> None:
-    directory(destination.parent)
-    with destination.open("xb") as target:
+DIR_FD_SUPPORTED = (os.open in os.supports_dir_fd and os.mkdir in os.supports_dir_fd
+                    and hasattr(os, "O_DIRECTORY") and hasattr(os, "O_NOFOLLOW"))
+DIR_FLAGS = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+
+
+def create_directory(path: Path, allow_empty: bool = False) -> None:
+    """Create only beneath an anchored parent; existing roots must remain owned and empty."""
+    parent = open_validated_root(path.parent)
+    try:
+        try:
+            os.mkdir(path.name, dir_fd=parent)
+        except FileExistsError:
+            if not allow_empty:
+                raise
+        child = open_directory_chain(parent, (path.name,))
+        try:
+            require(os.fstat(child).st_uid == os.getuid(), "destination is not owned by this user")
+            require(not os.listdir(child), "destination is occupied: " + str(path))
+        finally:
+            os.close(child)
+    finally:
+        os.close(parent)
+
+
+def open_validated_root(path: Path) -> int:
+    """Anchor `path` as a directory file descriptor by walking EVERY component of its absolute
+    path, starting from the filesystem root -- never a by-name open of `path` itself.
+
+    An earlier version of this function opened `path` directly (a multi-component path) on the
+    theory that every ancestor had just been proven by directory() with "no other actor able to
+    run in between". That theory is false against another PROCESS: nothing stops a second actor
+    from swapping any ancestor of `path` -- including `path`'s own parent -- for a symlink in the
+    instant between that proof and this open, and a bare os.open(path, O_NOFOLLOW) only guards
+    the FINAL component; every ancestor above it is still resolved by name and would silently
+    follow such a swap.
+
+    The fix: open "/" (which cannot be a symlink or swapped by any local actor -- it is the root
+    of the filesystem namespace) and then walk path.parts[1:] one component at a time via
+    open_directory_chain, which opens each name relative to the fd the PREVIOUS component's open
+    returned. Every single component, including what used to be "just an ancestor", now gets its
+    own atomic O_NOFOLLOW|O_DIRECTORY check; there is no remaining path string, at any depth, for
+    a swap at any point before or during this call to poison. If any component is, or has become,
+    a symlink or non-directory, this raises instead of silently resolving through it.
+
+    Every directory BELOW this root is opened the same way, one component at a time, via
+    open_directory_chain (see make_directory_tree), so this function is the ONLY remaining place
+    this module resolves more than one path component per syscall, and it does so entirely via
+    single-component dir_fd-relative opens chained from "/" -- never a multi-component name.
+    """
+    require(DIR_FD_SUPPORTED, "this platform cannot anchor directory custody")
+    require(path.is_absolute(), "root anchor path must be absolute: " + str(path))
+    root_fd = os.open(os.sep, DIR_FLAGS)
+    try:
+        return open_directory_chain(root_fd, path.parts[1:])
+    finally:
+        os.close(root_fd)
+
+
+def open_directory_chain(root_fd: int, components: tuple[str, ...]) -> int:
+    """From an already-open, already-anchored `root_fd`, open each of `components` one at a time,
+    every step relative to the fd the PREVIOUS step returned -- never a multi-component path.
+
+    O_NOFOLLOW|O_DIRECTORY makes each single-component open atomic: it fails immediately if that
+    one name is, or has become, a symlink or non-directory. Because every step's fd is bound to
+    the inode the previous step already opened, swapping an INTERMEDIATE ancestor's NAME for a
+    symlink after this walk has passed it changes nothing: there is no remaining path string for
+    that swap to poison, only fds already bound to real inodes. Always returns a fd this caller
+    owns and must close, even when `components` is empty (a dup of `root_fd`, so callers never need
+    to special-case "no fd was opened, don't close root_fd twice").
+    """
+    if not components:
+        return os.dup(root_fd)
+    fd = root_fd
+    owned = False
+    try:
+        for name in components:
+            next_fd = os.open(name, DIR_FLAGS, dir_fd=fd)
+            if owned:
+                os.close(fd)
+            fd, owned = next_fd, True
+        return fd
+    except BaseException:
+        if owned:
+            os.close(fd)
+        raise
+
+
+def make_directory_tree(root: Path, source_root: Path) -> dict[Path, int]:
+    """Anchor `root` (already just created by the caller) and create/open every subdirectory of
+    `source_root`'s tree beneath it via dir_fd-relative mkdir+open, one component at a time.
+
+    Returns every directory's fd keyed by its path relative to `root` (the root itself keyed by
+    Path(".")). No directory below `root` is ever created or opened by resolving a multi-component
+    path: each is created with os.mkdir(name, dir_fd=parent_fd) and opened with
+    os.open(name, ..., dir_fd=parent_fd), where parent_fd is the fd this same walk already opened
+    for its immediate parent -- see open_directory_chain's docstring for why that closes the gap a
+    bare per-file `directory()` walk-by-name cannot. Callers must close every returned fd.
+    """
+    require(DIR_FD_SUPPORTED, "this platform cannot anchor directory custody with O_NOFOLLOW|O_DIRECTORY+dir_fd")
+    directory_fds: dict[Path, int] = {Path("."): open_validated_root(root)}
+    try:
+        for current, directories, _ in os.walk(source_root, followlinks=False):
+            relative_current = Path(current).relative_to(source_root)
+            parent_fd = directory_fds[relative_current]
+            for child in sorted(directories):
+                os.mkdir(child, dir_fd=parent_fd)
+                directory_fds[relative_current / child] = open_directory_chain(parent_fd, (child,))
+        return directory_fds
+    except BaseException:
+        for fd in directory_fds.values():
+            os.close(fd)
+        raise
+
+
+def copy_new(source: Path, destination: Path, expected: str, limit: int, dir_fd: int | None = None) -> None:
+    """Exclusive create, flush, fsync, then an independent readback hash proof.
+
+    `dir_fd`, when given, anchors the create to an already-open, already fully path-anchored
+    directory file descriptor (see make_directory_tree/open_directory_chain) instead of resolving
+    `destination`'s parent by name: the create can then never be redirected by a directory-name
+    swap -- of the leaf OR any intermediate ancestor -- because dir_fd-relative opens operate on
+    the fd's inode, not any path string. Callers without a dir_fd acquire an anchored parent too.
+    """
+    flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW
+    if dir_fd is None:
+        parent = open_validated_root(destination.parent)
+        try:
+            handle = os.open(destination.name, flags, dir_fd=parent)
+        finally:
+            os.close(parent)
+    else:
+        handle = os.open(destination.name, flags, dir_fd=dir_fd)
+    with os.fdopen(handle, "wb") as target:
         copied = read_stream(source, limit, target.write)
         target.flush()
         os.fsync(target.fileno())
     require(copied == expected and digest(destination, limit) == expected, "copy differs from frozen source: " + str(source))
+
+
+def copy_new_files(pairs: list[tuple[Path, Path, str, int]], limit: int, workers: int = MAX_COPY_WORKERS) -> None:
+    """Bounded local-only parallel fan-out of copy_new, one worker thread per file at a time.
+
+    Every guard copy_new performs -- exclusive create, flush, fsync, independent readback hash --
+    runs unchanged for every file. Each pair already carries the dir_fd of its fully path-anchored
+    parent directory (see make_directory_tree): this function performs no directory validation or
+    opening of its own, it only fans copy_new out across workers and joins them. This never
+    launches a process and never touches a network path.
+
+    Every future is joined (ThreadPoolExecutor.shutdown waits for all of them) before this function
+    returns or raises, so a failure in one worker can never leave another worker still running when
+    the caller moves on. On any failure, every file's outcome is still awaited, the first error is
+    re-raised, and prepare() therefore never reaches the sealing phase: whatever partial
+    destination bytes exist stay exactly as ordinary serial failure would have left them.
+    """
+    require(type(workers) is int and workers > 0, "worker count must be a positive integer")
+    if not pairs:
+        return
+    errors: list[Exception] = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=min(workers, MAX_COPY_WORKERS, len(pairs))) as pool:
+        futures = [pool.submit(copy_new, source, destination, expected, limit, dir_fd)
+                   for source, destination, expected, dir_fd in pairs]
+        for future in concurrent.futures.as_completed(futures):
+            try:
+                future.result()
+            except Exception as error:
+                errors.append(error)
+    if errors:
+        raise errors[0]
 
 
 def request_text(raw: bytes) -> str:
@@ -176,94 +393,121 @@ def prepare(source: Path, destination: Path, assert_stopped: Callable[[Path], No
 
     Production main additionally requires the exact /mnt/c root domain and always supplies
     the real Windows verifier. There is no CLI skip flag or alternate process authority.
+
+    Wall-clock phase timings are recorded via PhaseTimer purely for diagnosis (see its
+    docstring): every guard, flush, readback and inventory below runs exactly as before.
     """
+    timer = PhaseTimer()
     require(ROOT_NAME.fullmatch(source.name) and ROOT_NAME.fullmatch(destination.name)
             and source.parent == destination.parent and source.name.lower() != destination.name.lower(),
             "source/destination must be distinct canonical sibling scenario roots")
-    directory(source)
-    source_seal, destination_seal = Path(str(source) + ".seal"), Path(str(destination) + ".seal")
-    directory(source_seal)
-    empty_destination(destination)
-    empty_destination(destination_seal)
-    ownership = read_bytes(source / "process-ownership.json", 16384)
-    ownership_shape(ownership, source)
-    assert_stopped(source)  # Before reading save/cache bytes or creating ANY output.
-    tree_files(source, MAX_FILE)
-    profile_seal = source_seal / "profile.sha256"
-    seal_bytes = read_bytes(profile_seal, 4 * 1024 * 1024)
-    request_bytes = read_bytes(source_seal / "request.txt", 1024)
-    request = request_text(request_bytes)
-    local = source / "Local"
-    files = tree_files(local, MAX_LOCAL_FILE)
-    expected = scenario_profile.read_seal(str(profile_seal))
-    require(scenario_profile.inventory(str(local)) == expected, "source Local differs from its closed seal")
-    require(read_bytes(local / "scenario-script.txt", MAX_LOCAL_FILE), "source has no sealed script")
-    embark = read_bytes(local / "Mods/ThousandAndFirst/Harness/EmbarkModules.xml", MAX_LOCAL_FILE).decode("utf-8")
-    marker = 'Name="r_TAF_ScenarioRequest_v1" Value="'
-    require(embark.count(marker) == 1 and embark.split(marker)[1].split('"', 1)[0] == request,
-            "sealed request and source embark overlay disagree")
-    require(not os.path.lexists(local / "scenario-load.txt") and not os.path.lexists(local / "scenario-load-snapshot.txt"),
-            "source already carries a load request")
-    receipt = read_bytes(source / "scenario-save-receipt.txt", 512)
-    lines = receipt.decode("ascii").split("\n")
-    require(len(lines) == 6 and lines[-1] == "" and lines[0] == "taf-scenario-save-v1"
-            and GUID.fullmatch(lines[1]) and all(SHA.fullmatch(line) for line in lines[2:5]), "malformed five-line save receipt")
-    game_id = lines[1]
-    snapshot = read_bytes(source / "scenario-save-snapshot.txt", MAX_SNAPSHOT)
-    require(snapshot and hashlib.sha256(snapshot).hexdigest() == lines[4], "save snapshot hash mismatch")
-    saves = source / "Synced/Saves"
-    directory(saves)
-    require(sorted(path.name for path in saves.iterdir()) == [game_id], "source must contain exactly the named save directory")
-    save = saves / game_id
-    directory(save)
-    children = {path.name for path in save.iterdir()}
-    require(set(SAVE_FILES) <= children <= set(SAVE_FILES) | {"Primary.sav.gz.bak"}, "save has missing files, WAL/SHM, or unexpected artifacts")
-    hashes = {name: digest(save / name) for name in children}
-    require(all((save / name).stat().st_size > 0 for name in SAVE_FILES), "save artifacts must not be empty")
-    require(hashes[SAVE_FILES[0]] == lines[2] and hashes[SAVE_FILES[1]] == lines[3], "primary/info save hash mismatch")
-    load_request = ("taf-scenario-load-v1\n" + game_id + "\n" + lines[2] + "\n" + lines[3]
-                    + "\n" + hashes["Cache.db"] + "\n" + lines[4] + "\n").encode("ascii")
-    frozen = {source / "process-ownership.json": ownership, profile_seal: seal_bytes,
-              source_seal / "request.txt": request_bytes, source / "scenario-save-receipt.txt": receipt,
-              source / "scenario-save-snapshot.txt": snapshot}
-    evidence = {"schema": "taf-scenario-load-source-v1", "sourceRoot": str(source), "gameId": game_id,
-                "processAuthority": False, "sourceHashes": {str(path.relative_to(source)) if path.is_relative_to(source)
-                    else ".seal/" + path.name: hashlib.sha256(data).hexdigest() for path, data in frozen.items()},
-                "saveHashes": {name: hashes[name] for name in SAVE_FILES}}
-    empty_destination(destination); empty_destination(destination_seal)
-    if not destination.exists(): destination.mkdir()
-    if not destination_seal.exists(): destination_seal.mkdir()
-    target_local = destination / "Local"
-    target_local.mkdir()
-    for current, directories, _ in os.walk(local, followlinks=False):
-        for child in sorted(directories):
-            (target_local / (Path(current) / child).relative_to(local)).mkdir()
-    for path in files:
-        copy_new(path, target_local / path.relative_to(local), expected[scenario_profile.normalize(str(path.relative_to(local)))], MAX_LOCAL_FILE)
-    require(scenario_profile.inventory(str(target_local)) == expected, "copied Local differs from original closed inventory")
-    write_new(target_local / "scenario-load.txt", load_request)
-    write_new(target_local / "scenario-load-snapshot.txt", snapshot)
-    (destination / "Save").mkdir()
-    (destination / "Synced").mkdir()
-    (destination / "Synced/Saves").mkdir()
-    target_save = destination / "Synced/Saves" / game_id
-    target_save.mkdir()
-    for name in SAVE_FILES:
-        copy_new(save / name, target_save / name, hashes[name], MAX_FILE)
-    for path, data in frozen.items():
-        require(read_bytes(path, max(len(data), 1)) == data, "source receipt/seal/snapshot changed during copy")
-    require(scenario_profile.inventory(str(local)) == expected, "source Local changed during copy")
-    tree_files(source, MAX_FILE)
-    require(sorted(path.name for path in saves.iterdir()) == [game_id] and {path.name for path in save.iterdir()} == children,
-            "source save inventory changed during copy")
-    for name, before in hashes.items():
-        require(digest(save / name) == before, "source save file changed during copy: " + name)
-    inventory = scenario_profile.inventory(str(target_local))
-    target_expected = dict(expected)
-    target_expected["scenario-load.txt"] = hashlib.sha256(load_request).hexdigest()
-    target_expected["scenario-load-snapshot.txt"] = hashlib.sha256(snapshot).hexdigest()
-    require(inventory == target_expected, "destination Local acquired unproved content during copy")
-    seal = scenario_profile.SEAL_HEADER + "\n" + "".join(inventory[key] + "  " + key + "\n" for key in sorted(inventory))
+    with timer.measure("preflight-and-stop-authority"):
+        directory(source)
+        source_seal, destination_seal = Path(str(source) + ".seal"), Path(str(destination) + ".seal")
+        directory(source_seal)
+        empty_destination(destination)
+        empty_destination(destination_seal)
+        ownership = read_bytes(source / "process-ownership.json", 16384)
+        ownership_shape(ownership, source)
+        assert_stopped(source)  # Before reading save/cache bytes or creating ANY output.
+    with timer.measure("source-validation") as counters:
+        tree_files(source, MAX_FILE)
+        profile_seal = source_seal / "profile.sha256"
+        seal_bytes = read_bytes(profile_seal, 4 * 1024 * 1024)
+        request_bytes = read_bytes(source_seal / "request.txt", 1024)
+        request = request_text(request_bytes)
+        local = source / "Local"
+        files = tree_files(local, MAX_LOCAL_FILE)
+        expected = scenario_profile.read_seal(str(profile_seal))
+        require(scenario_profile.inventory(str(local)) == expected, "source Local differs from its closed seal")
+        require(read_bytes(local / "scenario-script.txt", MAX_LOCAL_FILE), "source has no sealed script")
+        embark = read_bytes(local / "Mods/ThousandAndFirst/Harness/EmbarkModules.xml", MAX_LOCAL_FILE).decode("utf-8")
+        marker = 'Name="r_TAF_ScenarioRequest_v1" Value="'
+        require(embark.count(marker) == 1 and embark.split(marker)[1].split('"', 1)[0] == request,
+                "sealed request and source embark overlay disagree")
+        require(not os.path.lexists(local / "scenario-load.txt") and not os.path.lexists(local / "scenario-load-snapshot.txt"),
+                "source already carries a load request")
+        receipt = read_bytes(source / "scenario-save-receipt.txt", 512)
+        lines = receipt.decode("ascii").split("\n")
+        require(len(lines) == 6 and lines[-1] == "" and lines[0] == "taf-scenario-save-v1"
+                and GUID.fullmatch(lines[1]) and all(SHA.fullmatch(line) for line in lines[2:5]), "malformed five-line save receipt")
+        game_id = lines[1]
+        snapshot = read_bytes(source / "scenario-save-snapshot.txt", MAX_SNAPSHOT)
+        require(snapshot and hashlib.sha256(snapshot).hexdigest() == lines[4], "save snapshot hash mismatch")
+        saves = source / "Synced/Saves"
+        directory(saves)
+        require(sorted(path.name for path in saves.iterdir()) == [game_id], "source must contain exactly the named save directory")
+        save = saves / game_id
+        directory(save)
+        children = {path.name for path in save.iterdir()}
+        require(set(SAVE_FILES) <= children <= set(SAVE_FILES) | {"Primary.sav.gz.bak"}, "save has missing files, WAL/SHM, or unexpected artifacts")
+        hashes = {name: digest(save / name) for name in children}
+        require(all((save / name).stat().st_size > 0 for name in SAVE_FILES), "save artifacts must not be empty")
+        require(hashes[SAVE_FILES[0]] == lines[2] and hashes[SAVE_FILES[1]] == lines[3], "primary/info save hash mismatch")
+        load_request = ("taf-scenario-load-v1\n" + game_id + "\n" + lines[2] + "\n" + lines[3]
+                        + "\n" + hashes["Cache.db"] + "\n" + lines[4] + "\n").encode("ascii")
+        frozen = {source / "process-ownership.json": ownership, profile_seal: seal_bytes,
+                  source_seal / "request.txt": request_bytes, source / "scenario-save-receipt.txt": receipt,
+                  source / "scenario-save-snapshot.txt": snapshot}
+        evidence = {"schema": "taf-scenario-load-source-v1", "sourceRoot": str(source), "gameId": game_id,
+                    "processAuthority": False, "sourceHashes": {str(path.relative_to(source)) if path.is_relative_to(source)
+                        else ".seal/" + path.name: hashlib.sha256(data).hexdigest() for path, data in frozen.items()},
+                    "saveHashes": {name: hashes[name] for name in SAVE_FILES}}
+        counters["localFiles"] = len(files)
+    with timer.measure("destination-setup"):
+        empty_destination(destination); empty_destination(destination_seal)
+        create_directory(destination, allow_empty=True)
+        create_directory(destination_seal, allow_empty=True)
+        target_local = destination / "Local"
+        create_directory(target_local)
+        # Every subdirectory below target_local is created AND opened one path component at a time,
+        # relative to its own already-anchored parent fd -- never by resolving a multi-component
+        # path -- so a swap of any intermediate ancestor's NAME during the copy phase below cannot
+        # redirect a worker's write (see make_directory_tree/open_directory_chain docstrings).
+        directory_fds = make_directory_tree(target_local, local)
+    try:
+        with timer.measure("local-copy", {"files": len(files), "bytes": sum(os.path.getsize(path) for path in files)}):
+            pairs = [(path, target_local / path.relative_to(local),
+                      expected[scenario_profile.normalize(str(path.relative_to(local)))],
+                      directory_fds[path.relative_to(local).parent]) for path in files]
+            copy_new_files(pairs, MAX_LOCAL_FILE)
+    finally:
+        for fd in directory_fds.values():
+            os.close(fd)
+    with timer.measure("post-copy-target-inventory"):
+        require(scenario_profile.inventory(str(target_local)) == expected, "copied Local differs from original closed inventory")
+        write_new(target_local / "scenario-load.txt", load_request)
+        write_new(target_local / "scenario-load-snapshot.txt", snapshot)
+    with timer.measure("save-copy"):
+        create_directory(destination / "Save")
+        create_directory(destination / "Synced")
+        create_directory(destination / "Synced/Saves")
+        target_save = destination / "Synced/Saves" / game_id
+        create_directory(target_save)
+        for name in SAVE_FILES:
+            copy_new(save / name, target_save / name, hashes[name], MAX_FILE)
+    with timer.measure("source-reproof"):
+        for path, data in frozen.items():
+            require(read_bytes(path, max(len(data), 1)) == data, "source receipt/seal/snapshot changed during copy")
+        require(scenario_profile.inventory(str(local)) == expected, "source Local changed during copy")
+        tree_files(source, MAX_FILE)
+        require(sorted(path.name for path in saves.iterdir()) == [game_id] and {path.name for path in save.iterdir()} == children,
+                "source save inventory changed during copy")
+        for name, before in hashes.items():
+            require(digest(save / name) == before, "source save file changed during copy: " + name)
+    with timer.measure("seal-computation"):
+        inventory = scenario_profile.inventory(str(target_local))
+        target_expected = dict(expected)
+        target_expected["scenario-load.txt"] = hashlib.sha256(load_request).hexdigest()
+        target_expected["scenario-load-snapshot.txt"] = hashlib.sha256(snapshot).hexdigest()
+        require(inventory == target_expected, "destination Local acquired unproved content during copy")
+        seal = scenario_profile.SEAL_HEADER + "\n" + "".join(inventory[key] + "  " + key + "\n" for key in sorted(inventory))
+    # Written BEFORE the seal/request/evidence below, deliberately: this file's own write can fail
+    # (disk error, readback mismatch) like any write_new call, and when it does, prepare() must
+    # raise with NO seal on disk yet -- exactly like every other pre-seal refusal already tested --
+    # rather than leave an already-sealed profile behind a refusal that looks like the load failed.
+    timings = {"schema": "taf-scenario-load-phase-timings-v1", "phases": timer.phases}
+    write_new(destination / "load-phase-timings.json", (json.dumps(timings, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8"))
     write_new(destination_seal / "profile.sha256", seal.encode("utf-8"))
     write_new(destination_seal / "request.txt", request_bytes)
     write_new(destination / "load-source-evidence.json", (json.dumps(evidence, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8"))
