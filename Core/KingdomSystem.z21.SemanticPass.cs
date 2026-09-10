@@ -225,13 +225,13 @@ namespace ThousandAndFirst
 						+ ((HomecomingDays == 1) ? "day" : HomecomingDays + " days") + " you were away. {{K|(Charter: what happened while you were away)}}");
 				}
 			})) return false;
-			// This is the coherent boundary for a settlement visit: intake, simulation, ground
-			// publication, chronicle, and digest have all finished. The profile journal compares the
-			// semantic snapshot and writes only when one of those facts actually changed.
+			// Coherent boundary: intake, simulation, ground, chronicle and digest are finished.
 			if (!TrySemanticStep(SemanticStepSeal, "seal stage", delegate
 			{
 				string failure;
-				if (!KingdomSeal.TryStageSemanticSnapshot("settlement pass", out failure))
+				KingdomInheritanceSpatialCaptureResult spatial;
+				if (!KingdomSeal.TryStageSemanticSnapshot("settlement pass", out failure, out spatial)
+					&& spatial != KingdomInheritanceSpatialCaptureResult.Pending)
 				{
 					KingdomLog.Log("seal: settlement pass was not staged ("
 						+ (string.IsNullOrEmpty(failure) ? "unknown failure" : failure) + ")");
