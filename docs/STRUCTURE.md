@@ -31,10 +31,11 @@ alone does not approve the transaction boundary. Earlier censuses are retained c
 
 The stockpile deposit custody fix over the Kingdom Quickstart shelter ingress, the render-only
 city sight, the stockpile unit capacity, the first-basin water store and the Kingdom Quickstart
-tent rows reports 3068 staged production C# files and 435,538 physical lines.
+tent rows, plus the #142 starter-material identity hotfix, reports 3068 staged production C# files
+and 435,554 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa` (this digest differs from the previous one solely because of the 0.3.2 KingdomReleaseInfo.cs version-literal bump; no other change). The census reports
+`6989432e13313aa5cb7241f534f700224bef26a32816853fba7a899ee8fb82e5` (this digest differs from the shipped 0.3.2 one solely because of the #142 starter-material identity hotfix in World/KingdomQuickstartBootstrap.Materials.cs; no other production source changed). The census reports
 1429 files with direct `XRL` imports; 0 of those exceed the line limit.
 
 The shelter-ingress delta over the retained city-sight draft below is one added and one modified

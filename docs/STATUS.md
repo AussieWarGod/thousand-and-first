@@ -153,15 +153,60 @@ engine-free; `DevTests/KingdomQuickstartShelterIngressTests.cs` recomputes them 
 architecture with the same `KingdomRoadRules.TryAuthoredLane` the stake walks and fails on drift.
 The heart-ingress endpoints are unchanged and refusal is still fail-closed with the same message.
 
+## Unreleased 0.3.2 hotfix groundwork — Quickstart starter-material identity (refs #142)
+
+A player reported on the shipped 0.3.2 build that no building could be commissioned because the
+starter materials in the camp chest were not seen (#142). Tracing that report in the shipped source
+found an identity gap, which this change closes, and a separate, more direct cause for the reported
+symptom, which it deliberately does not touch.
+
+**What is fixed here.** The starter stacks were created, counted and inserted without ever being
+given an engine identity. `GameObject.IDIfAssigned` (pinned engine
+`XRL/World/GameObject.cs:424-434`) reads that identity without creating one; `GameObject.ID`
+(`:436-452`) is the allocating read. The chest takes its identity through `RequireID()` in
+`TryPrepareGrant` (`World/KingdomQuickstartBootstrap.Recovery.cs:89`); its contents took none, and
+nothing else on the quickstart path asked for one.
+`Growth/KingdomConstruction.InputObservationRegistry.cs:138` reads holder and item identity the
+non-allocating way and `:151-162` refuses an empty one with "Attended construction-input source
+identity is absent or ambiguous". The fix is
+bounded to `World/KingdomQuickstartBootstrap.Materials.cs`: each fresh starter stack takes its
+identity exactly once, at creation, BEFORE insertion, re-proved after insertion. The observer is
+deliberately untouched — an observer that allocated identity would invent one for anything it
+looked at.
+
+**What this does NOT fix, and why the symptom is not claimed.** The reported #142 symptom has a
+separate scope cause, addressed elsewhere and not touched here. Two shipped-source readings say the
+identity gap cannot be it: the material-lease gate admits an object with no identity for an
+ordinary local debit (`Growth/KingdomConstructionInputLeaseAuthority.cs:66-72` treats an empty
+`IDIfAssigned` as "not leased"), and `ActiveLocalCustody` (`:171-181`) excludes EVERY item whenever
+no survey is bound, which `KingdomMaterials.Stock`
+(`Growth/KingdomMaterials.05.StockpileAndPaymentGates.cs:29`) can produce because it takes
+`ActiveFor ?? Take` without binding. So the absent identity never made the build menu read zero.
+This change is a separately routed prerequisite for the later construction-input observation.
+
+**Also recorded as evidence, not fixed here.** `TryPlaceGrant`
+(`World/KingdomQuickstartBootstrap.Recovery.cs:100-127`) places a grant and proves custody but
+publishes nothing into a bound survey, and no quickstart bootstrap shard touches `KingdomSurvey` at
+all. `KingdomSurvey` caches nothing per zone — `ActiveFor`
+(`Growth/KingdomSurvey.01.Capture.cs:174-178`) answers only the currently bound pass and `Take`
+(`:94-108`) builds a fresh index otherwise — so a fresh world, whose bootstrap runs at
+`BOOTEVENT_GAMESTARTING` with nothing bound, is unaffected. The resume path
+(`World/KingdomQuickstartLifecycle.cs:36-47`, waking on `ZoneActivated` and `EndTurn`) can land a
+grant inside a live pass, which is a real if narrower absence. No change is made for it here.
+
+**Not claimed:** no native reproduction and no native verification have been made, so this is a
+source, compile and host-suite claim only. End-to-end construction acceptance from quickstart stock
+is owed to the native lane.
+
 Current census after merging `dev` (the Kingdom Quickstart tent rows, the first-basin water store,
 the stockpile unit capacity, the render-only city sight and the shelter ingress included) and the
 stockpile deposit custody fix: 3068
-staged C# files; 435,538 physical lines; 3099 files in the generated
+staged C# files; 435,554 physical lines; 3099 files in the generated
 cold-install inventory. Staged compilation covers 3068 sources, baseline and compatibility symbols
 (baseline compiles 3064 of them; the optional-mod bridge is compatibility-only), run here by Roslyn
 9.0.306 on Linux against the licensed Managed references with warnings as
 errors. Direct `XRL` imports: 1429 files, 0 over the line limit.
-Inventory SHA-256: `93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa` (this digest differs from the previous one solely because of the 0.3.2 KingdomReleaseInfo.cs version-literal bump; no other change).
+Inventory SHA-256: `6989432e13313aa5cb7241f534f700224bef26a32816853fba7a899ee8fb82e5` (this digest differs from the shipped 0.3.2 one solely because of the #142 starter-material identity hotfix in World/KingdomQuickstartBootstrap.Materials.cs; no other production source changed).
 Before the merge, all four `Tools/gate.sh` modes compiled clean on the shelter-ingress delta's own
 bytes — staged baseline (3050 sources), staged compatibility (3054), dev-harness baseline (3204)
 and dev-harness compatibility (3208) — with the installed-Hearthpyre source and ABI step, and the

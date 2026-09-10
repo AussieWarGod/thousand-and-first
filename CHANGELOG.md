@@ -17,6 +17,11 @@ below it.
   work, retaining the same protected-cargo, routed-lease and exact-custody checks. Previously
   a fresh Kingdom Quickstart could report no timber while four timber sat in its camp chest.
   This change adds no saved fields and does not replace or move existing goods.
+- Fresh Kingdom Quickstart material stacks now receive an engine identity before entering
+  their chest, re-proved after insertion. Routed construction-input observation needs these
+  identities; the chest already had one. Observers remain non-allocating. This closes a
+  separate prerequisite, not the cause of the menu's zero-stock reading. Existing materials
+  are not recreated or given identities by a blanket recovery pass.
 
 ### Compatibility
 
@@ -128,11 +133,11 @@ successful commissioning remain open; prior release receipts do not cover this d
   (ruling 5); no capacity, catch-up envelope, or stored item is touched, and a standing save reads
   exactly what it read before.
 
-> **Current unreleased census — exact structural gate passed.** Current 3068-file census is line-cap green:
-> 435,538 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> **Current hotfix census (#142) — exact structural gate passed.** Current 3068-file census is line-cap green:
+> 435,554 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1429 files, 0 of them over the line limit. Inventory SHA-256:
-> `93cec174fdb61a025dca0f8982f01f62e52e8ce80ff9479be2d8c3c50552aaaa` (this digest differs from the previous one solely because of the 0.3.2 KingdomReleaseInfo.cs version-literal bump; no other change).
+> `6989432e13313aa5cb7241f534f700224bef26a32816853fba7a899ee8fb82e5` (this digest differs from the shipped 0.3.2 one solely because of the #142 starter-material identity hotfix in World/KingdomQuickstartBootstrap.Materials.cs; no other production source changed).
 > The generated cold-install inventory contains 3099 files; no new subscription claim.
 > This digest is the stockpile deposit custody fix merged over `dev` at `862f14d` (the unattended
 > native observers, the Workshop listing wording, the automatic Workshop attempt finalisation, the
