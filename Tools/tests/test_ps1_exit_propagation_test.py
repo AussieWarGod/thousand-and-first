@@ -30,6 +30,14 @@ EXIT_CHECK_BLOCK = re.compile(
 )
 LEG_FAILURE_MARKER = re.compile(r"LICENSED_LEG_FAILED=")
 EXIT_LASTEXITCODE = re.compile(r"exit\s+\$LASTEXITCODE")
+# Accepts a -LegName argument written as a single-quoted literal ('x'), a
+# double-quoted literal ("x"), or a bare unquoted identifier (x) -- PowerShell
+# accepts all three for a static string argument, so a regex pinned to only one
+# quoting style would pass or fail this regression for reasons that have nothing
+# to do with #134's actual propagation defect.
+LEG_NAME_ARG = re.compile(
+    r"-LegName\s+(?:'([^']+)'|\"([^\"]+)\"|(\S+))"
+)
 
 
 def read_script(path=SCRIPT):
@@ -72,6 +80,18 @@ def dotnet_invocations_without_named_leg_propagation(text):
     return problems
 
 
+def extract_leg_names(text):
+    """Every -LegName argument in `text`, quote-agnostic: 'x', "x", or a bare x all
+    resolve to the same string "x" -- PowerShell itself treats all three identically
+    for a static-literal argument, so the regression must not be narrower than the
+    language it is pinning."""
+    names = []
+    for match in LEG_NAME_ARG.finditer(text):
+        single, double, bare = match.groups()
+        names.append(single if single is not None else double if double is not None else bare)
+    return names
+
+
 class TestPs1ExitPropagationStructureTest(unittest.TestCase):
     def test_every_dotnet_invocation_propagates_a_named_leg_failure(self):
         problems = dotnet_invocations_without_named_leg_propagation(read_script())
@@ -84,9 +104,30 @@ class TestPs1ExitPropagationStructureTest(unittest.TestCase):
         text = read_script()
         self.assertIn("TafTests.csproj", text)
         self.assertIn("PortableTests.csproj", text)
-        leg_names = re.findall(r'-LegName\s+"([^"]+)"', text)
+        leg_names = extract_leg_names(text)
         self.assertEqual(2, len(leg_names), "expected exactly two leg invocations")
         self.assertEqual(2, len(set(leg_names)), "leg names must be distinct")
+
+    def test_leg_name_regex_accepts_single_quoted_static_name(self):
+        self.assertEqual(["taf"], extract_leg_names("Invoke-LicensedLeg -LegName 'taf' -Project $p"))
+
+    def test_leg_name_regex_accepts_double_quoted_static_name(self):
+        self.assertEqual(["taf"], extract_leg_names('Invoke-LicensedLeg -LegName "taf" -Project $p'))
+
+    def test_leg_name_regex_accepts_bare_unquoted_static_name(self):
+        self.assertEqual(["taf"], extract_leg_names("Invoke-LicensedLeg -LegName taf -Project $p"))
+
+    def test_leg_name_regex_still_flags_two_identical_leg_names(self):
+        # Mixing quoting styles for a duplicate name must not disguise it as distinct:
+        # the whole point of the exact-two-distinct-names check is defeated if it can't
+        # see through quoting to compare the underlying strings.
+        text = (
+            'Invoke-LicensedLeg -LegName \'taf\' -Project $a\n'
+            'Invoke-LicensedLeg -LegName "taf" -Project $b\n'
+        )
+        leg_names = extract_leg_names(text)
+        self.assertEqual(2, len(leg_names))
+        self.assertEqual(1, len(set(leg_names)), "duplicate leg names must collapse to one")
 
     def test_script_ends_with_an_explicit_success_exit(self):
         text = read_script().rstrip()
@@ -157,6 +198,48 @@ class TestPs1RealExecutionTest(unittest.TestCase):
         self.env["PATH"] = pwsh_dir
         self.env.pop("TAF_TEST_FILTER", None)
 
+    def write_dotnet_stub(self, stub_dir, cases_posix, cases_cmd):
+        """Writes the SAME call-numbered dispatch as both a POSIX shell script named
+        `dotnet` and a Windows `dotnet.cmd` batch file, so `pwsh` resolves exactly one
+        Application named `dotnet` on either host: on POSIX, `Get-Command dotnet
+        -CommandType Application` finds the executable-bit-set extensionless file; on
+        Windows, PATHEXT resolution finds `dotnet.cmd` (an extensionless file is never an
+        Application there, which is exactly PRRT_kwDOT9Vt7c6hA-dj). Both bodies encode
+        the identical fail_at/fail_message/fail_code dispatch, generated from one shared
+        case list, so the two platforms can never silently drift apart. The batch file
+        dispatches via `goto`, one label per call number, rather than parenthesised
+        `if (...)` blocks: a stub message containing its own literal parentheses (the
+        real ALL GREEN text does) breaks cmd.exe's block-nesting parser, so a goto/label
+        dispatch is the only shape that stays correct for arbitrary message text."""
+        stub_dir.mkdir(exist_ok=True)
+        posix_stub = stub_dir / "dotnet"
+        posix_stub.write_text(
+            "#!/bin/sh\n"
+            'read -r n < "$TAF_STUB_COUNTER"\n'
+            "n=$((n + 1))\n"
+            'echo "$n" > "$TAF_STUB_COUNTER"\n'
+            'case "$n" in\n'
+            + "\n".join(cases_posix)
+            + "\n  *) exit 0 ;;\nesac\n",
+            encoding="utf-8",
+        )
+        posix_stub.chmod(posix_stub.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+        cmd_stub = stub_dir / "dotnet.cmd"
+        gotos = "\r\n".join("if %%N%%==%d goto n%d" % (n, n) for n in (1, 2, 3, 4))
+        labels = "".join(
+            ":n%d\r\n%s\r\n" % (n, body) for n, body in cases_cmd
+        )
+        cmd_stub.write_text(
+            "@echo off\r\n"
+            'set /p N=<"%TAF_STUB_COUNTER%"\r\n'
+            "set /a N=%N%+1\r\n"
+            'echo %N% >"%TAF_STUB_COUNTER%"\r\n'
+            + gotos + "\r\n"
+            + "exit /b 0\r\n"
+            + labels,
+            encoding="utf-8",
+        )
+
     def make_stub(self, fail_at, fail_message, fail_code):
         """A dotnet stub that succeeds every call except call number `fail_at` (1-4, in
         test.ps1's fixed restore/run-per-leg order), which prints `fail_message` and exits
@@ -166,30 +249,24 @@ class TestPs1RealExecutionTest(unittest.TestCase):
         counter_file = self.root / "call-count"
         counter_file.write_text("0", encoding="utf-8")
         stub_dir = self.root / "stub-bin"
-        stub_dir.mkdir(exist_ok=True)
-        stub = stub_dir / "dotnet"
-        cases = []
+        cases_posix = []
+        cases_cmd = []
         for n in (1, 2, 3, 4):
             if n == fail_at:
-                cases.append('  %d) echo "%s"; exit %d ;;' % (n, fail_message, fail_code))
+                cases_posix.append('  %d) echo "%s"; exit %d ;;' % (n, fail_message, fail_code))
+                cases_cmd.append((n, "echo %s\r\nexit /b %d" % (fail_message, fail_code)))
             elif n in (2, 4):
-                cases.append(
+                cases_posix.append(
                     '  %d) echo "ALL GREEN: 1 cases passed, 0 skipped (1 discovered)"; exit 0 ;;'
                     % n
                 )
+                cases_cmd.append(
+                    (n, "echo ALL GREEN: 1 cases passed, 0 skipped (1 discovered)\r\nexit /b 0")
+                )
             else:
-                cases.append("  %d) exit 0 ;;" % n)
-        stub.write_text(
-            "#!/bin/sh\n"
-            'read -r n < "$TAF_STUB_COUNTER"\n'
-            "n=$((n + 1))\n"
-            'echo "$n" > "$TAF_STUB_COUNTER"\n'
-            'case "$n" in\n'
-            + "\n".join(cases)
-            + "\n  *) exit 0 ;;\nesac\n",
-            encoding="utf-8",
-        )
-        stub.chmod(stub.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+                cases_posix.append("  %d) exit 0 ;;" % n)
+                cases_cmd.append((n, "exit /b 0"))
+        self.write_dotnet_stub(stub_dir, cases_posix, cases_cmd)
         self.env["PATH"] = str(stub_dir) + os.pathsep + self.env["PATH"]
         self.env["TAF_STUB_COUNTER"] = str(counter_file)
 
@@ -239,20 +316,18 @@ class TestPs1RealExecutionTest(unittest.TestCase):
         counter_file = self.root / "call-count"
         counter_file.write_text("0", encoding="utf-8")
         stub_dir = self.root / "stub-bin"
-        stub_dir.mkdir(exist_ok=True)
-        stub = stub_dir / "dotnet"
-        stub.write_text(
-            "#!/bin/sh\n"
-            'read -r n < "$TAF_STUB_COUNTER"\n'
-            "n=$((n + 1))\n"
-            'echo "$n" > "$TAF_STUB_COUNTER"\n'
-            'case "$n" in\n'
-            "  2|4) echo \"ALL GREEN: 1 cases passed, 0 skipped (1 discovered)\"; exit 0 ;;\n"
-            "  *) exit 0 ;;\n"
-            "esac\n",
-            encoding="utf-8",
-        )
-        stub.chmod(stub.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+        cases_posix = ["  1) exit 0 ;;",
+            "  2) echo \"ALL GREEN: 1 cases passed, 0 skipped (1 discovered)\"; exit 0 ;;",
+            "  3) exit 0 ;;",
+            "  4) echo \"ALL GREEN: 1 cases passed, 0 skipped (1 discovered)\"; exit 0 ;;"]
+        all_green_cmd = "echo ALL GREEN: 1 cases passed, 0 skipped (1 discovered)\r\nexit /b 0"
+        cases_cmd = [
+            (1, "exit /b 0"),
+            (2, all_green_cmd),
+            (3, "exit /b 0"),
+            (4, all_green_cmd),
+        ]
+        self.write_dotnet_stub(stub_dir, cases_posix, cases_cmd)
         self.env["PATH"] = str(stub_dir) + os.pathsep + self.env["PATH"]
         self.env["TAF_STUB_COUNTER"] = str(counter_file)
         result = self.run_script()
