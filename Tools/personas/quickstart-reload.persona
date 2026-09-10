@@ -1,0 +1,8 @@
+# Real production founding, real save, exact owned stop and cold load in one host workflow.
+# A fresh sealed descendant profile is mandatory; no script replay or graceful-Quit claim.
+DESCRIPTION=found by genuine Quickstart, save, cold reload, assert exact heart stock IDs and clocks
+REQUEST=founding-first-city
+SCRIPT=reload-descendant quickstart marsh yes
+EXPECT=RELOAD-COMPLETE
+SET=beta,reload
+TIMEOUT=600
