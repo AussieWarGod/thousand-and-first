@@ -12,6 +12,7 @@ below it.
 
 ### Fixed
 
+- The rite-ground catalogue description names its canvas horseshoe instead of the old bare ring.
 - The native subsidence/founding-heart fixture now proves both its empty 1,920-dram reservoir
   and the real founding receipt's dedicated 16-dram first basin. The old one-store assertion
   refused a correct 50-resident setup. Exact identities, dedication, placement and empty contents

@@ -24,6 +24,10 @@ Portable5,215 (zero skips), and Tools627/full portable audit pass. Wrong-count a
 source mutants each fail; restored fixture passes. Native `founding-heart-native-checks` passes
 all seven cases at the same seed (profile `QDaXBR`, receipt-owned stop proved). This signs that
 scenario only, not terminal heart completion, ordinary-save compatibility or overall camp acceptance.
+The same gameplay/harness bytes also pass fresh first-city founding, 16 native Quickstart
+creator/custody cases and claimed lighting after rendered frames (profiles TAplen/cltpMo/TWubeD;
+all receipt-stopped). These do not sign actual Quickstart embark. Subsequent rite-ground display
+text and unused test-import cleanup do not alter gameplay; their text assertion is checked separately.
 
 Cold-load transport hardening (PR #104): 27 executable filesystem tests cover ancestor
 swaps for directory, receipt and save outputs. Replacing component-wise anchoring with a bare

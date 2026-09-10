@@ -634,7 +634,7 @@
     other static court fabric may be renovated rather than entombed. Hosted floors belong to the
     shell authority, not to the XL surface plot.
   -->
-  <building Key="heartbasin" DisplayName="the rite ground (a ring of trodden earth, and the basin in the middle of it)" Blueprint="r_KingdomRiteGround"
+  <building Key="heartbasin" DisplayName="the rite ground (a canvas horseshoe around the first basin)" Blueprint="r_KingdomRiteGround"
             Cost="0" Ticks="600" Styles="all" Category="civic" Plot="S" Open="yes"
             Footprint="4x4" Roof="Open"
             Materials="canvas:4,timber:2" Carries="spirit:1"

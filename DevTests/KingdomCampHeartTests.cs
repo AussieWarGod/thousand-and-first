@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
-using System.IO;
 using NUnit.Framework;
 using NUnit.Framework.Legacy;
 using ThousandAndFirst;
@@ -120,6 +119,10 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void TheRiteGroundIsSevenCanvasCellsOneFireOneStoreAndTwoEntrances()
 		{
+			XElement building = XDocument.Parse(TestMain.ReadRepositoryText("RuntimeData/KingdomBuildings.xml"))
+				.Descendants("building").Single(value => (string)value.Attribute("Key") == "heartbasin");
+			ClassicAssert.AreEqual("the rite ground (a canvas horseshoe around the first basin)",
+				(string)building.Attribute("DisplayName"));
 			ArchitectureCorpus corpus = KingdomArchitectureCorpusFixture.Load();
 			ArchitectureMapDraft map = Map(corpus, "civic-heartbasin-s0");
 			ClassicAssert.AreEqual(7, Count(map, g => g.Structure == "$canvas"), "canvas cells");
