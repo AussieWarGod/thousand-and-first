@@ -172,17 +172,32 @@ namespace ThousandAndFirst.Harness
 				return plant;
 			}
 
-			/// <summary>Physical brush standing in Container right now, counted by the same
-			/// material recognition <c>MaterialStock.Tally</c> uses
-			/// (<see cref="KingdomMaterials.TryMaterialOf"/>), but with no lease filter -- a
-			/// direct census, never Tally-plus-arithmetic.</summary>
+			/// <summary>
+			/// Physical Brush standing in Container right now, read raw and native-only: never
+			/// the ordinary <c>Item.Count</c> (which reaches <c>Stacker.Number</c> and can repair
+			/// and dispatch), always <see cref="KingdomMaterials.RawCensusCountOf"/> (the same
+			/// field-only seam <c>Growth/KingdomMaterials.RawObservation.cs</c> uses for a
+			/// credit-proof census). Each body is proved in exact custody of Container -- its own
+			/// <c>Physics.InInventory</c> must name this exact container and it must sit in no
+			/// cell -- before it is counted at all; a body a moved list entry left behind does
+			/// not count. Accumulated in <c>long</c> so no realistic pile can wrap an <c>int</c>
+			/// sum; a total that would not fit back in <c>int</c> refuses by name instead of
+			/// truncating.
+			/// </summary>
 			private static int CensusBrushRaw(GameObject Container)
 			{
-				int total = 0;
+				string blueprint = KingdomMaterials.BlueprintFor(KingdomMaterial.Brush);
+				long total = 0;
 				foreach (GameObject item in Container.Inventory.Objects)
-					if (GameObject.Validate(item) && KingdomMaterials.TryMaterialOf(item, out var material)
-						&& material == KingdomMaterial.Brush) total += item.Count;
-				return total;
+				{
+					if (!GameObject.Validate(item) || item.Blueprint != blueprint) continue;
+					if (item.Physics == null || !ReferenceEquals(item.Physics.InInventory, Container)
+						|| item.CurrentCell != null) continue;
+					total += KingdomMaterials.RawCensusCountOf(item);
+					Require(total <= int.MaxValue, "taf-forage-census-overflow: raw brush census in "
+						+ Container.IDIfAssigned + " exceeded int.MaxValue");
+				}
+				return (int)total;
 			}
 
 			private static string EvidenceOf(GameObject Item)

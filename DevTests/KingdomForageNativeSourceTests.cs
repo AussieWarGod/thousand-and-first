@@ -84,7 +84,31 @@ namespace ThousandAndFirst.Tests
 				Assert.That(phases, Does.Contain(token), token);
 			string fixture = Read(Fixture);
 			Assert.That(fixture, Does.Contain("private static int CensusBrushRaw(GameObject Container)"));
-			Assert.That(fixture, Does.Contain("KingdomMaterials.TryMaterialOf(item, out var material)"));
+			// Raw seam only -- never the ordinary, dispatching Item.Count -- and each body must
+			// prove its own custody names the exact container before it is counted at all.
+			Assert.That(fixture, Does.Contain("KingdomMaterials.RawCensusCountOf(item)"));
+			Assert.That(fixture, Does.Contain(
+				"ReferenceEquals(item.Physics.InInventory, Container)"));
+			Assert.That(fixture, Does.Contain("total <= int.MaxValue"));
+			string census = Method(fixture, "private static int CensusBrushRaw(GameObject Container)");
+			Assert.That(census, Does.Not.Contain("item.Count"), "the census must never sum the "
+				+ "ordinary, dispatching Count -- only the raw seam");
+		}
+
+		/// <summary>The exact body of one method, from its signature line to the matching closing
+		/// brace at column zero indentation of the opening one.</summary>
+		private static string Method(string source, string signature)
+		{
+			int start = source.IndexOf(signature, StringComparison.Ordinal);
+			Assert.That(start, Is.GreaterThanOrEqualTo(0), "method not found: " + signature);
+			int open = source.IndexOf('{', start);
+			int depth = 0, i = open;
+			for (; i < source.Length; i++)
+			{
+				if (source[i] == '{') depth++;
+				else if (source[i] == '}' && --depth == 0) break;
+			}
+			return source.Substring(open, i - open + 1);
 		}
 
 		[Test]
