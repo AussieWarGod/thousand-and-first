@@ -121,50 +121,77 @@ exit $LASTEXITCODE
 
 @unittest.skipUnless(shutil.which("pwsh"), "pwsh is not installed on this host")
 class TestPs1RealExecutionTest(unittest.TestCase):
-    """Executes the real script under pwsh with a stub dotnet that fails only the portable
-    leg's run step, proving the propagation end-to-end rather than only in source shape.
+    """Executes the real script under pwsh with a stub dotnet, proving the propagation
+    end-to-end (not just in source shape) for all four restore/run call points across both
+    legs: taf-restore, taf-run, portable-restore, portable-run.
 
     The stub is keyed purely by call ORDER (1: taf restore, 2: taf run, 3: portable
     restore, 4: portable run), not by parsing dotnet's argument text -- test.ps1 always
     calls restore-then-run for taf, then restore-then-run for portable, in that fixed
     order, so a counter file is a strictly more robust discriminator than pattern-matching
-    reconstructed argv text, which is sensitive to how a given shell/host quotes args."""
+    reconstructed argv text, which is sensitive to how a given shell/host quotes args (this
+    project's own first attempt at argument-text matching was wrong; see git history)."""
 
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory(prefix="taf-test-ps1-exit-test-")
         self.addCleanup(self.temp.cleanup)
-        root = Path(self.temp.name)
-        self.devtests = root / "DevTests"
+        self.root = Path(self.temp.name)
+        self.devtests = self.root / "DevTests"
         self.devtests.mkdir()
         (self.devtests / "test.ps1").write_text(read_script(), encoding="utf-8")
         (self.devtests / "TafTests.csproj").write_text("<Project />", encoding="utf-8")
         (self.devtests / "PortableTests.csproj").write_text(
             "<Project />", encoding="utf-8"
         )
-        stub_dir = root / "stub-bin"
-        stub_dir.mkdir()
-        counter_file = root / "call-count"
+        # Scope PATH to exactly [stub_dir, pwsh's own directory]: if a real `dotnet` is
+        # ALSO reachable on PATH (as it typically is in CI), `Get-Command dotnet
+        # -CommandType Application` returns every match, and PowerShell's member
+        # enumeration on the resulting array silently turns `.Source` into a
+        # space-joined, unusable multi-path string -- test.ps1 then fails at the very
+        # first `& $dotnet restore ...` with a "term not recognized" parser error that
+        # never touches $LASTEXITCODE at all. That is a real fixture-PATH pitfall, not
+        # the behaviour under test, so exactly one `dotnet` must be resolvable here.
+        pwsh_path = shutil.which("pwsh")
+        pwsh_dir = str(Path(pwsh_path).resolve().parent) if pwsh_path else ""
+        self.env = dict(os.environ)
+        self.env["PATH"] = pwsh_dir
+        self.env.pop("TAF_TEST_FILTER", None)
+
+    def make_stub(self, fail_at, fail_message, fail_code):
+        """A dotnet stub that succeeds every call except call number `fail_at` (1-4, in
+        test.ps1's fixed restore/run-per-leg order), which prints `fail_message` and exits
+        `fail_code`. Calls before the failure that are `run` steps print ALL GREEN, exactly
+        like a real successful suite run, so a passing leg's marker is distinguishable from
+        the failing one's."""
+        counter_file = self.root / "call-count"
         counter_file.write_text("0", encoding="utf-8")
+        stub_dir = self.root / "stub-bin"
+        stub_dir.mkdir(exist_ok=True)
         stub = stub_dir / "dotnet"
+        cases = []
+        for n in (1, 2, 3, 4):
+            if n == fail_at:
+                cases.append('  %d) echo "%s"; exit %d ;;' % (n, fail_message, fail_code))
+            elif n in (2, 4):
+                cases.append(
+                    '  %d) echo "ALL GREEN: 1 cases passed, 0 skipped (1 discovered)"; exit 0 ;;'
+                    % n
+                )
+            else:
+                cases.append("  %d) exit 0 ;;" % n)
         stub.write_text(
             "#!/bin/sh\n"
             'n=$(cat "$TAF_STUB_COUNTER")\n'
             "n=$((n + 1))\n"
             'echo "$n" > "$TAF_STUB_COUNTER"\n'
             'case "$n" in\n'
-            "  1) exit 0 ;;\n"
-            '  2) echo "ALL GREEN: 1 cases passed, 0 skipped (1 discovered)"; exit 0 ;;\n'
-            "  3) exit 0 ;;\n"
-            '  4) echo "The application to execute does not exist: stub.dll"; exit 74 ;;\n'
-            "  *) exit 0 ;;\n"
-            "esac\n",
+            + "\n".join(cases)
+            + "\n  *) exit 0 ;;\nesac\n",
             encoding="utf-8",
         )
         stub.chmod(stub.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
-        self.env = dict(os.environ)
-        self.env["PATH"] = str(stub_dir) + os.pathsep + self.env.get("PATH", "")
+        self.env["PATH"] = str(stub_dir) + os.pathsep + self.env["PATH"]
         self.env["TAF_STUB_COUNTER"] = str(counter_file)
-        self.env.pop("TAF_TEST_FILTER", None)
 
     def run_script(self):
         return subprocess.run(
@@ -176,7 +203,8 @@ class TestPs1RealExecutionTest(unittest.TestCase):
             timeout=30,
         )
 
-    def test_portable_leg_failure_exits_non_zero_and_names_the_leg(self):
+    def assert_leg_failure(self, fail_at, fail_message, fail_code, expected_marker):
+        self.make_stub(fail_at, fail_message, fail_code)
         result = self.run_script()
         diagnostic = (
             "returncode=" + str(result.returncode)
@@ -184,8 +212,58 @@ class TestPs1RealExecutionTest(unittest.TestCase):
             + "\n--- stderr ---\n" + result.stderr
         )
         self.assertNotEqual(0, result.returncode, diagnostic)
-        self.assertIn("LICENSED_LEG_FAILED=portable", result.stdout, diagnostic)
+        self.assertIn(expected_marker, result.stdout, diagnostic)
+
+    def test_taf_restore_failure_exits_non_zero_and_names_taf(self):
+        self.assert_leg_failure(1, "restore failed", 41, "LICENSED_LEG_FAILED=taf rc=41 step=restore")
+
+    def test_taf_run_failure_exits_non_zero_and_names_taf(self):
+        self.assert_leg_failure(2, "ALL GREEN was a lie", 42, "LICENSED_LEG_FAILED=taf rc=42 step=run")
+
+    def test_portable_restore_failure_exits_non_zero_and_names_portable(self):
+        self.assert_leg_failure(3, "restore failed", 43, "LICENSED_LEG_FAILED=portable rc=43 step=restore")
+
+    def test_portable_run_failure_exits_non_zero_and_names_portable(self):
+        self.make_stub(4, "The application to execute does not exist: stub.dll", 74)
+        result = self.run_script()
+        diagnostic = (
+            "returncode=" + str(result.returncode)
+            + "\n--- stdout ---\n" + result.stdout
+            + "\n--- stderr ---\n" + result.stderr
+        )
+        self.assertNotEqual(0, result.returncode, diagnostic)
+        self.assertIn("LICENSED_LEG_FAILED=portable rc=74 step=run", result.stdout, diagnostic)
         self.assertIn("ALL GREEN", result.stdout, diagnostic)
+
+    def test_both_legs_succeed_exits_zero(self):
+        counter_file = self.root / "call-count"
+        counter_file.write_text("0", encoding="utf-8")
+        stub_dir = self.root / "stub-bin"
+        stub_dir.mkdir(exist_ok=True)
+        stub = stub_dir / "dotnet"
+        stub.write_text(
+            "#!/bin/sh\n"
+            'n=$(cat "$TAF_STUB_COUNTER")\n'
+            "n=$((n + 1))\n"
+            'echo "$n" > "$TAF_STUB_COUNTER"\n'
+            'case "$n" in\n'
+            "  2|4) echo \"ALL GREEN: 1 cases passed, 0 skipped (1 discovered)\"; exit 0 ;;\n"
+            "  *) exit 0 ;;\n"
+            "esac\n",
+            encoding="utf-8",
+        )
+        stub.chmod(stub.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
+        self.env["PATH"] = str(stub_dir) + os.pathsep + self.env["PATH"]
+        self.env["TAF_STUB_COUNTER"] = str(counter_file)
+        result = self.run_script()
+        diagnostic = (
+            "returncode=" + str(result.returncode)
+            + "\n--- stdout ---\n" + result.stdout
+            + "\n--- stderr ---\n" + result.stderr
+        )
+        self.assertEqual(0, result.returncode, diagnostic)
+        self.assertNotIn("LICENSED_LEG_FAILED", result.stdout, diagnostic)
+        self.assertEqual(2, result.stdout.count("ALL GREEN"), diagnostic)
 
 
 if __name__ == "__main__":
