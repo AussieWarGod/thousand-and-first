@@ -32,7 +32,9 @@ This is a **synthetic physical-capacity fixture**, not proof that 220 civic work
 lawfully commissioned or that an ordinary player produced the debt. It exercises 252
 medium container moves (756 thirds), whose ideal minimum is 32 budgeted turns. The
 production admission ceiling remains **at most 39 turns from first home entry**; the recipe
-also advances exactly 39 turns after returning to the starting cell. It does not assert
+also requests a 39-turn advance after returning to the starting cell. Its completion may be
+observed later at an action opportunity or render yield; this does not extend the receipt-based
+physical deadline. It does not assert
 that a measured drain must take exactly 39 turns. The 60-resident component of the
 312-unit/936-third worst case is **not exercised**. Journal fields preserve those limits:
 `synthetic-fixture=true`, `stress-residents=0`, `ordinary-acceptance=false`.

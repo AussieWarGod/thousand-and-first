@@ -22,6 +22,9 @@ demand receipts (936 thirds maximum), model/semantic clock monotonicity, growth 
 and schedule deadline/ordinal continuity. A post-return physical-demand receipt must reach zero
 within 39 turns after first home entry and remain settled at the final check. Three model resource
 flags alone never prove physical drainage. Missing demand evidence refuses, even in a quiet camp.
+The script requests a 39-turn drain wait; an action opportunity or real render yield may observe
+its completion later (for example, 40 elapsed turns). That later observation does not extend the
+physical deadline: the retained zero-demand receipt must still be within 39 turns of home entry.
 
 Limits: this small first-city fixture is not a 252-container stress fixture. Schedule continuity
 does not prove all economic pause effects; `pause-effects-proved=false` is mandatory. The route

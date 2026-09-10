@@ -73,6 +73,25 @@ namespace ThousandAndFirst.Tests
 		public void DrainRequiresObservedZeroWithinEnvelope(long began, long zero, int owed, bool expected)
 			=> ClassicAssert.AreEqual(expected, KingdomScenarioTravelRules.Drained(began, zero, owed));
 
+		[TestCase(100, 139, true)]
+		[TestCase(100, 140, true)]
+		[TestCase(100, 1000, true)]
+		[TestCase(100, 138, false)]
+		[TestCase(100, 99, false)]
+		[TestCase(-1, 139, false)]
+		[TestCase(long.MaxValue - 39, long.MaxValue, true)]
+		public void DrainObservationMayBeLateButNeverEarly(long arrived, long observed, bool expected)
+			=> ClassicAssert.AreEqual(expected, KingdomScenarioTravelRules.DrainObservationReady(arrived, observed));
+
+		[Test]
+		public void LateObservationDoesNotExtendPhysicalDrainDeadline()
+		{
+			ClassicAssert.IsTrue(KingdomScenarioTravelRules.DrainObservationReady(100, 140));
+			ClassicAssert.IsTrue(KingdomScenarioTravelRules.Drained(100, 139, 0));
+			ClassicAssert.IsFalse(KingdomScenarioTravelRules.Drained(100, 140, 0));
+			ClassicAssert.IsFalse(KingdomScenarioTravelRules.Drained(100, 139, 1));
+		}
+
 		[TestCase(100, 3, 100, 3, true)]
 		[TestCase(100, 3, 200, 4, true)]
 		[TestCase(100, 3, 99, 4, false)]
@@ -88,6 +107,7 @@ namespace ThousandAndFirst.Tests
 			string source = TestMain.ReadRepositoryText("Harness/KingdomScenarioTravel.cs");
 			StringAssert.Contains("ReturnDemandObserved && RemainingDemand == 0", source);
 			StringAssert.Contains("KingdomScenarioTravelRules.Drained(FirstHomeTurn, ZeroTurn, owed)", source);
+			StringAssert.Contains("KingdomScenarioTravelRules.DrainObservationReady(ArrivedTurn, Game.Turns)", source);
 			StringAssert.Contains("KingdomScenarioPauseController.Check()", source);
 			StringAssert.Contains("if (!Active) return \"; pause-effects-proved=false\"",
 				TestMain.ReadRepositoryText("Harness/KingdomScenarioPauseController.cs"));

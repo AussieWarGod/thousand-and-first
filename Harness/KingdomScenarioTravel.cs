@@ -152,7 +152,8 @@ namespace ThousandAndFirst.Harness
 		{
 			Observe();
 			Require(State == Phase.Draining && Player.CurrentZone.ZoneID == Home
-				&& Game.Turns - ArrivedTurn == KingdomScenarioTravelRules.DrainTurns, "drain leg is not exactly 39 turns");
+				&& KingdomScenarioTravelRules.DrainObservationReady(ArrivedTurn, Game.Turns),
+				"drain observation precedes the requested 39 turns");
 			Require(Book.TryZoneRow(Home, out int row), "home row missing");
 			int owed = Math.Abs(Book.ZoneOwedWater[row]) + Math.Abs(Book.ZoneOwedFood[row]) + Math.Abs(Book.ZoneOwedMaterials[row]);
 			Require(ReturnDemandObserved && RemainingDemand == 0

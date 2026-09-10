@@ -48,6 +48,31 @@ def economic_rows(mode="away", **changes):
 
 
 class TravelTests(unittest.TestCase):
+    def test_drain_completion_observation_can_overshoot_without_extending_deadline(self):
+        for fixture in (rows, economic_rows):
+            for mode in ("away", "present"):
+                with self.subTest(fixture=fixture.__name__, mode=mode):
+                    journal = fixture(mode, **{"drain-turns": "39"})
+                    journal = [(verb, outcome, "40 turn(s) elapsed of 39 requested"
+                                if verb == "advance-complete" and message.startswith("39 ") else message)
+                               for verb, outcome, message in journal]
+                    self.assertEqual(travel.assess(journal, mode, fixture is economic_rows), [])
+                    for key, value in (("drain-turns", "40"), ("remaining-demand", "1"),
+                                       ("demand-observed", "False")):
+                        bad = [(verb, outcome, message.replace(key + "=" +
+                               {"drain-turns": "39", "remaining-demand": "0", "demand-observed": "True"}[key],
+                               key + "=" + value)) for verb, outcome, message in journal]
+                        self.assertTrue(travel.assess(bad, mode, fixture is economic_rows))
+
+    def test_drain_completion_still_requires_requested_count_and_canonical_elapsed(self):
+        for message in ("38 turn(s) elapsed of 39 requested", "40 turn(s) elapsed of 40 requested",
+                        "040 turn(s) elapsed of 39 requested", "40 turn(s) elapsed of 39 requested extra",
+                        "9223372036854775808 turn(s) elapsed of 39 requested"):
+            with self.subTest(message=message):
+                journal = [(verb, outcome, message if verb == "advance-complete" and text.startswith("39 ")
+                            else text) for verb, outcome, text in rows()]
+                self.assertTrue(travel.assess(journal, "away"))
+
     def test_provider_admission_refusal_is_not_a_travel_failure(self):
         for fixture in (rows, economic_rows):
             for mode in ("away", "present"):

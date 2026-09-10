@@ -54,5 +54,10 @@ namespace ThousandAndFirst.Harness
 			=> Before >= 0 && Ordinal >= 0 && After >= Before && NextOrdinal >= Ordinal;
 		internal static bool Drained(long Began, long ZeroAt, int Owed)
 			=> Began >= 0 && ZeroAt >= Began && ZeroAt - Began <= DrainTurns && Owed == 0;
+
+		// Action opportunities and a real render yield can observe completion after the
+		// requested wait. This is not the deadline: Drained still requires zero within 39.
+		internal static bool DrainObservationReady(long Arrived, long Observed)
+			=> Arrived >= 0 && Observed >= Arrived && Observed - Arrived >= DrainTurns;
 	}
 }
