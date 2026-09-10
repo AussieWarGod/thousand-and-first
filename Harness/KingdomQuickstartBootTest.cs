@@ -162,6 +162,9 @@ namespace ThousandAndFirst.Harness
 				if (!ExactCompletion(Candidate)) Fail("boot completion authority changed during final verification");
 				KingdomScenarioJournal.Append("QUICKSTART-BOOT-COMPLETE", Failure == null,
 					(Failure ?? Request.Command) + "; boot-only=true; save-load=false; ordinary-acceptance=false");
+				// The build phase never starts before this row: boot-only=true above always
+				// observes a COMPLETED boot first, unmodified, whether or not a build follows.
+				if (Failure == null && Request.Build) KingdomQuickstartBuildTest.Run(Game, Zone, ObservedReceipt, Request.Command);
 			}
 			catch (Exception error)
 			{
