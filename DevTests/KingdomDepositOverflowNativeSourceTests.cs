@@ -21,6 +21,13 @@ namespace ThousandAndFirst.Tests
 
 		private static string Read(string Path) { return TestMain.ReadRepositoryText(Path); }
 
+		private static int Index(string Source, string Token)
+		{
+			int at = Source.IndexOf(Token, System.StringComparison.Ordinal);
+			Assert.That(at, Is.GreaterThanOrEqualTo(0), "missing source token: " + Token);
+			return at;
+		}
+
 		private static string Between(string Source, string Start, string End)
 		{
 			int from = Source.IndexOf(Start, System.StringComparison.Ordinal);
@@ -262,6 +269,91 @@ namespace ThousandAndFirst.Tests
 				Assert.That(fixture, Does.Contain(token), token);
 		}
 
+		/// <summary>
+		/// A freshly created object carries no engine id until something asks for one:
+		/// <c>IDIfAssigned</c> is a plain read, while <c>GameObject.ID</c> ALLOCATES on first
+		/// access. A fixture that only creates, counts and places never asks, so its own bodies
+		/// would stand there unidentified and admission would rightly refuse them. The fixture
+		/// therefore asks through the engine's own allocator while it is still BUILDING each body
+		/// &mdash; and the ask must come BEFORE that body is ever admitted.
+		/// </summary>
+		[Test]
+		public void EveryFixtureBodyIsGivenAnEngineIdentityBeforeItIsEverAdmitted()
+		{
+			string fixture = Read(Fixture);
+			foreach (string token in new[] {
+				"private string RequireAssignedIdentity(GameObject Item, string What)",
+				"string id = Item.ID;",
+				"!string.IsNullOrEmpty(id) && Item.IDIfAssigned == id",
+				"!Identities.Contains(id)",
+				"Identities.Add(id);",
+				"IdentitiesAllocated++;",
+				"Item.IDIfAssigned == Id,",
+				"string chestId = RequireAssignedIdentity(chest, \"the synthetic store\");",
+				"Id = RequireAssignedIdentity(item, \"a fixture stack\");",
+				"RequireIdentityHeld(item, id, \"a ground fixture stack\");",
+				"RequireIdentityHeld(item, id, \"a stored fixture stack\");",
+				"RequireIdentityHeld(chest, chestId, \"the synthetic store\");" })
+				Assert.That(fixture, Does.Contain(token), token);
+			// EXACTLY ONE allocating read per own body, and the ledger is shared across the stacks
+			// and the store, so "no two fixture bodies share an id" stands on its own.
+			Assert.That(Occurrences(fixture, "Item.ID;"), Is.EqualTo(1),
+				"there must be exactly one allocating identity read in the whole fixture");
+			Assert.That(Read(Checks), Does.Contain("HashSet<string> Identities"));
+			// SOURCE ORDER, read inside each member so it follows the call chain rather than the
+			// order the members happen to be written in. A stack is identified inside the maker,
+			// before the maker hands it back; and every placement and admission takes its body
+			// FROM that maker, so nothing is ever placed or admitted unidentified.
+			string make = Between(fixture, "private GameObject Make(int RawCount, out string Id)",
+				"private string RequireAssignedIdentity(");
+			Assert.That(Index(make, "Id = RequireAssignedIdentity(item, \"a fixture stack\");"),
+				Is.LessThan(Index(make, "return item;")),
+				"the maker hands back a stack it has not identified");
+			string inCell = Between(fixture, "private Body PlaceInCell(Cell Cell, int RawCount)",
+				"private Body PlaceInStore(int RawCount)");
+			int made = Index(inCell, "GameObject item = Make(RawCount, out id);");
+			foreach (string later in new[] { "Cell.AddObject(item, NoStack: true)",
+				"RequireIdentityHeld(item, id, \"a ground fixture stack\");",
+				"Body.OnGround(item, Cell)" })
+				Assert.That(Index(inCell, later), Is.GreaterThan(made),
+					"a ground body is used before the maker identified it: " + later);
+			string inStore = Between(fixture, "private Body PlaceInStore(int RawCount)",
+				"private GameObject Make(int RawCount, out string Id)");
+			made = Index(inStore, "GameObject item = Make(RawCount, out id);");
+			foreach (string later in new[] {
+				"Container.Inventory.AddObject(item, null, true, NoStack: true)",
+				"RequireIdentityHeld(item, id, \"a stored fixture stack\");",
+				"Body.InStore(item, Container)" })
+				Assert.That(Index(inStore, later), Is.GreaterThan(made),
+					"a stored body is used before the maker identified it: " + later);
+			string store = Between(fixture, "private void DedicateStore()",
+				"private Body PlaceInCell(");
+			int chestAllocation = Index(store,
+				"string chestId = RequireAssignedIdentity(chest, \"the synthetic store\");");
+			foreach (string later in new[] { "seat.AddObject(chest, NoStack: true)",
+				"KingdomMaterials.DedicateStockpile(System, Zone, chest, out failure)",
+				"RequireIdentityHeld(chest, chestId, \"the synthetic store\");",
+				"Container = chest;" })
+				Assert.That(Index(store, later), Is.GreaterThan(chestAllocation),
+					"the synthetic store is used before it is identified: " + later);
+		}
+
+		/// <summary>Observation never mints. Admission and every recheck read the plain
+		/// <c>IDIfAssigned</c>; the allocating <c>ID</c> accessor appears nowhere in the body
+		/// snapshot, so nothing an observation does can create an identity that was not already
+		/// standing.</summary>
+		[Test]
+		public void NoObservationPathEverAllocatesAnIdentity()
+		{
+			string body = Read(BodyShard);
+			Assert.That(body, Does.Contain("Item.IDIfAssigned"));
+			foreach (string minting in new[] { "Item.ID;", "Item.ID)", "Item.ID ", ".ID.ToString" })
+				Assert.That(body, Does.Not.Contain(minting),
+					"an observation path must never allocate an identity: " + minting);
+			Assert.That(Read(Checks), Does.Not.Contain("Item.ID;"));
+			Assert.That(Read(Cases), Does.Not.Contain(".ID;"));
+		}
+
 		/// <summary>Every report line and the persona itself disclose the synthetic setup, and
 		/// neither claims anything the run does not exercise.</summary>
 		[Test]
@@ -285,6 +377,10 @@ namespace ThousandAndFirst.Tests
 			string checks = Read(Checks);
 			Assert.That(checks, Does.Contain("synthetic-camp=true; synthetic-stacks=true; "
 				+ "synthetic-neverstack=true"));
+			// The identity allocation is disclosed in every report line, with its count.
+			Assert.That(checks, Does.Contain("synthetic-id-allocation=true; ids allocated="));
+			Assert.That(checks, Does.Contain("Retained.IdentitiesAllocated"));
+			Assert.That(persona, Does.Contain("synthetic-id-allocation"));
 			Assert.That(checks, Does.Contain("ordinary-reachability=untested; charter=untested; "
 				+ "save-load=untested"));
 		}

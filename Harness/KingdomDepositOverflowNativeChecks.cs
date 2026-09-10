@@ -44,6 +44,8 @@ namespace ThousandAndFirst.Harness
 			return (Complete ? "native-deposit-overflow cases=4 passed=4 failed=0"
 				: "native-deposit-overflow phase=" + Retained.Phase)
 				+ "; synthetic-camp=true; synthetic-stacks=true; synthetic-neverstack=true"
+				+ "; synthetic-id-allocation=true; ids allocated="
+				+ (Retained == null ? 0 : Retained.IdentitiesAllocated)
 				+ "; ordinary-reachability=untested; charter=untested; save-load=untested"
 				+ Retained.Evidence;
 		}
@@ -73,6 +75,13 @@ namespace ThousandAndFirst.Harness
 			private Body Boundary;
 			private Body[] StoreStacks, GroundStacks;
 			internal bool Armed, Done;
+			/// <summary>Fixture bodies the harness asked the engine to identify. Disclosed.
+			/// </summary>
+			internal int IdentitiesAllocated;
+
+			/// <summary>Every identity this fixture has been allocated, shared across the stacks
+			/// AND the store, so "no two fixture bodies share an id" stands on its own.</summary>
+			private readonly HashSet<string> Identities = new HashSet<string>();
 			internal int Phase;
 			internal readonly StringBuilder Evidence = new StringBuilder();
 
@@ -105,6 +114,7 @@ namespace ThousandAndFirst.Harness
 					.Append("; zone=").Append(Zone.ZoneID)
 					.Append("; blueprint=").Append(Blueprint)
 					.Append("; synthetic store=").Append(Container.IDIfAssigned)
+					.Append("; ids allocated so far=").Append(IdentitiesAllocated)
 					.Append("; capacity=").Append(KingdomSurvey.StockCapacityOf(Container))
 					.Append("; plain=").Append(Where(PlainGround))
 					.Append("; boundary=").Append(Where(BoundaryGround))

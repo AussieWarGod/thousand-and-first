@@ -213,7 +213,11 @@ below it.
   and holder OBJECTS — compared by reference, never by id, so a replacement holder or a rebuilt
   zone wearing the same id cannot read as unmoved. A body is admitted only in exactly one custody
   (in a cell and nobody's inventory, or in the exact container and no cell), with an assigned id
-  and a positive raw count. The store the suite delivers
+  and a positive raw count. A freshly created object carries no engine id until something asks —
+  `IDIfAssigned` is a plain read while `GameObject.ID` allocates on first access — so the fixture
+  asks once per body it makes, through the engine's own allocator, while it is still building that
+  body and never from an observation path; that synthetic identity allocation is disclosed with its
+  count in every report line. The store the suite delivers
   into is the fixture's own chest, dedicated through the production check-in
   (`KingdomMaterials.DedicateStockpile`) rather than stamped, so this ticket takes no dependency on
   another ticket's heart stockpile. The three ground cases reserve three DISTINCT cells before any
