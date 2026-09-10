@@ -100,6 +100,7 @@ namespace ThousandAndFirst
 			Dirty = false;
 			DirtyReason = null;
 			LastFailureKey = null;
+			LastPendingKey = null;
 			return true;
 		}
 

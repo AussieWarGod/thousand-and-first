@@ -16,6 +16,49 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
+## Unreleased roadless spatial capture correction (#131)
+
+A completed camp can have a public entrance before population traffic has worn a connected
+street to the zone edge. Native forage profile `mJLfAA` exposed the first daily capture treating
+this normal intermediate state as malformed geometry. The new internal Pending result applies
+only to the exact PublicEntrance / NoEntry / zero-street outcome after validation. Capture still
+returns false and clears the candidate record before any unavailable-ground fallback; neither
+a new seal nor an old spatial proxy is published. Automatic daily, semantic-pass and BeforeSave
+reporting names this pending state once per uninterrupted pending episode/session in the ledger;
+malformed geometry and exceptions remain errors. The notice may recur after loading a save.
+An empty or interior-road-only camp can remain pending indefinitely; no timeout invents corruption.
+Terminal and recovery callers retain their existing fail-closed refusal behavior.
+
+Current census: 3079 staged production C# files, 437,201 physical lines, 1434 files importing
+`XRL`, none at or above 300. Inventory SHA-256:
+`ab4cf22e665900bd82593ad4f9805861da4458e60b918c59b1d3a0bb88b74617`.
+The 3079 staged C# files produce a cold-install inventory of 3110 files. From these
+3079 sources, baseline and compatibility symbols select 3075 and 3079 ordinary inputs;
+the developer profiles compile 3257 and 3261 inputs. All four compile modes pass.
+One engine-free classifier is new; no serialized field, save key, wire format, or public API
+changes. Four canonical compile modes and repository audit pass (770 checks, six platform skips).
+Main 14,296 and portable 5,460 tests pass with zero skips. Focused nine checks pass; removing
+the fault, no-entry, and zero-street guards causes one, one, and two value failures respectively.
+Restored code passes. The bounded native roadless-camp regression passes as recorded below.
+The new developer persona completes an empty camp with a disclosed synthetic calendar, then
+checks two real two-day intervals for unchanged stage/revision and one pending notice.
+No road floors are fabricated. Save/load and terminal-pending acceptance are not claimed.
+First native attempt at `4d42fb8` (`8r2OHp`) refused during setup: capture did not return
+Pending; no daily phases ran. The fixture had not checked its completed work into the city book.
+Follow-up uses a disclosed production survey/check-in before observation, with real work rows
+and unchanged time required. The observer now calls capture only, never a flush, and verifies
+the stage immediately before/after. Follow-up four-mode compile and audit pass; main 14,296
+and portable 5,460 tests pass with zero skips.
+
+Native `0cfd8e7`, seed `#165939435`: first profile `zdkmsq` timed out before any journal
+at the default 300 seconds; its owned process was stopped and evidence retained. The runner's
+single timeout-only retry `H5UoPk` passed all seven verbs / 63 journal rows. Setup proved typed
+Pending with zero notices; after each real 2400-turn interval capture remained Pending, the
+stage/revision remained byte-identical, and exactly one pending notice existed. Strict Player.log
+checks passed. Owned retry process was stopped; both profiles and logs remain retained.
+This proves this synthetic roadless-camp/daily-capture case, not ordinary-play, save/load,
+terminal, historical inheritance or release acceptance. Required CI also passed at `0cfd8e7`.
+
 ## Unreleased master semantic receipt resume correction (#127)
 
 Native economic-present at 570294a established real local/master pause and 252 synthetic
