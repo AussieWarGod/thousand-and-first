@@ -40,6 +40,14 @@ namespace ThousandAndFirst.Harness
 					System = KingdomNativeCampFounding.Found(Game, Zone, Require);
 					NoticeBaseline = Notices();
 					KingdomScenarioCompletedHeart.Complete(Game, System, Zone);
+					long tick = Game.TimeTicks;
+					KingdomSurvey survey = KingdomSurvey.Take(Zone, System);
+					Require(survey != null && ReferenceEquals(survey.Ground, Zone), "completed camp survey absent");
+					using (survey.BindPass())
+						Simulation.City.KingdomCity.CheckIn(System, Zone, survey, tick);
+					Require(!KingdomSurvey.HasBoundPass && Game.TimeTicks == tick
+						&& System.City != null && System.City.WorkIds.Count > 0,
+						"completed camp check-in did not publish actual work rows without moving time");
 					Seal = Game.GetSystem<KingdomSeal>();
 					Require(Seal != null && System.Population == 0 && KingdomPlots.HeartRung(Zone) == 1,
 						"completed empty camp or seal absent");
@@ -61,7 +69,7 @@ namespace ThousandAndFirst.Harness
 				Ok = true;
 				return "native-seal-roadless phase=" + Phase + "; pending=true; stage-unchanged=true"
 					+ "; notices=" + (Notices() - NoticeBaseline) + "; synthetic-heart-calendar=true"
-					+ "; ordinary-acceptance=false; save-load=untested";
+						+ "; setup-production-checkin=true; ordinary-acceptance=false; save-load=untested";
 			}
 			catch (Exception error) { return KingdomScenarioRefusal.Message("taf-seal-roadless-refused", error.Message); }
 		}

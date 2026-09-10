@@ -43,6 +43,12 @@ Restored code passes. Native proof remains pending.
 The new developer persona completes an empty camp with a disclosed synthetic calendar, then
 checks two real two-day intervals for unchanged stage/revision and one pending notice.
 No road floors are fabricated. Save/load and terminal-pending acceptance are not claimed.
+First native attempt at `4d42fb8` (`8r2OHp`) refused during setup: capture did not return
+Pending; no daily phases ran. The fixture had not checked its completed work into the city book.
+Follow-up uses a disclosed production survey/check-in before observation, with real work rows
+and unchanged time required. The observer now calls capture only, never a flush, and verifies
+the stage immediately before/after. Follow-up four-mode compile and audit pass; main 14,296
+and portable 5,460 tests pass with zero skips. Corrected native proof remains pending.
 
 ## Unreleased master semantic receipt resume correction (#127)
 

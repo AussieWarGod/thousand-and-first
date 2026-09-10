@@ -12,8 +12,17 @@ namespace ThousandAndFirst
 
 		internal bool NativeSpatialCaptureWaits(out string Failure)
 		{
-			bool staged = TryFlushLiving("native roadless witness", true, out Failure, out var spatial);
-			return !staged && spatial == KingdomInheritanceSpatialCaptureResult.Pending;
+			string before = NativePendingStageEvidence();
+			bool captured = TryCapture(The.Game.GetSystem<KingdomSystem>(), LegacyId, Generation,
+				Revision, The.Game.TimeTicks, out var record, out Failure, out var spatial);
+			if (NativePendingStageEvidence() != before)
+			{
+				Failure = "capture-only observation changed the staged record"; return false;
+			}
+			if (!captured && record == null && spatial == KingdomInheritanceSpatialCaptureResult.Pending)
+				return true;
+			Failure = "captured=" + captured + "; spatial=" + spatial + "; reason=" + Failure;
+			return false;
 		}
 	}
 }

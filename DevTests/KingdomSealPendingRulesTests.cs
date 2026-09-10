@@ -46,7 +46,11 @@ namespace ThousandAndFirst.Tests
 			string observer = TestMain.ReadRepositoryText("Harness/KingdomSeal.NativePendingObservation.cs");
 			Assert.That(observer, Does.Contain("GetStore().ReadStage(OriginGameId)"));
 			Assert.That(observer, Does.Contain("record.Compose()"));
-			Assert.That(observer, Does.Contain("!staged && spatial == KingdomInheritanceSpatialCaptureResult.Pending"));
+			Assert.That(observer, Does.Contain("!captured && record == null && spatial == KingdomInheritanceSpatialCaptureResult.Pending"));
+			Assert.That(observer, Does.Contain("NativePendingStageEvidence() != before"));
+			Assert.That(observer, Does.Not.Contain("TryFlushLiving("));
+			Assert.That(source, Does.Contain("KingdomCity.CheckIn(System, Zone, survey, tick)"));
+			Assert.That(source, Does.Contain("System.City.WorkIds.Count > 0"));
 		}
 
 		[Test]
