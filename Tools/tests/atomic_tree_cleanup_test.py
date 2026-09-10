@@ -301,33 +301,38 @@ class CleanupIdentityPinTest(unittest.TestCase):
         self.assertTrue(os.path.isdir(os.path.join(self.parent.path, "far")))
 
     def test_release_context_tolerates_unrelated_churn(self) -> None:
-        """The ONLY place a vanishing entry may be skipped: after st_nlink == 0."""
+        """The ONLY place a vanishing entry may be skipped: after st_nlink == 0.
+
+        The fault stays active across the REAL ``_prove_identity_released`` call, so this
+        fails if that call stops passing ``tolerate_vanished=True``.
+        """
         victim = self.parent.make_directory("victim")
-        seen: list[tuple[tuple[str, str], ...]] = []
+        scans: list[int] = []
 
         def prove(parent_fd, held_fd, quarantine, expected, kind):
-            self.parent.make_directory(f"{FOREIGN_PREFIX}transient")
             real_scandir = publish.os.scandir
 
             def vanishing(*arguments, **keywords):
+                # A concurrent producer's entry disappears between scandir and stat,
+                # while the release proof is walking the parent.
+                transient = f"{FOREIGN_PREFIX}transient{len(scans):04x}"
+                os.mkdir(transient, dir_fd=parent_fd)
                 entries = list(real_scandir(*arguments, **keywords))
-                for item in entries:
-                    if item.name.endswith("transient"):
-                        os.rmdir(item.name, dir_fd=parent_fd)
+                os.rmdir(transient, dir_fd=parent_fd)
+                scans.append(len(entries))
                 return contextlib.nullcontext(iter(entries))
 
             with mock.patch.object(publish.os, "scandir", vanishing):
-                seen.append(
-                    publish._locate_matches(
-                        parent_fd, expected, kind, tolerate_vanished=True
-                    )
+                publish._prove_identity_released(
+                    parent_fd, held_fd, quarantine, expected, kind
                 )
-            publish._prove_identity_released(
-                parent_fd, held_fd, quarantine, expected, kind
-            )
 
         publish._remove_named_tree(self.parent.fd, "victim", victim, prove)
-        self.assertEqual(seen, [()])
+        self.assertEqual(len(scans), 1, "the release proof must have scanned once")
+        self.assertGreaterEqual(
+            scans[0], 1, "the vanishing entry must have been listed by the scan"
+        )
+        self.assertEqual(self.parent.entries(), [])
 
     def test_root_review_renamed_owned_directory_is_not_absent_success(self) -> None:
         """Root review negative: the admitted identity moved aside is still retained."""
