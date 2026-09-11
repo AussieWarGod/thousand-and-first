@@ -345,6 +345,60 @@ namespace ThousandAndFirst.Tests
 			Assert.That(Read(Checks), Does.Contain("synthetic-material-identities=true"));
 		}
 
+		/// <summary>
+		/// The persona and the provider seal the SAME script, word for word. The provider refuses
+		/// any other script outright, so a persona that drifted from it could only fail in a
+		/// native run; this compares the two texts instead.
+		/// </summary>
+		[Test]
+		public void ThePersonaScriptIsExactlyTheProvidersSealedScript()
+		{
+			string persona = Read(Persona);
+			int at = persona.IndexOf("\nSCRIPT=", StringComparison.Ordinal);
+			Assert.That(at, Is.GreaterThan(-1), "the persona declares no script");
+			int end = persona.IndexOf('\n', at + 1);
+			string[] words = persona.Substring(at + 8, end - at - 8).Split(';');
+
+			string provider = Read(Provider);
+			int array = provider.IndexOf("private static readonly string[] Script = {",
+				StringComparison.Ordinal);
+			Assert.That(array, Is.GreaterThan(-1), "the provider seals no script");
+			int open = provider.IndexOf('{', array) + 1;
+			int close = provider.IndexOf("};", open, StringComparison.Ordinal);
+			string[] sealedWords = provider.Substring(open, close - open).Split(',');
+			Assert.That(sealedWords.Length, Is.EqualTo(words.Length),
+				"the persona and the provider seal different script lengths");
+			for (int i = 0; i < words.Length; i++)
+			{
+				string word = sealedWords[i].Replace("\n", "").Replace("\t", "").Trim();
+				if (word == "SetupVerb") word = "\"camp-heart-setup\"";
+				if (word == "CheckVerb") word = "\"camp-heart-check\"";
+				Assert.That(word, Is.EqualTo("\"" + words[i].Trim() + "\""),
+					"script word " + i + " differs between persona and provider");
+			}
+		}
+
+		/// <summary>
+		/// The day after the raise asks production's own recovery predicate rather than reading a
+		/// log, so a settlement that can no longer recover its founding heart fails the persona.
+		/// </summary>
+		[Test]
+		public void TheDayAfterTheRaiseAsksProductionWhetherTheHeartStillRecovers()
+		{
+			string after = Read("Harness/KingdomCampHeartNativeAfterRaise.cs");
+			Assert.That(after, Does.Contain(
+				"bool recovered = KingdomPlots.RecoverFoundingHeart(System, Zone);"));
+			Assert.That(after, Does.Contain("Require(recovered, "
+				+ "\"taf-camp-after-raise-heart-unrecovered:"));
+			Assert.That(after, Does.Contain("RecordBookRow(standing);"));
+			Assert.That(after, Does.Contain("row names the standing heart="));
+			foreach (string driver in new[] { "KingdomUpgrade.Begin(", "KingdomPlots.Advance(",
+				"TryApplyUpgrade(", "SetIntProperty(", "SetStringProperty(", "Destroy(" })
+				Assert.That(after, Does.Not.Contain(driver),
+					"the day-after phase must read, never drive: " + driver);
+			Assert.That(Read(Phases), Does.Contain("case 3: Phase3(); Done = true;"));
+		}
+
 		[Test]
 		public void PersonaBracketsTheExactPhasesAndDisclosesEverySyntheticInput()
 		{
@@ -352,12 +406,18 @@ namespace ThousandAndFirst.Tests
 			Assert.That(persona, Does.Contain("REQUEST=founding-first-city"));
 			Assert.That(persona, Does.Contain("VERBS=camp-heart-setup,camp-heart-check"));
 			Assert.That(persona, Does.Contain("SCRIPT=stagedigest;camp-heart-setup;advance 1200;"
-				+ "camp-heart-check;advance 3600;camp-heart-check;stagedigest"));
+				+ "camp-heart-check;advance 3600;camp-heart-check;advance 1200;camp-heart-check;"
+				+ "stagedigest"));
 			Assert.That(persona, Does.Contain("EXPECT=stagedigest:OK~founded=false,"
 				+ "camp-heart-setup:OK~native-camp-heart phase=1,advance:OK,"
 				+ "camp-heart-check:OK~native-camp-heart phase=2,advance:OK,"
+				+ "camp-heart-check:OK~native-camp-heart phase=3,advance:OK,"
 				+ "camp-heart-check:OK~native-camp-heart cases=1 passed=1 failed=0,"
 				+ "stagedigest:OK~founded=true,COMPLETE"));
+			// The day after the raise, and the two halts it exists to catch.
+			Assert.That(persona, Does.Contain("LOG_FORBID=[\"construction: founding heart "
+				+ "recovery requires inspection\",\"seal: settlement pass was not staged\"]"));
+			Assert.That(persona, Does.Contain("ACCEPTANCE GATE FOR #162"));
 			Assert.That(persona, Does.Contain("cases 1, 3, 4, 5 and 6 remain owed"));
 			string checks = Read(Checks);
 			Assert.That(checks, Does.Contain("synthetic-camp=true; synthetic-residents=true; "

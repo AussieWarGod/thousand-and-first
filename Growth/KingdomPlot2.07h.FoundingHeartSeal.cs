@@ -136,21 +136,60 @@ namespace ThousandAndFirst
 				&& ExactFoundingHeartString(Work, FinalOutputIdProperty, terminal.FinalId);
 		}
 
+		/// <summary>The works slot the founding rite itself retired: the only generation this
+		/// authority knew before a heart could climb, and its behaviour here is unchanged.
+		/// </summary>
 		private static bool ExactFoundingHeartRetiredAuthority(Zone Z, string PredecessorId,
 			out FoundingHeartContext Context)
+		{
+			return ExactFoundingHeartRetiredAuthority(Z, PredecessorId,
+				KingdomFoundingHeartRetiredGeneration.Works, out Context);
+		}
+
+		/// <summary>
+		/// Retirement authority for ONE NAMED identity of this plan.
+		///
+		/// <para>The identity is never a caller's choice: each generation says which record of the
+		/// plan's own must name it, and an identity no record names is refused before any other
+		/// clause is asked. The works generation reads exactly as it always did; the final
+		/// generation names the identity the plan's own terminal record BOUND, which is the root a
+		/// rung climb retires. Everything below the naming clause -- seal, reservations, context,
+		/// marker roster, retired custody and the retirement proof itself -- is unchanged and is
+		/// asked of both.</para>
+		/// </summary>
+		private static bool ExactFoundingHeartRetiredAuthority(Zone Z, string PredecessorId,
+			KingdomFoundingHeartRetiredGeneration Generation, out FoundingHeartContext Context)
 		{
 			Context = null;
 			string raw = Z?.GetZoneProperty(FoundingHeartReceiptProperty, null);
 			return KingdomFoundingHeartRules.TryDecode(raw, out KingdomFoundingHeartPlan plan)
 				&& KingdomFoundingHeartRules.Complete(plan) && plan.ZoneId == Z.ZoneID
-				&& KingdomFoundingHeartRules.SlotId(plan,
-					KingdomFoundingHeartRules.WorksSlot) == PredecessorId
+				&& NamesRetiredFoundingHeartIdentity(Z, plan, PredecessorId, Generation)
 					&& ExactFoundingHeartSeal(Z, plan)
 					&& ExactFoundingHeartReservations(plan)
 					&& TryReadFoundingHeartContext(Z, plan, out Context)
 					&& ExactFoundingHeartMarkerRoster(Z, plan, false)
 					&& ExactFoundingHeartRetiredCustody(plan)
-					&& ExactFoundingHeartRetirementProof(Z, Context, PredecessorId);
+					&& ExactFoundingHeartRetirementProof(Z, Context, PredecessorId, Generation);
+		}
+
+		/// <summary>Whether a record of this plan's own names the identity being retired. The
+		/// works slot is a deterministic identity of the plan; the final generation is the
+		/// identity the sealed terminal bound, read back through the digest-sealed blob so a
+		/// stamped property can never nominate one.</summary>
+		private static bool NamesRetiredFoundingHeartIdentity(Zone Z,
+			KingdomFoundingHeartPlan Plan, string PredecessorId,
+			KingdomFoundingHeartRetiredGeneration Generation)
+		{
+			if (string.IsNullOrEmpty(PredecessorId)) return false;
+			if (Generation == KingdomFoundingHeartRetiredGeneration.Works)
+				return KingdomFoundingHeartRules.SlotId(Plan,
+					KingdomFoundingHeartRules.WorksSlot) == PredecessorId;
+			if (Generation != KingdomFoundingHeartRetiredGeneration.Final) return false;
+			return KingdomFoundingHeartTerminalRules.TryDecode(
+					Z?.GetZoneProperty(FoundingHeartTerminalProperty, null), out var terminal)
+				&& terminal.FinalId == PredecessorId
+				&& terminal.PredecessorId != PredecessorId;
 		}
 	}
 }

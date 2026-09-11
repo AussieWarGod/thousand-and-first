@@ -490,6 +490,371 @@ namespace ThousandAndFirst.Tests
 				Source("Growth/KingdomArchitectureDraftCompilerRules.cs"));
 		}
 
+		/// <summary>
+		/// Every branch that can refuse the founding heart's recovery says which one it was.
+		/// Three refusals were silent, and a native run that lost its heart could not tell a
+		/// lost works authority from an undecodable receipt from ground that never had a rite.
+		/// The answers are unchanged: each of these reads exactly as it read before, and only
+		/// the log gained a line.
+		/// </summary>
+		[Test]
+		public void EveryFoundingHeartRecoveryRefusalNamesItsOwnStep()
+		{
+			string authority = Source("Growth/KingdomPlot2.07a.FoundingHeartAuthority.cs");
+			StringAssert.Contains("return !HasReceiptlessFoundingHeartEvidence(System, Z) "
+				+ "|| HeartRefused(\"recover: receiptless evidence\");", authority);
+			StringAssert.Contains("out KingdomFoundingHeartPlan plan)) "
+				+ "return HeartRefused(\"recover: receipt decode\");", authority);
+
+			string drive = Source("Growth/KingdomPlot2.07j.FoundingHeartTerminalDrive.cs");
+			StringAssert.Contains("return HeartRefused(\"sealed: context or seal\");", drive);
+			StringAssert.Contains("return HeartRefused(\"sealed: works slot lookup\");", drive);
+			StringAssert.Contains("return TryReadFoundingHeartWorkAuthority(Z, works, out _)\n"
+				+ "\t\t\t\t\t|| HeartRefused(\"sealed: work authority\");", drive);
+
+			// The refusal helper still only logs and reads false, so naming a branch cannot
+			// change what any of them answers.
+			string diagnostics = Source("Growth/KingdomPlot2.07n.FoundingHeartDiagnostics.cs");
+			StringAssert.Contains("KingdomLog.Log(\"founding heart refused: \" + Step);",
+				diagnostics);
+			StringAssert.Contains("private static bool HeartRefused(string Step)", diagnostics);
+
+			// And the recovery these branches answer for still fails the whole settlement pass
+			// closed, which is what turned this defect into a silent halt rather than a wrong
+			// building.
+			string settlement = Source("Growth/KingdomConstruction.Settlement.cs");
+			StringAssert.Contains("if (!KingdomPlots.RecoverFoundingHeart(System, Z))", settlement);
+			StringAssert.Contains(
+				"KingdomLog.Log(\"construction: founding heart recovery requires inspection\");",
+				settlement);
+		}
+
+		/// <summary>
+		/// The retirement authority can now be asked about one NAMED generation, and the works
+		/// slot's own question is unchanged. The name is never the caller's to invent: each
+		/// generation says which record of the plan's own must name the identity, and the final
+		/// generation reads it out of the digest-sealed terminal rather than off a property.
+		/// The final generation's own retirement proof is not supplied yet, so it refuses --
+		/// fail-closed until the receipt chain that can prove it is wired in.
+		/// </summary>
+		[Test]
+		public void RetirementAuthorityNamesOneGenerationAndStillRefusesTheUnproved()
+		{
+			string seal = Source("Growth/KingdomPlot2.07h.FoundingHeartSeal.cs");
+			// The works case: same clause, reached through the named overload.
+			StringAssert.Contains("return ExactFoundingHeartRetiredAuthority(Z, PredecessorId,\n"
+				+ "\t\t\t\tKingdomFoundingHeartRetiredGeneration.Works, out Context);", seal);
+			StringAssert.Contains("KingdomFoundingHeartRules.SlotId(Plan,\n"
+				+ "\t\t\t\t\tKingdomFoundingHeartRules.WorksSlot) == PredecessorId;", seal);
+			// The naming clause runs BEFORE seal, reservations, roster, custody and proof, and
+			// those five are unchanged.
+			foreach (string clause in new[] {
+				"NamesRetiredFoundingHeartIdentity(Z, plan, PredecessorId, Generation)",
+				"&& ExactFoundingHeartSeal(Z, plan)",
+				"&& ExactFoundingHeartReservations(plan)",
+				"&& TryReadFoundingHeartContext(Z, plan, out Context)",
+				"&& ExactFoundingHeartMarkerRoster(Z, plan, false)",
+				"&& ExactFoundingHeartRetiredCustody(plan)",
+				"&& ExactFoundingHeartRetirementProof(Z, Context, PredecessorId, Generation)" })
+				StringAssert.Contains(clause, seal);
+			int names = seal.IndexOf("NamesRetiredFoundingHeartIdentity(Z, plan, PredecessorId",
+				StringComparison.Ordinal);
+			int proof = seal.IndexOf("ExactFoundingHeartRetirementProof(Z, Context, PredecessorId,",
+				StringComparison.Ordinal);
+			ClassicAssert.IsTrue(names > -1 && proof > names,
+				"the identity must be named before any authority is spent proving it");
+			// The final generation is read out of the sealed blob, and may not name the identity
+			// the prior record retired.
+			StringAssert.Contains("KingdomFoundingHeartTerminalRules.TryDecode(", seal);
+			StringAssert.Contains("&& terminal.FinalId == PredecessorId", seal);
+			StringAssert.Contains("&& terminal.PredecessorId != PredecessorId;", seal);
+
+			// And the proof itself refuses any generation it cannot prove.
+			string removal = Source("Growth/KingdomPlot2.07q.FoundingHeartRecordedRemoval.cs");
+			StringAssert.Contains("if (Generation != KingdomFoundingHeartRetiredGeneration.Works)"
+				+ " return false;", removal);
+		}
+
+		/// <summary>
+		/// The chained recovery path: proved from the retired identity outward, never from what
+		/// stands on the sealed cell, and it writes nothing. The one write in the chain is the
+		/// settle's own reservation, which is issued before the rung is stamped and refuses the
+		/// whole settle when it cannot be.
+		/// </summary>
+		[Test]
+		public void TheChainedRecoveryProvesIdentityReadsOnlyAndTheSettleOwnsTheOnlyWrite()
+		{
+			string chain = Source("Growth/KingdomPlot2.07s.FoundingHeartClimbedChain.cs");
+			// Identity, not position: the chain starts at the identity the sealed terminal bound.
+			StringAssert.Contains("string retired = prior.FinalId;", chain);
+			StringAssert.Contains("TryImprovementSuccessorOf(retired, out job, out successor, "
+				+ "out jobs, out objects)", chain);
+			// Every hop names itself, so the next native run says which one refused instead of
+			// leaving it to be inferred from what did not happen.
+			foreach (string hop in new[] { "chain: bound identity", "chain: improvement lookup",
+				"chain: receipt", "chain: removal proof", "chain: custody corroboration",
+				"chain: binds ground", "chain: retirement authority" })
+				StringAssert.Contains("HeartRefused(\"" + hop, chain);
+			StringAssert.Contains("row.SubjectId != RetiredId", chain);
+			// Exactly one job may name the retired identity: a second one refuses rather than
+			// choosing, and the count is carried into the refusal so a native run can read it.
+			StringAssert.Contains("Named++;", chain);
+			StringAssert.Contains("if (Named != 1 || Job.Phase != KingdomConstructionPhase.Complete",
+				chain);
+			StringAssert.Contains("if (Named != 1) Job = null;", chain);
+			StringAssert.Contains("KingdomConstruction.FindGlobalLiveId(Job.OutputId, out Successor)",
+				chain);
+			foreach (string fact in new[] { "KingdomConstruction.HasReceipt(successor, job)",
+				"r_KingdomScaffold.HasRemovalProof(successor, job.SubjectId)",
+				"KingdomFoundingHeartChainRules.CorroboratesRetired(stamp, retired)",
+				"Job.Phase != KingdomConstructionPhase.Complete",
+				"!string.IsNullOrEmpty(Job.Failure)",
+				"KingdomFoundingHeartChainRules.BindsGround(job.OutputId," })
+				StringAssert.Contains(fact, chain);
+			// The withdrawn clause: the reservation store is keyed by deterministic role
+			// identities, so nothing here may ask it about a successor.
+			foreach (string withdrawn in new[] { "HasExactFoundingHeartReservation",
+				"TryReserveClimbedFoundingHeartRoot", "FoundingHeartReservationPrefix" })
+				StringAssert.DoesNotContain(withdrawn, chain);
+			StringAssert.DoesNotContain("TryReserveClimbedFoundingHeartRoot",
+				Source("Growth/KingdomUpgrade.26.HeartRung.cs"));
+			// Nothing about the sealed cell, and no heart-shaped plot admitted by its stamps.
+			foreach (string position in new[] { "GetCell(", "CurrentCell", "HeartPlotProperty",
+				"MainWorldX" })
+				StringAssert.DoesNotContain(position, chain);
+			// The retirement authority is asked last, and about the identity the chain named.
+			int binds = chain.IndexOf("KingdomFoundingHeartChainRules.BindsGround(",
+				StringComparison.Ordinal);
+			int authority = chain.IndexOf("ExactFoundingHeartRetiredAuthority(Z, retired,",
+				StringComparison.Ordinal);
+			ClassicAssert.IsTrue(binds > -1 && authority > binds,
+				"the chain must prove itself before it spends the heart's own authority");
+
+			// The proof shard is read-only, whole: the hold that has to write lives in its own
+			// shard beside it, so this sweep needs no scoping at all.
+			foreach (string write in new[] { "SetStringProperty(", "SetIntProperty(",
+				"SetZoneProperty(", "SetObjectGameState(", "Ensure(", "Destroy(", "AddObject(" })
+				StringAssert.DoesNotContain(write, chain);
+
+			// The settle writes nothing for this chain: it proves its endpoint and its handover
+			// exactly as before, and stamps the rung.
+			string rung = Source("Growth/KingdomUpgrade.26.HeartRung.cs");
+			int endpoint = rung.IndexOf("ExactImprovementHeartEndpoint(System, Z, Successor, Job)",
+				StringComparison.Ordinal);
+			int stamp = rung.IndexOf("KingdomPlots.TrySettleHeartRung(", StringComparison.Ordinal);
+			ClassicAssert.IsTrue(endpoint > -1 && stamp > endpoint,
+				"the endpoint proof must still stand before the rung is stamped");
+
+			// And the final generation's retirement is the receipt chain, never absence alone.
+			string removal = Source("Growth/KingdomPlot2.07q.FoundingHeartRecordedRemoval.cs");
+			StringAssert.Contains("ExactFoundingHeartImprovementRetirement(PredecessorId)", removal);
+			StringAssert.Contains("TryImprovementSuccessorOf(PredecessorId, out var job, "
+				+ "out var successor,", removal);
+			StringAssert.Contains("&& ExactFoundingHeartLiveAbsence(PredecessorId);", removal);
+
+			// The chained branch sits beside the first-generation drive, after it refuses.
+			string drive = Source("Growth/KingdomPlot2.07j.FoundingHeartTerminalDrive.cs");
+			StringAssert.Contains("if (DriveFoundingHeartTerminal(System, Z, Context, null, null, "
+				+ "0L, null, false))\n\t\t\t\treturn true;", drive);
+			StringAssert.Contains("return TryChainedFoundingHeartRoot(Z, Context, out _)\n"
+				+ "\t\t\t\t|| HeartRefused(\"sealed: terminal drive and chain\");", drive);
+		}
+
+		/// <summary>
+		/// A stuck climb is a permanent refusal, so it must not also be permanently silent: the
+		/// seal dedupes its own line and the settlement's daily one is suppressed. The founder is
+		/// told once, on the ground, when the row is CLASSIFIED as an inspection -- never merely
+		/// read -- and the saying is taken back where the climb finishes, so a heart that sticks,
+		/// finishes and sticks again is said about twice.
+		/// </summary>
+		[Test]
+		public void AStuckClimbIsSaidOnceAndUnsaidWhereTheClimbFinishes()
+		{
+			string chain = Source("Growth/KingdomPlot2.07t.FoundingHeartClimbHold.cs");
+			string proof = Source("Growth/KingdomPlot2.07s.FoundingHeartClimbedChain.cs");
+			// The read says nothing. Announcing is a separate entry point.
+			StringAssert.Contains("internal static void NoteClimbUnderInspection(Zone Z, "
+				+ "int RowWorkId)", chain);
+			StringAssert.DoesNotContain("AnnounceClimbUnderInspection(", chain);
+			// The read lives beside the proof and says nothing at all: no writer, no ledger.
+			StringAssert.Contains("private static bool HasPendingClimb(Zone Z, int RowWorkId, "
+				+ "out string RetiredId,", proof);
+			StringAssert.DoesNotContain("SetZoneProperty(", proof);
+			StringAssert.DoesNotContain("Ledger", proof);
+
+			// Told only where the classification was actually reached, and never for a
+			// duplicated root, which is malformed rather than an inspection.
+			string evidence = Source("Core/KingdomInheritanceSpatial.Evidence.cs");
+			StringAssert.Contains("count == 0 && KingdomPlots.HasPendingClimb(Zone, Row.WorkId)",
+				evidence);
+			StringAssert.Contains("if (Pending) KingdomPlots.NoteClimbUnderInspection(Zone, "
+				+ "Row.WorkId);", evidence);
+
+			// Once only: decided by the shared rule, written, read back, and nothing said if the
+			// write did not take.
+			StringAssert.Contains("KingdomFoundingHeartChainRules.SaysClimbHold(held, true)",
+				chain);
+			StringAssert.Contains("Z.SetZoneProperty(FoundingHeartClimbHeldProperty, job.Id);",
+				chain);
+			StringAssert.Contains("if (Z.GetZoneProperty(FoundingHeartClimbHeldProperty, null) "
+				+ "!= job.Id) return;", chain);
+			StringAssert.Contains("system?.Ledger?.Note(", chain);
+			StringAssert.Contains("\"founding heart: climb under inspection; retired=\" "
+				+ "+ retired", chain);
+
+			// And taken back where the climb finishes -- the completion path the handover takes,
+			// because a completed climb never reaches the pending read again.
+			StringAssert.Contains("internal static void ClearClimbHold(Zone Z, string RetiredId)",
+				chain);
+			StringAssert.Contains("prior.FinalId != RetiredId) return;", chain);
+			string handover = Source("Growth/KingdomUpgrade.25.HandoverRemoval.cs");
+			StringAssert.Contains("KingdomPlots.ClearClimbHold(Z, Job.SubjectId);", handover);
+			int complete = handover.IndexOf("if (!KingdomConstruction.Complete(ref Job))",
+				StringComparison.Ordinal);
+			int cleared = handover.IndexOf("KingdomPlots.ClearClimbHold(Z, Job.SubjectId);",
+				StringComparison.Ordinal);
+			ClassicAssert.IsTrue(complete > -1 && cleared > complete,
+				"the hold is cleared only once the receipt has actually completed");
+
+			// The flag is declared beside the other founding-heart keys and regenerated into
+			// removal coverage like every other property.
+			StringAssert.Contains("public const string FoundingHeartClimbHeldProperty = "
+				+ "\"r_TAF_FoundingHeartClimbHeldAnnounced\";",
+				Source("Growth/KingdomPlot2.07i.FoundingHeartTerminalAuthority.cs"));
+			StringAssert.Contains("r_TAF_FoundingHeartClimbHeldAnnounced",
+				Source("Core/KingdomRemovalCoverage.Generated.cs"));
+		}
+
+		/// <summary>
+		/// VALUE. The once-only decision itself, executed: production's own rule for when a stuck
+		/// climb is SAID and when the saying is TAKEN BACK, driven through the whole life cycle a
+		/// heart can have -- stuck, still stuck, finished, stuck again -- and through the other
+		/// ending, cancellation, which never reaches the completion path.
+		/// </summary>
+		[Test]
+		public void TheHoldIsSaidOnceAndReleasedByEitherEnding()
+		{
+			// The four cells of the decision.
+			ClassicAssert.IsTrue(KingdomFoundingHeartChainRules.SaysClimbHold(false, true));
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.SaysClimbHold(true, true));
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.SaysClimbHold(false, false));
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.SaysClimbHold(true, false));
+			ClassicAssert.IsTrue(KingdomFoundingHeartChainRules.ReleasesClimbHold(true, false));
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.ReleasesClimbHold(false, false));
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.ReleasesClimbHold(true, true));
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.ReleasesClimbHold(false, true));
+
+			// The life cycle, each step decided by the rule rather than by the test.
+			bool held = false;
+			// Stuck: said, and the ground remembers it.
+			ClassicAssert.IsTrue(KingdomFoundingHeartChainRules.SaysClimbHold(held, true));
+			held = true;
+			// Still stuck, a later poll: nothing said, and nothing released.
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.SaysClimbHold(held, true));
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.ReleasesClimbHold(held, true));
+			// Finished: the completion path releases it.
+			ClassicAssert.IsTrue(KingdomFoundingHeartChainRules.ReleasesClimbHold(held, false));
+			held = false;
+			// Stuck again on a later climb: said again.
+			ClassicAssert.IsTrue(KingdomFoundingHeartChainRules.SaysClimbHold(held, true));
+			held = true;
+			// CANCELLED, which never reaches the completion path: the witness's own read is not
+			// pending, so the saying is taken back there instead.
+			ClassicAssert.IsTrue(KingdomFoundingHeartChainRules.ReleasesClimbHold(held, false));
+			held = false;
+			// And with nothing held, a cancelled or completed climb releases nothing.
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.ReleasesClimbHold(held, false));
+		}
+
+		/// <summary>Both sides of the hold run that one rule, and the cancelled ending has a
+		/// caller of its own.</summary>
+		[Test]
+		public void BothSidesOfTheHoldRunTheSharedRule()
+		{
+			string chain = Source("Growth/KingdomPlot2.07t.FoundingHeartClimbHold.cs");
+			StringAssert.Contains("KingdomFoundingHeartChainRules.SaysClimbHold(held, true)",
+				chain);
+			StringAssert.Contains("KingdomFoundingHeartChainRules.ReleasesClimbHold(held, false)",
+				chain);
+			StringAssert.Contains("KingdomFoundingHeartChainRules.ReleasesClimbHold(held, pending)",
+				chain);
+			StringAssert.Contains("internal static void ReleaseSettledClimbHold(Zone Z, "
+				+ "int RowWorkId)", chain);
+			// The witness releases on an absent root whose climb is no longer pending -- which is
+			// where a cancelled climb ends up, since it never completes.
+			StringAssert.Contains("else if (count == 0) KingdomPlots.ReleaseSettledClimbHold(Zone, "
+				+ "Row.WorkId);", Source("Core/KingdomInheritanceSpatial.Evidence.cs"));
+			// And the flag's own docstring now names both endings.
+			StringAssert.Contains("cleared when that improvement turns terminal EITHER WAY",
+				Source("Growth/KingdomPlot2.07i.FoundingHeartTerminalAuthority.cs"));
+		}
+
+		/// <summary>
+		/// VALUE. One row, one rect. The capture derives a row's rect for road evidence and the
+		/// validator derives it again; both must read the same key, or one capture masks road
+		/// cells under one footprint and validates them against another. The heart's first two
+		/// rungs are 4x4 and 8x6, so a split would have disagreed by four cells across and two
+		/// down on the very row this work is about.
+		/// </summary>
+		[Test]
+		public void TheRoadEvidenceRectAndTheValidatorsRectAgreeForAClimbedRow()
+		{
+			const string retired = "heartbasin";
+			const string standing = "heartwaterstone";
+			int retiredWidth;
+			int retiredHeight;
+			int standingWidth;
+			int standingHeight;
+			ClassicAssert.IsTrue(KingdomInheritRules.TryFootprint(retired, out retiredWidth,
+				out retiredHeight));
+			ClassicAssert.IsTrue(KingdomInheritRules.TryFootprint(standing, out standingWidth,
+				out standingHeight));
+			ClassicAssert.AreNotEqual(retiredWidth + "x" + retiredHeight,
+				standingWidth + "x" + standingHeight,
+				"the two rungs must differ, or this case proves nothing");
+
+			// The capture's fallback rect (built from width/height around the anchor) and the
+			// validator's legacy proxy, both taken from the row's own persisted key.
+			KingdomInheritanceSpatialRules.Rect validator;
+			ClassicAssert.IsTrue(KingdomInheritanceSpatialRules.TryLegacyRect(retired, 40, 12,
+				out validator));
+			KingdomInheritanceSpatialRules.Rect capture = new KingdomInheritanceSpatialRules.Rect
+			{
+				X1 = 40 - (retiredWidth - 1) / 2,
+				Y1 = 12 - (retiredHeight - 1) / 2,
+				X2 = 40 - (retiredWidth - 1) / 2 + retiredWidth - 1,
+				Y2 = 12 - (retiredHeight - 1) / 2 + retiredHeight - 1
+			};
+			ClassicAssert.AreEqual(validator.X1, capture.X1);
+			ClassicAssert.AreEqual(validator.Y1, capture.Y1);
+			ClassicAssert.AreEqual(validator.X2, capture.X2);
+			ClassicAssert.AreEqual(validator.Y2, capture.Y2);
+
+			// And what a split would have produced: the same anchor under the standing key is a
+			// different rect, which is the divergence this revert exists to prevent.
+			KingdomInheritanceSpatialRules.Rect split;
+			ClassicAssert.IsTrue(KingdomInheritanceSpatialRules.TryLegacyRect(standing, 40, 12,
+				out split));
+			ClassicAssert.IsTrue(split.X2 != validator.X2 || split.Y2 != validator.Y2,
+				"if the two keys gave the same rect the divergence would be invisible");
+		}
+
+		[Test]
+		public void EveryDerivationForARowUsesTheRowsOwnPersistedKey()
+		{
+			string spatial = Source("Core/KingdomInheritanceSpatial.cs");
+			StringAssert.Contains("string key = Record.WorkKeys[i];", spatial);
+			StringAssert.Contains("KingdomInheritRules.TryFootprint(key, out width, out height)",
+				spatial);
+			StringAssert.Contains("KingdomInheritanceSpatialRules.TryLegacyRect(key, row.X,",
+				spatial);
+			// Nothing re-keys a row off the standing blueprint any more.
+			StringAssert.DoesNotContain("TrySemanticKeyForBlueprint(standing", spatial);
+			// The validator reads the same persisted keys the derivations above used.
+			StringAssert.Contains("KingdomInheritanceSpatialRules.TryValidate(Record.WorkKeys,",
+				spatial);
+		}
+
 	}
 }
 #endif
