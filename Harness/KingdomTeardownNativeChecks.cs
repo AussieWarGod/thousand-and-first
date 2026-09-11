@@ -239,8 +239,9 @@ namespace ThousandAndFirst.Harness
 				KingdomSystem system = KingdomNativeCampFounding.Found(Game, Zone, Require);
 				KingdomNativeCampFounding.Dedicate(Game, Zone, system,
 					16 * KingdomRules.DramsPerArrival, Owned.Add, Require);
-				Require(KingdomData.TryGetBuilding("fire", out KingdomRules.BuildEntry fireEntry)
-					&& KingdomData.TryGetBuilding("larder", out KingdomRules.BuildEntry larderEntry),
+				bool foundFire = KingdomData.TryGetBuilding("fire", out KingdomRules.BuildEntry fireEntry);
+				bool foundLarder = KingdomData.TryGetBuilding("larder", out KingdomRules.BuildEntry larderEntry);
+				Require(foundFire && foundLarder,
 					"the fixture designs are missing from the live catalogue");
 				Require(KingdomGrowth.CountStoredWater(Zone) >= fireEntry.CostDrams + larderEntry.CostDrams,
 					"the dedicated store does not cover both fixture buildings' cost");
