@@ -18,8 +18,11 @@
 # KNOWN GAP, DISCLOSED, NOT FIXED: the crew has no home plot, so a roofless departure brink
 # (KingdomLodgingRules.GraceDays = 6 days = 7200 ticks from the warned tick) may fire near
 # tick 8400-9600, inside this budget and before the final check. Departure is not frozen or
-# synthesized away; if it happens first, the stalled phase output is expected to surface it
-# as an incomplete case, not a false pass.
+# synthesized away; if it happens first, Frame.Check() re-Requires the real production crew
+# count (KingdomResidents.OnRollCount) and refuses by a named outcome, "case=<fire|larder>
+# outcome=crew-departed onRoll=<n> wanted=<CrewSize> tick=<t>", inside the same Fail()
+# envelope every other named refusal in this scenario uses -- a named REFUSED verb, never a
+# silently stalled incomplete case and never a false pass.
 DESCRIPTION=a really built camp fire and larder are struck on real turns, return exactly the computed salvage, and refuse a second strike
 REQUEST=founding-first-city
 START=8.22@40,12
