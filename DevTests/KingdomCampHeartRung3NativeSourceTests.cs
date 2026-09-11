@@ -21,7 +21,7 @@ namespace ThousandAndFirst.Tests
 		private const string Rung3 = "Harness/KingdomCampHeartNativeRung3.cs";
 		private const string Stock = "Harness/KingdomCampHeartNativeRung3Stock.cs";
 		private const string Diagnostics = "Harness/KingdomCampHeartNativeRung3Diagnostics.cs";
-		private const string Bill = "Harness/KingdomCampHeartNativeBill.cs";
+		private const string BillShard = "Harness/KingdomCampHeartNativeBill.cs";
 		private const string TownSeed = "Harness/KingdomCampHeartNativeTownSeed.cs";
 		private const string Persona = "Tools/personas/camp-heart-rung3-native-check.persona";
 		private const string Buildings = "RuntimeData/KingdomBuildings.xml";
@@ -288,6 +288,29 @@ namespace ThousandAndFirst.Tests
 			Assert.That(rung3, Does.Contain(
 				"bool recovered = KingdomPlots.RecoverFoundingHeart(System, Zone);"));
 			Assert.That(rung3, Does.Contain("taf-camp-rung3-heart-unrecovered:"));
+			// The marker the rung-3 phase reads is the one production writes.
+			Assert.That(Read(Checks), Does.Contain("internal const string HeartEffectProperty = "
+				+ "\"r_TAF_ConstructionHeartEffect\";"));
+			Assert.That(Read("Growth/KingdomPlot2.03.RegistryAndDeclarations.cs"),
+				Does.Contain("private const string HeartEffectProperty = "
+					+ "\"r_TAF_ConstructionHeartEffect\";"));
+			Assert.That(Read("Growth/KingdomPlotHeartRules.Settle.cs"),
+				Does.Contain("Building.SetIntProperty(HeartEffectProperty, 2);"));
+
+			string checks = Read(Checks);
+			Assert.That(checks, Does.Contain("\"; target-rung=\" + Retained.TargetRung"));
+			Assert.That(checks, Does.Contain("\"; synthetic-rung3-bill=\""));
+			Assert.That(checks, Does.Contain("\"; synthetic-craft-disks=\""));
+
+			string persona = Read(Persona);
+			Assert.That(persona, Does.Contain("camp-builder CASE 3"));
+			Assert.That(persona, Does.Contain("founded, not commissioned"));
+			Assert.That(persona, Does.Contain("TWICE IN A ROW"));
+			Assert.That(persona, Does.Contain("That is a reading of the source, not a result."));
+			Assert.That(persona, Does.Contain("LOG_FORBID=[\"construction: founding heart "
+				+ "recovery requires inspection\",\"seal: settlement pass was not staged\"]"));
+			Assert.That(persona, Does.Contain("TIMEOUT=3600"));
+			Assert.That(persona, Does.Contain("SET=camp,native-regression,test-only"));
 		}
 
 		/// <summary>
@@ -340,8 +363,8 @@ namespace ThousandAndFirst.Tests
 				"TryApplyUpgrade(", "SetIntProperty(", "SetStringProperty(", "Destroy(", "Obliterate(" })
 				Assert.That(diagnostics, Does.Not.Contain(driver),
 					"the rung-3 diagnostics must read, never drive: " + driver);
-			Assert.That(Read(Bill), Does.Contain("private void RecordJobProgress(string Id, GameObject Root)"));
-			Assert.That(Read(Bill), Does.Contain("var improvement = Root?.GetPart<XRL.World.Parts.r_KingdomImprovement>();"));
+			Assert.That(Read(BillShard), Does.Contain("private void RecordJobProgress(string Id, GameObject Root)"));
+			Assert.That(Read(BillShard), Does.Contain("var improvement = Root?.GetPart<XRL.World.Parts.r_KingdomImprovement>();"));
 			Assert.That(Read(Phases), Does.Contain("RequireTownHeld(\"when the rung-3 bill was minted\");"));
 			Assert.That(diagnostics, Does.Contain("KingdomSubsidence.ScopedSupports(System, Zone, Census());"));
 			Assert.That(diagnostics, Does.Contain("\"; supported level=\").Append(KingdomSubsidenceRules.SupportedLevel("));
@@ -411,29 +434,6 @@ namespace ThousandAndFirst.Tests
 			Assert.That(persona, Does.Contain("never by writing a home id"));
 			Assert.That(persona, Does.Contain("taf-camp-rung3-town-held"));
 
-			// The marker the rung-3 phase reads is the one production writes.
-			Assert.That(Read(Checks), Does.Contain("internal const string HeartEffectProperty = "
-				+ "\"r_TAF_ConstructionHeartEffect\";"));
-			Assert.That(Read("Growth/KingdomPlot2.03.RegistryAndDeclarations.cs"),
-				Does.Contain("private const string HeartEffectProperty = "
-					+ "\"r_TAF_ConstructionHeartEffect\";"));
-			Assert.That(Read("Growth/KingdomPlotHeartRules.Settle.cs"),
-				Does.Contain("Building.SetIntProperty(HeartEffectProperty, 2);"));
-
-			string checks = Read(Checks);
-			Assert.That(checks, Does.Contain("\"; target-rung=\" + Retained.TargetRung"));
-			Assert.That(checks, Does.Contain("\"; synthetic-rung3-bill=\""));
-			Assert.That(checks, Does.Contain("\"; synthetic-craft-disks=\""));
-
-			string persona = Read(Persona);
-			Assert.That(persona, Does.Contain("camp-builder CASE 3"));
-			Assert.That(persona, Does.Contain("founded, not commissioned"));
-			Assert.That(persona, Does.Contain("TWICE IN A ROW"));
-			Assert.That(persona, Does.Contain("That is a reading of the source, not a result."));
-			Assert.That(persona, Does.Contain("LOG_FORBID=[\"construction: founding heart "
-				+ "recovery requires inspection\",\"seal: settlement pass was not staged\"]"));
-			Assert.That(persona, Does.Contain("TIMEOUT=3600"));
-			Assert.That(persona, Does.Contain("SET=camp,native-regression,test-only"));
 		}
 	}
 }
