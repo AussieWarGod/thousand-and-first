@@ -12,7 +12,32 @@ namespace ThousandAndFirst
 		/// declared passability and which test the body failed. The summary sentence the harness
 		/// parses is emitted separately and never grows.
 		/// </summary>
-		private static void NameOccupants(Zone Z, HashSet<int> Blocking,
+		/// <summary>
+		/// A raising whose applied stage has stopped short of Done and whose labour target does not
+		/// reach past it is stalled in a way nothing else logs. Said only when the labour is fully
+		/// PAID (a plot merely accumulating ticks between stages is working, not stalled) and only
+		/// when the pair has changed since the last line for this plot, so a stall costs one line,
+		/// not one line per plot per pass.
+		/// </summary>
+		private static void SayPlotStageWaiting(r_KingdomPlotWorks Works,
+			KingdomPlotRules.PlotStage Target)
+		{
+			GameObject root = Works.ParentObject;
+			if (root == null) return;
+			long remaining = TryGetPlotWorkLong(root, PlotWorkRemainingProperty, out long owed)
+				? owed : -1L;
+			string pair = KingdomPlotRules.StageWaitingPair(Works.StageApplied, (int)Target);
+			if (!KingdomPlotRules.ShouldSayStageWaiting(remaining, Works.StageApplied,
+				(int)KingdomPlotRules.PlotStage.Done,
+				root.GetStringProperty(PlotStageWaitingLastProperty), pair)) return;
+			root.SetStringProperty(PlotStageWaitingLastProperty, pair);
+			KingdomLog.Log("plot stage waiting: " + (Works.DisplayName ?? "work")
+				+ " lot " + root.GetStringProperty(PlotIdProperty)
+				+ " applied=" + (KingdomPlotRules.PlotStage)Works.StageApplied
+				+ " target=" + Target);
+		}
+
+		private static void NameOccupants(Zone Z, Dictionary<int, ArchitecturePassability> Slots,
 			List<GameObject> Occupants, List<KingdomPlotRules.OccupantReason> Reasons)
 		{
 			for (int i = 0; i < Occupants.Count && i < Reasons.Count; i++)
@@ -21,11 +46,15 @@ namespace ThousandAndFirst
 				if (!GameObject.Validate(body)) continue;
 				Cell at = body.CurrentCell;
 				int index = at == null ? -1 : at.Y * Z.Width + at.X;
+				// The passability printed is the one the MAP declares for the cell this body is
+				// actually standing on, read from the same lookup that decided whether it blocks.
+				ArchitecturePassability passability = ArchitecturePassability.Walkable;
+				bool authored = index >= 0 && Slots.TryGetValue(index, out passability);
 				KingdomLog.Log("architecture: occupant " + body.IDIfAssigned + " ("
 					+ body.Blueprint + ") at " + (at == null ? "nowhere" : at.X + "," + at.Y)
-					+ " on " + (index >= 0 && Blocking.Contains(index) ? "a blocked slot"
-						: "no blocked slot")
-					+ " passability=" + ArchitecturePassability.Blocked
+					+ " on " + (authored && KingdomPlotRules.SlotBlocksOccupant(passability)
+						? "a blocked slot" : "no blocked slot")
+					+ " passability=" + (authored ? passability.ToString() : "none")
 					+ " reason=" + Reasons[i]);
 			}
 		}

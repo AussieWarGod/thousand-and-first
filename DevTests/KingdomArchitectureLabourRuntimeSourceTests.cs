@@ -146,9 +146,9 @@ namespace ThousandAndFirst.Tests
 				"internal static bool TryGroundStageWithOccupants(",
 				"KingdomArchitectureStamper.TryStageLayer(Root, Z,",
 				"if (!ground && KingdomPlotRules.IsOccupantSlotRefusal(Failure))",
-				"bool stoodOff = KingdomArchitectureStamper.TryBlockingCells(Authored, Z,",
-				"out HashSet<int> blocking, out string clearanceRefusal)",
-				"&& TryClearManagedOccupants(System, Z, Root, Managed, blocking, Rect,",
+				"bool stoodOff = KingdomArchitectureStamper.TryPlacementPassability(Authored, Z,",
+				"out Dictionary<int, ArchitecturePassability> slots,",
+				"&& TryClearManagedOccupants(System, Z, Root, Managed, slots, Rect,",
 				"ground = KingdomArchitectureStamper.TryStageLayer(Root, Z,",
 				"SayPlotWorkCleared(System, Root, name, cleared, ground,",
 				"ground ? null : (stoodOff ? Failure : clearanceRefusal))",
@@ -163,7 +163,8 @@ namespace ThousandAndFirst.Tests
 			AssertOrdered(clearance,
 				"internal static bool TryClearManagedOccupants(",
 				"KingdomSurvey survey = KingdomSurvey.ActiveFor(Z)",
-				"foreach (int index in Blocking)",
+				"foreach (KeyValuePair<int, ArchitecturePassability> slot in Slots)",
+				"if (!KingdomPlotRules.SlotBlocksOccupant(slot.Value)) continue;",
 				"if (!item.IsCreature && !item.IsPlayer()) continue;",
 				"KingdomPlotRules.OccupantReason reason = ReasonFor(System, survey, item)",
 				"occupants.Add(item)",
@@ -199,11 +200,21 @@ namespace ThousandAndFirst.Tests
 			// Every refusing body is named with its reason before the parsed summary sentence.
 			string helpers = TestMain.ReadRepositoryText(
 				"Growth/KingdomPlot2.26d.OccupantHelpers.cs");
+			// The stall line is gated on paid labour AND a changed pair, and the passability it
+			// prints is read from the placement lookup, never a literal.
 			AssertOrdered(helpers,
+				"private static void SayPlotStageWaiting(",
+				"TryGetPlotWorkLong(root, PlotWorkRemainingProperty, out long owed)",
+				"KingdomPlotRules.StageWaitingPair(Works.StageApplied, (int)Target)",
+				"if (!KingdomPlotRules.ShouldSayStageWaiting(remaining, Works.StageApplied,",
+				"root.GetStringProperty(PlotStageWaitingLastProperty), pair)) return;",
+				"root.SetStringProperty(PlotStageWaitingLastProperty, pair)",
+				"KingdomLog.Log(\"plot stage waiting: \"",
 				"private static void NameOccupants(",
+				"Slots.TryGetValue(index, out passability)",
 				"KingdomLog.Log(\"architecture: occupant \" + body.IDIfAssigned",
 				"body.Blueprint",
-				"passability=",
+				"passability=\" + (authored ? passability.ToString() : \"none\")",
 				"reason=\" + Reasons[i])",
 				"private static KingdomPlotRules.OccupantReason ReasonFor(",
 				"if (Body.IsPlayer()) return KingdomPlotRules.OccupantReason.Player;",
@@ -239,17 +250,13 @@ namespace ThousandAndFirst.Tests
 			string receipts = TestMain.ReadRepositoryText(
 				"Growth/KingdomArchitectureStamper.OwnerReceipts.cs");
 			AssertOrdered(receipts,
-				"public static bool TryBlockingCells(",
-				"if (!KingdomPlotRules.SlotBlocksOccupant(PassabilityOf(snapshot, placement)))",
-				"continue;",
-				"result.Add(y * Z.Width + x)");
-			// A raising whose stages stop short of Done says so once a pass.
+				"public static bool TryPlacementPassability(",
+				"ArchitecturePassability passability = PassabilityOf(snapshot, placement)",
+				"|| KingdomPlotRules.SlotBlocksOccupant(passability)) result[key] = passability;");
+			StringAssert.DoesNotContain("passability=\" + ArchitecturePassability", helpers);
 			AssertOrdered(labour,
 				"if ((int)target <= Works.StageApplied)",
-				"if (Works.StageApplied < (int)KingdomPlotRules.PlotStage.Done)",
-				"KingdomLog.Log(\"plot stage waiting: \"",
-				"\" applied=\" + (KingdomPlotRules.PlotStage)Works.StageApplied",
-				"\" target=\" + target");
+				"SayPlotStageWaiting(Works, target)");
 			string window = TestMain.ReadRepositoryText(
 				"Growth/KingdomPlot2.26b.LabourWindow.cs");
 			string said = window.Substring(window.IndexOf(

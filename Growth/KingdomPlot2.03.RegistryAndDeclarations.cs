@@ -271,6 +271,8 @@ namespace ThousandAndFirst
 		public const string PlotWorkOccupantAnnouncedProperty = "r_TAF_PlotWorkOccupantAnnounced";
 		public const string PlotWorkOccupantSlotProperty = "r_TAF_PlotWorkOccupantSlot";
 		public const string PlotWorkClearedAnnouncedProperty = "r_TAF_PlotWorkClearedAnnounced";
+		/// <summary>Last applied:target pair the stage-waiting line was emitted for.</summary>
+		public const string PlotStageWaitingLastProperty = "r_TAF_PlotStageWaitingLast";
 		public const int PlotWorkSchema = 2;
 		private const int MaxFurnishItems = 64;
 		private const int MaxGrowthRows = 512;

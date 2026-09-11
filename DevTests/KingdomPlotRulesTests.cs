@@ -1105,6 +1105,44 @@ namespace ThousandAndFirst.Tests
 		}
 
 		/// <summary>
+		/// A stalled raising costs one line, not one per plot per pass. Both conditions are load
+		/// bearing -- mutation: dropping the paid test makes case 2 (remaining 600) print for every
+		/// plot merely accumulating labour, and dropping the pair test makes case 4 print again on
+		/// every pass for a pair already said.
+		/// </summary>
+		[TestCase(0L, 1, "1:1", true, TestName = "paid and unsaid says it once")]
+		[TestCase(600L, 1, null, false, TestName = "still being worked says nothing")]
+		[TestCase(-1L, 1, null, false, TestName = "unknown labour says nothing")]
+		[TestCase(0L, 1, "1:1", true, TestName = "a new pair says it again")]
+		public void AStalledRaisingSaysItOncePerPair(long Remaining, int Applied, string LastPair,
+			bool Expected)
+		{
+			string pair = KingdomPlotRules.StageWaitingPair(Applied, Applied);
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.ShouldSayStageWaiting(Remaining,
+				Applied, (int)Stage.Done, LastPair == pair ? null : LastPair, pair));
+		}
+
+		[Test]
+		public void AStageWaitingPairAlreadySaidIsNotSaidAgain()
+		{
+			string pair = KingdomPlotRules.StageWaitingPair(3, 3);
+			ClassicAssert.AreEqual("3:3", pair);
+			ClassicAssert.IsTrue(KingdomPlotRules.ShouldSayStageWaiting(0L, 3, (int)Stage.Done,
+				null, pair));
+			ClassicAssert.IsFalse(KingdomPlotRules.ShouldSayStageWaiting(0L, 3, (int)Stage.Done,
+				pair, pair));
+			ClassicAssert.IsTrue(KingdomPlotRules.ShouldSayStageWaiting(0L, 3, (int)Stage.Done,
+				pair, KingdomPlotRules.StageWaitingPair(3, 4)));
+		}
+
+		[Test]
+		public void AFinishedRaisingNeverSaysItIsWaiting()
+		{
+			ClassicAssert.IsFalse(KingdomPlotRules.ShouldSayStageWaiting(0L, (int)Stage.Done,
+				(int)Stage.Done, null, KingdomPlotRules.StageWaitingPair(4, 4)));
+		}
+
+		/// <summary>
 		/// Only a slot the map declares Blocked is blocked by a body. Mutation: widening this to
 		/// "not Walkable" fails the Adjacent case, and inverting it fails all three -- which is
 		/// exactly the defect that bricked the heart works, whose basin slot B in

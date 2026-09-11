@@ -36,15 +36,7 @@ namespace ThousandAndFirst
 				InfrastructureFailure, out target)) return;
 			if ((int)target <= Works.StageApplied)
 			{
-				// A raising whose applied stage has stopped short of Done and whose labour target
-				// does not reach past it is stalled in a way nothing else logs: name it, or the
-				// next run reads "stage-not-applied" with no line to classify it by.
-				if (Works.StageApplied < (int)KingdomPlotRules.PlotStage.Done)
-					KingdomLog.Log("plot stage waiting: " + (Works.DisplayName ?? "work")
-						+ " lot " + (Works.ParentObject == null ? "unknown"
-							: Works.ParentObject.GetStringProperty(PlotIdProperty))
-						+ " applied=" + (KingdomPlotRules.PlotStage)Works.StageApplied
-						+ " target=" + target);
+				SayPlotStageWaiting(Works, target);
 				return;
 			}
 			KingdomSystem.Guard("plot raising", delegate

@@ -45,9 +45,10 @@ namespace ThousandAndFirst
 				int cleared = 0;
 				KingdomPlotRules.OccupantVerdict verdict = KingdomPlotRules.OccupantVerdict.Clear;
 				Cell anchor = null;
-				bool stoodOff = KingdomArchitectureStamper.TryBlockingCells(Authored, Z,
-						out HashSet<int> blocking, out string clearanceRefusal)
-					&& TryClearManagedOccupants(System, Z, Root, Managed, blocking, Rect,
+				bool stoodOff = KingdomArchitectureStamper.TryPlacementPassability(Authored, Z,
+						out Dictionary<int, ArchitecturePassability> slots,
+						out string clearanceRefusal)
+					&& TryClearManagedOccupants(System, Z, Root, Managed, slots, Rect,
 						out cleared, out verdict, out anchor, out clearanceRefusal);
 				if (stoodOff)
 				{
@@ -87,16 +88,16 @@ namespace ThousandAndFirst
 		/// <param name="Anchor">The post anchor inside the layout, when that is the verdict.</param>
 		/// <param name="Refusal">Why nothing was moved, when this returns false.</param>
 		internal static bool TryClearManagedOccupants(KingdomSystem System, Zone Z, GameObject Root,
-			HashSet<int> Managed, HashSet<int> Blocking, KingdomPlotRules.PlotRect Rect,
-			out int Moved, out KingdomPlotRules.OccupantVerdict Verdict, out Cell Anchor,
-			out string Refusal)
+			HashSet<int> Managed, Dictionary<int, ArchitecturePassability> Slots,
+			KingdomPlotRules.PlotRect Rect, out int Moved,
+			out KingdomPlotRules.OccupantVerdict Verdict, out Cell Anchor, out string Refusal)
 		{
 			Moved = 0;
 			Verdict = KingdomPlotRules.OccupantVerdict.Clear;
 			Anchor = null;
 			Refusal = null;
 			if (System == null || Z == null || !GameObject.Validate(Root) || Managed == null
-				|| Blocking == null)
+				|| Slots == null)
 				return ClearanceFault("the layout was not witnessed", out Refusal);
 			KingdomSurvey survey = KingdomSurvey.ActiveFor(Z);
 			if (survey == null) return ClearanceFault("no ground survey is in hand", out Refusal);
@@ -107,9 +108,10 @@ namespace ThousandAndFirst
 			int residents = 0;
 			// Only Blocked slots are walked: a body on walkable ground or beside an adjacent-use
 			// slot is not in the way, so it is not an occupant of this raising at all.
-			foreach (int index in Blocking)
+			foreach (KeyValuePair<int, ArchitecturePassability> slot in Slots)
 			{
-				Cell cell = Z.GetCell(index % Z.Width, index / Z.Width);
+				if (!KingdomPlotRules.SlotBlocksOccupant(slot.Value)) continue;
+				Cell cell = Z.GetCell(slot.Key % Z.Width, slot.Key / Z.Width);
 				if (cell == null) continue;
 				List<GameObject> objects = cell.GetObjects();
 				for (int i = 0; i < objects.Count; i++)
@@ -137,7 +139,7 @@ namespace ThousandAndFirst
 			if (Verdict == KingdomPlotRules.OccupantVerdict.Clear) return true;
 			if (Verdict != KingdomPlotRules.OccupantVerdict.Displace)
 			{
-				NameOccupants(Z, Blocking, occupants, reasons);
+				NameOccupants(Z, Slots, occupants, reasons);
 				return ClearanceFault(Verdict == KingdomPlotRules.OccupantVerdict.AnchorBound
 					? "a resident is posted inside the layout"
 					: "somebody standing there is not the settlement's to move", out Refusal);

@@ -136,6 +136,28 @@ namespace ThousandAndFirst
 			return "The {{C|" + Name + "}} is paid for and cannot be raised: somebody is standing on the ground at layout slot " + Slot + ". Nothing living is moved to clear a plot. Send them off it, and the raising goes on.";
 		}
 
+		/// <summary>The stage pair a waiting line was said for, as stored on the raising root.</summary>
+		public static string StageWaitingPair(int Applied, int Target)
+		{
+			return Applied + ":" + Target;
+		}
+
+		/// <summary>
+		/// Whether a raising that is not advancing owes the log a line. Both conditions are load
+		/// bearing: an unpaid raising is merely accumulating labour between stages and would print
+		/// once per plot per pass, and a pair already said for this plot says nothing new.
+		/// </summary>
+		/// <param name="Remaining">Work ticks still owed; negative when unknown, which says nothing.</param>
+		/// <param name="Applied">The last stage physically applied.</param>
+		/// <param name="DoneStage">The stage value that means the raising is finished.</param>
+		/// <param name="LastPair">The pair last said for this plot, or null.</param>
+		/// <param name="Pair">The pair now in force.</param>
+		public static bool ShouldSayStageWaiting(long Remaining, int Applied, int DoneStage,
+			string LastPair, string Pair)
+		{
+			return Remaining == 0L && Applied < DoneStage && Pair != null && Pair != LastPair;
+		}
+
 		/// <summary>
 		/// Whether a living body standing on an authored slot is actually in the way. Only a slot
 		/// the map declares Blocked is: a wall, a ritestone or a canvas cannot be raised through
