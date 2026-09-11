@@ -44,10 +44,19 @@ namespace ThousandAndFirst.Harness
 			if (job == null)
 				return Refuse(GrownStep, "the commissioned job is no longer in the registry");
 			if (job.Phase != KingdomConstructionPhase.Complete)
+			{
 				// Not just "the budget expired": read the state that says WHY it did not finish,
-				// and name the case. Still a refusal, and nothing is repaired or waived.
+				// and name the case. Still a refusal, and nothing is repaired or waived. Only the
+				// STAMPED refusal row below stays Bounded to 300 chars
+				// (KingdomScenarioRowValidator.MaxTextChars); the journal's own row cap is 8192
+				// (KingdomScenarioJournal.cs), so the detail row appended here carries the full,
+				// untruncated reading -- a native run's diagnosis never has to guess at what the
+				// 300-char stamped row's own truncation dropped.
+				KingdomScenarioJournal.Append(KingdomQuickstartLifecycleStall.DetailRow, true,
+					KingdomQuickstartLifecycleStall.DetailMessage(Game, Zone, System, job));
 				return Refuse(GrownStep, "the job has not completed; turns=" + Game.Turns + "; "
 					+ KingdomQuickstartLifecycleStall.Describe(Game, Zone, System, job));
+			}
 			string failure = Standing(Zone, job, out GameObject building);
 			if (failure != null) return Refuse(GrownStep, failure);
 			Ok = true;

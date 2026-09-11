@@ -8,11 +8,6 @@ namespace ThousandAndFirst
 	public static partial class KingdomPlots
 	{
 		/// <summary>
-		/// One line per body that refused the raising: who, what, where, which blocking slot, its
-		/// declared passability and which test the body failed. The summary sentence the harness
-		/// parses is emitted separately and never grows.
-		/// </summary>
-		/// <summary>
 		/// A raising whose applied stage has stopped short of Done and whose labour target does not
 		/// reach past it is stalled in a way nothing else logs. Said only when the labour is fully
 		/// PAID (a plot merely accumulating ticks between stages is working, not stalled) and only
@@ -37,6 +32,11 @@ namespace ThousandAndFirst
 				+ " target=" + Target);
 		}
 
+		/// <summary>
+		/// One line per body that refused the raising: who, what, where, which blocking slot, its
+		/// declared passability and which test the body failed. The summary sentence the harness
+		/// parses is emitted separately and never grows.
+		/// </summary>
 		private static void NameOccupants(Zone Z, Dictionary<int, ArchitecturePassability> Slots,
 			List<GameObject> Occupants, List<KingdomPlotRules.OccupantReason> Reasons)
 		{

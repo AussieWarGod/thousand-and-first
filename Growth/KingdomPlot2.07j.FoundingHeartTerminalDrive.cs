@@ -18,13 +18,27 @@ namespace ThousandAndFirst
 		private static bool RecoverSealedFoundingHeart(KingdomSystem System, Zone Z,
 			FoundingHeartContext Context)
 		{
-			if (System == null || Z == null || !ExactFoundingHeartSeal(Z, Context?.Plan)) return false;
+			if (System == null || Z == null || !ExactFoundingHeartSeal(Z, Context?.Plan))
+				return HeartRefused("sealed: context or seal");
 			if (!HasFoundingHeartTerminalEvidence(Context.Plan, Z))
-				return FindGlobalFoundingHeartId(KingdomFoundingHeartRules.SlotId(Context.Plan,
-						KingdomFoundingHeartRules.WorksSlot), out GameObject works, out bool graveyard)
-					== KingdomPhysicalLookupState.Exact && !graveyard
-					&& TryReadFoundingHeartWorkAuthority(Z, works, out _);
-			return DriveFoundingHeartTerminal(System, Z, Context, null, null, 0L, null, false);
+			{
+				// The same two clauses, each named. A sealed heart whose works slot cannot be
+				// found exactly is the shape an authored improvement leaves behind when it
+				// replaces the root, and the log could not tell that from a lost authority.
+				if (FindGlobalFoundingHeartId(KingdomFoundingHeartRules.SlotId(Context.Plan,
+						KingdomFoundingHeartRules.WorksSlot), out GameObject works,
+						out bool graveyard) != KingdomPhysicalLookupState.Exact || graveyard)
+					return HeartRefused("sealed: works slot lookup");
+				return TryReadFoundingHeartWorkAuthority(Z, works, out _)
+					|| HeartRefused("sealed: work authority");
+			}
+			if (DriveFoundingHeartTerminal(System, Z, Context, null, null, 0L, null, false))
+				return true;
+			// The heart whose root climbed a rung: the first-generation drive cannot resolve a
+			// root the improvement route replaced, so the chain is proved from the retired
+			// identity outward instead. Read-only, and asked only once the drive has refused.
+			return TryChainedFoundingHeartRoot(Z, Context, out _)
+				|| HeartRefused("sealed: terminal drive and chain");
 		}
 
 		private static bool FinishFoundingHeart(r_KingdomPlotWorks Works, KingdomSystem System,

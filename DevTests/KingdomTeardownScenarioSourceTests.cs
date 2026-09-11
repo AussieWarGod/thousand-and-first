@@ -1,5 +1,7 @@
 #if TAF_TESTS
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 
 namespace ThousandAndFirst.Tests
@@ -21,7 +23,93 @@ namespace ThousandAndFirst.Tests
 	{
 		private const string Provider = "Harness/KingdomTeardownNativeProvider.cs";
 		private const string Checks = "Harness/KingdomTeardownNativeChecks.cs";
+		// The Case class (commission/await/strike/salvage) moved into its own partial-class file
+		// once the crew-departure diagnostic pushed Checks.cs past the harness line cap; this
+		// reads both as one logical source for pins that span the split, exactly as if it were
+		// still one file.
+		private const string Cases = "Harness/KingdomTeardownNativeChecks.Case.cs";
+		// The Telemetry()/ReadLong()/OccupantIdsOn shard split out once run20's additions would
+		// have pushed Case.cs back over the harness line cap; read as one logical source too.
+		private const string Telemetry = "Harness/KingdomTeardownNativeChecks.Telemetry.cs";
+		// review-teardown-run25-staked.md: PlacementCells/ResolvePlacementCells split into their
+		// own file rather than pushing Case.cs over the harness line cap; read as one logical
+		// source too.
+		private const string Placement = "Harness/KingdomTeardownNativeChecks.Placement.cs";
+		private const string Persona = "Tools/personas/teardown-native-check.persona";
 		private static string Read(string path) => TestMain.ReadRepositoryText(path);
+		private static string ReadChecksAndCases() =>
+			Read(Checks) + Read(Cases) + Read(Telemetry) + Read(Placement);
+
+		private static string ConstValue(string Source, string Name)
+		{
+			string marker = "internal const string " + Name + " = \"";
+			int from = Source.IndexOf(marker, StringComparison.Ordinal);
+			Assert.That(from, Is.GreaterThanOrEqualTo(0), "missing const: " + Name);
+			from += marker.Length;
+			int to = Source.IndexOf("\";", from, StringComparison.Ordinal);
+			Assert.That(to, Is.GreaterThan(from), "unterminated const: " + Name);
+			return Source.Substring(from, to - from);
+		}
+
+		/// <summary>Parses the provider's own Script array literal into the exact ordered step
+		/// names it seals, resolving the SetupVerb/CheckVerb identifiers against their own const
+		/// declarations in the same file rather than hardcoding either a second time here.
+		/// </summary>
+		private static List<string> ProviderScriptSteps(string ProviderSource)
+		{
+			string setupVerb = ConstValue(ProviderSource, "SetupVerb");
+			string checkVerb = ConstValue(ProviderSource, "CheckVerb");
+			int from = ProviderSource.IndexOf("private static readonly string[] Script = {",
+				StringComparison.Ordinal);
+			Assert.That(from, Is.GreaterThanOrEqualTo(0), "missing sealed Script array");
+			from += "private static readonly string[] Script = {".Length;
+			int to = ProviderSource.IndexOf("};", from, StringComparison.Ordinal);
+			Assert.That(to, Is.GreaterThan(from), "unterminated sealed Script array");
+			string body = ProviderSource.Substring(from, to - from);
+			List<string> steps = new List<string>();
+			foreach (string rawToken in body.Split(','))
+			{
+				string token = rawToken.Trim().Replace("\r", "").Replace("\n", "").Trim();
+				if (token.Length == 0) continue;
+				if (token.StartsWith("\"", StringComparison.Ordinal)
+					&& token.EndsWith("\"", StringComparison.Ordinal))
+					steps.Add(token.Substring(1, token.Length - 2));
+				else if (token == "SetupVerb") steps.Add(setupVerb);
+				else if (token == "CheckVerb") steps.Add(checkVerb);
+				else Assert.Fail("unrecognised Script token: " + token);
+			}
+			return steps;
+		}
+
+		private static List<string> PersonaScriptSteps(string PersonaSource)
+		{
+			foreach (string line in PersonaSource.Split('\n'))
+			{
+				string trimmed = line.Trim();
+				if (trimmed.StartsWith("SCRIPT=", StringComparison.Ordinal))
+					return trimmed.Substring("SCRIPT=".Length).Split(';').ToList();
+			}
+			Assert.Fail("persona has no SCRIPT= line");
+			return null;
+		}
+
+		/// <summary>
+		/// review-ead2ede-teardown-findings.md REQUIRED B: nothing bound the persona's own
+		/// SCRIPT to the provider's sealed Script array -- they were byte-identical only because
+		/// both were hand-edited together this pass; a future one-sided edit would have passed
+		/// every other test. This parses both files and compares the real step lists, the same
+		/// pattern DevTests/KingdomQuoteSitingOccupancyNativeSourceTests.cs uses for its own
+		/// sealed script.
+		/// </summary>
+		[Test]
+		public void TheSealedProviderScriptIsExactlyThePersonaScript()
+		{
+			List<string> providerSteps = ProviderScriptSteps(Read(Provider));
+			List<string> personaSteps = PersonaScriptSteps(Read(Persona));
+			Assert.That(providerSteps, Is.EqualTo(personaSteps),
+				"provider Script = [" + string.Join(";", providerSteps) + "] but persona SCRIPT = ["
+				+ string.Join(";", personaSteps) + "]");
+		}
 
 		[Test]
 		public void ProviderRegistersBothVerbsAndSealsAnExactScript()
@@ -34,28 +122,102 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void SealedScriptRunsFourChecksAtTheWidenedCumulativeCadence()
+		{
+			// Corrects the false "polls every tick" claim: Check() is driven only by these four
+			// sealed teardown-check verbs. Cumulative ticks 2400/6000/9600/13200 (deltas
+			// 2400/3600/3600/3600) per review-bba51c4-teardown-findings.md nit 1 -- widened from
+			// the prior zero-slack 2000/4800/7600/10800.
+			string source = Read(Provider);
+			Assert.That(source, Does.Contain("\"advance 2400\""));
+			Assert.That(source, Does.Contain("CheckVerb, \"advance 3600\", CheckVerb, \"advance 3600\", CheckVerb, \"advance 3600\","));
+			int checkVerbCount = 0;
+			int index = 0;
+			while ((index = source.IndexOf("CheckVerb,", index)) >= 0) { checkVerbCount++; index++; }
+			Assert.That(checkVerbCount, Is.EqualTo(4), "exactly four sealed CheckVerb tokens");
+			// Copilot #167 thread 3: every cumulative-tick list in the two Harness files must read
+			// the four numbers the sealed script produces. Provider.cs may name the prior
+			// schedule only as the explicitly superseded one; Checks.cs must not name it at all.
+			Assert.That(source, Does.Contain("Cumulative ticks 2400/6000/9600/13200"));
+			Assert.That(source, Does.Contain("the prior 2000/4800/7600/10800 schedule"));
+			string checks = Read(Checks);
+			Assert.That(checks, Does.Contain("cumulative ticks 2400/6000/9600/13200"));
+			Assert.That(checks, Does.Not.Contain("2000/4800/7600/10800"));
+		}
+
+		[Test]
 		public void SetupRunsTwoParallelCasesThroughRealProductionApis()
 		{
-			string source = Read(Checks);
+			string source = ReadChecksAndCases();
 			foreach (string token in new[]
 			{
 				"KingdomNativeCampFounding.Found(Game, Zone, Require)",
 				"KingdomNativeCampFounding.Dedicate(Game, Zone, system,",
+				"KingdomTeardownCrewEnrollment.Enroll(Game, Zone, system, Owned.Add,",
 				"KingdomMaterials.DedicateStockpile(System, Zone, Chest, out failure)",
 				"KingdomCommission.Commission(System, BuildKey, null,",
 				"new Case(\"fire\", \"fire\", system, Zone, Game, Owned)",
 				"new Case(\"larder\", \"larder\", system, Zone, Game, Owned)",
 			}) Assert.That(source, Does.Contain(token), token);
-			// The building object itself is never forced: no direct BuiltProperty/KingdomBuilt
-			// write anywhere in this file.
+			// The building object itself is never forced: no direct BuiltProperty write, and no
+			// SetIntProperty("KingdomBuilt" write, anywhere in this file. Reading it (the
+			// removal-census sweep) is legitimate and allowed.
 			Assert.That(source, Does.Not.Contain("BuiltProperty"));
 			Assert.That(source, Does.Not.Contain("SetIntProperty(\"KingdomBuilt\""));
+		}
+
+		/// <summary>
+		/// Native run 12 on 3272cff: teardown-setup REFUSED with InvalidOperationException
+		/// "The exact realm sources cannot cover this construction input (InsufficientMaterial)".
+		/// review-fb02900-coverage-findings.md finding 2: the reservation path honours Count end
+		/// to end (Growth/KingdomConstruction.InputObservationRegistry.cs:141 -> InputPlannerScan
+		/// .cs:173 -> KingdomMaterialDebitRules.Planning.cs:57), so the single-object-Count
+		/// hypothesis for run 12's failure was NEVER proven and is not asserted here; the real
+		/// cause remains UNPROVEN. Single-unit minting is kept only because it is
+		/// KingdomCampHeartNativeFixture.Mint's own proven shape, not because it is known to fix
+		/// run 12. What IS pinned: the bill is read live (never hardcoded), minted as N real
+		/// single-unit objects, bounded by the dedicated store's own declared capacity
+		/// (finding 2A) before anything is minted, and CanPayBill refuses by name with the exact
+		/// missing tally if the freshly minted store still cannot cover it.
+		/// </summary>
+		[Test]
+		public void TheBillIsMintedAsSeparateUnitsCapacityBoundedAndCanPayBillRefusesByName()
+		{
+			string source = ReadChecksAndCases();
+			Assert.That(source, Does.Contain(
+				"KingdomMaterialTally bill = KingdomMaterials.CostFor(BuildKey);"));
+			Assert.That(source, Does.Contain("MintBill(bill, Require, Journal);"));
+			Assert.That(source, Does.Contain(
+				"private void MintBill(KingdomMaterialTally Bill, Action<bool, string> Require,"));
+			Assert.That(source, Does.Contain(
+				"int capacity = KingdomSurvey.StockCapacityOf(Chest);"));
+			Assert.That(source, Does.Contain(
+				"Require(totalUnits <= capacity,"));
+			Assert.That(source, Does.Contain(
+				"GameObject unit = GameObject.Create(blueprint);"));
+			Assert.That(source, Does.Contain(
+				"Require(GameObject.Validate(unit) && unit.Count == 1,"));
+			Assert.That(source, Does.Contain(
+				"Chest.Inventory.AddObject(unit, null,\n\t\t\t\t\t\t\tSilent: true, NoStack: true);"));
+			Assert.That(source, Does.Contain("\"; synthetic-bill design=\""));
+			Assert.That(source, Does.Contain(
+				"private bool CanPayBill(KingdomMaterialTally Bill, out string Shortfall)"));
+			Assert.That(source, Does.Contain("KingdomMaterialRules.Covers(stock.Tally, Bill)"));
+			Assert.That(source, Does.Contain("KingdomMaterialRules.Missing(stock.Tally, Bill)"));
+			Assert.That(source, Does.Contain(
+				"Require(CanPayBill(bill, out shortfall),"));
+			// The withdrawn hypothesis must never be re-asserted as a proven cause.
+			Assert.That(source, Does.Not.Contain("did not answer a real material reservation"));
+			// Dropped in an earlier pass; restored per house law (never weaken a pin) --
+			// guards the anti-pattern itself, independent of whether it caused native run 12.
+			Assert.That(source, Does.Not.Contain(".Count = TimberCost"));
+			Assert.That(source, Does.Not.Contain("SetIntProperty(\"NeverStack\""));
 		}
 
 		[Test]
 		public void CheckPollsRealBuiltStateBeforeOrderingTheRealStrike()
 		{
-			string source = Read(Checks);
+			string source = ReadChecksAndCases();
 			Assert.That(source, Does.Contain(
 				"KingdomUpgrade.IsFunctionallyBuilt(works)"));
 			Assert.That(source, Does.Contain(
@@ -67,15 +229,17 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void BothCasesComputeExactSalvageDeltaFromTheProductionRuleNeverAssumed()
 		{
-			string source = Read(Checks);
+			string source = ReadChecksAndCases();
 			Assert.That(source, Does.Contain("awaiting-struck=true"));
 			// The expected delta is COMPUTED from the same production rule OrderStrike itself
 			// uses, never hardcoded: KingdomMaterials.CostFor + KingdomMaterialRules.
 			// StrikeSalvagePercent (Growth/KingdomMaterialRules.Clearance.cs:193,211-219),
 			// mirroring Cost.Scaled's own integer-floor arithmetic
-			// (Growth/KingdomMaterialTally.cs:101-111).
+			// (Growth/KingdomMaterialTally.cs:101-111). The single CostFor read is now shared
+			// (bound to `bill`) with MintBill/CanPayBill below, never re-read separately.
 			Assert.That(source, Does.Contain(
-				"KingdomMaterials.CostFor(BuildKey).Get(KingdomMaterial.Timber)"));
+				"KingdomMaterialTally bill = KingdomMaterials.CostFor(BuildKey);"));
+			Assert.That(source, Does.Contain("TimberCost = bill.Get(KingdomMaterial.Timber);"));
 			Assert.That(source, Does.Contain("KingdomMaterialRules.StrikeSalvagePercent"));
 			Assert.That(source, Does.Contain("salvaged == ExpectedSalvageDelta"));
 			Assert.That(source, Does.Contain("KingdomMaterials.RawCensusCountOf(item)"));
@@ -94,7 +258,7 @@ namespace ThousandAndFirst.Tests
 			// Two cases strike in parallel and production returns salvage to the FIRST eligible
 			// stockpile in the zone (Growth/KingdomMaterials.13.StrikeRemovalAndSalvage.cs:
 			// 114-126), not the original payer -- an own-chest before/after delta is unsound.
-			string source = Read(Checks);
+			string source = ReadChecksAndCases();
 			Assert.That(source, Does.Contain(
 				"item.GetStringProperty(KingdomMaterials.StrikeSalvageReceiptProperty)"));
 			Assert.That(source, Does.Contain("!= StrikeReceiptId) continue;"));
@@ -117,7 +281,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ReceiptIsCapturedAfterTheStrikeNeverBeforeAndMustDifferFromThePreStrikeOne()
 		{
-			string source = Read(Checks);
+			string source = ReadChecksAndCases();
 			int preStrike = source.IndexOf("preStrikeReceiptId = works.GetStringProperty(");
 			int order = source.IndexOf("KingdomMaterials.OrderStrike(System, Zone, Works, out string failure)");
 			int postStrike = source.IndexOf(
@@ -132,11 +296,26 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void TheNewRegistryRowIsResolvedByReferenceAndClaimChecked()
+		{
+			// The real behavioural proof lives in KingdomTeardownStrikeRowClaimsTests (value
+			// tests on the pure predicate); this pin only proves the harness actually calls it
+			// with the strike receipt id and the live works/owner/zone, right after the strike.
+			string source = ReadChecksAndCases();
+			Assert.That(source, Does.Contain(
+				"KingdomConstruction.TryFind(StrikeReceiptId, out KingdomConstructionJob row)"));
+			Assert.That(source, Does.Contain(
+				"KingdomTeardownStrikeRowClaims.IsExpectedStrikeRow(row,"));
+			Assert.That(source, Does.Contain(
+				"works.IDIfAssigned, KingdomConstruction.OwnerOf(System), Zone.ZoneID,"));
+		}
+
+		[Test]
 		public void RemovalRefusesASameIdReplacementRatherThanCountingItAsGone()
 		{
 			// A same-ID object that is not the exact struck reference must REFUSE, not be
 			// silently read as a valid removal.
-			string source = Read(Checks);
+			string source = ReadChecksAndCases();
 			Assert.That(source, Does.Contain(
 				"stillThere == null || ReferenceEquals(stillThere, Works)"));
 			Assert.That(source, Does.Contain(
@@ -150,7 +329,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void NegativePathRefusesASecondStrikeOnTheAbsentBuildingForBothCases()
 		{
-			string source = Read(Checks);
+			string source = ReadChecksAndCases();
 			Assert.That(source, Does.Contain("secondOrder = KingdomMaterials.OrderStrike("));
 			Assert.That(source, Does.Contain(
 				"!secondOrder && !string.IsNullOrEmpty(secondFailure)"));
@@ -163,6 +342,362 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = Read(Checks);
 			Assert.That(source, Does.Contain("foreach (Case c in Cases) if (!c.Done) Done = false;"));
+		}
+
+		/// <summary>
+		/// Required per review-3f010e3-teardown-findings.md finding 3: departure previously
+		/// stalled both cases at Phase 1 with Ok=true and no named diagnostic. Check() must
+		/// re-Require the crew is STILL on the roll (production KingdomResidents.OnRollCount,
+		/// never a cached or harness-local count) before touching either case, and refuse by
+		/// name -- naming the exact case still open, never a generic "labour" message -- through
+		/// the same Require/throw/Fail() pipeline every other named refusal in this scenario
+		/// already uses (so Ok=false follows for free). The real boundary/format proof is the
+		/// value test on KingdomTeardownCrewDepartureClaims (an engine-free predicate); this pins
+		/// only that Check() actually reads the real production count and calls it, with no
+		/// departure freeze (nothing tries to stop production ending the crew's stay) and no
+		/// re-enrolment (a departed body is never replaced).
+		/// </summary>
+		[Test]
+		public void CheckReRequiresTheCrewIsStillOnTheRollAndRefusesByNameNeverFreezingOrReenrolling()
+		{
+			string source = Read(Checks);
+			Assert.That(source, Does.Contain("private KingdomSystem System;"));
+			Assert.That(source, Does.Contain("System = system;"));
+			Assert.That(source, Does.Contain("int onRoll = KingdomResidents.OnRollCount(System);"));
+			Assert.That(source, Does.Contain(
+				"KingdomTeardownCrewDepartureClaims.HasDeparted(onRoll,"));
+			Assert.That(source, Does.Contain(
+				"Require(false, KingdomTeardownCrewDepartureClaims.Diagnostic(c.Name,"));
+			// No departure freeze: nothing here reads or writes a lodging/brink/grace state.
+			Assert.That(source, Does.Not.Contain("GraceDays"));
+			Assert.That(source, Does.Not.Contain("Lodging"));
+			// No re-enrolment: the crew-departure guard never calls Enroll again -- only Start()
+			// does, exactly once, before any case begins.
+			int enrollCalls = 0;
+			int index = 0;
+			while ((index = source.IndexOf("KingdomTeardownCrewEnrollment.Enroll(", index)) >= 0)
+			{
+				enrollCalls++;
+				index++;
+			}
+			Assert.That(enrollCalls, Is.EqualTo(1),
+				"the crew must be enrolled exactly once, in Start(), never re-enrolled on departure");
+		}
+
+		[Test]
+		public void CrewEnrollmentReusesTheRealProductionCitizenshipCallShape()
+		{
+			// Harness/KingdomTeardownCrewEnrollment.cs replicates the exact production call
+			// sequence Harness/KingdomBountyFetchNativeFixture.cs:109-136 already uses (private
+			// instance method on a sealed unrelated class, so a call-through was not possible).
+			string source = Read("Harness/KingdomTeardownCrewEnrollment.cs");
+			Assert.That(source, Does.Contain("internal const int CrewSize = 2;"));
+			Assert.That(source, Does.Contain(
+				"KingdomCitizenship.TryEnroll(System, body,"));
+			Assert.That(source, Does.Contain(
+				"KingdomCitizenshipEnrollmentReason.Arrival, tick, out string failure)"));
+			Assert.That(source, Does.Contain("body.SetIntProperty(\"KingdomBorn\", 1);"));
+			Assert.That(source, Does.Contain("KingdomResidents.TryEnsureRow(System, body,"));
+			// Copilot #167 thread 1: the order is load-bearing (Enrollable requires KingdomBorn==1
+			// and TryEnroll does not set it, so the stamp must precede TryEnsureRow) and the
+			// summary must state the true three-step order, not "stamped first". Strictly
+			// increasing IndexOf positions: moving the stamp above TryEnroll or below
+			// TryEnsureRow flips this pin.
+			int enrollAt = source.IndexOf("KingdomCitizenship.TryEnroll(System, body,", StringComparison.Ordinal);
+			int bornAt = source.IndexOf("body.SetIntProperty(\"KingdomBorn\", 1);", StringComparison.Ordinal);
+			int rowAt = source.IndexOf("KingdomResidents.TryEnsureRow(System, body,", StringComparison.Ordinal);
+			Assert.That(enrollAt, Is.LessThan(bornAt), "KingdomBorn=1 must be stamped after TryEnroll");
+			Assert.That(bornAt, Is.LessThan(rowAt), "KingdomBorn=1 must be stamped before TryEnsureRow");
+			Assert.That(source, Does.Contain("KingdomCitizenship.TryEnroll, then KingdomBorn=1, then"));
+			Assert.That(source, Does.Not.Contain("stamped first"));
+			Assert.That(source, Does.Contain("KingdomResidents.OnRollCount(System) >= CrewSize"));
+			// No direct Population/Working/Built write anywhere in the crew fixture.
+			Assert.That(source, Does.Not.Contain("Population ="));
+			Assert.That(source, Does.Not.Contain("\"KingdomBuilt\""));
+		}
+
+		/// <summary>
+		/// review-teardown-run15-neverbuilt.md finding 4c: OnRollCount alone counts every
+		/// non-Dead row and is blind to a standing or posting change. RequireAvailable is the
+		/// stronger, re-askable proof: read-only membership in the production
+		/// KingdomCrews.AvailableSettlers projection plus KingdomStations.PostOf==0, asserted
+		/// once at Enroll (setup) and again every Frame.Check() -- never minting or forcing
+		/// standing.
+		/// </summary>
+		[Test]
+		public void CrewAvailabilityIsReAskedEveryCheckNeverMintedOrForced()
+		{
+			string enrollment = Read("Harness/KingdomTeardownCrewEnrollment.cs");
+			Assert.That(enrollment, Does.Contain(
+				"internal static void RequireAvailable(KingdomSystem System, Zone Zone,"));
+			Assert.That(enrollment, Does.Contain(
+				"KingdomCrews.AvailableSettlers(System, survey)"));
+			Assert.That(enrollment, Does.Contain("out List<GameObject> Bodies)"));
+			Assert.That(enrollment, Does.Contain(
+				"RequireAvailable(System, Zone, Bodies, Require, null, null);"));
+			string checks = Read(Checks);
+			Assert.That(checks, Does.Contain(
+				"Require, out Crew) == 2,"));
+			Assert.That(checks, Does.Contain(
+				"KingdomTeardownCrewEnrollment.RequireAvailable(System, Zone, Crew, Require,"));
+			Assert.That(checks, Does.Contain(
+				"acceptablePosts, line => Evidence.Append(line));"));
+		}
+
+		/// <summary>
+		/// review-bba51c4-teardown-findings.md REQUIRED 1: a strict PostOf==0 re-ask on every
+		/// Check refused a healthy crew mid-raise, since production posts the selected hands and
+		/// only un-posts at the NEXT Assign pass. A post is now accepted on a per-Check re-ask
+		/// only when it names one of this fixture's own live raisings (fire's/larder's WorksId
+		/// via KingdomCityRules.StableId, the same id the allocator itself posts with), the raw
+		/// post journaled per body rather than asserted -- PostOf==0 stays a strict setup-only
+		/// assertion, before any raising exists.
+		/// </summary>
+		[Test]
+		public void ReAskedPostIsAcceptedOnlyWhenItNamesThisFixturesOwnRaisingNeverAssertedZero()
+		{
+			string enrollment = Read("Harness/KingdomTeardownCrewEnrollment.cs");
+			Assert.That(enrollment, Does.Contain("ISet<int> AcceptablePostIds,"));
+			Assert.That(enrollment, Does.Contain("Action<string> Journal)"));
+			Assert.That(enrollment, Does.Contain("int post = KingdomStations.PostOf(body);"));
+			Assert.That(enrollment, Does.Contain("if (AcceptablePostIds == null)"));
+			Assert.That(enrollment, Does.Contain("Require(post == 0,"));
+			Assert.That(enrollment, Does.Contain(
+				"AcceptablePostIds != null && post != 0\n\t\t\t\t\t&& AcceptablePostIds.Contains(post)"));
+			Assert.That(enrollment, Does.Contain(
+				"== (int)KingdomWorkKind.Construction;"));
+			Assert.That(enrollment, Does.Contain(
+				"Journal?.Invoke(\"; crew=\" + (i + 1) + \" posted-to=\" + post\n"
+					+ "\t\t\t\t\t+ \" own-raising=\" + ownRaising);"));
+			string checks = Read(Checks);
+			Assert.That(checks, Does.Contain(
+				"acceptablePosts.Add(KingdomCityRules.StableId(Fire.WorksId));"));
+			Assert.That(checks, Does.Contain(
+				"acceptablePosts.Add(KingdomCityRules.StableId(Larder.WorksId));"));
+			// The exact prior-round defect (bba51c4): no unconditional PostOf==0 assertion may
+			// survive on the re-ask path -- the setup call (AcceptablePostIds == null) is the
+			// only lawful strict use, verified above.
+			Assert.That(enrollment, Does.Not.Contain(
+				"Require(free || postedToThisFixture,"));
+		}
+
+		/// <summary>
+		/// review-ead2ede-teardown-findings.md residual: Growth/KingdomGrowth.z15.
+		/// WorkAssignment.cs re-posts EVERY AvailableSettler to whatever work it drew each pass,
+		/// before KingdomConstructionPresence.Assign ever runs, so a body can legitimately carry
+		/// a post naming neither 0 nor one of this fixture's own raisings. RequireAvailable must
+		/// never assert the post value once a raising can exist -- only journal it -- and must
+		/// refuse only on liveness/AvailableSettlers grounds.
+		/// </summary>
+		[Test]
+		public void RequireAvailableNeverAssertsThePostValueOnlyLivenessAndAvailability()
+		{
+			string enrollment = Read("Harness/KingdomTeardownCrewEnrollment.cs");
+			Assert.That(enrollment, Does.Contain(
+				"Require(GameObject.Validate(body) && body.IsAlive,"));
+			Assert.That(enrollment, Does.Contain(
+				"is dead or no longer a valid object"));
+			Assert.That(enrollment, Does.Contain(
+				"is not present in the production AvailableSettlers projection"));
+			Assert.That(enrollment, Does.Contain("bool ownRaising = AcceptablePostIds != null"));
+			// No Require may name the post value once a raising can exist -- disclosure only.
+			Assert.That(enrollment, Does.Not.Contain("neither free nor posted"));
+		}
+
+		/// <summary>
+		/// review-teardown-run15-neverbuilt.md findings 1/2: sequence the two cases (one gang,
+		/// one raising) and journal per-check telemetry so a future stall is diagnosable instead
+		/// of a bare "awaiting-built=true".
+		/// </summary>
+		[Test]
+		public void LarderIsSequencedAfterFireAndEveryCheckJournalsRealTelemetry()
+		{
+			string checks = Read(Checks);
+			Assert.That(checks, Does.Contain("private bool LarderStarted;"));
+			Assert.That(checks, Does.Contain("if (!LarderStarted && Fire.Phase >= 2)"));
+			Assert.That(checks, Does.Contain("Cases.Add(Larder);"));
+			Assert.That(checks, Does.Contain("Done = LarderStarted;"));
+			Assert.That(checks, Does.Contain("Append(\"; available=\")"));
+			Assert.That(checks, Does.Contain("Append(\" free=\")"));
+			Assert.That(checks, Does.Contain("Append(\" assigned-crew=\")"));
+			Assert.That(checks, Does.Contain("Append(\" on-roll=\")"));
+			Assert.That(checks, Does.Contain("Append(\" labours=\")"));
+			string telemetry = Read(Telemetry);
+			Assert.That(telemetry, Does.Contain("private string Telemetry(GameObject Root)"));
+			Assert.That(telemetry, Does.Contain("KingdomPlots.PlotWorkRequiredProperty"));
+			Assert.That(telemetry, Does.Contain("KingdomPlots.PlotWorkRemainingProperty"));
+			Assert.That(telemetry, Does.Contain("KingdomPlots.PlotWorkLastTickProperty"));
+			Assert.That(telemetry, Does.Contain("KingdomPlots.PlotWorkWindowProperty"));
+			Assert.That(telemetry, Does.Contain("KingdomConstructionPresence.SelectedProperty"));
+			Assert.That(telemetry, Does.Contain("KingdomConstructionPresence.HandsProperty"));
+			Assert.That(telemetry, Does.Contain("KingdomConstructionPresence.EffectivenessProperty"));
+			Assert.That(telemetry, Does.Contain("KingdomConstruction.TryFind(JobId, out KingdomConstructionJob row)"));
+			Assert.That(Read(Cases), Does.Contain("internal int LastHands;"));
+		}
+
+		/// <summary>
+		/// review-teardown-run20-stuckworking.md: fire's labour clock finished on the first
+		/// settlement pass but its Cleared stage was refused forever because a living occupant
+		/// stood on the authored ground layer -- undiagnosable with the run15/18 telemetry alone.
+		/// New Telemetry() keys pinned here: stage-applied/stage-target (r_KingdomPlotWorks.
+		/// StageApplied vs the terminal PlotStage.Done), built= (IsFunctionallyBuilt), completed-
+		/// tick= (PlotWorkCompletedTickProperty), apply-failure= (disclosed as unread -- the real
+		/// refusal is KingdomLog.Log only, dev-gated, never stored on any object), and occupants=
+		/// (creature/player ids on the raising's own footprint).
+		/// </summary>
+		[Test]
+		public void TelemetryNamesStageAppliedBuiltCompletedTickAndFootprintOccupants()
+		{
+			string telemetry = Read(Telemetry);
+			Assert.That(telemetry, Does.Contain(
+				"XRL.World.Parts.r_KingdomPlotWorks part = Root?.GetPart<XRL.World.Parts.r_KingdomPlotWorks>();"));
+			Assert.That(telemetry, Does.Contain(
+				"((KingdomPlotRules.PlotStage)part.StageApplied).ToString();"));
+			Assert.That(telemetry, Does.Contain(
+				"bool built = Root != null && KingdomUpgrade.IsFunctionallyBuilt(Root);"));
+			Assert.That(telemetry, Does.Contain(
+				"KingdomPlots.PlotWorkCompletedTickProperty"));
+			Assert.That(telemetry, Does.Contain("Append(\" stage-applied=\")"));
+			Assert.That(telemetry, Does.Contain("Append(\" stage-target=\")"));
+			Assert.That(telemetry, Does.Contain("Append(\" built=\")"));
+			Assert.That(telemetry, Does.Contain("Append(\" completed-tick=\")"));
+			Assert.That(telemetry, Does.Contain("Append(\" apply-failure=unread\")"));
+			Assert.That(telemetry, Does.Contain("Append(\" occupants=\")"));
+			Assert.That(telemetry, Does.Contain(
+				"internal static string OccupantIdsOn(Zone Zone, KingdomPlotRules.PlotRect Rect)"));
+			Assert.That(telemetry, Does.Contain("item.IsCreature || item.IsPlayer()"));
+			// Disclosed honestly, never invented: the real refusal text is never stored anywhere
+			// this harness can read.
+			Assert.That(telemetry, Does.Not.Contain("apply-failure=\").Append("));
+		}
+
+		/// <summary>
+		/// review-teardown-run20-stuckworking.md: the blocking occupant is almost certainly one
+		/// of this fixture's own crew bodies (they never wander otherwise). Frame resolves each
+		/// raising's rect at Start (Case.Rect/HasRect via KingdomPlots.TryReadRect) and relocates
+		/// any crew body found standing inside a known rect to a free cell outside every known
+		/// rect -- never a production resident or the player, never any object this fixture did
+		/// not itself enroll -- once after each case starts and again every Check().
+		/// </summary>
+		[Test]
+		public void CrewIsKeptOffEveryKnownRaisingRectNeverTouchingAnyOtherOccupant()
+		{
+			string cases = Read(Cases);
+			Assert.That(cases, Does.Contain("internal KingdomPlotRules.PlotRect Rect;"));
+			Assert.That(cases, Does.Contain("internal bool HasRect;"));
+			Assert.That(cases, Does.Contain(
+				"HasRect = KingdomPlots.TryReadRect(Zone.FindObjectByID(WorksId), out KingdomPlotRules.PlotRect rect);"));
+			string checks = Read(Checks);
+			Assert.That(checks, Does.Contain("private void KeepCrewOutsideRaisings()"));
+			Assert.That(checks, Does.Contain("if (Fire.HasRect) rects.Add(Fire.Rect);"));
+			Assert.That(checks, Does.Contain("if (Larder.HasRect) rects.Add(Larder.Rect);"));
+			Assert.That(checks, Does.Contain("foreach (GameObject body in Crew)"));
+			Assert.That(checks, Does.Contain("cell.RemoveObject(body);"));
+			Assert.That(checks, Does.Contain(
+				"Require(ReferenceEquals(destination.AddObject(body, NoStack: true), body),"));
+			Assert.That(checks, Does.Contain("private Cell FindCellOutside(List<KingdomPlotRules.PlotRect> Avoid)"));
+			Assert.That(checks, Does.Contain("KeepCrewOutsideRaisings();"));
+			// Only Crew (this fixture's own enrolled bodies) is ever iterated for relocation --
+			// no production resident or the player is ever named as a relocation target.
+			Assert.That(checks, Does.Not.Contain("The.Player"));
+			Assert.That(checks, Does.Not.Contain("Survey.Settlers"));
+		}
+
+		/// <summary>
+		/// review-15f9de2-teardown-findings.md residual B: Rect/HasRect were resolved ONCE at
+		/// Start via KingdomPlots.TryReadRect, which can legitimately return false the very pass
+		/// a plot is staked; never retried, HasRect stayed false forever and
+		/// KeepCrewOutsideRaisings returned early with no named disclosure. Check() now re-tries
+		/// every call until HasRect is true, journaling the transition once
+		/// ("case=&lt;name&gt; rect-known=true") and never re-journaling once known.
+		/// </summary>
+		[Test]
+		public void RectIsReResolvedEveryCheckUntilKnownAndJournaledOnce()
+		{
+			string cases = Read(Cases);
+			Assert.That(cases, Does.Contain("if (!HasRect && works != null)"));
+			Assert.That(cases, Does.Contain(
+				"HasRect = KingdomPlots.TryReadRect(works, out KingdomPlotRules.PlotRect rect);"));
+			Assert.That(cases, Does.Contain("if (HasRect)"));
+			Assert.That(cases, Does.Contain(
+				"Evidence.Append(\"; case=\").Append(Name).Append(\" rect-known=true\");"));
+		}
+
+		/// <summary>
+		/// review-teardown-run25-staked.md: Case.Rect is only the plot's bounding rectangle, not
+		/// the exact authored placements the production stamper's occupant refusal names.
+		/// PlacementCells is decoded once at Start from the commissioned job's OWN payload via
+		/// the same decode chain production uses to resolve architecture
+		/// (KingdomPlots.TryDecodePlotPayload -&gt; KingdomArchitectureRuntime.TryDecode) and the
+		/// same pure pose transform TryWorldFootprint itself uses
+		/// (KingdomArchitectureRules.TryToWorld) -- never re-derived, never guessed from the rect.
+		/// </summary>
+		[Test]
+		public void PlacementCellsAreDecodedFromTheJobsOwnPayloadTheSameChainProductionUses()
+		{
+			string cases = Read(Cases);
+			Assert.That(cases, Does.Contain(
+				"internal List<(int X, int Y)> PlacementCells = new List<(int X, int Y)>();"));
+			Assert.That(cases, Does.Contain(
+				"Require(TryResolvePlacementCells(job.Payload, out PlacementCells, out string placementFailure),"));
+			string placement = Read(Placement);
+			Assert.That(placement, Does.Contain(
+				"internal static bool TryResolvePlacementCells(string Payload,"));
+			Assert.That(placement, Does.Contain("KingdomPlots.TryDecodePlotPayload(Payload, out KingdomPlotRules.PlotRect rect,"));
+			Assert.That(placement, Does.Contain(
+				"KingdomArchitectureRuntime.TryDecode(architecture,"));
+			Assert.That(placement, Does.Contain("KingdomArchitectureRules.TryToWorld(rect.X1, rect.Y1,"));
+			Assert.That(placement, Does.Contain("foreach (ArchitecturePlacement placement in snapshot.Placements)"));
+			// Never guessed from the bounding rect alone -- only from decoded placements.
+			Assert.That(placement, Does.Not.Contain("Cells.Add((rect.X1"));
+		}
+
+		/// <summary>
+		/// review-teardown-run25-staked.md: occupants= (Case.Telemetry) is swept over the
+		/// authored placement cells, not just Case.Rect, so a refused slot outside the rect (or a
+		/// second occupant the old rect sweep never sampled) is nameable.
+		/// </summary>
+		[Test]
+		public void OccupantsAreSweptOverAuthoredPlacementCellsNotJustTheBoundingRect()
+		{
+			string telemetry = Read(Telemetry);
+			Assert.That(telemetry, Does.Contain(
+				"string occupants = PlacementCells.Count > 0 ? OccupantIdsOn(Zone, PlacementCells)"));
+			Assert.That(telemetry, Does.Contain(
+				"internal static string OccupantIdsOn(Zone Zone, List<(int X, int Y)> Cells)"));
+			Assert.That(telemetry, Does.Contain("foreach ((int X, int Y) cell in Cells)"));
+			Assert.That(telemetry, Does.Contain("item.IsCreature || item.IsPlayer()"));
+		}
+
+		/// <summary>
+		/// review-teardown-run25-staked.md: a one-shot, check-boundary-only relocation does not
+		/// hold -- crew are live-Brain NPCs that walk (or get re-posted) back onto the footprint
+		/// before the next settlement pass. A relocated body is now pinned stationary with the
+		/// exact production idiom for anchoring an NPC in place
+		/// (Simulation/City/KingdomStations.Claims.cs:137-139), disclosed as a fixture-only
+		/// property -- a real settlement's own wandering residents are never anchored this way
+		/// and can still trigger #163. Every call also journals each crew body's current cell and
+		/// its walkability, whether or not it moved this pass.
+		/// </summary>
+		[Test]
+		public void RelocatedCrewIsPinnedStationaryAndEveryCallJournalsParkedWalkability()
+		{
+			string checks = Read(Checks);
+			Assert.That(checks, Does.Contain("body.Brain.Wanders = false;"));
+			Assert.That(checks, Does.Contain("body.Brain.WandersRandomly = false;"));
+			Assert.That(checks, Does.Contain("body.Brain.Stay(destination);"));
+			Assert.That(checks, Does.Contain("Append(\") stationary=\").Append(body.Brain != null);"));
+			Assert.That(checks, Does.Contain("Append(\" parked-at=(\").Append(parked.X)"));
+			// Copilot #167 thread 2: the crew body itself occupies `parked` when this runs, and
+			// Cell.IsEmpty() (decompiled core 2.0.211.51, XRL/World/Cell.cs:5803-5819) returns
+			// false for any IsCombatObject(), so the bare form journalled false invariantly.
+			// Cell.IsEmptyIgnoring(Predicate<GameObject>) (XRL/World/Cell.cs:5839-5858) applies the
+			// same test to every non-excluded object; the body is the only exclusion.
+			Assert.That(checks, Does.Contain("Append(\") parked-empty=\").Append(parked.IsEmptyIgnoring(item => ReferenceEquals(item, body)))"));
+			Assert.That(checks, Does.Not.Contain("parked.IsEmpty()"));
+			Assert.That(checks, Does.Contain("Append(\" parked-passable=\").Append(parked.IsPassable());"));
+			// Fixture-only: never claims a production resident is anchored this way.
+			Assert.That(checks, Does.Not.Contain("Survey.Settlers"));
 		}
 	}
 }

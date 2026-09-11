@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using ThousandAndFirst.Simulation.City;
 using XRL;
 using XRL.World;
 using XRL.World.Parts;
@@ -12,22 +13,17 @@ namespace ThousandAndFirst.Harness
 	/// <see cref="KingdomTeardownNativeProvider"/> for the sealed script and scope.
 	/// <para>
 	/// SYNTHETIC SETUP, DISCLOSED, like <see cref="KingdomDepositOverflowNativeChecks"/>: real
-	/// founding/dedication, a harness-assigned raw timber count, real
-	/// <c>KingdomCommission.Commission</c> and real <c>KingdomMaterials.OrderStrike</c> -- never
-	/// forcing <c>KingdomBuilt</c>, the job phase, or the strike receipt directly.
-	/// </para>
-	/// <para>
-	/// EXACT SALVAGE, NOT "SOME". <c>OrderStrike</c> calls <c>KingdomMaterialRules.
-	/// StrikeSalvage</c> (<c>Growth/KingdomMaterialRules.Clearance.cs:211-219</c>) =
-	/// <c>Cost.Scaled(StrikeSalvagePercent=50)</c>, integer-floor per material
-	/// (<c>Growth/KingdomMaterialTally.cs:101-111</c>). Two cases prove both ends: <c>"fire"</c>
-	/// (1 timber) floors <c>(1*50)/100=0</c>, the ZERO-SALVAGE BOUNDARY; <c>"larder"</c>
-	/// (3 timber, same Camp-stage/<c>Plot="S"</c> prerequisites) gives <c>(3*50)/100=1</c>, the
-	/// POSITIVE-SALVAGE case. Both computed from <c>CostFor</c> + <c>StrikeSalvagePercent</c>
-	/// live, never hardcoded.
+	/// founding/dedication, a 2-body labour crew (<see cref="KingdomTeardownCrewEnrollment"/>),
+	/// each design's own authored bill minted as real single-unit objects bounded by the
+	/// dedicated store's declared capacity, real <c>KingdomCommission.Commission</c> and real
+	/// <c>KingdomMaterials.OrderStrike</c> -- never forcing <c>KingdomBuilt</c> or the job phase.
+	/// EXACT SALVAGE: <c>OrderStrike</c> = <c>Cost.Scaled(StrikeSalvagePercent=50)</c>,
+	/// integer-floor per material (<c>Growth/KingdomMaterialTally.cs:101-111</c>). <c>"fire"</c>
+	/// (1 timber) floors to 0, the ZERO-SALVAGE BOUNDARY; <c>"larder"</c> (3 timber) gives 1,
+	/// POSITIVE-SALVAGE. Both computed live from <c>CostFor</c>, never hardcoded.
 	/// </para>
 	/// </summary>
-	internal static class KingdomTeardownNativeChecks
+	internal static partial class KingdomTeardownNativeChecks
 	{
 		private static Frame Retained;
 
@@ -50,7 +46,8 @@ namespace ThousandAndFirst.Harness
 			Complete = Retained.Done;
 			return (Complete ? "native-teardown cases=2 passed=2 failed=0"
 				: "native-teardown phase=" + Retained.PhaseSummary())
-				+ "; synthetic-camp=true; synthetic-materials=true; ordinary-acceptance=false"
+				+ "; synthetic-camp=true; synthetic-crew=true; synthetic-materials=true"
+				+ "; ordinary-acceptance=false"
 				+ "; save-load=untested" + Retained.Evidence;
 		}
 
@@ -66,172 +63,10 @@ namespace ThousandAndFirst.Harness
 			KingdomTeardownNativeProvider.Require(Value, Failure);
 		}
 
-		/// <summary>Commission, await built, strike, await removed, assert the exact salvage
-		/// delta by STRIKE-RECEIPT ATTRIBUTION, never "my own chest" and never the pre-strike
-		/// receipt: OrderStrike mints a NEW registry row and rebinds the works to it inside the
-		/// same call, so the receipt read AFTER a successful strike -- not before -- is matched
-		/// against <c>StrikeSalvageReceiptProperty</c> wherever it actually landed. Then the
-		/// negative second-strike path. Forces no transition.</summary>
-		private sealed class Case
-		{
-			internal readonly string Name;
-			private readonly string BuildKey;
-			private readonly KingdomSystem System;
-			private readonly Zone Zone;
-			private readonly XRLGame Game;
-			private readonly List<GameObject> Owned;
-			private GameObject Chest, Works;
-			private Cell WorksCell;
-			private string WorksId, StrikeReceiptId;
-			private int ExpectedSalvageDelta, TimberCost;
-			internal int Phase;
-			internal bool Done;
-
-			internal Case(string Name, string BuildKey, KingdomSystem System, Zone Zone,
-				XRLGame Game, List<GameObject> Owned)
-			{
-				this.Name = Name; this.BuildKey = BuildKey; this.System = System;
-				this.Zone = Zone; this.Game = Game; this.Owned = Owned;
-			}
-
-			/// <summary>One direct raw material stack sized to this design's own cost, and one
-			/// real, synchronous plot commission.</summary>
-			internal void Start(Action<bool, string> Require, Func<GameObject, string, GameObject> Place)
-			{
-				GameObject chest = GameObject.Create("Chest");
-				Require(GameObject.Validate(chest) && chest.Inventory != null,
-					Name + ": the container blueprint produced nothing that holds things");
-				Owned.Add(chest);
-				Chest = (GameObject)Place(chest, Name);
-				string failure;
-				Require(KingdomMaterials.DedicateStockpile(System, Zone, Chest, out failure),
-					failure ?? Name + ": the production check-in refused the synthetic store");
-				TimberCost = KingdomMaterials.CostFor(BuildKey).Get(KingdomMaterial.Timber);
-				ExpectedSalvageDelta = (int)((long)TimberCost
-					* KingdomMaterialRules.StrikeSalvagePercent / 100L);
-				GameObject timber = GameObject.Create(
-					KingdomMaterials.BlueprintFor(KingdomMaterial.Timber));
-				Require(GameObject.Validate(timber), Name + ": the timber blueprint produced nothing");
-				Owned.Add(timber);
-				timber.SetIntProperty("NeverStack", 1);
-				timber.Count = TimberCost;
-				Chest.Inventory.AddObject(timber, null, true, NoStack: true);
-				Require(ReferenceEquals(timber.Physics?.InInventory, Chest),
-					Name + ": the fixture timber stack is not standing in the store's own custody");
-				Require(KingdomData.TryGetBuilding(BuildKey, out KingdomRules.BuildEntry entry),
-					Name + ": the design is missing from the live catalogue");
-				bool commissioned = KingdomCommission.Commission(System, BuildKey, null,
-					KingdomPlotRules.PlotSize.None, null, out string commissionFailure);
-				Require(commissioned, commissionFailure ?? Name + ": the fixture commission refused");
-				Require(KingdomConstruction.TryRead(out List<KingdomConstructionJob> jobs, out _),
-					Name + ": the construction registry could not be read after commissioning");
-				KingdomConstructionJob job = null;
-				foreach (KingdomConstructionJob candidate in jobs)
-					if (candidate != null && candidate.TargetKey == BuildKey) job = candidate;
-				Require(job != null && !string.IsNullOrEmpty(job.OutputId),
-					Name + ": the fixture commission produced no linked plot-works output");
-				WorksId = job.OutputId;
-				Phase = 1;
-			}
-
-			internal void Check(Action<bool, string> Require, StringBuilder Evidence, long ElapsedTicks)
-			{
-				Require(GameObject.Validate(Chest) && ReferenceEquals(Chest.CurrentZone, Zone),
-					Name + ": the synthetic store did not survive across turns");
-				if (Phase == 1)
-				{
-					GameObject works = Zone.FindObjectByID(WorksId);
-					if (works == null || !KingdomUpgrade.IsFunctionallyBuilt(works))
-					{
-						Evidence.Append("; case=").Append(Name).Append(" awaiting-built=true; elapsed-ticks=")
-							.Append(ElapsedTicks);
-						return;
-					}
-					Works = works;
-					WorksCell = works.CurrentCell;
-					Require(WorksCell != null,
-						Name + ": the functionally-built works carries no standing cell");
-					string preStrikeReceiptId = works.GetStringProperty(
-						KingdomConstruction.ReceiptProperty);
-					Require(!string.IsNullOrEmpty(preStrikeReceiptId),
-						Name + ": the functionally-built works carries no construction receipt");
-					Require(KingdomMaterials.OrderStrike(System, Zone, Works, out string failure),
-						failure ?? Name + ": the real strike order was refused");
-					// Captured AFTER the strike, never before: OrderStrike mints a NEW strike-
-					// route registry row and rebinds the works to it in the same call
-					// (Growth/KingdomMaterials.08.StrikeOrdering.cs:257-261 NewJob,
-					// 09.StrikeStampAndCancellation.cs:35 Bind), superseding the paid-
-					// construction receipt; salvage is tagged with the NEW id, never the old
-					// (Growth/KingdomMaterials.13.StrikeRemovalAndSalvage.cs:113).
-					StrikeReceiptId = works.GetStringProperty(KingdomConstruction.ReceiptProperty);
-					Require(!string.IsNullOrEmpty(StrikeReceiptId)
-						&& StrikeReceiptId != preStrikeReceiptId,
-						Name + ": the strike did not rebind the works to a distinct strike-job "
-						+ "receipt; the old paid-construction receipt would misattribute salvage");
-					Phase = 2;
-					return;
-				}
-				// A same-ID object that is NOT the exact struck reference is never a pass: a
-				// mint-over-the-old-id replacement must refuse, not be silently read as removal.
-				GameObject stillThere = Zone.FindObjectByID(WorksId);
-				Require(stillThere == null || ReferenceEquals(stillThere, Works),
-					Name + ": a different object now carries the struck building's own identity "
-					+ WorksId + " -- a same-ID replacement is never a valid removal");
-				if (stillThere != null)
-				{
-					Evidence.Append("; case=").Append(Name).Append(" awaiting-struck=true");
-					return;
-				}
-				// By reference too, not merely "the old id is gone".
-				foreach (GameObject onCell in WorksCell.GetObjects())
-					Require(!GameObject.Validate(onCell) || onCell.GetIntProperty("KingdomBuilt") != 1
-						|| onCell.GetStringProperty(KingdomUpgrade.BuildKeyProperty) != BuildKey,
-						Name + ": an object still reads as this finished building on its cell");
-				int salvaged = SalvageByReceipt(Require);
-				// Exact delta, attributed by THIS case's own strike receipt, never by chest.
-				Require(salvaged == ExpectedSalvageDelta,
-					Name + ": struck building's material return did not match the exact computed "
-					+ "salvage rule: expected-delta=" + ExpectedSalvageDelta + " observed="
-					+ salvaged);
-				bool secondOrder = KingdomMaterials.OrderStrike(System, Zone, Works,
-					out string secondFailure);
-				Require(!secondOrder && !string.IsNullOrEmpty(secondFailure),
-					Name + ": a second strike order against the absent building was not refused");
-				Evidence.Append("; case=").Append(Name).Append(" timber-cost=").Append(TimberCost)
-					.Append(" salvaged-by-receipt=").Append(salvaged)
-					.Append(" expected-salvage-delta=").Append(ExpectedSalvageDelta)
-					.Append(" elapsed-ticks=").Append(ElapsedTicks)
-					.Append(" negative-path-refusal=").Append(secondFailure);
-				Done = true;
-			}
-
-			/// <summary>Every zone stockpile (never assumed own chest) for a timber item whose
-			/// salvage receipt names THIS case's exact strike, by property, not location.</summary>
-			private int SalvageByReceipt(Action<bool, string> Require)
-			{
-				int total = 0;
-				GameObject matched = null;
-				KingdomMaterials.MaterialStock stock = KingdomMaterials.Stock(Zone);
-				foreach (GameObject stockpile in stock.Stockpiles)
-				{
-					if (!GameObject.Validate(stockpile) || stockpile.Inventory == null) continue;
-					foreach (GameObject item in stockpile.Inventory.Objects)
-					{
-						if (!GameObject.Validate(item)
-							|| item.GetStringProperty(KingdomMaterials.StrikeSalvageReceiptProperty)
-								!= StrikeReceiptId) continue;
-						Require(matched == null,
-							Name + ": more than one salvage item carries this exact strike receipt");
-						matched = item;
-						Require(KingdomMaterials.TryOrdinaryMaterialOf(item, out KingdomMaterial kind)
-							&& kind == KingdomMaterial.Timber,
-							Name + ": the receipted salvage item is not the expected material");
-						total += KingdomMaterials.RawCensusCountOf(item);
-					}
-				}
-				return total;
-			}
-		}
+		/// <summary>Commission, await built, strike, resolve the new registry row by reference
+		/// (<see cref="KingdomTeardownStrikeRowClaims"/>), await removed, assert the exact
+		/// salvage delta by STRIKE-RECEIPT ATTRIBUTION -- never "my own chest", never the
+		/// pre-strike receipt. Then the negative second-strike path. Forces no transition.</summary>
 
 		private sealed class Frame
 		{
@@ -240,6 +75,11 @@ namespace ThousandAndFirst.Harness
 			private readonly List<GameObject> Owned = new List<GameObject>();
 			private readonly List<Case> Cases = new List<Case>();
 			private long StartTicks;
+			private KingdomSystem System;
+			private Case Fire, Larder;
+			private Cell Seat;
+			private bool LarderStarted;
+			private List<GameObject> Crew;
 			internal bool Done;
 			internal readonly StringBuilder Evidence = new StringBuilder();
 
@@ -252,28 +92,130 @@ namespace ThousandAndFirst.Harness
 				return string.Join(",", parts);
 			}
 
-			/// <summary>Real founding, real dedication, then two parallel cases: the known
-			/// zero-salvage boundary ("fire", 1 timber cost) and the positive-salvage case
-			/// ("larder", 3 timber cost, no extra prerequisite beyond "fire"'s own).</summary>
+			/// <summary>Real founding, real dedication, a disclosed synthetic labour crew, then
+			/// ONE case commissioned now ("fire", 1 timber cost) -- review-teardown-run15-
+			/// neverbuilt.md: production's one-gang allocator gives its whole crew to the oldest
+			/// open raising only, so two concurrent commissions structurally pin the second at
+			/// zero hands. "larder" (3 timber cost) is deferred: Check() commissions it only
+			/// once fire reaches Phase 2 (built and struck), so the two never compete for the
+			/// same gang.</summary>
 			internal void Start()
 			{
 				StartTicks = Game.TimeTicks;
 				KingdomSystem system = KingdomNativeCampFounding.Found(Game, Zone, Require);
+				System = system;
 				KingdomNativeCampFounding.Dedicate(Game, Zone, system,
 					16 * KingdomRules.DramsPerArrival, Owned.Add, Require);
+				Require(KingdomTeardownCrewEnrollment.Enroll(Game, Zone, system, Owned.Add,
+					Require, out Crew) == 2,
+					"the disclosed synthetic crew did not reach its exact size");
 				bool foundFire = KingdomData.TryGetBuilding("fire", out KingdomRules.BuildEntry fireEntry);
 				bool foundLarder = KingdomData.TryGetBuilding("larder", out KingdomRules.BuildEntry larderEntry);
 				Require(foundFire && foundLarder,
 					"the fixture designs are missing from the live catalogue");
 				Require(KingdomGrowth.CountStoredWater(Zone) >= fireEntry.CostDrams + larderEntry.CostDrams,
 					"the dedicated store does not cover both fixture buildings' cost");
-				Cell seat = KingdomNativeCampFounding.Clear(Zone);
-				Case fire = new Case("fire", "fire", system, Zone, Game, Owned);
-				Case larder = new Case("larder", "larder", system, Zone, Game, Owned);
-				fire.Start(Require, (chest, name) => PlaceChest(seat, chest, name));
-				larder.Start(Require, (chest, name) => PlaceChest(seat, chest, name));
-				Cases.Add(fire);
-				Cases.Add(larder);
+				Seat = KingdomNativeCampFounding.Clear(Zone);
+				Fire = new Case("fire", "fire", system, Zone, Game, Owned);
+				Larder = new Case("larder", "larder", system, Zone, Game, Owned);
+				Fire.Start(Require, (chest, name) => PlaceChest(Seat, chest, name),
+					line => Evidence.Append(line));
+				Cases.Add(Fire);
+				KeepCrewOutsideRaisings();
+			}
+
+			/// <summary>Filed as issue #163: review-teardown-run20-stuckworking.md -- fire's
+			/// labour clock finished on the FIRST settlement pass but its Cleared stage was
+			/// refused forever because a living occupant stood on one authored layout slot --
+			/// almost certainly one of this fixture's own crew bodies (they never wander
+			/// otherwise; production enrolls no other settlers). Once a raising's rect is known
+			/// (Case.Rect, re-resolved every Check until known), relocate any of THIS fixture's
+			/// own crew bodies found standing inside it to a free cell outside every known rect
+			/// -- never a production resident or the player, and never any object this fixture
+			/// did not itself enroll.
+			/// <para>
+			/// review-teardown-run25-staked.md: a one-shot, check-boundary-only relocation
+			/// cannot hold -- crew walk back onto the footprint before the next settlement pass,
+			/// so #163 kept firing between checks. DISCLOSED AS SYNTHETIC: a relocated body is now
+			/// pinned with the production idiom for anchoring an NPC
+			/// (Simulation/City/KingdomStations.Claims.cs:137-139) -- Wanders/WandersRandomly =
+			/// false, Stay(destination) -- so it no longer WANDERS back on its own. FIXTURE-ONLY:
+			/// a real settlement's wandering residents are never anchored this way and can still
+			/// trigger #163 -- the gap fix/034-apply-occupant-announce (displacement at apply)
+			/// closes. Every call journals each crew body's cell and its walkability.
+			/// review-5093b00-teardown-findings.md item 2: Stay only stops WANDERING, not LABOUR
+			/// (posting is property-driven off KingdomConstructionPresence, never reading Brain)
+			/// and not PRODUCTION -- KingdomStations.Claim (Claims.cs:137-139,150,182-197)
+			/// re-issues Stay(target) plus a MoveTo(target) goal for a posted body, target being
+			/// the works cell or an adjacent one: production's own posting walks a posted body
+			/// back onto the footprint. This fixture cannot keep a site clear by construction;
+			/// run 25's 42 firings may recur, and a GREEN run is owed to the #163 production fix,
+			/// not this mitigation. This sweep still avoids only the bounding Rect, never
+			/// Case.PlacementCells directly -- a superset once a rect is known, so it still parks
+			/// outside every placement; Telemetry's occupants= is the one place that reads
+			/// PlacementCells (review-5093b00-teardown-findings.md REQUIRED 1). No production
+			/// change: a harness precondition mitigation only.</para>
+			/// </summary>
+			private void KeepCrewOutsideRaisings()
+			{
+				List<KingdomPlotRules.PlotRect> rects = new List<KingdomPlotRules.PlotRect>();
+				if (Fire.HasRect) rects.Add(Fire.Rect);
+				if (Larder.HasRect) rects.Add(Larder.Rect);
+				if (rects.Count == 0 || Crew == null) return;
+				foreach (GameObject body in Crew)
+				{
+					if (!GameObject.Validate(body)) continue;
+					Cell cell = body.CurrentCell;
+					if (cell == null) continue;
+					KingdomPlotRules.PlotRect hit = default;
+					bool inside = false;
+					foreach (KingdomPlotRules.PlotRect rect in rects)
+						if (cell.X >= rect.X1 && cell.X <= rect.X2
+							&& cell.Y >= rect.Y1 && cell.Y <= rect.Y2) { hit = rect; inside = true; break; }
+					Cell parked = cell;
+					if (inside)
+					{
+						Cell destination = FindCellOutside(rects);
+						Require(destination != null, "no free cell exists outside every known "
+							+ "raising rect to relocate a fixture crew body");
+						cell.RemoveObject(body);
+						Require(ReferenceEquals(destination.AddObject(body, NoStack: true), body),
+							"native relocation substituted the synthetic crew body");
+						if (body.Brain != null)
+						{
+							body.Brain.Wanders = false;
+							body.Brain.WandersRandomly = false;
+							body.Brain.Stay(destination);
+						}
+						parked = destination;
+						Evidence.Append("; crew-relocated id=").Append(body.IDIfAssigned ?? "unassigned")
+							.Append(" out-of-rect=(").Append(hit.X1).Append(',').Append(hit.Y1)
+							.Append(")-(").Append(hit.X2).Append(',').Append(hit.Y2)
+							.Append(") to=(").Append(destination.X).Append(',').Append(destination.Y)
+							.Append(") stationary=").Append(body.Brain != null);
+					}
+					Evidence.Append("; crew=").Append(body.IDIfAssigned ?? "unassigned")
+						.Append(" parked-at=(").Append(parked.X).Append(',').Append(parked.Y)
+						.Append(") parked-empty=").Append(parked.IsEmptyIgnoring(item => ReferenceEquals(item, body)))
+						.Append(" parked-passable=").Append(parked.IsPassable());
+				}
+			}
+
+			private Cell FindCellOutside(List<KingdomPlotRules.PlotRect> Avoid)
+			{
+				for (int y = 0; y < Zone.Height; y++)
+					for (int x = 0; x < Zone.Width; x++)
+					{
+						bool inside = false;
+						foreach (KingdomPlotRules.PlotRect rect in Avoid)
+							if (x >= rect.X1 && x <= rect.X2 && y >= rect.Y1 && y <= rect.Y2)
+							{ inside = true; break; }
+						if (inside) continue;
+						Cell cell = Zone.GetCell(x, y);
+						if (cell == null || !cell.IsEmpty() || !cell.IsPassable()) continue;
+						return cell;
+					}
+				return null;
 			}
 
 			private GameObject PlaceChest(Cell Seat, GameObject Chest, string Name)
@@ -283,14 +225,72 @@ namespace ThousandAndFirst.Harness
 				return Chest;
 			}
 
-			/// <summary>Polls both cases every tick; done only once every case's negative path
-			/// has been observed. Never forces either case's transitions.</summary>
+			/// <summary>Driven only by the sealed script's four teardown-check verbs (Provider.cs,
+			/// cumulative ticks 2400/6000/9600/13200), never every tick. Done only once every
+			/// started case's negative path has been observed AND larder has started; forces no
+			/// transition.
+			/// <para>
+			/// Required per review-3f010e3-teardown-findings.md finding 3: a genuine crew
+			/// departure (the roofless brink) previously stalled both cases at Phase 1 with
+			/// Ok=true and no named diagnostic. This re-Requires the crew is STILL on the roll
+			/// (production KingdomResidents.OnRollCount) before touching either case, and ALSO
+			/// re-asserts (review-teardown-run15-neverbuilt.md finding 4c) that every enrolled
+			/// body is still present in KingdomCrews.AvailableSettlers -- OnRollCount alone is
+			/// blind to a standing change. review-bba51c4-teardown-findings.md REQUIRED 1: a post
+			/// is no longer asserted to be zero here -- production posts the selected hands while
+			/// a raising is open and only un-posts at the next Assign pass, so a strict PostOf==0
+			/// re-ask refused a healthy, working crew. A post is now accepted when it names one
+			/// of THIS fixture's own live raisings (fire's/larder's WorksId, resolved through
+			/// KingdomCityRules.StableId, the same id the allocator posts with); the raw post is
+			/// journaled per body ("posted-to="), never asserted. No departure freeze, no
+			/// re-enrolment -- purely detection, by name.
+			/// </para>
+			/// </summary>
 			internal void Check()
 			{
 				long elapsed = Game.TimeTicks - StartTicks;
+				long tick = Game.TimeTicks;
+				int onRoll = KingdomResidents.OnRollCount(System);
+				if (KingdomTeardownCrewDepartureClaims.HasDeparted(onRoll,
+					KingdomTeardownCrewEnrollment.CrewSize))
+					foreach (Case c in Cases)
+						if (!c.Done)
+							Require(false, KingdomTeardownCrewDepartureClaims.Diagnostic(c.Name,
+								onRoll, KingdomTeardownCrewEnrollment.CrewSize, tick));
+				HashSet<int> acceptablePosts = new HashSet<int>();
+				if (!string.IsNullOrEmpty(Fire.WorksId))
+					acceptablePosts.Add(KingdomCityRules.StableId(Fire.WorksId));
+				if (!string.IsNullOrEmpty(Larder.WorksId))
+					acceptablePosts.Add(KingdomCityRules.StableId(Larder.WorksId));
+				KingdomTeardownCrewEnrollment.RequireAvailable(System, Zone, Crew, Require,
+					acceptablePosts, line => Evidence.Append(line));
 				foreach (Case c in Cases)
 					if (!c.Done) c.Check(Require, Evidence, elapsed);
-				Done = true;
+				if (!LarderStarted && Fire.Phase >= 2)
+				{
+					Larder.Start(Require, (chest, name) => PlaceChest(Seat, chest, name),
+						line => Evidence.Append(line));
+					Cases.Add(Larder);
+					LarderStarted = true;
+				}
+				KeepCrewOutsideRaisings();
+				KingdomSurvey survey = KingdomSurvey.Take(Zone, System);
+				List<GameObject> available = KingdomCrews.AvailableSettlers(System, survey);
+				int free = 0;
+				foreach (GameObject settler in available)
+					if (KingdomStations.PostOf(settler) == 0) free++;
+				int labours = 0;
+				List<KingdomResidentRow> labourRows = KingdomResidents.RollRows(System, true);
+				foreach (KingdomResidentRow row in labourRows)
+					if (KingdomResidentRules.Labours(row)) labours++;
+				int assignedCrew = 0;
+				foreach (Case c in Cases) assignedCrew += c.LastHands;
+				Evidence.Append("; available=").Append(available.Count)
+					.Append(" free=").Append(free)
+					.Append(" assigned-crew=").Append(assignedCrew)
+					.Append(" on-roll=").Append(onRoll)
+					.Append(" labours=").Append(labours);
+				Done = LarderStarted;
 				foreach (Case c in Cases) if (!c.Done) Done = false;
 			}
 		}

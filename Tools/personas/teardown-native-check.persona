@@ -1,0 +1,56 @@
+# Teardown on a really founded camp with a disclosed synthetic labour crew: real
+# KingdomCommission.Commission, real KingdomMaterials.OrderStrike, exact salvage by strike
+# receipt (fire = the zero-salvage boundary, larder = the positive one), and a negative
+# second-strike order that must refuse by name.
+#
+# SYNTHETIC SETUP, DISCLOSED: the camp is founded and the water dedicated by the harness, a
+# 2-body labour crew is enrolled through the real KingdomCitizenship.TryEnroll +
+# KingdomResidents.TryEnsureRow pair (crew size 2 = RaisingHandsWanted, the minimum that
+# saturates construction effectiveness), and each design's own authored bill (read live from
+# RuntimeData/KingdomBuildings.xml, never hardcoded) is minted as N separate single-unit
+# fixture bodies per material into a per-case dedicated stockpile, bounded by that store's own
+# declared capacity. Nothing forces KingdomBuilt, the job phase or the strike receipt.
+# Not ordinary play, not a rendered Charter, no save/load and no cold-load claim.
+#
+# Four checks, cumulative ticks 2400/6000/9600/13200 (deltas 2400/3600/3600/3600), widened per
+# review-bba51c4-teardown-findings.md nit 1 from the prior zero-slack 2000/4800/7600/10800: the
+# first attended settlement pass after founding prices a freshly-selected raising at 0 (Assign
+# selects on that same pass, before any labour is priced against it), so the first interval is
+# TWO 1200-tick passes -- the second is what actually prices fire's 600 ticks -- and every later
+# interval keeps one full spare pass over the 1200-tick legs it covers (fire's removal/salvage,
+# larder's own raise+strike, larder's removal). Fire and larder are SEQUENCED, one gang at a
+# time (Frame.Check() commissions larder only once fire reaches Phase 2), never concurrent.
+#
+# FIXTURE CREW DO NOT WANDER, DISCLOSED: once kept off a raising's footprint, a crew body is
+# pinned stationary (Brain.Wanders=false, Brain.WandersRandomly=false, Brain.Stay(cell), the
+# exact production idiom for anchoring an NPC) so it cannot WANDER back onto the footprint on
+# its own between the four scripted checks. A real settlement's own wandering residents are
+# never anchored this way and can still trigger issue #163 (a living occupant permanently
+# blocking an authored ground-layer slot); that production gap is being closed separately, on
+# fix/034-apply-occupant-announce.
+#
+# review-5093b00-teardown-findings.md item 2, DISCLOSED, NOT FIXED: Brain.Stay only stops
+# wandering -- it stops neither this body's own construction LABOUR (posting/hands are
+# property-driven off KingdomConstructionPresence, never off Brain) nor PRODUCTION itself:
+# KingdomStations.Claim re-issues Stay(target) plus a MoveTo(target) goal for a posted body,
+# target being the works cell or an adjacent one, so a construction-posted crew body is walked
+# BACK onto the footprint by production's own posting. This fixture cannot keep a site clear by
+# construction; #163 may still fire. A GREEN teardown run is owed to the #163 production fix
+# (settler displacement at apply), not to this mitigation.
+#
+# KNOWN GAP, DISCLOSED, NOT FIXED: the crew has no home plot, so a roofless departure brink
+# (KingdomLodgingRules.GraceDays = 6 days = 7200 ticks from the warned tick) may fire near
+# tick 8400-9600, inside this budget and before the final check. Departure is not frozen or
+# synthesized away; if it happens first, Frame.Check() re-Requires the real production crew
+# count (KingdomResidents.OnRollCount) and refuses by a named outcome, "case=<fire|larder>
+# outcome=crew-departed onRoll=<n> wanted=<CrewSize> tick=<t>", inside the same Fail()
+# envelope every other named refusal in this scenario uses -- a named REFUSED verb, never a
+# silently stalled incomplete case and never a false pass.
+DESCRIPTION=a really built camp fire and larder are struck on real turns, return exactly the computed salvage, and refuse a second strike
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;teardown-setup;advance 2400;teardown-check;advance 3600;teardown-check;advance 3600;teardown-check;advance 3600;teardown-check;stagedigest
+VERBS=teardown-setup,teardown-check
+EXPECT=stagedigest:OK~founded=false,teardown-setup:OK~fire=1,advance:OK,teardown-check:OK~native-teardown,advance:OK,teardown-check:OK~native-teardown,advance:OK,teardown-check:OK~native-teardown,advance:OK,teardown-check:OK~cases=2 passed=2 failed=0,stagedigest:OK~founded=true,COMPLETE
+SET=materials,growth,native-regression
+TIMEOUT=1200

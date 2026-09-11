@@ -155,8 +155,16 @@
 	<Compile Include="..\Harness\KingdomQuickstartLifecycleRows.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartLifecycleSnapshot.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartLifecycleStamp.cs" />
+	<Compile Include="..\Harness\KingdomQuickstartLifecycleOpenWait.cs" />
+	<Compile Include="KingdomQuickstartLifecycleOpenWaitTests.cs" />
+	<Compile Include="..\Harness\KingdomQuickstartLifecycleStall.Classify.cs" />
+	<Compile Include="KingdomQuickstartLifecycleStallClassifyTests.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartBuildClaims.cs" />
+	<Compile Include="..\Harness\KingdomTeardownStrikeRowClaims.cs" />
+	<Compile Include="..\Harness\KingdomTeardownCrewDepartureClaims.cs" />
 	<Compile Include="KingdomQuickstartBuildClaimsTests.cs" />
+	<Compile Include="KingdomTeardownStrikeRowClaimsTests.cs" />
+	<Compile Include="KingdomTeardownCrewDepartureClaimsTests.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartSaveSnapshot.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartSaveSnapshotCodec.cs" />
 	<Compile Include="KingdomQuickstartSaveSnapshotTests.cs" />
@@ -188,6 +196,7 @@
 	<Compile Include="KingdomPlotLabourRulesTests.cs" />
 	<Compile Include="KingdomPlotLabourWindowRulesTests.cs" />
 	<Compile Include="KingdomFoundingHeartRulesTests.cs" />
+	<Compile Include="KingdomFoundingHeartChainTests.cs" />
 	<Compile Include="KingdomFoundingHeartReservationRulesTests.cs" />
 	<Compile Include="KingdomFoundingHeartReservationStateTests.cs" />
 	<Compile Include="KingdomFoundingHeartReservationRuntimeSourceTests.cs" />
@@ -222,6 +231,8 @@
 	<Compile Include="..\Growth\KingdomFoundingHeartReservationState.cs" />
 	<Compile Include="..\Growth\KingdomFoundingHeartTerminalPlan.cs" />
 	<Compile Include="..\Growth\KingdomFoundingHeartTerminalRules.cs" />
+	<Compile Include="..\Growth\KingdomFoundingHeartChainRules.cs" />
+	<Compile Include="..\Growth\KingdomFoundingHeartRetiredGeneration.cs" />
 	<Compile Include="..\Growth\KingdomPlotLegacyEffectsPlan.cs" />
 	<Compile Include="..\Growth\KingdomPlotLegacyEffectsRules.cs" />
     <Compile Include="..\Growth\KingdomZoneObservationReceipt.cs" />

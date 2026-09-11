@@ -1,22 +1,69 @@
-# One construction lifecycle on an ordinary founded settlement: the production founding
-# transaction, a startup census of what the settlement actually holds, the production
-# quote/CanPay/commission with its physical timber and water debit, real engine turns spent by
-# the bounded advance verb, and the completion of that exact job into a functional building,
-# followed by a real save a separate cold-load profile can be imported from.
+# One construction lifecycle on the production Kingdom Quickstart road (ZAP-034 root ruling):
+# real Quickstart boot, the same production quote/CanPay/commission Quickstart already drives
+# during boot (Harness/KingdomQuickstartBuildTest.cs), then -- uniquely for this command --
+# further AutoRunner lines that spend real engine turns to carry that exact paid job to a
+# finished building, and a real save.
 #
-# Nothing is fabricated: no stock is minted and no job is forced into a phase. The settlement
-# pays out of its own accumulated stores, so lifecycle-build refuses honestly when the economy
-# has not yet paid for the design, and lifecycle-grown refuses when the turn budget expires
-# before the building stands. Both refusals are the point of the persona, not a failure of it.
+# WHY THE QUICKSTART ROAD, NOT founding-first-city (see lifecycle-founding-road-refusal.persona).
+# On founding-first-city, `realize` places no camp kit and dedicates no stockpile: dedication is a
+# founder-interactive act (Core/KingdomCharterPart.Vessels.cs) a sealed script never drives, so
+# lifecycle-open there can only wait its bounded budget and honestly refuse.
+# Harness/KingdomQuickstartLifecycleProvider.cs's own docstring gives the ORIGINAL reason that
+# road was chosen instead of Quickstart: "A Quickstart run carries no scenario auto-runner ...
+# Nothing in a Quickstart run can therefore spend engine turns." That was true until this
+# persona's own wiring: Harness/KingdomQuickstartLifecycleRunnerPatch.cs now adds the runner to a
+# Quickstart game, but ONLY for the separate quickstart-lifecycle command (never quickstart-boot,
+# quickstart-save or quickstart-build), and Harness/KingdomScenarioAutoRunner.cs skips its usual
+# re-strip and its usual line-0 verb for that same command -- the Quickstart camp's real founder
+# stock must never be obliterated, and the command's own first line is boot syntax, not a verb.
+# The root ruling overrides the original docstring reason because it targets the Quickstart
+# STOCKPILE lifecycle by name: on this road the stockpile IS dedicated, by
+# World/KingdomQuickstartBootstrap.Materials.cs:34, before the AutoRunner ever starts, so
+# lifecycle-open's CanPay reads a real dedication and proceeds instead of waiting.
 #
-# The cold-load session and the next action after it are NOT in this script: they need a second
-# profile imported from this save. Tools/check-quickstart-lifecycle.py reports them as BLOCKER
-# until that leg exists, and never as a pass.
-DESCRIPTION=one paid commission becomes a finished building over real turns, then a real save
+# NO lifecycle-build HERE. Quickstart's own boot-time build phase already ran the exact
+# quote/CanPay/commission sequence for the lifecycle command (Harness/KingdomQuickstartBuildTest.cs,
+# gated on KingdomQuickstartBootTest.LifecycleRequested) and persisted its job id into the SAME
+# durable key KingdomQuickstartLifecycleSteps.Build publishes
+# (KingdomQuickstartLifecycleSteps.JobKey) -- running lifecycle-build again would only refuse
+# "this lifecycle already commissioned its one job". Tools/check-quickstart-lifecycle.py's own
+# judge() already reads the QUICKSTART-BUILD-* rows this boot phase journals for the quote and
+# paid-commission links (it prefers whichever named group has more matches present), so nothing
+# needs to be re-driven.
+#
+# THE ADVANCE BUDGET (native run 17, f691ab4): the Quickstart bootstrap stakes two tentrow plots
+# (1700 ticks each) before the fire commission (900 ticks) this persona pays for, and the
+# settlement's ONE raising gang (Growth/KingdomConstructionPresenceRules.cs:41-59) works only the
+# single oldest active raising at a time -- so fire waits behind both tentrows: 2x1700 + 900 =
+# 4300 labour-ticks of serial contention, plus the first of the settlement's ~1200-tick daily
+# passes prices its own interval at 0 (no witness yet to price it against). That is at least
+# ceil(4300/1200) + 1 = 5 passes before fire could even finish being worked, so a 2400-turn
+# advance (2 passes) was structurally short regardless of the harness reading bug below. This
+# advances 7200 turns (~6 daily passes, one turn ~= one tick per native run 13/17 evidence) --
+# margin above the stated 5-pass minimum, still comfortably under
+# KingdomScenarioAdvance.MaxTurns/persona_matrix.COUNTED_VERBS[advance] (10000).
+#
+# THE HARNESS READING FIX (native run 17): lifecycle-grown's own stall classification
+# (Harness/KingdomQuickstartLifecycleStall.cs) used to read RemainingTicks/LastWorkedTick off
+# r_KingdomScaffold unconditionally; a "fire" commission is r_KingdomPlotWorks, whose progress
+# lives in KingdomPlots.PlotWork{Remaining,LastTick,Required}Property instead, so the scaffold
+# read was always absent (-1/-1) and every plot-backed refusal read "no-labour-ever" regardless of
+# whether labour had actually run. Now reads whichever lane Job.Projection names. The stamped
+# lifecycle-grown row stays Bounded to 300 chars either way (KingdomScenarioRowValidator.
+# MaxTextChars); the untruncated reading (selectedId=/candidates=/roots=/free=/plotRemaining=/
+# lastSemanticTick=/schema=) lands in its own lifecycle-grown-detail bookkeeping row.
+#
+# Nothing is fabricated: no stock is minted and no job is forced into a phase. lifecycle-grown
+# refuses honestly when the turn budget expires before the building stands, exactly as on the
+# founding road.
+#
+# NOT YET NATIVELY RUN with this budget: written and gate.sh-compiled only. The cold-load session
+# and the next action after it are NOT in this script; see Tools/check-quickstart-lifecycle.py for
+# why those two links still read BLOCKER without it.
+DESCRIPTION=on the real Quickstart road the stockpile is already dedicated at boot, so lifecycle-open proceeds straight to a real engine-turn build (budgeted past the one-gang tentrow contention) and save
 REQUEST=founding-first-city
-START=8.22@40,12
-SCRIPT=stagedigest;realize;lifecycle-open;advance 600;lifecycle-build;advance 2400;lifecycle-grown;lifecycle-save;stagedigest
-VERBS=lifecycle-open,lifecycle-build,lifecycle-grown,lifecycle-save
-EXPECT=stagedigest:OK~founded=false,realize:OK,lifecycle-open:OK~step=startup,advance:OK,lifecycle-build:OK~step=paid-commission,advance:OK,lifecycle-grown:OK~step=engine-turn-build,lifecycle-save:OK~step=save,stagedigest:OK~founded=true,COMPLETE
+SCRIPT=quickstart-lifecycle marsh yes;stagedigest;lifecycle-open;advance 7200;lifecycle-grown;lifecycle-save;stagedigest
+VERBS=lifecycle-open,lifecycle-grown,lifecycle-save
+EXPECT=QUICKSTART-BOOT-BEGIN:OK,QUICKSTART-BOOT-OBSERVED:OK,QUICKSTART-BOOT-COMPLETE:OK,QUICKSTART-BUILD-BEGIN:OK,QUICKSTART-BUILD-QUOTE:OK,QUICKSTART-BUILD-CANPAY:OK,QUICKSTART-BUILD-COMMISSION:OK,QUICKSTART-LIFECYCLE-PROFILE:OK,QUICKSTART-BUILD-COMPLETE:OK~commissioned=true,stagedigest:OK~founded=true,lifecycle-open:OK~step=startup,advance:OK,lifecycle-grown:OK~step=engine-turn-build,lifecycle-save:OK~step=save,stagedigest:OK~founded=true,COMPLETE
 SET=growth,construction,native-regression
-TIMEOUT=1200
+TIMEOUT=3000

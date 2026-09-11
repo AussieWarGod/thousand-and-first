@@ -113,12 +113,13 @@ SESSION_OF = {
     "cold-load": "cold-load-session",
     "next-action": "cold-load-session",
 }
-# The same chain can be driven two ways, and the journal says which. A Quickstart profile
-# lands the QUICKSTART-* rows its boot phases write; the founded lifecycle profile lands one
-# row per scenario verb it ran (Tools/personas/lifecycle-stockpile-native-check.persona), so
-# the verb names ARE the row names there. A link is judged against whichever vocabulary this
-# journal actually used; a journal that mixes them is judged on the fuller one and still has
-# to be complete and in order.
+# The same chain can be driven two ways, and the journal says which. The Quickstart-lifecycle
+# profile (Tools/personas/lifecycle-stockpile-native-check.persona) lands the QUICKSTART-*
+# rows its boot phases write; the founding-first-city profile
+# (Tools/personas/lifecycle-founding-road-refusal.persona) lands one row per scenario verb it
+# ran, so the verb names ARE the row names there. A link is judged against whichever
+# vocabulary this journal actually used; a journal that mixes them is judged on the fuller one
+# and still has to be complete and in order.
 LIFECYCLE_ROWS = {
     # The Quickstart lifecycle profile lands the boot rows first, then its build rows, then one
     # row per AutoRunner verb; the founded profile lands verb rows throughout. A link is judged
