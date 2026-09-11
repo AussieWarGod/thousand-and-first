@@ -65,6 +65,7 @@ namespace ThousandAndFirst.Harness
 
 			private void RecordBlockedMessages()
 			{
+				RecordRoadCensus();
 				Cell player = The.Player?.CurrentCell;
 				Evidence.Append("\nblocked-player-cell=").Append(player == null ? "(absent)"
 					: player.X + "," + player.Y);

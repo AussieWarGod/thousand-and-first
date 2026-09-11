@@ -21,6 +21,23 @@ namespace ThousandAndFirst.Tests
 		private static string Read(string path) => TestMain.ReadRepositoryText(path);
 
 		[Test]
+		public void RefusedIngressCensusReadsExactLaneWithoutManufacturingRoads()
+		{
+			// Source tripwire only; lane/traffic values are evidence only when read in game.
+			string census = Read("Harness/KingdomCampHeartNativeRoadCensus.cs");
+			Assert.That(Read(Phases), Does.Contain("RecordRoadCensus();"));
+			foreach (string reader in new[] { "KingdomRoads.ReadTally(Zone)",
+				"KingdomArchitectureRuntime.TryPrepareSuccessor(System, Zone, before,",
+				"KingdomRoadRules.TryAuthoredLane(snapshot, after.Rect, anchor, route,",
+				"KingdomRoads.FindOurFloor(lane, out _)", "road-target-lane=",
+				"road-census-error=", "road-census-truncated=" })
+				Assert.That(census, Does.Contain(reader));
+			foreach (string mutation in new[] { "WriteTally(", "OnSettlementPass(",
+				"SetZoneProperty(", "CreateObject(", "SetIntProperty(", "Commission(" })
+				Assert.That(census, Does.Not.Contain(mutation));
+		}
+
+		[Test]
 		public void CompletionChecksFunctionalRungAndPhysicalCapacity()
 		{
 			// Wiring only: the sealed native persona must execute these guards to prove effects.
