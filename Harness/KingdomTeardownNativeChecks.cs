@@ -18,13 +18,11 @@ namespace ThousandAndFirst.Harness
 	/// </para>
 	/// <para>
 	/// EXACT SALVAGE, NOT "SOME". <c>OrderStrike</c> calls <c>KingdomMaterialRules.
-	/// StrikeSalvage</c> (<c>Growth/KingdomMaterialRules.Clearance.cs:211-219</c>) =
-	/// <c>Cost.Scaled(StrikeSalvagePercent=50)</c>, integer-floor per material
-	/// (<c>Growth/KingdomMaterialTally.cs:101-111</c>). Two cases prove both ends: <c>"fire"</c>
-	/// (1 timber) floors <c>(1*50)/100=0</c>, the ZERO-SALVAGE BOUNDARY; <c>"larder"</c>
-	/// (3 timber, same Camp-stage/<c>Plot="S"</c> prerequisites) gives <c>(3*50)/100=1</c>, the
-	/// POSITIVE-SALVAGE case. Both computed from <c>CostFor</c> + <c>StrikeSalvagePercent</c>
-	/// live, never hardcoded.
+	/// StrikeSalvage</c> = <c>Cost.Scaled(StrikeSalvagePercent=50)</c>, integer-floor per
+	/// material (<c>Growth/KingdomMaterialTally.cs:101-111</c>). Two cases prove both ends:
+	/// <c>"fire"</c> (1 timber) floors <c>(1*50)/100=0</c>, the ZERO-SALVAGE BOUNDARY;
+	/// <c>"larder"</c> (3 timber, same prerequisites) gives <c>(3*50)/100=1</c>, POSITIVE-SALVAGE.
+	/// Both computed from <c>CostFor</c> + <c>StrikeSalvagePercent</c> live, never hardcoded.
 	/// </para>
 	/// </summary>
 	internal static class KingdomTeardownNativeChecks
@@ -66,12 +64,10 @@ namespace ThousandAndFirst.Harness
 			KingdomTeardownNativeProvider.Require(Value, Failure);
 		}
 
-		/// <summary>Commission, await built, strike, await removed, assert the exact salvage
-		/// delta by STRIKE-RECEIPT ATTRIBUTION, never "my own chest" and never the pre-strike
-		/// receipt: OrderStrike mints a NEW registry row and rebinds the works to it inside the
-		/// same call, so the receipt read AFTER a successful strike -- not before -- is matched
-		/// against <c>StrikeSalvageReceiptProperty</c> wherever it actually landed. Then the
-		/// negative second-strike path. Forces no transition.</summary>
+		/// <summary>Commission, await built, strike, resolve the new registry row by reference
+		/// (<see cref="KingdomTeardownStrikeRowClaims"/>), await removed, assert the exact
+		/// salvage delta by STRIKE-RECEIPT ATTRIBUTION -- never "my own chest", never the
+		/// pre-strike receipt. Then the negative second-strike path. Forces no transition.</summary>
 		private sealed class Case
 		{
 			internal readonly string Name;
@@ -157,17 +153,20 @@ namespace ThousandAndFirst.Harness
 						Name + ": the functionally-built works carries no construction receipt");
 					Require(KingdomMaterials.OrderStrike(System, Zone, Works, out string failure),
 						failure ?? Name + ": the real strike order was refused");
-					// Captured AFTER the strike, never before: OrderStrike mints a NEW strike-
-					// route registry row and rebinds the works to it in the same call
-					// (Growth/KingdomMaterials.08.StrikeOrdering.cs:257-261 NewJob,
-					// 09.StrikeStampAndCancellation.cs:35 Bind), superseding the paid-
-					// construction receipt; salvage is tagged with the NEW id, never the old
-					// (Growth/KingdomMaterials.13.StrikeRemovalAndSalvage.cs:113).
+					// Captured AFTER the strike, never before -- OrderStrike mints a NEW strike-
+					// route row and rebinds the works to it in the same call, superseding the
+					// paid-construction receipt (Growth/KingdomMaterials.08.StrikeOrdering.cs:
+					// 257-261, 09.StrikeStampAndCancellation.cs:35, 13.StrikeRemovalAndSalvage.cs:113).
 					StrikeReceiptId = works.GetStringProperty(KingdomConstruction.ReceiptProperty);
 					Require(!string.IsNullOrEmpty(StrikeReceiptId)
 						&& StrikeReceiptId != preStrikeReceiptId,
 						Name + ": the strike did not rebind the works to a distinct strike-job "
 						+ "receipt; the old paid-construction receipt would misattribute salvage");
+					// Resolve the row by reference: route/subject/owner/zone/phase re-proved live.
+					KingdomConstruction.TryFind(StrikeReceiptId, out KingdomConstructionJob row);
+					Require(KingdomTeardownStrikeRowClaims.IsExpectedStrikeRow(row,
+						works.IDIfAssigned, KingdomConstruction.OwnerOf(System), Zone.ZoneID,
+						out string rowFailure), Name + ": " + rowFailure);
 					Phase = 2;
 					return;
 				}

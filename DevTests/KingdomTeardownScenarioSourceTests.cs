@@ -46,10 +46,11 @@ namespace ThousandAndFirst.Tests
 				"new Case(\"fire\", \"fire\", system, Zone, Game, Owned)",
 				"new Case(\"larder\", \"larder\", system, Zone, Game, Owned)",
 			}) Assert.That(source, Does.Contain(token), token);
-			// The building object itself is never forced: no direct BuiltProperty/KingdomBuilt
-			// write anywhere in this file.
+			// The building object itself is never forced: no direct BuiltProperty write, and no
+			// SetIntProperty("KingdomBuilt" write, anywhere in this file. Reading it (the
+			// removal-census sweep) is legitimate and allowed.
 			Assert.That(source, Does.Not.Contain("BuiltProperty"));
-			Assert.That(source, Does.Not.Contain("\"KingdomBuilt\""));
+			Assert.That(source, Does.Not.Contain("SetIntProperty(\"KingdomBuilt\""));
 		}
 
 		[Test]
@@ -129,6 +130,21 @@ namespace ThousandAndFirst.Tests
 			Assert.That(source, Does.Contain("StrikeReceiptId != preStrikeReceiptId"));
 			Assert.That(source, Does.Contain(
 				"the old paid-construction receipt would misattribute salvage"));
+		}
+
+		[Test]
+		public void TheNewRegistryRowIsResolvedByReferenceAndClaimChecked()
+		{
+			// The real behavioural proof lives in KingdomTeardownStrikeRowClaimsTests (value
+			// tests on the pure predicate); this pin only proves the harness actually calls it
+			// with the strike receipt id and the live works/owner/zone, right after the strike.
+			string source = Read(Checks);
+			Assert.That(source, Does.Contain(
+				"KingdomConstruction.TryFind(StrikeReceiptId, out KingdomConstructionJob row)"));
+			Assert.That(source, Does.Contain(
+				"KingdomTeardownStrikeRowClaims.IsExpectedStrikeRow(row,"));
+			Assert.That(source, Does.Contain(
+				"works.IDIfAssigned, KingdomConstruction.OwnerOf(System), Zone.ZoneID,"));
 		}
 
 		[Test]
