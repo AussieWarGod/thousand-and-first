@@ -2,10 +2,10 @@
 
 ## Current 0.3.4 heart integration candidate — unverified
 
-3083 staged C# files; 437,656 physical lines; cold-install inventory contains 3114 files.
+3083 staged C# files; 437,668 physical lines; cold-install inventory contains 3114 files.
 Compile inventory: 3083 sources, baseline and compatibility symbols (3079 baseline).
 Direct `XRL` imports: 1438 files, 0 over the line limit. Zero at or above 300 lines.
-Inventory SHA-256: `5a700f0b155446c57d9adf9a45337d4f4f6a4cdc0a63274a93a06ac52c3f3b4b`.
+Inventory SHA-256: `42a34d27ac529934a9b3ae00d003fcba000553402ba3a277e4f173878eca1b0f`.
 Combines #141 authority, #144 shared-XL validation, #138/#139 rung settlement and #137 camp
 content/native fixture over dev with the verified 0.3.3 backmerge. Production and test-project
 merges are complete; compile, combined-suite, native progression and semantic review are owed.
@@ -25,6 +25,14 @@ The earlier seal errors disappear, but the heart still does not complete after a
 turns. Owned game stopped; no rung-2 acceptance claimed. Four compile modes clean; Linux strict
 14,502 + 5,575 cases, zero skips; tooling suite 796 tests with 11 existing platform skips.
 Read-only job/scaffold progress diagnostics added after that run; execution remains owed.
+
+Retained diagnostic `87679a5` run `heart034-progress-native.yKhmWV` confirms no labour:
+remaining work stays 2,250 and last-worked stays 39,601 from phase 1 through tick 42,327,
+beyond due tick 41,851; job remains Working without a failure string. Owned game stopped.
+Current draft replaces both Funded-only post-input dispatch gates with exact committed-input
+and fresh valid-job proof, retaining target-zone and failed-recovery refusal. Paid Working
+jobs keep their committed receipts and must reach ordinary labour dispatch. Compile, tests
+and native execution of this dispatch change remain owed; budgets are unchanged.
 
 Retained `77d9369` (production inventory `fce921c6bbcaff4992c3660b26d9b02a903b8f4f055b91c48aeff801669c0d05`):
 four compile modes clean; Linux strict 14,501 + 5,575 cases, zero skips. Native

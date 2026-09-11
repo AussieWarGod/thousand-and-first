@@ -102,9 +102,10 @@ namespace ThousandAndFirst
 						&& InputReceiptTouchesZone(routed, Z.ZoneID))
 					{
 						inputDriven = true;
-						DriveRoutedInput(System, Z, ref job, out fault);
-						if (!TryFind(job.Id, out job) || !targetHere
-							|| job.Phase != KingdomConstructionPhase.Funded) continue;
+						bool inputReady = DriveRoutedInput(System, Z, ref job, out fault);
+						if (!TryFind(job.Id, out job)
+							|| !KingdomConstructionRules.CanDispatchRecoveredInput(job, targetHere,
+								inputReady)) continue;
 					}
 					else if (!targetHere) continue;
 					if (KingdomConstructionRules.IsTerminal(job.Phase))
@@ -127,9 +128,10 @@ namespace ThousandAndFirst
 					}
 					if (!inputDriven && !string.IsNullOrEmpty(job.InputReceipt))
 					{
-						DriveRoutedInput(System, Z, ref job, out fault);
+						bool inputReady = DriveRoutedInput(System, Z, ref job, out fault);
 						if (!TryFind(job.Id, out job)
-							|| job.Phase != KingdomConstructionPhase.Funded) continue;
+							|| !KingdomConstructionRules.CanDispatchRecoveredInput(job, targetHere,
+								inputReady)) continue;
 					}
 					KingdomConstructionResumeAction action = KingdomConstructionRules.ResumeAction(job);
 					if (action == KingdomConstructionResumeAction.ResumeFunding)

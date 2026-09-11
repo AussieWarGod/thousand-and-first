@@ -31,6 +31,8 @@ namespace ThousandAndFirst.Harness
 						.Append(job.PhysicalPhase).Append("; started=").Append(job.StartedTick)
 						.Append("; due=").Append(job.DueTick).Append("; updated=").Append(job.UpdatedTick)
 						.Append("; failure=").Append(KingdomScenarioRules.Bounded(job.Failure));
+					if (KingdomConstructionRules.TryGetInputReceipt(job, out var input))
+						Evidence.Append("; input-phase=").Append(input.TxPhase);
 					var improvement = Heart?.GetPart<XRL.World.Parts.r_KingdomImprovement>();
 					var scaffold = improvement?.Scaffold?.GetPart<XRL.World.Parts.r_KingdomScaffold>();
 					Evidence.Append("; improvement-working=").Append(improvement?.Working)
