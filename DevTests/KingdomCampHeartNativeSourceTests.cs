@@ -352,7 +352,7 @@ namespace ThousandAndFirst.Tests
 			Assert.That(persona, Does.Contain("REQUEST=founding-first-city"));
 			Assert.That(persona, Does.Contain("VERBS=camp-heart-setup,camp-heart-check"));
 			Assert.That(persona, Does.Contain("SCRIPT=stagedigest;camp-heart-setup;advance 1200;"
-				+ "camp-heart-check;advance 2400;camp-heart-check;stagedigest"));
+				+ "camp-heart-check;advance 3600;camp-heart-check;stagedigest"));
 			Assert.That(persona, Does.Contain("EXPECT=stagedigest:OK~founded=false,"
 				+ "camp-heart-setup:OK~native-camp-heart phase=1,advance:OK,"
 				+ "camp-heart-check:OK~native-camp-heart phase=2,advance:OK,"

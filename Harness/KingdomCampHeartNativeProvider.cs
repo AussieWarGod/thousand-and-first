@@ -30,7 +30,7 @@ namespace ThousandAndFirst.Harness
 		internal const string CheckVerb = "camp-heart-check";
 		internal const string Receipt = "r_TAF_ScenarioCampHeartNative_v1";
 		private static readonly string[] Script = { "stagedigest", SetupVerb, "advance 1200",
-			CheckVerb, "advance 2400", CheckVerb, "stagedigest" };
+			CheckVerb, "advance 3600", CheckVerb, "stagedigest" };
 
 		public int ScenarioVerbApiVersion { get { return KingdomScenarioVerbApi.Version; } }
 

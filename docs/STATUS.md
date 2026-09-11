@@ -40,6 +40,14 @@ Current draft reuses the existing exact typed/legacy predecessor validator, reta
 scaffold identity, ownership and working-state guards. Native positive and detached-copy
 malformed/stale/foreign-payload negatives are added; execution remains owed.
 
+Native `4517620` run `heart034-dispatch-native.oEVhq5` now proves typed predecessor acceptance,
+malformed/stale/foreign-payload refusals and actual labour progression: 2,250 remaining at
+157,527 becomes 1,050 remaining with last-worked 159,600 at tick 159,927. Completion still RED;
+owned game stopped. Four compile modes and strict Linux 14,519 + 5,577 tests pass, zero skips.
+The next scenario adds one 1,200-turn daily interval (3,600 after paid-work observation),
+matching measured remaining labour and the prior-window charging rule. No production timing
+or completion state is changed. Full rung-2 completion remains unproven until the next run.
+
 Retained `77d9369` (production inventory `fce921c6bbcaff4992c3660b26d9b02a903b8f4f055b91c48aeff801669c0d05`):
 four compile modes clean; Linux strict 14,501 + 5,575 cases, zero skips. Native
 `heart034-bill-native.OwUR6t` proves occupied expansion refusal, normal founder movement clear,
