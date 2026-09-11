@@ -245,7 +245,9 @@ def _load_json(path: Path, *, reject_duplicates: bool = False) -> dict:
         result: dict = {}
         for key, item in pairs:
             if key in result:
-                raise ValidationError(f"{path.name} contains duplicate JSON field {key!r}")
+                raise ValidationError(
+                    f"{path.name} contains duplicate JSON field {key!r}"
+                )
             result[key] = item
         return result
 
@@ -279,7 +281,9 @@ def load_manifest(path: Path, require_preview: bool = True) -> dict:
     elif (reason := _qud_text_error(description)) is not None:
         errors.append(f"manifest description {reason}")
     elif len(description.encode("utf-8")) >= 8000:
-        errors.append("Workshop Description must be nonempty and under 8000 UTF-8 bytes")
+        errors.append(
+            "Workshop Description must be nonempty and under 8000 UTF-8 bytes"
+        )
     else:
         description_safe_for_canonical = True
         if "slice 0.1" in description.lower() or "debug wish" in description.lower():
@@ -492,25 +496,6 @@ def _identity_text_valid(value: object, minimum: int, maximum: int) -> bool:
         and PLACEHOLDER_SENTINEL.search(value) is None
         and FORGED_HUMAN_SIGNATURE.search(value) is None
         and _qud_text_error(value) is None
-    )
-
-
-
-# Store preview media provenance (who physically captured/reviewed the Steam listing
-# screenshot) is a deliberate legal/creative-attribution boundary, not a test gate, and stays
-# human per the author ruling of 2026-09-11: automation may not stand in as the capturer or
-# the no-generative-assistance reviewer of the public preview image.
-AUTOMATION_IDENTITY_INDICATOR = re.compile(
-    r"\b(?:driver|automated|automation|codex|claude|gpt|bot|pipeline|ci|workflow|"
-    r"script|structural review|native driver)\b",
-    re.IGNORECASE,
-)
-
-
-def _human_only_text_valid(value: object, minimum: int, maximum: int) -> bool:
-    return (
-        _identity_text_valid(value, minimum, maximum)
-        and AUTOMATION_IDENTITY_INDICATOR.search(value) is None
     )
 
 
@@ -770,11 +755,13 @@ def _validated_alpha_record(record_path: Path) -> dict:
             f"Alpha candidate fields must exactly match schema version {schema}; "
             f"missing={sorted(keys - set(record))}, extra={sorted(set(record) - keys)}"
         )
-    if (
-        type(schema) is not int
-        or schema not in (LEGACY_ALPHA_CANDIDATE_SCHEMA, ALPHA_CANDIDATE_SCHEMA)
+    if type(schema) is not int or schema not in (
+        LEGACY_ALPHA_CANDIDATE_SCHEMA,
+        ALPHA_CANDIDATE_SCHEMA,
     ):
-        errors.append("Alpha candidate schemaVersion must be 1 (historical 0.3.0 only) or 2")
+        errors.append(
+            "Alpha candidate schemaVersion must be 1 (historical 0.3.0 only) or 2"
+        )
     alpha_version = record.get("releaseVersion")
     if (
         not isinstance(alpha_version, str)
@@ -784,8 +771,13 @@ def _validated_alpha_record(record_path: Path) -> dict:
             f"Alpha candidate releaseVersion must be {FIRST_ALPHA_RELEASE_VERSION} "
             "or a later canonical 0.3.x patch"
         )
-    if schema == LEGACY_ALPHA_CANDIDATE_SCHEMA and alpha_version != FIRST_ALPHA_RELEASE_VERSION:
-        errors.append("Alpha candidate schema 1 is historical 0.3.0 only; later patches require schema 2")
+    if (
+        schema == LEGACY_ALPHA_CANDIDATE_SCHEMA
+        and alpha_version != FIRST_ALPHA_RELEASE_VERSION
+    ):
+        errors.append(
+            "Alpha candidate schema 1 is historical 0.3.0 only; later patches require schema 2"
+        )
     if record.get("releaseChannel") != ALPHA_RELEASE_CHANNEL:
         errors.append(
             f"Alpha candidate releaseChannel must be {ALPHA_RELEASE_CHANNEL!r}"
@@ -802,20 +794,36 @@ def _validated_alpha_record(record_path: Path) -> dict:
         )
     if record.get("gameCoreBuild") != GAME_CORE_BUILD:
         errors.append(f"Alpha candidate gameCoreBuild must be {GAME_CORE_BUILD}")
-    id_fields = ("workshopId", "privateWorkshopId") if schema == ALPHA_CANDIDATE_SCHEMA else ("workshopId",)
+    id_fields = (
+        ("workshopId", "privateWorkshopId")
+        if schema == ALPHA_CANDIDATE_SCHEMA
+        else ("workshopId",)
+    )
     for field in id_fields:
         try:
             _workshop_id({"WorkshopId": record.get(field)})
         except ValidationError as error:
             errors.append(f"Alpha candidate {field}: {error}")
-    if schema == ALPHA_CANDIDATE_SCHEMA and record.get("privateWorkshopId") == record.get("workshopId"):
-        errors.append("Alpha candidate privateWorkshopId must differ from public workshopId")
+    if schema == ALPHA_CANDIDATE_SCHEMA and record.get(
+        "privateWorkshopId"
+    ) == record.get("workshopId"):
+        errors.append(
+            "Alpha candidate privateWorkshopId must differ from public workshopId"
+        )
     for field in ("previewSha256", "privatePackageReceiptSha256"):
         value = record.get(field)
-        if not isinstance(value, str) or re.fullmatch(r"[0-9a-f]{64}", value) is None or value == "0" * 64:
-            errors.append(f"Alpha candidate {field} must be a nonzero lowercase SHA-256")
+        if (
+            not isinstance(value, str)
+            or re.fullmatch(r"[0-9a-f]{64}", value) is None
+            or value == "0" * 64
+        ):
+            errors.append(
+                f"Alpha candidate {field} must be a nonzero lowercase SHA-256"
+            )
     if record.get("previewSha256") == INTERIM_PREVIEW_SHA256:
-        errors.append("Alpha candidate refuses the known interim preview; capture the final native preview")
+        errors.append(
+            "Alpha candidate refuses the known interim preview; capture the final native preview"
+        )
     if errors:
         raise ValidationError("Alpha candidate is invalid; " + "; ".join(errors))
     return record
@@ -830,13 +838,18 @@ def validate_alpha_workshop_binding(
     public = _load_json(public_workshop_path, reject_duplicates=True)
     private_id, public_id = _workshop_id(private), _workshop_id(public)
     expected_private = (
-        record["workshopId"] if record["schemaVersion"] == LEGACY_ALPHA_CANDIDATE_SCHEMA
+        record["workshopId"]
+        if record["schemaVersion"] == LEGACY_ALPHA_CANDIDATE_SCHEMA
         else record["privateWorkshopId"]
     )
     if private.get("Visibility") != "0" or public.get("Visibility") != "2":
-        raise ValidationError("Alpha Workshop binding requires exact private Visibility '0' and public Visibility '2'")
+        raise ValidationError(
+            "Alpha Workshop binding requires exact private Visibility '0' and public Visibility '2'"
+        )
     if private_id != expected_private or public_id != record["workshopId"]:
-        raise ValidationError("Alpha Workshop binding IDs do not match the validated candidate record")
+        raise ValidationError(
+            "Alpha Workshop binding IDs do not match the validated candidate record"
+        )
     return private_id, public_id
 
 
@@ -1006,69 +1019,20 @@ def validate_release_evidence(
             errors,
             repository_root,
         )
-        preview_review = verification.get("previewReview")
-        _validate_artifact_binding(
-            preview_review,
-            "verification.previewReview",
-            errors,
-            repository_root,
-            expected_pass_id=PREVIEW_REVIEW_PASS_ID,
-            extra_keys={
-                "source",
-                "generativeAssistance",
-                "previewSha256",
-                "capturedBy",
-                "captureUtc",
-                "sourceSave",
-                "editSummary",
-                "reviewedBy",
-                "completedUtc",
-            },
+        # Preview-media provenance (author ruling, 2026-09-11: the 2026-09-11 "no manual test
+        # gate, ever" ruling supersedes the earlier "media/listing stays human" carve-out too).
+        # Machine-verifiable media checks (PNG structure, exact dimensions, size, hash bound to
+        # the staged preview.png) plus a truthful capture provenance artefact (tool/run id,
+        # capture log SHA-256) replace a mandatory human capturer/reviewer. A human aesthetic
+        # review is OPTIONAL: reviewedBy/completedUtc may be null (not performed), or a real
+        # identity if one did review it -- a forged human-signature claim is still refused.
+        try:
+            validate_preview(preview_path)
+        except ValidationError as error:
+            errors.append(f"release evidence preview media check failed: {error}")
+        _validate_preview_review(
+            verification.get("previewReview"), preview_hash, errors, repository_root
         )
-        if isinstance(preview_review, dict):
-            if preview_review.get("source") != "native-game-screenshot":
-                errors.append(
-                    "release evidence verification.previewReview.source must be 'native-game-screenshot'"
-                )
-            if (
-                type(preview_review.get("generativeAssistance")) is not bool
-                or preview_review.get("generativeAssistance") is not False
-            ):
-                errors.append(
-                    "release evidence verification.previewReview.generativeAssistance must be False"
-                )
-            if preview_review.get("previewSha256") != preview_hash:
-                errors.append(
-                    "release evidence verification.previewReview.previewSha256 must match preview.png"
-                )
-            if not _human_only_text_valid(preview_review.get("capturedBy"), 2, 80):
-                errors.append(
-                    "release evidence verification.previewReview.capturedBy must name the "
-                    "human capturer (public preview media provenance stays human by author "
-                    "ruling; automation may not stand in)"
-                )
-            if not _second_precision_utc(preview_review.get("captureUtc")):
-                errors.append(
-                    "release evidence verification.previewReview.captureUtc must be a real second-precision UTC date"
-                )
-            if not _identity_text_valid(preview_review.get("sourceSave"), 5, 200):
-                errors.append(
-                    "release evidence verification.previewReview.sourceSave must identify the native source save"
-                )
-            if not _identity_text_valid(preview_review.get("editSummary"), 10, 500):
-                errors.append(
-                    "release evidence verification.previewReview.editSummary must describe the crop and edits"
-                )
-            if not _human_only_text_valid(preview_review.get("reviewedBy"), 2, 80):
-                errors.append(
-                    "release evidence verification.previewReview.reviewedBy must name the "
-                    "human reviewer (public preview media provenance stays human by author "
-                    "ruling; automation may not stand in)"
-                )
-            if not _second_precision_utc(preview_review.get("completedUtc")):
-                errors.append(
-                    "release evidence verification.previewReview.completedUtc must be a real second-precision UTC date"
-                )
         protocols = verification.get("numberedProtocols")
         if not isinstance(protocols, dict) or set(protocols) != {
             "artifactRef",
@@ -1303,7 +1267,9 @@ def validate_release_evidence(
         )
         exit_code = private.get("driverExitCode")
         if type(exit_code) is not int or exit_code != 0:
-            errors.append("release evidence privateSubscription.driverExitCode must be 0")
+            errors.append(
+                "release evidence privateSubscription.driverExitCode must be 0"
+            )
         completed = private.get("completedUtc")
         if not _second_precision_utc(completed):
             errors.append(
@@ -1315,7 +1281,10 @@ def validate_release_evidence(
     # as one automated, reproducible, fixed-seed run. Missing reachability or any non-PASS step
     # is an unresolved release requirement (FAIL) with no waiver and no blanket skip.
     longform = evidence.get("longFormScenario")
-    if not isinstance(longform, dict) or set(longform) != {"artifactRef", "artifactSha256"}:
+    if not isinstance(longform, dict) or set(longform) != {
+        "artifactRef",
+        "artifactSha256",
+    }:
         errors.append(
             "release evidence longFormScenario fields must be artifactRef and artifactSha256"
         )
@@ -1328,12 +1297,110 @@ def validate_release_evidence(
             include_pass_id=False,
         )
         _validate_longform_scenario_results(
-            longform.get("artifactRef"), errors, repository_root
+            longform.get("artifactRef"),
+            errors,
+            repository_root,
+            expected_candidate_commit=candidate or None,
+            expected_game_build=GAME_CORE_BUILD,
         )
 
     if errors:
         raise ValidationError("release evidence is invalid; " + "; ".join(errors))
     return candidate
+
+
+def _validate_preview_review(
+    preview_review: object, preview_hash: str, errors: list[str], repository_root: Path
+) -> None:
+    """Preview-media provenance (author correction, 2026-09-11): machine-verifiable media
+    checks plus a truthful capture-provenance artefact replace a mandatory human capturer;
+    a human aesthetic review is OPTIONAL (reviewedBy/completedUtc both null, or both a real,
+    non-forged identity/timestamp)."""
+    _validate_artifact_binding(
+        preview_review,
+        "verification.previewReview",
+        errors,
+        repository_root,
+        expected_pass_id=PREVIEW_REVIEW_PASS_ID,
+        extra_keys={
+            "source",
+            "generativeAssistance",
+            "previewSha256",
+            "capturedBy",
+            "captureUtc",
+            "sourceSave",
+            "editSummary",
+            "captureProvenanceRef",
+            "captureProvenanceSha256",
+            "reviewedBy",
+            "completedUtc",
+        },
+    )
+    if not isinstance(preview_review, dict):
+        return
+    if preview_review.get("source") != "native-game-screenshot":
+        errors.append(
+            "release evidence verification.previewReview.source must be 'native-game-screenshot'"
+        )
+    if (
+        type(preview_review.get("generativeAssistance")) is not bool
+        or preview_review.get("generativeAssistance") is not False
+    ):
+        errors.append(
+            "release evidence verification.previewReview.generativeAssistance must be False"
+        )
+    if preview_review.get("previewSha256") != preview_hash:
+        errors.append(
+            "release evidence verification.previewReview.previewSha256 must match preview.png"
+        )
+    if not _identity_text_valid(preview_review.get("capturedBy"), 2, 80):
+        errors.append(
+            "release evidence verification.previewReview.capturedBy must name the capturer "
+            "(a person, or an honestly labelled automated capture identity); a forged "
+            "human-signature claim is never accepted"
+        )
+    if not _second_precision_utc(preview_review.get("captureUtc")):
+        errors.append(
+            "release evidence verification.previewReview.captureUtc must be a real second-precision UTC date"
+        )
+    if not _identity_text_valid(preview_review.get("sourceSave"), 5, 200):
+        errors.append(
+            "release evidence verification.previewReview.sourceSave must identify the native source save"
+        )
+    if not _identity_text_valid(preview_review.get("editSummary"), 10, 500):
+        errors.append(
+            "release evidence verification.previewReview.editSummary must describe the crop and edits"
+        )
+    _validate_artifact_binding(
+        {
+            "artifactRef": preview_review.get("captureProvenanceRef"),
+            "artifactSha256": preview_review.get("captureProvenanceSha256"),
+        },
+        "verification.previewReview.captureProvenance",
+        errors,
+        repository_root,
+        include_pass_id=False,
+    )
+    reviewed_by = preview_review.get("reviewedBy")
+    completed = preview_review.get("completedUtc")
+    if reviewed_by is None and completed is None:
+        pass
+    elif reviewed_by is None or completed is None:
+        errors.append(
+            "release evidence verification.previewReview.reviewedBy and completedUtc must "
+            "both be null (no aesthetic review performed) or both present"
+        )
+    else:
+        if not _identity_text_valid(reviewed_by, 2, 80):
+            errors.append(
+                "release evidence verification.previewReview.reviewedBy must name the "
+                "reviewer (a person, or an honestly labelled automated identity); a forged "
+                "human-signature claim is never accepted"
+            )
+        if not _second_precision_utc(completed):
+            errors.append(
+                "release evidence verification.previewReview.completedUtc must be a real second-precision UTC date"
+            )
 
 
 NATIVE_DRIVER_CHECKS = (
@@ -1350,7 +1417,9 @@ def _validate_native_driver_results(
 ) -> None:
     """Read the bound native-driver results artifact and require every check PASS with a
     stopped process. Replaces a human tester's word with a checkable automated record."""
-    if not isinstance(artifact_ref, str) or not _safe_evidence_artifact_ref(artifact_ref):
+    if not isinstance(artifact_ref, str) or not _safe_evidence_artifact_ref(
+        artifact_ref
+    ):
         return
     try:
         path = repository_root.joinpath(*artifact_ref.split("/"))
@@ -1366,9 +1435,7 @@ def _validate_native_driver_results(
         )
         return
     if not isinstance(payload, dict) or not isinstance(payload.get("results"), list):
-        errors.append(
-            "native driver results must be an object with a results array"
-        )
+        errors.append("native driver results must be an object with a results array")
         return
     seen: dict[str, bool] = {}
     for entry in payload["results"]:
@@ -1388,7 +1455,8 @@ def _validate_native_driver_results(
     missing = [check for check in NATIVE_DRIVER_CHECKS if check not in seen]
     if missing:
         errors.append(
-            "native driver results is missing an all-PASS entry for: " + ", ".join(missing)
+            "native driver results is missing an all-PASS entry for: "
+            + ", ".join(missing)
         )
 
 
@@ -1421,24 +1489,94 @@ def _validate_native_driver_results(
 # blanket skip. "engineTurnCompletion" is the paid commission's physical debit resolving,
 # by an actual engine turn, into a functional building; a source-level or simulated claim
 # does not satisfy it.
+LONGFORM_SCENARIO_SCHEMA = 1
+
+# The exact, ordered, non-repeatable step chain (Codex root protocol review, 2026-09-11).
 LONGFORM_SCENARIO_STEPS = (
     "startup",
-    "stockpileQuote",
-    "paidCommission",
-    "engineTurnCompletion",
+    "quote",
+    "paid-commission",
+    "engine-turn-build",
     "save",
-    "coldLoad",
-    "nextAction",
+    "cold-load",
+    "next-action",
 )
+# Session membership: startup..save happen inside one continuous live process; cold-load..
+# next-action happen inside the SEPARATE process that reloaded the save. Per-step "stopped"
+# flags are meaningless for a continuous live game and are refused; only the two whole
+# sessions carry a stopped fact.
+LONGFORM_SESSION_FOR_STEP = {
+    "startup": "save-session",
+    "quote": "save-session",
+    "paid-commission": "save-session",
+    "engine-turn-build": "save-session",
+    "save": "save-session",
+    "cold-load": "cold-load-session",
+    "next-action": "cold-load-session",
+}
+LONGFORM_SESSION_ROLES = ("save-session", "cold-load-session")
+LONGFORM_CONTINUITY_KEYS = {
+    "realmId",
+    "cityId",
+    "jobId",
+    "buildingId",
+    "plotId",
+    "saveId",
+}
+LONGFORM_PROCESS_KEYS = {"role", "launchId", "started", "stopped"}
+LONGFORM_STEP_KEYS = {
+    "step",
+    "status",
+    "turnsUsed",
+    "elapsedSeconds",
+    "turnBudget",
+    "timeoutSeconds",
+}
+LONGFORM_TOP_KEYS = {
+    "schemaVersion",
+    "driver",
+    "runId",
+    "seed",
+    "candidateCommit",
+    "runtimeInventorySha256",
+    "gameBuildId",
+    "logRef",
+    "logSha256",
+    "continuity",
+    "processes",
+    "steps",
+}
+
+
+class _RejectDuplicateKeys(dict):
+    """Marker so json.loads' object_pairs_hook can report duplicate keys instead of silently
+    keeping the last one -- schema discipline per Codex root protocol review, 2026-09-11."""
+
+
+def _no_duplicate_object_pairs(pairs: list[tuple[str, object]]) -> dict:
+    seen: dict[str, object] = {}
+    for key, value in pairs:
+        if key in seen:
+            raise ValueError(f"duplicate JSON key {key!r}")
+        seen[key] = value
+    return seen
 
 
 def _validate_longform_scenario_results(
-    artifact_ref: object, errors: list[str], repository_root: Path
+    artifact_ref: object,
+    errors: list[str],
+    repository_root: Path,
+    *,
+    expected_candidate_commit: str | None,
+    expected_game_build: str,
 ) -> None:
-    """Read the bound long-form scenario artefact: fixed seed, bounded turn/timeout budget, a
-    driver/run identity bound to a retained log hash, and all seven steps PASS with a stopped
-    process. Replaces a human playtester's word with a checkable automated record."""
-    if not isinstance(artifact_ref, str) or not _safe_evidence_artifact_ref(artifact_ref):
+    """Read the bound long-form scenario artefact and require it to prove one real, continuous,
+    fixed-seed, bounded run through the exact seven-step chain -- not seven arbitrary PASS
+    strings. See LONGFORM_SCENARIO_STEPS et al. above for the authoritative schema; the harness
+    that produces this file must target these exact field names and PASS semantics."""
+    if not isinstance(artifact_ref, str) or not _safe_evidence_artifact_ref(
+        artifact_ref
+    ):
         return
     try:
         path = repository_root.joinpath(*artifact_ref.split("/"))
@@ -1446,16 +1584,29 @@ def _validate_longform_scenario_results(
         resolved.relative_to(repository_root)
         if path.is_symlink() or not resolved.is_file():
             raise OSError("artifact is not a regular file")
-        payload = json.loads(resolved.read_text(encoding="utf-8-sig"))
+        payload = json.loads(
+            resolved.read_text(encoding="utf-8-sig"),
+            object_pairs_hook=_no_duplicate_object_pairs,
+        )
     except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as error:
         errors.append(
             "release evidence longFormScenario.artifactRef cannot read scenario results: "
             f"{error}"
         )
         return
-    if not isinstance(payload, dict):
-        errors.append("long-form scenario results must be an object")
+    if not isinstance(payload, dict) or set(payload) != LONGFORM_TOP_KEYS:
+        errors.append(
+            "long-form scenario results fields must exactly match schema version "
+            f"{LONGFORM_SCENARIO_SCHEMA}: " + ", ".join(sorted(LONGFORM_TOP_KEYS))
+        )
         return
+    if (
+        type(payload.get("schemaVersion")) is not int
+        or payload["schemaVersion"] != LONGFORM_SCENARIO_SCHEMA
+    ):
+        errors.append(
+            f"long-form scenario results schemaVersion must be {LONGFORM_SCENARIO_SCHEMA}"
+        )
     if not _identity_text_valid(payload.get("driver"), 2, 80):
         errors.append(
             "long-form scenario results driver must name the driver (a person, or an "
@@ -1463,51 +1614,169 @@ def _validate_longform_scenario_results(
             "accepted"
         )
     if not isinstance(payload.get("runId"), str) or not payload["runId"].strip():
-        errors.append("long-form scenario results runId must be a non-empty run identifier")
-    if type(payload.get("seed")) is not int:
-        errors.append("long-form scenario results seed must be a fixed integer world seed")
-    for bound_field in ("maxTurns", "timeoutSeconds"):
-        value = payload.get(bound_field)
-        if type(value) is not int or value <= 0:
-            errors.append(
-                f"long-form scenario results {bound_field} must be a positive integer budget"
-            )
-    log_hash = payload.get("logSha256")
-    if not isinstance(log_hash, str) or re.fullmatch(r"[0-9a-f]{64}", log_hash) is None or log_hash == "0" * 64:
         errors.append(
-            "long-form scenario results logSha256 must be a nonzero lowercase SHA-256"
+            "long-form scenario results runId must be a non-empty run identifier"
         )
+    if type(payload.get("seed")) is not int:
+        errors.append(
+            "long-form scenario results seed must be a fixed integer world seed"
+        )
+
+    # Bind to the exercised candidate: same commit, same runtime inventory digest, same game
+    # build -- never an arbitrary hashed log against unrelated PASS strings.
+    candidate = payload.get("candidateCommit")
+    if (
+        not isinstance(candidate, str)
+        or re.fullmatch(r"[0-9a-f]{40}", candidate) is None
+    ):
+        errors.append(
+            "long-form scenario results candidateCommit must be a lowercase full Git commit"
+        )
+    elif expected_candidate_commit and candidate != expected_candidate_commit:
+        errors.append(
+            "long-form scenario results candidateCommit must match the release evidence "
+            "candidateCommit"
+        )
+    inventory_digest = payload.get("runtimeInventorySha256")
+    if (
+        not isinstance(inventory_digest, str)
+        or re.fullmatch(r"[0-9a-f]{64}", inventory_digest) is None
+        or inventory_digest == "0" * 64
+    ):
+        errors.append(
+            "long-form scenario results runtimeInventorySha256 must be a nonzero lowercase "
+            "SHA-256 structural digest"
+        )
+    if payload.get("gameBuildId") != expected_game_build:
+        errors.append(
+            f"long-form scenario results gameBuildId must be {expected_game_build!r}"
+        )
+
+    log_hash = payload.get("logSha256")
     _validate_artifact_binding(
-        {"artifactRef": payload.get("logRef"), "artifactSha256": log_hash if isinstance(log_hash, str) else "0" * 64},
+        {
+            "artifactRef": payload.get("logRef"),
+            "artifactSha256": log_hash if isinstance(log_hash, str) else "0" * 64,
+        },
         "longFormScenario.log",
         errors,
         repository_root,
         include_pass_id=False,
     )
-    if not isinstance(payload.get("steps"), list):
-        errors.append("long-form scenario results must have a steps array")
-        return
-    seen: dict[str, bool] = {}
-    for entry in payload["steps"]:
-        if (
-            not isinstance(entry, dict)
-            or set(entry) != {"step", "status", "processStopped"}
-            or entry.get("step") not in LONGFORM_SCENARIO_STEPS
-            or entry.get("status") != "PASS"
-            or entry.get("processStopped") is not True
-        ):
+
+    # Continuity identities: the same realm/city/job/building/plot/save survive the whole
+    # chain, in particular across the save -> cold-load -> next-action boundary.
+    continuity = payload.get("continuity")
+    if not isinstance(continuity, dict) or set(continuity) != LONGFORM_CONTINUITY_KEYS:
+        errors.append(
+            "long-form scenario results continuity fields must be "
+            + ", ".join(sorted(LONGFORM_CONTINUITY_KEYS))
+        )
+    else:
+        for key in LONGFORM_CONTINUITY_KEYS:
+            value = continuity.get(key)
+            if not isinstance(value, str) or not value.strip():
+                errors.append(
+                    f"long-form scenario results continuity.{key} must be a non-empty identity"
+                )
+
+    # Process lifecycle: exactly the save-session and cold-load-session, each stopped, never a
+    # per-step fabrication.
+    processes = payload.get("processes")
+    if not isinstance(processes, list) or len(processes) != len(LONGFORM_SESSION_ROLES):
+        errors.append(
+            "long-form scenario results processes must have exactly the roles: "
+            + ", ".join(LONGFORM_SESSION_ROLES)
+        )
+    else:
+        seen_roles: dict[str, bool] = {}
+        for entry in processes:
+            if (
+                not isinstance(entry, dict)
+                or set(entry) != LONGFORM_PROCESS_KEYS
+                or entry.get("role") not in LONGFORM_SESSION_ROLES
+                or entry.get("role") in seen_roles
+                or not isinstance(entry.get("launchId"), str)
+                or not entry["launchId"].strip()
+                or not _second_precision_utc(entry.get("started"))
+                or entry.get("stopped") is not True
+            ):
+                errors.append(
+                    "long-form scenario results processes entries must each be an object with "
+                    "role, launchId, started, and stopped true, one per session role, no "
+                    "duplicates"
+                )
+                continue
+            seen_roles[entry["role"]] = True
+        missing_roles = [
+            role for role in LONGFORM_SESSION_ROLES if role not in seen_roles
+        ]
+        if missing_roles:
             errors.append(
-                "long-form scenario results steps entries must each be an object with step, "
-                "status 'PASS', and processStopped true"
+                "long-form scenario results processes is missing a stopped entry for: "
+                + ", ".join(missing_roles)
+            )
+
+    # The exact ordered, non-repeatable seven-step chain, each bounded by its own recorded
+    # turn/wall-clock usage against its own budget.
+    steps = payload.get("steps")
+    if not isinstance(steps, list) or len(steps) != len(LONGFORM_SCENARIO_STEPS):
+        errors.append(
+            "long-form scenario results steps must be the exact ordered chain: "
+            + ", ".join(LONGFORM_SCENARIO_STEPS)
+        )
+        return
+    for index, (expected_step, entry) in enumerate(zip(LONGFORM_SCENARIO_STEPS, steps)):
+        if not isinstance(entry, dict) or set(entry) != LONGFORM_STEP_KEYS:
+            errors.append(
+                f"long-form scenario results steps[{index}] fields must be "
+                + ", ".join(sorted(LONGFORM_STEP_KEYS))
             )
             continue
-        seen[entry["step"]] = True
-    missing_steps = [step for step in LONGFORM_SCENARIO_STEPS if step not in seen]
-    if missing_steps:
-        errors.append(
-            "long-form scenario results is missing an all-PASS entry for: "
-            + ", ".join(missing_steps)
-        )
+        if entry.get("step") != expected_step:
+            errors.append(
+                f"long-form scenario results steps[{index}].step must be {expected_step!r} "
+                "in the fixed chain order, never shuffled, duplicated, or substituted"
+            )
+        if entry.get("status") != "PASS":
+            errors.append(
+                f"long-form scenario results steps[{index}] ({expected_step}) must be PASS"
+            )
+        turns_used = entry.get("turnsUsed")
+        turn_budget = entry.get("turnBudget")
+        elapsed = entry.get("elapsedSeconds")
+        timeout = entry.get("timeoutSeconds")
+        for field, value in (
+            ("turnsUsed", turns_used),
+            ("turnBudget", turn_budget),
+            ("elapsedSeconds", elapsed),
+            ("timeoutSeconds", timeout),
+        ):
+            if type(value) is not int or value < 0:
+                errors.append(
+                    f"long-form scenario results steps[{index}].{field} must be a "
+                    "non-negative integer"
+                )
+        if (
+            type(turns_used) is int
+            and type(turn_budget) is int
+            and turn_budget > 0
+            and turns_used > turn_budget
+        ):
+            errors.append(
+                f"long-form scenario results steps[{index}] ({expected_step}) exceeded its "
+                "turnBudget"
+            )
+        if (
+            type(elapsed) is int
+            and type(timeout) is int
+            and timeout > 0
+            and elapsed > timeout
+        ):
+            errors.append(
+                f"long-form scenario results steps[{index}] ({expected_step}) exceeded its "
+                "timeoutSeconds"
+            )
 
 
 def _validate_artifact_binding(
@@ -1947,7 +2216,9 @@ def main(argv: list[str] | None = None) -> int:
             for artifact_ref in release_evidence_artifact_refs(args.record):
                 print(artifact_ref)
         elif args.command == "alpha-workshop-binding":
-            validate_alpha_workshop_binding(args.record, args.private_workshop, args.public_workshop)
+            validate_alpha_workshop_binding(
+                args.record, args.private_workshop, args.public_workshop
+            )
         elif args.command == "workshop-id":
             print(_workshop_id(_load_json(args.path)))
         elif args.command == "testing-pass-ids":

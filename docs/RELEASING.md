@@ -318,15 +318,23 @@ remain human).
 
 Copy `docs/RELEASE_EVIDENCE.example.json` to `docs/RELEASE_EVIDENCE.json`. Bind exact release
 version, pre-evidence candidate commit, Qud marketing/core build, `Assembly-CSharp.dll` SHA-256,
-Workshop ID, preview hash, private receipt hash, the native driver's `results.json` (all-PASS,
-every process cleanly stopped) bound by hash, the long-form behavioural scenario artefact
-(author/Codex addendum, 2026-09-11) — one automated, reproducible, fixed-seed run through
-startup, a stockpile quote, a paid commission with physical debit, an actual engine turn
-completing that commission into a functional building, save, cold-load, and one further action,
-every step PASS with its process stopped, bounded turn/timeout budget recorded, and its driver
-log bound by SHA-256 (schema documented next to `Tools/workshop_metadata.py`'s
-`_validate_longform_scenario_results`; missing reachability or any non-PASS step is unresolved,
-never waived) — every numbered TESTING pass or reviewed waiver, and
+Workshop ID, preview hash (with capture provenance bound by hash; a human aesthetic reviewer is
+optional, never required — see `verification.previewReview` below), private receipt hash, the
+native driver's `results.json` (all-PASS, every process cleanly stopped) bound by hash, and the
+long-form behavioural scenario artefact (author/Codex addendum, 2026-09-11; schema tightened by
+Codex root protocol review the same day) — one automated, reproducible, fixed-seed run through
+the EXACT ORDERED chain `startup, quote, paid-commission, engine-turn-build, save, cold-load,
+next-action` (never shuffled, duplicated, or missing a step), bound to the exercised
+`candidateCommit`, runtime inventory digest and game build, carrying one continuous
+`save-session` process (startup..save) and one separate `cold-load-session` process
+(cold-load..next-action) each recorded stopped — never a per-step stopped flag, which the schema
+refuses outright — continuity identities (realm, city, job, building, plot, save) that must
+survive the whole chain, every step PASS with its own recorded `turnsUsed`/`elapsedSeconds`
+at or under its own `turnBudget`/`timeoutSeconds`, and its driver log bound by SHA-256 (schema
+documented next to `Tools/workshop_metadata.py`'s `_validate_longform_scenario_results`; the
+JSON is parsed with a duplicate-key guard; missing reachability, wrong order, an over-budget
+step, or any non-PASS step is unresolved, never waived) — every numbered TESTING pass or
+reviewed waiver, and
 retained artifacts below `docs/release-evidence/`. Identities and times must be real; placeholders,
 a forged human-signature claim authored by automation, missing artifacts, hash drift, a non-PASS or
 missing `processStopped` driver entry, unknown pass IDs, duplicate IDs, reordered IDs, or stale
@@ -353,6 +361,18 @@ git tag -a "v${VERSION}" -m "The Thousand and First ${VERSION}"
 ```
 
 ## 6. Upload and verify public bytes
+
+Author ruling 2026-09-11 extends the "no manual test gate for release, forever" policy to this
+step: when the automated publisher (`.github/workflows/release.yml`, the self-hosted runner lane
+from the 2026-09-08 ruling below) is used, its own recorded run id plus the `finalize` job's
+receipt satisfy title/description/tags/preview/version/visibility confirmation, the post-success
+inventory/receipt re-check, the subscribed-bytes verification, and the repeated loader/save-reload
+smoke (via the bound `driverResultsRef`/`longFormScenario` artefacts) — none of that is a human
+step anymore. A human is needed only where Steam itself prompts: sign-in, Steam Guard, or a terms
+acceptance dialog, which the runner surfaces as an exit-4 `NeedsUser` outcome the operator clears.
+
+The steps below remain the LOCAL/MANUAL fallback path (no automated publisher run) and are
+unchanged for that path only:
 
 Move the verified public folder into exactly one Qud Mods root. Verify `Tools/stage.sh verify` and
 its `.sha256` receipt before opening Qud. In Workshop UI, confirm title, description, tags, preview,
@@ -488,7 +508,9 @@ Order of a full 0.3.x release:
    compares the tagged commit against the `origin/main` tip as the job reads it, not as it stood at
    trigger time, so a push to `main` while a release run is queued behind the concurrency group
    turns a legitimate release into a refusal. Never cancel a running `publish` or `finalize` job.
-6. Human: the complete section-6 post-upload checklist, once the `finalize` job is green.
+6. Once the `finalize` job is green, its run id and receipt satisfy the section-6 post-upload
+   checklist automatically; a human is needed only if the run itself reports a `NeedsUser`
+   Steam sign-in/Guard/terms prompt.
 
 `SubmittedUnverified` is not delivery, so the pipeline does not stop there. A `verify` job polls
 `-Verify` for up to 20 minutes, and **only** when it reports `SubscribedInstallationVerified` does
@@ -661,8 +683,10 @@ commits precede the release PR. The Public job runs against production only from
 the frozen staging-to-production `WorkshopId` and visibility metadata delta, and record both package
 digests. Never hide or mutate the public item for routine candidate validation. If the receipt
 schema cannot express that separation safely, stop promotion. A successful API response does not replace the
-subscribed-byte receipt, native load/save/reload smoke, signed-out page inspection, or human media
-review in sections 4 and 6.
+subscribed-byte receipt, the automated native load/save/reload driver evidence, the automated
+signed-out page/listing inspection, or the preview-media provenance artefact of sections 4 and 6 —
+all of which are automated-driver/artefact requirements, not human steps, since the 2026-09-11
+ruling; a human is needed only for an actual Steam sign-in/Guard/terms prompt (`NeedsUser`).
 
 ### Self-hosted runner security
 

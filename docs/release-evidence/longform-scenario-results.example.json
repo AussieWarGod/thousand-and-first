@@ -1,18 +1,32 @@
 {
+  "schemaVersion": 1,
   "driver": "DRIVER_NAME_OR_HONESTLY_LABELLED_AUTOMATED_IDENTITY",
   "runId": "OPAQUE_RUN_IDENTIFIER",
   "seed": 0,
-  "maxTurns": 0,
-  "timeoutSeconds": 0,
+  "candidateCommit": "FULL_LOWERCASE_PRIVATE_CANDIDATE_COMMIT",
+  "runtimeInventorySha256": "SHA256_PRINTED_BY_TOOLS_CHECK_STRUCTURE_FOR_THE_EXERCISED_TREE",
+  "gameBuildId": "2.0.211.51",
   "logRef": "docs/release-evidence/longform-scenario.log",
   "logSha256": "SHA256_OF_RETAINED_RAW_DRIVER_LOG",
+  "continuity": {
+    "realmId": "REPLACE_WITH_EXERCISED_REALM_ID",
+    "cityId": "REPLACE_WITH_EXERCISED_CITY_ID",
+    "jobId": "REPLACE_WITH_EXERCISED_CONSTRUCTION_JOB_ID",
+    "buildingId": "REPLACE_WITH_EXERCISED_BUILDING_IDENTITY",
+    "plotId": "REPLACE_WITH_EXERCISED_PLOT_ID",
+    "saveId": "REPLACE_WITH_EXERCISED_SAVE_IDENTITY"
+  },
+  "processes": [
+    {"role": "save-session", "launchId": "REPLACE_WITH_LAUNCH_ID", "started": "YYYY-MM-DDTHH:MM:SSZ", "stopped": true},
+    {"role": "cold-load-session", "launchId": "REPLACE_WITH_LAUNCH_ID", "started": "YYYY-MM-DDTHH:MM:SSZ", "stopped": true}
+  ],
   "steps": [
-    {"step": "startup", "status": "PASS", "processStopped": true},
-    {"step": "stockpileQuote", "status": "PASS", "processStopped": true},
-    {"step": "paidCommission", "status": "PASS", "processStopped": true},
-    {"step": "engineTurnCompletion", "status": "PASS", "processStopped": true},
-    {"step": "save", "status": "PASS", "processStopped": true},
-    {"step": "coldLoad", "status": "PASS", "processStopped": true},
-    {"step": "nextAction", "status": "PASS", "processStopped": true}
+    {"step": "startup", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0},
+    {"step": "quote", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0},
+    {"step": "paid-commission", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0},
+    {"step": "engine-turn-build", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0},
+    {"step": "save", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0},
+    {"step": "cold-load", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0},
+    {"step": "next-action", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0}
   ]
 }

@@ -46,12 +46,14 @@
       "source": "native-game-screenshot",
       "generativeAssistance": false,
       "previewSha256": "SHA256_OF_PREVIEW_PNG",
-      "capturedBy": "HUMAN_SCREENSHOT_CAPTURER_NAME_OR_ALIAS",
+      "capturedBy": "CAPTURER_NAME_OR_HONESTLY_LABELLED_AUTOMATED_CAPTURE_IDENTITY",
       "captureUtc": "YYYY-MM-DDTHH:MM:SSZ",
       "sourceSave": "REPLACE_WITH_NATIVE_SOURCE_SAVE_IDENTITY",
       "editSummary": "REPLACE_WITH_CROP_RESIZE_AND_OTHER_NON_GENERATIVE_EDITS",
-      "reviewedBy": "HUMAN_PREVIEW_REVIEWER_NAME_OR_ALIAS",
-      "completedUtc": "YYYY-MM-DDTHH:MM:SSZ"
+      "captureProvenanceRef": "docs/release-evidence/preview-capture-log.txt",
+      "captureProvenanceSha256": "SHA256_OF_RETAINED_CAPTURE_TOOL_RUN_LOG",
+      "reviewedBy": null,
+      "completedUtc": null
     },
     "numberedProtocols": {
       "artifactRef": "docs/release-evidence/numbered-protocols.txt",
