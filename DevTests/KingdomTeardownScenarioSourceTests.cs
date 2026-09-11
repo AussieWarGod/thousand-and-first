@@ -28,9 +28,12 @@ namespace ThousandAndFirst.Tests
 		// reads both as one logical source for pins that span the split, exactly as if it were
 		// still one file.
 		private const string Cases = "Harness/KingdomTeardownNativeChecks.Case.cs";
+		// The Telemetry()/ReadLong()/OccupantIdsOn shard split out once run20's additions would
+		// have pushed Case.cs back over the harness line cap; read as one logical source too.
+		private const string Telemetry = "Harness/KingdomTeardownNativeChecks.Telemetry.cs";
 		private const string Persona = "Tools/personas/teardown-native-check.persona";
 		private static string Read(string path) => TestMain.ReadRepositoryText(path);
-		private static string ReadChecksAndCases() => Read(Checks) + Read(Cases);
+		private static string ReadChecksAndCases() => Read(Checks) + Read(Cases) + Read(Telemetry);
 
 		private static string ConstValue(string Source, string Name)
 		{
@@ -494,17 +497,85 @@ namespace ThousandAndFirst.Tests
 			Assert.That(checks, Does.Contain("Append(\" assigned-crew=\")"));
 			Assert.That(checks, Does.Contain("Append(\" on-roll=\")"));
 			Assert.That(checks, Does.Contain("Append(\" labours=\")"));
+			string telemetry = Read(Telemetry);
+			Assert.That(telemetry, Does.Contain("private string Telemetry(GameObject Root)"));
+			Assert.That(telemetry, Does.Contain("KingdomPlots.PlotWorkRequiredProperty"));
+			Assert.That(telemetry, Does.Contain("KingdomPlots.PlotWorkRemainingProperty"));
+			Assert.That(telemetry, Does.Contain("KingdomPlots.PlotWorkLastTickProperty"));
+			Assert.That(telemetry, Does.Contain("KingdomPlots.PlotWorkWindowProperty"));
+			Assert.That(telemetry, Does.Contain("KingdomConstructionPresence.SelectedProperty"));
+			Assert.That(telemetry, Does.Contain("KingdomConstructionPresence.HandsProperty"));
+			Assert.That(telemetry, Does.Contain("KingdomConstructionPresence.EffectivenessProperty"));
+			Assert.That(telemetry, Does.Contain("KingdomConstruction.TryFind(JobId, out KingdomConstructionJob row)"));
+			Assert.That(Read(Cases), Does.Contain("internal int LastHands;"));
+		}
+
+		/// <summary>
+		/// review-teardown-run20-stuckworking.md: fire's labour clock finished on the first
+		/// settlement pass but its Cleared stage was refused forever because a living occupant
+		/// stood on the authored ground layer -- undiagnosable with the run15/18 telemetry alone.
+		/// New Telemetry() keys pinned here: stage-applied/stage-target (r_KingdomPlotWorks.
+		/// StageApplied vs the terminal PlotStage.Done), built= (IsFunctionallyBuilt), completed-
+		/// tick= (PlotWorkCompletedTickProperty), apply-failure= (disclosed as unread -- the real
+		/// refusal is KingdomLog.Log only, dev-gated, never stored on any object), and occupants=
+		/// (creature/player ids on the raising's own footprint).
+		/// </summary>
+		[Test]
+		public void TelemetryNamesStageAppliedBuiltCompletedTickAndFootprintOccupants()
+		{
+			string telemetry = Read(Telemetry);
+			Assert.That(telemetry, Does.Contain(
+				"XRL.World.Parts.r_KingdomPlotWorks part = Root?.GetPart<XRL.World.Parts.r_KingdomPlotWorks>();"));
+			Assert.That(telemetry, Does.Contain(
+				"((KingdomPlotRules.PlotStage)part.StageApplied).ToString();"));
+			Assert.That(telemetry, Does.Contain(
+				"bool built = Root != null && KingdomUpgrade.IsFunctionallyBuilt(Root);"));
+			Assert.That(telemetry, Does.Contain(
+				"KingdomPlots.PlotWorkCompletedTickProperty"));
+			Assert.That(telemetry, Does.Contain("Append(\" stage-applied=\")"));
+			Assert.That(telemetry, Does.Contain("Append(\" stage-target=\")"));
+			Assert.That(telemetry, Does.Contain("Append(\" built=\")"));
+			Assert.That(telemetry, Does.Contain("Append(\" completed-tick=\")"));
+			Assert.That(telemetry, Does.Contain("Append(\" apply-failure=unread\")"));
+			Assert.That(telemetry, Does.Contain("Append(\" occupants=\")"));
+			Assert.That(telemetry, Does.Contain(
+				"internal static string OccupantIdsOn(Zone Zone, KingdomPlotRules.PlotRect Rect)"));
+			Assert.That(telemetry, Does.Contain("item.IsCreature || item.IsPlayer()"));
+			// Disclosed honestly, never invented: the real refusal text is never stored anywhere
+			// this harness can read.
+			Assert.That(telemetry, Does.Not.Contain("apply-failure=\").Append("));
+		}
+
+		/// <summary>
+		/// review-teardown-run20-stuckworking.md: the blocking occupant is almost certainly one
+		/// of this fixture's own crew bodies (they never wander otherwise). Frame resolves each
+		/// raising's rect at Start (Case.Rect/HasRect via KingdomPlots.TryReadRect) and relocates
+		/// any crew body found standing inside a known rect to a free cell outside every known
+		/// rect -- never a production resident or the player, never any object this fixture did
+		/// not itself enroll -- once after each case starts and again every Check().
+		/// </summary>
+		[Test]
+		public void CrewIsKeptOffEveryKnownRaisingRectNeverTouchingAnyOtherOccupant()
+		{
 			string cases = Read(Cases);
-			Assert.That(cases, Does.Contain("private string Telemetry(GameObject Root)"));
-			Assert.That(cases, Does.Contain("KingdomPlots.PlotWorkRequiredProperty"));
-			Assert.That(cases, Does.Contain("KingdomPlots.PlotWorkRemainingProperty"));
-			Assert.That(cases, Does.Contain("KingdomPlots.PlotWorkLastTickProperty"));
-			Assert.That(cases, Does.Contain("KingdomPlots.PlotWorkWindowProperty"));
-			Assert.That(cases, Does.Contain("KingdomConstructionPresence.SelectedProperty"));
-			Assert.That(cases, Does.Contain("KingdomConstructionPresence.HandsProperty"));
-			Assert.That(cases, Does.Contain("KingdomConstructionPresence.EffectivenessProperty"));
-			Assert.That(cases, Does.Contain("KingdomConstruction.TryFind(JobId, out KingdomConstructionJob row)"));
-			Assert.That(cases, Does.Contain("internal int LastHands;"));
+			Assert.That(cases, Does.Contain("internal KingdomPlotRules.PlotRect Rect;"));
+			Assert.That(cases, Does.Contain("internal bool HasRect;"));
+			Assert.That(cases, Does.Contain(
+				"HasRect = KingdomPlots.TryReadRect(Zone.FindObjectByID(WorksId), out KingdomPlotRules.PlotRect rect);"));
+			string checks = Read(Checks);
+			Assert.That(checks, Does.Contain("private void KeepCrewOutsideRaisings()"));
+			Assert.That(checks, Does.Contain("if (Fire.HasRect) rects.Add(Fire.Rect);"));
+			Assert.That(checks, Does.Contain("if (Larder.HasRect) rects.Add(Larder.Rect);"));
+			Assert.That(checks, Does.Contain("foreach (GameObject body in Crew)"));
+			Assert.That(checks, Does.Contain("cell.RemoveObject(body);"));
+			Assert.That(checks, Does.Contain(
+				"Require(ReferenceEquals(destination.AddObject(body, NoStack: true), body),"));
+			Assert.That(checks, Does.Contain("private Cell FindCellOutside(List<KingdomPlotRules.PlotRect> Avoid)"));
+			Assert.That(checks, Does.Contain("KeepCrewOutsideRaisings();"));
+			// Only Crew (this fixture's own enrolled bodies) is ever iterated for relocation --
+			// no production resident or the player is ever named as a relocation target.
+			Assert.That(checks, Does.Not.Contain("The.Player"));
+			Assert.That(checks, Does.Not.Contain("Survey.Settlers"));
 		}
 	}
 }

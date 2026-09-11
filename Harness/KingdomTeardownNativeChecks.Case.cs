@@ -8,7 +8,7 @@ namespace ThousandAndFirst.Harness
 {
 	internal static partial class KingdomTeardownNativeChecks
 	{
-		private sealed class Case
+		private sealed partial class Case
 		{
 			internal readonly string Name;
 			private readonly string BuildKey;
@@ -23,6 +23,13 @@ namespace ThousandAndFirst.Harness
 			private int ExpectedSalvageDelta, TimberCost;
 			internal int Phase;
 			internal bool Done;
+			/// <summary>review-teardown-run20-stuckworking.md: the raising's authored footprint,
+			/// resolved once via KingdomPlots.TryReadRect the moment WorksId exists (works while
+			/// still under construction -- the rect is stamped at staking, not completion).
+			/// Frame uses this to keep the fixture's own crew off the footprint and to journal
+			/// occupant ids on it.</summary>
+			internal KingdomPlotRules.PlotRect Rect;
+			internal bool HasRect;
 			/// <summary>Hands read off the raising root's own production presence property
 			/// (KingdomConstructionPresence.HandsProperty) on the last Check() call; 0 once built
 			/// or before Start(). Frame sums this across cases for its settlement-wide
@@ -77,6 +84,8 @@ namespace ThousandAndFirst.Harness
 					Name + ": the fixture commission produced no linked plot-works output");
 				WorksId = job.OutputId;
 				JobId = job.Id;
+				HasRect = KingdomPlots.TryReadRect(Zone.FindObjectByID(WorksId), out KingdomPlotRules.PlotRect rect);
+				Rect = rect;
 				Phase = 1;
 			}
 
@@ -155,49 +164,6 @@ namespace ThousandAndFirst.Harness
 					.Append(" elapsed-ticks=").Append(ElapsedTicks)
 					.Append(" negative-path-refusal=").Append(secondFailure);
 				Done = true;
-			}
-
-			/// <summary>review-teardown-run15-neverbuilt.md finding 1: the job row and its tick
-			/// counter were read once at Start and never again, so an awaiting-built stall was
-			/// undiagnosable. Re-reads the raising root's own production properties every Check
-			/// -- required/remaining/last-worked ticks (KingdomPlots.PlotWork*Property), the raw
-			/// prior-interval witness (PlotWorkWindowProperty), and the one-gang allocator's own
-			/// presence (KingdomConstructionPresence.Selected/Hands/EffectivenessProperty) -- plus
-			/// the live construction registry row's Phase by re-TryFind-ing the job's own id
-			/// (JobId), never re-using the Start-time snapshot. Read-only; asserts nothing.</summary>
-			private string Telemetry(GameObject Root)
-			{
-				long required = ReadLong(Root, KingdomPlots.PlotWorkRequiredProperty);
-				long remaining = ReadLong(Root, KingdomPlots.PlotWorkRemainingProperty);
-				long lastWorked = ReadLong(Root, KingdomPlots.PlotWorkLastTickProperty);
-				string window = Root == null ? "" : (Root.GetStringProperty(
-					KingdomPlots.PlotWorkWindowProperty) ?? "");
-				bool selected = Root != null
-					&& Root.GetIntProperty(KingdomConstructionPresence.SelectedProperty) == 1;
-				int hands = Root == null ? 0
-					: Root.GetIntProperty(KingdomConstructionPresence.HandsProperty);
-				int effectiveness = Root == null ? 0
-					: Root.GetIntProperty(KingdomConstructionPresence.EffectivenessProperty);
-				string jobPhase = "unread";
-				if (!string.IsNullOrEmpty(JobId)
-					&& KingdomConstruction.TryFind(JobId, out KingdomConstructionJob row) && row != null)
-					jobPhase = row.Phase.ToString();
-				return new StringBuilder()
-					.Append(" required=").Append(required)
-					.Append(" remaining=").Append(remaining)
-					.Append(" last-worked=").Append(lastWorked)
-					.Append(" window=").Append(KingdomScenarioRules.Bounded(window))
-					.Append(" presence=selected:").Append(selected ? 1 : 0)
-					.Append(",hands:").Append(hands).Append(",effectiveness:").Append(effectiveness)
-					.Append(" job-phase=").Append(jobPhase)
-					.ToString();
-			}
-
-			private static long ReadLong(GameObject Root, string Property)
-			{
-				if (Root == null) return -1L;
-				long value;
-				return long.TryParse(Root.GetStringProperty(Property), out value) ? value : -1L;
 			}
 
 			/// <summary>Mints exactly the authored bill for this design (RuntimeData/

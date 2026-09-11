@@ -121,6 +121,67 @@ namespace ThousandAndFirst.Harness
 				Fire.Start(Require, (chest, name) => PlaceChest(Seat, chest, name),
 					line => Evidence.Append(line));
 				Cases.Add(Fire);
+				KeepCrewOutsideRaisings();
+			}
+
+			/// <summary>review-teardown-run20-stuckworking.md: fire's labour clock finished on
+			/// the FIRST settlement pass but its Cleared stage was refused forever because a
+			/// living occupant stood on one authored layout slot -- almost certainly one of this
+			/// fixture's own crew bodies (they never wander otherwise; production enrolls no
+			/// other settlers). Once a raising's rect is known (Case.Rect, resolved at Start),
+			/// relocate any of THIS fixture's own crew bodies found standing inside it to a free
+			/// cell outside every known rect -- never a production resident or the player, and
+			/// never any object this fixture did not itself enroll. Called once after each case
+			/// starts and once every Check(), so a body that wanders back in, or a rect (larder's)
+			/// that only resolves later, is still caught. No production change: this is a harness
+			/// precondition fix only, filed against the fixture's own occupancy, never the
+			/// production stamper that refuses the ground layer.</summary>
+			private void KeepCrewOutsideRaisings()
+			{
+				List<KingdomPlotRules.PlotRect> rects = new List<KingdomPlotRules.PlotRect>();
+				if (Fire.HasRect) rects.Add(Fire.Rect);
+				if (Larder.HasRect) rects.Add(Larder.Rect);
+				if (rects.Count == 0 || Crew == null) return;
+				foreach (GameObject body in Crew)
+				{
+					if (!GameObject.Validate(body)) continue;
+					Cell cell = body.CurrentCell;
+					if (cell == null) continue;
+					KingdomPlotRules.PlotRect hit = default;
+					bool inside = false;
+					foreach (KingdomPlotRules.PlotRect rect in rects)
+						if (cell.X >= rect.X1 && cell.X <= rect.X2
+							&& cell.Y >= rect.Y1 && cell.Y <= rect.Y2) { hit = rect; inside = true; break; }
+					if (!inside) continue;
+					Cell destination = FindCellOutside(rects);
+					Require(destination != null, "no free cell exists outside every known "
+						+ "raising rect to relocate a fixture crew body");
+					cell.RemoveObject(body);
+					Require(ReferenceEquals(destination.AddObject(body, NoStack: true), body),
+						"native relocation substituted the synthetic crew body");
+					Evidence.Append("; crew-relocated id=").Append(body.IDIfAssigned ?? "unassigned")
+						.Append(" out-of-rect=(").Append(hit.X1).Append(',').Append(hit.Y1)
+						.Append(")-(").Append(hit.X2).Append(',').Append(hit.Y2)
+						.Append(") to=(").Append(destination.X).Append(',').Append(destination.Y)
+						.Append(')');
+				}
+			}
+
+			private Cell FindCellOutside(List<KingdomPlotRules.PlotRect> Avoid)
+			{
+				for (int y = 0; y < Zone.Height; y++)
+					for (int x = 0; x < Zone.Width; x++)
+					{
+						bool inside = false;
+						foreach (KingdomPlotRules.PlotRect rect in Avoid)
+							if (x >= rect.X1 && x <= rect.X2 && y >= rect.Y1 && y <= rect.Y2)
+							{ inside = true; break; }
+						if (inside) continue;
+						Cell cell = Zone.GetCell(x, y);
+						if (cell == null || !cell.IsEmpty() || !cell.IsPassable()) continue;
+						return cell;
+					}
+				return null;
 			}
 
 			private GameObject PlaceChest(Cell Seat, GameObject Chest, string Name)
@@ -178,6 +239,7 @@ namespace ThousandAndFirst.Harness
 					Cases.Add(Larder);
 					LarderStarted = true;
 				}
+				KeepCrewOutsideRaisings();
 				KingdomSurvey survey = KingdomSurvey.Take(Zone, System);
 				List<GameObject> available = KingdomCrews.AvailableSettlers(System, survey);
 				int free = 0;
