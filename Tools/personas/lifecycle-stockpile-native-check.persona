@@ -1,0 +1,22 @@
+# One construction lifecycle on an ordinary founded settlement: the production founding
+# transaction, a startup census of what the settlement actually holds, the production
+# quote/CanPay/commission with its physical timber and water debit, real engine turns spent by
+# the bounded advance verb, and the completion of that exact job into a functional building,
+# followed by a real save a separate cold-load profile can be imported from.
+#
+# Nothing is fabricated: no stock is minted and no job is forced into a phase. The settlement
+# pays out of its own accumulated stores, so lifecycle-build refuses honestly when the economy
+# has not yet paid for the design, and lifecycle-grown refuses when the turn budget expires
+# before the building stands. Both refusals are the point of the persona, not a failure of it.
+#
+# The cold-load session and the next action after it are NOT in this script: they need a second
+# profile imported from this save. Tools/check-quickstart-lifecycle.py reports them as BLOCKER
+# until that leg exists, and never as a pass.
+DESCRIPTION=one paid commission becomes a finished building over real turns, then a real save
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;realize;lifecycle-open;advance 600;lifecycle-build;advance 2400;lifecycle-grown;lifecycle-save;stagedigest
+VERBS=lifecycle-open,lifecycle-build,lifecycle-grown,lifecycle-save
+EXPECT=stagedigest:OK~founded=false,realize:OK,lifecycle-open:OK~step=startup,advance:OK,lifecycle-build:OK~step=paid-commission,advance:OK,lifecycle-grown:OK~step=engine-turn-build,lifecycle-save:OK~step=save,stagedigest:OK~founded=true,COMPLETE
+SET=growth,construction,native-regression
+TIMEOUT=1200

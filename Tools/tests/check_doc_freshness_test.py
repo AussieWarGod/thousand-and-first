@@ -115,7 +115,7 @@ class DocumentationFreshnessTests(unittest.TestCase):
                     encoding="utf-8",
                 )
                 testing.write_text(
-                    "The current public Alpha manifest is `0.3.2`.\n",
+                    "The current public Alpha manifest is `0.3.3`.\n",
                     encoding="utf-8",
                 )
                 modding.write_text(
@@ -140,7 +140,7 @@ class DocumentationFreshnessTests(unittest.TestCase):
                         if missing_current:
                             expected.append(
                                 "TESTING.md is missing current contract text: "
-                                "current public Alpha manifest is `0.3.2`"
+                                "current public Alpha manifest is `0.3.3`"
                             )
                         expected.append(
                             "TESTING.md retains stale current-status text: " + stale_manifest

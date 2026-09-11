@@ -159,7 +159,9 @@ namespace ThousandAndFirst.Tests
 				"public static int HeartRung(", "public static int RiteWeight(",
 				"public static bool SurveyHeart(", "public static GameObject StakeHeartRung(",
 				"public static bool TryFindRect(", "public static bool TryFindRect(",
-				"public static int NearestIndex(", "public static bool TryQuoteCommission(",
+				"public static int NearestIndex(",
+				"private static KingdomPlotSelectionRules.Resolution ResolveArchitecture(",
+				"public static bool TryQuoteCommission(",
 				"public static bool Commission(", "public static bool Commission(",
 				"public static bool Commission(", "public static GameObject Stake(",
 				"internal static bool ProjectOnRect(", "internal static bool ExpectedArchitectureReceipt(",
@@ -181,6 +183,84 @@ namespace ThousandAndFirst.Tests
 				"public static bool IsYielding(", "public static List<GameObject> FindYielding(",
 				"public static bool TryHeartRectFor(", "public static bool GrowInPlace(",
 				"public static void Advance(", "public static int MaterialsHeld(");
+		}
+
+		/// <summary>
+		/// SOURCE PIN, not behavioural proof: DevTests cannot construct a real Zone/GameObject,
+		/// so a candidate rect actually holding a founder cannot be exercised here (that needs a
+		/// native run, out of scope for this pass -- root runs native Quickstart on the combined
+		/// fix). This pins the new occupancy-selection seam's call shape and message, and that
+		/// the pinned TryFindRect declaration/call-order tests above are untouched by it. The
+		/// selection loop it drives (KingdomPlotSelectionRules.TrySelect) is value-tested
+		/// directly, with a fake candidate/occupancy source, in DevTests/KingdomPlotRulesTests.cs.
+		/// </summary>
+		[Test]
+		public void GroundLoopNoLongerFiltersOccupancyAgainstTheWholeStakedRect()
+		{
+			// CORRECTED per review-637a54b-siting-findings.md: the whole-rect filter over-rejected
+			// (11.4% of authored lot cells are unclaimed margin, up to 72% on some designs).
+			// The ground loop is byte-identical to b5372a2 again; occupancy moved one stage
+			// later, into architecture acceptance.
+			string source = Plot();
+			Assert.That(source, Does.Not.Contain("nearestBlockedIsOccupant"));
+			AssertOrdered(source,
+				"KingdomPlotPoseSitingRules.Enumerate(",
+				"if (KingdomPlotRules.CrowdsExisting(rect, laid)) continue;",
+				"if (Grid.AnyRefusal(rect))");
+		}
+
+		[Test]
+		public void OccupancyIsFilteredAtTheArchitectureStageAgainstManagedCellsOnly()
+		{
+			// The fix (a) required correction: occupied cells are gathered once (still the whole
+			// interior, still a live scan), but only ever tested against a candidate's resolved,
+			// claimed cells and placements -- exactly what Preflight.cs later manages -- never
+			// the whole staked rect.
+			string source = Plot();
+			Assert.That(source, Does.Contain("HashSet<int> occupiedCells = new HashSet<int>();"));
+			Assert.That(source, Does.Contain(
+				"if (GameObject.Validate(occupant) && (occupant.IsCreature || occupant.IsPlayer()))"));
+			Assert.That(source, Does.Contain(
+				"KingdomPlotSelectionRules.TrySelect(groundCandidates,"));
+			Assert.That(source, Does.Contain(
+				"candidate => ResolveArchitecture(probe, candidate, Z, occupiedCells),"));
+			Assert.That(source, Does.Contain(
+				"if (!Probe.TryAccept(Candidate, out ArchitectureLayoutSnapshot accepted, out string failure))"));
+			Assert.That(source, Does.Contain(
+				"if (!KingdomArchitectureRules.IsClaimed(cell.Claim)) continue;"));
+			Assert.That(source, Does.Contain(
+				"KingdomArchitectureRuntime.TryWorldCell(accepted, Candidate, cell,"));
+			Assert.That(source, Does.Contain(
+				"KingdomArchitectureRuntime.TryWorldPlacement(accepted, Candidate,"));
+			Assert.That(source, Does.Contain(
+				"KingdomPlotRules.RefuseObstruction(\"a living occupant\", cx, cy)"));
+			Assert.That(source, Does.Contain(
+				"KingdomPlotRules.RefuseObstruction(\"a living occupant\", px, py)"));
+		}
+
+		/// <summary>Review thread (copilot-threads-157-158.md #1/#2): a TryWorldCell/
+		/// TryWorldPlacement coordinate-mapping failure must REFUSE the candidate by that
+		/// mapping failure text, never silently "continue" past it -- the old bug dropped the
+		/// cell from the occupancy sweep while TryManagedCells
+		/// (Growth/KingdomArchitectureStamper.OwnerReceipts.cs:140-168) treats the identical
+		/// failure as fatal for Preflight, so a candidate the stamper would refuse could still
+		/// be selected here. SOURCE PIN for the branch shape; the selection loop it feeds
+		/// (KingdomPlotSelectionRules.TrySelect) is value-tested with a fake mapping-failure
+		/// resolver in DevTests/KingdomPlotRulesTests.cs.
+		/// MUTATION: restoring either "continue" instead of the Resolution return flips this
+		/// test.</summary>
+		[Test]
+		public void MappingFailuresRefuseTheCandidateInsteadOfSkippingTheCellOrPlacement()
+		{
+			string source = Plot();
+			Assert.That(source, Does.Contain(
+				"out int cx, out int cy, out string mappingFailure))\n"
+				+ "\t\t\t\t\t\treturn new KingdomPlotSelectionRules.Resolution(false, mappingFailure);"));
+			Assert.That(source, Does.Contain(
+				"out int px, out int py, out string mappingFailure))\n"
+				+ "\t\t\t\t\t\treturn new KingdomPlotSelectionRules.Resolution(false, mappingFailure);"));
+			Assert.That(source, Does.Not.Contain("out string ignored)) continue;"),
+				"a mapping failure must never be discarded into an ignored out-var and skipped");
 		}
 
 		[Test]

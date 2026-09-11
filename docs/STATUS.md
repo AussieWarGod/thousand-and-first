@@ -1,13 +1,129 @@
 # Current implementation and release evidence
 
+## Current 0.3.4 heart integration candidate — unverified
+
+3089 staged C# files; 438,207 physical lines; cold-install inventory contains 3120 files.
+Compile inventory: 3089 sources, baseline and compatibility symbols (3085 baseline).
+Direct `XRL` imports: 1441 files, 0 over the line limit. Zero at or above 300 lines.
+Inventory SHA-256: `031417d6337e6cc2870749baa2ca611a6db2c6c421ee50ea1e7d0157fa70d146`.
+Combines #141 authority, #144 shared-XL validation, #138/#139 rung settlement and #137 camp
+content/native fixture over dev with the verified 0.3.3 backmerge. Production and test-project
+merges are complete; compile, combined-suite, native progression and semantic review are owed.
+Prior isolated evidence below remains bound to its original checkpoints, not this combined tree.
+No new version/tag/upload or Beta acceptance is claimed.
+
+The current draft additionally distinguishes fully authorized surveyed-heart physical access
+from ordinary positive road-network evidence. Exact public approach walkability remains required
+before debit and on retry; protected road/wear, occupied ground and all ownership guards remain.
+Compilation, native progression and independent review of this distinction are owed.
+
+The current draft also excludes transient combat occupants from structural passability
+validation. Real solid obstructions still refuse; construction placement and annexation retain
+their living-occupant guards. Native `73c2cb4` run `heart034-occupancy-native.wFtCGX`
+passes the NPC/solid-wall/cleanup probe at (40,12), occupied expansion refusal and paid bill.
+The earlier seal errors disappear, but the heart still does not complete after another 2,400
+turns. Owned game stopped; no rung-2 acceptance claimed. Four compile modes clean; Linux strict
+14,502 + 5,575 cases, zero skips; tooling suite 796 tests with 11 existing platform skips.
+Read-only job/scaffold progress diagnostics added after that run; execution remains owed.
+
+Retained diagnostic `87679a5` run `heart034-progress-native.yKhmWV` confirms no labour:
+remaining work stays 2,250 and last-worked stays 39,601 from phase 1 through tick 42,327,
+beyond due tick 41,851; job remains Working without a failure string. Owned game stopped.
+Current draft replaces both Funded-only post-input dispatch gates with exact committed-input
+and fresh valid-job proof, retaining target-zone and failed-recovery refusal. Paid Working
+jobs keep their committed receipts and must reach ordinary labour dispatch. Compile, tests
+and native execution of this dispatch change remain owed; budgets are unchanged.
+That routed-input defect is conditional on a retained input receipt, not yet proved to be
+this heart's path. A second source defect directly rejects authored upgrades: scaffold
+predecessor validation compared a plain building key with the encoded `v2|` successor payload.
+Current draft reuses the existing exact typed/legacy predecessor validator, retaining all
+scaffold identity, ownership and working-state guards. Native positive and detached-copy
+malformed/stale/foreign-payload negatives are added; execution remains owed.
+
+Native `4517620` run `heart034-dispatch-native.oEVhq5` now proves typed predecessor acceptance,
+malformed/stale/foreign-payload refusals and actual labour progression: 2,250 remaining at
+157,527 becomes 1,050 remaining with last-worked 159,600 at tick 159,927. Completion still RED;
+owned game stopped. Four compile modes and strict Linux 14,519 + 5,577 tests pass, zero skips.
+The next scenario adds one 1,200-turn daily interval (3,600 after paid-work observation),
+matching measured remaining labour and the prior-window charging rule. No production timing
+or completion state is changed. Full rung-2 completion remains unproven until the next run.
+
+Retained `77d9369` (production inventory `fce921c6bbcaff4992c3660b26d9b02a903b8f4f055b91c48aeff801669c0d05`):
+four compile modes clean; Linux strict 14,501 + 5,575 cases, zero skips. Native
+`heart034-bill-native.OwUR6t` proves occupied expansion refusal, normal founder movement clear,
+and a paid Working upgrade: exact 18 water, 24 stone and 1 timber, same chest retaining 23 brush.
+Completion remains RED after another 2,400 turns: authored walk cells reported blocked;
+daily seal MODERRORs and unfinished heartbasin retained. Owned game stopped. The preceding
+`3cc1195` run `heart034-surveyed-native.x4a7RV` stopped on the corrected test-oracle error:
+it incorrectly required physical net debit (`WaterLost`) to be zero. Neither run proves rung 2.
+
+Retained predecessor `15d65dc` (production inventory
+`31dfb1859670cbcef14e6a98288db376747dd8f3c1515c0703efd8f791bbb3cd`): four compile modes clean,
+Linux strict suites 14,493 + 5,568 cases, zero skips. Native seed #165939435 remains RED after
+1,200 actual turns: successor lanes (40,17)/(41,17) are walkable but have zero traffic and no
+road floor. Evidence `heart034-ingress-native.W8F6oT`; owned game stopped. No paid upgrade began.
+Already-worn annexed heart ground and later rungs require separate preservation/reachability proof.
+
 **Snapshot:** 2026-09-11
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
-**Next public version:** 0.3.3 stockpile hotfix in preparation; not published
-**Working candidate manifest:** 0.3.3 private Alpha candidate; not uploaded.
-Public Workshop remains the 0.3.2 public Alpha playtest, complete and finalized — see [Public 0.3.2](#public-032) below.
+**Current public version:** 0.3.3 stockpile hotfix; published, verified and finalized.
+**Working manifest:** 0.3.3 public Alpha playtest.
+The prior 0.3.2 public Alpha playtest remains documented under [Public 0.3.2](#public-032).
 **Dev integration:** main hotfix backmerged alongside unreleased beta work; not a release candidate.
 **Beta gates:** tracked in issues #58–#70 and the retained [gap report](BETA-GAP-REPORT-2026-09-09.md).
 Issue #68 was closed by the author; remaining heart endgame debt is tracked in #144.
+
+**Retained failed pre-upload run:** `34576910338` at the original `v0.3.3` tag
+(`277f4523f4a2bea13ec548ea05c07ef2678bb03d`) passed Linux and Windows suites but refused
+package reproduction: `release TESTING.md differs from subscribed private candidate`.
+The public-version protocol edit had been made after receipt binding. Publisher, verification,
+and finalization were all skipped: no public Steam attempt or upload occurred.
+Recovery candidate `16ed2b35a1516577cce2d5d15c922a1a1436a504` binds that same protocol
+before promotion, with unchanged private runtime and receipt. No guard is weakened.
+The author explicitly approved replacing this unshipped tag while preserving its original
+tag object and failed run. Recovery uses normal protected integration and exact-lease tag
+replacement; no package gate or test requirement is waived.
+
+## Public 0.3.3 — published and finalized
+
+[Release run 34577908711](https://github.com/AussieWarGod/thousand-and-first/actions/runs/34577908711)
+completed successfully at `84be52324f45aae75923362cef7a332a3003eebb` (normal protected
+[PR #150](https://github.com/AussieWarGod/thousand-and-first/pull/150) merge).
+Public item `3794797472`, attempt `0003`: submission reported
+`SubmittedUnverified`, `metadataMatches=true`, `contentUnchanged=true`; verification and
+finalization then reported `SubscribedInstallationVerified`, `attemptFinalized=true`.
+
+- Plan: `875a5819dfa8a41c85da4e6318ccd125a80923ca69ab3af630ea4f1aeb530097`.
+- Package receipt (3100 files): `e74205d357deb5f1f41e5ac0bed76842b29118f77c2f6c2f95575c73e1bf60d3`.
+- Installed inventory: `f0f79bb1976e07c1169f5dc3ac26e351e0128c7df88df45d34f3d45b9e1fce44`.
+- Finalization: `c97cd5f7ea9c7c34d69e79fd9bd8648326d8ef180c99cd09de031113e7fffd57`.
+- Canonical gate log: `e0e2637e1e52372d62354414c6ad480af0377355e8e648edbe8aca43ade50855`.
+
+All eleven canonical precheck stages passed; licensed suites passed 14112 and 5246 cases,
+zero managed skips, and the executable launcher harness passed 46 cases. The three
+PACKAGE/COPY/BACKUP bind-alias fixtures retained explicit environment-limited skips; this
+is not a zero-total-skips claim. Raw evidence is retained under
+`C:\taf-release\run-34577908711-1`.
+
+Verification proves **one subscribed client**, not all subscribers or a fresh transfer:
+`freshTransferVerified=false`, `releaseReady=false`. Native paid commissioning and six
+save/cold-load pairs retain their exact scope below. Construction completion, historical-save
+construction and full gameplay progression are not proved by this release.
+
+Original tag object `920dbf8442e3d7762f15b2f13254143586aa0669` is preserved remotely as
+`recovery/failed-v0.3.3-run-34576910338`. Author-approved exact-lease replacement produced
+tag object `c3bc09b4616069b1004108b14928a5a755805357`. GitHub reported the existing credential's
+protected-tag update bypass; no protection settings changed, and both PR merges used normal
+required checks. Release automation encountered [compiler-server wait issue #151](https://github.com/AussieWarGod/thousand-and-first/issues/151):
+only six verified leftover compiler servers were stopped after their parent launchers exited;
+no publisher, runner, Steam or game process was stopped. All operation receipts were retained.
+
+[Stockpile issue #142](https://github.com/AussieWarGod/thousand-and-first/issues/142) is closed.
+[Behavioural coverage #58](https://github.com/AussieWarGod/thousand-and-first/issues/58) remains
+open for actual construction completion, teardown/replacement, heart progression, NPC
+arrival/departure, raids, multiple cities and every other implemented behaviour. Source-only
+tests and unexecuted harnesses do not count as in-game proof. All release test gates remain
+automated-only under the standing author ruling.
 
 The public Alpha is [Steam Workshop item
 3794797472](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472). Rows marked retained
@@ -17,14 +133,98 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
-## Current dev hotfix backmerge
+## Retained dev hotfix backmerge
 
-3080 staged C# files; 437,399 physical lines; cold-install inventory contains 3111 files.
+3080 staged C# files; 437,405 physical lines; cold-install inventory contains 3111 files.
 Compile inventory: 3080 sources, baseline and compatibility symbols (3076 baseline).
 Direct `XRL` imports: 1435 files, 0 over the line limit. Zero at or above 300 lines.
-Inventory SHA-256: `6ebc095bd595e636c48079ba5c41c0cb3bb92f3af7741d99b05eeb8b81acc78d`.
-Combined-tree gates pending. The isolated main candidate and native receipts below exclude dev's
-unfinished gameplay. The inherited semantic review binds main only, not this dev inventory.
+Inventory SHA-256: `c964d43923a5fa4284464d09029ef0b69a71bfe79b71185b3a25661c06149dca`.
+These are the figures for this dev backmerge with the #141 heart envelope authority correction
+replayed onto it; its only production delta is
+`Growth/KingdomArchitectureStamper.EnvelopeGrowth.cs`. The isolated main candidate and native
+receipts below exclude dev's unfinished gameplay. The inherited semantic review binds main only, not this dev inventory.
+
+## Unreleased construction-lifecycle coverage verdict
+
+The first complete construction lifecycle is one chain: startup, stockpile quote, CanPay, a paid
+commission with physical timber and water debit, engine turns until the job completes into a
+functional building, a real save, a cold load, and a further action on the loaded game.
+
+Driven today (executable, native): startup, quote, CanPay, commission with exact debit and a new
+paid job (`Harness/KingdomQuickstartBuildTest.cs:92-155`), the real save
+(`Harness/KingdomQuickstartSaveTest.cs`) and the cold load with byte-identical restored identities
+(`Harness/KingdomQuickstartLoadTest.cs:19-57`).
+
+Two roads now drive this chain, and neither relaxes an old contract. The Quickstart road is a
+separate sealed command, `quickstart-lifecycle <profile> <yes|no>`
+(`Harness/KingdomQuickstartBootRequest.cs`), which boots exactly as before, runs the same starter-chest
+commissioning proof, and is the only command whose script may carry further sealed auto-runner lines
+and the only one whose run may carry an auto-runner at all
+(`Harness/KingdomQuickstartBootTest.cs` `RunnerAuthorized`). `quickstart-boot`, `quickstart-save` and
+`quickstart-build` keep their exact single-line grammar and their runner exclusion, and no Quickstart
+shard constructs a runner. The founded road needs no Quickstart profile at all: `Harness/KingdomQuickstartLifecycleProvider.cs`
+registers `lifecycle-open`, `lifecycle-build`, `lifecycle-grown` and `lifecycle-save`, and
+`Tools/personas/lifecycle-stockpile-native-check.persona` seals them around the existing bounded
+`advance` verb. The settlement pays from its own accumulated stores -- no stock is minted and no
+job is forced into a phase -- so an economy that cannot yet pay refuses at CanPay, and a turn budget
+that expires before the building stands lands a refusal, never a pass.
+
+The second session now exists. `lifecycle-save` publishes a lifecycle witness wire
+(`taf-lifecycle-save-v1:`) alongside the real save, the unchanged importer
+(`Tools/prepare-scenario-load.py`) carries that save into a fresh profile, and
+`Harness/KingdomScenarioLoadEntry.cs` routes only that prefix into the lifecycle load branch --
+every other profile's load path is untouched. In the second process `lifecycle-loaded` re-proves by
+reference what the first session witnessed (same save, realm and city identity, the building
+standing on its own cell reading as built under the commissioned design key, the retained job row
+still linkable to it, the stockpile's post-debit timber and the settlement's stored drams), and
+`lifecycle-next` takes a real further action: a new quote, the CanPay pre-check and a real
+commission that mints its OWN job, with the exact one-timber and exact-drams debit re-proved and
+the completed job's identity explicitly refused as a substitute. Nothing is restored from the
+witness; a difference refuses rather than repairs, and a production refusal is journalled as it
+came.
+
+`Tools/check-quickstart-lifecycle.py` judges the chain from the journals a native run leaves: PASS
+only when every link's rows are present, in order and OK; FAIL when rows are present but refused,
+partial, out of order or interleaved; BLOCKER when a link landed no rows at all. Its exit codes
+separate the three (0/4/3). With `--results` and a driver-written `--run-record` it emits the
+long-form release artefact: `schemaVersion`, the seven ordered steps
+(startup, quote, paid-commission, engine-turn-build, save, cold-load, next-action) each at most
+once and only when the journals prove it, per-step measured `turnsUsed`/`elapsedSeconds` beside
+`turnBudget`/`timeoutSeconds`, the two process sessions (save-session, cold-load-session), and the
+candidate/runtime/build and continuity bindings. It measures nothing itself: every field the run
+record omits is emitted nowhere and named under `unresolvedFields`, and every undriven step is
+named under `blockedSteps`, so the validator reads them as unresolved rather than as a pass.
+Per step it also carries, under `observed`, the identities the driver read at that step -- realm and city
+throughout, the job and plot from the paid commission, the building from the turns that raised it,
+the save id from the save -- each read again at its own step and never copied forward. An identity offered before the
+thing it names exists is dropped and named; an identity that should exist and is missing leaves its
+step out of the artefact entirely, so the chain reads as incomplete rather than as a pass with a
+hole in it. The completed work reports both its own receipt identity and the paid job it fulfils.
+Each session writes its own run record (`Tools/scenario_run_record.py`): preparation seals the
+exercised commit, the production structural digest measured by `Tools/check-structure.py --json`
+on the frozen tree (never the review ledger, which an active candidate keeps stale on purpose),
+that session's own closed profile seal and name, the frozen seed and its budgets;
+`Tools/run-scenario.ps1` adds the launch identity and start from the launched process together
+with an `ownership` block bound to its own `process-ownership.json` receipt (pid, start ticks,
+executable, receipt SHA-256), and on `-StopRecord` the stop, refusing unless that exact receipt is
+unchanged and the owned pid with its own start ticks has ended. An exit code is written only with
+`-ExitObserved`; otherwise `exitProvenance` records that the process ended with its exit
+unobserved and no code is written at all, so a wrapper's default can never pass for the game's own
+exit. The checker refuses a session whose ownership block is missing or malformed, whose launch
+identity does not name the owned pid, or whose exit code appears without observed provenance. The checker takes both
+records, binds each journal to the run record sitting in its own scenario root and requires every
+lifecycle row's own `profile=` / `seal=` stamp to equal that session's recorded profileName and
+profileSeal, so a step is attributed to the profile that actually ran it, derives per-step turns and seconds from the
+journals those runs wrote -- never from the budgets -- and refuses a pair that shares a launch identity, that began the cold load before the
+save session stopped, or that exercised different trees. Three digests stay separately named:
+`runtimeInventorySha256` (production structure), `harnessInventorySha256` (dev-harness inventory,
+recorded only when a caller can state it), and per-session `processes[].profileSeal` with
+`processes[].profileName`.
+`Tools/tests/quickstart_lifecycle_checker_test.py` and
+`Tools/tests/scenario_run_record_test.py` exercise those verdicts;
+`DevTests/KingdomQuickstartLifecycleContractTests.cs` is SOURCE-ONLY and pins the two row lists
+against each other and the driven links' physical assertions. No native run was made for this
+change.
 
 ## Native raw-delivery overflow evidence (#111 / #124 / #129)
 
@@ -86,6 +286,164 @@ substituting a local literal fails one source assertion, restored code passes.
 Native evidence above signs exact `53022df`; this constant-reference follow-up was not
 separately run natively.
 
+## Retained camp integration checkpoint (#107 / #132 / #137)
+
+The camp feature and native seam are integrated with `dev` through `bcca3e5`, including the
+roadless-seal correction. Both test registrations and all earlier evidence are retained.
+Retained census: 3079 staged C# files / 437,201 physical lines / 1434 XRL-importing files /
+zero files at or above 300; cold-install inventory 3110 files; 87 developer personas.
+Inventory SHA-256: `304123d5ee1b31fa0b1369d5ad13c52888111f5c7563245f4fe4096c8ca38c70`.
+Combined-tree four-mode compile passes (3075/3079/3265/3269 inputs), as does repository audit
+(770 checks, six platform skips). Main 14,341 and portable 5,491 tests pass with zero skips.
+Camp native proof remains pending. Earlier counts below sign only their named frozen trees.
+Paid-upgrade rung publication is a separate suspected defect;
+no rung-3 or general camp acceptance is claimed.
+
+First combined native `8c82521` (`j1Ck3c`, seed `#165939435`) refused in setup because a
+fresh material unit had no assigned identity; no upgrade phase ran. Owned process stopped,
+evidence retained. Follow-up explicitly allocates each owned synthetic material body's engine
+identity before inventory insertion, then re-proves the same assigned identity afterward.
+Observers remain non-minting; the strict identity admission is not relaxed. The report and
+persona disclose this setup allocation. Follow-up four-mode compile and audit pass; main 14,342
+and portable 5,492 tests pass with zero skips. Thirteen focused source checks pass; replacing
+the allocating getter with read-only lookup causes one source assertion failure, and restored
+code passes. Native `6d96098` (`k5pVWg`, same seed) passed setup with all 48
+assigned material identities, then refused because stage remained Camp after 600 turns.
+Setup tick 273927 was still 873 turns before the next absolute daily boundary at 274800.
+Owned process stopped and both failed native profiles remain retained.
+
+The cadence follow-up waits 1200 real turns before checking the paid start, then the
+existing 2400 turns for completion. Growth updates stage before the same semantic pass's
+improvement resolver automatically assesses and begins work; no fixture call starts it.
+The waterstone's 3000 authored ticks use the default 75% improvement duration (2250 ticks).
+Three total days remain below the six-day roof-warning window. Stage, payment, exact custody
+and completion assertions are unchanged. Follow-up four-mode compile and audit pass
+(770 tool checks, seven skips); main 14,346 and portable 5,496 tests pass with zero skips.
+Seventeen focused checks pass. Restoring the old persona interval fails three daily-boundary
+value cases and one script source assertion; restored code passes.
+
+Native `cb2ca69` (`rZi0Sb`, same seed) reached Steading after 1200 real turns but refused
+because no improvement was working. The log reports an absent or ambiguous construction-input
+source identity. The construction observer reads water-source IDs before materials; the shared
+fixture dedication helper created its synthetic vessel without assigning an ID.
+The follow-up allocates that owned vessel's identity in the creation callback, before placement
+or dedication, then re-proves the exact returned body, assigned ID and zone. Observation paths
+still never allocate IDs. Missing-improvement diagnostics now include the existing announced
+verdict and assigned crew. Owned failed process stopped; profile/evidence retained. Follow-up
+four-mode compile and repository audit pass (770 tool checks, six skips); main 14,347 and
+portable 5,497 tests pass with zero skips. Eighteen focused checks pass; replacing setup ID
+allocation with a non-allocating lookup fails one source assertion, and restored code passes.
+Native proof remains pending; no production guard is weakened.
+
+Native `d1596b3` (`hVKs5q`, same seed) no longer logged the construction-input identity
+error. Stage reached Steading, but improvement refused with announced verdict 13
+(`NoGroundToGrow`), population six and assigned crew zero. Owned process stopped;
+failed profile/evidence retained. A diagnostic-only follow-up records up to 16 existing ledger
+notes (1024 characters each, truncation marked) when the unchanged begin assertion fails,
+and prints the verdict name. It never reassesses, clears, moves or stamps ground. Follow-up
+four-mode compile and audit pass (770 tool checks, six skips); main 14,347 / portable 5,497
+tests pass with zero skips. Eighteen focused source checks pass; dropping diagnostic capture
+fails one source assertion, restored code passes. Actual paid-upgrade proof remains pending.
+
+Native `fb9a9c0` (`qyq8GE`, same seed) still refused `NoGroundToGrow`.
+The captured ledger already held its maximum 12 notes, so it omitted the later upgrade
+explanation; no reason was recovered. Owned PID 39452 stopped, evidence retained.
+The next diagnostic reads the engine's existing message list instead (last 16 messages,
+256 characters each with marked truncation, bounded below the 8192-character journal limit),
+plus the player's current cell. It does not clear the ledger, reassess or mutate the world.
+Follow-up verification passed: all four canonical compile modes plus installed compatibility
+ABI, portable audit, 14347 Taf and 5497 Portable cases with zero skips. Eighteen focused
+source checks passed; reverting the message-list read to the capped ledger failed one source
+assertion, then restored code passed. Actual paid-upgrade proof remains pending.
+
+## Unreleased camp-heart native seam (PR #107 native case 2)
+
+A dev-only scenario seam (`Harness/KingdomCampHeartNative*.cs`, persona
+`camp-heart-native-checks`) exists to answer one of PR #107's owed native cases: that the camp
+heart's dedicated stockpile, its contents and the cooking fire survive a real paid waterstone
+upgrade. The fixture is disclosed synthetic setup — a real founding, a real rung-1 completion, six
+really enrolled residents, one really dedicated 400-dram reservoir, forty-eight minted physical
+units in the authored store (exactly the authored rung-2 bill of 24 stone and 1 timber, plus 23
+brush the bill never asks for) and the founder's one-time improvement notice pre-marked as read.
+After setup the seam drives nothing: the real settlement pass assesses the heart, begins the
+improvement, commits the water and material debit, burns the labour and hands the rung over on the
+turns the persona's own `advance` spends. The seam never calls `KingdomUpgrade.Begin`,
+`KingdomPlots.Advance`, `KingdomArchitectureStamper.TryApplyUpgrade` or any gallery staging path,
+and a source-contract test refuses each of those names in every shard.
+
+Scope of the observation, stated exactly. Store contents are read RAW: the container's own object
+list, and per unit its exact identity, blueprint, exact holder and raw stack count through
+`KingdomMaterials.RawCensusCountOf` — never an eventful count and never a material tally. Custody
+is read from the body's own `Physics` fields: the holder must reference-equal this exact store
+object AND the cell must be null, because a body cannot be in a chest and on the ground at once.
+An inventory row that is not a valid body, carries no assigned identity, reports a nonpositive raw
+count, or contradicts itself fails with a `taf-` reason instead of being skipped, and the retained
+units are held BY REFERENCE across observations so a replacement that reused the identity string
+is refused even though every recorded field would match. Settlement-wide readings use
+`KingdomSurvey.TryTakeUnboundRecovery`, which is the production custody-only classification plus
+the two proofs a bare custody-only call does not make — no bound settlement pass, and every root
+in the zone actually classified — so a partial index refuses rather than under-reporting the
+ground. A unit's absence from the store is claimed only as absence from the store; that the
+settlement SPENT the authored bill is proved separately from the production construction job's
+own committed `Claims.WaterSpent` and `Claims.MaterialSpent`, compared EXACTLY against the
+authored catalogue cost in both directions — a short charge, an overcharge and a charged material
+the authored bill never names are all faults — so ordinary resident drinking can
+ never be read as a debit.
+
+Enrollment order is load-bearing and disclosed, and mirrors the reviewed forage seam. Each fixture
+body is enrolled into citizenship, re-proved to belong, stamped with a synthetic `KingdomBorn`
+provenance mark (production's roster gate `KingdomResidents.Enrollable` requires citizenship,
+`KingdomBorn == 1`, not-a-player and not-player-led, and `KingdomCitizenship.TryEnroll` supplies
+only the first), given a name, and PLACED on a claimed cell before
+`KingdomResidents.TryEnsureRow` publishes its row. The last two clauses of that gate are re-proved
+explicitly, and the published row is then read BACK through the book — a row at that resident id,
+exactly one such row on the roll, and that row bound to this zone. Nothing writes book state, and
+the born stamp and name are fixture facts rather than a real arrival. A source-order pin refuses
+the opposite order, which is exactly what refused the forage seam's first native run on
+2026-09-10.
+
+Retained evidence on `fd73131`: canonical `Tools/gate.sh --keep` printed all four COMPILE CLEAN lines —
+staged baseline 3074, staged compatibility 3078, dev-harness baseline 3260, dev-harness
+compatibility 3264 — plus installed Hearthpyre ABI clean. Licensed managed suites ran with zero
+skips: TafTests 14,261 and PortableTests 5,401. The full portable repository audit, the
+documentation freshness check, 766 Tools tests, the removal-coverage generator check and the
+architecture XML reference check all pass. Twenty-four source mutations of the seam's custody
+predicates — dropped raw-count, holder, blueprint, missing-identity, duplicate-identity, duplicate
+listing, spent-unit and truncation checks, a folded blueprint comparer, a dropped born stamp and
+an inverted place/publish order, a dropped player-led clause, a forgiven overcharge, a forgiven
+extra charged kind, a forgiven short charge, a downgraded incomplete-census guard, a neutralised
+contradictory-custody guard, a loosened holder field check, an identity-string body comparison and
+an inexact water bill, a heart-ground overlap forgiven, a store cell no longer crowded out and a
+dropped verbatim refusal reason — each fail only the focused cases that cover them, and the
+restored source passes all thirty-one.
+
+This is a source, compile and registration claim only. **No native run of this persona has been
+made**, so it signs nothing about actual Caves of Qud behaviour yet; the recipe for the operator is
+`Tools/run-personas.sh camp-heart-native-checks`. PR #107 native cases 1, 3, 4, 5 and 6 remain
+owed. Case 6 is answered here as far as the production plot-claim path reaches: a real commission
+is put to the settlement while the heart stands, the commissioned plot never lands on the heart's
+reserved rect, the production crowding predicate refuses the exact rect covering the camp store's
+cell, and the store and fire are untouched — but **no stockpile-specific refusal reason is
+claimed**, because the siting path drops a crowding rect with a bare `continue` and no recorded
+reason before any ground is read, and the founder-facing answer when nothing fits is
+`KingdomPlotRules.RefuseRoom`. Case 3 (raise the moot) is a suspected production defect under
+review: nothing on the improvement route advances the zone's `r_TAF_HeartRung`, which
+`KingdomArchitectureRuntime.TryPrepareSuccessor` requires to equal the standing rung before it will
+accrete rung 2 to rung 3.
+
+Native fixture recovery: matched seed `#121783523` measured 50 settlers/citizens/roll rows,
+two stores, 1,936 drams capacity and zero water. The previous fixture incorrectly required one
+1,920-dram store, omitting the dedicated first basin. The corrected fixture proves the exact
+reservoir plus receipt-bound basin. Fresh canonical four-mode compilation, Taf14,075 and
+Portable5,215 (zero skips), and Tools627/full portable audit pass. Wrong-count and missing-relic-ID
+source mutants each fail; restored fixture passes. Native `founding-heart-native-checks` passes
+all seven cases at the same seed (profile `QDaXBR`, receipt-owned stop proved). This signs that
+scenario only, not terminal heart completion, ordinary-save compatibility or overall camp acceptance.
+The same gameplay/harness bytes also pass fresh first-city founding, 16 native Quickstart
+creator/custody cases and claimed lighting after rendered frames (profiles TAplen/cltpMo/TWubeD;
+all receipt-stopped). These do not sign actual Quickstart embark. Subsequent rite-ground display
+text and unused test-import cleanup do not alter gameplay; their text assertion is checked separately.
+
 ## Unreleased roadless spatial capture correction (#131)
 
 A completed camp can have a public entrance before population traffic has worn a connected
@@ -99,13 +457,87 @@ malformed geometry and exceptions remain errors. The notice may recur after load
 An empty or interior-road-only camp can remain pending indefinitely; no timeout invents corruption.
 Terminal and recovery callers retain their existing fail-closed refusal behavior.
 
-Current census, with the #129 dev-harness native checks merged over this correction: 3079
+## Unreleased heart envelope authority correction (issue #141, PARTIAL)
+
+`TryAuthorizedEnvelopeExpansion` refuses every heart by design — ordinary plot-envelope growth may
+not claim founding-heart authority — but `TryProveEnvelopeGrowth` sent every differing-rect
+transition to it, including the heart's own. Rungs one to four all change rect, so every one of
+them was refused there before any ground question was asked.
+
+That single authority call in `TryProveEnvelopeGrowth` now asks `TryAuthorizedTransition` on these
+exact decoded endpoints, with `AllowPlanChange` false and the accretion flag discarded.
+`TryAuthorizedTransition` already dispatches: a heart answers to the founding authority, and an
+ordinary lot whose rects differ still reaches `TryAuthorizedEnvelopeExpansion` inside it, so the
+ordinary route is byte-identical in behaviour. No new helper, no caller-supplied bypass, no new
+parameter, no new field, no same-rect shortcut beyond the one already there, and no relaxation of
+the ordinary authority, which still refuses hearts.
+
+Every later check in the function is unchanged and still runs on every route: interior fit,
+malformed/out-of-zone geometry, plot overlap and road budget, the siting probe and frozen envelope
+including positive ingress, settled outputs, and the per-cell sweep. Every retry call site —
+assessment, pre-debit preflight, paid application, recovery — still calls the proof unconditionally.
+
+**PARTIAL #141. Heart progression is not claimed to work.** Positive road ingress at
+`TryPhysicalRoadIngressScore` is unresolved and is the likely next native refusal: nothing on
+either founding route lays qualifying road or worn-cell evidence at the heart's entrance lane, so
+a fresh settlement's earliest accretion can still refuse for want of it. The change is source-only:
+its evidence is source pins plus mutation on the changed call. No native run was made and no rung
+transition is proven.
+
+Against the actual base `dev` `3a287e4`, the production delta of this correction is exactly one
+file: `Growth/KingdomArchitectureStamper.EnvelopeGrowth.cs`. Everything else in the delta is
+DevTests and documentation; the combined figures are recorded in the current dev backmerge census
+block above, which remains the only block labelled current.
+
+Provenance disclosure: this is commit `b1efe18` replayed onto `dev` `3a287e4`. In that original
+commit the four-mode compile gate ran before a comment-only seven-to-three line trim of the inline
+rationale, so it saw the same executable bytes with four extra comment lines. The four-mode gate
+recorded here ran on this tree's final bytes.
+
+## Retained #129 integration census
+
+Retained census, with the #129 dev-harness native checks merged over the roadless correction: 3079
 staged C# files; 437,320 physical lines; 0 exceed 300 physical lines, 0 are exactly 300, and
 therefore 0 fail the strict cap; 0 exceed 1,000, 0 exceed 2,000, 0 exceed 5,000.
 Direct `XRL` imports: 1434 files, 0 over the line limit.
 Inventory SHA-256: `f9a9469102be2f0ca119056e08c884a56014b31439e71695852026f63bd02d17`.
-The merge adds no production source over this correction; its production delta is the unmerged
-#124 raw-delivery-overflow fix the #129 branch is built on.
+This retained checkpoint predates the main hotfix backmerge and the #144 correction.
+
+## Unreleased heart shared-XL transition fix (issue #144)
+
+The great court and the arcology stand on the same XL ground: the catalogue puts them in one
+binding and marks the arcology `Transition="renovate"`, and `KingdomPlotRules.HeartSizeForRung`
+maps rungs four and five both to `Huge`. The authored transition guard, though, asked whether a
+lot's tier equalled its rung NUMBER — true by coincidence for rungs one to four, false by
+construction for rung five — so rung four to five refused every time, for a reason no ground,
+occupant or road could satisfy.
+
+The endpoint half of that guard is now one pure rule,
+`KingdomPlotRules.HeartRungEndpointsAdmit(beforeRung, afterRung, beforeTier, afterTier)`: adjacent
+rungs, each end on the tier the canonical mapping gives its own rung, both ends on the ladder.
+`KingdomArchitectureStamper.TryAuthorizedTransition` calls it with its own lot sizes. Rungs one to
+four are judged exactly as before; the one same-footprint renovation at the top is admitted.
+
+Every other proof the heart branch made is unchanged and still made in the same order — owner,
+plan, lot type, facing, fixed anchors, both expected rects, the plot/lot identity, and both
+rite-basin custody checks — and no heart-only bypass was added. A same-rect heart transition never
+reaches ordinary envelope authority because that call is already gated on the rects differing;
+no short-circuit was introduced.
+
+**Source-level only.** No native run was made and no rung 4 to 5 acceptance is claimed; paid
+renovation, rung settlement, save/cold-load and attended/away progression remain owed to the beta
+end-game suite.
+
+Retained isolated #144 census, before combining the heart fixes:
+3080
+staged C# files; 437,433 physical lines; 0 exceed 300 physical lines, 0 are exactly 300, and
+therefore 0 fail the strict cap; 0 exceed 1,000, 0 exceed 2,000, 0 exceed 5,000.
+Direct `XRL` imports: 1435 files, 0 over the line limit.
+Inventory SHA-256: `24b4ab29aab9cd3c97bb30f5382df88937ee96eac565a6fb90ce52a0dd22c0a2`.
+The production delta against the merged `dev` baseline `3a287e4` is exactly two files:
+`Growth/KingdomPlotHeartRules.cs` gains the pure endpoint rule, and
+`Growth/KingdomArchitectureStamper.Transitions.cs` calls it in place of the rung-number
+comparison. Everything else in this delta is DevTests and documentation.
 
 Retained roadless seal census at its own bytes: 3079 staged production C# files, 437,201 physical
 lines, 1434 files importing
@@ -114,6 +546,59 @@ lines, 1434 files importing
 The 3079 staged C# files produce a cold-install inventory of 3110 files. From these
 3079 sources, baseline and compatibility symbols select 3075 and 3079 ordinary inputs;
 the developer profiles compile 3257 and 3261 inputs. All four compile modes pass.
+
+## Unreleased heart rung settlement seam (issue #138)
+
+Every rung of the heart above the first climbs through the ordinary improvement machinery — the
+plot commissioner refuses to commission one and zoning never offers one — but the zone's standing
+rung (`r_TAF_HeartRung`) was written only by the plot route. A settlement that raised its rite
+ground into a waterstone therefore kept a zone stamped at rung one, so the rung above it was
+refused for not accreting from its standing rung and the first basin stayed at sixteen drams
+instead of widening to forty-eight.
+
+The at-most-once rung effects now live in one shared settlement helper
+(`Growth/KingdomPlotHeartRules.Settle.cs`) that both routes call: the plot route from
+`Growth/KingdomPlot2.34.EffectsAndFurnishing.cs`, and the improvement handover from
+`Growth/KingdomUpgrade.26.HeartRung.cs`, called by
+`Growth/KingdomUpgrade.25.HandoverRemoval.cs`. Each route supplies its OWN exact endpoint and
+custody proof, re-asked after the ceremony callback; the 0/1/2 attempted/lost marker is unchanged,
+so an interrupted ceremony is honestly lost rather than fired twice; and a rung is never stamped
+backward. The improvement route settles the rung BEFORE its receipt completes, so a rung that
+cannot settle exactly leaves the receipt non-terminal for the ordinary recovery path. The basin
+widens in the SAME pass, inside the existing guard, rather than waiting for the next activation.
+
+Every callback boundary the rung introduces re-establishes the WHOLE handover proof, not the cheap
+identity gate: the improvement handover's own predicate block and its settled-contents check —
+including the exact legacy zero-content carve-out — are lifted whole into
+`KingdomUpgrade.ExactImprovementHandoverProof` (`Growth/KingdomUpgrade.25b.HandoverProof.cs`) and
+asked THREE times: once before anything is stamped — closing the window the handover's own
+`active.ObserveChanged` reclassification opens, which can tear carried contents while leaving the
+root standing — and then as the delegate the shared helper re-asks after the ceremony and again
+after the basin reconciliation. The final re-ask sits OUTSIDE the basin guard on purpose: the guard must keep
+swallowing a basin failure, which the next load repeats idempotently, but a torn endpoint must
+refuse. A late refusal leaves the honest state behind it — the rung stamped, the ceremony marker
+settled — so the retry quarantines with the exact reason and never re-fires the ceremony.
+
+Evidence honesty for that contract. The shared helper and the handover proof are engine-typed, and
+both public test projects are deliberately Qud-free, so the callback-tear behaviour cannot be
+executed there: **it is source-pinned, not behaviourally proven.** What IS executed against real
+values is the direction rule (`KingdomPlotRules.RungMaySettle`) and the rung/capacity ladder. The
+behavioural proof of the tear contract is owed to the native lane along with the rung climb itself.
+
+No serialized field, save key, wire format or public API changes; no new property is written on any
+object class that did not already carry it. Saves already stuck at a stale rung are a separate
+follow-up, not a silent migration. **Native proof owed:** the camp seam's third phase, climbing
+rung 2 to rung 3 and reading `HeartRung(Z) == 2` after the waterstone and `== 3` after the moot.
+This is a source, compile and host-suite claim only.
+
+Retained isolated #138 census: 3082 staged production C# files, 437,405 physical lines, none at or above 300.
+Direct `XRL` imports: 1437 files, 0 over the line limit. Inventory SHA-256:
+`40af1139cc9336140aca90a5db81c80aefb060a45635d57766b560c34c1753e4`.
+The 3082 staged C# files produce a cold-install inventory of 3113 files. From these
+3082 sources, baseline and compatibility symbols select 3078 and 3082 ordinary inputs;
+the developer profiles compile 3260 and 3264 inputs. All four compile modes pass.
+
+Retained roadless-seal verification continuation (not the combined heart candidate):
 One engine-free classifier is new; no serialized field, save key, wire format, or public API
 changes. Four canonical compile modes and repository audit pass (770 checks, six platform skips).
 Main 14,296 and portable 5,460 tests pass with zero skips. Focused nine checks pass; removing
@@ -271,9 +756,22 @@ receipt and ground, and no leaked survey scope all passed. External sealed-profi
 returned PASS and driver exit 0. Evidence `hotfix142-native.epWuUn`; profile
 `/mnt/c/taf-scenario.nwgvHE`; owned PID 37016 stopped with profile/seal retained. This proves
 staking the paid fire plot, not completion, ordinary play, historical saves or Steam delivery.
-The six terrain/advisor save–cold-load pairs are running separately, not yet accepted here.
+All six terrain/advisor automated save–cold-load pairs passed on the same frozen runtime.
+The retained marsh/advisor pair is `n1AMBR` → `FkREwz`; remaining pairs are recorded in
+`hotfix142-native.IqS6Jj/results.json` (driver exit 0, all owned game processes stopped).
+The sealed developer checks retain their stated scope; no ordinary-play claim is added.
 The following descendant changes only portable test registration (12 existing pure source files),
 not the exercised runtime or harness. Full candidate release gates remain required.
+
+Private staging run `34543738835` subsequently passed the complete release pipeline on
+`15901a42c5d2202813c5227c31d94e76e0c416c9`, including licensed suites 14112/0 and 5246/0,
+upload, subscribed-install verification and finalization for item `3796495680`, attempt `0004`.
+Bound receipt: `5c41283ea5dfaa499461db621488b25b0c6aefdbcb86dd04eb229ce7721fada2`.
+Installed inventory: `4dd88f11f278d7649672daea103c3c98723511c465dfdbbf85fd5371a14d019b`.
+Finalization: `343a00c9f83a9f1a79a114c95d9543e9dd1c4dc1ccb51bd3167d2c332f1731d4`.
+This proves one subscribed client only; `freshTransferVerified=false`, `releaseReady=false`.
+Public promotion is complete, with separate public evidence above. The author's standing 2026-09-11 ruling removes manual
+test gates for every release; all automated gates and evidence boundaries remain intact.
 
 The integrated `0f78405` native build run passed genuine boot, quote, CanPay, commission,
 physical timber/water debit and clean paid-claim checks, then correctly failed acceptance at

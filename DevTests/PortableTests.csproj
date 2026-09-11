@@ -17,12 +17,20 @@
 
   <ItemGroup>
     <Compile Include="TestMain.cs" />
+    <Compile Include="KingdomHeartRungSettleTests.cs" />
+    <Compile Include="KingdomCampHeartNativeSourceTests.cs" />
+    <Compile Include="..\Harness\KingdomCampHeartNativeCensus.cs" />
+    <Compile Include="KingdomCampHeartNativeCensusTests.cs" />
     <Compile Include="..\Core\KingdomSealPendingRules.cs" />
     <Compile Include="KingdomSealPendingRulesTests.cs" />
     <Compile Include="KingdomDepositOverflowNativeSourceTests.cs" />
+    <Compile Include="KingdomQuoteSitingOccupancyNativeSourceTests.cs" />
+    <Compile Include="KingdomQuoteSitingOccupancyCaseRunnerTests.cs" />
+    <Compile Include="..\Harness\KingdomQuoteSitingOccupancyCaseRunner.cs" />
     <Compile Include="KingdomDepositOverflowReservationTests.cs" />
     <Compile Include="..\Harness\KingdomDepositOverflowReservation.cs" />
     <Compile Include="KingdomQuickstartMaterialIdentityTests.cs" />
+    <Compile Include="KingdomQuickstartLifecycleContractTests.cs" />
     <Compile Include="KingdomRealmArchiveNestedWireSourceTests.cs" />
     <Compile Include="KingdomCityBookRefusalTests.cs" />
     <Compile Include="KingdomWearLoadSafetySourceTests.cs" />
@@ -144,6 +152,9 @@
 	<Compile Include="KingdomQuickstartTests.cs" />
 	<Compile Include="KingdomQuickstartGuideRulesTests.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartBootRequest.cs" />
+	<Compile Include="..\Harness\KingdomQuickstartLifecycleRows.cs" />
+	<Compile Include="..\Harness\KingdomQuickstartLifecycleSnapshot.cs" />
+	<Compile Include="..\Harness\KingdomQuickstartLifecycleStamp.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartBuildClaims.cs" />
 	<Compile Include="..\Harness\KingdomTeardownStrikeRowClaims.cs" />
 	<Compile Include="..\Harness\KingdomTeardownCrewDepartureClaims.cs" />
@@ -198,6 +209,9 @@
 	<Compile Include="KingdomGatehouseProjectionRulesTests.cs" />
 	<Compile Include="..\Debug\KingdomVisualProofRules.cs" />
 	<Compile Include="..\Growth\KingdomArchitectureEnums.cs" />
+	<Compile Include="..\Growth\KingdomArchitectureComponentCensusRules.cs" />
+    <Compile Include="..\Growth\KingdomArchitectureComponentCensusRow.cs" />
+	<Compile Include="KingdomArchitectureComponentCensusTests.cs" />
 	<Compile Include="..\Growth\KingdomArchitectureSnapshots.cs" />
 	<Compile Include="..\Growth\KingdomArchitectureLabourRules.cs" />
 	<Compile Include="..\Growth\KingdomArchitectureLabourRules.PlotReceipt.cs" />

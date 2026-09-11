@@ -20,6 +20,7 @@ namespace ThousandAndFirst.Tests
 		private const string Retag = "Growth/KingdomArchitectureStamper.UpgradeRetag.cs";
 		private const string Capture = "Growth/KingdomSurvey.01.Capture.cs";
 		private const string Effects = "Growth/KingdomPlot2.34.EffectsAndFurnishing.cs";
+		private const string RungSettle = "Growth/KingdomPlotHeartRules.Settle.cs";
 		private const string Events = "Core/KingdomSystem.z20.Events.cs";
 		private const string Blueprints = "RuntimeData/ObjectBlueprints.xml";
 		private const string Buildings = "RuntimeData/KingdomBuildings.xml";
@@ -211,12 +212,17 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void BothLiveStampsAndTheCatalogueAgreeWhereTheWaterIs()
 		{
-			// Guarded like every sibling callback in FinishPlotEffects: a throw from the survey,
-			// the anchored lookup or the ledger must not abort the settlement pass after the rung
-			// stamp has already been advanced.
-			Ordered(Read(Effects), "KingdomCeremonyHeart.OnRungRaised(",
+			// Guarded like every sibling callback the rung settles: a throw from the survey, the
+			// anchored lookup or the ledger must not abort the settlement pass after the rung
+			// stamp has already been advanced. The effects moved to the shared settlement helper
+			// (#138) so the improvement route settles the same rung the plot route does; the
+			// order they are pinned in did not move with them.
+			Ordered(Read(RungSettle), "KingdomCeremonyHeart.OnRungRaised(",
 				"KingdomSystem.Guard(\"heart basin capacity\", delegate",
 				"ReconcileBasinCapacity(System, Building, Z);");
+			// The plot route still reaches them, through the one helper and with its own proof.
+			Ordered(Read(Effects), "TrySettleHeartRung(System, Z, Building, Job.TargetKey,",
+				"ExactPlotEffectEndpoint(System, Z, Building, settling)");
 			// AFTER the seat exchange, and only for ground the seated realm claims. Before the
 			// exchange the flat fields -- ClaimedZones, Ledger, LifecycleBook -- still answer for
 			// the city the founder just left, so a second city's basin would be dedicated into the
@@ -487,10 +493,14 @@ namespace ThousandAndFirst.Tests
 			// has returned and its finally has dropped the hold, and that pass opens no water debit
 			// of its own -- so the completion is never asking a hold it is itself holding.
 			string effects = Read(Effects);
-			Ordered(effects, "KingdomSystem.Guard(\"heart basin capacity\", delegate",
+			string rungSettle = Read(RungSettle);
+			Ordered(rungSettle, "KingdomSystem.Guard(\"heart basin capacity\", delegate",
 				"ReconcileBasinCapacity(System, Building, Z);");
-			StringAssert.DoesNotContain("KingdomWaterDebit", effects);
-			StringAssert.DoesNotContain("CompensationWindow", effects);
+			foreach (string forbidden in new[] { "KingdomWaterDebit", "CompensationWindow" })
+			{
+				StringAssert.DoesNotContain(forbidden, effects);
+				StringAssert.DoesNotContain(forbidden, rungSettle);
+			}
 			string funding = Read(Funding);
 			StringAssert.DoesNotContain("ReconcileBasinCapacity", funding);
 			ClassicAssert.IsTrue(Regex.IsMatch(Compact(funding),

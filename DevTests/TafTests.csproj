@@ -18,12 +18,17 @@
 
   <ItemGroup>
     <Compile Include="TestMain.cs" />
+	<Compile Include="KingdomHeartRungSettleTests.cs" />
+	<Compile Include="KingdomCampHeartNativeSourceTests.cs" />
+	<Compile Include="..\Harness\KingdomCampHeartNativeCensus.cs" />
+	<Compile Include="KingdomCampHeartNativeCensusTests.cs" />
     <Compile Include="..\Core\KingdomSealPendingRules.cs" />
     <Compile Include="KingdomSealPendingRulesTests.cs" />
     <Compile Include="KingdomDepositOverflowNativeSourceTests.cs" />
     <Compile Include="KingdomDepositOverflowReservationTests.cs" />
     <Compile Include="..\Harness\KingdomDepositOverflowReservation.cs" />
     <Compile Include="KingdomQuickstartMaterialIdentityTests.cs" />
+    <Compile Include="KingdomQuickstartLifecycleContractTests.cs" />
     <Compile Include="KingdomRealmArchiveNestedWireSourceTests.cs" />
     <Compile Include="KingdomRealmHashBasisTests.cs" />
     <Compile Include="KingdomRealmCallbackBasisTests.cs" />
@@ -199,6 +204,10 @@
     <Compile Include="..\Experience\KingdomGrowthFirstGuestRules.Choices.cs" />
     <Compile Include="..\Core\KingdomBodyHistoryRules.cs" />
     <Compile Include="..\Growth\KingdomArchitectureSnapshots.cs" />
+    <Compile Include="..\Growth\KingdomArchitectureComponentCensusRules.cs" />
+    <Compile Include="..\Growth\KingdomArchitectureComponentCensusRow.cs" />
+    <Compile Include="KingdomArchitectureComponentCensusTests.cs" />
+    <Compile Include="KingdomArchitectureRetagPeerMappingTests.cs" />
     <Compile Include="..\Growth\KingdomArchitectureSelectorRules.cs" />
     <Compile Include="..\Growth\KingdomArchitectureValidationRules.cs" />
     <Compile Include="..\Core\KingdomQolRules.TagSets.cs" />
@@ -495,6 +504,9 @@
     <Compile Include="KingdomQuickstartShelterIngressTests.cs" />
     <Compile Include="KingdomQuickstartGuideRulesTests.cs" />
     <Compile Include="..\Harness\KingdomQuickstartBootRequest.cs" />
+    <Compile Include="..\Harness\KingdomQuickstartLifecycleRows.cs" />
+    <Compile Include="..\Harness\KingdomQuickstartLifecycleSnapshot.cs" />
+    <Compile Include="..\Harness\KingdomQuickstartLifecycleStamp.cs" />
     <Compile Include="..\Harness\KingdomQuickstartBuildClaims.cs" />
     <Compile Include="..\Harness\KingdomTeardownStrikeRowClaims.cs" />
     <Compile Include="..\Harness\KingdomTeardownCrewDepartureClaims.cs" />
@@ -713,6 +725,9 @@
 	<Compile Include="KingdomUpgradeSourceTests.cs" />
     <Compile Include="KingdomDesignRulesTests.cs" />
     <Compile Include="KingdomPlotRulesTests.cs" />
+    <Compile Include="KingdomQuoteSitingOccupancyNativeSourceTests.cs" />
+    <Compile Include="KingdomQuoteSitingOccupancyCaseRunnerTests.cs" />
+    <Compile Include="..\Harness\KingdomQuoteSitingOccupancyCaseRunner.cs" />
     <Compile Include="KingdomArchitectureRulesTests.cs" />
 	<Compile Include="KingdomArchitectureCorpusFixture.cs" />
 	<Compile Include="KingdomArchitectureEnclosureTests.cs" />
@@ -746,6 +761,7 @@
     <Compile Include="KingdomArchitectureStamperSourceTests.cs" />
     <Compile Include="KingdomFootprintTests.cs" />
     <Compile Include="KingdomMaterialRulesTests.cs" />
+    <Compile Include="KingdomCampHeartTests.cs" />
     <Compile Include="KingdomCatalogueRulesTests.cs" />
 	<Compile Include="KingdomCeremonyLogicalSource.cs" />
 	<Compile Include="KingdomCeremonyStructureSourceTests.cs" />
@@ -1128,6 +1144,7 @@
 	<Compile Include="..\Growth\KingdomPlotFootprintRules.cs" />
 	<Compile Include="..\Growth\KingdomPlotChainRules.cs" />
 	<Compile Include="..\Growth\KingdomPlotBoundsRules.cs" />
+	<Compile Include="..\Growth\KingdomPlotSelectionRules.cs" />
 	<Compile Include="..\Growth\KingdomPlotHeartRules.cs" />
 	<Compile Include="..\Growth\KingdomFoundingHeartPlan.cs" />
 	<Compile Include="..\Growth\KingdomFoundingHeartStakeRules.cs" />

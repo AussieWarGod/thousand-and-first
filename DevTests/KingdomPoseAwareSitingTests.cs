@@ -125,11 +125,13 @@ namespace ThousandAndFirst.Tests
 				"KingdomPlotRules.CrowdsExisting(rect, laid)",
 				"Grid.AnyRefusal(rect)",
 				"KingdomArchitectureRuntime.TryCreateSitingProbe(",
-				"probe.TryAccept(candidate, out architectureFailure)",
+				"KingdomPlotSelectionRules.TrySelect(groundCandidates,",
 				"KingdomPlotRules.ChooseRect(");
 			StringAssert.Contains("groundCandidates[0], Entry.Key, Entry.Category", source);
-			StringAssert.Contains("architectureFailures[nearest]", source);
-			StringAssert.Contains("string.IsNullOrEmpty(architectureRefusal)", source);
+			// The nearest-rejected-failure selection itself moved into
+			// Growth/KingdomPlotSelectionRules.cs (engine-free, value-tested there); this file
+			// now only wires the real Zone-coupled resolver into that shard.
+			StringAssert.Contains("candidate => ResolveArchitecture(probe, candidate, Z, occupiedCells)", source);
 		}
 
 		[Test]

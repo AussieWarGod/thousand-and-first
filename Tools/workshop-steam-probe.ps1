@@ -37,9 +37,14 @@ $Project = Join-Path $PSScriptRoot 'WorkshopSteam\WorkshopSteam.csproj'
 $OutputDirectory = Join-Path $EvidenceDirectory 'out'
 $IntermediateDirectory = (Join-Path $EvidenceDirectory 'obj') + '/'
 $Dotnet = (Get-Command dotnet.exe -CommandType Application).Source
+# Refs #151: --disable-build-servers refuses the MSBuild/VBCSCompiler/Razor persistent build
+# servers for this one invocation (a surviving VBCSCompiler.dll keepalive is the only
+# descendant left after a probe/launcher build exits, hanging the runner's outer
+# Start-Process -Wait); -m:1 -nr:false match Tools/test-workshop-upload.ps1's convention.
 & $Dotnet build $Project --nologo --configuration Release --output $OutputDirectory `
     "-p:QudManaged=$ManagedDirectory" "-p:BaseIntermediateOutputPath=$IntermediateDirectory" `
-    --ignore-failed-sources *> (Join-Path $EvidenceDirectory 'build.log')
+    --ignore-failed-sources --disable-build-servers '-m:1' '-nr:false' `
+    *> (Join-Path $EvidenceDirectory 'build.log')
 if ($LASTEXITCODE -ne 0) { throw 'Probe compilation failed; retained build.log.' }
 
 # Steam context is process-local. Never log credentials, start Steam, or answer authentication prompts.

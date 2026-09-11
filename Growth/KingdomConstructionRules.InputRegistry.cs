@@ -6,6 +6,16 @@ namespace ThousandAndFirst
 	/// <summary>Construction-registry ownership of the routed-input child receipt.</summary>
 	public static partial class KingdomConstructionRules
 	{
+		/// <summary>A committed input receipt remains attached through work and completion.
+		/// Recovery authorizes dispatch of the fresh valid job, not only its Funded phase.</summary>
+		public static bool CanDispatchRecoveredInput(KingdomConstructionJob Job,
+			bool AtTarget, bool RecoverySucceeded)
+		{
+			return AtTarget && RecoverySucceeded && Job != null && Job.Claims != null
+				&& ValidJob(Job) && TryGetInputReceipt(Job, out var receipt)
+				&& receipt.TxPhase == KingdomConstructionInputTxPhase.Committed;
+		}
+
 		public static bool TryGetInputReceipt(KingdomConstructionJob Job,
 			out KingdomConstructionInputReceipt Receipt)
 		{

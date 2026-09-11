@@ -326,9 +326,15 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("try { Id = Item.IDIfAssigned; return true; }", graveyard);
 			StringAssert.Contains("native graveyard identity is unreadable", graveyard);
 			StringAssert.DoesNotContain("GetInventoryDirectAndEquipment", graveyard);
+			// #138: the rung's ceremony moved into the shared settlement helper, and the proof it
+			// is re-asked with moved with it as the caller's own delegate. The pin follows the
+			// code: the callback still runs before the endpoint is re-proved, and the plot
+			// route's proof is still its own plot final-root custody.
+			string rungSettle = Source("Growth/KingdomPlotHeartRules.Settle.cs");
+			Ordered(rungSettle, "KingdomCeremonyHeart.OnRungRaised(", "if (!Prove()) return false;");
 			string jobEffects = Source("Growth/KingdomPlot2.34.EffectsAndFurnishing.cs");
-			Ordered(jobEffects, "KingdomCeremonyHeart.OnRungRaised(",
-				"ExactPlotFinalRootCustody(Job.OutputId, Building)");
+			Ordered(jobEffects, "TrySettleHeartRung(System, Z, Building, Job.TargetKey,",
+				"ExactPlotFinalRootCustody(settling.OutputId, Building)");
 		}
 
 		[Test]

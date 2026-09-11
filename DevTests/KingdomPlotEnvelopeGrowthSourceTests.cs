@@ -71,13 +71,15 @@ namespace ThousandAndFirst.Tests
 			string source = Read("Growth/KingdomArchitectureStamper.EnvelopeGrowth.cs");
 			AssertOrdered(source,
 				"System.ClaimedZones.Contains(Z.ZoneID)",
-				"TryAuthorizedEnvelopeExpansion(Owner, Z, beforeIntent, before, Successor,",
+				// Issue #141: the authority call here is now TryAuthorizedTransition, which
+				// dispatches heart and ordinary; the pin moves with the code, not weakened.
+				"TryAuthorizedTransition(Owner, Z, beforeIntent, before, Successor, after,",
 				"KingdomPlotRules.Fits(Successor.Rect, interior)",
 				"survey.PlotRoots",
 				"KingdomPlotRules.Reserved(other)",
 				"KingdomPlotRules.PlotAreaAllowance(Z.Width, Z.Height)",
 				"if (!AllowSettledSuccessor)",
-				"probe.TryAcceptExact(Successor.Rect, after, true",
+				"probe.TryAcceptExact(Successor.Rect, after, requireExistingRoadEvidence",
 				"TryAcceptFrozenEnvelope(Z, Successor.Rect,",
 				"ConnectionCells(Z)",
 				"ReadWornRoadCells(Z)",
@@ -122,6 +124,107 @@ namespace ThousandAndFirst.Tests
 			StringAssert.DoesNotContain("KingdomArchitecture.", frozen);
 			StringAssert.DoesNotContain("TrySelectionContext", frozen);
 			StringAssert.DoesNotContain("KingdomArchitectureMapping", frozen);
+		}
+
+		[Test]
+		public void EnvelopeGrowthAsksTheFoundingAuthorityWhichDispatchesHeartAndOrdinary()
+		{
+			// Issue #141 (PARTIAL): the old call went straight to TryAuthorizedEnvelopeExpansion,
+			// which refuses every heart by design, so a heart whose rects differ - rungs one to
+			// four, all of them - could never prove growth. TryAuthorizedTransition already
+			// dispatches, and a differing non-heart rect still reaches the expansion authority
+			// inside it, so the ordinary route is unchanged.
+			string growth = Read("Growth/KingdomArchitectureStamper.EnvelopeGrowth.cs");
+			AssertOrdered(growth,
+				"if (SameRect(beforeIntent.Rect, Successor.Rect)) return true;",
+				"if (!TryAuthorizedTransition(Owner, Z, beforeIntent, before, Successor, after,",
+				"false, out bool heartAccretion, out Failure))",
+				"return false;");
+			// The old direct call to the ordinary authority is gone from this function.
+			StringAssert.DoesNotContain(
+				"!TryAuthorizedEnvelopeExpansion(Owner, Z, beforeIntent, before, Successor,",
+				growth);
+			// No caller-supplied bypass, no new parameter, no new field, no plan change, no
+			// same-rect shortcut beyond the one that was already there.
+			foreach (string forbidden in new[] { "bool HeartAuthority", "AllowHeartAuthority",
+				"bool SkipAuthority", "HeartAccretion = true", "AllowPlanChange: true",
+				"Successor, after, true, out", "IsHeartTransitionEndpoints" })
+				StringAssert.DoesNotContain(forbidden, growth);
+			// The ordinary expansion authority still refuses hearts; it was not relaxed.
+			AssertOrdered(growth,
+				"KingdomPlotRules.HeartRungOf(Before.BuildKey) != 0",
+				"KingdomPlotRules.HeartRungOf(After.BuildKey) != 0",
+				"Owner.GetIntProperty(KingdomPlots.HeartPlotProperty) == 1",
+				"ordinary plot-envelope growth cannot claim founding-heart authority");
+		}
+
+		[Test]
+		public void EverySixLaterEnvelopeCheckStillRunsInOrderAfterTheAuthorityBlock()
+		{
+			// Both authorities still prove bounds, ownership and protected ground. Authorized
+			// hearts prove physical ingress; ordinary envelopes additionally need road evidence.
+			string growth = Read("Growth/KingdomArchitectureStamper.EnvelopeGrowth.cs");
+			AssertOrdered(growth,
+				"if (!TryAuthorizedTransition(Owner, Z, beforeIntent, before, Successor, after,",
+				// 1. interior fit
+				"KingdomPlotRules.TryInterior(Z.Width, Z.Height, out interior)",
+				"the enlarged authored lot does not fit settlement interior ground",
+				// 2. malformed / out-of-zone geometry
+				"the loaded zone carries malformed or out-of-zone plot geometry",
+				// 3. plot overlap and road budget
+				"the enlarged authored lot would consume the reserved lane of ",
+				"standing plot ownership is absent or ambiguous in the loaded zone",
+				"KingdomPlotRules.PlotAreaAllowance(Z.Width, Z.Height)",
+				"the enlarged authored lot would spend settlement road ground",
+				// 4. siting probe / frozen envelope, both branches
+				"KingdomArchitectureRuntime.TryCreateSitingProbe(System, Z, Successor.Rect,",
+				"probe.TryAcceptExact(Successor.Rect, after, requireExistingRoadEvidence,",
+				"KingdomArchitectureRuntime.TryAcceptFrozenEnvelope(Z, Successor.Rect,",
+				// 5. settled outputs
+				"TryReadSettledExpansionOutputs(Owner, SuccessorOwner, Z, beforeIntent,",
+				// 6. per-cell sweep, ending on the founding-heart ground refusal it always made
+				"plot-envelope growth would cover stairs or a zone connection at ",
+				"plot-envelope growth would cover open liquid at ",
+				"plot-envelope growth overlaps another active paid construction at ",
+				"plot-envelope growth would absorb public road ground at ",
+				"a living occupant stands on plot-envelope growth ground at ",
+				"founding-heart ground occupies plot-envelope growth at ");
+		}
+
+		[Test]
+		public void EveryRetryCallSiteStillProvesEnvelopeGrowthUnconditionally()
+		{
+			// Pre-debit and paid application both reach the proof, and neither gained a
+			// heart-shaped exemption from it.
+			string preflight = Read("Growth/KingdomArchitectureStamper.UpgradePreflight.cs");
+			StringAssert.Contains(
+				"TryProveEnvelopeGrowth(System, Z, Owner, null, Successor, false,", preflight);
+			string application = Read(
+				"Growth/KingdomArchitectureStamper.UpgradeApplication.cs");
+			StringAssert.Contains(
+				"TryProveEnvelopeGrowth(system, Z, Owner, Target, Successor, true,", application);
+			foreach (string source in new[] { preflight, application })
+				foreach (string forbidden in new[] { "heartAccretion &&", "!heartAccretion &&",
+					"HeartRungOf", "HeartPlotProperty" })
+					StringAssert.DoesNotContain(forbidden, source);
+		}
+
+		[Test]
+		public void SurveyedHeartRequiresPhysicalIngressBeforeBothProofBranches()
+		{
+			// Wiring tripwire, not a native reachability claim. The real camp persona must
+			// prove the roadless heart transition; protected-ground checks remain below.
+			string growth = Read("Growth/KingdomArchitectureStamper.EnvelopeGrowth.cs");
+			AssertOrdered(growth,
+				"false, out bool heartAccretion, out Failure))",
+				"if (heartAccretion && !KingdomArchitectureRuntime.TryVerifyPhysicalIngressRoutes(",
+				"Z, Successor.Rect, after, out Failure)) return false;",
+				"bool requireExistingRoadEvidence = !heartAccretion;",
+				"if (!AllowSettledSuccessor)",
+				"probe.TryAcceptExact(Successor.Rect, after, requireExistingRoadEvidence,",
+				"after, requireExistingRoadEvidence, out Failure)) return false;",
+				"plot-envelope growth would absorb public road ground at ");
+			StringAssert.DoesNotContain("requireExistingRoadEvidence = false", growth);
 		}
 
 		[Test]
@@ -181,9 +284,11 @@ namespace ThousandAndFirst.Tests
 
 			string receipts = Read(
 				"Growth/KingdomArchitectureStamper.UpgradeReceipts.cs");
+			string removal = Read(
+				"Growth/KingdomArchitectureStamper.UpgradeRemoval.cs");
 			StringAssert.Contains("state == 1 && found == KingdomPhysicalLookupState.Absent",
-				receipts);
-			StringAssert.Contains("threw before changing exact state", receipts);
+				removal);
+			StringAssert.Contains("threw before changing exact state", removal);
 			StringAssert.Contains("UpgradeQuarantine(Owner", receipts);
 			StringAssert.Contains("phase < 0 || phase > 5", receipts);
 

@@ -91,9 +91,16 @@ namespace ThousandAndFirst.Tests
 			string removal = Source("Growth", "KingdomUpgrade.25.HandoverRemoval.cs");
 			string recovery = Between(removal, "internal static bool TryRecoverAbsentHandover(",
 				"private static bool TryPublishRemovalIntent(");
+			// #138: the recovery's predicate block moved whole into its own shard so the rung
+			// settlement can re-ask the identical question after every callback. The recovery
+			// still asks it first, and the global-absence proof is still what it asks.
 			StringAssert.Contains(
-				"FindGlobalPredecessorAuthority(Job, Successor, out _)", recovery);
+				"ExactImprovementHandoverProof(System, Z, Successor, Job, out Failure)", recovery);
+			string proof = Source("Growth", "KingdomUpgrade.25b.HandoverProof.cs");
+			StringAssert.Contains(
+				"FindGlobalPredecessorAuthority(Job, Successor, out _)", proof);
 			StringAssert.DoesNotContain("FindGlobalLiveId(Job.SubjectId", recovery);
+			StringAssert.DoesNotContain("FindGlobalLiveId(Job.SubjectId", proof);
 		}
 
 		[Test]
@@ -344,6 +351,7 @@ namespace ThousandAndFirst.Tests
 				Source("Growth", "KingdomConstruction.Registry.cs"),
 				Source("Growth", "KingdomLodging.cs"),
 				Source("Growth", "KingdomArchitectureStamper.UpgradeReceipts.cs"),
+				Source("Growth", "KingdomArchitectureStamper.UpgradeRemoval.cs"),
 				Source("Experience", "KingdomExpeditions.DebitReceipts.cs")
 			};
 			foreach (string scan in pure) ClassicAssert.AreEqual(0, MintingReads(scan));

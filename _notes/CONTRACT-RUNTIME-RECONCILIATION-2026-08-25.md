@@ -1,6 +1,22 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
-## Current dev hotfix backmerge — 2026-09-11
+## Retained combined heart candidate before surveyed-ingress draft — 2026-09-11
+
+Current draft census/evidence is in docs/STATUS.md; the figures below describe its predecessor.
+
+3089 production C# files; 438,207 physical lines; 1441 direct-XRL files; zero cap failures;
+3,120 cold-install files. Inventory `031417d6337e6cc2870749baa2ca611a6db2c6c421ee50ea1e7d0157fa70d146`.
+#141/#144/#139/#137 combined; compile, native and semantic review owed. All earlier evidence
+below remains checkpoint-scoped. Public0.3.3 is finalized; this candidate prepares0.3.4.
+
+## Retained camp integration (#107 / #132 / #137) — 2026-09-10
+
+Integrated through dev `bcca3e5`; compile/audit and main14341/portable5491 pass, zero managed
+skips; native pending. Census3079/437201/1434,
+zero cap failures; inventory `304123d5ee1b31fa0b1369d5ad13c52888111f5c7563245f4fe4096c8ca38c70`.
+Earlier evidence below remains bound to its named checkpoints.
+
+## Retained dev hotfix backmerge — 2026-09-11
 
 3080 production C# files; 437,399 physical lines; 1435 direct-XRL files; zero at or above 300 lines;
 3,111 cold-install files. Inventory `6ebc095bd595e636c48079ba5c41c0cb3bb92f3af7741d99b05eeb8b81acc78d`.
@@ -10,9 +26,9 @@ See docs/STATUS.md for scoped release evidence. Public Workshop remains 0.3.2.
 
 ## Retained roadless seal census (#131) — 2026-09-10
 
-3079 production C# files; 3,110 cold-install files; 437,201 physical lines, 1434 direct-XRL,
-zero cap failures. Inventory `ab4cf22e665900bd82593ad4f9805861da4458e60b918c59b1d3a0bb88b74617`.
-Four compile modes, audit, main 14,296/portable 5,460 tests pass (managed zero skips).
+3082 production C# files; 3,113 cold-install files; 437,405 physical lines, 1437 direct-XRL,
+zero cap failures. Inventory `40af1139cc9336140aca90a5db81c80aefb060a45635d57766b560c34c1753e4`.
+Four compile modes, audit, main 14,318/portable 5,470 tests pass (managed zero skips).
 Roadless-camp native passes at `0cfd8e7` (bounded scope in docs/STATUS.md). No release approval inferred.
 
 ## Retained Kingdom Quickstart founding-cohort census — 2026-09-10
