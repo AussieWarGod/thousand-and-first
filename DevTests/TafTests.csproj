@@ -512,7 +512,11 @@
     <Compile Include="..\Harness\KingdomQuickstartLifecycleStall.Classify.cs" />
     <Compile Include="KingdomQuickstartLifecycleStallClassifyTests.cs" />
     <Compile Include="..\Harness\KingdomQuickstartBuildClaims.cs" />
+    <Compile Include="..\Harness\KingdomTeardownStrikeRowClaims.cs" />
+    <Compile Include="..\Harness\KingdomTeardownCrewDepartureClaims.cs" />
     <Compile Include="KingdomQuickstartBuildClaimsTests.cs" />
+    <Compile Include="KingdomTeardownStrikeRowClaimsTests.cs" />
+    <Compile Include="KingdomTeardownCrewDepartureClaimsTests.cs" />
     <Compile Include="..\Harness\KingdomQuickstartSaveSnapshot.cs" />
     <Compile Include="..\Harness\KingdomQuickstartSaveSnapshotCodec.cs" />
     <Compile Include="KingdomQuickstartSaveSnapshotTests.cs" />
