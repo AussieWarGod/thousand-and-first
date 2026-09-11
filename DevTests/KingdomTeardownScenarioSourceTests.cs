@@ -135,6 +135,14 @@ namespace ThousandAndFirst.Tests
 			int index = 0;
 			while ((index = source.IndexOf("CheckVerb,", index)) >= 0) { checkVerbCount++; index++; }
 			Assert.That(checkVerbCount, Is.EqualTo(4), "exactly four sealed CheckVerb tokens");
+			// Copilot #167 thread 3: every cumulative-tick list in the two Harness files must read
+			// the four numbers the sealed script produces. Provider.cs may name the prior
+			// schedule only as the explicitly superseded one; Checks.cs must not name it at all.
+			Assert.That(source, Does.Contain("Cumulative ticks 2400/6000/9600/13200"));
+			Assert.That(source, Does.Contain("the prior 2000/4800/7600/10800 schedule"));
+			string checks = Read(Checks);
+			Assert.That(checks, Does.Contain("cumulative ticks 2400/6000/9600/13200"));
+			Assert.That(checks, Does.Not.Contain("2000/4800/7600/10800"));
 		}
 
 		[Test]
@@ -390,6 +398,18 @@ namespace ThousandAndFirst.Tests
 				"KingdomCitizenshipEnrollmentReason.Arrival, tick, out string failure)"));
 			Assert.That(source, Does.Contain("body.SetIntProperty(\"KingdomBorn\", 1);"));
 			Assert.That(source, Does.Contain("KingdomResidents.TryEnsureRow(System, body,"));
+			// Copilot #167 thread 1: the order is load-bearing (Enrollable requires KingdomBorn==1
+			// and TryEnroll does not set it, so the stamp must precede TryEnsureRow) and the
+			// summary must state the true three-step order, not "stamped first". Strictly
+			// increasing IndexOf positions: moving the stamp above TryEnroll or below
+			// TryEnsureRow flips this pin.
+			int enrollAt = source.IndexOf("KingdomCitizenship.TryEnroll(System, body,", StringComparison.Ordinal);
+			int bornAt = source.IndexOf("body.SetIntProperty(\"KingdomBorn\", 1);", StringComparison.Ordinal);
+			int rowAt = source.IndexOf("KingdomResidents.TryEnsureRow(System, body,", StringComparison.Ordinal);
+			Assert.That(enrollAt, Is.LessThan(bornAt), "KingdomBorn=1 must be stamped after TryEnroll");
+			Assert.That(bornAt, Is.LessThan(rowAt), "KingdomBorn=1 must be stamped before TryEnsureRow");
+			Assert.That(source, Does.Contain("KingdomCitizenship.TryEnroll, then KingdomBorn=1, then"));
+			Assert.That(source, Does.Not.Contain("stamped first"));
 			Assert.That(source, Does.Contain("KingdomResidents.OnRollCount(System) >= CrewSize"));
 			// No direct Population/Working/Built write anywhere in the crew fixture.
 			Assert.That(source, Does.Not.Contain("Population ="));
@@ -668,7 +688,13 @@ namespace ThousandAndFirst.Tests
 			Assert.That(checks, Does.Contain("body.Brain.Stay(destination);"));
 			Assert.That(checks, Does.Contain("Append(\") stationary=\").Append(body.Brain != null);"));
 			Assert.That(checks, Does.Contain("Append(\" parked-at=(\").Append(parked.X)"));
-			Assert.That(checks, Does.Contain("Append(\") parked-empty=\").Append(parked.IsEmpty())"));
+			// Copilot #167 thread 2: the crew body itself occupies `parked` when this runs, and
+			// Cell.IsEmpty() (decompiled core 2.0.211.51, XRL/World/Cell.cs:5803-5819) returns
+			// false for any IsCombatObject(), so the bare form journalled false invariantly.
+			// Cell.IsEmptyIgnoring(Predicate<GameObject>) (XRL/World/Cell.cs:5839-5858) applies the
+			// same test to every non-excluded object; the body is the only exclusion.
+			Assert.That(checks, Does.Contain("Append(\") parked-empty=\").Append(parked.IsEmptyIgnoring(item => ReferenceEquals(item, body)))"));
+			Assert.That(checks, Does.Not.Contain("parked.IsEmpty()"));
 			Assert.That(checks, Does.Contain("Append(\" parked-passable=\").Append(parked.IsPassable());"));
 			// Fixture-only: never claims a production resident is anchored this way.
 			Assert.That(checks, Does.Not.Contain("Survey.Settlers"));

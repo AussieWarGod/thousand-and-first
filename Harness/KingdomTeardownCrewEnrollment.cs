@@ -9,9 +9,10 @@ namespace ThousandAndFirst.Harness
 	/// <summary>
 	/// A disclosed synthetic labour crew for the teardown scenario, enrolled through the exact
 	/// same production call sequence Harness/KingdomBountyFetchNativeFixture.cs:109-136 already
-	/// uses for its own fixture bodies (KingdomCitizenship.TryEnroll then
-	/// KingdomResidents.TryEnsureRow, with KingdomBorn=1 stamped first -- Enrollable requires it
-	/// and TryEnroll does not set it, exactly as that fixture's own comment there states). That
+	/// uses for its own fixture bodies: KingdomCitizenship.TryEnroll, then KingdomBorn=1, then
+	/// KingdomResidents.TryEnsureRow -- the roster gate Enrollable requires the property and
+	/// TryEnroll does not set it, so it must be carried before TryEnsureRow (as that fixture's
+	/// own comment there states; the stamp lands between the two calls, not before both). That
 	/// method is a private instance member of a sealed, unrelated fixture class closing over its
 	/// own Owned/Clear/Create helpers, so a call-through was not possible; this shard replicates
 	/// its production call shape instead of copy-pasting its fixture-specific plumbing, and nothing

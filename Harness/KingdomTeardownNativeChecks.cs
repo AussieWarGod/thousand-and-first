@@ -196,7 +196,7 @@ namespace ThousandAndFirst.Harness
 					}
 					Evidence.Append("; crew=").Append(body.IDIfAssigned ?? "unassigned")
 						.Append(" parked-at=(").Append(parked.X).Append(',').Append(parked.Y)
-						.Append(") parked-empty=").Append(parked.IsEmpty())
+						.Append(") parked-empty=").Append(parked.IsEmptyIgnoring(item => ReferenceEquals(item, body)))
 						.Append(" parked-passable=").Append(parked.IsPassable());
 				}
 			}
@@ -226,7 +226,7 @@ namespace ThousandAndFirst.Harness
 			}
 
 			/// <summary>Driven only by the sealed script's four teardown-check verbs (Provider.cs,
-			/// cumulative ticks 2000/4800/7600/10800), never every tick. Done only once every
+			/// cumulative ticks 2400/6000/9600/13200), never every tick. Done only once every
 			/// started case's negative path has been observed AND larder has started; forces no
 			/// transition.
 			/// <para>
