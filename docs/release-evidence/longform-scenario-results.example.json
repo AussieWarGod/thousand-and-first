@@ -10,23 +10,31 @@
   "logSha256": "SHA256_OF_RETAINED_RAW_DRIVER_LOG",
   "continuity": {
     "realmId": "REPLACE_WITH_EXERCISED_REALM_ID",
-    "cityId": "REPLACE_WITH_EXERCISED_CITY_ID",
-    "jobId": "REPLACE_WITH_EXERCISED_CONSTRUCTION_JOB_ID",
-    "buildingId": "REPLACE_WITH_EXERCISED_BUILDING_IDENTITY",
-    "plotId": "REPLACE_WITH_EXERCISED_PLOT_ID",
-    "saveId": "REPLACE_WITH_EXERCISED_SAVE_IDENTITY"
+    "cityId": "REPLACE_WITH_EXERCISED_CITY_ID"
   },
   "processes": [
-    {"role": "save-session", "launchId": "REPLACE_WITH_LAUNCH_ID", "started": "YYYY-MM-DDTHH:MM:SSZ", "stopped": true},
-    {"role": "cold-load-session", "launchId": "REPLACE_WITH_LAUNCH_ID", "started": "YYYY-MM-DDTHH:MM:SSZ", "stopped": true}
+    {"role": "save-session", "launchId": "REPLACE_WITH_LAUNCH_ID", "started": "YYYY-MM-DDTHH:MM:SSZ", "stoppedUtc": "YYYY-MM-DDTHH:MM:SSZ"},
+    {"role": "cold-load-session", "launchId": "REPLACE_WITH_A_DIFFERENT_LAUNCH_ID", "started": "YYYY-MM-DDTHH:MM:SSZ", "stoppedUtc": "YYYY-MM-DDTHH:MM:SSZ"}
   ],
   "steps": [
-    {"step": "startup", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0},
-    {"step": "quote", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0},
-    {"step": "paid-commission", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0},
-    {"step": "engine-turn-build", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0},
-    {"step": "save", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0},
-    {"step": "cold-load", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0},
-    {"step": "next-action", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0}
+    {"step": "startup", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0,
+     "observed": {"realmId": "REPLACE", "cityId": "REPLACE"}},
+    {"step": "quote", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0,
+     "observed": {"realmId": "REPLACE", "cityId": "REPLACE"}},
+    {"step": "paid-commission", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0,
+     "observed": {"realmId": "REPLACE", "cityId": "REPLACE", "jobId": "REPLACE_WITH_THE_COMMISSIONED_JOB_ID"}},
+    {"step": "engine-turn-build", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0,
+     "observed": {"realmId": "REPLACE", "cityId": "REPLACE", "jobId": "REPLACE_LIVE_JOB_OR_COMPLETED_RECEIPT_ID",
+       "buildingId": "REPLACE_WITH_THE_RESOLVED_BUILDING_ID", "plotId": "REPLACE_WITH_THE_PLOT_ID"}},
+    {"step": "save", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0,
+     "observed": {"realmId": "REPLACE", "cityId": "REPLACE", "buildingId": "REPLACE_SAME_AS_ABOVE",
+       "plotId": "REPLACE_SAME_AS_ABOVE", "saveId": "REPLACE_WITH_THE_SAVE_ID"}},
+    {"step": "cold-load", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0,
+     "observed": {"realmId": "REPLACE", "cityId": "REPLACE", "buildingId": "REPLACE_SAME_AS_ABOVE",
+       "plotId": "REPLACE_SAME_AS_ABOVE", "saveId": "REPLACE_SAME_AS_ABOVE"}},
+    {"step": "next-action", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0,
+     "observed": {"realmId": "REPLACE", "cityId": "REPLACE", "buildingId": "REPLACE_SAME_AS_ABOVE",
+       "plotId": "REPLACE_SAME_AS_ABOVE", "saveId": "REPLACE_SAME_AS_ABOVE",
+       "jobId": "OPTIONAL_A_BRAND_NEW_JOB_NO_LINKAGE_REQUIRED_TO_THE_COMPLETED_ONE"}}
   ]
 }

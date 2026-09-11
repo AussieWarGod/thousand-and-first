@@ -1302,6 +1302,9 @@ def validate_release_evidence(
             repository_root,
             expected_candidate_commit=candidate or None,
             expected_game_build=GAME_CORE_BUILD,
+            expected_runtime_inventory_sha256=_structure_review_inventory_sha256(
+                repository_root
+            ),
         )
 
     if errors:
@@ -1412,6 +1415,38 @@ NATIVE_DRIVER_CHECKS = (
 )
 
 
+def _observed_id_valid(value: object) -> bool:
+    """An opaque lifecycle identity (realm/city/job/building/plot/save id): real, non-empty,
+    printable, and not a fabricated-looking placeholder. Not a person/automation identity
+    field, so no forged-human check applies here -- only the placeholder sentinel."""
+    return (
+        isinstance(value, str)
+        and value == value.strip()
+        and 1 <= len(value) <= 200
+        and value.isprintable()
+        and PLACEHOLDER_SENTINEL.search(value) is None
+    )
+
+
+def _structure_review_inventory_sha256(repository_root: Path) -> str | None:
+    """The current tree's exact-inventory structural digest, as printed by
+    Tools/check-structure.py --json and recorded in docs/STRUCTURE_REVIEW.json. Returns None
+    (never raises) when the ledger is missing or malformed, so the caller can report an honest
+    "cannot be verified" failure instead of a stack trace."""
+    try:
+        path = (repository_root / "docs" / "STRUCTURE_REVIEW.json").resolve(strict=True)
+        path.relative_to(repository_root)
+        if path.is_symlink() or not path.is_file():
+            return None
+        payload = json.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeError, ValueError, json.JSONDecodeError):
+        return None
+    digest = payload.get("inventorySha256") if isinstance(payload, dict) else None
+    if not isinstance(digest, str) or re.fullmatch(r"[0-9a-f]{64}", digest) is None:
+        return None
+    return digest
+
+
 def _validate_native_driver_results(
     artifact_ref: object, errors: list[str], repository_root: Path
 ) -> None:
@@ -1460,35 +1495,59 @@ def _validate_native_driver_results(
         )
 
 
-# Long-form behavioural scenario artefact schema (author/Codex addendum, 2026-09-11). The
-# harness that produces this file (branch test/longform-reachability) must target these exact
-# field names and PASS semantics; the validator is the schema's single source of truth.
+# Long-form behavioural scenario artefact schema (author/Codex addendum, 2026-09-11; hardened
+# by Codex root protocol review the same day, then again after reading the validator against
+# the report). The harness that produces this file (branch test/longform-reachability) must
+# target these exact field names and PASS semantics; the validator is the schema's single
+# source of truth. Current shape (schemaVersion 1):
 #
 # {
+#   "schemaVersion": 1,
 #   "driver": "<honestly labelled identity: person or automation>",
 #   "runId": "<opaque run identifier>",
 #   "seed": <fixed integer world seed>,
-#   "maxTurns": <positive integer turn budget>,
-#   "timeoutSeconds": <positive integer wall-clock budget>,
+#   "candidateCommit": "<40-hex, must match the release evidence candidateCommit>",
+#   "runtimeInventorySha256": "<64-hex, must match docs/STRUCTURE_REVIEW.json inventorySha256
+#       for the exercised tree>",
+#   "gameBuildId": "<must match the recorded game core build>",
 #   "logRef": "docs/release-evidence/<...>.log",
 #   "logSha256": "<lowercase hex-64 SHA-256 of the retained raw driver log>",
+#   "continuity": {"realmId": "...", "cityId": "..."},
+#   "processes": [
+#     {"role": "save-session", "launchId": "...", "started": "UTC", "stoppedUtc": "UTC"},
+#     {"role": "cold-load-session", "launchId": "...", "started": "UTC", "stoppedUtc": "UTC"}
+#   ],
 #   "steps": [
-#     {"step": "startup", "status": "PASS", "processStopped": true},
-#     {"step": "stockpileQuote", "status": "PASS", "processStopped": true},
-#     {"step": "paidCommission", "status": "PASS", "processStopped": true},
-#     {"step": "engineTurnCompletion", "status": "PASS", "processStopped": true},
-#     {"step": "save", "status": "PASS", "processStopped": true},
-#     {"step": "coldLoad", "status": "PASS", "processStopped": true},
-#     {"step": "nextAction", "status": "PASS", "processStopped": true}
+#     {"step": "startup", "status": "PASS", "turnsUsed": N, "elapsedSeconds": N,
+#      "turnBudget": N, "timeoutSeconds": N, "observed": {"realmId": "...", "cityId": "..."}},
+#     ... quote, paid-commission (observed gains "jobId"), engine-turn-build (observed gains
+#     "buildingId"/"plotId"; "jobId" here may instead be the completed receipt id, not a live
+#     job), save (observed gains "saveId"), cold-load, next-action (observed's jobId, if any,
+#     may be a NEW job -- never required to match the completed one) ...
 #   ]
 # }
 #
-# PASS semantics: every one of the seven steps below must appear exactly once, with
-# status == "PASS" and processStopped == true. A missing step, an unreachable step, or any
-# non-PASS status is an unresolved release requirement (FAIL) — never a waiver, never a
-# blanket skip. "engineTurnCompletion" is the paid commission's physical debit resolving,
-# by an actual engine turn, into a functional building; a source-level or simulated claim
-# does not satisfy it.
+# PASS semantics: the seven steps above appear EXACTLY ONCE each, in this exact order (never
+# shuffled, duplicated, or missing), every status == "PASS", every turnsUsed/elapsedSeconds
+# <= its own turnBudget/timeoutSeconds (a zero budget enforces zero usage; no bypass at zero).
+# Process lifecycle is two whole sessions (not a per-step flag, which is refused): one
+# continuous save-session covering startup..save, one separate cold-load-session covering
+# cold-load..next-action, distinct launchIds, each started strictly before its own stoppedUtc,
+# and save-session stopping at or before cold-load-session starts.
+#
+# Per-step `observed` identities are lifecycle-gated, never blanket-required: realmId/cityId
+# on every step, equal to `continuity`; jobId absent before paid-commission, first appears
+# there (engine-turn-build's jobId, if present, may be the completed receipt rather than the
+# same live job -- no equality is enforced between them); buildingId/plotId absent before
+# engine-turn-build, required there, and equal to that value wherever they reappear at
+# save/cold-load/next-action; saveId absent before save, required at save, and equal to that
+# value wherever it reappears at cold-load/next-action. An id present before its creation step
+# fails; a placeholder-looking id fails. next-action may observe a brand-new jobId with no
+# linkage to the completed one -- causal linkage is realm/city/building/plot/save continuity,
+# never job identity equality across the whole run.
+#
+# "engine-turn-build" is the paid commission's physical debit resolving, by an actual engine
+# turn, into a functional building; a source-level or simulated claim does not satisfy it.
 LONGFORM_SCENARIO_SCHEMA = 1
 
 # The exact, ordered, non-repeatable step chain (Codex root protocol review, 2026-09-11).
@@ -1515,15 +1574,25 @@ LONGFORM_SESSION_FOR_STEP = {
     "next-action": "cold-load-session",
 }
 LONGFORM_SESSION_ROLES = ("save-session", "cold-load-session")
-LONGFORM_CONTINUITY_KEYS = {
-    "realmId",
-    "cityId",
-    "jobId",
-    "buildingId",
-    "plotId",
-    "saveId",
+# Top-level continuity is only the context known from the very start; job/building/plot/save
+# identity is lifecycle-gated and lives per-step in "observed" (LONGFORM_OBSERVED_KEYS), never
+# required blanket-equal across the whole run.
+LONGFORM_CONTINUITY_KEYS = {"realmId", "cityId"}
+LONGFORM_OBSERVED_KEYS = {"realmId", "cityId", "jobId", "buildingId", "plotId", "saveId"}
+# Per key: the first step index (into LONGFORM_SCENARIO_STEPS) at which it may legally appear
+# in a step's "observed". Absent from this map (realmId/cityId) means "every step, index 0".
+LONGFORM_OBSERVED_EARLIEST_STEP_INDEX = {
+    "jobId": 2,  # paid-commission
+    "buildingId": 3,  # engine-turn-build
+    "plotId": 3,  # engine-turn-build
+    "saveId": 4,  # save
 }
-LONGFORM_PROCESS_KEYS = {"role", "launchId", "started", "stopped"}
+# Keys that, once observed at their earliest step, must equal that same value at every LATER
+# step where they reappear (jobId is deliberately excluded: engine-turn-build's jobId may be a
+# completed receipt distinct from paid-commission's live job, and next-action may observe a
+# brand-new job with no required linkage to either).
+LONGFORM_OBSERVED_STABLE_AFTER_FIRST = ("buildingId", "plotId", "saveId")
+LONGFORM_PROCESS_KEYS = {"role", "launchId", "started", "stoppedUtc"}
 LONGFORM_STEP_KEYS = {
     "step",
     "status",
@@ -1531,6 +1600,7 @@ LONGFORM_STEP_KEYS = {
     "elapsedSeconds",
     "turnBudget",
     "timeoutSeconds",
+    "observed",
 }
 LONGFORM_TOP_KEYS = {
     "schemaVersion",
@@ -1569,6 +1639,7 @@ def _validate_longform_scenario_results(
     *,
     expected_candidate_commit: str | None,
     expected_game_build: str,
+    expected_runtime_inventory_sha256: str | None,
 ) -> None:
     """Read the bound long-form scenario artefact and require it to prove one real, continuous,
     fixed-seed, bounded run through the exact seven-step chain -- not seven arbitrary PASS
@@ -1647,6 +1718,16 @@ def _validate_longform_scenario_results(
             "long-form scenario results runtimeInventorySha256 must be a nonzero lowercase "
             "SHA-256 structural digest"
         )
+    elif expected_runtime_inventory_sha256 is None:
+        errors.append(
+            "long-form scenario results runtimeInventorySha256 cannot be verified: no "
+            "docs/STRUCTURE_REVIEW.json inventorySha256 was readable for the exercised tree"
+        )
+    elif inventory_digest != expected_runtime_inventory_sha256:
+        errors.append(
+            "long-form scenario results runtimeInventorySha256 must match the exercised "
+            "tree's docs/STRUCTURE_REVIEW.json inventorySha256"
+        )
     if payload.get("gameBuildId") != expected_game_build:
         errors.append(
             f"long-form scenario results gameBuildId must be {expected_game_build!r}"
@@ -1664,57 +1745,79 @@ def _validate_longform_scenario_results(
         include_pass_id=False,
     )
 
-    # Continuity identities: the same realm/city/job/building/plot/save survive the whole
-    # chain, in particular across the save -> cold-load -> next-action boundary.
+    # Continuity: realm/city are known from the very start and must hold for the whole run.
+    # Job/building/plot/save identity is lifecycle-gated and validated per-step below.
     continuity = payload.get("continuity")
     if not isinstance(continuity, dict) or set(continuity) != LONGFORM_CONTINUITY_KEYS:
         errors.append(
             "long-form scenario results continuity fields must be "
             + ", ".join(sorted(LONGFORM_CONTINUITY_KEYS))
         )
+        continuity = {}
     else:
         for key in LONGFORM_CONTINUITY_KEYS:
             value = continuity.get(key)
-            if not isinstance(value, str) or not value.strip():
+            if not _observed_id_valid(value):
                 errors.append(
-                    f"long-form scenario results continuity.{key} must be a non-empty identity"
+                    f"long-form scenario results continuity.{key} must be a real, non-empty, "
+                    "non-placeholder identity"
                 )
 
-    # Process lifecycle: exactly the save-session and cold-load-session, each stopped, never a
-    # per-step fabrication.
+    # Process lifecycle: exactly the save-session and cold-load-session, each with a distinct
+    # launch, its own start/stop timestamps in order, and the save-session stopping no later
+    # than the cold-load-session starts -- never a per-step fabrication.
     processes = payload.get("processes")
+    process_by_role: dict[str, dict] = {}
     if not isinstance(processes, list) or len(processes) != len(LONGFORM_SESSION_ROLES):
         errors.append(
             "long-form scenario results processes must have exactly the roles: "
             + ", ".join(LONGFORM_SESSION_ROLES)
         )
     else:
-        seen_roles: dict[str, bool] = {}
+        launch_ids: list[str] = []
         for entry in processes:
             if (
                 not isinstance(entry, dict)
                 or set(entry) != LONGFORM_PROCESS_KEYS
                 or entry.get("role") not in LONGFORM_SESSION_ROLES
-                or entry.get("role") in seen_roles
+                or entry.get("role") in process_by_role
                 or not isinstance(entry.get("launchId"), str)
                 or not entry["launchId"].strip()
                 or not _second_precision_utc(entry.get("started"))
-                or entry.get("stopped") is not True
+                or not _second_precision_utc(entry.get("stoppedUtc"))
+                or entry.get("started") >= entry.get("stoppedUtc")
             ):
                 errors.append(
                     "long-form scenario results processes entries must each be an object with "
-                    "role, launchId, started, and stopped true, one per session role, no "
-                    "duplicates"
+                    "role, launchId, started, and stoppedUtc (started strictly before "
+                    "stoppedUtc), one per session role, no duplicates"
                 )
                 continue
-            seen_roles[entry["role"]] = True
+            process_by_role[entry["role"]] = entry
+            launch_ids.append(entry["launchId"])
         missing_roles = [
-            role for role in LONGFORM_SESSION_ROLES if role not in seen_roles
+            role for role in LONGFORM_SESSION_ROLES if role not in process_by_role
         ]
         if missing_roles:
             errors.append(
-                "long-form scenario results processes is missing a stopped entry for: "
+                "long-form scenario results processes is missing a valid entry for: "
                 + ", ".join(missing_roles)
+            )
+        if len(launch_ids) == 2 and len(set(launch_ids)) != 2:
+            errors.append(
+                "long-form scenario results processes must use two distinct launchId values, "
+                "never the same launch for both sessions"
+            )
+        save_session = process_by_role.get("save-session")
+        cold_load_session = process_by_role.get("cold-load-session")
+        if (
+            save_session is not None
+            and cold_load_session is not None
+            and save_session["stoppedUtc"] > cold_load_session["started"]
+        ):
+            errors.append(
+                "long-form scenario results save-session must stop at or before "
+                "cold-load-session starts"
             )
 
     # The exact ordered, non-repeatable seven-step chain, each bounded by its own recorded
@@ -1726,7 +1829,15 @@ def _validate_longform_scenario_results(
             + ", ".join(LONGFORM_SCENARIO_STEPS)
         )
         return
+    save_step_index = LONGFORM_SCENARIO_STEPS.index("save")
+    stable_first_value: dict[str, str] = {}
     for index, (expected_step, entry) in enumerate(zip(LONGFORM_SCENARIO_STEPS, steps)):
+        # Internal consistency, not evidence content: the fixed step-order table and the
+        # step-to-session map must agree that steps up to and including "save" are the
+        # save-session and everything after is the cold-load-session.
+        assert LONGFORM_SESSION_FOR_STEP[expected_step] == (
+            "save-session" if index <= save_step_index else "cold-load-session"
+        ), "LONGFORM_SESSION_FOR_STEP is out of sync with LONGFORM_SCENARIO_STEPS"
         if not isinstance(entry, dict) or set(entry) != LONGFORM_STEP_KEYS:
             errors.append(
                 f"long-form scenario results steps[{index}] fields must be "
@@ -1757,26 +1868,78 @@ def _validate_longform_scenario_results(
                     f"long-form scenario results steps[{index}].{field} must be a "
                     "non-negative integer"
                 )
-        if (
-            type(turns_used) is int
-            and type(turn_budget) is int
-            and turn_budget > 0
-            and turns_used > turn_budget
-        ):
+        # No bypass at zero: a zero budget enforces zero usage, it does not waive the check.
+        if type(turns_used) is int and type(turn_budget) is int and turns_used > turn_budget:
             errors.append(
                 f"long-form scenario results steps[{index}] ({expected_step}) exceeded its "
                 "turnBudget"
             )
-        if (
-            type(elapsed) is int
-            and type(timeout) is int
-            and timeout > 0
-            and elapsed > timeout
-        ):
+        if type(elapsed) is int and type(timeout) is int and elapsed > timeout:
             errors.append(
                 f"long-form scenario results steps[{index}] ({expected_step}) exceeded its "
                 "timeoutSeconds"
             )
+
+        observed = entry.get("observed")
+        if isinstance(observed, dict):
+            if expected_step == "engine-turn-build":
+                for key in ("buildingId", "plotId"):
+                    if key not in observed:
+                        errors.append(
+                            f"long-form scenario results steps[{index}] (engine-turn-build) "
+                            f"must observe {key}: the paid commission's physical debit must "
+                            "resolve into an identified building on an identified plot"
+                        )
+            if expected_step == "save" and "saveId" not in observed:
+                errors.append(
+                    f"long-form scenario results steps[{index}] (save) must observe saveId"
+                )
+        if not isinstance(observed, dict) or not set(observed) <= LONGFORM_OBSERVED_KEYS:
+            errors.append(
+                f"long-form scenario results steps[{index}].observed keys must be a subset of "
+                + ", ".join(sorted(LONGFORM_OBSERVED_KEYS))
+            )
+            continue
+        for key in ("realmId", "cityId"):
+            value = observed.get(key)
+            if not _observed_id_valid(value):
+                errors.append(
+                    f"long-form scenario results steps[{index}].observed.{key} must be a "
+                    "real, non-empty identity on every step"
+                )
+            elif continuity.get(key) is not None and value != continuity.get(key):
+                errors.append(
+                    f"long-form scenario results steps[{index}].observed.{key} must match "
+                    "continuity"
+                )
+        for key, earliest in LONGFORM_OBSERVED_EARLIEST_STEP_INDEX.items():
+            if key not in observed:
+                continue
+            value = observed[key]
+            if not _observed_id_valid(value):
+                errors.append(
+                    f"long-form scenario results steps[{index}].observed.{key} must be a "
+                    "real, non-empty, non-placeholder identity"
+                )
+                continue
+            if index < earliest:
+                errors.append(
+                    f"long-form scenario results steps[{index}] ({expected_step}) observed "
+                    f"{key} before its creation step "
+                    f"({LONGFORM_SCENARIO_STEPS[earliest]!r}); a fabricated-looking or "
+                    "premature id fails"
+                )
+                continue
+            if key in LONGFORM_OBSERVED_STABLE_AFTER_FIRST:
+                if key in stable_first_value and value != stable_first_value[key]:
+                    errors.append(
+                        f"long-form scenario results steps[{index}].observed.{key} must equal "
+                        f"the value first observed at "
+                        f"{LONGFORM_SCENARIO_STEPS[earliest]!r} (causal linkage), got a "
+                        "different value"
+                    )
+                elif key not in stable_first_value:
+                    stable_first_value[key] = value
 
 
 def _validate_artifact_binding(
@@ -1919,34 +2082,79 @@ def _safe_evidence_artifact_ref(value: str) -> bool:
     return True
 
 
-def release_evidence_artifact_refs(path: Path) -> tuple[str, ...]:
-    """List every safe retained-artifact path before immutable extraction.
+# Every key name that binds a retained artifact path, anywhere in the evidence record or in a
+# JSON artifact it points to (nested one level, e.g. the longFormScenario results file's own
+# logRef). Adding a new "...Ref" field to the schema means adding it here too, or its file is
+# silently left out of the frozen release snapshot -- exactly the gap Codex root's protocol
+# review found in driverResultsRef/captureProvenanceRef/logRef.
+RELEASE_EVIDENCE_REF_KEYS = (
+    "artifactRef",
+    "driverResultsRef",
+    "captureProvenanceRef",
+    "logRef",
+)
+
+
+def release_evidence_artifact_refs(
+    path: Path, *, repository_root: Path | None = None
+) -> tuple[str, ...]:
+    """List every safe retained-artifact path before immutable extraction, including one level
+    of nested refs inside any referenced .json artifact (driverResultsRef's results.json and
+    longFormScenario's results.json each carry their own further ref fields).
 
     Full schema and hash validation happens after extraction. This first pass is deliberately
-    narrow: it discovers every artifactRef anywhere in the record, refuses unsafe spellings,
-    and returns one bytewise-sorted path per committed blob.
+    narrow: it discovers every ref in RELEASE_EVIDENCE_REF_KEYS anywhere in the record (and one
+    level into any .json artifact it points to), refuses unsafe spellings, and returns one
+    bytewise-sorted path per committed blob.
     """
     evidence = _load_json(path)
+    if repository_root is None:
+        repository_root = path.parent
     refs: list[str] = []
+    nested_json_refs: list[str] = []
 
-    def visit(value: object) -> None:
+    def visit(value: object, *, collect_nested: bool) -> None:
         if isinstance(value, dict):
-            if "artifactRef" in value:
-                artifact_ref = value["artifactRef"]
+            for key in RELEASE_EVIDENCE_REF_KEYS:
+                if key not in value:
+                    continue
+                artifact_ref = value[key]
                 if not isinstance(artifact_ref, str) or not _safe_evidence_artifact_ref(
                     artifact_ref
                 ):
                     raise ValidationError(
-                        "release evidence contains an unsafe artifactRef before extraction"
+                        f"release evidence contains an unsafe {key} before extraction"
                     )
                 refs.append(artifact_ref)
+                if (
+                    collect_nested
+                    and key == "artifactRef"
+                    and artifact_ref.endswith(".json")
+                ):
+                    nested_json_refs.append(artifact_ref)
             for child in value.values():
-                visit(child)
+                visit(child, collect_nested=collect_nested)
         elif isinstance(value, list):
             for child in value:
-                visit(child)
+                visit(child, collect_nested=collect_nested)
 
-    visit(evidence)
+    visit(evidence, collect_nested=True)
+    for nested_ref in nested_json_refs:
+        try:
+            nested_path = repository_root.joinpath(*nested_ref.split("/"))
+            resolved = nested_path.resolve(strict=True)
+            resolved.relative_to(repository_root)
+            if nested_path.is_symlink() or not resolved.is_file():
+                raise OSError("nested artifact is not a regular file")
+            nested_payload = json.loads(resolved.read_text(encoding="utf-8-sig"))
+        except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as error:
+            raise ValidationError(
+                f"release evidence cannot read nested artifact {nested_ref!r}: {error}"
+            ) from error
+        # One level only: a nested artifact's own further-nested refs (none exist in the
+        # current schema) are not recursed into again.
+        visit(nested_payload, collect_nested=False)
+
     if not refs:
         raise ValidationError("release evidence contains no retained artifactRef")
     duplicates = sorted(

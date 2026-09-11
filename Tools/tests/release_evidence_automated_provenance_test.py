@@ -14,9 +14,11 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import json
+import struct
 import sys
 import tempfile
 import unittest
+import zlib
 from pathlib import Path
 
 CHECKER_PATH = Path(__file__).resolve().parents[1] / "check-structure.py"
@@ -294,9 +296,11 @@ class NativeDriverResultsTests(unittest.TestCase):
 
 class LongFormScenarioResultsTests(unittest.TestCase):
     """Tools/workshop_metadata.py._validate_longform_scenario_results: the exact ordered
-    seven-step chain, session-level (not per-step) process lifecycle, candidate/build/
-    continuity binding, and per-phase bounded execution required by Codex root's protocol
-    review, 2026-09-11."""
+    seven-step chain, session-level (not per-step) process lifecycle with distinct launches
+    and ordered timestamps, candidate/build/runtime-inventory binding against the real
+    exercised tree, per-phase bounded execution with no zero-budget bypass, and lifecycle-
+    gated per-step continuity observations. Codex root's protocol review, 2026-09-11, plus
+    the follow-up executable-validation-gap and continuity-clarification corrections."""
 
     CANDIDATE = "a" * 40
 
@@ -304,6 +308,19 @@ class LongFormScenarioResultsTests(unittest.TestCase):
         self.temporary = tempfile.TemporaryDirectory()
         self.root = Path(self.temporary.name)
         (self.root / "docs" / "release-evidence").mkdir(parents=True)
+        review = {
+            "schemaVersion": 1,
+            "inventorySha256": "3" * 64,
+            "exceptions": [],
+            "reviewedBy": "camp-builder structural review",
+            "completedUtc": "2026-09-11T00:00:00Z",
+            "oneResponsibility": {"status": "passed", "notes": "run:x log:docs/release-evidence/x.log"},
+            "protocolsAtBoundaries": {"status": "passed", "notes": "run:x log:docs/release-evidence/x.log"},
+        }
+        (self.root / "docs" / "STRUCTURE_REVIEW.json").write_text(
+            json.dumps(review), encoding="utf-8"
+        )
+        self.RUNTIME_INVENTORY = review["inventorySha256"]
 
     def tearDown(self) -> None:
         self.temporary.cleanup()
@@ -314,6 +331,17 @@ class LongFormScenarioResultsTests(unittest.TestCase):
         path.write_text(text, encoding="utf-8")
         return ref, hashlib.sha256(path.read_bytes()).hexdigest()
 
+    def observed_for(self, step: str) -> dict:
+        base = {"realmId": "realm-1", "cityId": "city-1"}
+        if step in ("paid-commission", "engine-turn-build", "next-action"):
+            base["jobId"] = "job-1" if step != "next-action" else "job-2"
+        if step in ("engine-turn-build", "save", "cold-load", "next-action"):
+            base["buildingId"] = "building-1"
+            base["plotId"] = "plot-1"
+        if step in ("save", "cold-load", "next-action"):
+            base["saveId"] = "save-1"
+        return base
+
     def all_pass_steps(self) -> list[dict]:
         return [
             {
@@ -323,6 +351,7 @@ class LongFormScenarioResultsTests(unittest.TestCase):
                 "elapsedSeconds": 5,
                 "turnBudget": 100,
                 "timeoutSeconds": 60,
+                "observed": self.observed_for(step),
             }
             for step in METADATA.LONGFORM_SCENARIO_STEPS
         ]
@@ -340,37 +369,30 @@ class LongFormScenarioResultsTests(unittest.TestCase):
             "runId": "longform-run-1",
             "seed": 165939435,
             "candidateCommit": self.CANDIDATE,
-            "runtimeInventorySha256": "2" * 64,
+            "runtimeInventorySha256": self.RUNTIME_INVENTORY,
             "gameBuildId": METADATA.GAME_CORE_BUILD,
             "logRef": log_ref,
             "logSha256": log_hash,
-            "continuity": {
-                "realmId": "realm-1",
-                "cityId": "city-1",
-                "jobId": "job-1",
-                "buildingId": "building-1",
-                "plotId": "plot-1",
-                "saveId": "save-1",
-            },
+            "continuity": {"realmId": "realm-1", "cityId": "city-1"},
             "processes": [
                 {
                     "role": "save-session",
                     "launchId": "launch-a",
                     "started": "2026-09-11T00:00:00Z",
-                    "stopped": True,
+                    "stoppedUtc": "2026-09-11T00:05:00Z",
                 },
                 {
                     "role": "cold-load-session",
                     "launchId": "launch-b",
                     "started": "2026-09-11T00:10:00Z",
-                    "stopped": True,
+                    "stoppedUtc": "2026-09-11T00:15:00Z",
                 },
             ],
             "steps": self.all_pass_steps(),
         }
 
-    def validate(self, payload: dict) -> list[str]:
-        ref = self.write_results("longform-results.json", payload)
+    def validate(self, payload: dict, *, ref_name: str = "longform-results.json") -> list[str]:
+        ref = self.write_results(ref_name, payload)
         errors: list[str] = []
         METADATA._validate_longform_scenario_results(
             ref,
@@ -378,6 +400,7 @@ class LongFormScenarioResultsTests(unittest.TestCase):
             self.root,
             expected_candidate_commit=self.CANDIDATE,
             expected_game_build=METADATA.GAME_CORE_BUILD,
+            expected_runtime_inventory_sha256=self.RUNTIME_INVENTORY,
         )
         return errors
 
@@ -394,17 +417,13 @@ class LongFormScenarioResultsTests(unittest.TestCase):
         payload = self.valid_payload()
         payload["steps"][6] = dict(payload["steps"][5])
         errors = self.validate(payload)
-        self.assertTrue(
-            any("in the fixed chain order" in error for error in errors), errors
-        )
+        self.assertTrue(any("in the fixed chain order" in error for error in errors), errors)
 
     def test_wrong_order_fails(self) -> None:
         payload = self.valid_payload()
         payload["steps"][0], payload["steps"][1] = payload["steps"][1], payload["steps"][0]
         errors = self.validate(payload)
-        self.assertTrue(
-            any("in the fixed chain order" in error for error in errors), errors
-        )
+        self.assertTrue(any("in the fixed chain order" in error for error in errors), errors)
 
     def test_extra_unknown_step_fails(self) -> None:
         payload = self.valid_payload()
@@ -416,6 +435,7 @@ class LongFormScenarioResultsTests(unittest.TestCase):
                 "elapsedSeconds": 1,
                 "turnBudget": 10,
                 "timeoutSeconds": 10,
+                "observed": {"realmId": "realm-1", "cityId": "city-1"},
             }
         )
         errors = self.validate(payload)
@@ -447,15 +467,39 @@ class LongFormScenarioResultsTests(unittest.TestCase):
 
     def test_process_not_stopped_fails(self) -> None:
         payload = self.valid_payload()
-        payload["processes"][0]["stopped"] = False
+        del payload["processes"][0]["stoppedUtc"]
+        payload["processes"][0]["stopped"] = True
         errors = self.validate(payload)
-        self.assertTrue(any("stopped true" in error for error in errors), errors)
+        self.assertTrue(any("stoppedUtc" in error for error in errors), errors)
+
+    def test_process_started_after_stopped_fails(self) -> None:
+        payload = self.valid_payload()
+        payload["processes"][0]["started"], payload["processes"][0]["stoppedUtc"] = (
+            payload["processes"][0]["stoppedUtc"],
+            payload["processes"][0]["started"],
+        )
+        errors = self.validate(payload)
+        self.assertTrue(any("strictly before stoppedUtc" in error for error in errors), errors)
+
+    def test_shared_launch_id_across_sessions_fails(self) -> None:
+        payload = self.valid_payload()
+        payload["processes"][1]["launchId"] = payload["processes"][0]["launchId"]
+        errors = self.validate(payload)
+        self.assertTrue(any("two distinct launchId" in error for error in errors), errors)
+
+    def test_cold_load_session_starting_before_save_session_stops_fails(self) -> None:
+        payload = self.valid_payload()
+        payload["processes"][1]["started"] = "2026-09-11T00:01:00Z"
+        errors = self.validate(payload)
+        self.assertTrue(
+            any("save-session must stop at or before" in error for error in errors), errors
+        )
 
     def test_missing_continuity_identity_fails(self) -> None:
         payload = self.valid_payload()
-        payload["continuity"]["saveId"] = ""
+        payload["continuity"]["cityId"] = ""
         errors = self.validate(payload)
-        self.assertTrue(any("continuity.saveId" in error for error in errors), errors)
+        self.assertTrue(any("continuity.cityId" in error for error in errors), errors)
 
     def test_wrong_candidate_commit_fails(self) -> None:
         payload = self.valid_payload()
@@ -471,6 +515,35 @@ class LongFormScenarioResultsTests(unittest.TestCase):
         payload["gameBuildId"] = "0.0.0.0"
         errors = self.validate(payload)
         self.assertTrue(any("gameBuildId must be" in error for error in errors), errors)
+
+    def test_wrong_runtime_inventory_digest_fails(self) -> None:
+        payload = self.valid_payload()
+        payload["runtimeInventorySha256"] = "4" * 64
+        errors = self.validate(payload)
+        self.assertTrue(
+            any(
+                "must match the exercised tree's docs/STRUCTURE_REVIEW.json" in error
+                for error in errors
+            ),
+            errors,
+        )
+
+    def test_unreadable_structure_review_fails_closed(self) -> None:
+        (self.root / "docs" / "STRUCTURE_REVIEW.json").unlink()
+        self.assertIsNone(METADATA._structure_review_inventory_sha256(self.root))
+        ref = self.write_results("longform-results.json", self.valid_payload())
+        errors: list[str] = []
+        METADATA._validate_longform_scenario_results(
+            ref,
+            errors,
+            self.root,
+            expected_candidate_commit=self.CANDIDATE,
+            expected_game_build=METADATA.GAME_CORE_BUILD,
+            expected_runtime_inventory_sha256=METADATA._structure_review_inventory_sha256(
+                self.root
+            ),
+        )
+        self.assertTrue(any("cannot be verified" in error for error in errors), errors)
 
     def test_missing_seed_fails(self) -> None:
         payload = self.valid_payload()
@@ -492,6 +565,31 @@ class LongFormScenarioResultsTests(unittest.TestCase):
         errors = self.validate(payload)
         self.assertTrue(any("exceeded its timeoutSeconds" in error for error in errors), errors)
 
+    def test_zero_budget_does_not_bypass_over_usage(self) -> None:
+        payload = self.valid_payload()
+        payload["steps"][0]["turnsUsed"] = 999
+        payload["steps"][0]["turnBudget"] = 0
+        errors = self.validate(payload)
+        self.assertTrue(any("exceeded its turnBudget" in error for error in errors), errors)
+
+    def test_negative_budget_fails(self) -> None:
+        payload = self.valid_payload()
+        payload["steps"][0]["turnBudget"] = -1
+        errors = self.validate(payload)
+        self.assertTrue(any("turnBudget must be a non-negative integer" in error for error in errors), errors)
+
+    def test_float_turns_used_fails(self) -> None:
+        payload = self.valid_payload()
+        payload["steps"][0]["turnsUsed"] = 1.5
+        errors = self.validate(payload)
+        self.assertTrue(any("turnsUsed must be a non-negative integer" in error for error in errors), errors)
+
+    def test_string_budget_fails(self) -> None:
+        payload = self.valid_payload()
+        payload["steps"][0]["turnBudget"] = "unbounded"
+        errors = self.validate(payload)
+        self.assertTrue(any("turnBudget must be a non-negative integer" in error for error in errors), errors)
+
     def test_forged_human_driver_identity_fails(self) -> None:
         payload = self.valid_payload()
         payload["driver"] = "this is a human, personally driving the run"
@@ -509,8 +607,8 @@ class LongFormScenarioResultsTests(unittest.TestCase):
         )
 
     def test_duplicate_json_key_fails(self) -> None:
-        ref = "docs/release-evidence/longform-dup-key.json"
         valid = self.valid_payload()
+        ref = "docs/release-evidence/longform-dup-key.json"
         rendered = json.dumps(valid)
         # Inject a duplicate top-level key by hand: JSON permits this on the wire even though
         # Python's dumps will not produce it, so simulate a harness that emits one.
@@ -525,8 +623,445 @@ class LongFormScenarioResultsTests(unittest.TestCase):
             self.root,
             expected_candidate_commit=self.CANDIDATE,
             expected_game_build=METADATA.GAME_CORE_BUILD,
+            expected_runtime_inventory_sha256=self.RUNTIME_INVENTORY,
         )
         self.assertTrue(any("duplicate JSON key" in error for error in errors), errors)
+
+    # --- Lifecycle-gated continuity observations (author/Codex root clarification) ---
+
+    def test_job_id_before_paid_commission_fails(self) -> None:
+        payload = self.valid_payload()
+        payload["steps"][0]["observed"]["jobId"] = "job-early"
+        errors = self.validate(payload)
+        self.assertTrue(any("observed jobId before its creation step" in error for error in errors), errors)
+
+    def test_building_id_before_engine_turn_build_fails(self) -> None:
+        payload = self.valid_payload()
+        payload["steps"][2]["observed"]["buildingId"] = "building-early"
+        errors = self.validate(payload)
+        self.assertTrue(
+            any("observed buildingId before its creation step" in error for error in errors), errors
+        )
+
+    def test_save_id_before_save_fails(self) -> None:
+        payload = self.valid_payload()
+        payload["steps"][3]["observed"]["saveId"] = "save-early"
+        errors = self.validate(payload)
+        self.assertTrue(any("observed saveId before its creation step" in error for error in errors), errors)
+
+    def test_engine_turn_build_missing_building_or_plot_fails(self) -> None:
+        payload = self.valid_payload()
+        del payload["steps"][3]["observed"]["buildingId"]
+        errors = self.validate(payload)
+        self.assertTrue(
+            any("must observe buildingId" in error for error in errors), errors
+        )
+
+    def test_save_step_missing_save_id_fails(self) -> None:
+        payload = self.valid_payload()
+        del payload["steps"][4]["observed"]["saveId"]
+        errors = self.validate(payload)
+        self.assertTrue(any("must observe saveId" in error for error in errors), errors)
+
+    def test_building_id_changes_after_first_observed_fails(self) -> None:
+        payload = self.valid_payload()
+        payload["steps"][4]["observed"]["buildingId"] = "a-different-building"
+        errors = self.validate(payload)
+        self.assertTrue(
+            any("observed.buildingId must equal the value first observed" in error for error in errors),
+            errors,
+        )
+
+    def test_save_id_changes_after_first_observed_fails(self) -> None:
+        payload = self.valid_payload()
+        payload["steps"][5]["observed"]["saveId"] = "a-different-save"
+        errors = self.validate(payload)
+        self.assertTrue(
+            any("observed.saveId must equal the value first observed" in error for error in errors), errors
+        )
+
+    def test_next_action_may_observe_a_brand_new_job_id(self) -> None:
+        # No linkage required between the completed job and a fresh one next-action starts.
+        payload = self.valid_payload()
+        self.assertEqual(
+            payload["steps"][6]["observed"]["jobId"], "job-2", "fixture sanity: distinct job"
+        )
+        self.assertEqual(self.validate(payload), [])
+
+    def test_engine_turn_build_job_id_may_differ_from_paid_commission_receipt(self) -> None:
+        # engine-turn-build's jobId may name the completed receipt, not the live job; no
+        # equality is enforced against paid-commission's jobId.
+        payload = self.valid_payload()
+        payload["steps"][3]["observed"]["jobId"] = "receipt-99"
+        self.assertEqual(self.validate(payload), [])
+
+    def test_fabricated_looking_observed_id_fails(self) -> None:
+        payload = self.valid_payload()
+        payload["steps"][3]["observed"]["buildingId"] = "PLACEHOLDER"
+        errors = self.validate(payload)
+        self.assertTrue(any("non-placeholder identity" in error for error in errors), errors)
+
+    def test_observed_realm_or_city_mismatch_with_continuity_fails(self) -> None:
+        payload = self.valid_payload()
+        payload["steps"][0]["observed"]["realmId"] = "a-different-realm"
+        errors = self.validate(payload)
+        self.assertTrue(any("observed.realmId must match continuity" in error for error in errors), errors)
+
+    def test_observed_unknown_key_fails(self) -> None:
+        payload = self.valid_payload()
+        payload["steps"][0]["observed"]["notAField"] = "x"
+        errors = self.validate(payload)
+        self.assertTrue(any("keys must be a subset of" in error for error in errors), errors)
+
+
+class EndToEndReleaseEvidenceFixtureTest(unittest.TestCase):
+    """A full, real docs/RELEASE_EVIDENCE.json plus every retained artifact it binds, run
+    through validate_release_evidence AND release_evidence_artifact_refs -- not helper-only
+    unit tests. Proves the whole document validates, and that the artifact-ref collector
+    freezes every nested/raw log dependency (driverResultsRef, captureProvenanceRef, and the
+    longFormScenario results file's own nested logRef), per Codex root's protocol review."""
+
+    def setUp(self) -> None:
+        self.temporary = tempfile.TemporaryDirectory()
+        self.root = Path(self.temporary.name)
+        (self.root / "docs" / "release-evidence").mkdir(parents=True)
+        self.CANDIDATE = "c" * 40
+        self.INVENTORY = "5" * 64
+
+    def tearDown(self) -> None:
+        self.temporary.cleanup()
+
+    def sha(self, path: Path) -> str:
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+
+    def write_text_artifact(self, name: str, text: str) -> tuple[str, str]:
+        ref = f"docs/release-evidence/{name}"
+        path = self.root / ref
+        path.write_text(text, encoding="utf-8")
+        return ref, self.sha(path)
+
+    def _e2e_observed_for(self, step: str) -> dict:
+        base = {"realmId": "realm-1", "cityId": "city-1"}
+        if step in ("paid-commission", "engine-turn-build", "next-action"):
+            base["jobId"] = "job-1" if step != "next-action" else "job-2"
+        if step in ("engine-turn-build", "save", "cold-load", "next-action"):
+            base["buildingId"] = "building-1"
+            base["plotId"] = "plot-1"
+        if step in ("save", "cold-load", "next-action"):
+            base["saveId"] = "save-1"
+        return base
+
+    def write_preview(self) -> Path:
+        def chunk(kind: bytes, body: bytes) -> bytes:
+            return (
+                struct.pack(">I", len(body))
+                + kind
+                + body
+                + struct.pack(">I", zlib.crc32(kind + body) & 0xFFFFFFFF)
+            )
+
+        raw = b"".join(b"\x00" + b"\x18\x24\x30" * 512 for _ in range(512))
+        payload = (
+            b"\x89PNG\r\n\x1a\n"
+            + chunk(b"IHDR", struct.pack(">IIBBBBB", 512, 512, 8, 2, 0, 0, 0))
+            + chunk(b"IDAT", zlib.compress(raw, 9))
+            + chunk(b"IEND", b"")
+        )
+        path = self.root / "preview.png"
+        path.write_bytes(payload)
+        return path
+
+    def build(self) -> dict:
+        """Every path/hash the fixture needs, plus the finished evidence dict."""
+        manifest = {"version": "1.2.3"}
+        readme = self.root / "README.md"
+        readme.write_text(
+            "# Fixture\n\n**Status: 1.2.3 public playtest release.**\n", encoding="utf-8"
+        )
+        changelog = self.root / "CHANGELOG.md"
+        changelog.write_text("# Changelog\n\n## [1.2.3] — 2026-09-11\n", encoding="utf-8")
+
+        testing = self.root / "TESTING.md"
+        testing.write_text(
+            "| Step | Action | Expect |\n|---|---|---|\n| 1 | Do it | Passed |\n"
+            "| 2 | Do it | Passed |\n",
+            encoding="utf-8",
+        )
+
+        workshop = self.root / "workshop.json"
+        workshop.write_text(json.dumps({"WorkshopId": 3796495680}), encoding="utf-8")
+
+        preview = self.write_preview()
+        preview_hash = self.sha(preview)
+
+        assembly_hash = "6" * 64
+        native_compile_ref, native_compile_hash_actual = self.write_text_artifact(
+            "native-compile-load.log", f"Assembly-CSharp SHA-256: {assembly_hash}\n"
+        )
+        gallery_ref, gallery_hash = self.write_text_artifact("architecture-gallery.zip", "gallery")
+        controller_ref, controller_hash = self.write_text_artifact(
+            "controller-color-accessibility.txt", "controller ok"
+        )
+        density_ref, density_hash = self.write_text_artifact("dense-city-performance.csv", "perf")
+        survey_ref, survey_hash = self.write_text_artifact("one-survey-receipt.txt", "survey")
+        matrix_ref, matrix_hash = self.write_text_artifact("compatibility-matrix.csv", "matrix")
+        capture_provenance_ref, capture_provenance_hash = self.write_text_artifact(
+            "preview-capture.log", "capture tool transcript"
+        )
+        preview_review_ref, preview_review_hash = self.write_text_artifact(
+            "final-native-preview-review.txt", "preview review"
+        )
+        numbered_ref, numbered_hash = self.write_text_artifact(
+            "numbered-protocols.txt", "numbered transcript"
+        )
+
+        native_results_ref, _ = self.write_text_artifact(
+            "native-smoke-results.json",
+            json.dumps(
+                {
+                    "driver": "camp-builder native driver",
+                    "results": [
+                        {"check": check, "status": "PASS", "processStopped": True}
+                        for check in METADATA.NATIVE_DRIVER_CHECKS
+                    ],
+                }
+            ),
+        )
+        native_results_hash = self.sha(self.root / native_results_ref)
+
+        longform_log_ref, longform_log_hash = self.write_text_artifact(
+            "longform.log", "longform driver transcript"
+        )
+        longform_payload = {
+            "schemaVersion": 1,
+            "driver": "camp-builder longform driver",
+            "runId": "longform-run-1",
+            "seed": 165939435,
+            "candidateCommit": self.CANDIDATE,
+            "runtimeInventorySha256": self.INVENTORY,
+            "gameBuildId": METADATA.GAME_CORE_BUILD,
+            "logRef": longform_log_ref,
+            "logSha256": longform_log_hash,
+            "continuity": {"realmId": "realm-1", "cityId": "city-1"},
+            "processes": [
+                {
+                    "role": "save-session",
+                    "launchId": "launch-a",
+                    "started": "2026-09-11T00:00:00Z",
+                    "stoppedUtc": "2026-09-11T00:05:00Z",
+                },
+                {
+                    "role": "cold-load-session",
+                    "launchId": "launch-b",
+                    "started": "2026-09-11T00:10:00Z",
+                    "stoppedUtc": "2026-09-11T00:15:00Z",
+                },
+            ],
+            "steps": [
+                {
+                    "step": step,
+                    "status": "PASS",
+                    "turnsUsed": 1,
+                    "elapsedSeconds": 1,
+                    "turnBudget": 10,
+                    "timeoutSeconds": 10,
+                    "observed": self._e2e_observed_for(step),
+                }
+                for step in METADATA.LONGFORM_SCENARIO_STEPS
+            ],
+        }
+        longform_ref, _ = self.write_text_artifact(
+            "longform-results.json", json.dumps(longform_payload)
+        )
+        longform_hash = self.sha(self.root / longform_ref)
+
+        review = {
+            "schemaVersion": 1,
+            "inventorySha256": self.INVENTORY,
+            "exceptions": [],
+            "reviewedBy": "camp-builder structural review",
+            "completedUtc": "2026-09-11T00:00:00Z",
+            "oneResponsibility": {"status": "passed", "notes": "run:x log:docs/release-evidence/x.log"},
+            "protocolsAtBoundaries": {"status": "passed", "notes": "run:x log:docs/release-evidence/x.log"},
+        }
+        (self.root / "docs" / "STRUCTURE_REVIEW.json").write_text(
+            json.dumps(review), encoding="utf-8"
+        )
+
+        evidence = {
+            "schemaVersion": METADATA.RELEASE_EVIDENCE_SCHEMA,
+            "releaseVersion": "1.2.3",
+            "candidateCommit": self.CANDIDATE,
+            "gameMarketingVersion": METADATA.GAME_MARKETING_VERSION,
+            "gameCoreBuild": METADATA.GAME_CORE_BUILD,
+            "gameAssemblySha256": assembly_hash,
+            "workshopId": 3796495680,
+            "previewSha256": preview_hash,
+            "privatePackageReceiptSha256": "7" * 64,
+            "verification": {
+                "nativeCompileLoad": {
+                    "passId": "native-compile-load",
+                    "artifactRef": native_compile_ref,
+                    "artifactSha256": native_compile_hash_actual,
+                },
+                "architectureGallery": {
+                    "passId": "architecture-gallery",
+                    "artifactRef": gallery_ref,
+                    "artifactSha256": gallery_hash,
+                },
+                "controllerAndColor": {
+                    "passId": "controller-color-accessibility",
+                    "artifactRef": controller_ref,
+                    "artifactSha256": controller_hash,
+                },
+                "denseCityPerformance": {
+                    "passId": "dense-city-performance",
+                    "artifactRef": density_ref,
+                    "artifactSha256": density_hash,
+                },
+                "oneSurveyReceipt": {
+                    "passId": "one-survey-receipt",
+                    "artifactRef": survey_ref,
+                    "artifactSha256": survey_hash,
+                },
+                "compatibilityMatrix": {
+                    "passId": "compatibility-matrix",
+                    "artifactRef": matrix_ref,
+                    "artifactSha256": matrix_hash,
+                },
+                "previewReview": {
+                    "passId": METADATA.PREVIEW_REVIEW_PASS_ID,
+                    "artifactRef": preview_review_ref,
+                    "artifactSha256": preview_review_hash,
+                    "source": "native-game-screenshot",
+                    "generativeAssistance": False,
+                    "previewSha256": preview_hash,
+                    "capturedBy": "camp-builder capture tool",
+                    "captureUtc": "2026-09-11T00:00:00Z",
+                    "sourceSave": "quickstart-marsh-seed-1",
+                    "editSummary": "Cropped to 512x512, no other edits",
+                    "captureProvenanceRef": capture_provenance_ref,
+                    "captureProvenanceSha256": capture_provenance_hash,
+                    "reviewedBy": None,
+                    "completedUtc": None,
+                },
+                "numberedProtocols": {
+                    "artifactRef": numbered_ref,
+                    "artifactSha256": numbered_hash,
+                    "passIds": ["1", "2"],
+                    "waivers": [],
+                },
+            },
+            "privateSubscription": {
+                "source": "steam-subscription",
+                "inventory": "clean",
+                "receipt": "clean",
+                "loader": "passed",
+                "newGame": "passed",
+                "saveReload": "passed",
+                "oldSave": "passed",
+                "representativeFeatures": "passed",
+                "playerLog": "clean",
+                "localDuplicatesRemoved": True,
+                "uploadHiddenFiles": True,
+                "testedBy": "camp-builder native driver",
+                "driverResultsRef": native_results_ref,
+                "driverResultsSha256": native_results_hash,
+                "driverExitCode": 0,
+                "completedUtc": "2026-09-11T00:00:00Z",
+            },
+            "longFormScenario": {
+                "artifactRef": longform_ref,
+                "artifactSha256": longform_hash,
+            },
+        }
+        evidence_path = self.root / "docs" / "RELEASE_EVIDENCE.json"
+        evidence_path.write_text(json.dumps(evidence), encoding="utf-8")
+
+        return {
+            "manifest": manifest,
+            "preview": preview,
+            "workshop": workshop,
+            "evidence_path": evidence_path,
+            "readme": readme,
+            "changelog": changelog,
+            "testing": testing,
+            "native_results_ref": native_results_ref,
+            "longform_ref": longform_ref,
+            "longform_log_ref": longform_log_ref,
+            "capture_provenance_ref": capture_provenance_ref,
+        }
+
+    def test_full_document_validates_end_to_end(self) -> None:
+        fixture = self.build()
+        candidate = METADATA.validate_release_evidence(
+            fixture["manifest"],
+            fixture["preview"],
+            fixture["workshop"],
+            fixture["evidence_path"],
+            fixture["readme"],
+            fixture["changelog"],
+            repository_root=self.root,
+            testing_path=fixture["testing"],
+        )
+        self.assertEqual(candidate, self.CANDIDATE)
+
+    def test_artifact_ref_collector_freezes_every_nested_dependency(self) -> None:
+        fixture = self.build()
+        refs = METADATA.release_evidence_artifact_refs(
+            fixture["evidence_path"], repository_root=self.root
+        )
+        for expected in (
+            fixture["native_results_ref"],
+            fixture["longform_ref"],
+            fixture["longform_log_ref"],
+            fixture["capture_provenance_ref"],
+        ):
+            self.assertIn(expected, refs, f"{expected!r} missing from frozen artifact refs")
+
+    def test_unsafe_nested_logref_fails_extraction_collection(self) -> None:
+        fixture = self.build()
+        (self.root / fixture["longform_ref"]).write_text(
+            json.dumps({"logRef": "docs/release-evidence/../../escape.log"}), encoding="utf-8"
+        )
+        with self.assertRaisesRegex(METADATA.ValidationError, "unsafe logRef"):
+            METADATA.release_evidence_artifact_refs(
+                fixture["evidence_path"], repository_root=self.root
+            )
+
+    def test_missing_nested_logref_fails_full_validation(self) -> None:
+        fixture = self.build()
+        (self.root / fixture["longform_log_ref"]).unlink()
+        with self.assertRaisesRegex(METADATA.ValidationError, "longFormScenario.log"):
+            METADATA.validate_release_evidence(
+                fixture["manifest"],
+                fixture["preview"],
+                fixture["workshop"],
+                fixture["evidence_path"],
+                fixture["readme"],
+                fixture["changelog"],
+                repository_root=self.root,
+                testing_path=fixture["testing"],
+            )
+
+    def test_hash_drifted_nested_logref_fails_full_validation(self) -> None:
+        fixture = self.build()
+        (self.root / fixture["longform_log_ref"]).write_text(
+            "tampered transcript", encoding="utf-8"
+        )
+        with self.assertRaisesRegex(METADATA.ValidationError, "longFormScenario.log"):
+            METADATA.validate_release_evidence(
+                fixture["manifest"],
+                fixture["preview"],
+                fixture["workshop"],
+                fixture["evidence_path"],
+                fixture["readme"],
+                fixture["changelog"],
+                repository_root=self.root,
+                testing_path=fixture["testing"],
+            )
+
+
 
 
 if __name__ == "__main__":
