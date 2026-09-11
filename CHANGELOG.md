@@ -100,6 +100,20 @@ correction's only production delta is one file,
 
 ### Added
 
+- **A verdict for the whole construction lifecycle, and an honest name for the part that is
+  not driven yet.** The Quickstart harness already proves startup, a stockpile quote, the CanPay
+  pre-check, a paid commission with an exact timber and water debit and a new paid job, a real
+  save, and a cold load whose restored identities are byte-identical. Nothing judged those links
+  as ONE chain, and two links of that chain have no producer at all: carrying the paid job to a
+  finished building with engine turns, and acting again on the loaded game. A new read-only
+  verdict tool reads the journals a native run leaves and answers PASS only when every link
+  landed its rows in order; a link that landed no rows is BLOCKER, never a pass, and a link whose
+  rows refused is FAIL. It can also emit the long-form release
+  artefact from a driver-written run record: seven ordered steps, measured turns and seconds
+  beside their budgets, the two process sessions, and the candidate and continuity bindings --
+  omitting, and naming, anything the journals or the record do not actually carry. Source-only pins keep the harness and
+  the tool naming the same rows, so neither side can quietly stop demanding a link.
+
 - A dev-only native-check seam (`camp-heart-native-checks`) proves PR #107's owed native case 2:
   the camp heart's dedicated stockpile keeps its exact object identity, its exact cell and every
   physical unit the bill did not ask for across a REAL PAID climb from the rite ground to the

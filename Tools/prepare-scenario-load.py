@@ -511,7 +511,29 @@ def prepare(source: Path, destination: Path, assert_stopped: Callable[[Path], No
     write_new(destination_seal / "profile.sha256", seal.encode("utf-8"))
     write_new(destination_seal / "request.txt", request_bytes)
     write_new(destination / "load-source-evidence.json", (json.dumps(evidence, sort_keys=True, separators=(",", ":")) + "\n").encode("utf-8"))
+    seal_load_record(source, destination)
     return evidence
+
+
+def seal_load_record(source: Path, destination: Path) -> None:
+    """Seal the cold-load session's run record, when the source session kept one.
+
+    Presence is the opt-in: a source profile that carries no run-record.json is a run nobody is
+    recording, and this must stay exactly as it was for it. When one IS present, the copied
+    profile needs its own record before it is launched, carrying the SOURCE session's
+    candidateCommit and runtimeInventorySha256 -- the same tree was exercised -- and the
+    destination's OWN closed seal, which differs because it carries the load request.
+    """
+    if not (source / "run-record.json").is_file():
+        return
+    tools = Path(__file__).resolve().parent
+    budget = os.environ.get("TAF_SCENARIO_TURN_BUDGET", "10000")
+    timeout = os.environ.get("TAF_SCENARIO_TIMEOUT_SECONDS", "3600")
+    subprocess.run(
+        [sys.executable, str(tools / "scenario_run_record.py"), "seal-load", str(destination),
+         "--source", str(source), "--turn-budget", budget, "--timeout-seconds", timeout],
+        check=True, capture_output=True, text=True, timeout=900,
+    )
 
 
 def windows_path(path: Path) -> str:

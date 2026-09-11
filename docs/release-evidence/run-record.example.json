@@ -1,0 +1,25 @@
+{
+  "role": "save-session",
+  "root": "REPLACE_WITH_THE_SCENARIO_ROOT_PATH",
+  "seed": "#REPLACE_WITH_THE_FIXED_WORLD_SEED",
+  "script": "REPLACE_OR_LEAVE_EMPTY",
+  "candidateCommit": "FULL_LOWERCASE_PRIVATE_CANDIDATE_COMMIT",
+  "runtimeInventorySha256": "SHA256_FROM_TOOLS_CHECK_STRUCTURE_PY_JSON_FOR_THE_FROZEN_TREE",
+  "profileName": "REPLACE_WITH_THE_LAUNCHED_PROFILE_NAME",
+  "profileSeal": "SHA256_OF_THAT_SESSIONS_CLOSED_PROFILE_SHA256_HEADER_TAF_SCENARIO_PROFILE_SEAL_V1",
+  "turnBudget": 0,
+  "timeoutSeconds": 0,
+  "sealedUtc": "YYYY-MM-DDTHH:MM:SSZ",
+  "launchId": "pid-REPLACE_WITH_THE_OWNED_PID-YYYYMMDDTHHMMSSZ",
+  "started": "YYYY-MM-DDTHH:MM:SSZ",
+  "stoppedUtc": "YYYY-MM-DDTHH:MM:SSZ",
+  "ownership": {
+    "receiptRef": "process-ownership.json",
+    "receiptSha256": "SHA256_OF_THE_RECEIPT_FILE_BESIDE_THIS_RECORD",
+    "pid": 0,
+    "startTicks": "REPLACE_WITH_A_DIGIT_STRING",
+    "executable": "CoQ.exe"
+  },
+  "exitProvenance": "owned-process-exit-observed",
+  "exitCode": 0
+}

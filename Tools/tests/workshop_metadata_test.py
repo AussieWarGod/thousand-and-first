@@ -754,8 +754,9 @@ class WorkshopMetadataTests(unittest.TestCase):
         with self.assertRaisesRegex(METADATA.ValidationError, "release mode"):
             METADATA.validate_workshop(workshop, manifest, "preview")
 
-    def test_human_fields_reject_sentinels_and_nonprintable_text(self) -> None:
-        self.assertTrue(METADATA._human_text_valid("Morgan Reviewer", 2, 80))
+    def test_identity_fields_reject_sentinels_and_nonprintable_text(self) -> None:
+        self.assertTrue(METADATA._identity_text_valid("Morgan Reviewer", 2, 80))
+        self.assertTrue(METADATA._identity_text_valid("hotfix142-native driver", 2, 80))
         for value in (
             "HUMAN_TESTER_NAME_OR_ALIAS",
             "Example Reviewer",
@@ -764,9 +765,10 @@ class WorkshopMetadataTests(unittest.TestCase):
             "unknown person",
             "N/A",
             "Reviewer\nName",
+            "human-authored review",
         ):
             with self.subTest(value=value):
-                self.assertFalse(METADATA._human_text_valid(value, 2, 80))
+                self.assertFalse(METADATA._identity_text_valid(value, 2, 80))
 
     def test_release_artifact_discovery_is_safe_sorted_and_unique(self) -> None:
         record = self.root / "evidence.json"
