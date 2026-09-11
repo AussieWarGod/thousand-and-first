@@ -147,6 +147,48 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("taf-lifecycle-save-v1:", Read("Harness/KingdomQuickstartLifecycleSnapshot.cs"));
 		}
 
+		/// <summary>
+		/// The Quickstart lifecycle variant is a SEPARATE command with its own authority, and the
+		/// three old commands keep exactly the contract they had: one line, and no auto-runner.
+		/// </summary>
+		[Test]
+		public void TheQuickstartLifecycleAuthorityIsScopedAndLeavesTheOldProfilesAlone()
+		{
+			string request = Read("Harness/KingdomQuickstartBootRequest.cs");
+			StringAssert.Contains("LifecycleVerb = \"quickstart-lifecycle\"", request);
+			StringAssert.Contains("if (!lifecycle && Script.Count != 1) return false;", request);
+			string boot = Read("Harness/KingdomQuickstartBootTest.cs");
+			StringAssert.Contains("Request.Lifecycle || Game.GetSystem<KingdomScenarioAutoRunner>() == null",
+				boot);
+			// The runner is never CREATED by a Quickstart shard, whichever command is running.
+			foreach (string path in new[] { "Harness/KingdomQuickstartBootTest.cs",
+				"Harness/KingdomQuickstartBuildTest.cs", "Harness/KingdomQuickstartSaveState.cs" })
+				foreach (string forbidden in new[] { "new KingdomScenarioAutoRunner",
+					"RequireSystem<KingdomScenarioAutoRunner" })
+					StringAssert.DoesNotContain(forbidden, Read(path));
+			// The save path's own exclusion is untouched.
+			StringAssert.Contains("GetSystem<KingdomScenarioAutoRunner>() == null",
+				Read("Harness/KingdomQuickstartSaveState.cs"));
+			string profile = Read("Tools/scenario_profile.py");
+			StringAssert.Contains("QUICKSTART_LIFECYCLE_VERB = \"quickstart-lifecycle\"", profile);
+			StringAssert.Contains("QUICKSTART_VERBS = (QUICKSTART_BOOT_VERB, QUICKSTART_SAVE_VERB, QUICKSTART_BUILD_VERB)",
+				profile);
+			StringAssert.Contains("if tokens[:1] == [QUICKSTART_LIFECYCLE_VERB]:", profile);
+		}
+
+		/// <summary>The starter-chest commission hands its exact job to the lifecycle verbs, and
+		/// only under the lifecycle command.</summary>
+		[Test]
+		public void TheQuickstartBuildPhaseCarriesItsJobOnlyForTheLifecycleCommand()
+		{
+			string build = Read("Harness/KingdomQuickstartBuildTest.cs");
+			StringAssert.Contains("if (KingdomQuickstartBootTest.LifecycleRequested)", build);
+			StringAssert.Contains("KingdomQuickstartLifecycleSteps.JobKey, job.Id", build);
+			StringAssert.Contains("TakeStock(Zone, stockpile, true,", build);
+			string boot = Read("Harness/KingdomQuickstartBootTest.cs");
+			StringAssert.Contains("Request.Build || Request.Lifecycle", boot);
+		}
+
 		/// <summary>The lifecycle verbs mint no stock and force no phase.</summary>
 		[Test]
 		public void TheLifecycleDriverFabricatesNothing()

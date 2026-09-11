@@ -150,8 +150,17 @@ namespace ThousandAndFirst.Harness
 				if (!KingdomConstruction.TryRead(out List<KingdomConstructionJob> jobsAfter, out string readAfterFailure))
 				{ Refusal = readAfterFailure ?? "the construction registry could not be read after commissioning"; return "census-after"; }
 				if (!KingdomQuickstartBuildCensus.TryNewPaidJob(jobsBefore, jobsAfter, Zone, system, BuildKey,
-					entry.CostDrams, quote, out _, out string jobFailure))
+					entry.CostDrams, quote, out KingdomConstructionJob job, out string jobFailure))
 				{ Refusal = jobFailure; return "census-after"; }
+				// The lifecycle variant carries this exact job into its later verbs; boot, save
+				// and build publish nothing and behave exactly as before.
+				if (KingdomQuickstartBootTest.LifecycleRequested)
+				{
+					Game.SetStringGameState(KingdomQuickstartLifecycleSteps.JobKey, job.Id);
+					if (!KingdomScenarioDurableState.ProvesExactText(
+						KingdomQuickstartLifecycleSteps.JobKey, job.Id))
+					{ Refusal = "the commissioned job identity did not persist exactly"; return "census-after"; }
+				}
 				return null;
 			}
 			catch (Exception error)

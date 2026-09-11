@@ -178,14 +178,19 @@ if [ -f "$LOCAL/scenario-script.txt" ]; then
 	while IFS= read -r BANNER_LINE; do
 		case "$BANNER_LINE" in ''|'#'*) continue ;; esac
 		BANNER_COMMANDS=$(( BANNER_COMMANDS + 1 ))
-		if [[ "$BANNER_LINE" =~ ^quickstart-(boot|save|build)\ (marsh|canyon|dunes)\ (yes|no)$ ]]; then
+		if [[ "$BANNER_LINE" =~ ^quickstart-(boot|save|build|lifecycle)\ (marsh|canyon|dunes)\ (yes|no)$ ]]; then
 			QUICKSTART_BANNER="${BASH_REMATCH[1]}"
 			QUICKSTART_PROFILE="${BASH_REMATCH[2]}"
 			QUICKSTART_ADVISOR="${BASH_REMATCH[3]}"
+			QUICKSTART_COMMAND_LINE="$BANNER_COMMANDS"
 		fi
 	done < "$LOCAL/scenario-script.txt"
 fi
-if [ "$BANNER_COMMANDS" -ne 1 ]; then QUICKSTART_BANNER=""; fi
+# Boot, save and build are the whole script and stay that way. The lifecycle variant is the only
+# one that may carry further sealed AutoRunner lines, and its command must still be the first.
+if [ "$QUICKSTART_BANNER" = "lifecycle" ]; then
+	if [ "${QUICKSTART_COMMAND_LINE:-0}" -ne 1 ]; then QUICKSTART_BANNER=""; fi
+elif [ "$BANNER_COMMANDS" -ne 1 ]; then QUICKSTART_BANNER=""; fi
 if [ -z "$QUICKSTART_BANNER" ]; then
 	printf '%s\n' "$START_LINE" "$OPTIONS_NOTE"
 fi

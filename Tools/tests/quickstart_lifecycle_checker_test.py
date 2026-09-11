@@ -153,7 +153,7 @@ class LifecycleVerdict(unittest.TestCase):
                     "elapsedSeconds": 5,
                     "turnBudget": 100,
                     "timeoutSeconds": 60,
-                    "observedIdentities": {
+                    "observed": {
                         name: name + "-observed-at-" + step
                         for name in checker.EXPECTED_IDENTITIES[step]
                     },
@@ -194,7 +194,7 @@ class LifecycleVerdict(unittest.TestCase):
         self.assertEqual(
             sorted(payload["steps"][0]),
             sorted(["step", "status", "turnsUsed", "elapsedSeconds", "turnBudget",
-                    "timeoutSeconds", "observedIdentities"]),
+                    "timeoutSeconds", "observed"]),
         )
         self.assertEqual(payload["schemaVersion"], 1)
 
@@ -233,7 +233,7 @@ class LifecycleVerdict(unittest.TestCase):
     def test_each_step_carries_only_the_identities_it_could_have_observed(self):
         payload, unresolved = checker.results(checker.judge(whole_chain()), self.run_record())
         self.assertEqual(unresolved, [])
-        by_step = {entry["step"]: entry["observedIdentities"] for entry in payload["steps"]}
+        by_step = {entry["step"]: entry["observed"] for entry in payload["steps"]}
         self.assertEqual(sorted(by_step["startup"]), ["cityId", "realmId"])
         self.assertNotIn("jobId", by_step["quote"])
         self.assertIn("jobId", by_step["paid-commission"])
@@ -241,7 +241,7 @@ class LifecycleVerdict(unittest.TestCase):
         self.assertIn("buildingId", by_step["engine-turn-build"])
         self.assertIn("saveId", by_step["save"])
         # Read at that step, not copied forward: each value still names its own step.
-        self.assertEqual(by_step["save"]["jobId"], "jobId-observed-at-save")
+        self.assertEqual(by_step["save"]["buildingId"], "buildingId-observed-at-save")
         # The finished job need not survive the load, and the next action is free to be a new
         # one, so neither step is asked to repeat the completed job's identity.
         self.assertNotIn("jobId", checker.EXPECTED_IDENTITIES["cold-load"])
@@ -249,17 +249,36 @@ class LifecycleVerdict(unittest.TestCase):
         self.assertIn("saveId", checker.EXPECTED_IDENTITIES["next-action"])
         self.assertIn("buildingId", checker.EXPECTED_IDENTITIES["cold-load"])
 
+    def test_an_identity_offered_before_it_exists_is_dropped_and_named(self):
+        record = self.run_record()
+        record["phases"]["startup"]["observed"]["jobId"] = "job-from-the-future"
+        record["phases"]["quote"]["observed"]["saveId"] = "save-from-the-future"
+        payload, unresolved = checker.results(checker.judge(whole_chain()), record)
+        startup = next(entry for entry in payload["steps"] if entry["step"] == "startup")
+        quote = next(entry for entry in payload["steps"] if entry["step"] == "quote")
+        self.assertNotIn("jobId", startup["observed"])
+        self.assertNotIn("saveId", quote["observed"])
+        self.assertIn("startup.observed.jobId (before it exists)", unresolved)
+        self.assertIn("quote.observed.saveId (before it exists)", unresolved)
+
     def test_a_step_that_observed_no_identities_is_listed_not_filled_in(self):
         record = self.run_record()
-        del record["phases"]["engine-turn-build"]["observedIdentities"]["buildingId"]
-        record["phases"]["save"]["observedIdentities"] = {}
+        del record["phases"]["engine-turn-build"]["observed"]["buildingId"]
+        record["phases"]["save"]["observed"] = {}
         payload, unresolved = checker.results(checker.judge(whole_chain()), record)
-        self.assertIn("engine-turn-build.observedIdentities.buildingId", unresolved)
-        self.assertIn("save.observedIdentities", unresolved)
+        self.assertIn("engine-turn-build.observed.buildingId", unresolved)
+        self.assertIn("save.observed", unresolved)
         save = next(entry for entry in payload["steps"] if entry["step"] == "save")
-        self.assertNotIn("observedIdentities", save)
+        self.assertNotIn("observed", save)
         built = next(entry for entry in payload["steps"] if entry["step"] == "engine-turn-build")
-        self.assertNotIn("buildingId", built["observedIdentities"])
+        self.assertNotIn("buildingId", built["observed"])
+
+    def test_two_sessions_sharing_a_launch_id_are_refused_as_one_session(self):
+        record = self.run_record()
+        record["processes"][1]["launchId"] = record["processes"][0]["launchId"]
+        payload, unresolved = checker.results(checker.judge(whole_chain()), record)
+        self.assertNotIn("processes", payload)
+        self.assertIn("processes (sessions must have distinct launch ids)", unresolved)
 
     def test_the_artefact_never_carries_its_own_excuses(self):
         driven = list(checker.BOOT_ROWS)
@@ -285,6 +304,19 @@ class LifecycleVerdict(unittest.TestCase):
         self.assertEqual(states["cold-load"], checker.BLOCKER)
         self.assertEqual(states["next-action"], checker.BLOCKER)
         self.assertEqual(report["verdict"], checker.BLOCKER)
+
+    def test_the_quickstart_lifecycle_profile_chain_reaches_pass(self):
+        # Boot and build rows from the Quickstart phases, then the AutoRunner verbs.
+        driven = (
+            list(checker.BOOT_ROWS)
+            + list(checker.BUILD_ROWS)
+            + ["lifecycle-grown", "lifecycle-save", "lifecycle-loaded", "lifecycle-next"]
+        )
+        report = checker.judge(rows(*driven))
+        self.assertEqual(report["verdict"], checker.PASS)
+        payload, unresolved = checker.results(report, self.run_record())
+        self.assertEqual(unresolved, [])
+        self.assertEqual([entry["step"] for entry in payload["steps"]], list(checker.STEPS))
 
     def test_the_full_two_session_lifecycle_chain_reaches_pass(self):
         driven = [

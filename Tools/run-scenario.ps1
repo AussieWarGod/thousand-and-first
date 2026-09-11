@@ -211,8 +211,12 @@ if (Test-Path -LiteralPath $scriptPath -PathType Leaf) {
     $scriptVerbs = @(Get-Content -LiteralPath $scriptPath |
         Where-Object { $_.Trim() -ne '' -and -not $_.Trim().StartsWith('#') })
 }
-$quickstartBanner = $scriptVerbs.Count -eq 1 -and
-    $scriptVerbs[0] -cmatch '\Aquickstart-(boot|save|build) (marsh|canyon|dunes) (yes|no)\z'
+# Boot, save and build remain whole-script commands; only the lifecycle variant may be followed
+# by sealed AutoRunner lines, and even then its own command must be the first line.
+$quickstartBanner = ($scriptVerbs.Count -eq 1 -and
+    $scriptVerbs[0] -cmatch '\Aquickstart-(boot|save|build) (marsh|canyon|dunes) (yes|no)\z') -or
+    ($scriptVerbs.Count -ge 1 -and
+    $scriptVerbs[0] -cmatch '\Aquickstart-(lifecycle) (marsh|canyon|dunes) (yes|no)\z')
 if ($quickstartBanner) {
     $quickstartPhase = $Matches[1]; $quickstartProfile = $Matches[2]; $quickstartAdvisor = $Matches[3]
 }

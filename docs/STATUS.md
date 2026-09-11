@@ -37,11 +37,14 @@ paid job (`Harness/KingdomQuickstartBuildTest.cs:92-155`), the real save
 (`Harness/KingdomQuickstartSaveTest.cs`) and the cold load with byte-identical restored identities
 (`Harness/KingdomQuickstartLoadTest.cs:19-57`).
 
-A Quickstart profile runs with no scenario auto-runner (`Harness/KingdomQuickstartBootTest.cs:141`,
-pinned by `DevTests/KingdomQuickstartRoundtripSourceTests.cs:45,110`) and `Tools/scenario_profile.py`
-refuses a script mixing a Quickstart verb with the auto-runner verbs, so nothing in a Quickstart run
-can spend engine turns. The turn-driven half therefore runs on an ordinary founded settlement
-instead, with no Quickstart invariant relaxed: `Harness/KingdomQuickstartLifecycleProvider.cs`
+Two roads now drive this chain, and neither relaxes an old contract. The Quickstart road is a
+separate sealed command, `quickstart-lifecycle <profile> <yes|no>`
+(`Harness/KingdomQuickstartBootRequest.cs`), which boots exactly as before, runs the same starter-chest
+commissioning proof, and is the only command whose script may carry further sealed auto-runner lines
+and the only one whose run may carry an auto-runner at all
+(`Harness/KingdomQuickstartBootTest.cs` `RunnerAuthorized`). `quickstart-boot`, `quickstart-save` and
+`quickstart-build` keep their exact single-line grammar and their runner exclusion, and no Quickstart
+shard constructs a runner. The founded road needs no Quickstart profile at all: `Harness/KingdomQuickstartLifecycleProvider.cs`
 registers `lifecycle-open`, `lifecycle-build`, `lifecycle-grown` and `lifecycle-save`, and
 `Tools/personas/lifecycle-stockpile-native-check.persona` seals them around the existing bounded
 `advance` verb. The settlement pays from its own accumulated stores -- no stock is minted and no

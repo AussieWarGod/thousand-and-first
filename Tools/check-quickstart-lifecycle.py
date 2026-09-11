@@ -83,7 +83,7 @@ KEYS = {
     "continuity": "continuity",
     # Per-step identities as the driver actually read them at that step. The exact field name
     # is still settling on the validator side; it is one edit here.
-    "observed": "observedIdentities",
+    "observed": "observed",
 }
 SCHEMA_VERSION = 1
 SESSIONS = ("save-session", "cold-load-session")
@@ -105,6 +105,9 @@ SESSION_OF = {
 # journal actually used; a journal that mixes them is judged on the fuller one and still has
 # to be complete and in order.
 LIFECYCLE_ROWS = {
+    # The Quickstart lifecycle profile lands the boot rows first, then its build rows, then one
+    # row per AutoRunner verb; the founded profile lands verb rows throughout. A link is judged
+    # on whichever vocabulary the journal in hand actually used.
     "startup": ("realize", "lifecycle-open"),
     "quote": ("lifecycle-build",),
     "paid-commission": ("lifecycle-build",),
@@ -128,11 +131,24 @@ LIFECYCLE_ROWS = {
 EXPECTED_IDENTITIES = {
     "startup": ("realmId", "cityId"),
     "quote": ("realmId", "cityId"),
-    "paid-commission": ("realmId", "cityId", "jobId", "plotId"),
-    "engine-turn-build": ("realmId", "cityId", "jobId", "plotId", "buildingId"),
-    "save": ("realmId", "cityId", "jobId", "plotId", "buildingId", "saveId"),
-    "cold-load": ("realmId", "cityId", "plotId", "buildingId", "saveId"),
-    "next-action": ("realmId", "cityId", "saveId"),
+    "paid-commission": ("realmId", "cityId", "jobId"),
+    "engine-turn-build": ("realmId", "cityId", "jobId", "buildingId", "plotId"),
+    "save": ("realmId", "cityId", "buildingId", "plotId", "saveId"),
+    "cold-load": ("realmId", "cityId", "buildingId", "plotId", "saveId"),
+    "next-action": ("realmId", "cityId", "buildingId", "plotId", "saveId"),
+}
+
+# An identity a step CANNOT honestly have observed, because the thing it names does not exist
+# yet. Emitting one here would be a placeholder or a value borrowed from the future, so the
+# emitter drops it and says so rather than passing it on.
+FORBIDDEN_IDENTITIES = {
+    "startup": ("jobId", "buildingId", "plotId", "saveId"),
+    "quote": ("jobId", "buildingId", "plotId", "saveId"),
+    "paid-commission": ("buildingId", "plotId", "saveId"),
+    "engine-turn-build": ("saveId",),
+    "save": (),
+    "cold-load": (),
+    "next-action": (),
 }
 LINKS = (
     ("startup", BOOT_ROWS),
@@ -240,6 +256,17 @@ def results(report: dict, run: dict) -> tuple[dict, list[str]]:
             else:
                 unresolved.append(step + "." + field)
         observed = phase.get(KEYS["observed"])
+        if isinstance(observed, dict):
+            early = [name for name in FORBIDDEN_IDENTITIES[step] if name in observed]
+            if early:
+                observed = {
+                    name: value for name, value in observed.items()
+                    if name not in FORBIDDEN_IDENTITIES[step]
+                }
+                unresolved.extend(
+                    step + "." + KEYS["observed"] + "." + name + " (before it exists)"
+                    for name in early
+                )
         # Passed through exactly as the driver read it at THAT step. Nothing is copied
         # forward from an earlier step and nothing is filled in from the top-level
         # continuity block: an identity that only appears because a previous step saw it
@@ -266,8 +293,16 @@ def results(report: dict, run: dict) -> tuple[dict, list[str]]:
         for session in sessions
         if isinstance(session, dict) and session.get("role") == role
     ]
-    if len(ordered) == len(SESSIONS):
+    launches = [
+        session.get("launchId") for session in ordered
+        if isinstance(session.get("launchId"), str) and session["launchId"]
+    ]
+    if len(ordered) == len(SESSIONS) and len(set(launches)) == len(SESSIONS):
         payload[KEYS["processes"]] = ordered
+    elif len(ordered) == len(SESSIONS):
+        # Two sessions that share a launch id are one session described twice. Emitting them
+        # would claim a cold load that never had its own process.
+        unresolved.append(KEYS["processes"] + " (sessions must have distinct launch ids)")
     else:
         present = {session.get("role") for session in ordered}
         unresolved.extend(
