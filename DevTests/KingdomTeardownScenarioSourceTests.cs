@@ -74,6 +74,45 @@ namespace ThousandAndFirst.Tests
 			Assert.That(source, Does.Not.Contain("SetIntProperty(\"KingdomBuilt\""));
 		}
 
+		/// <summary>
+		/// Native run 12 on 3272cff: teardown-setup REFUSED with InvalidOperationException
+		/// "The exact realm sources cannot cover this construction input (InsufficientMaterial)",
+		/// before any advance/check -- the fixture's single-object Count-stack minting
+		/// (`timber.Count = TimberCost;`) did not answer a real material reservation, so
+		/// Commission's local funding fell through to realm-routed logistics no bare harness zone
+		/// has set up. Fixed: mint the authored bill as N separate single-unit objects per
+		/// material, KingdomCampHeartNativeFixture.Mint's own proven shape, then refuse by name
+		/// with the exact missing tally if the freshly minted store still cannot cover it --
+		/// never falling through to Commission's own realm-routed path at all.
+		/// </summary>
+		[Test]
+		public void TheBillIsMintedAsSeparateUnitsNeverAStackedCountAndCanPayBillRefusesByName()
+		{
+			string source = ReadChecksAndCases();
+			Assert.That(source, Does.Contain(
+				"KingdomMaterialTally bill = KingdomMaterials.CostFor(BuildKey);"));
+			Assert.That(source, Does.Contain("MintBill(bill, Require, Journal);"));
+			Assert.That(source, Does.Contain(
+				"private void MintBill(KingdomMaterialTally Bill, Action<bool, string> Require,"));
+			Assert.That(source, Does.Contain(
+				"GameObject unit = GameObject.Create(blueprint);"));
+			Assert.That(source, Does.Contain(
+				"Require(GameObject.Validate(unit) && unit.Count == 1,"));
+			Assert.That(source, Does.Contain(
+				"Chest.Inventory.AddObject(unit, null,\n\t\t\t\t\t\t\tSilent: true, NoStack: true);"));
+			Assert.That(source, Does.Contain("\"; synthetic-bill design=\""));
+			Assert.That(source, Does.Contain(
+				"private bool CanPayBill(KingdomMaterialTally Bill, out string Shortfall)"));
+			Assert.That(source, Does.Contain("KingdomMaterialRules.Covers(stock.Tally, Bill)"));
+			Assert.That(source, Does.Contain("KingdomMaterialRules.Missing(stock.Tally, Bill)"));
+			Assert.That(source, Does.Contain(
+				"Require(CanPayBill(bill, out shortfall),"));
+			// The exact defect from native run 12 must never return: no single object's Count
+			// field is ever set to stand in for a multi-unit material reservation.
+			Assert.That(source, Does.Not.Contain(".Count = TimberCost"));
+			Assert.That(source, Does.Not.Contain("SetIntProperty(\"NeverStack\""));
+		}
+
 		[Test]
 		public void CheckPollsRealBuiltStateBeforeOrderingTheRealStrike()
 		{
@@ -95,9 +134,11 @@ namespace ThousandAndFirst.Tests
 			// uses, never hardcoded: KingdomMaterials.CostFor + KingdomMaterialRules.
 			// StrikeSalvagePercent (Growth/KingdomMaterialRules.Clearance.cs:193,211-219),
 			// mirroring Cost.Scaled's own integer-floor arithmetic
-			// (Growth/KingdomMaterialTally.cs:101-111).
+			// (Growth/KingdomMaterialTally.cs:101-111). The single CostFor read is now shared
+			// (bound to `bill`) with MintBill/CanPayBill below, never re-read separately.
 			Assert.That(source, Does.Contain(
-				"KingdomMaterials.CostFor(BuildKey).Get(KingdomMaterial.Timber)"));
+				"KingdomMaterialTally bill = KingdomMaterials.CostFor(BuildKey);"));
+			Assert.That(source, Does.Contain("TimberCost = bill.Get(KingdomMaterial.Timber);"));
 			Assert.That(source, Does.Contain("KingdomMaterialRules.StrikeSalvagePercent"));
 			Assert.That(source, Does.Contain("salvaged == ExpectedSalvageDelta"));
 			Assert.That(source, Does.Contain("KingdomMaterials.RawCensusCountOf(item)"));

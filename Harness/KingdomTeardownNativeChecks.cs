@@ -109,8 +109,10 @@ namespace ThousandAndFirst.Harness
 				Cell seat = KingdomNativeCampFounding.Clear(Zone);
 				Case fire = new Case("fire", "fire", system, Zone, Game, Owned);
 				Case larder = new Case("larder", "larder", system, Zone, Game, Owned);
-				fire.Start(Require, (chest, name) => PlaceChest(seat, chest, name));
-				larder.Start(Require, (chest, name) => PlaceChest(seat, chest, name));
+				fire.Start(Require, (chest, name) => PlaceChest(seat, chest, name),
+					line => Evidence.Append(line));
+				larder.Start(Require, (chest, name) => PlaceChest(seat, chest, name),
+					line => Evidence.Append(line));
 				Cases.Add(fire);
 				Cases.Add(larder);
 			}
