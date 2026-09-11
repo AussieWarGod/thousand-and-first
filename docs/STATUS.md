@@ -88,8 +88,9 @@ on the frozen tree (never the review ledger, which an active candidate keeps sta
 that session's own closed profile seal and name, the frozen seed and its budgets;
 `Tools/run-scenario.ps1` adds the launch identity and start from the launched process and, on
 `-StopRecord`, the stop and the game build string the run's own log states. The checker takes both
-records, derives per-step turns and seconds from the journals those runs wrote -- never from the
-budgets -- and refuses a pair that shares a launch identity, that began the cold load before the
+records, binds each journal to the run record sitting in its own scenario root so a step is
+attributed to the profile that actually ran it, derives per-step turns and seconds from the
+journals those runs wrote -- never from the budgets -- and refuses a pair that shares a launch identity, that began the cold load before the
 save session stopped, or that exercised different trees. Three digests stay separately named:
 `runtimeInventorySha256` (production structure), `harnessInventorySha256` (dev-harness inventory,
 recorded only when a caller can state it), and per-session `processes[].profileSeal` with

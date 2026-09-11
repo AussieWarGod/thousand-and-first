@@ -236,6 +236,31 @@ def observed_in(message: str) -> dict:
     return seen
 
 
+def bind_journals(paths: list[Path], records: list[dict]) -> tuple[dict, list[str]]:
+    """Which session wrote each journal, proved rather than assumed.
+
+    A journal is bound to the run record that sits in its own scenario root, and that record
+    must be one of the two handed in. Without this, two journals could be read as one session's
+    work, or a step could be attributed to a profile that never ran it -- so a journal with no
+    record beside it, or one whose record is not in the pair, is refused rather than guessed at.
+    """
+    problems: list[str] = []
+    bound: dict = {}
+    known = {}
+    for entry in records:
+        root = entry.get("root")
+        if isinstance(root, str) and root:
+            known[str(Path(root).resolve())] = entry
+    for path in paths:
+        root = str(path.resolve().parent)
+        entry = known.get(root)
+        if entry is None:
+            problems.append("journal " + path.name + " has no run record for its own profile")
+            continue
+        bound[str(path.resolve())] = entry
+    return bound, problems
+
+
 def measure(paths: list[Path], records: list[dict]) -> dict:
     """Per-step turns and seconds, derived from the journals and bounded by the records.
 
@@ -245,6 +270,10 @@ def measure(paths: list[Path], records: list[dict]) -> dict:
     """
     stamped = stamped_rows(paths)
     by_role = {record.get("role"): record for record in records}
+    profiles = {
+        record.get("role"): (record.get("profileName"), record.get("profileSeal"))
+        for record in records
+    }
     phases: dict = {}
     last_turns = 0
     last_stamp = None
@@ -255,7 +284,12 @@ def measure(paths: list[Path], records: list[dict]) -> dict:
             continue
         stamp, _, message = rows[-1]
         record = by_role.get(SESSION_OF[step], {})
+        # The step's measurements belong to the profile that ran it, named here from that
+        # session's own record rather than from whichever record happened to be first.
+        name, seal = profiles.get(SESSION_OF[step], (None, None))
         phase = {
+            "profileName": name,
+            "profileSeal": seal,
             "turnBudget": record.get("turnBudget"),
             "timeoutSeconds": record.get("timeoutSeconds"),
             KEYS["observed"]: {
@@ -549,8 +583,20 @@ def emit(report: dict, options: dict, journals: list[Path]) -> list[str]:
         if not isinstance(payload, dict):
             raise ValueError("run record must be a JSON object")
         records.append(payload)
+    bound, binding_problems = bind_journals(journals, records)
+    phases = measure(journals, records)
+    # Visible in the verdict, not in the artefact: the validator's step key set is fixed, so the
+    # profile a step's evidence came from is reported beside the verdict instead of inside it.
+    report["profilesByStep"] = {
+        step: {
+            "profileName": phase.get("profileName"),
+            "profileSeal": phase.get("profileSeal"),
+            "journals": sorted({Path(name).name for name in bound}),
+        }
+        for step, phase in phases.items()
+    }
     run, problems = run_from(
-        records, measure(journals, records),
+        records, phases,
         options.get("driver", "automated lifecycle driver"),
         options.get("run-id", records[0].get("runId", "")),
     )
@@ -558,7 +604,7 @@ def emit(report: dict, options: dict, journals: list[Path]) -> list[str]:
     Path(options["results"]).write_text(
         json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
-    return problems + unresolved
+    return binding_problems + problems + unresolved
 
 
 def main(argv: list[str]) -> int:

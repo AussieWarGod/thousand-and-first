@@ -207,9 +207,18 @@ class TwoRecordEmission(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.root = Path(self.temporary.name)
-        (self.root / "save.tsv").write_text(save_journal(), encoding="utf-8")
-        (self.root / "load.tsv").write_text(load_journal(), encoding="utf-8")
-        self.journals = [self.root / "save.tsv", self.root / "load.tsv"]
+        # Each session owns a scenario root, and its journal sits beside its own run record --
+        # the same shape a real pair of profiles has.
+        self.save_root = self.root / "taf-scenario.save"
+        self.load_root = self.root / "taf-scenario.load"
+        self.save_root.mkdir()
+        self.load_root.mkdir()
+        (self.save_root / "scenario-journal.tsv").write_text(save_journal(), encoding="utf-8")
+        (self.load_root / "scenario-journal.tsv").write_text(load_journal(), encoding="utf-8")
+        self.journals = [
+            self.save_root / "scenario-journal.tsv",
+            self.load_root / "scenario-journal.tsv",
+        ]
 
     def tearDown(self):
         self.temporary.cleanup()
@@ -223,24 +232,27 @@ class TwoRecordEmission(unittest.TestCase):
             "logSha256": "c" * 64, "continuity": {"realmId": "r1", "cityId": "c1"},
             "turnBudget": 3000, "timeoutSeconds": 1200,
             "profileSeal": "d" * 64, "profileName": "taf-scenario.save",
+            "root": str(self.save_root),
         }
         second = dict(first)
         second.update({
             "role": "cold-load-session", "launchId": "L2", "started": "2026-09-11T10:09:00Z",
             "stoppedUtc": "2026-09-11T10:12:00Z", "turnBudget": 10, "timeoutSeconds": 600,
             "profileSeal": "e" * 64, "profileName": "taf-scenario.load",
+            "root": str(self.load_root),
         })
         second.update(overrides.pop("load", {}))
         first.update(overrides.pop("save", {}))
         return [first, second]
 
     def emit(self, records):
-        for name, payload in zip(("a.json", "b.json"), records):
-            (self.root / name).write_text(json.dumps(payload), encoding="utf-8")
+        for root, payload in zip((self.save_root, self.load_root), records):
+            (root / "run-record.json").write_text(json.dumps(payload), encoding="utf-8")
         report = checker.judge(checker.rows_of(self.journals))
         options = {
             "results": str(self.root / "results.json"),
-            "run-record": str(self.root / "a.json") + "," + str(self.root / "b.json"),
+            "run-record": str(self.save_root / "run-record.json") + ","
+            + str(self.load_root / "run-record.json"),
         }
         problems = checker.emit(report, options, self.journals)
         return json.loads((self.root / "results.json").read_text()), problems, report
@@ -280,6 +292,26 @@ class TwoRecordEmission(unittest.TestCase):
         _, problems, _ = self.emit(records)
         self.assertIn("processes.cold-load-session.profileSeal", problems)
 
+    def test_a_journal_without_its_own_run_record_is_refused(self):
+        stray = self.root / "stray"
+        stray.mkdir()
+        (stray / "scenario-journal.tsv").write_text(save_journal(), encoding="utf-8")
+        self.journals = [stray / "scenario-journal.tsv", self.journals[1]]
+        _, problems, _ = self.emit(self.records())
+        self.assertTrue(
+            any("no run record for its own profile" in problem for problem in problems), problems
+        )
+
+    def test_every_step_is_attributed_to_the_profile_that_ran_it(self):
+        _, problems, report = self.emit(self.records())
+        self.assertEqual(problems, [])
+        by_step = report["profilesByStep"]
+        self.assertEqual(by_step["paid-commission"]["profileName"], "taf-scenario.save")
+        self.assertEqual(by_step["cold-load"]["profileName"], "taf-scenario.load")
+        self.assertNotEqual(
+            by_step["save"]["profileSeal"], by_step["next-action"]["profileSeal"]
+        )
+
     def test_two_sessions_sharing_a_launch_id_are_refused(self):
         payload, problems, _ = self.emit(self.records(load={"launchId": "L1"}))
         self.assertTrue(any("distinct launch ids" in problem for problem in problems))
@@ -299,7 +331,7 @@ class TwoRecordEmission(unittest.TestCase):
         )
 
     def test_a_missing_second_record_leaves_the_chain_blocked(self):
-        (self.root / "load.tsv").write_text("", encoding="utf-8")
+        (self.load_root / "scenario-journal.tsv").write_text("", encoding="utf-8")
         payload, problems, report = self.emit(self.records())
         self.assertEqual(report["verdict"], checker.BLOCKER)
         self.assertIn("steps.cold-load", problems)
