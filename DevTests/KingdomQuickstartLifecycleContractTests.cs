@@ -1,0 +1,159 @@
+#if TAF_TESTS
+using System;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
+using NUnit.Framework;
+using NUnit.Framework.Legacy;
+
+namespace ThousandAndFirst.Tests
+{
+	/// <summary>
+	/// SOURCE-ONLY fixture. Every case here reads repository text; none of them runs the game, so
+	/// nothing in this file proves that a lifecycle link actually works. The behavioural (native)
+	/// coverage of this chain lives in the harness and its journals, judged by
+	/// Tools/check-quickstart-lifecycle.py -- see Harness/KingdomQuickstartLifecycleRows.cs for
+	/// which links have a producer today and which are owed.
+	/// <para>
+	/// What these cases DO protect: the contract cannot drift apart silently. The harness declares
+	/// the six links' row names in C#; the checker declares them again in Python; a native journal
+	/// is judged against the Python list. If the two lists diverge, a link could be renamed on one
+	/// side and quietly stop being demanded on the other, and a chain that was never driven to the
+	/// end would stop being reported as BLOCKER.
+	/// </para>
+	/// </summary>
+	public class KingdomQuickstartLifecycleContractTests
+	{
+		private const string Rows = "Harness/KingdomQuickstartLifecycleRows.cs";
+		private const string Checker = "Tools/check-quickstart-lifecycle.py";
+		private const string BuildTest = "Harness/KingdomQuickstartBuildTest.cs";
+		private const string LoadTest = "Harness/KingdomQuickstartLoadTest.cs";
+		private static string Read(string path) => TestMain.ReadRepositoryText(path);
+
+		private static List<string> RowNames(string source)
+		{
+			List<string> names = new List<string>();
+			foreach (Match match in Regex.Matches(source, "\"(QUICKSTART-[A-Z-]+)\""))
+				if (!names.Contains(match.Groups[1].Value)) names.Add(match.Groups[1].Value);
+			return names;
+		}
+
+		/// <summary>Both sides declare the same six links in the same order, so neither can drop a
+		/// demand the other still believes is being made.</summary>
+		[Test]
+		public void TheHarnessAndTheCheckerDeclareTheSameLifecycleRowsInTheSameOrder()
+		{
+			List<string> harness = RowNames(Read(Rows));
+			List<string> checker = RowNames(Read(Checker));
+			CollectionAssert.AreEqual(harness, checker);
+			ClassicAssert.AreEqual(18, harness.Count);
+		}
+
+		/// <summary>The two links with no producer are named as owed in the harness, in the same
+		/// words the checker uses, so "not driven" can never read as "driven and fine".</summary>
+		[Test]
+		public void TheUndrivenLinksAreDeclaredOwedRatherThanQuietlyOmitted()
+		{
+			string rows = Read(Rows);
+			StringAssert.Contains("QUICKSTART-NEXT-BEGIN", rows);
+			StringAssert.Contains("Owed: a second quote and commission attempt", rows);
+			StringAssert.Contains("WHAT IS STILL OWED", rows);
+			StringAssert.Contains("with NO scenario auto-runner", rows);
+			// The turn-driven half is declared as driven on the founded road, by the verbs the
+			// persona seals -- so "owed" shrinks only when a producer actually exists.
+			StringAssert.Contains("\"lifecycle-grown\"", rows);
+		}
+
+		/// <summary>The founded-road verbs the checker judges are the verbs the provider
+		/// registers and the persona seals: one vocabulary, three files.</summary>
+		[Test]
+		public void TheLifecycleVerbsAgreeAcrossProviderCheckerAndPersona()
+		{
+			string provider = Read("Harness/KingdomQuickstartLifecycleProvider.cs");
+			string checker = Read(Checker);
+			string persona = Read("Tools/personas/lifecycle-stockpile-native-check.persona");
+			foreach (string verb in new[] { "lifecycle-open", "lifecycle-build", "lifecycle-grown",
+				"lifecycle-save" })
+			{
+				StringAssert.Contains("\"" + verb + "\"", provider);
+				StringAssert.Contains("\"" + verb + "\"", checker);
+				StringAssert.Contains(verb, persona);
+			}
+			StringAssert.Contains("VERBS=lifecycle-open,lifecycle-build,lifecycle-grown,lifecycle-save", persona);
+		}
+
+		/// <summary>The turn-driven step refuses rather than passes when the job has not
+		/// completed, and the refusal names the budget as the reason.</summary>
+		[Test]
+		public void AnExpiredTurnBudgetIsARefusalNotAPass()
+		{
+			string finish = Read("Harness/KingdomQuickstartLifecycleFinish.cs");
+			StringAssert.Contains("job.Phase != KingdomConstructionPhase.Complete", finish);
+			StringAssert.Contains("the turn budget expired before this building stood", finish);
+			StringAssert.Contains("KingdomConstruction.HasReceipt(Building, Job)", finish);
+			StringAssert.Contains("GetIntProperty(\"KingdomBuilt\") != 1", finish);
+			StringAssert.Contains("GetStringProperty(KingdomUpgrade.BuildKeyProperty) != Job.TargetKey", finish);
+		}
+
+		/// <summary>The lifecycle verbs mint no stock and force no phase.</summary>
+		[Test]
+		public void TheLifecycleDriverFabricatesNothing()
+		{
+			foreach (string path in new[] { "Harness/KingdomQuickstartLifecycleSteps.cs",
+				"Harness/KingdomQuickstartLifecycleFinish.cs" })
+			{
+				string source = Read(path);
+				foreach (string forbidden in new[] { "CreateObject", "CreateUnmodifiedObject",
+					"Phase = KingdomConstructionPhase", "SetIntProperty(\"KingdomBuilt\"",
+					"UpdatePhysical(" })
+					StringAssert.DoesNotContain(forbidden, source);
+			}
+		}
+
+		/// <summary>A missing link must reach BLOCKER, and BLOCKER must not share PASS's exit
+		/// code: a chain that stopped early can then never be read as a success by a caller that
+		/// only checks the process status.</summary>
+		[Test]
+		public void TheCheckerTreatsAnUndrivenLinkAsBlockerAndNeverAsPass()
+		{
+			string checker = Read(Checker);
+			StringAssert.Contains("no rows for this link; it was never driven", checker);
+			StringAssert.Contains("EXITS = {PASS: 0, BLOCKER: 3, FAIL: 4}", checker);
+			StringAssert.DoesNotContain("verdict = PASS if", checker);
+			// The artefact never carries its own excuses, so a reader of the file alone cannot
+			// mistake an unfinished chain for a complete one that merely explains itself.
+			StringAssert.Contains("Blockers are NOT smuggled into it", checker);
+		}
+
+		/// <summary>The executable links this chain already owns keep their physical assertions:
+		/// the commission's exact timber and water debit, the new paid job, and the restored
+		/// identities after a cold load. A weakening here would empty the chain from the middle.</summary>
+		[Test]
+		public void TheAlreadyDrivenLinksKeepTheirPhysicalAndIdentityAssertions()
+		{
+			string build = Read(BuildTest);
+			StringAssert.Contains("ExactSingleDebit(stockBefore, stockAfter", build);
+			StringAssert.Contains("KingdomMaterial.Timber, 1", build);
+			StringAssert.Contains("ExactWaterDebit(waterBefore, waterAfter, entry.CostDrams", build);
+			StringAssert.Contains("TryNewPaidJob(jobsBefore, jobsAfter, Zone, system, BuildKey", build);
+			StringAssert.Contains("SameStockpile(stockBefore, stockAfter", build);
+			string load = Read(LoadTest);
+			StringAssert.Contains("KingdomQuickstartSaveState.Verify(Game, KingdomScenarioLoadEntry.QuickstartSnapshot)", load);
+			StringAssert.Contains("exact-saved-heart-stock-and-IDs=true", load);
+			StringAssert.Contains("bootstrap-replay=false", load);
+		}
+
+		/// <summary>The commission is still reached through the production three-call sequence the
+		/// Charter UI itself drives, not through a shortcut the harness invented.</summary>
+		[Test]
+		public void ThePaidCommissionLinkStillDrivesTheProductionSequence()
+		{
+			string build = Read(BuildTest);
+			int quote = build.IndexOf("KingdomPlots.TryQuoteCommission(system, Zone, entry, null,", StringComparison.Ordinal);
+			int canPay = build.IndexOf("KingdomMaterials.CanPay(Zone, BuildKey, out string materialBlocker)", StringComparison.Ordinal);
+			int commission = build.IndexOf("KingdomCommission.Commission(system, BuildKey, null,", StringComparison.Ordinal);
+			ClassicAssert.IsTrue(quote >= 0 && canPay > quote && commission > canPay,
+				"quote, CanPay and Commission must still run in that order");
+		}
+	}
+}
+#endif

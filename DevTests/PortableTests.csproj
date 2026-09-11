@@ -23,6 +23,7 @@
     <Compile Include="KingdomDepositOverflowReservationTests.cs" />
     <Compile Include="..\Harness\KingdomDepositOverflowReservation.cs" />
     <Compile Include="KingdomQuickstartMaterialIdentityTests.cs" />
+    <Compile Include="KingdomQuickstartLifecycleContractTests.cs" />
     <Compile Include="KingdomRealmArchiveNestedWireSourceTests.cs" />
     <Compile Include="KingdomCityBookRefusalTests.cs" />
     <Compile Include="KingdomWearLoadSafetySourceTests.cs" />
@@ -144,6 +145,7 @@
 	<Compile Include="KingdomQuickstartTests.cs" />
 	<Compile Include="KingdomQuickstartGuideRulesTests.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartBootRequest.cs" />
+	<Compile Include="..\Harness\KingdomQuickstartLifecycleRows.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartBuildClaims.cs" />
 	<Compile Include="KingdomQuickstartBuildClaimsTests.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartSaveSnapshot.cs" />

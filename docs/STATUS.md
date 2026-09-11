@@ -26,6 +26,52 @@ Inventory SHA-256: `6ebc095bd595e636c48079ba5c41c0cb3bb92f3af7741d99b05eeb8b81ac
 Combined-tree gates pending. The isolated main candidate and native receipts below exclude dev's
 unfinished gameplay. The inherited semantic review binds main only, not this dev inventory.
 
+## Unreleased construction-lifecycle coverage verdict
+
+The first complete construction lifecycle is one chain: startup, stockpile quote, CanPay, a paid
+commission with physical timber and water debit, engine turns until the job completes into a
+functional building, a real save, a cold load, and a further action on the loaded game.
+
+Driven today (executable, native): startup, quote, CanPay, commission with exact debit and a new
+paid job (`Harness/KingdomQuickstartBuildTest.cs:92-155`), the real save
+(`Harness/KingdomQuickstartSaveTest.cs`) and the cold load with byte-identical restored identities
+(`Harness/KingdomQuickstartLoadTest.cs:19-57`).
+
+A Quickstart profile runs with no scenario auto-runner (`Harness/KingdomQuickstartBootTest.cs:141`,
+pinned by `DevTests/KingdomQuickstartRoundtripSourceTests.cs:45,110`) and `Tools/scenario_profile.py`
+refuses a script mixing a Quickstart verb with the auto-runner verbs, so nothing in a Quickstart run
+can spend engine turns. The turn-driven half therefore runs on an ordinary founded settlement
+instead, with no Quickstart invariant relaxed: `Harness/KingdomQuickstartLifecycleProvider.cs`
+registers `lifecycle-open`, `lifecycle-build`, `lifecycle-grown` and `lifecycle-save`, and
+`Tools/personas/lifecycle-stockpile-native-check.persona` seals them around the existing bounded
+`advance` verb. The settlement pays from its own accumulated stores -- no stock is minted and no
+job is forced into a phase -- so an economy that cannot yet pay refuses at CanPay, and a turn budget
+that expires before the building stands lands a refusal, never a pass.
+
+Still not driven, and reported as BLOCKER rather than passed: the cold-load session and the next
+action after it. Both need a second profile imported from the lifecycle save, and the further action
+needs a verb inside that session.
+
+`Tools/check-quickstart-lifecycle.py` judges the chain from the journals a native run leaves: PASS
+only when every link's rows are present, in order and OK; FAIL when rows are present but refused,
+partial, out of order or interleaved; BLOCKER when a link landed no rows at all. Its exit codes
+separate the three (0/4/3). With `--results` and a driver-written `--run-record` it emits the
+long-form release artefact: `schemaVersion`, the seven ordered steps
+(startup, quote, paid-commission, engine-turn-build, save, cold-load, next-action) each at most
+once and only when the journals prove it, per-step measured `turnsUsed`/`elapsedSeconds` beside
+`turnBudget`/`timeoutSeconds`, the two process sessions (save-session, cold-load-session), and the
+candidate/runtime/build and continuity bindings. It measures nothing itself: every field the run
+record omits is emitted nowhere and named under `unresolvedFields`, and every undriven step is
+named under `blockedSteps`, so the validator reads them as unresolved rather than as a pass.
+Per step it also carries the identities the driver observed at that step -- realm and city
+throughout, the job and plot from the paid commission, the building from the turns that raised it,
+the save id from the save -- each read again at its own step and never copied forward, and absent
+rather than fabricated where the thing did not yet exist.
+`Tools/tests/quickstart_lifecycle_checker_test.py` exercises those verdicts;
+`DevTests/KingdomQuickstartLifecycleContractTests.cs` is SOURCE-ONLY and pins the two row lists
+against each other and the driven links' physical assertions. No native run was made for this
+change.
+
 ## Native raw-delivery overflow evidence (#111 / #124 / #129)
 
 Exact integrated head `2f90a5f85852a9be53afcd1a539fa8e1c01ddbba` passed
