@@ -20,8 +20,9 @@ replacement; no package gate or test requirement is waived.
 ## Public 0.3.3 — published and finalized
 
 [Release run 34577908711](https://github.com/AussieWarGod/thousand-and-first/actions/runs/34577908711)
-completed successfully at `84be52324f45aae75923362cef7a332a3003eebb` (normal protected PR150
-merge). Public item `3794797472`, attempt `0003`: submission reported
+completed successfully at `84be52324f45aae75923362cef7a332a3003eebb` (normal protected
+[PR #150](https://github.com/AussieWarGod/thousand-and-first/pull/150) merge).
+Public item `3794797472`, attempt `0003`: submission reported
 `SubmittedUnverified`, `metadataMatches=true`, `contentUnchanged=true`; verification and
 finalization then reported `SubscribedInstallationVerified`, `attemptFinalized=true`.
 
