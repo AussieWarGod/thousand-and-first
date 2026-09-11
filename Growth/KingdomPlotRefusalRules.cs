@@ -102,7 +102,11 @@ namespace ThousandAndFirst
 		/// <summary>The slot named by an occupant refusal, or null if it is another refusal.</summary>
 		public static string OccupantSlotOf(string Failure)
 		{
-			if (Failure == null || !Failure.StartsWith(OccupantSlotRefusalPrefix)
+			// Ordinal, like every other prefix parse in Growth: the matched length has to BE
+			// OccupantSlotRefusalPrefix.Length for the Substring below to cut the slot, and under
+			// linguistic comparison it need not be.
+			if (Failure == null || !Failure.StartsWith(OccupantSlotRefusalPrefix,
+					global::System.StringComparison.Ordinal)
 				|| Failure.Length <= OccupantSlotRefusalPrefix.Length) return null;
 			return Failure.Substring(OccupantSlotRefusalPrefix.Length);
 		}

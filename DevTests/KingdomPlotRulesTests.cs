@@ -1049,6 +1049,23 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.AreEqual("g:02:01", KingdomPlotRules.OccupantSlotOf(failure));
 		}
 
+		/// <summary>
+		/// The prefix match is ordinal, and must stay ordinal: the slot is cut at exactly
+		/// OccupantSlotRefusalPrefix.Length, so a text that merely collates equal is not a match.
+		/// A zero-width joiner inside the prefix compares equal under linguistic rules and would
+		/// cut the slot one character short; ordinal reads it as another refusal and returns null.
+		/// </summary>
+		[Test]
+		public void ACollatesEqualRefusalIsNotAnOccupantRefusal()
+		{
+			string collates = KingdomPlotRules.OccupantSlotRefusalPrefix.Insert(1, "\u200d")
+				+ "g:02:01";
+			ClassicAssert.AreNotEqual(
+				KingdomPlotRules.OccupantSlotRefusalPrefix + "g:02:01", collates);
+			ClassicAssert.IsNull(KingdomPlotRules.OccupantSlotOf(collates));
+			ClassicAssert.IsFalse(KingdomPlotRules.IsOccupantSlotRefusal(collates));
+		}
+
 		[TestCase(null)]
 		[TestCase("")]
 		[TestCase("protected or foreign state moved onto layout slot g:02:01")]
