@@ -575,6 +575,77 @@ namespace ThousandAndFirst.Tests
 				+ " return false;", removal);
 		}
 
+		/// <summary>
+		/// The chained recovery path: proved from the retired identity outward, never from what
+		/// stands on the sealed cell, and it writes nothing. The one write in the chain is the
+		/// settle's own reservation, which is issued before the rung is stamped and refuses the
+		/// whole settle when it cannot be.
+		/// </summary>
+		[Test]
+		public void TheChainedRecoveryProvesIdentityReadsOnlyAndTheSettleOwnsTheOnlyWrite()
+		{
+			string chain = Source("Growth/KingdomPlot2.07s.FoundingHeartClimbedChain.cs");
+			// Identity, not position: the chain starts at the identity the sealed terminal bound.
+			StringAssert.Contains("string retired = prior.FinalId;", chain);
+			StringAssert.Contains("TryImprovementSuccessorOf(retired, out job, out successor)",
+				chain);
+			StringAssert.Contains("row.SubjectId != RetiredId", chain);
+			StringAssert.Contains("if (Job != null) { Job = null; return false; }", chain);
+			StringAssert.Contains("KingdomConstruction.FindGlobalLiveId(Job.OutputId, out Successor)",
+				chain);
+			foreach (string fact in new[] { "KingdomConstruction.HasReceipt(successor, job)",
+				"r_KingdomScaffold.HasRemovalProof(successor, job.SubjectId)",
+				"successor.GetStringProperty(PlotFinalPredecessorProperty) == retired",
+				"HasExactFoundingHeartReservation(plan, job.OutputId, \"final\")",
+				"KingdomFoundingHeartChainRules.BindsGround(job.OutputId," })
+				StringAssert.Contains(fact, chain);
+			// Nothing about the sealed cell, and no heart-shaped plot admitted by its stamps.
+			foreach (string position in new[] { "GetCell(", "CurrentCell", "HeartPlotProperty",
+				"MainWorldX" })
+				StringAssert.DoesNotContain(position, chain);
+			// The retirement authority is asked last, and about the identity the chain named.
+			int binds = chain.IndexOf("KingdomFoundingHeartChainRules.BindsGround(",
+				StringComparison.Ordinal);
+			int authority = chain.IndexOf("ExactFoundingHeartRetiredAuthority(Z, retired,",
+				StringComparison.Ordinal);
+			ClassicAssert.IsTrue(binds > -1 && authority > binds,
+				"the chain must prove itself before it spends the heart's own authority");
+
+			// Recovery writes nothing: the reservation helper only observes.
+			int from = chain.IndexOf("private static bool TryChainedFoundingHeartRoot(",
+				StringComparison.Ordinal);
+			int to = chain.IndexOf("internal static bool TryReserveClimbedFoundingHeartRoot(",
+				StringComparison.Ordinal);
+			ClassicAssert.IsTrue(from > -1 && to > from);
+			string recovery = chain.Substring(from, to - from);
+			foreach (string write in new[] { "SetStringProperty(", "SetIntProperty(",
+				"SetZoneProperty(", "SetObjectGameState(", "Ensure(", "Destroy(", "AddObject(" })
+				StringAssert.DoesNotContain(write, recovery);
+
+			// The settle owns the write, before the rung, and refuses the settle without it.
+			string rung = Source("Growth/KingdomUpgrade.26.HeartRung.cs");
+			StringAssert.Contains("if (!KingdomPlots.TryReserveClimbedFoundingHeartRoot(Z, "
+				+ "Job.SubjectId, Job.OutputId))\n\t\t\t\treturn false;", rung);
+			int reserve = rung.IndexOf("TryReserveClimbedFoundingHeartRoot(", StringComparison.Ordinal);
+			int stamp = rung.IndexOf("KingdomPlots.TrySettleHeartRung(", StringComparison.Ordinal);
+			ClassicAssert.IsTrue(reserve > -1 && stamp > reserve,
+				"the reservation must be issued before the rung is stamped");
+
+			// And the final generation's retirement is the receipt chain, never absence alone.
+			string removal = Source("Growth/KingdomPlot2.07q.FoundingHeartRecordedRemoval.cs");
+			StringAssert.Contains("ExactFoundingHeartImprovementRetirement(PredecessorId)", removal);
+			StringAssert.Contains("TryImprovementSuccessorOf(PredecessorId, out var job, "
+				+ "out var successor)", removal);
+			StringAssert.Contains("&& ExactFoundingHeartLiveAbsence(PredecessorId);", removal);
+
+			// The chained branch sits beside the first-generation drive, after it refuses.
+			string drive = Source("Growth/KingdomPlot2.07j.FoundingHeartTerminalDrive.cs");
+			StringAssert.Contains("if (DriveFoundingHeartTerminal(System, Z, Context, null, null, "
+				+ "0L, null, false))\n\t\t\t\treturn true;", drive);
+			StringAssert.Contains("return TryChainedFoundingHeartRoot(Z, Context, out _)\n"
+				+ "\t\t\t\t|| HeartRefused(\"sealed: terminal drive and chain\");", drive);
+		}
+
 	}
 }
 #endif

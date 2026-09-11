@@ -32,7 +32,13 @@ namespace ThousandAndFirst
 				return TryReadFoundingHeartWorkAuthority(Z, works, out _)
 					|| HeartRefused("sealed: work authority");
 			}
-			return DriveFoundingHeartTerminal(System, Z, Context, null, null, 0L, null, false);
+			if (DriveFoundingHeartTerminal(System, Z, Context, null, null, 0L, null, false))
+				return true;
+			// The heart whose root climbed a rung: the first-generation drive cannot resolve a
+			// root the improvement route replaced, so the chain is proved from the retired
+			// identity outward instead. Read-only, and asked only once the drive has refused.
+			return TryChainedFoundingHeartRoot(Z, Context, out _)
+				|| HeartRefused("sealed: terminal drive and chain");
 		}
 
 		private static bool FinishFoundingHeart(r_KingdomPlotWorks Works, KingdomSystem System,

@@ -18,8 +18,24 @@ namespace ThousandAndFirst
 			FoundingHeartContext Context, string PredecessorId,
 			KingdomFoundingHeartRetiredGeneration Generation)
 		{
+			if (Generation == KingdomFoundingHeartRetiredGeneration.Final)
+				return ExactFoundingHeartImprovementRetirement(PredecessorId);
 			if (Generation != KingdomFoundingHeartRetiredGeneration.Works) return false;
 			return ExactFoundingHeartRetirementProof(Z, Context, PredecessorId);
+		}
+
+		/// <summary>The final generation's retirement, proved by the receipt chain that actually
+		/// retired it: exactly one completed improvement job named this identity as its subject,
+		/// its output stands as exactly one live object, and that object carries both the job's
+		/// own construction receipt and the scaffold removal proof for this identity. Absence is
+		/// never consulted: an offscreen root reads absent, and that is not a retirement.
+		/// </summary>
+		private static bool ExactFoundingHeartImprovementRetirement(string PredecessorId)
+		{
+			return TryImprovementSuccessorOf(PredecessorId, out var job, out var successor)
+				&& KingdomConstruction.HasReceipt(successor, job)
+				&& r_KingdomScaffold.HasRemovalProof(successor, job.SubjectId)
+				&& ExactFoundingHeartLiveAbsence(PredecessorId);
 		}
 
 		private static bool ExactFoundingHeartRetirementProof(Zone Z,
