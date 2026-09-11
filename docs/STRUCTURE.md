@@ -37,20 +37,29 @@ No saved fields or serialization formats change. The exact-inventory semantic re
 see [0.3.3 delta review](STRUCTURE_REVIEW_0_3_3.md). This source review does not replace native
 or release gates. Earlier censuses are retained checkpoints.
 
+## Current #144 heart shared-XL transition census
+
+3080 staged production C# files; 437,433 physical lines; zero files at or above 300 lines.
+1435 files with direct `XRL` imports, none over the line cap. Exact inventory:
+`24b4ab29aab9cd3c97bb30f5382df88937ee96eac565a6fb90ce52a0dd22c0a2`.
+The production delta over the merged `dev` baseline `6ba1969` is the #144 heart shared-XL
+transition fix and nothing else: two files, `Growth/KingdomPlotHeartRules.cs` for the pure
+endpoint rule and `Growth/KingdomArchitectureStamper.Transitions.cs` for the call that replaces
+the rung-number comparison. Everything else in this delta is DevTests and documentation.
+Source-level only; no native rung 4 to 5 acceptance is claimed.
+
 ## Retained isolated draft census
 
 The #129 dev-harness native checks merged over the roadless spatial capture correction — and so
 also over the master semantic resume correction, the Kingdom Quickstart founding cohort, the
 stockpile deposit custody fix, the Kingdom Quickstart shelter ingress, the render-only city sight,
 the stockpile unit capacity, the first-basin water store and the Kingdom Quickstart tent rows —
-report 3079 staged production C# files and 437,354
-physical lines. The production delta over the merged `dev` baseline `6ba1969` is the #144 heart
-shared-XL transition fix and nothing else: two files, `Growth/KingdomPlotHeartRules.cs` for the
-pure endpoint rule and `Growth/KingdomArchitectureStamper.Transitions.cs` for the call that
-replaces the rung-number comparison.
+report 3079 staged production C# files and 437,320
+physical lines. The merge adds no production source over the roadless correction; the production
+delta this branch carries is the unmerged #124 raw-delivery-overflow fix it is built on.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`4cede35b696fbb25635d48cef283fd1981531f06a279f02e363898ca8ee82ea0`. The census reports
+`f9a9469102be2f0ca119056e08c884a56014b31439e71695852026f63bd02d17`. The census reports
 1434 files with direct `XRL` imports; 0 of those exceed the line limit.
 
 The raw-delivery-overflow delta over the retained founding-cohort census below adds no production

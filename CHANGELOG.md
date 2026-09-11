@@ -11,10 +11,11 @@ below it.
 ## Unreleased — Beta gap report
 
 > **Current census — the #144 heart shared-XL transition fix over the dev backmerge.**
-> Current CENSUS_FILES-file census is line-cap green: CENSUS_LINES physical lines; zero files at
+> Current 3080-file census is line-cap green: 437,433 physical lines; zero files at
 > or above 300: 0 files exceed 300, 0 exceed 1,000, 0 exceed 2,000 and 0 exceed 5,000; direct
-> `XRL` imports occur in CENSUS_XRL files, 0 of them over the line limit. Inventory SHA-256:
-> `CENSUS_DIGEST`.
+> `XRL` imports occur in 1435 files, 0 of them over the line limit. Inventory SHA-256:
+> `24b4ab29aab9cd3c97bb30f5382df88937ee96eac565a6fb90ce52a0dd22c0a2`.
+> The cold-install inventory contains 3111 files.
 > Its production delta over the dev backmerge is two files: one pure endpoint rule added beside
 > the heart ladder it belongs to, and the heart transition guard rewired to ask it instead of
 > comparing a tier to a rung number. Everything else in it is DevTests and documentation.

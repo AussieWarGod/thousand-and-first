@@ -124,12 +124,12 @@ no short-circuit was introduced.
 renovation, rung settlement, save/cold-load and attended/away progression remain owed to the beta
 end-game suite.
 
-Current census, with the #144 heart shared-XL transition fix over the #129 dev-harness native
-checks: 3079
-staged C# files; 437,354 physical lines; 0 exceed 300 physical lines, 0 are exactly 300, and
+Current census, with the #144 heart shared-XL transition fix over the dev backmerge:
+3080
+staged C# files; 437,433 physical lines; 0 exceed 300 physical lines, 0 are exactly 300, and
 therefore 0 fail the strict cap; 0 exceed 1,000, 0 exceed 2,000, 0 exceed 5,000.
-Direct `XRL` imports: 1434 files, 0 over the line limit.
-Inventory SHA-256: `4cede35b696fbb25635d48cef283fd1981531f06a279f02e363898ca8ee82ea0`.
+Direct `XRL` imports: 1435 files, 0 over the line limit.
+Inventory SHA-256: `24b4ab29aab9cd3c97bb30f5382df88937ee96eac565a6fb90ce52a0dd22c0a2`.
 The production delta against the merged `dev` baseline `6ba1969` is exactly two files:
 `Growth/KingdomPlotHeartRules.cs` gains the pure endpoint rule, and
 `Growth/KingdomArchitectureStamper.Transitions.cs` calls it in place of the rung-number
