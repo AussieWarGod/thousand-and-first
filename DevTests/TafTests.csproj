@@ -1133,6 +1133,7 @@
 	<Compile Include="..\Growth\KingdomPlotFootprintRules.cs" />
 	<Compile Include="..\Growth\KingdomPlotChainRules.cs" />
 	<Compile Include="..\Growth\KingdomPlotBoundsRules.cs" />
+	<Compile Include="..\Growth\KingdomPlotSelectionRules.cs" />
 	<Compile Include="..\Growth\KingdomPlotHeartRules.cs" />
 	<Compile Include="..\Growth\KingdomFoundingHeartPlan.cs" />
 	<Compile Include="..\Growth\KingdomFoundingHeartStakeRules.cs" />

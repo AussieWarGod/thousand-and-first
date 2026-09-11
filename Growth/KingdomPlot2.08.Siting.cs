@@ -125,15 +125,53 @@ namespace ThousandAndFirst
 			List<KingdomPlotRules.PlotRect> groundCandidates =
 				new List<KingdomPlotRules.PlotRect>();
 			bool sawBlocked = false;
-			bool nearestBlockedIsOccupant = false;
 			KingdomPlotRules.PlotRect nearestBlocked = default(KingdomPlotRules.PlotRect);
 			int nearestBlockedReach = 0;
+			List<KingdomPlotPoseCandidate> posed = KingdomPlotPoseSitingRules.Enumerate(
+				interior, plotWidth, plotHeight);
+			for (int i = 0; i < posed.Count; i++)
+			{
+				KingdomPlotRules.PlotRect rect = posed[i].Rect;
+				if (KingdomPlotRules.CrowdsExisting(rect, laid)) continue;
+				if (Grid.AnyRefusal(rect))
+				{
+					int reach = hasFounder ? KingdomPlotRules.Reach(rect, founderX, founderY) : 0;
+					if (!sawBlocked || KingdomPlotRules.Beats(0, reach, rect,
+						0, nearestBlockedReach, nearestBlocked))
+					{
+						sawBlocked = true;
+						nearestBlocked = rect;
+						nearestBlockedReach = reach;
+					}
+					continue;
+				}
+				groundCandidates.Add(rect);
+			}
+			if (groundCandidates.Count == 0)
+			{
+				// The ground that came closest is the one the founder is told about: naming a
+				// refusal on the far side of the zone would be true and useless.
+				if (sawBlocked && Grid.TryFirstRefusal(nearestBlocked, out var blockX, out var blockY, out var blockKind, out var blocker))
+				{
+					Refusal = (blockKind == KingdomPlotRules.GroundKind.Liquid)
+						? KingdomPlotRules.RefuseLiquid(blockX, blockY)
+						: KingdomPlotRules.RefuseObstruction(blocker ?? "something", blockX, blockY);
+				}
+				else
+				{
+					Refusal = KingdomPlotRules.RefuseRoom(staked);
+				}
+				return false;
+			}
+
 			// ReadGround's own ground grid deliberately skips living occupants (a settler walks
-			// off ground, KingdomPlot2.04.Ground.cs:19-24), so Grid.AnyRefusal never sees one; a
-			// fixed founder or fauna body is gathered here, once, so a candidate rect covering it
-			// is skipped in favour of the next lawful clear pose rather than being handed on to
-			// the stamper only to refuse two layers later ("a living occupant stands on authored
-			// ground", Growth/KingdomArchitectureStamper.Preflight.cs:94-96).
+			// off ground, KingdomPlot2.04.Ground.cs:19-24), so nothing above ever saw one. A
+			// fixed founder or fauna body is gathered here, once -- not against the whole staked
+			// rect (that over-rejects: 11.4% of authored lot cells are unclaimed margin, up to
+			// 72% on some designs), but held for the architecture stage below, which filters
+			// against exactly the cells the stamper itself manages
+			// (Growth/KingdomArchitectureStamper.Preflight.cs:94-96 "a living occupant stands on
+			// authored ground").
 			HashSet<int> occupiedCells = new HashSet<int>();
 			for (int y = interior.Y1; y <= interior.Y2; y++)
 				for (int x = interior.X1; x <= interior.X2; x++)
@@ -148,53 +186,6 @@ namespace ThousandAndFirst
 						{ occupiedCells.Add(y * Z.Width + x); break; }
 					}
 				}
-			List<KingdomPlotPoseCandidate> posed = KingdomPlotPoseSitingRules.Enumerate(
-				interior, plotWidth, plotHeight);
-			for (int i = 0; i < posed.Count; i++)
-			{
-				KingdomPlotRules.PlotRect rect = posed[i].Rect;
-				if (KingdomPlotRules.CrowdsExisting(rect, laid)) continue;
-				bool occupantBlocked = KingdomPlotRules.CrowdsOccupant(rect, Z.Width, occupiedCells);
-				if (occupantBlocked || Grid.AnyRefusal(rect))
-				{
-					int reach = hasFounder ? KingdomPlotRules.Reach(rect, founderX, founderY) : 0;
-					if (!sawBlocked || KingdomPlotRules.Beats(0, reach, rect,
-						0, nearestBlockedReach, nearestBlocked))
-					{
-						sawBlocked = true;
-						nearestBlocked = rect;
-						nearestBlockedReach = reach;
-						nearestBlockedIsOccupant = occupantBlocked;
-					}
-					continue;
-				}
-				groundCandidates.Add(rect);
-			}
-			if (groundCandidates.Count == 0)
-			{
-				// The ground that came closest is the one the founder is told about: naming a
-				// refusal on the far side of the zone would be true and useless.
-				if (sawBlocked && nearestBlockedIsOccupant)
-				{
-					int occupantX = nearestBlocked.X1;
-					int occupantY = nearestBlocked.Y1;
-					for (int y = nearestBlocked.Y1; y <= nearestBlocked.Y2; y++)
-						for (int x = nearestBlocked.X1; x <= nearestBlocked.X2; x++)
-							if (occupiedCells.Contains(y * Z.Width + x)) { occupantX = x; occupantY = y; }
-					Refusal = KingdomPlotRules.RefuseObstruction("a living occupant", occupantX, occupantY);
-				}
-				else if (sawBlocked && Grid.TryFirstRefusal(nearestBlocked, out var blockX, out var blockY, out var blockKind, out var blocker))
-				{
-					Refusal = (blockKind == KingdomPlotRules.GroundKind.Liquid)
-						? KingdomPlotRules.RefuseLiquid(blockX, blockY)
-						: KingdomPlotRules.RefuseObstruction(blocker ?? "something", blockX, blockY);
-				}
-				else
-				{
-					Refusal = KingdomPlotRules.RefuseRoom(staked);
-				}
-				return false;
-			}
 
 			// A rectangle is not buildable merely because its cells are clear. Resolve the exact
 			// typed architecture and authored frontage against every pose before the layout grammar
@@ -204,31 +195,11 @@ namespace ThousandAndFirst
 			if (!KingdomArchitectureRuntime.TryCreateSitingProbe(System, Z,
 				groundCandidates[0], Entry.Key, Entry.Category, out probe, out Refusal))
 				return false;
-			List<KingdomPlotRules.PlotRect> candidates =
-				new List<KingdomPlotRules.PlotRect>();
-			List<KingdomPlotRules.PlotRect> architectureRejected =
-				new List<KingdomPlotRules.PlotRect>();
-			List<string> architectureFailures = new List<string>();
-			for (int i = 0; i < groundCandidates.Count; i++)
+			List<KingdomPlotRules.PlotRect> candidates;
+			if (!KingdomPlotSelectionRules.TrySelect(groundCandidates,
+				candidate => ResolveArchitecture(probe, candidate, Z, occupiedCells),
+				hasFounder, founderX, founderY, out candidates, out Refusal))
 			{
-				KingdomPlotRules.PlotRect candidate = groundCandidates[i];
-				string architectureFailure;
-				if (probe.TryAccept(candidate, out architectureFailure)) candidates.Add(candidate);
-				else
-				{
-					architectureRejected.Add(candidate);
-					architectureFailures.Add(architectureFailure);
-				}
-			}
-			if (candidates.Count == 0)
-			{
-				int nearest = NearestIndex(architectureRejected,
-					hasFounder, founderX, founderY);
-				string architectureRefusal = nearest >= 0
-					? architectureFailures[nearest] : null;
-				Refusal = string.IsNullOrEmpty(architectureRefusal)
-					? "No authored architecture fits any clear pose of that exact plot."
-					: architectureRefusal;
 				return false;
 			}
 			KingdomLayoutRules.LayoutPurpose purpose = KingdomLayout.PurposeOfEntry(Entry);
@@ -265,6 +236,40 @@ namespace ThousandAndFirst
 				}
 			}
 			return best;
+		}
+
+		/// <summary>Architecture acceptance plus occupancy, filtered against exactly the cells
+		/// the resolved snapshot manages (claimed cells + placements) -- the same set
+		/// Growth/KingdomArchitectureStamper.Preflight.cs:90,94 inspects, via the same
+		/// TryWorldCell/TryWorldPlacement coordinate mapping, never the whole staked rect.</summary>
+		private static KingdomPlotSelectionRules.Resolution ResolveArchitecture(
+			KingdomArchitectureRuntime.SitingProbe Probe, KingdomPlotRules.PlotRect Candidate,
+			Zone Z, HashSet<int> OccupiedCells)
+		{
+			if (!Probe.TryAccept(Candidate, out ArchitectureLayoutSnapshot accepted, out string failure))
+				return new KingdomPlotSelectionRules.Resolution(false, failure);
+			if (accepted != null && OccupiedCells.Count > 0)
+			{
+				for (int c = 0; c < accepted.Cells.Count; c++)
+				{
+					ArchitectureCellState cell = accepted.Cells[c];
+					if (!KingdomArchitectureRules.IsClaimed(cell.Claim)) continue;
+					if (!KingdomArchitectureRuntime.TryWorldCell(accepted, Candidate, cell,
+						out int cx, out int cy, out string ignored)) continue;
+					if (OccupiedCells.Contains(cy * Z.Width + cx))
+						return new KingdomPlotSelectionRules.Resolution(false,
+							KingdomPlotRules.RefuseObstruction("a living occupant", cx, cy));
+				}
+				for (int p = 0; p < accepted.Placements.Count; p++)
+				{
+					if (!KingdomArchitectureRuntime.TryWorldPlacement(accepted, Candidate,
+						accepted.Placements[p], out int px, out int py, out string ignored)) continue;
+					if (OccupiedCells.Contains(py * Z.Width + px))
+						return new KingdomPlotSelectionRules.Resolution(false,
+							KingdomPlotRules.RefuseObstruction("a living occupant", px, py));
+				}
+			}
+			return new KingdomPlotSelectionRules.Resolution(true, null);
 		}
 
 	}

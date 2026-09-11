@@ -1,0 +1,22 @@
+# Three behaviours for the #034 quote-siting occupancy fix, on a really founded camp: an
+# occupied first candidate rect yields a clear alternate; every lawful pose occupied refuses
+# with the exact "living occupant" sentence and spends nothing; a creature drifting onto the
+# quoted rect between quote and stamp still refuses at Commission's own preflight,
+# unconditionally.
+#
+# SYNTHETIC SETUP, DISCLOSED: the camp is founded and the water/materials dedicated by the
+# harness; each of the three cases places one or more synthetic NPC bodies, removed before
+# the next case runs. Nothing forces a rect, a snapshot, or a receipt directly. Not ordinary
+# play, no save/load.
+#
+# NOT YET NATIVELY RUN: written and gate.sh-compiled only; this script has not been executed.
+# All three cases run synchronously inside one setup call -- quoting and committing are
+# instant real production calls, unlike construction/strike, so no advance is needed.
+DESCRIPTION=an occupied quote candidate yields a clear alternate, an all-occupied quote refuses by name and spends nothing, and a creature drifting onto the quoted rect still refuses at preflight
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;quote-occupancy-setup;quote-occupancy-check;stagedigest
+VERBS=quote-occupancy-setup,quote-occupancy-check
+EXPECT=stagedigest:OK~founded=false,quote-occupancy-setup:OK~cases=3 passed=3 failed=0,quote-occupancy-check:OK~cases=3 passed=3 failed=0,stagedigest:OK~founded=true,COMPLETE
+SET=materials,growth,native-regression
+TIMEOUT=1200

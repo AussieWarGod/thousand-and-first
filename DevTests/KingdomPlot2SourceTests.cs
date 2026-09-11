@@ -159,7 +159,9 @@ namespace ThousandAndFirst.Tests
 				"public static int HeartRung(", "public static int RiteWeight(",
 				"public static bool SurveyHeart(", "public static GameObject StakeHeartRung(",
 				"public static bool TryFindRect(", "public static bool TryFindRect(",
-				"public static int NearestIndex(", "public static bool TryQuoteCommission(",
+				"public static int NearestIndex(",
+				"private static KingdomPlotSelectionRules.Resolution ResolveArchitecture(",
+				"public static bool TryQuoteCommission(",
 				"public static bool Commission(", "public static bool Commission(",
 				"public static bool Commission(", "public static GameObject Stake(",
 				"internal static bool ProjectOnRect(", "internal static bool ExpectedArchitectureReceipt(",
@@ -193,18 +195,48 @@ namespace ThousandAndFirst.Tests
 		/// DevTests/KingdomPlotRulesTests.cs, without a Zone.
 		/// </summary>
 		[Test]
-		public void TryFindRectSkipsAnOccupiedCandidateBeforeAcceptingItAsGroundClear()
+		public void GroundLoopNoLongerFiltersOccupancyAgainstTheWholeStakedRect()
 		{
+			// CORRECTED per review-637a54b-siting-findings.md: the whole-rect filter over-rejected
+			// (11.4% of authored lot cells are unclaimed margin, up to 72% on some designs).
+			// The ground loop is byte-identical to b5372a2 again; occupancy moved one stage
+			// later, into architecture acceptance.
+			string source = Plot();
+			Assert.That(source, Does.Not.Contain("CrowdsOccupant(rect, Z.Width, occupiedCells)"));
+			Assert.That(source, Does.Not.Contain("nearestBlockedIsOccupant"));
+			AssertOrdered(source,
+				"KingdomPlotPoseSitingRules.Enumerate(",
+				"if (KingdomPlotRules.CrowdsExisting(rect, laid)) continue;",
+				"if (Grid.AnyRefusal(rect))");
+		}
+
+		[Test]
+		public void OccupancyIsFilteredAtTheArchitectureStageAgainstManagedCellsOnly()
+		{
+			// The fix (a) required correction: occupied cells are gathered once (still the whole
+			// interior, still a live scan), but only ever tested against a candidate's resolved,
+			// claimed cells and placements -- exactly what Preflight.cs later manages -- never
+			// the whole staked rect.
 			string source = Plot();
 			Assert.That(source, Does.Contain("HashSet<int> occupiedCells = new HashSet<int>();"));
 			Assert.That(source, Does.Contain(
 				"if (GameObject.Validate(occupant) && (occupant.IsCreature || occupant.IsPlayer()))"));
 			Assert.That(source, Does.Contain(
-				"bool occupantBlocked = KingdomPlotRules.CrowdsOccupant(rect, Z.Width, occupiedCells);"));
-			Assert.That(source, Does.Contain("if (occupantBlocked || Grid.AnyRefusal(rect))"));
-			Assert.That(source, Does.Contain("nearestBlockedIsOccupant = occupantBlocked;"));
+				"KingdomPlotSelectionRules.TrySelect(groundCandidates,"));
 			Assert.That(source, Does.Contain(
-				"KingdomPlotRules.RefuseObstruction(\"a living occupant\", occupantX, occupantY)"));
+				"candidate => ResolveArchitecture(probe, candidate, Z, occupiedCells),"));
+			Assert.That(source, Does.Contain(
+				"if (!Probe.TryAccept(Candidate, out ArchitectureLayoutSnapshot accepted, out string failure))"));
+			Assert.That(source, Does.Contain(
+				"if (!KingdomArchitectureRules.IsClaimed(cell.Claim)) continue;"));
+			Assert.That(source, Does.Contain(
+				"KingdomArchitectureRuntime.TryWorldCell(accepted, Candidate, cell,"));
+			Assert.That(source, Does.Contain(
+				"KingdomArchitectureRuntime.TryWorldPlacement(accepted, Candidate,"));
+			Assert.That(source, Does.Contain(
+				"KingdomPlotRules.RefuseObstruction(\"a living occupant\", cx, cy)"));
+			Assert.That(source, Does.Contain(
+				"KingdomPlotRules.RefuseObstruction(\"a living occupant\", px, py)"));
 		}
 
 		[Test]

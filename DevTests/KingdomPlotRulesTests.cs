@@ -316,26 +316,49 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void CrowdsOccupantSelectsTheNextLawfulRectWhenTheFirstIsOccupied()
+		public void SelectionRulesShardChoosesTheClearAlternateOverAnOccupiedFirstCandidate()
 		{
-			// Simulates the exact selection-loop decision: given candidates in enumeration
-			// order, the first occupied one is skipped and the next clear one is chosen -- the
-			// mutation this guards against is deleting the CrowdsOccupant call entirely, which
-			// would let the loop accept the occupied rect as a valid candidate.
-			int zoneWidth = 80;
-			HashSet<int> occupied = new HashSet<int> { 13 * zoneWidth + 34 };
-			List<Rect> posed = new List<Rect> { R(32, 11, 36, 15), R(40, 20, 44, 24) };
-			Rect chosen = default(Rect);
-			bool found = false;
-			foreach (Rect candidate in posed)
+			// The REAL production seam (Growth/KingdomPlotSelectionRules.cs), not a hand-rolled
+			// copy of its loop: fed a fake Resolve source, so this drives the exact code Siting.cs
+			// calls without a Zone. The occupied candidate is rejected with the exact production
+			// refusal text; the clear alternate is chosen.
+			List<Rect> candidates = new List<Rect> { R(32, 11, 36, 15), R(40, 20, 44, 24) };
+			KingdomPlotSelectionRules.Resolution Resolve(Rect candidate)
 			{
-				if (KingdomPlotRules.CrowdsOccupant(candidate, zoneWidth, occupied)) continue;
-				chosen = candidate;
-				found = true;
-				break;
+				return candidate.X1 == 32
+					? new KingdomPlotSelectionRules.Resolution(false,
+						KingdomPlotRules.RefuseObstruction("a living occupant", 34, 13))
+					: new KingdomPlotSelectionRules.Resolution(true, null);
 			}
+			bool found = KingdomPlotSelectionRules.TrySelect(candidates, Resolve,
+				HasFounder: true, FounderX: 40, FounderY: 20,
+				Accepted: out List<Rect> accepted, Refusal: out string refusal);
 			ClassicAssert.IsTrue(found);
-			ClassicAssert.AreEqual(40, chosen.X1);
+			ClassicAssert.AreEqual(1, accepted.Count);
+			ClassicAssert.AreEqual(40, accepted[0].X1);
+			ClassicAssert.IsNull(refusal);
+		}
+
+		[Test]
+		public void SelectionRulesShardRefusesByNameWhenEveryCandidateIsRejected()
+		{
+			List<Rect> candidates = new List<Rect> { R(32, 11, 36, 15), R(40, 20, 44, 24) };
+			int calls = 0;
+			KingdomPlotSelectionRules.Resolution Resolve(Rect candidate)
+			{
+				calls++;
+				int x = candidate.X1 == 32 ? 34 : 42;
+				int y = candidate.X1 == 32 ? 13 : 22;
+				return new KingdomPlotSelectionRules.Resolution(false,
+					KingdomPlotRules.RefuseObstruction("a living occupant", x, y));
+			}
+			bool found = KingdomPlotSelectionRules.TrySelect(candidates, Resolve,
+				HasFounder: true, FounderX: 40, FounderY: 20,
+				Accepted: out List<Rect> accepted, Refusal: out string refusal);
+			ClassicAssert.IsFalse(found);
+			ClassicAssert.AreEqual(0, accepted.Count);
+			StringAssert.Contains("a living occupant", refusal);
+			ClassicAssert.AreEqual(2, calls, "the shard resolves every candidate, never mutating");
 		}
 
 		[Test]
