@@ -176,7 +176,8 @@ printf '%s\n' "$REQUEST" > "$SEAL_DIR/request.txt"
 # What only preparation knows: which frozen tree was staged, what that tree's production
 # structure actually measures (never the review ledger, which an active candidate keeps stale on
 # purpose), this session's own closed profile seal, the frozen seed and the budget it was given.
-# The launch and stop halves are written later by Tools/run-scenario.ps1. Opt-in, because every
+# The launch and stop halves are written later by Tools/run-scenario.ps1, which binds them to the
+# ownership receipt it wrote for the exact process it started. Opt-in, because every
 # existing profile shape must keep preparing exactly as it did: set TAF_SCENARIO_ROLE to
 # save-session or cold-load-session to ask for a record.
 if [ -n "${TAF_SCENARIO_ROLE:-}" ]; then

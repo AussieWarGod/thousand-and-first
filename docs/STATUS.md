@@ -86,8 +86,14 @@ Each session writes its own run record (`Tools/scenario_run_record.py`): prepara
 exercised commit, the production structural digest measured by `Tools/check-structure.py --json`
 on the frozen tree (never the review ledger, which an active candidate keeps stale on purpose),
 that session's own closed profile seal and name, the frozen seed and its budgets;
-`Tools/run-scenario.ps1` adds the launch identity and start from the launched process and, on
-`-StopRecord`, the stop and the game build string the run's own log states. The checker takes both
+`Tools/run-scenario.ps1` adds the launch identity and start from the launched process together
+with an `ownership` block bound to its own `process-ownership.json` receipt (pid, start ticks,
+executable, receipt SHA-256), and on `-StopRecord` the stop, refusing unless that exact receipt is
+unchanged and the owned pid with its own start ticks has ended. An exit code is written only with
+`-ExitObserved`; otherwise `exitProvenance` records that the process ended with its exit
+unobserved and no code is written at all, so a wrapper's default can never pass for the game's own
+exit. The checker refuses a session whose ownership block is missing or malformed, whose launch
+identity does not name the owned pid, or whose exit code appears without observed provenance. The checker takes both
 records, binds each journal to the run record sitting in its own scenario root and requires every
 lifecycle row's own `profile=` / `seal=` stamp to equal that session's recorded profileName and
 profileSeal, so a step is attributed to the profile that actually ran it, derives per-step turns and seconds from the

@@ -55,7 +55,7 @@ namespace ThousandAndFirst.Harness
 			// Where the row kept its identity the two read the same, and saying so plainly is
 			// the point -- neither is minted, and neither is omitted when it exists.
 			return Stamped("native-lifecycle step=engine-turn-build; " + Identities(System)
-				+ "; plotId=" + Describe(job.SubjectId) + "; jobId=" + job.Id
+				+ "; plotId=" + Observed(building) + "; jobId=" + job.Id
 				+ "; completedReceiptId=" + job.Id + "; forJobId=" + jobId
 				+ "; buildingId=" + Describe(building.IDIfAssigned)
 				+ "; building=" + Describe(building.IDIfAssigned)
@@ -88,13 +88,31 @@ namespace ThousandAndFirst.Harness
 			{ Failure = stockpileFailure; return null; }
 			if (!KingdomQuickstartBuildCensus.TakeStock(Zone, stockpile, false,
 				out var stock, out string stockFailure)) { Failure = stockFailure; return null; }
+			// The plot identity is READ from the standing building's own recorded rect, so both
+			// sessions observe the same thing rather than one of them repeating a job field.
+			if (!KingdomPlots.TryReadRect(building, out KingdomPlotRules.PlotRect rect))
+			{ Failure = "the finished building records no plot rect to observe"; return null; }
 			var snapshot = new KingdomQuickstartLifecycleSnapshot(Game.GameID, System.RealmId,
-				KingdomConstruction.OwnerOf(System), Zone.ZoneID, job.Id, job.SubjectId,
+				KingdomConstruction.OwnerOf(System), Zone.ZoneID, job.Id, RectKey(rect),
 				building.IDIfAssigned, job.TargetKey, job.X, job.Y, Timber(stock),
 				KingdomGrowth.CountStoredWater(Zone), Game.Turns);
 			if (!KingdomQuickstartLifecycleSnapshotCodec.TryEncode(snapshot, out string wire))
 			{ Failure = "the lifecycle witness could not be encoded"; return null; }
 			return wire;
+		}
+
+		/// <summary>The plot identity as the standing building itself records it, or a refusal
+		/// word. Never a value copied from a job field or a witness.</summary>
+		internal static string Observed(GameObject Building)
+		{
+			return KingdomPlots.TryReadRect(Building, out KingdomPlotRules.PlotRect rect)
+				? RectKey(rect) : "unrecorded";
+		}
+
+		/// <summary>A plot rect as one ASCII identity, the same spelling on both sides.</summary>
+		internal static string RectKey(KingdomPlotRules.PlotRect Rect)
+		{
+			return Rect.X1 + "," + Rect.Y1 + "-" + Rect.X2 + "," + Rect.Y2;
 		}
 
 		/// <summary>The finished building, re-proved from the job's own recorded identity rather
@@ -115,10 +133,22 @@ namespace ThousandAndFirst.Harness
 			}
 			if (Building == null)
 				return "no object with the job's own output identity stands on its cell";
-			if (!ReferenceEquals(Building.CurrentZone, Zone) || Building.CurrentCell != cell)
-				return "the built object is not standing in the zone and cell the job recorded";
-			if (!KingdomConstruction.HasReceipt(Building, Job))
+			// Custody by reference, not by coordinate equality: the object's OWN Physics cell,
+			// and that cell's own parent zone. Two cells can share an x,y across zones, and a
+			// coordinate match would accept an object the engine no longer holds here.
+			if (Building.Physics == null || Building.Physics._CurrentCell == null
+				|| !ReferenceEquals(Building.Physics._CurrentCell, cell)
+				|| !ReferenceEquals(Building.Physics._CurrentCell.ParentZone, Zone))
+				return "the built object is not physically held by the zone and cell the job recorded";
+			if (!KingdomConstruction.HasReceipt(Building, Job)
+				|| Building.GetStringProperty(KingdomConstruction.ReceiptProperty) != Job.Id)
 				return "the built object carries no construction receipt for this job";
+			// Functional completion, not a bare flag. The production predicate is called as-is
+			// (Growth/KingdomUpgrade.09.RegistryAndIdentity.cs:165-169): validated, KingdomBuilt,
+			// and no unresolved pending improvement-successor authority. Its scope is exactly
+			// that; nothing here broadens it into a registry sweep or weakens it.
+			if (!KingdomUpgrade.IsFunctionallyBuilt(Building))
+				return "the built object is not functionally built by the production predicate";
 			if (Building.GetIntProperty("KingdomBuilt") != 1)
 				return "the built object does not read as a finished settlement building";
 			if (Building.GetStringProperty(KingdomUpgrade.BuildKeyProperty) != Job.TargetKey)

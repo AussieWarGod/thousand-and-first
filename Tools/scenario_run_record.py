@@ -8,9 +8,20 @@ those facts down at the moment they are true, in three separate acts:
     seal    at profile preparation: the exercised commit, the production structural digest
             COMPUTED from the frozen tree, the digest of the closed profile seal actually
             launched, the frozen seed, the sealed script, the role and the budgets.
-    launch  at process start: the launch identity and the UTC start.
-    stop    after the process has ended: the UTC stop and the exit code, plus the game build
-            string if the run's own Player.log states one.
+    launch  at process start: the OWNED process's own identity -- the launch id, the UTC start,
+            and an ownership block bound to the launcher's process-ownership.json receipt (pid,
+            start ticks, executable, and that receipt's SHA-256).
+    stop    after the OWNED process has ended: the UTC stop, the provenance of that ending, the
+            exit code only when it was actually observed, and the game build string if the run's
+            own Player.log states one.
+
+EXIT PROVENANCE, NOT A DEFAULT. An exit code is evidence about one specific process. This module
+will not write one that nobody watched: `--exit-code` is accepted only together with
+`--exit-observed`, which asserts the caller held the owned process object and read its exit. When
+no one watched, `exitProvenance` says so and no exitCode is written at all -- a default zero would
+be a claim that the game ended cleanly, made by a wrapper that never saw it end. The stop half also
+refuses unless the launch half recorded an ownership block, so an exit can always be bound back to
+the pid and start ticks the launcher itself owned.
 
 Nothing here measures gameplay. Turns and elapsed time per step are derived by
 Tools/check-quickstart-lifecycle.py from the journal the run itself wrote, so a budget can never
@@ -193,16 +204,54 @@ def seal(arguments: argparse.Namespace) -> int:
     return 0
 
 
+def ownership(root: str, receipt: str) -> dict:
+    """The launcher's own ownership receipt, bound by its bytes.
+
+    process-ownership.json is written CreateNew by Start-TafOwnedScenarioProcess for the exact
+    process it started (schema, root, pid, startTicks, executable, arguments). Recording its pid
+    and start ticks beside its SHA-256 is what later lets an exit be bound to that process rather
+    than to a wrapper shell or to whoever happened to call stop.
+    """
+    path = Path(receipt)
+    try:
+        data = path.read_bytes()
+        payload = json.loads(data.decode("utf-8"))
+    except (OSError, UnicodeError, ValueError) as error:
+        fail("cannot read the launcher's ownership receipt (%s)" % type(error).__name__)
+    if not isinstance(payload, dict):
+        fail("the ownership receipt is not a JSON object")
+    for field in ("pid", "startTicks", "executable"):
+        if field not in payload:
+            fail("the ownership receipt carries no " + field)
+    if type(payload["pid"]) is not int or payload["pid"] <= 0:
+        fail("the ownership receipt has no positive integer pid")
+    if not isinstance(payload["startTicks"], str) or not payload["startTicks"].isdigit():
+        fail("the ownership receipt has malformed start ticks")
+    return {
+        "receiptRef": path.name,
+        "receiptSha256": __import__("hashlib").sha256(data).hexdigest(),
+        "pid": payload["pid"],
+        "startTicks": payload["startTicks"],
+        "executable": payload["executable"],
+    }
+
+
 def launch(arguments: argparse.Namespace) -> int:
     payload = read(arguments.root)
     if payload.get("launchId"):
         fail("this run record already names a launch")
     if not arguments.launch_id:
         fail("a launch needs its own identity")
+    owned = ownership(arguments.root, arguments.ownership)
+    if ("-" + str(owned["pid"]) + "-") not in arguments.launch_id:
+        fail("the launch identity does not name the owned process's pid")
     payload["launchId"] = arguments.launch_id
     payload["started"] = arguments.started or utc_now()
+    payload["ownership"] = owned
+    payload["exitProvenance"] = "unobserved"
     write(arguments.root, payload)
-    print("run record launch: " + payload["launchId"] + " at " + payload["started"])
+    print("run record launch: " + payload["launchId"] + " at " + payload["started"]
+          + " owning pid " + str(owned["pid"]))
     return 0
 
 
@@ -212,8 +261,22 @@ def stop(arguments: argparse.Namespace) -> int:
         fail("this run record names no launch to stop")
     if payload.get("stoppedUtc"):
         fail("this run record is already stopped")
+    owned = payload.get("ownership")
+    if not isinstance(owned, dict) or type(owned.get("pid")) is not int:
+        fail("this run record has no ownership block, so an exit could not be bound to the "
+             "process the launcher owned")
+    if arguments.exit_code is not None and not arguments.exit_observed:
+        fail("an exit code may only be recorded with --exit-observed: nobody may report an exit "
+             "they did not watch")
     payload["stoppedUtc"] = arguments.stopped or utc_now()
-    payload["exitCode"] = arguments.exit_code
+    if arguments.exit_observed:
+        if arguments.exit_code is None:
+            fail("--exit-observed needs the exit code that was observed")
+        payload["exitCode"] = arguments.exit_code
+        payload["exitProvenance"] = "owned-process-exit-observed"
+    else:
+        payload.pop("exitCode", None)
+        payload["exitProvenance"] = "owned-process-ended-exit-unobserved"
     build = game_build(Path(arguments.root) / "Player.log")
     if build:
         payload["gameBuildId"] = build
@@ -240,11 +303,13 @@ def main(argv: list[str]) -> int:
     launcher.add_argument("root")
     launcher.add_argument("--launch-id", required=True)
     launcher.add_argument("--started", default="")
+    launcher.add_argument("--ownership", required=True)
     launcher.set_defaults(handler=launch)
     stopper = actions.add_parser("stop")
     stopper.add_argument("root")
     stopper.add_argument("--stopped", default="")
-    stopper.add_argument("--exit-code", type=int, default=0)
+    stopper.add_argument("--exit-code", type=int, default=None)
+    stopper.add_argument("--exit-observed", action="store_true")
     stopper.set_defaults(handler=stop)
     parsed = parser.parse_args(argv[1:])
     return parsed.handler(parsed)

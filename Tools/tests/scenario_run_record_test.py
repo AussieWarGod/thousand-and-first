@@ -75,7 +75,8 @@ def load_journal() -> str:
             (
                 STAMPS[5],
                 "lifecycle-loaded",
-                "step=cold-load; " + IDS + "; saveId=save-1; buildingId=b1; plotId=p1; turns=90; "
+                "step=cold-load; " + IDS + "; saveId=save-1; buildingId=b1; plotId=37,10-44,15;"
+                " completedReceiptId=job-1; turns=90; "
                 + LOAD_STAMP,
             ),
             (
@@ -94,6 +95,15 @@ class RunRecordSeal(unittest.TestCase):
 
     def tearDown(self):
         self.temporary.cleanup()
+
+    def make_receipt(self, root: Path, pid: int = 4242, ticks: str = "638000000000000000") -> None:
+        (root / "process-ownership.json").write_text(
+            json.dumps({
+                "schema": "taf-scenario-process-v1", "root": str(root), "pid": pid,
+                "startTicks": ticks, "executable": "CoQ.exe", "arguments": ["-savepath", str(root)],
+            }),
+            encoding="utf-8",
+        )
 
     def make_seal(self, root: Path) -> None:
         seal = Path(str(root) + ".seal")
@@ -175,32 +185,77 @@ class RunRecordSeal(unittest.TestCase):
                 "--timeout-seconds", "60",
             ])
 
+    def launch(self, launch_id: str = "pid-4242-20260911T100000Z"):
+        self.make_receipt(self.root)
+        return record.main([
+            "scenario_run_record.py", "launch", str(self.root), "--launch-id", launch_id,
+            "--started", "2026-09-11T10:00:00Z",
+            "--ownership", str(self.root / "process-ownership.json"),
+        ])
+
     def test_launch_and_stop_are_written_once_each(self):
         self.seal()
-        record.main([
-            "scenario_run_record.py", "launch", str(self.root), "--launch-id", "L1",
-            "--started", "2026-09-11T10:00:00Z",
-        ])
+        self.launch()
         with self.assertRaises(SystemExit):
-            record.main([
-                "scenario_run_record.py", "launch", str(self.root), "--launch-id", "L2",
-            ])
+            self.launch("pid-4242-20260911T100001Z")
         record.main([
             "scenario_run_record.py", "stop", str(self.root),
-            "--stopped", "2026-09-11T10:05:00Z", "--exit-code", "0",
+            "--stopped", "2026-09-11T10:05:00Z", "--exit-code", "0", "--exit-observed",
         ])
         payload = json.loads((self.root / "run-record.json").read_text())
-        self.assertEqual(payload["launchId"], "L1")
+        self.assertEqual(payload["launchId"], "pid-4242-20260911T100000Z")
         self.assertEqual(payload["stoppedUtc"], "2026-09-11T10:05:00Z")
         self.assertEqual(payload["exitCode"], 0)
+        self.assertEqual(payload["exitProvenance"], "owned-process-exit-observed")
+        self.assertEqual(payload["ownership"]["pid"], 4242)
+        self.assertEqual(payload["ownership"]["receiptRef"], "process-ownership.json")
         with self.assertRaises(SystemExit):
             record.main(["scenario_run_record.py", "stop", str(self.root)])
 
+    def test_a_launch_whose_identity_is_not_the_owned_pid_refuses(self):
+        self.seal()
+        with self.assertRaises(SystemExit) as raised:
+            self.launch("pid-9999-20260911T100000Z")
+        self.assertIn("owned process's pid", str(raised.exception))
+
+    def test_a_launch_without_an_ownership_receipt_refuses(self):
+        self.seal()
+        with self.assertRaises(SystemExit):
+            record.main([
+                "scenario_run_record.py", "launch", str(self.root), "--launch-id", "pid-4242-x",
+                "--ownership", str(self.root / "absent.json"),
+            ])
+
+    def test_an_exit_code_without_an_observed_exit_refuses(self):
+        self.seal()
+        self.launch()
+        with self.assertRaises(SystemExit) as raised:
+            record.main([
+                "scenario_run_record.py", "stop", str(self.root), "--exit-code", "0",
+            ])
+        self.assertIn("an exit they did not watch", str(raised.exception))
+
+    def test_an_unwatched_stop_records_no_exit_code_at_all(self):
+        self.seal()
+        self.launch()
+        record.main(["scenario_run_record.py", "stop", str(self.root)])
+        payload = json.loads((self.root / "run-record.json").read_text())
+        self.assertNotIn("exitCode", payload)
+        self.assertEqual(payload["exitProvenance"], "owned-process-ended-exit-unobserved")
+
+    def test_a_stop_without_an_ownership_block_refuses(self):
+        self.seal()
+        self.launch()
+        payload = json.loads((self.root / "run-record.json").read_text())
+        del payload["ownership"]
+        (self.root / "run-record.json").write_text(json.dumps(payload), encoding="utf-8")
+        with self.assertRaises(SystemExit) as raised:
+            record.main(["scenario_run_record.py", "stop", str(self.root)])
+        self.assertIn("no ownership block", str(raised.exception))
+
     def test_the_game_build_is_read_from_the_runs_own_log_or_left_out(self):
         self.seal()
-        record.main([
-            "scenario_run_record.py", "launch", str(self.root), "--launch-id", "L1",
-        ])
+        self.launch()
         (self.root / "Player.log").write_text("Qud version 2.0.211.51 build\n", encoding="utf-8")
         record.main(["scenario_run_record.py", "stop", str(self.root)])
         self.assertEqual(
@@ -238,14 +293,27 @@ class TwoRecordEmission(unittest.TestCase):
             "turnBudget": 3000, "timeoutSeconds": 1200,
             "profileSeal": "d" * 64, "profileName": "taf-scenario.save",
             "root": str(self.save_root),
+            "ownership": {
+                "receiptRef": "process-ownership.json", "receiptSha256": "1" * 64,
+                "pid": 4242, "startTicks": "638000000000000000", "executable": "CoQ.exe",
+            },
+            "exitProvenance": "owned-process-exit-observed", "exitCode": 0,
+            "launchId": "pid-4242-20260911T100000Z",
         }
         second = dict(first)
         second.update({
-            "role": "cold-load-session", "launchId": "L2", "started": "2026-09-11T10:09:00Z",
+            "role": "cold-load-session", "started": "2026-09-11T10:09:00Z",
+            "launchId": "pid-5353-20260911T100900Z",
+            "ownership": {
+                "receiptRef": "process-ownership.json", "receiptSha256": "2" * 64,
+                "pid": 5353, "startTicks": "638000000000009999", "executable": "CoQ.exe",
+            },
+            "exitProvenance": "owned-process-ended-exit-unobserved",
             "stoppedUtc": "2026-09-11T10:12:00Z", "turnBudget": 10, "timeoutSeconds": 600,
             "profileSeal": "e" * 64, "profileName": "taf-scenario.load",
             "root": str(self.load_root),
         })
+        second.pop("exitCode", None)
         second.update(overrides.pop("load", {}))
         first.update(overrides.pop("save", {}))
         return [first, second]
@@ -296,6 +364,28 @@ class TwoRecordEmission(unittest.TestCase):
         del records[1]["profileSeal"]
         _, problems, _ = self.emit(records)
         self.assertIn("processes.cold-load-session.profileSeal", problems)
+
+    def test_an_exit_code_without_observed_provenance_is_refused(self):
+        _, problems, _ = self.emit(self.records(load={"exitCode": 0}))
+        self.assertTrue(
+            any("exitCode (recorded without an observed exit)" in problem for problem in problems),
+            problems,
+        )
+
+    def test_a_session_without_an_ownership_block_is_refused(self):
+        records = self.records()
+        del records[0]["ownership"]
+        _, problems, _ = self.emit(records)
+        self.assertTrue(
+            any("no owned-process receipt" in problem for problem in problems), problems
+        )
+
+    def test_a_launch_identity_that_is_not_the_owned_pid_is_refused(self):
+        _, problems, _ = self.emit(self.records(
+            load={"launchId": "pid-7777-20260911T100900Z"}))
+        self.assertTrue(
+            any("the ownership receipt does not" in problem for problem in problems), problems
+        )
 
     def test_a_journal_without_its_own_run_record_is_refused(self):
         stray = self.root / "stray"
@@ -350,7 +440,13 @@ class TwoRecordEmission(unittest.TestCase):
         )
 
     def test_two_sessions_sharing_a_launch_id_are_refused(self):
-        payload, problems, _ = self.emit(self.records(load={"launchId": "L1"}))
+        payload, problems, _ = self.emit(self.records(load={
+            "launchId": "pid-4242-20260911T100000Z",
+            "ownership": {
+                "receiptRef": "process-ownership.json", "receiptSha256": "2" * 64,
+                "pid": 4242, "startTicks": "638000000000009999", "executable": "CoQ.exe",
+            },
+        }))
         self.assertTrue(any("distinct launch ids" in problem for problem in problems))
         self.assertNotIn("processes", payload)
 
@@ -408,6 +504,31 @@ class LauncherSourceContracts(unittest.TestCase):
         self.assertIn("if ($record.ContainsKey('stoppedUtc')) { throw", source)
         self.assertIn("$record['stoppedUtc'] = [DateTime]::UtcNow", source)
         self.assertIn("Get-TafGameBuildId -LogPath (Join-Path $rootPath 'Player.log')", source)
+
+    def test_the_launcher_binds_the_owned_process_rather_than_its_own_shell(self):
+        source = self.launcher()
+        # The launch half reads the launcher's own ownership receipt and refuses if it names a
+        # different process than the one just started.
+        self.assertIn("function Get-TafOwnershipBlock {", source)
+        self.assertIn("'process-ownership.json'", source)
+        self.assertIn("if ($ownership.pid -ne $process.Id) {", source)
+        self.assertIn("$record['ownership'] = $ownership", source)
+        # The stop half re-reads the receipt, refuses a changed one, and refuses while the owned
+        # pid (with its own start ticks) is still alive -- a pid alone is not identity.
+        self.assertIn("function Test-TafOwnedProcessEnded {", source)
+        self.assertIn("$alive.StartTime.ToUniversalTime().Ticks.ToString() -ne $Ownership.startTicks",
+                      source)
+        self.assertIn("The ownership receipt changed since launch", source)
+        self.assertIn("The owned process is still running; its exit cannot be recorded yet.", source)
+
+    def test_the_launcher_writes_no_exit_code_nobody_watched(self):
+        source = self.launcher()
+        self.assertIn("[switch]$ExitObserved,", source)
+        self.assertIn("[int]$ExitCode", source)
+        self.assertNotIn("[int]$ExitCode = 0", source)
+        self.assertIn("$record['exitProvenance'] = 'owned-process-exit-observed'", source)
+        self.assertIn("$record['exitProvenance'] = 'owned-process-ended-exit-unobserved'", source)
+        self.assertIn("$record.Remove('exitCode')", source)
 
     def test_the_launcher_never_rewrites_what_preparation_recorded(self):
         source = self.launcher()

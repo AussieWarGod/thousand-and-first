@@ -536,6 +536,47 @@ def parse(argv: list[str]) -> tuple[list[str], dict]:
     return journals, options
 
 
+# What a session may say about how it ended. An exit code is only ever evidence when somebody
+# held the owned process and watched it exit; "ended, exit unobserved" is the honest reading of a
+# detached launch that was stopped from outside, and no exit code may accompany it.
+EXIT_OBSERVED = "owned-process-exit-observed"
+EXIT_UNOBSERVED = "owned-process-ended-exit-unobserved"
+
+
+def exit_provenance(record: dict) -> list[str]:
+    """Whether this session's ending is bound to the process the launcher actually owned.
+
+    The launcher writes an ownership block from its own process-ownership.json receipt: the pid
+    it started, that process's start ticks, the executable, and the receipt's SHA-256. Without
+    it, an exitCode is a number from whichever shell called stop. With it, the pid in the block
+    must be the pid the launch identity names, and an exitCode may appear only under the observed
+    provenance -- never beside a default.
+    """
+    problems: list[str] = []
+    role = str(record.get("role"))
+    owned = record.get("ownership")
+    if not isinstance(owned, dict):
+        return [role + ".ownership (no owned-process receipt; an exit cannot be bound)"]
+    for field in ("receiptRef", "receiptSha256", "pid", "startTicks"):
+        if not owned.get(field):
+            problems.append(role + ".ownership." + field)
+    digest = owned.get("receiptSha256")
+    if isinstance(digest, str) and re.fullmatch(r"[0-9a-f]{64}", digest) is None:
+        problems.append(role + ".ownership.receiptSha256 (not a lowercase SHA-256)")
+    pid = owned.get("pid")
+    launch = record.get("launchId")
+    if isinstance(pid, int) and isinstance(launch, str) and ("-" + str(pid) + "-") not in launch:
+        problems.append(
+            role + ".launchId (names a process the ownership receipt does not: pid " + str(pid) + ")"
+        )
+    provenance = record.get("exitProvenance")
+    if provenance not in (EXIT_OBSERVED, EXIT_UNOBSERVED):
+        problems.append(role + ".exitProvenance (" + str(provenance) + ")")
+    if "exitCode" in record and provenance != EXIT_OBSERVED:
+        problems.append(role + ".exitCode (recorded without an observed exit)")
+    return problems
+
+
 def sessions(records: list[dict]) -> tuple[list[dict], list[str]]:
     """The two process sessions, and what is wrong with them if anything is.
 
@@ -550,6 +591,8 @@ def sessions(records: list[dict]) -> tuple[list[dict], list[str]]:
         return [], [
             KEYS["processes"] + "." + role for role in SESSIONS if role not in by_role
         ]
+    for record in ordered:
+        problems.extend(exit_provenance(record))
     launches = [record.get("launchId") for record in ordered]
     if any(not isinstance(value, str) or not value for value in launches):
         problems.append(KEYS["processes"] + " (every session needs its own launch id)")
@@ -576,6 +619,8 @@ def sessions(records: list[dict]) -> tuple[list[dict], list[str]]:
         # The two profiles legitimately differ -- load authority, script, import metadata -- so
         # each session names its OWN seal here. Nothing hoists a single seal to the top level,
         # where it would falsely claim the two sessions, or the public package, were one thing.
+        # The artefact's process entry keeps the key set the validator fixed; the ownership and
+        # exit provenance are VALIDATED above and reported with the verdict, not emitted here.
         for field in ("profileSeal", "profileName"):
             if record.get(field):
                 entry[field] = record[field]

@@ -69,14 +69,38 @@ namespace ThousandAndFirst.Harness
 			}
 			if (building == null)
 				return "the saved building identity does not stand on its own cell after loading";
+			// Custody by reference: the object's own Physics cell and that cell's own zone, not
+			// an x,y match. The observed values below are read from THIS object, never echoed
+			// from the witness.
+			if (building.Physics == null || building.Physics._CurrentCell == null
+				|| !ReferenceEquals(building.Physics._CurrentCell, cell)
+				|| !ReferenceEquals(building.Physics._CurrentCell.ParentZone, zone))
+				return "the loaded building is not physically held by its own saved cell and zone";
 			if (building.GetIntProperty("KingdomBuilt") != 1)
 				return "the loaded building no longer reads as a finished settlement building";
+			// The production predicate as-is, Growth/KingdomUpgrade.09.RegistryAndIdentity.cs:165-169.
+			if (!KingdomUpgrade.IsFunctionallyBuilt(building))
+				return "the loaded building is not functionally built by the production predicate";
 			if (building.GetStringProperty(KingdomUpgrade.BuildKeyProperty) != Witness.DesignKey)
 				return "the loaded building's design key differs from the commissioned one";
-			// The completed job may have been compacted out of the live registry by the load; what
-			// must still hold is that whatever row remains is linkable to this exact building.
+			// The completed job row may be compacted out of the live registry by the load, but
+			// the BUILDING keeps its construction receipt property either way
+			// (Growth/KingdomConstruction.Physical.cs:10-23), so the link is read from the
+			// standing object rather than skipped when no row survives.
+			string receipt = building.GetStringProperty(KingdomConstruction.ReceiptProperty);
+			if (receipt != Witness.JobId)
+				return "the loaded building's construction receipt names " + Describe(receipt)
+					+ ", not the saved job";
+			int matching = 0;
+			foreach (KingdomConstructionJob candidate in jobs)
+				if (candidate?.Id == Witness.JobId) matching++;
+			if (matching > 1)
+				return "more than one retained registry row claims the saved job identity";
 			if (job != null && !KingdomConstruction.HasReceipt(building, job))
 				return "the retained job row is no longer linkable to the loaded building";
+			string plot = KingdomQuickstartLifecycleSteps.Observed(building);
+			if (plot != Witness.PlotId)
+				return "the loaded building records plot " + plot + ", not the saved " + Witness.PlotId;
 			if (!KingdomQuickstartLifecycleSteps.TryStockpile(zone, out GameObject stockpile,
 				out string stockpileFailure)) return stockpileFailure;
 			if (!KingdomQuickstartBuildCensus.TakeStock(zone, stockpile, false,
@@ -87,9 +111,14 @@ namespace ThousandAndFirst.Harness
 			int water = KingdomGrowth.CountStoredWater(zone);
 			if (water != Witness.StoredWater)
 				return "the loaded settlement holds " + water + " drams, not the saved " + Witness.StoredWater;
+			// Every value here was read from the loaded game a moment ago: the system, the
+			// standing object, its own cell and that cell's zone. None is copied from the witness.
 			Observed = "realmId=" + system.RealmId + "; cityId=" + cityId + "; saveId=" + Game.GameID
-				+ "; plotId=" + Describe(Witness.PlotId) + "; buildingId=" + Describe(building.IDIfAssigned)
-				+ "; built=1; jobRowRetained=" + (job != null) + "; timber=" + timber
+				+ "; plotId=" + plot + "; buildingId=" + Describe(building.IDIfAssigned)
+				+ "; completedReceiptId=" + Describe(receipt)
+				+ "; at=" + building.Physics._CurrentCell.X + "," + building.Physics._CurrentCell.Y
+				+ "; zone=" + building.Physics._CurrentCell.ParentZone.ZoneID
+				+ "; built=1; functional=true; jobRowRetained=" + (job != null) + "; timber=" + timber
 				+ "; storedWater=" + water + "; turns=" + Game.Turns;
 			return null;
 		}
@@ -158,10 +187,39 @@ namespace ThousandAndFirst.Harness
 			if (job.Id == Witness.JobId)
 				return "the next action reported the completed job's own identity; a further action "
 					+ "must mint its own job";
+			// Observed on the loaded game: the new job's own identity, and the building and plot
+			// read again from the standing object rather than echoed from the witness.
+			string standing = Standing(zone, Witness, out string plotId, out string buildingId);
+			if (standing != null) return standing;
 			Observed = "realmId=" + system.RealmId + "; cityId=" + KingdomConstruction.OwnerOf(system)
-				+ "; saveId=" + Game.GameID + "; newJobId=" + job.Id
+				+ "; saveId=" + Game.GameID + "; buildingId=" + buildingId + "; plotId=" + plotId
+				+ "; jobId=" + job.Id + "; newJobId=" + job.Id
 				+ "; completedJobId=" + Witness.JobId + "; timberDebited=1"
 				+ "; waterDebited=" + entry.CostDrams + "; turns=" + Game.Turns;
+			return null;
+		}
+
+		/// <summary>Re-reads the standing building and its plot on the loaded game, by the saved
+		/// identity, and hands back what THIS object says about itself.</summary>
+		private static string Standing(Zone Zone, KingdomQuickstartLifecycleSnapshot Witness,
+			out string PlotId, out string BuildingId)
+		{
+			PlotId = null;
+			BuildingId = null;
+			Cell cell = Zone?.GetCell(Witness.X, Witness.Y);
+			if (cell == null) return "the saved building's own cell is not in the loaded zone";
+			GameObject building = null;
+			foreach (GameObject item in cell.GetObjects())
+			{
+				if (!GameObject.Validate(item) || item.IDIfAssigned != Witness.BuildingId) continue;
+				if (building != null) return "two loaded objects claim the saved building identity";
+				building = item;
+			}
+			if (building == null) return "the saved building no longer stands on its own cell";
+			if (!KingdomUpgrade.IsFunctionallyBuilt(building))
+				return "the standing building is no longer functionally built";
+			PlotId = KingdomQuickstartLifecycleSteps.Observed(building);
+			BuildingId = Describe(building.IDIfAssigned);
 			return null;
 		}
 

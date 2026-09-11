@@ -122,6 +122,49 @@ namespace ThousandAndFirst.Tests
 				StringAssert.DoesNotContain(forbidden, load);
 		}
 
+		/// <summary>No observed field may be an echo of the witness: each is read from the loaded
+		/// game, and the plot identity is read from the standing building's own recorded rect.</summary>
+		[Test]
+		public void EveryObservedFieldOnTheLoadSideIsReadFromTheLoadedGame()
+		{
+			string load = Read("Harness/KingdomQuickstartLifecycleLoad.cs");
+			StringAssert.DoesNotContain("Describe(Witness.", load);
+			StringAssert.DoesNotContain("plotId=\" + Witness", load);
+			StringAssert.Contains("string plot = KingdomQuickstartLifecycleSteps.Observed(building)", load);
+			StringAssert.Contains("\"; plotId=\" + plot", load);
+			StringAssert.Contains("building.Physics._CurrentCell.X", load);
+			StringAssert.Contains("building.Physics._CurrentCell.ParentZone.ZoneID", load);
+			// The next action re-reads the standing building rather than repeating the witness.
+			StringAssert.Contains("Standing(zone, Witness, out string plotId, out string buildingId)", load);
+			string finish = Read("Harness/KingdomQuickstartLifecycleFinish.cs");
+			StringAssert.Contains("plotId=\" + Observed(building)", finish);
+			StringAssert.Contains("KingdomPlots.TryReadRect(building, out KingdomPlotRules.PlotRect rect)", finish);
+			StringAssert.DoesNotContain("Describe(job.SubjectId)", finish);
+		}
+
+		/// <summary>Functional completion is the production predicate, not a bare flag, and
+		/// custody is proved by reference on both sides.</summary>
+		[Test]
+		public void CompletionAndCustodyUseTheProductionPredicateAndReferenceIdentity()
+		{
+			foreach (string path in new[] { "Harness/KingdomQuickstartLifecycleFinish.cs",
+				"Harness/KingdomQuickstartLifecycleLoad.cs" })
+			{
+				string source = Read(path);
+				StringAssert.Contains("KingdomUpgrade.IsFunctionallyBuilt(", source);
+				// Called as-is: no local re-implementation and no broader registry sweep.
+				StringAssert.DoesNotContain("BuiltProperty", source);
+				StringAssert.DoesNotContain("HasPendingImprovementSuccessorAuthority", source);
+				StringAssert.Contains("Physics._CurrentCell", source);
+				StringAssert.Contains("ParentZone", source);
+			}
+			string load = Read("Harness/KingdomQuickstartLifecycleLoad.cs");
+			// The receipt is read from the building itself, so a compacted row cannot skip it.
+			StringAssert.Contains("building.GetStringProperty(KingdomConstruction.ReceiptProperty)", load);
+			StringAssert.Contains("receipt != Witness.JobId", load);
+			StringAssert.Contains("more than one retained registry row claims the saved job identity", load);
+		}
+
 		/// <summary>The next action mints its own job and may never report the completed one.</summary>
 		[Test]
 		public void TheNextActionMustMintItsOwnJob()
