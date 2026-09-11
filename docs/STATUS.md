@@ -6,6 +6,15 @@
 **Working candidate manifest:** 0.3.3 private Alpha candidate; uploaded, verified and finalized.
 Public Workshop remains the 0.3.2 public Alpha playtest, complete and finalized — see [Public 0.3.2](#public-032) below.
 
+**Public automation stopped before upload:** run `34576910338` at immutable tag `v0.3.3`
+(`277f4523f4a2bea13ec548ea05c07ef2678bb03d`) passed Linux and Windows suites but refused
+package reproduction: `release TESTING.md differs from subscribed private candidate`.
+The public-version protocol edit had been made after receipt binding. Publisher, verification,
+and finalization were all skipped: no public Steam attempt or upload occurred.
+Recovery candidate `16ed2b35a1516577cce2d5d15c922a1a1436a504` binds that same protocol
+before promotion, with unchanged private runtime and receipt. No guard is weakened.
+The failed tag is retained; its replacement requires explicit author direction, or a new version.
+
 The public Alpha is [Steam Workshop item
 3794797472](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472). Rows marked retained
 or frozen identify exact earlier checkpoints; their old counts do not sign later bytes. A green
