@@ -51,14 +51,18 @@ namespace ThousandAndFirst.Harness
 				Require(BilledWater == AuthoredWaterCost,
 					"taf-camp-bill-water-inexact: the committed claim spent " + BilledWater
 						+ " dram(s) against the authored " + AuthoredWaterCost);
-				Require(found.Claims.WaterOutstanding == 0 && found.Claims.WaterLost == 0,
-					"taf-camp-bill-water-unsettled: outstanding="
-						+ found.Claims.WaterOutstanding + " lost=" + found.Claims.WaterLost);
 				RequireExactMaterial();
-				Require(string.IsNullOrEmpty(found.Claims.MaterialOutstanding)
-					&& string.IsNullOrEmpty(found.Claims.MaterialLost),
-					"taf-camp-bill-material-unsettled: outstanding="
-						+ found.Claims.MaterialOutstanding + " lost=" + found.Claims.MaterialLost);
+				// Lost is physical net debit, not additional waste. This clean first attempt
+				// must debit exactly the authored bill, with no outstanding or excess loss.
+				Require(KingdomQuickstartBuildClaims.CleanFirstPayment(found.Claims,
+					AuthoredWaterCost, new KingdomMaterialDebitCost(
+						KingdomMaterials.UpgradeCostFor(FirstRungKey))),
+					"taf-camp-bill-payment-inexact: water requested/spent/outstanding/lost="
+						+ found.Claims.WaterRequested + "/" + found.Claims.WaterSpent + "/"
+						+ found.Claims.WaterOutstanding + "/" + found.Claims.WaterLost
+						+ "; material requested/spent/outstanding/lost="
+						+ found.Claims.MaterialRequested + "/" + found.Claims.MaterialSpent
+						+ "/" + found.Claims.MaterialOutstanding + "/" + found.Claims.MaterialLost);
 			}
 
 			/// <summary>The committed material claim, compared kind by kind against the authored

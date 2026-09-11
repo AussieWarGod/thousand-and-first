@@ -199,6 +199,16 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void BillUsesExecutedExactDebitPredicateNotZeroPhysicalLoss()
+		{
+			string bill = Read(Bill);
+			Assert.That(bill, Does.Contain("KingdomQuickstartBuildClaims.CleanFirstPayment(found.Claims,"));
+			Assert.That(bill, Does.Contain("KingdomMaterials.UpgradeCostFor(FirstRungKey)"));
+			Assert.That(bill, Does.Not.Contain("found.Claims.WaterLost == 0"));
+			Assert.That(bill, Does.Not.Contain("string.IsNullOrEmpty(found.Claims.MaterialOutstanding)"));
+		}
+
+		[Test]
 		public void CustodyIsReadRawAndAnInvalidEntryFailsRatherThanBeingSkipped()
 		{
 			string reads = Read(Reads);
