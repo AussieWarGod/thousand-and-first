@@ -23,15 +23,20 @@ namespace ThousandAndFirst.Harness
 		internal const string SetupVerb = "teardown-setup";
 		internal const string CheckVerb = "teardown-check";
 		internal const string Receipt = "r_TAF_ScenarioTeardownNative_v1";
-		// Cumulative ticks 2000/4800/7600/10800: fire+larder serialize one active labour root
-		// per settlement pass (Growth/KingdomConstructionPresence.cs:180-186 -- non-selected
-		// roots stay at 0 effectiveness) and each strike leg burns its own checkpoint pass
-		// before banking effort (Growth/KingdomMaterials.11.StrikeWorkAndRecoveryEntry.cs:31-36),
-		// so four checks are needed for both cases' full commission->build->strike->salvage
-		// progression to land inside one finite budget (see review-teardown-reachability-
-		// findings.md section 4).
-		private static readonly string[] Script = { "stagedigest", SetupVerb, "advance 2000",
-			CheckVerb, "advance 2800", CheckVerb, "advance 2800", CheckVerb, "advance 3200",
+		// Cumulative ticks 2400/6000/9600/13200 (deltas 2400/3600/3600/3600) -- widened per
+		// review-bba51c4-teardown-findings.md nit 1: the prior 2000/4800/7600/10800 schedule had
+		// ZERO slack (fire's 600 labour ticks / larder's 1200 vs one 1200-tick settlement pass
+		// per checkpoint), and persona EXPECT hard-required fire fully built by tick 2000 --
+		// exactly what native run 15 never achieved. The first interval is now TWO passes
+		// (2400 ticks): production's own first attended pass after founding prices the
+		// newly-selected raising at 0 (selection itself happens on that pass, Growth/
+		// KingdomConstructionPresence.cs:95-118 Assign, before any labour is priced against it),
+		// so a single 1200-tick interval can price nothing even on the successful path; the
+		// second pass inside this same interval is what actually prices fire's 600 ticks. Every
+		// later interval keeps a full spare pass (3600 = 3 passes for legs needing at most 1200
+		// ticks: fire's removal/salvage, larder's own raise+strike, larder's removal).
+		private static readonly string[] Script = { "stagedigest", SetupVerb, "advance 2400",
+			CheckVerb, "advance 3600", CheckVerb, "advance 3600", CheckVerb, "advance 3600",
 			CheckVerb, "stagedigest" };
 
 		public int ScenarioVerbApiVersion { get { return KingdomScenarioVerbApi.Version; } }

@@ -28,8 +28,19 @@ namespace ThousandAndFirst.Harness
 	/// row, so it passes for a body that Labours()==false, is staged, or is already fully
 	/// posted. RequireAvailable is the stronger, re-askable proof: each body must actually
 	/// appear in the production KingdomCrews.AvailableSettlers projection (grounded, unstaged,
-	/// Resident standing) AND carry no post (KingdomStations.PostOf==0). It is read-only --
-	/// nothing here ever sets Standing or a post; a failing body refuses by name.
+	/// Resident standing). It is read-only -- nothing here ever sets Standing or a post; a
+	/// failing body refuses by name.
+	/// </para>
+	/// <para>
+	/// review-bba51c4-teardown-findings.md REQUIRED 1: a strict PostOf==0 re-ask on every Check
+	/// refuses the crew exactly while it is legitimately working -- production posts the
+	/// selected hands (Growth/KingdomConstructionPresence.cs:128) and only un-posts at the START
+	/// of the NEXT Assign pass (:60-73), so a body mid-raise carries a non-zero post between
+	/// checks. PostOf==0 stays a strict assertion only at setup (before any raising exists); the
+	/// per-Check re-ask instead accepts a body posted to one of THIS fixture's own raisings
+	/// (fire's or larder's live WorksId, resolved through the same KingdomCityRules.StableId the
+	/// allocator itself posts with) as Construction work, journaling the raw post per body as
+	/// "posted-to=" rather than asserting a value that legitimately changes turn to turn.
 	/// </para>
 	/// </summary>
 	internal static class KingdomTeardownCrewEnrollment
@@ -65,16 +76,21 @@ namespace ThousandAndFirst.Harness
 			}
 			Require(KingdomResidents.OnRollCount(System) >= CrewSize,
 				"the synthetic crew roster cannot read a notice");
-			RequireAvailable(System, Zone, Bodies, Require);
+			RequireAvailable(System, Zone, Bodies, Require, null, null);
 			return enrolled;
 		}
 
 		/// <summary>Read-only, re-askable every check: each body must be grounded, unstaged and
-		/// Resident (the exact production KingdomCrews.AvailableSettlers membership) and carry
-		/// no post (KingdomStations.PostOf==0). Refuses by name, per body, on any mismatch --
-		/// never mints or forces standing.</summary>
+		/// Resident (the exact production KingdomCrews.AvailableSettlers membership). At setup
+		/// (AcceptablePostIds null) PostOf==0 is a strict assertion, since no raising exists yet.
+		/// On a per-Check re-ask, a non-zero post is accepted ONLY when it names one of this
+		/// fixture's own raisings (AcceptablePostIds, Construction-kind) -- never any other post
+		/// -- and the raw post is journaled ("posted-to=") rather than asserted, since it
+		/// legitimately changes turn to turn while the crew is working. Never mints or forces
+		/// standing or a post; refuses by name, per body, on any real mismatch.</summary>
 		internal static void RequireAvailable(KingdomSystem System, Zone Zone,
-			List<GameObject> Bodies, Action<bool, string> Require)
+			List<GameObject> Bodies, Action<bool, string> Require, ISet<int> AcceptablePostIds,
+			Action<string> Journal)
 		{
 			KingdomSurvey survey = KingdomSurvey.Take(Zone, System);
 			List<GameObject> available = KingdomCrews.AvailableSettlers(System, survey);
@@ -87,8 +103,16 @@ namespace ThousandAndFirst.Harness
 				Require(isAvailable, "crew body " + (i + 1) + " of " + Bodies.Count
 					+ " is not present in the production AvailableSettlers projection "
 					+ "(not Resident standing, staged, or ungrounded)");
-				Require(KingdomStations.PostOf(body) == 0, "crew body " + (i + 1) + " of "
-					+ Bodies.Count + " already carries a non-zero post and is not free labour");
+				int post = KingdomStations.PostOf(body);
+				bool free = post == 0;
+				bool postedToThisFixture = !free && AcceptablePostIds != null
+					&& AcceptablePostIds.Contains(post)
+					&& body.GetIntProperty(KingdomStations.PostKindProperty)
+						== (int)KingdomWorkKind.Construction;
+				Require(free || postedToThisFixture, "crew body " + (i + 1) + " of "
+					+ Bodies.Count + " carries post " + post
+					+ ", neither free nor posted to this fixture's own raising");
+				Journal?.Invoke("; crew=" + (i + 1) + " posted-to=" + post);
 			}
 		}
 	}

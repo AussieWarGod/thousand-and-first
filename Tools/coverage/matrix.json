@@ -126,7 +126,7 @@
       "id": 7,
       "behaviour": "Building teardown/removal",
       "prerequisites": "functionally-built building",
-      "transitions": "KingdomMaterials.OrderStrike (Growth/KingdomMaterials.08.StrikeOrdering.cs:23) -> removal + exact salvage; two parallel cases: fire (1 timber cost, RuntimeData/KingdomBuildings.xml:544-546, zero-salvage boundary) and larder (3 timber cost, RuntimeData/KingdomBuildings.xml:399-400, positive-salvage)",
+      "transitions": "KingdomMaterials.OrderStrike (Growth/KingdomMaterials.08.StrikeOrdering.cs:23) -> removal + exact salvage; two SEQUENCED cases, one gang at a time (bba51c4): fire (1 timber cost, RuntimeData/KingdomBuildings.xml:544-546, zero-salvage boundary) raised and struck first, then larder (3 timber cost, RuntimeData/KingdomBuildings.xml:399-400, positive-salvage) commissioned only once fire reaches Phase 2",
       "effects": "works object gone, exact material raw-count delta per KingdomMaterialRules.StrikeSalvage (Growth/KingdomMaterialRules.Clearance.cs:211-219): fire expects +0 timber (boundary), larder expects +1 timber (positive), both computed live from KingdomMaterials.CostFor + StrikeSalvagePercent, never hardcoded",
       "save_cold_load": "COVERAGE_GAP (not wired this pass)",
       "negative": "IMPLEMENTED_UNEXECUTED",

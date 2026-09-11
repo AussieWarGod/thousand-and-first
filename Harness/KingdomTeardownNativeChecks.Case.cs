@@ -18,7 +18,8 @@ namespace ThousandAndFirst.Harness
 			private readonly List<GameObject> Owned;
 			private GameObject Chest, Works;
 			private Cell WorksCell;
-			private string WorksId, StrikeReceiptId, JobId;
+			internal string WorksId;
+			private string StrikeReceiptId, JobId;
 			private int ExpectedSalvageDelta, TimberCost;
 			internal int Phase;
 			internal bool Done;

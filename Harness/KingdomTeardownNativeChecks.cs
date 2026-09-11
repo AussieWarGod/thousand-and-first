@@ -14,7 +14,8 @@ namespace ThousandAndFirst.Harness
 	/// <para>
 	/// SYNTHETIC SETUP, DISCLOSED, like <see cref="KingdomDepositOverflowNativeChecks"/>: real
 	/// founding/dedication, a 2-body labour crew (<see cref="KingdomTeardownCrewEnrollment"/>),
-	/// a harness-assigned raw timber count, real <c>KingdomCommission.Commission</c> and real
+	/// each design's own authored bill minted as real single-unit objects bounded by the
+	/// dedicated store's declared capacity, real <c>KingdomCommission.Commission</c> and real
 	/// <c>KingdomMaterials.OrderStrike</c> -- never forcing <c>KingdomBuilt</c> or the job phase.
 	/// EXACT SALVAGE: <c>OrderStrike</c> = <c>Cost.Scaled(StrikeSalvagePercent=50)</c>,
 	/// integer-floor per material (<c>Growth/KingdomMaterialTally.cs:101-111</c>). <c>"fire"</c>
@@ -139,9 +140,15 @@ namespace ThousandAndFirst.Harness
 			/// Ok=true and no named diagnostic. This re-Requires the crew is STILL on the roll
 			/// (production KingdomResidents.OnRollCount) before touching either case, and ALSO
 			/// re-asserts (review-teardown-run15-neverbuilt.md finding 4c) that every enrolled
-			/// body is still present in KingdomCrews.AvailableSettlers and carries no post --
-			/// OnRollCount alone is blind to a standing or posting change. No departure freeze,
-			/// no re-enrolment -- purely detection, by name.
+			/// body is still present in KingdomCrews.AvailableSettlers -- OnRollCount alone is
+			/// blind to a standing change. review-bba51c4-teardown-findings.md REQUIRED 1: a post
+			/// is no longer asserted to be zero here -- production posts the selected hands while
+			/// a raising is open and only un-posts at the next Assign pass, so a strict PostOf==0
+			/// re-ask refused a healthy, working crew. A post is now accepted when it names one
+			/// of THIS fixture's own live raisings (fire's/larder's WorksId, resolved through
+			/// KingdomCityRules.StableId, the same id the allocator posts with); the raw post is
+			/// journaled per body ("posted-to="), never asserted. No departure freeze, no
+			/// re-enrolment -- purely detection, by name.
 			/// </para>
 			/// </summary>
 			internal void Check()
@@ -155,7 +162,13 @@ namespace ThousandAndFirst.Harness
 						if (!c.Done)
 							Require(false, KingdomTeardownCrewDepartureClaims.Diagnostic(c.Name,
 								onRoll, KingdomTeardownCrewEnrollment.CrewSize, tick));
-				KingdomTeardownCrewEnrollment.RequireAvailable(System, Zone, Crew, Require);
+				HashSet<int> acceptablePosts = new HashSet<int>();
+				if (!string.IsNullOrEmpty(Fire.WorksId))
+					acceptablePosts.Add(KingdomCityRules.StableId(Fire.WorksId));
+				if (!string.IsNullOrEmpty(Larder.WorksId))
+					acceptablePosts.Add(KingdomCityRules.StableId(Larder.WorksId));
+				KingdomTeardownCrewEnrollment.RequireAvailable(System, Zone, Crew, Require,
+					acceptablePosts, line => Evidence.Append(line));
 				foreach (Case c in Cases)
 					if (!c.Done) c.Check(Require, Evidence, elapsed);
 				if (!LarderStarted && Fire.Phase >= 2)

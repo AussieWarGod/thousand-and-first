@@ -43,10 +43,12 @@ namespace ThousandAndFirst.Tests
 		public void SealedScriptRunsFourChecksAtTheWidenedCumulativeCadence()
 		{
 			// Corrects the false "polls every tick" claim: Check() is driven only by these four
-			// sealed teardown-check verbs, at cumulative ticks 2000/4800/7600/10800.
+			// sealed teardown-check verbs. Cumulative ticks 2400/6000/9600/13200 (deltas
+			// 2400/3600/3600/3600) per review-bba51c4-teardown-findings.md nit 1 -- widened from
+			// the prior zero-slack 2000/4800/7600/10800.
 			string source = Read(Provider);
-			Assert.That(source, Does.Contain("\"advance 2000\""));
-			Assert.That(source, Does.Contain("CheckVerb, \"advance 2800\", CheckVerb, \"advance 2800\", CheckVerb, \"advance 3200\","));
+			Assert.That(source, Does.Contain("\"advance 2400\""));
+			Assert.That(source, Does.Contain("CheckVerb, \"advance 3600\", CheckVerb, \"advance 3600\", CheckVerb, \"advance 3600\","));
 			int checkVerbCount = 0;
 			int index = 0;
 			while ((index = source.IndexOf("CheckVerb,", index)) >= 0) { checkVerbCount++; index++; }
@@ -116,6 +118,10 @@ namespace ThousandAndFirst.Tests
 				"Require(CanPayBill(bill, out shortfall),"));
 			// The withdrawn hypothesis must never be re-asserted as a proven cause.
 			Assert.That(source, Does.Not.Contain("did not answer a real material reservation"));
+			// Dropped in an earlier pass; restored per house law (never weaken a pin) --
+			// guards the anti-pattern itself, independent of whether it caused native run 12.
+			Assert.That(source, Does.Not.Contain(".Count = TimberCost"));
+			Assert.That(source, Does.Not.Contain("SetIntProperty(\"NeverStack\""));
 		}
 
 		[Test]
@@ -324,14 +330,51 @@ namespace ThousandAndFirst.Tests
 				"internal static void RequireAvailable(KingdomSystem System, Zone Zone,"));
 			Assert.That(enrollment, Does.Contain(
 				"KingdomCrews.AvailableSettlers(System, survey)"));
-			Assert.That(enrollment, Does.Contain("KingdomStations.PostOf(body) == 0"));
 			Assert.That(enrollment, Does.Contain("out List<GameObject> Bodies)"));
-			Assert.That(enrollment, Does.Contain("RequireAvailable(System, Zone, Bodies, Require);"));
+			Assert.That(enrollment, Does.Contain(
+				"RequireAvailable(System, Zone, Bodies, Require, null, null);"));
 			string checks = Read(Checks);
 			Assert.That(checks, Does.Contain(
 				"Require, out Crew) == 2,"));
 			Assert.That(checks, Does.Contain(
-				"KingdomTeardownCrewEnrollment.RequireAvailable(System, Zone, Crew, Require);"));
+				"KingdomTeardownCrewEnrollment.RequireAvailable(System, Zone, Crew, Require,"));
+			Assert.That(checks, Does.Contain(
+				"acceptablePosts, line => Evidence.Append(line));"));
+		}
+
+		/// <summary>
+		/// review-bba51c4-teardown-findings.md REQUIRED 1: a strict PostOf==0 re-ask on every
+		/// Check refused a healthy crew mid-raise, since production posts the selected hands and
+		/// only un-posts at the NEXT Assign pass. A post is now accepted on a per-Check re-ask
+		/// only when it names one of this fixture's own live raisings (fire's/larder's WorksId
+		/// via KingdomCityRules.StableId, the same id the allocator itself posts with), the raw
+		/// post journaled per body rather than asserted -- PostOf==0 stays a strict setup-only
+		/// assertion, before any raising exists.
+		/// </summary>
+		[Test]
+		public void ReAskedPostIsAcceptedOnlyWhenItNamesThisFixturesOwnRaisingNeverAssertedZero()
+		{
+			string enrollment = Read("Harness/KingdomTeardownCrewEnrollment.cs");
+			Assert.That(enrollment, Does.Contain("ISet<int> AcceptablePostIds,"));
+			Assert.That(enrollment, Does.Contain("Action<string> Journal)"));
+			Assert.That(enrollment, Does.Contain("int post = KingdomStations.PostOf(body);"));
+			Assert.That(enrollment, Does.Contain("bool free = post == 0;"));
+			Assert.That(enrollment, Does.Contain(
+				"AcceptablePostIds != null\n\t\t\t\t\t&& AcceptablePostIds.Contains(post)"));
+			Assert.That(enrollment, Does.Contain(
+				"== (int)KingdomWorkKind.Construction;"));
+			Assert.That(enrollment, Does.Contain("Require(free || postedToThisFixture,"));
+			Assert.That(enrollment, Does.Contain(
+				"Journal?.Invoke(\"; crew=\" + (i + 1) + \" posted-to=\" + post);"));
+			string checks = Read(Checks);
+			Assert.That(checks, Does.Contain(
+				"acceptablePosts.Add(KingdomCityRules.StableId(Fire.WorksId));"));
+			Assert.That(checks, Does.Contain(
+				"acceptablePosts.Add(KingdomCityRules.StableId(Larder.WorksId));"));
+			// The exact defect: no unconditional PostOf==0 assertion may survive on the re-ask
+			// path (the setup call is the only lawful strict use, verified above).
+			Assert.That(enrollment, Does.Not.Contain(
+				"Require(KingdomStations.PostOf(body) == 0,"));
 		}
 
 		/// <summary>

@@ -12,10 +12,14 @@
 # declared capacity. Nothing forces KingdomBuilt, the job phase or the strike receipt.
 # Not ordinary play, not a rendered Charter, no save/load and no cold-load claim.
 #
-# Four checks (cumulative ticks 2000/4800/7600/10800), not two: fire and larder serialize one
-# active labour root per settlement pass, and each strike leg burns its own checkpoint pass
-# before banking effort, so one finite budget needs this many observations to reach both
-# cases' full commission->build->strike->salvage progression.
+# Four checks, cumulative ticks 2400/6000/9600/13200 (deltas 2400/3600/3600/3600), widened per
+# review-bba51c4-teardown-findings.md nit 1 from the prior zero-slack 2000/4800/7600/10800: the
+# first attended settlement pass after founding prices a freshly-selected raising at 0 (Assign
+# selects on that same pass, before any labour is priced against it), so the first interval is
+# TWO 1200-tick passes -- the second is what actually prices fire's 600 ticks -- and every later
+# interval keeps one full spare pass over the 1200-tick legs it covers (fire's removal/salvage,
+# larder's own raise+strike, larder's removal). Fire and larder are SEQUENCED, one gang at a
+# time (Frame.Check() commissions larder only once fire reaches Phase 2), never concurrent.
 #
 # KNOWN GAP, DISCLOSED, NOT FIXED: the crew has no home plot, so a roofless departure brink
 # (KingdomLodgingRules.GraceDays = 6 days = 7200 ticks from the warned tick) may fire near
@@ -28,8 +32,8 @@
 DESCRIPTION=a really built camp fire and larder are struck on real turns, return exactly the computed salvage, and refuse a second strike
 REQUEST=founding-first-city
 START=8.22@40,12
-SCRIPT=stagedigest;teardown-setup;advance 2000;teardown-check;advance 2800;teardown-check;advance 2800;teardown-check;advance 3200;teardown-check;stagedigest
+SCRIPT=stagedigest;teardown-setup;advance 2400;teardown-check;advance 3600;teardown-check;advance 3600;teardown-check;advance 3600;teardown-check;stagedigest
 VERBS=teardown-setup,teardown-check
-EXPECT=stagedigest:OK~founded=false,teardown-setup:OK~fire=1,advance:OK,teardown-check:OK~larder=1,advance:OK,teardown-check:OK~native-teardown,advance:OK,teardown-check:OK~native-teardown,advance:OK,teardown-check:OK~cases=2 passed=2 failed=0,stagedigest:OK~founded=true,COMPLETE
+EXPECT=stagedigest:OK~founded=false,teardown-setup:OK~fire=1,advance:OK,teardown-check:OK~native-teardown,advance:OK,teardown-check:OK~native-teardown,advance:OK,teardown-check:OK~native-teardown,advance:OK,teardown-check:OK~cases=2 passed=2 failed=0,stagedigest:OK~founded=true,COMPLETE
 SET=materials,growth,native-regression
 TIMEOUT=1200
