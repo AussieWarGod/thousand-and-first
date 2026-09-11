@@ -6,8 +6,11 @@ namespace ThousandAndFirst.Tests
 	/// <summary>
 	/// Value tests for <see cref="KingdomTeardownStrikeRowClaims.IsExpectedStrikeRow"/> -- a
 	/// pure, engine-free predicate, so every case here is a real behavioural proof, not a
-	/// source pin. Covers the positive row and each named negative (wrong route, subject,
-	/// owner, zone, phase, and the old paid-construction id supplied by mistake).
+	/// source pin. The positive fixture is the row's state AFTER OrderStrikeDurable actually
+	/// returns true (Phase==Working, PhysicalPhase==StrikeWorking), never NewJob's initial
+	/// Published/pre-stamp state. Covers that positive row and each named negative (wrong
+	/// route, subject, owner, zone, pre-stamp Published phase, missing StrikeWorking physical
+	/// phase, and the old paid-construction id supplied by mistake).
 	/// </summary>
 	public class KingdomTeardownStrikeRowClaimsTests
 	{
@@ -25,7 +28,8 @@ namespace ThousandAndFirst.Tests
 				SourceId = WorksId,
 				OwnerKey = OwnerKey,
 				ZoneId = ZoneId,
-				Phase = KingdomConstructionPhase.Published,
+				Phase = KingdomConstructionPhase.Working,
+				PhysicalPhase = KingdomPhysicalPhase.StrikeWorking,
 			};
 		}
 
@@ -36,7 +40,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void ExactMatchingRowIsAccepted()
+		public void ExactPostStampRowIsAccepted()
 		{
 			Assert.That(Check(ExactRow(), out string failure), Is.True);
 			Assert.That(failure, Is.Null);
@@ -95,22 +99,45 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void PublishedPreStampPhaseIsRejected()
+		{
+			// NewJob's own initial state, before ResumeStrikeStamp ever ran -- OrderStrike has
+			// not actually returned true yet at this state, so it must never pass as "expected".
+			KingdomConstructionJob row = ExactRow();
+			row.Phase = KingdomConstructionPhase.Published;
+			row.PhysicalPhase = KingdomPhysicalPhase.StrikeOrdered;
+			Assert.That(Check(row, out string failure), Is.False);
+			Assert.That(failure, Does.Contain("Working"));
+		}
+
+		[Test]
 		public void WrongPhaseIsRejected()
 		{
 			KingdomConstructionJob row = ExactRow();
 			row.Phase = KingdomConstructionPhase.Complete;
 			Assert.That(Check(row, out string failure), Is.False);
-			Assert.That(failure, Does.Contain("phase"));
+			Assert.That(failure, Does.Contain("Working"));
+		}
+
+		[Test]
+		public void MissingStrikeWorkingPhysicalPhaseIsRejected()
+		{
+			// Phase reached Working but the physical stamp itself is not StrikeWorking -- a
+			// mismatched pair must still refuse, not pass on Phase alone.
+			KingdomConstructionJob row = ExactRow();
+			row.PhysicalPhase = KingdomPhysicalPhase.StrikeOrdered;
+			Assert.That(Check(row, out string failure), Is.False);
+			Assert.That(failure, Does.Contain("StrikeWorking"));
 		}
 
 		[Test]
 		public void OldConstructionRouteSuppliedInsteadOfStrikeIsRejected()
 		{
 			// The exact failure mode this predicate exists to catch: a caller mistakenly
-			// resolving the OLD paid-construction job (route PlotCommission, not Strike).
+			// resolving the OLD paid-construction job (route PlotCommission, not Strike), even
+			// though that old job may also legitimately read Phase==Working.
 			KingdomConstructionJob row = ExactRow();
 			row.Route = KingdomConstructionRoute.PlotCommission;
-			row.Phase = KingdomConstructionPhase.Working;
 			Assert.That(Check(row, out string failure), Is.False);
 			Assert.That(failure, Does.Contain("route"));
 		}

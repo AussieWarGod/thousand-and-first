@@ -1,7 +1,13 @@
 namespace ThousandAndFirst
 {
 	/// <summary>Engine-free predicate for the exact registry row a successful OrderStrike must
-	/// have minted (Growth/KingdomMaterials.08.StrikeOrdering.cs:257-261 NewJob, route Strike).
+	/// have minted AND fully stamped (Growth/KingdomMaterials.08.StrikeOrdering.cs:257-261
+	/// NewJob, route Strike; OrderStrikeDurable does not return true until
+	/// ResumeStrikeStamp succeeds, :274). ResumeStrikeStamp itself sets PhysicalPhase to
+	/// StrikeWorking (Growth/KingdomMaterials.09.StrikeStampAndCancellation.cs:51) and then
+	/// transitions Phase to Working via FinishProjection (:55-56) -- Phase is NEVER left at
+	/// NewJob's initial Published once OrderStrike has actually returned true, so a real
+	/// post-call row must read Phase==Working and PhysicalPhase==StrikeWorking, not Published.
 	/// Mirrors the KingdomQuickstartBuildClaims pattern: pure fields in, pure bool out, no
 	/// GameObject/Zone dependency, so it is value-testable without the game.</summary>
 	internal static class KingdomTeardownStrikeRowClaims
@@ -22,9 +28,13 @@ namespace ThousandAndFirst
 				return Fail(out Failure, "the registry row's owner key is not this settlement's");
 			if (Row.ZoneId != ExpectedZoneId)
 				return Fail(out Failure, "the registry row's zone id does not match the struck zone");
-			if (Row.Phase != KingdomConstructionPhase.Published)
+			if (Row.Phase != KingdomConstructionPhase.Working)
 				return Fail(out Failure,
-					"the registry row is not in its expected freshly-minted strike phase");
+					"the registry row has not been stamped to Working by ResumeStrikeStamp/"
+					+ "FinishProjection");
+			if (Row.PhysicalPhase != KingdomPhysicalPhase.StrikeWorking)
+				return Fail(out Failure,
+					"the registry row's physical phase is not StrikeWorking");
 			return true;
 		}
 
