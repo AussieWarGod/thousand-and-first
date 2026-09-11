@@ -164,11 +164,20 @@ namespace ThousandAndFirst
 		/// </summary>
 		internal static bool HasPendingClimb(Zone Z, int RowWorkId)
 		{
+			return HasPendingClimb(Z, RowWorkId, out _, out _);
+		}
+
+		private static bool HasPendingClimb(Zone Z, int RowWorkId, out string RetiredId,
+			out KingdomConstructionJob Job)
+		{
+			RetiredId = null;
+			Job = null;
 			if (Z == null || RowWorkId == 0) return false;
 			if (!KingdomFoundingHeartTerminalRules.TryDecode(
 					Z.GetZoneProperty(FoundingHeartTerminalProperty, null), out var prior)
 				|| Simulation.City.KingdomCityRules.StableId(prior.FinalId) != RowWorkId)
 				return false;
+			RetiredId = prior.FinalId;
 			if (!KingdomConstruction.TryRead(out List<KingdomConstructionJob> jobs, out _)
 				|| jobs == null) return false;
 			KingdomConstructionJob found = null;
@@ -183,11 +192,12 @@ namespace ThousandAndFirst
 			}
 			// Exactly one job, and it has not completed: the climb is still owed an outcome.
 			// A completed job is not pending, and no job at all is not pending either -- that is
-			// a root that is simply gone, and it must stay malformed.
-			bool pending = named == 1 && found.Phase != KingdomConstructionPhase.Complete
+			// a root that is simply gone, and it must stay malformed. This READS; whether the
+			// founder is told is the caller's to decide, because only the caller knows whether
+			// the classification was actually reached.
+			Job = found;
+			return named == 1 && found.Phase != KingdomConstructionPhase.Complete
 				&& found.Phase != KingdomConstructionPhase.Cancelled;
-			AnnounceClimbUnderInspection(Z, prior.FinalId, found, pending);
-			return pending;
 		}
 
 		/// <summary>
@@ -198,28 +208,41 @@ namespace ThousandAndFirst
 		/// inspection rather than malformed, which is correct, but it also dedupes its own line
 		/// and the settlement's daily one is suppressed -- so without this the condition would be
 		/// permanent AND silent. The standard once-only shape applies: a zone-side flag set the
-		/// first time the case is classified, cleared when the job turns terminal, so a climb that
-		/// sticks twice is said twice and one that stays stuck is said once.</para>
+		/// first time the case is CLASSIFIED -- never merely read, so a duplicated root, which is
+		/// malformed and not an inspection, is never announced -- and cleared where the climb
+		/// finishes, so a heart that sticks, finishes and sticks again is said about twice.</para>
 		/// </summary>
-		private static void AnnounceClimbUnderInspection(Zone Z, string RetiredId,
-			KingdomConstructionJob Job, bool Pending)
+		internal static void NoteClimbUnderInspection(Zone Z, int RowWorkId)
 		{
-			bool announced = !string.IsNullOrEmpty(
-				Z.GetZoneProperty(FoundingHeartClimbHeldProperty, null));
-			if (!Pending)
-			{
-				if (announced) Z.SetZoneProperty(FoundingHeartClimbHeldProperty, null);
+			if (Z == null || !HasPendingClimb(Z, RowWorkId, out string retired,
+				out KingdomConstructionJob job) || job == null) return;
+			if (!string.IsNullOrEmpty(Z.GetZoneProperty(FoundingHeartClimbHeldProperty, null)))
 				return;
-			}
-			if (announced) return;
-			Z.SetZoneProperty(FoundingHeartClimbHeldProperty, Job.Id);
-			if (Z.GetZoneProperty(FoundingHeartClimbHeldProperty, null) != Job.Id) return;
+			Z.SetZoneProperty(FoundingHeartClimbHeldProperty, job.Id);
+			if (Z.GetZoneProperty(FoundingHeartClimbHeldProperty, null) != job.Id) return;
 			KingdomSystem system = The.Game?.GetSystem<KingdomSystem>();
 			system?.Ledger?.Note("The heart's raised rung has not finished settling, so the "
 				+ "kingdom's seal is waiting on it. Nothing is sealed until that improvement "
 				+ "closes or is inspected.");
-			KingdomLog.Log("founding heart: climb under inspection; retired=" + RetiredId
-				+ "; job=" + Job.Id + "; phase=" + Job.Phase);
+			KingdomLog.Log("founding heart: climb under inspection; retired=" + retired
+				+ "; job=" + job.Id + "; phase=" + job.Phase);
+		}
+
+		/// <summary>
+		/// The saying is taken back where the climb actually finishes. A completed climb never
+		/// reaches the pending read again -- the chain binds the successor and the witness stops
+		/// asking -- so the settle is the only place that can clear the hold. Without this a heart
+		/// that sticks, finishes, and sticks again would be silent the second time.
+		/// </summary>
+		internal static void ClearClimbHold(Zone Z, string RetiredId)
+		{
+			if (Z == null || string.IsNullOrEmpty(RetiredId)
+				|| string.IsNullOrEmpty(Z.GetZoneProperty(FoundingHeartClimbHeldProperty, null)))
+				return;
+			if (!KingdomFoundingHeartTerminalRules.TryDecode(
+					Z.GetZoneProperty(FoundingHeartTerminalProperty, null), out var prior)
+				|| prior.FinalId != RetiredId) return;
+			Z.SetZoneProperty(FoundingHeartClimbHeldProperty, null);
 		}
 
 		/// <summary>The one COMPLETED improvement that retired this identity, and the object it

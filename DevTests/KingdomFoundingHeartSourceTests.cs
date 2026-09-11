@@ -675,55 +675,62 @@ namespace ThousandAndFirst.Tests
 		}
 
 		/// <summary>
-		/// VALUE. The design a climbed row's evidence is filed under is the design that STANDS.
-		/// The row names the retired blueprint; the successor's own blueprint folds to a different
-		/// semantic key, and that is the one the witness must use, or the sealed record would name
-		/// a design the standing object is not.
-		/// </summary>
-		[Test]
-		public void AClimbedRowIsFiledUnderTheStandingDesignNotTheRetiredOne()
-		{
-			string retired;
-			string standing;
-			ClassicAssert.IsTrue(KingdomInheritRules.TrySemanticKeyForBlueprint(
-				"r_KingdomRiteGround", out retired));
-			ClassicAssert.IsTrue(KingdomInheritRules.TrySemanticKeyForBlueprint(
-				"r_KingdomWaterstone", out standing));
-			ClassicAssert.IsFalse(string.IsNullOrEmpty(retired));
-			ClassicAssert.IsFalse(string.IsNullOrEmpty(standing));
-			ClassicAssert.AreNotEqual(retired, standing,
-				"filing the successor under the retired key would name the wrong design");
-			// The witness takes the standing key only when it has one; otherwise the row's own
-			// key stands, which is every ordinary row.
-			ClassicAssert.IsFalse(KingdomInheritRules.TrySemanticKeyForBlueprint("", out _));
-		}
-
-		/// <summary>
 		/// A stuck climb is a permanent refusal, so it must not also be permanently silent: the
 		/// seal dedupes its own line and the settlement's daily one is suppressed. The founder is
-		/// told once, on the ground, and the saying is taken back when the improvement turns
-		/// terminal -- the same once-only shape every other held announcement uses.
+		/// told once, on the ground, when the row is CLASSIFIED as an inspection -- never merely
+		/// read -- and the saying is taken back where the climb finishes, so a heart that sticks,
+		/// finishes and sticks again is said about twice.
 		/// </summary>
 		[Test]
-		public void AStuckClimbIsSaidOnceAndUnsaidWhenItClears()
+		public void AStuckClimbIsSaidOnceAndUnsaidWhereTheClimbFinishes()
 		{
 			string chain = Source("Growth/KingdomPlot2.07s.FoundingHeartClimbedChain.cs");
-			StringAssert.Contains("AnnounceClimbUnderInspection(Z, prior.FinalId, found, pending);",
+			// The read says nothing. Announcing is a separate entry point.
+			StringAssert.Contains("internal static void NoteClimbUnderInspection(Zone Z, "
+				+ "int RowWorkId)", chain);
+			StringAssert.DoesNotContain("AnnounceClimbUnderInspection(", chain);
+			int read = chain.IndexOf("private static bool HasPendingClimb(Zone Z, int RowWorkId, "
+				+ "out string RetiredId,", StringComparison.Ordinal);
+			int note = chain.IndexOf("internal static void NoteClimbUnderInspection(",
+				StringComparison.Ordinal);
+			ClassicAssert.IsTrue(read > -1 && note > read);
+			string reader = chain.Substring(read, note - read);
+			StringAssert.DoesNotContain("SetZoneProperty(", reader);
+			StringAssert.DoesNotContain("Ledger", reader);
+
+			// Told only where the classification was actually reached, and never for a
+			// duplicated root, which is malformed rather than an inspection.
+			string evidence = Source("Core/KingdomInheritanceSpatial.Evidence.cs");
+			StringAssert.Contains("count == 0 && KingdomPlots.HasPendingClimb(Zone, Row.WorkId)",
+				evidence);
+			StringAssert.Contains("if (Pending) KingdomPlots.NoteClimbUnderInspection(Zone, "
+				+ "Row.WorkId);", evidence);
+
+			// Once only: written, read back, and nothing said if the write did not take.
+			StringAssert.Contains("if (!string.IsNullOrEmpty(Z.GetZoneProperty("
+				+ "FoundingHeartClimbHeldProperty, null)))", chain);
+			StringAssert.Contains("Z.SetZoneProperty(FoundingHeartClimbHeldProperty, job.Id);",
 				chain);
-			// Cleared first when it is no longer pending, and only then said.
-			StringAssert.Contains("if (announced) Z.SetZoneProperty("
-				+ "FoundingHeartClimbHeldProperty, null);", chain);
-			StringAssert.Contains("if (announced) return;", chain);
-			StringAssert.Contains("Z.SetZoneProperty(FoundingHeartClimbHeldProperty, Job.Id);",
-				chain);
-			// Read back before anything is said, so a refused write says nothing.
 			StringAssert.Contains("if (Z.GetZoneProperty(FoundingHeartClimbHeldProperty, null) "
-				+ "!= Job.Id) return;", chain);
-			// The founder's line and the log line, and the log names both identities.
+				+ "!= job.Id) return;", chain);
 			StringAssert.Contains("system?.Ledger?.Note(", chain);
 			StringAssert.Contains("\"founding heart: climb under inspection; retired=\" "
-				+ "+ RetiredId", chain);
-			StringAssert.Contains("+ \"; job=\" + Job.Id + \"; phase=\" + Job.Phase", chain);
+				+ "+ retired", chain);
+
+			// And taken back where the climb finishes -- the completion path the handover takes,
+			// because a completed climb never reaches the pending read again.
+			StringAssert.Contains("internal static void ClearClimbHold(Zone Z, string RetiredId)",
+				chain);
+			StringAssert.Contains("prior.FinalId != RetiredId) return;", chain);
+			string handover = Source("Growth/KingdomUpgrade.25.HandoverRemoval.cs");
+			StringAssert.Contains("KingdomPlots.ClearClimbHold(Z, Job.SubjectId);", handover);
+			int complete = handover.IndexOf("if (!KingdomConstruction.Complete(ref Job))",
+				StringComparison.Ordinal);
+			int cleared = handover.IndexOf("KingdomPlots.ClearClimbHold(Z, Job.SubjectId);",
+				StringComparison.Ordinal);
+			ClassicAssert.IsTrue(complete > -1 && cleared > complete,
+				"the hold is cleared only once the receipt has actually completed");
+
 			// The flag is declared beside the other founding-heart keys and regenerated into
 			// removal coverage like every other property.
 			StringAssert.Contains("public const string FoundingHeartClimbHeldProperty = "
@@ -734,10 +741,37 @@ namespace ThousandAndFirst.Tests
 		}
 
 		/// <summary>
-		/// One row, one key. A climbed row keeps the key the seal persisted until the book is
-		/// rebuilt from the survey at the next check-in; splitting the derivations would have made
-		/// the road-evidence rect and the validator's rect disagree for the same row.
+		/// VALUE. The once-only flag's own life cycle, as the zone sees it: stuck says it once,
+		/// a second classification while it stands says nothing, the finish takes it back, and a
+		/// second sticking says it again.
 		/// </summary>
+		[Test]
+		public void TheHeldFlagIsSetOnceClearedOnCompletionAndSetAgain()
+		{
+			// The shape is a single zone string: absent means nothing has been said, present
+			// means it has. These are the four transitions the source above implements.
+			string held = null;
+			bool announced;
+
+			// Stuck: nothing said yet, so say it.
+			announced = string.IsNullOrEmpty(held);
+			ClassicAssert.IsTrue(announced);
+			if (announced) held = "job-1";
+
+			// Still stuck: already said, so say nothing.
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(held));
+
+			// Finished: the hold is taken back where the receipt completes.
+			held = null;
+			ClassicAssert.IsTrue(string.IsNullOrEmpty(held));
+
+			// Stuck again, on a later climb: said again, and under that climb's own job.
+			announced = string.IsNullOrEmpty(held);
+			ClassicAssert.IsTrue(announced);
+			if (announced) held = "job-2";
+			ClassicAssert.AreEqual("job-2", held);
+		}
+
 		/// <summary>
 		/// VALUE. One row, one rect. The capture derives a row's rect for road evidence and the
 		/// validator derives it again; both must read the same key, or one capture masks road

@@ -2,9 +2,9 @@
 
 ## Current combined heart candidate census
 
-3092 staged production C# files; 438,798 physical lines; zero at or above 300 lines.
+3092 staged production C# files; 438,817 physical lines; zero at or above 300 lines.
 1442 files with direct `XRL` imports; 3123 cold-install files. Exact inventory:
-`649ddb465915ab258d50ca34e437f7b171dc736a4132e6aef8091025d64e36f7`.
+`50cf4b5fac270d7c9895294a609ff406482f9694aaee8f3eeca3ceca4713a75c`.
 Combines #141/#144/#139/#137 over the dev hotfix backmerge. No combined gate or native proof
 is claimed yet. The inherited semantic review binds shipped main only and is stale here.
 The current draft adds the surveyed-heart physical-ingress distinction; retained predecessor

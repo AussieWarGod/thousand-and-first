@@ -291,7 +291,6 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Pending = KingdomSealPendingRules.ClimbUnderInspection("
 				+ "count == 0,", evidence);
 			StringAssert.Contains("KingdomPlots.HasPendingClimb(Zone, Row.WorkId)", evidence);
-			StringAssert.Contains("StandingBlueprint = climbed.Blueprint;", evidence);
 			StringAssert.Contains("KingdomPlots.TryChainedWorkSuccessor(Zone, Row.WorkId, "
 				+ "out GameObject proved)", evidence);
 			// Position still required, and still exactly once.

@@ -42,9 +42,7 @@ namespace ThousandAndFirst
 				SourceWork row = source[i];
 				GameObject root;
 				bool pending;
-				// The standing blueprint is yielded by the binding and deliberately NOT consumed
-				// here: see the note below on why one row has exactly one key.
-				if (!TryExactRoot(Active, row, out root, out pending, out _, out Failure))
+				if (!TryExactRoot(Active, row, out root, out pending, out Failure))
 					return pending ? KingdomInheritanceSpatialCaptureResult.Pending
 						: KingdomInheritanceSpatialCaptureResult.Malformed;
 				// ONE KEY PER ROW, AND IT IS THE PERSISTED ONE. A climbed row's root is the
@@ -56,9 +54,7 @@ namespace ThousandAndFirst
 				// while KingdomInheritanceSpatialRules recomputed the same row's rect from the
 				// other (4x4 against 8x6 on the first heart rung), so one capture would mask road
 				// cells under one footprint and validate them against another. Every derivation
-				// for a row therefore reads Record.WorkKeys[i], exactly as it always did. The
-				// standing blueprint is still carried out of the binding, because it is what
-				// names the object in a refusal.
+				// for a row therefore reads Record.WorkKeys[i], exactly as it always did.
 				string key = Record.WorkKeys[i];
 				if (!HasArchitectureEvidence(root))
 				{
