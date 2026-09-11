@@ -52,7 +52,16 @@ EVIDENCE_KEYS = (
     "scope",
     "historicalScope",
     "currentDevCoverage",
+    "inventoryDigest",
 )
+# The current dev worktree's own structural inventory digest, from
+# `python3 Tools/dev-harness-inventory.py --inventory-digest`. currentDevCoverage may only be
+# true when an evidence entry's own inventoryDigest equals this -- i.e. the ENTIRE exercised
+# runtime+harness inventory matched, never inferred from one provider file's content-identity
+# or from commit ancestry.
+CURRENT_DEV_DIGEST = "026de326a6506f4eba36b361c82c68dafe7c8384aecf938e7043313446fb891d"
+import re as _re
+_ARTIFACT_REF_PATTERN = _re.compile(r"^(/|[A-Za-z]:[\\/]|\.{1,2}/|[A-Za-z0-9_.-]+[/\\])")
 # Vague placeholder tokens that must never stand in for typed evidence.
 BANNED_EVIDENCE_SUBSTRINGS = ("prior-status", "owned-lane", "not-rerun")
 
@@ -117,6 +126,33 @@ def _validate_evidence_entry(row_id, entry, problems):
             "row %r evidence entry's evidenceDir must be null or a non-empty string"
             % (row_id,)
         )
+    digest = entry.get("inventoryDigest")
+    if digest is not None and (not isinstance(digest, str) or not digest.strip()):
+        problems.append(
+            "row %r evidence entry's inventoryDigest must be null or a non-empty string"
+            % (row_id,)
+        )
+    if entry.get("currentDevCoverage") is True and digest != CURRENT_DEV_DIGEST:
+        problems.append(
+            "row %r claims currentDevCoverage=true but inventoryDigest %r does not equal "
+            "the current dev digest %r -- currentDevCoverage requires whole-inventory "
+            "identity, not commit ancestry or one file's content-identity"
+            % (row_id, digest, CURRENT_DEV_DIGEST)
+        )
+    artifact_ref = entry.get("artifactRef")
+    if isinstance(artifact_ref, str) and artifact_ref.strip():
+        if not _ARTIFACT_REF_PATTERN.match(artifact_ref):
+            problems.append(
+                "row %r evidence entry's artifactRef %r does not look like a path "
+                "(a bare description like \"build journal (COMPLETE OK)\" is not a ref)"
+                % (row_id, artifact_ref)
+            )
+        elif artifact_ref.startswith("/") or _re.match(r"^[A-Za-z]:[\\/]", artifact_ref):
+            if not os.path.exists(artifact_ref):
+                problems.append(
+                    "row %r evidence entry's artifactRef %r is an absolute path that does "
+                    "not exist on this disk" % (row_id, artifact_ref)
+                )
 
 
 def validate(doc):

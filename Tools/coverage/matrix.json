@@ -18,19 +18,9 @@
       "save_cold_load": "not verified",
       "negative": "not verified",
       "driver": "Harness/KingdomFirstGuestNativeProvider.cs:18 (setup founds); Harness/KingdomNativeCampFounding.cs:26 (Found)",
-      "status": "NATIVE_PASS",
-      "note": "Driver Harness/KingdomFirstGuestNativeProvider.cs:18-19; content at e918538 (dev, #26) is byte-identical to the evidence-cited a64289c for this file (git diff empty), so the root-harness105-native.JNJnVO/report.tsv PASS carries forward to current dev bytes.",
-      "evidence": [
-        {
-          "commit": "e918538",
-          "evidenceDir": "root-harness105-native.JNJnVO",
-          "artifactRef": "report.tsv",
-          "verdict": "PASS - found-first-city, 11 rows, receipt-owned stop proved",
-          "scope": "synthetic same-process founding, seed #165939435; not ordinary reachability/save-load",
-          "historicalScope": true,
-          "currentDevCoverage": true
-        }
-      ]
+      "status": "EVIDENCE_UNVERIFIED",
+      "note": "Driver Harness/KingdomFirstGuestNativeProvider.cs:18-19; historical receipt cited at e918538/a64289c (root-harness105-native.JNJnVO/report.tsv) but no such directory exists on this disk (checked / and /mnt/c) -- artifactRef cannot be located, so per the typed-evidence rule this cannot be confirmed NATIVE_PASS. Current dev inventory digest 026de326a6506f4eba36b361c82c68dafe7c8384aecf938e7043313446fb891d not matched by any cited historical digest either.",
+      "evidence": null
     },
     {
       "id": 2,
@@ -41,19 +31,9 @@
       "save_cold_load": "COVERAGE_GAP",
       "negative": "COVERAGE_GAP",
       "driver": "Harness/KingdomFirstGuestNativeProvider.cs:18-19 (first-guest-setup/check)",
-      "status": "NATIVE_PASS",
-      "note": "Same evidence run and content-identity basis as row 1 (single script, two verbs).",
-      "evidence": [
-        {
-          "commit": "e918538",
-          "evidenceDir": "root-harness105-native.JNJnVO",
-          "artifactRef": "report.tsv",
-          "verdict": "PASS - first-guest-native-check, 135 rows, receipt-owned stop proved",
-          "scope": "synthetic same-process founding, seed #165939435; not ordinary reachability/save-load",
-          "historicalScope": true,
-          "currentDevCoverage": true
-        }
-      ]
+      "status": "EVIDENCE_UNVERIFIED",
+      "note": "Same basis as row 1 (single script, two verbs); root-harness105-native.JNJnVO not located on this disk.",
+      "evidence": null
     },
     {
       "id": 3,
@@ -91,16 +71,17 @@
       "negative": "NATIVE_PASS (veto path)",
       "driver": "Harness/KingdomRaidDeathNativeProvider.cs, KingdomRaidDeathVetoNativeProvider.cs, KingdomRaidRecoveryDeathNativeProvider.cs",
       "status": "NATIVE_PASS",
-      "note": "Driver Harness/KingdomRaidDeathNativeProvider.cs (be3f13a). git diff a4d61a9(#9) be3f13a for this file is empty -> content-identical, so the case28b.1 native evidence carries forward to current dev bytes. KingdomRaidDeathVetoNativeProvider.cs/KingdomRaidRecoveryDeathNativeProvider.cs share this same evidence run per docs/STATUS.md.",
+      "note": "Driver Harness/KingdomRaidDeathNativeProvider.cs (be3f13a); real artefact verified present at /mnt/c/taf-raid-death-fixed.nf0IMW/journal-raid-death-native-check.tsv on this disk. currentDevCoverage=false: that run's own cited inventory digest (980afeb7...) is the case28b.1 structural census, not the CURRENT dev digest (026de326...) -- content-identity of one provider file (previously checked) is NOT the same claim as whole-inventory identity, corrected per this round's instruction.",
       "evidence": [
         {
           "commit": "be3f13a",
-          "evidenceDir": "taf-raid-death-fixed.nf0IMW",
-          "artifactRef": "Player.log (native90794 TERMINAL0)",
+          "evidenceDir": "/mnt/c/taf-raid-death-fixed.nf0IMW",
+          "artifactRef": "/mnt/c/taf-raid-death-fixed.nf0IMW/journal-raid-death-native-check.tsv",
           "verdict": "PASS - all three real deaths/six callbacks, exact unchanged pending authority through final removal, one post-removal activation result, seed #1012029",
           "scope": "synthetic developer evidence; ordinary play, recovery and save/load stay unsigned",
           "historicalScope": true,
-          "currentDevCoverage": true
+          "inventoryDigest": "980afeb740331d69030591f1a6a27c575e9b61bd4448c05fe841f7b0cbeab6cb",
+          "currentDevCoverage": false
         }
       ]
     },
@@ -114,25 +95,27 @@
       "negative": "COVERAGE_GAP",
       "driver": "camp-builder-owned Quickstart build harness for the Quickstart leg; this pass's teardown-setup independently exercises the same KingdomCommission.Commission for a non-Quickstart camp (Harness/KingdomTeardownNativeProvider.cs:19)",
       "status": "NATIVE_PASS",
-      "note": "3cf2825 is a direct ancestor of the current dev base (verified). Completion-to-built (IsFunctionallyBuilt) and save/cold-load of the FINISHED building are a separate gap pending a dedicated camp lifecycle driver -- not covered by this evidence.",
+      "note": "3cf2825 is a direct ancestor of current dev (git-verified), but that is commit ancestry, NOT whole-inventory identity: docs/STATUS.md's 3cf2825 section cites no inventory SHA-256 at all (checked), so inventoryDigest is recorded null and currentDevCoverage is false, not assumed true from ancestry alone. Real artefacts verified present on this disk at the paths above. Completion-to-built and save/cold-load of the FINISHED building remain a separate gap.",
       "evidence": [
         {
           "commit": "3cf2825",
           "evidenceDir": "hotfix142-native.epWuUn",
-          "artifactRef": "build journal (COMPLETE OK)",
+          "artifactRef": "/home/r/work/taf-scratch/hotfix142-native.epWuUn/marsh-no-build/scenario-journal.tsv",
           "verdict": "PASS - quote/CanPay/Commission build journal",
           "scope": "quote/CanPay/Commission legs only",
           "historicalScope": true,
-          "currentDevCoverage": true
+          "inventoryDigest": null,
+          "currentDevCoverage": false
         },
         {
           "commit": "3cf2825",
           "evidenceDir": "hotfix142-native.IqS6Jj",
-          "artifactRef": "results.json (six-pair save/load matrix)",
+          "artifactRef": "/home/r/work/taf-scratch/hotfix142-native.IqS6Jj/results.json",
           "verdict": "PASS - six-pair save/load matrix",
           "scope": "quote/CanPay/Commission legs only",
           "historicalScope": true,
-          "currentDevCoverage": true
+          "inventoryDigest": null,
+          "currentDevCoverage": false
         }
       ]
     },
@@ -198,61 +181,47 @@
       "negative": "NATIVE_PASS (veto/recovery paths exist)",
       "driver": "Harness/KingdomRaidContactNativeProvider.cs, KingdomRaidLaunchNativeProvider.cs, KingdomRaidMasterTurnNativeProvider.cs, KingdomRaidRecoveryGuardsNativeProvider.cs, KingdomRaidRecoveryTurnNativeProvider.cs, KingdomRaidRecoveryReturnNativeProvider.cs, KingdomRaidOutboxNativeProvider.cs",
       "status": "NATIVE_PASS",
-      "note": "Aggregate row spans 5 driver classes; each sub-evidence content-verified content-identical (git diff empty) between its cited historical commit and the current dev-ancestor commit that last touched that provider file (be3f13a squash for contact/death/recovery, 7d331fe and b572ede as direct ancestors for launch/outbox). Full multi-raid/multi-city interaction remains a coverage gap.",
+      "note": "Aggregate row spans 5 driver classes; 4 sub-legs (contact, death, recovery-guards, recovery-turn) have a real, located artefact on this disk under /mnt/c/ and are kept as NATIVE_PASS evidence, all with currentDevCoverage=false (cited historical digests, where any exist, do not equal the current dev digest 026de326...; no digest was ancestry-inferred). The launch (taf-native-raid-warning-clean.zqlWbN) and outbox (taf-native-raid.XMFQ5q) sub-legs were removed from the evidence list: neither directory was found on this disk (checked / and /mnt/c), so per this round's artifactRef rule they cannot be confirmed and are GAP, not PASS, for this row's aggregate. Full multi-raid/multi-city interaction remains a coverage gap regardless.",
       "evidence": [
         {
           "commit": "be3f13a",
-          "evidenceDir": "taf-raid-contact-fixed.Dcjzs3",
-          "artifactRef": "README.md",
+          "evidenceDir": "/mnt/c/taf-raid-contact-fixed.Dcjzs3",
+          "artifactRef": "/mnt/c/taf-raid-contact-fixed.Dcjzs3/journal-raid-contact-native-check.tsv",
           "verdict": "PASS - foreign-zone/restored-contact debit exact, no quarantine, seed native14492",
           "scope": "synthetic component evidence; ordinary play/save-load untested",
           "historicalScope": true,
-          "currentDevCoverage": true
-        },
-        {
-          "commit": "7d331fe",
-          "evidenceDir": "taf-native-raid-warning-clean.zqlWbN",
-          "artifactRef": "raid-launch-native-a/-b1 raw logs",
-          "verdict": "PASS 2/2 - real per-actor Create/Add/Activate, no remint on second activation",
-          "scope": "synthetic founding/store/incident/Steading/party setup; model wire round trip only, not game save/load",
-          "historicalScope": true,
-          "currentDevCoverage": true
+          "inventoryDigest": "3f0d1dde39c6a07cfd6cbad9f9888833b9ca0837bceec7918cb910260e1e9688",
+          "currentDevCoverage": false
         },
         {
           "commit": "be3f13a",
-          "evidenceDir": "taf-raid-death-fixed.nf0IMW",
-          "artifactRef": "Player.log (native90794 TERMINAL0)",
+          "evidenceDir": "/mnt/c/taf-raid-death-fixed.nf0IMW",
+          "artifactRef": "/mnt/c/taf-raid-death-fixed.nf0IMW/journal-raid-death-native-check.tsv",
           "verdict": "PASS - see row 5",
           "scope": "same as row 5",
           "historicalScope": true,
-          "currentDevCoverage": true
+          "inventoryDigest": "980afeb740331d69030591f1a6a27c575e9b61bd4448c05fe841f7b0cbeab6cb",
+          "currentDevCoverage": false
         },
         {
           "commit": "be3f13a",
-          "evidenceDir": "taf-raid-recovery-guards.6Dnfup",
-          "artifactRef": "Player.log",
+          "evidenceDir": "/mnt/c/taf-raid-recovery-guards-native.6Dnfup",
+          "artifactRef": "/mnt/c/taf-raid-recovery-guards-native.6Dnfup/journal-raid-recovery-guards-native-check.tsv",
           "verdict": "PASS - controlled native recovery-guard API proof",
           "scope": "synthetic component evidence",
           "historicalScope": true,
-          "currentDevCoverage": true
+          "inventoryDigest": null,
+          "currentDevCoverage": false
         },
         {
           "commit": "be3f13a",
-          "evidenceDir": "taf-raid-recovery-turn-native.X0VMU8",
-          "artifactRef": "README.md",
+          "evidenceDir": "/mnt/c/taf-raid-recovery-turn-native.X0VMU8",
+          "artifactRef": "/mnt/c/taf-raid-recovery-turn-native.X0VMU8/journal-raid-recovery-turn-native-check.tsv",
           "verdict": "PASS - real-turn recovery proof",
           "scope": "synthetic engine-turn coverage, not ordinary play",
           "historicalScope": true,
-          "currentDevCoverage": true
-        },
-        {
-          "commit": "b572ede",
-          "evidenceDir": "taf-native-raid.XMFQ5q",
-          "artifactRef": "Player.log",
-          "verdict": "PASS 6/6 - local Chronicle/ledger/message/deed delivery, idempotence, quarantine recovery through replay/retirement",
-          "scope": "synthetic; realm unfounded before/after",
-          "historicalScope": true,
-          "currentDevCoverage": true
+          "inventoryDigest": null,
+          "currentDevCoverage": false
         }
       ]
     },
@@ -279,16 +248,17 @@
       "negative": "NATIVE_PASS (overflow path)",
       "driver": "Harness/KingdomDepositOverflowNativeProvider.cs (deposit/overflow); this pass's teardown scenario exercises strike-salvage return with an exact computed delta",
       "status": "NATIVE_PASS",
-      "note": "Driver Harness/KingdomDepositOverflowNativeProvider.cs. git diff 2f90a5f 6ba1969 for this file is empty -> content-identical; 6ba1969 (#129) is the current-dev-ancestor commit. Strike-salvage leg is a SEPARATE row (7, teardown), IMPLEMENTED_UNEXECUTED, not covered here.",
+      "note": "Driver Harness/KingdomDepositOverflowNativeProvider.cs. Real artefact verified present at the path above on this disk. currentDevCoverage=false: no inventory digest was cited for this run in docs/STATUS.md's overflow section (checked), so it cannot equal the current dev digest 026de326... -- recorded honestly as unmatched rather than inferred from commit content-identity. Strike-salvage leg is row 7, IMPLEMENTED_UNEXECUTED.",
       "evidence": [
         {
           "commit": "6ba1969",
           "evidenceDir": "root-overflow129-integrated-native.CcZZhl",
-          "artifactRef": "Player.log (13 journal rows)",
+          "artifactRef": "/home/r/work/taf-scratch/root-overflow129-integrated-native.CcZZhl/journal-deposit-overflow-native-check.tsv",
           "verdict": "PASS - deposit-overflow-native-check, seed #165939435, profile W0JAK2, 4/4 cases",
           "scope": "synthetic stacks/NeverStack/allocated identities; ordinary reachability, Charter, save/load and release acceptance are not claimed",
           "historicalScope": true,
-          "currentDevCoverage": true
+          "inventoryDigest": null,
+          "currentDevCoverage": false
         }
       ]
     },
@@ -354,16 +324,17 @@
       "negative": "NATIVE_PASS (fail-closed refusal paths)",
       "driver": "Harness/KingdomSealRoadlessNativeProvider.cs",
       "status": "NATIVE_PASS",
-      "note": "Driver Harness/KingdomSealRoadlessNativeProvider.cs. Evidence commit 0cfd8e7 (docs/STATUS.md diff at d9a29c3); git diff 0cfd8e7 bcca3e5 for this file is empty -> content-identical; bcca3e5 (#135) is the current-dev-ancestor commit. No named /tmp evidenceDir was given in the source text, only the sealed profile H5UoPk -- recorded as evidenceDir: null with the profile named in artifactRef.",
+      "note": "Driver Harness/KingdomSealRoadlessNativeProvider.cs. Real artefact verified present at /mnt/c/taf-scenario.H5UoPk/scenario-journal.tsv on this disk. currentDevCoverage=false: no inventory digest was located tied to this exact run in docs/STATUS.md (checked near d9a29c3's diff), so it cannot be confirmed equal to the current dev digest -- not inferred from bcca3e5's commit ancestry alone.",
       "evidence": [
         {
           "commit": "bcca3e5",
-          "evidenceDir": null,
-          "artifactRef": "Player.log (63 journal rows), retry profile H5UoPk",
+          "evidenceDir": "/mnt/c/taf-scenario.H5UoPk",
+          "artifactRef": "/mnt/c/taf-scenario.H5UoPk/scenario-journal.tsv",
           "verdict": "PASS 7/7 verbs - typed Pending capture unchanged across two real 2400-turn intervals, exactly one pending notice",
           "scope": "synthetic roadless-camp/daily-capture case; not ordinary-play/save-load/terminal/inheritance/release",
           "historicalScope": true,
-          "currentDevCoverage": true
+          "inventoryDigest": null,
+          "currentDevCoverage": false
         }
       ]
     },
@@ -376,19 +347,9 @@
       "save_cold_load": "NATIVE_PASS (dedicated save provider exists)",
       "negative": "COVERAGE_GAP",
       "driver": "Harness/KingdomSubsidenceNativeProvider.cs, KingdomSubsidenceRungNativeProvider.cs, KingdomSubsidenceRungSaveProvider.cs",
-      "status": "NATIVE_PASS",
-      "note": "Driver Harness/KingdomSubsidenceNativeProvider.cs etc. 7d331fe is itself a direct ancestor of the current dev base (verified), and is the exact base the evidence table in docs/STATUS.md is anchored to. Interrupted-mid-step path remains a coverage gap.",
-      "evidence": [
-        {
-          "commit": "7d331fe",
-          "evidenceDir": "taf-native-subsidence.a9XJXf",
-          "artifactRef": "raw logs",
-          "verdict": "PASS 13/13 managed + 3/3 bounded native checks, sealed kvjIzc",
-          "scope": "synthetic stage/elapsed setup; no world-turn/breakpoint/ordinary-play/save-load acceptance",
-          "historicalScope": true,
-          "currentDevCoverage": true
-        }
-      ]
+      "status": "EVIDENCE_UNVERIFIED",
+      "note": "Driver Harness/KingdomSubsidenceNativeProvider.cs etc. Historical receipt cited at 7d331fe (taf-native-subsidence.a9XJXf) but that directory was not found on this disk (checked / and /mnt/c) -- artifactRef cannot be located. 7d331fe being a direct dev ancestor is commit reachability, not proof the evidence directory still exists or that its whole-inventory census equals the current dev digest 026de326...; corrected per this round's instruction not to infer currentDevCoverage from ancestry. Interrupted-mid-step path remains a coverage gap regardless.",
+      "evidence": null
     }
   ],
   "combinations": [

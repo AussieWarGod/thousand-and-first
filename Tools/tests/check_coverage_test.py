@@ -35,11 +35,12 @@ def _evidence_entry(**overrides):
     entry = {
         "commit": "abc1234",
         "evidenceDir": "some-evidence-dir",
-        "artifactRef": "report.tsv",
+        "artifactRef": "some-evidence-dir/report.tsv",
         "verdict": "PASS - real thing happened",
         "scope": "synthetic setup, disclosed",
         "historicalScope": True,
-        "currentDevCoverage": True,
+        "currentDevCoverage": False,
+        "inventoryDigest": None,
     }
     entry.update(overrides)
     return entry
@@ -54,7 +55,9 @@ class CoverageMatrixSchemaTest(unittest.TestCase):
         doc = check_coverage.load(MATRIX_PATH)
         tally = check_coverage.counts(doc)
         self.assertEqual(tally["TOTAL"], len(doc["rows"]))
-        self.assertEqual(sum(v for k, v in tally.items() if k != "TOTAL"), tally["TOTAL"])
+        self.assertEqual(
+            sum(v for k, v in tally.items() if k != "TOTAL"), tally["TOTAL"]
+        )
 
     def test_unknown_status_token_is_rejected(self):
         doc = _base_doc()
@@ -110,6 +113,56 @@ class CoverageMatrixSchemaTest(unittest.TestCase):
         problems = check_coverage.validate(doc)
         self.assertTrue(any("non-null evidence field" in p for p in problems))
 
+    def test_current_dev_coverage_true_requires_matching_inventory_digest(self):
+        doc = _base_doc()
+        doc["rows"][0]["status"] = "NATIVE_PASS"
+        doc["rows"][0]["evidence"] = [
+            _evidence_entry(
+                currentDevCoverage=True, inventoryDigest="not-the-current-digest"
+            )
+        ]
+        problems = check_coverage.validate(doc)
+        self.assertTrue(
+            any("does not equal the current dev digest" in p for p in problems)
+        )
+
+    def test_current_dev_coverage_true_with_the_real_current_digest_is_accepted(self):
+        doc = _base_doc()
+        doc["rows"][0]["status"] = "NATIVE_PASS"
+        doc["rows"][0]["evidence"] = [
+            _evidence_entry(
+                currentDevCoverage=True,
+                inventoryDigest=check_coverage.CURRENT_DEV_DIGEST,
+            )
+        ]
+        self.assertEqual(check_coverage.validate(doc), [])
+
+    def test_artifact_ref_bare_description_is_rejected(self):
+        doc = _base_doc()
+        doc["rows"][0]["status"] = "NATIVE_PASS"
+        doc["rows"][0]["evidence"] = [
+            _evidence_entry(artifactRef="build journal (COMPLETE OK)")
+        ]
+        problems = check_coverage.validate(doc)
+        self.assertTrue(any("does not look like a path" in p for p in problems))
+
+    def test_artifact_ref_absolute_path_that_does_not_exist_is_rejected(self):
+        doc = _base_doc()
+        doc["rows"][0]["status"] = "NATIVE_PASS"
+        doc["rows"][0]["evidence"] = [
+            _evidence_entry(
+                artifactRef="/definitely/not/a/real/path/on/this/machine.tsv"
+            )
+        ]
+        problems = check_coverage.validate(doc)
+        self.assertTrue(any("does not exist on this disk" in p for p in problems))
+
+    def test_artifact_ref_absolute_path_that_exists_is_accepted(self):
+        doc = _base_doc()
+        doc["rows"][0]["status"] = "NATIVE_PASS"
+        doc["rows"][0]["evidence"] = [_evidence_entry(artifactRef=MATRIX_PATH)]
+        self.assertEqual(check_coverage.validate(doc), [])
+
     def test_duplicate_row_id_is_rejected(self):
         doc = _base_doc()
         doc["rows"].append(dict(doc["rows"][0]))
@@ -129,19 +182,35 @@ class CoverageMatrixSchemaTest(unittest.TestCase):
 
     def test_combination_referencing_unknown_row_id_is_rejected(self):
         combo = {
-            "id": "CX", "name": "x", "rows": [9999], "coupling": "x",
-            "prerequisites": "x", "invariants": "x", "seed_turn_matrix": "x",
-            "expected_failure_rows": "x", "reusable_seams": "x", "status": "NONE",
+            "id": "CX",
+            "name": "x",
+            "rows": [9999],
+            "coupling": "x",
+            "prerequisites": "x",
+            "invariants": "x",
+            "seed_turn_matrix": "x",
+            "expected_failure_rows": "x",
+            "reusable_seams": "x",
+            "status": "NONE",
             "evidence": None,
         }
-        problems = check_coverage.validate_combinations({"combinations": [combo]}, {1, 2})
+        problems = check_coverage.validate_combinations(
+            {"combinations": [combo]}, {1, 2}
+        )
         self.assertTrue(any("unknown behaviour row id" in p for p in problems))
 
     def test_combination_pass_status_with_no_evidence_is_rejected(self):
         combo = {
-            "id": "CX", "name": "x", "rows": [1], "coupling": "x",
-            "prerequisites": "x", "invariants": "x", "seed_turn_matrix": "x",
-            "expected_failure_rows": "x", "reusable_seams": "x", "status": "NATIVE_PASS",
+            "id": "CX",
+            "name": "x",
+            "rows": [1],
+            "coupling": "x",
+            "prerequisites": "x",
+            "invariants": "x",
+            "seed_turn_matrix": "x",
+            "expected_failure_rows": "x",
+            "reusable_seams": "x",
+            "status": "NATIVE_PASS",
             "evidence": None,
         }
         problems = check_coverage.validate_combinations({"combinations": [combo]}, {1})
