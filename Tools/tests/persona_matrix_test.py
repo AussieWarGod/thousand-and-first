@@ -563,7 +563,7 @@ class ShippedPersonaTest(unittest.TestCase):
         return cases
 
     def test_every_persona_parses(self):
-        self.assertEqual(90, len(self.personas()))
+        self.assertEqual(91, len(self.personas()))
         for path in self.personas():
             found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
             self.assertTrue(found["REQUEST"])
@@ -719,6 +719,21 @@ class ShippedPersonaTest(unittest.TestCase):
                 line.split()[0]
                 for line in profile.parse_script(found["SCRIPT_WORDS"].split(), extra)
             ]
+            # A quickstart-lifecycle persona's first sealed line is the boot command itself, never
+            # an EXPECT verb name (KingdomScenarioAutoRunner never dispatches it) -- Quickstart's
+            # own boot machinery instead journals a leading run of QUICKSTART_EVIDENCE_ROWS for
+            # that ONE sealed line, before the AutoRunner's own verbs ever run. Strip that leading
+            # run so the remaining comparison still holds the same prefix law the ordinary case
+            # already enforces.
+            if sealed and sealed[0] == matrix.QUICKSTART_LIFECYCLE_VERB:
+                boot_rows = 0
+                for verb in expected:
+                    if verb not in matrix.QUICKSTART_EVIDENCE_ROWS:
+                        break
+                    boot_rows += 1
+                self.assertGreater(boot_rows, 0, path.name)
+                expected = expected[boot_rows:]
+                sealed = sealed[1:]
             # The script may stop early on a declared refusal, so expectations are a PREFIX of the
             # sealed verbs - never a different list, and never longer.
             self.assertLessEqual(len(expected), len(sealed), path.name)

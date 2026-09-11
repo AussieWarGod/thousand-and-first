@@ -71,15 +71,66 @@ namespace ThousandAndFirst.Tests
 		{
 			string provider = Read("Harness/KingdomQuickstartLifecycleProvider.cs");
 			string checker = Read(Checker);
-			string persona = Read("Tools/personas/lifecycle-stockpile-native-check.persona");
+			// The Quickstart-lifecycle persona (ZAP-034 root ruling): the settlement's boot phase
+			// already ran the exact quote/CanPay/commission sequence, so this persona's own
+			// SCRIPT/VERBS deliberately omit lifecycle-build -- running it again would only refuse
+			// "this lifecycle already commissioned its one job". The founding-road persona below
+			// still seals all four verbs; only the vocabulary each persona SEALS differs.
+			string quickstartPersona = Read("Tools/personas/lifecycle-stockpile-native-check.persona");
+			string foundingPersona = Read("Tools/personas/lifecycle-founding-road-refusal.persona");
 			foreach (string verb in new[] { "lifecycle-open", "lifecycle-build", "lifecycle-grown",
 				"lifecycle-save" })
 			{
 				StringAssert.Contains("\"" + verb + "\"", provider);
 				StringAssert.Contains("\"" + verb + "\"", checker);
-				StringAssert.Contains(verb, persona);
+				StringAssert.Contains(verb, quickstartPersona);
+				StringAssert.Contains(verb, foundingPersona);
 			}
-			StringAssert.Contains("VERBS=lifecycle-open,lifecycle-build,lifecycle-grown,lifecycle-save", persona);
+			StringAssert.Contains("VERBS=lifecycle-open,lifecycle-grown,lifecycle-save", quickstartPersona);
+			StringAssert.Contains("VERBS=lifecycle-open,lifecycle-build,lifecycle-grown,lifecycle-save", foundingPersona);
+			StringAssert.Contains("SCRIPT=quickstart-lifecycle marsh yes;", quickstartPersona);
+			StringAssert.DoesNotContain(";lifecycle-build;", quickstartPersona);
+		}
+
+		/// <summary>Sealed-script equality (ZAP-034): each lifecycle persona's SCRIPT= line, pinned
+		/// exactly, so a future edit to either changes a test rather than silently drifting from
+		/// what the harness actually expects.</summary>
+		[Test]
+		public void SealedScriptsAreExactlyPinnedForBothLifecycleRoads()
+		{
+			string quickstartPersona = Read("Tools/personas/lifecycle-stockpile-native-check.persona");
+			string foundingPersona = Read("Tools/personas/lifecycle-founding-road-refusal.persona");
+			StringAssert.Contains(
+				"SCRIPT=quickstart-lifecycle marsh yes;stagedigest;lifecycle-open;advance 2400;"
+					+ "lifecycle-grown;lifecycle-save;stagedigest",
+				quickstartPersona);
+			StringAssert.Contains(
+				"SCRIPT=stagedigest;realize;lifecycle-open;advance 100;lifecycle-open;advance 100;"
+					+ "lifecycle-open;advance 100;lifecycle-open;advance 100;lifecycle-open;advance 100;"
+					+ "lifecycle-open;lifecycle-build;advance 2400;lifecycle-grown;lifecycle-save;stagedigest",
+				foundingPersona);
+		}
+
+		/// <summary>The Quickstart road (ZAP-034): the runner is added, but only under the
+		/// lifecycle command, and the runner never re-strips or skips a real Quickstart camp's
+		/// own boot line.</summary>
+		[Test]
+		public void TheQuickstartRoadWiresTheRunnerWithoutTouchingProductionQuickstart()
+		{
+			string patch = Read("Harness/KingdomQuickstartLifecycleRunnerPatch.cs");
+			StringAssert.Contains("[HarmonyPatch(typeof(QudGamemodeModule), \"bootGame\")]", patch);
+			StringAssert.Contains("KingdomQuickstartBootTest.LifecycleRequested", patch);
+			StringAssert.Contains("game.RequireSystem<KingdomScenarioAutoRunner>()", patch);
+			string runner = Read("Harness/KingdomScenarioAutoRunner.cs");
+			StringAssert.Contains("KingdomQuickstartBootTest.LifecycleRequested", runner);
+			StringAssert.Contains("quickstartLifecycle", runner);
+			// No re-strip and no line-0 dispatch under the lifecycle command; every other profile
+			// keeps its unconditional re-strip and its Cursor = 0.
+			StringAssert.Contains("if (!quickstartLifecycle)", runner);
+			StringAssert.Contains("Cursor = quickstartLifecycle ? 1 : 0;", runner);
+			// TheQuickstartLifecycleAuthorityIsScopedAndLeavesTheOldProfilesAlone (above) already
+			// pins that boot/build/save never construct or require the runner themselves; this
+			// new patch file is the one and only place that does, and only under Lifecycle.
 		}
 
 		/// <summary>The turn-driven step refuses rather than passes when the job has not

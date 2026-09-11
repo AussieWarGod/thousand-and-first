@@ -76,6 +76,28 @@ SCRIPT_VERBS = (
 COUNTED_VERB = "advance"
 MAX_ADVANCE_TURNS = 10000
 
+# The one Quickstart command a script may open with (Harness/KingdomQuickstartBootRequest.cs
+# LifecycleVerb). Unlike every other sealable step it is three words long and may appear
+# only as the very first step; the ordinary AutoRunner verbs that follow it are parsed
+# exactly as they always were. Must equal Tools/scenario_profile.py
+# QUICKSTART_LIFECYCLE_VERB/QUICKSTART_PROFILES.
+QUICKSTART_LIFECYCLE_VERB = "quickstart-lifecycle"
+QUICKSTART_PROFILES = ("marsh", "canyon", "dunes")
+
+# The Quickstart production evidence rows a quickstart-lifecycle boot lands BEFORE the
+# AutoRunner ever starts (Harness/KingdomQuickstartBootTest.cs, Harness/
+# KingdomQuickstartBuildTest.cs). Not bookkeeping -- they are the substantive evidence a
+# quickstart-flavoured persona pins -- but their SHOUTING-CASE names fall outside the
+# lowercase-only VERBS= alphabet, so they are named here once instead of forcing every such
+# persona to widen VERB_ALPHABET. Mirrors Tools/check-quickstart-lifecycle.py BOOT_ROWS +
+# BUILD_ROWS, plus the lifecycle-only stamp row.
+QUICKSTART_EVIDENCE_ROWS = (
+    "QUICKSTART-BOOT-BEGIN", "QUICKSTART-BOOT-OBSERVED", "QUICKSTART-BOOT-COMPLETE",
+    "QUICKSTART-BUILD-BEGIN", "QUICKSTART-BUILD-QUOTE", "QUICKSTART-BUILD-CANPAY",
+    "QUICKSTART-BUILD-COMMISSION", "QUICKSTART-BUILD-COMPLETE",
+    "QUICKSTART-LIFECYCLE-PROFILE",
+)
+
 # The second counted verb. `yield-frames <frames>` hands the engine back its own render loop, which
 # an advance never does: advance keeps the engine out of XRLCore.PlayerTurn on purpose, and that is
 # exactly where the per-frame BeforeRenderEvent dispatch lives. Must equal
@@ -300,11 +322,26 @@ def script_words(script: str, name: str, extra: tuple[str, ...] = ()) -> list[st
     else:
         steps = [step.strip() for step in script.split(";")]
     words: list[str] = []
-    for step in steps:
+    for index, step in enumerate(steps):
         if not step:
             fail("%s SCRIPT declares an empty verb" % name)
         parts = step.split()
-        if parts[0] in COUNTED_VERBS:
+        if parts[0] == QUICKSTART_LIFECYCLE_VERB:
+            if index != 0:
+                fail(
+                    "%s SCRIPT names %r after its first step; a Quickstart command may "
+                    "appear only once, at the start" % (name, QUICKSTART_LIFECYCLE_VERB)
+                )
+            if (
+                len(parts) != 3
+                or parts[1] not in QUICKSTART_PROFILES
+                or parts[2] not in ("yes", "no")
+            ):
+                fail(
+                    "%s SCRIPT step %r needs exactly '%s <marsh|canyon|dunes> <yes|no>'"
+                    % (name, step, QUICKSTART_LIFECYCLE_VERB)
+                )
+        elif parts[0] in COUNTED_VERBS:
             bound = COUNTED_VERBS[parts[0]]
             if len(parts) != 2:
                 fail(
@@ -362,7 +399,10 @@ def parse_expect(
                 "%s EXPECT item %r is not '<verb>:OK' or '<verb>:REFUSED'"
                 % (name, item)
             )
-        if verb not in SCRIPT_VERBS and verb not in COUNTED_VERBS and verb not in extra:
+        if (
+            verb not in SCRIPT_VERBS and verb not in COUNTED_VERBS and verb not in extra
+            and verb not in QUICKSTART_EVIDENCE_ROWS
+        ):
             fail("%s EXPECT item %r names an unsealable verb" % (name, item))
         parsed.append((verb, outcome, wanted.strip()))
     return parsed
