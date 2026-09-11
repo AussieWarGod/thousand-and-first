@@ -2209,7 +2209,16 @@ def _read_json_blob_at_commit(repository_root: Path, commit: str, relative_path:
             check=True,
             capture_output=True,
         )
-    except (OSError, subprocess.CalledProcessError) as error:
+    except subprocess.CalledProcessError as error:
+        stderr_text = (error.stderr or b"").decode("utf-8", errors="replace")
+        if "does not exist" in stderr_text or "exists on disk, but not in" in stderr_text:
+            raise ValidationError(
+                f"release evidence artifact is absent from HEAD: {relative_path}"
+            ) from error
+        raise ValidationError(
+            f"cannot read {relative_path!r} at commit {commit}: {error}"
+        ) from error
+    except OSError as error:
         raise ValidationError(
             f"cannot read {relative_path!r} at commit {commit}: {error}"
         ) from error

@@ -1355,7 +1355,7 @@ class AtCommitArtifactRefCollectionTest(unittest.TestCase):
             "docs/release-evidence/longform-results.json",
             {"logRef": "docs/release-evidence/longform.log"},
         )
-        with self.assertRaisesRegex(METADATA.ValidationError, "cannot read"):
+        with self.assertRaisesRegex(METADATA.ValidationError, "absent from HEAD"):
             METADATA.release_evidence_artifact_refs(
                 "docs/RELEASE_EVIDENCE.json", repository_root=self.root, at_commit=commit
             )
@@ -1363,7 +1363,7 @@ class AtCommitArtifactRefCollectionTest(unittest.TestCase):
     def test_top_level_evidence_missing_from_head_fails(self) -> None:
         self._write("README.md", "fixture repo, no evidence document committed")
         commit = self._commit_everything()
-        with self.assertRaisesRegex(METADATA.ValidationError, "cannot read"):
+        with self.assertRaisesRegex(METADATA.ValidationError, "absent from HEAD"):
             METADATA.release_evidence_artifact_refs(
                 "docs/RELEASE_EVIDENCE.json", repository_root=self.root, at_commit=commit
             )
@@ -1516,7 +1516,7 @@ class PackagePathCliSequenceTest(unittest.TestCase):
             head,
         )
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("cannot read", result.stderr)
+        self.assertIn("absent from HEAD", result.stderr)
 
 
 
