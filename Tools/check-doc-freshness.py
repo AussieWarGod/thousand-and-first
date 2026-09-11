@@ -637,7 +637,7 @@ def audit_public_release_status(problems):
         "`0.2.0` working tree is not a release package",
         "Once the public Alpha item exists",
     )
-    require(problems, "TESTING.md", "current public Alpha manifest is `0.3.2`")
+    require(problems, "TESTING.md", "current public Alpha manifest is `0.3.3`")
     forbid(
         problems,
         "TESTING.md",
@@ -754,7 +754,7 @@ def audit_public(problems):
     require(
         problems,
         "README.md",
-        "0.3.2 public Alpha playtest",
+        "0.3.3 public Alpha playtest",
         "Back up saves before updating",
         "plots: lots reserve typed space",
         "r_ThousandAndFirst",

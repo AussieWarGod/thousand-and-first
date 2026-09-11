@@ -2,12 +2,64 @@
 
 **Snapshot:** 2026-09-11
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
-**Next public version:** 0.3.3 stockpile hotfix in preparation; not published
-**Working candidate manifest:** 0.3.3 private Alpha candidate; not uploaded.
-Public Workshop remains the 0.3.2 public Alpha playtest, complete and finalized — see [Public 0.3.2](#public-032) below.
+**Current public version:** 0.3.3 stockpile hotfix; published, verified and finalized.
+**Working manifest:** 0.3.3 public Alpha playtest.
+The prior 0.3.2 public Alpha playtest remains documented under [Public 0.3.2](#public-032).
 **Dev integration:** main hotfix backmerged alongside unreleased beta work; not a release candidate.
 **Beta gates:** tracked in issues #58–#70 and the retained [gap report](BETA-GAP-REPORT-2026-09-09.md).
 Issue #68 was closed by the author; remaining heart endgame debt is tracked in #144.
+
+**Retained failed pre-upload run:** `34576910338` at the original `v0.3.3` tag
+(`277f4523f4a2bea13ec548ea05c07ef2678bb03d`) passed Linux and Windows suites but refused
+package reproduction: `release TESTING.md differs from subscribed private candidate`.
+The public-version protocol edit had been made after receipt binding. Publisher, verification,
+and finalization were all skipped: no public Steam attempt or upload occurred.
+Recovery candidate `16ed2b35a1516577cce2d5d15c922a1a1436a504` binds that same protocol
+before promotion, with unchanged private runtime and receipt. No guard is weakened.
+The author explicitly approved replacing this unshipped tag while preserving its original
+tag object and failed run. Recovery uses normal protected integration and exact-lease tag
+replacement; no package gate or test requirement is waived.
+
+## Public 0.3.3 — published and finalized
+
+[Release run 34577908711](https://github.com/AussieWarGod/thousand-and-first/actions/runs/34577908711)
+completed successfully at `84be52324f45aae75923362cef7a332a3003eebb` (normal protected
+[PR #150](https://github.com/AussieWarGod/thousand-and-first/pull/150) merge).
+Public item `3794797472`, attempt `0003`: submission reported
+`SubmittedUnverified`, `metadataMatches=true`, `contentUnchanged=true`; verification and
+finalization then reported `SubscribedInstallationVerified`, `attemptFinalized=true`.
+
+- Plan: `875a5819dfa8a41c85da4e6318ccd125a80923ca69ab3af630ea4f1aeb530097`.
+- Package receipt (3100 files): `e74205d357deb5f1f41e5ac0bed76842b29118f77c2f6c2f95575c73e1bf60d3`.
+- Installed inventory: `f0f79bb1976e07c1169f5dc3ac26e351e0128c7df88df45d34f3d45b9e1fce44`.
+- Finalization: `c97cd5f7ea9c7c34d69e79fd9bd8648326d8ef180c99cd09de031113e7fffd57`.
+- Canonical gate log: `e0e2637e1e52372d62354414c6ad480af0377355e8e648edbe8aca43ade50855`.
+
+All eleven canonical precheck stages passed; licensed suites passed 14112 and 5246 cases,
+zero managed skips, and the executable launcher harness passed 46 cases. The three
+PACKAGE/COPY/BACKUP bind-alias fixtures retained explicit environment-limited skips; this
+is not a zero-total-skips claim. Raw evidence is retained under
+`C:\taf-release\run-34577908711-1`.
+
+Verification proves **one subscribed client**, not all subscribers or a fresh transfer:
+`freshTransferVerified=false`, `releaseReady=false`. Native paid commissioning and six
+save/cold-load pairs retain their exact scope below. Construction completion, historical-save
+construction and full gameplay progression are not proved by this release.
+
+Original tag object `920dbf8442e3d7762f15b2f13254143586aa0669` is preserved remotely as
+`recovery/failed-v0.3.3-run-34576910338`. Author-approved exact-lease replacement produced
+tag object `c3bc09b4616069b1004108b14928a5a755805357`. GitHub reported the existing credential's
+protected-tag update bypass; no protection settings changed, and both PR merges used normal
+required checks. Release automation encountered [compiler-server wait issue #151](https://github.com/AussieWarGod/thousand-and-first/issues/151):
+only six verified leftover compiler servers were stopped after their parent launchers exited;
+no publisher, runner, Steam or game process was stopped. All operation receipts were retained.
+
+[Stockpile issue #142](https://github.com/AussieWarGod/thousand-and-first/issues/142) is closed.
+[Behavioural coverage #58](https://github.com/AussieWarGod/thousand-and-first/issues/58) remains
+open for actual construction completion, teardown/replacement, heart progression, NPC
+arrival/departure, raids, multiple cities and every other implemented behaviour. Source-only
+tests and unexecuted harnesses do not count as in-game proof. All release test gates remain
+automated-only under the standing author ruling.
 
 The public Alpha is [Steam Workshop item
 3794797472](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472). Rows marked retained
@@ -271,9 +323,22 @@ receipt and ground, and no leaked survey scope all passed. External sealed-profi
 returned PASS and driver exit 0. Evidence `hotfix142-native.epWuUn`; profile
 `/mnt/c/taf-scenario.nwgvHE`; owned PID 37016 stopped with profile/seal retained. This proves
 staking the paid fire plot, not completion, ordinary play, historical saves or Steam delivery.
-The six terrain/advisor save–cold-load pairs are running separately, not yet accepted here.
+All six terrain/advisor automated save–cold-load pairs passed on the same frozen runtime.
+The retained marsh/advisor pair is `n1AMBR` → `FkREwz`; remaining pairs are recorded in
+`hotfix142-native.IqS6Jj/results.json` (driver exit 0, all owned game processes stopped).
+The sealed developer checks retain their stated scope; no ordinary-play claim is added.
 The following descendant changes only portable test registration (12 existing pure source files),
 not the exercised runtime or harness. Full candidate release gates remain required.
+
+Private staging run `34543738835` subsequently passed the complete release pipeline on
+`15901a42c5d2202813c5227c31d94e76e0c416c9`, including licensed suites 14112/0 and 5246/0,
+upload, subscribed-install verification and finalization for item `3796495680`, attempt `0004`.
+Bound receipt: `5c41283ea5dfaa499461db621488b25b0c6aefdbcb86dd04eb229ce7721fada2`.
+Installed inventory: `4dd88f11f278d7649672daea103c3c98723511c465dfdbbf85fd5371a14d019b`.
+Finalization: `343a00c9f83a9f1a79a114c95d9543e9dd1c4dc1ccb51bd3167d2c332f1731d4`.
+This proves one subscribed client only; `freshTransferVerified=false`, `releaseReady=false`.
+Public promotion is complete, with separate public evidence above. The author's standing 2026-09-11 ruling removes manual
+test gates for every release; all automated gates and evidence boundaries remain intact.
 
 The integrated `0f78405` native build run passed genuine boot, quote, CanPay, commission,
 physical timber/water debit and clean paid-claim checks, then correctly failed acceptance at
