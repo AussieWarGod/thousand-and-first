@@ -70,6 +70,11 @@ EVIDENCE_KEYS = (
 _SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 _ABSOLUTE_PATH_PATTERN = re.compile(r"(?:^|\s)(/[A-Za-z0-9_.\-]|[A-Za-z]:[\\/])")
 _ARTIFACT_PATH_PATTERN = re.compile(r"^[A-Za-z0-9_.-]+(/[A-Za-z0-9_.\-]+)+$")
+
+
+def _has_dot_or_dotdot_segment(path):
+    return any(part in (".", "..") for part in path.replace("\\", "/").split("/"))
+
 # Vague placeholder tokens that must never stand in for typed evidence.
 BANNED_EVIDENCE_SUBSTRINGS = ("prior-status", "owned-lane", "not-rerun")
 
@@ -153,6 +158,11 @@ def _validate_evidence_entry(row_id, entry, current_digest, problems):
                 "row %r evidence entry's artifactPath %r does not look like a run-relative "
                 "\"dir/file\" name (a bare description like \"build journal (COMPLETE OK)\" "
                 "is not a ref)" % (row_id, artifact_path)
+            )
+        elif _has_dot_or_dotdot_segment(artifact_path):
+            problems.append(
+                "row %r evidence entry's artifactPath %r contains a \".\" or \"..\" segment "
+                "-- it must be a plain run-relative name with no traversal" % (row_id, artifact_path)
             )
     sha = entry.get("artifactSha256")
     if not isinstance(sha, str) or not _SHA256_PATTERN.match(sha):
@@ -446,21 +456,55 @@ def _all_evidence_entries(doc):
             yield combo.get("id"), entry
 
 
-def audit(doc, evidence_root):
+def _resolve_contained(evidence_root, artifact_path):
+    """Resolves artifact_path under evidence_root, following symlinks (os.path.realpath), and
+    returns None if the result escapes the root (os.path.commonpath) -- containment is proved
+    on the REAL path, so a symlink pointing outside evidence_root cannot be used to read
+    arbitrary files."""
+    root_real = os.path.realpath(evidence_root)
+    candidate = os.path.realpath(os.path.join(evidence_root, artifact_path))
+    try:
+        if os.path.commonpath([root_real, candidate]) != root_real:
+            return None
+    except ValueError:
+        # Different drives on Windows, or otherwise incomparable -- never contained.
+        return None
+    return candidate
+
+
+class SchemaFailedForAudit(Exception):
+    """Raised by audit() when the matrix does not validate cleanly -- audit REFUSES to check
+    any retained bytes against a document that is not even schema-valid. Schema PASS is a
+    hard prerequisite for evidence audit, never a parallel, independent check."""
+
+
+def audit(doc, evidence_root, current_digest=None):
     """Resolves each evidence entry's artifactPath under evidence_root and verifies the
     retained bytes' SHA-256 and size. This is a SEPARATE result from schema validation --
     "evidence audit", not "schema PASS" -- and is never required by test_checked_in_matrix,
-    which has no evidence archive to resolve against in a bare checkout or public CI."""
+    which has no evidence archive to resolve against in a bare checkout or public CI. Schema
+    validation is still a PREREQUISITE for running an audit at all: raises SchemaFailedForAudit
+    if the document itself does not validate, before touching the filesystem."""
+    problems = validate(doc, current_digest=current_digest)
+    valid_row_ids = {row["id"] for row in doc.get("rows", []) if isinstance(row, dict)}
+    problems.extend(validate_combinations(doc, valid_row_ids, current_digest=current_digest))
+    if problems:
+        raise SchemaFailedForAudit("; ".join(problems))
     results = []
     for owner_id, entry in _all_evidence_entries(doc):
-        path = os.path.join(evidence_root, entry.get("artifactPath", ""))
-        record = {"id": owner_id, "artifactPath": entry.get("artifactPath")}
-        if not os.path.isfile(path):
+        artifact_path = entry.get("artifactPath", "")
+        record = {"id": owner_id, "artifactPath": artifact_path}
+        resolved = _resolve_contained(evidence_root, artifact_path)
+        if resolved is None:
+            record["result"] = "ESCAPES_ROOT"
+            results.append(record)
+            continue
+        if not os.path.isfile(resolved):
             record["result"] = "MISSING"
             results.append(record)
             continue
-        actual_size = os.path.getsize(path)
-        with open(path, "rb") as handle:
+        actual_size = os.path.getsize(resolved)
+        with open(resolved, "rb") as handle:
             actual_sha = hashlib.sha256(handle.read()).hexdigest()
         expected_sha = entry.get("artifactSha256")
         expected_size = entry.get("artifactBytes")
@@ -496,6 +540,8 @@ def main(argv):
     audit_parser = sub.add_parser("audit", help="resolve+verify evidence bytes (never required)")
     audit_parser.add_argument("--matrix", default=os.path.join(os.path.dirname(__file__), "matrix.json"))
     audit_parser.add_argument("--evidence-root", required=True)
+    audit_parser.add_argument("--repo-root", default=None)
+    audit_parser.add_argument("--inventory-digest", default=None)
 
     # Back-compat: no subcommand behaves as "validate" with the old flat flags.
     parser.add_argument("--matrix", default=os.path.join(os.path.dirname(__file__), "matrix.json"))
@@ -510,7 +556,16 @@ def main(argv):
 
     if args.command == "audit":
         doc = load(args.matrix)
-        results = audit(doc, args.evidence_root)
+        current_digest = args.inventory_digest
+        if current_digest is None and args.repo_root is not None:
+            current_digest = compute_inventory_digest(args.repo_root)
+        try:
+            results = audit(doc, args.evidence_root, current_digest=current_digest)
+        except SchemaFailedForAudit as error:
+            print("EVIDENCE AUDIT ABORTED: schema validation failed before any byte check:",
+                  file=sys.stderr)
+            print(str(error), file=sys.stderr)
+            return 3
         bad = [r for r in results if r["result"] != "VERIFIED"]
         for r in results:
             print("evidence audit:", r)

@@ -138,7 +138,10 @@ class CoverageMatrixSchemaTest(unittest.TestCase):
         ]
         problems = check_coverage.validate(doc, current_digest=_DIGEST_B)
         self.assertTrue(
-            any("does not equal the digest of the tree being validated" in p for p in problems)
+            any(
+                "does not equal the digest of the tree being validated" in p
+                for p in problems
+            )
         )
 
     def test_current_dev_coverage_true_with_the_matching_digest_is_accepted(self):
@@ -149,7 +152,9 @@ class CoverageMatrixSchemaTest(unittest.TestCase):
         ]
         self.assertEqual(check_coverage.validate(doc, current_digest=_DIGEST_A), [])
 
-    def test_current_dev_coverage_true_with_no_current_digest_supplied_only_checks_shape(self):
+    def test_current_dev_coverage_true_with_no_current_digest_supplied_only_checks_shape(
+        self,
+    ):
         # Schema-only mode (no --repo-root/--inventory-digest given): cannot assert equality
         # against nothing, but a malformed digest is still rejected.
         doc = _base_doc()
@@ -203,6 +208,24 @@ class CoverageMatrixSchemaTest(unittest.TestCase):
         ]
         self.assertEqual(check_coverage.validate(doc), [])
 
+    def test_artifact_path_dotdot_segment_is_rejected(self):
+        doc = _base_doc()
+        doc["rows"][0]["status"] = "NATIVE_PASS"
+        doc["rows"][0]["evidence"] = [
+            _evidence_entry(artifactPath="synthetic-run/../../etc/passwd")
+        ]
+        problems = check_coverage.validate(doc)
+        self.assertTrue(any("traversal" in p for p in problems))
+
+    def test_artifact_path_dot_segment_is_rejected(self):
+        doc = _base_doc()
+        doc["rows"][0]["status"] = "NATIVE_PASS"
+        doc["rows"][0]["evidence"] = [
+            _evidence_entry(artifactPath="synthetic-run/./report.tsv")
+        ]
+        problems = check_coverage.validate(doc)
+        self.assertTrue(any("traversal" in p for p in problems))
+
     def test_malformed_sha256_is_rejected(self):
         doc = _base_doc()
         doc["rows"][0]["status"] = "NATIVE_PASS"
@@ -219,7 +242,9 @@ class CoverageMatrixSchemaTest(unittest.TestCase):
 
     def test_absolute_path_anywhere_in_a_row_is_rejected(self):
         doc = _base_doc()
-        doc["rows"][0]["note"] = "see /home/r/work/taf-scratch/some-evidence-dir for details"
+        doc["rows"][0]["note"] = (
+            "see /home/r/work/taf-scratch/some-evidence-dir for details"
+        )
         problems = check_coverage.validate(doc)
         self.assertTrue(any("absolute host path" in p for p in problems))
 
@@ -248,9 +273,16 @@ class CoverageMatrixSchemaTest(unittest.TestCase):
 
     def test_combination_referencing_unknown_row_id_is_rejected(self):
         combo = {
-            "id": "CX", "name": "x", "rows": [9999], "coupling": "x",
-            "prerequisites": "x", "invariants": "x", "seed_turn_matrix": "x",
-            "expected_failure_rows": "x", "reusable_seams": "x", "status": "NONE",
+            "id": "CX",
+            "name": "x",
+            "rows": [9999],
+            "coupling": "x",
+            "prerequisites": "x",
+            "invariants": "x",
+            "seed_turn_matrix": "x",
+            "expected_failure_rows": "x",
+            "reusable_seams": "x",
+            "status": "NONE",
             "evidence": None,
         }
         problems = check_coverage.validate_combinations(
@@ -260,9 +292,16 @@ class CoverageMatrixSchemaTest(unittest.TestCase):
 
     def test_combination_pass_status_with_no_evidence_is_rejected(self):
         combo = {
-            "id": "CX", "name": "x", "rows": [1], "coupling": "x",
-            "prerequisites": "x", "invariants": "x", "seed_turn_matrix": "x",
-            "expected_failure_rows": "x", "reusable_seams": "x", "status": "NATIVE_PASS",
+            "id": "CX",
+            "name": "x",
+            "rows": [1],
+            "coupling": "x",
+            "prerequisites": "x",
+            "invariants": "x",
+            "seed_turn_matrix": "x",
+            "expected_failure_rows": "x",
+            "reusable_seams": "x",
+            "status": "NATIVE_PASS",
             "evidence": None,
         }
         problems = check_coverage.validate_combinations({"combinations": [combo]}, {1})
@@ -338,6 +377,34 @@ class EvidenceAuditTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as root:
             results = check_coverage.audit(doc, root)
         self.assertEqual(results[0]["result"], "MISSING")
+
+    def test_audit_refuses_a_symlink_escaping_the_evidence_root(self):
+        content = b"synthetic native run journal\n"
+        doc = self._doc_with_one_entry(content)
+        with (
+            tempfile.TemporaryDirectory() as outside,
+            tempfile.TemporaryDirectory() as root,
+        ):
+            secret = os.path.join(outside, "secret.tsv")
+            with open(secret, "wb") as handle:
+                handle.write(b"not evidence, a private file outside the root\n")
+            run_dir = os.path.join(root, "synthetic-run")
+            os.makedirs(run_dir)
+            os.symlink(secret, os.path.join(run_dir, "report.tsv"))
+            results = check_coverage.audit(doc, root)
+        self.assertEqual(results[0]["result"], "ESCAPES_ROOT")
+
+    def test_audit_aborts_before_any_byte_check_when_schema_is_invalid(self):
+        content = b"synthetic native run journal\n"
+        doc = self._doc_with_one_entry(content)
+        doc["rows"][0]["driver"] = "owned-lane, banned placeholder makes this invalid"
+        with tempfile.TemporaryDirectory() as root:
+            run_dir = os.path.join(root, "synthetic-run")
+            os.makedirs(run_dir)
+            with open(os.path.join(run_dir, "report.tsv"), "wb") as handle:
+                handle.write(content)
+            with self.assertRaises(check_coverage.SchemaFailedForAudit):
+                check_coverage.audit(doc, root)
 
 
 if __name__ == "__main__":
