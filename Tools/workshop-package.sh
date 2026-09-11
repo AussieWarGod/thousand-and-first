@@ -954,7 +954,12 @@ if [ "$MODE" = "release" ]; then
 	extract_head_blob "$evidence_path" "$EVIDENCE_FILE" "release evidence" nonexec
 	extract_head_blob "TESTING.md" "$TESTING_FILE" "authoritative numbered protocol" nonexec
 	assert_scratch_workspace "after release evidence extraction"
-	python3 "$METADATA" evidence-artifact-refs "$EVIDENCE_FILE" > "$ARTIFACT_LIST"
+	# Discover the full artifact graph (including nested refs inside any referenced .json
+	# artifact) from the FROZEN HEAD tree via git show, never from the scratch extraction
+	# directory: at this point only the evidence document and TESTING.md have been extracted,
+	# so any nested artifact a nested .json declares does not exist on disk yet.
+	python3 "$METADATA" evidence-artifact-refs "$evidence_path" \
+		--repository-root "$REPO" --at-commit "$HEAD_COMMIT" > "$ARTIFACT_LIST"
 	assert_scratch_workspace "after release artifact inventory"
 	while IFS= read -r artifact_path; do
 		artifact_entry="$(git -c core.quotePath=false ls-tree "$HEAD_COMMIT" -- \

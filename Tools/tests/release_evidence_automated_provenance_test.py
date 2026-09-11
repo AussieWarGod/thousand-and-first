@@ -338,6 +338,9 @@ class LongFormScenarioResultsTests(unittest.TestCase):
         if step in ("engine-turn-build", "save", "cold-load", "next-action"):
             base["buildingId"] = "building-1"
             base["plotId"] = "plot-1"
+        if step == "engine-turn-build":
+            base["completedReceiptId"] = "receipt-1"
+            base["forJobId"] = "job-1"
         if step in ("save", "cold-load", "next-action"):
             base["saveId"] = "save-1"
         return base
@@ -713,6 +716,54 @@ class LongFormScenarioResultsTests(unittest.TestCase):
         errors = self.validate(payload)
         self.assertTrue(any("keys must be a subset of" in error for error in errors), errors)
 
+    def test_paid_commission_missing_job_id_fails(self) -> None:
+        payload = self.valid_payload()
+        del payload["steps"][2]["observed"]["jobId"]
+        errors = self.validate(payload)
+        self.assertTrue(
+            any("(paid-commission) must observe jobId" in error for error in errors), errors
+        )
+
+    def test_cold_load_missing_save_building_or_plot_fails(self) -> None:
+        for key in ("saveId", "buildingId", "plotId"):
+            with self.subTest(key=key):
+                payload = self.valid_payload()
+                del payload["steps"][5]["observed"][key]
+                errors = self.validate(payload)
+                self.assertTrue(
+                    any(f"(cold-load) must observe {key}" in error for error in errors), errors
+                )
+
+    def test_engine_turn_build_missing_completed_receipt_linkage_fails(self) -> None:
+        for key in ("completedReceiptId", "forJobId"):
+            with self.subTest(key=key):
+                payload = self.valid_payload()
+                del payload["steps"][3]["observed"][key]
+                errors = self.validate(payload)
+                self.assertTrue(
+                    any(f"(engine-turn-build) must observe {key}" in error for error in errors),
+                    errors,
+                )
+
+    def test_for_job_id_not_matching_paid_commission_job_fails(self) -> None:
+        payload = self.valid_payload()
+        payload["steps"][3]["observed"]["forJobId"] = "a-different-job"
+        errors = self.validate(payload)
+        self.assertTrue(
+            any(
+                "observed.forJobId must equal the jobId observed at paid-commission" in error
+                for error in errors
+            ),
+            errors,
+        )
+
+    def test_completed_receipt_id_may_differ_from_job_id(self) -> None:
+        # The receipt id itself is free to differ from both the live job and forJobId's value
+        # -- only forJobId is required to link back to paid-commission's jobId.
+        payload = self.valid_payload()
+        payload["steps"][3]["observed"]["completedReceiptId"] = "totally-unrelated-receipt-id"
+        self.assertEqual(self.validate(payload), [])
+
 
 class EndToEndReleaseEvidenceFixtureTest(unittest.TestCase):
     """A full, real docs/RELEASE_EVIDENCE.json plus every retained artifact it binds, run
@@ -747,6 +798,9 @@ class EndToEndReleaseEvidenceFixtureTest(unittest.TestCase):
         if step in ("engine-turn-build", "save", "cold-load", "next-action"):
             base["buildingId"] = "building-1"
             base["plotId"] = "plot-1"
+        if step == "engine-turn-build":
+            base["completedReceiptId"] = "receipt-1"
+            base["forJobId"] = "job-1"
         if step in ("save", "cold-load", "next-action"):
             base["saveId"] = "save-1"
         return base
@@ -1060,6 +1114,294 @@ class EndToEndReleaseEvidenceFixtureTest(unittest.TestCase):
                 repository_root=self.root,
                 testing_path=fixture["testing"],
             )
+
+
+
+
+class AtCommitArtifactRefCollectionTest(unittest.TestCase):
+    """release_evidence_artifact_refs(..., at_commit=...): the real Tools/workshop-package.sh
+    invocation reads the evidence document and every nested .json artifact it references from
+    the FROZEN HEAD git tree (git show), never the mutable working tree or an extraction
+    scratch directory that has not been populated yet. Codex root's read of the actual caller
+    (workshop-package.sh:957 calling before dependency extraction) found the filesystem-mode
+    collector cannot be called safely there."""
+
+    def setUp(self) -> None:
+        self.temporary = tempfile.TemporaryDirectory()
+        self.root = Path(self.temporary.name)
+        self._run("git", "init", "-q")
+        self._run("git", "config", "user.email", "fixture@example.com")
+        self._run("git", "config", "user.name", "Fixture")
+        (self.root / "docs" / "release-evidence").mkdir(parents=True)
+
+    def tearDown(self) -> None:
+        self.temporary.cleanup()
+
+    def _run(self, *args: str) -> None:
+        import subprocess
+
+        subprocess.run(args, cwd=self.root, check=True, capture_output=True)
+
+    def _write(self, relative: str, content: object) -> None:
+        path = self.root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        text = content if isinstance(content, str) else json.dumps(content)
+        path.write_text(text, encoding="utf-8")
+
+    def _commit_everything(self) -> str:
+        self._run("git", "add", "-A")
+        return self._commit_staged()
+
+    def _commit_staged(self) -> str:
+        self._run("git", "commit", "-q", "-m", "fixture")
+        import subprocess
+
+        return subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=self.root, check=True, capture_output=True, text=True
+        ).stdout.strip()
+
+    def test_collects_nested_refs_from_git_objects_with_no_working_tree_files(self) -> None:
+        self._write(
+            "docs/release-evidence/longform-results.json",
+            {"logRef": "docs/release-evidence/longform.log", "other": 1},
+        )
+        self._write("docs/release-evidence/longform.log", "transcript")
+        self._write(
+            "docs/RELEASE_EVIDENCE.json",
+            {
+                "longFormScenario": {
+                    "artifactRef": "docs/release-evidence/longform-results.json",
+                    "artifactSha256": "a" * 64,
+                }
+            },
+        )
+        commit = self._commit_everything()
+        # Prove independence from the working tree: delete every extracted file after the
+        # commit, exactly as the real pipeline's scratch directory has nothing on disk yet
+        # when this call happens.
+        for relative in (
+            "docs/release-evidence/longform-results.json",
+            "docs/release-evidence/longform.log",
+            "docs/RELEASE_EVIDENCE.json",
+        ):
+            (self.root / relative).unlink()
+
+        refs = METADATA.release_evidence_artifact_refs(
+            "docs/RELEASE_EVIDENCE.json", repository_root=self.root, at_commit=commit
+        )
+        self.assertEqual(
+            refs,
+            (
+                "docs/release-evidence/longform-results.json",
+                "docs/release-evidence/longform.log",
+            ),
+        )
+
+    def test_driver_results_ref_key_also_recurses_into_nested_json(self) -> None:
+        # Proves recursion is not special-cased to "artifactRef": driverResultsRef is a
+        # different declared ref key and must recurse the same way.
+        self._write(
+            "docs/release-evidence/driver-results.json",
+            {"logRef": "docs/release-evidence/driver.log"},
+        )
+        self._write("docs/release-evidence/driver.log", "transcript")
+        self._write(
+            "docs/RELEASE_EVIDENCE.json",
+            {
+                "privateSubscription": {
+                    "driverResultsRef": "docs/release-evidence/driver-results.json",
+                    "driverResultsSha256": "b" * 64,
+                }
+            },
+        )
+        commit = self._commit_everything()
+        refs = METADATA.release_evidence_artifact_refs(
+            "docs/RELEASE_EVIDENCE.json", repository_root=self.root, at_commit=commit
+        )
+        self.assertIn("docs/release-evidence/driver.log", refs)
+
+    def test_nested_artifact_only_in_working_tree_not_head_fails(self) -> None:
+        # The nested .json artifact (the thing the collector must open to find ITS further
+        # refs) is only ever written to the working tree, never committed -- exactly the
+        # shape of a harness that forgot to add a new dependency file to the tree. Only the
+        # top-level evidence document is committed and references it.
+        self._write(
+            "docs/RELEASE_EVIDENCE.json",
+            {
+                "longFormScenario": {
+                    "artifactRef": "docs/release-evidence/longform-results.json",
+                    "artifactSha256": "a" * 64,
+                }
+            },
+        )
+        self._run("git", "add", "docs/RELEASE_EVIDENCE.json")
+        commit = self._commit_staged()
+        self._write(
+            "docs/release-evidence/longform-results.json",
+            {"logRef": "docs/release-evidence/longform.log"},
+        )
+        with self.assertRaisesRegex(METADATA.ValidationError, "cannot read"):
+            METADATA.release_evidence_artifact_refs(
+                "docs/RELEASE_EVIDENCE.json", repository_root=self.root, at_commit=commit
+            )
+
+    def test_top_level_evidence_missing_from_head_fails(self) -> None:
+        self._write("README.md", "fixture repo, no evidence document committed")
+        commit = self._commit_everything()
+        with self.assertRaisesRegex(METADATA.ValidationError, "cannot read"):
+            METADATA.release_evidence_artifact_refs(
+                "docs/RELEASE_EVIDENCE.json", repository_root=self.root, at_commit=commit
+            )
+
+    def test_at_commit_without_repository_root_fails(self) -> None:
+        with self.assertRaisesRegex(METADATA.ValidationError, "requires a repository_root"):
+            METADATA.release_evidence_artifact_refs(
+                "docs/RELEASE_EVIDENCE.json", at_commit="HEAD"
+            )
+
+
+
+
+class PackagePathCliSequenceTest(unittest.TestCase):
+    """Runs the exact Tools/workshop-package.sh sequence around evidence-artifact-refs -- via
+    the same python CLI entry with the same argument shape, and a scratch dir populated in
+    the same order the shell script uses -- to prove the fixed dependency-order bug (Codex
+    root: the real caller extracts the evidence document and TESTING.md, THEN calls
+    evidence-artifact-refs, THEN extracts every declared artifact; a filesystem-mode call at
+    that point would look for nested .json artifacts that do not exist in the scratch
+    directory yet). This exercises the CLI subprocess boundary, not only the python helper."""
+
+    def setUp(self) -> None:
+        self.temporary = tempfile.TemporaryDirectory()
+        self.repo = Path(self.temporary.name) / "repo"
+        self.scratch = Path(self.temporary.name) / "scratch"
+        self.repo.mkdir()
+        self.scratch.mkdir()
+        (self.repo / "docs" / "release-evidence").mkdir(parents=True)
+        self._run("git", "init", "-q")
+        self._run("git", "config", "user.email", "fixture@example.com")
+        self._run("git", "config", "user.name", "Fixture")
+
+    def tearDown(self) -> None:
+        self.temporary.cleanup()
+
+    def _run(self, *args: str) -> None:
+        import subprocess
+
+        subprocess.run(args, cwd=self.repo, check=True, capture_output=True)
+
+    def _write_repo(self, relative: str, content: object) -> None:
+        path = self.repo / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        text = content if isinstance(content, str) else json.dumps(content)
+        path.write_text(text, encoding="utf-8")
+
+    def _commit(self) -> str:
+        import subprocess
+
+        self._run("git", "add", "-A")
+        self._run("git", "commit", "-q", "-m", "fixture")
+        return subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=self.repo, check=True, capture_output=True, text=True
+        ).stdout.strip()
+
+    def _cli(self, *args: str) -> "subprocess.CompletedProcess":
+        import subprocess
+
+        return subprocess.run(
+            [sys.executable, str(CHECKER_PATH.parent / "workshop_metadata.py"), *args],
+            cwd=self.repo,
+            capture_output=True,
+            text=True,
+        )
+
+    def test_package_style_sequence_extracts_every_nested_dependency_before_use(self) -> None:
+        self._write_repo(
+            "docs/release-evidence/longform-results.json",
+            {"logRef": "docs/release-evidence/longform.log"},
+        )
+        self._write_repo("docs/release-evidence/longform.log", "driver transcript")
+        self._write_repo(
+            "docs/RELEASE_EVIDENCE.json",
+            {
+                "longFormScenario": {
+                    "artifactRef": "docs/release-evidence/longform-results.json",
+                    "artifactSha256": "a" * 64,
+                }
+            },
+        )
+        head = self._commit()
+
+        # Step 1 (workshop-package.sh): extract ONLY the evidence document itself into
+        # scratch -- nothing else exists there yet.
+        scratch_evidence = self.scratch / "evidence.json"
+        scratch_evidence.write_text(
+            (self.repo / "docs" / "RELEASE_EVIDENCE.json").read_text(encoding="utf-8"),
+            encoding="utf-8",
+        )
+
+        # Step 2: discover the artifact graph from HEAD, not from the (still-empty) scratch
+        # directory -- this is the exact CLI shape Tools/workshop-package.sh uses.
+        result = self._cli(
+            "evidence-artifact-refs",
+            "docs/RELEASE_EVIDENCE.json",
+            "--repository-root",
+            str(self.repo),
+            "--at-commit",
+            head,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        refs = [line for line in result.stdout.splitlines() if line]
+        self.assertEqual(
+            refs,
+            [
+                "docs/release-evidence/longform-results.json",
+                "docs/release-evidence/longform.log",
+            ],
+        )
+
+        # Step 3: only NOW extract every declared dependency (as the shell loop does), and
+        # confirm every one of them is a real, retrievable HEAD blob.
+        for ref in refs:
+            destination = self.scratch / ref
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            import subprocess
+
+            blob = subprocess.run(
+                ["git", "-C", str(self.repo), "show", f"{head}:{ref}"],
+                check=True,
+                capture_output=True,
+            ).stdout
+            destination.write_bytes(blob)
+        self.assertTrue((self.scratch / "docs/release-evidence/longform-results.json").is_file())
+        self.assertTrue((self.scratch / "docs/release-evidence/longform.log").is_file())
+
+    def test_package_style_sequence_fails_when_nested_dependency_only_in_working_tree(self) -> None:
+        self._write_repo(
+            "docs/RELEASE_EVIDENCE.json",
+            {
+                "longFormScenario": {
+                    "artifactRef": "docs/release-evidence/longform-results.json",
+                    "artifactSha256": "a" * 64,
+                }
+            },
+        )
+        head = self._commit()
+        # The nested artifact the top-level document declares was never committed.
+        self._write_repo(
+            "docs/release-evidence/longform-results.json",
+            {"logRef": "docs/release-evidence/longform.log"},
+        )
+        result = self._cli(
+            "evidence-artifact-refs",
+            "docs/RELEASE_EVIDENCE.json",
+            "--repository-root",
+            str(self.repo),
+            "--at-commit",
+            head,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("cannot read", result.stderr)
 
 
 

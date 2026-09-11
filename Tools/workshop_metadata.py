@@ -11,6 +11,7 @@ import os
 import posixpath
 import re
 import struct
+import subprocess
 import sys
 import tempfile
 import unicodedata
@@ -1520,10 +1521,15 @@ def _validate_native_driver_results(
 #   "steps": [
 #     {"step": "startup", "status": "PASS", "turnsUsed": N, "elapsedSeconds": N,
 #      "turnBudget": N, "timeoutSeconds": N, "observed": {"realmId": "...", "cityId": "..."}},
-#     ... quote, paid-commission (observed gains "jobId"), engine-turn-build (observed gains
-#     "buildingId"/"plotId"; "jobId" here may instead be the completed receipt id, not a live
-#     job), save (observed gains "saveId"), cold-load, next-action (observed's jobId, if any,
-#     may be a NEW job -- never required to match the completed one) ...
+#     ... quote, paid-commission (observed REQUIRES "jobId": the commissioned job),
+#     engine-turn-build (observed REQUIRES "buildingId"/"plotId" -- the physical debit
+#     resolving into a functional building on a plot -- plus "completedReceiptId" and
+#     "forJobId": forJobId MUST equal paid-commission's jobId, linking the completed receipt
+#     back to the paid job even though completedReceiptId itself, and "jobId" here if present,
+#     may legitimately differ from the live job id), save (observed REQUIRES "saveId"),
+#     cold-load (observed REQUIRES "saveId"/"buildingId"/"plotId": the reloaded save carries
+#     the same building/plot forward), next-action (observed's jobId, if any, may be a NEW,
+#     separately identified job -- never required to match the completed one) ...
 #   ]
 # }
 #
@@ -1535,16 +1541,17 @@ def _validate_native_driver_results(
 # cold-load..next-action, distinct launchIds, each started strictly before its own stoppedUtc,
 # and save-session stopping at or before cold-load-session starts.
 #
-# Per-step `observed` identities are lifecycle-gated, never blanket-required: realmId/cityId
-# on every step, equal to `continuity`; jobId absent before paid-commission, first appears
-# there (engine-turn-build's jobId, if present, may be the completed receipt rather than the
-# same live job -- no equality is enforced between them); buildingId/plotId absent before
-# engine-turn-build, required there, and equal to that value wherever they reappear at
-# save/cold-load/next-action; saveId absent before save, required at save, and equal to that
-# value wherever it reappears at cold-load/next-action. An id present before its creation step
-# fails; a placeholder-looking id fails. next-action may observe a brand-new jobId with no
-# linkage to the completed one -- causal linkage is realm/city/building/plot/save continuity,
-# never job identity equality across the whole run.
+# Per-step `observed` identities are lifecycle-gated: realmId/cityId required on every step,
+# equal to `continuity`; jobId/buildingId/plotId/saveId/completedReceiptId/forJobId are
+# forbidden before their creation step and REQUIRED (never optional -- "phase-appropriate
+# observations are required where a real identity exists, never minted") at the exact step
+# named in LONGFORM_OBSERVED_REQUIRED_AT_STEP; buildingId/plotId/saveId are stable (equal)
+# wherever they reappear at a later step. The completed receipt at engine-turn-build links
+# back to the paid job via forJobId == paid-commission's jobId -- a contract check on the
+# declared record, not native proof that the same physical job was actually completed. An id
+# present before its creation step fails; a placeholder-looking id fails. next-action may
+# observe a brand-new jobId with no linkage to the completed one -- causal linkage there is
+# realm/city/building/plot/save continuity, never job identity equality across the whole run.
 #
 # "engine-turn-build" is the paid commission's physical debit resolving, by an actual engine
 # turn, into a functional building; a source-level or simulated claim does not satisfy it.
@@ -1578,20 +1585,41 @@ LONGFORM_SESSION_ROLES = ("save-session", "cold-load-session")
 # identity is lifecycle-gated and lives per-step in "observed" (LONGFORM_OBSERVED_KEYS), never
 # required blanket-equal across the whole run.
 LONGFORM_CONTINUITY_KEYS = {"realmId", "cityId"}
-LONGFORM_OBSERVED_KEYS = {"realmId", "cityId", "jobId", "buildingId", "plotId", "saveId"}
+LONGFORM_OBSERVED_KEYS = {
+    "realmId",
+    "cityId",
+    "jobId",
+    "buildingId",
+    "plotId",
+    "saveId",
+    "completedReceiptId",
+    "forJobId",
+}
 # Per key: the first step index (into LONGFORM_SCENARIO_STEPS) at which it may legally appear
 # in a step's "observed". Absent from this map (realmId/cityId) means "every step, index 0".
 LONGFORM_OBSERVED_EARLIEST_STEP_INDEX = {
     "jobId": 2,  # paid-commission
     "buildingId": 3,  # engine-turn-build
     "plotId": 3,  # engine-turn-build
+    "completedReceiptId": 3,  # engine-turn-build
+    "forJobId": 3,  # engine-turn-build
     "saveId": 4,  # save
 }
 # Keys that, once observed at their earliest step, must equal that same value at every LATER
 # step where they reappear (jobId is deliberately excluded: engine-turn-build's jobId may be a
 # completed receipt distinct from paid-commission's live job, and next-action may observe a
-# brand-new job with no required linkage to either).
+# brand-new job with no required linkage to either; the causal link to the paid job is instead
+# the mandatory completedReceiptId/forJobId pair below).
 LONGFORM_OBSERVED_STABLE_AFTER_FIRST = ("buildingId", "plotId", "saveId")
+# Phase-appropriate observations that are REQUIRED wherever a real identity exists -- never
+# minted, never allowed to silently disappear (author/Codex root clarification, 2026-09-11):
+# a fixed set of observed keys must be present at an exact step index.
+LONGFORM_OBSERVED_REQUIRED_AT_STEP = {
+    2: ("jobId",),  # paid-commission: the commissioned job must be identified
+    3: ("buildingId", "plotId", "completedReceiptId", "forJobId"),  # engine-turn-build
+    4: ("saveId",),  # save
+    5: ("saveId", "buildingId", "plotId"),  # cold-load: the reloaded save/building/plot
+}
 LONGFORM_PROCESS_KEYS = {"role", "launchId", "started", "stoppedUtc"}
 LONGFORM_STEP_KEYS = {
     "step",
@@ -1831,6 +1859,7 @@ def _validate_longform_scenario_results(
         return
     save_step_index = LONGFORM_SCENARIO_STEPS.index("save")
     stable_first_value: dict[str, str] = {}
+    paid_commission_job_id: str | None = None
     for index, (expected_step, entry) in enumerate(zip(LONGFORM_SCENARIO_STEPS, steps)):
         # Internal consistency, not evidence content: the fixed step-order table and the
         # step-to-session map must agree that steps up to and including "save" are the
@@ -1882,18 +1911,35 @@ def _validate_longform_scenario_results(
 
         observed = entry.get("observed")
         if isinstance(observed, dict):
+            # Phase-appropriate observations are REQUIRED where a real identity exists; they
+            # are never allowed to silently disappear once their phase is reached.
+            for key in LONGFORM_OBSERVED_REQUIRED_AT_STEP.get(index, ()):
+                if key not in observed:
+                    errors.append(
+                        f"long-form scenario results steps[{index}] ({expected_step}) must "
+                        f"observe {key}"
+                    )
             if expected_step == "engine-turn-build":
-                for key in ("buildingId", "plotId"):
-                    if key not in observed:
-                        errors.append(
-                            f"long-form scenario results steps[{index}] (engine-turn-build) "
-                            f"must observe {key}: the paid commission's physical debit must "
-                            "resolve into an identified building on an identified plot"
-                        )
-            if expected_step == "save" and "saveId" not in observed:
-                errors.append(
-                    f"long-form scenario results steps[{index}] (save) must observe saveId"
-                )
+                for_job_id = observed.get("forJobId")
+                if (
+                    isinstance(for_job_id, str)
+                    and paid_commission_job_id is not None
+                    and for_job_id != paid_commission_job_id
+                ):
+                    errors.append(
+                        f"long-form scenario results steps[{index}] (engine-turn-build) "
+                        "observed.forJobId must equal the jobId observed at paid-commission "
+                        "(the completed receipt must link back to the paid job, even when "
+                        "completedReceiptId itself differs)"
+                    )
+                elif for_job_id is not None and paid_commission_job_id is None:
+                    errors.append(
+                        f"long-form scenario results steps[{index}] (engine-turn-build) "
+                        "observed.forJobId cannot be verified: paid-commission did not "
+                        "observe a jobId to link back to"
+                    )
+            if expected_step == "paid-commission" and isinstance(observed.get("jobId"), str):
+                paid_commission_job_id = observed["jobId"]
         if not isinstance(observed, dict) or not set(observed) <= LONGFORM_OBSERVED_KEYS:
             errors.append(
                 f"long-form scenario results steps[{index}].observed keys must be a subset of "
@@ -2095,21 +2141,78 @@ RELEASE_EVIDENCE_REF_KEYS = (
 )
 
 
+def _read_json_blob_at_commit(repository_root: Path, commit: str, relative_path: str) -> object:
+    """Read and parse one JSON file from a frozen git commit -- never the working tree, never
+    a not-yet-populated extraction scratch directory. This is what makes it safe to discover
+    the full artifact graph BEFORE anything has been extracted (Tools/workshop-package.sh must
+    know every dependency to extract before any of them exist on disk)."""
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repository_root), "show", f"{commit}:{relative_path}"],
+            check=True,
+            capture_output=True,
+        )
+    except (OSError, subprocess.CalledProcessError) as error:
+        raise ValidationError(
+            f"cannot read {relative_path!r} at commit {commit}: {error}"
+        ) from error
+    try:
+        return json.loads(result.stdout.decode("utf-8-sig"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ValidationError(
+            f"{relative_path!r} at commit {commit} is not valid JSON: {error}"
+        ) from error
+
+
 def release_evidence_artifact_refs(
-    path: Path, *, repository_root: Path | None = None
+    path: Path,
+    *,
+    repository_root: Path | None = None,
+    at_commit: str | None = None,
 ) -> tuple[str, ...]:
     """List every safe retained-artifact path before immutable extraction, including one level
     of nested refs inside any referenced .json artifact (driverResultsRef's results.json and
-    longFormScenario's results.json each carry their own further ref fields).
+    longFormScenario's results.json each carry their own further ref fields, e.g. logRef).
 
     Full schema and hash validation happens after extraction. This first pass is deliberately
-    narrow: it discovers every ref in RELEASE_EVIDENCE_REF_KEYS anywhere in the record (and one
-    level into any .json artifact it points to), refuses unsafe spellings, and returns one
-    bytewise-sorted path per committed blob.
+    narrow: it discovers every ref named in RELEASE_EVIDENCE_REF_KEYS anywhere in the record
+    (and one level into any .json artifact any of those refs points to), refuses unsafe
+    spellings, and returns one bytewise-sorted path per committed blob.
+
+    When `at_commit` is given, `path` must be the evidence file's REPO-RELATIVE path (e.g.
+    "docs/RELEASE_EVIDENCE.json") and `repository_root` is required: the evidence document and
+    every nested .json artifact it references are read via `git show <commit>:<path>` -- frozen
+    git objects, never the mutable working tree or an extraction scratch directory that has not
+    been populated yet. This is the only safe way to call this function before dependency
+    extraction has happened.
     """
-    evidence = _load_json(path)
-    if repository_root is None:
-        repository_root = path.parent
+    if at_commit is not None:
+        if repository_root is None:
+            raise ValidationError(
+                "evidence-artifact-refs at a commit requires a repository_root"
+            )
+        evidence = _read_json_blob_at_commit(repository_root, at_commit, str(path))
+
+        def read_nested(relative_ref: str) -> object:
+            return _read_json_blob_at_commit(repository_root, at_commit, relative_ref)
+    else:
+        evidence = _load_json(path)
+        if repository_root is None:
+            repository_root = path.parent
+
+        def read_nested(relative_ref: str) -> object:
+            try:
+                nested_path = repository_root.joinpath(*relative_ref.split("/"))
+                resolved = nested_path.resolve(strict=True)
+                resolved.relative_to(repository_root)
+                if nested_path.is_symlink() or not resolved.is_file():
+                    raise OSError("nested artifact is not a regular file")
+                return json.loads(resolved.read_text(encoding="utf-8-sig"))
+            except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as error:
+                raise ValidationError(
+                    f"release evidence cannot read nested artifact {relative_ref!r}: {error}"
+                ) from error
+
     refs: list[str] = []
     nested_json_refs: list[str] = []
 
@@ -2126,11 +2229,9 @@ def release_evidence_artifact_refs(
                         f"release evidence contains an unsafe {key} before extraction"
                     )
                 refs.append(artifact_ref)
-                if (
-                    collect_nested
-                    and key == "artifactRef"
-                    and artifact_ref.endswith(".json")
-                ):
+                # Recurse on EVERY declared ref key (not only artifactRef): any of them may
+                # point at a .json artifact that itself carries further nested refs.
+                if collect_nested and artifact_ref.endswith(".json"):
                     nested_json_refs.append(artifact_ref)
             for child in value.values():
                 visit(child, collect_nested=collect_nested)
@@ -2140,20 +2241,9 @@ def release_evidence_artifact_refs(
 
     visit(evidence, collect_nested=True)
     for nested_ref in nested_json_refs:
-        try:
-            nested_path = repository_root.joinpath(*nested_ref.split("/"))
-            resolved = nested_path.resolve(strict=True)
-            resolved.relative_to(repository_root)
-            if nested_path.is_symlink() or not resolved.is_file():
-                raise OSError("nested artifact is not a regular file")
-            nested_payload = json.loads(resolved.read_text(encoding="utf-8-sig"))
-        except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as error:
-            raise ValidationError(
-                f"release evidence cannot read nested artifact {nested_ref!r}: {error}"
-            ) from error
         # One level only: a nested artifact's own further-nested refs (none exist in the
         # current schema) are not recursed into again.
-        visit(nested_payload, collect_nested=False)
+        visit(read_nested(nested_ref), collect_nested=False)
 
     if not refs:
         raise ValidationError("release evidence contains no retained artifactRef")
@@ -2369,7 +2459,9 @@ def main(argv: list[str] | None = None) -> int:
     alpha_binding.add_argument("private_workshop", type=Path)
     alpha_binding.add_argument("public_workshop", type=Path)
     artifact_refs = subparsers.add_parser("evidence-artifact-refs")
-    artifact_refs.add_argument("record", type=Path)
+    artifact_refs.add_argument("record", type=str)
+    artifact_refs.add_argument("--repository-root", type=Path, default=None)
+    artifact_refs.add_argument("--at-commit", type=str, default=None)
     workshop_id = subparsers.add_parser("workshop-id")
     workshop_id.add_argument("path", type=Path)
     testing_ids = subparsers.add_parser("testing-pass-ids")
@@ -2421,7 +2513,12 @@ def main(argv: list[str] | None = None) -> int:
             ):
                 print(value)
         elif args.command == "evidence-artifact-refs":
-            for artifact_ref in release_evidence_artifact_refs(args.record):
+            record = args.record if args.at_commit is not None else Path(args.record)
+            for artifact_ref in release_evidence_artifact_refs(
+                record,
+                repository_root=args.repository_root,
+                at_commit=args.at_commit,
+            ):
                 print(artifact_ref)
         elif args.command == "alpha-workshop-binding":
             validate_alpha_workshop_binding(
