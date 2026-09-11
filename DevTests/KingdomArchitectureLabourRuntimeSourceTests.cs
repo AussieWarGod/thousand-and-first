@@ -159,6 +159,8 @@ namespace ThousandAndFirst.Tests
 			AssertOrdered(clearance,
 				"internal static bool TryClearManagedOccupants(",
 				"KingdomSurvey survey = KingdomSurvey.ActiveFor(Z)",
+				"if (!item.IsCreature && !item.IsPlayer()) continue;",
+				"occupants.Add(item)",
 				"if (item.IsPlayer()) { player = true; continue; }",
 				"if (!IsOwnResident(System, survey, item)) continue;",
 				"Cell anchor = PostAnchorInLayout(Z, item, Managed)",
@@ -167,14 +169,28 @@ namespace ThousandAndFirst.Tests
 				"Cell target = FreeGroundOffLayout(Z, occupants[i], Managed, Rect, taken)",
 				"if (target == null)",
 				"return ClearanceFault(\"no free ground beside the site to stand them on\",",
-				"plan.Add(new KingdomLayoutDisplacement(occupants[i], target))",
+				"plan.Add(new KingdomLayoutDisplacement(occupants[i], occupants[i].CurrentCell,",
 				"move.Body.SystemLongDistanceMoveTo(move.Target, 0, forced: true,",
-				"|| move.Body.CurrentCell != move.Target)",
-				"Moved++;");
+				"&& move.Body.CurrentCell == move.Target)",
+				"int back = WalkBack(plan, i, out int stranded)",
+				"Moved = stranded;",
+				"return ClearanceFault(\"a settler would not stand off the site; \" + back",
+				"Moved = walked;");
+			// A half-cleared site is put back: every body already walked returns to the exact
+			// ground it stood on, and the fault names both counts.
+			AssertOrdered(clearance,
+				"private static int WalkBack(List<KingdomLayoutDisplacement> Plan, int Count,",
+				"move.Body.SystemLongDistanceMoveTo(move.Origin, 0, forced: true,",
+				"&& move.Body.CurrentCell == move.Origin)",
+				"back++;",
+				"Stranded++;");
+			StringAssert.Contains("SayPlotWorkCleared(System, Root, name, cleared);\n\t\t\t\tif (stoodOff)",
+				clearance);
 			AssertOrdered(clearance,
 				"private static bool IsOwnResident(",
 				"Simulation.City.KingdomPhysicalHappenings.IsStaged(Body)",
 				"Simulation.City.KingdomResidents.IdOf(Body)",
+				"if (id <= 0) return false;",
 				"row.Standing == Simulation.City.KingdomResidentStanding.Resident",
 				"private static Cell FreeGroundOffLayout(",
 				"Managed.Contains(candidate.Y * Z.Width + candidate.X)",

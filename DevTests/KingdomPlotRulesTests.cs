@@ -1074,7 +1074,8 @@ namespace ThousandAndFirst.Tests
 
 		[TestCase(0, 0, false, false, "Clear", TestName = "empty layout")]
 		[TestCase(2, 2, false, false, "Displace", TestName = "all ours are stood off")]
-		[TestCase(1, 1, true, false, "Refuse", TestName = "the player is never moved")]
+		[TestCase(1, 0, true, false, "Refuse", TestName = "the player alone is never moved")]
+		[TestCase(2, 1, true, false, "Refuse", TestName = "the player beside one of ours refuses")]
 		[TestCase(2, 1, false, false, "Refuse", TestName = "a stranger refuses the whole set")]
 		[TestCase(1, 0, false, false, "Refuse", TestName = "a lone stranger refuses")]
 		[TestCase(2, 2, false, true, "AnchorBound", TestName = "a post inside the layout is named")]
@@ -1084,6 +1085,19 @@ namespace ThousandAndFirst.Tests
 		{
 			ClassicAssert.AreEqual(Expected, KingdomPlotRules.JudgeOccupants(
 				Occupants, Residents, AnyPlayer, AnyAnchor).ToString());
+		}
+
+		/// <summary>
+		/// The player standing alone on a slot is an occupant, not an empty layout. A caller that
+		/// passed over them would report (0, 0, true) and the raising would land on the founder.
+		/// </summary>
+		[Test]
+		public void APlayerAloneOnTheLayoutIsAnOccupantAndRefuses()
+		{
+			ClassicAssert.AreEqual(KingdomPlotRules.OccupantVerdict.Refuse,
+				KingdomPlotRules.JudgeOccupants(1, 0, true, false));
+			ClassicAssert.AreNotEqual(KingdomPlotRules.OccupantVerdict.Clear,
+				KingdomPlotRules.JudgeOccupants(1, 0, true, false));
 		}
 
 		[Test]

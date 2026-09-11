@@ -5,15 +5,18 @@ namespace ThousandAndFirst
 {
 	using XRL.World.Parts;
 
-	/// <summary>One planned lawful walk off a raising's ground.</summary>
+	/// <summary>One planned lawful walk off a raising's ground, and the ground walked from,
+	/// so a set that fails half way through can be put back exactly as it stood.</summary>
 	public readonly struct KingdomLayoutDisplacement
 	{
 		public readonly GameObject Body;
+		public readonly Cell Origin;
 		public readonly Cell Target;
 
-		public KingdomLayoutDisplacement(GameObject Body, Cell Target)
+		public KingdomLayoutDisplacement(GameObject Body, Cell Origin, Cell Target)
 		{
 			this.Body = Body;
+			this.Origin = Origin;
 			this.Target = Target;
 		}
 	}
@@ -39,11 +42,14 @@ namespace ThousandAndFirst
 				ArchitectureLayer.Ground, out Failure);
 			if (!ground && KingdomPlotRules.IsOccupantSlotRefusal(Failure))
 			{
-				if (TryClearManagedOccupants(System, Z, Root, Managed, Rect, out int cleared,
-					out KingdomPlotRules.OccupantVerdict verdict, out Cell anchor,
-					out string clearanceRefusal))
+				bool stoodOff = TryClearManagedOccupants(System, Z, Root, Managed, Rect,
+					out int cleared, out KingdomPlotRules.OccupantVerdict verdict, out Cell anchor,
+					out string clearanceRefusal);
+				// Bodies left standing off the site are named whether or not the set succeeded:
+				// a failed clearance that could not put everyone back still moved somebody.
+				SayPlotWorkCleared(System, Root, name, cleared);
+				if (stoodOff)
 				{
-					SayPlotWorkCleared(System, Root, name, cleared);
 					ground = KingdomArchitectureStamper.TryStageLayer(Root, Z,
 						ArchitectureLayer.Ground, out Failure);
 				}
@@ -101,9 +107,12 @@ namespace ThousandAndFirst
 				{
 					GameObject item = objects[i];
 					if (!GameObject.Validate(item) || ReferenceEquals(item, Root)) continue;
-					if (item.IsPlayer()) { player = true; continue; }
-					if (!item.IsCreature || occupants.Contains(item)) continue;
+					// The player is an occupant like any other body: counted, never moved. Passing
+					// over them would judge a player-only slot empty and raise the building on them.
+					if (!item.IsCreature && !item.IsPlayer()) continue;
+					if (occupants.Contains(item)) continue;
 					occupants.Add(item);
+					if (item.IsPlayer()) { player = true; continue; }
 					if (!IsOwnResident(System, survey, item)) continue;
 					residents++;
 					Cell anchor = PostAnchorInLayout(Z, item, Managed);
@@ -126,22 +135,61 @@ namespace ThousandAndFirst
 					return ClearanceFault("no free ground beside the site to stand them on",
 						out Refusal);
 				taken.Add(target);
-				plan.Add(new KingdomLayoutDisplacement(occupants[i], target));
+				plan.Add(new KingdomLayoutDisplacement(occupants[i], occupants[i].CurrentCell,
+					target));
 			}
+			int walked = 0;
 			for (int i = 0; i < plan.Count; i++)
 			{
 				KingdomLayoutDisplacement move = plan[i];
-				if (!GameObject.Validate(move.Body)
-					|| !move.Body.SystemLongDistanceMoveTo(move.Target, 0, forced: true,
+				if (GameObject.Validate(move.Body)
+					&& move.Body.SystemLongDistanceMoveTo(move.Target, 0, forced: true,
 						ignoreCombat: true)
-					|| move.Body.CurrentCell != move.Target)
-					return ClearanceFault("a settler would not stand off the site", out Refusal);
-				Moved++;
-				KingdomLog.Log("architecture: stood occupant " + move.Body.IDIfAssigned
-					+ " off lot " + Root.GetStringProperty(PlotIdProperty) + " onto "
-					+ move.Target.X + "," + move.Target.Y);
+					&& move.Body.CurrentCell == move.Target)
+				{
+					walked++;
+					KingdomLog.Log("architecture: stood occupant " + move.Body.IDIfAssigned
+						+ " off lot " + Root.GetStringProperty(PlotIdProperty) + " onto "
+						+ move.Target.X + "," + move.Target.Y);
+					continue;
+				}
+				// Half a cleared site is nobody's intent: put back everyone already walked, and
+				// report exactly how many stayed put and how many are still standing off.
+				int back = WalkBack(plan, i, out int stranded);
+				Moved = stranded;
+				return ClearanceFault("a settler would not stand off the site; " + back
+					+ " stood back" + (stranded > 0
+						? " and " + stranded + " could not be stood back" : ""), out Refusal);
 			}
+			Moved = walked;
 			return true;
+		}
+
+		/// <summary>Walks the first <paramref name="Count"/> planned bodies back to the ground they
+		/// stood on. Returns how many stood back; <paramref name="Stranded"/> counts the rest.</summary>
+		private static int WalkBack(List<KingdomLayoutDisplacement> Plan, int Count,
+			out int Stranded)
+		{
+			int back = 0;
+			Stranded = 0;
+			for (int i = 0; i < Count; i++)
+			{
+				KingdomLayoutDisplacement move = Plan[i];
+				if (GameObject.Validate(move.Body) && move.Origin != null
+					&& move.Body.SystemLongDistanceMoveTo(move.Origin, 0, forced: true,
+						ignoreCombat: true)
+					&& move.Body.CurrentCell == move.Origin)
+				{
+					back++;
+					KingdomLog.Log("architecture: stood occupant " + move.Body.IDIfAssigned
+						+ " back onto " + move.Origin.X + "," + move.Origin.Y);
+					continue;
+				}
+				Stranded++;
+				KingdomLog.Log("architecture: occupant " + move.Body.IDIfAssigned
+					+ " could not be stood back");
+			}
+			return back;
 		}
 
 		private static bool ClearanceFault(string Message, out string Refusal)
@@ -160,8 +208,10 @@ namespace ThousandAndFirst
 		{
 			if (Body.IsPlayer() || Body.IsPlayerLed() || !Survey.Settlers.Contains(Body)
 				|| Simulation.City.KingdomPhysicalHappenings.IsStaged(Body)) return false;
+			// Fails closed: a surveyed body with no roll id is not a PROVEN resident, and an
+			// unproven body is never shoved. The roster mints an id for every settler it reads.
 			int id = Simulation.City.KingdomResidents.IdOf(Body);
-			if (id <= 0) return true;
+			if (id <= 0) return false;
 			return Simulation.City.KingdomResidents.TryResident(System.City, id,
 				out Simulation.City.KingdomResidentRow row)
 				&& row.Standing == Simulation.City.KingdomResidentStanding.Resident;
