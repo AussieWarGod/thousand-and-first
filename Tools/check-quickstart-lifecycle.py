@@ -10,7 +10,8 @@ The lifecycle this tool judges is one chain, not a set of independent legs:
 Three verdicts, and only one of them is success:
 
   PASS     every link's rows are present, in order, and OK.
-  FAIL     a link's rows are present but refused, out of order, or self-contradictory.
+  FAIL     a link's rows are present but refused, out of order, or self-contradictory
+           (failClass "chain"), or the founder died mid-run (failClass "founder-died").
   BLOCKER  a link has NO rows at all. Missing reachability is never a pass: an absent link
            means the chain was never driven that far, which is exactly the state this tool
            exists to make visible.
@@ -232,6 +233,27 @@ STALL_CLASSES = (
 )
 
 
+# The founder's death is its own FAIL class, distinct from every job-stall class above and from a
+# link that merely refused: native run 36 (13122f0) lost the founder to a wandering creature
+# mid-`advance` and, until the AutoRunner learned to journal it, the run simply hung. The runner
+# now lands a SCRIPT-STOPPED row whose message opens with DIED_PREFIX and the engine's own death
+# category (Harness/KingdomScenarioAutoRunner.Death.cs); this tool names it founder-died, never a
+# pass, never a waiver, and it outranks every other verdict because it is the root cause of
+# whatever the chain failed to reach afterwards.
+STOPPED_ROW = "SCRIPT-STOPPED"
+DIED_PREFIX = "DIED "
+FOUNDER_DIED = "founder-died"
+CHAIN_FAIL = "chain"
+
+
+def founder_death(rows: list[tuple[str, str, str]]) -> str | None:
+    """The message of the first SCRIPT-STOPPED row that reports the founder's death, if any."""
+    for verb, _, message in rows:
+        if verb == STOPPED_ROW and message.startswith(DIED_PREFIX):
+            return message
+    return None
+
+
 def stall_in(message: str) -> str | None:
     """The stall classification a refusal row named, if it named one."""
     found = re.search(r"\bstall=([a-z-]+)", message)
@@ -425,10 +447,16 @@ def judge(rows: list[tuple[str, str, str]]) -> dict:
             verdict, reason = FAIL, link + ": " + detail
         elif state == BLOCKER and verdict == PASS:
             verdict, reason = BLOCKER, link + ": " + detail
+    fail_class = CHAIN_FAIL if verdict == FAIL else None
+    death = founder_death(rows)
+    if death is not None:
+        verdict, reason, fail_class = FAIL, FOUNDER_DIED + ": " + death, FOUNDER_DIED
     return {
         "tool": "check-quickstart-lifecycle",
         "verdict": verdict,
         "reason": reason,
+        "failClass": fail_class,
+        "founderDeath": death,
         "links": links,
         "rowsRead": len(rows),
     }

@@ -35,6 +35,59 @@ def whole_chain(**kwargs):
     return rows(*names, **kwargs)
 
 
+class FounderDeath(unittest.TestCase):
+    """A founder who died mid-run is its own FAIL class, never a blocker and never a pass."""
+
+    DIED = (
+        "DIED bitten to death; reason=You were bitten to death by a snapjaw.;"
+        " founderCell=40,12; zone=JoppaWorld.8.22.1.1.10; guard=armed-at-death;"
+        " ignoreMe=True; walk=none; scope=quickstart-lifecycle"
+    )
+
+    def mid_advance(self, message):
+        """The Quickstart road exactly as native run 36 left it: boot and build rows landed,
+        lifecycle-open landed, the advance armed, then the run stopped."""
+        driven = rows(*checker.BOOT_ROWS, *checker.BUILD_ROWS, "lifecycle-open", "advance")
+        driven.append(("advance-guard", "OK", "start; founderCell=40,12; guard=ignoreme-armed"))
+        driven.append(("SCRIPT-STOPPED", "REFUSED", message))
+        return driven
+
+    def test_a_died_row_is_the_founder_died_fail_class(self):
+        report = checker.judge(self.mid_advance(self.DIED))
+        self.assertEqual(report["verdict"], checker.FAIL)
+        self.assertEqual(report["failClass"], checker.FOUNDER_DIED)
+        self.assertEqual(report["founderDeath"], self.DIED)
+        self.assertTrue(report["reason"].startswith("founder-died: DIED bitten to death"))
+        self.assertEqual(checker.EXITS[report["verdict"]], 4)
+
+    def test_the_death_outranks_the_blocker_the_unreached_links_would_read(self):
+        report = checker.judge(self.mid_advance(self.DIED))
+        states = {entry["link"]: entry["state"] for entry in report["links"]}
+        self.assertEqual(states["engine-turn-build"], checker.BLOCKER)
+        self.assertEqual(report["verdict"], checker.FAIL)
+        self.assertIn(checker.FOUNDER_DIED, report["reason"])
+
+    def test_an_ordinary_stopped_row_is_not_a_founder_death(self):
+        stopped = "refused at verb 5 of 7: lifecycle-grown"
+        report = checker.judge(self.mid_advance(stopped))
+        self.assertIsNone(report["founderDeath"])
+        self.assertNotEqual(report["failClass"], checker.FOUNDER_DIED)
+        self.assertEqual(report["verdict"], checker.BLOCKER)
+        self.assertIn("engine-turn-build", report["reason"])
+
+    def test_the_died_prefix_is_read_only_off_the_stopped_row(self):
+        driven = rows("lifecycle-open")
+        driven.append(("lifecycle-grown", "REFUSED", "DIED is just a word in a stall reading"))
+        self.assertIsNone(checker.founder_death(driven))
+
+    def test_a_chain_fail_carries_the_chain_class_and_a_pass_carries_none(self):
+        failed = checker.judge(whole_chain(refused=("QUICKSTART-BUILD-CANPAY",)))
+        self.assertEqual(failed["failClass"], checker.CHAIN_FAIL)
+        passed = checker.judge(whole_chain())
+        self.assertIsNone(passed["failClass"])
+        self.assertIsNone(passed["founderDeath"])
+
+
 class StallClassification(unittest.TestCase):
     """The four unfinished-job cases, surfaced verbatim and never softened into a pass."""
 

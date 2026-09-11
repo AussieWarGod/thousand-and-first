@@ -1125,7 +1125,8 @@ the engine never reaches `XRLCore.PlayerTurn`'s input wait. The engine's attende
 to a human, and an interrupt in an unattended run is a silent stall. Elapsed turns are counted from
 `XRLGame.Turns`, never from handler calls. A scripted run **suspends** at `advance` and resumes at
 the next verb; rows are `advance` (armed), `advance-progress` every 100 turns, and
-`advance-complete`. Refusals carry a **stable reason code** beside the prose — bind expectations to
+`advance-complete`, bracketed on the quickstart-lifecycle road by two `advance-guard` bookkeeping
+rows (founder cell and guard state at arming and at release; Harness/KingdomScenarioFounderGuard.cs). Refusals carry a **stable reason code** beside the prose — bind expectations to
 the code, never to the wording: `taf-advance-malformed-count`, `taf-advance-count-out-of-range`
 (the cap is 10000 per line), `taf-advance-no-driver`, `taf-advance-no-live-game`,
 `taf-advance-already-running`, `taf-advance-stalled`, `taf-advance-lost-player`.
@@ -1387,7 +1388,7 @@ fails a test rather than silently turning a persona green forever.
 **Strict in both directions.** The significant rows must equal the declared expectations exactly:
 an unexpected `OK` fails as loudly as an unexpected refusal, a missing row as loudly as an extra
 one. Runner bookkeeping is not significant and is skipped — `AUTOSTART`, `TESTGROUND-BUILT`,
-`RUNNER-ARMED`, `SCRIPT-BEGIN`, `advance-progress`, `advance-complete`, `VERB-REFUSED`.
+`RUNNER-ARMED`, `SCRIPT-BEGIN`, `advance-progress`, `advance-complete`, `advance-guard`, `VERB-REFUSED`.
 
 **`CHECK=status-digest-stable`** compares the 64-hex digests in the **first** and **last** `status`
 rows and fails if they differ or if the first carries none. Digests are data, not prose, so the

@@ -122,6 +122,8 @@ namespace ThousandAndFirst
 		public override void RegisterPlayer(GameObject Player, IEventRegistrar Registrar)
 		{
 			Registrar.Register(BeginTakeActionEvent.ID);
+			Registrar.Register(AfterDieEvent.ID); // KingdomScenarioAutoRunner.Death.cs
+			RegisteredPlayer = Player;
 		}
 
 		/// <summary>

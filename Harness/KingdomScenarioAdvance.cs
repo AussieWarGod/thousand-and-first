@@ -116,6 +116,7 @@ namespace ThousandAndFirst.Harness
 
 		internal static void Cancel()
 		{
+			KingdomScenarioFounderGuard.Release(The.Player); // silent backstop; rows land in EndGuard
 			Requested = 0;
 			Remaining = 0;
 			Elapsed = 0;
@@ -164,6 +165,8 @@ namespace ThousandAndFirst.Harness
 			NextProgress = ProgressTurns;
 			IdlePumps = 0;
 			LastTurn = game.Turns;
+			KingdomScenarioJournal.Append(KingdomScenarioFounderGuard.Row, true,
+				"start; " + KingdomScenarioFounderGuard.Arm(player)); // KingdomScenarioFounderGuard.cs
 			// This opportunity is the wait's first turn. Spending it here is what keeps the engine
 			// out of its input wait; see the class remarks.
 			Spend(player);
@@ -226,6 +229,7 @@ namespace ThousandAndFirst.Harness
 			}
 			if (Remaining <= 0)
 			{
+				EndGuard(player);
 				KingdomScenarioJournal.Append(CompleteRow, true, Elapsed + " turn(s) elapsed of "
 					+ Requested + " requested");
 				Cancel();
@@ -272,8 +276,18 @@ namespace ThousandAndFirst.Harness
 		/// <summary>Abandons a pending wait and records why, under the same codes the verb uses.</summary>
 		private static void Stop(string Code, string Detail)
 		{
+			EndGuard(The.Player);
 			KingdomScenarioJournal.Append(Verb, false, Refuse(Code, Detail));
 			Cancel();
+		}
+
+		/// <summary>The guard's end row, only when it was armed: the founder's cell and the
+		/// restored state, before the row that ends the advance.</summary>
+		private static void EndGuard(GameObject Player)
+		{
+			if (!KingdomScenarioFounderGuard.Armed) return;
+			KingdomScenarioJournal.Append(KingdomScenarioFounderGuard.Row, true,
+				"end; " + KingdomScenarioFounderGuard.Release(Player));
 		}
 	}
 }

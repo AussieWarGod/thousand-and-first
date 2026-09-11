@@ -57,6 +57,33 @@
 # refuses honestly when the turn budget expires before the building stands, exactly as on the
 # founding road.
 #
+# NATIVE RUN 36 (13122f0): THE FOUNDER DIED MID-ADVANCE. Boot, build and lifecycle-open landed
+# clean, then during `advance 7200` a wandering creature bit the founder (the player body, standing
+# on the rite cell with nobody at the keyboard) to death; succession refused (HeirUnreachable);
+# the engine lowered Game.Running and the AutoRunner, which wakes only on the player's own
+# BeginTakeActionEvent, could never journal a terminal row: no advance-progress row, ~50 minutes of
+# silence. Two harness-only changes, both disclosed here, nothing in production touched:
+#   1. DEATH IS TERMINAL (Harness/KingdomScenarioAutoRunner.Death.cs). The runner now observes
+#      AfterDieEvent through the same player registrar production's seal uses and lands
+#      `SCRIPT-STOPPED DIED <deathCategory>; reason=...; founderCell=...; guard=...` before the
+#      engine's death popup. Tools/check-quickstart-lifecycle.py reads that prefix as the distinct
+#      FAIL class `founder-died` (failClass), which outranks the BLOCKER the unreached links would
+#      otherwise read. run-personas.sh / run-scenario.ps1 already treat SCRIPT-STOPPED as terminal.
+#   2. THE FOUNDER IS NOT A COMBAT TARGET DURING THE SCRIPTED ADVANCE
+#      (Harness/KingdomScenarioFounderGuard.cs). For this command only (LifecycleRequested), from
+#      the moment `advance` arms until it ends by any route, the guard raises the engine's own
+#      XRLCore.IgnoreMe (decompile 2.0.211.51 XRL/Core/XRLCore.cs:217, the flag the engine's
+#      `ignoreme` wish toggles, Wishing.cs:3396-3398): Brain.WantToKill pushes no Kill goal against
+#      the player (Brain.cs:1075-1077) and GameObject.IsHostileTowards answers false toward the
+#      player (GameObject.cs:11431-11433). It is NOT invulnerability - TakeDamage/Die never read
+#      it, spawning is untouched, XRLCore.Calm and IDKFA are not used, the flag is NonSerialized
+#      and the prior value is restored at release. Two bookkeeping `advance-guard` rows (start/end)
+#      record founderCell=x,y, the guard state, and ignoreMe=; the advance-guard start row lands
+#      just before the `advance OK` row because the flag must be up before the wait's first spend.
+#      LIMIT: the preferred "walk the founder into the camp tent / heart interior first" is inert
+#      at Camp stage - the tent rows are staked, unwalled plots and the heart has no interior cell
+#      yet - so the founder stays on the cell the boot left him on (walk=none in the row).
+#
 # NOT YET NATIVELY RUN with this budget: written and gate.sh-compiled only. The cold-load session
 # and the next action after it are NOT in this script; see Tools/check-quickstart-lifecycle.py for
 # why those two links still read BLOCKER without it.
