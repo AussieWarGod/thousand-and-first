@@ -1,5 +1,5 @@
 {
-  "driver": "TESTER_NAME_OR_HONESTLY_LABELLED_AUTOMATED_DRIVER_IDENTITY",
+  "driver": "REPLACE_WITH_THE_TESTER_OR_HONESTLY_LABELLED_AUTOMATED_DRIVER_IDENTITY",
   "results": [
     {"check": "loader", "status": "PASS", "processStopped": true},
     {"check": "newGame", "status": "PASS", "processStopped": true},

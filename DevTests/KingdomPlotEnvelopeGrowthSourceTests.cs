@@ -284,9 +284,11 @@ namespace ThousandAndFirst.Tests
 
 			string receipts = Read(
 				"Growth/KingdomArchitectureStamper.UpgradeReceipts.cs");
+			string removal = Read(
+				"Growth/KingdomArchitectureStamper.UpgradeRemoval.cs");
 			StringAssert.Contains("state == 1 && found == KingdomPhysicalLookupState.Absent",
-				receipts);
-			StringAssert.Contains("threw before changing exact state", receipts);
+				removal);
+			StringAssert.Contains("threw before changing exact state", removal);
 			StringAssert.Contains("UpgradeQuarantine(Owner", receipts);
 			StringAssert.Contains("phase < 0 || phase > 5", receipts);
 

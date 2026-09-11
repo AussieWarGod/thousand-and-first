@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using System;
+using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 using NUnit.Framework.Legacy;
@@ -17,6 +18,126 @@ namespace ThousandAndFirst.Tests
 		private static string Plot()
 		{
 			return KingdomPlot2LogicalSource.Read();
+		}
+
+		/// <summary>
+		/// One census call site that passes no peer: the reason must stand next to the call, and
+		/// the call itself must still read null. A future edit that hands it a peer, or drops the
+		/// reason, fails here.
+		/// </summary>
+		private static void AssertNullPeerSite(string Path, string Comment, string Call)
+		{
+			string source = TestMain.ReadRepositoryText(Path);
+			StringAssert.Contains(Comment, source);
+			StringAssert.Contains(Call, source);
+			int at = source.IndexOf(Comment, StringComparison.Ordinal);
+			int call = source.IndexOf(Call, at, StringComparison.Ordinal);
+			ClassicAssert.IsTrue(call > at && call - (at + Comment.Length) < 200,
+				Path + " states no peer is permitted, but not beside the call");
+		}
+
+		[Test]
+		public void EveryCensusSiteWithoutAnUpgradeReceiptSaysSoBesideTheCallAndPassesNoPeer()
+		{
+			AssertNullPeerSite("Growth/KingdomArchitectureStamper.Verification.cs",
+				"// No upgrade receipt is in scope here, so no other generation may stand",
+				"ExactComponent(Owner, Exact, Z, Intent, Lot, Placement, id, null)");
+			AssertNullPeerSite("Growth/KingdomArchitectureStamper.AnchoredLookup.cs",
+				"// Anchored shell lookup carries no upgrade receipt: no other generation may stand.",
+				"ExactComponent(Owner, exact, Z, intent, lot, placement, id, null)");
+			AssertNullPeerSite("Growth/KingdomArchitectureStamper.Recovery.cs",
+				"// Rollback carries no upgrade receipt: no other generation may stand.",
+				"ExactComponent(Owner, item, Z, Intent, Lot, placement, id, null)");
+			AssertNullPeerSite("Growth/KingdomArchitectureStamper.Staging.cs",
+				"// Staging publication carries no upgrade receipt: no other generation may stand.",
+				"ExactComponent(Owner, pending, Z, Intent, Lot, Placement,\n\t\t\t\t\tOwner.GetStringProperty(idProperty), null)");
+			AssertNullPeerSite("Growth/KingdomArchitectureStamper.Staging.cs",
+				"// The staging add endpoint carries no upgrade receipt: no other generation may stand.",
+				"ExactComponent(Owner, placed, Z, Intent, Lot, Placement,\n\t\t\t\tOwner.GetStringProperty(idProperty), null)");
+			AssertNullPeerSite("Growth/KingdomArchitectureStamper.UpgradeRemoval.cs",
+				"// Removals run in their own phase, before any retained component is retagged, so",
+				"ExactComponent(Owner, exact, Z, Before, Lot, Placement, id, null)");
+			AssertNullPeerSite("Growth/KingdomArchitectureStamper.UpgradeRemoval.cs",
+				"// Still the removal phase after a throw: no other generation may stand.",
+				"ExactComponent(Owner, afterThrow, Z, Before, Lot, Placement, id, null)");
+			AssertNullPeerSite("Growth/KingdomArchitectureStamper.UpgradeRemoval.cs",
+				"// Still the removal phase after the callback: no other generation may stand.",
+				"ExactComponent(Owner, after, Z, Before, Lot, Placement, id, null)");
+
+			// Exactly these eight, and no more. Counted by reading every census call's own last
+			// argument rather than any spelling of it, so a ninth null site under a different
+			// argument name, with no reason beside it, fails here.
+			string source = Stamper();
+			int peerless = 0;
+			int peerBearing = 0;
+			foreach (int call in CensusCalls(source))
+			{
+				string peer = LastArgument(source, call);
+				if (peer == "null")
+				{
+					peerless++;
+					string before = source.Substring(Math.Max(0, call - 400), Math.Min(400, call));
+					StringAssert.Contains("no other generation may stand", before);
+				}
+				else
+				{
+					peerBearing++;
+					ClassicAssert.IsTrue(peer.Contains("Peer"),
+						"a census call neither resolves a peer nor passes null: " + peer);
+				}
+			}
+			ClassicAssert.AreEqual(8, peerless);
+			ClassicAssert.AreEqual(7, peerBearing);
+			ClassicAssert.AreEqual(8, source.Split(new[] { "no other generation may stand" },
+				StringSplitOptions.None).Length - 1);
+			StringAssert.Contains("ResolveComponentPeer(Owner, Z, Delta, BeforeIntent, Successor, Lot,\n\t\t\t\t\t\tPlacement.Slot, true)", source);
+		}
+
+		/// <summary>Every ExactComponent CALL in the stamper: its own definition and the
+		/// ExactComponentInt/String helpers are not calls and are skipped.</summary>
+		private static List<int> CensusCalls(string Source)
+		{
+			List<int> calls = new List<int>();
+			int at = 0;
+			while (true)
+			{
+				at = Source.IndexOf("ExactComponent(", at, StringComparison.Ordinal);
+				if (at < 0) return calls;
+				int line = Source.LastIndexOf('\n', at) + 1;
+				if (!Source.Substring(line, at - line).Contains("private static bool "))
+					calls.Add(at);
+				at += "ExactComponent(".Length;
+			}
+		}
+
+		/// <summary>The last top-level argument of the call beginning at <paramref name="At" />,
+		/// read by matching parentheses outside string literals.</summary>
+		private static string LastArgument(string Source, int At)
+		{
+			int open = Source.IndexOf('(', At);
+			int depth = 0;
+			int last = open + 1;
+			bool quoted = false;
+			for (int i = open; i < Source.Length; i++)
+			{
+				char c = Source[i];
+				if (quoted)
+				{
+					if (c == '\\') i++;
+					else if (c == '"') quoted = false;
+					continue;
+				}
+				if (c == '"') { quoted = true; continue; }
+				if (c == '(') depth++;
+				else if (c == ')')
+				{
+					depth--;
+					if (depth == 0) return Source.Substring(last, i - last).Trim();
+				}
+				else if (c == ',' && depth == 1) last = i + 1;
+			}
+			ClassicAssert.Fail("unbalanced census call at " + At.ToString());
+			return null;
 		}
 
 		private static string Upgrade()
@@ -205,7 +326,37 @@ namespace ThousandAndFirst.Tests
 				"ExactOptionalComponentInt(Item, ComponentCarriedProperty, 1)", exact);
 			StringAssert.Contains("ExactPendingComponentState(Owner, Item, Intent)", exact);
 			StringAssert.Contains("KingdomArchitectureRuntime.TryWorldPlacement", exact);
-			StringAssert.Contains("return count == 1", exact);
+			// The census is generation-aware: it counts by this generation's component token as
+			// well as lot and slot, because an authored upgrade legitimately has two generations
+			// under one lot at one layout-local slot name during the retag pass. The duplicate
+			// refusal it exists for is unchanged -- two copies of THIS generation still count two
+			// -- and the decision itself lives in a pure shard that is value-tested.
+			StringAssert.Contains("string token = ComponentToken(Lot, Intent.SnapshotHash, Placement)", exact);
+			StringAssert.Contains("new ArchitectureComponentCensusRow(", exact);
+			StringAssert.Contains("candidate.GetStringProperty(ComponentTokenProperty),", exact);
+			StringAssert.Contains("candidate.CurrentCell == Peer.Cell", exact);
+			StringAssert.Contains("KingdomArchitectureComponentCensusRules.Settles(Lot, Placement.Slot, token,", exact);
+			string census = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureComponentCensusRules.cs");
+			StringAssert.Contains("if (row == null || !AtSlot(Lot, Slot, row.Lot, row.Slot)) continue;", census);
+			StringAssert.Contains("int membership = Classify(Token, row.Token, row.Id, row.AtPeerCell, PeerId,", census);
+			StringAssert.Contains("return Settled(thisCount, otherCount, foreignCount);", census);
+			// No element check or cell guard was traded for it.
+			StringAssert.Contains("Item.CurrentCell != Z.GetCell(x, y)", exact);
+			// Census direction per call site: an After-generation settle may meet a predecessor
+			// peer (true), a Before-generation settle an already-retagged successor (false), and
+			// a site with no upgrade receipt in scope permits no peer at all (null).
+			StringAssert.Contains("BeforePlacement.Slot, false)))", source);
+			StringAssert.Contains("AfterPlacement.Slot, true))", source);
+			StringAssert.Contains("ExactComponent(Owner, exact, Z, Before, Lot, Placement, id, null)", source);
+			StringAssert.Contains("ExactComponent(Target, exact, Z, Successor, Lot, Placement, id,\n\t\t\t\t\tResolveComponentPeer(Owner, Z, Delta, BeforeIntent, Successor, Lot,", source);
+			StringAssert.Contains("ExactComponent(Owner, Item, Z, After, Lot, AfterPlacement, Id, Peer)", source);
+			StringAssert.Contains("private static ArchitectureComponentPeer ResolveComponentPeer(", source);
+			StringAssert.Contains("KingdomArchitectureComponentCensusRules.TryPeerTerms(Lot, intent.SnapshotHash,", source);
+			string terms = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureComponentCensusRules.cs");
+			StringAssert.Contains("Allowed = PeerAllowed(RetainState, AfterCensus);", terms);
+			StringAssert.Contains("PeerToken = ComponentTokenText(Lot, PeerHash, Peer);", terms);
 			StringAssert.Contains("Owner.SetStringProperty(FaultProperty, Failure)", source);
 			ClassicAssert.IsFalse(source.Contains("Stat.Random"));
 			ClassicAssert.IsFalse(source.Contains("GetRandomElement"));
@@ -488,8 +639,10 @@ namespace ThousandAndFirst.Tests
 				"private static bool ExactUpgradeState(");
 			StringAssert.Contains("ExactUpgradeState(Owner, UpgradeRemove", read);
 			StringAssert.Contains("ExactUpgradeState(Owner, UpgradeRetain", read);
-			string remove = Between(receipts, "private static bool TryRemoveUpgradeSlot(",
-				"private static bool TryCarryUpgradeSlot(");
+			string removal = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureStamper.UpgradeRemoval.cs");
+			string remove = Between(removal, "private static bool TryRemoveUpgradeSlot(",
+				"\n\t\t}\n\n\t}");
 			StringAssert.Contains("!Owner.HasIntProperty(stateProperty)", remove);
 			string carry = Between(receipts, "private static bool TryCarryUpgradeSlot(",
 				"\n\t\t}\n\n\t}");
@@ -499,10 +652,10 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void UpgradeRemovalSettlesOnlyAfterGlobalLiveIdAbsence()
 		{
-			string receipts = TestMain.ReadRepositoryText(
-				"Growth/KingdomArchitectureStamper.UpgradeReceipts.cs");
-			string remove = Between(receipts, "private static bool TryRemoveUpgradeSlot(",
-				"private static bool TryCarryUpgradeSlot(");
+			string removal = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureStamper.UpgradeRemoval.cs");
+			string remove = Between(removal, "private static bool TryRemoveUpgradeSlot(",
+				"\n\t\t}\n\n\t}");
 			ClassicAssert.AreEqual(4, remove.Split(new[] { "FindGlobalLiveId" },
 				StringSplitOptions.None).Length - 1);
 			ClassicAssert.AreEqual(2, remove.Split(new[] { "GlobalRemovalAftermath" },

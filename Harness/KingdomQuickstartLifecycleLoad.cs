@@ -30,7 +30,7 @@ namespace ThousandAndFirst.Harness
 			string failure = Compare(Game, Witness, out string observed);
 			KingdomScenarioJournal.Append(LoadedRow, failure == null, failure == null
 				? KingdomQuickstartLifecycleSteps.Stamped("native-lifecycle step=cold-load; " + observed)
-				: "native-lifecycle refused at cold-load: " + KingdomScenarioRules.Bounded(failure));
+				: KingdomQuickstartLifecycleSteps.Refuse("cold-load", failure));
 			if (failure != null)
 				throw new InvalidOperationException("cold-load proof refused: " + failure);
 		}
@@ -135,7 +135,7 @@ namespace ThousandAndFirst.Harness
 			string failure = Act(Game, Witness, out observed);
 			KingdomScenarioJournal.Append(NextRow, failure == null, failure == null
 				? KingdomQuickstartLifecycleSteps.Stamped("native-lifecycle step=next-action; " + observed)
-				: "native-lifecycle refused at next-action: " + KingdomScenarioRules.Bounded(failure));
+				: KingdomQuickstartLifecycleSteps.Refuse("next-action", failure));
 		}
 
 		private static string Act(XRLGame Game, KingdomQuickstartLifecycleSnapshot Witness, out string Observed)

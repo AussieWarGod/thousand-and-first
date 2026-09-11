@@ -145,6 +145,17 @@ class ReleaseReadinessTests(unittest.TestCase):
         mode = (ROOT / "docs/release-evidence/preview-source.png").stat().st_mode
         self.assertEqual(mode & 0o111, 0)
 
+    def test_releasing_docs_do_not_claim_a_required_human_preview_reviewer(self) -> None:
+        # Copilot review, PR #154: docs/RELEASING.md:351 claimed the public preview
+        # screenshot's capture/no-generative-assistance review "stays human", contradicting
+        # the automated-only release ruling (reviewedBy/completedUtc are optional and may be
+        # null; only bound non-generative capture provenance is required).
+        releasing = self.read("docs/RELEASING.md")
+        self.assertNotIn("stays human", releasing)
+        self.assertNotIn("which stays human by the same ruling", releasing)
+        self.assertIn("reviewedBy", releasing)
+        self.assertIn("optional and may be null", releasing)
+
 
 if __name__ == "__main__":
     unittest.main()

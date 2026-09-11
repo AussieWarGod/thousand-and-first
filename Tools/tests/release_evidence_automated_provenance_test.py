@@ -33,6 +33,9 @@ SPEC.loader.exec_module(CHECKER)
 
 from Tools import workshop_metadata as METADATA
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+EXAMPLE_IDENTITY_FIELDS = ("capturedBy", "testedBy", "reviewedBy", "driver")
+
 
 class StructureReviewProvenanceTests(unittest.TestCase):
     """Tools/check-structure.py's exact-inventory semantic review ledger."""
@@ -1729,6 +1732,119 @@ class RunRecordTest(unittest.TestCase):
         self.assertTrue(
             any("cannot read the owned-process receipt" in issue for issue in issues), issues
         )
+
+    def cold_load_record(self, **overrides) -> dict:
+        record = self.valid_record(role="cold-load-session")
+        record["inheritedFrom"] = "run-record.json"
+        record["inheritedVerified"] = True
+        record.update(overrides)
+        return record
+
+    def test_cold_load_record_with_inherited_fields_passes(self) -> None:
+        self.assertEqual(METADATA.validate_run_record(self.write(self.cold_load_record())), [])
+
+    def test_save_session_with_inherited_from_fails(self) -> None:
+        record = self.valid_record()
+        record["inheritedFrom"] = "run-record.json"
+        record["inheritedVerified"] = True
+        issues = METADATA.validate_run_record(self.write(record))
+        self.assertTrue(
+            any("fields must be exactly the required set" in issue for issue in issues), issues
+        )
+
+    def test_cold_load_record_missing_inherited_verified_fails(self) -> None:
+        record = self.cold_load_record()
+        del record["inheritedVerified"]
+        issues = METADATA.validate_run_record(self.write(record))
+        self.assertTrue(
+            any("must both be present for a cold-load-session record" in issue for issue in issues),
+            issues,
+        )
+
+    def test_cold_load_record_inherited_from_with_path_traversal_fails(self) -> None:
+        record = self.cold_load_record(inheritedFrom="../outside/run-record.json")
+        issues = METADATA.validate_run_record(self.write(record))
+        self.assertTrue(
+            any("inheritedFrom must be a safe basename" in issue for issue in issues), issues
+        )
+
+    def test_cold_load_record_inherited_from_absolute_path_fails(self) -> None:
+        record = self.cold_load_record(inheritedFrom="/etc/passwd")
+        issues = METADATA.validate_run_record(self.write(record))
+        self.assertTrue(
+            any("inheritedFrom must be a safe basename" in issue for issue in issues), issues
+        )
+
+    def test_cold_load_record_inherited_verified_non_bool_fails(self) -> None:
+        record = self.cold_load_record(inheritedVerified="true")
+        issues = METADATA.validate_run_record(self.write(record))
+        self.assertTrue(
+            any("inheritedVerified must be a boolean" in issue for issue in issues), issues
+        )
+
+    def test_cold_load_record_relative_source_root_inherited_from_passes(self) -> None:
+        record = self.cold_load_record(inheritedFrom="fixtures/save-session/run-record.json")
+        self.assertEqual(METADATA.validate_run_record(self.write(record)), [])
+
+    def test_paired_save_record_candidate_commit_mismatch_fails(self) -> None:
+        record = self.cold_load_record()
+        save_record = self.valid_record(candidateCommit="c" * 40)
+        issues = METADATA.validate_run_record(
+            self.write(record), paired_save_record=save_record
+        )
+        self.assertTrue(
+            any(
+                "candidateCommit must match the paired save-session record's value" in issue
+                for issue in issues
+            ),
+            issues,
+        )
+
+    def test_paired_save_record_matching_fields_pass(self) -> None:
+        record = self.cold_load_record()
+        save_record = self.valid_record()
+        issues = METADATA.validate_run_record(
+            self.write(record), paired_save_record=save_record
+        )
+        self.assertEqual(issues, [])
+
+class ExampleTemplateIdentityPlaceholderTest(unittest.TestCase):
+    """Copilot review, PR #154: docs/**/*.example.json ship identity placeholders shaped
+    "..._NAME_OR_HONESTLY_LABELLED_..._IDENTITY", which _identity_text_valid ACCEPTS (it only
+    rejects PLACEHOLDER_SENTINEL/FORGED_HUMAN_SIGNATURE matches), so an unedited template
+    passes the provenance gate. Every identity field in every shipped example template must
+    use the sentinel form instead ("REPLACE_WITH_...")."""
+
+    def _example_identity_values(self):
+        found = []
+        for path in sorted(REPO_ROOT.joinpath("docs").rglob("*.example.json")):
+            payload = json.loads(path.read_text(encoding="utf-8-sig"))
+            found.extend(self._walk(payload, path))
+        return found
+
+    def _walk(self, node, path):
+        found = []
+        if isinstance(node, dict):
+            for key, value in node.items():
+                if key in EXAMPLE_IDENTITY_FIELDS and isinstance(value, str):
+                    found.append((path, key, value))
+                else:
+                    found.extend(self._walk(value, path))
+        elif isinstance(node, list):
+            for item in node:
+                found.extend(self._walk(item, path))
+        return found
+
+    def test_every_example_identity_field_rejects_as_a_placeholder(self) -> None:
+        found = self._example_identity_values()
+        self.assertGreater(len(found), 0, "no example identity fields found -- test is inert")
+        for path, key, value in found:
+            self.assertFalse(
+                METADATA._identity_text_valid(value, 2, 80),
+                f"{path}:{key} = {value!r} must NOT validate as a real identity "
+                "(it is a template placeholder)",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

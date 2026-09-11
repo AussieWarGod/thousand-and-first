@@ -205,6 +205,9 @@
 	<Compile Include="KingdomGatehouseProjectionRulesTests.cs" />
 	<Compile Include="..\Debug\KingdomVisualProofRules.cs" />
 	<Compile Include="..\Growth\KingdomArchitectureEnums.cs" />
+	<Compile Include="..\Growth\KingdomArchitectureComponentCensusRules.cs" />
+    <Compile Include="..\Growth\KingdomArchitectureComponentCensusRow.cs" />
+	<Compile Include="KingdomArchitectureComponentCensusTests.cs" />
 	<Compile Include="..\Growth\KingdomArchitectureSnapshots.cs" />
 	<Compile Include="..\Growth\KingdomArchitectureLabourRules.cs" />
 	<Compile Include="..\Growth\KingdomArchitectureLabourRules.PlotReceipt.cs" />

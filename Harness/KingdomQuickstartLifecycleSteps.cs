@@ -91,7 +91,7 @@ namespace ThousandAndFirst.Harness
 
 			bool quoted = KingdomPlots.TryQuoteCommission(System, Zone, entry, null,
 				KingdomPlotRules.PlotSize.None, out KingdomPlotQuote quote, out string quoteFailure);
-			if (!quoted) return "native-lifecycle refused at quote: " + Bounded(quoteFailure);
+			if (!quoted) return Refuse("quote", quoteFailure);
 			string quoteReport = "quote waterDrams=" + quote.WaterDrams
 				+ " materialClaim=" + quote.MaterialClaim.ToClaimString() + "; ";
 
@@ -101,17 +101,17 @@ namespace ThousandAndFirst.Harness
 			else if (!KingdomMaterials.CanPay(Zone, BuildKey, out string materialBlocker))
 				blocked = "materials; blocker=" + Bounded(materialBlocker);
 			if (blocked != null)
-				return "native-lifecycle refused at canpay: " + blocked
-					+ "; the settlement's own economy has not yet paid for this design";
+				return Refuse("canpay", blocked
+					+ "; the settlement's own economy has not yet paid for this design");
 
 			bool commissioned = KingdomCommission.Commission(System, BuildKey, null,
 				KingdomPlotRules.PlotSize.None, quote, out string commissionFailure);
 			if (!commissioned)
-				return "native-lifecycle refused at commission: " + Bounded(commissionFailure);
+				return Refuse("commission", commissionFailure);
 			string census = Census(Game, Zone, System, stockpile, before, waterBefore, entry,
 				quote, jobsBefore, out KingdomConstructionJob job);
 			if (census != null)
-				return "native-lifecycle refused after commission: " + Bounded(census);
+				return Refuse("after-commission", census);
 			Game.SetStringGameState(JobKey, job.Id);
 			if (!KingdomScenarioDurableState.ProvesExactText(JobKey, job.Id))
 				return Refuse(BuildStep, "the commissioned job identity did not persist exactly");
@@ -201,10 +201,12 @@ namespace ThousandAndFirst.Harness
 
 		/// <summary>A refusal is returned, never journalled here: the scenario runner writes
 		/// exactly one row per verb it ran, carrying this text, so a persona's expectations stay
-		/// strict in both directions.</summary>
+		/// strict in both directions. Routed through Stamped(...) like every other lifecycle row,
+		/// so an honest refusal still names the profile that produced it instead of landing an
+		/// unbound row the checker cannot attribute to a session.</summary>
 		internal static string Refuse(string Step, string Reason)
 		{
-			return "native-lifecycle refused at " + Step + ": " + Bounded(Reason);
+			return Stamped("native-lifecycle refused at " + Step + ": " + Bounded(Reason));
 		}
 	}
 }

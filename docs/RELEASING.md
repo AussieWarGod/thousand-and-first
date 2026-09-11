@@ -383,8 +383,11 @@ reviewed waiver, and
 retained artifacts below `docs/release-evidence/`. Identities and times must be real; placeholders,
 a forged human-signature claim authored by automation, missing artifacts, hash drift, a non-PASS or
 missing `processStopped` driver entry, unknown pass IDs, duplicate IDs, reordered IDs, or stale
-`TESTING.md` all fail. Human names are no longer required anywhere except the public preview
-screenshot's capture/no-generative-assistance review, which stays human by the same ruling.
+`TESTING.md` all fail. Human names are no longer required anywhere: the public preview
+screenshot requires bound non-generative capture provenance (schema documented next to
+`Tools/workshop_metadata.py`'s preview-review validation), while `reviewedBy`/`completedUtc`
+are optional and may be null under the same author ruling (no manual test gate for release,
+ever; credential entry and legal/marketing approval remain human).
 
 Validate:
 

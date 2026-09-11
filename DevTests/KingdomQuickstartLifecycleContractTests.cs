@@ -239,9 +239,11 @@ namespace ThousandAndFirst.Tests
 		}
 
 		/// <summary>Every lifecycle row names the profile it was launched from, read from that
-		/// profile's own sealed root, and a run that cannot name it refuses.</summary>
+		/// profile's own sealed root, and a run that cannot name it refuses -- including a
+		/// refusal row: Refuse(...) and every hand-built refusal string route through Stamped(...)
+		/// too, so no lifecycle-* row (success or refusal) can be written unstamped.</summary>
 		[Test]
-		public void EveryLifecycleRowIsStampedWithItsLaunchedProfile()
+		public void EveryLifecycleRowIncludingRefusalsIsStampedWithItsLaunchedProfile()
 		{
 			string stamp = Read("Harness/KingdomQuickstartLifecycleStamp.cs");
 			StringAssert.Contains("internal static string Text(string Root)", stamp);
@@ -253,12 +255,31 @@ namespace ThousandAndFirst.Tests
 			string steps = Read("Harness/KingdomQuickstartLifecycleSteps.cs");
 			StringAssert.Contains("internal static string Stamped(string Report)", steps);
 			StringAssert.Contains("the launched profile could not be named from its ", steps);
-			foreach (string path in new[] { "Harness/KingdomQuickstartLifecycleSteps.cs",
-				"Harness/KingdomQuickstartLifecycleFinish.cs" })
-				ClassicAssert.AreEqual(2, Occurrences(Read(path), "return Stamped("), path);
+			// Refuse(...) itself routes through Stamped(...): the two success rows in Steps.cs
+			// (Open, Build) plus Refuse's own return make three; Finish.cs has no refusal helper
+			// of its own and calls the shared Refuse(...), so its count stays at its two success
+			// rows only.
+			StringAssert.Contains(
+				"return Stamped(\"native-lifecycle refused at \" + Step + \": \" + Bounded(Reason));",
+				steps);
+			ClassicAssert.AreEqual(3, Occurrences(steps, "return Stamped("), "Steps.cs");
+			ClassicAssert.AreEqual(2,
+				Occurrences(Read("Harness/KingdomQuickstartLifecycleFinish.cs"), "return Stamped("),
+				"Finish.cs");
 			string load = Read("Harness/KingdomQuickstartLifecycleLoad.cs");
 			ClassicAssert.AreEqual(2,
-				Occurrences(load, "KingdomQuickstartLifecycleSteps.Stamped("), "load rows");
+				Occurrences(load, "KingdomQuickstartLifecycleSteps.Stamped("), "load success rows");
+			// The two load refusal rows carry no hand-built literal any more: they route through
+			// the shared Refuse(...) helper, which is itself stamped.
+			ClassicAssert.AreEqual(2,
+				Occurrences(load, "KingdomQuickstartLifecycleSteps.Refuse("), "load refusal rows");
+			// No lifecycle shard may return a bare, unstamped refusal literal: every such return
+			// must go through Refuse(...) or Stamped(...) instead.
+			foreach (string path in new[] { "Harness/KingdomQuickstartLifecycleSteps.cs",
+				"Harness/KingdomQuickstartLifecycleFinish.cs", "Harness/KingdomQuickstartLifecycleLoad.cs" })
+				ClassicAssert.AreEqual(0,
+					Occurrences(Read(path), "return \"native-lifecycle refused"),
+					path + " must carry no unstamped refusal literal");
 			// The Quickstart lifecycle variant stamps its own row, and only that variant does.
 			string build = Read("Harness/KingdomQuickstartBuildTest.cs");
 			StringAssert.Contains("QUICKSTART-LIFECYCLE-PROFILE", build);

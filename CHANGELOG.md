@@ -10,9 +10,9 @@ below it.
 
 ## Unreleased — Beta gap report
 
-Current 3084-file census is line-cap green: 437,804 physical lines; direct `XRL`
-imports occur in 1438 files, 0 of them over the line limit. Inventory SHA-256:
-`3cde87156ce743b35914bfa819dca99e4e0b3981a915e6aa18c201b8b7c1c38a`. The cold-install inventory contains 3115 files.
+Current 3089-file census is line-cap green: 438,207 physical lines; direct `XRL`
+imports occur in 1441 files, 0 of them over the line limit. Inventory SHA-256:
+`031417d6337e6cc2870749baa2ca611a6db2c6c421ee50ea1e7d0157fa70d146`. The cold-install inventory contains 3120 files.
 This isolated 0.3.4 preparation combines heart authority, shared-XL transition, rung settlement
 and camp content/fixture branches. Combined compile/native gates and semantic review are owed;
 all earlier checkpoint counts below are retained, never carried forward as acceptance.
@@ -100,7 +100,21 @@ correction's only production delta is one file,
 
 ### Added
 
-- A dev-only native-check seam (`camp-heart-native-checks`) tests PR #107's owed native case 2:
+- **A verdict for the whole construction lifecycle, and an honest name for the part that is
+  not driven yet.** The Quickstart harness already proves startup, a stockpile quote, the CanPay
+  pre-check, a paid commission with an exact timber and water debit and a new paid job, a real
+  save, and a cold load whose restored identities are byte-identical. Nothing judged those links
+  as ONE chain, and two links of that chain have no producer at all: carrying the paid job to a
+  finished building with engine turns, and acting again on the loaded game. A new read-only
+  verdict tool reads the journals a native run leaves and answers PASS only when every link
+  landed its rows in order; a link that landed no rows is BLOCKER, never a pass, and a link whose
+  rows refused is FAIL. It can also emit the long-form release
+  artefact from a driver-written run record: seven ordered steps, measured turns and seconds
+  beside their budgets, the two process sessions, and the candidate and continuity bindings --
+  omitting, and naming, anything the journals or the record do not actually carry. Source-only pins keep the harness and
+  the tool naming the same rows, so neither side can quietly stop demanding a link.
+
+- A dev-only native-check seam (`camp-heart-native-checks`) proves PR #107's owed native case 2:
   the camp heart's dedicated stockpile keeps its exact object identity, its exact cell and every
   physical unit the bill did not ask for across a REAL PAID climb from the rite ground to the
   waterstone, and the cooking fire is re-laid on the same rite-relative cell. The fixture founds a
@@ -136,19 +150,6 @@ correction's only production delta is one file,
   `continue` and no recorded reason before the ground is ever read, and the founder-facing answer
   when nothing fits is `KingdomPlotRules.RefuseRoom`. Cases 1, 3, 4 and 5 of #107 remain owed.
 
-- **A verdict for the whole construction lifecycle, and an honest name for the part that is
-  not driven yet.** The Quickstart harness already proves startup, a stockpile quote, the CanPay
-  pre-check, a paid commission with an exact timber and water debit and a new paid job, a real
-  save, and a cold load whose restored identities are byte-identical. Nothing judged those links
-  as ONE chain, and two links of that chain have no producer at all: carrying the paid job to a
-  finished building with engine turns, and acting again on the loaded game. A new read-only
-  verdict tool reads the journals a native run leaves and answers PASS only when every link
-  landed its rows in order; a link that landed no rows is BLOCKER, never a pass, and a link whose
-  rows refused is FAIL. It can also emit the long-form release
-  artefact from a driver-written run record: seven ordered steps, measured turns and seconds
-  beside their budgets, the two process sessions, and the candidate and continuity bindings --
-  omitting, and naming, anything the journals or the record do not actually carry. Source-only pins keep the harness and
-  the tool naming the same rows, so neither side can quietly stop demanding a link.
 
 - Kingdom Quickstart now founds a world with four founding citizens — a hand, a drifter, a tinker
   and a physicker of one culture per camp — enrolled under a new `Founding` reason that only this
