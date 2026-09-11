@@ -22,6 +22,7 @@ namespace ThousandAndFirst.Tests
 		private const string Stock = "Harness/KingdomCampHeartNativeRung3Stock.cs";
 		private const string Diagnostics = "Harness/KingdomCampHeartNativeRung3Diagnostics.cs";
 		private const string Bill = "Harness/KingdomCampHeartNativeBill.cs";
+		private const string TownSeed = "Harness/KingdomCampHeartNativeTownSeed.cs";
 		private const string Persona = "Tools/personas/camp-heart-rung3-native-check.persona";
 		private const string Buildings = "RuntimeData/KingdomBuildings.xml";
 		private const string Blueprints = "RuntimeData/ObjectBlueprints.xml";
@@ -325,6 +326,60 @@ namespace ThousandAndFirst.Tests
 			Assert.That(Read(Bill), Does.Contain("private void RecordJobProgress(string Id, GameObject Root)"));
 			Assert.That(Read(Bill), Does.Contain("var improvement = Root?.GetPart<XRL.World.Parts.r_KingdomImprovement>();"));
 			Assert.That(Read(Phases), Does.Contain("RequireTownHeld(\"when the rung-3 bill was minted\");"));
+			Assert.That(diagnostics, Does.Contain("KingdomSubsidence.ScopedSupports(System, Zone, Census());"));
+			Assert.That(diagnostics, Does.Contain("\"; supported level=\").Append(KingdomSubsidenceRules.SupportedLevel("));
+		}
+
+		/// <summary>
+		/// WIRING (native run 33). The Town the moot yard is gated on is held by REAL finished
+		/// works seeded through production's own receiptless stake and schema-zero calendar, never
+		/// hand-stamped, never crewed, never by writing a home id; subsidence and lodging stay on
+		/// and the run refuses unless production's own bed count and water level carry 25. The seed
+		/// runs after the reservoir is dedicated and before the before-snapshot, and the persona
+		/// discloses all of it.
+		/// </summary>
+		[Test]
+		public void TheTownIsSeededAsRealFinishedWorksAndNeverHandStamped()
+		{
+			string seed = Read(TownSeed);
+			foreach (string production in new[] {
+				"KingdomPlots.Stake(System, Zone, lot, entry, spec, grid,",
+				"KingdomPlots.Advance(part, System, checked(part.StartTick + part.TotalTicks));",
+				"!works.HasIntProperty(KingdomPlots.PlotWorkSchemaProperty)",
+				"KingdomGrowth.TryCountBeds(Zone, out beds, out failure)",
+				"KingdomSubsidenceRules.LevelFromWater(water, stage) < Residents",
+				"KingdomSubsidenceRules.SupportedLevel(tally, stage, System.Shade)",
+				"KingdomLodging.OnSettlementPass(System, Zone, survey);",
+				"KingdomUpgrade.IsFunctionallyBuilt(final)",
+				"final.GetIntProperty(KingdomPlots.HeartPlotProperty) != 1",
+				"System.Stage = stage;",
+				"internal const string LodgingKey = \"tentrow\";",
+				"taf-camp-town-seed-roof:", "taf-camp-town-seed-water:", "taf-camp-town-seed-level:",
+				"taf-camp-town-seed-unhoused:", "crewed=false; hand-stamped=false" })
+				Assert.That(seed, Does.Contain(production), production);
+			foreach (string forbidden in new[] { "SetIntProperty(\"KingdomBuilt\"",
+				"KingdomUpgrade.BuildKeyProperty,", "SetStringProperty(KingdomLodging.HomePlotIdProperty",
+				"KingdomPlots.Commission(", "KingdomUpgrade.Begin(", "TryApplyUpgrade(",
+				"KingdomSubsidence.Enabled = ", "KingdomLodging.Enabled = ", "Destroy(", "Obliterate(" })
+				Assert.That(seed, Does.Not.Contain(forbidden),
+					"the town seed must go through production, never around it: " + forbidden);
+
+			string checks = Read(Checks);
+			int dedicate = checks.IndexOf("KingdomNativeCampFounding.Dedicate(Game, Zone, System, Drams,", StringComparison.Ordinal);
+			int seedAt = checks.IndexOf("SeedTownIfOwed();", StringComparison.Ordinal);
+			int before = checks.IndexOf("RecordBefore();", StringComparison.Ordinal);
+			Assert.That(dedicate, Is.GreaterThan(-1));
+			Assert.That(seedAt, Is.GreaterThan(dedicate), "the town is seeded after the reservoir is dedicated");
+			Assert.That(before, Is.GreaterThan(seedAt), "the town is seeded before the before-snapshot");
+			Assert.That(checks, Does.Contain("\"; synthetic-town-works=\""));
+			Assert.That(checks, Does.Contain("\"; synthetic-stage-derived=\""));
+			Assert.That(seed, Does.Contain("if (TargetRung < 3) return;"));
+
+			string persona = Read(Persona);
+			Assert.That(persona, Does.Contain("Subsidence and lodging departures stay ON."));
+			Assert.That(persona, Does.Contain("nothing is hand-stamped and no crew built them"));
+			Assert.That(persona, Does.Contain("never by writing a home id"));
+			Assert.That(persona, Does.Contain("taf-camp-rung3-town-held"));
 
 			// The marker the rung-3 phase reads is the one production writes.
 			Assert.That(Read(Checks), Does.Contain("internal const string HeartEffectProperty = "

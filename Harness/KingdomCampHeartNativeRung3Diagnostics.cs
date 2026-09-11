@@ -125,9 +125,15 @@ namespace ThousandAndFirst.Harness
 					"taf-camp-rung3-town-held: the settlement did not hold the Town the moot yard "
 						+ "is gated on " + When + "; stage=" + System.Stage + "; population="
 						+ System.Population + " of " + TownResidentCount);
+				KingdomCatalogueRules.SupportTally tally =
+					KingdomSubsidence.ScopedSupports(System, Zone, Census());
 				Evidence.Append("\nrung3-town-held ").Append(When).Append(" tick=")
 					.Append(Game.TimeTicks).Append("; stage=").Append(System.Stage)
-					.Append("; population=").Append(System.Population);
+					.Append("; population=").Append(System.Population)
+					.Append("; supports water=").Append(tally.Water).Append(" roof=")
+					.Append(tally.Roof).Append(" lift=").Append(tally.Lift)
+					.Append("; supported level=").Append(KingdomSubsidenceRules.SupportedLevel(
+						tally, System.Stage, System.Shade));
 			}
 		}
 	}

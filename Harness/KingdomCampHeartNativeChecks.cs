@@ -88,6 +88,8 @@ namespace ThousandAndFirst.Harness
 				+ "; target-rung=" + Retained.TargetRung
 				+ "; synthetic-rung3-bill=" + (Retained.TargetRung >= 3)
 				+ "; synthetic-craft-disks=" + (Retained.TargetRung >= 3)
+				+ "; synthetic-town-works=" + (Retained.TargetRung >= 3)
+				+ "; synthetic-stage-derived=" + (Retained.TargetRung >= 3)
 				+ "; synthetic-water-identity=true"
 				+ "; improvement-notice-premarked=true"
 				+ "; stockpile-refusal-reason-claimed=false"
@@ -213,6 +215,7 @@ namespace ThousandAndFirst.Harness
 				ProveStructuralOccupancy();
 				BindStoreAndFire();
 				MintStoreContents();
+				SeedTownIfOwed();
 				// The founder's one-time modal notice would stall a headless run. Marking it read is
 				// production game state a founder who has already seen it once carries anyway.
 				Game.SetIntGameState(KingdomUpgrade.NoticedState, 1);

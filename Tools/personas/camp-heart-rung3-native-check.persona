@@ -30,7 +30,22 @@
 #    only the per-material shortfall when there is not, never pushes the store past the capacity its
 #    blueprint declares, and journals the per-material census on both sides. Shaped timber is a worked
 #    material no fixture minted before this one;
-#  - the founder's one-time improvement notice, pre-marked as read so a headless run raises no modal.
+#  - the founder's one-time improvement notice, pre-marked as read so a headless run raises no modal;
+#  - THE TOWN ITSELF (native runs 7 and 33). Subsidence and lodging departures stay ON. Production
+#    sheds people its finished works cannot carry (the water support tally, then the six-day roof
+#    grace), and run 33 lost all 25 residents that way before the moot yard was ever assessed as a
+#    Town. So the fixture seeds, as REAL finished works, what production would require for 25:
+#    tentrow lodging lots until KingdomGrowth.TryCountBeds counts a bed each, and crewless dew-lane
+#    water works (catchmentbank, or the first design zoning permits) until the summed water carries
+#    25 at the stage the settlement holds. Each lot is staked receiptless (KingdomPlots.Stake, the
+#    quickstart shelter's own path, schema-zero calendar) and finished by the compatibility
+#    KingdomPlots.Advance the completed-heart seam uses, so production's own Finish stamps the build
+#    key, plot id and architecture designation: nothing is hand-stamped and no crew built them.
+#    Lodging is assigned by KingdomLodging.OnSettlementPass, never by writing a home id. The
+#    settlement stage is derived once from StageFor(population, capacity) exactly as the subsidence
+#    fixture derives it; population equilibrium after that is production's own reckoning, and the
+#    run REFUSES (taf-camp-rung3-town-held) unless the Town still stands when the rung-3 bill is
+#    minted and again at the rung-3 boundary, journaling the supports tally and stage each time.
 # The ground the moot yard must annex (the 8x6 -> 12x10 growth, seventy-two new cells) is CENSUSED and
 # journaled before the rung-3 commission -- objects, living bodies, solid bodies -- so a refusal for
 # want of ground is diagnosable. That census asserts nothing and moves nothing.
