@@ -13,7 +13,7 @@ namespace ThousandAndFirst
 		private static bool TryRetagUpgradeComponent(GameObject Owner, GameObject Item, Zone Z,
 			KingdomArchitectureIntent Before, KingdomArchitectureIntent After, string Lot,
 			ArchitecturePlacement BeforePlacement, ArchitecturePlacement AfterPlacement,
-			string Id, out string Failure)
+			string Id, ArchitectureComponentPeer Peer, out string Failure)
 		{
 			Failure = null;
 			if (!TryExactRetagPrefix(Item, Z, Before, After, Lot, BeforePlacement,
@@ -47,7 +47,7 @@ namespace ThousandAndFirst
 					+ " retag remains retryable: " + exception.Message;
 				return false;
 			}
-			return ExactComponent(Owner, Item, Z, After, Lot, AfterPlacement, Id)
+			return ExactComponent(Owner, Item, Z, After, Lot, AfterPlacement, Id, Peer)
 				&& Item.GetIntProperty(ComponentCarriedProperty) == 1
 				|| UpgradeQuarantine(Owner, "retained authored slot "
 					+ BeforePlacement.Slot + " did not settle after retag", out Failure);

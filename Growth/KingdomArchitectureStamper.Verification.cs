@@ -36,15 +36,24 @@ namespace ThousandAndFirst
 			string id = Owner.GetStringProperty(OutputId(Placement));
 			KingdomPhysicalLookupState state = KingdomConstruction.FindExactId(Z, id, out Exact);
 			if (state != KingdomPhysicalLookupState.Exact
-				|| !ExactComponent(Owner, Exact, Z, Intent, Lot, Placement, id))
+				// No upgrade receipt is in scope here, so no other generation may stand: null is
+				// the truth, not a gap. Reached mid-upgrade through TryVerifyComplete, a retagged
+				// item fails the element checks above before the census is ever counted.
+				|| !ExactComponent(Owner, Exact, Z, Intent, Lot, Placement, id, null))
 				return Quarantine(Owner, "settled layout slot " + Placement.Slot
 					+ " is absent, moved, duplicated, or changed", out Failure);
 			return true;
 		}
 
+		/// <summary>
+		/// Every element of one settled component, then a census of the slot it stands at.
+		/// <para><paramref name="Peer" /> names the single component of the other generation that
+		/// may legitimately share this slot name during an authored upgrade, resolved by the
+		/// caller that owns the receipt; null means none may.</para>
+		/// </summary>
 		private static bool ExactComponent(GameObject Owner, GameObject Item, Zone Z,
 			KingdomArchitectureIntent Intent, string Lot, ArchitecturePlacement Placement,
-			string ExpectedId)
+			string ExpectedId, ArchitectureComponentPeer Peer)
 		{
 			if (!GameObject.Validate(Item) || Item.ID != ExpectedId || Item.CurrentZone != Z
 				|| Item.Blueprint != Placement.Blueprint
@@ -70,23 +79,34 @@ namespace ThousandAndFirst
 			if (!KingdomArchitectureRuntime.TryWorldPlacement(snapshot, Intent.Rect, Placement,
 				out x, out y, out _) || Item.CurrentCell != Z.GetCell(x, y)) return false;
 			// Generation-aware uniqueness. The lot survives an authored upgrade and the slot name
-			// is layout-local, so during the retag pass the predecessor's component and the
-			// successor's retagged component legitimately share lot and slot while standing on
-			// different world cells. The component token binds the slot to THIS generation's
-			// snapshot hash and placement, so a second copy of this generation still counts two
-			// and still refuses, while the other generation is simply not this census's subject.
-			// Nothing here excuses a foreign object: an item whose token does not match is
-			// refused by the element checks above and by the layout-slot guard on its own cell.
+			// is layout-local, so during the retag pass a component of the other generation can
+			// legitimately share this slot name while standing on its own world cell. Every
+			// candidate at the lot and slot is classified and none is skipped: this generation's
+			// token is THIS, the caller's resolved peer -- proved by identity, cell and token
+			// together, and only while its retain state allows it -- is OTHER, and anything else
+			// is FOREIGN and refuses the census outright.
 			string token = ComponentToken(Lot, Intent.SnapshotHash, Placement);
-			int count = 0;
+			int thisCount = 0;
+			int otherCount = 0;
+			int foreignCount = 0;
 			KingdomSurvey survey = KingdomSurvey.ActiveFor(Z) ?? KingdomSurvey.Take(Z);
 			foreach (GameObject candidate in survey.ArchitectureComponents)
-				if (GameObject.Validate(candidate)
-					&& KingdomArchitectureComponentCensusRules.Counts(Lot, Placement.Slot, token,
+			{
+				if (!GameObject.Validate(candidate)
+					|| !KingdomArchitectureComponentCensusRules.AtSlot(Lot, Placement.Slot,
 						candidate.GetStringProperty(KingdomPlots.PlotIdProperty),
-						candidate.GetStringProperty(ComponentSlotProperty),
-						candidate.GetStringProperty(ComponentTokenProperty))) count++;
-			return KingdomArchitectureComponentCensusRules.Settled(count);
+						candidate.GetStringProperty(ComponentSlotProperty))) continue;
+				int membership = KingdomArchitectureComponentCensusRules.Classify(token,
+					candidate.GetStringProperty(ComponentTokenProperty), candidate.IDIfAssigned,
+					Peer != null && Peer.Cell != null && candidate.CurrentCell == Peer.Cell,
+					Peer == null ? null : Peer.Id, Peer == null ? null : Peer.Token,
+					Peer != null && Peer.Allowed);
+				if (membership == KingdomArchitectureComponentCensusRules.This) thisCount++;
+				else if (membership == KingdomArchitectureComponentCensusRules.Other) otherCount++;
+				else foreignCount++;
+			}
+			return KingdomArchitectureComponentCensusRules.Settled(thisCount, otherCount,
+				foreignCount);
 		}
 
 		private static bool ExactComponentInt(GameObject Item, string Property, int Expected)

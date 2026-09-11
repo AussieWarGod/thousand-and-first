@@ -26,7 +26,7 @@ namespace ThousandAndFirst
 				GameObject item;
 				if (KingdomConstruction.FindExactId(Z, id, out item)
 					!= KingdomPhysicalLookupState.Exact
-					|| !ExactComponent(Owner, item, Z, Intent, Lot, placement, id))
+					|| !ExactComponent(Owner, item, Z, Intent, Lot, placement, id, null))
 					return Fail("rollback cannot prove exact slot " + placement.Slot, out Failure);
 				bool removed;
 				try { removed = item.Obliterate(null, Silent: true); }

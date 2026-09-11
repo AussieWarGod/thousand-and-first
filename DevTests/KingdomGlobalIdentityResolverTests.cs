@@ -351,6 +351,7 @@ namespace ThousandAndFirst.Tests
 				Source("Growth", "KingdomConstruction.Registry.cs"),
 				Source("Growth", "KingdomLodging.cs"),
 				Source("Growth", "KingdomArchitectureStamper.UpgradeReceipts.cs"),
+				Source("Growth", "KingdomArchitectureStamper.UpgradeRemoval.cs"),
 				Source("Experience", "KingdomExpeditions.DebitReceipts.cs")
 			};
 			foreach (string scan in pure) ClassicAssert.AreEqual(0, MintingReads(scan));

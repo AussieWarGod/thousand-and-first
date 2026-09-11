@@ -1,4 +1,5 @@
 #if TAF_TESTS
+using System.Collections.Generic;
 using NUnit.Framework;
 using NUnit.Framework.Legacy;
 
@@ -6,125 +7,166 @@ namespace ThousandAndFirst.Tests
 {
 	/// <summary>
 	/// Value tests for the generation-aware component census
-	/// (<see cref="KingdomArchitectureComponentCensusRules"/>), over the exact tuple matrix in the
-	/// retag census spec. These are EXECUTABLE decisions, not source pins: each case states what a
-	/// surveyed candidate carries and what the census must make of it.
+	/// (<see cref="KingdomArchitectureComponentCensusRules"/>), plus one case that runs the REAL
+	/// delta over a real expanding layout and reads the retained pairing out of it.
 	/// <para>
-	/// The case that motivated the rule: during the retag pass of an authored upgrade, the
-	/// predecessor's component and the successor's retagged component share the lot and the
-	/// layout-local slot name while standing on different world cells. Counting by lot and slot
-	/// alone made a correct settlement look like a duplicate.
+	/// What motivated the rule: during the retag pass of an authored upgrade the component of one
+	/// generation and a component of the other legitimately share the lot and the layout-local
+	/// slot NAME while standing on different world cells. Counting by lot and slot alone made a
+	/// correct settlement read as a duplicate; counting by this generation's token alone let a
+	/// stranger at that slot pass unseen. The peer is proved by identity, cell and token together,
+	/// and anything else refuses.
 	/// </para>
 	/// </summary>
 	public class KingdomArchitectureComponentCensusTests
 	{
 		private const string Lot = "lot-1";
 		private const string Slot = "g:01:01";
-		private const string After = "token-after";
-		private const string Before = "token-before";
+		private const string ThisToken = "token-this";
+		private const string PeerToken = "token-peer";
+		private const string PeerId = "peer-id";
 
-		private static int Census(string Token, params string[][] Candidates)
+		private sealed class Candidate
 		{
-			int count = 0;
-			foreach (string[] candidate in Candidates)
-				if (KingdomArchitectureComponentCensusRules.Counts(Lot, Slot, Token,
-					candidate[0], candidate[1], candidate[2])) count++;
-			return count;
+			internal string Token;
+			internal string Id;
+			internal bool AtPeerCell;
+			internal Candidate(string token, string id, bool atPeerCell)
+			{ Token = token; Id = id; AtPeerCell = atPeerCell; }
 		}
 
-		private static string[] Candidate(string CandidateLot, string CandidateSlot, string Token)
+		private static bool Census(IList<Candidate> Candidates, bool PeerGiven, bool PeerAllowed)
 		{
-			return new[] { CandidateLot, CandidateSlot, Token };
-		}
-
-		/// <summary>The retag case: both generations stand, and each generation's own census is
-		/// one. This is the count that used to read as two and quarantine the settlement.</summary>
-		[Test]
-		public void BothGenerationsAtOneSlotEachCountExactlyOne()
-		{
-			string[] successor = Candidate(Lot, Slot, After);
-			string[] predecessor = Candidate(Lot, Slot, Before);
-			ClassicAssert.AreEqual(1, Census(After, successor, predecessor));
-			ClassicAssert.AreEqual(1, Census(Before, successor, predecessor));
-			ClassicAssert.IsTrue(KingdomArchitectureComponentCensusRules.Settled(
-				Census(After, successor, predecessor)));
-		}
-
-		/// <summary>A single component of the generation being settled.</summary>
-		[Test]
-		public void ASingleComponentOfThisGenerationSettles()
-		{
-			ClassicAssert.AreEqual(1, Census(After, Candidate(Lot, Slot, After)));
-			ClassicAssert.IsTrue(KingdomArchitectureComponentCensusRules.Settled(1));
-		}
-
-		/// <summary>Two copies of the SAME generation are still a duplicate, and still refuse.
-		/// This is the whole point of the census and nothing here relaxes it.</summary>
-		[Test]
-		public void TwoComponentsOfOneGenerationStillCountTwoAndRefuse()
-		{
-			ClassicAssert.AreEqual(2,
-				Census(After, Candidate(Lot, Slot, After), Candidate(Lot, Slot, After)));
-			ClassicAssert.IsFalse(KingdomArchitectureComponentCensusRules.Settled(2));
-			ClassicAssert.AreEqual(2,
-				Census(Before, Candidate(Lot, Slot, Before), Candidate(Lot, Slot, Before)));
-		}
-
-		/// <summary>An absent component is zero, which does not settle either.</summary>
-		[Test]
-		public void AnAbsentComponentDoesNotSettle()
-		{
-			ClassicAssert.AreEqual(0, Census(After, Candidate(Lot, Slot, Before)));
-			ClassicAssert.IsFalse(KingdomArchitectureComponentCensusRules.Settled(0));
-			ClassicAssert.IsFalse(KingdomArchitectureComponentCensusRules.Settled(-1));
-		}
-
-		/// <summary>Another lot's component, and another slot's, are not this census's subject.</summary>
-		[Test]
-		public void AnotherLotOrAnotherSlotIsNotCounted()
-		{
-			ClassicAssert.AreEqual(0, Census(After, Candidate("lot-2", Slot, After)));
-			ClassicAssert.AreEqual(0, Census(After, Candidate(Lot, "g:02:01", After)));
-		}
-
-		/// <summary>A candidate missing any term is not counted -- and is refused elsewhere, by the
-		/// element checks and the layout-slot cell guard, which this rule never replaces.</summary>
-		[Test]
-		public void AMissingTermIsNeverCounted()
-		{
-			foreach (string[] candidate in new[]
+			int thisCount = 0;
+			int otherCount = 0;
+			int foreignCount = 0;
+			foreach (Candidate candidate in Candidates)
 			{
-				Candidate(null, Slot, After), Candidate("", Slot, After),
-				Candidate(Lot, null, After), Candidate(Lot, "", After),
-				Candidate(Lot, Slot, null), Candidate(Lot, Slot, ""),
-			})
-				ClassicAssert.AreEqual(0, Census(After, candidate));
+				int membership = KingdomArchitectureComponentCensusRules.Classify(ThisToken,
+					candidate.Token, candidate.Id, candidate.AtPeerCell,
+					PeerGiven ? PeerId : null, PeerGiven ? PeerToken : null,
+					PeerGiven && PeerAllowed);
+				if (membership == KingdomArchitectureComponentCensusRules.This) thisCount++;
+				else if (membership == KingdomArchitectureComponentCensusRules.Other) otherCount++;
+				else foreignCount++;
+			}
+			return KingdomArchitectureComponentCensusRules.Settled(thisCount, otherCount,
+				foreignCount);
 		}
 
-		/// <summary>The census refuses to run at all without its own three terms, so a caller
-		/// cannot obtain a count from an incomplete question.</summary>
+		private static Candidate Mine() { return new Candidate(ThisToken, "mine", false); }
+
+		private static Candidate Peer() { return new Candidate(PeerToken, PeerId, true); }
+
+		/// <summary>Case 1: the ordinary settle, one component and no other generation.</summary>
 		[Test]
-		public void ACensusWithoutItsOwnTermsCountsNothing()
+		public void SingleComponentWithNoPeerSettles()
 		{
-			ClassicAssert.IsFalse(KingdomArchitectureComponentCensusRules.Counts(
-				null, Slot, After, Lot, Slot, After));
-			ClassicAssert.IsFalse(KingdomArchitectureComponentCensusRules.Counts(
-				Lot, null, After, Lot, Slot, After));
-			ClassicAssert.IsFalse(KingdomArchitectureComponentCensusRules.Counts(
-				Lot, Slot, null, Lot, Slot, After));
-			ClassicAssert.IsFalse(KingdomArchitectureComponentCensusRules.Counts(
-				Lot, Slot, "", Lot, Slot, ""));
+			ClassicAssert.IsTrue(Census(new[] { Mine() }, false, false));
 		}
 
-		/// <summary>A foreign token on this lot and slot -- a third object, or one whose placement
-		/// changed under it -- is not counted. It is refused by the checks that own that question,
-		/// never excused by this one.</summary>
+		/// <summary>Case 2: the retag case this rule exists for -- both generations stand, the
+		/// peer is proved and still allowed, and the census settles.</summary>
 		[Test]
-		public void AForeignTokenIsNotCountedAndIsNotTherebyExcused()
+		public void ThisPlusAProvedAllowedPeerSettles()
 		{
-			ClassicAssert.AreEqual(0, Census(After, Candidate(Lot, Slot, "token-foreign")));
-			ClassicAssert.AreEqual(1,
-				Census(After, Candidate(Lot, Slot, After), Candidate(Lot, Slot, "token-foreign")));
+			ClassicAssert.IsTrue(Census(new[] { Mine(), Peer() }, true, true));
+		}
+
+		/// <summary>Case 3: the peer was permitted but has already been retagged away, so nothing
+		/// of its generation stands here. At most one, never exactly one.</summary>
+		[Test]
+		public void AnAllowedPeerThatIsAbsentStillSettles()
+		{
+			ClassicAssert.IsTrue(Census(new[] { Mine() }, true, true));
+		}
+
+		/// <summary>Case 4: an unknown, empty or absent token at this slot is a stranger, and one
+		/// stranger refuses the census. This is what counting by token alone let through.</summary>
+		[Test]
+		public void AnUnknownEmptyOrAbsentTokenRefuses()
+		{
+			foreach (string token in new[] { "token-foreign", "", null })
+				ClassicAssert.IsFalse(
+					Census(new[] { Mine(), new Candidate(token, "stranger", false) }, true, true),
+					token ?? "null");
+		}
+
+		/// <summary>Case 5: two of this generation is the duplicate the census exists to catch.</summary>
+		[Test]
+		public void TwoOfThisGenerationRefuses()
+		{
+			ClassicAssert.IsFalse(Census(new[] { Mine(), Mine() }, true, true));
+		}
+
+		/// <summary>Case 6: two objects satisfying the peer proof are a duplicate too.</summary>
+		[Test]
+		public void TwoProvedPeersRefuse()
+		{
+			ClassicAssert.IsFalse(Census(new[] { Mine(), Peer(), Peer() }, true, true));
+		}
+
+		/// <summary>Case 7: the peer's token on another cell is not the peer.</summary>
+		[Test]
+		public void ThePeerTokenOnTheWrongCellRefuses()
+		{
+			ClassicAssert.IsFalse(
+				Census(new[] { Mine(), new Candidate(PeerToken, PeerId, false) }, true, true));
+		}
+
+		/// <summary>Case 8: the peer's token under another identity is not the peer.</summary>
+		[Test]
+		public void ThePeerTokenWithTheWrongIdentityRefuses()
+		{
+			ClassicAssert.IsFalse(
+				Census(new[] { Mine(), new Candidate(PeerToken, "other-id", true) }, true, true));
+		}
+
+		/// <summary>Case 9: a peer whose retain state no longer lets it stand is a stranger.
+		/// An After census permits a peer under state 2; a Before census permits one over 0.</summary>
+		[Test]
+		public void APeerThatIsNoLongerAllowedRefuses()
+		{
+			ClassicAssert.IsFalse(Census(new[] { Mine(), Peer() }, true, false));
+			ClassicAssert.IsFalse(KingdomArchitectureComponentCensusRules.PeerAllowed(2, true));
+			ClassicAssert.IsTrue(KingdomArchitectureComponentCensusRules.PeerAllowed(1, true));
+			ClassicAssert.IsTrue(KingdomArchitectureComponentCensusRules.PeerAllowed(0, true));
+			ClassicAssert.IsFalse(KingdomArchitectureComponentCensusRules.PeerAllowed(0, false));
+			ClassicAssert.IsTrue(KingdomArchitectureComponentCensusRules.PeerAllowed(1, false));
+			ClassicAssert.IsTrue(KingdomArchitectureComponentCensusRules.PeerAllowed(2, false));
+			ClassicAssert.IsFalse(KingdomArchitectureComponentCensusRules.PeerAllowed(3, true));
+			ClassicAssert.IsFalse(KingdomArchitectureComponentCensusRules.PeerAllowed(-1, false));
+		}
+
+		/// <summary>Case 10: a second generation standing where no peer was resolved refuses.</summary>
+		[Test]
+		public void ASecondGenerationWithNoPeerGivenRefuses()
+		{
+			ClassicAssert.IsFalse(Census(new[] { Mine(), Peer() }, false, false));
+		}
+
+		/// <summary>Slot membership is lot and slot; what a candidate IS is the classifier's
+		/// question, and a census without its own terms admits nothing.</summary>
+		[Test]
+		public void SlotMembershipAndEmptyCensusTermsAreExact()
+		{
+			ClassicAssert.IsTrue(
+				KingdomArchitectureComponentCensusRules.AtSlot(Lot, Slot, Lot, Slot));
+			ClassicAssert.IsFalse(
+				KingdomArchitectureComponentCensusRules.AtSlot(Lot, Slot, "lot-2", Slot));
+			ClassicAssert.IsFalse(
+				KingdomArchitectureComponentCensusRules.AtSlot(Lot, Slot, Lot, "g:02:02"));
+			ClassicAssert.IsFalse(
+				KingdomArchitectureComponentCensusRules.AtSlot(null, Slot, null, Slot));
+			ClassicAssert.IsFalse(
+				KingdomArchitectureComponentCensusRules.AtSlot(Lot, null, Lot, null));
+			ClassicAssert.AreEqual(KingdomArchitectureComponentCensusRules.Foreign,
+				KingdomArchitectureComponentCensusRules.Classify(null, ThisToken, "id", true,
+					PeerId, PeerToken, true));
+			ClassicAssert.IsFalse(
+				KingdomArchitectureComponentCensusRules.Settled(1, 0, 1));
+			ClassicAssert.IsFalse(
+				KingdomArchitectureComponentCensusRules.Settled(0, 0, 0));
 		}
 	}
 }

@@ -211,11 +211,23 @@ namespace ThousandAndFirst.Tests
 			// refusal it exists for is unchanged -- two copies of THIS generation still count two
 			// -- and the decision itself lives in a pure shard that is value-tested.
 			StringAssert.Contains("string token = ComponentToken(Lot, Intent.SnapshotHash, Placement)", exact);
-			StringAssert.Contains("KingdomArchitectureComponentCensusRules.Counts(Lot, Placement.Slot, token,", exact);
-			StringAssert.Contains("candidate.GetStringProperty(ComponentTokenProperty)", exact);
-			StringAssert.Contains("return KingdomArchitectureComponentCensusRules.Settled(count)", exact);
+			StringAssert.Contains("KingdomArchitectureComponentCensusRules.AtSlot(Lot, Placement.Slot,", exact);
+			StringAssert.Contains("KingdomArchitectureComponentCensusRules.Classify(token,", exact);
+			StringAssert.Contains("candidate.GetStringProperty(ComponentTokenProperty), candidate.IDIfAssigned,", exact);
+			StringAssert.Contains("candidate.CurrentCell == Peer.Cell", exact);
+			StringAssert.Contains("KingdomArchitectureComponentCensusRules.Settled(thisCount, otherCount,", exact);
 			// No element check or cell guard was traded for it.
 			StringAssert.Contains("Item.CurrentCell != Z.GetCell(x, y)", exact);
+			// Census direction per call site: an After-generation settle may meet a predecessor
+			// peer (true), a Before-generation settle an already-retagged successor (false), and
+			// a site with no upgrade receipt in scope permits no peer at all (null).
+			StringAssert.Contains("BeforePlacement.Slot, false)))", source);
+			StringAssert.Contains("AfterPlacement.Slot, true))", source);
+			StringAssert.Contains("ExactComponent(Owner, exact, Z, Before, Lot, Placement, id, null)", source);
+			StringAssert.Contains("ExactComponent(Target, exact, Z, Successor, Lot, Placement, id, null)", source);
+			StringAssert.Contains("ExactComponent(Owner, Item, Z, After, Lot, AfterPlacement, Id, Peer)", source);
+			StringAssert.Contains("private static ArchitectureComponentPeer ResolveComponentPeer(", source);
+			StringAssert.Contains("KingdomArchitectureComponentCensusRules.PeerAllowed(", source);
 			StringAssert.Contains("Owner.SetStringProperty(FaultProperty, Failure)", source);
 			ClassicAssert.IsFalse(source.Contains("Stat.Random"));
 			ClassicAssert.IsFalse(source.Contains("GetRandomElement"));
@@ -498,8 +510,10 @@ namespace ThousandAndFirst.Tests
 				"private static bool ExactUpgradeState(");
 			StringAssert.Contains("ExactUpgradeState(Owner, UpgradeRemove", read);
 			StringAssert.Contains("ExactUpgradeState(Owner, UpgradeRetain", read);
-			string remove = Between(receipts, "private static bool TryRemoveUpgradeSlot(",
-				"private static bool TryCarryUpgradeSlot(");
+			string removal = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureStamper.UpgradeRemoval.cs");
+			string remove = Between(removal, "private static bool TryRemoveUpgradeSlot(",
+				"\n\t\t}\n\n\t}");
 			StringAssert.Contains("!Owner.HasIntProperty(stateProperty)", remove);
 			string carry = Between(receipts, "private static bool TryCarryUpgradeSlot(",
 				"\n\t\t}\n\n\t}");
@@ -509,10 +523,10 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void UpgradeRemovalSettlesOnlyAfterGlobalLiveIdAbsence()
 		{
-			string receipts = TestMain.ReadRepositoryText(
-				"Growth/KingdomArchitectureStamper.UpgradeReceipts.cs");
-			string remove = Between(receipts, "private static bool TryRemoveUpgradeSlot(",
-				"private static bool TryCarryUpgradeSlot(");
+			string removal = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureStamper.UpgradeRemoval.cs");
+			string remove = Between(removal, "private static bool TryRemoveUpgradeSlot(",
+				"\n\t\t}\n\n\t}");
 			ClassicAssert.AreEqual(4, remove.Split(new[] { "FindGlobalLiveId" },
 				StringSplitOptions.None).Length - 1);
 			ClassicAssert.AreEqual(2, remove.Split(new[] { "GlobalRemovalAftermath" },

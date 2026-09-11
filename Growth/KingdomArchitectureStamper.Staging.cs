@@ -114,7 +114,7 @@ namespace ThousandAndFirst
 					KingdomSurvey.ObserveChangedInActive(Z, pending);
 				}
 				if (!ExactComponent(Owner, pending, Z, Intent, Lot, Placement,
-					Owner.GetStringProperty(idProperty)))
+					Owner.GetStringProperty(idProperty), null))
 					return Quarantine(Owner, "layout slot " + Placement.Slot
 						+ " changed after output publication", out Failure);
 				Owner.SetIntProperty(stateProperty, 2);
@@ -181,7 +181,7 @@ namespace ThousandAndFirst
 			}
 			KingdomSurvey.ObserveChangedInActive(Z, placed);
 			bool exactEndpoint = ExactComponent(Owner, placed, Z, Intent, Lot, Placement,
-				Owner.GetStringProperty(idProperty));
+				Owner.GetStringProperty(idProperty), null);
 			bool exactCustody = Placement.ExistingAuthority
 				|| TryStagingRoot(placed.IDIfAssigned, out GameObject rootedOutput)
 					&& object.ReferenceEquals(rootedOutput, placed);
