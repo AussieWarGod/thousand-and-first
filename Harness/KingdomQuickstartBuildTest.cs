@@ -156,6 +156,15 @@ namespace ThousandAndFirst.Harness
 				// and build publish nothing and behave exactly as before.
 				if (KingdomQuickstartBootTest.LifecycleRequested)
 				{
+					// The lifecycle variant's own rows are bound to their launched profile the
+					// same way the other lifecycle rows are; boot, save and build journal exactly
+					// what they always did.
+					string stamp = KingdomQuickstartLifecycleStamp.Text(
+						KingdomScenarioJournal.ProfileRoot());
+					if (stamp == null)
+					{ Refusal = "the launched profile could not be named from its own sealed root"; return "census-after"; }
+					KingdomScenarioJournal.Append("QUICKSTART-LIFECYCLE-PROFILE", true,
+						"jobId=" + job.Id + "; " + stamp);
 					Game.SetStringGameState(KingdomQuickstartLifecycleSteps.JobKey, job.Id);
 					if (!KingdomScenarioDurableState.ProvesExactText(
 						KingdomQuickstartLifecycleSteps.JobKey, job.Id))

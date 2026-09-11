@@ -193,6 +193,52 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Request.Build || Request.Lifecycle", boot);
 		}
 
+		/// <summary>Every lifecycle row names the profile it was launched from, read from that
+		/// profile's own sealed root, and a run that cannot name it refuses.</summary>
+		[Test]
+		public void EveryLifecycleRowIsStampedWithItsLaunchedProfile()
+		{
+			string stamp = Read("Harness/KingdomQuickstartLifecycleStamp.cs");
+			StringAssert.Contains("internal static string Text(string Root)", stamp);
+			StringAssert.Contains("KingdomScenarioJournal.ProfileRoot()",
+				Read("Harness/KingdomQuickstartLifecycleSteps.cs"));
+			StringAssert.Contains("\"profile.sha256\"", stamp);
+			StringAssert.Contains("taf-scenario-profile-seal-v1", stamp);
+			StringAssert.Contains("\"profile=\" + name + \" seal=\" + digest", stamp);
+			string steps = Read("Harness/KingdomQuickstartLifecycleSteps.cs");
+			StringAssert.Contains("internal static string Stamped(string Report)", steps);
+			StringAssert.Contains("the launched profile could not be named from its ", steps);
+			foreach (string path in new[] { "Harness/KingdomQuickstartLifecycleSteps.cs",
+				"Harness/KingdomQuickstartLifecycleFinish.cs" })
+				ClassicAssert.AreEqual(2, Occurrences(Read(path), "return Stamped("), path);
+			string load = Read("Harness/KingdomQuickstartLifecycleLoad.cs");
+			ClassicAssert.AreEqual(2,
+				Occurrences(load, "KingdomQuickstartLifecycleSteps.Stamped("), "load rows");
+			// The Quickstart lifecycle variant stamps its own row, and only that variant does.
+			string build = Read("Harness/KingdomQuickstartBuildTest.cs");
+			StringAssert.Contains("QUICKSTART-LIFECYCLE-PROFILE", build);
+			StringAssert.Contains("if (KingdomQuickstartBootTest.LifecycleRequested)", build);
+		}
+
+		/// <summary>The checker demands the stamp agree with that session's own run record.</summary>
+		[Test]
+		public void TheCheckerBindsEachRowToItsSessionsRecordedProfile()
+		{
+			string checker = Read("Tools/check-quickstart-lifecycle.py");
+			StringAssert.Contains("def check_stamps(", checker);
+			StringAssert.Contains("carries no profile stamp", checker);
+			StringAssert.Contains("record.get(\"profileName\") != name", checker);
+			StringAssert.Contains("record.get(\"profileSeal\") != seal", checker);
+		}
+
+		private static int Occurrences(string Source, string Token)
+		{
+			int total = 0;
+			for (int at = Source.IndexOf(Token, StringComparison.Ordinal); at >= 0;
+				at = Source.IndexOf(Token, at + Token.Length, StringComparison.Ordinal)) total++;
+			return total;
+		}
+
 		/// <summary>The lifecycle verbs mint no stock and force no phase.</summary>
 		[Test]
 		public void TheLifecycleDriverFabricatesNothing()

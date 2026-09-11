@@ -31,6 +31,8 @@ def load(name: str, filename: str):
 record = load("scenario_run_record", "scenario_run_record.py")
 checker = load("quickstart_lifecycle", "check-quickstart-lifecycle.py")
 
+SAVE_STAMP = "profile=taf-scenario.save seal=" + "d" * 64
+LOAD_STAMP = "profile=taf-scenario.load seal=" + "e" * 64
 STAMPS = [
     "2026-09-11T10:00:00.000Z",
     "2026-09-11T10:00:30.000Z",
@@ -52,15 +54,17 @@ def save_journal() -> str:
     return journal(
         [
             (STAMPS[0], "realize", "founded"),
-            (STAMPS[1], "lifecycle-open", "step=startup; " + IDS + "; turns=10"),
-            (STAMPS[2], "lifecycle-build", "step=paid-commission; " + IDS + "; jobId=job-1; turns=30"),
+            (STAMPS[1], "lifecycle-open", "step=startup; " + IDS + "; turns=10; " + SAVE_STAMP),
+            (STAMPS[2], "lifecycle-build",
+             "step=paid-commission; " + IDS + "; jobId=job-1; turns=30; " + SAVE_STAMP),
             (
                 STAMPS[3],
                 "lifecycle-grown",
                 "step=engine-turn-build; " + IDS + "; buildingId=b1; plotId=p1;"
-                " completedReceiptId=job-1; forJobId=job-1; turns=90",
+                " completedReceiptId=job-1; forJobId=job-1; turns=90; " + SAVE_STAMP,
             ),
-            (STAMPS[4], "lifecycle-save", "step=save; " + IDS + "; saveId=save-1; turns=90"),
+            (STAMPS[4], "lifecycle-save",
+             "step=save; " + IDS + "; saveId=save-1; turns=90; " + SAVE_STAMP),
         ]
     )
 
@@ -71,12 +75,13 @@ def load_journal() -> str:
             (
                 STAMPS[5],
                 "lifecycle-loaded",
-                "step=cold-load; " + IDS + "; saveId=save-1; buildingId=b1; plotId=p1; turns=90",
+                "step=cold-load; " + IDS + "; saveId=save-1; buildingId=b1; plotId=p1; turns=90; "
+                + LOAD_STAMP,
             ),
             (
                 STAMPS[5],
                 "lifecycle-next",
-                "step=next-action; " + IDS + "; saveId=save-1; jobId=job-2; turns=90",
+                "step=next-action; " + IDS + "; saveId=save-1; jobId=job-2; turns=90; " + LOAD_STAMP,
             ),
         ]
     )
@@ -310,6 +315,38 @@ class TwoRecordEmission(unittest.TestCase):
         self.assertEqual(by_step["cold-load"]["profileName"], "taf-scenario.load")
         self.assertNotEqual(
             by_step["save"]["profileSeal"], by_step["next-action"]["profileSeal"]
+        )
+
+    def test_a_row_stamped_with_another_profile_is_refused(self):
+        text = (self.save_root / "scenario-journal.tsv").read_text(encoding="utf-8")
+        (self.save_root / "scenario-journal.tsv").write_text(
+            text.replace("profile=taf-scenario.save", "profile=taf-scenario.other", 1),
+            encoding="utf-8",
+        )
+        _, problems, _ = self.emit(self.records())
+        self.assertTrue(
+            any("names profile taf-scenario.other" in problem for problem in problems), problems
+        )
+
+    def test_a_row_stamped_with_another_seal_is_refused(self):
+        text = (self.load_root / "scenario-journal.tsv").read_text(encoding="utf-8")
+        (self.load_root / "scenario-journal.tsv").write_text(
+            text.replace("seal=" + "e" * 64, "seal=" + "f" * 64), encoding="utf-8"
+        )
+        _, problems, _ = self.emit(self.records())
+        self.assertTrue(
+            any("names a seal its session's record does not" in problem for problem in problems),
+            problems,
+        )
+
+    def test_a_row_with_no_profile_stamp_is_refused(self):
+        text = (self.save_root / "scenario-journal.tsv").read_text(encoding="utf-8")
+        (self.save_root / "scenario-journal.tsv").write_text(
+            text.replace("; " + SAVE_STAMP, "", 1), encoding="utf-8"
+        )
+        _, problems, _ = self.emit(self.records())
+        self.assertTrue(
+            any("carries no profile stamp" in problem for problem in problems), problems
         )
 
     def test_two_sessions_sharing_a_launch_id_are_refused(self):

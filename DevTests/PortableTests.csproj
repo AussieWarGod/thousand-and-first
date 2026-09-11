@@ -147,6 +147,7 @@
 	<Compile Include="..\Harness\KingdomQuickstartBootRequest.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartLifecycleRows.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartLifecycleSnapshot.cs" />
+	<Compile Include="..\Harness\KingdomQuickstartLifecycleStamp.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartBuildClaims.cs" />
 	<Compile Include="KingdomQuickstartBuildClaimsTests.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartSaveSnapshot.cs" />

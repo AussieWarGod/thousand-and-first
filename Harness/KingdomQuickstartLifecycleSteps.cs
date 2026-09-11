@@ -64,10 +64,10 @@ namespace ThousandAndFirst.Harness
 			if (!KingdomScenarioDurableState.ProvesExactText(OpenedKey, opened))
 				return Refuse(OpenStep, "the lifecycle's own opening receipt did not persist exactly");
 			Ok = true;
-			return "native-lifecycle step=startup; " + Identities(System)
+			return Stamped("native-lifecycle step=startup; " + Identities(System)
 				+ "; zone=" + Zone.ZoneID + "; stockpile=" + Describe(stockpile.IDIfAssigned)
 				+ "; timber=" + Timber(stock) + "; storedWater=" + water
-				+ "; designCostDrams=" + entry.CostDrams + "; turns=" + Game.Turns;
+				+ "; designCostDrams=" + entry.CostDrams + "; turns=" + Game.Turns);
 		}
 
 		/// <summary>Quote, the founder-facing CanPay pre-check, then the exact-quote commission,
@@ -116,11 +116,11 @@ namespace ThousandAndFirst.Harness
 			if (!KingdomScenarioDurableState.ProvesExactText(JobKey, job.Id))
 				return Refuse(BuildStep, "the commissioned job identity did not persist exactly");
 			Ok = true;
-			return "native-lifecycle step=paid-commission; " + Identities(System)
+			return Stamped("native-lifecycle step=paid-commission; " + Identities(System)
 				+ "; plotId=" + Describe(job.SubjectId) + "; jobId=" + job.Id + "; " + quoteReport
 				+ "canpay blocked=false storedWater=" + waterBefore + "; job=" + job.Id
 				+ "; timberDebited=1; waterDebited=" + entry.CostDrams
-				+ "; phase=" + job.Phase + "; turns=" + Game.Turns;
+				+ "; phase=" + job.Phase + "; turns=" + Game.Turns);
 		}
 
 		/// <summary>The physical census on the far side of the production commissioning call:
@@ -155,6 +155,21 @@ namespace ThousandAndFirst.Harness
 		{
 			return "realmId=" + Describe(System.RealmId)
 				+ "; cityId=" + Describe(KingdomConstruction.OwnerOf(System));
+		}
+
+		/// <summary>
+		/// Stamps the row with the profile this run was launched from. Every lifecycle row carries
+		/// it, so a journal can be bound to its own session rather than assumed into one, and a
+		/// run whose profile cannot be named honestly refuses instead of landing an unbound row.
+		/// </summary>
+		internal static string Stamped(string Report)
+		{
+			string stamp = KingdomQuickstartLifecycleStamp.Text(
+				KingdomScenarioJournal.ProfileRoot());
+			return stamp == null
+				? "native-lifecycle refused: the launched profile could not be named from its "
+					+ "own sealed root"
+				: Report + "; " + stamp;
 		}
 
 		internal static int Timber(KingdomQuickstartBuildCensus.StockSnapshot Stock)

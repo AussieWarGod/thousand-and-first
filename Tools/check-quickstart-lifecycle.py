@@ -220,6 +220,13 @@ def seconds_between(first: str, second: str) -> int:
     return max(0, int((end - start).total_seconds()))
 
 
+def stamp_in(message: str) -> tuple[str | None, str | None]:
+    """The profile name and seal a lifecycle row stamped on itself, if it stamped one."""
+    name = re.search(r"\bprofile=([^;\s]+)", message)
+    seal = re.search(r"\bseal=([0-9a-f]{64})\b", message)
+    return (name.group(1) if name else None, seal.group(1) if seal else None)
+
+
 def turns_in(message: str) -> int | None:
     """The turn counter a lifecycle row states, if it states one."""
     found = re.search(r"\bturns=(\d+)\b", message)
@@ -234,6 +241,42 @@ def observed_in(message: str) -> dict:
         if found and found.group(1) not in ("unassigned", ""):
             seen[name] = found.group(1)
     return seen
+
+
+def check_stamps(paths: list[Path], records: list[dict]) -> list[str]:
+    """Every lifecycle row must name the profile that ran it, and name it correctly.
+
+    The row stamps profile= and seal= from the launched profile's own sealed root; the run
+    record sealed the same two values at preparation time. A row that names a different profile
+    did not come from this session, and a row that names none cannot be bound to one -- both are
+    refusals rather than something to be taken on trust.
+    """
+    problems: list[str] = []
+    by_role = {record.get("role"): record for record in records}
+    # Only rows the lifecycle verbs themselves write can carry the stamp; the built-in verbs
+    # this chain leans on (realize, and the Quickstart boot phases) are not ours to restamp,
+    # and demanding it of them would be demanding evidence nobody produces.
+    named = {
+        name for names in LIFECYCLE_ROWS.values() for name in names
+        if name.startswith("lifecycle-")
+    }
+    for verb_stamp, verb, message in stamped_rows(paths):
+        if verb not in named:
+            continue
+        step = next((name for name, rows in LIFECYCLE_ROWS.items() if verb in rows), None)
+        record = by_role.get(SESSION_OF.get(step, ""), {})
+        name, seal = stamp_in(message)
+        if name is None or seal is None:
+            problems.append("row " + verb + " carries no profile stamp")
+            continue
+        if record.get("profileName") != name:
+            problems.append(
+                "row " + verb + " names profile " + name + ", not its session's "
+                + str(record.get("profileName"))
+            )
+        if record.get("profileSeal") != seal:
+            problems.append("row " + verb + " names a seal its session's record does not")
+    return problems
 
 
 def bind_journals(paths: list[Path], records: list[dict]) -> tuple[dict, list[str]]:
@@ -584,6 +627,7 @@ def emit(report: dict, options: dict, journals: list[Path]) -> list[str]:
             raise ValueError("run record must be a JSON object")
         records.append(payload)
     bound, binding_problems = bind_journals(journals, records)
+    binding_problems.extend(check_stamps(journals, records))
     phases = measure(journals, records)
     # Visible in the verdict, not in the artefact: the validator's step key set is fixed, so the
     # profile a step's evidence came from is reported beside the verdict instead of inside it.

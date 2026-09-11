@@ -54,14 +54,14 @@ namespace ThousandAndFirst.Harness
 			// row's own identity, and the paid job it fulfils as the commission published it.
 			// Where the row kept its identity the two read the same, and saying so plainly is
 			// the point -- neither is minted, and neither is omitted when it exists.
-			return "native-lifecycle step=engine-turn-build; " + Identities(System)
+			return Stamped("native-lifecycle step=engine-turn-build; " + Identities(System)
 				+ "; plotId=" + Describe(job.SubjectId) + "; jobId=" + job.Id
 				+ "; completedReceiptId=" + job.Id + "; forJobId=" + jobId
 				+ "; buildingId=" + Describe(building.IDIfAssigned)
 				+ "; building=" + Describe(building.IDIfAssigned)
 				+ "; designKey=" + building.GetStringProperty(KingdomUpgrade.BuildKeyProperty)
 				+ "; blueprint=" + building.Blueprint + "; built=1"
-				+ "; at=" + job.X + "," + job.Y + "; turns=" + Game.Turns;
+				+ "; at=" + job.X + "," + job.Y + "; turns=" + Game.Turns);
 		}
 
 		/// <summary>
@@ -175,9 +175,9 @@ namespace ThousandAndFirst.Harness
 			if (KingdomScenarioSaveFiles.ReadText(Path.Combine(root, KingdomScenarioSaveFiles.ReceiptFile), 512) != receipt)
 				return Refuse(SaveStep, "the save receipt did not persist exactly");
 			Ok = true;
-			return "native-lifecycle step=save; witness=published; " + Identities(System)
+			return Stamped("native-lifecycle step=save; witness=published; " + Identities(System)
 				+ "; saveId=" + Game.GameID + "; jobId=" + jobId + "; real-save=true"
-				+ "; turns=" + Game.Turns + "; cold-load=unproved-in-this-session";
+				+ "; turns=" + Game.Turns + "; cold-load=unproved-in-this-session");
 		}
 	}
 }
