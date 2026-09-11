@@ -133,6 +133,14 @@ namespace ThousandAndFirst.Harness
 						+ "the waterstone; key=" + KingdomUpgrade.DesignKeyOf(standing));
 				Require(!ReferenceEquals(standing, Heart) && standing.IDIfAssigned != HeartId,
 					"taf-camp-successor-is-predecessor: no rung was raised");
+				Require(KingdomUpgrade.IsFunctionallyBuilt(standing),
+					"taf-camp-rung-nonfunctional: the raised heart still has unfinished authority");
+				Require(KingdomPlots.HeartRung(Zone) == 2,
+					"taf-camp-rung-unsettled: the waterstone stands but the recorded rung is "
+						+ KingdomPlots.HeartRung(Zone));
+				Require(BasinCapacity(standing) == "48",
+					"taf-camp-basin-unsettled: the waterstone's basin must hold 48 drams; got "
+						+ BasinCapacity(standing));
 				GameObject store;
 				string failure;
 				Require(KingdomArchitectureStamper.TryExactAnchoredComponent(standing, Zone,
@@ -239,8 +247,8 @@ namespace ThousandAndFirst.Harness
 				return found;
 			}
 
-			/// <summary>Reported, never asserted: what the first basin's capacity reads after the
-			/// climb. Recorded so the journal carries the measurement instead of a claim.
+			/// <summary>Reads the exact anchored basin's physical capacity after the climb.
+			/// Phase2 asserts the waterstone's 48 drams, then journals the same measurement.
 			/// </summary>
 			internal string BasinCapacity(GameObject Root)
 			{

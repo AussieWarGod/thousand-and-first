@@ -21,6 +21,16 @@ namespace ThousandAndFirst.Tests
 		private static string Read(string path) => TestMain.ReadRepositoryText(path);
 
 		[Test]
+		public void CompletionChecksFunctionalRungAndPhysicalCapacity()
+		{
+			// Wiring only: the sealed native persona must execute these guards to prove effects.
+			string phases = Read(Phases);
+			Assert.That(phases, Does.Contain("Require(KingdomUpgrade.IsFunctionallyBuilt(standing),"));
+			Assert.That(phases, Does.Contain("Require(KingdomPlots.HeartRung(Zone) == 2,"));
+			Assert.That(phases, Does.Contain("Require(BasinCapacity(standing) == \"48\","));
+		}
+
+		[Test]
 		public void ProviderIsRegisteredWithBothVerbsAndTheSealedScript()
 		{
 			string provider = Read(Provider);
