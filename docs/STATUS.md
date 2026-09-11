@@ -2,10 +2,10 @@
 
 ## Current 0.3.4 heart integration candidate — unverified
 
-3083 staged C# files; 437,667 physical lines; cold-install inventory contains 3114 files.
+3083 staged C# files; 437,727 physical lines; cold-install inventory contains 3114 files.
 Compile inventory: 3083 sources, baseline and compatibility symbols (3079 baseline).
 Direct `XRL` imports: 1438 files, 0 over the line limit. Zero at or above 300 lines.
-Inventory SHA-256: `f0a32eb330ef4fa72f288971981f241863c8fcc9b148e35b3109a5a8d6aff27c`.
+Inventory SHA-256: `044175859bc362fe062c7ab8c597e14674e5f902ba3daf8ee4ed64336c590c43`.
 Combines #141 authority, #144 shared-XL validation, #138/#139 rung settlement and #137 camp
 content/native fixture over dev with the verified 0.3.3 backmerge. Production and test-project
 merges are complete; compile, combined-suite, native progression and semantic review are owed.

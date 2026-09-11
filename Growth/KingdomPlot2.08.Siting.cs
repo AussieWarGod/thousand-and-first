@@ -125,15 +125,37 @@ namespace ThousandAndFirst
 			List<KingdomPlotRules.PlotRect> groundCandidates =
 				new List<KingdomPlotRules.PlotRect>();
 			bool sawBlocked = false;
+			bool nearestBlockedIsOccupant = false;
 			KingdomPlotRules.PlotRect nearestBlocked = default(KingdomPlotRules.PlotRect);
 			int nearestBlockedReach = 0;
+			// ReadGround's own ground grid deliberately skips living occupants (a settler walks
+			// off ground, KingdomPlot2.04.Ground.cs:19-24), so Grid.AnyRefusal never sees one; a
+			// fixed founder or fauna body is gathered here, once, so a candidate rect covering it
+			// is skipped in favour of the next lawful clear pose rather than being handed on to
+			// the stamper only to refuse two layers later ("a living occupant stands on authored
+			// ground", Growth/KingdomArchitectureStamper.Preflight.cs:94-96).
+			HashSet<int> occupiedCells = new HashSet<int>();
+			for (int y = interior.Y1; y <= interior.Y2; y++)
+				for (int x = interior.X1; x <= interior.X2; x++)
+				{
+					Cell occupantCell = Z.GetCell(x, y);
+					if (occupantCell == null) continue;
+					List<GameObject> occupants = occupantCell.GetObjects();
+					for (int k = 0; k < occupants.Count; k++)
+					{
+						GameObject occupant = occupants[k];
+						if (GameObject.Validate(occupant) && (occupant.IsCreature || occupant.IsPlayer()))
+						{ occupiedCells.Add(y * Z.Width + x); break; }
+					}
+				}
 			List<KingdomPlotPoseCandidate> posed = KingdomPlotPoseSitingRules.Enumerate(
 				interior, plotWidth, plotHeight);
 			for (int i = 0; i < posed.Count; i++)
 			{
 				KingdomPlotRules.PlotRect rect = posed[i].Rect;
 				if (KingdomPlotRules.CrowdsExisting(rect, laid)) continue;
-				if (Grid.AnyRefusal(rect))
+				bool occupantBlocked = KingdomPlotRules.CrowdsOccupant(rect, Z.Width, occupiedCells);
+				if (occupantBlocked || Grid.AnyRefusal(rect))
 				{
 					int reach = hasFounder ? KingdomPlotRules.Reach(rect, founderX, founderY) : 0;
 					if (!sawBlocked || KingdomPlotRules.Beats(0, reach, rect,
@@ -142,6 +164,7 @@ namespace ThousandAndFirst
 						sawBlocked = true;
 						nearestBlocked = rect;
 						nearestBlockedReach = reach;
+						nearestBlockedIsOccupant = occupantBlocked;
 					}
 					continue;
 				}
@@ -151,7 +174,16 @@ namespace ThousandAndFirst
 			{
 				// The ground that came closest is the one the founder is told about: naming a
 				// refusal on the far side of the zone would be true and useless.
-				if (sawBlocked && Grid.TryFirstRefusal(nearestBlocked, out var blockX, out var blockY, out var blockKind, out var blocker))
+				if (sawBlocked && nearestBlockedIsOccupant)
+				{
+					int occupantX = nearestBlocked.X1;
+					int occupantY = nearestBlocked.Y1;
+					for (int y = nearestBlocked.Y1; y <= nearestBlocked.Y2; y++)
+						for (int x = nearestBlocked.X1; x <= nearestBlocked.X2; x++)
+							if (occupiedCells.Contains(y * Z.Width + x)) { occupantX = x; occupantY = y; }
+					Refusal = KingdomPlotRules.RefuseObstruction("a living occupant", occupantX, occupantY);
+				}
+				else if (sawBlocked && Grid.TryFirstRefusal(nearestBlocked, out var blockX, out var blockY, out var blockKind, out var blocker))
 				{
 					Refusal = (blockKind == KingdomPlotRules.GroundKind.Liquid)
 						? KingdomPlotRules.RefuseLiquid(blockX, blockY)

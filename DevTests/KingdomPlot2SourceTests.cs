@@ -183,6 +183,30 @@ namespace ThousandAndFirst.Tests
 				"public static void Advance(", "public static int MaterialsHeld(");
 		}
 
+		/// <summary>
+		/// SOURCE PIN, not behavioural proof: DevTests cannot construct a real Zone/GameObject,
+		/// so a candidate rect actually holding a founder cannot be exercised here (that needs a
+		/// native run, out of scope for this pass -- root runs native Quickstart on the combined
+		/// fix). This pins the new occupancy-selection seam's call shape and message, and that
+		/// the pinned TryFindRect declaration/call-order tests above are untouched by it. The
+		/// pure decision half (KingdomPlotRules.CrowdsOccupant) is value-tested directly in
+		/// DevTests/KingdomPlotRulesTests.cs, without a Zone.
+		/// </summary>
+		[Test]
+		public void TryFindRectSkipsAnOccupiedCandidateBeforeAcceptingItAsGroundClear()
+		{
+			string source = Plot();
+			Assert.That(source, Does.Contain("HashSet<int> occupiedCells = new HashSet<int>();"));
+			Assert.That(source, Does.Contain(
+				"if (GameObject.Validate(occupant) && (occupant.IsCreature || occupant.IsPlayer()))"));
+			Assert.That(source, Does.Contain(
+				"bool occupantBlocked = KingdomPlotRules.CrowdsOccupant(rect, Z.Width, occupiedCells);"));
+			Assert.That(source, Does.Contain("if (occupantBlocked || Grid.AnyRefusal(rect))"));
+			Assert.That(source, Does.Contain("nearestBlockedIsOccupant = occupantBlocked;"));
+			Assert.That(source, Does.Contain(
+				"KingdomPlotRules.RefuseObstruction(\"a living occupant\", occupantX, occupantY)"));
+		}
+
 		[Test]
 		public void PaidProjectionClearanceGrowthAndFinishKeepTransactionOrder()
 		{
