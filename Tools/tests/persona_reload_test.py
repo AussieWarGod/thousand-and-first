@@ -94,7 +94,13 @@ class ReloadTests(unittest.TestCase):
         for text in (MANIFEST.replace("marsh", "arbitrary"), MANIFEST.replace("yes", "maybe"),
                      MANIFEST.replace("marsh yes", "marsh yes;status"), MANIFEST.replace("RELOAD-COMPLETE", "COMPLETE"),
                      MANIFEST + "START=testground\n", MANIFEST + "VERBS=foreign\n",
-                     MANIFEST + 'LOG_EXPECT=["ignored"]\n', MANIFEST + "CHECK=status-digest-stable\n",
+                     MANIFEST + 'LOG_EXPECT=["ignored"]\n',
+                     # The same promise, for the opposite field: a reload persona declares no
+                     # overrides, and a forbidden-diagnostic list is an override too. Without
+                     # this the branch returns before the field is normalised and its raw text
+                     # would reach the tab-separated field output.
+                     MANIFEST + 'LOG_FORBID=["ignored"]\n',
+                     MANIFEST + "CHECK=status-digest-stable\n",
                      MANIFEST.replace("founding-first-city", "arch-gallery-slice")):
             with self.subTest(text=text), self.assertRaises(SystemExit): parse_manifest(text, "test")
 

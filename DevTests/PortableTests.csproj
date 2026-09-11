@@ -192,6 +192,7 @@
 	<Compile Include="KingdomPlotLabourRulesTests.cs" />
 	<Compile Include="KingdomPlotLabourWindowRulesTests.cs" />
 	<Compile Include="KingdomFoundingHeartRulesTests.cs" />
+	<Compile Include="KingdomFoundingHeartChainTests.cs" />
 	<Compile Include="KingdomFoundingHeartReservationRulesTests.cs" />
 	<Compile Include="KingdomFoundingHeartReservationStateTests.cs" />
 	<Compile Include="KingdomFoundingHeartReservationRuntimeSourceTests.cs" />
@@ -226,6 +227,8 @@
 	<Compile Include="..\Growth\KingdomFoundingHeartReservationState.cs" />
 	<Compile Include="..\Growth\KingdomFoundingHeartTerminalPlan.cs" />
 	<Compile Include="..\Growth\KingdomFoundingHeartTerminalRules.cs" />
+	<Compile Include="..\Growth\KingdomFoundingHeartChainRules.cs" />
+	<Compile Include="..\Growth\KingdomFoundingHeartRetiredGeneration.cs" />
 	<Compile Include="..\Growth\KingdomPlotLegacyEffectsPlan.cs" />
 	<Compile Include="..\Growth\KingdomPlotLegacyEffectsRules.cs" />
     <Compile Include="..\Growth\KingdomZoneObservationReceipt.cs" />

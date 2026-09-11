@@ -737,6 +737,7 @@
 	<Compile Include="KingdomFoundingHeartReservationRulesTests.cs" />
 	<Compile Include="KingdomFoundingHeartReservationStateTests.cs" />
 	<Compile Include="KingdomFoundingHeartSourceTests.cs" />
+	<Compile Include="KingdomFoundingHeartChainTests.cs" />
 	<Compile Include="KingdomFoundingHeartReservationRuntimeSourceTests.cs" />
 	<Compile Include="KingdomFoundingHeartNativeSourceTests.cs" />
 	<Compile Include="KingdomFoundingHeartLifecycleSourceTests.cs" />
@@ -1153,6 +1154,8 @@
 	<Compile Include="..\Growth\KingdomFoundingHeartReservationState.cs" />
 	<Compile Include="..\Growth\KingdomFoundingHeartTerminalPlan.cs" />
 	<Compile Include="..\Growth\KingdomFoundingHeartTerminalRules.cs" />
+	<Compile Include="..\Growth\KingdomFoundingHeartChainRules.cs" />
+	<Compile Include="..\Growth\KingdomFoundingHeartRetiredGeneration.cs" />
 	<Compile Include="..\Growth\KingdomPlotLegacyEffectsPlan.cs" />
 	<Compile Include="..\Growth\KingdomPlotLegacyEffectsRules.cs" />
 	<Compile Include="..\Growth\KingdomHostedLotDefinition.cs" />
@@ -1809,6 +1812,7 @@
     <Compile Include="KingdomCityRulesTests.cs" />
     <Compile Include="KingdomBindingRegistryTests.cs" />
     <Compile Include="KingdomResidentRulesTests.cs" />
+    <Compile Include="KingdomCrewFollowsClimbedWorkTests.cs" />
     <Compile Include="KingdomPlacementRulesTests.cs" />
 	<Compile Include="KingdomDistanceRulesTests.cs" />
 	<Compile Include="KingdomDistanceRuntimeSourceTests.cs" />

@@ -344,6 +344,50 @@ class ExpectedLogTest(unittest.TestCase):
                     )
 
 
+class ForbiddenLogTest(unittest.TestCase):
+    """LOG_FORBID is the opposite of LOG_EXPECT and is bounded exactly as tightly."""
+
+    def manifest(self, lines):
+        return matrix.parse_manifest(
+            GREEN + "LOG_FORBID=" + json.dumps(lines) + "\n", "x.persona"
+        )
+
+    def test_optional_field_is_disabled_or_canonical_json(self):
+        self.assertNotIn("LOG_FORBID", matrix.parse_manifest(GREEN, "x"))
+        found = self.manifest(["a halt line", "another"])
+        self.assertEqual('["a halt line","another"]', found["LOG_FORBID"])
+
+    def test_malformed_shapes_duplicates_and_nonprintable_lines_are_refused(self):
+        bad = ["", "null", "{}", "[]", '"line"', "[1]", "[null]", '[""]',
+               '["same","same"]', json.dumps(["before\nafter"])]
+        for value in bad:
+            with self.subTest(value=value), self.assertRaises(SystemExit):
+                matrix.parse_manifest(GREEN + "LOG_FORBID=" + value + "\n", "x")
+        for lines in (["x" * 1025], [str(index) for index in range(5)]):
+            with self.subTest(lines=lines), self.assertRaises(SystemExit):
+                self.manifest(lines)
+
+    def test_a_forbidden_substring_is_found_anywhere_in_the_log(self):
+        manifest = self.manifest(["recovery requires inspection", "was not staged"])
+        clean = b"[TAF] heart rung raised: 2 (heartwaterstone)\n[TAF] all is well\n"
+        self.assertEqual([], matrix.forbidden_log(manifest, clean, "x"))
+        dirty = (b"[TAF] heart rung raised: 2 (heartwaterstone)\n"
+                 b"[TAF] construction: founding heart recovery requires inspection\n")
+        seen = matrix.forbidden_log(manifest, dirty, "x")
+        self.assertEqual(["line 2: recovery requires inspection"], seen)
+        # Both halves of the #162 signature, each reported once with its own line number.
+        both = dirty + b"[TAF] seal: settlement pass was not staged (a sealed work root)\n"
+        self.assertEqual(
+            ["line 2: recovery requires inspection", "line 3: was not staged"],
+            matrix.forbidden_log(manifest, both, "x"))
+        # Windows line endings are read the same way, and a persona without the field refuses
+        # rather than silently passing.
+        self.assertEqual(["line 1: was not staged"], matrix.forbidden_log(
+            manifest, b"seal: settlement pass was not staged\r\nrest\r\n", "x"))
+        with self.assertRaises(SystemExit):
+            matrix.forbidden_log(matrix.parse_manifest(GREEN, "x"), clean, "x")
+
+
 class ScriptGrammarTest(unittest.TestCase):
     def test_advance_folds_to_two_words(self):
         self.assertEqual(

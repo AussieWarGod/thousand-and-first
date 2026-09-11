@@ -12,6 +12,11 @@
 # APIs; this is not a real arrival), the minted store units, and the pre-marked improvement notice,
 # all disclosed in every report line. Not ordinary play, not a rendered Charter, no save/load or
 # general camp acceptance. Covers PR #107 native case 2 only; cases 1, 3, 4, 5 and 6 remain owed.
+# ACCEPTANCE GATE FOR #162. One more ordinary day after the rung is raised, and then production's own
+# founding-heart recovery predicate -- the one KingdomConstruction.Settlement gates every pass on --
+# is asked on that ground. A settlement whose heart cannot be recovered once its root has climbed a
+# rung refuses every later pass, and native run 9 was green while exactly that was happening.
+# Player.log must also carry neither halt line: they are FORBIDDEN, not merely unexpected.
 DESCRIPTION=the camp heart's dedicated store keeps its identity, cell and unspent contents across a real paid waterstone upgrade paid out of that same store
 REQUEST=founding-first-city
 START=8.22@40,12
@@ -19,9 +24,10 @@ START=8.22@40,12
 # Labour prices the prior daily crew window, not elapsed wall time alone. Native 4517620
 # reached 1050 remaining after 2400 further turns; one additional 1200-turn interval is owed.
 # 3600 covers the observed first zero-priced window plus the 2250-tick paid labour bill.
-SCRIPT=stagedigest;camp-heart-setup;advance 1200;camp-heart-check;advance 3600;camp-heart-check;stagedigest
+SCRIPT=stagedigest;camp-heart-setup;advance 1200;camp-heart-check;advance 3600;camp-heart-check;advance 1200;camp-heart-check;stagedigest
 VERBS=camp-heart-setup,camp-heart-check
-EXPECT=stagedigest:OK~founded=false,camp-heart-setup:OK~native-camp-heart phase=1,advance:OK,camp-heart-check:OK~native-camp-heart phase=2,advance:OK,camp-heart-check:OK~native-camp-heart cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
+EXPECT=stagedigest:OK~founded=false,camp-heart-setup:OK~native-camp-heart phase=1,advance:OK,camp-heart-check:OK~native-camp-heart phase=2,advance:OK,camp-heart-check:OK~native-camp-heart phase=3,advance:OK,camp-heart-check:OK~native-camp-heart cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
 LOG_EXPECT=["MODWARN [Pets of Harvest Dawn] - Mod defining manual load order, please convert it to use the Dependencies field.","MODWARN [Pets of Harvest Dawn] - XmlDataHelper:: <...>/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/DLC/PetsPack1/Freehold_Pet_Ercolano/PopulationTables.xml line 4 char 6"]
+LOG_FORBID=["construction: founding heart recovery requires inspection","seal: settlement pass was not staged"]
 SET=camp,native-regression,test-only
 TIMEOUT=1800

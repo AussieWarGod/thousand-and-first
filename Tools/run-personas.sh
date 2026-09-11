@@ -107,7 +107,7 @@ load_persona() {
 	path="$(persona_path "$1")"
 	[ -f "$path" ] || die "no such persona: $1 ($path)"
 	P_REQUEST=""; P_SCRIPT=""; P_START=""; P_CHECK=""; P_TIMEOUT=""; P_VERBS=""; P_DESC=""
-	P_SET=""; P_GATE=0; P_LOG_EXPECT=""; P_RELOAD=""
+	P_SET=""; P_GATE=0; P_LOG_EXPECT=""; P_LOG_FORBID=""; P_RELOAD=""
 	fields="$(python3 "$MATRIX" fields "$path")" || die "persona $1 is malformed"
 	while IFS=$'\t' read -r key value; do
 		case "$key" in
@@ -120,6 +120,7 @@ load_persona() {
 			description) P_DESC="$value" ;;
 			set) P_SET="$value" ;;
 			log_expect) P_LOG_EXPECT="$value" ;;
+			log_forbid) P_LOG_FORBID="$value" ;;
 			reload) P_RELOAD="$value" ;;
 		esac
 	done <<< "$fields"
@@ -369,6 +370,20 @@ run_persona() {
 		if ! python3 "$MATRIX" expected-log "$(persona_path "$persona")" "$archived_player_log" \
 			> "$checked_player_log" 2> "$REPORT_DIR/expected-log-$artifact.log"; then
 			DETAIL="expected diagnostic check refused; inspect raw log and expected-log-$artifact.log"
+			stop_owned
+			return
+		fi
+	fi
+	if [ -n "$P_LOG_FORBID" ]; then
+		# The opposite of LOG_EXPECT, and read off the RAW log: a line a persona forbids must not
+		# appear even once, and filtering it out first would be the one way to miss it.
+		local forbidden
+		if forbidden="$(python3 "$MATRIX" forbidden-log "$(persona_path "$persona")" \
+			"$archived_player_log" 2>&1)"; then
+			:
+		else
+			DETAIL="Player.log carries a forbidden diagnostic: $(printf '%s' "$forbidden" \
+				| tail -n 2 | tr '\n\t' '  ')"
 			stop_owned
 			return
 		fi

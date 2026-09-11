@@ -29,8 +29,10 @@ namespace ThousandAndFirst.Harness
 		internal const string SetupVerb = "camp-heart-setup";
 		internal const string CheckVerb = "camp-heart-check";
 		internal const string Receipt = "r_TAF_ScenarioCampHeartNative_v1";
+		// The last pair is the acceptance gate for issue #162: one more ordinary day AFTER the
+		// rung was raised, and then a check that the settlement pass still runs on this ground.
 		private static readonly string[] Script = { "stagedigest", SetupVerb, "advance 1200",
-			CheckVerb, "advance 3600", CheckVerb, "stagedigest" };
+			CheckVerb, "advance 3600", CheckVerb, "advance 1200", CheckVerb, "stagedigest" };
 
 		public int ScenarioVerbApiVersion { get { return KingdomScenarioVerbApi.Version; } }
 
