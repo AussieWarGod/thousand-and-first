@@ -12,9 +12,10 @@ namespace ThousandAndFirst
 		/// applicable-but-blocked path announces once), and forgotten the moment the ground layer
 		/// stops refusing for an occupant, so a later block is said again.
 		/// </summary>
-		/// <param name="Slot">The refused slot, or null when the occupant block is not in force.</param>
+		/// <param name="Slot">The refused slot key, or null when the block is not in force.</param>
+		/// <param name="Line">The sentence to say for that key.</param>
 		private static void SayPlotWorkOccupied(KingdomSystem System, GameObject Works,
-			string Name, string Slot)
+			string Slot, string Line)
 		{
 			if (Works == null) return;
 			if (Slot == null)
@@ -28,10 +29,26 @@ namespace ThousandAndFirst
 				Works.GetStringProperty(PlotWorkOccupantSlotProperty), Slot)) return;
 			Works.SetIntProperty(PlotWorkOccupantAnnouncedProperty, 1);
 			Works.SetStringProperty(PlotWorkOccupantSlotProperty, Slot);
+			if (System != null && System.Founded && Line != null)
+			{
+				System.Ledger.Note("{{r|" + Line + "}}");
+			}
+		}
+
+		/// <summary>
+		/// The crew stood its own people off a paid raising's ground. Said once per job: the
+		/// founder is told their settlers were moved, because nothing moves without being named.
+		/// </summary>
+		private static void SayPlotWorkCleared(KingdomSystem System, GameObject Works,
+			string Name, int Moved)
+		{
+			if (Works == null || Moved <= 0
+				|| Works.GetIntProperty(PlotWorkClearedAnnouncedProperty) == 1) return;
+			Works.SetIntProperty(PlotWorkClearedAnnouncedProperty, 1);
 			if (System != null && System.Founded)
 			{
-				System.Ledger.Note("{{r|" + KingdomPlotRules.RefuseOccupiedSlot(
-					Name ?? "work", Slot) + "}}");
+				System.Ledger.Note("{{W|" + KingdomPlotRules.ClearedOccupiedSlots(
+					Name ?? "work", Moved) + "}}");
 			}
 		}
 

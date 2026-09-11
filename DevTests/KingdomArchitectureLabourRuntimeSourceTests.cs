@@ -123,25 +123,65 @@ namespace ThousandAndFirst.Tests
 		}
 
 		/// <summary>
-		/// A paid raising whose ground layer is refused by a living occupant must say so once and
-		/// keep its developer log line. Pinned at the site because the refusal itself is unchanged:
-		/// only the silence was the defect (Growth/KingdomPlot2.26.Labour.cs, Apply(Cleared)).
+		/// A paid raising whose ground layer is refused by a living occupant stands our own
+		/// residents off the site and retries in the SAME pass; the player, a stranger, or one of
+		/// ours posted into the layout is never moved and is said once. Pinned at the three sites
+		/// because the stamper refusal itself is unchanged.
 		/// </summary>
 		[Test]
-		public void AnOccupiedGroundLayerIsAnnouncedOnceAndStillLogged()
+		public void AnOccupiedGroundLayerClearsOurOwnAndOtherwiseAnnouncesOnce()
 		{
 			string labour = TestMain.ReadRepositoryText("Growth/KingdomPlot2.26.Labour.cs");
 			AssertOrdered(labour,
 				"private static bool Apply(r_KingdomPlotWorks Works, KingdomPlotRules.PlotStage Stage,",
 				"KingdomSystem System)",
 				"case KingdomPlotRules.PlotStage.Cleared:",
-				"bool ground = KingdomArchitectureStamper.TryStageLayer(parent, zone,",
-				"ArchitectureLayer.Ground, out string groundFailure)",
-				"SayPlotWorkOccupied(System, parent, Works.DisplayName,",
-				"ground ? null : KingdomPlotRules.OccupantSlotOf(groundFailure))",
-				"if (!ground)",
+				"if (currentAuthored && !TryGroundStageWithOccupants(System, zone, parent,",
+				"Works, managed, plot, out string groundFailure))",
 				"KingdomLog.Log(\"architecture: ground layer refused: \" + groundFailure)",
 				"return false;");
+			string clearance = TestMain.ReadRepositoryText(
+				"Growth/KingdomPlot2.26c.OccupantClearance.cs");
+			AssertOrdered(clearance,
+				"internal static bool TryGroundStageWithOccupants(",
+				"KingdomArchitectureStamper.TryStageLayer(Root, Z,",
+				"if (!ground && KingdomPlotRules.IsOccupantSlotRefusal(Failure))",
+				"if (TryClearManagedOccupants(System, Z, Root, Managed, Rect, out int cleared,",
+				"SayPlotWorkCleared(System, Root, name, cleared)",
+				"ground = KingdomArchitectureStamper.TryStageLayer(Root, Z,",
+				"KingdomPlotRules.OccupantVerdict.AnchorBound && anchor != null",
+				"KingdomPlotRules.RefuseOccupiedAnchor(name, anchor.X, anchor.Y)",
+				"SayPlotWorkOccupied(System, Root, slot,",
+				"KingdomPlotRules.RefuseOccupiedSlot(name, slot)");
+			// Plan before effect: classify, prove every destination, then move. The destination
+			// excludes every layout slot, the plot rect, liquid, impassable and occupied ground,
+			// and the lawful system move is checked by return value AND by re-reading the cell.
+			AssertOrdered(clearance,
+				"internal static bool TryClearManagedOccupants(",
+				"KingdomSurvey survey = KingdomSurvey.ActiveFor(Z)",
+				"if (item.IsPlayer()) { player = true; continue; }",
+				"if (!IsOwnResident(System, survey, item)) continue;",
+				"Cell anchor = PostAnchorInLayout(Z, item, Managed)",
+				"Verdict = KingdomPlotRules.JudgeOccupants(occupants.Count, residents, player,",
+				"if (Verdict != KingdomPlotRules.OccupantVerdict.Displace)",
+				"Cell target = FreeGroundOffLayout(Z, occupants[i], Managed, Rect, taken)",
+				"if (target == null)",
+				"return ClearanceFault(\"no free ground beside the site to stand them on\",",
+				"plan.Add(new KingdomLayoutDisplacement(occupants[i], target))",
+				"move.Body.SystemLongDistanceMoveTo(move.Target, 0, forced: true,",
+				"|| move.Body.CurrentCell != move.Target)",
+				"Moved++;");
+			AssertOrdered(clearance,
+				"private static bool IsOwnResident(",
+				"Simulation.City.KingdomPhysicalHappenings.IsStaged(Body)",
+				"Simulation.City.KingdomResidents.IdOf(Body)",
+				"row.Standing == Simulation.City.KingdomResidentStanding.Resident",
+				"private static Cell FreeGroundOffLayout(",
+				"Managed.Contains(candidate.Y * Z.Width + candidate.X)",
+				"candidate.HasOpenLiquidVolume()",
+				"!candidate.IsPassable(Body) || HoldsLivingBody(candidate)");
+			StringAssert.DoesNotContain("DirectMoveTo", clearance);
+			StringAssert.DoesNotContain("TeleportTo", clearance);
 			string window = TestMain.ReadRepositoryText(
 				"Growth/KingdomPlot2.26b.LabourWindow.cs");
 			string said = window.Substring(window.IndexOf(
@@ -155,8 +195,12 @@ namespace ThousandAndFirst.Tests
 				"Works.GetStringProperty(PlotWorkOccupantSlotProperty), Slot)",
 				"Works.SetIntProperty(PlotWorkOccupantAnnouncedProperty, 1)",
 				"Works.SetStringProperty(PlotWorkOccupantSlotProperty, Slot)",
-				"System.Ledger.Note(",
-				"KingdomPlotRules.RefuseOccupiedSlot(");
+				"System.Ledger.Note(");
+			// The one gang is not held by a paid, physically unbuilt root: apply retries on its
+			// own, so labour candidacy stays exactly the spent-clock predicate it was.
+			string presence = TestMain.ReadRepositoryText(
+				"Growth/KingdomConstructionPresence.Helpers.cs");
+			StringAssert.Contains("&& remaining > 0L;", presence);
 			string stamper = TestMain.ReadRepositoryText(
 				"Growth/KingdomArchitectureStamper.Verification.cs");
 			StringAssert.Contains(

@@ -1072,6 +1072,38 @@ namespace ThousandAndFirst.Tests
 				Announced, AnnouncedSlot, Slot));
 		}
 
+		[TestCase(0, 0, false, false, "Clear", TestName = "empty layout")]
+		[TestCase(2, 2, false, false, "Displace", TestName = "all ours are stood off")]
+		[TestCase(1, 1, true, false, "Refuse", TestName = "the player is never moved")]
+		[TestCase(2, 1, false, false, "Refuse", TestName = "a stranger refuses the whole set")]
+		[TestCase(1, 0, false, false, "Refuse", TestName = "a lone stranger refuses")]
+		[TestCase(2, 2, false, true, "AnchorBound", TestName = "a post inside the layout is named")]
+		[TestCase(2, 1, false, true, "Refuse", TestName = "a stranger outranks an anchor")]
+		public void OnlyOurOwnUnpostedResidentsAreStoodOffTheirSite(int Occupants, int Residents,
+			bool AnyPlayer, bool AnyAnchor, string Expected)
+		{
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.JudgeOccupants(
+				Occupants, Residents, AnyPlayer, AnyAnchor).ToString());
+		}
+
+		[Test]
+		public void AClearedSiteSaysHowManyWereStoodOff()
+		{
+			StringAssert.Contains("1 settler", KingdomPlotRules.ClearedOccupiedSlots("fire", 1));
+			StringAssert.Contains("2 settlers", KingdomPlotRules.ClearedOccupiedSlots("fire", 2));
+			StringAssert.Contains("fire", KingdomPlotRules.ClearedOccupiedSlots("fire", 2));
+		}
+
+		[Test]
+		public void AnAnchoredPostNamesItsOwnGroundAndIsNotTheSlotSentence()
+		{
+			string line = KingdomPlotRules.RefuseOccupiedAnchor("fire", 21, 7);
+			StringAssert.Contains("21, 7", line);
+			StringAssert.Contains("fire", line);
+			ClassicAssert.AreNotEqual(line, KingdomPlotRules.RefuseOccupiedSlot("fire", "g:02:01"),
+				"a post conflict is a siting fault, not a body that wandered on");
+		}
+
 		[Test]
 		public void AnOccupiedRaisingNamesTheBuildingTheSlotAndTheBody()
 		{

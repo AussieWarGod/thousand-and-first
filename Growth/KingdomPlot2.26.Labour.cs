@@ -211,19 +211,11 @@ namespace ThousandAndFirst
 						return false;
 					}
 					if (!ClearGround(Works, zone, plot, footprint, roof, managed)) return false;
-					if (currentAuthored)
+					if (currentAuthored && !TryGroundStageWithOccupants(System, zone, parent,
+						Works, managed, plot, out string groundFailure))
 					{
-						bool ground = KingdomArchitectureStamper.TryStageLayer(parent, zone,
-							ArchitectureLayer.Ground, out string groundFailure);
-						// A living occupant is the one ground refusal the founder can act on, and
-						// the labour is already spent: say it once rather than retry in silence.
-						SayPlotWorkOccupied(System, parent, Works.DisplayName,
-							ground ? null : KingdomPlotRules.OccupantSlotOf(groundFailure));
-						if (!ground)
-						{
-							KingdomLog.Log("architecture: ground layer refused: " + groundFailure);
-							return false;
-						}
+						KingdomLog.Log("architecture: ground layer refused: " + groundFailure);
+						return false;
 					}
 					break;
 				case KingdomPlotRules.PlotStage.Frame:

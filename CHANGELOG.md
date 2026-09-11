@@ -10,9 +10,9 @@ below it.
 
 ## Unreleased — Beta gap report
 
-Current 3089-file census is line-cap green: 438,298 physical lines; direct `XRL`
-imports occur in 1441 files, 0 of them over the line limit. Inventory SHA-256:
-`41f94c110702f36ff7b0bdc4c7cf44a068d56b9f40d7ad732cfe2b93bed48006`. The cold-install inventory contains 3120 files.
+Current 3090-file census is line-cap green: 438,572 physical lines; direct `XRL`
+imports occur in 1442 files, 0 of them over the line limit. Inventory SHA-256:
+`e7f69c04b3d7dcaeb86baae6ef32d65c7983a40b23a04e7a3fdfdbe17017de6f`. The cold-install inventory contains 3121 files.
 This isolated 0.3.4 preparation combines heart authority, shared-XL transition, rung settlement
 and camp content/fixture branches. Combined compile/native gates and semantic review are owed;
 all earlier checkpoint counts below are retained, never carried forward as acceptance.

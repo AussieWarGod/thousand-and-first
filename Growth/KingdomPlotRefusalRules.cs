@@ -132,6 +132,56 @@ namespace ThousandAndFirst
 			return "The {{C|" + Name + "}} is paid for and cannot be raised: somebody is standing on the ground at layout slot " + Slot + ". Nothing living is moved to clear a plot. Send them off it, and the raising goes on.";
 		}
 
+		/// <summary>What a raising may lawfully do about the living bodies on its slots.</summary>
+		public enum OccupantVerdict
+		{
+			/// <summary>Nobody is standing on the layout.</summary>
+			Clear,
+			/// <summary>Every occupant is this settlement's own: the crew walks them off.</summary>
+			Displace,
+			/// <summary>The player or a stranger stands there: refused, and said once.</summary>
+			Refuse,
+			/// <summary>One of ours is posted INTO the layout: walking them off only sends them
+			/// back next pass, so it is a siting fault to be named, not a body to be moved.</summary>
+			AnchorBound
+		}
+
+		/// <summary>
+		/// Who may be moved off a raising's ground. The settlement's own residents are walked off
+		/// their own building site; the player and anybody who is not ours are never moved, because
+		/// nothing the founder did not place is the settlement's to shove. Mixed company refuses:
+		/// clearing half the slots would move residents for nothing. A resident whose post anchor
+		/// lies inside the layout is named instead of shoved in a circle.
+		/// </summary>
+		/// <param name="Occupants">Living bodies standing on layout slots.</param>
+		/// <param name="Residents">How many of them are this settlement's residents.</param>
+		/// <param name="AnyPlayer">Whether the player is one of them.</param>
+		/// <param name="AnyAnchorInLayout">Whether one of them is posted into the layout.</param>
+		public static OccupantVerdict JudgeOccupants(int Occupants, int Residents, bool AnyPlayer,
+			bool AnyAnchorInLayout)
+		{
+			if (Occupants <= 0) return OccupantVerdict.Clear;
+			if (AnyPlayer || Residents != Occupants || Residents < 0) return OccupantVerdict.Refuse;
+			return AnyAnchorInLayout ? OccupantVerdict.AnchorBound : OccupantVerdict.Displace;
+		}
+
+		/// <summary>The crew stood its own people off the site and the raising went on.</summary>
+		public static string ClearedOccupiedSlots(string Name, int Moved)
+		{
+			return "The crew stood " + Moved + (Moved == 1 ? " settler" : " settlers")
+				+ " off the ground the {{C|" + Name + "}} is being raised on, and the work goes on.";
+		}
+
+		/// <summary>
+		/// A raising whose ground is stood on by one of our own whose post is INSIDE the layout.
+		/// Standing them off would only walk them back, so the founder is told where the post is:
+		/// this is a siting fault to be settled, not a body to be shoved.
+		/// </summary>
+		public static string RefuseOccupiedAnchor(string Name, int X, int Y)
+		{
+			return "The {{C|" + Name + "}} is paid for and cannot be raised: one of your own is posted at " + X + ", " + Y + ", inside the ground it stands on, and walks back the moment the crew stands them off. Move the post or stake the work elsewhere.";
+		}
+
 		/// <summary>A design people are meant to sleep in, on a tier with nothing over it.</summary>
 		public static string RefuseBedRoof(string Name)
 		{
