@@ -185,9 +185,23 @@ $Project = Join-Path (Join-Path $PSScriptRoot 'WorkshopSteam') $Invocation.Proje
 $OutputDirectory = Join-Path $EvidenceDirectory 'out'
 $IntermediateDirectory = (Join-Path $EvidenceDirectory 'obj') + '/'
 $Dotnet = (Get-Command dotnet.exe -CommandType Application).Source
-& $Dotnet build $Project --nologo --configuration Release --output $OutputDirectory `
-    "-p:QudManaged=$ManagedDirectory" "-p:BaseIntermediateOutputPath=$IntermediateDirectory" `
-    --ignore-failed-sources *> (Join-Path $EvidenceDirectory 'build.log')
+# Refs #151: a shared-compilation VBCSCompiler.dll keepalive process survives this build and
+# is the only surviving descendant after the launcher's own process exits, so the runner's
+# Start-Process -Wait on the outer launcher invocation (release.yml) never returns. Disable
+# shared compilation and MSBuild node reuse for this one build so nothing outlives it.
+$PriorUseMsBuildServer = $env:DOTNET_CLI_USE_MSBUILD_SERVER
+$PriorDisableNodeReuse = $env:MSBUILDDISABLENODEREUSE
+$env:DOTNET_CLI_USE_MSBUILD_SERVER = '0'
+$env:MSBUILDDISABLENODEREUSE = '1'
+try {
+    & $Dotnet build $Project --nologo --configuration Release --output $OutputDirectory `
+        "-p:QudManaged=$ManagedDirectory" "-p:BaseIntermediateOutputPath=$IntermediateDirectory" `
+        "-p:UseSharedCompilation=false" "-nodeReuse:false" `
+        --ignore-failed-sources *> (Join-Path $EvidenceDirectory 'build.log')
+} finally {
+    $env:DOTNET_CLI_USE_MSBUILD_SERVER = $PriorUseMsBuildServer
+    $env:MSBUILDDISABLENODEREUSE = $PriorDisableNodeReuse
+}
 if ($LASTEXITCODE -ne 0) { throw 'Upload helper compilation failed; retained build.log.' }
 
 # Publisher argv retains the fixed-root literal; delivery uses its compiled root directly.
