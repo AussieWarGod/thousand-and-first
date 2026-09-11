@@ -10,11 +10,11 @@ namespace ThousandAndFirst.Tests
 	/// Game-coupled logic is source-pinned here; there is no pure predicate to value-test.
 	/// <para>
 	/// SOURCE PINS ONLY. These tests prove the fixture's call shape and exact salvage-rule
-	/// computation are present in the file; they do NOT execute the scenario, do NOT prove the
-	/// "fire" build or strike ever actually completes on real turns, and do NOT sign the
-	/// negative path as observed — that requires a real native run, which this pass does not
-	/// perform. Status for this whole scenario is "implemented-unexecuted", never "covered" or
-	/// "PASS", until a native evidence id exists.
+	/// computation are present in the file; they do NOT execute the scenario, do NOT prove
+	/// either the "fire" or "larder" build or strike ever actually completes on real turns, and
+	/// do NOT sign either case's negative path as observed — that requires a real native run,
+	/// which this pass does not perform. Status for this whole scenario is
+	/// "implemented-unexecuted", never "covered" or "PASS", until a native evidence id exists.
 	/// </para>
 	/// </summary>
 	public class KingdomTeardownScenarioSourceTests
@@ -34,15 +34,17 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void SetupFoundsDedicatesAndCommissionsThroughRealProductionApis()
+		public void SetupRunsTwoParallelCasesThroughRealProductionApis()
 		{
 			string source = Read(Checks);
 			foreach (string token in new[]
 			{
 				"KingdomNativeCampFounding.Found(Game, Zone, Require)",
-				"KingdomNativeCampFounding.Dedicate(Game, Zone, System,",
-				"KingdomMaterials.DedicateStockpile(System, Zone, chest, out failure)",
+				"KingdomNativeCampFounding.Dedicate(Game, Zone, system,",
+				"KingdomMaterials.DedicateStockpile(System, Zone, Chest, out failure)",
 				"KingdomCommission.Commission(System, BuildKey, null,",
+				"new Case(\"fire\", \"fire\", system, Zone, Game, Owned)",
+				"new Case(\"larder\", \"larder\", system, Zone, Game, Owned)",
 			}) Assert.That(source, Does.Contain(token), token);
 			// The building object itself is never forced: no direct BuiltProperty/KingdomBuilt
 			// write anywhere in this file.
@@ -63,7 +65,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void RemovalAndExactSalvageDeltaAreComputedFromTheProductionRuleNeverAssumed()
+		public void BothCasesComputeExactSalvageDeltaFromTheProductionRuleNeverAssumed()
 		{
 			string source = Read(Checks);
 			Assert.That(source, Does.Contain("awaiting-struck=true"));
@@ -80,12 +82,15 @@ namespace ThousandAndFirst.Tests
 			Assert.That(source, Does.Contain("KingdomMaterials.RawCensusCountOf(item)"));
 			// Never the ordinary, dispatching Count for the material-return proof.
 			Assert.That(source, Does.Not.Contain("item.Count"));
-			// Never a bare hardcoded "0" standing in for the computed rule.
+			// The "fire" case is the explicit ZERO-SALVAGE BOUNDARY (1 timber cost floors to 0);
+			// "larder" (3 timber cost) is the POSITIVE-SALVAGE case this fixture was missing
+			// before -- neither is a bare hardcoded literal standing in for the computed rule.
 			Assert.That(source, Does.Not.Contain("ExpectedSalvageDelta = 0"));
+			Assert.That(source, Does.Not.Contain("ExpectedSalvageDelta = 1"));
 		}
 
 		[Test]
-		public void NegativePathRefusesASecondStrikeOnTheAbsentBuilding()
+		public void NegativePathRefusesASecondStrikeOnTheAbsentBuildingForBothCases()
 		{
 			string source = Read(Checks);
 			Assert.That(source, Does.Contain("secondOrder = KingdomMaterials.OrderStrike("));
@@ -93,6 +98,13 @@ namespace ThousandAndFirst.Tests
 				"!secondOrder && !string.IsNullOrEmpty(secondFailure)"));
 			Assert.That(source, Does.Contain(
 				"a second strike order against the absent building was not refused"));
+		}
+
+		[Test]
+		public void FrameOnlyCompletesOnceEveryCaseHasFinished()
+		{
+			string source = Read(Checks);
+			Assert.That(source, Does.Contain("foreach (Case c in Cases) if (!c.Done) Done = false;"));
 		}
 	}
 }

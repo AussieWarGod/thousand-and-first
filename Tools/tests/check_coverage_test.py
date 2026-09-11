@@ -1,24 +1,18 @@
-"""Regression for Tools/coverage/check_coverage.py: the schema validator must
-reject a bad status token, a PASS-shaped status with no evidence id, and a
-duplicate row id -- never silently accept them -- and the real matrix.json
-checked into this repo must itself validate clean."""
-
-import copy
 import os
 import sys
 import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "coverage"))
-import check_coverage as cc  # noqa: E402
-
-MATRIX_PATH = os.path.join(
-    os.path.dirname(__file__), "..", "coverage", "matrix.json"
-)
+import check_coverage  # noqa: E402
 
 
-def _good_doc():
+REPO_ROOT = os.path.join(os.path.dirname(__file__), "..", "..")
+MATRIX_PATH = os.path.join(REPO_ROOT, "Tools", "coverage", "matrix.json")
+
+
+def _base_doc():
     return {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "rows": [
             {
                 "id": 1,
@@ -30,67 +24,143 @@ def _good_doc():
                 "negative": "x",
                 "driver": "x",
                 "status": "NONE",
-                "evidence_id": None,
+                "evidence": None,
                 "note": "x",
             }
         ],
     }
 
 
+def _evidence_entry(**overrides):
+    entry = {
+        "commit": "abc1234",
+        "evidenceDir": "some-evidence-dir",
+        "artifactRef": "report.tsv",
+        "verdict": "PASS - real thing happened",
+        "scope": "synthetic setup, disclosed",
+        "historicalScope": True,
+        "currentDevCoverage": True,
+    }
+    entry.update(overrides)
+    return entry
+
+
 class CoverageMatrixSchemaTest(unittest.TestCase):
     def test_the_real_matrix_json_validates_clean(self):
-        doc = cc.load(MATRIX_PATH)
-        self.assertEqual([], cc.validate(doc))
+        doc = check_coverage.load(MATRIX_PATH)
+        self.assertEqual(check_coverage.validate(doc), [])
 
     def test_the_real_matrix_json_counts_are_derived_not_hand_typed(self):
-        doc = cc.load(MATRIX_PATH)
-        tally = cc.counts(doc)
-        self.assertEqual(len(doc["rows"]), tally["TOTAL"])
-        self.assertEqual(
-            tally["TOTAL"],
-            sum(v for k, v in tally.items() if k != "TOTAL"),
-            "the per-status counts must sum to the row total",
-        )
+        doc = check_coverage.load(MATRIX_PATH)
+        tally = check_coverage.counts(doc)
+        self.assertEqual(tally["TOTAL"], len(doc["rows"]))
+        self.assertEqual(sum(v for k, v in tally.items() if k != "TOTAL"), tally["TOTAL"])
 
     def test_unknown_status_token_is_rejected(self):
-        doc = _good_doc()
-        doc["rows"][0]["status"] = "MAYBE"
-        problems = cc.validate(doc)
-        self.assertTrue(
-            any("unknown status token" in p for p in problems), problems
-        )
+        doc = _base_doc()
+        doc["rows"][0]["status"] = "MOSTLY_FINE"
+        problems = check_coverage.validate(doc)
+        self.assertTrue(any("unknown status token" in p for p in problems))
 
-    def test_pass_status_with_no_evidence_id_is_rejected(self):
-        doc = _good_doc()
+    def test_pass_status_with_no_evidence_is_rejected(self):
+        doc = _base_doc()
         doc["rows"][0]["status"] = "NATIVE_PASS"
-        doc["rows"][0]["evidence_id"] = None
-        problems = cc.validate(doc)
-        self.assertTrue(
-            any("no evidence_id" in p for p in problems), problems
-        )
+        doc["rows"][0]["evidence"] = None
+        problems = check_coverage.validate(doc)
+        self.assertTrue(any("no typed evidence list" in p for p in problems))
 
-    def test_pass_status_with_an_evidence_id_is_accepted(self):
-        doc = _good_doc()
+    def test_pass_status_with_a_bare_string_evidence_is_rejected(self):
+        doc = _base_doc()
         doc["rows"][0]["status"] = "NEGATIVE_PASS"
-        doc["rows"][0]["evidence_id"] = "run-1234"
-        self.assertEqual([], cc.validate(doc))
+        doc["rows"][0]["evidence"] = "prior-status-md-rows-not-rerun"
+        problems = check_coverage.validate(doc)
+        self.assertTrue(any("no typed evidence list" in p for p in problems))
+
+    def test_pass_status_with_a_typed_evidence_list_is_accepted(self):
+        doc = _base_doc()
+        doc["rows"][0]["status"] = "NATIVE_PASS"
+        doc["rows"][0]["evidence"] = [_evidence_entry()]
+        self.assertEqual(check_coverage.validate(doc), [])
+
+    def test_evidence_entry_missing_a_required_key_is_rejected(self):
+        doc = _base_doc()
+        doc["rows"][0]["status"] = "NATIVE_PASS"
+        entry = _evidence_entry()
+        del entry["evidenceDir"]
+        doc["rows"][0]["evidence"] = [entry]
+        problems = check_coverage.validate(doc)
+        self.assertTrue(any("missing keys" in p for p in problems))
+
+    def test_banned_placeholder_substring_is_rejected_anywhere_in_a_row(self):
+        doc = _base_doc()
+        doc["rows"][0]["note"] = "see prior-status doc for details"
+        problems = check_coverage.validate(doc)
+        self.assertTrue(any("banned placeholder substring" in p for p in problems))
+
+    def test_owned_lane_placeholder_is_rejected(self):
+        doc = _base_doc()
+        doc["rows"][0]["driver"] = "owned-lane, not independently assessed"
+        problems = check_coverage.validate(doc)
+        self.assertTrue(any("banned placeholder substring" in p for p in problems))
+
+    def test_non_pass_status_with_non_null_evidence_is_rejected(self):
+        doc = _base_doc()
+        doc["rows"][0]["status"] = "EVIDENCE_UNVERIFIED"
+        doc["rows"][0]["evidence"] = [_evidence_entry()]
+        problems = check_coverage.validate(doc)
+        self.assertTrue(any("non-null evidence field" in p for p in problems))
 
     def test_duplicate_row_id_is_rejected(self):
-        doc = _good_doc()
-        doc["rows"].append(copy.deepcopy(doc["rows"][0]))
-        problems = cc.validate(doc)
-        self.assertTrue(any("duplicate row id" in p for p in problems), problems)
+        doc = _base_doc()
+        doc["rows"].append(dict(doc["rows"][0]))
+        problems = check_coverage.validate(doc)
+        self.assertTrue(any("duplicate row id" in p for p in problems))
 
     def test_missing_required_key_is_rejected(self):
-        doc = _good_doc()
+        doc = _base_doc()
         del doc["rows"][0]["driver"]
-        problems = cc.validate(doc)
-        self.assertTrue(any("missing keys" in p for p in problems), problems)
+        problems = check_coverage.validate(doc)
+        self.assertTrue(any("missing keys" in p for p in problems))
+
+    def test_the_real_matrix_json_combinations_validate_clean(self):
+        doc = check_coverage.load(MATRIX_PATH)
+        valid_ids = {row["id"] for row in doc["rows"]}
+        self.assertEqual(check_coverage.validate_combinations(doc, valid_ids), [])
+
+    def test_combination_referencing_unknown_row_id_is_rejected(self):
+        combo = {
+            "id": "CX", "name": "x", "rows": [9999], "coupling": "x",
+            "prerequisites": "x", "invariants": "x", "seed_turn_matrix": "x",
+            "expected_failure_rows": "x", "reusable_seams": "x", "status": "NONE",
+            "evidence": None,
+        }
+        problems = check_coverage.validate_combinations({"combinations": [combo]}, {1, 2})
+        self.assertTrue(any("unknown behaviour row id" in p for p in problems))
+
+    def test_combination_pass_status_with_no_evidence_is_rejected(self):
+        combo = {
+            "id": "CX", "name": "x", "rows": [1], "coupling": "x",
+            "prerequisites": "x", "invariants": "x", "seed_turn_matrix": "x",
+            "expected_failure_rows": "x", "reusable_seams": "x", "status": "NATIVE_PASS",
+            "evidence": None,
+        }
+        problems = check_coverage.validate_combinations({"combinations": [combo]}, {1})
+        self.assertTrue(any("no typed evidence list" in p for p in problems))
+
+    def test_combination_status_never_counts_toward_behaviour_coverage(self):
+        doc = check_coverage.load(MATRIX_PATH)
+        tally = check_coverage.counts(doc)
+        behaviour_total = sum(v for k, v in tally.items() if k != "TOTAL")
+        self.assertEqual(behaviour_total, len(doc["rows"]))
+        # Combinations exist but are excluded from the behaviour tally entirely.
+        self.assertGreater(len(doc.get("combinations", [])), 0)
+        self.assertEqual(tally["TOTAL"], len(doc["rows"]))
 
     def test_empty_rows_is_rejected(self):
-        doc = {"schemaVersion": 1, "rows": []}
-        problems = cc.validate(doc)
-        self.assertTrue(any("non-empty" in p for p in problems), problems)
+        doc = _base_doc()
+        doc["rows"] = []
+        problems = check_coverage.validate(doc)
+        self.assertTrue(any("non-empty list" in p for p in problems))
 
 
 if __name__ == "__main__":

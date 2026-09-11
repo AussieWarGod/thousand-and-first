@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "statusTokens": [
     "NONE",
     "IMPLEMENTED_UNEXECUTED",
@@ -19,8 +19,18 @@
       "negative": "not verified",
       "driver": "Harness/KingdomFirstGuestNativeProvider.cs:18 (setup founds); Harness/KingdomNativeCampFounding.cs:26 (Found)",
       "status": "NATIVE_PASS",
-      "evidence_id": "prior-status-md-rows-not-rerun",
-      "note": "prior PR evidence, not re-run this pass"
+      "note": "Driver Harness/KingdomFirstGuestNativeProvider.cs:18-19; content at e918538 (dev, #26) is byte-identical to the evidence-cited a64289c for this file (git diff empty), so the root-harness105-native.JNJnVO/report.tsv PASS carries forward to current dev bytes.",
+      "evidence": [
+        {
+          "commit": "e918538",
+          "evidenceDir": "root-harness105-native.JNJnVO",
+          "artifactRef": "report.tsv",
+          "verdict": "PASS - found-first-city, 11 rows, receipt-owned stop proved",
+          "scope": "synthetic same-process founding, seed #165939435; not ordinary reachability/save-load",
+          "historicalScope": true,
+          "currentDevCoverage": true
+        }
+      ]
     },
     {
       "id": 2,
@@ -32,8 +42,18 @@
       "negative": "COVERAGE_GAP",
       "driver": "Harness/KingdomFirstGuestNativeProvider.cs:18-19 (first-guest-setup/check)",
       "status": "NATIVE_PASS",
-      "evidence_id": "prior-status-md-rows-not-rerun",
-      "note": "save/cold-load and interrupted path are coverage gaps, not defects"
+      "note": "Same evidence run and content-identity basis as row 1 (single script, two verbs).",
+      "evidence": [
+        {
+          "commit": "e918538",
+          "evidenceDir": "root-harness105-native.JNJnVO",
+          "artifactRef": "report.tsv",
+          "verdict": "PASS - first-guest-native-check, 135 rows, receipt-owned stop proved",
+          "scope": "synthetic same-process founding, seed #165939435; not ordinary reachability/save-load",
+          "historicalScope": true,
+          "currentDevCoverage": true
+        }
+      ]
     },
     {
       "id": 3,
@@ -45,8 +65,8 @@
       "negative": "owned lane",
       "driver": "camp-builder-owned (Harness/KingdomQuickstartBootstrap.Founders*.cs)",
       "status": "NONE",
-      "evidence_id": null,
-      "note": "out of this review's edit scope; owned lane, not independently assessed"
+      "note": "out of this review's edit scope; owned lane, not independently assessed",
+      "evidence": null
     },
     {
       "id": 4,
@@ -58,8 +78,8 @@
       "negative": "COVERAGE_GAP",
       "driver": "NONE found among the 30 [KingdomScenarioVerbProvider] classes on dev",
       "status": "NONE",
-      "evidence_id": null,
-      "note": "COVERAGE GAP, not a proven-unreachable defect: no failed transition or production proof of unreachability was found, only an absent driver"
+      "note": "COVERAGE GAP, not a proven-unreachable defect: no failed transition or production proof of unreachability was found, only an absent driver",
+      "evidence": null
     },
     {
       "id": 5,
@@ -71,8 +91,18 @@
       "negative": "NATIVE_PASS (veto path)",
       "driver": "Harness/KingdomRaidDeathNativeProvider.cs, KingdomRaidDeathVetoNativeProvider.cs, KingdomRaidRecoveryDeathNativeProvider.cs",
       "status": "NATIVE_PASS",
-      "evidence_id": "prior-status-md-rows-not-rerun",
-      "note": "raid-caused death path only; non-raid death path is a coverage gap"
+      "note": "Driver Harness/KingdomRaidDeathNativeProvider.cs (be3f13a). git diff a4d61a9(#9) be3f13a for this file is empty -> content-identical, so the case28b.1 native evidence carries forward to current dev bytes. KingdomRaidDeathVetoNativeProvider.cs/KingdomRaidRecoveryDeathNativeProvider.cs share this same evidence run per docs/STATUS.md.",
+      "evidence": [
+        {
+          "commit": "be3f13a",
+          "evidenceDir": "taf-raid-death-fixed.nf0IMW",
+          "artifactRef": "Player.log (native90794 TERMINAL0)",
+          "verdict": "PASS - all three real deaths/six callbacks, exact unchanged pending authority through final removal, one post-removal activation result, seed #1012029",
+          "scope": "synthetic developer evidence; ordinary play, recovery and save/load stay unsigned",
+          "historicalScope": true,
+          "currentDevCoverage": true
+        }
+      ]
     },
     {
       "id": 6,
@@ -84,21 +114,40 @@
       "negative": "COVERAGE_GAP",
       "driver": "camp-builder-owned Quickstart build harness for the Quickstart leg; this pass's teardown-setup independently exercises the same KingdomCommission.Commission for a non-Quickstart camp (Harness/KingdomTeardownNativeProvider.cs:19)",
       "status": "NATIVE_PASS",
-      "evidence_id": "3cf2825 build-journal PASS; hotfix142-native",
-      "note": "quote/CanPay/Commission legs have a real native PASS at 3cf2825 (hotfix142-native); completion-to-finished-building and save/cold-load legs are a coverage gap pending a dedicated camp lifecycle driver, not proven absent"
+      "note": "3cf2825 is a direct ancestor of the current dev base (verified). Completion-to-built (IsFunctionallyBuilt) and save/cold-load of the FINISHED building are a separate gap pending a dedicated camp lifecycle driver -- not covered by this evidence.",
+      "evidence": [
+        {
+          "commit": "3cf2825",
+          "evidenceDir": "hotfix142-native.epWuUn",
+          "artifactRef": "build journal (COMPLETE OK)",
+          "verdict": "PASS - quote/CanPay/Commission build journal",
+          "scope": "quote/CanPay/Commission legs only",
+          "historicalScope": true,
+          "currentDevCoverage": true
+        },
+        {
+          "commit": "3cf2825",
+          "evidenceDir": "hotfix142-native.IqS6Jj",
+          "artifactRef": "results.json (six-pair save/load matrix)",
+          "verdict": "PASS - six-pair save/load matrix",
+          "scope": "quote/CanPay/Commission legs only",
+          "historicalScope": true,
+          "currentDevCoverage": true
+        }
+      ]
     },
     {
       "id": 7,
       "behaviour": "Building teardown/removal",
       "prerequisites": "functionally-built building",
-      "transitions": "KingdomMaterials.OrderStrike (Growth/KingdomMaterials.08.StrikeOrdering.cs:23) -> removal + exact salvage",
-      "effects": "works object gone, exact material raw-count delta per KingdomMaterialRules.StrikeSalvage (Growth/KingdomMaterialRules.Clearance.cs:211-219)",
+      "transitions": "KingdomMaterials.OrderStrike (Growth/KingdomMaterials.08.StrikeOrdering.cs:23) -> removal + exact salvage; two parallel cases: fire (1 timber cost, RuntimeData/KingdomBuildings.xml:544-546, zero-salvage boundary) and larder (3 timber cost, RuntimeData/KingdomBuildings.xml:399-400, positive-salvage)",
+      "effects": "works object gone, exact material raw-count delta per KingdomMaterialRules.StrikeSalvage (Growth/KingdomMaterialRules.Clearance.cs:211-219): fire expects +0 timber (boundary), larder expects +1 timber (positive), both computed live from KingdomMaterials.CostFor + StrikeSalvagePercent, never hardcoded",
       "save_cold_load": "COVERAGE_GAP (not wired this pass)",
       "negative": "IMPLEMENTED_UNEXECUTED",
       "driver": "Harness/KingdomTeardownNativeProvider.cs:18-19 (teardown-setup/teardown-check)",
       "status": "IMPLEMENTED_UNEXECUTED",
-      "evidence_id": null,
-      "note": "source-pinned only (DevTests/KingdomTeardownScenarioSourceTests.cs); no native run performed this pass, so this cannot be marked covered or PASS"
+      "note": "source-pinned only (DevTests/KingdomTeardownScenarioSourceTests.cs); no native run performed this pass, so this cannot be marked covered or PASS. Two cases journal as teardown-check~case=fire and ~case=larder (Harness/KingdomTeardownNativeChecks.cs Case class), proving both the zero-salvage boundary and a genuine positive-salvage delta from the same live production rule.",
+      "evidence": null
     },
     {
       "id": 8,
@@ -110,8 +159,8 @@
       "negative": "COVERAGE_GAP",
       "driver": "NONE among the 30 [KingdomScenarioVerbProvider] classes on dev; KingdomUpgradeSourceProvider.cs/KingdomUpgradeStageProvider.cs are the SAVE-SCHEMA migration/downgrade lane (Donor/Reserved/Stage verbs, water-scarcity profile_schema), not gameplay building-tier replacement -- verified by reading their verb names and doc scope",
       "status": "NONE",
-      "evidence_id": null,
-      "note": "COVERAGE GAP: no driver exercises ordinary (non-heart) building tier replacement; the two Upgrade*Provider classes are a different, unrelated system (save-schema migration)"
+      "note": "COVERAGE GAP: no driver exercises ordinary (non-heart) building tier replacement; the two Upgrade*Provider classes are a different, unrelated system (save-schema migration)",
+      "evidence": null
     },
     {
       "id": 9,
@@ -123,8 +172,8 @@
       "negative": "COVERAGE_GAP",
       "driver": "fix lives on fix/issue-141-heart-authority (b1efe18), not merged to dev",
       "status": "NONE",
-      "evidence_id": null,
-      "note": "GAP pending #141/#148 integration onto dev, not a proven defect -- see review-b1efe18-findings.md"
+      "note": "GAP pending #141/#148 integration onto dev, not a proven defect -- see review-b1efe18-findings.md",
+      "evidence": null
     },
     {
       "id": 10,
@@ -135,9 +184,9 @@
       "save_cold_load": "n/a",
       "negative": "n/a",
       "driver": "NONE",
-      "evidence_id": null,
       "status": "DEFECT",
-      "note": "Precise basis (issue #144): rung 5 (arcology) shares rung 4's own LotSize/HeartRungEndpointsAdmit tier mapping (both bind Size=\"XL\" in Architecture/KingdomArchitectures-CivicFaith.xml, confirmed at KingdomPlotHeartRules.cs's HeartSizeForRung(4)==HeartSizeForRung(5)==PlotSize.Huge), but Transitions.cs:56's (int)After.LotSize != afterRung equality check demands LotSize's int value equal the rung NUMBER (5), which HeartRungEndpointsAdmit's shared-tier mapping can never satisfy for this one rung pair -- see camp-authority-trace.md Part 3 Section 3 for the full derivation"
+      "note": "Precise basis (issue #144): rung 5 (arcology) shares rung 4's own LotSize/HeartRungEndpointsAdmit tier mapping (both bind Size=\"XL\" in Architecture/KingdomArchitectures-CivicFaith.xml, confirmed at KingdomPlotHeartRules.cs's HeartSizeForRung(4)==HeartSizeForRung(5)==PlotSize.Huge), but Transitions.cs:56's (int)After.LotSize != afterRung equality check demands LotSize's int value equal the rung NUMBER (5), which HeartRungEndpointsAdmit's shared-tier mapping can never satisfy for this one rung pair -- see camp-authority-trace.md Part 3 Section 3 for the full derivation",
+      "evidence": null
     },
     {
       "id": 11,
@@ -149,8 +198,63 @@
       "negative": "NATIVE_PASS (veto/recovery paths exist)",
       "driver": "Harness/KingdomRaidContactNativeProvider.cs, KingdomRaidLaunchNativeProvider.cs, KingdomRaidMasterTurnNativeProvider.cs, KingdomRaidRecoveryGuardsNativeProvider.cs, KingdomRaidRecoveryTurnNativeProvider.cs, KingdomRaidRecoveryReturnNativeProvider.cs, KingdomRaidOutboxNativeProvider.cs",
       "status": "NATIVE_PASS",
-      "evidence_id": "prior-status-md-rows-not-rerun",
-      "note": "full multi-raid/multi-city interaction is a coverage gap"
+      "note": "Aggregate row spans 5 driver classes; each sub-evidence content-verified content-identical (git diff empty) between its cited historical commit and the current dev-ancestor commit that last touched that provider file (be3f13a squash for contact/death/recovery, 7d331fe and b572ede as direct ancestors for launch/outbox). Full multi-raid/multi-city interaction remains a coverage gap.",
+      "evidence": [
+        {
+          "commit": "be3f13a",
+          "evidenceDir": "taf-raid-contact-fixed.Dcjzs3",
+          "artifactRef": "README.md",
+          "verdict": "PASS - foreign-zone/restored-contact debit exact, no quarantine, seed native14492",
+          "scope": "synthetic component evidence; ordinary play/save-load untested",
+          "historicalScope": true,
+          "currentDevCoverage": true
+        },
+        {
+          "commit": "7d331fe",
+          "evidenceDir": "taf-native-raid-warning-clean.zqlWbN",
+          "artifactRef": "raid-launch-native-a/-b1 raw logs",
+          "verdict": "PASS 2/2 - real per-actor Create/Add/Activate, no remint on second activation",
+          "scope": "synthetic founding/store/incident/Steading/party setup; model wire round trip only, not game save/load",
+          "historicalScope": true,
+          "currentDevCoverage": true
+        },
+        {
+          "commit": "be3f13a",
+          "evidenceDir": "taf-raid-death-fixed.nf0IMW",
+          "artifactRef": "Player.log (native90794 TERMINAL0)",
+          "verdict": "PASS - see row 5",
+          "scope": "same as row 5",
+          "historicalScope": true,
+          "currentDevCoverage": true
+        },
+        {
+          "commit": "be3f13a",
+          "evidenceDir": "taf-raid-recovery-guards.6Dnfup",
+          "artifactRef": "Player.log",
+          "verdict": "PASS - controlled native recovery-guard API proof",
+          "scope": "synthetic component evidence",
+          "historicalScope": true,
+          "currentDevCoverage": true
+        },
+        {
+          "commit": "be3f13a",
+          "evidenceDir": "taf-raid-recovery-turn-native.X0VMU8",
+          "artifactRef": "README.md",
+          "verdict": "PASS - real-turn recovery proof",
+          "scope": "synthetic engine-turn coverage, not ordinary play",
+          "historicalScope": true,
+          "currentDevCoverage": true
+        },
+        {
+          "commit": "b572ede",
+          "evidenceDir": "taf-native-raid.XMFQ5q",
+          "artifactRef": "Player.log",
+          "verdict": "PASS 6/6 - local Chronicle/ledger/message/deed delivery, idempotence, quarantine recovery through replay/retirement",
+          "scope": "synthetic; realm unfounded before/after",
+          "historicalScope": true,
+          "currentDevCoverage": true
+        }
+      ]
     },
     {
       "id": 12,
@@ -162,8 +266,8 @@
       "negative": "COVERAGE_GAP",
       "driver": "NONE found among the 30 [KingdomScenarioVerbProvider] classes on dev",
       "status": "NONE",
-      "evidence_id": null,
-      "note": "COVERAGE GAP, not a proven defect: every native fixture surveyed founds exactly one city; no failed second-founding transition or production proof of unreachability was found"
+      "note": "COVERAGE GAP, not a proven defect: every native fixture surveyed founds exactly one city; no failed second-founding transition or production proof of unreachability was found",
+      "evidence": null
     },
     {
       "id": 13,
@@ -175,8 +279,18 @@
       "negative": "NATIVE_PASS (overflow path)",
       "driver": "Harness/KingdomDepositOverflowNativeProvider.cs (deposit/overflow); this pass's teardown scenario exercises strike-salvage return with an exact computed delta",
       "status": "NATIVE_PASS",
-      "evidence_id": "prior-status-md-rows-not-rerun (deposit/overflow only)",
-      "note": "strike-salvage leg is IMPLEMENTED_UNEXECUTED this pass (see row 7), not yet native-proven"
+      "note": "Driver Harness/KingdomDepositOverflowNativeProvider.cs. git diff 2f90a5f 6ba1969 for this file is empty -> content-identical; 6ba1969 (#129) is the current-dev-ancestor commit. Strike-salvage leg is a SEPARATE row (7, teardown), IMPLEMENTED_UNEXECUTED, not covered here.",
+      "evidence": [
+        {
+          "commit": "6ba1969",
+          "evidenceDir": "root-overflow129-integrated-native.CcZZhl",
+          "artifactRef": "Player.log (13 journal rows)",
+          "verdict": "PASS - deposit-overflow-native-check, seed #165939435, profile W0JAK2, 4/4 cases",
+          "scope": "synthetic stacks/NeverStack/allocated identities; ordinary reachability, Charter, save/load and release acceptance are not claimed",
+          "historicalScope": true,
+          "currentDevCoverage": true
+        }
+      ]
     },
     {
       "id": 14,
@@ -187,9 +301,9 @@
       "save_cold_load": "COVERAGE_GAP",
       "negative": "COVERAGE_GAP",
       "driver": "Harness/KingdomWaterMaintenanceNativeProvider.cs",
-      "status": "NATIVE_PASS",
-      "evidence_id": "prior-status-md-rows-not-rerun",
-      "note": "full scarcity/downgrade lane is a coverage gap (partial native proof exists per water-scarcity-lane-truth memory, not re-verified this pass)"
+      "status": "EVIDENCE_UNVERIFIED",
+      "note": "Driver Harness/KingdomWaterMaintenanceNativeProvider.cs (dev commit 1a3f6ba, #23). No evidenceDir/artifactRef for a native run of THIS provider was located in docs/STATUS.md within this pass. Do not conflate with the separate profile_schema donor/stage/downgrade proof (water-scarcity-lane-truth memory) -- that is a different migration lane, unverified mapping to this driver. Gap, not a proven defect.",
+      "evidence": null
     },
     {
       "id": 15,
@@ -201,8 +315,8 @@
       "negative": "COVERAGE_GAP",
       "driver": "NOT on dev: Harness/KingdomForageNativeChecks.cs exists at commit 098d781 (\"test(forage): refuse unobserved ambient plants\") and 3eb169f (\"fix(harness): count forage exhaustion episodes\"), on branches feat/forage-brush-duty / test/forage-native-checks (PR #123/#130 lineage) -- confirmed present in this repo's fetched history, not yet merged to dev",
       "status": "NONE",
-      "evidence_id": null,
-      "note": "COVERAGE GAP pending merge to dev, NOT unreachable: real native forage work exists off-dev (PR #123/#130 checkpoints); a foreign Brinestalk plant blocking the bounded garden is cited by the coordinator as an open scope note on that lineage, not independently re-verified line-by-line this pass"
+      "note": "COVERAGE GAP pending merge to dev, NOT unreachable: real native forage work exists off-dev (PR #123/#130 checkpoints); a foreign Brinestalk plant blocking the bounded garden is cited by the coordinator as an open scope note on that lineage, not independently re-verified line-by-line this pass",
+      "evidence": null
     },
     {
       "id": 16,
@@ -213,9 +327,9 @@
       "save_cold_load": "COVERAGE_GAP",
       "negative": "NATIVE_PASS (pause fault paths exist)",
       "driver": "Harness/KingdomScenarioTravelProvider.cs, KingdomScenarioPauseController.cs",
-      "status": "NATIVE_PASS",
-      "evidence_id": "prior-status-md-rows-not-rerun (#122)",
-      "note": "full away-leg economic drift is a coverage gap"
+      "status": "EVIDENCE_UNVERIFIED",
+      "note": "Driver Harness/KingdomScenarioTravel.cs / KingdomCity.NativeTravelDemand.cs (dev commits 0c3115a #122, 62fc9c6 #126). docs/STATUS.md:72-78 narrates a native economic-present/away PASS at `53022df` (seed #165939435, profiles mlKgm8/dZxP6D) but cites no evidenceDir or artifactRef -- only \"profile and evidence retained\", which does not meet this pass's typed-evidence bar. Gap, not a proven defect; a real receipt may exist but was not located.",
+      "evidence": null
     },
     {
       "id": 17,
@@ -226,9 +340,9 @@
       "save_cold_load": "COVERAGE_GAP",
       "negative": "COVERAGE_GAP",
       "driver": "Harness/KingdomScenarioPauseController.cs:16 (beta-master-pause verb); resume observed directly at :78-91 (witness.ResumeTick, pause-resumed=, resume-arrival=, resume-applications=)",
-      "status": "NATIVE_PASS",
-      "evidence_id": "prior-status-md-rows-not-rerun; see master-resume-semantic-defect memory (bug found via this exact seam)",
-      "note": "resume IS exercised as a real observable output of the SAME pause-controller driver, not a separate unreached lane"
+      "status": "EVIDENCE_UNVERIFIED",
+      "note": "Driver Harness/KingdomScenarioPauseController.cs:16,78-91 (dev commit 0c3115a, #122). docs/STATUS.md:762 cites a native PASS (Native11624, seed #1012036, sealed LN1Xkb, evidence taf-master-growth-native.sP00c6/README.md) under heading \"case28d.5\", but I could not confirm within this pass's budget that its source commit is content-identical to the current KingdomScenarioPauseController.cs (unlike rows 1/2/5/6/11/13/18/19 where a git diff was actually run) -- recorded as unverified rather than stretched.",
+      "evidence": null
     },
     {
       "id": 18,
@@ -240,8 +354,18 @@
       "negative": "NATIVE_PASS (fail-closed refusal paths)",
       "driver": "Harness/KingdomSealRoadlessNativeProvider.cs",
       "status": "NATIVE_PASS",
-      "evidence_id": "prior-status-md-rows-not-rerun (#131)",
-      "note": "full inheritance/legacy-carry lane is a coverage gap"
+      "note": "Driver Harness/KingdomSealRoadlessNativeProvider.cs. Evidence commit 0cfd8e7 (docs/STATUS.md diff at d9a29c3); git diff 0cfd8e7 bcca3e5 for this file is empty -> content-identical; bcca3e5 (#135) is the current-dev-ancestor commit. No named /tmp evidenceDir was given in the source text, only the sealed profile H5UoPk -- recorded as evidenceDir: null with the profile named in artifactRef.",
+      "evidence": [
+        {
+          "commit": "bcca3e5",
+          "evidenceDir": null,
+          "artifactRef": "Player.log (63 journal rows), retry profile H5UoPk",
+          "verdict": "PASS 7/7 verbs - typed Pending capture unchanged across two real 2400-turn intervals, exactly one pending notice",
+          "scope": "synthetic roadless-camp/daily-capture case; not ordinary-play/save-load/terminal/inheritance/release",
+          "historicalScope": true,
+          "currentDevCoverage": true
+        }
+      ]
     },
     {
       "id": 19,
@@ -253,8 +377,119 @@
       "negative": "COVERAGE_GAP",
       "driver": "Harness/KingdomSubsidenceNativeProvider.cs, KingdomSubsidenceRungNativeProvider.cs, KingdomSubsidenceRungSaveProvider.cs",
       "status": "NATIVE_PASS",
-      "evidence_id": "prior-status-md-rows-not-rerun",
-      "note": "interrupted-mid-step path is a coverage gap"
+      "note": "Driver Harness/KingdomSubsidenceNativeProvider.cs etc. 7d331fe is itself a direct ancestor of the current dev base (verified), and is the exact base the evidence table in docs/STATUS.md is anchored to. Interrupted-mid-step path remains a coverage gap.",
+      "evidence": [
+        {
+          "commit": "7d331fe",
+          "evidenceDir": "taf-native-subsidence.a9XJXf",
+          "artifactRef": "raw logs",
+          "verdict": "PASS 13/13 managed + 3/3 bounded native checks, sealed kvjIzc",
+          "scope": "synthetic stage/elapsed setup; no world-turn/breakpoint/ordinary-play/save-load acceptance",
+          "historicalScope": true,
+          "currentDevCoverage": true
+        }
+      ]
+    }
+  ],
+  "combinations": [
+    {
+      "id": "C1",
+      "name": "construction + raid interruption",
+      "rows": [
+        6,
+        11
+      ],
+      "coupling": "Both a settlement's active construction commission and a raid's contact/compensation draw an exact water reservation from the SAME survey via KingdomWaterDebit.ReserveExactStore/ReserveExactWater: construction at Growth/KingdomCommission.cs:205 (ReserveExactWater) and Growth/KingdomConstruction.Funding.cs:68, raid contact at Raids/KingdomRaids.06.AttackResolutionAndOutbox.cs:107-108 (ReserveExactStore). KingdomWaterDebit.cs:156 is the shared reservation authority both lanes call into.",
+      "prerequisites": "a founded settlement with an in-progress construction commission (Working phase, unfinished) AND a raid contact/attack resolved against the same zone within the same interval",
+      "invariants": "conservation of water: sum of all outstanding reservations against the survey never exceeds the real store census; a raid's compensation debit and a construction job's funding debit against the same store never double-reserve the same drams; custody by reference (the construction job's own Water reservation object is never silently reused or mutated by the raid's debit path)",
+      "seed_turn_matrix": "one fixed seed; 2 turn-order variants (raid resolves before vs after the construction job's daily funding poll in the same tick window); no further seed variation -- this is a two-cell matrix, not a sweep",
+      "expected_failure_rows": "a torn/negative water census after both debits settle; a construction job stuck Funded with a Water reservation object no longer in Reserved state but no journaled cause",
+      "reusable_seams": "Harness/KingdomTeardownNativeProvider.cs (commission half) + Harness/KingdomRaidContactNativeProvider.cs (contact half) -- no existing seam runs both together",
+      "status": "NONE",
+      "evidence": null
+    },
+    {
+      "id": "C2",
+      "name": "multiple cities + travel + save/load",
+      "rows": [
+        12,
+        16
+      ],
+      "coupling": "Travel's loaded-index scan is per-zone (Harness/KingdomCity.NativeTravelDemand.cs:38, walking Growth/KingdomSurvey's LoadedObjects), and a second founded city is a second, independent KingdomSystem/zone pair under the same save (Core/KingdomSystem.z01.State.Foundation.cs founding identity). The shared authority is the save's own system registry each city's founding claims a slot in -- no driver currently founds a second city at all (row 12, NONE), so this coupling is untested even at the single-behaviour level.",
+      "prerequisites": "two founded settlements in the same save AND at least one travel (away/return) cycle for a resident of one of them, followed by a save/cold-load",
+      "invariants": "city/actor isolation by reference: a travel scan against city A's zone never reads or credits city B's stockpile/roster; save/cold-load reproduces both cities' System identities and bindings distinctly (no merged or aliased KingdomSystem after reload)",
+      "seed_turn_matrix": "one fixed seed; single scenario shape (found city A, found city B, travel one resident of A away and back, save, cold-load, re-assert both cities' rosters/stock unchanged) -- not a sweep, a single bounded chain",
+      "expected_failure_rows": "a travel scan against A observing or crediting B's objects; a cold-load that merges the two cities' System records or loses one",
+      "reusable_seams": "NONE -- no existing driver founds a second city, so this chain has no reachable starting seam at all",
+      "status": "NONE",
+      "evidence": null
+    },
+    {
+      "id": "C3",
+      "name": "heart upgrade + replacement/teardown",
+      "rows": [
+        9,
+        10,
+        8,
+        7
+      ],
+      "coupling": "The heart's own upgrade chain and an ordinary building's teardown/replacement chain both go through the SAME successor/removal-proof authority, r_KingdomScaffold: HasPendingImprovementSuccessorAuthority gates IsFunctionallyBuilt (Growth/KingdomUpgrade.09.RegistryAndIdentity.cs:165) exactly as HasRemovalProof/IsExactSuccessor gate ordinary handover removal (Growth/KingdomUpgrade.25.HandoverRemoval.cs:56,75,90-100).",
+      "prerequisites": "a heart at rung 1-4 (gap, #141/#148) mid-upgrade AND an ordinary building on the same plot/lot queued for OrderStrike or a tier-replace in the same interval",
+      "invariants": "only one successor authority claim exists per subject at a time (a heart upgrade in flight and an ordinary strike on the same lot never both hold r_KingdomScaffold successor state); a struck ordinary building's removal never clears or corrupts the heart's own pending-successor marker",
+      "seed_turn_matrix": "one fixed seed; single ordering case (heart upgrade staged, then teardown ordered on an adjacent plot before the heart upgrade completes) -- no sweep",
+      "expected_failure_rows": "a heart upgrade that silently completes or stalls because an unrelated teardown cleared a shared scaffold marker; a teardown that refuses because it misreads the heart's own pending marker as its own",
+      "reusable_seams": "Harness/KingdomTeardownNativeProvider.cs (teardown half); NONE for the heart-upgrade half (rows 9/10 have no driver at all)",
+      "status": "NONE",
+      "evidence": null
+    },
+    {
+      "id": "C4",
+      "name": "NPC join/leave + water/food shortage",
+      "rows": [
+        2,
+        4,
+        14
+      ],
+      "coupling": "Arrival (Growth/KingdomFirstGuestRuntime.cs, gated by Experience/KingdomGrowthFirstGuestRules.Choices.cs) and departure capacity (Growth/KingdomResidentDepartureRuntime.Capacity.cs, KingdomSystem.ResidentDepartureCapacityWarnings) both key off the settlement's water census read at Core/KingdomReportsPeople.cs:43 (KingdomGrowth.CountStoredWater), the same census Growth/KingdomCommission.cs:205 draws down for construction. NOTE: the exact conditional that denies/motivates arrival or departure from a shortage reading was not traced line-by-line this pass -- the coupling is the shared census, not a confirmed shared branch; treat prerequisites below as approximate.",
+      "prerequisites": "a settlement at or below its water/food shortage threshold AND a pending first-guest candidate AND (row 4 has no driver) no way to independently force a departure attempt in the same window",
+      "invariants": "conservation of water/food: an arrival's dedication and a departure's capacity bookkeeping never double-count or double-release the same stock; a shortage state is read consistently by both lanes in the same tick (no stale read on one side and fresh on the other)",
+      "seed_turn_matrix": "one fixed seed; single scenario shape once row 4 gets a driver -- currently NOT REACHABLE at all because row 4 (resident departure) has no driver",
+      "expected_failure_rows": "N/A -- unreachable until row 4 has a driver; recorded as backlog shape only",
+      "reusable_seams": "NONE -- row 4 has no driver to build this chain on",
+      "status": "NONE",
+      "evidence": null
+    },
+    {
+      "id": "C5",
+      "name": "stockpile/materials + construction (shared store conservation)",
+      "rows": [
+        13,
+        6
+      ],
+      "coupling": "KingdomCommission.CanPay reads the exact same dedicated stockpile tally that OrderStrike later debits for salvage: both go through Growth/KingdomMaterials.05.StockpileAndPaymentGates.cs's stockpile registry, and Growth/KingdomCommission.cs:167 constructs its claim from KingdomMaterials.CostFor(entry.Key) against the same store the teardown fixture's OrderStrike (Growth/KingdomMaterials.08.StrikeOrdering.cs:23) draws salvage back into.",
+      "prerequisites": "a dedicated stockpile funding one commission while a second, already-built commission on the same store is struck for salvage in the same interval",
+      "invariants": "conservation of materials: the store's raw census after both the new commission's debit and the struck building's salvage credit equals the arithmetic sum of the two independently-computed deltas -- no interleaving artifact credits or loses units",
+      "seed_turn_matrix": "one fixed seed; single interleaving case (commission B's funding debit lands in the same tick as building A's strike-salvage credit) -- no sweep",
+      "expected_failure_rows": "a store census that differs from the two independently computed deltas summed; a commission that reads a stale pre-strike census and over/under-commits",
+      "reusable_seams": "Harness/KingdomTeardownNativeProvider.cs already commissions+strikes one building on a dedicated store -- extending it with a second concurrent commission on the SAME store is the cheapest path to this chain",
+      "status": "NONE",
+      "evidence": null
+    },
+    {
+      "id": "C6",
+      "name": "founding + multiple cities (registry isolation)",
+      "rows": [
+        1,
+        12
+      ],
+      "coupling": "Founding claims a System/zone identity slot at Core/KingdomSystem.z05.Identity.Founding.cs and Core/KingdomSystem.z01.State.Foundation.cs; a second founding on the same save must claim a DISTINCT slot in the same registry rather than aliasing or overwriting the first. Row 12 (multiple cities) has no driver at all, so this shared-authority claim is currently untested even once.",
+      "prerequisites": "one already-founded settlement AND a second founding attempt in the same save",
+      "invariants": "city isolation by reference: the second founding's System is a distinct object from the first's; no shared mutable field (ledger, stockpile registry, roster) is aliased between the two",
+      "seed_turn_matrix": "one fixed seed; single scenario (found city A, then found city B in the same save, assert both Systems distinct and both rosters/stocks independent) -- no sweep",
+      "expected_failure_rows": "a second founding that silently reuses or mutates the first city's System instance; a shared ledger/stockpile reference between the two",
+      "reusable_seams": "Harness/KingdomNativeCampFounding.Found (reusable helper) called twice in one fixture -- no existing driver does this",
+      "status": "NONE",
+      "evidence": null
     }
   ]
 }
