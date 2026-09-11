@@ -134,16 +134,25 @@ namespace ThousandAndFirst.Harness
 			/// -- never a production resident or the player, and never any object this fixture
 			/// did not itself enroll.
 			/// <para>
-			/// review-15f9de2-teardown-findings.md residual A: this is BEST-EFFORT, not a
-			/// guarantee. The crew are live NPC-brained bodies posted to construction work by
-			/// production, so they act on every tick between the four scripted checks; Apply
-			/// (Cleared) runs inside those settlement passes, and a body that walks (or is
-			/// posted) back onto the footprint mid-window cannot be prevented by a check-boundary
-			/// relocation. Correct claim: the fixture's own crew is kept off the footprint AT
-			/// EACH SCRIPTED CHECK; between checks, production defect #163 can still fire, and
-			/// Case.Telemetry's occupants= records it when it does. No production change: this
-			/// is a harness precondition mitigation only, never the production stamper that
-			/// refuses the ground layer.
+			/// review-teardown-run25-staked.md: review-15f9de2-teardown-findings.md residual A
+			/// proved a one-shot, check-boundary-only relocation cannot hold -- the crew are live
+			/// NPC-brained bodies that walk (or get re-posted) back onto the footprint before the
+			/// next 1200-tick settlement pass, so #163 kept firing between checks. Fixed here,
+			/// DISCLOSED AS SYNTHETIC: once relocated, a crew body is pinned stationary with the
+			/// exact production idiom for anchoring an NPC in place
+			/// (Simulation/City/KingdomStations.Claims.cs:137-139) -- Brain.Wanders = false,
+			/// Brain.WandersRandomly = false, Brain.Stay(destination) -- so it no longer wanders
+			/// back on its own. This is a FIXTURE-ONLY property: a real settlement's own
+			/// wandering residents are never anchored this way and can still trigger #163: that
+			/// is exactly the gap the production fix on fix/034-apply-occupant-announce (settler
+			/// displacement at apply) closes. Every call (Start and every Check) also journals
+			/// each crew body's current cell and its walkability, whether or not it moved this
+			/// pass, so a parked body silently drifting off a pinned cell would be visible.
+			/// Post-move occupancy over the authored placement cells is Case.Telemetry's own
+			/// occupants= line (Case.PlacementCells, widened per this same review), already
+			/// re-run every Check -- not duplicated here. No production change: this is a harness
+			/// precondition mitigation only, never the production stamper that refuses the
+			/// ground layer.
 			/// </para>
 			/// </summary>
 			private void KeepCrewOutsideRaisings()
@@ -162,18 +171,32 @@ namespace ThousandAndFirst.Harness
 					foreach (KingdomPlotRules.PlotRect rect in rects)
 						if (cell.X >= rect.X1 && cell.X <= rect.X2
 							&& cell.Y >= rect.Y1 && cell.Y <= rect.Y2) { hit = rect; inside = true; break; }
-					if (!inside) continue;
-					Cell destination = FindCellOutside(rects);
-					Require(destination != null, "no free cell exists outside every known "
-						+ "raising rect to relocate a fixture crew body");
-					cell.RemoveObject(body);
-					Require(ReferenceEquals(destination.AddObject(body, NoStack: true), body),
-						"native relocation substituted the synthetic crew body");
-					Evidence.Append("; crew-relocated id=").Append(body.IDIfAssigned ?? "unassigned")
-						.Append(" out-of-rect=(").Append(hit.X1).Append(',').Append(hit.Y1)
-						.Append(")-(").Append(hit.X2).Append(',').Append(hit.Y2)
-						.Append(") to=(").Append(destination.X).Append(',').Append(destination.Y)
-						.Append(')');
+					Cell parked = cell;
+					if (inside)
+					{
+						Cell destination = FindCellOutside(rects);
+						Require(destination != null, "no free cell exists outside every known "
+							+ "raising rect to relocate a fixture crew body");
+						cell.RemoveObject(body);
+						Require(ReferenceEquals(destination.AddObject(body, NoStack: true), body),
+							"native relocation substituted the synthetic crew body");
+						if (body.Brain != null)
+						{
+							body.Brain.Wanders = false;
+							body.Brain.WandersRandomly = false;
+							body.Brain.Stay(destination);
+						}
+						parked = destination;
+						Evidence.Append("; crew-relocated id=").Append(body.IDIfAssigned ?? "unassigned")
+							.Append(" out-of-rect=(").Append(hit.X1).Append(',').Append(hit.Y1)
+							.Append(")-(").Append(hit.X2).Append(',').Append(hit.Y2)
+							.Append(") to=(").Append(destination.X).Append(',').Append(destination.Y)
+							.Append(") stationary=").Append(body.Brain != null);
+					}
+					Evidence.Append("; crew=").Append(body.IDIfAssigned ?? "unassigned")
+						.Append(" parked-at=(").Append(parked.X).Append(',').Append(parked.Y)
+						.Append(") parked-empty=").Append(parked.IsEmpty())
+						.Append(" parked-passable=").Append(parked.IsPassable());
 				}
 			}
 

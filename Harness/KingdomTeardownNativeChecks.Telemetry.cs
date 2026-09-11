@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using XRL.World;
 
@@ -51,7 +52,11 @@ namespace ThousandAndFirst.Harness
 				string stageApplied = part == null ? "unread"
 					: ((KingdomPlotRules.PlotStage)part.StageApplied).ToString();
 				bool built = Root != null && KingdomUpgrade.IsFunctionallyBuilt(Root);
-				string occupants = HasRect ? OccupantIdsOn(Zone, Rect) : "unread";
+				// review-teardown-run25-staked.md: swept over the authored placement cells (the
+				// exact "layout slot" set the stamper's occupant refusal names), never just the
+				// bounding rect -- a second occupant/plot outside the rect is no longer invisible.
+				string occupants = PlacementCells.Count > 0 ? OccupantIdsOn(Zone, PlacementCells)
+					: (HasRect ? OccupantIdsOn(Zone, Rect) : "unread");
 				return new StringBuilder()
 					.Append(" required=").Append(required)
 					.Append(" remaining=").Append(remaining)
@@ -98,6 +103,29 @@ namespace ThousandAndFirst.Harness
 						ids.Append(item.IDIfAssigned ?? "unassigned");
 					}
 				}
+			return ids == null ? "none" : ids.ToString();
+		}
+
+		/// <summary>review-teardown-run25-staked.md: the same creature/player-id sweep, but over
+		/// an exact set of authored placement cells (Case.PlacementCells) instead of every cell
+		/// of a bounding rect -- the narrower, correct set the production stamper's own occupant
+		/// refusal checks. Read-only; duplicate cells collapse (callers may pass cells pooled
+		/// across more than one raising).</summary>
+		internal static string OccupantIdsOn(Zone Zone, List<(int X, int Y)> Cells)
+		{
+			StringBuilder ids = null;
+			foreach ((int X, int Y) cell in Cells)
+			{
+				Cell worldCell = Zone?.GetCell(cell.X, cell.Y);
+				if (worldCell == null) continue;
+				foreach (GameObject item in worldCell.GetObjects())
+				{
+					if (!GameObject.Validate(item) || !(item.IsCreature || item.IsPlayer())) continue;
+					if (ids == null) ids = new StringBuilder();
+					else ids.Append(',');
+					ids.Append(item.IDIfAssigned ?? "unassigned");
+				}
+			}
 			return ids == null ? "none" : ids.ToString();
 		}
 	}

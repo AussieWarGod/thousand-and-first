@@ -31,9 +31,14 @@ namespace ThousandAndFirst.Tests
 		// The Telemetry()/ReadLong()/OccupantIdsOn shard split out once run20's additions would
 		// have pushed Case.cs back over the harness line cap; read as one logical source too.
 		private const string Telemetry = "Harness/KingdomTeardownNativeChecks.Telemetry.cs";
+		// review-teardown-run25-staked.md: PlacementCells/ResolvePlacementCells split into their
+		// own file rather than pushing Case.cs over the harness line cap; read as one logical
+		// source too.
+		private const string Placement = "Harness/KingdomTeardownNativeChecks.Placement.cs";
 		private const string Persona = "Tools/personas/teardown-native-check.persona";
 		private static string Read(string path) => TestMain.ReadRepositoryText(path);
-		private static string ReadChecksAndCases() => Read(Checks) + Read(Cases) + Read(Telemetry);
+		private static string ReadChecksAndCases() =>
+			Read(Checks) + Read(Cases) + Read(Telemetry) + Read(Placement);
 
 		private static string ConstValue(string Source, string Name)
 		{
@@ -596,6 +601,77 @@ namespace ThousandAndFirst.Tests
 			Assert.That(cases, Does.Contain("if (HasRect)"));
 			Assert.That(cases, Does.Contain(
 				"Evidence.Append(\"; case=\").Append(Name).Append(\" rect-known=true\");"));
+		}
+
+		/// <summary>
+		/// review-teardown-run25-staked.md: Case.Rect is only the plot's bounding rectangle, not
+		/// the exact authored placements the production stamper's occupant refusal names.
+		/// PlacementCells is decoded once at Start from the commissioned job's OWN payload via
+		/// the same decode chain production uses to resolve architecture
+		/// (KingdomPlots.TryDecodePlotPayload -&gt; KingdomArchitectureRuntime.TryDecode) and the
+		/// same pure pose transform TryWorldFootprint itself uses
+		/// (KingdomArchitectureRules.TryToWorld) -- never re-derived, never guessed from the rect.
+		/// </summary>
+		[Test]
+		public void PlacementCellsAreDecodedFromTheJobsOwnPayloadTheSameChainProductionUses()
+		{
+			string cases = Read(Cases);
+			Assert.That(cases, Does.Contain(
+				"internal List<(int X, int Y)> PlacementCells = new List<(int X, int Y)>();"));
+			Assert.That(cases, Does.Contain(
+				"Require(TryResolvePlacementCells(job.Payload, out PlacementCells, out string placementFailure),"));
+			string placement = Read(Placement);
+			Assert.That(placement, Does.Contain(
+				"internal static bool TryResolvePlacementCells(string Payload,"));
+			Assert.That(placement, Does.Contain("KingdomPlots.TryDecodePlotPayload(Payload, out KingdomPlotRules.PlotRect rect,"));
+			Assert.That(placement, Does.Contain(
+				"KingdomArchitectureRuntime.TryDecode(architecture,"));
+			Assert.That(placement, Does.Contain("KingdomArchitectureRules.TryToWorld(rect.X1, rect.Y1,"));
+			Assert.That(placement, Does.Contain("foreach (ArchitecturePlacement placement in snapshot.Placements)"));
+			// Never guessed from the bounding rect alone -- only from decoded placements.
+			Assert.That(placement, Does.Not.Contain("Cells.Add((rect.X1"));
+		}
+
+		/// <summary>
+		/// review-teardown-run25-staked.md: occupants= (Case.Telemetry) is swept over the
+		/// authored placement cells, not just Case.Rect, so a refused slot outside the rect (or a
+		/// second occupant the old rect sweep never sampled) is nameable.
+		/// </summary>
+		[Test]
+		public void OccupantsAreSweptOverAuthoredPlacementCellsNotJustTheBoundingRect()
+		{
+			string telemetry = Read(Telemetry);
+			Assert.That(telemetry, Does.Contain(
+				"string occupants = PlacementCells.Count > 0 ? OccupantIdsOn(Zone, PlacementCells)"));
+			Assert.That(telemetry, Does.Contain(
+				"internal static string OccupantIdsOn(Zone Zone, List<(int X, int Y)> Cells)"));
+			Assert.That(telemetry, Does.Contain("foreach ((int X, int Y) cell in Cells)"));
+			Assert.That(telemetry, Does.Contain("item.IsCreature || item.IsPlayer()"));
+		}
+
+		/// <summary>
+		/// review-teardown-run25-staked.md: a one-shot, check-boundary-only relocation does not
+		/// hold -- crew are live-Brain NPCs that walk (or get re-posted) back onto the footprint
+		/// before the next settlement pass. A relocated body is now pinned stationary with the
+		/// exact production idiom for anchoring an NPC in place
+		/// (Simulation/City/KingdomStations.Claims.cs:137-139), disclosed as a fixture-only
+		/// property -- a real settlement's own wandering residents are never anchored this way
+		/// and can still trigger #163. Every call also journals each crew body's current cell and
+		/// its walkability, whether or not it moved this pass.
+		/// </summary>
+		[Test]
+		public void RelocatedCrewIsPinnedStationaryAndEveryCallJournalsParkedWalkability()
+		{
+			string checks = Read(Checks);
+			Assert.That(checks, Does.Contain("body.Brain.Wanders = false;"));
+			Assert.That(checks, Does.Contain("body.Brain.WandersRandomly = false;"));
+			Assert.That(checks, Does.Contain("body.Brain.Stay(destination);"));
+			Assert.That(checks, Does.Contain("Append(\") stationary=\").Append(body.Brain != null);"));
+			Assert.That(checks, Does.Contain("Append(\" parked-at=(\").Append(parked.X)"));
+			Assert.That(checks, Does.Contain("Append(\") parked-empty=\").Append(parked.IsEmpty())"));
+			Assert.That(checks, Does.Contain("Append(\" parked-passable=\").Append(parked.IsPassable());"));
+			// Fixture-only: never claims a production resident is anchored this way.
+			Assert.That(checks, Does.Not.Contain("Survey.Settlers"));
 		}
 	}
 }

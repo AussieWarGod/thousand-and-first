@@ -21,6 +21,14 @@
 # larder's own raise+strike, larder's removal). Fire and larder are SEQUENCED, one gang at a
 # time (Frame.Check() commissions larder only once fire reaches Phase 2), never concurrent.
 #
+# FIXTURE CREW DO NOT WANDER, DISCLOSED: once kept off a raising's footprint, a crew body is
+# pinned stationary (Brain.Wanders=false, Brain.WandersRandomly=false, Brain.Stay(cell), the
+# exact production idiom for anchoring an NPC) so it cannot walk back onto the footprint on its
+# own between the four scripted checks. A real settlement's own wandering residents are never
+# anchored this way and can still trigger issue #163 (a living occupant permanently blocking an
+# authored ground-layer slot); that production gap is being closed separately, on
+# fix/034-apply-occupant-announce.
+#
 # KNOWN GAP, DISCLOSED, NOT FIXED: the crew has no home plot, so a roofless departure brink
 # (KingdomLodgingRules.GraceDays = 6 days = 7200 ticks from the warned tick) may fire near
 # tick 8400-9600, inside this budget and before the final check. Departure is not frozen or

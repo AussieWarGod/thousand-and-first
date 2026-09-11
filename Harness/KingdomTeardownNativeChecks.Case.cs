@@ -30,6 +30,12 @@ namespace ThousandAndFirst.Harness
 			/// occupant ids on it.</summary>
 			internal KingdomPlotRules.PlotRect Rect;
 			internal bool HasRect;
+			/// <summary>review-teardown-run25-staked.md: the authored layout's own placement
+			/// cells (world coordinates), decoded once at Start from the commissioned job's own
+			/// payload via the pure, engine-free KingdomTeardownNativeChecks.TryResolvePlacementCells
+			/// -- the same decode chain Preflight/ResolveArchitecture use, never guessed from
+			/// Rect. Frame's crew relocation and Telemetry's occupants= both sweep this set.</summary>
+			internal List<(int X, int Y)> PlacementCells = new List<(int X, int Y)>();
 			/// <summary>Hands read off the raising root's own production presence property
 			/// (KingdomConstructionPresence.HandsProperty) on the last Check() call; 0 once built
 			/// or before Start(). Frame sums this across cases for its settlement-wide
@@ -86,6 +92,8 @@ namespace ThousandAndFirst.Harness
 				JobId = job.Id;
 				HasRect = KingdomPlots.TryReadRect(Zone.FindObjectByID(WorksId), out KingdomPlotRules.PlotRect rect);
 				Rect = rect;
+				Require(TryResolvePlacementCells(job.Payload, out PlacementCells, out string placementFailure),
+					placementFailure ?? Name + ": the commissioned job's own payload would not decode");
 				Phase = 1;
 			}
 
