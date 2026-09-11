@@ -124,18 +124,28 @@ namespace ThousandAndFirst.Harness
 				KeepCrewOutsideRaisings();
 			}
 
-			/// <summary>review-teardown-run20-stuckworking.md: fire's labour clock finished on
-			/// the FIRST settlement pass but its Cleared stage was refused forever because a
-			/// living occupant stood on one authored layout slot -- almost certainly one of this
-			/// fixture's own crew bodies (they never wander otherwise; production enrolls no
-			/// other settlers). Once a raising's rect is known (Case.Rect, resolved at Start),
-			/// relocate any of THIS fixture's own crew bodies found standing inside it to a free
-			/// cell outside every known rect -- never a production resident or the player, and
-			/// never any object this fixture did not itself enroll. Called once after each case
-			/// starts and once every Check(), so a body that wanders back in, or a rect (larder's)
-			/// that only resolves later, is still caught. No production change: this is a harness
-			/// precondition fix only, filed against the fixture's own occupancy, never the
-			/// production stamper that refuses the ground layer.</summary>
+			/// <summary>Filed as issue #163: review-teardown-run20-stuckworking.md -- fire's
+			/// labour clock finished on the FIRST settlement pass but its Cleared stage was
+			/// refused forever because a living occupant stood on one authored layout slot --
+			/// almost certainly one of this fixture's own crew bodies (they never wander
+			/// otherwise; production enrolls no other settlers). Once a raising's rect is known
+			/// (Case.Rect, re-resolved every Check until known), relocate any of THIS fixture's
+			/// own crew bodies found standing inside it to a free cell outside every known rect
+			/// -- never a production resident or the player, and never any object this fixture
+			/// did not itself enroll.
+			/// <para>
+			/// review-15f9de2-teardown-findings.md residual A: this is BEST-EFFORT, not a
+			/// guarantee. The crew are live NPC-brained bodies posted to construction work by
+			/// production, so they act on every tick between the four scripted checks; Apply
+			/// (Cleared) runs inside those settlement passes, and a body that walks (or is
+			/// posted) back onto the footprint mid-window cannot be prevented by a check-boundary
+			/// relocation. Correct claim: the fixture's own crew is kept off the footprint AT
+			/// EACH SCRIPTED CHECK; between checks, production defect #163 can still fire, and
+			/// Case.Telemetry's occupants= records it when it does. No production change: this
+			/// is a harness precondition mitigation only, never the production stamper that
+			/// refuses the ground layer.
+			/// </para>
+			/// </summary>
 			private void KeepCrewOutsideRaisings()
 			{
 				List<KingdomPlotRules.PlotRect> rects = new List<KingdomPlotRules.PlotRect>();

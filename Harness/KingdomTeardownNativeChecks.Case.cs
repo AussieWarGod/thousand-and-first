@@ -96,6 +96,19 @@ namespace ThousandAndFirst.Harness
 				if (Phase == 1)
 				{
 					GameObject works = Zone.FindObjectByID(WorksId);
+					// review-15f9de2-teardown-findings.md residual B: Rect/HasRect resolved once
+					// at Start left HasRect false forever if TryReadRect could not yet read the
+					// stamped rect that pass; re-try every Check until it succeeds, journaling
+					// the transition once (never re-journaled once known).
+					if (!HasRect && works != null)
+					{
+						HasRect = KingdomPlots.TryReadRect(works, out KingdomPlotRules.PlotRect rect);
+						if (HasRect)
+						{
+							Rect = rect;
+							Evidence.Append("; case=").Append(Name).Append(" rect-known=true");
+						}
+					}
 					if (works == null || !KingdomUpgrade.IsFunctionallyBuilt(works))
 					{
 						LastHands = works == null ? 0

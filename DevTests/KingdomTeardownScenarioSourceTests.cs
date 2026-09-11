@@ -577,6 +577,26 @@ namespace ThousandAndFirst.Tests
 			Assert.That(checks, Does.Not.Contain("The.Player"));
 			Assert.That(checks, Does.Not.Contain("Survey.Settlers"));
 		}
+
+		/// <summary>
+		/// review-15f9de2-teardown-findings.md residual B: Rect/HasRect were resolved ONCE at
+		/// Start via KingdomPlots.TryReadRect, which can legitimately return false the very pass
+		/// a plot is staked; never retried, HasRect stayed false forever and
+		/// KeepCrewOutsideRaisings returned early with no named disclosure. Check() now re-tries
+		/// every call until HasRect is true, journaling the transition once
+		/// ("case=&lt;name&gt; rect-known=true") and never re-journaling once known.
+		/// </summary>
+		[Test]
+		public void RectIsReResolvedEveryCheckUntilKnownAndJournaledOnce()
+		{
+			string cases = Read(Cases);
+			Assert.That(cases, Does.Contain("if (!HasRect && works != null)"));
+			Assert.That(cases, Does.Contain(
+				"HasRect = KingdomPlots.TryReadRect(works, out KingdomPlotRules.PlotRect rect);"));
+			Assert.That(cases, Does.Contain("if (HasRect)"));
+			Assert.That(cases, Does.Contain(
+				"Evidence.Append(\"; case=\").Append(Name).Append(\" rect-known=true\");"));
+		}
 	}
 }
 #endif
