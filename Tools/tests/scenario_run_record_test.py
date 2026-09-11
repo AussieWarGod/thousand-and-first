@@ -496,6 +496,114 @@ class TwoRecordEmission(unittest.TestCase):
         self.assertEqual(built["turnBudget"], 5)
 
 
+class ColdLoadSeal(unittest.TestCase):
+    """The cold-load session's record inherits the exercised tree and keeps its own seal."""
+
+    def setUp(self):
+        self.temporary = tempfile.TemporaryDirectory()
+        self.root = Path(self.temporary.name)
+        self.source = self.root / "taf-scenario.a"
+        self.destination = self.root / "taf-scenario.b"
+        for root in (self.source, self.destination):
+            (root / "Local").mkdir(parents=True)
+            seal = Path(str(root) + ".seal")
+            seal.mkdir()
+            (seal / "profile.sha256").write_text(
+                "taf-scenario-profile-seal-v1\n" + ("a" if root == self.source else "b") * 64
+                + "  Local/scenario-script.txt\n",
+                encoding="utf-8",
+            )
+        (self.destination / "Local" / "scenario-script.txt").write_text(
+            "# sealed\nquickstart-lifecycle marsh no\nadvance 2400\n", encoding="utf-8"
+        )
+        self.measured = json.loads(subprocess.run(
+            [sys.executable, str(TOOLS / "check-structure.py"), "--json"],
+            check=True, capture_output=True, text=True, cwd=str(REPO),
+        ).stdout)["inventorySha256"]
+        self.head = subprocess.run(
+            ["git", "-C", str(REPO), "rev-parse", "HEAD"],
+            check=True, capture_output=True, text=True,
+        ).stdout.strip()
+
+    def tearDown(self):
+        self.temporary.cleanup()
+
+    def write_source(self, **overrides):
+        payload = {
+            "role": "save-session", "root": str(self.source), "seed": "#43101",
+            "candidateCommit": self.head, "runtimeInventorySha256": self.measured,
+            "profileSeal": "a" * 64, "profileName": "taf-scenario.a",
+            "turnBudget": 10000, "timeoutSeconds": 3600,
+        }
+        payload.update(overrides)
+        (self.source / "run-record.json").write_text(json.dumps(payload), encoding="utf-8")
+
+    def seal_load(self, **extra):
+        arguments = [
+            "scenario_run_record.py", "seal-load", str(self.destination),
+            "--source", str(self.source), "--turn-budget", "10000",
+            "--timeout-seconds", "3600",
+        ]
+        for key, value in extra.items():
+            arguments += ["--" + key.replace("_", "-"), str(value)]
+        return record.main(arguments)
+
+    def test_the_cold_load_record_inherits_the_tree_and_keeps_its_own_seal(self):
+        self.write_source()
+        self.assertEqual(self.seal_load(tree=str(REPO)), 0)
+        payload = json.loads((self.destination / "run-record.json").read_text())
+        self.assertEqual(payload["role"], "cold-load-session")
+        self.assertEqual(payload["candidateCommit"], self.head)
+        self.assertEqual(payload["runtimeInventorySha256"], self.measured)
+        self.assertEqual(payload["seed"], "#43101")
+        self.assertEqual(payload["profileName"], "taf-scenario.b")
+        self.assertNotEqual(payload["profileSeal"], "a" * 64)
+        self.assertEqual(payload["script"], "quickstart-lifecycle marsh no advance 2400")
+        self.assertTrue(payload["inheritedVerified"])
+
+    def test_an_unverified_inheritance_is_labelled_rather_than_claimed(self):
+        self.write_source()
+        self.seal_load()
+        payload = json.loads((self.destination / "run-record.json").read_text())
+        self.assertFalse(payload["inheritedVerified"])
+        self.assertEqual(payload["candidateCommit"], self.head)
+
+    def test_a_missing_source_record_refuses(self):
+        with self.assertRaises(SystemExit) as raised:
+            self.seal_load()
+        self.assertIn("cannot read", str(raised.exception))
+
+    def test_a_source_that_is_not_a_save_session_refuses(self):
+        self.write_source(role="cold-load-session")
+        with self.assertRaises(SystemExit) as raised:
+            self.seal_load()
+        self.assertIn("not a save-session record", str(raised.exception))
+
+    def test_a_digest_that_does_not_match_the_frozen_tree_refuses(self):
+        self.write_source(runtimeInventorySha256="c" * 64)
+        with self.assertRaises(SystemExit) as raised:
+            self.seal_load(tree=str(REPO))
+        self.assertIn("not the source record's", str(raised.exception))
+
+    def test_a_commit_that_does_not_match_the_frozen_tree_refuses(self):
+        self.write_source(candidateCommit="d" * 40)
+        with self.assertRaises(SystemExit) as raised:
+            self.seal_load(tree=str(REPO))
+        self.assertIn("is at", str(raised.exception))
+
+    def test_a_second_seal_refuses_rather_than_overwriting(self):
+        self.write_source()
+        self.seal_load()
+        with self.assertRaises(SystemExit):
+            self.seal_load()
+
+    def test_the_copier_seals_a_cold_load_record_only_when_the_source_kept_one(self):
+        source = (TOOLS / "prepare-scenario-load.py").read_text(encoding="utf-8")
+        self.assertIn("def seal_load_record(source: Path, destination: Path) -> None:", source)
+        self.assertIn('if not (source / "run-record.json").is_file():', source)
+        self.assertIn('"seal-load", str(destination),', source)
+
+
 class LauncherSourceContracts(unittest.TestCase):
     """SOURCE-ONLY pins on the PowerShell halves.
 
