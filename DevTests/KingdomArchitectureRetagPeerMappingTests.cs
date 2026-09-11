@@ -184,8 +184,12 @@ namespace ThousandAndFirst.Tests
 		/// identity. What is NOT executed here is the engine half -- the survey iteration and
 		/// property reads that build the rows, the by-reference cell compare,
 		/// <c>TryWorldPlacement</c>, and the receipt state machine in <c>TryCarryUpgradeSlot</c>
-		/// that chooses the direction -- because each needs a live GameObject and Zone. That
-		/// remains owed to a native run.</para>
+		/// that chooses the direction -- because each needs a live GameObject and Zone. Nor does
+		/// it execute <c>ResolveComponentPeer</c>'s own composition: the
+		/// <c>intent = AfterCensus ? Before : After</c> choice and the receipt property-shape
+		/// guards around it are mirrored here by hand (this case supplies the predecessor hash for
+		/// direction 1 and the successor hash for direction 2), so a swap there is caught only by
+		/// the source pin. All of it remains owed to a native run.</para>
 		/// </summary>
 		[Test]
 		public void TheSharedSlotCensusSettlesOneOfEachGenerationAndRefusesEveryStranger()

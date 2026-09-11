@@ -168,6 +168,50 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.IsFalse(
 				KingdomArchitectureComponentCensusRules.Settled(0, 0, 0));
 		}
+
+		/// <summary>
+		/// Peer terms refuse outright unless the pair names a placement, a lot, a generation hash
+		/// and a recorded identity. An intent with no snapshot hash cannot be tokenised, so no
+		/// peer is permitted rather than one proved against the token of an empty hash -- the
+		/// census then admits only this generation.
+		/// </summary>
+		[Test]
+		public void PeerTermsRefuseWithoutAPlacementLotHashOrRecordedIdentity()
+		{
+			ArchitecturePlacement placement = new ArchitecturePlacement
+			{
+				Layer = ArchitectureLayer.Ground, X = 1, Y = 1, Slot = Slot,
+				Blueprint = "r_KingdomHearthstone", Material = "stone", MinTech = "hands"
+			};
+			string id;
+			string token;
+			bool allowed;
+			ClassicAssert.IsTrue(KingdomArchitectureComponentCensusRules.TryPeerTerms(Lot,
+				"hash-before", placement, "peer-output-id", 1, true, out id, out token,
+				out allowed));
+			ClassicAssert.AreEqual("peer-output-id", id);
+			ClassicAssert.AreEqual(KingdomArchitectureComponentCensusRules.ComponentTokenText(Lot,
+				"hash-before", placement), token);
+			ClassicAssert.IsTrue(allowed);
+			// An empty or absent snapshot hash: no peer at all.
+			ClassicAssert.IsFalse(KingdomArchitectureComponentCensusRules.TryPeerTerms(Lot, "",
+				placement, "peer-output-id", 1, true, out id, out token, out allowed));
+			ClassicAssert.IsNull(id);
+			ClassicAssert.IsNull(token);
+			ClassicAssert.IsFalse(allowed);
+			ClassicAssert.IsFalse(KingdomArchitectureComponentCensusRules.TryPeerTerms(Lot, null,
+				placement, "peer-output-id", 1, true, out id, out token, out allowed));
+			// And the same for a missing placement, lot, or recorded identity.
+			ClassicAssert.IsFalse(KingdomArchitectureComponentCensusRules.TryPeerTerms(Lot,
+				"hash-before", null, "peer-output-id", 1, true, out id, out token, out allowed));
+			ClassicAssert.IsFalse(KingdomArchitectureComponentCensusRules.TryPeerTerms(null,
+				"hash-before", placement, "peer-output-id", 1, true, out id, out token,
+				out allowed));
+			ClassicAssert.IsFalse(KingdomArchitectureComponentCensusRules.TryPeerTerms(Lot,
+				"hash-before", placement, "", 1, true, out id, out token, out allowed));
+			// A refused peer is exactly a census that permits no other generation.
+			ClassicAssert.IsFalse(Census(new[] { Mine(), Peer() }, false, false));
+		}
 	}
 }
 #endif

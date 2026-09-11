@@ -1,5 +1,6 @@
 #if TAF_TESTS
 using System;
+using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
 using NUnit.Framework.Legacy;
@@ -63,19 +64,80 @@ namespace ThousandAndFirst.Tests
 				"// Still the removal phase after the callback: no other generation may stand.",
 				"ExactComponent(Owner, after, Z, Before, Lot, Placement, id, null)");
 
-			// Exactly these eight, and no more: every other census call resolves a peer, and an
-			// added successor slot resolves one too, because a retained BEFORE slot may carry the
-			// same layout-local name.
+			// Exactly these eight, and no more. Counted by reading every census call's own last
+			// argument rather than any spelling of it, so a ninth null site under a different
+			// argument name, with no reason beside it, fails here.
 			string source = Stamper();
+			int peerless = 0;
+			int peerBearing = 0;
+			foreach (int call in CensusCalls(source))
+			{
+				string peer = LastArgument(source, call);
+				if (peer == "null")
+				{
+					peerless++;
+					string before = source.Substring(Math.Max(0, call - 400), Math.Min(400, call));
+					StringAssert.Contains("no other generation may stand", before);
+				}
+				else
+				{
+					peerBearing++;
+					ClassicAssert.IsTrue(peer.Contains("Peer"),
+						"a census call neither resolves a peer nor passes null: " + peer);
+				}
+			}
+			ClassicAssert.AreEqual(8, peerless);
+			ClassicAssert.AreEqual(7, peerBearing);
 			ClassicAssert.AreEqual(8, source.Split(new[] { "no other generation may stand" },
 				StringSplitOptions.None).Length - 1);
-			ClassicAssert.AreEqual(6, source.Split(new[] { "id, null)" },
-				StringSplitOptions.None).Length - 1);
-			ClassicAssert.AreEqual(2, source.Split(new[] { "idProperty), null)" },
-				StringSplitOptions.None).Length - 1);
-			ClassicAssert.AreEqual(8, source.Split(new[] { "ResolveComponentPeer(" },
-				StringSplitOptions.None).Length - 1);
 			StringAssert.Contains("ResolveComponentPeer(Owner, Z, Delta, BeforeIntent, Successor, Lot,\n\t\t\t\t\t\tPlacement.Slot, true)", source);
+		}
+
+		/// <summary>Every ExactComponent CALL in the stamper: its own definition and the
+		/// ExactComponentInt/String helpers are not calls and are skipped.</summary>
+		private static List<int> CensusCalls(string Source)
+		{
+			List<int> calls = new List<int>();
+			int at = 0;
+			while (true)
+			{
+				at = Source.IndexOf("ExactComponent(", at, StringComparison.Ordinal);
+				if (at < 0) return calls;
+				int line = Source.LastIndexOf('\n', at) + 1;
+				if (!Source.Substring(line, at - line).Contains("private static bool "))
+					calls.Add(at);
+				at += "ExactComponent(".Length;
+			}
+		}
+
+		/// <summary>The last top-level argument of the call beginning at <paramref name="At" />,
+		/// read by matching parentheses outside string literals.</summary>
+		private static string LastArgument(string Source, int At)
+		{
+			int open = Source.IndexOf('(', At);
+			int depth = 0;
+			int last = open + 1;
+			bool quoted = false;
+			for (int i = open; i < Source.Length; i++)
+			{
+				char c = Source[i];
+				if (quoted)
+				{
+					if (c == '\\') i++;
+					else if (c == '"') quoted = false;
+					continue;
+				}
+				if (c == '"') { quoted = true; continue; }
+				if (c == '(') depth++;
+				else if (c == ')')
+				{
+					depth--;
+					if (depth == 0) return Source.Substring(last, i - last).Trim();
+				}
+				else if (c == ',' && depth == 1) last = i + 1;
+			}
+			ClassicAssert.Fail("unbalanced census call at " + At.ToString());
+			return null;
 		}
 
 		private static string Upgrade()
