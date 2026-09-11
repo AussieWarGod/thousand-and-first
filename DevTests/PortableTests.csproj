@@ -25,6 +25,8 @@
     <Compile Include="KingdomSealPendingRulesTests.cs" />
     <Compile Include="KingdomDepositOverflowNativeSourceTests.cs" />
     <Compile Include="KingdomQuoteSitingOccupancyNativeSourceTests.cs" />
+    <Compile Include="KingdomQuoteSitingOccupancyCaseRunnerTests.cs" />
+    <Compile Include="..\Harness\KingdomQuoteSitingOccupancyCaseRunner.cs" />
     <Compile Include="KingdomDepositOverflowReservationTests.cs" />
     <Compile Include="..\Harness\KingdomDepositOverflowReservation.cs" />
     <Compile Include="KingdomQuickstartMaterialIdentityTests.cs" />

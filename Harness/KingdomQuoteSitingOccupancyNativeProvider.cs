@@ -83,7 +83,10 @@ namespace ThousandAndFirst.Harness
 					Require(KingdomScenarioDurableState.ProvesExactText(Receipt, result),
 						"the quote-occupancy report failed its exact readback");
 				}
-				Ok = true;
+				// Truthful past the fixture level: a per-case failure inside RunCase never
+				// throws (it is caught and counted), so this verb must REFUSE (Ok=false) on
+				// its own here rather than reporting success whenever no Require escapes.
+				Ok = KingdomQuoteSitingOccupancyNativeChecks.Ok;
 				return result;
 			}
 			catch (Exception error) { return KingdomQuoteSitingOccupancyNativeChecks.Fail(error); }

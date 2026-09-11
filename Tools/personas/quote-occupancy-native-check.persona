@@ -28,6 +28,6 @@ REQUEST=founding-first-city
 START=8.22@40,12
 SCRIPT=stagedigest;quote-occupancy-setup;quote-occupancy-check;quote-occupancy-check;quote-occupancy-check;quote-occupancy-check;quote-occupancy-check;stagedigest
 VERBS=quote-occupancy-setup,quote-occupancy-check
-EXPECT=stagedigest:OK~founded=false,quote-occupancy-setup:OK~cases=3 passed=3 failed=0,quote-occupancy-check:OK~case=occupied-first-clear-alternate,quote-occupancy-check:OK~alternate-chosen=True,quote-occupancy-check:OK~case=all-occupied-no-mutation,quote-occupancy-check:OK~case=drift-after-quote-preflight-refused,quote-occupancy-check:OK~cases=3 passed=3 failed=0,stagedigest:OK~founded=true,COMPLETE
+EXPECT=stagedigest:OK~founded=false,quote-occupancy-setup:OK~cases=3 passed=3 failed=0,quote-occupancy-check:OK~case=occupied-first-clear-alternate,quote-occupancy-check:OK~alternate-chosen=True,quote-occupancy-check:OK~case=all-occupied-no-mutation,quote-occupancy-check:OK~case=drift-after-quote-refused,quote-occupancy-check:OK~cases=3 passed=3 failed=0,stagedigest:OK~founded=true,COMPLETE
 SET=materials,growth,native-regression
 TIMEOUT=1200

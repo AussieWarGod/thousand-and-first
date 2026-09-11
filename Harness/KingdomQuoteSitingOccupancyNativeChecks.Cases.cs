@@ -129,7 +129,7 @@ namespace ThousandAndFirst.Harness
 						occupant.Obliterate(null, Silent: true);
 				}
 				Require(!stillFound && !string.IsNullOrEmpty(failure)
-					&& failure.StartsWith("{{C|a living occupant}} stands at ", StringComparison.Ordinal),
+					&& failure.StartsWith(ObstructionRefusalPrefix, StringComparison.Ordinal),
 					"filling every lawful pose with an occupant did not produce the named refusal: "
 					+ KingdomScenarioRules.Bounded(failure));
 				Require(timberAfter == timberBefore && waterAfter == waterBefore,
@@ -140,19 +140,22 @@ namespace ThousandAndFirst.Harness
 
 			/// <summary>(3) A creature drifting onto a claimed cell of the SAME rect a quote
 			/// already resolved must still refuse the stamp, spend nothing, and stamp no
-			/// component. Traced in source (Growth/KingdomPlot2.10.Commission.cs:95,130-139 vs
+			/// component. Named "drift-after-quote-refused", not "...-preflight-refused": it
+			/// observes whichever of the two named refusals below actually fires, and natively
+			/// (a4c19fc) only the plan-changed leg ever has -- Preflight's own living-occupant
+			/// text is written but UNPROVEN so far, reachable only when re-siting itself finds no
+			/// occupant-free alternate at all. Traced in source
+			/// (Growth/KingdomPlot2.10.Commission.cs:95,130-139 vs
 			/// Growth/KingdomArchitectureStamper.Preflight.cs:94-96): Commission() re-derives the
 			/// plot from scratch via TryFindRect at :95 -- occupancy-aware, this same fix -- and
 			/// compares the fresh result against Expected at :130-139 BEFORE ever reaching the
 			/// stamping path where Preflight.cs's own living-occupant check lives. When an
 			/// occupant-free alternate exists elsewhere (as case 1 proves one does), the fresh
 			/// re-siting picks it, the rect no longer matches Expected, and Commission refuses
-			/// with its own "plan changed" text at :139 -- never Preflight's. Preflight's text
-			/// remains the reachable refusal only when re-siting itself fails to find any
-			/// occupant-free alternate at all. Both are the SAME contract this fix protects
-			/// (a living occupant is never built over); this case accepts either, named
-			/// explicitly, never by a substring wildcard.</summary>
-			private void DriftAfterQuotePreflightRefusal(KingdomSystem system, KingdomRules.BuildEntry entry)
+			/// with its own "plan changed" text at :139 -- never Preflight's. Both are the SAME
+			/// contract this fix protects (a living occupant is never built over); this case
+			/// accepts either, named explicitly, never by a substring wildcard.</summary>
+			private void DriftAfterQuoteRefusal(KingdomSystem system, KingdomRules.BuildEntry entry)
 			{
 				string failure;
 				Require(KingdomPlots.TryQuoteCommission(system, Zone, entry, null,
@@ -198,9 +201,14 @@ namespace ThousandAndFirst.Harness
 				Require(builtAfter == builtBefore,
 					"a refused drift-after-quote commission still stamped a component");
 				string which = isPlanChanged ? "plan-changed" : "living-occupant";
-				Evidence.Append("; case=drift-after-quote-preflight-refused refused=true refusal=")
+				Evidence.Append("; case=drift-after-quote-refused refused=true refusal=")
 					.Append(which);
 			}
+
+			/// <summary>Growth/KingdomPlotRefusalRules.cs:14, verbatim prefix (up to the
+			/// interpolated X, Y coordinates RefuseObstruction("a living occupant", X, Y)
+			/// appends).</summary>
+			private const string ObstructionRefusalPrefix = "{{C|a living occupant}} stands at ";
 
 			/// <summary>Growth/KingdomPlot2.10.Commission.cs:139, verbatim.</summary>
 			private const string PlanChangedText = "The ground or production plan changed after "

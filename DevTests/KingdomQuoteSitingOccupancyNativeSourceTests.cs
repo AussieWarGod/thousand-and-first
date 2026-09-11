@@ -23,7 +23,12 @@ namespace ThousandAndFirst.Tests
 		// class file to keep KingdomQuoteSitingOccupancyNativeChecks.cs under the harness line
 		// cap once case 3 grew to trace and name two possible refusals.
 		private const string Cases = "Harness/KingdomQuoteSitingOccupancyNativeChecks.Cases.cs";
+		// Engine-free per-case pass/fail counting, extracted out of Checks.cs so the counting
+		// contract runs as a real value test (KingdomQuoteSitingOccupancyCaseRunnerTests)
+		// instead of only as a source pin.
+		private const string CaseRunner = "Harness/KingdomQuoteSitingOccupancyCaseRunner.cs";
 		private const string Persona = "Tools/personas/quote-occupancy-native-check.persona";
+		private const string RefusalRules = "Growth/KingdomPlotRefusalRules.cs";
 
 		private static string Read(string Path) { return TestMain.ReadRepositoryText(Path); }
 
@@ -201,7 +206,26 @@ namespace ThousandAndFirst.Tests
 			Assert.That(persona, Does.Contain("case=occupied-first-clear-alternate"));
 			Assert.That(persona, Does.Contain("alternate-chosen=True"));
 			Assert.That(persona, Does.Contain("case=all-occupied-no-mutation"));
-			Assert.That(persona, Does.Contain("case=drift-after-quote-preflight-refused"));
+			Assert.That(persona, Does.Contain("case=drift-after-quote-refused"));
+		}
+
+		/// <summary>Review nit: case 2's contract text was an inline string literal, correct
+		/// today but unpinned tomorrow. Now a named const, cross-checked verbatim against the
+		/// real production return statement it names
+		/// (Growth/KingdomPlotRefusalRules.cs:14, RefuseObstruction) rather than trusting a
+		/// second independently-typed literal here.</summary>
+		[Test]
+		public void ObstructionRefusalPrefixConstMatchesTheProductionRefusalRuleVerbatim()
+		{
+			string cases = Read(Cases);
+			Assert.That(cases, Does.Contain(
+				"private const string ObstructionRefusalPrefix = \"{{C|a living occupant}} stands at \";"));
+			Assert.That(cases, Does.Contain("failure.StartsWith(ObstructionRefusalPrefix"));
+			string rules = Read(RefusalRules);
+			Assert.That(rules, Does.Contain(
+				"return \"{{C|\" + What + \"}} stands at \" + X + \", \" + Y"),
+				"KingdomPlotRefusalRules.RefuseObstruction's own return text must still start "
+				+ "with the exact prefix ObstructionRefusalPrefix pins");
 		}
 
 		/// <summary>Native run of bd9bbcd threw instead of journaling: production DID refuse (the
@@ -233,7 +257,7 @@ namespace ThousandAndFirst.Tests
 			Assert.That(cases, Does.Contain(
 				"a refused drift-after-quote commission spent timber or water"));
 			Assert.That(cases, Does.Contain(
-				"; case=drift-after-quote-preflight-refused refused=true refusal=\")"));
+				"; case=drift-after-quote-refused refused=true refusal=\")"));
 			// The exact bug: an unconditional single-substring StartsWith against only the
 			// living-occupant text must never return.
 			Assert.That(cases, Does.Not.Contain(
@@ -242,28 +266,66 @@ namespace ThousandAndFirst.Tests
 
 		/// <summary>The other half of the same bug: a Require failure inside one case escaped as
 		/// an exception and aborted the whole setup verb (native run bd9bbcd, verb REFUSED with
-		/// "InvalidOperationException:..."). Every case now runs through RunCase, which catches
-		/// and counts rather than propagating, so the setup verb's own cases=/passed=/failed=
-		/// line reflects real per-case outcomes instead of a hardcoded "3 failed=0".</summary>
+		/// "InvalidOperationException:..."). Every case now runs through RunCase, which delegates
+		/// to the engine-free KingdomQuoteSitingOccupancyCaseRunner (own DevTests value test:
+		/// KingdomQuoteSitingOccupancyCaseRunnerTests) that catches and counts rather than
+		/// propagating, so the setup verb's own cases=/passed=/failed= line reflects real
+		/// per-case outcomes instead of a hardcoded "3 failed=0".</summary>
 		[Test]
 		public void EveryCaseIsCaughtByRunCaseSoOneFailureNeverAbortsTheOthers()
 		{
 			string checks = Read(Checks);
+			string runner = Read(CaseRunner);
 			Assert.That(checks, Does.Contain("private void RunCase(string Name, Action Body)"));
-			Assert.That(checks, Does.Contain("catch (Exception error)"));
-			Assert.That(checks, Does.Contain("Failed++;"));
-			Assert.That(checks, Does.Contain("Passed++;"));
+			Assert.That(checks, Does.Contain("Cases.Run(Name, Body);"),
+				"RunCase must delegate counting to the engine-free case runner, not re-implement it");
+			Assert.That(runner, Does.Contain("catch (Exception error)"));
+			Assert.That(runner, Does.Contain("Failed++;"));
+			Assert.That(runner, Does.Contain("Passed++;"));
 			Assert.That(checks, Does.Contain(
 				"RunCase(\"occupied-first-clear-alternate\","));
 			Assert.That(checks, Does.Contain(
 				"RunCase(\"all-occupied-no-mutation\", () => AllOccupiedNoMutation(system, entry));"));
 			Assert.That(checks, Does.Contain(
-				"RunCase(\"drift-after-quote-preflight-refused\","));
+				"RunCase(\"drift-after-quote-refused\","));
 			Assert.That(checks, Does.Contain(
 				"cases=3 passed=\" + Retained.Passed"));
 			Assert.That(checks, Does.Contain("+ \" failed=\" + Retained.Failed + Retained.Evidence;"));
 			Assert.That(checks, Does.Not.Contain("passed=\" + (Complete ? \"3 failed=0\""),
 				"the verb's own summary line must report real counts, never a hardcoded 3/0");
+		}
+
+		/// <summary>Review nit: Fail(Exception) (the escape path when the verb throws outside
+		/// every case, e.g. during fixture setup) must report whatever Passed/Failed the retained
+		/// Frame actually reached, never a hardcoded "passed=0 failed=1" -- fabricating counts on
+		/// the exact escape path this test suite otherwise forbids for the happy path.</summary>
+		[Test]
+		public void FailReportsRealCountersNeverAHardcodedZeroAndOne()
+		{
+			string checks = Read(Checks);
+			Assert.That(checks, Does.Contain(
+				"internal static string Fail(Exception Error)"));
+			Assert.That(checks, Does.Contain(
+				"return \"native-quote-occupancy cases=3 passed=\" + Passed + \" failed=\" + Failed"));
+			Assert.That(checks, Does.Not.Contain("cases=3 passed=0 failed=1"),
+				"Fail(Exception) must never hardcode passed=0 failed=1");
+		}
+
+		/// <summary>Review nit: the verb's own Ok out-parameter must go false (REFUSED) on a real
+		/// per-case failure, not stay unconditionally true whenever no fixture-level Require
+		/// throws -- otherwise a regressed case is buried inside a report string nobody but the
+		/// persona's own EXPECT substring match is checking.</summary>
+		[Test]
+		public void VerbOkGoesFalseOnARealCaseFailureRatherThanAlwaysTrue()
+		{
+			string provider = Read(Provider);
+			Assert.That(provider, Does.Not.Contain("Ok = true;\n\t\t\t\treturn result;"),
+				"the verb must not report success unconditionally once no Require has thrown");
+			Assert.That(provider, Does.Contain(
+				"Ok = KingdomQuoteSitingOccupancyNativeChecks.Ok;"));
+			string checks = Read(Checks);
+			Assert.That(checks, Does.Contain(
+				"internal static bool Ok { get { return Retained?.Ok ?? true; } }"));
 		}
 	}
 }

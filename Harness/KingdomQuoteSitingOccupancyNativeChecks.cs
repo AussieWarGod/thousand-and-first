@@ -45,9 +45,24 @@ namespace ThousandAndFirst.Harness
 				+ " failed=" + Retained.Failed + Retained.Evidence;
 		}
 
+		internal static int Passed { get { return Retained?.Passed ?? 0; } }
+
+		internal static int Failed { get { return Retained?.Failed ?? 0; } }
+
+		/// <summary>False the instant one case has failed -- read by the provider to make the
+		/// verb itself REFUSE (Ok=false) on a real per-case failure instead of always reporting
+		/// success once no fixture-level Require throws.</summary>
+		internal static bool Ok { get { return Retained?.Ok ?? true; } }
+
+		/// <summary>Truthful even on the escape path: reports whatever Passed/Failed the
+		/// retained Frame actually reached before this exception (0/0 when it threw during
+		/// fixture setup, before any RunCase ran), never the fabricated "passed=0 failed=1" the
+		/// review named -- that hardcoding is exactly the bug this const-and-counters pass
+		/// removes.</summary>
 		internal static string Fail(Exception Error)
 		{
-			return "native-quote-occupancy cases=3 passed=0 failed=1; evidence retained: "
+			return "native-quote-occupancy cases=3 passed=" + Passed + " failed=" + Failed
+				+ "; evidence retained: "
 				+ KingdomScenarioRules.Bounded(Error.GetType().Name + ": " + Error.Message)
 				+ Retained?.Evidence;
 		}
@@ -70,10 +85,13 @@ namespace ThousandAndFirst.Harness
 			private readonly XRLGame Game;
 			private readonly Zone Zone;
 			private readonly List<GameObject> Owned = new List<GameObject>();
+			private readonly KingdomQuoteSitingOccupancyCaseRunner Cases
+				= new KingdomQuoteSitingOccupancyCaseRunner();
 			internal bool Done;
-			internal int Passed;
-			internal int Failed;
-			internal readonly StringBuilder Evidence = new StringBuilder();
+			internal int Passed { get { return Cases.Passed; } }
+			internal int Failed { get { return Cases.Failed; } }
+			internal bool Ok { get { return Cases.Ok; } }
+			internal StringBuilder Evidence { get { return Cases.Evidence; } }
 
 			internal Frame(XRLGame Game, Zone Zone) { this.Game = Game; this.Zone = Zone; }
 
@@ -97,29 +115,19 @@ namespace ThousandAndFirst.Harness
 				RunCase("occupied-first-clear-alternate",
 					() => OccupiedFirstClearAlternate(system, entry));
 				RunCase("all-occupied-no-mutation", () => AllOccupiedNoMutation(system, entry));
-				RunCase("drift-after-quote-preflight-refused",
-					() => DriftAfterQuotePreflightRefusal(system, entry));
+				RunCase("drift-after-quote-refused",
+					() => DriftAfterQuoteRefusal(system, entry));
 			}
 
 			/// <summary>A Require failure (or any other exception) inside ONE case must never
-			/// abort the other two or escape this verb: it is caught here, counted, and journaled
-			/// by name, so the setup call's own cases=/passed=/failed= line stays truthful even
-			/// when a case regresses. Fixture setup ABOVE this (founding, dedicating the store)
-			/// still throws through Require -- without it no case could run at all.</summary>
+			/// abort the other two or escape this verb: counting and journaling by name are
+			/// delegated to the engine-free KingdomQuoteSitingOccupancyCaseRunner (own DevTests
+			/// value test), so the setup call's own cases=/passed=/failed= line stays truthful
+			/// even when a case regresses. Fixture setup ABOVE this (founding, dedicating the
+			/// store) still throws through Require -- without it no case could run at all.</summary>
 			private void RunCase(string Name, Action Body)
 			{
-				try
-				{
-					Body();
-					Passed++;
-				}
-				catch (Exception error)
-				{
-					Failed++;
-					Evidence.Append("; case=").Append(Name).Append(" outcome=FAILED reason=")
-						.Append(KingdomScenarioRules.Bounded(
-							error.GetType().Name + ": " + error.Message));
-				}
+				Cases.Run(Name, Body);
 			}
 
 			/// <summary>Idempotent: the cases already ran in Start(), so every check call --
