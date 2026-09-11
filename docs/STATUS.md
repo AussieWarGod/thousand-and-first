@@ -13,7 +13,9 @@ The public-version protocol edit had been made after receipt binding. Publisher,
 and finalization were all skipped: no public Steam attempt or upload occurred.
 Recovery candidate `16ed2b35a1516577cce2d5d15c922a1a1436a504` binds that same protocol
 before promotion, with unchanged private runtime and receipt. No guard is weakened.
-The failed tag is retained; its replacement requires explicit author direction, or a new version.
+The author explicitly approved replacing this unshipped tag while preserving its original
+tag object and failed run. Recovery uses normal protected integration and exact-lease tag
+replacement; no package gate or test requirement is waived.
 
 The public Alpha is [Steam Workshop item
 3794797472](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472). Rows marked retained
