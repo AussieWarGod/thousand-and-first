@@ -172,6 +172,22 @@ fi
 python3 "$PROFILE_TOOL" seal "$LOCAL" "$SEAL_DIR/profile.sha256"
 printf '%s\n' "$REQUEST" > "$SEAL_DIR/request.txt"
 
+# ---- the session's own run record -------------------------------------------------------------
+# What only preparation knows: which frozen tree was staged, what that tree's production
+# structure actually measures (never the review ledger, which an active candidate keeps stale on
+# purpose), this session's own closed profile seal, the frozen seed and the budget it was given.
+# The launch and stop halves are written later by Tools/run-scenario.ps1. Opt-in, because every
+# existing profile shape must keep preparing exactly as it did: set TAF_SCENARIO_ROLE to
+# save-session or cold-load-session to ask for a record.
+if [ -n "${TAF_SCENARIO_ROLE:-}" ]; then
+	RECORD_TURN_BUDGET="${TAF_SCENARIO_TURN_BUDGET:-10000}"
+	RECORD_TIMEOUT="${TAF_SCENARIO_TIMEOUT_SECONDS:-3600}"
+	python3 "$REPO/Tools/scenario_run_record.py" seal "$ROOT" \
+		--tree "$REPO" --role "$TAF_SCENARIO_ROLE" --seed "$SEED" \
+		--script "${TAF_SCENARIO_SCRIPT:-}" --profile-name "$(basename "$ROOT")" \
+		--turn-budget "$RECORD_TURN_BUDGET" --timeout-seconds "$RECORD_TIMEOUT"
+fi
+
 QUICKSTART_BANNER=""
 BANNER_COMMANDS=0
 if [ -f "$LOCAL/scenario-script.txt" ]; then

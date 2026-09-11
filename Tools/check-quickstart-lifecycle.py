@@ -23,7 +23,9 @@ per-leg acceptance oracle (boot/save/load/build); this tool only judges the whol
 from __future__ import annotations
 
 import json
+from datetime import datetime
 from pathlib import Path
+import re
 import sys
 
 sys.dont_write_bytecode = True
@@ -89,6 +91,19 @@ SCHEMA_VERSION = 1
 SESSIONS = ("save-session", "cold-load-session")
 # Which session each step belongs to, so the two launches can be checked against the steps
 # they are supposed to cover rather than asserted in prose.
+# An identity a step MAY carry beyond what it must. Two steps can share one journal row (the
+# quote and the commission are one production call), and a row states everything it knew; the
+# derivation therefore keeps only what each step is entitled to say, rather than letting a later
+# identity leak backwards into an earlier step.
+ALLOWED_EXTRA = {
+    "engine-turn-build": ("jobId",),
+    "save": ("buildingId", "plotId"),
+    "next-action": ("jobId", "buildingId", "plotId"),
+}
+OBSERVED_KEYS = (
+    "realmId", "cityId", "jobId", "buildingId", "plotId", "saveId",
+    "completedReceiptId", "forJobId",
+)
 SESSION_OF = {
     "startup": "save-session",
     "quote": "save-session",
@@ -132,13 +147,15 @@ EXPECTED_IDENTITIES = {
     "startup": ("realmId", "cityId"),
     "quote": ("realmId", "cityId"),
     "paid-commission": ("realmId", "cityId", "jobId"),
-    # Provisional names, pending the validator's confirmation: the completed registry row's own
-    # id, and the paid job it fulfils, so the finished work links back to what was paid for.
-    "engine-turn-build": ("realmId", "cityId", "jobId", "buildingId", "plotId",
+    # The completed registry row's own id, and the paid job it fulfils, so the finished work
+    # links back to what was paid for.
+    "engine-turn-build": ("realmId", "cityId", "buildingId", "plotId",
                           "completedReceiptId", "forJobId"),
-    "save": ("realmId", "cityId", "buildingId", "plotId", "saveId"),
+    "save": ("realmId", "cityId", "saveId"),
     "cold-load": ("realmId", "cityId", "buildingId", "plotId", "saveId"),
-    "next-action": ("realmId", "cityId", "buildingId", "plotId", "saveId"),
+    # The next action's own job is deliberately unlinked from the completed one, so nothing here
+    # asks it to repeat an identity; what must still hold is the world it acted on.
+    "next-action": ("realmId", "cityId", "saveId"),
 }
 
 # An identity a step CANNOT honestly have observed, because the thing it names does not exist
@@ -171,6 +188,90 @@ def rows_of(paths: list[Path]) -> list[tuple[str, str, str]]:
         text = path.read_bytes().decode("utf-8").replace("\r\n", "\n")
         rows.extend(persona_matrix.read_journal(text))
     return rows
+
+
+def stamped_rows(paths: list[Path]) -> list[tuple[str, str, str]]:
+    """Every row as (utc stamp, verb, message).
+
+    The stamp is the harness's own clock, written when the row was journalled, which is why
+    elapsed time is derived from it rather than from a second clock: two clocks can disagree,
+    and the journal's is the one that witnessed the step.
+    """
+    stamped: list[tuple[str, str, str]] = []
+    for path in paths:
+        text = path.read_bytes().decode("utf-8").replace("\r\n", "\n")
+        for line in text.splitlines():
+            if not line.strip():
+                continue
+            fields = line.split("\t")
+            if len(fields) != 4:
+                raise ValueError("journal row does not have four columns")
+            stamped.append(
+                (fields[0], persona_matrix.unescape(fields[1]), persona_matrix.unescape(fields[3]))
+            )
+    return stamped
+
+
+def seconds_between(first: str, second: str) -> int:
+    """Whole seconds between two journal stamps, never negative."""
+    shape = "%Y-%m-%dT%H:%M:%S.%fZ"
+    start = datetime.strptime(first, shape)
+    end = datetime.strptime(second, shape)
+    return max(0, int((end - start).total_seconds()))
+
+
+def turns_in(message: str) -> int | None:
+    """The turn counter a lifecycle row states, if it states one."""
+    found = re.search(r"\bturns=(\d+)\b", message)
+    return int(found.group(1)) if found else None
+
+
+def observed_in(message: str) -> dict:
+    """The identities a lifecycle row states, exactly as it stated them."""
+    seen = {}
+    for name in OBSERVED_KEYS:
+        found = re.search(r"\b" + name + r"=([^;\s]+)", message)
+        if found and found.group(1) not in ("unassigned", ""):
+            seen[name] = found.group(1)
+    return seen
+
+
+def measure(paths: list[Path], records: list[dict]) -> dict:
+    """Per-step turns and seconds, derived from the journals and bounded by the records.
+
+    Turns are the difference between the turn counters two consecutive lifecycle rows state;
+    seconds are the difference between their stamps. Budgets come from the records and are
+    never used as a measurement -- an over-budget run must be able to say so.
+    """
+    stamped = stamped_rows(paths)
+    by_role = {record.get("role"): record for record in records}
+    phases: dict = {}
+    last_turns = 0
+    last_stamp = None
+    for step, _ in LINKS:
+        names = LIFECYCLE_ROWS.get(step, ())
+        rows = [row for row in stamped if row[1] in names]
+        if not rows:
+            continue
+        stamp, _, message = rows[-1]
+        record = by_role.get(SESSION_OF[step], {})
+        phase = {
+            "turnBudget": record.get("turnBudget"),
+            "timeoutSeconds": record.get("timeoutSeconds"),
+            KEYS["observed"]: {
+                name: value for name, value in observed_in(message).items()
+                if name in EXPECTED_IDENTITIES[step] + ALLOWED_EXTRA.get(step, ())
+            },
+        }
+        turns = turns_in(message)
+        if turns is not None:
+            phase["turnsUsed"] = max(0, turns - last_turns)
+            last_turns = turns
+        first_stamp = last_stamp if last_stamp else stamp
+        phase["elapsedSeconds"] = seconds_between(first_stamp, stamp)
+        last_stamp = stamp
+        phases[step] = {key: value for key, value in phase.items() if value is not None}
+    return phases
 
 
 def judge(rows: list[tuple[str, str, str]]) -> dict:
@@ -351,25 +452,113 @@ def parse(argv: list[str]) -> tuple[list[str], dict]:
         key = name[2:]
         if key in options:
             raise ValueError("repeated option " + name)
-        if key not in ("results", "run-record"):
+        if key not in ("results", "run-record", "driver", "run-id"):
             raise ValueError("unknown option " + name)
         options[key] = argv[index + 1]
         index += 2
     return journals, options
 
 
-def emit(report: dict, options: dict) -> None:
-    """Writes the long-form artefact beside the verdict, from the driver's run record."""
-    if set(options) != {"results", "run-record"}:
+def sessions(records: list[dict]) -> tuple[list[dict], list[str]]:
+    """The two process sessions, and what is wrong with them if anything is.
+
+    Two records that share a launch identity are one session described twice, and a cold load
+    that began before the save session stopped never loaded that save at all. Either way the
+    pair is refused rather than emitted.
+    """
+    problems: list[str] = []
+    by_role = {record.get("role"): record for record in records}
+    ordered = [by_role[role] for role in SESSIONS if role in by_role]
+    if len(ordered) != len(SESSIONS):
+        return [], [
+            KEYS["processes"] + "." + role for role in SESSIONS if role not in by_role
+        ]
+    launches = [record.get("launchId") for record in ordered]
+    if any(not isinstance(value, str) or not value for value in launches):
+        problems.append(KEYS["processes"] + " (every session needs its own launch id)")
+    elif len(set(launches)) != len(launches):
+        problems.append(KEYS["processes"] + " (sessions must have distinct launch ids)")
+    stopped = ordered[0].get("stoppedUtc")
+    started = ordered[1].get("started")
+    if not isinstance(stopped, str) or not isinstance(started, str):
+        problems.append(KEYS["processes"] + " (both sessions need started and stoppedUtc)")
+    elif stopped > started:
+        problems.append(
+            KEYS["processes"] + " (the cold-load session began before the save session stopped)"
+        )
+    if problems:
+        return [], problems
+    entries = []
+    for record in ordered:
+        entry = {
+            "role": record["role"],
+            "launchId": record["launchId"],
+            "started": record["started"],
+            "stoppedUtc": record["stoppedUtc"],
+        }
+        # The two profiles legitimately differ -- load authority, script, import metadata -- so
+        # each session names its OWN seal here. Nothing hoists a single seal to the top level,
+        # where it would falsely claim the two sessions, or the public package, were one thing.
+        for field in ("profileSeal", "profileName"):
+            if record.get(field):
+                entry[field] = record[field]
+            else:
+                problems.append(KEYS["processes"] + "." + record["role"] + "." + field)
+        entries.append(entry)
+    return entries, problems
+
+
+def run_from(records: list[dict], phases: dict, driver: str, run_id: str) -> tuple[dict, list[str]]:
+    """One run description assembled from the two session records and the derived phases."""
+    problems: list[str] = []
+    save = next((record for record in records if record.get("role") == SESSIONS[0]), {})
+    run: dict = {"phases": phases, "driver": driver, "runId": run_id}
+    for field, source in (("seed", "seed"), ("candidateCommit", "candidateCommit"),
+                          ("runtimeInventorySha256", "runtimeInventorySha256"),
+                          ("harnessInventorySha256", "harnessInventorySha256"),
+                          ("gameBuildId", "gameBuildId"), ("logRef", "logRef"),
+                          ("logSha256", "logSha256"), ("continuity", "continuity")):
+        value = save.get(source)
+        if value is not None:
+            run[field] = value
+    if isinstance(run.get("seed"), str):
+        digits = run["seed"].lstrip("#")
+        if digits.isdigit():
+            run["seed"] = int(digits)
+    for other in records:
+        for field in ("candidateCommit", "runtimeInventorySha256"):
+            if field in save and field in other and save[field] != other[field]:
+                problems.append(field + " (the two sessions exercised different trees)")
+    ordered, session_problems = sessions(records)
+    problems.extend(session_problems)
+    if ordered:
+        run[KEYS["processes"]] = ordered
+    return run, problems
+
+
+def emit(report: dict, options: dict, journals: list[Path]) -> list[str]:
+    """Writes the long-form artefact beside the verdict, from the two session run records."""
+    if set(options) < {"results", "run-record"}:
         raise ValueError("results emission needs both --results and --run-record")
-    run = json.loads(Path(options["run-record"]).read_text(encoding="utf-8"))
-    if not isinstance(run, dict):
-        raise ValueError("run record must be a JSON object")
+    paths = [Path(name) for name in options["run-record"].split(",") if name]
+    if len(paths) != len(SESSIONS):
+        raise ValueError("--run-record takes the two run-record.json paths, comma separated")
+    records = []
+    for path in paths:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if not isinstance(payload, dict):
+            raise ValueError("run record must be a JSON object")
+        records.append(payload)
+    run, problems = run_from(
+        records, measure(journals, records),
+        options.get("driver", "automated lifecycle driver"),
+        options.get("run-id", records[0].get("runId", "")),
+    )
     payload, unresolved = results(report, run)
     Path(options["results"]).write_text(
         json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
-    report["unresolvedFields"] = unresolved
+    return problems + unresolved
 
 
 def main(argv: list[str]) -> int:
@@ -381,7 +570,7 @@ def main(argv: list[str]) -> int:
         paths = [Path(name).resolve(strict=True) for name in journals]
         report = judge(rows_of(paths))
         if options:
-            emit(report, options)
+            report["unresolvedFields"] = emit(report, options, paths)
     except (OSError, ValueError) as error:
         print(json.dumps({"verdict": "REFUSED", "reason": str(error)}, sort_keys=True))
         return 2

@@ -241,7 +241,7 @@ class LifecycleVerdict(unittest.TestCase):
         self.assertIn("buildingId", by_step["engine-turn-build"])
         self.assertIn("saveId", by_step["save"])
         # Read at that step, not copied forward: each value still names its own step.
-        self.assertEqual(by_step["save"]["buildingId"], "buildingId-observed-at-save")
+        self.assertEqual(by_step["save"]["saveId"], "saveId-observed-at-save")
         # The finished job need not survive the load, and the next action is free to be a new
         # one, so neither step is asked to repeat the completed job's identity.
         self.assertNotIn("jobId", checker.EXPECTED_IDENTITIES["cold-load"])

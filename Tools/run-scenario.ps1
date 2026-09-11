@@ -16,10 +16,43 @@
 param(
     [Parameter(Mandatory = $true)][string]$Root,
     [string]$Game,
-    [switch]$OwnAttended
+    [switch]$OwnAttended,
+    # Writes the stop half of this session's run record and exits. Run it after the owned process
+    # has actually ended, so stoppedUtc is when the session ended rather than when it was asked to.
+    [switch]$StopRecord,
+    [int]$ExitCode = 0
 )
 
 $ErrorActionPreference = 'Stop'
+
+# --- this session's run record ---------------------------------------------------------------
+# Only the halves a launcher can honestly witness: who launched, when it started, when it
+# stopped, and the game build string the run's own log states. Everything about the exercised
+# tree was written at preparation time by Tools/scenario_run_record.py and is never rewritten
+# here. The file is replaced whole, so a half-written record can never be read as a whole one.
+function Read-TafRunRecord {
+    param([Parameter(Mandatory = $true)][string]$Path)
+    return Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json -AsHashtable
+}
+
+function Write-TafRunRecord {
+    param([Parameter(Mandatory = $true)][string]$Path,
+          [Parameter(Mandatory = $true)][hashtable]$Record)
+    $partial = "$Path.partial"
+    ($Record | ConvertTo-Json -Depth 12) | Set-Content -LiteralPath $partial -Encoding UTF8
+    Move-Item -LiteralPath $partial -Destination $Path -Force
+}
+
+function Get-TafGameBuildId {
+    param([Parameter(Mandatory = $true)][string]$LogPath)
+    if (-not (Test-Path -LiteralPath $LogPath -PathType Leaf)) { return $null }
+    foreach ($line in Get-Content -LiteralPath $LogPath -TotalCount 400) {
+        if ($line -match '(?i)(version|build)' -and $line -match '(\d+\.\d+\.\d+\.\d+)') {
+            return $Matches[1]
+        }
+    }
+    return $null
+}
 
 if ([string]::IsNullOrWhiteSpace($Game)) {
     $configuredGameRoot = $env:TAF_QUD_ROOT
@@ -304,6 +337,28 @@ if ($OwnAttended) {
         throw 'A Qud process is already running; owned attended launch refused.'
     }
 }
+if ($StopRecord) {
+    # The stop half, written after the owned process has ended. It never invents a stop for a
+    # session that was never launched, and never overwrites one already recorded.
+    $recordPath = Join-Path $rootPath 'run-record.json'
+    if (-not (Test-Path -LiteralPath $recordPath -PathType Leaf)) {
+        throw 'This scenario root carries no run record to stop.'
+    }
+    $record = Read-TafRunRecord -Path $recordPath
+    if (-not $record.ContainsKey('launchId')) { throw 'This run record names no launch to stop.' }
+    if ($record.ContainsKey('stoppedUtc')) { throw 'This run record is already stopped.' }
+    if (@(Get-Process | Where-Object { $_.ProcessName -in @('CoQ', 'CavesOfQud') }).Count -ne 0) {
+        throw 'A Qud process is still running; stop it before recording the stop.'
+    }
+    $record['stoppedUtc'] = [DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ')
+    $record['exitCode'] = $ExitCode
+    $build = Get-TafGameBuildId -LogPath (Join-Path $rootPath 'Player.log')
+    if ($build) { $record['gameBuildId'] = $build }
+    Write-TafRunRecord -Path $recordPath -Record $record
+    Write-Host "Run record stopped: $($record['stoppedUtc'])"
+    exit 0
+}
+
 # A scripted profile runs itself, so its window must never steal the operator's focus.
 # Minimizing is NOT safe - Unity may pause a minimized player and stall the runner - so the
 # window is instead launched detached and, once it exists, moved to the bottom-right screen
@@ -336,6 +391,20 @@ public static class QuietWindow {
             break
         }
         Start-Sleep -Milliseconds 500
+    }
+    # The launch half of this session's run record, if preparation sealed one. The launch
+    # identity is this process's own identity -- the launched PID and its start time -- so two
+    # sessions can never be mistaken for one, and the record says when the window really opened
+    # rather than when the operator typed the command.
+    $recordPath = Join-Path $rootPath 'run-record.json'
+    if (Test-Path -LiteralPath $recordPath -PathType Leaf) {
+        $record = Read-TafRunRecord -Path $recordPath
+        if ($record.ContainsKey('launchId')) { throw 'This run record already names a launch.' }
+        $utcStart = $process.StartTime.ToUniversalTime()
+        $record['launchId'] = "pid-$($process.Id)-$($utcStart.ToString('yyyyMMddTHHmmssZ'))"
+        $record['started'] = $utcStart.ToString('yyyy-MM-ddTHH:mm:ssZ')
+        Write-TafRunRecord -Path $recordPath -Record $record
+        Write-Host "Run record launch: $($record['launchId'])"
     }
     Write-Host "Scenario game launched quietly (PID $($process.Id)); it will not take focus."
     Write-Host "Ownership receipt: $(Get-TafScenarioReceiptPath -Root $rootPath)"

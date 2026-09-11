@@ -82,7 +82,20 @@ the save id from the save -- each read again at its own step and never copied fo
 thing it names exists is dropped and named; an identity that should exist and is missing leaves its
 step out of the artefact entirely, so the chain reads as incomplete rather than as a pass with a
 hole in it. The completed work reports both its own receipt identity and the paid job it fulfils.
-`Tools/tests/quickstart_lifecycle_checker_test.py` exercises those verdicts;
+Each session writes its own run record (`Tools/scenario_run_record.py`): preparation seals the
+exercised commit, the production structural digest measured by `Tools/check-structure.py --json`
+on the frozen tree (never the review ledger, which an active candidate keeps stale on purpose),
+that session's own closed profile seal and name, the frozen seed and its budgets;
+`Tools/run-scenario.ps1` adds the launch identity and start from the launched process and, on
+`-StopRecord`, the stop and the game build string the run's own log states. The checker takes both
+records, derives per-step turns and seconds from the journals those runs wrote -- never from the
+budgets -- and refuses a pair that shares a launch identity, that began the cold load before the
+save session stopped, or that exercised different trees. Three digests stay separately named:
+`runtimeInventorySha256` (production structure), `harnessInventorySha256` (dev-harness inventory,
+recorded only when a caller can state it), and per-session `processes[].profileSeal` with
+`processes[].profileName`.
+`Tools/tests/quickstart_lifecycle_checker_test.py` and
+`Tools/tests/scenario_run_record_test.py` exercise those verdicts;
 `DevTests/KingdomQuickstartLifecycleContractTests.cs` is SOURCE-ONLY and pins the two row lists
 against each other and the driven links' physical assertions. No native run was made for this
 change.
