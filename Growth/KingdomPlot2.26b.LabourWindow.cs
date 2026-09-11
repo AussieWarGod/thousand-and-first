@@ -40,7 +40,7 @@ namespace ThousandAndFirst
 		/// founder is told their settlers were moved, because nothing moves without being named.
 		/// </summary>
 		private static void SayPlotWorkCleared(KingdomSystem System, GameObject Works,
-			string Name, int Moved)
+			string Name, int Moved, bool Raised, string Fault)
 		{
 			if (Works == null || Moved <= 0
 				|| Works.GetIntProperty(PlotWorkClearedAnnouncedProperty) == 1) return;
@@ -48,7 +48,7 @@ namespace ThousandAndFirst
 			if (System != null && System.Founded)
 			{
 				System.Ledger.Note("{{W|" + KingdomPlotRules.ClearedOccupiedSlots(
-					Name ?? "work", Moved) + "}}");
+					Name ?? "work", Moved, Raised, Fault) + "}}");
 			}
 		}
 

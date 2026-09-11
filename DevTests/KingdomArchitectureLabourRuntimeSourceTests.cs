@@ -146,10 +146,13 @@ namespace ThousandAndFirst.Tests
 				"internal static bool TryGroundStageWithOccupants(",
 				"KingdomArchitectureStamper.TryStageLayer(Root, Z,",
 				"if (!ground && KingdomPlotRules.IsOccupantSlotRefusal(Failure))",
-				"if (TryClearManagedOccupants(System, Z, Root, Managed, Rect, out int cleared,",
-				"SayPlotWorkCleared(System, Root, name, cleared)",
+				"bool stoodOff = TryClearManagedOccupants(System, Z, Root, Managed, Rect,",
+				"out int cleared, out KingdomPlotRules.OccupantVerdict verdict, out Cell anchor,",
 				"ground = KingdomArchitectureStamper.TryStageLayer(Root, Z,",
-				"KingdomPlotRules.OccupantVerdict.AnchorBound && anchor != null",
+				"SayPlotWorkCleared(System, Root, name, cleared, ground,",
+				"ground ? null : (stoodOff ? Failure : clearanceRefusal))",
+				"if (!ground && verdict == KingdomPlotRules.OccupantVerdict.AnchorBound",
+				"&& anchor != null)",
 				"KingdomPlotRules.RefuseOccupiedAnchor(name, anchor.X, anchor.Y)",
 				"SayPlotWorkOccupied(System, Root, slot,",
 				"KingdomPlotRules.RefuseOccupiedSlot(name, slot)");
@@ -172,7 +175,7 @@ namespace ThousandAndFirst.Tests
 				"plan.Add(new KingdomLayoutDisplacement(occupants[i], occupants[i].CurrentCell,",
 				"move.Body.SystemLongDistanceMoveTo(move.Target, 0, forced: true,",
 				"&& move.Body.CurrentCell == move.Target)",
-				"int back = WalkBack(plan, i, out int stranded)",
+				"int back = WalkBack(plan, i + 1, out int stranded)",
 				"Moved = stranded;",
 				"return ClearanceFault(\"a settler would not stand off the site; \" + back",
 				"Moved = walked;");
@@ -180,12 +183,16 @@ namespace ThousandAndFirst.Tests
 			// ground it stood on, and the fault names both counts.
 			AssertOrdered(clearance,
 				"private static int WalkBack(List<KingdomLayoutDisplacement> Plan, int Count,",
+				"|| move.Body.CurrentCell == move.Origin) continue;",
 				"move.Body.SystemLongDistanceMoveTo(move.Origin, 0, forced: true,",
 				"&& move.Body.CurrentCell == move.Origin)",
 				"back++;",
 				"Stranded++;");
-			StringAssert.Contains("SayPlotWorkCleared(System, Root, name, cleared);\n\t\t\t\tif (stoodOff)",
-				clearance);
+			string labourWindow = TestMain.ReadRepositoryText(
+				"Growth/KingdomPlot2.26b.LabourWindow.cs");
+			StringAssert.Contains(
+				"KingdomPlotRules.ClearedOccupiedSlots(\n\t\t\t\t\tName ?? \"work\", Moved, Raised, Fault)",
+				labourWindow);
 			AssertOrdered(clearance,
 				"private static bool IsOwnResident(",
 				"Simulation.City.KingdomPhysicalHappenings.IsStaged(Body)",

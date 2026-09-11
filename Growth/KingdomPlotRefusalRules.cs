@@ -165,11 +165,21 @@ namespace ThousandAndFirst
 			return AnyAnchorInLayout ? OccupantVerdict.AnchorBound : OccupantVerdict.Displace;
 		}
 
-		/// <summary>The crew stood its own people off the site and the raising went on.</summary>
-		public static string ClearedOccupiedSlots(string Name, int Moved)
+		/// <summary>
+		/// The crew stood its own people off the site. Told outcome-first, because bodies are moved
+		/// on the failing path too: a founder who is told "the work goes on" when the raising was
+		/// refused anyway has been lied to about ground they can see standing empty.
+		/// </summary>
+		/// <param name="Moved">Bodies left standing off the site.</param>
+		/// <param name="Raised">Whether the ground stage then landed.</param>
+		/// <param name="Fault">Why it did not, when it did not.</param>
+		public static string ClearedOccupiedSlots(string Name, int Moved, bool Raised, string Fault)
 		{
-			return "The crew stood " + Moved + (Moved == 1 ? " settler" : " settlers")
-				+ " off the ground the {{C|" + Name + "}} is being raised on, and the work goes on.";
+			string stood = "The crew stood " + Moved + (Moved == 1 ? " settler" : " settlers")
+				+ " off the ground the {{C|" + Name + "}} is being raised on, ";
+			return Raised ? stood + "and the work goes on."
+				: stood + "but the raising was refused: " + (Fault ?? "the ground would not take it")
+					+ ".";
 		}
 
 		/// <summary>

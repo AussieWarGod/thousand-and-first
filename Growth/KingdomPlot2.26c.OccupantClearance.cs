@@ -45,23 +45,22 @@ namespace ThousandAndFirst
 				bool stoodOff = TryClearManagedOccupants(System, Z, Root, Managed, Rect,
 					out int cleared, out KingdomPlotRules.OccupantVerdict verdict, out Cell anchor,
 					out string clearanceRefusal);
-				// Bodies left standing off the site are named whether or not the set succeeded:
-				// a failed clearance that could not put everyone back still moved somebody.
-				SayPlotWorkCleared(System, Root, name, cleared);
 				if (stoodOff)
 				{
 					ground = KingdomArchitectureStamper.TryStageLayer(Root, Z,
 						ArchitectureLayer.Ground, out Failure);
 				}
-				else
+				else KingdomLog.Log("architecture: layout clearance refused: " + clearanceRefusal);
+				// Bodies left standing off the site are named whether or not the set succeeded,
+				// and the sentence says which of the two the founder is looking at.
+				SayPlotWorkCleared(System, Root, name, cleared, ground,
+					ground ? null : (stoodOff ? Failure : clearanceRefusal));
+				if (!ground && verdict == KingdomPlotRules.OccupantVerdict.AnchorBound
+					&& anchor != null)
 				{
-					KingdomLog.Log("architecture: layout clearance refused: " + clearanceRefusal);
-					if (verdict == KingdomPlotRules.OccupantVerdict.AnchorBound && anchor != null)
-					{
-						SayPlotWorkOccupied(System, Root, "anchor:" + anchor.X + "," + anchor.Y,
-							KingdomPlotRules.RefuseOccupiedAnchor(name, anchor.X, anchor.Y));
-						return false;
-					}
+					SayPlotWorkOccupied(System, Root, "anchor:" + anchor.X + "," + anchor.Y,
+						KingdomPlotRules.RefuseOccupiedAnchor(name, anchor.X, anchor.Y));
+					return false;
 				}
 			}
 			string slot = ground ? null : KingdomPlotRules.OccupantSlotOf(Failure);
@@ -155,7 +154,9 @@ namespace ThousandAndFirst
 				}
 				// Half a cleared site is nobody's intent: put back everyone already walked, and
 				// report exactly how many stayed put and how many are still standing off.
-				int back = WalkBack(plan, i, out int stranded);
+				// i is included: a move can return true and still land off-target, leaving that
+				// body displaced. Everything in plan[0..i] not standing on its origin comes back.
+				int back = WalkBack(plan, i + 1, out int stranded);
 				Moved = stranded;
 				return ClearanceFault("a settler would not stand off the site; " + back
 					+ " stood back" + (stranded > 0
@@ -165,8 +166,10 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		/// <summary>Walks the first <paramref name="Count"/> planned bodies back to the ground they
-		/// stood on. Returns how many stood back; <paramref name="Stranded"/> counts the rest.</summary>
+		/// <summary>Walks every one of the first <paramref name="Count"/> planned bodies that is no
+		/// longer standing on its origin back onto it. A body that never left is not touched and
+		/// counts as neither. Returns how many stood back; <paramref name="Stranded"/> counts those
+		/// that could not.</summary>
 		private static int WalkBack(List<KingdomLayoutDisplacement> Plan, int Count,
 			out int Stranded)
 		{
@@ -175,7 +178,9 @@ namespace ThousandAndFirst
 			for (int i = 0; i < Count; i++)
 			{
 				KingdomLayoutDisplacement move = Plan[i];
-				if (GameObject.Validate(move.Body) && move.Origin != null
+				if (!GameObject.Validate(move.Body)
+					|| move.Body.CurrentCell == move.Origin) continue;
+				if (move.Origin != null
 					&& move.Body.SystemLongDistanceMoveTo(move.Origin, 0, forced: true,
 						ignoreCombat: true)
 					&& move.Body.CurrentCell == move.Origin)

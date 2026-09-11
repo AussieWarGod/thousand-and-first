@@ -1103,9 +1103,39 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AClearedSiteSaysHowManyWereStoodOff()
 		{
-			StringAssert.Contains("1 settler", KingdomPlotRules.ClearedOccupiedSlots("fire", 1));
-			StringAssert.Contains("2 settlers", KingdomPlotRules.ClearedOccupiedSlots("fire", 2));
-			StringAssert.Contains("fire", KingdomPlotRules.ClearedOccupiedSlots("fire", 2));
+			StringAssert.Contains("1 settler",
+				KingdomPlotRules.ClearedOccupiedSlots("fire", 1, true, null));
+			StringAssert.Contains("2 settlers",
+				KingdomPlotRules.ClearedOccupiedSlots("fire", 2, true, null));
+			StringAssert.Contains("fire",
+				KingdomPlotRules.ClearedOccupiedSlots("fire", 2, true, null));
+		}
+
+		/// <summary>
+		/// Bodies are stood off on the failing path too, so the sentence must say which outcome the
+		/// founder is looking at. Mutation: swapping the Raised argument swaps the two assertions --
+		/// the raised text must not contain "refused" and the refused text must not promise work.
+		/// </summary>
+		[Test]
+		public void AClearedSiteTellsTheTruthAboutWhetherTheRaisingLanded()
+		{
+			string raised = KingdomPlotRules.ClearedOccupiedSlots("fire", 1, true, null);
+			StringAssert.Contains("and the work goes on.", raised);
+			StringAssert.DoesNotContain("refused", raised);
+			string refused = KingdomPlotRules.ClearedOccupiedSlots("fire", 1, false,
+				"a living occupant moved onto layout slot g:03:01");
+			StringAssert.Contains("but the raising was refused:", refused);
+			StringAssert.Contains("g:03:01", refused);
+			StringAssert.DoesNotContain("and the work goes on.", refused);
+			ClassicAssert.AreNotEqual(raised, refused);
+		}
+
+		[Test]
+		public void ARefusedClearanceWithNoNamedFaultStillSaysItWasRefused()
+		{
+			string line = KingdomPlotRules.ClearedOccupiedSlots("fire", 2, false, null);
+			StringAssert.Contains("but the raising was refused:", line);
+			StringAssert.DoesNotContain("and the work goes on.", line);
 		}
 
 		[Test]
