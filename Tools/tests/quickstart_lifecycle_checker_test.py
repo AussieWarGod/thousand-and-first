@@ -493,6 +493,54 @@ class StampedRefusalsBindRatherThanReportUnbindable(unittest.TestCase):
         self.assertEqual(problems, ["row lifecycle-grown carries no profile stamp"])
 
 
+class RepeatedLifecycleOpenWaitAttemptsAreJudgedHonestly(unittest.TestCase):
+    """ZAP-034: lifecycle-open now retries under a bounded wait for the founder to have
+    dedicated a stockpile (Harness/KingdomQuickstartLifecycleOpenWait), journaling each attempt
+    as its own lifecycle-open row. The checker introduces no new row kind for this -- these
+    cases prove the EXISTING judge() logic already reads a repeated verb name honestly: a
+    string of OK "still waiting" rows never reads as complete on its own, and the final row's
+    own outcome (not the first attempt's) decides the link."""
+
+    def waiting_rows(self, count, final_outcome, final_message):
+        rows = [("realize", "OK", "m")]
+        for i in range(count):
+            rows.append(("lifecycle-open", "OK", "step=open-wait; chunk=%d of %d" % (i + 1, count)))
+        rows.append(("lifecycle-open", final_outcome, final_message))
+        return rows
+
+    def test_a_budget_exhausted_after_several_waits_fails_rather_than_blocks_or_passes(self):
+        rows = self.waiting_rows(
+            5, "REFUSED",
+            "no dedicated stockpile appeared within 500 ordinary engine turns of waiting;"
+            " last reading: this settlement has no dedicated stockpile to pay from",
+        )
+        report = checker.judge(rows)
+        self.assertEqual(report["verdict"], checker.FAIL)
+        self.assertIn("startup", report["reason"])
+        self.assertIn("refused row(s): lifecycle-open", report["reason"])
+
+    def test_dedication_arriving_mid_wait_still_passes_the_startup_link(self):
+        # The predicate becoming true on, say, the third attempt: two "still waiting" rows, then
+        # the real startup census row -- exactly what a fixed persona (no more waits needed once
+        # dedicated) would journal.
+        rows = self.waiting_rows(2, "OK", "step=startup; realmId=r1; cityId=c1; turns=200")
+        report = checker.judge(rows)
+        self.assertEqual(report["verdict"], checker.BLOCKER)
+        startup = next(link for link in report["links"] if link["link"] == "startup")
+        self.assertEqual(startup["state"], checker.PASS)
+
+    def test_a_lone_waiting_row_with_no_conclusion_yet_blocks_the_later_links(self):
+        # An interrupted run (game stopped mid-wait): only "still waiting" rows exist, no final
+        # outcome. startup itself still reads PASS (every row is OK, in order), but nothing
+        # downstream was ever driven -- exactly the same shape as today's single-row startup.
+        rows = self.waiting_rows(3, "OK", "step=open-wait; chunk=4 of 5")
+        report = checker.judge(rows[:-1] + [rows[-1]])
+        startup = next(link for link in report["links"] if link["link"] == "startup")
+        self.assertEqual(startup["state"], checker.PASS)
+        self.assertEqual(report["verdict"], checker.BLOCKER)
+
+
+
 
 if __name__ == "__main__":
     unittest.main()

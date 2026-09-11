@@ -169,6 +169,8 @@ registers `lifecycle-open`, `lifecycle-build`, `lifecycle-grown` and `lifecycle-
 job is forced into a phase -- so an economy that cannot yet pay refuses at CanPay, and a turn budget
 that expires before the building stands lands a refusal, never a pass.
 
+`lifecycle-open` itself now waits, bounded, for the founder to have dedicated a stockpile (`Harness/KingdomQuickstartLifecycleOpenWait.cs`): `realize` places no camp kit and dedicates nothing, and dedication is a founder-interactive act (`Core/KingdomCharterPart.Vessels.cs`) a sealed script never drives, so an instant refusal the moment `realize` finished proved nothing. Each attempt spends one ordinary 100-turn `advance` and journals its reading as an OK "still waiting" row, up to `KingdomQuickstartLifecycleOpenWait.MaxChunks` times, before an honest refusal names the last reading -- no minting, no direct dedication write. ZAP-034.
+
 The second session now exists. `lifecycle-save` publishes a lifecycle witness wire
 (`taf-lifecycle-save-v1:`) alongside the real save, the unchanged importer
 (`Tools/prepare-scenario-load.py`) carries that save into a fresh profile, and

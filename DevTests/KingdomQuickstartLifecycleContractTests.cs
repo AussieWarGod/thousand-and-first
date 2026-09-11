@@ -256,13 +256,15 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("internal static string Stamped(string Report)", steps);
 			StringAssert.Contains("the launched profile could not be named from its ", steps);
 			// Refuse(...) itself routes through Stamped(...): the two success rows in Steps.cs
-			// (Open, Build) plus Refuse's own return make three; Finish.cs has no refusal helper
-			// of its own and calls the shared Refuse(...), so its count stays at its two success
-			// rows only.
+			// (Open, Build), the open-wait "still waiting" row Open() journals while its bounded
+			// stockpile-dedication wait is unresolved, and Refuse's own return make four; Finish.cs
+			// has no refusal helper of its own and calls the shared Refuse(...), so its count stays
+			// at its two success rows only.
 			StringAssert.Contains(
 				"return Stamped(\"native-lifecycle refused at \" + Step + \": \" + Bounded(Reason));",
 				steps);
-			ClassicAssert.AreEqual(3, Occurrences(steps, "return Stamped("), "Steps.cs");
+			StringAssert.Contains("return Stamped(\"native-lifecycle step=open-wait; ", steps);
+			ClassicAssert.AreEqual(4, Occurrences(steps, "return Stamped("), "Steps.cs");
 			ClassicAssert.AreEqual(2,
 				Occurrences(Read("Harness/KingdomQuickstartLifecycleFinish.cs"), "return Stamped("),
 				"Finish.cs");
