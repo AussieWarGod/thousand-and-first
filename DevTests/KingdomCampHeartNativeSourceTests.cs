@@ -71,7 +71,8 @@ namespace ThousandAndFirst.Tests
 				"internal const string CheckVerb = \"camp-heart-check\";"));
 			Assert.That(provider, Does.Contain("\"stagedigest\", SetupVerb, \"advance 1200\","));
 			Assert.That(provider, Does.Contain(
-				"KingdomCampHeartNativeChecks.Run(Verb, game, zone, out complete)"));
+				"KingdomCampHeartNativeChecks.Run(Verb, game, zone, targetRung,"));
+			Assert.That(provider, Does.Contain("int targetRung = SealedTargetRung();"));
 		}
 
 		[TestCase(0)]
@@ -124,7 +125,7 @@ namespace ThousandAndFirst.Tests
 				"KingdomNativeCampFounding.Found(Game, Zone, RequirePair)",
 				"KingdomScenarioCompletedHeart.Complete(Game, System, Zone)",
 				"KingdomPlots.HeartRung(Zone) == 1", "EnrollResidents()",
-				"KingdomNativeCampFounding.Dedicate(Game, Zone, System, DedicatedDrams,",
+				"KingdomNativeCampFounding.Dedicate(Game, Zone, System, Drams,",
 				"MintStoreContents()",
 				"Game.SetIntGameState(KingdomUpgrade.NoticedState, 1)" })
 				Assert.That(checks, Does.Contain(token), token);

@@ -20,6 +20,7 @@
     <Compile Include="TestMain.cs" />
 	<Compile Include="KingdomHeartRungSettleTests.cs" />
 	<Compile Include="KingdomCampHeartNativeSourceTests.cs" />
+	<Compile Include="KingdomCampHeartRung3NativeSourceTests.cs" />
 	<Compile Include="..\Harness\KingdomCampHeartNativeCensus.cs" />
 	<Compile Include="KingdomCampHeartNativeCensusTests.cs" />
     <Compile Include="..\Core\KingdomSealPendingRules.cs" />

@@ -1,0 +1,42 @@
+# Heart rung 2 -> 3 (the waterstone into the moot yard), issue #159. The rung-2 climb is run
+# FIRST inside this same persona, by the same real settlement pass, so the rung-3 start state is
+# reached lawfully rather than seeded: nothing here writes r_TAF_HeartRung, and no rung is stamped,
+# copied or forced by the seam. Everything after setup is the REAL pass on the turns this script's
+# own `advance` spends -- the seam never calls KingdomUpgrade.Begin, KingdomPlots.Advance or
+# KingdomArchitectureStamper.TryApplyUpgrade.
+#
+# OPEN QUESTION THIS RUN EXISTS TO ANSWER (camp-builder CASE 3, carried verbatim from the runbook):
+# the only writers of r_TAF_HeartRung were the plot/rite route, and Growth/KingdomPlot2.10.Commission.cs
+# states the heart is founded, not commissioned. Growth/KingdomUpgrade.26.HeartRung.cs
+# (TrySettleImprovementHeartRung) is the fix that makes every rung above the first climb by the
+# improvement route -- 2->3 is the first rung that exercises it TWICE IN A ROW, so this is exactly
+# the untested seam. Source reading only, until this runs: TrySettleImprovementHeartRung stamps the
+# rung, tells the chronicle once and reconciles the basin behind an at-most-once 0/1/2 marker, and
+# never stamps a rung backward; nothing in it is keyed to "the first improvement", so a second
+# consecutive climb SHOULD settle the same way. That is a reading of the source, not a result.
+#
+# SYNTHETIC SETUP, DISCLOSED, all through production APIs and all reported in every line:
+#  - the camp, its residents (twenty-five, because the moot yard asks for a Town), the dedicated
+#    1920-dram reservoir and its drams, and each fixture body's KingdomBorn provenance and name;
+#  - five taught designs (KingdomZoning.Learn, one point each) so the keepers stand at the workshop
+#    craft level the moot yard is gated on; the level is read back, never written;
+#  - the minted store units: the authored rung-2 bill (24 stone, 1 timber) plus 23 brush the bill
+#    never asks for at setup, and then the authored rung-3 bill (17 timber, 2 stone, 6 shapedtimber)
+#    minted at the phase-2 boundary, once the rung-2 bill has left, so the store's declared 48-unit
+#    capacity is met exactly and never exceeded. Shaped timber is a worked material no fixture minted
+#    before this one;
+#  - the founder's one-time improvement notice, pre-marked as read so a headless run raises no modal.
+# Not ordinary play, not a rendered Charter, no save/load, no general camp acceptance. Rung 3 -> 4
+# and 4 -> 5 remain owed, as do PR #107 cases 1, 3, 4 and 5.
+DESCRIPTION=the heart climbs a second consecutive improvement-route rung, waterstone to moot yard, paid out of its own camp store
+REQUEST=founding-first-city
+START=8.22@40,12
+# 1200 crosses the first daily reconciliation; 3600 covers the waterstone's 3000-tick labour as the
+# rung-2 persona measured it; 7200 covers the moot yard's own 6000-tick bill plus the window that
+# prices it. 12000 turns in total, against 4800 turns in under three minutes on the rung-2 run.
+SCRIPT=stagedigest;camp-heart-setup;advance 1200;camp-heart-check;advance 3600;camp-heart-check;advance 7200;camp-heart-check;stagedigest
+VERBS=camp-heart-setup,camp-heart-check
+EXPECT=stagedigest:OK~founded=false,camp-heart-setup:OK~native-camp-heart phase=1,advance:OK,camp-heart-check:OK~native-camp-heart phase=2,advance:OK,camp-heart-check:OK~native-camp-heart phase=3,advance:OK,camp-heart-check:OK~native-camp-heart cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
+LOG_EXPECT=["MODWARN [Pets of Harvest Dawn] - Mod defining manual load order, please convert it to use the Dependencies field.","MODWARN [Pets of Harvest Dawn] - XmlDataHelper:: <...>/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/DLC/PetsPack1/Freehold_Pet_Ercolano/PopulationTables.xml line 4 char 6"]
+SET=camp,native-regression,test-only
+TIMEOUT=3600

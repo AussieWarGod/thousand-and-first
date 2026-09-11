@@ -25,28 +25,48 @@ namespace ThousandAndFirst.Harness
 		internal const string StorageRole = "fixture:storage";
 		internal const string FirstRungKey = "heartbasin";
 		internal const string SecondRungKey = "heartwaterstone";
+		internal const string ThirdRungKey = "heartmoot";
 		internal const string FixtureOrigin = "native camp heart fixture";
 		internal const int ResidentCount = 6;
 		internal const int DedicatedDrams = 400;
 		internal const int MintedStoneUnits = 24;
 		internal const int MintedTimberUnits = 1;
 		internal const int MintedBrushUnits = 23;
+		// The authored rung 2 -> 3 bill, RuntimeData/KingdomBuildings.xml:646
+		// (heartwaterstone UpgradeMaterials="timber:17,stone:2,shapedtimber:6"). Minted at the
+		// phase-2 boundary, after the rung-2 bill has left the store, so the 48-unit declared
+		// capacity (r_KingdomStockpileCapacity) is met exactly and never exceeded.
+		internal const int Rung3TimberUnits = 17;
+		internal const int Rung3StoneUnits = 2;
+		internal const int Rung3ShapedTimberUnits = 6;
+		// The moot yard asks for a Town (KingdomBuildings.xml:652 MinStage="Town"), which is
+		// twenty-five people over 256 drams of dedicated capacity
+		// (Core/KingdomRules.TradeAndGrowth.cs:153), and for the workshop craft level, which is
+		// five tech points (Growth/KingdomZoningRules.cs:237 thresholds, one point per disk).
+		internal const int TownResidentCount = 25;
+		internal const int TownDedicatedDrams = 1920;
+		internal const int WorkshopDisks = 5;
 		private static Frame Retained;
 
 		internal static bool Vacant { get { return Retained == null; } }
 
-		internal static string Run(string Verb, XRLGame Game, Zone Zone, out bool Complete)
+		internal static string Run(string Verb, XRLGame Game, Zone Zone, int TargetRung,
+			out bool Complete)
 		{
 			Complete = false;
+			Require(TargetRung == 2 || TargetRung == 3,
+				"the sealed camp heart script names no known target rung");
 			if (Verb == KingdomCampHeartNativeProvider.SetupVerb)
 			{
 				Require(Retained == null, "a camp heart attempt is already retained");
-				Retained = new Frame(Game, Zone);
+				Retained = new Frame(Game, Zone, TargetRung);
 				Retained.Start();
 			}
 			else
 			{
 				Require(Retained != null, "camp heart setup is absent");
+				Require(Retained.TargetRung == TargetRung,
+					"the sealed script changed its target rung mid-run");
 				Retained.Check();
 			}
 			Complete = Retained.Done;
@@ -55,6 +75,9 @@ namespace ThousandAndFirst.Harness
 				+ "; synthetic-camp=true; synthetic-residents=true; synthetic-store-contents=true"
 				+ "; synthetic-drams=true; synthetic-born-provenance=true"
 				+ "; synthetic-material-identities=true"
+				+ "; target-rung=" + Retained.TargetRung
+				+ "; synthetic-rung3-bill=" + (Retained.TargetRung >= 3)
+				+ "; synthetic-craft-disks=" + (Retained.TargetRung >= 3)
 				+ "; synthetic-water-identity=true"
 				+ "; improvement-notice-premarked=true"
 				+ "; stockpile-refusal-reason-claimed=false"
@@ -79,6 +102,8 @@ namespace ThousandAndFirst.Harness
 		{
 			internal readonly XRLGame Game;
 			internal readonly Zone Zone;
+			/// <summary>The rung this sealed run climbs to: 2 or 3.</summary>
+			internal readonly int TargetRung;
 			internal readonly List<GameObject> Owned = new List<GameObject>();
 			internal KingdomSystem System;
 			internal GameObject Heart;
@@ -92,6 +117,7 @@ namespace ThousandAndFirst.Harness
 			internal readonly List<string> MintedStone = new List<string>();
 			internal readonly List<string> MintedTimber = new List<string>();
 			internal readonly List<string> MintedBrush = new List<string>();
+			internal readonly List<string> MintedRung3 = new List<string>();
 			internal int BeforeWater;
 			internal List<KingdomCampHeartNativeCensus.Unit> RetainedBrush;
 			internal List<GameObject> RetainedBrushBodies;
@@ -100,7 +126,27 @@ namespace ThousandAndFirst.Harness
 			internal int Phase;
 			internal readonly StringBuilder Evidence = new StringBuilder();
 
-			internal Frame(XRLGame Game, Zone Zone) { this.Game = Game; this.Zone = Zone; }
+			internal Frame(XRLGame Game, Zone Zone, int TargetRung)
+			{
+				this.Game = Game;
+				this.Zone = Zone;
+				this.TargetRung = TargetRung;
+			}
+
+			/// <summary>People this run enrolls: the moot yard asks for a Town, the waterstone
+			/// only for a Steading.</summary>
+			internal int Residents
+			{
+				get { return TargetRung >= 3 ? TownResidentCount : ResidentCount; }
+			}
+
+			/// <summary>Drams dedicated at setup: a Town of twenty-five drinks 45 a day
+			/// (Core/KingdomRules.Economy.cs:76,83), and the run spends twelve thousand turns.
+			/// </summary>
+			internal int Drams
+			{
+				get { return TargetRung >= 3 ? TownDedicatedDrams : DedicatedDrams; }
+			}
 
 			/// <summary>Real founding, real rung-1 rite-ground completion, six really enrolled
 			/// residents, one really dedicated reservoir, and forty-eight minted physical units in
@@ -120,11 +166,12 @@ namespace ThousandAndFirst.Harness
 				Require(KingdomPlots.HeartRung(Zone) == 1,
 					"the completed rite ground does not stand at rung one");
 				EnrollResidents();
-				Require(System.Population == ResidentCount,
+				Require(System.Population == Residents,
 					"enrollment did not reach the fixture population");
+				TeachCraftIfOwed();
 				GameObject ownedVessel = null;
 				string waterId = null;
-				var water = KingdomNativeCampFounding.Dedicate(Game, Zone, System, DedicatedDrams,
+				var water = KingdomNativeCampFounding.Dedicate(Game, Zone, System, Drams,
 					delegate(GameObject item)
 					{
 						Owned.Add(item);

@@ -56,7 +56,13 @@ namespace ThousandAndFirst.Harness
 				switch (Phase)
 				{
 					case 1: Phase1(); break;
-					case 2: Phase2(); Done = true; Armed = false; break;
+					case 2:
+						Phase2();
+						if (TargetRung >= 3) { Phase = 3; break; }
+						Done = true;
+						Armed = false;
+						break;
+					case 3: Phase3(); Done = true; Armed = false; break;
 					default:
 						Require(false, "taf-camp-phase-overrun: check ran past its final phase");
 						break;
@@ -181,6 +187,10 @@ namespace ThousandAndFirst.Harness
 					.Append("; basin capacity read=").Append(BasinCapacity(standing))
 					.Append("; real commission outcome=").Append(ClaimOutcome)
 					.Append("; stockpile-reason-claimed=false");
+				// The rung-3 run mints the next authored bill here, once the rung-2 bill has left
+				// the store, and lets the SAME real settlement pass assess the moot yard on the
+				// turns the third advance spends. Nothing about rung 3 is begun from here.
+				if (TargetRung >= 3) MintRung3Bill();
 			}
 
 			/// <summary>The bodies in Present whose identity appears in Wanted, in Wanted's own
