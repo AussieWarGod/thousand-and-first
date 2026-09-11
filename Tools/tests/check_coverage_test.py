@@ -1,5 +1,7 @@
+import hashlib
 import os
 import sys
+import tempfile
 import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "coverage"))
@@ -8,11 +10,14 @@ import check_coverage  # noqa: E402
 
 REPO_ROOT = os.path.join(os.path.dirname(__file__), "..", "..")
 MATRIX_PATH = os.path.join(REPO_ROOT, "Tools", "coverage", "matrix.json")
+_DIGEST_A = "a" * 64
+_DIGEST_B = "b" * 64
+_SHA_X = "1" * 64
 
 
 def _base_doc():
     return {
-        "schemaVersion": 2,
+        "schemaVersion": 3,
         "rows": [
             {
                 "id": 1,
@@ -34,8 +39,9 @@ def _base_doc():
 def _evidence_entry(**overrides):
     entry = {
         "commit": "abc1234",
-        "evidenceDir": "some-evidence-dir",
-        "artifactRef": "some-evidence-dir/report.tsv",
+        "artifactPath": "some-evidence-dir/report.tsv",
+        "artifactSha256": _SHA_X,
+        "artifactBytes": 42,
         "verdict": "PASS - real thing happened",
         "scope": "synthetic setup, disclosed",
         "historicalScope": True,
@@ -47,7 +53,10 @@ def _evidence_entry(**overrides):
 
 
 class CoverageMatrixSchemaTest(unittest.TestCase):
-    def test_the_real_matrix_json_validates_clean(self):
+    """Pure schema checks: no filesystem access, no dependency on this machine's layout --
+    exactly what test_checked_in_matrix runs offline in a clean checkout / public CI."""
+
+    def test_the_real_matrix_json_validates_clean_offline(self):
         doc = check_coverage.load(MATRIX_PATH)
         self.assertEqual(check_coverage.validate(doc), [])
 
@@ -58,6 +67,14 @@ class CoverageMatrixSchemaTest(unittest.TestCase):
         self.assertEqual(
             sum(v for k, v in tally.items() if k != "TOTAL"), tally["TOTAL"]
         )
+
+    def test_checked_in_matrix_against_the_live_inventory_digest(self):
+        """Computes the digest for THIS checked-in tree at test time -- never a hardcoded
+        constant that could silently outlive dev changes."""
+        doc = check_coverage.load(MATRIX_PATH)
+        digest = check_coverage.compute_inventory_digest(os.path.abspath(REPO_ROOT))
+        self.assertRegex(digest, r"^[0-9a-f]{64}$")
+        self.assertEqual(check_coverage.validate(doc, current_digest=digest), [])
 
     def test_unknown_status_token_is_rejected(self):
         doc = _base_doc()
@@ -89,7 +106,7 @@ class CoverageMatrixSchemaTest(unittest.TestCase):
         doc = _base_doc()
         doc["rows"][0]["status"] = "NATIVE_PASS"
         entry = _evidence_entry()
-        del entry["evidenceDir"]
+        del entry["artifactSha256"]
         doc["rows"][0]["evidence"] = [entry]
         problems = check_coverage.validate(doc)
         self.assertTrue(any("missing keys" in p for p in problems))
@@ -117,51 +134,100 @@ class CoverageMatrixSchemaTest(unittest.TestCase):
         doc = _base_doc()
         doc["rows"][0]["status"] = "NATIVE_PASS"
         doc["rows"][0]["evidence"] = [
-            _evidence_entry(
-                currentDevCoverage=True, inventoryDigest="not-the-current-digest"
-            )
+            _evidence_entry(currentDevCoverage=True, inventoryDigest=_DIGEST_A)
         ]
-        problems = check_coverage.validate(doc)
+        problems = check_coverage.validate(doc, current_digest=_DIGEST_B)
         self.assertTrue(
-            any("does not equal the current dev digest" in p for p in problems)
+            any("does not equal the digest of the tree being validated" in p for p in problems)
         )
 
-    def test_current_dev_coverage_true_with_the_real_current_digest_is_accepted(self):
+    def test_current_dev_coverage_true_with_the_matching_digest_is_accepted(self):
         doc = _base_doc()
         doc["rows"][0]["status"] = "NATIVE_PASS"
         doc["rows"][0]["evidence"] = [
-            _evidence_entry(
-                currentDevCoverage=True,
-                inventoryDigest=check_coverage.CURRENT_DEV_DIGEST,
-            )
+            _evidence_entry(currentDevCoverage=True, inventoryDigest=_DIGEST_A)
+        ]
+        self.assertEqual(check_coverage.validate(doc, current_digest=_DIGEST_A), [])
+
+    def test_current_dev_coverage_true_with_no_current_digest_supplied_only_checks_shape(self):
+        # Schema-only mode (no --repo-root/--inventory-digest given): cannot assert equality
+        # against nothing, but a malformed digest is still rejected.
+        doc = _base_doc()
+        doc["rows"][0]["status"] = "NATIVE_PASS"
+        doc["rows"][0]["evidence"] = [
+            _evidence_entry(currentDevCoverage=True, inventoryDigest=_DIGEST_A)
         ]
         self.assertEqual(check_coverage.validate(doc), [])
 
-    def test_artifact_ref_bare_description_is_rejected(self):
+    def test_current_dev_coverage_true_with_no_digest_at_all_is_rejected(self):
         doc = _base_doc()
         doc["rows"][0]["status"] = "NATIVE_PASS"
         doc["rows"][0]["evidence"] = [
-            _evidence_entry(artifactRef="build journal (COMPLETE OK)")
+            _evidence_entry(currentDevCoverage=True, inventoryDigest=None)
         ]
         problems = check_coverage.validate(doc)
-        self.assertTrue(any("does not look like a path" in p for p in problems))
+        self.assertTrue(any("no inventoryDigest to prove" in p for p in problems))
 
-    def test_artifact_ref_absolute_path_that_does_not_exist_is_rejected(self):
+    def test_artifact_path_bare_description_is_rejected(self):
         doc = _base_doc()
         doc["rows"][0]["status"] = "NATIVE_PASS"
         doc["rows"][0]["evidence"] = [
-            _evidence_entry(
-                artifactRef="/definitely/not/a/real/path/on/this/machine.tsv"
-            )
+            _evidence_entry(artifactPath="build journal (COMPLETE OK)")
         ]
         problems = check_coverage.validate(doc)
-        self.assertTrue(any("does not exist on this disk" in p for p in problems))
+        self.assertTrue(any("does not look like a run-relative" in p for p in problems))
 
-    def test_artifact_ref_absolute_path_that_exists_is_accepted(self):
+    def test_artifact_path_absolute_unix_path_is_rejected(self):
         doc = _base_doc()
         doc["rows"][0]["status"] = "NATIVE_PASS"
-        doc["rows"][0]["evidence"] = [_evidence_entry(artifactRef=MATRIX_PATH)]
+        doc["rows"][0]["evidence"] = [
+            _evidence_entry(artifactPath="/home/someone/evidence/report.tsv")
+        ]
+        problems = check_coverage.validate(doc)
+        self.assertTrue(any("must be run-relative" in p for p in problems))
+
+    def test_artifact_path_absolute_windows_path_is_rejected(self):
+        doc = _base_doc()
+        doc["rows"][0]["status"] = "NATIVE_PASS"
+        doc["rows"][0]["evidence"] = [
+            _evidence_entry(artifactPath=r"C:\evidence\report.tsv")
+        ]
+        problems = check_coverage.validate(doc)
+        self.assertTrue(any("must be run-relative" in p for p in problems))
+
+    def test_artifact_path_run_relative_is_accepted(self):
+        doc = _base_doc()
+        doc["rows"][0]["status"] = "NATIVE_PASS"
+        doc["rows"][0]["evidence"] = [
+            _evidence_entry(artifactPath="hotfix142-native.IqS6Jj/results.json")
+        ]
         self.assertEqual(check_coverage.validate(doc), [])
+
+    def test_malformed_sha256_is_rejected(self):
+        doc = _base_doc()
+        doc["rows"][0]["status"] = "NATIVE_PASS"
+        doc["rows"][0]["evidence"] = [_evidence_entry(artifactSha256="not-a-hash")]
+        problems = check_coverage.validate(doc)
+        self.assertTrue(any("64-char lowercase hex digest" in p for p in problems))
+
+    def test_non_positive_artifact_bytes_is_rejected(self):
+        doc = _base_doc()
+        doc["rows"][0]["status"] = "NATIVE_PASS"
+        doc["rows"][0]["evidence"] = [_evidence_entry(artifactBytes=0)]
+        problems = check_coverage.validate(doc)
+        self.assertTrue(any("positive integer" in p for p in problems))
+
+    def test_absolute_path_anywhere_in_a_row_is_rejected(self):
+        doc = _base_doc()
+        doc["rows"][0]["note"] = "see /home/r/work/taf-scratch/some-evidence-dir for details"
+        problems = check_coverage.validate(doc)
+        self.assertTrue(any("absolute host path" in p for p in problems))
+
+    def test_windows_absolute_path_anywhere_in_a_row_is_rejected(self):
+        doc = _base_doc()
+        doc["rows"][0]["note"] = r"see C:\Users\someone\evidence for details"
+        problems = check_coverage.validate(doc)
+        self.assertTrue(any("absolute host path" in p for p in problems))
 
     def test_duplicate_row_id_is_rejected(self):
         doc = _base_doc()
@@ -182,16 +248,9 @@ class CoverageMatrixSchemaTest(unittest.TestCase):
 
     def test_combination_referencing_unknown_row_id_is_rejected(self):
         combo = {
-            "id": "CX",
-            "name": "x",
-            "rows": [9999],
-            "coupling": "x",
-            "prerequisites": "x",
-            "invariants": "x",
-            "seed_turn_matrix": "x",
-            "expected_failure_rows": "x",
-            "reusable_seams": "x",
-            "status": "NONE",
+            "id": "CX", "name": "x", "rows": [9999], "coupling": "x",
+            "prerequisites": "x", "invariants": "x", "seed_turn_matrix": "x",
+            "expected_failure_rows": "x", "reusable_seams": "x", "status": "NONE",
             "evidence": None,
         }
         problems = check_coverage.validate_combinations(
@@ -201,16 +260,9 @@ class CoverageMatrixSchemaTest(unittest.TestCase):
 
     def test_combination_pass_status_with_no_evidence_is_rejected(self):
         combo = {
-            "id": "CX",
-            "name": "x",
-            "rows": [1],
-            "coupling": "x",
-            "prerequisites": "x",
-            "invariants": "x",
-            "seed_turn_matrix": "x",
-            "expected_failure_rows": "x",
-            "reusable_seams": "x",
-            "status": "NATIVE_PASS",
+            "id": "CX", "name": "x", "rows": [1], "coupling": "x",
+            "prerequisites": "x", "invariants": "x", "seed_turn_matrix": "x",
+            "expected_failure_rows": "x", "reusable_seams": "x", "status": "NATIVE_PASS",
             "evidence": None,
         }
         problems = check_coverage.validate_combinations({"combinations": [combo]}, {1})
@@ -221,7 +273,6 @@ class CoverageMatrixSchemaTest(unittest.TestCase):
         tally = check_coverage.counts(doc)
         behaviour_total = sum(v for k, v in tally.items() if k != "TOTAL")
         self.assertEqual(behaviour_total, len(doc["rows"]))
-        # Combinations exist but are excluded from the behaviour tally entirely.
         self.assertGreater(len(doc.get("combinations", [])), 0)
         self.assertEqual(tally["TOTAL"], len(doc["rows"]))
 
@@ -230,6 +281,63 @@ class CoverageMatrixSchemaTest(unittest.TestCase):
         doc["rows"] = []
         problems = check_coverage.validate(doc)
         self.assertTrue(any("non-empty list" in p for p in problems))
+
+    def test_generated_markdown_leaks_no_private_absolute_paths(self):
+        doc = check_coverage.load(MATRIX_PATH)
+        markdown = check_coverage.render_markdown(doc)
+        self.assertNotIn("/home/", markdown)
+        self.assertNotIn("/mnt/", markdown)
+        self.assertNotIn("C:\\", markdown)
+
+
+class EvidenceAuditTest(unittest.TestCase):
+    """The audit entry point is SEPARATE from schema validation and is never required by
+    test_checked_in_matrix -- it resolves artifactPath under a caller-supplied root and
+    verifies the retained bytes' own SHA-256, against a synthetic evidence root here (never
+    against a real machine's private evidence archive)."""
+
+    def _doc_with_one_entry(self, content: bytes, **overrides):
+        sha = hashlib.sha256(content).hexdigest()
+        doc = _base_doc()
+        doc["rows"][0]["status"] = "NATIVE_PASS"
+        entry = _evidence_entry(
+            artifactPath="synthetic-run/report.tsv",
+            artifactSha256=sha,
+            artifactBytes=len(content),
+        )
+        entry.update(overrides)
+        doc["rows"][0]["evidence"] = [entry]
+        return doc
+
+    def test_audit_verifies_matching_bytes(self):
+        content = b"synthetic native run journal\n"
+        doc = self._doc_with_one_entry(content)
+        with tempfile.TemporaryDirectory() as root:
+            run_dir = os.path.join(root, "synthetic-run")
+            os.makedirs(run_dir)
+            with open(os.path.join(run_dir, "report.tsv"), "wb") as handle:
+                handle.write(content)
+            results = check_coverage.audit(doc, root)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]["result"], "VERIFIED")
+
+    def test_audit_detects_hash_drift(self):
+        content = b"synthetic native run journal\n"
+        doc = self._doc_with_one_entry(content)
+        with tempfile.TemporaryDirectory() as root:
+            run_dir = os.path.join(root, "synthetic-run")
+            os.makedirs(run_dir)
+            with open(os.path.join(run_dir, "report.tsv"), "wb") as handle:
+                handle.write(b"drifted bytes, not the retained content\n")
+            results = check_coverage.audit(doc, root)
+        self.assertEqual(results[0]["result"], "HASH_DRIFT")
+
+    def test_audit_detects_missing_file(self):
+        content = b"synthetic native run journal\n"
+        doc = self._doc_with_one_entry(content)
+        with tempfile.TemporaryDirectory() as root:
+            results = check_coverage.audit(doc, root)
+        self.assertEqual(results[0]["result"], "MISSING")
 
 
 if __name__ == "__main__":
