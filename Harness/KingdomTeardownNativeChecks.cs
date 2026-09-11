@@ -18,7 +18,7 @@ namespace ThousandAndFirst.Harness
 	/// <see cref="KingdomDepositOverflowNativeChecks"/>. Starter timber stacks are placed
 	/// directly with harness-assigned raw counts, never minted through Quickstart. Buildings are
 	/// raised through the real, unmodified <c>KingdomCommission.Commission</c> and torn down
-	/// through the real, unmodified <c>KingdomMaterials.OrderStrike</c> — this harness asserts on
+	/// through the real, unmodified <c>KingdomMaterials.OrderStrike</c> -- this harness asserts on
 	/// their outputs, it does not force <c>KingdomBuilt</c>, the construction job phase, or the
 	/// strike receipt directly.
 	/// </para>
@@ -26,14 +26,14 @@ namespace ThousandAndFirst.Harness
 	/// EXACT SALVAGE, NOT "SOME". <c>OrderStrike</c> reads the paid receipt's own material tally
 	/// and calls <c>KingdomMaterialRules.StrikeSalvage</c>
 	/// (<c>Growth/KingdomMaterialRules.Clearance.cs:211-219</c>), which is exactly
-	/// <c>Cost.Scaled(StrikeSalvagePercent)</c> — <c>StrikeSalvagePercent = 50</c>
+	/// <c>Cost.Scaled(StrikeSalvagePercent)</c> -- <c>StrikeSalvagePercent = 50</c>
 	/// (<c>:193</c>) and <c>Scaled</c> is integer-floor per material,
 	/// <c>(long)Amounts[i] * Percent / 100L</c> (<c>Growth/KingdomMaterialTally.cs:101-111</c>).
 	/// Two cases run in parallel to prove both ends of that floor:
 	/// <list type="bullet">
 	/// <item><description><c>"fire"</c> costs exactly 1 timber
 	/// (<c>RuntimeData/KingdomBuildings.xml:544-546</c>, <c>Materials="timber:1"</c>), so
-	/// <c>(1*50)/100 = 0</c> — the explicit ZERO-SALVAGE BOUNDARY row: a struck "fire" plot
+	/// <c>(1*50)/100 = 0</c> -- the explicit ZERO-SALVAGE BOUNDARY row: a struck "fire" plot
 	/// returns no timber, by design ("nothing about striking is a refund",
 	/// <c>KingdomMaterialRules.Clearance.cs:188-190</c>).</description></item>
 	/// <item><description><c>"larder"</c> costs exactly 3 timber
@@ -42,7 +42,7 @@ namespace ThousandAndFirst.Harness
 	/// <c>GrowthStage.Camp</c> with no crew, exactly like "fire";
 	/// <c>Core/KingdomRules.cs:3-9</c>, <c>Growth/KingdomCommission.cs:20</c>) and shares "fire"'s
 	/// single-cell <c>Plot="S"</c>, so it commissions through the identical call shape with no
-	/// extra prerequisite. <c>(3*50)/100 = 1</c> — a struck larder returns exactly 1 timber, the
+	/// extra prerequisite. <c>(3*50)/100 = 1</c> -- a struck larder returns exactly 1 timber, the
 	/// POSITIVE-SALVAGE row this fixture was missing before.</description></item>
 	/// </list>
 	/// Both deltas are computed from <c>KingdomMaterials.CostFor</c> and

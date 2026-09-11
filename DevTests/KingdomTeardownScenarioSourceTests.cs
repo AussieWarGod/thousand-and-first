@@ -12,7 +12,7 @@ namespace ThousandAndFirst.Tests
 	/// SOURCE PINS ONLY. These tests prove the fixture's call shape and exact salvage-rule
 	/// computation are present in the file; they do NOT execute the scenario, do NOT prove
 	/// either the "fire" or "larder" build or strike ever actually completes on real turns, and
-	/// do NOT sign either case's negative path as observed — that requires a real native run,
+	/// do NOT sign either case's negative path as observed -- that requires a real native run,
 	/// which this pass does not perform. Status for this whole scenario is
 	/// "implemented-unexecuted", never "covered" or "PASS", until a native evidence id exists.
 	/// </para>

@@ -8,7 +8,7 @@ namespace ThousandAndFirst.Harness
 {
 	/// <summary>
 	/// Behavioural coverage: building teardown. Founds a fresh camp, dedicates water and a
-	/// materials stockpile directly (SYNTHETIC SETUP, DISCLOSED — the same convention
+	/// materials stockpile directly (SYNTHETIC SETUP, DISCLOSED -- the same convention
 	/// <see cref="KingdomDepositOverflowNativeChecks"/> and <see cref="KingdomFirstGuestNativeChecks"/>
 	/// use: real founding, real dedication API, harness-assigned raw counts), commissions one
 	/// real plot building through <see cref="KingdomCommission.Commission"/>, orders it struck
