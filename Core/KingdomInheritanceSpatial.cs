@@ -41,15 +41,24 @@ namespace ThousandAndFirst
 			{
 				SourceWork row = source[i];
 				GameObject root;
-				if (!TryExactRoot(Active, row, out root, out Failure))
-					return KingdomInheritanceSpatialCaptureResult.Malformed;
+				bool pending;
+				string standing;
+				if (!TryExactRoot(Active, row, out root, out pending, out standing, out Failure))
+					return pending ? KingdomInheritanceSpatialCaptureResult.Pending
+						: KingdomInheritanceSpatialCaptureResult.Malformed;
+				// A row whose root climbed names the RETIRED design; its evidence is filed under
+				// the design that is standing, read off the object the chain proved.
+				string key = Record.WorkKeys[i];
+				if (!string.IsNullOrEmpty(standing)
+					&& KingdomInheritRules.TrySemanticKeyForBlueprint(standing, out string climbed)
+					&& !string.IsNullOrEmpty(climbed)) key = climbed;
 				if (!HasArchitectureEvidence(root))
 				{
 					snapshots.Add("");
 					hashes.Add("");
 					int width;
 					int height;
-					if (!KingdomInheritRules.TryFootprint(Record.WorkKeys[i], out width, out height))
+					if (!KingdomInheritRules.TryFootprint(key, out width, out height))
 					{
 						width = 1;
 						height = 1;
@@ -83,7 +92,7 @@ namespace ThousandAndFirst
 				if (!KingdomArchitectureRules.IsCurrentSnapshotEncoding(intent.EncodedSnapshot))
 				{
 					KingdomInheritanceSpatialRules.Rect proxy;
-					if (!KingdomInheritanceSpatialRules.TryLegacyRect(Record.WorkKeys[i], row.X,
+					if (!KingdomInheritanceSpatialRules.TryLegacyRect(key, row.X,
 						row.Y, out proxy) || proxy.X1 != rect.X1 || proxy.Y1 != rect.Y1
 						|| proxy.X2 != rect.X2 || proxy.Y2 != rect.Y2)
 						return Malformed("a legacy authored work cannot be represented by its bounded anchor proxy",

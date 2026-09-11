@@ -661,6 +661,30 @@ namespace ThousandAndFirst.Tests
 				+ "\t\t\t\t|| HeartRefused(\"sealed: terminal drive and chain\");", drive);
 		}
 
+		/// <summary>
+		/// VALUE. The design a climbed row's evidence is filed under is the design that STANDS.
+		/// The row names the retired blueprint; the successor's own blueprint folds to a different
+		/// semantic key, and that is the one the witness must use, or the sealed record would name
+		/// a design the standing object is not.
+		/// </summary>
+		[Test]
+		public void AClimbedRowIsFiledUnderTheStandingDesignNotTheRetiredOne()
+		{
+			string retired;
+			string standing;
+			ClassicAssert.IsTrue(KingdomInheritRules.TrySemanticKeyForBlueprint(
+				"r_KingdomRiteGround", out retired));
+			ClassicAssert.IsTrue(KingdomInheritRules.TrySemanticKeyForBlueprint(
+				"r_KingdomWaterstone", out standing));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(retired));
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(standing));
+			ClassicAssert.AreNotEqual(retired, standing,
+				"filing the successor under the retired key would name the wrong design");
+			// The witness takes the standing key only when it has one; otherwise the row's own
+			// key stands, which is every ordinary row.
+			ClassicAssert.IsFalse(KingdomInheritRules.TrySemanticKeyForBlueprint("", out _));
+		}
+
 	}
 }
 #endif

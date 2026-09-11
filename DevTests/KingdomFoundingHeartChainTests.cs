@@ -284,8 +284,14 @@ namespace ThousandAndFirst.Tests
 			// Added only where the exact count was zero, and the old refusal is untouched.
 			StringAssert.Contains("if (count == 0 && TryClimbedRoot(Zone, cell, Row, "
 				+ "out GameObject climbed))", evidence);
-			StringAssert.Contains("Failure = \"a sealed work root is absent, duplicated, moved, "
-				+ "or changed\";", evidence);
+			// The old refusal is still the answer for a root that is simply gone; only a climb
+			// the settlement is still resolving is classified differently.
+			StringAssert.Contains("\"a sealed work root is absent, duplicated, moved, or changed\"",
+				evidence);
+			StringAssert.Contains("Pending = KingdomSealPendingRules.ClimbUnderInspection("
+				+ "count == 0,", evidence);
+			StringAssert.Contains("KingdomPlots.HasPendingClimb(Zone, Row.WorkId)", evidence);
+			StringAssert.Contains("StandingBlueprint = climbed.Blueprint;", evidence);
 			StringAssert.Contains("KingdomPlots.TryChainedWorkSuccessor(Zone, Row.WorkId, "
 				+ "out GameObject proved)", evidence);
 			// Position still required, and still exactly once.
@@ -361,6 +367,29 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, "other-plan",
 				prior, retired, successor, true, true, custodyContradicted));
 		}
+
+		/// <summary>
+		/// VALUE. A climb that has not finished is not a malformed seal. The handover destroys the
+		/// predecessor BEFORE the receipt completes, and a refused step in between leaves the
+		/// receipt non-terminal for the recovery path -- so a root can be absent while the
+		/// settlement's own records say an improvement is still owed an outcome. That case is
+		/// classified as pending; a root simply gone is still malformed; and a completed climb is
+		/// neither, because the chain binds it.
+		/// </summary>
+		[Test]
+		public void AClimbStillUnderInspectionIsPendingAndAGoneRootIsNot()
+		{
+			ClassicAssert.IsTrue(KingdomSealPendingRules.ClimbUnderInspection(true, true));
+			// A root that is gone with no improvement owed stays malformed.
+			ClassicAssert.IsFalse(KingdomSealPendingRules.ClimbUnderInspection(true, false));
+			// A root that is present, or duplicated, is never softened by an unfinished climb.
+			ClassicAssert.IsFalse(KingdomSealPendingRules.ClimbUnderInspection(false, true));
+			ClassicAssert.IsFalse(KingdomSealPendingRules.ClimbUnderInspection(false, false));
+			// And the roadless rule beside it is untouched.
+			ClassicAssert.IsTrue(KingdomSealPendingRules.RoadlessEntrance(true, true, 0));
+			ClassicAssert.IsFalse(KingdomSealPendingRules.RoadlessEntrance(true, true, 1));
+		}
+
 	}
 }
 #endif

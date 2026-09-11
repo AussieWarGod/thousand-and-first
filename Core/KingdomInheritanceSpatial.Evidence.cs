@@ -88,7 +88,22 @@ namespace ThousandAndFirst
 		private static bool TryExactRoot(Zone Zone, SourceWork Row, out GameObject Root,
 			out string Failure)
 		{
+			return TryExactRoot(Zone, Row, out Root, out _, out _, out Failure);
+		}
+
+		/// <summary>
+		/// The witnessed root, and two things the caller needs when it is not the object the row
+		/// was written from: whether the absence is a climb the settlement is still resolving
+		/// (<paramref name="Pending" />), and the design the STANDING object actually is
+		/// (<paramref name="StandingBlueprint" />), so nothing is filed under a design that was
+		/// retired.
+		/// </summary>
+		private static bool TryExactRoot(Zone Zone, SourceWork Row, out GameObject Root,
+			out bool Pending, out string StandingBlueprint, out string Failure)
+		{
 			Root = null;
+			Pending = false;
+			StandingBlueprint = null;
 			Failure = "";
 			Cell cell = Zone.GetCell(Row.X, Row.Y);
 			if (cell == null)
@@ -109,12 +124,20 @@ namespace ThousandAndFirst
 			if (count == 0 && TryClimbedRoot(Zone, cell, Row, out GameObject climbed))
 			{
 				Root = climbed;
+				// The row was written from the retired object, so the design it names is the
+				// retired one. What stands here is the successor, and the successor's own
+				// blueprint is what its evidence must be filed under.
+				StandingBlueprint = climbed.Blueprint;
 				return true;
 			}
 			if (count != 1)
 			{
 				Root = null;
-				Failure = "a sealed work root is absent, duplicated, moved, or changed";
+				Pending = KingdomSealPendingRules.ClimbUnderInspection(count == 0,
+					KingdomPlots.HasPendingClimb(Zone, Row.WorkId));
+				Failure = Pending
+					? "a sealed work root is being replaced by an improvement still under inspection"
+					: "a sealed work root is absent, duplicated, moved, or changed";
 				return false;
 			}
 			return true;

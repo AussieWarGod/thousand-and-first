@@ -34,11 +34,18 @@ namespace ThousandAndFirst
 		/// <para>ORDERING, AND WHAT IT CANNOT PROMISE. The daily seal poll and the settlement pass
 		/// are both EndTurnEvent handlers on game systems, and the engine dispatches them in the
 		/// order the systems were added to XRLGame.Systems -- first RequireSystem call wins, which
-		/// is a property of the save, not of this source. So on the very turn a rung is raised the
-		/// seal may still capture the book row the pass has not rebuilt yet, and report one
-		/// Malformed for that day. From the first pass after the climb onward this chain recovers
-		/// the heart, the pass runs, the book row follows the successor and the seal agrees. The
-		/// once-per-climb window can only be observed natively.</para>
+		/// is a property of the save, not of this source. The handover destroys the predecessor
+		/// and completes the receipt inside one synchronous call, so a poll sees either the old
+		/// root standing or a completed climb this chain binds; the seal's witness asks the same
+		/// chain, so a bound climb is witnessed rather than reported. THE EXPOSURE IS NOT A
+		/// ONE-DAY WINDOW: if a step between the destroy and the completion refuses -- the rung
+		/// failing to settle, a component retirement, a torn survey, or the vetoed-removal branch
+		/// -- the receipt stays non-terminal and this chain refuses for as long as that stands,
+		/// because it binds only a COMPLETED improvement. That is deliberate: a rung that never
+		/// settled is not a heart standing. The seal classifies that case through the settlement's
+		/// own inspection state instead of reporting a malformed root
+		/// (KingdomSealPendingRules.ClimbUnderInspection), so an inspection is said once and
+		/// waited on rather than raised every day.</para>
 		///
 		/// <para>IDENTITY, NEVER POSITION. Nothing here looks at what stands on the sealed cell. A
 		/// foreign heart-shaped plot on that ground proves nothing, because the chain is read from
@@ -135,6 +142,49 @@ namespace ThousandAndFirst
 			if (!TryReadFoundingHeartContext(Z, plan, out FoundingHeartContext context))
 				return false;
 			return TryChainedFoundingHeartRoot(Z, context, out Successor);
+		}
+
+		/// <summary>
+		/// Whether this work row's root is absent because a climb is IN FLIGHT or UNDER
+		/// INSPECTION rather than because the root is gone.
+		///
+		/// <para>The handover destroys the predecessor before the receipt completes
+		/// (<c>KingdomUpgrade.25.HandoverRemoval</c> settles the rung first on purpose, so a rung
+		/// that cannot settle leaves the receipt non-terminal for the ordinary recovery path). If
+		/// any step between those two points refuses, the job stays non-terminal -- quarantined,
+		/// outstanding, or inspection-required -- and the chain refuses FOREVER, because it only
+		/// binds a completed improvement. Recovery is right to refuse: a rung that never settled
+		/// is not a heart standing. But the seal must not keep reporting a malformed root for a
+		/// climb the settlement itself already knows is under inspection, so this says which case
+		/// it is and the witness classifies it accordingly.</para>
+		///
+		/// <para>Read-only and fail-closed: unknown reads as "not pending", which leaves the
+		/// stricter answer in place.</para>
+		/// </summary>
+		internal static bool HasPendingClimb(Zone Z, int RowWorkId)
+		{
+			if (Z == null || RowWorkId == 0) return false;
+			if (!KingdomFoundingHeartTerminalRules.TryDecode(
+					Z.GetZoneProperty(FoundingHeartTerminalProperty, null), out var prior)
+				|| Simulation.City.KingdomCityRules.StableId(prior.FinalId) != RowWorkId)
+				return false;
+			if (!KingdomConstruction.TryRead(out List<KingdomConstructionJob> jobs, out _)
+				|| jobs == null) return false;
+			KingdomConstructionJob found = null;
+			int named = 0;
+			for (int i = 0; i < jobs.Count; i++)
+			{
+				KingdomConstructionJob row = jobs[i];
+				if (row == null || row.Route != KingdomConstructionRoute.Improvement
+					|| row.SubjectId != prior.FinalId) continue;
+				named++;
+				found = row;
+			}
+			// Exactly one job, and it has not completed: the climb is still owed an outcome.
+			// A completed job is not pending, and no job at all is not pending either -- that is
+			// a root that is simply gone, and it must stay malformed.
+			return named == 1 && found.Phase != KingdomConstructionPhase.Complete
+				&& found.Phase != KingdomConstructionPhase.Cancelled;
 		}
 
 		/// <summary>The one COMPLETED improvement that retired this identity, and the object it
