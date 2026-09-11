@@ -2,10 +2,10 @@
 
 ## Current 0.3.4 heart integration candidate — unverified
 
-3083 staged C# files; 437,668 physical lines; cold-install inventory contains 3114 files.
+3083 staged C# files; 437,667 physical lines; cold-install inventory contains 3114 files.
 Compile inventory: 3083 sources, baseline and compatibility symbols (3079 baseline).
 Direct `XRL` imports: 1438 files, 0 over the line limit. Zero at or above 300 lines.
-Inventory SHA-256: `42a34d27ac529934a9b3ae00d003fcba000553402ba3a277e4f173878eca1b0f`.
+Inventory SHA-256: `f0a32eb330ef4fa72f288971981f241863c8fcc9b148e35b3109a5a8d6aff27c`.
 Combines #141 authority, #144 shared-XL validation, #138/#139 rung settlement and #137 camp
 content/native fixture over dev with the verified 0.3.3 backmerge. Production and test-project
 merges are complete; compile, combined-suite, native progression and semantic review are owed.
@@ -33,6 +33,12 @@ Current draft replaces both Funded-only post-input dispatch gates with exact com
 and fresh valid-job proof, retaining target-zone and failed-recovery refusal. Paid Working
 jobs keep their committed receipts and must reach ordinary labour dispatch. Compile, tests
 and native execution of this dispatch change remain owed; budgets are unchanged.
+That routed-input defect is conditional on a retained input receipt, not yet proved to be
+this heart's path. A second source defect directly rejects authored upgrades: scaffold
+predecessor validation compared a plain building key with the encoded `v2|` successor payload.
+Current draft reuses the existing exact typed/legacy predecessor validator, retaining all
+scaffold identity, ownership and working-state guards. Native positive and detached-copy
+malformed/stale/foreign-payload negatives are added; execution remains owed.
 
 Retained `77d9369` (production inventory `fce921c6bbcaff4992c3660b26d9b02a903b8f4f055b91c48aeff801669c0d05`):
 four compile modes clean; Linux strict 14,501 + 5,575 cases, zero skips. Native

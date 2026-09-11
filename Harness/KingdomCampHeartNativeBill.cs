@@ -94,6 +94,31 @@ namespace ThousandAndFirst.Harness
 						+ "; material requested/spent/outstanding/lost="
 						+ found.Claims.MaterialRequested + "/" + found.Claims.MaterialSpent
 						+ "/" + found.Claims.MaterialOutstanding + "/" + found.Claims.MaterialLost);
+				ProveTypedPredecessor(found);
+			}
+
+			private void ProveTypedPredecessor(KingdomConstructionJob Job)
+			{
+				Require(Job.Payload != null && Job.Payload.StartsWith("v2|", StringComparison.Ordinal)
+					&& KingdomUpgrade.IsImprovementPredecessorIdentity(System, Zone, Heart, Job),
+					"taf-camp-typed-predecessor-positive-unreached");
+				// Mutate detached copies only. No malformed receipt is published into the world.
+				var malformed = Job.Copy();
+				malformed.Payload = "v2|torn";
+				Require(!KingdomUpgrade.IsImprovementPredecessorIdentity(System, Zone, Heart, malformed),
+					"taf-camp-malformed-payload-accepted");
+				var stale = Job.Copy();
+				stale.Payload = FirstRungKey;
+				Require(!KingdomUpgrade.IsImprovementPredecessorIdentity(System, Zone, Heart, stale),
+					"taf-camp-authored-legacy-payload-accepted");
+				var foreign = Job.Copy();
+				foreign.SubjectId = "not-the-paid-heart";
+				Require(!KingdomUpgrade.IsImprovementPredecessorIdentity(System, Zone, Heart, foreign),
+					"taf-camp-foreign-predecessor-accepted");
+				Require(KingdomConstruction.IsCurrent(Job), "taf-camp-probe-mutated-live-job");
+				Evidence.Append("\ntyped-predecessor-accepted=true; malformed-payload-refused=true")
+					.Append("; stale-plain-payload-refused=true; foreign-predecessor-refused=true")
+					.Append("; live-job-unchanged=true");
 			}
 
 			/// <summary>The committed material claim, compared kind by kind against the authored

@@ -221,6 +221,18 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void ScaffoldReusesTypedPredecessorProofAndNativeRefusalsUseOnlyCopies()
+		{
+			string scaffold = Read("Growth/KingdomScaffold.SuccessorProof.cs");
+			Assert.That(scaffold, Does.Contain("KingdomUpgrade.IsImprovementPredecessorIdentity(System, Z, work, Job)"));
+			Assert.That(scaffold, Does.Not.Contain("work.GetStringProperty(KingdomUpgrade.BuildKeyProperty) == Job.Payload"));
+			foreach (string token in new[] { "malformed = Job.Copy()", "stale = Job.Copy()",
+				"foreign = Job.Copy()", "KingdomConstruction.IsCurrent(Job)",
+				"malformed-payload-refused=true", "foreign-predecessor-refused=true" })
+				Assert.That(Read(Bill), Does.Contain(token));
+		}
+
+		[Test]
 		public void CustodyIsReadRawAndAnInvalidEntryFailsRatherThanBeingSkipped()
 		{
 			string reads = Read(Reads);

@@ -88,7 +88,7 @@ namespace ThousandAndFirst
 			return KingdomPhysicalLookupState.Exact;
 		}
 
-		private static bool IsImprovementPredecessorIdentity(KingdomSystem System, Zone Z,
+		internal static bool IsImprovementPredecessorIdentity(KingdomSystem System, Zone Z,
 			GameObject Work, KingdomConstructionJob Job)
 		{
 			Cell cell = Z == null || Job == null ? null : Z.GetCell(Job.X, Job.Y);
