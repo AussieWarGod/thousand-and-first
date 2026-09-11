@@ -287,35 +287,6 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void CrowdsOccupantSkipsAnOccupiedCandidateAndAcceptsAClearAlternate()
-		{
-			// The candidate-selection seam for #034: ReadGround's ground grid deliberately skips
-			// living occupants (a settler walks off ground), so this is the separate, pure
-			// decision half of the fix -- a caller-gathered occupied-cell set, checked against a
-			// candidate rect, with no Zone/GameObject dependency.
-			int zoneWidth = 80;
-			HashSet<int> occupied = new HashSet<int> { 13 * zoneWidth + 34 };
-			Rect occupiedCandidate = R(32, 11, 36, 15); // covers 34,13
-			Rect clearAlternate = R(40, 20, 44, 24);
-			ClassicAssert.IsTrue(KingdomPlotRules.CrowdsOccupant(occupiedCandidate, zoneWidth, occupied),
-				"a rect covering the occupied cell must be flagged");
-			ClassicAssert.IsFalse(KingdomPlotRules.CrowdsOccupant(clearAlternate, zoneWidth, occupied),
-				"a rect nowhere near the occupied cell must not be flagged");
-		}
-
-		[Test]
-		public void CrowdsOccupantIsFalseWhenNothingIsOccupiedOrTheRectMisses()
-		{
-			int zoneWidth = 80;
-			Rect rect = R(32, 11, 36, 15);
-			ClassicAssert.IsFalse(KingdomPlotRules.CrowdsOccupant(rect, zoneWidth, null));
-			ClassicAssert.IsFalse(KingdomPlotRules.CrowdsOccupant(rect, zoneWidth, new HashSet<int>()));
-			// A cell just outside the rect's east edge must not count.
-			HashSet<int> justOutside = new HashSet<int> { 13 * zoneWidth + 37 };
-			ClassicAssert.IsFalse(KingdomPlotRules.CrowdsOccupant(rect, zoneWidth, justOutside));
-		}
-
-		[Test]
 		public void SelectionRulesShardChoosesTheClearAlternateOverAnOccupiedFirstCandidate()
 		{
 			// The REAL production seam (Growth/KingdomPlotSelectionRules.cs), not a hand-rolled
@@ -358,18 +329,8 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.IsFalse(found);
 			ClassicAssert.AreEqual(0, accepted.Count);
 			StringAssert.Contains("a living occupant", refusal);
-			ClassicAssert.AreEqual(2, calls, "the shard resolves every candidate, never mutating");
-		}
-
-		[Test]
-		public void CrowdsOccupantFlagsEveryCandidateWhenAllAreOccupied()
-		{
-			int zoneWidth = 80;
-			HashSet<int> occupied = new HashSet<int> { 13 * zoneWidth + 34, 22 * zoneWidth + 42 };
-			List<Rect> posed = new List<Rect> { R(32, 11, 36, 15), R(40, 20, 44, 24) };
-			foreach (Rect candidate in posed)
-				ClassicAssert.IsTrue(KingdomPlotRules.CrowdsOccupant(candidate, zoneWidth, occupied),
-					"every candidate in this fixture covers one of the two occupied cells");
+			ClassicAssert.AreEqual(2, calls,
+				"the shard resolves each candidate exactly once, in the order given");
 		}
 
 		[Test]

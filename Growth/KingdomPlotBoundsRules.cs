@@ -113,34 +113,6 @@ namespace ThousandAndFirst
 			return false;
 		}
 
-		/// <summary>
-		/// Whether a candidate rect covers any cell a living occupant currently stands on.
-		/// ReadGround's own ground grid deliberately skips creatures (a settler walks off ground,
-		/// KingdomPlot2.04.Ground.cs:19-24), so occupancy is never visible through Grid.AnyRefusal;
-		/// this is the separate, pure decision half of the fix -- the caller gathers OccupiedCells
-		/// once (packed Y*ZoneWidth+X) from a live scan, and this predicate only asks whether that
-		/// already-gathered set intersects the candidate rect, so it stays engine-free and
-		/// value-testable without a zone.
-		/// </summary>
-		public static bool CrowdsOccupant(PlotRect Rect, int ZoneWidth, ISet<int> OccupiedCells)
-		{
-			if (OccupiedCells == null || OccupiedCells.Count == 0)
-			{
-				return false;
-			}
-			for (int y = Rect.Y1; y <= Rect.Y2; y++)
-			{
-				for (int x = Rect.X1; x <= Rect.X2; x++)
-				{
-					if (OccupiedCells.Contains(y * ZoneWidth + x))
-					{
-						return true;
-					}
-				}
-			}
-			return false;
-		}
-
 		/// <summary>Plot cells a zone's interior may hold before the lanes are eaten.</summary>
 		public static int PlotAreaAllowance(int Width, int Height)
 		{

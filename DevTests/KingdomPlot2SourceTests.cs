@@ -191,8 +191,8 @@ namespace ThousandAndFirst.Tests
 		/// native run, out of scope for this pass -- root runs native Quickstart on the combined
 		/// fix). This pins the new occupancy-selection seam's call shape and message, and that
 		/// the pinned TryFindRect declaration/call-order tests above are untouched by it. The
-		/// pure decision half (KingdomPlotRules.CrowdsOccupant) is value-tested directly in
-		/// DevTests/KingdomPlotRulesTests.cs, without a Zone.
+		/// selection loop it drives (KingdomPlotSelectionRules.TrySelect) is value-tested
+		/// directly, with a fake candidate/occupancy source, in DevTests/KingdomPlotRulesTests.cs.
 		/// </summary>
 		[Test]
 		public void GroundLoopNoLongerFiltersOccupancyAgainstTheWholeStakedRect()
