@@ -124,8 +124,9 @@ namespace ThousandAndFirst.Harness
 			private void SeedFinishedWork(string Key)
 			{
 				KingdomRules.BuildEntry entry;
-				KingdomPlotRules.PlotSpec spec;
-				int width, height;
+				KingdomPlotRules.PlotSpec spec = null;
+				int width = 0;
+				int height = 0;
 				Require(KingdomData.TryGetBuilding(Key, out entry) && entry != null
 					&& KingdomPlots.TryGetSpec(Key, out spec) && spec != null
 					&& KingdomPlotRules.TryDimensions(spec.Size, out width, out height),
