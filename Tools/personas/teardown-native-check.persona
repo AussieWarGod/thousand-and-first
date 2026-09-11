@@ -23,11 +23,20 @@
 #
 # FIXTURE CREW DO NOT WANDER, DISCLOSED: once kept off a raising's footprint, a crew body is
 # pinned stationary (Brain.Wanders=false, Brain.WandersRandomly=false, Brain.Stay(cell), the
-# exact production idiom for anchoring an NPC) so it cannot walk back onto the footprint on its
-# own between the four scripted checks. A real settlement's own wandering residents are never
-# anchored this way and can still trigger issue #163 (a living occupant permanently blocking an
-# authored ground-layer slot); that production gap is being closed separately, on
+# exact production idiom for anchoring an NPC) so it cannot WANDER back onto the footprint on
+# its own between the four scripted checks. A real settlement's own wandering residents are
+# never anchored this way and can still trigger issue #163 (a living occupant permanently
+# blocking an authored ground-layer slot); that production gap is being closed separately, on
 # fix/034-apply-occupant-announce.
+#
+# review-5093b00-teardown-findings.md item 2, DISCLOSED, NOT FIXED: Brain.Stay only stops
+# wandering -- it stops neither this body's own construction LABOUR (posting/hands are
+# property-driven off KingdomConstructionPresence, never off Brain) nor PRODUCTION itself:
+# KingdomStations.Claim re-issues Stay(target) plus a MoveTo(target) goal for a posted body,
+# target being the works cell or an adjacent one, so a construction-posted crew body is walked
+# BACK onto the footprint by production's own posting. This fixture cannot keep a site clear by
+# construction; #163 may still fire. A GREEN teardown run is owed to the #163 production fix
+# (settler displacement at apply), not to this mitigation.
 #
 # KNOWN GAP, DISCLOSED, NOT FIXED: the crew has no home plot, so a roofless departure brink
 # (KingdomLodgingRules.GraceDays = 6 days = 7200 ticks from the warned tick) may fire near

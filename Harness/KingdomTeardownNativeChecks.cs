@@ -134,26 +134,27 @@ namespace ThousandAndFirst.Harness
 			/// -- never a production resident or the player, and never any object this fixture
 			/// did not itself enroll.
 			/// <para>
-			/// review-teardown-run25-staked.md: review-15f9de2-teardown-findings.md residual A
-			/// proved a one-shot, check-boundary-only relocation cannot hold -- the crew are live
-			/// NPC-brained bodies that walk (or get re-posted) back onto the footprint before the
-			/// next 1200-tick settlement pass, so #163 kept firing between checks. Fixed here,
-			/// DISCLOSED AS SYNTHETIC: once relocated, a crew body is pinned stationary with the
-			/// exact production idiom for anchoring an NPC in place
-			/// (Simulation/City/KingdomStations.Claims.cs:137-139) -- Brain.Wanders = false,
-			/// Brain.WandersRandomly = false, Brain.Stay(destination) -- so it no longer wanders
-			/// back on its own. This is a FIXTURE-ONLY property: a real settlement's own
-			/// wandering residents are never anchored this way and can still trigger #163: that
-			/// is exactly the gap the production fix on fix/034-apply-occupant-announce (settler
-			/// displacement at apply) closes. Every call (Start and every Check) also journals
-			/// each crew body's current cell and its walkability, whether or not it moved this
-			/// pass, so a parked body silently drifting off a pinned cell would be visible.
-			/// Post-move occupancy over the authored placement cells is Case.Telemetry's own
-			/// occupants= line (Case.PlacementCells, widened per this same review), already
-			/// re-run every Check -- not duplicated here. No production change: this is a harness
-			/// precondition mitigation only, never the production stamper that refuses the
-			/// ground layer.
-			/// </para>
+			/// review-teardown-run25-staked.md: a one-shot, check-boundary-only relocation
+			/// cannot hold -- crew walk back onto the footprint before the next settlement pass,
+			/// so #163 kept firing between checks. DISCLOSED AS SYNTHETIC: a relocated body is now
+			/// pinned with the production idiom for anchoring an NPC
+			/// (Simulation/City/KingdomStations.Claims.cs:137-139) -- Wanders/WandersRandomly =
+			/// false, Stay(destination) -- so it no longer WANDERS back on its own. FIXTURE-ONLY:
+			/// a real settlement's wandering residents are never anchored this way and can still
+			/// trigger #163 -- the gap fix/034-apply-occupant-announce (displacement at apply)
+			/// closes. Every call journals each crew body's cell and its walkability.
+			/// review-5093b00-teardown-findings.md item 2: Stay only stops WANDERING, not LABOUR
+			/// (posting is property-driven off KingdomConstructionPresence, never reading Brain)
+			/// and not PRODUCTION -- KingdomStations.Claim (Claims.cs:137-139,150,182-197)
+			/// re-issues Stay(target) plus a MoveTo(target) goal for a posted body, target being
+			/// the works cell or an adjacent one: production's own posting walks a posted body
+			/// back onto the footprint. This fixture cannot keep a site clear by construction;
+			/// run 25's 42 firings may recur, and a GREEN run is owed to the #163 production fix,
+			/// not this mitigation. This sweep still avoids only the bounding Rect, never
+			/// Case.PlacementCells directly -- a superset once a rect is known, so it still parks
+			/// outside every placement; Telemetry's occupants= is the one place that reads
+			/// PlacementCells (review-5093b00-teardown-findings.md REQUIRED 1). No production
+			/// change: a harness precondition mitigation only.</para>
 			/// </summary>
 			private void KeepCrewOutsideRaisings()
 			{

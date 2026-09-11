@@ -32,9 +32,13 @@ namespace ThousandAndFirst.Harness
 			internal bool HasRect;
 			/// <summary>review-teardown-run25-staked.md: the authored layout's own placement
 			/// cells (world coordinates), decoded once at Start from the commissioned job's own
-			/// payload via the pure, engine-free KingdomTeardownNativeChecks.TryResolvePlacementCells
+			/// payload via the engine-touching KingdomTeardownNativeChecks.TryResolvePlacementCells
 			/// -- the same decode chain Preflight/ResolveArchitecture use, never guessed from
-			/// Rect. Frame's crew relocation and Telemetry's occupants= both sweep this set.</summary>
+			/// Rect. review-5093b00-teardown-findings.md REQUIRED 1: Telemetry's occupants=
+			/// sweeps this exact set; Frame's KeepCrewOutsideRaisings/FindCellOutside still avoid
+			/// only the bounding Rect (a true superset of these cells once both rects are known,
+			/// so parking still lands outside every placement -- but NOT before Larder.Start,
+			/// when only Fire's rect is known and larder has no rect to be a superset of yet).</summary>
 			internal List<(int X, int Y)> PlacementCells = new List<(int X, int Y)>();
 			/// <summary>Hands read off the raising root's own production presence property
 			/// (KingdomConstructionPresence.HandsProperty) on the last Check() call; 0 once built
