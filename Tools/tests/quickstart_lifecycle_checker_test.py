@@ -8,6 +8,7 @@ BLOCKER cases here are the load-bearing ones.
 
 import importlib.util
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -421,6 +422,76 @@ class LifecycleVerdict(unittest.TestCase):
         report = checker.judge([])
         self.assertEqual(report["verdict"], checker.BLOCKER)
         self.assertIn("startup", report["reason"])
+
+
+class StampedRefusalsBindRatherThanReportUnbindable(unittest.TestCase):
+    """A refusal row that carries its stamp binds to its session exactly like a stamped success;
+    only a row missing the stamp entirely is unbindable. This is the producer/consumer fix for
+    Harness/KingdomQuickstartLifecycleSteps.Refuse(...) and the hand-built refusal rows in
+    Harness/KingdomQuickstartLifecycleLoad.cs: before it, an honest refusal was misreported as
+    an unbindable row rather than attributed to its session."""
+
+    SAVE_SESSION = "founding-first-city"
+    SAVE_SEAL = "a" * 64
+    LOAD_SESSION = "founding-first-city-load"
+    LOAD_SEAL = "b" * 64
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="taf-lifecycle-stamps-test.")
+        self.addCleanup(self.temp.cleanup)
+        self.journal_path = Path(self.temp.name) / "journal.tsv"
+
+    def write(self, *rows):
+        lines = ["2026-09-11T00:00:00.000000Z\t" + verb + "\t" + outcome + "\t" + message
+                 for verb, outcome, message in rows]
+        self.journal_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        return [self.journal_path]
+
+    def records(self):
+        return [
+            {"role": "save-session", "profileName": self.SAVE_SESSION, "profileSeal": self.SAVE_SEAL},
+            {"role": "cold-load-session", "profileName": self.LOAD_SESSION, "profileSeal": self.LOAD_SEAL},
+        ]
+
+    def stamped_stall_refusal(self):
+        """What Harness/KingdomQuickstartLifecycleSteps.Refuse(...) now writes for a stalled
+        engine-turn-build: the stall reason, then the profile stamp Stamped(...) appends."""
+        return (
+            "lifecycle-grown", "REFUSED",
+            "native-lifecycle refused at engine-turn-build: the job has not completed; turns=2400;"
+            " stall=insufficient-turns; phase=Working; startedTick=1200; remainingTicks=2250;"
+            " lastWorkedTick=1200; lastSemanticTick=3600"
+            "; profile=" + self.SAVE_SESSION + " seal=" + self.SAVE_SEAL,
+        )
+
+    def stamped_load_refusal(self):
+        """What Harness/KingdomQuickstartLifecycleLoad.cs now writes via the shared
+        Refuse(...) helper for a failed cold-load proof."""
+        return (
+            "lifecycle-loaded", "REFUSED",
+            "native-lifecycle refused at cold-load: the loaded realm identity differs from the"
+            " saved one; profile=" + self.LOAD_SESSION + " seal=" + self.LOAD_SEAL,
+        )
+
+    def test_a_stamped_stall_refusal_binds_rather_than_reporting_unbindable(self):
+        paths = self.write(self.stamped_stall_refusal())
+        problems = checker.check_stamps(paths, self.records())
+        self.assertEqual(problems, [])
+
+    def test_a_stamped_load_refusal_binds_rather_than_reporting_unbindable(self):
+        paths = self.write(self.stamped_load_refusal())
+        problems = checker.check_stamps(paths, self.records())
+        self.assertEqual(problems, [])
+
+    def test_a_row_missing_its_stamp_is_still_reported_as_unbindable(self):
+        """Mutation evidence: strip the stamp the fix adds, and the checker must still catch it
+        rather than passing an unstamped row silently."""
+        verb, outcome, message = self.stamped_stall_refusal()
+        unstamped = message.split("; profile=")[0]
+        paths = self.write((verb, outcome, unstamped))
+        problems = checker.check_stamps(paths, self.records())
+        self.assertEqual(problems, ["row lifecycle-grown carries no profile stamp"])
+
 
 
 if __name__ == "__main__":
