@@ -115,7 +115,8 @@ OUTCOMES = ("OK", "REFUSED")
 CHECKS = ("status-digest-stable", "travel-away", "travel-present", "travel-economic-away", "travel-economic-present")
 
 REQUIRED_KEYS = ("REQUEST", "SCRIPT", "EXPECT")
-OPTIONAL_KEYS = ("START", "CHECK", "TIMEOUT", "DESCRIPTION", "VERBS", "SET", "LOG_EXPECT")
+OPTIONAL_KEYS = ("START", "CHECK", "TIMEOUT", "DESCRIPTION", "VERBS", "SET", "LOG_EXPECT",
+                 "LOG_FORBID")
 
 # Tags a persona may carry so `run-personas.sh --set <tag>` can run a named slice of the matrix.
 # Same alphabet as verbs: lowercase, digits, hyphen, dot. Order inside SET= is not significant.
@@ -192,6 +193,11 @@ def parse_manifest(text: str, name: str) -> dict:
             parse_log_expect(found["LOG_EXPECT"], name),
             ensure_ascii=False, separators=(",", ":"),
         )
+    if "LOG_FORBID" in found:
+        found["LOG_FORBID"] = json.dumps(
+            parse_log_forbid(found["LOG_FORBID"], name),
+            ensure_ascii=False, separators=(",", ":"),
+        )
     return found
 
 
@@ -230,6 +236,45 @@ def expected_log(manifest: dict, raw: bytes, name: str) -> bytes:
         line + (b"\n" if index < len(lines) - 1 else b"")
         for index, line in enumerate(lines) if line not in expected
     )
+
+
+def parse_log_forbid(value: str, name: str) -> list[str]:
+    """Diagnostics that must NOT appear in Player.log at all.
+
+    LOG_EXPECT allows a known-benign line through the checker; this is its opposite and is not a
+    weaker form of it. Each entry is a literal SUBSTRING, because the lines that matter carry a
+    tick or an id the persona cannot know in advance, and one occurrence anywhere fails the run.
+    Bounded exactly like LOG_EXPECT so a persona cannot smuggle a regex or an essay in here.
+    """
+    if len(value) > 8192:
+        fail("%s LOG_FORBID exceeds 8192 characters" % name)
+    try:
+        lines = json.loads(value)
+    except (ValueError, RecursionError):
+        fail("%s LOG_FORBID must be a JSON array of literal substrings" % name)
+    if not isinstance(lines, list) or not 1 <= len(lines) <= 4:
+        fail("%s LOG_FORBID must contain 1..4 literal substrings" % name)
+    if any(not isinstance(line, str) or not 1 <= len(line) <= 1024
+           or not line.isprintable() for line in lines):
+        fail("%s LOG_FORBID lines must be 1..1024 printable characters" % name)
+    if len(set(lines)) != len(lines) or sum(map(len, lines)) > 8192:
+        fail("%s LOG_FORBID lines must be unique and total at most 8192 characters" % name)
+    return lines
+
+
+def forbidden_log(manifest: dict, raw: bytes, name: str) -> list[str]:
+    """Every forbidden substring that DID appear, with the first line each was seen on."""
+    if "LOG_FORBID" not in manifest:
+        fail("%s requires LOG_FORBID for forbidden-log" % name)
+    found: list[str] = []
+    lines = raw.replace(b"\r\n", b"\n").split(b"\n")
+    for forbidden in parse_log_forbid(manifest["LOG_FORBID"], name):
+        needle = forbidden.encode("utf-8")
+        for number, line in enumerate(lines, 1):
+            if needle in line:
+                found.append("line %d: %s" % (number, forbidden))
+                break
+    return found
 
 
 def parse_set(value: str, name: str) -> tuple[str, ...]:
@@ -501,7 +546,8 @@ def load(path: str) -> tuple[dict, str]:
 def main(argv: list[str]) -> int:
     if len(argv) < 3:
         fail(
-            "usage: persona_matrix.py <fields|assert|terminal|warnings|expected-log> <persona|journal>"
+            "usage: persona_matrix.py <fields|assert|terminal|warnings|expected-log|forbidden-log>"
+            " <persona|journal>"
             " [journal|Player.log]"
         )
     action = argv[1]
@@ -517,6 +563,7 @@ def main(argv: list[str]) -> int:
             "DESCRIPTION",
             "SET",
             "LOG_EXPECT",
+            "LOG_FORBID",
             "RELOAD",
         ):
             print("%s\t%s" % (key.lower(), manifest.get(key, "")))
@@ -526,6 +573,14 @@ def main(argv: list[str]) -> int:
         with open(argv[3], "rb") as handle:
             filtered = expected_log(manifest, handle.read(), name)
         sys.stdout.buffer.write(filtered)
+        return 0
+    if action == "forbidden-log" and len(argv) == 4:
+        manifest, name = load(argv[2])
+        with open(argv[3], "rb") as handle:
+            seen = forbidden_log(manifest, handle.read(), name)
+        if seen:
+            print("; ".join(seen))
+            return 1
         return 0
     if action == "terminal" and len(argv) == 3:
         with open(argv[2], encoding="utf-8") as handle:
