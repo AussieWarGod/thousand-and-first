@@ -28,7 +28,9 @@ namespace ThousandAndFirst
 		/// retired it: exactly one completed improvement job named this identity as its subject,
 		/// its output stands as exactly one live object, and that object carries both the job's
 		/// own construction receipt and the scaffold removal proof for this identity. Absence is
-		/// never consulted: an offscreen root reads absent, and that is not a retirement.
+		/// consulted LAST and only once those records have proved the retirement: an offscreen
+		/// root also reads absent, so absence can refuse a chain but can never be the proof of
+		/// one.
 		/// </summary>
 		private static bool ExactFoundingHeartImprovementRetirement(string PredecessorId)
 		{

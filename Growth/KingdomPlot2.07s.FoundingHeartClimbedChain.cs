@@ -67,11 +67,12 @@ namespace ThousandAndFirst
 			// the construction receipt the successor carries is the job's own durable receipt for
 			// exactly this output (KingdomConstruction.HasReceipt), and the scaffold removal proof
 			// is the durable successor-side record naming the retired identity
-			// (r_KingdomScaffold.HasRemovalProof) -- neither is a bare property a stamp could
-			// forge. STAMP: PlotFinalPredecessorProperty, which names the identity replaced; it is
-			// corroboration, never the load-bearing link, because the finishing transaction's
-			// PlotFinalRoot custody key is retired when the job settles
-			// (KingdomPlot2.34.EffectsAndFurnishing) and cannot be read here at all.
+			// (r_KingdomScaffold.HasRemovalProof); those two carry the link. STAMPS: the engine
+			// identity and PlotFinalPredecessorProperty are plain property reads, REQUIRED
+			// corroboration and never sufficient on their own -- a stamp alone proves nothing
+			// here, and neither is asked before the receipts are. The finishing transaction's
+			// PlotFinalRoot custody key would have been the durable custody row, but it is retired
+			// when the job settles (KingdomPlot2.34.EffectsAndFurnishing) and cannot be read here.
 			bool custody = successor.IDIfAssigned == job.OutputId
 				&& successor.GetStringProperty(PlotFinalPredecessorProperty) == retired
 				&& KingdomConstruction.HasReceipt(successor, job);

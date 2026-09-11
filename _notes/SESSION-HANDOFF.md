@@ -4,8 +4,8 @@
 
 Current draft census/evidence is in docs/STATUS.md; the figures below describe its predecessor.
 
-3092 staged sources; 438,535 physical lines; 1442 direct-XRL files; zero cap failures;
-3123 cold-install files. Inventory `23f6f9bb65d38c36d037fb839e5a5a432a3d8da997cbc687e9a55f73d290f81c`.
+3092 staged sources; 438,538 physical lines; 1442 direct-XRL files; zero cap failures;
+3123 cold-install files. Inventory `dad7920c33fedbcb8d2f66729f59e011c8d73735053d3c25ca1763c5b607eef7`.
 #141/#144/#139/#137 combined; compile, native and semantic review owed. Earlier rows are
 retained checkpoints, not acceptance of this candidate. Public0.3.3 is finalized.
 
