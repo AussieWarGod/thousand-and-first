@@ -138,7 +138,9 @@ commit the four-mode compile gate ran before a comment-only seven-to-three line 
 rationale, so it saw the same executable bytes with four extra comment lines. The four-mode gate
 recorded here ran on this tree's final bytes.
 
-Current census, with the #129 dev-harness native checks merged over this correction: 3079
+## Retained #129 integration census
+
+Retained census, with the #129 dev-harness native checks merged over the roadless correction: 3079
 staged C# files; 437,320 physical lines; 0 exceed 300 physical lines, 0 are exactly 300, and
 therefore 0 fail the strict cap; 0 exceed 1,000, 0 exceed 2,000, 0 exceed 5,000.
 Direct `XRL` imports: 1434 files, 0 over the line limit.
