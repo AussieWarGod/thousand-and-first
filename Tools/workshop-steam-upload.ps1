@@ -187,21 +187,14 @@ $IntermediateDirectory = (Join-Path $EvidenceDirectory 'obj') + '/'
 $Dotnet = (Get-Command dotnet.exe -CommandType Application).Source
 # Refs #151: a shared-compilation VBCSCompiler.dll keepalive process survives this build and
 # is the only surviving descendant after the launcher's own process exits, so the runner's
-# Start-Process -Wait on the outer launcher invocation (release.yml) never returns. Disable
-# shared compilation and MSBuild node reuse for this one build so nothing outlives it.
-$PriorUseMsBuildServer = $env:DOTNET_CLI_USE_MSBUILD_SERVER
-$PriorDisableNodeReuse = $env:MSBUILDDISABLENODEREUSE
-$env:DOTNET_CLI_USE_MSBUILD_SERVER = '0'
-$env:MSBUILDDISABLENODEREUSE = '1'
-try {
-    & $Dotnet build $Project --nologo --configuration Release --output $OutputDirectory `
-        "-p:QudManaged=$ManagedDirectory" "-p:BaseIntermediateOutputPath=$IntermediateDirectory" `
-        "-p:UseSharedCompilation=false" "-nodeReuse:false" `
-        --ignore-failed-sources *> (Join-Path $EvidenceDirectory 'build.log')
-} finally {
-    $env:DOTNET_CLI_USE_MSBUILD_SERVER = $PriorUseMsBuildServer
-    $env:MSBUILDDISABLENODEREUSE = $PriorDisableNodeReuse
-}
+# Start-Process -Wait on the outer launcher invocation (release.yml) never returns.
+# --disable-build-servers refuses the MSBuild/VBCSCompiler/Razor persistent build servers for
+# this one invocation; -m:1 -nr:false match the same no-node-reuse convention already used by
+# Tools/test-workshop-upload.ps1's SDK-free build.
+& $Dotnet build $Project --nologo --configuration Release --output $OutputDirectory `
+    "-p:QudManaged=$ManagedDirectory" "-p:BaseIntermediateOutputPath=$IntermediateDirectory" `
+    --ignore-failed-sources --disable-build-servers '-m:1' '-nr:false' `
+    *> (Join-Path $EvidenceDirectory 'build.log')
 if ($LASTEXITCODE -ne 0) { throw 'Upload helper compilation failed; retained build.log.' }
 
 # Publisher argv retains the fixed-root literal; delivery uses its compiled root directly.
