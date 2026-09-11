@@ -77,8 +77,7 @@ namespace ThousandAndFirst.Tests
 			Assert.That(source, Does.Contain(
 				"KingdomMaterials.CostFor(BuildKey).Get(KingdomMaterial.Timber)"));
 			Assert.That(source, Does.Contain("KingdomMaterialRules.StrikeSalvagePercent"));
-			Assert.That(source, Does.Contain(
-				"timberAfter - TimberBeforeStrike == ExpectedSalvageDelta"));
+			Assert.That(source, Does.Contain("salvaged == ExpectedSalvageDelta"));
 			Assert.That(source, Does.Contain("KingdomMaterials.RawCensusCountOf(item)"));
 			// Never the ordinary, dispatching Count for the material-return proof.
 			Assert.That(source, Does.Not.Contain("item.Count"));
@@ -87,6 +86,40 @@ namespace ThousandAndFirst.Tests
 			// before -- neither is a bare hardcoded literal standing in for the computed rule.
 			Assert.That(source, Does.Not.Contain("ExpectedSalvageDelta = 0"));
 			Assert.That(source, Does.Not.Contain("ExpectedSalvageDelta = 1"));
+		}
+
+		[Test]
+		public void SalvageIsAttributedByStrikeReceiptNeverByOwnChestDelta()
+		{
+			// Two cases strike in parallel and production returns salvage to the FIRST eligible
+			// stockpile in the zone (Growth/KingdomMaterials.13.StrikeRemovalAndSalvage.cs:
+			// 114-126), not the original payer -- an own-chest before/after delta is unsound.
+			string source = Read(Checks);
+			Assert.That(source, Does.Contain(
+				"works.GetStringProperty(KingdomConstruction.ReceiptProperty)"));
+			Assert.That(source, Does.Contain(
+				"item.GetStringProperty(KingdomMaterials.StrikeSalvageReceiptProperty)"));
+			Assert.That(source, Does.Contain("!= StrikeReceiptId) continue;"));
+			Assert.That(source, Does.Contain("KingdomMaterials.Stock(Zone)"));
+			Assert.That(source, Does.Contain("foreach (GameObject stockpile in stock.Stockpiles)"));
+			Assert.That(source, Does.Contain(
+				"more than one salvage item carries this exact strike receipt"));
+		}
+
+		[Test]
+		public void RemovalRefusesASameIdReplacementRatherThanCountingItAsGone()
+		{
+			// A same-ID object that is not the exact struck reference must REFUSE, not be
+			// silently read as a valid removal.
+			string source = Read(Checks);
+			Assert.That(source, Does.Contain(
+				"stillThere == null || ReferenceEquals(stillThere, Works)"));
+			Assert.That(source, Does.Contain(
+				"a same-ID replacement is never a valid removal"));
+			Assert.That(source, Does.Contain(
+				"onCell.GetIntProperty(\"KingdomBuilt\") != 1"));
+			Assert.That(source, Does.Contain(
+				"onCell.GetStringProperty(KingdomUpgrade.BuildKeyProperty) != BuildKey"));
 		}
 
 		[Test]

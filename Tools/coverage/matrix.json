@@ -132,7 +132,7 @@
       "negative": "IMPLEMENTED_UNEXECUTED",
       "driver": "Harness/KingdomTeardownNativeProvider.cs:18-19 (teardown-setup/teardown-check)",
       "status": "IMPLEMENTED_UNEXECUTED",
-      "note": "source-pinned only (DevTests/KingdomTeardownScenarioSourceTests.cs); no native run performed this pass, so this cannot be marked covered or PASS. Two cases journal as teardown-check~case=fire and ~case=larder (Harness/KingdomTeardownNativeChecks.cs Case class), proving both the zero-salvage boundary and a genuine positive-salvage delta from the same live production rule.",
+      "note": "source-pinned only (DevTests/KingdomTeardownScenarioSourceTests.cs); no native run performed this pass, so this cannot be marked covered or PASS. Two cases journal as teardown-check~case=fire and ~case=larder (Harness/KingdomTeardownNativeChecks.cs Case class), proving both the zero-salvage boundary and a genuine positive-salvage delta from the same live production rule. Salvage is attributed by STRIKE-RECEIPT (KingdomConstruction.ReceiptProperty captured before the strike, matched via StrikeSalvageReceiptProperty across every zone stockpile), never by own-chest before/after delta -- OrderStrike returns salvage to the first eligible stockpile zone-wide (Growth/KingdomMaterials.13.StrikeRemovalAndSalvage.cs:114-126), not the original payer, which an own-chest delta with two parallel cases would get wrong. Removal is confirmed by reference (a same-ID replacement object refuses, never counts as gone) and by a same-cell finished-building sweep, not by ID-string absence alone.",
       "evidence": null
     },
     {

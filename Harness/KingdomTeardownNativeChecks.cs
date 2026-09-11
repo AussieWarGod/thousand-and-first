@@ -11,43 +11,23 @@ namespace ThousandAndFirst.Harness
 	/// Behavioural coverage for building teardown (issue: coverage-matrix). See
 	/// <see cref="KingdomTeardownNativeProvider"/> for the sealed script and scope.
 	/// <para>
-	/// SYNTHETIC SETUP, DISCLOSED. Real founding
-	/// (<c>KingdomNativeCampFounding.Found</c>), real water dedication
-	/// (<c>KingdomNativeCampFounding.Dedicate</c>) and real stockpile dedication
-	/// (<c>KingdomMaterials.DedicateStockpile</c>), exactly like
-	/// <see cref="KingdomDepositOverflowNativeChecks"/>. Starter timber stacks are placed
-	/// directly with harness-assigned raw counts, never minted through Quickstart. Buildings are
-	/// raised through the real, unmodified <c>KingdomCommission.Commission</c> and torn down
-	/// through the real, unmodified <c>KingdomMaterials.OrderStrike</c> -- this harness asserts on
-	/// their outputs, it does not force <c>KingdomBuilt</c>, the construction job phase, or the
-	/// strike receipt directly.
+	/// SYNTHETIC SETUP, DISCLOSED. Real founding, water dedication and stockpile dedication,
+	/// exactly like <see cref="KingdomDepositOverflowNativeChecks"/>. Starter timber is placed
+	/// directly with a harness-assigned raw count, never minted through Quickstart. Buildings
+	/// are raised through the real, unmodified <c>KingdomCommission.Commission</c> and torn down
+	/// through the real, unmodified <c>KingdomMaterials.OrderStrike</c> -- never forcing
+	/// <c>KingdomBuilt</c>, the job phase, or the strike receipt directly.
 	/// </para>
 	/// <para>
-	/// EXACT SALVAGE, NOT "SOME". <c>OrderStrike</c> reads the paid receipt's own material tally
-	/// and calls <c>KingdomMaterialRules.StrikeSalvage</c>
-	/// (<c>Growth/KingdomMaterialRules.Clearance.cs:211-219</c>), which is exactly
-	/// <c>Cost.Scaled(StrikeSalvagePercent)</c> -- <c>StrikeSalvagePercent = 50</c>
-	/// (<c>:193</c>) and <c>Scaled</c> is integer-floor per material,
-	/// <c>(long)Amounts[i] * Percent / 100L</c> (<c>Growth/KingdomMaterialTally.cs:101-111</c>).
-	/// Two cases run in parallel to prove both ends of that floor:
-	/// <list type="bullet">
-	/// <item><description><c>"fire"</c> costs exactly 1 timber
-	/// (<c>RuntimeData/KingdomBuildings.xml:544-546</c>, <c>Materials="timber:1"</c>), so
-	/// <c>(1*50)/100 = 0</c> -- the explicit ZERO-SALVAGE BOUNDARY row: a struck "fire" plot
-	/// returns no timber, by design ("nothing about striking is a refund",
-	/// <c>KingdomMaterialRules.Clearance.cs:188-190</c>).</description></item>
-	/// <item><description><c>"larder"</c> costs exactly 3 timber
-	/// (<c>RuntimeData/KingdomBuildings.xml:399-400</c>, <c>Materials="timber:3"</c>), has no
-	/// <c>MinStage</c>/<c>MinTech</c>/<c>Staff</c> attribute (so it is reachable at
-	/// <c>GrowthStage.Camp</c> with no crew, exactly like "fire";
-	/// <c>Core/KingdomRules.cs:3-9</c>, <c>Growth/KingdomCommission.cs:20</c>) and shares "fire"'s
-	/// single-cell <c>Plot="S"</c>, so it commissions through the identical call shape with no
-	/// extra prerequisite. <c>(3*50)/100 = 1</c> -- a struck larder returns exactly 1 timber, the
-	/// POSITIVE-SALVAGE row this fixture was missing before.</description></item>
-	/// </list>
-	/// Both deltas are computed from <c>KingdomMaterials.CostFor</c> and
-	/// <c>KingdomMaterialRules.StrikeSalvagePercent</c> directly, never hardcoded, so a future
-	/// catalogue or rule change is caught rather than silently re-passing a stale expectation.
+	/// EXACT SALVAGE, NOT "SOME". <c>OrderStrike</c> calls <c>KingdomMaterialRules.
+	/// StrikeSalvage</c> (<c>Growth/KingdomMaterialRules.Clearance.cs:211-219</c>) =
+	/// <c>Cost.Scaled(StrikeSalvagePercent=50)</c> (<c>:193</c>), integer-floor per material
+	/// (<c>Growth/KingdomMaterialTally.cs:101-111</c>). Two cases prove both ends of that floor:
+	/// <c>"fire"</c> (1 timber, <c>RuntimeData/KingdomBuildings.xml:544-546</c>) floors to
+	/// <c>(1*50)/100=0</c> -- the ZERO-SALVAGE BOUNDARY; <c>"larder"</c> (3 timber, <c>:399-400</c>,
+	/// same Camp-stage/<c>Plot="S"</c> prerequisites as "fire") gives <c>(3*50)/100=1</c> -- the
+	/// POSITIVE-SALVAGE case. Both deltas are computed from <c>KingdomMaterials.CostFor</c> +
+	/// <c>StrikeSalvagePercent</c> live, never hardcoded.
 	/// </para>
 	/// </summary>
 	internal static class KingdomTeardownNativeChecks
@@ -89,9 +69,14 @@ namespace ThousandAndFirst.Harness
 			KingdomTeardownNativeProvider.Require(Value, Failure);
 		}
 
-		/// <summary>One design's teardown lifecycle: commission, await built, strike, await
-		/// removed, assert the exact computed salvage delta, then the negative second-strike
-		/// path. Never forces any transition.</summary>
+		/// <summary>Commission, await built, strike, await removed, assert the exact salvage
+		/// delta by STRIKE-RECEIPT ATTRIBUTION, never "my own chest": with two cases running in
+		/// parallel, <c>Growth/KingdomMaterials.13.StrikeRemovalAndSalvage.cs:114-126</c> returns
+		/// salvage to the FIRST eligible stockpile in the zone, not the original payer, so an
+		/// own-chest before/after delta is unsound. Instead this captures the exact strike
+		/// receipt id (<c>KingdomConstruction.ReceiptProperty</c>) before ordering the strike,
+		/// then finds the salvage item by matching <c>StrikeSalvageReceiptProperty</c> wherever
+		/// it actually landed. Then the negative second-strike path. Forces no transition.</summary>
 		private sealed class Case
 		{
 			internal readonly string Name;
@@ -101,8 +86,9 @@ namespace ThousandAndFirst.Harness
 			private readonly XRLGame Game;
 			private readonly List<GameObject> Owned;
 			private GameObject Chest, Works;
-			private string WorksId;
-			private int TimberBeforeStrike, ExpectedSalvageDelta, TimberCost;
+			private Cell WorksCell;
+			private string WorksId, StrikeReceiptId;
+			private int ExpectedSalvageDelta, TimberCost;
 			internal int Phase;
 			internal bool Done;
 
@@ -167,46 +153,82 @@ namespace ThousandAndFirst.Harness
 						return;
 					}
 					Works = works;
-					TimberBeforeStrike = RawTimber();
+					WorksCell = works.CurrentCell;
+					Require(WorksCell != null,
+						Name + ": the functionally-built works carries no standing cell");
+					// Captured BEFORE the strike so the salvage item's own receipt tag can be
+					// matched later regardless of which stockpile in the zone actually receives
+					// it -- never an assumption that it lands back in this case's own chest.
+					StrikeReceiptId = works.GetStringProperty(KingdomConstruction.ReceiptProperty);
+					Require(!string.IsNullOrEmpty(StrikeReceiptId),
+						Name + ": the functionally-built works carries no construction receipt");
 					Require(KingdomMaterials.OrderStrike(System, Zone, Works, out string failure),
 						failure ?? Name + ": the real strike order was refused");
 					Phase = 2;
 					return;
 				}
 				GameObject stillThere = Zone.FindObjectByID(WorksId);
-				bool gone = stillThere == null || !GameObject.Validate(stillThere)
-					|| !ReferenceEquals(stillThere, Works);
-				if (!gone)
+				// A same-ID object that is NOT the exact reference we struck is never a pass: a
+				// mint-over-the-old-id replacement must refuse, not be silently read as removal.
+				Require(stillThere == null || ReferenceEquals(stillThere, Works),
+					Name + ": a different object now carries the struck building's own identity "
+					+ WorksId + " -- a same-ID replacement is never a valid removal");
+				if (stillThere != null)
 				{
 					Evidence.Append("; case=").Append(Name).Append(" awaiting-struck=true");
 					return;
 				}
-				int timberAfter = RawTimber();
-				// Exact delta, not "some change": the production formula is asserted, never assumed.
-				Require(timberAfter - TimberBeforeStrike == ExpectedSalvageDelta,
+				// By reference too: nothing on the struck cell still reads as this finished
+				// building, not merely "the old id is gone".
+				foreach (GameObject onCell in WorksCell.GetObjects())
+					Require(!GameObject.Validate(onCell) || onCell.GetIntProperty("KingdomBuilt") != 1
+						|| onCell.GetStringProperty(KingdomUpgrade.BuildKeyProperty) != BuildKey,
+						Name + ": an object still reads as this finished building on its own cell "
+						+ "after removal");
+				int salvaged = SalvageByReceipt(Require);
+				// Exact delta, not "some change": the production formula is asserted, never
+				// assumed, and attributed by THIS case's own strike receipt, never by chest.
+				Require(salvaged == ExpectedSalvageDelta,
 					Name + ": struck building's material return did not match the exact computed "
-					+ "salvage rule: expected-delta=" + ExpectedSalvageDelta + " observed-delta="
-					+ (timberAfter - TimberBeforeStrike));
+					+ "salvage rule: expected-delta=" + ExpectedSalvageDelta + " observed="
+					+ salvaged);
 				bool secondOrder = KingdomMaterials.OrderStrike(System, Zone, Works,
 					out string secondFailure);
 				Require(!secondOrder && !string.IsNullOrEmpty(secondFailure),
 					Name + ": a second strike order against the absent building was not refused");
 				Evidence.Append("; case=").Append(Name).Append(" timber-cost=").Append(TimberCost)
-					.Append(" timber-before=").Append(TimberBeforeStrike)
-					.Append(" timber-after=").Append(timberAfter)
+					.Append(" salvaged-by-receipt=").Append(salvaged)
 					.Append(" expected-salvage-delta=").Append(ExpectedSalvageDelta)
 					.Append(" elapsed-ticks=").Append(ElapsedTicks)
 					.Append(" negative-path-refusal=").Append(secondFailure);
 				Done = true;
 			}
 
-			private int RawTimber()
+			/// <summary>Scans every stockpile the zone actually has (never assumed to be this
+			/// case's own chest) for a timber item whose salvage receipt names THIS case's exact
+			/// strike -- attribution by reference/property, never by custody location.</summary>
+			private int SalvageByReceipt(Action<bool, string> Require)
 			{
 				int total = 0;
-				foreach (GameObject item in Chest.Inventory.Objects)
-					if (KingdomMaterials.TryOrdinaryMaterialOf(item, out KingdomMaterial kind)
-						&& kind == KingdomMaterial.Timber)
+				GameObject matched = null;
+				KingdomMaterials.MaterialStock stock = KingdomMaterials.Stock(Zone);
+				foreach (GameObject stockpile in stock.Stockpiles)
+				{
+					if (!GameObject.Validate(stockpile) || stockpile.Inventory == null) continue;
+					foreach (GameObject item in stockpile.Inventory.Objects)
+					{
+						if (!GameObject.Validate(item)
+							|| item.GetStringProperty(KingdomMaterials.StrikeSalvageReceiptProperty)
+								!= StrikeReceiptId) continue;
+						Require(matched == null,
+							Name + ": more than one salvage item carries this exact strike receipt");
+						matched = item;
+						Require(KingdomMaterials.TryOrdinaryMaterialOf(item, out KingdomMaterial kind)
+							&& kind == KingdomMaterial.Timber,
+							Name + ": the receipted salvage item is not the expected material");
 						total += KingdomMaterials.RawCensusCountOf(item);
+					}
+				}
 				return total;
 			}
 		}
