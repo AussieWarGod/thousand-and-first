@@ -172,7 +172,18 @@ namespace ThousandAndFirst.Harness
 				Fail("boot completion observer exception: " + error.GetType().Name);
 				KingdomScenarioJournal.Append("QUICKSTART-BOOT-COMPLETE", false, Failure);
 			}
-			finally { Ended = true; if (OwnSuppression) Popup.Suppress = false; }
+			// OwnSuppression means THIS raised Popup.Suppress from false; but on the lifecycle
+			// variant the auto-runner (added mid-bootGame by KingdomQuickstartLifecycleRunnerPatch,
+			// which therefore runs AFTER this method's own Begin already claimed it) claims the
+			// SAME global flag moments later and needs it held past this point, into its own
+			// sealed script. Dropping it here regardless of that second claim was the native-run
+			// stall: an unattended popup right after boot then blocks forever on a keypress that
+			// never comes. Never our call to make when the runner still wants it.
+			finally
+			{
+				Ended = true;
+				if (OwnSuppression && !KingdomScenarioAutoRunner.Suppressing(Game)) Popup.Suppress = false;
+			}
 		}
 
 		private static bool ExactCompletion(EmbarkInfo Candidate)

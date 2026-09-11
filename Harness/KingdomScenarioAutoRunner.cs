@@ -54,7 +54,7 @@ namespace ThousandAndFirst
 	/// </para>
 	/// </summary>
 	[Serializable]
-	public sealed class KingdomScenarioAutoRunner : IPlayerSystem
+	public sealed partial class KingdomScenarioAutoRunner : IPlayerSystem
 	{
 		private const int SerializationMagic = 1414746964;
 		private const int CurrentSerializationVersion = 1;
@@ -271,28 +271,12 @@ namespace ThousandAndFirst
 			Popup.Suppress = false;
 		}
 
-		public override void Write(SerializationWriter Writer)
+		/// <summary>Whether THIS system currently holds Popup.Suppress. A read-only query so an
+		/// unrelated caller (KingdomQuickstartBootTest.End) can avoid dropping a suppression it
+		/// does not own -- see Harness/KingdomQuickstartLifecycleRunnerPatch.cs remarks.</summary>
+		internal static bool Suppressing(XRLGame Game)
 		{
-			SerializationVersion = CurrentSerializationVersion;
-			Writer.Write(SerializationMagic);
-			Writer.Write(CurrentSerializationVersion);
-			Writer.WriteNamedFields(this, typeof(KingdomScenarioAutoRunner),
-				BindingFlags.Instance | BindingFlags.NonPublic);
-		}
-
-		public override void Read(SerializationReader Reader)
-		{
-			int magic = Reader.ReadInt32();
-			int version = Reader.ReadInt32();
-			if (magic != SerializationMagic || version < 1
-				|| version > CurrentSerializationVersion)
-				throw new InvalidOperationException(
-					"Unsupported ThousandAndFirst scenario auto-runner save block.");
-			Reader.ReadNamedFields(this, typeof(KingdomScenarioAutoRunner),
-				BindingFlags.Instance | BindingFlags.NonPublic);
-			if (SerializationVersion != version)
-				throw new InvalidOperationException(
-					"Unsupported ThousandAndFirst scenario auto-runner named-field version.");
+			return Game?.GetSystem<KingdomScenarioAutoRunner>()?.SuppressedPopups == true;
 		}
 	}
 }

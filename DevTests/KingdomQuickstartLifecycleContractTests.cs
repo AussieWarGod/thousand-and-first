@@ -133,6 +133,32 @@ namespace ThousandAndFirst.Tests
 			// new patch file is the one and only place that does, and only under Lifecycle.
 		}
 
+		/// <summary>Native run 13 (529a2aa) diagnosis: KingdomQuickstartBootTest.Begin is a
+		/// HarmonyPrefix on the OUTER EmbarkInfo.bootGame, so it claims Popup.Suppress BEFORE the
+		/// runner patch's postfix (on the INNER QudGamemodeModule.bootGame) ever runs -- backwards
+		/// from what the original patch docstring assumed. Begin's own `finally` then dropped the
+		/// flag unconditionally once its own OwnSuppression was true, with no idea the runner had
+		/// also claimed it, stalling the very next unattended popup. This pins both the diagnostic
+		/// row and the fix at that finally.</summary>
+		[Test]
+		public void TheDiagnosedSuppressionRaceIsBothLoggedAndFixed()
+		{
+			string patch = Read("Harness/KingdomQuickstartLifecycleRunnerPatch.cs");
+			StringAssert.Contains("KingdomScenarioJournal.Append(\"LIFECYCLE-RUNNER\"", patch);
+			StringAssert.Contains("LIFECYCLE-RUNNER patched=true added=", patch);
+			StringAssert.Contains("lifecycleRequested=", patch);
+			StringAssert.Contains("MetricsManager.LogInfo(\"[TAF] \" + line)", patch);
+			string runner = Read("Harness/KingdomScenarioAutoRunner.cs");
+			StringAssert.Contains("internal static bool Suppressing(XRLGame Game)", runner);
+			StringAssert.Contains(
+				"return Game?.GetSystem<KingdomScenarioAutoRunner>()?.SuppressedPopups == true;",
+				runner);
+			string boot = Read("Harness/KingdomQuickstartBootTest.cs");
+			StringAssert.Contains(
+				"if (OwnSuppression && !KingdomScenarioAutoRunner.Suppressing(Game)) Popup.Suppress = false;",
+				boot);
+		}
+
 		/// <summary>The turn-driven step refuses rather than passes when the job has not
 		/// completed, and the refusal names the budget as the reason.</summary>
 		[Test]
