@@ -159,6 +159,34 @@ namespace ThousandAndFirst.Tests
 				boot);
 		}
 
+		/// <summary>Review-required fix on a16359f: LIFECYCLE-RUNNER was journaled for EVERY
+		/// Quickstart-mode boot, breaking quickstart-boot/-save/-build's byte-identical journal
+		/// (Tools/check-quickstart-results.py's exact positional boot-row equality) and the
+		/// lifecycle persona's own strictly positional EXPECT (persona_matrix.match). Fixed by
+		/// folding the LifecycleRequested check into the single early return -- the row can now
+		/// exist only when that guard already passed -- and by registering it as bookkeeping so
+		/// persona_matrix.significant() drops it before any positional comparison runs.</summary>
+		[Test]
+		public void TheLifecycleRunnerRowNeverReachesNonLifecycleQuickstartBoots()
+		{
+			string patch = Read("Harness/KingdomQuickstartLifecycleRunnerPatch.cs");
+			StringAssert.Contains(
+				"if (game == null || !KingdomQuickstartRules.IsMode(game.gameMode)", patch);
+			StringAssert.Contains(
+				"|| !KingdomQuickstartBootTest.LifecycleRequested) return;", patch);
+			// Nothing between the guard and the Append call may itself return early on a
+			// non-lifecycle path -- the guard above is the ONLY gate, so no separate check could
+			// let the row through for boot/save/build.
+			string guardText = "LifecycleRequested) return;";
+			int guardEnd = patch.IndexOf(guardText, StringComparison.Ordinal) + guardText.Length;
+			int appendAt = patch.IndexOf("KingdomScenarioJournal.Append(\"LIFECYCLE-RUNNER\"",
+				StringComparison.Ordinal);
+			ClassicAssert.IsTrue(guardEnd > guardText.Length && appendAt > guardEnd);
+			StringAssert.DoesNotContain("return;", patch.Substring(guardEnd, appendAt - guardEnd));
+			string matrix = Read("Tools/personas/persona_matrix.py");
+			StringAssert.Contains("\"LIFECYCLE-RUNNER\",", matrix);
+		}
+
 		/// <summary>The turn-driven step refuses rather than passes when the job has not
 		/// completed, and the refusal names the budget as the reason.</summary>
 		[Test]

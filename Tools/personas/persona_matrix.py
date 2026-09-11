@@ -48,6 +48,11 @@ BOOKKEEPING = frozenset(
         "yield-frames-complete",
         "travel-out-complete",
         "travel-return-complete",
+        # Written once per quickstart-lifecycle boot, right after QUICKSTART-BOOT-BEGIN
+        # (Harness/KingdomQuickstartLifecycleRunnerPatch.cs), never for quickstart-boot/-save/
+        # -build. It describes the runner's OWN wiring for this run, not a verb the script asked
+        # for, so a lifecycle persona's positional EXPECT must not have to name it.
+        "LIFECYCLE-RUNNER",
         # A third-party verb provider the admission law refused. It describes the PROFILE a run was
         # launched into, not a step the script asked for, so a persona must not go red because
         # somebody else's mod shipped a broken provider. `Tools/run-personas.sh` surfaces these
@@ -92,9 +97,14 @@ QUICKSTART_PROFILES = ("marsh", "canyon", "dunes")
 # persona to widen VERB_ALPHABET. Mirrors Tools/check-quickstart-lifecycle.py BOOT_ROWS +
 # BUILD_ROWS, plus the lifecycle-only stamp row.
 QUICKSTART_EVIDENCE_ROWS = (
-    "QUICKSTART-BOOT-BEGIN", "QUICKSTART-BOOT-OBSERVED", "QUICKSTART-BOOT-COMPLETE",
-    "QUICKSTART-BUILD-BEGIN", "QUICKSTART-BUILD-QUOTE", "QUICKSTART-BUILD-CANPAY",
-    "QUICKSTART-BUILD-COMMISSION", "QUICKSTART-BUILD-COMPLETE",
+    "QUICKSTART-BOOT-BEGIN",
+    "QUICKSTART-BOOT-OBSERVED",
+    "QUICKSTART-BOOT-COMPLETE",
+    "QUICKSTART-BUILD-BEGIN",
+    "QUICKSTART-BUILD-QUOTE",
+    "QUICKSTART-BUILD-CANPAY",
+    "QUICKSTART-BUILD-COMMISSION",
+    "QUICKSTART-BUILD-COMPLETE",
     "QUICKSTART-LIFECYCLE-PROFILE",
 )
 
@@ -134,10 +144,24 @@ RESERVED_VERBS = (
 VERB_ALPHABET = "abcdefghijklmnopqrstuvwxyz" + "0123456789" + "-."
 
 OUTCOMES = ("OK", "REFUSED")
-CHECKS = ("status-digest-stable", "travel-away", "travel-present", "travel-economic-away", "travel-economic-present")
+CHECKS = (
+    "status-digest-stable",
+    "travel-away",
+    "travel-present",
+    "travel-economic-away",
+    "travel-economic-present",
+)
 
 REQUIRED_KEYS = ("REQUEST", "SCRIPT", "EXPECT")
-OPTIONAL_KEYS = ("START", "CHECK", "TIMEOUT", "DESCRIPTION", "VERBS", "SET", "LOG_EXPECT")
+OPTIONAL_KEYS = (
+    "START",
+    "CHECK",
+    "TIMEOUT",
+    "DESCRIPTION",
+    "VERBS",
+    "SET",
+    "LOG_EXPECT",
+)
 
 # Tags a persona may carry so `run-personas.sh --set <tag>` can run a named slice of the matrix.
 # Same alphabet as verbs: lowercase, digits, hyphen, dot. Order inside SET= is not significant.
@@ -188,12 +212,25 @@ def parse_manifest(text: str, name: str) -> dict:
     found["VERBS"] = ",".join(extra)
     if found["SCRIPT"].startswith("reload-descendant "):
         parts = found["SCRIPT"].split()
-        if (len(parts) != 4 or parts[:2] != ["reload-descendant", "quickstart"]
-                or parts[2] not in ("marsh", "canyon", "dunes") or parts[3] not in ("yes", "no")):
-            fail(name + " reload requires exactly: reload-descendant quickstart <marsh|canyon|dunes> <yes|no>")
-        if (found["EXPECT"] != "RELOAD-COMPLETE" or found["REQUEST"] != "founding-first-city"
-                or any(found.get(key) for key in ("START", "CHECK", "VERBS", "LOG_EXPECT"))):
-            fail(name + " reload requires founding-first-city, EXPECT=RELOAD-COMPLETE and no overrides")
+        if (
+            len(parts) != 4
+            or parts[:2] != ["reload-descendant", "quickstart"]
+            or parts[2] not in ("marsh", "canyon", "dunes")
+            or parts[3] not in ("yes", "no")
+        ):
+            fail(
+                name
+                + " reload requires exactly: reload-descendant quickstart <marsh|canyon|dunes> <yes|no>"
+            )
+        if (
+            found["EXPECT"] != "RELOAD-COMPLETE"
+            or found["REQUEST"] != "founding-first-city"
+            or any(found.get(key) for key in ("START", "CHECK", "VERBS", "LOG_EXPECT"))
+        ):
+            fail(
+                name
+                + " reload requires founding-first-city, EXPECT=RELOAD-COMPLETE and no overrides"
+            )
         found["SCRIPT_WORDS"] = "quickstart-save " + " ".join(parts[2:])
         found["RELOAD"] = "quickstart"
         found["TIMEOUT"] = str(parse_timeout(found.get("TIMEOUT", ""), name))
@@ -212,7 +249,8 @@ def parse_manifest(text: str, name: str) -> dict:
     if "LOG_EXPECT" in found:
         found["LOG_EXPECT"] = json.dumps(
             parse_log_expect(found["LOG_EXPECT"], name),
-            ensure_ascii=False, separators=(",", ":"),
+            ensure_ascii=False,
+            separators=(",", ":"),
         )
     return found
 
@@ -227,11 +265,18 @@ def parse_log_expect(value: str, name: str) -> list[str]:
         fail("%s LOG_EXPECT must be a JSON array of literal lines" % name)
     if not isinstance(lines, list) or not 1 <= len(lines) <= 4:
         fail("%s LOG_EXPECT must contain 1..4 literal lines" % name)
-    if any(not isinstance(line, str) or not 1 <= len(line) <= 1024
-           or not line.isprintable() for line in lines):
+    if any(
+        not isinstance(line, str)
+        or not 1 <= len(line) <= 1024
+        or not line.isprintable()
+        for line in lines
+    ):
         fail("%s LOG_EXPECT lines must be 1..1024 printable characters" % name)
     if len(set(lines)) != len(lines) or sum(map(len, lines)) > 8192:
-        fail("%s LOG_EXPECT lines must be unique and total at most 8192 characters" % name)
+        fail(
+            "%s LOG_EXPECT lines must be unique and total at most 8192 characters"
+            % name
+        )
     return lines
 
 
@@ -245,12 +290,15 @@ def expected_log(manifest: dict, raw: bytes, name: str) -> bytes:
     lines = raw.replace(b"\r\n", b"\n").split(b"\n")
     if any(lines.count(line) != 1 for line in expected):
         fail("%s LOG_EXPECT requires every declared line exactly once" % name)
-    if any(line not in expected and (b"MODERROR" in line or b"MODWARN" in line)
-           for line in lines):
+    if any(
+        line not in expected and (b"MODERROR" in line or b"MODWARN" in line)
+        for line in lines
+    ):
         fail("%s contains an undeclared MODERROR or MODWARN line" % name)
     return b"".join(
         line + (b"\n" if index < len(lines) - 1 else b"")
-        for index, line in enumerate(lines) if line not in expected
+        for index, line in enumerate(lines)
+        if line not in expected
     )
 
 
@@ -400,7 +448,9 @@ def parse_expect(
                 % (name, item)
             )
         if (
-            verb not in SCRIPT_VERBS and verb not in COUNTED_VERBS and verb not in extra
+            verb not in SCRIPT_VERBS
+            and verb not in COUNTED_VERBS
+            and verb not in extra
             and verb not in QUICKSTART_EVIDENCE_ROWS
         ):
             fail("%s EXPECT item %r names an unsealable verb" % (name, item))
@@ -511,19 +561,30 @@ def status_digest_stable(rows: list[tuple[str, str, str]]) -> list[str]:
 
 def assess(manifest: dict, journal: str, name: str) -> list[str]:
     if manifest.get("RELOAD"):
-        return ["reload requires both strict Quickstart checks and receipt-owned process workflow; journal alone is insufficient"]
+        return [
+            "reload requires both strict Quickstart checks and receipt-owned process workflow; journal alone is insufficient"
+        ]
     rows = significant(read_journal(journal))
     extra = tuple(v for v in manifest.get("VERBS", "").split(",") if v)
     problems = match(parse_expect(manifest["EXPECT"], name, extra), rows)
     if manifest.get("CHECK") == "status-digest-stable":
         problems.extend(status_digest_stable(rows))
     if manifest.get("CHECK", "").startswith("travel-"):
-        spec = importlib.util.spec_from_file_location("taf_persona_travel", os.path.join(os.path.dirname(__file__), "persona_travel.py"))
+        spec = importlib.util.spec_from_file_location(
+            "taf_persona_travel",
+            os.path.join(os.path.dirname(__file__), "persona_travel.py"),
+        )
         travel = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(travel)
-        mode = manifest["CHECK"][len("travel-"):]
+        mode = manifest["CHECK"][len("travel-") :]
         economic = mode.startswith("economic-")
-        problems.extend(travel.assess(read_journal(journal), mode.removeprefix("economic-"), require_economic=economic))
+        problems.extend(
+            travel.assess(
+                read_journal(journal),
+                mode.removeprefix("economic-"),
+                require_economic=economic,
+            )
+        )
     return problems
 
 

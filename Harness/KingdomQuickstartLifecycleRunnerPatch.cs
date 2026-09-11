@@ -45,11 +45,11 @@ namespace ThousandAndFirst.Harness
 		[HarmonyPostfix]
 		internal static void Postfix(XRLGame game)
 		{
-			if (game == null || !KingdomQuickstartRules.IsMode(game.gameMode)) return;
-			bool lifecycleRequested = KingdomQuickstartBootTest.LifecycleRequested;
+			if (game == null || !KingdomQuickstartRules.IsMode(game.gameMode)
+				|| !KingdomQuickstartBootTest.LifecycleRequested) return;
 			bool added = game.GetSystem<KingdomScenarioAutoRunner>() != null;
 			string failure = null;
-			if (lifecycleRequested && !added)
+			if (!added)
 			{
 				try
 				{
@@ -60,8 +60,10 @@ namespace ThousandAndFirst.Harness
 					failure = error.GetType().Name + ": " + KingdomScenarioRules.Bounded(error.Message);
 				}
 			}
-			string line = "LIFECYCLE-RUNNER patched=true added=" + added
-				+ " lifecycleRequested=" + lifecycleRequested
+			// Never emitted for quickstart-boot/-save/-build (the check above already returned):
+			// their journals must stay byte-identical to before this file existed, and
+			// Tools/check-quickstart-results.py compares them by exact position.
+			string line = "LIFECYCLE-RUNNER patched=true added=" + added + " lifecycleRequested=true"
 				+ (failure == null ? "" : "; requireSystemThrew=" + failure);
 			KingdomScenarioJournal.Append("LIFECYCLE-RUNNER", failure == null, line);
 			MetricsManager.LogInfo("[TAF] " + line);
