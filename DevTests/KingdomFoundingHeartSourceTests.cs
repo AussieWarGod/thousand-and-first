@@ -596,9 +596,17 @@ namespace ThousandAndFirst.Tests
 			foreach (string fact in new[] { "KingdomConstruction.HasReceipt(successor, job)",
 				"r_KingdomScaffold.HasRemovalProof(successor, job.SubjectId)",
 				"successor.GetStringProperty(PlotFinalPredecessorProperty) == retired",
-				"HasExactFoundingHeartReservation(plan, job.OutputId, \"final\")",
+				"Job.Phase != KingdomConstructionPhase.Complete",
+				"!string.IsNullOrEmpty(Job.Failure)",
 				"KingdomFoundingHeartChainRules.BindsGround(job.OutputId," })
 				StringAssert.Contains(fact, chain);
+			// The withdrawn clause: the reservation store is keyed by deterministic role
+			// identities, so nothing here may ask it about a successor.
+			foreach (string withdrawn in new[] { "HasExactFoundingHeartReservation",
+				"TryReserveClimbedFoundingHeartRoot", "FoundingHeartReservationPrefix" })
+				StringAssert.DoesNotContain(withdrawn, chain);
+			StringAssert.DoesNotContain("TryReserveClimbedFoundingHeartRoot",
+				Source("Growth/KingdomUpgrade.26.HeartRung.cs"));
 			// Nothing about the sealed cell, and no heart-shaped plot admitted by its stamps.
 			foreach (string position in new[] { "GetCell(", "CurrentCell", "HeartPlotProperty",
 				"MainWorldX" })
@@ -612,24 +620,20 @@ namespace ThousandAndFirst.Tests
 				"the chain must prove itself before it spends the heart's own authority");
 
 			// Recovery writes nothing: the reservation helper only observes.
-			int from = chain.IndexOf("private static bool TryChainedFoundingHeartRoot(",
-				StringComparison.Ordinal);
-			int to = chain.IndexOf("internal static bool TryReserveClimbedFoundingHeartRoot(",
-				StringComparison.Ordinal);
-			ClassicAssert.IsTrue(from > -1 && to > from);
-			string recovery = chain.Substring(from, to - from);
+			// The whole shard is read-only now: the settle write was withdrawn with the clause
+			// that needed it, so nothing in this file may write at all.
 			foreach (string write in new[] { "SetStringProperty(", "SetIntProperty(",
 				"SetZoneProperty(", "SetObjectGameState(", "Ensure(", "Destroy(", "AddObject(" })
-				StringAssert.DoesNotContain(write, recovery);
+				StringAssert.DoesNotContain(write, chain);
 
-			// The settle owns the write, before the rung, and refuses the settle without it.
+			// The settle writes nothing for this chain: it proves its endpoint and its handover
+			// exactly as before, and stamps the rung.
 			string rung = Source("Growth/KingdomUpgrade.26.HeartRung.cs");
-			StringAssert.Contains("if (!KingdomPlots.TryReserveClimbedFoundingHeartRoot(Z, "
-				+ "Job.SubjectId, Job.OutputId))\n\t\t\t\treturn false;", rung);
-			int reserve = rung.IndexOf("TryReserveClimbedFoundingHeartRoot(", StringComparison.Ordinal);
+			int endpoint = rung.IndexOf("ExactImprovementHeartEndpoint(System, Z, Successor, Job)",
+				StringComparison.Ordinal);
 			int stamp = rung.IndexOf("KingdomPlots.TrySettleHeartRung(", StringComparison.Ordinal);
-			ClassicAssert.IsTrue(reserve > -1 && stamp > reserve,
-				"the reservation must be issued before the rung is stamped");
+			ClassicAssert.IsTrue(endpoint > -1 && stamp > endpoint,
+				"the endpoint proof must still stand before the rung is stamped");
 
 			// And the final generation's retirement is the receipt chain, never absence alone.
 			string removal = Source("Growth/KingdomPlot2.07q.FoundingHeartRecordedRemoval.cs");

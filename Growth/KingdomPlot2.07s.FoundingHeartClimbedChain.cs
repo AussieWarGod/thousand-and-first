@@ -25,6 +25,21 @@ namespace ThousandAndFirst
 		/// exact output of a completed improvement whose subject was the retired root, carrying
 		/// that job's own receipt and its removal proof.</para>
 		///
+		/// <para>NO RESERVATION IS ASKED FOR. The heart's reservation store is keyed by
+		/// deterministic role identities and refuses any row whose id is not
+		/// StableId(transaction, zone, role), so a successor cannot be named in it at all. An
+		/// earlier draft demanded one at the settle and thereby refused every heart climb; the
+		/// clause is withdrawn, and the chain rests on the receipt records instead.</para>
+		///
+		/// <para>ORDERING, AND WHAT IT CANNOT PROMISE. The daily seal poll and the settlement pass
+		/// are both EndTurnEvent handlers on game systems, and the engine dispatches them in the
+		/// order the systems were added to XRLGame.Systems -- first RequireSystem call wins, which
+		/// is a property of the save, not of this source. So on the very turn a rung is raised the
+		/// seal may still capture the book row the pass has not rebuilt yet, and report one
+		/// Malformed for that day. From the first pass after the climb onward this chain recovers
+		/// the heart, the pass runs, the book row follows the successor and the seal agrees. The
+		/// once-per-climb window can only be observed natively.</para>
+		///
 		/// <para>IDENTITY, NEVER POSITION. Nothing here looks at what stands on the sealed cell. A
 		/// foreign heart-shaped plot on that ground proves nothing, because the chain is read from
 		/// the retired identity outward: the sealed terminal names it, the construction registry
@@ -48,16 +63,21 @@ namespace ThousandAndFirst
 			if (!TryImprovementSuccessorOf(retired, out job, out successor)) return false;
 			bool receipt = KingdomConstruction.HasReceipt(successor, job);
 			bool removal = r_KingdomScaffold.HasRemovalProof(successor, job.SubjectId);
-			// Custody, read from the successor's own durable predecessor stamp and its unique
-			// global identity. The finishing transaction's PlotFinalRoot key is retired when the
-			// job settles, so it cannot be read here; what remains is the successor naming the
-			// exact identity it replaced, which no plot that did not replace it can name.
-			bool custody = successor.GetStringProperty(PlotFinalPredecessorProperty) == retired
-				&& successor.IDIfAssigned == job.OutputId;
-			bool reservation = HasExactFoundingHeartReservation(plan, job.OutputId, "final");
+			// Custody. TWO RECEIPT-BACKED FACTS AND ONE STAMP, named as what they are. RECEIPTS:
+			// the construction receipt the successor carries is the job's own durable receipt for
+			// exactly this output (KingdomConstruction.HasReceipt), and the scaffold removal proof
+			// is the durable successor-side record naming the retired identity
+			// (r_KingdomScaffold.HasRemovalProof) -- neither is a bare property a stamp could
+			// forge. STAMP: PlotFinalPredecessorProperty, which names the identity replaced; it is
+			// corroboration, never the load-bearing link, because the finishing transaction's
+			// PlotFinalRoot custody key is retired when the job settles
+			// (KingdomPlot2.34.EffectsAndFurnishing) and cannot be read here at all.
+			bool custody = successor.IDIfAssigned == job.OutputId
+				&& successor.GetStringProperty(PlotFinalPredecessorProperty) == retired
+				&& KingdomConstruction.HasReceipt(successor, job);
 			if (!KingdomFoundingHeartChainRules.BindsGround(job.OutputId,
 				FoundingHeartFinalId(plan), prior, retired, job.OutputId, receipt, removal,
-				custody, reservation)) return false;
+				custody)) return false;
 			// The retirement authority is asked LAST and about the identity the chain named, so a
 			// chain that proved itself still cannot stand on a heart whose seal, reservations,
 			// roster or retired custody do not.
@@ -67,9 +87,11 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		/// <summary>The one completed improvement that retired this identity, and the object it
-		/// produced. Exactly one job may name it, and its output must resolve to exactly one live
-		/// object; anything else refuses rather than choosing.</summary>
+		/// <summary>The one COMPLETED improvement that retired this identity, and the object it
+		/// produced. Exactly one job may name it, that job must have reached its terminal
+		/// completion phase -- a job still working has retired nothing -- and its output must
+		/// resolve to exactly one live object; anything else refuses rather than choosing.
+		/// </summary>
 		private static bool TryImprovementSuccessorOf(string RetiredId,
 			out KingdomConstructionJob Job, out GameObject Successor)
 		{
@@ -86,57 +108,13 @@ namespace ThousandAndFirst
 				if (Job != null) { Job = null; return false; }
 				Job = row;
 			}
-			if (Job == null || string.IsNullOrEmpty(Job.OutputId)
+			if (Job == null || Job.Phase != KingdomConstructionPhase.Complete
+				|| !string.IsNullOrEmpty(Job.Failure) || string.IsNullOrEmpty(Job.OutputId)
 				|| Job.OutputId == RetiredId) return false;
 			return KingdomConstruction.FindGlobalLiveId(Job.OutputId, out Successor)
 					== KingdomPhysicalLookupState.Exact
 				&& GameObject.Validate(Successor);
 		}
 
-		/// <summary>Whether the reservation store already holds the exact reservation this plan
-		/// would issue for one identity and role. A read: recovery never issues one, because a
-		/// recovery that could reserve would be minting the authority it is meant to check.
-		/// </summary>
-		private static bool HasExactFoundingHeartReservation(KingdomFoundingHeartPlan Plan,
-			string Id, string Role)
-		{
-			if (!KingdomFoundingHeartRules.Valid(Plan) || string.IsNullOrEmpty(Id)) return false;
-			string key = FoundingHeartReservationPrefix + Id;
-			string expected = FoundingHeartReservation(Plan, Id, Role);
-			if (string.IsNullOrEmpty(expected)) return false;
-			FoundingHeartReservationStore store = new FoundingHeartReservationStore();
-			return store.Current
-				&& KingdomFoundingHeartReservationState.TryExpected(key, expected,
-					store.Observe(key), out bool absent) && !absent && store.Current;
-		}
-
-		/// <summary>
-		/// The settle's own write, and the only one in this chain: the successor's identity is
-		/// reserved under the heart's final role before the rung is stamped. Called from the
-		/// improvement settle, never from recovery. A climb on ground that carries no founding
-		/// heart, or whose sealed terminal does not name this retiring root, owes nothing and
-		/// says so by returning true.
-		/// </summary>
-		internal static bool TryReserveClimbedFoundingHeartRoot(Zone Z, string RetiredId,
-			string SuccessorId)
-		{
-			if (Z == null || string.IsNullOrEmpty(RetiredId) || string.IsNullOrEmpty(SuccessorId)
-				|| RetiredId == SuccessorId) return false;
-			if (!KingdomFoundingHeartRules.TryDecode(
-					Z.GetZoneProperty(FoundingHeartReceiptProperty, null), out var plan)
-				|| !KingdomFoundingHeartRules.Complete(plan) || plan.ZoneId != Z.ZoneID)
-				return true;
-			if (!KingdomFoundingHeartTerminalRules.TryDecode(
-					Z.GetZoneProperty(FoundingHeartTerminalProperty, null), out var prior)
-				|| prior.FinalId != RetiredId) return true;
-			// Plan before effect: the reservation is proved absent-or-exact, issued, and read
-			// back, and the plan's own reservations must still stand afterwards.
-			FoundingHeartReservationStore store = new FoundingHeartReservationStore();
-			if (!store.CheckPlan(plan)) return HeartRefused("climb: plan reservations");
-			if (!EnsureFoundingHeartReservation(store, plan, SuccessorId, "final"))
-				return HeartRefused("climb: successor reservation");
-			return HasExactFoundingHeartReservation(plan, SuccessorId, "final")
-				&& store.CheckPlan(plan) || HeartRefused("climb: reservation readback");
-		}
 	}
 }

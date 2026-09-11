@@ -21,6 +21,14 @@ namespace ThousandAndFirst
 	/// generation that drops any one of them is refused exactly as the first generation would be.
 	/// </para>
 	///
+	/// <para>NO RESERVATION CLAUSE, AND WHY. The heart's reservation store is keyed by
+	/// DETERMINISTIC role identities: KingdomFoundingHeartReservationRules refuses any row whose
+	/// id is not StableId(transaction, zone, role), and for the final role that id IS the root the
+	/// founding rite minted. A successor therefore cannot be named in that store at all, by
+	/// design, so a clause demanding one could only ever refuse -- and while it stood at the
+	/// settle it refused every heart climb outright. The chain is proved by the receipt records
+	/// instead.</para>
+	///
 	/// <para>This shard decides; it never reads the world. The caller supplies what it proved, so
 	/// the decision is executable outside a live game and the same decision is made at the settle
 	/// and at every later recovery.</para>
@@ -56,11 +64,10 @@ namespace ThousandAndFirst
 		/// <param name="HasRemovalProof">The standing object carries the scaffold removal proof
 		/// naming the retired identity.</param>
 		/// <param name="CustodyProved">The successor is the unique holder of that identity and
-		/// its saved root custody is keyed to it.</param>
-		/// <param name="ReservationProved">The final role is reserved for that identity.</param>
+		/// names the exact identity it replaced.</param>
 		public static bool ChainedGeneration(KingdomFoundingHeartTerminalPlan Prior,
 			string RetiredIdentity, string TerminalFinalId, string JobOutputId, bool HasReceipt,
-			bool HasRemovalProof, bool CustodyProved, bool ReservationProved)
+			bool HasRemovalProof, bool CustodyProved)
 		{
 			// The prior generation is read, not described: an undecodable or malformed record is
 			// no chain at all.
@@ -76,18 +83,18 @@ namespace ThousandAndFirst
 			// The receipt names the identity being bound, and both receipt facts are read off the
 			// standing object rather than assumed.
 			if (JobOutputId != TerminalFinalId) return false;
-			return HasReceipt && HasRemovalProof && CustodyProved && ReservationProved;
+			return HasReceipt && HasRemovalProof && CustodyProved;
 		}
 
 		/// <summary>The whole equality the terminal binding asks: first generation, or a proved
 		/// chain. Nothing else is a heart.</summary>
 		public static bool BindsGround(string TerminalFinalId, string PlanFinalId,
 			KingdomFoundingHeartTerminalPlan Prior, string RetiredIdentity, string JobOutputId,
-			bool HasReceipt, bool HasRemovalProof, bool CustodyProved, bool ReservationProved)
+			bool HasReceipt, bool HasRemovalProof, bool CustodyProved)
 		{
 			return FirstGeneration(TerminalFinalId, PlanFinalId)
 				|| ChainedGeneration(Prior, RetiredIdentity, TerminalFinalId, JobOutputId,
-					HasReceipt, HasRemovalProof, CustodyProved, ReservationProved);
+					HasReceipt, HasRemovalProof, CustodyProved);
 		}
 	}
 }

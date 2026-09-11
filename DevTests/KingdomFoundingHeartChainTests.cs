@@ -128,41 +128,38 @@ namespace ThousandAndFirst.Tests
 
 			// First generation: the reserved identity, no chain asked for.
 			ClassicAssert.IsTrue(KingdomFoundingHeartChainRules.BindsGround(planFinal, planFinal,
-				null, null, null, false, false, false, false));
+				null, null, null, false, false, false));
 			// A stranger identity with no chain is not a heart.
 			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
-				null, null, null, false, false, false, false));
+				null, null, null, false, false, false));
 			// The whole chained proof.
 			ClassicAssert.IsTrue(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
-				prior, planFinal, successor, true, true, true, true));
+				prior, planFinal, successor, true, true, true));
 
 			// One clause dropped per row, and each must refuse.
 			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
-				null, planFinal, successor, true, true, true, true), "prior record absent");
+				null, planFinal, successor, true, true, true), "prior record absent");
 			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
 				Terminal("works-slot-id", "someone-elses-final"), planFinal, successor, true, true,
-				true, true), "the prior record bound another identity");
+				true), "the prior record bound another identity");
 			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
-				prior, "", successor, true, true, true, true), "no identity was retired");
+				prior, "", successor, true, true, true), "no identity was retired");
 			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
-				prior, planFinal, "other-id", true, true, true, true),
+				prior, planFinal, "other-id", true, true, true),
 				"the receipt names another output");
 			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
-				prior, planFinal, successor, false, true, true, true), "no construction receipt");
+				prior, planFinal, successor, false, true, true), "no construction receipt");
 			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
-				prior, planFinal, successor, true, false, true, true), "no removal proof");
+				prior, planFinal, successor, true, false, true), "no removal proof");
 			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
-				prior, planFinal, successor, true, true, false, true), "custody unproved");
-			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
-				prior, planFinal, successor, true, true, true, false), "reservation unproved");
+				prior, planFinal, successor, true, true, false), "custody unproved");
 
 			// A record that retires what it binds, and one that loops back onto the prior
 			// record's own predecessor, are not generations.
 			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
-				Terminal("works-slot-id", successor), successor, successor, true, true, true,
-				true));
+				Terminal("works-slot-id", successor), successor, successor, true, true, true));
 			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround("works-slot-id",
-				planFinal, prior, planFinal, "works-slot-id", true, true, true, true));
+				planFinal, prior, planFinal, "works-slot-id", true, true, true));
 		}
 
 		/// <summary>
@@ -178,20 +175,18 @@ namespace ThousandAndFirst.Tests
 			const string successor = "successor-id";
 			// Every proof flag asserted, and nothing to read: refused.
 			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
-				null, planFinal, successor, true, true, true, true));
+				null, planFinal, successor, true, true, true));
 			// A prior record that is not a valid terminal at all: refused.
 			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
-				new KingdomFoundingHeartTerminalPlan(), planFinal, successor, true, true, true,
-				true));
+				new KingdomFoundingHeartTerminalPlan(), planFinal, successor, true, true, true));
 			// A well-formed prior record belonging to ANOTHER heart's chain: refused, because the
 			// link is read from the record and does not match the identity retired here.
 			KingdomFoundingHeartTerminalPlan foreign = Terminal("other-works", "other-final");
 			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
-				foreign, planFinal, successor, true, true, true, true));
+				foreign, planFinal, successor, true, true, true));
 			// And the honest chain, for contrast, with the same flags.
 			ClassicAssert.IsTrue(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
-				Terminal("works-slot-id", planFinal), planFinal, successor, true, true, true,
-				true));
+				Terminal("works-slot-id", planFinal), planFinal, successor, true, true, true));
 		}
 
 		/// <summary>
@@ -216,6 +211,32 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.IsTrue(guard > -1 && halt > guard && work > halt,
 				"the founding-heart guard must still stand before any settlement work");
 		}
+		/// <summary>
+		/// VALUE, and the case whose absence let a hard refusal ship: the heart's reservation
+		/// store is keyed by DETERMINISTIC role identities. A row whose id is not the role's own
+		/// stable identity cannot be read back at all, and Encode returns null for one, so a chain
+		/// clause demanding a reservation for a successor could only ever refuse -- and while it
+		/// stood at the settle it refused every heart climb.
+		/// </summary>
+		[Test]
+		public void AReservationCannotNameAnythingButTheRolesOwnStableIdentity()
+		{
+			string final = KingdomFoundingHeartRules.StableId(Transaction, Zone, "final");
+			ClassicAssert.IsFalse(string.IsNullOrEmpty(final));
+			ClassicAssert.AreNotEqual("successor-id", final);
+			// A well-formed row for the role's own identity is readable only under its own key,
+			// and the same row under a successor's key is refused: the id is checked against
+			// StableId(transaction, zone, role), which no successor identity can equal.
+			string raw = "hr1|" + Convert.ToBase64String(
+					System.Text.Encoding.UTF8.GetBytes(Transaction))
+				+ "|" + Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(Zone))
+				+ "|" + Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("final"))
+				+ "|successor-id|" + new string('0', 64);
+			ClassicAssert.IsFalse(KingdomFoundingHeartReservationRules.TryRead(
+				KingdomFoundingHeartReservationRules.Prefix + "successor-id", raw, out _, out _,
+				out _), "the store must refuse an id that is not the role's stable identity");
+		}
+
 	}
 }
 #endif

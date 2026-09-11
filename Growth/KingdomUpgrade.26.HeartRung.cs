@@ -46,12 +46,6 @@ namespace ThousandAndFirst
 			// this successor with, carve-out and all.
 			if (!ExactImprovementHeartEndpoint(System, Z, Successor, Job)) return false;
 			if (!ExactImprovementHandoverProof(System, Z, Successor, Job, out _)) return false;
-			// Plan before effect, and the only write in the founding heart's chain: a climb that
-			// retires the heart's own sealed root reserves the successor's identity under the
-			// heart's final role BEFORE the rung is stamped, so recovery can read a reservation
-			// it never had to issue. A climb that cannot reserve does not stamp a rung.
-			if (!KingdomPlots.TryReserveClimbedFoundingHeartRoot(Z, Job.SubjectId, Job.OutputId))
-				return false;
 			return KingdomPlots.TrySettleHeartRung(System, Z, Successor, Job.TargetKey,
 				() => ExactImprovementHandoverProof(System, Z, Successor, Job, out _));
 		}
