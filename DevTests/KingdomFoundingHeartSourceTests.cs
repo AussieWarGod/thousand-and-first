@@ -630,24 +630,10 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.IsTrue(binds > -1 && authority > binds,
 				"the chain must prove itself before it spends the heart's own authority");
 
-			// Recovery writes nothing: the reservation helper only observes.
-			// The PROOF is read-only: it may never write, and the sweep is scoped to it rather
-			// than to the file, because the shard also holds the once-only announcement that a
-			// stuck climb is allowed -- and required -- to write.
-			int proofFrom = chain.IndexOf("private static bool TryChainedFoundingHeartRoot(",
-				StringComparison.Ordinal);
-			int proofTo = chain.IndexOf("internal static bool TryChainedWorkSuccessor(",
-				StringComparison.Ordinal);
-			ClassicAssert.IsTrue(proofFrom > -1 && proofTo > proofFrom);
-			string proof = chain.Substring(proofFrom, proofTo - proofFrom);
+			// The proof shard is read-only, whole: the hold that has to write lives in its own
+			// shard beside it, so this sweep needs no scoping at all.
 			foreach (string write in new[] { "SetStringProperty(", "SetIntProperty(",
 				"SetZoneProperty(", "SetObjectGameState(", "Ensure(", "Destroy(", "AddObject(" })
-				StringAssert.DoesNotContain(write, proof);
-			// And the only writer in the shard is that announcement, on the held flag alone.
-			ClassicAssert.AreEqual(2, chain.Split(new[] { "SetZoneProperty(" },
-				StringSplitOptions.None).Length - 1);
-			foreach (string write in new[] { "SetStringProperty(", "SetIntProperty(",
-				"SetObjectGameState(", "Destroy(", "AddObject(" })
 				StringAssert.DoesNotContain(write, chain);
 
 			// The settle writes nothing for this chain: it proves its endpoint and its handover
@@ -684,19 +670,17 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AStuckClimbIsSaidOnceAndUnsaidWhereTheClimbFinishes()
 		{
-			string chain = Source("Growth/KingdomPlot2.07s.FoundingHeartClimbedChain.cs");
+			string chain = Source("Growth/KingdomPlot2.07t.FoundingHeartClimbHold.cs");
+			string proof = Source("Growth/KingdomPlot2.07s.FoundingHeartClimbedChain.cs");
 			// The read says nothing. Announcing is a separate entry point.
 			StringAssert.Contains("internal static void NoteClimbUnderInspection(Zone Z, "
 				+ "int RowWorkId)", chain);
 			StringAssert.DoesNotContain("AnnounceClimbUnderInspection(", chain);
-			int read = chain.IndexOf("private static bool HasPendingClimb(Zone Z, int RowWorkId, "
-				+ "out string RetiredId,", StringComparison.Ordinal);
-			int note = chain.IndexOf("internal static void NoteClimbUnderInspection(",
-				StringComparison.Ordinal);
-			ClassicAssert.IsTrue(read > -1 && note > read);
-			string reader = chain.Substring(read, note - read);
-			StringAssert.DoesNotContain("SetZoneProperty(", reader);
-			StringAssert.DoesNotContain("Ledger", reader);
+			// The read lives beside the proof and says nothing at all: no writer, no ledger.
+			StringAssert.Contains("private static bool HasPendingClimb(Zone Z, int RowWorkId, "
+				+ "out string RetiredId,", proof);
+			StringAssert.DoesNotContain("SetZoneProperty(", proof);
+			StringAssert.DoesNotContain("Ledger", proof);
 
 			// Told only where the classification was actually reached, and never for a
 			// duplicated root, which is malformed rather than an inspection.
@@ -706,9 +690,10 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("if (Pending) KingdomPlots.NoteClimbUnderInspection(Zone, "
 				+ "Row.WorkId);", evidence);
 
-			// Once only: written, read back, and nothing said if the write did not take.
-			StringAssert.Contains("if (!string.IsNullOrEmpty(Z.GetZoneProperty("
-				+ "FoundingHeartClimbHeldProperty, null)))", chain);
+			// Once only: decided by the shared rule, written, read back, and nothing said if the
+			// write did not take.
+			StringAssert.Contains("KingdomFoundingHeartChainRules.SaysClimbHold(held, true)",
+				chain);
 			StringAssert.Contains("Z.SetZoneProperty(FoundingHeartClimbHeldProperty, job.Id);",
 				chain);
 			StringAssert.Contains("if (Z.GetZoneProperty(FoundingHeartClimbHeldProperty, null) "
@@ -741,35 +726,67 @@ namespace ThousandAndFirst.Tests
 		}
 
 		/// <summary>
-		/// VALUE. The once-only flag's own life cycle, as the zone sees it: stuck says it once,
-		/// a second classification while it stands says nothing, the finish takes it back, and a
-		/// second sticking says it again.
+		/// VALUE. The once-only decision itself, executed: production's own rule for when a stuck
+		/// climb is SAID and when the saying is TAKEN BACK, driven through the whole life cycle a
+		/// heart can have -- stuck, still stuck, finished, stuck again -- and through the other
+		/// ending, cancellation, which never reaches the completion path.
 		/// </summary>
 		[Test]
-		public void TheHeldFlagIsSetOnceClearedOnCompletionAndSetAgain()
+		public void TheHoldIsSaidOnceAndReleasedByEitherEnding()
 		{
-			// The shape is a single zone string: absent means nothing has been said, present
-			// means it has. These are the four transitions the source above implements.
-			string held = null;
-			bool announced;
+			// The four cells of the decision.
+			ClassicAssert.IsTrue(KingdomFoundingHeartChainRules.SaysClimbHold(false, true));
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.SaysClimbHold(true, true));
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.SaysClimbHold(false, false));
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.SaysClimbHold(true, false));
+			ClassicAssert.IsTrue(KingdomFoundingHeartChainRules.ReleasesClimbHold(true, false));
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.ReleasesClimbHold(false, false));
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.ReleasesClimbHold(true, true));
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.ReleasesClimbHold(false, true));
 
-			// Stuck: nothing said yet, so say it.
-			announced = string.IsNullOrEmpty(held);
-			ClassicAssert.IsTrue(announced);
-			if (announced) held = "job-1";
+			// The life cycle, each step decided by the rule rather than by the test.
+			bool held = false;
+			// Stuck: said, and the ground remembers it.
+			ClassicAssert.IsTrue(KingdomFoundingHeartChainRules.SaysClimbHold(held, true));
+			held = true;
+			// Still stuck, a later poll: nothing said, and nothing released.
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.SaysClimbHold(held, true));
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.ReleasesClimbHold(held, true));
+			// Finished: the completion path releases it.
+			ClassicAssert.IsTrue(KingdomFoundingHeartChainRules.ReleasesClimbHold(held, false));
+			held = false;
+			// Stuck again on a later climb: said again.
+			ClassicAssert.IsTrue(KingdomFoundingHeartChainRules.SaysClimbHold(held, true));
+			held = true;
+			// CANCELLED, which never reaches the completion path: the witness's own read is not
+			// pending, so the saying is taken back there instead.
+			ClassicAssert.IsTrue(KingdomFoundingHeartChainRules.ReleasesClimbHold(held, false));
+			held = false;
+			// And with nothing held, a cancelled or completed climb releases nothing.
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.ReleasesClimbHold(held, false));
+		}
 
-			// Still stuck: already said, so say nothing.
-			ClassicAssert.IsFalse(string.IsNullOrEmpty(held));
-
-			// Finished: the hold is taken back where the receipt completes.
-			held = null;
-			ClassicAssert.IsTrue(string.IsNullOrEmpty(held));
-
-			// Stuck again, on a later climb: said again, and under that climb's own job.
-			announced = string.IsNullOrEmpty(held);
-			ClassicAssert.IsTrue(announced);
-			if (announced) held = "job-2";
-			ClassicAssert.AreEqual("job-2", held);
+		/// <summary>Both sides of the hold run that one rule, and the cancelled ending has a
+		/// caller of its own.</summary>
+		[Test]
+		public void BothSidesOfTheHoldRunTheSharedRule()
+		{
+			string chain = Source("Growth/KingdomPlot2.07t.FoundingHeartClimbHold.cs");
+			StringAssert.Contains("KingdomFoundingHeartChainRules.SaysClimbHold(held, true)",
+				chain);
+			StringAssert.Contains("KingdomFoundingHeartChainRules.ReleasesClimbHold(held, false)",
+				chain);
+			StringAssert.Contains("KingdomFoundingHeartChainRules.ReleasesClimbHold(held, pending)",
+				chain);
+			StringAssert.Contains("internal static void ReleaseSettledClimbHold(Zone Z, "
+				+ "int RowWorkId)", chain);
+			// The witness releases on an absent root whose climb is no longer pending -- which is
+			// where a cancelled climb ends up, since it never completes.
+			StringAssert.Contains("else if (count == 0) KingdomPlots.ReleaseSettledClimbHold(Zone, "
+				+ "Row.WorkId);", Source("Core/KingdomInheritanceSpatial.Evidence.cs"));
+			// And the flag's own docstring now names both endings.
+			StringAssert.Contains("cleared when that improvement turns terminal EITHER WAY",
+				Source("Growth/KingdomPlot2.07i.FoundingHeartTerminalAuthority.cs"));
 		}
 
 		/// <summary>

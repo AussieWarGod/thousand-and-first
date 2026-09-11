@@ -103,6 +103,24 @@ namespace ThousandAndFirst
 			return string.IsNullOrEmpty(Stamp) || Stamp == RetiredIdentity;
 		}
 
+		/// <summary>
+		/// Whether a stuck climb should be SAID now: it is pending, and nothing has been said yet.
+		/// </summary>
+		public static bool SaysClimbHold(bool Held, bool Pending)
+		{
+			return Pending && !Held;
+		}
+
+		/// <summary>
+		/// Whether a saying should be TAKEN BACK now: something was said, and the climb is no
+		/// longer pending -- because it completed, or because it was cancelled. Both are outcomes;
+		/// a hold may outlive neither.
+		/// </summary>
+		public static bool ReleasesClimbHold(bool Held, bool Pending)
+		{
+			return Held && !Pending;
+		}
+
 		/// <summary>The whole equality the terminal binding asks: first generation, or a proved
 		/// chain. Nothing else is a heart.</summary>
 		public static bool BindsGround(string TerminalFinalId, string PlanFinalId,

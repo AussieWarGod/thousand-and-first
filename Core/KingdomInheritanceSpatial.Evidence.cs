@@ -129,8 +129,11 @@ namespace ThousandAndFirst
 				Pending = KingdomSealPendingRules.ClimbUnderInspection(count == 0,
 					count == 0 && KingdomPlots.HasPendingClimb(Zone, Row.WorkId));
 				// Told only when the row really is classified that way: a DUPLICATED root is
-				// malformed, and must not be announced as an inspection.
+				// malformed, and must not be announced as an inspection. And when an absent root's
+				// climb is no longer pending -- cancelled, most of all, which never reaches the
+				// completion path that clears the hold -- the saying is taken back here.
 				if (Pending) KingdomPlots.NoteClimbUnderInspection(Zone, Row.WorkId);
+				else if (count == 0) KingdomPlots.ReleaseSettledClimbHold(Zone, Row.WorkId);
 				Failure = Pending
 					? "a sealed work root is being replaced by an improvement still under inspection"
 					: "a sealed work root is absent, duplicated, moved, or changed";

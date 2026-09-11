@@ -11,8 +11,10 @@ namespace ThousandAndFirst
 		public const string FoundingHeartTerminalFailureProperty = "r_TAF_FoundingHeartTerminalFailure";
 
 		/// <summary>Set on the ground once the founder has been told a heart's climb is stuck
-		/// short of completion, and cleared the moment that improvement turns terminal, so the
-		/// saying follows the same once-only shape as every other held announcement.</summary>
+		/// short of completion, and cleared when that improvement turns terminal EITHER WAY: on
+		/// the completion path where the receipt completes, and on the witness's own read for a
+		/// climb that was cancelled, which never reaches that path. The saying follows the same
+		/// once-only shape as every other held announcement.</summary>
 		public const string FoundingHeartClimbHeldProperty = "r_TAF_FoundingHeartClimbHeldAnnounced";
 
 		private static string FoundingHeartFinalId(KingdomFoundingHeartPlan Plan)

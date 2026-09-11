@@ -4,8 +4,8 @@
 
 Current draft census/evidence is in docs/STATUS.md; the figures below describe its predecessor.
 
-**3092** production C# files; 438,817 physical lines; 1442 direct-XRL files; zero cap failures;
-3123 cold-install files. Inventory `50cf4b5fac270d7c9895294a609ff406482f9694aaee8f3eeca3ceca4713a75c`.
+**3093** production C# files; 438,869 physical lines; 1443 direct-XRL files; zero cap failures;
+3124 cold-install files. Inventory `53258c460cfa8b343eea2fa869d5428c15a419ea735b6b1160cca95ab8a79813`.
 #141/#144/#139/#137 combined over dev with the 0.3.3 backmerge. Compile, native and semantic
 review are owed; old counts below are retained, not current acceptance. Public0.3.3 finalized.
 
