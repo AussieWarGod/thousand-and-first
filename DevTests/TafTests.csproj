@@ -1808,6 +1808,7 @@
     <Compile Include="KingdomCityRulesTests.cs" />
     <Compile Include="KingdomBindingRegistryTests.cs" />
     <Compile Include="KingdomResidentRulesTests.cs" />
+    <Compile Include="KingdomCrewFollowsClimbedWorkTests.cs" />
     <Compile Include="KingdomPlacementRulesTests.cs" />
 	<Compile Include="KingdomDistanceRulesTests.cs" />
 	<Compile Include="KingdomDistanceRuntimeSourceTests.cs" />
