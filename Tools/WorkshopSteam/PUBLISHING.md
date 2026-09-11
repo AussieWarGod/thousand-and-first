@@ -1,5 +1,10 @@
 # Local Workshop publisher
 
+**Current public Alpha: 0.3.3, published and finalized.** Run `34577908711` verified one
+subscribed installation for item `3794797472`, attempt `0003`; exact receipts and coverage
+limits are in [current status](../../docs/STATUS.md#public-033--published-and-finalized).
+The 0.3.1 narratives below are retained history, not the current version.
+
 ## Standing release rule — 2026-09-11
 
 The author permanently removed manual test gates for every release, including 0.3.3,
