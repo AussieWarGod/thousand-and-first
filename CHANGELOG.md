@@ -54,6 +54,32 @@ correction's only production delta is one file,
 > audit and main 14,296/portable 5,460 tests pass (managed zero skips). The roadless-camp native
 > check passes at `0cfd8e7` after one retained startup timeout. Earlier census entries are retained evidence.
 
+### Fixed
+
+- **The heart's rungs now rise by the route they are meant to rise by.** Every rung of the heart
+  above the first climbs through the ordinary improvement machinery — the plot commissioner refuses
+  to commission one, and zoning never offers one — but the zone's standing rung was written only by
+  the plot route. A settlement that raised its rite ground into a waterstone therefore kept a zone
+  still stamped at rung one: the rung above it was refused for not accreting from its standing
+  rung, and the first basin stayed at sixteen drams instead of widening to forty-eight. The at-most-
+  once rung effects now live in one shared settlement helper that both routes call, so the
+  improvement handover stamps the rung, tells the chronicle once, and widens the basin exactly as
+  the plot route always did. Each route brings its OWN exact endpoint and custody proof, re-asked
+  after the ceremony callback, so a callback that moved or replaced the building refuses rather
+  than settling; the 0/1/2 attempted/lost marker is unchanged, so an interrupted ceremony is
+  honestly lost rather than fired twice; and a rung is never stamped backward. The improvement
+  route settles the rung BEFORE its receipt completes, so a rung that cannot settle exactly leaves
+  the receipt non-terminal for the ordinary recovery path instead of closing the job over an
+  unwritten rung. Every callback boundary re-establishes the whole handover proof — exact successor
+  blueprint, a predecessor that stayed gone, an unduplicated removal proof, and carried contents
+  that still agree with the receipt they were counted into, with the existing legacy zero-content
+  carve-out lifted whole rather than re-derived — so a callback that leaves the root standing but
+  changes what the root IS refuses instead of settling. The last of those re-asks runs after the
+  basin widening and outside its guard, because the guard must keep swallowing an idempotent basin
+  failure while a torn endpoint must refuse. No serialized field, save key, wire format or public
+  API changes. Saves already
+  stuck at a stale rung are a separate follow-up, not a silent migration here. Fixes #138.
+
 ### Added
 
 - Kingdom Quickstart now founds a world with four founding citizens — a hand, a drifter, a tinker

@@ -201,6 +201,59 @@ lines, 1434 files importing
 The 3079 staged C# files produce a cold-install inventory of 3110 files. From these
 3079 sources, baseline and compatibility symbols select 3075 and 3079 ordinary inputs;
 the developer profiles compile 3257 and 3261 inputs. All four compile modes pass.
+
+## Unreleased heart rung settlement seam (issue #138)
+
+Every rung of the heart above the first climbs through the ordinary improvement machinery — the
+plot commissioner refuses to commission one and zoning never offers one — but the zone's standing
+rung (`r_TAF_HeartRung`) was written only by the plot route. A settlement that raised its rite
+ground into a waterstone therefore kept a zone stamped at rung one, so the rung above it was
+refused for not accreting from its standing rung and the first basin stayed at sixteen drams
+instead of widening to forty-eight.
+
+The at-most-once rung effects now live in one shared settlement helper
+(`Growth/KingdomPlotHeartRules.Settle.cs`) that both routes call: the plot route from
+`Growth/KingdomPlot2.34.EffectsAndFurnishing.cs`, and the improvement handover from
+`Growth/KingdomUpgrade.26.HeartRung.cs`, called by
+`Growth/KingdomUpgrade.25.HandoverRemoval.cs`. Each route supplies its OWN exact endpoint and
+custody proof, re-asked after the ceremony callback; the 0/1/2 attempted/lost marker is unchanged,
+so an interrupted ceremony is honestly lost rather than fired twice; and a rung is never stamped
+backward. The improvement route settles the rung BEFORE its receipt completes, so a rung that
+cannot settle exactly leaves the receipt non-terminal for the ordinary recovery path. The basin
+widens in the SAME pass, inside the existing guard, rather than waiting for the next activation.
+
+Every callback boundary the rung introduces re-establishes the WHOLE handover proof, not the cheap
+identity gate: the improvement handover's own predicate block and its settled-contents check —
+including the exact legacy zero-content carve-out — are lifted whole into
+`KingdomUpgrade.ExactImprovementHandoverProof` (`Growth/KingdomUpgrade.25b.HandoverProof.cs`) and
+asked THREE times: once before anything is stamped — closing the window the handover's own
+`active.ObserveChanged` reclassification opens, which can tear carried contents while leaving the
+root standing — and then as the delegate the shared helper re-asks after the ceremony and again
+after the basin reconciliation. The final re-ask sits OUTSIDE the basin guard on purpose: the guard must keep
+swallowing a basin failure, which the next load repeats idempotently, but a torn endpoint must
+refuse. A late refusal leaves the honest state behind it — the rung stamped, the ceremony marker
+settled — so the retry quarantines with the exact reason and never re-fires the ceremony.
+
+Evidence honesty for that contract. The shared helper and the handover proof are engine-typed, and
+both public test projects are deliberately Qud-free, so the callback-tear behaviour cannot be
+executed there: **it is source-pinned, not behaviourally proven.** What IS executed against real
+values is the direction rule (`KingdomPlotRules.RungMaySettle`) and the rung/capacity ladder. The
+behavioural proof of the tear contract is owed to the native lane along with the rung climb itself.
+
+No serialized field, save key, wire format or public API changes; no new property is written on any
+object class that did not already carry it. Saves already stuck at a stale rung are a separate
+follow-up, not a silent migration. **Native proof owed:** the camp seam's third phase, climbing
+rung 2 to rung 3 and reading `HeartRung(Z) == 2` after the waterstone and `== 3` after the moot.
+This is a source, compile and host-suite claim only.
+
+Retained isolated #138 census: 3082 staged production C# files, 437,405 physical lines, none at or above 300.
+Direct `XRL` imports: 1437 files, 0 over the line limit. Inventory SHA-256:
+`40af1139cc9336140aca90a5db81c80aefb060a45635d57766b560c34c1753e4`.
+The 3082 staged C# files produce a cold-install inventory of 3113 files. From these
+3082 sources, baseline and compatibility symbols select 3078 and 3082 ordinary inputs;
+the developer profiles compile 3260 and 3264 inputs. All four compile modes pass.
+
+Retained roadless-seal verification continuation (not the combined heart candidate):
 One engine-free classifier is new; no serialized field, save key, wire format, or public API
 changes. Four canonical compile modes and repository audit pass (770 checks, six platform skips).
 Main 14,296 and portable 5,460 tests pass with zero skips. Focused nine checks pass; removing

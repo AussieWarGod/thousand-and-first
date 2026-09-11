@@ -77,9 +77,10 @@ cold-install inventory contains 3110 files.
 
 ## Retained roadless spatial capture census
 
-Roadless spatial capture correction (#131): 3079 staged production C# files; 437,201 physical
-lines; 1434 direct `XRL` importing files; zero at or above 300. Exact inventory SHA-256:
-`ab4cf22e665900bd82593ad4f9805861da4458e60b918c59b1d3a0bb88b74617`.
+Heart rung settlement seam (#138): 3082 staged production C# files; 437,405 physical
+lines; zero at or above 300. The census reports
+1437 files with direct `XRL` imports; 0 of those exceed the line limit. Exact inventory SHA-256:
+`40af1139cc9336140aca90a5db81c80aefb060a45635d57766b560c34c1753e4`.
 One small engine-free classifier is added. Existing internal capture/flush/reporting seams carry
 a typed pending result without serialized state or format changes. Four compile modes, audit,
 main 14,296/portable 5,460 tests pass (managed zero skips). The bounded roadless-camp native

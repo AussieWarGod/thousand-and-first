@@ -511,6 +511,49 @@ namespace ThousandAndFirst.Tests
 		{
 			ClassicAssert.AreEqual(Expected, KingdomCeremonyHeartRules.IsAccomplishment(Rung));
 		}
+
+		// Issue #138: the rung a design key names and the drams that rung is worth are the two
+		// numbers the shared settlement helper turns a finished job into. Pinned per rung so a
+		// ladder edit cannot silently move the waterstone's 48 drams.
+		[TestCase("heartbasin", 1, 16)]
+		[TestCase("heartwaterstone", 2, 48)]
+		[TestCase("heartmoot", 3, 160)]
+		[TestCase("heartcourt", 4, 512)]
+		[TestCase("arcology", 5, 1024)]
+		public void EveryRungKeyMapsToItsRungAndItsBasinCapacity(string key, int rung, int drams)
+		{
+			ClassicAssert.AreEqual(rung, KingdomPlotRules.HeartRungOf(key));
+			ClassicAssert.AreEqual(drams, KingdomPlotRules.HeartBasinCapacityForRung(rung));
+			ClassicAssert.AreEqual(key, KingdomPlotRules.HeartKeyForRung(rung));
+		}
+
+		// Issue #138: the direction rule the shared settlement helper judges a finished receipt
+		// by. Deliberately NOT a plus-one rule: that the ladder climbs one rung at a time is
+		// gated upstream in KingdomArchitectureRuntime.TryPrepareSuccessor, where BOTH ends of
+		// the transition are known; by settling time the predecessor is gone, so re-deriving it
+		// here would guess at a number this helper cannot see. Direction is all it judges.
+		[TestCase(2, 1, true, TestName = "one rung forward settles")]
+		[TestCase(2, 2, true, TestName = "the same rung settles again, idempotently")]
+		[TestCase(3, 1, true, TestName = "two rungs forward is left to the upstream ladder gate")]
+		[TestCase(1, 2, false, TestName = "a rung below the standing one never settles")]
+		[TestCase(1, 0, true, TestName = "the first rung settles on ground standing at none")]
+		[TestCase(0, 0, false, TestName = "a design off the ladder settles no rung")]
+		public void ARungSettlesOnlyForwardAndNeverBelowTheStandingRung(int rung, int standing,
+			bool expected)
+		{
+			ClassicAssert.AreEqual(expected, KingdomPlotRules.RungMaySettle(rung, standing));
+		}
+
+		[Test]
+		public void ADesignOffTheLadderHasNoRungAndNoBasinCapacity()
+		{
+			ClassicAssert.AreEqual(0, KingdomPlotRules.HeartRungOf("hut"));
+			ClassicAssert.AreEqual(0, KingdomPlotRules.HeartRungOf(null));
+			ClassicAssert.AreEqual(0, KingdomPlotRules.HeartBasinCapacityForRung(0));
+			ClassicAssert.AreEqual(0, KingdomPlotRules.HeartBasinCapacityForRung(6));
+			ClassicAssert.IsNull(KingdomPlotRules.HeartKeyForRung(0));
+			ClassicAssert.IsNull(KingdomPlotRules.HeartKeyForRung(6));
+		}
 	}
 }
 #endif

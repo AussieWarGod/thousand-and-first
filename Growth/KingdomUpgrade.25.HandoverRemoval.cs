@@ -156,39 +156,7 @@ namespace ThousandAndFirst
 		internal static bool TryRecoverAbsentHandover(KingdomSystem System, Zone Z,
 			GameObject Successor, ref KingdomConstructionJob Job, out string Failure)
 		{
-			Failure = null;
-			GameObject exact;
-			KingdomRules.BuildEntry entry;
-			if (System == null || Z == null || Job == null || !GameObject.Validate(Successor)
-				|| Job.Route != KingdomConstructionRoute.Improvement
-				|| !KingdomConstruction.Owns(System, Z, Job) || !KingdomConstruction.IsCurrent(Job)
-				|| !KingdomData.TryGetBuilding(Job.TargetKey, out entry)
-				|| Successor.IDIfAssigned != Job.OutputId || Successor.CurrentCell != Z.GetCell(Job.X, Job.Y)
-				|| KingdomConstruction.FindGlobalPredecessorAuthority(Job, Successor, out _)
-					!= KingdomPhysicalLookupState.Absent
-				|| KingdomConstruction.FindExactId(Z, Job.OutputId, out exact)
-					!= KingdomPhysicalLookupState.Exact || !ReferenceEquals(exact, Successor)
-				|| !r_KingdomScaffold.IsExactSuccessor(Successor, Z,
-					Z.GetCell(Job.X, Job.Y), Job, entry.Blueprint)
-				|| Successor.HasIntProperty(r_KingdomScaffold.RemovalProofProperty)
-				|| !ExactRecoverableRemovalReceipt(Job)
-				|| !r_KingdomScaffold.HasRemovalProof(Successor,
-					Job.SubjectId))
-			{
-				Failure = "Final improvement-removal evidence is absent, duplicated, or changed.";
-				return false;
-			}
-			bool legacyZeroContent = !ExactRemovalReceipt(Job)
-				&& ExactRecoverableRemovalReceipt(Job);
-			if (!legacyZeroContent
-				&& (!r_KingdomImprovement.VerifySettledHandoverContentCustody(Successor,
-					Job.Id, out int settledItems, out int settledLiquid, out Failure)
-					|| settledItems != Job.PhysicalIndex
-					|| settledLiquid != Job.PhysicalAmount))
-			{
-				Failure = Failure ?? "Settled handover contents disagree with the removal receipt.";
-				return false;
-			}
+			if (!ExactImprovementHandoverProof(System, Z, Successor, Job, out Failure)) return false;
 			if (Job.PhysicalPhase == KingdomPhysicalPhase.FinalRemovalPending
 				&& !KingdomConstruction.UpdatePhysical(ref Job, KingdomPhysicalPhase.FinalRemoved,
 					Job.PhysicalIndex, Job.PhysicalAmount, 0, Job.SubjectId, Job.OutputId,
@@ -203,6 +171,14 @@ namespace ThousandAndFirst
 			if (active != null && !active.ObserveChanged(Successor))
 			{
 				Failure = "The completed successor could not refresh its active survey identity.";
+				return false;
+			}
+			// BEFORE Complete on purpose: a rung that cannot settle exactly leaves the receipt
+			// non-terminal, so the ordinary recovery path quarantines it with this exact reason
+			// rather than closing the job over an unwritten rung.
+			if (!TrySettleImprovementHeartRung(System, Z, Successor, Job))
+			{
+				Failure = "The raised heart rung could not settle its exact effects.";
 				return false;
 			}
 			if (!KingdomConstruction.Complete(ref Job))
