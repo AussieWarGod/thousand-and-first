@@ -236,6 +236,80 @@ def ownership(root: str, receipt: str) -> dict:
     }
 
 
+def seal_load(arguments: argparse.Namespace) -> int:
+    """Seal the COLD-LOAD session's record from the save session's own record.
+
+    The cold-load profile is a copy: it exercises the same source tree as the session that wrote
+    the save, so its candidateCommit and runtimeInventorySha256 must be the ones that session
+    recorded -- read from <source>/run-record.json, never re-measured from whatever happens to be
+    checked out now, which is exactly where drift would enter. Its profile seal, by contrast, is
+    its OWN: the copier writes a different closed seal for the destination, because that profile
+    carries the load request the source never had.
+
+    With --tree, the inherited digest is re-verified against that frozen tree and a mismatch
+    refuses rather than being written; without it, the digest is inherited and labelled as such.
+    """
+    if arguments.root == arguments.source:
+        fail("the cold-load profile cannot be its own source")
+    source = read(arguments.source)
+    if source.get("role") != ROLES[0]:
+        fail("the source record is not a %s record" % ROLES[0])
+    for field in ("candidateCommit", "runtimeInventorySha256", "seed"):
+        if not source.get(field):
+            fail("the source record carries no " + field)
+    commit = source["candidateCommit"]
+    digest = source["runtimeInventorySha256"]
+    if not COMMIT.fullmatch(str(commit)) or not SHA256.fullmatch(str(digest)):
+        fail("the source record's commit or inventory digest is malformed")
+    if arguments.tree:
+        measured = inventory_digest(arguments.tree)
+        if measured != digest:
+            fail("the frozen tree measures %s, not the source record's %s" % (measured, digest))
+        head = head_commit(arguments.tree)
+        if head != commit:
+            fail("the frozen tree is at %s, not the source record's %s" % (head, commit))
+    root = Path(arguments.root)
+    if not root.is_dir():
+        fail("cold-load root %s is not a directory" % root)
+    if record_path(arguments.root).exists():
+        fail("this cold-load root already carries a run record")
+    if arguments.turn_budget <= 0 or arguments.timeout_seconds <= 0:
+        fail("turn budget and timeout must both be positive")
+    payload = {
+        "role": ROLES[1],
+        "root": str(root),
+        "seed": source["seed"],
+        "script": arguments.script or load_script(arguments.root),
+        "runtimeInventorySha256": digest,
+        "candidateCommit": commit,
+        "profileSeal": profile_seal_digest(arguments.root),
+        "profileName": arguments.profile_name or root.name,
+        "turnBudget": arguments.turn_budget,
+        "timeoutSeconds": arguments.timeout_seconds,
+        "sealedUtc": utc_now(),
+        "inheritedFrom": str(Path(arguments.source).name),
+        "inheritedVerified": bool(arguments.tree),
+    }
+    if source.get("harnessInventorySha256"):
+        payload["harnessInventorySha256"] = source["harnessInventorySha256"]
+    write(arguments.root, payload)
+    print("sealed cold-load run record: " + str(record_path(arguments.root)))
+    return 0
+
+
+def load_script(root: str) -> str:
+    """The script the copied profile actually carries, read from its own sealed Local."""
+    path = Path(root) / "Local" / "scenario-script.txt"
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError as error:
+        fail("cannot read the cold-load profile's sealed script (%s)" % type(error).__name__)
+    return " ".join(
+        line.strip() for line in text.splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    )
+
+
 def launch(arguments: argparse.Namespace) -> int:
     payload = read(arguments.root)
     if payload.get("launchId"):
@@ -299,6 +373,15 @@ def main(argv: list[str]) -> int:
     sealer.add_argument("--profile-name", default="")
     sealer.add_argument("--harness-inventory-sha256", default="")
     sealer.set_defaults(handler=seal)
+    loader = actions.add_parser("seal-load")
+    loader.add_argument("root")
+    loader.add_argument("--source", required=True)
+    loader.add_argument("--tree", default="")
+    loader.add_argument("--script", default="")
+    loader.add_argument("--profile-name", default="")
+    loader.add_argument("--turn-budget", type=int, required=True)
+    loader.add_argument("--timeout-seconds", type=int, required=True)
+    loader.set_defaults(handler=seal_load)
     launcher = actions.add_parser("launch")
     launcher.add_argument("root")
     launcher.add_argument("--launch-id", required=True)
