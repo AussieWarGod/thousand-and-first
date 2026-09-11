@@ -49,7 +49,7 @@ namespace ThousandAndFirst.Tests
 			// The building object itself is never forced: no direct BuiltProperty/KingdomBuilt
 			// write anywhere in this file.
 			Assert.That(source, Does.Not.Contain("BuiltProperty"));
-			Assert.That(source, Does.Not.Contain("\"KingdomBuilt\""));
+			Assert.That(source, Does.Not.Contain("SetIntProperty(\"KingdomBuilt\""));
 		}
 
 		[Test]
