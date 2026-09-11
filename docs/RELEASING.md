@@ -1,5 +1,9 @@
 # Release and Steam Workshop Procedure
 
+**Current public Alpha: 0.3.3, published and finalized.** Release run `34577908711` verified
+one subscribed installation. [Exact public receipts and limits](STATUS.md#public-033--published-and-finalized).
+Earlier release narratives below remain historical evidence, not current acceptance claims.
+
 ## Standing author ruling — 2026-09-11
 
 The author instructed: **"yes, and forever, no manual test gate for release"**.
