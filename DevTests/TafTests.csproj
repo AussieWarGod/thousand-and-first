@@ -516,6 +516,7 @@
     <Compile Include="KingdomQuickstartNativeHarnessSourceTests.cs" />
     <Compile Include="KingdomQuickstartFoundersTests.cs" />
     <Compile Include="KingdomQuickstartBuildSourceTests.cs" />
+    <Compile Include="KingdomTeardownScenarioSourceTests.cs" />
     <Compile Include="KingdomRaidOutboxNativeHarnessSourceTests.cs" />
     <Compile Include="ScenarioProcessPolicyTests.cs" />
     <Compile Include="TestMainDiscoveryRulesTests.cs" />

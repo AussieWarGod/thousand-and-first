@@ -165,6 +165,7 @@
     <Compile Include="..\Core\KingdomQuickstartStockRules.cs" />
     <Compile Include="ScenarioProcessPolicyTests.cs" />
     <Compile Include="TestMainDiscoveryRulesTests.cs" />
+    <Compile Include="KingdomTeardownScenarioSourceTests.cs" />
     <Compile Include="KingdomRaidOutboxNativeHarnessSourceTests.cs" />
     <Compile Include="..\Tools\ScenarioProcessPolicy.cs" />
 	<Compile Include="KingdomGlobalIdentityResolverTests.cs" />
