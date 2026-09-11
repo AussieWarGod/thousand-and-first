@@ -205,7 +205,17 @@ namespace ThousandAndFirst.Tests
 				"ExactOptionalComponentInt(Item, ComponentCarriedProperty, 1)", exact);
 			StringAssert.Contains("ExactPendingComponentState(Owner, Item, Intent)", exact);
 			StringAssert.Contains("KingdomArchitectureRuntime.TryWorldPlacement", exact);
-			StringAssert.Contains("return count == 1", exact);
+			// The census is generation-aware: it counts by this generation's component token as
+			// well as lot and slot, because an authored upgrade legitimately has two generations
+			// under one lot at one layout-local slot name during the retag pass. The duplicate
+			// refusal it exists for is unchanged -- two copies of THIS generation still count two
+			// -- and the decision itself lives in a pure shard that is value-tested.
+			StringAssert.Contains("string token = ComponentToken(Lot, Intent.SnapshotHash, Placement)", exact);
+			StringAssert.Contains("KingdomArchitectureComponentCensusRules.Counts(Lot, Placement.Slot, token,", exact);
+			StringAssert.Contains("candidate.GetStringProperty(ComponentTokenProperty)", exact);
+			StringAssert.Contains("return KingdomArchitectureComponentCensusRules.Settled(count)", exact);
+			// No element check or cell guard was traded for it.
+			StringAssert.Contains("Item.CurrentCell != Z.GetCell(x, y)", exact);
 			StringAssert.Contains("Owner.SetStringProperty(FaultProperty, Failure)", source);
 			ClassicAssert.IsFalse(source.Contains("Stat.Random"));
 			ClassicAssert.IsFalse(source.Contains("GetRandomElement"));

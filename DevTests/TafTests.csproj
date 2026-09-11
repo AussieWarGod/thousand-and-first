@@ -203,6 +203,8 @@
     <Compile Include="..\Experience\KingdomGrowthFirstGuestRules.Choices.cs" />
     <Compile Include="..\Core\KingdomBodyHistoryRules.cs" />
     <Compile Include="..\Growth\KingdomArchitectureSnapshots.cs" />
+    <Compile Include="..\Growth\KingdomArchitectureComponentCensusRules.cs" />
+    <Compile Include="KingdomArchitectureComponentCensusTests.cs" />
     <Compile Include="..\Growth\KingdomArchitectureSelectorRules.cs" />
     <Compile Include="..\Growth\KingdomArchitectureValidationRules.cs" />
     <Compile Include="..\Core\KingdomQolRules.TagSets.cs" />

@@ -69,13 +69,24 @@ namespace ThousandAndFirst
 			int y;
 			if (!KingdomArchitectureRuntime.TryWorldPlacement(snapshot, Intent.Rect, Placement,
 				out x, out y, out _) || Item.CurrentCell != Z.GetCell(x, y)) return false;
+			// Generation-aware uniqueness. The lot survives an authored upgrade and the slot name
+			// is layout-local, so during the retag pass the predecessor's component and the
+			// successor's retagged component legitimately share lot and slot while standing on
+			// different world cells. The component token binds the slot to THIS generation's
+			// snapshot hash and placement, so a second copy of this generation still counts two
+			// and still refuses, while the other generation is simply not this census's subject.
+			// Nothing here excuses a foreign object: an item whose token does not match is
+			// refused by the element checks above and by the layout-slot guard on its own cell.
+			string token = ComponentToken(Lot, Intent.SnapshotHash, Placement);
 			int count = 0;
 			KingdomSurvey survey = KingdomSurvey.ActiveFor(Z) ?? KingdomSurvey.Take(Z);
 			foreach (GameObject candidate in survey.ArchitectureComponents)
 				if (GameObject.Validate(candidate)
-					&& candidate.GetStringProperty(KingdomPlots.PlotIdProperty) == Lot
-					&& candidate.GetStringProperty(ComponentSlotProperty) == Placement.Slot) count++;
-			return count == 1;
+					&& KingdomArchitectureComponentCensusRules.Counts(Lot, Placement.Slot, token,
+						candidate.GetStringProperty(KingdomPlots.PlotIdProperty),
+						candidate.GetStringProperty(ComponentSlotProperty),
+						candidate.GetStringProperty(ComponentTokenProperty))) count++;
+			return KingdomArchitectureComponentCensusRules.Settled(count);
 		}
 
 		private static bool ExactComponentInt(GameObject Item, string Property, int Expected)
