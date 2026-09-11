@@ -12,10 +12,13 @@ namespace ThousandAndFirst.Harness
 	/// setup reads what the REAL settlement pass did on the turns the persona's <c>advance</c>
 	/// spends; this seam never begins, funds, advances or applies the upgrade itself.
 	/// <para>
-	/// SYNTHETIC SETUP, DISCLOSED. Real founding, real rung-1 completion, six really enrolled
-	/// residents, a dedicated reservoir with minted drams, and forty-eight minted physical units
-	/// inside the authored camp stockpile. Not ordinary play, not a rendered Charter, not
-	/// save/load, and not overall camp acceptance.
+	/// SYNTHETIC SETUP, DISCLOSED. Real founding, real rung-1 completion, <c>Residents</c> really
+	/// enrolled residents, a dedicated reservoir with <c>Drams</c> minted drams, and the minted
+	/// physical units inside the authored camp stockpile (the rung-2 bill plus <c>Unasked</c>
+	/// brush). All three are conditional on the sealed target rung and read off those accessors
+	/// (<c>ResidentCount</c> / <c>TownResidentCount</c>, <c>DedicatedDrams</c> /
+	/// <c>TownDedicatedDrams</c>, <c>MintedBrushUnits</c> / <c>Rung3UnaskedBrushUnits</c>). Not
+	/// ordinary play, not a rendered Charter, not save/load, and not overall camp acceptance.
 	/// </para>
 	/// </summary>
 	internal static partial class KingdomCampHeartNativeChecks
@@ -172,11 +175,13 @@ namespace ThousandAndFirst.Harness
 				get { return TargetRung >= 3 ? Rung3UnaskedBrushUnits : MintedBrushUnits; }
 			}
 
-			/// <summary>Real founding, real rung-1 rite-ground completion, six really enrolled
-			/// residents, one really dedicated reservoir, and forty-eight minted physical units in
-			/// the authored camp stockpile - enough that the settlement can genuinely afford the
-			/// authored rung-2 bill out of its own store when the real pass assesses the heart.
-			/// </summary>
+			/// <summary>Real founding, real rung-1 rite-ground completion, <c>Residents</c> really
+			/// enrolled residents, one really dedicated reservoir of <c>Drams</c>, and the minted
+			/// physical units in the authored camp stockpile (the rung-2 bill plus <c>Unasked</c>
+			/// brush) - enough that the settlement can genuinely afford the authored rung-2 bill
+			/// out of its own store when the real pass assesses the heart. The figures are the
+			/// accessors' and conditional on the sealed target rung; a rung-3 run also seeds its
+			/// Town and mints the rung-3 bill later, at the phase-2 boundary.</summary>
 			internal void Start()
 			{
 				System = KingdomNativeCampFounding.Found(Game, Zone, RequirePair);

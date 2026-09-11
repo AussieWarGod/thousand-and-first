@@ -298,6 +298,21 @@ namespace ThousandAndFirst.Tests
 				Does.Contain("Building.SetIntProperty(HeartEffectProperty, 2);"));
 
 			string checks = Read(Checks);
+			// The setup docstrings state the conditional and point at the accessors; the rung-2
+			// literals they once hard-coded (PR #170 review) must not come back.
+			string fixture = Read(Fixture);
+			foreach (string stale in new[] { "Six real NPC residents", "six really enrolled",
+				"forty-eight", "23 brush", "400-dram", "Six is the smallest" })
+			{
+				Assert.That(fixture, Does.Not.Contain(stale), Fixture + " / " + stale);
+				Assert.That(checks, Does.Not.Contain(stale), Checks + " / " + stale);
+			}
+			foreach (string accessor in new[] { "<c>Residents</c> real NPC residents",
+				"<c>TownResidentCount</c>", "<c>Rung3UnaskedBrushUnits</c>", "<c>Unasked</c> brush" })
+				Assert.That(fixture, Does.Contain(accessor), Fixture + " / " + accessor);
+			foreach (string accessor in new[] { "<c>Residents</c> really", "<c>Drams</c>",
+				"<c>TownDedicatedDrams</c>", "<c>Rung3UnaskedBrushUnits</c>" })
+				Assert.That(checks, Does.Contain(accessor), Checks + " / " + accessor);
 			Assert.That(checks, Does.Contain("\"; target-rung=\" + Retained.TargetRung"));
 			Assert.That(checks, Does.Contain("\"; synthetic-rung3-bill=\""));
 			Assert.That(checks, Does.Contain("\"; synthetic-craft-disks=\""));
