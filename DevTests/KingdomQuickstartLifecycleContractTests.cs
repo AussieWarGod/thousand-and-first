@@ -222,21 +222,58 @@ namespace ThousandAndFirst.Tests
 				finish);
 			string stall = Read("Harness/KingdomQuickstartLifecycleStall.cs");
 			StringAssert.Contains("internal const string DetailRow = \"lifecycle-grown-detail\";", stall);
-			StringAssert.Contains("if (Job.Projection == KingdomConstructionProjection.PlotWorks)", stall);
-			StringAssert.Contains("KingdomPlots.PlotWorkRemainingProperty", stall);
-			StringAssert.Contains("KingdomPlots.PlotWorkLastTickProperty", stall);
-			StringAssert.Contains("KingdomPlots.PlotWorkRequiredProperty", stall);
-			StringAssert.Contains("KingdomPlots.PlotWorkSchemaProperty", stall);
-			StringAssert.Contains("KingdomPlots.PlotWorkWindowProperty", stall);
+			// The Projection branch and the works-root read live in the split partial shard now
+			// (KingdomQuickstartLifecycleStall.Detail.cs), kept under the house line cap.
+			string detail = Read("Harness/KingdomQuickstartLifecycleStall.Detail.cs");
+			StringAssert.Contains("internal static partial class KingdomQuickstartLifecycleStall", detail);
+			StringAssert.Contains("if (Job.Projection == KingdomConstructionProjection.PlotWorks)", detail);
+			StringAssert.Contains("KingdomPlots.PlotWorkRemainingProperty", detail);
+			StringAssert.Contains("KingdomPlots.PlotWorkLastTickProperty", detail);
+			StringAssert.Contains("KingdomPlots.PlotWorkRequiredProperty", detail);
+			StringAssert.Contains("KingdomPlots.PlotWorkSchemaProperty", detail);
+			StringAssert.Contains("KingdomPlots.PlotWorkWindowProperty", detail);
 			// The scaffold lane is still read, but only for the non-plot branch -- neither lane
 			// is dropped, only correctly chosen.
-			StringAssert.Contains("r_KingdomScaffold scaffold = root.GetPart<r_KingdomScaffold>();", stall);
+			StringAssert.Contains("r_KingdomScaffold scaffold = root.GetPart<r_KingdomScaffold>();", detail);
 			// The detail row's key set, exactly as the diagnosis asked for.
 			foreach (string key in new[] { "selectedId=", "candidates=", "roots=", "free=",
 				"plotRemaining=", "lastSemanticTick=", "schema=" })
-				StringAssert.Contains(key, stall);
+				StringAssert.Contains(key, detail);
 			string matrix = Read("Tools/personas/persona_matrix.py");
 			StringAssert.Contains("\"lifecycle-grown-detail\",", matrix);
+		}
+
+		/// <summary>Native run 23 (3e3ff75), #163: a paid, fully-laboured job whose plot stage
+		/// never advances (a living occupant on the footprint refuses the apply every pass) must
+		/// classify as stage-not-applied/apply-blocked-occupant, never fall through to the wrong
+		/// insufficient-turns default. The occupant read is the same test production's own
+		/// CanInsert refuses on, and the detail row now also carries stage-applied=/physical=/
+		/// occupants= so a native run can bind the classification to what was actually found.
+		/// </summary>
+		[Test]
+		public void StallClassificationNamesAnApplyBlockedOccupantBeforeInsufficientTurns()
+		{
+			// The pure classification half lives in its own engine-free shard so it can be value
+			// tested, not only source-pinned -- see DevTests/
+			// KingdomQuickstartLifecycleStallClassifyTests.cs.
+			string classify = Read("Harness/KingdomQuickstartLifecycleStall.Classify.cs");
+			StringAssert.Contains("internal const string StageNotApplied = \"stage-not-applied\";",
+				classify);
+			StringAssert.Contains(
+				"internal const string ApplyBlockedOccupant = \"apply-blocked-occupant\";", classify);
+			StringAssert.Contains(
+				"if (RemainingTicks <= 0L && StageApplied < StageTarget)", classify);
+			StringAssert.Contains(
+				"return OccupantCount > 0 ? ApplyBlockedOccupant : StageNotApplied;", classify);
+			// The new branch must land BEFORE the insufficient-turns default, not after.
+			int branchAt = classify.IndexOf("StageApplied < StageTarget", StringComparison.Ordinal);
+			int defaultAt = classify.IndexOf("return InsufficientTurns;", StringComparison.Ordinal);
+			ClassicAssert.IsTrue(branchAt >= 0 && defaultAt > branchAt);
+			string detail = Read("Harness/KingdomQuickstartLifecycleStall.Detail.cs");
+			StringAssert.Contains("private static List<string> OccupantsOn(", detail);
+			StringAssert.Contains("item.IsCreature || item.IsPlayer()", detail);
+			StringAssert.Contains("stage-applied=", detail);
+			StringAssert.Contains("occupants=", detail);
 		}
 
 		/// <summary>The cold-load session compares what it reads against the witness; it never
@@ -450,21 +487,30 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AnUnfinishedJobIsClassifiedFromReadProductionState()
 		{
+			// KingdomQuickstartLifecycleStall is now split across three partial shards to stay
+			// under the house line cap: .cs (Describe + shared helpers), .Classify.cs (the pure,
+			// engine-free classification), .Detail.cs (the untruncated DetailRow reading).
 			string stall = Read("Harness/KingdomQuickstartLifecycleStall.cs");
+			string classify = Read("Harness/KingdomQuickstartLifecycleStall.Classify.cs");
+			string detail = Read("Harness/KingdomQuickstartLifecycleStall.Detail.cs");
 			foreach (string token in new[] { "\"pass-never-ran\"", "\"no-labour-ever\"",
-				"\"labour-stalled\"", "\"insufficient-turns\"" })
-				StringAssert.Contains(token, stall);
+				"\"labour-stalled\"", "\"insufficient-turns\"", "\"stage-not-applied\"",
+				"\"apply-blocked-occupant\"" })
+				StringAssert.Contains(token, classify);
 			foreach (string field in new[] { "scaffold.RemainingTicks", "scaffold.LastWorkedTick",
 				"r_KingdomScaffold.WorkWindowProperty", "KingdomConstructionPresence.SelectedProperty",
 				"KingdomConstructionPresence.HandsProperty",
 				"KingdomConstructionPresence.EffectivenessProperty",
-				"KingdomConstructionPresence.SchemaProperty", "System.LastSemanticTick",
+				"KingdomConstructionPresence.SchemaProperty" })
+				StringAssert.Contains(field, detail);
+			foreach (string field in new[] { "System.LastSemanticTick",
 				"Job.StartedTick", "Job.DueTick", "Job.UpdatedTick", "Job.InputReceipt" })
 				StringAssert.Contains(field, stall);
-			// Reads only: nothing here writes state or advances a clock.
-			foreach (string forbidden in new[] { "SetIntProperty", "SetStringProperty",
-				"AdvanceDurable", "RetryDurable", "= now;" })
-				StringAssert.DoesNotContain(forbidden, stall);
+			// Reads only: nothing here writes state or advances a clock, across all three shards.
+			foreach (string source in new[] { stall, classify, detail })
+				foreach (string forbidden in new[] { "SetIntProperty", "SetStringProperty",
+					"AdvanceDurable", "RetryDurable", "= now;" })
+					StringAssert.DoesNotContain(forbidden, source);
 			string finish = Read("Harness/KingdomQuickstartLifecycleFinish.cs");
 			StringAssert.Contains("KingdomQuickstartLifecycleStall.Describe(Game, Zone, System, job)", finish);
 			StringAssert.DoesNotContain("the turn budget expired before this building stood", finish);
