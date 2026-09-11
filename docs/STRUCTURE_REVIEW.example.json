@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "inventorySha256": "SHA256_PRINTED_BY_TOOLS_CHECK_STRUCTURE",
   "exceptions": [],
-  "reviewedBy": "REVIEWER_NAME_OR_HONESTLY_LABELLED_AUTOMATED_IDENTITY",
+  "reviewedBy": "REPLACE_WITH_THE_REVIEWER_OR_HONESTLY_LABELLED_AUTOMATED_IDENTITY",
   "completedUtc": "YYYY-MM-DDTHH:MM:SSZ",
   "oneResponsibility": {
     "status": "passed",
