@@ -35,8 +35,15 @@ namespace ThousandAndFirst.Harness
 			/// inspection, and no layout or upgrade quarantine was raised on the way.</summary>
 			private void ClimbRung3()
 			{
-				RecordJobProgress();
 				GameObject standing = StandingHeart();
+				// Everything is READ before anything is asserted, so a refusal below names the
+				// production gate that held (runs 7 and 33 named only the design key).
+				RecordRung3Standing(standing);
+				KingdomConstructionJob rung3Job = FindRung3Job();
+				RecordRung3Blocked(rung3Job);
+				RecordJobProgress(rung3Job == null ? "(no moot-yard job)" : rung3Job.Id,
+					SecondStanding);
+				RequireTownHeld("at the rung-3 boundary");
 				Require(KingdomUpgrade.DesignKeyOf(standing) == ThirdRungKey,
 					"taf-camp-rung3-unfinished: the heart did not finish its real paid climb to "
 						+ "the moot yard; key=" + KingdomUpgrade.DesignKeyOf(standing));
@@ -157,22 +164,7 @@ namespace ThousandAndFirst.Harness
 			/// phase that is not Complete, refuses here rather than being read as a pass.</summary>
 			private void RequireCompletedImprovement()
 			{
-				List<KingdomConstructionJob> jobs;
-				string failure;
-				// The whole durable registry, not the active slice: a finished job is terminal and
-				// the active reads deliberately exclude it.
-				Require(KingdomConstruction.TryRead(out jobs, out failure) && jobs != null,
-					"taf-camp-rung3-jobs-unreadable: " + KingdomScenarioRules.Bounded(failure));
-				KingdomConstructionJob found = null;
-				for (int i = 0; i < jobs.Count; i++)
-				{
-					KingdomConstructionJob job = jobs[i];
-					if (job == null || job.Route != KingdomConstructionRoute.Improvement
-						|| job.TargetKey != ThirdRungKey) continue;
-					Require(found == null,
-						"taf-camp-rung3-job-ambiguous: two improvement jobs target the moot yard");
-					found = job;
-				}
+				KingdomConstructionJob found = FindRung3Job();
 				Require(found != null,
 					"taf-camp-rung3-job-absent: no improvement job targets the moot yard");
 				Require(found.Phase == KingdomConstructionPhase.Complete,

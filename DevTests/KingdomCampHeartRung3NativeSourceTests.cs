@@ -20,6 +20,8 @@ namespace ThousandAndFirst.Tests
 		private const string Phases = "Harness/KingdomCampHeartNativeChecksPhases.cs";
 		private const string Rung3 = "Harness/KingdomCampHeartNativeRung3.cs";
 		private const string Stock = "Harness/KingdomCampHeartNativeRung3Stock.cs";
+		private const string Diagnostics = "Harness/KingdomCampHeartNativeRung3Diagnostics.cs";
+		private const string Bill = "Harness/KingdomCampHeartNativeBill.cs";
 		private const string Persona = "Tools/personas/camp-heart-rung3-native-check.persona";
 		private const string Buildings = "RuntimeData/KingdomBuildings.xml";
 		private const string Blueprints = "RuntimeData/ObjectBlueprints.xml";
@@ -276,6 +278,53 @@ namespace ThousandAndFirst.Tests
 			Assert.That(rung3, Does.Contain(
 				"bool recovered = KingdomPlots.RecoverFoundingHeart(System, Zone);"));
 			Assert.That(rung3, Does.Contain("taf-camp-rung3-heart-unrecovered:"));
+		}
+
+		/// <summary>
+		/// WIRING (native runs 7 and 33). The rung-3 boundary reads the settlement's own verdict,
+		/// stage, population and the moot yard's job BY TARGET before its first Require, journals
+		/// the blocked path exactly as the rung-2 leg does, keys job progress on the rung-3 job
+		/// and the waterstone rather than the retained rung-2 pair, and proves the Town held both
+		/// when the bill was minted and at the boundary. The diagnostic shard drives nothing.
+		/// </summary>
+		[Test]
+		public void TheRungThreeBoundaryReadsTheVerdictAndTheTownBeforeItAsserts()
+		{
+			string rung3 = Read(Rung3);
+			int standing = rung3.IndexOf("RecordRung3Standing(standing);", StringComparison.Ordinal);
+			int firstRequire = rung3.IndexOf("Require(KingdomUpgrade.DesignKeyOf(standing) == ThirdRungKey,",
+				StringComparison.Ordinal);
+			Assert.That(standing, Is.GreaterThan(-1));
+			Assert.That(firstRequire, Is.GreaterThan(standing), "the verdict is read before the key is asserted");
+			foreach (string wiring in new[] { "KingdomConstructionJob rung3Job = FindRung3Job();",
+				"RecordRung3Blocked(rung3Job);",
+				"RecordJobProgress(rung3Job == null ? \"(no moot-yard job)\" : rung3Job.Id,",
+				"SecondStanding);", "RequireTownHeld(\"at the rung-3 boundary\");",
+				"KingdomConstructionJob found = FindRung3Job();" })
+				Assert.That(rung3, Does.Contain(wiring), wiring);
+			Assert.That(rung3.IndexOf("RequireTownHeld(\"at the rung-3 boundary\");", StringComparison.Ordinal),
+				Is.LessThan(firstRequire));
+
+			string diagnostics = Read(Diagnostics);
+			foreach (string read in new[] {
+				"KingdomUpgrade.Assessment assessment = KingdomUpgrade.Assess(System, Zone,",
+				"int freeHands = System.Population - System.AssignedCrew;",
+				"\"; verdict=\").Append(assessment.Verdict)",
+				"\"; stage-needed=\").Append(assessment.StageNeeded)",
+				"((KingdomUpgradeRules.UpgradeVerdict)improvement.AnnouncedReason)",
+				"|| job.TargetKey != ThirdRungKey) continue;",
+				"RecordBlockedMessages();",
+				"\"taf-camp-rung3-town-held: the settlement did not hold the Town the moot yard \"",
+				"System.Stage >= GrowthStage.Town",
+				"&& System.Population >= TownResidentCount," })
+				Assert.That(diagnostics, Does.Contain(read), read);
+			foreach (string driver in new[] { "KingdomUpgrade.Begin(", "KingdomPlots.Advance(",
+				"TryApplyUpgrade(", "SetIntProperty(", "SetStringProperty(", "Destroy(", "Obliterate(" })
+				Assert.That(diagnostics, Does.Not.Contain(driver),
+					"the rung-3 diagnostics must read, never drive: " + driver);
+			Assert.That(Read(Bill), Does.Contain("private void RecordJobProgress(string Id, GameObject Root)"));
+			Assert.That(Read(Bill), Does.Contain("var improvement = Root?.GetPart<XRL.World.Parts.r_KingdomImprovement>();"));
+			Assert.That(Read(Phases), Does.Contain("RequireTownHeld(\"when the rung-3 bill was minted\");"));
 
 			// The marker the rung-3 phase reads is the one production writes.
 			Assert.That(Read(Checks), Does.Contain("internal const string HeartEffectProperty = "
