@@ -202,7 +202,6 @@ namespace ThousandAndFirst.Tests
 			// The ground loop is byte-identical to b5372a2 again; occupancy moved one stage
 			// later, into architecture acceptance.
 			string source = Plot();
-			Assert.That(source, Does.Not.Contain("CrowdsOccupant(rect, Z.Width, occupiedCells)"));
 			Assert.That(source, Does.Not.Contain("nearestBlockedIsOccupant"));
 			AssertOrdered(source,
 				"KingdomPlotPoseSitingRules.Enumerate(",

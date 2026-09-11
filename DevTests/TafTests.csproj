@@ -717,6 +717,7 @@
 	<Compile Include="KingdomUpgradeSourceTests.cs" />
     <Compile Include="KingdomDesignRulesTests.cs" />
     <Compile Include="KingdomPlotRulesTests.cs" />
+    <Compile Include="KingdomQuoteSitingOccupancyNativeSourceTests.cs" />
     <Compile Include="KingdomArchitectureRulesTests.cs" />
 	<Compile Include="KingdomArchitectureCorpusFixture.cs" />
 	<Compile Include="KingdomArchitectureEnclosureTests.cs" />

@@ -21,7 +21,8 @@ namespace ThousandAndFirst.Harness
 		internal const string SetupVerb = "quote-occupancy-setup";
 		internal const string CheckVerb = "quote-occupancy-check";
 		internal const string Receipt = "r_TAF_ScenarioQuoteOccupancyNative_v1";
-		private static readonly string[] Script = { "stagedigest", SetupVerb, CheckVerb, "stagedigest" };
+		private static readonly string[] Script = { "stagedigest", SetupVerb, CheckVerb, CheckVerb,
+			CheckVerb, CheckVerb, CheckVerb, "stagedigest" };
 
 		public int ScenarioVerbApiVersion { get { return KingdomScenarioVerbApi.Version; } }
 

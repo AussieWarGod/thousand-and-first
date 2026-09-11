@@ -28,7 +28,11 @@ namespace ThousandAndFirst.Harness
 				Retained = new Frame(Game, Zone);
 				Retained.Start();
 			}
-			Require(Retained != null, "the quote-occupancy check verb arrived before its setup verb");
+			else
+			{
+				Require(Retained != null, "the quote-occupancy check verb arrived before its setup verb");
+				Retained.Check();
+			}
 			Complete = Retained.Done;
 			return "native-quote-occupancy cases=3 passed="
 				+ (Complete ? "3 failed=0" : "0 failed=0") + Retained.Evidence;
@@ -47,7 +51,13 @@ namespace ThousandAndFirst.Harness
 		}
 
 		/// <summary>All three behaviours run synchronously inside Start() -- quoting and
-		/// committing never wait on engine turns, unlike construction/strike.</summary>
+		/// committing never wait on engine turns, unlike construction/strike. Start() runs the
+		/// cases but does NOT set Done: setup must still return the plain "intent" receipt so
+		/// the check verb's own readback (Provider.cs) is not overwritten before it runs, the
+		/// same reason KingdomDepositOverflowNativeChecks reaches Done only on its own last
+		/// check. Since all three cases already finished by the time setup returns, the first
+		/// Check() call is what flips Done -- idempotent afterward, like every later check
+		/// call here.</summary>
 		private sealed class Frame
 		{
 			private readonly XRLGame Game;
@@ -78,6 +88,12 @@ namespace ThousandAndFirst.Harness
 				OccupiedFirstClearAlternate(system, entry);
 				AllOccupiedNoMutation(system, entry);
 				DriftAfterQuotePreflightRefusal(system, entry);
+			}
+
+			/// <summary>Idempotent: the cases already ran in Start(), so every check call --
+			/// the first and every one after -- only confirms completion.</summary>
+			internal void Check()
+			{
 				Done = true;
 			}
 
