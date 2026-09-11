@@ -529,6 +529,52 @@ namespace ThousandAndFirst.Tests
 				settlement);
 		}
 
+		/// <summary>
+		/// The retirement authority can now be asked about one NAMED generation, and the works
+		/// slot's own question is unchanged. The name is never the caller's to invent: each
+		/// generation says which record of the plan's own must name the identity, and the final
+		/// generation reads it out of the digest-sealed terminal rather than off a property.
+		/// The final generation's own retirement proof is not supplied yet, so it refuses --
+		/// fail-closed until the receipt chain that can prove it is wired in.
+		/// </summary>
+		[Test]
+		public void RetirementAuthorityNamesOneGenerationAndStillRefusesTheUnproved()
+		{
+			string seal = Source("Growth/KingdomPlot2.07h.FoundingHeartSeal.cs");
+			// The works case: same clause, reached through the named overload.
+			StringAssert.Contains("return ExactFoundingHeartRetiredAuthority(Z, PredecessorId,\n"
+				+ "\t\t\t\tKingdomFoundingHeartRetiredGeneration.Works, out Context);", seal);
+			StringAssert.Contains("KingdomFoundingHeartRules.SlotId(Plan,\n"
+				+ "\t\t\t\t\tKingdomFoundingHeartRules.WorksSlot) == PredecessorId;", seal);
+			// The naming clause runs BEFORE seal, reservations, roster, custody and proof, and
+			// those five are unchanged.
+			foreach (string clause in new[] {
+				"NamesRetiredFoundingHeartIdentity(Z, plan, PredecessorId, Generation)",
+				"&& ExactFoundingHeartSeal(Z, plan)",
+				"&& ExactFoundingHeartReservations(plan)",
+				"&& TryReadFoundingHeartContext(Z, plan, out Context)",
+				"&& ExactFoundingHeartMarkerRoster(Z, plan, false)",
+				"&& ExactFoundingHeartRetiredCustody(plan)",
+				"&& ExactFoundingHeartRetirementProof(Z, Context, PredecessorId, Generation)" })
+				StringAssert.Contains(clause, seal);
+			int names = seal.IndexOf("NamesRetiredFoundingHeartIdentity(Z, plan, PredecessorId",
+				StringComparison.Ordinal);
+			int proof = seal.IndexOf("ExactFoundingHeartRetirementProof(Z, Context, PredecessorId,",
+				StringComparison.Ordinal);
+			ClassicAssert.IsTrue(names > -1 && proof > names,
+				"the identity must be named before any authority is spent proving it");
+			// The final generation is read out of the sealed blob, and may not name the identity
+			// the prior record retired.
+			StringAssert.Contains("KingdomFoundingHeartTerminalRules.TryDecode(", seal);
+			StringAssert.Contains("&& terminal.FinalId == PredecessorId", seal);
+			StringAssert.Contains("&& terminal.PredecessorId != PredecessorId;", seal);
+
+			// And the proof itself refuses any generation it cannot prove.
+			string removal = Source("Growth/KingdomPlot2.07q.FoundingHeartRecordedRemoval.cs");
+			StringAssert.Contains("if (Generation != KingdomFoundingHeartRetiredGeneration.Works)"
+				+ " return false;", removal);
+		}
+
 	}
 }
 #endif

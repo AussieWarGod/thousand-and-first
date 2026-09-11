@@ -117,44 +117,81 @@ namespace ThousandAndFirst.Tests
 		/// <summary>
 		/// VALUE. The relaxed binding, clause by clause. The first row is the whole proof; every
 		/// row after it drops exactly one demand and must refuse. A first-generation terminal is
-		/// accepted without any of them, and a chained one is accepted without all of them.
+		/// accepted without any of them, and a stranger identity without all of them.
 		/// </summary>
 		[Test]
 		public void TheRelaxedBindingRefusesWhenAnySingleClauseIsDropped()
 		{
 			const string planFinal = "final-reserved-id";
 			const string successor = "successor-id";
+			KingdomFoundingHeartTerminalPlan prior = Terminal("works-slot-id", planFinal);
+
 			// First generation: the reserved identity, no chain asked for.
 			ClassicAssert.IsTrue(KingdomFoundingHeartChainRules.BindsGround(planFinal, planFinal,
 				null, null, null, false, false, false, false));
 			// A stranger identity with no chain is not a heart.
 			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
 				null, null, null, false, false, false, false));
-
 			// The whole chained proof.
 			ClassicAssert.IsTrue(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
-				planFinal, planFinal, successor, true, true, true, true));
+				prior, planFinal, successor, true, true, true, true));
 
 			// One clause dropped per row, and each must refuse.
-			foreach (object[] row in new[]
-			{
-				new object[] { "prior blob absent", "", planFinal, successor, true, true, true, true },
-				new object[] { "chain link broken", "someone-else", planFinal, successor, true, true, true, true },
-				new object[] { "predecessor unnamed", planFinal, "", successor, true, true, true, true },
-				new object[] { "receipt names another id", planFinal, planFinal, "other-id", true, true, true, true },
-				new object[] { "retirement unproved", planFinal, planFinal, successor, false, true, true, true },
-				new object[] { "receipt unproved", planFinal, planFinal, successor, true, false, true, true },
-				new object[] { "custody unproved", planFinal, planFinal, successor, true, true, false, true },
-				new object[] { "reservation unproved", planFinal, planFinal, successor, true, true, true, false }
-			})
-				ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor,
-					planFinal, (string)row[1], (string)row[2], (string)row[3], (bool)row[4],
-					(bool)row[5], (bool)row[6], (bool)row[7]),
-					"the chain was accepted with a clause missing: " + row[0]);
-
-			// A record that retires what it binds is not a generation.
 			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
-				successor, successor, successor, true, true, true, true));
+				null, planFinal, successor, true, true, true, true), "prior record absent");
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
+				Terminal("works-slot-id", "someone-elses-final"), planFinal, successor, true, true,
+				true, true), "the prior record bound another identity");
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
+				prior, "", successor, true, true, true, true), "no identity was retired");
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
+				prior, planFinal, "other-id", true, true, true, true),
+				"the receipt names another output");
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
+				prior, planFinal, successor, false, true, true, true), "no construction receipt");
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
+				prior, planFinal, successor, true, false, true, true), "no removal proof");
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
+				prior, planFinal, successor, true, true, false, true), "custody unproved");
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
+				prior, planFinal, successor, true, true, true, false), "reservation unproved");
+
+			// A record that retires what it binds, and one that loops back onto the prior
+			// record's own predecessor, are not generations.
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
+				Terminal("works-slot-id", successor), successor, successor, true, true, true,
+				true));
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround("works-slot-id",
+				planFinal, prior, planFinal, "works-slot-id", true, true, true, true));
+		}
+
+		/// <summary>
+		/// VALUE. A caller holding nothing but booleans cannot satisfy the chain. The prior
+		/// generation must be the record the plan's own sealed blob decoded to, so a forged or
+		/// merely asserted chain -- every flag true, no real prior record, or a prior record from
+		/// another heart -- is refused on the evidence rather than on the flags.
+		/// </summary>
+		[Test]
+		public void EveryFlagTrueWithoutTheRecordsIsRefused()
+		{
+			const string planFinal = "final-reserved-id";
+			const string successor = "successor-id";
+			// Every proof flag asserted, and nothing to read: refused.
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
+				null, planFinal, successor, true, true, true, true));
+			// A prior record that is not a valid terminal at all: refused.
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
+				new KingdomFoundingHeartTerminalPlan(), planFinal, successor, true, true, true,
+				true));
+			// A well-formed prior record belonging to ANOTHER heart's chain: refused, because the
+			// link is read from the record and does not match the identity retired here.
+			KingdomFoundingHeartTerminalPlan foreign = Terminal("other-works", "other-final");
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
+				foreign, planFinal, successor, true, true, true, true));
+			// And the honest chain, for contrast, with the same flags.
+			ClassicAssert.IsTrue(KingdomFoundingHeartChainRules.BindsGround(successor, planFinal,
+				Terminal("works-slot-id", planFinal), planFinal, successor, true, true, true,
+				true));
 		}
 
 		/// <summary>

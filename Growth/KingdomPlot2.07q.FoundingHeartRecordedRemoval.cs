@@ -7,6 +7,21 @@ namespace ThousandAndFirst
 	{
 		// Called only after exact founding seal, reservations, markers and retired custody.
 		// A native tombstone proves a fresh cut; the persisted Removed phase survives its pooling.
+		/// <summary>The retirement proof for one named generation. The works generation is
+		/// unchanged: a founding-heart tombstone minted for the works slot, or the recorded
+		/// removal the terminal itself witnesses. The FINAL generation -- the root a rung climb
+		/// retires -- has neither of those records, because the improvement route removed it
+		/// through its own receipt chain; its proof therefore belongs to the caller that holds
+		/// that chain, and until one supplies it this refuses. Fail-closed on every unknown.
+		/// </summary>
+		private static bool ExactFoundingHeartRetirementProof(Zone Z,
+			FoundingHeartContext Context, string PredecessorId,
+			KingdomFoundingHeartRetiredGeneration Generation)
+		{
+			if (Generation != KingdomFoundingHeartRetiredGeneration.Works) return false;
+			return ExactFoundingHeartRetirementProof(Z, Context, PredecessorId);
+		}
+
 		private static bool ExactFoundingHeartRetirementProof(Zone Z,
 			FoundingHeartContext Context, string PredecessorId)
 		{

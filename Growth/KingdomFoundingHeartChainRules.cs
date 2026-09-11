@@ -36,46 +36,58 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// A chained generation, proved rather than asserted.
+		/// A chained generation, proved from the records themselves rather than asserted.
+		///
+		/// <para>The caller hands over the PRIOR TERMINAL as the plan decoded it -- not a string
+		/// it typed -- so the chain link is read out of the digest-sealed blob here; the identity
+		/// the retirement authority actually answered for, so a caller cannot claim retirement of
+		/// one identity while binding another; and the improvement receipt's own output identity
+		/// beside the two receipt facts read off the standing object. A caller with nothing but
+		/// booleans cannot satisfy this.</para>
 		/// </summary>
-		/// <param name="PriorFinalId">The final identity the blob standing before this one named.
-		/// Empty when no prior terminal could be decoded, which refuses.</param>
-		/// <param name="TerminalPredecessorId">The identity this record retires.</param>
-		/// <param name="TerminalFinalId">The identity this record binds the ground to.</param>
+		/// <param name="Prior">The terminal the plan's own sealed blob decoded to. Null refuses.
+		/// </param>
+		/// <param name="RetiredIdentity">The identity the retirement authority proved retired.
+		/// </param>
+		/// <param name="TerminalFinalId">The identity the ground would be bound to.</param>
 		/// <param name="JobOutputId">The improvement receipt's own output identity.</param>
-		/// <param name="RetirementProved">The retiring root's retirement authority, proved for
-		/// THAT identity.</param>
-		/// <param name="ReceiptProved">The improvement's receipt and removal proof, read off the
-		/// successor.</param>
-		/// <param name="CustodyProved">The successor is the unique holder of its identity and the
-		/// saved root key is re-keyed to it.</param>
-		/// <param name="ReservationProved">The reservation store issues the final role for the
-		/// new identity.</param>
-		public static bool ChainedGeneration(string PriorFinalId, string TerminalPredecessorId,
-			string TerminalFinalId, string JobOutputId, bool RetirementProved, bool ReceiptProved,
-			bool CustodyProved, bool ReservationProved)
+		/// <param name="HasReceipt">The standing object carries that job's construction receipt.
+		/// </param>
+		/// <param name="HasRemovalProof">The standing object carries the scaffold removal proof
+		/// naming the retired identity.</param>
+		/// <param name="CustodyProved">The successor is the unique holder of that identity and
+		/// its saved root custody is keyed to it.</param>
+		/// <param name="ReservationProved">The final role is reserved for that identity.</param>
+		public static bool ChainedGeneration(KingdomFoundingHeartTerminalPlan Prior,
+			string RetiredIdentity, string TerminalFinalId, string JobOutputId, bool HasReceipt,
+			bool HasRemovalProof, bool CustodyProved, bool ReservationProved)
 		{
-			// A chain link is two named identities that differ: a record that retires what it
-			// binds, or binds what it retires, is not a generation at all.
-			if (string.IsNullOrEmpty(PriorFinalId) || string.IsNullOrEmpty(TerminalPredecessorId)
-				|| string.IsNullOrEmpty(TerminalFinalId) || string.IsNullOrEmpty(JobOutputId))
-				return false;
-			if (TerminalPredecessorId == TerminalFinalId) return false;
-			if (PriorFinalId != TerminalPredecessorId) return false;
+			// The prior generation is read, not described: an undecodable or malformed record is
+			// no chain at all.
+			if (!KingdomFoundingHeartTerminalRules.Valid(Prior)) return false;
+			if (string.IsNullOrEmpty(RetiredIdentity) || string.IsNullOrEmpty(TerminalFinalId)
+				|| string.IsNullOrEmpty(JobOutputId)) return false;
+			// The chain link: what the prior generation BOUND is exactly what this one retires.
+			if (Prior.FinalId != RetiredIdentity) return false;
+			// A record that retires what it binds is not a generation, and a chain that loops
+			// back onto the prior record's own predecessor is not one either.
+			if (RetiredIdentity == TerminalFinalId) return false;
+			if (Prior.PredecessorId == TerminalFinalId) return false;
+			// The receipt names the identity being bound, and both receipt facts are read off the
+			// standing object rather than assumed.
 			if (JobOutputId != TerminalFinalId) return false;
-			return RetirementProved && ReceiptProved && CustodyProved && ReservationProved;
+			return HasReceipt && HasRemovalProof && CustodyProved && ReservationProved;
 		}
 
 		/// <summary>The whole equality the terminal binding asks: first generation, or a proved
 		/// chain. Nothing else is a heart.</summary>
 		public static bool BindsGround(string TerminalFinalId, string PlanFinalId,
-			string PriorFinalId, string TerminalPredecessorId, string JobOutputId,
-			bool RetirementProved, bool ReceiptProved, bool CustodyProved, bool ReservationProved)
+			KingdomFoundingHeartTerminalPlan Prior, string RetiredIdentity, string JobOutputId,
+			bool HasReceipt, bool HasRemovalProof, bool CustodyProved, bool ReservationProved)
 		{
 			return FirstGeneration(TerminalFinalId, PlanFinalId)
-				|| ChainedGeneration(PriorFinalId, TerminalPredecessorId, TerminalFinalId,
-					JobOutputId, RetirementProved, ReceiptProved, CustodyProved,
-					ReservationProved);
+				|| ChainedGeneration(Prior, RetiredIdentity, TerminalFinalId, JobOutputId,
+					HasReceipt, HasRemovalProof, CustodyProved, ReservationProved);
 		}
 	}
 }
