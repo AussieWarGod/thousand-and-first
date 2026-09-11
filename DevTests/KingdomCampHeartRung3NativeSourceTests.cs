@@ -32,6 +32,15 @@ namespace ThousandAndFirst.Tests
 			return TestMain.ReadRepositoryText(Path);
 		}
 
+		private static int Occurrences(string Text, string Token)
+		{
+			int count = 0;
+			for (int at = Text.IndexOf(Token, StringComparison.Ordinal); at > -1;
+				at = Text.IndexOf(Token, at + Token.Length, StringComparison.Ordinal))
+				count++;
+			return count;
+		}
+
 		/// <summary>The value of one attribute of one authored building, read out of the catalogue
 		/// rather than restated here.</summary>
 		private static string Authored(string Key, string Attribute)
@@ -316,9 +325,17 @@ namespace ThousandAndFirst.Tests
 				"|| job.TargetKey != ThirdRungKey) continue;",
 				"RecordBlockedMessages();",
 				"\"taf-camp-rung3-town-held: the settlement did not hold the Town the moot yard \"",
-				"System.Stage >= GrowthStage.Town",
-				"&& System.Population >= TownResidentCount," })
+				"Require(System.Stage >= GrowthStage.Town,",
+				"\"; population=\").Append(System.Population)" })
 				Assert.That(diagnostics, Does.Contain(read), read);
+			// The word is gated on the moot yard's REAL gate, the stage, never on a raw resident
+			// count that production's hysteresis lets sit at 20-24 for a pass; and its tally is
+			// journaled BEFORE its refusal, so the one refusal it owns still names what bound.
+			Assert.That(diagnostics, Does.Not.Contain("System.Population >= TownResidentCount"));
+			int townRead = diagnostics.IndexOf("Evidence.Append(\"\\nrung3-town-held \")", StringComparison.Ordinal);
+			int townRequire = diagnostics.IndexOf("Require(System.Stage >= GrowthStage.Town,", StringComparison.Ordinal);
+			Assert.That(townRead, Is.GreaterThan(-1));
+			Assert.That(townRequire, Is.GreaterThan(townRead), "the supports tally is read before the Town is asserted");
 			foreach (string driver in new[] { "KingdomUpgrade.Begin(", "KingdomPlots.Advance(",
 				"TryApplyUpgrade(", "SetIntProperty(", "SetStringProperty(", "Destroy(", "Obliterate(" })
 				Assert.That(diagnostics, Does.Not.Contain(driver),
@@ -357,12 +374,25 @@ namespace ThousandAndFirst.Tests
 				"taf-camp-town-seed-roof:", "taf-camp-town-seed-water:", "taf-camp-town-seed-level:",
 				"taf-camp-town-seed-unhoused:", "crewed=false; hand-stamped=false" })
 				Assert.That(seed, Does.Contain(production), production);
-			foreach (string forbidden in new[] { "SetIntProperty(\"KingdomBuilt\"",
-				"KingdomUpgrade.BuildKeyProperty,", "SetStringProperty(KingdomLodging.HomePlotIdProperty",
-				"KingdomPlots.Commission(", "KingdomUpgrade.Begin(", "TryApplyUpgrade(",
-				"KingdomSubsidence.Enabled = ", "KingdomLodging.Enabled = ", "Destroy(", "Obliterate(" })
+			// Wholesale: no property or game-state write of any spelling in the seed shard, so a
+			// hand-stamp through a constant (KingdomUpgrade.BuiltProperty) or an alias cannot pass.
+			foreach (string forbidden in new[] { "SetIntProperty(", "SetStringProperty(",
+				"RemoveIntProperty(", "RemoveStringProperty(", "SetIntGameState(", "SetStringGameState(",
+				"KingdomUpgrade.BuildKeyProperty", "HomePlotIdProperty, ",
+				"KingdomPlots.Commission(", "KingdomSubsidence.Enabled = ", "KingdomLodging.Enabled = ",
+				"Destroy(", "Obliterate(" })
 				Assert.That(seed, Does.Not.Contain(forbidden),
 					"the town seed must go through production, never around it: " + forbidden);
+			// Exactly ONE calendar advance in the seed, on the works Stake just returned; and the
+			// heart drivers are forbidden in every rung-3 shard, so a new partial cannot sidestep
+			// NoShardEverDrivesTheUpgradeItself's file list.
+			Assert.That(Occurrences(seed, "KingdomPlots.Advance("), Is.EqualTo(1));
+			Assert.That(seed, Does.Contain("final.GetIntProperty(KingdomPlots.HeartPlotProperty) != 1"));
+			foreach (string path in new[] { TownSeed, Diagnostics, Rung3, Stock,
+				"Harness/KingdomCampHeartNativeAfterRaise.cs" })
+				foreach (string driver in new[] { "KingdomUpgrade.Begin(", "KingdomUpgrade.BeginPrepared(",
+					"TryApplyUpgrade(", "TryStage(", "KingdomConstruction.TryFundNew(" })
+					Assert.That(Read(path), Does.Not.Contain(driver), path + " / " + driver);
 
 			string checks = Read(Checks);
 			int dedicate = checks.IndexOf("KingdomNativeCampFounding.Dedicate(Game, Zone, System, Drams,", StringComparison.Ordinal);

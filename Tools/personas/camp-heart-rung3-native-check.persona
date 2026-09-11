@@ -42,8 +42,12 @@
 #    KingdomPlots.Advance the completed-heart seam uses, so production's own Finish stamps the build
 #    key, plot id and architecture designation: nothing is hand-stamped and no crew built them.
 #    Lodging is assigned by KingdomLodging.OnSettlementPass, never by writing a home id. The
-#    settlement stage is derived once from StageFor(population, capacity) exactly as the subsidence
-#    fixture derives it; population equilibrium after that is production's own reckoning, and the
+#    settlement stage is written once from StageFor(population, capacity) exactly as the subsidence
+#    fixture writes it -- load-bearing, because zoning refuses the dew lane's MinStage=Steading at a
+#    fresh camp until a daily pass has raised the stage; population equilibrium after that is
+#    production's own reckoning. KNOWN GAP: KingdomPlots.Stake spends nothing and does not apply the
+#    plot-area budget (KingdomPlotRules.WouldExceedBudget) a real commission would, so the seeded
+#    lots may exceed what the settlement could have commissioned on this ground; left open. The
 #    run REFUSES (taf-camp-rung3-town-held) unless the Town still stands when the rung-3 bill is
 #    minted and again at the rung-3 boundary, journaling the supports tally and stage each time.
 # The ground the moot yard must annex (the 8x6 -> 12x10 growth, seventy-two new cells) is CENSUSED and

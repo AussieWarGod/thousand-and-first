@@ -49,8 +49,11 @@ namespace ThousandAndFirst.Harness
 				Require(stage >= GrowthStage.Town, "taf-camp-town-seed-stage: " + System.Population
 					+ " people over " + survey.StorageCapacity + " drams of capacity is a " + stage
 					+ ", not the Town the moot yard asks for");
-				// Derived exactly as KingdomSubsidenceNativeFixture derives it; the daily pass
-				// re-reckons it through StageWithHysteresis from the same two readings.
+				// A hand-written production field, as KingdomSubsidenceNativeFixture writes it, and
+				// LOAD-BEARING here: KingdomZoning.Permits refuses the dew lane's MinStage="Steading"
+				// at the fresh camp's Camp stage until a daily pass has raised it, and Stake asks
+				// Permits. The daily pass re-reckons the stage through StageWithHysteresis from the
+				// same two readings, so nothing here outlives production's own reckoning.
 				System.Stage = stage;
 				Evidence.Append("\nsynthetic-town stage-derived=").Append(stage)
 					.Append("; population=").Append(System.Population)
@@ -181,8 +184,11 @@ namespace ThousandAndFirst.Harness
 			}
 
 			/// <summary>A width-by-height rect of bare, unrefused, lifeless ground that crowds no
-			/// seeded lot and lies outside the heart's growth reserve. Scanned from the zone's
-			/// edges inward so the seeded town rings the heart rather than crowding it.</summary>
+			/// seeded lot and lies outside the heart's growth reserve. A plain row-major scan from
+			/// the top-left; because the reserve (heart rect + 8x6 a side + road margin, twice the
+			/// +4 a side the 8x6 -> 12x10 growth needs) spans most rows, seeded lots land in the
+			/// two side strips of the zone, which is intended: nothing seeded may ever stand where
+			/// the moot yard annexes.</summary>
 			private bool TryFindLot(KingdomPlots.GroundGrid Grid, int Width, int Height,
 				out KingdomPlotRules.PlotRect Lot)
 			{
@@ -198,7 +204,8 @@ namespace ThousandAndFirst.Harness
 					for (int x = 1; x + Width < Zone.Width; x++)
 					{
 						Lot = new KingdomPlotRules.PlotRect(x, y, x + Width - 1, y + Height - 1);
-						if (KingdomPlotRules.Overlaps(KingdomPlotRules.Reserved(Lot), reserve)
+						// The reserve already carries the road margin, so the lot itself is tested.
+						if (KingdomPlotRules.Overlaps(Lot, reserve)
 							|| KingdomPlotRules.CrowdsExisting(Lot, SeededLots)
 							|| Grid.AnyRefusal(Lot) || !BareAndLifeless(Grid, Lot)) continue;
 						return true;

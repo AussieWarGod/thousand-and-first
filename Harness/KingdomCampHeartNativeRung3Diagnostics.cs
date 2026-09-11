@@ -14,8 +14,11 @@ namespace ThousandAndFirst.Harness
 	/// TARGET rather than by the retained rung-2 id. All of it is journaled here first, so the
 	/// next refusal names the production gate that held rather than the symptom.
 	/// <para>Read-only: <c>KingdomUpgrade.Assess</c> is the settlement pass's own listing read
-	/// and changes nothing; the free-hands and other-work inputs are derived exactly as
-	/// <c>KingdomUpgrade.Resolve</c> derives them from the same survey.</para>
+	/// and changes nothing. Free hands are derived exactly as <c>KingdomUpgrade.Resolve</c>
+	/// derives them; other-work-underway mirrors only Resolve's improvements half (a working
+	/// <c>r_KingdomImprovement</c>), because its built-works half (<c>HasActiveConstruction</c>)
+	/// is private to production, so a journaled verdict can read Ready where the pass itself
+	/// would say WorksElsewhere. The journal names the half it read.</para>
 	/// </summary>
 	internal static partial class KingdomCampHeartNativeChecks
 	{
@@ -47,7 +50,7 @@ namespace ThousandAndFirst.Harness
 						.Append("; assigned-crew=").Append(System.AssignedCrew)
 						.Append("; free-hands=").Append(freeHands)
 						.Append("; craft=").Append(KingdomZoning.Tech(System))
-						.Append("; other-work-underway=").Append(otherWorkUnderway)
+						.Append("; other-improvement-working=").Append(otherWorkUnderway)
 						.Append("; stored water=").Append(survey.StoredWater)
 						.Append("; assess valid=").Append(assessment.Valid)
 						.Append("; verdict=").Append(assessment.Verdict)
@@ -113,27 +116,37 @@ namespace ThousandAndFirst.Harness
 				RecordBlockedMessages();
 			}
 
-			/// <summary>The gate run 33 fell through: the moot yard asks for a Town, and the
-			/// settlement must still BE one when the pass prices its bill. Production is free to
-			/// shed people the works cannot carry; a fixture that lost them proves nothing about
-			/// the second climb and says so here, with the numbers, instead of at the design key.
-			/// </summary>
+			/// <summary>The gate run 33 fell through: the moot yard is assessed against
+			/// <c>System.Stage</c> (Assessment.cs), and the settlement must still BE a Town when the
+			/// pass prices its bill. Production is free to shed people the works cannot carry, and
+			/// its hysteresis holds Town down to twenty people for a pass, so the word is gated on
+			/// the STAGE, which is the moot yard's real gate, with the population reported beside
+			/// it. The supports tally is read and journaled BEFORE the refusal, so the one refusal
+			/// this word owns still says whether water, roof or lift bound.</summary>
 			internal void RequireTownHeld(string When)
 			{
-				Require(System.Stage >= GrowthStage.Town
-					&& System.Population >= TownResidentCount,
+				try
+				{
+					KingdomCatalogueRules.SupportTally tally =
+						KingdomSubsidence.ScopedSupports(System, Zone, Census());
+					Evidence.Append("\nrung3-town-held ").Append(When).Append(" tick=")
+						.Append(Game.TimeTicks).Append("; stage=").Append(System.Stage)
+						.Append("; population=").Append(System.Population)
+						.Append("; supports water=").Append(tally.Water).Append(" roof=")
+						.Append(tally.Roof).Append(" lift=").Append(tally.Lift)
+						.Append("; supported level=").Append(KingdomSubsidenceRules.SupportedLevel(
+							tally, System.Stage, System.Shade));
+				}
+				catch (Exception error)
+				{
+					// Diagnostics never pre-empt the production answer asserted below them.
+					Evidence.Append("\nrung3-town-held-read-error=").Append(
+						KingdomScenarioRules.Bounded(error.GetType().Name + ": " + error.Message));
+				}
+				Require(System.Stage >= GrowthStage.Town,
 					"taf-camp-rung3-town-held: the settlement did not hold the Town the moot yard "
 						+ "is gated on " + When + "; stage=" + System.Stage + "; population="
-						+ System.Population + " of " + TownResidentCount);
-				KingdomCatalogueRules.SupportTally tally =
-					KingdomSubsidence.ScopedSupports(System, Zone, Census());
-				Evidence.Append("\nrung3-town-held ").Append(When).Append(" tick=")
-					.Append(Game.TimeTicks).Append("; stage=").Append(System.Stage)
-					.Append("; population=").Append(System.Population)
-					.Append("; supports water=").Append(tally.Water).Append(" roof=")
-					.Append(tally.Roof).Append(" lift=").Append(tally.Lift)
-					.Append("; supported level=").Append(KingdomSubsidenceRules.SupportedLevel(
-						tally, System.Stage, System.Shade));
+						+ System.Population + " (enrolled " + TownResidentCount + ")");
 			}
 		}
 	}
