@@ -149,6 +149,7 @@ namespace ThousandAndFirst.Harness
 				Require(Game.GetIntGameState(KingdomUpgrade.NoticedState) == 1,
 					"the improvement notice mark failed its readback");
 				RecordBefore();
+				ProveFounderAndWalkClear();
 				Armed = true;
 				Phase = 1;
 			}

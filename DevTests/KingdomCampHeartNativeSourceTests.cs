@@ -21,6 +21,19 @@ namespace ThousandAndFirst.Tests
 		private static string Read(string path) => TestMain.ReadRepositoryText(path);
 
 		[Test]
+		public void FounderOccupancyIsProvedThenClearedByNormalMovement()
+		{
+			// Wiring only; the sealed native run must execute both real ground proofs.
+			string source = Read("Harness/KingdomCampHeartNativeFounder.cs");
+			Assert.That(Read(Checks), Does.Contain("ProveFounderAndWalkClear();"));
+			Assert.That(source, Does.Contain("!KingdomArchitectureStamper.TryProveEnvelopeGrowth("));
+			Assert.That(source, Does.Contain("a living occupant stands on plot-envelope growth ground at "));
+			Assert.That(source, Does.Contain("player.Move(\"W\", AllowDashing: false, DoConfirmations: false)"));
+			Assert.That(source, Does.Contain("Require(KingdomArchitectureStamper.TryProveEnvelopeGrowth("));
+			Assert.That(source, Does.Not.Contain("DirectMoveTo"));
+		}
+
+		[Test]
 		public void RefusedIngressCensusReadsExactLaneWithoutManufacturingRoads()
 		{
 			// Source tripwire only; lane/traffic values are evidence only when read in game.
