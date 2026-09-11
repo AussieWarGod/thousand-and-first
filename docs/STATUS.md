@@ -3,11 +3,22 @@
 **Snapshot:** 2026-09-11
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
 **Next public version:** 0.3.3 stockpile hotfix in preparation; not published
-**Working candidate manifest:** 0.3.3 private Alpha candidate; not uploaded.
+**Working candidate manifest:** 0.3.3 private Alpha candidate; uploaded, verified and finalized.
 Public Workshop remains the 0.3.2 public Alpha playtest, complete and finalized — see [Public 0.3.2](#public-032) below.
 **Dev integration:** main hotfix backmerged alongside unreleased beta work; not a release candidate.
 **Beta gates:** tracked in issues #58–#70 and the retained [gap report](BETA-GAP-REPORT-2026-09-09.md).
 Issue #68 was closed by the author; remaining heart endgame debt is tracked in #144.
+
+**Public automation stopped before upload:** run `34576910338` at immutable tag `v0.3.3`
+(`277f4523f4a2bea13ec548ea05c07ef2678bb03d`) passed Linux and Windows suites but refused
+package reproduction: `release TESTING.md differs from subscribed private candidate`.
+The public-version protocol edit had been made after receipt binding. Publisher, verification,
+and finalization were all skipped: no public Steam attempt or upload occurred.
+Recovery candidate `16ed2b35a1516577cce2d5d15c922a1a1436a504` binds that same protocol
+before promotion, with unchanged private runtime and receipt. No guard is weakened.
+The author explicitly approved replacing this unshipped tag while preserving its original
+tag object and failed run. Recovery uses normal protected integration and exact-lease tag
+replacement; no package gate or test requirement is waived.
 
 The public Alpha is [Steam Workshop item
 3794797472](https://steamcommunity.com/sharedfiles/filedetails/?id=3794797472). Rows marked retained
@@ -271,9 +282,22 @@ receipt and ground, and no leaked survey scope all passed. External sealed-profi
 returned PASS and driver exit 0. Evidence `hotfix142-native.epWuUn`; profile
 `/mnt/c/taf-scenario.nwgvHE`; owned PID 37016 stopped with profile/seal retained. This proves
 staking the paid fire plot, not completion, ordinary play, historical saves or Steam delivery.
-The six terrain/advisor save–cold-load pairs are running separately, not yet accepted here.
+All six terrain/advisor automated save–cold-load pairs passed on the same frozen runtime.
+The retained marsh/advisor pair is `n1AMBR` → `FkREwz`; remaining pairs are recorded in
+`hotfix142-native.IqS6Jj/results.json` (driver exit 0, all owned game processes stopped).
+The sealed developer checks retain their stated scope; no ordinary-play claim is added.
 The following descendant changes only portable test registration (12 existing pure source files),
 not the exercised runtime or harness. Full candidate release gates remain required.
+
+Private staging run `34543738835` subsequently passed the complete release pipeline on
+`15901a42c5d2202813c5227c31d94e76e0c416c9`, including licensed suites 14112/0 and 5246/0,
+upload, subscribed-install verification and finalization for item `3796495680`, attempt `0004`.
+Bound receipt: `5c41283ea5dfaa499461db621488b25b0c6aefdbcb86dd04eb229ce7721fada2`.
+Installed inventory: `4dd88f11f278d7649672daea103c3c98723511c465dfdbbf85fd5371a14d019b`.
+Finalization: `343a00c9f83a9f1a79a114c95d9543e9dd1c4dc1ccb51bd3167d2c332f1731d4`.
+This proves one subscribed client only; `freshTransferVerified=false`, `releaseReady=false`.
+Public promotion remains pending. The author's standing 2026-09-11 ruling removes manual
+test gates for every release; all automated gates and evidence boundaries remain intact.
 
 The integrated `0f78405` native build run passed genuine boot, quote, CanPay, commission,
 physical timber/water debit and clean paid-claim checks, then correctly failed acceptance at

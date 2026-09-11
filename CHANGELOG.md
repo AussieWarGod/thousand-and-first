@@ -148,7 +148,7 @@ The cold-install inventory contains 3111 files. This is the dev backmerge, not t
   shipped 0.3.2 bytes: gates #58–#70 remain open, and the report sizes each gap and lists open
   decisions for the author. Docs-only; no source, tooling, package, or release bytes change.
 
-## [0.3.3] — 2026-09-11 (Alpha candidate; not published)
+## [0.3.3] — 2026-09-11 (Alpha)
 
 ### Fixed
 
@@ -174,7 +174,9 @@ Isolated main candidate 3069-file census is line-cap green: 435,617 physical lin
 imports occur in 1430 files, 0 of them over the line limit. Inventory SHA-256:
 `249d3bb40ca34f57289770494e985a97e81cf42c2bae8f053fb6e14005b61d3d`.
 The generated cold-install inventory contains 3100 files. Exact-inventory source review is
-current for those main bytes; fresh commissioning passed at `3cf2825` (see docs/STATUS.md). Prior release receipts do not cover this delta.
+current for those main bytes. Automated native paid commissioning and six save/cold-load
+pairs passed on that runtime; building completion and historical-save construction remain
+unverified. These receipts do not sign unreleased dev changes.
 
 ## [0.3.2] — 2026-09-09 (Alpha)
 

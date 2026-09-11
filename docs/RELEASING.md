@@ -1,5 +1,37 @@
 # Release and Steam Workshop Procedure
 
+## Standing author ruling — 2026-09-11
+
+The author instructed: **"yes, and forever, no manual test gate for release"**.
+This applies to 0.3.3 and all subsequent Alpha, Beta, and production releases.
+Automated tests and machine-verifiable release evidence are the release testing gates.
+Manual startup/save/reload, gameplay, media review, and listing inspection are optional
+supplementary checks, never prerequisites or recurring waiver requests. This ruling
+supersedes every manual-testing or human-test-review requirement below, including
+the historical 0.3.1-only waiver language. Historical evidence is not relabelled.
+
+All automated checks, package custody, receipt/lineage binding, protected integration,
+and subscribed-install verification remain required. Record actual coverage and gaps;
+never invent a manual PASS, waive an automated failure, or claim all-subscriber delivery
+from one client. Authentication, Steam Guard, and legal acceptance remain human actions;
+`NeedsUser` still stops those operations. Legacy full-evidence validator identity fields
+must be migrated to truthful automated provenance before that lane is used, not filled
+with fictitious human reviewers. The existing Alpha lane already uses machine evidence.
+
+### 0.3.3 automated evidence
+
+Private staging run `34543738835` completed successfully at source
+`15901a42c5d2202813c5227c31d94e76e0c416c9`: all release-check stages, submission,
+subscribed-install verification, and finalization passed for item `3796495680`, attempt
+`0004`. The bound private receipt SHA-256 is
+`5c41283ea5dfaa499461db621488b25b0c6aefdbcb86dd04eb229ce7721fada2`.
+Licensed suites passed 14112 and 5246 cases with zero skips. Automated native evidence
+on identical production/harness bytes at `3cf2825ec94a8153c180faccb5c7bf33e464f4df`
+includes fresh Quickstart paid construction and six biome/advisor save/cold-load pairs.
+This does not prove old-save construction, building completion, or ordinary gameplay.
+Private delivery proves one subscribed client only (`freshTransferVerified=false`,
+`releaseReady=false`); public publication remains a separate verified operation.
+
 The package builder remains offline: it never authenticates, creates an item, accepts agreements,
 uploads, or changes visibility. A separate local Steam-client publisher is implemented under the
 maintainer's authorization for autonomous, ready Alpha releases. Corrected private0.3.1 attempt
