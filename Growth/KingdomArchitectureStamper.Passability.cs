@@ -85,11 +85,14 @@ namespace ThousandAndFirst
 			Cell cell = Z.GetCell(x, y);
 			if (cell == null) return Fail("authored pass cell left its exact zone", out Failure);
 			bool authoredDoor = HasAuthoredDoor(cell, Lot, Intent.SnapshotHash);
-			bool walk = cell.IsPassable() || authoredDoor;
+			// Structural evidence must survive residents walking through a completed building.
+			// Physical placement/annexation keeps its separate living-occupant guards.
+			bool structuralPassable = cell.IsPassable(null, IncludeCombatObjects: false);
+			bool walk = structuralPassable || authoredDoor;
 			if (CellState.Passability == ArchitecturePassability.Walkable && !walk)
 				return Fail("concrete authored walk cell is blocked at " + Coordinate(x, y), out Failure);
 			if (CellState.Passability == ArchitecturePassability.Blocked
-				&& (cell.IsPassable() || authoredDoor))
+				&& (structuralPassable || authoredDoor))
 				return Fail("concrete authored blocked cell is passable or a door at "
 					+ Coordinate(x, y), out Failure);
 			if (CellState.Passability == ArchitecturePassability.Adjacent)
@@ -108,7 +111,7 @@ namespace ThousandAndFirst
 					if (!KingdomArchitectureRuntime.TryWorldCell(Snapshot, Intent.Rect, neighbour,
 						out nx, out ny, out Failure)) return false;
 					Cell use = Z.GetCell(nx, ny);
-					reached = use != null && (use.IsPassable()
+					reached = use != null && (use.IsPassable(null, IncludeCombatObjects: false)
 						|| HasAuthoredDoor(use, Lot, Intent.SnapshotHash));
 				}
 				if (!reached)

@@ -141,6 +141,7 @@ namespace ThousandAndFirst.Harness
 					&& ownedVessel.IDIfAssigned == waterId && ownedVessel.CurrentZone == Zone,
 					"water dedication changed its exact body, assigned identity or ground");
 				BindHeart();
+				ProveStructuralOccupancy();
 				BindStoreAndFire();
 				MintStoreContents();
 				// The founder's one-time modal notice would stall a headless run. Marking it read is

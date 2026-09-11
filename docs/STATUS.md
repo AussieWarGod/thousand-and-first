@@ -2,10 +2,10 @@
 
 ## Current 0.3.4 heart integration candidate — unverified
 
-3083 staged C# files; 437,653 physical lines; cold-install inventory contains 3114 files.
+3083 staged C# files; 437,656 physical lines; cold-install inventory contains 3114 files.
 Compile inventory: 3083 sources, baseline and compatibility symbols (3079 baseline).
 Direct `XRL` imports: 1438 files, 0 over the line limit. Zero at or above 300 lines.
-Inventory SHA-256: `fce921c6bbcaff4992c3660b26d9b02a903b8f4f055b91c48aeff801669c0d05`.
+Inventory SHA-256: `5a700f0b155446c57d9adf9a45337d4f4f6a4cdc0a63274a93a06ac52c3f3b4b`.
 Combines #141 authority, #144 shared-XL validation, #138/#139 rung settlement and #137 camp
 content/native fixture over dev with the verified 0.3.3 backmerge. Production and test-project
 merges are complete; compile, combined-suite, native progression and semantic review are owed.
@@ -16,6 +16,19 @@ The current draft additionally distinguishes fully authorized surveyed-heart phy
 from ordinary positive road-network evidence. Exact public approach walkability remains required
 before debit and on retry; protected road/wear, occupied ground and all ownership guards remain.
 Compilation, native progression and independent review of this distinction are owed.
+
+The current draft also excludes transient combat occupants from structural passability
+validation. Real solid obstructions still refuse; construction placement and annexation retain
+their living-occupant guards. A native NPC/solid-wall/cleanup probe is implemented but unexecuted.
+
+Retained `77d9369` (production inventory `fce921c6bbcaff4992c3660b26d9b02a903b8f4f055b91c48aeff801669c0d05`):
+four compile modes clean; Linux strict 14,501 + 5,575 cases, zero skips. Native
+`heart034-bill-native.OwUR6t` proves occupied expansion refusal, normal founder movement clear,
+and a paid Working upgrade: exact 18 water, 24 stone and 1 timber, same chest retaining 23 brush.
+Completion remains RED after another 2,400 turns: authored walk cells reported blocked;
+daily seal MODERRORs and unfinished heartbasin retained. Owned game stopped. The preceding
+`3cc1195` run `heart034-surveyed-native.x4a7RV` stopped on the corrected test-oracle error:
+it incorrectly required physical net debit (`WaterLost`) to be zero. Neither run proves rung 2.
 
 Retained predecessor `15d65dc` (production inventory
 `31dfb1859670cbcef14e6a98288db376747dd8f3c1515c0703efd8f791bbb3cd`): four compile modes clean,
