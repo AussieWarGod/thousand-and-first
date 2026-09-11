@@ -34,6 +34,20 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void SealedScriptRunsFourChecksAtTheWidenedCumulativeCadence()
+		{
+			// Corrects the false "polls every tick" claim: Check() is driven only by these four
+			// sealed teardown-check verbs, at cumulative ticks 2000/4800/7600/10800.
+			string source = Read(Provider);
+			Assert.That(source, Does.Contain("\"advance 2000\""));
+			Assert.That(source, Does.Contain("CheckVerb, \"advance 2800\", CheckVerb, \"advance 2800\", CheckVerb, \"advance 3200\","));
+			int checkVerbCount = 0;
+			int index = 0;
+			while ((index = source.IndexOf("CheckVerb,", index)) >= 0) { checkVerbCount++; index++; }
+			Assert.That(checkVerbCount, Is.EqualTo(4), "exactly four sealed CheckVerb tokens");
+		}
+
+		[Test]
 		public void SetupRunsTwoParallelCasesThroughRealProductionApis()
 		{
 			string source = Read(Checks);
@@ -41,6 +55,7 @@ namespace ThousandAndFirst.Tests
 			{
 				"KingdomNativeCampFounding.Found(Game, Zone, Require)",
 				"KingdomNativeCampFounding.Dedicate(Game, Zone, system,",
+				"KingdomTeardownCrewEnrollment.Enroll(Game, Zone, system, Owned.Add,",
 				"KingdomMaterials.DedicateStockpile(System, Zone, Chest, out failure)",
 				"KingdomCommission.Commission(System, BuildKey, null,",
 				"new Case(\"fire\", \"fire\", system, Zone, Game, Owned)",
@@ -179,6 +194,26 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = Read(Checks);
 			Assert.That(source, Does.Contain("foreach (Case c in Cases) if (!c.Done) Done = false;"));
+		}
+
+		[Test]
+		public void CrewEnrollmentReusesTheRealProductionCitizenshipCallShape()
+		{
+			// Harness/KingdomTeardownCrewEnrollment.cs replicates the exact production call
+			// sequence Harness/KingdomBountyFetchNativeFixture.cs:109-136 already uses (private
+			// instance method on a sealed unrelated class, so a call-through was not possible).
+			string source = Read("Harness/KingdomTeardownCrewEnrollment.cs");
+			Assert.That(source, Does.Contain("internal const int CrewSize = 2;"));
+			Assert.That(source, Does.Contain(
+				"KingdomCitizenship.TryEnroll(System, body,"));
+			Assert.That(source, Does.Contain(
+				"KingdomCitizenshipEnrollmentReason.Arrival, tick, out string failure)"));
+			Assert.That(source, Does.Contain("body.SetIntProperty(\"KingdomBorn\", 1);"));
+			Assert.That(source, Does.Contain("KingdomResidents.TryEnsureRow(System, body,"));
+			Assert.That(source, Does.Contain("KingdomResidents.OnRollCount(System) >= CrewSize"));
+			// No direct Population/Working/Built write anywhere in the crew fixture.
+			Assert.That(source, Does.Not.Contain("Population ="));
+			Assert.That(source, Does.Not.Contain("\"KingdomBuilt\""));
 		}
 	}
 }

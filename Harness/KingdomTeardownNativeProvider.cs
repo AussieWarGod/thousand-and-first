@@ -23,8 +23,16 @@ namespace ThousandAndFirst.Harness
 		internal const string SetupVerb = "teardown-setup";
 		internal const string CheckVerb = "teardown-check";
 		internal const string Receipt = "r_TAF_ScenarioTeardownNative_v1";
+		// Cumulative ticks 2000/4800/7600/10800: fire+larder serialize one active labour root
+		// per settlement pass (Growth/KingdomConstructionPresence.cs:180-186 -- non-selected
+		// roots stay at 0 effectiveness) and each strike leg burns its own checkpoint pass
+		// before banking effort (Growth/KingdomMaterials.11.StrikeWorkAndRecoveryEntry.cs:31-36),
+		// so four checks are needed for both cases' full commission->build->strike->salvage
+		// progression to land inside one finite budget (see review-teardown-reachability-
+		// findings.md section 4).
 		private static readonly string[] Script = { "stagedigest", SetupVerb, "advance 2000",
-			CheckVerb, "advance 4000", CheckVerb, "stagedigest" };
+			CheckVerb, "advance 2800", CheckVerb, "advance 2800", CheckVerb, "advance 3200",
+			CheckVerb, "stagedigest" };
 
 		public int ScenarioVerbApiVersion { get { return KingdomScenarioVerbApi.Version; } }
 

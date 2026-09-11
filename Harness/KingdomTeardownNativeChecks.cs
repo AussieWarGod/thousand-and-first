@@ -12,17 +12,13 @@ namespace ThousandAndFirst.Harness
 	/// <see cref="KingdomTeardownNativeProvider"/> for the sealed script and scope.
 	/// <para>
 	/// SYNTHETIC SETUP, DISCLOSED, like <see cref="KingdomDepositOverflowNativeChecks"/>: real
-	/// founding/dedication, a harness-assigned raw timber count, real
-	/// <c>KingdomCommission.Commission</c> and real <c>KingdomMaterials.OrderStrike</c> -- never
-	/// forcing <c>KingdomBuilt</c>, the job phase, or the strike receipt directly.
-	/// </para>
-	/// <para>
-	/// EXACT SALVAGE, NOT "SOME". <c>OrderStrike</c> calls <c>KingdomMaterialRules.
-	/// StrikeSalvage</c> = <c>Cost.Scaled(StrikeSalvagePercent=50)</c>, integer-floor per
-	/// material (<c>Growth/KingdomMaterialTally.cs:101-111</c>). Two cases prove both ends:
-	/// <c>"fire"</c> (1 timber) floors <c>(1*50)/100=0</c>, the ZERO-SALVAGE BOUNDARY;
-	/// <c>"larder"</c> (3 timber, same prerequisites) gives <c>(3*50)/100=1</c>, POSITIVE-SALVAGE.
-	/// Both computed from <c>CostFor</c> + <c>StrikeSalvagePercent</c> live, never hardcoded.
+	/// founding/dedication, a 2-body labour crew (<see cref="KingdomTeardownCrewEnrollment"/>),
+	/// a harness-assigned raw timber count, real <c>KingdomCommission.Commission</c> and real
+	/// <c>KingdomMaterials.OrderStrike</c> -- never forcing <c>KingdomBuilt</c> or the job phase.
+	/// EXACT SALVAGE: <c>OrderStrike</c> = <c>Cost.Scaled(StrikeSalvagePercent=50)</c>,
+	/// integer-floor per material (<c>Growth/KingdomMaterialTally.cs:101-111</c>). <c>"fire"</c>
+	/// (1 timber) floors to 0, the ZERO-SALVAGE BOUNDARY; <c>"larder"</c> (3 timber) gives 1,
+	/// POSITIVE-SALVAGE. Both computed live from <c>CostFor</c>, never hardcoded.
 	/// </para>
 	/// </summary>
 	internal static class KingdomTeardownNativeChecks
@@ -48,7 +44,8 @@ namespace ThousandAndFirst.Harness
 			Complete = Retained.Done;
 			return (Complete ? "native-teardown cases=2 passed=2 failed=0"
 				: "native-teardown phase=" + Retained.PhaseSummary())
-				+ "; synthetic-camp=true; synthetic-materials=true; ordinary-acceptance=false"
+				+ "; synthetic-camp=true; synthetic-crew=true; synthetic-materials=true"
+				+ "; ordinary-acceptance=false"
 				+ "; save-load=untested" + Retained.Evidence;
 		}
 
@@ -251,15 +248,18 @@ namespace ThousandAndFirst.Harness
 				return string.Join(",", parts);
 			}
 
-			/// <summary>Real founding, real dedication, then two parallel cases: the known
-			/// zero-salvage boundary ("fire", 1 timber cost) and the positive-salvage case
-			/// ("larder", 3 timber cost, no extra prerequisite beyond "fire"'s own).</summary>
+			/// <summary>Real founding, real dedication, a disclosed synthetic labour crew, then
+			/// two parallel cases: the known zero-salvage boundary ("fire", 1 timber cost) and
+			/// the positive-salvage case ("larder", 3 timber cost, no extra prerequisite beyond
+			/// "fire"'s own).</summary>
 			internal void Start()
 			{
 				StartTicks = Game.TimeTicks;
 				KingdomSystem system = KingdomNativeCampFounding.Found(Game, Zone, Require);
 				KingdomNativeCampFounding.Dedicate(Game, Zone, system,
 					16 * KingdomRules.DramsPerArrival, Owned.Add, Require);
+				Require(KingdomTeardownCrewEnrollment.Enroll(Game, Zone, system, Owned.Add,
+					Require) == 2, "the disclosed synthetic crew did not reach its exact size");
 				bool foundFire = KingdomData.TryGetBuilding("fire", out KingdomRules.BuildEntry fireEntry);
 				bool foundLarder = KingdomData.TryGetBuilding("larder", out KingdomRules.BuildEntry larderEntry);
 				Require(foundFire && foundLarder,
@@ -282,8 +282,9 @@ namespace ThousandAndFirst.Harness
 				return Chest;
 			}
 
-			/// <summary>Polls both cases every tick; done only once every case's negative path
-			/// has been observed. Never forces either case's transitions.</summary>
+			/// <summary>Driven only by the sealed script's four teardown-check verbs (Provider.cs,
+			/// cumulative ticks 2000/4800/7600/10800), never every tick. Done only once every
+			/// case's negative path has been observed; forces no transition.</summary>
 			internal void Check()
 			{
 				long elapsed = Game.TimeTicks - StartTicks;
