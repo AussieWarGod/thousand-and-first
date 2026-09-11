@@ -91,6 +91,101 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.AreEqual(Expected, KingdomPlotRules.HeartSizeForRung(Rung));
 		}
 
+		// --- Issue #144: the shared XL tier at the top of the ladder ---------------------
+		//
+		// KingdomPlotRules.HeartRungEndpointsAdmit is the pure endpoint half of the authored
+		// heart transition guard: adjacent rungs, each end on the tier HeartSizeForRung gives
+		// its own rung. Rungs one to four each happen to stand on the tier numbered like
+		// themselves, which is why a rung-number comparison passed for so long; rungs four and
+		// five both stand on Huge, so the last step is a same-footprint renovation and the
+		// number comparison made it unsatisfiable. Tier arguments below are integer values of
+		// KingdomPlotRules.PlotSize, which the caller supplies from its own lot size.
+
+		private static int Tier(Size Size) { return (int)Size; }
+
+		[TestCase(1, 2, Size.Small, Size.Medium, TestName = "rung 1->2 grows small to medium")]
+		[TestCase(2, 3, Size.Medium, Size.Large, TestName = "rung 2->3 grows medium to large")]
+		[TestCase(3, 4, Size.Large, Size.Huge, TestName = "rung 3->4 grows large to huge")]
+		[TestCase(4, 5, Size.Huge, Size.Huge, TestName = "rung 4->5 renovates the same huge ground")]
+		public void EveryAdjacentRungPairOnItsOwnTiersIsAdmitted(int Before, int After,
+			Size BeforeTier, Size AfterTier)
+		{
+			ClassicAssert.IsTrue(KingdomPlotRules.HeartRungEndpointsAdmit(Before, After,
+				Tier(BeforeTier), Tier(AfterTier)));
+		}
+
+		[TestCase(1, 2, Size.Medium, Size.Medium, TestName = "wrong before tier refuses")]
+		[TestCase(2, 3, Size.Medium, Size.Huge, TestName = "wrong after tier refuses")]
+		[TestCase(4, 5, Size.Large, Size.Huge, TestName = "the top step still checks its before tier")]
+		[TestCase(4, 5, Size.Huge, Size.Large, TestName = "the top step still checks its after tier")]
+		[TestCase(3, 4, Size.None, Size.Huge, TestName = "an untiered before end refuses")]
+		public void AnEndpointOnTheWrongTierIsNeverAdmitted(int Before, int After,
+			Size BeforeTier, Size AfterTier)
+		{
+			ClassicAssert.IsFalse(KingdomPlotRules.HeartRungEndpointsAdmit(Before, After,
+				Tier(BeforeTier), Tier(AfterTier)));
+		}
+
+		[TestCase(1, 3, TestName = "skipping a rung refuses")]
+		[TestCase(3, 5, TestName = "skipping the court refuses")]
+		[TestCase(2, 5, TestName = "jumping to the arcology refuses")]
+		[TestCase(5, 4, TestName = "climbing backward refuses")]
+		[TestCase(2, 2, TestName = "standing still is not a step")]
+		public void NonAdjacentOrBackwardRungPairsAreNeverAdmitted(int Before, int After)
+		{
+			// Each end is given its own CORRECT tier, so only adjacency can be doing the work.
+			ClassicAssert.IsFalse(KingdomPlotRules.HeartRungEndpointsAdmit(Before, After,
+				(int)KingdomPlotRules.HeartSizeForRung(Before),
+				(int)KingdomPlotRules.HeartSizeForRung(After)));
+		}
+
+		[TestCase(0, 1, TestName = "there is no rung below the first")]
+		[TestCase(-1, 0, TestName = "a negative rung is not a rung")]
+		[TestCase(5, 6, TestName = "there is no rung above the arcology")]
+		[TestCase(6, 7, TestName = "both ends off the ladder refuse")]
+		public void ARungOffTheLadderIsNeverAnEndpoint(int Before, int After)
+		{
+			ClassicAssert.IsFalse(KingdomPlotRules.HeartRungEndpointsAdmit(Before, After,
+				(int)KingdomPlotRules.HeartSizeForRung(Before),
+				(int)KingdomPlotRules.HeartSizeForRung(After)));
+		}
+
+		[TestCase(1, 2, false)]
+		[TestCase(2, 3, false)]
+		[TestCase(3, 4, false)]
+		[TestCase(4, 5, true)]
+		public void OnlyTheLastRungRenovatesTheGroundBelowItRatherThanGrowingOntoMore(
+			int Before, int After, bool SameFootprint)
+		{
+			bool shared = KingdomPlotRules.HeartSizeForRung(Before)
+				== KingdomPlotRules.HeartSizeForRung(After);
+			ClassicAssert.AreEqual(SameFootprint, shared,
+				"rung " + Before + "->" + After + " footprint sharing");
+		}
+
+		[TestCase(4)]
+		[TestCase(5)]
+		public void TheTopTwoRungsShareTheOneHugeTierSoTheirRectsAreTheSameGround(int Rung)
+		{
+			ClassicAssert.AreEqual(Size.Huge, KingdomPlotRules.HeartSizeForRung(Rung));
+			int width, height;
+			ClassicAssert.IsTrue(KingdomPlotRules.TryDimensions(
+				KingdomPlotRules.HeartSizeForRung(Rung), out width, out height));
+			ClassicAssert.AreEqual(KingdomPlotRules.HugeWidth, width);
+			ClassicAssert.AreEqual(KingdomPlotRules.HugeHeight, height);
+		}
+
+		[Test]
+		public void OnlyTheTopRungsTierDiffersFromItsOwnNumber()
+		{
+			for (int rung = 1; rung <= 4; rung++)
+				ClassicAssert.AreEqual(rung, (int)KingdomPlotRules.HeartSizeForRung(rung),
+					"rungs one to four are unchanged by the canonical mapping");
+			ClassicAssert.AreEqual(4, (int)KingdomPlotRules.HeartSizeForRung(5));
+			ClassicAssert.AreNotEqual(5, (int)KingdomPlotRules.HeartSizeForRung(5),
+				"rung five is the only rung whose tier is not its own number");
+		}
+
 		[Test]
 		public void EveryRungIsGatedByTheStageThatLaysItsPlotAndNothingElse()
 		{

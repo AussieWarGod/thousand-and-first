@@ -10,13 +10,32 @@ below it.
 
 ## Unreleased — Beta gap report
 
-Current 3080-file census is line-cap green: 437,405 physical lines; direct `XRL`
+Retained #141 checkpoint: 3080-file census is line-cap green: 437,405 physical lines; direct `XRL`
 imports occur in 1435 files, 0 of them over the line limit. Inventory SHA-256:
 `c964d43923a5fa4284464d09029ef0b69a71bfe79b71185b3a25661c06149dca`.
 The cold-install inventory contains 3111 files. This is the dev backmerge with the #141 heart
 envelope authority correction replayed onto it, not the isolated 0.3.3 release package; that
 correction's only production delta is one file,
 `Growth/KingdomArchitectureStamper.EnvelopeGrowth.cs`. Semantic review remains pending.
+
+> **Retained census — the isolated #144 heart shared-XL transition fix over the dev backmerge.**
+> Its 3080-file census is line-cap green: 437,433 physical lines; zero files at
+> or above 300: 0 files exceed 300, 0 exceed 1,000, 0 exceed 2,000 and 0 exceed 5,000; direct
+> `XRL` imports occur in 1435 files, 0 of them over the line limit. Inventory SHA-256:
+> `24b4ab29aab9cd3c97bb30f5382df88937ee96eac565a6fb90ce52a0dd22c0a2`.
+> The cold-install inventory contains 3111 files.
+> Its production delta over the dev backmerge is two files: one pure endpoint rule added beside
+> the heart ladder it belongs to, and the heart transition guard rewired to ask it instead of
+> comparing a tier to a rung number. Everything else in it is DevTests and documentation.
+> Source-level only; no native rung 4 to 5 acceptance is claimed. Every earlier census below is
+> retained at its own bytes and is not restated for this one.
+
+> **Retained dev backmerge census — the dev merge before the #144 heart shared-XL transition
+> fix.** That 3080-file census is line-cap green: 437,399 physical lines; direct `XRL`
+> imports occur in 1435 files, 0 of them over the line limit. Inventory SHA-256:
+> `6ebc095bd595e636c48079ba5c41c0cb3bb92f3af7741d99b05eeb8b81acc78d`. The cold-install inventory
+> contains 3111 files. This is the dev backmerge, not the isolated 0.3.3 release package.
+> Combined-tree gates and semantic review remain pending.
 
 > **Retained #129 merged census — the #129 dev-harness native checks over the roadless seal
 > correction.** That 3079-file census is line-cap green: 437,320 physical lines, zero files at
@@ -102,6 +121,22 @@ correction's only production delta is one file,
   transition proven. Replayed onto `dev` `3a287e4`; in the original commit `b1efe18` the four-mode
   compile ran before a comment-only seven-to-three line trim of the inline rationale, so that
   gate saw the same executable bytes but four more comment lines. Refs #141.
+
+- **Correct heartcourt-to-arcology tier validation.** The great court and the arcology stand on the same XL
+  ground — the catalogue puts them in one binding and marks the arcology a renovation, not a
+  growth — but the authored transition guard asked whether a lot's TIER equalled its RUNG NUMBER.
+  That holds by coincidence for the first four rungs and is false by construction for the fifth,
+  whose tier is Huge rather than five, so rung four to five refused every time for a reason no
+  ground, occupant or road could satisfy. The guard now asks the canonical rung-size mapping the
+  expected rects are already derived from, which leaves rungs one to four judged exactly as
+  before and admits the one same-footprint renovation at the top. The endpoint half of that
+  question is now one pure rule, `KingdomPlotRules.HeartRungEndpointsAdmit`, sitting beside the
+  ladder it reads and covered by ordinary value tests rather than only by a source pin. Every
+  other proof the branch made — owner, rung adjacency, plan, lot type, facing, fixed anchors, both rects, the plot/lot
+  identity and both rite-basin custody checks — is unchanged and still made in the same order, and
+  no heart-only bypass was added: a same-rect heart transition simply never reaches the ordinary
+  envelope authority, because that call is already gated on the rects differing. Source-level
+  only; no native rung 4 to 5 acceptance is claimed. Refs #144.
 
 - A roadless completed camp now reports that its spatial seal is waiting for connected streets,
   rather than treating that exact intermediate topology as corruption during daily/save polls.
