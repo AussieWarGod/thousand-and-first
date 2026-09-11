@@ -42,16 +42,24 @@ namespace ThousandAndFirst
 				SourceWork row = source[i];
 				GameObject root;
 				bool pending;
-				string standing;
-				if (!TryExactRoot(Active, row, out root, out pending, out standing, out Failure))
+				// The standing blueprint is yielded by the binding and deliberately NOT consumed
+				// here: see the note below on why one row has exactly one key.
+				if (!TryExactRoot(Active, row, out root, out pending, out _, out Failure))
 					return pending ? KingdomInheritanceSpatialCaptureResult.Pending
 						: KingdomInheritanceSpatialCaptureResult.Malformed;
-				// A row whose root climbed names the RETIRED design; its evidence is filed under
-				// the design that is standing, read off the object the chain proved.
+				// ONE KEY PER ROW, AND IT IS THE PERSISTED ONE. A climbed row's root is the
+				// successor, and the row still names the design the seal was written from --
+				// until the next check-in rebuilds the book from the survey
+				// (Core/KingdomInheritRules.Prepare.cs) and the standing design is what gets
+				// filed. Re-keying only SOME derivations here would be worse than the drift it
+				// was meant to fix: the rect fed to road evidence would be built from one design
+				// while KingdomInheritanceSpatialRules recomputed the same row's rect from the
+				// other (4x4 against 8x6 on the first heart rung), so one capture would mask road
+				// cells under one footprint and validate them against another. Every derivation
+				// for a row therefore reads Record.WorkKeys[i], exactly as it always did. The
+				// standing blueprint is still carried out of the binding, because it is what
+				// names the object in a refusal.
 				string key = Record.WorkKeys[i];
-				if (!string.IsNullOrEmpty(standing)
-					&& KingdomInheritRules.TrySemanticKeyForBlueprint(standing, out string climbed)
-					&& !string.IsNullOrEmpty(climbed)) key = climbed;
 				if (!HasArchitectureEvidence(root))
 				{
 					snapshots.Add("");

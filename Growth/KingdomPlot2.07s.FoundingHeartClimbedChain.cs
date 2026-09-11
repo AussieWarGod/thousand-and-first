@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using XRL;
 using XRL.World;
 using XRL.World.Parts;
 
@@ -183,8 +184,42 @@ namespace ThousandAndFirst
 			// Exactly one job, and it has not completed: the climb is still owed an outcome.
 			// A completed job is not pending, and no job at all is not pending either -- that is
 			// a root that is simply gone, and it must stay malformed.
-			return named == 1 && found.Phase != KingdomConstructionPhase.Complete
+			bool pending = named == 1 && found.Phase != KingdomConstructionPhase.Complete
 				&& found.Phase != KingdomConstructionPhase.Cancelled;
+			AnnounceClimbUnderInspection(Z, prior.FinalId, found, pending);
+			return pending;
+		}
+
+		/// <summary>
+		/// The founder is told ONCE that a heart's climb is stuck, and the saying is taken back
+		/// the moment it is not.
+		///
+		/// <para>A stuck climb is a permanent refusal: the seal reports the settlement as under
+		/// inspection rather than malformed, which is correct, but it also dedupes its own line
+		/// and the settlement's daily one is suppressed -- so without this the condition would be
+		/// permanent AND silent. The standard once-only shape applies: a zone-side flag set the
+		/// first time the case is classified, cleared when the job turns terminal, so a climb that
+		/// sticks twice is said twice and one that stays stuck is said once.</para>
+		/// </summary>
+		private static void AnnounceClimbUnderInspection(Zone Z, string RetiredId,
+			KingdomConstructionJob Job, bool Pending)
+		{
+			bool announced = !string.IsNullOrEmpty(
+				Z.GetZoneProperty(FoundingHeartClimbHeldProperty, null));
+			if (!Pending)
+			{
+				if (announced) Z.SetZoneProperty(FoundingHeartClimbHeldProperty, null);
+				return;
+			}
+			if (announced) return;
+			Z.SetZoneProperty(FoundingHeartClimbHeldProperty, Job.Id);
+			if (Z.GetZoneProperty(FoundingHeartClimbHeldProperty, null) != Job.Id) return;
+			KingdomSystem system = The.Game?.GetSystem<KingdomSystem>();
+			system?.Ledger?.Note("The heart's raised rung has not finished settling, so the "
+				+ "kingdom's seal is waiting on it. Nothing is sealed until that improvement "
+				+ "closes or is inspected.");
+			KingdomLog.Log("founding heart: climb under inspection; retired=" + RetiredId
+				+ "; job=" + Job.Id + "; phase=" + Job.Phase);
 		}
 
 		/// <summary>The one COMPLETED improvement that retired this identity, and the object it

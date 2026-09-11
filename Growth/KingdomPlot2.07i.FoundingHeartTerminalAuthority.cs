@@ -10,6 +10,11 @@ namespace ThousandAndFirst
 		public const string FoundingHeartFinalRootPrefix = "r_TAF_FoundingHeartFinalRoot:";
 		public const string FoundingHeartTerminalFailureProperty = "r_TAF_FoundingHeartTerminalFailure";
 
+		/// <summary>Set on the ground once the founder has been told a heart's climb is stuck
+		/// short of completion, and cleared the moment that improvement turns terminal, so the
+		/// saying follows the same once-only shape as every other held announcement.</summary>
+		public const string FoundingHeartClimbHeldProperty = "r_TAF_FoundingHeartClimbHeldAnnounced";
+
 		private static string FoundingHeartFinalId(KingdomFoundingHeartPlan Plan)
 		{
 			return KingdomFoundingHeartRules.Valid(Plan)

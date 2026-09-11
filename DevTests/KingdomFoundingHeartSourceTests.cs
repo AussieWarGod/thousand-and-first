@@ -631,10 +631,23 @@ namespace ThousandAndFirst.Tests
 				"the chain must prove itself before it spends the heart's own authority");
 
 			// Recovery writes nothing: the reservation helper only observes.
-			// The whole shard is read-only now: the settle write was withdrawn with the clause
-			// that needed it, so nothing in this file may write at all.
+			// The PROOF is read-only: it may never write, and the sweep is scoped to it rather
+			// than to the file, because the shard also holds the once-only announcement that a
+			// stuck climb is allowed -- and required -- to write.
+			int proofFrom = chain.IndexOf("private static bool TryChainedFoundingHeartRoot(",
+				StringComparison.Ordinal);
+			int proofTo = chain.IndexOf("internal static bool TryChainedWorkSuccessor(",
+				StringComparison.Ordinal);
+			ClassicAssert.IsTrue(proofFrom > -1 && proofTo > proofFrom);
+			string proof = chain.Substring(proofFrom, proofTo - proofFrom);
 			foreach (string write in new[] { "SetStringProperty(", "SetIntProperty(",
 				"SetZoneProperty(", "SetObjectGameState(", "Ensure(", "Destroy(", "AddObject(" })
+				StringAssert.DoesNotContain(write, proof);
+			// And the only writer in the shard is that announcement, on the held flag alone.
+			ClassicAssert.AreEqual(2, chain.Split(new[] { "SetZoneProperty(" },
+				StringSplitOptions.None).Length - 1);
+			foreach (string write in new[] { "SetStringProperty(", "SetIntProperty(",
+				"SetObjectGameState(", "Destroy(", "AddObject(" })
 				StringAssert.DoesNotContain(write, chain);
 
 			// The settle writes nothing for this chain: it proves its endpoint and its handover
@@ -683,6 +696,112 @@ namespace ThousandAndFirst.Tests
 			// The witness takes the standing key only when it has one; otherwise the row's own
 			// key stands, which is every ordinary row.
 			ClassicAssert.IsFalse(KingdomInheritRules.TrySemanticKeyForBlueprint("", out _));
+		}
+
+		/// <summary>
+		/// A stuck climb is a permanent refusal, so it must not also be permanently silent: the
+		/// seal dedupes its own line and the settlement's daily one is suppressed. The founder is
+		/// told once, on the ground, and the saying is taken back when the improvement turns
+		/// terminal -- the same once-only shape every other held announcement uses.
+		/// </summary>
+		[Test]
+		public void AStuckClimbIsSaidOnceAndUnsaidWhenItClears()
+		{
+			string chain = Source("Growth/KingdomPlot2.07s.FoundingHeartClimbedChain.cs");
+			StringAssert.Contains("AnnounceClimbUnderInspection(Z, prior.FinalId, found, pending);",
+				chain);
+			// Cleared first when it is no longer pending, and only then said.
+			StringAssert.Contains("if (announced) Z.SetZoneProperty("
+				+ "FoundingHeartClimbHeldProperty, null);", chain);
+			StringAssert.Contains("if (announced) return;", chain);
+			StringAssert.Contains("Z.SetZoneProperty(FoundingHeartClimbHeldProperty, Job.Id);",
+				chain);
+			// Read back before anything is said, so a refused write says nothing.
+			StringAssert.Contains("if (Z.GetZoneProperty(FoundingHeartClimbHeldProperty, null) "
+				+ "!= Job.Id) return;", chain);
+			// The founder's line and the log line, and the log names both identities.
+			StringAssert.Contains("system?.Ledger?.Note(", chain);
+			StringAssert.Contains("\"founding heart: climb under inspection; retired=\" "
+				+ "+ RetiredId", chain);
+			StringAssert.Contains("+ \"; job=\" + Job.Id + \"; phase=\" + Job.Phase", chain);
+			// The flag is declared beside the other founding-heart keys and regenerated into
+			// removal coverage like every other property.
+			StringAssert.Contains("public const string FoundingHeartClimbHeldProperty = "
+				+ "\"r_TAF_FoundingHeartClimbHeldAnnounced\";",
+				Source("Growth/KingdomPlot2.07i.FoundingHeartTerminalAuthority.cs"));
+			StringAssert.Contains("r_TAF_FoundingHeartClimbHeldAnnounced",
+				Source("Core/KingdomRemovalCoverage.Generated.cs"));
+		}
+
+		/// <summary>
+		/// One row, one key. A climbed row keeps the key the seal persisted until the book is
+		/// rebuilt from the survey at the next check-in; splitting the derivations would have made
+		/// the road-evidence rect and the validator's rect disagree for the same row.
+		/// </summary>
+		/// <summary>
+		/// VALUE. One row, one rect. The capture derives a row's rect for road evidence and the
+		/// validator derives it again; both must read the same key, or one capture masks road
+		/// cells under one footprint and validates them against another. The heart's first two
+		/// rungs are 4x4 and 8x6, so a split would have disagreed by four cells across and two
+		/// down on the very row this work is about.
+		/// </summary>
+		[Test]
+		public void TheRoadEvidenceRectAndTheValidatorsRectAgreeForAClimbedRow()
+		{
+			const string retired = "heartbasin";
+			const string standing = "heartwaterstone";
+			int retiredWidth;
+			int retiredHeight;
+			int standingWidth;
+			int standingHeight;
+			ClassicAssert.IsTrue(KingdomInheritRules.TryFootprint(retired, out retiredWidth,
+				out retiredHeight));
+			ClassicAssert.IsTrue(KingdomInheritRules.TryFootprint(standing, out standingWidth,
+				out standingHeight));
+			ClassicAssert.AreNotEqual(retiredWidth + "x" + retiredHeight,
+				standingWidth + "x" + standingHeight,
+				"the two rungs must differ, or this case proves nothing");
+
+			// The capture's fallback rect (built from width/height around the anchor) and the
+			// validator's legacy proxy, both taken from the row's own persisted key.
+			KingdomInheritanceSpatialRules.Rect validator;
+			ClassicAssert.IsTrue(KingdomInheritanceSpatialRules.TryLegacyRect(retired, 40, 12,
+				out validator));
+			KingdomInheritanceSpatialRules.Rect capture = new KingdomInheritanceSpatialRules.Rect
+			{
+				X1 = 40 - (retiredWidth - 1) / 2,
+				Y1 = 12 - (retiredHeight - 1) / 2,
+				X2 = 40 - (retiredWidth - 1) / 2 + retiredWidth - 1,
+				Y2 = 12 - (retiredHeight - 1) / 2 + retiredHeight - 1
+			};
+			ClassicAssert.AreEqual(validator.X1, capture.X1);
+			ClassicAssert.AreEqual(validator.Y1, capture.Y1);
+			ClassicAssert.AreEqual(validator.X2, capture.X2);
+			ClassicAssert.AreEqual(validator.Y2, capture.Y2);
+
+			// And what a split would have produced: the same anchor under the standing key is a
+			// different rect, which is the divergence this revert exists to prevent.
+			KingdomInheritanceSpatialRules.Rect split;
+			ClassicAssert.IsTrue(KingdomInheritanceSpatialRules.TryLegacyRect(standing, 40, 12,
+				out split));
+			ClassicAssert.IsTrue(split.X2 != validator.X2 || split.Y2 != validator.Y2,
+				"if the two keys gave the same rect the divergence would be invisible");
+		}
+
+		[Test]
+		public void EveryDerivationForARowUsesTheRowsOwnPersistedKey()
+		{
+			string spatial = Source("Core/KingdomInheritanceSpatial.cs");
+			StringAssert.Contains("string key = Record.WorkKeys[i];", spatial);
+			StringAssert.Contains("KingdomInheritRules.TryFootprint(key, out width, out height)",
+				spatial);
+			StringAssert.Contains("KingdomInheritanceSpatialRules.TryLegacyRect(key, row.X,",
+				spatial);
+			// Nothing re-keys a row off the standing blueprint any more.
+			StringAssert.DoesNotContain("TrySemanticKeyForBlueprint(standing", spatial);
+			// The validator reads the same persisted keys the derivations above used.
+			StringAssert.Contains("KingdomInheritanceSpatialRules.TryValidate(Record.WorkKeys,",
+				spatial);
 		}
 
 	}

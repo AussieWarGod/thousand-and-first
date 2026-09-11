@@ -171,7 +171,8 @@ def parse_manifest(text: str, name: str) -> dict:
                 or parts[2] not in ("marsh", "canyon", "dunes") or parts[3] not in ("yes", "no")):
             fail(name + " reload requires exactly: reload-descendant quickstart <marsh|canyon|dunes> <yes|no>")
         if (found["EXPECT"] != "RELOAD-COMPLETE" or found["REQUEST"] != "founding-first-city"
-                or any(found.get(key) for key in ("START", "CHECK", "VERBS", "LOG_EXPECT"))):
+                or any(found.get(key) for key in ("START", "CHECK", "VERBS", "LOG_EXPECT",
+                                                  "LOG_FORBID"))):
             fail(name + " reload requires founding-first-city, EXPECT=RELOAD-COMPLETE and no overrides")
         found["SCRIPT_WORDS"] = "quickstart-save " + " ".join(parts[2:])
         found["RELOAD"] = "quickstart"
