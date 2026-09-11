@@ -96,14 +96,39 @@ namespace ThousandAndFirst.Tests
 			// 114-126), not the original payer -- an own-chest before/after delta is unsound.
 			string source = Read(Checks);
 			Assert.That(source, Does.Contain(
-				"works.GetStringProperty(KingdomConstruction.ReceiptProperty)"));
-			Assert.That(source, Does.Contain(
 				"item.GetStringProperty(KingdomMaterials.StrikeSalvageReceiptProperty)"));
 			Assert.That(source, Does.Contain("!= StrikeReceiptId) continue;"));
 			Assert.That(source, Does.Contain("KingdomMaterials.Stock(Zone)"));
 			Assert.That(source, Does.Contain("foreach (GameObject stockpile in stock.Stockpiles)"));
 			Assert.That(source, Does.Contain(
 				"more than one salvage item carries this exact strike receipt"));
+		}
+
+		/// <summary>
+		/// ORDER PIN ONLY. OrderStrike mints a new strike-route registry row and rebinds the
+		/// works to it inside the same call (Growth/KingdomMaterials.08.StrikeOrdering.cs:
+		/// 257-261, 09.StrikeStampAndCancellation.cs:35), superseding the paid-construction
+		/// receipt salvage is actually tagged with. This proves the receipt capture line comes
+		/// AFTER OrderStrike in source and that a distinctness check exists; it does NOT prove
+		/// the runtime behaviour -- that the old receipt would truly misattribute -- since no
+		/// pure predicate exists to value-test this without the game. The distinctness Require
+		/// is the executable half; this pin is the ordering half.
+		/// </summary>
+		[Test]
+		public void ReceiptIsCapturedAfterTheStrikeNeverBeforeAndMustDifferFromThePreStrikeOne()
+		{
+			string source = Read(Checks);
+			int preStrike = source.IndexOf("preStrikeReceiptId = works.GetStringProperty(");
+			int order = source.IndexOf("KingdomMaterials.OrderStrike(System, Zone, Works, out string failure)");
+			int postStrike = source.IndexOf(
+				"StrikeReceiptId = works.GetStringProperty(KingdomConstruction.ReceiptProperty);");
+			Assert.That(preStrike, Is.GreaterThanOrEqualTo(0));
+			Assert.That(order, Is.GreaterThan(preStrike));
+			Assert.That(postStrike, Is.GreaterThan(order),
+				"the strike-job receipt capture must be textually AFTER OrderStrike, never before");
+			Assert.That(source, Does.Contain("StrikeReceiptId != preStrikeReceiptId"));
+			Assert.That(source, Does.Contain(
+				"the old paid-construction receipt would misattribute salvage"));
 		}
 
 		[Test]

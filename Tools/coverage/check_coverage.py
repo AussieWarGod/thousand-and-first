@@ -75,10 +75,16 @@ _ARTIFACT_PATH_PATTERN = re.compile(r"^[A-Za-z0-9_.-]+(/[A-Za-z0-9_.\-]+)+$")
 def _has_dot_or_dotdot_segment(path):
     return any(part in (".", "..") for part in path.replace("\\", "/").split("/"))
 
+
 # Vague placeholder tokens that must never stand in for typed evidence.
 BANNED_EVIDENCE_SUBSTRINGS = ("prior-status", "owned-lane", "not-rerun")
 
-COMBINATION_STATUS_TOKENS = {"NONE", "IMPLEMENTED_UNEXECUTED", "NATIVE_PASS", "NEGATIVE_PASS"}
+COMBINATION_STATUS_TOKENS = {
+    "NONE",
+    "IMPLEMENTED_UNEXECUTED",
+    "NATIVE_PASS",
+    "NEGATIVE_PASS",
+}
 COMBINATION_PASS_STATUSES = {"NATIVE_PASS", "NEGATIVE_PASS"}
 REQUIRED_COMBINATION_KEYS = (
     "id",
@@ -127,9 +133,7 @@ def _validate_evidence_entry(row_id, entry, current_digest, problems):
         return
     missing = [k for k in EVIDENCE_KEYS if k not in entry]
     if missing:
-        problems.append(
-            "row %r evidence entry is missing keys: %s" % (row_id, missing)
-        )
+        problems.append("row %r evidence entry is missing keys: %s" % (row_id, missing))
         return
     if not isinstance(entry["historicalScope"], bool) or not isinstance(
         entry["currentDevCoverage"], bool
@@ -150,19 +154,21 @@ def _validate_evidence_entry(row_id, entry, current_digest, problems):
         if _ABSOLUTE_PATH_PATTERN.match(artifact_path):
             problems.append(
                 "row %r evidence entry's artifactPath %r is an absolute path -- it must be "
-                "run-relative (e.g. \"hotfix142-native.IqS6Jj/results.json\") so schema "
-                "validation never depends on this machine's layout" % (row_id, artifact_path)
+                'run-relative (e.g. "hotfix142-native.IqS6Jj/results.json") so schema '
+                "validation never depends on this machine's layout"
+                % (row_id, artifact_path)
             )
         elif not _ARTIFACT_PATH_PATTERN.match(artifact_path):
             problems.append(
                 "row %r evidence entry's artifactPath %r does not look like a run-relative "
-                "\"dir/file\" name (a bare description like \"build journal (COMPLETE OK)\" "
+                '"dir/file" name (a bare description like "build journal (COMPLETE OK)" '
                 "is not a ref)" % (row_id, artifact_path)
             )
         elif _has_dot_or_dotdot_segment(artifact_path):
             problems.append(
-                "row %r evidence entry's artifactPath %r contains a \".\" or \"..\" segment "
-                "-- it must be a plain run-relative name with no traversal" % (row_id, artifact_path)
+                'row %r evidence entry\'s artifactPath %r contains a "." or ".." segment '
+                "-- it must be a plain run-relative name with no traversal"
+                % (row_id, artifact_path)
             )
     sha = entry.get("artifactSha256")
     if not isinstance(sha, str) or not _SHA256_PATTERN.match(sha):
@@ -173,10 +179,13 @@ def _validate_evidence_entry(row_id, entry, current_digest, problems):
     size = entry.get("artifactBytes")
     if not isinstance(size, int) or isinstance(size, bool) or size <= 0:
         problems.append(
-            "row %r evidence entry's artifactBytes must be a positive integer" % (row_id,)
+            "row %r evidence entry's artifactBytes must be a positive integer"
+            % (row_id,)
         )
     digest = entry.get("inventoryDigest")
-    if digest is not None and (not isinstance(digest, str) or not _SHA256_PATTERN.match(digest)):
+    if digest is not None and (
+        not isinstance(digest, str) or not _SHA256_PATTERN.match(digest)
+    ):
         problems.append(
             "row %r evidence entry's inventoryDigest must be null or a 64-char lowercase hex "
             "digest" % (row_id,)
@@ -207,7 +216,9 @@ def validate(doc, current_digest=None):
     """
     problems = []
     if not isinstance(doc, dict) or doc.get("schemaVersion") != 3:
-        problems.append("missing or wrong schemaVersion (expected 3, host-independent evidence)")
+        problems.append(
+            "missing or wrong schemaVersion (expected 3, host-independent evidence)"
+        )
         return problems
     rows = doc.get("rows")
     if not isinstance(rows, list) or not rows:
@@ -288,12 +299,15 @@ def validate_combinations(doc, valid_row_ids, current_digest=None):
         seen_ids.add(cid)
         rows = combo["rows"]
         if not isinstance(rows, list) or not rows:
-            problems.append("combination %r must reference a non-empty list of row ids" % (cid,))
+            problems.append(
+                "combination %r must reference a non-empty list of row ids" % (cid,)
+            )
         else:
             for rid in rows:
                 if rid not in valid_row_ids:
                     problems.append(
-                        "combination %r references unknown behaviour row id %r" % (cid, rid)
+                        "combination %r references unknown behaviour row id %r"
+                        % (cid, rid)
                     )
         status = combo["status"]
         evidence = combo["evidence"]
@@ -304,14 +318,16 @@ def validate_combinations(doc, valid_row_ids, current_digest=None):
         elif status in COMBINATION_PASS_STATUSES:
             if not isinstance(evidence, list) or not evidence:
                 problems.append(
-                    "combination %r claims %s with no typed evidence list" % (cid, status)
+                    "combination %r claims %s with no typed evidence list"
+                    % (cid, status)
                 )
             else:
                 for entry in evidence:
                     _validate_evidence_entry(cid, entry, current_digest, problems)
         elif evidence is not None:
             problems.append(
-                "combination %r has status %s but a non-null evidence field" % (cid, status)
+                "combination %r has status %s but a non-null evidence field"
+                % (cid, status)
             )
         for field_name, field_value in combo.items():
             for s in _string_fields(field_value):
@@ -349,7 +365,11 @@ def _evidence_summary(evidence):
     for e in evidence:
         parts.append(
             "%s/%s (%s)"
-            % (e.get("commit", "?"), e.get("artifactPath") or "-", e.get("verdict", "?"))
+            % (
+                e.get("commit", "?"),
+                e.get("artifactPath") or "-",
+                e.get("verdict", "?"),
+            )
         )
     return "; ".join(parts).replace("|", "\\|")
 
@@ -422,7 +442,9 @@ def render_markdown(doc):
                 )
             )
         lines.append("")
-        lines.append("### Combination counts (derived, never hand-typed, never coverage)")
+        lines.append(
+            "### Combination counts (derived, never hand-typed, never coverage)"
+        )
         lines.append("")
         for token in sorted(COMBINATION_STATUS_TOKENS) + ["TOTAL"]:
             lines.append("- %s: %d" % (token, combo_tally.get(token, 0)))
@@ -442,7 +464,10 @@ def compute_inventory_digest(repo_root):
     script = os.path.join(repo_root, "Tools", "dev-harness-inventory.py")
     result = subprocess.run(
         [sys.executable, script, "--inventory-digest"],
-        cwd=repo_root, capture_output=True, text=True, check=True,
+        cwd=repo_root,
+        capture_output=True,
+        text=True,
+        check=True,
     )
     return result.stdout.strip()
 
@@ -484,10 +509,21 @@ def audit(doc, evidence_root, current_digest=None):
     "evidence audit", not "schema PASS" -- and is never required by test_checked_in_matrix,
     which has no evidence archive to resolve against in a bare checkout or public CI. Schema
     validation is still a PREREQUISITE for running an audit at all: raises SchemaFailedForAudit
-    if the document itself does not validate, before touching the filesystem."""
+    if the document itself does not validate, before touching the filesystem.
+
+    SCOPE: this is a LOCAL ARCHIVE INTEGRITY CHECK ONLY -- it proves the bytes at
+    evidence_root/artifactPath, right now, still hash to what the matrix retained, and that the
+    resolved path did not escape evidence_root. It makes NO adversarial-concurrent-writer
+    security claim: it does not defend against another process racing to swap the file between
+    this function's stat/open/read calls (a TOCTOU window), does not verify who wrote
+    evidence_root or with what privilege, and is not a guard against a malicious or compromised
+    evidence archive -- only a caller-trusted one. Use it to catch accidental drift or a
+    misplaced/renamed retained artefact, not as a security boundary."""
     problems = validate(doc, current_digest=current_digest)
     valid_row_ids = {row["id"] for row in doc.get("rows", []) if isinstance(row, dict)}
-    problems.extend(validate_combinations(doc, valid_row_ids, current_digest=current_digest))
+    problems.extend(
+        validate_combinations(doc, valid_row_ids, current_digest=current_digest)
+    )
     if problems:
         raise SchemaFailedForAudit("; ".join(problems))
     results = []
@@ -526,29 +562,48 @@ def main(argv):
 
     validate_parser = sub.add_parser("validate", help="schema-only, offline (default)")
     validate_parser.add_argument(
-        "--matrix", default=os.path.join(os.path.dirname(__file__), "matrix.json"))
+        "--matrix", default=os.path.join(os.path.dirname(__file__), "matrix.json")
+    )
     validate_parser.add_argument("--render", action="store_true")
     validate_parser.add_argument(
-        "--out", default=os.path.join(
-            os.path.dirname(__file__), "..", "..", "docs", "BEHAVIOUR_COVERAGE.md"))
-    validate_parser.add_argument("--repo-root", default=None,
+        "--out",
+        default=os.path.join(
+            os.path.dirname(__file__), "..", "..", "docs", "BEHAVIOUR_COVERAGE.md"
+        ),
+    )
+    validate_parser.add_argument(
+        "--repo-root",
+        default=None,
         help="compute the live inventory digest against this repo root, for "
-             "currentDevCoverage=true checks (never hardcoded)")
-    validate_parser.add_argument("--inventory-digest", default=None,
-        help="use this digest directly instead of computing one")
+        "currentDevCoverage=true checks (never hardcoded)",
+    )
+    validate_parser.add_argument(
+        "--inventory-digest",
+        default=None,
+        help="use this digest directly instead of computing one",
+    )
 
-    audit_parser = sub.add_parser("audit", help="resolve+verify evidence bytes (never required)")
-    audit_parser.add_argument("--matrix", default=os.path.join(os.path.dirname(__file__), "matrix.json"))
+    audit_parser = sub.add_parser(
+        "audit", help="resolve+verify evidence bytes (never required)"
+    )
+    audit_parser.add_argument(
+        "--matrix", default=os.path.join(os.path.dirname(__file__), "matrix.json")
+    )
     audit_parser.add_argument("--evidence-root", required=True)
     audit_parser.add_argument("--repo-root", default=None)
     audit_parser.add_argument("--inventory-digest", default=None)
 
     # Back-compat: no subcommand behaves as "validate" with the old flat flags.
-    parser.add_argument("--matrix", default=os.path.join(os.path.dirname(__file__), "matrix.json"))
+    parser.add_argument(
+        "--matrix", default=os.path.join(os.path.dirname(__file__), "matrix.json")
+    )
     parser.add_argument("--render", action="store_true")
     parser.add_argument(
-        "--out", default=os.path.join(
-            os.path.dirname(__file__), "..", "..", "docs", "BEHAVIOUR_COVERAGE.md"))
+        "--out",
+        default=os.path.join(
+            os.path.dirname(__file__), "..", "..", "docs", "BEHAVIOUR_COVERAGE.md"
+        ),
+    )
     parser.add_argument("--repo-root", default=None)
     parser.add_argument("--inventory-digest", default=None)
 
@@ -562,15 +617,20 @@ def main(argv):
         try:
             results = audit(doc, args.evidence_root, current_digest=current_digest)
         except SchemaFailedForAudit as error:
-            print("EVIDENCE AUDIT ABORTED: schema validation failed before any byte check:",
-                  file=sys.stderr)
+            print(
+                "EVIDENCE AUDIT ABORTED: schema validation failed before any byte check:",
+                file=sys.stderr,
+            )
             print(str(error), file=sys.stderr)
             return 3
         bad = [r for r in results if r["result"] != "VERIFIED"]
         for r in results:
             print("evidence audit:", r)
         if bad:
-            print("EVIDENCE AUDIT: %d/%d entries failed" % (len(bad), len(results)), file=sys.stderr)
+            print(
+                "EVIDENCE AUDIT: %d/%d entries failed" % (len(bad), len(results)),
+                file=sys.stderr,
+            )
             return 2
         print("EVIDENCE AUDIT: %d/%d entries verified" % (len(results), len(results)))
         return 0
@@ -581,7 +641,9 @@ def main(argv):
         current_digest = compute_inventory_digest(args.repo_root)
     problems = validate(doc, current_digest=current_digest)
     valid_row_ids = {row["id"] for row in doc.get("rows", []) if isinstance(row, dict)}
-    problems.extend(validate_combinations(doc, valid_row_ids, current_digest=current_digest))
+    problems.extend(
+        validate_combinations(doc, valid_row_ids, current_digest=current_digest)
+    )
     if problems:
         for problem in problems:
             print(problem, file=sys.stderr)

@@ -11,23 +11,20 @@ namespace ThousandAndFirst.Harness
 	/// Behavioural coverage for building teardown (issue: coverage-matrix). See
 	/// <see cref="KingdomTeardownNativeProvider"/> for the sealed script and scope.
 	/// <para>
-	/// SYNTHETIC SETUP, DISCLOSED. Real founding, water dedication and stockpile dedication,
-	/// exactly like <see cref="KingdomDepositOverflowNativeChecks"/>. Starter timber is placed
-	/// directly with a harness-assigned raw count, never minted through Quickstart. Buildings
-	/// are raised through the real, unmodified <c>KingdomCommission.Commission</c> and torn down
-	/// through the real, unmodified <c>KingdomMaterials.OrderStrike</c> -- never forcing
-	/// <c>KingdomBuilt</c>, the job phase, or the strike receipt directly.
+	/// SYNTHETIC SETUP, DISCLOSED, like <see cref="KingdomDepositOverflowNativeChecks"/>: real
+	/// founding/dedication, a harness-assigned raw timber count, real
+	/// <c>KingdomCommission.Commission</c> and real <c>KingdomMaterials.OrderStrike</c> -- never
+	/// forcing <c>KingdomBuilt</c>, the job phase, or the strike receipt directly.
 	/// </para>
 	/// <para>
 	/// EXACT SALVAGE, NOT "SOME". <c>OrderStrike</c> calls <c>KingdomMaterialRules.
 	/// StrikeSalvage</c> (<c>Growth/KingdomMaterialRules.Clearance.cs:211-219</c>) =
-	/// <c>Cost.Scaled(StrikeSalvagePercent=50)</c> (<c>:193</c>), integer-floor per material
-	/// (<c>Growth/KingdomMaterialTally.cs:101-111</c>). Two cases prove both ends of that floor:
-	/// <c>"fire"</c> (1 timber, <c>RuntimeData/KingdomBuildings.xml:544-546</c>) floors to
-	/// <c>(1*50)/100=0</c> -- the ZERO-SALVAGE BOUNDARY; <c>"larder"</c> (3 timber, <c>:399-400</c>,
-	/// same Camp-stage/<c>Plot="S"</c> prerequisites as "fire") gives <c>(3*50)/100=1</c> -- the
-	/// POSITIVE-SALVAGE case. Both deltas are computed from <c>KingdomMaterials.CostFor</c> +
-	/// <c>StrikeSalvagePercent</c> live, never hardcoded.
+	/// <c>Cost.Scaled(StrikeSalvagePercent=50)</c>, integer-floor per material
+	/// (<c>Growth/KingdomMaterialTally.cs:101-111</c>). Two cases prove both ends: <c>"fire"</c>
+	/// (1 timber) floors <c>(1*50)/100=0</c>, the ZERO-SALVAGE BOUNDARY; <c>"larder"</c>
+	/// (3 timber, same Camp-stage/<c>Plot="S"</c> prerequisites) gives <c>(3*50)/100=1</c>, the
+	/// POSITIVE-SALVAGE case. Both computed from <c>CostFor</c> + <c>StrikeSalvagePercent</c>
+	/// live, never hardcoded.
 	/// </para>
 	/// </summary>
 	internal static class KingdomTeardownNativeChecks
@@ -70,13 +67,11 @@ namespace ThousandAndFirst.Harness
 		}
 
 		/// <summary>Commission, await built, strike, await removed, assert the exact salvage
-		/// delta by STRIKE-RECEIPT ATTRIBUTION, never "my own chest": with two cases running in
-		/// parallel, <c>Growth/KingdomMaterials.13.StrikeRemovalAndSalvage.cs:114-126</c> returns
-		/// salvage to the FIRST eligible stockpile in the zone, not the original payer, so an
-		/// own-chest before/after delta is unsound. Instead this captures the exact strike
-		/// receipt id (<c>KingdomConstruction.ReceiptProperty</c>) before ordering the strike,
-		/// then finds the salvage item by matching <c>StrikeSalvageReceiptProperty</c> wherever
-		/// it actually landed. Then the negative second-strike path. Forces no transition.</summary>
+		/// delta by STRIKE-RECEIPT ATTRIBUTION, never "my own chest" and never the pre-strike
+		/// receipt: OrderStrike mints a NEW registry row and rebinds the works to it inside the
+		/// same call, so the receipt read AFTER a successful strike -- not before -- is matched
+		/// against <c>StrikeSalvageReceiptProperty</c> wherever it actually landed. Then the
+		/// negative second-strike path. Forces no transition.</summary>
 		private sealed class Case
 		{
 			internal readonly string Name;
@@ -156,20 +151,29 @@ namespace ThousandAndFirst.Harness
 					WorksCell = works.CurrentCell;
 					Require(WorksCell != null,
 						Name + ": the functionally-built works carries no standing cell");
-					// Captured BEFORE the strike so the salvage item's own receipt tag can be
-					// matched later regardless of which stockpile in the zone actually receives
-					// it -- never an assumption that it lands back in this case's own chest.
-					StrikeReceiptId = works.GetStringProperty(KingdomConstruction.ReceiptProperty);
-					Require(!string.IsNullOrEmpty(StrikeReceiptId),
+					string preStrikeReceiptId = works.GetStringProperty(
+						KingdomConstruction.ReceiptProperty);
+					Require(!string.IsNullOrEmpty(preStrikeReceiptId),
 						Name + ": the functionally-built works carries no construction receipt");
 					Require(KingdomMaterials.OrderStrike(System, Zone, Works, out string failure),
 						failure ?? Name + ": the real strike order was refused");
+					// Captured AFTER the strike, never before: OrderStrike mints a NEW strike-
+					// route registry row and rebinds the works to it in the same call
+					// (Growth/KingdomMaterials.08.StrikeOrdering.cs:257-261 NewJob,
+					// 09.StrikeStampAndCancellation.cs:35 Bind), superseding the paid-
+					// construction receipt; salvage is tagged with the NEW id, never the old
+					// (Growth/KingdomMaterials.13.StrikeRemovalAndSalvage.cs:113).
+					StrikeReceiptId = works.GetStringProperty(KingdomConstruction.ReceiptProperty);
+					Require(!string.IsNullOrEmpty(StrikeReceiptId)
+						&& StrikeReceiptId != preStrikeReceiptId,
+						Name + ": the strike did not rebind the works to a distinct strike-job "
+						+ "receipt; the old paid-construction receipt would misattribute salvage");
 					Phase = 2;
 					return;
 				}
-				GameObject stillThere = Zone.FindObjectByID(WorksId);
-				// A same-ID object that is NOT the exact reference we struck is never a pass: a
+				// A same-ID object that is NOT the exact struck reference is never a pass: a
 				// mint-over-the-old-id replacement must refuse, not be silently read as removal.
+				GameObject stillThere = Zone.FindObjectByID(WorksId);
 				Require(stillThere == null || ReferenceEquals(stillThere, Works),
 					Name + ": a different object now carries the struck building's own identity "
 					+ WorksId + " -- a same-ID replacement is never a valid removal");
@@ -178,16 +182,13 @@ namespace ThousandAndFirst.Harness
 					Evidence.Append("; case=").Append(Name).Append(" awaiting-struck=true");
 					return;
 				}
-				// By reference too: nothing on the struck cell still reads as this finished
-				// building, not merely "the old id is gone".
+				// By reference too, not merely "the old id is gone".
 				foreach (GameObject onCell in WorksCell.GetObjects())
 					Require(!GameObject.Validate(onCell) || onCell.GetIntProperty("KingdomBuilt") != 1
 						|| onCell.GetStringProperty(KingdomUpgrade.BuildKeyProperty) != BuildKey,
-						Name + ": an object still reads as this finished building on its own cell "
-						+ "after removal");
+						Name + ": an object still reads as this finished building on its cell");
 				int salvaged = SalvageByReceipt(Require);
-				// Exact delta, not "some change": the production formula is asserted, never
-				// assumed, and attributed by THIS case's own strike receipt, never by chest.
+				// Exact delta, attributed by THIS case's own strike receipt, never by chest.
 				Require(salvaged == ExpectedSalvageDelta,
 					Name + ": struck building's material return did not match the exact computed "
 					+ "salvage rule: expected-delta=" + ExpectedSalvageDelta + " observed="
@@ -204,9 +205,8 @@ namespace ThousandAndFirst.Harness
 				Done = true;
 			}
 
-			/// <summary>Scans every stockpile the zone actually has (never assumed to be this
-			/// case's own chest) for a timber item whose salvage receipt names THIS case's exact
-			/// strike -- attribution by reference/property, never by custody location.</summary>
+			/// <summary>Every zone stockpile (never assumed own chest) for a timber item whose
+			/// salvage receipt names THIS case's exact strike, by property, not location.</summary>
 			private int SalvageByReceipt(Action<bool, string> Require)
 			{
 				int total = 0;

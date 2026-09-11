@@ -96,7 +96,7 @@
       "negative": "COVERAGE_GAP",
       "driver": "camp-builder-owned Quickstart build harness for the Quickstart leg; this pass's teardown-setup independently exercises the same KingdomCommission.Commission for a non-Quickstart camp (Harness/KingdomTeardownNativeProvider.cs:19)",
       "status": "NATIVE_PASS",
-      "note": "3cf2825 is a direct ancestor of current dev (git-verified), but that is commit ancestry, NOT whole-inventory identity: docs/STATUS.md's 3cf2825 section cites no inventory SHA-256 at all (checked), so inventoryDigest is recorded null and currentDevCoverage is false, not assumed true from ancestry alone. Real artefacts checksummed and confirmed present. Completion-to-built and save/cold-load of the FINISHED building remain a separate gap.",
+      "note": "3cf2825 is a direct ancestor of current dev (git-verified), but that is commit ancestry, NOT whole-inventory identity: docs/STATUS.md's 3cf2825 section cites no inventory SHA-256 at all (checked), so inventoryDigest is recorded null and currentDevCoverage is false, not assumed true from ancestry alone. Real artefacts checksummed and confirmed present. Completion-to-built and save/cold-load of the FINISHED building remain a separate gap. Completion-to-built and save/cold-load legs, plus the full lifecycle chain (quote through next-action-after-load), are now IMPLEMENTED_UNEXECUTED on test/longform-reachability -- see rows 20-23, not this row's own driver.",
       "evidence": [
         {
           "commit": "3cf2825",
@@ -132,7 +132,7 @@
       "negative": "IMPLEMENTED_UNEXECUTED",
       "driver": "Harness/KingdomTeardownNativeProvider.cs:18-19 (teardown-setup/teardown-check)",
       "status": "IMPLEMENTED_UNEXECUTED",
-      "note": "source-pinned only (DevTests/KingdomTeardownScenarioSourceTests.cs); no native run performed this pass, so this cannot be marked covered or PASS. Two cases journal as teardown-check~case=fire and ~case=larder (Harness/KingdomTeardownNativeChecks.cs Case class), proving both the zero-salvage boundary and a genuine positive-salvage delta from the same live production rule. Salvage is attributed by STRIKE-RECEIPT (KingdomConstruction.ReceiptProperty captured before the strike, matched via StrikeSalvageReceiptProperty across every zone stockpile), never by own-chest before/after delta -- OrderStrike returns salvage to the first eligible stockpile zone-wide (Growth/KingdomMaterials.13.StrikeRemovalAndSalvage.cs:114-126), not the original payer, which an own-chest delta with two parallel cases would get wrong. Removal is confirmed by reference (a same-ID replacement object refuses, never counts as gone) and by a same-cell finished-building sweep, not by ID-string absence alone.",
+      "note": "source-pinned only (DevTests/KingdomTeardownScenarioSourceTests.cs); no native run performed this pass, so this cannot be marked covered or PASS. Two cases journal as teardown-check~case=fire and ~case=larder (Harness/KingdomTeardownNativeChecks.cs Case class), proving both the zero-salvage boundary and a genuine positive-salvage delta from the same live production rule. Salvage is attributed by STRIKE-RECEIPT (KingdomConstruction.ReceiptProperty captured before the strike, matched via StrikeSalvageReceiptProperty across every zone stockpile), never by own-chest before/after delta -- OrderStrike returns salvage to the first eligible stockpile zone-wide (Growth/KingdomMaterials.13.StrikeRemovalAndSalvage.cs:114-126), not the original payer, which an own-chest delta with two parallel cases would get wrong. Removal is confirmed by reference (a same-ID replacement object refuses, never counts as gone) and by a same-cell finished-building sweep, not by ID-string absence alone. BLOCKER FOUND AND FIXED (Codex root, source review, pre-native): the receipt must be captured AFTER a successful OrderStrike, never before -- OrderStrike mints a NEW strike-route registry row and rebinds the works to it in the same call (Growth/KingdomMaterials.08.StrikeOrdering.cs:257-261 NewJob, Growth/KingdomMaterials.09.StrikeStampAndCancellation.cs:35 Bind), superseding the paid-construction receipt salvage is tagged against (Growth/KingdomMaterials.13.StrikeRemovalAndSalvage.cs:113). Fixed: capture moved after OrderStrike, plus a Require that the new receipt differs from the pre-strike one. Negative regression is an ORDER PIN only (DevTests test ReceiptIsCapturedAfterTheStrikeNeverBeforeAndMustDifferFromThePreStrikeOne), disclosed as not runtime behaviour proof -- no pure predicate exists to value-test this without the game.",
       "evidence": null
     },
     {
@@ -359,6 +359,58 @@
       "status": "EVIDENCE_UNVERIFIED",
       "note": "Driver Harness/KingdomSubsidenceNativeProvider.cs etc. Historical receipt cited at 7d331fe (taf-native-subsidence.a9XJXf) but that directory could not be located on any machine checked -- artifactPath cannot be resolved. 7d331fe being a direct dev ancestor is commit reachability, not proof the evidence directory still exists or that its whole-inventory census equals the current dev digest -- corrected per this round's instruction not to infer currentDevCoverage from ancestry. Interrupted-mid-step path remains a coverage gap regardless.",
       "evidence": null
+    },
+    {
+      "id": 20,
+      "behaviour": "Construction lifecycle on the founded road (quote->paid commission->engine turns->built->save)",
+      "prerequisites": "a founded settlement (founding-first-city profile), a dedicated stockpile, stored water covering the design's cost",
+      "transitions": "lifecycle-open (startup census) -> lifecycle-build (quote/CanPay/real KingdomCommission.Commission) -> advance N (real engine turns via the bounded advance verb) -> lifecycle-grown (job reaches KingdomConstructionPhase.Complete, output stands on its own cell) -> lifecycle-save (real SaveGame)",
+      "effects": "exact physical timber/water debit, a job/receipt identity linking the commission to its output, IsFunctionallyBuilt-equivalent state (KingdomBuilt==1 + design key match on the job's own cell), a real save file with a hashed receipt",
+      "save_cold_load": "see row 22 (separate row: cold-load is a second session)",
+      "negative": "CanPay refusal at lifecycle-build (economy has not yet paid for the design); budget-expiry refusal at lifecycle-grown (turn budget expired before the building stood, job phase named in the refusal)",
+      "driver": "Harness/KingdomQuickstartLifecycleProvider.cs:35-38 (verbs); Harness/KingdomQuickstartLifecycleSteps.cs (Open/Build), KingdomQuickstartLifecycleFinish.cs (Grown/Save); persona Tools/personas/lifecycle-stockpile-native-check.persona; checker Tools/check-quickstart-lifecycle.py",
+      "status": "IMPLEMENTED_UNEXECUTED",
+      "note": "On branch test/longform-reachability (not yet merged to dev), read only reviewed (review-fff8eba-lifecycle-findings.md). Source-pinned only (DevTests/KingdomQuickstartLifecycleContractTests.cs); no native run performed. Cannot be marked covered or PASS until a native evidence id exists.",
+      "evidence": null
+    },
+    {
+      "id": 21,
+      "behaviour": "Construction lifecycle on the Quickstart same-chest road (quickstart-lifecycle <profile> <yes|no>)",
+      "prerequisites": "a Quickstart boot request naming the lifecycle command specifically -- the ONLY command whose RunnerAuthorized() check tolerates a live KingdomScenarioAutoRunner (Harness/KingdomQuickstartBootTest.cs:199-202); quickstart-boot/-save/-build keep their single-line grammar and runner exclusion unchanged",
+      "transitions": "same lifecycle-open/build/grown/save verb chain as row 20, but starting from the Quickstart boot's own starter chest/materials instead of an ordinary founding-first-city dedication",
+      "effects": "same physical/identity effects as row 20, keyed to the Quickstart starter stockpile; every lifecycle row additionally carries a profile stamp (KingdomQuickstartLifecycleSteps.Stamped)",
+      "save_cold_load": "see row 22",
+      "negative": "unbound-stamp refusal (KingdomQuickstartLifecycleSteps.Stamped: \"the launched profile could not be named from its own sealed root\") in addition to row 20's CanPay/budget-expiry refusals",
+      "driver": "Harness/KingdomQuickstartBootRequest.cs:20 (LifecycleVerb=\"quickstart-lifecycle\"), :35,43 (Lifecycle flag/grammar); Tools/scenario_profile.py QUICKSTART_LIFECYCLE_VERB/QUICKSTART_LIFECYCLE_VERBS; checker Tools/check-quickstart-lifecycle.py",
+      "status": "IMPLEMENTED_UNEXECUTED",
+      "note": "Camp-builder-owned lane (Quickstart construction chain files) -- recorded from the read-only review of test/longform-reachability, not independently exercised or edited by this branch. Source-pinned only; no native run performed.",
+      "evidence": null
+    },
+    {
+      "id": 22,
+      "behaviour": "Construction lifecycle save/cold-load as a second session",
+      "prerequisites": "a completed lifecycle-save leg (row 20 or 21) producing a real save file under the taf-lifecycle-save-v1 snapshot prefix",
+      "transitions": "a second process imports the save (KingdomScenarioLoadEntry.cs LifecycleSnapshot dispatch) and re-proves realm/city/plot/building/stockpile/water identities strictly BY REFERENCE against the loaded game -- nothing is restored from the witness, every fact is re-read live",
+      "effects": "same GameId/RealmId/city-owner/plot-cell/building-id/design-key/stockpile-timber/stored-water as the saved session, each read fresh from the cold-loaded world, not copied from the witness snapshot",
+      "save_cold_load": "this row IS the save/cold-load leg",
+      "negative": "any identity mismatch (GameId/RealmId/city/zone/building/design-key/timber/water) refuses at Compare(); unbound-stamp refusal also applies",
+      "driver": "Harness/KingdomQuickstartLifecycleLoad.cs::VerifyLoaded/Compare; Harness/KingdomScenarioLoadEntry.cs (LifecycleSnapshot, taf-lifecycle-save-v1: prefix); checker Tools/check-quickstart-lifecycle.py LOAD_ROWS/cold-load link",
+      "status": "IMPLEMENTED_UNEXECUTED",
+      "note": "Newly implemented on test/longform-reachability (commit 8f774cb, read-only reviewed in review-fff8eba-lifecycle-findings.md). Source-pinned only; no native run performed; this closes the cold-load gap 2d663d0 originally left as BLOCKER.",
+      "evidence": null
+    },
+    {
+      "id": 23,
+      "behaviour": "Construction lifecycle next-action after cold-load",
+      "prerequisites": "a successful cold-load (row 22) of a game carrying a completed lifecycle job",
+      "transitions": "a further real quote/CanPay/KingdomCommission.Commission on the loaded game, minting a genuinely NEW job distinct from the completed one",
+      "effects": "a new job id, a new physical timber/water debit, exact single-timber debit and exact drams debit matching the design's live cost -- computed on the loaded game's own state, never copied forward",
+      "save_cold_load": "runs strictly after row 22's cold-load; not itself a save/load leg",
+      "negative": "job-id reuse refusal (Harness/KingdomQuickstartLifecycleLoad.cs::Act: \"the next action reported the completed job's own identity; a further action must mint its own job\")",
+      "driver": "Harness/KingdomQuickstartLifecycleLoad.cs::Next/Act; checker Tools/check-quickstart-lifecycle.py NEXT_ROWS/next-action link",
+      "status": "IMPLEMENTED_UNEXECUTED",
+      "note": "Newly implemented on test/longform-reachability (commit 8f774cb, read-only reviewed in review-fff8eba-lifecycle-findings.md). Source-pinned only; no native run performed.",
+      "evidence": null
     }
   ],
   "combinations": [
@@ -385,12 +437,12 @@
         12,
         16
       ],
-      "coupling": "Travel's loaded-index scan is per-zone (Harness/KingdomCity.NativeTravelDemand.cs:38, walking Growth/KingdomSurvey's LoadedObjects), and a second founded city is a second, independent KingdomSystem/zone pair under the same save (Core/KingdomSystem.z01.State.Foundation.cs founding identity). The shared authority is the save's own system registry each city's founding claims a slot in -- no driver currently founds a second city at all (row 12, NONE), so this coupling is untested even at the single-behaviour level.",
+      "coupling": "CORRECTED: production has ONE realm KingdomSystem, not one System per city. A second 'city' is a second, non-seat KingdomSettlement row in System.SettlementTopology (Core/KingdomSystem.z08.SettlementTopology.cs:22, NonSeatSettlements()), each carrying its own KingdomCityBook with its own SettlementId (Core/KingdomSystem.z25.IdentityNormalization.cs:167-178, City.SettlementId assigned per-row), and its own claimed zone (Core/KingdomSystem.z08.Settlements.cs:61, TrySeat/FindNonSeatSettlementByZone). Travel's loaded-index scan is per-zone (Harness/KingdomCity.NativeTravelDemand.cs:38). The shared authority is this single System's settlement-topology registry each non-seat row claims a slot in -- no driver currently founds a second settlement row at all (row 12, NONE), so this coupling is untested even at the single-behaviour level.",
       "prerequisites": "two founded settlements in the same save AND at least one travel (away/return) cycle for a resident of one of them, followed by a save/cold-load",
-      "invariants": "city/actor isolation by reference: a travel scan against city A's zone never reads or credits city B's stockpile/roster; save/cold-load reproduces both cities' System identities and bindings distinctly (no merged or aliased KingdomSystem after reload)",
+      "invariants": "settlement isolation WITHIN the one System: two non-seat KingdomSettlement rows carry distinct SettlementId/City books and distinct claimed zones; a travel scan against settlement A's zone never reads or credits settlement B's stockpile/roster; save/cold-load reproduces every settlement row's SettlementId/City/ClaimedZones distinctly (no merged or aliased KingdomSettlement row after reload)",
       "seed_turn_matrix": "one fixed seed; single scenario shape (found city A, found city B, travel one resident of A away and back, save, cold-load, re-assert both cities' rosters/stock unchanged) -- not a sweep, a single bounded chain",
-      "expected_failure_rows": "a travel scan against A observing or crediting B's objects; a cold-load that merges the two cities' System records or loses one",
-      "reusable_seams": "NONE -- no existing driver founds a second city, so this chain has no reachable starting seam at all",
+      "expected_failure_rows": "a travel scan against settlement A observing or crediting settlement B's objects; a cold-load that merges two KingdomSettlement rows' SettlementId/City books or loses one",
+      "reusable_seams": "NONE -- no existing driver adds a second KingdomSettlement row to the realm System, so this chain has no reachable starting seam at all",
       "status": "NONE",
       "evidence": null
     },
@@ -423,7 +475,7 @@
       "coupling": "Arrival (Growth/KingdomFirstGuestRuntime.cs, gated by Experience/KingdomGrowthFirstGuestRules.Choices.cs) and departure capacity (Growth/KingdomResidentDepartureRuntime.Capacity.cs, KingdomSystem.ResidentDepartureCapacityWarnings) both key off the settlement's water census read at Core/KingdomReportsPeople.cs:43 (KingdomGrowth.CountStoredWater), the same census Growth/KingdomCommission.cs:205 draws down for construction. NOTE: the exact conditional that denies/motivates arrival or departure from a shortage reading was not traced line-by-line this pass -- the coupling is the shared census, not a confirmed shared branch; treat prerequisites below as approximate.",
       "prerequisites": "a settlement at or below its water/food shortage threshold AND a pending first-guest candidate AND (row 4 has no driver) no way to independently force a departure attempt in the same window",
       "invariants": "conservation of water/food: an arrival's dedication and a departure's capacity bookkeeping never double-count or double-release the same stock; a shortage state is read consistently by both lanes in the same tick (no stale read on one side and fresh on the other)",
-      "seed_turn_matrix": "one fixed seed; single scenario shape once row 4 gets a driver -- currently NOT REACHABLE at all because row 4 (resident departure) has no driver",
+      "seed_turn_matrix": "one fixed seed; single scenario shape once row 4 gets a driver -- currently UNIMPLEMENTED/UNEXECUTED (driver NONE), not product-unreachable: no failed transition or production proof of unreachability exists for resident departure, only an absent driver",
       "expected_failure_rows": "N/A -- unreachable until row 4 has a driver; recorded as backlog shape only",
       "reusable_seams": "NONE -- row 4 has no driver to build this chain on",
       "status": "NONE",
@@ -447,17 +499,17 @@
     },
     {
       "id": "C6",
-      "name": "founding + multiple cities (registry isolation)",
+      "name": "founding + multiple settlements (registry isolation, single System)",
       "rows": [
         1,
         12
       ],
-      "coupling": "Founding claims a System/zone identity slot at Core/KingdomSystem.z05.Identity.Founding.cs and Core/KingdomSystem.z01.State.Foundation.cs; a second founding on the same save must claim a DISTINCT slot in the same registry rather than aliasing or overwriting the first. Row 12 (multiple cities) has no driver at all, so this shared-authority claim is currently untested even once.",
+      "coupling": "CORRECTED: one realm KingdomSystem holds every settlement. Founding claims the SEAT slot (Core/KingdomSystem.z25.IdentityNormalization.cs:167-172, City.SettlementId on the seat City); a second settlement is a NEW non-seat KingdomSettlement row added to System.SettlementTopology (Core/KingdomSystem.z08.SettlementTopology.cs:22) with its own distinct SettlementId (z25.IdentityNormalization.cs:173-178, per-row City.SettlementId) and must claim a distinct zone (z08.Settlements.cs:61 TrySeat requires the zone not already in ClaimedZones). The shared authority is this ONE System's settlement-topology registry each row claims a slot in -- not a second System instance.",
       "prerequisites": "one already-founded settlement AND a second founding attempt in the same save",
-      "invariants": "city isolation by reference: the second founding's System is a distinct object from the first's; no shared mutable field (ledger, stockpile registry, roster) is aliased between the two",
-      "seed_turn_matrix": "one fixed seed; single scenario (found city A, then found city B in the same save, assert both Systems distinct and both rosters/stocks independent) -- no sweep",
-      "expected_failure_rows": "a second founding that silently reuses or mutates the first city's System instance; a shared ledger/stockpile reference between the two",
-      "reusable_seams": "Harness/KingdomNativeCampFounding.Found (reusable helper) called twice in one fixture -- no existing driver does this",
+      "invariants": "settlement isolation by reference WITHIN the single System: a second settlement's KingdomSettlement/City/SettlementId are a distinct object/value from the seat's; no shared mutable field (ledger, stockpile registry, roster) is aliased between seat and non-seat rows, or between two non-seat rows",
+      "seed_turn_matrix": "one fixed seed; single scenario (found the seat, then add a second KingdomSettlement row in the same System, assert both rows' SettlementId/City/roster/stock independent) -- no sweep",
+      "expected_failure_rows": "a second settlement row that silently reuses or mutates the seat's SettlementId/City instance; a shared ledger/stockpile reference between seat and non-seat rows, or between two non-seat rows",
+      "reusable_seams": "Harness/KingdomNativeCampFounding.Found founds the ONE realm System's seat only; adding a second KingdomSettlement row to the same System's SettlementTopology has no existing harness seam -- NONE found that exercises this",
       "status": "NONE",
       "evidence": null
     }
