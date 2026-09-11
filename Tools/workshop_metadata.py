@@ -1435,6 +1435,101 @@ def _observed_id_valid(value: object) -> bool:
     )
 
 
+# The camp harness's exact-owned-process receipt (test/longform-reachability,
+# Tools/scenario_run_record.py + run-scenario.ps1), a SEPARATE artefact from the
+# longFormScenario results artefact above -- its fields are never required inside
+# longFormScenario's processes[] entries, which stay exactly {role, launchId, started,
+# stoppedUtc, profileName, profileSeal}.
+RUN_RECORD_TOP_KEYS = {"launchId", "ownership", "exitProvenance", "exitCode"}
+RUN_RECORD_OWNERSHIP_KEYS = {"receiptRef", "receiptSha256", "pid", "startTicks", "executable"}
+RUN_RECORD_EXIT_PROVENANCE_OBSERVED = "owned-process-exit-observed"
+RUN_RECORD_EXIT_PROVENANCE_UNOBSERVED = "owned-process-ended-exit-unobserved"
+RUN_RECORD_EXIT_PROVENANCE_VALUES = (
+    RUN_RECORD_EXIT_PROVENANCE_OBSERVED,
+    RUN_RECORD_EXIT_PROVENANCE_UNOBSERVED,
+)
+
+
+def validate_run_record(path: Path, *, repository_root: Path | None = None) -> list[str]:
+    """Validate one run-record.json: an ownership block is REQUIRED (never optional -- "stop
+    refuses without an ownership block"), exitCode is present only under observed exit
+    provenance, the launch id must name the owned pid, and receiptSha256 must be a real,
+    well-formed digest. Returns a list of issues; empty means valid."""
+    errors: list[str] = []
+    if repository_root is None:
+        repository_root = path.parent
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as error:
+        return [f"run record is unreadable: {path}: {error}"]
+    if not isinstance(payload, dict) or set(payload) != RUN_RECORD_TOP_KEYS:
+        return [
+            "run record fields must be exactly: " + ", ".join(sorted(RUN_RECORD_TOP_KEYS))
+        ]
+    launch_id = payload.get("launchId")
+    if not isinstance(launch_id, str) or not launch_id.strip():
+        errors.append("run record launchId must be a non-empty identifier")
+        launch_id = None
+    ownership = payload.get("ownership")
+    if not isinstance(ownership, dict) or set(ownership) != RUN_RECORD_OWNERSHIP_KEYS:
+        errors.append(
+            "run record ownership is required and must be exactly: "
+            + ", ".join(sorted(RUN_RECORD_OWNERSHIP_KEYS))
+        )
+        ownership = {}
+    pid = ownership.get("pid")
+    if type(pid) is not int or pid <= 0:
+        errors.append("run record ownership.pid must be a positive integer")
+        pid = None
+    if pid is not None and launch_id is not None and str(pid) not in launch_id:
+        errors.append("run record launchId must name the owned pid")
+    start_ticks = ownership.get("startTicks")
+    if type(start_ticks) is not int or start_ticks < 0:
+        errors.append("run record ownership.startTicks must be a non-negative integer")
+    if not _observed_id_valid(ownership.get("executable")):
+        errors.append(
+            "run record ownership.executable must be a real, non-empty, non-placeholder "
+            "identity"
+        )
+    receipt_sha = ownership.get("receiptSha256")
+    if (
+        not isinstance(receipt_sha, str)
+        or re.fullmatch(r"[0-9a-f]{64}", receipt_sha) is None
+        or receipt_sha == "0" * 64
+    ):
+        errors.append("run record ownership.receiptSha256 must be a nonzero lowercase SHA-256")
+    _validate_artifact_binding(
+        {
+            "artifactRef": ownership.get("receiptRef"),
+            "artifactSha256": receipt_sha if isinstance(receipt_sha, str) else "0" * 64,
+        },
+        "runRecord.ownership",
+        errors,
+        repository_root,
+        include_pass_id=False,
+    )
+    provenance = payload.get("exitProvenance")
+    if provenance not in RUN_RECORD_EXIT_PROVENANCE_VALUES:
+        errors.append(
+            "run record exitProvenance must be one of: "
+            + ", ".join(RUN_RECORD_EXIT_PROVENANCE_VALUES)
+        )
+        provenance = None
+    exit_code = payload.get("exitCode")
+    if provenance == RUN_RECORD_EXIT_PROVENANCE_OBSERVED:
+        if type(exit_code) is not int:
+            errors.append(
+                "run record exitCode must be an integer when exitProvenance is "
+                f"{RUN_RECORD_EXIT_PROVENANCE_OBSERVED!r}"
+            )
+    elif exit_code is not None:
+        errors.append(
+            "run record exitCode must be absent (null) unless exitProvenance is "
+            f"{RUN_RECORD_EXIT_PROVENANCE_OBSERVED!r}"
+        )
+    return errors
+
+
 def _validate_native_driver_results(
     artifact_ref: object, errors: list[str], repository_root: Path
 ) -> None:

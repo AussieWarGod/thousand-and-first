@@ -1521,5 +1521,117 @@ class PackagePathCliSequenceTest(unittest.TestCase):
 
 
 
+class RunRecordTest(unittest.TestCase):
+    """Tools/workshop_metadata.py.validate_run_record: the camp harness's exact-owned-process
+    receipt (test/longform-reachability, Tools/scenario_run_record.py + run-scenario.ps1) --
+    a SEPARATE artefact from longFormScenario, whose processes[] entries never carry these
+    fields."""
+
+    def setUp(self) -> None:
+        self.temporary = tempfile.TemporaryDirectory()
+        self.root = Path(self.temporary.name)
+        (self.root / "docs" / "release-evidence").mkdir(parents=True)
+
+    def tearDown(self) -> None:
+        self.temporary.cleanup()
+
+    def write_receipt(self, name: str = "run-receipt.txt") -> tuple[str, str]:
+        ref = f"docs/release-evidence/{name}"
+        path = self.root / ref
+        path.write_text("owned process receipt\n", encoding="utf-8")
+        return ref, hashlib.sha256(path.read_bytes()).hexdigest()
+
+    def valid_record(self, **overrides) -> dict:
+        receipt_ref, receipt_sha = self.write_receipt()
+        record = {
+            "launchId": "launch-pid-4242",
+            "ownership": {
+                "receiptRef": receipt_ref,
+                "receiptSha256": receipt_sha,
+                "pid": 4242,
+                "startTicks": 1000,
+                "executable": "CoQ.exe",
+            },
+            "exitProvenance": METADATA.RUN_RECORD_EXIT_PROVENANCE_OBSERVED,
+            "exitCode": 0,
+        }
+        record.update(overrides)
+        return record
+
+    def write(self, record: dict) -> Path:
+        path = self.root / "run-record.json"
+        path.write_text(json.dumps(record), encoding="utf-8")
+        return path
+
+    def test_valid_observed_record_passes(self) -> None:
+        self.assertEqual(METADATA.validate_run_record(self.write(self.valid_record())), [])
+
+    def test_valid_unobserved_record_with_no_exit_code_passes(self) -> None:
+        record = self.valid_record(
+            exitProvenance=METADATA.RUN_RECORD_EXIT_PROVENANCE_UNOBSERVED, exitCode=None
+        )
+        self.assertEqual(METADATA.validate_run_record(self.write(record)), [])
+
+    def test_missing_ownership_block_fails(self) -> None:
+        record = self.valid_record()
+        record["ownership"] = None
+        issues = METADATA.validate_run_record(self.write(record))
+        self.assertTrue(any("ownership is required" in issue for issue in issues), issues)
+
+    def test_ownership_key_entirely_absent_fails(self) -> None:
+        record = self.valid_record()
+        del record["ownership"]
+        issues = METADATA.validate_run_record(self.write(record))
+        self.assertTrue(any("fields must be exactly" in issue for issue in issues), issues)
+
+    def test_exit_code_under_unobserved_provenance_fails(self) -> None:
+        record = self.valid_record(
+            exitProvenance=METADATA.RUN_RECORD_EXIT_PROVENANCE_UNOBSERVED
+        )
+        # exitCode still 0 from valid_record(), which is not allowed when unobserved.
+        issues = METADATA.validate_run_record(self.write(record))
+        self.assertTrue(
+            any("exitCode must be absent (null) unless" in issue for issue in issues), issues
+        )
+
+    def test_missing_exit_code_under_observed_provenance_fails(self) -> None:
+        record = self.valid_record(exitCode=None)
+        issues = METADATA.validate_run_record(self.write(record))
+        self.assertTrue(
+            any("exitCode must be an integer when exitProvenance is" in issue for issue in issues),
+            issues,
+        )
+
+    def test_launch_id_not_naming_pid_fails(self) -> None:
+        record = self.valid_record(launchId="launch-unrelated")
+        issues = METADATA.validate_run_record(self.write(record))
+        self.assertTrue(any("launchId must name the owned pid" in issue for issue in issues), issues)
+
+    def test_malformed_receipt_sha_fails(self) -> None:
+        record = self.valid_record()
+        record["ownership"]["receiptSha256"] = "not-a-hash"
+        issues = METADATA.validate_run_record(self.write(record))
+        self.assertTrue(
+            any("receiptSha256 must be a nonzero lowercase SHA-256" in issue for issue in issues),
+            issues,
+        )
+
+    def test_unknown_exit_provenance_fails(self) -> None:
+        record = self.valid_record(exitProvenance="something-else")
+        issues = METADATA.validate_run_record(self.write(record))
+        self.assertTrue(
+            any("exitProvenance must be one of" in issue for issue in issues), issues
+        )
+
+    def test_hash_drifted_receipt_fails(self) -> None:
+        record = self.valid_record()
+        real = record["ownership"]["receiptSha256"]
+        record["ownership"]["receiptSha256"] = ("0" if real[0] != "0" else "1") + real[1:]
+        issues = METADATA.validate_run_record(self.write(record))
+        self.assertTrue(any("artifactSha256 must match" in issue for issue in issues), issues)
+
+
+
+
 if __name__ == "__main__":
     unittest.main()
