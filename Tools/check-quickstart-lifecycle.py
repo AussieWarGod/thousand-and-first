@@ -110,6 +110,8 @@ LIFECYCLE_ROWS = {
     "paid-commission": ("lifecycle-build",),
     "engine-turn-build": ("lifecycle-grown",),
     "save": ("lifecycle-save",),
+    "cold-load": ("lifecycle-loaded",),
+    "next-action": ("lifecycle-next",),
 }
 # Which identities a step must have observed BY THE TIME IT RAN, following the real
 # lifecycle rather than the shape of the schema. A job does not exist before it is

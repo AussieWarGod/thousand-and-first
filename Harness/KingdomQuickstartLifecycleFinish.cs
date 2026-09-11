@@ -59,6 +59,39 @@ namespace ThousandAndFirst.Harness
 				+ "; at=" + job.X + "," + job.Y + "; turns=" + Game.Turns;
 		}
 
+		/// <summary>
+		/// The lifecycle witness wire: the identities and counts this session actually read, for
+		/// the cold-load session to compare its own reads against. Every value is read here, now,
+		/// from live state -- nothing is taken from the durable receipts except the job identity
+		/// that names which job to look at.
+		/// </summary>
+		private static string Witness(XRLGame Game, Zone Zone, KingdomSystem System, out string Failure)
+		{
+			Failure = null;
+			string jobId = KingdomScenarioDurableState.Observe(JobKey).String;
+			if (!KingdomConstruction.TryRead(out List<KingdomConstructionJob> jobs, out string readFailure))
+			{ Failure = readFailure ?? "the construction registry could not be read for the witness"; return null; }
+			KingdomConstructionJob job = null;
+			foreach (KingdomConstructionJob candidate in jobs)
+				if (candidate?.Id == jobId) job = candidate;
+			if (job == null) { Failure = "the lifecycle job is not in the registry at save time"; return null; }
+			if (job.Phase != KingdomConstructionPhase.Complete)
+			{ Failure = "the lifecycle job is not complete; there is nothing finished to save"; return null; }
+			string standing = Standing(Zone, job, out GameObject building);
+			if (standing != null) { Failure = standing; return null; }
+			if (!TryStockpile(Zone, out GameObject stockpile, out string stockpileFailure))
+			{ Failure = stockpileFailure; return null; }
+			if (!KingdomQuickstartBuildCensus.TakeStock(Zone, stockpile, false,
+				out var stock, out string stockFailure)) { Failure = stockFailure; return null; }
+			var snapshot = new KingdomQuickstartLifecycleSnapshot(Game.GameID, System.RealmId,
+				KingdomConstruction.OwnerOf(System), Zone.ZoneID, job.Id, job.SubjectId,
+				building.IDIfAssigned, job.TargetKey, job.X, job.Y, Timber(stock),
+				KingdomGrowth.CountStoredWater(Zone), Game.Turns);
+			if (!KingdomQuickstartLifecycleSnapshotCodec.TryEncode(snapshot, out string wire))
+			{ Failure = "the lifecycle witness could not be encoded"; return null; }
+			return wire;
+		}
+
 		/// <summary>The finished building, re-proved from the job's own recorded identity rather
 		/// than from whatever happens to stand nearby.</summary>
 		private static string Standing(Zone Zone, KingdomConstructionJob Job, out GameObject Building)
@@ -107,6 +140,14 @@ namespace ThousandAndFirst.Harness
 			foreach (string existing in Directory.GetFiles(directory))
 				if (Path.GetFileName(existing) != "Cache.db")
 					return Refuse(SaveStep, "the save directory already holds primary or backup evidence");
+			// The witness is written BEFORE the save, so what the cold-load session compares
+			// against is what this world actually held at the moment it was serialized.
+			string wire = Witness(Game, Zone, System, out string witnessFailure);
+			if (wire == null) return Refuse(SaveStep, witnessFailure);
+			Game.SetStringGameState(KingdomScenarioSaveFiles.SnapshotKey, wire);
+			if (!KingdomScenarioDurableState.ProvesExactText(KingdomScenarioSaveFiles.SnapshotKey, wire))
+				return Refuse(SaveStep, "the lifecycle save witness did not publish exactly");
+			KingdomScenarioSaveFiles.WriteNew(Path.Combine(root, KingdomScenarioSaveFiles.SnapshotFile), wire);
 			The.ZoneManager.CheckCached(true, true);
 			long turns = Game.Turns;
 			Task save = Game.SaveGame("Primary");
@@ -124,12 +165,12 @@ namespace ThousandAndFirst.Harness
 			string infoHash = KingdomScenarioSaveFiles.HashFile(info, 1048576);
 			string jobId = KingdomScenarioDurableState.Observe(JobKey).String;
 			string receipt = "taf-scenario-save-v1\n" + Game.GameID + "\n" + primaryHash + "\n"
-				+ infoHash + "\n" + KingdomScenarioSaveFiles.HashText(jobId) + "\n";
+				+ infoHash + "\n" + KingdomScenarioSaveFiles.HashText(wire) + "\n";
 			KingdomScenarioSaveFiles.WriteNew(Path.Combine(root, KingdomScenarioSaveFiles.ReceiptFile), receipt);
 			if (KingdomScenarioSaveFiles.ReadText(Path.Combine(root, KingdomScenarioSaveFiles.ReceiptFile), 512) != receipt)
 				return Refuse(SaveStep, "the save receipt did not persist exactly");
 			Ok = true;
-			return "native-lifecycle step=save; " + Identities(System)
+			return "native-lifecycle step=save; witness=published; " + Identities(System)
 				+ "; saveId=" + Game.GameID + "; jobId=" + jobId + "; real-save=true"
 				+ "; turns=" + Game.Turns + "; cold-load=unproved-in-this-session";
 		}

@@ -26,10 +26,11 @@ namespace ThousandAndFirst.Harness
 	/// KingdomQuickstartLifecycleProvider's four verbs and the existing bounded <c>advance</c>:
 	/// <see cref="Lifecycle" /> names those rows. No Quickstart invariant is relaxed.</para>
 	///
-	/// <para>WHAT IS STILL OWED. <see cref="Next" /> has no producer on either road: the cold-load
-	/// session needs a second profile imported from the lifecycle save, and the further action
-	/// after that load needs a verb inside it. Until both exist the chain's verdict is BLOCKER by
-	/// design, never a pass.</para>
+	/// <para>THE SECOND SESSION. The cold load and the action after it run in a separate process,
+	/// on a fresh profile imported from the lifecycle save by the unchanged importer
+	/// (Tools/prepare-scenario-load.py). That session is reached only through the lifecycle
+	/// snapshot prefix, and lands the rows <see cref="Lifecycle" /> names last:
+	/// lifecycle-loaded and lifecycle-next.</para>
 	/// </summary>
 	internal static class KingdomQuickstartLifecycleRows
 	{
@@ -58,7 +59,8 @@ namespace ThousandAndFirst.Harness
 			// Literals on purpose: this shard is engine-free and is compiled into the portable
 			// test projects, where the engine-coupled provider that registers these verbs is not
 			// present. DevTests pins the two spellings against each other instead.
-			"realize", "lifecycle-open", "lifecycle-build", "lifecycle-grown", "lifecycle-save"
+			"realize", "lifecycle-open", "lifecycle-build", "lifecycle-grown", "lifecycle-save",
+			"lifecycle-loaded", "lifecycle-next"
 		};
 
 		internal static readonly IList<string> Save = new[]

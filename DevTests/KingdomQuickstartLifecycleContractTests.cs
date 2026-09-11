@@ -56,7 +56,8 @@ namespace ThousandAndFirst.Tests
 			string rows = Read(Rows);
 			StringAssert.Contains("QUICKSTART-NEXT-BEGIN", rows);
 			StringAssert.Contains("Owed: a second quote and commission attempt", rows);
-			StringAssert.Contains("WHAT IS STILL OWED", rows);
+			StringAssert.Contains("THE SECOND SESSION", rows);
+			StringAssert.Contains("\"lifecycle-loaded\", \"lifecycle-next\"", rows);
 			StringAssert.Contains("with NO scenario auto-runner", rows);
 			// The turn-driven half is declared as driven on the founded road, by the verbs the
 			// persona seals -- so "owed" shrinks only when a producer actually exists.
@@ -94,12 +95,65 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("GetStringProperty(KingdomUpgrade.BuildKeyProperty) != Job.TargetKey", finish);
 		}
 
+		/// <summary>The cold-load session compares what it reads against the witness; it never
+		/// restores from it, and a difference refuses rather than repairs.</summary>
+		[Test]
+		public void TheColdLoadStepReProvesByReferenceAndNeverRestores()
+		{
+			string load = Read("Harness/KingdomQuickstartLifecycleLoad.cs");
+			foreach (string term in new[] {
+				"Game.GameID != Witness.GameId",
+				"system.RealmId != Witness.RealmId",
+				"cityId != Witness.CityId",
+				"item.IDIfAssigned != Witness.BuildingId",
+				"building.GetIntProperty(\"KingdomBuilt\") != 1",
+				"KingdomConstruction.HasReceipt(building, job)",
+				"timber != Witness.Timber",
+				"water != Witness.StoredWater" })
+				StringAssert.Contains(term, load);
+			// Restoring would mean writing state from the witness; comparing against it is what
+			// this step does, so only the writing verbs are forbidden here.
+			foreach (string forbidden in new[] { "SetIntProperty", "SetStringProperty",
+				"CreateObject", "RequirePart", "AddObject" })
+				StringAssert.DoesNotContain(forbidden, load);
+		}
+
+		/// <summary>The next action mints its own job and may never report the completed one.</summary>
+		[Test]
+		public void TheNextActionMustMintItsOwnJob()
+		{
+			string load = Read("Harness/KingdomQuickstartLifecycleLoad.cs");
+			StringAssert.Contains("KingdomPlots.TryQuoteCommission(system, zone, entry, null,", load);
+			StringAssert.Contains("KingdomMaterials.CanPay(zone, KingdomQuickstartLifecycleSteps.BuildKey", load);
+			StringAssert.Contains("KingdomCommission.Commission(system, KingdomQuickstartLifecycleSteps.BuildKey", load);
+			StringAssert.Contains("ExactSingleDebit(before, after", load);
+			StringAssert.Contains("job.Id == Witness.JobId", load);
+			StringAssert.Contains("must mint its own job", load);
+		}
+
+		/// <summary>The lifecycle load branch is reached only through its own snapshot prefix, and
+		/// no other profile's load path is altered by it.</summary>
+		[Test]
+		public void TheLoadBranchIsGatedByTheLifecycleAuthorityMarker()
+		{
+			string entry = Read("Harness/KingdomScenarioLoadEntry.cs");
+			StringAssert.Contains("KingdomQuickstartLifecycleSnapshotCodec.MatchesPrefix(SnapshotWire)", entry);
+			StringAssert.Contains("LifecycleSnapshot.GameId == Request.GameId", entry);
+			StringAssert.Contains("KingdomQuickstartLifecycleLoad.VerifyLoaded(loaded, LifecycleSnapshot)", entry);
+			StringAssert.Contains("KingdomQuickstartLifecycleLoad.Next(loaded, LifecycleSnapshot)", entry);
+			// The older routes still stand exactly as they were.
+			StringAssert.Contains("KingdomQuickstartLoadTest.VerifyLoaded(loaded)", entry);
+			StringAssert.Contains("KingdomUpgradeLoad.VerifyLoaded(loaded)", entry);
+			StringAssert.Contains("taf-lifecycle-save-v1:", Read("Harness/KingdomQuickstartLifecycleSnapshot.cs"));
+		}
+
 		/// <summary>The lifecycle verbs mint no stock and force no phase.</summary>
 		[Test]
 		public void TheLifecycleDriverFabricatesNothing()
 		{
 			foreach (string path in new[] { "Harness/KingdomQuickstartLifecycleSteps.cs",
-				"Harness/KingdomQuickstartLifecycleFinish.cs" })
+				"Harness/KingdomQuickstartLifecycleFinish.cs",
+				"Harness/KingdomQuickstartLifecycleLoad.cs" })
 			{
 				string source = Read(path);
 				foreach (string forbidden in new[] { "CreateObject", "CreateUnmodifiedObject",

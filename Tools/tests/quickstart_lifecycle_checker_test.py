@@ -286,6 +286,43 @@ class LifecycleVerdict(unittest.TestCase):
         self.assertEqual(states["next-action"], checker.BLOCKER)
         self.assertEqual(report["verdict"], checker.BLOCKER)
 
+    def test_the_full_two_session_lifecycle_chain_reaches_pass(self):
+        driven = [
+            "realize", "lifecycle-open", "lifecycle-build", "lifecycle-grown", "lifecycle-save",
+            "lifecycle-loaded", "lifecycle-next",
+        ]
+        report = checker.judge(rows(*driven))
+        self.assertEqual(report["verdict"], checker.PASS)
+        self.assertEqual([entry["state"] for entry in report["links"]], [checker.PASS] * 7)
+        payload, unresolved = checker.results(report, self.run_record())
+        self.assertEqual(unresolved, [])
+        self.assertEqual([entry["step"] for entry in payload["steps"]], list(checker.STEPS))
+
+    def test_a_refused_cold_load_row_fails_the_chain(self):
+        driven = [
+            "realize", "lifecycle-open", "lifecycle-build", "lifecycle-grown", "lifecycle-save",
+            "lifecycle-loaded",
+        ]
+        report = checker.judge(rows(*driven, refused=("lifecycle-loaded",)))
+        self.assertEqual(report["verdict"], checker.FAIL)
+        self.assertIn("cold-load", report["reason"])
+
+    def test_a_refused_next_action_fails_rather_than_blocking(self):
+        driven = [
+            "realize", "lifecycle-open", "lifecycle-build", "lifecycle-grown", "lifecycle-save",
+            "lifecycle-loaded", "lifecycle-next",
+        ]
+        report = checker.judge(rows(*driven, refused=("lifecycle-next",)))
+        self.assertEqual(report["verdict"], checker.FAIL)
+        self.assertIn("next-action", report["reason"])
+
+    def test_a_second_session_that_never_ran_still_blocks(self):
+        driven = ["realize", "lifecycle-open", "lifecycle-build", "lifecycle-grown", "lifecycle-save"]
+        report = checker.judge(rows(*driven))
+        self.assertEqual(report["verdict"], checker.BLOCKER)
+        blocked = [entry["link"] for entry in report["links"] if entry["state"] == checker.BLOCKER]
+        self.assertEqual(blocked, ["cold-load", "next-action"])
+
     def test_a_refused_lifecycle_verb_row_fails_that_link(self):
         driven = ["realize", "lifecycle-open", "lifecycle-build"]
         report = checker.judge(rows(*driven, refused=("lifecycle-build",)))

@@ -48,9 +48,19 @@ registers `lifecycle-open`, `lifecycle-build`, `lifecycle-grown` and `lifecycle-
 job is forced into a phase -- so an economy that cannot yet pay refuses at CanPay, and a turn budget
 that expires before the building stands lands a refusal, never a pass.
 
-Still not driven, and reported as BLOCKER rather than passed: the cold-load session and the next
-action after it. Both need a second profile imported from the lifecycle save, and the further action
-needs a verb inside that session.
+The second session now exists. `lifecycle-save` publishes a lifecycle witness wire
+(`taf-lifecycle-save-v1:`) alongside the real save, the unchanged importer
+(`Tools/prepare-scenario-load.py`) carries that save into a fresh profile, and
+`Harness/KingdomScenarioLoadEntry.cs` routes only that prefix into the lifecycle load branch --
+every other profile's load path is untouched. In the second process `lifecycle-loaded` re-proves by
+reference what the first session witnessed (same save, realm and city identity, the building
+standing on its own cell reading as built under the commissioned design key, the retained job row
+still linkable to it, the stockpile's post-debit timber and the settlement's stored drams), and
+`lifecycle-next` takes a real further action: a new quote, the CanPay pre-check and a real
+commission that mints its OWN job, with the exact one-timber and exact-drams debit re-proved and
+the completed job's identity explicitly refused as a substitute. Nothing is restored from the
+witness; a difference refuses rather than repairs, and a production refusal is journalled as it
+came.
 
 `Tools/check-quickstart-lifecycle.py` judges the chain from the journals a native run leaves: PASS
 only when every link's rows are present, in order and OK; FAIL when rows are present but refused,
