@@ -9,7 +9,8 @@ $launcher = Join-Path $PSScriptRoot 'run-scenario.ps1'
 $ast = [System.Management.Automation.Language.Parser]::ParseFile(
     $launcher, [ref]$tokens, [ref]$parseErrors)
 if ($parseErrors.Count -ne 0) { throw 'The scenario launcher does not parse.' }
-$names = @('ConvertTo-TafRecordValue', 'Read-TafRunRecord', 'Write-TafRunRecord')
+$names = @('ConvertTo-TafRecordValue', 'Read-TafRunRecord', 'Write-TafRunRecord',
+    'Assert-TafScenarioOutputVacant')
 foreach ($name in $names) {
     $definitions = @($ast.FindAll({
         param($node)
@@ -25,6 +26,15 @@ try {
     $path = Join-Path $fixture 'run-record.json'
     $json = '{"role":"save-session","ownership":{"pid":4242,"startTicks":"639247202896713857","receiptSha256":"abc"},"inheritedVerified":false,"optional":null,"values":[null,false,2,"three"],"empty":[]}'
     [IO.File]::WriteAllText($path, $json)
+    foreach ($kind in @('log', 'journal')) {
+        Assert-TafScenarioOutputVacant -Path $path -Kind $kind -RecordingStop
+        $refused = $false
+        try { Assert-TafScenarioOutputVacant -Path $path -Kind $kind }
+        catch { $refused = $_.Exception.Message -like "scenario $kind already exists:*" }
+        if (-not $refused) { throw 'A new launch accepted existing output.' }
+        Assert-TafScenarioOutputVacant -Path (Join-Path $fixture 'absent') -Kind $kind
+    }
+    if ([IO.File]::ReadAllText($path) -cne $json) { throw 'Output guard modified retained evidence.' }
     $record = Read-TafRunRecord -Path $path
     if ($record -isnot [hashtable] -or $record.ownership -isnot [hashtable]) {
         throw 'Top-level and nested ownership must be dictionaries.'
