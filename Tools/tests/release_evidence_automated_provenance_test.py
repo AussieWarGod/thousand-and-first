@@ -51,7 +51,8 @@ class StructureReviewProvenanceTests(unittest.TestCase):
         path.write_text("\n".join(rows) + "\n", encoding="utf-8")
 
     def review(self, **overrides) -> tuple[Path, object]:
-        self.source("Core/One.cs", 20)
+        (self.root / "Core").mkdir(parents=True, exist_ok=True)
+        (self.root / "Core" / "One.cs").write_text("namespace Fixture;\n", encoding="utf-8")
         census = CHECKER.build_census(self.root, ["Core/One.cs"])
         payload = {
             "schemaVersion": 1,
@@ -304,23 +305,12 @@ class LongFormScenarioResultsTests(unittest.TestCase):
 
     CANDIDATE = "a" * 40
 
+    RUNTIME_INVENTORY = "3" * 64
+
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory()
         self.root = Path(self.temporary.name)
         (self.root / "docs" / "release-evidence").mkdir(parents=True)
-        review = {
-            "schemaVersion": 1,
-            "inventorySha256": "3" * 64,
-            "exceptions": [],
-            "reviewedBy": "camp-builder structural review",
-            "completedUtc": "2026-09-11T00:00:00Z",
-            "oneResponsibility": {"status": "passed", "notes": "run:x log:docs/release-evidence/x.log"},
-            "protocolsAtBoundaries": {"status": "passed", "notes": "run:x log:docs/release-evidence/x.log"},
-        }
-        (self.root / "docs" / "STRUCTURE_REVIEW.json").write_text(
-            json.dumps(review), encoding="utf-8"
-        )
-        self.RUNTIME_INVENTORY = review["inventorySha256"]
 
     def tearDown(self) -> None:
         self.temporary.cleanup()
@@ -377,22 +367,37 @@ class LongFormScenarioResultsTests(unittest.TestCase):
             "logRef": log_ref,
             "logSha256": log_hash,
             "continuity": {"realmId": "realm-1", "cityId": "city-1"},
-            "processes": [
-                {
-                    "role": "save-session",
-                    "launchId": "launch-a",
-                    "started": "2026-09-11T00:00:00Z",
-                    "stoppedUtc": "2026-09-11T00:05:00Z",
-                },
-                {
-                    "role": "cold-load-session",
-                    "launchId": "launch-b",
-                    "started": "2026-09-11T00:10:00Z",
-                    "stoppedUtc": "2026-09-11T00:15:00Z",
-                },
-            ],
+            "processes": self.processes_for(self.CANDIDATE, self.RUNTIME_INVENTORY, "save-1"),
             "steps": self.all_pass_steps(),
         }
+
+    def processes_for(
+        self, candidate_commit: str, runtime_inventory: str, save_id: str
+    ) -> list[dict]:
+        return [
+            {
+                "role": "save-session",
+                "launchId": "launch-a",
+                "started": "2026-09-11T00:00:00Z",
+                "stoppedUtc": "2026-09-11T00:05:00Z",
+                "profileName": "save-session profile",
+                "profileSeal": "4" * 64,
+                "boundCandidateCommit": candidate_commit,
+                "boundRuntimeInventorySha256": runtime_inventory,
+                "boundSaveId": save_id,
+            },
+            {
+                "role": "cold-load-session",
+                "launchId": "launch-b",
+                "started": "2026-09-11T00:10:00Z",
+                "stoppedUtc": "2026-09-11T00:15:00Z",
+                "profileName": "cold-load-session profile (deliberately different)",
+                "profileSeal": "5" * 64,
+                "boundCandidateCommit": candidate_commit,
+                "boundRuntimeInventorySha256": runtime_inventory,
+                "boundSaveId": save_id,
+            },
+        ]
 
     def validate(self, payload: dict, *, ref_name: str = "longform-results.json") -> list[str]:
         ref = self.write_results(ref_name, payload)
@@ -504,6 +509,74 @@ class LongFormScenarioResultsTests(unittest.TestCase):
         errors = self.validate(payload)
         self.assertTrue(any("continuity.cityId" in error for error in errors), errors)
 
+    # --- Per-session profile identity (author/Codex root precision, 2026-09-11) ---
+
+    def test_differing_profile_seal_and_name_across_sessions_passes(self) -> None:
+        # save-session and cold-load-session legitimately run different profiles/scripts; a
+        # differing profileName/profileSeal alone must never fail.
+        payload = self.valid_payload()
+        self.assertNotEqual(
+            payload["processes"][0]["profileSeal"], payload["processes"][1]["profileSeal"]
+        )
+        self.assertNotEqual(
+            payload["processes"][0]["profileName"], payload["processes"][1]["profileName"]
+        )
+        self.assertEqual(self.validate(payload), [])
+
+    def test_process_bound_candidate_commit_mismatch_fails(self) -> None:
+        payload = self.valid_payload()
+        payload["processes"][0]["boundCandidateCommit"] = "b" * 40
+        errors = self.validate(payload)
+        self.assertTrue(
+            any("boundCandidateCommit must equal the shared candidateCommit" in error for error in errors),
+            errors,
+        )
+
+    def test_process_bound_runtime_inventory_mismatch_fails(self) -> None:
+        payload = self.valid_payload()
+        payload["processes"][1]["boundRuntimeInventorySha256"] = "6" * 64
+        errors = self.validate(payload)
+        self.assertTrue(
+            any(
+                "boundRuntimeInventorySha256 must equal the shared runtimeInventorySha256"
+                in error
+                for error in errors
+            ),
+            errors,
+        )
+
+    def test_process_bound_save_id_disagreement_between_sessions_fails(self) -> None:
+        payload = self.valid_payload()
+        payload["processes"][1]["boundSaveId"] = "a-different-save"
+        errors = self.validate(payload)
+        self.assertTrue(
+            any("must bind to the same boundSaveId" in error for error in errors), errors
+        )
+
+    def test_process_bound_save_id_not_matching_observed_save_fails(self) -> None:
+        # Both sessions agree with EACH OTHER but not with the save the run actually produced
+        # -- exactly "a session's seal does not bind to the shared source/save".
+        payload = self.valid_payload()
+        payload["processes"] = self.processes_for(
+            self.CANDIDATE, self.RUNTIME_INVENTORY, "an-unrelated-save-id"
+        )
+        errors = self.validate(payload)
+        self.assertTrue(
+            any(
+                "boundSaveId must equal the saveId observed at the save step" in error
+                for error in errors
+            ),
+            errors,
+        )
+
+    def test_missing_profile_name_or_seal_fails(self) -> None:
+        payload = self.valid_payload()
+        del payload["processes"][0]["profileName"]
+        errors = self.validate(payload)
+        self.assertTrue(
+            any("processes entries must each be an object" in error for error in errors), errors
+        )
+
     def test_wrong_candidate_commit_fails(self) -> None:
         payload = self.valid_payload()
         payload["candidateCommit"] = "b" * 40
@@ -525,28 +598,73 @@ class LongFormScenarioResultsTests(unittest.TestCase):
         errors = self.validate(payload)
         self.assertTrue(
             any(
-                "must match the exercised tree's docs/STRUCTURE_REVIEW.json" in error
+                "must match the requested tree's own Tools/check-structure.py --json "
+                "production structural digest" in error
                 for error in errors
             ),
             errors,
         )
 
-    def test_unreadable_structure_review_fails_closed(self) -> None:
-        (self.root / "docs" / "STRUCTURE_REVIEW.json").unlink()
-        self.assertIsNone(METADATA._structure_review_inventory_sha256(self.root))
-        ref = self.write_results("longform-results.json", self.valid_payload())
+    def test_no_caller_supplied_inventory_digest_fails_closed(self) -> None:
         errors: list[str] = []
+        ref = self.write_results("longform-results.json", self.valid_payload())
         METADATA._validate_longform_scenario_results(
             ref,
             errors,
             self.root,
             expected_candidate_commit=self.CANDIDATE,
             expected_game_build=METADATA.GAME_CORE_BUILD,
-            expected_runtime_inventory_sha256=METADATA._structure_review_inventory_sha256(
-                self.root
-            ),
+            expected_runtime_inventory_sha256=None,
         )
         self.assertTrue(any("cannot be verified" in error for error in errors), errors)
+
+    def test_stale_structure_review_ledger_still_passes_longform_but_fails_freshness_separately(
+        self,
+    ) -> None:
+        # Author/Codex correction, 2026-09-11: an active candidate's docs/STRUCTURE_REVIEW.json
+        # is a separate, freshness-checked artefact -- it is never a source of exercised bytes
+        # for this check. A stale ledger (its own digest != the real tree digest) must not
+        # affect the longform result at all, and must be caught by check-structure.py's own
+        # --release review-freshness gate instead, with its own error text.
+        stale_review_digest = "9" * 64
+        self.assertNotEqual(stale_review_digest, self.RUNTIME_INVENTORY)
+        (self.root / "docs" / "STRUCTURE_REVIEW.json").write_text(
+            json.dumps(
+                {
+                    "schemaVersion": 1,
+                    "inventorySha256": stale_review_digest,
+                    "exceptions": [],
+                    "reviewedBy": "camp-builder structural review",
+                    "completedUtc": "2026-09-11T00:00:00Z",
+                    "oneResponsibility": {
+                        "status": "passed",
+                        "notes": "run:x log:docs/release-evidence/x.log",
+                    },
+                    "protocolsAtBoundaries": {
+                        "status": "passed",
+                        "notes": "run:x log:docs/release-evidence/x.log",
+                    },
+                }
+            ),
+            encoding="utf-8",
+        )
+        # The longform check passes when given the REAL exercised digest, unaffected by the
+        # stale ledger sitting right next to it.
+        self.assertEqual(self.validate(self.valid_payload()), [])
+        # Separately, check-structure.py's own freshness gate (fed the real current tree's
+        # inventory digest) refuses because the ledger does not bind to it.
+        (self.root / "Core").mkdir(parents=True, exist_ok=True)
+        (self.root / "Core" / "One.cs").write_text("namespace Fixture;\n", encoding="utf-8")
+        census = CHECKER.build_census(self.root, ["Core/One.cs"])
+        # A distinct real digest for "the current tree" that the stale ledger does not match.
+        object.__setattr__(census, "inventory_sha256", self.RUNTIME_INVENTORY)
+        review_issues = CHECKER.review_issues(
+            self.root / "docs" / "STRUCTURE_REVIEW.json", census
+        )
+        self.assertTrue(
+            any("does not bind the current staged C# inventory" in issue for issue in review_issues),
+            review_issues,
+        )
 
     def test_missing_seed_fails(self) -> None:
         payload = self.valid_payload()
@@ -903,12 +1021,22 @@ class EndToEndReleaseEvidenceFixtureTest(unittest.TestCase):
                     "launchId": "launch-a",
                     "started": "2026-09-11T00:00:00Z",
                     "stoppedUtc": "2026-09-11T00:05:00Z",
+                    "profileName": "save-session profile",
+                    "profileSeal": "7" * 64,
+                    "boundCandidateCommit": self.CANDIDATE,
+                    "boundRuntimeInventorySha256": self.INVENTORY,
+                    "boundSaveId": "save-1",
                 },
                 {
                     "role": "cold-load-session",
                     "launchId": "launch-b",
                     "started": "2026-09-11T00:10:00Z",
                     "stoppedUtc": "2026-09-11T00:15:00Z",
+                    "profileName": "cold-load-session profile",
+                    "profileSeal": "8" * 64,
+                    "boundCandidateCommit": self.CANDIDATE,
+                    "boundRuntimeInventorySha256": self.INVENTORY,
+                    "boundSaveId": "save-1",
                 },
             ],
             "steps": [
@@ -1057,6 +1185,7 @@ class EndToEndReleaseEvidenceFixtureTest(unittest.TestCase):
             fixture["changelog"],
             repository_root=self.root,
             testing_path=fixture["testing"],
+            exercised_inventory_sha256=self.INVENTORY,
         )
         self.assertEqual(candidate, self.CANDIDATE)
 
@@ -1096,6 +1225,7 @@ class EndToEndReleaseEvidenceFixtureTest(unittest.TestCase):
                 fixture["changelog"],
                 repository_root=self.root,
                 testing_path=fixture["testing"],
+                exercised_inventory_sha256=self.INVENTORY,
             )
 
     def test_hash_drifted_nested_logref_fails_full_validation(self) -> None:
@@ -1113,6 +1243,7 @@ class EndToEndReleaseEvidenceFixtureTest(unittest.TestCase):
                 fixture["changelog"],
                 repository_root=self.root,
                 testing_path=fixture["testing"],
+                exercised_inventory_sha256=self.INVENTORY,
             )
 
 

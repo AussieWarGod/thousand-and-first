@@ -4,7 +4,7 @@
   "runId": "OPAQUE_RUN_IDENTIFIER",
   "seed": 0,
   "candidateCommit": "FULL_LOWERCASE_PRIVATE_CANDIDATE_COMMIT",
-  "runtimeInventorySha256": "SHA256_PRINTED_BY_TOOLS_CHECK_STRUCTURE_FOR_THE_EXERCISED_TREE",
+  "runtimeInventorySha256": "SHA256_FROM_TOOLS_CHECK_STRUCTURE_PY_JSON_FOR_THE_REQUESTED_TREE_NEVER_STRUCTURE_REVIEW_JSON",
   "gameBuildId": "2.0.211.51",
   "logRef": "docs/release-evidence/longform-scenario.log",
   "logSha256": "SHA256_OF_RETAINED_RAW_DRIVER_LOG",
@@ -13,8 +13,28 @@
     "cityId": "REPLACE_WITH_EXERCISED_CITY_ID"
   },
   "processes": [
-    {"role": "save-session", "launchId": "REPLACE_WITH_LAUNCH_ID", "started": "YYYY-MM-DDTHH:MM:SSZ", "stoppedUtc": "YYYY-MM-DDTHH:MM:SSZ"},
-    {"role": "cold-load-session", "launchId": "REPLACE_WITH_A_DIFFERENT_LAUNCH_ID", "started": "YYYY-MM-DDTHH:MM:SSZ", "stoppedUtc": "YYYY-MM-DDTHH:MM:SSZ"}
+    {
+      "role": "save-session",
+      "launchId": "REPLACE_WITH_LAUNCH_ID",
+      "started": "YYYY-MM-DDTHH:MM:SSZ",
+      "stoppedUtc": "YYYY-MM-DDTHH:MM:SSZ",
+      "profileName": "REPLACE_WITH_THE_LAUNCHED_SAVE_SESSION_PROFILE_NAME",
+      "profileSeal": "SHA256_OF_THE_SAVE_SESSION_LAUNCHED_PROFILE",
+      "boundCandidateCommit": "FULL_LOWERCASE_PRIVATE_CANDIDATE_COMMIT",
+      "boundRuntimeInventorySha256": "SHA256_FROM_TOOLS_CHECK_STRUCTURE_PY_JSON_FOR_THE_REQUESTED_TREE",
+      "boundSaveId": "REPLACE_WITH_THE_SAVE_ID"
+    },
+    {
+      "role": "cold-load-session",
+      "launchId": "REPLACE_WITH_A_DIFFERENT_LAUNCH_ID",
+      "started": "YYYY-MM-DDTHH:MM:SSZ",
+      "stoppedUtc": "YYYY-MM-DDTHH:MM:SSZ",
+      "profileName": "REPLACE_WITH_THE_LAUNCHED_COLD_LOAD_SESSION_PROFILE_NAME_MAY_DIFFER",
+      "profileSeal": "SHA256_OF_THE_COLD_LOAD_SESSION_LAUNCHED_PROFILE_MAY_DIFFER",
+      "boundCandidateCommit": "FULL_LOWERCASE_PRIVATE_CANDIDATE_COMMIT",
+      "boundRuntimeInventorySha256": "SHA256_FROM_TOOLS_CHECK_STRUCTURE_PY_JSON_FOR_THE_REQUESTED_TREE",
+      "boundSaveId": "REPLACE_WITH_THE_SAME_SAVE_ID_AS_ABOVE"
+    }
   ],
   "steps": [
     {"step": "startup", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0,
@@ -24,8 +44,9 @@
     {"step": "paid-commission", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0,
      "observed": {"realmId": "REPLACE", "cityId": "REPLACE", "jobId": "REPLACE_WITH_THE_COMMISSIONED_JOB_ID"}},
     {"step": "engine-turn-build", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0,
-     "observed": {"realmId": "REPLACE", "cityId": "REPLACE", "jobId": "REPLACE_LIVE_JOB_OR_COMPLETED_RECEIPT_ID",
-       "buildingId": "REPLACE_WITH_THE_RESOLVED_BUILDING_ID", "plotId": "REPLACE_WITH_THE_PLOT_ID"}},
+     "observed": {"realmId": "REPLACE", "cityId": "REPLACE", "buildingId": "REPLACE_WITH_THE_RESOLVED_BUILDING_ID",
+       "plotId": "REPLACE_WITH_THE_PLOT_ID", "completedReceiptId": "REPLACE_WITH_THE_COMPLETED_RECEIPT_ID",
+       "forJobId": "REPLACE_MUST_EQUAL_PAID_COMMISSIONS_JOB_ID"}},
     {"step": "save", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0,
      "observed": {"realmId": "REPLACE", "cityId": "REPLACE", "buildingId": "REPLACE_SAME_AS_ABOVE",
        "plotId": "REPLACE_SAME_AS_ABOVE", "saveId": "REPLACE_WITH_THE_SAVE_ID"}},

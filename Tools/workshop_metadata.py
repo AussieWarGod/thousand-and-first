@@ -898,7 +898,15 @@ def validate_release_evidence(
     *,
     repository_root: Path | None = None,
     testing_path: Path | None = None,
+    exercised_inventory_sha256: str | None = None,
 ) -> str:
+    """`exercised_inventory_sha256` is the caller-supplied production structural digest (the
+    caller already ran Tools/check-structure.py --json against the ACTUAL requested/exercised
+    tree). It is never read from docs/STRUCTURE_REVIEW.json: that ledger is a separate,
+    freshness-checked artefact that an active candidate keeps stale by design, and is never a
+    source of exercised bytes for the long-form scenario proof (author/Codex correction,
+    2026-09-11). Per-session harness/profile identity is validated per longFormScenario
+    process entry instead of a single global seal -- see LONGFORM_PROCESS_KEYS."""
     validate_release_claims(manifest, readme_path, changelog_path)
     evidence = _load_json(evidence_path)
     if repository_root is None:
@@ -1303,9 +1311,7 @@ def validate_release_evidence(
             repository_root,
             expected_candidate_commit=candidate or None,
             expected_game_build=GAME_CORE_BUILD,
-            expected_runtime_inventory_sha256=_structure_review_inventory_sha256(
-                repository_root
-            ),
+            expected_runtime_inventory_sha256=exercised_inventory_sha256,
         )
 
     if errors:
@@ -1429,25 +1435,6 @@ def _observed_id_valid(value: object) -> bool:
     )
 
 
-def _structure_review_inventory_sha256(repository_root: Path) -> str | None:
-    """The current tree's exact-inventory structural digest, as printed by
-    Tools/check-structure.py --json and recorded in docs/STRUCTURE_REVIEW.json. Returns None
-    (never raises) when the ledger is missing or malformed, so the caller can report an honest
-    "cannot be verified" failure instead of a stack trace."""
-    try:
-        path = (repository_root / "docs" / "STRUCTURE_REVIEW.json").resolve(strict=True)
-        path.relative_to(repository_root)
-        if path.is_symlink() or not path.is_file():
-            return None
-        payload = json.loads(path.read_text(encoding="utf-8-sig"))
-    except (OSError, UnicodeError, ValueError, json.JSONDecodeError):
-        return None
-    digest = payload.get("inventorySha256") if isinstance(payload, dict) else None
-    if not isinstance(digest, str) or re.fullmatch(r"[0-9a-f]{64}", digest) is None:
-        return None
-    return digest
-
-
 def _validate_native_driver_results(
     artifact_ref: object, errors: list[str], repository_root: Path
 ) -> None:
@@ -1508,15 +1495,21 @@ def _validate_native_driver_results(
 #   "runId": "<opaque run identifier>",
 #   "seed": <fixed integer world seed>,
 #   "candidateCommit": "<40-hex, must match the release evidence candidateCommit>",
-#   "runtimeInventorySha256": "<64-hex, must match docs/STRUCTURE_REVIEW.json inventorySha256
-#       for the exercised tree>",
+#   "runtimeInventorySha256": "<64-hex, must match the caller-supplied production structural
+#       digest of the requested/exercised tree -- Tools/check-structure.py --json, NEVER
+#       docs/STRUCTURE_REVIEW.json, which an active candidate keeps stale by design and is
+#       validated separately, on its own freshness terms, by check-structure.py --release>",
 #   "gameBuildId": "<must match the recorded game core build>",
 #   "logRef": "docs/release-evidence/<...>.log",
 #   "logSha256": "<lowercase hex-64 SHA-256 of the retained raw driver log>",
 #   "continuity": {"realmId": "...", "cityId": "..."},
 #   "processes": [
-#     {"role": "save-session", "launchId": "...", "started": "UTC", "stoppedUtc": "UTC"},
-#     {"role": "cold-load-session", "launchId": "...", "started": "UTC", "stoppedUtc": "UTC"}
+#     {"role": "save-session", "launchId": "...", "started": "UTC", "stoppedUtc": "UTC",
+#      "profileName": "...", "profileSeal": "<hex-64>", "boundCandidateCommit": "<40-hex>",
+#      "boundRuntimeInventorySha256": "<64-hex>", "boundSaveId": "..."},
+#     {"role": "cold-load-session", "launchId": "...", "started": "UTC", "stoppedUtc": "UTC",
+#      "profileName": "...", "profileSeal": "<hex-64>", "boundCandidateCommit": "<40-hex>",
+#      "boundRuntimeInventorySha256": "<64-hex>", "boundSaveId": "..."}
 #   ],
 #   "steps": [
 #     {"step": "startup", "status": "PASS", "turnsUsed": N, "elapsedSeconds": N,
@@ -1539,7 +1532,14 @@ def _validate_native_driver_results(
 # Process lifecycle is two whole sessions (not a per-step flag, which is refused): one
 # continuous save-session covering startup..save, one separate cold-load-session covering
 # cold-load..next-action, distinct launchIds, each started strictly before its own stoppedUtc,
-# and save-session stopping at or before cold-load-session starts.
+# and save-session stopping at or before cold-load-session starts. Each session ALSO carries
+# its own profileName/profileSeal (the launched dev-profile/harness identity) -- the two
+# sessions' profileName/profileSeal are NEVER required to match each other (a save-session and
+# a cold-load-session legitimately run different profiles, load authority, scripts, or import
+# metadata) -- but both sessions' boundCandidateCommit/boundRuntimeInventorySha256/boundSaveId
+# must equal the shared top-level candidateCommit/runtimeInventorySha256 and the same saveId
+# the run actually produced (observed at the save step); a session whose seal does not bind to
+# that shared source/save fails, even though a differing profileSeal alone never does.
 #
 # Per-step `observed` identities are lifecycle-gated: realmId/cityId required on every step,
 # equal to `continuity`; jobId/buildingId/plotId/saveId/completedReceiptId/forJobId are
@@ -1620,7 +1620,17 @@ LONGFORM_OBSERVED_REQUIRED_AT_STEP = {
     4: ("saveId",),  # save
     5: ("saveId", "buildingId", "plotId"),  # cold-load: the reloaded save/building/plot
 }
-LONGFORM_PROCESS_KEYS = {"role", "launchId", "started", "stoppedUtc"}
+LONGFORM_PROCESS_KEYS = {
+    "role",
+    "launchId",
+    "started",
+    "stoppedUtc",
+    "profileName",
+    "profileSeal",
+    "boundCandidateCommit",
+    "boundRuntimeInventorySha256",
+    "boundSaveId",
+}
 LONGFORM_STEP_KEYS = {
     "step",
     "status",
@@ -1748,13 +1758,14 @@ def _validate_longform_scenario_results(
         )
     elif expected_runtime_inventory_sha256 is None:
         errors.append(
-            "long-form scenario results runtimeInventorySha256 cannot be verified: no "
-            "docs/STRUCTURE_REVIEW.json inventorySha256 was readable for the exercised tree"
+            "long-form scenario results runtimeInventorySha256 cannot be verified: the caller "
+            "supplied no production structural digest (Tools/check-structure.py --json of the "
+            "requested tree) for the exercised tree"
         )
     elif inventory_digest != expected_runtime_inventory_sha256:
         errors.append(
-            "long-form scenario results runtimeInventorySha256 must match the exercised "
-            "tree's docs/STRUCTURE_REVIEW.json inventorySha256"
+            "long-form scenario results runtimeInventorySha256 must match the requested "
+            "tree's own Tools/check-structure.py --json production structural digest"
         )
     if payload.get("gameBuildId") != expected_game_build:
         errors.append(
@@ -1817,11 +1828,52 @@ def _validate_longform_scenario_results(
             ):
                 errors.append(
                     "long-form scenario results processes entries must each be an object with "
-                    "role, launchId, started, and stoppedUtc (started strictly before "
-                    "stoppedUtc), one per session role, no duplicates"
+                    "role, launchId, started, stoppedUtc (started strictly before stoppedUtc), "
+                    "profileName, profileSeal, boundCandidateCommit, "
+                    "boundRuntimeInventorySha256, and boundSaveId, one per session role, no "
+                    "duplicates"
                 )
                 continue
-            process_by_role[entry["role"]] = entry
+            # Per-session profile identity: save-session and cold-load-session legitimately
+            # run different profiles/scripts/import metadata, so profileName/profileSeal are
+            # NEVER required to match each other. What each session MUST bind to is the
+            # shared source (candidateCommit), the shared exercised tree
+            # (runtimeInventorySha256), and the shared save -- never a single global seal.
+            role = entry["role"]
+            if not _observed_id_valid(entry.get("profileName")):
+                errors.append(
+                    f"long-form scenario results processes[{role}].profileName must be a "
+                    "real, non-empty, non-placeholder identity"
+                )
+            profile_seal = entry.get("profileSeal")
+            if (
+                not isinstance(profile_seal, str)
+                or re.fullmatch(r"[0-9a-f]{64}", profile_seal) is None
+                or profile_seal == "0" * 64
+            ):
+                errors.append(
+                    f"long-form scenario results processes[{role}].profileSeal must be a "
+                    "nonzero lowercase SHA-256"
+                )
+            if isinstance(candidate, str) and entry.get("boundCandidateCommit") != candidate:
+                errors.append(
+                    f"long-form scenario results processes[{role}].boundCandidateCommit must "
+                    "equal the shared candidateCommit"
+                )
+            if (
+                isinstance(inventory_digest, str)
+                and entry.get("boundRuntimeInventorySha256") != inventory_digest
+            ):
+                errors.append(
+                    f"long-form scenario results processes[{role}]."
+                    "boundRuntimeInventorySha256 must equal the shared runtimeInventorySha256"
+                )
+            if not _observed_id_valid(entry.get("boundSaveId")):
+                errors.append(
+                    f"long-form scenario results processes[{role}].boundSaveId must be a "
+                    "real, non-empty, non-placeholder identity"
+                )
+            process_by_role[role] = entry
             launch_ids.append(entry["launchId"])
         missing_roles = [
             role for role in LONGFORM_SESSION_ROLES if role not in process_by_role
@@ -1846,6 +1898,15 @@ def _validate_longform_scenario_results(
             errors.append(
                 "long-form scenario results save-session must stop at or before "
                 "cold-load-session starts"
+            )
+        if (
+            save_session is not None
+            and cold_load_session is not None
+            and save_session.get("boundSaveId") != cold_load_session.get("boundSaveId")
+        ):
+            errors.append(
+                "long-form scenario results processes save-session and cold-load-session "
+                "must bind to the same boundSaveId (the shared save survives the reload)"
             )
 
     # The exact ordered, non-repeatable seven-step chain, each bounded by its own recorded
@@ -1986,6 +2047,25 @@ def _validate_longform_scenario_results(
                     )
                 elif key not in stable_first_value:
                     stable_first_value[key] = value
+
+    # The shared boundSaveId both process sessions bind to must be the actual save the run
+    # produced, not an arbitrary self-consistent pair the two sessions agree on alone.
+    observed_save_id = stable_first_value.get("saveId")
+    shared_bound_save_id = None
+    for entry in process_by_role.values():
+        bound = entry.get("boundSaveId")
+        if isinstance(bound, str):
+            shared_bound_save_id = bound
+            break
+    if (
+        shared_bound_save_id is not None
+        and observed_save_id is not None
+        and shared_bound_save_id != observed_save_id
+    ):
+        errors.append(
+            "long-form scenario results processes boundSaveId must equal the saveId "
+            "observed at the save step; a session's seal does not bind to the shared save"
+        )
 
 
 def _validate_artifact_binding(
@@ -2447,6 +2527,7 @@ def main(argv: list[str] | None = None) -> int:
     evidence.add_argument("changelog", type=Path)
     evidence.add_argument("--repository-root", type=Path)
     evidence.add_argument("--testing", type=Path)
+    evidence.add_argument("--inventory-digest", type=str, default=None)
     alpha_candidate = subparsers.add_parser("alpha-candidate")
     alpha_candidate.add_argument("manifest", type=Path)
     alpha_candidate.add_argument("preview", type=Path)
@@ -2499,6 +2580,7 @@ def main(argv: list[str] | None = None) -> int:
                     args.changelog,
                     repository_root=args.repository_root,
                     testing_path=args.testing,
+                    exercised_inventory_sha256=args.inventory_digest,
                 )
             )
         elif args.command == "alpha-candidate":

@@ -325,11 +325,18 @@ long-form behavioural scenario artefact (author/Codex addendum, 2026-09-11; sche
 Codex root protocol review the same day) — one automated, reproducible, fixed-seed run through
 the EXACT ORDERED chain `startup, quote, paid-commission, engine-turn-build, save, cold-load,
 next-action` (never shuffled, duplicated, or missing a step), bound to the exercised
-`candidateCommit`, runtime inventory digest and game build, carrying one continuous
+`candidateCommit`, the requested tree's own `Tools/check-structure.py --json` production
+structural digest — supplied by the caller via `--inventory-digest`, never read from
+`docs/STRUCTURE_REVIEW.json`, which an active candidate keeps stale by design and is checked
+separately, on its own freshness terms — and the game build, carrying one continuous
 `save-session` process (startup..save) and one separate `cold-load-session` process
-(cold-load..next-action) each recorded stopped — never a per-step stopped flag, which the schema
-refuses outright — continuity identities (realm, city, job, building, plot, save) that must
-survive the whole chain, every step PASS with its own recorded `turnsUsed`/`elapsedSeconds`
+(cold-load..next-action), each with its own `profileName`/`profileSeal` (the two sessions'
+profiles are never required to match each other) but both bound by `boundCandidateCommit`/
+`boundRuntimeInventorySha256`/`boundSaveId` to the shared source, tree and save — recorded
+stopped via `started`/`stoppedUtc`, never a per-step stopped flag, which the schema refuses
+outright — continuity identities (realm, city, job, building, plot, save, and the
+engine-turn-build completed-receipt linkage `completedReceiptId`/`forJobId`) that are required,
+not merely allowed to reappear, once their phase is reached, every step PASS with its own recorded `turnsUsed`/`elapsedSeconds`
 at or under its own `turnBudget`/`timeoutSeconds`, and its driver log bound by SHA-256 (schema
 documented next to `Tools/workshop_metadata.py`'s `_validate_longform_scenario_results`; the
 JSON is parsed with a duplicate-key guard; missing reachability, wrong order, an over-budget

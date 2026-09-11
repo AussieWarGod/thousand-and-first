@@ -163,6 +163,25 @@ require_release_structure() {
 		--repo-root "$BUILD_DIR" --inventory-file "$STRUCTURE_INVENTORY_FILE" \
 		--review-ledger "$STRUCTURE_LEDGER_FILE" --release
 	assert_scratch_workspace "after immutable structural release gate"
+	# Capture the production structural digest of THIS requested/exercised tree (never the
+	# separately freshness-checked docs/STRUCTURE_REVIEW.json, which an active candidate keeps
+	# stale by design) so release mode can bind the long-form scenario artefact to it.
+	if [ "$MODE" = "release" ]; then
+		PYTHONDONTWRITEBYTECODE=1 python3 "$STRUCTURE_GATE_FILE" \
+			--repo-root "$BUILD_DIR" --inventory-file "$STRUCTURE_INVENTORY_FILE" \
+			--review-ledger "$STRUCTURE_LEDGER_FILE" --json > "$STRUCTURE_DIGEST_FILE"
+		assert_scratch_workspace "after structural digest capture"
+		STRUCTURE_DIGEST="$(python3 - "$STRUCTURE_DIGEST_FILE" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+print(json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))["inventorySha256"])
+PY
+)"
+		[ -n "$STRUCTURE_DIGEST" ] || {
+			echo "could not capture the production structural digest" >&2; return 1; }
+	fi
 }
 
 SCRATCH_DIR=""
@@ -188,6 +207,8 @@ EVIDENCE_ROOT=""
 STRUCTURE_GATE_FILE=""
 STRUCTURE_LEDGER_FILE=""
 STRUCTURE_INVENTORY_FILE=""
+STRUCTURE_DIGEST_FILE=""
+STRUCTURE_DIGEST=""
 PRIVATE_COMMIT=""
 PUBLISHED_DEST_ID=""
 PUBLISHED_RECEIPT_ID=""
@@ -578,6 +599,7 @@ if [ "$MODE" = "release" ]; then
 	new_scratch_file EVIDENCE_FILE evidence
 	new_scratch_file ARTIFACT_LIST artifact-list
 	new_scratch_file TESTING_FILE testing
+	new_scratch_file STRUCTURE_DIGEST_FILE structure-digest
 	EVIDENCE_ROOT="$SCRATCH_DIR/evidence-root"
 	mkdir -- "$EVIDENCE_ROOT"
 	chmod 700 -- "$EVIDENCE_ROOT"
@@ -987,7 +1009,8 @@ if [ "$MODE" = "release" ]; then
 	PRIVATE_COMMIT="$(python3 "$METADATA" evidence "$BUILD_DIR/manifest.json" \
 		"$BUILD_DIR/$PREVIEW" "$BUILD_DIR/workshop.json" "$EVIDENCE_FILE" \
 		"$BUILD_DIR/README.md" "$BUILD_DIR/CHANGELOG.md" \
-		--repository-root "$EVIDENCE_ROOT" --testing "$TESTING_FILE")"
+		--repository-root "$EVIDENCE_ROOT" --testing "$TESTING_FILE" \
+		--inventory-digest "$STRUCTURE_DIGEST")"
 	assert_scratch_workspace "after release evidence validation"
 	[ "$PRIVATE_COMMIT" != "$HEAD_COMMIT" ] \
 		&& git cat-file -e "$PRIVATE_COMMIT^{commit}" 2>/dev/null \
