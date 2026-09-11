@@ -164,8 +164,7 @@ namespace ThousandAndFirst.Harness
 			/// prior-interval witness (PlotWorkWindowProperty), and the one-gang allocator's own
 			/// presence (KingdomConstructionPresence.Selected/Hands/EffectivenessProperty) -- plus
 			/// the live construction registry row's Phase by re-TryFind-ing the job's own id
-			/// (JobId), never re-using the Start-time snapshot. Read-only; asserts nothing.
-			/// </summary>
+			/// (JobId), never re-using the Start-time snapshot. Read-only; asserts nothing.</summary>
 			private string Telemetry(GameObject Root)
 			{
 				long required = ReadLong(Root, KingdomPlots.PlotWorkRequiredProperty);

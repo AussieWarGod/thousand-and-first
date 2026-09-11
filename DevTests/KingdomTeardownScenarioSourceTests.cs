@@ -1,5 +1,7 @@
 #if TAF_TESTS
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 
 namespace ThousandAndFirst.Tests
@@ -26,8 +28,80 @@ namespace ThousandAndFirst.Tests
 		// reads both as one logical source for pins that span the split, exactly as if it were
 		// still one file.
 		private const string Cases = "Harness/KingdomTeardownNativeChecks.Case.cs";
+		private const string Persona = "Tools/personas/teardown-native-check.persona";
 		private static string Read(string path) => TestMain.ReadRepositoryText(path);
 		private static string ReadChecksAndCases() => Read(Checks) + Read(Cases);
+
+		private static string ConstValue(string Source, string Name)
+		{
+			string marker = "internal const string " + Name + " = \"";
+			int from = Source.IndexOf(marker, StringComparison.Ordinal);
+			Assert.That(from, Is.GreaterThanOrEqualTo(0), "missing const: " + Name);
+			from += marker.Length;
+			int to = Source.IndexOf("\";", from, StringComparison.Ordinal);
+			Assert.That(to, Is.GreaterThan(from), "unterminated const: " + Name);
+			return Source.Substring(from, to - from);
+		}
+
+		/// <summary>Parses the provider's own Script array literal into the exact ordered step
+		/// names it seals, resolving the SetupVerb/CheckVerb identifiers against their own const
+		/// declarations in the same file rather than hardcoding either a second time here.
+		/// </summary>
+		private static List<string> ProviderScriptSteps(string ProviderSource)
+		{
+			string setupVerb = ConstValue(ProviderSource, "SetupVerb");
+			string checkVerb = ConstValue(ProviderSource, "CheckVerb");
+			int from = ProviderSource.IndexOf("private static readonly string[] Script = {",
+				StringComparison.Ordinal);
+			Assert.That(from, Is.GreaterThanOrEqualTo(0), "missing sealed Script array");
+			from += "private static readonly string[] Script = {".Length;
+			int to = ProviderSource.IndexOf("};", from, StringComparison.Ordinal);
+			Assert.That(to, Is.GreaterThan(from), "unterminated sealed Script array");
+			string body = ProviderSource.Substring(from, to - from);
+			List<string> steps = new List<string>();
+			foreach (string rawToken in body.Split(','))
+			{
+				string token = rawToken.Trim().Replace("\r", "").Replace("\n", "").Trim();
+				if (token.Length == 0) continue;
+				if (token.StartsWith("\"", StringComparison.Ordinal)
+					&& token.EndsWith("\"", StringComparison.Ordinal))
+					steps.Add(token.Substring(1, token.Length - 2));
+				else if (token == "SetupVerb") steps.Add(setupVerb);
+				else if (token == "CheckVerb") steps.Add(checkVerb);
+				else Assert.Fail("unrecognised Script token: " + token);
+			}
+			return steps;
+		}
+
+		private static List<string> PersonaScriptSteps(string PersonaSource)
+		{
+			foreach (string line in PersonaSource.Split('\n'))
+			{
+				string trimmed = line.Trim();
+				if (trimmed.StartsWith("SCRIPT=", StringComparison.Ordinal))
+					return trimmed.Substring("SCRIPT=".Length).Split(';').ToList();
+			}
+			Assert.Fail("persona has no SCRIPT= line");
+			return null;
+		}
+
+		/// <summary>
+		/// review-ead2ede-teardown-findings.md REQUIRED B: nothing bound the persona's own
+		/// SCRIPT to the provider's sealed Script array -- they were byte-identical only because
+		/// both were hand-edited together this pass; a future one-sided edit would have passed
+		/// every other test. This parses both files and compares the real step lists, the same
+		/// pattern DevTests/KingdomQuoteSitingOccupancyNativeSourceTests.cs uses for its own
+		/// sealed script.
+		/// </summary>
+		[Test]
+		public void TheSealedProviderScriptIsExactlyThePersonaScript()
+		{
+			List<string> providerSteps = ProviderScriptSteps(Read(Provider));
+			List<string> personaSteps = PersonaScriptSteps(Read(Persona));
+			Assert.That(providerSteps, Is.EqualTo(personaSteps),
+				"provider Script = [" + string.Join(";", providerSteps) + "] but persona SCRIPT = ["
+				+ string.Join(";", personaSteps) + "]");
+		}
 
 		[Test]
 		public void ProviderRegistersBothVerbsAndSealsAnExactScript()
@@ -358,23 +432,48 @@ namespace ThousandAndFirst.Tests
 			Assert.That(enrollment, Does.Contain("ISet<int> AcceptablePostIds,"));
 			Assert.That(enrollment, Does.Contain("Action<string> Journal)"));
 			Assert.That(enrollment, Does.Contain("int post = KingdomStations.PostOf(body);"));
-			Assert.That(enrollment, Does.Contain("bool free = post == 0;"));
+			Assert.That(enrollment, Does.Contain("if (AcceptablePostIds == null)"));
+			Assert.That(enrollment, Does.Contain("Require(post == 0,"));
 			Assert.That(enrollment, Does.Contain(
-				"AcceptablePostIds != null\n\t\t\t\t\t&& AcceptablePostIds.Contains(post)"));
+				"AcceptablePostIds != null && post != 0\n\t\t\t\t\t&& AcceptablePostIds.Contains(post)"));
 			Assert.That(enrollment, Does.Contain(
 				"== (int)KingdomWorkKind.Construction;"));
-			Assert.That(enrollment, Does.Contain("Require(free || postedToThisFixture,"));
 			Assert.That(enrollment, Does.Contain(
-				"Journal?.Invoke(\"; crew=\" + (i + 1) + \" posted-to=\" + post);"));
+				"Journal?.Invoke(\"; crew=\" + (i + 1) + \" posted-to=\" + post\n"
+					+ "\t\t\t\t\t+ \" own-raising=\" + ownRaising);"));
 			string checks = Read(Checks);
 			Assert.That(checks, Does.Contain(
 				"acceptablePosts.Add(KingdomCityRules.StableId(Fire.WorksId));"));
 			Assert.That(checks, Does.Contain(
 				"acceptablePosts.Add(KingdomCityRules.StableId(Larder.WorksId));"));
-			// The exact defect: no unconditional PostOf==0 assertion may survive on the re-ask
-			// path (the setup call is the only lawful strict use, verified above).
+			// The exact prior-round defect (bba51c4): no unconditional PostOf==0 assertion may
+			// survive on the re-ask path -- the setup call (AcceptablePostIds == null) is the
+			// only lawful strict use, verified above.
 			Assert.That(enrollment, Does.Not.Contain(
-				"Require(KingdomStations.PostOf(body) == 0,"));
+				"Require(free || postedToThisFixture,"));
+		}
+
+		/// <summary>
+		/// review-ead2ede-teardown-findings.md residual: Growth/KingdomGrowth.z15.
+		/// WorkAssignment.cs re-posts EVERY AvailableSettler to whatever work it drew each pass,
+		/// before KingdomConstructionPresence.Assign ever runs, so a body can legitimately carry
+		/// a post naming neither 0 nor one of this fixture's own raisings. RequireAvailable must
+		/// never assert the post value once a raising can exist -- only journal it -- and must
+		/// refuse only on liveness/AvailableSettlers grounds.
+		/// </summary>
+		[Test]
+		public void RequireAvailableNeverAssertsThePostValueOnlyLivenessAndAvailability()
+		{
+			string enrollment = Read("Harness/KingdomTeardownCrewEnrollment.cs");
+			Assert.That(enrollment, Does.Contain(
+				"Require(GameObject.Validate(body) && body.IsAlive,"));
+			Assert.That(enrollment, Does.Contain(
+				"is dead or no longer a valid object"));
+			Assert.That(enrollment, Does.Contain(
+				"is not present in the production AvailableSettlers projection"));
+			Assert.That(enrollment, Does.Contain("bool ownRaising = AcceptablePostIds != null"));
+			// No Require may name the post value once a raising can exist -- disclosure only.
+			Assert.That(enrollment, Does.Not.Contain("neither free nor posted"));
 		}
 
 		/// <summary>

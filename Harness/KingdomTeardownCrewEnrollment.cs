@@ -36,11 +36,20 @@ namespace ThousandAndFirst.Harness
 	/// refuses the crew exactly while it is legitimately working -- production posts the
 	/// selected hands (Growth/KingdomConstructionPresence.cs:128) and only un-posts at the START
 	/// of the NEXT Assign pass (:60-73), so a body mid-raise carries a non-zero post between
-	/// checks. PostOf==0 stays a strict assertion only at setup (before any raising exists); the
-	/// per-Check re-ask instead accepts a body posted to one of THIS fixture's own raisings
-	/// (fire's or larder's live WorksId, resolved through the same KingdomCityRules.StableId the
-	/// allocator itself posts with) as Construction work, journaling the raw post per body as
-	/// "posted-to=" rather than asserting a value that legitimately changes turn to turn.
+	/// checks. PostOf==0 stays a strict assertion only at setup (before any raising exists).
+	/// </para>
+	/// <para>
+	/// review-ead2ede-teardown-findings.md residual: Growth/KingdomGrowth.z15.WorkAssignment.cs
+	/// :72-125 re-posts EVERY AvailableSettler to WHATEVER work it drew that pass, before
+	/// KingdomConstructionPresence.Assign ever runs -- so a body can legitimately carry a post
+	/// that names neither 0 nor one of this fixture's own raisings (some other lawful
+	/// production posting this settlement happens to have). The per-Check re-ask therefore
+	/// never asserts the post value once a raising can exist: it journals the raw post
+	/// ("posted-to=") and whether it happens to name one of this fixture's own Construction
+	/// raisings ("own-raising="), for disclosure only. What IS still asserted, always: the body
+	/// is a live, valid object (not Dead/absent) and is Resident and present in the production
+	/// AvailableSettlers projection -- those are what actually distinguish a healthy crew from
+	/// a departed or destroyed one.
 	/// </para>
 	/// </summary>
 	internal static class KingdomTeardownCrewEnrollment
@@ -80,14 +89,15 @@ namespace ThousandAndFirst.Harness
 			return enrolled;
 		}
 
-		/// <summary>Read-only, re-askable every check: each body must be grounded, unstaged and
-		/// Resident (the exact production KingdomCrews.AvailableSettlers membership). At setup
-		/// (AcceptablePostIds null) PostOf==0 is a strict assertion, since no raising exists yet.
-		/// On a per-Check re-ask, a non-zero post is accepted ONLY when it names one of this
-		/// fixture's own raisings (AcceptablePostIds, Construction-kind) -- never any other post
-		/// -- and the raw post is journaled ("posted-to=") rather than asserted, since it
-		/// legitimately changes turn to turn while the crew is working. Never mints or forces
-		/// standing or a post; refuses by name, per body, on any real mismatch.</summary>
+		/// <summary>Read-only, re-askable every check: each body must be a live, valid object,
+		/// grounded, unstaged and Resident (the exact production KingdomCrews.AvailableSettlers
+		/// membership). At setup (AcceptablePostIds null) PostOf==0 is a strict assertion, since
+		/// no raising exists yet. On a per-Check re-ask (AcceptablePostIds non-null), the post
+		/// value is never asserted -- only journaled, alongside whether it happens to name one
+		/// of this fixture's own Construction raisings -- since production may legitimately post
+		/// an available body to any lawful work each pass. Never mints or forces standing or a
+		/// post; refuses by name, per body, only when the body is dead/absent or is not present
+		/// in the production AvailableSettlers projection.</summary>
 		internal static void RequireAvailable(KingdomSystem System, Zone Zone,
 			List<GameObject> Bodies, Action<bool, string> Require, ISet<int> AcceptablePostIds,
 			Action<string> Journal)
@@ -97,6 +107,8 @@ namespace ThousandAndFirst.Harness
 			for (int i = 0; i < Bodies.Count; i++)
 			{
 				GameObject body = Bodies[i];
+				Require(GameObject.Validate(body) && body.IsAlive, "crew body " + (i + 1)
+					+ " of " + Bodies.Count + " is dead or no longer a valid object");
 				bool isAvailable = false;
 				for (int j = 0; j < available.Count; j++)
 					if (ReferenceEquals(available[j], body)) { isAvailable = true; break; }
@@ -104,15 +116,15 @@ namespace ThousandAndFirst.Harness
 					+ " is not present in the production AvailableSettlers projection "
 					+ "(not Resident standing, staged, or ungrounded)");
 				int post = KingdomStations.PostOf(body);
-				bool free = post == 0;
-				bool postedToThisFixture = !free && AcceptablePostIds != null
+				if (AcceptablePostIds == null)
+					Require(post == 0, "crew body " + (i + 1) + " of " + Bodies.Count
+						+ " already carries a non-zero post before any raising exists");
+				bool ownRaising = AcceptablePostIds != null && post != 0
 					&& AcceptablePostIds.Contains(post)
 					&& body.GetIntProperty(KingdomStations.PostKindProperty)
 						== (int)KingdomWorkKind.Construction;
-				Require(free || postedToThisFixture, "crew body " + (i + 1) + " of "
-					+ Bodies.Count + " carries post " + post
-					+ ", neither free nor posted to this fixture's own raising");
-				Journal?.Invoke("; crew=" + (i + 1) + " posted-to=" + post);
+				Journal?.Invoke("; crew=" + (i + 1) + " posted-to=" + post
+					+ " own-raising=" + ownRaising);
 			}
 		}
 	}
