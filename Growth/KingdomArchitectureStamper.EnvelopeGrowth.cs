@@ -91,7 +91,7 @@ namespace ThousandAndFirst
 			// ordinary differing rect still reaches TryAuthorizedEnvelopeExpansion inside it.
 			// Calling that expansion authority here refused every heart, rungs one to four.
 			if (!TryAuthorizedTransition(Owner, Z, beforeIntent, before, Successor, after,
-				false, out _, out Failure))
+				false, out bool heartAccretion, out Failure))
 			{
 				return false;
 			}
@@ -150,15 +150,25 @@ namespace ThousandAndFirst
 				return Fail("the enlarged authored lot would spend settlement road ground",
 					out Failure);
 
+			// The surveyed founding heart proves its exact public approach, not an ordinary
+			// road-frontage network. Its standing door errands end inside the successor's road
+			// margin, so demanding worn ground beyond that margin deadlocks the first accretion.
+			// Only the complete heart authority above admits this distinction. Physical ingress
+			// remains mandatory before debit AND on paid retry; protected road ground below is
+			// never donated by this proof, even when it lies inside the surveyed heart envelope.
+			if (heartAccretion && !KingdomArchitectureRuntime.TryVerifyPhysicalIngressRoutes(
+				Z, Successor.Rect, after, out Failure)) return false;
+			bool requireExistingRoadEvidence = !heartAccretion;
 			if (!AllowSettledSuccessor)
 			{
 				KingdomArchitectureRuntime.SitingProbe probe;
 				if (!KingdomArchitectureRuntime.TryCreateSitingProbe(System, Z, Successor.Rect,
 					after.BuildKey, after.LotType, out probe, out Failure)
-					|| !probe.TryAcceptExact(Successor.Rect, after, true, out Failure)) return false;
+					|| !probe.TryAcceptExact(Successor.Rect, after, requireExistingRoadEvidence,
+						out Failure)) return false;
 			}
 			else if (!KingdomArchitectureRuntime.TryAcceptFrozenEnvelope(Z, Successor.Rect,
-				after, true, out Failure)) return false;
+				after, requireExistingRoadEvidence, out Failure)) return false;
 
 			HashSet<GameObject> settled = new HashSet<GameObject>();
 			if (!TryReadSettledExpansionOutputs(Owner, SuccessorOwner, Z, beforeIntent,

@@ -79,7 +79,7 @@ namespace ThousandAndFirst.Tests
 				"KingdomPlotRules.Reserved(other)",
 				"KingdomPlotRules.PlotAreaAllowance(Z.Width, Z.Height)",
 				"if (!AllowSettledSuccessor)",
-				"probe.TryAcceptExact(Successor.Rect, after, true",
+				"probe.TryAcceptExact(Successor.Rect, after, requireExistingRoadEvidence",
 				"TryAcceptFrozenEnvelope(Z, Successor.Rect,",
 				"ConnectionCells(Z)",
 				"ReadWornRoadCells(Z)",
@@ -138,7 +138,7 @@ namespace ThousandAndFirst.Tests
 			AssertOrdered(growth,
 				"if (SameRect(beforeIntent.Rect, Successor.Rect)) return true;",
 				"if (!TryAuthorizedTransition(Owner, Z, beforeIntent, before, Successor, after,",
-				"false, out _, out Failure))",
+				"false, out bool heartAccretion, out Failure))",
 				"return false;");
 			// The old direct call to the ordinary authority is gone from this function.
 			StringAssert.DoesNotContain(
@@ -161,8 +161,8 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void EverySixLaterEnvelopeCheckStillRunsInOrderAfterTheAuthorityBlock()
 		{
-			// The authority disjunct is the only thing that moved. Everything the function did
-			// after it must still be done, in the same order, on every route.
+			// Both authorities still prove bounds, ownership and protected ground. Authorized
+			// hearts prove physical ingress; ordinary envelopes additionally need road evidence.
 			string growth = Read("Growth/KingdomArchitectureStamper.EnvelopeGrowth.cs");
 			AssertOrdered(growth,
 				"if (!TryAuthorizedTransition(Owner, Z, beforeIntent, before, Successor, after,",
@@ -178,7 +178,7 @@ namespace ThousandAndFirst.Tests
 				"the enlarged authored lot would spend settlement road ground",
 				// 4. siting probe / frozen envelope, both branches
 				"KingdomArchitectureRuntime.TryCreateSitingProbe(System, Z, Successor.Rect,",
-				"probe.TryAcceptExact(Successor.Rect, after, true, out Failure)",
+				"probe.TryAcceptExact(Successor.Rect, after, requireExistingRoadEvidence,",
 				"KingdomArchitectureRuntime.TryAcceptFrozenEnvelope(Z, Successor.Rect,",
 				// 5. settled outputs
 				"TryReadSettledExpansionOutputs(Owner, SuccessorOwner, Z, beforeIntent,",
@@ -207,6 +207,24 @@ namespace ThousandAndFirst.Tests
 				foreach (string forbidden in new[] { "heartAccretion &&", "!heartAccretion &&",
 					"HeartRungOf", "HeartPlotProperty" })
 					StringAssert.DoesNotContain(forbidden, source);
+		}
+
+		[Test]
+		public void SurveyedHeartRequiresPhysicalIngressBeforeBothProofBranches()
+		{
+			// Wiring tripwire, not a native reachability claim. The real camp persona must
+			// prove the roadless heart transition; protected-ground checks remain below.
+			string growth = Read("Growth/KingdomArchitectureStamper.EnvelopeGrowth.cs");
+			AssertOrdered(growth,
+				"false, out bool heartAccretion, out Failure))",
+				"if (heartAccretion && !KingdomArchitectureRuntime.TryVerifyPhysicalIngressRoutes(",
+				"Z, Successor.Rect, after, out Failure)) return false;",
+				"bool requireExistingRoadEvidence = !heartAccretion;",
+				"if (!AllowSettledSuccessor)",
+				"probe.TryAcceptExact(Successor.Rect, after, requireExistingRoadEvidence,",
+				"after, requireExistingRoadEvidence, out Failure)) return false;",
+				"plot-envelope growth would absorb public road ground at ");
+			StringAssert.DoesNotContain("requireExistingRoadEvidence = false", growth);
 		}
 
 		[Test]

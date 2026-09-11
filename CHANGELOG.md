@@ -10,12 +10,17 @@ below it.
 
 ## Unreleased — Beta gap report
 
-Current 3083-file census is line-cap green: 437,643 physical lines; direct `XRL`
+Current 3083-file census is line-cap green: 437,653 physical lines; direct `XRL`
 imports occur in 1438 files, 0 of them over the line limit. Inventory SHA-256:
-`31dfb1859670cbcef14e6a98288db376747dd8f3c1515c0703efd8f791bbb3cd`. The cold-install inventory contains 3114 files.
+`fce921c6bbcaff4992c3660b26d9b02a903b8f4f055b91c48aeff801669c0d05`. The cold-install inventory contains 3114 files.
 This isolated 0.3.4 preparation combines heart authority, shared-XL transition, rung settlement
 and camp content/fixture branches. Combined compile/native gates and semantic review are owed;
 all earlier checkpoint counts below are retained, never carried forward as acceptance.
+
+Draft surveyed-heart ingress correction: full heart authority plus exact physical public access,
+without requiring the ordinary road network beyond the enlarged margin. Ordinary road evidence
+and all protected-ground checks remain. Predecessor native road census reproduced #141; current
+draft compilation/native checks are owed. No later-rung or already-worn-ground acceptance claim.
 
 > **Retained camp integration census (#107 / #132 / #137).** Its 3079-file census is line-cap green:
 > 437,201 physical lines; 1434 XRL-importing files; zero at or above 300.

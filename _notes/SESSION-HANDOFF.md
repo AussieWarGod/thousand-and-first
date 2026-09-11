@@ -1,6 +1,8 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current combined heart candidate — 2026-09-11
+## Retained combined heart candidate before surveyed-ingress draft — 2026-09-11
+
+Current draft census/evidence is in docs/STATUS.md; the figures below describe its predecessor.
 
 3083 staged sources; 437,643 physical lines; 1438 direct-XRL files; zero cap failures;
 3114 cold-install files. Inventory `31dfb1859670cbcef14e6a98288db376747dd8f3c1515c0703efd8f791bbb3cd`.

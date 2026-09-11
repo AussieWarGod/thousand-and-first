@@ -2,15 +2,27 @@
 
 ## Current 0.3.4 heart integration candidate — unverified
 
-3083 staged C# files; 437,643 physical lines; cold-install inventory contains 3114 files.
+3083 staged C# files; 437,653 physical lines; cold-install inventory contains 3114 files.
 Compile inventory: 3083 sources, baseline and compatibility symbols (3079 baseline).
 Direct `XRL` imports: 1438 files, 0 over the line limit. Zero at or above 300 lines.
-Inventory SHA-256: `31dfb1859670cbcef14e6a98288db376747dd8f3c1515c0703efd8f791bbb3cd`.
+Inventory SHA-256: `fce921c6bbcaff4992c3660b26d9b02a903b8f4f055b91c48aeff801669c0d05`.
 Combines #141 authority, #144 shared-XL validation, #138/#139 rung settlement and #137 camp
 content/native fixture over dev with the verified 0.3.3 backmerge. Production and test-project
 merges are complete; compile, combined-suite, native progression and semantic review are owed.
 Prior isolated evidence below remains bound to its original checkpoints, not this combined tree.
 No new version/tag/upload or Beta acceptance is claimed.
+
+The current draft additionally distinguishes fully authorized surveyed-heart physical access
+from ordinary positive road-network evidence. Exact public approach walkability remains required
+before debit and on retry; protected road/wear, occupied ground and all ownership guards remain.
+Compilation, native progression and independent review of this distinction are owed.
+
+Retained predecessor `15d65dc` (production inventory
+`31dfb1859670cbcef14e6a98288db376747dd8f3c1515c0703efd8f791bbb3cd`): four compile modes clean,
+Linux strict suites 14,493 + 5,568 cases, zero skips. Native seed #165939435 remains RED after
+1,200 actual turns: successor lanes (40,17)/(41,17) are walkable but have zero traffic and no
+road floor. Evidence `heart034-ingress-native.W8F6oT`; owned game stopped. No paid upgrade began.
+Already-worn annexed heart ground and later rungs require separate preservation/reachability proof.
 
 **Snapshot:** 2026-09-11
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
