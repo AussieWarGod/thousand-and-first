@@ -1,5 +1,15 @@
 # Local Workshop publisher
 
+## Standing release rule — 2026-09-11
+
+The author permanently removed manual test gates for every release, including 0.3.3,
+Beta, and production. Automated checks and truthful machine-verifiable evidence remain
+mandatory; manual testing is optional and never requires a recurring waiver. This
+supersedes historical manual-test requirements and one-release waiver limits below.
+Authentication, Steam Guard, legal acceptance, immutable custody, and subscribed-byte
+verification are unchanged. Never invent human approvals or claim untested coverage.
+See [the standing ruling and current evidence](../../docs/RELEASING.md#standing-author-ruling--2026-09-11).
+
 Public Alpha `0.3.1` is published to item `3794797472`: submit55498 TERMINAL0 at13:18 UTC
 reports `SubmittedUnverified`, `metadataMatches=true`, `contentUnchanged=true`, attempt `0001`.
 Finalizer55266 TERMINAL0 reports `SubscribedInstallationVerified`, `reason=null`,

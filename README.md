@@ -4,18 +4,18 @@ Found a faction in Caves of Qud, raise settlements from reserved ground, and gov
 after you leave. Water, food, labour, materials, roads, trade, threats, civic memory, and physical
 works remain part of the same world instead of becoming a detached management screen.
 
-**Status: 0.3.2 public Alpha playtest.**
+**Status: 0.3.3 public Alpha playtest.**
 Alpha playtest. Back up saves before updating.
 Current evidence and remaining test limits live in
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/STATUS.md);
 historical test counts do not sign later changes.
 
-This patch corrects the Kingdom Quickstart empty-site startup failure found during private
-playtesting. Earlier component tests missed the complete startup path. The corrected startup
-checkpoint passed genuine boot, save and cold-load automation across all three locations and
-both advisor choices at a fixed test seed. It prepares the bounded camp after terrain generation
-and includes two previously missed heart-entrance cells. Later stock hardening has separate
-synthetic native coverage. These checks do not establish ordinary play, graceful Save and Quit,
+This hotfix lets construction menus and commissions read dedicated material stockpiles
+outside the settlement's background pass. Fresh Kingdom Quickstart materials also receive
+the engine identities required by routed construction inputs. Automated native checks passed
+paid construction from the camp chest and save/cold-load across all three locations and both
+advisor choices. Existing goods stay in place; no replacement supplies or blanket identity
+repair are performed. These checks do not establish building completion, ordinary play,
 or full historical-save compatibility; see
 [test scope](https://github.com/AussieWarGod/thousand-and-first/blob/main/DevTests/QUICKSTART-BOOT-TESTS.md).
 
