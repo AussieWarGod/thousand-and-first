@@ -56,12 +56,7 @@ namespace ThousandAndFirst.Harness
 				switch (Phase)
 				{
 					case 1: Phase1(); break;
-					case 2:
-						Phase2();
-						if (TargetRung >= 3) { Phase = 3; break; }
-						Done = true;
-						Armed = false;
-						break;
+					case 2: Phase2(); Phase = 3; break;
 					case 3: Phase3(); Done = true; Armed = false; break;
 					default:
 						Require(false, "taf-camp-phase-overrun: check ran past its final phase");

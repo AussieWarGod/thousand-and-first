@@ -264,6 +264,18 @@ namespace ThousandAndFirst.Tests
 			Assert.That(stock, Does.Contain("annex-ground rect="));
 			Assert.That(Read(Phases), Does.Contain("MintRung3Bill();"));
 			Assert.That(Read(Phases), Does.Contain("RecordAnnexGround();"));
+			// The third check of either ladder is dispatched by the sealed target rung: the rung-2
+			// run keeps its #162 day-after gate, the rung-3 run reads the second climb, and both
+			// ask production's own founding-heart recovery predicate (PR #164) on their ground.
+			string afterRaise = Read("Harness/KingdomCampHeartNativeAfterRaise.cs");
+			Assert.That(Read(Phases), Does.Contain("case 3: Phase3(); Done = true;"));
+			Assert.That(afterRaise, Does.Contain("if (TargetRung >= 3) { ClimbRung3(); return; }"));
+			Assert.That(afterRaise, Does.Contain("AfterRaise();"));
+			Assert.That(rung3, Does.Contain("private void ClimbRung3()"));
+			Assert.That(rung3, Does.Contain("RequireRecoveredAfterSecondClimb();"));
+			Assert.That(rung3, Does.Contain(
+				"bool recovered = KingdomPlots.RecoverFoundingHeart(System, Zone);"));
+			Assert.That(rung3, Does.Contain("taf-camp-rung3-heart-unrecovered:"));
 
 			// The marker the rung-3 phase reads is the one production writes.
 			Assert.That(Read(Checks), Does.Contain("internal const string HeartEffectProperty = "
@@ -284,6 +296,8 @@ namespace ThousandAndFirst.Tests
 			Assert.That(persona, Does.Contain("founded, not commissioned"));
 			Assert.That(persona, Does.Contain("TWICE IN A ROW"));
 			Assert.That(persona, Does.Contain("That is a reading of the source, not a result."));
+			Assert.That(persona, Does.Contain("LOG_FORBID=[\"construction: founding heart "
+				+ "recovery requires inspection\",\"seal: settlement pass was not staged\"]"));
 			Assert.That(persona, Does.Contain("TIMEOUT=3600"));
 			Assert.That(persona, Does.Contain("SET=camp,native-regression,test-only"));
 		}

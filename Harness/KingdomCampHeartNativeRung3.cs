@@ -33,7 +33,7 @@ namespace ThousandAndFirst.Harness
 			/// rung three, the basin holds what rung three is worth, the authored footprint grew
 			/// from 8x6 to 12x10, the improvement job closed Complete with no failure and no
 			/// inspection, and no layout or upgrade quarantine was raised on the way.</summary>
-			private void Phase3()
+			private void ClimbRung3()
 			{
 				RecordJobProgress();
 				GameObject standing = StandingHeart();
@@ -52,6 +52,7 @@ namespace ThousandAndFirst.Harness
 				RequireCompletedImprovement();
 				RequireSettledOnceEachClimb(standing);
 				RequireNoQuarantine(standing);
+				RequireRecoveredAfterSecondClimb();
 				RequireStoreIdentity();
 				List<GameObject> bodies;
 				List<KingdomCampHeartNativeCensus.Unit> present = ContentUnits(out bodies);
@@ -114,6 +115,23 @@ namespace ThousandAndFirst.Harness
 					.Append("; waterstone=").Append(SecondHeartId).Append(" reads ").Append(first)
 					.Append("; moot yard=").Append(Standing.IDIfAssigned).Append(" reads ")
 					.Append(settled).Append("; distinct bodies=true");
+			}
+
+			/// <summary>Issue #162, asked again after the SECOND climb: production's own founding
+			/// heart recovery predicate, the one <c>KingdomConstruction.Settlement</c> gates every
+			/// pass on, read on the ground the moot yard now stands on. Idempotent by construction
+			/// (the pass calls it every tick), so asking it here drives nothing. A false here is the
+			/// "founding heart recovery requires inspection" halt seen from inside the game, and it
+			/// would mean the chained recovery PR #164 proved for one climb does not hold for two.
+			/// </summary>
+			private void RequireRecoveredAfterSecondClimb()
+			{
+				bool recovered = KingdomPlots.RecoverFoundingHeart(System, Zone);
+				Evidence.Append("\nphase3 founding heart recovered after second climb=")
+					.Append(recovered);
+				Require(recovered, "taf-camp-rung3-heart-unrecovered: the settlement cannot recover "
+					+ "its founding heart once the moot yard stands, so every later settlement pass "
+					+ "on this ground refuses before it begins (issue #162 after a second climb)");
 			}
 
 			/// <summary>The authored growth the moot yard declares: 8x6 becomes 12x10

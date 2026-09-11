@@ -205,6 +205,43 @@ namespace ThousandAndFirst.Tests
 				"Failure = \"The raised heart rung could not settle its exact effects.\";"));
 		}
 
+		/// <summary>Review thread (copilot-threads-157-158.md #3): the &lt;returns&gt; doc
+		/// falsely said false happens "only" when a rung WAS owed and could not be settled.
+		/// Growth/KingdomPlotHeartRules.Settle.cs:41-42 refuses BEFORE HeartRungOf is even read
+		/// for four independent invalid-input classes: unfounded/null System, null Z, null
+		/// Prove, and an invalid Building. One case per class, pinning the guard's exact clauses
+		/// and their order ahead of the rung read -- and that the doc now names both refusal
+		/// classes rather than only the owed-rung one.</summary>
+		[Test]
+		public void EveryInvalidInputClassRefusesBeforeTheRungIsEvenRead()
+		{
+			string settle = Read(Settle);
+			// One assertion per invalid-input class named in the guard.
+			Assert.That(settle, Does.Contain("System == null"), "unfounded/absent System");
+			Assert.That(settle, Does.Contain("!System.Founded"), "unfounded System");
+			Assert.That(settle, Does.Contain("Z == null"), "null Z");
+			Assert.That(settle, Does.Contain("Prove == null"), "null Prove");
+			Assert.That(settle, Does.Contain("!GameObject.Validate(Building)"), "invalid Building");
+			Ordered(settle,
+				"if (System == null || !System.Founded || Z == null || Prove == null\n"
+					+ "\t\t\t\t|| !GameObject.Validate(Building)) return false;",
+				"int rung = KingdomPlotRules.HeartRungOf(TargetKey);");
+		}
+
+		[Test]
+		public void TheReturnsDocNamesBothRefusalClassesNotOnlyTheOwedRung()
+		{
+			string settle = Read(Settle);
+			Assert.That(settle, Does.Contain(
+				"False in either of two classes, both retryable by the caller: the"));
+			Assert.That(settle, Does.Contain(
+				"is unusable (System not founded, Z null,"));
+			Assert.That(settle, Does.Contain(
+				"even read -- or the input was usable and a rung WAS"));
+			Assert.That(settle, Does.Not.Contain("False only when a rung WAS owed"),
+				"the doc must not claim invalid input is impossible here");
+		}
+
 		[Test]
 		public void TheImprovementEndpointProvesTheExactSuccessorJobAndGround()
 		{

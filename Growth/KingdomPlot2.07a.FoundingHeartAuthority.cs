@@ -97,11 +97,11 @@ namespace ThousandAndFirst
 			if (string.IsNullOrEmpty(raw))
 			{
 				if (!TryRiteGround(Z, out int riteX, out int riteY))
-					return !HasReceiptlessFoundingHeartEvidence(System, Z);
+					return !HasReceiptlessFoundingHeartEvidence(System, Z) || HeartRefused("recover: receiptless evidence");
 				return EnsureFoundingHeartProjection(System, Z, riteX, riteY);
 			}
 			if (!KingdomFoundingHeartRules.TryDecode(raw,
-				out KingdomFoundingHeartPlan plan)) return false;
+				out KingdomFoundingHeartPlan plan)) return HeartRefused("recover: receipt decode");
 			return EnsureFoundingHeartProjection(System, Z, plan.RiteX, plan.RiteY);
 		}
 

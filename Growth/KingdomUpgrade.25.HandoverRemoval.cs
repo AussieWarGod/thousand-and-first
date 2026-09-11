@@ -186,6 +186,10 @@ namespace ThousandAndFirst
 				Failure = "The physically closed improvement receipt could not complete.";
 				return false;
 			}
+			// The climb finished: a hold said about it while it was stuck is taken back here,
+			// because a completed climb is bound by the chain and never reaches the pending read
+			// again. A heart that sticks twice is therefore said about twice.
+			KingdomPlots.ClearClimbHold(Z, Job.SubjectId);
 			if (!r_KingdomScaffold.TellCompletion(System, Successor, Job))
 			{
 				Failure = "The completed improvement could not settle its exact telling outbox.";

@@ -36,6 +36,9 @@
 # want of ground is diagnosable. That census asserts nothing and moves nothing.
 # Not ordinary play, not a rendered Charter, no save/load, no general camp acceptance. Rung 3 -> 4
 # and 4 -> 5 remain owed, as do PR #107 cases 1, 3, 4 and 5.
+# The #162 halt lines are FORBIDDEN here too (PR #164): a heart that cannot be recovered after its
+# first climb never begins the second, and the rung-3 check also asks production's own recovery
+# predicate once the moot yard stands.
 DESCRIPTION=the heart climbs a second consecutive improvement-route rung, waterstone to moot yard, paid out of its own camp store
 REQUEST=founding-first-city
 START=8.22@40,12
@@ -46,5 +49,6 @@ SCRIPT=stagedigest;camp-heart-setup;advance 1200;camp-heart-check;advance 3600;c
 VERBS=camp-heart-setup,camp-heart-check
 EXPECT=stagedigest:OK~founded=false,camp-heart-setup:OK~native-camp-heart phase=1,advance:OK,camp-heart-check:OK~native-camp-heart phase=2,advance:OK,camp-heart-check:OK~native-camp-heart phase=3,advance:OK,camp-heart-check:OK~native-camp-heart cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
 LOG_EXPECT=["MODWARN [Pets of Harvest Dawn] - Mod defining manual load order, please convert it to use the Dependencies field.","MODWARN [Pets of Harvest Dawn] - XmlDataHelper:: <...>/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/DLC/PetsPack1/Freehold_Pet_Ercolano/PopulationTables.xml line 4 char 6"]
+LOG_FORBID=["construction: founding heart recovery requires inspection","seal: settlement pass was not staged"]
 SET=camp,native-regression,test-only
 TIMEOUT=3600

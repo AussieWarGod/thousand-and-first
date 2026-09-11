@@ -32,8 +32,10 @@ namespace ThousandAndFirst
 				wornEvidence = ReadWornEvidence(Zone);
 			}
 
-			internal bool TryAccept(KingdomPlotRules.PlotRect Rect, out string Failure)
+			internal bool TryAccept(KingdomPlotRules.PlotRect Rect,
+				out ArchitectureLayoutSnapshot Accepted, out string Failure)
 			{
+				Accepted = null;
 				Failure = null;
 				if (!ValidRectInZone(Rect, zone))
 					return Fail("the authored lot rectangle is malformed or outside the zone",
@@ -50,6 +52,11 @@ namespace ThousandAndFirst
 				if (!TryHeartFacing(mapping, zone, Rect, out facing, out Failure)) return false;
 				if (!TrySnapshot(facing, out ArchitectureLayoutSnapshot snapshot, out Failure))
 					return false;
+				// Exposed to the caller unconditionally, even if physical ingress goes on to
+				// refuse: the resolved snapshot is what lets candidate selection filter occupancy
+				// against exactly the cells Preflight.cs later manages (claimed cells +
+				// placements), never the whole staked rect.
+				Accepted = snapshot;
 				return TryVerifyPhysicalIngressRoutes(zone, Rect, snapshot, out Failure);
 			}
 

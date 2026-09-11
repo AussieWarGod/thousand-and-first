@@ -29,9 +29,11 @@ namespace ThousandAndFirst.Harness
 		internal const string SetupVerb = "camp-heart-setup";
 		internal const string CheckVerb = "camp-heart-check";
 		internal const string Receipt = "r_TAF_ScenarioCampHeartNative_v1";
-		/// <summary>The sealed rung 1 -> 2 script (issue #41 / PR #107 case 2).</summary>
+		/// <summary>The sealed rung 1 -> 2 script (issue #41 / PR #107 case 2). The last pair is
+		/// the acceptance gate for issue #162: one more ordinary day AFTER the rung was raised, and
+		/// then a check that the settlement pass still runs on this ground.</summary>
 		private static readonly string[] Rung2Script = { "stagedigest", SetupVerb, "advance 1200",
-			CheckVerb, "advance 3600", CheckVerb, "stagedigest" };
+			CheckVerb, "advance 3600", CheckVerb, "advance 1200", CheckVerb, "stagedigest" };
 
 		/// <summary>The sealed rung 1 -> 2 -> 3 script (issue #159). The rung-2 climb is run
 		/// FIRST, in this same persona, so the rung-3 start state is reached by the ordinary

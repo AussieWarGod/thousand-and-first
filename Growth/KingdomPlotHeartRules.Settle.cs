@@ -29,9 +29,12 @@ namespace ThousandAndFirst
 		/// effects owed.</param>
 		/// <param name="Prove">The caller's exact endpoint and custody proof, re-asked after the
 		/// ceremony callback. A caller that cannot prove its own endpoint refuses here.</param>
-		/// <returns>False only when a rung WAS owed and could not be settled exactly, so the
-		/// caller keeps its receipt retryable. True when the effects settled, and true when
-		/// nothing was owed.</returns>
+		/// <returns>False in either of two classes, both retryable by the caller: the
+		/// settlement/zone/building/endpoint proof is unusable (System not founded, Z null,
+		/// Prove null, or Building fails GameObject.Validate) -- refused before
+		/// <c>HeartRungOf(TargetKey)</c> is even read -- or the input was usable and a rung WAS
+		/// owed but could not be settled exactly. True when the effects settled, and true when
+		/// nothing was owed (TargetKey off the heart ladder, or no rung).</returns>
 		internal static bool TrySettleHeartRung(KingdomSystem System, Zone Z,
 			GameObject Building, string TargetKey, Func<bool> Prove)
 		{
