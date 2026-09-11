@@ -8,6 +8,14 @@ namespace ThousandAndFirst.Tests
 	/// Behavioural-coverage-matrix scenario: building teardown
 	/// (Harness/KingdomTeardownNativeProvider.cs, Harness/KingdomTeardownNativeChecks.cs).
 	/// Game-coupled logic is source-pinned here; there is no pure predicate to value-test.
+	/// <para>
+	/// SOURCE PINS ONLY. These tests prove the fixture's call shape and exact salvage-rule
+	/// computation are present in the file; they do NOT execute the scenario, do NOT prove the
+	/// "fire" build or strike ever actually completes on real turns, and do NOT sign the
+	/// negative path as observed — that requires a real native run, which this pass does not
+	/// perform. Status for this whole scenario is "implemented-unexecuted", never "covered" or
+	/// "PASS", until a native evidence id exists.
+	/// </para>
 	/// </summary>
 	public class KingdomTeardownScenarioSourceTests
 	{
@@ -55,15 +63,25 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void RemovalAndMaterialReturnAreObservedNeverAssumed()
+		public void RemovalAndExactSalvageDeltaAreComputedFromTheProductionRuleNeverAssumed()
 		{
 			string source = Read(Checks);
 			Assert.That(source, Does.Contain("awaiting-struck=true"));
+			// The expected delta is COMPUTED from the same production rule OrderStrike itself
+			// uses, never hardcoded: KingdomMaterials.CostFor + KingdomMaterialRules.
+			// StrikeSalvagePercent (Growth/KingdomMaterialRules.Clearance.cs:193,211-219),
+			// mirroring Cost.Scaled's own integer-floor arithmetic
+			// (Growth/KingdomMaterialTally.cs:101-111).
 			Assert.That(source, Does.Contain(
-				"struck building returned no material to the dedicated store"));
+				"KingdomMaterials.CostFor(BuildKey).Get(KingdomMaterial.Timber)"));
+			Assert.That(source, Does.Contain("KingdomMaterialRules.StrikeSalvagePercent"));
+			Assert.That(source, Does.Contain(
+				"timberAfter - TimberBeforeStrike == ExpectedSalvageDelta"));
 			Assert.That(source, Does.Contain("KingdomMaterials.RawCensusCountOf(item)"));
 			// Never the ordinary, dispatching Count for the material-return proof.
 			Assert.That(source, Does.Not.Contain("item.Count"));
+			// Never a bare hardcoded "0" standing in for the computed rule.
+			Assert.That(source, Does.Not.Contain("ExpectedSalvageDelta = 0"));
 		}
 
 		[Test]

@@ -22,6 +22,22 @@ namespace ThousandAndFirst.Harness
 	/// asserts on their outputs, it does not force <c>KingdomBuilt</c>, the construction job
 	/// phase, or the strike receipt directly.
 	/// </para>
+	/// <para>
+	/// EXACT SALVAGE, NOT "SOME". <c>OrderStrike</c> reads the paid receipt's own material tally
+	/// and calls <c>KingdomMaterialRules.StrikeSalvage</c>
+	/// (<c>Growth/KingdomMaterialRules.Clearance.cs:211-219</c>), which is exactly
+	/// <c>Cost.Scaled(StrikeSalvagePercent)</c> — <c>StrikeSalvagePercent = 50</c>
+	/// (<c>:193</c>) and <c>Scaled</c> is integer-floor per material,
+	/// <c>(long)Amounts[i] * Percent / 100L</c> (<c>Growth/KingdomMaterialTally.cs:101-111</c>).
+	/// "fire" costs exactly 1 timber (<c>RuntimeData/KingdomBuildings.xml:544-546</c>,
+	/// <c>Materials="timber:1"</c>), so the production formula this fixture computes and asserts
+	/// is <c>(1 * 50) / 100 = 0</c> — a struck "fire" plot returns NO timber, by design ("taking
+	/// a thing down carefully is still taking it down, and nothing about striking is a refund",
+	/// <c>KingdomMaterialRules.Clearance.cs:188-190</c>). This fixture computes that expectation
+	/// from <c>KingdomMaterials.CostFor(BuildKey)</c> and <c>KingdomMaterialRules.
+	/// StrikeSalvagePercent</c> directly, never a hardcoded "0", so a future catalogue or rule
+	/// change is caught rather than silently re-passing a stale expectation.
+	/// </para>
 	/// </summary>
 	internal static class KingdomTeardownNativeChecks
 	{
@@ -71,7 +87,8 @@ namespace ThousandAndFirst.Harness
 			private KingdomSystem System;
 			private GameObject Chest, Works;
 			private string WorksId;
-			private int TimberBeforeStrike;
+			private int TimberBeforeStrike, ExpectedSalvageDelta;
+			private long StartTicks;
 			internal bool Done;
 			internal int Phase;
 			internal readonly StringBuilder Evidence = new StringBuilder();
@@ -82,6 +99,7 @@ namespace ThousandAndFirst.Harness
 			/// real, synchronous plot commission.</summary>
 			internal void Start()
 			{
+				StartTicks = Game.TimeTicks;
 				System = KingdomNativeCampFounding.Found(Game, Zone, Require);
 				KingdomNativeCampFounding.Dedicate(Game, Zone, System,
 					8 * KingdomRules.DramsPerArrival, Owned.Add, Require);
@@ -108,6 +126,15 @@ namespace ThousandAndFirst.Harness
 					"the \"" + BuildKey + "\" design is missing from the live catalogue");
 				Require(KingdomGrowth.CountStoredWater(Zone) >= entry.CostDrams,
 					"the dedicated store does not cover the fixture building's cost");
+				// The exact production salvage rule, computed here rather than hardcoded: what
+				// "fire" costs today (KingdomMaterials.CostFor), scaled by the same integer-floor
+				// percentage OrderStrike itself applies (KingdomMaterialRules.StrikeSalvage ->
+				// .Scaled(StrikeSalvagePercent), Growth/KingdomMaterialRules.Clearance.cs:193,211-219;
+				// Growth/KingdomMaterialTally.cs:101-111). A catalogue or rule change changes this
+				// computed expectation too, so it is never a stale hardcoded delta.
+				int originalTimberCost = KingdomMaterials.CostFor(BuildKey).Get(KingdomMaterial.Timber);
+				ExpectedSalvageDelta = (int)((long)originalTimberCost
+					* KingdomMaterialRules.StrikeSalvagePercent / 100L);
 				bool commissioned = KingdomCommission.Commission(System, BuildKey, null,
 					KingdomPlotRules.PlotSize.None, null, out string commissionFailure);
 				Require(commissioned, commissionFailure ?? "the fixture commission refused");
@@ -134,7 +161,8 @@ namespace ThousandAndFirst.Harness
 					GameObject works = Zone.FindObjectByID(WorksId);
 					if (works == null || !KingdomUpgrade.IsFunctionallyBuilt(works))
 					{
-						Evidence.Append("; awaiting-built=true");
+						Evidence.Append("; awaiting-built=true; elapsed-ticks=")
+							.Append(Game.TimeTicks - StartTicks);
 						return;
 					}
 					Works = works;
@@ -155,8 +183,14 @@ namespace ThousandAndFirst.Harness
 						return;
 					}
 					int timberAfter = RawTimber();
-					Require(timberAfter > TimberBeforeStrike,
-						"struck building returned no material to the dedicated store");
+					// Exact delta, not "some increase": for "fire" (1 timber cost) the
+					// production formula floors to zero, so the correct assertion here is
+					// frequently an EXACT NO-OP return, proven against the computed rule rather
+					// than assumed as an increase.
+					Require(timberAfter - TimberBeforeStrike == ExpectedSalvageDelta,
+						"struck building's material return did not match the exact computed "
+						+ "salvage rule: expected-delta=" + ExpectedSalvageDelta + " observed-delta="
+						+ (timberAfter - TimberBeforeStrike));
 					// Negative path: the same reference, now gone, must refuse by name rather
 					// than silently accepting a second strike order.
 					bool secondOrder = KingdomMaterials.OrderStrike(System, Zone, Works,
@@ -165,6 +199,8 @@ namespace ThousandAndFirst.Harness
 						"a second strike order against the absent building was not refused");
 					Evidence.Append("; timber-before=").Append(TimberBeforeStrike)
 						.Append("; timber-after=").Append(timberAfter)
+						.Append("; expected-salvage-delta=").Append(ExpectedSalvageDelta)
+						.Append("; elapsed-ticks=").Append(Game.TimeTicks - StartTicks)
 						.Append("; negative-path-refusal=").Append(secondFailure);
 					Done = true;
 				}
