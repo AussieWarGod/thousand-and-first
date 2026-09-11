@@ -25,7 +25,7 @@ TAGS = ("Building", "Faction", "Settlement", "World", "Script", "Lore")
 PREVIEW = "preview.png"
 GAME_MARKETING_VERSION = "1.0.5"
 GAME_CORE_BUILD = "2.0.211.51"
-RELEASE_EVIDENCE_SCHEMA = 4
+RELEASE_EVIDENCE_SCHEMA = 6
 ALPHA_CANDIDATE_SCHEMA = 2
 LEGACY_ALPHA_CANDIDATE_SCHEMA = 1
 FIRST_ALPHA_RELEASE_VERSION = "0.3.0"
@@ -54,10 +54,17 @@ INTERIM_PREVIEW_SHA256 = (
     "498e85d0f6aba0024845bccece31a427b7b84f680087abd1d6588b8b30e00bad"
 )
 PREVIEW_REVIEW_PASS_ID = "final-native-preview-review"
-HUMAN_SENTINEL = re.compile(
+PLACEHOLDER_SENTINEL = re.compile(
     r"(?:^|[^a-z0-9])(?:placeholder|example|todo|tbd|unknown|n\s*/\s*a)"
     r"(?:$|[^a-z0-9])|human[_ -]*(?:reviewer|tester)|name[_ -]*the|"
     r"replace[_ -]*with|your[_ -]*name",
+    re.IGNORECASE,
+)
+# An automated identity is welcome (e.g. "hotfix142-native driver"); a claim that automation
+# IS a human, or that a human personally/physically did the work, is never accepted.
+FORGED_HUMAN_SIGNATURE = re.compile(
+    r"\b(?:i\s*am|this\s*is|signed\s*as|personally|in\s*person)\b[^.]{0,40}\bhuman\b"
+    r"|\bhuman[_ -]*(?:signature|authored|approved|signed)\b",
     re.IGNORECASE,
 )
 
@@ -473,14 +480,37 @@ def canonicalize_workshop(path: Path, manifest: dict, mode: str) -> None:
                 pass
 
 
-def _human_text_valid(value: object, minimum: int, maximum: int) -> bool:
+def _identity_text_valid(value: object, minimum: int, maximum: int) -> bool:
+    """A reviewer/tester/capturer identity: a person, or an honestly labelled automated
+    identity (e.g. "hotfix142-native driver"). Placeholders and forged human-signature
+    claims by automation are never accepted."""
     return (
         isinstance(value, str)
         and value == value.strip()
         and minimum <= len(value) <= maximum
         and value.isprintable()
-        and HUMAN_SENTINEL.search(value) is None
+        and PLACEHOLDER_SENTINEL.search(value) is None
+        and FORGED_HUMAN_SIGNATURE.search(value) is None
         and _qud_text_error(value) is None
+    )
+
+
+
+# Store preview media provenance (who physically captured/reviewed the Steam listing
+# screenshot) is a deliberate legal/creative-attribution boundary, not a test gate, and stays
+# human per the author ruling of 2026-09-11: automation may not stand in as the capturer or
+# the no-generative-assistance reviewer of the public preview image.
+AUTOMATION_IDENTITY_INDICATOR = re.compile(
+    r"\b(?:driver|automated|automation|codex|claude|gpt|bot|pipeline|ci|workflow|"
+    r"script|structural review|native driver)\b",
+    re.IGNORECASE,
+)
+
+
+def _human_only_text_valid(value: object, minimum: int, maximum: int) -> bool:
+    return (
+        _identity_text_valid(value, minimum, maximum)
+        and AUTOMATION_IDENTITY_INDICATOR.search(value) is None
     )
 
 
@@ -881,6 +911,7 @@ def validate_release_evidence(
         "privatePackageReceiptSha256",
         "privateSubscription",
         "verification",
+        "longFormScenario",
     }
     errors: list[str] = []
     if set(evidence) != top_keys:
@@ -1010,25 +1041,29 @@ def validate_release_evidence(
                 errors.append(
                     "release evidence verification.previewReview.previewSha256 must match preview.png"
                 )
-            if not _human_text_valid(preview_review.get("capturedBy"), 2, 80):
+            if not _human_only_text_valid(preview_review.get("capturedBy"), 2, 80):
                 errors.append(
-                    "release evidence verification.previewReview.capturedBy must name the human capturer"
+                    "release evidence verification.previewReview.capturedBy must name the "
+                    "human capturer (public preview media provenance stays human by author "
+                    "ruling; automation may not stand in)"
                 )
             if not _second_precision_utc(preview_review.get("captureUtc")):
                 errors.append(
                     "release evidence verification.previewReview.captureUtc must be a real second-precision UTC date"
                 )
-            if not _human_text_valid(preview_review.get("sourceSave"), 5, 200):
+            if not _identity_text_valid(preview_review.get("sourceSave"), 5, 200):
                 errors.append(
                     "release evidence verification.previewReview.sourceSave must identify the native source save"
                 )
-            if not _human_text_valid(preview_review.get("editSummary"), 10, 500):
+            if not _identity_text_valid(preview_review.get("editSummary"), 10, 500):
                 errors.append(
                     "release evidence verification.previewReview.editSummary must describe the crop and edits"
                 )
-            if not _human_text_valid(preview_review.get("reviewedBy"), 2, 80):
+            if not _human_only_text_valid(preview_review.get("reviewedBy"), 2, 80):
                 errors.append(
-                    "release evidence verification.previewReview.reviewedBy must name the human reviewer"
+                    "release evidence verification.previewReview.reviewedBy must name the "
+                    "human reviewer (public preview media provenance stays human by author "
+                    "ruling; automation may not stand in)"
                 )
             if not _second_precision_utc(preview_review.get("completedUtc")):
                 errors.append(
@@ -1124,14 +1159,16 @@ def validate_release_evidence(
                     else:
                         waiver_seen.add(waiver_id)
                         waiver_ids.append(waiver_id)
-                    if not _human_text_valid(waiver.get("reason"), 20, 500):
+                    if not _identity_text_valid(waiver.get("reason"), 20, 500):
                         errors.append(
                             f"release evidence {label}.reason must be a bounded human-reviewed reason"
                         )
                         valid_waivers = False
-                    if not _human_text_valid(waiver.get("reviewedBy"), 2, 80):
+                    if not _identity_text_valid(waiver.get("reviewedBy"), 2, 80):
                         errors.append(
-                            f"release evidence {label}.reviewedBy must name the human reviewer"
+                            f"release evidence {label}.reviewedBy must name the reviewer "
+                            "(a person, or an honestly labelled automated identity); a "
+                            "forged human-signature claim is never accepted"
                         )
                         valid_waivers = False
                     if not _second_precision_utc(waiver.get("completedUtc")):
@@ -1175,7 +1212,7 @@ def validate_release_evidence(
                     ]
                     if missing:
                         errors.append(
-                            "release evidence is missing TESTING.md IDs without a human-reviewed waiver: "
+                            "release evidence is missing TESTING.md IDs without a reviewed waiver: "
                             + ", ".join(missing)
                         )
                     expected_passes = [
@@ -1211,6 +1248,9 @@ def validate_release_evidence(
         "localDuplicatesRemoved",
         "uploadHiddenFiles",
         "testedBy",
+        "driverResultsRef",
+        "driverResultsSha256",
+        "driverExitCode",
         "completedUtc",
     }
     if not isinstance(private, dict) or set(private) != private_keys:
@@ -1238,17 +1278,236 @@ def validate_release_evidence(
                 errors.append(
                     f"release evidence privateSubscription.{key} must be {value!r}"
                 )
+        # No manual test gate for release, ever (author ruling, 2026-09-11): testedBy names
+        # who or what drove the private subscribed smoke — a person, or an honestly labelled
+        # automated identity such as "hotfix142-native driver" — and the driver's own results
+        # artifact (below) is the actual, checkable proof; a bare name is not.
         tester = private.get("testedBy")
-        if not _human_text_valid(tester, 2, 80):
-            errors.append("release evidence testedBy must name the human tester")
+        if not _identity_text_valid(tester, 2, 80):
+            errors.append(
+                "release evidence testedBy must name the tester (a person, or an honestly "
+                "labelled automated identity); a forged human-signature claim is never accepted"
+            )
+        _validate_artifact_binding(
+            {
+                "artifactRef": private.get("driverResultsRef"),
+                "artifactSha256": private.get("driverResultsSha256"),
+            },
+            "privateSubscription.driverResults",
+            errors,
+            repository_root,
+            include_pass_id=False,
+        )
+        _validate_native_driver_results(
+            private.get("driverResultsRef"), errors, repository_root
+        )
+        exit_code = private.get("driverExitCode")
+        if type(exit_code) is not int or exit_code != 0:
+            errors.append("release evidence privateSubscription.driverExitCode must be 0")
         completed = private.get("completedUtc")
         if not _second_precision_utc(completed):
             errors.append(
                 "release evidence completedUtc must be a real second-precision UTC date"
             )
+
+    # Long-form behavioural proof (author/Codex addendum, 2026-09-11): startup through a full
+    # paid-commission build to a functional building, then save/cold-load and one more action,
+    # as one automated, reproducible, fixed-seed run. Missing reachability or any non-PASS step
+    # is an unresolved release requirement (FAIL) with no waiver and no blanket skip.
+    longform = evidence.get("longFormScenario")
+    if not isinstance(longform, dict) or set(longform) != {"artifactRef", "artifactSha256"}:
+        errors.append(
+            "release evidence longFormScenario fields must be artifactRef and artifactSha256"
+        )
+    else:
+        _validate_artifact_binding(
+            longform,
+            "longFormScenario",
+            errors,
+            repository_root,
+            include_pass_id=False,
+        )
+        _validate_longform_scenario_results(
+            longform.get("artifactRef"), errors, repository_root
+        )
+
     if errors:
         raise ValidationError("release evidence is invalid; " + "; ".join(errors))
     return candidate
+
+
+NATIVE_DRIVER_CHECKS = (
+    "loader",
+    "newGame",
+    "saveReload",
+    "oldSave",
+    "representativeFeatures",
+)
+
+
+def _validate_native_driver_results(
+    artifact_ref: object, errors: list[str], repository_root: Path
+) -> None:
+    """Read the bound native-driver results artifact and require every check PASS with a
+    stopped process. Replaces a human tester's word with a checkable automated record."""
+    if not isinstance(artifact_ref, str) or not _safe_evidence_artifact_ref(artifact_ref):
+        return
+    try:
+        path = repository_root.joinpath(*artifact_ref.split("/"))
+        resolved = path.resolve(strict=True)
+        resolved.relative_to(repository_root)
+        if path.is_symlink() or not resolved.is_file():
+            raise OSError("artifact is not a regular file")
+        payload = json.loads(resolved.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as error:
+        errors.append(
+            "release evidence privateSubscription.driverResultsRef cannot read native driver "
+            f"results: {error}"
+        )
+        return
+    if not isinstance(payload, dict) or not isinstance(payload.get("results"), list):
+        errors.append(
+            "native driver results must be an object with a results array"
+        )
+        return
+    seen: dict[str, bool] = {}
+    for entry in payload["results"]:
+        if (
+            not isinstance(entry, dict)
+            or set(entry) != {"check", "status", "processStopped"}
+            or entry.get("check") not in NATIVE_DRIVER_CHECKS
+            or entry.get("status") != "PASS"
+            or entry.get("processStopped") is not True
+        ):
+            errors.append(
+                "native driver results entries must each be an object with check, status "
+                "'PASS', and processStopped true"
+            )
+            continue
+        seen[entry["check"]] = True
+    missing = [check for check in NATIVE_DRIVER_CHECKS if check not in seen]
+    if missing:
+        errors.append(
+            "native driver results is missing an all-PASS entry for: " + ", ".join(missing)
+        )
+
+
+# Long-form behavioural scenario artefact schema (author/Codex addendum, 2026-09-11). The
+# harness that produces this file (branch test/longform-reachability) must target these exact
+# field names and PASS semantics; the validator is the schema's single source of truth.
+#
+# {
+#   "driver": "<honestly labelled identity: person or automation>",
+#   "runId": "<opaque run identifier>",
+#   "seed": <fixed integer world seed>,
+#   "maxTurns": <positive integer turn budget>,
+#   "timeoutSeconds": <positive integer wall-clock budget>,
+#   "logRef": "docs/release-evidence/<...>.log",
+#   "logSha256": "<lowercase hex-64 SHA-256 of the retained raw driver log>",
+#   "steps": [
+#     {"step": "startup", "status": "PASS", "processStopped": true},
+#     {"step": "stockpileQuote", "status": "PASS", "processStopped": true},
+#     {"step": "paidCommission", "status": "PASS", "processStopped": true},
+#     {"step": "engineTurnCompletion", "status": "PASS", "processStopped": true},
+#     {"step": "save", "status": "PASS", "processStopped": true},
+#     {"step": "coldLoad", "status": "PASS", "processStopped": true},
+#     {"step": "nextAction", "status": "PASS", "processStopped": true}
+#   ]
+# }
+#
+# PASS semantics: every one of the seven steps below must appear exactly once, with
+# status == "PASS" and processStopped == true. A missing step, an unreachable step, or any
+# non-PASS status is an unresolved release requirement (FAIL) — never a waiver, never a
+# blanket skip. "engineTurnCompletion" is the paid commission's physical debit resolving,
+# by an actual engine turn, into a functional building; a source-level or simulated claim
+# does not satisfy it.
+LONGFORM_SCENARIO_STEPS = (
+    "startup",
+    "stockpileQuote",
+    "paidCommission",
+    "engineTurnCompletion",
+    "save",
+    "coldLoad",
+    "nextAction",
+)
+
+
+def _validate_longform_scenario_results(
+    artifact_ref: object, errors: list[str], repository_root: Path
+) -> None:
+    """Read the bound long-form scenario artefact: fixed seed, bounded turn/timeout budget, a
+    driver/run identity bound to a retained log hash, and all seven steps PASS with a stopped
+    process. Replaces a human playtester's word with a checkable automated record."""
+    if not isinstance(artifact_ref, str) or not _safe_evidence_artifact_ref(artifact_ref):
+        return
+    try:
+        path = repository_root.joinpath(*artifact_ref.split("/"))
+        resolved = path.resolve(strict=True)
+        resolved.relative_to(repository_root)
+        if path.is_symlink() or not resolved.is_file():
+            raise OSError("artifact is not a regular file")
+        payload = json.loads(resolved.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as error:
+        errors.append(
+            "release evidence longFormScenario.artifactRef cannot read scenario results: "
+            f"{error}"
+        )
+        return
+    if not isinstance(payload, dict):
+        errors.append("long-form scenario results must be an object")
+        return
+    if not _identity_text_valid(payload.get("driver"), 2, 80):
+        errors.append(
+            "long-form scenario results driver must name the driver (a person, or an "
+            "honestly labelled automated identity); a forged human-signature claim is never "
+            "accepted"
+        )
+    if not isinstance(payload.get("runId"), str) or not payload["runId"].strip():
+        errors.append("long-form scenario results runId must be a non-empty run identifier")
+    if type(payload.get("seed")) is not int:
+        errors.append("long-form scenario results seed must be a fixed integer world seed")
+    for bound_field in ("maxTurns", "timeoutSeconds"):
+        value = payload.get(bound_field)
+        if type(value) is not int or value <= 0:
+            errors.append(
+                f"long-form scenario results {bound_field} must be a positive integer budget"
+            )
+    log_hash = payload.get("logSha256")
+    if not isinstance(log_hash, str) or re.fullmatch(r"[0-9a-f]{64}", log_hash) is None or log_hash == "0" * 64:
+        errors.append(
+            "long-form scenario results logSha256 must be a nonzero lowercase SHA-256"
+        )
+    _validate_artifact_binding(
+        {"artifactRef": payload.get("logRef"), "artifactSha256": log_hash if isinstance(log_hash, str) else "0" * 64},
+        "longFormScenario.log",
+        errors,
+        repository_root,
+        include_pass_id=False,
+    )
+    if not isinstance(payload.get("steps"), list):
+        errors.append("long-form scenario results must have a steps array")
+        return
+    seen: dict[str, bool] = {}
+    for entry in payload["steps"]:
+        if (
+            not isinstance(entry, dict)
+            or set(entry) != {"step", "status", "processStopped"}
+            or entry.get("step") not in LONGFORM_SCENARIO_STEPS
+            or entry.get("status") != "PASS"
+            or entry.get("processStopped") is not True
+        ):
+            errors.append(
+                "long-form scenario results steps entries must each be an object with step, "
+                "status 'PASS', and processStopped true"
+            )
+            continue
+        seen[entry["step"]] = True
+    missing_steps = [step for step in LONGFORM_SCENARIO_STEPS if step not in seen]
+    if missing_steps:
+        errors.append(
+            "long-form scenario results is missing an all-PASS entry for: "
+            + ", ".join(missing_steps)
+        )
 
 
 def _validate_artifact_binding(

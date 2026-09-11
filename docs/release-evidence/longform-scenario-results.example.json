@@ -1,0 +1,18 @@
+{
+  "driver": "DRIVER_NAME_OR_HONESTLY_LABELLED_AUTOMATED_IDENTITY",
+  "runId": "OPAQUE_RUN_IDENTIFIER",
+  "seed": 0,
+  "maxTurns": 0,
+  "timeoutSeconds": 0,
+  "logRef": "docs/release-evidence/longform-scenario.log",
+  "logSha256": "SHA256_OF_RETAINED_RAW_DRIVER_LOG",
+  "steps": [
+    {"step": "startup", "status": "PASS", "processStopped": true},
+    {"step": "stockpileQuote", "status": "PASS", "processStopped": true},
+    {"step": "paidCommission", "status": "PASS", "processStopped": true},
+    {"step": "engineTurnCompletion", "status": "PASS", "processStopped": true},
+    {"step": "save", "status": "PASS", "processStopped": true},
+    {"step": "coldLoad", "status": "PASS", "processStopped": true},
+    {"step": "nextAction", "status": "PASS", "processStopped": true}
+  ]
+}

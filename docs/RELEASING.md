@@ -87,7 +87,10 @@ procedure below and Beta/Release evidence requirements remain unchanged.
 [Exact decision and gate log identity](STATUS.md#one-release-alpha-verification-decision).
 These 0.3.1 waivers do not carry forward. The automated lane runs the complete `--alpha` or
 `--test` release-check at the tagged commit on every run and requires its clean marker; it inherits
-no waiver, and the manual startup/save/reload proof stays a human step of every release.
+no waiver. Per the author ruling of 2026-09-11 ("no manual test gate for release, forever"),
+the startup/save/reload proof is an automated-driver `results.json` artifact (every check
+PASS, its process cleanly stopped) bound by hash in `docs/RELEASE_EVIDENCE.json`, never a
+human tester's unverifiable word. Credential entry and legal/marketing approval remain human.
 
 Supported target: Caves of Qud v1.0.5, core build 2.0.211.51. Re-run all licensed checks before
 claiming compatibility with another build.
@@ -100,7 +103,7 @@ claiming compatibility with another build.
 |---|---|---|
 | `--test` | Private bootstrap/candidate; local `--test` tooling tolerates `workshop.json` absent | Clean committed package only |
 | `--alpha` | Public `0.3.x`, labelled **v0.3 Alpha**; first version is exactly `0.3.0` | Private receipt binding, final preview, structure review, public metadata, annotated tag |
-| `--release` | Evidence-complete later lane | Every Alpha gate plus `docs/RELEASE_EVIDENCE.json` and retained human/native artifacts |
+| `--release` | Evidence-complete later lane | Every Alpha gate plus `docs/RELEASE_EVIDENCE.json` and retained automated-driver/native artifacts |
 
 The `workshop.json`-may-be-absent tolerance above is the **local** `--test` tooling only:
 `Tools/workshop_metadata.py validate_workshop` returns `None` for a missing file when invoked
@@ -252,8 +255,8 @@ staged candidate remains byte-identical to the subscribed package.
 This subsection records the one-time first-publication flow. Do not rerun it or recreate its tag;
 later Alpha patches use **Updating Alpha**.
 
-Do not create `docs/RELEASE_EVIDENCE.json` for Alpha. It would falsely imply completed final human
-release passes. Instead:
+Do not create `docs/RELEASE_EVIDENCE.json` for Alpha. It would falsely imply completed final
+automated-driver release passes. Instead:
 
 1. Change root Workshop metadata from private to public:
 
@@ -309,14 +312,26 @@ release evidence.
 ## 5B. Evidence-complete later release
 
 Use this lane only after metadata/tool constants are intentionally changed for the separate Beta or
-Release listing and a human has performed every claimed pass.
+Release listing and the automated native driver has recorded every claimed pass (author ruling
+2026-09-11: no manual test gate for release, ever; credential entry and legal/marketing approval
+remain human).
 
 Copy `docs/RELEASE_EVIDENCE.example.json` to `docs/RELEASE_EVIDENCE.json`. Bind exact release
 version, pre-evidence candidate commit, Qud marketing/core build, `Assembly-CSharp.dll` SHA-256,
-Workshop ID, preview hash, private receipt hash, subscription results, every numbered TESTING pass
-or reviewed waiver, and retained artifacts below `docs/release-evidence/`. Human names/times must be
-real; placeholders, automation-authored human claims, missing artifacts, hash drift, unknown pass
-IDs, duplicate IDs, reordered IDs, or stale `TESTING.md` fail.
+Workshop ID, preview hash, private receipt hash, the native driver's `results.json` (all-PASS,
+every process cleanly stopped) bound by hash, the long-form behavioural scenario artefact
+(author/Codex addendum, 2026-09-11) — one automated, reproducible, fixed-seed run through
+startup, a stockpile quote, a paid commission with physical debit, an actual engine turn
+completing that commission into a functional building, save, cold-load, and one further action,
+every step PASS with its process stopped, bounded turn/timeout budget recorded, and its driver
+log bound by SHA-256 (schema documented next to `Tools/workshop_metadata.py`'s
+`_validate_longform_scenario_results`; missing reachability or any non-PASS step is unresolved,
+never waived) — every numbered TESTING pass or reviewed waiver, and
+retained artifacts below `docs/release-evidence/`. Identities and times must be real; placeholders,
+a forged human-signature claim authored by automation, missing artifacts, hash drift, a non-PASS or
+missing `processStopped` driver entry, unknown pass IDs, duplicate IDs, reordered IDs, or stale
+`TESTING.md` all fail. Human names are no longer required anywhere except the public preview
+screenshot's capture/no-generative-assistance review, which stays human by the same ruling.
 
 Validate:
 
@@ -457,9 +472,11 @@ Order of a full 0.3.x release:
    again on the Steam host; a stale review stops the release before the licensed gate is burned.
 2. Push `staging-v<version>` on that commit. Nothing waits for an approval. The pipeline gates,
    packages `--test`, plans, checks, submits, verifies and finalizes against the staging item.
-3. Human: confirm the `finalize` job's recorded finalization SHA-256, then the section-4
-   subscribed smoke, then bind the receipt into `docs/PRIVATE_PACKAGE_RECEIPT.sha256`. That
-   binding commit is `candidateCommit`.
+3. Confirm the `finalize` job's recorded finalization SHA-256, run the section-4 automated
+   startup/save/reload driver against the subscribed candidate (writing its all-PASS
+   `results.json`), then bind the package receipt into `docs/PRIVATE_PACKAGE_RECEIPT.sha256`.
+   That binding commit is `candidateCommit`. This Alpha lane still carries no
+   `docs/RELEASE_EVIDENCE.json`; the driver artifact matters for 5B evidence-complete releases.
 4. Public flip commit: canonicalize Alpha metadata, status line, changelog heading and a fresh
    `docs/ALPHA_CANDIDATE.json`. Open the release pull request from `dev` to `main` and merge it
    **with a merge commit** to preserve `candidateCommit` ancestry. Merge commits are enabled

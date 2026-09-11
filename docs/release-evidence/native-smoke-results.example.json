@@ -1,0 +1,10 @@
+{
+  "driver": "TESTER_NAME_OR_HONESTLY_LABELLED_AUTOMATED_DRIVER_IDENTITY",
+  "results": [
+    {"check": "loader", "status": "PASS", "processStopped": true},
+    {"check": "newGame", "status": "PASS", "processStopped": true},
+    {"check": "saveReload", "status": "PASS", "processStopped": true},
+    {"check": "oldSave", "status": "PASS", "processStopped": true},
+    {"check": "representativeFeatures", "status": "PASS", "processStopped": true}
+  ]
+}

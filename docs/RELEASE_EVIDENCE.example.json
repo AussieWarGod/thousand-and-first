@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 6,
   "releaseVersion": "0.2.0",
   "candidateCommit": "FULL_LOWERCASE_PRIVATE_CANDIDATE_COMMIT",
   "gameMarketingVersion": "1.0.5",
@@ -776,6 +776,10 @@
       "waivers": []
     }
   },
+  "longFormScenario": {
+    "artifactRef": "docs/release-evidence/longform-scenario-results.json",
+    "artifactSha256": "SHA256_OF_LONGFORM_SCENARIO_RESULTS_JSON"
+  },
   "privateSubscription": {
     "source": "steam-subscription",
     "inventory": "clean",
@@ -788,7 +792,10 @@
     "playerLog": "clean",
     "localDuplicatesRemoved": true,
     "uploadHiddenFiles": true,
-    "testedBy": "HUMAN_TESTER_NAME_OR_ALIAS",
+    "testedBy": "TESTER_NAME_OR_HONESTLY_LABELLED_AUTOMATED_DRIVER_IDENTITY",
+    "driverResultsRef": "docs/release-evidence/native-smoke-results.json",
+    "driverResultsSha256": "SHA256_OF_NATIVE_SMOKE_RESULTS_JSON",
+    "driverExitCode": 0,
     "completedUtc": "YYYY-MM-DDTHH:MM:SSZ"
   }
 }
