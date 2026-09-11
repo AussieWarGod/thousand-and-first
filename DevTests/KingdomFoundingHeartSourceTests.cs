@@ -508,7 +508,7 @@ namespace ThousandAndFirst.Tests
 
 			string drive = Source("Growth/KingdomPlot2.07j.FoundingHeartTerminalDrive.cs");
 			StringAssert.Contains("return HeartRefused(\"sealed: context or seal\");", drive);
-			StringAssert.Contains("return HeartRefused(\"sealed: works slot lookup\");", drive);
+			StringAssert.Contains("|| HeartRefused(\"sealed: works slot lookup\");", drive);
 			StringAssert.Contains("return TryReadFoundingHeartWorkAuthority(Z, works, out _)\n"
 				+ "\t\t\t\t\t|| HeartRefused(\"sealed: work authority\");", drive);
 

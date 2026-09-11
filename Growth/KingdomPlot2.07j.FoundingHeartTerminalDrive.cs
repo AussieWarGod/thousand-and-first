@@ -28,7 +28,11 @@ namespace ThousandAndFirst
 				if (FindGlobalFoundingHeartId(KingdomFoundingHeartRules.SlotId(Context.Plan,
 						KingdomFoundingHeartRules.WorksSlot), out GameObject works,
 						out bool graveyard) != KingdomPhysicalLookupState.Exact || graveyard)
-					return HeartRefused("sealed: works slot lookup");
+					// The one shape this is not: a sealed heart whose root climbed a rung by the
+					// improvement route, which replaces the object and cannot carry the reserved
+					// identity forward. Proved on its own terms, or refused as before.
+					return HasClimbedFoundingHeartRoot(System, Z, Context)
+						|| HeartRefused("sealed: works slot lookup");
 				return TryReadFoundingHeartWorkAuthority(Z, works, out _)
 					|| HeartRefused("sealed: work authority");
 			}

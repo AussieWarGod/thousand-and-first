@@ -733,6 +733,7 @@
 	<Compile Include="KingdomFoundingHeartReservationRulesTests.cs" />
 	<Compile Include="KingdomFoundingHeartReservationStateTests.cs" />
 	<Compile Include="KingdomFoundingHeartSourceTests.cs" />
+	<Compile Include="KingdomFoundingHeartClimbedRootTests.cs" />
 	<Compile Include="KingdomFoundingHeartReservationRuntimeSourceTests.cs" />
 	<Compile Include="KingdomFoundingHeartNativeSourceTests.cs" />
 	<Compile Include="KingdomFoundingHeartLifecycleSourceTests.cs" />
