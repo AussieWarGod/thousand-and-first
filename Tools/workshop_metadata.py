@@ -1451,6 +1451,10 @@ RUN_RECORD_REQUIRED_KEYS = {
     "launchId", "started", "stoppedUtc", "ownership", "exitProvenance",
 }
 RUN_RECORD_OPTIONAL_KEYS = {"exitCode", "harnessInventorySha256", "gameBuildId"}
+# inheritedFrom/inheritedVerified are written ONLY by scenario_run_record.py's cold-load seal
+# path (test/longform-reachability, 82fd47c) -- never by save-session seal. Legal only when
+# role == "cold-load-session"; forbidden for "save-session".
+RUN_RECORD_COLD_LOAD_ONLY_KEYS = {"inheritedFrom", "inheritedVerified"}
 RUN_RECORD_OWNERSHIP_KEYS = {"receiptRef", "receiptSha256", "pid", "startTicks", "executable"}
 RUN_RECORD_EXIT_PROVENANCE_OBSERVED = "owned-process-exit-observed"
 RUN_RECORD_EXIT_PROVENANCE_UNOBSERVED = "owned-process-ended-exit-unobserved"
@@ -1477,13 +1481,31 @@ def _run_record_basename_valid(value: object) -> bool:
     )
 
 
-def validate_run_record(path: Path) -> list[str]:
+def _run_record_inherited_from_valid(value: object) -> bool:
+    """A safe basename or relative source-root string naming the record's cold-load source:
+    non-empty, never absolute, never containing a ".." traversal segment."""
+    if not isinstance(value, str) or value == "" or value != value.strip() or not value.isprintable():
+        return False
+    if value.startswith("/") or value.startswith("\\") or re.match(r"^[A-Za-z]:[\\/]", value):
+        return False
+    parts = re.split(r"[\\/]", value)
+    return all(part not in ("", "..") for part in parts)
+
+
+def validate_run_record(
+    path: Path, *, paired_save_record: "dict[str, object] | None" = None
+) -> list[str]:
     """Validate one run-record.json exactly as Tools/scenario_run_record.py's seal/launch/stop
     emit it: an ownership block is REQUIRED (never optional -- "stop refuses without an
     ownership block"), exitCode is present only under OBSERVED exit provenance and absent
     otherwise, the launch id must name the owned pid with a hyphen-delimited match, and
     receiptSha256 must be a real digest bound to the bare-named receipt file beside this
-    record. Returns a list of issues; empty means valid."""
+    record. inheritedFrom/inheritedVerified are legal ONLY for role == "cold-load-session"
+    (both required together there; forbidden for "save-session"), matching the cold-load
+    seal path in the same emitter, frozen at 82fd47c (test/longform-reachability). Pass
+    paired_save_record (the source save-session record's already-parsed payload) to also
+    require candidateCommit/runtimeInventorySha256 match between the two when both are
+    present. Returns a list of issues; empty means valid."""
     try:
         payload = json.loads(path.read_text(encoding="utf-8-sig"))
     except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as error:
@@ -1491,17 +1513,35 @@ def validate_run_record(path: Path) -> list[str]:
     if not isinstance(payload, dict):
         return ["run record must be a JSON object"]
     keys = set(payload)
-    if not (
-        RUN_RECORD_REQUIRED_KEYS <= keys <= RUN_RECORD_REQUIRED_KEYS | RUN_RECORD_OPTIONAL_KEYS
-    ):
+    allowed_optional = RUN_RECORD_OPTIONAL_KEYS
+    if payload.get("role") == "cold-load-session":
+        allowed_optional = allowed_optional | RUN_RECORD_COLD_LOAD_ONLY_KEYS
+    if not (RUN_RECORD_REQUIRED_KEYS <= keys <= RUN_RECORD_REQUIRED_KEYS | allowed_optional):
         return [
             "run record fields must be exactly the required set "
             + ", ".join(sorted(RUN_RECORD_REQUIRED_KEYS))
-            + ", plus any of the optional " + ", ".join(sorted(RUN_RECORD_OPTIONAL_KEYS))
+            + ", plus any of the optional " + ", ".join(sorted(allowed_optional))
         ]
     errors: list[str] = []
     if payload.get("role") not in RUN_RECORD_ROLES:
         errors.append("run record role must be one of: " + ", ".join(RUN_RECORD_ROLES))
+    # A save-session record carrying inheritedFrom/inheritedVerified is already refused above
+    # by the exact key-set check (those keys are only added to allowed_optional for
+    # cold-load-session), so no separate save-session branch is needed here.
+    if payload.get("role") == "cold-load-session":
+        if keys & RUN_RECORD_COLD_LOAD_ONLY_KEYS != RUN_RECORD_COLD_LOAD_ONLY_KEYS:
+            errors.append(
+                "run record inheritedFrom and inheritedVerified must both be present for a "
+                "cold-load-session record"
+            )
+        else:
+            if not _run_record_inherited_from_valid(payload.get("inheritedFrom")):
+                errors.append(
+                    "run record inheritedFrom must be a safe basename or relative source-root "
+                    "string"
+                )
+            if not isinstance(payload.get("inheritedVerified"), bool):
+                errors.append("run record inheritedVerified must be a boolean")
     if not isinstance(payload.get("root"), str) or not payload["root"].strip():
         errors.append("run record root must be a non-empty path string")
     if not isinstance(payload.get("seed"), str) or not payload["seed"].strip():
@@ -1632,6 +1672,14 @@ def validate_run_record(path: Path) -> list[str]:
             "run record exitCode must be entirely absent unless exitProvenance is "
             f"{RUN_RECORD_EXIT_PROVENANCE_OBSERVED!r}"
         )
+    if isinstance(paired_save_record, dict):
+        for field in ("candidateCommit", "runtimeInventorySha256"):
+            ours = payload.get(field)
+            theirs = paired_save_record.get(field)
+            if isinstance(ours, str) and isinstance(theirs, str) and ours != theirs:
+                errors.append(
+                    f"run record {field} must match the paired save-session record's value"
+                )
     return errors
 
 
