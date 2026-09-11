@@ -54,7 +54,7 @@ namespace ThousandAndFirst
 	/// </para>
 	/// </summary>
 	[Serializable]
-	public sealed class KingdomScenarioAutoRunner : IPlayerSystem
+	public sealed partial class KingdomScenarioAutoRunner : IPlayerSystem
 	{
 		private const int SerializationMagic = 1414746964;
 		private const int CurrentSerializationVersion = 1;
@@ -193,8 +193,7 @@ namespace ThousandAndFirst
 			if (Verbs != null) Finish(StoppedRow, false, "the " + What + " was abandoned");
 		}
 
-		/// <summary>Reads the sealed script and opens the run. Returns false when there is nothing
-		/// to run, which is the ordinary attended case as well as a refusal.</summary>
+		/// <summary>Reads the sealed script and opens the run; false when there is nothing to run.</summary>
 		private bool Begin()
 		{
 			if (!KingdomScenarioScript.Present()) { Release(); return false; }
@@ -206,14 +205,15 @@ namespace ThousandAndFirst
 				return false;
 			}
 			UnityEngine.Application.runInBackground = true; // in-world only; mid-boot crashed
-			XRL.World.ZoneBuilders.KingdomScenarioTestGroundBuilder.Restrip(The.Player?.CurrentZone);
+			bool quickstartLifecycle = KingdomQuickstartBootTest.LifecycleRequested; // KingdomQuickstartLifecycleRunnerPatch
+			if (!quickstartLifecycle) XRL.World.ZoneBuilders.KingdomScenarioTestGroundBuilder.Restrip(The.Player?.CurrentZone);
 			KingdomScenarioJournal.Append(ArmedRow, true, "armed by BeginTakeActionEvent; popups "
 				+ (SuppressedPopups ? "suppressed from " + PrimedSeam : "NOT suppressed - no primer "
 					+ "seam fired, so the boot and arrival popups still need a keypress"));
 			KingdomScenarioJournal.Append(BeginRow, true,
 				verbs.Count + " verb(s) from " + KingdomScenarioScript.Locate());
 			Verbs = verbs;
-			Cursor = 0;
+			Cursor = quickstartLifecycle ? 1 : 0; // line 0 is the already-consumed boot command
 			return true;
 		}
 
@@ -271,28 +271,12 @@ namespace ThousandAndFirst
 			Popup.Suppress = false;
 		}
 
-		public override void Write(SerializationWriter Writer)
+		/// <summary>Whether THIS system currently holds Popup.Suppress. A read-only query so an
+		/// unrelated caller (KingdomQuickstartBootTest.End) can avoid dropping a suppression it
+		/// does not own -- see Harness/KingdomQuickstartLifecycleRunnerPatch.cs remarks.</summary>
+		internal static bool Suppressing(XRLGame Game)
 		{
-			SerializationVersion = CurrentSerializationVersion;
-			Writer.Write(SerializationMagic);
-			Writer.Write(CurrentSerializationVersion);
-			Writer.WriteNamedFields(this, typeof(KingdomScenarioAutoRunner),
-				BindingFlags.Instance | BindingFlags.NonPublic);
-		}
-
-		public override void Read(SerializationReader Reader)
-		{
-			int magic = Reader.ReadInt32();
-			int version = Reader.ReadInt32();
-			if (magic != SerializationMagic || version < 1
-				|| version > CurrentSerializationVersion)
-				throw new InvalidOperationException(
-					"Unsupported ThousandAndFirst scenario auto-runner save block.");
-			Reader.ReadNamedFields(this, typeof(KingdomScenarioAutoRunner),
-				BindingFlags.Instance | BindingFlags.NonPublic);
-			if (SerializationVersion != version)
-				throw new InvalidOperationException(
-					"Unsupported ThousandAndFirst scenario auto-runner named-field version.");
+			return Game?.GetSystem<KingdomScenarioAutoRunner>()?.SuppressedPopups == true;
 		}
 	}
 }

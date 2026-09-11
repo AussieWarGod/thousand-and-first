@@ -155,6 +155,10 @@
 	<Compile Include="..\Harness\KingdomQuickstartLifecycleRows.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartLifecycleSnapshot.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartLifecycleStamp.cs" />
+	<Compile Include="..\Harness\KingdomQuickstartLifecycleOpenWait.cs" />
+	<Compile Include="KingdomQuickstartLifecycleOpenWaitTests.cs" />
+	<Compile Include="..\Harness\KingdomQuickstartLifecycleStall.Classify.cs" />
+	<Compile Include="KingdomQuickstartLifecycleStallClassifyTests.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartBuildClaims.cs" />
 	<Compile Include="..\Harness\KingdomTeardownStrikeRowClaims.cs" />
 	<Compile Include="..\Harness\KingdomTeardownCrewDepartureClaims.cs" />

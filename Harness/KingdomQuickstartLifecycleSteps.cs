@@ -21,13 +21,22 @@ namespace ThousandAndFirst.Harness
 		/// game state, never a new serialized field.</summary>
 		internal const string JobKey = "r_TAF_ScenarioLifecycleJob_v1";
 		internal const string OpenedKey = "r_TAF_ScenarioLifecycleOpened_v1";
+		/// <summary>Durable count of ordinary-turn wait chunks lifecycle-open has already spent
+		/// this game, so a repeated attempt after `advance` knows how much budget remains. An int
+		/// game state, never a new serialized field.</summary>
+		internal const string WaitChunksKey = "r_TAF_ScenarioLifecycleOpenWaitChunks_v1";
+
+		/// <summary>The exact reading TryStockpile reports when none is dedicated yet -- the one
+		/// case lifecycle-open's bounded wait is for, as opposed to an ambiguous multiple-stockpile
+		/// reading, which waiting can never resolve.</summary>
+		internal const string NoStockpileFailure = "this settlement has no dedicated stockpile to pay from";
 
 		/// <summary>The settlement's single dedicated stockpile, re-proved by its own reference
 		/// and placed cell. More than one is ambiguous and is refused rather than guessed at.</summary>
 		internal static bool TryStockpile(Zone Zone, out GameObject Stockpile, out string Failure)
 		{
 			Stockpile = null;
-			Failure = "this settlement has no dedicated stockpile to pay from";
+			Failure = NoStockpileFailure;
 			foreach (GameObject item in KingdomSurvey.ObjectsFor(Zone))
 			{
 				if (!GameObject.Validate(item) || !KingdomMaterials.IsStockpile(item)
@@ -46,14 +55,44 @@ namespace ThousandAndFirst.Harness
 			return true;
 		}
 
-		/// <summary>Startup: what the settlement actually holds before anything is spent.</summary>
+		/// <summary>
+		/// Startup: what the settlement actually holds before anything is spent.
+		/// <para>
+		/// BOUNDED WAIT FOR DEDICATION. `realize` places no camp kit and dedicates nothing --
+		/// dedicating a stockpile is a founder-interactive act
+		/// (Core/KingdomCharterPart.Vessels.cs:182, Growth/KingdomMaterials.05.
+		/// StockpileAndPaymentGates.cs:166) a sealed script never drives. Refusing the instant
+		/// `realize` finishes proved nothing about whether the predicate could ever become true, so
+		/// when TryStockpile reads none dedicated yet (never for the ambiguous multiple-stockpile
+		/// reading, which waiting can never resolve), this attempt journals the reading as an OK
+		/// "still waiting" row and asks the persona to spend one more ordinary
+		/// KingdomQuickstartLifecycleOpenWait.ChunkTurns-turn chunk (via its own `advance` line)
+		/// before trying again. Only once KingdomQuickstartLifecycleOpenWait.MaxChunks chunks have
+		/// passed with the predicate still false does this refuse, naming the last reading. Nothing
+		/// here dedicates, mints, or writes the predicate directly.
+		/// </para>
+		/// </summary>
 		internal static string Open(XRLGame Game, Zone Zone, KingdomSystem System, out bool Ok)
 		{
 			Ok = false;
 			if (Present(OpenedKey))
 				return Refuse(OpenStep, "the lifecycle was already opened in this game");
 			if (!TryStockpile(Zone, out GameObject stockpile, out string stockpileFailure))
-				return Refuse(OpenStep, stockpileFailure);
+			{
+				if (stockpileFailure != NoStockpileFailure) return Refuse(OpenStep, stockpileFailure);
+				int chunksWaited = Game.GetIntGameState(WaitChunksKey);
+				KingdomQuickstartLifecycleOpenWait.Decision decision =
+					KingdomQuickstartLifecycleOpenWait.Evaluate(false, chunksWaited);
+				if (decision == KingdomQuickstartLifecycleOpenWait.Decision.Exhausted)
+					return Refuse(OpenStep, "no dedicated stockpile appeared within "
+						+ KingdomQuickstartLifecycleOpenWait.TotalBudgetTurns
+						+ " ordinary engine turns of waiting; last reading: " + stockpileFailure);
+				Game.SetIntGameState(WaitChunksKey, chunksWaited + 1);
+				Ok = true;
+				return Stamped("native-lifecycle step=open-wait; " + Identities(System)
+					+ "; chunk=" + (chunksWaited + 1) + " of " + KingdomQuickstartLifecycleOpenWait.MaxChunks
+					+ "; reading=" + stockpileFailure + "; turns=" + Game.Turns);
+			}
 			if (!KingdomQuickstartBuildCensus.TakeStock(Zone, stockpile, false,
 				out var stock, out string stockFailure)) return Refuse(OpenStep, stockFailure);
 			if (!KingdomData.TryGetBuilding(BuildKey, out KingdomRules.BuildEntry entry))
