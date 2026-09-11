@@ -1711,7 +1711,7 @@ class ArchitectureCheckerTests(unittest.TestCase):
 
         civic_path = self.repo / "KingdomArchitectures-CivicFaith.xml"
         civic = civic_path.read_text(encoding="utf-8").replace(
-            '<row Cells=".RB@R." />', '<row Cells=".BR@R." />', 1
+            '<row Cells="#RB@R#" />', '<row Cells="#BR@R#" />', 1
         )
         civic_path.write_text(civic, encoding="utf-8")
         self.assertIn("heart.basin-rite", self.codes(CHECKER.run_check(self.repo)))

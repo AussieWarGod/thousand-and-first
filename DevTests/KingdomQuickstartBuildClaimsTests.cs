@@ -73,6 +73,45 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.IsFalse(KingdomQuickstartBuildClaims.CleanFirstPayment(Paid(), 2, null));
 			ClassicAssert.IsFalse(KingdomQuickstartBuildClaims.CleanFirstPayment(Paid(), -1, Price()));
 		}
+
+		[TestCase("exact", true)]
+		[TestCase("water-extra", false)]
+		[TestCase("stone-extra", false)]
+		[TestCase("timber-unpaid", false)]
+		[TestCase("unasked-brush", false)]
+		public void HeartBillRequiresExactCompositeDebit(string fault, bool accepted)
+		{
+			var materials = new KingdomMaterialTally();
+			materials.Set(KingdomMaterial.Stone, 24);
+			materials.Set(KingdomMaterial.Timber, 1);
+			var price = new KingdomMaterialDebitCost(materials);
+			var claim = KingdomConstructionRules.NewClaims(18, price);
+			ClassicAssert.IsTrue(KingdomConstructionRules.TryApplyWaterAttempt(
+				claim, 18, 18, 0, 18, true, out claim));
+			claim.MaterialSpent = claim.MaterialLost = price.ToClaimString();
+			claim.MaterialOutstanding = new KingdomMaterialDebitCost().ToClaimString();
+			if (fault == "water-extra") claim.WaterLost++;
+			if (fault == "stone-extra")
+			{
+				materials.Set(KingdomMaterial.Stone, 25);
+				claim.MaterialLost = new KingdomMaterialDebitCost(materials).ToClaimString();
+			}
+			if (fault == "timber-unpaid")
+			{
+				materials.Set(KingdomMaterial.Timber, 0);
+				claim.MaterialSpent = claim.MaterialLost = new KingdomMaterialDebitCost(materials).ToClaimString();
+				var remaining = new KingdomMaterialTally(); remaining.Set(KingdomMaterial.Timber, 1);
+				claim.MaterialOutstanding = new KingdomMaterialDebitCost(remaining).ToClaimString();
+			}
+			if (fault == "unasked-brush")
+			{
+				materials.Set(KingdomMaterial.Brush, 1);
+				claim.MaterialRequested = claim.MaterialSpent = claim.MaterialLost =
+					new KingdomMaterialDebitCost(materials).ToClaimString();
+			}
+			ClassicAssert.AreEqual(accepted,
+				KingdomQuickstartBuildClaims.CleanFirstPayment(claim, 18, price));
+		}
 	}
 }
 #endif

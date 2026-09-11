@@ -47,42 +47,14 @@ namespace ThousandAndFirst
 				|| !ExactPlotFinalRootCustody(Job.OutputId, Building)) return false;
 			if (!raised) return false;
 
-			bool heart = Building.GetIntProperty(HeartPlotProperty) == 1;
-			int rung = KingdomPlotRules.HeartRungOf(Job.TargetKey);
-			if (heart && rung > 0)
-			{
-				// The functional stamp is inspectable and idempotent. Ceremony callbacks are
-				// at-most-once: an interrupted Attempting marker becomes honestly lost.
-				Z.SetZoneProperty(HeartRungProperty, rung.ToString(
-					global::System.Globalization.CultureInfo.InvariantCulture));
-				if (Z.GetZoneProperty(HeartRungProperty, null) != rung.ToString(
-					global::System.Globalization.CultureInfo.InvariantCulture)) return false;
-				int state = Building.GetIntProperty(HeartEffectProperty);
-				if (state < 0 || state > 2) return false;
-				if (state == 0)
-				{
-					Building.SetIntProperty(HeartEffectProperty, 1);
-					if (Building.GetIntProperty(HeartEffectProperty) != 1) return false;
-					bool callbackReturned = false;
-					try { KingdomCeremonyHeart.OnRungRaised(System, Z, Job.TargetKey, true);
-						callbackReturned = true; }
-					catch { }
-					if (!ExactPlotEffectEndpoint(System, Z, Building, Job)
-						|| !ExactPlotFinalRootCustody(Job.OutputId, Building)) return false;
-					if (!callbackReturned) return false;
-				}
-				if (Building.GetIntProperty(HeartEffectProperty) == 1)
-					Building.SetIntProperty(HeartEffectProperty, 2);
-				if (Building.GetIntProperty(HeartEffectProperty) != 2) return false;
-				// The rung's own water. Idempotent and only ever upward, so an interrupted
-				// ceremony above costs the basin nothing: the next load or activation repeats it.
-				// Guarded like every other callback in this method: a refusal here must skip one
-				// idempotent step, never abort the settlement pass after the rung stamp landed.
-				KingdomSystem.Guard("heart basin capacity", delegate
-				{
-					ReconcileBasinCapacity(System, Building, Z);
-				});
-			}
+			// The heart's rung effects are the settlement's, not the plot route's: the same
+			// helper settles them for the improvement route, which is the only route a rung above
+			// the first can climb by. This route's own exact endpoint and custody proof travels
+			// with the call and is re-asked after the ceremony callback exactly as before.
+			KingdomConstructionJob settling = Job;
+			if (!TrySettleHeartRung(System, Z, Building, Job.TargetKey,
+				() => ExactPlotEffectEndpoint(System, Z, Building, settling)
+					&& ExactPlotFinalRootCustody(settling.OutputId, Building))) return false;
 			if (KingdomDelveRules.IsDelve(Job.TargetKey))
 			{
 				bool linkSettled = false;

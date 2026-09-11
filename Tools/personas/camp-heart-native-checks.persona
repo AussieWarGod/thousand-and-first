@@ -1,0 +1,27 @@
+# Real founding on the #107 camp (canvas horseshoe, cooking fire, dedicated 48-unit stockpile),
+# real rung-1 rite-ground completion, six really enrolled residents and one really dedicated
+# 400-dram reservoir. The camp store is then filled to its declared capacity with real material
+# objects: exactly the authored rung-2 bill (24 stone, 1 timber) plus 23 brush the bill does not
+# ask for. Setup explicitly allocates engine identities for its freshly created material bodies.
+# Its own synthetic water vessel also receives an identity before placement and dedication.
+# Everything after setup is the REAL settlement pass on the turns this script's own
+# `advance` spends -- the seam never calls KingdomUpgrade.Begin, KingdomPlots.Advance or
+# KingdomArchitectureStamper.TryApplyUpgrade. Synthetic setup only: the camp, the residents, the
+# reservoir, its drams, the synthetic KingdomBorn provenance and name each fixture body carries so
+# production's roster gate admits it (citizenship and roster authority still come from production
+# APIs; this is not a real arrival), the minted store units, and the pre-marked improvement notice,
+# all disclosed in every report line. Not ordinary play, not a rendered Charter, no save/load or
+# general camp acceptance. Covers PR #107 native case 2 only; cases 1, 3, 4, 5 and 6 remain owed.
+DESCRIPTION=the camp heart's dedicated store keeps its identity, cell and unspent contents across a real paid waterstone upgrade paid out of that same store
+REQUEST=founding-first-city
+START=8.22@40,12
+# A full 1200-turn day crosses the next daily reconciliation regardless of setup's clock phase.
+# Labour prices the prior daily crew window, not elapsed wall time alone. Native 4517620
+# reached 1050 remaining after 2400 further turns; one additional 1200-turn interval is owed.
+# 3600 covers the observed first zero-priced window plus the 2250-tick paid labour bill.
+SCRIPT=stagedigest;camp-heart-setup;advance 1200;camp-heart-check;advance 3600;camp-heart-check;stagedigest
+VERBS=camp-heart-setup,camp-heart-check
+EXPECT=stagedigest:OK~founded=false,camp-heart-setup:OK~native-camp-heart phase=1,advance:OK,camp-heart-check:OK~native-camp-heart phase=2,advance:OK,camp-heart-check:OK~native-camp-heart cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
+LOG_EXPECT=["MODWARN [Pets of Harvest Dawn] - Mod defining manual load order, please convert it to use the Dependencies field.","MODWARN [Pets of Harvest Dawn] - XmlDataHelper:: <...>/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/DLC/PetsPack1/Freehold_Pet_Ercolano/PopulationTables.xml line 4 char 6"]
+SET=camp,native-regression,test-only
+TIMEOUT=1800

@@ -18,6 +18,10 @@
 
   <ItemGroup>
     <Compile Include="TestMain.cs" />
+	<Compile Include="KingdomHeartRungSettleTests.cs" />
+	<Compile Include="KingdomCampHeartNativeSourceTests.cs" />
+	<Compile Include="..\Harness\KingdomCampHeartNativeCensus.cs" />
+	<Compile Include="KingdomCampHeartNativeCensusTests.cs" />
     <Compile Include="..\Core\KingdomSealPendingRules.cs" />
     <Compile Include="KingdomSealPendingRulesTests.cs" />
     <Compile Include="KingdomDepositOverflowNativeSourceTests.cs" />
@@ -200,6 +204,10 @@
     <Compile Include="..\Experience\KingdomGrowthFirstGuestRules.Choices.cs" />
     <Compile Include="..\Core\KingdomBodyHistoryRules.cs" />
     <Compile Include="..\Growth\KingdomArchitectureSnapshots.cs" />
+    <Compile Include="..\Growth\KingdomArchitectureComponentCensusRules.cs" />
+    <Compile Include="..\Growth\KingdomArchitectureComponentCensusRow.cs" />
+    <Compile Include="KingdomArchitectureComponentCensusTests.cs" />
+    <Compile Include="KingdomArchitectureRetagPeerMappingTests.cs" />
     <Compile Include="..\Growth\KingdomArchitectureSelectorRules.cs" />
     <Compile Include="..\Growth\KingdomArchitectureValidationRules.cs" />
     <Compile Include="..\Core\KingdomQolRules.TagSets.cs" />
@@ -745,6 +753,7 @@
     <Compile Include="KingdomArchitectureStamperSourceTests.cs" />
     <Compile Include="KingdomFootprintTests.cs" />
     <Compile Include="KingdomMaterialRulesTests.cs" />
+    <Compile Include="KingdomCampHeartTests.cs" />
     <Compile Include="KingdomCatalogueRulesTests.cs" />
 	<Compile Include="KingdomCeremonyLogicalSource.cs" />
 	<Compile Include="KingdomCeremonyStructureSourceTests.cs" />

@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Security.Cryptography;
-using System.Text;
 using XRL.World;
 using XRL.World.Parts;
 
@@ -26,7 +24,8 @@ namespace ThousandAndFirst
 				GameObject item;
 				if (KingdomConstruction.FindExactId(Z, id, out item)
 					!= KingdomPhysicalLookupState.Exact
-					|| !ExactComponent(Owner, item, Z, Intent, Lot, placement, id))
+					// Rollback carries no upgrade receipt: no other generation may stand.
+					|| !ExactComponent(Owner, item, Z, Intent, Lot, placement, id, null))
 					return Fail("rollback cannot prove exact slot " + placement.Slot, out Failure);
 				bool removed;
 				try { removed = item.Obliterate(null, Silent: true); }
@@ -92,19 +91,8 @@ namespace ThousandAndFirst
 		private static string ComponentToken(string Lot, string Hash,
 			ArchitecturePlacement Placement)
 		{
-			string preimage = Lot + "|" + Hash + "|" + Placement.Slot + "|"
-				+ ((int)Placement.Layer).ToString(CultureInfo.InvariantCulture) + "|"
-				+ Placement.X.ToString(CultureInfo.InvariantCulture) + "|"
-				+ Placement.Y.ToString(CultureInfo.InvariantCulture) + "|"
-				+ Placement.Blueprint + "|" + (Placement.StatefulAnchor ?? "") + "|"
-				+ (Placement.ExistingAuthority ? "1" : "0");
-			byte[] digest;
-			using (SHA256 sha = SHA256.Create())
-				digest = sha.ComputeHash(Encoding.UTF8.GetBytes(preimage));
-			StringBuilder result = new StringBuilder(64);
-			for (int i = 0; i < digest.Length; i++)
-				result.Append(digest[i].ToString("x2", CultureInfo.InvariantCulture));
-			return result.ToString();
+			return KingdomArchitectureComponentCensusRules.ComponentTokenText(Lot, Hash,
+				Placement);
 		}
 
 		private static bool ValidLotId(string Value)

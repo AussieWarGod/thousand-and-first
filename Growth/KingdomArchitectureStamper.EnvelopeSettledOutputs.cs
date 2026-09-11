@@ -37,18 +37,20 @@ namespace ThousandAndFirst
 				if (retained)
 				{
 					if (!TryReadRetainedExpansionOutput(Owner, SuccessorOwner, Z,
-						BeforeIntent, Successor, beforePlacement,
+						BeforeIntent, Successor, Delta, beforePlacement,
 						afterPlacement, Lot, Settled, out Failure)) return false;
 				}
-				else if (!TryReadAddedExpansionOutput(Owner, SuccessorOwner, Z, Successor,
-					After, afterPlacement, Lot, Settled, out Failure)) return false;
+				else if (!TryReadAddedExpansionOutput(Owner, SuccessorOwner, Z, BeforeIntent,
+					Successor, After, Delta, afterPlacement, Lot, Settled, out Failure))
+					return false;
 			}
 			return true;
 		}
 
 		private static bool TryReadRetainedExpansionOutput(GameObject Owner,
 			GameObject Target, Zone Z, KingdomArchitectureIntent BeforeIntent,
-			KingdomArchitectureIntent Successor, ArchitecturePlacement BeforePlacement,
+			KingdomArchitectureIntent Successor, ArchitectureLayoutDelta Delta,
+			ArchitecturePlacement BeforePlacement,
 			ArchitecturePlacement AfterPlacement, string Lot, HashSet<GameObject> Settled,
 			out string Failure)
 		{
@@ -76,7 +78,9 @@ namespace ThousandAndFirst
 			if (target == ArchitectureOutputPrefix.Empty
 				|| target == ArchitectureOutputPrefix.StateOnly
 				|| retain == 0)
-				return ExactComponent(Owner, exact, Z, BeforeIntent, Lot, BeforePlacement, id)
+				return ExactComponent(Owner, exact, Z, BeforeIntent, Lot, BeforePlacement, id,
+						ResolveComponentPeer(Owner, Z, Delta, BeforeIntent, Successor, Lot,
+							BeforePlacement.Slot, false))
 					|| UpgradeQuarantine(Owner, "unpublished retained expansion output changed",
 						out Failure);
 			if (target == ArchitectureOutputPrefix.Published && retain == 1)
@@ -89,7 +93,9 @@ namespace ThousandAndFirst
 				return true;
 			}
 			if (target == ArchitectureOutputPrefix.Settled
-				&& ExactComponent(Owner, exact, Z, Successor, Lot, AfterPlacement, id)
+				&& ExactComponent(Owner, exact, Z, Successor, Lot, AfterPlacement, id,
+					ResolveComponentPeer(Owner, Z, Delta, BeforeIntent, Successor, Lot,
+						AfterPlacement.Slot, true))
 				&& exact.GetIntProperty(ComponentCarriedProperty) == 1)
 			{
 				Settled.Add(exact);
@@ -100,7 +106,8 @@ namespace ThousandAndFirst
 		}
 
 		private static bool TryReadAddedExpansionOutput(GameObject Owner, GameObject Target,
-			Zone Z, KingdomArchitectureIntent Successor, ArchitectureLayoutSnapshot After,
+			Zone Z, KingdomArchitectureIntent BeforeIntent, KingdomArchitectureIntent Successor,
+			ArchitectureLayoutSnapshot After, ArchitectureLayoutDelta Delta,
 			ArchitecturePlacement Placement, string Lot, HashSet<GameObject> Settled,
 			out string Failure)
 		{
@@ -125,7 +132,12 @@ namespace ThousandAndFirst
 					|| UpgradeQuarantine(Owner,
 						"published expansion output has no exact staging custody", out Failure);
 			if (found != KingdomPhysicalLookupState.Exact
-				|| !ExactComponent(Target, exact, Z, Successor, Lot, Placement, id))
+				// An added slot is new ground in the successor layout, but nothing forbids a
+				// retained BEFORE slot from carrying the same layout-local name, so the peer is
+				// resolved here exactly as at a retained slot: direction 1, from the same delta.
+				|| !ExactComponent(Target, exact, Z, Successor, Lot, Placement, id,
+					ResolveComponentPeer(Owner, Z, Delta, BeforeIntent, Successor, Lot,
+						Placement.Slot, true)))
 				return UpgradeQuarantine(Owner, "added expansion output is foreign, duplicated, "
 					+ "moved, or changed", out Failure);
 			Settled.Add(exact);

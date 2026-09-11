@@ -7,6 +7,82 @@ namespace ThousandAndFirst.Tests
 {
 	public class KingdomConstructionInputRegistryRulesTests
 	{
+		[TestCase(KingdomConstructionPhase.Funded, KingdomConstructionResumeAction.RetryProjection)]
+		[TestCase(KingdomConstructionPhase.ProjectionPending, KingdomConstructionResumeAction.Inspect)]
+		[TestCase(KingdomConstructionPhase.Working, KingdomConstructionResumeAction.AdvanceWork)]
+		[TestCase(KingdomConstructionPhase.Outstanding, KingdomConstructionResumeAction.RetryProjection)]
+		[TestCase(KingdomConstructionPhase.Complete, KingdomConstructionResumeAction.None)]
+		public void CommittedInputAllowsEachPostFundingDispatch(KingdomConstructionPhase phase,
+			KingdomConstructionResumeAction action)
+		{
+			var job = CommittedJob();
+			job.Phase = phase;
+			ClassicAssert.IsTrue(KingdomConstructionRules.CanDispatchRecoveredInput(job, true, true));
+			ClassicAssert.AreEqual(action, KingdomConstructionRules.ResumeAction(job));
+			ClassicAssert.IsFalse(KingdomConstructionRules.CanDispatchRecoveredInput(job, false, true));
+			ClassicAssert.IsFalse(KingdomConstructionRules.CanDispatchRecoveredInput(job, true, false));
+		}
+
+		[TestCase("missing")]
+		[TestCase("malformed")]
+		[TestCase("owner")]
+		[TestCase("zone")]
+		[TestCase("job-id")]
+		[TestCase("hash")]
+		[TestCase("unpaid")]
+		[TestCase("no-claims")]
+		public void ContradictoryCommittedInputCannotDispatch(string fault)
+		{
+			var job = CommittedJob();
+			job.Phase = KingdomConstructionPhase.Working;
+			switch (fault)
+			{
+				case "missing": job.InputReceipt = null; break;
+				case "malformed": job.InputReceipt += "x"; break;
+				case "owner": job.OwnerKey = "foreign"; break;
+				case "zone": job.ZoneId = "foreign-zone"; break;
+				case "job-id": job.Id = new string('b', 32); break;
+				case "hash": job.InputReceiptHash = new string('b', 64); break;
+				case "unpaid":
+					job.Claims.MaterialSpent = job.Claims.MaterialLost = EmptyClaim();
+					job.Claims.MaterialOutstanding = job.Claims.MaterialRequested; break;
+				case "no-claims": job.Claims = null; break;
+			}
+			ClassicAssert.IsFalse(KingdomConstructionRules.CanDispatchRecoveredInput(job, true, true));
+		}
+
+		[Test]
+		public void UncommittedInputAndMissingJobNeverDispatch()
+		{
+			var job = NewJob();
+			ClassicAssert.IsTrue(KingdomConstructionRules.UpdateInputReceipt(ref job, NewReceipt(job)));
+			ClassicAssert.IsFalse(KingdomConstructionRules.CanDispatchRecoveredInput(job, true, true));
+			ClassicAssert.IsFalse(KingdomConstructionRules.CanDispatchRecoveredInput(null, true, true));
+		}
+
+		[Test]
+		public void BothRuntimeRecoveryPathsUseFreshCommittedDispatchGuard()
+		{
+			string source = TestMain.ReadRepositoryText("Growth/KingdomConstruction.Settlement.cs");
+			ClassicAssert.AreEqual(2, source.Split(new[] {
+				"KingdomConstructionRules.CanDispatchRecoveredInput(job, targetHere,"
+			}, System.StringSplitOptions.None).Length - 1);
+			StringAssert.DoesNotContain("job.Phase != KingdomConstructionPhase.Funded", source);
+		}
+
+		private static KingdomConstructionJob CommittedJob()
+		{
+			var job = NewJob();
+			var closing = DriveToClosing(NewReceipt(job), job.Id, job.ZoneId);
+			var committed = Tx(closing, KingdomConstructionInputTxPhase.Committed);
+			job.Phase = KingdomConstructionPhase.Funded;
+			job.Claims.MaterialSpent = job.Claims.MaterialLost = job.Claims.MaterialRequested;
+			job.Claims.MaterialOutstanding = EmptyClaim();
+			ClassicAssert.IsTrue(KingdomConstructionRules.UpdateInputReceipt(ref job, committed));
+			ClassicAssert.IsTrue(KingdomConstructionRules.ValidJob(job));
+			return job;
+		}
+
 		[Test]
 		public void RoutedReceiptBindsOuterJobIntentClaimsAndWire()
 		{

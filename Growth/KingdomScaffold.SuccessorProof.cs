@@ -120,8 +120,7 @@ namespace XRL.World.Parts
 				&& intent != null && work.CurrentZone == Z && work.CurrentCell == expected
 				&& KingdomConstruction.HasReceipt(work, Job)
 				&& work.GetIntProperty(KingdomUpgrade.BuiltProperty) == 1
-				&& (string.IsNullOrEmpty(Job.Payload)
-					|| work.GetStringProperty(KingdomUpgrade.BuildKeyProperty) == Job.Payload)
+				&& KingdomUpgrade.IsImprovementPredecessorIdentity(System, Z, work, Job)
 				&& intent.Working && intent.Scaffold == ParentObject
 				&& intent.SuccessorKey == Job.TargetKey
 				&& intent.SuccessorBlueprint == TargetBlueprint;

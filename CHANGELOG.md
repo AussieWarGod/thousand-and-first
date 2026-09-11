@@ -10,11 +10,50 @@ below it.
 
 ## Unreleased — Beta gap report
 
-Current 3080-file census is line-cap green: 437,399 physical lines; direct `XRL`
+Current 3088-file census is line-cap green: 438,070 physical lines; direct `XRL`
+imports occur in 1441 files, 0 of them over the line limit. Inventory SHA-256:
+`4d2e543c015521036cb30fbfe556c13e9499c3e225d16c1f453862841757cf07`. The cold-install inventory contains 3119 files.
+This isolated 0.3.4 preparation combines heart authority, shared-XL transition, rung settlement
+and camp content/fixture branches. Combined compile/native gates and semantic review are owed;
+all earlier checkpoint counts below are retained, never carried forward as acceptance.
+
+Draft surveyed-heart ingress correction: full heart authority plus exact physical public access,
+without requiring the ordinary road network beyond the enlarged margin. Ordinary road evidence
+and all protected-ground checks remain. Predecessor native road census reproduced #141; current
+draft compilation/native checks are owed. No later-rung or already-worn-ground acceptance claim.
+
+> **Retained camp integration census (#107 / #132 / #137).** Its 3079-file census is line-cap green:
+> 437,201 physical lines; 1434 XRL-importing files; zero at or above 300.
+> Inventory SHA-256: `304123d5ee1b31fa0b1369d5ad13c52888111f5c7563245f4fe4096c8ca38c70`.
+> Combined-tree four-mode compile, audit, main 14,341/portable 5,491 tests pass (managed zero
+> skips). Camp native proof remains pending; prior checkpoints below are retained.
+
+Retained #141 checkpoint: 3080-file census is line-cap green: 437,405 physical lines; direct `XRL`
 imports occur in 1435 files, 0 of them over the line limit. Inventory SHA-256:
-`6ebc095bd595e636c48079ba5c41c0cb3bb92f3af7741d99b05eeb8b81acc78d`.
-The cold-install inventory contains 3111 files. This is the dev backmerge, not the isolated
-0.3.3 release package. Combined-tree gates and semantic review remain pending.
+`c964d43923a5fa4284464d09029ef0b69a71bfe79b71185b3a25661c06149dca`.
+The cold-install inventory contains 3111 files. This is the dev backmerge with the #141 heart
+envelope authority correction replayed onto it, not the isolated 0.3.3 release package; that
+correction's only production delta is one file,
+`Growth/KingdomArchitectureStamper.EnvelopeGrowth.cs`. Semantic review remains pending.
+
+> **Retained census — the isolated #144 heart shared-XL transition fix over the dev backmerge.**
+> Its 3080-file census is line-cap green: 437,433 physical lines; zero files at
+> or above 300: 0 files exceed 300, 0 exceed 1,000, 0 exceed 2,000 and 0 exceed 5,000; direct
+> `XRL` imports occur in 1435 files, 0 of them over the line limit. Inventory SHA-256:
+> `24b4ab29aab9cd3c97bb30f5382df88937ee96eac565a6fb90ce52a0dd22c0a2`.
+> The cold-install inventory contains 3111 files.
+> Its production delta over the dev backmerge is two files: one pure endpoint rule added beside
+> the heart ladder it belongs to, and the heart transition guard rewired to ask it instead of
+> comparing a tier to a rung number. Everything else in it is DevTests and documentation.
+> Source-level only; no native rung 4 to 5 acceptance is claimed. Every earlier census below is
+> retained at its own bytes and is not restated for this one.
+
+> **Retained dev backmerge census — the dev merge before the #144 heart shared-XL transition
+> fix.** That 3080-file census is line-cap green: 437,399 physical lines; direct `XRL`
+> imports occur in 1435 files, 0 of them over the line limit. Inventory SHA-256:
+> `6ebc095bd595e636c48079ba5c41c0cb3bb92f3af7741d99b05eeb8b81acc78d`. The cold-install inventory
+> contains 3111 files. This is the dev backmerge, not the isolated 0.3.3 release package.
+> Combined-tree gates and semantic review remain pending.
 
 > **Retained #129 merged census — the #129 dev-harness native checks over the roadless seal
 > correction.** That 3079-file census is line-cap green: 437,320 physical lines, zero files at
@@ -33,6 +72,32 @@ The cold-install inventory contains 3111 files. This is the dev backmerge, not t
 > audit and main 14,296/portable 5,460 tests pass (managed zero skips). The roadless-camp native
 > check passes at `0cfd8e7` after one retained startup timeout. Earlier census entries are retained evidence.
 
+### Fixed
+
+- **The heart's rungs now rise by the route they are meant to rise by.** Every rung of the heart
+  above the first climbs through the ordinary improvement machinery — the plot commissioner refuses
+  to commission one, and zoning never offers one — but the zone's standing rung was written only by
+  the plot route. A settlement that raised its rite ground into a waterstone therefore kept a zone
+  still stamped at rung one: the rung above it was refused for not accreting from its standing
+  rung, and the first basin stayed at sixteen drams instead of widening to forty-eight. The at-most-
+  once rung effects now live in one shared settlement helper that both routes call, so the
+  improvement handover stamps the rung, tells the chronicle once, and widens the basin exactly as
+  the plot route always did. Each route brings its OWN exact endpoint and custody proof, re-asked
+  after the ceremony callback, so a callback that moved or replaced the building refuses rather
+  than settling; the 0/1/2 attempted/lost marker is unchanged, so an interrupted ceremony is
+  honestly lost rather than fired twice; and a rung is never stamped backward. The improvement
+  route settles the rung BEFORE its receipt completes, so a rung that cannot settle exactly leaves
+  the receipt non-terminal for the ordinary recovery path instead of closing the job over an
+  unwritten rung. Every callback boundary re-establishes the whole handover proof — exact successor
+  blueprint, a predecessor that stayed gone, an unduplicated removal proof, and carried contents
+  that still agree with the receipt they were counted into, with the existing legacy zero-content
+  carve-out lifted whole rather than re-derived — so a callback that leaves the root standing but
+  changes what the root IS refuses instead of settling. The last of those re-asks runs after the
+  basin widening and outside its guard, because the guard must keep swallowing an idempotent basin
+  failure while a torn endpoint must refuse. No serialized field, save key, wire format or public
+  API changes. Saves already
+  stuck at a stale rung are a separate follow-up, not a silent migration here. Fixes #138.
+
 ### Added
 
 - **A verdict for the whole construction lifecycle, and an honest name for the part that is
@@ -48,6 +113,42 @@ The cold-install inventory contains 3111 files. This is the dev backmerge, not t
   beside their budgets, the two process sessions, and the candidate and continuity bindings --
   omitting, and naming, anything the journals or the record do not actually carry. Source-only pins keep the harness and
   the tool naming the same rows, so neither side can quietly stop demanding a link.
+
+- A dev-only native-check seam (`camp-heart-native-checks`) proves PR #107's owed native case 2:
+  the camp heart's dedicated stockpile keeps its exact object identity, its exact cell and every
+  physical unit the bill did not ask for across a REAL PAID climb from the rite ground to the
+  waterstone, and the cooking fire is re-laid on the same rite-relative cell. The fixture founds a
+  real camp, completes rung one through the production plot works, enrolls six real residents (each
+  standing on claimed ground and carrying a disclosed synthetic `KingdomBorn` provenance stamp
+  before its row is published, because production's roster gate requires one and citizenship
+  enrollment never sets it, with the published row then read back off the settlement's own book),
+  dedicates one real 400-dram reservoir, and fills the authored store to its declared forty-eight
+  units with real material objects — exactly the authored rung-2 bill (24 stone, 1 timber) plus 23
+  brush the bill never asks for, so the bill is drawn from the very store under test. Nothing after
+  setup is driven by the seam: the real settlement pass assesses the heart, begins the improvement,
+  commits the water and material debit, burns the labour and hands the rung over on the turns the
+  persona's own `advance` spends. Every retained unit is proved by its WHOLE custody — exact object
+  id, blueprint, the exact holder it was found in, and the raw stack count read through the
+  production raw-census seam, held BY REFERENCE across observations — so a matching total, a
+  replacement that reused the identity string, a moved unit or a changed stack all refuse; an
+  inventory row that is not a valid body held by that exact store with no cell of its own fails the
+  check rather than being skipped. Absence from the store is only ever claimed as absence from the
+  store: that the settlement SPENT the bill is proved separately from the production construction
+  job's own committed claim, compared EXACTLY against the authored catalogue cost in both
+  directions, so neither an ordinary drink nor an overcharge can pass as the bill. The
+  settlement-wide readings use the production unbound-recovery observation, which publishes
+  nothing, refuses during a bound pass, and refuses a partial index rather than under-reporting. Harness, persona and DevTests only; no
+  production source changed.
+
+- The same seam now also answers PR #107's native case 6 as far as the production plot-claim path
+  reaches: a REAL commission is put to the settlement while the camp heart stands, and the heart's
+  ground is proved untakeable — the commissioned plot never lands on the heart's reserved rect, the
+  production crowding predicate refuses the exact rect that would cover the camp store's own cell,
+  and the store and fire are untouched by the attempt. **No stockpile-specific refusal reason is
+  claimed.** #107's wording "refuses for stockpile reason" is deliberately not asserted, because
+  production records no such reason here: the siting path drops a crowding rect with a bare
+  `continue` and no recorded reason before the ground is ever read, and the founder-facing answer
+  when nothing fits is `KingdomPlotRules.RefuseRoom`. Cases 1, 3, 4 and 5 of #107 remain owed.
 
 - Kingdom Quickstart now founds a world with four founding citizens — a hand, a drifter, a tinker
   and a physicker of one culture per camp — enrolled under a new `Founding` reason that only this
@@ -93,11 +194,55 @@ The cold-install inventory contains 3111 files. This is the dev backmerge, not t
 
 ### Fixed
 
+- **A heart's envelope growth asks the heart's own authority (PARTIAL #141).** Ordinary
+  plot-envelope growth may not claim founding-heart authority, and refuses every heart by design —
+  but the envelope-growth proof sent every differing-rect transition to exactly that refusal,
+  including the heart's own. Rungs one to four all change rect, so every one of them was refused
+  before any ground question was asked. That one call now asks `TryAuthorizedTransition` instead,
+  on these exact decoded endpoints, with no plan change permitted and the accretion flag ignored.
+  It already dispatches: a heart answers to the founding authority, and an ordinary lot whose
+  rects differ still reaches the ordinary expansion authority inside it, unchanged and still
+  refusing hearts. No new helper, no caller-supplied bypass, no new parameter or field, no
+  same-rect shortcut beyond the one already there. Every later check —
+  interior fit, malformed geometry, plot overlap and road budget, siting probe and frozen envelope
+  including positive ingress, settled outputs, the per-cell sweep — is unchanged and still runs,
+  and every retry call site still proves growth unconditionally.
+
+  **This is partial and heart progression is not claimed to work.** Positive road ingress at
+  `TryPhysicalRoadIngressScore` remains unresolved and is the likely next native refusal: neither
+  founding route lays qualifying road or worn-cell evidence at the heart's entrance lane. The
+  change is source-only: proven by source pins and mutation, with no native run and no rung
+  transition proven. Replayed onto `dev` `3a287e4`; in the original commit `b1efe18` the four-mode
+  compile ran before a comment-only seven-to-three line trim of the inline rationale, so that
+  gate saw the same executable bytes but four more comment lines. Refs #141.
+
+- **Correct heartcourt-to-arcology tier validation.** The great court and the arcology stand on the same XL
+  ground — the catalogue puts them in one binding and marks the arcology a renovation, not a
+  growth — but the authored transition guard asked whether a lot's TIER equalled its RUNG NUMBER.
+  That holds by coincidence for the first four rungs and is false by construction for the fifth,
+  whose tier is Huge rather than five, so rung four to five refused every time for a reason no
+  ground, occupant or road could satisfy. The guard now asks the canonical rung-size mapping the
+  expected rects are already derived from, which leaves rungs one to four judged exactly as
+  before and admits the one same-footprint renovation at the top. The endpoint half of that
+  question is now one pure rule, `KingdomPlotRules.HeartRungEndpointsAdmit`, sitting beside the
+  ladder it reads and covered by ordinary value tests rather than only by a source pin. Every
+  other proof the branch made — owner, rung adjacency, plan, lot type, facing, fixed anchors, both rects, the plot/lot
+  identity and both rite-basin custody checks — is unchanged and still made in the same order, and
+  no heart-only bypass was added: a same-rect heart transition simply never reaches the ordinary
+  envelope authority, because that call is already gated on the rects differing. Source-level
+  only; no native rung 4 to 5 acceptance is claimed. Refs #144.
+
+
+- The rite-ground catalogue description names its canvas horseshoe instead of the old bare ring.
+- The native subsidence/founding-heart fixture now proves both its empty 1,920-dram reservoir
+  and the real founding receipt's dedicated 16-dram first basin. The old one-store assertion
+  refused a correct 50-resident setup. Exact identities, dedication, placement and empty contents
+  remain checked; production water capacity and accounting are unchanged.
 - A roadless completed camp now reports that its spatial seal is waiting for connected streets,
   rather than treating that exact intermediate topology as corruption during daily/save polls.
   Capture still refuses to publish: no new seal, old spatial fallback, fabricated street, or
-  weakened geometry validation. No saved fields or formats change. Native verification is
-  pending under #131; terminal/recovery refusal semantics are unchanged.
+  weakened geometry validation. No saved fields or formats change. Bounded roadless native
+  verification passed under #131; terminal/recovery refusal semantics are unchanged.
 
 - Master resume now reanchors the semantic clock for a completed, published receipt even when
   its durable active flag remains set. Unfinished, unpublished, or malformed active receipts
@@ -155,6 +300,28 @@ The cold-install inventory contains 3111 files. This is the dev backmerge, not t
 - Cold-load phase durations use a monotonic clock; wall-clock timestamps remain available for
   correlation. Parallel copies reject invalid worker counts, cap concurrency, and propagate
   process-control exceptions after joining submitted work.
+
+### Added
+
+- The rite ground is now a camp. A horseshoe of seven canvas cells stands round the basin, a
+  cooking fire burns beside it, and one dry stockpile holds 48 units of what the settlement has
+  cut and carried. The camp's fire warms its own hearthstone and nothing else — not even what is
+  standing on the same cell — so the canvas ring can never catch and nobody who walks through the
+  fire is burned by it. Every other hearth in the catalogue is unchanged. The
+  horseshoe opens south onto the approach the rite already declared, because the heart's Small
+  6x4 plot cannot hold a closed ring, the rite, the fire and the store at once. The store sits on
+  a yard cell just outside the frozen 4x4 footprint, which is lawful; widening the footprint is
+  not. The founding bill (canvas:4, timber:2) is the rite's own gift and is charged to nobody:
+  heart rungs are refused by every commission path.
+- The stockpile rides every heart rung at the same rite-relative cell — under canvas at the rite
+  ground and the waterstone, inside the walls at the moot, the great court and the arcology — so
+  what is in it is never moved, emptied or re-founded when the settlement builds over it. It
+  counts toward the eight stores the keepers will account for.
+- Each heart rung now asks for one more timber than the rung below it (2/3/20/21/22), so a
+  settlement founded before this change raises its store at **the next improvement it begins
+  after this update**, with the timber for it already in that transition's bill. An improvement
+  already under way finishes to the plan it was paid for: storeless, on the old bill, with the
+  store arriving one rung later. Nothing is re-priced, refunded or quarantined at any point.
 
 ### Docs
 
@@ -358,7 +525,7 @@ unverified. These receipts do not sign unreleased dev changes.
 > 437,114 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
 > 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
 > imports occur in 1434 files, 0 of them over the line limit. Inventory SHA-256:
-> `e1ddecb76e357905d90bbc40ad8414b68efc38f2b532d19ec61d2df4a5053ce9`.
+> `a918f8e8bab3c1ca44118211d0667ce027f1a0ef77610074f298e2b8b49cb396`.
 > The generated cold-install inventory contains 3109 files; no new subscription claim.
 > This digest is the Kingdom Quickstart founding cohort over the stockpile deposit custody census
 > retained below, and over every delta retained beneath that; each carries its own review chain and

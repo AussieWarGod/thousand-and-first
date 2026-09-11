@@ -1,6 +1,22 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current dev hotfix backmerge — 2026-09-11
+## Retained combined heart candidate before surveyed-ingress draft — 2026-09-11
+
+Current draft census/evidence is in docs/STATUS.md; the figures below describe its predecessor.
+
+3088 staged sources; 438,070 physical lines; 1441 direct-XRL files; zero cap failures;
+3119 cold-install files. Inventory `4d2e543c015521036cb30fbfe556c13e9499c3e225d16c1f453862841757cf07`.
+#141/#144/#139/#137 combined; compile, native and semantic review owed. Earlier rows are
+retained checkpoints, not acceptance of this candidate. Public0.3.3 is finalized.
+
+## Retained camp integration (#107 / #132 / #137)
+
+Integrated through dev `bcca3e5`; compile/audit and main14341/portable5491 pass, zero managed
+skips; native pending. Census3079/437201/1434,
+zero cap failures; inventory `304123d5ee1b31fa0b1369d5ad13c52888111f5c7563245f4fe4096c8ca38c70`.
+Earlier evidence below remains bound to its named checkpoints.
+
+## Retained dev hotfix backmerge — 2026-09-11
 
 3080 staged sources; 437,399 physical lines; 1435 direct-XRL files; zero at or above 300 lines;
 3111 cold-install files. Inventory `6ebc095bd595e636c48079ba5c41c0cb3bb92f3af7741d99b05eeb8b81acc78d`.
@@ -10,9 +26,9 @@ See docs/STATUS.md for scoped release evidence. Public Workshop remains 0.3.2.
 
 ## Retained roadless seal candidate (#131)
 
-3079 staged sources; 437,201 physical lines; 1434 direct-XRL; zero cap failures; 3110
-cold-install files. Inventory `ab4cf22e665900bd82593ad4f9805861da4458e60b918c59b1d3a0bb88b74617`.
-Four compile modes, audit, main 14,296/portable 5,460 tests pass (managed zero skips).
+3082 staged sources; 437,405 physical lines; 1437 direct-XRL; zero cap failures; 3113
+cold-install files. Inventory `40af1139cc9336140aca90a5db81c80aefb060a45635d57766b560c34c1753e4`.
+Four compile modes, audit, main 14,318/portable 5,470 tests pass (managed zero skips).
 Roadless-camp native passes at `0cfd8e7`; see docs/STATUS.md for exact scope and retained timeout.
 
 ## Retained unreleased Kingdom Quickstart founding cohort
