@@ -490,6 +490,45 @@ namespace ThousandAndFirst.Tests
 				Source("Growth/KingdomArchitectureDraftCompilerRules.cs"));
 		}
 
+		/// <summary>
+		/// Every branch that can refuse the founding heart's recovery says which one it was.
+		/// Three refusals were silent, and a native run that lost its heart could not tell a
+		/// lost works authority from an undecodable receipt from ground that never had a rite.
+		/// The answers are unchanged: each of these reads exactly as it read before, and only
+		/// the log gained a line.
+		/// </summary>
+		[Test]
+		public void EveryFoundingHeartRecoveryRefusalNamesItsOwnStep()
+		{
+			string authority = Source("Growth/KingdomPlot2.07a.FoundingHeartAuthority.cs");
+			StringAssert.Contains("return !HasReceiptlessFoundingHeartEvidence(System, Z) "
+				+ "|| HeartRefused(\"recover: receiptless evidence\");", authority);
+			StringAssert.Contains("out KingdomFoundingHeartPlan plan)) "
+				+ "return HeartRefused(\"recover: receipt decode\");", authority);
+
+			string drive = Source("Growth/KingdomPlot2.07j.FoundingHeartTerminalDrive.cs");
+			StringAssert.Contains("return HeartRefused(\"sealed: context or seal\");", drive);
+			StringAssert.Contains("return HeartRefused(\"sealed: works slot lookup\");", drive);
+			StringAssert.Contains("return TryReadFoundingHeartWorkAuthority(Z, works, out _)\n"
+				+ "\t\t\t\t\t|| HeartRefused(\"sealed: work authority\");", drive);
+
+			// The refusal helper still only logs and reads false, so naming a branch cannot
+			// change what any of them answers.
+			string diagnostics = Source("Growth/KingdomPlot2.07n.FoundingHeartDiagnostics.cs");
+			StringAssert.Contains("KingdomLog.Log(\"founding heart refused: \" + Step);",
+				diagnostics);
+			StringAssert.Contains("private static bool HeartRefused(string Step)", diagnostics);
+
+			// And the recovery these branches answer for still fails the whole settlement pass
+			// closed, which is what turned this defect into a silent halt rather than a wrong
+			// building.
+			string settlement = Source("Growth/KingdomConstruction.Settlement.cs");
+			StringAssert.Contains("if (!KingdomPlots.RecoverFoundingHeart(System, Z))", settlement);
+			StringAssert.Contains(
+				"KingdomLog.Log(\"construction: founding heart recovery requires inspection\");",
+				settlement);
+		}
+
 	}
 }
 #endif
