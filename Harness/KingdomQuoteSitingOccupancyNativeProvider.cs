@@ -28,6 +28,18 @@ namespace ThousandAndFirst.Harness
 
 		public IEnumerable<string> ScenarioVerbs { get { return new[] { SetupVerb, CheckVerb }; } }
 
+		/// <summary>
+		/// The receipt carries "intent" until the FIRST completing verb call, then the frozen
+		/// report text forever after -- unlike KingdomDepositOverflowNativeProvider (where Done
+		/// only ever fires on the persona's OWN LAST script step, so nothing calls it again),
+		/// this persona's check verb is idempotent by design and IS called again after
+		/// completion (five times, so each of its per-case tokens can be pinned as its own
+		/// EXPECT entry). A check called before completion still requires "intent" intact; a
+		/// check called AFTER completion instead requires the receipt still holds the EXACT
+		/// report text this same call recomputes (Frame.Check()/Run() re-run nothing and mutate
+		/// nothing, so the recomputed text is always byte-identical) -- proving durable
+		/// continuity without ever re-writing the receipt or touching "intent" again.
+		/// </summary>
 		public string RunScenarioVerb(string Verb, string Argument, out bool Ok)
 		{
 			Ok = false;
@@ -42,6 +54,7 @@ namespace ThousandAndFirst.Harness
 					Require(script[i] == Script[i], "the sealed quote-occupancy script differs");
 				XRLGame game = The.Game;
 				Zone zone = The.Player?.CurrentZone;
+				bool alreadyComplete = KingdomQuoteSitingOccupancyNativeChecks.Completed;
 				if (Verb == SetupVerb)
 				{
 					Require(Eligible(game, zone), "requires a fresh stamped marsh camp with the "
@@ -50,11 +63,20 @@ namespace ThousandAndFirst.Harness
 					Require(KingdomScenarioDurableState.ProvesExactText(Receipt, "intent"),
 						"the quote-occupancy intent failed its exact readback");
 				}
-				Require(game != null && KingdomScenarioDurableState.ProvesExactText(Receipt, "intent"),
-					"the quote-occupancy owner intent is absent or torn");
+				else if (!alreadyComplete)
+				{
+					Require(game != null && KingdomScenarioDurableState.ProvesExactText(Receipt, "intent"),
+						"the quote-occupancy owner intent is absent or torn");
+				}
 				bool complete;
 				string result = KingdomQuoteSitingOccupancyNativeChecks.Run(Verb, game, zone, out complete);
-				if (complete)
+				if (alreadyComplete)
+				{
+					// Idempotent repeat: no case re-runs, nothing is written -- only re-proved.
+					Require(game != null && KingdomScenarioDurableState.ProvesExactText(Receipt, result),
+						"the quote-occupancy report was torn between idempotent checks");
+				}
+				else if (complete)
 				{
 					Require(ReferenceEquals(The.Game, game), "the quote-occupancy report owner changed");
 					game.SetStringGameState(Receipt, result);

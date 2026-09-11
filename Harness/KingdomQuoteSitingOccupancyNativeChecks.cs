@@ -19,6 +19,11 @@ namespace ThousandAndFirst.Harness
 
 		internal static bool Vacant { get { return Retained == null; } }
 
+		/// <summary>True once a check verb has ALREADY set Done on a prior call -- read by the
+		/// provider BEFORE calling Run() again, so it knows a repeat check must verify the
+		/// already-written report rather than the pre-completion "intent" text.</summary>
+		internal static bool Completed { get { return Retained != null && Retained.Done; } }
+
 		internal static string Run(string Verb, XRLGame Game, Zone Zone, out bool Complete)
 		{
 			Complete = false;

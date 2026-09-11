@@ -139,6 +139,56 @@ namespace ThousandAndFirst.Tests
 				"Run() must dispatch to Check() on the check verb, not inline the flag flip");
 		}
 
+		/// <summary>Native run of ad75a8a: setup and the FIRST check passed 3/3, but the SECOND
+		/// check refused "the quote-occupancy owner intent is absent or torn" and the script
+		/// stopped -- the provider unconditionally required the receipt to still read "intent"
+		/// before every Run() call, but the first completing check had already overwritten it
+		/// with the report. Fixed: the provider now reads Completed BEFORE calling Run() and
+		/// checks the receipt against "intent" only pre-completion; once already complete, it
+		/// re-verifies the receipt against the (byte-identical, nothing-mutated) recomputed
+		/// report instead, and never writes the receipt again. Because Check() only ever sets a
+		/// bool and no case re-runs, the recomputed report is provably the same string every
+		/// time, so two consecutive checks are guaranteed to emit an identical journal line by
+		/// construction -- pinned here as a source/value fact rather than executed (DevTests has
+		/// no real Zone/GameObject to run a genuine Frame).</summary>
+		[Test]
+		public void RepeatCheckCallsReVerifyTheReportInsteadOfIntentAndNeverRewriteTheReceipt()
+		{
+			string checks = Read(Checks);
+			Assert.That(checks, Does.Contain(
+				"internal static bool Completed { get { return Retained != null && Retained.Done; } }"));
+			// Check() has exactly one statement -- setting the flag -- so a repeat call mutates
+			// nothing and Passed/Failed/Evidence (and therefore the recomputed report string)
+			// cannot differ between the first and any later completing call.
+			string check = Between(checks, "internal void Check()\n\t\t\t{", "}");
+			Assert.That(check.Trim(), Is.EqualTo("Done = true;"),
+				"Check() must do nothing but flip the flag, or repeat calls are no longer provably identical");
+
+			string provider = Read(Provider);
+			Assert.That(provider, Does.Contain(
+				"bool alreadyComplete = KingdomQuoteSitingOccupancyNativeChecks.Completed;"));
+			Assert.That(provider, Does.Contain("else if (!alreadyComplete)"));
+			Assert.That(provider, Does.Contain(
+				"the quote-occupancy owner intent is absent or torn"));
+			Assert.That(provider, Does.Contain("if (alreadyComplete)"));
+			Assert.That(provider, Does.Contain(
+				"Require(game != null && KingdomScenarioDurableState.ProvesExactText(Receipt, result),\n"
+				+ "\t\t\t\t\t\t\"the quote-occupancy report was torn between idempotent checks\");"));
+			// The idempotent branch must never call SetStringGameState -- a repeat check proves
+			// continuity, it does not re-write.
+			string idempotentBranch = Between(provider, "if (alreadyComplete)\n\t\t\t\t{",
+				"else if (complete)");
+			Assert.That(idempotentBranch, Does.Not.Contain("SetStringGameState"),
+				"an idempotent repeat check must never re-write the durable receipt");
+			// Two DISTINCT named refusals, one per regime, so a genuinely torn receipt still
+			// refuses by name whether it tears before completion (against "intent") or after
+			// (against the frozen report) -- neither text is a substring of the other.
+			Assert.That("the quote-occupancy owner intent is absent or torn",
+				Does.Not.Contain("the quote-occupancy report was torn between idempotent checks"));
+			Assert.That("the quote-occupancy report was torn between idempotent checks",
+				Does.Not.Contain("the quote-occupancy owner intent is absent or torn"));
+		}
+
 		[Test]
 		public void PersonaDisclosesSyntheticSetupAndNativeNonExecution()
 		{
