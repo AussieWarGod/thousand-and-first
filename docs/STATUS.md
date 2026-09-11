@@ -76,10 +76,12 @@ once and only when the journals prove it, per-step measured `turnsUsed`/`elapsed
 candidate/runtime/build and continuity bindings. It measures nothing itself: every field the run
 record omits is emitted nowhere and named under `unresolvedFields`, and every undriven step is
 named under `blockedSteps`, so the validator reads them as unresolved rather than as a pass.
-Per step it also carries the identities the driver observed at that step -- realm and city
+Per step it also carries, under `observed`, the identities the driver read at that step -- realm and city
 throughout, the job and plot from the paid commission, the building from the turns that raised it,
-the save id from the save -- each read again at its own step and never copied forward, and absent
-rather than fabricated where the thing did not yet exist.
+the save id from the save -- each read again at its own step and never copied forward. An identity offered before the
+thing it names exists is dropped and named; an identity that should exist and is missing leaves its
+step out of the artefact entirely, so the chain reads as incomplete rather than as a pass with a
+hole in it. The completed work reports both its own receipt identity and the paid job it fulfils.
 `Tools/tests/quickstart_lifecycle_checker_test.py` exercises those verdicts;
 `DevTests/KingdomQuickstartLifecycleContractTests.cs` is SOURCE-ONLY and pins the two row lists
 against each other and the driven links' physical assertions. No native run was made for this

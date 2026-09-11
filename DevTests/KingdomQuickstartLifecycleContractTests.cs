@@ -91,6 +91,10 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("job.Phase != KingdomConstructionPhase.Complete", finish);
 			StringAssert.Contains("the turn budget expired before this building stood", finish);
 			StringAssert.Contains("KingdomConstruction.HasReceipt(Building, Job)", finish);
+			// The completed work reports both its own receipt identity and the paid job it
+			// fulfils, so the finished building is linkable back to what was paid for.
+			StringAssert.Contains("completedReceiptId=", finish);
+			StringAssert.Contains("forJobId=", finish);
 			StringAssert.Contains("GetIntProperty(\"KingdomBuilt\") != 1", finish);
 			StringAssert.Contains("GetStringProperty(KingdomUpgrade.BuildKeyProperty) != Job.TargetKey", finish);
 		}

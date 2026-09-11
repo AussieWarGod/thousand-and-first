@@ -132,7 +132,10 @@ EXPECTED_IDENTITIES = {
     "startup": ("realmId", "cityId"),
     "quote": ("realmId", "cityId"),
     "paid-commission": ("realmId", "cityId", "jobId"),
-    "engine-turn-build": ("realmId", "cityId", "jobId", "buildingId", "plotId"),
+    # Provisional names, pending the validator's confirmation: the completed registry row's own
+    # id, and the paid job it fulfils, so the finished work links back to what was paid for.
+    "engine-turn-build": ("realmId", "cityId", "jobId", "buildingId", "plotId",
+                          "completedReceiptId", "forJobId"),
     "save": ("realmId", "cityId", "buildingId", "plotId", "saveId"),
     "cold-load": ("realmId", "cityId", "buildingId", "plotId", "saveId"),
     "next-action": ("realmId", "cityId", "buildingId", "plotId", "saveId"),
@@ -275,9 +278,17 @@ def results(report: dict, run: dict) -> tuple[dict, list[str]]:
             entry[KEYS["observed"]] = observed
         else:
             unresolved.append(step + "." + KEYS["observed"])
-        for identity in EXPECTED_IDENTITIES[step]:
-            if not isinstance(observed, dict) or identity not in observed:
-                unresolved.append(step + "." + KEYS["observed"] + "." + identity)
+        # A required identity that is absent is NOT quietly dropped from the chain: the step is
+        # left out of the artefact entirely and named here, so the validator reads the chain as
+        # incomplete. An id is never minted to fill the hole -- the honest producer of a missing
+        # identity is a refusal row from the verb that could not read it.
+        missing = [
+            identity for identity in EXPECTED_IDENTITIES[step]
+            if not isinstance(observed, dict) or identity not in observed
+        ]
+        if missing:
+            unresolved.extend(step + "." + KEYS["observed"] + "." + name for name in missing)
+            continue
         steps.append(entry)
     payload: dict = {KEYS["schema"]: SCHEMA_VERSION}
     for key in ("driver", "run", "seed", "candidate", "inventory", "build", "log_ref",

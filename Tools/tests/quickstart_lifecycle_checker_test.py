@@ -261,17 +261,43 @@ class LifecycleVerdict(unittest.TestCase):
         self.assertIn("startup.observed.jobId (before it exists)", unresolved)
         self.assertIn("quote.observed.saveId (before it exists)", unresolved)
 
-    def test_a_step_that_observed_no_identities_is_listed_not_filled_in(self):
+    def test_a_step_missing_a_required_identity_leaves_the_chain_incomplete(self):
         record = self.run_record()
         del record["phases"]["engine-turn-build"]["observed"]["buildingId"]
         record["phases"]["save"]["observed"] = {}
         payload, unresolved = checker.results(checker.judge(whole_chain()), record)
         self.assertIn("engine-turn-build.observed.buildingId", unresolved)
         self.assertIn("save.observed", unresolved)
-        save = next(entry for entry in payload["steps"] if entry["step"] == "save")
-        self.assertNotIn("observed", save)
-        built = next(entry for entry in payload["steps"] if entry["step"] == "engine-turn-build")
-        self.assertNotIn("buildingId", built["observed"])
+        emitted = [entry["step"] for entry in payload["steps"]]
+        # Neither step is emitted with a hole in it, and no id is invented to fill one.
+        self.assertNotIn("engine-turn-build", emitted)
+        self.assertNotIn("save", emitted)
+
+    def test_the_completed_work_must_link_back_to_the_paid_job(self):
+        self.assertIn("completedReceiptId", checker.EXPECTED_IDENTITIES["engine-turn-build"])
+        self.assertIn("forJobId", checker.EXPECTED_IDENTITIES["engine-turn-build"])
+        record = self.run_record()
+        del record["phases"]["engine-turn-build"]["observed"]["forJobId"]
+        payload, unresolved = checker.results(checker.judge(whole_chain()), record)
+        self.assertIn("engine-turn-build.observed.forJobId", unresolved)
+        self.assertNotIn(
+            "engine-turn-build", [entry["step"] for entry in payload["steps"]]
+        )
+
+    def test_paid_commission_and_cold_load_identities_are_not_optional(self):
+        for step, identity in (
+            ("paid-commission", "jobId"),
+            ("cold-load", "saveId"),
+            ("cold-load", "buildingId"),
+            ("cold-load", "plotId"),
+        ):
+            with self.subTest(step=step, identity=identity):
+                self.assertIn(identity, checker.EXPECTED_IDENTITIES[step])
+                record = self.run_record()
+                del record["phases"][step]["observed"][identity]
+                payload, unresolved = checker.results(checker.judge(whole_chain()), record)
+                self.assertIn(step + ".observed." + identity, unresolved)
+                self.assertNotIn(step, [entry["step"] for entry in payload["steps"]])
 
     def test_two_sessions_sharing_a_launch_id_are_refused_as_one_session(self):
         record = self.run_record()

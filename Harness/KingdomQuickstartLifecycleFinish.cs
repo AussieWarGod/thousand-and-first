@@ -50,8 +50,13 @@ namespace ThousandAndFirst.Harness
 			string failure = Standing(Zone, job, out GameObject building);
 			if (failure != null) return Refuse(GrownStep, failure);
 			Ok = true;
+			// The finished work is reported linked to what was paid for: the completed registry
+			// row's own identity, and the paid job it fulfils as the commission published it.
+			// Where the row kept its identity the two read the same, and saying so plainly is
+			// the point -- neither is minted, and neither is omitted when it exists.
 			return "native-lifecycle step=engine-turn-build; " + Identities(System)
 				+ "; plotId=" + Describe(job.SubjectId) + "; jobId=" + job.Id
+				+ "; completedReceiptId=" + job.Id + "; forJobId=" + jobId
 				+ "; buildingId=" + Describe(building.IDIfAssigned)
 				+ "; building=" + Describe(building.IDIfAssigned)
 				+ "; designKey=" + building.GetStringProperty(KingdomUpgrade.BuildKeyProperty)
