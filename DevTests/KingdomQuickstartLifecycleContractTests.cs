@@ -262,9 +262,17 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains(
 				"internal const string ApplyBlockedOccupant = \"apply-blocked-occupant\";", classify);
 			StringAssert.Contains(
-				"if (RemainingTicks <= 0L && StageApplied < StageTarget)", classify);
+				"&& (StageApplied < StageTarget || PhysicalPhase == KingdomPhysicalPhase.None))",
+				classify);
 			StringAssert.Contains(
 				"return OccupantCount > 0 ? ApplyBlockedOccupant : StageNotApplied;", classify);
+			// PhysicalPhase must actually be read (Stall.cs) and threaded through (Classify.cs),
+			// per the review's own advisory on 090a188 -- otherwise a scaffold-backed job (whose
+			// StageApplied/StageTarget both stay 0) can never reach stage-not-applied at all.
+			StringAssert.Contains("KingdomPhysicalPhase PhysicalPhase)", classify);
+			string stall = Read("Harness/KingdomQuickstartLifecycleStall.cs");
+			StringAssert.Contains(
+				"reading.StageTarget, reading.Occupants.Count, Job.PhysicalPhase);", stall);
 			// The new branch must land BEFORE the insufficient-turns default, not after.
 			int branchAt = classify.IndexOf("StageApplied < StageTarget", StringComparison.Ordinal);
 			int defaultAt = classify.IndexOf("return InsufficientTurns;", StringComparison.Ordinal);

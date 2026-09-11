@@ -15,10 +15,12 @@ namespace ThousandAndFirst.Harness
 		/// <summary>
 		/// The untruncated reading behind Describe's stamped row, plus the settlement's one-gang
 		/// allocation state (Growth/KingdomConstructionPresenceRules.cs) at the moment this ran.
-		/// Read-only: nothing here binds a survey the caller did not already need, mutates a
-		/// property, or assigns a gang. A field this cannot read honestly names itself
-		/// absent/unavailable rather than being guessed or omitted. Meant for
-		/// <see cref="DetailRow"/>, never for the stamped, length-bounded refusal row itself.
+		/// Read-only in the sense that matters here: nothing mutates a property or assigns a
+		/// gang. TryBindLocalOperation may still Take a fresh survey when none is already active
+		/// (Growth/KingdomSurvey.LocalOperation.cs:24) -- scoped and disposed on the way out, but
+		/// a real bind, not a free read of one the caller already held. A field this cannot read
+		/// honestly names itself absent/unavailable rather than being guessed or omitted. Meant
+		/// for <see cref="DetailRow"/>, never for the stamped, length-bounded refusal row itself.
 		/// </summary>
 		internal static string DetailMessage(XRLGame Game, Zone Zone, KingdomSystem System,
 			KingdomConstructionJob Job)

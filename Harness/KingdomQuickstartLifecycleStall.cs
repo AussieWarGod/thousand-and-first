@@ -85,7 +85,7 @@ namespace ThousandAndFirst.Harness
 			long authored = reading.Required > 0L ? reading.Required : Authored(Job.TargetKey);
 			string classification = Classify(System.LastSemanticTick, Job.StartedTick,
 				reading.LastWorked, reading.Remaining, authored, reading.StageApplied,
-				reading.StageTarget, reading.Occupants.Count);
+				reading.StageTarget, reading.Occupants.Count, Job.PhysicalPhase);
 			return "stall=" + classification
 				+ "; phase=" + Job.Phase + "; physical=" + Job.PhysicalPhase
 				+ "; startedTick=" + Job.StartedTick + "; dueTick=" + Job.DueTick

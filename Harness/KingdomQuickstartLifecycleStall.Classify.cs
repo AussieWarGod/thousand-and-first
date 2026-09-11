@@ -33,20 +33,29 @@ namespace ThousandAndFirst.Harness
 		/// The six cases, in the order that makes each answer the previous one's absence: a pass
 		/// that never reached this job explains everything downstream of it; then labour that
 		/// never happened; then labour that happened without the work coming down; then labour
-		/// that finished without the plot's own stage advancing to match -- native run 23
-		/// (3e3ff75), #163: a living occupant on the footprint refuses the apply forever, silently,
-		/// once labour is spent -- named by occupant when one is found; and only then the ordinary
-		/// case of a job that needed more turns.
+		/// that finished without the job's own physical stage advancing to match -- native run 23
+		/// (3e3ff75), #163: a living occupant on a plot's footprint refuses the apply forever,
+		/// silently, once labour is spent -- named by occupant when one is found; and only then
+		/// the ordinary case of a job that needed more turns.
+		///
+		/// <para>StageApplied/StageTarget carry the plot lane's own KingdomPlotRules.PlotStage
+		/// reading (0 for both on a scaffold-backed job, where Read() never populates them, so
+		/// that half of the check is structurally inert there); PhysicalPhase is
+		/// Job.PhysicalPhase, read for both lanes, and catches the scaffold-backed case the same
+		/// review that named this fix pointed out: a scaffold job whose labour is spent but whose
+		/// physical callback chain never left KingdomPhysicalPhase.None is the same "finished
+		/// labour, no result" shape as a stuck plot stage, just on the other lane.</para>
 		/// </summary>
 		internal static string Classify(long LastSemanticTick, long StartedTick, long LastWorkedTick,
 			long RemainingTicks, long AuthoredTicks, int StageApplied, int StageTarget,
-			int OccupantCount)
+			int OccupantCount, KingdomPhysicalPhase PhysicalPhase)
 		{
 			if (LastSemanticTick < StartedTick) return PassNeverRan;
 			if (LastWorkedTick <= 0L || LastWorkedTick == StartedTick) return NoLabourEver;
 			if (AuthoredTicks > 0L && RemainingTicks >= AuthoredTicks) return LabourStalled;
 			if (RemainingTicks < 0L) return LabourStalled;
-			if (RemainingTicks <= 0L && StageApplied < StageTarget)
+			if (RemainingTicks <= 0L
+				&& (StageApplied < StageTarget || PhysicalPhase == KingdomPhysicalPhase.None))
 				return OccupantCount > 0 ? ApplyBlockedOccupant : StageNotApplied;
 			return InsufficientTurns;
 		}
