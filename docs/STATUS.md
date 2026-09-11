@@ -30,12 +30,14 @@ inferred from source or static automation.
 
 ## Current dev hotfix backmerge
 
-3080 staged C# files; 437,399 physical lines; cold-install inventory contains 3111 files.
+3080 staged C# files; 437,405 physical lines; cold-install inventory contains 3111 files.
 Compile inventory: 3080 sources, baseline and compatibility symbols (3076 baseline).
 Direct `XRL` imports: 1435 files, 0 over the line limit. Zero at or above 300 lines.
-Inventory SHA-256: `6ebc095bd595e636c48079ba5c41c0cb3bb92f3af7741d99b05eeb8b81acc78d`.
-Combined-tree gates pending. The isolated main candidate and native receipts below exclude dev's
-unfinished gameplay. The inherited semantic review binds main only, not this dev inventory.
+Inventory SHA-256: `c964d43923a5fa4284464d09029ef0b69a71bfe79b71185b3a25661c06149dca`.
+These are the figures for this dev backmerge with the #141 heart envelope authority correction
+replayed onto it; its only production delta is
+`Growth/KingdomArchitectureStamper.EnvelopeGrowth.cs`. The isolated main candidate and native
+receipts below exclude dev's unfinished gameplay. The inherited semantic review binds main only, not this dev inventory.
 
 ## Native raw-delivery overflow evidence (#111 / #124 / #129)
 
@@ -110,7 +112,46 @@ malformed geometry and exceptions remain errors. The notice may recur after load
 An empty or interior-road-only camp can remain pending indefinitely; no timeout invents corruption.
 Terminal and recovery callers retain their existing fail-closed refusal behavior.
 
-Current census, with the #129 dev-harness native checks merged over this correction: 3079
+## Unreleased heart envelope authority correction (issue #141, PARTIAL)
+
+`TryAuthorizedEnvelopeExpansion` refuses every heart by design — ordinary plot-envelope growth may
+not claim founding-heart authority — but `TryProveEnvelopeGrowth` sent every differing-rect
+transition to it, including the heart's own. Rungs one to four all change rect, so every one of
+them was refused there before any ground question was asked.
+
+That single authority call in `TryProveEnvelopeGrowth` now asks `TryAuthorizedTransition` on these
+exact decoded endpoints, with `AllowPlanChange` false and the accretion flag discarded.
+`TryAuthorizedTransition` already dispatches: a heart answers to the founding authority, and an
+ordinary lot whose rects differ still reaches `TryAuthorizedEnvelopeExpansion` inside it, so the
+ordinary route is byte-identical in behaviour. No new helper, no caller-supplied bypass, no new
+parameter, no new field, no same-rect shortcut beyond the one already there, and no relaxation of
+the ordinary authority, which still refuses hearts.
+
+Every later check in the function is unchanged and still runs on every route: interior fit,
+malformed/out-of-zone geometry, plot overlap and road budget, the siting probe and frozen envelope
+including positive ingress, settled outputs, and the per-cell sweep. Every retry call site —
+assessment, pre-debit preflight, paid application, recovery — still calls the proof unconditionally.
+
+**PARTIAL #141. Heart progression is not claimed to work.** Positive road ingress at
+`TryPhysicalRoadIngressScore` is unresolved and is the likely next native refusal: nothing on
+either founding route lays qualifying road or worn-cell evidence at the heart's entrance lane, so
+a fresh settlement's earliest accretion can still refuse for want of it. The change is source-only:
+its evidence is source pins plus mutation on the changed call. No native run was made and no rung
+transition is proven.
+
+Against the actual base `dev` `3a287e4`, the production delta of this correction is exactly one
+file: `Growth/KingdomArchitectureStamper.EnvelopeGrowth.cs`. Everything else in the delta is
+DevTests and documentation; the combined figures are recorded in the current dev backmerge census
+block above, which remains the only block labelled current.
+
+Provenance disclosure: this is commit `b1efe18` replayed onto `dev` `3a287e4`. In that original
+commit the four-mode compile gate ran before a comment-only seven-to-three line trim of the inline
+rationale, so it saw the same executable bytes with four extra comment lines. The four-mode gate
+recorded here ran on this tree's final bytes.
+
+## Retained #129 integration census
+
+Retained census, with the #129 dev-harness native checks merged over the roadless correction: 3079
 staged C# files; 437,320 physical lines; 0 exceed 300 physical lines, 0 are exactly 300, and
 therefore 0 fail the strict cap; 0 exceed 1,000, 0 exceed 2,000, 0 exceed 5,000.
 Direct `XRL` imports: 1434 files, 0 over the line limit.

@@ -10,11 +10,13 @@ below it.
 
 ## Unreleased — Beta gap report
 
-Current 3080-file census is line-cap green: 437,399 physical lines; direct `XRL`
+Current 3080-file census is line-cap green: 437,405 physical lines; direct `XRL`
 imports occur in 1435 files, 0 of them over the line limit. Inventory SHA-256:
-`6ebc095bd595e636c48079ba5c41c0cb3bb92f3af7741d99b05eeb8b81acc78d`.
-The cold-install inventory contains 3111 files. This is the dev backmerge, not the isolated
-0.3.3 release package. Combined-tree gates and semantic review remain pending.
+`c964d43923a5fa4284464d09029ef0b69a71bfe79b71185b3a25661c06149dca`.
+The cold-install inventory contains 3111 files. This is the dev backmerge with the #141 heart
+envelope authority correction replayed onto it, not the isolated 0.3.3 release package; that
+correction's only production delta is one file,
+`Growth/KingdomArchitectureStamper.EnvelopeGrowth.cs`. Semantic review remains pending.
 
 > **Retained #129 merged census — the #129 dev-harness native checks over the roadless seal
 > correction.** That 3079-file census is line-cap green: 437,320 physical lines, zero files at
@@ -78,6 +80,28 @@ The cold-install inventory contains 3111 files. This is the dev backmerge, not t
   default Yes, read once when the world is made and frozen there.
 
 ### Fixed
+
+- **A heart's envelope growth asks the heart's own authority (PARTIAL #141).** Ordinary
+  plot-envelope growth may not claim founding-heart authority, and refuses every heart by design —
+  but the envelope-growth proof sent every differing-rect transition to exactly that refusal,
+  including the heart's own. Rungs one to four all change rect, so every one of them was refused
+  before any ground question was asked. That one call now asks `TryAuthorizedTransition` instead,
+  on these exact decoded endpoints, with no plan change permitted and the accretion flag ignored.
+  It already dispatches: a heart answers to the founding authority, and an ordinary lot whose
+  rects differ still reaches the ordinary expansion authority inside it, unchanged and still
+  refusing hearts. No new helper, no caller-supplied bypass, no new parameter or field, no
+  same-rect shortcut beyond the one already there. Every later check —
+  interior fit, malformed geometry, plot overlap and road budget, siting probe and frozen envelope
+  including positive ingress, settled outputs, the per-cell sweep — is unchanged and still runs,
+  and every retry call site still proves growth unconditionally.
+
+  **This is partial and heart progression is not claimed to work.** Positive road ingress at
+  `TryPhysicalRoadIngressScore` remains unresolved and is the likely next native refusal: neither
+  founding route lays qualifying road or worn-cell evidence at the heart's entrance lane. The
+  change is source-only: proven by source pins and mutation, with no native run and no rung
+  transition proven. Replayed onto `dev` `3a287e4`; in the original commit `b1efe18` the four-mode
+  compile ran before a comment-only seven-to-three line trim of the inline rationale, so that
+  gate saw the same executable bytes but four more comment lines. Refs #141.
 
 - A roadless completed camp now reports that its spatial seal is waiting for connected streets,
   rather than treating that exact intermediate topology as corruption during daily/save polls.
