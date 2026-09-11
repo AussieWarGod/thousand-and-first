@@ -3,11 +3,13 @@
 # receipt (fire = the zero-salvage boundary, larder = the positive one), and a negative
 # second-strike order that must refuse by name.
 #
-# SYNTHETIC SETUP, DISCLOSED: the camp is founded and the water/materials dedicated by the
-# harness, a 2-body labour crew is enrolled through the real KingdomCitizenship.TryEnroll +
+# SYNTHETIC SETUP, DISCLOSED: the camp is founded and the water dedicated by the harness, a
+# 2-body labour crew is enrolled through the real KingdomCitizenship.TryEnroll +
 # KingdomResidents.TryEnsureRow pair (crew size 2 = RaisingHandsWanted, the minimum that
-# saturates construction effectiveness), and the timber stack is a fixture body whose Count
-# the harness assigns. Nothing forces KingdomBuilt, the job phase or the strike receipt.
+# saturates construction effectiveness), and each design's own authored bill (read live from
+# RuntimeData/KingdomBuildings.xml, never hardcoded) is minted as N separate single-unit
+# fixture bodies per material into a per-case dedicated stockpile, bounded by that store's own
+# declared capacity. Nothing forces KingdomBuilt, the job phase or the strike receipt.
 # Not ordinary play, not a rendered Charter, no save/load and no cold-load claim.
 #
 # Four checks (cumulative ticks 2000/4800/7600/10800), not two: fire and larder serialize one

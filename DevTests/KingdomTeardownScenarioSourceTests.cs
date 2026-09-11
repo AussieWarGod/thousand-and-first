@@ -76,17 +76,20 @@ namespace ThousandAndFirst.Tests
 
 		/// <summary>
 		/// Native run 12 on 3272cff: teardown-setup REFUSED with InvalidOperationException
-		/// "The exact realm sources cannot cover this construction input (InsufficientMaterial)",
-		/// before any advance/check -- the fixture's single-object Count-stack minting
-		/// (`timber.Count = TimberCost;`) did not answer a real material reservation, so
-		/// Commission's local funding fell through to realm-routed logistics no bare harness zone
-		/// has set up. Fixed: mint the authored bill as N separate single-unit objects per
-		/// material, KingdomCampHeartNativeFixture.Mint's own proven shape, then refuse by name
-		/// with the exact missing tally if the freshly minted store still cannot cover it --
-		/// never falling through to Commission's own realm-routed path at all.
+		/// "The exact realm sources cannot cover this construction input (InsufficientMaterial)".
+		/// review-fb02900-coverage-findings.md finding 2: the reservation path honours Count end
+		/// to end (Growth/KingdomConstruction.InputObservationRegistry.cs:141 -> InputPlannerScan
+		/// .cs:173 -> KingdomMaterialDebitRules.Planning.cs:57), so the single-object-Count
+		/// hypothesis for run 12's failure was NEVER proven and is not asserted here; the real
+		/// cause remains UNPROVEN. Single-unit minting is kept only because it is
+		/// KingdomCampHeartNativeFixture.Mint's own proven shape, not because it is known to fix
+		/// run 12. What IS pinned: the bill is read live (never hardcoded), minted as N real
+		/// single-unit objects, bounded by the dedicated store's own declared capacity
+		/// (finding 2A) before anything is minted, and CanPayBill refuses by name with the exact
+		/// missing tally if the freshly minted store still cannot cover it.
 		/// </summary>
 		[Test]
-		public void TheBillIsMintedAsSeparateUnitsNeverAStackedCountAndCanPayBillRefusesByName()
+		public void TheBillIsMintedAsSeparateUnitsCapacityBoundedAndCanPayBillRefusesByName()
 		{
 			string source = ReadChecksAndCases();
 			Assert.That(source, Does.Contain(
@@ -94,6 +97,10 @@ namespace ThousandAndFirst.Tests
 			Assert.That(source, Does.Contain("MintBill(bill, Require, Journal);"));
 			Assert.That(source, Does.Contain(
 				"private void MintBill(KingdomMaterialTally Bill, Action<bool, string> Require,"));
+			Assert.That(source, Does.Contain(
+				"int capacity = KingdomSurvey.StockCapacityOf(Chest);"));
+			Assert.That(source, Does.Contain(
+				"Require(totalUnits <= capacity,"));
 			Assert.That(source, Does.Contain(
 				"GameObject unit = GameObject.Create(blueprint);"));
 			Assert.That(source, Does.Contain(
@@ -107,10 +114,8 @@ namespace ThousandAndFirst.Tests
 			Assert.That(source, Does.Contain("KingdomMaterialRules.Missing(stock.Tally, Bill)"));
 			Assert.That(source, Does.Contain(
 				"Require(CanPayBill(bill, out shortfall),"));
-			// The exact defect from native run 12 must never return: no single object's Count
-			// field is ever set to stand in for a multi-unit material reservation.
-			Assert.That(source, Does.Not.Contain(".Count = TimberCost"));
-			Assert.That(source, Does.Not.Contain("SetIntProperty(\"NeverStack\""));
+			// The withdrawn hypothesis must never be re-asserted as a proven cause.
+			Assert.That(source, Does.Not.Contain("did not answer a real material reservation"));
 		}
 
 		[Test]
@@ -301,6 +306,63 @@ namespace ThousandAndFirst.Tests
 			// No direct Population/Working/Built write anywhere in the crew fixture.
 			Assert.That(source, Does.Not.Contain("Population ="));
 			Assert.That(source, Does.Not.Contain("\"KingdomBuilt\""));
+		}
+
+		/// <summary>
+		/// review-teardown-run15-neverbuilt.md finding 4c: OnRollCount alone counts every
+		/// non-Dead row and is blind to a standing or posting change. RequireAvailable is the
+		/// stronger, re-askable proof: read-only membership in the production
+		/// KingdomCrews.AvailableSettlers projection plus KingdomStations.PostOf==0, asserted
+		/// once at Enroll (setup) and again every Frame.Check() -- never minting or forcing
+		/// standing.
+		/// </summary>
+		[Test]
+		public void CrewAvailabilityIsReAskedEveryCheckNeverMintedOrForced()
+		{
+			string enrollment = Read("Harness/KingdomTeardownCrewEnrollment.cs");
+			Assert.That(enrollment, Does.Contain(
+				"internal static void RequireAvailable(KingdomSystem System, Zone Zone,"));
+			Assert.That(enrollment, Does.Contain(
+				"KingdomCrews.AvailableSettlers(System, survey)"));
+			Assert.That(enrollment, Does.Contain("KingdomStations.PostOf(body) == 0"));
+			Assert.That(enrollment, Does.Contain("out List<GameObject> Bodies)"));
+			Assert.That(enrollment, Does.Contain("RequireAvailable(System, Zone, Bodies, Require);"));
+			string checks = Read(Checks);
+			Assert.That(checks, Does.Contain(
+				"Require, out Crew) == 2,"));
+			Assert.That(checks, Does.Contain(
+				"KingdomTeardownCrewEnrollment.RequireAvailable(System, Zone, Crew, Require);"));
+		}
+
+		/// <summary>
+		/// review-teardown-run15-neverbuilt.md findings 1/2: sequence the two cases (one gang,
+		/// one raising) and journal per-check telemetry so a future stall is diagnosable instead
+		/// of a bare "awaiting-built=true".
+		/// </summary>
+		[Test]
+		public void LarderIsSequencedAfterFireAndEveryCheckJournalsRealTelemetry()
+		{
+			string checks = Read(Checks);
+			Assert.That(checks, Does.Contain("private bool LarderStarted;"));
+			Assert.That(checks, Does.Contain("if (!LarderStarted && Fire.Phase >= 2)"));
+			Assert.That(checks, Does.Contain("Cases.Add(Larder);"));
+			Assert.That(checks, Does.Contain("Done = LarderStarted;"));
+			Assert.That(checks, Does.Contain("Append(\"; available=\")"));
+			Assert.That(checks, Does.Contain("Append(\" free=\")"));
+			Assert.That(checks, Does.Contain("Append(\" assigned-crew=\")"));
+			Assert.That(checks, Does.Contain("Append(\" on-roll=\")"));
+			Assert.That(checks, Does.Contain("Append(\" labours=\")"));
+			string cases = Read(Cases);
+			Assert.That(cases, Does.Contain("private string Telemetry(GameObject Root)"));
+			Assert.That(cases, Does.Contain("KingdomPlots.PlotWorkRequiredProperty"));
+			Assert.That(cases, Does.Contain("KingdomPlots.PlotWorkRemainingProperty"));
+			Assert.That(cases, Does.Contain("KingdomPlots.PlotWorkLastTickProperty"));
+			Assert.That(cases, Does.Contain("KingdomPlots.PlotWorkWindowProperty"));
+			Assert.That(cases, Does.Contain("KingdomConstructionPresence.SelectedProperty"));
+			Assert.That(cases, Does.Contain("KingdomConstructionPresence.HandsProperty"));
+			Assert.That(cases, Does.Contain("KingdomConstructionPresence.EffectivenessProperty"));
+			Assert.That(cases, Does.Contain("KingdomConstruction.TryFind(JobId, out KingdomConstructionJob row)"));
+			Assert.That(cases, Does.Contain("internal int LastHands;"));
 		}
 	}
 }

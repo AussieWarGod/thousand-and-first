@@ -75,6 +75,10 @@ namespace ThousandAndFirst.Harness
 			private readonly List<Case> Cases = new List<Case>();
 			private long StartTicks;
 			private KingdomSystem System;
+			private Case Fire, Larder;
+			private Cell Seat;
+			private bool LarderStarted;
+			private List<GameObject> Crew;
 			internal bool Done;
 			internal readonly StringBuilder Evidence = new StringBuilder();
 
@@ -88,9 +92,12 @@ namespace ThousandAndFirst.Harness
 			}
 
 			/// <summary>Real founding, real dedication, a disclosed synthetic labour crew, then
-			/// two parallel cases: the known zero-salvage boundary ("fire", 1 timber cost) and
-			/// the positive-salvage case ("larder", 3 timber cost, no extra prerequisite beyond
-			/// "fire"'s own).</summary>
+			/// ONE case commissioned now ("fire", 1 timber cost) -- review-teardown-run15-
+			/// neverbuilt.md: production's one-gang allocator gives its whole crew to the oldest
+			/// open raising only, so two concurrent commissions structurally pin the second at
+			/// zero hands. "larder" (3 timber cost) is deferred: Check() commissions it only
+			/// once fire reaches Phase 2 (built and struck), so the two never compete for the
+			/// same gang.</summary>
 			internal void Start()
 			{
 				StartTicks = Game.TimeTicks;
@@ -99,22 +106,20 @@ namespace ThousandAndFirst.Harness
 				KingdomNativeCampFounding.Dedicate(Game, Zone, system,
 					16 * KingdomRules.DramsPerArrival, Owned.Add, Require);
 				Require(KingdomTeardownCrewEnrollment.Enroll(Game, Zone, system, Owned.Add,
-					Require) == 2, "the disclosed synthetic crew did not reach its exact size");
+					Require, out Crew) == 2,
+					"the disclosed synthetic crew did not reach its exact size");
 				bool foundFire = KingdomData.TryGetBuilding("fire", out KingdomRules.BuildEntry fireEntry);
 				bool foundLarder = KingdomData.TryGetBuilding("larder", out KingdomRules.BuildEntry larderEntry);
 				Require(foundFire && foundLarder,
 					"the fixture designs are missing from the live catalogue");
 				Require(KingdomGrowth.CountStoredWater(Zone) >= fireEntry.CostDrams + larderEntry.CostDrams,
 					"the dedicated store does not cover both fixture buildings' cost");
-				Cell seat = KingdomNativeCampFounding.Clear(Zone);
-				Case fire = new Case("fire", "fire", system, Zone, Game, Owned);
-				Case larder = new Case("larder", "larder", system, Zone, Game, Owned);
-				fire.Start(Require, (chest, name) => PlaceChest(seat, chest, name),
+				Seat = KingdomNativeCampFounding.Clear(Zone);
+				Fire = new Case("fire", "fire", system, Zone, Game, Owned);
+				Larder = new Case("larder", "larder", system, Zone, Game, Owned);
+				Fire.Start(Require, (chest, name) => PlaceChest(Seat, chest, name),
 					line => Evidence.Append(line));
-				larder.Start(Require, (chest, name) => PlaceChest(seat, chest, name),
-					line => Evidence.Append(line));
-				Cases.Add(fire);
-				Cases.Add(larder);
+				Cases.Add(Fire);
 			}
 
 			private GameObject PlaceChest(Cell Seat, GameObject Chest, string Name)
@@ -126,18 +131,19 @@ namespace ThousandAndFirst.Harness
 
 			/// <summary>Driven only by the sealed script's four teardown-check verbs (Provider.cs,
 			/// cumulative ticks 2000/4800/7600/10800), never every tick. Done only once every
-			/// case's negative path has been observed; forces no transition.</summary>
-			/// <summary>Required per review-3f010e3-teardown-findings.md finding 3: a genuine
-			/// crew departure (the roofless brink) previously stalled both cases at Phase 1 with
-			/// Ok=true and no named diagnostic -- production's own labour requirement (Core/
-			/// KingdomRules.Population.cs:72-87, CrewEffectiveness) silently starves without ever
-			/// surfacing that the crew itself is gone. This re-Requires the crew is STILL on the
-			/// roll before touching either case, reading the same production
-			/// KingdomResidents.OnRollCount(System) the enrollment fixture itself proves against
-			/// (Harness/KingdomTeardownCrewEnrollment.cs:55) -- never a cached or harness-local
-			/// count. No departure freeze (this never tries to stop a real departure) and no
-			/// re-enrolment (this never tries to replace a departed body) -- purely detection, by
-			/// name, naming whichever case is still open when it fires.</summary>
+			/// started case's negative path has been observed AND larder has started; forces no
+			/// transition.
+			/// <para>
+			/// Required per review-3f010e3-teardown-findings.md finding 3: a genuine crew
+			/// departure (the roofless brink) previously stalled both cases at Phase 1 with
+			/// Ok=true and no named diagnostic. This re-Requires the crew is STILL on the roll
+			/// (production KingdomResidents.OnRollCount) before touching either case, and ALSO
+			/// re-asserts (review-teardown-run15-neverbuilt.md finding 4c) that every enrolled
+			/// body is still present in KingdomCrews.AvailableSettlers and carries no post --
+			/// OnRollCount alone is blind to a standing or posting change. No departure freeze,
+			/// no re-enrolment -- purely detection, by name.
+			/// </para>
+			/// </summary>
 			internal void Check()
 			{
 				long elapsed = Game.TimeTicks - StartTicks;
@@ -149,9 +155,33 @@ namespace ThousandAndFirst.Harness
 						if (!c.Done)
 							Require(false, KingdomTeardownCrewDepartureClaims.Diagnostic(c.Name,
 								onRoll, KingdomTeardownCrewEnrollment.CrewSize, tick));
+				KingdomTeardownCrewEnrollment.RequireAvailable(System, Zone, Crew, Require);
 				foreach (Case c in Cases)
 					if (!c.Done) c.Check(Require, Evidence, elapsed);
-				Done = true;
+				if (!LarderStarted && Fire.Phase >= 2)
+				{
+					Larder.Start(Require, (chest, name) => PlaceChest(Seat, chest, name),
+						line => Evidence.Append(line));
+					Cases.Add(Larder);
+					LarderStarted = true;
+				}
+				KingdomSurvey survey = KingdomSurvey.Take(Zone, System);
+				List<GameObject> available = KingdomCrews.AvailableSettlers(System, survey);
+				int free = 0;
+				foreach (GameObject settler in available)
+					if (KingdomStations.PostOf(settler) == 0) free++;
+				int labours = 0;
+				List<KingdomResidentRow> labourRows = KingdomResidents.RollRows(System, true);
+				foreach (KingdomResidentRow row in labourRows)
+					if (KingdomResidentRules.Labours(row)) labours++;
+				int assignedCrew = 0;
+				foreach (Case c in Cases) assignedCrew += c.LastHands;
+				Evidence.Append("; available=").Append(available.Count)
+					.Append(" free=").Append(free)
+					.Append(" assigned-crew=").Append(assignedCrew)
+					.Append(" on-roll=").Append(onRoll)
+					.Append(" labours=").Append(labours);
+				Done = LarderStarted;
 				foreach (Case c in Cases) if (!c.Done) Done = false;
 			}
 		}

@@ -18,10 +18,15 @@ namespace ThousandAndFirst.Harness
 			private readonly List<GameObject> Owned;
 			private GameObject Chest, Works;
 			private Cell WorksCell;
-			private string WorksId, StrikeReceiptId;
+			private string WorksId, StrikeReceiptId, JobId;
 			private int ExpectedSalvageDelta, TimberCost;
 			internal int Phase;
 			internal bool Done;
+			/// <summary>Hands read off the raising root's own production presence property
+			/// (KingdomConstructionPresence.HandsProperty) on the last Check() call; 0 once built
+			/// or before Start(). Frame sums this across cases for its settlement-wide
+			/// "assigned-crew=" telemetry line.</summary>
+			internal int LastHands;
 
 			internal Case(string Name, string BuildKey, KingdomSystem System, Zone Zone,
 				XRLGame Game, List<GameObject> Owned)
@@ -70,6 +75,7 @@ namespace ThousandAndFirst.Harness
 				Require(job != null && !string.IsNullOrEmpty(job.OutputId),
 					Name + ": the fixture commission produced no linked plot-works output");
 				WorksId = job.OutputId;
+				JobId = job.Id;
 				Phase = 1;
 			}
 
@@ -82,10 +88,13 @@ namespace ThousandAndFirst.Harness
 					GameObject works = Zone.FindObjectByID(WorksId);
 					if (works == null || !KingdomUpgrade.IsFunctionallyBuilt(works))
 					{
+						LastHands = works == null ? 0
+							: works.GetIntProperty(KingdomConstructionPresence.HandsProperty);
 						Evidence.Append("; case=").Append(Name).Append(" awaiting-built=true; elapsed-ticks=")
-							.Append(ElapsedTicks);
+							.Append(ElapsedTicks).Append(Telemetry(works));
 						return;
 					}
+					LastHands = 0;
 					Works = works;
 					WorksCell = works.CurrentCell;
 					Require(WorksCell != null,
@@ -147,17 +156,77 @@ namespace ThousandAndFirst.Harness
 				Done = true;
 			}
 
+			/// <summary>review-teardown-run15-neverbuilt.md finding 1: the job row and its tick
+			/// counter were read once at Start and never again, so an awaiting-built stall was
+			/// undiagnosable. Re-reads the raising root's own production properties every Check
+			/// -- required/remaining/last-worked ticks (KingdomPlots.PlotWork*Property), the raw
+			/// prior-interval witness (PlotWorkWindowProperty), and the one-gang allocator's own
+			/// presence (KingdomConstructionPresence.Selected/Hands/EffectivenessProperty) -- plus
+			/// the live construction registry row's Phase by re-TryFind-ing the job's own id
+			/// (JobId), never re-using the Start-time snapshot. Read-only; asserts nothing.
+			/// </summary>
+			private string Telemetry(GameObject Root)
+			{
+				long required = ReadLong(Root, KingdomPlots.PlotWorkRequiredProperty);
+				long remaining = ReadLong(Root, KingdomPlots.PlotWorkRemainingProperty);
+				long lastWorked = ReadLong(Root, KingdomPlots.PlotWorkLastTickProperty);
+				string window = Root == null ? "" : (Root.GetStringProperty(
+					KingdomPlots.PlotWorkWindowProperty) ?? "");
+				bool selected = Root != null
+					&& Root.GetIntProperty(KingdomConstructionPresence.SelectedProperty) == 1;
+				int hands = Root == null ? 0
+					: Root.GetIntProperty(KingdomConstructionPresence.HandsProperty);
+				int effectiveness = Root == null ? 0
+					: Root.GetIntProperty(KingdomConstructionPresence.EffectivenessProperty);
+				string jobPhase = "unread";
+				if (!string.IsNullOrEmpty(JobId)
+					&& KingdomConstruction.TryFind(JobId, out KingdomConstructionJob row) && row != null)
+					jobPhase = row.Phase.ToString();
+				return new StringBuilder()
+					.Append(" required=").Append(required)
+					.Append(" remaining=").Append(remaining)
+					.Append(" last-worked=").Append(lastWorked)
+					.Append(" window=").Append(KingdomScenarioRules.Bounded(window))
+					.Append(" presence=selected:").Append(selected ? 1 : 0)
+					.Append(",hands:").Append(hands).Append(",effectiveness:").Append(effectiveness)
+					.Append(" job-phase=").Append(jobPhase)
+					.ToString();
+			}
+
+			private static long ReadLong(GameObject Root, string Property)
+			{
+				if (Root == null) return -1L;
+				long value;
+				return long.TryParse(Root.GetStringProperty(Property), out value) ? value : -1L;
+			}
+
 			/// <summary>Mints exactly the authored bill for this design (RuntimeData/
 			/// KingdomBuildings.xml Materials="..."), one real single-unit object per unit --
 			/// KingdomCampHeartNativeFixture.Mint's own proven shape (Create() then
-			/// Inventory.AddObject(..., NoStack: true), never a single object's Count field set
-			/// to N; a stack-Count synthetic bill is what native run 12 (3272cff) found does NOT
-			/// answer a real material reservation the same way). Discloses
-			/// "synthetic-bill design=&lt;key&gt; &lt;material&gt;=&lt;n&gt;..." for every
-			/// nonzero material in the bill.</summary>
+			/// Inventory.AddObject(..., NoStack: true)). review-fb02900-coverage-findings.md
+			/// finding 2: the reservation path honours Count end to end (Growth/
+			/// KingdomConstruction.InputObservationRegistry.cs:141 -> InputPlannerScan.cs:173 ->
+			/// KingdomMaterialDebitRules.Planning.cs:57), so a single stacked-Count object was
+			/// never proven to be native run 12's real InsufficientMaterial cause; that claim is
+			/// withdrawn and the true cause is UNPROVEN from the available evidence. Single-unit
+			/// minting is kept only because it is the exact shape the proven sibling fixture
+			/// uses, not because it is known to fix anything here. CAPACITY-BOUNDED (finding 2A):
+			/// refuses by name, before minting anything, if the design's own bill would not fit
+			/// the dedicated store's declared capacity (KingdomSurvey.StockCapacityOf -- the same
+			/// read KingdomCampHeartNativeFixture uses for its own declared-capacity fill).
+			/// Discloses "synthetic-bill design=&lt;key&gt; &lt;material&gt;=&lt;n&gt;..." for
+			/// every nonzero material in the bill.</summary>
 			private void MintBill(KingdomMaterialTally Bill, Action<bool, string> Require,
 				Action<string> Journal)
 			{
+				int totalUnits = 0;
+				foreach (KingdomMaterial material in (KingdomMaterial[])Enum.GetValues(
+					typeof(KingdomMaterial)))
+					totalUnits += Bill.Get(material);
+				int capacity = KingdomSurvey.StockCapacityOf(Chest);
+				Require(totalUnits <= capacity,
+					Name + ": the dedicated store's declared capacity (" + capacity
+					+ ") cannot hold this design's own bill (" + totalUnits + " units)");
 				StringBuilder line = new StringBuilder("; synthetic-bill design=").Append(BuildKey);
 				foreach (KingdomMaterial material in (KingdomMaterial[])Enum.GetValues(
 					typeof(KingdomMaterial)))
