@@ -19,6 +19,10 @@ namespace ThousandAndFirst.Tests
 	{
 		private const string Provider = "Harness/KingdomQuoteSitingOccupancyNativeProvider.cs";
 		private const string Checks = "Harness/KingdomQuoteSitingOccupancyNativeChecks.cs";
+		// The three case bodies (and TryFindManagedCell/RawTimber) moved to their own partial-
+		// class file to keep KingdomQuoteSitingOccupancyNativeChecks.cs under the harness line
+		// cap once case 3 grew to trace and name two possible refusals.
+		private const string Cases = "Harness/KingdomQuoteSitingOccupancyNativeChecks.Cases.cs";
 		private const string Persona = "Tools/personas/quote-occupancy-native-check.persona";
 
 		private static string Read(string Path) { return TestMain.ReadRepositoryText(Path); }
@@ -148,6 +152,68 @@ namespace ThousandAndFirst.Tests
 			Assert.That(persona, Does.Contain("alternate-chosen=True"));
 			Assert.That(persona, Does.Contain("case=all-occupied-no-mutation"));
 			Assert.That(persona, Does.Contain("case=drift-after-quote-preflight-refused"));
+		}
+
+		/// <summary>Native run of bd9bbcd threw instead of journaling: production DID refuse (the
+		/// plan-changed guard, nothing spent) but earlier than the living-occupant preflight text
+		/// the case demanded by exact substring, and the exception escaped the whole verb. Fixed
+		/// per review: this pins that case 3 now accepts EITHER named text (never a substring
+		/// wildcard), proves nothing spent AND nothing stamped, and journals its outcome instead
+		/// of letting a Require escape.</summary>
+		[Test]
+		public void DriftCaseAcceptsEitherNamedRefusalTextAndProvesNothingSpentOrStamped()
+		{
+			string cases = Read(Cases);
+			Assert.That(cases, Does.Contain("private const string PlanChangedText = "
+				+ "\"The ground or production plan changed after \""));
+			Assert.That(cases, Does.Contain("\"its preview. Review the exact plan again; "
+				+ "nothing was spent.\";"));
+			Assert.That(cases, Does.Contain("private const string LivingOccupantText = "
+				+ "\"a living occupant stands on authored ground at \";"));
+			Assert.That(cases, Does.Contain(
+				"commitFailure == PlanChangedText"));
+			Assert.That(cases, Does.Contain(
+				"commitFailure.StartsWith(LivingOccupantText, StringComparison.Ordinal)"));
+			Assert.That(cases, Does.Contain(
+				"Require(!committed && (isPlanChanged || isLivingOccupant),"));
+			Assert.That(cases, Does.Contain("int builtBefore = KingdomPlots.CountBuilt(Zone);"));
+			Assert.That(cases, Does.Contain("int builtAfter = KingdomPlots.CountBuilt(Zone);"));
+			Assert.That(cases, Does.Contain(
+				"a refused drift-after-quote commission still stamped a component"));
+			Assert.That(cases, Does.Contain(
+				"a refused drift-after-quote commission spent timber or water"));
+			Assert.That(cases, Does.Contain(
+				"; case=drift-after-quote-preflight-refused refused=true refusal=\")"));
+			// The exact bug: an unconditional single-substring StartsWith against only the
+			// living-occupant text must never return.
+			Assert.That(cases, Does.Not.Contain(
+				"commitFailure.StartsWith(\"a living occupant stands on authored ground at \","));
+		}
+
+		/// <summary>The other half of the same bug: a Require failure inside one case escaped as
+		/// an exception and aborted the whole setup verb (native run bd9bbcd, verb REFUSED with
+		/// "InvalidOperationException:..."). Every case now runs through RunCase, which catches
+		/// and counts rather than propagating, so the setup verb's own cases=/passed=/failed=
+		/// line reflects real per-case outcomes instead of a hardcoded "3 failed=0".</summary>
+		[Test]
+		public void EveryCaseIsCaughtByRunCaseSoOneFailureNeverAbortsTheOthers()
+		{
+			string checks = Read(Checks);
+			Assert.That(checks, Does.Contain("private void RunCase(string Name, Action Body)"));
+			Assert.That(checks, Does.Contain("catch (Exception error)"));
+			Assert.That(checks, Does.Contain("Failed++;"));
+			Assert.That(checks, Does.Contain("Passed++;"));
+			Assert.That(checks, Does.Contain(
+				"RunCase(\"occupied-first-clear-alternate\","));
+			Assert.That(checks, Does.Contain(
+				"RunCase(\"all-occupied-no-mutation\", () => AllOccupiedNoMutation(system, entry));"));
+			Assert.That(checks, Does.Contain(
+				"RunCase(\"drift-after-quote-preflight-refused\","));
+			Assert.That(checks, Does.Contain(
+				"cases=3 passed=\" + Retained.Passed"));
+			Assert.That(checks, Does.Contain("+ \" failed=\" + Retained.Failed + Retained.Evidence;"));
+			Assert.That(checks, Does.Not.Contain("passed=\" + (Complete ? \"3 failed=0\""),
+				"the verb's own summary line must report real counts, never a hardcoded 3/0");
 		}
 	}
 }
