@@ -168,6 +168,35 @@ namespace ThousandAndFirst
 			return true;
 		}
 
+		/// <summary>
+		/// The subset of layout cells a living body actually blocks: the cells of placements whose
+		/// own declared passability is Blocked. Walkable ground and adjacent-use slots are laid
+		/// under or beside a standing body and are not in anyone's way.
+		/// </summary>
+		public static bool TryBlockingCells(KingdomArchitectureIntent Intent, Zone Z,
+			out HashSet<int> Cells, out string Failure)
+		{
+			Cells = null;
+			Failure = null;
+			ArchitectureLayoutSnapshot snapshot;
+			if (Z == null || !KingdomArchitectureRuntime.TryDecode(Intent, out snapshot, out Failure))
+				return false;
+			HashSet<int> result = new HashSet<int>();
+			for (int i = 0; i < snapshot.Placements.Count; i++)
+			{
+				ArchitecturePlacement placement = snapshot.Placements[i];
+				if (!KingdomPlotRules.SlotBlocksOccupant(PassabilityOf(snapshot, placement)))
+					continue;
+				int x;
+				int y;
+				if (!KingdomArchitectureRuntime.TryWorldPlacement(snapshot, Intent.Rect,
+					placement, out x, out y, out Failure)) return false;
+				result.Add(y * Z.Width + x);
+			}
+			Cells = result;
+			return true;
+		}
+
 		/// <summary>Stamp one exact layer. Interruption after output-ID publication fails closed.</summary>
 	}
 }

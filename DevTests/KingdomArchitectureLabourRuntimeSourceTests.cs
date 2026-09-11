@@ -137,7 +137,7 @@ namespace ThousandAndFirst.Tests
 				"KingdomSystem System)",
 				"case KingdomPlotRules.PlotStage.Cleared:",
 				"if (currentAuthored && !TryGroundStageWithOccupants(System, zone, parent,",
-				"Works, managed, plot, out string groundFailure))",
+				"Works, managed, authored, plot, out string groundFailure))",
 				"KingdomLog.Log(\"architecture: ground layer refused: \" + groundFailure)",
 				"return false;");
 			string clearance = TestMain.ReadRepositoryText(
@@ -146,8 +146,9 @@ namespace ThousandAndFirst.Tests
 				"internal static bool TryGroundStageWithOccupants(",
 				"KingdomArchitectureStamper.TryStageLayer(Root, Z,",
 				"if (!ground && KingdomPlotRules.IsOccupantSlotRefusal(Failure))",
-				"bool stoodOff = TryClearManagedOccupants(System, Z, Root, Managed, Rect,",
-				"out int cleared, out KingdomPlotRules.OccupantVerdict verdict, out Cell anchor,",
+				"bool stoodOff = KingdomArchitectureStamper.TryBlockingCells(Authored, Z,",
+				"out HashSet<int> blocking, out string clearanceRefusal)",
+				"&& TryClearManagedOccupants(System, Z, Root, Managed, blocking, Rect,",
 				"ground = KingdomArchitectureStamper.TryStageLayer(Root, Z,",
 				"SayPlotWorkCleared(System, Root, name, cleared, ground,",
 				"ground ? null : (stoodOff ? Failure : clearanceRefusal))",
@@ -162,10 +163,12 @@ namespace ThousandAndFirst.Tests
 			AssertOrdered(clearance,
 				"internal static bool TryClearManagedOccupants(",
 				"KingdomSurvey survey = KingdomSurvey.ActiveFor(Z)",
+				"foreach (int index in Blocking)",
 				"if (!item.IsCreature && !item.IsPlayer()) continue;",
+				"KingdomPlotRules.OccupantReason reason = ReasonFor(System, survey, item)",
 				"occupants.Add(item)",
-				"if (item.IsPlayer()) { player = true; continue; }",
-				"if (!IsOwnResident(System, survey, item)) continue;",
+				"if (reason == KingdomPlotRules.OccupantReason.Player) { player = true; continue; }",
+				"if (reason != KingdomPlotRules.OccupantReason.Resident) continue;",
 				"Cell anchor = PostAnchorInLayout(Z, item, Managed)",
 				"Verdict = KingdomPlotRules.JudgeOccupants(occupants.Count, residents, player,",
 				"if (Verdict != KingdomPlotRules.OccupantVerdict.Displace)",
@@ -193,18 +196,60 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains(
 				"KingdomPlotRules.ClearedOccupiedSlots(\n\t\t\t\t\tName ?? \"work\", Moved, Raised, Fault)",
 				labourWindow);
-			AssertOrdered(clearance,
-				"private static bool IsOwnResident(",
+			// Every refusing body is named with its reason before the parsed summary sentence.
+			string helpers = TestMain.ReadRepositoryText(
+				"Growth/KingdomPlot2.26d.OccupantHelpers.cs");
+			AssertOrdered(helpers,
+				"private static void NameOccupants(",
+				"KingdomLog.Log(\"architecture: occupant \" + body.IDIfAssigned",
+				"body.Blueprint",
+				"passability=",
+				"reason=\" + Reasons[i])",
+				"private static KingdomPlotRules.OccupantReason ReasonFor(",
+				"if (Body.IsPlayer()) return KingdomPlotRules.OccupantReason.Player;",
+				"KingdomPlotRules.OccupantReason.PlayerLed",
+				"KingdomPlotRules.OccupantReason.NotOurs",
 				"Simulation.City.KingdomPhysicalHappenings.IsStaged(Body)",
+				"KingdomPlotRules.OccupantReason.Staged",
 				"Simulation.City.KingdomResidents.IdOf(Body)",
-				"if (id <= 0) return false;",
+				"if (id <= 0) return KingdomPlotRules.OccupantReason.NoRoll;",
 				"row.Standing == Simulation.City.KingdomResidentStanding.Resident",
+				"KingdomPlotRules.OccupantReason.Resident",
+				"KingdomPlotRules.OccupantReason.NotResident",
 				"private static Cell FreeGroundOffLayout(",
 				"Managed.Contains(candidate.Y * Z.Width + candidate.X)",
 				"candidate.HasOpenLiquidVolume()",
 				"!candidate.IsPassable(Body) || HoldsLivingBody(candidate)");
 			StringAssert.DoesNotContain("DirectMoveTo", clearance);
 			StringAssert.DoesNotContain("TeleportTo", clearance);
+			StringAssert.DoesNotContain("DirectMoveTo", helpers);
+			StringAssert.DoesNotContain("TeleportTo", helpers);
+			// A body only blocks a slot the map declares Blocked: the stamper gates its refusal on
+			// the declared passability, and the clearance walks only the blocking cells.
+			string verification = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureStamper.Verification.cs");
+			AssertOrdered(verification,
+				"bool blocks = KingdomPlotRules.SlotBlocksOccupant(PassabilityOf(Snapshot, Placement))",
+				"if (item.IsCreature || item.IsPlayer())",
+				"if (!blocks) continue;",
+				"KingdomLog.Log(\"architecture: blocked slot \" + Placement.Slot + \" holds \"",
+				"return Fail(KingdomPlotRules.OccupantSlotRefusalPrefix + Placement.Slot,",
+				"internal static ArchitecturePassability PassabilityOf(",
+				"return ArchitecturePassability.Blocked;");
+			string receipts = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureStamper.OwnerReceipts.cs");
+			AssertOrdered(receipts,
+				"public static bool TryBlockingCells(",
+				"if (!KingdomPlotRules.SlotBlocksOccupant(PassabilityOf(snapshot, placement)))",
+				"continue;",
+				"result.Add(y * Z.Width + x)");
+			// A raising whose stages stop short of Done says so once a pass.
+			AssertOrdered(labour,
+				"if ((int)target <= Works.StageApplied)",
+				"if (Works.StageApplied < (int)KingdomPlotRules.PlotStage.Done)",
+				"KingdomLog.Log(\"plot stage waiting: \"",
+				"\" applied=\" + (KingdomPlotRules.PlotStage)Works.StageApplied",
+				"\" target=\" + target");
 			string window = TestMain.ReadRepositoryText(
 				"Growth/KingdomPlot2.26b.LabourWindow.cs");
 			string said = window.Substring(window.IndexOf(

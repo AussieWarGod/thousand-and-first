@@ -17,9 +17,10 @@ namespace ThousandAndFirst.Tests
 		public void TopLevelAndNestedSerializedIdentitiesRemainExact()
 		{
 			string source = Plot();
-			// 07n.FoundingHeartDiagnostics names the founding heart's refusals and
-			// 26c.OccupantClearance stands our own residents off a blocked layout: two more shards.
-			ClassicAssert.AreEqual(58, Count(source, "public static partial class KingdomPlots"));
+			// 07n.FoundingHeartDiagnostics names the founding heart's refusals, and
+			// 26c.OccupantClearance + 26d.OccupantHelpers stand our own residents off a blocked
+			// layout and name whoever refuses it: three more shards.
+			ClassicAssert.AreEqual(59, Count(source, "public static partial class KingdomPlots"));
 			StringAssert.DoesNotContain("public static class KingdomPlots", source);
 			string yielding = Between(source, "[Serializable]\n\tpublic class r_KingdomYielding : IPart",
 				"[Serializable]\n\tpublic class r_KingdomPlotWorks : IPart");

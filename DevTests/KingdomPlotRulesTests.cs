@@ -1105,6 +1105,21 @@ namespace ThousandAndFirst.Tests
 		}
 
 		/// <summary>
+		/// Only a slot the map declares Blocked is blocked by a body. Mutation: widening this to
+		/// "not Walkable" fails the Adjacent case, and inverting it fails all three -- which is
+		/// exactly the defect that bricked the heart works, whose basin slot B in
+		/// civic-heartbasin-s0 is authored Pass="walk" and is the cell the founder pours on.
+		/// </summary>
+		[TestCase(ArchitecturePassability.Blocked, true)]
+		[TestCase(ArchitecturePassability.Walkable, false)]
+		[TestCase(ArchitecturePassability.Adjacent, false)]
+		public void OnlyABlockedSlotIsBlockedByAStandingBody(ArchitecturePassability Passability,
+			bool Expected)
+		{
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.SlotBlocksOccupant(Passability));
+		}
+
+		/// <summary>
 		/// The player standing alone on a slot is an occupant, not an empty layout. A caller that
 		/// passed over them would report (0, 0, true) and the raising would land on the founder.
 		/// </summary>

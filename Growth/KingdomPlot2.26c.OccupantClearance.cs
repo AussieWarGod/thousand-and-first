@@ -35,16 +35,20 @@ namespace ThousandAndFirst
 		/// <param name="Failure">The stamper refusal left standing, when this returns false.</param>
 		internal static bool TryGroundStageWithOccupants(KingdomSystem System, Zone Z,
 			GameObject Root, r_KingdomPlotWorks Works, HashSet<int> Managed,
-			KingdomPlotRules.PlotRect Rect, out string Failure)
+			KingdomArchitectureIntent Authored, KingdomPlotRules.PlotRect Rect, out string Failure)
 		{
 			string name = Works.DisplayName ?? "work";
 			bool ground = KingdomArchitectureStamper.TryStageLayer(Root, Z,
 				ArchitectureLayer.Ground, out Failure);
 			if (!ground && KingdomPlotRules.IsOccupantSlotRefusal(Failure))
 			{
-				bool stoodOff = TryClearManagedOccupants(System, Z, Root, Managed, Rect,
-					out int cleared, out KingdomPlotRules.OccupantVerdict verdict, out Cell anchor,
-					out string clearanceRefusal);
+				int cleared = 0;
+				KingdomPlotRules.OccupantVerdict verdict = KingdomPlotRules.OccupantVerdict.Clear;
+				Cell anchor = null;
+				bool stoodOff = KingdomArchitectureStamper.TryBlockingCells(Authored, Z,
+						out HashSet<int> blocking, out string clearanceRefusal)
+					&& TryClearManagedOccupants(System, Z, Root, Managed, blocking, Rect,
+						out cleared, out verdict, out anchor, out clearanceRefusal);
 				if (stoodOff)
 				{
 					ground = KingdomArchitectureStamper.TryStageLayer(Root, Z,
@@ -83,21 +87,27 @@ namespace ThousandAndFirst
 		/// <param name="Anchor">The post anchor inside the layout, when that is the verdict.</param>
 		/// <param name="Refusal">Why nothing was moved, when this returns false.</param>
 		internal static bool TryClearManagedOccupants(KingdomSystem System, Zone Z, GameObject Root,
-			HashSet<int> Managed, KingdomPlotRules.PlotRect Rect, out int Moved,
-			out KingdomPlotRules.OccupantVerdict Verdict, out Cell Anchor, out string Refusal)
+			HashSet<int> Managed, HashSet<int> Blocking, KingdomPlotRules.PlotRect Rect,
+			out int Moved, out KingdomPlotRules.OccupantVerdict Verdict, out Cell Anchor,
+			out string Refusal)
 		{
 			Moved = 0;
 			Verdict = KingdomPlotRules.OccupantVerdict.Clear;
 			Anchor = null;
 			Refusal = null;
-			if (System == null || Z == null || !GameObject.Validate(Root) || Managed == null)
+			if (System == null || Z == null || !GameObject.Validate(Root) || Managed == null
+				|| Blocking == null)
 				return ClearanceFault("the layout was not witnessed", out Refusal);
 			KingdomSurvey survey = KingdomSurvey.ActiveFor(Z);
 			if (survey == null) return ClearanceFault("no ground survey is in hand", out Refusal);
 			List<GameObject> occupants = new List<GameObject>();
+			List<KingdomPlotRules.OccupantReason> reasons =
+				new List<KingdomPlotRules.OccupantReason>();
 			bool player = false;
 			int residents = 0;
-			foreach (int index in Managed)
+			// Only Blocked slots are walked: a body on walkable ground or beside an adjacent-use
+			// slot is not in the way, so it is not an occupant of this raising at all.
+			foreach (int index in Blocking)
 			{
 				Cell cell = Z.GetCell(index % Z.Width, index / Z.Width);
 				if (cell == null) continue;
@@ -110,21 +120,28 @@ namespace ThousandAndFirst
 					// over them would judge a player-only slot empty and raise the building on them.
 					if (!item.IsCreature && !item.IsPlayer()) continue;
 					if (occupants.Contains(item)) continue;
+					KingdomPlotRules.OccupantReason reason = ReasonFor(System, survey, item);
 					occupants.Add(item);
-					if (item.IsPlayer()) { player = true; continue; }
-					if (!IsOwnResident(System, survey, item)) continue;
+					reasons.Add(reason);
+					if (reason == KingdomPlotRules.OccupantReason.Player) { player = true; continue; }
+					if (reason != KingdomPlotRules.OccupantReason.Resident) continue;
 					residents++;
 					Cell anchor = PostAnchorInLayout(Z, item, Managed);
-					if (anchor != null && Anchor == null) Anchor = anchor;
+					if (anchor == null) continue;
+					reasons[reasons.Count - 1] = KingdomPlotRules.OccupantReason.AnchorBound;
+					if (Anchor == null) Anchor = anchor;
 				}
 			}
 			Verdict = KingdomPlotRules.JudgeOccupants(occupants.Count, residents, player,
 				Anchor != null);
 			if (Verdict == KingdomPlotRules.OccupantVerdict.Clear) return true;
 			if (Verdict != KingdomPlotRules.OccupantVerdict.Displace)
+			{
+				NameOccupants(Z, Blocking, occupants, reasons);
 				return ClearanceFault(Verdict == KingdomPlotRules.OccupantVerdict.AnchorBound
 					? "a resident is posted inside the layout"
 					: "somebody standing there is not the settlement's to move", out Refusal);
+			}
 			List<KingdomLayoutDisplacement> plan = new List<KingdomLayoutDisplacement>();
 			HashSet<Cell> taken = new HashSet<Cell>();
 			for (int i = 0; i < occupants.Count; i++)
@@ -197,75 +214,5 @@ namespace ThousandAndFirst
 			return back;
 		}
 
-		private static bool ClearanceFault(string Message, out string Refusal)
-		{
-			Refusal = Message;
-			return false;
-		}
-
-		/// <summary>
-		/// A body this settlement may stand off its own building site: one of our surveyed
-		/// settlers, never staged for a happening, and where it carries a roll id, a resident in
-		/// standing on that roll.
-		/// </summary>
-		private static bool IsOwnResident(KingdomSystem System, KingdomSurvey Survey,
-			GameObject Body)
-		{
-			if (Body.IsPlayer() || Body.IsPlayerLed() || !Survey.Settlers.Contains(Body)
-				|| Simulation.City.KingdomPhysicalHappenings.IsStaged(Body)) return false;
-			// Fails closed: a surveyed body with no roll id is not a PROVEN resident, and an
-			// unproven body is never shoved. The roster mints an id for every settler it reads.
-			int id = Simulation.City.KingdomResidents.IdOf(Body);
-			if (id <= 0) return false;
-			return Simulation.City.KingdomResidents.TryResident(System.City, id,
-				out Simulation.City.KingdomResidentRow row)
-				&& row.Standing == Simulation.City.KingdomResidentStanding.Resident;
-		}
-
-		/// <summary>The body's post anchor when it lies on a layout slot, else null.</summary>
-		private static Cell PostAnchorInLayout(Zone Z, GameObject Body, HashSet<int> Managed)
-		{
-			XRL.World.Parts.Brain brain = Body.Brain;
-			XRL.World.GlobalLocation anchor = brain?.StartingCell;
-			if (anchor == null || anchor.World == null
-				|| !string.Equals(anchor.ZoneID, Z.ZoneID, global::System.StringComparison.Ordinal))
-				return null;
-			Cell cell = Z.GetCell(anchor.CellX, anchor.CellY);
-			return cell != null && Managed.Contains(cell.Y * Z.Width + cell.X) ? cell : null;
-		}
-
-		/// <summary>Nearest free walkable ground off the raising, or null when there is none.</summary>
-		private static Cell FreeGroundOffLayout(Zone Z, GameObject Body, HashSet<int> Managed,
-			KingdomPlotRules.PlotRect Rect, HashSet<Cell> Taken)
-		{
-			Cell from = Body.CurrentCell;
-			if (from == null) return null;
-			for (int radius = 1; radius <= OccupantDisplacementRadius; radius++)
-				for (int dy = -radius; dy <= radius; dy++)
-					for (int dx = -radius; dx <= radius; dx++)
-					{
-						if (dx > -radius && dx < radius && dy > -radius && dy < radius) continue;
-						Cell candidate = Z.GetCell(from.X + dx, from.Y + dy);
-						if (candidate == null || Taken.Contains(candidate)
-							|| Managed.Contains(candidate.Y * Z.Width + candidate.X)
-							|| candidate.X >= Rect.X1 && candidate.X <= Rect.X2
-								&& candidate.Y >= Rect.Y1 && candidate.Y <= Rect.Y2
-							|| candidate.HasOpenLiquidVolume()
-							|| !candidate.IsPassable(Body) || HoldsLivingBody(candidate)) continue;
-						return candidate;
-					}
-			return null;
-		}
-
-		private static bool HoldsLivingBody(Cell Cell)
-		{
-			List<GameObject> objects = Cell.GetObjects();
-			for (int i = 0; i < objects.Count; i++)
-			{
-				GameObject item = objects[i];
-				if (GameObject.Validate(item) && (item.IsCreature || item.IsPlayer())) return true;
-			}
-			return false;
-		}
 	}
 }

@@ -136,6 +136,41 @@ namespace ThousandAndFirst
 			return "The {{C|" + Name + "}} is paid for and cannot be raised: somebody is standing on the ground at layout slot " + Slot + ". Nothing living is moved to clear a plot. Send them off it, and the raising goes on.";
 		}
 
+		/// <summary>
+		/// Whether a living body standing on an authored slot is actually in the way. Only a slot
+		/// the map declares Blocked is: a wall, a ritestone or a canvas cannot be raised through
+		/// somebody. A walkable ground or path tile laid UNDER a standing body is lawful and always
+		/// was -- non-solid objects share a cell in Qud -- and refusing there is how the founder,
+		/// who by construction stands on the rite cell they poured, bricked their own heart works.
+		/// Adjacent slots are used from the side and never stood on, so they do not block either.
+		/// </summary>
+		public static bool SlotBlocksOccupant(ArchitecturePassability Passability)
+		{
+			return Passability == ArchitecturePassability.Blocked;
+		}
+
+		/// <summary>Why one body on a blocking slot is or is not the settlement's to stand off.
+		/// Named in the log so an operator never sees "a living occupant" with no identity.</summary>
+		public enum OccupantReason
+		{
+			/// <summary>One of ours, in standing, unposted: displaceable.</summary>
+			Resident,
+			/// <summary>The founder. Never moved.</summary>
+			Player,
+			/// <summary>Led by the founder. Never moved.</summary>
+			PlayerLed,
+			/// <summary>Not on this settlement's surveyed roll of settlers.</summary>
+			NotOurs,
+			/// <summary>Staged for a happening; its position is another system's.</summary>
+			Staged,
+			/// <summary>Ours by survey, but carrying no roll id: unproven, so not moved.</summary>
+			NoRoll,
+			/// <summary>On the roll, but not in resident standing.</summary>
+			NotResident,
+			/// <summary>Ours and displaceable, but posted into the layout: naming, not shoving.</summary>
+			AnchorBound
+		}
+
 		/// <summary>What a raising may lawfully do about the living bodies on its slots.</summary>
 		public enum OccupantVerdict
 		{
