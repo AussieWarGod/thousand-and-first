@@ -50,6 +50,41 @@ namespace ThousandAndFirst
 			return true;
 		}
 
+		/// <summary>
+		/// The one root a witnessed row may have that is not the object it was written from: the
+		/// successor of a heart whose root climbed a rung.
+		///
+		/// <para>WHY A ROW CAN OUTLIVE ITS OBJECT. A work row's id is the FOLD of the standing
+		/// object's identity (<c>Simulation/City/KingdomCity.z09</c>), and an improvement replaces
+		/// that object with one carrying its own identity. The row is rebuilt at the next
+		/// check-in, but the seal may witness before that, and until then the row names an
+		/// identity nothing carries -- which is indistinguishable, from here, from a root that was
+		/// destroyed.</para>
+		///
+		/// <para>WHAT IS ADDED, AND WHAT IS NOT. The chain answers only when the records prove it:
+		/// the row's id must be the fold of an identity the founding heart's own sealed terminal
+		/// bound, exactly one completed improvement must have retired that identity, its output
+		/// must stand as exactly one live object carrying that job's receipt and removal proof.
+		/// Position is still required and still exact -- the successor must stand at this row's
+		/// own anchor cell, once -- and nothing else is relaxed: a root that is simply gone still
+		/// refuses, because no completed improvement names it, and a foreign object at the anchor
+		/// still refuses, because the chain never looked at the cell to find it.</para>
+		/// </summary>
+		private static bool TryClimbedRoot(Zone Zone, Cell Cell, SourceWork Row,
+			out GameObject Climbed)
+		{
+			Climbed = null;
+			if (Zone == null || Cell == null
+				|| !KingdomPlots.TryChainedWorkSuccessor(Zone, Row.WorkId, out GameObject proved)
+				|| !GameObject.Validate(proved)) return false;
+			int here = 0;
+			for (int i = 0; i < Cell.Objects.Count; i++)
+				if (object.ReferenceEquals(Cell.Objects[i], proved)) here++;
+			if (here != 1) return false;
+			Climbed = proved;
+			return true;
+		}
+
 		private static bool TryExactRoot(Zone Zone, SourceWork Row, out GameObject Root,
 			out string Failure)
 		{
@@ -70,6 +105,11 @@ namespace ThousandAndFirst
 						!= Row.WorkId) continue;
 				Root = item;
 				count++;
+			}
+			if (count == 0 && TryClimbedRoot(Zone, cell, Row, out GameObject climbed))
+			{
+				Root = climbed;
+				return true;
 			}
 			if (count != 1)
 			{

@@ -34,7 +34,8 @@ namespace ThousandAndFirst
 		/// </summary>
 		private static bool ExactFoundingHeartImprovementRetirement(string PredecessorId)
 		{
-			return TryImprovementSuccessorOf(PredecessorId, out var job, out var successor)
+			return TryImprovementSuccessorOf(PredecessorId, out var job, out var successor,
+					out _, out _)
 				&& KingdomConstruction.HasReceipt(successor, job)
 				&& r_KingdomScaffold.HasRemovalProof(successor, job.SubjectId)
 				&& ExactFoundingHeartLiveAbsence(PredecessorId);

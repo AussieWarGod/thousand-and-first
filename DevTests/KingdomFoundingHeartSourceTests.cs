@@ -587,10 +587,21 @@ namespace ThousandAndFirst.Tests
 			string chain = Source("Growth/KingdomPlot2.07s.FoundingHeartClimbedChain.cs");
 			// Identity, not position: the chain starts at the identity the sealed terminal bound.
 			StringAssert.Contains("string retired = prior.FinalId;", chain);
-			StringAssert.Contains("TryImprovementSuccessorOf(retired, out job, out successor)",
-				chain);
+			StringAssert.Contains("TryImprovementSuccessorOf(retired, out job, out successor, "
+				+ "out jobs, out objects)", chain);
+			// Every hop names itself, so the next native run says which one refused instead of
+			// leaving it to be inferred from what did not happen.
+			foreach (string hop in new[] { "chain: bound identity", "chain: improvement lookup",
+				"chain: receipt", "chain: removal proof", "chain: custody corroboration",
+				"chain: binds ground", "chain: retirement authority" })
+				StringAssert.Contains("HeartRefused(\"" + hop, chain);
 			StringAssert.Contains("row.SubjectId != RetiredId", chain);
-			StringAssert.Contains("if (Job != null) { Job = null; return false; }", chain);
+			// Exactly one job may name the retired identity: a second one refuses rather than
+			// choosing, and the count is carried into the refusal so a native run can read it.
+			StringAssert.Contains("Named++;", chain);
+			StringAssert.Contains("if (Named != 1 || Job.Phase != KingdomConstructionPhase.Complete",
+				chain);
+			StringAssert.Contains("if (Named != 1) Job = null;", chain);
 			StringAssert.Contains("KingdomConstruction.FindGlobalLiveId(Job.OutputId, out Successor)",
 				chain);
 			foreach (string fact in new[] { "KingdomConstruction.HasReceipt(successor, job)",
@@ -639,7 +650,7 @@ namespace ThousandAndFirst.Tests
 			string removal = Source("Growth/KingdomPlot2.07q.FoundingHeartRecordedRemoval.cs");
 			StringAssert.Contains("ExactFoundingHeartImprovementRetirement(PredecessorId)", removal);
 			StringAssert.Contains("TryImprovementSuccessorOf(PredecessorId, out var job, "
-				+ "out var successor)", removal);
+				+ "out var successor,", removal);
 			StringAssert.Contains("&& ExactFoundingHeartLiveAbsence(PredecessorId);", removal);
 
 			// The chained branch sits beside the first-generation drive, after it refuses.

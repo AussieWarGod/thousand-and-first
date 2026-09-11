@@ -2,6 +2,7 @@
 using System;
 using NUnit.Framework;
 using NUnit.Framework.Legacy;
+using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Tests
 {
@@ -237,6 +238,83 @@ namespace ThousandAndFirst.Tests
 				out _), "the store must refuse an id that is not the role's stable identity");
 		}
 
+
+		/// <summary>
+		/// VALUE. How a witnessed work row is re-linked to a retired identity: the seal holds the
+		/// FOLD of an object identity, and the fold of the retired root is what the row carries
+		/// until the next check-in rebuilds it. The successor's own fold is a different number,
+		/// which is why the row stops matching the world and why the chain has to name the
+		/// identity rather than search the cell.
+		/// </summary>
+		[Test]
+		public void AWitnessedRowIsRelinkedByTheFoldOfTheRetiredIdentity()
+		{
+			const string retired = "r_TAF_FoundingHeart:final:9f2c";
+			const string successor = "r_TAF_FoundingHeart:final:9f2d";
+			int row = KingdomCityRules.StableId(retired);
+			ClassicAssert.AreNotEqual(0, row);
+			// The row's id is the retired identity's fold, and only that identity's.
+			ClassicAssert.AreEqual(row, KingdomCityRules.StableId(retired));
+			ClassicAssert.AreNotEqual(row, KingdomCityRules.StableId(successor));
+			ClassicAssert.AreNotEqual(row, KingdomCityRules.StableId("r_TAF_SomeoneElse"));
+			// A foreign identity standing at the same anchor cannot borrow the row: its fold is
+			// not the row's, so the re-link refuses before any cell is read.
+			ClassicAssert.AreNotEqual(row, KingdomCityRules.StableId("r_KingdomWaterstone:stray"));
+		}
+
+		/// <summary>
+		/// Both sites that follow a climbed root run the SAME proof: the seal's spatial witness
+		/// asks through the work-row entry point, which calls the recovery path's own function,
+		/// so the two cannot drift apart. And the witness still requires position, exactly once.
+		/// </summary>
+		[Test]
+		public void TheSealAndTheRecoveryShareOneChainProof()
+		{
+			string chain = TestMain.ReadRepositoryText(
+				"Growth/KingdomPlot2.07s.FoundingHeartClimbedChain.cs");
+			StringAssert.Contains("internal static bool TryChainedWorkSuccessor(Zone Z, "
+				+ "int RowWorkId,", chain);
+			StringAssert.Contains("Simulation.City.KingdomCityRules.StableId(prior.FinalId) "
+				+ "!= RowWorkId", chain);
+			StringAssert.Contains("return TryChainedFoundingHeartRoot(Z, context, out Successor);",
+				chain);
+
+			string evidence = TestMain.ReadRepositoryText(
+				"Core/KingdomInheritanceSpatial.Evidence.cs");
+			// Added only where the exact count was zero, and the old refusal is untouched.
+			StringAssert.Contains("if (count == 0 && TryClimbedRoot(Zone, cell, Row, "
+				+ "out GameObject climbed))", evidence);
+			StringAssert.Contains("Failure = \"a sealed work root is absent, duplicated, moved, "
+				+ "or changed\";", evidence);
+			StringAssert.Contains("KingdomPlots.TryChainedWorkSuccessor(Zone, Row.WorkId, "
+				+ "out GameObject proved)", evidence);
+			// Position still required, and still exactly once.
+			StringAssert.Contains("if (object.ReferenceEquals(Cell.Objects[i], proved)) here++;",
+				evidence);
+			StringAssert.Contains("if (here != 1) return false;", evidence);
+			// The witness writes nothing.
+			foreach (string write in new[] { "SetStringProperty(", "SetIntProperty(",
+				"SetZoneProperty(", "SetObjectGameState(", "Destroy(", "AddObject(" })
+				StringAssert.DoesNotContain(write, evidence);
+		}
+
+		/// <summary>
+		/// The two day-length constants the ordering argument rests on are the same number, so the
+		/// seal's daily poll and the settlement's daily cadence measure the same day.
+		/// </summary>
+		[Test]
+		public void TheSealsDayAndTheSettlementsDayAreTheSameLength()
+		{
+			// Ours, executed. The engine's own constant cannot be executed here -- these suites
+			// are engine-free -- so it is pinned where we consume it and verified against the
+			// pinned decompile: XRL/World/Calendar.cs:13 declares TurnsPerDay = 1200.
+			ClassicAssert.AreEqual(1200L, KingdomRules.TicksPerDay);
+			ClassicAssert.AreEqual(1200L, KingdomSemanticClockRules.CadenceTicks);
+			StringAssert.Contains("Calendar.TurnsPerDay",
+				TestMain.ReadRepositoryText("Core/KingdomSeal.cs"));
+			StringAssert.Contains("public const long CadenceTicks = KingdomRules.TicksPerDay;",
+				TestMain.ReadRepositoryText("Simulation/City/KingdomSemanticClockRules.cs"));
+		}
 	}
 }
 #endif
