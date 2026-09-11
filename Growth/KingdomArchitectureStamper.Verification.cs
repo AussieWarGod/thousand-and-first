@@ -86,27 +86,22 @@ namespace ThousandAndFirst
 			// together, and only while its retain state allows it -- is OTHER, and anything else
 			// is FOREIGN and refuses the census outright.
 			string token = ComponentToken(Lot, Intent.SnapshotHash, Placement);
-			int thisCount = 0;
-			int otherCount = 0;
-			int foreignCount = 0;
+			List<ArchitectureComponentCensusRow> candidates =
+				new List<ArchitectureComponentCensusRow>();
 			KingdomSurvey survey = KingdomSurvey.ActiveFor(Z) ?? KingdomSurvey.Take(Z);
 			foreach (GameObject candidate in survey.ArchitectureComponents)
 			{
-				if (!GameObject.Validate(candidate)
-					|| !KingdomArchitectureComponentCensusRules.AtSlot(Lot, Placement.Slot,
-						candidate.GetStringProperty(KingdomPlots.PlotIdProperty),
-						candidate.GetStringProperty(ComponentSlotProperty))) continue;
-				int membership = KingdomArchitectureComponentCensusRules.Classify(token,
-					candidate.GetStringProperty(ComponentTokenProperty), candidate.IDIfAssigned,
-					Peer != null && Peer.Cell != null && candidate.CurrentCell == Peer.Cell,
-					Peer == null ? null : Peer.Id, Peer == null ? null : Peer.Token,
-					Peer != null && Peer.Allowed);
-				if (membership == KingdomArchitectureComponentCensusRules.This) thisCount++;
-				else if (membership == KingdomArchitectureComponentCensusRules.Other) otherCount++;
-				else foreignCount++;
+				if (!GameObject.Validate(candidate)) continue;
+				candidates.Add(new ArchitectureComponentCensusRow(
+					candidate.GetStringProperty(KingdomPlots.PlotIdProperty),
+					candidate.GetStringProperty(ComponentSlotProperty),
+					candidate.GetStringProperty(ComponentTokenProperty),
+					candidate.IDIfAssigned,
+					Peer != null && Peer.Cell != null && candidate.CurrentCell == Peer.Cell));
 			}
-			return KingdomArchitectureComponentCensusRules.Settled(thisCount, otherCount,
-				foreignCount);
+			return KingdomArchitectureComponentCensusRules.Settles(Lot, Placement.Slot, token,
+				candidates, Peer == null ? null : Peer.Id, Peer == null ? null : Peer.Token,
+				Peer != null && Peer.Allowed);
 		}
 
 		private static bool ExactComponentInt(GameObject Item, string Property, int Expected)

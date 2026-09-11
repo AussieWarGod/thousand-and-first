@@ -105,6 +105,7 @@ namespace ThousandAndFirst
 				if (Owner.GetIntProperty(OutputState(placement)) != 2
 					|| KingdomConstruction.FindExactId(Z, id, out exact)
 						!= KingdomPhysicalLookupState.Exact
+					// Anchored shell lookup carries no upgrade receipt: no other generation may stand.
 					|| !ExactComponent(Owner, exact, Z, intent, lot, placement, id, null))
 					return Fail("authored shell component is absent, moved, or changed", out Failure);
 			}

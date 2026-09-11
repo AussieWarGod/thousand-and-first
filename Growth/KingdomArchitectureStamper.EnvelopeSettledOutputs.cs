@@ -40,8 +40,9 @@ namespace ThousandAndFirst
 						BeforeIntent, Successor, Delta, beforePlacement,
 						afterPlacement, Lot, Settled, out Failure)) return false;
 				}
-				else if (!TryReadAddedExpansionOutput(Owner, SuccessorOwner, Z, Successor,
-					After, afterPlacement, Lot, Settled, out Failure)) return false;
+				else if (!TryReadAddedExpansionOutput(Owner, SuccessorOwner, Z, BeforeIntent,
+					Successor, After, Delta, afterPlacement, Lot, Settled, out Failure))
+					return false;
 			}
 			return true;
 		}
@@ -105,7 +106,8 @@ namespace ThousandAndFirst
 		}
 
 		private static bool TryReadAddedExpansionOutput(GameObject Owner, GameObject Target,
-			Zone Z, KingdomArchitectureIntent Successor, ArchitectureLayoutSnapshot After,
+			Zone Z, KingdomArchitectureIntent BeforeIntent, KingdomArchitectureIntent Successor,
+			ArchitectureLayoutSnapshot After, ArchitectureLayoutDelta Delta,
 			ArchitecturePlacement Placement, string Lot, HashSet<GameObject> Settled,
 			out string Failure)
 		{
@@ -130,9 +132,12 @@ namespace ThousandAndFirst
 					|| UpgradeQuarantine(Owner,
 						"published expansion output has no exact staging custody", out Failure);
 			if (found != KingdomPhysicalLookupState.Exact
-				// An added slot is new ground in the successor layout; no retained pair carries
-				// its name, so no other generation may stand there.
-				|| !ExactComponent(Target, exact, Z, Successor, Lot, Placement, id, null))
+				// An added slot is new ground in the successor layout, but nothing forbids a
+				// retained BEFORE slot from carrying the same layout-local name, so the peer is
+				// resolved here exactly as at a retained slot: direction 1, from the same delta.
+				|| !ExactComponent(Target, exact, Z, Successor, Lot, Placement, id,
+					ResolveComponentPeer(Owner, Z, Delta, BeforeIntent, Successor, Lot,
+						Placement.Slot, true)))
 				return UpgradeQuarantine(Owner, "added expansion output is foreign, duplicated, "
 					+ "moved, or changed", out Failure);
 			Settled.Add(exact);

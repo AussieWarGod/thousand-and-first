@@ -33,8 +33,12 @@ namespace ThousandAndFirst
 			string retainProperty = UpgradeRetain(retainKey);
 			if (!Owner.HasIntProperty(retainProperty) || Owner.HasStringProperty(retainProperty))
 				return null;
-			bool allowed = KingdomArchitectureComponentCensusRules.PeerAllowed(
-				Owner.GetIntProperty(retainProperty), AfterCensus);
+			string peerId;
+			string peerToken;
+			bool allowed;
+			if (!KingdomArchitectureComponentCensusRules.TryPeerTerms(Lot, intent.SnapshotHash,
+				peer, id, Owner.GetIntProperty(retainProperty), AfterCensus, out peerId,
+				out peerToken, out allowed)) return null;
 			ArchitectureLayoutSnapshot snapshot;
 			int x;
 			int y;
@@ -43,8 +47,7 @@ namespace ThousandAndFirst
 					out x, out y, out _)) return null;
 			Cell cell = Z.GetCell(x, y);
 			if (cell == null) return null;
-			return new ArchitectureComponentPeer(id,
-				ComponentToken(Lot, intent.SnapshotHash, peer), cell, allowed);
+			return new ArchitectureComponentPeer(peerId, peerToken, cell, allowed);
 		}
 	}
 }

@@ -113,6 +113,7 @@ namespace ThousandAndFirst
 					StampComponent(Owner, pending, Lot, Intent.SnapshotHash, Placement);
 					KingdomSurvey.ObserveChangedInActive(Z, pending);
 				}
+				// Staging publication carries no upgrade receipt: no other generation may stand.
 				if (!ExactComponent(Owner, pending, Z, Intent, Lot, Placement,
 					Owner.GetStringProperty(idProperty), null))
 					return Quarantine(Owner, "layout slot " + Placement.Slot
@@ -180,6 +181,7 @@ namespace ThousandAndFirst
 				finally { KingdomSurvey.ObserveAddResultInActive(Z, placed, accepted); }
 			}
 			KingdomSurvey.ObserveChangedInActive(Z, placed);
+			// The staging add endpoint carries no upgrade receipt: no other generation may stand.
 			bool exactEndpoint = ExactComponent(Owner, placed, Z, Intent, Lot, Placement,
 				Owner.GetStringProperty(idProperty), null);
 			bool exactCustody = Placement.ExistingAuthority

@@ -40,6 +40,7 @@ namespace ThousandAndFirst.Tests
 				TierKey = "tier", VariantKey = "variant", PaletteKey = "civic-heart-stone",
 				LotType = "civic", LotSize = Size, Facing = ArchitectureFacing.North,
 				IncomingTransitionMode = Mode, Width = Width, Height = Height,
+				BaseRoof = KingdomPlotRules.RoofState.Open,
 				MainX = MainX, MainY = MainY, FootprintX = 0, FootprintY = 0,
 				FootprintWidth = Width, FootprintHeight = Height
 			};
@@ -130,28 +131,166 @@ namespace ThousandAndFirst.Tests
 				null, "g:01:01", true, out peer, out retainKey));
 		}
 
-		[Test]
-		public void TheSharedSlotSettlesOneOfEachAndRefusesAStranger()
+		/// <summary>Both generations' real snapshots, so the walk hashes and tokenises exactly
+		/// what the stamper would.</summary>
+		private static ArchitectureLayoutSnapshot Before()
 		{
+			return Layout(6, 4, 0, 0, ArchitectureLotSize.Small,
+				ArchitectureTransitionMode.None,
+				Ground(0, 0, "r_KingdomRitestone"), Ground(1, 1, "r_KingdomHearthstone"));
+		}
+
+		private static ArchitectureLayoutSnapshot After()
+		{
+			return Layout(8, 6, 1, 1, ArchitectureLotSize.Medium,
+				ArchitectureTransitionMode.RenovateExpand,
+				Ground(1, 1, "r_KingdomRitestone"), Ground(2, 2, "r_KingdomHearthstone"),
+				Ground(6, 4, "r_KingdomKerb"));
+		}
+
+		private static string Hash(ArchitectureLayoutSnapshot Snapshot)
+		{
+			string hash;
+			string failure;
+			ClassicAssert.IsTrue(
+				KingdomArchitectureRules.TrySnapshotHash(Snapshot, out hash, out failure),
+				failure);
+			return hash;
+		}
+
+		private static ArchitecturePlacement At(ArchitectureLayoutSnapshot Snapshot, string Slot)
+		{
+			for (int i = 0; i < Snapshot.Placements.Count; i++)
+				if (Snapshot.Placements[i].Slot == Slot) return Snapshot.Placements[i];
+			ClassicAssert.Fail("no placement at " + Slot);
+			return null;
+		}
+
+		private static ArchitectureComponentCensusRow Row(string Slot, string Token, string Id,
+			bool AtPeerCell)
+		{
+			return new ArchitectureComponentCensusRow(Lot, Slot, Token, Id, AtPeerCell);
+		}
+
+		private const string Lot = "lot-heart";
+
+		/// <summary>
+		/// The census the stamper runs at the shared slot name, over the real delta, the real
+		/// snapshot hashes, the real component tokens and the real peer terms -- the same calls
+		/// <c>ExactComponent</c> makes once the engine has read each candidate's lot, slot, token,
+		/// identity and cell.
+		/// <para>Both directions settle one of each generation, and every stranger shape refuses:
+		/// a foreign token, the peer's token on the wrong cell, and the peer's token under another
+		/// identity. What is NOT executed here is the engine half -- the survey iteration and
+		/// property reads that build the rows, the by-reference cell compare,
+		/// <c>TryWorldPlacement</c>, and the receipt state machine in <c>TryCarryUpgradeSlot</c>
+		/// that chooses the direction -- because each needs a live GameObject and Zone. That
+		/// remains owed to a native run.</para>
+		/// </summary>
+		[Test]
+		public void TheSharedSlotCensusSettlesOneOfEachGenerationAndRefusesEveryStranger()
+		{
+			ArchitectureLayoutSnapshot before = Before();
+			ArchitectureLayoutSnapshot after = After();
+			string beforeHash = Hash(before);
+			string afterHash = Hash(after);
 			ArchitectureLayoutDelta delta = Delta();
+			const string slot = "g:01:01";
+
+			// Direction 1: settling the SUCCESSOR at g:01:01. The peer is the predecessor
+			// component that has not been retagged yet and still reads that same name.
 			ArchitecturePlacement peer;
 			ArchitecturePlacement retainKey;
-			KingdomArchitectureComponentCensusRules.TryPeerPlacement(delta, "g:01:01", true,
-				out peer, out retainKey);
-			// Tokens stand for the two generations' own component tokens; what matters here is
-			// that the peer resolved above is proved by identity, cell and token together.
-			int settled = KingdomArchitectureComponentCensusRules.Classify("after-token",
-				"after-token", "mine", false, "peer-id", "before-token", true);
-			int other = KingdomArchitectureComponentCensusRules.Classify("after-token",
-				"before-token", "peer-id", true, "peer-id", "before-token", true);
-			int stranger = KingdomArchitectureComponentCensusRules.Classify("after-token",
-				"third-token", "stranger", false, "peer-id", "before-token", true);
-			ClassicAssert.AreEqual(KingdomArchitectureComponentCensusRules.This, settled);
-			ClassicAssert.AreEqual(KingdomArchitectureComponentCensusRules.Other, other);
-			ClassicAssert.AreEqual(KingdomArchitectureComponentCensusRules.Foreign, stranger);
-			ClassicAssert.IsTrue(KingdomArchitectureComponentCensusRules.Settled(1, 1, 0));
-			ClassicAssert.IsFalse(KingdomArchitectureComponentCensusRules.Settled(1, 1, 1));
+			ClassicAssert.IsTrue(KingdomArchitectureComponentCensusRules.TryPeerPlacement(
+				delta, slot, true, out peer, out retainKey));
+			string peerId;
+			string peerToken;
+			bool allowed;
+			ClassicAssert.IsTrue(KingdomArchitectureComponentCensusRules.TryPeerTerms(Lot,
+				beforeHash, peer, "peer-output-id", 1, true, out peerId, out peerToken,
+				out allowed));
+			ClassicAssert.IsTrue(allowed);
+			string thisToken = KingdomArchitectureComponentCensusRules.ComponentTokenText(Lot,
+				afterHash, At(after, slot));
+			ClassicAssert.AreNotEqual(thisToken, peerToken);
+			List<ArchitectureComponentCensusRow> rows = new List<ArchitectureComponentCensusRow>
+			{
+				Row(slot, thisToken, "settling-id", false),
+				Row(slot, peerToken, peerId, true)
+			};
+			ClassicAssert.IsTrue(KingdomArchitectureComponentCensusRules.Settles(Lot, slot,
+				thisToken, rows, peerId, peerToken, allowed));
+
+			// A peer that has already settled on its successor may no longer stand here.
+			ClassicAssert.IsTrue(KingdomArchitectureComponentCensusRules.TryPeerTerms(Lot,
+				beforeHash, peer, "peer-output-id", 2, true, out peerId, out peerToken,
+				out allowed));
+			ClassicAssert.IsFalse(allowed);
+			ClassicAssert.IsFalse(KingdomArchitectureComponentCensusRules.Settles(Lot, slot,
+				thisToken, rows, peerId, peerToken, allowed));
+
+			// Direction 2: settling the PREDECESSOR at g:01:01 mid-pass. The peer is the
+			// successor component of the other pair, already retagged onto this name.
+			ClassicAssert.IsTrue(KingdomArchitectureComponentCensusRules.TryPeerPlacement(
+				delta, slot, false, out peer, out retainKey));
+			ClassicAssert.AreEqual("g:00:00", retainKey.Slot);
+			ClassicAssert.IsTrue(KingdomArchitectureComponentCensusRules.TryPeerTerms(Lot,
+				afterHash, peer, "retagged-output-id", 1, false, out peerId, out peerToken,
+				out allowed));
+			ClassicAssert.IsTrue(allowed);
+			string beforeToken = KingdomArchitectureComponentCensusRules.ComponentTokenText(Lot,
+				beforeHash, At(before, slot));
+			List<ArchitectureComponentCensusRow> backward =
+				new List<ArchitectureComponentCensusRow>
+			{
+				Row(slot, beforeToken, "settling-id", false),
+				Row(slot, peerToken, peerId, true)
+			};
+			ClassicAssert.IsTrue(KingdomArchitectureComponentCensusRules.Settles(Lot, slot,
+				beforeToken, backward, peerId, peerToken, allowed));
+
+			// An unpublished peer cannot already be wearing the successor name.
+			ClassicAssert.IsTrue(KingdomArchitectureComponentCensusRules.TryPeerTerms(Lot,
+				afterHash, peer, "retagged-output-id", 0, false, out peerId, out peerToken,
+				out allowed));
+			ClassicAssert.IsFalse(allowed);
+			ClassicAssert.IsFalse(KingdomArchitectureComponentCensusRules.Settles(Lot, slot,
+				beforeToken, backward, peerId, peerToken, allowed));
+
+			// Strangers at the shared name: a foreign token, the peer token on the wrong cell,
+			// and the peer token under another identity. Each refuses the whole census.
+			ClassicAssert.IsTrue(KingdomArchitectureComponentCensusRules.TryPeerTerms(Lot,
+				beforeHash, At(before, "g:01:01"), "peer-output-id", 1, true, out peerId,
+				out peerToken, out allowed));
+			string foreign = KingdomArchitectureComponentCensusRules.ComponentTokenText(Lot,
+				afterHash, At(after, "g:06:04"));
+			ClassicAssert.IsFalse(KingdomArchitectureComponentCensusRules.Settles(Lot, slot,
+				thisToken, new List<ArchitectureComponentCensusRow>
+				{
+					Row(slot, thisToken, "settling-id", false),
+					Row(slot, foreign, "stranger-id", false)
+				}, peerId, peerToken, allowed));
+			ClassicAssert.IsFalse(KingdomArchitectureComponentCensusRules.Settles(Lot, slot,
+				thisToken, new List<ArchitectureComponentCensusRow>
+				{
+					Row(slot, thisToken, "settling-id", false),
+					Row(slot, peerToken, peerId, false)
+				}, peerId, peerToken, allowed));
+			ClassicAssert.IsFalse(KingdomArchitectureComponentCensusRules.Settles(Lot, slot,
+				thisToken, new List<ArchitectureComponentCensusRow>
+				{
+					Row(slot, thisToken, "settling-id", false),
+					Row(slot, peerToken, "stranger-id", true)
+				}, peerId, peerToken, allowed));
+			// A candidate at another slot of the same lot is not this census's business.
+			ClassicAssert.IsTrue(KingdomArchitectureComponentCensusRules.Settles(Lot, slot,
+				thisToken, new List<ArchitectureComponentCensusRow>
+				{
+					Row(slot, thisToken, "settling-id", false),
+					Row("g:02:02", foreign, "elsewhere-id", false)
+				}, peerId, peerToken, allowed));
 		}
+
 	}
 }
 #endif

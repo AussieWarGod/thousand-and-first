@@ -1,4 +1,7 @@
 using System.Collections.Generic;
+using System.Globalization;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace ThousandAndFirst
 {
@@ -87,7 +90,7 @@ namespace ThousandAndFirst
 		/// </summary>
 		public static bool Settled(int ThisCount, int OtherCount, int ForeignCount)
 		{
-			return ForeignCount == 0 && ThisCount == 1 && OtherCount >= 0 && OtherCount <= 1;
+			return ForeignCount == 0 && ThisCount == 1 && OtherCount <= 1;
 		}
 
 		/// <summary>
@@ -104,6 +107,77 @@ namespace ThousandAndFirst
 				return false;
 			}
 			return AfterCensus ? RetainState < 2 : RetainState > 0;
+		}
+
+		/// <summary>
+		/// The component token for one placement of one generation: the exact preimage the
+		/// stamper writes onto the component itself, so a census and a stamp can never disagree.
+		/// </summary>
+		public static string ComponentTokenText(string Lot, string Hash,
+			ArchitecturePlacement Placement)
+		{
+			string preimage = Lot + "|" + Hash + "|" + Placement.Slot + "|"
+				+ ((int)Placement.Layer).ToString(CultureInfo.InvariantCulture) + "|"
+				+ Placement.X.ToString(CultureInfo.InvariantCulture) + "|"
+				+ Placement.Y.ToString(CultureInfo.InvariantCulture) + "|"
+				+ Placement.Blueprint + "|" + (Placement.StatefulAnchor ?? "") + "|"
+				+ (Placement.ExistingAuthority ? "1" : "0");
+			byte[] digest;
+			using (SHA256 sha = SHA256.Create())
+				digest = sha.ComputeHash(Encoding.UTF8.GetBytes(preimage));
+			StringBuilder result = new StringBuilder(64);
+			for (int i = 0; i < digest.Length; i++)
+				result.Append(digest[i].ToString("x2", CultureInfo.InvariantCulture));
+			return result.ToString();
+		}
+
+		/// <summary>
+		/// The peer's census terms from the frozen pairing and the receipt that records it: the
+		/// identity it must present, the token it must carry, and whether its retain state still
+		/// lets it stand. False when the receipt records no identity for the pair, which is the
+		/// same refusal as naming no peer at all.
+		/// </summary>
+		public static bool TryPeerTerms(string Lot, string PeerHash, ArchitecturePlacement Peer,
+			string RecordedId, int RetainState, bool AfterCensus, out string PeerId,
+			out string PeerToken, out bool Allowed)
+		{
+			PeerId = null;
+			PeerToken = null;
+			Allowed = false;
+			if (Peer == null || string.IsNullOrEmpty(Lot) || string.IsNullOrEmpty(PeerHash)
+				|| string.IsNullOrEmpty(RecordedId)) return false;
+			PeerId = RecordedId;
+			PeerToken = ComponentTokenText(Lot, PeerHash, Peer);
+			Allowed = PeerAllowed(RetainState, AfterCensus);
+			return true;
+		}
+
+		/// <summary>
+		/// The whole census over one slot: every candidate standing at this lot and slot is
+		/// classified, nothing is skipped, and the counts are settled. This is the decision the
+		/// stamper makes; the caller only supplies what the engine read.
+		/// </summary>
+		public static bool Settles(string Lot, string Slot, string Token,
+			IList<ArchitectureComponentCensusRow> Candidates, string PeerId, string PeerToken,
+			bool PeerAllowed)
+		{
+			int thisCount = 0;
+			int otherCount = 0;
+			int foreignCount = 0;
+			if (Candidates != null)
+			{
+				for (int i = 0; i < Candidates.Count; i++)
+				{
+					ArchitectureComponentCensusRow row = Candidates[i];
+					if (row == null || !AtSlot(Lot, Slot, row.Lot, row.Slot)) continue;
+					int membership = Classify(Token, row.Token, row.Id, row.AtPeerCell, PeerId,
+						PeerToken, PeerAllowed);
+					if (membership == This) thisCount++;
+					else if (membership == Other) otherCount++;
+					else foreignCount++;
+				}
+			}
+			return Settled(thisCount, otherCount, foreignCount);
 		}
 
 		/// <summary>

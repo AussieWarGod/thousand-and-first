@@ -32,8 +32,8 @@ namespace ThousandAndFirst
 				return true;
 			}
 			if (found != KingdomPhysicalLookupState.Exact
-				// Removals run in their own phase, before any retained component is retagged
-				// (UpgradeApplication.cs:126-138), so no successor generation stands yet.
+				// Removals run in their own phase, before any retained component is retagged, so
+				// no successor generation stands: no other generation may stand.
 				|| !ExactComponent(Owner, exact, Z, Before, Lot, Placement, id, null))
 				return UpgradeQuarantine(Owner, "authored removal source " + Placement.Slot
 					+ " is absent, duplicated, moved, or changed", out Failure);
@@ -49,6 +49,7 @@ namespace ThousandAndFirst
 				KingdomExactRemovalAction aftermath =
 					KingdomConstructionRules.GlobalRemovalAftermath(found,
 						ReferenceEquals(afterThrow, exact), found == KingdomPhysicalLookupState.Exact
+						// Still the removal phase after a throw: no other generation may stand.
 						&& ExactComponent(Owner, afterThrow, Z, Before, Lot, Placement, id, null));
 				if (aftermath == KingdomExactRemovalAction.ProvedAbsent)
 				{
@@ -68,6 +69,7 @@ namespace ThousandAndFirst
 			found = KingdomConstruction.FindGlobalLiveId(id, out GameObject after);
 			KingdomExactRemovalAction result = KingdomConstructionRules.GlobalRemovalAftermath(
 				found, ReferenceEquals(after, exact), found == KingdomPhysicalLookupState.Exact
+				// Still the removal phase after the callback: no other generation may stand.
 				&& ExactComponent(Owner, after, Z, Before, Lot, Placement, id, null));
 			if (result == KingdomExactRemovalAction.ProvedAbsent)
 			{
