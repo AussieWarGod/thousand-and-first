@@ -100,7 +100,7 @@ correction's only production delta is one file,
 
 ### Added
 
-- A dev-only native-check seam (`camp-heart-native-checks`) proves PR #107's owed native case 2:
+- A dev-only native-check seam (`camp-heart-native-checks`) tests PR #107's owed native case 2:
   the camp heart's dedicated stockpile keeps its exact object identity, its exact cell and every
   physical unit the bill did not ask for across a REAL PAID climb from the rite ground to the
   waterstone, and the cooking fire is re-laid on the same rite-relative cell. The fixture founds a
@@ -135,6 +135,20 @@ correction's only production delta is one file,
   production records no such reason here: the siting path drops a crowding rect with a bare
   `continue` and no recorded reason before the ground is ever read, and the founder-facing answer
   when nothing fits is `KingdomPlotRules.RefuseRoom`. Cases 1, 3, 4 and 5 of #107 remain owed.
+
+- **A verdict for the whole construction lifecycle, and an honest name for the part that is
+  not driven yet.** The Quickstart harness already proves startup, a stockpile quote, the CanPay
+  pre-check, a paid commission with an exact timber and water debit and a new paid job, a real
+  save, and a cold load whose restored identities are byte-identical. Nothing judged those links
+  as ONE chain, and two links of that chain have no producer at all: carrying the paid job to a
+  finished building with engine turns, and acting again on the loaded game. A new read-only
+  verdict tool reads the journals a native run leaves and answers PASS only when every link
+  landed its rows in order; a link that landed no rows is BLOCKER, never a pass, and a link whose
+  rows refused is FAIL. It can also emit the long-form release
+  artefact from a driver-written run record: seven ordered steps, measured turns and seconds
+  beside their budgets, the two process sessions, and the candidate and continuity bindings --
+  omitting, and naming, anything the journals or the record do not actually carry. Source-only pins keep the harness and
+  the tool naming the same rows, so neither side can quietly stop demanding a link.
 
 - Kingdom Quickstart now founds a world with four founding citizens — a hand, a drifter, a tinker
   and a physicker of one culture per camp — enrolled under a new `Founding` reason that only this

@@ -144,6 +144,88 @@ replayed onto it; its only production delta is
 `Growth/KingdomArchitectureStamper.EnvelopeGrowth.cs`. The isolated main candidate and native
 receipts below exclude dev's unfinished gameplay. The inherited semantic review binds main only, not this dev inventory.
 
+## Unreleased construction-lifecycle coverage verdict
+
+The first complete construction lifecycle is one chain: startup, stockpile quote, CanPay, a paid
+commission with physical timber and water debit, engine turns until the job completes into a
+functional building, a real save, a cold load, and a further action on the loaded game.
+
+Driven today (executable, native): startup, quote, CanPay, commission with exact debit and a new
+paid job (`Harness/KingdomQuickstartBuildTest.cs:92-155`), the real save
+(`Harness/KingdomQuickstartSaveTest.cs`) and the cold load with byte-identical restored identities
+(`Harness/KingdomQuickstartLoadTest.cs:19-57`).
+
+Two roads now drive this chain, and neither relaxes an old contract. The Quickstart road is a
+separate sealed command, `quickstart-lifecycle <profile> <yes|no>`
+(`Harness/KingdomQuickstartBootRequest.cs`), which boots exactly as before, runs the same starter-chest
+commissioning proof, and is the only command whose script may carry further sealed auto-runner lines
+and the only one whose run may carry an auto-runner at all
+(`Harness/KingdomQuickstartBootTest.cs` `RunnerAuthorized`). `quickstart-boot`, `quickstart-save` and
+`quickstart-build` keep their exact single-line grammar and their runner exclusion, and no Quickstart
+shard constructs a runner. The founded road needs no Quickstart profile at all: `Harness/KingdomQuickstartLifecycleProvider.cs`
+registers `lifecycle-open`, `lifecycle-build`, `lifecycle-grown` and `lifecycle-save`, and
+`Tools/personas/lifecycle-stockpile-native-check.persona` seals them around the existing bounded
+`advance` verb. The settlement pays from its own accumulated stores -- no stock is minted and no
+job is forced into a phase -- so an economy that cannot yet pay refuses at CanPay, and a turn budget
+that expires before the building stands lands a refusal, never a pass.
+
+The second session now exists. `lifecycle-save` publishes a lifecycle witness wire
+(`taf-lifecycle-save-v1:`) alongside the real save, the unchanged importer
+(`Tools/prepare-scenario-load.py`) carries that save into a fresh profile, and
+`Harness/KingdomScenarioLoadEntry.cs` routes only that prefix into the lifecycle load branch --
+every other profile's load path is untouched. In the second process `lifecycle-loaded` re-proves by
+reference what the first session witnessed (same save, realm and city identity, the building
+standing on its own cell reading as built under the commissioned design key, the retained job row
+still linkable to it, the stockpile's post-debit timber and the settlement's stored drams), and
+`lifecycle-next` takes a real further action: a new quote, the CanPay pre-check and a real
+commission that mints its OWN job, with the exact one-timber and exact-drams debit re-proved and
+the completed job's identity explicitly refused as a substitute. Nothing is restored from the
+witness; a difference refuses rather than repairs, and a production refusal is journalled as it
+came.
+
+`Tools/check-quickstart-lifecycle.py` judges the chain from the journals a native run leaves: PASS
+only when every link's rows are present, in order and OK; FAIL when rows are present but refused,
+partial, out of order or interleaved; BLOCKER when a link landed no rows at all. Its exit codes
+separate the three (0/4/3). With `--results` and a driver-written `--run-record` it emits the
+long-form release artefact: `schemaVersion`, the seven ordered steps
+(startup, quote, paid-commission, engine-turn-build, save, cold-load, next-action) each at most
+once and only when the journals prove it, per-step measured `turnsUsed`/`elapsedSeconds` beside
+`turnBudget`/`timeoutSeconds`, the two process sessions (save-session, cold-load-session), and the
+candidate/runtime/build and continuity bindings. It measures nothing itself: every field the run
+record omits is emitted nowhere and named under `unresolvedFields`, and every undriven step is
+named under `blockedSteps`, so the validator reads them as unresolved rather than as a pass.
+Per step it also carries, under `observed`, the identities the driver read at that step -- realm and city
+throughout, the job and plot from the paid commission, the building from the turns that raised it,
+the save id from the save -- each read again at its own step and never copied forward. An identity offered before the
+thing it names exists is dropped and named; an identity that should exist and is missing leaves its
+step out of the artefact entirely, so the chain reads as incomplete rather than as a pass with a
+hole in it. The completed work reports both its own receipt identity and the paid job it fulfils.
+Each session writes its own run record (`Tools/scenario_run_record.py`): preparation seals the
+exercised commit, the production structural digest measured by `Tools/check-structure.py --json`
+on the frozen tree (never the review ledger, which an active candidate keeps stale on purpose),
+that session's own closed profile seal and name, the frozen seed and its budgets;
+`Tools/run-scenario.ps1` adds the launch identity and start from the launched process together
+with an `ownership` block bound to its own `process-ownership.json` receipt (pid, start ticks,
+executable, receipt SHA-256), and on `-StopRecord` the stop, refusing unless that exact receipt is
+unchanged and the owned pid with its own start ticks has ended. An exit code is written only with
+`-ExitObserved`; otherwise `exitProvenance` records that the process ended with its exit
+unobserved and no code is written at all, so a wrapper's default can never pass for the game's own
+exit. The checker refuses a session whose ownership block is missing or malformed, whose launch
+identity does not name the owned pid, or whose exit code appears without observed provenance. The checker takes both
+records, binds each journal to the run record sitting in its own scenario root and requires every
+lifecycle row's own `profile=` / `seal=` stamp to equal that session's recorded profileName and
+profileSeal, so a step is attributed to the profile that actually ran it, derives per-step turns and seconds from the
+journals those runs wrote -- never from the budgets -- and refuses a pair that shares a launch identity, that began the cold load before the
+save session stopped, or that exercised different trees. Three digests stay separately named:
+`runtimeInventorySha256` (production structure), `harnessInventorySha256` (dev-harness inventory,
+recorded only when a caller can state it), and per-session `processes[].profileSeal` with
+`processes[].profileName`.
+`Tools/tests/quickstart_lifecycle_checker_test.py` and
+`Tools/tests/scenario_run_record_test.py` exercise those verdicts;
+`DevTests/KingdomQuickstartLifecycleContractTests.cs` is SOURCE-ONLY and pins the two row lists
+against each other and the driven links' physical assertions. No native run was made for this
+change.
+
 ## Native raw-delivery overflow evidence (#111 / #124 / #129)
 
 Exact integrated head `2f90a5f85852a9be53afcd1a539fa8e1c01ddbba` passed

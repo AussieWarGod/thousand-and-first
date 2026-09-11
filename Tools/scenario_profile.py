@@ -233,7 +233,14 @@ QUICKSTART_SAVE_VERB = "quickstart-save"
 # Sibling of boot/save: same genuine boot, plus a separate post-boot production commissioning
 # proof (Harness/KingdomQuickstartBuildTest.cs). Never changes boot/save grammar or behaviour.
 QUICKSTART_BUILD_VERB = "quickstart-build"
+# The lifecycle variant: the same genuine boot and the same post-boot commissioning proof, and
+# then -- uniquely among these commands -- further AutoRunner lines after it, because carrying a
+# paid job to a finished building needs real engine turns and only the runner spends them. It is
+# a SEPARATE verb so that boot, save and build keep their exact single-line grammar and their
+# runner exclusion untouched; see Harness/KingdomQuickstartBootRequest.cs LifecycleVerb.
+QUICKSTART_LIFECYCLE_VERB = "quickstart-lifecycle"
 QUICKSTART_VERBS = (QUICKSTART_BOOT_VERB, QUICKSTART_SAVE_VERB, QUICKSTART_BUILD_VERB)
+QUICKSTART_LIFECYCLE_VERBS = QUICKSTART_VERBS + (QUICKSTART_LIFECYCLE_VERB,)
 QUICKSTART_PROFILES = ("marsh", "canyon", "dunes")
 QUICKSTART_ADVISOR_ENV = "TAF_SCENARIO_QUICKSTART_ADVISOR"
 QUICKSTART_ADVISOR_OPTION = "r_TAF_OptionQuickstartAdvisor"
@@ -289,6 +296,16 @@ QUICKSTART_SAVE_SCRIPT_HEADER = (
     "# Written before the profile seal together with the matching PlayerOptions.json.\n"
 )
 
+QUICKSTART_LIFECYCLE_SCRIPT_HEADER = (
+    "# Sealed developer Quickstart LIFECYCLE profile, not an ordinary AutoRunner scenario and not\n"
+    "# an ordinary Quickstart profile. Selects real Kingdom Quickstart, drives the same production\n"
+    "# commissioning call from starter stock, and then -- uniquely -- runs the sealed AutoRunner\n"
+    "# lines after it so real engine turns can carry that paid job to a finished building.\n"
+    "# The runner is authorised for THIS command only; quickstart-boot, quickstart-save and\n"
+    "# quickstart-build keep their single-line grammar and their runner exclusion unchanged.\n"
+    "# Written before the profile seal together with the matching PlayerOptions.json.\n"
+)
+
 QUICKSTART_BUILD_SCRIPT_HEADER = (
     "# Sealed developer Quickstart build check, not an AutoRunner scenario script.\n"
     "# Selects real Kingdom Quickstart; after production boot checks, drives one real production\n"
@@ -309,7 +326,7 @@ def parse_quickstart_command(tokens: list[str]) -> str:
     """Require one exact boot or save command; return the native advisor option value."""
     if (
         len(tokens) != 3
-        or tokens[0] not in QUICKSTART_VERBS
+        or tokens[0] not in QUICKSTART_LIFECYCLE_VERBS
         or tokens[1] not in QUICKSTART_PROFILES
         or tokens[2] not in ("yes", "no")
     ):
@@ -323,7 +340,13 @@ def quickstart_advisor(tokens: list[str]) -> str:
     if os.environ.get(QUICKSTART_ADVISOR_ENV) != tokens[2]:
         fail(QUICKSTART_ADVISOR_ENV + " must exactly match the Quickstart command's yes/no")
     raw = os.environ.get("TAF_SCENARIO_SCRIPT")
-    if raw is not None and raw != " ".join(tokens):
+    command = " ".join(tokens)
+    # Boot, save and build must be the WHOLE script, character for character, exactly as before.
+    # The lifecycle variant is the only one that may carry a tail, and even then its command must
+    # be the exact literal prefix followed by a single space -- no reflowed whitespace, no tabs.
+    if raw is not None and raw != command and not (
+        tokens[0] == QUICKSTART_LIFECYCLE_VERB and raw.startswith(command + " ")
+    ):
         fail("TAF_SCENARIO_SCRIPT disagrees with the exact Quickstart command")
     return value
 
@@ -366,6 +389,12 @@ def parse_script(tokens: list[str], extra: tuple[str, ...] = ()) -> list[str]:
     become one line. The count is validated here rather than left to the runtime: a sealed profile
     is not retryable, and a malformed count discovered in game costs a whole run.
     """
+    if tokens[:1] == [QUICKSTART_LIFECYCLE_VERB]:
+        # Exactly one lifecycle command, then ordinary AutoRunner lines. The command itself is
+        # validated by the same three-token rule as its siblings; the tail is parsed below by the
+        # ordinary grammar, so its counts and reserved-verb rules are unchanged.
+        parse_quickstart_command(tokens[:3])
+        return [" ".join(tokens[:3])] + parse_script(tokens[3:], extra)
     if any(verb in tokens for verb in QUICKSTART_VERBS):
         parse_quickstart_command(tokens)
         return [" ".join(tokens)]
@@ -414,8 +443,9 @@ def write_script(destination: str, verbs: list[str]) -> None:
     if not chosen:
         fail("the scenario script would declare no verbs")
     header = SCRIPT_HEADER
-    if verbs and verbs[0] in QUICKSTART_VERBS:
-        advisor = quickstart_advisor(verbs)
+    if verbs and verbs[0] in QUICKSTART_LIFECYCLE_VERBS:
+        advisor = quickstart_advisor(
+            list(verbs[:3]) if verbs[0] == QUICKSTART_LIFECYCLE_VERB else list(verbs))
         options_path = os.path.join(os.path.dirname(destination), "PlayerOptions.json")
         try:
             with open(options_path, encoding="utf-8") as handle:
@@ -427,10 +457,12 @@ def write_script(destination: str, verbs: list[str]) -> None:
             fail("Quickstart advisor differs from sibling PlayerOptions.json")
         header = (QUICKSTART_SAVE_SCRIPT_HEADER if verbs[0] == QUICKSTART_SAVE_VERB
                   else QUICKSTART_BUILD_SCRIPT_HEADER if verbs[0] == QUICKSTART_BUILD_VERB
+                  else QUICKSTART_LIFECYCLE_SCRIPT_HEADER
+                  if verbs[0] == QUICKSTART_LIFECYCLE_VERB
                   else QUICKSTART_SCRIPT_HEADER)
     elif (QUICKSTART_ADVISOR_ENV in os.environ
           or any(verb in os.environ.get("TAF_SCENARIO_SCRIPT", "").split()
-                 for verb in QUICKSTART_VERBS)):
+                 for verb in QUICKSTART_LIFECYCLE_VERBS)):
         fail("Quickstart preparation is valid only for a standalone Quickstart command")
     with open(destination, "w", encoding="utf-8") as handle:
         handle.write(header + "\n".join(chosen) + "\n")
