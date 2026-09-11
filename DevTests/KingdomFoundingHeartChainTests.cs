@@ -315,6 +315,52 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("public const long CadenceTicks = KingdomRules.TicksPerDay;",
 				TestMain.ReadRepositoryText("Simulation/City/KingdomSemanticClockRules.cs"));
 		}
+
+		/// <summary>
+		/// VALUE. The custody corroboration, after native run 19: the improvement route never
+		/// writes a predecessor stamp (only the plot finish route does), so an absent stamp must
+		/// bind on the receipts, a stamp naming the retired identity must bind, and a stamp naming
+		/// anything else must refuse. Receipts missing refuses whatever the stamp says.
+		/// </summary>
+		[Test]
+		public void AnAbsentPredecessorStampBindsAndAContradictingOneRefuses()
+		{
+			const string retired = "final-reserved-id";
+			const string successor = "successor-id";
+
+			// The stamp alone, in its three shapes.
+			ClassicAssert.IsTrue(KingdomFoundingHeartChainRules.CorroboratesRetired(null, retired),
+				"the improvement route writes no stamp, so absence cannot refuse");
+			ClassicAssert.IsTrue(KingdomFoundingHeartChainRules.CorroboratesRetired("", retired));
+			ClassicAssert.IsTrue(KingdomFoundingHeartChainRules.CorroboratesRetired(retired,
+				retired));
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.CorroboratesRetired(
+				"someone-elses-root", retired),
+				"a successor stamped with another predecessor did not replace this root");
+			// And it can never supply the identity it is corroborating.
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.CorroboratesRetired(retired,
+				null));
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.CorroboratesRetired(null, ""));
+
+			// In the whole binding: custody proved on the receipts alone still binds, and the
+			// receipts missing still refuses -- the stamp cannot rescue it either way.
+			KingdomFoundingHeartTerminalPlan prior = Terminal("works-slot-id", retired);
+			bool custodyOnReceipts = KingdomFoundingHeartChainRules.CorroboratesRetired(null,
+				retired);
+			ClassicAssert.IsTrue(KingdomFoundingHeartChainRules.BindsGround(successor, "other-plan",
+				prior, retired, successor, true, true, custodyOnReceipts));
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, "other-plan",
+				prior, retired, successor, false, true, custodyOnReceipts),
+				"no construction receipt refuses however the stamp reads");
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, "other-plan",
+				prior, retired, successor, true, false, custodyOnReceipts),
+				"no removal proof refuses however the stamp reads");
+			// A contradicting stamp collapses custody, and the binding refuses with it.
+			bool custodyContradicted = KingdomFoundingHeartChainRules.CorroboratesRetired(
+				"someone-elses-root", retired);
+			ClassicAssert.IsFalse(KingdomFoundingHeartChainRules.BindsGround(successor, "other-plan",
+				prior, retired, successor, true, true, custodyContradicted));
+		}
 	}
 }
 #endif

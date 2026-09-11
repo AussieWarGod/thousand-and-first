@@ -606,7 +606,7 @@ namespace ThousandAndFirst.Tests
 				chain);
 			foreach (string fact in new[] { "KingdomConstruction.HasReceipt(successor, job)",
 				"r_KingdomScaffold.HasRemovalProof(successor, job.SubjectId)",
-				"successor.GetStringProperty(PlotFinalPredecessorProperty) == retired",
+				"KingdomFoundingHeartChainRules.CorroboratesRetired(stamp, retired)",
 				"Job.Phase != KingdomConstructionPhase.Complete",
 				"!string.IsNullOrEmpty(Job.Failure)",
 				"KingdomFoundingHeartChainRules.BindsGround(job.OutputId," })

@@ -86,6 +86,23 @@ namespace ThousandAndFirst
 			return HasReceipt && HasRemovalProof && CustodyProved;
 		}
 
+		/// <summary>
+		/// Whether a successor's predecessor STAMP corroborates the retired identity.
+		///
+		/// <para>The stamp is written by the plot finish route alone
+		/// (<c>KingdomPlot2.31.FinishOutput</c>), and the improvement route -- the only route a
+		/// heart rung above the first can climb by -- never writes it. So its absence says
+		/// nothing, and demanding it refused every real climb. What it can still do is CONTRADICT:
+		/// a successor stamped with some other predecessor is not the one that replaced this
+		/// root, and that refuses. Present it must match; absent the receipts carry the link.
+		/// </para>
+		/// </summary>
+		public static bool CorroboratesRetired(string Stamp, string RetiredIdentity)
+		{
+			if (string.IsNullOrEmpty(RetiredIdentity)) return false;
+			return string.IsNullOrEmpty(Stamp) || Stamp == RetiredIdentity;
+		}
+
 		/// <summary>The whole equality the terminal binding asks: first generation, or a proved
 		/// chain. Nothing else is a heart.</summary>
 		public static bool BindsGround(string TerminalFinalId, string PlanFinalId,

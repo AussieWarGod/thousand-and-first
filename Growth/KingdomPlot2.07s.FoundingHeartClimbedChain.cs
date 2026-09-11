@@ -72,23 +72,24 @@ namespace ThousandAndFirst
 				+ "; output=" + job.OutputId);
 			bool removal = r_KingdomScaffold.HasRemovalProof(successor, job.SubjectId);
 			if (!removal) return HeartRefused("chain: removal proof: subject=" + job.SubjectId);
-			// Custody. TWO RECEIPT-BACKED FACTS AND ONE STAMP, named as what they are. RECEIPTS:
-			// the construction receipt the successor carries is the job's own durable receipt for
-			// exactly this output (KingdomConstruction.HasReceipt), and the scaffold removal proof
-			// is the durable successor-side record naming the retired identity
-			// (r_KingdomScaffold.HasRemovalProof); those two carry the link. STAMPS: the engine
-			// identity and PlotFinalPredecessorProperty are plain property reads, REQUIRED
-			// corroboration and never sufficient on their own -- a stamp alone proves nothing
-			// here, and neither is asked before the receipts are. The finishing transaction's
-			// PlotFinalRoot custody key would have been the durable custody row, but it is retired
-			// when the job settles (KingdomPlot2.34.EffectsAndFurnishing) and cannot be read here.
+			// Custody. THE RECEIPTS CARRY IT; THE STAMP CAN ONLY CONTRADICT IT. The construction
+			// receipt the successor carries is the job's own durable receipt for exactly this
+			// output, and the scaffold removal proof is the durable successor-side record naming
+			// the retired identity; those two are the link, and both were proved above. The
+			// predecessor STAMP is written by the plot finish route alone
+			// (KingdomPlot2.31.FinishOutput:135) and the improvement route never writes it, so an
+			// absent stamp says nothing -- demanding it refused every real climb (native run 19).
+			// Present, it must name the retired identity: a successor stamped with some other
+			// predecessor did not replace this root. The finishing transaction's PlotFinalRoot
+			// custody key would have been a durable custody row, but it is retired when the job
+			// settles (KingdomPlot2.34.EffectsAndFurnishing) and cannot be read here at all.
+			string stamp = successor.GetStringProperty(PlotFinalPredecessorProperty);
 			bool custody = successor.IDIfAssigned == job.OutputId
-				&& successor.GetStringProperty(PlotFinalPredecessorProperty) == retired
+				&& KingdomFoundingHeartChainRules.CorroboratesRetired(stamp, retired)
 				&& KingdomConstruction.HasReceipt(successor, job);
 			if (!custody) return HeartRefused("chain: custody corroboration: successor="
 				+ successor.IDIfAssigned + "; output=" + job.OutputId + "; predecessor stamp="
-				+ (successor.GetStringProperty(PlotFinalPredecessorProperty) ?? "(absent)")
-				+ "; retired=" + retired);
+				+ (string.IsNullOrEmpty(stamp) ? "(absent)" : stamp) + "; retired=" + retired);
 			if (!KingdomFoundingHeartChainRules.BindsGround(job.OutputId,
 				FoundingHeartFinalId(plan), prior, retired, job.OutputId, receipt, removal,
 				custody))
