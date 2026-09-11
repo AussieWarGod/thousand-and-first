@@ -19,7 +19,12 @@ Compilation, native progression and independent review of this distinction are o
 
 The current draft also excludes transient combat occupants from structural passability
 validation. Real solid obstructions still refuse; construction placement and annexation retain
-their living-occupant guards. A native NPC/solid-wall/cleanup probe is implemented but unexecuted.
+their living-occupant guards. Native `73c2cb4` run `heart034-occupancy-native.wFtCGX`
+passes the NPC/solid-wall/cleanup probe at (40,12), occupied expansion refusal and paid bill.
+The earlier seal errors disappear, but the heart still does not complete after another 2,400
+turns. Owned game stopped; no rung-2 acceptance claimed. Four compile modes clean; Linux strict
+14,502 + 5,575 cases, zero skips; tooling suite 796 tests with 11 existing platform skips.
+Read-only job/scaffold progress diagnostics added after that run; execution remains owed.
 
 Retained `77d9369` (production inventory `fce921c6bbcaff4992c3660b26d9b02a903b8f4f055b91c48aeff801669c0d05`):
 four compile modes clean; Linux strict 14,501 + 5,575 cases, zero skips. Native

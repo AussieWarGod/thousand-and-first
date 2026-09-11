@@ -209,6 +209,18 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void FailedCompletionRecordsActualJobAndScaffoldProgress()
+		{
+			string phases = Read(Phases);
+			int phase = phases.IndexOf("private void Phase2()", StringComparison.Ordinal);
+			Assert.That(phases.IndexOf("RecordJobProgress();", phase, StringComparison.Ordinal),
+				Is.LessThan(phases.IndexOf("StandingHeart();", phase, StringComparison.Ordinal)));
+			foreach (string field in new[] { "job.Phase", "job.Failure", "job.DueTick",
+				"scaffold?.RemainingTicks", "scaffold?.LastWorkedTick" })
+				Assert.That(Read(Bill), Does.Contain(field));
+		}
+
+		[Test]
 		public void CustodyIsReadRawAndAnInvalidEntryFailsRatherThanBeingSkipped()
 		{
 			string reads = Read(Reads);

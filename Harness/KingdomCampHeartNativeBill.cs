@@ -17,6 +17,35 @@ namespace ThousandAndFirst.Harness
 			internal string BilledMaterial;
 			internal string AuthoredMaterial;
 
+			// Read the real job and scaffold at each boundary, including a failed completion.
+			// A duration estimate is not evidence that work advanced or that handover succeeded.
+			private void RecordJobProgress()
+			{
+				try
+				{
+					Evidence.Append("\njob-progress tick=").Append(Game.TimeTicks)
+						.Append("; turns=").Append(Game.Turns).Append("; job=").Append(JobId);
+					if (!KingdomConstruction.TryFind(JobId, out var job) || job == null)
+					{ Evidence.Append("; row=absent"); return; }
+					Evidence.Append("; phase=").Append(job.Phase).Append("; physical=")
+						.Append(job.PhysicalPhase).Append("; started=").Append(job.StartedTick)
+						.Append("; due=").Append(job.DueTick).Append("; updated=").Append(job.UpdatedTick)
+						.Append("; failure=").Append(KingdomScenarioRules.Bounded(job.Failure));
+					var improvement = Heart?.GetPart<XRL.World.Parts.r_KingdomImprovement>();
+					var scaffold = improvement?.Scaffold?.GetPart<XRL.World.Parts.r_KingdomScaffold>();
+					Evidence.Append("; improvement-working=").Append(improvement?.Working)
+						.Append("; improvement-due=").Append(improvement?.WorkCompleteTick)
+						.Append("; scaffold=").Append(improvement?.Scaffold?.IDIfAssigned)
+						.Append("; remaining=").Append(scaffold?.RemainingTicks)
+						.Append("; last-worked=").Append(scaffold?.LastWorkedTick);
+				}
+				catch (Exception error)
+				{
+					Evidence.Append("; progress-read-error=")
+						.Append(KingdomScenarioRules.Bounded(error.GetType().Name + ": " + error.Message));
+				}
+			}
+
 			/// <summary>Finds the settlement's own active Improvement job for this heart and
 			/// proves it committed EXACTLY the authored water and material bill. Water drawn by
 			/// ordinary resident upkeep never appears here: <c>Claims.WaterSpent</c> is the

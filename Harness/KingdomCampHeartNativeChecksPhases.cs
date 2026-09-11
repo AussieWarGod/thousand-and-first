@@ -100,6 +100,7 @@ namespace ThousandAndFirst.Harness
 						: ((KingdomUpgradeRules.UpgradeVerdict)improvement.AnnouncedReason).ToString())
 					+ "; population=" + System.Population + "; assigned-crew=" + System.AssignedCrew);
 				RequireBillDebited();
+				RecordJobProgress();
 				List<GameObject> bodies;
 				List<KingdomCampHeartNativeCensus.Unit> present = ContentUnits(out bodies);
 				RequireAbsent(MintedStone, present, "stone");
@@ -128,6 +129,7 @@ namespace ThousandAndFirst.Harness
 			/// same raw count - and the fire re-laid on the same rite-relative cell.</summary>
 			private void Phase2()
 			{
+				RecordJobProgress();
 				GameObject standing = StandingHeart();
 				Require(KingdomUpgrade.DesignKeyOf(standing) == SecondRungKey,
 					"taf-camp-rung-unfinished: the heart did not finish its real paid climb to "
