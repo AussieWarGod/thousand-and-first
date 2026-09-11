@@ -33,9 +33,32 @@ $ErrorActionPreference = 'Stop'
 # stopped, and the game build string the run's own log states. Everything about the exercised
 # tree was written at preparation time by Tools/scenario_run_record.py and is never rewritten
 # here. The file is replaced whole, so a half-written record can never be read as a whole one.
+function ConvertTo-TafRecordValue {
+    param($Value)
+    if ($Value -is [System.Management.Automation.PSCustomObject]) {
+        $record = @{}
+        foreach ($property in $Value.PSObject.Properties) {
+            $record[$property.Name] = ConvertTo-TafRecordValue $property.Value
+        }
+        return $record
+    }
+    if ($Value -is [array]) {
+        $items = New-Object System.Collections.ArrayList
+        foreach ($item in $Value) { [void]$items.Add((ConvertTo-TafRecordValue $item)) }
+        return ,$items.ToArray()
+    }
+    return $Value
+}
+
 function Read-TafRunRecord {
     param([Parameter(Mandatory = $true)][string]$Path)
-    return Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json -AsHashtable
+    # Windows PowerShell 5.1 has no ConvertFrom-Json -AsHashtable. Keep typed nested
+    # ownership fields without requiring another shell to launch or stop the game.
+    $value = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
+    if ($value -isnot [System.Management.Automation.PSCustomObject]) {
+        throw 'A run record must be a JSON object.'
+    }
+    return ConvertTo-TafRecordValue $value
 }
 
 function Write-TafRunRecord {
