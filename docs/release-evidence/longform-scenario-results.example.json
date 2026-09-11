@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "driver": "REPLACE_WITH_THE_DRIVER_OR_HONESTLY_LABELLED_AUTOMATED_IDENTITY",
+  "runId": "OPAQUE_RUN_IDENTIFIER",
+  "seed": 0,
+  "candidateCommit": "FULL_LOWERCASE_PRIVATE_CANDIDATE_COMMIT",
+  "runtimeInventorySha256": "SHA256_FROM_TOOLS_CHECK_STRUCTURE_PY_JSON_FOR_THE_REQUESTED_TREE_NEVER_STRUCTURE_REVIEW_JSON",
+  "gameBuildId": "2.0.211.51",
+  "logRef": "docs/release-evidence/longform-scenario.log",
+  "logSha256": "SHA256_OF_RETAINED_RAW_DRIVER_LOG",
+  "continuity": {
+    "realmId": "REPLACE_WITH_EXERCISED_REALM_ID",
+    "cityId": "REPLACE_WITH_EXERCISED_CITY_ID"
+  },
+  "processes": [
+    {
+      "role": "save-session",
+      "launchId": "REPLACE_WITH_LAUNCH_ID",
+      "started": "YYYY-MM-DDTHH:MM:SSZ",
+      "stoppedUtc": "YYYY-MM-DDTHH:MM:SSZ",
+      "profileName": "REPLACE_WITH_THE_LAUNCHED_SAVE_SESSION_PROFILE_NAME",
+      "profileSeal": "SHA256_OF_THAT_SESSIONS_CLOSED_PROFILE_SHA256_HEADER_TAF_SCENARIO_PROFILE_SEAL_V1"
+    },
+    {
+      "role": "cold-load-session",
+      "launchId": "REPLACE_WITH_A_DIFFERENT_LAUNCH_ID",
+      "started": "YYYY-MM-DDTHH:MM:SSZ",
+      "stoppedUtc": "YYYY-MM-DDTHH:MM:SSZ",
+      "profileName": "REPLACE_MAY_DIFFER_FROM_SAVE_SESSION_PROFILE_NAME",
+      "profileSeal": "SHA256_MAY_DIFFER_FROM_SAVE_SESSIONS_SEAL"
+    }
+  ],
+  "steps": [
+    {"step": "startup", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0,
+     "observed": {"realmId": "REPLACE", "cityId": "REPLACE"}},
+    {"step": "quote", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0,
+     "observed": {"realmId": "REPLACE", "cityId": "REPLACE"}},
+    {"step": "paid-commission", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0,
+     "observed": {"realmId": "REPLACE", "cityId": "REPLACE", "jobId": "REPLACE_WITH_THE_COMMISSIONED_JOB_ID"}},
+    {"step": "engine-turn-build", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0,
+     "observed": {"realmId": "REPLACE", "cityId": "REPLACE", "buildingId": "REPLACE_WITH_THE_RESOLVED_BUILDING_ID",
+       "plotId": "REPLACE_WITH_THE_PLOT_ID", "completedReceiptId": "REPLACE_WITH_THE_COMPLETED_RECEIPT_ID",
+       "forJobId": "REPLACE_MUST_EQUAL_PAID_COMMISSIONS_JOB_ID"}},
+    {"step": "save", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0,
+     "observed": {"realmId": "REPLACE", "cityId": "REPLACE", "buildingId": "REPLACE_SAME_AS_ABOVE",
+       "plotId": "REPLACE_SAME_AS_ABOVE", "saveId": "REPLACE_WITH_THE_SAVE_ID"}},
+    {"step": "cold-load", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0,
+     "observed": {"realmId": "REPLACE", "cityId": "REPLACE", "buildingId": "REPLACE_SAME_AS_ABOVE",
+       "plotId": "REPLACE_SAME_AS_ABOVE", "saveId": "REPLACE_SAME_AS_ABOVE"}},
+    {"step": "next-action", "status": "PASS", "turnsUsed": 0, "elapsedSeconds": 0, "turnBudget": 0, "timeoutSeconds": 0,
+     "observed": {"realmId": "REPLACE", "cityId": "REPLACE", "buildingId": "REPLACE_SAME_AS_ABOVE",
+       "plotId": "REPLACE_SAME_AS_ABOVE", "saveId": "REPLACE_SAME_AS_ABOVE",
+       "jobId": "OPTIONAL_A_BRAND_NEW_JOB_NO_LINKAGE_REQUIRED_TO_THE_COMPLETED_ONE"}}
+  ]
+}
