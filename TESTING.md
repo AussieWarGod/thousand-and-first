@@ -9,7 +9,7 @@ No combined compilation, licensed-suite or native progression result is claimed 
 figures below remain retained evidence for their own checkpoints. Current public release is
 0.3.3; this work prepares 0.3.4 and does not change the published tag or package.
 
-The current public Alpha manifest is `0.3.3`, prepared for the public Workshop item.
+The current public Alpha manifest is `0.3.3`, published to the public Workshop item.
 Its private candidate passed subscribed-install verification and finalization (2026-09-11).
 Public delivery is recorded separately in `docs/STATUS.md`; `0.3.2` is the prior public release.
 Working-tree changes do not inherit that tagged release's receipts. Any next public release
