@@ -791,6 +791,14 @@ class LongFormScenarioResultsTests(unittest.TestCase):
             any("observed.saveId must equal the value first observed" in error for error in errors), errors
         )
 
+    def test_next_action_missing_save_id_fails(self) -> None:
+        payload = self.valid_payload()
+        del payload["steps"][6]["observed"]["saveId"]
+        errors = self.validate(payload)
+        self.assertTrue(
+            any("(next-action) must observe saveId" in error for error in errors), errors
+        )
+
     def test_next_action_may_observe_a_brand_new_job_id(self) -> None:
         # No linkage required between the completed job and a fresh one next-action starts.
         payload = self.valid_payload()
@@ -1523,33 +1531,48 @@ class PackagePathCliSequenceTest(unittest.TestCase):
 
 class RunRecordTest(unittest.TestCase):
     """Tools/workshop_metadata.py.validate_run_record: the camp harness's exact-owned-process
-    receipt (test/longform-reachability, Tools/scenario_run_record.py + run-scenario.ps1) --
-    a SEPARATE artefact from longFormScenario, whose processes[] entries never carry these
-    fields."""
+    receipt (test/longform-reachability, Tools/scenario_run_record.py's seal/launch/stop,
+    frozen at 8fe3093) -- a SEPARATE artefact from longFormScenario, whose processes[]
+    entries never carry these fields. Fixture values (launchId "pid-4242-...", startTicks
+    "638000000000000000", receiptRef "process-ownership.json") are copied from that branch's
+    own Tools/tests/scenario_run_record_test.py positives, read-only, not invented here."""
 
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory()
         self.root = Path(self.temporary.name)
-        (self.root / "docs" / "release-evidence").mkdir(parents=True)
 
     def tearDown(self) -> None:
         self.temporary.cleanup()
 
-    def write_receipt(self, name: str = "run-receipt.txt") -> tuple[str, str]:
-        ref = f"docs/release-evidence/{name}"
-        path = self.root / ref
-        path.write_text("owned process receipt\n", encoding="utf-8")
-        return ref, hashlib.sha256(path.read_bytes()).hexdigest()
+    def write_receipt(self, name: str = "process-ownership.json") -> tuple[str, str]:
+        path = self.root / name
+        path.write_text(
+            json.dumps({"schema": "taf-scenario-process-v1", "pid": 4242}), encoding="utf-8"
+        )
+        return name, hashlib.sha256(path.read_bytes()).hexdigest()
 
     def valid_record(self, **overrides) -> dict:
         receipt_ref, receipt_sha = self.write_receipt()
         record = {
-            "launchId": "launch-pid-4242",
+            "role": "save-session",
+            "root": str(self.root),
+            "seed": "#43101",
+            "script": "",
+            "candidateCommit": "a" * 40,
+            "runtimeInventorySha256": "b" * 64,
+            "profileName": "taf-scenario.save",
+            "profileSeal": "d" * 64,
+            "turnBudget": 3000,
+            "timeoutSeconds": 1200,
+            "sealedUtc": "2026-09-11T09:59:00Z",
+            "launchId": "pid-4242-20260911T100000Z",
+            "started": "2026-09-11T10:00:00Z",
+            "stoppedUtc": "2026-09-11T10:05:00Z",
             "ownership": {
                 "receiptRef": receipt_ref,
                 "receiptSha256": receipt_sha,
                 "pid": 4242,
-                "startTicks": 1000,
+                "startTicks": "638000000000000000",
                 "executable": "CoQ.exe",
             },
             "exitProvenance": METADATA.RUN_RECORD_EXIT_PROVENANCE_OBSERVED,
@@ -1566,11 +1589,63 @@ class RunRecordTest(unittest.TestCase):
     def test_valid_observed_record_passes(self) -> None:
         self.assertEqual(METADATA.validate_run_record(self.write(self.valid_record())), [])
 
-    def test_valid_unobserved_record_with_no_exit_code_passes(self) -> None:
+    def test_valid_unobserved_record_with_no_exit_code_key_passes(self) -> None:
         record = self.valid_record(
-            exitProvenance=METADATA.RUN_RECORD_EXIT_PROVENANCE_UNOBSERVED, exitCode=None
+            exitProvenance=METADATA.RUN_RECORD_EXIT_PROVENANCE_UNOBSERVED
         )
+        del record["exitCode"]
         self.assertEqual(METADATA.validate_run_record(self.write(record)), [])
+
+    def test_unknown_top_level_key_fails(self) -> None:
+        record = self.valid_record()
+        record["notAField"] = "x"
+        issues = METADATA.validate_run_record(self.write(record))
+        self.assertTrue(any("fields must be exactly the required set" in issue for issue in issues), issues)
+
+    def test_missing_required_key_fails(self) -> None:
+        record = self.valid_record()
+        del record["script"]
+        issues = METADATA.validate_run_record(self.write(record))
+        self.assertTrue(any("fields must be exactly the required set" in issue for issue in issues), issues)
+
+    def test_optional_harness_inventory_and_game_build_pass(self) -> None:
+        record = self.valid_record(harnessInventorySha256="c" * 64, gameBuildId="2.0.211.51")
+        self.assertEqual(METADATA.validate_run_record(self.write(record)), [])
+
+    def test_role_not_in_enum_fails(self) -> None:
+        record = self.valid_record(role="some-other-role")
+        issues = METADATA.validate_run_record(self.write(record))
+        self.assertTrue(any("role must be one of" in issue for issue in issues), issues)
+
+    def test_stopped_before_started_fails(self) -> None:
+        record = self.valid_record(started="2026-09-11T10:10:00Z", stoppedUtc="2026-09-11T10:00:00Z")
+        issues = METADATA.validate_run_record(self.write(record))
+        self.assertTrue(any("stoppedUtc must not be before started" in issue for issue in issues), issues)
+
+    def test_stopped_equal_to_started_passes(self) -> None:
+        # Coordinator rule: stoppedUtc >= started (not strictly greater).
+        record = self.valid_record(stoppedUtc="2026-09-11T10:00:00Z")
+        self.assertEqual(METADATA.validate_run_record(self.write(record)), [])
+
+    def test_start_ticks_as_int_fails(self) -> None:
+        record = self.valid_record()
+        record["ownership"]["startTicks"] = 638000000000000000
+        issues = METADATA.validate_run_record(self.write(record))
+        self.assertTrue(any("startTicks must be a digit string" in issue for issue in issues), issues)
+
+    def test_start_ticks_non_digit_string_fails(self) -> None:
+        record = self.valid_record()
+        record["ownership"]["startTicks"] = "not-digits"
+        issues = METADATA.validate_run_record(self.write(record))
+        self.assertTrue(any("startTicks must be a digit string" in issue for issue in issues), issues)
+
+    def test_receipt_ref_with_path_separator_fails(self) -> None:
+        record = self.valid_record()
+        record["ownership"]["receiptRef"] = "docs/release-evidence/process-ownership.json"
+        issues = METADATA.validate_run_record(self.write(record))
+        self.assertTrue(
+            any("receiptRef must be a bare file name" in issue for issue in issues), issues
+        )
 
     def test_missing_ownership_block_fails(self) -> None:
         record = self.valid_record()
@@ -1578,34 +1653,37 @@ class RunRecordTest(unittest.TestCase):
         issues = METADATA.validate_run_record(self.write(record))
         self.assertTrue(any("ownership is required" in issue for issue in issues), issues)
 
-    def test_ownership_key_entirely_absent_fails(self) -> None:
-        record = self.valid_record()
-        del record["ownership"]
-        issues = METADATA.validate_run_record(self.write(record))
-        self.assertTrue(any("fields must be exactly" in issue for issue in issues), issues)
-
-    def test_exit_code_under_unobserved_provenance_fails(self) -> None:
+    def test_exit_code_present_under_unobserved_provenance_fails(self) -> None:
         record = self.valid_record(
             exitProvenance=METADATA.RUN_RECORD_EXIT_PROVENANCE_UNOBSERVED
         )
-        # exitCode still 0 from valid_record(), which is not allowed when unobserved.
+        # exitCode key still present (0) from valid_record(), which is refused when unobserved.
         issues = METADATA.validate_run_record(self.write(record))
         self.assertTrue(
-            any("exitCode must be absent (null) unless" in issue for issue in issues), issues
+            any("exitCode must be entirely absent unless" in issue for issue in issues), issues
         )
 
     def test_missing_exit_code_under_observed_provenance_fails(self) -> None:
-        record = self.valid_record(exitCode=None)
+        record = self.valid_record()
+        del record["exitCode"]
         issues = METADATA.validate_run_record(self.write(record))
         self.assertTrue(
-            any("exitCode must be an integer when exitProvenance is" in issue for issue in issues),
+            any(
+                "exitCode must be a present integer when exitProvenance is" in issue
+                for issue in issues
+            ),
             issues,
         )
 
-    def test_launch_id_not_naming_pid_fails(self) -> None:
-        record = self.valid_record(launchId="launch-unrelated")
+    def test_launch_id_bare_substring_without_hyphens_fails(self) -> None:
+        # A bare substring match ("42424242" contains "4242") must NOT be accepted: the
+        # coordinator's rule is hyphen-delimited, matching srr.py:246 / cql.py:568 exactly.
+        record = self.valid_record(launchId="pid-42424242-20260911T100000Z")
         issues = METADATA.validate_run_record(self.write(record))
-        self.assertTrue(any("launchId must name the owned pid" in issue for issue in issues), issues)
+        self.assertTrue(
+            any("launchId must name the owned pid (hyphen-delimited)" in issue for issue in issues),
+            issues,
+        )
 
     def test_malformed_receipt_sha_fails(self) -> None:
         record = self.valid_record()
@@ -1623,15 +1701,34 @@ class RunRecordTest(unittest.TestCase):
             any("exitProvenance must be one of" in issue for issue in issues), issues
         )
 
+    def test_transient_unobserved_provenance_is_refused_for_a_stopped_record(self) -> None:
+        # scenario_run_record.py:251 writes "unobserved" right after launch(), before stop()
+        # runs; a record reaching this validator is always stopped, so that transient value
+        # is not a third legal provenance.
+        record = self.valid_record(exitProvenance="unobserved")
+        del record["exitCode"]
+        issues = METADATA.validate_run_record(self.write(record))
+        self.assertTrue(
+            any("exitProvenance must be one of" in issue for issue in issues), issues
+        )
+
     def test_hash_drifted_receipt_fails(self) -> None:
         record = self.valid_record()
         real = record["ownership"]["receiptSha256"]
         record["ownership"]["receiptSha256"] = ("0" if real[0] != "0" else "1") + real[1:]
         issues = METADATA.validate_run_record(self.write(record))
-        self.assertTrue(any("artifactSha256 must match" in issue for issue in issues), issues)
+        self.assertTrue(
+            any("receiptSha256 must match the retained receipt" in issue for issue in issues),
+            issues,
+        )
 
-
-
+    def test_missing_receipt_file_fails(self) -> None:
+        record = self.valid_record()
+        (self.root / "process-ownership.json").unlink()
+        issues = METADATA.validate_run_record(self.write(record))
+        self.assertTrue(
+            any("cannot read the owned-process receipt" in issue for issue in issues), issues
+        )
 
 if __name__ == "__main__":
     unittest.main()

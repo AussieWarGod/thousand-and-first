@@ -1439,33 +1439,124 @@ def _observed_id_valid(value: object) -> bool:
 # Tools/scenario_run_record.py + run-scenario.ps1), a SEPARATE artefact from the
 # longFormScenario results artefact above -- its fields are never required inside
 # longFormScenario's processes[] entries, which stay exactly {role, launchId, started,
-# stoppedUtc, profileName, profileSeal}.
-RUN_RECORD_TOP_KEYS = {"launchId", "ownership", "exitProvenance", "exitCode"}
+# stoppedUtc, profileName, profileSeal}. Matches the actual emitted shape of
+# Tools/scenario_run_record.py's seal/launch/stop (test/longform-reachability, frozen at
+# 8fe3093), not an earlier guess: a cross-check against the real emitter found the guess
+# rejected every real record (top-level key set, startTicks type, receiptRef path convention,
+# exitCode presence/absence all disagreed).
+RUN_RECORD_ROLES = ("save-session", "cold-load-session")
+RUN_RECORD_REQUIRED_KEYS = {
+    "role", "root", "seed", "script", "candidateCommit", "runtimeInventorySha256",
+    "profileName", "profileSeal", "turnBudget", "timeoutSeconds", "sealedUtc",
+    "launchId", "started", "stoppedUtc", "ownership", "exitProvenance",
+}
+RUN_RECORD_OPTIONAL_KEYS = {"exitCode", "harnessInventorySha256", "gameBuildId"}
 RUN_RECORD_OWNERSHIP_KEYS = {"receiptRef", "receiptSha256", "pid", "startTicks", "executable"}
 RUN_RECORD_EXIT_PROVENANCE_OBSERVED = "owned-process-exit-observed"
 RUN_RECORD_EXIT_PROVENANCE_UNOBSERVED = "owned-process-ended-exit-unobserved"
+# "unobserved" is the transient value scenario_run_record.py's launch() writes before stop()
+# runs (srr.py:251); a record being validated here is always a STOPPED one, so that value is
+# refused, not treated as a third legal provenance.
 RUN_RECORD_EXIT_PROVENANCE_VALUES = (
     RUN_RECORD_EXIT_PROVENANCE_OBSERVED,
     RUN_RECORD_EXIT_PROVENANCE_UNOBSERVED,
 )
 
 
-def validate_run_record(path: Path, *, repository_root: Path | None = None) -> list[str]:
-    """Validate one run-record.json: an ownership block is REQUIRED (never optional -- "stop
-    refuses without an ownership block"), exitCode is present only under observed exit
-    provenance, the launch id must name the owned pid, and receiptSha256 must be a real,
-    well-formed digest. Returns a list of issues; empty means valid."""
-    errors: list[str] = []
-    if repository_root is None:
-        repository_root = path.parent
+def _run_record_basename_valid(value: object) -> bool:
+    """A bare file name relative to the scenario root (e.g. "process-ownership.json") --
+    never a path, never docs/release-evidence/... (that convention does not apply here: the
+    receipt lives beside the run record in the native scenario root, not the evidence tree)."""
+    return (
+        isinstance(value, str)
+        and value not in ("", ".", "..")
+        and "/" not in value
+        and "\\" not in value
+        and value == value.strip()
+        and value.isprintable()
+    )
+
+
+def validate_run_record(path: Path) -> list[str]:
+    """Validate one run-record.json exactly as Tools/scenario_run_record.py's seal/launch/stop
+    emit it: an ownership block is REQUIRED (never optional -- "stop refuses without an
+    ownership block"), exitCode is present only under OBSERVED exit provenance and absent
+    otherwise, the launch id must name the owned pid with a hyphen-delimited match, and
+    receiptSha256 must be a real digest bound to the bare-named receipt file beside this
+    record. Returns a list of issues; empty means valid."""
     try:
         payload = json.loads(path.read_text(encoding="utf-8-sig"))
     except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as error:
         return [f"run record is unreadable: {path}: {error}"]
-    if not isinstance(payload, dict) or set(payload) != RUN_RECORD_TOP_KEYS:
+    if not isinstance(payload, dict):
+        return ["run record must be a JSON object"]
+    keys = set(payload)
+    if not (
+        RUN_RECORD_REQUIRED_KEYS <= keys <= RUN_RECORD_REQUIRED_KEYS | RUN_RECORD_OPTIONAL_KEYS
+    ):
         return [
-            "run record fields must be exactly: " + ", ".join(sorted(RUN_RECORD_TOP_KEYS))
+            "run record fields must be exactly the required set "
+            + ", ".join(sorted(RUN_RECORD_REQUIRED_KEYS))
+            + ", plus any of the optional " + ", ".join(sorted(RUN_RECORD_OPTIONAL_KEYS))
         ]
+    errors: list[str] = []
+    if payload.get("role") not in RUN_RECORD_ROLES:
+        errors.append("run record role must be one of: " + ", ".join(RUN_RECORD_ROLES))
+    if not isinstance(payload.get("root"), str) or not payload["root"].strip():
+        errors.append("run record root must be a non-empty path string")
+    if not isinstance(payload.get("seed"), str) or not payload["seed"].strip():
+        errors.append("run record seed must be a non-empty string")
+    if not isinstance(payload.get("script"), str):
+        errors.append("run record script must be a string")
+    candidate = payload.get("candidateCommit")
+    if not isinstance(candidate, str) or re.fullmatch(r"[0-9a-f]{40}", candidate) is None:
+        errors.append("run record candidateCommit must be a lowercase full Git commit")
+    inventory = payload.get("runtimeInventorySha256")
+    if (
+        not isinstance(inventory, str)
+        or re.fullmatch(r"[0-9a-f]{64}", inventory) is None
+        or inventory == "0" * 64
+    ):
+        errors.append("run record runtimeInventorySha256 must be a nonzero lowercase SHA-256")
+    if not _observed_id_valid(payload.get("profileName")):
+        errors.append(
+            "run record profileName must be a real, non-empty, non-placeholder identity"
+        )
+    profile_seal = payload.get("profileSeal")
+    if (
+        not isinstance(profile_seal, str)
+        or re.fullmatch(r"[0-9a-f]{64}", profile_seal) is None
+        or profile_seal == "0" * 64
+    ):
+        errors.append("run record profileSeal must be a nonzero lowercase SHA-256")
+    for field in ("turnBudget", "timeoutSeconds"):
+        value = payload.get(field)
+        if type(value) is not int or value <= 0:
+            errors.append(f"run record {field} must be a positive integer")
+    if not _second_precision_utc(payload.get("sealedUtc")):
+        errors.append("run record sealedUtc must be a real second-precision UTC date")
+    started = payload.get("started")
+    stopped = payload.get("stoppedUtc")
+    if not _second_precision_utc(started):
+        errors.append("run record started must be a real second-precision UTC date")
+    if not _second_precision_utc(stopped):
+        errors.append("run record stoppedUtc must be a real second-precision UTC date")
+    elif isinstance(started, str) and stopped < started:
+        errors.append("run record stoppedUtc must not be before started")
+    if "harnessInventorySha256" in payload:
+        harness_inventory = payload["harnessInventorySha256"]
+        if (
+            not isinstance(harness_inventory, str)
+            or re.fullmatch(r"[0-9a-f]{64}", harness_inventory) is None
+            or harness_inventory == "0" * 64
+        ):
+            errors.append(
+                "run record harnessInventorySha256, if present, must be a nonzero lowercase "
+                "SHA-256"
+            )
+    if "gameBuildId" in payload and not isinstance(payload["gameBuildId"], str):
+        errors.append("run record gameBuildId, if present, must be a string")
+
     launch_id = payload.get("launchId")
     if not isinstance(launch_id, str) or not launch_id.strip():
         errors.append("run record launchId must be a non-empty identifier")
@@ -1481,15 +1572,21 @@ def validate_run_record(path: Path, *, repository_root: Path | None = None) -> l
     if type(pid) is not int or pid <= 0:
         errors.append("run record ownership.pid must be a positive integer")
         pid = None
-    if pid is not None and launch_id is not None and str(pid) not in launch_id:
-        errors.append("run record launchId must name the owned pid")
+    if pid is not None and launch_id is not None and f"-{pid}-" not in launch_id:
+        errors.append("run record launchId must name the owned pid (hyphen-delimited)")
     start_ticks = ownership.get("startTicks")
-    if type(start_ticks) is not int or start_ticks < 0:
-        errors.append("run record ownership.startTicks must be a non-negative integer")
+    if not isinstance(start_ticks, str) or re.fullmatch(r"[0-9]+", start_ticks) is None:
+        errors.append("run record ownership.startTicks must be a digit string")
     if not _observed_id_valid(ownership.get("executable")):
         errors.append(
             "run record ownership.executable must be a real, non-empty, non-placeholder "
             "identity"
+        )
+    receipt_ref = ownership.get("receiptRef")
+    if not _run_record_basename_valid(receipt_ref):
+        errors.append(
+            "run record ownership.receiptRef must be a bare file name beside this record "
+            "(no path separators, never docs/release-evidence/...)"
         )
     receipt_sha = ownership.get("receiptSha256")
     if (
@@ -1498,16 +1595,24 @@ def validate_run_record(path: Path, *, repository_root: Path | None = None) -> l
         or receipt_sha == "0" * 64
     ):
         errors.append("run record ownership.receiptSha256 must be a nonzero lowercase SHA-256")
-    _validate_artifact_binding(
-        {
-            "artifactRef": ownership.get("receiptRef"),
-            "artifactSha256": receipt_sha if isinstance(receipt_sha, str) else "0" * 64,
-        },
-        "runRecord.ownership",
-        errors,
-        repository_root,
-        include_pass_id=False,
-    )
+    elif isinstance(receipt_ref, str) and _run_record_basename_valid(receipt_ref):
+        try:
+            receipt_path = (path.parent / receipt_ref).resolve(strict=True)
+            receipt_path.relative_to(path.parent.resolve())
+            if (path.parent / receipt_ref).is_symlink() or not receipt_path.is_file():
+                raise OSError("receipt is not a regular file")
+            digest = hashlib.sha256(receipt_path.read_bytes()).hexdigest()
+        except (OSError, ValueError) as error:
+            errors.append(
+                f"run record ownership.receiptRef cannot read the owned-process receipt: "
+                f"{error}"
+            )
+        else:
+            if digest != receipt_sha:
+                errors.append(
+                    "run record ownership.receiptSha256 must match the retained receipt"
+                )
+
     provenance = payload.get("exitProvenance")
     if provenance not in RUN_RECORD_EXIT_PROVENANCE_VALUES:
         errors.append(
@@ -1515,16 +1620,16 @@ def validate_run_record(path: Path, *, repository_root: Path | None = None) -> l
             + ", ".join(RUN_RECORD_EXIT_PROVENANCE_VALUES)
         )
         provenance = None
-    exit_code = payload.get("exitCode")
+    exit_code_present = "exitCode" in payload
     if provenance == RUN_RECORD_EXIT_PROVENANCE_OBSERVED:
-        if type(exit_code) is not int:
+        if not exit_code_present or type(payload.get("exitCode")) is not int:
             errors.append(
-                "run record exitCode must be an integer when exitProvenance is "
+                "run record exitCode must be a present integer when exitProvenance is "
                 f"{RUN_RECORD_EXIT_PROVENANCE_OBSERVED!r}"
             )
-    elif exit_code is not None:
+    elif exit_code_present:
         errors.append(
-            "run record exitCode must be absent (null) unless exitProvenance is "
+            "run record exitCode must be entirely absent unless exitProvenance is "
             f"{RUN_RECORD_EXIT_PROVENANCE_OBSERVED!r}"
         )
     return errors
@@ -1718,6 +1823,7 @@ LONGFORM_OBSERVED_REQUIRED_AT_STEP = {
     3: ("buildingId", "plotId", "completedReceiptId", "forJobId"),  # engine-turn-build
     4: ("saveId",),  # save
     5: ("saveId", "buildingId", "plotId"),  # cold-load: the reloaded save/building/plot
+    6: ("saveId",),  # next-action: still carried through, per the emitter's own contract
 }
 LONGFORM_PROCESS_KEYS = {
     "role",
