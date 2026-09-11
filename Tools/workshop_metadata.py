@@ -11,6 +11,7 @@ import os
 import posixpath
 import re
 import struct
+import subprocess
 import sys
 import tempfile
 import unicodedata
@@ -25,7 +26,7 @@ TAGS = ("Building", "Faction", "Settlement", "World", "Script", "Lore")
 PREVIEW = "preview.png"
 GAME_MARKETING_VERSION = "1.0.5"
 GAME_CORE_BUILD = "2.0.211.51"
-RELEASE_EVIDENCE_SCHEMA = 4
+RELEASE_EVIDENCE_SCHEMA = 6
 ALPHA_CANDIDATE_SCHEMA = 2
 LEGACY_ALPHA_CANDIDATE_SCHEMA = 1
 FIRST_ALPHA_RELEASE_VERSION = "0.3.0"
@@ -54,10 +55,17 @@ INTERIM_PREVIEW_SHA256 = (
     "498e85d0f6aba0024845bccece31a427b7b84f680087abd1d6588b8b30e00bad"
 )
 PREVIEW_REVIEW_PASS_ID = "final-native-preview-review"
-HUMAN_SENTINEL = re.compile(
+PLACEHOLDER_SENTINEL = re.compile(
     r"(?:^|[^a-z0-9])(?:placeholder|example|todo|tbd|unknown|n\s*/\s*a)"
     r"(?:$|[^a-z0-9])|human[_ -]*(?:reviewer|tester)|name[_ -]*the|"
     r"replace[_ -]*with|your[_ -]*name",
+    re.IGNORECASE,
+)
+# An automated identity is welcome (e.g. "hotfix142-native driver"); a claim that automation
+# IS a human, or that a human personally/physically did the work, is never accepted.
+FORGED_HUMAN_SIGNATURE = re.compile(
+    r"\b(?:i\s*am|this\s*is|signed\s*as|personally|in\s*person)\b[^.]{0,40}\bhuman\b"
+    r"|\bhuman[_ -]*(?:signature|authored|approved|signed)\b",
     re.IGNORECASE,
 )
 
@@ -238,7 +246,9 @@ def _load_json(path: Path, *, reject_duplicates: bool = False) -> dict:
         result: dict = {}
         for key, item in pairs:
             if key in result:
-                raise ValidationError(f"{path.name} contains duplicate JSON field {key!r}")
+                raise ValidationError(
+                    f"{path.name} contains duplicate JSON field {key!r}"
+                )
             result[key] = item
         return result
 
@@ -272,7 +282,9 @@ def load_manifest(path: Path, require_preview: bool = True) -> dict:
     elif (reason := _qud_text_error(description)) is not None:
         errors.append(f"manifest description {reason}")
     elif len(description.encode("utf-8")) >= 8000:
-        errors.append("Workshop Description must be nonempty and under 8000 UTF-8 bytes")
+        errors.append(
+            "Workshop Description must be nonempty and under 8000 UTF-8 bytes"
+        )
     else:
         description_safe_for_canonical = True
         if "slice 0.1" in description.lower() or "debug wish" in description.lower():
@@ -473,13 +485,17 @@ def canonicalize_workshop(path: Path, manifest: dict, mode: str) -> None:
                 pass
 
 
-def _human_text_valid(value: object, minimum: int, maximum: int) -> bool:
+def _identity_text_valid(value: object, minimum: int, maximum: int) -> bool:
+    """A reviewer/tester/capturer identity: a person, or an honestly labelled automated
+    identity (e.g. "hotfix142-native driver"). Placeholders and forged human-signature
+    claims by automation are never accepted."""
     return (
         isinstance(value, str)
         and value == value.strip()
         and minimum <= len(value) <= maximum
         and value.isprintable()
-        and HUMAN_SENTINEL.search(value) is None
+        and PLACEHOLDER_SENTINEL.search(value) is None
+        and FORGED_HUMAN_SIGNATURE.search(value) is None
         and _qud_text_error(value) is None
     )
 
@@ -740,11 +756,13 @@ def _validated_alpha_record(record_path: Path) -> dict:
             f"Alpha candidate fields must exactly match schema version {schema}; "
             f"missing={sorted(keys - set(record))}, extra={sorted(set(record) - keys)}"
         )
-    if (
-        type(schema) is not int
-        or schema not in (LEGACY_ALPHA_CANDIDATE_SCHEMA, ALPHA_CANDIDATE_SCHEMA)
+    if type(schema) is not int or schema not in (
+        LEGACY_ALPHA_CANDIDATE_SCHEMA,
+        ALPHA_CANDIDATE_SCHEMA,
     ):
-        errors.append("Alpha candidate schemaVersion must be 1 (historical 0.3.0 only) or 2")
+        errors.append(
+            "Alpha candidate schemaVersion must be 1 (historical 0.3.0 only) or 2"
+        )
     alpha_version = record.get("releaseVersion")
     if (
         not isinstance(alpha_version, str)
@@ -754,8 +772,13 @@ def _validated_alpha_record(record_path: Path) -> dict:
             f"Alpha candidate releaseVersion must be {FIRST_ALPHA_RELEASE_VERSION} "
             "or a later canonical 0.3.x patch"
         )
-    if schema == LEGACY_ALPHA_CANDIDATE_SCHEMA and alpha_version != FIRST_ALPHA_RELEASE_VERSION:
-        errors.append("Alpha candidate schema 1 is historical 0.3.0 only; later patches require schema 2")
+    if (
+        schema == LEGACY_ALPHA_CANDIDATE_SCHEMA
+        and alpha_version != FIRST_ALPHA_RELEASE_VERSION
+    ):
+        errors.append(
+            "Alpha candidate schema 1 is historical 0.3.0 only; later patches require schema 2"
+        )
     if record.get("releaseChannel") != ALPHA_RELEASE_CHANNEL:
         errors.append(
             f"Alpha candidate releaseChannel must be {ALPHA_RELEASE_CHANNEL!r}"
@@ -772,20 +795,36 @@ def _validated_alpha_record(record_path: Path) -> dict:
         )
     if record.get("gameCoreBuild") != GAME_CORE_BUILD:
         errors.append(f"Alpha candidate gameCoreBuild must be {GAME_CORE_BUILD}")
-    id_fields = ("workshopId", "privateWorkshopId") if schema == ALPHA_CANDIDATE_SCHEMA else ("workshopId",)
+    id_fields = (
+        ("workshopId", "privateWorkshopId")
+        if schema == ALPHA_CANDIDATE_SCHEMA
+        else ("workshopId",)
+    )
     for field in id_fields:
         try:
             _workshop_id({"WorkshopId": record.get(field)})
         except ValidationError as error:
             errors.append(f"Alpha candidate {field}: {error}")
-    if schema == ALPHA_CANDIDATE_SCHEMA and record.get("privateWorkshopId") == record.get("workshopId"):
-        errors.append("Alpha candidate privateWorkshopId must differ from public workshopId")
+    if schema == ALPHA_CANDIDATE_SCHEMA and record.get(
+        "privateWorkshopId"
+    ) == record.get("workshopId"):
+        errors.append(
+            "Alpha candidate privateWorkshopId must differ from public workshopId"
+        )
     for field in ("previewSha256", "privatePackageReceiptSha256"):
         value = record.get(field)
-        if not isinstance(value, str) or re.fullmatch(r"[0-9a-f]{64}", value) is None or value == "0" * 64:
-            errors.append(f"Alpha candidate {field} must be a nonzero lowercase SHA-256")
+        if (
+            not isinstance(value, str)
+            or re.fullmatch(r"[0-9a-f]{64}", value) is None
+            or value == "0" * 64
+        ):
+            errors.append(
+                f"Alpha candidate {field} must be a nonzero lowercase SHA-256"
+            )
     if record.get("previewSha256") == INTERIM_PREVIEW_SHA256:
-        errors.append("Alpha candidate refuses the known interim preview; capture the final native preview")
+        errors.append(
+            "Alpha candidate refuses the known interim preview; capture the final native preview"
+        )
     if errors:
         raise ValidationError("Alpha candidate is invalid; " + "; ".join(errors))
     return record
@@ -800,13 +839,18 @@ def validate_alpha_workshop_binding(
     public = _load_json(public_workshop_path, reject_duplicates=True)
     private_id, public_id = _workshop_id(private), _workshop_id(public)
     expected_private = (
-        record["workshopId"] if record["schemaVersion"] == LEGACY_ALPHA_CANDIDATE_SCHEMA
+        record["workshopId"]
+        if record["schemaVersion"] == LEGACY_ALPHA_CANDIDATE_SCHEMA
         else record["privateWorkshopId"]
     )
     if private.get("Visibility") != "0" or public.get("Visibility") != "2":
-        raise ValidationError("Alpha Workshop binding requires exact private Visibility '0' and public Visibility '2'")
+        raise ValidationError(
+            "Alpha Workshop binding requires exact private Visibility '0' and public Visibility '2'"
+        )
     if private_id != expected_private or public_id != record["workshopId"]:
-        raise ValidationError("Alpha Workshop binding IDs do not match the validated candidate record")
+        raise ValidationError(
+            "Alpha Workshop binding IDs do not match the validated candidate record"
+        )
     return private_id, public_id
 
 
@@ -854,7 +898,15 @@ def validate_release_evidence(
     *,
     repository_root: Path | None = None,
     testing_path: Path | None = None,
+    exercised_inventory_sha256: str | None = None,
 ) -> str:
+    """`exercised_inventory_sha256` is the caller-supplied production structural digest (the
+    caller already ran Tools/check-structure.py --json against the ACTUAL requested/exercised
+    tree). It is never read from docs/STRUCTURE_REVIEW.json: that ledger is a separate,
+    freshness-checked artefact that an active candidate keeps stale by design, and is never a
+    source of exercised bytes for the long-form scenario proof (author/Codex correction,
+    2026-09-11). Per-session harness/profile identity is validated per longFormScenario
+    process entry instead of a single global seal -- see LONGFORM_PROCESS_KEYS."""
     validate_release_claims(manifest, readme_path, changelog_path)
     evidence = _load_json(evidence_path)
     if repository_root is None:
@@ -881,6 +933,7 @@ def validate_release_evidence(
         "privatePackageReceiptSha256",
         "privateSubscription",
         "verification",
+        "longFormScenario",
     }
     errors: list[str] = []
     if set(evidence) != top_keys:
@@ -975,65 +1028,20 @@ def validate_release_evidence(
             errors,
             repository_root,
         )
-        preview_review = verification.get("previewReview")
-        _validate_artifact_binding(
-            preview_review,
-            "verification.previewReview",
-            errors,
-            repository_root,
-            expected_pass_id=PREVIEW_REVIEW_PASS_ID,
-            extra_keys={
-                "source",
-                "generativeAssistance",
-                "previewSha256",
-                "capturedBy",
-                "captureUtc",
-                "sourceSave",
-                "editSummary",
-                "reviewedBy",
-                "completedUtc",
-            },
+        # Preview-media provenance (author ruling, 2026-09-11: the 2026-09-11 "no manual test
+        # gate, ever" ruling supersedes the earlier "media/listing stays human" carve-out too).
+        # Machine-verifiable media checks (PNG structure, exact dimensions, size, hash bound to
+        # the staged preview.png) plus a truthful capture provenance artefact (tool/run id,
+        # capture log SHA-256) replace a mandatory human capturer/reviewer. A human aesthetic
+        # review is OPTIONAL: reviewedBy/completedUtc may be null (not performed), or a real
+        # identity if one did review it -- a forged human-signature claim is still refused.
+        try:
+            validate_preview(preview_path)
+        except ValidationError as error:
+            errors.append(f"release evidence preview media check failed: {error}")
+        _validate_preview_review(
+            verification.get("previewReview"), preview_hash, errors, repository_root
         )
-        if isinstance(preview_review, dict):
-            if preview_review.get("source") != "native-game-screenshot":
-                errors.append(
-                    "release evidence verification.previewReview.source must be 'native-game-screenshot'"
-                )
-            if (
-                type(preview_review.get("generativeAssistance")) is not bool
-                or preview_review.get("generativeAssistance") is not False
-            ):
-                errors.append(
-                    "release evidence verification.previewReview.generativeAssistance must be False"
-                )
-            if preview_review.get("previewSha256") != preview_hash:
-                errors.append(
-                    "release evidence verification.previewReview.previewSha256 must match preview.png"
-                )
-            if not _human_text_valid(preview_review.get("capturedBy"), 2, 80):
-                errors.append(
-                    "release evidence verification.previewReview.capturedBy must name the human capturer"
-                )
-            if not _second_precision_utc(preview_review.get("captureUtc")):
-                errors.append(
-                    "release evidence verification.previewReview.captureUtc must be a real second-precision UTC date"
-                )
-            if not _human_text_valid(preview_review.get("sourceSave"), 5, 200):
-                errors.append(
-                    "release evidence verification.previewReview.sourceSave must identify the native source save"
-                )
-            if not _human_text_valid(preview_review.get("editSummary"), 10, 500):
-                errors.append(
-                    "release evidence verification.previewReview.editSummary must describe the crop and edits"
-                )
-            if not _human_text_valid(preview_review.get("reviewedBy"), 2, 80):
-                errors.append(
-                    "release evidence verification.previewReview.reviewedBy must name the human reviewer"
-                )
-            if not _second_precision_utc(preview_review.get("completedUtc")):
-                errors.append(
-                    "release evidence verification.previewReview.completedUtc must be a real second-precision UTC date"
-                )
         protocols = verification.get("numberedProtocols")
         if not isinstance(protocols, dict) or set(protocols) != {
             "artifactRef",
@@ -1124,14 +1132,16 @@ def validate_release_evidence(
                     else:
                         waiver_seen.add(waiver_id)
                         waiver_ids.append(waiver_id)
-                    if not _human_text_valid(waiver.get("reason"), 20, 500):
+                    if not _identity_text_valid(waiver.get("reason"), 20, 500):
                         errors.append(
                             f"release evidence {label}.reason must be a bounded human-reviewed reason"
                         )
                         valid_waivers = False
-                    if not _human_text_valid(waiver.get("reviewedBy"), 2, 80):
+                    if not _identity_text_valid(waiver.get("reviewedBy"), 2, 80):
                         errors.append(
-                            f"release evidence {label}.reviewedBy must name the human reviewer"
+                            f"release evidence {label}.reviewedBy must name the reviewer "
+                            "(a person, or an honestly labelled automated identity); a "
+                            "forged human-signature claim is never accepted"
                         )
                         valid_waivers = False
                     if not _second_precision_utc(waiver.get("completedUtc")):
@@ -1175,7 +1185,7 @@ def validate_release_evidence(
                     ]
                     if missing:
                         errors.append(
-                            "release evidence is missing TESTING.md IDs without a human-reviewed waiver: "
+                            "release evidence is missing TESTING.md IDs without a reviewed waiver: "
                             + ", ".join(missing)
                         )
                     expected_passes = [
@@ -1211,6 +1221,9 @@ def validate_release_evidence(
         "localDuplicatesRemoved",
         "uploadHiddenFiles",
         "testedBy",
+        "driverResultsRef",
+        "driverResultsSha256",
+        "driverExitCode",
         "completedUtc",
     }
     if not isinstance(private, dict) or set(private) != private_keys:
@@ -1238,17 +1251,999 @@ def validate_release_evidence(
                 errors.append(
                     f"release evidence privateSubscription.{key} must be {value!r}"
                 )
+        # No manual test gate for release, ever (author ruling, 2026-09-11): testedBy names
+        # who or what drove the private subscribed smoke — a person, or an honestly labelled
+        # automated identity such as "hotfix142-native driver" — and the driver's own results
+        # artifact (below) is the actual, checkable proof; a bare name is not.
         tester = private.get("testedBy")
-        if not _human_text_valid(tester, 2, 80):
-            errors.append("release evidence testedBy must name the human tester")
+        if not _identity_text_valid(tester, 2, 80):
+            errors.append(
+                "release evidence testedBy must name the tester (a person, or an honestly "
+                "labelled automated identity); a forged human-signature claim is never accepted"
+            )
+        _validate_artifact_binding(
+            {
+                "artifactRef": private.get("driverResultsRef"),
+                "artifactSha256": private.get("driverResultsSha256"),
+            },
+            "privateSubscription.driverResults",
+            errors,
+            repository_root,
+            include_pass_id=False,
+        )
+        _validate_native_driver_results(
+            private.get("driverResultsRef"), errors, repository_root
+        )
+        exit_code = private.get("driverExitCode")
+        if type(exit_code) is not int or exit_code != 0:
+            errors.append(
+                "release evidence privateSubscription.driverExitCode must be 0"
+            )
         completed = private.get("completedUtc")
         if not _second_precision_utc(completed):
             errors.append(
                 "release evidence completedUtc must be a real second-precision UTC date"
             )
+
+    # Long-form behavioural proof (author/Codex addendum, 2026-09-11): startup through a full
+    # paid-commission build to a functional building, then save/cold-load and one more action,
+    # as one automated, reproducible, fixed-seed run. Missing reachability or any non-PASS step
+    # is an unresolved release requirement (FAIL) with no waiver and no blanket skip.
+    longform = evidence.get("longFormScenario")
+    if not isinstance(longform, dict) or set(longform) != {
+        "artifactRef",
+        "artifactSha256",
+    }:
+        errors.append(
+            "release evidence longFormScenario fields must be artifactRef and artifactSha256"
+        )
+    else:
+        _validate_artifact_binding(
+            longform,
+            "longFormScenario",
+            errors,
+            repository_root,
+            include_pass_id=False,
+        )
+        _validate_longform_scenario_results(
+            longform.get("artifactRef"),
+            errors,
+            repository_root,
+            expected_candidate_commit=candidate or None,
+            expected_game_build=GAME_CORE_BUILD,
+            expected_runtime_inventory_sha256=exercised_inventory_sha256,
+        )
+
     if errors:
         raise ValidationError("release evidence is invalid; " + "; ".join(errors))
     return candidate
+
+
+def _validate_preview_review(
+    preview_review: object, preview_hash: str, errors: list[str], repository_root: Path
+) -> None:
+    """Preview-media provenance (author correction, 2026-09-11): machine-verifiable media
+    checks plus a truthful capture-provenance artefact replace a mandatory human capturer;
+    a human aesthetic review is OPTIONAL (reviewedBy/completedUtc both null, or both a real,
+    non-forged identity/timestamp)."""
+    _validate_artifact_binding(
+        preview_review,
+        "verification.previewReview",
+        errors,
+        repository_root,
+        expected_pass_id=PREVIEW_REVIEW_PASS_ID,
+        extra_keys={
+            "source",
+            "generativeAssistance",
+            "previewSha256",
+            "capturedBy",
+            "captureUtc",
+            "sourceSave",
+            "editSummary",
+            "captureProvenanceRef",
+            "captureProvenanceSha256",
+            "reviewedBy",
+            "completedUtc",
+        },
+    )
+    if not isinstance(preview_review, dict):
+        return
+    if preview_review.get("source") != "native-game-screenshot":
+        errors.append(
+            "release evidence verification.previewReview.source must be 'native-game-screenshot'"
+        )
+    if (
+        type(preview_review.get("generativeAssistance")) is not bool
+        or preview_review.get("generativeAssistance") is not False
+    ):
+        errors.append(
+            "release evidence verification.previewReview.generativeAssistance must be False"
+        )
+    if preview_review.get("previewSha256") != preview_hash:
+        errors.append(
+            "release evidence verification.previewReview.previewSha256 must match preview.png"
+        )
+    if not _identity_text_valid(preview_review.get("capturedBy"), 2, 80):
+        errors.append(
+            "release evidence verification.previewReview.capturedBy must name the capturer "
+            "(a person, or an honestly labelled automated capture identity); a forged "
+            "human-signature claim is never accepted"
+        )
+    if not _second_precision_utc(preview_review.get("captureUtc")):
+        errors.append(
+            "release evidence verification.previewReview.captureUtc must be a real second-precision UTC date"
+        )
+    if not _identity_text_valid(preview_review.get("sourceSave"), 5, 200):
+        errors.append(
+            "release evidence verification.previewReview.sourceSave must identify the native source save"
+        )
+    if not _identity_text_valid(preview_review.get("editSummary"), 10, 500):
+        errors.append(
+            "release evidence verification.previewReview.editSummary must describe the crop and edits"
+        )
+    _validate_artifact_binding(
+        {
+            "artifactRef": preview_review.get("captureProvenanceRef"),
+            "artifactSha256": preview_review.get("captureProvenanceSha256"),
+        },
+        "verification.previewReview.captureProvenance",
+        errors,
+        repository_root,
+        include_pass_id=False,
+    )
+    reviewed_by = preview_review.get("reviewedBy")
+    completed = preview_review.get("completedUtc")
+    if reviewed_by is None and completed is None:
+        pass
+    elif reviewed_by is None or completed is None:
+        errors.append(
+            "release evidence verification.previewReview.reviewedBy and completedUtc must "
+            "both be null (no aesthetic review performed) or both present"
+        )
+    else:
+        if not _identity_text_valid(reviewed_by, 2, 80):
+            errors.append(
+                "release evidence verification.previewReview.reviewedBy must name the "
+                "reviewer (a person, or an honestly labelled automated identity); a forged "
+                "human-signature claim is never accepted"
+            )
+        if not _second_precision_utc(completed):
+            errors.append(
+                "release evidence verification.previewReview.completedUtc must be a real second-precision UTC date"
+            )
+
+
+NATIVE_DRIVER_CHECKS = (
+    "loader",
+    "newGame",
+    "saveReload",
+    "oldSave",
+    "representativeFeatures",
+)
+
+
+def _observed_id_valid(value: object) -> bool:
+    """An opaque lifecycle identity (realm/city/job/building/plot/save id): real, non-empty,
+    printable, and not a fabricated-looking placeholder. Not a person/automation identity
+    field, so no forged-human check applies here -- only the placeholder sentinel."""
+    return (
+        isinstance(value, str)
+        and value == value.strip()
+        and 1 <= len(value) <= 200
+        and value.isprintable()
+        and PLACEHOLDER_SENTINEL.search(value) is None
+    )
+
+
+# The camp harness's exact-owned-process receipt (test/longform-reachability,
+# Tools/scenario_run_record.py + run-scenario.ps1), a SEPARATE artefact from the
+# longFormScenario results artefact above -- its fields are never required inside
+# longFormScenario's processes[] entries, which stay exactly {role, launchId, started,
+# stoppedUtc, profileName, profileSeal}. Matches the actual emitted shape of
+# Tools/scenario_run_record.py's seal/launch/stop (test/longform-reachability, frozen at
+# 8fe3093), not an earlier guess: a cross-check against the real emitter found the guess
+# rejected every real record (top-level key set, startTicks type, receiptRef path convention,
+# exitCode presence/absence all disagreed).
+RUN_RECORD_ROLES = ("save-session", "cold-load-session")
+RUN_RECORD_REQUIRED_KEYS = {
+    "role", "root", "seed", "script", "candidateCommit", "runtimeInventorySha256",
+    "profileName", "profileSeal", "turnBudget", "timeoutSeconds", "sealedUtc",
+    "launchId", "started", "stoppedUtc", "ownership", "exitProvenance",
+}
+RUN_RECORD_OPTIONAL_KEYS = {"exitCode", "harnessInventorySha256", "gameBuildId"}
+RUN_RECORD_OWNERSHIP_KEYS = {"receiptRef", "receiptSha256", "pid", "startTicks", "executable"}
+RUN_RECORD_EXIT_PROVENANCE_OBSERVED = "owned-process-exit-observed"
+RUN_RECORD_EXIT_PROVENANCE_UNOBSERVED = "owned-process-ended-exit-unobserved"
+# "unobserved" is the transient value scenario_run_record.py's launch() writes before stop()
+# runs (srr.py:251); a record being validated here is always a STOPPED one, so that value is
+# refused, not treated as a third legal provenance.
+RUN_RECORD_EXIT_PROVENANCE_VALUES = (
+    RUN_RECORD_EXIT_PROVENANCE_OBSERVED,
+    RUN_RECORD_EXIT_PROVENANCE_UNOBSERVED,
+)
+
+
+def _run_record_basename_valid(value: object) -> bool:
+    """A bare file name relative to the scenario root (e.g. "process-ownership.json") --
+    never a path, never docs/release-evidence/... (that convention does not apply here: the
+    receipt lives beside the run record in the native scenario root, not the evidence tree)."""
+    return (
+        isinstance(value, str)
+        and value not in ("", ".", "..")
+        and "/" not in value
+        and "\\" not in value
+        and value == value.strip()
+        and value.isprintable()
+    )
+
+
+def validate_run_record(path: Path) -> list[str]:
+    """Validate one run-record.json exactly as Tools/scenario_run_record.py's seal/launch/stop
+    emit it: an ownership block is REQUIRED (never optional -- "stop refuses without an
+    ownership block"), exitCode is present only under OBSERVED exit provenance and absent
+    otherwise, the launch id must name the owned pid with a hyphen-delimited match, and
+    receiptSha256 must be a real digest bound to the bare-named receipt file beside this
+    record. Returns a list of issues; empty means valid."""
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as error:
+        return [f"run record is unreadable: {path}: {error}"]
+    if not isinstance(payload, dict):
+        return ["run record must be a JSON object"]
+    keys = set(payload)
+    if not (
+        RUN_RECORD_REQUIRED_KEYS <= keys <= RUN_RECORD_REQUIRED_KEYS | RUN_RECORD_OPTIONAL_KEYS
+    ):
+        return [
+            "run record fields must be exactly the required set "
+            + ", ".join(sorted(RUN_RECORD_REQUIRED_KEYS))
+            + ", plus any of the optional " + ", ".join(sorted(RUN_RECORD_OPTIONAL_KEYS))
+        ]
+    errors: list[str] = []
+    if payload.get("role") not in RUN_RECORD_ROLES:
+        errors.append("run record role must be one of: " + ", ".join(RUN_RECORD_ROLES))
+    if not isinstance(payload.get("root"), str) or not payload["root"].strip():
+        errors.append("run record root must be a non-empty path string")
+    if not isinstance(payload.get("seed"), str) or not payload["seed"].strip():
+        errors.append("run record seed must be a non-empty string")
+    if not isinstance(payload.get("script"), str):
+        errors.append("run record script must be a string")
+    candidate = payload.get("candidateCommit")
+    if not isinstance(candidate, str) or re.fullmatch(r"[0-9a-f]{40}", candidate) is None:
+        errors.append("run record candidateCommit must be a lowercase full Git commit")
+    inventory = payload.get("runtimeInventorySha256")
+    if (
+        not isinstance(inventory, str)
+        or re.fullmatch(r"[0-9a-f]{64}", inventory) is None
+        or inventory == "0" * 64
+    ):
+        errors.append("run record runtimeInventorySha256 must be a nonzero lowercase SHA-256")
+    if not _observed_id_valid(payload.get("profileName")):
+        errors.append(
+            "run record profileName must be a real, non-empty, non-placeholder identity"
+        )
+    profile_seal = payload.get("profileSeal")
+    if (
+        not isinstance(profile_seal, str)
+        or re.fullmatch(r"[0-9a-f]{64}", profile_seal) is None
+        or profile_seal == "0" * 64
+    ):
+        errors.append("run record profileSeal must be a nonzero lowercase SHA-256")
+    for field in ("turnBudget", "timeoutSeconds"):
+        value = payload.get(field)
+        if type(value) is not int or value <= 0:
+            errors.append(f"run record {field} must be a positive integer")
+    if not _second_precision_utc(payload.get("sealedUtc")):
+        errors.append("run record sealedUtc must be a real second-precision UTC date")
+    started = payload.get("started")
+    stopped = payload.get("stoppedUtc")
+    if not _second_precision_utc(started):
+        errors.append("run record started must be a real second-precision UTC date")
+    if not _second_precision_utc(stopped):
+        errors.append("run record stoppedUtc must be a real second-precision UTC date")
+    elif isinstance(started, str) and stopped < started:
+        errors.append("run record stoppedUtc must not be before started")
+    if "harnessInventorySha256" in payload:
+        harness_inventory = payload["harnessInventorySha256"]
+        if (
+            not isinstance(harness_inventory, str)
+            or re.fullmatch(r"[0-9a-f]{64}", harness_inventory) is None
+            or harness_inventory == "0" * 64
+        ):
+            errors.append(
+                "run record harnessInventorySha256, if present, must be a nonzero lowercase "
+                "SHA-256"
+            )
+    if "gameBuildId" in payload and not isinstance(payload["gameBuildId"], str):
+        errors.append("run record gameBuildId, if present, must be a string")
+
+    launch_id = payload.get("launchId")
+    if not isinstance(launch_id, str) or not launch_id.strip():
+        errors.append("run record launchId must be a non-empty identifier")
+        launch_id = None
+    ownership = payload.get("ownership")
+    if not isinstance(ownership, dict) or set(ownership) != RUN_RECORD_OWNERSHIP_KEYS:
+        errors.append(
+            "run record ownership is required and must be exactly: "
+            + ", ".join(sorted(RUN_RECORD_OWNERSHIP_KEYS))
+        )
+        ownership = {}
+    pid = ownership.get("pid")
+    if type(pid) is not int or pid <= 0:
+        errors.append("run record ownership.pid must be a positive integer")
+        pid = None
+    if pid is not None and launch_id is not None and f"-{pid}-" not in launch_id:
+        errors.append("run record launchId must name the owned pid (hyphen-delimited)")
+    start_ticks = ownership.get("startTicks")
+    if not isinstance(start_ticks, str) or re.fullmatch(r"[0-9]+", start_ticks) is None:
+        errors.append("run record ownership.startTicks must be a digit string")
+    if not _observed_id_valid(ownership.get("executable")):
+        errors.append(
+            "run record ownership.executable must be a real, non-empty, non-placeholder "
+            "identity"
+        )
+    receipt_ref = ownership.get("receiptRef")
+    if not _run_record_basename_valid(receipt_ref):
+        errors.append(
+            "run record ownership.receiptRef must be a bare file name beside this record "
+            "(no path separators, never docs/release-evidence/...)"
+        )
+    receipt_sha = ownership.get("receiptSha256")
+    if (
+        not isinstance(receipt_sha, str)
+        or re.fullmatch(r"[0-9a-f]{64}", receipt_sha) is None
+        or receipt_sha == "0" * 64
+    ):
+        errors.append("run record ownership.receiptSha256 must be a nonzero lowercase SHA-256")
+    elif isinstance(receipt_ref, str) and _run_record_basename_valid(receipt_ref):
+        try:
+            receipt_path = (path.parent / receipt_ref).resolve(strict=True)
+            receipt_path.relative_to(path.parent.resolve())
+            if (path.parent / receipt_ref).is_symlink() or not receipt_path.is_file():
+                raise OSError("receipt is not a regular file")
+            digest = hashlib.sha256(receipt_path.read_bytes()).hexdigest()
+        except (OSError, ValueError) as error:
+            errors.append(
+                f"run record ownership.receiptRef cannot read the owned-process receipt: "
+                f"{error}"
+            )
+        else:
+            if digest != receipt_sha:
+                errors.append(
+                    "run record ownership.receiptSha256 must match the retained receipt"
+                )
+
+    provenance = payload.get("exitProvenance")
+    if provenance not in RUN_RECORD_EXIT_PROVENANCE_VALUES:
+        errors.append(
+            "run record exitProvenance must be one of: "
+            + ", ".join(RUN_RECORD_EXIT_PROVENANCE_VALUES)
+        )
+        provenance = None
+    exit_code_present = "exitCode" in payload
+    if provenance == RUN_RECORD_EXIT_PROVENANCE_OBSERVED:
+        if not exit_code_present or type(payload.get("exitCode")) is not int:
+            errors.append(
+                "run record exitCode must be a present integer when exitProvenance is "
+                f"{RUN_RECORD_EXIT_PROVENANCE_OBSERVED!r}"
+            )
+    elif exit_code_present:
+        errors.append(
+            "run record exitCode must be entirely absent unless exitProvenance is "
+            f"{RUN_RECORD_EXIT_PROVENANCE_OBSERVED!r}"
+        )
+    return errors
+
+
+def _validate_native_driver_results(
+    artifact_ref: object, errors: list[str], repository_root: Path
+) -> None:
+    """Read the bound native-driver results artifact and require every check PASS with a
+    stopped process. Replaces a human tester's word with a checkable automated record."""
+    if not isinstance(artifact_ref, str) or not _safe_evidence_artifact_ref(
+        artifact_ref
+    ):
+        return
+    try:
+        path = repository_root.joinpath(*artifact_ref.split("/"))
+        resolved = path.resolve(strict=True)
+        resolved.relative_to(repository_root)
+        if path.is_symlink() or not resolved.is_file():
+            raise OSError("artifact is not a regular file")
+        payload = json.loads(resolved.read_text(encoding="utf-8-sig"))
+    except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as error:
+        errors.append(
+            "release evidence privateSubscription.driverResultsRef cannot read native driver "
+            f"results: {error}"
+        )
+        return
+    if not isinstance(payload, dict) or not isinstance(payload.get("results"), list):
+        errors.append("native driver results must be an object with a results array")
+        return
+    seen: dict[str, bool] = {}
+    for entry in payload["results"]:
+        if (
+            not isinstance(entry, dict)
+            or set(entry) != {"check", "status", "processStopped"}
+            or entry.get("check") not in NATIVE_DRIVER_CHECKS
+            or entry.get("status") != "PASS"
+            or entry.get("processStopped") is not True
+        ):
+            errors.append(
+                "native driver results entries must each be an object with check, status "
+                "'PASS', and processStopped true"
+            )
+            continue
+        seen[entry["check"]] = True
+    missing = [check for check in NATIVE_DRIVER_CHECKS if check not in seen]
+    if missing:
+        errors.append(
+            "native driver results is missing an all-PASS entry for: "
+            + ", ".join(missing)
+        )
+
+
+# Long-form behavioural scenario artefact schema (author/Codex addendum, 2026-09-11; hardened
+# by Codex root protocol review the same day, then again after reading the validator against
+# the report). The harness that produces this file (branch test/longform-reachability) must
+# target these exact field names and PASS semantics; the validator is the schema's single
+# source of truth. Current shape (schemaVersion 1):
+#
+# {
+#   "schemaVersion": 1,
+#   "driver": "<honestly labelled identity: person or automation>",
+#   "runId": "<opaque run identifier>",
+#   "seed": <fixed integer world seed>,
+#   "candidateCommit": "<40-hex, must match the release evidence candidateCommit>",
+#   "runtimeInventorySha256": "<64-hex, must match the caller-supplied production structural
+#       digest of the requested/exercised tree -- Tools/check-structure.py --json, NEVER
+#       docs/STRUCTURE_REVIEW.json, which an active candidate keeps stale by design and is
+#       validated separately, on its own freshness terms, by check-structure.py --release>",
+#   "harnessInventorySha256": "<OPTIONAL, 64-hex; a distinct fact -- the launched dev-profile/
+#       harness inventory -- validated (format only) when present, never conflated with
+#       runtimeInventorySha256 above>",
+#   "gameBuildId": "<must match the recorded game core build>",
+#   "logRef": "docs/release-evidence/<...>.log",
+#   "logSha256": "<lowercase hex-64 SHA-256 of the retained raw driver log>",
+#   "continuity": {"realmId": "...", "cityId": "..."},
+#   "processes": [
+#     {"role": "save-session", "launchId": "...", "started": "UTC", "stoppedUtc": "UTC",
+#      "profileName": "...", "profileSeal": "<hex-64, SHA-256 of that session's own closed
+#      profile.sha256, header taf-scenario-profile-seal-v1>"},
+#     {"role": "cold-load-session", "launchId": "...", "started": "UTC", "stoppedUtc": "UTC",
+#      "profileName": "...", "profileSeal": "<hex-64, may differ from save-session's>"}
+#   ],
+#   "steps": [
+#     {"step": "startup", "status": "PASS", "turnsUsed": N, "elapsedSeconds": N,
+#      "turnBudget": N, "timeoutSeconds": N, "observed": {"realmId": "...", "cityId": "..."}},
+#     ... quote, paid-commission (observed REQUIRES "jobId": the commissioned job),
+#     engine-turn-build (observed REQUIRES "buildingId"/"plotId" -- the physical debit
+#     resolving into a functional building on a plot -- plus "completedReceiptId" and
+#     "forJobId": forJobId MUST equal paid-commission's jobId, linking the completed receipt
+#     back to the paid job even though completedReceiptId itself, and "jobId" here if present,
+#     may legitimately differ from the live job id), save (observed REQUIRES "saveId"),
+#     cold-load (observed REQUIRES "saveId"/"buildingId"/"plotId": the reloaded save carries
+#     the same building/plot forward), next-action (observed's jobId, if any, may be a NEW,
+#     separately identified job -- never required to match the completed one) ...
+#   ]
+# }
+#
+# PASS semantics: the seven steps above appear EXACTLY ONCE each, in this exact order (never
+# shuffled, duplicated, or missing), every status == "PASS", every turnsUsed/elapsedSeconds
+# <= its own turnBudget/timeoutSeconds (a zero budget enforces zero usage; no bypass at zero).
+# Process lifecycle is two whole sessions (not a per-step flag, which is refused): one
+# continuous save-session covering startup..save, one separate cold-load-session covering
+# cold-load..next-action, distinct launchIds, each started strictly before its own stoppedUtc,
+# and save-session stopping at or before cold-load-session starts. Each session ALSO carries
+# its own profileName/profileSeal (the launched dev-profile/harness identity: profileSeal is
+# the SHA-256 of that session's own closed profile.sha256, header taf-scenario-profile-seal-v1)
+# -- the two sessions' profileName/profileSeal are NEVER required to match each other (a
+# save-session and a cold-load-session legitimately run different profiles, load authority,
+# scripts, or import metadata); only each field's own presence and shape is checked, never
+# cross-session equality. What both sessions DO share needs no separate per-process field: the
+# single top-level candidateCommit/runtimeInventorySha256 apply to the whole run by
+# construction, and saveId consistency is already enforced by the per-step `observed` stability
+# rule below.
+#
+# Per-step `observed` identities are lifecycle-gated: realmId/cityId required on every step,
+# equal to `continuity`; jobId/buildingId/plotId/saveId/completedReceiptId/forJobId are
+# forbidden before their creation step and REQUIRED (never optional -- "phase-appropriate
+# observations are required where a real identity exists, never minted") at the exact step
+# named in LONGFORM_OBSERVED_REQUIRED_AT_STEP; buildingId/plotId/saveId are stable (equal)
+# wherever they reappear at a later step. The completed receipt at engine-turn-build links
+# back to the paid job via forJobId == paid-commission's jobId -- a contract check on the
+# declared record, not native proof that the same physical job was actually completed. An id
+# present before its creation step fails; a placeholder-looking id fails. next-action may
+# observe a brand-new jobId with no linkage to the completed one -- causal linkage there is
+# realm/city/building/plot/save continuity, never job identity equality across the whole run.
+#
+# "engine-turn-build" is the paid commission's physical debit resolving, by an actual engine
+# turn, into a functional building; a source-level or simulated claim does not satisfy it.
+LONGFORM_SCENARIO_SCHEMA = 1
+
+# The exact, ordered, non-repeatable step chain (Codex root protocol review, 2026-09-11).
+LONGFORM_SCENARIO_STEPS = (
+    "startup",
+    "quote",
+    "paid-commission",
+    "engine-turn-build",
+    "save",
+    "cold-load",
+    "next-action",
+)
+# Session membership: startup..save happen inside one continuous live process; cold-load..
+# next-action happen inside the SEPARATE process that reloaded the save. Per-step "stopped"
+# flags are meaningless for a continuous live game and are refused; only the two whole
+# sessions carry a stopped fact.
+LONGFORM_SESSION_FOR_STEP = {
+    "startup": "save-session",
+    "quote": "save-session",
+    "paid-commission": "save-session",
+    "engine-turn-build": "save-session",
+    "save": "save-session",
+    "cold-load": "cold-load-session",
+    "next-action": "cold-load-session",
+}
+LONGFORM_SESSION_ROLES = ("save-session", "cold-load-session")
+# Top-level continuity is only the context known from the very start; job/building/plot/save
+# identity is lifecycle-gated and lives per-step in "observed" (LONGFORM_OBSERVED_KEYS), never
+# required blanket-equal across the whole run.
+LONGFORM_CONTINUITY_KEYS = {"realmId", "cityId"}
+LONGFORM_OBSERVED_KEYS = {
+    "realmId",
+    "cityId",
+    "jobId",
+    "buildingId",
+    "plotId",
+    "saveId",
+    "completedReceiptId",
+    "forJobId",
+}
+# Per key: the first step index (into LONGFORM_SCENARIO_STEPS) at which it may legally appear
+# in a step's "observed". Absent from this map (realmId/cityId) means "every step, index 0".
+LONGFORM_OBSERVED_EARLIEST_STEP_INDEX = {
+    "jobId": 2,  # paid-commission
+    "buildingId": 3,  # engine-turn-build
+    "plotId": 3,  # engine-turn-build
+    "completedReceiptId": 3,  # engine-turn-build
+    "forJobId": 3,  # engine-turn-build
+    "saveId": 4,  # save
+}
+# Keys that, once observed at their earliest step, must equal that same value at every LATER
+# step where they reappear (jobId is deliberately excluded: engine-turn-build's jobId may be a
+# completed receipt distinct from paid-commission's live job, and next-action may observe a
+# brand-new job with no required linkage to either; the causal link to the paid job is instead
+# the mandatory completedReceiptId/forJobId pair below).
+LONGFORM_OBSERVED_STABLE_AFTER_FIRST = ("buildingId", "plotId", "saveId")
+# Phase-appropriate observations that are REQUIRED wherever a real identity exists -- never
+# minted, never allowed to silently disappear (author/Codex root clarification, 2026-09-11):
+# a fixed set of observed keys must be present at an exact step index.
+LONGFORM_OBSERVED_REQUIRED_AT_STEP = {
+    2: ("jobId",),  # paid-commission: the commissioned job must be identified
+    3: ("buildingId", "plotId", "completedReceiptId", "forJobId"),  # engine-turn-build
+    4: ("saveId",),  # save
+    5: ("saveId", "buildingId", "plotId"),  # cold-load: the reloaded save/building/plot
+    6: ("saveId",),  # next-action: still carried through, per the emitter's own contract
+}
+LONGFORM_PROCESS_KEYS = {
+    "role",
+    "launchId",
+    "started",
+    "stoppedUtc",
+    "profileName",
+    "profileSeal",
+}
+LONGFORM_STEP_KEYS = {
+    "step",
+    "status",
+    "turnsUsed",
+    "elapsedSeconds",
+    "turnBudget",
+    "timeoutSeconds",
+    "observed",
+}
+LONGFORM_TOP_KEYS = {
+    "schemaVersion",
+    "driver",
+    "runId",
+    "seed",
+    "candidateCommit",
+    "runtimeInventorySha256",
+    "gameBuildId",
+    "logRef",
+    "logSha256",
+    "continuity",
+    "processes",
+    "steps",
+}
+# harnessInventorySha256 is a distinct, OPTIONAL fact (the launched dev-profile/harness
+# inventory, never conflated with the production structural digest above) -- present or
+# absent are both valid top-level shapes.
+LONGFORM_TOP_KEYS_WITH_HARNESS_INVENTORY = LONGFORM_TOP_KEYS | {"harnessInventorySha256"}
+
+
+class _RejectDuplicateKeys(dict):
+    """Marker so json.loads' object_pairs_hook can report duplicate keys instead of silently
+    keeping the last one -- schema discipline per Codex root protocol review, 2026-09-11."""
+
+
+def _no_duplicate_object_pairs(pairs: list[tuple[str, object]]) -> dict:
+    seen: dict[str, object] = {}
+    for key, value in pairs:
+        if key in seen:
+            raise ValueError(f"duplicate JSON key {key!r}")
+        seen[key] = value
+    return seen
+
+
+def _validate_longform_scenario_results(
+    artifact_ref: object,
+    errors: list[str],
+    repository_root: Path,
+    *,
+    expected_candidate_commit: str | None,
+    expected_game_build: str,
+    expected_runtime_inventory_sha256: str | None,
+) -> None:
+    """Read the bound long-form scenario artefact and require it to prove one real, continuous,
+    fixed-seed, bounded run through the exact seven-step chain -- not seven arbitrary PASS
+    strings. See LONGFORM_SCENARIO_STEPS et al. above for the authoritative schema; the harness
+    that produces this file must target these exact field names and PASS semantics."""
+    if not isinstance(artifact_ref, str) or not _safe_evidence_artifact_ref(
+        artifact_ref
+    ):
+        return
+    try:
+        path = repository_root.joinpath(*artifact_ref.split("/"))
+        resolved = path.resolve(strict=True)
+        resolved.relative_to(repository_root)
+        if path.is_symlink() or not resolved.is_file():
+            raise OSError("artifact is not a regular file")
+        payload = json.loads(
+            resolved.read_text(encoding="utf-8-sig"),
+            object_pairs_hook=_no_duplicate_object_pairs,
+        )
+    except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as error:
+        errors.append(
+            "release evidence longFormScenario.artifactRef cannot read scenario results: "
+            f"{error}"
+        )
+        return
+    if not isinstance(payload, dict) or set(payload) not in (
+        LONGFORM_TOP_KEYS,
+        LONGFORM_TOP_KEYS_WITH_HARNESS_INVENTORY,
+    ):
+        errors.append(
+            "long-form scenario results fields must exactly match schema version "
+            f"{LONGFORM_SCENARIO_SCHEMA} (harnessInventorySha256 optional): "
+            + ", ".join(sorted(LONGFORM_TOP_KEYS))
+        )
+        return
+    if "harnessInventorySha256" in payload:
+        harness_inventory = payload["harnessInventorySha256"]
+        if (
+            not isinstance(harness_inventory, str)
+            or re.fullmatch(r"[0-9a-f]{64}", harness_inventory) is None
+            or harness_inventory == "0" * 64
+        ):
+            errors.append(
+                "long-form scenario results harnessInventorySha256, if present, must be a "
+                "nonzero lowercase SHA-256"
+            )
+    if (
+        type(payload.get("schemaVersion")) is not int
+        or payload["schemaVersion"] != LONGFORM_SCENARIO_SCHEMA
+    ):
+        errors.append(
+            f"long-form scenario results schemaVersion must be {LONGFORM_SCENARIO_SCHEMA}"
+        )
+    if not _identity_text_valid(payload.get("driver"), 2, 80):
+        errors.append(
+            "long-form scenario results driver must name the driver (a person, or an "
+            "honestly labelled automated identity); a forged human-signature claim is never "
+            "accepted"
+        )
+    if not isinstance(payload.get("runId"), str) or not payload["runId"].strip():
+        errors.append(
+            "long-form scenario results runId must be a non-empty run identifier"
+        )
+    if type(payload.get("seed")) is not int:
+        errors.append(
+            "long-form scenario results seed must be a fixed integer world seed"
+        )
+
+    # Bind to the exercised candidate: same commit, same runtime inventory digest, same game
+    # build -- never an arbitrary hashed log against unrelated PASS strings.
+    candidate = payload.get("candidateCommit")
+    if (
+        not isinstance(candidate, str)
+        or re.fullmatch(r"[0-9a-f]{40}", candidate) is None
+    ):
+        errors.append(
+            "long-form scenario results candidateCommit must be a lowercase full Git commit"
+        )
+    elif expected_candidate_commit and candidate != expected_candidate_commit:
+        errors.append(
+            "long-form scenario results candidateCommit must match the release evidence "
+            "candidateCommit"
+        )
+    inventory_digest = payload.get("runtimeInventorySha256")
+    if (
+        not isinstance(inventory_digest, str)
+        or re.fullmatch(r"[0-9a-f]{64}", inventory_digest) is None
+        or inventory_digest == "0" * 64
+    ):
+        errors.append(
+            "long-form scenario results runtimeInventorySha256 must be a nonzero lowercase "
+            "SHA-256 structural digest"
+        )
+    elif expected_runtime_inventory_sha256 is None:
+        errors.append(
+            "long-form scenario results runtimeInventorySha256 cannot be verified: the caller "
+            "supplied no production structural digest (Tools/check-structure.py --json of the "
+            "requested tree) for the exercised tree"
+        )
+    elif inventory_digest != expected_runtime_inventory_sha256:
+        errors.append(
+            "long-form scenario results runtimeInventorySha256 must match the requested "
+            "tree's own Tools/check-structure.py --json production structural digest"
+        )
+    if payload.get("gameBuildId") != expected_game_build:
+        errors.append(
+            f"long-form scenario results gameBuildId must be {expected_game_build!r}"
+        )
+
+    log_hash = payload.get("logSha256")
+    _validate_artifact_binding(
+        {
+            "artifactRef": payload.get("logRef"),
+            "artifactSha256": log_hash if isinstance(log_hash, str) else "0" * 64,
+        },
+        "longFormScenario.log",
+        errors,
+        repository_root,
+        include_pass_id=False,
+    )
+
+    # Continuity: realm/city are known from the very start and must hold for the whole run.
+    # Job/building/plot/save identity is lifecycle-gated and validated per-step below.
+    continuity = payload.get("continuity")
+    if not isinstance(continuity, dict) or set(continuity) != LONGFORM_CONTINUITY_KEYS:
+        errors.append(
+            "long-form scenario results continuity fields must be "
+            + ", ".join(sorted(LONGFORM_CONTINUITY_KEYS))
+        )
+        continuity = {}
+    else:
+        for key in LONGFORM_CONTINUITY_KEYS:
+            value = continuity.get(key)
+            if not _observed_id_valid(value):
+                errors.append(
+                    f"long-form scenario results continuity.{key} must be a real, non-empty, "
+                    "non-placeholder identity"
+                )
+
+    # Process lifecycle: exactly the save-session and cold-load-session, each with a distinct
+    # launch, its own start/stop timestamps in order, and the save-session stopping no later
+    # than the cold-load-session starts -- never a per-step fabrication.
+    processes = payload.get("processes")
+    process_by_role: dict[str, dict] = {}
+    if not isinstance(processes, list) or len(processes) != len(LONGFORM_SESSION_ROLES):
+        errors.append(
+            "long-form scenario results processes must have exactly the roles: "
+            + ", ".join(LONGFORM_SESSION_ROLES)
+        )
+    else:
+        launch_ids: list[str] = []
+        for entry in processes:
+            if (
+                not isinstance(entry, dict)
+                or set(entry) != LONGFORM_PROCESS_KEYS
+                or entry.get("role") not in LONGFORM_SESSION_ROLES
+                or entry.get("role") in process_by_role
+                or not isinstance(entry.get("launchId"), str)
+                or not entry["launchId"].strip()
+                or not _second_precision_utc(entry.get("started"))
+                or not _second_precision_utc(entry.get("stoppedUtc"))
+                or entry.get("started") >= entry.get("stoppedUtc")
+            ):
+                errors.append(
+                    "long-form scenario results processes entries must each be an object with "
+                    "role, launchId, started, stoppedUtc (started strictly before stoppedUtc), "
+                    "profileName, and profileSeal, one per session role, no duplicates"
+                )
+                continue
+            # Per-session profile identity: save-session and cold-load-session legitimately
+            # run different profiles/scripts/import metadata (profileSeal is the SHA-256 of
+            # that session's own closed profile.sha256, header taf-scenario-profile-seal-v1),
+            # so profileName/profileSeal are NEVER required to match each other -- only their
+            # presence, shape, and binding to THIS session (not cross-session equality) are
+            # checked. What both sessions DO share is already the single top-level
+            # candidateCommit/runtimeInventorySha256 and the saveId stability already enforced
+            # across steps below -- no separate per-process binding fields are needed for that.
+            role = entry["role"]
+            if not _observed_id_valid(entry.get("profileName")):
+                errors.append(
+                    f"long-form scenario results processes[{role}].profileName must be a "
+                    "real, non-empty, non-placeholder identity"
+                )
+            profile_seal = entry.get("profileSeal")
+            if (
+                not isinstance(profile_seal, str)
+                or re.fullmatch(r"[0-9a-f]{64}", profile_seal) is None
+                or profile_seal == "0" * 64
+            ):
+                errors.append(
+                    f"long-form scenario results processes[{role}].profileSeal must be a "
+                    "nonzero lowercase SHA-256"
+                )
+            process_by_role[role] = entry
+            launch_ids.append(entry["launchId"])
+        missing_roles = [
+            role for role in LONGFORM_SESSION_ROLES if role not in process_by_role
+        ]
+        if missing_roles:
+            errors.append(
+                "long-form scenario results processes is missing a valid entry for: "
+                + ", ".join(missing_roles)
+            )
+        if len(launch_ids) == 2 and len(set(launch_ids)) != 2:
+            errors.append(
+                "long-form scenario results processes must use two distinct launchId values, "
+                "never the same launch for both sessions"
+            )
+        save_session = process_by_role.get("save-session")
+        cold_load_session = process_by_role.get("cold-load-session")
+        if (
+            save_session is not None
+            and cold_load_session is not None
+            and save_session["stoppedUtc"] > cold_load_session["started"]
+        ):
+            errors.append(
+                "long-form scenario results save-session must stop at or before "
+                "cold-load-session starts"
+            )
+
+
+    # The exact ordered, non-repeatable seven-step chain, each bounded by its own recorded
+    # turn/wall-clock usage against its own budget.
+    steps = payload.get("steps")
+    if not isinstance(steps, list) or len(steps) != len(LONGFORM_SCENARIO_STEPS):
+        errors.append(
+            "long-form scenario results steps must be the exact ordered chain: "
+            + ", ".join(LONGFORM_SCENARIO_STEPS)
+        )
+        return
+    save_step_index = LONGFORM_SCENARIO_STEPS.index("save")
+    stable_first_value: dict[str, str] = {}
+    paid_commission_job_id: str | None = None
+    for index, (expected_step, entry) in enumerate(zip(LONGFORM_SCENARIO_STEPS, steps)):
+        # Internal consistency, not evidence content: the fixed step-order table and the
+        # step-to-session map must agree that steps up to and including "save" are the
+        # save-session and everything after is the cold-load-session.
+        assert LONGFORM_SESSION_FOR_STEP[expected_step] == (
+            "save-session" if index <= save_step_index else "cold-load-session"
+        ), "LONGFORM_SESSION_FOR_STEP is out of sync with LONGFORM_SCENARIO_STEPS"
+        if not isinstance(entry, dict) or set(entry) != LONGFORM_STEP_KEYS:
+            errors.append(
+                f"long-form scenario results steps[{index}] fields must be "
+                + ", ".join(sorted(LONGFORM_STEP_KEYS))
+            )
+            continue
+        if entry.get("step") != expected_step:
+            errors.append(
+                f"long-form scenario results steps[{index}].step must be {expected_step!r} "
+                "in the fixed chain order, never shuffled, duplicated, or substituted"
+            )
+        if entry.get("status") != "PASS":
+            errors.append(
+                f"long-form scenario results steps[{index}] ({expected_step}) must be PASS"
+            )
+        turns_used = entry.get("turnsUsed")
+        turn_budget = entry.get("turnBudget")
+        elapsed = entry.get("elapsedSeconds")
+        timeout = entry.get("timeoutSeconds")
+        for field, value in (
+            ("turnsUsed", turns_used),
+            ("turnBudget", turn_budget),
+            ("elapsedSeconds", elapsed),
+            ("timeoutSeconds", timeout),
+        ):
+            if type(value) is not int or value < 0:
+                errors.append(
+                    f"long-form scenario results steps[{index}].{field} must be a "
+                    "non-negative integer"
+                )
+        # No bypass at zero: a zero budget enforces zero usage, it does not waive the check.
+        if type(turns_used) is int and type(turn_budget) is int and turns_used > turn_budget:
+            errors.append(
+                f"long-form scenario results steps[{index}] ({expected_step}) exceeded its "
+                "turnBudget"
+            )
+        if type(elapsed) is int and type(timeout) is int and elapsed > timeout:
+            errors.append(
+                f"long-form scenario results steps[{index}] ({expected_step}) exceeded its "
+                "timeoutSeconds"
+            )
+
+        observed = entry.get("observed")
+        if isinstance(observed, dict):
+            # Phase-appropriate observations are REQUIRED where a real identity exists; they
+            # are never allowed to silently disappear once their phase is reached.
+            for key in LONGFORM_OBSERVED_REQUIRED_AT_STEP.get(index, ()):
+                if key not in observed:
+                    errors.append(
+                        f"long-form scenario results steps[{index}] ({expected_step}) must "
+                        f"observe {key}"
+                    )
+            if expected_step == "engine-turn-build":
+                for_job_id = observed.get("forJobId")
+                if (
+                    isinstance(for_job_id, str)
+                    and paid_commission_job_id is not None
+                    and for_job_id != paid_commission_job_id
+                ):
+                    errors.append(
+                        f"long-form scenario results steps[{index}] (engine-turn-build) "
+                        "observed.forJobId must equal the jobId observed at paid-commission "
+                        "(the completed receipt must link back to the paid job, even when "
+                        "completedReceiptId itself differs)"
+                    )
+                elif for_job_id is not None and paid_commission_job_id is None:
+                    errors.append(
+                        f"long-form scenario results steps[{index}] (engine-turn-build) "
+                        "observed.forJobId cannot be verified: paid-commission did not "
+                        "observe a jobId to link back to"
+                    )
+            if expected_step == "paid-commission" and isinstance(observed.get("jobId"), str):
+                paid_commission_job_id = observed["jobId"]
+        if not isinstance(observed, dict) or not set(observed) <= LONGFORM_OBSERVED_KEYS:
+            errors.append(
+                f"long-form scenario results steps[{index}].observed keys must be a subset of "
+                + ", ".join(sorted(LONGFORM_OBSERVED_KEYS))
+            )
+            continue
+        for key in ("realmId", "cityId"):
+            value = observed.get(key)
+            if not _observed_id_valid(value):
+                errors.append(
+                    f"long-form scenario results steps[{index}].observed.{key} must be a "
+                    "real, non-empty identity on every step"
+                )
+            elif continuity.get(key) is not None and value != continuity.get(key):
+                errors.append(
+                    f"long-form scenario results steps[{index}].observed.{key} must match "
+                    "continuity"
+                )
+        for key, earliest in LONGFORM_OBSERVED_EARLIEST_STEP_INDEX.items():
+            if key not in observed:
+                continue
+            value = observed[key]
+            if not _observed_id_valid(value):
+                errors.append(
+                    f"long-form scenario results steps[{index}].observed.{key} must be a "
+                    "real, non-empty, non-placeholder identity"
+                )
+                continue
+            if index < earliest:
+                errors.append(
+                    f"long-form scenario results steps[{index}] ({expected_step}) observed "
+                    f"{key} before its creation step "
+                    f"({LONGFORM_SCENARIO_STEPS[earliest]!r}); a fabricated-looking or "
+                    "premature id fails"
+                )
+                continue
+            if key in LONGFORM_OBSERVED_STABLE_AFTER_FIRST:
+                if key in stable_first_value and value != stable_first_value[key]:
+                    errors.append(
+                        f"long-form scenario results steps[{index}].observed.{key} must equal "
+                        f"the value first observed at "
+                        f"{LONGFORM_SCENARIO_STEPS[earliest]!r} (causal linkage), got a "
+                        "different value"
+                    )
+                elif key not in stable_first_value:
+                    stable_first_value[key] = value
+
 
 
 def _validate_artifact_binding(
@@ -1391,34 +2386,132 @@ def _safe_evidence_artifact_ref(value: str) -> bool:
     return True
 
 
-def release_evidence_artifact_refs(path: Path) -> tuple[str, ...]:
-    """List every safe retained-artifact path before immutable extraction.
+# Every key name that binds a retained artifact path, anywhere in the evidence record or in a
+# JSON artifact it points to (nested one level, e.g. the longFormScenario results file's own
+# logRef). Adding a new "...Ref" field to the schema means adding it here too, or its file is
+# silently left out of the frozen release snapshot -- exactly the gap Codex root's protocol
+# review found in driverResultsRef/captureProvenanceRef/logRef.
+RELEASE_EVIDENCE_REF_KEYS = (
+    "artifactRef",
+    "driverResultsRef",
+    "captureProvenanceRef",
+    "logRef",
+)
+
+
+def _read_json_blob_at_commit(repository_root: Path, commit: str, relative_path: str) -> object:
+    """Read and parse one JSON file from a frozen git commit -- never the working tree, never
+    a not-yet-populated extraction scratch directory. This is what makes it safe to discover
+    the full artifact graph BEFORE anything has been extracted (Tools/workshop-package.sh must
+    know every dependency to extract before any of them exist on disk)."""
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repository_root), "show", f"{commit}:{relative_path}"],
+            check=True,
+            capture_output=True,
+        )
+    except subprocess.CalledProcessError as error:
+        stderr_text = (error.stderr or b"").decode("utf-8", errors="replace")
+        if "does not exist" in stderr_text or "exists on disk, but not in" in stderr_text:
+            raise ValidationError(
+                f"release evidence artifact is absent from HEAD: {relative_path}"
+            ) from error
+        raise ValidationError(
+            f"cannot read {relative_path!r} at commit {commit}: {error}"
+        ) from error
+    except OSError as error:
+        raise ValidationError(
+            f"cannot read {relative_path!r} at commit {commit}: {error}"
+        ) from error
+    try:
+        return json.loads(result.stdout.decode("utf-8-sig"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ValidationError(
+            f"{relative_path!r} at commit {commit} is not valid JSON: {error}"
+        ) from error
+
+
+def release_evidence_artifact_refs(
+    path: Path,
+    *,
+    repository_root: Path | None = None,
+    at_commit: str | None = None,
+) -> tuple[str, ...]:
+    """List every safe retained-artifact path before immutable extraction, including one level
+    of nested refs inside any referenced .json artifact (driverResultsRef's results.json and
+    longFormScenario's results.json each carry their own further ref fields, e.g. logRef).
 
     Full schema and hash validation happens after extraction. This first pass is deliberately
-    narrow: it discovers every artifactRef anywhere in the record, refuses unsafe spellings,
-    and returns one bytewise-sorted path per committed blob.
-    """
-    evidence = _load_json(path)
-    refs: list[str] = []
+    narrow: it discovers every ref named in RELEASE_EVIDENCE_REF_KEYS anywhere in the record
+    (and one level into any .json artifact any of those refs points to), refuses unsafe
+    spellings, and returns one bytewise-sorted path per committed blob.
 
-    def visit(value: object) -> None:
+    When `at_commit` is given, `path` must be the evidence file's REPO-RELATIVE path (e.g.
+    "docs/RELEASE_EVIDENCE.json") and `repository_root` is required: the evidence document and
+    every nested .json artifact it references are read via `git show <commit>:<path>` -- frozen
+    git objects, never the mutable working tree or an extraction scratch directory that has not
+    been populated yet. This is the only safe way to call this function before dependency
+    extraction has happened.
+    """
+    if at_commit is not None:
+        if repository_root is None:
+            raise ValidationError(
+                "evidence-artifact-refs at a commit requires a repository_root"
+            )
+        evidence = _read_json_blob_at_commit(repository_root, at_commit, str(path))
+
+        def read_nested(relative_ref: str) -> object:
+            return _read_json_blob_at_commit(repository_root, at_commit, relative_ref)
+    else:
+        evidence = _load_json(path)
+        if repository_root is None:
+            repository_root = path.parent
+
+        def read_nested(relative_ref: str) -> object:
+            try:
+                nested_path = repository_root.joinpath(*relative_ref.split("/"))
+                resolved = nested_path.resolve(strict=True)
+                resolved.relative_to(repository_root)
+                if nested_path.is_symlink() or not resolved.is_file():
+                    raise OSError("nested artifact is not a regular file")
+                return json.loads(resolved.read_text(encoding="utf-8-sig"))
+            except (OSError, UnicodeError, ValueError, json.JSONDecodeError) as error:
+                raise ValidationError(
+                    f"release evidence cannot read nested artifact {relative_ref!r}: {error}"
+                ) from error
+
+    refs: list[str] = []
+    nested_json_refs: list[str] = []
+
+    def visit(value: object, *, collect_nested: bool) -> None:
         if isinstance(value, dict):
-            if "artifactRef" in value:
-                artifact_ref = value["artifactRef"]
+            for key in RELEASE_EVIDENCE_REF_KEYS:
+                if key not in value:
+                    continue
+                artifact_ref = value[key]
                 if not isinstance(artifact_ref, str) or not _safe_evidence_artifact_ref(
                     artifact_ref
                 ):
                     raise ValidationError(
-                        "release evidence contains an unsafe artifactRef before extraction"
+                        f"release evidence contains an unsafe {key} before extraction"
                     )
                 refs.append(artifact_ref)
+                # Recurse on EVERY declared ref key (not only artifactRef): any of them may
+                # point at a .json artifact that itself carries further nested refs.
+                if collect_nested and artifact_ref.endswith(".json"):
+                    nested_json_refs.append(artifact_ref)
             for child in value.values():
-                visit(child)
+                visit(child, collect_nested=collect_nested)
         elif isinstance(value, list):
             for child in value:
-                visit(child)
+                visit(child, collect_nested=collect_nested)
 
-    visit(evidence)
+    visit(evidence, collect_nested=True)
+    for nested_ref in nested_json_refs:
+        # One level only: a nested artifact's own further-nested refs (none exist in the
+        # current schema) are not recursed into again.
+        visit(read_nested(nested_ref), collect_nested=False)
+
     if not refs:
         raise ValidationError("release evidence contains no retained artifactRef")
     duplicates = sorted(
@@ -1621,6 +2714,7 @@ def main(argv: list[str] | None = None) -> int:
     evidence.add_argument("changelog", type=Path)
     evidence.add_argument("--repository-root", type=Path)
     evidence.add_argument("--testing", type=Path)
+    evidence.add_argument("--inventory-digest", type=str, default=None)
     alpha_candidate = subparsers.add_parser("alpha-candidate")
     alpha_candidate.add_argument("manifest", type=Path)
     alpha_candidate.add_argument("preview", type=Path)
@@ -1633,7 +2727,9 @@ def main(argv: list[str] | None = None) -> int:
     alpha_binding.add_argument("private_workshop", type=Path)
     alpha_binding.add_argument("public_workshop", type=Path)
     artifact_refs = subparsers.add_parser("evidence-artifact-refs")
-    artifact_refs.add_argument("record", type=Path)
+    artifact_refs.add_argument("record", type=str)
+    artifact_refs.add_argument("--repository-root", type=Path, default=None)
+    artifact_refs.add_argument("--at-commit", type=str, default=None)
     workshop_id = subparsers.add_parser("workshop-id")
     workshop_id.add_argument("path", type=Path)
     testing_ids = subparsers.add_parser("testing-pass-ids")
@@ -1671,6 +2767,7 @@ def main(argv: list[str] | None = None) -> int:
                     args.changelog,
                     repository_root=args.repository_root,
                     testing_path=args.testing,
+                    exercised_inventory_sha256=args.inventory_digest,
                 )
             )
         elif args.command == "alpha-candidate":
@@ -1685,10 +2782,17 @@ def main(argv: list[str] | None = None) -> int:
             ):
                 print(value)
         elif args.command == "evidence-artifact-refs":
-            for artifact_ref in release_evidence_artifact_refs(args.record):
+            record = args.record if args.at_commit is not None else Path(args.record)
+            for artifact_ref in release_evidence_artifact_refs(
+                record,
+                repository_root=args.repository_root,
+                at_commit=args.at_commit,
+            ):
                 print(artifact_ref)
         elif args.command == "alpha-workshop-binding":
-            validate_alpha_workshop_binding(args.record, args.private_workshop, args.public_workshop)
+            validate_alpha_workshop_binding(
+                args.record, args.private_workshop, args.public_workshop
+            )
         elif args.command == "workshop-id":
             print(_workshop_id(_load_json(args.path)))
         elif args.command == "testing-pass-ids":

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 6,
   "releaseVersion": "0.2.0",
   "candidateCommit": "FULL_LOWERCASE_PRIVATE_CANDIDATE_COMMIT",
   "gameMarketingVersion": "1.0.5",
@@ -46,12 +46,14 @@
       "source": "native-game-screenshot",
       "generativeAssistance": false,
       "previewSha256": "SHA256_OF_PREVIEW_PNG",
-      "capturedBy": "HUMAN_SCREENSHOT_CAPTURER_NAME_OR_ALIAS",
+      "capturedBy": "CAPTURER_NAME_OR_HONESTLY_LABELLED_AUTOMATED_CAPTURE_IDENTITY",
       "captureUtc": "YYYY-MM-DDTHH:MM:SSZ",
       "sourceSave": "REPLACE_WITH_NATIVE_SOURCE_SAVE_IDENTITY",
       "editSummary": "REPLACE_WITH_CROP_RESIZE_AND_OTHER_NON_GENERATIVE_EDITS",
-      "reviewedBy": "HUMAN_PREVIEW_REVIEWER_NAME_OR_ALIAS",
-      "completedUtc": "YYYY-MM-DDTHH:MM:SSZ"
+      "captureProvenanceRef": "docs/release-evidence/preview-capture-log.txt",
+      "captureProvenanceSha256": "SHA256_OF_RETAINED_CAPTURE_TOOL_RUN_LOG",
+      "reviewedBy": null,
+      "completedUtc": null
     },
     "numberedProtocols": {
       "artifactRef": "docs/release-evidence/numbered-protocols.txt",
@@ -776,6 +778,10 @@
       "waivers": []
     }
   },
+  "longFormScenario": {
+    "artifactRef": "docs/release-evidence/longform-scenario-results.json",
+    "artifactSha256": "SHA256_OF_LONGFORM_SCENARIO_RESULTS_JSON"
+  },
   "privateSubscription": {
     "source": "steam-subscription",
     "inventory": "clean",
@@ -788,7 +794,10 @@
     "playerLog": "clean",
     "localDuplicatesRemoved": true,
     "uploadHiddenFiles": true,
-    "testedBy": "HUMAN_TESTER_NAME_OR_ALIAS",
+    "testedBy": "TESTER_NAME_OR_HONESTLY_LABELLED_AUTOMATED_DRIVER_IDENTITY",
+    "driverResultsRef": "docs/release-evidence/native-smoke-results.json",
+    "driverResultsSha256": "SHA256_OF_NATIVE_SMOKE_RESULTS_JSON",
+    "driverExitCode": 0,
     "completedUtc": "YYYY-MM-DDTHH:MM:SSZ"
   }
 }

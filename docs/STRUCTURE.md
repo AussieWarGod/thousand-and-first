@@ -421,7 +421,12 @@ Copy `docs/STRUCTURE_REVIEW.example.json` only after the review itself; replace 
 record concrete evidence in both notes fields. Schema 1 accepts no exceptions: exactly the
 template keys, nothing else. Reviewer identity is 2–80 printable characters; each evidence note is
 20–2,000 printable characters; completion uses a real second-precision UTC timestamp. Placeholder,
-sentinel, example, TODO, TBD, UNKNOWN, and N/A reviewer/notes text is rejected. Changing that rule
+sentinel, example, TODO, TBD, UNKNOWN, and N/A reviewer/notes text is rejected, as is any text
+claiming automation is a human or that a human personally/physically performed the review. Per
+the author ruling of 2026-09-11 ("no manual test gate for release, forever"), each evidence note
+must also bind to a real, checkable artefact — a run id, a log/receipt path, or a digest, written
+as `run:<id>`, `log:<path>`, or `sha256:<hex>`/`receipt:<hex>` inline in the note — so an honestly
+labelled automated review is exactly as verifiable as a human one was. Changing that rule
 requires an explicit author amendment to Addendum 9, not a tooling allowlist.
 
 ### Addendum 9 amendment — who may sign (author ruling, 2026-09-02)

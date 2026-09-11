@@ -3,8 +3,13 @@
 
 Report mode is diagnostic and always succeeds after a valid census. Release mode
 enforces the conservative, mechanically provable proxy (every staged production
-C# file is strictly under 300 physical lines) and requires exact-inventory human
-review evidence for the two semantic requirements automation cannot prove.
+C# file is strictly under 300 physical lines) and requires exact-inventory
+review evidence, bound to a real artefact, for the two semantic requirements
+automation cannot fully prove on its own (one-responsibility, protocols at
+boundaries). The reviewer identity may be an honestly labelled automated
+identity (e.g. "codex-root structural review") as well as a person; per the
+author ruling of 2026-09-11, no manual test gate is required for release ever
+again, but a forged human signature authored by automation is always rejected.
 """
 
 from __future__ import annotations
@@ -30,10 +35,23 @@ REVIEW_KEYS = {
     "oneResponsibility", "protocolsAtBoundaries",
 }
 REVIEW_SECTION_KEYS = {"status", "notes"}
-HUMAN_SENTINEL = re.compile(
+PLACEHOLDER_SENTINEL = re.compile(
     r"(?:^|[^a-z0-9])(?:placeholder|example|todo|tbd|unknown|n\s*/\s*a)"
     r"(?:$|[^a-z0-9])|human[_ -]*(?:reviewer|tester)|name[_ -]*the|"
     r"replace[_ -]*with|your[_ -]*name",
+    re.IGNORECASE,
+)
+# An automated identity is welcome (e.g. "codex-root structural review"); a claim that
+# automation IS a human, or that a human personally/physically did the work, is not.
+FORGED_HUMAN_SIGNATURE = re.compile(
+    r"\b(?:i\s*am|this\s*is|signed\s*as|personally|in\s*person)\b[^.]{0,40}\bhuman\b"
+    r"|\bhuman[_ -]*(?:signature|authored|approved|signed)\b",
+    re.IGNORECASE,
+)
+# A bound artefact reference: a run id, a log/receipt path, or a results/receipt SHA-256 digest.
+# Free prose alone is not verifiable evidence; text must point at something checkable.
+BOUND_ARTIFACT = re.compile(
+    r"\b(?:sha256|run|log|receipt)\s*[:=]\s*\S+",
     re.IGNORECASE,
 )
 
@@ -186,13 +204,25 @@ def _utc_timestamp(value: object) -> bool:
     return True
 
 
-def _human_text(value: object, minimum: int, maximum: int) -> bool:
+def _identity_text(value: object, minimum: int, maximum: int) -> bool:
+    """A reviewer/tester identity: person or honestly labelled automation, never a placeholder
+    and never a forged claim that automation is a human."""
     return (
         isinstance(value, str)
         and value == value.strip()
         and minimum <= len(value) <= maximum
         and value.isprintable()
-        and HUMAN_SENTINEL.search(value) is None
+        and PLACEHOLDER_SENTINEL.search(value) is None
+        and FORGED_HUMAN_SIGNATURE.search(value) is None
+    )
+
+
+def _evidence_notes(value: object, minimum: int, maximum: int) -> bool:
+    """Review notes: bounded prose that is not a placeholder or a forged human claim, and that
+    binds to a real, checkable artefact (a run id, a log/receipt path, or a digest)."""
+    return (
+        _identity_text(value, minimum, maximum)
+        and BOUND_ARTIFACT.search(value) is not None
     )
 
 
@@ -215,8 +245,12 @@ def review_issues(path: Path, census: Census) -> list[str]:
         issues.append("semantic review does not bind the current staged C# inventory")
     if payload.get("exceptions") != []:
         issues.append("semantic review exceptions must be empty; only an author ruling may amend Addendum 9")
-    if not _human_text(payload.get("reviewedBy"), 2, 80):
-        issues.append("semantic review reviewedBy must name the human reviewer")
+    if not _identity_text(payload.get("reviewedBy"), 2, 80):
+        issues.append(
+            "semantic review reviewedBy must name the reviewer (a person, or an honestly "
+            "labelled automated identity such as 'codex-root structural review'); a forged "
+            "human-signature claim is never accepted"
+        )
     if not _utc_timestamp(payload.get("completedUtc")):
         issues.append("semantic review completedUtc must be a real second-precision UTC date")
     for key in ("oneResponsibility", "protocolsAtBoundaries"):
@@ -228,9 +262,12 @@ def review_issues(path: Path, census: Census) -> list[str]:
             issues.append(f"semantic review {key} fields must be notes and status")
         if review.get("status") != "passed":
             issues.append(f"semantic review {key}.status must be 'passed'")
-        if not _human_text(review.get("notes"), 20, 2000):
+        if not _evidence_notes(review.get("notes"), 20, 2000):
             issues.append(
-                f"semantic review {key}.notes must be bounded human evidence notes"
+                f"semantic review {key}.notes must be bounded evidence notes bound to a real "
+                "artefact (a run id, a log/receipt path, or a digest — e.g. 'sha256:<hex>', "
+                "'log:<path>', 'run:<id>', or 'receipt:<hex>'), not a placeholder or a forged "
+                "human-signature claim"
             )
     return issues
 
