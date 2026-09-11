@@ -53,6 +53,11 @@ BOOKKEEPING = frozenset(
         # -build. It describes the runner's OWN wiring for this run, not a verb the script asked
         # for, so a lifecycle persona's positional EXPECT must not have to name it.
         "LIFECYCLE-RUNNER",
+        # Native run 17 (f691ab4): the untruncated structured reading behind a "lifecycle-grown"
+        # stall refusal (Harness/KingdomQuickstartLifecycleStall.cs DetailRow). It is an
+        # observation about what the checker's own diagnosis found, never a verb the script
+        # asked for, so it never belongs in a positional EXPECT.
+        "lifecycle-grown-detail",
         # A third-party verb provider the admission law refused. It describes the PROFILE a run was
         # launched into, not a step the script asked for, so a persona must not go red because
         # somebody else's mod shipped a broken provider. `Tools/run-personas.sh` surfaces these

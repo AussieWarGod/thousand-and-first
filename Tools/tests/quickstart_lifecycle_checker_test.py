@@ -541,6 +541,49 @@ class RepeatedLifecycleOpenWaitAttemptsAreJudgedHonestly(unittest.TestCase):
 
 
 
+class LifecycleGrownDetailRowIsTolerated(unittest.TestCase):
+    """ZAP-034 native run 17: lifecycle-grown-detail carries the untruncated stall reading
+    behind a Bounded(...) 300-char lifecycle-grown refusal (Harness/
+    KingdomQuickstartLifecycleStall.cs). It must never affect judge()'s verdict or trip
+    check_stamps() -- it names no link and carries no stamp by design."""
+
+    def test_the_detail_row_does_not_change_the_engine_turn_build_verdict(self):
+        rows = [
+            ("realize", "OK", "m"),
+            ("lifecycle-open", "OK", "step=startup"),
+            ("lifecycle-grown-detail", "OK", "selectedId=x; candidates=1; roots=3; free=0"),
+            ("lifecycle-grown", "REFUSED", "stall=no-labour-ever; turns=2400"),
+        ]
+        with_detail = checker.judge(rows)
+        without_detail = checker.judge([row for row in rows if row[0] != "lifecycle-grown-detail"])
+        self.assertEqual(with_detail["verdict"], without_detail["verdict"])
+        self.assertEqual(with_detail["reason"], without_detail["reason"])
+        self.assertEqual(with_detail["verdict"], checker.FAIL)
+
+    def test_the_detail_row_is_never_demanded_a_stamp(self):
+        rows = [
+            ("lifecycle-open", "OK",
+             "step=startup; profile=founding-first-city seal=" + "a" * 64),
+            ("lifecycle-grown-detail", "OK", "selectedId=x; candidates=1"),
+        ]
+        paths = [self._journal(rows)]
+        records = [{"role": "save-session", "profileName": "founding-first-city",
+                    "profileSeal": "a" * 64}]
+        self.assertEqual(checker.check_stamps(paths, records), [])
+
+    def _journal(self, rows):
+        import tempfile
+        from pathlib import Path
+        temp = tempfile.TemporaryDirectory(prefix="taf-lifecycle-detail-row-test.")
+        self.addCleanup(temp.cleanup)
+        path = Path(temp.name) / "journal.tsv"
+        lines = ["2026-09-11T00:00:00.000000Z\t" + verb + "\t" + outcome + "\t" + message
+                 for verb, outcome, message in rows]
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        return path
+
+
+
 
 if __name__ == "__main__":
     unittest.main()

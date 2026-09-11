@@ -101,7 +101,7 @@ namespace ThousandAndFirst.Tests
 			string quickstartPersona = Read("Tools/personas/lifecycle-stockpile-native-check.persona");
 			string foundingPersona = Read("Tools/personas/lifecycle-founding-road-refusal.persona");
 			StringAssert.Contains(
-				"SCRIPT=quickstart-lifecycle marsh yes;stagedigest;lifecycle-open;advance 2400;"
+				"SCRIPT=quickstart-lifecycle marsh yes;stagedigest;lifecycle-open;advance 7200;"
 					+ "lifecycle-grown;lifecycle-save;stagedigest",
 				quickstartPersona);
 			StringAssert.Contains(
@@ -204,6 +204,39 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("forJobId=", finish);
 			StringAssert.Contains("GetIntProperty(\"KingdomBuilt\") != 1", finish);
 			StringAssert.Contains("GetStringProperty(KingdomUpgrade.BuildKeyProperty) != Job.TargetKey", finish);
+		}
+
+		/// <summary>Native run 17 (f691ab4) fix: a plot-backed job (Job.Projection == PlotWorks,
+		/// e.g. the "fire" commission) must read its progress off KingdomPlots.PlotWork* string
+		/// properties, never off r_KingdomScaffold -- that read was always absent for a plot root,
+		/// so every plot-backed refusal misread as "no-labour-ever" regardless of whether labour
+		/// had actually run. The untruncated reading goes to its own bookkeeping row so the
+		/// stamped, 300-char-bounded refusal row never has to carry it.</summary>
+		[Test]
+		public void StallClassificationReadsThePlotLaneForPlotBackedJobs()
+		{
+			string finish = Read("Harness/KingdomQuickstartLifecycleFinish.cs");
+			StringAssert.Contains("KingdomQuickstartLifecycleStall.DetailMessage(Game, Zone, System, job)",
+				finish);
+			StringAssert.Contains("KingdomScenarioJournal.Append(KingdomQuickstartLifecycleStall.DetailRow",
+				finish);
+			string stall = Read("Harness/KingdomQuickstartLifecycleStall.cs");
+			StringAssert.Contains("internal const string DetailRow = \"lifecycle-grown-detail\";", stall);
+			StringAssert.Contains("if (Job.Projection == KingdomConstructionProjection.PlotWorks)", stall);
+			StringAssert.Contains("KingdomPlots.PlotWorkRemainingProperty", stall);
+			StringAssert.Contains("KingdomPlots.PlotWorkLastTickProperty", stall);
+			StringAssert.Contains("KingdomPlots.PlotWorkRequiredProperty", stall);
+			StringAssert.Contains("KingdomPlots.PlotWorkSchemaProperty", stall);
+			StringAssert.Contains("KingdomPlots.PlotWorkWindowProperty", stall);
+			// The scaffold lane is still read, but only for the non-plot branch -- neither lane
+			// is dropped, only correctly chosen.
+			StringAssert.Contains("r_KingdomScaffold scaffold = root.GetPart<r_KingdomScaffold>();", stall);
+			// The detail row's key set, exactly as the diagnosis asked for.
+			foreach (string key in new[] { "selectedId=", "candidates=", "roots=", "free=",
+				"plotRemaining=", "lastSemanticTick=", "schema=" })
+				StringAssert.Contains(key, stall);
+			string matrix = Read("Tools/personas/persona_matrix.py");
+			StringAssert.Contains("\"lifecycle-grown-detail\",", matrix);
 		}
 
 		/// <summary>The cold-load session compares what it reads against the witness; it never
