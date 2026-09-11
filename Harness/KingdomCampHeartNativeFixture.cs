@@ -181,10 +181,12 @@ namespace ThousandAndFirst.Harness
 			{
 				Mint(KingdomMaterial.Stone, MintedStoneUnits, MintedStone);
 				Mint(KingdomMaterial.Timber, MintedTimberUnits, MintedTimber);
-				Mint(KingdomMaterial.Brush, MintedBrushUnits, MintedBrush);
+				Mint(KingdomMaterial.Brush, Unasked, MintedBrush);
 				Require(Store.Inventory.Objects.Count
-					== MintedStoneUnits + MintedTimberUnits + MintedBrushUnits,
-					"taf-camp-store-fill: the minted contents do not fill the declared capacity");
+					== MintedStoneUnits + MintedTimberUnits + Unasked,
+					"taf-camp-store-fill: the minted contents are not the authored bill plus the "
+						+ Unasked + " unasked unit(s): the store holds "
+						+ Store.Inventory.Objects.Count);
 			}
 
 			private void Mint(KingdomMaterial Material, int Units, List<string> Ids)
@@ -207,61 +209,6 @@ namespace ThousandAndFirst.Harness
 						"a minted unit has no unique assigned identity");
 					Ids.Add(id);
 				}
-			}
-
-			/// <summary>
-			/// SYNTHETIC CRAFT, DISCLOSED. The moot yard is gated at the workshop craft level
-			/// (RuntimeData/KingdomBuildings.xml:652 MinTech="workshop"), which production reckons
-			/// from the keepers' own roster: one point per taught design, five points for workshop
-			/// (Growth/KingdomZoningRules.cs:210,237). Nothing here writes the roster or the
-			/// level: each design is taught through the production API a founder's own data disk
-			/// would use, and the level is READ BACK afterwards. A rung-2 run teaches nothing.
-			/// </summary>
-			private void TeachCraftIfOwed()
-			{
-				if (TargetRung < 3) return;
-				TechLevel before = KingdomZoning.Tech(System);
-				for (int i = 0; i < WorkshopDisks; i++)
-					Require(KingdomZoning.Learn(System, "disk",
-						"camp heart fixture design " + (i + 1)),
-						"taf-camp-craft-unlearned: the keepers refused a synthetic taught design");
-				TechLevel after = KingdomZoning.Tech(System);
-				Require(after >= TechLevel.Workshop,
-					"taf-camp-craft-short: the keepers stand at " + after
-						+ " and the moot yard wants " + TechLevel.Workshop);
-				Evidence.Append("\nsynthetic-craft disks=").Append(WorkshopDisks)
-					.Append("; craft=").Append(before).Append(" -> ").Append(after);
-			}
-
-			/// <summary>
-			/// SYNTHETIC STOCK, DISCLOSED. The authored rung 2 -> 3 bill, minted into the SAME
-			/// camp store through the same production custody path the rung-2 fill uses, at the
-			/// phase-2 boundary: the rung-2 bill has left by then, so the store's declared
-			/// forty-eight units are met exactly rather than exceeded. Shaped timber is a worked
-			/// material no fixture minted before this one; it is created from the production
-			/// blueprint for KingdomMaterial.ShapedTimber, never authored by hand.
-			/// </summary>
-			internal void MintRung3Bill()
-			{
-				Require(TargetRung >= 3, "taf-camp-rung3-mint-unsealed: this run climbs one rung");
-				Require(MintedRung3.Count == 0, "taf-camp-rung3-mint-twice: the rung-3 bill is "
-					+ "already minted");
-				Mint(KingdomMaterial.Timber, Rung3TimberUnits, MintedRung3);
-				Mint(KingdomMaterial.Stone, Rung3StoneUnits, MintedRung3);
-				Mint(KingdomMaterial.ShapedTimber, Rung3ShapedTimberUnits, MintedRung3);
-				Require(MintedRung3.Count
-					== Rung3TimberUnits + Rung3StoneUnits + Rung3ShapedTimberUnits,
-					"taf-camp-rung3-mint-short: the rung-3 bill did not mint whole");
-				Require(Store.Inventory.Objects.Count
-					== MintedBrushUnits + MintedRung3.Count,
-					"taf-camp-rung3-store-fill: the store holds "
-						+ Store.Inventory.Objects.Count + " units, not the unasked "
-						+ MintedBrushUnits + " plus the rung-3 bill");
-				Evidence.Append("\nsynthetic-rung3-bill minted=")
-					.Append(MintedRung3.Count).Append("; timber=").Append(Rung3TimberUnits)
-					.Append("; stone=").Append(Rung3StoneUnits).Append("; shapedtimber=")
-					.Append(Rung3ShapedTimberUnits)
-					.Append("; store units=").Append(Store.Inventory.Objects.Count);
 			}
 
 			private GameObject Create(string Blueprint)

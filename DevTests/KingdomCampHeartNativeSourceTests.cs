@@ -135,7 +135,7 @@ namespace ThousandAndFirst.Tests
 				"Store.Inventory.Objects.Count == 0",
 				"Mint(KingdomMaterial.Stone, MintedStoneUnits, MintedStone)",
 				"Mint(KingdomMaterial.Timber, MintedTimberUnits, MintedTimber)",
-				"Mint(KingdomMaterial.Brush, MintedBrushUnits, MintedBrush)" })
+				"Mint(KingdomMaterial.Brush, Unasked, MintedBrush)" })
 				Assert.That(fixture, Does.Contain(token), token);
 		}
 

@@ -46,6 +46,16 @@ namespace ThousandAndFirst.Harness
 		internal const int TownResidentCount = 25;
 		internal const int TownDedicatedDrams = 1920;
 		internal const int WorkshopDisks = 5;
+		// The rung-3 run leaves ROOM: production's own keepers deposit what the settlement's yard
+		// work makes into this same dedicated stockpile while a rung is built, and native run 5
+		// found 46 of 48 units standing at the phase-2 boundary. Two unasked units still witness
+		// "the bill took only what it asked for" without filling the store the next bill needs.
+		internal const int Rung3UnaskedBrushUnits = 2;
+		/// <summary>The at-most-once 0/1/2 rung-effect marker production sets on the successor of
+		/// each climb, declared private at Growth/KingdomPlot2.03.RegistryAndDeclarations.cs and
+		/// read here by its exact name. The DevTests pin holds the two spellings together.
+		/// </summary>
+		internal const string HeartEffectProperty = "r_TAF_ConstructionHeartEffect";
 		private static Frame Retained;
 
 		internal static bool Vacant { get { return Retained == null; } }
@@ -118,6 +128,10 @@ namespace ThousandAndFirst.Harness
 			internal readonly List<string> MintedTimber = new List<string>();
 			internal readonly List<string> MintedBrush = new List<string>();
 			internal readonly List<string> MintedRung3 = new List<string>();
+			/// <summary>The body rung two settled on, kept so the second consecutive climb can be
+			/// told from the first by its own at-most-once marker.</summary>
+			internal GameObject SecondStanding;
+			internal string SecondHeartId;
 			internal int BeforeWater;
 			internal List<KingdomCampHeartNativeCensus.Unit> RetainedBrush;
 			internal List<GameObject> RetainedBrushBodies;
@@ -146,6 +160,14 @@ namespace ThousandAndFirst.Harness
 			internal int Drams
 			{
 				get { return TargetRung >= 3 ? TownDedicatedDrams : DedicatedDrams; }
+			}
+
+			/// <summary>Units the rung-2 bill never asks for, minted so the store can be proved
+			/// untouched where the bill did not reach. Fewer on the rung-3 run, which needs the
+			/// room for the next authored bill.</summary>
+			internal int Unasked
+			{
+				get { return TargetRung >= 3 ? Rung3UnaskedBrushUnits : MintedBrushUnits; }
 			}
 
 			/// <summary>Real founding, real rung-1 rite-ground completion, six really enrolled

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using XRL;
 using XRL.World;
@@ -49,6 +50,7 @@ namespace ThousandAndFirst.Harness
 						+ BasinCapacity(standing));
 				RequireGrownFootprint(standing);
 				RequireCompletedImprovement();
+				RequireSettledOnceEachClimb(standing);
 				RequireNoQuarantine(standing);
 				RequireStoreIdentity();
 				List<GameObject> bodies;
@@ -77,6 +79,41 @@ namespace ThousandAndFirst.Harness
 					.Append(KingdomCampHeartNativeCensus.Describe(RetainedBrush))
 					.Append("; fire=").Append(fire.IDIfAssigned)
 					.Append('@').Append(Offset(fire.CurrentCell));
+			}
+
+			/// <summary>
+			/// CASE 3 ITSELF, ASSERTED RATHER THAN INFERRED. The heart's rung effects are settled
+			/// once per climb behind an at-most-once 0/1/2 marker set on the SUCCESSOR of that
+			/// climb (<c>Growth/KingdomPlotHeartRules.Settle.cs</c>, the property declared at
+			/// <c>Growth/KingdomPlot2.03.RegistryAndDeclarations.cs</c>): 0 nothing owed, 1 the
+			/// ceremony is in flight, 2 settled. A second consecutive improvement-route rung must
+			/// therefore leave TWO distinct bodies each carrying exactly 2 -- the waterstone this
+			/// run climbed to, and the moot yard it climbed to next -- and a marker still at 1 is
+			/// an interrupted ceremony, honestly lost, not a settle.
+			/// <para>The name is a string here because production declares it private. The
+			/// DevTests pin holds the two spellings together, so a rename fails there rather than
+			/// making this read a property nothing writes.</para>
+			/// </summary>
+			private void RequireSettledOnceEachClimb(GameObject Standing)
+			{
+				int settled = Standing.GetIntProperty(HeartEffectProperty);
+				Require(settled == 2, "taf-camp-rung3-ceremony-unsettled: the moot yard's "
+					+ "at-most-once rung marker reads " + settled
+					+ ", not the settled 2 (0 owed, 1 in flight, 2 settled)");
+				Require(GameObject.Validate(SecondStanding),
+					"taf-camp-rung3-predecessor-lost: the waterstone this run climbed to is gone, "
+						+ "so the second consecutive climb cannot be told from the first");
+				Require(!ReferenceEquals(SecondStanding, Standing)
+					&& SecondStanding.IDIfAssigned != Standing.IDIfAssigned,
+					"taf-camp-rung3-same-body: the moot yard is the very body rung two settled on, "
+						+ "so only one climb happened");
+				int first = SecondStanding.GetIntProperty(HeartEffectProperty);
+				Require(first == 2, "taf-camp-rung3-first-climb-unsettled: the waterstone's own "
+					+ "rung marker reads " + first + ", not the settled 2");
+				Evidence.Append("\nphase3 rung-marker property=").Append(HeartEffectProperty)
+					.Append("; waterstone=").Append(SecondHeartId).Append(" reads ").Append(first)
+					.Append("; moot yard=").Append(Standing.IDIfAssigned).Append(" reads ")
+					.Append(settled).Append("; distinct bodies=true");
 			}
 
 			/// <summary>The authored growth the moot yard declares: 8x6 becomes 12x10

@@ -19,6 +19,7 @@ namespace ThousandAndFirst.Tests
 		private const string Fixture = "Harness/KingdomCampHeartNativeFixture.cs";
 		private const string Phases = "Harness/KingdomCampHeartNativeChecksPhases.cs";
 		private const string Rung3 = "Harness/KingdomCampHeartNativeRung3.cs";
+		private const string Stock = "Harness/KingdomCampHeartNativeRung3Stock.cs";
 		private const string Persona = "Tools/personas/camp-heart-rung3-native-check.persona";
 		private const string Buildings = "RuntimeData/KingdomBuildings.xml";
 		private const string Blueprints = "RuntimeData/ObjectBlueprints.xml";
@@ -45,6 +46,24 @@ namespace ThousandAndFirst.Tests
 			int open = element.IndexOf('"', name) + 1;
 			int close = element.IndexOf('"', open);
 			return element.Substring(open, close - open);
+		}
+
+		/// <summary>The stockpile capacity one named blueprint declares, read inside that
+		/// blueprint's own element. Several blueprints declare the tag and they are not all the
+		/// same size, so the element is bounded before the tag is read.</summary>
+		private static int DeclaredCapacity(string Blueprint)
+		{
+			string xml = Read(Blueprints);
+			int at = xml.IndexOf("<object Name=\"" + Blueprint + "\"", StringComparison.Ordinal);
+			Assert.That(at, Is.GreaterThan(-1), Blueprint + " is not an authored blueprint");
+			int end = xml.IndexOf("</object>", at, StringComparison.Ordinal);
+			Assert.That(end, Is.GreaterThan(at), Blueprint + " has no closing tag");
+			string element = xml.Substring(at, end - at);
+			int tag = element.IndexOf("<tag Name=\"r_KingdomStockpileCapacity\" Value=\"",
+				StringComparison.Ordinal);
+			Assert.That(tag, Is.GreaterThan(-1), Blueprint + " declares no stockpile capacity");
+			int open = element.IndexOf("Value=\"", tag, StringComparison.Ordinal) + 7;
+			return int.Parse(element.Substring(open, element.IndexOf('"', open) - open));
 		}
 
 		/// <summary>A <c>kind:units</c> bill as a dictionary, in the catalogue's own spelling.</summary>
@@ -74,9 +93,10 @@ namespace ThousandAndFirst.Tests
 
 		/// <summary>
 		/// VALUE. The rung-3 bill the fixture mints is the authored rung 2 -> 3 bill, term for
-		/// term, and the store can hold it: the units left standing after the rung-2 bill is spent,
-		/// plus the whole rung-3 bill, are exactly the stockpile's declared capacity. A bill that
-		/// grew by one unit, or a capacity that shrank, fails here rather than in a native run.
+		/// term, and what the fixture is accountable for at the rung-3 boundary fits the store's
+		/// OWN declared capacity. The store is not the fixture's to predict -- the settlement
+		/// deposits its own yard work into it while a rung is built -- so this is an upper bound
+		/// the fixture must leave room inside, never an equality it asserts about the world.
 		/// </summary>
 		[Test]
 		public void TheMintedRungThreeBillIsTheAuthoredBillAndFitsTheDeclaredCapacity()
@@ -90,24 +110,31 @@ namespace ThousandAndFirst.Tests
 
 			int rung3 = authored["timber"] + authored["stone"] + authored["shapedtimber"];
 			Assert.That(rung3, Is.EqualTo(25));
-			int brush = Constant(Checks, "MintedBrushUnits");
-			string blueprints = Read(Blueprints);
-			int tag = blueprints.IndexOf("<tag Name=\"r_KingdomStockpileCapacity\" Value=\"",
-				StringComparison.Ordinal);
-			Assert.That(tag, Is.GreaterThan(-1));
-			int open = blueprints.IndexOf("Value=\"", tag, StringComparison.Ordinal) + 7;
-			int capacity = int.Parse(blueprints.Substring(open,
-				blueprints.IndexOf('"', open) - open));
-			// The rung-2 bill has left the store by the time the rung-3 bill is minted, so what
-			// stands afterwards is the unasked units plus the new bill, and that must be exactly
-			// the declared capacity: one unit more would refuse, one fewer would leave it unproved.
-			Assert.That(brush + rung3, Is.EqualTo(capacity));
+			int capacity = DeclaredCapacity("r_KingdomHeartStockpile");
+			// The fixture's own store, not the first stockpile tag in the file: two blueprints
+			// declare 48 today, so reading the wrong one would prove nothing about this store.
+			Assert.That(capacity, Is.EqualTo(48));
 
-			// And the rung-2 fill itself still fills the same capacity.
+			// The rung-2 fill, and the room the rung-3 run deliberately leaves. Native run 5
+			// found 46 of 48 units standing at the phase-2 boundary, because the settlement's own
+			// keepers deposit what its yard work makes into this same store while the rung is
+			// built: the fixture's fill must leave room for that AND for the next authored bill.
+			int rung2Fill = Constant(Checks, "MintedStoneUnits") + Constant(Checks, "MintedTimberUnits");
+			int unasked = Constant(Checks, "Rung3UnaskedBrushUnits");
+			Assert.That(rung2Fill + unasked, Is.LessThanOrEqualTo(capacity));
+			// What the fixture is accountable for at the rung-3 boundary -- its own unasked units
+			// plus the whole next bill -- must fit the declared capacity with room to spare.
+			Assert.That(unasked + rung3, Is.LessThanOrEqualTo(capacity));
+			Assert.That(unasked, Is.GreaterThan(0),
+				"the unasked units are the witness that the bill took only what it asked for");
+
+			// The rung-2 bill the fixture mints is still the authored rung 1 -> 2 bill, and the
+			// rung-2 run's own fill still fills the declared capacity exactly.
 			Dictionary<string, int> rung2 = Bill(Authored("heartbasin", "UpgradeMaterials"));
 			Assert.That(rung2["stone"], Is.EqualTo(Constant(Checks, "MintedStoneUnits")));
 			Assert.That(rung2["timber"], Is.EqualTo(Constant(Checks, "MintedTimberUnits")));
-			Assert.That(rung2["stone"] + rung2["timber"] + brush, Is.EqualTo(capacity));
+			Assert.That(rung2["stone"] + rung2["timber"] + Constant(Checks, "MintedBrushUnits"),
+				Is.EqualTo(capacity));
 		}
 
 		/// <summary>
@@ -203,18 +230,49 @@ namespace ThousandAndFirst.Tests
 			foreach (string read in new[] { "KingdomPlots.HeartRung(Zone) == 3",
 				"KingdomUpgrade.IsFunctionallyBuilt(standing)",
 				"KingdomConstructionPhase.Complete",
-				"KingdomArchitectureStamper.UpgradeFaultProperty" })
+				"KingdomArchitectureStamper.UpgradeFaultProperty",
+				"RequireSettledOnceEachClimb(standing);",
+				"int settled = Standing.GetIntProperty(HeartEffectProperty);",
+				"int first = SecondStanding.GetIntProperty(HeartEffectProperty);" })
 				Assert.That(rung3, Does.Contain(read));
 			Assert.That(rung3, Does.Contain("TrySettleImprovementHeartRung"));
 			Assert.That(rung3, Does.Contain("settlement helper TWICE"));
 			Assert.That(rung3, Does.Contain("SECOND consecutive climb"));
 
-			string fixture = Read(Fixture);
-			Assert.That(fixture, Does.Contain("Mint(KingdomMaterial.ShapedTimber, "
-				+ "Rung3ShapedTimberUnits, MintedRung3);"));
-			Assert.That(fixture, Does.Contain("KingdomZoning.Learn(System, \"disk\","));
-			Assert.That(fixture, Does.Contain("Require(after >= TechLevel.Workshop,"));
-			Assert.That(Read(Phases), Does.Contain("if (TargetRung >= 3) MintRung3Bill();"));
+			string stock = Read(Stock);
+			foreach (string driver in new[] { "KingdomUpgrade.Begin(", "KingdomPlots.Advance(",
+				"TryApplyUpgrade(", "Destroy(", "Obliterate(" })
+				Assert.That(stock, Does.Not.Contain(driver),
+					"the rung-3 stock shard must never drive or dispose: " + driver);
+			Assert.That(stock, Does.Contain("Mint(KingdomMaterial.ShapedTimber, shaped, "
+				+ "MintedRung3);"));
+			Assert.That(stock, Does.Contain("KingdomZoning.Learn(System, \"disk\","));
+			Assert.That(stock, Does.Contain("Require(after >= TechLevel.Workshop,"));
+			// Observed-relative, capacity-bounded, and diagnosable: the store is read before and
+			// after, the declared capacity is production's own, and every refusal carries the
+			// per-material census.
+			Assert.That(stock, Does.Contain("int capacity = KingdomSurvey.StockCapacityOf(Store);"));
+			Assert.That(stock, Does.Contain("int before = KingdomSurvey.StockHeldIn(Store);"));
+			Assert.That(stock, Does.Contain("Require(before + minting <= capacity,"));
+			Assert.That(stock, Does.Contain("Require(after == before + minting,"));
+			Assert.That(stock, Does.Contain("taf-camp-rung3-bill-short: the store holds "));
+			foreach (string diagnostic in new[] { "capacity. Observed: \" + census",
+				"unit(s) minted. Before: \" + census + \". After: \" + held",
+				"bill asks for \" + Units + \". Observed: \" + Census" })
+				Assert.That(stock, Does.Contain(diagnostic));
+			Assert.That(stock, Does.Contain("RecordAnnexGround()"));
+			Assert.That(stock, Does.Contain("annex-ground rect="));
+			Assert.That(Read(Phases), Does.Contain("MintRung3Bill();"));
+			Assert.That(Read(Phases), Does.Contain("RecordAnnexGround();"));
+
+			// The marker the rung-3 phase reads is the one production writes.
+			Assert.That(Read(Checks), Does.Contain("internal const string HeartEffectProperty = "
+				+ "\"r_TAF_ConstructionHeartEffect\";"));
+			Assert.That(Read("Growth/KingdomPlot2.03.RegistryAndDeclarations.cs"),
+				Does.Contain("private const string HeartEffectProperty = "
+					+ "\"r_TAF_ConstructionHeartEffect\";"));
+			Assert.That(Read("Growth/KingdomPlotHeartRules.Settle.cs"),
+				Does.Contain("Building.SetIntProperty(HeartEffectProperty, 2);"));
 
 			string checks = Read(Checks);
 			Assert.That(checks, Does.Contain("\"; target-rung=\" + Retained.TargetRung"));

@@ -30,9 +30,9 @@ namespace ThousandAndFirst.Harness
 				List<KingdomCampHeartNativeCensus.Unit> units = ContentUnits(out bodies);
 				RetainedBrush = Select(units, MintedBrush);
 				RetainedBrushBodies = SelectBodies(bodies, MintedBrush);
-				Require(RetainedBrush.Count == MintedBrushUnits,
+				Require(RetainedBrush.Count == Unasked,
 					"taf-camp-store-retained-missing: the store does not hold all "
-						+ MintedBrushUnits + " unasked units before the upgrade");
+						+ Unasked + " unasked units before the upgrade");
 				Evidence.Append("\nbefore tick=").Append(Game.TimeTicks)
 					.Append("; population=").Append(System.Population)
 					.Append("; stage=").Append(System.Stage)
@@ -190,7 +190,13 @@ namespace ThousandAndFirst.Harness
 				// The rung-3 run mints the next authored bill here, once the rung-2 bill has left
 				// the store, and lets the SAME real settlement pass assess the moot yard on the
 				// turns the third advance spends. Nothing about rung 3 is begun from here.
-				if (TargetRung >= 3) MintRung3Bill();
+				if (TargetRung >= 3)
+				{
+					SecondStanding = standing;
+					SecondHeartId = standing.IDIfAssigned;
+					MintRung3Bill();
+					RecordAnnexGround();
+				}
 			}
 
 			/// <summary>The bodies in Present whose identity appears in Wanted, in Wanted's own

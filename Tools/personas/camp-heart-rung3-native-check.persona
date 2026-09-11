@@ -20,12 +20,20 @@
 #    1920-dram reservoir and its drams, and each fixture body's KingdomBorn provenance and name;
 #  - five taught designs (KingdomZoning.Learn, one point each) so the keepers stand at the workshop
 #    craft level the moot yard is gated on; the level is read back, never written;
-#  - the minted store units: the authored rung-2 bill (24 stone, 1 timber) plus 23 brush the bill
-#    never asks for at setup, and then the authored rung-3 bill (17 timber, 2 stone, 6 shapedtimber)
-#    minted at the phase-2 boundary, once the rung-2 bill has left, so the store's declared 48-unit
-#    capacity is met exactly and never exceeded. Shaped timber is a worked material no fixture minted
-#    before this one;
+#  - the minted store units: the authored rung-2 bill (24 stone, 1 timber) plus 2 brush the bill
+#    never asks for, and then the authored rung-3 bill (17 timber, 2 stone, 6 shapedtimber) minted at
+#    the phase-2 boundary. Only 2 unasked units, not the rung-2 run's 23, because the store is NOT the
+#    fixture's to predict: native run 5 found 46 of its 48 units standing at that boundary, since the
+#    settlement's own keepers deposit what its yard work makes into this same dedicated stockpile
+#    while the rung is built. The rung-3 fill is therefore read off the OBSERVED store -- held and
+#    declared capacity through production's own reads -- mints the whole bill when there is room and
+#    only the per-material shortfall when there is not, never pushes the store past the capacity its
+#    blueprint declares, and journals the per-material census on both sides. Shaped timber is a worked
+#    material no fixture minted before this one;
 #  - the founder's one-time improvement notice, pre-marked as read so a headless run raises no modal.
+# The ground the moot yard must annex (the 8x6 -> 12x10 growth, seventy-two new cells) is CENSUSED and
+# journaled before the rung-3 commission -- objects, living bodies, solid bodies -- so a refusal for
+# want of ground is diagnosable. That census asserts nothing and moves nothing.
 # Not ordinary play, not a rendered Charter, no save/load, no general camp acceptance. Rung 3 -> 4
 # and 4 -> 5 remain owed, as do PR #107 cases 1, 3, 4 and 5.
 DESCRIPTION=the heart climbs a second consecutive improvement-route rung, waterstone to moot yard, paid out of its own camp store
