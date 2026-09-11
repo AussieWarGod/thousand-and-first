@@ -17,7 +17,7 @@ only for the exact exercised native cases; visual quality,
 accessibility, compatibility, and Steam subscription remain separate evidence and are never
 inferred from source or static automation.
 
-## Current dev hotfix backmerge
+## Retained dev hotfix backmerge
 
 3080 staged C# files; 437,399 physical lines; cold-install inventory contains 3111 files.
 Compile inventory: 3080 sources, baseline and compatibility symbols (3076 baseline).
@@ -99,6 +99,13 @@ malformed geometry and exceptions remain errors. The notice may recur after load
 An empty or interior-road-only camp can remain pending indefinitely; no timeout invents corruption.
 Terminal and recovery callers retain their existing fail-closed refusal behavior.
 
+## Retained #129 integration census
+
+At the #129 dev-harness integration checkpoint: 3079 staged C# files;
+437,320 physical lines; zero at or above 300 lines; 1434 direct `XRL` imports.
+Inventory SHA-256: `f9a9469102be2f0ca119056e08c884a56014b31439e71695852026f63bd02d17`.
+This retained checkpoint predates the main hotfix backmerge and the #144 correction.
+
 ## Unreleased heart shared-XL transition fix (issue #144)
 
 The great court and the arcology stand on the same XL ground: the catalogue puts them in one
@@ -130,7 +137,7 @@ staged C# files; 437,433 physical lines; 0 exceed 300 physical lines, 0 are exac
 therefore 0 fail the strict cap; 0 exceed 1,000, 0 exceed 2,000, 0 exceed 5,000.
 Direct `XRL` imports: 1435 files, 0 over the line limit.
 Inventory SHA-256: `24b4ab29aab9cd3c97bb30f5382df88937ee96eac565a6fb90ce52a0dd22c0a2`.
-The production delta against the merged `dev` baseline `6ba1969` is exactly two files:
+The production delta against the merged `dev` baseline `3a287e4` is exactly two files:
 `Growth/KingdomPlotHeartRules.cs` gains the pure endpoint rule, and
 `Growth/KingdomArchitectureStamper.Transitions.cs` calls it in place of the rung-number
 comparison. Everything else in this delta is DevTests and documentation.

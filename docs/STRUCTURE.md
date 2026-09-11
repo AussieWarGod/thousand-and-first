@@ -18,7 +18,7 @@ python3 Tools/check-structure.py --report
 python3 Tools/check-structure.py --release
 ```
 
-## Current dev hotfix backmerge census
+## Retained dev hotfix backmerge census
 
 3080 staged production C# files; 437,399 physical lines; zero files at or above 300 lines.
 1435 files with direct `XRL` imports; 3111 cold-install files. Exact inventory:
@@ -42,7 +42,7 @@ or release gates. Earlier censuses are retained checkpoints.
 3080 staged production C# files; 437,433 physical lines; zero files at or above 300 lines.
 1435 files with direct `XRL` imports, none over the line cap. Exact inventory:
 `24b4ab29aab9cd3c97bb30f5382df88937ee96eac565a6fb90ce52a0dd22c0a2`.
-The production delta over the merged `dev` baseline `6ba1969` is the #144 heart shared-XL
+The production delta over the merged `dev` baseline `3a287e4` is the #144 heart shared-XL
 transition fix and nothing else: two files, `Growth/KingdomPlotHeartRules.cs` for the pure
 endpoint rule and `Growth/KingdomArchitectureStamper.Transitions.cs` for the call that replaces
 the rung-number comparison. Everything else in this delta is DevTests and documentation.
