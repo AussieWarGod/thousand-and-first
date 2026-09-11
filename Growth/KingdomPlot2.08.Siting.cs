@@ -164,6 +164,29 @@ namespace ThousandAndFirst
 				return false;
 			}
 
+			// ReadGround's own ground grid deliberately skips living occupants (a settler walks
+			// off ground, KingdomPlot2.04.Ground.cs:19-24), so nothing above ever saw one. A
+			// fixed founder or fauna body is gathered here, once -- not against the whole staked
+			// rect (that over-rejects: 11.4% of authored lot cells are unclaimed margin, up to
+			// 72% on some designs), but held for the architecture stage below, which filters
+			// against exactly the cells the stamper itself manages
+			// (Growth/KingdomArchitectureStamper.Preflight.cs:94-96 "a living occupant stands on
+			// authored ground").
+			HashSet<int> occupiedCells = new HashSet<int>();
+			for (int y = interior.Y1; y <= interior.Y2; y++)
+				for (int x = interior.X1; x <= interior.X2; x++)
+				{
+					Cell occupantCell = Z.GetCell(x, y);
+					if (occupantCell == null) continue;
+					List<GameObject> occupants = occupantCell.GetObjects();
+					for (int k = 0; k < occupants.Count; k++)
+					{
+						GameObject occupant = occupants[k];
+						if (GameObject.Validate(occupant) && (occupant.IsCreature || occupant.IsPlayer()))
+						{ occupiedCells.Add(y * Z.Width + x); break; }
+					}
+				}
+
 			// A rectangle is not buildable merely because its cells are clear. Resolve the exact
 			// typed architecture and authored frontage against every pose before the layout grammar
 			// scores anything. This keeps a valid transposed entrance from losing to a canonical
@@ -172,31 +195,11 @@ namespace ThousandAndFirst
 			if (!KingdomArchitectureRuntime.TryCreateSitingProbe(System, Z,
 				groundCandidates[0], Entry.Key, Entry.Category, out probe, out Refusal))
 				return false;
-			List<KingdomPlotRules.PlotRect> candidates =
-				new List<KingdomPlotRules.PlotRect>();
-			List<KingdomPlotRules.PlotRect> architectureRejected =
-				new List<KingdomPlotRules.PlotRect>();
-			List<string> architectureFailures = new List<string>();
-			for (int i = 0; i < groundCandidates.Count; i++)
+			List<KingdomPlotRules.PlotRect> candidates;
+			if (!KingdomPlotSelectionRules.TrySelect(groundCandidates,
+				candidate => ResolveArchitecture(probe, candidate, Z, occupiedCells),
+				hasFounder, founderX, founderY, out candidates, out Refusal))
 			{
-				KingdomPlotRules.PlotRect candidate = groundCandidates[i];
-				string architectureFailure;
-				if (probe.TryAccept(candidate, out architectureFailure)) candidates.Add(candidate);
-				else
-				{
-					architectureRejected.Add(candidate);
-					architectureFailures.Add(architectureFailure);
-				}
-			}
-			if (candidates.Count == 0)
-			{
-				int nearest = NearestIndex(architectureRejected,
-					hasFounder, founderX, founderY);
-				string architectureRefusal = nearest >= 0
-					? architectureFailures[nearest] : null;
-				Refusal = string.IsNullOrEmpty(architectureRefusal)
-					? "No authored architecture fits any clear pose of that exact plot."
-					: architectureRefusal;
 				return false;
 			}
 			KingdomLayoutRules.LayoutPurpose purpose = KingdomLayout.PurposeOfEntry(Entry);
@@ -233,6 +236,47 @@ namespace ThousandAndFirst
 				}
 			}
 			return best;
+		}
+
+		/// <summary>Architecture acceptance plus occupancy, filtered against exactly the cells
+		/// the resolved snapshot manages (claimed cells + placements) -- the same set
+		/// Growth/KingdomArchitectureStamper.Preflight.cs:90,94 inspects, via the same
+		/// TryWorldCell/TryWorldPlacement coordinate mapping, never the whole staked rect. A
+		/// mapping failure on either call REFUSES this candidate by that same failure text
+		/// (never silently drops the cell/placement from the sweep): TryManagedCells
+		/// (Growth/KingdomArchitectureStamper.OwnerReceipts.cs:140-168) treats the identical
+		/// failure as fatal for Preflight, so quoting must refuse for the same reason or a
+		/// candidate the stamper would refuse could still be selected here.</summary>
+		private static KingdomPlotSelectionRules.Resolution ResolveArchitecture(
+			KingdomArchitectureRuntime.SitingProbe Probe, KingdomPlotRules.PlotRect Candidate,
+			Zone Z, HashSet<int> OccupiedCells)
+		{
+			if (!Probe.TryAccept(Candidate, out ArchitectureLayoutSnapshot accepted, out string failure))
+				return new KingdomPlotSelectionRules.Resolution(false, failure);
+			if (accepted != null && OccupiedCells.Count > 0)
+			{
+				for (int c = 0; c < accepted.Cells.Count; c++)
+				{
+					ArchitectureCellState cell = accepted.Cells[c];
+					if (!KingdomArchitectureRules.IsClaimed(cell.Claim)) continue;
+					if (!KingdomArchitectureRuntime.TryWorldCell(accepted, Candidate, cell,
+						out int cx, out int cy, out string mappingFailure))
+						return new KingdomPlotSelectionRules.Resolution(false, mappingFailure);
+					if (OccupiedCells.Contains(cy * Z.Width + cx))
+						return new KingdomPlotSelectionRules.Resolution(false,
+							KingdomPlotRules.RefuseObstruction("a living occupant", cx, cy));
+				}
+				for (int p = 0; p < accepted.Placements.Count; p++)
+				{
+					if (!KingdomArchitectureRuntime.TryWorldPlacement(accepted, Candidate,
+						accepted.Placements[p], out int px, out int py, out string mappingFailure))
+						return new KingdomPlotSelectionRules.Resolution(false, mappingFailure);
+					if (OccupiedCells.Contains(py * Z.Width + px))
+						return new KingdomPlotSelectionRules.Resolution(false,
+							KingdomPlotRules.RefuseObstruction("a living occupant", px, py));
+				}
+			}
+			return new KingdomPlotSelectionRules.Resolution(true, null);
 		}
 
 	}

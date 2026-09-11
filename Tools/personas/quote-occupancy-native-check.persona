@@ -1,0 +1,33 @@
+# Three behaviours for the #034 quote-siting occupancy fix, on a really founded camp: an
+# occupied first candidate rect yields a clear alternate; every lawful pose occupied refuses
+# with the exact "living occupant" sentence and spends nothing; a creature drifting onto the
+# quoted rect between quote and stamp still refuses the stamp -- either Commission's own
+# plan-changed guard (fires first when an occupant-free alternate exists elsewhere, since
+# Commission re-derives the plot from scratch through the same occupancy-aware siting this
+# fix adds, Growth/KingdomPlot2.10.Commission.cs:95,130-139) or the stamper's own
+# living-occupant preflight (Growth/KingdomArchitectureStamper.Preflight.cs:94-96, reachable
+# only when re-siting finds no alternate at all) -- spending nothing and stamping nothing
+# either way. Both are named explicitly in the case; neither is asserted by a substring
+# wildcard.
+#
+# SYNTHETIC SETUP, DISCLOSED: the camp is founded and the water/materials dedicated by the
+# harness; each of the three cases places one or more synthetic NPC bodies, removed before
+# the next case runs. Nothing forces a rect, a snapshot, or a receipt directly. Not ordinary
+# play, no save/load.
+#
+# NOT YET NATIVELY RUN: written and gate.sh-compiled only; this script has not been executed.
+# All three cases run synchronously inside one setup call -- quoting and committing are
+# instant real production calls, unlike construction/strike, so no advance is needed. The
+# check verb is idempotent (it only reads the retained, already-complete Frame) and is called
+# five times in a row so each of the per-case tokens below can be pinned as its own EXPECT
+# entry, positionally, rather than trusting one unpinned substring to stand for all three
+# cases -- case 1's own alternate-chosen=True/False is what actually distinguishes the fix
+# from the over-rejection regression it replaces.
+DESCRIPTION=an occupied quote candidate yields a clear alternate, an all-occupied quote refuses by name and spends nothing, and a creature drifting onto the quoted rect still refuses the stamp by name (either Commission's plan-changed guard or the stamper's living-occupant preflight) and stamps nothing
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;quote-occupancy-setup;quote-occupancy-check;quote-occupancy-check;quote-occupancy-check;quote-occupancy-check;quote-occupancy-check;stagedigest
+VERBS=quote-occupancy-setup,quote-occupancy-check
+EXPECT=stagedigest:OK~founded=false,quote-occupancy-setup:OK~cases=3 passed=3 failed=0,quote-occupancy-check:OK~case=occupied-first-clear-alternate,quote-occupancy-check:OK~alternate-chosen=True,quote-occupancy-check:OK~case=all-occupied-no-mutation,quote-occupancy-check:OK~case=drift-after-quote-refused,quote-occupancy-check:OK~cases=3 passed=3 failed=0,stagedigest:OK~founded=true,COMPLETE
+SET=materials,growth,native-regression
+TIMEOUT=1200

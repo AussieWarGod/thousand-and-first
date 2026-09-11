@@ -33,9 +33,41 @@ $ErrorActionPreference = 'Stop'
 # stopped, and the game build string the run's own log states. Everything about the exercised
 # tree was written at preparation time by Tools/scenario_run_record.py and is never rewritten
 # here. The file is replaced whole, so a half-written record can never be read as a whole one.
+function ConvertTo-TafRecordValue {
+    param($Value)
+    if ($Value -is [System.Management.Automation.PSCustomObject]) {
+        $record = @{}
+        foreach ($property in $Value.PSObject.Properties) {
+            $record[$property.Name] = ConvertTo-TafRecordValue $property.Value
+        }
+        return $record
+    }
+    if ($Value -is [array]) {
+        $items = New-Object System.Collections.ArrayList
+        foreach ($item in $Value) { [void]$items.Add((ConvertTo-TafRecordValue $item)) }
+        return ,$items.ToArray()
+    }
+    return $Value
+}
+
 function Read-TafRunRecord {
     param([Parameter(Mandatory = $true)][string]$Path)
-    return Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json -AsHashtable
+    # Windows PowerShell 5.1 has no ConvertFrom-Json -AsHashtable. Keep typed nested
+    # ownership fields without requiring another shell to launch or stop the game.
+    $value = Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
+    if ($value -isnot [System.Management.Automation.PSCustomObject]) {
+        throw 'A run record must be a JSON object.'
+    }
+    return ConvertTo-TafRecordValue $value
+}
+
+function Assert-TafScenarioOutputVacant {
+    param([string]$Path, [string]$Kind, [switch]$RecordingStop)
+    # Recording an already-owned process's ending needs its existing evidence. It never
+    # launches a game; the stop branch separately re-proves ownership and process absence.
+    if (-not $RecordingStop -and (Test-Path -LiteralPath $Path)) {
+        throw "scenario $Kind already exists: $Path"
+    }
 }
 
 function Write-TafRunRecord {
@@ -334,7 +366,7 @@ Write-Host ''
 # the AppData mod directories in RefreshModDirectory; with these four it lists only
 # the profile's.
 $logPath = Join-Path $rootPath 'Player.log'
-if (Test-Path -LiteralPath $logPath) { throw "scenario log already exists: $logPath" }
+Assert-TafScenarioOutputVacant -Path $logPath -Kind 'log' -RecordingStop:$StopRecord
 # The scenario journal is POST-SEAL OUTPUT, exactly like Player.log above. Assert-ClosedSeal ran
 # once, before launch, over $localRoot only - the sealed launcher INPUTS. Both this file and the
 # log sit beside that tree in $rootPath, so nothing a run writes is inside the inventory the seal
@@ -342,9 +374,7 @@ if (Test-Path -LiteralPath $logPath) { throw "scenario log already exists: $logP
 # exists for the same reason the log is: the journal is appended to, and two runs' rows in one file
 # cannot be told apart.
 $journalPath = Join-Path $rootPath 'scenario-journal.tsv'
-if (Test-Path -LiteralPath $journalPath) {
-    throw "scenario journal already exists: $journalPath"
-}
+Assert-TafScenarioOutputVacant -Path $journalPath -Kind 'journal' -RecordingStop:$StopRecord
 $arguments = @(
     '-savepath', (Join-Path $rootPath 'Save'),
     '-sharedpath', $localRoot,

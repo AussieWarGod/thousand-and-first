@@ -287,6 +287,95 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void SelectionRulesShardChoosesTheClearAlternateOverAnOccupiedFirstCandidate()
+		{
+			// The REAL production seam (Growth/KingdomPlotSelectionRules.cs), not a hand-rolled
+			// copy of its loop: fed a fake Resolve source, so this drives the exact code Siting.cs
+			// calls without a Zone. The occupied candidate is rejected with the exact production
+			// refusal text; the clear alternate is chosen.
+			List<Rect> candidates = new List<Rect> { R(32, 11, 36, 15), R(40, 20, 44, 24) };
+			KingdomPlotSelectionRules.Resolution Resolve(Rect candidate)
+			{
+				return candidate.X1 == 32
+					? new KingdomPlotSelectionRules.Resolution(false,
+						KingdomPlotRules.RefuseObstruction("a living occupant", 34, 13))
+					: new KingdomPlotSelectionRules.Resolution(true, null);
+			}
+			bool found = KingdomPlotSelectionRules.TrySelect(candidates, Resolve,
+				HasFounder: true, FounderX: 40, FounderY: 20,
+				Accepted: out List<Rect> accepted, Refusal: out string refusal);
+			ClassicAssert.IsTrue(found);
+			ClassicAssert.AreEqual(1, accepted.Count);
+			ClassicAssert.AreEqual(40, accepted[0].X1);
+			ClassicAssert.IsNull(refusal);
+		}
+
+		[Test]
+		public void SelectionRulesShardRefusesByNameWhenEveryCandidateIsRejected()
+		{
+			List<Rect> candidates = new List<Rect> { R(32, 11, 36, 15), R(40, 20, 44, 24) };
+			int calls = 0;
+			KingdomPlotSelectionRules.Resolution Resolve(Rect candidate)
+			{
+				calls++;
+				int x = candidate.X1 == 32 ? 34 : 42;
+				int y = candidate.X1 == 32 ? 13 : 22;
+				return new KingdomPlotSelectionRules.Resolution(false,
+					KingdomPlotRules.RefuseObstruction("a living occupant", x, y));
+			}
+			bool found = KingdomPlotSelectionRules.TrySelect(candidates, Resolve,
+				HasFounder: true, FounderX: 40, FounderY: 20,
+				Accepted: out List<Rect> accepted, Refusal: out string refusal);
+			ClassicAssert.IsFalse(found);
+			ClassicAssert.AreEqual(0, accepted.Count);
+			StringAssert.Contains("a living occupant", refusal);
+			ClassicAssert.AreEqual(2, calls,
+				"the shard resolves each candidate exactly once, in the order given");
+		}
+
+		/// <summary>Review thread (copilot-threads-157-158.md #1/#2): a TryWorldCell/
+		/// TryWorldPlacement coordinate-mapping failure must REJECT the candidate by that exact
+		/// failure text, never be silently dropped from the sweep (the old
+		/// "continue" bug in Growth/KingdomPlot2.08.Siting.cs's ResolveArchitecture). This drives
+		/// the real KingdomPlotSelectionRules seam with a fake Resolve standing in for
+		/// ResolveArchitecture reporting a mapping failure, so the value under test is the
+		/// selection loop's own name-preserving rejection, not a hand-copy of it.</summary>
+		[Test]
+		public void SelectionRulesShardRejectsByNameOnAMappingFailureRatherThanSkippingTheCandidate()
+		{
+			const string MappingFailure = "the resolved snapshot has no world cell for that pose";
+			List<Rect> candidates = new List<Rect> { R(32, 11, 36, 15), R(40, 20, 44, 24) };
+			KingdomPlotSelectionRules.Resolution Resolve(Rect candidate)
+			{
+				return candidate.X1 == 32
+					? new KingdomPlotSelectionRules.Resolution(false, MappingFailure)
+					: new KingdomPlotSelectionRules.Resolution(true, null);
+			}
+			bool found = KingdomPlotSelectionRules.TrySelect(candidates, Resolve,
+				HasFounder: true, FounderX: 32, FounderY: 11,
+				Accepted: out List<Rect> accepted, Refusal: out string refusal);
+			// The mapping-failed candidate never joins Accepted -- it is rejected, not skipped --
+			// so selection still succeeds on the other, unaffected candidate.
+			ClassicAssert.IsTrue(found);
+			ClassicAssert.AreEqual(1, accepted.Count);
+			ClassicAssert.AreEqual(40, accepted[0].X1);
+			ClassicAssert.IsNull(refusal);
+
+			// When EVERY candidate hits the same mapping failure, that exact text -- never a
+			// generic "no authored architecture" fallback -- is what the caller sees.
+			KingdomPlotSelectionRules.Resolution AllFail(Rect candidate)
+			{
+				return new KingdomPlotSelectionRules.Resolution(false, MappingFailure);
+			}
+			bool allFound = KingdomPlotSelectionRules.TrySelect(candidates, AllFail,
+				HasFounder: true, FounderX: 32, FounderY: 11,
+				Accepted: out List<Rect> allAccepted, Refusal: out string allRefusal);
+			ClassicAssert.IsFalse(allFound);
+			ClassicAssert.AreEqual(0, allAccepted.Count);
+			ClassicAssert.AreEqual(MappingFailure, allRefusal);
+		}
+
+		[Test]
 		public void OverlapIsSymmetricAndInclusive()
 		{
 			ClassicAssert.IsTrue(KingdomPlotRules.Overlaps(R(0, 0, 4, 4), R(4, 4, 8, 8)));

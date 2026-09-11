@@ -374,7 +374,7 @@ def parse_extra_verbs(raw: str) -> tuple[str, ...]:
                 "extra scenario verb %r is not a lowercase SafeToken; the runtime would "
                 "refuse the provider that claimed it" % verb
             )
-        if verb in SCRIPT_VERBS or verb in RESERVED_VERBS or verb in QUICKSTART_VERBS:
+        if verb in SCRIPT_VERBS or verb in RESERVED_VERBS or verb in QUICKSTART_LIFECYCLE_VERBS:
             fail("extra scenario verb %r is reserved by the harness" % verb)
         if verb in chosen:
             fail("extra scenario verb %r is named more than once" % verb)
@@ -394,6 +394,8 @@ def parse_script(tokens: list[str], extra: tuple[str, ...] = ()) -> list[str]:
         # validated by the same three-token rule as its siblings; the tail is parsed below by the
         # ordinary grammar, so its counts and reserved-verb rules are unchanged.
         parse_quickstart_command(tokens[:3])
+        if any(verb in tokens[3:] for verb in QUICKSTART_LIFECYCLE_VERBS):
+            fail("Quickstart commands may appear only once, at the start of the script")
         return [" ".join(tokens[:3])] + parse_script(tokens[3:], extra)
     if any(verb in tokens for verb in QUICKSTART_VERBS):
         parse_quickstart_command(tokens)
@@ -473,8 +475,14 @@ def write_options(source: str, destination: str) -> None:
     advisor = None
     script = os.environ.get("TAF_SCENARIO_SCRIPT", "")
     tokens = script.split()
-    if QUICKSTART_ADVISOR_ENV in os.environ or any(verb in tokens for verb in QUICKSTART_VERBS):
-        advisor = quickstart_advisor(tokens)
+    if QUICKSTART_ADVISOR_ENV in os.environ or any(verb in tokens for verb in QUICKSTART_LIFECYCLE_VERBS):
+        if tokens[:1] == [QUICKSTART_LIFECYCLE_VERB]:
+            # Validate the entire tail before writing options, but bind the advisor to the
+            # three-token startup command. Boot/save/build still require the whole script.
+            parse_script(tokens, parse_extra_verbs(os.environ.get("TAF_SCENARIO_EXTRA_VERBS", "")))
+            advisor = quickstart_advisor(tokens[:3])
+        else:
+            advisor = quickstart_advisor(tokens)
     with open(source, encoding="utf-8") as handle:
         options = json.loads(handle.read())
     if not isinstance(options, dict):

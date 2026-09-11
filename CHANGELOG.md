@@ -10,9 +10,9 @@ below it.
 
 ## Unreleased — Beta gap report
 
-Current 3088-file census is line-cap green: 438,070 physical lines; direct `XRL`
+Current 3089-file census is line-cap green: 438,207 physical lines; direct `XRL`
 imports occur in 1441 files, 0 of them over the line limit. Inventory SHA-256:
-`4d2e543c015521036cb30fbfe556c13e9499c3e225d16c1f453862841757cf07`. The cold-install inventory contains 3119 files.
+`031417d6337e6cc2870749baa2ca611a6db2c6c421ee50ea1e7d0157fa70d146`. The cold-install inventory contains 3120 files.
 This isolated 0.3.4 preparation combines heart authority, shared-XL transition, rung settlement
 and camp content/fixture branches. Combined compile/native gates and semantic review are owed;
 all earlier checkpoint counts below are retained, never carried forward as acceptance.
@@ -149,6 +149,7 @@ correction's only production delta is one file,
   production records no such reason here: the siting path drops a crowding rect with a bare
   `continue` and no recorded reason before the ground is ever read, and the founder-facing answer
   when nothing fits is `KingdomPlotRules.RefuseRoom`. Cases 1, 3, 4 and 5 of #107 remain owed.
+
 
 - Kingdom Quickstart now founds a world with four founding citizens — a hand, a drifter, a tinker
   and a physicker of one culture per camp — enrolled under a new `Founding` reason that only this
