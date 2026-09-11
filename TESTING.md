@@ -1,5 +1,14 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
+## Current combined heart candidate — gates owed
+
+The planned compatibility compile runs across 3083 production C# sources (3079 baseline);
+the cold-install inventory contains 3114 files. Inventory `31dfb1859670cbcef14e6a98288db376747dd8f3c1515c0703efd8f791bbb3cd`.
+This combines heart authority, shared-XL transition, rung settlement and camp content/fixture.
+No combined compilation, licensed-suite or native progression result is claimed yet. Earlier
+figures below remain retained evidence for their own checkpoints. Current public release is
+0.3.3; this work prepares 0.3.4 and does not change the published tag or package.
+
 The current public Alpha manifest is `0.3.3`, prepared for the public Workshop item.
 Its private candidate passed subscribed-install verification and finalization (2026-09-11).
 Public delivery is recorded separately in `docs/STATUS.md`; `0.3.2` is the prior public release.
@@ -12,7 +21,14 @@ The standing author ruling of 2026-09-11 removes manual test gates permanently: 
 testing is optional, while automated failures still block release. Historical human-test
 requirements below are superseded; authentication and legal acceptance remain human actions.
 
-## Current roadless seal candidate (#131)
+## Current camp integration (#107 / #132 / #137)
+
+Integrated through dev `bcca3e5`; four-mode compile, audit, main 14,341/portable 5,491 tests
+pass (managed zero skips). Camp native proof remains pending.
+The current census and exact inventory are in docs/STATUS.md. Prior gate counts below belong
+to their named earlier checkpoints, not automatically to this combined tree.
+
+## Retained roadless seal candidate (#131)
 
 Compatibility compilation runs across 3082 production C# sources (baseline 3078); developer
 profiles compile 3260/3264 inputs. All four modes pass. The generated

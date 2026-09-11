@@ -157,6 +157,15 @@
     <part Name="Physics" Weight="30" Takeable="false" FlameTemperature="10000" Organic="true" />
     <part Name="Campfire" ExtinguishBlueprint="Campfire Remains" />
   </object>
+  <!-- The camp's cooking fire. CampfireHeatSelfOnly is read by the vanilla part twice
+       (D/XRL/World/Parts/Campfire.cs:139 and :168, engine 2.0.211.51): the EndTurn branch at
+       :168 heats the OTHER objects standing on the fire's cell only when the tag is absent,
+       while :166 still warms the fire itself, and :139 stops it claiming heat radiation. A
+       camp is a ring of canvas one cell away with citizens walking past it all day; the fire
+       must warm its own hearthstone and nothing else, whatever ends up sharing the cell. -->
+  <object Name="r_KingdomCivicCampfireCamp" Inherits="r_KingdomCivicCampfire">
+    <tag Name="CampfireHeatSelfOnly" />
+  </object>
   <object Name="r_KingdomCivicBookshelf" Inherits="Bookshelf">
     <removebuilder Name="RandomTile" />
     <removepart Name="PackagePush2" />
@@ -317,6 +326,22 @@
     <part Name="Render" DisplayName="purpose output basket" ColorString="&amp;Y" DetailColor="G" />
     <part Name="Physics" Takeable="false" />
     <tag Name="r_KingdomStockpileCapacity" Value="96" />
+    <intproperty Name="KingdomStockpile" Value="1" />
+  </object>
+  <!-- The camp's dry store. Inherits the vanilla Chest wholesale (Container, Inventory, tile)
+       for the same reason r_KingdomLarder does: STANDARDS.md requires art for anything that
+       carries its own, and reusing an already-wired vanilla tile is the surest way to owe none.
+       It is a stockpile from the moment it is placed - the settlement never has to walk up to
+       it and dedicate it - and it declares the capacity a container that says nothing would
+       have got anyway (KingdomRules.DefaultStockpileCapacity), stated out loud so a later
+       change to that default cannot silently resize the founding's one store. -->
+  <object Name="r_KingdomHeartStockpile" Inherits="Chest">
+    <stag Name="Contemporary" />
+    <part Name="Render" DisplayName="camp stockpile" />
+    <part Name="Description" Short="A lidded timber chest set down beside the fire, its lid scored with the tally of what the settlement has cut and carried. What is put in here is the settlement's, not whoever opens it first." />
+    <part Name="Physics" Takeable="false" />
+    <tag Name="InventoryPopulationTable" Value="*delete" />
+    <tag Name="r_KingdomStockpileCapacity" Value="48" />
     <intproperty Name="KingdomStockpile" Value="1" />
   </object>
   <object Name="r_KingdomPurposeBoreHead" Inherits="Furniture">

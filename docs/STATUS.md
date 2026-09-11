@@ -1,5 +1,17 @@
 # Current implementation and release evidence
 
+## Current 0.3.4 heart integration candidate — unverified
+
+3083 staged C# files; 437,643 physical lines; cold-install inventory contains 3114 files.
+Compile inventory: 3083 sources, baseline and compatibility symbols (3079 baseline).
+Direct `XRL` imports: 1438 files, 0 over the line limit. Zero at or above 300 lines.
+Inventory SHA-256: `31dfb1859670cbcef14e6a98288db376747dd8f3c1515c0703efd8f791bbb3cd`.
+Combines #141 authority, #144 shared-XL validation, #138/#139 rung settlement and #137 camp
+content/native fixture over dev with the verified 0.3.3 backmerge. Production and test-project
+merges are complete; compile, combined-suite, native progression and semantic review are owed.
+Prior isolated evidence below remains bound to its original checkpoints, not this combined tree.
+No new version/tag/upload or Beta acceptance is claimed.
+
 **Snapshot:** 2026-09-11
 **Target:** Beta preparation; current public lane remains v0.3 Alpha
 **Next public version:** 0.3.3 stockpile hotfix in preparation; not published
@@ -98,6 +110,164 @@ main 14,303 / portable 5,467 tests pass, zero skips. Seven focused source checks
 substituting a local literal fails one source assertion, restored code passes.
 Native evidence above signs exact `53022df`; this constant-reference follow-up was not
 separately run natively.
+
+## Retained camp integration checkpoint (#107 / #132 / #137)
+
+The camp feature and native seam are integrated with `dev` through `bcca3e5`, including the
+roadless-seal correction. Both test registrations and all earlier evidence are retained.
+Retained census: 3079 staged C# files / 437,201 physical lines / 1434 XRL-importing files /
+zero files at or above 300; cold-install inventory 3110 files; 87 developer personas.
+Inventory SHA-256: `304123d5ee1b31fa0b1369d5ad13c52888111f5c7563245f4fe4096c8ca38c70`.
+Combined-tree four-mode compile passes (3075/3079/3265/3269 inputs), as does repository audit
+(770 checks, six platform skips). Main 14,341 and portable 5,491 tests pass with zero skips.
+Camp native proof remains pending. Earlier counts below sign only their named frozen trees.
+Paid-upgrade rung publication is a separate suspected defect;
+no rung-3 or general camp acceptance is claimed.
+
+First combined native `8c82521` (`j1Ck3c`, seed `#165939435`) refused in setup because a
+fresh material unit had no assigned identity; no upgrade phase ran. Owned process stopped,
+evidence retained. Follow-up explicitly allocates each owned synthetic material body's engine
+identity before inventory insertion, then re-proves the same assigned identity afterward.
+Observers remain non-minting; the strict identity admission is not relaxed. The report and
+persona disclose this setup allocation. Follow-up four-mode compile and audit pass; main 14,342
+and portable 5,492 tests pass with zero skips. Thirteen focused source checks pass; replacing
+the allocating getter with read-only lookup causes one source assertion failure, and restored
+code passes. Native `6d96098` (`k5pVWg`, same seed) passed setup with all 48
+assigned material identities, then refused because stage remained Camp after 600 turns.
+Setup tick 273927 was still 873 turns before the next absolute daily boundary at 274800.
+Owned process stopped and both failed native profiles remain retained.
+
+The cadence follow-up waits 1200 real turns before checking the paid start, then the
+existing 2400 turns for completion. Growth updates stage before the same semantic pass's
+improvement resolver automatically assesses and begins work; no fixture call starts it.
+The waterstone's 3000 authored ticks use the default 75% improvement duration (2250 ticks).
+Three total days remain below the six-day roof-warning window. Stage, payment, exact custody
+and completion assertions are unchanged. Follow-up four-mode compile and audit pass
+(770 tool checks, seven skips); main 14,346 and portable 5,496 tests pass with zero skips.
+Seventeen focused checks pass. Restoring the old persona interval fails three daily-boundary
+value cases and one script source assertion; restored code passes.
+
+Native `cb2ca69` (`rZi0Sb`, same seed) reached Steading after 1200 real turns but refused
+because no improvement was working. The log reports an absent or ambiguous construction-input
+source identity. The construction observer reads water-source IDs before materials; the shared
+fixture dedication helper created its synthetic vessel without assigning an ID.
+The follow-up allocates that owned vessel's identity in the creation callback, before placement
+or dedication, then re-proves the exact returned body, assigned ID and zone. Observation paths
+still never allocate IDs. Missing-improvement diagnostics now include the existing announced
+verdict and assigned crew. Owned failed process stopped; profile/evidence retained. Follow-up
+four-mode compile and repository audit pass (770 tool checks, six skips); main 14,347 and
+portable 5,497 tests pass with zero skips. Eighteen focused checks pass; replacing setup ID
+allocation with a non-allocating lookup fails one source assertion, and restored code passes.
+Native proof remains pending; no production guard is weakened.
+
+Native `d1596b3` (`hVKs5q`, same seed) no longer logged the construction-input identity
+error. Stage reached Steading, but improvement refused with announced verdict 13
+(`NoGroundToGrow`), population six and assigned crew zero. Owned process stopped;
+failed profile/evidence retained. A diagnostic-only follow-up records up to 16 existing ledger
+notes (1024 characters each, truncation marked) when the unchanged begin assertion fails,
+and prints the verdict name. It never reassesses, clears, moves or stamps ground. Follow-up
+four-mode compile and audit pass (770 tool checks, six skips); main 14,347 / portable 5,497
+tests pass with zero skips. Eighteen focused source checks pass; dropping diagnostic capture
+fails one source assertion, restored code passes. Actual paid-upgrade proof remains pending.
+
+Native `fb9a9c0` (`qyq8GE`, same seed) still refused `NoGroundToGrow`.
+The captured ledger already held its maximum 12 notes, so it omitted the later upgrade
+explanation; no reason was recovered. Owned PID 39452 stopped, evidence retained.
+The next diagnostic reads the engine's existing message list instead (last 16 messages,
+256 characters each with marked truncation, bounded below the 8192-character journal limit),
+plus the player's current cell. It does not clear the ledger, reassess or mutate the world.
+Follow-up verification passed: all four canonical compile modes plus installed compatibility
+ABI, portable audit, 14347 Taf and 5497 Portable cases with zero skips. Eighteen focused
+source checks passed; reverting the message-list read to the capped ledger failed one source
+assertion, then restored code passed. Actual paid-upgrade proof remains pending.
+
+## Unreleased camp-heart native seam (PR #107 native case 2)
+
+A dev-only scenario seam (`Harness/KingdomCampHeartNative*.cs`, persona
+`camp-heart-native-checks`) exists to answer one of PR #107's owed native cases: that the camp
+heart's dedicated stockpile, its contents and the cooking fire survive a real paid waterstone
+upgrade. The fixture is disclosed synthetic setup — a real founding, a real rung-1 completion, six
+really enrolled residents, one really dedicated 400-dram reservoir, forty-eight minted physical
+units in the authored store (exactly the authored rung-2 bill of 24 stone and 1 timber, plus 23
+brush the bill never asks for) and the founder's one-time improvement notice pre-marked as read.
+After setup the seam drives nothing: the real settlement pass assesses the heart, begins the
+improvement, commits the water and material debit, burns the labour and hands the rung over on the
+turns the persona's own `advance` spends. The seam never calls `KingdomUpgrade.Begin`,
+`KingdomPlots.Advance`, `KingdomArchitectureStamper.TryApplyUpgrade` or any gallery staging path,
+and a source-contract test refuses each of those names in every shard.
+
+Scope of the observation, stated exactly. Store contents are read RAW: the container's own object
+list, and per unit its exact identity, blueprint, exact holder and raw stack count through
+`KingdomMaterials.RawCensusCountOf` — never an eventful count and never a material tally. Custody
+is read from the body's own `Physics` fields: the holder must reference-equal this exact store
+object AND the cell must be null, because a body cannot be in a chest and on the ground at once.
+An inventory row that is not a valid body, carries no assigned identity, reports a nonpositive raw
+count, or contradicts itself fails with a `taf-` reason instead of being skipped, and the retained
+units are held BY REFERENCE across observations so a replacement that reused the identity string
+is refused even though every recorded field would match. Settlement-wide readings use
+`KingdomSurvey.TryTakeUnboundRecovery`, which is the production custody-only classification plus
+the two proofs a bare custody-only call does not make — no bound settlement pass, and every root
+in the zone actually classified — so a partial index refuses rather than under-reporting the
+ground. A unit's absence from the store is claimed only as absence from the store; that the
+settlement SPENT the authored bill is proved separately from the production construction job's
+own committed `Claims.WaterSpent` and `Claims.MaterialSpent`, compared EXACTLY against the
+authored catalogue cost in both directions — a short charge, an overcharge and a charged material
+the authored bill never names are all faults — so ordinary resident drinking can
+ never be read as a debit.
+
+Enrollment order is load-bearing and disclosed, and mirrors the reviewed forage seam. Each fixture
+body is enrolled into citizenship, re-proved to belong, stamped with a synthetic `KingdomBorn`
+provenance mark (production's roster gate `KingdomResidents.Enrollable` requires citizenship,
+`KingdomBorn == 1`, not-a-player and not-player-led, and `KingdomCitizenship.TryEnroll` supplies
+only the first), given a name, and PLACED on a claimed cell before
+`KingdomResidents.TryEnsureRow` publishes its row. The last two clauses of that gate are re-proved
+explicitly, and the published row is then read BACK through the book — a row at that resident id,
+exactly one such row on the roll, and that row bound to this zone. Nothing writes book state, and
+the born stamp and name are fixture facts rather than a real arrival. A source-order pin refuses
+the opposite order, which is exactly what refused the forage seam's first native run on
+2026-09-10.
+
+Retained evidence on `fd73131`: canonical `Tools/gate.sh --keep` printed all four COMPILE CLEAN lines —
+staged baseline 3074, staged compatibility 3078, dev-harness baseline 3260, dev-harness
+compatibility 3264 — plus installed Hearthpyre ABI clean. Licensed managed suites ran with zero
+skips: TafTests 14,261 and PortableTests 5,401. The full portable repository audit, the
+documentation freshness check, 766 Tools tests, the removal-coverage generator check and the
+architecture XML reference check all pass. Twenty-four source mutations of the seam's custody
+predicates — dropped raw-count, holder, blueprint, missing-identity, duplicate-identity, duplicate
+listing, spent-unit and truncation checks, a folded blueprint comparer, a dropped born stamp and
+an inverted place/publish order, a dropped player-led clause, a forgiven overcharge, a forgiven
+extra charged kind, a forgiven short charge, a downgraded incomplete-census guard, a neutralised
+contradictory-custody guard, a loosened holder field check, an identity-string body comparison and
+an inexact water bill, a heart-ground overlap forgiven, a store cell no longer crowded out and a
+dropped verbatim refusal reason — each fail only the focused cases that cover them, and the
+restored source passes all thirty-one.
+
+This is a source, compile and registration claim only. **No native run of this persona has been
+made**, so it signs nothing about actual Caves of Qud behaviour yet; the recipe for the operator is
+`Tools/run-personas.sh camp-heart-native-checks`. PR #107 native cases 1, 3, 4, 5 and 6 remain
+owed. Case 6 is answered here as far as the production plot-claim path reaches: a real commission
+is put to the settlement while the heart stands, the commissioned plot never lands on the heart's
+reserved rect, the production crowding predicate refuses the exact rect covering the camp store's
+cell, and the store and fire are untouched — but **no stockpile-specific refusal reason is
+claimed**, because the siting path drops a crowding rect with a bare `continue` and no recorded
+reason before any ground is read, and the founder-facing answer when nothing fits is
+`KingdomPlotRules.RefuseRoom`. Case 3 (raise the moot) is a suspected production defect under
+review: nothing on the improvement route advances the zone's `r_TAF_HeartRung`, which
+`KingdomArchitectureRuntime.TryPrepareSuccessor` requires to equal the standing rung before it will
+accrete rung 2 to rung 3.
+
+Native fixture recovery: matched seed `#121783523` measured 50 settlers/citizens/roll rows,
+two stores, 1,936 drams capacity and zero water. The previous fixture incorrectly required one
+1,920-dram store, omitting the dedicated first basin. The corrected fixture proves the exact
+reservoir plus receipt-bound basin. Fresh canonical four-mode compilation, Taf14,075 and
+Portable5,215 (zero skips), and Tools627/full portable audit pass. Wrong-count and missing-relic-ID
+source mutants each fail; restored fixture passes. Native `founding-heart-native-checks` passes
+all seven cases at the same seed (profile `QDaXBR`, receipt-owned stop proved). This signs that
+scenario only, not terminal heart completion, ordinary-save compatibility or overall camp acceptance.
+The same gameplay/harness bytes also pass fresh first-city founding, 16 native Quickstart
+creator/custody cases and claimed lighting after rendered frames (profiles TAplen/cltpMo/TWubeD;
+all receipt-stopped). These do not sign actual Quickstart embark. Subsequent rite-ground display
+text and unused test-import cleanup do not alter gameplay; their text assertion is checked separately.
 
 ## Unreleased roadless spatial capture correction (#131)
 

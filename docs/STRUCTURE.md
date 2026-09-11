@@ -1,5 +1,13 @@
 # Structural release contract
 
+## Current combined heart candidate census
+
+3083 staged production C# files; 437,643 physical lines; zero at or above 300 lines.
+1438 files with direct `XRL` imports; 3114 cold-install files. Exact inventory:
+`31dfb1859670cbcef14e6a98288db376747dd8f3c1515c0703efd8f791bbb3cd`.
+Combines #141/#144/#139/#137 over the dev hotfix backmerge. No combined gate or native proof
+is claimed yet. The inherited semantic review binds shipped main only and is stale here.
+
 Addendum 9 of the binding building-catalogue brief requires services to stay strictly under 300
 lines, own one responsibility, and communicate through protocols at boundaries before public
 release. This repository does not weaken that rule by silently redefining a large file as a
@@ -81,6 +89,20 @@ Heart rung settlement seam (#138): 3082 staged production C# files; 437,405 phys
 lines; zero at or above 300. The census reports
 1437 files with direct `XRL` imports; 0 of those exceed the line limit. Exact inventory SHA-256:
 `40af1139cc9336140aca90a5db81c80aefb060a45635d57766b560c34c1753e4`.
+
+## Retained camp integration checkpoint
+
+Camp integration (#107 / #132 / #137) through dev `bcca3e5`: 3079 production files,
+437,201 physical lines, 1434 XRL-importing files, zero at or above 300.
+Inventory SHA-256: `304123d5ee1b31fa0b1369d5ad13c52888111f5c7563245f4fe4096c8ca38c70`.
+Combined-tree four-mode compile and audit pass; main 14,341/portable 5,491 tests pass with zero
+skips. Camp native proof and release semantic review remain pending.
+
+## Retained roadless seal census
+
+Roadless spatial capture correction (#131): 3079 staged production C# files; 437,201 physical
+lines; 1434 direct `XRL` importing files; zero at or above 300. Exact inventory SHA-256:
+`ab4cf22e665900bd82593ad4f9805861da4458e60b918c59b1d3a0bb88b74617`.
 One small engine-free classifier is added. Existing internal capture/flush/reporting seams carry
 a typed pending result without serialized state or format changes. Four compile modes, audit,
 main 14,296/portable 5,460 tests pass (managed zero skips). The bounded roadless-camp native
@@ -108,8 +130,10 @@ first-basin water store and the Kingdom Quickstart
 tent rows reports 3078 staged production C# files and 437,114 physical lines.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`e1ddecb76e357905d90bbc40ad8414b68efc38f2b532d19ec61d2df4a5053ce9`. The census reports
-1434 files with direct `XRL` imports; 0 of those exceed the line limit.
+`a918f8e8bab3c1ca44118211d0667ce027f1a0ef77610074f298e2b8b49cb396`. The census reports
+1434 files with direct `XRL` imports; 0 of those exceed the line limit. This digest carries both
+the camp heart's authored architecture, catalogue and blueprint bytes and the founding-cohort
+sources merged from `dev`; no staged production C# source is added or removed by this branch.
 
 The founding-cohort delta over the retained draft below is ten added production sources and no
 removals: the quickstart rules' founders partial, the bootstrap's receipt partial split out of the

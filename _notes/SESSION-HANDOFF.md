@@ -1,6 +1,20 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current dev hotfix backmerge — 2026-09-11
+## Current combined heart candidate — 2026-09-11
+
+3083 staged sources; 437,643 physical lines; 1438 direct-XRL files; zero cap failures;
+3114 cold-install files. Inventory `31dfb1859670cbcef14e6a98288db376747dd8f3c1515c0703efd8f791bbb3cd`.
+#141/#144/#139/#137 combined; compile, native and semantic review owed. Earlier rows are
+retained checkpoints, not acceptance of this candidate. Public0.3.3 is finalized.
+
+## Retained camp integration (#107 / #132 / #137)
+
+Integrated through dev `bcca3e5`; compile/audit and main14341/portable5491 pass, zero managed
+skips; native pending. Census3079/437201/1434,
+zero cap failures; inventory `304123d5ee1b31fa0b1369d5ad13c52888111f5c7563245f4fe4096c8ca38c70`.
+Earlier evidence below remains bound to its named checkpoints.
+
+## Retained dev hotfix backmerge — 2026-09-11
 
 3080 staged sources; 437,399 physical lines; 1435 direct-XRL files; zero at or above 300 lines;
 3111 cold-install files. Inventory `6ebc095bd595e636c48079ba5c41c0cb3bb92f3af7741d99b05eeb8b81acc78d`.

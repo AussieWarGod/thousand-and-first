@@ -155,8 +155,8 @@ namespace ThousandAndFirst.Tests
 			Ordered(body, "Survey = KingdomSurvey.Take(Zone, System);", "ReferenceEquals(Survey.Ground, Zone)",
 				"Survey.Settlers.Count == ResidentCount", "System.Population == ResidentCount",
 				"KingdomResidents.OnRollCount(System) == ResidentCount", "System.City.ResidentCount == ResidentCount",
-				"System.Bindings.Count == ResidentCount", "ReferenceEquals(Survey.Stores[0].ParentObject, Store)",
-				"Survey.StorageCapacity == 1920 && Survey.StoredWater == 0", "ids.Add(Ids[i]) && objects.Add(body.IDIfAssigned)",
+				"System.Bindings.Count == ResidentCount", "ExactFixtureStores()",
+				"Survey.StorageCapacity == 1936 && Survey.StoredWater == 0", "ids.Add(Ids[i]) && objects.Add(body.IDIfAssigned)",
 				"ExactCell(body, Cells[i]) && Survey.Settlers.Contains(body)", "KingdomResidents.IdOf(body) == Ids[i]",
 				"KingdomResidentTransitionAuthority.CanPrepareResidentBodyDestruction(System, body, Ids[i])",
 				"KingdomSubsidence.ScopedSupports(System, Zone, Survey)",
@@ -164,6 +164,14 @@ namespace ThousandAndFirst.Tests
 				"System.Shade == 0", "KingdomRules.StageFor(System.Population, Survey.StorageCapacity)",
 				"stage == GrowthStage.City", "System.Stage = stage;");
 			StringAssert.Contains("internal const int ResidentCount = 50;", Read(Fixture));
+			ContainsAll(Body(Fixture, "private bool ExactFixtureStores("), "Survey.Stores.Count != 2",
+				"KingdomFoundingHeartRules.Complete(plan)", "plan.ZoneId != Zone.ZoneID",
+				"reservoir.MaxVolume != 1920 || reservoir.Volume != 0",
+				"ReferenceEquals(Survey.Stores[0], reservoir)", "ReferenceEquals(Survey.Stores[1], reservoir)",
+				"body.Blueprint == \"r_KingdomFirstBasin\"",
+				"KingdomFoundingHeartRules.SlotId(plan, KingdomFoundingHeartRules.RelicSlot)",
+				"ExactCell(body, Zone.GetCell(plan.RiteX, plan.RiteY))",
+				"body.GetIntProperty(\"KingdomStores\") == 1 && basin.MaxVolume == 16 && basin.Volume == 0");
 		}
 
 		[Test]
