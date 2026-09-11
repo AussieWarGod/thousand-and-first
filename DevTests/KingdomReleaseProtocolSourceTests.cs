@@ -273,7 +273,7 @@ namespace ThousandAndFirst.Tests
 		{
 			string metadata = Source(Path.Combine("Tools", "workshop_metadata.py"));
 			string example = Source(Path.Combine("docs", "RELEASE_EVIDENCE.example.json"));
-			StringAssert.Contains("RELEASE_EVIDENCE_SCHEMA = 4", metadata);
+			StringAssert.Contains("RELEASE_EVIDENCE_SCHEMA = 6", metadata);
 			foreach (string lane in new[]
 			{
 				"nativeCompileLoad", "architectureGallery", "controllerAndColor",
