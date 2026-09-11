@@ -34,6 +34,36 @@ def whole_chain(**kwargs):
     return rows(*names, **kwargs)
 
 
+class StallClassification(unittest.TestCase):
+    """The four unfinished-job cases, surfaced verbatim and never softened into a pass."""
+
+    def journal(self, message):
+        return [("lifecycle-grown", "REFUSED", message)]
+
+    def test_each_classification_is_read_back_verbatim(self):
+        for name in checker.STALL_CLASSES:
+            with self.subTest(stall=name):
+                message = (
+                    "native-lifecycle refused at lifecycle-grown: the job has not completed;"
+                    " turns=2400; stall=" + name + "; phase=Working; startedTick=1200;"
+                    " remainingTicks=2250; lastWorkedTick=1200; lastSemanticTick=3600"
+                )
+                self.assertEqual(checker.stall_in(message), name)
+
+    def test_a_stalled_row_fails_its_link_and_never_passes(self):
+        driven = [
+            "realize", "lifecycle-open", "lifecycle-build", "lifecycle-grown",
+        ]
+        report = checker.judge(rows(*driven, refused=("lifecycle-grown",)))
+        self.assertEqual(report["verdict"], checker.FAIL)
+        self.assertIn("engine-turn-build", report["reason"])
+
+    def test_an_unknown_classification_is_marked_rather_than_accepted(self):
+        self.assertIsNone(checker.stall_in("no stall here"))
+        self.assertEqual(checker.stall_in("stall=made-up-word"), "made-up-word")
+        self.assertNotIn("made-up-word", checker.STALL_CLASSES)
+
+
 class LifecycleVerdict(unittest.TestCase):
     def test_the_whole_chain_passes(self):
         report = checker.judge(whole_chain())

@@ -387,6 +387,22 @@ class TwoRecordEmission(unittest.TestCase):
             any("the ownership receipt does not" in problem for problem in problems), problems
         )
 
+    def test_a_stall_is_surfaced_verbatim_beside_the_verdict(self):
+        text = (self.save_root / "scenario-journal.tsv").read_text(encoding="utf-8")
+        stalled = text.replace(
+            "step=engine-turn-build",
+            "refused at lifecycle-grown: the job has not completed; turns=2400;"
+            " stall=no-labour-ever; phase=Working; startedTick=1200; dueTick=4800;"
+            " remainingTicks=2250; lastWorkedTick=1200; lastSemanticTick=3600; step-was",
+            1,
+        )
+        (self.save_root / "scenario-journal.tsv").write_text(stalled, encoding="utf-8")
+        _, _, report = self.emit(self.records())
+        self.assertTrue(report["stalls"], report)
+        self.assertIn("stall=no-labour-ever", report["stalls"][0])
+        self.assertIn("remainingTicks=2250", report["stalls"][0])
+        self.assertIn("lastWorkedTick=1200", report["stalls"][0])
+
     def test_a_journal_without_its_own_run_record_is_refused(self):
         stray = self.root / "stray"
         stray.mkdir()

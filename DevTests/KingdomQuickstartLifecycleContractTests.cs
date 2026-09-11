@@ -89,7 +89,9 @@ namespace ThousandAndFirst.Tests
 		{
 			string finish = Read("Harness/KingdomQuickstartLifecycleFinish.cs");
 			StringAssert.Contains("job.Phase != KingdomConstructionPhase.Complete", finish);
-			StringAssert.Contains("the turn budget expired before this building stood", finish);
+			// The refusal now names WHY, from read state, instead of only saying time ran out.
+			StringAssert.Contains("the job has not completed; turns=", finish);
+			StringAssert.Contains("KingdomQuickstartLifecycleStall.Describe(", finish);
 			StringAssert.Contains("KingdomConstruction.HasReceipt(Building, Job)", finish);
 			// The completed work reports both its own receipt identity and the paid job it
 			// fulfils, so the finished building is linkable back to what was paid for.
@@ -280,6 +282,34 @@ namespace ThousandAndFirst.Tests
 			for (int at = Source.IndexOf(Token, StringComparison.Ordinal); at >= 0;
 				at = Source.IndexOf(Token, at + Token.Length, StringComparison.Ordinal)) total++;
 			return total;
+		}
+
+		/// <summary>An unfinished job is diagnosed, not merely declared over budget: the four
+		/// cases are named, every field they rest on is read, and none of it repairs anything.</summary>
+		[Test]
+		public void AnUnfinishedJobIsClassifiedFromReadProductionState()
+		{
+			string stall = Read("Harness/KingdomQuickstartLifecycleStall.cs");
+			foreach (string token in new[] { "\"pass-never-ran\"", "\"no-labour-ever\"",
+				"\"labour-stalled\"", "\"insufficient-turns\"" })
+				StringAssert.Contains(token, stall);
+			foreach (string field in new[] { "scaffold.RemainingTicks", "scaffold.LastWorkedTick",
+				"r_KingdomScaffold.WorkWindowProperty", "KingdomConstructionPresence.SelectedProperty",
+				"KingdomConstructionPresence.HandsProperty",
+				"KingdomConstructionPresence.EffectivenessProperty",
+				"KingdomConstructionPresence.SchemaProperty", "System.LastSemanticTick",
+				"Job.StartedTick", "Job.DueTick", "Job.UpdatedTick", "Job.InputReceipt" })
+				StringAssert.Contains(field, stall);
+			// Reads only: nothing here writes state or advances a clock.
+			foreach (string forbidden in new[] { "SetIntProperty", "SetStringProperty",
+				"AdvanceDurable", "RetryDurable", "= now;" })
+				StringAssert.DoesNotContain(forbidden, stall);
+			string finish = Read("Harness/KingdomQuickstartLifecycleFinish.cs");
+			StringAssert.Contains("KingdomQuickstartLifecycleStall.Describe(Game, Zone, System, job)", finish);
+			StringAssert.DoesNotContain("the turn budget expired before this building stood", finish);
+			string checker = Read("Tools/check-quickstart-lifecycle.py");
+			StringAssert.Contains("STALL_CLASSES = (", checker);
+			StringAssert.Contains("never a pass or a waiver", checker);
 		}
 
 		/// <summary>The lifecycle verbs mint no stock and force no phase.</summary>

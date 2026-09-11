@@ -44,9 +44,10 @@ namespace ThousandAndFirst.Harness
 			if (job == null)
 				return Refuse(GrownStep, "the commissioned job is no longer in the registry");
 			if (job.Phase != KingdomConstructionPhase.Complete)
-				return Refuse(GrownStep, "the job has not completed: phase=" + job.Phase
-					+ "; physical=" + job.PhysicalPhase + "; turns=" + Game.Turns
-					+ "; the turn budget expired before this building stood");
+				// Not just "the budget expired": read the state that says WHY it did not finish,
+				// and name the case. Still a refusal, and nothing is repaired or waived.
+				return Refuse(GrownStep, "the job has not completed; turns=" + Game.Turns + "; "
+					+ KingdomQuickstartLifecycleStall.Describe(Game, Zone, System, job));
 			string failure = Standing(Zone, job, out GameObject building);
 			if (failure != null) return Refuse(GrownStep, failure);
 			Ok = true;

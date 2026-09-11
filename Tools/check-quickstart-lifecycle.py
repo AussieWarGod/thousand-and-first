@@ -220,6 +220,38 @@ def seconds_between(first: str, second: str) -> int:
     return max(0, int((end - start).total_seconds()))
 
 
+# The four ways a paid job can be unfinished when the turns run out, as the harness names them
+# (Harness/KingdomQuickstartLifecycleStall.cs). Surfaced verbatim in the verdict so the reason is
+# read rather than guessed; every one of them is a FAIL for its link, never a pass or a waiver.
+STALL_CLASSES = (
+    "pass-never-ran",
+    "no-labour-ever",
+    "labour-stalled",
+    "insufficient-turns",
+)
+
+
+def stall_in(message: str) -> str | None:
+    """The stall classification a refusal row named, if it named one."""
+    found = re.search(r"\bstall=([a-z-]+)", message)
+    return found.group(1) if found else None
+
+
+def stalls(paths: list[Path]) -> list[str]:
+    """Every stall a journal reported, quoted as the row stated it."""
+    reported: list[str] = []
+    for stamp, verb, message in stamped_rows(paths):
+        name = stall_in(message)
+        if name is None:
+            continue
+        reported.append(
+            verb + ": stall=" + name
+            + ("" if name in STALL_CLASSES else " (unknown classification)")
+            + "; " + message.split("stall=", 1)[1]
+        )
+    return reported
+
+
 def stamp_in(message: str) -> tuple[str | None, str | None]:
     """The profile name and seal a lifecycle row stamped on itself, if it stamped one."""
     name = re.search(r"\bprofile=([^;\s]+)", message)
@@ -673,6 +705,9 @@ def emit(report: dict, options: dict, journals: list[Path]) -> list[str]:
         records.append(payload)
     bound, binding_problems = bind_journals(journals, records)
     binding_problems.extend(check_stamps(journals, records))
+    # A stall is never a waiver: it is reported verbatim beside a verdict that already refuses
+    # the link whose row carried it.
+    report["stalls"] = stalls(journals)
     phases = measure(journals, records)
     # Visible in the verdict, not in the artefact: the validator's step key set is fixed, so the
     # profile a step's evidence came from is reported beside the verdict instead of inside it.
