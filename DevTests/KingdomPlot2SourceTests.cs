@@ -238,6 +238,31 @@ namespace ThousandAndFirst.Tests
 				"KingdomPlotRules.RefuseObstruction(\"a living occupant\", px, py)"));
 		}
 
+		/// <summary>Review thread (copilot-threads-157-158.md #1/#2): a TryWorldCell/
+		/// TryWorldPlacement coordinate-mapping failure must REFUSE the candidate by that
+		/// mapping failure text, never silently "continue" past it -- the old bug dropped the
+		/// cell from the occupancy sweep while TryManagedCells
+		/// (Growth/KingdomArchitectureStamper.OwnerReceipts.cs:140-168) treats the identical
+		/// failure as fatal for Preflight, so a candidate the stamper would refuse could still
+		/// be selected here. SOURCE PIN for the branch shape; the selection loop it feeds
+		/// (KingdomPlotSelectionRules.TrySelect) is value-tested with a fake mapping-failure
+		/// resolver in DevTests/KingdomPlotRulesTests.cs.
+		/// MUTATION: restoring either "continue" instead of the Resolution return flips this
+		/// test.</summary>
+		[Test]
+		public void MappingFailuresRefuseTheCandidateInsteadOfSkippingTheCellOrPlacement()
+		{
+			string source = Plot();
+			Assert.That(source, Does.Contain(
+				"out int cx, out int cy, out string mappingFailure))\n"
+				+ "\t\t\t\t\t\treturn new KingdomPlotSelectionRules.Resolution(false, mappingFailure);"));
+			Assert.That(source, Does.Contain(
+				"out int px, out int py, out string mappingFailure))\n"
+				+ "\t\t\t\t\t\treturn new KingdomPlotSelectionRules.Resolution(false, mappingFailure);"));
+			Assert.That(source, Does.Not.Contain("out string ignored)) continue;"),
+				"a mapping failure must never be discarded into an ignored out-var and skipped");
+		}
+
 		[Test]
 		public void PaidProjectionClearanceGrowthAndFinishKeepTransactionOrder()
 		{

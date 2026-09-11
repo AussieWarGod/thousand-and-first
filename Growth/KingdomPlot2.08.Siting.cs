@@ -241,7 +241,12 @@ namespace ThousandAndFirst
 		/// <summary>Architecture acceptance plus occupancy, filtered against exactly the cells
 		/// the resolved snapshot manages (claimed cells + placements) -- the same set
 		/// Growth/KingdomArchitectureStamper.Preflight.cs:90,94 inspects, via the same
-		/// TryWorldCell/TryWorldPlacement coordinate mapping, never the whole staked rect.</summary>
+		/// TryWorldCell/TryWorldPlacement coordinate mapping, never the whole staked rect. A
+		/// mapping failure on either call REFUSES this candidate by that same failure text
+		/// (never silently drops the cell/placement from the sweep): TryManagedCells
+		/// (Growth/KingdomArchitectureStamper.OwnerReceipts.cs:140-168) treats the identical
+		/// failure as fatal for Preflight, so quoting must refuse for the same reason or a
+		/// candidate the stamper would refuse could still be selected here.</summary>
 		private static KingdomPlotSelectionRules.Resolution ResolveArchitecture(
 			KingdomArchitectureRuntime.SitingProbe Probe, KingdomPlotRules.PlotRect Candidate,
 			Zone Z, HashSet<int> OccupiedCells)
@@ -255,7 +260,8 @@ namespace ThousandAndFirst
 					ArchitectureCellState cell = accepted.Cells[c];
 					if (!KingdomArchitectureRules.IsClaimed(cell.Claim)) continue;
 					if (!KingdomArchitectureRuntime.TryWorldCell(accepted, Candidate, cell,
-						out int cx, out int cy, out string ignored)) continue;
+						out int cx, out int cy, out string mappingFailure))
+						return new KingdomPlotSelectionRules.Resolution(false, mappingFailure);
 					if (OccupiedCells.Contains(cy * Z.Width + cx))
 						return new KingdomPlotSelectionRules.Resolution(false,
 							KingdomPlotRules.RefuseObstruction("a living occupant", cx, cy));
@@ -263,7 +269,8 @@ namespace ThousandAndFirst
 				for (int p = 0; p < accepted.Placements.Count; p++)
 				{
 					if (!KingdomArchitectureRuntime.TryWorldPlacement(accepted, Candidate,
-						accepted.Placements[p], out int px, out int py, out string ignored)) continue;
+						accepted.Placements[p], out int px, out int py, out string mappingFailure))
+						return new KingdomPlotSelectionRules.Resolution(false, mappingFailure);
 					if (OccupiedCells.Contains(py * Z.Width + px))
 						return new KingdomPlotSelectionRules.Resolution(false,
 							KingdomPlotRules.RefuseObstruction("a living occupant", px, py));
