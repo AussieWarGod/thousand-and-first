@@ -1,6 +1,6 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
-The current public Alpha manifest is `0.3.3`, prepared for the public Workshop item.
+The current public Alpha manifest is `0.3.3`, published to the public Workshop item.
 Its private candidate passed subscribed-install verification and finalization (2026-09-11).
 Public delivery is recorded separately in `docs/STATUS.md`; `0.3.2` is the prior public release.
 Working-tree changes do not inherit that tagged release's receipts. Any next public release
