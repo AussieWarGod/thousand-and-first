@@ -367,13 +367,11 @@ class LongFormScenarioResultsTests(unittest.TestCase):
             "logRef": log_ref,
             "logSha256": log_hash,
             "continuity": {"realmId": "realm-1", "cityId": "city-1"},
-            "processes": self.processes_for(self.CANDIDATE, self.RUNTIME_INVENTORY, "save-1"),
+            "processes": self.processes_for(),
             "steps": self.all_pass_steps(),
         }
 
-    def processes_for(
-        self, candidate_commit: str, runtime_inventory: str, save_id: str
-    ) -> list[dict]:
+    def processes_for(self) -> list[dict]:
         return [
             {
                 "role": "save-session",
@@ -382,9 +380,6 @@ class LongFormScenarioResultsTests(unittest.TestCase):
                 "stoppedUtc": "2026-09-11T00:05:00Z",
                 "profileName": "save-session profile",
                 "profileSeal": "4" * 64,
-                "boundCandidateCommit": candidate_commit,
-                "boundRuntimeInventorySha256": runtime_inventory,
-                "boundSaveId": save_id,
             },
             {
                 "role": "cold-load-session",
@@ -393,9 +388,6 @@ class LongFormScenarioResultsTests(unittest.TestCase):
                 "stoppedUtc": "2026-09-11T00:15:00Z",
                 "profileName": "cold-load-session profile (deliberately different)",
                 "profileSeal": "5" * 64,
-                "boundCandidateCommit": candidate_commit,
-                "boundRuntimeInventorySha256": runtime_inventory,
-                "boundSaveId": save_id,
             },
         ]
 
@@ -523,58 +515,56 @@ class LongFormScenarioResultsTests(unittest.TestCase):
         )
         self.assertEqual(self.validate(payload), [])
 
-    def test_process_bound_candidate_commit_mismatch_fails(self) -> None:
-        payload = self.valid_payload()
-        payload["processes"][0]["boundCandidateCommit"] = "b" * 40
-        errors = self.validate(payload)
-        self.assertTrue(
-            any("boundCandidateCommit must equal the shared candidateCommit" in error for error in errors),
-            errors,
-        )
-
-    def test_process_bound_runtime_inventory_mismatch_fails(self) -> None:
-        payload = self.valid_payload()
-        payload["processes"][1]["boundRuntimeInventorySha256"] = "6" * 64
-        errors = self.validate(payload)
-        self.assertTrue(
-            any(
-                "boundRuntimeInventorySha256 must equal the shared runtimeInventorySha256"
-                in error
-                for error in errors
-            ),
-            errors,
-        )
-
-    def test_process_bound_save_id_disagreement_between_sessions_fails(self) -> None:
-        payload = self.valid_payload()
-        payload["processes"][1]["boundSaveId"] = "a-different-save"
-        errors = self.validate(payload)
-        self.assertTrue(
-            any("must bind to the same boundSaveId" in error for error in errors), errors
-        )
-
-    def test_process_bound_save_id_not_matching_observed_save_fails(self) -> None:
-        # Both sessions agree with EACH OTHER but not with the save the run actually produced
-        # -- exactly "a session's seal does not bind to the shared source/save".
-        payload = self.valid_payload()
-        payload["processes"] = self.processes_for(
-            self.CANDIDATE, self.RUNTIME_INVENTORY, "an-unrelated-save-id"
-        )
-        errors = self.validate(payload)
-        self.assertTrue(
-            any(
-                "boundSaveId must equal the saveId observed at the save step" in error
-                for error in errors
-            ),
-            errors,
-        )
-
     def test_missing_profile_name_or_seal_fails(self) -> None:
         payload = self.valid_payload()
         del payload["processes"][0]["profileName"]
         errors = self.validate(payload)
         self.assertTrue(
             any("processes entries must each be an object" in error for error in errors), errors
+        )
+
+    def test_invalid_profile_seal_shape_fails(self) -> None:
+        payload = self.valid_payload()
+        payload["processes"][0]["profileSeal"] = "not-a-hash"
+        errors = self.validate(payload)
+        self.assertTrue(
+            any("profileSeal must be a nonzero lowercase SHA-256" in error for error in errors),
+            errors,
+        )
+
+    def test_placeholder_profile_name_fails(self) -> None:
+        payload = self.valid_payload()
+        payload["processes"][0]["profileName"] = "TODO"
+        errors = self.validate(payload)
+        self.assertTrue(
+            any(
+                "processes[save-session].profileName must be a real" in error
+                for error in errors
+            ),
+            errors,
+        )
+
+    def test_harness_inventory_sha256_absent_passes(self) -> None:
+        payload = self.valid_payload()
+        self.assertNotIn("harnessInventorySha256", payload)
+        self.assertEqual(self.validate(payload), [])
+
+    def test_harness_inventory_sha256_present_and_valid_passes(self) -> None:
+        payload = self.valid_payload()
+        payload["harnessInventorySha256"] = "c" * 64
+        self.assertEqual(self.validate(payload), [])
+
+    def test_harness_inventory_sha256_malformed_when_present_fails(self) -> None:
+        payload = self.valid_payload()
+        payload["harnessInventorySha256"] = "not-a-hash"
+        errors = self.validate(payload)
+        self.assertTrue(
+            any(
+                "harnessInventorySha256, if present, must be a nonzero lowercase SHA-256"
+                in error
+                for error in errors
+            ),
+            errors,
         )
 
     def test_wrong_candidate_commit_fails(self) -> None:
@@ -1023,9 +1013,6 @@ class EndToEndReleaseEvidenceFixtureTest(unittest.TestCase):
                     "stoppedUtc": "2026-09-11T00:05:00Z",
                     "profileName": "save-session profile",
                     "profileSeal": "7" * 64,
-                    "boundCandidateCommit": self.CANDIDATE,
-                    "boundRuntimeInventorySha256": self.INVENTORY,
-                    "boundSaveId": "save-1",
                 },
                 {
                     "role": "cold-load-session",
@@ -1034,9 +1021,6 @@ class EndToEndReleaseEvidenceFixtureTest(unittest.TestCase):
                     "stoppedUtc": "2026-09-11T00:15:00Z",
                     "profileName": "cold-load-session profile",
                     "profileSeal": "8" * 64,
-                    "boundCandidateCommit": self.CANDIDATE,
-                    "boundRuntimeInventorySha256": self.INVENTORY,
-                    "boundSaveId": "save-1",
                 },
             ],
             "steps": [

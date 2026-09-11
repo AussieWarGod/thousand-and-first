@@ -1499,17 +1499,19 @@ def _validate_native_driver_results(
 #       digest of the requested/exercised tree -- Tools/check-structure.py --json, NEVER
 #       docs/STRUCTURE_REVIEW.json, which an active candidate keeps stale by design and is
 #       validated separately, on its own freshness terms, by check-structure.py --release>",
+#   "harnessInventorySha256": "<OPTIONAL, 64-hex; a distinct fact -- the launched dev-profile/
+#       harness inventory -- validated (format only) when present, never conflated with
+#       runtimeInventorySha256 above>",
 #   "gameBuildId": "<must match the recorded game core build>",
 #   "logRef": "docs/release-evidence/<...>.log",
 #   "logSha256": "<lowercase hex-64 SHA-256 of the retained raw driver log>",
 #   "continuity": {"realmId": "...", "cityId": "..."},
 #   "processes": [
 #     {"role": "save-session", "launchId": "...", "started": "UTC", "stoppedUtc": "UTC",
-#      "profileName": "...", "profileSeal": "<hex-64>", "boundCandidateCommit": "<40-hex>",
-#      "boundRuntimeInventorySha256": "<64-hex>", "boundSaveId": "..."},
+#      "profileName": "...", "profileSeal": "<hex-64, SHA-256 of that session's own closed
+#      profile.sha256, header taf-scenario-profile-seal-v1>"},
 #     {"role": "cold-load-session", "launchId": "...", "started": "UTC", "stoppedUtc": "UTC",
-#      "profileName": "...", "profileSeal": "<hex-64>", "boundCandidateCommit": "<40-hex>",
-#      "boundRuntimeInventorySha256": "<64-hex>", "boundSaveId": "..."}
+#      "profileName": "...", "profileSeal": "<hex-64, may differ from save-session's>"}
 #   ],
 #   "steps": [
 #     {"step": "startup", "status": "PASS", "turnsUsed": N, "elapsedSeconds": N,
@@ -1533,13 +1535,15 @@ def _validate_native_driver_results(
 # continuous save-session covering startup..save, one separate cold-load-session covering
 # cold-load..next-action, distinct launchIds, each started strictly before its own stoppedUtc,
 # and save-session stopping at or before cold-load-session starts. Each session ALSO carries
-# its own profileName/profileSeal (the launched dev-profile/harness identity) -- the two
-# sessions' profileName/profileSeal are NEVER required to match each other (a save-session and
-# a cold-load-session legitimately run different profiles, load authority, scripts, or import
-# metadata) -- but both sessions' boundCandidateCommit/boundRuntimeInventorySha256/boundSaveId
-# must equal the shared top-level candidateCommit/runtimeInventorySha256 and the same saveId
-# the run actually produced (observed at the save step); a session whose seal does not bind to
-# that shared source/save fails, even though a differing profileSeal alone never does.
+# its own profileName/profileSeal (the launched dev-profile/harness identity: profileSeal is
+# the SHA-256 of that session's own closed profile.sha256, header taf-scenario-profile-seal-v1)
+# -- the two sessions' profileName/profileSeal are NEVER required to match each other (a
+# save-session and a cold-load-session legitimately run different profiles, load authority,
+# scripts, or import metadata); only each field's own presence and shape is checked, never
+# cross-session equality. What both sessions DO share needs no separate per-process field: the
+# single top-level candidateCommit/runtimeInventorySha256 apply to the whole run by
+# construction, and saveId consistency is already enforced by the per-step `observed` stability
+# rule below.
 #
 # Per-step `observed` identities are lifecycle-gated: realmId/cityId required on every step,
 # equal to `continuity`; jobId/buildingId/plotId/saveId/completedReceiptId/forJobId are
@@ -1627,9 +1631,6 @@ LONGFORM_PROCESS_KEYS = {
     "stoppedUtc",
     "profileName",
     "profileSeal",
-    "boundCandidateCommit",
-    "boundRuntimeInventorySha256",
-    "boundSaveId",
 }
 LONGFORM_STEP_KEYS = {
     "step",
@@ -1654,6 +1655,10 @@ LONGFORM_TOP_KEYS = {
     "processes",
     "steps",
 }
+# harnessInventorySha256 is a distinct, OPTIONAL fact (the launched dev-profile/harness
+# inventory, never conflated with the production structural digest above) -- present or
+# absent are both valid top-level shapes.
+LONGFORM_TOP_KEYS_WITH_HARNESS_INVENTORY = LONGFORM_TOP_KEYS | {"harnessInventorySha256"}
 
 
 class _RejectDuplicateKeys(dict):
@@ -1703,12 +1708,27 @@ def _validate_longform_scenario_results(
             f"{error}"
         )
         return
-    if not isinstance(payload, dict) or set(payload) != LONGFORM_TOP_KEYS:
+    if not isinstance(payload, dict) or set(payload) not in (
+        LONGFORM_TOP_KEYS,
+        LONGFORM_TOP_KEYS_WITH_HARNESS_INVENTORY,
+    ):
         errors.append(
             "long-form scenario results fields must exactly match schema version "
-            f"{LONGFORM_SCENARIO_SCHEMA}: " + ", ".join(sorted(LONGFORM_TOP_KEYS))
+            f"{LONGFORM_SCENARIO_SCHEMA} (harnessInventorySha256 optional): "
+            + ", ".join(sorted(LONGFORM_TOP_KEYS))
         )
         return
+    if "harnessInventorySha256" in payload:
+        harness_inventory = payload["harnessInventorySha256"]
+        if (
+            not isinstance(harness_inventory, str)
+            or re.fullmatch(r"[0-9a-f]{64}", harness_inventory) is None
+            or harness_inventory == "0" * 64
+        ):
+            errors.append(
+                "long-form scenario results harnessInventorySha256, if present, must be a "
+                "nonzero lowercase SHA-256"
+            )
     if (
         type(payload.get("schemaVersion")) is not int
         or payload["schemaVersion"] != LONGFORM_SCENARIO_SCHEMA
@@ -1829,16 +1849,17 @@ def _validate_longform_scenario_results(
                 errors.append(
                     "long-form scenario results processes entries must each be an object with "
                     "role, launchId, started, stoppedUtc (started strictly before stoppedUtc), "
-                    "profileName, profileSeal, boundCandidateCommit, "
-                    "boundRuntimeInventorySha256, and boundSaveId, one per session role, no "
-                    "duplicates"
+                    "profileName, and profileSeal, one per session role, no duplicates"
                 )
                 continue
             # Per-session profile identity: save-session and cold-load-session legitimately
-            # run different profiles/scripts/import metadata, so profileName/profileSeal are
-            # NEVER required to match each other. What each session MUST bind to is the
-            # shared source (candidateCommit), the shared exercised tree
-            # (runtimeInventorySha256), and the shared save -- never a single global seal.
+            # run different profiles/scripts/import metadata (profileSeal is the SHA-256 of
+            # that session's own closed profile.sha256, header taf-scenario-profile-seal-v1),
+            # so profileName/profileSeal are NEVER required to match each other -- only their
+            # presence, shape, and binding to THIS session (not cross-session equality) are
+            # checked. What both sessions DO share is already the single top-level
+            # candidateCommit/runtimeInventorySha256 and the saveId stability already enforced
+            # across steps below -- no separate per-process binding fields are needed for that.
             role = entry["role"]
             if not _observed_id_valid(entry.get("profileName")):
                 errors.append(
@@ -1854,24 +1875,6 @@ def _validate_longform_scenario_results(
                 errors.append(
                     f"long-form scenario results processes[{role}].profileSeal must be a "
                     "nonzero lowercase SHA-256"
-                )
-            if isinstance(candidate, str) and entry.get("boundCandidateCommit") != candidate:
-                errors.append(
-                    f"long-form scenario results processes[{role}].boundCandidateCommit must "
-                    "equal the shared candidateCommit"
-                )
-            if (
-                isinstance(inventory_digest, str)
-                and entry.get("boundRuntimeInventorySha256") != inventory_digest
-            ):
-                errors.append(
-                    f"long-form scenario results processes[{role}]."
-                    "boundRuntimeInventorySha256 must equal the shared runtimeInventorySha256"
-                )
-            if not _observed_id_valid(entry.get("boundSaveId")):
-                errors.append(
-                    f"long-form scenario results processes[{role}].boundSaveId must be a "
-                    "real, non-empty, non-placeholder identity"
                 )
             process_by_role[role] = entry
             launch_ids.append(entry["launchId"])
@@ -1899,15 +1902,7 @@ def _validate_longform_scenario_results(
                 "long-form scenario results save-session must stop at or before "
                 "cold-load-session starts"
             )
-        if (
-            save_session is not None
-            and cold_load_session is not None
-            and save_session.get("boundSaveId") != cold_load_session.get("boundSaveId")
-        ):
-            errors.append(
-                "long-form scenario results processes save-session and cold-load-session "
-                "must bind to the same boundSaveId (the shared save survives the reload)"
-            )
+
 
     # The exact ordered, non-repeatable seven-step chain, each bounded by its own recorded
     # turn/wall-clock usage against its own budget.
@@ -2048,24 +2043,6 @@ def _validate_longform_scenario_results(
                 elif key not in stable_first_value:
                     stable_first_value[key] = value
 
-    # The shared boundSaveId both process sessions bind to must be the actual save the run
-    # produced, not an arbitrary self-consistent pair the two sessions agree on alone.
-    observed_save_id = stable_first_value.get("saveId")
-    shared_bound_save_id = None
-    for entry in process_by_role.values():
-        bound = entry.get("boundSaveId")
-        if isinstance(bound, str):
-            shared_bound_save_id = bound
-            break
-    if (
-        shared_bound_save_id is not None
-        and observed_save_id is not None
-        and shared_bound_save_id != observed_save_id
-    ):
-        errors.append(
-            "long-form scenario results processes boundSaveId must equal the saveId "
-            "observed at the save step; a session's seal does not bind to the shared save"
-        )
 
 
 def _validate_artifact_binding(
