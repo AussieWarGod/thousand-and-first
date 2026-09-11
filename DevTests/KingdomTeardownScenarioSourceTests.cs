@@ -21,7 +21,13 @@ namespace ThousandAndFirst.Tests
 	{
 		private const string Provider = "Harness/KingdomTeardownNativeProvider.cs";
 		private const string Checks = "Harness/KingdomTeardownNativeChecks.cs";
+		// The Case class (commission/await/strike/salvage) moved into its own partial-class file
+		// once the crew-departure diagnostic pushed Checks.cs past the harness line cap; this
+		// reads both as one logical source for pins that span the split, exactly as if it were
+		// still one file.
+		private const string Cases = "Harness/KingdomTeardownNativeChecks.Case.cs";
 		private static string Read(string path) => TestMain.ReadRepositoryText(path);
+		private static string ReadChecksAndCases() => Read(Checks) + Read(Cases);
 
 		[Test]
 		public void ProviderRegistersBothVerbsAndSealsAnExactScript()
@@ -50,7 +56,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void SetupRunsTwoParallelCasesThroughRealProductionApis()
 		{
-			string source = Read(Checks);
+			string source = ReadChecksAndCases();
 			foreach (string token in new[]
 			{
 				"KingdomNativeCampFounding.Found(Game, Zone, Require)",
@@ -71,7 +77,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void CheckPollsRealBuiltStateBeforeOrderingTheRealStrike()
 		{
-			string source = Read(Checks);
+			string source = ReadChecksAndCases();
 			Assert.That(source, Does.Contain(
 				"KingdomUpgrade.IsFunctionallyBuilt(works)"));
 			Assert.That(source, Does.Contain(
@@ -83,7 +89,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void BothCasesComputeExactSalvageDeltaFromTheProductionRuleNeverAssumed()
 		{
-			string source = Read(Checks);
+			string source = ReadChecksAndCases();
 			Assert.That(source, Does.Contain("awaiting-struck=true"));
 			// The expected delta is COMPUTED from the same production rule OrderStrike itself
 			// uses, never hardcoded: KingdomMaterials.CostFor + KingdomMaterialRules.
@@ -110,7 +116,7 @@ namespace ThousandAndFirst.Tests
 			// Two cases strike in parallel and production returns salvage to the FIRST eligible
 			// stockpile in the zone (Growth/KingdomMaterials.13.StrikeRemovalAndSalvage.cs:
 			// 114-126), not the original payer -- an own-chest before/after delta is unsound.
-			string source = Read(Checks);
+			string source = ReadChecksAndCases();
 			Assert.That(source, Does.Contain(
 				"item.GetStringProperty(KingdomMaterials.StrikeSalvageReceiptProperty)"));
 			Assert.That(source, Does.Contain("!= StrikeReceiptId) continue;"));
@@ -133,7 +139,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void ReceiptIsCapturedAfterTheStrikeNeverBeforeAndMustDifferFromThePreStrikeOne()
 		{
-			string source = Read(Checks);
+			string source = ReadChecksAndCases();
 			int preStrike = source.IndexOf("preStrikeReceiptId = works.GetStringProperty(");
 			int order = source.IndexOf("KingdomMaterials.OrderStrike(System, Zone, Works, out string failure)");
 			int postStrike = source.IndexOf(
@@ -153,7 +159,7 @@ namespace ThousandAndFirst.Tests
 			// The real behavioural proof lives in KingdomTeardownStrikeRowClaimsTests (value
 			// tests on the pure predicate); this pin only proves the harness actually calls it
 			// with the strike receipt id and the live works/owner/zone, right after the strike.
-			string source = Read(Checks);
+			string source = ReadChecksAndCases();
 			Assert.That(source, Does.Contain(
 				"KingdomConstruction.TryFind(StrikeReceiptId, out KingdomConstructionJob row)"));
 			Assert.That(source, Does.Contain(
@@ -167,7 +173,7 @@ namespace ThousandAndFirst.Tests
 		{
 			// A same-ID object that is not the exact struck reference must REFUSE, not be
 			// silently read as a valid removal.
-			string source = Read(Checks);
+			string source = ReadChecksAndCases();
 			Assert.That(source, Does.Contain(
 				"stillThere == null || ReferenceEquals(stillThere, Works)"));
 			Assert.That(source, Does.Contain(
@@ -181,7 +187,7 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void NegativePathRefusesASecondStrikeOnTheAbsentBuildingForBothCases()
 		{
-			string source = Read(Checks);
+			string source = ReadChecksAndCases();
 			Assert.That(source, Does.Contain("secondOrder = KingdomMaterials.OrderStrike("));
 			Assert.That(source, Does.Contain(
 				"!secondOrder && !string.IsNullOrEmpty(secondFailure)"));
@@ -194,6 +200,46 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = Read(Checks);
 			Assert.That(source, Does.Contain("foreach (Case c in Cases) if (!c.Done) Done = false;"));
+		}
+
+		/// <summary>
+		/// Required per review-3f010e3-teardown-findings.md finding 3: departure previously
+		/// stalled both cases at Phase 1 with Ok=true and no named diagnostic. Check() must
+		/// re-Require the crew is STILL on the roll (production KingdomResidents.OnRollCount,
+		/// never a cached or harness-local count) before touching either case, and refuse by
+		/// name -- naming the exact case still open, never a generic "labour" message -- through
+		/// the same Require/throw/Fail() pipeline every other named refusal in this scenario
+		/// already uses (so Ok=false follows for free). The real boundary/format proof is the
+		/// value test on KingdomTeardownCrewDepartureClaims (an engine-free predicate); this pins
+		/// only that Check() actually reads the real production count and calls it, with no
+		/// departure freeze (nothing tries to stop production ending the crew's stay) and no
+		/// re-enrolment (a departed body is never replaced).
+		/// </summary>
+		[Test]
+		public void CheckReRequiresTheCrewIsStillOnTheRollAndRefusesByNameNeverFreezingOrReenrolling()
+		{
+			string source = Read(Checks);
+			Assert.That(source, Does.Contain("private KingdomSystem System;"));
+			Assert.That(source, Does.Contain("System = system;"));
+			Assert.That(source, Does.Contain("int onRoll = KingdomResidents.OnRollCount(System);"));
+			Assert.That(source, Does.Contain(
+				"KingdomTeardownCrewDepartureClaims.HasDeparted(onRoll,"));
+			Assert.That(source, Does.Contain(
+				"Require(false, KingdomTeardownCrewDepartureClaims.Diagnostic(c.Name,"));
+			// No departure freeze: nothing here reads or writes a lodging/brink/grace state.
+			Assert.That(source, Does.Not.Contain("GraceDays"));
+			Assert.That(source, Does.Not.Contain("Lodging"));
+			// No re-enrolment: the crew-departure guard never calls Enroll again -- only Start()
+			// does, exactly once, before any case begins.
+			int enrollCalls = 0;
+			int index = 0;
+			while ((index = source.IndexOf("KingdomTeardownCrewEnrollment.Enroll(", index)) >= 0)
+			{
+				enrollCalls++;
+				index++;
+			}
+			Assert.That(enrollCalls, Is.EqualTo(1),
+				"the crew must be enrolled exactly once, in Start(), never re-enrolled on departure");
 		}
 
 		[Test]
