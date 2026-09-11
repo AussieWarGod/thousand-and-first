@@ -122,6 +122,49 @@ namespace ThousandAndFirst.Tests
 			StringAssert.DoesNotContain("EffectivenessOf", zero);
 		}
 
+		/// <summary>
+		/// A paid raising whose ground layer is refused by a living occupant must say so once and
+		/// keep its developer log line. Pinned at the site because the refusal itself is unchanged:
+		/// only the silence was the defect (Growth/KingdomPlot2.26.Labour.cs, Apply(Cleared)).
+		/// </summary>
+		[Test]
+		public void AnOccupiedGroundLayerIsAnnouncedOnceAndStillLogged()
+		{
+			string labour = TestMain.ReadRepositoryText("Growth/KingdomPlot2.26.Labour.cs");
+			AssertOrdered(labour,
+				"private static bool Apply(r_KingdomPlotWorks Works, KingdomPlotRules.PlotStage Stage,",
+				"KingdomSystem System)",
+				"case KingdomPlotRules.PlotStage.Cleared:",
+				"bool ground = KingdomArchitectureStamper.TryStageLayer(parent, zone,",
+				"ArchitectureLayer.Ground, out string groundFailure)",
+				"SayPlotWorkOccupied(System, parent, Works.DisplayName,",
+				"ground ? null : KingdomPlotRules.OccupantSlotOf(groundFailure))",
+				"if (!ground)",
+				"KingdomLog.Log(\"architecture: ground layer refused: \" + groundFailure)",
+				"return false;");
+			string window = TestMain.ReadRepositoryText(
+				"Growth/KingdomPlot2.26b.LabourWindow.cs");
+			string said = window.Substring(window.IndexOf(
+				"private static void SayPlotWorkOccupied", StringComparison.Ordinal));
+			AssertOrdered(said,
+				"if (Slot == null)",
+				"Works.SetIntProperty(PlotWorkOccupantAnnouncedProperty, 0)",
+				"Works.SetStringProperty(PlotWorkOccupantSlotProperty, null, RemoveIfNull: true)",
+				"KingdomPlotRules.ShouldAnnounceOccupiedSlot(",
+				"Works.GetIntProperty(PlotWorkOccupantAnnouncedProperty)",
+				"Works.GetStringProperty(PlotWorkOccupantSlotProperty), Slot)",
+				"Works.SetIntProperty(PlotWorkOccupantAnnouncedProperty, 1)",
+				"Works.SetStringProperty(PlotWorkOccupantSlotProperty, Slot)",
+				"System.Ledger.Note(",
+				"KingdomPlotRules.RefuseOccupiedSlot(");
+			string stamper = TestMain.ReadRepositoryText(
+				"Growth/KingdomArchitectureStamper.Verification.cs");
+			StringAssert.Contains(
+				"return Fail(KingdomPlotRules.OccupantSlotRefusalPrefix + Placement.Slot,",
+				stamper);
+			StringAssert.DoesNotContain("\"a living occupant moved onto layout slot \"", stamper);
+		}
+
 		[Test]
 		public void UpgradeInfrastructureIsFrozenBeforeRequirementAndDebitAssessment()
 		{

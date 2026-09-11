@@ -147,7 +147,7 @@ namespace ThousandAndFirst
 				if (!GameObject.Validate(item) || ReferenceEquals(item, Owner)
 					|| item.GetIntProperty(KingdomPlots.HeartStakeProperty) == 1) continue;
 				if (item.IsCreature || item.IsPlayer())
-					return Fail("a living occupant moved onto layout slot " + Placement.Slot,
+					return Fail(KingdomPlotRules.OccupantSlotRefusalPrefix + Placement.Slot,
 						out Failure);
 				if (item.GetStringProperty(KingdomPlots.PlotIdProperty) == Lot
 					&& item.GetStringProperty(ComponentHashProperty) == Hash

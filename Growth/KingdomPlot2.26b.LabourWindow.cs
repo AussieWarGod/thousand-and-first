@@ -6,6 +6,35 @@ namespace ThousandAndFirst
 
 	public static partial class KingdomPlots
 	{
+		/// <summary>
+		/// The one stage refusal a founder can act on: a living body standing on a layout slot of
+		/// a raising whose labour is already paid. Said once per job and slot (house law: an
+		/// applicable-but-blocked path announces once), and forgotten the moment the ground layer
+		/// stops refusing for an occupant, so a later block is said again.
+		/// </summary>
+		/// <param name="Slot">The refused slot, or null when the occupant block is not in force.</param>
+		private static void SayPlotWorkOccupied(KingdomSystem System, GameObject Works,
+			string Name, string Slot)
+		{
+			if (Works == null) return;
+			if (Slot == null)
+			{
+				Works.SetIntProperty(PlotWorkOccupantAnnouncedProperty, 0);
+				Works.SetStringProperty(PlotWorkOccupantSlotProperty, null, RemoveIfNull: true);
+				return;
+			}
+			if (!KingdomPlotRules.ShouldAnnounceOccupiedSlot(
+				Works.GetIntProperty(PlotWorkOccupantAnnouncedProperty),
+				Works.GetStringProperty(PlotWorkOccupantSlotProperty), Slot)) return;
+			Works.SetIntProperty(PlotWorkOccupantAnnouncedProperty, 1);
+			Works.SetStringProperty(PlotWorkOccupantSlotProperty, Slot);
+			if (System != null && System.Founded)
+			{
+				System.Ledger.Note("{{r|" + KingdomPlotRules.RefuseOccupiedSlot(
+					Name ?? "work", Slot) + "}}");
+			}
+		}
+
 		/// <summary>Freezes only facts witnessed now; they may price the following interval.</summary>
 		private static bool TryCapturePlotLabourWindow(GameObject Root, KingdomSystem System,
 			long TimeTick, int InfrastructurePercent, string InfrastructureFailure,

@@ -43,7 +43,7 @@ namespace ThousandAndFirst
 				while (Works.StageApplied < (int)target && Works.DesignKey != null)
 				{
 					KingdomPlotRules.PlotStage next = (KingdomPlotRules.PlotStage)(Works.StageApplied + 1);
-					if (!Apply(Works, next))
+					if (!Apply(Works, next, System))
 					{
 						// The stage could not land -- a design a third-party mod withdrew between
 						// staking and finishing, or a zone torn down under us. The plot stays
@@ -164,7 +164,8 @@ namespace ThousandAndFirst
 				global::System.Globalization.CultureInfo.InvariantCulture, out Value);
 		}
 
-		private static bool Apply(r_KingdomPlotWorks Works, KingdomPlotRules.PlotStage Stage)
+		private static bool Apply(r_KingdomPlotWorks Works, KingdomPlotRules.PlotStage Stage,
+			KingdomSystem System)
 		{
 			GameObject parent = Works.ParentObject;
 			Zone zone = parent?.CurrentZone;
@@ -210,11 +211,19 @@ namespace ThousandAndFirst
 						return false;
 					}
 					if (!ClearGround(Works, zone, plot, footprint, roof, managed)) return false;
-					if (currentAuthored && !KingdomArchitectureStamper.TryStageLayer(parent,
-						zone, ArchitectureLayer.Ground, out string groundFailure))
+					if (currentAuthored)
 					{
-						KingdomLog.Log("architecture: ground layer refused: " + groundFailure);
-						return false;
+						bool ground = KingdomArchitectureStamper.TryStageLayer(parent, zone,
+							ArchitectureLayer.Ground, out string groundFailure);
+						// A living occupant is the one ground refusal the founder can act on, and
+						// the labour is already spent: say it once rather than retry in silence.
+						SayPlotWorkOccupied(System, parent, Works.DisplayName,
+							ground ? null : KingdomPlotRules.OccupantSlotOf(groundFailure));
+						if (!ground)
+						{
+							KingdomLog.Log("architecture: ground layer refused: " + groundFailure);
+							return false;
+						}
 					}
 					break;
 				case KingdomPlotRules.PlotStage.Frame:

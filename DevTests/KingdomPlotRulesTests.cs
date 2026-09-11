@@ -1041,6 +1041,48 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.AreNotEqual(room, budget, "the founder must be able to tell blocked ground from a full plan");
 		}
 
+		[Test]
+		public void AnOccupiedSlotRefusalIsReadBackToItsSlot()
+		{
+			string failure = KingdomPlotRules.OccupantSlotRefusalPrefix + "g:02:01";
+			ClassicAssert.IsTrue(KingdomPlotRules.IsOccupantSlotRefusal(failure));
+			ClassicAssert.AreEqual("g:02:01", KingdomPlotRules.OccupantSlotOf(failure));
+		}
+
+		[TestCase(null)]
+		[TestCase("")]
+		[TestCase("protected or foreign state moved onto layout slot g:02:01")]
+		[TestCase("a living occupant moved onto layout slot ")]
+		public void OnlyAnOccupantRefusalNamingASlotIsReadAsOne(string Failure)
+		{
+			ClassicAssert.IsFalse(KingdomPlotRules.IsOccupantSlotRefusal(Failure));
+			ClassicAssert.IsNull(KingdomPlotRules.OccupantSlotOf(Failure));
+		}
+
+		[TestCase(0, null, "g:02:01", true, TestName = "first block on a slot is said")]
+		[TestCase(1, "g:02:01", "g:02:01", false, TestName = "the same slot stays quiet")]
+		[TestCase(1, "g:02:01", "g:03:01", true, TestName = "a different slot is said again")]
+		[TestCase(0, "g:02:01", "g:02:01", true, TestName = "a cleared flag re-announces")]
+		[TestCase(1, "g:02:01", null, false, TestName = "no block says nothing")]
+		[TestCase(0, null, null, false, TestName = "no block and no flag says nothing")]
+		public void AnOccupiedRaisingIsAnnouncedOncePerJobAndSlot(int Announced,
+			string AnnouncedSlot, string Slot, bool Expected)
+		{
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.ShouldAnnounceOccupiedSlot(
+				Announced, AnnouncedSlot, Slot));
+		}
+
+		[Test]
+		public void AnOccupiedRaisingNamesTheBuildingTheSlotAndTheBody()
+		{
+			string line = KingdomPlotRules.RefuseOccupiedSlot("fire", "g:02:01");
+			StringAssert.Contains("fire", line);
+			StringAssert.Contains("g:02:01", line);
+			StringAssert.Contains("standing", line);
+			ClassicAssert.AreNotEqual(line, KingdomPlotRules.RefuseOccupiedSlot("fire", "g:03:01"),
+				"the founder must be told which ground is stood on");
+		}
+
 		[TestCase(Size.Small, "small")]
 		[TestCase(Size.Medium, "middling")]
 		[TestCase(Size.Large, "large")]

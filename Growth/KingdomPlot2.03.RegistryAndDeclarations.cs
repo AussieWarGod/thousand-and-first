@@ -266,6 +266,12 @@ namespace ThousandAndFirst
 		public const string PlotWorkCompletedTickProperty = "r_TAF_PlotWorkCompletedTick";
 		public const string PlotWorkShortfallSaidProperty = "r_TAF_PlotWorkShortfallSaid";
 		public const string PlotWorkFaultSaidProperty = "r_TAF_PlotWorkFaultSaid";
+		/// <summary>Once-flag for the living-occupant stage block: 1 once the founder has been
+		/// told. Cleared the moment the ground layer stops refusing for an occupant.</summary>
+		public const string PlotWorkOccupantAnnouncedProperty = "r_TAF_PlotWorkOccupantAnnounced";
+		/// <summary>The layout slot the occupant block was last announced for, so the same body
+		/// standing on a different slot is said once too.</summary>
+		public const string PlotWorkOccupantSlotProperty = "r_TAF_PlotWorkOccupantSlot";
 		public const int PlotWorkSchema = 2;
 		private const int MaxFurnishItems = 64;
 		private const int MaxGrowthRows = 512;
