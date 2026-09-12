@@ -107,7 +107,7 @@ namespace ThousandAndFirst.Harness
 					Name + ": the synthetic store did not survive across turns");
 				if (Phase == 1)
 				{
-					GameObject works = Zone.FindObjectByID(WorksId);
+					GameObject works = ResolveCurrentRoot(); // KingdomTeardownNativeChecks.Root.cs
 					// review-15f9de2-teardown-findings.md residual B: Rect/HasRect resolved once
 					// at Start left HasRect false forever if TryReadRect could not yet read the
 					// stamped rect that pass; re-try every Check until it succeeds, journaling
@@ -131,6 +131,7 @@ namespace ThousandAndFirst.Harness
 					}
 					LastHands = 0;
 					Works = works;
+					StruckId = works.IDIfAssigned;
 					WorksCell = works.CurrentCell;
 					Require(WorksCell != null,
 						Name + ": the functionally-built works carries no standing cell");
@@ -159,10 +160,10 @@ namespace ThousandAndFirst.Harness
 				}
 				// A same-ID object that is NOT the exact struck reference is never a pass: a
 				// mint-over-the-old-id replacement must refuse, not be silently read as removal.
-				GameObject stillThere = Zone.FindObjectByID(WorksId);
+				GameObject stillThere = Zone.FindObjectByID(StruckId ?? WorksId);
 				Require(stillThere == null || ReferenceEquals(stillThere, Works),
 					Name + ": a different object now carries the struck building's own identity "
-					+ WorksId + " -- a same-ID replacement is never a valid removal");
+					+ (StruckId ?? WorksId) + " -- a same-ID replacement is never a valid removal");
 				if (stillThere != null)
 				{
 					Evidence.Append("; case=").Append(Name).Append(" awaiting-struck=true");

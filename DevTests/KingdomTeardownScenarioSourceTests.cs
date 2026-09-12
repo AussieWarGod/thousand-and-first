@@ -490,6 +490,31 @@ namespace ThousandAndFirst.Tests
 		/// refuse only on liveness/AvailableSettlers grounds.
 		/// </summary>
 		[Test]
+		public void TheCaseReadsThePlotsCurrentRootNotTheRetiredWorksRoot()
+		{
+			// Run 43 (6fba8b5): production re-roots the paid output on the final building and
+			// Job.OutputId names it; the case must re-resolve every Check, through the
+			// engine-free rule, and journal final=/root-source=/blueprint=/design-key=.
+			string root = Read("Harness/KingdomTeardownNativeChecks.Root.cs");
+			Assert.That(root, Does.Contain("KingdomConstruction.TryFind(JobId, out row) && row != null"));
+			Assert.That(root, Does.Contain("row.Phase == KingdomConstructionPhase.Complete"));
+			Assert.That(root, Does.Contain("survey.Built[i]"));
+			Assert.That(root, Does.Contain("KingdomConstruction.ReceiptProperty) == JobId"));
+			Assert.That(root, Does.Contain("KingdomTeardownRootResolution.Choose(WorksId, found, complete,"));
+			Assert.That(root, Does.Contain("KingdomUpgrade.DesignKeyOf(Root)"));
+			Assert.That(root, Does.Contain("larder-gate="));
+			string source = Read("Harness/KingdomTeardownNativeChecks.Case.cs");
+			Assert.That(source, Does.Contain("GameObject works = ResolveCurrentRoot();"));
+			Assert.That(source, Does.Not.Contain("GameObject works = Zone.FindObjectByID(WorksId);"));
+			Assert.That(source, Does.Contain("StruckId = works.IDIfAssigned;"));
+			Assert.That(source, Does.Contain("Zone.FindObjectByID(StruckId ?? WorksId)"));
+			Assert.That(Read("Harness/KingdomTeardownNativeChecks.Telemetry.cs"), Does.Contain(".Append(RootClause(Root))"));
+			string rule = Read("Harness/KingdomTeardownRootResolution.cs");
+			Assert.That(rule, Does.Not.Contain("using XRL"));
+			Assert.That(rule, Does.Contain("if (RowFound && RowComplete && !string.IsNullOrEmpty(RowOutputId))"));
+		}
+
+		[Test]
 		public void RequireAvailableNeverAssertsThePostValueOnlyLivenessAndAvailability()
 		{
 			string enrollment = Read("Harness/KingdomTeardownCrewEnrollment.cs");
