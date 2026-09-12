@@ -17,13 +17,13 @@ the lifecycle accounting/load-witness corrections (#183). Public 0.3.3 is unchan
 - The first Windows full-suite attempt found a source-contract false positive: the new observer
   reads `EnrollmentReason.Founding`, while the old guard treated every reference as enrollment.
   That failed run was stopped, retained, and corrected at `7cb11cf`: the exact observer is allowed
-  only with comparison present and enrollment/property-write APIs absent. Full rerun is pending.
+  only with comparison present and enrollment/property-write APIs absent. The rerun passed 14769 main cases with zero skips, then the portable project failed to compile its missing new dependencies. Those dependencies and unused engine imports were corrected; current Linux full suites pass 14771 main and 5731 portable cases, zero skips.
 - Genuine marsh/advisor-on Quickstart at seed `#43101`, on `7cb11cf`, reached startup with four
   citizens, zero completed shelters and zero beds. After 7200 ordinary turns it retained the
   same four citizens, both reserved tent rows were functionally built, six physical beds were
   counted, and all four citizens were assigned homes. The paid fire completed and a real save
   was written. Session 1's strict Player.log check and persona assertions passed; its owned
-  process was stopped and the stop recorded. Cold-load preparation is still running.
+  process was stopped and the stop recorded. Cold load preserved the same four citizens, six beds, homes and completed fire. A second paid commission debited actual zone timber 23 to 22. Both journals completed, but strict cold-load Player.log FAILED on two seal reconciliation MODERRORs. The run remains FAILED. The missing-stage branch bypassed #181; `e1d26d9` carries typed Pending there without clearing dirty state or advancing revision. Native rerun is owed.
 - Evidence root: `/home/r/work/taf-scratch/hotfix-quickstart.FIuLCD/marsh-yes-2`.
   Save profile: `/mnt/c/taf-scenario.v4248bnb`; load profile: `/mnt/c/taf-scenario.qptkbr2x`.
   The earlier `marsh-yes` attempt failed during profile preparation because the temporary host
@@ -31,7 +31,7 @@ the lifecycle accounting/load-witness corrections (#183). Public 0.3.3 is unchan
 
 ## Housing shortage gate
 
-`quickstart-housing-recovery.persona` is authored, parsed, and **not compiled or executed yet**.
+`quickstart-housing-recovery.persona` compiled in all four modes at `44bd72f`; its first native run at `e1d26d9` is in progress (`/mnt/c/taf-scenario.enTgCl`).
 It starts with the real four founding citizens. Physical empty chests block both starter housing
 lots for 12400 ordinary turns, with explicitly synthetic water and meals to isolate roof pressure.
 Two real roof departures must leave the same two citizens across repeated passes. After removing
@@ -40,16 +40,12 @@ completed physical output for the paid construction job. Population, clocks, wor
 departures and home assignments are never set by the fixture.
 
 Production already intends to retain `KingdomRules.LoyalCoreSettlers == 2` on voluntary departure.
-This must be proved on the housing path, including actual construction recovery. Also inspect the
-ordering of the population check in `KingdomGrowth.EmigrateCore` against pending-departure recovery
-inside `KingdomResidentDepartureRuntime.TryBegin`: recovery may change the roll after that first
-check. This is a source-review concern, not a reproduced defect or a completed fix.
+`e1d26d9` adds a fresh settlement census after pending/orphan recovery and before admitting a new departure, closing the stale pre-recovery floor check. The exact recovery interleaving still needs native fault-injection evidence. The housing stress run already observed two actual roof departures and two surviving original citizens at turn 10002; further retention and physical construction recovery are still pending.
 
 ## Remaining hotfix work
 
-Finish the cold-load/next-action chain and the delayed-housing recovery scenario. Extend normal
-observations past the roof-departure deadline. Run the three Quickstart locations with both advisor
+Finish the cold-load/next-action chain and the delayed-housing recovery scenario. The normal lifecycle now waits 10800 turns (nine days), past the roof-departure deadline; that extended native run is owed. Run the three Quickstart locations with both advisor
 choices on final candidate bytes; test existing-save recovery without retroactive founder grants.
-Clarify the guide's building, housing, and first-guest instructions. Complete the automated release
+The guide now explains four default founders, clear starter shelter plots, and exact first-guest charter/interaction choices. Its text checks pass; native guest interaction coverage still needs review. Complete the automated release
 gates and subscribed-install verification before publishing the next Alpha. The broader Beta goal
 and combination-coverage backlog remain active; no Beta or release-readiness claim is made here.

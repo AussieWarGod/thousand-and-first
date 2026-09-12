@@ -125,7 +125,9 @@
 # why those two links still read BLOCKER without it.
 DESCRIPTION=on the real Quickstart road the stockpile is already dedicated at boot, so lifecycle-open proceeds straight to a real engine-turn build (budgeted past the one-gang tentrow contention) and save
 REQUEST=founding-first-city
-SCRIPT=quickstart-lifecycle marsh yes;stagedigest;lifecycle-open;advance 7200;lifecycle-grown;lifecycle-save;stagedigest
+# Hotfix acceptance waits nine days, past the six-day roof grace period; the historical
+# 7200-turn runs above proved construction but did not yet prove that later housing stability.
+SCRIPT=quickstart-lifecycle marsh yes;stagedigest;lifecycle-open;advance 10800;lifecycle-grown;lifecycle-save;stagedigest
 VERBS=lifecycle-open,lifecycle-grown,lifecycle-save
 EXPECT=QUICKSTART-BOOT-BEGIN:OK,QUICKSTART-BOOT-OBSERVED:OK,QUICKSTART-BOOT-COMPLETE:OK,QUICKSTART-BUILD-BEGIN:OK,QUICKSTART-BUILD-QUOTE:OK,QUICKSTART-BUILD-CANPAY:OK,QUICKSTART-BUILD-COMMISSION:OK,QUICKSTART-LIFECYCLE-PROFILE:OK,QUICKSTART-BUILD-COMPLETE:OK~commissioned=true,stagedigest:OK~founded=true,lifecycle-open:OK~step=startup,advance:OK,lifecycle-grown:OK~step=engine-turn-build,lifecycle-save:OK~step=save,stagedigest:OK~founded=true,COMPLETE
 SET=growth,construction,native-regression

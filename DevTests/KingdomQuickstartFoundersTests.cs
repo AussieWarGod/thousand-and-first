@@ -556,11 +556,12 @@ namespace ThousandAndFirst.Tests
 			Assert.That(verify, Is.GreaterThanOrEqualTo(0));
 			Assert.That(bootstrap.LastIndexOf("RunFounders(", StringComparison.Ordinal),
 				Is.GreaterThan(verify));
-			// The guide is untouched: it still knows exactly its five rule-shaped topics, and it
-			// still never states the size of the roll, which is why four founders cannot make it
-			// lie. (Its words are pinned in full by KingdomQuickstartGuideRulesTests.)
+			// Starting provisions are explicit; the current roll still needs to be read.
 			Assert.That(KingdomQuickstartGuideRules.TopicCount, Is.EqualTo(5));
-			string[] sizes = { "four settlers", "four citizens", "founding citizens",
+			Assert.That(KingdomQuickstartRules.FounderCount, Is.EqualTo(4));
+			StringAssert.Contains("normally provides four founding citizens", KingdomQuickstartGuideRules.Start);
+			StringAssert.Contains("check the citizen roll", KingdomQuickstartGuideRules.Start);
+			string[] sizes = { "four settlers", "four citizens",
 				"four of you", "four people" };
 			foreach (string size in sizes)
 			{
