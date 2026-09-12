@@ -75,24 +75,33 @@ namespace ThousandAndFirst
 		internal static bool IsMovableEnvelopeOccupant(KingdomSystem System, Zone Z,
 			GameObject Body)
 		{
-			KingdomSurvey survey = Z == null ? null : KingdomSurvey.ActiveFor(Z);
+			KingdomSurvey survey = EnvelopeSurvey(System, Z);
 			if (System == null || survey == null || !GameObject.Validate(Body)) return false;
 			return KingdomPlotRules.IsMovableOccupant(ReasonFor(System, survey, Body));
+		}
+
+		/// <summary>
+		/// The ground reading this classification stands on. KingdomSurvey.Take reuses the pass's
+		/// bound survey when there is one and captures a fresh one when there is not, so a
+		/// menu-time preview or a harness proof outside a settlement pass names the real reason
+		/// instead of "unwitnessed" -- which is then left for the one case that means it: no zone,
+		/// no system, or a survey that could not be taken at all.
+		/// </summary>
+		private static KingdomSurvey EnvelopeSurvey(KingdomSystem System, Zone Z)
+		{
+			return System == null || Z == null ? null : KingdomSurvey.Take(Z, System);
 		}
 
 		/// <summary>One line naming a body that stands on ground an improvement wants.</summary>
 		internal static void NameEnvelopeOccupant(KingdomSystem System, Zone Z, GameObject Body,
 			ArchitecturePassability Passability)
 		{
-			KingdomSurvey survey = Z == null ? null : KingdomSurvey.ActiveFor(Z);
+			KingdomSurvey survey = EnvelopeSurvey(System, Z);
 			Cell at = GameObject.Validate(Body) ? Body.CurrentCell : null;
-			KingdomLog.Log("architecture: envelope occupant "
-				+ (at == null ? "unknown" : Body.IDIfAssigned) + " ("
-				+ (at == null ? "gone" : Body.Blueprint) + ") at "
-				+ (at == null ? "nowhere" : at.X + "," + at.Y)
-				+ " passability=" + Passability + " reason="
-				+ (System == null || survey == null ? "unwitnessed"
-					: ReasonFor(System, survey, Body).ToString()));
+			KingdomLog.Log(KingdomPlotRules.OccupantLine(at == null ? null : Body.IDIfAssigned,
+				at == null ? null : Body.Blueprint,
+				at == null ? null : at.X + "," + at.Y, Passability,
+				survey == null ? null : ReasonFor(System, survey, Body).ToString()));
 		}
 	}
 }

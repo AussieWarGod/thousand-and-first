@@ -1238,6 +1238,31 @@ namespace ThousandAndFirst.Tests
 			}
 		}
 
+		/// <summary>
+		/// "unwitnessed" is reserved for the one case that means it: no ground reading could be
+		/// taken at all. A classified body always names its rung, and a body that has gone still
+		/// names where it was not. Mutation: printing the reason unconditionally turns case 2 into
+		/// an empty reason= gap; printing "unwitnessed" for a known reason fails case 1.
+		/// </summary>
+		[Test]
+		public void AnOccupantLineSaysUnwitnessedOnlyWhenNothingCouldBeRead()
+		{
+			string known = KingdomPlotRules.OccupantLine("511", "Croc", "37,12",
+				ArchitecturePassability.Blocked, "Beast");
+			StringAssert.Contains("511", known);
+			StringAssert.Contains("(Croc)", known);
+			StringAssert.Contains("at 37,12", known);
+			StringAssert.Contains("passability=Blocked", known);
+			StringAssert.Contains("reason=Beast", known);
+			StringAssert.DoesNotContain("unwitnessed", known);
+			string unread = KingdomPlotRules.OccupantLine(null, null, null,
+				ArchitecturePassability.Walkable, null);
+			StringAssert.Contains("unknown", unread);
+			StringAssert.Contains("(gone)", unread);
+			StringAssert.Contains("at nowhere", unread);
+			StringAssert.Contains("reason=unwitnessed", unread);
+		}
+
 		[Test]
 		public void AMovedPostNamesTheGroundItMovedTo()
 		{

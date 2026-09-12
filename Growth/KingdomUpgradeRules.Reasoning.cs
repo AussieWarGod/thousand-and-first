@@ -5,6 +5,21 @@ namespace ThousandAndFirst
 	public static partial class KingdomUpgradeRules
 	{
 		/// <summary>
+		/// The operator's line for a refused improvement. The founder gets the reason in their
+		/// ledger; the log needs the keys and the verdict beside it, or a refused climb leaves no
+		/// trace in Player.log and no run can say what stopped it (run 49). A missing key is named
+		/// "unknown" rather than left as an empty gap in the line.
+		/// </summary>
+		public static string RefusedLine(string Key, string SuccessorKey, UpgradeVerdict Verdict,
+			string Reason)
+		{
+			return "improvement refused: " + (string.IsNullOrEmpty(Key) ? "unknown" : Key)
+				+ " -> " + (string.IsNullOrEmpty(SuccessorKey) ? "unknown" : SuccessorKey)
+				+ " verdict=" + Verdict
+				+ " reason=" + (string.IsNullOrEmpty(Reason) ? "unstated" : Reason);
+		}
+
+		/// <summary>
 		/// The one sentence a blocked improvement owes the founder, or null for a verdict that
 		/// correctly says nothing. Every reason names the thing that would lift it, because a
 		/// stall the player cannot act on is the failure this whole file exists to prevent.
