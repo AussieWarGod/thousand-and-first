@@ -37,16 +37,21 @@ namespace ThousandAndFirst.Harness
 
 			private readonly Dictionary<int, PredictedEnvelope> Predicted =
 				new Dictionary<int, PredictedEnvelope>();
+			private List<KingdomPlotRules.PlotRect> EnvelopeCache;
+			/// <summary>Every predicted envelope's lane cells, folded into each lot search.</summary>
+			internal readonly HashSet<int> EnvelopeLaneCells = new HashSet<int>();
 			/// <summary>How many envelope cells (successor rects beyond the heart, plus their
 			/// lanes) the last candidate search held reserved.</summary>
 			internal int ReservedEnvelopeCells;
 
 			/// <summary>The heart's current rect followed by the predicted envelope of every
-			/// successor rung up to the sealed target; each envelope's lane cells are added to
-			/// LaneCells.</summary>
-			internal List<KingdomPlotRules.PlotRect> HeartEnvelopes(KingdomPlotRules.PlotRect HeartRect,
-				HashSet<int> LaneCells)
+			/// successor rung up to the sealed target, computed and journaled ONCE (native run 49:
+			/// a per-lot dump of the same rects filled the row); each envelope's lane cells go to
+			/// <see cref="EnvelopeLaneCells"/>.</summary>
+			internal List<KingdomPlotRules.PlotRect> HeartEnvelopes(KingdomPlotRules.PlotRect HeartRect)
 			{
+				if (EnvelopeCache != null) return EnvelopeCache;
+				HashSet<int> LaneCells = EnvelopeLaneCells;
 				List<KingdomPlotRules.PlotRect> envelopes = new List<KingdomPlotRules.PlotRect>();
 				envelopes.Add(HeartRect);
 				string failure;
@@ -94,6 +99,7 @@ namespace ThousandAndFirst.Harness
 					rung++;
 				}
 				ReservedEnvelopeCells = cells;
+				EnvelopeCache = envelopes;
 				return envelopes;
 			}
 

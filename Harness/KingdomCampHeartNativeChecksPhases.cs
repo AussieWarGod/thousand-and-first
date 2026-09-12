@@ -53,6 +53,9 @@ namespace ThousandAndFirst.Harness
 				Require(Phase >= 1 && !Done, "taf-camp-setup-absent: setup did not run");
 				Require(!KingdomScenarioAdvance.Pending,
 					"taf-camp-turns-owed: turns are still owed");
+				// This check's reads come first in its row; everything earlier follows them.
+				Prior.Insert(0, Evidence.ToString());
+				Evidence.Length = 0;
 				switch (Phase)
 				{
 					case 1: Phase1(); break;
@@ -73,11 +76,14 @@ namespace ThousandAndFirst.Harness
 				List<string> notes = Game.Player?.Messages?.Messages;
 				Evidence.Append("\nblocked-message-count=").Append(notes == null ? 0 : notes.Count);
 				if (notes == null) return;
-				for (int i = Math.Max(0, notes.Count - 16); i < notes.Count; i++)
+				// Bounded so a check row's own reads stay under the journal row cap (native run
+				// 49): the last BlockedMessagesKept messages, each at most BlockedMessageChars,
+				// both declared beside the cap they answer to.
+				for (int i = Math.Max(0, notes.Count - KingdomScenarioJournalRules.BlockedMessagesKept); i < notes.Count; i++)
 				{
 					string note = notes[i] ?? "(null)";
-					Evidence.Append("\nblocked-message=").Append(note.Length <= 256
-						? note : note.Substring(0, 256) + "[truncated]");
+					Evidence.Append("\nblocked-message=").Append(note.Length <= KingdomScenarioJournalRules.BlockedMessageChars
+						? note : note.Substring(0, KingdomScenarioJournalRules.BlockedMessageChars) + "[truncated]");
 				}
 			}
 

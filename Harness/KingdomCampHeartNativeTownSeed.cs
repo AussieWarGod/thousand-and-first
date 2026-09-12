@@ -87,6 +87,10 @@ namespace ThousandAndFirst.Harness
 				Require(level >= Residents, "taf-camp-town-seed-level: the seeded works support "
 					+ level + " people at " + stage + ", not " + Residents);
 				AssignLodging();
+				// The per-lot lines are a row of their own (bookkeeping to the persona matrix), so
+				// the setup and check rows keep their reads inside the journal's row cap.
+				KingdomScenarioJournal.Append("town-lots", true, "native-camp-heart town-lots="
+					+ SeededLots.Count + "; stake-refused=" + RefusedLots.Count + LotEvidence);
 				Evidence.Append("\nsynthetic-town-works lodging=").Append(LodgingKey).Append('x')
 					.Append(lodgingLots).Append("; beds=").Append(beds).Append("; water=")
 					.Append(waterKey ?? "(none)").Append('x').Append(waterLots)
@@ -149,7 +153,7 @@ namespace ThousandAndFirst.Harness
 						KingdomPlotRules.IsUnderground(Zone.Z));
 					if (works != null) break;
 					RefusedLots.Add(lot);
-					Evidence.Append("\nsynthetic-town-stake-refused key=").Append(Key)
+					LotEvidence.Append("\nsynthetic-town-stake-refused key=").Append(Key)
 						.Append("; rect=").Append(lot.X1).Append(',').Append(lot.Y1).Append(' ')
 						.Append(lot.X2).Append(',').Append(lot.Y2)
 						.Append("; the architecture log line carries the reason");
@@ -172,7 +176,7 @@ namespace ThousandAndFirst.Harness
 				SeededLots.Add(lot);
 				SeededIds.Add(final.IDIfAssigned);
 				SeededRoots.Add(final);
-				Evidence.Append("\nsynthetic-town-lot key=").Append(Key).Append("; rect=")
+				LotEvidence.Append("\nsynthetic-town-lot key=").Append(Key).Append("; rect=")
 					.Append(lot.X1).Append(',').Append(lot.Y1).Append(' ').Append(lot.X2)
 					.Append(',').Append(lot.Y2).Append("; ingress=").Append(intent.Facing)
 					.Append("; lane depth=").Append(LaneDepth)

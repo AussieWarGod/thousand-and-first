@@ -97,7 +97,7 @@ namespace ThousandAndFirst.Harness
 				+ "; improvement-notice-premarked=true"
 				+ "; stockpile-refusal-reason-claimed=false"
 				+ "; ordinary-acceptance=false; charter=untested; save-load=untested"
-				+ Retained.Evidence;
+				+ Retained.Evidence + Retained.Prior;
 		}
 
 		internal static string Fail(Exception Error)
@@ -105,7 +105,7 @@ namespace ThousandAndFirst.Harness
 			if (Retained != null) Retained.Armed = false;
 			return "native-camp-heart cases=1 passed=0 failed=1; evidence retained: "
 				+ KingdomScenarioRules.Bounded(Error.GetType().Name + ": " + Error.Message)
-				+ Retained?.Evidence;
+				+ Retained?.Evidence + Retained?.Prior;
 		}
 
 		private static void Require(bool Value, string Failure)
@@ -143,7 +143,14 @@ namespace ThousandAndFirst.Harness
 			internal bool Begun;
 			internal bool Armed, Done;
 			internal int Phase;
+			/// <summary>This phase's evidence, FIRST in every row (native run 49: the journal caps
+			/// a row at KingdomScenarioJournalRules.MaxMessageChars and the rung-3 reads were cut
+			/// behind the setup's dump). Earlier phases follow in <see cref="Prior"/>.</summary>
 			internal readonly StringBuilder Evidence = new StringBuilder();
+			/// <summary>Evidence of the phases before this one, appended after the current.</summary>
+			internal readonly StringBuilder Prior = new StringBuilder();
+			/// <summary>Per-lot seeding lines, journaled as their own town-lots row.</summary>
+			internal readonly StringBuilder LotEvidence = new StringBuilder();
 
 			internal Frame(XRLGame Game, Zone Zone, int TargetRung)
 			{

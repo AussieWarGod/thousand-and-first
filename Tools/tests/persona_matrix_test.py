@@ -530,6 +530,7 @@ class JournalReadingTest(unittest.TestCase):
                 row("status", "OK"),
                 row("advance-progress", "OK"),
                 row("advance-complete", "OK"),
+                row("town-lots", "OK"),
                 row("SCRIPT-COMPLETE", "OK"),
             )
         )

@@ -57,7 +57,8 @@ namespace ThousandAndFirst.Harness
 				ReservedLaneCells = reserved.Count;
 				// Native run 44: the heart's FUTURE envelopes, one per rung this persona climbs,
 				// derived from the authored chain, with their own lanes folded into the reserve.
-				List<KingdomPlotRules.PlotRect> envelopes = HeartEnvelopes(heart, reserved);
+				List<KingdomPlotRules.PlotRect> envelopes = HeartEnvelopes(heart);
+				reserved.UnionWith(EnvelopeLaneCells);
 				List<KingdomPlotRules.PlotRect> existing = new List<KingdomPlotRules.PlotRect>(SeededLots);
 				existing.AddRange(envelopes);
 				List<KingdomPlotRules.PlotRect> candidates = InteriorFirst(Width, Height, depth);
@@ -80,13 +81,13 @@ namespace ThousandAndFirst.Harness
 					}
 					refused++;
 					if (refused <= JournaledLotRefusals)
-						Evidence.Append("\nsynthetic-town-lot-refused key=").Append(Entry.Key)
+						LotEvidence.Append("\nsynthetic-town-lot-refused key=").Append(Entry.Key)
 							.Append("; rect=").Append(candidate.X1).Append(',').Append(candidate.Y1)
 							.Append(' ').Append(candidate.X2).Append(',').Append(candidate.Y2)
 							.Append("; edge distance=").Append(EdgeDistance(candidate))
 							.Append("; preflight=").Append(KingdomScenarioRules.Bounded(failure));
 				}
-				Evidence.Append("\nsynthetic-town-lot-exhausted key=").Append(Entry.Key)
+				LotEvidence.Append("\nsynthetic-town-lot-exhausted key=").Append(Entry.Key)
 					.Append("; lane-reserved=").Append(reserved.Count)
 					.Append("; heart-envelope-reserved=").Append(ReservedEnvelopeCells)
 					.Append("; preflight refusals=").Append(refused)

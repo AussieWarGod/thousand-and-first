@@ -456,7 +456,25 @@ namespace ThousandAndFirst.Tests
 			Assert.That(Read(Rung3), Does.Contain("RequireEnvelopeMatches(3, standing);"));
 			Assert.That(Read(Phases).IndexOf("RequireEnvelopeMatches(2, standing);", StringComparison.Ordinal),
 				Is.LessThan(Read(Phases).IndexOf("MintRung3Bill();", StringComparison.Ordinal)));
-			Assert.That(lots, Does.Contain("List<KingdomPlotRules.PlotRect> envelopes = HeartEnvelopes(heart, reserved);"));
+			Assert.That(lots, Does.Contain("List<KingdomPlotRules.PlotRect> envelopes = HeartEnvelopes(heart);"));
+			Assert.That(lots, Does.Contain("reserved.UnionWith(EnvelopeLaneCells);"));
+			// Native run 49: the envelopes are computed and journaled once, per-lot lines go to
+			// their own town-lots row, and each check row leads with its own phase's reads.
+			Assert.That(envelope, Does.Contain("if (EnvelopeCache != null) return EnvelopeCache;"));
+			Assert.That(lots, Does.Contain("LotEvidence.Append(\"\\nsynthetic-town-lot-refused key=\")"));
+			Assert.That(lots, Does.Contain("LotEvidence.Append(\"\\nsynthetic-town-lot-exhausted key=\")"));
+			Assert.That(seed, Does.Contain("LotEvidence.Append(\"\\nsynthetic-town-lot key=\")"));
+			Assert.That(seed, Does.Contain("LotEvidence.Append(\"\\nsynthetic-town-stake-refused key=\")"));
+			Assert.That(seed, Does.Contain("KingdomScenarioJournal.Append(\"town-lots\", true, \"native-camp-heart town-lots=\""));
+			Assert.That(Read(Checks), Does.Contain("+ Retained.Evidence + Retained.Prior;"));
+			Assert.That(Read(Checks), Does.Contain("+ Retained?.Evidence + Retained?.Prior;"));
+			Assert.That(Read(Phases), Does.Contain("Prior.Insert(0, Evidence.ToString());"));
+			Assert.That(Read(Phases), Does.Contain("Evidence.Length = 0;"));
+			Assert.That(Read(Phases), Does.Contain("notes.Count - KingdomScenarioJournalRules.BlockedMessagesKept"));
+			Assert.That(Read(Phases), Does.Contain("note.Substring(0, KingdomScenarioJournalRules.BlockedMessageChars)"));
+			Assert.That(Read("Tools/personas/persona_matrix.py"), Does.Contain("\"town-lots\","));
+			Assert.That(Read("Harness/KingdomScenarioJournal.cs"),
+				Does.Contain("return KingdomScenarioJournalRules.Bound(Message, MaxMessageChars);"));
 			Assert.That(lots, Does.Contain("if (CrowdsEnvelope(candidate, envelopes)"));
 			Assert.That(lots, Does.Contain("existing.AddRange(envelopes);"));
 			Assert.That(lots, Does.Contain("\"; heart-envelope-reserved=\").Append(ReservedEnvelopeCells)"));
