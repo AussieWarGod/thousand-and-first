@@ -1,14 +1,17 @@
 # Current implementation and release evidence
 
-## Current 0.3.4 heart integration candidate — unverified
+## Current 0.3.4 Quickstart recovery candidate — native acceptance pending
 
-3098 staged C# files; 440,079 physical lines; cold-install inventory contains 3129 files.
+3098 staged C# files; 440,089 physical lines; cold-install inventory contains 3129 files.
 Compile inventory: 3098 sources, baseline and compatibility symbols (3094 baseline).
 Direct `XRL` imports: 1445 files, 0 over the line limit. Zero at or above 300 lines.
-Inventory SHA-256: `edb507bb9f3fc5203e4fe3f83312f4c4c9adda7c9fbba99e6b2a73145a212205`.
+Inventory SHA-256: `43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6`.
 Combines #141 authority, #144 shared-XL validation, #138/#139 rung settlement and #137 camp
 content/native fixture over dev with the verified 0.3.3 backmerge. Production and test-project
-merges are complete; compile, combined-suite, native progression and semantic review are owed.
+merges are complete. Full-cask main/portable suites pass 14775/5732 cases with zero skips,
+and all four compile modes pass. Automated structural review binds the inventory above.
+Fresh fourteen-day Quickstart, housing departure/recovery/load and strike native checks
+remain pending; later heart-rung and broader Beta acceptance remain separate.
 Prior isolated evidence below remains bound to its original checkpoints, not this combined tree.
 No new version/tag/upload or Beta acceptance is claimed.
 
