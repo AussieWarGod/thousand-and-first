@@ -31,7 +31,7 @@ the lifecycle accounting/load-witness corrections (#183). Public 0.3.3 is unchan
 
 ## Housing shortage gate
 
-`quickstart-housing-recovery.persona` compiled in all four modes at `44bd72f`; its first native run at `e1d26d9` is in progress (`/mnt/c/taf-scenario.enTgCl`).
+`quickstart-housing-recovery.persona` compiled in all four modes at `44bd72f`; its native run at `e1d26d9` PASSED (`/mnt/c/taf-scenario.enTgCl`), including strict Player.log and receipt-owned stop. The 206-row journal retained the same two citizens at turns 10002 and 12402, then proved usable homes and the completed paid building at turn 17202.
 It starts with the real four founding citizens. Physical empty chests block both starter housing
 lots for 12400 ordinary turns, with explicitly synthetic water and meals to isolate roof pressure.
 Two real roof departures must leave the same two citizens across repeated passes. After removing
@@ -40,12 +40,14 @@ completed physical output for the paid construction job. Population, clocks, wor
 departures and home assignments are never set by the fixture.
 
 Production already intends to retain `KingdomRules.LoyalCoreSettlers == 2` on voluntary departure.
-`e1d26d9` adds a fresh settlement census after pending/orphan recovery and before admitting a new departure, closing the stale pre-recovery floor check. The exact recovery interleaving still needs native fault-injection evidence. The housing stress run already observed two actual roof departures and two surviving original citizens at turn 10002; further retention and physical construction recovery are still pending.
+`e1d26d9` adds a fresh settlement census after pending/orphan recovery and before admitting a new departure, closing the stale pre-recovery floor check. The exact recovery interleaving still needs native fault-injection evidence. The housing stress run proved two real roof departures, repeated retention, and physical construction recovery. It does not yet prove a cold load with departed founders.
 
 ## Remaining hotfix work
 
-Finish the cold-load/next-action chain and the delayed-housing recovery scenario. The normal lifecycle now waits 10800 turns (nine days), past the roof-departure deadline; that extended native run is owed. Run the three Quickstart locations with both advisor
+Finish the normal cold-load/next-action chain. The delayed-housing scenario has passed. The normal lifecycle now waits 10800 turns (nine days), past the roof-departure deadline; that extended native run is owed. Run the three Quickstart locations with both advisor
 choices on final candidate bytes; test existing-save recovery without retroactive founder grants.
 The guide now explains four default founders, clear starter shelter plots, and exact first-guest charter/interaction choices. Its text checks pass; native guest interaction coverage still needs review. Complete the automated release
 gates and subscribed-install verification before publishing the next Alpha. The broader Beta goal
 and combination-coverage backlog remain active; no Beta or release-readiness claim is made here.
+
+Validation update: four final compile modes passed at production inventory `e2faa4877de8f08945de13b5cbda24573afecf36f73e15fffee78b74cdbe7066`. Full tooling initially failed because the new nine-day advance exceeded the per-verb 10000-turn limit and the persona census still expected 92. `439f980` splits it into 7200 + 3600, records 93 personas; all 60 persona-matrix tests and 25 lifecycle source contracts pass. The full tooling failure is retained in `/tmp/taf-hotfix-tools-final.log`; a full corrected rerun is owed. Nine-day prepare attempts 1 and 2 launched no game (oversized advance, then a randomly generated underscore rejected by the exact profile-name grammar). Attempt 3 uses the canonical mktemp profile allocator and is running.

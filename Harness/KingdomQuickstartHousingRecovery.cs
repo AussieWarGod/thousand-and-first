@@ -98,6 +98,11 @@ namespace ThousandAndFirst.Harness
 			foreach (GameObject obstacle in Obstacles)
 				Require(GameObject.Validate(obstacle) && ReferenceEquals(obstacle.CurrentZone, Zone),
 					"a physical housing obstacle vanished during the delay");
+			Require(KingdomConstruction.TryRead(out List<KingdomConstructionJob> jobs, out failure), failure);
+			string jobId = Game.GetStringGameState(KingdomQuickstartLifecycleSteps.JobKey);
+			KingdomConstructionJob job = jobs.Find(item => item.Id == jobId);
+			Require(job != null && job.Phase == KingdomConstructionPhase.Working,
+				"the paid job must remain unfinished until after the two roof departures");
 			return Report("retained", survivors.Count);
 		}
 
