@@ -515,6 +515,27 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void TheStrikeWaitsForTheRealReceiptToBecomeSupersedable()
+		{
+			// Run 45 (28a4451): production's OrderStrike refuses a building whose own terminal
+			// receipt is not yet supersedable (closure pending); the case must wait, journaling
+			// receipt-source=real, and never mint a receipt of its own.
+			string root = Read("Harness/KingdomTeardownNativeChecks.Root.cs");
+			Assert.That(root, Does.Contain("KingdomConstruction.CanSupersedeTerminalReceipt(System, Zone, Built, row)"));
+			Assert.That(root, Does.Contain("KingdomTeardownStrikeReadiness.Judge("));
+			Assert.That(root, Does.Contain("receipt-source="));
+			Assert.That(root, Does.Contain("synthetic-bill=stock-only"));
+			string source = Read("Harness/KingdomTeardownNativeChecks.Case.cs");
+			Assert.That(source, Does.Contain("if (readiness == KingdomTeardownStrikeReadiness.Verdict.WaitClosure)"));
+			Assert.That(source, Does.Contain("awaiting-supersede=true"));
+			Assert.That(source, Does.Contain("Require(readiness == KingdomTeardownStrikeReadiness.Verdict.Strike,"));
+			Assert.That(source, Does.Not.Contain("SetStringProperty(KingdomConstruction.ReceiptProperty"));
+			string rule = Read("Harness/KingdomTeardownStrikeReadiness.cs");
+			Assert.That(rule, Does.Not.Contain("using XRL"));
+			Assert.That(rule, Does.Contain("return Supersedable ? Verdict.Strike : Verdict.WaitClosure;"));
+		}
+
+		[Test]
 		public void RequireAvailableNeverAssertsThePostValueOnlyLivenessAndAvailability()
 		{
 			string enrollment = Read("Harness/KingdomTeardownCrewEnrollment.cs");

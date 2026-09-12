@@ -520,6 +520,8 @@
     <Compile Include="KingdomTeardownCrewAvailabilityRulesTests.cs" />
     <Compile Include="..\Harness\KingdomTeardownRootResolution.cs" />
     <Compile Include="KingdomTeardownRootResolutionTests.cs" />
+    <Compile Include="..\Harness\KingdomTeardownStrikeReadiness.cs" />
+    <Compile Include="KingdomTeardownStrikeReadinessTests.cs" />
     <Compile Include="KingdomQuickstartBuildClaimsTests.cs" />
     <Compile Include="KingdomTeardownStrikeRowClaimsTests.cs" />
     <Compile Include="KingdomTeardownCrewDepartureClaimsTests.cs" />

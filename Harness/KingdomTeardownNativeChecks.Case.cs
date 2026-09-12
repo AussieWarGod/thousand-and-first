@@ -130,15 +130,20 @@ namespace ThousandAndFirst.Harness
 						return;
 					}
 					LastHands = 0;
+					// Run 45: the building's own terminal receipt may not be supersedable yet
+					// (closure pending); that is a wait, not a refusal (KingdomTeardownNativeChecks.Root.cs).
+					KingdomTeardownStrikeReadiness.Verdict readiness = StrikeReadiness(works, Evidence);
+					if (readiness == KingdomTeardownStrikeReadiness.Verdict.WaitClosure)
+					{ Evidence.Append(" awaiting-supersede=true").Append(Telemetry(works)); return; }
+					Require(readiness == KingdomTeardownStrikeReadiness.Verdict.Strike,
+						Name + ": a non-terminal receipt of another job holds this building");
 					Works = works;
 					StruckId = works.IDIfAssigned;
 					WorksCell = works.CurrentCell;
 					Require(WorksCell != null,
 						Name + ": the functionally-built works carries no standing cell");
 					string preStrikeReceiptId = works.GetStringProperty(
-						KingdomConstruction.ReceiptProperty);
-					Require(!string.IsNullOrEmpty(preStrikeReceiptId),
-						Name + ": the functionally-built works carries no construction receipt");
+						KingdomConstruction.ReceiptProperty) ?? "";
 					Require(KingdomMaterials.OrderStrike(System, Zone, Works, out string failure),
 						failure ?? Name + ": the real strike order was refused");
 					// Captured AFTER the strike, never before -- OrderStrike mints a NEW strike-

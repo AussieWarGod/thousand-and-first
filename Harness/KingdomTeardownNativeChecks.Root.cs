@@ -40,6 +40,32 @@ namespace ThousandAndFirst.Harness
 				return Zone.FindObjectByID(CurrentId);
 			}
 
+			/// <summary>Run 45: may the strike be ordered on this built root now? Reads the
+			/// building's real construction receipt and its row, asks the production supersede
+			/// predicate, and journals receipt=/receipt-source=/receipt-phase=/supersedable=.
+			/// WaitClosure is a wait, never a refusal: the checkpoint budget bounds it.</summary>
+			private KingdomTeardownStrikeReadiness.Verdict StrikeReadiness(GameObject Built,
+				StringBuilder Evidence)
+			{
+				string receipt = Built.GetStringProperty(KingdomConstruction.ReceiptProperty);
+				bool present = !string.IsNullOrEmpty(receipt);
+				KingdomConstructionJob row = null;
+				bool found = present && KingdomConstruction.TryFind(receipt, out row) && row != null;
+				bool terminal = found && KingdomConstructionRules.IsTerminal(row.Phase);
+				bool supersedable = terminal
+					&& KingdomConstruction.CanSupersedeTerminalReceipt(System, Zone, Built, row);
+				KingdomTeardownStrikeReadiness.Verdict verdict = KingdomTeardownStrikeReadiness.Judge(
+					true, present, found, terminal, supersedable);
+				Evidence.Append("; case=").Append(Name)
+					.Append(" receipt=").Append(present ? receipt : "none")
+					.Append(" receipt-source=").Append(KingdomTeardownStrikeReadiness.ReceiptSource(present, found))
+					.Append(" receipt-phase=").Append(found ? row.Phase.ToString() : "no-row")
+					.Append(" supersedable=").Append(supersedable)
+					.Append(" strike-readiness=").Append(verdict)
+					.Append(" synthetic-bill=stock-only");
+				return verdict;
+			}
+
 			/// <summary>What the resolved root says about itself: read from THAT object, never
 			/// echoed from the job row. Larder-gate: the Frame starts the larder only once the
 			/// fire case reaches Phase 2 (struck), so an unstruck fire says so here.</summary>
