@@ -55,6 +55,7 @@ namespace ThousandAndFirst.Tests
 			"Growth/KingdomPlot2.26b.LabourWindow.cs",
 			"Growth/KingdomPlot2.26c.OccupantClearance.cs",
 			"Growth/KingdomPlot2.26d.OccupantHelpers.cs",
+			"Growth/KingdomPlot2.26e.EnvelopeClearance.cs",
 			"Growth/KingdomPlot2.27.FinalBuilding.cs",
 			"Growth/KingdomPlot2.28.ClearPayout.cs",
 			"Growth/KingdomPlot2.29.ClearProofs.cs",
