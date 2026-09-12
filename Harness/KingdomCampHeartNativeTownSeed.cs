@@ -175,10 +175,12 @@ namespace ThousandAndFirst.Harness
 					"taf-camp-town-seed-heart-marked: a seeded lot carries the heart plot mark");
 				SeededLots.Add(lot);
 				SeededIds.Add(final.IDIfAssigned);
+				SeededRoots.Add(final);
 				Evidence.Append("\nsynthetic-town-lot key=").Append(Key).Append("; rect=")
 					.Append(lot.X1).Append(',').Append(lot.Y1).Append(' ').Append(lot.X2)
 					.Append(',').Append(lot.Y2).Append("; ingress=").Append(intent.Facing)
-					.Append("; lane depth=").Append(LaneDepth).Append("; plot=").Append(plotId)
+					.Append("; lane depth=").Append(LaneDepth)
+					.Append("; lane-reserved=").Append(ReservedLaneCells).Append("; plot=").Append(plotId)
 					.Append("; final=").Append(final.IDIfAssigned);
 			}
 

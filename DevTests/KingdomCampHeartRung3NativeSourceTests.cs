@@ -405,7 +405,7 @@ namespace ThousandAndFirst.Tests
 			string lots = Read(TownLots);
 			foreach (string rule in new[] {
 				"KingdomPlots.TryPreparePlotPayload(System, Zone, candidate, Entry.Key,",
-				"Entry.Category, SkinKey, out Intent, out payload, out failure))",
+				"Entry.Category, SkinKey, out Intent, out payload, out failure)",
 				"internal static int LaneDepth { get { return KingdomPlotRules.RoadMargin + 1; } }",
 				"for (int y = Depth; y + Height + Depth <= Zone.Height; y++)",
 				"for (int x = Depth; x + Width + Depth <= Zone.Width; x++)",
@@ -415,8 +415,30 @@ namespace ThousandAndFirst.Tests
 				"int byDepth = EdgeDistance(b).CompareTo(EdgeDistance(a));",
 				"Math.Min(Zone.Width - 1 - Rect.X2, Zone.Height - 1 - Rect.Y2)",
 				"\"; edge distance=\").Append(EdgeDistance(candidate))",
-				"synthetic-town-lot-refused key=", "synthetic-town-lot-exhausted key=" })
+				"synthetic-town-lot-refused key=", "synthetic-town-lot-exhausted key=",
+				// Native run 42: existing works' public ingress lanes are reserved through
+				// production's own receipt reader and authored-lane rule, and a candidate's own
+				// lanes may not land inside an existing rect.
+				"HashSet<int> reserved = ReservedLanes(heart);",
+				"|| CoversLane(candidate, reserved)",
+				"&& OwnLanesClear(Intent, candidate, existing, out failure))",
+				"KingdomArchitectureRuntime.TryRead(Root, out intent, out failure)",
+				"KingdomArchitectureRuntime.TryDecode(intent, out snapshot, out failure)",
+				"Require(KingdomRoadRules.TryAuthoredLane(Snapshot, Rect, anchor, route,",
+				"Lanes.Add(new ArchitecturePoint(laneX, laneY));",
+				"\"; lane-reserved=\").Append(reserved.Count)" })
 				Assert.That(lots, Does.Contain(rule), rule);
+			Assert.That(seed, Does.Contain("SeededRoots.Add(final);"));
+			Assert.That(seed, Does.Contain("\"; lane-reserved=\").Append(ReservedLaneCells)"));
+			// And the founder is walked clear of the envelope production prepares for the target
+			// rung before the rung-3 leg, with the cell journaled.
+			string founder = Read("Harness/KingdomCampHeartNativeFounder.cs");
+			Assert.That(founder, Does.Contain("ThirdRungKey, out var after, out failure),"));
+			Assert.That(founder, Does.Contain("while (after.Rect.Contains(player.CurrentCell.X, player.CurrentCell.Y))"));
+			Assert.That(founder, Does.Contain("\"; founder cell=\").Append(player.CurrentCell.X)"));
+			Assert.That(Read(Phases), Does.Contain("WalkFounderClearOfRung3();"));
+			Assert.That(Read(Phases).IndexOf("WalkFounderClearOfRung3();", StringComparison.Ordinal),
+				Is.LessThan(Read(Phases).IndexOf("RequireTownHeld(\"when the rung-3 bill was minted\");", StringComparison.Ordinal)));
 			foreach (string loop in new[] { "while (works == null)", "if (works != null) break;",
 				"RefusedLots.Add(lot);", "synthetic-town-stake-refused key=",
 				"\"; ingress=\").Append(intent.Facing)", "\"; lane depth=\").Append(LaneDepth)" })

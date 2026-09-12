@@ -191,6 +191,7 @@ namespace ThousandAndFirst.Harness
 					SecondHeartId = standing.IDIfAssigned;
 					MintRung3Bill();
 					RecordAnnexGround();
+					WalkFounderClearOfRung3();
 					RequireTownHeld("when the rung-3 bill was minted");
 				}
 			}

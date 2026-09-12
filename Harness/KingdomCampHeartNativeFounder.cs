@@ -50,6 +50,46 @@ namespace ThousandAndFirst.Harness
 					.Append("; cleared-ground-proved=true; cell=")
 					.Append(player.CurrentCell.X).Append(',').Append(player.CurrentCell.Y);
 			}
+
+			/// <summary>Native run 42: the walk above leaves the founder one cell outside the
+			/// rung-2 rect, which is INSIDE the rung-3 envelope, and the moot yard then refused
+			/// NoGroundToGrow for a living occupant at that cell. Before the rung-3 leg the founder
+			/// walks west by ordinary movement until outside the envelope production itself
+			/// prepares for the target rung from the authored map (never a constant), and the cell
+			/// is journaled.</summary>
+			private void WalkFounderClearOfRung3()
+			{
+				GameObject player = The.Player;
+				Require(GameObject.Validate(player) && player.CurrentZone == Zone
+					&& player.CurrentCell != null, "taf-camp-founder-absent: no exact founder cell");
+				Require(GameObject.Validate(SecondStanding),
+					"taf-camp-founder-rung3-no-waterstone: the rung-2 body is gone");
+				string failure;
+				KingdomArchitectureIntent before;
+				Require(KingdomArchitectureRuntime.TryRead(SecondStanding, out before, out failure),
+					failure ?? "taf-camp-founder-rung3-no-layout");
+				Require(KingdomArchitectureRuntime.TryPrepareSuccessor(System, Zone, before,
+					ThirdRungKey, out var after, out failure),
+					failure ?? "taf-camp-founder-rung3-no-successor");
+				int moves = 0;
+				while (after.Rect.Contains(player.CurrentCell.X, player.CurrentCell.Y))
+				{
+					int x = player.CurrentCell.X, y = player.CurrentCell.Y;
+					Require(x > 1 && ++moves <= 32
+						&& player.Move("W", AllowDashing: false, DoConfirmations: false),
+						"taf-camp-founder-rung3-walk-refused: founder could not walk clear of the "
+							+ "moot yard's envelope");
+					Require(ReferenceEquals(The.Game, Game) && ReferenceEquals(The.Player, player)
+						&& player.CurrentZone == Zone && player.CurrentCell != null
+						&& player.CurrentCell.X == x - 1 && player.CurrentCell.Y == y,
+						"taf-camp-founder-rung3-walk-changed: movement changed ownership or ground");
+				}
+				Evidence.Append("\nfounder-rung3-envelope=").Append(after.Rect.X1).Append(',')
+					.Append(after.Rect.Y1).Append(' ').Append(after.Rect.X2).Append(',')
+					.Append(after.Rect.Y2).Append("; west-moves=").Append(moves)
+					.Append("; founder cell=").Append(player.CurrentCell.X).Append(',')
+					.Append(player.CurrentCell.Y);
+			}
 		}
 	}
 }
