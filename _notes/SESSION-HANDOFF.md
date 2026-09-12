@@ -4,8 +4,8 @@
 
 Current draft census/evidence is in docs/STATUS.md; the figures below describe its predecessor.
 
-3095 staged sources; 439,562 physical lines; 1445 direct-XRL files; zero cap failures;
-3126 cold-install files. Inventory `207351ca17beed6af69f33df5a63ffa6b4d16a6207c389f15f5f18d2204f116f`.
+3096 staged sources; 439,780 physical lines; 1445 direct-XRL files; zero cap failures;
+3127 cold-install files. Inventory `88d5929dc2b083f4926f4ffdf6b7ccc006fe6cc5c646932b85f6d86f639af721`.
 #141/#144/#139/#137 combined; compile, native and semantic review owed. Earlier rows are
 retained checkpoints, not acceptance of this candidate. Public0.3.3 is finalized.
 
@@ -13,7 +13,7 @@ retained checkpoints, not acceptance of this candidate. Public0.3.3 is finalized
 
 Integrated through dev `bcca3e5`; compile/audit and main14341/portable5491 pass, zero managed
 skips; native pending. Census3079/437201/1434,
-zero cap failures; inventory `207351ca17beed6af69f33df5a63ffa6b4d16a6207c389f15f5f18d2204f116f`.
+zero cap failures; inventory `88d5929dc2b083f4926f4ffdf6b7ccc006fe6cc5c646932b85f6d86f639af721`.
 Earlier evidence below remains bound to its named checkpoints.
 
 ## Retained dev hotfix backmerge — 2026-09-11

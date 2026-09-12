@@ -26,6 +26,9 @@ namespace ThousandAndFirst
 		/// <summary>How far the crew will walk a resident to get them off their own site.</summary>
 		private const int OccupantDisplacementRadius = 8;
 
+		/// <summary>The engine's base animal blueprint; kind is decided by inheriting it.</summary>
+		private const string AnimalBlueprint = "Animal";
+
 		/// <summary>
 		/// Puts the ground layer down, standing our own residents off the slots when that is what
 		/// stands in the way and retrying in the SAME pass, because a body walks back. The player,
@@ -43,13 +46,16 @@ namespace ThousandAndFirst
 			if (!ground && KingdomPlotRules.IsOccupantSlotRefusal(Failure))
 			{
 				int cleared = 0;
+				int beasts = 0;
+				Cell post = null;
 				KingdomPlotRules.OccupantVerdict verdict = KingdomPlotRules.OccupantVerdict.Clear;
 				Cell anchor = null;
 				bool stoodOff = KingdomArchitectureStamper.TryPlacementPassability(Authored, Z,
 						out Dictionary<int, ArchitecturePassability> slots,
 						out string clearanceRefusal)
 					&& TryClearManagedOccupants(System, Z, Root, Managed, slots, Rect,
-						out cleared, out verdict, out anchor, out clearanceRefusal);
+						out cleared, out beasts, out post, out verdict, out anchor,
+						out clearanceRefusal);
 				if (stoodOff)
 				{
 					ground = KingdomArchitectureStamper.TryStageLayer(Root, Z,
@@ -57,9 +63,12 @@ namespace ThousandAndFirst
 				}
 				else KingdomLog.Log("architecture: layout clearance refused: " + clearanceRefusal);
 				// Bodies left standing off the site are named whether or not the set succeeded,
-				// and the sentence says which of the two the founder is looking at.
-				SayPlotWorkCleared(System, Root, name, cleared, ground,
-					ground ? null : (stoodOff ? Failure : clearanceRefusal));
+				// and the sentence says which of the two the founder is looking at. Settlers stood
+				// aside and beasts driven off are different acts and get different sentences.
+				string fault = ground ? null : (stoodOff ? Failure : clearanceRefusal);
+				SayPlotWorkCleared(System, Root, name, cleared - beasts, ground, fault);
+				SayPlotBeastsDriven(System, Root, name, beasts, ground, fault);
+				if (post != null) SayPlotPostMoved(System, Root, name, post);
 				if (!ground && verdict == KingdomPlotRules.OccupantVerdict.AnchorBound
 					&& anchor != null)
 				{
@@ -89,10 +98,12 @@ namespace ThousandAndFirst
 		/// <param name="Refusal">Why nothing was moved, when this returns false.</param>
 		internal static bool TryClearManagedOccupants(KingdomSystem System, Zone Z, GameObject Root,
 			HashSet<int> Managed, Dictionary<int, ArchitecturePassability> Slots,
-			KingdomPlotRules.PlotRect Rect, out int Moved,
+			KingdomPlotRules.PlotRect Rect, out int Moved, out int Beasts, out Cell Post,
 			out KingdomPlotRules.OccupantVerdict Verdict, out Cell Anchor, out string Refusal)
 		{
 			Moved = 0;
+			Beasts = 0;
+			Post = null;
 			Verdict = KingdomPlotRules.OccupantVerdict.Clear;
 			Anchor = null;
 			Refusal = null;
@@ -104,8 +115,9 @@ namespace ThousandAndFirst
 			List<GameObject> occupants = new List<GameObject>();
 			List<KingdomPlotRules.OccupantReason> reasons =
 				new List<KingdomPlotRules.OccupantReason>();
+			List<Cell> anchors = new List<Cell>();
 			bool player = false;
-			int residents = 0;
+			int movable = 0;
 			// Only Blocked slots are walked: a body on walkable ground or beside an adjacent-use
 			// slot is not in the way, so it is not an occupant of this raising at all.
 			foreach (KeyValuePair<int, ArchitecturePassability> slot in Slots)
@@ -125,17 +137,17 @@ namespace ThousandAndFirst
 					KingdomPlotRules.OccupantReason reason = ReasonFor(System, survey, item);
 					occupants.Add(item);
 					reasons.Add(reason);
+					anchors.Add(null);
 					if (reason == KingdomPlotRules.OccupantReason.Player) { player = true; continue; }
+					if (!KingdomPlotRules.IsMovableOccupant(reason)) continue;
+					movable++;
 					if (reason != KingdomPlotRules.OccupantReason.Resident) continue;
-					residents++;
-					Cell anchor = PostAnchorInLayout(Z, item, Managed);
-					if (anchor == null) continue;
-					reasons[reasons.Count - 1] = KingdomPlotRules.OccupantReason.AnchorBound;
-					if (Anchor == null) Anchor = anchor;
+					// A post standing inside the layout is not a refusal any more: the post moves
+					// with its holder in the same pass, and only a post that will not move is.
+					anchors[anchors.Count - 1] = PostAnchorInLayout(Z, item, Managed);
 				}
 			}
-			Verdict = KingdomPlotRules.JudgeOccupants(occupants.Count, residents, player,
-				Anchor != null);
+			Verdict = KingdomPlotRules.JudgeOccupants(occupants.Count, movable, player);
 			if (Verdict == KingdomPlotRules.OccupantVerdict.Clear) return true;
 			if (Verdict != KingdomPlotRules.OccupantVerdict.Displace)
 			{
@@ -156,19 +168,36 @@ namespace ThousandAndFirst
 				plan.Add(new KingdomLayoutDisplacement(occupants[i], occupants[i].CurrentCell,
 					target));
 			}
+			// Plan before effect for the posts too: a post that cannot be moved is a refusal
+			// BEFORE any body walks, so the anchored case still moves nobody.
+			for (int i = 0; i < anchors.Count; i++)
+			{
+				if (anchors[i] == null || CanMovePost(plan[i].Body)) continue;
+				Verdict = KingdomPlotRules.OccupantVerdict.AnchorBound;
+				Anchor = anchors[i];
+				NameOccupants(Z, Slots, occupants, reasons);
+				return ClearanceFault("a resident is posted inside the layout and its post will not move",
+					out Refusal);
+			}
 			int walked = 0;
+			int drove = 0;
 			for (int i = 0; i < plan.Count; i++)
 			{
 				KingdomLayoutDisplacement move = plan[i];
+				bool anchored = anchors[i] != null;
 				if (GameObject.Validate(move.Body)
 					&& move.Body.SystemLongDistanceMoveTo(move.Target, 0, forced: true,
 						ignoreCombat: true)
-					&& move.Body.CurrentCell == move.Target)
+					&& move.Body.CurrentCell == move.Target
+					&& (!anchored || TryMovePost(move.Body, move.Target)))
 				{
 					walked++;
+					if (reasons[i] == KingdomPlotRules.OccupantReason.Beast) drove++;
+					else if (anchored) Post = move.Target;
 					KingdomLog.Log("architecture: stood occupant " + move.Body.IDIfAssigned
 						+ " off lot " + Root.GetStringProperty(PlotIdProperty) + " onto "
-						+ move.Target.X + "," + move.Target.Y);
+						+ move.Target.X + "," + move.Target.Y
+						+ (anchored ? " with its post" : ""));
 					continue;
 				}
 				// Half a cleared site is nobody's intent: put back everyone already walked, and
@@ -182,6 +211,7 @@ namespace ThousandAndFirst
 						? " and " + stranded + " could not be stood back" : ""), out Refusal);
 			}
 			Moved = walked;
+			Beasts = drove;
 			return true;
 		}
 

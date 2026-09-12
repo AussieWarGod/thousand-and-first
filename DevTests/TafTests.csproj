@@ -297,6 +297,7 @@
     <Compile Include="..\Core\KingdomSealRules.Capture.cs" />
     <Compile Include="..\Simulation\City\IKingdomComputeJournal.cs" />
     <Compile Include="..\Growth\KingdomPlotRefusalRules.cs" />
+    <Compile Include="..\Growth\KingdomPlotOccupantRules.cs" />
     <Compile Include="..\Core\KingdomCreedRules.WeightsAndDominance.cs" />
     <Compile Include="..\Core\KingdomQolRules.OffersAndJudgment.cs" />
     <Compile Include="..\Growth\KingdomClaimRules.cs" />
