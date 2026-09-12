@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "inventorySha256": "249d3bb40ca34f57289770494e985a97e81cf42c2bae8f053fb6e14005b61d3d",
+  "inventorySha256": "edb507bb9f3fc5203e4fe3f83312f4c4c9adda7c9fbba99e6b2a73145a212205",
   "exceptions": [],
-  "reviewedBy": "Codex with independent Claude reviews, under author authorization",
-  "completedUtc": "2026-09-10T22:05:02Z",
+  "reviewedBy": "Codex root automated structural review",
+  "completedUtc": "2026-09-12T22:50:09Z",
   "oneResponsibility": {
     "status": "passed",
-    "notes": "See docs/STRUCTURE_REVIEW_0_3_3.md. Enumerated canonical 3069-file inventory and compared every source blob with shipped d02608a: 3063 unchanged inherit that commit's explicit review chain and limitations; five modified and one added were risk-weighted deep-read. Scope helper owns local pass lifetime; stock readers own tally; two commissioning entries retain their existing transaction responsibilities; fresh-grant creator owns the one new identity allocation; release-info changes only a literal. Independent Claude reviews of ad0dd90 and 3500035 found no blocking production finding. Test-summary attribution corrected in ebbb919. No line-cap exception, saved field or serialization format change. This is structural review, not native or release acceptance."
+    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:edb507bb9f3fc5203e4fe3f83312f4c4c9adda7c9fbba99e6b2a73145a212205. Enumerated all 3098 staged C# files against public e96b50e1: 3003 unchanged inherit its review chain and limits; 66 modified and 29 added were read by responsibility group; no removal or line-limit exception. Core rules/codecs, World bootstrap, Growth physical protocols and seal lifecycle retain bounded responsibilities. log:/home/r/work/taf-scratch/hotfix-quickstart.FIuLCD/structural-delta.json. Automated source review only; no independent reviewer or native/release acceptance claimed."
   },
   "protocolsAtBoundaries": {
     "status": "passed",
-    "notes": "See docs/STRUCTURE_REVIEW_0_3_3.md and retained d02608a review chain for unchanged bytes. TryBindLocalOperation requires exact active ground, refuses foreign bound authority before capture, rechecks after capture, and reuses existing disposable PassScope. Stock's short read scope does not cross UI input; both final commission entries keep the complete reserve/fund/project transaction bound. Existing lease, exact-container, quote, custody and commit-time authority checks remain. Fresh material identity is allocated only on privately created stacks before insertion and re-proved non-allocating afterward; rollback remains the unchanged grant owner, observers remain read-only. No blanket old-save identity repair or replacement goods. Independent scope and identity reviews accepted; combined native debit/projection, save/load and delivery are separate unsatisfied gates, not inferred here."
+    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:edb507bb9f3fc5203e4fe3f83312f4c4c9adda7c9fbba99e6b2a73145a212205. Read founder publication/origin quarantine, raw census unknowns and deposit custody, exact generation peers, final output identity, occupancy clearance, completed heart receipt bindings, rung callback reproof, typed Pending load/capture and post-recovery departure census. Existing identity/ownership/removal guards remain; old receipts do not remint founders. log:/tmp/taf-hotfix-water-ingress-gate.log. Native matrix, old-save recovery, later heart rungs and callback fault combinations remain separate evidence obligations."
   }
 }

@@ -9,6 +9,25 @@ Work continues from Claude's `dev` checkpoint `899f7d6` in branch
 unchanged. This candidate integrates the pending spatial-capture load correction (#181) and
 the lifecycle accounting/load-witness corrections (#183). Public 0.3.3 is unchanged.
 
+## Current candidate validation
+
+Production/harness changes through `bdde5cff` bind staged C# inventory
+`edb507bb9f3fc5203e4fe3f83312f4c4c9adda7c9fbba99e6b2a73145a212205`.
+All four canonical compile modes passed (3094/3098 ordinary, 3338/3342 harness).
+Linux full suites passed 14772 main and 5732 portable cases, zero skips. Full
+Python tooling passed 1066 cases with 12 platform skips; coverage tests passed 38.
+The exact inventory structural review is in `STRUCTURE_REVIEW_0_3_4.md`.
+
+Final native matrix is running at
+`/home/r/work/taf-scratch/hotfix-quickstart.FIuLCD/final-matrix-1`.
+Marsh/advisor-on PASSED: nine days retained the same four founders, all housed,
+two complete shelters and six physical beds; the paid fire completed; real save
+and cold load preserved those facts; another paid commission debited actual zone
+timber 23 to 22. Both strict Player.log checks and receipt-owned stops passed.
+The wall/liquid-carrier ingress negatives and missing-anchor refusal also passed.
+Save `/mnt/c/taf-scenario.HSWSI8`, load `/mnt/c/taf-scenario.i1Mo8T`.
+Remaining pairs and final-candidate housing stress are still pending.
+
 ## Recorded evidence
 
 - `4bcf552` adds read-only original-citizen and housing checks to the construction lifecycle.
@@ -23,7 +42,7 @@ the lifecycle accounting/load-witness corrections (#183). Public 0.3.3 is unchan
   same four citizens, both reserved tent rows were functionally built, six physical beds were
   counted, and all four citizens were assigned homes. The paid fire completed and a real save
   was written. Session 1's strict Player.log check and persona assertions passed; its owned
-  process was stopped and the stop recorded. Cold load preserved the same four citizens, six beds, homes and completed fire. A second paid commission debited actual zone timber 23 to 22. Both journals completed, but strict cold-load Player.log FAILED on two seal reconciliation MODERRORs. The run remains FAILED. The missing-stage branch bypassed #181; `e1d26d9` carries typed Pending there without clearing dirty state or advancing revision. Native rerun is owed.
+  process was stopped and the stop recorded. Cold load preserved the same four citizens, six beds, homes and completed fire. A second paid commission debited actual zone timber 23 to 22. Both journals completed, but strict cold-load Player.log FAILED on two seal reconciliation MODERRORs. The run remains FAILED. The missing-stage branch bypassed #181; `e1d26d9` carries typed Pending there without clearing dirty state or advancing revision. The final marsh/advisor-on rerun passed; remaining combinations are tracked above.
 - Evidence root: `/home/r/work/taf-scratch/hotfix-quickstart.FIuLCD/marsh-yes-2`.
   Save profile: `/mnt/c/taf-scenario.v4248bnb`; load profile: `/mnt/c/taf-scenario.qptkbr2x`.
   The earlier `marsh-yes` attempt failed during profile preparation because the temporary host
@@ -44,12 +63,12 @@ Production already intends to retain `KingdomRules.LoyalCoreSettlers == 2` on vo
 
 ## Remaining hotfix work
 
-Finish the normal cold-load/next-action chain. The delayed-housing scenario has passed. The normal lifecycle now waits 10800 turns (nine days), past the roof-departure deadline; that extended native run is owed. Run the three Quickstart locations with both advisor
+Complete all six normal cold-load/next-action pairs. Historical delayed-housing evidence passed; rerun its strengthened Working-phase assertions on final bytes. The normal lifecycle waits 10800 turns (nine days), past the roof-departure deadline. Run the three Quickstart locations with both advisor
 choices on final candidate bytes; test existing-save recovery without retroactive founder grants.
 The guide now explains four default founders, clear starter shelter plots, and exact first-guest charter/interaction choices. Its text checks pass; native guest interaction coverage still needs review. Complete the automated release
 gates and subscribed-install verification before publishing the next Alpha. The broader Beta goal
 and combination-coverage backlog remain active; no Beta or release-readiness claim is made here.
 
-Validation update: four final compile modes passed at production inventory `e2faa4877de8f08945de13b5cbda24573afecf36f73e15fffee78b74cdbe7066`. Full tooling initially failed because the new nine-day advance exceeded the per-verb 10000-turn limit and the persona census still expected 92. `439f980` splits it into 7200 + 3600, records 93 personas; all 60 persona-matrix tests and 25 lifecycle source contracts pass. The full tooling failure is retained in `/tmp/taf-hotfix-tools-final.log`; a full corrected rerun is owed. Nine-day prepare attempts 1 and 2 launched no game (oversized advance, then a randomly generated underscore rejected by the exact profile-name grammar). Attempt 3 uses the canonical mktemp profile allocator and is running.
+Validation update: four final compile modes passed at production inventory `e2faa4877de8f08945de13b5cbda24573afecf36f73e15fffee78b74cdbe7066`. Full tooling initially failed because the new nine-day advance exceeded the per-verb 10000-turn limit and the persona census still expected 92. `439f980` splits it into 7200 + 3600, records 93 personas; all 60 persona-matrix tests and 25 lifecycle source contracts pass. The full tooling failure is retained in `/tmp/taf-hotfix-tools-final.log`; the corrected full rerun passed 1066 tests with 12 platform skips in `/tmp/taf-hotfix-tools-corrected.log`. Nine-day prepare attempts 1 and 2 launched no game (oversized advance, then a randomly generated underscore rejected by the exact profile-name grammar). Attempt 3 used the canonical mktemp profile allocator; its failure is retained below.
 
-The first completed nine-day run (`439f980`, profile `/mnt/c/taf-scenario.6JYYg5`) FAILED. Both shelters and the paid fire finished, but 24 starter drams ran out: two original citizens emigrated for drought by day nine. One seal daily MODERROR also classified a physically obstructed exterior entrance at 24,17 as malformed building evidence. Candidate corrections: new worlds receive 48 finite drams; typed exterior-ingress obstruction defers seal capture only after all component and internal passability checks succeed. A new native probe temporarily blocks a completed home with an exact owned wall and liquid carrier, requires Pending with unchanged stage, removes each obstacle, and verifies the same home again. A missing entrance remains a structural refusal. Current compile and full-suite runs are pending. All earlier PASS claims remain bound to their stated bytes.
+The first completed nine-day run (`439f980`, profile `/mnt/c/taf-scenario.6JYYg5`) FAILED. Both shelters and the paid fire finished, but 24 starter drams ran out: two original citizens emigrated for drought by day nine. One seal daily MODERROR also classified a physically obstructed exterior entrance at 24,17 as malformed building evidence. Candidate corrections: new worlds receive 48 finite drams; typed exterior-ingress obstruction defers seal capture only after all component and internal passability checks succeed. A new native probe temporarily blocks a completed home with an exact owned wall and liquid carrier, requires Pending with unchanged stage, removes each obstacle, and verifies the same home again. A missing entrance remains a structural refusal. Those corrections passed current compile and full suites, as recorded above. All earlier PASS claims remain bound to their stated bytes.
