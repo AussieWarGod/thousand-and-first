@@ -157,6 +157,8 @@
 	<Compile Include="..\Harness\KingdomQuickstartLifecycleStamp.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartLifecycleOpenWait.cs" />
 	<Compile Include="KingdomQuickstartLifecycleOpenWaitTests.cs" />
+	<Compile Include="..\Harness\KingdomQuickstartLifecycleDebitRules.cs" />
+	<Compile Include="KingdomQuickstartLifecycleDebitRulesTests.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartLifecycleStall.Classify.cs" />
 	<Compile Include="KingdomQuickstartLifecycleStallClassifyTests.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartBuildClaims.cs" />

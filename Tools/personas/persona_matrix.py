@@ -58,6 +58,13 @@ BOOKKEEPING = frozenset(
         # observation about what the checker's own diagnosis found, never a verb the script
         # asked for, so it never belongs in a positional EXPECT.
         "lifecycle-grown-detail",
+        # Run 46b/47 (investigation C): the lifecycle save's own pre-activation witness row
+        # (Harness/KingdomQuickstartLifecycleLoad.cs BeforeActivation), landed by the load
+        # witness before AfterGameLoaded handlers run. Wiring, never a verb the script asked for,
+        # and deliberately NOT a QUICKSTART-LOAD-* row: Tools/check-quickstart-lifecycle.py picks
+        # the cold-load row group by presence, and a lone Quickstart-named row beside
+        # lifecycle-loaded would flip that choice into "partial evidence".
+        "lifecycle-preactivation",
         # A third-party verb provider the admission law refused. It describes the PROFILE a run was
         # launched into, not a step the script asked for, so a persona must not go red because
         # somebody else's mod shipped a broken provider. `Tools/run-personas.sh` surfaces these
