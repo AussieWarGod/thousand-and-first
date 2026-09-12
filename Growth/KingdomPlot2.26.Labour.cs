@@ -49,7 +49,15 @@ namespace ThousandAndFirst
 						// The stage could not land -- a design a third-party mod withdrew between
 						// staking and finishing, or a zone torn down under us. The plot stays
 						// exactly where it is and tries again, which is the same "waiting is not
-						// failing" contract a staked plan already holds.
+						// failing" contract a staked plan already holds. It is named, though:
+						// this break is how a paid raising stalled for eleven passes in silence
+						// (issue #172). The step's own reason is on the line just before this one.
+						KingdomLog.Log("plot stage refused: " + (Works.DisplayName ?? "work")
+							+ " lot " + (Works.ParentObject == null ? "unknown"
+								: Works.ParentObject.GetStringProperty(PlotIdProperty))
+							+ " stage=" + next + " applied="
+							+ (KingdomPlotRules.PlotStage)Works.StageApplied
+							+ " (reason on the preceding line)");
 						break;
 					}
 					Works.StageApplied = (int)next;
