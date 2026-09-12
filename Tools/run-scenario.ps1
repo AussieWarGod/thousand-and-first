@@ -74,7 +74,11 @@ function Write-TafRunRecord {
     param([Parameter(Mandatory = $true)][string]$Path,
           [Parameter(Mandatory = $true)][hashtable]$Record)
     $partial = "$Path.partial"
-    ($Record | ConvertTo-Json -Depth 12) | Set-Content -LiteralPath $partial -Encoding UTF8
+    # UTF-8 WITHOUT a BOM. Windows PowerShell 5.1's Set-Content -Encoding UTF8 prefixes EF BB BF,
+    # which Python's json module refuses (run 46 lost its session 2 to it). UTF8Encoding($false)
+    # is the 5.1-compatible way to say no BOM; the readers tolerate either form.
+    $json = ($Record | ConvertTo-Json -Depth 12) + [Environment]::NewLine
+    [IO.File]::WriteAllText($partial, $json, (New-Object Text.UTF8Encoding($false)))
     Move-Item -LiteralPath $partial -Destination $Path -Force
 }
 

@@ -112,6 +112,14 @@
 # row carries storeId=<id>; stores=<count>. Tools/check-quickstart-lifecycle.py reports storeIds and
 # fails the chain as store-drift if the OK steps ever name different stores.
 #
+# NATIVE RUN 46: lifecycle-save landed a real receipt, then the session-2 prepare refused
+# `JSONDecodeError: Unexpected UTF-8 BOM` - Windows PowerShell 5.1's Set-Content -Encoding UTF8 had
+# written run-record.json with EF BB BF all along; nothing read it until the seal-load path did.
+# Tools/run-scenario.ps1 Write-TafRunRecord now writes UTF-8 without a BOM ([IO.File]::WriteAllText
+# with UTF8Encoding($false), executed under 5.1 by Tools/tests/scenario_run_record_writer_test.py),
+# and every Python reader of a run record (Tools/scenario_run_record.py read, Tools/
+# check-quickstart-lifecycle.py read_record) decodes utf-8-sig, so a record written either way loads.
+#
 # NOT YET NATIVELY RUN with this budget: written and gate.sh-compiled only. The cold-load session
 # and the next action after it are NOT in this script; see Tools/check-quickstart-lifecycle.py for
 # why those two links still read BLOCKER without it.

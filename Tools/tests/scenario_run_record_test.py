@@ -193,6 +193,15 @@ class RunRecordSeal(unittest.TestCase):
             "--ownership", str(self.root / "process-ownership.json"),
         ])
 
+    def test_a_bom_prefixed_record_and_a_bom_free_record_both_load(self):
+        # Run 46: Windows PowerShell 5.1 wrote run-record.json with EF BB BF and json refused it.
+        payload = {"schemaVersion": 1, "profileName": "taf-scenario.Test", "script": "x"}
+        for label, prefix in (("bom", b"\xef\xbb\xbf"), ("no-bom", b"")):
+            with self.subTest(record=label), tempfile.TemporaryDirectory() as tmp:
+                (Path(tmp) / run_record.FILE_NAME).write_bytes(
+                    prefix + json.dumps(payload).encode("utf-8") + b"\n")
+                self.assertEqual(run_record.read(tmp), payload)
+
     def test_launch_and_stop_are_written_once_each(self):
         self.seal()
         self.launch()

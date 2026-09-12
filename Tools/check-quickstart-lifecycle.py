@@ -753,12 +753,7 @@ def emit(report: dict, options: dict, journals: list[Path]) -> list[str]:
     paths = [Path(name) for name in options["run-record"].split(",") if name]
     if len(paths) != len(SESSIONS):
         raise ValueError("--run-record takes the two run-record.json paths, comma separated")
-    records = []
-    for path in paths:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-        if not isinstance(payload, dict):
-            raise ValueError("run record must be a JSON object")
-        records.append(payload)
+    records = [read_record(path) for path in paths]
     bound, binding_problems = bind_journals(journals, records)
     binding_problems.extend(check_stamps(journals, records))
     # A stall is never a waiver: it is reported verbatim beside a verdict that already refuses
@@ -785,6 +780,15 @@ def emit(report: dict, options: dict, journals: list[Path]) -> list[str]:
         json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     return binding_problems + problems + unresolved
+
+
+def read_record(path: Path) -> dict:
+    """One driver run record, as written. Windows PowerShell 5.1 prefixes a UTF-8 BOM; run 46's
+    session 2 was lost to json refusing it, so the record is decoded as utf-8-sig either way."""
+    payload = json.loads(path.read_text(encoding="utf-8-sig"))
+    if not isinstance(payload, dict):
+        raise ValueError("run record must be a JSON object")
+    return payload
 
 
 def main(argv: list[str]) -> int:

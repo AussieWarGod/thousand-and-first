@@ -7,6 +7,7 @@ BLOCKER cases here are the load-bearing ones.
 """
 
 import importlib.util
+import json
 import sys
 import tempfile
 import unittest
@@ -98,6 +99,25 @@ class FounderDeath(unittest.TestCase):
         passed = checker.judge(whole_chain())
         self.assertIsNone(passed["failClass"])
         self.assertIsNone(passed["founderDeath"])
+
+
+class RunRecordEncoding(unittest.TestCase):
+    """Run 46: the driver's run-record.json may carry a UTF-8 BOM; the checker reads it either way."""
+
+    def test_a_bom_prefixed_and_a_bom_free_run_record_both_load(self):
+        payload = {"runId": "r1", "phases": {}}
+        for label, prefix in (("bom", b"\xef\xbb\xbf"), ("no-bom", b"")):
+            with self.subTest(record=label), tempfile.TemporaryDirectory() as tmp:
+                path = Path(tmp) / "run-record.json"
+                path.write_bytes(prefix + json.dumps(payload).encode("utf-8"))
+                self.assertEqual(checker.read_record(path), payload)
+
+    def test_a_non_object_record_is_refused(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "run-record.json"
+            path.write_bytes(b"\xef\xbb\xbf[1]")
+            with self.assertRaises(ValueError):
+                checker.read_record(path)
 
 
 class StoreIdentity(unittest.TestCase):
