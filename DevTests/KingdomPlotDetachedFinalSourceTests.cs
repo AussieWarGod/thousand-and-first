@@ -119,6 +119,77 @@ namespace ThousandAndFirst.Tests
 			return source.Substring(start);
 		}
 
+		/// <summary>
+		/// The engine assigns object ids lazily. The created branch of TryFinishOutput must ask the
+		/// freshly created building for .ID -- which ASSIGNS one -- before anything reads
+		/// IDIfAssigned off it, or the custody root is asked to publish under a null id and the
+		/// whole finish refuses in silence on every pass (issue #172; the same class was fixed on
+		/// the staging side in RootStagingOutput on 2026-08-30). Source-only: this fixture has no
+		/// game host, so the lazy-id behaviour itself is pinned at both sites rather than executed.
+		/// </summary>
+		[Test]
+		public void TheCreatedFinalOutputAsksForItsIdBeforeReadingIDIfAssigned()
+		{
+			string finish = Read("Growth/KingdomPlot2.31.FinishOutput.cs");
+			StringAssert.Contains("expectedOutput = building.ID;", finish);
+			string created = Between(finish, "building = GameObject.Create(entry.Blueprint)",
+				"bool exactEndpoint =");
+			int firstAssigning = created.IndexOf("building.ID;", StringComparison.Ordinal);
+			int firstLazyRead = created.IndexOf("building.IDIfAssigned", StringComparison.Ordinal);
+			ClassicAssert.GreaterOrEqual(firstAssigning, 0,
+				"the created final output must ask for building.ID");
+			ClassicAssert.IsTrue(firstLazyRead < 0 || firstAssigning < firstLazyRead,
+				"building.IDIfAssigned must never be read before building.ID has assigned one");
+			StringAssert.DoesNotContain("expectedOutput = building.IDIfAssigned;", created);
+			// The staging sibling this mirrors, so neither side can regress alone.
+			string staging = Read("Growth/KingdomArchitectureStamper.StagingCustody.cs");
+			Ordered(staging, "private static bool RootStagingOutput(",
+				"string id = Output.ID;", "StagingRootPrefix + id");
+		}
+
+		/// <summary>
+		/// A refused finish, a refused stage and the revert that follows them all say so. This is
+		/// the stall signature of issue #172: at most one line per plot per pass, because
+		/// TryFinishOutput returns at its first fault and Advance breaks at its first refusal.
+		/// </summary>
+		[Test]
+		public void ARefusedFinishStageAndRevertAreAllNamed()
+		{
+			string finish = Read("Growth/KingdomPlot2.31.FinishOutput.cs");
+			Ordered(finish,
+				"private static bool FinishOutputFault(GameObject Parent, string Step)",
+				"KingdomLog.Log(\"plot finish refused: \" + Step + \" (lot \"",
+				"return false;");
+			foreach (string step in new[] {
+				"no final building to publish",
+				"the new final output is not prepared",
+				"the published final output id did not stick",
+				"the physical phase would not reach pending",
+				"the pending physical endpoints disagree",
+				"the final output is not prepared for placing",
+				"the physical phase would not settle",
+				"the placed final building is not exact" })
+				StringAssert.Contains("FinishOutputFault(parent, \"" + step, finish);
+			// Wrapped onto its own line because it names the id it could not root under.
+			Ordered(finish, "return FinishOutputFault(parent,",
+				"\"the new final output could not be rooted under id \"",
+				"string.IsNullOrEmpty(expectedOutput) ? \"<none>\" : expectedOutput");
+			// The two wrapped calls: the root fault names the id, and both receipt faults name
+			// which side of the publication would not take it.
+			foreach (string wrapped in new[] {
+				"\"the receipt would not take the rooted final output id\"",
+				"\"the receipt would not take the new final output id\"" })
+				StringAssert.Contains(wrapped, finish);
+			string labour = Read("Growth/KingdomPlot2.26.Labour.cs");
+			Ordered(labour, "if (!Apply(Works, next))",
+				"KingdomLog.Log(\"plot stage refused: \"",
+				"\" stage=\" + next + \" applied=\"",
+				"break;");
+			string inspect = Read("Growth/KingdomPlot2.16.RecoveryInspect.cs");
+			Ordered(inspect, "KingdomLog.Log(\"plot job reverted to working: \" + inspected.Id",
+				"KingdomConstruction.FinishProjection(ref inspected, true, true);");
+		}
+
 		private static string Read(string path)
 		{
 			return Regex.Replace(TestMain.ReadRepositoryText(path), @"\s+", " ");
