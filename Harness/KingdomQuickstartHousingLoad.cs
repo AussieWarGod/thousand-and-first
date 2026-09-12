@@ -14,7 +14,7 @@ namespace ThousandAndFirst.Harness
 		internal const string Row = "quickstart-housing-load";
 		private const string Header = "taf-housing-save-v1";
 		private static readonly string[] Script = {
-			"quickstart-lifecycle marsh yes", "stagedigest", "housing-delay", "advance 10000",
+			"quickstart-lifecycle marsh yes", "stagedigest", "lifecycle-open", "housing-delay", "advance 10000",
 			"housing-retained", "advance 2400", "housing-retained", "housing-unblock",
 			"advance 4800", "housing-recovered", "housing-witness", "lifecycle-save", "stagedigest" };
 

@@ -5,8 +5,8 @@
 # Passing this persona alone proves the real save, never the cold load.
 DESCRIPTION=delayed housing retains two citizens, restores their homes and saves exact survivor identities for a separate cold load
 REQUEST=founding-first-city
-SCRIPT=quickstart-lifecycle marsh yes;stagedigest;housing-delay;advance 10000;housing-retained;advance 2400;housing-retained;housing-unblock;advance 4800;housing-recovered;housing-witness;lifecycle-save;stagedigest
-VERBS=housing-delay,housing-retained,housing-unblock,housing-recovered,housing-witness,lifecycle-save
-EXPECT=QUICKSTART-BOOT-BEGIN:OK,QUICKSTART-BOOT-OBSERVED:OK,QUICKSTART-BOOT-COMPLETE:OK,QUICKSTART-BUILD-BEGIN:OK,QUICKSTART-BUILD-QUOTE:OK,QUICKSTART-BUILD-CANPAY:OK,QUICKSTART-BUILD-COMMISSION:OK,QUICKSTART-LIFECYCLE-PROFILE:OK,QUICKSTART-BUILD-COMPLETE:OK~commissioned=true,stagedigest:OK~founded=true,housing-delay:OK~housing-recovery delayed,advance:OK,housing-retained:OK~housing-recovery retained,advance:OK,housing-retained:OK~housing-recovery retained,housing-unblock:OK~housing-recovery unblocked,advance:OK,housing-recovered:OK~housing-recovery recovered,housing-witness:OK~housing-recovery save-witness,lifecycle-save:OK~real-save=true,stagedigest:OK~founded=true,COMPLETE
+SCRIPT=quickstart-lifecycle marsh yes;stagedigest;lifecycle-open;housing-delay;advance 10000;housing-retained;advance 2400;housing-retained;housing-unblock;advance 4800;housing-recovered;housing-witness;lifecycle-save;stagedigest
+VERBS=lifecycle-open,housing-delay,housing-retained,housing-unblock,housing-recovered,housing-witness,lifecycle-save
+EXPECT=QUICKSTART-BOOT-BEGIN:OK,QUICKSTART-BOOT-OBSERVED:OK,QUICKSTART-BOOT-COMPLETE:OK,QUICKSTART-BUILD-BEGIN:OK,QUICKSTART-BUILD-QUOTE:OK,QUICKSTART-BUILD-CANPAY:OK,QUICKSTART-BUILD-COMMISSION:OK,QUICKSTART-LIFECYCLE-PROFILE:OK,QUICKSTART-BUILD-COMPLETE:OK~commissioned=true,stagedigest:OK~founded=true,lifecycle-open:OK~step=startup,housing-delay:OK~housing-recovery delayed,advance:OK,housing-retained:OK~housing-recovery retained,advance:OK,housing-retained:OK~housing-recovery retained,housing-unblock:OK~housing-recovery unblocked,advance:OK,housing-recovered:OK~housing-recovery recovered,housing-witness:OK~housing-recovery save-witness,lifecycle-save:OK~real-save=true,stagedigest:OK~founded=true,COMPLETE
 SET=growth,housing,native-regression,save-load
 TIMEOUT=1800

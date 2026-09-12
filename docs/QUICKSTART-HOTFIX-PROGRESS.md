@@ -119,3 +119,21 @@ skips; all four compile modes passed (3094/3098 ordinary, 3339/3343 harness).
 Logs: `/tmp/taf-full-cask-full-2.log`, `/tmp/taf-full-cask-portable.log`,
 `/tmp/taf-full-cask-gate.log`. The subsequent deterministic paid-plot obstruction
 needs its own harness compile and fresh native run.
+
+### Full-cask housing recovery: gameplay passed, save harness refused
+
+At `c1eb5e1f`, the revised 72-obstacle native setup proved two original roof
+departures, two repeated checks retaining the same two citizens with zero beds,
+and ordinary completion of both starter homes and the original paid fire after
+removing only owned empty obstacles. The exact survivor/departure save witness
+was recorded. The following real-save step correctly refused an ambiguous store:
+the script omitted `lifecycle-open`, so no original stockpile had been bound before
+the heart produced another dedicated store. No save or cold-load PASS is claimed.
+Evidence: `full-cask-housing-load-1` under the evidence root.
+
+The save persona now calls the existing production-read startup step before the
+shortage setup, binding the exact original store. Its strict script witness includes
+that step. This changes only the harness; the production digest remains
+`43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6`.
+A fresh native save/load attempt is required. The fourteen-day canyon/yes lifecycle
+is running separately from an immutable `c1eb5e1f` checkout.
