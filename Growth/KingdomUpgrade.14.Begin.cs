@@ -35,7 +35,7 @@ namespace ThousandAndFirst
 		/// the thing that decides whether the improvement may take it.
 		/// </summary>
 		private static void ClearImprovementGround(KingdomSystem System, Zone Z, GameObject Work,
-			KingdomArchitectureIntent Successor)
+			KingdomArchitectureIntent Successor, ImprovementGroundClearance Cleared)
 		{
 			if (Successor == null || !KingdomPlots.TryReadRect(Work,
 				out KingdomPlotRules.PlotRect before)) return;
@@ -43,17 +43,46 @@ namespace ThousandAndFirst
 				out int moved, out int beasts, out Cell post, out string refusal))
 			{
 				KingdomLog.Log("architecture: improvement ground clearance refused: " + refusal);
+				Cleared.Moved = moved;
+				Cleared.Beasts = beasts;
 				return;
 			}
+			Cleared.Moved = moved;
+			Cleared.Beasts = beasts;
+			Cleared.Post = post;
 			if (moved <= 0 && post == null) return;
 			KingdomLog.Log("architecture: improvement ground cleared: " + moved + " stood off ("
 				+ beasts + " driven) for " + Work.ShortDisplayName);
-			KingdomPlots.SayEnvelopeCleared(System, Work, Work.ShortDisplayName, moved, beasts,
-				post);
+		}
+
+		/// <summary>What the crew did to the annexed ground, held until the improvement's own
+		/// outcome is known so the founder is never told the work goes on when it did not.</summary>
+		private sealed class ImprovementGroundClearance
+		{
+			internal int Moved;
+			internal int Beasts;
+			internal Cell Post;
+			internal string Fault;
 		}
 
 		private static bool BeginCore(KingdomSystem System, Zone Z, GameObject Work,
 			Assessment A, KingdomSurvey Survey, PreparedImprovement Prepared)
+		{
+			ImprovementGroundClearance cleared = new ImprovementGroundClearance();
+			bool begun = BeginCommit(System, Z, Work, A, Survey, Prepared, cleared);
+			// Said last, with the real outcome: the transition block, the reserve and the funding
+			// can all still refuse AFTER bodies have been stood off this ground.
+			if (cleared.Moved > 0 || cleared.Post != null)
+			{
+				KingdomPlots.SayEnvelopeCleared(System, Work, Work.ShortDisplayName,
+					cleared.Moved, cleared.Beasts, cleared.Post, begun, cleared.Fault);
+			}
+			return begun;
+		}
+
+		private static bool BeginCommit(KingdomSystem System, Zone Z, GameObject Work,
+			Assessment A, KingdomSurvey Survey, PreparedImprovement Prepared,
+			ImprovementGroundClearance Cleared)
 		{
 			if (!A.Valid || !KingdomUpgradeRules.IsReady(A.Verdict) || A.Successor == null)
 			{
@@ -89,7 +118,7 @@ namespace ThousandAndFirst
 			// This is the mutating path, so the ground the improvement is about to annex is cleared
 			// here and not in Assess: our own, their posts and any beast are stood off the blocked
 			// annexed slots before the strict envelope proof reads them (issues #176, #165).
-			ClearImprovementGround(System, Z, Work, successorLayout);
+			ClearImprovementGround(System, Z, Work, successorLayout, Cleared);
 			KingdomSocketTransition transition = null;
 			KingdomArchitectureIntent transitionBefore = null;
 			KingdomArchitectureIntent transitionAfter = null;
@@ -107,6 +136,8 @@ namespace ThousandAndFirst
 					|| !TryCurrentTransition(transitionBefore, A, out transition,
 						out architectureFailure))
 				{
+					Cleared.Fault = architectureFailure
+						?? "its exact declaration changed before debit";
 					System.Ledger.Note("{{r|The plan change waits. "
 						+ (architectureFailure ?? "Its exact declaration changed before debit.")
 						+ "}}");
@@ -120,6 +151,7 @@ namespace ThousandAndFirst
 			}
 			if (!ContentsWouldFit(Work, A.Successor.Blueprint))
 			{
+				Cleared.Fault = "its exact contents are no longer safe to hand over";
 				System.Ledger.Note("{{r|The improvement waits. Its exact contents are no longer safe to hand over.}}");
 				return false;
 			}
@@ -152,6 +184,7 @@ namespace ThousandAndFirst
 			{
 				water.Rollback();
 				materials.Cancel();
+				Cleared.Fault = "its exact build effects could not be frozen";
 				System.Ledger.Note("{{r|The improvement waits. Its exact build effects could not be frozen.}}");
 				return false;
 			}
@@ -160,6 +193,7 @@ namespace ThousandAndFirst
 			{
 				water.Rollback();
 				materials.Cancel();
+				Cleared.Fault = hostedFailure;
 				System.Ledger.Note("{{r|The improvement waits. " + hostedFailure + "}}");
 				return false;
 			}
@@ -173,6 +207,8 @@ namespace ThousandAndFirst
 						KingdomHostedArcology.ReleaseCleanReservation(System, Z, Work, job.Id);
 					water.Rollback();
 					materials.Cancel();
+					Cleared.Fault = transitionFailure
+						?? "its exact transition receipt could not be frozen";
 					System.Ledger.Note("{{r|The plan change waits. "
 						+ (transitionFailure ?? "Its exact transition receipt could not be frozen.")
 						+ "}}");
@@ -191,6 +227,7 @@ namespace ThousandAndFirst
 				}
 				if (transition != null) KingdomSocketTransitions.ClearReceipt(Work, job,
 					transitionBefore, transitionAfter, transition);
+				Cleared.Fault = fundingFailure ?? "its exact stores are not ready";
 				KingdomLog.Log("improvement refused cleanly: "
 					+ (fundingFailure ?? A.SuccessorKey));
 				return false;

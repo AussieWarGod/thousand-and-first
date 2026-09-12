@@ -48,12 +48,21 @@ namespace ThousandAndFirst
 				out Refusal);
 		}
 
-		/// <summary>Names what the crew did to the annexed ground, in the raising's own words.</summary>
+		/// <summary>
+		/// Names what the crew did to the annexed ground, in the raising's own words and with the
+		/// improvement's real outcome: the ground is cleared before the transition, the reserve and
+		/// the funding have had their say, so "the work goes on" is only true once they have.
+		/// <para>The once-flags are the plot route's properties, but they are set on the WORK being
+		/// improved, not on a plot-works root, so the two routes never share a flag even when both
+		/// run in one pass.</para>
+		/// </summary>
+		/// <param name="Raised">Whether the improvement actually began.</param>
+		/// <param name="Fault">Why it did not, when it did not.</param>
 		internal static void SayEnvelopeCleared(KingdomSystem System, GameObject Owner,
-			string Name, int Moved, int Beasts, Cell Post)
+			string Name, int Moved, int Beasts, Cell Post, bool Raised, string Fault)
 		{
-			SayPlotWorkCleared(System, Owner, Name, Moved - Beasts, true, null);
-			SayPlotBeastsDriven(System, Owner, Name, Beasts, true, null);
+			SayPlotWorkCleared(System, Owner, Name, Moved - Beasts, Raised, Fault);
+			SayPlotBeastsDriven(System, Owner, Name, Beasts, Raised, Fault);
 			if (Post != null) SayPlotPostMoved(System, Owner, Name, Post);
 		}
 

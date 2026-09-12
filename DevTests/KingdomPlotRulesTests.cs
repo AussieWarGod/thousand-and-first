@@ -1178,6 +1178,33 @@ namespace ThousandAndFirst.Tests
 				KingdomPlotRules.ClearedOccupiedSlots("communal fire", 1, true, null));
 		}
 
+		/// <summary>
+		/// The improvement route clears ground BEFORE its transition, reserve and funding have had
+		/// their say, so both sentences must carry the real outcome. Executed, not pinned: these
+		/// are the exact arguments SayEnvelopeCleared forwards once BeginCore's outcome is known.
+		/// Mutation: hardcoding Raised true (what the route did before) makes both refused cases
+		/// say "and the work goes on." and fails all four assertions below; hardcoding it false
+		/// fails the two begun cases.
+		/// </summary>
+		[TestCase("the reserve refused")]
+		[TestCase(null)]
+		public void GroundClearedForARefusedImprovementNeverSaysTheWorkGoesOn(string Fault)
+		{
+			string settlers = KingdomPlotRules.ClearedOccupiedSlots("moot", 2, false, Fault);
+			string beasts = KingdomPlotRules.DroveBeastsOff("moot", 1, false, Fault);
+			StringAssert.DoesNotContain("and the work goes on.", settlers);
+			StringAssert.DoesNotContain("and the work goes on.", beasts);
+			StringAssert.Contains("but the raising was refused:", settlers);
+			StringAssert.Contains("but the raising was refused:", beasts);
+			StringAssert.Contains(Fault ?? "the ground would not take it", settlers);
+			StringAssert.Contains(Fault ?? "the ground would not take it", beasts);
+			// The same bodies, the same counts, the other outcome: the only difference is the truth.
+			StringAssert.Contains("and the work goes on.",
+				KingdomPlotRules.ClearedOccupiedSlots("moot", 2, true, null));
+			StringAssert.Contains("and the work goes on.",
+				KingdomPlotRules.DroveBeastsOff("moot", 1, true, null));
+		}
+
 		[Test]
 		public void AMovedPostNamesTheGroundItMovedTo()
 		{

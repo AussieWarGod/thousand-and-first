@@ -204,8 +204,10 @@ namespace ThousandAndFirst
 				// report exactly how many stayed put and how many are still standing off.
 				// i is included: a move can return true and still land off-target, leaving that
 				// body displaced. Everything in plan[0..i] not standing on its origin comes back.
-				int back = WalkBack(plan, i + 1, out int stranded);
+				int back = WalkBack(plan, i + 1, out int stranded, out int strandedBeasts,
+					reasons);
 				Moved = stranded;
+				Beasts = strandedBeasts;
 				return ClearanceFault("a settler would not stand off the site; " + back
 					+ " stood back" + (stranded > 0
 						? " and " + stranded + " could not be stood back" : ""), out Refusal);
@@ -218,12 +220,15 @@ namespace ThousandAndFirst
 		/// <summary>Walks every one of the first <paramref name="Count"/> planned bodies that is no
 		/// longer standing on its origin back onto it. A body that never left is not touched and
 		/// counts as neither. Returns how many stood back; <paramref name="Stranded"/> counts those
-		/// that could not.</summary>
+		/// that could not, and <paramref name="StrandedBeasts"/> how many of those were beasts, so
+		/// both sentences still count the right bodies on the failing path.</summary>
 		private static int WalkBack(List<KingdomLayoutDisplacement> Plan, int Count,
-			out int Stranded)
+			out int Stranded, out int StrandedBeasts,
+			List<KingdomPlotRules.OccupantReason> Reasons)
 		{
 			int back = 0;
 			Stranded = 0;
+			StrandedBeasts = 0;
 			for (int i = 0; i < Count; i++)
 			{
 				KingdomLayoutDisplacement move = Plan[i];
@@ -240,6 +245,8 @@ namespace ThousandAndFirst
 					continue;
 				}
 				Stranded++;
+				if (Reasons != null && i < Reasons.Count
+					&& Reasons[i] == KingdomPlotRules.OccupantReason.Beast) StrandedBeasts++;
 				KingdomLog.Log("architecture: occupant " + move.Body.IDIfAssigned
 					+ " could not be stood back");
 			}

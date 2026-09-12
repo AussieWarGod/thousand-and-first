@@ -240,8 +240,8 @@ namespace ThousandAndFirst.Tests
 				"return TryClearManagedOccupants(System, Z, Owner, new HashSet<int>(annexed.Keys),",
 				"annexed, Successor.Rect, out Moved, out Beasts, out Post,",
 				"internal static void SayEnvelopeCleared(",
-				"SayPlotWorkCleared(System, Owner, Name, Moved - Beasts, true, null);",
-				"SayPlotBeastsDriven(System, Owner, Name, Beasts, true, null);",
+				"SayPlotWorkCleared(System, Owner, Name, Moved - Beasts, Raised, Fault);",
+				"SayPlotBeastsDriven(System, Owner, Name, Beasts, Raised, Fault);",
 				"internal static bool IsMovableEnvelopeOccupant(",
 				"KingdomPlotRules.IsMovableOccupant(ReasonFor(System, survey, Body))",
 				"internal static void NameEnvelopeOccupant(");
@@ -251,13 +251,26 @@ namespace ThousandAndFirst.Tests
 			AssertOrdered(begin,
 				"KingdomArchitectureIntent successorLayout = Prepared?.Architecture;",
 				"out successorLayout, out _, out _, out architectureFailure)",
-				"ClearImprovementGround(System, Z, Work, successorLayout);");
+				"ClearImprovementGround(System, Z, Work, successorLayout, Cleared);");
+			// The sentence waits for the improvement's own outcome: the clearance only records
+			// what it did, and BeginCore says it after BeginCommit has returned.
+			AssertOrdered(begin,
+				"bool begun = BeginCommit(System, Z, Work, A, Survey, Prepared, cleared);",
+				"if (cleared.Moved > 0 || cleared.Post != null)",
+				"KingdomPlots.SayEnvelopeCleared(System, Work, Work.ShortDisplayName,",
+				"cleared.Moved, cleared.Beasts, cleared.Post, begun, cleared.Fault);",
+				"return begun;",
+				"private static bool BeginCommit(");
+			StringAssert.DoesNotContain("SayEnvelopeCleared(System, Work, Work.ShortDisplayName, moved, beasts,",
+				begin);
 			AssertOrdered(begin,
 				"private static void ClearImprovementGround(",
 				"KingdomPlots.TryClearEnvelopeOccupants(System, Z, Work, Successor, before,",
 				"KingdomLog.Log(\"architecture: improvement ground clearance refused: \" + refusal)",
-				"KingdomLog.Log(\"architecture: improvement ground cleared: \"",
-				"KingdomPlots.SayEnvelopeCleared(System, Work, Work.ShortDisplayName, moved, beasts,");
+				"Cleared.Moved = moved;",
+				"Cleared.Beasts = beasts;",
+				"Cleared.Post = post;",
+				"KingdomLog.Log(\"architecture: improvement ground cleared: \"");
 			string assess = Read("Growth/KingdomUpgrade.10.Assessment.cs");
 			StringAssert.DoesNotContain("TryClearEnvelopeOccupants", assess);
 			StringAssert.DoesNotContain("ClearImprovementGround", assess);

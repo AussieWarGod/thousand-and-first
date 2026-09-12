@@ -192,8 +192,9 @@ namespace ThousandAndFirst.Tests
 				"&& (!anchored || TryMovePost(move.Body, move.Target)))",
 				"if (reasons[i] == KingdomPlotRules.OccupantReason.Beast) drove++;",
 				"else if (anchored) Post = move.Target;",
-				"int back = WalkBack(plan, i + 1, out int stranded)",
+				"int back = WalkBack(plan, i + 1, out int stranded, out int strandedBeasts,",
 				"Moved = stranded;",
+				"Beasts = strandedBeasts;",
 				"return ClearanceFault(\"a settler would not stand off the site; \" + back",
 				"Moved = walked;",
 				"Beasts = drove;");
@@ -201,11 +202,13 @@ namespace ThousandAndFirst.Tests
 			// ground it stood on, and the fault names both counts.
 			AssertOrdered(clearance,
 				"private static int WalkBack(List<KingdomLayoutDisplacement> Plan, int Count,",
+				"out int Stranded, out int StrandedBeasts,",
 				"|| move.Body.CurrentCell == move.Origin) continue;",
 				"move.Body.SystemLongDistanceMoveTo(move.Origin, 0, forced: true,",
 				"&& move.Body.CurrentCell == move.Origin)",
 				"back++;",
-				"Stranded++;");
+				"Stranded++;",
+				"Reasons[i] == KingdomPlotRules.OccupantReason.Beast) StrandedBeasts++;");
 			string labourWindow = TestMain.ReadRepositoryText(
 				"Growth/KingdomPlot2.26b.LabourWindow.cs");
 			StringAssert.Contains(
