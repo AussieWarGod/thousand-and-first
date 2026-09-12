@@ -36,6 +36,7 @@ namespace ThousandAndFirst
 				InfrastructureFailure, out target)) return;
 			if ((int)target <= Works.StageApplied)
 			{
+				SayPlotStageWaiting(Works, target);
 				return;
 			}
 			KingdomSystem.Guard("plot raising", delegate
@@ -43,12 +44,20 @@ namespace ThousandAndFirst
 				while (Works.StageApplied < (int)target && Works.DesignKey != null)
 				{
 					KingdomPlotRules.PlotStage next = (KingdomPlotRules.PlotStage)(Works.StageApplied + 1);
-					if (!Apply(Works, next))
+					if (!Apply(Works, next, System))
 					{
 						// The stage could not land -- a design a third-party mod withdrew between
 						// staking and finishing, or a zone torn down under us. The plot stays
 						// exactly where it is and tries again, which is the same "waiting is not
-						// failing" contract a staked plan already holds.
+						// failing" contract a staked plan already holds. It is named, though:
+						// this break is how a paid raising stalled for eleven passes in silence
+						// (issue #172). The step's own reason is on the line just before this one.
+						KingdomLog.Log("plot stage refused: " + (Works.DisplayName ?? "work")
+							+ " lot " + (Works.ParentObject == null ? "unknown"
+								: Works.ParentObject.GetStringProperty(PlotIdProperty))
+							+ " stage=" + next + " applied="
+							+ (KingdomPlotRules.PlotStage)Works.StageApplied
+							+ " (reason on the preceding line)");
 						break;
 					}
 					Works.StageApplied = (int)next;
@@ -164,7 +173,8 @@ namespace ThousandAndFirst
 				global::System.Globalization.CultureInfo.InvariantCulture, out Value);
 		}
 
-		private static bool Apply(r_KingdomPlotWorks Works, KingdomPlotRules.PlotStage Stage)
+		private static bool Apply(r_KingdomPlotWorks Works, KingdomPlotRules.PlotStage Stage,
+			KingdomSystem System)
 		{
 			GameObject parent = Works.ParentObject;
 			Zone zone = parent?.CurrentZone;
@@ -210,8 +220,8 @@ namespace ThousandAndFirst
 						return false;
 					}
 					if (!ClearGround(Works, zone, plot, footprint, roof, managed)) return false;
-					if (currentAuthored && !KingdomArchitectureStamper.TryStageLayer(parent,
-						zone, ArchitectureLayer.Ground, out string groundFailure))
+					if (currentAuthored && !TryGroundStageWithOccupants(System, zone, parent,
+						Works, managed, authored, plot, out string groundFailure))
 					{
 						KingdomLog.Log("architecture: ground layer refused: " + groundFailure);
 						return false;

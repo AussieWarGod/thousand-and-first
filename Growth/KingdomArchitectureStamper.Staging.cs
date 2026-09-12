@@ -160,7 +160,8 @@ namespace ThousandAndFirst
 			}
 			else
 			{
-				if (!CanInsert(Owner, Z, cell, Lot, Intent.SnapshotHash, Placement, out Failure))
+				if (!CanInsert(Owner, Z, cell, Lot, Intent.SnapshotHash, Placement, Snapshot,
+					out Failure))
 					return false;
 				try { placed = GameObject.Create(Placement.Blueprint); }
 				catch (Exception exception)
