@@ -80,9 +80,11 @@ namespace ThousandAndFirst.Harness
 		/// from live state -- nothing is taken from the durable receipts except the job identity
 		/// that names which job to look at.
 		/// </summary>
-		private static string Witness(XRLGame Game, Zone Zone, KingdomSystem System, out string Failure)
+		private static string Witness(XRLGame Game, Zone Zone, KingdomSystem System, out string Failure,
+			out string Store)
 		{
 			Failure = null;
+			Store = "storeId=unresolved; stores=unread";
 			string jobId = KingdomScenarioDurableState.Observe(JobKey).String;
 			if (!KingdomConstruction.TryRead(out List<KingdomConstructionJob> jobs, out string readFailure))
 			{ Failure = readFailure ?? "the construction registry could not be read for the witness"; return null; }
@@ -94,8 +96,9 @@ namespace ThousandAndFirst.Harness
 			{ Failure = "the lifecycle job is not complete; there is nothing finished to save"; return null; }
 			string standing = Standing(Zone, job, out GameObject building);
 			if (standing != null) { Failure = standing; return null; }
-			if (!TryStockpile(Zone, out GameObject stockpile, out string stockpileFailure))
+			if (!TryStockpile(Game, Zone, out GameObject stockpile, out string stockpileFailure))
 			{ Failure = stockpileFailure; return null; }
+			Store = StoreClause(Zone, stockpile);
 			if (!KingdomQuickstartBuildCensus.TakeStock(Zone, stockpile, false,
 				out var stock, out string stockFailure)) { Failure = stockFailure; return null; }
 			// The plot identity is READ from the standing building's own recorded rect, so both
@@ -187,7 +190,7 @@ namespace ThousandAndFirst.Harness
 					return Refuse(SaveStep, "the save directory already holds primary or backup evidence");
 			// The witness is written BEFORE the save, so what the cold-load session compares
 			// against is what this world actually held at the moment it was serialized.
-			string wire = Witness(Game, Zone, System, out string witnessFailure);
+			string wire = Witness(Game, Zone, System, out string witnessFailure, out string store);
 			if (wire == null) return Refuse(SaveStep, witnessFailure);
 			Game.SetStringGameState(KingdomScenarioSaveFiles.SnapshotKey, wire);
 			if (!KingdomScenarioDurableState.ProvesExactText(KingdomScenarioSaveFiles.SnapshotKey, wire))
@@ -216,7 +219,7 @@ namespace ThousandAndFirst.Harness
 				return Refuse(SaveStep, "the save receipt did not persist exactly");
 			Ok = true;
 			return Stamped("native-lifecycle step=save; witness=published; " + Identities(System)
-				+ "; saveId=" + Game.GameID + "; jobId=" + jobId + "; real-save=true"
+				+ "; saveId=" + Game.GameID + "; jobId=" + jobId + "; " + store + "; real-save=true"
 				+ "; turns=" + Game.Turns + "; cold-load=unproved-in-this-session");
 		}
 	}

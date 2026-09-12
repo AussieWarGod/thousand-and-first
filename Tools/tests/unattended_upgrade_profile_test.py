@@ -59,8 +59,12 @@ def journal(mode):
                ("stagedigest", "observed"), ("SCRIPT-COMPLETE", "3 verb(s) ran without a refusal")]
     if mode == "stage-source":
         entries[1] = ("SCRIPT-BEGIN", "5 verb(s) from owned sealed profile")
-        entries[3:4] = [("upgrade-stage-setup", "founded"), ("advance", "2400 turns"),
-                        ("advance-progress", "100 turns"), ("advance-complete", "2400 turns"),
+        entries[3:4] = [("upgrade-stage-setup", "founded"),
+                        ("advance-guard", "start; founderCell=40,12; guard=ignoreme-armed"),
+                        ("advance", "2400 turns"),
+                        ("advance-progress", "100 turns"),
+                        ("advance-guard", "end; founderCell=40,12; guard=ignoreme-released"),
+                        ("advance-complete", "2400 turns"),
                         ("upgrade-stage-save", "native fixture evidence")]
         entries[-1] = ("SCRIPT-COMPLETE", "5 verb(s) ran without a refusal")
     entries[0:0] = [("AUTOSTART", "exact sealed native scenario"),
@@ -239,6 +243,57 @@ class NativeSourceReceiptTest(unittest.TestCase):
                       'donor_witness["receiptSha256"] == reference["receiptSha256"]',
                       "donorAuthority=donor_authority", "source_link(source, config, state"):
             self.assertIn(token, text)
+
+    def test_the_founder_guard_rows_must_bracket_the_stage_source_advance_exactly(self):
+        # Harness/KingdomScenarioFounderGuard.cs brackets EVERY scripted advance with a start row
+        # immediately before `advance` and an end row immediately before `advance-complete`.
+        # The witness accepts exactly that shape and refuses every other placement or count.
+        good = journal("stage-source")
+        start = b"2026-09-08T11:00:00.000Z\tadvance-guard\tOK\tstart; founderCell=40,12; guard=ignoreme-armed\n"
+        end = b"2026-09-08T11:00:00.000Z\tadvance-guard\tOK\tend; founderCell=40,12; guard=ignoreme-released\n"
+        bad = {
+            "no guard rows": good.replace(start, b"").replace(end, b""),
+            "start row missing": good.replace(start, b""),
+            "end row missing": good.replace(end, b""),
+            "start row after the advance": good.replace(start, b"").replace(
+                b"\tadvance-progress\t", b"\tadvance-guard\tOK\tstart; late\n2026-09-08T11:00:00.000Z\tadvance-progress\t", 1),
+            "a third guard row": good.replace(end, end + start),
+            "end row after completion": good.replace(end, b"").replace(
+                b"\tupgrade-stage-save\t", b"\tadvance-guard\tOK\tend; late\n2026-09-08T11:00:00.000Z\tupgrade-stage-save\t", 1),
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "scenario-journal.tsv").write_bytes(good)
+            witnesses.script_journal(root, "stage-source")
+            for case, raw in bad.items():
+                with self.subTest(case=case):
+                    self.assertNotEqual(raw, good, case)
+                    (root / "scenario-journal.tsv").write_bytes(raw)
+                    with self.assertRaises(ValueError):
+                        witnesses.script_journal(root, "stage-source")
+
+    def test_a_guard_row_on_a_non_advancing_road_is_refused(self):
+        raw = journal("source-donor").replace(
+            b"\tupgrade-source-donor\t", b"\tadvance-guard\tOK\tstart; x\n2026-09-08T11:00:00.000Z\tupgrade-source-donor\t", 1)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "scenario-journal.tsv").write_bytes(raw)
+            with self.assertRaises(ValueError) as refused:
+                witnesses.script_journal(root, "source-donor")
+            self.assertIn("unexpectedly advanced", str(refused.exception))
+
+    def test_the_real_row_emitter_arms_on_every_advance_and_gates_the_row_on_arming(self):
+        # A Python test cannot run the C# path, so the emitter is pinned as text
+        # (DevTests/KingdomScenarioFounderSafetySourceTests.cs pins the same order).
+        advance = (TOOLS.parent / "Harness/KingdomScenarioAdvance.cs").read_text()
+        arm = advance.index("string guard = KingdomScenarioFounderGuard.Arm(player);")
+        gate = advance.index("if (KingdomScenarioFounderGuard.Armed)", arm)
+        row = advance.index('KingdomScenarioJournal.Append(KingdomScenarioFounderGuard.Row, true, "start; " + guard);', gate)
+        self.assertLess(arm, gate)
+        self.assertLess(gate, row)
+        guard = (TOOLS.parent / "Harness/KingdomScenarioFounderGuard.cs").read_text()
+        self.assertNotIn("LifecycleRequested", guard)
+        self.assertLess(guard.index("internal static string Arm("), guard.index("The.Core.IgnoreMe = true;"))
 
     def test_boot_prefix_cannot_be_missing_duplicated_reordered_or_trailing(self):
         original = journal("source-donor").splitlines(keepends=True)

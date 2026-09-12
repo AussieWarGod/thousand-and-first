@@ -57,6 +57,69 @@
 # refuses honestly when the turn budget expires before the building stands, exactly as on the
 # founding road.
 #
+# NATIVE RUN 36 (13122f0): THE FOUNDER DIED MID-ADVANCE. Boot, build and lifecycle-open landed
+# clean, then during `advance 7200` a wandering creature bit the founder (the player body, standing
+# on the rite cell with nobody at the keyboard) to death; succession refused (HeirUnreachable);
+# the engine lowered Game.Running and the AutoRunner, which wakes only on the player's own
+# BeginTakeActionEvent, could never journal a terminal row: no advance-progress row, ~50 minutes of
+# silence. Two harness-only changes, both disclosed here, nothing in production touched:
+#   1. DEATH IS TERMINAL (Harness/KingdomScenarioAutoRunner.Death.cs). The runner now observes
+#      AfterDieEvent through the same player registrar production's seal uses and lands
+#      `SCRIPT-STOPPED DIED <deathCategory>; reason=...; founderCell=...; guard=...` before the
+#      engine's death popup. Tools/check-quickstart-lifecycle.py reads that prefix as the distinct
+#      FAIL class `founder-died` (failClass), which outranks every other verdict (a chain FAIL or the
+#      BLOCKER the unreached links would otherwise read). EXPECTED AFTERMATH: Finish releases
+#      Popup.Suppress, so the engine's death popup (GameObject.Die -> ShowDeathMessage) then BLOCKS
+#      the process on a keypress nobody sends; that frozen death screen is not a new hang - the
+#      terminal row is already on disk and the driver reaps the process on it. The driver that reads
+#      the row is Tools/run-personas.sh (persona_matrix.terminal_row); Tools/run-scenario.ps1 does
+#      not parse SCRIPT-STOPPED/SCRIPT-COMPLETE at all, so a run-scenario.ps1 operator must read the
+#      journal's last row themselves.
+#   2. THE FOUNDER IS NOT A COMBAT TARGET DURING THE SCRIPTED ADVANCE
+#      (Harness/KingdomScenarioFounderGuard.cs). Originally this command only; widened after the
+#      run 39 investigation to EVERY scripted advance on every road (disclosed once in TESTING.md).
+#      From the moment `advance` arms until it ends by any route, the guard raises the engine's own
+#      XRLCore.IgnoreMe (decompile 2.0.211.51 XRL/Core/XRLCore.cs:217, the flag the engine's
+#      `ignoreme` wish toggles, Wishing.cs:3396-3398): Brain.WantToKill pushes no Kill goal against
+#      the player (Brain.cs:1075-1077) and GameObject.IsHostileTowards answers false toward the
+#      player (GameObject.cs:11431-11433). It is NOT invulnerability - TakeDamage/Die never read
+#      it, spawning is untouched, XRLCore.Calm and IDKFA are not used, the flag is NonSerialized
+#      and the prior value is restored at release. Two bookkeeping `advance-guard` rows (start/end)
+#      record founderCell=x,y, the guard state, and ignoreMe=; the advance-guard start row lands
+#      just before the `advance OK` row because the flag must be up before the wait's first spend.
+#      Both rows land ONLY when the guard armed, which is now every advancing road; they are
+#      bookkeeping (persona_matrix BOOKKEEPING) and Tools/upgrade_profile_witnesses.py expects the
+#      two of them around the stage-source advance. The DIED row also names killer=/weapon=/
+#      projectile=/killerText=/accidental= from the engine's own death event (IDeathEvent.cs:6-18).
+#      A pump exception lowers the flag in a finally; a script stop cancels the wait and the guard.
+#      LIMIT: the preferred "walk the founder into the camp tent / heart interior first" is inert
+#      at Camp stage - the tent rows are staked, unwalled plots and the heart has no interior cell
+#      yet - so the founder stays on the cell the boot left him on (walk=none in the row).
+#
+# NATIVE RUN 38 (2fa563c): lifecycle-grown built=1 for the first time, then lifecycle-save refused
+# "more than one dedicated stockpile stands here". Both stores are lawful production artefacts and
+# both are kept: the Quickstart bootstrap's camp materials chest (World/KingdomQuickstartBootstrap.
+# Materials.cs:34; the store lifecycle-open read, id 495 in that run) and the heart's own dry store
+# r_KingdomHeartStockpile (RuntimeData/ObjectBlueprints.xml KingdomStockpile=1; Architecture/
+# KingdomArchitectures-CivicFaith.xml palette civic-heart-natural slot "store"), stamped when the
+# settlement raised heart rung 1 (heartbasin) during the 7200-turn advance (Player.log "heart rung
+# raised: 1 (heartbasin)"). Nothing is deleted or undedicated. The harness fault was binding to a
+# SCAN ("exactly one") instead of to the store it opened with: lifecycle-open now records the store
+# in its durable opened receipt (zone|storeId|turns, a string game state that survives the save),
+# every later step - build, save, and session 2's loaded/next - resolves THAT id among the stores
+# standing (Harness/KingdomQuickstartLifecycleStoreRules.cs, value-tested: ambiguity with a bound
+# id resolves, without one refuses, a bound store that no longer stands refuses), and every step's
+# row carries storeId=<id>; stores=<count>. Tools/check-quickstart-lifecycle.py reports storeIds and
+# fails the chain as store-drift if the OK steps ever name different stores.
+#
+# NATIVE RUN 46: lifecycle-save landed a real receipt, then the session-2 prepare refused
+# `JSONDecodeError: Unexpected UTF-8 BOM` - Windows PowerShell 5.1's Set-Content -Encoding UTF8 had
+# written run-record.json with EF BB BF all along; nothing read it until the seal-load path did.
+# Tools/run-scenario.ps1 Write-TafRunRecord now writes UTF-8 without a BOM ([IO.File]::WriteAllText
+# with UTF8Encoding($false), executed under 5.1 by Tools/tests/scenario_run_record_writer_test.py),
+# and every Python reader of a run record (Tools/scenario_run_record.py read, Tools/
+# check-quickstart-lifecycle.py read_record) decodes utf-8-sig, so a record written either way loads.
+#
 # NOT YET NATIVELY RUN with this budget: written and gate.sh-compiled only. The cold-load session
 # and the next action after it are NOT in this script; see Tools/check-quickstart-lifecycle.py for
 # why those two links still read BLOCKER without it.
