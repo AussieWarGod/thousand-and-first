@@ -72,3 +72,20 @@ and combination-coverage backlog remain active; no Beta or release-readiness cla
 Validation update: four final compile modes passed at production inventory `e2faa4877de8f08945de13b5cbda24573afecf36f73e15fffee78b74cdbe7066`. Full tooling initially failed because the new nine-day advance exceeded the per-verb 10000-turn limit and the persona census still expected 92. `439f980` splits it into 7200 + 3600, records 93 personas; all 60 persona-matrix tests and 25 lifecycle source contracts pass. The full tooling failure is retained in `/tmp/taf-hotfix-tools-final.log`; the corrected full rerun passed 1066 tests with 12 platform skips in `/tmp/taf-hotfix-tools-corrected.log`. Nine-day prepare attempts 1 and 2 launched no game (oversized advance, then a randomly generated underscore rejected by the exact profile-name grammar). Attempt 3 used the canonical mktemp profile allocator; its failure is retained below.
 
 The first completed nine-day run (`439f980`, profile `/mnt/c/taf-scenario.6JYYg5`) FAILED. Both shelters and the paid fire finished, but 24 starter drams ran out: two original citizens emigrated for drought by day nine. One seal daily MODERROR also classified a physically obstructed exterior entrance at 24,17 as malformed building evidence. Candidate corrections: new worlds receive 48 finite drams; typed exterior-ingress obstruction defers seal capture only after all component and internal passability checks succeed. A new native probe temporarily blocks a completed home with an exact owned wall and liquid carrier, requires Pending with unchanged stage, removes each obstacle, and verifies the same home again. A missing entrance remains a structural refusal. Those corrections passed current compile and full suites, as recorded above. All earlier PASS claims remain bound to their stated bytes.
+
+## Housing crisis cold-load extension — native run pending
+
+`quickstart-housing-recovery-save.persona` repeats the full adverse housing scenario,
+then freezes the two exact surviving IDs and two exact departed IDs before a real
+save. Its separate load lane reads that evidence, requires the same original
+Quickstart receipt, two citizen/roll/home assignments and two absent departed
+bodies, then uses the existing paid-building/load/next-commission checks.
+The normal lifecycle continues to require all four founders. The new lane is
+claimed by its sealed housing-witness verb and requires its entire exact script;
+it never edits citizens, housing or production receipts during load.
+
+The source-only persona does not prove cold load by itself. Both sessions need
+strict Player.log checks and receipt-owned stops. Four compile modes passed
+(3094/3098 ordinary, 3339/3343 harness), 60 persona tests and 25 lifecycle source
+contracts passed. Production inventory remains `edb507bb9f3fc5203e4fe3f83312f4c4c9adda7c9fbba99e6b2a73145a212205`.
+Native housing-crisis cold-load evidence is still owed.

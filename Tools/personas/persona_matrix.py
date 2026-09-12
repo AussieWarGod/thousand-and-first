@@ -72,6 +72,7 @@ BOOKKEEPING = frozenset(
         "lifecycle-preactivation",
         "quickstart-settlement",
         "quickstart-ingress",
+        "quickstart-housing-load",
         # A third-party verb provider the admission law refused. It describes the PROFILE a run was
         # launched into, not a step the script asked for, so a persona must not go red because
         # somebody else's mod shipped a broken provider. `Tools/run-personas.sh` surfaces these

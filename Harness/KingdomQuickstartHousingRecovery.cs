@@ -156,6 +156,14 @@ namespace ThousandAndFirst.Harness
 			return result;
 		}
 
+		internal string SaveWitness()
+		{
+			Require(Phase == 3 && Fault == null && Retained != null
+				&& Retained.SetEquals(Citizens()), "housing recovery must finish before its save witness");
+			KingdomQuickstartHousingLoad.Record(Game, Zone, System, Retained, Departed);
+			return Report("save-witness", Retained.Count);
+		}
+
 		private string Report(string State, int Citizens)
 		{
 			return "housing-recovery " + State + "; citizens=" + Citizens + "; roofDepartures=" + Departed.Count

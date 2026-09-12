@@ -13,7 +13,7 @@ namespace ThousandAndFirst.Harness
 		public int ScenarioVerbApiVersion { get { return KingdomScenarioVerbApi.Version; } }
 		public IEnumerable<string> ScenarioVerbs
 		{
-			get { return new[] { "housing-delay", "housing-retained", "housing-unblock", "housing-recovered" }; }
+			get { return new[] { "housing-delay", "housing-retained", "housing-unblock", "housing-recovered", "housing-witness" }; }
 		}
 		public string RunScenarioVerb(string Verb, string Argument, out bool Ok)
 		{
@@ -44,6 +44,7 @@ namespace ThousandAndFirst.Harness
 					case "housing-retained": result = Active.CheckRetained(); break;
 					case "housing-unblock": result = Active.Unblock(); break;
 					case "housing-recovered": result = Active.Recovered(); break;
+					case "housing-witness": result = Active.SaveWitness(); break;
 					default: throw new InvalidOperationException("unknown housing recovery verb");
 				}
 				Ok = true; return result;
