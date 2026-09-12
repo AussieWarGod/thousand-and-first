@@ -61,6 +61,8 @@ namespace ThousandAndFirst.Harness
 			if (failure != null) return Refuse(GrownStep, failure);
 			if (!KingdomQuickstartSettlementChecks.Observe(Game, Zone, System, "grown", out string settlementFailure))
 				return Refuse(GrownStep, settlementFailure);
+			if (!KingdomQuickstartIngressChecks.Verify(Game, Zone, out string ingressFailure))
+				return Refuse(GrownStep, ingressFailure);
 			Ok = true;
 			// The finished work is reported linked to what was paid for: the completed registry
 			// row's own identity, and the paid job it fulfils as the commission published it.

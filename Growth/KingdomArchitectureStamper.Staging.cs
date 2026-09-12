@@ -45,7 +45,12 @@ namespace ThousandAndFirst
 		}
 
 		public static bool TryVerifyComplete(GameObject Owner, Zone Z, out string Failure)
+			=> TryVerifyComplete(Owner, Z, out Failure, out _);
+
+		internal static bool TryVerifyComplete(GameObject Owner, Zone Z, out string Failure,
+			out bool IngressBlocked)
 		{
+			IngressBlocked = false;
 			Failure = null;
 			KingdomArchitectureIntent intent;
 			ArchitectureLayoutSnapshot snapshot;
@@ -64,7 +69,7 @@ namespace ThousandAndFirst
 			}
 			return TryVerifyPassability(Z, intent, snapshot, lot, out Failure)
 				&& KingdomArchitectureRuntime.TryVerifyPhysicalIngressRoutes(
-					Z, intent.Rect, snapshot, out Failure);
+					Z, intent.Rect, snapshot, out Failure, out IngressBlocked);
 		}
 
 		private static bool TrySettlePlacement(GameObject Owner, Zone Z,

@@ -39,7 +39,7 @@ namespace ThousandAndFirst
 		public const int AdvisorCellX = 28;
 		public const int AdvisorCellY = 16;
 
-		public const int StarterWaterDrams = 24;
+		public const int StarterWaterDrams = 48;
 		public const int StarterFoodServings = 12;
 		public const int StarterMud = 1;
 		public const int StarterBrush = 3;

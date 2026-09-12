@@ -81,12 +81,16 @@ namespace ThousandAndFirst
 				ArchitectureLayoutSnapshot snapshot;
 				if (!KingdomArchitectureRuntime.TryRead(root, out intent, out Failure)
 					|| !KingdomArchitectureRuntime.TryDecode(intent, out snapshot, out Failure)
-					|| !KingdomArchitectureStamper.TryVerifyComplete(root, Active, out Failure)
 					|| intent.EncodedSnapshot.Length > KingdomInheritanceSpatialRules.MaxSnapshotChars
 					|| intent.MainWorldX != row.X || intent.MainWorldY != row.Y
 					|| root.CurrentCell != Active.GetCell(row.X, row.Y))
 					return Malformed("an authored work has incomplete or changed frozen evidence: "
 						+ Failure, out Failure);
+				if (!KingdomArchitectureStamper.TryVerifyComplete(root, Active, out Failure,
+					out bool ingressBlocked))
+					return ingressBlocked ? KingdomInheritanceSpatialCaptureResult.Pending
+						: Malformed("an authored work has incomplete or changed frozen evidence: "
+							+ Failure, out Failure);
 				KingdomInheritanceSpatialRules.Rect rect;
 				if (!KingdomInheritanceSpatialRules.TrySnapshotRect(snapshot, row.X, row.Y,
 					out rect) || rect.X1 != intent.Rect.X1 || rect.Y1 != intent.Rect.Y1

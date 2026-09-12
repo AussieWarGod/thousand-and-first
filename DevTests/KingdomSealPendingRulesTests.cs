@@ -39,6 +39,22 @@ namespace ThousandAndFirst.Tests
 				Is.EqualTo(expected));
 
 		[Test]
+		public void PhysicalIngressWaitsOnlyAfterBuildingComponentsAreVerified()
+		{
+			string capture = TestMain.ReadRepositoryText("Core/KingdomInheritanceSpatial.cs");
+			Assert.That(capture, Does.Contain("out bool ingressBlocked)"));
+			Assert.That(capture, Does.Contain("return ingressBlocked ? KingdomInheritanceSpatialCaptureResult.Pending"));
+			string staging = TestMain.ReadRepositoryText("Growth/KingdomArchitectureStamper.Staging.cs");
+			int complete = staging.IndexOf("internal static bool TryVerifyComplete(");
+			int components = staging.IndexOf("!TryExactOutput(", complete);
+			int passage = staging.IndexOf("TryVerifyPassability(Z, intent, snapshot, lot", complete);
+			int ingress = staging.IndexOf("out Failure, out IngressBlocked)", complete);
+			Assert.That(components, Is.GreaterThan(complete));
+			Assert.That(passage, Is.GreaterThan(components));
+			Assert.That(ingress, Is.GreaterThan(passage));
+		}
+
+		[Test]
 		public void FirstLoadWithoutAStageAlsoCarriesTypedPending()
 		{
 			string source = TestMain.ReadRepositoryText("Core/KingdomSeal.Synchronization.cs");

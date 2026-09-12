@@ -54,7 +54,7 @@ namespace ThousandAndFirst
 			"Quickstart normally provides four founding citizens and two marked shelter plots. "
 			+ "Open your charter to check the citizen roll and construction. Let the citizens finish "
 			+ "those shelters before recruiting more people; keep the plots clear. "
-			+ "The casks start with twenty-four drams and the larder twelve meals. Refill them: "
+			+ "The casks start with forty-eight drams and the larder twelve meals. Refill them: "
 			+ "they do not produce supplies. I am a visiting guide, not on your roll, and I do not build.";
 
 		/// <summary>How he ends it. The house farewell.</summary>
