@@ -86,10 +86,17 @@ def record_path(root: str) -> Path:
     return Path(root) / FILE_NAME
 
 
+# Windows PowerShell 5.1's Set-Content -Encoding UTF8 writes a UTF-8 BOM (EF BB BF); json.loads
+# refuses it ("Unexpected UTF-8 BOM"). Run 46 lost its session 2 to exactly that. The writer
+# (Tools/run-scenario.ps1 Write-TafRunRecord) now writes without a BOM, and every reader of a run
+# record tolerates one either way: a record is bytes somebody else wrote, never re-typed here.
+RECORD_ENCODING = "utf-8-sig"
+
+
 def read(root: str) -> dict:
     path = record_path(root)
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
+        payload = json.loads(path.read_text(encoding=RECORD_ENCODING))
     except (OSError, ValueError) as error:
         fail("cannot read %s (%s)" % (path, type(error).__name__))
     if not isinstance(payload, dict):

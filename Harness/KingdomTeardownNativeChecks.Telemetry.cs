@@ -71,6 +71,7 @@ namespace ThousandAndFirst.Harness
 					.Append(" completed-tick=").Append(completedTick)
 					.Append(" apply-failure=unread")
 					.Append(" occupants=").Append(occupants)
+					.Append(RootClause(Root)) // run 43: final=/root-source=/blueprint=/design-key=
 					.ToString();
 			}
 

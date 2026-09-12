@@ -101,7 +101,7 @@ namespace ThousandAndFirst.Harness
 			string plot = KingdomQuickstartLifecycleSteps.Observed(building);
 			if (plot != Witness.PlotId)
 				return "the loaded building records plot " + plot + ", not the saved " + Witness.PlotId;
-			if (!KingdomQuickstartLifecycleSteps.TryStockpile(zone, out GameObject stockpile,
+			if (!KingdomQuickstartLifecycleSteps.TryStockpile(Game, zone, out GameObject stockpile,
 				out string stockpileFailure)) return stockpileFailure;
 			if (!KingdomQuickstartBuildCensus.TakeStock(zone, stockpile, false,
 				out var stock, out string stockFailure)) return stockFailure;
@@ -118,7 +118,8 @@ namespace ThousandAndFirst.Harness
 				+ "; completedReceiptId=" + Describe(receipt)
 				+ "; at=" + building.Physics._CurrentCell.X + "," + building.Physics._CurrentCell.Y
 				+ "; zone=" + building.Physics._CurrentCell.ParentZone.ZoneID
-				+ "; built=1; functional=true; jobRowRetained=" + (job != null) + "; timber=" + timber
+				+ "; built=1; functional=true; jobRowRetained=" + (job != null)
+				+ "; " + KingdomQuickstartLifecycleSteps.StoreClause(zone, stockpile) + "; timber=" + timber
 				+ "; storedWater=" + water + "; turns=" + Game.Turns;
 			return null;
 		}
@@ -148,7 +149,7 @@ namespace ThousandAndFirst.Harness
 			if (!KingdomData.TryGetBuilding(KingdomQuickstartLifecycleSteps.BuildKey,
 				out KingdomRules.BuildEntry entry))
 				return "the design is missing from the loaded catalogue";
-			if (!KingdomQuickstartLifecycleSteps.TryStockpile(zone, out GameObject stockpile,
+			if (!KingdomQuickstartLifecycleSteps.TryStockpile(Game, zone, out GameObject stockpile,
 				out string stockpileFailure)) return stockpileFailure;
 			if (!KingdomQuickstartBuildCensus.TakeStock(zone, stockpile, false,
 				out var before, out string beforeFailure)) return beforeFailure;
@@ -194,7 +195,8 @@ namespace ThousandAndFirst.Harness
 			Observed = "realmId=" + system.RealmId + "; cityId=" + KingdomConstruction.OwnerOf(system)
 				+ "; saveId=" + Game.GameID + "; buildingId=" + buildingId + "; plotId=" + plotId
 				+ "; jobId=" + job.Id + "; newJobId=" + job.Id
-				+ "; completedJobId=" + Witness.JobId + "; timberDebited=1"
+				+ "; completedJobId=" + Witness.JobId + "; "
+				+ KingdomQuickstartLifecycleSteps.StoreClause(zone, stockpile) + "; timberDebited=1"
 				+ "; waterDebited=" + entry.CostDrams + "; turns=" + Game.Turns;
 			return null;
 		}

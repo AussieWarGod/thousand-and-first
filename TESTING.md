@@ -2,8 +2,8 @@
 
 ## Current combined heart candidate — gates owed
 
-The planned compatibility compile runs across 3097 production C# sources (3093 baseline);
-the cold-install inventory contains 3128 files. Inventory `b80c62e7798a8df85282a9a41300d3dec5c249f627db47c404b2a662e378a115`.
+The planned compatibility compile runs across 3098 production C# sources (3094 baseline);
+the cold-install inventory contains 3129 files. Inventory `fba0d595a8b2c29876f3f74eae29914a9595d85182831f2ceddb5b44d51dfdc0`.
 This combines heart authority, shared-XL transition, rung settlement and camp content/fixture.
 It also drafts surveyed-heart physical ingress independent of ordinary road-network evidence;
 protected road ground remains protected. Predecessor native ingress census was RED.
@@ -1125,7 +1125,18 @@ the engine never reaches `XRLCore.PlayerTurn`'s input wait. The engine's attende
 to a human, and an interrupt in an unattended run is a silent stall. Elapsed turns are counted from
 `XRLGame.Turns`, never from handler calls. A scripted run **suspends** at `advance` and resumes at
 the next verb; rows are `advance` (armed), `advance-progress` every 100 turns, and
-`advance-complete`. Refusals carry a **stable reason code** beside the prose — bind expectations to
+`advance-complete`, bracketed on EVERY road by two `advance-guard` bookkeeping rows (founder cell
+and guard state at arming and at release; Harness/KingdomScenarioFounderGuard.cs). DISCLOSURE, once,
+here: during every scripted `advance` the founder is not a hostile target - the guard raises the
+engine's own `XRLCore.IgnoreMe` (the `ignoreme` wish flag; `Brain.WantToKill` pushes no Kill goal
+against the player and `GameObject.IsHostileTowards` answers false toward the player), because the
+founder spends every advance turn in `Player.PassTurn()` with no hostile interrupt on any road and
+was bitten to death on both the live marsh (run 36) and the cleared teardown ground (run 39-1). It
+is not invulnerability (damage still lands if something attacks), changes no spawning, is never
+serialized, and is restored on every exit. A scripted player
+death is always a stop, on every road: the runner lands `SCRIPT-STOPPED DIED <category>; ...`
+(Harness/KingdomScenarioAutoRunner.Death.cs) even where production succession would have
+re-bodied the player, and the process is then left on the engine's death popup for the driver to reap. Refusals carry a **stable reason code** beside the prose — bind expectations to
 the code, never to the wording: `taf-advance-malformed-count`, `taf-advance-count-out-of-range`
 (the cap is 10000 per line), `taf-advance-no-driver`, `taf-advance-no-live-game`,
 `taf-advance-already-running`, `taf-advance-stalled`, `taf-advance-lost-player`.
@@ -1387,7 +1398,7 @@ fails a test rather than silently turning a persona green forever.
 **Strict in both directions.** The significant rows must equal the declared expectations exactly:
 an unexpected `OK` fails as loudly as an unexpected refusal, a missing row as loudly as an extra
 one. Runner bookkeeping is not significant and is skipped — `AUTOSTART`, `TESTGROUND-BUILT`,
-`RUNNER-ARMED`, `SCRIPT-BEGIN`, `advance-progress`, `advance-complete`, `VERB-REFUSED`.
+`RUNNER-ARMED`, `SCRIPT-BEGIN`, `advance-progress`, `advance-complete`, `advance-guard`, `VERB-REFUSED`.
 
 **`CHECK=status-digest-stable`** compares the 64-hex digests in the **first** and **last** `status`
 rows and fails if they differ or if the first carries none. Digests are data, not prose, so the
