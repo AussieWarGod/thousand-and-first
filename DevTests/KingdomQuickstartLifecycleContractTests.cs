@@ -350,6 +350,17 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("more than one retained registry row claims the saved job identity", load);
 		}
 
+		private static void AssertOrdered(string source, params string[] terms)
+		{
+			int cursor = -1;
+			foreach (string term in terms)
+			{
+				int next = source.IndexOf(term, cursor + 1, StringComparison.Ordinal);
+				ClassicAssert.Greater(next, cursor, term);
+				cursor = next;
+			}
+		}
+
 		/// <summary>The next action mints its own job and may never report the completed one.</summary>
 		[Test]
 		public void TheNextActionMustMintItsOwnJob()
@@ -358,7 +369,37 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("KingdomPlots.TryQuoteCommission(system, zone, entry, null,", load);
 			StringAssert.Contains("KingdomMaterials.CanPay(zone, KingdomQuickstartLifecycleSteps.BuildKey", load);
 			StringAssert.Contains("KingdomCommission.Commission(system, KingdomQuickstartLifecycleSteps.BuildKey", load);
-			StringAssert.Contains("ExactSingleDebit(before, after", load);
+			// Run 46b: the debit is judged over EVERY dedicated store (production pays from any),
+			// never over the one bound store alone; every store's count is journaled.
+			StringAssert.DoesNotContain("ExactSingleDebit(before, after", load);
+			AssertOrdered(load, "TimberByStore(zone, out List<string> storeIds, out List<int> timberBefore, out List<string> unreadBefore);",
+				"KingdomCommission.Commission(system, KingdomQuickstartLifecycleSteps.BuildKey",
+				"TimberByStore(zone, out List<string> storeIdsAfter, out List<int> timberAfter, out List<string> unreadAfter);",
+				"KingdomQuickstartLifecycleDebitRules.Judge(storeIds, timberBefore, timberAfter,",
+				"unreadBefore, unreadAfter, 1, out string debitFailure)",
+				"KingdomQuickstartLifecycleDebitRules.Describe(storeIds, timberBefore, timberAfter)");
+			string rules = Read("Harness/KingdomQuickstartLifecycleDebitRules.cs");
+			StringAssert.DoesNotContain("using XRL", rules);
+			// PR #183: an unread store refuses FIRST, before any arithmetic (the failure loop
+			// precedes the count loop), and the census never discards TakeStock's failure.
+			AssertOrdered(rules, "internal static bool Judge(", "could not be stocked: ", "GAINED timber");
+			string censusShard = Read("Harness/KingdomQuickstartLifecycleLoad.Census.cs");
+			StringAssert.DoesNotContain("out _)", censusShard);
+			StringAssert.Contains("Failures.Add(read ? null : (failure ?? \"unread\"));", censusShard);
+			// Run 46b/47 C: the lifecycle save is routed to its own pre-activation witness, beside
+			// the Quickstart branch and before the Rung one; the generic witness null-guards.
+			string witness = Read("Harness/KingdomScenarioLoadWitness.cs");
+			AssertOrdered(witness, "if (KingdomScenarioLoadEntry.QuickstartSnapshot != null)",
+				"if (KingdomScenarioLoadEntry.LifecycleSnapshot != null)",
+				"KingdomQuickstartLifecycleLoad.BeforeActivation(KingdomScenarioLoadEntry.LifecycleSnapshot);",
+				"return;", "if (KingdomScenarioLoadEntry.RungSnapshot != null)",
+				"Check(snapshot != null, \"no generic snapshot was decoded",
+				"game.GameID == snapshot.GameId");
+			string census = Read("Harness/KingdomQuickstartLifecycleLoad.Census.cs");
+			AssertOrdered(census, "internal const string PreactivationRow = \"lifecycle-preactivation\";",
+				"internal static void BeforeActivation(KingdomQuickstartLifecycleSnapshot Witness)",
+				"try", "catch (Exception error)", "KingdomScenarioJournal.Append(PreactivationRow, false,");
+			StringAssert.Contains("\"lifecycle-preactivation\",", Read("Tools/personas/persona_matrix.py"));
 			StringAssert.Contains("job.Id == Witness.JobId", load);
 			StringAssert.Contains("must mint its own job", load);
 		}

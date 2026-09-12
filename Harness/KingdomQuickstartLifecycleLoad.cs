@@ -16,7 +16,7 @@ namespace ThousandAndFirst.Harness
 	/// it never reuses or revives the completed one, and a production refusal is journalled as it
 	/// came rather than retried into a pass.</para>
 	/// </summary>
-	internal static class KingdomQuickstartLifecycleLoad
+	internal static partial class KingdomQuickstartLifecycleLoad
 	{
 		internal const string LoadedRow = "lifecycle-loaded";
 		internal const string NextRow = "lifecycle-next";
@@ -153,6 +153,8 @@ namespace ThousandAndFirst.Harness
 				out string stockpileFailure)) return stockpileFailure;
 			if (!KingdomQuickstartBuildCensus.TakeStock(zone, stockpile, false,
 				out var before, out string beforeFailure)) return beforeFailure;
+			// Run 46b: production pays from ANY dedicated store, so the debit is judged over all.
+			TimberByStore(zone, out List<string> storeIds, out List<int> timberBefore, out List<string> unreadBefore);
 			if (!KingdomConstruction.TryRead(out List<KingdomConstructionJob> jobsBefore, out string readFailure))
 				return readFailure ?? "the construction registry could not be read after loading";
 			int waterBefore = KingdomGrowth.CountStoredWater(zone);
@@ -174,8 +176,12 @@ namespace ThousandAndFirst.Harness
 				out var after, out string afterFailure)) return afterFailure;
 			if (!KingdomQuickstartBuildCensus.SameStockpile(before, after, out string sameFailure))
 				return sameFailure;
-			if (!KingdomQuickstartBuildCensus.ExactSingleDebit(before, after,
-				KingdomMaterial.Timber, 1, out string debitFailure)) return debitFailure;
+			TimberByStore(zone, out List<string> storeIdsAfter, out List<int> timberAfter, out List<string> unreadAfter);
+			if (!SameStores(storeIds, storeIdsAfter))
+				return "the dedicated store set changed across the new commission";
+			if (!KingdomQuickstartLifecycleDebitRules.Judge(storeIds, timberBefore, timberAfter,
+				unreadBefore, unreadAfter, 1, out string debitFailure)) return debitFailure;
+			string debit = KingdomQuickstartLifecycleDebitRules.Describe(storeIds, timberBefore, timberAfter);
 			int waterAfter = KingdomGrowth.CountStoredWater(zone);
 			if (waterAfter != waterBefore - entry.CostDrams)
 				return "the new commission moved " + (waterBefore - waterAfter)
@@ -196,7 +202,7 @@ namespace ThousandAndFirst.Harness
 				+ "; saveId=" + Game.GameID + "; buildingId=" + buildingId + "; plotId=" + plotId
 				+ "; jobId=" + job.Id + "; newJobId=" + job.Id
 				+ "; completedJobId=" + Witness.JobId + "; "
-				+ KingdomQuickstartLifecycleSteps.StoreClause(zone, stockpile) + "; timberDebited=1"
+				+ KingdomQuickstartLifecycleSteps.StoreClause(zone, stockpile) + "; " + debit + "; timberDebited=1"
 				+ "; waterDebited=" + entry.CostDrams + "; turns=" + Game.Turns;
 			return null;
 		}
