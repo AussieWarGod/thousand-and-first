@@ -1125,9 +1125,15 @@ the engine never reaches `XRLCore.PlayerTurn`'s input wait. The engine's attende
 to a human, and an interrupt in an unattended run is a silent stall. Elapsed turns are counted from
 `XRLGame.Turns`, never from handler calls. A scripted run **suspends** at `advance` and resumes at
 the next verb; rows are `advance` (armed), `advance-progress` every 100 turns, and
-`advance-complete`. On the quickstart-lifecycle road only, two `advance-guard` bookkeeping rows
-bracket them (founder cell and guard state at arming and at release;
-Harness/KingdomScenarioFounderGuard.cs); every other road journals no such row. A scripted player
+`advance-complete`, bracketed on EVERY road by two `advance-guard` bookkeeping rows (founder cell
+and guard state at arming and at release; Harness/KingdomScenarioFounderGuard.cs). DISCLOSURE, once,
+here: during every scripted `advance` the founder is not a hostile target - the guard raises the
+engine's own `XRLCore.IgnoreMe` (the `ignoreme` wish flag; `Brain.WantToKill` pushes no Kill goal
+against the player and `GameObject.IsHostileTowards` answers false toward the player), because the
+founder spends every advance turn in `Player.PassTurn()` with no hostile interrupt on any road and
+was bitten to death on both the live marsh (run 36) and the cleared teardown ground (run 39-1). It
+is not invulnerability (damage still lands if something attacks), changes no spawning, is never
+serialized, and is restored on every exit. A scripted player
 death is always a stop, on every road: the runner lands `SCRIPT-STOPPED DIED <category>; ...`
 (Harness/KingdomScenarioAutoRunner.Death.cs) even where production succession would have
 re-bodied the player, and the process is then left on the engine's death popup for the driver to reap. Refusals carry a **stable reason code** beside the prose — bind expectations to

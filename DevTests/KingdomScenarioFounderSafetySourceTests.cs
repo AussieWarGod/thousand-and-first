@@ -89,6 +89,10 @@ namespace ThousandAndFirst.Tests
 			AssertOrder(death, "private void Died(", "KingdomScenarioAdvance.Cancel();",
 				"Finish(StoppedRow, false, KingdomScenarioRules.Bounded(DiedPrefix + category");
 			StringAssert.Contains("\"armed-at-death\" : \"unarmed-at-death\"", death);
+			// What the engine exposes on the death event (decompile IDeathEvent.cs:6-18) is named.
+			foreach (string field in new[] { "Name(E.Killer)", "E.KillerText", "Name(E.Weapon)",
+				"Name(E.Projectile)", "E.Accidental", "IDeathEvent.cs:6-18" })
+				StringAssert.Contains(field, death);
 			// The seal reads the same category field, so the row and the seal never disagree.
 			StringAssert.Contains("Physics?.LastDeathCategory", Read("Core/KingdomSeal.Utilities.cs"));
 		}
@@ -112,17 +116,19 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("\"advance-guard\",", Read("Tools/personas/persona_matrix.py"));
 		}
 
-		/// <summary>The guard is the engine's own IgnoreMe, scoped to the lifecycle command, armed
+		/// <summary>The guard is the engine's own IgnoreMe, armed by every scripted advance, armed
 		/// before the wait's first spend and restored (never assumed false) on every route out. It
 		/// is not god mode: no invulnerability flag, no world freeze, no stat write.</summary>
 		[Test]
-		public void TheFounderGuardIsIgnoreMeScopedToTheLifecycleAndRestoredOnEveryExit()
+		public void TheFounderGuardIsIgnoreMeOnEveryScriptedAdvanceAndRestoredOnEveryExit()
 		{
 			string guard = Read("Harness/KingdomScenarioFounderGuard.cs");
 			StringAssert.Contains("internal const string Row = \"advance-guard\";", guard);
-			// if (!Held) before Previous: a double arm must not overwrite Previous with true.
-			AssertOrder(guard, "internal static string Arm(",
-				"if (!KingdomQuickstartBootTest.LifecycleRequested)", "if (!Held)",
+			// Every scripted advance, every road (run 39 investigation); if (!Held) before
+			// Previous: a double arm must not overwrite Previous with true.
+			StringAssert.DoesNotContain("LifecycleRequested", guard);
+			StringAssert.Contains("scope=every-scripted-advance", guard);
+			AssertOrder(guard, "internal static string Arm(", "if (!Held)",
 				"Previous = The.Core.IgnoreMe;", "The.Core.IgnoreMe = true;", "Held = true;");
 			AssertOrder(guard, "internal static string Release(", "The.Core.IgnoreMe = Previous;",
 				"Held = false;");

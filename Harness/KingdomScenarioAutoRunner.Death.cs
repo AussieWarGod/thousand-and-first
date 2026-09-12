@@ -34,7 +34,12 @@ namespace ThousandAndFirst
 	/// ROW. <c>SCRIPT-STOPPED</c> whose message opens with <see cref="DiedPrefix" /> followed by the
 	/// engine's own death category (<c>Physics.LastDeathCategory</c>, the same reading
 	/// Core/KingdomSeal.Utilities.cs takes) and the reason; Tools/check-quickstart-lifecycle.py
-	/// classifies that prefix as the distinct FAIL class <c>founder-died</c>. Any pending advance is
+	/// classifies that prefix as the distinct FAIL class <c>founder-died</c>. The row also names
+	/// what the engine exposes on the event (decompile 2.0.211.51 XRL/World/IDeathEvent.cs:6-18:
+	/// <c>Killer</c>, <c>Weapon</c>, <c>Projectile</c>, <c>KillerText</c>, <c>Reason</c>,
+	/// <c>ThirdPersonReason</c>, <c>Accidental</c>) - blueprint and id of the killer and weapon,
+	/// the reason text, and the accidental flag - since run 39's investigation could not name a
+	/// biter from Player.log and the category alone. Any pending advance is
 	/// discarded first, which also releases the founder guard; the row records the guard state AT
 	/// death, so a death under an armed guard is visible as such rather than explained away.
 	/// </para>
@@ -72,11 +77,23 @@ namespace ThousandAndFirst
 			if (string.IsNullOrEmpty(category)) category = "unknown";
 			string reason = !string.IsNullOrEmpty(E.ThirdPersonReason) ? E.ThirdPersonReason
 				: (!string.IsNullOrEmpty(E.Reason) ? E.Reason : "unstated");
+			string killer = "killer=" + Name(E.Killer) + "; killerText="
+				+ (string.IsNullOrEmpty(E.KillerText) ? "unstated" : E.KillerText)
+				+ "; weapon=" + Name(E.Weapon) + "; projectile=" + Name(E.Projectile)
+				+ "; accidental=" + E.Accidental;
 			// Explicit and load-bearing even though Finish cancels again: Finish stops the travel
 			// driver FIRST, and if that throws the guard must already be down (Release is idempotent).
 			KingdomScenarioAdvance.Cancel();
 			Finish(StoppedRow, false, KingdomScenarioRules.Bounded(DiedPrefix + category
-				+ "; reason=" + reason + "; " + guard));
+				+ "; reason=" + reason + "; " + killer + "; " + guard));
+		}
+
+		/// <summary>Blueprint and id of an event participant, or "none" when the engine set none.</summary>
+		private static string Name(GameObject Object)
+		{
+			if (Object == null) return "none";
+			return Object.Blueprint + "#" + (string.IsNullOrEmpty(Object.IDIfAssigned)
+				? "unassigned" : Object.IDIfAssigned);
 		}
 	}
 }

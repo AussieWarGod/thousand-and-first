@@ -41,7 +41,7 @@ class FounderDeath(unittest.TestCase):
     DIED = (
         "DIED bitten to death; reason=You were bitten to death by a snapjaw.;"
         " founderCell=40,12; zone=JoppaWorld.8.22.1.1.10; guard=armed-at-death;"
-        " ignoreMe=True; walk=none; scope=quickstart-lifecycle"
+        " ignoreMe=True; walk=none; scope=every-scripted-advance"
     )
 
     def mid_advance(self, message):

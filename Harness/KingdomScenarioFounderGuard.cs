@@ -4,8 +4,8 @@ using XRL.World;
 namespace ThousandAndFirst.Harness
 {
 	/// <summary>
-	/// Keeps the founder out of the wandering world's target lists for the duration of ONE
-	/// scripted <c>advance</c>, and only on the quickstart-lifecycle road.
+	/// Keeps the founder out of the wandering world's target lists for the duration of EVERY
+	/// scripted <c>advance</c>, on every road.
 	/// <para>
 	/// WHY (native run 36, 13122f0). During the persona's scripted <c>advance 7200</c> the founder
 	/// - the player body, standing on the rite cell with nobody at the keyboard - was bitten to
@@ -28,13 +28,15 @@ namespace ThousandAndFirst.Harness
 	/// disables no spawning, and it is never serialized, so a save taken under it carries nothing.
 	/// </para>
 	/// <para>
-	/// SCOPE. Armed only when KingdomQuickstartBootTest.LifecycleRequested - the one command whose
-	/// founder is the player - and only between an <c>advance</c> arming and that advance's end by
-	/// any route (complete, stall, lost player, death, pump exception, script stop, new game).
-	/// Every other persona's advance is untouched, flag AND journal: the start/end rows land
-	/// only when the guard actually armed, so a non-lifecycle journal is byte-identical to
-	/// before this shard existed (Tools/upgrade_profile_witnesses.py reads an exact verb
-	/// sequence). The previous value is restored, never assumed false.
+	/// SCOPE (widened after the run 39 investigation: the founder spends every advance turn in
+	/// Player.PassTurn() with no hostile interrupt on ANY road, and run 39-1 died on the cleared
+	/// teardown ground through the retained border ring). Armed by every scripted <c>advance</c>,
+	/// from arming to that advance's end by any route (complete, stall, lost player, death, pump
+	/// exception, script stop, new game). The start/end rows land only when the guard actually
+	/// armed, which is now every advancing road: Tools/personas/persona_matrix.py BOOKKEEPING
+	/// skips them and Tools/upgrade_profile_witnesses.py expects exactly the two around the
+	/// stage-source advance. Disclosed once in TESTING.md. The previous value is restored,
+	/// never assumed false.
 	/// </para>
 	/// <para>
 	/// NO WALK. The brief preferred walking the founder into the staked camp tent or the heart's
@@ -54,7 +56,6 @@ namespace ThousandAndFirst.Harness
 
 		internal const string StateArmed = "ignoreme-armed";
 		internal const string StateReleased = "ignoreme-released";
-		internal const string StateNotRequested = "not-requested";
 
 		private static bool Held;
 		private static bool Previous;
@@ -62,12 +63,10 @@ namespace ThousandAndFirst.Harness
 		/// <summary>True while this guard holds the engine flag.</summary>
 		internal static bool Armed { get { return Held; } }
 
-		/// <summary>Raises the flag for a quickstart-lifecycle run; a no-op elsewhere. Returns the
-		/// row text naming the founder's cell and the resulting state.</summary>
+		/// <summary>Raises the flag for a scripted advance on any road. Returns the row text naming
+		/// the founder's cell and the resulting state. A double arm keeps the first Previous.</summary>
 		internal static string Arm(GameObject Player)
 		{
-			if (!KingdomQuickstartBootTest.LifecycleRequested)
-				return Describe(Player, StateNotRequested);
 			if (!Held)
 			{
 				Previous = The.Core.IgnoreMe;
@@ -81,9 +80,7 @@ namespace ThousandAndFirst.Harness
 		/// every end-of-advance route, including a new game in the same process.</summary>
 		internal static string Release(GameObject Player)
 		{
-			if (!Held)
-				return Describe(Player, KingdomQuickstartBootTest.LifecycleRequested
-					? StateReleased : StateNotRequested);
+			if (!Held) return Describe(Player, StateReleased);
 			The.Core.IgnoreMe = Previous;
 			Held = false;
 			return Describe(Player, StateReleased);
@@ -100,7 +97,7 @@ namespace ThousandAndFirst.Harness
 			XRL.Core.XRLCore core = The.Core;
 			return where + "; guard=" + State + "; ignoreMe="
 				+ (core == null ? "no-core" : core.IgnoreMe.ToString())
-				+ "; walk=none; scope=quickstart-lifecycle";
+				+ "; walk=none; scope=every-scripted-advance";
 		}
 	}
 }

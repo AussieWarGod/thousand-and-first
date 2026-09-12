@@ -76,8 +76,9 @@
 #      not parse SCRIPT-STOPPED/SCRIPT-COMPLETE at all, so a run-scenario.ps1 operator must read the
 #      journal's last row themselves.
 #   2. THE FOUNDER IS NOT A COMBAT TARGET DURING THE SCRIPTED ADVANCE
-#      (Harness/KingdomScenarioFounderGuard.cs). For this command only (LifecycleRequested), from
-#      the moment `advance` arms until it ends by any route, the guard raises the engine's own
+#      (Harness/KingdomScenarioFounderGuard.cs). Originally this command only; widened after the
+#      run 39 investigation to EVERY scripted advance on every road (disclosed once in TESTING.md).
+#      From the moment `advance` arms until it ends by any route, the guard raises the engine's own
 #      XRLCore.IgnoreMe (decompile 2.0.211.51 XRL/Core/XRLCore.cs:217, the flag the engine's
 #      `ignoreme` wish toggles, Wishing.cs:3396-3398): Brain.WantToKill pushes no Kill goal against
 #      the player (Brain.cs:1075-1077) and GameObject.IsHostileTowards answers false toward the
@@ -86,8 +87,10 @@
 #      and the prior value is restored at release. Two bookkeeping `advance-guard` rows (start/end)
 #      record founderCell=x,y, the guard state, and ignoreMe=; the advance-guard start row lands
 #      just before the `advance OK` row because the flag must be up before the wait's first spend.
-#      Both rows land ONLY when the guard armed: every other road's journal carries no advance-guard
-#      row (Tools/upgrade_profile_witnesses.py reads the stage-source journal as an exact sequence).
+#      Both rows land ONLY when the guard armed, which is now every advancing road; they are
+#      bookkeeping (persona_matrix BOOKKEEPING) and Tools/upgrade_profile_witnesses.py expects the
+#      two of them around the stage-source advance. The DIED row also names killer=/weapon=/
+#      projectile=/killerText=/accidental= from the engine's own death event (IDeathEvent.cs:6-18).
 #      A pump exception lowers the flag in a finally; a script stop cancels the wait and the guard.
 #      LIMIT: the preferred "walk the founder into the camp tent / heart interior first" is inert
 #      at Camp stage - the tent rows are staked, unwalled plots and the heart has no interior cell
