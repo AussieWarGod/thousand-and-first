@@ -149,9 +149,13 @@ namespace ThousandAndFirst.Tests
 				"bool stoodOff = KingdomArchitectureStamper.TryPlacementPassability(Authored, Z,",
 				"out Dictionary<int, ArchitecturePassability> slots,",
 				"&& TryClearManagedOccupants(System, Z, Root, Managed, slots, Rect,",
+				"out cleared, out beasts, out post, out verdict, out anchor,",
 				"ground = KingdomArchitectureStamper.TryStageLayer(Root, Z,",
-				"SayPlotWorkCleared(System, Root, name, cleared, ground,",
-				"ground ? null : (stoodOff ? Failure : clearanceRefusal))",
+				"string fault = ground ? null : (stoodOff ? Failure : clearanceRefusal);",
+				"SayPlotWorkCleared(System, Root, name,",
+				"KingdomPlotRules.SettlersMoved(cleared, beasts), ground, fault);",
+				"SayPlotBeastsDriven(System, Root, name, beasts, ground, fault);",
+				"if (post != null) SayPlotPostMoved(System, Root, name, post);",
 				"if (!ground && verdict == KingdomPlotRules.OccupantVerdict.AnchorBound",
 				"&& anchor != null)",
 				"KingdomPlotRules.RefuseOccupiedAnchor(name, anchor.X, anchor.Y)",
@@ -169,34 +173,61 @@ namespace ThousandAndFirst.Tests
 				"KingdomPlotRules.OccupantReason reason = ReasonFor(System, survey, item)",
 				"occupants.Add(item)",
 				"if (reason == KingdomPlotRules.OccupantReason.Player) { player = true; continue; }",
+				"if (!KingdomPlotRules.IsMovableOccupant(reason)) continue;",
+				"movable++;",
 				"if (reason != KingdomPlotRules.OccupantReason.Resident) continue;",
-				"Cell anchor = PostAnchorInLayout(Z, item, Managed)",
-				"Verdict = KingdomPlotRules.JudgeOccupants(occupants.Count, residents, player,",
+				"anchors[anchors.Count - 1] = PostAnchorInLayout(Z, item, Managed);",
+				"Verdict = KingdomPlotRules.JudgeOccupants(occupants.Count, movable, player);",
 				"if (Verdict != KingdomPlotRules.OccupantVerdict.Displace)",
 				"Cell target = FreeGroundOffLayout(Z, occupants[i], Managed, Rect, taken)",
 				"if (target == null)",
 				"return ClearanceFault(\"no free ground beside the site to stand them on\",",
 				"plan.Add(new KingdomLayoutDisplacement(occupants[i], occupants[i].CurrentCell,",
+				"target, anchors[i]));",
+				// A post that will not move refuses BEFORE anyone walks, so the anchored case
+				// still moves nobody; a post that will is moved with its holder in the same pass.
+				"if (anchors[i] == null || CanMovePost(plan[i].Body)) continue;",
+				"Verdict = KingdomPlotRules.OccupantVerdict.AnchorBound;",
+				"return ClearanceFault(\"a resident is posted inside the layout and its post will not move\",",
 				"move.Body.SystemLongDistanceMoveTo(move.Target, 0, forced: true,",
-				"&& move.Body.CurrentCell == move.Target)",
-				"int back = WalkBack(plan, i + 1, out int stranded)",
+				"&& move.Body.CurrentCell == move.Target",
+				"&& (!anchored || TryMovePost(move.Body, move.Target)))",
+				"if (reasons[i] == KingdomPlotRules.OccupantReason.Beast) drove++;",
+				"else if (anchored) Post = move.Target;",
+				"int back = WalkBack(plan, i + 1, out int stranded, out int strandedBeasts,",
 				"Moved = stranded;",
+				"Beasts = strandedBeasts;",
 				"return ClearanceFault(\"a settler would not stand off the site; \" + back",
-				"Moved = walked;");
+				"Moved = walked;",
+				"Beasts = drove;");
 			// A half-cleared site is put back: every body already walked returns to the exact
 			// ground it stood on, and the fault names both counts.
 			AssertOrdered(clearance,
 				"private static int WalkBack(List<KingdomLayoutDisplacement> Plan, int Count,",
+				"out int Stranded, out int StrandedBeasts,",
 				"|| move.Body.CurrentCell == move.Origin) continue;",
 				"move.Body.SystemLongDistanceMoveTo(move.Origin, 0, forced: true,",
-				"&& move.Body.CurrentCell == move.Origin)",
+				"&& move.Body.CurrentCell == move.Origin",
+				// The post comes home with the body, or the body counts as stranded.
+				"&& (move.Anchor == null || TryMovePost(move.Body, move.Anchor)))",
 				"back++;",
-				"Stranded++;");
+				"Stranded++;",
+				"Reasons[i] == KingdomPlotRules.OccupantReason.Beast) StrandedBeasts++;");
 			string labourWindow = TestMain.ReadRepositoryText(
 				"Growth/KingdomPlot2.26b.LabourWindow.cs");
 			StringAssert.Contains(
 				"KingdomPlotRules.ClearedOccupiedSlots(\n\t\t\t\t\tName ?? \"work\", Moved, Raised, Fault)",
 				labourWindow);
+			// Beasts and moved posts are announced separately from settlers stood aside.
+			AssertOrdered(labourWindow,
+				"private static void SayPlotBeastsDriven(",
+				"Works.GetIntProperty(PlotWorkBeastsAnnouncedProperty) == 1",
+				"Works.SetIntProperty(PlotWorkBeastsAnnouncedProperty, 1)",
+				"KingdomPlotRules.DroveBeastsOff(",
+				"private static void SayPlotPostMoved(",
+				"Works.GetStringProperty(PlotWorkPostMovedProperty) == key",
+				"Works.SetStringProperty(PlotWorkPostMovedProperty, key)",
+				"KingdomPlotRules.MovedPostWithResident(");
 			// Every refusing body is named with its reason before the parsed summary sentence.
 			string helpers = TestMain.ReadRepositoryText(
 				"Growth/KingdomPlot2.26d.OccupantHelpers.cs");
@@ -216,17 +247,26 @@ namespace ThousandAndFirst.Tests
 				"body.Blueprint",
 				"passability=\" + (authored ? passability.ToString() : \"none\")",
 				"reason=\" + Reasons[i])",
+				// The ladder is the pure rule's; the runtime only freezes the facts, including the
+				// engine kind/name/trade tests that decide a beast.
 				"private static KingdomPlotRules.OccupantReason ReasonFor(",
-				"if (Body.IsPlayer()) return KingdomPlotRules.OccupantReason.Player;",
-				"KingdomPlotRules.OccupantReason.PlayerLed",
-				"KingdomPlotRules.OccupantReason.NotOurs",
-				"Simulation.City.KingdomPhysicalHappenings.IsStaged(Body)",
-				"KingdomPlotRules.OccupantReason.Staged",
+				"bool ours = Survey.Settlers.Contains(Body)",
 				"Simulation.City.KingdomResidents.IdOf(Body)",
-				"if (id <= 0) return KingdomPlotRules.OccupantReason.NoRoll;",
 				"row.Standing == Simulation.City.KingdomResidentStanding.Resident",
-				"KingdomPlotRules.OccupantReason.Resident",
-				"KingdomPlotRules.OccupantReason.NotResident",
+				"return KingdomPlotRules.JudgeOccupant(new KingdomPlotRules.OccupantFacts(",
+				"Body.IsPlayer(), Body.IsPlayerLed(),",
+				"Simulation.City.KingdomPhysicalHappenings.IsStaged(Body), ours,",
+				"Body.HasProperName, Body.IsMerchant(), AnimalKind(Body), id > 0, standing));",
+				"private static bool AnimalKind(GameObject Body)",
+				"blueprint.InheritsFrom(AnimalBlueprint)",
+				// The post moves through the engine's own anchor API and is verified by re-reading
+				// the anchor; a post that did not move is a failure, not a silent success.
+				"private static bool CanMovePost(GameObject Body)",
+				"brain.IsMobile() && !brain.Wanders && !brain.WandersRandomly",
+				"private static bool TryMovePost(GameObject Body, Cell Target)",
+				"Body.Brain.Stay(Target);",
+				"XRL.World.GlobalLocation anchor = Body.Brain.StartingCell;",
+				"anchor.CellX == Target.X",
 				"private static Cell FreeGroundOffLayout(",
 				"Managed.Contains(candidate.Y * Z.Width + candidate.X)",
 				"candidate.HasOpenLiquidVolume()",

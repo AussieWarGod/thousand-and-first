@@ -70,9 +70,14 @@ namespace ThousandAndFirst
 		/// published by an interrupted retry are the sole non-ground objects admitted in the added
 		/// envelope.
 		/// </summary>
+		/// <param name="TolerateMovableOccupants">True only on the non-mutating preflight: a body
+		/// the crew may lawfully stand aside is not ground the improvement lacks, because the
+		/// mutating path clears it before it proves this again. The mutating path passes false, so
+		/// anything still standing there refuses.</param>
 		internal static bool TryProveEnvelopeGrowth(KingdomSystem System, Zone Z,
 			GameObject Owner, GameObject SuccessorOwner, KingdomArchitectureIntent Successor,
-			bool AllowSettledSuccessor, out string Failure)
+			bool AllowSettledSuccessor, out string Failure,
+			bool TolerateMovableOccupants = false)
 		{
 			Failure = null;
 			KingdomArchitectureIntent beforeIntent;
@@ -174,6 +179,12 @@ namespace ThousandAndFirst
 			if (!TryReadSettledExpansionOutputs(Owner, SuccessorOwner, Z, beforeIntent,
 				Successor, before, after, delta, lot, AllowSettledSuccessor, settled,
 				out Failure)) return false;
+			// A body only stands in the way of a cell the successor map declares Blocked: annexed
+			// path, yard and adjacent-use ground is walked on, and the founder standing there has
+			// never been a reason a settlement cannot grow (issue #176 class, run 42).
+			if (!TryPlacementPassability(Successor, Z,
+				out Dictionary<int, ArchitecturePassability> successorSlots, out Failure))
+				return false;
 			HashSet<int> connections = ConnectionCells(Z);
 			HashSet<int> wornRoads = ReadWornRoadCells(Z);
 			for (int y = Successor.Rect.Y1; y <= Successor.Rect.Y2; y++)
@@ -205,8 +216,16 @@ namespace ThousandAndFirst
 						if (!GameObject.Validate(item)) continue;
 						if (settled.Contains(item)) continue;
 						if (item.IsCreature || item.IsPlayer())
+						{
+							ArchitecturePassability declared = ArchitecturePassability.Walkable;
+							if (!successorSlots.TryGetValue(packed, out declared)
+								|| !KingdomPlotRules.SlotBlocksOccupant(declared)) continue;
+							if (TolerateMovableOccupants
+								&& KingdomPlots.IsMovableEnvelopeOccupant(System, Z, item)) continue;
+							KingdomPlots.NameEnvelopeOccupant(System, Z, item, declared);
 							return Fail("a living occupant stands on plot-envelope growth ground at "
 								+ Coordinate(x, y), out Failure);
+						}
 						if (item.GetIntProperty(KingdomPlots.HeartStakeProperty) == 1
 							|| item.GetIntProperty(KingdomPlots.HeartRelicProperty) == 1)
 							return Fail("founding-heart ground occupies plot-envelope growth at "
