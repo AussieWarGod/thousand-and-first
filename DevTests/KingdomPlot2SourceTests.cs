@@ -225,7 +225,7 @@ namespace ThousandAndFirst.Tests
 			Assert.That(source, Does.Contain(
 				"KingdomPlotSelectionRules.TrySelect(groundCandidates,"));
 			Assert.That(source, Does.Contain(
-				"candidate => ResolveArchitecture(probe, candidate, Z, occupiedCells),"));
+				"candidate => ResolveArchitecture(probe, candidate, Z, occupiedCells, protectedCells),"));
 			Assert.That(source, Does.Contain(
 				"if (!Probe.TryAccept(Candidate, out ArchitectureLayoutSnapshot accepted, out string failure))"));
 			Assert.That(source, Does.Contain(

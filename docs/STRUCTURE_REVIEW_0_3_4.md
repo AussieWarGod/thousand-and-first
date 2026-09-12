@@ -86,3 +86,24 @@ The 48-dram nine-day matrix passed marsh/dunes with both guide settings. Canyon
  correctly failed an unfinished 15000-tick rocky-ground fire quote; its log shows
  the four founders already housed. The new fourteen-day matrix and full-cask native
  housing recovery remain pending. The source review does not upgrade those results.
+
+## Automatic site protection follow-up
+
+Current production inventory:
+`9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f`.
+3098 C# files, 440099 physical lines, 1445 direct-XRL files, no size exception.
+The only production changes since the full-cask/strike review are the shared
+connection census becoming internal and the plot-selection caller using that census
+plus live stair parts. Both enumerated and cached connections are included. Candidates
+are rejected only where resolved claimed cells or placements cover protected cells;
+unclaimed margins remain eligible. Final preflight still independently rejects stairs,
+connections, invalid mappings and other protected ground. No new mutation or receipt
+format is introduced. Source review read both changed files and final preflight.
+
+Main/portable suites passed 14775/5732 cases, zero skips, and all four canonical
+compile modes passed. Logs: `/tmp/taf-stair-siting-full.log`,
+`/tmp/taf-stair-siting-portable.log`, `/tmp/taf-stair-siting-gate.log`.
+The native canyon source reached fourteen days, four housed citizens, a completed
+paid building and a real save on the predecessor. Cold load preserved those facts;
+its next commission refused a connection at 29,12 that site selection had missed.
+That complete chain remains FAIL. Native verification of the selection fix is pending.

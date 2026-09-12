@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "inventorySha256": "43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6",
+  "inventorySha256": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
   "exceptions": [],
   "reviewedBy": "Codex root automated structural review",
-  "completedUtc": "2026-09-12T23:17:27Z",
+  "completedUtc": "2026-09-12T23:43:22Z",
   "oneResponsibility": {
     "status": "passed",
-    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6. The prior edb507bb9f3fc5203e4fe3f83312f4c4c9adda7c9fbba99e6b2a73145a212205 inventory review is retained there with its exact comparison and limitations. Read all subsequent production changes: finite 64-dram starter quantity and matching guide/verification, plus exact stamped and funded Strike Published-to-Working recovery. Responsibilities and identity/input boundaries remain bounded; no new serialized field or size exception. Census: 3098 files, 440089 physical lines, 1445 direct-XRL files, none at or above 300. Automated source review only; native behavior and release acceptance remain separate. log:/tmp/taf-full-cask-structure.json."
+    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f. Prior grouped reviews and their exact limits remain there. Read the subsequent internal connection-census sharing and automatic plot-selection protection against live stairs plus enumerated/cached connections. Filtering uses exact claimed/placement cells; final preflight, ownership, debit and mapping refusals remain. No new mutation or serialization. Census: 3098 files, 440099 physical lines, 1445 direct-XRL files, none at or above 300. Automated source review only; native/release acceptance separate. log:/tmp/taf-stair-siting-structure.json."
   },
   "protocolsAtBoundaries": {
     "status": "passed",
-    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6. The prior edb507bb9f3fc5203e4fe3f83312f4c4c9adda7c9fbba99e6b2a73145a212205 inventory review is retained there with its exact comparison and limitations. Read all subsequent production changes: finite 64-dram starter quantity and matching guide/verification, plus exact stamped and funded Strike Published-to-Working recovery. Responsibilities and identity/input boundaries remain bounded; no new serialized field or size exception. Census: 3098 files, 440089 physical lines, 1445 direct-XRL files, none at or above 300. Automated source review only; native behavior and release acceptance remain separate. log:/tmp/taf-full-cask-structure.json."
+    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f. Prior grouped reviews and their exact limits remain there. Read the subsequent internal connection-census sharing and automatic plot-selection protection against live stairs plus enumerated/cached connections. Filtering uses exact claimed/placement cells; final preflight, ownership, debit and mapping refusals remain. No new mutation or serialization. Census: 3098 files, 440099 physical lines, 1445 direct-XRL files, none at or above 300. Automated source review only; native/release acceptance separate. log:/tmp/taf-stair-siting-structure.json."
   }
 }

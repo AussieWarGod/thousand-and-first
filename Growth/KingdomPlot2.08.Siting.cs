@@ -173,11 +173,15 @@ namespace ThousandAndFirst
 			// (Growth/KingdomArchitectureStamper.Preflight.cs:94-96 "a living occupant stands on
 			// authored ground").
 			HashSet<int> occupiedCells = new HashSet<int>();
+			HashSet<int> protectedCells = KingdomArchitectureStamper.ConnectionCells(Z);
 			for (int y = interior.Y1; y <= interior.Y2; y++)
 				for (int x = interior.X1; x <= interior.X2; x++)
 				{
 					Cell occupantCell = Z.GetCell(x, y);
 					if (occupantCell == null) continue;
+					if (occupantCell.HasStairs() || occupantCell.HasObjectWithPart("StairsUp")
+						|| occupantCell.HasObjectWithPart("StairsDown"))
+						protectedCells.Add(y * Z.Width + x);
 					List<GameObject> occupants = occupantCell.GetObjects();
 					for (int k = 0; k < occupants.Count; k++)
 					{
@@ -197,7 +201,7 @@ namespace ThousandAndFirst
 				return false;
 			List<KingdomPlotRules.PlotRect> candidates;
 			if (!KingdomPlotSelectionRules.TrySelect(groundCandidates,
-				candidate => ResolveArchitecture(probe, candidate, Z, occupiedCells),
+				candidate => ResolveArchitecture(probe, candidate, Z, occupiedCells, protectedCells),
 				hasFounder, founderX, founderY, out candidates, out Refusal))
 			{
 				return false;
@@ -249,11 +253,11 @@ namespace ThousandAndFirst
 		/// candidate the stamper would refuse could still be selected here.</summary>
 		private static KingdomPlotSelectionRules.Resolution ResolveArchitecture(
 			KingdomArchitectureRuntime.SitingProbe Probe, KingdomPlotRules.PlotRect Candidate,
-			Zone Z, HashSet<int> OccupiedCells)
+			Zone Z, HashSet<int> OccupiedCells, HashSet<int> ProtectedCells)
 		{
 			if (!Probe.TryAccept(Candidate, out ArchitectureLayoutSnapshot accepted, out string failure))
 				return new KingdomPlotSelectionRules.Resolution(false, failure);
-			if (accepted != null && OccupiedCells.Count > 0)
+			if (accepted != null && (OccupiedCells.Count > 0 || ProtectedCells.Count > 0))
 			{
 				for (int c = 0; c < accepted.Cells.Count; c++)
 				{
@@ -262,6 +266,9 @@ namespace ThousandAndFirst
 					if (!KingdomArchitectureRuntime.TryWorldCell(accepted, Candidate, cell,
 						out int cx, out int cy, out string mappingFailure))
 						return new KingdomPlotSelectionRules.Resolution(false, mappingFailure);
+					if (ProtectedCells.Contains(cy * Z.Width + cx))
+						return new KingdomPlotSelectionRules.Resolution(false,
+							KingdomPlotRules.RefuseObstruction("stairs or a zone connection", cx, cy));
 					if (OccupiedCells.Contains(cy * Z.Width + cx))
 						return new KingdomPlotSelectionRules.Resolution(false,
 							KingdomPlotRules.RefuseObstruction("a living occupant", cx, cy));
@@ -271,6 +278,9 @@ namespace ThousandAndFirst
 					if (!KingdomArchitectureRuntime.TryWorldPlacement(accepted, Candidate,
 						accepted.Placements[p], out int px, out int py, out string mappingFailure))
 						return new KingdomPlotSelectionRules.Resolution(false, mappingFailure);
+					if (ProtectedCells.Contains(py * Z.Width + px))
+						return new KingdomPlotSelectionRules.Resolution(false,
+							KingdomPlotRules.RefuseObstruction("stairs or a zone connection", px, py));
 					if (OccupiedCells.Contains(py * Z.Width + px))
 						return new KingdomPlotSelectionRules.Resolution(false,
 							KingdomPlotRules.RefuseObstruction("a living occupant", px, py));
