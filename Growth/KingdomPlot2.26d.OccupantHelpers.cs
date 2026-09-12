@@ -73,20 +73,62 @@ namespace ThousandAndFirst
 		private static KingdomPlotRules.OccupantReason ReasonFor(KingdomSystem System,
 			KingdomSurvey Survey, GameObject Body)
 		{
-			if (Body.IsPlayer()) return KingdomPlotRules.OccupantReason.Player;
-			if (Body.IsPlayerLed()) return KingdomPlotRules.OccupantReason.PlayerLed;
-			if (!Survey.Settlers.Contains(Body)) return KingdomPlotRules.OccupantReason.NotOurs;
-			if (Simulation.City.KingdomPhysicalHappenings.IsStaged(Body))
-				return KingdomPlotRules.OccupantReason.Staged;
+			bool ours = Survey.Settlers.Contains(Body);
 			// Fails closed: a surveyed body with no roll id is not a PROVEN resident, and an
 			// unproven body is never shoved. The roster mints an id for every settler it reads.
-			int id = Simulation.City.KingdomResidents.IdOf(Body);
-			if (id <= 0) return KingdomPlotRules.OccupantReason.NoRoll;
-			return Simulation.City.KingdomResidents.TryResident(System.City, id,
-				out Simulation.City.KingdomResidentRow row)
-				&& row.Standing == Simulation.City.KingdomResidentStanding.Resident
-					? KingdomPlotRules.OccupantReason.Resident
-					: KingdomPlotRules.OccupantReason.NotResident;
+			int id = ours ? Simulation.City.KingdomResidents.IdOf(Body) : 0;
+			bool standing = id > 0
+				&& Simulation.City.KingdomResidents.TryResident(System.City, id,
+					out Simulation.City.KingdomResidentRow row)
+				&& row.Standing == Simulation.City.KingdomResidentStanding.Resident;
+			return KingdomPlotRules.JudgeOccupant(new KingdomPlotRules.OccupantFacts(
+				Body.IsPlayer(), Body.IsPlayerLed(),
+				Simulation.City.KingdomPhysicalHappenings.IsStaged(Body), ours,
+				Body.HasProperName, Body.IsMerchant(), AnimalKind(Body), id > 0, standing));
+		}
+
+		/// <summary>
+		/// Whether this body's blueprint descends from the base "Animal" blueprint. Inheritance is
+		/// the engine's own kind test (GameObjectBlueprint.InheritsFrom, ILSpy 9.1 of core
+		/// 2.0.211.51, XRL/World/GameObjectBlueprint.cs:237-249) and is what separates a croc
+		/// (Croc -> BaseReptile -> Animal -> Creature) from the villagers, merchants and named NPCs
+		/// who descend from Humanoid. A blueprint the factory does not know is not an animal.
+		/// </summary>
+		private static bool AnimalKind(GameObject Body)
+		{
+			XRL.World.GameObjectBlueprint blueprint = Body.GetBlueprint(false);
+			return blueprint != null && (blueprint.Name == AnimalBlueprint
+				|| blueprint.InheritsFrom(AnimalBlueprint));
+		}
+
+		/// <summary>
+		/// Whether this body's post could be moved with it. Mirrors the engine's own guard on
+		/// Brain.Stay (ILSpy 9.1 of core 2.0.211.51, XRL/World/Parts/Brain.cs:2507-2523): Stay only
+		/// writes StartingCell for a mobile body that is not set to wander, which is exactly the
+		/// shape a posted resident has (KingdomStations.Claim clears both wander flags before it
+		/// calls Stay). Asked BEFORE anyone walks, so an immovable post refuses the whole set.
+		/// </summary>
+		private static bool CanMovePost(GameObject Body)
+		{
+			Brain brain = GameObject.Validate(Body) ? Body.Brain : null;
+			return brain != null && brain.IsMobile() && !brain.Wanders && !brain.WandersRandomly;
+		}
+
+		/// <summary>
+		/// Moves a resident's post to the ground they were just stood on, through the engine's own
+		/// anchor API (Brain.Stay, Brain.cs:2507-2523 -- the same call KingdomStations.Claim uses
+		/// to set a post). Verified by re-reading StartingCell: a post that did not move is a
+		/// failure, because the body would walk back onto the site on the next pass.
+		/// </summary>
+		private static bool TryMovePost(GameObject Body, Cell Target)
+		{
+			if (!CanMovePost(Body) || Target == null) return false;
+			Body.Brain.Stay(Target);
+			XRL.World.GlobalLocation anchor = Body.Brain.StartingCell;
+			return anchor != null && anchor.World != null && anchor.CellX == Target.X
+				&& anchor.CellY == Target.Y
+				&& string.Equals(anchor.ZoneID, Target.ParentZone?.ZoneID,
+					global::System.StringComparison.Ordinal);
 		}
 
 		/// <summary>The body's post anchor when it lies on a layout slot, else null.</summary>

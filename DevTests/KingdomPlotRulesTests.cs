@@ -1,4 +1,5 @@
 #if TAF_TESTS
+using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using NUnit.Framework.Legacy;
@@ -1089,19 +1090,163 @@ namespace ThousandAndFirst.Tests
 				Announced, AnnouncedSlot, Slot));
 		}
 
-		[TestCase(0, 0, false, false, "Clear", TestName = "empty layout")]
-		[TestCase(2, 2, false, false, "Displace", TestName = "all ours are stood off")]
-		[TestCase(1, 0, true, false, "Refuse", TestName = "the player alone is never moved")]
-		[TestCase(2, 1, true, false, "Refuse", TestName = "the player beside one of ours refuses")]
-		[TestCase(2, 1, false, false, "Refuse", TestName = "a stranger refuses the whole set")]
-		[TestCase(1, 0, false, false, "Refuse", TestName = "a lone stranger refuses")]
-		[TestCase(2, 2, false, true, "AnchorBound", TestName = "a post inside the layout is named")]
-		[TestCase(2, 1, false, true, "Refuse", TestName = "a stranger outranks an anchor")]
-		public void OnlyOurOwnUnpostedResidentsAreStoodOffTheirSite(int Occupants, int Residents,
-			bool AnyPlayer, bool AnyAnchor, string Expected)
+		/// <summary>
+		/// Movable is residents AND beasts now. Mutation: dropping the AnyPlayer clause turns case
+		/// 3 into Displace and the founder is shoved off their own rite cell; dropping the
+		/// Movable != Occupants clause turns cases 5 and 6 into Displace and a stranger is shoved.
+		/// </summary>
+		[TestCase(0, 0, false, "Clear", TestName = "empty layout")]
+		[TestCase(2, 2, false, "Displace", TestName = "all movable are moved")]
+		[TestCase(1, 0, true, "Refuse", TestName = "the player alone is never moved")]
+		[TestCase(2, 1, true, "Refuse", TestName = "the player beside one of ours refuses")]
+		[TestCase(2, 1, false, "Refuse", TestName = "a person refuses the whole set")]
+		[TestCase(1, 0, false, "Refuse", TestName = "a lone person refuses")]
+		[TestCase(1, 1, false, "Displace", TestName = "one beast alone is driven off")]
+		public void OnlyOurOwnAndTheWildAreMovedOffTheSite(int Occupants, int Movable,
+			bool AnyPlayer, string Expected)
 		{
 			ClassicAssert.AreEqual(Expected, KingdomPlotRules.JudgeOccupants(
-				Occupants, Residents, AnyPlayer, AnyAnchor).ToString());
+				Occupants, Movable, AnyPlayer).ToString());
+		}
+
+		/// <summary>
+		/// Every rung of the occupant ladder, in order. Mutation: moving the Staged rung below the
+		/// ours/wild split turns case 4 into Beast and a staged animal is driven off its own
+		/// happening; dropping the ProperName clause turns case 6 into Beast and a named creature
+		/// is shoved; dropping Merchant turns case 7 into Beast and a trader is shoved; dropping
+		/// AnimalKind turns case 5 into Beast and every stranger in Qud becomes drivable.
+		/// </summary>
+		[TestCase(true, false, false, false, false, false, false, false, false, "Player")]
+		[TestCase(false, true, false, false, false, false, true, false, false, "PlayerLed")]
+		[TestCase(false, false, true, true, false, false, false, true, true, "Staged")]
+		[TestCase(false, false, true, false, false, false, true, false, false, "Staged")]
+		[TestCase(false, false, false, false, false, false, false, false, false, "NotOurs")]
+		[TestCase(false, false, false, false, true, false, true, false, false, "NotOurs")]
+		[TestCase(false, false, false, false, false, true, true, false, false, "NotOurs")]
+		[TestCase(false, false, false, false, false, false, true, false, false, "Beast")]
+		[TestCase(false, false, false, true, false, false, false, false, false, "NoRoll")]
+		[TestCase(false, false, false, true, false, false, false, true, false, "NotResident")]
+		[TestCase(false, false, false, true, false, false, false, true, true, "Resident")]
+		public void TheOccupantLadderRunsInOrder(bool Player, bool PlayerLed, bool Staged,
+			bool OurSettler, bool ProperName, bool Merchant, bool AnimalKind, bool RollId,
+			bool ResidentStanding, string Expected)
+		{
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.JudgeOccupant(
+				new KingdomPlotRules.OccupantFacts(Player, PlayerLed, Staged, OurSettler,
+					ProperName, Merchant, AnimalKind, RollId, ResidentStanding)).ToString());
+		}
+
+		[TestCase(false, false, true, true, TestName = "a nameless animal is drivable")]
+		[TestCase(true, false, true, false, TestName = "a named animal is somebody")]
+		[TestCase(false, true, true, false, TestName = "a trading animal is somebody")]
+		[TestCase(false, false, false, false, TestName = "a nameless person is not an animal")]
+		public void OnlyANamelessTradelessAnimalIsDrivable(bool ProperName, bool Merchant,
+			bool AnimalKind, bool Expected)
+		{
+			ClassicAssert.AreEqual(Expected,
+				KingdomPlotRules.IsDrivableBeast(ProperName, Merchant, AnimalKind));
+		}
+
+		/// <summary>The anchor rung was withdrawn from the verdict: a post moves with its holder,
+		/// and AnchorBound is only the post that will not move. The prose has to say so.</summary>
+		[Test]
+		public void TheOccupantRulesNoLongerClaimAPostedResidentIsNamedInsteadOfMoved()
+		{
+			string rules = TestMain.ReadRepositoryText("Growth/KingdomPlotOccupantRules.cs");
+			StringAssert.DoesNotContain("named instead of shoved in a circle", rules);
+			StringAssert.DoesNotContain("walking them off only sends them back next pass", rules);
+			StringAssert.DoesNotContain("AnyAnchorInLayout", rules);
+			StringAssert.Contains("A post standing inside the layout that will not move", rules);
+		}
+
+		[TestCase("Resident", true)]
+		[TestCase("Beast", true)]
+		[TestCase("Player", false)]
+		[TestCase("PlayerLed", false)]
+		[TestCase("NotOurs", false)]
+		[TestCase("Staged", false)]
+		[TestCase("NoRoll", false)]
+		[TestCase("NotResident", false)]
+		[TestCase("AnchorBound", false)]
+		public void OnlyResidentsAndBeastsAreMovable(string Reason, bool Expected)
+		{
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.IsMovableOccupant(
+				(KingdomPlotRules.OccupantReason)Enum.Parse(
+					typeof(KingdomPlotRules.OccupantReason), Reason)));
+		}
+
+		[Test]
+		public void DrivingBeastsOffIsNotTheSameSentenceAsStandingSettlersAside()
+		{
+			string drove = KingdomPlotRules.DroveBeastsOff("communal fire", 1, true, null);
+			StringAssert.Contains("drove 1 beast", drove);
+			StringAssert.Contains("communal fire", drove);
+			StringAssert.Contains("and the work goes on.", drove);
+			StringAssert.Contains("drove 2 beasts",
+				KingdomPlotRules.DroveBeastsOff("communal fire", 2, true, null));
+			string refused = KingdomPlotRules.DroveBeastsOff("communal fire", 1, false, "no ground");
+			StringAssert.Contains("but the raising was refused: no ground.", refused);
+			ClassicAssert.AreNotEqual(drove,
+				KingdomPlotRules.ClearedOccupiedSlots("communal fire", 1, true, null));
+		}
+
+		/// <summary>
+		/// The improvement route clears ground BEFORE its transition, reserve and funding have had
+		/// their say, so both sentences must carry the real outcome. Executed, not pinned: these
+		/// are the exact arguments SayEnvelopeCleared forwards once BeginCore's outcome is known.
+		/// Mutation: hardcoding Raised true (what the route did before) makes both refused cases
+		/// say "and the work goes on." and fails all four assertions below; hardcoding it false
+		/// fails the two begun cases.
+		/// </summary>
+		[TestCase("the reserve refused")]
+		[TestCase(null)]
+		public void GroundClearedForARefusedImprovementNeverSaysTheWorkGoesOn(string Fault)
+		{
+			string settlers = KingdomPlotRules.ClearedOccupiedSlots("moot", 2, false, Fault);
+			string beasts = KingdomPlotRules.DroveBeastsOff("moot", 1, false, Fault);
+			StringAssert.DoesNotContain("and the work goes on.", settlers);
+			StringAssert.DoesNotContain("and the work goes on.", beasts);
+			StringAssert.Contains("but the raising was refused:", settlers);
+			StringAssert.Contains("but the raising was refused:", beasts);
+			StringAssert.Contains(Fault ?? "the ground would not take it", settlers);
+			StringAssert.Contains(Fault ?? "the ground would not take it", beasts);
+			// The same bodies, the same counts, the other outcome: the only difference is the truth.
+			StringAssert.Contains("and the work goes on.",
+				KingdomPlotRules.ClearedOccupiedSlots("moot", 2, true, null));
+			StringAssert.Contains("and the work goes on.",
+				KingdomPlotRules.DroveBeastsOff("moot", 1, true, null));
+		}
+
+		/// <summary>
+		/// Moved counts residents AND beasts, so the settler sentence is the remainder and the two
+		/// sentences never count each other's bodies -- on the failing path too, where Moved is the
+		/// stranded count and Beasts the stranded beasts. Mutation: reading Moved as settlers
+		/// (what the old doc claimed) makes case 2 report 3 settlers beside 1 beast for 3 bodies.
+		/// </summary>
+		[TestCase(0, 0, 0, TestName = "nobody moved")]
+		[TestCase(3, 1, 2, TestName = "a mixed set splits into settlers and beasts")]
+		[TestCase(2, 2, 0, TestName = "beasts only")]
+		[TestCase(2, 0, 2, TestName = "settlers only")]
+		[TestCase(1, 2, 0, TestName = "never a negative crowd")]
+		public void MovedCountsResidentsAndBeastsTogether(int Moved, int Beasts, int Settlers)
+		{
+			ClassicAssert.AreEqual(Settlers, KingdomPlotRules.SettlersMoved(Moved, Beasts));
+			if (Moved >= Beasts)
+			{
+				ClassicAssert.AreEqual(Moved,
+					KingdomPlotRules.SettlersMoved(Moved, Beasts) + Beasts);
+			}
+		}
+
+		[Test]
+		public void AMovedPostNamesTheGroundItMovedTo()
+		{
+			string line = KingdomPlotRules.MovedPostWithResident("communal fire", 27, 9);
+			StringAssert.Contains("27, 9", line);
+			StringAssert.Contains("communal fire", line);
+			StringAssert.Contains("post", line);
+			ClassicAssert.AreNotEqual(line,
+				KingdomPlotRules.RefuseOccupiedAnchor("communal fire", 27, 9));
 		}
 
 		/// <summary>
@@ -1165,9 +1310,9 @@ namespace ThousandAndFirst.Tests
 		public void APlayerAloneOnTheLayoutIsAnOccupantAndRefuses()
 		{
 			ClassicAssert.AreEqual(KingdomPlotRules.OccupantVerdict.Refuse,
-				KingdomPlotRules.JudgeOccupants(1, 0, true, false));
+				KingdomPlotRules.JudgeOccupants(1, 0, true));
 			ClassicAssert.AreNotEqual(KingdomPlotRules.OccupantVerdict.Clear,
-				KingdomPlotRules.JudgeOccupants(1, 0, true, false));
+				KingdomPlotRules.JudgeOccupants(1, 0, true));
 		}
 
 		[Test]
