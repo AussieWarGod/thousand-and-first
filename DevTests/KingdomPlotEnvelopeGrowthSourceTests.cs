@@ -246,15 +246,15 @@ namespace ThousandAndFirst.Tests
 				"internal static bool IsMovableEnvelopeOccupant(",
 				"KingdomSurvey survey = EnvelopeSurvey(System, Z)",
 				"KingdomPlotRules.IsMovableOccupant(ReasonFor(System, survey, Body))",
-				// A survey is TAKEN, not only read: outside a settlement pass the classification is
-				// still real, and "unwitnessed" is left for the case that truly cannot be read.
+				// The BOUND survey and only that: taking one is not a read, and this runs once per
+				// occupant from a menu preview, so "unwitnessed" stays the honest answer.
 				"private static KingdomSurvey EnvelopeSurvey(KingdomSystem System, Zone Z)",
-				"KingdomSurvey.Take(Z, System)",
+				"KingdomSurvey.ActiveFor(Z)",
 				"internal static void NameEnvelopeOccupant(",
 				"KingdomSurvey survey = EnvelopeSurvey(System, Z)",
 				"KingdomLog.Log(KingdomPlotRules.OccupantLine(",
 				"survey == null ? null : ReasonFor(System, survey, Body).ToString()));");
-			StringAssert.DoesNotContain("KingdomSurvey.ActiveFor(Z)", clearance);
+			StringAssert.DoesNotContain("KingdomSurvey.Take(", clearance);
 			// A refused improvement reaches the log as well as the ledger, once per verdict change.
 			string resolve = Read("Growth/KingdomUpgrade.13.Resolve.cs");
 			AssertOrdered(resolve,

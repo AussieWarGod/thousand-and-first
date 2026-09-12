@@ -127,8 +127,8 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// The operator's line for one body standing on ground a raising or an improvement wants.
-		/// "unwitnessed" is reserved for the one case that means it -- no ground reading could be
-		/// taken at all -- so a menu-time preview never reads as a mystery.
+		/// "unwitnessed" says exactly one thing: no settlement pass was bound for that ground when
+		/// the body was read, so nothing witnessed it. A classified body always names its rung.
 		/// </summary>
 		/// <param name="Reason">The ladder's answer, or null when nothing could be read.</param>
 		public static string OccupantLine(string Id, string Blueprint, string At,

@@ -81,15 +81,16 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// The ground reading this classification stands on. KingdomSurvey.Take reuses the pass's
-		/// bound survey when there is one and captures a fresh one when there is not, so a
-		/// menu-time preview or a harness proof outside a settlement pass names the real reason
-		/// instead of "unwitnessed" -- which is then left for the one case that means it: no zone,
-		/// no system, or a survey that could not be taken at all.
+		/// The ground reading this classification stands on: the pass's BOUND survey, never a
+		/// fresh one. KingdomSurvey.Take is not a read -- it stamps legacy furnishing properties,
+		/// observes legacy state, can put a message in front of the player and moves its own reuse
+		/// counters -- and this runs once per occupant, from a menu preview among other places.
+		/// Null means exactly one thing: no settlement pass is bound for this zone. That is what
+		/// "unwitnessed" says, and it is the true answer rather than one bought with side effects.
 		/// </summary>
 		private static KingdomSurvey EnvelopeSurvey(KingdomSystem System, Zone Z)
 		{
-			return System == null || Z == null ? null : KingdomSurvey.Take(Z, System);
+			return System == null || Z == null ? null : KingdomSurvey.ActiveFor(Z);
 		}
 
 		/// <summary>One line naming a body that stands on ground an improvement wants.</summary>
