@@ -480,6 +480,16 @@ namespace ThousandAndFirst.Tests
 					.Replace('\\', '/');
 				if (!System.IO.File.ReadAllText(file).Contains(
 					"KingdomCitizenshipEnrollmentReason.Founding")) continue;
+				if (relative == "Harness/KingdomQuickstartSettlementChecks.cs")
+				{
+					// The native acceptance observer compares the existing reason; it never enrolls.
+					string observer = System.IO.File.ReadAllText(file);
+					StringAssert.Contains("citizenship.EnrollmentReason ==", observer);
+					foreach (string mutation in new[] { "TryEnroll(", "EnrollCitizen(",
+						"SetIntProperty(", "SetStringProperty(" })
+						Assert.That(observer.Contains(mutation), Is.False, mutation);
+					continue;
+				}
 				Assert.That(relative == "Core/KingdomCitizenshipRules.cs"
 					|| relative == "World/KingdomQuickstartBootstrap.Founders.Enrollment.cs"
 					|| relative.StartsWith("DevTests/", StringComparison.Ordinal), Is.True,
