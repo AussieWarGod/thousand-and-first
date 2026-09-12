@@ -41,11 +41,11 @@
       "prerequisites": "Quickstart",
       "transitions": "founders enrolled",
       "effects": "roster count",
-      "save_cold_load": "current candidate matrix in progress",
+      "save_cold_load": "NATIVE_PASS at 60f11aee: real save, same two housed survivors, absent departed founders, functional original building and another paid commission",
       "negative": "no partial or synthetic enrollment in the native shortage observer",
       "driver": "Harness/KingdomQuickstartSettlementChecks.cs; Harness/KingdomQuickstartHousingRecovery.cs",
       "status": "NATIVE_PASS",
-      "note": "Historical e1d26d9 native boot proved four unique original founder IDs, applied founding citizenship and living roll rows before ordinary turns. Terminal grants are not minted by the observer. Current candidate and cold-load coverage remain separate.",
+      "note": "Native 60f11aee starts with four unique founding citizens; after two genuine roof departures the original receipt still names the same cohort. Cold load preserves two housed survivors and keeps both departed bodies absent. Other join/recruitment paths remain outside this scenario.",
       "evidence": [
         {
           "commit": "e1d26d9",
@@ -57,6 +57,17 @@
           "historicalScope": true,
           "inventoryDigest": null,
           "currentDevCoverage": false
+        },
+        {
+          "commit": "60f11aee323582d52c003e79159e3aeec887398e",
+          "artifactPath": "quickstart-housing/60f11aee/housing-load-result.json",
+          "artifactSha256": "5a5a7025768968965df6f9f94bc1d1b2733b172a5d445435228eadcbb394323b",
+          "artifactBytes": 2970,
+          "verdict": "PASS - two roof departures, repeated two-citizen floor, recovered homes and paid work, real save/cold load and another paid commission",
+          "scope": "seed #43101 marsh/advisor-on; 17200 ordinary turns plus harness handoffs; 400 synthetic real drams, 100 meals, 72 physical obstacles; original citizens and real production work; strict logs and owned stops in both sessions",
+          "historicalScope": true,
+          "inventoryDigest": "43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6",
+          "currentDevCoverage": false
         }
       ]
     },
@@ -66,11 +77,11 @@
       "prerequisites": "founded, enrolled resident",
       "transitions": "KingdomResidentDepartureRuntime.TryBegin (Growth/KingdomResidentDepartureRuntime.Begin.cs:10)",
       "effects": "population/roster drop, capacity archive",
-      "save_cold_load": "COVERAGE_GAP",
+      "save_cold_load": "NATIVE_PASS at 60f11aee: real save, same two housed survivors, absent departed founders, functional original building and another paid commission",
       "negative": "COVERAGE_GAP",
       "driver": "Harness/KingdomQuickstartHousingRecoveryProvider.cs; Tools/personas/quickstart-housing-recovery.persona",
       "status": "NATIVE_PASS",
-      "note": "Native e1d26d9 scenario proves two ordinary roof departures, exact living rows and removed bodies, retention at the two-person floor on repeated passes, and construction recovery. Pending-departure fault injection and cold load after departures remain gaps. Current candidate changes and stronger unfinished-job assertion require rerun.",
+      "note": "Native 60f11aee proves two ordinary roof departures, repeated retention of the same two citizens, construction recovery, and cold-load preservation without reminting departed founders. Pending-departure interruption and multi-city combinations remain gaps.",
       "evidence": [
         {
           "commit": "e1d26d9",
@@ -81,6 +92,17 @@
           "scope": "isolated native Quickstart, synthetic water/meals and physical housing obstructions; 17200 ordinary turns; no cold-load or historical-save claim",
           "historicalScope": true,
           "inventoryDigest": null,
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "60f11aee323582d52c003e79159e3aeec887398e",
+          "artifactPath": "quickstart-housing/60f11aee/housing-load-result.json",
+          "artifactSha256": "5a5a7025768968965df6f9f94bc1d1b2733b172a5d445435228eadcbb394323b",
+          "artifactBytes": 2970,
+          "verdict": "PASS - two roof departures, repeated two-citizen floor, recovered homes and paid work, real save/cold load and another paid commission",
+          "scope": "seed #43101 marsh/advisor-on; 17200 ordinary turns plus harness handoffs; 400 synthetic real drams, 100 meals, 72 physical obstacles; original citizens and real production work; strict logs and owned stops in both sessions",
+          "historicalScope": true,
+          "inventoryDigest": "43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6",
           "currentDevCoverage": false
         }
       ]
@@ -116,11 +138,11 @@
       "prerequisites": "founded, water+material stock",
       "transitions": "quote/CanPay/Commission -> Working/PlotWorks",
       "effects": "job phase, works receipt, ground",
-      "save_cold_load": "Harness/KingdomQuickstartLifecycleLoad.cs exists; current candidate matrix in progress",
+      "save_cold_load": "NATIVE_PASS at 60f11aee: real save, same two housed survivors, absent departed founders, functional original building and another paid commission",
       "negative": "COVERAGE_GAP",
       "driver": "Harness/KingdomQuickstartLifecycleProvider.cs; Harness/KingdomQuickstartHousingRecoveryProvider.cs; Harness/KingdomTeardownNativeProvider.cs",
       "status": "NATIVE_PASS",
-      "note": "3cf2825 is a direct ancestor of current dev (git-verified), but that is commit ancestry, NOT whole-inventory identity: docs/STATUS.md's 3cf2825 section cites no inventory SHA-256 at all (checked), so inventoryDigest is recorded null and currentDevCoverage is false, not assumed true from ancestry alone. Real artefacts checksummed and confirmed present. Completion-to-built and save/cold-load of the FINISHED building remain a separate gap. Completion-to-built and save/cold-load legs, plus the full lifecycle chain (quote through next-action-after-load), are now IMPLEMENTED_UNEXECUTED on test/longform-reachability -- see rows 20-23, not this row's own driver. Historical e1d26d9 housing-shortage scenario additionally proves a completed functional paid building after ordinary turns and two departures, with matching construction receipt; no cold-load claim. Current lifecycle driver now exists and its nine-day/cold-load matrix is running.",
+      "note": "Historical quote/commission evidence is retained below. Native 60f11aee additionally keeps the paid job Working through both two-citizen observations, completes its functional output after removing owned physical obstructions, saves and cold-loads it, then pays for another commission. This is a supplied housing stress scenario, not whole-inventory or ordinary-start acceptance.",
       "evidence": [
         {
           "commit": "3cf2825",
@@ -153,6 +175,17 @@
           "scope": "isolated native Quickstart, synthetic water/meals and physical housing obstructions; 17200 ordinary turns; no cold-load or historical-save claim",
           "historicalScope": true,
           "inventoryDigest": null,
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "60f11aee323582d52c003e79159e3aeec887398e",
+          "artifactPath": "quickstart-housing/60f11aee/housing-load-result.json",
+          "artifactSha256": "5a5a7025768968965df6f9f94bc1d1b2733b172a5d445435228eadcbb394323b",
+          "artifactBytes": 2970,
+          "verdict": "PASS - two roof departures, repeated two-citizen floor, recovered homes and paid work, real save/cold load and another paid commission",
+          "scope": "seed #43101 marsh/advisor-on; 17200 ordinary turns plus harness handoffs; 400 synthetic real drams, 100 meals, 72 physical obstacles; original citizens and real production work; strict logs and owned stops in both sessions",
+          "historicalScope": true,
+          "inventoryDigest": "43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6",
           "currentDevCoverage": false
         }
       ]
@@ -453,11 +486,11 @@
       "prerequisites": "genuine default Quickstart; four founders; two physically obstructed starter shelter plots; explicit extra provisions isolate roof pressure",
       "transitions": "roof warnings -> two voluntary departures -> repeated two-citizen floor -> clear exact obstacles -> usable homes and completed paid work",
       "effects": "physical citizen identities, living roll, removed departed bodies, bed census, home assignments and paid construction output",
-      "save_cold_load": "COVERAGE_GAP after departures; normal four-founder lifecycle matrix in progress",
+      "save_cold_load": "NATIVE_PASS at 60f11aee: real save, same two housed survivors, absent departed founders, functional original building and another paid commission",
       "negative": "blocked shelters provide zero beds; missing/corrupt resident rows refuse; unrelated departure causes refuse",
-      "driver": "Harness/KingdomQuickstartHousingRecoveryProvider.cs; Tools/personas/quickstart-housing-recovery.persona",
+      "driver": "Harness/KingdomQuickstartHousingRecoveryProvider.cs; Tools/personas/quickstart-housing-recovery.persona; Harness/KingdomQuickstartHousingLoad.cs; Tools/personas/quickstart-housing-recovery-save.persona",
       "status": "NATIVE_PASS",
-      "note": "Historical e1d26d9, seed #43101, 17200 ordinary turns, strict Player.log clean. Current source adds a paid-job-unfinished precondition and needs rerun. Multi-city, interrupted-departure and condemned-home combinations remain gaps.",
+      "note": "Native 60f11aee passes the strengthened unfinished-work condition, two repeated zero-bed retention checks, usable homes/paid completion, real save and cold load with identical survivors and absent departed founders, then another paid commission. Logs and owned stops pass. Multi-city, interrupted-departure and condemned-home combinations remain gaps.",
       "evidence": [
         {
           "commit": "e1d26d9",
@@ -468,6 +501,17 @@
           "scope": "isolated native Quickstart, synthetic water/meals and physical housing obstructions; 17200 ordinary turns; no cold-load or historical-save claim",
           "historicalScope": true,
           "inventoryDigest": null,
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "60f11aee323582d52c003e79159e3aeec887398e",
+          "artifactPath": "quickstart-housing/60f11aee/housing-load-result.json",
+          "artifactSha256": "5a5a7025768968965df6f9f94bc1d1b2733b172a5d445435228eadcbb394323b",
+          "artifactBytes": 2970,
+          "verdict": "PASS - two roof departures, repeated two-citizen floor, recovered homes and paid work, real save/cold load and another paid commission",
+          "scope": "seed #43101 marsh/advisor-on; 17200 ordinary turns plus harness handoffs; 400 synthetic real drams, 100 meals, 72 physical obstacles; original citizens and real production work; strict logs and owned stops in both sessions",
+          "historicalScope": true,
+          "inventoryDigest": "43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6",
           "currentDevCoverage": false
         }
       ]
@@ -583,11 +627,11 @@
         24
       ],
       "coupling": "The same four original residents supply labour and need homes; housing refusal triggers departures while construction still needs a workforce.",
-      "prerequisites": "Genuine Quickstart, physical obstructions on both starter shelter lots, explicit provisions to isolate housing pressure.",
-      "invariants": "Two exact citizens remain through repeated roof-departure passes; those same identities have real homes after unblocking; paid work has a functional output with its original receipt.",
-      "seed_turn_matrix": "Historical e1d26d9, seed #43101, marsh/advisor-on, 10000 + 2400 + 4800 ordinary turns; no sweep or cold-load claim.",
+      "prerequisites": "Genuine Quickstart, physical obstructions on both starter shelters and the paid plot, explicit provisions to isolate housing pressure.",
+      "invariants": "Two exact citizens remain through repeated roof-departure passes; those same identities have real homes after unblocking; paid work has a functional output with its original receipt. Cold load preserves survivor identities, homes and absent departed founders; another commission pays normally.",
+      "seed_turn_matrix": "Native 60f11aee, seed #43101, marsh/advisor-on, 10000 + 2400 + 4800 ordinary turns plus handoffs; real save, separate cold load and next paid action. Historical e1d26d9 source-only evidence retained.",
       "expected_failure_rows": "housing-retained refuses below-floor or changed survivors, unrelated departure causes, unexpected beds or lost obstacles; housing-recovered refuses missing homes or incomplete paid work.",
-      "reusable_seams": "Tools/personas/quickstart-housing-recovery.persona; current fixture additionally requires paid work to remain unfinished through both retention observations.",
+      "reusable_seams": "Tools/personas/quickstart-housing-recovery-save.persona; exact startup stockpile binding; unfinished paid work at repeated shortage observations; dedicated housing load witness.",
       "status": "NATIVE_PASS",
       "evidence": [
         {
@@ -599,6 +643,17 @@
           "scope": "isolated native Quickstart, synthetic water/meals and physical housing obstructions; 17200 ordinary turns; no cold-load or historical-save claim",
           "historicalScope": true,
           "inventoryDigest": null,
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "60f11aee323582d52c003e79159e3aeec887398e",
+          "artifactPath": "quickstart-housing/60f11aee/housing-load-result.json",
+          "artifactSha256": "5a5a7025768968965df6f9f94bc1d1b2733b172a5d445435228eadcbb394323b",
+          "artifactBytes": 2970,
+          "verdict": "PASS - two roof departures, repeated two-citizen floor, recovered homes and paid work, real save/cold load and another paid commission",
+          "scope": "seed #43101 marsh/advisor-on; 17200 ordinary turns plus harness handoffs; 400 synthetic real drams, 100 meals, 72 physical obstacles; original citizens and real production work; strict logs and owned stops in both sessions",
+          "historicalScope": true,
+          "inventoryDigest": "43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6",
           "currentDevCoverage": false
         }
       ]

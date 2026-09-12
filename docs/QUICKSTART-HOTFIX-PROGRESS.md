@@ -152,3 +152,28 @@ claimed cells/placements before scoring candidates. Final preflight still protec
 those cells. Main 14775/portable 5732 tests and all four compile modes pass; native
 rerun is owed. The corrected housing save/load script is currently running separately
 on frozen `60f11aee` production, before this site-selection change.
+
+### Housing recovery, real save, cold load and next action: PASS
+
+The strengthened `60f11aee` scenario completed all 14 source verbs and the separate
+cold-load/next-commission session. Two roof departures left the same two original
+citizens through repeated zero-bed observations while the paid job remained Working.
+After removing the 72 owned empty obstacles, those citizens occupied completed homes
+and finished the original paid building. Cold load preserved both survivors, six usable
+beds, the exact original receipt and output; both departed founders stayed absent.
+Another commission debited one timber and two drams. Both strict game logs and owned
+process stops passed. This is supplied stress coverage (400 real drams, 100 meals),
+not ordinary-start or whole-current-inventory acceptance.
+
+Result: `full-cask-housing-load-2/housing-load-result.json` under the evidence root.
+Checked archive: `quickstart-housing/60f11aee/` under the behaviour-evidence root.
+Production inventory was `43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6`;
+later protected-site selection and the release-version literal are separate changes.
+Coverage rows 3/4/6/24 and combination C7 retain that exact scope and digest.
+
+Private 0.3.4 candidate `b564eaed` (same content tree as `9e0a4dfd`) passes all four
+compile modes and 14775 main/5732 portable cases with zero skips. Logs:
+`/tmp/taf-alpha-034-gate.log`, `/tmp/taf-alpha-034-full.log`,
+`/tmp/taf-alpha-034-portable.log`. Its inventory is
+`73c87caced09ccdffc714a2475c170679e6e37a68b0fe42e92566d98c18d2907`.
+No private or public upload has occurred; native site-selection and delivery checks remain pending.
