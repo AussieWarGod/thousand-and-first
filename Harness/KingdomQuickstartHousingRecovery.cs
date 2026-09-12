@@ -58,6 +58,7 @@ namespace ThousandAndFirst.Harness
 				"the original paid job is not working at delay setup");
 			KingdomPlotRules.PlotRect paidRect = default;
 			Require(KingdomConstruction.FindExactId(Zone, job.SubjectId, out GameObject root)
+					== KingdomPhysicalLookupState.Exact
 				&& KingdomConstruction.HasReceipt(root, job)
 				&& KingdomPlots.TryReadRect(root, out paidRect), "the paid plot has no exact physical root");
 			// Keep the paid work unfinished with owned physical obstacles, independent of where
