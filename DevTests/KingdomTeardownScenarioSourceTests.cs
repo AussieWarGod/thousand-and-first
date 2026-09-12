@@ -497,9 +497,19 @@ namespace ThousandAndFirst.Tests
 				"Require(GameObject.Validate(body) && body.IsAlive,"));
 			Assert.That(enrollment, Does.Contain(
 				"is dead or no longer a valid object"));
-			Assert.That(enrollment, Does.Contain(
-				"is not present in the production AvailableSettlers projection"));
 			Assert.That(enrollment, Does.Contain("bool ownRaising = AcceptablePostIds != null"));
+			// Run 39 retry 2: staged for a physical happening is healthy; only standing and ground
+			// are asserted, through the engine-free rule, and staged=/standing= are journaled.
+			Assert.That(enrollment, Does.Contain("KingdomPhysicalHappenings.IsStaged(body)"));
+			Assert.That(enrollment, Does.Contain("KingdomTeardownCrewAvailabilityRules.Judge(onRoll, grounded, staged)"));
+			Assert.That(enrollment, Does.Contain("verdict == KingdomTeardownCrewAvailabilityRules.Verdict.Accepted"));
+			Assert.That(enrollment, Does.Contain(".Describe(onRoll, grounded, staged, isAvailable)"));
+			Assert.That(enrollment, Does.Not.Contain("Require(isAvailable,"));
+			string rules = Read("Harness/KingdomTeardownCrewAvailabilityRules.cs");
+			Assert.That(rules, Does.Not.Contain("using XRL"));
+			Assert.That(rules, Does.Contain("if (!ResidentOnRoll) return Verdict.RefusedNotResident;"));
+			Assert.That(rules, Does.Contain("if (!Grounded) return Verdict.RefusedUngrounded;"));
+			Assert.That(rules, Does.Not.Contain("if (Staged)"));
 			// No Require may name the post value once a raising can exist -- disclosure only.
 			Assert.That(enrollment, Does.Not.Contain("neither free nor posted"));
 		}

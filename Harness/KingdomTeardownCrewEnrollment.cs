@@ -91,8 +91,13 @@ namespace ThousandAndFirst.Harness
 		}
 
 		/// <summary>Read-only, re-askable every check: each body must be a live, valid object,
-		/// grounded, unstaged and Resident (the exact production KingdomCrews.AvailableSettlers
-		/// membership). At setup (AcceptablePostIds null) PostOf==0 is a strict assertion, since
+		/// grounded and Resident on the roll. STAGED IS HEALTHY (run 39 retry 2): a body staged for
+		/// a physical happening - the completed fire's raising ceremony stamps the happening token
+		/// on its settler attendees until the happening is driven to its end - drops out of the
+		/// production KingdomCrews.AvailableSettlers projection while doing lawful settlement work,
+		/// so membership there is journaled (available=) but the verdict is the engine-free
+		/// KingdomTeardownCrewAvailabilityRules.Judge over standing and ground only; staged= and
+		/// standing= are journaled per body. At setup (AcceptablePostIds null) PostOf==0 is a strict assertion, since
 		/// no raising exists yet. On a per-Check re-ask (AcceptablePostIds non-null), the post
 		/// value is never asserted -- only journaled, alongside whether it happens to name one
 		/// of this fixture's own Construction raisings -- since production may legitimately post
@@ -105,6 +110,8 @@ namespace ThousandAndFirst.Harness
 		{
 			KingdomSurvey survey = KingdomSurvey.Take(Zone, System);
 			List<GameObject> available = KingdomCrews.AvailableSettlers(System, survey);
+			List<Simulation.City.KingdomResidentRow> labour =
+				Simulation.City.KingdomResidents.RollRows(System, true);
 			for (int i = 0; i < Bodies.Count; i++)
 			{
 				GameObject body = Bodies[i];
@@ -113,9 +120,21 @@ namespace ThousandAndFirst.Harness
 				bool isAvailable = false;
 				for (int j = 0; j < available.Count; j++)
 					if (ReferenceEquals(available[j], body)) { isAvailable = true; break; }
-				Require(isAvailable, "crew body " + (i + 1) + " of " + Bodies.Count
-					+ " is not present in the production AvailableSettlers projection "
-					+ "(not Resident standing, staged, or ungrounded)");
+				int residentId = Simulation.City.KingdomResidents.IdOf(body);
+				bool onRoll = false;
+				for (int j = 0; j < labour.Count; j++)
+					if (residentId > 0 && labour[j].ResidentId == residentId) { onRoll = true; break; }
+				bool grounded = false;
+				for (int j = 0; j < survey.Settlers.Count; j++)
+					if (ReferenceEquals(survey.Settlers[j], body)) { grounded = true; break; }
+				bool staged = Simulation.City.KingdomPhysicalHappenings.IsStaged(body);
+				KingdomTeardownCrewAvailabilityRules.Verdict verdict =
+					KingdomTeardownCrewAvailabilityRules.Judge(onRoll, grounded, staged);
+				Require(verdict == KingdomTeardownCrewAvailabilityRules.Verdict.Accepted,
+					KingdomTeardownCrewAvailabilityRules.Refusal(verdict, i + 1, Bodies.Count)
+						?? "accepted");
+				Journal?.Invoke("; crew=" + (i + 1) + " " + KingdomTeardownCrewAvailabilityRules
+					.Describe(onRoll, grounded, staged, isAvailable));
 				int post = KingdomStations.PostOf(body);
 				if (AcceptablePostIds == null)
 					Require(post == 0, "crew body " + (i + 1) + " of " + Bodies.Count

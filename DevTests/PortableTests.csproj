@@ -165,6 +165,8 @@
 	<Compile Include="..\Harness\KingdomQuickstartBuildClaims.cs" />
 	<Compile Include="..\Harness\KingdomTeardownStrikeRowClaims.cs" />
 	<Compile Include="..\Harness\KingdomTeardownCrewDepartureClaims.cs" />
+	<Compile Include="..\Harness\KingdomTeardownCrewAvailabilityRules.cs" />
+	<Compile Include="KingdomTeardownCrewAvailabilityRulesTests.cs" />
 	<Compile Include="KingdomQuickstartBuildClaimsTests.cs" />
 	<Compile Include="KingdomTeardownStrikeRowClaimsTests.cs" />
 	<Compile Include="KingdomTeardownCrewDepartureClaimsTests.cs" />
