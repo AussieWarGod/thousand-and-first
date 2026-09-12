@@ -11,7 +11,8 @@ Three verdicts, and only one of them is success:
 
   PASS     every link's rows are present, in order, and OK.
   FAIL     a link's rows are present but refused, out of order, or self-contradictory
-           (failClass "chain"), or the founder died mid-run (failClass "founder-died").
+           (failClass "chain"), the founder died mid-run (failClass "founder-died"), or the
+           steps named different stores (failClass "store-drift").
   BLOCKER  a link has NO rows at all. Missing reachability is never a pass: an absent link
            means the chain was never driven that far, which is exactly the state this tool
            exists to make visible.
@@ -244,6 +245,27 @@ STOPPED_ROW = "SCRIPT-STOPPED"
 DIED_PREFIX = "DIED "
 FOUNDER_DIED = "founder-died"
 CHAIN_FAIL = "chain"
+# Native run 38 (2fa563c): the heart's own dry store joined the bootstrap chest mid-advance and a
+# scan-based "exactly one" refused the save. Every lifecycle step now names the store it paid from
+# (storeId=, Harness/KingdomQuickstartLifecycleSteps.cs StoreClause); the chain must name ONE store
+# from open to next-action, and a drift between steps is its own FAIL class.
+STORE_DRIFT = "store-drift"
+
+
+def store_in(message: str) -> str | None:
+    """The store id a lifecycle row named, if it named one."""
+    found = re.search(r"\bstoreId=([^;\s]+)", message)
+    return found.group(1) if found else None
+
+
+def store_ids(rows: list[tuple[str, str, str]]) -> list[str]:
+    """Every distinct store id the OK lifecycle rows named, in first-seen order."""
+    seen: list[str] = []
+    for verb, outcome, message in rows:
+        name = store_in(message)
+        if outcome == "OK" and name is not None and name not in seen:
+            seen.append(name)
+    return seen
 
 
 def founder_death(rows: list[tuple[str, str, str]]) -> str | None:
@@ -448,6 +470,10 @@ def judge(rows: list[tuple[str, str, str]]) -> dict:
         elif state == BLOCKER and verdict == PASS:
             verdict, reason = BLOCKER, link + ": " + detail
     fail_class = CHAIN_FAIL if verdict == FAIL else None
+    stores = store_ids(rows)
+    if len(stores) > 1:
+        verdict, fail_class = FAIL, STORE_DRIFT
+        reason = STORE_DRIFT + ": the steps paid from different stores " + ",".join(stores)
     death = founder_death(rows)
     if death is not None:
         verdict, reason, fail_class = FAIL, FOUNDER_DIED + ": " + death, FOUNDER_DIED
@@ -457,6 +483,7 @@ def judge(rows: list[tuple[str, str, str]]) -> dict:
         "reason": reason,
         "failClass": fail_class,
         "founderDeath": death,
+        "storeIds": stores,
         "links": links,
         "rowsRead": len(rows),
     }

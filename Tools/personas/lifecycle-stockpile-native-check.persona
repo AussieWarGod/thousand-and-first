@@ -93,6 +93,22 @@
 #      at Camp stage - the tent rows are staked, unwalled plots and the heart has no interior cell
 #      yet - so the founder stays on the cell the boot left him on (walk=none in the row).
 #
+# NATIVE RUN 38 (2fa563c): lifecycle-grown built=1 for the first time, then lifecycle-save refused
+# "more than one dedicated stockpile stands here". Both stores are lawful production artefacts and
+# both are kept: the Quickstart bootstrap's camp materials chest (World/KingdomQuickstartBootstrap.
+# Materials.cs:34; the store lifecycle-open read, id 495 in that run) and the heart's own dry store
+# r_KingdomHeartStockpile (RuntimeData/ObjectBlueprints.xml KingdomStockpile=1; Architecture/
+# KingdomArchitectures-CivicFaith.xml palette civic-heart-natural slot "store"), stamped when the
+# settlement raised heart rung 1 (heartbasin) during the 7200-turn advance (Player.log "heart rung
+# raised: 1 (heartbasin)"). Nothing is deleted or undedicated. The harness fault was binding to a
+# SCAN ("exactly one") instead of to the store it opened with: lifecycle-open now records the store
+# in its durable opened receipt (zone|storeId|turns, a string game state that survives the save),
+# every later step - build, save, and session 2's loaded/next - resolves THAT id among the stores
+# standing (Harness/KingdomQuickstartLifecycleStoreRules.cs, value-tested: ambiguity with a bound
+# id resolves, without one refuses, a bound store that no longer stands refuses), and every step's
+# row carries storeId=<id>; stores=<count>. Tools/check-quickstart-lifecycle.py reports storeIds and
+# fails the chain as store-drift if the OK steps ever name different stores.
+#
 # NOT YET NATIVELY RUN with this budget: written and gate.sh-compiled only. The cold-load session
 # and the next action after it are NOT in this script; see Tools/check-quickstart-lifecycle.py for
 # why those two links still read BLOCKER without it.

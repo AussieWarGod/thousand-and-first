@@ -100,6 +100,39 @@ class FounderDeath(unittest.TestCase):
         self.assertIsNone(passed["founderDeath"])
 
 
+class StoreIdentity(unittest.TestCase):
+    """Every step must pay from the one store lifecycle-open bound (native run 38)."""
+
+    def chain(self, *ids):
+        driven = whole_chain()
+        for index, store in enumerate(ids):
+            driven.append(("lifecycle-step-%d" % index, "OK", "step; storeId=%s; stores=2" % store))
+        return driven
+
+    def test_one_store_named_throughout_is_reported_and_passes(self):
+        report = checker.judge(self.chain("495", "495", "495"))
+        self.assertEqual(report["verdict"], checker.PASS)
+        self.assertEqual(report["storeIds"], ["495"])
+
+    def test_two_stores_across_steps_is_the_store_drift_fail_class(self):
+        report = checker.judge(self.chain("495", "1203"))
+        self.assertEqual(report["verdict"], checker.FAIL)
+        self.assertEqual(report["failClass"], checker.STORE_DRIFT)
+        self.assertIn("495,1203", report["reason"])
+        self.assertEqual(checker.EXITS[report["verdict"]], 4)
+
+    def test_a_refused_row_naming_another_store_does_not_count(self):
+        driven = self.chain("495")
+        driven.append(("lifecycle-save", "REFUSED", "refused; storeId=1203; stores=2"))
+        report = checker.judge(driven)
+        self.assertEqual(report["storeIds"], ["495"])
+        self.assertNotEqual(report["failClass"], checker.STORE_DRIFT)
+
+    def test_the_store_field_is_read_exactly(self):
+        self.assertEqual(checker.store_in("x; storeId=495; stores=2"), "495")
+        self.assertIsNone(checker.store_in("x; stockpile=495; stores=2"))
+
+
 class StallClassification(unittest.TestCase):
     """The four unfinished-job cases, surfaced verbatim and never softened into a pass."""
 
