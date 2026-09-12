@@ -372,12 +372,20 @@ namespace ThousandAndFirst.Tests
 			// Run 46b: the debit is judged over EVERY dedicated store (production pays from any),
 			// never over the one bound store alone; every store's count is journaled.
 			StringAssert.DoesNotContain("ExactSingleDebit(before, after", load);
-			AssertOrdered(load, "TimberByStore(zone, out List<string> storeIds, out List<int> timberBefore);",
+			AssertOrdered(load, "TimberByStore(zone, out List<string> storeIds, out List<int> timberBefore, out List<string> unreadBefore);",
 				"KingdomCommission.Commission(system, KingdomQuickstartLifecycleSteps.BuildKey",
-				"TimberByStore(zone, out List<string> storeIdsAfter, out List<int> timberAfter);",
-				"KingdomQuickstartLifecycleDebitRules.Judge(storeIds, timberBefore, timberAfter, 1,",
+				"TimberByStore(zone, out List<string> storeIdsAfter, out List<int> timberAfter, out List<string> unreadAfter);",
+				"KingdomQuickstartLifecycleDebitRules.Judge(storeIds, timberBefore, timberAfter,",
+				"unreadBefore, unreadAfter, 1, out string debitFailure)",
 				"KingdomQuickstartLifecycleDebitRules.Describe(storeIds, timberBefore, timberAfter)");
-			StringAssert.DoesNotContain("using XRL", Read("Harness/KingdomQuickstartLifecycleDebitRules.cs"));
+			string rules = Read("Harness/KingdomQuickstartLifecycleDebitRules.cs");
+			StringAssert.DoesNotContain("using XRL", rules);
+			// PR #183: an unread store refuses FIRST, before any arithmetic (the failure loop
+			// precedes the count loop), and the census never discards TakeStock's failure.
+			AssertOrdered(rules, "internal static bool Judge(", "could not be stocked: ", "GAINED timber");
+			string censusShard = Read("Harness/KingdomQuickstartLifecycleLoad.Census.cs");
+			StringAssert.DoesNotContain("out _)", censusShard);
+			StringAssert.Contains("Failures.Add(read ? null : (failure ?? \"unread\"));", censusShard);
 			// Run 46b/47 C: the lifecycle save is routed to its own pre-activation witness, beside
 			// the Quickstart branch and before the Rung one; the generic witness null-guards.
 			string witness = Read("Harness/KingdomScenarioLoadWitness.cs");

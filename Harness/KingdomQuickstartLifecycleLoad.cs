@@ -153,7 +153,7 @@ namespace ThousandAndFirst.Harness
 			if (!KingdomQuickstartBuildCensus.TakeStock(zone, stockpile, false,
 				out var before, out string beforeFailure)) return beforeFailure;
 			// Run 46b: production pays from ANY dedicated store, so the debit is judged over all.
-			TimberByStore(zone, out List<string> storeIds, out List<int> timberBefore);
+			TimberByStore(zone, out List<string> storeIds, out List<int> timberBefore, out List<string> unreadBefore);
 			if (!KingdomConstruction.TryRead(out List<KingdomConstructionJob> jobsBefore, out string readFailure))
 				return readFailure ?? "the construction registry could not be read after loading";
 			int waterBefore = KingdomGrowth.CountStoredWater(zone);
@@ -175,11 +175,11 @@ namespace ThousandAndFirst.Harness
 				out var after, out string afterFailure)) return afterFailure;
 			if (!KingdomQuickstartBuildCensus.SameStockpile(before, after, out string sameFailure))
 				return sameFailure;
-			TimberByStore(zone, out List<string> storeIdsAfter, out List<int> timberAfter);
+			TimberByStore(zone, out List<string> storeIdsAfter, out List<int> timberAfter, out List<string> unreadAfter);
 			if (!SameStores(storeIds, storeIdsAfter))
 				return "the dedicated store set changed across the new commission";
-			if (!KingdomQuickstartLifecycleDebitRules.Judge(storeIds, timberBefore, timberAfter, 1,
-				out string debitFailure)) return debitFailure;
+			if (!KingdomQuickstartLifecycleDebitRules.Judge(storeIds, timberBefore, timberAfter,
+				unreadBefore, unreadAfter, 1, out string debitFailure)) return debitFailure;
 			string debit = KingdomQuickstartLifecycleDebitRules.Describe(storeIds, timberBefore, timberAfter);
 			int waterAfter = KingdomGrowth.CountStoredWater(zone);
 			if (waterAfter != waterBefore - entry.CostDrams)

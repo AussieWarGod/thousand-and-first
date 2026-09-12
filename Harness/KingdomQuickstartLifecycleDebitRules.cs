@@ -22,15 +22,28 @@ namespace ThousandAndFirst.Harness
 	{
 		/// <summary>True when the per-store counts, taken before and after in the same store
 		/// order, show exactly <paramref name="ExpectedDrop" /> units gone in total, spread across
-		/// any stores, with no store gaining and no store added or removed.</summary>
+		/// any stores, with no store gaining and no store added or removed.
+		/// <para>PR #183 review: a store whose stock could not be read is NOT a zero. Its failure
+		/// text (parallel lists <paramref name="BeforeFailures" /> / <paramref name="AfterFailures" />,
+		/// null where the read succeeded) refuses FIRST, before any arithmetic, so an unmeasured
+		/// store can neither fabricate a gain nor let a balanced total pass as proof.</para></summary>
 		internal static bool Judge(IReadOnlyList<string> Ids, IReadOnlyList<int> Before,
-			IReadOnlyList<int> After, int ExpectedDrop, out string Failure)
+			IReadOnlyList<int> After, IReadOnlyList<string> BeforeFailures,
+			IReadOnlyList<string> AfterFailures, int ExpectedDrop, out string Failure)
 		{
 			Failure = null;
 			if (Ids == null || Before == null || After == null
 				|| Ids.Count != Before.Count || Before.Count != After.Count)
 			{
 				Failure = "the dedicated store set changed across the commission";
+				return false;
+			}
+			for (int i = 0; i < Ids.Count; i++)
+			{
+				string unread = Unread(BeforeFailures, i) ?? Unread(AfterFailures, i);
+				if (unread == null) continue;
+				Failure = "dedicated store " + (string.IsNullOrEmpty(Ids[i]) ? "unassigned" : Ids[i])
+					+ " could not be stocked: " + unread;
 				return false;
 			}
 			if (Ids.Count == 0) { Failure = "no dedicated store stood to pay from"; return false; }
@@ -54,6 +67,12 @@ namespace ThousandAndFirst.Harness
 				return false;
 			}
 			return true;
+		}
+
+		private static string Unread(IReadOnlyList<string> Failures, int Index)
+		{
+			if (Failures == null || Index >= Failures.Count) return null;
+			return string.IsNullOrEmpty(Failures[Index]) ? null : Failures[Index];
 		}
 
 		/// <summary>Every store's count before and after, in one ASCII clause.</summary>

@@ -11,19 +11,24 @@ namespace ThousandAndFirst.Harness
 	internal static partial class KingdomQuickstartLifecycleLoad
 	{
 		/// <summary>Every dedicated store's timber, in survey order, read through the same
-		/// TakeStock census the single-store proof uses. Ids and counts are parallel lists.</summary>
-		private static void TimberByStore(Zone Zone, out List<string> Ids, out List<int> Timber)
+		/// TakeStock census the single-store proof uses. Ids, counts and failures are parallel
+		/// lists; a store whose stock could not be read carries its TakeStock failure text (and a
+		/// count of 0 that DebitRules.Judge never reads, because the failure refuses first).</summary>
+		private static void TimberByStore(Zone Zone, out List<string> Ids, out List<int> Timber,
+			out List<string> Failures)
 		{
 			Ids = new List<string>();
 			Timber = new List<int>();
+			Failures = new List<string>();
 			foreach (GameObject item in KingdomSurvey.ObjectsFor(Zone))
 			{
 				if (!GameObject.Validate(item) || !KingdomMaterials.IsStockpile(item)
 					|| item.Inventory == null) continue;
-				int count = KingdomQuickstartBuildCensus.TakeStock(Zone, item, false,
-					out var stock, out _) ? KingdomQuickstartLifecycleSteps.Timber(stock) : 0;
+				bool read = KingdomQuickstartBuildCensus.TakeStock(Zone, item, false,
+					out var stock, out string failure);
 				Ids.Add(item.IDIfAssigned ?? "");
-				Timber.Add(count);
+				Timber.Add(read ? KingdomQuickstartLifecycleSteps.Timber(stock) : 0);
+				Failures.Add(read ? null : (failure ?? "unread"));
 			}
 		}
 
