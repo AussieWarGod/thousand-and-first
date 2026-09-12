@@ -1,0 +1,73 @@
+# Heart rung 2 -> 3 (the waterstone into the moot yard), issue #159. The rung-2 climb is run
+# FIRST inside this same persona, by the same real settlement pass, so the rung-3 start state is
+# reached lawfully rather than seeded: nothing here writes r_TAF_HeartRung, and no rung is stamped,
+# copied or forced by the seam. Everything after setup is the REAL pass on the turns this script's
+# own `advance` spends -- the seam never calls KingdomUpgrade.Begin, KingdomPlots.Advance or
+# KingdomArchitectureStamper.TryApplyUpgrade.
+#
+# OPEN QUESTION THIS RUN EXISTS TO ANSWER (camp-builder CASE 3, carried verbatim from the runbook):
+# the only writers of r_TAF_HeartRung were the plot/rite route, and Growth/KingdomPlot2.10.Commission.cs
+# states the heart is founded, not commissioned. Growth/KingdomUpgrade.26.HeartRung.cs
+# (TrySettleImprovementHeartRung) is the fix that makes every rung above the first climb by the
+# improvement route -- 2->3 is the first rung that exercises it TWICE IN A ROW, so this is exactly
+# the untested seam. Source reading only, until this runs: TrySettleImprovementHeartRung stamps the
+# rung, tells the chronicle once and reconciles the basin behind an at-most-once 0/1/2 marker, and
+# never stamps a rung backward; nothing in it is keyed to "the first improvement", so a second
+# consecutive climb SHOULD settle the same way. That is a reading of the source, not a result.
+#
+# SYNTHETIC SETUP, DISCLOSED, all through production APIs and all reported in every line:
+#  - the camp, its residents (twenty-five, because the moot yard asks for a Town), the dedicated
+#    1920-dram reservoir and its drams, and each fixture body's KingdomBorn provenance and name;
+#  - five taught designs (KingdomZoning.Learn, one point each) so the keepers stand at the workshop
+#    craft level the moot yard is gated on; the level is read back, never written;
+#  - the minted store units: the authored rung-2 bill (24 stone, 1 timber) plus 2 brush the bill
+#    never asks for, and then the authored rung-3 bill (17 timber, 2 stone, 6 shapedtimber) minted at
+#    the phase-2 boundary. Only 2 unasked units, not the rung-2 run's 23, because the store is NOT the
+#    fixture's to predict: native run 5 found 46 of its 48 units standing at that boundary, since the
+#    settlement's own keepers deposit what its yard work makes into this same dedicated stockpile
+#    while the rung is built. The rung-3 fill is therefore read off the OBSERVED store -- held and
+#    declared capacity through production's own reads -- mints the whole bill when there is room and
+#    only the per-material shortfall when there is not, never pushes the store past the capacity its
+#    blueprint declares, and journals the per-material census on both sides. Shaped timber is a worked
+#    material no fixture minted before this one;
+#  - the founder's one-time improvement notice, pre-marked as read so a headless run raises no modal;
+#  - THE TOWN ITSELF (native runs 7 and 33). Subsidence and lodging departures stay ON. Production
+#    sheds people its finished works cannot carry (the water support tally, then the six-day roof
+#    grace), and run 33 lost all 25 residents that way before the moot yard was ever assessed as a
+#    Town. So the fixture seeds, as REAL finished works, what production would require for 25:
+#    tentrow lodging lots until KingdomGrowth.TryCountBeds counts a bed each, and crewless dew-lane
+#    water works (catchmentbank, or the first design zoning permits) until the summed water carries
+#    25 at the stage the settlement holds. Each lot is staked receiptless (KingdomPlots.Stake, the
+#    quickstart shelter's own path, schema-zero calendar) and finished by the compatibility
+#    KingdomPlots.Advance the completed-heart seam uses, so production's own Finish stamps the build
+#    key, plot id and architecture designation: nothing is hand-stamped and no crew built them.
+#    Lodging is assigned by KingdomLodging.OnSettlementPass, never by writing a home id. The
+#    settlement stage is written once from StageFor(population, capacity) exactly as the subsidence
+#    fixture writes it -- load-bearing, because zoning refuses the dew lane's MinStage=Steading at a
+#    fresh camp until a daily pass has raised the stage; population equilibrium after that is
+#    production's own reckoning. KNOWN GAP: KingdomPlots.Stake spends nothing and does not apply the
+#    plot-area budget (KingdomPlotRules.WouldExceedBudget) a real commission would, so the seeded
+#    lots may exceed what the settlement could have commissioned on this ground; left open. The
+#    run REFUSES (taf-camp-rung3-town-held) unless the Town still stands when the rung-3 bill is
+#    minted and again at the rung-3 boundary, journaling the supports tally and stage each time.
+# The ground the moot yard must annex (the 8x6 -> 12x10 growth, seventy-two new cells) is CENSUSED and
+# journaled before the rung-3 commission -- objects, living bodies, solid bodies -- so a refusal for
+# want of ground is diagnosable. That census asserts nothing and moves nothing.
+# Not ordinary play, not a rendered Charter, no save/load, no general camp acceptance. Rung 3 -> 4
+# and 4 -> 5 remain owed, as do PR #107 cases 1, 3, 4 and 5.
+# The #162 halt lines are FORBIDDEN here too (PR #164): a heart that cannot be recovered after its
+# first climb never begins the second, and the rung-3 check also asks production's own recovery
+# predicate once the moot yard stands.
+DESCRIPTION=the heart climbs a second consecutive improvement-route rung, waterstone to moot yard, paid out of its own camp store
+REQUEST=founding-first-city
+START=8.22@40,12
+# 1200 crosses the first daily reconciliation; 3600 covers the waterstone's 3000-tick labour as the
+# rung-2 persona measured it; 7200 covers the moot yard's own 6000-tick bill plus the window that
+# prices it. 12000 turns in total, against 4800 turns in under three minutes on the rung-2 run.
+SCRIPT=stagedigest;camp-heart-setup;advance 1200;camp-heart-check;advance 3600;camp-heart-check;advance 7200;camp-heart-check;stagedigest
+VERBS=camp-heart-setup,camp-heart-check
+EXPECT=stagedigest:OK~founded=false,camp-heart-setup:OK~native-camp-heart phase=1,advance:OK,camp-heart-check:OK~native-camp-heart phase=2,advance:OK,camp-heart-check:OK~native-camp-heart phase=3,advance:OK,camp-heart-check:OK~native-camp-heart cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
+LOG_EXPECT=["MODWARN [Pets of Harvest Dawn] - Mod defining manual load order, please convert it to use the Dependencies field.","MODWARN [Pets of Harvest Dawn] - XmlDataHelper:: <...>/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/DLC/PetsPack1/Freehold_Pet_Ercolano/PopulationTables.xml line 4 char 6"]
+LOG_FORBID=["construction: founding heart recovery requires inspection","seal: settlement pass was not staged"]
+SET=camp,native-regression,test-only
+TIMEOUT=3600

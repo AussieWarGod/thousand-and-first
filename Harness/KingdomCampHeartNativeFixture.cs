@@ -14,10 +14,13 @@ namespace ThousandAndFirst.Harness
 	{
 		private sealed partial class Frame
 		{
-			/// <summary>Six real NPC residents, enrolled through the production citizenship and
-			/// roster APIs - the same path a genuine arrival takes. Six is the smallest population
-			/// that reaches the Steading gate the waterstone asks for while drinking little enough
-			/// that a 400-dram store outlasts the whole build.
+			/// <summary><c>Residents</c> real NPC residents, enrolled through the production
+			/// citizenship and roster APIs - the same path a genuine arrival takes. How many is
+			/// conditional on the sealed target rung and read off the accessor, never restated
+			/// here: <c>ResidentCount</c> for a rung-2 run (the smallest population that reaches
+			/// the Steading gate the waterstone asks for) and <c>TownResidentCount</c> for a rung-3
+			/// run (the Town the moot yard asks for); the dedicated drams follow the same rule
+			/// through <c>Drams</c> (<c>DedicatedDrams</c> / <c>TownDedicatedDrams</c>).
 			/// <para>
 			/// ORDER AND PROVENANCE ARE LOAD-BEARING, AND THE SYNTHETIC PARTS ARE DISCLOSED.
 			/// Production's roster gate (<c>KingdomResidents.Enrollable</c>,
@@ -33,7 +36,7 @@ namespace ThousandAndFirst.Harness
 			private void EnrollResidents()
 			{
 				long tick = Game.TimeTicks;
-				for (int i = 0; i < ResidentCount; i++)
+				for (int i = 0; i < Residents; i++)
 				{
 					GameObject body = Create("NPC");
 					Require(body.Brain != null && body.Body != null && body.IsAlive
@@ -173,18 +176,23 @@ namespace ThousandAndFirst.Harness
 					"the camp fire has no assigned identity or cell");
 			}
 
-			/// <summary>Fills the store to its declared forty-eight-unit capacity with real
-			/// material objects: exactly the authored rung-2 bill (24 stone, 1 timber) plus 23
-			/// brush the bill does not ask for. The bill is therefore paid out of the very store
-			/// under test, and the brush is what must still be there afterwards.</summary>
+			/// <summary>Fills the store with real material objects: exactly the authored rung-2
+			/// bill (<c>MintedStoneUnits</c> stone, <c>MintedTimberUnits</c> timber) plus
+			/// <c>Unasked</c> brush the bill does not ask for. The brush count is conditional on the
+			/// sealed target rung and read off the accessor: <c>MintedBrushUnits</c> on a rung-2 run
+			/// fills the declared capacity exactly, <c>Rung3UnaskedBrushUnits</c> on a rung-3 run
+			/// leaves room for the next authored bill. The bill is therefore paid out of the very
+			/// store under test, and the brush is what must still be there afterwards.</summary>
 			private void MintStoreContents()
 			{
 				Mint(KingdomMaterial.Stone, MintedStoneUnits, MintedStone);
 				Mint(KingdomMaterial.Timber, MintedTimberUnits, MintedTimber);
-				Mint(KingdomMaterial.Brush, MintedBrushUnits, MintedBrush);
+				Mint(KingdomMaterial.Brush, Unasked, MintedBrush);
 				Require(Store.Inventory.Objects.Count
-					== MintedStoneUnits + MintedTimberUnits + MintedBrushUnits,
-					"taf-camp-store-fill: the minted contents do not fill the declared capacity");
+					== MintedStoneUnits + MintedTimberUnits + Unasked,
+					"taf-camp-store-fill: the minted contents are not the authored bill plus the "
+						+ Unasked + " unasked unit(s): the store holds "
+						+ Store.Inventory.Objects.Count);
 			}
 
 			private void Mint(KingdomMaterial Material, int Units, List<string> Ids)

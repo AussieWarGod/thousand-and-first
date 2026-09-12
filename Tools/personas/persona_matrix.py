@@ -58,6 +58,11 @@ BOOKKEEPING = frozenset(
         # observation about what the checker's own diagnosis found, never a verb the script
         # asked for, so it never belongs in a positional EXPECT.
         "lifecycle-grown-detail",
+        # Native run 49: the camp-heart Town seed's per-lot lines (rects, ingress sides, refusals),
+        # written once by Harness/KingdomCampHeartNativeTownSeed.cs so the setup and check rows
+        # keep their own reads under the journal row cap. Detail, never a verb the script asked
+        # for, so it never belongs in a positional EXPECT.
+        "town-lots",
         # A third-party verb provider the admission law refused. It describes the PROFILE a run was
         # launched into, not a step the script asked for, so a persona must not go red because
         # somebody else's mod shipped a broken provider. `Tools/run-personas.sh` surfaces these

@@ -42,7 +42,7 @@ namespace ThousandAndFirst.Harness
 		/// otherwise have read in the popup, and truncating it to a roster field width would throw
 		/// away the answer the journal exists to deliver.
 		/// </summary>
-		internal const int MaxMessageChars = 8192;
+		internal const int MaxMessageChars = KingdomScenarioJournalRules.MaxMessageChars;
 
 		/// <summary>
 		/// The throwaway profile root: the parent of the engine's save path.
@@ -130,10 +130,7 @@ namespace ThousandAndFirst.Harness
 
 		private static string Bound(string Message)
 		{
-			if (string.IsNullOrEmpty(Message)) return "";
-			return Message.Length <= MaxMessageChars
-				? Message
-				: Message.Substring(0, MaxMessageChars);
+			return KingdomScenarioJournalRules.Bound(Message, MaxMessageChars);
 		}
 
 		private static string Warn(string Detail)

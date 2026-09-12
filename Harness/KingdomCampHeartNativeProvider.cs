@@ -29,10 +29,18 @@ namespace ThousandAndFirst.Harness
 		internal const string SetupVerb = "camp-heart-setup";
 		internal const string CheckVerb = "camp-heart-check";
 		internal const string Receipt = "r_TAF_ScenarioCampHeartNative_v1";
-		// The last pair is the acceptance gate for issue #162: one more ordinary day AFTER the
-		// rung was raised, and then a check that the settlement pass still runs on this ground.
-		private static readonly string[] Script = { "stagedigest", SetupVerb, "advance 1200",
+		/// <summary>The sealed rung 1 -> 2 script (issue #41 / PR #107 case 2). The last pair is
+		/// the acceptance gate for issue #162: one more ordinary day AFTER the rung was raised, and
+		/// then a check that the settlement pass still runs on this ground.</summary>
+		private static readonly string[] Rung2Script = { "stagedigest", SetupVerb, "advance 1200",
 			CheckVerb, "advance 3600", CheckVerb, "advance 1200", CheckVerb, "stagedigest" };
+
+		/// <summary>The sealed rung 1 -> 2 -> 3 script (issue #159). The rung-2 climb is run
+		/// FIRST, in this same persona, so the rung-3 start state is reached by the ordinary
+		/// improvement route rather than seeded; the third window carries the moot yard's own
+		/// 6000-tick labour.</summary>
+		private static readonly string[] Rung3Script = { "stagedigest", SetupVerb, "advance 1200",
+			CheckVerb, "advance 3600", CheckVerb, "advance 7200", CheckVerb, "stagedigest" };
 
 		public int ScenarioVerbApiVersion { get { return KingdomScenarioVerbApi.Version; } }
 
@@ -45,11 +53,7 @@ namespace ThousandAndFirst.Harness
 			{
 				Require(string.IsNullOrEmpty(Argument) && (Verb == SetupVerb || Verb == CheckVerb),
 					"camp heart verbs take no arguments");
-				IList<string> script;
-				Require(KingdomScenarioScript.TryRead(out script, out _)
-					&& script.Count == Script.Length, "the exact sealed camp heart script is absent");
-				for (int i = 0; i < Script.Length; i++)
-					Require(script[i] == Script[i], "the sealed camp heart script differs");
+				int targetRung = SealedTargetRung();
 				XRLGame game = The.Game;
 				Zone zone = The.Player?.CurrentZone;
 				if (Verb == SetupVerb)
@@ -63,7 +67,8 @@ namespace ThousandAndFirst.Harness
 				Require(game != null && KingdomScenarioDurableState.ProvesExactText(Receipt, "intent"),
 					"the camp heart owner intent is absent or torn");
 				bool complete;
-				string result = KingdomCampHeartNativeChecks.Run(Verb, game, zone, out complete);
+				string result = KingdomCampHeartNativeChecks.Run(Verb, game, zone, targetRung,
+					out complete);
 				if (complete)
 				{
 					Require(ReferenceEquals(The.Game, game), "the camp heart report owner changed");
@@ -75,6 +80,28 @@ namespace ThousandAndFirst.Harness
 				return result;
 			}
 			catch (Exception error) { return KingdomCampHeartNativeChecks.Fail(error); }
+		}
+
+		/// <summary>Which rung ladder this run is sealed for, read off the sealed script itself.
+		/// A script that is neither sealed form is refused exactly as before: no other script may
+		/// drive these verbs, and the target rung is never an argument a caller chooses.</summary>
+		private static int SealedTargetRung()
+		{
+			IList<string> script;
+			Require(KingdomScenarioScript.TryRead(out script, out _) && script != null,
+				"the exact sealed camp heart script is absent");
+			if (SameScript(script, Rung2Script)) return 2;
+			if (SameScript(script, Rung3Script)) return 3;
+			Require(false, "the sealed camp heart script differs");
+			return 0;
+		}
+
+		private static bool SameScript(IList<string> Script, string[] Sealed)
+		{
+			if (Script.Count != Sealed.Length) return false;
+			for (int i = 0; i < Sealed.Length; i++)
+				if (Script[i] != Sealed[i]) return false;
+			return true;
 		}
 
 		private static bool Eligible(XRLGame Game, Zone Zone)

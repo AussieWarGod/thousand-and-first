@@ -20,6 +20,7 @@
     <Compile Include="TestMain.cs" />
 	<Compile Include="KingdomHeartRungSettleTests.cs" />
 	<Compile Include="KingdomCampHeartNativeSourceTests.cs" />
+	<Compile Include="KingdomCampHeartRung3NativeSourceTests.cs" />
 	<Compile Include="..\Harness\KingdomCampHeartNativeCensus.cs" />
 	<Compile Include="KingdomCampHeartNativeCensusTests.cs" />
     <Compile Include="..\Core\KingdomSealPendingRules.cs" />
@@ -2128,6 +2129,7 @@
 	<Compile Include="..\Harness\KingdomScenarioVerbSchema.cs" />
 	<Compile Include="..\Harness\KingdomScenarioRowValidator.cs" />
 	<Compile Include="..\Harness\KingdomScenarioRules.cs" />
+	<Compile Include="..\Harness\KingdomScenarioJournalRules.cs" />
 	<Compile Include="..\Harness\KingdomScenarioLoadRules.cs" />
 	<Compile Include="..\Harness\KingdomScenarioTravelRules.cs" />
 	<Compile Include="KingdomScenarioTravelRulesTests.cs" />
@@ -2319,6 +2321,7 @@
 	<Compile Include="KingdomScenarioValidatorRulesTests.cs" />
 	<Compile Include="KingdomScenarioKeySetDigestTests.cs" />
 	<Compile Include="KingdomScenarioRulesTests.cs" />
+	<Compile Include="KingdomScenarioJournalRulesTests.cs" />
     <Compile Include="KingdomScenarioLoadRulesTests.cs" />
     <Compile Include="KingdomScenarioSaveLoadSourceTests.cs" />
     <Compile Include="KingdomResidentReceiptSerializationSourceTests.cs" />

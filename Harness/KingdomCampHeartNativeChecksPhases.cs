@@ -30,9 +30,9 @@ namespace ThousandAndFirst.Harness
 				List<KingdomCampHeartNativeCensus.Unit> units = ContentUnits(out bodies);
 				RetainedBrush = Select(units, MintedBrush);
 				RetainedBrushBodies = SelectBodies(bodies, MintedBrush);
-				Require(RetainedBrush.Count == MintedBrushUnits,
+				Require(RetainedBrush.Count == Unasked,
 					"taf-camp-store-retained-missing: the store does not hold all "
-						+ MintedBrushUnits + " unasked units before the upgrade");
+						+ Unasked + " unasked units before the upgrade");
 				Evidence.Append("\nbefore tick=").Append(Game.TimeTicks)
 					.Append("; population=").Append(System.Population)
 					.Append("; stage=").Append(System.Stage)
@@ -53,6 +53,9 @@ namespace ThousandAndFirst.Harness
 				Require(Phase >= 1 && !Done, "taf-camp-setup-absent: setup did not run");
 				Require(!KingdomScenarioAdvance.Pending,
 					"taf-camp-turns-owed: turns are still owed");
+				// This check's reads come first in its row; everything earlier follows them.
+				Prior.Insert(0, Evidence.ToString());
+				Evidence.Length = 0;
 				switch (Phase)
 				{
 					case 1: Phase1(); break;
@@ -73,11 +76,14 @@ namespace ThousandAndFirst.Harness
 				List<string> notes = Game.Player?.Messages?.Messages;
 				Evidence.Append("\nblocked-message-count=").Append(notes == null ? 0 : notes.Count);
 				if (notes == null) return;
-				for (int i = Math.Max(0, notes.Count - 16); i < notes.Count; i++)
+				// Bounded so a check row's own reads stay under the journal row cap (native run
+				// 49): the last BlockedMessagesKept messages, each at most BlockedMessageChars,
+				// both declared beside the cap they answer to.
+				for (int i = Math.Max(0, notes.Count - KingdomScenarioJournalRules.BlockedMessagesKept); i < notes.Count; i++)
 				{
 					string note = notes[i] ?? "(null)";
-					Evidence.Append("\nblocked-message=").Append(note.Length <= 256
-						? note : note.Substring(0, 256) + "[truncated]");
+					Evidence.Append("\nblocked-message=").Append(note.Length <= KingdomScenarioJournalRules.BlockedMessageChars
+						? note : note.Substring(0, KingdomScenarioJournalRules.BlockedMessageChars) + "[truncated]");
 				}
 			}
 
@@ -182,6 +188,19 @@ namespace ThousandAndFirst.Harness
 					.Append("; basin capacity read=").Append(BasinCapacity(standing))
 					.Append("; real commission outcome=").Append(ClaimOutcome)
 					.Append("; stockpile-reason-claimed=false");
+				// The rung-3 run mints the next authored bill here, once the rung-2 bill has left
+				// the store, and lets the SAME real settlement pass assess the moot yard on the
+				// turns the third advance spends. Nothing about rung 3 is begun from here.
+				if (TargetRung >= 3)
+				{
+					SecondStanding = standing;
+					SecondHeartId = standing.IDIfAssigned;
+					RequireEnvelopeMatches(2, standing);
+					MintRung3Bill();
+					RecordAnnexGround();
+					WalkFounderClearOfRung3();
+					RequireTownHeld("when the rung-3 bill was minted");
+				}
 			}
 
 			/// <summary>The bodies in Present whose identity appears in Wanted, in Wanted's own
