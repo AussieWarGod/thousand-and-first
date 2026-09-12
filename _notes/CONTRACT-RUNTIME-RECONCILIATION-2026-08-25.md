@@ -4,8 +4,8 @@
 
 Current draft census/evidence is in docs/STATUS.md; the figures below describe its predecessor.
 
-3093 production C# files; 438,915 physical lines; 1443 direct-XRL files; zero cap failures;
-3,124 cold-install files. Inventory `3cacf1beb374ac9276d80a00f8f45b1068caeb156aba955520a8b97614715448`.
+3095 production C# files; 439,562 physical lines; 1445 direct-XRL files; zero cap failures;
+3,126 cold-install files. Inventory `207351ca17beed6af69f33df5a63ffa6b4d16a6207c389f15f5f18d2204f116f`.
 #141/#144/#139/#137 combined; compile, native and semantic review owed. All earlier evidence
 below remains checkpoint-scoped. Public0.3.3 is finalized; this candidate prepares0.3.4.
 
@@ -13,7 +13,7 @@ below remains checkpoint-scoped. Public0.3.3 is finalized; this candidate prepar
 
 Integrated through dev `bcca3e5`; compile/audit and main14341/portable5491 pass, zero managed
 skips; native pending. Census3079/437201/1434,
-zero cap failures; inventory `304123d5ee1b31fa0b1369d5ad13c52888111f5c7563245f4fe4096c8ca38c70`.
+zero cap failures; inventory `207351ca17beed6af69f33df5a63ffa6b4d16a6207c389f15f5f18d2204f116f`.
 Earlier evidence below remains bound to its named checkpoints.
 
 ## Retained dev hotfix backmerge — 2026-09-11

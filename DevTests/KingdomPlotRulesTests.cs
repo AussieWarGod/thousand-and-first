@@ -1041,6 +1041,194 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.AreNotEqual(room, budget, "the founder must be able to tell blocked ground from a full plan");
 		}
 
+		[Test]
+		public void AnOccupiedSlotRefusalIsReadBackToItsSlot()
+		{
+			string failure = KingdomPlotRules.OccupantSlotRefusalPrefix + "g:02:01";
+			ClassicAssert.IsTrue(KingdomPlotRules.IsOccupantSlotRefusal(failure));
+			ClassicAssert.AreEqual("g:02:01", KingdomPlotRules.OccupantSlotOf(failure));
+		}
+
+		/// <summary>
+		/// The prefix match is ordinal, and must stay ordinal: the slot is cut at exactly
+		/// OccupantSlotRefusalPrefix.Length, so a text that merely collates equal is not a match.
+		/// A zero-width joiner inside the prefix compares equal under linguistic rules and would
+		/// cut the slot one character short; ordinal reads it as another refusal and returns null.
+		/// </summary>
+		[Test]
+		public void ACollatesEqualRefusalIsNotAnOccupantRefusal()
+		{
+			string collates = KingdomPlotRules.OccupantSlotRefusalPrefix.Insert(1, "\u200d")
+				+ "g:02:01";
+			ClassicAssert.AreNotEqual(
+				KingdomPlotRules.OccupantSlotRefusalPrefix + "g:02:01", collates);
+			ClassicAssert.IsNull(KingdomPlotRules.OccupantSlotOf(collates));
+			ClassicAssert.IsFalse(KingdomPlotRules.IsOccupantSlotRefusal(collates));
+		}
+
+		[TestCase(null)]
+		[TestCase("")]
+		[TestCase("protected or foreign state moved onto layout slot g:02:01")]
+		[TestCase("a living occupant moved onto layout slot ")]
+		public void OnlyAnOccupantRefusalNamingASlotIsReadAsOne(string Failure)
+		{
+			ClassicAssert.IsFalse(KingdomPlotRules.IsOccupantSlotRefusal(Failure));
+			ClassicAssert.IsNull(KingdomPlotRules.OccupantSlotOf(Failure));
+		}
+
+		[TestCase(0, null, "g:02:01", true, TestName = "first block on a slot is said")]
+		[TestCase(1, "g:02:01", "g:02:01", false, TestName = "the same slot stays quiet")]
+		[TestCase(1, "g:02:01", "g:03:01", true, TestName = "a different slot is said again")]
+		[TestCase(0, "g:02:01", "g:02:01", true, TestName = "a cleared flag re-announces")]
+		[TestCase(1, "g:02:01", null, false, TestName = "no block says nothing")]
+		[TestCase(0, null, null, false, TestName = "no block and no flag says nothing")]
+		public void AnOccupiedRaisingIsAnnouncedOncePerJobAndSlot(int Announced,
+			string AnnouncedSlot, string Slot, bool Expected)
+		{
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.ShouldAnnounceOccupiedSlot(
+				Announced, AnnouncedSlot, Slot));
+		}
+
+		[TestCase(0, 0, false, false, "Clear", TestName = "empty layout")]
+		[TestCase(2, 2, false, false, "Displace", TestName = "all ours are stood off")]
+		[TestCase(1, 0, true, false, "Refuse", TestName = "the player alone is never moved")]
+		[TestCase(2, 1, true, false, "Refuse", TestName = "the player beside one of ours refuses")]
+		[TestCase(2, 1, false, false, "Refuse", TestName = "a stranger refuses the whole set")]
+		[TestCase(1, 0, false, false, "Refuse", TestName = "a lone stranger refuses")]
+		[TestCase(2, 2, false, true, "AnchorBound", TestName = "a post inside the layout is named")]
+		[TestCase(2, 1, false, true, "Refuse", TestName = "a stranger outranks an anchor")]
+		public void OnlyOurOwnUnpostedResidentsAreStoodOffTheirSite(int Occupants, int Residents,
+			bool AnyPlayer, bool AnyAnchor, string Expected)
+		{
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.JudgeOccupants(
+				Occupants, Residents, AnyPlayer, AnyAnchor).ToString());
+		}
+
+		/// <summary>
+		/// A stalled raising costs one line, not one per plot per pass. Both conditions are load
+		/// bearing -- mutation: dropping the paid test makes case 2 (remaining 600) print for every
+		/// plot merely accumulating labour, and dropping the pair test makes case 4 print again on
+		/// every pass for a pair already said.
+		/// </summary>
+		[TestCase(0L, 1, "1:1", true, TestName = "paid and unsaid says it once")]
+		[TestCase(600L, 1, null, false, TestName = "still being worked says nothing")]
+		[TestCase(-1L, 1, null, false, TestName = "unknown labour says nothing")]
+		[TestCase(0L, 1, "1:1", true, TestName = "a new pair says it again")]
+		public void AStalledRaisingSaysItOncePerPair(long Remaining, int Applied, string LastPair,
+			bool Expected)
+		{
+			string pair = KingdomPlotRules.StageWaitingPair(Applied, Applied);
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.ShouldSayStageWaiting(Remaining,
+				Applied, (int)Stage.Done, LastPair == pair ? null : LastPair, pair));
+		}
+
+		[Test]
+		public void AStageWaitingPairAlreadySaidIsNotSaidAgain()
+		{
+			string pair = KingdomPlotRules.StageWaitingPair(3, 3);
+			ClassicAssert.AreEqual("3:3", pair);
+			ClassicAssert.IsTrue(KingdomPlotRules.ShouldSayStageWaiting(0L, 3, (int)Stage.Done,
+				null, pair));
+			ClassicAssert.IsFalse(KingdomPlotRules.ShouldSayStageWaiting(0L, 3, (int)Stage.Done,
+				pair, pair));
+			ClassicAssert.IsTrue(KingdomPlotRules.ShouldSayStageWaiting(0L, 3, (int)Stage.Done,
+				pair, KingdomPlotRules.StageWaitingPair(3, 4)));
+		}
+
+		[Test]
+		public void AFinishedRaisingNeverSaysItIsWaiting()
+		{
+			ClassicAssert.IsFalse(KingdomPlotRules.ShouldSayStageWaiting(0L, (int)Stage.Done,
+				(int)Stage.Done, null, KingdomPlotRules.StageWaitingPair(4, 4)));
+		}
+
+		/// <summary>
+		/// Only a slot the map declares Blocked is blocked by a body. Mutation: widening this to
+		/// "not Walkable" fails the Adjacent case, and inverting it fails all three -- which is
+		/// exactly the defect that bricked the heart works, whose basin slot B in
+		/// civic-heartbasin-s0 is authored Pass="walk" and is the cell the founder pours on.
+		/// </summary>
+		[TestCase(ArchitecturePassability.Blocked, true)]
+		[TestCase(ArchitecturePassability.Walkable, false)]
+		[TestCase(ArchitecturePassability.Adjacent, false)]
+		public void OnlyABlockedSlotIsBlockedByAStandingBody(ArchitecturePassability Passability,
+			bool Expected)
+		{
+			ClassicAssert.AreEqual(Expected, KingdomPlotRules.SlotBlocksOccupant(Passability));
+		}
+
+		/// <summary>
+		/// The player standing alone on a slot is an occupant, not an empty layout. A caller that
+		/// passed over them would report (0, 0, true) and the raising would land on the founder.
+		/// </summary>
+		[Test]
+		public void APlayerAloneOnTheLayoutIsAnOccupantAndRefuses()
+		{
+			ClassicAssert.AreEqual(KingdomPlotRules.OccupantVerdict.Refuse,
+				KingdomPlotRules.JudgeOccupants(1, 0, true, false));
+			ClassicAssert.AreNotEqual(KingdomPlotRules.OccupantVerdict.Clear,
+				KingdomPlotRules.JudgeOccupants(1, 0, true, false));
+		}
+
+		[Test]
+		public void AClearedSiteSaysHowManyWereStoodOff()
+		{
+			StringAssert.Contains("1 settler",
+				KingdomPlotRules.ClearedOccupiedSlots("fire", 1, true, null));
+			StringAssert.Contains("2 settlers",
+				KingdomPlotRules.ClearedOccupiedSlots("fire", 2, true, null));
+			StringAssert.Contains("fire",
+				KingdomPlotRules.ClearedOccupiedSlots("fire", 2, true, null));
+		}
+
+		/// <summary>
+		/// Bodies are stood off on the failing path too, so the sentence must say which outcome the
+		/// founder is looking at. Mutation: swapping the Raised argument swaps the two assertions --
+		/// the raised text must not contain "refused" and the refused text must not promise work.
+		/// </summary>
+		[Test]
+		public void AClearedSiteTellsTheTruthAboutWhetherTheRaisingLanded()
+		{
+			string raised = KingdomPlotRules.ClearedOccupiedSlots("fire", 1, true, null);
+			StringAssert.Contains("and the work goes on.", raised);
+			StringAssert.DoesNotContain("refused", raised);
+			string refused = KingdomPlotRules.ClearedOccupiedSlots("fire", 1, false,
+				"a living occupant moved onto layout slot g:03:01");
+			StringAssert.Contains("but the raising was refused:", refused);
+			StringAssert.Contains("g:03:01", refused);
+			StringAssert.DoesNotContain("and the work goes on.", refused);
+			ClassicAssert.AreNotEqual(raised, refused);
+		}
+
+		[Test]
+		public void ARefusedClearanceWithNoNamedFaultStillSaysItWasRefused()
+		{
+			string line = KingdomPlotRules.ClearedOccupiedSlots("fire", 2, false, null);
+			StringAssert.Contains("but the raising was refused:", line);
+			StringAssert.DoesNotContain("and the work goes on.", line);
+		}
+
+		[Test]
+		public void AnAnchoredPostNamesItsOwnGroundAndIsNotTheSlotSentence()
+		{
+			string line = KingdomPlotRules.RefuseOccupiedAnchor("fire", 21, 7);
+			StringAssert.Contains("21, 7", line);
+			StringAssert.Contains("fire", line);
+			ClassicAssert.AreNotEqual(line, KingdomPlotRules.RefuseOccupiedSlot("fire", "g:02:01"),
+				"a post conflict is a siting fault, not a body that wandered on");
+		}
+
+		[Test]
+		public void AnOccupiedRaisingNamesTheBuildingTheSlotAndTheBody()
+		{
+			string line = KingdomPlotRules.RefuseOccupiedSlot("fire", "g:02:01");
+			StringAssert.Contains("fire", line);
+			StringAssert.Contains("g:02:01", line);
+			StringAssert.Contains("standing", line);
+			ClassicAssert.AreNotEqual(line, KingdomPlotRules.RefuseOccupiedSlot("fire", "g:03:01"),
+				"the founder must be told which ground is stood on");
+		}
+
 		[TestCase(Size.Small, "small")]
 		[TestCase(Size.Medium, "middling")]
 		[TestCase(Size.Large, "large")]
