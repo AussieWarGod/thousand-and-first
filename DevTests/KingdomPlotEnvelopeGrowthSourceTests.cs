@@ -191,6 +191,78 @@ namespace ThousandAndFirst.Tests
 				"founding-heart ground occupies plot-envelope growth at ");
 		}
 
+		/// <summary>
+		/// A body only stands in the way of an annexed cell the successor map declares Blocked, and
+		/// the non-mutating preflight tolerates one the crew may lawfully stand aside, because the
+		/// mutating path clears it before proving this again. Run 42's NoGroundToGrow was the
+		/// founder standing on annexed YARD ground of the rung-3 moot.
+		/// Mutation: dropping the SlotBlocksOccupant clause refuses every annexed cell a body
+		/// stands on again; dropping TolerateMovableOccupants makes Assess refuse ground Begin is
+		/// about to clear, so the climb never starts.
+		/// </summary>
+		[Test]
+		public void OnlyABlockedAnnexedCellIsBlockedByABody()
+		{
+			string envelope = Read("Growth/KingdomArchitectureStamper.EnvelopeGrowth.cs");
+			AssertOrdered(envelope,
+				"bool TolerateMovableOccupants = false)",
+				"if (!TryPlacementPassability(Successor, Z,",
+				"out Dictionary<int, ArchitecturePassability> successorSlots, out Failure)",
+				"if (item.IsCreature || item.IsPlayer())",
+				"if (!successorSlots.TryGetValue(packed, out declared)",
+				"|| !KingdomPlotRules.SlotBlocksOccupant(declared)) continue;",
+				"if (TolerateMovableOccupants",
+				"&& KingdomPlots.IsMovableEnvelopeOccupant(System, Z, item)) continue;",
+				"KingdomPlots.NameEnvelopeOccupant(System, Z, item, declared);",
+				"a living occupant stands on plot-envelope growth ground at ");
+			// Only the preflight tolerates them; the mutating application path does not.
+			string preflight = Read("Growth/KingdomArchitectureStamper.UpgradePreflight.cs");
+			StringAssert.Contains("out Failure, TolerateMovableOccupants: true)) return false;",
+				preflight);
+			string application = Read("Growth/KingdomArchitectureStamper.UpgradeApplication.cs");
+			StringAssert.DoesNotContain("TolerateMovableOccupants", application);
+		}
+
+		/// <summary>
+		/// The improvement route clears its annexed ground through the plot clearance, not a copy
+		/// of it: same ladder, same destinations, same walk-back, same sentences. Only annexed,
+		/// blocked cells are scanned, and the whole successor rect is excluded as a destination.
+		/// </summary>
+		[Test]
+		public void TheImprovementRouteClearsGroundThroughThePlotClearance()
+		{
+			string clearance = Read("Growth/KingdomPlot2.26e.EnvelopeClearance.cs");
+			AssertOrdered(clearance,
+				"internal static bool TryClearEnvelopeOccupants(",
+				"KingdomArchitectureStamper.TryPlacementPassability(Successor, Z,",
+				"if (!KingdomPlotRules.SlotBlocksOccupant(slot.Value)) continue;",
+				"if (Before.Contains(slot.Key % Z.Width, slot.Key / Z.Width)) continue;",
+				"return TryClearManagedOccupants(System, Z, Owner, new HashSet<int>(annexed.Keys),",
+				"annexed, Successor.Rect, out Moved, out Beasts, out Post,",
+				"internal static void SayEnvelopeCleared(",
+				"SayPlotWorkCleared(System, Owner, Name, Moved - Beasts, true, null);",
+				"SayPlotBeastsDriven(System, Owner, Name, Beasts, true, null);",
+				"internal static bool IsMovableEnvelopeOccupant(",
+				"KingdomPlotRules.IsMovableOccupant(ReasonFor(System, survey, Body))",
+				"internal static void NameEnvelopeOccupant(");
+			StringAssert.DoesNotContain("SystemLongDistanceMoveTo", clearance);
+			// Begin is the mutating path, so the clearance runs there and never in Assess.
+			string begin = Read("Growth/KingdomUpgrade.14.Begin.cs");
+			AssertOrdered(begin,
+				"KingdomArchitectureIntent successorLayout = Prepared?.Architecture;",
+				"out successorLayout, out _, out _, out architectureFailure)",
+				"ClearImprovementGround(System, Z, Work, successorLayout);");
+			AssertOrdered(begin,
+				"private static void ClearImprovementGround(",
+				"KingdomPlots.TryClearEnvelopeOccupants(System, Z, Work, Successor, before,",
+				"KingdomLog.Log(\"architecture: improvement ground clearance refused: \" + refusal)",
+				"KingdomLog.Log(\"architecture: improvement ground cleared: \"",
+				"KingdomPlots.SayEnvelopeCleared(System, Work, Work.ShortDisplayName, moved, beasts,");
+			string assess = Read("Growth/KingdomUpgrade.10.Assessment.cs");
+			StringAssert.DoesNotContain("TryClearEnvelopeOccupants", assess);
+			StringAssert.DoesNotContain("ClearImprovementGround", assess);
+		}
+
 		[Test]
 		public void EveryRetryCallSiteStillProvesEnvelopeGrowthUnconditionally()
 		{

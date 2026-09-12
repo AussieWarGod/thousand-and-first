@@ -28,6 +28,30 @@ namespace ThousandAndFirst
 			return BeginCore(System, Z, Work, A, Survey, Prepared);
 		}
 
+		/// <summary>
+		/// Stands movable bodies off the ground this improvement is about to annex, through the
+		/// plot clearance so there is one set of rules for both routes. Never fatal: a clearance
+		/// that refuses leaves the ground exactly as it was, and the envelope proof that follows is
+		/// the thing that decides whether the improvement may take it.
+		/// </summary>
+		private static void ClearImprovementGround(KingdomSystem System, Zone Z, GameObject Work,
+			KingdomArchitectureIntent Successor)
+		{
+			if (Successor == null || !KingdomPlots.TryReadRect(Work,
+				out KingdomPlotRules.PlotRect before)) return;
+			if (!KingdomPlots.TryClearEnvelopeOccupants(System, Z, Work, Successor, before,
+				out int moved, out int beasts, out Cell post, out string refusal))
+			{
+				KingdomLog.Log("architecture: improvement ground clearance refused: " + refusal);
+				return;
+			}
+			if (moved <= 0 && post == null) return;
+			KingdomLog.Log("architecture: improvement ground cleared: " + moved + " stood off ("
+				+ beasts + " driven) for " + Work.ShortDisplayName);
+			KingdomPlots.SayEnvelopeCleared(System, Work, Work.ShortDisplayName, moved, beasts,
+				post);
+		}
+
 		private static bool BeginCore(KingdomSystem System, Zone Z, GameObject Work,
 			Assessment A, KingdomSurvey Survey, PreparedImprovement Prepared)
 		{
@@ -50,9 +74,10 @@ namespace ThousandAndFirst
 			}
 			string payload;
 			string architectureFailure;
+			KingdomArchitectureIntent successorLayout = Prepared?.Architecture;
 			if (Prepared == null
 				? !TryPrepareImprovementPayload(System, Z, Work, A, out payload,
-					out _, out _, out _, out architectureFailure)
+					out successorLayout, out _, out _, out architectureFailure)
 				: !TryReprovePreparedImprovement(System, Z, Work, A, Prepared,
 					out payload, out architectureFailure))
 			{
@@ -61,6 +86,10 @@ namespace ThousandAndFirst
 					+ architectureFailure);
 				return false;
 			}
+			// This is the mutating path, so the ground the improvement is about to annex is cleared
+			// here and not in Assess: our own, their posts and any beast are stood off the blocked
+			// annexed slots before the strict envelope proof reads them (issues #176, #165).
+			ClearImprovementGround(System, Z, Work, successorLayout);
 			KingdomSocketTransition transition = null;
 			KingdomArchitectureIntent transitionBefore = null;
 			KingdomArchitectureIntent transitionAfter = null;

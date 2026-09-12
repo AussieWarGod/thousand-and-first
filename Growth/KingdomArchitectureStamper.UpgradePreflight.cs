@@ -97,9 +97,11 @@ namespace ThousandAndFirst
 					AllowPlanChange, out heartAccretion, out Failure))
 				return Failure != null ? false : Fail(
 					"authored successor crosses, moves, or retypes its frozen lot", out Failure);
+			// Non-mutating: this is what Assess reads, so a body the crew will stand aside when the
+			// work begins is reported as ground the settlement HAS, not ground it lacks.
 			if (!SameRect(beforeIntent.Rect, Successor.Rect)
 				&& !TryProveEnvelopeGrowth(System, Z, Owner, null, Successor, false,
-					out Failure)) return false;
+					out Failure, TolerateMovableOccupants: true)) return false;
 			KingdomPlotRules.PlotRect expectedBeforeFootprint;
 			KingdomPlotRules.PlotRect standingFootprint;
 			KingdomPlotRules.RoofState expectedBeforeRoof;
