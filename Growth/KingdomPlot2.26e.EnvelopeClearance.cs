@@ -75,24 +75,34 @@ namespace ThousandAndFirst
 		internal static bool IsMovableEnvelopeOccupant(KingdomSystem System, Zone Z,
 			GameObject Body)
 		{
-			KingdomSurvey survey = Z == null ? null : KingdomSurvey.ActiveFor(Z);
+			KingdomSurvey survey = EnvelopeSurvey(System, Z);
 			if (System == null || survey == null || !GameObject.Validate(Body)) return false;
 			return KingdomPlotRules.IsMovableOccupant(ReasonFor(System, survey, Body));
+		}
+
+		/// <summary>
+		/// The ground reading this classification stands on: the pass's BOUND survey, never a
+		/// fresh one. KingdomSurvey.Take is not a read -- it stamps legacy furnishing properties,
+		/// observes legacy state, can put a message in front of the player and moves its own reuse
+		/// counters -- and this runs once per occupant, from a menu preview among other places.
+		/// Null means exactly one thing: no settlement pass is bound for this zone. That is what
+		/// "unwitnessed" says, and it is the true answer rather than one bought with side effects.
+		/// </summary>
+		private static KingdomSurvey EnvelopeSurvey(KingdomSystem System, Zone Z)
+		{
+			return System == null || Z == null ? null : KingdomSurvey.ActiveFor(Z);
 		}
 
 		/// <summary>One line naming a body that stands on ground an improvement wants.</summary>
 		internal static void NameEnvelopeOccupant(KingdomSystem System, Zone Z, GameObject Body,
 			ArchitecturePassability Passability)
 		{
-			KingdomSurvey survey = Z == null ? null : KingdomSurvey.ActiveFor(Z);
+			KingdomSurvey survey = EnvelopeSurvey(System, Z);
 			Cell at = GameObject.Validate(Body) ? Body.CurrentCell : null;
-			KingdomLog.Log("architecture: envelope occupant "
-				+ (at == null ? "unknown" : Body.IDIfAssigned) + " ("
-				+ (at == null ? "gone" : Body.Blueprint) + ") at "
-				+ (at == null ? "nowhere" : at.X + "," + at.Y)
-				+ " passability=" + Passability + " reason="
-				+ (System == null || survey == null ? "unwitnessed"
-					: ReasonFor(System, survey, Body).ToString()));
+			KingdomLog.Log(KingdomPlotRules.OccupantLine(at == null ? null : Body.IDIfAssigned,
+				at == null ? null : Body.Blueprint,
+				at == null ? null : at.X + "," + at.Y, Passability,
+				survey == null ? null : ReasonFor(System, survey, Body).ToString()));
 		}
 	}
 }

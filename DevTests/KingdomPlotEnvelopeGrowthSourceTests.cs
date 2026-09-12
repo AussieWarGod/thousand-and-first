@@ -244,8 +244,26 @@ namespace ThousandAndFirst.Tests
 				"KingdomPlotRules.SettlersMoved(Moved, Beasts), Raised, Fault);",
 				"SayPlotBeastsDriven(System, Owner, Name, Beasts, Raised, Fault);",
 				"internal static bool IsMovableEnvelopeOccupant(",
+				"KingdomSurvey survey = EnvelopeSurvey(System, Z)",
 				"KingdomPlotRules.IsMovableOccupant(ReasonFor(System, survey, Body))",
-				"internal static void NameEnvelopeOccupant(");
+				// The BOUND survey and only that: taking one is not a read, and this runs once per
+				// occupant from a menu preview, so "unwitnessed" stays the honest answer.
+				"private static KingdomSurvey EnvelopeSurvey(KingdomSystem System, Zone Z)",
+				"KingdomSurvey.ActiveFor(Z)",
+				"internal static void NameEnvelopeOccupant(",
+				"KingdomSurvey survey = EnvelopeSurvey(System, Z)",
+				"KingdomLog.Log(KingdomPlotRules.OccupantLine(",
+				"survey == null ? null : ReasonFor(System, survey, Body).ToString()));");
+			StringAssert.DoesNotContain("KingdomSurvey.Take(", clearance);
+			// A refused improvement reaches the log as well as the ledger, once per verdict change.
+			string resolve = Read("Growth/KingdomUpgrade.13.Resolve.cs");
+			AssertOrdered(resolve,
+				"AnnouncedReason = (int)speaksFirstAssessment.Verdict;",
+				"KingdomLog.Log(KingdomUpgradeRules.RefusedLine(speaksFirstAssessment.Key,",
+				"speaksFirstAssessment.SuccessorKey, speaksFirstAssessment.Verdict,",
+				"speaksFirstAssessment.Reason));",
+				"MessageQueue.AddPlayerMessage(\"{{K|\" + speaksFirstAssessment.Reason",
+				"System.Ledger.Note(\"{{K|\" + speaksFirstAssessment.Reason");
 			StringAssert.DoesNotContain("SystemLongDistanceMoveTo", clearance);
 			// Begin is the mutating path, so the clearance runs there and never in Assess.
 			string begin = Read("Growth/KingdomUpgrade.14.Begin.cs");

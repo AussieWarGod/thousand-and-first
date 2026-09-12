@@ -125,6 +125,22 @@ namespace ThousandAndFirst
 			return Moved <= Beasts ? 0 : Moved - Beasts;
 		}
 
+		/// <summary>
+		/// The operator's line for one body standing on ground a raising or an improvement wants.
+		/// "unwitnessed" says exactly one thing: no settlement pass was bound for that ground when
+		/// the body was read, so nothing witnessed it. A classified body always names its rung.
+		/// </summary>
+		/// <param name="Reason">The ladder's answer, or null when nothing could be read.</param>
+		public static string OccupantLine(string Id, string Blueprint, string At,
+			ArchitecturePassability Passability, string Reason)
+		{
+			return "architecture: envelope occupant " + (string.IsNullOrEmpty(Id) ? "unknown" : Id)
+				+ " (" + (string.IsNullOrEmpty(Blueprint) ? "gone" : Blueprint) + ") at "
+				+ (string.IsNullOrEmpty(At) ? "nowhere" : At)
+				+ " passability=" + Passability
+				+ " reason=" + (string.IsNullOrEmpty(Reason) ? "unwitnessed" : Reason);
+		}
+
 		/// <summary>Whether a classified body may be moved off the ground at all.</summary>
 		public static bool IsMovableOccupant(OccupantReason Reason)
 		{
