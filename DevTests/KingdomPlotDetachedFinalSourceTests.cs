@@ -71,13 +71,17 @@ namespace ThousandAndFirst.Tests
 				"PrepareFinalBuilding(building, entry, receipt, id, Rect, Footprint, Roof,",
 				"building.SetStringProperty(PlotFinalPredecessorProperty, parent.IDIfAssigned);",
 				"if (!PreparedPlotFinalOutput(building, parent, entry, receipt, id, Rect,",
-				"|| !RootPlotFinalOutput(expectedOutput, building)) return false;");
+				// Split in two when each refusal was given its own name (issue #172). The contract
+				// this pins is unchanged: prepared first, then rooted, both before placement.
+				"if (!RootPlotFinalOutput(expectedOutput, building))");
 			string placement = Between(finish,
 				"if (building.CurrentCell == null && building.InInventory == null)",
 				"bool exactEndpoint =");
 			Ordered(placement,
 				"if (!PreparedPlotFinalOutput(building, parent, entry, receipt, id, Rect,",
-				"Footprint, Roof, expectedOutput, construction)) return false;",
+				// Named rather than silent (issue #172); the ordering contract is unchanged.
+				"Footprint, Roof, expectedOutput, construction))",
+				"return FinishOutputFault(parent, \"the final output is not prepared for placing\");",
 				"accepted = cell.AddObject(building);",
 				"KingdomSurvey.ObserveAddResultInActive(Z, building, accepted)");
 			string prepare = Between(Read("Growth/KingdomPlot2.27.FinalBuilding.cs"),
@@ -161,6 +165,7 @@ namespace ThousandAndFirst.Tests
 				"KingdomLog.Log(\"plot finish refused: \" + Step + \" (lot \"",
 				"return false;");
 			foreach (string step in new[] {
+				"the rooted final output is not prepared",
 				"no final building to publish",
 				"the new final output is not prepared",
 				"the published final output id did not stick",
@@ -181,7 +186,7 @@ namespace ThousandAndFirst.Tests
 				"\"the receipt would not take the new final output id\"" })
 				StringAssert.Contains(wrapped, finish);
 			string labour = Read("Growth/KingdomPlot2.26.Labour.cs");
-			Ordered(labour, "if (!Apply(Works, next))",
+			Ordered(labour, "if (!Apply(Works, next, System))",
 				"KingdomLog.Log(\"plot stage refused: \"",
 				"\" stage=\" + next + \" applied=\"",
 				"break;");
