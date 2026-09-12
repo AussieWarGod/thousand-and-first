@@ -137,3 +137,18 @@ that step. This changes only the harness; the production digest remains
 `43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6`.
 A fresh native save/load attempt is required. The fourteen-day canyon/yes lifecycle
 is running separately from an immutable `c1eb5e1f` checkout.
+
+### Canyon continuation exposed missed protected ground
+
+The full-cask `c1eb5e1f` canyon/yes source passed fourteen days with all four
+original citizens housed, two tent rows/six beds, the completed paid fire and a
+real save. Cold load preserved those facts. The next commission correctly refused
+an authored footprint over a zone connection at 29,12. The chain is FAIL, despite
+its successful prior observations; all evidence remains in `full-cask-matrix-1/canyon-yes`.
+
+Automatic site selection now shares the stamper's exact enumerated/cached connection
+census and collects live stairs, rejecting only their intersection with authored
+claimed cells/placements before scoring candidates. Final preflight still protects
+those cells. Main 14775/portable 5732 tests and all four compile modes pass; native
+rerun is owed. The corrected housing save/load script is currently running separately
+on frozen `60f11aee` production, before this site-selection change.

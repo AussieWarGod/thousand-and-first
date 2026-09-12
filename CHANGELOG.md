@@ -8,11 +8,20 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-## Unreleased — Beta gap report
+## [0.3.4] — 2026-09-13 (Alpha)
 
-Current 3098-file census is line-cap green: 440,089 physical lines; direct `XRL`
+Private candidate preparation; this version has not been published.
+
+Quickstart supplies four founding citizens, two shelter plots and a full finite
+64-dram water cask. Housing-driven departures retain the final two citizens so
+construction can recover. The guide explains the starter housing and first guest.
+Young settlements tolerate typed pending spatial capture on cold load, and exact
+stamped teardown orders can resume. Native/release evidence below remains scoped
+to its actual checkpoints; the broader Beta goal is not complete.
+
+Current 3098-file census is line-cap green: 440,099 physical lines; direct `XRL`
 imports occur in 1445 files, 0 of them over the line limit. Inventory SHA-256:
-`43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6`. The cold-install inventory contains 3129 files.
+`73c87caced09ccdffc714a2475c170679e6e37a68b0fe42e92566d98c18d2907`. The cold-install inventory contains 3129 files.
 This isolated 0.3.4 preparation combines heart authority, shared-XL transition, rung settlement
 and camp content/fixture branches with Quickstart recovery and exact strike phase recovery.
 All four compile modes and 14775 main/5732 portable cases pass with zero skips. Automated

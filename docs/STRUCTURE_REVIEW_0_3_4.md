@@ -86,3 +86,36 @@ The 48-dram nine-day matrix passed marsh/dunes with both guide settings. Canyon
  correctly failed an unfinished 15000-tick rocky-ground fire quote; its log shows
  the four founders already housed. The new fourteen-day matrix and full-cask native
  housing recovery remain pending. The source review does not upgrade those results.
+
+## Automatic site protection follow-up
+
+Current production inventory:
+`9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f`.
+3098 C# files, 440099 physical lines, 1445 direct-XRL files, no size exception.
+The only production changes since the full-cask/strike review are the shared
+connection census becoming internal and the plot-selection caller using that census
+plus live stair parts. Both enumerated and cached connections are included. Candidates
+are rejected only where resolved claimed cells or placements cover protected cells;
+unclaimed margins remain eligible. Final preflight still independently rejects stairs,
+connections, invalid mappings and other protected ground. No new mutation or receipt
+format is introduced. Source review read both changed files and final preflight.
+
+Main/portable suites passed 14775/5732 cases, zero skips, and all four canonical
+compile modes passed. Logs: `/tmp/taf-stair-siting-full.log`,
+`/tmp/taf-stair-siting-portable.log`, `/tmp/taf-stair-siting-gate.log`.
+The native canyon source reached fourteen days, four housed citizens, a completed
+paid building and a real save on the predecessor. Cold load preserved those facts;
+its next commission refused a connection at 29,12 that site selection had missed.
+That complete chain remains FAIL. Native verification of the selection fix is pending.
+
+## Private 0.3.4 packaging review
+
+Production inventory `73c87caced09ccdffc714a2475c170679e6e37a68b0fe42e92566d98c18d2907`: 3098 files, 440099 physical lines,
+1445 direct-XRL files, no size exception. Relative to the site-selection inventory
+`9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f`, the only C# change is
+`KingdomReleaseInfo.Version` from 0.3.3 to 0.3.4, matching the private manifest.
+Its production callers are the architecture-gallery and visual-state debug wishes;
+no gameplay branch or persisted receipt schema changes. Harness reports now identify
+the actual candidate version. This review covers that literal identity change and
+inherits the prior source review limits. Versioned private-package and native
+acceptance remain pending; no prior failure becomes a PASS.
