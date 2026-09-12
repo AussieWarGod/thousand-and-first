@@ -35,8 +35,9 @@ namespace ThousandAndFirst
 			NoRoll,
 			/// <summary>On the roll, but not in resident standing.</summary>
 			NotResident,
-			/// <summary>Ours and displaceable, but posted into the layout: the post moves with the
-			/// body, and only a post that will not move leaves this as a refusal.</summary>
+			/// <summary>A post standing inside the layout that will not move. The post normally
+			/// moves with its holder; this is the one case left where it cannot, and then the
+			/// raising waits rather than shoving somebody who would walk straight back.</summary>
 			AnchorBound,
 			/// <summary>A wild animal: no name, no trade, nobody's neighbour. Driven off.</summary>
 			Beast
@@ -114,6 +115,16 @@ namespace ThousandAndFirst
 			return Facts.ResidentStanding ? OccupantReason.Resident : OccupantReason.NotResident;
 		}
 
+		/// <summary>
+		/// How many of the bodies standing off a site were the settlement's own. The clearance
+		/// counts residents and beasts together, so the settler sentence is always the remainder;
+		/// a count that cannot be made is nobody rather than a negative crowd.
+		/// </summary>
+		public static int SettlersMoved(int Moved, int Beasts)
+		{
+			return Moved <= Beasts ? 0 : Moved - Beasts;
+		}
+
 		/// <summary>Whether a classified body may be moved off the ground at all.</summary>
 		public static bool IsMovableOccupant(OccupantReason Reason)
 		{
@@ -135,11 +146,12 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
-		/// Who may be moved off a raising's ground. The settlement's own residents are walked off
-		/// their own building site; the player and anybody who is not ours are never moved, because
-		/// nothing the founder did not place is the settlement's to shove. Mixed company refuses:
-		/// clearing half the slots would move residents for nothing. A resident whose post anchor
-		/// lies inside the layout is named instead of shoved in a circle.
+		/// Who may be moved off a raising's ground. The settlement's own residents and the wild
+		/// things are moved off their building site; the player and any person who is not ours are
+		/// never moved, because nothing the founder did not place is the settlement's to shove.
+		/// Mixed company refuses: clearing half the slots would move bodies for nothing. A post
+		/// standing inside the layout is not judged here at all -- it moves with its holder, and
+		/// the one post that will not move is caught before anybody walks.
 		/// </summary>
 		/// <param name="Occupants">Living bodies standing on blocked layout slots.</param>
 		/// <param name="Movable">How many of them are ours to move: residents and beasts.</param>

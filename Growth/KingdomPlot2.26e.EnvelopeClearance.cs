@@ -61,7 +61,8 @@ namespace ThousandAndFirst
 		internal static void SayEnvelopeCleared(KingdomSystem System, GameObject Owner,
 			string Name, int Moved, int Beasts, Cell Post, bool Raised, string Fault)
 		{
-			SayPlotWorkCleared(System, Owner, Name, Moved - Beasts, Raised, Fault);
+			SayPlotWorkCleared(System, Owner, Name,
+				KingdomPlotRules.SettlersMoved(Moved, Beasts), Raised, Fault);
 			SayPlotBeastsDriven(System, Owner, Name, Beasts, Raised, Fault);
 			if (Post != null) SayPlotPostMoved(System, Owner, Name, Post);
 		}

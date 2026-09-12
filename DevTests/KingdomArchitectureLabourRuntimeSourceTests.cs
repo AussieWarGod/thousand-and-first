@@ -152,7 +152,8 @@ namespace ThousandAndFirst.Tests
 				"out cleared, out beasts, out post, out verdict, out anchor,",
 				"ground = KingdomArchitectureStamper.TryStageLayer(Root, Z,",
 				"string fault = ground ? null : (stoodOff ? Failure : clearanceRefusal);",
-				"SayPlotWorkCleared(System, Root, name, cleared - beasts, ground, fault);",
+				"SayPlotWorkCleared(System, Root, name,",
+				"KingdomPlotRules.SettlersMoved(cleared, beasts), ground, fault);",
 				"SayPlotBeastsDriven(System, Root, name, beasts, ground, fault);",
 				"if (post != null) SayPlotPostMoved(System, Root, name, post);",
 				"if (!ground && verdict == KingdomPlotRules.OccupantVerdict.AnchorBound",
@@ -182,6 +183,7 @@ namespace ThousandAndFirst.Tests
 				"if (target == null)",
 				"return ClearanceFault(\"no free ground beside the site to stand them on\",",
 				"plan.Add(new KingdomLayoutDisplacement(occupants[i], occupants[i].CurrentCell,",
+				"target, anchors[i]));",
 				// A post that will not move refuses BEFORE anyone walks, so the anchored case
 				// still moves nobody; a post that will is moved with its holder in the same pass.
 				"if (anchors[i] == null || CanMovePost(plan[i].Body)) continue;",
@@ -205,7 +207,9 @@ namespace ThousandAndFirst.Tests
 				"out int Stranded, out int StrandedBeasts,",
 				"|| move.Body.CurrentCell == move.Origin) continue;",
 				"move.Body.SystemLongDistanceMoveTo(move.Origin, 0, forced: true,",
-				"&& move.Body.CurrentCell == move.Origin)",
+				"&& move.Body.CurrentCell == move.Origin",
+				// The post comes home with the body, or the body counts as stranded.
+				"&& (move.Anchor == null || TryMovePost(move.Body, move.Anchor)))",
 				"back++;",
 				"Stranded++;",
 				"Reasons[i] == KingdomPlotRules.OccupantReason.Beast) StrandedBeasts++;");

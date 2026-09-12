@@ -115,10 +115,6 @@ namespace ThousandAndFirst
 					+ architectureFailure);
 				return false;
 			}
-			// This is the mutating path, so the ground the improvement is about to annex is cleared
-			// here and not in Assess: our own, their posts and any beast are stood off the blocked
-			// annexed slots before the strict envelope proof reads them (issues #176, #165).
-			ClearImprovementGround(System, Z, Work, successorLayout, Cleared);
 			KingdomSocketTransition transition = null;
 			KingdomArchitectureIntent transitionBefore = null;
 			KingdomArchitectureIntent transitionAfter = null;
@@ -233,6 +229,12 @@ namespace ThousandAndFirst
 				return false;
 			}
 			KingdomConstruction.Bind(Work, job);
+			// The ground is cleared HERE and nowhere earlier: the transition block, the contents
+			// check and both reserves can all refuse for reasons that have nothing to do with who
+			// is standing where, and nobody is moved for a raising a missing dram then refuses.
+			// This is the mutating path, so it is also not Assess. The strict envelope proof reads
+			// this ground later, when the funded job applies (issues #176, #165).
+			ClearImprovementGround(System, Z, Work, successorLayout, Cleared);
 			if (transition != null)
 			{
 				if (!KingdomSocketTransitions.Authorizes(Work, transitionBefore,

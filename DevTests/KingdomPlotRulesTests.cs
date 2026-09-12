@@ -1147,6 +1147,18 @@ namespace ThousandAndFirst.Tests
 				KingdomPlotRules.IsDrivableBeast(ProperName, Merchant, AnimalKind));
 		}
 
+		/// <summary>The anchor rung was withdrawn from the verdict: a post moves with its holder,
+		/// and AnchorBound is only the post that will not move. The prose has to say so.</summary>
+		[Test]
+		public void TheOccupantRulesNoLongerClaimAPostedResidentIsNamedInsteadOfMoved()
+		{
+			string rules = TestMain.ReadRepositoryText("Growth/KingdomPlotOccupantRules.cs");
+			StringAssert.DoesNotContain("named instead of shoved in a circle", rules);
+			StringAssert.DoesNotContain("walking them off only sends them back next pass", rules);
+			StringAssert.DoesNotContain("AnyAnchorInLayout", rules);
+			StringAssert.Contains("A post standing inside the layout that will not move", rules);
+		}
+
 		[TestCase("Resident", true)]
 		[TestCase("Beast", true)]
 		[TestCase("Player", false)]
@@ -1203,6 +1215,27 @@ namespace ThousandAndFirst.Tests
 				KingdomPlotRules.ClearedOccupiedSlots("moot", 2, true, null));
 			StringAssert.Contains("and the work goes on.",
 				KingdomPlotRules.DroveBeastsOff("moot", 1, true, null));
+		}
+
+		/// <summary>
+		/// Moved counts residents AND beasts, so the settler sentence is the remainder and the two
+		/// sentences never count each other's bodies -- on the failing path too, where Moved is the
+		/// stranded count and Beasts the stranded beasts. Mutation: reading Moved as settlers
+		/// (what the old doc claimed) makes case 2 report 3 settlers beside 1 beast for 3 bodies.
+		/// </summary>
+		[TestCase(0, 0, 0, TestName = "nobody moved")]
+		[TestCase(3, 1, 2, TestName = "a mixed set splits into settlers and beasts")]
+		[TestCase(2, 2, 0, TestName = "beasts only")]
+		[TestCase(2, 0, 2, TestName = "settlers only")]
+		[TestCase(1, 2, 0, TestName = "never a negative crowd")]
+		public void MovedCountsResidentsAndBeastsTogether(int Moved, int Beasts, int Settlers)
+		{
+			ClassicAssert.AreEqual(Settlers, KingdomPlotRules.SettlersMoved(Moved, Beasts));
+			if (Moved >= Beasts)
+			{
+				ClassicAssert.AreEqual(Moved,
+					KingdomPlotRules.SettlersMoved(Moved, Beasts) + Beasts);
+			}
 		}
 
 		[Test]

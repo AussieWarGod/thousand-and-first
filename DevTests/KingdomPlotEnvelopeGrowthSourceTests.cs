@@ -240,7 +240,8 @@ namespace ThousandAndFirst.Tests
 				"return TryClearManagedOccupants(System, Z, Owner, new HashSet<int>(annexed.Keys),",
 				"annexed, Successor.Rect, out Moved, out Beasts, out Post,",
 				"internal static void SayEnvelopeCleared(",
-				"SayPlotWorkCleared(System, Owner, Name, Moved - Beasts, Raised, Fault);",
+				"SayPlotWorkCleared(System, Owner, Name,",
+				"KingdomPlotRules.SettlersMoved(Moved, Beasts), Raised, Fault);",
 				"SayPlotBeastsDriven(System, Owner, Name, Beasts, Raised, Fault);",
 				"internal static bool IsMovableEnvelopeOccupant(",
 				"KingdomPlotRules.IsMovableOccupant(ReasonFor(System, survey, Body))",
@@ -254,6 +255,14 @@ namespace ThousandAndFirst.Tests
 				"ClearImprovementGround(System, Z, Work, successorLayout, Cleared);");
 			// The sentence waits for the improvement's own outcome: the clearance only records
 			// what it did, and BeginCore says it after BeginCommit has returned.
+			// Nobody is moved for a raising a missing dram then refuses: every non-ground refusal
+			// comes first, and the ground is cleared only once the job is funded and bound.
+			AssertOrdered(begin,
+				"if (!ContentsWouldFit(Work, A.Successor.Blueprint))",
+				"KingdomWaterDebit water = Survey.ReserveExactWater(A.CostDrams);",
+				"KingdomConstructionStartResult funding = KingdomConstruction.TryFundNew(job,",
+				"KingdomConstruction.Bind(Work, job);",
+				"ClearImprovementGround(System, Z, Work, successorLayout, Cleared);");
 			AssertOrdered(begin,
 				"bool begun = BeginCommit(System, Z, Work, A, Survey, Prepared, cleared);",
 				"if (cleared.Moved > 0 || cleared.Post != null)",
