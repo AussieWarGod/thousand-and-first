@@ -49,6 +49,7 @@ namespace ThousandAndFirst.Harness
 						+ "the moot yard; key=" + KingdomUpgrade.DesignKeyOf(standing));
 				Require(KingdomUpgrade.IsFunctionallyBuilt(standing),
 					"taf-camp-rung3-nonfunctional: the moot yard still has unfinished authority");
+				RequireEnvelopeMatches(3, standing);
 				Require(KingdomPlots.HeartRung(Zone) == 3,
 					"taf-camp-rung3-unsettled: the moot yard stands but the recorded rung is "
 						+ KingdomPlots.HeartRung(Zone));

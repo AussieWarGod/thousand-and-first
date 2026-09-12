@@ -433,15 +433,29 @@ namespace ThousandAndFirst.Tests
 			// authored chain, never a constant margin, and a candidate's RESERVED rect (the rect
 			// production's envelope proof tests) may not overlap one; envelope lanes are reserved.
 			string envelope = Read("Harness/KingdomCampHeartNativeTownEnvelope.cs");
+			// Native run 48: production refuses to PREPARE a successor from a rung that is not
+			// standing, so envelopes are predicted from authored geometry only (the pure rect
+			// helper TryPrepareSuccessor itself uses, and the design map through the read-only
+			// siting probe) and PROVEN live when each rung stands.
 			foreach (string rule in new[] { "while (rung < TargetRung)",
 				"Require(KingdomUpgrade.TryGetChain(key, out chain) && chain != null",
-				"Require(KingdomArchitectureRuntime.TryPrepareSuccessor(System, Zone, intent,",
-				"chain.SuccessorKey, out next, out failure) && next != null,",
-				"LanesOf(snapshot, next.Rect, lanes);",
+				"Require(KingdomPlots.TryHeartRectFor(Zone, rung + 1, out rect),",
+				"KingdomArchitectureRuntime.TryCreateSitingProbe(System, Zone, Rect, Key,",
+				"|| !probe.TryAccept(Rect, out snapshot, out Failure)) return false;",
+				"LanesOf(snapshot, Rect, Lanes);",
+				"internal void RequireEnvelopeMatches(int Rung, GameObject Standing)",
+				"bool lanesMatch = predicted.Lanes != null && predicted.Lanes.SetEquals(liveLanes);",
+				"taf-camp-town-seed-envelope-mismatch:", "taf-camp-town-seed-envelope-lanes-mismatch:",
+				"heart-envelope-check rung=", "heart-envelope rung=",
 				"KingdomPlotRules.PlotRect reserved = KingdomPlotRules.Reserved(Candidate);",
-				"if (KingdomPlotRules.Overlaps(reserved, Envelopes[i])) return true;",
-				"heart-envelope rung=" })
+				"if (KingdomPlotRules.Overlaps(reserved, Envelopes[i])) return true;" })
 				Assert.That(envelope, Does.Contain(rule), rule);
+			Assert.That(envelope, Does.Not.Contain("TryPrepareSuccessor("),
+				"a successor cannot be prepared from a rung that is not standing");
+			Assert.That(Read(Phases), Does.Contain("RequireEnvelopeMatches(2, standing);"));
+			Assert.That(Read(Rung3), Does.Contain("RequireEnvelopeMatches(3, standing);"));
+			Assert.That(Read(Phases).IndexOf("RequireEnvelopeMatches(2, standing);", StringComparison.Ordinal),
+				Is.LessThan(Read(Phases).IndexOf("MintRung3Bill();", StringComparison.Ordinal)));
 			Assert.That(lots, Does.Contain("List<KingdomPlotRules.PlotRect> envelopes = HeartEnvelopes(heart, reserved);"));
 			Assert.That(lots, Does.Contain("if (CrowdsEnvelope(candidate, envelopes)"));
 			Assert.That(lots, Does.Contain("existing.AddRange(envelopes);"));

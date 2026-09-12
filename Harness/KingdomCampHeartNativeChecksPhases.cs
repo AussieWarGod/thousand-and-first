@@ -189,6 +189,7 @@ namespace ThousandAndFirst.Harness
 				{
 					SecondStanding = standing;
 					SecondHeartId = standing.IDIfAssigned;
+					RequireEnvelopeMatches(2, standing);
 					MintRung3Bill();
 					RecordAnnexGround();
 					WalkFounderClearOfRung3();
