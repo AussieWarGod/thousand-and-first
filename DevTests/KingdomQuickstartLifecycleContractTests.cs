@@ -568,6 +568,50 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("never a pass or a waiver", checker);
 		}
 
+		/// <summary>Native run 38: every store read after the open resolves the store the opened
+		/// receipt bound, through the engine-free rule, never a scan that refuses on a second
+		/// lawful store; every step names storeId= for the checker.</summary>
+		[Test]
+		public void TheStockpileIsResolvedByTheOpenedIdentityNotByScan()
+		{
+			string steps = Read("Harness/KingdomQuickstartLifecycleSteps.cs");
+			OrderedInSource(steps, "internal static bool TryStockpile(XRLGame Game, Zone Zone,",
+				"KingdomQuickstartLifecycleStoreRules.BoundStoreId(", "Game?.GetStringGameState(OpenedKey)",
+				"KingdomQuickstartLifecycleStoreRules.Select(bound, ids,");
+			StringAssert.DoesNotContain("the lifecycle refuses \"\n\t\t\t\t\t\t+ \"to guess", steps);
+			StringAssert.Contains("KingdomQuickstartLifecycleStoreRules.OpenedReceipt(Zone.ZoneID,", steps);
+			StringAssert.Contains("internal const string NoStockpileFailure = KingdomQuickstartLifecycleStoreRules.NoneFailure;", steps);
+			StringAssert.Contains("return \"storeId=\" + Describe(Stockpile?.IDIfAssigned) + \"; stores=\" + count;", steps);
+			foreach (string path in new[] { "Harness/KingdomQuickstartLifecycleSteps.cs",
+				"Harness/KingdomQuickstartLifecycleFinish.cs", "Harness/KingdomQuickstartLifecycleLoad.cs" })
+			{
+				string source = Read(path);
+				StringAssert.DoesNotContain("TryStockpile(Zone, out", source);
+				StringAssert.DoesNotContain("TryStockpile(zone, out", source);
+				StringAssert.Contains("StoreClause(", source);
+			}
+			string rules = Read("Harness/KingdomQuickstartLifecycleStoreRules.cs");
+			StringAssert.DoesNotContain("using XRL", rules);
+			StringAssert.DoesNotContain("SetIntProperty", rules + steps);
+			string checker = Read("Tools/check-quickstart-lifecycle.py");
+			StringAssert.Contains("STORE_DRIFT = \"store-drift\"", checker);
+			StringAssert.Contains("def store_ids(", checker);
+			string persona = Read("Tools/personas/lifecycle-stockpile-native-check.persona");
+			StringAssert.Contains("r_KingdomHeartStockpile", persona);
+			StringAssert.Contains("storeId=", persona);
+		}
+
+		private static void OrderedInSource(string source, params string[] terms)
+		{
+			int cursor = -1;
+			foreach (string term in terms)
+			{
+				int next = source.IndexOf(term, cursor + 1, StringComparison.Ordinal);
+				ClassicAssert.Greater(next, cursor, term);
+				cursor = next;
+			}
+		}
+
 		/// <summary>The lifecycle verbs mint no stock and force no phase.</summary>
 		[Test]
 		public void TheLifecycleDriverFabricatesNothing()

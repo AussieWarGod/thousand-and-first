@@ -45,6 +45,11 @@ BOOKKEEPING = frozenset(
         "SCRIPT-BEGIN",
         "advance-progress",
         "advance-complete",
+        # Native run 36 (13122f0) / run 39 investigation: the founder guard's own start/end rows
+        # around EVERY scripted advance, on every road (Harness/KingdomScenarioFounderGuard.cs) -
+        # the founder's cell and the guard state, read at arming and at release. Wiring, not a
+        # verb the script asked for; Tools/upgrade_profile_witnesses.py expects exactly two.
+        "advance-guard",
         "yield-frames-complete",
         "travel-out-complete",
         "travel-return-complete",

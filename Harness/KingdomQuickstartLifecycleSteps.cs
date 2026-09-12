@@ -29,30 +29,46 @@ namespace ThousandAndFirst.Harness
 		/// <summary>The exact reading TryStockpile reports when none is dedicated yet -- the one
 		/// case lifecycle-open's bounded wait is for, as opposed to an ambiguous multiple-stockpile
 		/// reading, which waiting can never resolve.</summary>
-		internal const string NoStockpileFailure = "this settlement has no dedicated stockpile to pay from";
+		internal const string NoStockpileFailure = KingdomQuickstartLifecycleStoreRules.NoneFailure;
 
-		/// <summary>The settlement's single dedicated stockpile, re-proved by its own reference
-		/// and placed cell. More than one is ambiguous and is refused rather than guessed at.</summary>
-		internal static bool TryStockpile(Zone Zone, out GameObject Stockpile, out string Failure)
+		/// <summary>The stockpile this lifecycle pays from, by IDENTITY once opened: the opened
+		/// receipt (OpenedKey, a durable string game state that survives the save into session 2)
+		/// names the store lifecycle-open read, and every later step resolves that id among the
+		/// dedicated stores standing now (KingdomQuickstartLifecycleStoreRules.Select). Native run
+		/// 38: the heart's own r_KingdomHeartStockpile joined the bootstrap chest mid-advance, both
+		/// lawful; a scan-based "exactly one" refused the save. Before the open, exactly one
+		/// candidate resolves and more refuse. Nothing here dedicates or undedicates.</summary>
+		internal static bool TryStockpile(XRLGame Game, Zone Zone, out GameObject Stockpile,
+			out string Failure)
 		{
 			Stockpile = null;
-			Failure = NoStockpileFailure;
+			List<string> ids = new List<string>();
+			List<GameObject> stores = new List<GameObject>();
 			foreach (GameObject item in KingdomSurvey.ObjectsFor(Zone))
 			{
 				if (!GameObject.Validate(item) || !KingdomMaterials.IsStockpile(item)
 					|| item.Inventory == null) continue;
-				if (Stockpile != null)
-				{
-					Stockpile = null;
-					Failure = "more than one dedicated stockpile stands here; the lifecycle refuses "
-						+ "to guess which one the settlement pays from";
-					return false;
-				}
-				Stockpile = item;
+				ids.Add(item.IDIfAssigned ?? "");
+				stores.Add(item);
 			}
-			if (Stockpile == null) return false;
-			Failure = null;
-			return true;
+			string bound = KingdomQuickstartLifecycleStoreRules.BoundStoreId(
+				Game?.GetStringGameState(OpenedKey));
+			if (!KingdomQuickstartLifecycleStoreRules.Select(bound, ids, out string selected,
+				out Failure)) return false;
+			for (int i = 0; i < ids.Count; i++)
+				if (ids[i] == selected && Stockpile == null) Stockpile = stores[i];
+			return Stockpile != null;
+		}
+
+		/// <summary>The row field naming the store a step paid from and how many dedicated stores
+		/// stood at that moment, so the checker can see every step named the SAME store.</summary>
+		internal static string StoreClause(Zone Zone, GameObject Stockpile)
+		{
+			int count = 0;
+			foreach (GameObject item in KingdomSurvey.ObjectsFor(Zone))
+				if (GameObject.Validate(item) && KingdomMaterials.IsStockpile(item)
+					&& item.Inventory != null) count++;
+			return "storeId=" + Describe(Stockpile?.IDIfAssigned) + "; stores=" + count;
 		}
 
 		/// <summary>
@@ -77,7 +93,7 @@ namespace ThousandAndFirst.Harness
 			Ok = false;
 			if (Present(OpenedKey))
 				return Refuse(OpenStep, "the lifecycle was already opened in this game");
-			if (!TryStockpile(Zone, out GameObject stockpile, out string stockpileFailure))
+			if (!TryStockpile(Game, Zone, out GameObject stockpile, out string stockpileFailure))
 			{
 				if (stockpileFailure != NoStockpileFailure) return Refuse(OpenStep, stockpileFailure);
 				int chunksWaited = Game.GetIntGameState(WaitChunksKey);
@@ -98,13 +114,15 @@ namespace ThousandAndFirst.Harness
 			if (!KingdomData.TryGetBuilding(BuildKey, out KingdomRules.BuildEntry entry))
 				return Refuse(OpenStep, "the \"" + BuildKey + "\" design is missing from the live catalogue");
 			int water = KingdomGrowth.CountStoredWater(Zone);
-			string opened = Zone.ZoneID + "|" + stockpile.IDIfAssigned + "|" + Game.Turns;
+			string opened = KingdomQuickstartLifecycleStoreRules.OpenedReceipt(Zone.ZoneID,
+				stockpile.IDIfAssigned, Game.Turns);
 			Game.SetStringGameState(OpenedKey, opened);
 			if (!KingdomScenarioDurableState.ProvesExactText(OpenedKey, opened))
 				return Refuse(OpenStep, "the lifecycle's own opening receipt did not persist exactly");
 			Ok = true;
 			return Stamped("native-lifecycle step=startup; " + Identities(System)
 				+ "; zone=" + Zone.ZoneID + "; stockpile=" + Describe(stockpile.IDIfAssigned)
+				+ "; " + StoreClause(Zone, stockpile)
 				+ "; timber=" + Timber(stock) + "; storedWater=" + water
 				+ "; designCostDrams=" + entry.CostDrams + "; turns=" + Game.Turns);
 		}
@@ -118,7 +136,7 @@ namespace ThousandAndFirst.Harness
 				return Refuse(BuildStep, "the lifecycle was never opened; startup census is missing");
 			if (Present(JobKey))
 				return Refuse(BuildStep, "this lifecycle already commissioned its one job");
-			if (!TryStockpile(Zone, out GameObject stockpile, out string stockpileFailure))
+			if (!TryStockpile(Game, Zone, out GameObject stockpile, out string stockpileFailure))
 				return Refuse(BuildStep, stockpileFailure);
 			if (!KingdomQuickstartBuildCensus.TakeStock(Zone, stockpile, false,
 				out var before, out string beforeFailure)) return Refuse(BuildStep, beforeFailure);
@@ -156,7 +174,8 @@ namespace ThousandAndFirst.Harness
 				return Refuse(BuildStep, "the commissioned job identity did not persist exactly");
 			Ok = true;
 			return Stamped("native-lifecycle step=paid-commission; " + Identities(System)
-				+ "; plotId=" + Describe(job.SubjectId) + "; jobId=" + job.Id + "; " + quoteReport
+				+ "; plotId=" + Describe(job.SubjectId) + "; jobId=" + job.Id + "; "
+				+ StoreClause(Zone, stockpile) + "; " + quoteReport
 				+ "canpay blocked=false storedWater=" + waterBefore + "; job=" + job.Id
 				+ "; timberDebited=1; waterDebited=" + entry.CostDrams
 				+ "; phase=" + job.Phase + "; turns=" + Game.Turns);
