@@ -27,10 +27,11 @@ def writer_function() -> str:
 class RunRecordWriterTest(unittest.TestCase):
     def test_the_writer_names_a_bom_free_utf8_encoding_and_never_set_content_utf8(self):
         body = writer_function()
-        self.assertIn("New-Object Text.UTF8Encoding($false)", body)
-        self.assertIn("[IO.File]::WriteAllText($partial, $json,", body)
-        self.assertNotIn("Set-Content", body)
-        self.assertNotIn("Out-File", body)
+        code = "\n".join(line for line in body.splitlines() if not line.strip().startswith("#"))
+        self.assertIn("New-Object Text.UTF8Encoding($false)", code)
+        self.assertIn("[IO.File]::WriteAllText($partial, $json,", code)
+        self.assertNotIn("Set-Content", code)
+        self.assertNotIn("Out-File", code)
 
     def test_windows_powershell_5_1_writes_the_record_without_a_bom(self):
         exe = shutil.which("powershell.exe")

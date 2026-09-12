@@ -198,9 +198,9 @@ class RunRecordSeal(unittest.TestCase):
         payload = {"schemaVersion": 1, "profileName": "taf-scenario.Test", "script": "x"}
         for label, prefix in (("bom", b"\xef\xbb\xbf"), ("no-bom", b"")):
             with self.subTest(record=label), tempfile.TemporaryDirectory() as tmp:
-                (Path(tmp) / run_record.FILE_NAME).write_bytes(
+                (Path(tmp) / record.FILE_NAME).write_bytes(
                     prefix + json.dumps(payload).encode("utf-8") + b"\n")
-                self.assertEqual(run_record.read(tmp), payload)
+                self.assertEqual(record.read(tmp), payload)
 
     def test_launch_and_stop_are_written_once_each(self):
         self.seal()
