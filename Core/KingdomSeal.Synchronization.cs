@@ -129,7 +129,13 @@ namespace ThousandAndFirst
 			if (stage == null)
 			{
 				Dirty = true;
-				return TryFlushLiving("loaded world", ProbeEvenIfClean: true, out Failure);
+				bool flushed = TryFlushLiving("loaded world", ProbeEvenIfClean: true,
+					out Failure, out KingdomInheritanceSpatialCaptureResult initialSpatial);
+				if (KingdomSealSpatialRules.SpatialCaptureIsFault(flushed, initialSpatial)) return false;
+				// A young settlement may never have staged a seal. Preserve its dirty state
+				// and revision until a real street connection makes capture possible.
+				Failure = "";
+				return true;
 			}
 			if (stage.Status == KingdomSealStatus.Retired && SameCurrentIdentity(stage))
 			{

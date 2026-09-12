@@ -22,6 +22,8 @@
     <Compile Include="..\Harness\KingdomCampHeartNativeCensus.cs" />
     <Compile Include="KingdomCampHeartNativeCensusTests.cs" />
     <Compile Include="..\Core\KingdomSealPendingRules.cs" />
+    <Compile Include="..\Core\KingdomInheritanceSpatial.CaptureResult.cs" />
+    <Compile Include="..\Core\KingdomSealSpatialRules.cs" />
     <Compile Include="KingdomSealPendingRulesTests.cs" />
     <Compile Include="KingdomDepositOverflowNativeSourceTests.cs" />
     <Compile Include="KingdomQuoteSitingOccupancyNativeSourceTests.cs" />

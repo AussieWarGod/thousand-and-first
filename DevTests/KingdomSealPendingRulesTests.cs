@@ -39,6 +39,19 @@ namespace ThousandAndFirst.Tests
 				Is.EqualTo(expected));
 
 		[Test]
+		public void FirstLoadWithoutAStageAlsoCarriesTypedPending()
+		{
+			string source = TestMain.ReadRepositoryText("Core/KingdomSeal.Synchronization.cs");
+			int begin = source.IndexOf("if (stage == null)\n");
+			int end = source.IndexOf("if (stage.Status ==", begin);
+			string unstaged = source.Substring(begin, end - begin);
+			Assert.That(unstaged, Does.Contain("out Failure, out KingdomInheritanceSpatialCaptureResult initialSpatial)"));
+			Assert.That(unstaged, Does.Contain("SpatialCaptureIsFault(flushed, initialSpatial)"));
+			Assert.That(unstaged, Does.Not.Contain("Dirty = false"));
+			Assert.That(unstaged, Does.Not.Contain("Revision ="));
+		}
+
+		[Test]
 		public void PendingCaptureRefusesBeforeUnavailableFallbackOrPublication()
 		{
 			string capture = TestMain.ReadRepositoryText("Core/KingdomSeal.Capture.cs");
