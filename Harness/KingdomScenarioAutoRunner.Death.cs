@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using XRL.World;
 using ThousandAndFirst.Harness;
 
@@ -23,8 +24,11 @@ namespace ThousandAndFirst
 	/// <c>Running</c> is lowered (:15079), so the terminal row is on disk while the process is
 	/// still writing. It is the seam the production seal already observes (Core/KingdomSeal.cs
 	/// RegisterPlayer), so the runner sees exactly the death production sees. The registered body
-	/// is remembered so that a succession that already re-bodied the player before this handler
-	/// ran still names the founder's death rather than missing it.
+	/// set is remembered - EVERY body this run registered, never removed on re-register - because
+	/// KingdomSuccession re-bodies the player inside this same event (SetPlayerBodyAndRebindAll ->
+	/// TrySetBodyAndRebindPlayerSystems re-registers every player system on the heir), after which
+	/// the founder is neither IsPlayer() nor the latest registered body. The decision itself is
+	/// the engine-free KingdomScenarioDeathRules.ShouldRecordDeath, value-tested for that shape.
 	/// </para>
 	/// <para>
 	/// ROW. <c>SCRIPT-STOPPED</c> whose message opens with <see cref="DiedPrefix" /> followed by the
@@ -44,11 +48,17 @@ namespace ThousandAndFirst
 		[NonSerialized]
 		private GameObject RegisteredPlayer;
 
+		/// <summary>Every body RegisterPlayer ever bound this run (founder, then each heir);
+		/// never removed on re-register or unregister. Session state only.</summary>
+		[NonSerialized]
+		private readonly HashSet<GameObject> RegisteredBodies = new HashSet<GameObject>();
+
 		public override bool HandleEvent(AfterDieEvent E)
 		{
 			GameObject dying = E?.Dying;
-			if (dying != null && Verbs != null
-				&& (dying.IsPlayer() || ReferenceEquals(dying, RegisteredPlayer)))
+			if (dying != null && KingdomScenarioDeathRules.ShouldRecordDeath(dying.IsPlayer(),
+				ReferenceEquals(dying, RegisteredPlayer) || RegisteredBodies.Contains(dying),
+				Verbs != null))
 				KingdomSystem.Guard("scenario auto-runner death", delegate { Died(E, dying); });
 			return base.HandleEvent(E);
 		}
@@ -62,6 +72,8 @@ namespace ThousandAndFirst
 			if (string.IsNullOrEmpty(category)) category = "unknown";
 			string reason = !string.IsNullOrEmpty(E.ThirdPersonReason) ? E.ThirdPersonReason
 				: (!string.IsNullOrEmpty(E.Reason) ? E.Reason : "unstated");
+			// Explicit and load-bearing even though Finish cancels again: Finish stops the travel
+			// driver FIRST, and if that throws the guard must already be down (Release is idempotent).
 			KingdomScenarioAdvance.Cancel();
 			Finish(StoppedRow, false, KingdomScenarioRules.Bounded(DiedPrefix + category
 				+ "; reason=" + reason + "; " + guard));

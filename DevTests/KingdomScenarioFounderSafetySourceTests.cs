@@ -47,9 +47,34 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Registrar.Register(AfterDieEvent.ID);", Read("Core/KingdomSeal.cs"));
 			string death = Read("Harness/KingdomScenarioAutoRunner.Death.cs");
 			StringAssert.Contains("public override bool HandleEvent(AfterDieEvent E)", death);
-			StringAssert.Contains("dying.IsPlayer() || ReferenceEquals(dying, RegisteredPlayer)", death);
-			// Only a scripted run stops here; an attended game with no script journals nothing.
-			StringAssert.Contains("dying != null && Verbs != null", death);
+			// Succession re-registers the runner on the heir inside AfterDieEvent, so the death of
+			// any body ever registered counts, decided by the engine-free predicate.
+			AssertOrder(runner, "RegisteredPlayer = Player;", "RegisteredBodies.Add(Player);");
+			StringAssert.DoesNotContain("RegisteredBodies.Remove(", runner + death);
+			StringAssert.DoesNotContain("RegisteredBodies.Clear(", runner + death);
+			StringAssert.Contains("private readonly HashSet<GameObject> RegisteredBodies = new HashSet<GameObject>();", death);
+			AssertOrder(death, "KingdomScenarioDeathRules.ShouldRecordDeath(dying.IsPlayer(),",
+				"ReferenceEquals(dying, RegisteredPlayer) || RegisteredBodies.Contains(dying),",
+				"Verbs != null))");
+		}
+
+		/// <summary>The decision by value. The succession shape is the load-bearing case: the
+		/// founder is no longer the player and no longer the latest registered body, yet was
+		/// registered, so the death is recorded; an unrelated NPC death never is.</summary>
+		[Test]
+		public void ShouldRecordDeathByValueIncludingTheSuccessionShape()
+		{
+			ClassicAssert.IsTrue(Harness.KingdomScenarioDeathRules.ShouldRecordDeath(false, true, true),
+				"succession: founder re-bodied before the handler ran");
+			ClassicAssert.IsTrue(Harness.KingdomScenarioDeathRules.ShouldRecordDeath(true, true, true));
+			ClassicAssert.IsTrue(Harness.KingdomScenarioDeathRules.ShouldRecordDeath(true, false, true),
+				"player body never seen by RegisterPlayer still counts");
+			ClassicAssert.IsFalse(Harness.KingdomScenarioDeathRules.ShouldRecordDeath(false, false, true),
+				"an NPC death under a running script is not a stop");
+			ClassicAssert.IsFalse(Harness.KingdomScenarioDeathRules.ShouldRecordDeath(true, true, false),
+				"no script running: an attended game journals nothing");
+			ClassicAssert.IsFalse(Harness.KingdomScenarioDeathRules.ShouldRecordDeath(false, true, false));
+			ClassicAssert.IsFalse(Harness.KingdomScenarioDeathRules.ShouldRecordDeath(false, false, false));
 		}
 
 		/// <summary>One terminal row, DIED-prefixed with the engine's own category, after the

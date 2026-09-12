@@ -123,7 +123,11 @@ namespace ThousandAndFirst
 		{
 			Registrar.Register(BeginTakeActionEvent.ID);
 			Registrar.Register(AfterDieEvent.ID); // KingdomScenarioAutoRunner.Death.cs
-			RegisteredPlayer = Player; // also on the unregistration call: same body, harmless
+			// Succession re-registers this system on the heir INSIDE AfterDieEvent, so the latest
+			// body is not enough: every body ever registered this run stays in the set
+			// (KingdomScenarioAutoRunner.Death.cs, KingdomScenarioDeathRules.cs).
+			RegisteredPlayer = Player;
+			RegisteredBodies.Add(Player);
 		}
 
 		/// <summary>

@@ -2333,6 +2333,7 @@
 	<Compile Include="KingdomMigrationPortExemptionCensusTests.cs" />
 	<Compile Include="KingdomScenarioCaptureRulesTests.cs" />
 	<Compile Include="KingdomScenarioRuntimeSourceTests.cs" />
+	<Compile Include="..\Harness\KingdomScenarioDeathRules.cs" />
 	<Compile Include="KingdomScenarioFounderSafetySourceTests.cs" />
 	<Compile Include="KingdomScenarioLauncherSourceTests.cs" />
 	<Compile Include="KingdomScenarioVerbProviderRulesTests.cs" />
