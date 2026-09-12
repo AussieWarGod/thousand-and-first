@@ -1,5 +1,19 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
+## Quickstart housing hotfix acceptance (2026-09-13)
+
+The construction lifecycle now also observes the original four Quickstart citizens at startup,
+after its ordinary 7,200-turn construction interval, and after cold load. Each must retain its
+original physical identity, applied founding citizenship and living resident row. Startup requires
+unfinished shelter; the later observations require both reserved tent rows to be functionally
+built, sufficient physical roof capacity, and all four original citizens assigned to those homes.
+Master simulation, Growth and Lodging must remain enabled. No test citizens, housing completion,
+or home assignments are injected. The `quickstart-settlement` journal rows report measured counts;
+any refusal also fails the enclosing lifecycle step. This extends the real fire commission,
+save/load and next-action chain rather than treating that fire as evidence of working housing.
+Execution on the combined candidate is pending. A release needs the three locations with both
+advisor choices, plus an existing-save recovery check; boot-only receipts do not satisfy this gate.
+
 ## Current combined heart candidate — gates owed
 
 The planned compatibility compile runs across 3098 production C# sources (3094 baseline);

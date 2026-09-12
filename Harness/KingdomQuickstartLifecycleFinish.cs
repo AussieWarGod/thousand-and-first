@@ -59,6 +59,8 @@ namespace ThousandAndFirst.Harness
 			}
 			string failure = Standing(Zone, job, out GameObject building);
 			if (failure != null) return Refuse(GrownStep, failure);
+			if (!KingdomQuickstartSettlementChecks.Observe(Game, Zone, System, "grown", out string settlementFailure))
+				return Refuse(GrownStep, settlementFailure);
 			Ok = true;
 			// The finished work is reported linked to what was paid for: the completed registry
 			// row's own identity, and the paid job it fulfils as the commission published it.

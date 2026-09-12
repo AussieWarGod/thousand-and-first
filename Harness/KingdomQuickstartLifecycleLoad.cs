@@ -111,6 +111,8 @@ namespace ThousandAndFirst.Harness
 			int water = KingdomGrowth.CountStoredWater(zone);
 			if (water != Witness.StoredWater)
 				return "the loaded settlement holds " + water + " drams, not the saved " + Witness.StoredWater;
+			if (!KingdomQuickstartSettlementChecks.Observe(Game, zone, system, "loaded", out string settlementFailure))
+				return settlementFailure;
 			// Every value here was read from the loaded game a moment ago: the system, the
 			// standing object, its own cell and that cell's zone. None is copied from the witness.
 			Observed = "realmId=" + system.RealmId + "; cityId=" + cityId + "; saveId=" + Game.GameID

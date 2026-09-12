@@ -70,6 +70,7 @@ BOOKKEEPING = frozenset(
         # the cold-load row group by presence, and a lone Quickstart-named row beside
         # lifecycle-loaded would flip that choice into "partial evidence".
         "lifecycle-preactivation",
+        "quickstart-settlement",
         # A third-party verb provider the admission law refused. It describes the PROFILE a run was
         # launched into, not a step the script asked for, so a persona must not go red because
         # somebody else's mod shipped a broken provider. `Tools/run-personas.sh` surfaces these
