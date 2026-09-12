@@ -136,10 +136,12 @@ namespace ThousandAndFirst
 		}
 
 		private static bool CanInsert(GameObject Owner, Zone Z, Cell Cell, string Lot,
-			string Hash, ArchitecturePlacement Placement, out string Failure)
+			string Hash, ArchitecturePlacement Placement, ArchitectureLayoutSnapshot Snapshot,
+			out string Failure)
 		{
 			Failure = null;
 			if (Cell == null) return Fail("layout slot lies outside its frozen zone", out Failure);
+			bool blocks = KingdomPlotRules.SlotBlocksOccupant(PassabilityOf(Snapshot, Placement));
 			List<GameObject> objects = Cell.GetObjects();
 			for (int i = 0; i < objects.Count; i++)
 			{
@@ -147,8 +149,18 @@ namespace ThousandAndFirst
 				if (!GameObject.Validate(item) || ReferenceEquals(item, Owner)
 					|| item.GetIntProperty(KingdomPlots.HeartStakeProperty) == 1) continue;
 				if (item.IsCreature || item.IsPlayer())
-					return Fail("a living occupant moved onto layout slot " + Placement.Slot,
+				{
+					// A body only stands in the way of a slot the map declares Blocked. Ground and
+					// path go down under them; adjacent slots are used from the side.
+					if (!blocks) continue;
+					// Separate line on purpose: the refusal text above is parsed by
+					// KingdomPlotRules.OccupantSlotOf and by harness telemetry, so it never grows.
+					KingdomLog.Log("architecture: blocked slot " + Placement.Slot + " holds "
+						+ item.IDIfAssigned + " (" + item.Blueprint + ") at " + Cell.X + ","
+						+ Cell.Y);
+					return Fail(KingdomPlotRules.OccupantSlotRefusalPrefix + Placement.Slot,
 						out Failure);
+				}
 				if (item.GetStringProperty(KingdomPlots.PlotIdProperty) == Lot
 					&& item.GetStringProperty(ComponentHashProperty) == Hash
 					&& item.GetIntProperty(ComponentSchemaProperty) == ComponentSchema) continue;
@@ -157,6 +169,22 @@ namespace ThousandAndFirst
 					out Failure);
 			}
 			return true;
+		}
+
+		/// <summary>The map's declared passability for a placement's own cell. An unmapped cell
+		/// reads Blocked: an unknown slot is never quietly treated as open ground.</summary>
+		internal static ArchitecturePassability PassabilityOf(ArchitectureLayoutSnapshot Snapshot,
+			ArchitecturePlacement Placement)
+		{
+			if (Snapshot == null || Snapshot.Cells == null || Placement == null)
+				return ArchitecturePassability.Blocked;
+			for (int i = 0; i < Snapshot.Cells.Count; i++)
+			{
+				ArchitectureCellState cell = Snapshot.Cells[i];
+				if (cell != null && cell.X == Placement.X && cell.Y == Placement.Y)
+					return cell.Passability;
+			}
+			return ArchitecturePassability.Blocked;
 		}
 
 		private static void StampComponent(GameObject Owner, GameObject Item, string Lot, string Hash,

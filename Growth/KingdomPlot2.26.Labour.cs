@@ -36,6 +36,7 @@ namespace ThousandAndFirst
 				InfrastructureFailure, out target)) return;
 			if ((int)target <= Works.StageApplied)
 			{
+				SayPlotStageWaiting(Works, target);
 				return;
 			}
 			KingdomSystem.Guard("plot raising", delegate
@@ -43,7 +44,7 @@ namespace ThousandAndFirst
 				while (Works.StageApplied < (int)target && Works.DesignKey != null)
 				{
 					KingdomPlotRules.PlotStage next = (KingdomPlotRules.PlotStage)(Works.StageApplied + 1);
-					if (!Apply(Works, next))
+					if (!Apply(Works, next, System))
 					{
 						// The stage could not land -- a design a third-party mod withdrew between
 						// staking and finishing, or a zone torn down under us. The plot stays
@@ -164,7 +165,8 @@ namespace ThousandAndFirst
 				global::System.Globalization.CultureInfo.InvariantCulture, out Value);
 		}
 
-		private static bool Apply(r_KingdomPlotWorks Works, KingdomPlotRules.PlotStage Stage)
+		private static bool Apply(r_KingdomPlotWorks Works, KingdomPlotRules.PlotStage Stage,
+			KingdomSystem System)
 		{
 			GameObject parent = Works.ParentObject;
 			Zone zone = parent?.CurrentZone;
@@ -210,8 +212,8 @@ namespace ThousandAndFirst
 						return false;
 					}
 					if (!ClearGround(Works, zone, plot, footprint, roof, managed)) return false;
-					if (currentAuthored && !KingdomArchitectureStamper.TryStageLayer(parent,
-						zone, ArchitectureLayer.Ground, out string groundFailure))
+					if (currentAuthored && !TryGroundStageWithOccupants(System, zone, parent,
+						Works, managed, authored, plot, out string groundFailure))
 					{
 						KingdomLog.Log("architecture: ground layer refused: " + groundFailure);
 						return false;

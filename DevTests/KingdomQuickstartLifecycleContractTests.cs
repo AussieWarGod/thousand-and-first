@@ -71,15 +71,120 @@ namespace ThousandAndFirst.Tests
 		{
 			string provider = Read("Harness/KingdomQuickstartLifecycleProvider.cs");
 			string checker = Read(Checker);
-			string persona = Read("Tools/personas/lifecycle-stockpile-native-check.persona");
+			// The Quickstart-lifecycle persona (ZAP-034 root ruling): the settlement's boot phase
+			// already ran the exact quote/CanPay/commission sequence, so this persona's own
+			// SCRIPT/VERBS deliberately omit lifecycle-build -- running it again would only refuse
+			// "this lifecycle already commissioned its one job". The founding-road persona below
+			// still seals all four verbs; only the vocabulary each persona SEALS differs.
+			string quickstartPersona = Read("Tools/personas/lifecycle-stockpile-native-check.persona");
+			string foundingPersona = Read("Tools/personas/lifecycle-founding-road-refusal.persona");
 			foreach (string verb in new[] { "lifecycle-open", "lifecycle-build", "lifecycle-grown",
 				"lifecycle-save" })
 			{
 				StringAssert.Contains("\"" + verb + "\"", provider);
 				StringAssert.Contains("\"" + verb + "\"", checker);
-				StringAssert.Contains(verb, persona);
+				StringAssert.Contains(verb, quickstartPersona);
+				StringAssert.Contains(verb, foundingPersona);
 			}
-			StringAssert.Contains("VERBS=lifecycle-open,lifecycle-build,lifecycle-grown,lifecycle-save", persona);
+			StringAssert.Contains("VERBS=lifecycle-open,lifecycle-grown,lifecycle-save", quickstartPersona);
+			StringAssert.Contains("VERBS=lifecycle-open,lifecycle-build,lifecycle-grown,lifecycle-save", foundingPersona);
+			StringAssert.Contains("SCRIPT=quickstart-lifecycle marsh yes;", quickstartPersona);
+			StringAssert.DoesNotContain(";lifecycle-build;", quickstartPersona);
+		}
+
+		/// <summary>Sealed-script equality (ZAP-034): each lifecycle persona's SCRIPT= line, pinned
+		/// exactly, so a future edit to either changes a test rather than silently drifting from
+		/// what the harness actually expects.</summary>
+		[Test]
+		public void SealedScriptsAreExactlyPinnedForBothLifecycleRoads()
+		{
+			string quickstartPersona = Read("Tools/personas/lifecycle-stockpile-native-check.persona");
+			string foundingPersona = Read("Tools/personas/lifecycle-founding-road-refusal.persona");
+			StringAssert.Contains(
+				"SCRIPT=quickstart-lifecycle marsh yes;stagedigest;lifecycle-open;advance 7200;"
+					+ "lifecycle-grown;lifecycle-save;stagedigest",
+				quickstartPersona);
+			StringAssert.Contains(
+				"SCRIPT=stagedigest;realize;lifecycle-open;advance 100;lifecycle-open;advance 100;"
+					+ "lifecycle-open;advance 100;lifecycle-open;advance 100;lifecycle-open;advance 100;"
+					+ "lifecycle-open;lifecycle-build;advance 2400;lifecycle-grown;lifecycle-save;stagedigest",
+				foundingPersona);
+		}
+
+		/// <summary>The Quickstart road (ZAP-034): the runner is added, but only under the
+		/// lifecycle command, and the runner never re-strips or skips a real Quickstart camp's
+		/// own boot line.</summary>
+		[Test]
+		public void TheQuickstartRoadWiresTheRunnerWithoutTouchingProductionQuickstart()
+		{
+			string patch = Read("Harness/KingdomQuickstartLifecycleRunnerPatch.cs");
+			StringAssert.Contains("[HarmonyPatch(typeof(QudGamemodeModule), \"bootGame\")]", patch);
+			StringAssert.Contains("KingdomQuickstartBootTest.LifecycleRequested", patch);
+			StringAssert.Contains("game.RequireSystem<KingdomScenarioAutoRunner>()", patch);
+			string runner = Read("Harness/KingdomScenarioAutoRunner.cs");
+			StringAssert.Contains("KingdomQuickstartBootTest.LifecycleRequested", runner);
+			StringAssert.Contains("quickstartLifecycle", runner);
+			// No re-strip and no line-0 dispatch under the lifecycle command; every other profile
+			// keeps its unconditional re-strip and its Cursor = 0.
+			StringAssert.Contains("if (!quickstartLifecycle)", runner);
+			StringAssert.Contains("Cursor = quickstartLifecycle ? 1 : 0;", runner);
+			// TheQuickstartLifecycleAuthorityIsScopedAndLeavesTheOldProfilesAlone (above) already
+			// pins that boot/build/save never construct or require the runner themselves; this
+			// new patch file is the one and only place that does, and only under Lifecycle.
+		}
+
+		/// <summary>Native run 13 (529a2aa) diagnosis: KingdomQuickstartBootTest.Begin is a
+		/// HarmonyPrefix on the OUTER EmbarkInfo.bootGame, so it claims Popup.Suppress BEFORE the
+		/// runner patch's postfix (on the INNER QudGamemodeModule.bootGame) ever runs -- backwards
+		/// from what the original patch docstring assumed. Begin's own `finally` then dropped the
+		/// flag unconditionally once its own OwnSuppression was true, with no idea the runner had
+		/// also claimed it, stalling the very next unattended popup. This pins both the diagnostic
+		/// row and the fix at that finally.</summary>
+		[Test]
+		public void TheDiagnosedSuppressionRaceIsBothLoggedAndFixed()
+		{
+			string patch = Read("Harness/KingdomQuickstartLifecycleRunnerPatch.cs");
+			StringAssert.Contains("KingdomScenarioJournal.Append(\"LIFECYCLE-RUNNER\"", patch);
+			StringAssert.Contains("LIFECYCLE-RUNNER patched=true added=", patch);
+			StringAssert.Contains("lifecycleRequested=", patch);
+			StringAssert.Contains("MetricsManager.LogInfo(\"[TAF] \" + line)", patch);
+			string runner = Read("Harness/KingdomScenarioAutoRunner.cs");
+			StringAssert.Contains("internal static bool Suppressing(XRLGame Game)", runner);
+			StringAssert.Contains(
+				"return Game?.GetSystem<KingdomScenarioAutoRunner>()?.SuppressedPopups == true;",
+				runner);
+			string boot = Read("Harness/KingdomQuickstartBootTest.cs");
+			StringAssert.Contains(
+				"if (OwnSuppression && !KingdomScenarioAutoRunner.Suppressing(Game)) Popup.Suppress = false;",
+				boot);
+		}
+
+		/// <summary>Review-required fix on a16359f: LIFECYCLE-RUNNER was journaled for EVERY
+		/// Quickstart-mode boot, breaking quickstart-boot/-save/-build's byte-identical journal
+		/// (Tools/check-quickstart-results.py's exact positional boot-row equality) and the
+		/// lifecycle persona's own strictly positional EXPECT (persona_matrix.match). Fixed by
+		/// folding the LifecycleRequested check into the single early return -- the row can now
+		/// exist only when that guard already passed -- and by registering it as bookkeeping so
+		/// persona_matrix.significant() drops it before any positional comparison runs.</summary>
+		[Test]
+		public void TheLifecycleRunnerRowNeverReachesNonLifecycleQuickstartBoots()
+		{
+			string patch = Read("Harness/KingdomQuickstartLifecycleRunnerPatch.cs");
+			StringAssert.Contains(
+				"if (game == null || !KingdomQuickstartRules.IsMode(game.gameMode)", patch);
+			StringAssert.Contains(
+				"|| !KingdomQuickstartBootTest.LifecycleRequested) return;", patch);
+			// Nothing between the guard and the Append call may itself return early on a
+			// non-lifecycle path -- the guard above is the ONLY gate, so no separate check could
+			// let the row through for boot/save/build.
+			string guardText = "LifecycleRequested) return;";
+			int guardEnd = patch.IndexOf(guardText, StringComparison.Ordinal) + guardText.Length;
+			int appendAt = patch.IndexOf("KingdomScenarioJournal.Append(\"LIFECYCLE-RUNNER\"",
+				StringComparison.Ordinal);
+			ClassicAssert.IsTrue(guardEnd > guardText.Length && appendAt > guardEnd);
+			StringAssert.DoesNotContain("return;", patch.Substring(guardEnd, appendAt - guardEnd));
+			string matrix = Read("Tools/personas/persona_matrix.py");
+			StringAssert.Contains("\"LIFECYCLE-RUNNER\",", matrix);
 		}
 
 		/// <summary>The turn-driven step refuses rather than passes when the job has not
@@ -99,6 +204,84 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("forJobId=", finish);
 			StringAssert.Contains("GetIntProperty(\"KingdomBuilt\") != 1", finish);
 			StringAssert.Contains("GetStringProperty(KingdomUpgrade.BuildKeyProperty) != Job.TargetKey", finish);
+		}
+
+		/// <summary>Native run 17 (f691ab4) fix: a plot-backed job (Job.Projection == PlotWorks,
+		/// e.g. the "fire" commission) must read its progress off KingdomPlots.PlotWork* string
+		/// properties, never off r_KingdomScaffold -- that read was always absent for a plot root,
+		/// so every plot-backed refusal misread as "no-labour-ever" regardless of whether labour
+		/// had actually run. The untruncated reading goes to its own bookkeeping row so the
+		/// stamped, 300-char-bounded refusal row never has to carry it.</summary>
+		[Test]
+		public void StallClassificationReadsThePlotLaneForPlotBackedJobs()
+		{
+			string finish = Read("Harness/KingdomQuickstartLifecycleFinish.cs");
+			StringAssert.Contains("KingdomQuickstartLifecycleStall.DetailMessage(Game, Zone, System, job)",
+				finish);
+			StringAssert.Contains("KingdomScenarioJournal.Append(KingdomQuickstartLifecycleStall.DetailRow",
+				finish);
+			string stall = Read("Harness/KingdomQuickstartLifecycleStall.cs");
+			StringAssert.Contains("internal const string DetailRow = \"lifecycle-grown-detail\";", stall);
+			// The Projection branch and the works-root read live in the split partial shard now
+			// (KingdomQuickstartLifecycleStall.Detail.cs), kept under the house line cap.
+			string detail = Read("Harness/KingdomQuickstartLifecycleStall.Detail.cs");
+			StringAssert.Contains("internal static partial class KingdomQuickstartLifecycleStall", detail);
+			StringAssert.Contains("if (Job.Projection == KingdomConstructionProjection.PlotWorks)", detail);
+			StringAssert.Contains("KingdomPlots.PlotWorkRemainingProperty", detail);
+			StringAssert.Contains("KingdomPlots.PlotWorkLastTickProperty", detail);
+			StringAssert.Contains("KingdomPlots.PlotWorkRequiredProperty", detail);
+			StringAssert.Contains("KingdomPlots.PlotWorkSchemaProperty", detail);
+			StringAssert.Contains("KingdomPlots.PlotWorkWindowProperty", detail);
+			// The scaffold lane is still read, but only for the non-plot branch -- neither lane
+			// is dropped, only correctly chosen.
+			StringAssert.Contains("r_KingdomScaffold scaffold = root.GetPart<r_KingdomScaffold>();", detail);
+			// The detail row's key set, exactly as the diagnosis asked for.
+			foreach (string key in new[] { "selectedId=", "candidates=", "roots=", "free=",
+				"plotRemaining=", "lastSemanticTick=", "schema=" })
+				StringAssert.Contains(key, detail);
+			string matrix = Read("Tools/personas/persona_matrix.py");
+			StringAssert.Contains("\"lifecycle-grown-detail\",", matrix);
+		}
+
+		/// <summary>Native run 23 (3e3ff75), #163: a paid, fully-laboured job whose plot stage
+		/// never advances (a living occupant on the footprint refuses the apply every pass) must
+		/// classify as stage-not-applied/apply-blocked-occupant, never fall through to the wrong
+		/// insufficient-turns default. The occupant read is the same test production's own
+		/// CanInsert refuses on, and the detail row now also carries stage-applied=/physical=/
+		/// occupants= so a native run can bind the classification to what was actually found.
+		/// </summary>
+		[Test]
+		public void StallClassificationNamesAnApplyBlockedOccupantBeforeInsufficientTurns()
+		{
+			// The pure classification half lives in its own engine-free shard so it can be value
+			// tested, not only source-pinned -- see DevTests/
+			// KingdomQuickstartLifecycleStallClassifyTests.cs.
+			string classify = Read("Harness/KingdomQuickstartLifecycleStall.Classify.cs");
+			StringAssert.Contains("internal const string StageNotApplied = \"stage-not-applied\";",
+				classify);
+			StringAssert.Contains(
+				"internal const string ApplyBlockedOccupant = \"apply-blocked-occupant\";", classify);
+			StringAssert.Contains(
+				"&& (StageApplied < StageTarget || PhysicalPhase == KingdomPhysicalPhase.None))",
+				classify);
+			StringAssert.Contains(
+				"return OccupantCount > 0 ? ApplyBlockedOccupant : StageNotApplied;", classify);
+			// PhysicalPhase must actually be read (Stall.cs) and threaded through (Classify.cs),
+			// per the review's own advisory on 090a188 -- otherwise a scaffold-backed job (whose
+			// StageApplied/StageTarget both stay 0) can never reach stage-not-applied at all.
+			StringAssert.Contains("KingdomPhysicalPhase PhysicalPhase)", classify);
+			string stall = Read("Harness/KingdomQuickstartLifecycleStall.cs");
+			StringAssert.Contains(
+				"reading.StageTarget, reading.Occupants.Count, Job.PhysicalPhase);", stall);
+			// The new branch must land BEFORE the insufficient-turns default, not after.
+			int branchAt = classify.IndexOf("StageApplied < StageTarget", StringComparison.Ordinal);
+			int defaultAt = classify.IndexOf("return InsufficientTurns;", StringComparison.Ordinal);
+			ClassicAssert.IsTrue(branchAt >= 0 && defaultAt > branchAt);
+			string detail = Read("Harness/KingdomQuickstartLifecycleStall.Detail.cs");
+			StringAssert.Contains("private static List<string> OccupantsOn(", detail);
+			StringAssert.Contains("item.IsCreature || item.IsPlayer()", detail);
+			StringAssert.Contains("stage-applied=", detail);
+			StringAssert.Contains("occupants=", detail);
 		}
 
 		/// <summary>The cold-load session compares what it reads against the witness; it never
@@ -256,13 +439,15 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("internal static string Stamped(string Report)", steps);
 			StringAssert.Contains("the launched profile could not be named from its ", steps);
 			// Refuse(...) itself routes through Stamped(...): the two success rows in Steps.cs
-			// (Open, Build) plus Refuse's own return make three; Finish.cs has no refusal helper
-			// of its own and calls the shared Refuse(...), so its count stays at its two success
-			// rows only.
+			// (Open, Build), the open-wait "still waiting" row Open() journals while its bounded
+			// stockpile-dedication wait is unresolved, and Refuse's own return make four; Finish.cs
+			// has no refusal helper of its own and calls the shared Refuse(...), so its count stays
+			// at its two success rows only.
 			StringAssert.Contains(
 				"return Stamped(\"native-lifecycle refused at \" + Step + \": \" + Bounded(Reason));",
 				steps);
-			ClassicAssert.AreEqual(3, Occurrences(steps, "return Stamped("), "Steps.cs");
+			StringAssert.Contains("return Stamped(\"native-lifecycle step=open-wait; ", steps);
+			ClassicAssert.AreEqual(4, Occurrences(steps, "return Stamped("), "Steps.cs");
 			ClassicAssert.AreEqual(2,
 				Occurrences(Read("Harness/KingdomQuickstartLifecycleFinish.cs"), "return Stamped("),
 				"Finish.cs");
@@ -310,21 +495,30 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void AnUnfinishedJobIsClassifiedFromReadProductionState()
 		{
+			// KingdomQuickstartLifecycleStall is now split across three partial shards to stay
+			// under the house line cap: .cs (Describe + shared helpers), .Classify.cs (the pure,
+			// engine-free classification), .Detail.cs (the untruncated DetailRow reading).
 			string stall = Read("Harness/KingdomQuickstartLifecycleStall.cs");
+			string classify = Read("Harness/KingdomQuickstartLifecycleStall.Classify.cs");
+			string detail = Read("Harness/KingdomQuickstartLifecycleStall.Detail.cs");
 			foreach (string token in new[] { "\"pass-never-ran\"", "\"no-labour-ever\"",
-				"\"labour-stalled\"", "\"insufficient-turns\"" })
-				StringAssert.Contains(token, stall);
+				"\"labour-stalled\"", "\"insufficient-turns\"", "\"stage-not-applied\"",
+				"\"apply-blocked-occupant\"" })
+				StringAssert.Contains(token, classify);
 			foreach (string field in new[] { "scaffold.RemainingTicks", "scaffold.LastWorkedTick",
 				"r_KingdomScaffold.WorkWindowProperty", "KingdomConstructionPresence.SelectedProperty",
 				"KingdomConstructionPresence.HandsProperty",
 				"KingdomConstructionPresence.EffectivenessProperty",
-				"KingdomConstructionPresence.SchemaProperty", "System.LastSemanticTick",
+				"KingdomConstructionPresence.SchemaProperty" })
+				StringAssert.Contains(field, detail);
+			foreach (string field in new[] { "System.LastSemanticTick",
 				"Job.StartedTick", "Job.DueTick", "Job.UpdatedTick", "Job.InputReceipt" })
 				StringAssert.Contains(field, stall);
-			// Reads only: nothing here writes state or advances a clock.
-			foreach (string forbidden in new[] { "SetIntProperty", "SetStringProperty",
-				"AdvanceDurable", "RetryDurable", "= now;" })
-				StringAssert.DoesNotContain(forbidden, stall);
+			// Reads only: nothing here writes state or advances a clock, across all three shards.
+			foreach (string source in new[] { stall, classify, detail })
+				foreach (string forbidden in new[] { "SetIntProperty", "SetStringProperty",
+					"AdvanceDurable", "RetryDurable", "= now;" })
+					StringAssert.DoesNotContain(forbidden, source);
 			string finish = Read("Harness/KingdomQuickstartLifecycleFinish.cs");
 			StringAssert.Contains("KingdomQuickstartLifecycleStall.Describe(Game, Zone, System, job)", finish);
 			StringAssert.DoesNotContain("the turn budget expired before this building stood", finish);

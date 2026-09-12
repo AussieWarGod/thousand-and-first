@@ -493,6 +493,97 @@ class StampedRefusalsBindRatherThanReportUnbindable(unittest.TestCase):
         self.assertEqual(problems, ["row lifecycle-grown carries no profile stamp"])
 
 
+class RepeatedLifecycleOpenWaitAttemptsAreJudgedHonestly(unittest.TestCase):
+    """ZAP-034: lifecycle-open now retries under a bounded wait for the founder to have
+    dedicated a stockpile (Harness/KingdomQuickstartLifecycleOpenWait), journaling each attempt
+    as its own lifecycle-open row. The checker introduces no new row kind for this -- these
+    cases prove the EXISTING judge() logic already reads a repeated verb name honestly: a
+    string of OK "still waiting" rows never reads as complete on its own, and the final row's
+    own outcome (not the first attempt's) decides the link."""
+
+    def waiting_rows(self, count, final_outcome, final_message):
+        rows = [("realize", "OK", "m")]
+        for i in range(count):
+            rows.append(("lifecycle-open", "OK", "step=open-wait; chunk=%d of %d" % (i + 1, count)))
+        rows.append(("lifecycle-open", final_outcome, final_message))
+        return rows
+
+    def test_a_budget_exhausted_after_several_waits_fails_rather_than_blocks_or_passes(self):
+        rows = self.waiting_rows(
+            5, "REFUSED",
+            "no dedicated stockpile appeared within 500 ordinary engine turns of waiting;"
+            " last reading: this settlement has no dedicated stockpile to pay from",
+        )
+        report = checker.judge(rows)
+        self.assertEqual(report["verdict"], checker.FAIL)
+        self.assertIn("startup", report["reason"])
+        self.assertIn("refused row(s): lifecycle-open", report["reason"])
+
+    def test_dedication_arriving_mid_wait_still_passes_the_startup_link(self):
+        # The predicate becoming true on, say, the third attempt: two "still waiting" rows, then
+        # the real startup census row -- exactly what a fixed persona (no more waits needed once
+        # dedicated) would journal.
+        rows = self.waiting_rows(2, "OK", "step=startup; realmId=r1; cityId=c1; turns=200")
+        report = checker.judge(rows)
+        self.assertEqual(report["verdict"], checker.BLOCKER)
+        startup = next(link for link in report["links"] if link["link"] == "startup")
+        self.assertEqual(startup["state"], checker.PASS)
+
+    def test_a_lone_waiting_row_with_no_conclusion_yet_blocks_the_later_links(self):
+        # An interrupted run (game stopped mid-wait): only "still waiting" rows exist, no final
+        # outcome. startup itself still reads PASS (every row is OK, in order), but nothing
+        # downstream was ever driven -- exactly the same shape as today's single-row startup.
+        rows = self.waiting_rows(3, "OK", "step=open-wait; chunk=4 of 5")
+        report = checker.judge(rows[:-1] + [rows[-1]])
+        startup = next(link for link in report["links"] if link["link"] == "startup")
+        self.assertEqual(startup["state"], checker.PASS)
+        self.assertEqual(report["verdict"], checker.BLOCKER)
+
+
+
+class LifecycleGrownDetailRowIsTolerated(unittest.TestCase):
+    """ZAP-034 native run 17: lifecycle-grown-detail carries the untruncated stall reading
+    behind a Bounded(...) 300-char lifecycle-grown refusal (Harness/
+    KingdomQuickstartLifecycleStall.cs). It must never affect judge()'s verdict or trip
+    check_stamps() -- it names no link and carries no stamp by design."""
+
+    def test_the_detail_row_does_not_change_the_engine_turn_build_verdict(self):
+        rows = [
+            ("realize", "OK", "m"),
+            ("lifecycle-open", "OK", "step=startup"),
+            ("lifecycle-grown-detail", "OK", "selectedId=x; candidates=1; roots=3; free=0"),
+            ("lifecycle-grown", "REFUSED", "stall=no-labour-ever; turns=2400"),
+        ]
+        with_detail = checker.judge(rows)
+        without_detail = checker.judge([row for row in rows if row[0] != "lifecycle-grown-detail"])
+        self.assertEqual(with_detail["verdict"], without_detail["verdict"])
+        self.assertEqual(with_detail["reason"], without_detail["reason"])
+        self.assertEqual(with_detail["verdict"], checker.FAIL)
+
+    def test_the_detail_row_is_never_demanded_a_stamp(self):
+        rows = [
+            ("lifecycle-open", "OK",
+             "step=startup; profile=founding-first-city seal=" + "a" * 64),
+            ("lifecycle-grown-detail", "OK", "selectedId=x; candidates=1"),
+        ]
+        paths = [self._journal(rows)]
+        records = [{"role": "save-session", "profileName": "founding-first-city",
+                    "profileSeal": "a" * 64}]
+        self.assertEqual(checker.check_stamps(paths, records), [])
+
+    def _journal(self, rows):
+        import tempfile
+        from pathlib import Path
+        temp = tempfile.TemporaryDirectory(prefix="taf-lifecycle-detail-row-test.")
+        self.addCleanup(temp.cleanup)
+        path = Path(temp.name) / "journal.tsv"
+        lines = ["2026-09-11T00:00:00.000000Z\t" + verb + "\t" + outcome + "\t" + message
+                 for verb, outcome, message in rows]
+        path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        return path
+
+
+
 
 if __name__ == "__main__":
     unittest.main()
