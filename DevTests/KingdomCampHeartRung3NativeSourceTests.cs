@@ -429,6 +429,32 @@ namespace ThousandAndFirst.Tests
 				"\"; lane-reserved=\").Append(reserved.Count)" })
 				Assert.That(lots, Does.Contain(rule), rule);
 			Assert.That(seed, Does.Contain("SeededRoots.Add(final);"));
+			// Native run 44: the heart's future envelopes are derived per climbed rung from the
+			// authored chain, never a constant margin, and a candidate's RESERVED rect (the rect
+			// production's envelope proof tests) may not overlap one; envelope lanes are reserved.
+			string envelope = Read("Harness/KingdomCampHeartNativeTownEnvelope.cs");
+			foreach (string rule in new[] { "while (rung < TargetRung)",
+				"Require(KingdomUpgrade.TryGetChain(key, out chain) && chain != null",
+				"Require(KingdomArchitectureRuntime.TryPrepareSuccessor(System, Zone, intent,",
+				"chain.SuccessorKey, out next, out failure) && next != null,",
+				"LanesOf(snapshot, next.Rect, lanes);",
+				"KingdomPlotRules.PlotRect reserved = KingdomPlotRules.Reserved(Candidate);",
+				"if (KingdomPlotRules.Overlaps(reserved, Envelopes[i])) return true;",
+				"heart-envelope rung=" })
+				Assert.That(envelope, Does.Contain(rule), rule);
+			Assert.That(lots, Does.Contain("List<KingdomPlotRules.PlotRect> envelopes = HeartEnvelopes(heart, reserved);"));
+			Assert.That(lots, Does.Contain("if (CrowdsEnvelope(candidate, envelopes)"));
+			Assert.That(lots, Does.Contain("existing.AddRange(envelopes);"));
+			Assert.That(lots, Does.Contain("\"; heart-envelope-reserved=\").Append(ReservedEnvelopeCells)"));
+			Assert.That(seed, Does.Contain("\"; heart-envelope-reserved=\").Append(ReservedEnvelopeCells)"));
+			foreach (string gone in new[] { "HeartGrowthMarginX", "HeartGrowthMarginY" })
+			{
+				Assert.That(seed, Does.Not.Contain(gone), gone);
+				Assert.That(lots, Does.Not.Contain(gone), gone);
+			}
+			foreach (string forbidden in new[] { "SetIntProperty(", "SetStringProperty(", "KingdomPlots.Stake(",
+				"KingdomPlots.Advance(", "KingdomUpgrade.Begin(", "TryApplyUpgrade(" })
+				Assert.That(envelope, Does.Not.Contain(forbidden), "the envelope reader must read, never drive: " + forbidden);
 			Assert.That(seed, Does.Contain("\"; lane-reserved=\").Append(ReservedLaneCells)"));
 			// And the founder is walked clear of the envelope production prepares for the target
 			// rung before the rung-3 leg, with the cell journaled.

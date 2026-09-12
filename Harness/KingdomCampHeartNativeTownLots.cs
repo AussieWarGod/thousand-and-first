@@ -36,7 +36,8 @@ namespace ThousandAndFirst.Harness
 			/// <summary>The lane depth the authored road rule declares beyond a lot's own rect.</summary>
 			internal static int LaneDepth { get { return KingdomPlotRules.RoadMargin + 1; } }
 
-			/// <summary>The first candidate rect production's own preflight accepts for Entry, with
+			/// <summary>The first candidate rect production's own preflight accepts for Entry, clear
+			/// of every existing work's lanes and of the heart's future envelopes, with
 			/// the prepared intent it accepted. False when every candidate was refused; the
 			/// refusals are in the journal either way.</summary>
 			internal bool TryFindLot(KingdomPlots.GroundGrid Grid, KingdomRules.BuildEntry Entry,
@@ -46,11 +47,6 @@ namespace ThousandAndFirst.Harness
 				KingdomPlotRules.PlotRect heart;
 				Require(KingdomPlots.TryReadRect(Heart, out heart),
 					"taf-camp-town-seed-heart-rect: the founded heart's rect could not be read");
-				KingdomPlotRules.PlotRect reserve = new KingdomPlotRules.PlotRect(
-					heart.X1 - HeartGrowthMarginX - KingdomPlotRules.RoadMargin,
-					heart.Y1 - HeartGrowthMarginY - KingdomPlotRules.RoadMargin,
-					heart.X2 + HeartGrowthMarginX + KingdomPlotRules.RoadMargin,
-					heart.Y2 + HeartGrowthMarginY + KingdomPlotRules.RoadMargin);
 				int depth = LaneDepth;
 				int refused = 0;
 				// Native run 42: a later lot walled over an earlier lot's public ingress lane and
@@ -59,14 +55,16 @@ namespace ThousandAndFirst.Harness
 				// held reserved, and a candidate's own lanes may not land inside any existing rect.
 				HashSet<int> reserved = ReservedLanes(heart);
 				ReservedLaneCells = reserved.Count;
+				// Native run 44: the heart's FUTURE envelopes, one per rung this persona climbs,
+				// derived from the authored chain, with their own lanes folded into the reserve.
+				List<KingdomPlotRules.PlotRect> envelopes = HeartEnvelopes(heart, reserved);
 				List<KingdomPlotRules.PlotRect> existing = new List<KingdomPlotRules.PlotRect>(SeededLots);
-				existing.Add(heart);
+				existing.AddRange(envelopes);
 				List<KingdomPlotRules.PlotRect> candidates = InteriorFirst(Width, Height, depth);
 				for (int i = 0; i < candidates.Count; i++)
 				{
 					KingdomPlotRules.PlotRect candidate = candidates[i];
-					// The reserve already carries the road margin, so the lot itself is tested.
-					if (KingdomPlotRules.Overlaps(candidate, reserve)
+					if (CrowdsEnvelope(candidate, envelopes)
 						|| KingdomPlotRules.CrowdsExisting(candidate, SeededLots)
 						|| IsRefused(candidate) || Grid.AnyRefusal(candidate)
 						|| CoversLane(candidate, reserved)
@@ -90,6 +88,7 @@ namespace ThousandAndFirst.Harness
 				}
 				Evidence.Append("\nsynthetic-town-lot-exhausted key=").Append(Entry.Key)
 					.Append("; lane-reserved=").Append(reserved.Count)
+					.Append("; heart-envelope-reserved=").Append(ReservedEnvelopeCells)
 					.Append("; preflight refusals=").Append(refused)
 					.Append("; stake refusals=").Append(RefusedLots.Count)
 					.Append("; seeded=").Append(SeededLots.Count);

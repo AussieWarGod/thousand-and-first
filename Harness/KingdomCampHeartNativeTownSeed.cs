@@ -30,10 +30,6 @@ namespace ThousandAndFirst.Harness
 		internal static readonly string[] WaterKeys = { "catchmentbank", "catchment", "airwellcourt" };
 		internal const int MaxLodgingLots = 16;
 		internal const int MaxWaterLots = 16;
-		/// <summary>Ground kept clear around the heart for its authored growth to 12x10 plus the
-		/// road margin, so no seeded lot stands where the moot yard must annex.</summary>
-		internal const int HeartGrowthMarginX = 8;
-		internal const int HeartGrowthMarginY = 6;
 
 		private sealed partial class Frame
 		{
@@ -180,7 +176,9 @@ namespace ThousandAndFirst.Harness
 					.Append(lot.X1).Append(',').Append(lot.Y1).Append(' ').Append(lot.X2)
 					.Append(',').Append(lot.Y2).Append("; ingress=").Append(intent.Facing)
 					.Append("; lane depth=").Append(LaneDepth)
-					.Append("; lane-reserved=").Append(ReservedLaneCells).Append("; plot=").Append(plotId)
+					.Append("; lane-reserved=").Append(ReservedLaneCells)
+					.Append("; heart-envelope-reserved=").Append(ReservedEnvelopeCells)
+					.Append("; plot=").Append(plotId)
 					.Append("; final=").Append(final.IDIfAssigned);
 			}
 
