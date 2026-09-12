@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "inventorySha256": "edb507bb9f3fc5203e4fe3f83312f4c4c9adda7c9fbba99e6b2a73145a212205",
+  "inventorySha256": "43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6",
   "exceptions": [],
   "reviewedBy": "Codex root automated structural review",
-  "completedUtc": "2026-09-12T22:50:09Z",
+  "completedUtc": "2026-09-12T23:17:27Z",
   "oneResponsibility": {
     "status": "passed",
-    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:edb507bb9f3fc5203e4fe3f83312f4c4c9adda7c9fbba99e6b2a73145a212205. Enumerated all 3098 staged C# files against public e96b50e1: 3003 unchanged inherit its review chain and limits; 66 modified and 29 added were read by responsibility group; no removal or line-limit exception. Core rules/codecs, World bootstrap, Growth physical protocols and seal lifecycle retain bounded responsibilities. log:/home/r/work/taf-scratch/hotfix-quickstart.FIuLCD/structural-delta.json. Automated source review only; no independent reviewer or native/release acceptance claimed."
+    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6. The prior edb507bb9f3fc5203e4fe3f83312f4c4c9adda7c9fbba99e6b2a73145a212205 inventory review is retained there with its exact comparison and limitations. Read all subsequent production changes: finite 64-dram starter quantity and matching guide/verification, plus exact stamped and funded Strike Published-to-Working recovery. Responsibilities and identity/input boundaries remain bounded; no new serialized field or size exception. Census: 3098 files, 440089 physical lines, 1445 direct-XRL files, none at or above 300. Automated source review only; native behavior and release acceptance remain separate. log:/tmp/taf-full-cask-structure.json."
   },
   "protocolsAtBoundaries": {
     "status": "passed",
-    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:edb507bb9f3fc5203e4fe3f83312f4c4c9adda7c9fbba99e6b2a73145a212205. Read founder publication/origin quarantine, raw census unknowns and deposit custody, exact generation peers, final output identity, occupancy clearance, completed heart receipt bindings, rung callback reproof, typed Pending load/capture and post-recovery departure census. Existing identity/ownership/removal guards remain; old receipts do not remint founders. log:/tmp/taf-hotfix-water-ingress-gate.log. Native matrix, old-save recovery, later heart rungs and callback fault combinations remain separate evidence obligations."
+    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6. The prior edb507bb9f3fc5203e4fe3f83312f4c4c9adda7c9fbba99e6b2a73145a212205 inventory review is retained there with its exact comparison and limitations. Read all subsequent production changes: finite 64-dram starter quantity and matching guide/verification, plus exact stamped and funded Strike Published-to-Working recovery. Responsibilities and identity/input boundaries remain bounded; no new serialized field or size exception. Census: 3098 files, 440089 physical lines, 1445 direct-XRL files, none at or above 300. Automated source review only; native behavior and release acceptance remain separate. log:/tmp/taf-full-cask-structure.json."
   }
 }

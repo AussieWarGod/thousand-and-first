@@ -50,25 +50,39 @@ namespace ThousandAndFirst.Harness
 					&& ReferenceEquals(meal.InInventory, larder), "synthetic meal custody differs");
 			}
 			for (int i = 0; i < KingdomQuickstartRules.ShelterLotCount; i++)
-			{
-				var rect = KingdomQuickstartRules.ShelterLot(i);
-				for (int y = rect.Y1; y <= rect.Y2; y++)
-					for (int x = rect.X1; x <= rect.X2; x++)
-					{
-						GameObject chest = GameObject.Create("Chest");
-						Require(GameObject.Validate(chest) && chest.Inventory != null
-							&& chest.Inventory.Objects.Count == 0 && !string.IsNullOrEmpty(chest.ID),
-							"obstacle is not an empty identified chest");
-						Cell cell = Zone.GetCell(x, y);
-						Require(ReferenceEquals(cell.AddObject(chest, NoStack: true), chest)
-							&& ReferenceEquals(chest.CurrentCell, cell)
-							&& KingdomPlots.ReadObject(chest) == KingdomPlotRules.GroundKind.Held,
-							"obstacle does not physically reserve its layout cell");
-						Obstacles.Add(chest);
-					}
-			}
+				Obstruct(KingdomQuickstartRules.ShelterLot(i));
+			Require(KingdomConstruction.TryRead(out List<KingdomConstructionJob> jobs, out failure), failure);
+			string jobId = Game.GetStringGameState(KingdomQuickstartLifecycleSteps.JobKey);
+			KingdomConstructionJob job = jobs.Find(item => item.Id == jobId);
+			Require(job != null && job.Phase == KingdomConstructionPhase.Working,
+				"the original paid job is not working at delay setup");
+			KingdomPlotRules.PlotRect paidRect = default;
+			Require(KingdomConstruction.FindExactId(Zone, job.SubjectId, out GameObject root)
+				&& KingdomConstruction.HasReceipt(root, job)
+				&& KingdomPlots.TryReadRect(root, out paidRect), "the paid plot has no exact physical root");
+			// Keep the paid work unfinished with owned physical obstacles, independent of where
+			// wandering residents happen to stand. Phase and labour receipts remain untouched.
+			Obstruct(paidRect);
 			Began = Game.TimeTicks; Phase = 1;
 			return Report("delayed", Founders.Count);
+		}
+
+		private void Obstruct(KingdomPlotRules.PlotRect Rect)
+		{
+			for (int y = Rect.Y1; y <= Rect.Y2; y++)
+				for (int x = Rect.X1; x <= Rect.X2; x++)
+				{
+					GameObject chest = GameObject.Create("Chest");
+					Require(GameObject.Validate(chest) && chest.Inventory != null
+						&& chest.Inventory.Objects.Count == 0 && !string.IsNullOrEmpty(chest.ID),
+						"obstacle is not an empty identified chest");
+					Cell cell = Zone.GetCell(x, y);
+					Require(ReferenceEquals(cell.AddObject(chest, NoStack: true), chest)
+						&& ReferenceEquals(chest.CurrentCell, cell)
+						&& KingdomPlots.ReadObject(chest) == KingdomPlotRules.GroundKind.Held,
+						"obstacle does not physically reserve its layout cell");
+					Obstacles.Add(chest);
+				}
 		}
 
 		internal void ObserveDeparture(string Id, string Cause, bool Result)

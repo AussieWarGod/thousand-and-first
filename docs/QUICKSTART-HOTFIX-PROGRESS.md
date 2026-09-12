@@ -89,3 +89,33 @@ strict Player.log checks and receipt-owned stops. Four compile modes passed
 (3094/3098 ordinary, 3339/3343 harness), 60 persona tests and 25 lifecycle source
 contracts passed. Production inventory remains `edb507bb9f3fc5203e4fe3f83312f4c4c9adda7c9fbba99e6b2a73145a212205`.
 Native housing-crisis cold-load evidence is still owed.
+
+### Full-cask follow-up after canyon budget refusal
+
+Four nine-day lifecycle chains passed (marsh/dunes, guide yes/no). Canyon/yes
+retained all four founders under completed roofs but refused its unfinished fire:
+the actual rocky-ground quote was 15000 ticks; 5401 ticks remained after 10800 turns.
+Evidence: `final-matrix-1/canyon-yes` under the evidence root. Canyon/no was not run.
+No failed receipt was changed or counted as PASS.
+
+Starter water now fills the finite 64-dram cask, with matching guide and diagnostic.
+Acceptance persona now advances 16800 turns (7200 + 9600), allowing that actual
+quote and fourteen days of housing stability. Fresh native matrix remains pending.
+Strike phase recovery from #182 is integrated; its native teardown proof remains
+pending. Housing stress/cold-load is running against the frozen 48-dram predecessor
+`d268081f`, and will remain attributed to those exact bytes.
+
+The `d268081f` housing save/load source attempt refused at its first retained check:
+two original citizens remained with no beds, but the paid fire had already finished.
+Its new unfinished-work assertion correctly caught the earlier fixture's accidental
+reliance on a wandering body blocking that plot. The revised fixture places owned
+empty chests on the paid plot as well as both shelter lots, removes only those exact
+empty objects after two retained checks, and still requires real completion afterward.
+This is harness setup, not a production job-state change. The failed source remains
+under `final-housing-load-1`; no cold load ran and no PASS is claimed.
+
+Full-cask production checks: 14775 main and 5732 portable cases passed with zero
+skips; all four compile modes passed (3094/3098 ordinary, 3339/3343 harness).
+Logs: `/tmp/taf-full-cask-full-2.log`, `/tmp/taf-full-cask-portable.log`,
+`/tmp/taf-full-cask-gate.log`. The subsequent deterministic paid-plot obstruction
+needs its own harness compile and fresh native run.

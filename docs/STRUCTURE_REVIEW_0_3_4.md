@@ -58,3 +58,31 @@ Existing-save recovery, cold load after founder departures, further heart rungs,
 other Beta feature combinations and subscribed delivery are not signed by this
 review. See `QUICKSTART-HOTFIX-PROGRESS.md` and the coverage matrix for their actual
 status.
+
+## Full-cask and strike follow-up review
+
+The preceding review remains historical evidence for `edb507bb9f3fc5203e4fe3f83312f4c4c9adda7c9fbba99e6b2a73145a212205`.
+The follow-up staged inventory is
+`43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6`:
+3098 files, 440089 physical lines, 1445 direct-XRL files, no file at or above
+300 lines. Production changes since that review were read directly:
+
+- Quickstart's finite water grant fills the existing 64-dram vessel. The guide
+  names that quantity, and grant verification derives its diagnostic from the
+  same constant. No new container, refill-on-load or historical receipt migration.
+- Strike orders may move from Published to Working only with the same already
+  stamped StrikeWorking phase and exact funding on both records. Registry identity,
+  revision, route and input guards still apply. Other routes and unpaid or unstamped
+  jobs retain their refusals. This admits the interrupted production strike path
+  without broadening purchase transitions. Three automated tests cover reload and
+  terminal progression, all other routes/phases, and unpaid or changed stamps.
+
+The housing save/load extension is harness-only. It freezes original survivor and
+departed IDs before a real save, then checks those identities and usable housing
+after cold load without restoring departed founders. Its full native result is
+ separate; compilation alone does not prove the load behavior.
+
+The 48-dram nine-day matrix passed marsh/dunes with both guide settings. Canyon
+ correctly failed an unfinished 15000-tick rocky-ground fire quote; its log shows
+ the four founders already housed. The new fourteen-day matrix and full-cask native
+ housing recovery remain pending. The source review does not upgrade those results.

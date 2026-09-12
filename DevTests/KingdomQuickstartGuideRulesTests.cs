@@ -68,7 +68,7 @@ namespace ThousandAndFirst.Tests
 		public void StartKeepsTheInventoryAndNamesTheRollAndTheRoof()
 		{
 			string start = KingdomQuickstartGuideRules.Start;
-			StringAssert.Contains("forty-eight drams", start);
+			StringAssert.Contains("sixty-four drams", start);
 			StringAssert.Contains("twelve meals", start);
 			StringAssert.Contains("not on your roll", start);
 			StringAssert.Contains("normally provides four founding citizens", start);
@@ -88,7 +88,7 @@ namespace ThousandAndFirst.Tests
 			Dictionary<int, string> words = new Dictionary<int, string>
 			{
 				{ 1, "one" }, { 3, "three" }, { 4, "four" }, { 12, "twelve" },
-				{ 48, "forty-eight" }
+				{ 64, "sixty-four" }
 			};
 			int[] quoted =
 			{
