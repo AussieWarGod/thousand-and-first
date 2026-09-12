@@ -407,8 +407,14 @@ namespace ThousandAndFirst.Tests
 				"KingdomPlots.TryPreparePlotPayload(System, Zone, candidate, Entry.Key,",
 				"Entry.Category, SkinKey, out Intent, out payload, out failure))",
 				"internal static int LaneDepth { get { return KingdomPlotRules.RoadMargin + 1; } }",
-				"for (int y = depth; y + Height + depth <= Zone.Height; y++)",
-				"for (int x = depth; x + Width + depth <= Zone.Width; x++)",
+				"for (int y = Depth; y + Height + Depth <= Zone.Height; y++)",
+				"for (int x = Depth; x + Width + Depth <= Zone.Width; x++)",
+				// Interior first (native run 40 staked the first accepted lot edge-adjacent at 4,2):
+				// candidates are ordered by distance from the nearest zone edge, deepest first.
+				"List<KingdomPlotRules.PlotRect> candidates = InteriorFirst(Width, Height, depth);",
+				"int byDepth = EdgeDistance(b).CompareTo(EdgeDistance(a));",
+				"Math.Min(Zone.Width - 1 - Rect.X2, Zone.Height - 1 - Rect.Y2)",
+				"\"; edge distance=\").Append(EdgeDistance(candidate))",
 				"synthetic-town-lot-refused key=", "synthetic-town-lot-exhausted key=" })
 				Assert.That(lots, Does.Contain(rule), rule);
 			foreach (string loop in new[] { "while (works == null)", "if (works != null) break;",

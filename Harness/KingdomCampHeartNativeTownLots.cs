@@ -48,31 +48,31 @@ namespace ThousandAndFirst.Harness
 					heart.Y2 + HeartGrowthMarginY + KingdomPlotRules.RoadMargin);
 				int depth = LaneDepth;
 				int refused = 0;
-				for (int y = depth; y + Height + depth <= Zone.Height; y++)
-					for (int x = depth; x + Width + depth <= Zone.Width; x++)
+				List<KingdomPlotRules.PlotRect> candidates = InteriorFirst(Width, Height, depth);
+				for (int i = 0; i < candidates.Count; i++)
+				{
+					KingdomPlotRules.PlotRect candidate = candidates[i];
+					// The reserve already carries the road margin, so the lot itself is tested.
+					if (KingdomPlotRules.Overlaps(candidate, reserve)
+						|| KingdomPlotRules.CrowdsExisting(candidate, SeededLots)
+						|| IsRefused(candidate) || Grid.AnyRefusal(candidate)
+						|| !BareAndLifeless(Grid, candidate)) continue;
+					string failure;
+					string payload;
+					if (KingdomPlots.TryPreparePlotPayload(System, Zone, candidate, Entry.Key,
+						Entry.Category, SkinKey, out Intent, out payload, out failure))
 					{
-						KingdomPlotRules.PlotRect candidate = new KingdomPlotRules.PlotRect(
-							x, y, x + Width - 1, y + Height - 1);
-						// The reserve already carries the road margin, so the lot itself is tested.
-						if (KingdomPlotRules.Overlaps(candidate, reserve)
-							|| KingdomPlotRules.CrowdsExisting(candidate, SeededLots)
-							|| IsRefused(candidate) || Grid.AnyRefusal(candidate)
-							|| !BareAndLifeless(Grid, candidate)) continue;
-						string failure;
-						string payload;
-						if (KingdomPlots.TryPreparePlotPayload(System, Zone, candidate, Entry.Key,
-							Entry.Category, SkinKey, out Intent, out payload, out failure))
-						{
-							Lot = candidate;
-							return true;
-						}
-						refused++;
-						if (refused <= JournaledLotRefusals)
-							Evidence.Append("\nsynthetic-town-lot-refused key=").Append(Entry.Key)
-								.Append("; rect=").Append(x).Append(',').Append(y).Append(' ')
-								.Append(candidate.X2).Append(',').Append(candidate.Y2)
-								.Append("; preflight=").Append(KingdomScenarioRules.Bounded(failure));
+						Lot = candidate;
+						return true;
 					}
+					refused++;
+					if (refused <= JournaledLotRefusals)
+						Evidence.Append("\nsynthetic-town-lot-refused key=").Append(Entry.Key)
+							.Append("; rect=").Append(candidate.X1).Append(',').Append(candidate.Y1)
+							.Append(' ').Append(candidate.X2).Append(',').Append(candidate.Y2)
+							.Append("; edge distance=").Append(EdgeDistance(candidate))
+							.Append("; preflight=").Append(KingdomScenarioRules.Bounded(failure));
+				}
 				Evidence.Append("\nsynthetic-town-lot-exhausted key=").Append(Entry.Key)
 					.Append("; preflight refusals=").Append(refused)
 					.Append("; stake refusals=").Append(RefusedLots.Count)
@@ -80,6 +80,33 @@ namespace ThousandAndFirst.Harness
 				Lot = default(KingdomPlotRules.PlotRect);
 				Intent = null;
 				return false;
+			}
+
+			/// <summary>Every Width-by-Height rect at least Depth cells inside the zone, deepest
+			/// interior first (native run 40 staked the first accepted lot edge-adjacent at 4,2),
+			/// ties broken by row then column so the order is deterministic.</summary>
+			private List<KingdomPlotRules.PlotRect> InteriorFirst(int Width, int Height, int Depth)
+			{
+				List<KingdomPlotRules.PlotRect> candidates = new List<KingdomPlotRules.PlotRect>();
+				for (int y = Depth; y + Height + Depth <= Zone.Height; y++)
+					for (int x = Depth; x + Width + Depth <= Zone.Width; x++)
+						candidates.Add(new KingdomPlotRules.PlotRect(
+							x, y, x + Width - 1, y + Height - 1));
+				candidates.Sort(delegate(KingdomPlotRules.PlotRect a, KingdomPlotRules.PlotRect b)
+				{
+					int byDepth = EdgeDistance(b).CompareTo(EdgeDistance(a));
+					if (byDepth != 0) return byDepth;
+					int byRow = a.Y1.CompareTo(b.Y1);
+					return byRow != 0 ? byRow : a.X1.CompareTo(b.X1);
+				});
+				return candidates;
+			}
+
+			/// <summary>How many cells a rect stands inside the nearest zone edge.</summary>
+			private int EdgeDistance(KingdomPlotRules.PlotRect Rect)
+			{
+				return Math.Min(Math.Min(Rect.X1, Rect.Y1),
+					Math.Min(Zone.Width - 1 - Rect.X2, Zone.Height - 1 - Rect.Y2));
 			}
 
 			private bool IsRefused(KingdomPlotRules.PlotRect Candidate)
