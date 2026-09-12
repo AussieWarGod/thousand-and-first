@@ -95,8 +95,9 @@ namespace ThousandAndFirst.Tests
 		{
 			string guard = Read("Harness/KingdomScenarioFounderGuard.cs");
 			StringAssert.Contains("internal const string Row = \"advance-guard\";", guard);
+			// if (!Held) before Previous: a double arm must not overwrite Previous with true.
 			AssertOrder(guard, "internal static string Arm(",
-				"if (!KingdomQuickstartBootTest.LifecycleRequested)",
+				"if (!KingdomQuickstartBootTest.LifecycleRequested)", "if (!Held)",
 				"Previous = The.Core.IgnoreMe;", "The.Core.IgnoreMe = true;", "Held = true;");
 			AssertOrder(guard, "internal static string Release(", "The.Core.IgnoreMe = Previous;",
 				"Held = false;");
@@ -108,8 +109,24 @@ namespace ThousandAndFirst.Tests
 				"Stat(\"Hitpoints\"", "SetIntProperty", "SetStringProperty", "AddPart", "RemoveObject" })
 				StringAssert.DoesNotContain(forbidden, guard);
 			string advance = Read("Harness/KingdomScenarioAdvance.cs");
+			// The start row is gated on Armed exactly like the end row: a non-lifecycle journal is
+			// byte-identical to before the guard (Tools/upgrade_profile_witnesses.py exact sequence).
 			AssertOrder(advance, "internal static string Run(", "LastTurn = game.Turns;",
-				"KingdomScenarioFounderGuard.Arm(player)", "Spend(player);");
+				"string guard = KingdomScenarioFounderGuard.Arm(player);",
+				"if (KingdomScenarioFounderGuard.Armed)",
+				"KingdomScenarioJournal.Append(KingdomScenarioFounderGuard.Row, true, \"start; \" + guard);",
+				"GuardedSpend(player);");
+			StringAssert.DoesNotContain("\"start; \" + KingdomScenarioFounderGuard.Arm(player)", advance);
+			string guarded = Read("Harness/KingdomScenarioAdvance.Guard.cs");
+			AssertOrder(guarded, "internal static bool Pump(out bool Faulted)", "try", "PumpCore(out Faulted)",
+				"settled = true;", "finally", "if (!settled) KingdomScenarioFounderGuard.Release(The.Player);");
+			AssertOrder(guarded, "private static void GuardedSpend(", "Spend(Player);", "finally",
+				"if (!settled) KingdomScenarioFounderGuard.Release(Player);");
+			AssertOrder(guarded, "private static void EndGuard(", "if (!KingdomScenarioFounderGuard.Armed) return;",
+				"\"end; \" + KingdomScenarioFounderGuard.Release(Player)");
+			AssertOrder(Read("Harness/KingdomScenarioAutoRunner.cs"), "private void Finish(",
+				"KingdomScenarioTravelDriver.Stop();", "KingdomScenarioAdvance.Cancel();",
+				"KingdomScenarioJournal.Append(Row, Ok, Message);");
 			AssertOrder(advance, "if (Remaining <= 0)", "EndGuard(player);",
 				"KingdomScenarioJournal.Append(CompleteRow");
 			AssertOrder(advance, "private static void Stop(", "EndGuard(The.Player);",

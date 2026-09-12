@@ -30,8 +30,11 @@ namespace ThousandAndFirst.Harness
 	/// <para>
 	/// SCOPE. Armed only when KingdomQuickstartBootTest.LifecycleRequested - the one command whose
 	/// founder is the player - and only between an <c>advance</c> arming and that advance's end by
-	/// any route (complete, stall, lost player, death, new game). Every other persona's advance is
-	/// untouched. The previous value is restored, never assumed false.
+	/// any route (complete, stall, lost player, death, pump exception, script stop, new game).
+	/// Every other persona's advance is untouched, flag AND journal: the start/end rows land
+	/// only when the guard actually armed, so a non-lifecycle journal is byte-identical to
+	/// before this shard existed (Tools/upgrade_profile_witnesses.py reads an exact verb
+	/// sequence). The previous value is restored, never assumed false.
 	/// </para>
 	/// <para>
 	/// NO WALK. The brief preferred walking the founder into the staked camp tent or the heart's

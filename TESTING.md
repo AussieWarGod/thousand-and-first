@@ -1125,8 +1125,12 @@ the engine never reaches `XRLCore.PlayerTurn`'s input wait. The engine's attende
 to a human, and an interrupt in an unattended run is a silent stall. Elapsed turns are counted from
 `XRLGame.Turns`, never from handler calls. A scripted run **suspends** at `advance` and resumes at
 the next verb; rows are `advance` (armed), `advance-progress` every 100 turns, and
-`advance-complete`, bracketed on the quickstart-lifecycle road by two `advance-guard` bookkeeping
-rows (founder cell and guard state at arming and at release; Harness/KingdomScenarioFounderGuard.cs). Refusals carry a **stable reason code** beside the prose — bind expectations to
+`advance-complete`. On the quickstart-lifecycle road only, two `advance-guard` bookkeeping rows
+bracket them (founder cell and guard state at arming and at release;
+Harness/KingdomScenarioFounderGuard.cs); every other road journals no such row. A scripted player
+death is always a stop, on every road: the runner lands `SCRIPT-STOPPED DIED <category>; ...`
+(Harness/KingdomScenarioAutoRunner.Death.cs) even where production succession would have
+re-bodied the player, and the process is then left on the engine's death popup for the driver to reap. Refusals carry a **stable reason code** beside the prose — bind expectations to
 the code, never to the wording: `taf-advance-malformed-count`, `taf-advance-count-out-of-range`
 (the cap is 10000 per line), `taf-advance-no-driver`, `taf-advance-no-live-game`,
 `taf-advance-already-running`, `taf-advance-stalled`, `taf-advance-lost-player`.

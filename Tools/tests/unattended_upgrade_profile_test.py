@@ -240,6 +240,37 @@ class NativeSourceReceiptTest(unittest.TestCase):
                       "donorAuthority=donor_authority", "source_link(source, config, state"):
             self.assertIn(token, text)
 
+    def test_a_founder_guard_row_is_foreign_to_the_stage_source_sequence(self):
+        # Harness/KingdomScenarioFounderGuard.cs lands `advance-guard` rows only when the guard
+        # armed (quickstart-lifecycle road); if one ever leaked into this road's journal the exact
+        # verb sequence below would refuse it, so the leak could not pass silently as a witness.
+        raw = journal("stage-source").replace(
+            b"\tadvance\tOK\t", b"\tadvance-guard\tOK\tstart; guard=not-requested\n"
+            b"2026-09-08T11:00:00.000Z\tadvance\tOK\t", 1)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "scenario-journal.tsv").write_bytes(raw)
+            with self.assertRaises(ValueError) as refused:
+                witnesses.script_journal(root, "stage-source")
+            self.assertIn("foreign", str(refused.exception))
+            (root / "scenario-journal.tsv").write_bytes(journal("stage-source"))
+            witnesses.script_journal(root, "stage-source")
+
+    def test_the_real_row_emitter_gates_the_guard_row_on_arming(self):
+        # The witness above proves the parser refuses the row; this pins that the emitter never
+        # writes it on a non-lifecycle road (a Python test cannot run the C# path, so the gate is
+        # pinned as text; DevTests/KingdomScenarioFounderSafetySourceTests.cs pins the same order).
+        advance = (TOOLS.parent / "Harness/KingdomScenarioAdvance.cs").read_text()
+        arm = advance.index("string guard = KingdomScenarioFounderGuard.Arm(player);")
+        gate = advance.index("if (KingdomScenarioFounderGuard.Armed)", arm)
+        row = advance.index('KingdomScenarioJournal.Append(KingdomScenarioFounderGuard.Row, true, "start; " + guard);', gate)
+        self.assertLess(arm, gate)
+        self.assertLess(gate, row)
+        self.assertNotIn('"start; " + KingdomScenarioFounderGuard.Arm(', advance)
+        guard = (TOOLS.parent / "Harness/KingdomScenarioFounderGuard.cs").read_text()
+        self.assertLess(guard.index("internal static string Arm("),
+                        guard.index("if (!KingdomQuickstartBootTest.LifecycleRequested)"))
+
     def test_boot_prefix_cannot_be_missing_duplicated_reordered_or_trailing(self):
         original = journal("source-donor").splitlines(keepends=True)
         variants = [b"".join(original[3:]), b"".join(original[:1] + original),

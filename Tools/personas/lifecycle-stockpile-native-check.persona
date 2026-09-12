@@ -67,8 +67,14 @@
 #      AfterDieEvent through the same player registrar production's seal uses and lands
 #      `SCRIPT-STOPPED DIED <deathCategory>; reason=...; founderCell=...; guard=...` before the
 #      engine's death popup. Tools/check-quickstart-lifecycle.py reads that prefix as the distinct
-#      FAIL class `founder-died` (failClass), which outranks the BLOCKER the unreached links would
-#      otherwise read. run-personas.sh / run-scenario.ps1 already treat SCRIPT-STOPPED as terminal.
+#      FAIL class `founder-died` (failClass), which outranks every other verdict (a chain FAIL or the
+#      BLOCKER the unreached links would otherwise read). EXPECTED AFTERMATH: Finish releases
+#      Popup.Suppress, so the engine's death popup (GameObject.Die -> ShowDeathMessage) then BLOCKS
+#      the process on a keypress nobody sends; that frozen death screen is not a new hang - the
+#      terminal row is already on disk and the driver reaps the process on it. The driver that reads
+#      the row is Tools/run-personas.sh (persona_matrix.terminal_row); Tools/run-scenario.ps1 does
+#      not parse SCRIPT-STOPPED/SCRIPT-COMPLETE at all, so a run-scenario.ps1 operator must read the
+#      journal's last row themselves.
 #   2. THE FOUNDER IS NOT A COMBAT TARGET DURING THE SCRIPTED ADVANCE
 #      (Harness/KingdomScenarioFounderGuard.cs). For this command only (LifecycleRequested), from
 #      the moment `advance` arms until it ends by any route, the guard raises the engine's own
@@ -80,6 +86,9 @@
 #      and the prior value is restored at release. Two bookkeeping `advance-guard` rows (start/end)
 #      record founderCell=x,y, the guard state, and ignoreMe=; the advance-guard start row lands
 #      just before the `advance OK` row because the flag must be up before the wait's first spend.
+#      Both rows land ONLY when the guard armed: every other road's journal carries no advance-guard
+#      row (Tools/upgrade_profile_witnesses.py reads the stage-source journal as an exact sequence).
+#      A pump exception lowers the flag in a finally; a script stop cancels the wait and the guard.
 #      LIMIT: the preferred "walk the founder into the camp tent / heart interior first" is inert
 #      at Camp stage - the tent rows are staked, unwalled plots and the heart has no interior cell
 #      yet - so the founder stays on the cell the boot left him on (walk=none in the row).

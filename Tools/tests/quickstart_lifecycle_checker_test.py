@@ -67,6 +67,18 @@ class FounderDeath(unittest.TestCase):
         self.assertEqual(report["verdict"], checker.FAIL)
         self.assertIn(checker.FOUNDER_DIED, report["reason"])
 
+    def test_the_death_outranks_a_chain_fail_too(self):
+        # Kills the `if death is not None and verdict != FAIL` mutant: a refused lifecycle-grown
+        # row followed by the death must still be attributed to the death, the root cause.
+        driven = whole_chain(refused=("QUICKSTART-BUILD-CANPAY",))
+        self.assertEqual(checker.judge(driven)["failClass"], checker.CHAIN_FAIL)  # a real chain FAIL
+        driven.append(("SCRIPT-STOPPED", "REFUSED", self.DIED))
+        report = checker.judge(driven)
+        self.assertEqual(report["verdict"], checker.FAIL)
+        self.assertEqual(report["failClass"], checker.FOUNDER_DIED)
+        self.assertTrue(report["reason"].startswith("founder-died: "))
+        self.assertNotIn("refused row(s)", report["reason"])
+
     def test_an_ordinary_stopped_row_is_not_a_founder_death(self):
         stopped = "refused at verb 5 of 7: lifecycle-grown"
         report = checker.judge(self.mid_advance(stopped))

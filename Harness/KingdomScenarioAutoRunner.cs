@@ -123,7 +123,7 @@ namespace ThousandAndFirst
 		{
 			Registrar.Register(BeginTakeActionEvent.ID);
 			Registrar.Register(AfterDieEvent.ID); // KingdomScenarioAutoRunner.Death.cs
-			RegisteredPlayer = Player;
+			RegisteredPlayer = Player; // also on the unregistration call: same body, harmless
 		}
 
 		/// <summary>
@@ -258,6 +258,7 @@ namespace ThousandAndFirst
 		private void Finish(string Row, bool Ok, string Message)
 		{
 			KingdomScenarioTravelDriver.Stop();
+			KingdomScenarioAdvance.Cancel(); // a script stop ends any pending wait and its guard
 			Verbs = null;
 			Cursor = 0;
 			KingdomScenarioJournal.Append(Row, Ok, Message);
