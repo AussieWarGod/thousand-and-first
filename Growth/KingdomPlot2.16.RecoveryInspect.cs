@@ -64,6 +64,13 @@ namespace ThousandAndFirst
 						}
 						if (!KingdomConstruction.UpdateSubject(ref inspected, result.IDIfAssigned)) return;
 					}
+					// Standing works with the job's own design key mean the raising has not landed
+					// yet, so the job goes back to Working and is retried. Named because a finish
+					// that refuses in silence leaves this revert as the only trace, once a pass,
+					// forever (issue #172).
+					KingdomLog.Log("plot job reverted to working: " + inspected.Id + " target="
+						+ inspected.TargetKey + " phase=" + Job.Phase
+						+ " (the plot works still stand, so the raising has not landed)");
 					KingdomConstruction.FinishProjection(ref inspected, true, true);
 				}
 				return;

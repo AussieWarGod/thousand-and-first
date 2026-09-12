@@ -3,7 +3,7 @@
 ## Current combined heart candidate — gates owed
 
 The planned compatibility compile runs across 3095 production C# sources (3091 baseline);
-the cold-install inventory contains 3126 files. Inventory `988e21bd80795fdae21edf9281d720d0649fb5e2a04a35f8007a079b49b91896`.
+the cold-install inventory contains 3126 files. Inventory `207351ca17beed6af69f33df5a63ffa6b4d16a6207c389f15f5f18d2204f116f`.
 This combines heart authority, shared-XL transition, rung settlement and camp content/fixture.
 It also drafts surveyed-heart physical ingress independent of ordinary road-network evidence;
 protected road ground remains protected. Predecessor native ingress census was RED.
