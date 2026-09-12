@@ -127,8 +127,8 @@ DESCRIPTION=on the real Quickstart road the stockpile is already dedicated at bo
 REQUEST=founding-first-city
 # Hotfix acceptance waits nine days, past the six-day roof grace period; the historical
 # 7200-turn runs above proved construction but did not yet prove that later housing stability.
-SCRIPT=quickstart-lifecycle marsh yes;stagedigest;lifecycle-open;advance 10800;lifecycle-grown;lifecycle-save;stagedigest
+SCRIPT=quickstart-lifecycle marsh yes;stagedigest;lifecycle-open;advance 7200;advance 3600;lifecycle-grown;lifecycle-save;stagedigest
 VERBS=lifecycle-open,lifecycle-grown,lifecycle-save
-EXPECT=QUICKSTART-BOOT-BEGIN:OK,QUICKSTART-BOOT-OBSERVED:OK,QUICKSTART-BOOT-COMPLETE:OK,QUICKSTART-BUILD-BEGIN:OK,QUICKSTART-BUILD-QUOTE:OK,QUICKSTART-BUILD-CANPAY:OK,QUICKSTART-BUILD-COMMISSION:OK,QUICKSTART-LIFECYCLE-PROFILE:OK,QUICKSTART-BUILD-COMPLETE:OK~commissioned=true,stagedigest:OK~founded=true,lifecycle-open:OK~step=startup,advance:OK,lifecycle-grown:OK~step=engine-turn-build,lifecycle-save:OK~step=save,stagedigest:OK~founded=true,COMPLETE
+EXPECT=QUICKSTART-BOOT-BEGIN:OK,QUICKSTART-BOOT-OBSERVED:OK,QUICKSTART-BOOT-COMPLETE:OK,QUICKSTART-BUILD-BEGIN:OK,QUICKSTART-BUILD-QUOTE:OK,QUICKSTART-BUILD-CANPAY:OK,QUICKSTART-BUILD-COMMISSION:OK,QUICKSTART-LIFECYCLE-PROFILE:OK,QUICKSTART-BUILD-COMPLETE:OK~commissioned=true,stagedigest:OK~founded=true,lifecycle-open:OK~step=startup,advance:OK,advance:OK,lifecycle-grown:OK~step=engine-turn-build,lifecycle-save:OK~step=save,stagedigest:OK~founded=true,COMPLETE
 SET=growth,construction,native-regression
 TIMEOUT=3000

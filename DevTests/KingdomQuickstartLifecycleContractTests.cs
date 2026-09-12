@@ -101,7 +101,7 @@ namespace ThousandAndFirst.Tests
 			string quickstartPersona = Read("Tools/personas/lifecycle-stockpile-native-check.persona");
 			string foundingPersona = Read("Tools/personas/lifecycle-founding-road-refusal.persona");
 			StringAssert.Contains(
-				"SCRIPT=quickstart-lifecycle marsh yes;stagedigest;lifecycle-open;advance 10800;"
+				"SCRIPT=quickstart-lifecycle marsh yes;stagedigest;lifecycle-open;advance 7200;advance 3600;"
 					+ "lifecycle-grown;lifecycle-save;stagedigest",
 				quickstartPersona);
 			StringAssert.Contains(
