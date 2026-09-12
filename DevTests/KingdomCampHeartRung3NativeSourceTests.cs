@@ -23,6 +23,7 @@ namespace ThousandAndFirst.Tests
 		private const string Diagnostics = "Harness/KingdomCampHeartNativeRung3Diagnostics.cs";
 		private const string BillShard = "Harness/KingdomCampHeartNativeBill.cs";
 		private const string TownSeed = "Harness/KingdomCampHeartNativeTownSeed.cs";
+		private const string TownLots = "Harness/KingdomCampHeartNativeTownLots.cs";
 		private const string Persona = "Tools/personas/camp-heart-rung3-native-check.persona";
 		private const string Buildings = "RuntimeData/KingdomBuildings.xml";
 		private const string Blueprints = "RuntimeData/ObjectBlueprints.xml";
@@ -397,6 +398,25 @@ namespace ThousandAndFirst.Tests
 		public void TheTownIsSeededAsRealFinishedWorksAndNeverHandStamped()
 		{
 			string seed = Read(TownSeed);
+			// Native run 34: a candidate lot is judged by production's own plot preflight (the
+			// read Stake makes, ingress lanes included) BEFORE Stake, kept off every zone edge by
+			// the derived lane depth, a Stake refusal moves on to the next candidate, and the seed
+			// refuses only when the candidates are exhausted; chosen lots journal their ingress.
+			string lots = Read(TownLots);
+			foreach (string rule in new[] {
+				"KingdomPlots.TryPreparePlotPayload(System, Zone, candidate, Entry.Key,",
+				"Entry.Category, SkinKey, out Intent, out payload, out failure))",
+				"internal static int LaneDepth { get { return KingdomPlotRules.RoadMargin + 1; } }",
+				"for (int y = depth; y + Height + depth <= Zone.Height; y++)",
+				"for (int x = depth; x + Width + depth <= Zone.Width; x++)",
+				"synthetic-town-lot-refused key=", "synthetic-town-lot-exhausted key=" })
+				Assert.That(lots, Does.Contain(rule), rule);
+			foreach (string loop in new[] { "while (works == null)", "if (works != null) break;",
+				"RefusedLots.Add(lot);", "synthetic-town-stake-refused key=",
+				"\"; ingress=\").Append(intent.Facing)", "\"; lane depth=\").Append(LaneDepth)" })
+				Assert.That(seed, Does.Contain(loop), loop);
+			Assert.That(seed, Does.Not.Contain("taf-camp-town-seed-stake-refused"),
+				"a single Stake refusal must not end the seed");
 			foreach (string production in new[] {
 				"KingdomPlots.Stake(System, Zone, lot, entry, spec, grid,",
 				"KingdomPlots.Advance(part, System, checked(part.StartTick + part.TotalTicks));",
@@ -419,14 +439,20 @@ namespace ThousandAndFirst.Tests
 				"KingdomUpgrade.BuildKeyProperty", "HomePlotIdProperty, ",
 				"KingdomPlots.Commission(", "KingdomSubsidence.Enabled = ", "KingdomLodging.Enabled = ",
 				"Destroy(", "Obliterate(" })
+			{
 				Assert.That(seed, Does.Not.Contain(forbidden),
 					"the town seed must go through production, never around it: " + forbidden);
+				Assert.That(lots, Does.Not.Contain(forbidden),
+					"the lot finder must read, never write: " + forbidden);
+			}
 			// Exactly ONE calendar advance in the seed, on the works Stake just returned; and the
 			// heart drivers are forbidden in every rung-3 shard, so a new partial cannot sidestep
 			// NoShardEverDrivesTheUpgradeItself's file list.
 			Assert.That(Occurrences(seed, "KingdomPlots.Advance("), Is.EqualTo(1));
 			Assert.That(seed, Does.Contain("final.GetIntProperty(KingdomPlots.HeartPlotProperty) != 1"));
-			foreach (string path in new[] { TownSeed, Diagnostics, Rung3, Stock,
+			Assert.That(Occurrences(lots, "KingdomPlots.Advance("), Is.EqualTo(0));
+			Assert.That(Occurrences(lots, "KingdomPlots.Stake("), Is.EqualTo(0));
+			foreach (string path in new[] { TownSeed, TownLots, Diagnostics, Rung3, Stock,
 				"Harness/KingdomCampHeartNativeAfterRaise.cs" })
 				foreach (string driver in new[] { "KingdomUpgrade.Begin(", "KingdomUpgrade.BeginPrepared(",
 					"TryApplyUpgrade(", "TryStage(", "KingdomConstruction.TryFundNew(" })

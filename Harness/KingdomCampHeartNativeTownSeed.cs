@@ -122,8 +122,10 @@ namespace ThousandAndFirst.Harness
 				return null;
 			}
 
-			/// <summary>One lot of Key, staked receiptless on bare unclaimed ground clear of the
-			/// heart's growth and finished by production's own calendar.</summary>
+			/// <summary>One lot of Key: the first candidate production's own preflight accepts,
+			/// staked receiptless and finished by production's own calendar. A Stake refusal after
+			/// a passed preflight is journaled and the next candidate is tried; the seed refuses
+			/// only when the candidates are exhausted (<c>KingdomCampHeartNativeTownLots</c>).</summary>
 			private void SeedFinishedWork(string Key)
 			{
 				KingdomRules.BuildEntry entry;
@@ -134,17 +136,28 @@ namespace ThousandAndFirst.Harness
 					&& KingdomPlots.TryGetSpec(Key, out spec) && spec != null
 					&& KingdomPlotRules.TryDimensions(spec.Size, out width, out height),
 					"taf-camp-town-seed-design: " + Key + " is not an authored plotted design");
-				KingdomPlots.GroundGrid grid = new KingdomPlots.GroundGrid(Zone);
-				KingdomPlotRules.PlotRect lot;
-				Require(TryFindLot(grid, width, height, out lot), "taf-camp-town-seed-ground: no "
-					+ width + "x" + height + " bare lot clear of the heart remains for " + Key
-					+ " after " + SeededLots.Count + " seeded lot(s)");
 				KingdomDesignRules.SkinEntry skin = KingdomDesignRules.ResolveDefaultSkinForKeys(
 					entry.Skins, KingdomData.StyleKeys(System.Style));
-				GameObject works = KingdomPlots.Stake(System, Zone, lot, entry, spec, grid,
-					skin == null ? null : skin.Key, KingdomPlotRules.IsUnderground(Zone.Z));
-				Require(works != null, "taf-camp-town-seed-stake-refused: the settlement refused "
-					+ Key + " at " + lot.X1 + "," + lot.Y1 + " (see the architecture log line)");
+				string skinKey = skin == null ? null : skin.Key;
+				GameObject works = null;
+				KingdomPlotRules.PlotRect lot = default(KingdomPlotRules.PlotRect);
+				KingdomArchitectureIntent intent = null;
+				while (works == null)
+				{
+					KingdomPlots.GroundGrid grid = new KingdomPlots.GroundGrid(Zone);
+					Require(TryFindLot(grid, entry, width, height, skinKey, out lot, out intent),
+						"taf-camp-town-seed-ground: no " + width + "x" + height + " lot production's "
+							+ "preflight accepts remains for " + Key + " after " + SeededLots.Count
+							+ " seeded and " + RefusedLots.Count + " stake-refused lot(s)");
+					works = KingdomPlots.Stake(System, Zone, lot, entry, spec, grid, skinKey,
+						KingdomPlotRules.IsUnderground(Zone.Z));
+					if (works != null) break;
+					RefusedLots.Add(lot);
+					Evidence.Append("\nsynthetic-town-stake-refused key=").Append(Key)
+						.Append("; rect=").Append(lot.X1).Append(',').Append(lot.Y1).Append(' ')
+						.Append(lot.X2).Append(',').Append(lot.Y2)
+						.Append("; the architecture log line carries the reason");
+				}
 				r_KingdomPlotWorks part = works.GetPart<r_KingdomPlotWorks>();
 				string plotId = works.GetStringProperty(KingdomPlots.PlotIdProperty);
 				Require(part != null && part.DesignKey == Key && !string.IsNullOrEmpty(plotId)
@@ -164,7 +177,8 @@ namespace ThousandAndFirst.Harness
 				SeededIds.Add(final.IDIfAssigned);
 				Evidence.Append("\nsynthetic-town-lot key=").Append(Key).Append("; rect=")
 					.Append(lot.X1).Append(',').Append(lot.Y1).Append(' ').Append(lot.X2)
-					.Append(',').Append(lot.Y2).Append("; plot=").Append(plotId)
+					.Append(',').Append(lot.Y2).Append("; ingress=").Append(intent.Facing)
+					.Append("; lane depth=").Append(LaneDepth).Append("; plot=").Append(plotId)
 					.Append("; final=").Append(final.IDIfAssigned);
 			}
 
@@ -181,52 +195,6 @@ namespace ThousandAndFirst.Harness
 						return root;
 				}
 				return null;
-			}
-
-			/// <summary>A width-by-height rect of bare, unrefused, lifeless ground that crowds no
-			/// seeded lot and lies outside the heart's growth reserve. A plain row-major scan from
-			/// the top-left; because the reserve (heart rect + 8x6 a side + road margin, twice the
-			/// +4 a side the 8x6 -> 12x10 growth needs) spans most rows, seeded lots land in the
-			/// two side strips of the zone, which is intended: nothing seeded may ever stand where
-			/// the moot yard annexes.</summary>
-			private bool TryFindLot(KingdomPlots.GroundGrid Grid, int Width, int Height,
-				out KingdomPlotRules.PlotRect Lot)
-			{
-				KingdomPlotRules.PlotRect heart;
-				Require(KingdomPlots.TryReadRect(Heart, out heart),
-					"taf-camp-town-seed-heart-rect: the founded heart's rect could not be read");
-				KingdomPlotRules.PlotRect reserve = new KingdomPlotRules.PlotRect(
-					heart.X1 - HeartGrowthMarginX - KingdomPlotRules.RoadMargin,
-					heart.Y1 - HeartGrowthMarginY - KingdomPlotRules.RoadMargin,
-					heart.X2 + HeartGrowthMarginX + KingdomPlotRules.RoadMargin,
-					heart.Y2 + HeartGrowthMarginY + KingdomPlotRules.RoadMargin);
-				for (int y = 1; y + Height < Zone.Height; y++)
-					for (int x = 1; x + Width < Zone.Width; x++)
-					{
-						Lot = new KingdomPlotRules.PlotRect(x, y, x + Width - 1, y + Height - 1);
-						// The reserve already carries the road margin, so the lot itself is tested.
-						if (KingdomPlotRules.Overlaps(Lot, reserve)
-							|| KingdomPlotRules.CrowdsExisting(Lot, SeededLots)
-							|| Grid.AnyRefusal(Lot) || !BareAndLifeless(Grid, Lot)) continue;
-						return true;
-					}
-				Lot = default(KingdomPlotRules.PlotRect);
-				return false;
-			}
-
-			private bool BareAndLifeless(KingdomPlots.GroundGrid Grid, KingdomPlotRules.PlotRect Lot)
-			{
-				for (int y = Lot.Y1; y <= Lot.Y2; y++)
-					for (int x = Lot.X1; x <= Lot.X2; x++)
-					{
-						if (Grid.KindAt(x, y) != KingdomPlotRules.GroundKind.Bare) return false;
-						Cell cell = Zone.GetCell(x, y);
-						if (cell == null) return false;
-						foreach (GameObject item in cell.GetObjects())
-							if (GameObject.Validate(item) && (item.IsAlive || item.IsPlayer()))
-								return false;
-					}
-				return true;
 			}
 
 			/// <summary>Production's own lodging pass, on a bound survey, then a readback that
