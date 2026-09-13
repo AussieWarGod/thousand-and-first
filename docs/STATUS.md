@@ -1,6 +1,6 @@
 # Current implementation and release evidence
 
-## Current 0.3.4 Quickstart hotfix — private verified; public promotion pending
+## Current 0.3.4 Quickstart hotfix — published and finalized
 
 3098 staged C# files; 440,124 physical lines; cold-install inventory contains 3129 files.
 Compile inventory: 3098 sources, baseline and compatibility symbols (3094 baseline).
@@ -28,8 +28,48 @@ also fixed unbound dialogue water authority, duplicate enrollment event IDs and 
 projection mismatch. The no-bed repeated-welcome preservation case passes on `895e700e` with
 its disclosed synthetic camp. An earlier first-day founder-count loss remains an unexplained
 failed precondition; these results do not claim all-seed survival or guest save/load coverage.
-Private 0.3.4 is verified and finalized as recorded below. Public promotion and broader Beta acceptance remain pending.
+Private and public 0.3.4 are verified and finalized as recorded below. Broader Beta acceptance remains pending.
 
+
+### Public 0.3.4 — published and finalized
+
+[Release run 34740130479](https://github.com/AussieWarGod/thousand-and-first/actions/runs/34740130479)
+passed all hosted/licensed gates and submitted the package for annotated `v0.3.4`, main source
+`8e85a5cc073f0a13564d0e058b73cf409d1d4240`. PRs #186 and #187 merged through their
+required checks with merge commits,
+preserving private candidate `101fd5a694898515b802264a145f2c8071b55f02`.
+Tag creation used the existing maintainer exception to the restricted release-tag rule;
+no branch protection was changed and no required merge check was bypassed.
+
+The workflow conclusion is `cancelled`, not success: its verification job remained queued
+without a runner assignment for over ten minutes, including after an idle runner reconnect.
+All gates and the publisher job had already succeeded. The queued workflow was cancelled
+before local fallback, with no active publisher, finalizer, game or runner worker. The
+replacement idle runner was stopped. No submission was retried and no tag was moved.
+The documented local `-Verify`, followed by one `-Finalize`, then passed using the exact
+retained plan, receipt, change note, package, item and registry, with fresh evidence directories.
+
+Public item `3794797472` reported `SubscribedInstallationVerified` and
+`attemptFinalized=true`. The 3129-file package was independently reproduced, submitted,
+verified on one subscribed installation and finalized. This is not all-subscriber delivery;
+`freshTransferVerified=false` and `releaseReady=false` remain explicit limits.
+
+- Public receipt SHA-256: `c450a9f63cf8c7d293a79737a6084c62330f9a94c70bede0eea6e0330b7811e7`.
+- Plan SHA-256: `4346c78c35803ac8a9f867a160c90de357baaca388c05de0d19e45f536dbc2bc`.
+- Installed inventory SHA-256: `070b615cd00df2a148978fc915bc42712133b157dc1ace4146e6185f61fa5f3e`.
+- Finalization SHA-256: `09b669f9ede602692fc18452cf13a71234d84b1f63cc19e979f673fdc92b4260`.
+
+Hosted Linux/Windows tests and all eleven licensed release-check stages passed, including
+14790 main and 5743 portable cases with zero managed skips, all four compile modes,
+46 launcher cases and structural validation. The same three PACKAGE/COPY/BACKUP bind-alias
+fixtures retained explicit environment-limited skips; this is not a zero-total-skips claim.
+Production/harness bytes are unchanged from the verified private candidate. The native
+fourteen-day construction, real save/cold-load and next-commission proof below therefore
+retains its exact runtime scope; no new native run on ordinary public Workshop loading is claimed.
+
+Raw host evidence remains under `C:\taf-release\run-34740130479-1`.
+The local archive `/home/r/work/taf-scratch/behaviour-evidence/releases/0.3.4/public/result.json`
+has SHA-256 `0163d99c2a58cc492222aeb9901e6ad2999835be1d9fbcbd9500edffef233eb6`. Historical 0.3.3 receipts below remain historical.
 
 ### Private 0.3.4 — verified and finalized
 
