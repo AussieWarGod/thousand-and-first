@@ -15,12 +15,13 @@ SOURCE = (ROOT / "Tools" / "run-personas.sh").read_text(encoding="utf-8")
 START = SOURCE.index("run_persona() {")
 END = SOURCE.index("# ---- the matrix", START)
 RUN_PERSONA = SOURCE[START:END]
+CHECK_LOG = SOURCE[SOURCE.index("check_persona_log() {"):START]
 
 
 class PersonaRunnerEvidenceSourceTest(unittest.TestCase):
     def test_live_archive_and_assert_precede_capture_and_stop(self):
         archive = RUN_PERSONA.index('archive_file "$journal" "$archived_journal"')
-        log_check = RUN_PERSONA.index('"$LOG_CHECK" "$checked_player_log"')
+        log_check = RUN_PERSONA.index('check_persona_log "$persona" "$archived_player_log"')
         assertion = RUN_PERSONA.index('python3 "$MATRIX" assert')
         pass_capture = RUN_PERSONA.index(
             'if [ "$VERDICT" = PASS ] && [ -n "$CAPTURE_DIR" ]'
@@ -40,18 +41,18 @@ class PersonaRunnerEvidenceSourceTest(unittest.TestCase):
 
     def test_every_persona_requires_an_archived_clean_taf_log(self):
         archive = RUN_PERSONA.index('archive_file "$player_log" "$archived_player_log"')
-        raw = RUN_PERSONA.index('checked_player_log="$archived_player_log"', archive)
-        expected = RUN_PERSONA.index('python3 "$MATRIX" expected-log', raw)
-        checker = RUN_PERSONA.index('"$LOG_CHECK" "$checked_player_log"', expected)
-        assertion = RUN_PERSONA.index('python3 "$MATRIX" assert', checker)
-        self.assertLess(archive, raw)
+        call = RUN_PERSONA.index('check_persona_log "$persona" "$archived_player_log"', archive)
+        assertion = RUN_PERSONA.index('python3 "$MATRIX" assert', call)
+        raw = CHECK_LOG.index('checked_player_log="$archived_player_log"')
+        expected = CHECK_LOG.index('python3 "$MATRIX" expected-log', raw)
+        checker = CHECK_LOG.index('"$LOG_CHECK" "$checked_player_log"', expected)
+        self.assertLess(archive, call)
+        self.assertLess(call, assertion)
         self.assertLess(raw, expected)
         self.assertLess(expected, checker)
-        self.assertLess(checker, assertion)
-        self.assertIn('"$archived_player_log" \\\n\t\t\t> "$checked_player_log"', RUN_PERSONA)
-        self.assertIn('expected diagnostic check refused', RUN_PERSONA)
+        self.assertIn('expected diagnostic check refused', CHECK_LOG)
         self.assertIn('live Player.log is absent', RUN_PERSONA)
-        self.assertIn('Player.log rejected:', RUN_PERSONA)
+        self.assertIn('Player.log rejected:', CHECK_LOG)
 
     def test_failed_assertion_or_capture_cannot_replace_a_good_png(self):
         pass_capture = RUN_PERSONA.index(

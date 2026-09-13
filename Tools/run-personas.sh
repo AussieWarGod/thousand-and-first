@@ -246,12 +246,41 @@ archive_file() {
 	fi
 }
 
+# The same counted expectations and forbidden diagnostics apply before and after shutdown.
+# Each phase keeps its own raw and derived logs; a later refusal cannot erase earlier evidence.
+check_persona_log() {
+	local persona="$1" archived_player_log="$2" artifact="$3"
+	local log_allow="" checked_player_log="$archived_player_log" log_problem forbidden
+	[ "$P_GATE" != 1 ] || log_allow="scenario harness refused to open|KingdomScenarioNewGameGate[.]mutate"
+	if [ -n "$P_LOG_EXPECT" ]; then
+		log_allow=""
+		checked_player_log="$REPORT_DIR/checked-$artifact.Player.log"
+		if ! python3 "$MATRIX" expected-log "$(persona_path "$persona")" "$archived_player_log" \
+			> "$checked_player_log" 2> "$REPORT_DIR/expected-log-$artifact.log"; then
+			echo "expected diagnostic check refused; inspect raw log and expected-log-$artifact.log"
+			return 1
+		fi
+	fi
+	if [ -n "$P_LOG_FORBID" ]; then
+		if ! forbidden="$(python3 "$MATRIX" forbidden-log "$(persona_path "$persona")" \
+			"$archived_player_log" 2>&1)"; then
+			echo "Player.log carries a forbidden diagnostic: $(printf '%s' "$forbidden" \
+				| tail -n 2 | tr '\n\t' '  ')"
+			return 1
+		fi
+	fi
+	if ! log_problem="$(TAF_LOG_ALLOW="$log_allow" "$LOG_CHECK" "$checked_player_log" 2>&1)"; then
+		echo "Player.log rejected: $(printf '%s\n' "$log_problem" | tail -n 8 | tr '\n\t' '  ')"
+		return 1
+	fi
+}
+
 # ---- one persona ------------------------------------------------------------------------------
 
 # Sets VERDICT and DETAIL. Never exits: one persona's fault must not end the matrix.
 run_persona() {
 	local persona="$1" attempt="${2:-1}" root journal archived_journal player_log
-	local archived_player_log checked_player_log log_problem
+	local archived_player_log stopped_player_log log_problem
 	local timeout waited terminal problems warnings capture_problem archive_problem artifact
 	local capture_temp capture_target prepare_log launch_log capture_log
 	local -a prepare_args
@@ -373,37 +402,8 @@ run_persona() {
 		stop_owned
 		return
 	fi
-	local log_allow=""
-	[ "$P_GATE" != 1 ] || log_allow="scenario harness refused to open|KingdomScenarioNewGameGate[.]mutate"
-	checked_player_log="$archived_player_log"
-	if [ -n "$P_LOG_EXPECT" ]; then
-		# Exact, counted diagnostic expectations affect only a derived check input. Raw evidence stays intact.
-		log_allow=""
-		checked_player_log="$REPORT_DIR/checked-$artifact.Player.log"
-		if ! python3 "$MATRIX" expected-log "$(persona_path "$persona")" "$archived_player_log" \
-			> "$checked_player_log" 2> "$REPORT_DIR/expected-log-$artifact.log"; then
-			DETAIL="expected diagnostic check refused; inspect raw log and expected-log-$artifact.log"
-			stop_owned
-			return
-		fi
-	fi
-	if [ -n "$P_LOG_FORBID" ]; then
-		# The opposite of LOG_EXPECT, and read off the RAW log: a line a persona forbids must not
-		# appear even once, and filtering it out first would be the one way to miss it.
-		local forbidden
-		if forbidden="$(python3 "$MATRIX" forbidden-log "$(persona_path "$persona")" \
-			"$archived_player_log" 2>&1)"; then
-			:
-		else
-			DETAIL="Player.log carries a forbidden diagnostic: $(printf '%s' "$forbidden" \
-				| tail -n 2 | tr '\n\t' '  ')"
-			stop_owned
-			return
-		fi
-	fi
-	if ! log_problem="$(TAF_LOG_ALLOW="$log_allow" "$LOG_CHECK" "$checked_player_log" 2>&1)"; then
-		DETAIL="Player.log rejected: $(printf '%s\n' "$log_problem" | tail -n 8 \
-			| tr '\n\t' '  ')"
+	if ! log_problem="$(check_persona_log "$persona" "$archived_player_log" "$artifact")"; then
+		DETAIL="$log_problem"
 		stop_owned
 		return
 	fi
@@ -471,6 +471,18 @@ run_persona() {
 	fi
 	DETAIL="${DETAIL:+$DETAIL; }profile=$root (retained)"
 	if ! stop_owned; then
+		[ -z "${capture_temp:-}" ] || rm -f -- "$capture_temp"
+		return
+	fi
+	stopped_player_log="$REPORT_DIR/stopped-player-$artifact.log"
+	if ! archive_file "$player_log" "$stopped_player_log"; then
+		DETAIL="$DETAIL; could not archive stopped Player.log: $stopped_player_log"
+		VERDICT=FAIL
+	elif ! log_problem="$(check_persona_log "$persona" "$stopped_player_log" "stopped-$artifact")"; then
+		DETAIL="$DETAIL; stopped $log_problem"
+		VERDICT=FAIL
+	fi
+	if [ "$VERDICT" != PASS ]; then
 		[ -z "${capture_temp:-}" ] || rm -f -- "$capture_temp"
 		return
 	fi

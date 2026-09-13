@@ -149,7 +149,9 @@ elif name == "powershell.exe":
             refuse("fixture ownership receipt refused: " + mode)
         # Stopping changes only fixture outputs. An early stop would poison archive/assertion.
         (root / "scenario-journal.tsv").write_text("changed after scoped stop\n", encoding="utf-8")
-        (root / "Player.log").write_text("changed after scoped stop\n", encoding="utf-8")
+        if mode == "late_log_error":
+            with (root / "Player.log").open("a", encoding="utf-8") as output:
+                output.write(os.environ["LIFECYCLE_STOP_LOG_SUFFIX"])
         print("STOPPED fixture root=" + str(root))
     else:
         raise AssertionError("Unexpected PowerShell call: " + repr(args))
@@ -521,6 +523,38 @@ class PersonaRunnerLifecycleTest(unittest.TestCase):
                 else:
                     self.assertEqual(1, result.returncode, result.stdout + result.stderr)
                     self.assertEqual(b"prior accepted image", target.read_bytes())
+
+    def test_late_log_failures_preserve_live_evidence_and_prior_capture(self):
+        capture_dir = self.base / "late-captures"
+        capture_dir.mkdir()
+        self.env["TAF_PERSONA_CAPTURE_DIR"] = str(capture_dir)
+        target = capture_dir / "alpha.png"
+        cases = (
+            ("runtime", PLAYER_LOG, "[TAF] late exception after terminal\n", "",
+             "stopped Player.log rejected"),
+            ("forbidden", PLAYER_LOG, "late settlement halt\n",
+             'LOG_FORBID=["late settlement halt"]\n',
+             "stopped Player.log carries a forbidden diagnostic"),
+            ("duplicate-expected", EXPECTED_PLAYER_LOG, EXPECTED_MOD_ERROR + "\n",
+             "LOG_EXPECT=" + json.dumps(EXPECTED_DIAGNOSTICS) + "\n",
+             "stopped expected diagnostic check refused"),
+        )
+        for name, original, suffix, fields, detail in cases:
+            with self.subTest(name=name):
+                (self.tools / "personas" / "alpha.persona").write_text(
+                    PERSONA.format(name="alpha") + fields, encoding="utf-8")
+                self.env.update(LIFECYCLE_PLAYER_LOG=original, LIFECYCLE_STOP_LOG_SUFFIX=suffix)
+                target.write_bytes(b"prior accepted image")
+                result = self.run_cli("late_log_error")
+                self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+                self.assertEqual("FAIL", self.rows()[0]["verdict"])
+                self.assertIn(detail, self.rows()[0]["detail"])
+                self.assertEqual(original, (self.report.parent / "player-alpha.log").read_text())
+                self.assertEqual(original + suffix,
+                                 (self.report.parent / "stopped-player-alpha.log").read_text())
+                self.assertEqual(b"prior accepted image", target.read_bytes())
+                self.assertEqual([target], list(capture_dir.iterdir()))
+                self.assertNotIn("PERSONA MATRIX GREEN", result.stdout)
 
     def test_prepare_refusal_never_attempts_process_stop(self):
         result = self.run_cli("prepare_refusal")
