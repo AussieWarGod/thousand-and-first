@@ -1,5 +1,15 @@
 # Current implementation and release evidence
 
+## In-progress paid camp cold-load coverage
+
+The developer camp scenario can now save its actual paid rung-2 heart, city work row, stockpile,
+fire and material custody. Its separate load route compares restored state before explicit
+recovery, then commissions a new paid fire and waits for ordinary construction completion.
+The fixture supplies one disclosed extra timber before saving; it creates no materials after load.
+Focused checks pass (83 main, 69 portable, zero skips), four journal-oracle tests pass, and all
+four engine compile modes pass (3094/3098 ordinary, 3364/3368 developer sources).
+Native save/load execution is pending; this does not close rung-2 persistence or Beta acceptance.
+
 ## Unreleased profile inventory optimization
 
 The shared scenario profile reader now hashes at most four files concurrently, preserving the

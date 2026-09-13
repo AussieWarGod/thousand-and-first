@@ -24,6 +24,7 @@ namespace ThousandAndFirst.Harness
 		internal static KingdomQuickstartSaveSnapshot QuickstartSnapshot;
 		internal static KingdomQuickstartLifecycleSnapshot LifecycleSnapshot;
 		internal static KingdomUpgradeSnapshot UpgradeSnapshot;
+		internal static KingdomCampHeartSaveSnapshot CampSnapshot;
 		internal static bool Armed;
 		internal static string SnapshotWire;
 
@@ -83,7 +84,10 @@ namespace ThousandAndFirst.Harness
 							Math.Max(KingdomQuickstartSaveSnapshotCodec.MaxWireChars, KingdomUpgradeSnapshotCodec.MaxWireChars))));
 				Check(KingdomScenarioSaveFiles.HashText(SnapshotWire) == Request.SnapshotSha256,
 					"sealed snapshot hash differs");
-				if (SnapshotWire.StartsWith(KingdomUpgradeSnapshotCodec.Prefix, StringComparison.Ordinal))
+				if (SnapshotWire.StartsWith(KingdomCampHeartSaveSnapshotCodec.Prefix, StringComparison.Ordinal))
+					Check(KingdomCampHeartSaveSnapshotCodec.TryDecode(SnapshotWire, out CampSnapshot)
+						&& CampSnapshot.GameId == Request.GameId, "sealed camp snapshot does not bind selected save");
+				else if (SnapshotWire.StartsWith(KingdomUpgradeSnapshotCodec.Prefix, StringComparison.Ordinal))
 				{
 					Check(KingdomUpgradeSnapshotCodec.TryDecode(SnapshotWire, out UpgradeSnapshot)
 						&& UpgradeSnapshot.GameId == Request.GameId, "sealed upgrade snapshot does not bind selected save");
@@ -126,6 +130,12 @@ namespace ThousandAndFirst.Harness
 					Session: false, ShowPopup: false));
 				Check(loaded != null && ReferenceEquals(The.Game, loaded) && loaded.GameID == Request.GameId,
 					"loader did not return the exact selected game");
+				if (CampSnapshot != null)
+				{
+					KingdomCampHeartLoad.Prepare(loaded);
+					resume = loaded;
+					return;
+				}
 				if (UpgradeSnapshot != null)
 				{
 					KingdomUpgradeLoad.VerifyLoaded(loaded);

@@ -25,6 +25,10 @@
 	<Compile Include="KingdomCampHeartNativeSourceTests.cs" />
 	<Compile Include="..\Harness\KingdomCampHeartNativeCensus.cs" />
 	<Compile Include="KingdomCampHeartNativeCensusTests.cs" />
+    <Compile Include="..\Harness\KingdomCampHeartSaveSnapshot.cs" />
+    <Compile Include="..\Harness\KingdomCampHeartSaveSnapshotCodec.cs" />
+    <Compile Include="..\Harness\KingdomCampHeartScript.cs" />
+    <Compile Include="KingdomCampHeartSaveTests.cs" />
     <Compile Include="..\Core\KingdomSealPendingRules.cs" />
     <Compile Include="..\Core\KingdomInheritanceSpatial.CaptureResult.cs" />
     <Compile Include="..\Core\KingdomSealSpatialRules.cs" />
