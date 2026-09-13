@@ -9,6 +9,27 @@ namespace ThousandAndFirst.Harness
 	{
 		private sealed partial class Case
 		{
+			private void RequireSettledStrike(Action<bool, string> Require)
+			{
+				KingdomConstruction.TryFind(StrikeReceiptId, out KingdomConstructionJob row);
+				string detail = row == null ? "missing" : row.Phase + "/" + row.PhysicalPhase
+					+ " destination=" + (row.PhysicalDestinationId ?? "null")
+					+ " item=" + (row.PhysicalItemId ?? "null") + " amount=" + row.PhysicalAmount;
+				foreach (GameObject root in Zone.GetObjects())
+				{
+					if (root.Inventory == null) continue;
+					foreach (GameObject item in root.Inventory.Objects)
+						if (item.GetStringProperty(KingdomMaterials.StrikeSalvageReceiptProperty) == StrikeReceiptId)
+							detail += " observed-item=" + (item.IDIfAssigned ?? "null")
+								+ " count=" + KingdomMaterials.RawCensusCountOf(item)
+								+ " holder=" + (root.IDIfAssigned ?? "null")
+								+ " custody=" + ReferenceEquals(item.InInventory, root);
+				}
+				Require(row != null && row.Phase == KingdomConstructionPhase.Complete
+					&& row.PhysicalPhase == KingdomPhysicalPhase.Settled,
+					Name + ": removed building has an unsettled strike receipt: " + detail);
+			}
+
 			private string StrikeTelemetry(GameObject Root)
 			{
 				KingdomConstruction.TryFind(StrikeReceiptId, out KingdomConstructionJob row);

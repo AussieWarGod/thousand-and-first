@@ -40,6 +40,18 @@ namespace ThousandAndFirst.Tests
 		private static string ReadChecksAndCases() =>
 			Read(Checks) + Read(Cases) + Read(Telemetry) + Read(Placement);
 
+		[Test]
+		public void RemovedBuildingMustHaveACompletedSettledStrikeReceipt()
+		{
+			string cases = Read(Cases);
+			Assert.That(cases, Does.Contain("RequireSettledStrike(Require);"));
+			Assert.That(cases.IndexOf("RequireSettledStrike(Require);", StringComparison.Ordinal),
+				Is.LessThan(cases.IndexOf("int salvaged = SalvageByReceipt", StringComparison.Ordinal)));
+			string telemetry = Read(Telemetry);
+			Assert.That(telemetry, Does.Contain("row.Phase == KingdomConstructionPhase.Complete"));
+			Assert.That(telemetry, Does.Contain("row.PhysicalPhase == KingdomPhysicalPhase.Settled"));
+		}
+
 		private static string ConstValue(string Source, string Name)
 		{
 			string marker = "internal const string " + Name + " = \"";
