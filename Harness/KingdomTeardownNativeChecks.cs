@@ -248,6 +248,7 @@ namespace ThousandAndFirst.Harness
 			/// </summary>
 			internal void Check()
 			{
+				foreach (Case c in Cases) Evidence.Append(c.StrikeReceiptDiagnostic());
 				long elapsed = Game.TimeTicks - StartTicks;
 				long tick = Game.TimeTicks;
 				int onRoll = KingdomResidents.OnRollCount(System);

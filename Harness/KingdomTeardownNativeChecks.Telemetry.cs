@@ -12,6 +12,15 @@ namespace ThousandAndFirst.Harness
 			private void RequireSettledStrike(Action<bool, string> Require)
 			{
 				KingdomConstruction.TryFind(StrikeReceiptId, out KingdomConstructionJob row);
+				Require(row != null && row.Phase == KingdomConstructionPhase.Complete
+					&& row.PhysicalPhase == KingdomPhysicalPhase.Settled,
+					Name + ": removed building has an unsettled strike receipt: " + StrikeReceiptDiagnostic());
+			}
+
+			internal string StrikeReceiptDiagnostic()
+			{
+				if (string.IsNullOrEmpty(StrikeReceiptId)) return "";
+				KingdomConstruction.TryFind(StrikeReceiptId, out KingdomConstructionJob row);
 				string detail = row == null ? "missing" : row.Phase + "/" + row.PhysicalPhase
 					+ " destination=" + (row.PhysicalDestinationId ?? "null")
 					+ " item=" + (row.PhysicalItemId ?? "null") + " amount=" + row.PhysicalAmount;
@@ -25,9 +34,7 @@ namespace ThousandAndFirst.Harness
 								+ " holder=" + (root.IDIfAssigned ?? "null")
 								+ " custody=" + ReferenceEquals(item.InInventory, root);
 				}
-				Require(row != null && row.Phase == KingdomConstructionPhase.Complete
-					&& row.PhysicalPhase == KingdomPhysicalPhase.Settled,
-					Name + ": removed building has an unsettled strike receipt: " + detail);
+				return "; strike-receipt case=" + Name + " " + detail;
 			}
 
 			private string StrikeTelemetry(GameObject Root)
