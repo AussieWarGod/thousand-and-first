@@ -67,6 +67,26 @@ data = module.canonical_workshop_data(manifest, workshop_id, visibility)
 PY
 }
 
+structure_digest_for() {
+	local repo="$1"
+	python3 - "$repo" <<'PY'
+import importlib.util
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1])
+spec = importlib.util.spec_from_file_location(
+    "check_structure_digest_helper", root / "Tools/check-structure.py"
+)
+module = importlib.util.module_from_spec(spec)
+sys.modules["check_structure_digest_helper"] = module
+assert spec.loader is not None
+spec.loader.exec_module(module)
+census = module.build_census(root, module.stage_inventory(root))
+print(census.inventory_sha256)
+PY
+}
+
 write_evidence() {
 	local repo="$1" candidate="$2"
 	mkdir -p "$repo/docs"
@@ -119,9 +139,109 @@ preview_review_ref, preview_review_digest = retain(
         "Preview SHA-256: " + preview_sha + "\n"
     ).encode("utf-8"),
 )
+capture_provenance_ref, capture_provenance_digest = retain(
+    "preview-capture.log", b"fixture capture tool transcript\n"
+)
+
+# The requested/exercised tree's own production structural digest -- never
+# docs/STRUCTURE_REVIEW.json, which is a separate, freshness-checked artefact (author
+# correction, 2026-09-11). Computed the same way Tools/workshop-package.sh's own
+# require_release_structure() does, against this exact fixture repo.
+structure_spec = importlib.util.spec_from_file_location(
+    "check_structure_fixture", root / "Tools/check-structure.py"
+)
+structure_module = importlib.util.module_from_spec(structure_spec)
+sys.modules["check_structure_fixture"] = structure_module
+assert structure_spec.loader is not None
+structure_spec.loader.exec_module(structure_module)
+structure_census = structure_module.build_census(
+    root, structure_module.stage_inventory(root)
+)
+inventory_digest = structure_census.inventory_sha256
+
+native_results_ref, native_results_digest = retain(
+    "native-smoke-results.json",
+    json.dumps(
+        {
+            "driver": "TAF package harness native driver",
+            "results": [
+                {"check": check, "status": "PASS", "processStopped": True}
+                for check in module.NATIVE_DRIVER_CHECKS
+            ],
+        }
+    ).encode("utf-8"),
+)
+longform_log_ref, longform_log_digest = retain(
+    "longform-scenario.log", b"fixture longform driver transcript\n"
+)
+longform_results_ref, longform_results_digest = retain(
+    "longform-scenario-results.json",
+    json.dumps(
+        {
+            "schemaVersion": 1,
+            "driver": "TAF package harness longform driver",
+            "runId": "fixture-longform-run-1",
+            "seed": 165939435,
+            "candidateCommit": candidate,
+            "runtimeInventorySha256": inventory_digest,
+            "gameBuildId": module.GAME_CORE_BUILD,
+            "logRef": longform_log_ref,
+            "logSha256": longform_log_digest,
+            "continuity": {"realmId": "fixture-realm", "cityId": "fixture-city"},
+            "processes": [
+                {
+                    "role": "save-session",
+                    "launchId": "fixture-launch-a",
+                    "started": "2026-09-11T00:00:00Z",
+                    "stoppedUtc": "2026-09-11T00:05:00Z",
+                    "profileName": "fixture save-session profile",
+                    "profileSeal": "4" * 64,
+                },
+                {
+                    "role": "cold-load-session",
+                    "launchId": "fixture-launch-b",
+                    "started": "2026-09-11T00:10:00Z",
+                    "stoppedUtc": "2026-09-11T00:15:00Z",
+                    "profileName": "fixture cold-load-session profile",
+                    "profileSeal": "5" * 64,
+                },
+            ],
+            "steps": [
+                {
+                    "step": step,
+                    "status": "PASS",
+                    "turnsUsed": 1,
+                    "elapsedSeconds": 1,
+                    "turnBudget": 10,
+                    "timeoutSeconds": 10,
+                    "observed": (
+                        {"realmId": "fixture-realm", "cityId": "fixture-city"}
+                        | ({"jobId": "fixture-job-1"} if step in ("paid-commission", "engine-turn-build") else {})
+                        | (
+                            {"buildingId": "fixture-building-1", "plotId": "fixture-plot-1"}
+                            if step in ("engine-turn-build", "save", "cold-load", "next-action")
+                            else {}
+                        )
+                        | (
+                            {"completedReceiptId": "fixture-receipt-1", "forJobId": "fixture-job-1"}
+                            if step == "engine-turn-build"
+                            else {}
+                        )
+                        | (
+                            {"saveId": "fixture-save-1"}
+                            if step in ("save", "cold-load", "next-action")
+                            else {}
+                        )
+                    ),
+                }
+                for step in module.LONGFORM_SCENARIO_STEPS
+            ],
+        }
+    ).encode("utf-8"),
+)
 
 evidence = {
-    "schemaVersion": 4,
+    "schemaVersion": module.RELEASE_EVIDENCE_SCHEMA,
     "releaseVersion": "0.2.0",
     "candidateCommit": candidate,
     "gameMarketingVersion": "1.0.5",
@@ -160,6 +280,8 @@ evidence = {
             "captureUtc": "2026-08-24T00:00:00Z",
             "sourceSave": "Dedicated clean release gallery save",
             "editSummary": "Cropped to a square and resized without generated content.",
+            "captureProvenanceRef": capture_provenance_ref,
+            "captureProvenanceSha256": capture_provenance_digest,
             "reviewedBy": "Release Preview Reviewer",
             "completedUtc": "2026-08-24T00:00:00Z",
         },
@@ -183,7 +305,14 @@ evidence = {
         "localDuplicatesRemoved": True,
         "uploadHiddenFiles": True,
         "testedBy": "Harness Tester",
+        "driverResultsRef": native_results_ref,
+        "driverResultsSha256": native_results_digest,
+        "driverExitCode": 0,
         "completedUtc": "2026-08-24T00:00:00Z",
+    },
+    "longFormScenario": {
+        "artifactRef": longform_results_ref,
+        "artifactSha256": longform_results_digest,
     },
 }
 
@@ -386,11 +515,11 @@ payload = {
     "completedUtc": "2026-08-27T00:00:00Z",
     "oneResponsibility": {
         "status": "passed",
-        "notes": "Fixture review: Core/Test.cs is one one-line runtime declaration.",
+        "notes": "Fixture review: Core/Test.cs is one one-line runtime declaration. run:fixture-package-harness log:Tools/test-workshop-package.sh",
     },
     "protocolsAtBoundaries": {
         "status": "passed",
-        "notes": "Fixture review: Core/Test.cs has no engine, serialization, API, or extension boundary.",
+        "notes": "Fixture review: Core/Test.cs has no engine, serialization, API, or extension boundary. run:fixture-package-harness log:Tools/test-workshop-package.sh",
     },
 }
 path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
@@ -1447,11 +1576,11 @@ from pathlib import Path
 
 path = Path(sys.argv[1])
 data = json.loads(path.read_text(encoding="utf-8"))
-data["schemaVersion"] = 4.0
+data["schemaVersion"] = 6.0
 path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 PY
 commit_all "$numeric_evidence" "numeric evidence types"
-expect_fail "floating-point release evidence" "schemaVersion must be 4" \
+expect_fail "floating-point release evidence" "schemaVersion must be 6" \
 	"$numeric_evidence/Tools/workshop-package.sh" --release \
 	"$FIXTURE_ROOT/numeric-evidence-package"
 
@@ -1531,7 +1660,7 @@ path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 PY
 commit_all "$missing_verification" "missing verification lane"
 expect_fail "missing verification lane" \
-	"verification fields must exactly match schema version 4" \
+	"verification fields must exactly match schema version 6" \
 	"$missing_verification/Tools/workshop-package.sh" --release \
 	"$FIXTURE_ROOT/missing-verification-package"
 
@@ -1642,11 +1771,12 @@ data["verification"]["numberedProtocols"]["passIds"].pop()
 path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 PY
 expect_fail "unwaived protocol omission" \
-	"missing TESTING.md IDs without a human-reviewed waiver" \
+	"missing TESTING.md IDs without a reviewed waiver" \
 	python3 "$missing_protocol/Tools/workshop_metadata.py" evidence \
 	"$missing_protocol/manifest.json" "$missing_protocol/preview.png" \
 	"$missing_protocol/workshop.json" "$missing_protocol/docs/RELEASE_EVIDENCE.json" \
-	"$missing_protocol/README.md" "$missing_protocol/CHANGELOG.md"
+	"$missing_protocol/README.md" "$missing_protocol/CHANGELOG.md" \
+	--repository-root "$missing_protocol" --inventory-digest "$(structure_digest_for "$missing_protocol")"
 
 duplicate_protocol="$(clone_case duplicate-protocol-evidence)"
 duplicate_protocol_candidate="$(freeze_private_candidate "$duplicate_protocol")"
@@ -1667,7 +1797,8 @@ expect_fail "duplicate protocol evidence" "passIds must not contain duplicates" 
 	python3 "$duplicate_protocol/Tools/workshop_metadata.py" evidence \
 	"$duplicate_protocol/manifest.json" "$duplicate_protocol/preview.png" \
 	"$duplicate_protocol/workshop.json" "$duplicate_protocol/docs/RELEASE_EVIDENCE.json" \
-	"$duplicate_protocol/README.md" "$duplicate_protocol/CHANGELOG.md"
+	"$duplicate_protocol/README.md" "$duplicate_protocol/CHANGELOG.md" \
+	--repository-root "$duplicate_protocol" --inventory-digest "$(structure_digest_for "$duplicate_protocol")"
 
 waived_protocol="$(clone_case bounded-protocol-waiver)"
 waived_protocol_candidate="$(freeze_private_candidate "$waived_protocol")"
@@ -1693,7 +1824,8 @@ PY
 python3 "$waived_protocol/Tools/workshop_metadata.py" evidence \
 	"$waived_protocol/manifest.json" "$waived_protocol/preview.png" \
 	"$waived_protocol/workshop.json" "$waived_protocol/docs/RELEASE_EVIDENCE.json" \
-	"$waived_protocol/README.md" "$waived_protocol/CHANGELOG.md" >/dev/null
+	"$waived_protocol/README.md" "$waived_protocol/CHANGELOG.md" \
+	--repository-root "$waived_protocol" --inventory-digest "$(structure_digest_for "$waived_protocol")" >/dev/null
 python3 - "$waived_protocol/docs/RELEASE_EVIDENCE.json" <<'PY'
 import json
 import sys
@@ -1709,7 +1841,8 @@ expect_fail "placeholder protocol waiver" "bounded human-reviewed reason" \
 	python3 "$waived_protocol/Tools/workshop_metadata.py" evidence \
 	"$waived_protocol/manifest.json" "$waived_protocol/preview.png" \
 	"$waived_protocol/workshop.json" "$waived_protocol/docs/RELEASE_EVIDENCE.json" \
-	"$waived_protocol/README.md" "$waived_protocol/CHANGELOG.md"
+	"$waived_protocol/README.md" "$waived_protocol/CHANGELOG.md" \
+	--repository-root "$waived_protocol" --inventory-digest "$(structure_digest_for "$waived_protocol")"
 
 placeholder_human="$(clone_case placeholder-human-evidence)"
 placeholder_human_candidate="$(freeze_private_candidate "$placeholder_human")"
@@ -1725,11 +1858,12 @@ data = json.loads(path.read_text(encoding="utf-8"))
 data["privateSubscription"]["testedBy"] = "HUMAN_TESTER_NAME_OR_ALIAS"
 path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 PY
-expect_fail "placeholder human tester" "testedBy must name the human tester" \
+expect_fail "placeholder human tester" "testedBy must name the tester" \
 	python3 "$placeholder_human/Tools/workshop_metadata.py" evidence \
 	"$placeholder_human/manifest.json" "$placeholder_human/preview.png" \
 	"$placeholder_human/workshop.json" "$placeholder_human/docs/RELEASE_EVIDENCE.json" \
-	"$placeholder_human/README.md" "$placeholder_human/CHANGELOG.md"
+	"$placeholder_human/README.md" "$placeholder_human/CHANGELOG.md" \
+	--repository-root "$placeholder_human" --inventory-digest "$(structure_digest_for "$placeholder_human")"
 write_evidence "$placeholder_human" "$placeholder_human_candidate"
 python3 - "$placeholder_human/docs/RELEASE_EVIDENCE.json" <<'PY'
 import json
@@ -1741,11 +1875,12 @@ data = json.loads(path.read_text(encoding="utf-8"))
 data["verification"]["previewReview"]["reviewedBy"] = "Example Reviewer"
 path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 PY
-expect_fail "placeholder preview reviewer" "reviewedBy must name the human reviewer" \
+expect_fail "placeholder preview reviewer" "reviewedBy must name the" \
 	python3 "$placeholder_human/Tools/workshop_metadata.py" evidence \
 	"$placeholder_human/manifest.json" "$placeholder_human/preview.png" \
 	"$placeholder_human/workshop.json" "$placeholder_human/docs/RELEASE_EVIDENCE.json" \
-	"$placeholder_human/README.md" "$placeholder_human/CHANGELOG.md"
+	"$placeholder_human/README.md" "$placeholder_human/CHANGELOG.md" \
+	--repository-root "$placeholder_human" --inventory-digest "$(structure_digest_for "$placeholder_human")"
 
 interim_preview="$(clone_case interim-preview-evidence)"
 cp -- "$SOURCE_REPO/preview.png" "$interim_preview/preview.png"
@@ -1778,7 +1913,8 @@ expect_fail "known interim preview" "refuses the known interim preview" \
 	python3 "$interim_preview/Tools/workshop_metadata.py" evidence \
 	"$interim_preview/manifest.json" "$interim_preview/preview.png" \
 	"$interim_preview/workshop.json" "$interim_preview/docs/RELEASE_EVIDENCE.json" \
-	"$interim_preview/README.md" "$interim_preview/CHANGELOG.md"
+	"$interim_preview/README.md" "$interim_preview/CHANGELOG.md" \
+	--repository-root "$interim_preview" --inventory-digest "$(structure_digest_for "$interim_preview")"
 
 missing_structure="$(clone_case missing-structure-review)"
 missing_structure_candidate="$(freeze_private_candidate "$missing_structure")"
@@ -1853,8 +1989,12 @@ write_evidence "$mutated" "$mutated_candidate"
 printf '%s\n' '// changed after subscribed private evidence' >> "$mutated/Core/Test.cs"
 write_structure_review "$mutated"
 commit_all "$mutated" "change runtime after private test"
+# The structural digest check (author correction, 2026-09-11: bound to the ACTUAL requested
+# tree, computed fresh every run) now catches this drift even earlier than the later
+# candidate-receipt byte comparison below would -- the protection is unchanged, only which
+# check fires first.
 expect_fail "runtime changed after private subscription" \
-	"release runtime differs from subscribed private candidate: Core/Test.cs" \
+	"runtimeInventorySha256 must match the requested tree's own Tools/check-structure.py --json production structural digest" \
 	"$mutated/Tools/workshop-package.sh" --release "$FIXTURE_ROOT/mutated-package"
 
 # Candidate provenance comes from the exact tested receipt, not release checkout's newer

@@ -286,10 +286,16 @@ namespace ThousandAndFirst.Tests
 		{
 			string creators = TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.Stock.cs")
 				+ TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.Materials.cs")
-				+ TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.Advisor.cs");
+				+ TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.Advisor.cs")
+				+ TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.Founders.cs");
+			// Five creators, and the founding cohort is exactly ONE of them: four scopes could not
+			// give zero-or-four, because a later failure would leave the earlier founders standing.
 			Assert.That(creators.Split(new[] { "bool created = TryCreateFreshGrant(" },
-				StringSplitOptions.None).Length - 1, Is.EqualTo(4));
+				StringSplitOptions.None).Length - 1, Is.EqualTo(5));
 			StringAssert.DoesNotContain("Obliterate(", creators);
+			// The NoLoot idiom is satisfied by the advisor alone and must stay that way: founders
+			// deliberately KEEP the gear their blueprint gives them, which is why every piece of it
+			// is registered in the same scope as its body.
 			StringAssert.Contains("BeforeObjectCreated: obj => obj.SetIntProperty(\"NoLoot\", 1)", creators);
 			string adapter = TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.Allocations.cs");
 			int destroy = adapter.IndexOf("Object.Obliterate(", StringComparison.Ordinal);

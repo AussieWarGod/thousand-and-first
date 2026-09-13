@@ -266,6 +266,15 @@ namespace ThousandAndFirst
 		public const string PlotWorkCompletedTickProperty = "r_TAF_PlotWorkCompletedTick";
 		public const string PlotWorkShortfallSaidProperty = "r_TAF_PlotWorkShortfallSaid";
 		public const string PlotWorkFaultSaidProperty = "r_TAF_PlotWorkFaultSaid";
+		// Occupant-blocked raising: the announced flag and the slot it was said for, the once-flags
+		// for standing our own off and driving beasts off, and where a post was last moved to.
+		public const string PlotWorkOccupantAnnouncedProperty = "r_TAF_PlotWorkOccupantAnnounced";
+		public const string PlotWorkOccupantSlotProperty = "r_TAF_PlotWorkOccupantSlot";
+		public const string PlotWorkClearedAnnouncedProperty = "r_TAF_PlotWorkClearedAnnounced";
+		public const string PlotWorkBeastsAnnouncedProperty = "r_TAF_PlotWorkBeastsAnnounced";
+		public const string PlotWorkPostMovedProperty = "r_TAF_PlotWorkPostMoved";
+		/// <summary>Last applied:target pair the stage-waiting line was emitted for.</summary>
+		public const string PlotStageWaitingLastProperty = "r_TAF_PlotStageWaitingLast";
 		public const int PlotWorkSchema = 2;
 		private const int MaxFurnishItems = 64;
 		private const int MaxGrowthRows = 512;

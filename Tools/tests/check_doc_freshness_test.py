@@ -115,7 +115,7 @@ class DocumentationFreshnessTests(unittest.TestCase):
                     encoding="utf-8",
                 )
                 testing.write_text(
-                    "The current public Alpha manifest is `0.3.3`.\n",
+                    "Public release status is tracked in [docs/STATUS.md](docs/STATUS.md).\n",
                     encoding="utf-8",
                 )
                 modding.write_text(
@@ -127,10 +127,10 @@ class DocumentationFreshnessTests(unittest.TestCase):
                 self.assertEqual([], problems)
 
                 current_testing = testing.read_text(encoding="utf-8")
-                stale_manifest = "current public Alpha manifest is `0.3.1`"
+                stale_manifest = "current public Alpha manifest is"
                 for body, missing_current in (
-                    ("The " + stale_manifest + ".\n", True),
-                    (current_testing + "The " + stale_manifest + ".\n", False),
+                    ("The " + stale_manifest + " `0.3.3`.\n", True),
+                    (current_testing + "The " + stale_manifest + " `0.3.4`.\n", False),
                 ):
                     with self.subTest(testing_manifest=body):
                         testing.write_text(body, encoding="utf-8")
@@ -140,7 +140,7 @@ class DocumentationFreshnessTests(unittest.TestCase):
                         if missing_current:
                             expected.append(
                                 "TESTING.md is missing current contract text: "
-                                "current public Alpha manifest is `0.3.3`"
+                                "Public release status is tracked in [docs/STATUS.md](docs/STATUS.md)"
                             )
                         expected.append(
                             "TESTING.md retains stale current-status text: " + stale_manifest
@@ -362,6 +362,10 @@ class DocumentationFreshnessTests(unittest.TestCase):
     def test_read_only_audit_snapshots_keep_pinned_source_citations(self) -> None:
         self.assertIn(
             "_notes/ARCOLOGY-AUTHORED-INTERIOR-PLAN.md",
+            CHECKER.FROZEN_SOURCE_CITATION_DOCUMENTS,
+        )
+        self.assertIn(
+            "_notes/CITY-IMPLEMENTATION-PLAN-v4-2026-09-09.md",
             CHECKER.FROZEN_SOURCE_CITATION_DOCUMENTS,
         )
         self.assertIn(

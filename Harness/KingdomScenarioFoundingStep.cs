@@ -39,6 +39,12 @@ namespace ThousandAndFirst.Harness
 		/// <summary>A realm already stands: founding twice is a refusal, never a crash.</summary>
 		internal const string CodeAlreadyFounded = "taf-scenario-founding-already-founded";
 
+		/// <summary>
+		/// The ground already answers to a foreign faction: refused before the production
+		/// transaction ever runs, never after it publishes.
+		/// </summary>
+		internal const string CodeForeignFaction = "taf-scenario-founding-foreign-ground";
+
 		/// <summary>Read-only: proves no realm stands, so the ground is claimable as a first city.</summary>
 		internal static bool TryProveUnfounded(out string Detail, out string Failure)
 		{
@@ -72,7 +78,37 @@ namespace ThousandAndFirst.Harness
 				return Refuse("the frozen city name is refused by the production name law: "
 					+ KingdomScenarioRules.Bounded(nameFailure ?? "unnamed"), out Failure);
 			string detail;
-			return TryProveUnfounded(out detail, out Failure);
+			if (!TryProveUnfounded(out detail, out Failure)) return false;
+			return TryProveGroundNotForeign(Site, out Failure);
+		}
+
+		/// <summary>
+		/// Read-only: refuses ground a foreign faction already answers to BEFORE the production
+		/// transaction ever runs. Mirrors <c>KingdomRules.GroundIsForeignFaction</c> - the SAME
+		/// predicate <c>Core/KingdomFounding.04.Claims.cs</c> guards publication with - so this
+		/// harness refusal and the production guard it stands in front of can never disagree about
+		/// what counts as foreign.
+		/// <para>
+		/// Called only after <see cref="TryProveUnfounded"/> has already passed, so the world holds
+		/// no realm yet and the kingdom's own faction name is empty: any non-empty zone
+		/// <c>"faction"</c> property reads as foreign here, because there is no "our own ground" yet
+		/// to except. Refusing here - before the attempt marker, before the transaction, before any
+		/// publication - is what keeps a harness first-city attempt out of the recoverable-but-
+		/// published state a post-publication refusal leaves behind (see issue #90).
+		/// </para>
+		/// </summary>
+		internal static bool TryProveGroundNotForeign(Zone Site, out string Failure)
+		{
+			Failure = null;
+			KingdomSystem system = Observe();
+			string kingdomFactionName = system?.KingdomFactionName ?? "";
+			string zoneFaction = Site?.GetZoneProperty("faction");
+			if (KingdomRules.GroundIsForeignFaction(zoneFaction, kingdomFactionName))
+				return Refuse("[" + CodeForeignFaction + "] this ground already answers to a "
+					+ "foreign faction (" + zoneFaction + "); a harness first-city founding "
+					+ "refuses before production publication rather than publish then refuse",
+					out Failure);
+			return true;
 		}
 
 		/// <summary>

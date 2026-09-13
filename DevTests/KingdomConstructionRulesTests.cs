@@ -57,6 +57,66 @@ namespace ThousandAndFirst.Tests
 			return job;
 		}
 
+		[Test]
+		public void StampedZeroCostStrikeResumesPublishedReceiptAfterReload()
+		{
+			KingdomConstructionJob stamped = Job(KingdomConstructionRoute.Strike);
+			stamped.PhysicalPhase = KingdomPhysicalPhase.StrikeWorking;
+			ClassicAssert.IsTrue(KingdomConstructionRules.TryEncode(
+				new List<KingdomConstructionJob> { stamped }, out string wire));
+			ClassicAssert.IsTrue(KingdomConstructionRules.TryDecode(wire, out var restored));
+			KingdomConstructionJob current = restored[0];
+			KingdomConstructionJob working = KingdomConstructionRules.Transition(current,
+				KingdomConstructionPhase.Working, 30L);
+			ClassicAssert.IsTrue(KingdomConstructionRules.ValidRegistryUpdate(current, working));
+			ClassicAssert.AreEqual(KingdomConstructionPhase.Published, current.Phase);
+			ClassicAssert.IsTrue(KingdomConstructionRules.ValidRegistryUpdate(working,
+				KingdomConstructionRules.Transition(working, KingdomConstructionPhase.Complete, 40L)));
+		}
+
+		[Test]
+		public void PublishedWorkShortcutRefusesEveryOtherRouteAndUnstampedStrike()
+		{
+			foreach (KingdomConstructionRoute route in Enum.GetValues(typeof(KingdomConstructionRoute)))
+			{
+				if (route == KingdomConstructionRoute.None || route == KingdomConstructionRoute.Strike) continue;
+				KingdomConstructionJob other = Job(route);
+				other.PhysicalPhase = KingdomPhysicalPhase.StrikeWorking;
+				ClassicAssert.IsFalse(KingdomConstructionRules.ValidRegistryUpdate(other,
+					KingdomConstructionRules.Transition(other, KingdomConstructionPhase.Working, 30L)), route.ToString());
+			}
+			foreach (KingdomPhysicalPhase phase in Enum.GetValues(typeof(KingdomPhysicalPhase)))
+			{
+				if (phase == KingdomPhysicalPhase.StrikeWorking) continue;
+				KingdomConstructionJob strike = Job(KingdomConstructionRoute.Strike);
+				strike.PhysicalPhase = phase;
+				ClassicAssert.IsFalse(KingdomConstructionRules.ValidRegistryUpdate(strike,
+					KingdomConstructionRules.Transition(strike, KingdomConstructionPhase.Working, 30L)), phase.ToString());
+			}
+		}
+
+		[Test]
+		public void PublishedStrikeCannotUseWorkTransitionToSettleDebtOrChangePhysicalPhase()
+		{
+			foreach (KingdomConstructionJob strike in new[] {
+				Job(KingdomConstructionRoute.Strike, Water: 1),
+				Job(KingdomConstructionRoute.Strike, Material: MaterialCost(Timber: 1)) })
+			{
+				strike.PhysicalPhase = KingdomPhysicalPhase.StrikeWorking;
+				KingdomConstructionJob next = KingdomConstructionRules.Transition(strike,
+					KingdomConstructionPhase.Working, 30L);
+				ClassicAssert.IsFalse(KingdomConstructionRules.ValidRegistryUpdate(strike, next));
+				next.Claims = KingdomConstructionRules.NewClaims(0, new KingdomMaterialDebitCost());
+				ClassicAssert.IsFalse(KingdomConstructionRules.ValidRegistryUpdate(strike, next));
+			}
+			KingdomConstructionJob stamped = Job(KingdomConstructionRoute.Strike);
+			stamped.PhysicalPhase = KingdomPhysicalPhase.StrikeWorking;
+			KingdomConstructionJob changed = KingdomConstructionRules.Transition(stamped,
+				KingdomConstructionPhase.Working, 30L);
+			changed.PhysicalPhase = KingdomPhysicalPhase.StrikeWorkComplete;
+			ClassicAssert.IsFalse(KingdomConstructionRules.ValidRegistryUpdate(stamped, changed));
+		}
+
 		private static KingdomConstructionOutbox SettledOutbox(string Id,
 			string Suffix = "redressed")
 		{

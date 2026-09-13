@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  BASELINE FIXTURE - do not edit to match the shipped catalogue.
+
+  The four heart palettes and five heart maps exactly as they stood on dev at 4f66331, the
+  commit before the camp landed. A settlement founded before that build decodes to THESE
+  definitions, so a test that wants to prove what a pre-change save does at its next
+  improvement must compile these, not the current maps with a placement deleted. Overlaid onto
+  the live corpus by KingdomArchitectureCorpusFixture.Overlay, together with the civic-heart
+  plan: its tier requirements belong to the old build as much as its rows do, and a map that
+  predates a required anchor cannot be compiled against the tier that demands it. Every other
+  palette, map, plan, pose and catalogue row stays current, which is exactly the mixed world an
+  old save loads into.
+
+  The root tag is deliberately NOT <KingdomArchitectures>: every tool that enumerates authored
+  architecture walks the whole checkout for that tag (Tools/gallery_cases.py:77-86), and a
+  fixture that answered to it would be counted as a ninth shipped stream and double every heart
+  case in the gallery census. This file is read by exactly one caller, by path.
+
+  If the heart maps are ever REPLACED again, this file stays as it is: it records a shipped
+  past, not an intention.
+-->
+<KingdomArchitecturesBaselineFixture>
+  <palette Key="civic-heart-natural">
+    <slot Key="ground" Blueprint="DirtFloor" Role="rite-ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="path" Blueprint="DirtPath" Role="trodden-ring" Material="mud" MinTech="hands" Natural="yes" />
+    <!-- The basin is founding equipment already fixed at the rite coordinate. It is retained,
+         not fabricated by this zero-material tier; the stamper must bind it, never duplicate it. -->
+    <slot Key="basin" Blueprint="r_KingdomFirstBasin" Role="first-basin" Material="scrap" MinTech="hands" Natural="no" />
+    <!-- Two unshaped stones rolled to the rite at founding. Natural retained rock, no bill;
+         every later rung keeps them at the same rite-relative coordinates. -->
+    <slot Key="ritestone" Blueprint="r_KingdomStructureLimestone" Role="retained-rite-stone" Material="stone" MinTech="hands" Natural="yes" />
+    <slot Key="benefit-heartbasin-main" Blueprint="r_KingdomFirstBasinRite" Role="physical-benefit-heartbasin-main" Material="stone" MinTech="hands" Natural="yes" />
+  </palette>
+
+  <palette Key="civic-heart-stone">
+    <slot Key="ground" Blueprint="DirtFloor" Role="rite-ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="path" Blueprint="DirtPath" Role="queue-path" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="kerb" Blueprint="r_KingdomStructureHalfStone" Role="waterstone-kerb" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="basin" Blueprint="r_KingdomFirstBasin" Role="first-basin" Material="scrap" MinTech="hands" Natural="no" />
+    <slot Key="ritestone" Blueprint="r_KingdomStructureLimestone" Role="retained-rite-stone" Material="stone" MinTech="hands" Natural="yes" />
+    <slot Key="benefit-heartwaterstone-main" Blueprint="r_KingdomWaterstoneRite" Role="physical-benefit-heartwaterstone-main" Material="stone" MinTech="hands" Natural="no" />
+  </palette>
+
+  <palette Key="civic-heart-moot">
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="path" Blueprint="DirtPath" Role="yard-path" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="floor" Blueprint="WoodFloor" Role="raised-moot-floor" Material="shapedtimber" MinTech="workshop" Natural="no" />
+    <slot Key="kerb" Blueprint="r_KingdomStructureHalfStone" Role="retained-kerb" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="wall" Blueprint="r_KingdomStructureBrinestalkWall" Role="roof-frame" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="door" Blueprint="r_KingdomFixtureDoorTimber" Role="door" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="seat" Blueprint="r_KingdomFixtureBenchTimber" Role="moot-bench" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="basin" Blueprint="r_KingdomFirstBasin" Role="first-basin" Material="scrap" MinTech="hands" Natural="no" />
+    <slot Key="ritestone" Blueprint="r_KingdomStructureLimestone" Role="retained-rite-stone" Material="stone" MinTech="hands" Natural="yes" />
+    <slot Key="light" Blueprint="r_KingdomCivicTorchpost" Role="moot-light" Material="stone" MinTech="workshop" Natural="no" />
+    <slot Key="benefit-heartmoot-main" Blueprint="r_KingdomMootRostrum" Role="physical-benefit-heartmoot-main" Material="shapedtimber" MinTech="workshop" Natural="no" />
+  </palette>
+
+  <palette Key="civic-heart-court">
+    <slot Key="statue" Blueprint="r_KingdomFounderStatue" Role="founder-statue" Material="shapedstone" MinTech="workshop" Natural="no" />
+    <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="path" Blueprint="DirtPath" Role="rite-path" Material="mud" MinTech="hands" Natural="yes" />
+    <slot Key="kerb" Blueprint="r_KingdomStructureHalfStone" Role="waterstone-kerb" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="mootfloor" Blueprint="WoodFloor" Role="charter-pavilion-floor" Material="shapedtimber" MinTech="workshop" Natural="no" />
+    <slot Key="mootwall" Blueprint="r_KingdomStructureBrinestalkWall" Role="charter-pavilion-frame" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="mootdoor" Blueprint="r_KingdomFixtureDoorTimber" Role="charter-pavilion-door" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="seat" Blueprint="r_KingdomFixtureBenchTimber" Role="public-council-bench" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="floor" Blueprint="BrickWalkway" Role="colonnade-floor" Material="shapedstone" MinTech="workshop" Natural="no" />
+    <slot Key="marble" Blueprint="MarbleFloor" Role="court-axis" Material="marble" MinTech="workshop" Natural="no" />
+    <slot Key="wall" Blueprint="r_KingdomStructureSandstone" Role="stone-shell" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="column" Blueprint="r_KingdomStructureBrickWall" Role="dressed-column" Material="shapedstone" MinTech="workshop" Natural="no" />
+    <slot Key="door" Blueprint="r_KingdomFixtureDoorMetal" Role="worked-gate" Material="workedmetal" MinTech="foundry" Natural="no" />
+    <slot Key="basin" Blueprint="r_KingdomFirstBasin" Role="first-basin" Material="scrap" MinTech="hands" Natural="no" />
+    <slot Key="ritestone" Blueprint="r_KingdomStructureLimestone" Role="retained-rite-stone" Material="stone" MinTech="hands" Natural="yes" />
+    <slot Key="arcwall" Blueprint="r_KingdomStructureConcreteWall" Role="arcology-threshold-wall" Material="shapedstone" MinTech="foundry" Natural="no" />
+    <slot Key="arcrib" Blueprint="r_KingdomStructureMetalWall" Role="arcology-service-rib" Material="workedmetal" MinTech="arclight" Natural="no" />
+    <slot Key="light" Blueprint="r_KingdomCivicTorchpost" Role="moot-flame" Material="stone" MinTech="workshop" Natural="no" />
+    <slot Key="arclight" Blueprint="Techlight1" Role="arcology-threshold-light" Material="workedmetal" MinTech="arclight" Natural="no" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <slot Key="benefit-heartcourt-main" Blueprint="r_KingdomGreatCourtRostrum" Role="physical-benefit-heartcourt-main" Material="workedmetal" MinTech="foundry" Natural="no" />
+    <slot Key="benefit-arcology-main" Blueprint="r_KingdomArcologyCouncilDais" Role="physical-benefit-arcology-main" Material="workedmetal" MinTech="arclight" Natural="no" />
+  </palette>
+
+  <map Key="civic-heartbasin-s0" Width="6" Height="4" Footprint="1,0,4x4" DefaultCover="open">
+    <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="0" Ground="$path" Claim="yard" Pass="walk" Cover="open" Object="$benefit-heartbasin-main" Anchors="benefit:heartbasin-main,rite:first-basin-witness" />
+    <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:settlement-heart" Stateful="yes" />
+    <glyph Char="B" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:first-basin" Object="$basin" Stateful="yes" />
+    <glyph Char="R" Ground="$ground" Structure="$ritestone" Claim="yard" Pass="blocked" Cover="open" />
+    <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <!-- Two unshaped stones and the basin/root pair make a readable four-piece rite, while a
+         two-cell southern approach declares the axis that every later building elaborates. -->
+    <row Cells=".0PPP." />
+    <row Cells=".RB@R." />
+    <row Cells=".PPPP." />
+    <row Cells="..EE.." />
+  </map>
+
+  <map Key="civic-heartwaterstone-m1" Width="8" Height="6" Footprint="0,0,8x6" DefaultCover="open">
+    <glyph Char="K" Ground="$ground" Structure="$kerb" Claim="yard" Pass="blocked" Cover="open" />
+    <glyph Char="P" Ground="$path" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="0" Ground="$path" Claim="yard" Pass="walk" Cover="open" Object="$benefit-heartwaterstone-main" Anchors="benefit:heartwaterstone-main,rite:waterstone-witness" />
+    <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:settlement-heart" Stateful="yes" />
+    <glyph Char="B" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:first-basin" Object="$basin" Stateful="yes" />
+    <glyph Char="Q" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="function:water-queue" />
+    <glyph Char="R" Ground="$ground" Structure="$ritestone" Claim="yard" Pass="blocked" Cover="open" />
+    <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <!-- An octagonal low kerb remains visibly hand-laid and open to weather. Paired queue cells
+         lead to the basin/root dais; paired north and south breaks keep circulation obvious. -->
+    <row Cells=".KK0PKK." />
+    <row Cells="KPPPPPPK" />
+    <row Cells="KPRB@RPK" />
+    <row Cells="KPPPPPPK" />
+    <row Cells="KPPQQPPK" />
+    <row Cells=".KKEEKK." />
+  </map>
+
+  <map Key="civic-heartmoot-l2" Width="12" Height="10" Footprint="0,0,12x10" DefaultCover="walled">
+    <glyph Char="W" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="K" Ground="$floor" Structure="$kerb" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="P" Ground="$path" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="I" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="X" Ground="$floor" Object="$benefit-heartmoot-main" Claim="building" Pass="walk" Cover="walled" Anchors="seat:moot1,benefit:heartmoot-main" />
+    <glyph Char="Y" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" Anchors="seat:moot2" />
+    <glyph Char="Q" Ground="$path" Claim="building" Pass="walk" Cover="walled" Anchors="function:water-queue" />
+    <glyph Char="@" Ground="$ground" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:settlement-heart" Stateful="yes" />
+    <glyph Char="B" Ground="$path" Object="$basin" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:first-basin" Stateful="yes" />
+    <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="R" Ground="$ground" Structure="$ritestone" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:moot" />
+    <!-- The waterstone is renovated into a raised timber charter hall. Benches and torch-posts
+         mirror one another across the seam; the stone-framed basin dais interrupts, but never
+         seals, the two-cell processional way between paired doors. -->
+    <row Cells="WWWWWDDWWWWW" />
+    <row Cells="WIILIIIILIIW" />
+    <row Cells="WIXIIIIIIYIW" />
+    <row Cells="WIIIKPPKIIIW" />
+    <row Cells="WIIIRB@RIIIW" />
+    <row Cells="WIIIKPPKIIIW" />
+    <row Cells="WIIIQPPQIIIW" />
+    <row Cells="WIIIIPPIIIIW" />
+    <row Cells="WIIIIPPIIIIW" />
+    <row Cells="WWWWWDDWWWWW" />
+  </map>
+
+  <map Key="civic-heartcourt-xl3" Width="20" Height="18" Footprint="0,0,20x18" DefaultCover="walled">
+    <glyph Char="#" Ground="$ground" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="s" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="m" Ground="$marble" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="c" Ground="$floor" Structure="$column" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="w" Ground="$mootfloor" Structure="$mootwall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="P" Ground="$path" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="I" Ground="$mootfloor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="X" Ground="$mootfloor" Object="$benefit-heartcourt-main" Claim="building" Pass="walk" Cover="walled" Anchors="seat:moot1,benefit:heartcourt-main" />
+    <glyph Char="Y" Ground="$mootfloor" Object="$seat" Claim="building" Pass="walk" Cover="walled" Anchors="seat:moot2" />
+    <glyph Char="Q" Ground="$path" Claim="building" Pass="walk" Cover="walled" Anchors="function:water-queue" />
+    <glyph Char="@" Ground="$ground" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:settlement-heart" Stateful="yes" />
+    <glyph Char="B" Ground="$path" Object="$basin" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:first-basin" Stateful="yes" />
+    <glyph Char="D" Ground="$mootfloor" Structure="$mootdoor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="R" Ground="$ground" Structure="$ritestone" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="b" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="L" Ground="$mootfloor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:moot" />
+    <glyph Char="G" Ground="$marble" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:gate" />
+    <glyph Char="T" Ground="$marble" Object="$statue" Claim="building" Pass="blocked" Cover="walled" />
+    <!-- The city rebuilds, rather than entombs, its moot. A compact brinestalk charter pavilion
+         holds the rite at the centre of a sandstone enclosure; public brick galleries, mirrored
+         council benches, paired founder statues, dressed columns, and a four-cell marble avenue
+         make civic use and processional hierarchy legible. Every obstruction has a paired mate. -->
+    <row Cells="#########++#########" />
+    <row Cells="#sssssssmmmmsssssss#" />
+    <row Cells="#sbscsscmmmmcsscsbs#" />
+    <row Cells="#sssssssmmmmsssssss#" />
+    <row Cells="#ssscsscmmmmcsscsss#" />
+    <row Cells="#ssssswwwDDwwwsssss#" />
+    <row Cells="#ssssswILIILIwsssss#" />
+    <row Cells="#ssssswIXIIYIwsssss#" />
+    <row Cells="#ssssswIRB@RIwsssss#" />
+    <row Cells="#ssssswIQPPQIwsssss#" />
+    <row Cells="#ssssswwwDDwwwsssss#" />
+    <row Cells="#ssscsscmmmmcsscsss#" />
+    <row Cells="#sbscsssmmmmssscsbs#" />
+    <row Cells="#ssssssTmmmmTssssss#" />
+    <row Cells="#sssssssmmmmsssssss#" />
+    <row Cells="#sssssscGmmGcssssss#" />
+    <row Cells="#sssssssmmmmsssssss#" />
+    <row Cells="#########++#########" />
+  </map>
+
+  <map Key="civic-arcology-xl4" Width="20" Height="18" Footprint="0,0,20x18" DefaultCover="walled">
+    <glyph Char="A" Ground="$ground" Structure="$arcwall" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="M" Ground="$ground" Structure="$arcrib" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="s" Ground="$floor" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="m" Ground="$marble" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="+" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
+    <glyph Char="P" Ground="$path" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="Q" Ground="$path" Claim="building" Pass="walk" Cover="walled" Anchors="function:water-queue" />
+    <glyph Char="@" Ground="$ground" Object="$building" Claim="building" Pass="adjacent" Cover="walled" Anchors="main,function:settlement-heart,function:arcology-gateway" Stateful="yes" />
+    <glyph Char="B" Ground="$path" Object="$basin" Claim="building" Pass="walk" Cover="walled" Anchors="fixture:first-basin" Stateful="yes" />
+    <glyph Char="R" Ground="$ground" Structure="$ritestone" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="X" Ground="$floor" Object="$benefit-arcology-main" Claim="building" Pass="walk" Cover="walled" Anchors="seat:moot1,benefit:arcology-main" Stateful="yes" />
+    <glyph Char="Y" Ground="$floor" Object="$seat" Claim="building" Pass="walk" Cover="walled" Anchors="seat:moot2" />
+    <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:moot" />
+    <glyph Char="G" Ground="$marble" Object="$arclight" Claim="building" Pass="walk" Cover="walled" Anchors="light:gate" />
+    <glyph Char="h" Ground="$floor" Object="$arclight" Claim="building" Pass="walk" Cover="walled" />
+    <row Cells="MAAAMAAMA++AMAAMAAAM" />
+    <row Cells="MsssssssmmmmsssssssM" />
+    <row Cells="MssMssMsmmmmsMssMssM" />
+    <row Cells="MsssssshmmmmhssssssM" />
+    <row Cells="MsAAAsssmmmmsssAAAsM" />
+    <row Cells="MssMssMsmmmmsMssMssM" />
+    <row Cells="MsssssssmmmmsssssssM" />
+    <row Cells="MsssssssmmmmsssssssM" />
+    <row Cells="MsssXssLRB@RLssYsssM" />
+    <row Cells="MsssssssQPPQsssssssM" />
+    <row Cells="MsssssssmmmmsssssssM" />
+    <row Cells="MsssssshmmmmhssssssM" />
+    <row Cells="MssMssMsmmmmsMssMssM" />
+    <row Cells="MsAAAsssmmmmsssAAAsM" />
+    <row Cells="MsssssssmmmmsssssssM" />
+    <row Cells="MssMssMGmmmmGMssMssM" />
+    <row Cells="MsssssssmmmmsssssssM" />
+    <row Cells="MAAAMAAMA++AMAAMAAAM" />
+  </map>
+
+  <plan Key="civic-heart">
+    <binding Key="civic-s-heart" Type="civic" Size="S" Facing="heart">
+      <tier Key="heartbasin" BuildKey="heartbasin" Level="0" Map="civic-heartbasin-s0" Palette="civic-heart-natural">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:settlement-heart" Min="1" />
+        <require Role="fixture:first-basin" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+    <binding Key="civic-m-heart" Type="civic" Size="M" Facing="heart">
+      <tier Key="heartwaterstone" BuildKey="heartwaterstone" Level="1" Transition="renovate-expand" Map="civic-heartwaterstone-m1" Palette="civic-heart-stone">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:settlement-heart" Min="1" />
+        <require Role="fixture:first-basin" Min="1" />
+        <require Role="function:water-queue" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+    <binding Key="civic-l-heart" Type="civic" Size="L" Facing="heart">
+      <tier Key="heartmoot" BuildKey="heartmoot" Level="2" Transition="renovate-expand" Map="civic-heartmoot-l2" Palette="civic-heart-moot">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="2" />
+        <require Role="function:settlement-heart" Min="1" />
+        <require Role="fixture:first-basin" Min="1" />
+        <require Role="function:water-queue" Min="1" />
+        <require Role="seat:moot1" Min="1" />
+        <require Role="seat:moot2" Min="1" />
+        <require Role="light:moot" Min="2" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+    <binding Key="civic-xl-heart" Type="civic" Size="XL" Facing="heart">
+      <tier Key="heartcourt" BuildKey="heartcourt" Level="3" Transition="renovate-expand" Map="civic-heartcourt-xl3" Palette="civic-heart-court">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="2" />
+        <require Role="function:settlement-heart" Min="1" />
+        <require Role="fixture:first-basin" Min="1" />
+        <require Role="function:water-queue" Min="1" />
+        <require Role="seat:moot1" Min="1" />
+        <require Role="seat:moot2" Min="1" />
+        <require Role="light:moot" Min="2" />
+        <require Role="light:gate" Min="2" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+      <tier Key="arcology" BuildKey="arcology" Level="4" Transition="renovate" Map="civic-arcology-xl4" Palette="civic-heart-court">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="2" />
+        <require Role="function:settlement-heart" Min="1" />
+        <require Role="function:arcology-gateway" Min="1" />
+        <require Role="fixture:first-basin" Min="1" />
+        <require Role="function:water-queue" Min="1" />
+        <require Role="seat:moot1" Min="1" />
+        <require Role="seat:moot2" Min="1" />
+        <require Role="light:moot" Min="2" />
+        <require Role="light:gate" Min="2" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+</KingdomArchitecturesBaselineFixture>

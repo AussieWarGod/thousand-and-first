@@ -56,16 +56,28 @@ namespace ThousandAndFirst
 		/// asking any object a question that could answer back. This is the reading a batch is
 		/// finally judged against, and it is a whole-occupancy reading exactly as the ordinary one
 		/// is, because everything in a chest takes up the space it takes up (ruling 5).
+		/// <para>
+		/// False means the store's contents are not a WHOLE NUMBER a delivery can reason about,
+		/// and there is then no room reading at all &mdash; not a large one, not zero. A store
+		/// that has stopped being a destination is a different answer: that is true with no room,
+		/// which is a fact about the store rather than a failure to read it.
+		/// </para>
 		/// </summary>
-		internal static int DepositRawRoomNow(GameObject Container)
+		internal static bool TryDepositRawRoomNow(GameObject Container, out int Room)
 		{
+			Room = 0;
 			if (!GameObject.Validate(Container) || Container.Inventory == null
 				|| !IsStockpile(Container))
 			{
-				return 0;
+				return true;
 			}
-			int room = KingdomSurvey.StockCapacityOf(Container) - RawStockHeldIn(Container);
-			return (room > 0) ? room : 0;
+			if (!TryRawStockHeldIn(Container, out int held))
+			{
+				return false;
+			}
+			int room = KingdomSurvey.StockCapacityOf(Container) - held;
+			Room = (room > 0) ? room : 0;
+			return true;
 		}
 
 		/// <summary>
@@ -73,10 +85,20 @@ namespace ThousandAndFirst
 		/// survey's own, so this and <see cref="KingdomSurvey.StockHeldIn"/> answer the same
 		/// question about the same things; only the count read differs, and only here, where the
 		/// answer licences a destruction or an insertion.
+		/// <para>
+		/// The running total is a <c>long</c> because the rows are not. A stack's count is the
+		/// engine's own plain <c>int</c> field with no ceiling on it (<c>Stacker._StackCount</c>,
+		/// read back by <c>Reader.ReadInt32</c> and merged by unchecked <c>int</c> addition), so
+		/// two honest stacks can add up to more than <c>int.MaxValue</c>. A wrapped sum would come
+		/// back large and NEGATIVE and reopen a full store's room; the bound here is therefore
+		/// representability itself &mdash; what an <c>int</c> can hold &mdash; and not an invented
+		/// ceiling that would refuse a legitimately large modded store.
+		/// </para>
 		/// </summary>
-		private static int RawStockHeldIn(GameObject Container)
+		private static bool TryRawStockHeldIn(GameObject Container, out int Held)
 		{
-			int held = 0;
+			Held = 0;
+			long held = 0;
 			List<GameObject> objects = Container.Inventory.Objects;
 			for (int i = 0; i < objects.Count; i++)
 			{
@@ -95,9 +117,14 @@ namespace ThousandAndFirst
 					|| !UnitBits(item).IsEmpty())
 				{
 					held += RawCensusCountOf(item);
+					if (held > int.MaxValue)
+					{
+						return false;
+					}
 				}
 			}
-			return held;
+			Held = (int)held;
+			return true;
 		}
 
 		/// <summary>
@@ -111,23 +138,37 @@ namespace ThousandAndFirst
 		/// material, and a handler that retires the timber and drops an equal count of stone would
 		/// otherwise pay this delivery in full for timber that never arrived.
 		/// </para>
+		/// <para>
+		/// False means the destination's hold in this material does not total to a value
+		/// representable as an <c>int</c>, and there is then no reading at all. A delivery may not
+		/// treat that as nothing gained, because the difference of two such readings is a CREDIT.
+		/// </para>
 		/// </summary>
-		internal static int DepositMaterialHeldNow(GameObject Container, string Blueprint)
+		internal static bool TryDepositMaterialHeldNow(GameObject Container, string Blueprint,
+			out int Held)
 		{
+			Held = 0;
 			if (!GameObject.Validate(Container) || Container.Inventory == null
 				|| !IsStockpile(Container) || string.IsNullOrEmpty(Blueprint))
 			{
-				return 0;
+				return true;
 			}
-			return CountBlueprint(Container.Inventory.Objects, Blueprint, Container, null);
+			return TryCountBlueprint(Container.Inventory.Objects, Blueprint, Container, null,
+				out Held);
 		}
 
 		/// <summary>The same reading for open ground, which has no capacity and no designation:
-		/// units of one blueprint standing in an exact cell right now.</summary>
-		internal static int GroundMaterialHeldNow(Cell Ground, string Blueprint)
+		/// units of one blueprint standing in an exact cell right now. Open ground declares a
+		/// bound rather than counting a capacity, so this is the ONLY place a spill's arithmetic
+		/// can run past <c>int.MaxValue</c>.</summary>
+		internal static bool TryGroundMaterialHeldNow(Cell Ground, string Blueprint, out int Held)
 		{
-			return (Ground != null && !string.IsNullOrEmpty(Blueprint))
-				? CountBlueprint(Ground.Objects, Blueprint, null, Ground) : 0;
+			Held = 0;
+			if (Ground == null || string.IsNullOrEmpty(Blueprint))
+			{
+				return true;
+			}
+			return TryCountBlueprint(Ground.Objects, Blueprint, null, Ground, out Held);
 		}
 
 		/// <summary>
@@ -149,14 +190,23 @@ namespace ThousandAndFirst
 		/// row's reading can move an earlier row out from under a count already taken, and the
 		/// number that comes back describes the store as it stood at one instant.
 		/// </para>
+		/// <para>
+		/// The total is a <c>long</c> for the reason the room census is: a stack's count is the
+		/// engine's own unbounded <c>int</c> field, so two honest stacks can sum past what an
+		/// <c>int</c> holds, and a wrapped pair would agree mod 2^32 and MINT a credit for a
+		/// landing that did not happen. Once the true total stops being representable as an
+		/// <c>int</c> there is no answer, and a delivery that has no answer credits nothing for
+		/// the parcel in hand.
+		/// </para>
 		/// </summary>
-		private static int CountBlueprint(IReadOnlyList<GameObject> Objects, string Blueprint,
-			GameObject Container, Cell Ground)
+		private static bool TryCountBlueprint(IReadOnlyList<GameObject> Objects, string Blueprint,
+			GameObject Container, Cell Ground, out int Held)
 		{
-			int held = 0;
+			Held = 0;
+			long held = 0;
 			if (Objects == null)
 			{
-				return 0;
+				return true;
 			}
 			for (int i = 0; i < Objects.Count; i++)
 			{
@@ -167,8 +217,13 @@ namespace ThousandAndFirst
 					continue;
 				}
 				held += RawCensusCountOf(item);
+				if (held > int.MaxValue)
+				{
+					return false;
+				}
 			}
-			return held;
+			Held = (int)held;
+			return true;
 		}
 
 		/// <summary>Whether one object's OWN custody names the exact destination being read. A

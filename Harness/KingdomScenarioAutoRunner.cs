@@ -44,8 +44,7 @@ namespace ThousandAndFirst
 	/// <para>
 	/// SUSPENDS AND RESUMES. <c>advance</c> and <c>yield-frames</c> make a script span turns and
 	/// rendered frames, so the verb list and a cursor live across events (see
-	/// <see cref="KingdomScenarioAdvance" />, <see cref="KingdomScenarioFrames" />). Both suspend
-	/// through this one seam and only one may be pending. The cursor is session state: the durable
+	/// <see cref="KingdomScenarioAdvance" />, <see cref="KingdomScenarioFrames" />); travel shares this seam. Only one pump may be pending. The cursor is session state: the durable
 	/// one-shot below already forbids a replay after a reload, so a script interrupted by a save
 	/// does not resume, and the journal's last row says where it stopped.
 	/// </para>
@@ -55,7 +54,7 @@ namespace ThousandAndFirst
 	/// </para>
 	/// </summary>
 	[Serializable]
-	public sealed class KingdomScenarioAutoRunner : IPlayerSystem
+	public sealed partial class KingdomScenarioAutoRunner : IPlayerSystem
 	{
 		private const int SerializationMagic = 1414746964;
 		private const int CurrentSerializationVersion = 1;
@@ -123,6 +122,12 @@ namespace ThousandAndFirst
 		public override void RegisterPlayer(GameObject Player, IEventRegistrar Registrar)
 		{
 			Registrar.Register(BeginTakeActionEvent.ID);
+			Registrar.Register(AfterDieEvent.ID); // KingdomScenarioAutoRunner.Death.cs
+			// Succession re-registers this system on the heir INSIDE AfterDieEvent, so the latest
+			// body is not enough: every body ever registered this run stays in the set
+			// (KingdomScenarioAutoRunner.Death.cs, KingdomScenarioDeathRules.cs).
+			RegisteredPlayer = Player;
+			RegisteredBodies.Add(Player);
 		}
 
 		/// <summary>
@@ -163,6 +168,8 @@ namespace ThousandAndFirst
 		private void Step()
 		{
 			bool faulted;
+			if (KingdomScenarioTravelDriver.Pump(out bool travelFault)) return;
+			if (travelFault) { Abandon("travel"); return; }
 			if (KingdomScenarioAdvance.Pending)
 			{
 				if (KingdomScenarioAdvance.Pump(out faulted)) return;
@@ -170,8 +177,7 @@ namespace ThousandAndFirst
 			}
 			else if (KingdomScenarioFrames.Pending)
 			{
-				// Unlike the advance pump this one has NOT spent the opportunity, and must not:
-				// the unspent energy is what carries the engine into its own render loop.
+				// Unspent energy carries a frame yield into the engine's render loop.
 				if (KingdomScenarioFrames.Pump(out faulted)) return;
 				if (faulted) { Abandon("frame yield"); return; }
 			}
@@ -193,8 +199,7 @@ namespace ThousandAndFirst
 			if (Verbs != null) Finish(StoppedRow, false, "the " + What + " was abandoned");
 		}
 
-		/// <summary>Reads the sealed script and opens the run. Returns false when there is nothing
-		/// to run, which is the ordinary attended case as well as a refusal.</summary>
+		/// <summary>Reads the sealed script and opens the run; false when there is nothing to run.</summary>
 		private bool Begin()
 		{
 			if (!KingdomScenarioScript.Present()) { Release(); return false; }
@@ -206,14 +211,15 @@ namespace ThousandAndFirst
 				return false;
 			}
 			UnityEngine.Application.runInBackground = true; // in-world only; mid-boot crashed
-			XRL.World.ZoneBuilders.KingdomScenarioTestGroundBuilder.Restrip(The.Player?.CurrentZone);
+			bool quickstartLifecycle = KingdomQuickstartBootTest.LifecycleRequested; // KingdomQuickstartLifecycleRunnerPatch
+			if (!quickstartLifecycle) XRL.World.ZoneBuilders.KingdomScenarioTestGroundBuilder.Restrip(The.Player?.CurrentZone);
 			KingdomScenarioJournal.Append(ArmedRow, true, "armed by BeginTakeActionEvent; popups "
 				+ (SuppressedPopups ? "suppressed from " + PrimedSeam : "NOT suppressed - no primer "
 					+ "seam fired, so the boot and arrival popups still need a keypress"));
 			KingdomScenarioJournal.Append(BeginRow, true,
 				verbs.Count + " verb(s) from " + KingdomScenarioScript.Locate());
 			Verbs = verbs;
-			Cursor = 0;
+			Cursor = quickstartLifecycle ? 1 : 0; // line 0 is the already-consumed boot command
 			return true;
 		}
 
@@ -247,7 +253,7 @@ namespace ThousandAndFirst
 						+ ": " + verb);
 					return;
 				}
-				if (KingdomScenarioAdvance.Pending || KingdomScenarioFrames.Pending) return;
+				if (KingdomScenarioAdvance.Pending || KingdomScenarioFrames.Pending || KingdomScenarioTravel.Pending) return;
 			}
 			Finish(CompleteRow, true, Verbs.Count + " verb(s) ran without a refusal");
 		}
@@ -255,6 +261,8 @@ namespace ThousandAndFirst
 		/// <summary>Closes the run: one final row, then the popup bracket is released.</summary>
 		private void Finish(string Row, bool Ok, string Message)
 		{
+			KingdomScenarioTravelDriver.Stop();
+			KingdomScenarioAdvance.Cancel(); // a script stop ends any pending wait and its guard
 			Verbs = null;
 			Cursor = 0;
 			KingdomScenarioJournal.Append(Row, Ok, Message);
@@ -270,28 +278,12 @@ namespace ThousandAndFirst
 			Popup.Suppress = false;
 		}
 
-		public override void Write(SerializationWriter Writer)
+		/// <summary>Whether THIS system currently holds Popup.Suppress. A read-only query so an
+		/// unrelated caller (KingdomQuickstartBootTest.End) can avoid dropping a suppression it
+		/// does not own -- see Harness/KingdomQuickstartLifecycleRunnerPatch.cs remarks.</summary>
+		internal static bool Suppressing(XRLGame Game)
 		{
-			SerializationVersion = CurrentSerializationVersion;
-			Writer.Write(SerializationMagic);
-			Writer.Write(CurrentSerializationVersion);
-			Writer.WriteNamedFields(this, typeof(KingdomScenarioAutoRunner),
-				BindingFlags.Instance | BindingFlags.NonPublic);
-		}
-
-		public override void Read(SerializationReader Reader)
-		{
-			int magic = Reader.ReadInt32();
-			int version = Reader.ReadInt32();
-			if (magic != SerializationMagic || version < 1
-				|| version > CurrentSerializationVersion)
-				throw new InvalidOperationException(
-					"Unsupported ThousandAndFirst scenario auto-runner save block.");
-			Reader.ReadNamedFields(this, typeof(KingdomScenarioAutoRunner),
-				BindingFlags.Instance | BindingFlags.NonPublic);
-			if (SerializationVersion != version)
-				throw new InvalidOperationException(
-					"Unsupported ThousandAndFirst scenario auto-runner named-field version.");
+			return Game?.GetSystem<KingdomScenarioAutoRunner>()?.SuppressedPopups == true;
 		}
 	}
 }

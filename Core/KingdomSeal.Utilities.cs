@@ -68,6 +68,21 @@ namespace ThousandAndFirst
 			return Tick < 0L ? 0L : Tick;
 		}
 
+		private void ReportCaptureFailure(string Action, string Failure,
+			KingdomInheritanceSpatialCaptureResult Spatial)
+		{
+			if (Spatial != KingdomInheritanceSpatialCaptureResult.Pending)
+			{
+				ReportFailure(Action, Failure); return;
+			}
+			string key = "spatial pending\u001f" + Failure;
+			if (string.Equals(LastPendingKey, key, StringComparison.Ordinal)) return;
+			LastPendingKey = key;
+			KingdomLog.Log("seal: spatial capture pending (" + Failure + ")");
+			The.Game?.GetSystem<KingdomSystem>()?.Ledger?.Note(
+				"The kingdom's seal waits for a worn street connecting its public entrance to the zone edge. No new seal has been written.");
+		}
+
 		private void ReportFailure(string Action, string Failure, Exception Exception = null)
 		{
 			string failure = string.IsNullOrEmpty(Failure) ? "unknown failure" : Failure;

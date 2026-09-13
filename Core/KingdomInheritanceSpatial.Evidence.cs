@@ -50,10 +50,57 @@ namespace ThousandAndFirst
 			return true;
 		}
 
+		/// <summary>
+		/// The one root a witnessed row may have that is not the object it was written from: the
+		/// successor of a heart whose root climbed a rung.
+		///
+		/// <para>WHY A ROW CAN OUTLIVE ITS OBJECT. A work row's id is the FOLD of the standing
+		/// object's identity (<c>Simulation/City/KingdomCity.z09</c>), and an improvement replaces
+		/// that object with one carrying its own identity. The row is rebuilt at the next
+		/// check-in, but the seal may witness before that, and until then the row names an
+		/// identity nothing carries -- which is indistinguishable, from here, from a root that was
+		/// destroyed.</para>
+		///
+		/// <para>WHAT IS ADDED, AND WHAT IS NOT. The chain answers only when the records prove it:
+		/// the row's id must be the fold of an identity the founding heart's own sealed terminal
+		/// bound, exactly one completed improvement must have retired that identity, its output
+		/// must stand as exactly one live object carrying that job's receipt and removal proof.
+		/// Position is still required and still exact -- the successor must stand at this row's
+		/// own anchor cell, once -- and nothing else is relaxed: a root that is simply gone still
+		/// refuses, because no completed improvement names it, and a foreign object at the anchor
+		/// still refuses, because the chain never looked at the cell to find it.</para>
+		/// </summary>
+		private static bool TryClimbedRoot(Zone Zone, Cell Cell, SourceWork Row,
+			out GameObject Climbed)
+		{
+			Climbed = null;
+			if (Zone == null || Cell == null
+				|| !KingdomPlots.TryChainedWorkSuccessor(Zone, Row.WorkId, out GameObject proved)
+				|| !GameObject.Validate(proved)) return false;
+			int here = 0;
+			for (int i = 0; i < Cell.Objects.Count; i++)
+				if (object.ReferenceEquals(Cell.Objects[i], proved)) here++;
+			if (here != 1) return false;
+			Climbed = proved;
+			return true;
+		}
+
 		private static bool TryExactRoot(Zone Zone, SourceWork Row, out GameObject Root,
 			out string Failure)
 		{
+			return TryExactRoot(Zone, Row, out Root, out _, out Failure);
+		}
+
+		/// <summary>
+		/// The witnessed root, and the one thing the caller needs when there is none: whether the
+		/// absence is a climb the settlement is still resolving (<paramref name="Pending" />)
+		/// rather than a root that is gone.
+		/// </summary>
+		private static bool TryExactRoot(Zone Zone, SourceWork Row, out GameObject Root,
+			out bool Pending, out string Failure)
+		{
 			Root = null;
+			Pending = false;
 			Failure = "";
 			Cell cell = Zone.GetCell(Row.X, Row.Y);
 			if (cell == null)
@@ -71,10 +118,25 @@ namespace ThousandAndFirst
 				Root = item;
 				count++;
 			}
+			if (count == 0 && TryClimbedRoot(Zone, cell, Row, out GameObject climbed))
+			{
+				Root = climbed;
+				return true;
+			}
 			if (count != 1)
 			{
 				Root = null;
-				Failure = "a sealed work root is absent, duplicated, moved, or changed";
+				Pending = KingdomSealPendingRules.ClimbUnderInspection(count == 0,
+					count == 0 && KingdomPlots.HasPendingClimb(Zone, Row.WorkId));
+				// Told only when the row really is classified that way: a DUPLICATED root is
+				// malformed, and must not be announced as an inspection. And when an absent root's
+				// climb is no longer pending -- cancelled, most of all, which never reaches the
+				// completion path that clears the hold -- the saying is taken back here.
+				if (Pending) KingdomPlots.NoteClimbUnderInspection(Zone, Row.WorkId);
+				else if (count == 0) KingdomPlots.ReleaseSettledClimbHold(Zone, Row.WorkId);
+				Failure = Pending
+					? "a sealed work root is being replaced by an improvement still under inspection"
+					: "a sealed work root is absent, duplicated, moved, or changed";
 				return false;
 			}
 			return true;

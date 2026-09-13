@@ -41,15 +41,28 @@ namespace ThousandAndFirst
 			{
 				SourceWork row = source[i];
 				GameObject root;
-				if (!TryExactRoot(Active, row, out root, out Failure))
-					return KingdomInheritanceSpatialCaptureResult.Malformed;
+				bool pending;
+				if (!TryExactRoot(Active, row, out root, out pending, out Failure))
+					return pending ? KingdomInheritanceSpatialCaptureResult.Pending
+						: KingdomInheritanceSpatialCaptureResult.Malformed;
+				// ONE KEY PER ROW, AND IT IS THE PERSISTED ONE. A climbed row's root is the
+				// successor, and the row still names the design the seal was written from --
+				// until the next check-in rebuilds the book from the survey
+				// (Core/KingdomInheritRules.Prepare.cs) and the standing design is what gets
+				// filed. Re-keying only SOME derivations here would be worse than the drift it
+				// was meant to fix: the rect fed to road evidence would be built from one design
+				// while KingdomInheritanceSpatialRules recomputed the same row's rect from the
+				// other (4x4 against 8x6 on the first heart rung), so one capture would mask road
+				// cells under one footprint and validate them against another. Every derivation
+				// for a row therefore reads Record.WorkKeys[i], exactly as it always did.
+				string key = Record.WorkKeys[i];
 				if (!HasArchitectureEvidence(root))
 				{
 					snapshots.Add("");
 					hashes.Add("");
 					int width;
 					int height;
-					if (!KingdomInheritRules.TryFootprint(Record.WorkKeys[i], out width, out height))
+					if (!KingdomInheritRules.TryFootprint(key, out width, out height))
 					{
 						width = 1;
 						height = 1;
@@ -68,12 +81,16 @@ namespace ThousandAndFirst
 				ArchitectureLayoutSnapshot snapshot;
 				if (!KingdomArchitectureRuntime.TryRead(root, out intent, out Failure)
 					|| !KingdomArchitectureRuntime.TryDecode(intent, out snapshot, out Failure)
-					|| !KingdomArchitectureStamper.TryVerifyComplete(root, Active, out Failure)
 					|| intent.EncodedSnapshot.Length > KingdomInheritanceSpatialRules.MaxSnapshotChars
 					|| intent.MainWorldX != row.X || intent.MainWorldY != row.Y
 					|| root.CurrentCell != Active.GetCell(row.X, row.Y))
 					return Malformed("an authored work has incomplete or changed frozen evidence: "
 						+ Failure, out Failure);
+				if (!KingdomArchitectureStamper.TryVerifyComplete(root, Active, out Failure,
+					out bool ingressBlocked))
+					return ingressBlocked ? KingdomInheritanceSpatialCaptureResult.Pending
+						: Malformed("an authored work has incomplete or changed frozen evidence: "
+							+ Failure, out Failure);
 				KingdomInheritanceSpatialRules.Rect rect;
 				if (!KingdomInheritanceSpatialRules.TrySnapshotRect(snapshot, row.X, row.Y,
 					out rect) || rect.X1 != intent.Rect.X1 || rect.Y1 != intent.Rect.Y1
@@ -83,7 +100,7 @@ namespace ThousandAndFirst
 				if (!KingdomArchitectureRules.IsCurrentSnapshotEncoding(intent.EncodedSnapshot))
 				{
 					KingdomInheritanceSpatialRules.Rect proxy;
-					if (!KingdomInheritanceSpatialRules.TryLegacyRect(Record.WorkKeys[i], row.X,
+					if (!KingdomInheritanceSpatialRules.TryLegacyRect(key, row.X,
 						row.Y, out proxy) || proxy.X1 != rect.X1 || proxy.Y1 != rect.Y1
 						|| proxy.X2 != rect.X2 || proxy.Y2 != rect.Y2)
 						return Malformed("a legacy authored work cannot be represented by its bounded anchor proxy",
@@ -114,8 +131,17 @@ namespace ThousandAndFirst
 				Record.WorkY, Record.WorkConditions, snapshots, hashes,
 				KingdomInheritanceSpatialRules.Width, KingdomInheritanceSpatialRules.Height,
 				entrySide, entryX, entryY, streetX, streetY, out fault))
+			{
+				if (KingdomSealPendingRules.RoadlessEntrance(
+					fault == KingdomInheritanceSpatialFault.PublicEntrance,
+					entrySide == KingdomInheritanceSpatialRules.NoEntry, streetX.Count))
+				{
+					Failure = "the public entrance has no witnessed street connection to the zone edge yet";
+					return KingdomInheritanceSpatialCaptureResult.Pending;
+				}
 				return Malformed("the witnessed architecture and street graph do not form a safe "
 					+ "spatial seal: " + fault, out Failure);
+			}
 
 			Record.SpatialVersion = KingdomInheritanceSpatialRules.SpatialVersion;
 			Record.SpatialWidth = KingdomInheritanceSpatialRules.Width;

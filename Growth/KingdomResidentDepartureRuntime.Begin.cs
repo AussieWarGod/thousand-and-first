@@ -112,6 +112,13 @@ namespace ThousandAndFirst
 				|| !book.TryReadExact(out KingdomCityState state, out KingdomCityFault _)
 				|| !state.TryResidentIndex(ResidentId, out int at)
 				|| !state.TryResident(at, out former)) return false;
+			// Recovery above can finish an earlier departure after EmigrateCore's census.
+			// Recount this settlement before admitting another departure transaction.
+			if (!KingdomResidentRules.TryProject(state, out KingdomResidentRollProjection roll)
+				|| roll.Population <= KingdomRules.LoyalCoreSettlers)
+			{
+				Failure = "the settlement must retain its last willing citizens"; return false;
+			}
 			string settlement = System.SettlementIdForOwnedZone(leaver.CurrentZone?.ZoneID);
 			if (former.ResidentId != ResidentId
 				|| former.Standing != KingdomResidentStanding.Resident

@@ -34,12 +34,13 @@ MANAGED_WIN="$(wslpath -w "$MANAGED")"
 # so recursively removing it would be removing somebody else's directory on a bad day.
 # Order matters: the trap is armed between the two allocations, so a failing second mktemp cannot
 # leak the first. Both paths are printed IMMEDIATELY - under --keep no trap is installed at all, and
-# an abort before the compiles finish would otherwise leave two /tmp trees nobody was told about.
+# an abort before the compiles finish would otherwise leave two temporary trees nobody was told about.
 DEV=""
-STAGE="$(mktemp -d /tmp/taf-stage.XXXXXX)"
+# Honor a caller's private TMPDIR so independent gates need not share /tmp's parent lock.
+STAGE="$(mktemp -d -t taf-stage.XXXXXX)"
 cleanup() { rm -rf "$STAGE" "$DEV"; }
 [ "${1:-}" = "--keep" ] || trap cleanup EXIT
-DEV="$(mktemp -d /tmp/taf-devharness.XXXXXX)"
+DEV="$(mktemp -d -t taf-devharness.XXXXXX)"
 echo "staged tree: $STAGE"
 echo "dev profile: $DEV"
 
@@ -70,12 +71,13 @@ compile_mode() {
 		--managed "$MANAGED" \
 		--managed-windows "$MANAGED_WIN" \
 		--mode "$mode" \
-		--output "$rendered"
+		--output "$rendered" || return 1
 	# One shared inventory primitive for ordinary and dev alike: the mode's exclusions live in
 	# Tools/dev-harness-inventory.py, so baseline can never drop the optional-mod bridge here and
 	# keep it there.
 	python3 "$REPO/Tools/dev-harness-inventory.py" --sources \
-		--stage "$STAGE" --mode "$mode" --out "$source_list"
+		--stage "$STAGE" --mode "$mode" --out "$source_list" || return 1
+	[ -s "$source_list" ] || return 1
 	if [ "$mode" != baseline ]; then
 		stub_dll="$STAGE/Hearthpyre-2.2.3-abi.dll"
 		stub_rsp="$STAGE/hearthpyre-2.2.3-abi.rsp"
@@ -97,7 +99,7 @@ compile_mode() {
 			return 1
 		fi
 	fi
-	mode_count="$(wc -l < "$source_list")"
+	mode_count="$(wc -l < "$source_list")" || return 1
 	{
 		printf '@"%s"\n' "$(unc "$rendered")"
 		printf -- '-out:"%s"\n' "$(unc "$STAGE/r_ThousandAndFirst-$mode.dll")"
@@ -142,8 +144,9 @@ compile_dev_harness() {
 	local mode="$1" rendered="$STAGE/refs-$1.rsp" rsp="$STAGE/gate-devharness-$1.rsp"
 	local source_list="$STAGE/sources-devharness-$1.list" count output rc
 	python3 "$REPO/Tools/dev-harness-inventory.py" --dev-sources \
-		--stage "$DEV" --mode "$mode" --out "$source_list"
-	count="$(wc -l < "$source_list")"
+		--stage "$DEV" --mode "$mode" --out "$source_list" || return 1
+	[ -s "$source_list" ] || return 1
+	count="$(wc -l < "$source_list")" || return 1
 	{
 		printf '@"%s"\n' "$(unc "$rendered")"
 		printf -- '-out:"%s"\n' "$(unc "$STAGE/r_ThousandAndFirst-devharness-$mode.dll")"

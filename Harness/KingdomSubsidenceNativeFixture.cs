@@ -178,9 +178,14 @@ namespace ThousandAndFirst.Harness
 				&& Survey.Citizens == ResidentCount && System.Population == ResidentCount
 				&& KingdomResidents.OnRollCount(System) == ResidentCount
 				&& System.City.ResidentCount == ResidentCount && System.Bindings.Count == ResidentCount
-				&& Survey.Stores.Count == 1 && ReferenceEquals(Survey.Stores[0].ParentObject, Store)
-				&& Survey.StorageCapacity == 1920 && Survey.StoredWater == 0
-				&& ExactCell(Store, Cells[ResidentCount]), "physical survey/roll/capacity does not match fixture");
+				&& ExactFixtureStores()
+				&& Survey.StorageCapacity == 1936 && Survey.StoredWater == 0
+				&& ExactCell(Store, Cells[ResidentCount]), "physical survey/roll/capacity does not match fixture: "
+				+ "settlers=" + Survey.Settlers.Count + " citizens=" + Survey.Citizens
+				+ " population=" + System.Population + " roll=" + KingdomResidents.OnRollCount(System)
+				+ " city=" + System.City.ResidentCount + " bindings=" + System.Bindings.Count
+				+ " stores=" + Survey.Stores.Count + " capacity=" + Survey.StorageCapacity
+				+ " water=" + Survey.StoredWater + " exactCell=" + ExactCell(Store, Cells[ResidentCount]));
 			HashSet<int> ids = new HashSet<int>();
 			HashSet<string> objects = new HashSet<string>(StringComparer.Ordinal);
 			for (int i = 0; i < Residents.Count; i++)
@@ -200,6 +205,26 @@ namespace ThousandAndFirst.Harness
 			Require(stage == GrowthStage.City, "measured fixture does not qualify for City");
 			// Synthetic setup derives this field; it does not execute production stage advancement.
 			System.Stage = stage;
+		}
+
+		private bool ExactFixtureStores()
+		{
+			if (Survey.Stores.Count != 2 || !KingdomFoundingHeartRules.TryDecode(
+				Zone.GetZoneProperty(KingdomPlots.FoundingHeartReceiptProperty, null), out var plan)
+				|| plan.ZoneId != Zone.ZoneID || !KingdomFoundingHeartRules.Complete(plan)) return false;
+			LiquidVolume reservoir = Store.GetPart<LiquidVolume>();
+			if (reservoir == null || !ReferenceEquals(reservoir.ParentObject, Store)
+				|| reservoir.MaxVolume != 1920 || reservoir.Volume != 0
+				|| Store.GetIntProperty("KingdomStores") != 1) return false;
+			LiquidVolume basin = ReferenceEquals(Survey.Stores[0], reservoir) ? Survey.Stores[1]
+				: ReferenceEquals(Survey.Stores[1], reservoir) ? Survey.Stores[0] : null;
+			GameObject body = basin?.ParentObject;
+			return GameObject.Validate(body) && !ReferenceEquals(body, Store)
+				&& body.Blueprint == "r_KingdomFirstBasin"
+				&& body.IDIfAssigned == KingdomFoundingHeartRules.SlotId(plan, KingdomFoundingHeartRules.RelicSlot)
+				&& ExactCell(body, Zone.GetCell(plan.RiteX, plan.RiteY))
+				&& ReferenceEquals(body.GetPart<LiquidVolume>(), basin)
+				&& body.GetIntProperty("KingdomStores") == 1 && basin.MaxVolume == 16 && basin.Volume == 0;
 		}
 
 		private void RequireWorld()

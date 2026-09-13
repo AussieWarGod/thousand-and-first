@@ -1,0 +1,959 @@
+{
+  "schemaVersion": 3,
+  "statusTokens": [
+    "NONE",
+    "IMPLEMENTED_UNEXECUTED",
+    "NATIVE_PASS",
+    "NEGATIVE_PASS",
+    "COVERAGE_GAP",
+    "DEFECT"
+  ],
+  "rows": [
+    {
+      "id": 1,
+      "behaviour": "Founding (first city)",
+      "prerequisites": "fresh camp, marsh profile",
+      "transitions": "found -> claimed zone",
+      "effects": "KingdomSystem.Founded, ClaimedZones",
+      "save_cold_load": "not verified",
+      "negative": "not verified",
+      "driver": "Harness/KingdomFirstGuestNativeProvider.cs:18 (setup founds); Harness/KingdomNativeCampFounding.cs:26 (Found)",
+      "status": "EVIDENCE_UNVERIFIED",
+      "note": "Driver Harness/KingdomFirstGuestNativeProvider.cs:18-19; historical receipt cited at e918538/a64289c (root-harness105-native.JNJnVO/report.tsv) but that evidence directory could not be located on any machine checked -- artifactPath cannot be resolved, so per the typed-evidence rule this cannot be confirmed NATIVE_PASS.",
+      "evidence": null
+    },
+    {
+      "id": 2,
+      "behaviour": "First-guest correspondence opening",
+      "prerequisites": "founded, no roof",
+      "transitions": "first due pass opens correspondence -> later due pass leaves same unanswered opportunity",
+      "effects": "exactly one opening message; no guest ledger note; ordinary housing need remains visible",
+      "save_cold_load": "COVERAGE_GAP",
+      "negative": "COVERAGE_GAP",
+      "driver": "Harness/KingdomFirstGuestNativeProvider.cs (first-guest-setup/check)",
+      "status": "NATIVE_PASS",
+      "note": "Native 660ba354 passes the real two-due-pass correspondence scenario. Synthetic founding and water are disclosed. Physical guest admission/citizenship is tracked separately as a coverage gap.",
+      "evidence": [
+        {
+          "commit": "660ba354b00692bc045f95c6df916de07be9aaa3",
+          "artifactPath": "alpha-034-native/first-guest-native-check/result.json",
+          "artifactSha256": "bf7ac93d5482183309f1c013d1a39818ec2ce179a6c13ab01c02f0f6d599be15",
+          "artifactBytes": 1373,
+          "verdict": "PASS - exactly one opening message across two due passes; unanswered opportunity retained",
+          "scope": "synthetic founded roofless camp and water; 12000 real turns; actual message observer and next-need read; strict log and owned stop; no physical admission/citizenship, rendered UI or save/load",
+          "historicalScope": true,
+          "inventoryDigest": "0ebe8fb749a39bccd21578e78d95777725eb4ffc0bedba84962830baa679370c",
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "behaviour": "NPC join (Quickstart founders)",
+      "prerequisites": "Quickstart",
+      "transitions": "founders enrolled",
+      "effects": "roster count",
+      "save_cold_load": "NATIVE_PASS at 60f11aee: real save, same two housed survivors, absent departed founders, functional original building and another paid commission",
+      "negative": "no partial or synthetic enrollment in the native shortage observer",
+      "driver": "Harness/KingdomQuickstartSettlementChecks.cs; Harness/KingdomQuickstartHousingRecovery.cs",
+      "status": "NATIVE_PASS",
+      "note": "Native 60f11aee starts with four unique founding citizens; after two genuine roof departures the original receipt still names the same cohort. Cold load preserves two housed survivors and keeps both departed bodies absent. Other join/recruitment paths remain outside this scenario. Source-bound creator/cohort and grant rollback checks also pass in the 17-case native fixture at 660ba354.",
+      "evidence": [
+        {
+          "commit": "e1d26d9",
+          "artifactPath": "quickstart-housing/e1d26d9/scenario-journal.tsv",
+          "artifactSha256": "bc62caa33cd0edfb0c2a3e1223823bdb6aa04282b028ea2368e15d88bb9f74cd",
+          "artifactBytes": 17972,
+          "verdict": "PASS - two roof departures; same two original citizens retained over repeated passes; functional housing and paid construction after clearing exact obstacles",
+          "scope": "isolated native Quickstart, synthetic water/meals and physical housing obstructions; 17200 ordinary turns; no cold-load or historical-save claim",
+          "historicalScope": true,
+          "inventoryDigest": null,
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "60f11aee323582d52c003e79159e3aeec887398e",
+          "artifactPath": "quickstart-housing/60f11aee/housing-load-result.json",
+          "artifactSha256": "5a5a7025768968965df6f9f94bc1d1b2733b172a5d445435228eadcbb394323b",
+          "artifactBytes": 2970,
+          "verdict": "PASS - two roof departures, repeated two-citizen floor, recovered homes and paid work, real save/cold load and another paid commission",
+          "scope": "seed #43101 marsh/advisor-on; 17200 ordinary turns plus harness handoffs; 400 synthetic real drams, 100 meals, 72 physical obstacles; original citizens and real production work; strict logs and owned stops in both sessions",
+          "historicalScope": true,
+          "inventoryDigest": "43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "660ba354b00692bc045f95c6df916de07be9aaa3",
+          "artifactPath": "alpha-034-native/quickstart-native-checks/result.json",
+          "artifactSha256": "1778d5e060c56960a87974e0f58eda75a4fa98b9d7c2f8f6998beaaaf9e1459e",
+          "artifactBytes": 1373,
+          "verdict": "PASS - 17 native creator/callback/rollback cases including the real four-founder cohort",
+          "scope": "synthetic native fixture; exact current production source and all 3344 C# inputs bound to the stopped closed profile; factory/cohort checks only, not ordinary embark or save/load; later teardown harness changes are outside this source binding",
+          "historicalScope": true,
+          "inventoryDigest": "0ebe8fb749a39bccd21578e78d95777725eb4ffc0bedba84962830baa679370c",
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "behaviour": "Resident departure (\"leave\")",
+      "prerequisites": "founded, enrolled resident",
+      "transitions": "KingdomResidentDepartureRuntime.TryBegin (Growth/KingdomResidentDepartureRuntime.Begin.cs:10)",
+      "effects": "population/roster drop, capacity archive",
+      "save_cold_load": "NATIVE_PASS at 60f11aee: real save, same two housed survivors, absent departed founders, functional original building and another paid commission",
+      "negative": "COVERAGE_GAP",
+      "driver": "Harness/KingdomQuickstartHousingRecoveryProvider.cs; Tools/personas/quickstart-housing-recovery.persona",
+      "status": "NATIVE_PASS",
+      "note": "Native 60f11aee proves two ordinary roof departures, repeated retention of the same two citizens, construction recovery, and cold-load preservation without reminting departed founders. Pending-departure interruption and multi-city combinations remain gaps.",
+      "evidence": [
+        {
+          "commit": "e1d26d9",
+          "artifactPath": "quickstart-housing/e1d26d9/scenario-journal.tsv",
+          "artifactSha256": "bc62caa33cd0edfb0c2a3e1223823bdb6aa04282b028ea2368e15d88bb9f74cd",
+          "artifactBytes": 17972,
+          "verdict": "PASS - two roof departures; same two original citizens retained over repeated passes; functional housing and paid construction after clearing exact obstacles",
+          "scope": "isolated native Quickstart, synthetic water/meals and physical housing obstructions; 17200 ordinary turns; no cold-load or historical-save claim",
+          "historicalScope": true,
+          "inventoryDigest": null,
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "60f11aee323582d52c003e79159e3aeec887398e",
+          "artifactPath": "quickstart-housing/60f11aee/housing-load-result.json",
+          "artifactSha256": "5a5a7025768968965df6f9f94bc1d1b2733b172a5d445435228eadcbb394323b",
+          "artifactBytes": 2970,
+          "verdict": "PASS - two roof departures, repeated two-citizen floor, recovered homes and paid work, real save/cold load and another paid commission",
+          "scope": "seed #43101 marsh/advisor-on; 17200 ordinary turns plus harness handoffs; 400 synthetic real drams, 100 meals, 72 physical obstacles; original citizens and real production work; strict logs and owned stops in both sessions",
+          "historicalScope": true,
+          "inventoryDigest": "43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6",
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "behaviour": "Resident death",
+      "prerequisites": "founded, enrolled resident",
+      "transitions": "death -> recovery",
+      "effects": "roster drop, chronicle",
+      "save_cold_load": "COVERAGE_GAP",
+      "negative": "NATIVE_PASS (veto path)",
+      "driver": "Harness/KingdomRaidDeathNativeProvider.cs, KingdomRaidDeathVetoNativeProvider.cs, KingdomRaidRecoveryDeathNativeProvider.cs",
+      "status": "NATIVE_PASS",
+      "note": "Driver Harness/KingdomRaidDeathNativeProvider.cs (be3f13a); real artefact checksummed and confirmed present. currentDevCoverage=false: that run's own structural census is not the digest of the tree being validated -- content-identity of one provider file is NOT the same claim as whole-inventory identity.",
+      "evidence": [
+        {
+          "commit": "be3f13a",
+          "artifactPath": "taf-raid-death-fixed.nf0IMW/journal-raid-death-native-check.tsv",
+          "artifactSha256": "0aa963cad1ffa65206bbe8c15fb664ee80911a24df51d167a459989b6a3787c7",
+          "artifactBytes": 5442,
+          "verdict": "PASS - all three real deaths/six callbacks, exact unchanged pending authority through final removal, one post-removal activation result, seed #1012029",
+          "scope": "synthetic developer evidence; ordinary play, recovery and save/load stay unsigned",
+          "historicalScope": true,
+          "inventoryDigest": null,
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "behaviour": "Building construction (plot)",
+      "prerequisites": "founded, water+material stock",
+      "transitions": "quote/CanPay/Commission -> Working/PlotWorks",
+      "effects": "job phase, works receipt, ground",
+      "save_cold_load": "NATIVE_PASS at 60f11aee: real save, same two housed survivors, absent departed founders, functional original building and another paid commission",
+      "negative": "COVERAGE_GAP",
+      "driver": "Harness/KingdomQuickstartLifecycleProvider.cs; Harness/KingdomQuickstartHousingRecoveryProvider.cs; Harness/KingdomTeardownNativeProvider.cs",
+      "status": "NATIVE_PASS",
+      "note": "Historical quote/commission evidence is retained below. Native 60f11aee additionally keeps the paid job Working through both two-citizen observations, completes its functional output after removing owned physical obstructions, saves and cold-loads it, then pays for another commission. This is a supplied housing stress scenario, not whole-inventory or ordinary-start acceptance.",
+      "evidence": [
+        {
+          "commit": "3cf2825",
+          "artifactPath": "hotfix142-native.epWuUn/marsh-no-build/scenario-journal.tsv",
+          "artifactSha256": "9b97834fcce2621b35c07d5e698b69f56ddc2633b505f1065439663410db6362",
+          "artifactBytes": 1093,
+          "verdict": "PASS - quote/CanPay/Commission build journal",
+          "scope": "quote/CanPay/Commission legs only",
+          "historicalScope": true,
+          "inventoryDigest": null,
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "3cf2825",
+          "artifactPath": "hotfix142-native.IqS6Jj/results.json",
+          "artifactSha256": "54a85ec9d642406e747e1f36c51677ca042fb4fbbc5374620cf880208ccb029b",
+          "artifactBytes": 11771,
+          "verdict": "PASS - six-pair save/load matrix",
+          "scope": "quote/CanPay/Commission legs only",
+          "historicalScope": true,
+          "inventoryDigest": null,
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "e1d26d9",
+          "artifactPath": "quickstart-housing/e1d26d9/scenario-journal.tsv",
+          "artifactSha256": "bc62caa33cd0edfb0c2a3e1223823bdb6aa04282b028ea2368e15d88bb9f74cd",
+          "artifactBytes": 17972,
+          "verdict": "PASS - two roof departures; same two original citizens retained over repeated passes; functional housing and paid construction after clearing exact obstacles",
+          "scope": "isolated native Quickstart, synthetic water/meals and physical housing obstructions; 17200 ordinary turns; no cold-load or historical-save claim",
+          "historicalScope": true,
+          "inventoryDigest": null,
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "60f11aee323582d52c003e79159e3aeec887398e",
+          "artifactPath": "quickstart-housing/60f11aee/housing-load-result.json",
+          "artifactSha256": "5a5a7025768968965df6f9f94bc1d1b2733b172a5d445435228eadcbb394323b",
+          "artifactBytes": 2970,
+          "verdict": "PASS - two roof departures, repeated two-citizen floor, recovered homes and paid work, real save/cold load and another paid commission",
+          "scope": "seed #43101 marsh/advisor-on; 17200 ordinary turns plus harness handoffs; 400 synthetic real drams, 100 meals, 72 physical obstacles; original citizens and real production work; strict logs and owned stops in both sessions",
+          "historicalScope": true,
+          "inventoryDigest": "43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6",
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "behaviour": "Building teardown/removal",
+      "prerequisites": "functionally-built building",
+      "transitions": "KingdomMaterials.OrderStrike (Growth/KingdomMaterials.08.StrikeOrdering.cs:23) -> removal + exact salvage; two SEQUENCED cases, one gang at a time (bba51c4): fire (1 timber cost, RuntimeData/KingdomBuildings.xml:544-546, zero-salvage boundary) raised and struck first, then larder (3 timber cost, RuntimeData/KingdomBuildings.xml:399-400, positive-salvage) commissioned only once fire reaches Phase 2",
+      "effects": "works object gone, exact material raw-count delta per KingdomMaterialRules.StrikeSalvage (Growth/KingdomMaterialRules.Clearance.cs:211-219): fire expects +0 timber (boundary), larder expects +1 timber (positive), both computed live from KingdomMaterials.CostFor + StrikeSalvagePercent, never hardcoded",
+      "save_cold_load": "COVERAGE_GAP (not wired this pass)",
+      "negative": "NEGATIVE_PASS",
+      "driver": "Harness/KingdomTeardownNativeProvider.cs (teardown-setup/check)",
+      "status": "NATIVE_PASS",
+      "note": "Native b27a26c2 passes both sequenced cases after 16800 real turns. Exact strike receipts must be Complete/Settled, original roots and their city work rows absent, and a repeated strike refused. Two synthetic crew survive without homes; synthetic bills remain disclosed. Unassigned stockpile identity and stale work-row seal failures are retained in docs/QUICKSTART-HOTFIX-PROGRESS.md and separate native archives. No save/cold-load teardown claim.",
+      "evidence": [
+        {
+          "commit": "b27a26c2ecc094c03bd50432fb3f66ed9d7a5b6d",
+          "artifactPath": "teardown/b27a26c2/result.json",
+          "artifactSha256": "e07ecbb562baf57051b41f20bdacc9f22669c06859832ec1f92929d1f31648d3",
+          "artifactBytes": 1384,
+          "verdict": "PASS - both real builds/strikes, exact salvage, completed receipts, current work projection, repeated-strike refusals and strict log",
+          "scope": "seed #43101, synthetic two-person crew and material bills; 16800 ordinary turns; fire zero salvage and larder positive salvage; exact closed profile, 3344 C# inputs, owned stop; save/load untested",
+          "historicalScope": true,
+          "inventoryDigest": "8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8",
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "behaviour": "Changing/replacing buildings (ordinary tier upgrade, non-heart)",
+      "prerequisites": "staged plot, funded",
+      "transitions": "KingdomArchitectureStamper/KingdomUpgrade renovate-expand transitions",
+      "effects": "phase, output identity",
+      "save_cold_load": "COVERAGE_GAP",
+      "negative": "COVERAGE_GAP",
+      "driver": "NONE among the 30 [KingdomScenarioVerbProvider] classes on dev; KingdomUpgradeSourceProvider.cs/KingdomUpgradeStageProvider.cs are the SAVE-SCHEMA migration/downgrade lane (Donor/Reserved/Stage verbs, water-scarcity profile_schema), not gameplay building-tier replacement -- verified by reading their verb names and doc scope",
+      "status": "NONE",
+      "note": "COVERAGE GAP: no driver exercises ordinary (non-heart) building tier replacement; the two Upgrade*Provider classes are a different, unrelated system (save-schema migration)",
+      "evidence": null
+    },
+    {
+      "id": 9,
+      "behaviour": "Heart expansion (rungs 1-4)",
+      "prerequisites": "founded heart",
+      "transitions": "envelope-authority transition (issue #141)",
+      "effects": "rung/plot rect",
+      "save_cold_load": "COVERAGE_GAP",
+      "negative": "COVERAGE_GAP",
+      "driver": "fix lives on fix/issue-141-heart-authority (b1efe18), not merged to dev",
+      "status": "NONE",
+      "note": "GAP pending #141/#148 integration onto dev, not a proven defect -- see review-b1efe18-findings.md",
+      "evidence": null
+    },
+    {
+      "id": 10,
+      "behaviour": "Heart expansion (rung 4->5, arcology)",
+      "prerequisites": "rung 4 heart",
+      "transitions": "TryAuthorizedTransition heart branch (Growth/KingdomArchitectureStamper.Transitions.cs:48-71)",
+      "effects": "n/a (refused before any transition)",
+      "save_cold_load": "n/a",
+      "negative": "n/a",
+      "driver": "NONE",
+      "status": "DEFECT",
+      "note": "Precise basis (issue #144): rung 5 (arcology) shares rung 4's own LotSize/HeartRungEndpointsAdmit tier mapping (both bind Size=\"XL\" in Architecture/KingdomArchitectures-CivicFaith.xml, confirmed at KingdomPlotHeartRules.cs's HeartSizeForRung(4)==HeartSizeForRung(5)==PlotSize.Huge), but Transitions.cs:56's (int)After.LotSize != afterRung equality check demands LotSize's int value equal the rung NUMBER (5), which HeartRungEndpointsAdmit's shared-tier mapping can never satisfy for this one rung pair -- see camp-authority-trace.md Part 3 Section 3 for the full derivation",
+      "evidence": null
+    },
+    {
+      "id": 11,
+      "behaviour": "Raids (contact/launch/death/recovery)",
+      "prerequisites": "founded, defence",
+      "transitions": "contact -> launch -> resolution -> recovery",
+      "effects": "outbox, casualties",
+      "save_cold_load": "COVERAGE_GAP",
+      "negative": "NATIVE_PASS (veto/recovery paths exist)",
+      "driver": "Harness/KingdomRaidContactNativeProvider.cs, KingdomRaidLaunchNativeProvider.cs, KingdomRaidMasterTurnNativeProvider.cs, KingdomRaidRecoveryGuardsNativeProvider.cs, KingdomRaidRecoveryTurnNativeProvider.cs, KingdomRaidRecoveryReturnNativeProvider.cs, KingdomRaidOutboxNativeProvider.cs",
+      "status": "NATIVE_PASS",
+      "note": "Aggregate row spans 5 driver classes; 4 sub-legs (contact, death, recovery-guards, recovery-turn) have a real, checksummed artefact and are kept as NATIVE_PASS evidence, all with currentDevCoverage=false (no cited historical digest equals the current dev digest; none was ancestry-inferred). The launch (taf-native-raid-warning-clean.zqlWbN) and outbox (taf-native-raid.XMFQ5q) sub-legs were removed from the evidence list: neither artefact could be located on any machine checked, so per this round's artifactPath rule they cannot be confirmed and are GAP, not PASS, for this row's aggregate. Full multi-raid/multi-city interaction remains a coverage gap regardless.",
+      "evidence": [
+        {
+          "commit": "be3f13a",
+          "artifactPath": "taf-raid-contact-fixed.Dcjzs3/journal-raid-contact-native-check.tsv",
+          "artifactSha256": "0d0b22b053f8230bb98302a2bf5dbf1a9e0d36635af0b8209317d7e4dec7c8c7",
+          "artifactBytes": 3369,
+          "verdict": "PASS - foreign-zone/restored-contact debit exact, no quarantine, seed native14492",
+          "scope": "synthetic component evidence; ordinary play/save-load untested",
+          "historicalScope": true,
+          "inventoryDigest": null,
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "be3f13a",
+          "artifactPath": "taf-raid-death-fixed.nf0IMW/journal-raid-death-native-check.tsv",
+          "artifactSha256": "0aa963cad1ffa65206bbe8c15fb664ee80911a24df51d167a459989b6a3787c7",
+          "artifactBytes": 5442,
+          "verdict": "PASS - see row 5",
+          "scope": "same as row 5",
+          "historicalScope": true,
+          "inventoryDigest": null,
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "be3f13a",
+          "artifactPath": "taf-raid-recovery-guards-native.6Dnfup/journal-raid-recovery-guards-native-check.tsv",
+          "artifactSha256": "947de39824af5768878f2e93ea2b4df84d0c48fed86d4e47c6c3b1092fe7c911",
+          "artifactBytes": 2825,
+          "verdict": "PASS - controlled native recovery-guard API proof",
+          "scope": "synthetic component evidence",
+          "historicalScope": true,
+          "inventoryDigest": null,
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "be3f13a",
+          "artifactPath": "taf-raid-recovery-turn-native.X0VMU8/journal-raid-recovery-turn-native-check.tsv",
+          "artifactSha256": "58c7ae36ca729f02fd40961ea9d00d2dcb5d8e29075d9855c928d0b87d685023",
+          "artifactBytes": 3228,
+          "verdict": "PASS - real-turn recovery proof",
+          "scope": "synthetic engine-turn coverage, not ordinary play",
+          "historicalScope": true,
+          "inventoryDigest": null,
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "behaviour": "Multiple cities",
+      "prerequisites": "founded seat + second claim",
+      "transitions": "second-city founding",
+      "effects": "ClaimedZones.Count>1",
+      "save_cold_load": "COVERAGE_GAP",
+      "negative": "COVERAGE_GAP",
+      "driver": "NONE found among the 30 [KingdomScenarioVerbProvider] classes on dev",
+      "status": "NONE",
+      "note": "COVERAGE GAP, not a proven defect: every native fixture surveyed founds exactly one city; no failed second-founding transition or production proof of unreachability was found",
+      "evidence": null
+    },
+    {
+      "id": 13,
+      "behaviour": "Stockpile/materials (deposit, overflow, strike salvage)",
+      "prerequisites": "dedicated stockpile",
+      "transitions": "deposit -> overflow -> strike salvage",
+      "effects": "raw census",
+      "save_cold_load": "COVERAGE_GAP",
+      "negative": "NATIVE_PASS (overflow path)",
+      "driver": "Harness/KingdomDepositOverflowNativeProvider.cs (deposit/overflow); this pass's teardown scenario exercises strike-salvage return with an exact computed delta",
+      "status": "NATIVE_PASS",
+      "note": "Driver Harness/KingdomDepositOverflowNativeProvider.cs. Real artefact checksummed and confirmed present. currentDevCoverage=false: no inventory digest was cited for this run in docs/STATUS.md's overflow section (checked), so it cannot be confirmed equal to the digest of the tree being validated -- not inferred from commit content-identity. Strike-salvage leg is row 7, IMPLEMENTED_UNEXECUTED.",
+      "evidence": [
+        {
+          "commit": "6ba1969",
+          "artifactPath": "root-overflow129-integrated-native.CcZZhl/journal-deposit-overflow-native-check.tsv",
+          "artifactSha256": "665d5dda4ad2f91cef6ef306648551a3bff0ceab5fd603385653a79cafd94cc3",
+          "artifactBytes": 5146,
+          "verdict": "PASS - deposit-overflow-native-check, seed #165939435, profile W0JAK2, 4/4 cases",
+          "scope": "synthetic stacks/NeverStack/allocated identities; ordinary reachability, Charter, save/load and release acceptance are not claimed",
+          "historicalScope": true,
+          "inventoryDigest": null,
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "behaviour": "Water (dedication, maintenance)",
+      "prerequisites": "dedicated reservoir",
+      "transitions": "fill -> maintenance cadence",
+      "effects": "volume, departure evidence",
+      "save_cold_load": "COVERAGE_GAP",
+      "negative": "COVERAGE_GAP",
+      "driver": "Harness/KingdomWaterMaintenanceNativeProvider.cs",
+      "status": "EVIDENCE_UNVERIFIED",
+      "note": "Driver Harness/KingdomWaterMaintenanceNativeProvider.cs (dev commit 1a3f6ba, #23). No evidenceDir/artifactRef for a native run of THIS provider was located in docs/STATUS.md within this pass. Do not conflate with the separate profile_schema donor/stage/downgrade proof (water-scarcity-lane-truth memory) -- that is a different migration lane, unverified mapping to this driver. Gap, not a proven defect.",
+      "evidence": null
+    },
+    {
+      "id": 15,
+      "behaviour": "Forage/camp",
+      "prerequisites": "camp ground",
+      "transitions": "forage -> stock",
+      "effects": "raw census",
+      "save_cold_load": "COVERAGE_GAP",
+      "negative": "COVERAGE_GAP",
+      "driver": "NOT on dev: Harness/KingdomForageNativeChecks.cs exists at commit 098d781 (\"test(forage): refuse unobserved ambient plants\") and 3eb169f (\"fix(harness): count forage exhaustion episodes\"), on branches feat/forage-brush-duty / test/forage-native-checks (PR #123/#130 lineage) -- confirmed present in this repo's fetched history, not yet merged to dev",
+      "status": "NONE",
+      "note": "COVERAGE GAP pending merge to dev, NOT unreachable: real native forage work exists off-dev (PR #123/#130 checkpoints); a foreign Brinestalk plant blocking the bounded garden is cited by the coordinator as an open scope note on that lineage, not independently re-verified line-by-line this pass",
+      "evidence": null
+    },
+    {
+      "id": 16,
+      "behaviour": "Travel (present/away)",
+      "prerequisites": "founded, pause",
+      "transitions": "travel out -> pause -> resume",
+      "effects": "continuity receipt",
+      "save_cold_load": "COVERAGE_GAP",
+      "negative": "NATIVE_PASS (pause fault paths exist)",
+      "driver": "Harness/KingdomScenarioTravelProvider.cs, KingdomScenarioPauseController.cs",
+      "status": "EVIDENCE_UNVERIFIED",
+      "note": "Driver Harness/KingdomScenarioTravel.cs / KingdomCity.NativeTravelDemand.cs (dev commits 0c3115a #122, 62fc9c6 #126). docs/STATUS.md:72-78 narrates a native economic-present/away PASS at `53022df` (seed #165939435, profiles mlKgm8/dZxP6D) but cites no evidenceDir or artifactRef -- only \"profile and evidence retained\", which does not meet this pass's typed-evidence bar. Gap, not a proven defect; a real receipt may exist but was not located.",
+      "evidence": null
+    },
+    {
+      "id": 17,
+      "behaviour": "Master settlement plan (resume)",
+      "prerequisites": "paused master",
+      "transitions": "resume verdict",
+      "effects": "SemanticPassActive/resume state, ResumeTick, ResumeApplications",
+      "save_cold_load": "COVERAGE_GAP",
+      "negative": "COVERAGE_GAP",
+      "driver": "Harness/KingdomScenarioPauseController.cs:16 (beta-master-pause verb); resume observed directly at :78-91 (witness.ResumeTick, pause-resumed=, resume-arrival=, resume-applications=)",
+      "status": "EVIDENCE_UNVERIFIED",
+      "note": "Driver Harness/KingdomScenarioPauseController.cs:16,78-91 (dev commit 0c3115a, #122). docs/STATUS.md:762 cites a native PASS (Native11624, seed #1012036, sealed LN1Xkb, evidence taf-master-growth-native.sP00c6/README.md) under heading \"case28d.5\", but I could not confirm within this pass's budget that its source commit is content-identical to the current KingdomScenarioPauseController.cs (unlike rows 1/2/5/6/11/13/18/19 where a git diff was actually run) -- recorded as unverified rather than stretched.",
+      "evidence": null
+    },
+    {
+      "id": 18,
+      "behaviour": "Seal/inheritance (roadless spatial capture)",
+      "prerequisites": "camp, no street connection",
+      "transitions": "seal pending -> capture",
+      "effects": "seal state",
+      "save_cold_load": "COVERAGE_GAP",
+      "negative": "NATIVE_PASS (fail-closed refusal paths)",
+      "driver": "Harness/KingdomSealRoadlessNativeProvider.cs",
+      "status": "NATIVE_PASS",
+      "note": "Driver Harness/KingdomSealRoadlessNativeProvider.cs. Real artefact checksummed and confirmed present. currentDevCoverage=false: no inventory digest was located tied to this exact run in docs/STATUS.md (checked near d9a29c3's diff), so it cannot be confirmed equal to the digest of the tree being validated -- not inferred from bcca3e5's commit ancestry alone.",
+      "evidence": [
+        {
+          "commit": "bcca3e5",
+          "artifactPath": "taf-scenario.H5UoPk/scenario-journal.tsv",
+          "artifactSha256": "0a5a6303b6edd748820fc222ea37e77d9d831c57ad38399f91fd7c64dc83b13c",
+          "artifactBytes": 6084,
+          "verdict": "PASS 7/7 verbs - typed Pending capture unchanged across two real 2400-turn intervals, exactly one pending notice",
+          "scope": "synthetic roadless-camp/daily-capture case; not ordinary-play/save-load/terminal/inheritance/release",
+          "historicalScope": true,
+          "inventoryDigest": null,
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "behaviour": "Subsidence",
+      "prerequisites": "claimed zone, roof debt",
+      "transitions": "rung step -> announcement",
+      "effects": "subsidence receipt",
+      "save_cold_load": "NATIVE_PASS (dedicated save provider exists)",
+      "negative": "COVERAGE_GAP",
+      "driver": "Harness/KingdomSubsidenceNativeProvider.cs, KingdomSubsidenceRungNativeProvider.cs, KingdomSubsidenceRungSaveProvider.cs",
+      "status": "EVIDENCE_UNVERIFIED",
+      "note": "Driver Harness/KingdomSubsidenceNativeProvider.cs etc. Historical receipt cited at 7d331fe (taf-native-subsidence.a9XJXf) but that directory could not be located on any machine checked -- artifactPath cannot be resolved. 7d331fe being a direct dev ancestor is commit reachability, not proof the evidence directory still exists or that its whole-inventory census equals the current dev digest -- corrected per this round's instruction not to infer currentDevCoverage from ancestry. Interrupted-mid-step path remains a coverage gap regardless.",
+      "evidence": null
+    },
+    {
+      "id": 20,
+      "behaviour": "Construction lifecycle on the founded road (quote->paid commission->engine turns->built->save)",
+      "prerequisites": "a founded settlement (founding-first-city profile), a dedicated stockpile, stored water covering the design's cost",
+      "transitions": "lifecycle-open (startup census) -> lifecycle-build (quote/CanPay/real KingdomCommission.Commission) -> advance N (real engine turns via the bounded advance verb) -> lifecycle-grown (job reaches KingdomConstructionPhase.Complete, output stands on its own cell) -> lifecycle-save (real SaveGame)",
+      "effects": "exact physical timber/water debit, a job/receipt identity linking the commission to its output, IsFunctionallyBuilt-equivalent state (KingdomBuilt==1 + design key match on the job's own cell), a real save file with a hashed receipt",
+      "save_cold_load": "see row 22 (separate row: cold-load is a second session)",
+      "negative": "CanPay refusal at lifecycle-build (economy has not yet paid for the design); budget-expiry refusal at lifecycle-grown (turn budget expired before the building stood, job phase named in the refusal)",
+      "driver": "Harness/KingdomQuickstartLifecycleProvider.cs:35-38 (verbs); Harness/KingdomQuickstartLifecycleSteps.cs (Open/Build), KingdomQuickstartLifecycleFinish.cs (Grown/Save); persona Tools/personas/lifecycle-stockpile-native-check.persona; checker Tools/check-quickstart-lifecycle.py",
+      "status": "IMPLEMENTED_UNEXECUTED",
+      "note": "On branch test/longform-reachability (not yet merged to dev), read only reviewed (review-fff8eba-lifecycle-findings.md). Source-pinned only (DevTests/KingdomQuickstartLifecycleContractTests.cs); no native run performed. Cannot be marked covered or PASS until a native evidence id exists.",
+      "evidence": null
+    },
+    {
+      "id": 21,
+      "behaviour": "Construction lifecycle on the Quickstart same-chest road (quickstart-lifecycle <profile> <yes|no>)",
+      "prerequisites": "a Quickstart boot request naming the lifecycle command specifically -- the ONLY command whose RunnerAuthorized() check tolerates a live KingdomScenarioAutoRunner (Harness/KingdomQuickstartBootTest.cs:199-202); quickstart-boot/-save/-build keep their single-line grammar and runner exclusion unchanged",
+      "transitions": "same lifecycle-open/build/grown/save verb chain as row 20, but starting from the Quickstart boot's own starter chest/materials instead of an ordinary founding-first-city dedication",
+      "effects": "same physical/identity effects as row 20, keyed to the Quickstart starter stockpile; every lifecycle row additionally carries a profile stamp (KingdomQuickstartLifecycleSteps.Stamped)",
+      "save_cold_load": "see row 22",
+      "negative": "unbound-stamp refusal (KingdomQuickstartLifecycleSteps.Stamped: \"the launched profile could not be named from its own sealed root\") in addition to row 20's CanPay/budget-expiry refusals",
+      "driver": "Harness/KingdomQuickstartBootRequest.cs:20 (LifecycleVerb=\"quickstart-lifecycle\"), :35,43 (Lifecycle flag/grammar); Tools/scenario_profile.py QUICKSTART_LIFECYCLE_VERB/QUICKSTART_LIFECYCLE_VERBS; checker Tools/check-quickstart-lifecycle.py",
+      "status": "NATIVE_PASS",
+      "note": "All six canyon/marsh/dunes and advisor yes/no combinations pass the complete Quickstart chain at 86c0b5df. All four original citizens occupy completed starter homes and the paid fire finishes after 16800 ordinary turns. Later production differences are the release-version literal and guide text; these receipts retain their exact inventory.",
+      "evidence": [
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/canyon-yes/results.json",
+          "artifactSha256": "8cc20a65465ffd9efe841506eb5b00bdcf9cc9c5e418fb2471017b5718af0e5b",
+          "artifactBytes": 3634,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "canyon-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/canyon-no/results.json",
+          "artifactSha256": "b464d4cfa560d32c1133d4e745f3c3a8b9a28ba82338f8302d721d914571310e",
+          "artifactBytes": 3634,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "canyon-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/marsh-yes/results.json",
+          "artifactSha256": "e9fd3c539513ff687319fc5f4594400b0ca2df72d91c9c67efe9e929d6be8e34",
+          "artifactBytes": 3640,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "marsh-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/marsh-no/results.json",
+          "artifactSha256": "e9e6a54cf5f526524bc27598d0870ae3eba991b57645cf51dae3e0fb50d433f5",
+          "artifactBytes": 3639,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "marsh-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/dunes-yes/results.json",
+          "artifactSha256": "deaab23bfc39ee6b83bedabe516b024243a1957d0c7f2d1d15507b83bbe7eaf3",
+          "artifactBytes": 3633,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "dunes-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/dunes-no/results.json",
+          "artifactSha256": "adeb70bcf5f5c1629609462de6d8823ede8489523e1d8576a5e6255a94740e9d",
+          "artifactBytes": 3633,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "dunes-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "behaviour": "Construction lifecycle save/cold-load as a second session",
+      "prerequisites": "a completed lifecycle-save leg (row 20 or 21) producing a real save file under the taf-lifecycle-save-v1 snapshot prefix",
+      "transitions": "a second process imports the save (KingdomScenarioLoadEntry.cs LifecycleSnapshot dispatch) and re-proves realm/city/plot/building/stockpile/water identities strictly BY REFERENCE against the loaded game -- nothing is restored from the witness, every fact is re-read live",
+      "effects": "same GameId/RealmId/city-owner/plot-cell/building-id/design-key/stockpile-timber/stored-water as the saved session, each read fresh from the cold-loaded world, not copied from the witness snapshot",
+      "save_cold_load": "this row IS the save/cold-load leg",
+      "negative": "any identity mismatch (GameId/RealmId/city/zone/building/design-key/timber/water) refuses at Compare(); unbound-stamp refusal also applies",
+      "driver": "Harness/KingdomQuickstartLifecycleLoad.cs::VerifyLoaded/Compare; Harness/KingdomScenarioLoadEntry.cs (LifecycleSnapshot, taf-lifecycle-save-v1: prefix); checker Tools/check-quickstart-lifecycle.py LOAD_ROWS/cold-load link",
+      "status": "NATIVE_PASS",
+      "note": "All six source sessions wrote real saves; separate cold-load sessions preserved original citizen, home, building, store and resource identity/accounting. Strict Player.log checks pass in all twelve sessions. Evidence is bound to 86c0b5df, not every current feature.",
+      "evidence": [
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/canyon-yes/results.json",
+          "artifactSha256": "8cc20a65465ffd9efe841506eb5b00bdcf9cc9c5e418fb2471017b5718af0e5b",
+          "artifactBytes": 3634,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "canyon-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/canyon-no/results.json",
+          "artifactSha256": "b464d4cfa560d32c1133d4e745f3c3a8b9a28ba82338f8302d721d914571310e",
+          "artifactBytes": 3634,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "canyon-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/marsh-yes/results.json",
+          "artifactSha256": "e9fd3c539513ff687319fc5f4594400b0ca2df72d91c9c67efe9e929d6be8e34",
+          "artifactBytes": 3640,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "marsh-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/marsh-no/results.json",
+          "artifactSha256": "e9e6a54cf5f526524bc27598d0870ae3eba991b57645cf51dae3e0fb50d433f5",
+          "artifactBytes": 3639,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "marsh-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/dunes-yes/results.json",
+          "artifactSha256": "deaab23bfc39ee6b83bedabe516b024243a1957d0c7f2d1d15507b83bbe7eaf3",
+          "artifactBytes": 3633,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "dunes-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/dunes-no/results.json",
+          "artifactSha256": "adeb70bcf5f5c1629609462de6d8823ede8489523e1d8576a5e6255a94740e9d",
+          "artifactBytes": 3633,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "dunes-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "behaviour": "Construction lifecycle next-action after cold-load",
+      "prerequisites": "a successful cold-load (row 22) of a game carrying a completed lifecycle job",
+      "transitions": "a further real quote/CanPay/KingdomCommission.Commission on the loaded game, minting a genuinely NEW job distinct from the completed one",
+      "effects": "a new job id, a new physical timber/water debit, exact single-timber debit and exact drams debit matching the design's live cost -- computed on the loaded game's own state, never copied forward",
+      "save_cold_load": "runs strictly after row 22's cold-load; not itself a save/load leg",
+      "negative": "job-id reuse refusal (Harness/KingdomQuickstartLifecycleLoad.cs::Act: \"the next action reported the completed job's own identity; a further action must mint its own job\")",
+      "driver": "Harness/KingdomQuickstartLifecycleLoad.cs::Next/Act; checker Tools/check-quickstart-lifecycle.py NEXT_ROWS/next-action link",
+      "status": "NATIVE_PASS",
+      "note": "All six cold-load sessions commissioned a distinct new job and paid its live timber/water cost. The exact completed building remained functional. This proves commission admission and debit; completion of the second job is outside this chain.",
+      "evidence": [
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/canyon-yes/results.json",
+          "artifactSha256": "8cc20a65465ffd9efe841506eb5b00bdcf9cc9c5e418fb2471017b5718af0e5b",
+          "artifactBytes": 3634,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "canyon-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/canyon-no/results.json",
+          "artifactSha256": "b464d4cfa560d32c1133d4e745f3c3a8b9a28ba82338f8302d721d914571310e",
+          "artifactBytes": 3634,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "canyon-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/marsh-yes/results.json",
+          "artifactSha256": "e9fd3c539513ff687319fc5f4594400b0ca2df72d91c9c67efe9e929d6be8e34",
+          "artifactBytes": 3640,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "marsh-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/marsh-no/results.json",
+          "artifactSha256": "e9e6a54cf5f526524bc27598d0870ae3eba991b57645cf51dae3e0fb50d433f5",
+          "artifactBytes": 3639,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "marsh-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/dunes-yes/results.json",
+          "artifactSha256": "deaab23bfc39ee6b83bedabe516b024243a1957d0c7f2d1d15507b83bbe7eaf3",
+          "artifactBytes": 3633,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "dunes-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/dunes-no/results.json",
+          "artifactSha256": "adeb70bcf5f5c1629609462de6d8823ede8489523e1d8576a5e6255a94740e9d",
+          "artifactBytes": 3633,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "dunes-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "behaviour": "Housing shortage and workforce recovery",
+      "prerequisites": "genuine default Quickstart; four founders; two physically obstructed starter shelter plots; explicit extra provisions isolate roof pressure",
+      "transitions": "roof warnings -> two voluntary departures -> repeated two-citizen floor -> clear exact obstacles -> usable homes and completed paid work",
+      "effects": "physical citizen identities, living roll, removed departed bodies, bed census, home assignments and paid construction output",
+      "save_cold_load": "NATIVE_PASS at 60f11aee: real save, same two housed survivors, absent departed founders, functional original building and another paid commission",
+      "negative": "blocked shelters provide zero beds; missing/corrupt resident rows refuse; unrelated departure causes refuse",
+      "driver": "Harness/KingdomQuickstartHousingRecoveryProvider.cs; Tools/personas/quickstart-housing-recovery.persona; Harness/KingdomQuickstartHousingLoad.cs; Tools/personas/quickstart-housing-recovery-save.persona",
+      "status": "NATIVE_PASS",
+      "note": "Native 60f11aee passes the strengthened unfinished-work condition, two repeated zero-bed retention checks, usable homes/paid completion, real save and cold load with identical survivors and absent departed founders, then another paid commission. Logs and owned stops pass. Multi-city, interrupted-departure and condemned-home combinations remain gaps.",
+      "evidence": [
+        {
+          "commit": "e1d26d9",
+          "artifactPath": "quickstart-housing/e1d26d9/scenario-journal.tsv",
+          "artifactSha256": "bc62caa33cd0edfb0c2a3e1223823bdb6aa04282b028ea2368e15d88bb9f74cd",
+          "artifactBytes": 17972,
+          "verdict": "PASS - two roof departures; same two original citizens retained over repeated passes; functional housing and paid construction after clearing exact obstacles",
+          "scope": "isolated native Quickstart, synthetic water/meals and physical housing obstructions; 17200 ordinary turns; no cold-load or historical-save claim",
+          "historicalScope": true,
+          "inventoryDigest": null,
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "60f11aee323582d52c003e79159e3aeec887398e",
+          "artifactPath": "quickstart-housing/60f11aee/housing-load-result.json",
+          "artifactSha256": "5a5a7025768968965df6f9f94bc1d1b2733b172a5d445435228eadcbb394323b",
+          "artifactBytes": 2970,
+          "verdict": "PASS - two roof departures, repeated two-citizen floor, recovered homes and paid work, real save/cold load and another paid commission",
+          "scope": "seed #43101 marsh/advisor-on; 17200 ordinary turns plus harness handoffs; 400 synthetic real drams, 100 meals, 72 physical obstacles; original citizens and real production work; strict logs and owned stops in both sessions",
+          "historicalScope": true,
+          "inventoryDigest": "43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6",
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "behaviour": "Public 0.3.3 Quickstart fresh-save preservation under a 0.3.4 reader",
+      "prerequisites": "retained genuine public 0.3.3 fresh marsh/advisor-on save; exact stopped source, closed profile, code/content hashes and successful fresh-save journal",
+      "transitions": "old save copied unchanged -> fresh sealed current reader -> preactivation and post-load physical verification",
+      "effects": "same GameID, heart, stocks and object IDs; original 24-dram grant; terminal bootstrap is not replayed; no retroactive founders or refill",
+      "save_cold_load": "NATIVE_PASS for the exact retained fresh save; arbitrary historical saves and later construction progression remain untested",
+      "negative": "malformed/wrong source, game, snapshot, quantity and noncanonical marker inputs refuse in pure observer tests; native malformed-marker injection not performed",
+      "driver": "Tools/prepare-quickstart-033-upgrade.py; Harness/KingdomQuickstartHistoricalGrant.cs; Harness/KingdomQuickstartSaveState.cs; Harness/KingdomQuickstartLoadTest.cs",
+      "status": "NATIVE_PASS",
+      "note": "The old save remains unchanged. The first attempt exposed a current-grant assumption in the harness; the corrected source-bound observer preserves the old quantity without changing production grants. Strict source/reader logs and owned reader shutdown pass.",
+      "evidence": [
+        {
+          "commit": "5596328501ae8878cb88b4da58c69b881f2c7593",
+          "artifactPath": "quickstart-upgrade/55963285/result.json",
+          "artifactSha256": "3435132540077dc0986cdbedc24d2ad70482120d55ea0fe40776eb80a4bec889",
+          "artifactBytes": 525,
+          "verdict": "PASS - old public fresh-save identity, stock and heart preservation before activation and after load; no bootstrap replay",
+          "scope": "marsh/advisor-on seed #43101; public source e96b50e1c7ce698ed05749963d4fb885ab42d054; 0.3.4 reader; old-save construction progression untested",
+          "historicalScope": true,
+          "inventoryDigest": "73c87caced09ccdffc714a2475c170679e6e37a68b0fe42e92566d98c18d2907",
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 26,
+      "behaviour": "Physical first-guest admission and citizenship",
+      "prerequisites": "real unanswered first-guest opportunity and loaded held ground",
+      "transitions": "Charter admission -> exact hosted body -> body interaction -> explicit citizenship",
+      "effects": "guest is interactable but not a citizen before explicit welcome; completed welcome enrolls exact body once",
+      "save_cold_load": "COVERAGE_GAP",
+      "negative": "NEGATIVE_PASS",
+      "driver": "Harness/KingdomGuestActionsNativeProvider.cs; guest-actions-native-check and guest-actions-quickstart-native-check",
+      "status": "NATIVE_PASS",
+      "note": "Real production correspondence and physical body choices with scripted exact menu input. Native d9d0f4b4 uses genuine Quickstart: four original founders, six completed beds, one uncreeded guest welcomed once, stale interaction refused and five citizens after another 1200 turns. Native 895e700e uses disclosed synthetic founding/water and proves two no-bed welcomes preserve the same hosted guest and supplies. Later refusal prose and scoped reconciliation changes are separate from that older negative inventory. An earlier first-day founder-count loss remains an unexplained failed precondition. No rendered UI, all-seed survival or guest save/load claim.",
+      "evidence": [
+        {
+          "commit": "895e700e3f459d859bb3985b7427f36bfddfa571",
+          "artifactPath": "guest-actions/895e700e/guest-actions-native-check/result.json",
+          "artifactSha256": "8296bd2eecffe7f5b5df059ca1332c9ddd486e5713b2cd4da33bb51199450279",
+          "artifactBytes": 1408,
+          "verdict": "PASS - two no-bed welcomes preserve exact guest, interaction, water and population",
+          "scope": "6000 real turns; synthetic camp and 64 drams; exact production correspondence and body actions; no rendered UI or save/load",
+          "historicalScope": true,
+          "inventoryDigest": "d15228c9b93d402b534712ec917baf59026ff68220aec2d175c0d8dbf8fba55a",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "d9d0f4b4c3fd7918cf023d189bccb7ac7781bfa0",
+          "artifactPath": "guest-actions/d9d0f4b4/guest-actions-quickstart-native-check/result.json",
+          "artifactSha256": "83ee863b3885fc5abdfbf7ceb5e0a1b95b85209452cb8fb8249fe01fb2f75740",
+          "artifactBytes": 1834,
+          "verdict": "PASS - exact fifth citizen and next settlement day after genuine Quickstart housing",
+          "scope": "8400 then 1200 real turns; four original founders, six beds, uncreeded guest, duplicate interaction refused; scripted menu input; no guest save/load",
+          "historicalScope": true,
+          "inventoryDigest": "a5e00bd45a1122917e6b164ad98373cdcc043e6c681790495086ee0a2e870182",
+          "currentDevCoverage": false
+        }
+      ]
+    }
+  ],
+  "combinations": [
+    {
+      "id": "C1",
+      "name": "construction + raid interruption",
+      "rows": [
+        6,
+        11
+      ],
+      "coupling": "Both a settlement's active construction commission and a raid's contact/compensation draw an exact water reservation from the SAME survey via KingdomWaterDebit.ReserveExactStore/ReserveExactWater: construction at Growth/KingdomCommission.cs:205 (ReserveExactWater) and Growth/KingdomConstruction.Funding.cs:68, raid contact at Raids/KingdomRaids.06.AttackResolutionAndOutbox.cs:107-108 (ReserveExactStore). KingdomWaterDebit.cs:156 is the shared reservation authority both lanes call into.",
+      "prerequisites": "a founded settlement with an in-progress construction commission (Working phase, unfinished) AND a raid contact/attack resolved against the same zone within the same interval",
+      "invariants": "conservation of water: sum of all outstanding reservations against the survey never exceeds the real store census; a raid's compensation debit and a construction job's funding debit against the same store never double-reserve the same drams; custody by reference (the construction job's own Water reservation object is never silently reused or mutated by the raid's debit path)",
+      "seed_turn_matrix": "one fixed seed; 2 turn-order variants (raid resolves before vs after the construction job's daily funding poll in the same tick window); no further seed variation -- this is a two-cell matrix, not a sweep",
+      "expected_failure_rows": "a torn/negative water census after both debits settle; a construction job stuck Funded with a Water reservation object no longer in Reserved state but no journaled cause",
+      "reusable_seams": "Harness/KingdomTeardownNativeProvider.cs (commission half) + Harness/KingdomRaidContactNativeProvider.cs (contact half) -- no existing seam runs both together",
+      "status": "NONE",
+      "evidence": null
+    },
+    {
+      "id": "C2",
+      "name": "multiple cities + travel + save/load",
+      "rows": [
+        12,
+        16
+      ],
+      "coupling": "CORRECTED: production has ONE realm KingdomSystem, not one System per city. A second 'city' is a second, non-seat KingdomSettlement row in System.SettlementTopology (Core/KingdomSystem.z08.SettlementTopology.cs:22, NonSeatSettlements()), each carrying its own KingdomCityBook with its own SettlementId (Core/KingdomSystem.z25.IdentityNormalization.cs:167-178, City.SettlementId assigned per-row), and its own claimed zone (Core/KingdomSystem.z08.Settlements.cs:61, TrySeat/FindNonSeatSettlementByZone). Travel's loaded-index scan is per-zone (Harness/KingdomCity.NativeTravelDemand.cs:38). The shared authority is this single System's settlement-topology registry each non-seat row claims a slot in -- no driver currently founds a second settlement row at all (row 12, NONE), so this coupling is untested even at the single-behaviour level.",
+      "prerequisites": "two founded settlements in the same save AND at least one travel (away/return) cycle for a resident of one of them, followed by a save/cold-load",
+      "invariants": "settlement isolation WITHIN the one System: two non-seat KingdomSettlement rows carry distinct SettlementId/City books and distinct claimed zones; a travel scan against settlement A's zone never reads or credits settlement B's stockpile/roster; save/cold-load reproduces every settlement row's SettlementId/City/ClaimedZones distinctly (no merged or aliased KingdomSettlement row after reload)",
+      "seed_turn_matrix": "one fixed seed; single scenario shape (found city A, found city B, travel one resident of A away and back, save, cold-load, re-assert both cities' rosters/stock unchanged) -- not a sweep, a single bounded chain",
+      "expected_failure_rows": "a travel scan against settlement A observing or crediting settlement B's objects; a cold-load that merges two KingdomSettlement rows' SettlementId/City books or loses one",
+      "reusable_seams": "NONE -- no existing driver adds a second KingdomSettlement row to the realm System, so this chain has no reachable starting seam at all",
+      "status": "NONE",
+      "evidence": null
+    },
+    {
+      "id": "C3",
+      "name": "heart upgrade + replacement/teardown",
+      "rows": [
+        9,
+        10,
+        8,
+        7
+      ],
+      "coupling": "The heart's own upgrade chain and an ordinary building's teardown/replacement chain both go through the SAME successor/removal-proof authority, r_KingdomScaffold: HasPendingImprovementSuccessorAuthority gates IsFunctionallyBuilt (Growth/KingdomUpgrade.09.RegistryAndIdentity.cs:165) exactly as HasRemovalProof/IsExactSuccessor gate ordinary handover removal (Growth/KingdomUpgrade.25.HandoverRemoval.cs:56,75,90-100).",
+      "prerequisites": "a heart at rung 1-4 (gap, #141/#148) mid-upgrade AND an ordinary building on the same plot/lot queued for OrderStrike or a tier-replace in the same interval",
+      "invariants": "only one successor authority claim exists per subject at a time (a heart upgrade in flight and an ordinary strike on the same lot never both hold r_KingdomScaffold successor state); a struck ordinary building's removal never clears or corrupts the heart's own pending-successor marker",
+      "seed_turn_matrix": "one fixed seed; single ordering case (heart upgrade staged, then teardown ordered on an adjacent plot before the heart upgrade completes) -- no sweep",
+      "expected_failure_rows": "a heart upgrade that silently completes or stalls because an unrelated teardown cleared a shared scaffold marker; a teardown that refuses because it misreads the heart's own pending marker as its own",
+      "reusable_seams": "Harness/KingdomTeardownNativeProvider.cs (teardown half); NONE for the heart-upgrade half (rows 9/10 have no driver at all)",
+      "status": "NONE",
+      "evidence": null
+    },
+    {
+      "id": "C4",
+      "name": "NPC join/leave + water/food shortage",
+      "rows": [
+        2,
+        4,
+        14
+      ],
+      "coupling": "Arrival (Growth/KingdomFirstGuestRuntime.cs, gated by Experience/KingdomGrowthFirstGuestRules.Choices.cs) and departure capacity (Growth/KingdomResidentDepartureRuntime.Capacity.cs, KingdomSystem.ResidentDepartureCapacityWarnings) both key off the settlement's water census read at Core/KingdomReportsPeople.cs:43 (KingdomGrowth.CountStoredWater), the same census Growth/KingdomCommission.cs:205 draws down for construction. NOTE: the exact conditional that denies/motivates arrival or departure from a shortage reading was not traced line-by-line this pass -- the coupling is the shared census, not a confirmed shared branch; treat prerequisites below as approximate.",
+      "prerequisites": "a settlement at or below its water/food shortage threshold AND a pending first-guest candidate AND (row 4 has no driver) no way to independently force a departure attempt in the same window",
+      "invariants": "conservation of water/food: an arrival's dedication and a departure's capacity bookkeeping never double-count or double-release the same stock; a shortage state is read consistently by both lanes in the same tick (no stale read on one side and fresh on the other)",
+      "seed_turn_matrix": "one fixed seed; single scenario shape once row 4 gets a driver -- currently UNIMPLEMENTED/UNEXECUTED (driver NONE), not product-unreachable: no failed transition or production proof of unreachability exists for resident departure, only an absent driver",
+      "expected_failure_rows": "N/A -- unreachable until row 4 has a driver; recorded as backlog shape only",
+      "reusable_seams": "NONE -- row 4 has no driver to build this chain on",
+      "status": "NONE",
+      "evidence": null
+    },
+    {
+      "id": "C5",
+      "name": "stockpile/materials + construction (shared store conservation)",
+      "rows": [
+        13,
+        6
+      ],
+      "coupling": "KingdomCommission.CanPay reads the exact same dedicated stockpile tally that OrderStrike later debits for salvage: both go through Growth/KingdomMaterials.05.StockpileAndPaymentGates.cs's stockpile registry, and Growth/KingdomCommission.cs:167 constructs its claim from KingdomMaterials.CostFor(entry.Key) against the same store the teardown fixture's OrderStrike (Growth/KingdomMaterials.08.StrikeOrdering.cs:23) draws salvage back into.",
+      "prerequisites": "a dedicated stockpile funding one commission while a second, already-built commission on the same store is struck for salvage in the same interval",
+      "invariants": "conservation of materials: the store's raw census after both the new commission's debit and the struck building's salvage credit equals the arithmetic sum of the two independently-computed deltas -- no interleaving artifact credits or loses units",
+      "seed_turn_matrix": "one fixed seed; single interleaving case (commission B's funding debit lands in the same tick as building A's strike-salvage credit) -- no sweep",
+      "expected_failure_rows": "a store census that differs from the two independently computed deltas summed; a commission that reads a stale pre-strike census and over/under-commits",
+      "reusable_seams": "Harness/KingdomTeardownNativeProvider.cs already commissions+strikes one building on a dedicated store -- extending it with a second concurrent commission on the SAME store is the cheapest path to this chain",
+      "status": "NONE",
+      "evidence": null
+    },
+    {
+      "id": "C6",
+      "name": "founding + multiple settlements (registry isolation, single System)",
+      "rows": [
+        1,
+        12
+      ],
+      "coupling": "CORRECTED: one realm KingdomSystem holds every settlement. Founding claims the SEAT slot (Core/KingdomSystem.z25.IdentityNormalization.cs:167-172, City.SettlementId on the seat City); a second settlement is a NEW non-seat KingdomSettlement row added to System.SettlementTopology (Core/KingdomSystem.z08.SettlementTopology.cs:22) with its own distinct SettlementId (z25.IdentityNormalization.cs:173-178, per-row City.SettlementId) and must claim a distinct zone (z08.Settlements.cs:61 TrySeat requires the zone not already in ClaimedZones). The shared authority is this ONE System's settlement-topology registry each row claims a slot in -- not a second System instance.",
+      "prerequisites": "one already-founded settlement AND a second founding attempt in the same save",
+      "invariants": "settlement isolation by reference WITHIN the single System: a second settlement's KingdomSettlement/City/SettlementId are a distinct object/value from the seat's; no shared mutable field (ledger, stockpile registry, roster) is aliased between seat and non-seat rows, or between two non-seat rows",
+      "seed_turn_matrix": "one fixed seed; single scenario (found the seat, then add a second KingdomSettlement row in the same System, assert both rows' SettlementId/City/roster/stock independent) -- no sweep",
+      "expected_failure_rows": "a second settlement row that silently reuses or mutates the seat's SettlementId/City instance; a shared ledger/stockpile reference between seat and non-seat rows, or between two non-seat rows",
+      "reusable_seams": "Harness/KingdomNativeCampFounding.Found founds the ONE realm System's seat only; adding a second KingdomSettlement row to the same System's SettlementTopology has no existing harness seam -- NONE found that exercises this",
+      "status": "NONE",
+      "evidence": null
+    },
+    {
+      "id": "C7",
+      "name": "Quickstart founders + housing shortage + departures + construction recovery",
+      "rows": [
+        3,
+        4,
+        6,
+        24
+      ],
+      "coupling": "The same four original residents supply labour and need homes; housing refusal triggers departures while construction still needs a workforce.",
+      "prerequisites": "Genuine Quickstart, physical obstructions on both starter shelters and the paid plot, explicit provisions to isolate housing pressure.",
+      "invariants": "Two exact citizens remain through repeated roof-departure passes; those same identities have real homes after unblocking; paid work has a functional output with its original receipt. Cold load preserves survivor identities, homes and absent departed founders; another commission pays normally.",
+      "seed_turn_matrix": "Native 60f11aee, seed #43101, marsh/advisor-on, 10000 + 2400 + 4800 ordinary turns plus handoffs; real save, separate cold load and next paid action. Historical e1d26d9 source-only evidence retained.",
+      "expected_failure_rows": "housing-retained refuses below-floor or changed survivors, unrelated departure causes, unexpected beds or lost obstacles; housing-recovered refuses missing homes or incomplete paid work.",
+      "reusable_seams": "Tools/personas/quickstart-housing-recovery-save.persona; exact startup stockpile binding; unfinished paid work at repeated shortage observations; dedicated housing load witness.",
+      "status": "NATIVE_PASS",
+      "evidence": [
+        {
+          "commit": "e1d26d9",
+          "artifactPath": "quickstart-housing/e1d26d9/scenario-journal.tsv",
+          "artifactSha256": "bc62caa33cd0edfb0c2a3e1223823bdb6aa04282b028ea2368e15d88bb9f74cd",
+          "artifactBytes": 17972,
+          "verdict": "PASS - two roof departures; same two original citizens retained over repeated passes; functional housing and paid construction after clearing exact obstacles",
+          "scope": "isolated native Quickstart, synthetic water/meals and physical housing obstructions; 17200 ordinary turns; no cold-load or historical-save claim",
+          "historicalScope": true,
+          "inventoryDigest": null,
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "60f11aee323582d52c003e79159e3aeec887398e",
+          "artifactPath": "quickstart-housing/60f11aee/housing-load-result.json",
+          "artifactSha256": "5a5a7025768968965df6f9f94bc1d1b2733b172a5d445435228eadcbb394323b",
+          "artifactBytes": 2970,
+          "verdict": "PASS - two roof departures, repeated two-citizen floor, recovered homes and paid work, real save/cold load and another paid commission",
+          "scope": "seed #43101 marsh/advisor-on; 17200 ordinary turns plus harness handoffs; 400 synthetic real drams, 100 meals, 72 physical obstacles; original citizens and real production work; strict logs and owned stops in both sessions",
+          "historicalScope": true,
+          "inventoryDigest": "43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6",
+          "currentDevCoverage": false
+        }
+      ]
+    }
+  ]
+}

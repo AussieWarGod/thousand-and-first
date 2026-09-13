@@ -1,11 +1,53 @@
 # Brief-to-implementation audit
 
-## Current stock-operation hotfix census — 2026-09-10
+## Retained combined heart candidate before surveyed-ingress draft — 2026-09-11
 
-**3069** production C# files, 435,617 physical lines, 1430 direct-XRL, zero cap failures.
-3100 cold-install files. Scope-only ad0dd90: four compile profiles and full Taf 14,067
-zero skips passed; combined scope/identity/version gates pending;
-native commissioning remains open. Exact-inventory source review is current; see docs/STATUS.md.
+Current draft census/evidence is in docs/STATUS.md; the figures below describe its predecessor.
+
+**3098** production C# files; 440,044 physical lines; 1446 direct-XRL files; zero cap failures;
+3129 cold-install files. Inventory `fba0d595a8b2c29876f3f74eae29914a9595d85182831f2ceddb5b44d51dfdc0`.
+#141/#144/#139/#137 combined over dev with the 0.3.3 backmerge. Compile, native and semantic
+review are owed; old counts below are retained, not current acceptance. Public0.3.3 finalized.
+
+## Retained camp integration (#107 / #132 / #137) — 2026-09-10
+
+Integrated through dev `bcca3e5`; compile/audit and main14341/portable5491 pass, zero managed
+skips; native pending. Census3079/437201/1434,
+zero cap failures; inventory `fba0d595a8b2c29876f3f74eae29914a9595d85182831f2ceddb5b44d51dfdc0`.
+Earlier evidence below remains bound to its named checkpoints.
+
+## Retained dev hotfix backmerge — 2026-09-11
+
+**3080** production C# files; 437,399 physical lines; 1435 direct-XRL files; zero at or above 300 lines;
+3111 cold-install files. Inventory `6ebc095bd595e636c48079ba5c41c0cb3bb92f3af7741d99b05eeb8b81acc78d`.
+Combined-tree gates pending; isolated main hotfix native evidence does not sign dev features.
+The retained 0.3.3 semantic review binds main only, not this combined inventory.
+See docs/STATUS.md for scoped release evidence. Public Workshop remains 0.3.2.
+
+## Retained roadless seal census (#131) — 2026-09-10
+
+**3082** production C# files, 437,405 physical lines, 1437 direct-XRL, zero cap failures;
+3113 cold-install files. Inventory `40af1139cc9336140aca90a5db81c80aefb060a45635d57766b560c34c1753e4`.
+Four compile modes, audit, main 14,318/portable 5,470 tests pass (managed zero skips).
+Roadless-camp native passes at `0cfd8e7` (bounded scope in docs/STATUS.md). No release approval inferred.
+
+## Retained Kingdom Quickstart founding-cohort census — 2026-09-10
+
+**3078** production C# files, 437,114 physical lines, 1434 direct-XRL, zero cap failures;
+3109 generated cold-install files. Exact digest
+`e1ddecb76e357905d90bbc40ad8414b68efc38f2b532d19ec61d2df4a5053ce9`.
+Ten added sources (the quickstart rules' founders partial, the bootstrap receipt partial split out
+of the bootstrap, the three bootstrap founders partials, and the founder origin accounting's models,
+codec, host seam, engine and adapter) and ten modified, over the deposit
+custody census retained below. Structure, doc freshness and the Tools suite (627 tests) pass, the
+engine-free suites pass 14,147 main / 5,301 Portable with zero skips, and all four compile modes are
+clean under the canonical gate — staged baseline (3074), staged compatibility (3078),
+dev-harness baseline (3241), dev-harness compatibility (3245). Forty-one guard mutations were run
+against the new rules; thirty-six were caught by a failing case and five are documented, each with
+the guard that refuses its case first named. The identity filter and the strict encoder cover each
+other; removing both fails five cases. No native run, ordinary-play acceptance or
+exact-inventory human semantic review binds this digest, and the six-profile Quickstart boot matrix
+is owed before merge.
 
 ## Retained stockpile deposit custody census — 2026-09-09
 

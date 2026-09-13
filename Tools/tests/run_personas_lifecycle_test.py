@@ -208,6 +208,43 @@ class PersonaRunnerLifecycleTest(unittest.TestCase):
         with self.report.open(encoding="utf-8", newline="") as source:
             return list(csv.DictReader(source, delimiter="\t"))
 
+    def install_reload_fixture(self, exit_code=0):
+        (self.tools / "personas" / "reload.persona").write_text(
+            "REQUEST=founding-first-city\nSCRIPT=reload-descendant quickstart marsh yes\n"
+            "EXPECT=RELOAD-COMPLETE\n", encoding="utf-8")
+        (self.tools / "run-persona-reload.py").write_text(
+            "import json, os, pathlib, sys\n"
+            "root = pathlib.Path(os.environ['LIFECYCLE_FIXTURE'])\n"
+            "(root / 'reload-args.json').write_text(json.dumps(sys.argv[1:]))\n"
+            "print(json.dumps({'verdict': 'FIXTURE', 'ordinaryAcceptance': False}))\n"
+            "raise SystemExit(" + str(exit_code) + ")\n", encoding="utf-8")
+
+    def test_reload_route_passes_exact_arguments_without_normal_launch(self):
+        self.install_reload_fixture()
+        result = self.run_cli(names=("reload",))
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertEqual("PASS", self.rows()[0]["verdict"])
+        self.assertEqual(json.loads((self.base / "reload-args.json").read_text()),
+                         [str(self.tools / "personas" / "reload.persona"),
+                          "--game", str(self.game), "--report-dir", str(self.report.parent)])
+        self.assertEqual([], self.events("launch"))
+        self.assertEqual([], self.events("stop"))
+
+    def test_reload_failure_blocks_following_normal_persona(self):
+        self.install_reload_fixture(exit_code=1)
+        result = self.run_cli(names=("reload", "alpha"))
+        self.assertNotEqual(0, result.returncode)
+        self.assertEqual([("reload", "FAIL")], [(row["persona"], row["verdict"]) for row in self.rows()])
+        self.assertEqual([], self.events("launch"))
+        self.assertEqual([], self.events("stop"))
+
+    def test_prior_ownership_failure_blocks_reload_helper(self):
+        self.install_reload_fixture()
+        result = self.run_cli(mode="missing_receipt", names=("alpha", "reload"))
+        self.assertNotEqual(0, result.returncode)
+        self.assertFalse((self.base / "reload-args.json").exists())
+        self.assertEqual([("alpha", "FAIL")], [(row["persona"], row["verdict"]) for row in self.rows()])
+
     def assert_scoped_calls(self):
         launched = {entry["root"] for entry in self.events("launch")}
         for entry in self.events("stop"):

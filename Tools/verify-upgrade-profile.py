@@ -18,7 +18,7 @@ import scenario_profile
 from upgrade_profile_inputs import CONFIG, OLD_PIN, SHA, local_inputs, parse_config, require, sha
 from upgrade_profile_state import (authenticate_source, capture, capture_stage, fs, inventory,
                                    native, native_plan, windows)
-from upgrade_profile_witnesses import diagnostics
+from upgrade_profile_witnesses import diagnostics, label_retained
 
 _spec = importlib.util.spec_from_file_location("taf_upgrade_host", Path(__file__).with_name("prepare-upgrade-profile.py"))
 assert _spec and _spec.loader
@@ -134,8 +134,10 @@ def verify(args) -> str:
     log_hash = host.clean_log(args.root)
     raw_log = fs.read_bytes(args.root / "Player.log", 64 * 1024**2)
     # TAF-only contract (upgrade_profile_witnesses.diagnostics), same as host.clean_log() above:
-    # only a MODERROR/MODWARN naming The Thousand and First ever refuses here. A third party's
-    # own MODWARN/MODERROR is retained below and folded into the verdict, never fatal on its own.
+    # only a MODERROR/MODWARN naming The Thousand and First ever refuses here. Any other
+    # diagnostic-shaped line -- ours but non-fatal by disposition (e.g. a "[TAF] ... refused"
+    # line), or a genuine third party's -- is retained below and folded into the verdict, never
+    # fatal on its own.
     retained = diagnostics(raw_log)
     if config["mode"] == "upgrade":
         request = extra["scenario-load.txt"].decode("ascii").split("\n")
@@ -165,8 +167,7 @@ def verify(args) -> str:
         require(capture_stage(args.source, after_config, after_state) == stage_witness,
                 "retained native stage capture changed during terminal proof")
     require(fs.digest(args.root / "Player.log") == log_hash, "terminal native log changed")
-    if retained:
-        verdict += "; retained non-TAF diagnostics: " + " | ".join(retained)
+    verdict += label_retained(retained)
     return verdict + "; candidate=" + args.candidate + "; ordinary-ui-acceptance=false"
 
 

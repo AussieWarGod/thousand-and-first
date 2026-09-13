@@ -1,5 +1,15 @@
 # Structural release contract
 
+## Current Quickstart hotfix candidate census
+
+3098 staged production C# files; 440,124 physical lines; zero at or above 300 lines.
+1445 files with direct `XRL` imports; 3129 cold-install files. Exact inventory:
+`a5e00bd45a1122917e6b164ad98373cdcc043e6c681790495086ee0a2e870182`.
+Combines the dev integrations and Quickstart recovery fixes. Automated semantic review binds
+this exact inventory in `docs/STRUCTURE_REVIEW.json`. Native evidence retains each exercised
+build; current teardown passes exact receipt, salvage, work-row and strict-log checks.
+Current results and retained failures are recorded in `docs/STATUS.md`.
+
 Addendum 9 of the binding building-catalogue brief requires services to stay strictly under 300
 lines, own one responsibility, and communicate through protocols at boundaries before public
 release. This repository does not weaken that rule by silently redefining a large file as a
@@ -18,27 +28,122 @@ python3 Tools/check-structure.py --report
 python3 Tools/check-structure.py --release
 ```
 
-## Current stock-operation hotfix census
+## Retained dev hotfix backmerge census
+
+3080 staged production C# files; 437,405 physical lines; zero files at or above 300 lines.
+1435 files with direct `XRL` imports; 3111 cold-install files. Exact inventory:
+`c964d43923a5fa4284464d09029ef0b69a71bfe79b71185b3a25661c06149dca`. These figures include the
+#141 heart envelope authority correction replayed onto this backmerge; against base `3a287e4` its
+only production delta is `Growth/KingdomArchitectureStamper.EnvelopeGrowth.cs`.
+Combined-tree gates pending. The inherited semantic review binds the isolated main hotfix,
+not this combined dev tree; no native or release acceptance is inferred.
+
+## Retained isolated main stock-operation hotfix census
 
 3069 staged production C# files; 435,617 physical lines; zero files at or above 300 lines.
 1430 files with direct `XRL` imports; zero of these exceed the line cap. Exact inventory:
 `249d3bb40ca34f57289770494e985a97e81cf42c2bae8f053fb6e14005b61d3d`.
 One new local-operation scope helper and five modified production files over 0.3.2:
 three scope callers, fresh starter-material identity allocation and the release version literal.
-No saved fields or serialization formats change. The exact-inventory semantic review is current;
+No saved fields or serialization formats change. The exact-inventory semantic review binds these main bytes;
 see [0.3.3 delta review](STRUCTURE_REVIEW_0_3_3.md). This source review does not replace native
 or release gates. Earlier censuses are retained checkpoints.
 
+## Current #144 heart shared-XL transition census
+
+3080 staged production C# files; 437,433 physical lines; zero files at or above 300 lines.
+1435 files with direct `XRL` imports, none over the line cap. Exact inventory:
+`24b4ab29aab9cd3c97bb30f5382df88937ee96eac565a6fb90ce52a0dd22c0a2`.
+The production delta over the merged `dev` baseline `3a287e4` is the #144 heart shared-XL
+transition fix and nothing else: two files, `Growth/KingdomPlotHeartRules.cs` for the pure
+endpoint rule and `Growth/KingdomArchitectureStamper.Transitions.cs` for the call that replaces
+the rung-number comparison. Everything else in this delta is DevTests and documentation.
+Source-level only; no native rung 4 to 5 acceptance is claimed.
+
 ## Retained isolated draft census
 
-The stockpile deposit custody fix over the Kingdom Quickstart shelter ingress, the render-only
-city sight, the stockpile unit capacity, the first-basin water store and the Kingdom Quickstart
-tent rows, plus the #142 starter-material identity hotfix, reports 3068 staged production C# files
-and 435,554 physical lines.
+The #129 dev-harness native checks merged over the roadless spatial capture correction — and so
+also over the master semantic resume correction, the Kingdom Quickstart founding cohort, the
+stockpile deposit custody fix, the Kingdom Quickstart shelter ingress, the render-only city sight,
+the stockpile unit capacity, the first-basin water store and the Kingdom Quickstart tent rows —
+report 3079 staged production C# files and 437,320
+physical lines. The merge adds no production source over the roadless correction; the production
+delta this branch carries is the unmerged #124 raw-delivery-overflow fix it is built on.
 Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
 1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
-`6989432e13313aa5cb7241f534f700224bef26a32816853fba7a899ee8fb82e5` (this digest differs from the shipped 0.3.2 one solely because of the #142 starter-material identity hotfix in World/KingdomQuickstartBootstrap.Materials.cs; no other production source changed). The census reports
-1429 files with direct `XRL` imports; 0 of those exceed the line limit.
+`f9a9469102be2f0ca119056e08c884a56014b31439e71695852026f63bd02d17`. The census reports
+1434 files with direct `XRL` imports; 0 of those exceed the line limit.
+
+The raw-delivery-overflow delta over the retained founding-cohort census below adds no production
+source and removes none: it changes the deposit seam's two raw readings, both raw censuses, the
+deposit law's three refusal branches and one rule, and the rest of its lines are comments and
+documentation. The native-check delta on top of it adds no production source either — six
+DEV-HARNESS shards, one persona and two DevTests suites — so the staged production census above is
+byte-identical to the fix's own, and only the dev-harness inventory grows. All four
+`Tools/gate.sh` modes compiled clean on these merged bytes through the canonical gate — staged
+baseline (3075 sources), staged compatibility (3079), dev-harness baseline (3263) and dev-harness
+compatibility (3267) — with the installed-Hearthpyre source and ABI step clean, and the generated
+cold-install inventory contains 3110 files.
+
+## Retained roadless spatial capture census
+
+Heart rung settlement seam (#138): 3082 staged production C# files; 437,405 physical
+lines; zero at or above 300. The census reports
+1437 files with direct `XRL` imports; 0 of those exceed the line limit. Exact inventory SHA-256:
+`40af1139cc9336140aca90a5db81c80aefb060a45635d57766b560c34c1753e4`.
+
+## Retained camp integration checkpoint
+
+Camp integration (#107 / #132 / #137) through dev `bcca3e5`: 3079 production files,
+437,201 physical lines, 1434 XRL-importing files, zero at or above 300.
+Inventory SHA-256: `304123d5ee1b31fa0b1369d5ad13c52888111f5c7563245f4fe4096c8ca38c70`.
+Combined-tree four-mode compile and audit pass; main 14,341/portable 5,491 tests pass with zero
+skips. Camp native proof and release semantic review remain pending.
+
+## Retained roadless seal census
+
+Roadless spatial capture correction (#131): 3079 staged production C# files; 437,201 physical
+lines; 1434 direct `XRL` importing files; zero at or above 300. Exact inventory SHA-256:
+`ab4cf22e665900bd82593ad4f9805861da4458e60b918c59b1d3a0bb88b74617`.
+One small engine-free classifier is added. Existing internal capture/flush/reporting seams carry
+a typed pending result without serialized state or format changes. Four compile modes, audit,
+main 14,296/portable 5,460 tests pass (managed zero skips). The bounded roadless-camp native
+check passes at `0cfd8e7`; exact-inventory release semantic review remains pending.
+This census is not release approval.
+
+## Retained master semantic resume census
+
+The master semantic resume correction reports 3078 staged production C# files and 437,136
+physical lines. Zero are at or above 300; direct `XRL` imports occur in 1434 files, none over
+the cap. Exact staged source inventory digest:
+`f533203f98ed26e0ab95970b54b13fce26d6281988e36c9e3d20f6f870a82bb9`.
+Three existing production sources changed: the engine-free semantic clock rule, the master
+settlement plan, and the access level of the system's existing required-step mask. No new
+production source, serialized field, public API or compatibility dependency. At 76ab44d, all four
+canonical compile modes pass (3074/3078/3254/3258 sources), repository audit is clean, and main
+14,287/portable 5,451 tests pass with zero skips. Native component proof is recorded in STATUS;
+the economic persona remains RED. Older evidence below is retained at its own inventory.
+
+## Retained founding-cohort draft census
+
+The Kingdom Quickstart founding cohort over the stockpile deposit custody fix, the Kingdom
+Quickstart shelter ingress, the render-only city sight, the stockpile unit capacity, the
+first-basin water store and the Kingdom Quickstart
+tent rows reports 3078 staged production C# files and 437,114 physical lines.
+Of those, 0 exceed 300 lines, 0 are exactly 300, and therefore 0 fail the strict cap; 0 exceed
+1,000, 0 exceed 2,000, and 0 exceed 5,000. Exact staged source inventory digest:
+`a918f8e8bab3c1ca44118211d0667ce027f1a0ef77610074f298e2b8b49cb396`. The census reports
+1434 files with direct `XRL` imports; 0 of those exceed the line limit. This digest carries both
+the camp heart's authored architecture, catalogue and blueprint bytes and the founding-cohort
+sources merged from `dev`; no staged production C# source is added or removed by this branch.
+
+The founding-cohort delta over the retained draft below is ten added production sources and no
+removals: the quickstart rules' founders partial, the bootstrap's receipt partial split out of the
+bootstrap itself, the three bootstrap founders partials, and the five the founder origin accounting
+adds — its models, its bounded versioned codec, its host seam, its engine-free transaction, and the
+one adapter that knows what a body and a settlement are. All four `Tools/gate.sh` modes compiled
+clean on these bytes through the canonical gate itself — staged baseline (3074 sources), staged
+compatibility (3078), dev-harness baseline (3241) and dev-harness compatibility (3245).
 
 The shelter-ingress delta over the retained city-sight draft below is one added and one modified
 production source and no
@@ -316,7 +421,12 @@ Copy `docs/STRUCTURE_REVIEW.example.json` only after the review itself; replace 
 record concrete evidence in both notes fields. Schema 1 accepts no exceptions: exactly the
 template keys, nothing else. Reviewer identity is 2–80 printable characters; each evidence note is
 20–2,000 printable characters; completion uses a real second-precision UTC timestamp. Placeholder,
-sentinel, example, TODO, TBD, UNKNOWN, and N/A reviewer/notes text is rejected. Changing that rule
+sentinel, example, TODO, TBD, UNKNOWN, and N/A reviewer/notes text is rejected, as is any text
+claiming automation is a human or that a human personally/physically performed the review. Per
+the author ruling of 2026-09-11 ("no manual test gate for release, forever"), each evidence note
+must also bind to a real, checkable artefact — a run id, a log/receipt path, or a digest, written
+as `run:<id>`, `log:<path>`, or `sha256:<hex>`/`receipt:<hex>` inline in the note — so an honestly
+labelled automated review is exactly as verifiable as a human one was. Changing that rule
 requires an explicit author amendment to Addendum 9, not a tooling allowlist.
 
 ### Addendum 9 amendment — who may sign (author ruling, 2026-09-02)

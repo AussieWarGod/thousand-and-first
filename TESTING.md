@@ -1,8 +1,59 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
-The current public Alpha manifest is `0.3.3`, prepared for the public Workshop item.
-Its private candidate passed subscribed-install verification and finalization (2026-09-11).
-Public delivery is recorded separately in `docs/STATUS.md`; `0.3.2` is the prior public release.
+## Quickstart housing hotfix acceptance (2026-09-13)
+
+The construction lifecycle now also observes the original four Quickstart citizens at startup,
+after its ordinary 16,800-turn construction interval (7,200 + 9,600), and after cold load. Each must retain its
+original physical identity, applied founding citizenship and living resident row. Startup requires
+unfinished shelter; the later observations require both reserved tent rows to be functionally
+built, sufficient physical roof capacity, and all four original citizens assigned to those homes.
+Master simulation, Growth and Lodging must remain enabled. No test citizens, housing completion,
+or home assignments are injected. The `quickstart-settlement` journal rows report measured counts;
+any refusal also fails the enclosing lifecycle step. This extends the real fire commission,
+save/load and next-action chain rather than treating that fire as evidence of working housing.
+All six location/advisor combinations pass the complete source, cold-load and next-commission
+chain at `86c0b5df`, with strict logs and owned stops. Archives: `quickstart-lifecycle/86c0b5df/`
+under the behaviour-evidence root; coverage rows 21–23 bind their exact hashes and inventory.
+Later production changes are the release-version literal, guide text and strike salvage
+stockpile identity binding and end-of-pass work projection refresh. The supplied housing
+crisis also passes recovery and cold load with the same two survivors at `60f11aee` (row 24/C7).
+The historical-version reader remains a separate check; boot-only receipts do not replace these chains.
+
+The retained public 0.3.3 fresh-save fixture uses a source-bound observer grant of 24 drams;
+new saves require the current 64-dram grant. `Tools/prepare-quickstart-033-upgrade.py REPO PIN
+SOURCE DESTINATION` verifies the old public executable/content hashes, successful fresh-save
+journal, stopped ownership, sealed inputs and exact save hashes before creating a fresh reader.
+Its sealed historical marker binds the public commit, GameID, snapshot hash and original quantity.
+The observer requires that marker to own the active cold load, then checks the actual water,
+container, custody and receipts without replenishing stock. Malformed or mismatched markers
+refuse; they do not select a default. This fixture covers that exact fresh save, not arbitrary
+historical progression. Native reader `55963285` passes preactivation and post-load checks,
+strict logs and owned shutdown for the retained save; coverage row 25 binds the result.
+Creator fault fixtures use the current grant before injecting capacity or custody faults;
+the persona expects all 17 registered cases.
+
+Native teardown must prove both the physically removed building and its exact Complete/Settled
+strike receipt before accepting the material return. Dedicated stores may begin without an
+assigned ID: inventory salvage must acquire and record that identity, while null means ground
+salvage only. The larder case exercises positive salvage; the fire case exercises zero salvage.
+Both require a refused second strike. Strict Player.log remains decisive even when case summaries
+pass. Original quarantine failures and each subsequent run retain distinct profiles and receipts.
+
+## Retained combined heart candidate — superseded checkpoint
+
+The planned compatibility compile runs across 3098 production C# sources (3094 baseline);
+the cold-install inventory contains 3129 files. Inventory `fba0d595a8b2c29876f3f74eae29914a9595d85182831f2ceddb5b44d51dfdc0`.
+This combines heart authority, shared-XL transition, rung settlement and camp content/fixture.
+It also drafts surveyed-heart physical ingress independent of ordinary road-network evidence;
+protected road ground remains protected. Predecessor native ingress census was RED.
+No combined compilation, licensed-suite or native progression result is claimed yet. Earlier
+figures below remain retained evidence for their own checkpoints.
+
+Public release status is tracked in [docs/STATUS.md](docs/STATUS.md).
+This test protocol stays byte-identical between private-candidate binding and public
+promotion; publication updates belong in the status ledger. Historical checkpoint:
+0.3.3 passed subscribed-install verification and finalization on 2026-09-11;
+0.3.2 was the preceding public release.
 Working-tree changes do not inherit that tagged release's receipts. Any next public release
 requires a new version.
 A future v1.0 test-candidate claim requires its exact tree—not any historical
@@ -11,6 +62,22 @@ subscribed-package gate named here.
 The standing author ruling of 2026-09-11 removes manual test gates permanently: manual
 testing is optional, while automated failures still block release. Historical human-test
 requirements below are superseded; authentication and legal acceptance remain human actions.
+
+## Current camp integration (#107 / #132 / #137)
+
+Integrated through dev `bcca3e5`; four-mode compile, audit, main 14,341/portable 5,491 tests
+pass (managed zero skips). Camp native proof remains pending.
+The current census and exact inventory are in docs/STATUS.md. Prior gate counts below belong
+to their named earlier checkpoints, not automatically to this combined tree.
+
+## Retained roadless seal candidate (#131)
+
+Compatibility compilation runs across 3082 production C# sources (baseline 3078); developer
+profiles compile 3260/3264 inputs. All four modes pass. The generated
+cold-install inventory contains 3113 files. Main 14,318 and portable 5,470 tests pass with zero
+skips; repository audit passes. The bounded roadless-camp native check passes at `0cfd8e7`
+(one startup timeout retained, single retry passes); see docs/STATUS.md for scope.
+older evidence below signs only its stated earlier bytes.
 
 ## Current bounty fetch carry validation
 
@@ -111,9 +178,18 @@ baseline and dev-harness compatibility compiles. The shared `DevTests/refs.rsp` 
 `-langversion:latest`, so those compiles are not pinned to C# 7.3; `LangVersion` 7.3 is pinned
 only in `DevTests/Engine*/Probe.csproj` and `Tools/WorkshopSteam/*.csproj`. Retained sections
 below keep their original wording as written at their own checkpoints.
-Current hotfix staged compatibility compilation runs across 3069 production C# sources, staged baseline across
-3065 (the optional-mod bridge is compatibility-only); the generated
-cold-install inventory contains 3100 files. Neither count proves subscriber delivery.
+Current dev backmerge compilation inventory runs across 3080 production C# sources,
+3076 baseline sources; cold-install inventory contains 3111 files.
+Combined-tree compile/test verification is pending; no prior receipt
+is reattributed. The isolated 0.3.3 release remains on main, without dev's founding cohort.
+
+Retained founding-cohort checkpoint:
+Staged compatibility compilation runs across 3078 production C# sources, staged baseline across
+3074 (the optional-mod bridge is a compatibility-only source); the generated
+cold-install inventory contains 3109 files. Neither count proves subscriber delivery.
+That census is the Kingdom Quickstart founding cohort's; the counts one paragraph down and the
+receipts named above were measured before it. The six-profile Quickstart boot matrix has NOT been
+re-run on these bytes and is owed, because the cohort changes what Quickstart does at boot.
 The receipts named above were measured at the earlier 3052/3048/3083 census, before the Kingdom
 Quickstart tent rows, the first-basin water store, the stockpile unit capacity, the render-only
 city sight and the shelter ingress added production
@@ -733,16 +809,17 @@ neither earlier launch pass supplied that proof or closes the remaining gates.
 
 ## Unattended observers for the attended light / guide / first-guest steps
 
-Three personas replace the human-eyes observations the pinned native protocol still asks for on
-the claimed-ground light, the camp guide's topics, and the first guest's correspondence. They are
-**registered, not yet run**: no native receipt exists for any of them, and nothing here is
-evidence of a pass.
+These personas inspect claimed-ground light, the camp guide's conversation graph, and first-guest
+correspondence automatically. Guide topics (three cases) and first-guest correspondence (one case)
+have native passes at `660ba354`; their exact receipts and limits are recorded in the coverage
+matrix. Those passes do not execute physical guest admission or citizenship, and do not prove
+rendered dialogue UI. Claimed-light evidence remains separately scoped in the matrix.
 
-| Persona | Command | Attended step it replaces |
+| Persona | Command | Automated observation |
 | --- | --- | --- |
 | [`claimed-light-native-check`](Tools/personas/claimed-light-native-check.persona) | `Tools/run-personas.sh claimed-light-native-check` | walking the held zone to see it lit, and reading part cardinality and `SettlementId` by eye |
-| [`guide-topics-native-check`](Tools/personas/guide-topics-native-check.persona) | `Tools/run-personas.sh guide-topics-native-check` | talking through all five topics in order, comparing each rendered answer, and checking every return to Start |
-| [`first-guest-native-check`](Tools/personas/first-guest-native-check.persona) | `Tools/run-personas.sh first-guest-native-check` | reading the opening message once, and reading the Charter next-need ordering by eye |
+| [`guide-topics-native-check`](Tools/personas/guide-topics-native-check.persona) | `Tools/run-personas.sh guide-topics-native-check` | conversation graph, topic text and return links |
+| [`first-guest-native-check`](Tools/personas/first-guest-native-check.persona) | `Tools/run-personas.sh first-guest-native-check` | one correspondence opening and the Charter next-need ordering |
 
 What the machine asserts:
 
@@ -1089,7 +1166,18 @@ the engine never reaches `XRLCore.PlayerTurn`'s input wait. The engine's attende
 to a human, and an interrupt in an unattended run is a silent stall. Elapsed turns are counted from
 `XRLGame.Turns`, never from handler calls. A scripted run **suspends** at `advance` and resumes at
 the next verb; rows are `advance` (armed), `advance-progress` every 100 turns, and
-`advance-complete`. Refusals carry a **stable reason code** beside the prose — bind expectations to
+`advance-complete`, bracketed on EVERY road by two `advance-guard` bookkeeping rows (founder cell
+and guard state at arming and at release; Harness/KingdomScenarioFounderGuard.cs). DISCLOSURE, once,
+here: during every scripted `advance` the founder is not a hostile target - the guard raises the
+engine's own `XRLCore.IgnoreMe` (the `ignoreme` wish flag; `Brain.WantToKill` pushes no Kill goal
+against the player and `GameObject.IsHostileTowards` answers false toward the player), because the
+founder spends every advance turn in `Player.PassTurn()` with no hostile interrupt on any road and
+was bitten to death on both the live marsh (run 36) and the cleared teardown ground (run 39-1). It
+is not invulnerability (damage still lands if something attacks), changes no spawning, is never
+serialized, and is restored on every exit. A scripted player
+death is always a stop, on every road: the runner lands `SCRIPT-STOPPED DIED <category>; ...`
+(Harness/KingdomScenarioAutoRunner.Death.cs) even where production succession would have
+re-bodied the player, and the process is then left on the engine's death popup for the driver to reap. Refusals carry a **stable reason code** beside the prose — bind expectations to
 the code, never to the wording: `taf-advance-malformed-count`, `taf-advance-count-out-of-range`
 (the cap is 10000 per line), `taf-advance-no-driver`, `taf-advance-no-live-game`,
 `taf-advance-already-running`, `taf-advance-stalled`, `taf-advance-lost-player`.
@@ -1351,7 +1439,7 @@ fails a test rather than silently turning a persona green forever.
 **Strict in both directions.** The significant rows must equal the declared expectations exactly:
 an unexpected `OK` fails as loudly as an unexpected refusal, a missing row as loudly as an extra
 one. Runner bookkeeping is not significant and is skipped — `AUTOSTART`, `TESTGROUND-BUILT`,
-`RUNNER-ARMED`, `SCRIPT-BEGIN`, `advance-progress`, `advance-complete`, `VERB-REFUSED`.
+`RUNNER-ARMED`, `SCRIPT-BEGIN`, `advance-progress`, `advance-complete`, `advance-guard`, `VERB-REFUSED`.
 
 **`CHECK=status-digest-stable`** compares the 64-hex digests in the **first** and **last** `status`
 rows and fails if they differ or if the first carries none. Digests are data, not prose, so the
@@ -2792,3 +2880,34 @@ and controller. Optional physical descendants may fail without stranding their s
   went dark while the forge was still lit" is a bug. Recovery says **nothing** — a settlement that
   announced every recovery would be a settlement that never stops talking about itself — so a pass
   reporting "it never told me the power came back" is correct behaviour.
+
+## Physical first-guest action regressions
+
+Run these separately: the Quickstart profile requires its explicit advisor setting, while the
+synthetic founding profile rejects a Quickstart setting.
+
+```bash
+TAF_PERSONA_SEED='#43101' Tools/run-personas.sh guest-actions-native-check
+TAF_SCENARIO_QUICKSTART_ADVISOR=yes TAF_PERSONA_SEED='#43101' \
+  Tools/run-personas.sh guest-actions-quickstart-native-check
+```
+
+The first scenario uses disclosed synthetic founding and 64 drams, with no citizens or housing.
+Real cadence opens correspondence. It defers and admits the same guest through the production
+Charter API, reads the real inventory dialogue action, chooses to remain a guest, then attempts
+two welcomes without beds. Both refusals must preserve the exact interactable body, citizenship,
+population and water. Native pass `895e700e` predates the later refusal wording and scoped
+reconciliation changes; the coverage matrix retains its exact production inventory.
+
+The second scenario uses genuine Quickstart founding, all four original citizens, ordinary
+construction of six beds, and 8400 real turns before the same production choices. Explicit
+welcome must enroll the same body once, including a guest without a creed, and stale interaction
+must preserve water and population. After another 1200 real turns, the resource report must still
+show five citizens. Native pass `d9d0f4b4` has a clean strict Player.log and a stopped owned game.
+Founder death/departure observations and exact enrollment graph captures are diagnostic only;
+they cannot cancel actions, change callback results, or supply completion, supplies or citizens.
+The earlier three-founder run remains a failed precondition with an unresolved cause.
+
+Both scenarios provide scripted menu input only after exact title and option checks. They do not
+claim rendered UI or guest save/cold-load coverage. Historical failures and their exact source
+inventories remain archived; no intermediate case marker overrides a failed strict game log.

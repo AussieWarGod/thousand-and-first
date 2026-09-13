@@ -47,13 +47,16 @@ namespace ThousandAndFirst
 
 			KingdomPlotRules.PlotRect expectedBefore;
 			KingdomPlotRules.PlotRect expectedAfter;
-			if (beforeRung < 1 || afterRung != beforeRung + 1
+			// Endpoints first: adjacent rungs, each on the tier HeartSizeForRung gives it. Rungs
+			// four and five share the one Huge tier, so the last step is a same-footprint
+			// renovation rather than a growth.
+			if (!KingdomPlotRules.HeartRungEndpointsAdmit(beforeRung, afterRung,
+					(int)Before.LotSize, (int)After.LotSize)
 				|| Before.PlanKey != "civic-heart" || After.PlanKey != "civic-heart"
 				|| Before.LotType != "civic" || After.LotType != "civic"
 				|| Before.Facing != After.Facing
 				|| BeforeIntent.MainWorldX != AfterIntent.MainWorldX
 				|| BeforeIntent.MainWorldY != AfterIntent.MainWorldY
-				|| (int)Before.LotSize != beforeRung || (int)After.LotSize != afterRung
 				|| Owner.GetIntProperty(KingdomPlots.HeartPlotProperty) != 1
 				|| KingdomPlots.HeartRung(Z) != beforeRung
 				|| !KingdomPlots.TryHeartRectFor(Z, beforeRung, out expectedBefore)

@@ -67,6 +67,9 @@ namespace ThousandAndFirst
 		[NonSerialized]
 		private string LastFailureKey;
 
+		[NonSerialized]
+		private string LastPendingKey;
+
 		public override bool WantFieldReflection => false;
 
 		/// <summary>Stable dynasty id. Empty before a realm is founded.</summary>
@@ -147,9 +150,10 @@ namespace ThousandAndFirst
 				LastPollTick = SafeTick(game.TimeTicks);
 				TryReconcileProfile("daily reconciliation");
 				string failure;
-				if (!TryFlushLiving("daily missed-dirty backstop", ProbeEvenIfClean: true, out failure))
+				if (!TryFlushLiving("daily missed-dirty backstop", ProbeEvenIfClean: true, out failure,
+					out KingdomInheritanceSpatialCaptureResult spatial))
 				{
-					ReportFailure("daily stage", failure);
+					ReportCaptureFailure("daily stage", failure, spatial);
 				}
 			}
 			catch (Exception ex)
@@ -197,9 +201,10 @@ namespace ThousandAndFirst
 				KingdomSystem kingdom = The.Game?.GetSystem<KingdomSystem>();
 				if (KingdomMaster.AutomaticWorkAllowed(kingdom)
 					&& SealEnabled() && AuthorityEnabled
-					&& !TryFlushLiving("BeforeSave", ProbeEvenIfClean: true, out failure))
+					&& !TryFlushLiving("BeforeSave", ProbeEvenIfClean: true, out failure,
+						out KingdomInheritanceSpatialCaptureResult spatial))
 				{
-					ReportFailure("BeforeSave stage", failure);
+					ReportCaptureFailure("BeforeSave stage", failure, spatial);
 				}
 			}
 			catch (Exception ex)
@@ -216,6 +221,7 @@ namespace ThousandAndFirst
 			FlushInProgress = false;
 			ReconcileInProgress = false;
 			LastFailureKey = null;
+			LastPendingKey = null;
 			if (!AuthorityEnabled)
 			{
 				NeutralizeDisabledState();

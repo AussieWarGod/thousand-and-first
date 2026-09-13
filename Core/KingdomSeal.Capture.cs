@@ -14,7 +14,15 @@ namespace ThousandAndFirst
 		private bool TryCapture(KingdomSystem Kingdom, string CaptureLegacyId,
 			int CaptureGeneration, int CaptureRevision, long WrittenTick,
 			out KingdomSealRecord Record, out string Failure)
+			=> TryCapture(Kingdom, CaptureLegacyId, CaptureGeneration, CaptureRevision, WrittenTick,
+				out Record, out Failure, out _);
+
+		private bool TryCapture(KingdomSystem Kingdom, string CaptureLegacyId,
+			int CaptureGeneration, int CaptureRevision, long WrittenTick,
+			out KingdomSealRecord Record, out string Failure,
+			out KingdomInheritanceSpatialCaptureResult Spatial)
 		{
+			Spatial = KingdomInheritanceSpatialCaptureResult.Malformed;
 			Record = null;
 			Failure = "";
 			try
@@ -56,16 +64,17 @@ namespace ThousandAndFirst
 					{
 						Record = null; return false;
 					}
-					KingdomInheritanceSpatialCaptureResult spatial =
+					Spatial =
 						KingdomInheritanceSpatial.TryCapture(seat.City, Record,
 							The.ZoneManager?.ActiveZone, out string spatialFailure);
-					if (spatial == KingdomInheritanceSpatialCaptureResult.Malformed)
+					if (Spatial == KingdomInheritanceSpatialCaptureResult.Malformed
+						|| Spatial == KingdomInheritanceSpatialCaptureResult.Pending)
 					{
 						Failure = spatialFailure;
 						Record = null;
 						return false;
 					}
-					if (spatial == KingdomInheritanceSpatialCaptureResult.Unavailable)
+					if (Spatial == KingdomInheritanceSpatialCaptureResult.Unavailable)
 					{
 						// Captures may happen away from the one inherited seat. Reuse only an exact
 						// prior geometry basis for this generation; otherwise retain the explicit

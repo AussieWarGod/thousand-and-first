@@ -358,6 +358,45 @@ class QuickstartBootPreparationTest(unittest.TestCase):
                     tokens = ["quickstart-boot", terrain, advisor]
                     self.assertEqual([" ".join(tokens)], profile.parse_script(tokens))
 
+    def test_lifecycle_options_script_and_closed_seal_all_six_combinations(self):
+        for terrain in ("marsh", "canyon", "dunes"):
+            for advisor in ("yes", "no"):
+                with self.subTest(terrain=terrain, advisor=advisor):
+                    prefix = self.choose(terrain, advisor, "quickstart-lifecycle")
+                    tokens = prefix + ["advance", "2400", "lifecycle-grown", "lifecycle-save"]
+                    os.environ["TAF_SCENARIO_SCRIPT"] = " ".join(tokens)
+                    os.environ["TAF_SCENARIO_EXTRA_VERBS"] = "lifecycle-grown,lifecycle-save"
+                    self.write_options()
+                    profile.write_script(str(self.script), tokens)
+                    options = json.loads(self.options.read_text(encoding="utf-8"))
+                    self.assertEqual(advisor.title(), options[profile.QUICKSTART_ADVISOR_OPTION])
+                    self.assertEqual("retained", options["OtherOption"])
+                    self.assertTrue(self.script.read_text(encoding="utf-8").endswith(
+                        " ".join(prefix) + "\nadvance 2400\nlifecycle-grown\nlifecycle-save\n"))
+                    seal = self.tmp / "lifecycle.sha256"
+                    profile.seal(str(self.local), str(seal))
+                    profile.verify(str(self.local), str(seal))
+
+    def test_lifecycle_options_refuse_invalid_tail_before_writing(self):
+        for tail in ("advance", "advance 0", "unknown", "quickstart-lifecycle marsh no",
+                     "quickstart-boot marsh no"):
+            with self.subTest(tail=tail):
+                self.choose("marsh", "no", "quickstart-lifecycle")
+                os.environ["TAF_SCENARIO_SCRIPT"] += " " + tail
+                self.assert_options_refuse_unchanged()
+
+    def test_lifecycle_verb_cannot_be_claimed_as_an_extra_provider(self):
+        with self.assertRaises(SystemExit):
+            profile.parse_extra_verbs("quickstart-lifecycle")
+
+    def test_lifecycle_tail_still_requires_explicit_matching_advisor(self):
+        self.choose("marsh", "no", "quickstart-lifecycle")
+        os.environ["TAF_SCENARIO_SCRIPT"] += " advance 2400"
+        os.environ[profile.QUICKSTART_ADVISOR_ENV] = "yes"
+        self.assert_options_refuse_unchanged()
+        del os.environ[profile.QUICKSTART_ADVISOR_ENV]
+        self.assert_options_refuse_unchanged()
+
     def test_invalid_boot_shape_refuses_even_when_claimed_as_extra(self):
         for tokens in (
             ["quickstart-boot"], ["quickstart-boot", "marsh"],

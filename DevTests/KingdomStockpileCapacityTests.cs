@@ -1,4 +1,4 @@
-#if TAF_TESTS
+﻿#if TAF_TESTS
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -186,7 +186,15 @@ namespace ThousandAndFirst.Tests
 				"public bool Landed(object Bundle, object Accepted, int Batch)",
 				"ReferenceEquals(item.CurrentCell, Ground)",
 				"Ground.Objects.Contains(item)");
-			StringAssert.Contains("return GroundMaterialHeldNow(Ground, Blueprint);", ground);
+			StringAssert.Contains("return TryGroundMaterialHeldNow(Ground, Blueprint, out Held);",
+				ground);
+			// Open ground declares a bound rather than counting a capacity, so its room reading
+			// never exceed int.MaxValue and never fails; the cell's hold in the material is
+			// the only census on the spill path, and so the only place it can.
+			AssertOrdered(Between(ground, "public bool TryRawRoomNow(out int Room)",
+					"public bool TryRawMaterialHeldNow(out int Held)"),
+				"Room = (Ground != null && Ground.ParentZone != null",
+				"return true;");
 		}
 
 		/// <summary>
@@ -331,15 +339,25 @@ namespace ThousandAndFirst.Tests
 				// EVERY batch is proved, and every reading in the final proof is RAW: nothing in
 				// that group can dispatch, so no reading there can invalidate another and the
 				// custody proof beside them stays true until the mutation that follows it.
-				"int roomNow = Host.RawRoomNow();",
+				"bool roomKnown = Host.TryRawRoomNow(out int roomNow);",
 				"int carried = Host.RawCountOf(bundle);",
 				"if (!Host.HeldByNobody(bundle))",
+				"return Refuse(Host, Placed);",
+				// A room total past int.MaxValue is not a room of nothing and not
+				// a room of everything. The parcel is already made, stamped, and proved ownerless
+				// by the fence just above, so the delivery destroys the parcel IT made before
+				// stopping -- never destroyed without that proof, and never abandoned with it.
+				// Units proved into this destination earlier in the same fill keep their credit.
+				"if (!roomKnown)",
+				"Host.Discard(bundle);",
 				"return Refuse(Host, Placed);",
 				"if (!KingdomRules.DepositStampHolds(batch, carried, roomNow))",
 				"if (!Host.Discard(bundle))",
 				"return Refuse(Host, Placed);",
 				"break;",
-				"int held = Host.RawMaterialHeldNow();",
+				"if (!Host.TryRawMaterialHeldNow(out int held))",
+				"Host.Discard(bundle);",
+				"return Refuse(Host, Placed);",
 				"object accepted = Host.Insert(bundle);",
 				"if (Host.Landed(bundle, accepted, batch))",
 				"Placed += batch;",
@@ -349,8 +367,11 @@ namespace ThousandAndFirst.Tests
 				"if (!Host.HeldByNobody(bundle) || !Host.Discard(bundle))",
 				"return Refuse(Host, Placed);",
 				"break;",
-				"int landed = KingdomRules.DepositLandedUnits(batch, false, held,",
-				"Host.RawMaterialHeldNow());",
+				// After the insertion the parcel belongs to the destination, so an unreadable hold
+				// destroys nothing and withdraws nothing: it credits nothing and stops.
+				"if (!Host.TryRawMaterialHeldNow(out int heldAfter))",
+				"return Refuse(Host, Placed);",
+				"int landed = KingdomRules.DepositLandedUnits(batch, false, held, heldAfter);",
 				"Placed += landed;",
 				"remaining -= landed;",
 				"room -= landed;",
@@ -370,7 +391,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("&& IsStockpile(Container)) ? StockpileRoom(Container) : 0;",
 				room);
 			string raw = TestMain.ReadRepositoryText(RawFile);
-			StringAssert.Contains("internal static int DepositMaterialHeldNow(GameObject Container, string Blueprint)",
+			StringAssert.Contains("internal static bool TryDepositMaterialHeldNow(GameObject Container, string Blueprint,",
 				raw);
 			// The raw count primitive reads the FIELD. Stacker.Number repairs a nonpositive count
 			// and sends StackCountChangedEvent for it; StackCount simply returns _StackCount.
@@ -382,7 +403,7 @@ namespace ThousandAndFirst.Tests
 				"Stacker stacker = Item.Stacker;",
 				"return (stacker == null) ? 1 : stacker.StackCount;");
 			AssertOrdered(Between(raw, "internal static int RawCensusCountOf(",
-					"internal static int DepositRawRoomNow("),
+					"internal static bool TryDepositRawRoomNow("),
 				"int raw = RawPhysicalCountOf(Item);",
 				"return (raw > 0) ? raw : 1;");
 			// The raw hold classifies bits by what ONE of a thing is worth. TryBitsOf beside it
@@ -391,13 +412,35 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("|| !UnitBits(item).IsEmpty())", raw);
 			ClassicAssert.AreEqual(0, Occurrences(raw, "TryBitsOf("),
 				"the raw census must not classify through a count-scaled reader");
-			StringAssert.Contains("internal static int DepositRawRoomNow(GameObject Container)", raw);
+			StringAssert.Contains("internal static bool TryDepositRawRoomNow(GameObject Container, out int Room)",
+				raw);
 			StringAssert.Contains("held += RawCensusCountOf(item);", raw);
+			// Both raw censuses total in a LONG and answer false once the total is not
+			// representable as an int. A raw
+			// stack count is the engine's own unbounded int field (Stacker._StackCount, read back
+			// by Reader.ReadInt32 at Stacker.cs:111 and merged by unchecked int addition at
+			// Stacker.cs:313), so two honest stacks can sum past what an int holds: unchecked, the
+			// room census reopens a full store and the gain census pays for a landing nobody saw.
+			// The bound is representability itself -- what an int can hold -- so a legitimately large
+			// modded store is never refused for being large.
+			ClassicAssert.AreEqual(2, Occurrences(raw, "long held = 0;"),
+				"a census of unbounded fields must not total in the type it is bounding");
+			ClassicAssert.AreEqual(2, Occurrences(raw, "if (held > int.MaxValue)"),
+				"and must answer false once the total is not representable, on both censuses");
+			ClassicAssert.AreEqual(0, Occurrences(raw, "int.MaxValue;"),
+				"an unreadable total is refused, never saturated into an exact-looking one");
+			AssertOrdered(Between(raw, "internal static bool TryDepositRawRoomNow(",
+					"What a store physically holds"),
+				"if (!TryRawStockHeldIn(Container, out int held))",
+				"return false;",
+				"int room = KingdomSurvey.StockCapacityOf(Container) - held;",
+				"Room = (room > 0) ? room : 0;",
+				"return true;");
 			// The gain census counts PROVED members only, in ONE callback-free pass. Cell.AddObject
 			// appends to the cell it was asked about even when the entry callbacks moved the body
 			// elsewhere first, so a destination's list can hold a dead entry; and a census that
 			// dispatched could move an earlier row after its units were already in the total.
-			AssertOrdered(Between(raw, "private static int CountBlueprint(",
+			AssertOrdered(Between(raw, "private static bool TryCountBlueprint(",
 					"private static bool StandsIn("),
 				"if (!GameObject.Validate(item) || item.Blueprint != Blueprint",
 				"|| !StandsIn(item, Container, Ground))",
@@ -439,8 +482,9 @@ namespace ThousandAndFirst.Tests
 			}
 			string host = TestMain.ReadRepositoryText(HostFile);
 			StringAssert.Contains("return DepositRoomNow(Container);", host);
-			StringAssert.Contains("return DepositRawRoomNow(Container);", host);
-			StringAssert.Contains("return DepositMaterialHeldNow(Container, Blueprint);", host);
+			StringAssert.Contains("return TryDepositRawRoomNow(Container, out Room);", host);
+			StringAssert.Contains("return TryDepositMaterialHeldNow(Container, Blueprint, out Held);",
+				host);
 			StringAssert.Contains("item.Count = Count;", host);
 			StringAssert.Contains("return GameObject.Create(Blueprint);", host);
 		}
@@ -481,6 +525,15 @@ namespace ThousandAndFirst.Tests
 		[TestCase(4, false, 10, 6, 0)]
 		[TestCase(4, false, 10, 99, 4)]
 		[TestCase(0, true, 10, 14, 0)]
+		// A store never holds a negative number of things, so a negative reading on either side is
+		// not a hold at all -- it is what an unchecked sum of two honest stacks looks like once it
+		// exceeded int.MaxValue. Subtracting one pays a whole batch for a landing nobody saw:
+		// a cell holding 2,400,000,000 units reads back as -1,894,967,296, a parcel of one merges
+		// away, and the difference from a later reading of 1 is 1,894,967,297.
+		[TestCase(1, false, -1894967296, 1, 0)]
+		[TestCase(4, false, -1894967296, 4, 0)]
+		[TestCase(4, false, 10, -3, 0)]
+		[TestCase(4, true, -1894967296, 1, 4)]
 		public void OnlyWhatTheStoreGainedIsEverCounted(int batch, bool proved, int before,
 			int after, int expected)
 		{
@@ -521,8 +574,9 @@ namespace ThousandAndFirst.Tests
 			// Only the store's own gain IN THIS MATERIAL is credited, and a gain short of the
 			// batch stops the delivery rather than letting the caller create the shortfall again.
 			AssertOrdered(Between(law, "// The bundle went into this", "return Settle(Host, Placed);"),
-				"int landed = KingdomRules.DepositLandedUnits(batch, false, held,",
-				"Host.RawMaterialHeldNow());",
+				"if (!Host.TryRawMaterialHeldNow(out int heldAfter))",
+				"return Refuse(Host, Placed);",
+				"int landed = KingdomRules.DepositLandedUnits(batch, false, held, heldAfter);",
 				"if (landed < batch)",
 				"return Refuse(Host, Placed);");
 			foreach (string source in new[]
@@ -646,8 +700,18 @@ namespace ThousandAndFirst.Tests
 				"the destination seams own the only withdrawal");
 			ClassicAssert.AreEqual(1, Occurrences(host, "item.Obliterate(null, Silent: true)"));
 			ClassicAssert.AreEqual(1, Occurrences(ground, "item.Obliterate(null, Silent: true)"));
-			ClassicAssert.AreEqual(3, Occurrences(law, "Host.Discard(bundle)"),
-				"a bundle is withdrawn on exactly three paths, each proved held-by-nobody first");
+			// Five withdrawal paths now, each still standing behind a held-by-nobody proof and
+			// each still putting back a parcel this delivery MADE: the batch that came out below
+			// one, the stamp the store filled underneath, the insertion that reached nobody, and
+			// the two readings that ran past int.MaxValue before the parcel was handed over. The
+			// reading that runs past it AFTER the insertion adds no sixth: the parcel belongs to
+			// the destination by then, and is neither destroyed nor withdrawn.
+			ClassicAssert.AreEqual(5, Occurrences(law, "Host.Discard(bundle)"),
+				"a bundle is withdrawn on exactly five paths, each proved held-by-nobody first");
+			ClassicAssert.AreEqual(0, Occurrences(Between(law,
+					"// The bundle went into this", "return Settle(Host, Placed);"),
+				"Host.Discard(bundle)"),
+				"a parcel already inside its destination is never destroyed for an unreadable hold");
 		}
 
 		/// <summary>STANDARDS 7b: said once when the store fills, taken back the moment it has

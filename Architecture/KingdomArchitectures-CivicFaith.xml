@@ -96,6 +96,14 @@
          every later rung keeps them at the same rite-relative coordinates. -->
     <slot Key="ritestone" Blueprint="r_KingdomStructureLimestone" Role="retained-rite-stone" Material="stone" MinTech="hands" Natural="yes" />
     <slot Key="benefit-heartbasin-main" Blueprint="r_KingdomFirstBasinRite" Role="physical-benefit-heartbasin-main" Material="stone" MinTech="hands" Natural="yes" />
+    <!-- The rite ground is a camp. A horseshoe of tensioned canvas stands round the basin,
+         a cooking fire burns on its own hearthstone, and one dry store keeps what the
+         settlement has cut and carried. The store is Stateful and recurs at the same
+         rite-relative cell in every rung above this one; the canvas and the fire are
+         ordinary fabric and are struck when the walls go up. -->
+    <slot Key="canvas" Blueprint="r_KingdomStructureCanvasWall" Role="camp-canvas" Material="canvas" MinTech="hands" Natural="no" />
+    <slot Key="hearth" Blueprint="r_KingdomCivicCampfireCamp" Role="heat" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="store" Blueprint="r_KingdomHeartStockpile" Role="storage" Material="timber" MinTech="hands" Natural="no" />
   </palette>
 
   <palette Key="civic-heart-stone">
@@ -105,6 +113,8 @@
     <slot Key="basin" Blueprint="r_KingdomFirstBasin" Role="first-basin" Material="scrap" MinTech="hands" Natural="no" />
     <slot Key="ritestone" Blueprint="r_KingdomStructureLimestone" Role="retained-rite-stone" Material="stone" MinTech="hands" Natural="yes" />
     <slot Key="benefit-heartwaterstone-main" Blueprint="r_KingdomWaterstoneRite" Role="physical-benefit-heartwaterstone-main" Material="stone" MinTech="hands" Natural="no" />
+    <slot Key="hearth" Blueprint="r_KingdomCivicCampfireCamp" Role="heat" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="store" Blueprint="r_KingdomHeartStockpile" Role="storage" Material="timber" MinTech="hands" Natural="no" />
   </palette>
 
   <palette Key="civic-heart-moot">
@@ -119,6 +129,7 @@
     <slot Key="ritestone" Blueprint="r_KingdomStructureLimestone" Role="retained-rite-stone" Material="stone" MinTech="hands" Natural="yes" />
     <slot Key="light" Blueprint="r_KingdomCivicTorchpost" Role="moot-light" Material="stone" MinTech="workshop" Natural="no" />
     <slot Key="benefit-heartmoot-main" Blueprint="r_KingdomMootRostrum" Role="physical-benefit-heartmoot-main" Material="shapedtimber" MinTech="workshop" Natural="no" />
+    <slot Key="store" Blueprint="r_KingdomHeartStockpile" Role="storage" Material="timber" MinTech="hands" Natural="no" />
   </palette>
 
   <palette Key="civic-heart-court">
@@ -141,6 +152,7 @@
     <slot Key="arcrib" Blueprint="r_KingdomStructureMetalWall" Role="arcology-service-rib" Material="workedmetal" MinTech="arclight" Natural="no" />
     <slot Key="light" Blueprint="r_KingdomCivicTorchpost" Role="moot-flame" Material="stone" MinTech="workshop" Natural="no" />
     <slot Key="arclight" Blueprint="Techlight1" Role="arcology-threshold-light" Material="workedmetal" MinTech="arclight" Natural="no" />
+    <slot Key="store" Blueprint="r_KingdomHeartStockpile" Role="storage" Material="timber" MinTech="hands" Natural="no" />
 
 
 
@@ -349,6 +361,7 @@
     <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:moot" />
     <glyph Char="G" Ground="$marble" Object="$arclight" Claim="building" Pass="walk" Cover="walled" Anchors="light:gate" />
     <glyph Char="h" Ground="$floor" Object="$arclight" Claim="building" Pass="walk" Cover="walled" />
+    <glyph Char="S" Ground="$floor" Object="$store" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:storage" Stateful="yes" />
     <row Cells="MAAAMAAMA++AMAAMAAAM" />
     <row Cells="MsssssssmmmmsssssssM" />
     <row Cells="MssMssMsmmmmsMssMssM" />
@@ -358,7 +371,7 @@
     <row Cells="MsssssssmmmmsssssssM" />
     <row Cells="MsssssssmmmmsssssssM" />
     <row Cells="MsssXssLRB@RLssYsssM" />
-    <row Cells="MsssssssQPPQsssssssM" />
+    <row Cells="MsssssssQPPQSssssssM" />
     <row Cells="MsssssssmmmmsssssssM" />
     <row Cells="MsssssshmmmmhssssssM" />
     <row Cells="MssMssMsmmmmsMssMssM" />
@@ -494,12 +507,22 @@
     <glyph Char="@" Ground="$ground" Object="$building" Claim="yard" Pass="adjacent" Cover="open" Anchors="main,function:settlement-heart" Stateful="yes" />
     <glyph Char="B" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="fixture:first-basin" Object="$basin" Stateful="yes" />
     <glyph Char="R" Ground="$ground" Structure="$ritestone" Claim="yard" Pass="blocked" Cover="open" />
+    <glyph Char="#" Ground="$ground" Structure="$canvas" Claim="yard" Pass="blocked" Cover="open" />
+    <glyph Char="h" Ground="$path" Object="$hearth" Claim="yard" Pass="adjacent" Cover="open" Anchors="fixture:hearth" />
+    <glyph Char="S" Ground="$path" Object="$store" Claim="yard" Pass="adjacent" Cover="open" Anchors="fixture:storage" Stateful="yes" />
     <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <!-- Two unshaped stones and the basin/root pair make a readable four-piece rite, while a
-         two-cell southern approach declares the axis that every later building elaborates. -->
-    <row Cells=".0PPP." />
-    <row Cells=".RB@R." />
-    <row Cells=".PPPP." />
+         two-cell southern approach declares the axis that every later building elaborates.
+         Round all of it stands a horseshoe of seven canvas cells, open to the south so the
+         approach is never sealed: the plot is a Small 6x4 and a closed ring would leave no
+         room for the rite, the fire and the store together. The two flanks and the store sit
+         on the x=0 and x=5 columns, OUTSIDE the frozen 4x4 footprint and therefore yard-
+         claimed; widening the footprint is refused by the catalogue and is not the route.
+         The fire heats its own hearthstone and nothing else, which is why canvas may stand
+         beside it; its cell is used from the side and never stood on. -->
+    <row Cells=".####." />
+    <row Cells="#RB@R#" />
+    <row Cells="#h0PPS" />
     <row Cells="..EE.." />
   </map>
 
@@ -512,12 +535,17 @@
     <glyph Char="Q" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="function:water-queue" />
     <glyph Char="R" Ground="$ground" Structure="$ritestone" Claim="yard" Pass="blocked" Cover="open" />
     <glyph Char="E" Ground="$path" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="h" Ground="$path" Object="$hearth" Claim="yard" Pass="adjacent" Cover="open" Anchors="fixture:hearth" />
+    <glyph Char="S" Ground="$path" Object="$store" Claim="yard" Pass="adjacent" Cover="open" Anchors="fixture:storage" Stateful="yes" />
     <!-- An octagonal low kerb remains visibly hand-laid and open to weather. Paired queue cells
-         lead to the basin/root dais; paired north and south breaks keep circulation obvious. -->
+         lead to the basin/root dais; paired north and south breaks keep circulation obvious.
+         The camp's fire and its dry store are re-laid on the widened apron at the same rite-
+         relative cells they held at the rite ground; the canvas comes down when the kerb goes
+         in, because a kerb is what the settlement now has instead. -->
     <row Cells=".KK0PKK." />
     <row Cells="KPPPPPPK" />
     <row Cells="KPRB@RPK" />
-    <row Cells="KPPPPPPK" />
+    <row Cells="KPhPPPSK" />
     <row Cells="KPPQQPPK" />
     <row Cells=".KKEEKK." />
   </map>
@@ -535,6 +563,7 @@
     <glyph Char="D" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" Anchors="entrance:public" />
     <glyph Char="R" Ground="$ground" Structure="$ritestone" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="L" Ground="$floor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:moot" />
+    <glyph Char="S" Ground="$floor" Object="$store" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:storage" Stateful="yes" />
     <!-- The waterstone is renovated into a raised timber charter hall. Benches and torch-posts
          mirror one another across the seam; the stone-framed basin dais interrupts, but never
          seals, the two-cell processional way between paired doors. -->
@@ -543,7 +572,7 @@
     <row Cells="WIXIIIIIIYIW" />
     <row Cells="WIIIKPPKIIIW" />
     <row Cells="WIIIRB@RIIIW" />
-    <row Cells="WIIIKPPKIIIW" />
+    <row Cells="WIIIKPPKSIIW" />
     <row Cells="WIIIQPPQIIIW" />
     <row Cells="WIIIIPPIIIIW" />
     <row Cells="WIIIIPPIIIIW" />
@@ -570,6 +599,7 @@
     <glyph Char="L" Ground="$mootfloor" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:moot" />
     <glyph Char="G" Ground="$marble" Object="$light" Claim="building" Pass="walk" Cover="walled" Anchors="light:gate" />
     <glyph Char="T" Ground="$marble" Object="$statue" Claim="building" Pass="blocked" Cover="walled" />
+    <glyph Char="S" Ground="$mootfloor" Object="$store" Claim="building" Pass="adjacent" Cover="walled" Anchors="fixture:storage" Stateful="yes" />
     <!-- The city rebuilds, rather than entombs, its moot. A compact brinestalk charter pavilion
          holds the rite at the centre of a sandstone enclosure; public brick galleries, mirrored
          council benches, paired founder statues, dressed columns, and a four-cell marble avenue
@@ -583,7 +613,7 @@
     <row Cells="#ssssswILIILIwsssss#" />
     <row Cells="#ssssswIXIIYIwsssss#" />
     <row Cells="#ssssswIRB@RIwsssss#" />
-    <row Cells="#ssssswIQPPQIwsssss#" />
+    <row Cells="#ssssswIQPPQSwsssss#" />
     <row Cells="#ssssswwwDDwwwsssss#" />
     <row Cells="#ssscsscmmmmcsscsss#" />
     <row Cells="#sbscsssmmmmssscsbs#" />
@@ -971,6 +1001,8 @@
         <require Role="entrance:public" Min="1" />
         <require Role="function:settlement-heart" Min="1" />
         <require Role="fixture:first-basin" Min="1" />
+        <require Role="fixture:hearth" Min="1" />
+        <require Role="fixture:storage" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>
@@ -981,6 +1013,8 @@
         <require Role="function:settlement-heart" Min="1" />
         <require Role="fixture:first-basin" Min="1" />
         <require Role="function:water-queue" Min="1" />
+        <require Role="fixture:hearth" Min="1" />
+        <require Role="fixture:storage" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>
@@ -994,6 +1028,7 @@
         <require Role="seat:moot1" Min="1" />
         <require Role="seat:moot2" Min="1" />
         <require Role="light:moot" Min="2" />
+        <require Role="fixture:storage" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>
@@ -1008,6 +1043,7 @@
         <require Role="seat:moot2" Min="1" />
         <require Role="light:moot" Min="2" />
         <require Role="light:gate" Min="2" />
+        <require Role="fixture:storage" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
       <tier Key="arcology" BuildKey="arcology" Level="4" Transition="renovate" Map="civic-arcology-xl4" Palette="civic-heart-court">
@@ -1021,6 +1057,7 @@
         <require Role="seat:moot2" Min="1" />
         <require Role="light:moot" Min="2" />
         <require Role="light:gate" Min="2" />
+        <require Role="fixture:storage" Min="1" />
         <variant Key="fallback" Priority="0" />
       </tier>
     </binding>

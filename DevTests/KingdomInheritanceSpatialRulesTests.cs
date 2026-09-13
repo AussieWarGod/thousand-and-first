@@ -18,6 +18,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Captured = 0", source);
 			StringAssert.Contains("Unavailable = 1", source);
 			StringAssert.Contains("Malformed = 2", source);
+			StringAssert.Contains("Pending = 3", source);
 			StringAssert.Contains("internal static partial class KingdomInheritanceSpatial", source);
 			StringAssert.Contains("private sealed class SourceWork", source);
 			string[] fields =

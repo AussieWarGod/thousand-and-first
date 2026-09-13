@@ -243,6 +243,19 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void StructuralPassabilityIgnoresTransientCombatOccupancy()
+		{
+			string source = TestMain.ReadRepositoryText("Growth/KingdomArchitectureStamper.Passability.cs");
+			StringAssert.Contains("cell.IsPassable(null, IncludeCombatObjects: false)", source);
+			StringAssert.Contains("use.IsPassable(null, IncludeCombatObjects: false)", source);
+			StringAssert.DoesNotContain("cell.IsPassable()", source);
+			string native = TestMain.ReadRepositoryText("Harness/KingdomCampHeartNativeOccupancy.cs");
+			StringAssert.Contains("occupant.IsCombatObject() && !probe.IsPassable()", native);
+			StringAssert.Contains("solid-wall-refused=true", native);
+			StringAssert.Contains("probe-cleanup-proved=true", native);
+		}
+
+		[Test]
 		public void SuccessorAllowsOnlyAdjacentRiteAnchoredHeartAccretion()
 		{
 			string source = Runtime();

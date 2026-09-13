@@ -67,14 +67,14 @@ namespace ThousandAndFirst
 				return DepositRoomNow(Container);
 			}
 
-			public int RawRoomNow()
+			public bool TryRawRoomNow(out int Room)
 			{
-				return DepositRawRoomNow(Container);
+				return TryDepositRawRoomNow(Container, out Room);
 			}
 
-			public int RawMaterialHeldNow()
+			public bool TryRawMaterialHeldNow(out int Held)
 			{
-				return DepositMaterialHeldNow(Container, Blueprint);
+				return TryDepositMaterialHeldNow(Container, Blueprint, out Held);
 			}
 
 			public object Create()

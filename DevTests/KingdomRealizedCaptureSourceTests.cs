@@ -264,8 +264,11 @@ namespace ThousandAndFirst.Tests
 		public void TheRecomputedTokenMirrorsTheProductionPreimage()
 		{
 			string production = Read("Growth/KingdomArchitectureStamper.Recovery.cs");
+			// The token preimage itself now lives in the engine-free census shard, so a census
+			// and a stamp cannot disagree; the mirror still has to match it exactly.
+			string token = Read("Growth/KingdomArchitectureComponentCensusRules.cs");
 			string mirror = Read("Core/KingdomRealizedArchitectureCapture.Authority.cs");
-			ClassicAssert.AreEqual(Statement(production, "string preimage ="),
+			ClassicAssert.AreEqual(Statement(token, "string preimage ="),
 				Statement(mirror, "string preimage ="),
 				"the component-token preimage drifted from the stamper's own");
 			string objects = Read("Core/KingdomRealizedArchitectureCapture.Objects.cs");

@@ -68,13 +68,12 @@ namespace ThousandAndFirst.Tests
 		public void StartKeepsTheInventoryAndNamesTheRollAndTheRoof()
 		{
 			string start = KingdomQuickstartGuideRules.Start;
-			StringAssert.Contains("twenty-four drams", start);
+			StringAssert.Contains("sixty-four drams", start);
 			StringAssert.Contains("twelve meals", start);
 			StringAssert.Contains("not on your roll", start);
-			StringAssert.Contains("I pass through, and I am not counted", start);
-			StringAssert.Contains("hands come off the roll", start);
-			StringAssert.Contains("nobody new stays unless a roof stands with room left in it",
-				start);
+			StringAssert.Contains("normally provides four founding citizens", start);
+			StringAssert.Contains("two marked shelter plots", start);
+			StringAssert.Contains("before recruiting more people", start);
 			Assert.That(KingdomQuickstartGuideRules.Goodbye, Is.EqualTo("Live and drink."));
 		}
 
@@ -89,7 +88,7 @@ namespace ThousandAndFirst.Tests
 			Dictionary<int, string> words = new Dictionary<int, string>
 			{
 				{ 1, "one" }, { 3, "three" }, { 4, "four" }, { 12, "twelve" },
-				{ 24, "twenty-four" }
+				{ 64, "sixty-four" }
 			};
 			int[] quoted =
 			{
@@ -139,10 +138,16 @@ namespace ThousandAndFirst.Tests
 				Assert.That(words.Contains("["), Is.False, words);
 				Assert.That(Regex.IsMatch(words, "[0-9]+ *, *[0-9]+"), Is.False, words);
 			}
-			StringAssert.Contains("Nobody joins a place that has no roof with room left under it",
+			StringAssert.Contains("a completed home with a spare bed",
 				KingdomQuickstartGuideRules.Topics()[3].Answer);
-			StringAssert.Contains("a commission is a shape in the dirt that waits",
+			StringAssert.Contains("Founding citizens can work before they have homes",
 				KingdomQuickstartGuideRules.Topics()[1].Answer);
+			StringAssert.Contains("Read the first guest's correspondence",
+				KingdomQuickstartGuideRules.Topics()[3].Answer);
+			StringAssert.Contains("speak with the first guest",
+				KingdomQuickstartGuideRules.Topics()[3].Answer);
+			StringAssert.Contains("Admit this person through Growth", KingdomQuickstartGuideRules.Topics()[3].Answer);
+			StringAssert.Contains("Welcome as citizen", KingdomQuickstartGuideRules.Topics()[3].Answer);
 		}
 
 		/// <summary>

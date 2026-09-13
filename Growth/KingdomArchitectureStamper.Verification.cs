@@ -36,15 +36,24 @@ namespace ThousandAndFirst
 			string id = Owner.GetStringProperty(OutputId(Placement));
 			KingdomPhysicalLookupState state = KingdomConstruction.FindExactId(Z, id, out Exact);
 			if (state != KingdomPhysicalLookupState.Exact
-				|| !ExactComponent(Owner, Exact, Z, Intent, Lot, Placement, id))
+				// No upgrade receipt is in scope here, so no other generation may stand: null is
+				// the truth, not a gap. Reached mid-upgrade through TryVerifyComplete, a retagged
+				// item fails the element checks above before the census is ever counted.
+				|| !ExactComponent(Owner, Exact, Z, Intent, Lot, Placement, id, null))
 				return Quarantine(Owner, "settled layout slot " + Placement.Slot
 					+ " is absent, moved, duplicated, or changed", out Failure);
 			return true;
 		}
 
+		/// <summary>
+		/// Every element of one settled component, then a census of the slot it stands at.
+		/// <para><paramref name="Peer" /> names the single component of the other generation that
+		/// may legitimately share this slot name during an authored upgrade, resolved by the
+		/// caller that owns the receipt; null means none may.</para>
+		/// </summary>
 		private static bool ExactComponent(GameObject Owner, GameObject Item, Zone Z,
 			KingdomArchitectureIntent Intent, string Lot, ArchitecturePlacement Placement,
-			string ExpectedId)
+			string ExpectedId, ArchitectureComponentPeer Peer)
 		{
 			if (!GameObject.Validate(Item) || Item.ID != ExpectedId || Item.CurrentZone != Z
 				|| Item.Blueprint != Placement.Blueprint
@@ -69,13 +78,30 @@ namespace ThousandAndFirst
 			int y;
 			if (!KingdomArchitectureRuntime.TryWorldPlacement(snapshot, Intent.Rect, Placement,
 				out x, out y, out _) || Item.CurrentCell != Z.GetCell(x, y)) return false;
-			int count = 0;
+			// Generation-aware uniqueness. The lot survives an authored upgrade and the slot name
+			// is layout-local, so during the retag pass a component of the other generation can
+			// legitimately share this slot name while standing on its own world cell. Every
+			// candidate at the lot and slot is classified and none is skipped: this generation's
+			// token is THIS, the caller's resolved peer -- proved by identity, cell and token
+			// together, and only while its retain state allows it -- is OTHER, and anything else
+			// is FOREIGN and refuses the census outright.
+			string token = ComponentToken(Lot, Intent.SnapshotHash, Placement);
+			List<ArchitectureComponentCensusRow> candidates =
+				new List<ArchitectureComponentCensusRow>();
 			KingdomSurvey survey = KingdomSurvey.ActiveFor(Z) ?? KingdomSurvey.Take(Z);
 			foreach (GameObject candidate in survey.ArchitectureComponents)
-				if (GameObject.Validate(candidate)
-					&& candidate.GetStringProperty(KingdomPlots.PlotIdProperty) == Lot
-					&& candidate.GetStringProperty(ComponentSlotProperty) == Placement.Slot) count++;
-			return count == 1;
+			{
+				if (!GameObject.Validate(candidate)) continue;
+				candidates.Add(new ArchitectureComponentCensusRow(
+					candidate.GetStringProperty(KingdomPlots.PlotIdProperty),
+					candidate.GetStringProperty(ComponentSlotProperty),
+					candidate.GetStringProperty(ComponentTokenProperty),
+					candidate.IDIfAssigned,
+					Peer != null && Peer.Cell != null && candidate.CurrentCell == Peer.Cell));
+			}
+			return KingdomArchitectureComponentCensusRules.Settles(Lot, Placement.Slot, token,
+				candidates, Peer == null ? null : Peer.Id, Peer == null ? null : Peer.Token,
+				Peer != null && Peer.Allowed);
 		}
 
 		private static bool ExactComponentInt(GameObject Item, string Property, int Expected)
@@ -110,10 +136,12 @@ namespace ThousandAndFirst
 		}
 
 		private static bool CanInsert(GameObject Owner, Zone Z, Cell Cell, string Lot,
-			string Hash, ArchitecturePlacement Placement, out string Failure)
+			string Hash, ArchitecturePlacement Placement, ArchitectureLayoutSnapshot Snapshot,
+			out string Failure)
 		{
 			Failure = null;
 			if (Cell == null) return Fail("layout slot lies outside its frozen zone", out Failure);
+			bool blocks = KingdomPlotRules.SlotBlocksOccupant(PassabilityOf(Snapshot, Placement));
 			List<GameObject> objects = Cell.GetObjects();
 			for (int i = 0; i < objects.Count; i++)
 			{
@@ -121,8 +149,18 @@ namespace ThousandAndFirst
 				if (!GameObject.Validate(item) || ReferenceEquals(item, Owner)
 					|| item.GetIntProperty(KingdomPlots.HeartStakeProperty) == 1) continue;
 				if (item.IsCreature || item.IsPlayer())
-					return Fail("a living occupant moved onto layout slot " + Placement.Slot,
+				{
+					// A body only stands in the way of a slot the map declares Blocked. Ground and
+					// path go down under them; adjacent slots are used from the side.
+					if (!blocks) continue;
+					// Separate line on purpose: the refusal text above is parsed by
+					// KingdomPlotRules.OccupantSlotOf and by harness telemetry, so it never grows.
+					KingdomLog.Log("architecture: blocked slot " + Placement.Slot + " holds "
+						+ item.IDIfAssigned + " (" + item.Blueprint + ") at " + Cell.X + ","
+						+ Cell.Y);
+					return Fail(KingdomPlotRules.OccupantSlotRefusalPrefix + Placement.Slot,
 						out Failure);
+				}
 				if (item.GetStringProperty(KingdomPlots.PlotIdProperty) == Lot
 					&& item.GetStringProperty(ComponentHashProperty) == Hash
 					&& item.GetIntProperty(ComponentSchemaProperty) == ComponentSchema) continue;
@@ -131,6 +169,22 @@ namespace ThousandAndFirst
 					out Failure);
 			}
 			return true;
+		}
+
+		/// <summary>The map's declared passability for a placement's own cell. An unmapped cell
+		/// reads Blocked: an unknown slot is never quietly treated as open ground.</summary>
+		internal static ArchitecturePassability PassabilityOf(ArchitectureLayoutSnapshot Snapshot,
+			ArchitecturePlacement Placement)
+		{
+			if (Snapshot == null || Snapshot.Cells == null || Placement == null)
+				return ArchitecturePassability.Blocked;
+			for (int i = 0; i < Snapshot.Cells.Count; i++)
+			{
+				ArchitectureCellState cell = Snapshot.Cells[i];
+				if (cell != null && cell.X == Placement.X && cell.Y == Placement.Y)
+					return cell.Passability;
+			}
+			return ArchitecturePassability.Blocked;
 		}
 
 		private static void StampComponent(GameObject Owner, GameObject Item, string Lot, string Hash,

@@ -83,6 +83,56 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void ReceiptMustBeAFinishedNonFaultedCohortJustAsTheNativeBootDemands()
+		{
+			// A seeded world snapshots, saves and cold-loads exactly as an omitted one does.
+			ClassicAssert.IsNotNull(Wire(Change(10, FoundersReceipt(
+				KingdomQuickstartFoundersDisposition.Seeded))));
+			// A world that still owes a cohort, is part-way through one, or has faulted one is not
+			// a finished world and the harness may not carry it at all.
+			foreach (KingdomQuickstartFoundersDisposition unfinished in new[]
+			{
+				KingdomQuickstartFoundersDisposition.Pending,
+				KingdomQuickstartFoundersDisposition.Seeding,
+				KingdomQuickstartFoundersDisposition.Faulted
+			})
+				Refuses(Change(10, FoundersReceipt(unfinished)));
+		}
+
+		private static string FoundersReceipt(KingdomQuickstartFoundersDisposition disposition)
+		{
+			ClassicAssert.IsTrue(KingdomQuickstartRules.TryProfile("marsh", out KingdomQuickstartProfile profile));
+			ClassicAssert.IsTrue(KingdomQuickstartRules.TryCreateReceipt("marsh", profile.ZoneId,
+				KingdomQuickstartFoundersDisposition.Pending, out KingdomQuickstartReceipt receipt));
+			string[] values = { "", "Starapple", "water-id", "larder-id", "materials-id", "advisor-id", "" };
+			for (int phase = 1; phase <= 6; phase++)
+			{
+				var advisor = phase == 5 ? KingdomQuickstartAdvisorDisposition.Included
+					: KingdomQuickstartAdvisorDisposition.Unresolved;
+				ClassicAssert.IsTrue(KingdomQuickstartRules.TryAdvance(receipt,
+					(KingdomQuickstartPhase)phase, values[phase], advisor, out var next));
+				receipt = next;
+			}
+			if (disposition == KingdomQuickstartFoundersDisposition.Pending)
+				return KingdomQuickstartRules.Encode(receipt);
+			ClassicAssert.IsTrue(KingdomQuickstartRules.TryRestateFounders(receipt,
+				KingdomQuickstartFoundersDisposition.Seeding,
+				new[] { "f0", "f1", "f2", "f3" }, out KingdomQuickstartReceipt seeding));
+			if (disposition == KingdomQuickstartFoundersDisposition.Seeding)
+				return KingdomQuickstartRules.Encode(seeding);
+			if (disposition == KingdomQuickstartFoundersDisposition.Faulted)
+			{
+				ClassicAssert.IsTrue(KingdomQuickstartRules.TryRestateFounders(seeding,
+					KingdomQuickstartFoundersDisposition.Faulted, null, out KingdomQuickstartReceipt faulted));
+				return KingdomQuickstartRules.Encode(faulted);
+			}
+			ClassicAssert.IsTrue(KingdomQuickstartRules.TryAdvance(seeding,
+				KingdomQuickstartPhase.FoundersSeeded, "",
+				KingdomQuickstartAdvisorDisposition.Unresolved, out KingdomQuickstartReceipt seeded));
+			return KingdomQuickstartRules.Encode(seeded);
+		}
+
+		[Test]
 		public void RequiredTextCannotDefaultNullOrEmpty()
 		{
 			foreach (int field in TextFields) if (field != 5 && field != 13)
@@ -171,7 +221,8 @@ namespace ThousandAndFirst.Tests
 		private static string Receipt(string key, bool advisor, int target = 6)
 		{
 			ClassicAssert.IsTrue(KingdomQuickstartRules.TryProfile(key, out KingdomQuickstartProfile profile));
-			ClassicAssert.IsTrue(KingdomQuickstartRules.TryCreateReceipt(key, profile.ZoneId, out KingdomQuickstartReceipt receipt));
+			ClassicAssert.IsTrue(KingdomQuickstartRules.TryCreateReceipt(key, profile.ZoneId,
+				KingdomQuickstartFoundersDisposition.Omitted, out KingdomQuickstartReceipt receipt));
 			string[] values = { "", "Starapple", "water-id", "larder-id", "materials-id", advisor ? "advisor-id" : "", "" };
 			for (int phase = 1; phase <= target; phase++)
 			{

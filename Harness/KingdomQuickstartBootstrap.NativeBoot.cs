@@ -13,10 +13,18 @@ namespace ThousandAndFirst
 		internal static bool NativeVerifyFreshBoot(XRLGame Game, GameObject Founder, Zone Zone,
 			KingdomQuickstartProfile Profile, bool Advisor, out string Failure)
 		{
+			return NativeVerifyFreshBoot(Game, Founder, Zone, Profile, Advisor,
+				KingdomQuickstartRules.StarterWaterDrams, out Failure);
+		}
+
+		internal static bool NativeVerifyFreshBoot(XRLGame Game, GameObject Founder, Zone Zone,
+			KingdomQuickstartProfile Profile, bool Advisor, int InitialWaterDrams, out string Failure)
+		{
 			Failure = "Native fresh boot authority did not match the captured owner.";
 			try
 			{
-				if (Game == null || Founder == null || Zone == null || Profile == null
+				if ((InitialWaterDrams != 24 && InitialWaterDrams != KingdomQuickstartRules.StarterWaterDrams)
+					|| Game == null || Founder == null || Zone == null || Profile == null
 					|| Game.StringGameState == null || Game.IntGameState == null
 					|| Game.Int64GameState == null || Game.ObjectGameState == null
 					|| Game.BooleanGameState == null) return false;
@@ -25,13 +33,15 @@ namespace ThousandAndFirst
 				string raw = Game.GetStringGameState(KingdomQuickstartRules.ReceiptState, null);
 				if (!NativeBootString(Game, KingdomQuickstartRules.ReceiptState, raw)
 					|| !KingdomQuickstartRules.TryDecode(raw, out KingdomQuickstartReceipt receipt)
-					|| receipt.Phase != KingdomQuickstartPhase.Complete
+					|| !KingdomQuickstartRules.IsTerminal(receipt)
+					|| receipt.FoundersDisposition
+						== KingdomQuickstartFoundersDisposition.Faulted
 					|| KingdomQuickstartRules.Encode(receipt) != raw
 					|| receipt.ProfileKey != Profile.Key || receipt.ZoneId != Profile.ZoneId
 					|| receipt.AdvisorDisposition != (Advisor ? KingdomQuickstartAdvisorDisposition.Included
 						: KingdomQuickstartAdvisorDisposition.Omitted))
 				{
-					Failure = "Native boot lacks its canonical Complete receipt or exact advisor decision.";
+					Failure = "Native boot lacks its canonical finished receipt or exact advisor decision.";
 					return false;
 				}
 				if (!NativeBootRoster(Zone, Founder, receipt, out GameObject[] grants, out Failure)) return false;
@@ -41,7 +51,7 @@ namespace ThousandAndFirst
 					return false;
 				}
 				if (!VerifyComplete(owner.System, Zone, receipt, out Failure)
-					|| !VerifyWaterGrant(Zone, grants[0], receipt, true, out Failure)
+					|| !NativeInitialWater(Zone, grants[0], receipt, InitialWaterDrams, out Failure)
 					|| !VerifyLarderGrant(Zone, grants[1], receipt, true, out Failure)
 					|| !VerifyMaterialsGrant(Zone, grants[2], receipt, true, out Failure)) return false;
 				if (!NativeBootRoster(Zone, Founder, receipt, out GameObject[] after, out Failure)) return false;
@@ -65,6 +75,16 @@ namespace ThousandAndFirst
 				Failure = "Native fresh boot verification threw " + ex.GetType().Name + ".";
 				return false;
 			}
+		}
+
+		private static bool NativeInitialWater(Zone Zone, GameObject Water,
+			KingdomQuickstartReceipt Receipt, int Drams, out string Failure)
+		{
+			if (!VerifyWaterGrant(Zone, Water, Receipt, false, out Failure)) return false;
+			LiquidVolume volume = Water.GetPart<LiquidVolume>();
+			if (volume.Volume == Drams && KingdomLiquids.HasFreshWater(volume)) return true;
+			Failure = "The saved starter water differs from its source-bound initial grant of " + Drams + " drams.";
+			return false;
 		}
 
 		private sealed class NativeBootOwner
@@ -148,14 +168,24 @@ namespace ThousandAndFirst
 			Grants = null;
 			Failure = "Native boot grant IDs, markers, or loaded-zone custody were not exact and unique.";
 			if (Zone.Width != 80 || Zone.Height != 25) return false;
-			string[] ids = { Receipt.WaterObjectId, Receipt.LarderObjectId, Receipt.StockpileObjectId, Receipt.AdvisorObjectId };
-			string[] markers = new string[4]; int[] counts = new int[4]; GameObject[] found = new GameObject[4];
+			// Eight slots: the four grants, then the four founder bodies. A founder wears an
+			// indexed reservation of the same family, so an unknown-marker object is still a hard
+			// failure here; without these rows every founder would be one.
+			const int slots = 4 + KingdomQuickstartRules.FounderCount;
+			string[] ids = new string[slots];
+			ids[0] = Receipt.WaterObjectId; ids[1] = Receipt.LarderObjectId;
+			ids[2] = Receipt.StockpileObjectId; ids[3] = Receipt.AdvisorObjectId;
+			for (int i = 0; i < KingdomQuickstartRules.FounderCount; i++) ids[4 + i] = Receipt.FounderObjectIds[i];
+			string[] markers = new string[slots]; int[] counts = new int[slots]; GameObject[] found = new GameObject[slots];
 			bool advisor = Receipt.AdvisorDisposition == KingdomQuickstartAdvisorDisposition.Included;
+			bool seeded = Receipt.FoundersDisposition == KingdomQuickstartFoundersDisposition.Seeded;
 			HashSet<string> distinct = new HashSet<string>(StringComparer.Ordinal);
-			for (int i = 0; i < 4; i++)
+			for (int i = 0; i < slots; i++)
 			{
-				markers[i] = KingdomQuickstartRules.GrantMarker(Receipt, (KingdomQuickstartPhase)(i + 2));
-				if (string.IsNullOrEmpty(markers[i]) || (i < 3 || advisor) && (string.IsNullOrEmpty(ids[i]) || !distinct.Add(ids[i]))) return false;
+				markers[i] = i < 4 ? KingdomQuickstartRules.GrantMarker(Receipt, (KingdomQuickstartPhase)(i + 2))
+					: KingdomQuickstartRules.FounderMarker(Receipt, i - 4);
+				bool owed = i < 3 || (i == 3 ? advisor : seeded);
+				if (string.IsNullOrEmpty(markers[i]) || owed && (string.IsNullOrEmpty(ids[i]) || !distinct.Add(ids[i]))) return false;
 			}
 			Stack<GameObject> pending = new Stack<GameObject>();
 			Dictionary<GameObject, Cell> roots = new Dictionary<GameObject, Cell>();
@@ -183,14 +213,14 @@ namespace ThousandAndFirst
 				if (item.HasIntProperty(KingdomQuickstartRules.GrantMarkerProperty)) return false;
 				string marker = tagged ? item.GetStringProperty(KingdomQuickstartRules.GrantMarkerProperty) : null;
 				int role = -1, idRole = -1;
-				for (int i = 0; i < 4; i++)
+				for (int i = 0; i < slots; i++)
 				{
 					if (tagged && marker == markers[i]) role = i;
 					if (!string.IsNullOrEmpty(ids[i]) && id == ids[i]) idRole = i;
 				}
 				if (tagged || idRole >= 0)
 				{
-					if (role < 0 || role != idRole || role == 3 && !advisor || ++counts[role] != 1
+					if (role < 0 || role != idRole || role == 3 && !advisor || role >= 4 && !seeded || ++counts[role] != 1
 						|| ReferenceEquals(item, Founder) || !GameObject.Validate(item) || item.Physics == null
 						|| !ReferenceEquals(item.Physics._ParentObject, item) || item.Physics._InInventory != null
 						|| item.Physics._Equipped != null || item.Physics._CurrentCell == null
@@ -203,6 +233,7 @@ namespace ThousandAndFirst
 			}
 			if (Zone.Width != 80 || Zone.Height != 25 || founders != 1 || counts[0] != 1 || counts[1] != 1
 				|| counts[2] != 1 || counts[3] != (advisor ? 1 : 0)) return false;
+			for (int i = 4; i < slots; i++) if (counts[i] != (seeded ? 1 : 0)) return false;
 			Grants = found; Failure = null;
 			return true;
 		}

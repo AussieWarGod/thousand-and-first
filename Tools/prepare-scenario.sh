@@ -172,20 +172,42 @@ fi
 python3 "$PROFILE_TOOL" seal "$LOCAL" "$SEAL_DIR/profile.sha256"
 printf '%s\n' "$REQUEST" > "$SEAL_DIR/request.txt"
 
+# ---- the session's own run record -------------------------------------------------------------
+# What only preparation knows: which frozen tree was staged, what that tree's production
+# structure actually measures (never the review ledger, which an active candidate keeps stale on
+# purpose), this session's own closed profile seal, the frozen seed and the budget it was given.
+# The launch and stop halves are written later by Tools/run-scenario.ps1, which binds them to the
+# ownership receipt it wrote for the exact process it started. Opt-in, because every
+# existing profile shape must keep preparing exactly as it did: set TAF_SCENARIO_ROLE to
+# save-session or cold-load-session to ask for a record.
+if [ -n "${TAF_SCENARIO_ROLE:-}" ]; then
+	RECORD_TURN_BUDGET="${TAF_SCENARIO_TURN_BUDGET:-10000}"
+	RECORD_TIMEOUT="${TAF_SCENARIO_TIMEOUT_SECONDS:-3600}"
+	python3 "$REPO/Tools/scenario_run_record.py" seal "$ROOT" \
+		--tree "$REPO" --role "$TAF_SCENARIO_ROLE" --seed "$SEED" \
+		--script "${TAF_SCENARIO_SCRIPT:-}" --profile-name "$(basename "$ROOT")" \
+		--turn-budget "$RECORD_TURN_BUDGET" --timeout-seconds "$RECORD_TIMEOUT"
+fi
+
 QUICKSTART_BANNER=""
 BANNER_COMMANDS=0
 if [ -f "$LOCAL/scenario-script.txt" ]; then
 	while IFS= read -r BANNER_LINE; do
 		case "$BANNER_LINE" in ''|'#'*) continue ;; esac
 		BANNER_COMMANDS=$(( BANNER_COMMANDS + 1 ))
-		if [[ "$BANNER_LINE" =~ ^quickstart-(boot|save|build)\ (marsh|canyon|dunes)\ (yes|no)$ ]]; then
+		if [[ "$BANNER_LINE" =~ ^quickstart-(boot|save|build|lifecycle)\ (marsh|canyon|dunes)\ (yes|no)$ ]]; then
 			QUICKSTART_BANNER="${BASH_REMATCH[1]}"
 			QUICKSTART_PROFILE="${BASH_REMATCH[2]}"
 			QUICKSTART_ADVISOR="${BASH_REMATCH[3]}"
+			QUICKSTART_COMMAND_LINE="$BANNER_COMMANDS"
 		fi
 	done < "$LOCAL/scenario-script.txt"
 fi
-if [ "$BANNER_COMMANDS" -ne 1 ]; then QUICKSTART_BANNER=""; fi
+# Boot, save and build are the whole script and stay that way. The lifecycle variant is the only
+# one that may carry further sealed AutoRunner lines, and its command must still be the first.
+if [ "$QUICKSTART_BANNER" = "lifecycle" ]; then
+	if [ "${QUICKSTART_COMMAND_LINE:-0}" -ne 1 ]; then QUICKSTART_BANNER=""; fi
+elif [ "$BANNER_COMMANDS" -ne 1 ]; then QUICKSTART_BANNER=""; fi
 if [ -z "$QUICKSTART_BANNER" ]; then
 	printf '%s\n' "$START_LINE" "$OPTIONS_NOTE"
 fi

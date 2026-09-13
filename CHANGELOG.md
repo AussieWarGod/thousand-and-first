@@ -8,6 +8,348 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
+## [0.3.4] — 2026-09-13 (Alpha)
+
+- Guests without a creed can complete enrollment without a false state-mismatch refusal.
+- Arrival transactions now give each enrollment step a distinct event and receipt identity.
+- First-guest dialogue now opens the local stock transaction scope required to enroll a citizen and debit arrival water.
+- A first guest refused for lack of suitable housing stays present and available to welcome again after construction.
+
+Alpha hotfix for Quickstart founding, housing recovery and guest recruitment.
+
+Quickstart supplies four founding citizens, two shelter plots and a full finite
+64-dram water cask. Housing-driven departures retain the final two citizens so
+construction can recover. The guide explains the starter housing and first guest.
+Young settlements tolerate typed pending spatial capture on cold load, and exact
+stamped teardown orders can resume. Salvage now assigns a selected stockpile identity
+before recording inventory custody, preventing valid timber returns from quarantining
+a completed demolition. End-of-pass work records also refresh before spatial sealing,
+so a legitimately removed building does not leave a stale sealed work root.
+Native/release evidence below remains scoped
+to its actual checkpoints; the broader Beta goal is not complete.
+
+Current 3098-file census is line-cap green: 440,124 physical lines; direct `XRL`
+imports occur in 1445 files, 0 of them over the line limit. Inventory SHA-256:
+`a5e00bd45a1122917e6b164ad98373cdcc043e6c681790495086ee0a2e870182`. The cold-install inventory contains 3129 files.
+This isolated 0.3.4 preparation combines heart authority, shared-XL transition, rung settlement
+and camp content/fixture branches with Quickstart recovery and exact strike phase recovery.
+All four compile modes and 14790 main/5743 portable cases pass with zero skips. Automated
+structural review binds this inventory. Native and release acceptance remain pending;
+all earlier checkpoint counts below retain their original scope.
+
+Draft surveyed-heart ingress correction: full heart authority plus exact physical public access,
+without requiring the ordinary road network beyond the enlarged margin. Ordinary road evidence
+and all protected-ground checks remain. Predecessor native road census reproduced #141; current
+draft compilation/native checks are owed. No later-rung or already-worn-ground acceptance claim.
+
+> **Retained camp integration census (#107 / #132 / #137).** Its 3079-file census is line-cap green:
+> 437,201 physical lines; 1434 XRL-importing files; zero at or above 300.
+> Inventory SHA-256: `304123d5ee1b31fa0b1369d5ad13c52888111f5c7563245f4fe4096c8ca38c70`.
+> Combined-tree four-mode compile, audit, main 14,341/portable 5,491 tests pass (managed zero
+> skips). Camp native proof remains pending; prior checkpoints below are retained.
+
+Retained #141 checkpoint: 3080-file census is line-cap green: 437,405 physical lines; direct `XRL`
+imports occur in 1435 files, 0 of them over the line limit. Inventory SHA-256:
+`c964d43923a5fa4284464d09029ef0b69a71bfe79b71185b3a25661c06149dca`.
+The cold-install inventory contains 3111 files. This is the dev backmerge with the #141 heart
+envelope authority correction replayed onto it, not the isolated 0.3.3 release package; that
+correction's only production delta is one file,
+`Growth/KingdomArchitectureStamper.EnvelopeGrowth.cs`. Semantic review remains pending.
+
+> **Retained census — the isolated #144 heart shared-XL transition fix over the dev backmerge.**
+> Its 3080-file census is line-cap green: 437,433 physical lines; zero files at
+> or above 300: 0 files exceed 300, 0 exceed 1,000, 0 exceed 2,000 and 0 exceed 5,000; direct
+> `XRL` imports occur in 1435 files, 0 of them over the line limit. Inventory SHA-256:
+> `24b4ab29aab9cd3c97bb30f5382df88937ee96eac565a6fb90ce52a0dd22c0a2`.
+> The cold-install inventory contains 3111 files.
+> Its production delta over the dev backmerge is two files: one pure endpoint rule added beside
+> the heart ladder it belongs to, and the heart transition guard rewired to ask it instead of
+> comparing a tier to a rung number. Everything else in it is DevTests and documentation.
+> Source-level only; no native rung 4 to 5 acceptance is claimed. Every earlier census below is
+> retained at its own bytes and is not restated for this one.
+
+> **Retained dev backmerge census — the dev merge before the #144 heart shared-XL transition
+> fix.** That 3080-file census is line-cap green: 437,399 physical lines; direct `XRL`
+> imports occur in 1435 files, 0 of them over the line limit. Inventory SHA-256:
+> `6ebc095bd595e636c48079ba5c41c0cb3bb92f3af7741d99b05eeb8b81acc78d`. The cold-install inventory
+> contains 3111 files. This is the dev backmerge, not the isolated 0.3.3 release package.
+> Combined-tree gates and semantic review remain pending.
+
+> **Retained #129 merged census — the #129 dev-harness native checks over the roadless seal
+> correction.** That 3079-file census is line-cap green: 437,320 physical lines, zero files at
+> or above 300: 0 files exceed 300, 0 exceed 1,000, 0 exceed 2,000 and 0 exceed 5,000; direct
+> `XRL` imports occur in 1434 files, 0 of them over the line limit. Inventory SHA-256:
+> `f9a9469102be2f0ca119056e08c884a56014b31439e71695852026f63bd02d17`.
+> The merge adds NO production source over the roadless correction: the production delta it
+> carries is the unmerged #124 raw-delivery-overflow fix this branch is built on, and everything
+> else in it is dev-harness shards, DevTests and documentation. Every earlier census below is
+> retained at its own bytes and is not restated for this one.
+
+> **Retained roadless seal census (#131), at its own bytes.** That 3079-file census was line-cap green:
+> 437,201 physical lines; zero files at or above 300; 1434 direct `XRL` importing files.
+> Inventory SHA-256: `ab4cf22e665900bd82593ad4f9805861da4458e60b918c59b1d3a0bb88b74617`.
+> The generated cold-install inventory contains 3110 files. All four compile modes pass;
+> audit and main 14,296/portable 5,460 tests pass (managed zero skips). The roadless-camp native
+> check passes at `0cfd8e7` after one retained startup timeout. Earlier census entries are retained evidence.
+
+### Fixed
+
+- **The heart's rungs now rise by the route they are meant to rise by.** Every rung of the heart
+  above the first climbs through the ordinary improvement machinery — the plot commissioner refuses
+  to commission one, and zoning never offers one — but the zone's standing rung was written only by
+  the plot route. A settlement that raised its rite ground into a waterstone therefore kept a zone
+  still stamped at rung one: the rung above it was refused for not accreting from its standing
+  rung, and the first basin stayed at sixteen drams instead of widening to forty-eight. The at-most-
+  once rung effects now live in one shared settlement helper that both routes call, so the
+  improvement handover stamps the rung, tells the chronicle once, and widens the basin exactly as
+  the plot route always did. Each route brings its OWN exact endpoint and custody proof, re-asked
+  after the ceremony callback, so a callback that moved or replaced the building refuses rather
+  than settling; the 0/1/2 attempted/lost marker is unchanged, so an interrupted ceremony is
+  honestly lost rather than fired twice; and a rung is never stamped backward. The improvement
+  route settles the rung BEFORE its receipt completes, so a rung that cannot settle exactly leaves
+  the receipt non-terminal for the ordinary recovery path instead of closing the job over an
+  unwritten rung. Every callback boundary re-establishes the whole handover proof — exact successor
+  blueprint, a predecessor that stayed gone, an unduplicated removal proof, and carried contents
+  that still agree with the receipt they were counted into, with the existing legacy zero-content
+  carve-out lifted whole rather than re-derived — so a callback that leaves the root standing but
+  changes what the root IS refuses instead of settling. The last of those re-asks runs after the
+  basin widening and outside its guard, because the guard must keep swallowing an idempotent basin
+  failure while a torn endpoint must refuse. No serialized field, save key, wire format or public
+  API changes. Saves already
+  stuck at a stale rung are a separate follow-up, not a silent migration here. Fixes #138.
+
+### Added
+
+- **A verdict for the whole construction lifecycle, and an honest name for the part that is
+  not driven yet.** The Quickstart harness already proves startup, a stockpile quote, the CanPay
+  pre-check, a paid commission with an exact timber and water debit and a new paid job, a real
+  save, and a cold load whose restored identities are byte-identical. Nothing judged those links
+  as ONE chain, and two links of that chain have no producer at all: carrying the paid job to a
+  finished building with engine turns, and acting again on the loaded game. A new read-only
+  verdict tool reads the journals a native run leaves and answers PASS only when every link
+  landed its rows in order; a link that landed no rows is BLOCKER, never a pass, and a link whose
+  rows refused is FAIL. It can also emit the long-form release
+  artefact from a driver-written run record: seven ordered steps, measured turns and seconds
+  beside their budgets, the two process sessions, and the candidate and continuity bindings --
+  omitting, and naming, anything the journals or the record do not actually carry. Source-only pins keep the harness and
+  the tool naming the same rows, so neither side can quietly stop demanding a link.
+
+- A dev-only native-check seam (`camp-heart-native-checks`) proves PR #107's owed native case 2:
+  the camp heart's dedicated stockpile keeps its exact object identity, its exact cell and every
+  physical unit the bill did not ask for across a REAL PAID climb from the rite ground to the
+  waterstone, and the cooking fire is re-laid on the same rite-relative cell. The fixture founds a
+  real camp, completes rung one through the production plot works, enrolls six real residents (each
+  standing on claimed ground and carrying a disclosed synthetic `KingdomBorn` provenance stamp
+  before its row is published, because production's roster gate requires one and citizenship
+  enrollment never sets it, with the published row then read back off the settlement's own book),
+  dedicates one real 400-dram reservoir, and fills the authored store to its declared forty-eight
+  units with real material objects — exactly the authored rung-2 bill (24 stone, 1 timber) plus 23
+  brush the bill never asks for, so the bill is drawn from the very store under test. Nothing after
+  setup is driven by the seam: the real settlement pass assesses the heart, begins the improvement,
+  commits the water and material debit, burns the labour and hands the rung over on the turns the
+  persona's own `advance` spends. Every retained unit is proved by its WHOLE custody — exact object
+  id, blueprint, the exact holder it was found in, and the raw stack count read through the
+  production raw-census seam, held BY REFERENCE across observations — so a matching total, a
+  replacement that reused the identity string, a moved unit or a changed stack all refuse; an
+  inventory row that is not a valid body held by that exact store with no cell of its own fails the
+  check rather than being skipped. Absence from the store is only ever claimed as absence from the
+  store: that the settlement SPENT the bill is proved separately from the production construction
+  job's own committed claim, compared EXACTLY against the authored catalogue cost in both
+  directions, so neither an ordinary drink nor an overcharge can pass as the bill. The
+  settlement-wide readings use the production unbound-recovery observation, which publishes
+  nothing, refuses during a bound pass, and refuses a partial index rather than under-reporting. Harness, persona and DevTests only; no
+  production source changed.
+
+- The same seam now also answers PR #107's native case 6 as far as the production plot-claim path
+  reaches: a REAL commission is put to the settlement while the camp heart stands, and the heart's
+  ground is proved untakeable — the commissioned plot never lands on the heart's reserved rect, the
+  production crowding predicate refuses the exact rect that would cover the camp store's own cell,
+  and the store and fire are untouched by the attempt. **No stockpile-specific refusal reason is
+  claimed.** #107's wording "refuses for stockpile reason" is deliberately not asserted, because
+  production records no such reason here: the siting path drops a crowding rect with a bare
+  `continue` and no recorded reason before the ground is ever read, and the founder-facing answer
+  when nothing fits is `KingdomPlotRules.RefuseRoom`. Cases 1, 3, 4 and 5 of #107 remain owed.
+
+
+- Kingdom Quickstart now founds a world with four founding citizens — a hand, a drifter, a tinker
+  and a physicker of one culture per camp — enrolled under a new `Founding` reason that only this
+  bootstrap can emit, on the roll and able to work at turn 1, standing on the approach. They arrive
+  together or not at all: the bodies and all their gear are raised inside one custody scope, so a
+  proved complete unwind permits a clean retry. A durable Raising receipt precedes the first
+  factory; an interrupted attempt with no bodies left on this ground never invents replacements.
+  They sleep rough until the two tent rows stand (about a day and a half) against a six-day grace,
+  and the completion notice and the charter both say so. Four at a camp drink 4 drams a day, so the
+  opening 24 drams last six days, and the base arrival interval becomes 6000 ticks rather than 3600.
+  Actual arrival timing still follows the live cadence, district, and settlement policies.
+  A save cut part-way through enrollment resumes by the exact published founder identities.
+  Each founder is counted into the settlement's per-profile origin tally by ADDING one under its
+  own durable, identity-bound obligation — bound to the exact body, profile and owning city and
+  proved so on every read, prepared before anything is mutated, and completed only after both the
+  origin label and the tally have been measured. That tally is shared with ordinary arrivals, which
+  raise it inside their own protocol, so five citizens already here plus four founders is nine.
+  Where an interruption falls between the label and the increment, the outcome cannot be told from
+  the tally — an unrelated arrival can leave it reading exactly what a finished count would have
+  left, and counter equality therefore never authorises completion — so that founder's accounting
+  is declared unresolved in the open, once, and never retried. It is not declared SHORT: an
+  interruption after the increment retains it, and the two cases cannot be told apart afterwards,
+  so the tally is left exactly as it stands. That is a deliberate safety policy rather than a claim
+  of fully automatic forward recovery: the world stays playable and the founder is named, enrolled
+  and on the roll. Identities are bound to the canonical settlement, not to the ground it stands
+  on, so a later incarnation on the same first-claimed zone cannot inherit another's proof; a name
+  found in the engine's number-property table, or in both tables at once, stops the accounting
+  before any write and is left exactly where it stands as evidence; and identities must survive
+  strict UTF-8 unchanged, so an unpaired surrogate — which the replacement encoder would fold into
+  one indistinguishable value — is refused rather than written down, and a control character is
+  refused by policy because a pipe-delimited, line-oriented wire is no place to smuggle one. The
+  reader itself never raises: hashing is an encoding step, so the digest is taken inside the
+  refusal boundary and a raw wire carrying a lone surrogate is answered false rather than throwing. A save cut in the gap between the four bodies being placed
+  and their identities being published is recovered from the ground: each founder wears a
+  reservation minted from the camp's own frozen ground, so a wake adopts four that are already
+  standing rather than raising four more, and refuses outright — once, and permanently — on a party
+  that is not exactly four after an attempt began. A named founder that cannot be found afterwards is announced once
+  and never retried, and the world says it is short rather than quietly standing at one, two or
+  three. A refused cohort never costs the founder the stores or the completion notice. A world founded before this change, or founded
+  with the new option off, decodes with no cohort, re-encodes byte for byte as it was written, is
+  finished on every wake, and never gains founders. New option `r_TAF_OptionQuickstartFounders`,
+  default Yes, read once when the world is made and frozen there.
+
+### Fixed
+
+- **A heart's envelope growth asks the heart's own authority (PARTIAL #141).** Ordinary
+  plot-envelope growth may not claim founding-heart authority, and refuses every heart by design —
+  but the envelope-growth proof sent every differing-rect transition to exactly that refusal,
+  including the heart's own. Rungs one to four all change rect, so every one of them was refused
+  before any ground question was asked. That one call now asks `TryAuthorizedTransition` instead,
+  on these exact decoded endpoints, with no plan change permitted and the accretion flag ignored.
+  It already dispatches: a heart answers to the founding authority, and an ordinary lot whose
+  rects differ still reaches the ordinary expansion authority inside it, unchanged and still
+  refusing hearts. No new helper, no caller-supplied bypass, no new parameter or field, no
+  same-rect shortcut beyond the one already there. Every later check —
+  interior fit, malformed geometry, plot overlap and road budget, siting probe and frozen envelope
+  including positive ingress, settled outputs, the per-cell sweep — is unchanged and still runs,
+  and every retry call site still proves growth unconditionally.
+
+  **This is partial and heart progression is not claimed to work.** Positive road ingress at
+  `TryPhysicalRoadIngressScore` remains unresolved and is the likely next native refusal: neither
+  founding route lays qualifying road or worn-cell evidence at the heart's entrance lane. The
+  change is source-only: proven by source pins and mutation, with no native run and no rung
+  transition proven. Replayed onto `dev` `3a287e4`; in the original commit `b1efe18` the four-mode
+  compile ran before a comment-only seven-to-three line trim of the inline rationale, so that
+  gate saw the same executable bytes but four more comment lines. Refs #141.
+
+- **Correct heartcourt-to-arcology tier validation.** The great court and the arcology stand on the same XL
+  ground — the catalogue puts them in one binding and marks the arcology a renovation, not a
+  growth — but the authored transition guard asked whether a lot's TIER equalled its RUNG NUMBER.
+  That holds by coincidence for the first four rungs and is false by construction for the fifth,
+  whose tier is Huge rather than five, so rung four to five refused every time for a reason no
+  ground, occupant or road could satisfy. The guard now asks the canonical rung-size mapping the
+  expected rects are already derived from, which leaves rungs one to four judged exactly as
+  before and admits the one same-footprint renovation at the top. The endpoint half of that
+  question is now one pure rule, `KingdomPlotRules.HeartRungEndpointsAdmit`, sitting beside the
+  ladder it reads and covered by ordinary value tests rather than only by a source pin. Every
+  other proof the branch made — owner, rung adjacency, plan, lot type, facing, fixed anchors, both rects, the plot/lot
+  identity and both rite-basin custody checks — is unchanged and still made in the same order, and
+  no heart-only bypass was added: a same-rect heart transition simply never reaches the ordinary
+  envelope authority, because that call is already gated on the rects differing. Source-level
+  only; no native rung 4 to 5 acceptance is claimed. Refs #144.
+
+
+- The rite-ground catalogue description names its canvas horseshoe instead of the old bare ring.
+- The native subsidence/founding-heart fixture now proves both its empty 1,920-dram reservoir
+  and the real founding receipt's dedicated 16-dram first basin. The old one-store assertion
+  refused a correct 50-resident setup. Exact identities, dedication, placement and empty contents
+  remain checked; production water capacity and accounting are unchanged.
+- A roadless completed camp now reports that its spatial seal is waiting for connected streets,
+  rather than treating that exact intermediate topology as corruption during daily/save polls.
+  Capture still refuses to publish: no new seal, old spatial fallback, fabricated street, or
+  weakened geometry validation. No saved fields or formats change. Bounded roadless native
+  verification passed under #131; terminal/recovery refusal semantics are unchanged.
+
+- Master resume now reanchors the semantic clock for a completed, published receipt even when
+  its durable active flag remains set. Unfinished, unpublished, or malformed active receipts
+  retain their old clock, so resuming never fabricates publication. The same rule serves the
+  seated settlement and away mirrors; no saved fields or formats change. Native component
+  verification is recorded in STATUS; overall economic fixture refusals remain retained.
+- Canonical compile gates honor a private `TMPDIR` for both independently allocated trees,
+  allowing parallel workers to avoid the shared `/tmp` publication lock without bypassing it.
+- The dev-only scenario test ground's `Strip`/`Restrip` cleared only the zone's interior objects, so
+  a re-stripped ground could still carry worldgen's `faction` zone property forward into the next
+  attempt — not born-clean. `Strip` now also clears `"faction"`, but ONLY once it has proved no
+  founding-attempt site reservation stands on the zone: a prior attempt's reservation (authority,
+  name, vocation, village-charter target, tick) is production state a resumed or cleaned-up attempt
+  still reads, and erasing any proper subset of it would silently change what the reservation means
+  rather than make the ground clean. When one is pending, `Strip` now refuses whole and touches
+  nothing, and `BuildZone`/`Restrip` carry that refusal into their journal row
+  (`Harness/KingdomScenarioTestGround.cs`). The harness first-city founding step also gained a
+  read-only foreign-faction precondition, mirroring `KingdomRules.GroundIsForeignFaction` — the SAME
+  predicate `Core/KingdomFounding.04.Claims.cs` guards publication with — so a foreign zone is refused
+  before the production transaction ever runs rather than publish-then-refuse
+  (`Harness/KingdomScenarioFoundingStep.cs`). Harness-only; no production source changed and the
+  structural census is unchanged. Refs #90.
+
+- Developer reload failures retain the original exception as their cause and report both errors
+  when receipt-owned cleanup also refuses. No later persona may assume cleanup succeeded.
+  Shell lifecycle fixtures exercise reload argument routing and stop the matrix after refusal.
+- The cold-reload host arms a kernel parent-death signal so a killed run-personas.sh cannot
+  orphan it: two arming races (parent already gone before, or during, the arming call) refuse
+  explicitly rather than proceeding unprotected, and a failed prctl (missing libc, refused
+  syscall) refuses rather than a silent fallback. run-personas.sh itself still never sends a raw
+  kill to any process; it relies on the kernel-delivered signal and reports truthfully that its
+  own exit is a hand-off, not confirmed cleanup. Executable process-lifecycle tests (real child
+  processes, real signals, no game launch) prove the disposal, the refusals, and the shell's
+  forwarding and reporting.
+- Developer profile validation batches metadata checks four at a time, preserving every path,
+  link, size and closed-inventory check while reducing serialized filesystem overhead.
+
+- Private staging cleanup admits, removes and proves one entry inside a single helper process.
+  The previous protocol split those steps across processes, so the freed inode number could be
+  recycled by an unrelated concurrent directory before the post-removal identity search ran, and a
+  clean gate was refused. The descriptor the removal already opens on the sequestered entry is now
+  held across the removal, deletion is proved positively by that descriptor reporting zero links,
+  and the identity search runs while it is still open. Exact-identity admission, the exit-5 refusal
+  meaning and the identity search are unchanged; an entry whose name is gone while its identity is
+  still present elsewhere in the parent is refused rather than reported absent; probe cleanup is
+  identity-bound, never name-bound; and a filesystem that cannot witness a released inode is
+  refused by name with no fallback.
+
+- Repository audits ignore existing Python bytecode and disable new cache writes. Same-size,
+  same-second mutation/restoration cycles therefore test current source, not a stale `.pyc`.
+- Developer cold-load preparation anchors all destination writes, including directory creation,
+  saved-game copies and receipt files, through no-follow directory handles. An ancestor symlink
+  swap cannot redirect writes outside the intended tree; independent readback and seal checks
+  still refuse changed paths. This changes test tooling only, not ordinary saves or mod content.
+- Cold-load phase durations use a monotonic clock; wall-clock timestamps remain available for
+  correlation. Parallel copies reject invalid worker counts, cap concurrency, and propagate
+  process-control exceptions after joining submitted work.
+
+### Added
+
+- The rite ground is now a camp. A horseshoe of seven canvas cells stands round the basin, a
+  cooking fire burns beside it, and one dry stockpile holds 48 units of what the settlement has
+  cut and carried. The camp's fire warms its own hearthstone and nothing else — not even what is
+  standing on the same cell — so the canvas ring can never catch and nobody who walks through the
+  fire is burned by it. Every other hearth in the catalogue is unchanged. The
+  horseshoe opens south onto the approach the rite already declared, because the heart's Small
+  6x4 plot cannot hold a closed ring, the rite, the fire and the store at once. The store sits on
+  a yard cell just outside the frozen 4x4 footprint, which is lawful; widening the footprint is
+  not. The founding bill (canvas:4, timber:2) is the rite's own gift and is charged to nobody:
+  heart rungs are refused by every commission path.
+- The stockpile rides every heart rung at the same rite-relative cell — under canvas at the rite
+  ground and the waterstone, inside the walls at the moot, the great court and the arcology — so
+  what is in it is never moved, emptied or re-founded when the settlement builds over it. It
+  counts toward the eight stores the keepers will account for.
+- Each heart rung now asks for one more timber than the rung below it (2/3/20/21/22), so a
+  settlement founded before this change raises its store at **the next improvement it begins
+  after this update**, with the timber for it already in that transition's bill. An improvement
+  already under way finishes to the plan it was paid for: storeless, on the old bill, with the
+  store arriving one rung later. Nothing is re-priced, refunded or quarantined at any point.
+
+### Docs
+
+- Landed the 2026-09-09 Beta gap report (`docs/BETA-GAP-REPORT-2026-09-09.md`), re-read against the
+  shipped 0.3.2 bytes: gates #58–#70 remain open, and the report sizes each gap and lists open
+  decisions for the author. Docs-only; no source, tooling, package, or release bytes change.
+
 ## [0.3.3] — 2026-09-11 (Alpha)
 
 ### Fixed
@@ -30,12 +372,13 @@ stock stays in place; no replacement supplies or blanket identity repair are per
 Back up saves before updating. Existing-save reload and downgrade compatibility are not
 claimed from the fresh-world regression.
 
-Current 3069-file census is line-cap green: 435,617 physical lines; direct `XRL`
+Isolated main candidate 3069-file census is line-cap green: 435,617 physical lines; direct `XRL`
 imports occur in 1430 files, 0 of them over the line limit. Inventory SHA-256:
 `249d3bb40ca34f57289770494e985a97e81cf42c2bae8f053fb6e14005b61d3d`.
 The generated cold-install inventory contains 3100 files. Exact-inventory source review is
-current. Automated native paid commissioning and six save/cold-load pairs passed on this
-runtime; building completion and historical-save construction remain unverified.
+current for those main bytes. Automated native paid commissioning and six save/cold-load
+pairs passed on that runtime; building completion and historical-save construction remain
+unverified. These receipts do not sign unreleased dev changes.
 
 ## [0.3.2] — 2026-09-09 (Alpha)
 
@@ -125,6 +468,62 @@ runtime; building completion and historical-save construction remain unverified.
 
 ### Changed
 
+- DEV-HARNESS ONLY: a native-check seam drives the raw delivery refusal through the REAL adapters
+  — `KingdomMaterials.StockpileDepositHost` and `KingdomMaterials.GroundSpillHost` — and the real
+  `KingdomDepositEngine.Fill`, over real bodies in a really founded camp
+  (`Harness/KingdomDepositOverflowNativeProvider.cs` and its checks, fixture and cases shards,
+  `Tools/personas/deposit-overflow-native-check.persona`). Four cases: an ordinary delivered parcel
+  into the store and onto bare ground; a real held stack at exactly `int.MaxValue` that still reads
+  and still credits; and a total past `int.MaxValue` refusing on both hosts with zero credit and
+  every standing body proved unchanged by identity, blueprint, raw count and the exact zone, cell
+  and holder OBJECTS — compared by reference, never by id, so a replacement holder or a rebuilt
+  zone wearing the same id cannot read as unmoved. A body is admitted only in exactly one custody
+  (in a cell and nobody's inventory, or in the exact container and no cell), with an assigned id
+  and a positive raw count. A freshly created object carries no engine id until something asks —
+  `IDIfAssigned` is a plain read while `GameObject.ID` allocates on first access — so the fixture
+  asks once per body it makes, through the engine's own allocator, while it is still building that
+  body and never from an observation path; that synthetic identity allocation is disclosed with its
+  count in every report line. The store the suite delivers
+  into is the fixture's own chest, dedicated through the production check-in
+  (`KingdomMaterials.DedicateStockpile`) rather than stamped, so this ticket takes no dependency on
+  another ticket's heart stockpile. The three ground cases reserve three DISTINCT cells before any
+  of them is used, with a pure engine-free regression for the reservation itself
+  (`Harness/KingdomDepositOverflowReservation.cs`,
+  `DevTests/KingdomDepositOverflowReservationTests.cs`). The large stacks are
+  fixture bodies whose `Stacker.StackCount` the harness assigns directly and which carry
+  `NeverStack` so the engine cannot merge two rows into one; that synthetic setup is disclosed in
+  every report line, in the persona and in the PR. No production source, blueprint, or saved format
+  changes, and the run itself is still owed. Refs #111.
+
+- A settlement delivery read its destination's room and its gain by summing raw stack counts into
+  an `int`. A stack's count is the engine's own plain `int` field with no ceiling on it
+  (`Stacker._StackCount`, read back by `Reader.ReadInt32` and merged by unchecked `int` addition),
+  so two honest stacks can total more than `int.MaxValue`. Summed unchecked, two stacks of
+  1,200,000,000 read back as −1,894,967,296: a full chest then reports 1,894,967,360 places free
+  and admits the delivery past its stated size, and a pair of wrapped gain readings agrees mod 2^32
+  and pays the delivery in full for a landing nobody can see. Both censuses now total in a `long`
+  and answer FALSE once the total is not representable as an `int`, and the deposit seam's two raw
+  readings answer with a
+  proof rather than a number (`Growth/KingdomMaterials.RawObservation.cs`,
+  `Core/IKingdomDepositHost.cs`, `Growth/KingdomMaterials.StockpileDeposit.cs`,
+  `Growth/KingdomMaterials.GroundSpill.cs`). The bound is representability itself — what an `int`
+  can hold — so a legitimately large modded store is never refused for being large, and nothing is
+  ever saturated into an exact-looking total. An unreadable room or an unreadable hold BEFORE the
+  insertion destroys the parcel this delivery made itself (behind the same held-by-nobody proof
+  every other withdrawal stands behind) and stops, leaving what was already proved into the store
+  in the same fill credited; an unreadable hold AFTER it destroys nothing and moves nothing,
+  because the parcel then belongs to the destination, and simply takes no credit for that parcel.
+  A parcel proved exact-body is credited on that proof alone and never depends on the before/after
+  comparison at all. Units left uncertain this way are UNPROVEN rather than known-undelivered:
+  no replacement is minted and nothing replays them automatically
+  (`Core/KingdomDepositEngine.cs`). `KingdomRules.DepositLandedUnits` also refuses a negative hold
+  on either side outright, so the arithmetic cannot be talked into a credit by a caller that takes
+  its counts elsewhere (`Core/KingdomRules.MaterialStores.cs`). Custody is reported as `Unproved`
+  and said once; no enum member, saved format, capacity, or stored item changed, and a standing
+  save reads exactly what it read before. The public advisory readings
+  `KingdomSurvey.StockHeldIn` and `KingdomMaterials.StockpileRoom` are deliberately NOT changed
+  here and remain a follow-up on #111. Refs #111.
+
 - The deposit law moved out of the engine-facing shard into `Core/KingdomDepositEngine.cs` behind
   `Core/IKingdomDepositHost.cs`, so it can be driven against handlers that relocate, fill, veto a
   destruction, or merge the bundle away mid-callback.
@@ -133,6 +532,47 @@ runtime; building completion and historical-save construction remain unverified.
   `Growth/KingdomMaterials.10b.YardWork.cs` to stay under the line cap. Counting stays whole and intake is still the only thing refused
   (ruling 5); no capacity, catch-up envelope, or stored item is touched, and a standing save reads
   exactly what it read before.
+
+> **Retained #129 checkpoint census — exact structural gate passed on those bytes.** That 3079-file census was line-cap green:
+> 437,320 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> **Retained master semantic resume census — exact structural gate passed on those bytes.** That 3078-file census was line-cap green:
+> 437,136 physical lines; zero files at or above 300; 1434 direct `XRL` imports.
+> Inventory SHA-256: `f533203f98ed26e0ab95970b54b13fce26d6281988e36c9e3d20f6f870a82bb9`.
+> Three production files changed, no added sources or saved fields. At 76ab44d, canonical compile
+> modes and repository audit pass; main 14,287 and portable 5,451 tests pass, zero skipped.
+> Fresh native proof remains pending; retained founder evidence below does not sign this correction.
+
+> **Retained founding-cohort census — exact structural gate passed on those bytes.**
+> 437,114 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,
+> 0 exceed 2,000 and 0 exceed 5,000; direct `XRL`
+> imports occur in 1434 files, 0 of them over the line limit. Inventory SHA-256:
+> `a918f8e8bab3c1ca44118211d0667ce027f1a0ef77610074f298e2b8b49cb396`.
+> The generated cold-install inventory contains 3109 files; no new subscription claim.
+> This digest is the Kingdom Quickstart founding cohort over the stockpile deposit custody census
+> retained below, and over every delta retained beneath that; each carries its own review chain and
+> none is restated for the others.
+> The founding-cohort delta over the custody census below is ten added and ten modified production
+> sources, and it regenerates the removal-coverage roster for the one object property the founder
+> origin accounting owns: the quickstart rules' founders partial, the bootstrap's receipt partial
+> split out of the bootstrap itself to stay under the line cap, the three bootstrap founders
+> partials, and the accounting's models, bounded versioned codec, host seam, engine-free
+> transaction and adapter are the additions; the quickstart models, rules, codec, citizenship
+> rules, bootstrap, recovery, verification, enrolment and lifecycle shards and the two harness
+> gates are the modifications.
+> On these bytes ALL FOUR compile modes are clean — staged baseline (3074 sources), staged
+> compatibility (3078 plus the tracked Hearthpyre 2.2.3 ABI stub), dev-harness baseline (3241) and
+> dev-harness compatibility (3245) — through the canonical `Tools/gate.sh` itself, with its
+> installed-Hearthpyre source and ABI step. The
+> engine-free suites pass ALL GREEN: 14,147 TafTests cases and 5,301 PortableTests cases, zero
+> skipped, of 14,147/5,301 discovered; the 670-test tooling suite passes. Forty-one guard mutations
+> were run against the new rules and thirty-six were caught by a failing case; the five survivors
+> are each recorded, with the guard that refuses the case first named in every one: the wire digest,
+> the codec floor, and the identity filter and the strict encoder, which cover each other so that
+> removing BOTH fails five cases.
+> NOT run for this delta: the native Quickstart boot matrix, ordinary play, graceful Quit and
+> Steam delivery. The six-profile boot matrix at seed `#43101` is OWED before merge, because this
+> delta changes what Quickstart does at boot.
+> The exact-inventory human semantic review is open against this digest; this is not Beta sign-off.
 
 > **Retained 0.3.2 census — exact structural gate passed.** The 3068-file census is line-cap green:
 > 435,538 physical lines, zero files at or above 300: 0 files exceed 300, 0 exceed 1,000,

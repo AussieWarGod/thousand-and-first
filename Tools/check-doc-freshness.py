@@ -35,6 +35,7 @@ FROZEN_SOURCE_CITATION_DOCUMENTS = frozenset(
         "_notes/ASSIGNMENT-LOG.md",
         "_notes/ARCOLOGY-AUTHORED-INTERIOR-PLAN.md",
         "_notes/ARCHITECTURE-POLISH-DISK-AUDIT.md",
+        "_notes/CITY-IMPLEMENTATION-PLAN-v4-2026-09-09.md",
         "_notes/CLOCK-REWORK-CHANGE-MAP.md",
         "_notes/CODEX-ENGINE-TRUTH-BATCH-1-ANSWERS.md",
         "_notes/COVERAGE-GAP-MAP.md",
@@ -636,11 +637,13 @@ def audit_public_release_status(problems):
         "`0.2.0` working tree is not a release package",
         "Once the public Alpha item exists",
     )
-    require(problems, "TESTING.md", "current public Alpha manifest is `0.3.3`")
+    # TESTING is frozen into the private candidate's protocol binding. Publication status
+    # changes during promotion, so it belongs in STATUS rather than this immutable protocol.
+    require(problems, "TESTING.md", "Public release status is tracked in [docs/STATUS.md](docs/STATUS.md)")
     forbid(
         problems,
         "TESTING.md",
-        "current public Alpha manifest is `0.3.1`",
+        "current public Alpha manifest is",
         "manifest remains `0.2.0`",
     )
     require(problems, "MODDING.md", '"r_ThousandAndFirst": "0.3.0"')
@@ -753,7 +756,7 @@ def audit_public(problems):
     require(
         problems,
         "README.md",
-        "0.3.3 public Alpha playtest",
+        "0.3.4 public Alpha playtest",
         "Back up saves before updating",
         "plots: lots reserve typed space",
         "r_ThousandAndFirst",

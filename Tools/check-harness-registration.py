@@ -455,7 +455,7 @@ def assert_route_wiring(problems: list[str], gate: str | None = None) -> None:
     for statement in traps:
         if not statement.endswith("trap cleanup EXIT"):
             problems.append("gate route wiring: a trap other than the literal cleanup trap")
-    if 'DEV="$(mktemp -d /tmp/taf-devharness.XXXXXX)"' not in statements:
+    if 'DEV="$(mktemp -d -t taf-devharness.XXXXXX)"' not in statements:
         problems.append("gate route wiring: the dev tree is not independently allocated")
     if not any("--inventory-digest" in row for row in statements):
         problems.append("gate route wiring: the receipt does not bind the compile inventory")

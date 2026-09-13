@@ -22,6 +22,7 @@ namespace ThousandAndFirst.Harness
 		internal static KingdomScenarioSaveSnapshot Snapshot;
 		internal static KingdomSubsidenceRungSaveSnapshot RungSnapshot;
 		internal static KingdomQuickstartSaveSnapshot QuickstartSnapshot;
+		internal static KingdomQuickstartLifecycleSnapshot LifecycleSnapshot;
 		internal static KingdomUpgradeSnapshot UpgradeSnapshot;
 		internal static bool Armed;
 		internal static string SnapshotWire;
@@ -90,6 +91,13 @@ namespace ThousandAndFirst.Harness
 				else if (SnapshotWire.StartsWith(KingdomQuickstartSaveSnapshotCodec.Prefix, StringComparison.Ordinal))
 					Check(KingdomQuickstartSaveSnapshotCodec.TryDecode(SnapshotWire, out QuickstartSnapshot)
 						&& QuickstartSnapshot.GameId == Request.GameId, "sealed Quickstart snapshot does not bind selected save");
+				else if (KingdomQuickstartLifecycleSnapshotCodec.MatchesPrefix(SnapshotWire))
+					// The lifecycle authority marker: only a save written by the lifecycle
+					// session carries this prefix, and only it reaches the lifecycle load branch.
+					// No other profile's load behaviour is touched by its presence or absence.
+					Check(KingdomQuickstartLifecycleSnapshotCodec.TryDecode(SnapshotWire, out LifecycleSnapshot)
+						&& LifecycleSnapshot.GameId == Request.GameId,
+						"sealed lifecycle snapshot does not bind the selected save");
 				else if (KingdomSubsidenceRungSaveSnapshotCodec.MatchesPrefix(SnapshotWire))
 					Check(KingdomSubsidenceRungSaveSnapshotCodec.MatchesCurrentPrefix(SnapshotWire)
 						&& KingdomSubsidenceRungSaveSnapshotCodec.TryDecode(SnapshotWire, out RungSnapshot)
@@ -126,6 +134,21 @@ namespace ThousandAndFirst.Harness
 				{
 					KingdomQuickstartLoadTest.VerifyLoaded(loaded);
 					quickstartVerified = true;
+					return;
+				}
+				if (LifecycleSnapshot != null)
+				{
+					// Two rows, in the order the chain runs: what the load itself proves, then
+					// the further action taken on the loaded world. The action's own refusal is
+					// journalled by its verb and never converted into a load failure.
+					KingdomQuickstartLifecycleLoad.VerifyLoaded(loaded, LifecycleSnapshot);
+					KingdomQuickstartLifecycleLoad.Next(loaded, LifecycleSnapshot);
+					Check(!KingdomScenarioLoadReaderWitness.HadErrors,
+						"engine reported deserialization errors");
+					Check(KingdomScenarioJournal.Append("SCRIPT-COMPLETE", true,
+						"native-lifecycle cold-load session complete; real-save-quit-load=true"
+						+ "; new-game-script-replayed=false; ordinary-acceptance=false") == null,
+						"lifecycle load completion could not be journalled");
 					return;
 				}
 				string route = RungSnapshot == null ? KingdomScenarioLoadWitness.VerifyRecovered(loaded, Snapshot)

@@ -72,7 +72,15 @@ namespace ThousandAndFirst
 			switch (Current.Phase)
 			{
 				case KingdomConstructionPhase.Published:
-					return Next.Phase == KingdomConstructionPhase.WaterPending;
+					// Strike has no purchase: its exact physical order is stamped before work
+					// starts. Permit that same persisted stamp to resume after an interruption,
+					// while every purchasing route still follows its funding ladder.
+					return Next.Phase == KingdomConstructionPhase.WaterPending
+						|| Current.Route == KingdomConstructionRoute.Strike
+							&& Current.PhysicalPhase == KingdomPhysicalPhase.StrikeWorking
+							&& Next.PhysicalPhase == Current.PhysicalPhase
+							&& Next.Phase == KingdomConstructionPhase.Working
+							&& FullyFundedExact(Current);
 				case KingdomConstructionPhase.WaterPending:
 					return Next.Phase == KingdomConstructionPhase.WaterSettled;
 				case KingdomConstructionPhase.WaterSettled:

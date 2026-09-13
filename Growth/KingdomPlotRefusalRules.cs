@@ -86,6 +86,78 @@ namespace ThousandAndFirst
 				+ " Let the trade go first, and the work can begin. Nothing in the yard comes down on its own.";
 		}
 
+		/// <summary>
+		/// Verbatim head of the stamper's occupant refusal (Growth/KingdomArchitectureStamper.
+		/// Verification.cs, CanInsert). Kept here so the refusal text and the reader that turns it
+		/// into a sentence for the founder cannot drift apart.
+		/// </summary>
+		public const string OccupantSlotRefusalPrefix = "a living occupant moved onto layout slot ";
+
+		/// <summary>True when a stage refusal is the living-occupant one and names a slot.</summary>
+		public static bool IsOccupantSlotRefusal(string Failure)
+		{
+			return OccupantSlotOf(Failure) != null;
+		}
+
+		/// <summary>The slot named by an occupant refusal, or null if it is another refusal.</summary>
+		public static string OccupantSlotOf(string Failure)
+		{
+			// Ordinal, like every other prefix parse in Growth: the matched length has to BE
+			// OccupantSlotRefusalPrefix.Length for the Substring below to cut the slot, and under
+			// linguistic comparison it need not be.
+			if (Failure == null || !Failure.StartsWith(OccupantSlotRefusalPrefix,
+					global::System.StringComparison.Ordinal)
+				|| Failure.Length <= OccupantSlotRefusalPrefix.Length) return null;
+			return Failure.Substring(OccupantSlotRefusalPrefix.Length);
+		}
+
+		/// <summary>
+		/// Whether a paid raising blocked by a living occupant owes the founder a sentence. Once
+		/// per job and slot: a block already spoken for that slot stays quiet on every later pass,
+		/// and the occupant standing on a DIFFERENT slot is a new fact worth saying.
+		/// </summary>
+		/// <param name="Announced">The raising root's announced flag: 1 once spoken.</param>
+		/// <param name="AnnouncedSlot">The slot last spoken for, or null if none.</param>
+		/// <param name="Slot">The slot the stamper refused now. Null says nothing.</param>
+		public static bool ShouldAnnounceOccupiedSlot(int Announced, string AnnouncedSlot,
+			string Slot)
+		{
+			return Slot != null && (Announced != 1 || AnnouncedSlot != Slot);
+		}
+
+		/// <summary>
+		/// A fully paid raising that cannot put its first stage on the ground because somebody is
+		/// standing on one of its slots. Named rather than retried in silence: the labour is spent,
+		/// the work will never land while the body is there, and moving a living occupant is not
+		/// the settlement's to do.
+		/// </summary>
+		public static string RefuseOccupiedSlot(string Name, string Slot)
+		{
+			return "The {{C|" + Name + "}} is paid for and cannot be raised: somebody is standing on the ground at layout slot " + Slot + ". Nothing living is moved to clear a plot. Send them off it, and the raising goes on.";
+		}
+
+		/// <summary>The stage pair a waiting line was said for, as stored on the raising root.</summary>
+		public static string StageWaitingPair(int Applied, int Target)
+		{
+			return Applied + ":" + Target;
+		}
+
+		/// <summary>
+		/// Whether a raising that is not advancing owes the log a line. Both conditions are load
+		/// bearing: an unpaid raising is merely accumulating labour between stages and would print
+		/// once per plot per pass, and a pair already said for this plot says nothing new.
+		/// </summary>
+		/// <param name="Remaining">Work ticks still owed; negative when unknown, which says nothing.</param>
+		/// <param name="Applied">The last stage physically applied.</param>
+		/// <param name="DoneStage">The stage value that means the raising is finished.</param>
+		/// <param name="LastPair">The pair last said for this plot, or null.</param>
+		/// <param name="Pair">The pair now in force.</param>
+		public static bool ShouldSayStageWaiting(long Remaining, int Applied, int DoneStage,
+			string LastPair, string Pair)
+		{
+			return Remaining == 0L && Applied < DoneStage && Pair != null && Pair != LastPair;
+		}
+
 		/// <summary>A design people are meant to sleep in, on a tier with nothing over it.</summary>
 		public static string RefuseBedRoof(string Name)
 		{

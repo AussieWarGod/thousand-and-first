@@ -70,9 +70,14 @@ namespace ThousandAndFirst
 		/// published by an interrupted retry are the sole non-ground objects admitted in the added
 		/// envelope.
 		/// </summary>
+		/// <param name="TolerateMovableOccupants">True only on the non-mutating preflight: a body
+		/// the crew may lawfully stand aside is not ground the improvement lacks, because the
+		/// mutating path clears it before it proves this again. The mutating path passes false, so
+		/// anything still standing there refuses.</param>
 		internal static bool TryProveEnvelopeGrowth(KingdomSystem System, Zone Z,
 			GameObject Owner, GameObject SuccessorOwner, KingdomArchitectureIntent Successor,
-			bool AllowSettledSuccessor, out string Failure)
+			bool AllowSettledSuccessor, out string Failure,
+			bool TolerateMovableOccupants = false)
 		{
 			Failure = null;
 			KingdomArchitectureIntent beforeIntent;
@@ -87,8 +92,14 @@ namespace ThousandAndFirst
 				return Failure != null ? false : Fail(
 					"plot-envelope growth needs exact owned settlement ground", out Failure);
 			if (SameRect(beforeIntent.Rect, Successor.Rect)) return true;
-			if (!TryAuthorizedEnvelopeExpansion(Owner, Z, beforeIntent, before, Successor,
-				after, out Failure)) return false;
+			// TryAuthorizedTransition dispatches: a heart answers to the founding authority, an
+			// ordinary differing rect still reaches TryAuthorizedEnvelopeExpansion inside it.
+			// Calling that expansion authority here refused every heart, rungs one to four.
+			if (!TryAuthorizedTransition(Owner, Z, beforeIntent, before, Successor, after,
+				false, out bool heartAccretion, out Failure))
+			{
+				return false;
+			}
 			ArchitectureLayoutDelta delta;
 			if (!KingdomArchitectureRules.TryBuildDelta(before, after, out delta, out Failure))
 				return false;
@@ -144,20 +155,36 @@ namespace ThousandAndFirst
 				return Fail("the enlarged authored lot would spend settlement road ground",
 					out Failure);
 
+			// The surveyed founding heart proves its exact public approach, not an ordinary
+			// road-frontage network. Its standing door errands end inside the successor's road
+			// margin, so demanding worn ground beyond that margin deadlocks the first accretion.
+			// Only the complete heart authority above admits this distinction. Physical ingress
+			// remains mandatory before debit AND on paid retry; protected road ground below is
+			// never donated by this proof, even when it lies inside the surveyed heart envelope.
+			if (heartAccretion && !KingdomArchitectureRuntime.TryVerifyPhysicalIngressRoutes(
+				Z, Successor.Rect, after, out Failure)) return false;
+			bool requireExistingRoadEvidence = !heartAccretion;
 			if (!AllowSettledSuccessor)
 			{
 				KingdomArchitectureRuntime.SitingProbe probe;
 				if (!KingdomArchitectureRuntime.TryCreateSitingProbe(System, Z, Successor.Rect,
 					after.BuildKey, after.LotType, out probe, out Failure)
-					|| !probe.TryAcceptExact(Successor.Rect, after, true, out Failure)) return false;
+					|| !probe.TryAcceptExact(Successor.Rect, after, requireExistingRoadEvidence,
+						out Failure)) return false;
 			}
 			else if (!KingdomArchitectureRuntime.TryAcceptFrozenEnvelope(Z, Successor.Rect,
-				after, true, out Failure)) return false;
+				after, requireExistingRoadEvidence, out Failure)) return false;
 
 			HashSet<GameObject> settled = new HashSet<GameObject>();
 			if (!TryReadSettledExpansionOutputs(Owner, SuccessorOwner, Z, beforeIntent,
 				Successor, before, after, delta, lot, AllowSettledSuccessor, settled,
 				out Failure)) return false;
+			// A body only stands in the way of a cell the successor map declares Blocked: annexed
+			// path, yard and adjacent-use ground is walked on, and the founder standing there has
+			// never been a reason a settlement cannot grow (issue #176 class, run 42).
+			if (!TryPlacementPassability(Successor, Z,
+				out Dictionary<int, ArchitecturePassability> successorSlots, out Failure))
+				return false;
 			HashSet<int> connections = ConnectionCells(Z);
 			HashSet<int> wornRoads = ReadWornRoadCells(Z);
 			for (int y = Successor.Rect.Y1; y <= Successor.Rect.Y2; y++)
@@ -189,8 +216,16 @@ namespace ThousandAndFirst
 						if (!GameObject.Validate(item)) continue;
 						if (settled.Contains(item)) continue;
 						if (item.IsCreature || item.IsPlayer())
+						{
+							ArchitecturePassability declared = ArchitecturePassability.Walkable;
+							if (!successorSlots.TryGetValue(packed, out declared)
+								|| !KingdomPlotRules.SlotBlocksOccupant(declared)) continue;
+							if (TolerateMovableOccupants
+								&& KingdomPlots.IsMovableEnvelopeOccupant(System, Z, item)) continue;
+							KingdomPlots.NameEnvelopeOccupant(System, Z, item, declared);
 							return Fail("a living occupant stands on plot-envelope growth ground at "
 								+ Coordinate(x, y), out Failure);
+						}
 						if (item.GetIntProperty(KingdomPlots.HeartStakeProperty) == 1
 							|| item.GetIntProperty(KingdomPlots.HeartRelicProperty) == 1)
 							return Fail("founding-heart ground occupies plot-envelope growth at "

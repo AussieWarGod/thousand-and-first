@@ -134,7 +134,7 @@ namespace ThousandAndFirst
 			{
 				for (int i = 0; i < delta.Retained.Count; i++)
 					if (!TryCarryUpgradeSlot(Owner, Target, Z, beforeIntent, Successor, lot,
-						delta.Retained[i], delta.RetainedAfter[i], out Failure))
+						delta, delta.Retained[i], delta.RetainedAfter[i], out Failure))
 						return false;
 				Owner.SetIntProperty(UpgradePhaseProperty, 4);
 				phase = 4;

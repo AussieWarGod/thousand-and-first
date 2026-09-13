@@ -59,8 +59,12 @@ def journal(mode):
                ("stagedigest", "observed"), ("SCRIPT-COMPLETE", "3 verb(s) ran without a refusal")]
     if mode == "stage-source":
         entries[1] = ("SCRIPT-BEGIN", "5 verb(s) from owned sealed profile")
-        entries[3:4] = [("upgrade-stage-setup", "founded"), ("advance", "2400 turns"),
-                        ("advance-progress", "100 turns"), ("advance-complete", "2400 turns"),
+        entries[3:4] = [("upgrade-stage-setup", "founded"),
+                        ("advance-guard", "start; founderCell=40,12; guard=ignoreme-armed"),
+                        ("advance", "2400 turns"),
+                        ("advance-progress", "100 turns"),
+                        ("advance-guard", "end; founderCell=40,12; guard=ignoreme-released"),
+                        ("advance-complete", "2400 turns"),
                         ("upgrade-stage-save", "native fixture evidence")]
         entries[-1] = ("SCRIPT-COMPLETE", "5 verb(s) ran without a refusal")
     entries[0:0] = [("AUTOSTART", "exact sealed native scenario"),
@@ -240,6 +244,57 @@ class NativeSourceReceiptTest(unittest.TestCase):
                       "donorAuthority=donor_authority", "source_link(source, config, state"):
             self.assertIn(token, text)
 
+    def test_the_founder_guard_rows_must_bracket_the_stage_source_advance_exactly(self):
+        # Harness/KingdomScenarioFounderGuard.cs brackets EVERY scripted advance with a start row
+        # immediately before `advance` and an end row immediately before `advance-complete`.
+        # The witness accepts exactly that shape and refuses every other placement or count.
+        good = journal("stage-source")
+        start = b"2026-09-08T11:00:00.000Z\tadvance-guard\tOK\tstart; founderCell=40,12; guard=ignoreme-armed\n"
+        end = b"2026-09-08T11:00:00.000Z\tadvance-guard\tOK\tend; founderCell=40,12; guard=ignoreme-released\n"
+        bad = {
+            "no guard rows": good.replace(start, b"").replace(end, b""),
+            "start row missing": good.replace(start, b""),
+            "end row missing": good.replace(end, b""),
+            "start row after the advance": good.replace(start, b"").replace(
+                b"\tadvance-progress\t", b"\tadvance-guard\tOK\tstart; late\n2026-09-08T11:00:00.000Z\tadvance-progress\t", 1),
+            "a third guard row": good.replace(end, end + start),
+            "end row after completion": good.replace(end, b"").replace(
+                b"\tupgrade-stage-save\t", b"\tadvance-guard\tOK\tend; late\n2026-09-08T11:00:00.000Z\tupgrade-stage-save\t", 1),
+        }
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "scenario-journal.tsv").write_bytes(good)
+            witnesses.script_journal(root, "stage-source")
+            for case, raw in bad.items():
+                with self.subTest(case=case):
+                    self.assertNotEqual(raw, good, case)
+                    (root / "scenario-journal.tsv").write_bytes(raw)
+                    with self.assertRaises(ValueError):
+                        witnesses.script_journal(root, "stage-source")
+
+    def test_a_guard_row_on_a_non_advancing_road_is_refused(self):
+        raw = journal("source-donor").replace(
+            b"\tupgrade-source-donor\t", b"\tadvance-guard\tOK\tstart; x\n2026-09-08T11:00:00.000Z\tupgrade-source-donor\t", 1)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            (root / "scenario-journal.tsv").write_bytes(raw)
+            with self.assertRaises(ValueError) as refused:
+                witnesses.script_journal(root, "source-donor")
+            self.assertIn("unexpectedly advanced", str(refused.exception))
+
+    def test_the_real_row_emitter_arms_on_every_advance_and_gates_the_row_on_arming(self):
+        # A Python test cannot run the C# path, so the emitter is pinned as text
+        # (DevTests/KingdomScenarioFounderSafetySourceTests.cs pins the same order).
+        advance = (TOOLS.parent / "Harness/KingdomScenarioAdvance.cs").read_text()
+        arm = advance.index("string guard = KingdomScenarioFounderGuard.Arm(player);")
+        gate = advance.index("if (KingdomScenarioFounderGuard.Armed)", arm)
+        row = advance.index('KingdomScenarioJournal.Append(KingdomScenarioFounderGuard.Row, true, "start; " + guard);', gate)
+        self.assertLess(arm, gate)
+        self.assertLess(gate, row)
+        guard = (TOOLS.parent / "Harness/KingdomScenarioFounderGuard.cs").read_text()
+        self.assertNotIn("LifecycleRequested", guard)
+        self.assertLess(guard.index("internal static string Arm("), guard.index("The.Core.IgnoreMe = true;"))
+
     def test_boot_prefix_cannot_be_missing_duplicated_reordered_or_trailing(self):
         original = journal("source-donor").splitlines(keepends=True)
         variants = [b"".join(original[3:]), b"".join(original[:1] + original),
@@ -323,3 +378,30 @@ class DiagnosticContractTest(unittest.TestCase):
 
     def test_clean_log_retains_nothing(self):
         self.assertEqual(witnesses.diagnostics(b"INFO - Enabled mods: The Thousand and First\n"), [])
+
+    def test_retained_taf_tagged_refused_line_is_labeled_taf_not_non_taf(self):
+        # Regression for #86: a retained "[TAF] ... refused" line names this mod (via its
+        # KingdomLog "[TAF] " prefix) but is correctly non-fatal -- "refused" is not one of
+        # TAF_DIAGNOSTIC's fatal keywords. The verdict label must say it is TAF-tagged, not
+        # claim it is a third party's "non-TAF" diagnostic.
+        taf_refused = ("[TAF] hosted reach overlay refused (hosted departure authority is absent)",
+                       "[TAF] architecture: ground layer refused: a living occupant moved onto "
+                       "layout slot g:02:01")
+        label = witnesses.label_retained(list(taf_refused))
+        self.assertIn("retained TAF-tagged non-fatal diagnostics: " + " | ".join(taf_refused), label)
+        self.assertNotIn("non-TAF", label)
+
+    def test_retained_third_party_line_keeps_the_non_taf_label(self):
+        third_party = witnesses.diagnostics(b"INFO clean\n" + self.PETS_LOAD_ORDER + b"\n")
+        label = witnesses.label_retained(third_party)
+        self.assertEqual(label, "; retained non-TAF diagnostics: " + self.PETS_LOAD_ORDER.decode())
+
+    def test_retained_mixed_lines_get_both_labels(self):
+        mixed = ["[TAF] hosted reach overlay refused (hosted departure authority is absent)",
+                 self.PETS_LOAD_ORDER.decode()]
+        label = witnesses.label_retained(mixed)
+        self.assertIn("retained TAF-tagged non-fatal diagnostics: [TAF] hosted reach overlay refused", label)
+        self.assertIn("retained non-TAF diagnostics: " + self.PETS_LOAD_ORDER.decode(), label)
+
+    def test_label_retained_returns_empty_string_when_nothing_retained(self):
+        self.assertEqual(witnesses.label_retained([]), "")

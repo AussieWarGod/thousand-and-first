@@ -122,83 +122,10 @@ namespace ThousandAndFirst
 			return true;
 		}
 
-		private static bool TryRemoveUpgradeSlot(GameObject Owner, Zone Z,
-			KingdomArchitectureIntent Before, string Lot, ArchitecturePlacement Placement,
-			out string Failure)
-		{
-			Failure = null;
-			string stateProperty = UpgradeRemove(Placement);
-			int state = Owner.GetIntProperty(stateProperty);
-			if (!Owner.HasIntProperty(stateProperty) || Owner.HasStringProperty(stateProperty)
-				|| state < 0 || state > 2)
-				return UpgradeQuarantine(Owner, "authored removal receipt for slot "
-					+ Placement.Slot + " is malformed",
-					out Failure);
-			string id = Owner.GetStringProperty(OutputId(Placement));
-			if (state == 2)
-				return KingdomConstruction.FindGlobalLiveId(id, out _)
-					== KingdomPhysicalLookupState.Absent || UpgradeQuarantine(Owner,
-						"removed authored slot " + Placement.Slot + " reappeared", out Failure);
-			GameObject exact;
-			KingdomPhysicalLookupState found = KingdomConstruction.FindGlobalLiveId(id, out exact);
-			if (state == 1 && found == KingdomPhysicalLookupState.Absent)
-			{
-				Owner.SetIntProperty(stateProperty, 2);
-				return true;
-			}
-			if (found != KingdomPhysicalLookupState.Exact
-				|| !ExactComponent(Owner, exact, Z, Before, Lot, Placement, id))
-				return UpgradeQuarantine(Owner, "authored removal source " + Placement.Slot
-					+ " is absent, duplicated, moved, or changed", out Failure);
-			if (!TryRemovableComponent(exact, Placement, out Failure))
-				return UpgradeQuarantine(Owner, Failure, out Failure);
-			if (state == 0) Owner.SetIntProperty(stateProperty, 1);
-			bool removed;
-			try { removed = exact.Destroy(null, Silent: true); }
-			catch (Exception exception)
-			{
-				KingdomSurvey.ObserveCurrentTopologyInActive(Z, exact);
-				found = KingdomConstruction.FindGlobalLiveId(id, out GameObject afterThrow);
-				KingdomExactRemovalAction aftermath =
-					KingdomConstructionRules.GlobalRemovalAftermath(found,
-						ReferenceEquals(afterThrow, exact), found == KingdomPhysicalLookupState.Exact
-						&& ExactComponent(Owner, afterThrow, Z, Before, Lot, Placement, id));
-				if (aftermath == KingdomExactRemovalAction.ProvedAbsent)
-				{
-					Owner.SetIntProperty(stateProperty, 2);
-					return true;
-				}
-				if (aftermath == KingdomExactRemovalAction.InvokeOnce)
-					return Fail("authored removal " + Placement.Slot
-						+ " threw before changing exact state: " + exception.Message,
-						out Failure);
-				return UpgradeQuarantine(Owner, "authored removal " + Placement.Slot
-					+ " threw after ambiguous physical change: " + exception.Message,
-					out Failure);
-			}
-			if (removed && !GameObject.Validate(exact))
-				KingdomSurvey.ObserveRemovedFromActive(Z, exact);
-			found = KingdomConstruction.FindGlobalLiveId(id, out GameObject after);
-			KingdomExactRemovalAction result = KingdomConstructionRules.GlobalRemovalAftermath(
-				found, ReferenceEquals(after, exact), found == KingdomPhysicalLookupState.Exact
-				&& ExactComponent(Owner, after, Z, Before, Lot, Placement, id));
-			if (result == KingdomExactRemovalAction.ProvedAbsent)
-			{
-				Owner.SetIntProperty(stateProperty, 2);
-				return true;
-			}
-			if (result == KingdomExactRemovalAction.InvokeOnce)
-				return Fail("authored removal " + Placement.Slot
-					+ (removed ? " reported success without changing exact state"
-						: " was vetoed before changing exact state"), out Failure);
-			return UpgradeQuarantine(Owner, "authored removal " + Placement.Slot
-				+ " changed ambiguously during callback", out Failure);
-		}
-
 		private static bool TryCarryUpgradeSlot(GameObject Owner, GameObject Target, Zone Z,
 			KingdomArchitectureIntent Before, KingdomArchitectureIntent After, string Lot,
-			ArchitecturePlacement BeforePlacement, ArchitecturePlacement AfterPlacement,
-			out string Failure)
+			ArchitectureLayoutDelta Delta, ArchitecturePlacement BeforePlacement,
+			ArchitecturePlacement AfterPlacement, out string Failure)
 		{
 			Failure = null;
 			if (BeforePlacement == null || AfterPlacement == null)
@@ -229,7 +156,11 @@ namespace ThousandAndFirst
 				GameObject old;
 				if (KingdomConstruction.FindExactId(Z, id, out old)
 					!= KingdomPhysicalLookupState.Exact
-					|| !ExactComponent(Owner, old, Z, Before, Lot, BeforePlacement, id))
+					// A Before-generation census reached mid-pass: an earlier pair may already
+					// have been retagged onto a successor slot carrying this same name.
+					|| !ExactComponent(Owner, old, Z, Before, Lot, BeforePlacement, id,
+						ResolveComponentPeer(Owner, Z, Delta, Before, After, Lot,
+							BeforePlacement.Slot, false)))
 					return UpgradeQuarantine(Owner, "retained authored slot " + BeforePlacement.Slot
 						+ " changed before successor publication", out Failure);
 				if (targetPrefix == ArchitectureOutputPrefix.Empty
@@ -258,11 +189,15 @@ namespace ThousandAndFirst
 				if (targetPrefix == ArchitectureOutputPrefix.Published)
 				{
 					if (!TryRetagUpgradeComponent(Owner, exact, Z, Before, After, Lot,
-						BeforePlacement, AfterPlacement, id, out Failure)) return false;
+						BeforePlacement, AfterPlacement, id,
+						ResolveComponentPeer(Owner, Z, Delta, Before, After, Lot,
+							AfterPlacement.Slot, true), out Failure)) return false;
 					if (!TrySetUpgradeInt(Target, OutputState(AfterPlacement), 2,
 						"retained successor settlement", out Failure)) return false;
 				}
-				else if (!ExactComponent(Owner, exact, Z, After, Lot, AfterPlacement, id)
+				else if (!ExactComponent(Owner, exact, Z, After, Lot, AfterPlacement, id,
+						ResolveComponentPeer(Owner, Z, Delta, Before, After, Lot,
+							AfterPlacement.Slot, true))
 					|| exact.GetIntProperty(ComponentCarriedProperty) != 1)
 					return UpgradeQuarantine(Owner, "settled retained successor slot "
 						+ AfterPlacement.Slot + " is absent, moved, duplicated, or changed",
@@ -277,7 +212,9 @@ namespace ThousandAndFirst
 				&& Target.GetIntProperty(OutputState(AfterPlacement)) == 2
 				&& KingdomConstruction.FindExactId(Z, id, out settled)
 				== KingdomPhysicalLookupState.Exact
-				&& ExactComponent(Owner, settled, Z, After, Lot, AfterPlacement, id)
+				&& ExactComponent(Owner, settled, Z, After, Lot, AfterPlacement, id,
+					ResolveComponentPeer(Owner, Z, Delta, Before, After, Lot,
+						AfterPlacement.Slot, true))
 				&& settled.GetIntProperty(ComponentCarriedProperty) == 1
 				|| UpgradeQuarantine(Owner, "retained authored slot " + BeforePlacement.Slot
 					+ " did not settle on the successor", out Failure);

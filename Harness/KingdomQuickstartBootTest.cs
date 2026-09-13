@@ -138,7 +138,7 @@ namespace ThousandAndFirst.Harness
 			{
 				if (Observations != 1 || WorldCalls != 1 || CampCalls != 1 || RunCalls != 1
 					|| !RunSucceeded || !ExactScript() || Game.GetStringGameState("OriginalWorldSeed", null) != Seed
-					|| Game.GetSystem<KingdomScenarioAutoRunner>() != null)
+					|| !RunnerAuthorized())
 					Fail("production hook counts, seed or runner exclusion disagreed");
 				if (!KingdomQuickstartBootstrap.NativeVerifyFreshBoot(Game, Founder, Zone,
 					Profile, Request.Advisor, out string failure)) Fail(failure);
@@ -164,14 +164,26 @@ namespace ThousandAndFirst.Harness
 					(Failure ?? Request.Command) + "; boot-only=true; save-load=false; ordinary-acceptance=false");
 				// The build phase never starts before this row: boot-only=true above always
 				// observes a COMPLETED boot first, unmodified, whether or not a build follows.
-				if (Failure == null && Request.Build) KingdomQuickstartBuildTest.Run(Game, Zone, ObservedReceipt, Request.Command);
+				if (Failure == null && (Request.Build || Request.Lifecycle))
+					KingdomQuickstartBuildTest.Run(Game, Zone, ObservedReceipt, Request.Command);
 			}
 			catch (Exception error)
 			{
 				Fail("boot completion observer exception: " + error.GetType().Name);
 				KingdomScenarioJournal.Append("QUICKSTART-BOOT-COMPLETE", false, Failure);
 			}
-			finally { Ended = true; if (OwnSuppression) Popup.Suppress = false; }
+			// OwnSuppression means THIS raised Popup.Suppress from false; but on the lifecycle
+			// variant the auto-runner (added mid-bootGame by KingdomQuickstartLifecycleRunnerPatch,
+			// which therefore runs AFTER this method's own Begin already claimed it) claims the
+			// SAME global flag moments later and needs it held past this point, into its own
+			// sealed script. Dropping it here regardless of that second claim was the native-run
+			// stall: an unattended popup right after boot then blocks forever on a keypress that
+			// never comes. Never our call to make when the runner still wants it.
+			finally
+			{
+				Ended = true;
+				if (OwnSuppression && !KingdomScenarioAutoRunner.Suppressing(Game)) Popup.Suppress = false;
+			}
 		}
 
 		private static bool ExactCompletion(EmbarkInfo Candidate)
@@ -179,10 +191,26 @@ namespace ThousandAndFirst.Harness
 			return Active && Verified && ReferenceEquals(Candidate, Info) && Observations == 1
 				&& WorldCalls == 1 && CampCalls == 1 && RunCalls == 1 && ExactScript()
 				&& Candidate.GameSeed == Seed && Game.GetStringGameState("OriginalWorldSeed", null) == Seed
-				&& Game.GetSystem<KingdomScenarioAutoRunner>() == null
+				&& RunnerAuthorized()
 				&& !KingdomNativeRegressionContext.HasAnyState(Game, KingdomScenarioNewGameGate.RequestState)
 				&& Options.GetOption(KingdomQuickstartRules.AdvisorOption) == (Request.Advisor ? "Yes" : "No")
 				&& Game.GetStringGameState(KingdomQuickstartRules.ReceiptState, null) == ObservedReceipt;
+		}
+
+		/// <summary>
+		/// Whether this run's scenario auto-runner state is the one its OWN request authorises.
+		///
+		/// <para>For quickstart-boot, quickstart-save and quickstart-build the rule is exactly
+		/// what it has always been: <c>Game.GetSystem&lt;KingdomScenarioAutoRunner&gt;() == null</c>,
+		/// no runner, no exceptions. Only the separate quickstart-lifecycle request authorises one,
+		/// because that variant's whole purpose is to spend real engine turns between its verbs,
+		/// and a turn is spent by the runner's own bounded advance. The authorisation is scoped to
+		/// that request and is asserted here rather than assumed anywhere else.</para>
+		/// </summary>
+		private static bool RunnerAuthorized()
+		{
+			return Request != null && Game != null
+				&& (Request.Lifecycle || Game.GetSystem<KingdomScenarioAutoRunner>() == null);
 		}
 
 		private static bool ExactScript()
@@ -191,6 +219,11 @@ namespace ThousandAndFirst.Harness
 				&& KingdomQuickstartBootRequest.TryParse(script, out var observed)
 				&& observed.Command == Request.Command;
 		}
+
+		/// <summary>Whether the live request is the separate lifecycle variant. Read by the build
+		/// phase so it can hand its commissioned job to the lifecycle verbs; false for every old
+		/// profile, which therefore publishes nothing new.</summary>
+		internal static bool LifecycleRequested { get { return Request?.Lifecycle == true; } }
 
 		internal static bool ClaimsSave(XRLGame Current)
 		{

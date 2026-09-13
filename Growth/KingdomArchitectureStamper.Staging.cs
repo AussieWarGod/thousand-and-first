@@ -45,7 +45,12 @@ namespace ThousandAndFirst
 		}
 
 		public static bool TryVerifyComplete(GameObject Owner, Zone Z, out string Failure)
+			=> TryVerifyComplete(Owner, Z, out Failure, out _);
+
+		internal static bool TryVerifyComplete(GameObject Owner, Zone Z, out string Failure,
+			out bool IngressBlocked)
 		{
+			IngressBlocked = false;
 			Failure = null;
 			KingdomArchitectureIntent intent;
 			ArchitectureLayoutSnapshot snapshot;
@@ -64,7 +69,7 @@ namespace ThousandAndFirst
 			}
 			return TryVerifyPassability(Z, intent, snapshot, lot, out Failure)
 				&& KingdomArchitectureRuntime.TryVerifyPhysicalIngressRoutes(
-					Z, intent.Rect, snapshot, out Failure);
+					Z, intent.Rect, snapshot, out Failure, out IngressBlocked);
 		}
 
 		private static bool TrySettlePlacement(GameObject Owner, Zone Z,
@@ -113,8 +118,9 @@ namespace ThousandAndFirst
 					StampComponent(Owner, pending, Lot, Intent.SnapshotHash, Placement);
 					KingdomSurvey.ObserveChangedInActive(Z, pending);
 				}
+				// Staging publication carries no upgrade receipt: no other generation may stand.
 				if (!ExactComponent(Owner, pending, Z, Intent, Lot, Placement,
-					Owner.GetStringProperty(idProperty)))
+					Owner.GetStringProperty(idProperty), null))
 					return Quarantine(Owner, "layout slot " + Placement.Slot
 						+ " changed after output publication", out Failure);
 				Owner.SetIntProperty(stateProperty, 2);
@@ -159,7 +165,8 @@ namespace ThousandAndFirst
 			}
 			else
 			{
-				if (!CanInsert(Owner, Z, cell, Lot, Intent.SnapshotHash, Placement, out Failure))
+				if (!CanInsert(Owner, Z, cell, Lot, Intent.SnapshotHash, Placement, Snapshot,
+					out Failure))
 					return false;
 				try { placed = GameObject.Create(Placement.Blueprint); }
 				catch (Exception exception)
@@ -180,8 +187,9 @@ namespace ThousandAndFirst
 				finally { KingdomSurvey.ObserveAddResultInActive(Z, placed, accepted); }
 			}
 			KingdomSurvey.ObserveChangedInActive(Z, placed);
+			// The staging add endpoint carries no upgrade receipt: no other generation may stand.
 			bool exactEndpoint = ExactComponent(Owner, placed, Z, Intent, Lot, Placement,
-				Owner.GetStringProperty(idProperty));
+				Owner.GetStringProperty(idProperty), null);
 			bool exactCustody = Placement.ExistingAuthority
 				|| TryStagingRoot(placed.IDIfAssigned, out GameObject rootedOutput)
 					&& object.ReferenceEquals(rootedOutput, placed);

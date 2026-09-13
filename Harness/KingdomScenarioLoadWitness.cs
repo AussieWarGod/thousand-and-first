@@ -31,6 +31,13 @@ namespace ThousandAndFirst.Harness
 				if (ReferenceEquals(__instance, The.Player)) KingdomQuickstartLoadTest.BeforeActivation();
 				return;
 			}
+			if (KingdomScenarioLoadEntry.LifecycleSnapshot != null)
+			{
+				// Run 46b/47 C: the lifecycle save has its own witness; it never reaches the generic one.
+				if (ReferenceEquals(__instance, The.Player))
+					KingdomQuickstartLifecycleLoad.BeforeActivation(KingdomScenarioLoadEntry.LifecycleSnapshot);
+				return;
+			}
 			if (KingdomScenarioLoadEntry.RungSnapshot != null)
 			{
 				if (ReferenceEquals(__instance, The.Player)) KingdomSubsidenceRungLoadWitness.Prefix();
@@ -44,6 +51,7 @@ namespace ThousandAndFirst.Harness
 				Check(KingdomScenarioLoadReaderWitness.Releases == 1 && !KingdomScenarioLoadReaderWitness.HadErrors,
 					"primary reader did not complete exactly once without errors");
 				KingdomScenarioSaveSnapshot snapshot = KingdomScenarioLoadEntry.Snapshot;
+				Check(snapshot != null, "no generic snapshot was decoded: an unrouted save prefix reached the generic witness");
 				XRLGame game = The.Game;
 				Check(game != null && ReferenceEquals(The.Game, game) && game.GameID == snapshot.GameId
 					&& game.TimeTicks == snapshot.Now && game.GetSystem<KingdomScenarioAutoRunner>()?.HasConsideredScript == true

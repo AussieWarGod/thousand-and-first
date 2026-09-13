@@ -69,7 +69,7 @@ namespace ThousandAndFirst.Tests
 			string providers = Read("Harness/KingdomScenarioVerbProviderRules.cs");
 			string digests = Read("Harness/KingdomScenarioDigestVerbs.cs");
 			string sources = transaction + "\n" + realizer + "\n" + advance + "\n" + frames
-				+ "\n" + providers + "\n" + digests;
+				+ "\n" + providers + "\n" + digests + "\n" + Read("Harness/KingdomScenarioTravel.cs");
 			int asserted = 0;
 			foreach (string path in Personas())
 			{
@@ -136,6 +136,22 @@ namespace ThousandAndFirst.Tests
 			}
 			StringAssert.Contains("RESERVED_VERBS", profile);
 			StringAssert.Contains("RESERVED_VERBS", matrix);
+		}
+
+		/// <summary>
+		/// The reload dispatch line is not compiled into either DevTests project (the refusal it
+		/// routes to is pinned separately by KingdomScenarioReloadTests), so deleting the wiring in
+		/// <see cref="KingdomScenarioVerbs"/> would survive every other test. Pin it here.
+		/// </summary>
+		[Test]
+		public void ReloadTokenDispatchesToTheColdProcessRefusal()
+		{
+			string verbs = Read("Harness/KingdomScenarioVerbs.cs");
+			StringAssert.Contains("KingdomScenarioReload.Refuse(", verbs);
+			int reload = verbs.IndexOf("Token(Raw) == \"reload\"", StringComparison.Ordinal);
+			int refuse = verbs.IndexOf("KingdomScenarioReload.Refuse(", StringComparison.Ordinal);
+			ClassicAssert.Greater(reload, -1, "the reload token must be checked before dispatch");
+			ClassicAssert.Greater(refuse, reload, "the reload token must route to the refusal, not around it");
 		}
 
 		[Test]

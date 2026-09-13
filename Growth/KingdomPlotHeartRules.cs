@@ -97,6 +97,37 @@ namespace ThousandAndFirst
 		}
 
 		/// <summary>
+		/// Whether the two ENDPOINTS of an authored heart transition are a lawful adjacent step
+		/// on this ladder: the rungs are adjacent, and each end stands on the tier
+		/// <see cref="HeartSizeForRung"/> gives its own rung.
+		/// <para>
+		/// Rungs one to four each happen to stand on the tier numbered like themselves, which is
+		/// why a rung-number comparison passed for so long. Rungs four and five both stand on
+		/// Huge: the catalogue puts the great court and the arcology in one XL binding and marks
+		/// the arcology a renovation, so the last step is a same-footprint renovation of the
+		/// ground the court already holds. Asking the mapping rather than the number is what
+		/// makes that step expressible without loosening anything below it.
+		/// </para>
+		/// <para>
+		/// Endpoints only. Ownership, ground, rects, facing, anchors, basin custody and every
+		/// other proof stay where they are; this answers one question and no more.
+		/// </para>
+		/// </summary>
+		/// <param name="BeforeTier">The standing lot's tier as its integer value.</param>
+		/// <param name="AfterTier">The successor lot's tier as its integer value.</param>
+		public static bool HeartRungEndpointsAdmit(int BeforeRung, int AfterRung,
+			int BeforeTier, int AfterTier)
+		{
+			PlotSize before = HeartSizeForRung(BeforeRung);
+			PlotSize after = HeartSizeForRung(AfterRung);
+			// Both ends must be ON the ladder. Without this, two rungs off the ladder would both
+			// answer PlotSize.None and match each other, admitting a step that does not exist.
+			return before != PlotSize.None && after != PlotSize.None
+				&& BeforeRung >= 1 && AfterRung == BeforeRung + 1
+				&& BeforeTier == (int)before && AfterTier == (int)after;
+		}
+
+		/// <summary>
 		/// What the rite ground counts for when the heart is reckoned, by the rung standing on it.
 		/// One at the basin &mdash; a tin bowl on bare ground is not a monument, and the heart
 		/// still walks after the city, which is correct. Four, twelve, and forty as the great work
@@ -238,6 +269,29 @@ namespace ThousandAndFirst
 			}
 			Rect = new PlotRect(x1, y1, x1 + Width - 1, y1 + Height - 1);
 			return true;
+		}
+
+		/// <summary>
+		/// Whether a finished receipt's rung may be settled over the rung already standing on the
+		/// ground. The ladder only accretes: a receipt naming a LOWER rung than the one standing
+		/// describes ground that no longer exists, and settling it would tell the settlement it
+		/// had un-built its own heart.
+		/// <para>
+		/// Deliberately not a plus-one rule. That the ladder climbs one rung at a time is gated
+		/// UPSTREAM, where both ends of the transition are known
+		/// (<c>KingdomArchitectureRuntime.TryPrepareSuccessor</c> admits accretion only when the
+		/// successor's rung is exactly the predecessor's plus one, and only when the zone already
+		/// stands at the predecessor's rung). By the time a receipt is being settled its
+		/// predecessor is gone, so re-deriving that gate here would guess at a number this
+		/// helper cannot see. What it CAN see, and all it judges, is the direction.
+		/// </para>
+		/// </summary>
+		/// <param name="Rung">The rung the finished receipt names, one-based.</param>
+		/// <param name="Standing">The rung the ground already stands at; zero before any rung.
+		/// </param>
+		public static bool RungMaySettle(int Rung, int Standing)
+		{
+			return Rung > 0 && Rung >= Standing;
 		}
 
 	}

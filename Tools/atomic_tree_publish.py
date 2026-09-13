@@ -28,7 +28,7 @@ import select
 import signal
 import stat
 import sys
-from typing import Sequence
+from typing import Callable, Sequence
 import unicodedata
 
 
@@ -221,6 +221,9 @@ def _validate_test_signal_configuration() -> None:
     scope = os.environ.get("TAF_ATOMIC_TEST_SIGNAL_SCOPE")
     if scope not in (None, "self", "process-group"):
         raise PublishError(f"unknown atomic test signal scope: {scope}")
+
+
+ProveRelease = Callable[[int, int, str, str, str], None]
 
 
 def identity(status: os.stat_result) -> str:
@@ -1243,6 +1246,19 @@ def _sequester_entry(parent_fd: int, name: str, expected: str, kind: str) -> str
     return quarantine
 
 
+def _open_proof_descriptor(parent_fd: int, name: str, expected: str) -> int:
+    """Open the exact regular file for reading, to witness its links after unlinking."""
+
+    descriptor = os.open(
+        name, os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW, dir_fd=parent_fd
+    )
+    status = os.fstat(descriptor)
+    if not stat.S_ISREG(status.st_mode) or identity(status) != expected:
+        os.close(descriptor)
+        raise PublishError(f"regular-file identity changed while binding proof: {name}")
+    return descriptor
+
+
 def _open_bound_regular(parent_fd: int, name: str, expected: str) -> int:
     flags = getattr(os, "O_PATH", os.O_RDONLY) | os.O_CLOEXEC | os.O_NOFOLLOW
     descriptor = os.open(name, flags, dir_fd=parent_fd)
@@ -1253,7 +1269,9 @@ def _open_bound_regular(parent_fd: int, name: str, expected: str) -> int:
     return descriptor
 
 
-def _remove_named_tree(parent_fd: int, name: str, expected: str) -> None:
+def _remove_named_tree(
+    parent_fd: int, name: str, expected: str, prove: ProveRelease | None = None
+) -> None:
     with _defer_signals():
         # Seal exact owned root before namespace mutation. If untrappable death lands immediately
         # after sequester rename, other UIDs still cannot enter and race child names.
@@ -1348,6 +1366,10 @@ def _remove_named_tree(parent_fd: int, name: str, expected: str) -> None:
                 raise PublishError("bound cleanup-root identity changed")
             _require_directory_entry(parent_fd, quarantine, expected)
             os.rmdir(quarantine, dir_fd=parent_fd)
+            if prove is not None:
+                # root_fd was opened on the quarantine AFTER the sequester rename and is
+                # still open, so the released inode number cannot have been recycled.
+                prove(parent_fd, root_fd, quarantine, expected, "directory")
         except BaseException as cleanup_error:
             current = _entry_status(parent_fd, quarantine)
             if _entry_matches(current, expected, "directory"):
@@ -1362,14 +1384,24 @@ def _remove_named_tree(parent_fd: int, name: str, expected: str) -> None:
         _fsync_directory(parent_fd)
 
 
-def _remove_named_file(parent_fd: int, name: str, expected: str) -> None:
+def _remove_named_file(
+    parent_fd: int, name: str, expected: str, prove: ProveRelease | None = None
+) -> None:
     with _defer_signals():
         quarantine = _sequester_entry(parent_fd, name, expected, "file")
         descriptor = -1
+        proof_fd = -1
         try:
             descriptor = _open_bound_regular(parent_fd, quarantine, expected)
+            if prove is not None:
+                # O_PATH is enough to bind the entry, but a 9p/drvfs mount refuses
+                # fstat through an O_PATH descriptor once the name is unlinked, so the
+                # release proof needs a fully opened descriptor on the same inode.
+                proof_fd = _open_proof_descriptor(parent_fd, quarantine, expected)
             _require_regular_entry(parent_fd, quarantine, expected)
             os.unlink(quarantine, dir_fd=parent_fd)
+            if prove is not None:
+                prove(parent_fd, proof_fd, quarantine, expected, "file")
         except BaseException as cleanup_error:
             current = _entry_status(parent_fd, quarantine)
             if _entry_matches(current, expected, "file"):
@@ -1378,19 +1410,30 @@ def _remove_named_file(parent_fd: int, name: str, expected: str) -> None:
                 ) from cleanup_error
             raise
         finally:
+            if proof_fd >= 0:
+                os.close(proof_fd)
             if descriptor >= 0:
                 os.close(descriptor)
         _fsync_directory(parent_fd)
 
 
+def _remove_entry(
+    parent_fd: int,
+    name: str,
+    expected: str,
+    kind: str,
+    prove: ProveRelease | None = None,
+) -> None:
+    if kind == "directory":
+        _remove_named_tree(parent_fd, name, expected, prove)
+    else:
+        _remove_named_file(parent_fd, name, expected, prove)
+
+
 def _remove(args: argparse.Namespace) -> None:
     parent_fd = _open_locked_parent(args)
     try:
-        name = _safe_name(args.name)
-        if args.kind == "directory":
-            _remove_named_tree(parent_fd, name, args.expected_id)
-        else:
-            _remove_named_file(parent_fd, name, args.expected_id)
+        _remove_entry(parent_fd, _safe_name(args.name), args.expected_id, args.kind)
     finally:
         os.close(parent_fd)
 
@@ -1457,21 +1500,259 @@ def _list_prefix(args: argparse.Namespace) -> None:
         os.close(parent_fd)
 
 
+def _locate_matches(
+    parent_fd: int,
+    expected: str,
+    kind: str,
+    *,
+    tolerate_vanished: bool = False,
+) -> tuple[tuple[str, str], ...]:
+    """Every entry in the parent whose exact (device, inode, kind) identity matches.
+
+    Callers that run this after a removal MUST still hold a descriptor on the removed
+    inode. Without that pin the inode number is free the instant the last reference
+    closes, and an unrelated entry created by a concurrent producer can be recycled
+    onto it and reported here as a retained identity (issue #115).
+    """
+
+    matches: list[tuple[bytes, str, str]] = []
+    with os.scandir(parent_fd) as scanned:
+        for entry in scanned:
+            try:
+                status = entry.stat(follow_symlinks=False)
+            except FileNotFoundError as vanished:
+                if not tolerate_vanished:
+                    # An entry that disappears between scandir and stat is ambiguous,
+                    # not proven absent: the owned identity may simply have been renamed
+                    # aside mid-scan. Only the release context below, where a held
+                    # descriptor has already proved st_nlink == 0, may tolerate this.
+                    raise RetainedEntry(
+                        "identity search is ambiguous: "
+                        f"{_display_name(entry.name)} disappeared while searching for "
+                        f"{expected}, so that identity cannot be proved absent"
+                    ) from vanished
+                continue
+            if not _entry_matches(status, expected, kind):
+                continue
+            _safe_name(entry.name)
+            matches.append((entry.name.encode("utf-8"), entry.name, identity(status)))
+    return tuple((name, entry_id) for _encoded, name, entry_id in sorted(matches))
+
+
+def _display_name(value: str) -> str:
+    """Escape a name that has NOT passed _safe_name, for safe emission to a log.
+
+    _safe_name rejects control characters and disallowed Unicode, but it only runs on an
+    entry that survived stat(). A name reported in a failure path before that check is
+    attacker-influenced text going straight into operator logs and CI output, so it is
+    escaped to printable ASCII first: ascii() renders a newline as \n and any non-ASCII
+    codepoint as an escape, and quotes the result so its extent is unambiguous.
+    """
+
+    return ascii(value)
+
+
+def _render_matches(matches: Sequence[tuple[str, str]]) -> str:
+    if not matches:
+        return "none"
+    return "; ".join(f"{name}={entry_id}" for name, entry_id in matches)
+
+
 def _locate(args: argparse.Namespace) -> None:
     parent_fd = _open_locked_parent(args)
     try:
-        matches: list[tuple[bytes, str, str]] = []
-        with os.scandir(parent_fd) as scanned:
-            for entry in scanned:
-                status = entry.stat(follow_symlinks=False)
-                if not _entry_matches(status, args.expected_id, args.kind):
-                    continue
-                _safe_name(entry.name)
-                matches.append(
-                    (entry.name.encode("utf-8"), entry.name, identity(status))
-                )
-        for _encoded, name, entry_id in sorted(matches):
+        for name, entry_id in _locate_matches(
+            parent_fd, args.expected_id, args.kind
+        ):
             print(f"{name}\t{args.kind}\t{entry_id}")
+    finally:
+        os.close(parent_fd)
+
+
+def _private_entry_name(parent_fd: int, prefix: str, failure: str) -> str:
+    for _attempt in range(128):
+        proposed = prefix + secrets.token_bytes(16).hex()
+        if _entry_status(parent_fd, proposed) is None:
+            return proposed
+    raise PublishError(failure)
+
+
+def _discard_probe(parent_fd: int, *entries: tuple[str, str]) -> None:
+    """Remove leftover probe entries, each only at its exact admitted identity.
+
+    A probe name is private and freshly verified absent before use, but it still sits in
+    a shared parent. Removing it by name alone would delete whatever a concurrent peer
+    had put there; the identity captured when the probe was created is re-proved
+    immediately before the rmdir, and a mismatch refuses instead of deleting.
+    """
+
+    for name, expected in entries:
+        if not name:
+            continue
+        status = _entry_status(parent_fd, name)
+        if status is None:
+            continue
+        if not _entry_matches(status, expected, "directory"):
+            raise RetainedEntry(
+                f"cleanup refused to discard identity-pin probe {name}: expected "
+                f"{expected}, found {identity(status)} kind={_entry_kind(status)}"
+            )
+        try:
+            os.rmdir(name, dir_fd=parent_fd)
+        except OSError as discard_error:
+            raise RetainedEntry(
+                f"cleanup retained identity-pin probe {name} identity {expected}: "
+                f"{discard_error}"
+            ) from discard_error
+
+
+def _require_identity_pin_semantics(parent_fd: int) -> None:
+    """Rehearse the release proof on this parent; refuse the filesystem if it fails.
+
+    The descriptor is opened on the QUARANTINE entry, after the sequester rename, and
+    held across the removal. Opening it on the original name instead leaves a 9p/drvfs
+    mount holding a stale dentry for that name, after which every lookup of the renamed
+    entry returns ENOENT; taken post-rename the sequence gives a stable device/inode,
+    st_nlink 0, an absent name and an empty parent on both ext4 and 9p/drvfs.
+    """
+
+    fstype = _fd_mount_fstype(parent_fd) or "unknown"
+    # Share the quarantine prefix so a probe stranded by untrappable death is caught by
+    # the existing "prior quarantined cleanup requires recovery" refusal in stage.sh.
+    probe = _private_entry_name(
+        parent_fd, ".taf-remove-probe-", "cannot allocate a private identity-pin probe name"
+    )
+    os.mkdir(probe, 0o700, dir_fd=parent_fd)
+    probe_status = os.stat(probe, dir_fd=parent_fd, follow_symlinks=False)
+    if not stat.S_ISDIR(probe_status.st_mode):
+        raise PublishError(f"identity-pin probe is not a directory: {probe}")
+    expected = identity(probe_status)
+    quarantine = ""
+    descriptor = -1
+    failure = ""
+    try:
+        quarantine = _private_entry_name(
+            parent_fd, ".taf-remove-probe-", "cannot allocate a probe quarantine name"
+        )
+        _renameat2(parent_fd, probe, quarantine, RENAME_NOREPLACE)
+        if _entry_status(parent_fd, probe) is not None:
+            failure = "a sequestered entry survived under its original name"
+        elif not _entry_matches(
+            _entry_status(parent_fd, quarantine), expected, "directory"
+        ):
+            failure = "a sequestered entry could not be resolved by its quarantine name"
+        else:
+            descriptor = _open_child_directory(
+                parent_fd, quarantine, probe_status.st_dev, expected
+            )
+            os.rmdir(quarantine, dir_fd=parent_fd)
+            pinned = os.fstat(descriptor)
+            if identity(pinned) != expected:
+                failure = (
+                    f"a held descriptor rebound from {expected} to "
+                    f"{identity(pinned)} across removal"
+                )
+            elif pinned.st_nlink != 0:
+                failure = (
+                    f"a removed directory still reports {pinned.st_nlink} links "
+                    "through a held descriptor"
+                )
+            elif _entry_status(parent_fd, quarantine) is not None:
+                failure = "the parent still lists a removed probe entry"
+            else:
+                quarantine = ""
+    except OSError as probe_error:
+        failure = f"the release rehearsal failed: {probe_error}"
+    finally:
+        if descriptor >= 0:
+            os.close(descriptor)
+        _discard_probe(parent_fd, (probe, expected), (quarantine, expected))
+    if failure:
+        raise UnsupportedPublish(
+            f"cleanup release proof is unsupported on filesystem {fstype}: {failure}"
+        )
+
+
+def _prove_identity_released(
+    parent_fd: int, held_fd: int, quarantine: str, expected: str, kind: str
+) -> None:
+    """Positive release proof, taken before the removal's own descriptor is closed.
+
+    ``held_fd`` was opened on the quarantine entry after the sequester rename and is
+    still open, so the inode number cannot have been recycled by a concurrent producer.
+    That is what makes the identity search below meaningful: a match can only be a
+    genuine second link, never an unrelated entry that inherited a freed inode (#115).
+    """
+
+    pinned = os.fstat(held_fd)
+    if identity(pinned) != expected:
+        raise RetainedEntry(
+            f"cleanup pin for {quarantine} rebound from identity {expected} to "
+            f"{identity(pinned)}"
+        )
+    if pinned.st_nlink != 0:
+        raise RetainedEntry(
+            f"cleanup left {pinned.st_nlink} links on identity {expected} after "
+            f"removing {quarantine}; exact identities under the publication parent: "
+            f"{_render_matches(_locate_matches(parent_fd, expected, kind, tolerate_vanished=True))}"
+        )
+    # Safe here and ONLY here: the descriptor above has already proved the inode
+    # released, so an entry vanishing mid-scan is unrelated churn, not the owned
+    # identity slipping away unobserved.
+    matches = _locate_matches(parent_fd, expected, kind, tolerate_vanished=True)
+    if matches:
+        raise RetainedEntry(
+            "cleanup retained exact identities under the publication parent: "
+            f"{_render_matches(matches)}"
+        )
+    if _entry_status(parent_fd, quarantine) is not None:
+        raise RetainedEntry(
+            f"cleanup postcondition ambiguous; retained {quarantine} id={expected}"
+        )
+
+
+def _cleanup(args: argparse.Namespace) -> None:
+    """Admit, remove and prove one private entry inside a single process.
+
+    Splitting these steps across helper processes (the pre-#115 protocol) dropped the
+    last reference to the removed inode before the post-proof ran, so the proof could
+    match on an inode number a concurrent producer had been recycled onto. Everything
+    below happens in one process, against one admitted identity, with a descriptor
+    pinning that inode across the removal.
+    """
+
+    parent_fd = _open_locked_parent(args)
+    try:
+        name = _safe_name(args.name)
+        status = _entry_status(parent_fd, name)
+        if status is None:
+            # The name is gone, but the owned identity may simply have been renamed
+            # aside. Nothing may be reported clean while it still exists here.
+            elsewhere = _locate_matches(parent_fd, args.expected_id, args.kind)
+            if elsewhere:
+                raise RetainedEntry(
+                    f"cleanup found no entry named {name}, but identity "
+                    f"{args.expected_id} is still named under the publication parent: "
+                    f"{_render_matches(elsewhere)}"
+                )
+            print("absent")
+            return
+        actual_kind = _entry_kind(status)
+        actual_id = identity(status)
+        if actual_kind != args.kind or actual_id != args.expected_id:
+            raise RetainedEntry(
+                f"cleanup identity ambiguous; retained {name} id={actual_id} "
+                f"kind={actual_kind}"
+            )
+        _require_identity_pin_semantics(parent_fd)
+        _remove_entry(
+            parent_fd, name, actual_id, args.kind, _prove_identity_released
+        )
+        if _entry_status(parent_fd, name) is not None:
+            raise RetainedEntry(
+                f"cleanup postcondition ambiguous; retained {name} id={actual_id}"
+            )
+        print("removed")
     finally:
         os.close(parent_fd)
 
@@ -1752,6 +2033,12 @@ def parser() -> argparse.ArgumentParser:
     locate.add_argument("--expected-id", required=True)
     kind_argument(locate)
 
+    cleanup = commands.add_parser("cleanup")
+    parent_arguments(cleanup)
+    cleanup.add_argument("--name", required=True)
+    cleanup.add_argument("--expected-id", required=True)
+    kind_argument(cleanup)
+
     write_file = commands.add_parser("write-file")
     parent_arguments(write_file)
     write_file.add_argument("--name", required=True)
@@ -1793,6 +2080,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                 _list_prefix(args)
             elif args.command == "locate":
                 _locate(args)
+            elif args.command == "cleanup":
+                _cleanup(args)
             elif args.command == "write-file":
                 _write_file(args)
             elif args.command == "compare":

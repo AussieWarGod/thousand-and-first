@@ -22,13 +22,27 @@ namespace ThousandAndFirst.Tests
 		[Test]
 		public void SourceContract_RecordedRetirementRemainsBehindFullAuthorityAndRetiredCustody()
 		{
-			Ordered(Tail(Read(Seal), "private static bool ExactFoundingHeartRetiredAuthority("),
+			// The authority now answers for one NAMED generation. Every clause it spent before is
+			// spent still, in the same order; the works-slot equality moved into the naming clause
+			// and is pinned there, below, rather than weakened.
+			Ordered(Tail(Read(Seal), "KingdomFoundingHeartRetiredGeneration Generation, "
+					+ "out FoundingHeartContext Context)"),
 				"Context = null", "KingdomFoundingHeartRules.TryDecode(raw, out KingdomFoundingHeartPlan plan)",
 				"KingdomFoundingHeartRules.Complete(plan) && plan.ZoneId == Z.ZoneID",
-				"KingdomFoundingHeartRules.SlotId(plan, KingdomFoundingHeartRules.WorksSlot) == PredecessorId",
+				"NamesRetiredFoundingHeartIdentity(Z, plan, PredecessorId, Generation)",
 				"ExactFoundingHeartSeal(Z, plan)", "ExactFoundingHeartReservations(plan)",
 				"TryReadFoundingHeartContext(Z, plan, out Context)", "ExactFoundingHeartMarkerRoster(Z, plan, false)",
-				"ExactFoundingHeartRetiredCustody(plan)", "ExactFoundingHeartRetirementProof(Z, Context, PredecessorId)");
+				"ExactFoundingHeartRetiredCustody(plan)",
+				"ExactFoundingHeartRetirementProof(Z, Context, PredecessorId, Generation)");
+			Ordered(Tail(Read(Seal), "private static bool NamesRetiredFoundingHeartIdentity("),
+				"if (string.IsNullOrEmpty(PredecessorId)) return false",
+				"Generation == KingdomFoundingHeartRetiredGeneration.Works",
+				"KingdomFoundingHeartRules.SlotId(Plan,",
+				"KingdomFoundingHeartRules.WorksSlot) == PredecessorId",
+				"Generation != KingdomFoundingHeartRetiredGeneration.Final) return false",
+				"KingdomFoundingHeartTerminalRules.TryDecode(",
+				"terminal.FinalId == PredecessorId",
+				"terminal.PredecessorId != PredecessorId");
 			string custody = Between(Read(Custody), "private static bool ExactFoundingHeartRetiredCustody(",
 				"private static bool HasGlobalFoundingHeartTransactionEvidence(");
 			Ordered(custody, "if (!ExactFoundingHeartOwnedRoster(Plan)) return false",

@@ -44,6 +44,35 @@ Workshop-package receipt or a multiple-seed gameplay acceptance claim.
 
 ## Prepare and run
 
+### Unattended descendant reload persona
+
+After a current canonical compile gate, `Tools/run-personas.sh quickstart-reload` owns both
+legs serially. Its manifest declares `SCRIPT=reload-descendant quickstart marsh yes` and
+`EXPECT=RELOAD-COMPLETE`. Substitute canyon/dunes and yes/no in a separate persona to expand
+the matrix. This first seam supports only genuine Quickstart, not arbitrary rung continuation.
+
+The host prepares the real `quickstart-save` recipe, awaits its native terminal, runs the strict
+save checker, stops only its exact receipt-owned process, verifies idle, and invokes the existing
+stopped-source transport into a **fresh sealed descendant profile**. It launches the existing
+Continue route, awaits the native cold-load terminal, runs the strict load checker, compares
+game/seed/selection and primary save hashes across both legs, then proves owned stop and idle.
+Native witnesses check heart, stock, IDs and clocks without replaying bootstrap. Existing
+Quickstart save/Continue barriers and popup cleanup keep both observations before player turns;
+no synthetic frame/turn advance is substituted for an unload.
+
+Both profiles, seals and per-phase logs remain retained. The helper prints a host JSON result;
+it does not invent a `RELOAD-COMPLETE` native journal row or a release receipt. Every failed
+phase or ownership check refuses the workflow and prevents subsequent personas from assuming
+the game is idle. Screenshot requests are explicitly refused for this first reload recipe.
+`--check quickstart-reload` validates the manifest without preparing profiles or launching Qud.
+
+Bare in-process `reload` is sealable solely to test its explicit refusal:
+`taf-reload-requires-cold-process`. The live script cannot prove full engine unload or resume its
+one-shot cursor. A frame yield or focus hold is not a cold load. No spent profile is reused,
+ordinary user saves are never imported, and graceful Quit, arbitrary rung chaining, ordinary
+acceptance and release approval remain separate obligations. Host unit tests use fake effects;
+they do not prove a native run occurred.
+
 First pass the canonical compile gate. Prepare a fresh dedicated profile for each combination of
 `marsh|canyon|dunes` and `yes|no` advisor selection. For example:
 
@@ -79,9 +108,13 @@ Built zone before player placement, then bootstrap sees that same zone and the a
 at `(40,12)`. The observer records start-cell reachability before preparation and requires it
 afterward; this is not proof of safe escape or general traversal. Other checks require an
 initially absent Quickstart receipt, correct seed/profile/mode/options, exact founded heart,
-canonical Complete receipt, no quarantine, no scenario runner/request, single physical grant
+canonical finished receipt, no quarantine, no scenario runner/request, single physical grant
 identities, and initial quantities:24 drams,12 meals,1 mud/3 brush/4 timber. Advisor decision must
-match the sealed selection. Owner, receipt, quantities and terminal boot conditions are checked
+match the sealed selection. With the founders option on, the finished receipt is at the seeded
+phase with a seeded cohort, and the native roster additionally requires four founder bodies, each
+wearing its own indexed reservation, each with the identity the receipt names, and none of them
+duplicated; the charter must read four settlers at turn 1 and the day-1 seal must list four names.
+A receipt that owes or is part-way through a cohort is NOT finished and fails this check. Owner, receipt, quantities and terminal boot conditions are checked
 again before the final positive. Treat an absent journal row as unproved, never success.
 
 The `quickstart-boot` command proves boot only when actually executed. Save/cold-load uses the

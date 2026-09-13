@@ -45,15 +45,21 @@ class StructureCheckerTests(unittest.TestCase):
                     "schemaVersion": 1,
                     "inventorySha256": census.inventory_sha256,
                     "exceptions": [],
-                    "reviewedBy": "fixture-reviewer",
+                    "reviewedBy": "fixture-automated-review",
                     "completedUtc": "2026-08-26T12:00:00Z",
                     "oneResponsibility": {
                         "status": "passed",
-                        "notes": "Reviewed each fixture ownership boundary.",
+                        "notes": (
+                            "Reviewed each fixture ownership boundary. "
+                            "run:fixture-review-1 log:docs/release-evidence/fixture.log"
+                        ),
                     },
                     "protocolsAtBoundaries": {
                         "status": "passed",
-                        "notes": "Reviewed fixture dependency direction.",
+                        "notes": (
+                            "Reviewed fixture dependency direction. "
+                            "run:fixture-review-1 log:docs/release-evidence/fixture.log"
+                        ),
                     },
                 }
             ),

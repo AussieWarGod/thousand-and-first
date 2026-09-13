@@ -107,6 +107,15 @@ without spending it. This slower route is useful for economy and compatibility t
 - Food storage or crops, one named citizen's home/work relationship, and one road connection.
 - A second city, trade route, rival cohort, inherited realm, or hosted arcology only after the
   small founding loop is stable.
+- A new Kingdom Quickstart world with "found new Kingdom Quickstart worlds with four settlers
+  already on the roll" (`r_TAF_OptionQuickstartFounders`, on by default) left on: four named
+  settlers should be standing on the approach at turn 1, the Charter should read four settlers
+  before you take a step, and the day-1 seal should list four names. They have nowhere to live
+  until a tent row stands about a day and a half in, so expect four "nowhere to live" lines and
+  brink warnings — that is the design, not a fault. Then make a world with the option off and
+  confirm it is the old opening exactly, and that turning the option back on afterwards never
+  gives that world founders. Load a world made before this version, play twenty turns, save, and
+  confirm it still has none.
 - Standing in a claimed zone at night: the settlement should read as lit ground with dark
   building interiors, and the minimap should hold the whole zone. Walk into an unclaimed
   neighbour and confirm ordinary darkness. The checkbox is

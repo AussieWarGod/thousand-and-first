@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "inventorySha256": "249d3bb40ca34f57289770494e985a97e81cf42c2bae8f053fb6e14005b61d3d",
+  "inventorySha256": "a5e00bd45a1122917e6b164ad98373cdcc043e6c681790495086ee0a2e870182",
   "exceptions": [],
-  "reviewedBy": "Codex with independent Claude reviews, under author authorization",
-  "completedUtc": "2026-09-10T22:05:02Z",
+  "reviewedBy": "Codex root automated structural review",
+  "completedUtc": "2026-09-13T04:00:37Z",
   "oneResponsibility": {
     "status": "passed",
-    "notes": "See docs/STRUCTURE_REVIEW_0_3_3.md. Enumerated canonical 3069-file inventory and compared every source blob with shipped d02608a: 3063 unchanged inherit that commit's explicit review chain and limitations; five modified and one added were risk-weighted deep-read. Scope helper owns local pass lifetime; stock readers own tally; two commissioning entries retain their existing transaction responsibilities; fresh-grant creator owns the one new identity allocation; release-info changes only a literal. Independent Claude reviews of ad0dd90 and 3500035 found no blocking production finding. Test-summary attribution corrected in ebbb919. No line-cap exception, saved field or serialization format change. This is structural review, not native or release acceptance."
+    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:a5e00bd45a1122917e6b164ad98373cdcc043e6c681790495086ee0a2e870182. Inherits exact review 5039e82aca01ced8e9c4fc73f626469b6584912b8571a5d02d9f348c8e073fef. Sole production delta projects the existing creed property unchanged when PlannedCreed is empty, matching KingdomCreed.Record, which is a no-op in that case. Nonempty creed projection and exact graph/map comparisons remain unchanged; absent and empty properties are not normalized. Automated source review; native acceptance separately scoped."
   },
   "protocolsAtBoundaries": {
     "status": "passed",
-    "notes": "See docs/STRUCTURE_REVIEW_0_3_3.md and retained d02608a review chain for unchanged bytes. TryBindLocalOperation requires exact active ground, refuses foreign bound authority before capture, rechecks after capture, and reuses existing disposable PassScope. Stock's short read scope does not cross UI input; both final commission entries keep the complete reserve/fund/project transaction bound. Existing lease, exact-container, quote, custody and commit-time authority checks remain. Fresh material identity is allocated only on privately created stacks before insertion and re-proved non-allocating afterward; rollback remains the unchanged grant owner, observers remain read-only. No blanket old-save identity repair or replacement goods. Independent scope and identity reviews accepted; combined native debit/projection, save/load and delivery are separate unsatisfied gates, not inferred here."
+    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:a5e00bd45a1122917e6b164ad98373cdcc043e6c681790495086ee0a2e870182. Inherits exact review 5039e82aca01ced8e9c4fc73f626469b6584912b8571a5d02d9f348c8e073fef. Sole production delta projects the existing creed property unchanged when PlannedCreed is empty, matching KingdomCreed.Record, which is a no-op in that case. Nonempty creed projection and exact graph/map comparisons remain unchanged; absent and empty properties are not normalized. Automated source review; native acceptance separately scoped."
   }
 }

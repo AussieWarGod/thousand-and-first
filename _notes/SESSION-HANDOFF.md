@@ -1,16 +1,54 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Current stock-operation hotfix — issue #142
+## Retained combined heart candidate before surveyed-ingress draft — 2026-09-11
 
-3069 staged sources; 435,617 physical lines; 1430 direct-XRL; zero cap failures; 3100
-cold-install files. Scope-only ad0dd90: full Taf 14,067 zero skips and all four compiles
-3065/3069/3232/3236 passed. Combined scope/identity/version gates remain pending.
-Native main-based quickstart reproduced four timber counted as zero outside a bound survey.
-Scope and fresh-ID source reviews passed; native CanPay succeeded on original unidentified stock.
-Actual commissioned debit/projection and release remain open.
-Current digest and evidence: docs/STATUS.md. No save migration or replacement goods.
+Current draft census/evidence is in docs/STATUS.md; the figures below describe its predecessor.
 
-## Retained stockpile deposit custody
+3098 staged sources; 440,044 physical lines; 1446 direct-XRL files; zero cap failures;
+3129 cold-install files. Inventory `fba0d595a8b2c29876f3f74eae29914a9595d85182831f2ceddb5b44d51dfdc0`.
+#141/#144/#139/#137 combined; compile, native and semantic review owed. Earlier rows are
+retained checkpoints, not acceptance of this candidate. Public0.3.3 is finalized.
+
+## Retained camp integration (#107 / #132 / #137)
+
+Integrated through dev `bcca3e5`; compile/audit and main14341/portable5491 pass, zero managed
+skips; native pending. Census3079/437201/1434,
+zero cap failures; inventory `fba0d595a8b2c29876f3f74eae29914a9595d85182831f2ceddb5b44d51dfdc0`.
+Earlier evidence below remains bound to its named checkpoints.
+
+## Retained dev hotfix backmerge — 2026-09-11
+
+3080 staged sources; 437,399 physical lines; 1435 direct-XRL files; zero at or above 300 lines;
+3111 cold-install files. Inventory `6ebc095bd595e636c48079ba5c41c0cb3bb92f3af7741d99b05eeb8b81acc78d`.
+Combined-tree gates pending; isolated main hotfix native evidence does not sign dev features.
+The retained 0.3.3 semantic review binds main only, not this combined inventory.
+See docs/STATUS.md for scoped release evidence. Public Workshop remains 0.3.2.
+
+## Retained roadless seal candidate (#131)
+
+3082 staged sources; 437,405 physical lines; 1437 direct-XRL; zero cap failures; 3113
+cold-install files. Inventory `40af1139cc9336140aca90a5db81c80aefb060a45635d57766b560c34c1753e4`.
+Four compile modes, audit, main 14,318/portable 5,470 tests pass (managed zero skips).
+Roadless-camp native passes at `0cfd8e7`; see docs/STATUS.md for exact scope and retained timeout.
+
+## Retained unreleased Kingdom Quickstart founding cohort
+
+3078 staged sources; 437,114 physical lines; 1434 direct-XRL; zero cap failures; 3109 generated
+cold-stage files. Exact inventory `e1ddecb76e357905d90bbc40ad8414b68efc38f2b532d19ec61d2df4a5053ce9`.
+Kingdom Quickstart founds a world with four founding citizens on the approach at turn 1, raised in
+one custody scope (zero-or-four), published by identity before any irreversible write, then enrolled
+forward-only and idempotently under a new `Founding` reason. The receipt gains a durable founders
+disposition and four ids on a sixteen-field wire; the old eleven-field form is byte-preserved and
+terminal, so no world made before this change, and no world made with the new option off, can gain
+founders. Each founder is counted into the shared per-profile origin tally by ADDING one under its
+own durable identity-bound obligation, so five prior citizens plus four founders is nine; mixed
+state after an interruption between the label and the increment is refused in the open, once, per
+obligation, as a stated safety policy rather than a recovery claim.
+Four compile modes, both engine-free suites (14,147 / 5,301, zero skips) and the Tools
+suite (627) are green. The six-profile boot matrix at seed `#43101` is OWED before merge, along with
+the `found-first-city`, `first-guest-native-check` and `guide-topics-native-check` personas.
+
+## Retained unreleased stockpile deposit custody
 
 3068 staged sources; 435,538 physical lines; 1429 direct-XRL; zero cap failures; 3099 generated
 cold-stage files. Exact inventory `3cfe76c38704930c03d2923e400d05155cbcbf96b9ad8b31ad90304cc8fea6c0`.

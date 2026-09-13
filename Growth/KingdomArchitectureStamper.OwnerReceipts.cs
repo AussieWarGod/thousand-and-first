@@ -168,6 +168,44 @@ namespace ThousandAndFirst
 			return true;
 		}
 
+		/// <summary>
+		/// Every layout placement's world cell against the passability its map declares for it, so
+		/// a caller can tell which cells a living body actually blocks (only Blocked ones: walkable
+		/// ground and adjacent-use slots are laid under or beside a standing body) AND can name the
+		/// real declared value of whatever cell a body is standing on.
+		/// <para>Every layer is reported, not only Ground. The ground stage is the first to meet a
+		/// body, so clearing all of a layout's blocked slots at that point is deliberate: it stands
+		/// the crew off once rather than once per layer as the structure and object stages follow.
+		/// </para>
+		/// </summary>
+		public static bool TryPlacementPassability(KingdomArchitectureIntent Intent, Zone Z,
+			out Dictionary<int, ArchitecturePassability> Cells, out string Failure)
+		{
+			Cells = null;
+			Failure = null;
+			ArchitectureLayoutSnapshot snapshot;
+			if (Z == null || !KingdomArchitectureRuntime.TryDecode(Intent, out snapshot, out Failure))
+				return false;
+			Dictionary<int, ArchitecturePassability> result =
+				new Dictionary<int, ArchitecturePassability>();
+			for (int i = 0; i < snapshot.Placements.Count; i++)
+			{
+				ArchitecturePlacement placement = snapshot.Placements[i];
+				int x;
+				int y;
+				if (!KingdomArchitectureRuntime.TryWorldPlacement(snapshot, Intent.Rect,
+					placement, out x, out y, out Failure)) return false;
+				ArchitecturePassability passability = PassabilityOf(snapshot, placement);
+				int key = y * Z.Width + x;
+				// Two placements on one cell (a layer each): the blocking one is the truth for a
+				// body standing there, so a Blocked reading is never overwritten by a walkable one.
+				if (!result.ContainsKey(key)
+					|| KingdomPlotRules.SlotBlocksOccupant(passability)) result[key] = passability;
+			}
+			Cells = result;
+			return true;
+		}
+
 		/// <summary>Stamp one exact layer. Interruption after output-ID publication fails closed.</summary>
 	}
 }

@@ -72,6 +72,7 @@ namespace ThousandAndFirst.Harness
 		private static string Dispatch(string Raw, out bool Ok)
 		{
 			Ok = true;
+			if (Token(Raw) == "reload") return KingdomScenarioReload.Refuse(out Ok);
 			if (Raw.StartsWith(CapturePrefix, StringComparison.OrdinalIgnoreCase))
 				return KingdomScenarioCaptureReport.Emit(Raw.Substring(CapturePrefix.Length),
 					out Ok);

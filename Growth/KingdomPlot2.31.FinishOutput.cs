@@ -51,11 +51,14 @@ namespace ThousandAndFirst
 				{
 					expectedOutput = building.IDIfAssigned;
 					if (!PreparedPlotFinalOutput(building, parent, entry, receipt, id, Rect,
-						Footprint, Roof, expectedOutput, construction)) return false;
+						Footprint, Roof, expectedOutput, construction))
+						return FinishOutputFault(parent, "the rooted final output is not prepared");
 					if (construction != null)
 					{
 						if (!KingdomConstruction.UpdateFinalOutput(ref construction,
-							parent.IDIfAssigned, expectedOutput)) return false;
+							parent.IDIfAssigned, expectedOutput))
+							return FinishOutputFault(parent,
+								"the receipt would not take the rooted final output id");
 					}
 					else parent.SetStringProperty(FinalOutputIdProperty, expectedOutput);
 						hasFrozenFinal = true;
@@ -86,7 +89,7 @@ namespace ThousandAndFirst
 			}
 			if (building == null)
 			{
-				return false;
+				return FinishOutputFault(parent, "no final building to publish");
 			}
 			if (created && !legacyArchitecture)
 			{
@@ -133,22 +136,33 @@ namespace ThousandAndFirst
 					return false;
 				}
 				building.SetStringProperty(PlotFinalPredecessorProperty, parent.IDIfAssigned);
-				expectedOutput = building.IDIfAssigned;
+				// The engine assigns object ids lazily: a freshly Created output has none yet, so
+				// IDIfAssigned here refused every finish silently (issue #172) -- the same class
+				// fixed on the staging side on 2026-08-30 (RootStagingOutput). The custody root
+				// needs a durable id; asking for ID assigns one, which is exactly what publishing
+				// a brand-new final output means.
+				expectedOutput = building.ID;
 				if (!PreparedPlotFinalOutput(building, parent, entry, receipt, id, Rect,
-					Footprint, Roof, expectedOutput, construction)
-					|| !RootPlotFinalOutput(expectedOutput, building)) return false;
+					Footprint, Roof, expectedOutput, construction))
+					return FinishOutputFault(parent, "the new final output is not prepared");
+				if (!RootPlotFinalOutput(expectedOutput, building))
+					return FinishOutputFault(parent,
+						"the new final output could not be rooted under id "
+							+ (string.IsNullOrEmpty(expectedOutput) ? "<none>" : expectedOutput));
 				if (construction != null)
 				{
 					if (!KingdomConstruction.UpdateFinalOutput(ref construction,
 						parent.IDIfAssigned, building.ID))
 					{
-						return false;
+						return FinishOutputFault(parent,
+							"the receipt would not take the new final output id");
 					}
 				}
 				else parent.SetStringProperty(FinalOutputIdProperty, building.ID);
 				if ((construction == null
 						? parent.GetStringProperty(FinalOutputIdProperty) : construction.OutputId)
-					!= expectedOutput) return false;
+					!= expectedOutput)
+					return FinishOutputFault(parent, "the published final output id did not stick");
 			}
 			if (construction != null
 				&& construction.PhysicalPhase != KingdomPhysicalPhase.FinalOutputPending
@@ -156,16 +170,19 @@ namespace ThousandAndFirst
 				&& !KingdomConstruction.UpdatePhysical(ref construction,
 					KingdomPhysicalPhase.FinalOutputPending, construction.PhysicalIndex,
 					construction.PhysicalAmount, construction.PhysicalSpilled,
-					parent.IDIfAssigned, building.ID, construction.PhysicalReceipt)) return false;
+					parent.IDIfAssigned, building.ID, construction.PhysicalReceipt))
+				return FinishOutputFault(parent, "the physical phase would not reach pending");
 			if (construction != null
 				&& (construction.PhysicalItemId != parent.IDIfAssigned
-					|| construction.PhysicalDestinationId != expectedOutput)) return false;
+					|| construction.PhysicalDestinationId != expectedOutput))
+				return FinishOutputFault(parent, "the pending physical endpoints disagree");
 			GameObject accepted = null;
 			bool callbackReturned = false;
 			if (building.CurrentCell == null && building.InInventory == null)
 			{
 				if (!PreparedPlotFinalOutput(building, parent, entry, receipt, id, Rect,
-					Footprint, Roof, expectedOutput, construction)) return false;
+					Footprint, Roof, expectedOutput, construction))
+					return FinishOutputFault(parent, "the final output is not prepared for placing");
 				try { accepted = cell.AddObject(building); callbackReturned = true; building.MakeActive(); }
 				catch { }
 				finally { KingdomSurvey.ObserveAddResultInActive(Z, building, accepted); }
@@ -191,7 +208,8 @@ namespace ThousandAndFirst
 					KingdomPhysicalPhase.FinalOutputSettled, construction.PhysicalIndex,
 					construction.PhysicalAmount,
 					construction.PhysicalSpilled, parent.IDIfAssigned, building.ID,
-					construction.PhysicalReceipt)) return false;
+					construction.PhysicalReceipt))
+				return FinishOutputFault(parent, "the physical phase would not settle");
 			if (building.CurrentCell != cell || building.IDIfAssigned != expectedOutput
 				|| building.GetIntProperty("KingdomBuilt") != 1
 				|| building.GetStringProperty(KingdomUpgrade.BuildKeyProperty) != entry.Key
@@ -200,11 +218,24 @@ namespace ThousandAndFirst
 				|| (construction != null && (!KingdomConstruction.IsCurrent(construction)
 					|| !KingdomConstruction.PaidBuildMatches(building, construction))))
 			{
-					return false;
+				return FinishOutputFault(parent, "the placed final building is not exact");
 			}
 			Building = building;
 			Created = created;
 			return true;
+		}
+
+		/// <summary>
+		/// Names a finish refusal. Every step here used to return false in silence, which is how a
+		/// fully paid commission cycled ProjectionPending -> Working forever with nothing in the
+		/// log to read (issue #172). Once per call, and TryFinishOutput returns at the first fault,
+		/// so a stalled plot costs one line a pass.
+		/// </summary>
+		private static bool FinishOutputFault(GameObject Parent, string Step)
+		{
+			KingdomLog.Log("plot finish refused: " + Step + " (lot "
+				+ (Parent == null ? "unknown" : Parent.GetStringProperty(PlotIdProperty)) + ")");
+			return false;
 		}
 	}
 }

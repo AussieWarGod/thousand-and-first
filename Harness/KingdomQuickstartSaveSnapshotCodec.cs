@@ -38,7 +38,9 @@ namespace ThousandAndFirst.Harness
 					|| value.Turns < 0 || value.TimeTicks < 0 || value.ActionTicks < 0 || value.PlayerActionTicks < 0
 					|| !Text(value.ReceiptWire, MaxReceiptChars, false)
 					|| !KingdomQuickstartRules.TryDecode(value.ReceiptWire, out KingdomQuickstartReceipt receipt)
-					|| receipt.Phase != KingdomQuickstartPhase.Complete || receipt.ProfileKey != value.ProfileKey
+					|| !KingdomQuickstartRules.IsTerminal(receipt)
+					|| receipt.FoundersDisposition == KingdomQuickstartFoundersDisposition.Faulted
+					|| receipt.ProfileKey != value.ProfileKey
 					|| receipt.ZoneId != profile.ZoneId
 					|| receipt.AdvisorDisposition != (value.Advisor ? KingdomQuickstartAdvisorDisposition.Included
 						: KingdomQuickstartAdvisorDisposition.Omitted)

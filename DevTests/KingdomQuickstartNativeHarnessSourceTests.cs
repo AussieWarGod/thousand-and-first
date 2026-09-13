@@ -46,7 +46,7 @@ namespace ThousandAndFirst.Tests
 			Ordered(Flat(Method(source, "internal void Enter(")), "Owner(); BlueprintExact(true)",
 				"ReferenceEquals(entered.Object, body)", "ReferenceEquals(entered.Cell, cell)",
 				"witness.Exact()", "Count(cell.Objects, body) == 1", "witness.Volume.MaxVolume == 64",
-				"witness.Volume.Volume == 24", "Owner(); BlueprintExact(true); witness.Exact()",
+				"witness.Volume.Volume == KingdomQuickstartRules.StarterWaterDrams", "Owner(); BlueprintExact(true); witness.Exact()",
 				"Entries++", "if (Entries == 1)", "Faults++; witness.Volume.MaxVolume = 32");
 			Ordered(Flat(Method(source, "public void Dispose(")), "Owner(); BlueprintExact(true)",
 				"catch (Exception error)", "ReferenceEquals(added, Probe)", "Parts.Remove(ProbeName)",
@@ -55,7 +55,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void SixteenUniqueCaseIdsBindExactCreatorAndFaultCallbacks()
+		public void SeventeenUniqueCaseIdsBindExactCreatorAndFaultCallbacks()
 		{
 			string registrations = Method(Read(Creators), "internal static void NativeQuickstartChecks(")
 				+ Method(Read(Faults), "private static void NativeQuickstartFaults(");
@@ -67,6 +67,7 @@ namespace ThousandAndFirst.Tests
 				"creator-larder-recovery=NativeLarderCreator(Context)",
 				"creator-materials-recovery=NativeMaterialsCreator(Context)",
 				"creator-advisor-recovery=NativeAdvisorCreator(Context)",
+				"creator-founders-cohort=NativeFoundersCohort(Context)",
 				"creator-foreign-obstruction=NativeForeignObstruction(Context)",
 				"adapter-water-verification-refusal=NativeWaterFault(Context, \"verify\")",
 				"adapter-throw-before-placement=NativeWaterFault(Context, \"before\")",
@@ -82,13 +83,13 @@ namespace ThousandAndFirst.Tests
 			};
 			CollectionAssert.AreEqual(expected, matches.Cast<Match>().Select(m =>
 				m.Groups[1].Value + "=" + Flat(m.Groups[2].Value)).ToArray());
-			ClassicAssert.AreEqual(16, new HashSet<string>(matches.Cast<Match>()
+			ClassicAssert.AreEqual(17, new HashSet<string>(matches.Cast<Match>()
 				.Select(m => m.Groups[1].Value), StringComparer.Ordinal).Count);
 			StringAssert.Contains("NativeQuickstartFaults(Context);", registrations);
-			StringAssert.Contains("internal const int ExpectedCases = 16;", Read(Provider));
+			StringAssert.Contains("internal const int ExpectedCases = 17;", Read(Provider));
 		}
 
-		[TestCase("Water", "water", "VerifyWaterGrant", "Volume == 24")]
+		[TestCase("Water", "water", "VerifyWaterGrant", "Volume == KingdomQuickstartRules.StarterWaterDrams")]
 		[TestCase("Larder", "larder", "VerifyLarderGrant", "Inventory.Objects.Count == 12")]
 		[TestCase("Materials", "stockpile", "VerifyMaterialsGrant", "Inventory.Objects.Count == 3")]
 		public void ProductionCreatorsVerifyPhysicalGrantsAndRecoverSameReferences(
@@ -240,7 +241,7 @@ namespace ThousandAndFirst.Tests
 			CollectionAssert.AreEqual(new[] { "stagedigest", "quickstart-check", "stagedigest" },
 				Setting(persona, "SCRIPT").Split(';'));
 			CollectionAssert.AreEqual(new[] { "stagedigest:OK~founded=false",
-				"quickstart-check:OK~cases=16 passed=16 failed=0", "stagedigest:OK~founded=false", "COMPLETE" },
+				"quickstart-check:OK~cases=17 passed=17 failed=0", "stagedigest:OK~founded=false", "COMPLETE" },
 				Setting(persona, "EXPECT").Split(','));
 			ClassicAssert.AreEqual("quickstart-check", Setting(persona, "VERBS"));
 			ClassicAssert.AreEqual("founding-first-city", Setting(persona, "REQUEST"));
