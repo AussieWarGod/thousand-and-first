@@ -32,6 +32,14 @@ namespace XRL.World.Parts
 						throw new InvalidOperationException("vortex creation object differs");
 					GameId = The.Game.GameID;
 					var text = new StringBuilder("created-tick=").Append(The.Game.TimeTicks);
+					GameObject actor = The.ActionManager?.Actor;
+					Cell actorCell = actor?.CurrentCell;
+					text.Append("; acting-blueprint=").Append(actor?.Blueprint)
+						.Append("; acting-object=").Append(actor?.IDIfAssigned)
+						.Append("; acting-zone=").Append(actorCell?.ParentZone?.ZoneID)
+						.Append("; acting-cell=").Append(actorCell?.X).Append(',').Append(actorCell?.Y)
+						.Append("; acting-has-vortex=").Append(actor?.HasPart("SpacetimeVortex") ?? false)
+						.Append("; acting-target=").Append(actor?.Brain?.Target?.Blueprint);
 					int count = 0;
 					foreach (StackFrame frame in new StackTrace(false).GetFrames() ?? new StackFrame[0])
 					{
