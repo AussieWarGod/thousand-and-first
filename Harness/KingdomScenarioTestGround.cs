@@ -127,6 +127,7 @@ namespace XRL.World.ZoneBuilders
 			int removed = 0;
 			int keptStairs = 0;
 			int keptBare = 0;
+			KingdomScenarioGroundCensus.Record(Z, "before-strip");
 			// The border ring is left alone: zone-edge cells carry the travel connections to the
 			// neighbouring parasangs, and a test ground nobody can walk out of is not a test ground.
 			for (int y = 1; y < Z.Height - 1; y++)
@@ -167,6 +168,7 @@ namespace XRL.World.ZoneBuilders
 			Removed = removed;
 			KeptStairs = keptStairs;
 			KeptBare = keptBare;
+			KingdomScenarioGroundCensus.Record(Z, "after-strip");
 			return true;
 		}
 

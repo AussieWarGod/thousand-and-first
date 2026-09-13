@@ -568,7 +568,11 @@ def read_journal(text: str) -> list[tuple[str, str, str]]:
 
 
 def significant(rows: list[tuple[str, str, str]]) -> list[tuple[str, str, str]]:
-    return [row for row in rows if row[0] not in BOOKKEEPING]
+    # These bounded observations do not occupy scripted EXPECT positions. A failed
+    # observation remains significant, so diagnosis cannot silently lose evidence.
+    diagnostics = {"TESTGROUND-CENSUS", "camp-resident-movement"}
+    return [row for row in rows if row[0] not in BOOKKEEPING
+            and not (row[0] in diagnostics and row[1] == "OK")]
 
 
 def terminal_row(rows: list[tuple[str, str, str]]) -> str:

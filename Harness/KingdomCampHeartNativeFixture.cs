@@ -42,7 +42,8 @@ namespace ThousandAndFirst.Harness
 					var movement = new XRL.World.Parts.r_TAF_CampResidentMoveProbe
 					{
 						OriginZone = Zone.ZoneID, FixtureSlot = i + 1,
-						Record = detail => Evidence.Append(detail)
+						Record = detail => KingdomScenarioJournal.Append(
+							"camp-resident-movement", true, detail)
 					};
 					Require(ReferenceEquals(body.AddPart(movement), movement),
 						"the read-only resident movement probe was not attached");
