@@ -241,7 +241,7 @@ namespace ThousandAndFirst.Tests
 			CollectionAssert.AreEqual(new[] { "stagedigest", "quickstart-check", "stagedigest" },
 				Setting(persona, "SCRIPT").Split(';'));
 			CollectionAssert.AreEqual(new[] { "stagedigest:OK~founded=false",
-				"quickstart-check:OK~cases=16 passed=16 failed=0", "stagedigest:OK~founded=false", "COMPLETE" },
+				"quickstart-check:OK~cases=17 passed=17 failed=0", "stagedigest:OK~founded=false", "COMPLETE" },
 				Setting(persona, "EXPECT").Split(','));
 			ClassicAssert.AreEqual("quickstart-check", Setting(persona, "VERBS"));
 			ClassicAssert.AreEqual("founding-first-city", Setting(persona, "REQUEST"));
