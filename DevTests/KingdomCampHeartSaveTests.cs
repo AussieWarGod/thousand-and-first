@@ -180,6 +180,27 @@ namespace ThousandAndFirst.Tests
 			}
 			Assert.That(KingdomCampHeartScript.Matches(saved.Concat(new[] { "camp-heart-save" }).ToArray()), Is.False);
 		}
+		[Test]
+		public void PaidChainRequiresEveryOrdinaryWaitAndCannotClaimSaveCoverage()
+		{
+			var script = Script("camp-heart-chain");
+			Assert.That(KingdomCampHeartChainScript.Matches(script), Is.True);
+			Assert.That(KingdomCampHeartScript.Matches(script), Is.True);
+			Assert.That(KingdomCampHeartScript.Matches(script, true), Is.False);
+			Assert.That(script.Take(9), Is.EqualTo(Script("camp-heart-native-checks")));
+			Assert.That(KingdomCampHeartChainScript.Matches(null), Is.False);
+			for (int i = 0; i < script.Length; i++)
+			{
+				var changed = (string[])script.Clone(); changed[i] += " ";
+				Assert.That(KingdomCampHeartChainScript.Matches(changed), Is.False);
+				Assert.That(KingdomCampHeartChainScript.Matches(script.Where((_, at) => at != i).ToArray()), Is.False);
+			}
+			Assert.That(KingdomCampHeartChainScript.Matches(script.Concat(new[] { "camp-heart-save" }).ToArray()), Is.False);
+			int turns = script.Where(x => x.StartsWith("advance ")).Sum(x => int.Parse(x.Substring(8)));
+			Assert.That(turns, Is.EqualTo(30000));
+			Assert.That(script.Where(x => x.StartsWith("advance ")).All(x => int.Parse(x.Substring(8)) <= 10000), Is.True);
+		}
+
 		private static string[] Script(string name) => TestMain.ReadRepositoryText("Tools/personas/" + name + ".persona")
 			.Split('\n').Single(line => line.StartsWith("SCRIPT=", StringComparison.Ordinal)).Substring(7).Split(';');
 	}

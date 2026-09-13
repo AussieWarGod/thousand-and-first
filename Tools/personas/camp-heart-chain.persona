@@ -1,0 +1,14 @@
+# Synthetic city support: 50 enrolled bodies, 18 authored tent rows via setup-only calendar completion,
+# 3600 additional drams, 1728 food, foundry knowledge, one supplemental granary stockpile.
+# All non-heart improvements held; only the exact next heart material bill is supplied per leg.
+# Paid heart improvements use ordinary turns only. No higher-rung save/load or ordinary-play acceptance.
+DESCRIPTION=paid heart 1->2->3->4 with supported synthetic city, exact costs and original basin/stockpile custody
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;camp-heart-setup;advance 1200;camp-heart-check;advance 3600;camp-heart-check;advance 1200;camp-heart-check;stagedigest;camp-heart-chain-setup;advance 1200;camp-heart-chain-check;advance 7200;camp-heart-chain-check;camp-heart-chain-supply;advance 1200;camp-heart-chain-check;advance 6600;advance 6600;camp-heart-chain-check;advance 1200;camp-heart-chain-check
+VERBS=camp-heart-setup,camp-heart-check,camp-heart-chain-setup,camp-heart-chain-check,camp-heart-chain-supply
+EXPECT=stagedigest:OK~founded=false,camp-heart-setup:OK~native-camp-heart phase=1,advance:OK,camp-heart-check:OK~native-camp-heart phase=2,advance:OK,camp-heart-check:OK~native-camp-heart phase=3,advance:OK,camp-heart-check:OK~native-camp-heart cases=1 passed=1 failed=0,stagedigest:OK~founded=true,camp-heart-chain-setup:OK~paid-heart-chain setup,advance:OK,camp-heart-chain-check:OK~paid-heart-chain paid; target=3,advance:OK,camp-heart-chain-check:OK~paid-heart-chain completed; rung=3,camp-heart-chain-supply:OK~target=4,advance:OK,camp-heart-chain-check:OK~paid-heart-chain paid; target=4,advance:OK,advance:OK,camp-heart-chain-check:OK~paid-heart-chain completed; rung=4,advance:OK,camp-heart-chain-check:OK~paid-heart-chain complete;,COMPLETE
+LOG_EXPECT=["MODWARN [Pets of Harvest Dawn] - Mod defining manual load order, please convert it to use the Dependencies field.","MODWARN [Pets of Harvest Dawn] - XmlDataHelper:: <...>/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/DLC/PetsPack1/Freehold_Pet_Ercolano/PopulationTables.xml line 4 char 6"]
+LOG_FORBID=["construction: founding heart recovery requires inspection","seal: settlement pass was not staged"]
+SET=camp,native-regression,test-only
+TIMEOUT=1800

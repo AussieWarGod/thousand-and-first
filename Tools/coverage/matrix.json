@@ -1083,9 +1083,9 @@
           "artifactBytes": 4678,
           "verdict": "PASS - paid rung2, next-day recovery, exact cold load and next paid completed fire",
           "scope": "Synthetic paid camp rung1-to-2 and next-day recovery, exact saved heart/book/store/fire/material witness, separate cold load, another real paid fire commission and 3600 ordinary turns to independent completed output. One disclosed timber supplied before save, none after load. No ordinary Quickstart, higher rung or all-feature acceptance. Both complete 3369-source profiles, runtime/Harness XML binding, strict final logs and owned stopped records verified. Exact identities, city work row, paid tent receipt, 21 original brush and world clock match before and after activation. Full developer C# digest computed from the exact archived source commit; all 3369 current C# inputs are byte-identical.",
-          "historicalScope": false,
+          "historicalScope": true,
           "inventoryDigest": "9763830753f5d45146100eda42b45ce4710a30f7caa9269544c5e45fa91c8fc9",
-          "currentDevCoverage": true
+          "currentDevCoverage": false
         }
       ]
     }

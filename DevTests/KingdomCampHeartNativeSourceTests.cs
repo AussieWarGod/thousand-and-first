@@ -158,7 +158,8 @@ namespace ThousandAndFirst.Tests
 			Assert.That(placed, Is.LessThan(rowed), "AddObject must precede TryEnsureRow");
 			foreach (string token in new[] {
 				"System.ClaimedZones.Contains(Zone.ZoneID)",
-				"taf-camp-resident-unplaced", "RequireRowInBook(book, body, id, i + 1)",
+				"taf-camp-resident-unplaced", "int expected = System.Population + 1",
+				"RequireRowInBook(book, body, id, expected)",
 				"Book.TryResidentRow(Id, out index)", "rows[i].BoundZoneId",
 				"!body.IsPlayer() && !body.IsPlayerLed()",
 				"KingdomResidents.RollRows(System)",

@@ -1,5 +1,13 @@
 # Current implementation and release evidence
 
+## In-progress paid heart chain
+
+A developer scenario extends the paid camp path toward rungs 3 and 4. Its disclosed city support
+uses fifty enrolled residents, eighteen authored tent rows, finite water and food stores, synthetic
+craft lessons and separately supplied material bills. Only setup housing uses a future calendar
+argument; ordinary turns must pay and complete both heart improvements. Native execution remains
+pending. This does not establish higher-rung persistence, ordinary growth or Beta acceptance.
+
 ## Paid camp cold-load coverage
 
 Native developer scenario at `de82845056b1bfb8b747925f3aeb38fc72d0dfbd` passes 6000 source
