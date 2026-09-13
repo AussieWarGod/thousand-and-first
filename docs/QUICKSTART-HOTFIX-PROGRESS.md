@@ -177,3 +177,31 @@ compile modes and 14775 main/5732 portable cases with zero skips. Logs:
 `/tmp/taf-alpha-034-portable.log`. Its inventory is
 `73c87caced09ccdffc714a2475c170679e6e37a68b0fe42e92566d98c18d2907`.
 No private or public upload has occurred; native site-selection and delivery checks remain pending.
+
+
+### Protected siting and historical observer update — 2026-09-13
+
+Both canyon advisor choices pass at `86c0b5df`: 16,800 real turns, all four original
+citizens housed, six beds, paid fire completion, real save, cold load and another paid
+commission. Strict logs and owned stops pass. Exact archives are
+`quickstart-lifecycle/86c0b5df/canyon-yes` and `canyon-no` under the behaviour-evidence
+root. The remaining four marsh/dunes combinations run sequentially on the same frozen
+production inventory `9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f`.
+
+Private candidate `55963285` keeps inventory `73c87caced09ccdffc714a2475c170679e6e37a68b0fe42e92566d98c18d2907`.
+Main/portable suites pass 14785/5742 cases; the changed Quickstart fixtures pass 345
+focused cases, zero skips. Four final compile modes pass in
+`/tmp/taf-historical-grant-gate-2.log`; persona tooling passes 132 cases and compile
+route tooling passes 41. A compile-inventory refusal previously reached a zero-source
+compiler and could print success. `1679a1ee` adds explicit failure returns; its regression
+fails against the previous gate in all five injected cases. The interrupted earlier
+compile receipt `/tmp/taf-historical-grant-gate.log` is INVALID, regardless of its footer.
+
+The retained public 0.3.3 save first refused at the historical observer because it held
+its correct original 24 drams while the observer expected the current 64. No production
+refill or save edit occurred. `55963285` authenticates the old public code/content and
+fresh-save journal, then binds the original grant to the exact GameID and snapshot in a
+fresh sealed reader. It keeps actual stock, custody and receipt verification. Current
+creator-fault fixtures use the current grant; malformed historical bindings refuse.
+Historical native rerun and current creator/strike cases are queued after the profile
+matrix. No new private or public upload has occurred.

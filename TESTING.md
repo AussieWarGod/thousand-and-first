@@ -3,7 +3,7 @@
 ## Quickstart housing hotfix acceptance (2026-09-13)
 
 The construction lifecycle now also observes the original four Quickstart citizens at startup,
-after its ordinary 7,200-turn construction interval, and after cold load. Each must retain its
+after its ordinary 16,800-turn construction interval (7,200 + 9,600), and after cold load. Each must retain its
 original physical identity, applied founding citizenship and living resident row. Startup requires
 unfinished shelter; the later observations require both reserved tent rows to be functionally
 built, sufficient physical roof capacity, and all four original citizens assigned to those homes.
