@@ -1106,8 +1106,9 @@ Running it (unattended - no keyboard beyond starting the game):
    before `GlobalLocation.ResolveCell` generates the zone. Post-builders run at priority 5000, after
    the terrain, village, ruin, and lair builders, so it strips what they placed: every interior cell
    is cleared of anything the settlement's own `KingdomPlots.ReadObject` law does not already read
-   as bare, creatures and liquid pools included. It **keeps** the one-cell border (the zone's travel
-   connections to its neighbours) and any stairs (its connection to the strata below). It only ever
+   as bare, creatures and liquid pools included. Border creatures are also removed; non-creature
+   border objects (including travel connections) and stairs remain. The after-strip census refuses
+   if any non-player creature survives. It only ever
    removes, never places or rolls, so under the sealed seed it is deterministic. It is bound to the
    **resolved** location, so `TAF_SCENARIO_START` and a hand-walked chargen both get the same
    treatment, and it is inert without a sealed script — an attended profile is one an operator is

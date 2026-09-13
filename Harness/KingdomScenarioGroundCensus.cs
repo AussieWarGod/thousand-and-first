@@ -14,6 +14,7 @@ namespace ThousandAndFirst.Harness
 				var counts = new SortedDictionary<string, int>(StringComparer.Ordinal);
 				var samples = new StringBuilder();
 				int shown = 0, observed = 0;
+				bool cleared = true;
 				foreach (GameObject body in Zone.GetObjects())
 				{
 					if (!GameObject.Validate(body) || body.IsPlayer()) continue;
@@ -26,6 +27,7 @@ namespace ThousandAndFirst.Harness
 					string kind = vortex ? "vortex" : body.IsCreature ? "creature"
 						: widget ? "widget" : null;
 					if (kind == null) continue;
+					if (body.IsCreature) cleared = false;
 					string key = (border ? "border-" : "interior-") + kind;
 					counts.TryGetValue(key, out int count);
 					counts[key] = count + 1;
@@ -42,7 +44,8 @@ namespace ThousandAndFirst.Harness
 					text.Append("; ").Append(pair.Key).Append('=').Append(pair.Value);
 				text.Append("; sample-count=").Append(Math.Min(shown, 16))
 					.Append("; omitted=").Append(Math.Max(0, observed - 16)).Append(samples);
-				KingdomScenarioJournal.Append("TESTGROUND-CENSUS", true, text.ToString());
+				KingdomScenarioJournal.Append("TESTGROUND-CENSUS",
+					Checkpoint != "after-strip" || cleared, text.ToString());
 			}
 			catch (Exception error)
 			{

@@ -32,7 +32,7 @@ namespace ThousandAndFirst.Tests
 				"if (KingdomFoundingTransaction.HasSiteReservation(Z))",
 				"Failure = \"[\" + ReservationPendingCode + \"] a founding-attempt site reservation \"",
 				"return false;",
-				"for (int y = 1; y < Z.Height - 1; y++)",
+				"for (int y = 0; y < Z.Height; y++)",
 				"if (gone || !GameObject.Validate(item)) removed++;",
 				"Z.RemoveZoneProperty(\"faction\");",
 				"Removed = removed;",

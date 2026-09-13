@@ -31,8 +31,8 @@ namespace XRL.World.ZoneBuilders
 	/// zone.
 	/// </para>
 	/// <para>
-	/// WHAT IT KEEPS. The one-cell border, so the zone's own travel connections to its neighbours
-	/// survive; stairs, which are the zone's connection to the strata below; and anything the
+	/// WHAT IT KEEPS. Non-creature objects on the one-cell border, so the zone's own travel
+	/// connections survive; stairs, which are the zone's connection to the strata below; and anything the
 	/// settlement's own clearance law already reads as bare - floors, paint objects, and the engine
 	/// bookkeeping widgets that have no physical presence. Everything else in the interior goes,
 	/// creatures and liquid pools included. The predicate is
@@ -128,18 +128,19 @@ namespace XRL.World.ZoneBuilders
 			int keptStairs = 0;
 			int keptBare = 0;
 			KingdomScenarioGroundCensus.Record(Z, "before-strip");
-			// The border ring is left alone: zone-edge cells carry the travel connections to the
-			// neighbouring parasangs, and a test ground nobody can walk out of is not a test ground.
-			for (int y = 1; y < Z.Height - 1; y++)
-				for (int x = 1; x < Z.Width - 1; x++)
+			// Keep border terrain and travel connections, but clear creatures there as well.
+			for (int y = 0; y < Z.Height; y++)
+				for (int x = 0; x < Z.Width; x++)
 				{
 					Cell cell = Z.GetCell(x, y);
 					if (cell == null) continue;
+					bool border = x == 0 || y == 0 || x == Z.Width - 1 || y == Z.Height - 1;
 					List<GameObject> objects = cell.GetObjects();
 					for (int i = 0; i < objects.Count; i++)
 					{
 						GameObject item = objects[i];
 						if (item == null || item.IsPlayer()) continue;
+						if (border && !item.IsCreature) continue;
 						if (item.HasPart("StairsUp") || item.HasPart("StairsDown"))
 						{
 							keptStairs++;
@@ -190,8 +191,8 @@ namespace XRL.World.ZoneBuilders
 					if (cell.HasOpenLiquidVolume()) liquid++;
 				}
 			return (Z.ZoneID ?? "(unkeyed)") + ": cleared " + Removed + " object(s) from the "
-				+ (Z.Width - 2) + "x" + (Z.Height - 2) + " interior; kept " + KeptStairs
-				+ " stair(s) and " + KeptBare + " bare/widget object(s), plus the border ring for "
+				+ (Z.Width - 2) + "x" + (Z.Height - 2) + " interior and border creatures; kept " + KeptStairs
+				+ " stair(s) and " + KeptBare + " bare/widget object(s), plus non-creature border objects for "
 				+ "travel connections. Interior now has " + impassable + " impassable cell(s) and "
 				+ liquid + " open-liquid cell(s).";
 		}

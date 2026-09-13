@@ -1,5 +1,27 @@
 # Current implementation and release evidence
 
+## Unreleased camp test-ground correction — PR204
+
+The camp fixture preserved a glowpad at border cell `(0,15)` with the Spacetime Vortex mutation.
+Native creation and placement tracing at `ef1f78a44d9ab2df4f9a13c9e223e31c785b2d37` identifies
+that same active actor targeting an NPC and creating the vortex during ordinary combat. The
+closed failed attempt is `beta-camp-heart/ef1f78a4/vortex-caster-1/result.json`, SHA-256
+`387713d0ef3d8ed1d155b56bb491e9b4f4153ad83a41d4424f986e3da741f06c`.
+Developer test-ground cleanup now removes border creatures while retaining non-creature border
+objects and travel connections. The after-strip census refuses surviving non-player creatures.
+Native validation at `42b252e7c324423b702248040184fe9072f7221d` passes all nine scripted steps
+across 6000 ordinary turns: cleanup removes 17 border creatures and retains five border widgets;
+production pays 18 drams, 24 stone and 1 timber, completes waterstone 811 at rung 2, preserves
+stockpile 754 and 23 unspent brush, and recovers the founding heart one day later. No vortex
+creation is recorded. Two fixture residents later emigrate through normal subsidence; this is
+not the separate housed Quickstart scenario. Full closed seal, 3360 C# inputs, runtime and Harness
+XML bindings, strict final log and owned stopped record verify. Archive:
+`beta-camp-heart/42b252e7/border-creatures-cleared-1/result.json`, SHA-256
+`3d3a7d3f0807a00bea11f2716a51f6340b4a0932c3d9162afbd1a0fe1c790673`.
+All four engine compile modes, four focused source and nine documentation checks pass.
+Earlier failures remain retained. Rung-2 cold load, other seeds and higher-rung coverage remain gaps;
+ordinary-world cleanup and public release are unchanged.
+
 ## Unreleased Beta validation — PR194
 
 This work does not change the finalized public 0.3.6 release below. Broader Beta acceptance
