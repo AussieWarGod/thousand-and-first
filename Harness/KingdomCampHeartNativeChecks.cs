@@ -35,6 +35,19 @@ namespace ThousandAndFirst.Harness
 
 		internal static bool Vacant { get { return Retained == null; } }
 
+		internal static string ObservedHazardZone
+		{
+			get { return Retained != null && Retained.Armed
+				&& ReferenceEquals(The.Game, Retained.Game) ? Retained.Zone.ZoneID : null; }
+		}
+
+		internal static void RecordVortexOrigin(bool Ok, string Detail)
+		{
+			if (ObservedHazardZone == null || Retained.VortexObservations >= 8) return;
+			Retained.VortexObservations++;
+			KingdomScenarioJournal.Append("camp-vortex-origin", Ok, Detail);
+		}
+
 		internal static string Run(string Verb, XRLGame Game, Zone Zone, out bool Complete)
 		{
 			Complete = false;
@@ -97,6 +110,7 @@ namespace ThousandAndFirst.Harness
 			internal List<GameObject> RetainedBrushBodies;
 			internal bool Begun;
 			internal bool Armed, Done;
+			internal int VortexObservations;
 			internal int Phase;
 			internal readonly StringBuilder Evidence = new StringBuilder();
 
@@ -151,6 +165,11 @@ namespace ThousandAndFirst.Harness
 					"the improvement notice mark failed its readback");
 				RecordBefore();
 				ProveFounderAndWalkClear();
+				Require(GameObjectFactory.Factory.Blueprints.TryGetValue("Space-Time Vortex",
+					out var vortexBlueprint) && vortexBlueprint.Parts.TryGetValue(
+						"r_TAF_CampVortexOriginProbe", out var probe)
+					&& probe.T == typeof(XRL.World.Parts.r_TAF_CampVortexOriginProbe),
+					"the developer vortex origin observer is not wired to the engine blueprint");
 				Armed = true;
 				Phase = 1;
 			}
