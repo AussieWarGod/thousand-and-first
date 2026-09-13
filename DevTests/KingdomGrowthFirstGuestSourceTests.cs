@@ -345,6 +345,15 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void EmptyCreedProjectionPreservesTheActualProperty()
+		{
+			string source = Source("Growth/KingdomGrowth.z10.ArrivalProofAndDomainHash.cs");
+			AssertOrdered(source, "case KingdomGrowthDomainStepKind.Creed:",
+				"projectedAfter && !string.IsNullOrEmpty(PlannedCreed(settler))",
+				"? PlannedCreed(settler)", ": settler.GetStringProperty(KingdomCreed.CreedProperty)");
+		}
+
+		[Test]
 		public void GuestBodyHasNoLootXpTradeLaborOrCombatContribution()
 		{
 			string hardening = Source(

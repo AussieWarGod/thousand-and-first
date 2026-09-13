@@ -2,13 +2,13 @@
 
 ## Current 0.3.4 Quickstart hotfix — release gates pending
 
-3098 staged C# files; 440,122 physical lines; cold-install inventory contains 3129 files.
+3098 staged C# files; 440,124 physical lines; cold-install inventory contains 3129 files.
 Compile inventory: 3098 sources, baseline and compatibility symbols (3094 baseline).
 Direct `XRL` imports: 1445 files, 0 over the line limit. Zero at or above 300 lines.
-Inventory SHA-256: `5039e82aca01ced8e9c4fc73f626469b6584912b8571a5d02d9f348c8e073fef`.
+Inventory SHA-256: `a5e00bd45a1122917e6b164ad98373cdcc043e6c681790495086ee0a2e870182`.
 Combines #141 authority, #144 shared-XL validation, #138/#139 rung settlement and #137 camp
 content/native fixture over dev with the verified 0.3.3 backmerge. Production and test-project
-merges are complete. Current main/portable suites pass 14789/5743 cases with zero skips,
+merges are complete. Current main/portable suites pass 14790/5743 cases with zero skips,
 and all four compile modes pass. Automated structural review binds the inventory above.
 All six location/advisor choices pass fourteen-day Quickstart, housing and paid construction,
 real save/cold load and a further paid commission on `86c0b5df`. The supplied housing crisis

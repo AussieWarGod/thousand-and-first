@@ -280,7 +280,9 @@ namespace ThousandAndFirst
 						: settler.GetStringProperty(ArrivalRosterReceiptProperty));
 					break;
 				case KingdomGrowthDomainStepKind.Creed:
-					WriteString(writer, projectedAfter ? PlannedCreed(settler)
+					// Recording no creed is a no-op, including an absent property.
+					WriteString(writer, projectedAfter && !string.IsNullOrEmpty(PlannedCreed(settler))
+						? PlannedCreed(settler)
 						: settler.GetStringProperty(KingdomCreed.CreedProperty));
 					WriteString(writer, projectedAfter ? operationId
 						: settler.GetStringProperty(ArrivalCreedReceiptProperty));

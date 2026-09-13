@@ -50,6 +50,7 @@ namespace ThousandAndFirst.Harness
 			Require(ReferenceEquals(Game, game) && ReferenceEquals(Zone, zone), "guest action owner changed");
 			Require(KingdomFirstGuestRuntime.IsAwaitingAnswer(System), "real due pass did not open correspondence");
 			KingdomGrowthArrivalCandidate candidate = System.LifecycleBook.Growth.ArrivalCandidate;
+			Evidence.Append("; planned-creed=").Append(candidate.PlannedCreed);
 			int populationBefore = System.Population;
 			string candidateId = candidate.Id, opportunityId = candidate.FirstGuest.OpportunityId;
 			string[] correspondence = { "Admit this person through Growth", "Defer without limit", "Decline without penalty" };
