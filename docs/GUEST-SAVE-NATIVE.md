@@ -31,6 +31,18 @@ diagnostics now record the victim/killer goals and any civic posting while a fou
 combat/flee goal. The harness does not suppress wildlife, alter combat, replace founders,
 or waive the original-founder requirement. The causal role of civic AI remains unverified.
 
+Run `4d207e8c` kept all four founders and the enrolled guest through fourteen days, with no
+recorded civic combat interruption. It failed in the supply harness before pouring: the
+material census incorrectly selected water-store markers instead of `KingdomMaterials.IsStockpile`.
+The walk also caused the engine to add previously absent `OptionLookLocked=No` and rewrite its
+options JSON format. The owned process stopped and strict log passed, but the stop record
+correctly refused the changed profile seal. The failed profile was never repaired or resealed.
+Evidence: `guest-save/4d207e8c/material-census-and-options-drift-1/result.json`, SHA-256
+`4ccbb67acd67001fc17afcf37ffab8a1f4039cbf6f4ab4f00e9312ab40fd889e`.
+The corrected census uses the production material predicate. New physical guest-walk profiles
+author the initial look option and observed engine JSON format before sealing; all later
+profile changes still refuse. Other scenario options retain their existing format.
+
 The `guest-save-witness` verb captures the real guest's identity, living roll membership,
 applied arrival citizenship, home plot, name and nullable creed, arrival domain receipts,
 terminal first-guest receipt and opportunity fields, population, water and arrival accounting.

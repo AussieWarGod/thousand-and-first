@@ -129,12 +129,13 @@ namespace ThousandAndFirst.Harness
 				Tick = game.TimeTicks; Turns = game.Turns; Actions = game.ActionTicks; PlayerActions = game.PlayerActionTicks;
 				Heartbeat = system.LastHeartbeatTick; Dry = system.DryStreak; Upkeep = system.Ledger.UpkeepDrawn; Departures = system.Ledger.Departures;
 				foreach (GameObject store in zone.GetObjects())
-					if (store.Inventory != null && store.GetIntProperty("KingdomStores") == 1)
+					if (store.Inventory != null && KingdomMaterials.IsStockpile(store))
 					{
 						Require(KingdomQuickstartBuildCensus.TakeStock(zone, store, false, out var stock, out string failure), failure);
 						Stores.Add(store, stock);
 					}
-				Require(Stores.Count > 0 && Registry != null, "material or construction authority absent");
+				Require(Stores.Count > 0, "dedicated material stockpile absent");
+				Require(Registry != null, "construction authority absent");
 			}
 			internal void Verify()
 			{
@@ -147,7 +148,7 @@ namespace ThousandAndFirst.Harness
 					&& System.Ledger.UpkeepDrawn == Upkeep && System.Ledger.Departures == Departures, "shortage or refill changed authority/clocks/accounting");
 				int count = 0;
 				foreach (GameObject store in Zone.GetObjects())
-					if (store.Inventory != null && store.GetIntProperty("KingdomStores") == 1)
+					if (store.Inventory != null && KingdomMaterials.IsStockpile(store))
 					{
 						count++;
 						Require(Stores.TryGetValue(store, out var before), "dedicated material store added");
