@@ -24,13 +24,13 @@ namespace ThousandAndFirst.Harness
 					timber = unit.Id;
 				}
 			}
-			Require(brush.Count == MintedBrushUnits && timber != null, "saved camp lacks 23 brush and one timber: store="
+			Require(brush.Count == SavedBrushUnits && timber != null, "saved camp lacks 21 brush and one timber: store="
 				+ frame.StoreId + "; brush=" + brush.Count + "; timber=" + (timber ?? "absent")
 				+ "; raw=" + KingdomCampHeartNativeCensus.Describe(units));
 			return new KingdomCampHeartSaveSnapshot(Game.GameID, frame.System.RealmId,
 				KingdomConstruction.OwnerOf(frame.System), Zone.ZoneID, frame.HeartId, frame.JobId,
 				frame.StoreId, frame.FireId, timber, KingdomCampHeartSaveSnapshotCodec.CustodyDigest(units),
-				KingdomCampHeartSaveSnapshotCodec.CustodyDigest(brush), frame.Heart.CurrentCell.X,
+				KingdomCampHeartSaveSnapshotCodec.CustodyDigest(brush), frame.TentJobId, frame.Heart.CurrentCell.X,
 				frame.Heart.CurrentCell.Y, frame.StoreCell.X, frame.StoreCell.Y, frame.FireCell.X,
 				frame.FireCell.Y, frame.Census().StoredWater, Game.Turns);
 		}
@@ -70,6 +70,7 @@ namespace ThousandAndFirst.Harness
 					&& job.PhysicalPhase == KingdomPhysicalPhase.EffectsSettled && KingdomConstruction.HasReceipt(frame.Heart, job),
 					"retained heart job is ambiguous, unfinished or detached from its standing output");
 			}
+			frame.TentJobId = PaidTent(frame, jobs);
 			RequireBookRow(frame);
 			return frame;
 		}

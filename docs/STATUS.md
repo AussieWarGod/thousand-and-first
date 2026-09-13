@@ -6,9 +6,19 @@ The developer camp scenario can now save its actual paid rung-2 heart, city work
 fire and material custody. Its separate load route compares restored state before explicit
 recovery, then commissions a new paid fire and waits for ordinary construction completion.
 The fixture supplies one disclosed extra timber before saving; it creates no materials after load.
-Focused checks pass (83 main, 69 portable, zero skips), four journal-oracle tests pass, and all
-four engine compile modes pass (3094/3098 ordinary, 3364/3368 developer sources).
-Native save/load execution is pending; this does not close rung-2 persistence or Beta acceptance.
+Two source runs completed the paid upgrade and next-day recovery but refused the save witness.
+The diagnostic run at `da5a82343fa0ee98422ddf7214a82f9ff6dbae82` observes 21 brush before adding
+the timber, with the same 21 brush afterward. The existing ground-protection case also commissions
+a tent: its real bill is three drams and two canvas, which production classifies as brush.
+The new witness now binds that paid tent receipt and the surviving 21 original brush objects.
+It does not skip the tent commission or replace consumed materials to satisfy the old expectation.
+Both failed source runs retain closed profiles, strict logs and owned stopped records.
+Diagnostic archive: `beta-camp-cold-load/da5a8234/paid-tent-custody-1/result.json`, SHA-256
+`1dbb7a3a52371c371ebc10abd5afeb1bf63c0844babadfda496903ef428a7173`.
+Before that accounting correction, focused checks passed (83 main, 69 portable, zero skips),
+four journal-oracle tests passed, and all four engine compile modes passed (3094/3098 ordinary,
+3364/3368 developer sources). Corrected native save/load execution remains pending;
+this does not close rung-2 persistence or Beta acceptance.
 
 ## Unreleased profile inventory optimization
 

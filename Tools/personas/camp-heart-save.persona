@@ -1,7 +1,7 @@
 # Synthetic paid camp 1->2, next-day recovery, then an actual save for a separate cold load.
 # Inherits six synthetic residents, 400 drams and 48 initial material units from the camp case.
 # Save adds one explicitly disclosed timber unit. Loaded continuation spends it on a new fire.
-# The loaded process must complete that paid job while preserving the upgraded heart and 23 brush.
+# The existing tent commission pays two brush; preserve its receipt and the 21 remaining brush across load.
 DESCRIPTION=paid rung-2 camp save for separate cold-load and independently completed next construction
 REQUEST=founding-first-city
 START=8.22@40,12

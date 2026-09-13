@@ -12,9 +12,9 @@ namespace ThousandAndFirst.Tests
 	public class KingdomCampHeartSaveTests
 	{
 		private static KingdomCampHeartSaveSnapshot Sample(string game = "01234567-89ab-cdef-0123-456789abcdef",
-			string heart = "heart", string store = "store", string digest = null, int x = 40, int water = 300, long turns = 6002)
+			string heart = "heart", string store = "store", string digest = null, int x = 40, int water = 300, long turns = 6002, string tentJob = "tent-job")
 			=> new KingdomCampHeartSaveSnapshot(game, "realm", "city", "JoppaWorld.8.22.1.1.10",
-				heart, "upgrade", store, "fire", "timber", digest ?? new string('a', 64), new string('b', 64),
+				heart, "upgrade", store, "fire", "timber", digest ?? new string('a', 64), new string('b', 64), tentJob,
 				x, 12, 43, 13, 39, 13, water, turns);
 		private static string Encode(KingdomCampHeartSaveSnapshot value)
 		{
@@ -36,9 +36,9 @@ namespace ThousandAndFirst.Tests
 			string wire = Encode(want);
 			Assert.That(Codec.TryDecode(wire, out var got), Is.True);
 			Assert.That(new[] { got.GameId, got.RealmId, got.CityId, got.ZoneId, got.HeartId, got.UpgradeJobId,
-				got.StoreId, got.FireId, got.TimberId, got.ContentsDigest, got.BrushDigest },
+				got.StoreId, got.FireId, got.TimberId, got.ContentsDigest, got.BrushDigest, got.TentJobId },
 				Is.EqualTo(new[] { want.GameId, want.RealmId, want.CityId, want.ZoneId, want.HeartId, want.UpgradeJobId,
-					want.StoreId, want.FireId, want.TimberId, want.ContentsDigest, want.BrushDigest }));
+					want.StoreId, want.FireId, want.TimberId, want.ContentsDigest, want.BrushDigest, want.TentJobId }));
 			Assert.That(new[] { got.HeartX, got.HeartY, got.StoreX, got.StoreY, got.FireX, got.FireY, got.Water },
 				Is.EqualTo(new[] { want.HeartX, want.HeartY, want.StoreX, want.StoreY, want.FireX, want.FireY, want.Water }));
 			Assert.That(got.Turns, Is.EqualTo(want.Turns));
@@ -84,6 +84,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("empty-game")]
 		[TestCase("uppercase-guid")]
 		[TestCase("duplicate-object")]
+		[TestCase("duplicate-job")]
 		[TestCase("negative-coordinate")]
 		[TestCase("outside-coordinate")]
 		[TestCase("negative-water")]
@@ -98,6 +99,7 @@ namespace ThousandAndFirst.Tests
 			var value = fault == "empty-game" ? Sample(game: "")
 				: fault == "uppercase-guid" ? Sample(game: "01234567-89AB-CDEF-0123-456789ABCDEF")
 				: fault == "duplicate-object" ? Sample(store: "heart")
+				: fault == "duplicate-job" ? Sample(tentJob: "upgrade")
 				: fault == "negative-coordinate" ? Sample(x: -1)
 				: fault == "outside-coordinate" ? Sample(x: 4096)
 				: fault == "negative-water" ? Sample(water: -1)

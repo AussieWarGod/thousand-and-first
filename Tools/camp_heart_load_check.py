@@ -33,9 +33,10 @@ def judge(source, loaded):
         require(prior < at < checked and detail == f'{count} turn(s) elapsed of {count} requested',
                 'source ordinary turn interval differs')
         prior = checked
-    equal_fields(save, {'paid-camp-save': 'true', 'rung': '2', 'synthetic-next-job-timber': '1', 'brush': '23'})
+    equal_fields(save, {'paid-camp-save': 'true', 'rung': '2', 'synthetic-next-job-timber': '1', 'brush': '21'})
     identities = {name: field(save, name) for name in ('heart', 'store', 'fire')}
     require(len(set(identities.values())) == 3, 'camp object identities collide')
+    tent_job = field(save, 'tent-job')
     digest = field(save, 'snapshot-sha256')
     require(re.fullmatch('[0-9a-f]{64}', digest), 'camp snapshot digest malformed')
     game = field(save, 'save')
@@ -48,20 +49,20 @@ def judge(source, loaded):
     require(not any(event in ('camp-heart-setup', 'camp-heart-check', 'camp-heart-save', 'stagedigest')
                     for event, _, _ in loaded), 'source script replayed in loaded process')
     equal_fields(begin, {'game-id': game, 'new-game': 'false', 'mod-restore': 'false'})
-    equal_fields(restored, dict(identities, rung='2', basin='48', brush='23', timber='1', **{'snapshot-sha256': digest}))
+    equal_fields(restored, dict(identities, rung='2', basin='48', brush='21', timber='1', **{'snapshot-sha256': digest, 'tent-job': tent_job}))
     equal_fields(paid, {'water-debited': '2', 'timber-debited': '1', 'synthetic-materials-after-load': '0'})
     next_job, upgrade = field(paid, 'new-job'), field(paid, 'upgrade-job')
-    require(next_job != upgrade, 'next job reuses completed upgrade identity')
+    require(len({next_job, upgrade, tent_job}) == 3, 'new job, upgrade and paid tent identities collide')
     equal_fields(resumed, {'vanilla-Continue': 'true', 'saved-script-considered': 'true', 'requested-turns': '3600'})
     require(elapsed == '3600 turn(s) elapsed of 3600 requested', 'loaded ordinary wait incomplete')
-    equal_fields(completed, dict(identities, phase='Complete', brush='23', **{'new-job': next_job, 'effects-settled': 'true'}))
+    equal_fields(completed, dict(identities, phase='Complete', brush='21', **{'new-job': next_job, 'effects-settled': 'true'}))
     output = field(completed, 'output')
     require(output not in identities.values(), 'completed next output reuses existing camp object')
     require(re.fullmatch('[1-9][0-9]*', field(completed, 'turns')), 'completed game clock absent')
     equal_fields(terminal, {'real-save-quit-load': 'true', 'next-paid-job-complete': 'true',
                            'new-game-script-replayed': 'false', 'ordinary-acceptance': 'false'})
     return dict(verdict='PASS', gameId=game, snapshotSha256=digest, newJobId=next_job, outputId=output,
-                **identities, sourceTurns=6000, loadedTurns=3600, brush=23,
+                **identities, sourceTurns=6000, loadedTurns=3600, brush=21,
                 scope='Synthetic paid camp journal proof only; require closed profiles, source/runtime/harness bindings, strict logs and owned stops.')
 
 

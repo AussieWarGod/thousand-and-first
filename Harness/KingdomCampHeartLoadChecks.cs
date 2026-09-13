@@ -26,8 +26,8 @@ namespace ThousandAndFirst.Harness
 			foreach (var body in bodies)
 				if (body.Blueprint == KingdomMaterials.BlueprintFor(KingdomMaterial.Brush)) frame.RetainedBrushBodies.Add(body);
 			Require(KingdomScenarioJournal.Append("camp-heart-loaded", true,
-				"rung=2; basin=48; brush=23; timber=1; heart=" + observed.HeartId + "; store=" + observed.StoreId
-				+ "; fire=" + observed.FireId + "; snapshot-sha256=" + KingdomScenarioSaveFiles.HashText(wire)) == null,
+				"rung=2; basin=48; brush=21; timber=1; heart=" + observed.HeartId + "; store=" + observed.StoreId
+				+ "; fire=" + observed.FireId + "; tent-job=" + observed.TentJobId + "; snapshot-sha256=" + KingdomScenarioSaveFiles.HashText(wire)) == null,
 				"loaded camp proof journal unavailable");
 			Require(KingdomPlots.RecoverFoundingHeart(frame.System, zone), "loaded camp founding heart cannot recover");
 			Require(KingdomData.TryGetBuilding("fire", out var entry) && entry.CostDrams == 2,
@@ -45,7 +45,7 @@ namespace ThousandAndFirst.Harness
 				quote, out var job, out failure), failure ?? "loaded commission did not mint exactly one paid job");
 			var timberBill = new KingdomMaterialTally();
 			timberBill.Add(KingdomMaterial.Timber, 1);
-			Require(job.Id != Witness.UpgradeJobId
+			Require(job.Id != Witness.UpgradeJobId && job.Id != Witness.TentJobId
 				&& job.Claims.MaterialSpent == new KingdomMaterialDebitCost(timberBill).ToClaimString(),
 				"loaded job reused the upgrade or paid a different material bill");
 			NextJobId = job.Id;
@@ -78,7 +78,7 @@ namespace ThousandAndFirst.Harness
 				"loaded completed fire has no distinct functional standing output with its own receipt");
 			return "new-job=" + finished.Id + "; phase=" + finished.Phase + "; effects-settled=true; output="
 				+ output.IDIfAssigned + "; heart=" + frame.HeartId + "; store=" + frame.StoreId
-				+ "; fire=" + frame.FireId + "; brush=23; turns=" + Game.Turns;
+				+ "; fire=" + frame.FireId + "; brush=21; turns=" + Game.Turns;
 		}
 
 		private static Frame PreservedLoaded(XRLGame Game, KingdomCampHeartSaveSnapshot Witness)
@@ -89,14 +89,14 @@ namespace ThousandAndFirst.Harness
 			Require(ReferenceEquals(frame.System, LoadedCamp.System) && ReferenceEquals(frame.Heart, LoadedCamp.Heart)
 				&& ReferenceEquals(frame.Store, LoadedCamp.Store) && ReferenceEquals(frame.Fire, LoadedCamp.Fire)
 				&& frame.HeartId == Witness.HeartId && frame.StoreId == Witness.StoreId && frame.FireId == Witness.FireId
-				&& frame.JobId == Witness.UpgradeJobId && frame.System.RealmId == Witness.RealmId
+				&& frame.JobId == Witness.UpgradeJobId && frame.TentJobId == Witness.TentJobId && frame.System.RealmId == Witness.RealmId
 				&& KingdomConstruction.OwnerOf(frame.System) == Witness.CityId && frame.Zone.ZoneID == Witness.ZoneId
 				&& frame.Heart.CurrentCell.X == Witness.HeartX && frame.Heart.CurrentCell.Y == Witness.HeartY
 				&& frame.StoreCell.X == Witness.StoreX && frame.StoreCell.Y == Witness.StoreY
 				&& frame.FireCell.X == Witness.FireX && frame.FireCell.Y == Witness.FireY,
 				"loaded paid work replaced or moved the saved camp");
 			var units = frame.ContentUnits(out var bodies);
-			Require(units.Count == MintedBrushUnits
+			Require(units.Count == SavedBrushUnits
 				&& KingdomCampHeartSaveSnapshotCodec.CustodyDigest(units) == Witness.BrushDigest,
 				"loaded paid work changed unspent brush or failed to remove the timber");
 			frame.RequireSameBodies(LoadedCamp.RetainedBrushBodies, bodies, "loaded brush");

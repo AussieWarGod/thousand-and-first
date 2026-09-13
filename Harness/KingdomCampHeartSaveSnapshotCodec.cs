@@ -21,7 +21,7 @@ namespace ThousandAndFirst.Harness
 			foreach (int coordinate in Coordinates(Value)) if (coordinate < 0 || coordinate >= 4096) return false;
 			var objects = new HashSet<string>(StringComparer.Ordinal)
 				{ Value.HeartId, Value.StoreId, Value.FireId, Value.TimberId };
-			return objects.Count == 4 && Digest(Value.ContentsDigest) && Digest(Value.BrushDigest);
+			return objects.Count == 4 && Value.TentJobId != Value.UpgradeJobId && Digest(Value.ContentsDigest) && Digest(Value.BrushDigest);
 		}
 
 		internal static bool TryEncode(KingdomCampHeartSaveSnapshot Value, out string Wire)
@@ -58,12 +58,12 @@ namespace ThousandAndFirst.Harness
 				using (var reader = new BinaryReader(stream, Utf8))
 				{
 					if (reader.ReadInt32() != Magic || reader.ReadInt32() != 1) return false;
-					var fields = new string[11];
+					var fields = new string[12];
 					for (int i = 0; i < fields.Length; i++) fields[i] = Read(reader);
 					var coordinates = new int[6];
 					for (int i = 0; i < coordinates.Length; i++) coordinates[i] = reader.ReadInt32();
 					var result = new KingdomCampHeartSaveSnapshot(fields[0], fields[1], fields[2], fields[3],
-						fields[4], fields[5], fields[6], fields[7], fields[8], fields[9], fields[10],
+						fields[4], fields[5], fields[6], fields[7], fields[8], fields[9], fields[10], fields[11],
 						coordinates[0], coordinates[1], coordinates[2], coordinates[3], coordinates[4],
 						coordinates[5], reader.ReadInt32(), reader.ReadInt64());
 					if (stream.Position != stream.Length || !Valid(result)) return false;
@@ -102,7 +102,7 @@ namespace ThousandAndFirst.Harness
 		private static string[] Fields(KingdomCampHeartSaveSnapshot Value) => new[]
 		{
 			Value.GameId, Value.RealmId, Value.CityId, Value.ZoneId, Value.HeartId, Value.UpgradeJobId,
-			Value.StoreId, Value.FireId, Value.TimberId, Value.ContentsDigest, Value.BrushDigest
+			Value.StoreId, Value.FireId, Value.TimberId, Value.ContentsDigest, Value.BrushDigest, Value.TentJobId
 		};
 		private static int[] Coordinates(KingdomCampHeartSaveSnapshot Value) => new[]
 			{ Value.HeartX, Value.HeartY, Value.StoreX, Value.StoreY, Value.FireX, Value.FireY };
