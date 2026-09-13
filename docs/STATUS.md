@@ -1,6 +1,6 @@
 # Current implementation and release evidence
 
-## Current 0.3.4 Quickstart hotfix — release gates pending
+## Current 0.3.4 Quickstart hotfix — private verified; public promotion pending
 
 3098 staged C# files; 440,124 physical lines; cold-install inventory contains 3129 files.
 Compile inventory: 3098 sources, baseline and compatibility symbols (3094 baseline).
@@ -28,7 +28,46 @@ also fixed unbound dialogue water authority, duplicate enrollment event IDs and 
 projection mismatch. The no-bed repeated-welcome preservation case passes on `895e700e` with
 its disclosed synthetic camp. An earlier first-day founder-count loss remains an unexplained
 failed precondition; these results do not claim all-seed survival or guest save/load coverage.
-Private 0.3.4 metadata is prepared; no new tag/upload or Beta acceptance is claimed.
+Private 0.3.4 is verified and finalized as recorded below. Public promotion and broader Beta acceptance remain pending.
+
+
+### Private 0.3.4 — verified and finalized
+
+[Release run 34737798572](https://github.com/AussieWarGod/thousand-and-first/actions/runs/34737798572)
+succeeded at annotated `staging-v0.3.4`, source
+`20a4c79c52ccebfec796adac561464845131e24f`. All eleven release-check stages passed,
+including 14790 main and 5743 portable cases with zero managed skips, all four compile
+modes, 46 launcher cases, package/deployment harnesses and structural validation.
+Three PACKAGE/COPY/BACKUP bind-alias fixtures reported environment-limited skips because
+`/tmp` is foreign-owned in the user namespace; this is not a zero-total-skips claim.
+The raw licensed log is retained at
+`C:\taf-release\run-34737798572-1\logs\release-check.log`.
+
+Private item `3796495680` reported `SubscribedInstallationVerified` and
+`attemptFinalized=true`. Verification covers one subscribed client;
+`freshTransferVerified=false` and `releaseReady=false` remain unchanged.
+
+- Package: 3129 files; receipt SHA-256
+  `79b516f0cb46d929d59fda0ae52bc556eb43126753e3085be4fd03f8052177a9`.
+- Plan SHA-256: `e4c36fbbf1be145afb3aacbeb5ae2ef7c0136ac18dcca1b6838f4fbb91e72cf7`.
+- Installed inventory SHA-256: `c60b9171e05cd96900252c766f6448488bb0f6605f10c7524185b68ed1a1671a`.
+- Finalization SHA-256: `cfa8862365a1e8598109058cb55365f688fa7d1afd1ea72bfc43051ae523b2ce`.
+
+After finalization, an automated native marsh/advisor-yes Quickstart pair passed on that
+exact source and production inventory. All four original founders remained housed after
+16800 real turns, with two shelters, six beds and a functional paid campfire. A real save,
+separate cold load and another paid commission passed; both strict logs and owned stops
+passed. All 3129 runtime files match the private package and subscribed installation;
+both closed profiles match the exact 3347 C# production/harness inputs. This is isolated
+native automation, not rendered UI, all-seed survival or guest save/load acceptance.
+
+The local archive is
+`/home/r/work/taf-scratch/behaviour-evidence/quickstart-lifecycle/20a4c79c/marsh-yes/`.
+Its `results.json` SHA-256 is
+`00174a7fe27c960c7437beb51fbb15ded0d86596468ac5426fc5f057137a7223`.
+Profiles `taf-scenario.d2TOXS` and `taf-scenario.FLI6sA` and their saves remain local.
+The private package receipt is copied byte-for-byte into
+`docs/PRIVATE_PACKAGE_RECEIPT.sha256`; this binding commit is the public Alpha candidate.
 
 The current draft additionally distinguishes fully authorized surveyed-heart physical access
 from ordinary positive road-network evidence. Exact public approach walkability remains required
