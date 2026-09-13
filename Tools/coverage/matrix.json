@@ -255,26 +255,26 @@
       "id": 9,
       "behaviour": "Heart expansion (rungs 1-4)",
       "prerequisites": "founded heart",
-      "transitions": "envelope-authority transition (issue #141)",
-      "effects": "rung/plot rect",
+      "transitions": "paid adjacent heart upgrades 1->2->3->4 with authored envelope authority",
+      "effects": "new standing heart and settled rung/plot rectangle after each paid upgrade",
       "save_cold_load": "COVERAGE_GAP",
       "negative": "COVERAGE_GAP",
-      "driver": "fix lives on fix/issue-141-heart-authority (b1efe18), not merged to dev",
-      "status": "NONE",
-      "note": "GAP pending #141/#148 integration onto dev, not a proven defect -- see review-b1efe18-findings.md",
+      "driver": "Partial only: Tools/personas/camp-heart-native-checks.persona and Harness/KingdomCampHeartNativeProvider.cs exercise 1->2 plus one later day (row 30). No native driver covers the complete 1->4 chain.",
+      "status": "COVERAGE_GAP",
+      "note": "Source audit at bccf8cb387e5bdb773e0a36b575a9ce5a6cf3d46: the #141 authority and rung-settlement fixes are merged (docs/STATUS.md, published 0.3.4 inventory). Growth/KingdomArchitectureStamper.Transitions.cs enforces exact adjacent endpoints, frozen rectangles and basin custody. The old unmerged-branch claim is obsolete. Native paid progression through every rung, save/cold load and present/away settlement remain unverified; row 30 tracks the narrower existing 1->2 driver without claiming the full chain.",
       "evidence": null
     },
     {
       "id": 10,
       "behaviour": "Heart expansion (rung 4->5, arcology)",
       "prerequisites": "rung 4 heart",
-      "transitions": "TryAuthorizedTransition heart branch (Growth/KingdomArchitectureStamper.Transitions.cs:48-71)",
-      "effects": "n/a (refused before any transition)",
-      "save_cold_load": "n/a",
-      "negative": "n/a",
+      "transitions": "paid rung 4->5 renovation through TryAuthorizedTransition, retaining the shared Huge footprint",
+      "effects": "standing arcology, settled rung 5 and unchanged held footprint with exact basin/storage custody",
+      "save_cold_load": "COVERAGE_GAP",
+      "negative": "COVERAGE_GAP",
       "driver": "NONE",
-      "status": "DEFECT",
-      "note": "Precise basis (issue #144): rung 5 (arcology) shares rung 4's own LotSize/HeartRungEndpointsAdmit tier mapping (both bind Size=\"XL\" in Architecture/KingdomArchitectures-CivicFaith.xml, confirmed at KingdomPlotHeartRules.cs's HeartSizeForRung(4)==HeartSizeForRung(5)==PlotSize.Huge), but Transitions.cs:56's (int)After.LotSize != afterRung equality check demands LotSize's int value equal the rung NUMBER (5), which HeartRungEndpointsAdmit's shared-tier mapping can never satisfy for this one rung pair -- see camp-authority-trace.md Part 3 Section 3 for the full derivation",
+      "status": "COVERAGE_GAP",
+      "note": "The historical #144 integer/rung comparison is fixed in current source, audited at bccf8cb387e5bdb773e0a36b575a9ce5a6cf3d46. Growth/KingdomArchitectureStamper.Transitions.cs calls HeartRungEndpointsAdmit with both actual lot tiers; Growth/KingdomPlotHeartRules.cs maps rungs 4 and 5 to PlotSize.Huge and admits adjacent endpoints on that shared tier. This source proof removes the obsolete unreachability claim only. No native driver or typed receipt proves paid arcology renovation, settled rung, custody, save/cold load or its later settlement passes.",
       "evidence": null
     },
     {
@@ -909,6 +909,19 @@
           "currentDevCoverage": false
         }
       ]
+    },
+    {
+      "id": 30,
+      "behaviour": "Paid heart upgrade 1->2 and next-day settlement",
+      "prerequisites": "Fresh stamped founding-first-city profile with synthetic founding, rung-1 completion frontier, six enrolled residents, 400 dedicated drams and 48 minted material units; all fixture state disclosed",
+      "transitions": "camp-heart-setup -> 1200 real turns -> paid bill observation -> 3600 real turns -> standing waterstone observation -> 1200 real turns -> post-upgrade founding recovery observation",
+      "effects": "Exact 18-dram, 24-stone and 1-timber bill; a distinct functional waterstone at settled rung 2; same anchored stockpile and 23 unspent brush units; camp fire re-laid; later founding-heart recovery succeeds",
+      "save_cold_load": "COVERAGE_GAP: this existing persona has no save or cold-load phase",
+      "negative": "Fixture includes occupied expansion and malformed/stale/foreign predecessor probes; fresh source-bound native evidence is required",
+      "driver": "Tools/personas/camp-heart-native-checks.persona; Harness/KingdomCampHeartNativeProvider.cs; KingdomCampHeartNativeChecksPhases.cs; KingdomCampHeartNativeAfterRaise.cs",
+      "status": "IMPLEMENTED_UNEXECUTED",
+      "note": "Existing exact script is present at bccf8cb387e5bdb773e0a36b575a9ce5a6cf3d46, but no current source-bound, sealed, strictly logged receipt is attached here. Historical attempts and their failures remain in docs/STATUS.md; earlier persona-only green output did not prove a clean settlement pass (issue #162). First rerun this scenario with full profile seals, owned stop, strict logs and immutable source binding; then extend coverage to cold load, an independently observed later paid job and the higher rungs. This row does not claim ordinary play, 1->4 progression or a native PASS.",
+      "evidence": null
     }
   ],
   "combinations": [
