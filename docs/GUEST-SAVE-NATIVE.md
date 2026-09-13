@@ -21,6 +21,16 @@ accounting must survive the refusal and refill. Missing carried water or an obst
 refuses the scenario. The full save/load witness still includes stored water; only the local
 transfer comparison measures that intentionally changed quantity separately.
 
+The revised run at `76baa664` stopped before recruitment: a giant dragonfly killed original
+founder `516`; the other three founders and six completed beds remained. The full sealed
+source and strict log passed custody checks, but the scenario failed. Retained evidence:
+`guest-save/76baa664/dragonfly-founder-death-1/result.json`, SHA-256
+`ceb240de0144a5957bfc1865b680998863d37fbd21f172dc16121e56679143be`.
+This is a witnessed combat death, not evidence of another housing departure. Read-only
+diagnostics now record the victim/killer goals and any civic posting while a founder has a
+combat/flee goal. The harness does not suppress wildlife, alter combat, replace founders,
+or waive the original-founder requirement. The causal role of civic AI remains unverified.
+
 The `guest-save-witness` verb captures the real guest's identity, living roll membership,
 applied arrival citizenship, home plot, name and nullable creed, arrival domain receipts,
 terminal first-guest receipt and opportunity fields, population, water and arrival accounting.

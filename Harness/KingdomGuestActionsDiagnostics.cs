@@ -91,6 +91,10 @@ namespace ThousandAndFirst.Harness
 		internal static void Before(GameObject __instance, GameObject Killer, string Reason, string DeathCategory)
 		{
 			if (!KingdomGuestActionsNativeChecks.Founders.Contains(__instance)) return;
+			KingdomScenarioJournal.Append("guest-founder-death", false,
+				"tick=" + The.Game.TimeTicks + "; victim=" + KingdomGuestFounderCombatDiagnostics.Describe(__instance)
+				+ "; killer=" + KingdomGuestFounderCombatDiagnostics.Describe(Killer)
+				+ "; reason=" + KingdomScenarioRules.Bounded(Reason ?? "none") + "; observation-only=true");
 			KingdomGuestActionsNativeChecks.Evidence.Append("; founder-death=").Append(__instance.IDIfAssigned)
 				.Append(" killer=").Append(Killer?.Blueprint ?? "none")
 				.Append(" reason=").Append(KingdomScenarioRules.Bounded(Reason ?? "none"))
