@@ -49,3 +49,19 @@ python3 Tools/heart_sight_check.py SAVE_JOURNAL LOAD_JOURNAL --results HEART_SIG
 
 Retain failures unchanged. A source-only pass does not establish cold-load rendering, and
 passing journal text does not substitute for source binding, profile seals or strict logs.
+
+## Retained failed execution
+
+Source `64573611` in profile `C:\taf-scenario.1i27wH` observed zero canvas at opening, then
+all seven completed canvas cells at `38,12|38,13|39,11|40,11|41,11|42,11|43,12`. Four original
+founders were housed in two shelters with six beds at turn 8402; the paid fire completed.
+Five real frames drew all 2000 cells, including 1725 naturally occluded cells, and restored
+gameplay visibility. The real save completed.
+
+This is **failed acceptance**, because `PlayerOptions.json` gained `OptionLookLocked=No` and
+the engine's JSON formatting during the run. Receipt-owned stop and strict Player.log passed,
+but the full profile seal and stop record refused. No cold load was attempted. The profile
+and journal remain unchanged. Fresh completed-heart profiles now author this default and
+wire format before sealing, as the existing physical carried-water scenario already does;
+later byte changes still fail. Tests cover the initial format, later drift and malformed
+script tails that must not write options.

@@ -478,6 +478,26 @@ class QuickstartBootPreparationTest(unittest.TestCase):
         os.environ["TAF_SCENARIO_EXTRA_VERBS"] = "guest-save-supply"
         self.assert_options_refuse_unchanged()
 
+    def test_completed_heart_render_authors_look_default_before_sealing(self):
+        self.choose("marsh", "yes", "quickstart-lifecycle")
+        os.environ["TAF_SCENARIO_SCRIPT"] += " heart-sight-inspect yield-frames 3"
+        os.environ["TAF_SCENARIO_EXTRA_VERBS"] = "heart-sight-inspect"
+        self.write_options()
+        original = self.options.read_text(encoding="utf-8")
+        self.assertEqual("No", json.loads(original)["OptionLookLocked"])
+        self.assertTrue(original.startswith('{\n"') and original.endswith('\n}'))
+        seal = self.tmp / "heart-render.sha256"
+        profile.seal(str(self.local), str(seal))
+        profile.verify(str(self.local), str(seal))
+        self.options.write_text(original + "\n", encoding="utf-8")
+        with self.assertRaises(SystemExit): profile.verify(str(self.local), str(seal))
+
+    def test_completed_heart_render_invalid_tail_preserves_options(self):
+        self.choose("marsh", "yes", "quickstart-lifecycle")
+        os.environ["TAF_SCENARIO_SCRIPT"] += " heart-sight-inspect yield-frames 0"
+        os.environ["TAF_SCENARIO_EXTRA_VERBS"] = "heart-sight-inspect"
+        self.assert_options_refuse_unchanged()
+
     def test_ordinary_options_do_not_invent_advisor_key(self):
         self.source.write_text('{"OtherOption":"retained"}', encoding="utf-8")
         self.write_options()
