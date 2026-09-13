@@ -86,6 +86,12 @@ hashes, case identities, skips and exit status. Optimize duplicate work or files
 do not infer equivalent coverage from equal case counts. Stage performance changes separately
 from an urgent release candidate.
 
+Scenario profile inventory uses the shared `Tools/scenario_profile.py` reader with at most four
+files outstanding. It retains every normalized path, SHA-256 and link/type check, and joins
+sibling readers before propagating a failure. Keep source and destination inventories at their
+existing validation boundaries; faster hashing does not permit skipping a reproof. Both agents
+use this automatically through the existing preparation and verification commands.
+
 The native source-test route was selected after comparing evaluated Linux and Windows inputs:
 both projects have identical source lists, compiler symbols and target framework, and every
 source byte matches the accepted Windows private 0.3.5 run. Both full licensed suites passed

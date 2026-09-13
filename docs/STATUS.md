@@ -1,5 +1,32 @@
 # Current implementation and release evidence
 
+## Unreleased profile inventory optimization
+
+The shared scenario profile reader now hashes at most four files concurrently, preserving the
+existing complete inventory and per-file checks. Tests exercise overlapping reads, exact hashes,
+bounded active readers and failure propagation that waits for siblings and preserves the prior seal.
+The two concurrency tests failed against the serial reader; all 87 profile/load tests pass afterward.
+
+The preceding prototype measured serial inventory at 41.4 seconds and four-worker inventory at
+7.7–7.9 seconds in both execution orders on one stopped Windows-mounted profile. All 3398 paths
+and hashes matched its closed seal. Prototype archive:
+`tooling/profile-inventory-parallel/e2fab515/prototype-1/result.json`, SHA-256
+`6fe78ebbe9c387e6ad3df5336c1fb7894b8649c4acc26f1d275e64d788a96dd7`.
+Native validation at `948e77e5202c86c58dd73f59029513eb0bc56d3b` passes real marsh Quickstart, 8400 turns,
+four original citizens housed, two shelters and six beds, save/separate cold load, another paid
+commission, vanilla Continue and four source plus four loaded whole-zone frames. Complete Local
+seals, 3360 C# inputs, runtime/Harness XML bindings, strict final logs and both owned stops verify.
+Native archive: `heart-sight/948e77e5/parallel-profile-cold-load-1/result.json`, SHA-256
+`5231ff508ca5d0fd35332300e1360166cc41dcdbd9cdd4c61109fdbc41f41721`.
+
+The measured load-preparation phases total 99.0 seconds, compared with 234.7 seconds in the earlier
+run on this host. Post-copy inventory and sealing each take about 7.8 seconds; copying remains
+about 32 seconds. These are summed phase measurements, not whole-command wall time. Timing and
+check evidence: `tooling/profile-inventory-parallel/948e77e5/native-1/result.json`, SHA-256
+`53cf4b52c8961a91c8878142fe1b21eed483333dcb32ab56d1d74b41c36bab3c`. Engine/compiler inputs match the accepted 42b252e7 four-mode
+receipt exactly, so those compiles were reused rather than rerun. Rung-2 cold load, other seeds
+and broader Beta coverage remain separate gaps.
+
 ## Unreleased camp test-ground correction — PR204
 
 The camp fixture preserved a glowpad at border cell `(0,15)` with the Spacetime Vortex mutation.
