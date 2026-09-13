@@ -23,7 +23,7 @@
 #   TAF_PERSONA_REPORT=<path>            default Tools/PortableOutput/personas-report.tsv
 #   TAF_PERSONA_TIMEOUT=<seconds>        overrides every persona's own TIMEOUT
 #   TAF_PERSONA_CAPTURE_DIR=<path>        publish one native PNG only after an asserted PASS;
-#                                         failed assertion/capture keeps the prior good PNG
+#                                         failed assertion/capture/closed-record keeps the prior good PNG
 #   TAF_PERSONA_CAPTURE_WIDTH/HEIGHT      native capture window size (default 2560x1440); a
 #                                         taller window shows a taller lot at the same tile size
 #   TAF_PERSONA_SEED=<#int>               optional exact seed reused by every selected persona
@@ -185,8 +185,21 @@ stop_owned() {
 		LIFECYCLE_BROKEN=1
 		return 1
 	fi
-	ACTIVE_ROOT=""
 	ACTIVE_LAUNCH=0
+	# The process is already closed. A seal/record refusal must not retry its shutdown or
+	# permit another persona to hide the failed evidence boundary.
+	local record_log="${ACTIVE_STOP_LOG%.log}-record.log"
+	if ! powershell.exe -NoProfile -ExecutionPolicy Bypass \
+		-File "$(wslpath -w "$LAUNCHER")" -StopRecord \
+		-Root "$(wslpath -w "$ACTIVE_ROOT")" -Game "$(wslpath -w "$GAME")" \
+		> "$record_log" 2>&1
+	then
+		VERDICT=FAIL
+		DETAIL="${DETAIL:+$DETAIL; }stopped profile seal/run record refused; profile=$ACTIVE_ROOT; log=$record_log"
+		LIFECYCLE_BROKEN=1
+		return 1
+	fi
+	ACTIVE_ROOT=""
 }
 
 on_exit() {
@@ -426,7 +439,7 @@ run_persona() {
 	[ -z "$warnings" ] || DETAIL="$DETAIL; verb providers refused: $warnings"
 
 	# A PNG is evidence for this exact asserted run, not merely for a process that reached a terminal
-	# row. Keep the prior published image until both the assertion and new capture have succeeded.
+	# row. Publish only after assertion, capture and the stopped profile record all succeed.
 	capture_problem=""
 	if [ "$VERDICT" = PASS ] && [ -n "$CAPTURE_DIR" ]; then
 		capture_target="$CAPTURE_DIR/$persona.png"
@@ -449,9 +462,6 @@ run_persona() {
 		then
 			capture_problem="capture helper returned a non-PNG file"
 			rm -f -- "$capture_temp"
-		elif ! mv -f -- "$capture_temp" "$capture_target"; then
-			capture_problem="capture succeeded but atomic publication failed: $capture_target"
-			rm -f -- "$capture_temp"
 		fi
 	fi
 	if [ -n "$capture_problem" ]; then
@@ -460,7 +470,17 @@ run_persona() {
 		VERDICT=FAIL
 	fi
 	DETAIL="${DETAIL:+$DETAIL; }profile=$root (retained)"
-	stop_owned
+	if ! stop_owned; then
+		[ -z "${capture_temp:-}" ] || rm -f -- "$capture_temp"
+		return
+	fi
+	if [ "$VERDICT" = PASS ] && [ -n "${capture_temp:-}" ]; then
+		if ! mv -f -- "$capture_temp" "$capture_target"; then
+			DETAIL="$DETAIL; capture succeeded but atomic publication failed: $capture_target"
+			VERDICT=FAIL
+			rm -f -- "$capture_temp"
+		fi
+	fi
 }
 
 # ---- the matrix -------------------------------------------------------------------------------

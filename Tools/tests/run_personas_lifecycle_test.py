@@ -105,9 +105,14 @@ elif name == "prepare-scenario.sh":
         refuse("fixture prepare refusal")
 elif name == "powershell.exe":
     target = pathlib.Path(option("-File")).name
-    game = option("-Game")
+    game = option("-ScenarioGame" if target == "capture-game-window.ps1" else "-Game")
     assert game == str(base / "fake install" / "CoQ.exe"), game
-    if target == "scenario-process-control.ps1" and option("-Mode") == "idle":
+    if target == "capture-game-window.ps1":
+        root = pathlib.Path(option("-ScenarioRoot"))
+        assert root.parent == base / "profiles"
+        event("capture", root=str(root))
+        pathlib.Path(option("-Output")).write_bytes(b"\x89PNG\r\n\x1a\nfixture capture")
+    elif target == "scenario-process-control.ps1" and option("-Mode") == "idle":
         assert "-Root" not in args
         event("idle", game=game, argv=args)
         if mode == "existing_game":
@@ -115,6 +120,14 @@ elif name == "powershell.exe":
     elif target == "run-scenario.ps1":
         root = pathlib.Path(option("-Root"))
         assert root.parent == base / "profiles"
+        if "-StopRecord" in args:
+            event("stop-record", root=str(root), game=game, argv=args)
+            prior = [json.loads(line) for line in (base / "events.jsonl").read_text().splitlines()]
+            assert any(row["kind"] == "stop" and row["root"] == str(root) for row in prior)
+            if mode == "stop_record_refusal":
+                refuse("fixture stopped profile seal differs")
+            (root / "run-record.json").write_text("fixture stopped record\n", encoding="utf-8")
+            raise SystemExit(0)
         event("launch", root=str(root), game=game, argv=args)
         (root / "Player.log").write_text(os.environ["LIFECYCLE_PLAYER_LOG"], encoding="utf-8")
         if mode != "missing_receipt":
@@ -165,7 +178,7 @@ class PersonaRunnerLifecycleTest(unittest.TestCase):
             directory.mkdir(parents=True)
         for relative in ("run-personas.sh", "personas/persona_matrix.py", "check-player-log.sh"):
             shutil.copy2(ROOT / "Tools" / relative, self.tools / relative)
-        for name in ("run-scenario.ps1", "scenario-process-control.ps1"):
+        for name in ("run-scenario.ps1", "scenario-process-control.ps1", "capture-game-window.ps1"):
             (self.tools / name).write_text("fixture boundary; never executed\n", encoding="utf-8")
         for name in ("powershell.exe", "wslpath", "mktemp", "sleep"):
             self.write_executable(self.bin / name, EXTERNAL)
@@ -267,7 +280,7 @@ class PersonaRunnerLifecycleTest(unittest.TestCase):
 
     def assert_new_scoped_cycle(self, events_before):
         events = self.events()[events_before:]
-        self.assertEqual(["idle", "allocate", "prepare", "launch", "stop"],
+        self.assertEqual(["idle", "allocate", "prepare", "launch", "stop", "stop-record"],
                          [entry["kind"] for entry in events])
         self.assertEqual(events[3]["root"], events[4]["root"])
         self.assert_scoped_calls()
@@ -430,7 +443,7 @@ class PersonaRunnerLifecycleTest(unittest.TestCase):
         result = self.run_cli(names=("alpha", "beta"))
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
         self.assertEqual(["PASS", "PASS"], [row["verdict"] for row in self.rows()])
-        self.assertEqual(["idle", "allocate", "prepare", "launch", "stop"] * 2,
+        self.assertEqual(["idle", "allocate", "prepare", "launch", "stop", "stop-record"] * 2,
                          [entry["kind"] for entry in self.events()])
         self.assertEqual(2, len({entry["root"] for entry in self.events("launch")}))
         for name, launch, stop in zip(("alpha", "beta"), self.events("launch"), self.events("stop")):
@@ -466,6 +479,49 @@ class PersonaRunnerLifecycleTest(unittest.TestCase):
     def test_malformed_receipt_turns_asserted_pass_into_failure_and_blocks_next_launch(self):
         self.assert_stop_refusal_blocks_next_persona("malformed_receipt")
 
+    def test_stopped_record_refusal_blocks_next_persona_without_repeating_stop(self):
+        self.install_reload_fixture()
+        for following in ("beta", "reload"):
+            with self.subTest(following=following):
+                before = len(self.events())
+                result = self.run_cli("stop_record_refusal", names=("alpha", following))
+                self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+                self.assertEqual([("alpha", "FAIL")],
+                                 [(row["persona"], row["verdict"]) for row in self.rows()])
+                self.assertIn("stopped profile seal/run record refused", self.rows()[0]["detail"])
+                events = self.events()[before:]
+                self.assertEqual(["idle", "allocate", "prepare", "launch", "stop", "stop-record"],
+                                 [entry["kind"] for entry in events])
+                self.assertEqual(events[-2]["root"], events[-1]["root"])
+                self.assertEqual(str(self.game), events[-1]["game"])
+                self.assertFalse((pathlib.Path(events[-1]["root"]) / "run-record.json").exists())
+                self.assertFalse((self.base / "reload-args.json").exists())
+                self.assertNotIn("PERSONA MATRIX GREEN", result.stdout)
+                self.assert_profiles_retained()
+
+    def test_capture_publication_requires_successful_stopped_record(self):
+        capture_dir = self.base / "captures"
+        capture_dir.mkdir()
+        self.env["TAF_PERSONA_CAPTURE_DIR"] = str(capture_dir)
+        target = capture_dir / "alpha.png"
+        for mode in ("stop_record_refusal", "success"):
+            with self.subTest(mode=mode):
+                target.write_bytes(b"prior accepted image")
+                before = len(self.events())
+                result = self.run_cli(mode)
+                events = self.events()[before:]
+                self.assertEqual(["capture", "stop", "stop-record"],
+                                 [entry["kind"] for entry in events[-3:]])
+                self.assertEqual([target], list(capture_dir.iterdir()))
+                if mode == "success":
+                    self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+                    self.assertEqual(b"\x89PNG\r\n\x1a\nfixture capture", target.read_bytes())
+                    record = pathlib.Path(events[-1]["root"]) / "run-record.json"
+                    self.assertEqual("fixture stopped record\n", record.read_text())
+                else:
+                    self.assertEqual(1, result.returncode, result.stdout + result.stderr)
+                    self.assertEqual(b"prior accepted image", target.read_bytes())
+
     def test_prepare_refusal_never_attempts_process_stop(self):
         result = self.run_cli("prepare_refusal")
         self.assertEqual(1, result.returncode, result.stderr)
@@ -480,7 +536,7 @@ class PersonaRunnerLifecycleTest(unittest.TestCase):
         sentinel.write_text("foreign fixture\n")
         result = self.run_cli("launcher_refusal")
         self.assertEqual(1, result.returncode, result.stderr)
-        self.assertEqual(["idle", "allocate", "prepare", "launch", "stop"],
+        self.assertEqual(["idle", "allocate", "prepare", "launch", "stop", "stop-record"],
                          [entry["kind"] for entry in self.events()])
         self.assertIn("launch refused", self.rows()[0]["detail"])
         self.assertEqual("foreign fixture\n", sentinel.read_text())

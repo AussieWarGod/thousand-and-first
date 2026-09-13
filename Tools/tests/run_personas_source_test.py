@@ -26,7 +26,7 @@ class PersonaRunnerEvidenceSourceTest(unittest.TestCase):
             'if [ "$VERDICT" = PASS ] && [ -n "$CAPTURE_DIR" ]'
         )
         capture = RUN_PERSONA.index('-File "$(wslpath -w "$CAPTURE")"', pass_capture)
-        stop = RUN_PERSONA.index("\n\tstop_owned", capture)
+        stop = RUN_PERSONA.index("\n\tif ! stop_owned; then", capture)
         self.assertLess(archive, assertion)
         self.assertLess(archive, log_check)
         self.assertLess(log_check, assertion)
@@ -62,6 +62,7 @@ class PersonaRunnerEvidenceSourceTest(unittest.TestCase):
         )
         png_check = RUN_PERSONA.index("89504e470d0a1a0a", pass_capture)
         self.assertLess(png_check, publish)
+        self.assertLess(RUN_PERSONA.index("\n\tif ! stop_owned; then", pass_capture), publish)
         self.assertNotIn('rm -f -- "$capture_target"', RUN_PERSONA)
         self.assertNotIn('cp -f -- "$capture_temp" "$capture_target"', RUN_PERSONA)
 
