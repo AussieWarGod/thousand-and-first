@@ -1,6 +1,15 @@
 # Structural release contract
 
-## Current Alpha 0.3.5 candidate census
+## Current Alpha 0.3.6 candidate census
+
+3098 staged C# files; 440,137 physical lines; 1445 direct `XRL` imports; zero at or above
+300 lines; 3129 cold-install files. Inventory SHA-256: `e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719`.
+
+The sole production delta from verified private 0.3.5 is Core/KingdomReleaseInfo.cs changing its
+receipt identity from 0.3.5 to 0.3.6. Automated review in docs/STRUCTURE_REVIEW.json binds the
+exact inventory. Current candidate delivery and native verification remain separate checks.
+
+## Retained Alpha 0.3.5 candidate census
 
 3098 staged production C# files; 440,137 physical lines; zero at or above 300 lines.
 1445 files with direct `XRL` imports; 3129 cold-install files. Exact inventory:

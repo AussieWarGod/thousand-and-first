@@ -1,6 +1,21 @@
 # Current implementation and release evidence
 
-## Current 0.3.5 sight hotfix — private verified; public upload refused
+## Current 0.3.6 sight hotfix — private preparation
+
+The corrected sight hotfix is being prepared as private Alpha 0.3.6. Public 0.3.5 failed before
+upload; its tag and refusal evidence remain unchanged. The public listing remains 0.3.4.
+No 0.3.6 delivery or native PASS is claimed yet.
+
+3098 staged C# files; 440,137 physical lines; 1445 direct `XRL` imports; zero at or above
+300 lines; 3129 cold-install files. Inventory SHA-256: `e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719`.
+
+The only production C# change from verified private 0.3.5 is the runtime release constant, from
+0.3.5 to 0.3.6, matching manifest.json. The current structural review binds that exact delta.
+Shared development preflight PR197 is merged. Native .NET release-source optimization PR198 is
+being checked separately; the candidate will incorporate its checked integration before tagging.
+Original native housing, guest and claimed-zone evidence below keeps its original source.
+
+## Retained 0.3.5 sight hotfix — private verified; public upload refused
 
 The private Alpha 0.3.5 sight hotfix is verified and finalized. The public attempt failed before
 upload; the public listing still serves 0.3.4. Broader Beta acceptance remains pending.
