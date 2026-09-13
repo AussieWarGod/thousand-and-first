@@ -1,5 +1,20 @@
 # Current implementation and release evidence
 
+## Unreleased profile inventory optimization
+
+The shared scenario profile reader now hashes at most four files concurrently, preserving the
+existing complete inventory and per-file checks. Tests exercise overlapping reads, exact hashes,
+bounded active readers and failure propagation that waits for siblings and preserves the prior seal.
+The two concurrency tests failed against the serial reader; all 87 profile/load tests pass afterward.
+
+The preceding prototype measured serial inventory at 41.4 seconds and four-worker inventory at
+7.7–7.9 seconds in both execution orders on one stopped Windows-mounted profile. All 3398 paths
+and hashes matched its closed seal. Prototype archive:
+`tooling/profile-inventory-parallel/e2fab515/prototype-1/result.json`, SHA-256
+`6fe78ebbe9c387e6ad3df5336c1fb7894b8649c4acc26f1d275e64d788a96dd7`.
+Real source/save/cold-load validation of the implemented reader is pending; this benchmark alone
+does not establish native acceptance or an end-to-end preparation time.
+
 ## Unreleased camp test-ground correction — PR204
 
 The camp fixture preserved a glowpad at border cell `(0,15)` with the Spacetime Vortex mutation.
