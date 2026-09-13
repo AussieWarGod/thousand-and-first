@@ -74,6 +74,11 @@ a newly finished building can spend them on its own next improvement. Keep unrel
 and their reserved lanes outside the largest heart footprint being tested. Run available read-only
 preflights before long waits, and retain both the verdict and detailed production reason on refusal.
 These checks apply to both agents; they do not replace observing the actual paid transition.
+Reserved plot margins are not the whole entrance route: authored lane endpoints extend one cell
+beyond them. Preserve the complete approaches to paid work and future expansions. Recheck physical
+ingress after all fixture buildings and stores are placed, before costly enrollment or turn waits.
+If work reaches its final stage but refuses physical completion, inspect the recorded construction
+reason before increasing the wait. A blocked entrance does not improve with more time.
 
 ## Release batch
 

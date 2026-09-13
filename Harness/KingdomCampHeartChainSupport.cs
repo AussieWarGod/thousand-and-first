@@ -12,13 +12,15 @@ namespace ThousandAndFirst.Harness
 		{
 			private readonly List<GameObject> ChainHomes = new List<GameObject>();
 			private readonly List<GameObject> ChainResidents = new List<GameObject>();
+			private GameObject ChainTent;
 
 			private void SeedChainSupport()
 			{
 				long tick = Game.TimeTicks;
 				SeedChainHomes();
 				for (int i = 0; i < 2; i++)
-					KingdomNativeCampFounding.Dedicate(Game, Zone, System, 1800, Owned.Add, RequirePair);
+					KingdomNativeCampFounding.Dedicate(Game, Zone, System, 1800, Owned.Add,
+						RequirePair, ChainSupplyCell);
 				int beforeFood = Census().FoodStored;
 				for (int i = 0; i < 6; i++)
 				{
@@ -29,6 +31,7 @@ namespace ThousandAndFirst.Harness
 				Require(food.StoreFood(1728, KingdomData.CropForStyle(System.Style)) == 1728
 					&& Census().FoodStored == beforeFood + 1728, "synthetic pantry supply did not land exactly");
 				ChainStore = ChainContainer("KingdomStockpile");
+				RequireChainIngress();
 				Require(System.Population >= 2 && System.Population <= 6, "source camp population differs");
 				EnrollResidents(50 - System.Population);
 				ChainResidents.AddRange(ChainResidentBodies(Census()));
@@ -58,11 +61,34 @@ namespace ThousandAndFirst.Harness
 				Require(container.Inventory != null && container.Inventory.Objects.Count == 0,
 					"synthetic granary has unexpected contents");
 				container.SetIntProperty(Purpose, 1);
-				var cell = KingdomNativeCampFounding.Clear(Zone);
+				var cell = ChainSupplyCell();
 				Require(cell != null && ReferenceEquals(cell.AddObject(container, NoStack: true), container)
 					&& container.CurrentCell == cell && container.CurrentZone == Zone,
 					"synthetic granary placement changed its custody");
 				return container;
+			}
+
+			private Cell ChainSupplyCell()
+			{
+				var plots = KingdomPlots.ReadPlots(Zone);
+				Require(KingdomPlots.TryHeartRectFor(Zone, 4, out var heart), "final heart lot absent");
+				plots.Add(heart);
+				for (int y = 1; y < Zone.Height - 1; y++)
+					for (int x = 1; x < Zone.Width - 1; x++)
+					{
+						var cell = Zone.GetCell(x, y);
+						if (cell == null || !cell.IsEmpty() || !cell.IsPassable()
+							|| cell.HasOpenLiquidVolume()) continue;
+						var point = new KingdomPlotRules.PlotRect(x, y, x, y);
+						bool clear = true;
+						foreach (var plot in plots)
+							if (!KingdomCampHeartChainGrid.ClearsPaidApproach(point, plot)) clear = false;
+						foreach (var item in cell.Objects)
+							if (!GameObject.Validate(item) || item.IsCreature
+								|| KingdomPlots.ReadObject(item) != KingdomPlotRules.GroundKind.Bare) clear = false;
+						if (clear) return cell;
+					}
+				throw new InvalidOperationException("no bare supply cell outside authored approaches");
 			}
 
 			private void HoldChainTent()
@@ -72,7 +98,8 @@ namespace ThousandAndFirst.Harness
 				Require(KingdomConstruction.TryFind(TentJobId, out var job) && job != null
 					&& job.Phase == KingdomConstructionPhase.Complete
 					&& job.PhysicalPhase == KingdomPhysicalPhase.EffectsSettled,
-					"source tent must complete through ordinary turns before heart materials arrive");
+					"source tent must complete through ordinary turns before heart materials arrive: phase="
+					+ job?.Phase + "; physical=" + job?.PhysicalPhase + "; tick=" + Game.TimeTicks);
 				Require(KingdomConstruction.FindExactId(Zone, job.OutputId, out var tent)
 					== KingdomPhysicalLookupState.Exact, "completed source tent lacks exact physical output");
 				tent.RequirePart<r_KingdomImprovement>().Held = true;
@@ -86,11 +113,21 @@ namespace ThousandAndFirst.Harness
 				Require(KingdomPlots.TryGetSpec("tentrow", out var spec), "authored tent row spec missing");
 				Require(KingdomPlotRules.TryInterior(Zone.Width, Zone.Height, out var interior),
 					"city support ground has no plot interior");
+				Require(KingdomConstruction.TryRead(out var jobs, out string failure), failure);
+				TentJobId = PaidTent(this, jobs);
+				Require(KingdomConstruction.TryFind(TentJobId, out var tentJob) && tentJob != null,
+					"paid tent job absent before housing setup");
+				Require(KingdomConstruction.FindExactId(Zone, tentJob.OutputId, out ChainTent)
+					== KingdomPhysicalLookupState.Exact, "paid tent output absent before housing setup");
+				Require(KingdomPlots.TryReadRect(ChainTent, out var tentRect), "paid tent lot absent");
+				Require(KingdomPlots.TryHeartRectFor(Zone, 4, out var heartRect), "final heart lot absent");
 				string lastFailure = null;
 				foreach (var rect in KingdomCampHeartChainGrid.Candidates())
 				{
 					if (ChainHomes.Count == 18) break;
 					if (!KingdomPlotRules.Fits(rect, interior)) continue;
+					if (!KingdomCampHeartChainGrid.ClearsPaidApproach(rect, tentRect)
+						|| !KingdomCampHeartChainGrid.ClearsPaidApproach(rect, heartRect)) continue;
 					if (KingdomPlotRules.CrowdsExisting(rect, KingdomPlots.ReadPlots(Zone)))
 					{
 						lastFailure = "candidate crowds an existing plot's reserved lane";
@@ -126,6 +163,20 @@ namespace ThousandAndFirst.Harness
 				}
 				Require(ChainHomes.Count == 18, "eighteen authored homes do not fit: count="
 					+ ChainHomes.Count + "; last=" + lastFailure);
+				RequireChainIngress();
+			}
+
+			private void RequireChainIngress()
+			{
+				var roots = new List<GameObject>(ChainHomes) { ChainTent, StandingHeart() };
+				foreach (var root in roots)
+				{
+					Require(KingdomArchitectureStamper.TryReadOwner(root, out var intent,
+						out var snapshot, out _, out string failure), failure);
+					Require(KingdomArchitectureRuntime.TryVerifyPhysicalIngressRoutes(Zone,
+						intent.Rect, snapshot, out failure), "city fixture blocked ingress for "
+						+ root.IDIfAssigned + ": " + failure);
+				}
 			}
 
 		}

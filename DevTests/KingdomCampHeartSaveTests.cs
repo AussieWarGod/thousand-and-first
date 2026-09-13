@@ -215,13 +215,27 @@ namespace ThousandAndFirst.Tests
 			foreach (var rect in KingdomCampHeartChainGrid.Candidates())
 			{
 				if (!KingdomPlotRules.Fits(rect, usable)
+					|| !KingdomCampHeartChainGrid.ClearsPaidApproach(rect, occupied[0])
+					|| !KingdomCampHeartChainGrid.ClearsPaidApproach(rect, occupied[1])
 					|| KingdomPlotRules.CrowdsExisting(rect, occupied)) continue;
 				occupied.Add(rect); accepted++;
 			}
 			Assert.That(accepted, Is.GreaterThanOrEqualTo(18),
-				"leave southern approach cells and every existing plot's reserved lane intact");
+				"leave complete paid entrance approaches and every existing plot's reserved lane intact");
 			Assert.That(KingdomCampHeartChainGrid.Candidates().All(rect =>
 				KingdomPlotRules.Fits(rect, usable)), Is.True, "all candidates fit the production interior");
+		}
+
+		[Test]
+		public void ChainHousingProtectsPaidLaneBeyondReservedMargin()
+		{
+			var tent = new KingdomPlotRules.PlotRect(24, 7, 29, 10);
+			var blocker = new KingdomPlotRules.PlotRect(23, 2, 28, 5);
+			Assert.That(KingdomPlotRules.CrowdsExisting(blocker, new[] { tent }), Is.False);
+			Assert.That(blocker.Contains(26, 5), Is.True, "recorded north-facing tent lane endpoint");
+			Assert.That(KingdomCampHeartChainGrid.ClearsPaidApproach(blocker, tent), Is.False);
+			Assert.That(KingdomCampHeartChainGrid.ClearsPaidApproach(
+				new KingdomPlotRules.PlotRect(16, 2, 21, 5), tent), Is.True);
 		}
 
 		private static string[] Script(string name) => TestMain.ReadRepositoryText("Tools/personas/" + name + ".persona")

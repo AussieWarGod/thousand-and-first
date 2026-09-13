@@ -61,6 +61,15 @@ The fixture grid now offers four western and three eastern columns, with three r
 production crowding, ground, typed ingress and physical-completion checks still govern every home.
 Failed archive: `beta-heart-chain/f4826b24/housing-ingress-refused-1/result.json`, SHA-256
 `008e881a724d2600688e5e4701d60720900a11cd11e92c2b35439373facb7372`.
+At `cb3370e98532656cb5b538568d51a9b5cc8f45bd`, eighteen homes and fifty housed residents passed,
+but the paid tent could not finish: its authored entrance's lane endpoint extends beyond the
+reserved plot margin and was blocked by the home at `(23,2)..(28,5)`. The log records a `Done`
+stage with physical ingress refusal, so extending the wait would not resolve it. The fixture now
+preserves the full approaches of both paid plots, shifts eastern housing one cell, and verifies
+every physical entrance before enrollment and waiting. A focused geometry regression covers the
+previously accepted blocker. Ordinary gameplay and the 31200-turn script are unchanged.
+Failed archive: `beta-heart-chain/cb3370e9/tent-completion-refused-1/result.json`, SHA-256
+`56e4979993f0e3b02044d056368a23c0caca5c0c904470a1383ab7bcf1b1e569`.
 
 ## Paid camp cold-load coverage
 
