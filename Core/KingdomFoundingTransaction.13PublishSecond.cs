@@ -91,6 +91,12 @@ namespace ThousandAndFirst
 				throw new InvalidOperationException("The second city is not seated exactly once.");
 			}
 			Projection = KingdomFoundingProjection.Seat;
+			// A second founding also claims an already active zone. Its settled seat now
+			// supplies the exact owner stamp; do not wait for a later departure and return.
+			KingdomSystem.Guard("second founding sight", delegate
+			{
+				KingdomClaimedGround.ReconcileZone(system, Site);
+			});
 
 			if (!EnsureAbility(Actor))
 			{

@@ -216,6 +216,12 @@ namespace ThousandAndFirst
 			{
 				system.NextArrivalTick = The.Game.TimeTicks + KingdomRules.ArrivalIntervalTicks(system.Population);
 			}
+			// Founding and Charter claim the zone the player already occupies. No activation
+			// follows that claim, so publish its presentation now, including on a claim retry.
+			KingdomSystem.Guard("claimed ground sight", delegate
+			{
+				KingdomClaimedGround.ReconcileZone(system, Z);
+			});
 			if (StageSnapshot)
 			{
 				string sealFailure;
