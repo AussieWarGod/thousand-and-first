@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "inventorySha256": "d15228c9b93d402b534712ec917baf59026ff68220aec2d175c0d8dbf8fba55a",
+  "inventorySha256": "c2e5d302f4acc9ee5bd091f5b57a8f92711bc12603f252b3f327c922d8d870b8",
   "exceptions": [],
   "reviewedBy": "Codex root automated structural review",
-  "completedUtc": "2026-09-13T03:16:07Z",
+  "completedUtc": "2026-09-13T03:27:03Z",
   "oneResponsibility": {
     "status": "passed",
-    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:d15228c9b93d402b534712ec917baf59026ff68220aec2d175c0d8dbf8fba55a. Inherits exact inventory review 8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8. Sole production delta observes the existing assignment-level lodging gate before committing physical first-guest citizenship. A refusal leaves body custody, choice phase, water and population unchanged; the existing transactional observation still runs after commitment. No capacity, species needs, creed or receipt predicate is relaxed. Automated source review; native acceptance separately scoped."
+    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:c2e5d302f4acc9ee5bd091f5b57a8f92711bc12603f252b3f327c922d8d870b8. Inherits exact inventory review 8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8. Sole production delta observes the existing assignment-level lodging gate before committing physical first-guest citizenship. A refusal leaves body custody, choice phase, water and population unchanged; the existing transactional observation still runs after commitment. No capacity, species needs, creed or receipt predicate is relaxed. Automated source review; native acceptance separately scoped."
   },
   "protocolsAtBoundaries": {
     "status": "passed",
-    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:d15228c9b93d402b534712ec917baf59026ff68220aec2d175c0d8dbf8fba55a. Inherits exact inventory review 8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8. Sole production delta observes the existing assignment-level lodging gate before committing physical first-guest citizenship. A refusal leaves body custody, choice phase, water and population unchanged; the existing transactional observation still runs after commitment. No capacity, species needs, creed or receipt predicate is relaxed. Automated source review; native acceptance separately scoped."
+    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:c2e5d302f4acc9ee5bd091f5b57a8f92711bc12603f252b3f327c922d8d870b8. Inherits exact inventory review 8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8. Sole production delta observes the existing assignment-level lodging gate before committing physical first-guest citizenship. A refusal leaves body custody, choice phase, water and population unchanged; the existing transactional observation still runs after commitment. No capacity, species needs, creed or receipt predicate is relaxed. Automated source review; native acceptance separately scoped."
   }
 }

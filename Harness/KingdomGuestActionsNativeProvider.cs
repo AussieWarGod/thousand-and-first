@@ -11,7 +11,7 @@ namespace ThousandAndFirst.Harness
 	{
 		internal const string Setup = "guest-actions-setup", Check = "guest-actions-check", Quickstart = "guest-actions-quickstart";
 		private const string Receipt = "r_TAF_ScenarioGuestActions_v1";
-		private static readonly string[] QuickstartScript = { "quickstart-lifecycle marsh yes", Quickstart, "advance 6000", Check, "stagedigest" };
+		private static readonly string[] QuickstartScript = { "quickstart-lifecycle marsh yes", Quickstart, "advance 8400", Check, "stagedigest" };
 		private static readonly string[] Script = { "stagedigest", Setup, "advance 6000", Check, "stagedigest" };
 		public int ScenarioVerbApiVersion => KingdomScenarioVerbApi.Version;
 		public IEnumerable<string> ScenarioVerbs => new[] { Setup, Quickstart, Check };

@@ -75,8 +75,8 @@ namespace ThousandAndFirst
 			if (!KingdomLodging.ObservePreparedArrival(system, zone, body, PlannedCreed(body),
 				out KingdomLodgingRules.UnhousedReason housingReason, out string _))
 			{
-				Popup.Show("No suitable home is available (" + housingReason
-					+ "). Complete suitable housing, then welcome this person again. They remain your guest.");
+				Popup.Show(KingdomLodgingRules.ArrivalRefusedNote(housingReason)
+					+ " They remain your guest. Speak with them again when a suitable home is ready.");
 				return;
 			}
 			if (!KingdomLifecycleRules.TryBeginGrowthFirstGuestCitizenship(growth, candidate, now))

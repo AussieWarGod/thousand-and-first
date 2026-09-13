@@ -2,7 +2,7 @@
 # Real cadence, production correspondence/body actions, same guest welcomed once.
 DESCRIPTION=Quickstart completes housing and welcomes the same hosted guest as a fifth citizen
 REQUEST=founding-first-city
-SCRIPT=quickstart-lifecycle marsh yes;guest-actions-quickstart;advance 6000;guest-actions-check;stagedigest
+SCRIPT=quickstart-lifecycle marsh yes;guest-actions-quickstart;advance 8400;guest-actions-check;stagedigest
 VERBS=guest-actions-quickstart,guest-actions-check
 EXPECT=QUICKSTART-BOOT-BEGIN:OK,QUICKSTART-BOOT-OBSERVED:OK,QUICKSTART-BOOT-COMPLETE:OK,QUICKSTART-BUILD-BEGIN:OK,QUICKSTART-BUILD-QUOTE:OK,QUICKSTART-BUILD-CANPAY:OK,QUICKSTART-BUILD-COMMISSION:OK,QUICKSTART-LIFECYCLE-PROFILE:OK,QUICKSTART-BUILD-COMPLETE:OK~commissioned=true,guest-actions-quickstart:OK~real-quickstart=true,advance:OK,guest-actions-check:OK~cases=1 passed=1 failed=0,stagedigest:OK~founded=true,COMPLETE
 SET=growth,native-regression

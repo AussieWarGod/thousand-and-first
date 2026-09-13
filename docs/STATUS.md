@@ -5,7 +5,7 @@
 3098 staged C# files; 440,114 physical lines; cold-install inventory contains 3129 files.
 Compile inventory: 3098 sources, baseline and compatibility symbols (3094 baseline).
 Direct `XRL` imports: 1445 files, 0 over the line limit. Zero at or above 300 lines.
-Inventory SHA-256: `d15228c9b93d402b534712ec917baf59026ff68220aec2d175c0d8dbf8fba55a`.
+Inventory SHA-256: `c2e5d302f4acc9ee5bd091f5b57a8f92711bc12603f252b3f327c922d8d870b8`.
 Combines #141 authority, #144 shared-XL validation, #138/#139 rung settlement and #137 camp
 content/native fixture over dev with the verified 0.3.3 backmerge. Production and test-project
 merges are complete. Current main/portable suites pass 14787/5743 cases with zero skips,
