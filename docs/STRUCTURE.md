@@ -7,7 +7,7 @@
 `8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8`.
 Combines the dev integrations and Quickstart recovery fixes. Automated semantic review binds
 this exact inventory in `docs/STRUCTURE_REVIEW.json`. Native evidence retains each exercised
-build; the latest salvage identity fix is awaiting its own strict native acceptance.
+build; current teardown passes exact receipt, salvage, work-row and strict-log checks.
 Current results and retained failures are recorded in `docs/STATUS.md`.
 
 Addendum 9 of the binding building-catalogue brief requires services to stay strictly under 300

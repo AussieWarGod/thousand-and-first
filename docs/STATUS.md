@@ -1,6 +1,6 @@
 # Current implementation and release evidence
 
-## Current 0.3.4 Quickstart recovery candidate — native acceptance pending
+## Current 0.3.4 Quickstart hotfix — release gates pending
 
 3098 staged C# files; 440,105 physical lines; cold-install inventory contains 3129 files.
 Compile inventory: 3098 sources, baseline and compatibility symbols (3094 baseline).
@@ -16,9 +16,10 @@ passes departure, retention of the final two, recovery and the complete save/loa
 chain on `60f11aee`. Historical reader `55963285` preserves the genuine 0.3.3 fresh save,
 including its original stock and identities, without bootstrap replay. Later historical-save
 progression remains untested. Each result retains its exact inventory. Native creators (17 cases), guide topics (3) and first-guest correspondence (1) pass on
-`660ba354`. They do not prove rendered UI or physical guest admission/citizenship. Teardown
-found an unassigned stockpile ID misrecorded as ground salvage; the identity fix is awaiting
-strict native acceptance. Later heart-rung and broader Beta acceptance remain separate.
+`660ba354`. They do not prove rendered UI or physical guest admission/citizenship. Teardown passes both real build/strike cases on `b27a26c2`, including exact zero/positive
+salvage, Complete/Settled receipts, removed city work rows, repeated-strike refusal, two live
+crew and a clean strict log. Native failures identified and fixed an unassigned salvage
+destination ID and stale end-of-pass work rows. Later heart-rung and broader Beta acceptance remain separate.
 Prior isolated evidence below remains bound to its original checkpoints, not this combined tree.
 Private 0.3.4 metadata is prepared; no new tag/upload or Beta acceptance is claimed.
 

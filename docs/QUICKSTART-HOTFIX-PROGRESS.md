@@ -285,3 +285,30 @@ passes in `/mnt/c/taf-scenario.ur6CAD`. Both strict logs and owned stops pass. A
 `alpha-034-native/first-guest-native-check/`. These prove current topic content and
 exactly-once correspondence, respectively; rendered UI, physical guest admission and
 citizenship are not covered by those runs. Public Workshop remains 0.3.3.
+
+
+### Teardown transaction and spatial snapshot: native PASS
+
+Native `27240cef` proved the exact failure: salvage item 684/count 1 was in the intended
+chest, but the chest ID and recorded destination were both null. Since null means ground
+custody, the valid inventory return quarantined. Commit `b1f4277d` assigns the selected
+chest ID before recording the pending insert; all custody guards remain. Its native run
+proved Complete/Settled salvage, but still failed because the city work projection named
+the removed building. That run also lost one synthetic crew body; it remains FAIL.
+
+Commit `b27a26c2` reuses the existing live ReadWorks projection at CheckOut before publishing
+the city book for spatial sealing. The native assertion requires the removed work row to
+be absent as well as its exact strike receipt Complete/Settled. A read-only death observer
+records fixture crew death causes without preventing them or changing arguments.
+
+Profile `/mnt/c/taf-scenario.5AuoqZ` passes at 02:03:31 UTC: 16800 real turns, two sequenced
+builds/strikes, exact zero/positive timber salvage, both receipts Complete/Settled, removed
+city work rows, refused second strikes and both original synthetic crew alive. Strict
+Player.log and owned shutdown pass. All 3344 C# inputs match `b27a26c2`; closed Local is
+reverified. Archive `teardown/b27a26c2/result.json` SHA:
+`e07ecbb562baf57051b41f20bdacc9f22669c06859832ec1f92929d1f31648d3`.
+Production inventory `8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8`:
+3098 files, 440105 physical lines, no size exception. Four compile modes and full main
+14787/portable 5743 tests pass with zero skips. Coverage row 7 binds this native result;
+row 2 now accurately names correspondence, with physical guest admission/citizenship
+explicitly uncovered in row 26. Public 0.3.4 release gates and subscription remain pending.
