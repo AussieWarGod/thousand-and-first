@@ -3,13 +3,27 @@ using System.Threading.Tasks;
 
 namespace ThousandAndFirst.Harness
 {
-	// The owned runner terminates this terminal fixture; no worker outcome releases dispatch.
+	// Terminal fixtures stay parked. An explicit continuation releases only after worker success.
 	internal sealed class KingdomScenarioLoadBarrier<T>
 	{
 		private readonly object Gate = new object();
 		private readonly TaskCompletionSource<T> Parked = new TaskCompletionSource<T>();
 		private bool IsClaimed;
 		private Task StartedWork;
+		private bool ResumePrepared;
+		private T ResumeValue;
+
+		internal void PrepareResume(T value)
+		{
+			if ((object)value == null) throw new ArgumentNullException(nameof(value));
+			lock (Gate)
+			{
+				if (!IsClaimed || StartedWork == null || StartedWork.IsCompleted || ResumePrepared)
+					throw new InvalidOperationException("load continuation is not available");
+				ResumeValue = value;
+				ResumePrepared = true;
+			}
+		}
 
 		internal bool Claimed
 		{
@@ -47,6 +61,8 @@ namespace ThousandAndFirst.Harness
 						if (running == null)
 							throw new InvalidOperationException("load worker returned no task");
 						await running.ConfigureAwait(false);
+						lock (Gate)
+							if (ResumePrepared) Parked.TrySetResult(ResumeValue);
 					});
 				}
 				return Parked.Task;
