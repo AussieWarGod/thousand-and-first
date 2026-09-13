@@ -4,7 +4,7 @@ set -euo pipefail
 repo="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo"
 usage() {
-	printf '%s\n' 'Usage: Tools/dev-check.sh docs | tools BASENAME_PATTERN | main FILTER | portable FILTER | audit' >&2
+	printf '%s\n' 'Usage: Tools/dev-check.sh docs | tools BASENAME_PATTERN | main FILTER | portable FILTER | licensed | audit' >&2
 	exit 2
 }
 [ "$#" -ge 1 ] || usage
@@ -23,16 +23,26 @@ case "$mode" in
 		compgen -G "Tools/tests/$1" > /dev/null || { echo 'No matching tool tests' >&2; exit 2; }
 		python3 -m unittest discover -s Tools/tests -p "$1"
 		;;
-	main|portable)
-		[ "$#" -eq 1 ] && [[ -n "${1//[[:space:]]/}" ]] || usage
+	main|portable|licensed)
+		if [ "$mode" = licensed ]; then
+			[ "$#" -eq 0 ] || usage
+			[ -z "${TAF_TEST_FILTER:-}" ] || { echo 'Full licensed checks refuse ambient TAF_TEST_FILTER' >&2; exit 2; }
+			unset TAF_TEST_FILTER
+			projects=(DevTests/TafTests.csproj DevTests/PortableTests.csproj)
+		else
+			[ "$#" -eq 1 ] && [[ -n "${1//[[:space:]]/}" ]] || usage
+			export TAF_TEST_FILTER="$1"
+			projects=(DevTests/TafTests.csproj)
+			[ "$mode" != portable ] || projects=(DevTests/PortableTests.csproj)
+		fi
 		dotnet_bin="${TAF_DOTNET:-dotnet}"
 		[ "$("$dotnet_bin" --version)" = 9.0.306 ] || { echo 'Use .NET 9.0.306; set TAF_DOTNET to its executable.' >&2; exit 2; }
-		project=DevTests/TafTests.csproj
-		[ "$mode" != portable ] || project=DevTests/PortableTests.csproj
-		export TAF_REPO_ROOT="$repo" TAF_TEST_FILTER="$1" TAF_FORBID_SKIPS=1
+		export TAF_REPO_ROOT="$repo" TAF_FORBID_SKIPS=1
 		unset TAF_ALLOWED_SKIPS
-		"$dotnet_bin" restore "$project" --locked-mode -v q --nologo
-		"$dotnet_bin" run --project "$project" --no-restore -v q --nologo
+		for project in "${projects[@]}"; do
+			"$dotnet_bin" restore "$project" --locked-mode -v q --nologo
+			"$dotnet_bin" run --project "$project" --no-restore -v q --nologo
+		done
 		;;
 	audit)
 		[ "$#" -eq 0 ] || usage

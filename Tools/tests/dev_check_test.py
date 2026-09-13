@@ -75,6 +75,28 @@ elif sys.argv[1] == os.getenv("FAIL_STEP"):
         self.assertEqual(self.run_check("main", "Fixture", FAKE_SDK="8.0.100").returncode, 2)
         self.assertEqual(len(self.calls()), 1)
 
+    def test_full_licensed_legs_are_serial_unfiltered_and_zero_skip(self):
+        result = self.run_check("licensed", TAF_TEST_FILTER="")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        calls = self.calls()
+        self.assertEqual([row["args"][0] for row in calls],
+                         ["--version", "restore", "run", "restore", "run"])
+        for row in calls[1:]:
+            self.assertIsNone(row["filter"])
+            self.assertEqual(row["forbid"], "1")
+            self.assertIsNone(row["allowed"])
+        self.assertIn("DevTests/TafTests.csproj", calls[2]["args"])
+        self.assertIn("DevTests/PortableTests.csproj", calls[4]["args"])
+
+    def test_full_licensed_failure_blocks_second_leg(self):
+        result = self.run_check("licensed", TAF_TEST_FILTER="", FAIL_STEP="run")
+        self.assertEqual(result.returncode, 19)
+        self.assertEqual([row["args"][0] for row in self.calls()], ["--version", "restore", "run"])
+
+    def test_full_licensed_refuses_ambient_filter(self):
+        self.assertEqual(self.run_check("licensed").returncode, 2)
+        self.assertFalse(self.log.exists())
+
     def test_invalid_selection_never_invokes_dotnet(self):
         for args in ((), ("main",), ("main", " "), ("main", "X", "Y"),
                      ("tools", "missing_test.py"), ("tools", "../escape_test.py"),

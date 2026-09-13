@@ -19,6 +19,7 @@ requires broader checks, not an assumed documentation-only classification.
 | C# rules or source contracts | `Tools/dev-check.sh main KingdomQuickstart` | Select the relevant fixture or method substring; include portable checks if that kernel changes. |
 | Portable C# kernel | `Tools/dev-check.sh portable KingdomQuickstart` | Full suites at integration. |
 | Repository-wide tooling | `Tools/dev-check.sh audit` | Required CI and any affected licensed or native checks. |
+| Full local licensed source validation | `Tools/dev-check.sh licensed` | Both full suites, serially, with zero skips; does not replace Windows release or in-game gates. |
 | Gameplay, persistence or engine integration | Focused C# checks, then `Tools/gate.sh` | Relevant real in-game behavioral scenarios, including complex failure/recovery and save/load where applicable. |
 
 The examples are selectors, not a universal test list. The helper refuses empty C# selectors,
@@ -36,6 +37,10 @@ TAF_DOTNET=/home/r/.dotnet/dotnet Tools/dev-check.sh main KingdomQuickstart
 Prefer native Linux .NET for focused source checks on a Linux checkout. Windows accesses to
 `\\wsl.localhost` can be expensive. This preference does not replace the release's Windows
 or licensed gates. Set `TAF_QUD_BASE` to the actual licensed Base directory when needed.
+For a full local licensed integration check, use `Tools/dev-check.sh licensed` with that SDK
+and installed data. It refuses an ambient test filter, restores and runs both projects serially,
+and stops at the first failure. This makes the same fast local route available to both agents;
+the tagged release still executes its existing Windows lane.
 Keep restore beside its matching run. Never overlap .NET builds in one checkout or run this
 helper against a checkout being tested by another process. Use an isolated worktree for
 independent work. Never overlap native game scenarios or compete with the release Steam host.
@@ -74,7 +79,14 @@ from an urgent release candidate.
 
 ## Handoff between agents
 
-Keep one short current-state note with: objective and priority; branch/worktree and exact head;
+Read and update the shared local note at the following path (the common Git directory makes
+it available to every worktree without creating documentation commits for status updates):
+
+```bash
+printf '%s/taf-workstate.md\n' "$(git rev-parse --path-format=absolute --git-common-dir)"
+```
+
+Keep that note short, with: objective and priority; branch/worktree and exact head;
 changed behavior; completed checks and evidence paths; outstanding failures/gaps; active process
 or workflow IDs and ownership records; next concrete action. Update it before switching agents.
 Inspect those authoritative handles first on resumption. Do not restart work from historical
