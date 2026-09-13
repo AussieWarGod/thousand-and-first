@@ -90,7 +90,11 @@ namespace ThousandAndFirst.Harness
 			Require(Capture(game, out body, out terminal) == raw, "loaded guest, citizenship, terminal receipt, home or resources differ");
 		}
 
-		private static string Capture(XRLGame game, out GameObject body, out KingdomGrowthFirstGuestTerminalReceipt terminal)
+		// Transfer checks measure stored water independently; the save/load witness always includes it.
+		internal static string CaptureTransferAuthority(XRLGame game) => Capture(game, out _, out _, false);
+
+		private static string Capture(XRLGame game, out GameObject body, out KingdomGrowthFirstGuestTerminalReceipt terminal,
+			bool includeStoredWater = true)
 		{
 			var system = game.GetSystem<KingdomSystem>();
 			Zone zone = game.ZoneManager.ActiveZone;
@@ -122,7 +126,7 @@ namespace ThousandAndFirst.Harness
 				"guest does not occupy real starter housing");
 			var opportunity = terminal.Opportunity;
 			string wire = Encode("taf-guest-save-v1", game.GameID, game.TimeTicks, system.RealmId,
-				system.CurrentSettlementId, zone.ZoneID, system.Population, KingdomGrowth.CountStoredWater(zone),
+				system.CurrentSettlementId, zone.ZoneID, system.Population, includeStoredWater ? KingdomGrowth.CountStoredWater(zone) : 0,
 				system.Ledger.Arrivals, system.Ledger.ArrivalCost,
 				game.GetStringGameState(KingdomQuickstartRules.ReceiptState), body.IDIfAssigned,
 				KingdomResidents.IdOf(body), body.DisplayName, body.GetStringProperty("KingdomName"),

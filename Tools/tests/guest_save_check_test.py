@@ -9,7 +9,10 @@ import guest_save_check
 class GuestSaveCheckTests(unittest.TestCase):
     def fixture(self):
         stamp = "guest=123; population=5; receipt-sha256=" + "a" * 64 + "; world-repair=false"
-        source = [("guest-actions-check", "OK", "passed"), ("guest-save-witness", "OK", stamp),
+        source = [("guest-actions-check", "OK", "passed"),
+                  ("guest-save-shortage", "OK", "stored=0; required=2; commission-refused=true; authority-unchanged=true; materials-unchanged=true; water-debit=0"),
+                  ("guest-save-supply", "OK", "supply=carried-water; amount=8; donor=456; cask=789; donor-before=32; donor-after=24; store-before=0; store-after=8; moves=12; adjacent=true; conserved=true; authority-unchanged=true; materials-unchanged=true; world-repair=false"),
+                  ("guest-save-witness", "OK", stamp),
                   ("lifecycle-save", "OK", "saved"), ("SCRIPT-COMPLETE", "OK", "done")]
         loaded = [("guest-load-preactivation", "OK", "exact-guest-authority=true; before-AfterGameLoaded=true; " + stamp),
                   ("guest-load-verified", "OK", "same-citizen=true; stale-choice-refused=2; duplicate-enrollment=false; extra-water-debit=false; " + stamp),
@@ -50,6 +53,38 @@ class GuestSaveCheckTests(unittest.TestCase):
         source, loaded = self.fixture()
         loaded[-1] = "SCRIPT-STOPPED", "REFUSED", "failed"
         with self.assertRaises(ValueError): guest_save_check.judge(source, loaded)
+
+    def test_refusal_must_preserve_authority_materials_and_water(self):
+        for old, new in (("stored=0", "stored=2"), ("required=2", "required=0"),
+                         ("commission-refused=true", "commission-refused=false"),
+                         ("authority-unchanged=true", "authority-unchanged=false"),
+                         ("materials-unchanged=true", "materials-unchanged=false"), ("water-debit=0", "water-debit=2")):
+            source, loaded = self.fixture()
+            event, outcome, detail = source[1]
+            source[1] = event, outcome, detail.replace(old, new)
+            with self.subTest(old=old), self.assertRaises(ValueError): guest_save_check.judge(source, loaded)
+
+    def test_transfer_mutations_refuse(self):
+        for old, new in (("supply=carried-water", "supply=created"), ("amount=8", "amount=9"),
+                         ("donor-before=32", "donor-before=33"), ("donor-after=24", "donor-after=25"),
+                         ("donor-after=24", "donor-after=-1"), ("moves=12", "moves=81"),
+                         ("cask=789", "cask=456"), ("store-before=0", "store-before=1"),
+                         ("store-after=8", "store-after=7"), ("adjacent=true", "adjacent=false"),
+                         ("conserved=true", "conserved=false"), ("world-repair=false", "world-repair=true"),
+                         ("authority-unchanged=true", "authority-unchanged=false"),
+                         ("materials-unchanged=true", "materials-unchanged=false")):
+            source, loaded = self.fixture()
+            event, outcome, detail = source[2]
+            source[2] = event, outcome, detail.replace(old, new)
+            with self.subTest(old=old), self.assertRaises(ValueError): guest_save_check.judge(source, loaded)
+
+    def test_missing_repeated_reordered_supply_refuses(self):
+        for mode in ("missing", "repeated", "reordered"):
+            source, loaded = self.fixture()
+            if mode == "missing": del source[2]
+            elif mode == "repeated": source.insert(2, source[2])
+            else: source[1], source[2] = source[2], source[1]
+            with self.subTest(mode=mode), self.assertRaises(ValueError): guest_save_check.judge(source, loaded)
 
 
 if __name__ == "__main__": unittest.main()

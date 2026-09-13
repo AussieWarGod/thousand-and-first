@@ -32,9 +32,26 @@ def judge(source, loaded):
         require(persona_matrix.terminal_row(rows) == "SCRIPT-COMPLETE", "session did not complete")
         require(all(outcome == "OK" for _, outcome, _ in rows), "session contains a refusal")
     action, _ = one(source, "guest-actions-check")
+    shortage, refusal = one(source, "guest-save-shortage")
+    supply, transfer = one(source, "guest-save-supply")
     witness, written = one(source, "guest-save-witness")
     save, _ = one(source, "lifecycle-save")
-    require(action < witness < save, "save witness is not after recruitment and before save")
+    require(action < shortage < supply < witness < save, "recruitment, shortage, refill and save are out of order")
+    for name, value in (("stored", "0"), ("required", "2"), ("commission-refused", "true"),
+                        ("authority-unchanged", "true"), ("materials-unchanged", "true"), ("water-debit", "0")):
+        require(field(refusal, name) == value, "unfunded commission invariant failed: " + name)
+    for name, value in (("supply", "carried-water"), ("amount", "8"), ("store-before", "0"), ("store-after", "8"),
+                        ("adjacent", "true"), ("conserved", "true"), ("authority-unchanged", "true"),
+                        ("materials-unchanged", "true"), ("world-repair", "false")):
+        require(field(transfer, name) == value, "carried water invariant failed: " + name)
+    numbers = {}
+    for name in ("donor-before", "donor-after", "moves"):
+        raw = field(transfer, name)
+        require(re.fullmatch(r"0|[1-9][0-9]{0,8}", raw), "invalid water transfer number: " + name)
+        numbers[name] = int(raw)
+    require(numbers["donor-before"] - numbers["donor-after"] == 8 and numbers["moves"] <= 80,
+            "donation did not conserve water or exceeded bounded walk")
+    require(field(transfer, "donor") != field(transfer, "cask"), "donor and cask identities collide")
     before, pre = one(loaded, "guest-load-preactivation")
     after, post = one(loaded, "guest-load-verified")
     life, _ = one(loaded, "lifecycle-loaded")
@@ -56,6 +73,7 @@ def judge(source, loaded):
                 "guest identity, population or saved authority changed across load")
     return {"verdict": "PASS", "guestId": values["guest"], "population": int(values["population"]),
             "snapshotSha256": values["receipt-sha256"], "staleActionRefusals": 2,
+            "carriedWaterDrams": 8, "unfundedCommissionRefusals": 1,
             "scope": "guest journal assertions only; require lifecycle result, source binding, strict logs and owned stops"}
 
 

@@ -10,6 +10,17 @@ action, then welcomes that same body once. Another 8400 turns permit ordinary se
 activity before the completed campfire, original four founders and starter housing are checked.
 Subsequent ordinary arrivals are allowed; the exact saved population must survive loading.
 
+The first execution preserved the guest across load but failed the final paid commission:
+five citizens had exhausted the finite starter water. That run remains a failed complete
+scenario. The revised source requires the actual empty store and a refused, otherwise payable
+two-dram campfire commission. The founder walks to the receipted cask and transfers eight
+drams from an existing carried pure-water vessel using the engine's physical liquid transfer.
+No vessels, supplies, citizens or housing are created for this recovery. Exact donor/store
+deltas, adjacency, guest authority, materials, construction registry, clocks and upkeep
+accounting must survive the refusal and refill. Missing carried water or an obstructed route
+refuses the scenario. The full save/load witness still includes stored water; only the local
+transfer comparison measures that intentionally changed quantity separately.
+
 The `guest-save-witness` verb captures the real guest's identity, living roll membership,
 applied arrival citizenship, home plot, name and nullable creed, arrival domain receipts,
 terminal first-guest receipt and opportunity fields, population, water and arrival accounting.
