@@ -756,7 +756,7 @@ def audit_public(problems):
     require(
         problems,
         "README.md",
-        "0.3.5 public Alpha playtest",
+        "0.3.6 public Alpha playtest",
         "Back up saves before updating",
         "plots: lots reserve typed space",
         "r_ThousandAndFirst",

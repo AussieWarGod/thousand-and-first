@@ -4,9 +4,9 @@ Found a faction in Caves of Qud, raise settlements from reserved ground, and gov
 after you leave. Water, food, labour, materials, roads, trade, threats, civic memory, and physical
 works remain part of the same world instead of becoming a detached management screen.
 
-**Status: pre-release source for 0.3.5 public Alpha playtest; public promotion pending.**
-The public Workshop listing currently serves 0.3.4; tagged delivery and subscribed-install
-verification must finish before 0.3.5 is published.
+**Status: 0.3.6 public Alpha playtest.**
+This status identifies the package target; public delivery is pending. The listing currently
+serves 0.3.4. See the linked release ledger for verified publication status.
 Back up saves before updating.
 Current evidence and remaining test limits live in
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/STATUS.md);
@@ -16,10 +16,10 @@ This Alpha fixes settlement lighting and full-zone city sight immediately after 
 an active zone, including Kingdom Quickstart. You no longer need to leave and return before
 the claimed map becomes visible. Drawing restores normal gameplay sight after each frame.
 
-Automated checks cover ordinary construction, four housed founders, six beds, real save and
+Private 0.3.6 automated checks cover ordinary construction, four housed founders, six beds, real save and
 cold load, and all 2,000 cells in actual source and loaded render frames. The completed first
 heart is open rite ground with seven canvas walls; starter shelters provide housing.
-The private package and its subscribed installation match the verified native source. See
+The private package and one subscribed installation match the verified native source. See
 [the native test scope](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/HEART-SIGHT-NATIVE.md).
 
 ## What the mod adds
