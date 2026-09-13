@@ -205,3 +205,61 @@ fresh sealed reader. It keeps actual stock, custody and receipt verification. Cu
 creator-fault fixtures use the current grant; malformed historical bindings refuse.
 Historical native rerun and current creator/strike cases are queued after the profile
 matrix. No new private or public upload has occurred.
+
+
+### Six complete Quickstart lifecycle pairs: PASS
+
+All canyon/marsh/dunes × advisor yes/no pairs pass on `86c0b5df` at seed #43101:
+16,800 ordinary turns, four original housed citizens, two completed tent rows/six beds,
+original paid fire completion, real save, separate cold load and a distinct paid commission.
+All twelve strict game logs and owned stops pass. The final matrix finished on 2026-09-13
+at approximately 00:59 UTC. Every pair has a verified 17-file archive under
+`quickstart-lifecycle/86c0b5df/`; `/tmp/taf-final-matrix-archive.log` records all result hashes.
+Coverage rows 21–23 contain the six typed evidence records with original inventory
+`9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f`.
+
+Current production inventory `0ebe8fb749a39bccd21578e78d95777725eb4ffc0bedba84962830baa679370c`
+adds only the 0.3.4 release identity and the guide's exact two-step admission wording.
+Both deltas have scoped structural reviews. Its four compile modes and 14785/5742
+main/portable cases pass, zero skips (`/tmp/taf-guest-guide-gate.log`,
+`/tmp/taf-guest-guide-full.log`, `/tmp/taf-guest-guide-portable.log`). CI passed at
+`1700adde` (run 34728438014), and the subsequent protocol/status separation is tool-tested.
+The production source stays frozen while the historical reader and creator/strike/guide/
+first-guest native checks execute. No new Alpha upload or Beta acceptance is claimed.
+
+
+### Public 0.3.3 fresh save under 0.3.4 reader: PASS
+
+Reader `5596328501ae8878cb88b4da58c69b881f2c7593` cold-loaded untouched source
+`/mnt/c/taf-scenario.n1AMBR` in `/mnt/c/taf-scenario.pperru`. At 00:59:32/34 UTC,
+preactivation and post-load checks preserved exact heart, stock and identities with
+no bootstrap replay. Both strict logs and the reader's owned stop pass. The old public
+source keeps its original 24 drams; no replacement founders or supplies were granted.
+This is one genuine fresh save, not proof of arbitrary old saves or later construction.
+
+Verified archive: `quickstart-upgrade/55963285/` under the behaviour-evidence root,
+15 files including source/reader logs, transport proof and native copy plan. Result SHA:
+`3435132540077dc0986cdbedc24d2ad70482120d55ea0fe40776eb80a4bec889`.
+Coverage row 25 binds this exact reader inventory
+`73c87caced09ccdffc714a2475c170679e6e37a68b0fe42e92566d98c18d2907`.
+Creator and teardown checks started next; guide and correspondence checks follow them.
+
+
+### Current native creators PASS; teardown needs its final interval
+
+The current 0.3.4 `quickstart-native-checks` passes all 17 cases, including exact founder
+cohort creation and water/larder/material/advisor creation plus real callback/rollback
+negatives. Profile `/mnt/c/taf-scenario.t4Itmh` has all 3344 C# inputs byte-matched to
+`660ba354`; closed Local, strict raw log and stopped ownership were independently rechecked.
+Archive: `alpha-034-native/quickstart-native-checks/`; row 3 binds its current production
+inventory and limits the evidence to the fixture's actual factory/cohort scope.
+
+Teardown profile `/mnt/c/taf-scenario.J4foZ8` correctly remains FAIL: the fire was removed,
+its exact zero-salvage boundary passed, and a second strike was refused. The larder built,
+but closure made its strike first admissible at the last 13200-turn checkpoint. The script
+then ended with larder in phase 2. No engine error or false two-case PASS is claimed.
+Archive: `teardown/660ba354-budget-failed/`. The revised sealed script adds one final
+3600-turn interval and check (16800 total): the observed 29 effort needs two days at two
+free hands (10 effort/hand/day), plus cadence slack. Read-only strike effort/checkpoint/job
+telemetry was added for an informative refusal if it still stalls. Production clocks,
+crew, work rates, job phases and completion remain untouched. Native rerun is owed.

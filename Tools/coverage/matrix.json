@@ -45,7 +45,7 @@
       "negative": "no partial or synthetic enrollment in the native shortage observer",
       "driver": "Harness/KingdomQuickstartSettlementChecks.cs; Harness/KingdomQuickstartHousingRecovery.cs",
       "status": "NATIVE_PASS",
-      "note": "Native 60f11aee starts with four unique founding citizens; after two genuine roof departures the original receipt still names the same cohort. Cold load preserves two housed survivors and keeps both departed bodies absent. Other join/recruitment paths remain outside this scenario.",
+      "note": "Native 60f11aee starts with four unique founding citizens; after two genuine roof departures the original receipt still names the same cohort. Cold load preserves two housed survivors and keeps both departed bodies absent. Other join/recruitment paths remain outside this scenario. Source-bound creator/cohort and grant rollback checks also pass in the 17-case native fixture at 660ba354.",
       "evidence": [
         {
           "commit": "e1d26d9",
@@ -67,6 +67,17 @@
           "scope": "seed #43101 marsh/advisor-on; 17200 ordinary turns plus harness handoffs; 400 synthetic real drams, 100 meals, 72 physical obstacles; original citizens and real production work; strict logs and owned stops in both sessions",
           "historicalScope": true,
           "inventoryDigest": "43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "660ba354b00692bc045f95c6df916de07be9aaa3",
+          "artifactPath": "alpha-034-native/quickstart-native-checks/result.json",
+          "artifactSha256": "1778d5e060c56960a87974e0f58eda75a4fa98b9d7c2f8f6998beaaaf9e1459e",
+          "artifactBytes": 1373,
+          "verdict": "PASS - 17 native creator/callback/rollback cases including the real four-founder cohort",
+          "scope": "synthetic native fixture; exact current production source and all 3344 C# inputs bound to the stopped closed profile; factory/cohort checks only, not ordinary embark or save/load; later teardown harness changes are outside this source binding",
+          "historicalScope": true,
+          "inventoryDigest": "0ebe8fb749a39bccd21578e78d95777725eb4ffc0bedba84962830baa679370c",
           "currentDevCoverage": false
         }
       ]
@@ -451,7 +462,7 @@
       "negative": "unbound-stamp refusal (KingdomQuickstartLifecycleSteps.Stamped: \"the launched profile could not be named from its own sealed root\") in addition to row 20's CanPay/budget-expiry refusals",
       "driver": "Harness/KingdomQuickstartBootRequest.cs:20 (LifecycleVerb=\"quickstart-lifecycle\"), :35,43 (Lifecycle flag/grammar); Tools/scenario_profile.py QUICKSTART_LIFECYCLE_VERB/QUICKSTART_LIFECYCLE_VERBS; checker Tools/check-quickstart-lifecycle.py",
       "status": "NATIVE_PASS",
-      "note": "Canyon with advisor enabled and disabled passes the complete Quickstart chain at 86c0b5df. All four original citizens occupy the completed starter homes and the paid fire finishes after 16800 ordinary turns. Four marsh/dunes combinations remain pending.",
+      "note": "All six canyon/marsh/dunes and advisor yes/no combinations pass the complete Quickstart chain at 86c0b5df. All four original citizens occupy completed starter homes and the paid fire finishes after 16800 ordinary turns. Later production differences are the release-version literal and guide text; these receipts retain their exact inventory.",
       "evidence": [
         {
           "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
@@ -459,7 +470,7 @@
           "artifactSha256": "8cc20a65465ffd9efe841506eb5b00bdcf9cc9c5e418fb2471017b5718af0e5b",
           "artifactBytes": 3634,
           "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
-          "scope": "canyon-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; other location combinations pending",
+          "scope": "canyon-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
           "historicalScope": true,
           "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
           "currentDevCoverage": false
@@ -470,7 +481,51 @@
           "artifactSha256": "b464d4cfa560d32c1133d4e745f3c3a8b9a28ba82338f8302d721d914571310e",
           "artifactBytes": 3634,
           "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
-          "scope": "canyon-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; other location combinations pending",
+          "scope": "canyon-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/marsh-yes/results.json",
+          "artifactSha256": "e9fd3c539513ff687319fc5f4594400b0ca2df72d91c9c67efe9e929d6be8e34",
+          "artifactBytes": 3640,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "marsh-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/marsh-no/results.json",
+          "artifactSha256": "e9e6a54cf5f526524bc27598d0870ae3eba991b57645cf51dae3e0fb50d433f5",
+          "artifactBytes": 3639,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "marsh-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/dunes-yes/results.json",
+          "artifactSha256": "deaab23bfc39ee6b83bedabe516b024243a1957d0c7f2d1d15507b83bbe7eaf3",
+          "artifactBytes": 3633,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "dunes-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/dunes-no/results.json",
+          "artifactSha256": "adeb70bcf5f5c1629609462de6d8823ede8489523e1d8576a5e6255a94740e9d",
+          "artifactBytes": 3633,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "dunes-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
           "historicalScope": true,
           "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
           "currentDevCoverage": false
@@ -487,7 +542,7 @@
       "negative": "any identity mismatch (GameId/RealmId/city/zone/building/design-key/timber/water) refuses at Compare(); unbound-stamp refusal also applies",
       "driver": "Harness/KingdomQuickstartLifecycleLoad.cs::VerifyLoaded/Compare; Harness/KingdomScenarioLoadEntry.cs (LifecycleSnapshot, taf-lifecycle-save-v1: prefix); checker Tools/check-quickstart-lifecycle.py LOAD_ROWS/cold-load link",
       "status": "NATIVE_PASS",
-      "note": "Both canyon source sessions wrote real saves; separate cold-load sessions preserved original citizen, home, building, store and resource identity/accounting. Strict Player.log checks pass in both sessions. Evidence is bound to 86c0b5df, not every current feature.",
+      "note": "All six source sessions wrote real saves; separate cold-load sessions preserved original citizen, home, building, store and resource identity/accounting. Strict Player.log checks pass in all twelve sessions. Evidence is bound to 86c0b5df, not every current feature.",
       "evidence": [
         {
           "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
@@ -495,7 +550,7 @@
           "artifactSha256": "8cc20a65465ffd9efe841506eb5b00bdcf9cc9c5e418fb2471017b5718af0e5b",
           "artifactBytes": 3634,
           "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
-          "scope": "canyon-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; other location combinations pending",
+          "scope": "canyon-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
           "historicalScope": true,
           "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
           "currentDevCoverage": false
@@ -506,7 +561,51 @@
           "artifactSha256": "b464d4cfa560d32c1133d4e745f3c3a8b9a28ba82338f8302d721d914571310e",
           "artifactBytes": 3634,
           "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
-          "scope": "canyon-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; other location combinations pending",
+          "scope": "canyon-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/marsh-yes/results.json",
+          "artifactSha256": "e9fd3c539513ff687319fc5f4594400b0ca2df72d91c9c67efe9e929d6be8e34",
+          "artifactBytes": 3640,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "marsh-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/marsh-no/results.json",
+          "artifactSha256": "e9e6a54cf5f526524bc27598d0870ae3eba991b57645cf51dae3e0fb50d433f5",
+          "artifactBytes": 3639,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "marsh-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/dunes-yes/results.json",
+          "artifactSha256": "deaab23bfc39ee6b83bedabe516b024243a1957d0c7f2d1d15507b83bbe7eaf3",
+          "artifactBytes": 3633,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "dunes-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/dunes-no/results.json",
+          "artifactSha256": "adeb70bcf5f5c1629609462de6d8823ede8489523e1d8576a5e6255a94740e9d",
+          "artifactBytes": 3633,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "dunes-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
           "historicalScope": true,
           "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
           "currentDevCoverage": false
@@ -523,7 +622,7 @@
       "negative": "job-id reuse refusal (Harness/KingdomQuickstartLifecycleLoad.cs::Act: \"the next action reported the completed job's own identity; a further action must mint its own job\")",
       "driver": "Harness/KingdomQuickstartLifecycleLoad.cs::Next/Act; checker Tools/check-quickstart-lifecycle.py NEXT_ROWS/next-action link",
       "status": "NATIVE_PASS",
-      "note": "Both canyon cold-load sessions commissioned a distinct new job and paid the live timber/water cost. The exact completed building remained functional. This proves commission admission and debit; completion of that second job is outside this chain.",
+      "note": "All six cold-load sessions commissioned a distinct new job and paid its live timber/water cost. The exact completed building remained functional. This proves commission admission and debit; completion of the second job is outside this chain.",
       "evidence": [
         {
           "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
@@ -531,7 +630,7 @@
           "artifactSha256": "8cc20a65465ffd9efe841506eb5b00bdcf9cc9c5e418fb2471017b5718af0e5b",
           "artifactBytes": 3634,
           "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
-          "scope": "canyon-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; other location combinations pending",
+          "scope": "canyon-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
           "historicalScope": true,
           "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
           "currentDevCoverage": false
@@ -542,7 +641,51 @@
           "artifactSha256": "b464d4cfa560d32c1133d4e745f3c3a8b9a28ba82338f8302d721d914571310e",
           "artifactBytes": 3634,
           "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
-          "scope": "canyon-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; other location combinations pending",
+          "scope": "canyon-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/marsh-yes/results.json",
+          "artifactSha256": "e9fd3c539513ff687319fc5f4594400b0ca2df72d91c9c67efe9e929d6be8e34",
+          "artifactBytes": 3640,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "marsh-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/marsh-no/results.json",
+          "artifactSha256": "e9e6a54cf5f526524bc27598d0870ae3eba991b57645cf51dae3e0fb50d433f5",
+          "artifactBytes": 3639,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "marsh-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/dunes-yes/results.json",
+          "artifactSha256": "deaab23bfc39ee6b83bedabe516b024243a1957d0c7f2d1d15507b83bbe7eaf3",
+          "artifactBytes": 3633,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "dunes-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/dunes-no/results.json",
+          "artifactSha256": "adeb70bcf5f5c1629609462de6d8823ede8489523e1d8576a5e6255a94740e9d",
+          "artifactBytes": 3633,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "dunes-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
           "historicalScope": true,
           "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
           "currentDevCoverage": false
@@ -581,6 +724,31 @@
           "scope": "seed #43101 marsh/advisor-on; 17200 ordinary turns plus harness handoffs; 400 synthetic real drams, 100 meals, 72 physical obstacles; original citizens and real production work; strict logs and owned stops in both sessions",
           "historicalScope": true,
           "inventoryDigest": "43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6",
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 25,
+      "behaviour": "Public 0.3.3 Quickstart fresh-save preservation under a 0.3.4 reader",
+      "prerequisites": "retained genuine public 0.3.3 fresh marsh/advisor-on save; exact stopped source, closed profile, code/content hashes and successful fresh-save journal",
+      "transitions": "old save copied unchanged -> fresh sealed current reader -> preactivation and post-load physical verification",
+      "effects": "same GameID, heart, stocks and object IDs; original 24-dram grant; terminal bootstrap is not replayed; no retroactive founders or refill",
+      "save_cold_load": "NATIVE_PASS for the exact retained fresh save; arbitrary historical saves and later construction progression remain untested",
+      "negative": "malformed/wrong source, game, snapshot, quantity and noncanonical marker inputs refuse in pure observer tests; native malformed-marker injection not performed",
+      "driver": "Tools/prepare-quickstart-033-upgrade.py; Harness/KingdomQuickstartHistoricalGrant.cs; Harness/KingdomQuickstartSaveState.cs; Harness/KingdomQuickstartLoadTest.cs",
+      "status": "NATIVE_PASS",
+      "note": "The old save remains unchanged. The first attempt exposed a current-grant assumption in the harness; the corrected source-bound observer preserves the old quantity without changing production grants. Strict source/reader logs and owned reader shutdown pass.",
+      "evidence": [
+        {
+          "commit": "5596328501ae8878cb88b4da58c69b881f2c7593",
+          "artifactPath": "quickstart-upgrade/55963285/result.json",
+          "artifactSha256": "3435132540077dc0986cdbedc24d2ad70482120d55ea0fe40776eb80a4bec889",
+          "artifactBytes": 525,
+          "verdict": "PASS - old public fresh-save identity, stock and heart preservation before activation and after load; no bootstrap replay",
+          "scope": "marsh/advisor-on seed #43101; public source e96b50e1c7ce698ed05749963d4fb885ab42d054; 0.3.4 reader; old-save construction progression untested",
+          "historicalScope": true,
+          "inventoryDigest": "73c87caced09ccdffc714a2475c170679e6e37a68b0fe42e92566d98c18d2907",
           "currentDevCoverage": false
         }
       ]

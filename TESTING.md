@@ -11,8 +11,12 @@ Master simulation, Growth and Lodging must remain enabled. No test citizens, hou
 or home assignments are injected. The `quickstart-settlement` journal rows report measured counts;
 any refusal also fails the enclosing lifecycle step. This extends the real fire commission,
 save/load and next-action chain rather than treating that fire as evidence of working housing.
-Execution on the combined candidate is pending. A release needs the three locations with both
-advisor choices, plus an existing-save recovery check; boot-only receipts do not satisfy this gate.
+All six location/advisor combinations pass the complete source, cold-load and next-commission
+chain at `86c0b5df`, with strict logs and owned stops. Archives: `quickstart-lifecycle/86c0b5df/`
+under the behaviour-evidence root; coverage rows 21–23 bind their exact hashes and inventory.
+Later production changes are the release-version literal and guide text. The supplied housing
+crisis also passes recovery and cold load with the same two survivors at `60f11aee` (row 24/C7).
+The historical-version reader remains a separate check; boot-only receipts do not replace these chains.
 
 The retained public 0.3.3 fresh-save fixture uses a source-bound observer grant of 24 drams;
 new saves require the current 64-dram grant. `Tools/prepare-quickstart-033-upgrade.py REPO PIN
@@ -22,8 +26,10 @@ Its sealed historical marker binds the public commit, GameID, snapshot hash and 
 The observer requires that marker to own the active cold load, then checks the actual water,
 container, custody and receipts without replenishing stock. Malformed or mismatched markers
 refuse; they do not select a default. This fixture covers that exact fresh save, not arbitrary
-historical progression. Native rerun remains pending. Creator fault fixtures use the current
-grant before injecting capacity or custody faults; the persona expects all 17 registered cases.
+historical progression. Native reader `55963285` passes preactivation and post-load checks,
+strict logs and owned shutdown for the retained save; coverage row 25 binds the result.
+Creator fault fixtures use the current grant before injecting capacity or custody faults;
+the persona expects all 17 registered cases.
 
 ## Current combined heart candidate — gates owed
 

@@ -10,11 +10,13 @@ Combines #141 authority, #144 shared-XL validation, #138/#139 rung settlement an
 content/native fixture over dev with the verified 0.3.3 backmerge. Production and test-project
 merges are complete. Full-cask main/portable suites pass 14785/5742 cases with zero skips,
 and all four compile modes pass. Automated structural review binds the inventory above.
-Both canyon advisor choices pass fourteen-day Quickstart, housing and paid construction,
+All six location/advisor choices pass fourteen-day Quickstart, housing and paid construction,
 real save/cold load and a further paid commission on `86c0b5df`. The supplied housing crisis
 passes departure, retention of the final two, recovery and the complete save/load/next-action
-chain on `60f11aee`. Each remains bound to its exact predecessor inventory. Four marsh/dunes
-lifecycle pairs, historical reader and strike native checks remain pending; later heart-rung and broader Beta acceptance remain separate.
+chain on `60f11aee`. Historical reader `55963285` preserves the genuine 0.3.3 fresh save,
+including its original stock and identities, without bootstrap replay. Later historical-save
+progression remains untested. Each result retains its exact inventory. Creator, strike, guide
+and first-guest checks remain pending; later heart-rung and broader Beta acceptance remain separate.
 Prior isolated evidence below remains bound to its original checkpoints, not this combined tree.
 Private 0.3.4 metadata is prepared; no new tag/upload or Beta acceptance is claimed.
 
