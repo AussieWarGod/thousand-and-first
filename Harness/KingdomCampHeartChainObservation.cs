@@ -10,6 +10,43 @@ namespace ThousandAndFirst.Harness
 	{
 		private sealed partial class Frame
 		{
+			private bool ChainCommission;
+
+			private void PrepareChainCommission()
+			{
+				Require(KingdomScenarioScript.TryRead(out var script, out string failure), failure);
+				ChainCommission = KingdomCampHeartChainScript.Matches(script);
+				if (!ChainCommission) return;
+				Require(KingdomPlots.TryHeartRectFor(Zone, 4, out var outer), "final heart envelope absent");
+				int destination = outer.X1 - KingdomPlotRules.SmallWidth - KingdomPlotRules.RoadMargin - 2;
+				var player = The.Player;
+				Require(destination >= 1 && GameObject.Validate(player) && player.CurrentZone == Zone
+					&& player.CurrentCell != null, "chain commission has no western approach");
+				long tick = Game.TimeTicks;
+				int moves = 0;
+				while (player.CurrentCell.X > destination)
+				{
+					int x = player.CurrentCell.X, y = player.CurrentCell.Y;
+					Require(++moves <= 40 && player.Move("W", AllowDashing: false, DoConfirmations: false)
+						&& ReferenceEquals(The.Player, player) && player.CurrentZone == Zone
+						&& player.CurrentCell.X == x - 1 && player.CurrentCell.Y == y,
+						"founder could not walk to the chain commission approach");
+				}
+				Require(Game.TimeTicks == tick && ReferenceEquals(The.Game, Game),
+					"commission approach changed the game or clock");
+				Evidence.Append("\nchain-commission normal-west-moves=").Append(moves)
+					.Append("; founder-cell=").Append(player.CurrentCell.X).Append(",").Append(player.CurrentCell.Y);
+			}
+
+			private void RequireChainCommissionClear(KingdomPlotRules.PlotRect Plot)
+			{
+				if (!ChainCommission) return;
+				Require(KingdomPlots.TryHeartRectFor(Zone, 4, out var outer)
+					&& !KingdomPlotRules.Overlaps(outer, KingdomPlotRules.Reserved(Plot)),
+					"source tent reserves ground needed by a later heart rung");
+				Evidence.Append("\nchain-commission final-heart-reserved-lane-clear=true");
+			}
+
 			private List<GameObject> ChainResidentBodies(KingdomSurvey Survey)
 			{
 				var bodies = new List<GameObject>();

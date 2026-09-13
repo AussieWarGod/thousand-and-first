@@ -65,6 +65,15 @@ a new run. Changed inputs require the relevant scenarios again. New behavior nee
 behavioral test, not only source-text assertions. Disclose synthetic setup and untested cases.
 Preserve failed evidence, strict final logs, complete seals, and exact owned shutdown records.
 
+Before a long city scenario, check fixture calls against their production contracts. Authored
+housing needs typed plot-payload preflight; a custody-only survey has no populated civic lists.
+Use the existing local-operation survey scope when settlement APIs share physical-benefit reads,
+and prove its disposal. Account for pending paid construction before supplying exact materials:
+a newly finished building can spend them on its own next improvement. Keep unrelated test plots
+and their reserved lanes outside the largest heart footprint being tested. Run available read-only
+preflights before long waits, and retain both the verdict and detailed production reason on refusal.
+These checks apply to both agents; they do not replace observing the actual paid transition.
+
 ## Release batch
 
 Prepare version constants, manifest, Workshop lane, README, changelog and ledger together.

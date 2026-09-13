@@ -1,5 +1,6 @@
 # Synthetic city support: 50 enrolled bodies, 18 authored tent rows via setup-only calendar completion,
 # 3600 additional drams, 1728 food, foundry knowledge, one supplemental granary stockpile.
+# Founder walks west before the source tent commission; its reserved lane must clear the final heart.
 # The source paid tent completes during an ordinary day, then its improvement is held.
 # All non-heart improvements held before the exact next heart material bill is supplied per leg.
 # Paid heart improvements use ordinary turns only. No higher-rung save/load or ordinary-play acceptance.

@@ -34,6 +34,9 @@ namespace ThousandAndFirst.Harness
 						ChainSupplied.Add(unit);
 					}
 				Require(KingdomMaterials.CanPayUpgrade(Zone, ChainFrom, out string failure), failure);
+				var assessment = KingdomUpgrade.Assess(System, Zone, ChainHeart, Census(), 50, false);
+				Require(KingdomUpgradeRules.IsReady(assessment.Verdict), "supplied heart preflight refused: "
+					+ assessment.Verdict + "; reason=" + assessment.Reason);
 			}
 
 			private void CheckChainPaid()
@@ -49,8 +52,12 @@ namespace ThousandAndFirst.Harness
 					{
 						Require(found == null, "multiple improvement receipts name the chain predecessor"); found = job;
 					}
-				Require(found != null, "ordinary settlement pass did not begin paid " + ChainFrom + "->" + ChainTo
-					+ "; assessment=" + KingdomUpgrade.Assess(System, Zone, ChainHeart, Census(), 50, false).Verdict);
+				if (found == null)
+				{
+					var assessment = KingdomUpgrade.Assess(System, Zone, ChainHeart, Census(), 50, false);
+					Require(false, "ordinary settlement pass did not begin paid " + ChainFrom + "->" + ChainTo
+						+ "; assessment=" + assessment.Verdict + "; reason=" + assessment.Reason);
+				}
 				Require(found.Id != JobId && found.Id != ChainJobId
 					&& KingdomQuickstartBuildClaims.CleanFirstPayment(found.Claims, ChainWater,
 						new KingdomMaterialDebitCost(KingdomMaterials.UpgradeCostFor(ChainFrom)))

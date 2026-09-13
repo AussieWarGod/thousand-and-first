@@ -39,6 +39,15 @@ The scenario now waits an ordinary day without the next heart materials, require
 paid completion and exact physical output, and holds its improvement before supplying the heart.
 The complete script now requests 31200 ordinary turns. This adds an actual construction boundary;
 it neither directly completes the tent nor supplies replacement materials after a failed payment.
+At `6c56420f214daa8abe67d0efd409e6749ed7e966`, the tent completion/hold and first supply passed,
+but heart payment refused `NoGroundToGrow`. The observer omitted the detailed production reason.
+Source and recorded geometry show the tent at `(29,7)..(34,10)` reserves a lane into the rung-three
+footprint. The chain fixture now walks the founder west before the ordinary commission and verifies
+that the resulting tent's reserved lane stays outside the final heart footprint. Other camp personas
+retain their existing commission position. Supply now checks real readiness before waiting, and
+refusals include the full production reason. Failed archive:
+`beta-heart-chain/6c56420f/expansion-ground-refused-1/result.json`, SHA-256
+`868071665a197651b5d41d5676e235063cb183e7b1d58f37197f0a6e786eebd6`.
 
 ## Paid camp cold-load coverage
 
