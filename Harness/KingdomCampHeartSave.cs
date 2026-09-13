@@ -60,7 +60,7 @@ namespace ThousandAndFirst.Harness
 				KingdomScenarioSaveFiles.WriteNew(Path.Combine(root, KingdomScenarioSaveFiles.SnapshotFile), wire);
 				The.ZoneManager.CheckCached(true, true);
 				Game.SaveGame("Primary")?.GetAwaiter().GetResult();
-				Require(ReferenceEquals(The.Game, Game) && Game.Turns == witness.Turns,
+				Require(ReferenceEquals(The.Game, Game) && Game.Turns == witness.Turns && Game.TimeTicks == witness.TimeTicks,
 					"the camp changed across serialization");
 				string primary = Path.Combine(directory, "Primary.sav.gz");
 				using (var file = KingdomScenarioSaveFiles.Open(primary, KingdomScenarioSaveFiles.MaxSaveBytes))
@@ -73,7 +73,7 @@ namespace ThousandAndFirst.Harness
 				Require(KingdomScenarioSaveFiles.ReadText(Path.Combine(root, KingdomScenarioSaveFiles.ReceiptFile), 512) == receipt,
 					"camp save receipt changed");
 				return "paid-camp-save=true; rung=2; synthetic-next-job-timber=1; brush=21; tent-job=" + witness.TentJobId + "; save="
-					+ Game.GameID + "; heart=" + witness.HeartId + "; store=" + witness.StoreId
+					+ Game.GameID + "; time-ticks=" + witness.TimeTicks + "; heart=" + witness.HeartId + "; store=" + witness.StoreId
 					+ "; fire=" + witness.FireId + "; snapshot-sha256=" + KingdomScenarioSaveFiles.HashText(wire);
 			}
 		}

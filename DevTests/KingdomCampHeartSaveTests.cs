@@ -11,11 +11,28 @@ namespace ThousandAndFirst.Tests
 {
 	public class KingdomCampHeartSaveTests
 	{
+		[Test]
+		public void CampLoadHasOwnPreactivationAndPopupLifetime()
+		{
+			string routes = TestMain.ReadRepositoryText("Harness/KingdomScenarioLoadWitness.cs");
+			int camp = routes.IndexOf("KingdomScenarioLoadEntry.CampSnapshot != null", StringComparison.Ordinal);
+			int generic = routes.IndexOf("KingdomScenarioSaveSnapshot snapshot", StringComparison.Ordinal);
+			Assert.That(camp, Is.GreaterThan(-1));
+			Assert.That(camp, Is.LessThan(generic));
+			Assert.That(routes.Substring(camp, generic - camp), Does.Contain("KingdomCampHeartLoad.BeforeActivation()"));
+			string load = TestMain.ReadRepositoryText("Harness/KingdomCampHeartLoad.cs");
+			Assert.That(load, Does.Contain("ReferenceEquals(WitnessedGame, Game)"));
+			Assert.That(load, Does.Contain("OwnsPopups = true"));
+			Assert.That(load, Does.Contain("Popup.Suppress = PriorPopup"));
+			Assert.That(TestMain.ReadRepositoryText("Harness/KingdomScenarioLoadEntry.cs"),
+				Does.Contain("!KingdomCampHeartLoad.OwnsPopups"));
+		}
+
 		private static KingdomCampHeartSaveSnapshot Sample(string game = "01234567-89ab-cdef-0123-456789abcdef",
-			string heart = "heart", string store = "store", string digest = null, int x = 40, int water = 300, long turns = 6002, string tentJob = "tent-job")
+			string heart = "heart", string store = "store", string digest = null, int x = 40, int water = 300, long turns = 6002, string tentJob = "tent-job", long ticks = 265527)
 			=> new KingdomCampHeartSaveSnapshot(game, "realm", "city", "JoppaWorld.8.22.1.1.10",
 				heart, "upgrade", store, "fire", "timber", digest ?? new string('a', 64), new string('b', 64), tentJob,
-				x, 12, 43, 13, 39, 13, water, turns);
+				x, 12, 43, 13, 39, 13, water, turns, ticks);
 		private static string Encode(KingdomCampHeartSaveSnapshot value)
 		{
 			Assert.That(Codec.TryEncode(value, out string wire), Is.True);
@@ -42,6 +59,7 @@ namespace ThousandAndFirst.Tests
 			Assert.That(new[] { got.HeartX, got.HeartY, got.StoreX, got.StoreY, got.FireX, got.FireY, got.Water },
 				Is.EqualTo(new[] { want.HeartX, want.HeartY, want.StoreX, want.StoreY, want.FireX, want.FireY, want.Water }));
 			Assert.That(got.Turns, Is.EqualTo(want.Turns));
+			Assert.That(got.TimeTicks, Is.EqualTo(want.TimeTicks));
 			Assert.That(Encode(got), Is.EqualTo(wire));
 		}
 
@@ -54,7 +72,8 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[TestCase(0, 0)]
-		[TestCase(4, 2)]
+		[TestCase(4, 1)]
+		[TestCase(4, 3)]
 		[TestCase(8, 0)]
 		[TestCase(8, -1)]
 		[TestCase(8, 4097)]
@@ -76,7 +95,7 @@ namespace ThousandAndFirst.Tests
 			Refuse(wire.Insert(Codec.Prefix.Length + 4, " "));
 			Refuse(wire + "\n");
 			Refuse(Codec.Prefix + "!");
-			Refuse("taf-camp-heart-save-v2:" + wire.Substring(Codec.Prefix.Length));
+			Refuse("taf-camp-heart-save-v3:" + wire.Substring(Codec.Prefix.Length));
 			Refuse(null);
 			Refuse(new string('a', Codec.MaxWireChars + 1));
 		}
@@ -89,6 +108,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase("outside-coordinate")]
 		[TestCase("negative-water")]
 		[TestCase("negative-turns")]
+		[TestCase("negative-ticks")]
 		[TestCase("uppercase-digest")]
 		[TestCase("short-digest")]
 		[TestCase("control")]
@@ -104,6 +124,7 @@ namespace ThousandAndFirst.Tests
 				: fault == "outside-coordinate" ? Sample(x: 4096)
 				: fault == "negative-water" ? Sample(water: -1)
 				: fault == "negative-turns" ? Sample(turns: -1)
+				: fault == "negative-ticks" ? Sample(ticks: -1)
 				: fault == "uppercase-digest" ? Sample(digest: new string('A', 64))
 				: fault == "short-digest" ? Sample(digest: "abc")
 				: fault == "control" ? Sample(heart: "heart\n")

@@ -27,7 +27,7 @@ namespace ThousandAndFirst.Harness
 				if (body.Blueprint == KingdomMaterials.BlueprintFor(KingdomMaterial.Brush)) frame.RetainedBrushBodies.Add(body);
 			Require(KingdomScenarioJournal.Append("camp-heart-loaded", true,
 				"rung=2; basin=48; brush=21; timber=1; heart=" + observed.HeartId + "; store=" + observed.StoreId
-				+ "; fire=" + observed.FireId + "; tent-job=" + observed.TentJobId + "; snapshot-sha256=" + KingdomScenarioSaveFiles.HashText(wire)) == null,
+				+ "; time-ticks=" + observed.TimeTicks + "; fire=" + observed.FireId + "; tent-job=" + observed.TentJobId + "; snapshot-sha256=" + KingdomScenarioSaveFiles.HashText(wire)) == null,
 				"loaded camp proof journal unavailable");
 			Require(KingdomPlots.RecoverFoundingHeart(frame.System, zone), "loaded camp founding heart cannot recover");
 			Require(KingdomData.TryGetBuilding("fire", out var entry) && entry.CostDrams == 2,

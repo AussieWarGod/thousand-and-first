@@ -32,7 +32,7 @@ namespace ThousandAndFirst.Harness
 				frame.StoreId, frame.FireId, timber, KingdomCampHeartSaveSnapshotCodec.CustodyDigest(units),
 				KingdomCampHeartSaveSnapshotCodec.CustodyDigest(brush), frame.TentJobId, frame.Heart.CurrentCell.X,
 				frame.Heart.CurrentCell.Y, frame.StoreCell.X, frame.StoreCell.Y, frame.FireCell.X,
-				frame.FireCell.Y, frame.Census().StoredWater, Game.Turns);
+				frame.FireCell.Y, frame.Census().StoredWater, Game.Turns, Game.TimeTicks);
 		}
 
 		private static Frame ObserveCamp(XRLGame Game, Zone Zone)

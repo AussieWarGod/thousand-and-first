@@ -20,6 +20,20 @@ four journal-oracle tests passed, and all four engine compile modes passed (3094
 3364/3368 developer sources). Corrected native save/load execution remains pending;
 this does not close rung-2 persistence or Beta acceptance.
 
+At `24986884b066bfcf6f44108ad81405a6a14252bc`, the corrected source completes its real save.
+After a tooling-only expectation correction, the same stopped save was reused with byte-identical
+runtime and Harness inputs. Cold load restores the exact camp, paid tent receipt and 21 brush,
+and a distinct fire commission pays two drams and one timber. The attempt remains FAIL: the
+preactivation dispatcher incorrectly sent the new snapshot to the generic witness, and a gossip
+popup stopped the unattended continuation after 800 turns. A captured native window confirms the
+popup; both full 3369-source profiles, strict logs and owned stops are retained in
+`beta-camp-cold-load/24986884/load-route-and-popup-1/result.json`, SHA-256
+`276d1e26c5d173411410835cf3536ab8f813e181d9867e4e66d8dd8210aee240`.
+The follow-up adds the scoped preactivation route and preserves popup suppression until the
+loaded wait finishes. Its version-2 witness also binds the saved world clock before and after
+activation. A new routing regression failed before these changes. Corrected native execution
+and independent completion of the loaded fire remain pending.
+
 ## Unreleased profile inventory optimization
 
 The shared scenario profile reader now hashes at most four files concurrently, preserving the

@@ -132,7 +132,7 @@ namespace ThousandAndFirst.Harness
 					"loader did not return the exact selected game");
 				if (CampSnapshot != null)
 				{
-					KingdomCampHeartLoad.Prepare(loaded);
+					KingdomCampHeartLoad.Prepare(loaded, priorPopup);
 					resume = loaded;
 					return;
 				}
@@ -181,7 +181,7 @@ namespace ThousandAndFirst.Harness
 			finally
 			{
 				if (RungSnapshot != null) KingdomSubsidenceRungReleaseCut.Disarm();
-				if (!priorPopup && Popup.Suppress) Popup.Suppress = false;
+				if (!priorPopup && Popup.Suppress && !KingdomCampHeartLoad.OwnsPopups) Popup.Suppress = false;
 				try { if (QuickstartSnapshot != null) KingdomQuickstartLoadTest.Finish(quickstartVerified); }
 				finally { Armed = false; }
 				// Only this exact scenario continues through vanilla RunGame after all cleanup succeeds.

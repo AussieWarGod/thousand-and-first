@@ -8,15 +8,15 @@ namespace ThousandAndFirst.Harness
 {
 	internal static class KingdomCampHeartSaveSnapshotCodec
 	{
-		internal const string Prefix = "taf-camp-heart-save-v1:";
+		internal const string Prefix = "taf-camp-heart-save-v2:";
 		internal const int MaxWireChars = 32768;
-		private const int Magic = 0x31484354;
+		private const int Magic = 0x32484354;
 		private static readonly UTF8Encoding Utf8 = new UTF8Encoding(false, true);
 
 		internal static bool Valid(KingdomCampHeartSaveSnapshot Value)
 		{
 			if (Value == null || !Guid.TryParseExact(Value.GameId, "D", out var id)
-				|| id.ToString("D") != Value.GameId || Value.Turns < 0 || Value.Water < 0) return false;
+				|| id.ToString("D") != Value.GameId || Value.Turns < 0 || Value.TimeTicks < 0 || Value.Water < 0) return false;
 			foreach (string text in Fields(Value)) if (!Text(text)) return false;
 			foreach (int coordinate in Coordinates(Value)) if (coordinate < 0 || coordinate >= 4096) return false;
 			var objects = new HashSet<string>(StringComparer.Ordinal)
@@ -33,10 +33,10 @@ namespace ThousandAndFirst.Harness
 				using (var stream = new MemoryStream())
 				using (var writer = new BinaryWriter(stream, Utf8, true))
 				{
-					writer.Write(Magic); writer.Write(1);
+					writer.Write(Magic); writer.Write(2);
 					foreach (string field in Fields(Value)) Write(writer, field);
 					foreach (int coordinate in Coordinates(Value)) writer.Write(coordinate);
-					writer.Write(Value.Water); writer.Write(Value.Turns);
+					writer.Write(Value.Water); writer.Write(Value.Turns); writer.Write(Value.TimeTicks);
 					string result = Prefix + Convert.ToBase64String(stream.ToArray());
 					if (result.Length > MaxWireChars) return false;
 					Wire = result;
@@ -57,7 +57,7 @@ namespace ThousandAndFirst.Harness
 				using (var stream = new MemoryStream(bytes, false))
 				using (var reader = new BinaryReader(stream, Utf8))
 				{
-					if (reader.ReadInt32() != Magic || reader.ReadInt32() != 1) return false;
+					if (reader.ReadInt32() != Magic || reader.ReadInt32() != 2) return false;
 					var fields = new string[12];
 					for (int i = 0; i < fields.Length; i++) fields[i] = Read(reader);
 					var coordinates = new int[6];
@@ -65,7 +65,7 @@ namespace ThousandAndFirst.Harness
 					var result = new KingdomCampHeartSaveSnapshot(fields[0], fields[1], fields[2], fields[3],
 						fields[4], fields[5], fields[6], fields[7], fields[8], fields[9], fields[10], fields[11],
 						coordinates[0], coordinates[1], coordinates[2], coordinates[3], coordinates[4],
-						coordinates[5], reader.ReadInt32(), reader.ReadInt64());
+						coordinates[5], reader.ReadInt32(), reader.ReadInt64(), reader.ReadInt64());
 					if (stream.Position != stream.Length || !Valid(result)) return false;
 					Value = result;
 					return true;

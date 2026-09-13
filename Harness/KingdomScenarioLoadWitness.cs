@@ -21,6 +21,11 @@ namespace ThousandAndFirst.Harness
 		internal static void Prefix(GameObject __instance, string __0)
 		{
 			if (!KingdomScenarioLoadEntry.Armed || __0 != "GameRestored") return;
+			if (KingdomScenarioLoadEntry.CampSnapshot != null)
+			{
+				if (ReferenceEquals(__instance, The.Player)) KingdomCampHeartLoad.BeforeActivation();
+				return;
+			}
 			if (KingdomScenarioLoadEntry.UpgradeSnapshot != null)
 			{
 				if (ReferenceEquals(__instance, The.Player)) KingdomUpgradeLoad.BeforeActivation();

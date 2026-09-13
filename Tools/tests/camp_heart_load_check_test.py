@@ -16,10 +16,11 @@ class CampHeartLoadCheckTests(unittest.TestCase):
             source += [('advance-complete', 'OK', wait(n)), ('camp-heart-check', 'OK', 'phase')]
         source[-1] = ('camp-heart-check', 'OK', 'native-camp-heart cases=1 passed=1 failed=0; next-day=true')
         source += [('camp-heart-save-custody', 'OK', 'store=store; before=r_KingdomBrush=21; after=r_KingdomBrush=21,r_KingdomTimber=1; added-timber=timber'),
-                   ('camp-heart-save', 'OK', 'paid-camp-save=true; rung=2; synthetic-next-job-timber=1; brush=21; save=' + game + '; tent-job=tent-job; ' + physical + '; ' + digest),
+                   ('camp-heart-save', 'OK', 'paid-camp-save=true; rung=2; synthetic-next-job-timber=1; brush=21; time-ticks=265527; save=' + game + '; tent-job=tent-job; ' + physical + '; ' + digest),
                    ('SCRIPT-COMPLETE', 'OK', 'done')]
         loaded = [('LOAD-BEGIN', 'OK', 'exact sealed save; game-id=' + game + '; new-game=false; mod-restore=false'),
-                  ('camp-heart-loaded', 'OK', 'rung=2; basin=48; brush=21; timber=1; tent-job=tent-job; ' + physical + '; ' + digest),
+                  ('camp-heart-preactivation', 'OK', 'before-AfterGameLoaded=true; tent-job=tent-job; time-ticks=265527; ' + physical + '; ' + digest),
+                  ('camp-heart-loaded', 'OK', 'rung=2; basin=48; brush=21; timber=1; time-ticks=265527; tent-job=tent-job; ' + physical + '; ' + digest),
                   ('camp-heart-next', 'OK', 'new-job=next; upgrade-job=upgrade; water-debited=2; timber-debited=1; synthetic-materials-after-load=0'),
                   ('camp-heart-resume', 'OK', 'vanilla-Continue=true; saved-script-considered=true; requested-turns=3600'),
                   ('advance-complete', 'OK', wait(3600)),
@@ -63,6 +64,7 @@ class CampHeartLoadCheckTests(unittest.TestCase):
                    (5, 'brush=21', 'brush=22'), (6, 'new-game-script-replayed=false', 'new-game-script-replayed=true'))
         for index, before, after in changes:
             source, loaded = self.fixture()
+            if index >= 1: index += 1
             event, outcome, detail = loaded[index]
             self.assertIn(before, detail)
             loaded[index] = event, outcome, detail.replace(before, after)
@@ -74,12 +76,21 @@ class CampHeartLoadCheckTests(unittest.TestCase):
             loaded.insert(0, (event, 'OK', 'replay'))
             with self.assertRaises(ValueError): check.judge(source, loaded)
         source, loaded = self.fixture()
-        event, status, detail = loaded[1]
-        loaded[1] = event, status, detail + '; brush=21'
+        event, status, detail = loaded[2]
+        loaded[2] = event, status, detail + '; brush=21'
         with self.assertRaises(ValueError): check.judge(source, loaded)
         source, loaded = self.fixture()
         loaded.append(('extra', 'OK', 'after terminal'))
         with self.assertRaises(ValueError): check.judge(source, loaded)
+
+    def test_preactivation_must_match_saved_physical_state_and_clock(self):
+        for index in (1, 2):
+            for before, after in (('265527', '265528'), ('heart=heart', 'heart=other'),
+                                  ('tent-job=tent-job', 'tent-job=other'), ('a' * 64, 'b' * 64)):
+                source, loaded = self.fixture()
+                event, status, detail = loaded[index]
+                loaded[index] = event, status, detail.replace(before, after)
+                with self.subTest(index=index, before=before), self.assertRaises(ValueError): check.judge(source, loaded)
 
 
 if __name__ == '__main__': unittest.main()

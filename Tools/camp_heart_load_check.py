@@ -41,19 +41,23 @@ def judge(source, loaded):
     require(field(custody, 'added-timber') not in identities.values(), 'new timber reuses a camp object')
     require(len(set(identities.values())) == 3, 'camp object identities collide')
     tent_job = field(save, 'tent-job')
+    ticks = field(save, 'time-ticks')
+    require(re.fullmatch('0|[1-9][0-9]*', ticks), 'saved world clock malformed')
     digest = field(save, 'snapshot-sha256')
     require(re.fullmatch('[0-9a-f]{64}', digest), 'camp snapshot digest malformed')
     game = field(save, 'save')
     require(re.fullmatch('[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}', game), 'saved game id malformed')
-    names = ('LOAD-BEGIN', 'camp-heart-loaded', 'camp-heart-next', 'camp-heart-resume',
+    names = ('LOAD-BEGIN', 'camp-heart-preactivation', 'camp-heart-loaded', 'camp-heart-next', 'camp-heart-resume',
              'advance-complete', 'camp-heart-completed', 'SCRIPT-COMPLETE')
     observations = [one(loaded, name) for name in names]
     require([at for at, _ in observations] == sorted(at for at, _ in observations), 'loaded phases out of order')
-    begin, restored, paid, resumed, elapsed, completed, terminal = [detail for _, detail in observations]
+    begin, preactivation, restored, paid, resumed, elapsed, completed, terminal = [detail for _, detail in observations]
     require(not any(event in ('camp-heart-setup', 'camp-heart-check', 'camp-heart-save', 'stagedigest')
                     for event, _, _ in loaded), 'source script replayed in loaded process')
     equal_fields(begin, {'game-id': game, 'new-game': 'false', 'mod-restore': 'false'})
-    equal_fields(restored, dict(identities, rung='2', basin='48', brush='21', timber='1', **{'snapshot-sha256': digest, 'tent-job': tent_job}))
+    saved_fields = dict(identities, **{'snapshot-sha256': digest, 'tent-job': tent_job, 'time-ticks': ticks})
+    equal_fields(preactivation, dict(saved_fields, **{'before-AfterGameLoaded': 'true'}))
+    equal_fields(restored, dict(saved_fields, rung='2', basin='48', brush='21', timber='1'))
     equal_fields(paid, {'water-debited': '2', 'timber-debited': '1', 'synthetic-materials-after-load': '0'})
     next_job, upgrade = field(paid, 'new-job'), field(paid, 'upgrade-job')
     require(len({next_job, upgrade, tent_job}) == 3, 'new job, upgrade and paid tent identities collide')

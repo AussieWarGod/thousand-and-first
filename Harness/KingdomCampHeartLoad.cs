@@ -1,6 +1,7 @@
 using System;
 using HarmonyLib;
 using XRL;
+using XRL.UI;
 
 namespace ThousandAndFirst.Harness
 {
@@ -8,9 +9,44 @@ namespace ThousandAndFirst.Harness
 	{
 		private static XRLGame Resuming;
 		private static bool Finished;
-		internal static void Prepare(XRLGame Game)
+		private static XRLGame WitnessedGame;
+		private static int WitnessAttempts;
+		private static string WitnessFailure;
+		private static bool PriorPopup;
+		internal static bool OwnsPopups;
+
+		internal static void BeforeActivation()
+		{
+			try
+			{
+				Require(++WitnessAttempts == 1 && WitnessedGame == null && KingdomScenarioLoadEntry.Armed
+					&& KingdomScenarioLoadReaderWitness.Releases == 1 && !KingdomScenarioLoadReaderWitness.HadErrors,
+					"camp primary reader or preactivation witness is not exact");
+				XRLGame game = The.Game;
+				Require(game?.GetSystem<KingdomScenarioAutoRunner>()?.HasConsideredScript == true
+					&& KingdomScenarioDurableState.ProvesExactText(KingdomScenarioSaveFiles.SnapshotKey,
+						KingdomScenarioLoadEntry.SnapshotWire), "camp saved script or snapshot changed before activation");
+				var observed = KingdomCampHeartNativeChecks.CaptureSaveWitness(game, The.ZoneManager?.ActiveZone);
+				Require(KingdomCampHeartSaveSnapshotCodec.TryEncode(observed, out string wire)
+					&& wire == KingdomScenarioLoadEntry.SnapshotWire, "camp state changed before activation");
+				Require(KingdomScenarioJournal.Append("camp-heart-preactivation", true,
+					"before-AfterGameLoaded=true; snapshot-sha256=" + KingdomScenarioSaveFiles.HashText(wire)
+					+ "; heart=" + observed.HeartId + "; store=" + observed.StoreId + "; fire=" + observed.FireId
+					+ "; tent-job=" + observed.TentJobId + "; time-ticks=" + observed.TimeTicks) == null,
+					"camp preactivation journal unavailable");
+				WitnessedGame = game;
+			}
+			catch (Exception error)
+			{
+				WitnessFailure = KingdomScenarioRules.Bounded(error.GetType().Name + ": " + error.Message);
+				KingdomScenarioJournal.Append("camp-heart-preactivation", false, WitnessFailure);
+			}
+		}
+
+		internal static void Prepare(XRLGame Game, bool OriginalPopup)
 		{
 			Require(Resuming == null && !Finished && KingdomScenarioLoadEntry.Armed && Game.Running
+				&& WitnessAttempts == 1 && WitnessFailure == null && ReferenceEquals(WitnessedGame, Game)
 				&& ReferenceEquals(Game, The.Game) && Game.GetSystem<KingdomScenarioAutoRunner>()?.HasConsideredScript == true
 				&& !KingdomScenarioAdvance.Pending && !KingdomScenarioFrames.Pending
 				&& KingdomScenarioScript.TryRead(out var script, out _) && KingdomCampHeartScript.Matches(script, true),
@@ -28,6 +64,9 @@ namespace ThousandAndFirst.Harness
 				"vanilla-Continue=true; saved-script-considered=true; requested-turns=3600") == null,
 				"camp continuation journal unavailable");
 			Resuming = Game;
+			PriorPopup = OriginalPopup;
+			OwnsPopups = true;
+			Popup.Suppress = true;
 		}
 
 		private static void AfterPump(bool __result, bool Faulted)
@@ -48,6 +87,11 @@ namespace ThousandAndFirst.Harness
 			{
 				KingdomScenarioJournal.Append("SCRIPT-STOPPED", false,
 					"camp cold-load continuation refused: " + KingdomScenarioRules.Bounded(error.Message));
+			}
+			finally
+			{
+				if (OwnsPopups) Popup.Suppress = PriorPopup;
+				OwnsPopups = false;
 			}
 		}
 		private static void Require(bool Value, string Failure) => KingdomCampHeartNativeProvider.Require(Value, Failure);
