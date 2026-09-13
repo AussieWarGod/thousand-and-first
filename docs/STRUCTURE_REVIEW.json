@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "inventorySha256": "8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8",
+  "inventorySha256": "a5e00bd45a1122917e6b164ad98373cdcc043e6c681790495086ee0a2e870182",
   "exceptions": [],
   "reviewedBy": "Codex root automated structural review",
-  "completedUtc": "2026-09-13T02:02:19Z",
+  "completedUtc": "2026-09-13T04:00:37Z",
   "oneResponsibility": {
     "status": "passed",
-    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8. Inherits exact inventory review 42d5b7cc6079c4bff660b1347956d20400cb7e17674a6b194e97199a6fd5f2ed. Sole production delta reuses ReadWorks at CheckOut before publishing, so the next spatial seal sees the current live survey after construction or strike. Existing rebuild preserves other-zone works, residents, clocks and stock accounting; no seal acceptance guard changes. 3098 files, 440105 physical lines, 1445 direct-XRL files, no size exception. Automated source review, with native acceptance separately scoped."
+    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:a5e00bd45a1122917e6b164ad98373cdcc043e6c681790495086ee0a2e870182. Inherits exact review 5039e82aca01ced8e9c4fc73f626469b6584912b8571a5d02d9f348c8e073fef. Sole production delta projects the existing creed property unchanged when PlannedCreed is empty, matching KingdomCreed.Record, which is a no-op in that case. Nonempty creed projection and exact graph/map comparisons remain unchanged; absent and empty properties are not normalized. Automated source review; native acceptance separately scoped."
   },
   "protocolsAtBoundaries": {
     "status": "passed",
-    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8. Inherits exact inventory review 42d5b7cc6079c4bff660b1347956d20400cb7e17674a6b194e97199a6fd5f2ed. Sole production delta reuses ReadWorks at CheckOut before publishing, so the next spatial seal sees the current live survey after construction or strike. Existing rebuild preserves other-zone works, residents, clocks and stock accounting; no seal acceptance guard changes. 3098 files, 440105 physical lines, 1445 direct-XRL files, no size exception. Automated source review, with native acceptance separately scoped."
+    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:a5e00bd45a1122917e6b164ad98373cdcc043e6c681790495086ee0a2e870182. Inherits exact review 5039e82aca01ced8e9c4fc73f626469b6584912b8571a5d02d9f348c8e073fef. Sole production delta projects the existing creed property unchanged when PlannedCreed is empty, matching KingdomCreed.Record, which is a no-op in that case. Nonempty creed projection and exact graph/map comparisons remain unchanged; absent and empty properties are not normalized. Automated source review; native acceptance separately scoped."
   }
 }

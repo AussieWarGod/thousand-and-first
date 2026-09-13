@@ -2,13 +2,13 @@
 
 ## Current 0.3.4 Quickstart hotfix — release gates pending
 
-3098 staged C# files; 440,105 physical lines; cold-install inventory contains 3129 files.
+3098 staged C# files; 440,124 physical lines; cold-install inventory contains 3129 files.
 Compile inventory: 3098 sources, baseline and compatibility symbols (3094 baseline).
 Direct `XRL` imports: 1445 files, 0 over the line limit. Zero at or above 300 lines.
-Inventory SHA-256: `8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8`.
+Inventory SHA-256: `a5e00bd45a1122917e6b164ad98373cdcc043e6c681790495086ee0a2e870182`.
 Combines #141 authority, #144 shared-XL validation, #138/#139 rung settlement and #137 camp
 content/native fixture over dev with the verified 0.3.3 backmerge. Production and test-project
-merges are complete. Current main/portable suites pass 14787/5743 cases with zero skips,
+merges are complete. Current main/portable suites pass 14790/5743 cases with zero skips,
 and all four compile modes pass. Automated structural review binds the inventory above.
 All six location/advisor choices pass fourteen-day Quickstart, housing and paid construction,
 real save/cold load and a further paid commission on `86c0b5df`. The supplied housing crisis
@@ -21,6 +21,13 @@ salvage, Complete/Settled receipts, removed city work rows, repeated-strike refu
 crew and a clean strict log. Native failures identified and fixed an unassigned salvage
 destination ID and stale end-of-pass work rows. Later heart-rung and broader Beta acceptance remain separate.
 Prior isolated evidence below remains bound to its original checkpoints, not this combined tree.
+Physical guest actions now pass on `d9d0f4b4`: genuine Quickstart, four living original founders,
+six beds, exact defer/admit/remain/welcome actions, one uncreeded guest enrolled, repeated action
+refusal and five citizens after another 1200 turns. Strict log and owned stop pass. Native testing
+also fixed unbound dialogue water authority, duplicate enrollment event IDs and an absent-creed
+projection mismatch. The no-bed repeated-welcome preservation case passes on `895e700e` with
+its disclosed synthetic camp. An earlier first-day founder-count loss remains an unexplained
+failed precondition; these results do not claim all-seed survival or guest save/load coverage.
 Private 0.3.4 metadata is prepared; no new tag/upload or Beta acceptance is claimed.
 
 The current draft additionally distinguishes fully authorized surveyed-heart physical access
