@@ -131,6 +131,9 @@ QUICKSTART_EVIDENCE_ROWS = (
 # Observation emitted inside guest-save-supply before the physical refill; not a callable verb.
 GUEST_SAVE_EVIDENCE_ROWS = ("guest-save-shortage",)
 
+# The save verb observes remaining custody before publishing its snapshot.
+CAMP_HEART_EVIDENCE_ROWS = ("camp-heart-save-custody",)
+
 # The second counted verb. `yield-frames <frames>` hands the engine back its own render loop, which
 # an advance never does: advance keeps the engine out of XRLCore.PlayerTurn on purpose, and that is
 # exactly where the per-frame BeforeRenderEvent dispatch lives. Must equal
@@ -524,6 +527,7 @@ def parse_expect(
             and verb not in extra
             and verb not in QUICKSTART_EVIDENCE_ROWS
             and verb not in GUEST_SAVE_EVIDENCE_ROWS
+            and verb not in CAMP_HEART_EVIDENCE_ROWS
         ):
             fail("%s EXPECT item %r names an unsealable verb" % (name, item))
         parsed.append((verb, outcome, wanted.strip()))

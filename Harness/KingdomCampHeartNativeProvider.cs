@@ -29,10 +29,6 @@ namespace ThousandAndFirst.Harness
 		internal const string SetupVerb = "camp-heart-setup";
 		internal const string CheckVerb = "camp-heart-check";
 		internal const string Receipt = "r_TAF_ScenarioCampHeartNative_v1";
-		// The last pair is the acceptance gate for issue #162: one more ordinary day AFTER the
-		// rung was raised, and then a check that the settlement pass still runs on this ground.
-		private static readonly string[] Script = { "stagedigest", SetupVerb, "advance 1200",
-			CheckVerb, "advance 3600", CheckVerb, "advance 1200", CheckVerb, "stagedigest" };
 
 		public int ScenarioVerbApiVersion { get { return KingdomScenarioVerbApi.Version; } }
 
@@ -47,9 +43,7 @@ namespace ThousandAndFirst.Harness
 					"camp heart verbs take no arguments");
 				IList<string> script;
 				Require(KingdomScenarioScript.TryRead(out script, out _)
-					&& script.Count == Script.Length, "the exact sealed camp heart script is absent");
-				for (int i = 0; i < Script.Length; i++)
-					Require(script[i] == Script[i], "the sealed camp heart script differs");
+					&& KingdomCampHeartScript.Matches(script), "the exact sealed camp heart script is absent");
 				XRLGame game = The.Game;
 				Zone zone = The.Player?.CurrentZone;
 				if (Verb == SetupVerb)
