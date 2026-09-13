@@ -23,6 +23,11 @@ Native diagnostic and sealed acceptance status are recorded in `docs/STATUS.md`.
 
 Private candidate preparation; this version has not been published.
 
+3098 staged C# files; 440,137 physical lines; 1445 direct `XRL` imports; zero at or above
+300 lines; 3129 cold-install files. Inventory SHA-256:
+`4d3938534ed4663c01492bd0455a6aea9b707d76ea4f7b4442357c9aac38472d`. Runtime receipt identity matches manifest 0.3.5;
+private delivery and candidate native verification remain pending.
+
 - Newly claimed active zones immediately receive settlement lighting and full-zone city sight when those options are enabled, including Kingdom Quickstart. Leaving and returning is no longer required.
 - City sight remains a drawing effect: ordinary gameplay visibility is restored after every frame.
 - Added in-game regression coverage for ordinary first-heart completion, all seven canvas walls, original founders and starter housing, real save/cold load, another paid construction job, and complete claimed-zone rendering before and after loading.
