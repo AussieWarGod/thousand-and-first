@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "inventorySha256": "0ed11a224e19d6938eaa5afd5e46e8d89e4d85cac628000566a9a2ce00fa9db0",
+  "inventorySha256": "5039e82aca01ced8e9c4fc73f626469b6584912b8571a5d02d9f348c8e073fef",
   "exceptions": [],
   "reviewedBy": "Codex root automated structural review",
-  "completedUtc": "2026-09-13T03:37:56Z",
+  "completedUtc": "2026-09-13T03:45:52Z",
   "oneResponsibility": {
     "status": "passed",
-    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:0ed11a224e19d6938eaa5afd5e46e8d89e4d85cac628000566a9a2ce00fa9db0. Inherits exact review c2e5d302f4acc9ee5bd091f5b57a8f92711bc12603f252b3f327c922d8d870b8. Sole production delta binds TryContinueFirstGuestDecision with the existing TryBindLocalOperation scope. Reconciliation consumes the same active survey that water debit and civic identity refresh require. Existing active-zone, foreign-pass, lease, housing, custody and receipt predicates remain unchanged. Scope disposal covers successful and failed reconciliation. Automated source review; native acceptance separately scoped."
+    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:5039e82aca01ced8e9c4fc73f626469b6584912b8571a5d02d9f348c8e073fef. Inherits exact review 0ed11a224e19d6938eaa5afd5e46e8d89e4d85cac628000566a9a2ce00fa9db0. Sole production delta appends each prepared arrival domain step before preparing its successor, because PrepareGrowthDomainStep derives event and receipt identities from DomainSteps.Count. Null checks precede each append; the draft remains unpublished until all five steps and the complete plan validate. No live game domain is applied during preparation, and duplicate-ID checks remain strict. Automated source review; native acceptance separately scoped."
   },
   "protocolsAtBoundaries": {
     "status": "passed",
-    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:0ed11a224e19d6938eaa5afd5e46e8d89e4d85cac628000566a9a2ce00fa9db0. Inherits exact review c2e5d302f4acc9ee5bd091f5b57a8f92711bc12603f252b3f327c922d8d870b8. Sole production delta binds TryContinueFirstGuestDecision with the existing TryBindLocalOperation scope. Reconciliation consumes the same active survey that water debit and civic identity refresh require. Existing active-zone, foreign-pass, lease, housing, custody and receipt predicates remain unchanged. Scope disposal covers successful and failed reconciliation. Automated source review; native acceptance separately scoped."
+    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:5039e82aca01ced8e9c4fc73f626469b6584912b8571a5d02d9f348c8e073fef. Inherits exact review 0ed11a224e19d6938eaa5afd5e46e8d89e4d85cac628000566a9a2ce00fa9db0. Sole production delta appends each prepared arrival domain step before preparing its successor, because PrepareGrowthDomainStep derives event and receipt identities from DomainSteps.Count. Null checks precede each append; the draft remains unpublished until all five steps and the complete plan validate. No live game domain is applied during preparation, and duplicate-ID checks remain strict. Automated source review; native acceptance separately scoped."
   }
 }

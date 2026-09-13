@@ -334,6 +334,17 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void ArrivalStepsReserveDistinctOrdinalsBeforeTheNextPreparation()
+		{
+			string source = Source("Growth/KingdomGrowth.z06.ArrivalPreparation.cs");
+			AssertOrdered(source, "operation.DomainSteps.Add(enrollment)",
+				"KingdomGrowthDomainStep roster =", "operation.DomainSteps.Add(roster)",
+				"KingdomGrowthDomainStep creed =", "operation.DomainSteps.Add(creed)",
+				"KingdomGrowthDomainStep population =", "operation.DomainSteps.Add(population)",
+				"KingdomGrowthDomainStep accounting =", "operation.DomainSteps.Add(accounting)");
+		}
+
+		[Test]
 		public void GuestBodyHasNoLootXpTradeLaborOrCombatContribution()
 		{
 			string hardening = Source(

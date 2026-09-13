@@ -2,9 +2,9 @@
 
 ## Current Quickstart hotfix candidate census
 
-3098 staged production C# files; 440,119 physical lines; zero at or above 300 lines.
+3098 staged production C# files; 440,122 physical lines; zero at or above 300 lines.
 1445 files with direct `XRL` imports; 3129 cold-install files. Exact inventory:
-`0ed11a224e19d6938eaa5afd5e46e8d89e4d85cac628000566a9a2ce00fa9db0`.
+`5039e82aca01ced8e9c4fc73f626469b6584912b8571a5d02d9f348c8e073fef`.
 Combines the dev integrations and Quickstart recovery fixes. Automated semantic review binds
 this exact inventory in `docs/STRUCTURE_REVIEW.json`. Native evidence retains each exercised
 build; current teardown passes exact receipt, salvage, work-row and strict-log checks.
