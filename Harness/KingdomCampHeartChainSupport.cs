@@ -35,7 +35,12 @@ namespace ThousandAndFirst.Harness
 				Require(ChainResidents.Count == 50 && KingdomResidents.OnRollCount(System) == 50,
 					"city support did not enroll fifty actual bodies: bodies=" + ChainResidents.Count
 					+ "; population=" + System.Population + "; on-roll=" + KingdomResidents.OnRollCount(System));
-				KingdomLodging.OnSettlementPass(System, Zone, Census());
+				Require(!KingdomSurvey.HasBoundPass, "housing setup found an outstanding survey pass");
+				Require(KingdomSurvey.TryBindLocalOperation(Zone, System, out var scope,
+					out string failure), failure);
+				using (scope)
+					KingdomLodging.OnSettlementPass(System, Zone, KingdomSurvey.ActiveFor(Zone));
+				Require(!KingdomSurvey.HasBoundPass, "housing setup left its survey bound");
 				for (int i = 0; i < KingdomZoningRules.PointsForLevel(TechLevel.Foundry); i++)
 					Require(KingdomZoning.Learn(System, "disk", "paid-heart-chain-fixture-" + i),
 						"synthetic craft lesson already present or refused");

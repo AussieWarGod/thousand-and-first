@@ -20,6 +20,15 @@ benefit index to check every home assignment and capacity. It also walks the fou
 final heart envelope using ordinary movement. Failed archive:
 `beta-heart-chain/cad5ee19/resident-census-refused-1/result.json`, SHA-256
 `261d9087b80871d85ce7acc1b311a4b8bc3c4babd5cd76b4a8d4c3efa8f30089`.
+The `23cb0a347dfad7eceabecf0aa00b023f1b2fd6a8` attempt was stopped as incomplete after city
+support spent over twelve minutes without reaching its next checkpoint. Source inspection found
+that setup housing assignment ran outside the shared survey scope, allowing education/reach
+queries to rebuild physical-benefit observations for candidate homes. Setup now uses the existing
+local-operation scope, verifies its disposal, and retains every physical housing assertion.
+The incomplete attempt is not an assertion failure or a native PASS. Its complete sealed profile,
+strict log, owned shutdown and native window observations are retained in
+`beta-heart-chain/23cb0a34/unbound-housing-incomplete-1/result.json`, SHA-256
+`43ccc9b0bfb4f6678f3d9885b36ac2bb80c811992f4072ef3d3e1af9d5391bee`.
 
 ## Paid camp cold-load coverage
 
