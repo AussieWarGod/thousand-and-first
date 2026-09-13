@@ -238,6 +238,22 @@ namespace ThousandAndFirst.Tests
 				new KingdomPlotRules.PlotRect(16, 2, 21, 5), tent), Is.True);
 		}
 
+		[TestCase(true, true, "CommandSurvivalCamp", true)]
+		[TestCase(false, true, "CommandSurvivalCamp", false)]
+		[TestCase(true, false, "CommandSurvivalCamp", false)]
+		[TestCase(true, true, "CommandWait", false)]
+		[TestCase(true, true, null, false)]
+		public void ChainCampCommandGuardOnlyAppliesDuringItsPlayerWait(bool advancing,
+			bool player, string command, bool expected)
+		{
+			Assert.That(KingdomCampHeartChainScript.UnexpectedCampCommand(Script("camp-heart-chain"),
+				advancing, player, command), Is.EqualTo(expected));
+			Assert.That(KingdomCampHeartChainScript.UnexpectedCampCommand(Script("camp-heart-save"),
+				advancing, player, command), Is.False);
+			Assert.That(KingdomCampHeartChainScript.UnexpectedCampCommand(null,
+				advancing, player, command), Is.False);
+		}
+
 		private static string[] Script(string name) => TestMain.ReadRepositoryText("Tools/personas/" + name + ".persona")
 			.Split('\n').Single(line => line.StartsWith("SCRIPT=", StringComparison.Ordinal)).Substring(7).Split(';');
 	}

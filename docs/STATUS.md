@@ -80,6 +80,20 @@ the previous run logged missing construction-input source identity. No root caus
 upgrade or full-chain PASS is claimed. Failed archive:
 `beta-heart-chain/1b9d0755/ready-not-started-1/result.json`, SHA-256
 `a3999fd28fe82f2fc00ffe8898c00a39f201e5d6a8b43a2b570cf4f460d4686e`.
+At `5f67495a669a3a094fc69ccfd0ee9d9eb5403c6c`, city support, paid tent completion and actual-input
+material readiness pass. The next wait stops progressing at 1100/1200. A full native window capture
+shows `Make Camp — Select a direction`; an earlier cropped capture could not exclude that prompt.
+The operator stopped the exact driver for owned shutdown. The closed profile also fails its full
+seal: `playeroptions.json` acquired `OptionLookLocked=No`. All 3376 C# inputs, runtime and Harness
+XML still match, and the strict final log passes, but this is **INVALID / INCOMPLETE**, not accepted
+chain evidence. Both complete inventories, option versions, captures and shutdown records are kept
+without resealing in `beta-heart-chain/5f67495a/camp-direction-invalid-1/result.json`, SHA-256
+`a9ecc18378ea3bb2d0db21f7cf76b42d0e6919c84962d8a00f7db6e4bf931766`.
+The sealed chain now refuses an unexpected player Make Camp command during an advance before
+the typed skill handler runs, recording its caller. Other scripts and ordinary player actions
+retain their route. Command origin and the earlier missing-upgrade cause remain unproven.
+The guard's pure boundary cases and engine compiles do not establish its native event-order
+behavior; that verification and the full paid chain remain open.
 
 ## Paid camp cold-load coverage
 

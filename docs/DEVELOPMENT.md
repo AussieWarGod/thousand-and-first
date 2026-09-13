@@ -83,6 +83,9 @@ Readiness observations must use production staffing and competing-work inputs, n
 initial population and an assumed empty queue. Keep the last production announcement and relevant
 ledger reason when a ready-looking action never starts. Explicitly identify synthetic stores before
 expecting construction-input observations to reference them.
+A cropped quiet-window capture cannot exclude a blocking prompt. Use the existing full native
+window capture when the view is incomplete; never infer a completed turn from process responsiveness.
+Preserve a changed profile as invalid evidence with expected and actual inventories, not a new seal.
 
 ## Release batch
 

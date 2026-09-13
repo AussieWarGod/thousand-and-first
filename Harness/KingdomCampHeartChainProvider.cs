@@ -26,6 +26,8 @@ namespace ThousandAndFirst.Harness
 			}
 			catch (Exception error)
 			{
+				KingdomScenarioJournal.Append("camp-heart-chain-diagnostic", false,
+					error.GetType().Name + ": " + error.Message);
 				return "paid-heart-chain refused; evidence retained: "
 					+ KingdomScenarioRules.Bounded(error.GetType().Name + ": " + error.Message);
 			}

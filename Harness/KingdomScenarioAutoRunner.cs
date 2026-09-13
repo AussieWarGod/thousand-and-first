@@ -121,6 +121,7 @@ namespace ThousandAndFirst
 
 		public override void RegisterPlayer(GameObject Player, IEventRegistrar Registrar)
 		{
+			Registrar.Register(CommandEvent.ID, Order: int.MinValue);
 			Registrar.Register(BeginTakeActionEvent.ID);
 			Registrar.Register(AfterDieEvent.ID); // KingdomScenarioAutoRunner.Death.cs
 			// Succession re-registers this system on the heir INSIDE AfterDieEvent, so the latest
