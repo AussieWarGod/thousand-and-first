@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using HarmonyLib;
+using XRL;
 
 namespace ThousandAndFirst.Harness
 {
@@ -23,7 +24,7 @@ namespace ThousandAndFirst.Harness
 		}
 		internal static void Record(string step, string result)
 		{
-			if (KingdomGuestActionsNativeChecks.ActionActive
+			if (The.Game != null && KingdomGuestActionsNativeChecks.ActionActive
 				&& KingdomGuestActionsNativeChecks.Evidence.Length < 4000)
 				KingdomGuestActionsNativeChecks.Evidence.Append("; ").Append(step).Append('=').Append(result);
 		}
