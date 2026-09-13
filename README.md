@@ -4,18 +4,18 @@ Found a faction in Caves of Qud, raise settlements from reserved ground, and gov
 after you leave. Water, food, labour, materials, roads, trade, threats, civic memory, and physical
 works remain part of the same world instead of becoming a detached management screen.
 
-**Status: 0.3.4 pre-release source (private Alpha candidate).**
-The public listing remains the 0.3.3 public Alpha playtest.
+**Status: 0.3.4 public Alpha playtest.**
 Back up saves before updating.
 Current evidence and remaining test limits live in
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/STATUS.md);
 historical test counts do not sign later changes.
 
-This candidate adds four Quickstart founding citizens, two starter shelter plots and
+This Alpha adds four Quickstart founding citizens, two starter shelter plots and
 64 finite drams of water. Housing shortages retain the final two citizens so the
 settlement can recover. The guide explains construction, supplies and the first guest.
 New grants apply to new Quickstart worlds; completed historical grants are not replenished.
-Native acceptance and publication are still pending. See
+Native Quickstart construction, housing recovery, save/cold-load and guest recruitment checks
+pass within their recorded scopes. See
 [test scope](https://github.com/AussieWarGod/thousand-and-first/blob/main/DevTests/QUICKSTART-BOOT-TESTS.md).
 
 ## What the mod adds
