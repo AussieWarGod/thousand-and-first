@@ -66,7 +66,8 @@ behavioral test, not only source-text assertions. Disclose synthetic setup and u
 Preserve failed evidence, strict final logs, complete seals, and exact owned shutdown records.
 
 Before a long city scenario, check fixture calls against their production contracts. Authored
-housing needs typed plot-payload preflight; a custody-only survey has no populated civic lists.
+housing needs the normal plot-crowding and ground checks before typed plot-payload preflight;
+a custody-only survey has no populated civic lists.
 Use the existing local-operation survey scope when settlement APIs share physical-benefit reads,
 and prove its disposal. Account for pending paid construction before supplying exact materials:
 a newly finished building can spend them on its own next improvement. Keep unrelated test plots

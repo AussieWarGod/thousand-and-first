@@ -91,10 +91,21 @@ namespace ThousandAndFirst.Harness
 						{
 							int x = (side == 0 ? 2 : 54) + column * 8;
 							var rect = new KingdomPlotRules.PlotRect(x, y, x + 5, y + 3);
+							if (KingdomPlotRules.CrowdsExisting(rect, KingdomPlots.ReadPlots(Zone)))
+							{
+								lastFailure = "candidate crowds an existing plot's reserved lane";
+								continue;
+							}
+							var grid = new KingdomPlots.GroundGrid(Zone);
+							if (grid.AnyRefusal(rect))
+							{
+								lastFailure = "candidate contains protected or liquid ground";
+								continue;
+							}
 							if (!KingdomPlots.TryPreparePlotPayload(System, Zone, rect, entry.Key,
 								entry.Category, null, out _, out _, out lastFailure)) continue;
 							var work = KingdomPlots.Stake(System, Zone, rect, entry, spec,
-								new KingdomPlots.GroundGrid(Zone), null, false);
+								grid, null, false);
 							Require(work != null, "synthetic home stake refused after preflight");
 							string plot = work.GetStringProperty(KingdomPlots.PlotIdProperty);
 							var works = work.GetPart<r_KingdomPlotWorks>();

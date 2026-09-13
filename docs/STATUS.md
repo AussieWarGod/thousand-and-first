@@ -48,6 +48,12 @@ retain their existing commission position. Supply now checks real readiness befo
 refusals include the full production reason. Failed archive:
 `beta-heart-chain/6c56420f/expansion-ground-refused-1/result.json`, SHA-256
 `868071665a197651b5d41d5676e235063cb183e7b1d58f37197f0a6e786eebd6`.
+At `2e5ae6c169e2176fcd0018b629aabbd2c8be49b3`, the commission moved to `(24,7)..(29,10)` and
+passed the final-heart clearance check. The setup then placed a home at `(18,8)..(23,11)`, touching
+the tent's reserved lane. Execution was stopped early as an incomplete fixture-layout attempt.
+The home loop now applies production's `CrowdsExisting` and `GroundGrid.AnyRefusal` checks before
+typed preflight and staking. Archive: `beta-heart-chain/2e5ae6c1/fixture-lane-incomplete-1/result.json`,
+SHA-256 `a7fc044c6e1c4dc2575929cdedc3b2637b87c01e7efe080bfa0c6320b09ae9fe`.
 
 ## Paid camp cold-load coverage
 
