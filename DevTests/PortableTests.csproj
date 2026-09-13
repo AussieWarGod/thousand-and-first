@@ -1416,6 +1416,7 @@
 	<Compile Include="..\Harness\KingdomSubsidenceRungSaveForecast.cs" />
 	<Compile Include="..\Harness\KingdomScenarioLoadBarrier.cs" />
 	<Compile Include="KingdomScenarioLoadBarrierTests.cs" />
+	<Compile Include="KingdomScenarioLoadResumeTests.cs" />
 	<Compile Include="..\Harness\KingdomScenarioVerbProvider.cs" />
 	<Compile Include="..\Harness\KingdomScenarioVerbProviderRules.cs" />
 	<Compile Include="..\Harness\KingdomScenarioDigests.cs" />

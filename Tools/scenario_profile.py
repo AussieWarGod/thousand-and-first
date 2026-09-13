@@ -493,8 +493,18 @@ def write_options(source: str, destination: str) -> None:
     options["OptionEnableSeed"] = "Yes"
     if advisor is not None:
         options[QUICKSTART_ADVISOR_OPTION] = advisor
+    # GameObject.Move and the completed-heart render scenario persist this absent option.
+    # Author its initial value and engine format before sealing these native scenarios.
+    # A used profile is never normalized or resealed when an engine write differs.
+    native_look_defaults = any(verb in tokens for verb in ("guest-save-supply", "heart-sight-inspect"))
+    if native_look_defaults:
+        options["OptionLookLocked"] = "No"
     with open(destination, "w", encoding="utf-8") as handle:
-        handle.write(json.dumps(options, indent=2) + "\n")
+        if native_look_defaults:
+            handle.write("{\n" + ",\n".join(json.dumps(key) + ":" + json.dumps(value)
+                                          for key, value in options.items()) + "\n}")
+        else:
+            handle.write(json.dumps(options, indent=2) + "\n")
     print("scenario profile exposes the native world-seed field for operator entry")
 
 

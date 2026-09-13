@@ -13,8 +13,7 @@ namespace ThousandAndFirst.Harness
 	/// <para>
 	/// OBSERVATION ONLY. Nothing here calls <c>KingdomClaimedGround.ReconcileZone</c>,
 	/// <c>RemoveZone</c>, <c>Zone.AddLight</c>, <c>LightAll</c> or <c>ExploreAll</c>. The claim is
-	/// made by a real founding, the attachment by the engine's own <c>Zone.Activated()</c> - the
-	/// same entry <c>Qud/API/JournalAPI.cs:82</c> uses - and the light by the real per-frame
+	/// made by a real founding, with attachment checked before reactivation, and the light by the real per-frame
 	/// <c>BeforeRenderEvent</c> dispatch the runtime already performs while the persona's
 	/// <c>yield-frames</c> hands the engine back its own render loop.
 	/// </para>
@@ -123,13 +122,14 @@ namespace ThousandAndFirst.Harness
 				SettlementId = System.SettlementIdForOwnedZone(ZoneId);
 				Require(!string.IsNullOrEmpty(SettlementId),
 					"the claimed zone answers to no single settlement");
-				Zone.Activated();
-				Require(Fault == null, "claimed activation faulted the observer: " + Fault);
 				Attached = Zone.GetPart<KingdomClaimedGroundLight>();
 				Require(Count() == 1 && Attached != null,
-					"a claimed activation did not attach exactly one claimed-ground light");
+					"founding did not immediately attach exactly one claimed-ground light");
 				Require(Attached.Version == 1 && string.Equals(Attached.SettlementId, SettlementId,
 					StringComparison.Ordinal), "the attached light carries the wrong stamp");
+				Zone.Activated();
+				Require(Fault == null && ReferenceEquals(Zone.GetPart<KingdomClaimedGroundLight>(), Attached)
+					&& Count() == 1, "reactivation replaced or duplicated the founding light");
 				Foreign = ForeignParts();
 				Require(Foreign == 0,
 					"a live zone outside ClaimedZones already carries the claimed-ground light");

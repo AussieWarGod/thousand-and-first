@@ -116,6 +116,8 @@ namespace ThousandAndFirst.Harness
 				: KingdomQuickstartSettlementChecks.Observe(Game, zone, system, "loaded", out settlementFailure);
 			if (!settlement)
 				return settlementFailure;
+			if (KingdomGuestSaveNativeProvider.ClaimsScript()) KingdomGuestSaveWitness.VerifyLoaded(Game);
+			if (KingdomHeartSightNativeProvider.ClaimsScript()) KingdomHeartSightWitness.VerifyLoaded(Game);
 			// Every value here was read from the loaded game a moment ago: the system, the
 			// standing object, its own cell and that cell's zone. None is copied from the witness.
 			Observed = "realmId=" + system.RealmId + "; cityId=" + cityId + "; saveId=" + Game.GameID
@@ -135,13 +137,14 @@ namespace ThousandAndFirst.Harness
 		/// from the completed one -- a "next action" that reported the finished job again would be
 		/// proving the load, not proving that the loaded world still works.
 		/// </summary>
-		internal static void Next(XRLGame Game, KingdomQuickstartLifecycleSnapshot Witness)
+		internal static bool Next(XRLGame Game, KingdomQuickstartLifecycleSnapshot Witness)
 		{
 			string observed;
 			string failure = Act(Game, Witness, out observed);
 			KingdomScenarioJournal.Append(NextRow, failure == null, failure == null
 				? KingdomQuickstartLifecycleSteps.Stamped("native-lifecycle step=next-action; " + observed)
-				: KingdomQuickstartLifecycleSteps.Refuse("next-action", failure));
+					: KingdomQuickstartLifecycleSteps.Refuse("next-action", failure));
+			return failure == null;
 		}
 
 		private static string Act(XRLGame Game, KingdomQuickstartLifecycleSnapshot Witness, out string Observed)

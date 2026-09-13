@@ -55,6 +55,8 @@ namespace ThousandAndFirst.Harness
 			try
 			{
 				XRLGame game = The.Game;
+				if (KingdomGuestSaveNativeProvider.ClaimsScript()) KingdomGuestSaveWitness.BeforeActivation(game);
+				if (KingdomHeartSightNativeProvider.ClaimsScript()) KingdomHeartSightWitness.BeforeActivation(game);
 				string failure = game == null ? "no live game before activation"
 					: Witness == null ? "no lifecycle witness was decoded"
 					: game.GameID != Witness.GameId ? "the loading game is not the saved game"

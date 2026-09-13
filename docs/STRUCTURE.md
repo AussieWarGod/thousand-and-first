@@ -1,11 +1,21 @@
 # Structural release contract
 
-## Current Quickstart hotfix candidate census
+## Current Alpha 0.3.5 candidate census
 
-3098 staged production C# files; 440,124 physical lines; zero at or above 300 lines.
+3098 staged production C# files; 440,137 physical lines; zero at or above 300 lines.
 1445 files with direct `XRL` imports; 3129 cold-install files. Exact inventory:
-`a5e00bd45a1122917e6b164ad98373cdcc043e6c681790495086ee0a2e870182`.
-Combines the dev integrations and Quickstart recovery fixes. Automated semantic review binds
+`4d3938534ed4663c01492bd0455a6aea9b707d76ea4f7b4442357c9aac38472d`.
+The sole production change after the accepted sight/heart native source is the runtime
+receipt version changing from 0.3.4 to 0.3.5. Automated review in
+`docs/STRUCTURE_REVIEW.json` binds this source. Private delivery and current candidate
+native verification remain separate, pending checks; older native evidence is unchanged.
+
+## Retained claimed-ground sight candidate census
+
+3098 staged production C# files; 440,137 physical lines; zero at or above 300 lines.
+1445 files with direct `XRL` imports; 3129 cold-install files. Exact inventory:
+`d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389`.
+Adds immediate claim-presentation reconciliation to the published 0.3.4 source. Automated structural review binds
 this exact inventory in `docs/STRUCTURE_REVIEW.json`. Native evidence retains each exercised
 build; current teardown passes exact receipt, salvage, work-row and strict-log checks.
 Current results and retained failures are recorded in `docs/STATUS.md`.

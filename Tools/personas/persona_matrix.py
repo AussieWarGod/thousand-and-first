@@ -128,6 +128,9 @@ QUICKSTART_EVIDENCE_ROWS = (
     "QUICKSTART-LIFECYCLE-PROFILE",
 )
 
+# Observation emitted inside guest-save-supply before the physical refill; not a callable verb.
+GUEST_SAVE_EVIDENCE_ROWS = ("guest-save-shortage",)
+
 # The second counted verb. `yield-frames <frames>` hands the engine back its own render loop, which
 # an advance never does: advance keeps the engine out of XRLCore.PlayerTurn on purpose, and that is
 # exactly where the per-frame BeforeRenderEvent dispatch lives. Must equal
@@ -520,6 +523,7 @@ def parse_expect(
             and verb not in COUNTED_VERBS
             and verb not in extra
             and verb not in QUICKSTART_EVIDENCE_ROWS
+            and verb not in GUEST_SAVE_EVIDENCE_ROWS
         ):
             fail("%s EXPECT item %r names an unsealable verb" % (name, item))
         parsed.append((verb, outcome, wanted.strip()))
@@ -602,6 +606,9 @@ def match(
                 "row %d verb %s, expected %s" % (index + 1, actual_verb, verb)
             )
             continue
+        # Terminal shorthand omits :OK/:REFUSED, but each terminal has a fixed outcome.
+        if verb in TERMINALS.values():
+            outcome = "OK" if verb == TERMINALS["COMPLETE"] else "REFUSED"
         if outcome and actual_outcome != outcome:
             problems.append(
                 "row %d %s is %s, expected %s"

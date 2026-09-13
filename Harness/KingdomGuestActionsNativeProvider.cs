@@ -26,8 +26,11 @@ namespace ThousandAndFirst.Harness
 					&& script.Count > 0, "exact guest action script absent");
 				bool quickstart = script[0] == QuickstartScript[0];
 				string[] expected = quickstart ? QuickstartScript : Script;
-				Require(script.Count == expected.Length, "guest action script length differs");
-				for (int i = 0; i < expected.Length; i++) Require(script[i] == expected[i], "guest action script differs");
+				if (!KingdomGuestSaveNativeProvider.IsExact(script))
+				{
+					Require(script.Count == expected.Length, "guest action script length differs");
+					for (int i = 0; i < expected.Length; i++) Require(script[i] == expected[i], "guest action script differs");
+				}
 				XRLGame game = The.Game;
 				Zone zone = The.Player?.CurrentZone;
 				Require(game != null && zone != null && !KingdomSurvey.HasBoundPass
