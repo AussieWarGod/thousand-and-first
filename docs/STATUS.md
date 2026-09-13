@@ -11,9 +11,14 @@ release-version literal in `Core/KingdomReleaseInfo.cs`; the structural review b
 The first candidate CI caught an unsynchronized runtime version. That failed source was
 never uploaded. The local test process was stopped after CI established the mismatch.
 The corrected candidate then refused at the documentation inventory check; its current
-census is now recorded here, in the changelog and structural contract. Fresh full release
-checks are required. Private submission, subscribed-install and candidate native checks
-remain pending; public Alpha 0.3.4 is unchanged. Earlier evidence retains its exact source.
+census is now recorded here, in the changelog and structural contract. The next licensed
+run passed stages 1–10, including 14,794 main and 5,747 portable cases with zero skips,
+but stage 11 refused two review notes without a structured artifact reference. Those
+notes now bind the same reviewed inventory with the required `sha256:` prefix. Three
+bind-mount alias fixtures were unavailable in this environment. The corrected structural
+gate passes; the tagged full release gate remains required. Private submission, subscribed-install
+and candidate native checks remain pending; public Alpha 0.3.4 is unchanged. Earlier
+evidence retains its exact source.
 
 ## Completed first heart and cold-load city sight — native verified
 
