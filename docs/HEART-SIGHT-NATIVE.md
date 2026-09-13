@@ -1,7 +1,10 @@
 # Completed first heart and claimed-zone sight after cold load
 
-Status: implemented; native execution pending. This is developer evidence, not a claim that the
-first heart is enclosed or that the sight fix has reached the public Workshop item.
+Status: native PASS for source `52d67656b0ecafe5fd2f0ca15c77bb2120b7539c`. Both separate sessions preserve their full
+profile seals, pass strict logs and receipt-owned stops, and bind all 3357 C# inputs and
+runtime content to source. Evidence: `heart-sight/52d67656/completed-heart-cold-load-1/result.json`,
+SHA-256 `337ba196566bd8c4af84a180ee2473e997757d4987671a1a8cbf03b4aabf6c29`. Coverage row 29 and combination C9 record this scope.
+The first heart remains an open camp; public Alpha 0.3.4 is unchanged.
 
 The exact `heart-sight-lifecycle-native-check.persona` starts genuine marsh Quickstart with the
 advisor, observes its founding receipt and initial canvas count, and advances 8400 ordinary
@@ -65,3 +68,19 @@ and journal remain unchanged. Fresh completed-heart profiles now author this def
 wire format before sealing, as the existing physical carried-water scenario already does;
 later byte changes still fail. Tests cover the initial format, later drift and malformed
 script tails that must not write options.
+
+## Accepted execution
+
+Source profile `C:\taf-scenario.Jy60Hu` saved at turn 8403 with four original founders,
+six beds, the completed paid fire and seven canvas cells. It observed 4 real source frames.
+Separate cold load in `C:\taf-scenario.idCuws` preserved exact physical output before
+activation and afterward, paid for a distinct new job, then resumed vanilla Continue and
+observed 4 real loaded frames. Every observed frame drew all 2000 cells visible and lit
+and restored native gameplay visibility. The saved autorunner did not replay its source script.
+
+The saved witness SHA-256 is `1929cb6617adbabb240dd6c8eacc432be713b01100d960a357ee9df9d6893421`.
+All game/harness C# bytes are unchanged from the first attempted source; the accepted profile
+recipe supplies the observed initial look option before sealing. No used profile was repaired.
+The rejected first run is archived at
+`heart-sight/64573611/source-render-options-drift-1/result.json`, SHA-256
+`09c829025cb9d21aef1647feac4d5b99187f9f81bdc87836b6bcb91c272cc6bb`.
