@@ -1,8 +1,8 @@
 # Release and Steam Workshop Procedure
 
-**Current public Alpha: 0.3.4, published and finalized.** Release run `34740130479` completed
-gates and submission; recorded local verification/finalization confirmed one subscribed
-installation after the queued workflow was stopped. [Exact public receipts and limits](STATUS.md#public-034--published-and-finalized).
+**Current public Alpha: 0.3.6, published and finalized.** Release run `34761004824` passed
+all applicable hosted, licensed, submission, subscribed verification and finalization jobs.
+[Exact public receipts and one-client limits](STATUS.md#public-036--published-and-finalized).
 Earlier release narratives below remain historical evidence, not current acceptance claims.
 
 ## Standing author ruling — 2026-09-11
