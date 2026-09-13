@@ -8,6 +8,17 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
+## [Unreleased]
+
+- Claimed-ground sight starts immediately when founding or a Charter claim publishes, including
+  a newly founded second city. The player need not leave and return to see the claimed zone.
+- Native Quickstart regression checks all 2000 cells during real rendered frames and verifies
+  that ordinary gameplay sight returns afterward, without test-only light or reactivation.
+
+Development census: 3098 staged C# files; 440,137 physical lines; 3129 cold-install files.
+Inventory SHA-256: `d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389`.
+Native diagnostic and sealed acceptance status are recorded in `docs/STATUS.md`.
+
 ## [0.3.4] — 2026-09-13 (Alpha)
 
 - Guests without a creed can complete enrollment without a false state-mismatch refusal.
