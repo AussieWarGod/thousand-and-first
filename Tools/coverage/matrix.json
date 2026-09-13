@@ -575,6 +575,17 @@
           "historicalScope": true,
           "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
           "currentDevCoverage": false
+        },
+        {
+          "commit": "948e77e5202c86c58dd73f59029513eb0bc56d3b",
+          "artifactPath": "heart-sight/948e77e5/parallel-profile-cold-load-1/result.json",
+          "artifactSha256": "5231ff508ca5d0fd35332300e1360166cc41dcdbd9cdd4c61109fdbc41f41721",
+          "artifactBytes": 3447,
+          "verdict": "PASS - shared parallel profile reader, real Quickstart construction, save/cold load, next paid commission and whole-zone sight",
+          "scope": "Real marsh Quickstart with four original citizens housed after 8400 ordinary turns, two shelters and six beds, a completed first-heart camp and paid building. Four source and four loaded frames show all 2000 cells with ordinary sight restored afterward. Real save, separately prepared cold load, another paid commission and vanilla Continue without source script replay. Both complete Local seals, 3360 C# inputs, runtime/Harness XML bindings, strict final logs and owned stops verify. Shared bounded parallel profile hashing is exercised at preparation and verification boundaries. The first heart remains an open camp; this does not cover paid rung-2 cold load, higher rungs, other seeds or complete Beta behavior.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+          "currentDevCoverage": false
         }
       ]
     },
@@ -674,6 +685,17 @@
           "artifactBytes": 3343,
           "verdict": "PASS - Quickstart completed heart, whole-zone frames and separate cold load on asynchronous load harness",
           "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary turns, four original citizens housed, two shelters/six beds, completed paid fire and seven-wall open heart. Four source and four loaded frames show all 2000 cells and restore native sight; exact physical components survive preactivation, cold load, another paid commission and vanilla Continue without source-script replay. Both full Local seals, 3358 C# inputs and runtime binding, strict final logs and exact owned stops verified. No enclosed-tent, all-seed, paid-rung-2 or later-progression claim.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "948e77e5202c86c58dd73f59029513eb0bc56d3b",
+          "artifactPath": "heart-sight/948e77e5/parallel-profile-cold-load-1/result.json",
+          "artifactSha256": "5231ff508ca5d0fd35332300e1360166cc41dcdbd9cdd4c61109fdbc41f41721",
+          "artifactBytes": 3447,
+          "verdict": "PASS - shared parallel profile reader, real Quickstart construction, save/cold load, next paid commission and whole-zone sight",
+          "scope": "Real marsh Quickstart with four original citizens housed after 8400 ordinary turns, two shelters and six beds, a completed first-heart camp and paid building. Four source and four loaded frames show all 2000 cells with ordinary sight restored afterward. Real save, separately prepared cold load, another paid commission and vanilla Continue without source script replay. Both complete Local seals, 3360 C# inputs, runtime/Harness XML bindings, strict final logs and owned stops verify. Shared bounded parallel profile hashing is exercised at preparation and verification boundaries. The first heart remains an open camp; this does not cover paid rung-2 cold load, higher rungs, other seeds or complete Beta behavior.",
           "historicalScope": true,
           "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
           "currentDevCoverage": false
@@ -923,6 +945,17 @@
           "historicalScope": true,
           "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
           "currentDevCoverage": false
+        },
+        {
+          "commit": "948e77e5202c86c58dd73f59029513eb0bc56d3b",
+          "artifactPath": "heart-sight/948e77e5/parallel-profile-cold-load-1/result.json",
+          "artifactSha256": "5231ff508ca5d0fd35332300e1360166cc41dcdbd9cdd4c61109fdbc41f41721",
+          "artifactBytes": 3447,
+          "verdict": "PASS - shared parallel profile reader, real Quickstart construction, save/cold load, next paid commission and whole-zone sight",
+          "scope": "Real marsh Quickstart with four original citizens housed after 8400 ordinary turns, two shelters and six beds, a completed first-heart camp and paid building. Four source and four loaded frames show all 2000 cells with ordinary sight restored afterward. Real save, separately prepared cold load, another paid commission and vanilla Continue without source script replay. Both complete Local seals, 3360 C# inputs, runtime/Harness XML bindings, strict final logs and owned stops verify. Shared bounded parallel profile hashing is exercised at preparation and verification boundaries. The first heart remains an open camp; this does not cover paid rung-2 cold load, higher rungs, other seeds or complete Beta behavior.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+          "currentDevCoverage": false
         }
       ]
     },
@@ -992,6 +1025,17 @@
           "artifactBytes": 3343,
           "verdict": "PASS - Quickstart completed heart, whole-zone frames and separate cold load on asynchronous load harness",
           "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary turns, four original citizens housed, two shelters/six beds, completed paid fire and seven-wall open heart. Four source and four loaded frames show all 2000 cells and restore native sight; exact physical components survive preactivation, cold load, another paid commission and vanilla Continue without source-script replay. Both full Local seals, 3358 C# inputs and runtime binding, strict final logs and exact owned stops verified. No enclosed-tent, all-seed, paid-rung-2 or later-progression claim.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "948e77e5202c86c58dd73f59029513eb0bc56d3b",
+          "artifactPath": "heart-sight/948e77e5/parallel-profile-cold-load-1/result.json",
+          "artifactSha256": "5231ff508ca5d0fd35332300e1360166cc41dcdbd9cdd4c61109fdbc41f41721",
+          "artifactBytes": 3447,
+          "verdict": "PASS - shared parallel profile reader, real Quickstart construction, save/cold load, next paid commission and whole-zone sight",
+          "scope": "Real marsh Quickstart with four original citizens housed after 8400 ordinary turns, two shelters and six beds, a completed first-heart camp and paid building. Four source and four loaded frames show all 2000 cells with ordinary sight restored afterward. Real save, separately prepared cold load, another paid commission and vanilla Continue without source script replay. Both complete Local seals, 3360 C# inputs, runtime/Harness XML bindings, strict final logs and owned stops verify. Shared bounded parallel profile hashing is exercised at preparation and verification boundaries. The first heart remains an open camp; this does not cover paid rung-2 cold load, higher rungs, other seeds or complete Beta behavior.",
           "historicalScope": true,
           "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
           "currentDevCoverage": false
@@ -1233,6 +1277,17 @@
           "artifactBytes": 3343,
           "verdict": "PASS - Quickstart completed heart, whole-zone frames and separate cold load on asynchronous load harness",
           "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary turns, four original citizens housed, two shelters/six beds, completed paid fire and seven-wall open heart. Four source and four loaded frames show all 2000 cells and restore native sight; exact physical components survive preactivation, cold load, another paid commission and vanilla Continue without source-script replay. Both full Local seals, 3358 C# inputs and runtime binding, strict final logs and exact owned stops verified. No enclosed-tent, all-seed, paid-rung-2 or later-progression claim.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "948e77e5202c86c58dd73f59029513eb0bc56d3b",
+          "artifactPath": "heart-sight/948e77e5/parallel-profile-cold-load-1/result.json",
+          "artifactSha256": "5231ff508ca5d0fd35332300e1360166cc41dcdbd9cdd4c61109fdbc41f41721",
+          "artifactBytes": 3447,
+          "verdict": "PASS - shared parallel profile reader, real Quickstart construction, save/cold load, next paid commission and whole-zone sight",
+          "scope": "Real marsh Quickstart with four original citizens housed after 8400 ordinary turns, two shelters and six beds, a completed first-heart camp and paid building. Four source and four loaded frames show all 2000 cells with ordinary sight restored afterward. Real save, separately prepared cold load, another paid commission and vanilla Continue without source script replay. Both complete Local seals, 3360 C# inputs, runtime/Harness XML bindings, strict final logs and owned stops verify. Shared bounded parallel profile hashing is exercised at preparation and verification boundaries. The first heart remains an open camp; this does not cover paid rung-2 cold load, higher rungs, other seeds or complete Beta behavior.",
           "historicalScope": true,
           "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
           "currentDevCoverage": false
