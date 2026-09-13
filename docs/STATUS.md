@@ -7,6 +7,12 @@ uses fifty enrolled residents, eighteen authored tent rows, finite water and foo
 craft lessons and separately supplied material bills. Only setup housing uses a future calendar
 argument; ordinary turns must pay and complete both heart improvements. Native execution remains
 pending. This does not establish higher-rung persistence, ordinary growth or Beta acceptance.
+The first attempt at `ec85c024226858ee65c815b979722615a4c13353` passed the original 6000-turn
+camp path but refused city support before any home was created: setup called an untyped layout
+lookup for a design requiring a typed lot. The correction reuses production plot-payload preflight.
+Failed archive: `beta-heart-chain/ec85c024/untyped-housing-refused-1/result.json`, SHA-256
+`ebebaf1801d608c59c82fc7fcf7583ff104a0692db4595e414e4b88b9ed7fce1`.
+The full closed profile, source bindings, strict log and owned stop verify; this is not a chain PASS.
 
 ## Paid camp cold-load coverage
 

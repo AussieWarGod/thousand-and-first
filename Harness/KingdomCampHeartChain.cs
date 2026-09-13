@@ -8,9 +8,10 @@ namespace ThousandAndFirst.Harness
 {
 	internal static partial class KingdomCampHeartNativeChecks
 	{
-		internal static string Chain(string Verb)
+		internal static string Chain(string Verb, XRLGame Game)
 		{
-			Require(Retained != null && Retained.Done && ReferenceEquals(The.Game, Retained.Game)
+			Require(Game != null && Retained != null && Retained.Done && ReferenceEquals(Game, The.Game)
+				&& ReferenceEquals(Game, Retained.Game)
 				&& ReferenceEquals(The.Player?.CurrentZone, Retained.Zone)
 				&& !KingdomScenarioAdvance.Pending && !KingdomScenarioFrames.Pending,
 				"paid heart chain requires its completed source camp and no outstanding turns");
