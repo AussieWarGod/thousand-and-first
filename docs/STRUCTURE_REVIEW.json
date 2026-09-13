@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "inventorySha256": "d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389",
+  "inventorySha256": "4d3938534ed4663c01492bd0455a6aea9b707d76ea4f7b4442357c9aac38472d",
   "exceptions": [],
   "reviewedBy": "Codex root automated structural review",
-  "completedUtc": "2026-09-13T07:11:16Z",
+  "completedUtc": "2026-09-13T10:02:26Z",
   "oneResponsibility": {
     "status": "passed",
-    "notes": "Inherits published 0.3.4 inventory a5e00bd45a1122917e6b164ad98373cdcc043e6c681790495086ee0a2e870182. Three production files changed: ClaimZone reconciles sight only after exact claim projections commit, before seal staging so a pending seal still exposes the committed claim; PublishSecond reconciles after paired topology and exact seat/claim checks. Both calls use the existing guarded, idempotent ReconcileZone and do not turn a presentation failure into a repeated debit. The third file updates comments only. Ownership, master/option gates and duplicate prevention remain centralized in ReconcileZone. No fields, serialization, rendering projection, gameplay LOS or architecture change. Root automated source review; native acceptance is separately recorded in STATUS.md."
+    "notes": "Inherits the reviewed claimed-zone sight inventory d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389. The only subsequent production C# change is Core/KingdomReleaseInfo.cs: the single diagnostic/native-receipt version constant changes from 0.3.4 to 0.3.5 to match manifest.json. No gameplay, serialization, fields, ownership, drawing or architecture behavior changes. The existing version contract test requires this exact manifest/runtime identity. Root automated source review; private delivery and native candidate evidence are separate release checks."
   },
   "protocolsAtBoundaries": {
     "status": "passed",
-    "notes": "Inherits published 0.3.4 inventory a5e00bd45a1122917e6b164ad98373cdcc043e6c681790495086ee0a2e870182. Three production files changed: ClaimZone reconciles sight only after exact claim projections commit, before seal staging so a pending seal still exposes the committed claim; PublishSecond reconciles after paired topology and exact seat/claim checks. Both calls use the existing guarded, idempotent ReconcileZone and do not turn a presentation failure into a repeated debit. The third file updates comments only. Ownership, master/option gates and duplicate prevention remain centralized in ReconcileZone. No fields, serialization, rendering projection, gameplay LOS or architecture change. Root automated source review; native acceptance is separately recorded in STATUS.md."
+    "notes": "Inherits the reviewed claimed-zone sight inventory d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389. The only subsequent production C# change is Core/KingdomReleaseInfo.cs: the single diagnostic/native-receipt version constant changes from 0.3.4 to 0.3.5 to match manifest.json. No gameplay, serialization, fields, ownership, drawing or architecture behavior changes. The existing version contract test requires this exact manifest/runtime identity. Root automated source review; private delivery and native candidate evidence are separate release checks."
   }
 }
