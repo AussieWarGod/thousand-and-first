@@ -95,6 +95,8 @@ This is a change to where engine-free source tests run, not evidence of native g
 Input comparison: `tooling/licensed-source-parity/917bb79d/result.json`, SHA-256
 `c60dcbaf8890ae1e0a5f25d10ffc35ab7ba7cb58d56c9ee48dccb73198aa2dfd` in the local evidence archive.
 It records all 2346 main and 1444 portable compiler inputs individually, rather than only counts.
+The subsequent test-only change updates the release-source contract to require the native Base
+handoff and shared full-suite command; gameplay test inputs and discovery rules are unchanged.
 
 ## Handoff between agents
 
