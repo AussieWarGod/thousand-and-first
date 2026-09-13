@@ -1,19 +1,90 @@
 # Current implementation and release evidence
 
-## Current 0.3.6 sight hotfix — private preparation
+## Current 0.3.6 sight hotfix — published and finalized
 
-The corrected sight hotfix is being prepared as private Alpha 0.3.6. Public 0.3.5 failed before
-upload; its tag and refusal evidence remain unchanged. The public listing remains 0.3.4.
-No 0.3.6 delivery or native PASS is claimed yet.
+Public Alpha 0.3.6 is published, verified and finalized. It supersedes 0.3.4 on the public
+listing. Failed public 0.3.5 and its refusal evidence remain unchanged. Earlier version and
+pending-publication statements below describe their historical checkpoints; this section
+controls current delivery status. Broader Beta acceptance remains incomplete.
+
+### Public 0.3.6 — published and finalized
+
+[Run 34761004824](https://github.com/AussieWarGod/thousand-and-first/actions/runs/34761004824)
+passed all applicable hosted, licensed, submit, verify and finalize jobs at immutable
+`v0.3.6`, source `2624c4fb2b7d8dffeaef6fca1a19aa0174e79de5`. PR200 prepared the private receipt binding and
+public metadata; PR201 used a normal checked dev-to-main merge commit. The shared actual Alpha
+metadata preflight passed again before tagging. The existing maintainer exception admitted tag
+creation; no protection setting changed, required merge check was bypassed, upload retried or
+tag moved. The owned runner stopped after terminal finalization.
+
+All eleven licensed release gates passed, including 14,794 main and 5,747 portable cases with
+zero managed skips, all four engine compile modes, 46 launcher cases and package boundaries.
+Three foreign-owned PACKAGE/COPY/BACKUP bind-alias fixture skips remain explicit. Public item
+`3794797472` reports `SubscribedInstallationVerified`, `attemptFinalized=true`; all 3129 package
+files match the subscribed installation. This proves one client only:
+`freshTransferVerified=false`, `releaseReady=false`.
+
+- Public receipt SHA-256: `11bf0c16f57097a814f7348636afaf964485ce1bf4823a13682218b51512af37`.
+- Plan SHA-256: `1e7b411348b90b1fa2f17a98608d6b4c58eae4e11196b97ed8858fc3f79a3afe`.
+- Installed inventory SHA-256: `666ab40c347b565459d7ebf6b997beee5503886b43606b3deed5458787ea0076`.
+- Finalization SHA-256: `2c44a3da2172ffb93474af45dd4f8b1ed6a8c42f1b22ee0084936e754ad576e6`.
+- Delivery archive: `releases/0.3.6/public/result.json`, SHA-256 `ea3db79f7d63b98df9a48c6daa632efcc56dc167039d00eef9e2767bf14df202`.
+
+Production, harness and TESTING.md remain byte-identical to the accepted private 0.3.6 source.
+The native evidence below is the original private-candidate run on those identical inputs,
+not a new public gameplay run. It proves the recorded construction/sight/save/cold-load chain;
+later heart rungs, old-save migrations, other seeds and broader feature combinations remain gaps.
+
 
 3098 staged C# files; 440,137 physical lines; 1445 direct `XRL` imports; zero at or above
 300 lines; 3129 cold-install files. Inventory SHA-256: `e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719`.
+The only production C# change from private 0.3.5 is the synchronized release-version literal.
+PR197's shared Codex/Claude workflow and PR198's native Linux source-test route are merged.
+Both full suites, hosted Windows checks, all four engine compile modes and native gates remain.
 
-The only production C# change from verified private 0.3.5 is the runtime release constant, from
-0.3.5 to 0.3.6, matching manifest.json. The current structural review binds that exact delta.
-Shared development preflight PR197 is merged. Native .NET release-source optimization PR198 is
-being checked separately; the candidate will incorporate its checked integration before tagging.
-Original native housing, guest and claimed-zone evidence below keeps its original source.
+### Private 0.3.6 — verified and finalized
+
+[Run 34758593664](https://github.com/AussieWarGod/thousand-and-first/actions/runs/34758593664)
+passed every applicable hosted, licensed, submit, verify and finalize job at
+`e8f595fb3152eeadc746a95f49a7968c5b93a54c`, the immutable `staging-v0.3.6` source from checked PR199.
+All eleven licensed gates passed: 14,794 main and 5,747 portable cases with zero managed
+skips, four engine compile modes, 46 launcher cases and package/structural boundaries.
+Three PACKAGE/COPY/BACKUP bind-alias fixtures retained explicit foreign-owned-environment
+skips; this is not a zero-total-skips claim.
+
+Private item `3796495680` reports `SubscribedInstallationVerified`, `attemptFinalized=true`.
+All 3129 package files match the subscribed installation and every runtime byte binds to the
+native source. This proves one subscribed client; `freshTransferVerified=false` and
+`releaseReady=false` remain explicit limits. No upload was retried or tag moved. The existing
+maintainer exception admitted tag creation; no protection setting or required merge check changed.
+
+- Private receipt SHA-256: `ad785c658f36799a942f2545982aaa5b29c11806b3e01df9678b58a060d223ce`.
+- Plan SHA-256: `4fc0c4b25984b2b2acf920be2cc5725468dbaacdc960105044fac559a832a278`.
+- Installed inventory SHA-256: `ab86b944f9d04a6be566fd1c7395e6f73a4c0e91357cb13674f3aef963107229`.
+- Finalization SHA-256: `38e37994cc53f131395bc7bd785f45175c1736d1724e58a38e639bfe4d05f0de`.
+- Delivery archive: `releases/0.3.6/private/result.json`, SHA-256 `7010b53496e58dc2216c2e97d0047003da1cd2511972e9c2376a060c8a0518a7`.
+
+After finalization and exact runner shutdown, a fresh marsh/advisor-on Quickstart on seed
+`#43101` passed 8400 ordinary advance turns: four original founders, six beds in two shelters,
+a completed paid fire and all seven physical canvas walls. The heart remains open rite ground;
+shelters provide housing. A real save at 8403 turns and a separate cold load preserved the
+heart before activation and afterward. A distinct loaded job paid exactly one timber and two
+drams. Four source and five loaded frames drew all 2000 cells visible and lit, then restored
+ordinary gameplay sight. The saved script did not replay. No synthetic completion, fabricated
+visibility or world repair was used.
+
+Both full profile seals, strict final logs, owned stops and run records pass. All 3357 staged
+C# inputs per session bind to the candidate; other runtime inputs match apart from the intentional
+developer manifest. Profiles `taf-scenario.5QDtwK` and `taf-scenario.bFoqqT`, save
+`f106fbfc-1ab2-4c22-bc0d-6b07126167c8`, and raw evidence remain local.
+Native archive: `alpha-036-heart-sight/e8f595fb/private-candidate-cold-load-1/result.json`,
+SHA-256 `03578178926b9f0d61828b185d6d6e3000822bf5f623c8bcb452a5be8d8bfcd1`. This bounded proof does not establish all-seed survival, old-save
+migrations, later heart rungs or all feature combinations. Earlier housing and guest evidence
+retains its original source and scope.
+
+The verified private receipt is copied byte-for-byte into `docs/PRIVATE_PACKAGE_RECEIPT.sha256`.
+This receipt-and-ledger commit becomes the public Alpha candidate binding; TESTING.md remains
+unchanged throughout promotion.
 
 ## Retained 0.3.5 sight hotfix — private verified; public upload refused
 
