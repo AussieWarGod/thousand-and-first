@@ -8,30 +8,23 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-## [Unreleased]
-
-- Claimed-ground sight starts immediately when founding or a Charter claim publishes, including
-  a newly founded second city. The player need not leave and return to see the claimed zone.
-- Native Quickstart regression checks all 2000 cells during real rendered frames and verifies
-  that ordinary gameplay sight returns afterward, without test-only light or reactivation.
-
-Development census: 3098 staged C# files; 440,137 physical lines; 3129 cold-install files.
-Inventory SHA-256: `d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389`.
-Native diagnostic and sealed acceptance status are recorded in `docs/STATUS.md`.
-
 ## [0.3.5] — 2026-09-13 (Alpha)
 
-Private candidate preparation; this version has not been published.
+Alpha hotfix for immediate claimed-zone lighting and full-zone city sight.
 
 3098 staged C# files; 440,137 physical lines; 1445 direct `XRL` imports; zero at or above
 300 lines; 3129 cold-install files. Inventory SHA-256:
 `4d3938534ed4663c01492bd0455a6aea9b707d76ea4f7b4442357c9aac38472d`. Runtime receipt identity matches manifest 0.3.5;
-private delivery and candidate native verification remain pending.
+private delivery and candidate native construction/sight/save/cold-load verification passed.
+Exact evidence and release status remain in `docs/STATUS.md`.
 
-- Newly claimed active zones immediately receive settlement lighting and full-zone city sight when those options are enabled, including Kingdom Quickstart. Leaving and returning is no longer required.
+- Newly claimed active zones immediately receive settlement lighting and full-zone city sight when those options are enabled, including Kingdom Quickstart and a newly founded second city. Leaving and returning is no longer required.
 - City sight remains a drawing effect: ordinary gameplay visibility is restored after every frame.
 - Added in-game regression coverage for ordinary first-heart completion, all seven canvas walls, original founders and starter housing, real save/cold load, another paid construction job, and complete claimed-zone rendering before and after loading.
 - Added in-game coverage for first-guest citizenship across cold load and recovery from exhausted civic water using the founder's existing carried water.
+
+Earlier native sight acceptance remains bound to development inventory
+`d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389`; candidate evidence uses the inventory above.
 
 The first heart remains an open canvas horseshoe around the basin, not an enclosed tent.
 This hotfix retains Alpha 0.3.4's housing departure floor and finite starter supplies.
