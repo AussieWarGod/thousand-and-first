@@ -14,6 +14,17 @@ save/load and next-action chain rather than treating that fire as evidence of wo
 Execution on the combined candidate is pending. A release needs the three locations with both
 advisor choices, plus an existing-save recovery check; boot-only receipts do not satisfy this gate.
 
+The retained public 0.3.3 fresh-save fixture uses a source-bound observer grant of 24 drams;
+new saves require the current 64-dram grant. `Tools/prepare-quickstart-033-upgrade.py REPO PIN
+SOURCE DESTINATION` verifies the old public executable/content hashes, successful fresh-save
+journal, stopped ownership, sealed inputs and exact save hashes before creating a fresh reader.
+Its sealed historical marker binds the public commit, GameID, snapshot hash and original quantity.
+The observer requires that marker to own the active cold load, then checks the actual water,
+container, custody and receipts without replenishing stock. Malformed or mismatched markers
+refuse; they do not select a default. This fixture covers that exact fresh save, not arbitrary
+historical progression. Native rerun remains pending. Creator fault fixtures use the current
+grant before injecting capacity or custody faults; the persona expects all 17 registered cases.
+
 ## Current combined heart candidate — gates owed
 
 The planned compatibility compile runs across 3098 production C# sources (3094 baseline);

@@ -131,7 +131,7 @@ namespace ThousandAndFirst.Harness
 					&& !body.HasIntProperty(KingdomQuickstartRules.GrantMarkerProperty)
 					&& body.GetIntProperty("KingdomStores") == 1 && body.GetIntProperty("KingdomBuilt") == 0
 					&& !body.HasPart("LiquidProducer") && witness.Volume.MaxVolume == 64
-					&& witness.Volume.Volume == 24 && KingdomLiquids.HasFreshWater(witness.Volume),
+					&& witness.Volume.Volume == KingdomQuickstartRules.StarterWaterDrams && KingdomLiquids.HasFreshWater(witness.Volume),
 					"entered cask was not the exact healthy placed production grant");
 				Owner(); BlueprintExact(true); witness.Exact();
 				witness.PlacedId = body.IDIfAssigned;
@@ -139,7 +139,7 @@ namespace ThousandAndFirst.Harness
 				if (Entries == 1)
 				{
 					Faults++; witness.Volume.MaxVolume = 32;
-					Require(witness.Volume.MaxVolume == 32 && witness.Volume.Volume == 24,
+					Require(witness.Volume.MaxVolume == 32 && witness.Volume.Volume == KingdomQuickstartRules.StarterWaterDrams,
 						"native cask capacity injection did not preserve physical stock");
 				}
 			}

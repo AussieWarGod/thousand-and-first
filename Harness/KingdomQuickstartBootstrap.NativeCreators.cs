@@ -60,7 +60,8 @@ namespace ThousandAndFirst
 			using (var fault = new KingdomQuickstartCaskFault(Context, receipt))
 			{
 				GameObject refused = CreateWater(Context.Game, Context.Zone, receipt, out string refusal);
-				Context.Check(refused == null && refusal == "The starter water was not exactly 24 physical drams in its dedicated casks.",
+				Context.Check(refused == null && refusal == "The starter water was not exactly "
+					+ KingdomQuickstartRules.StarterWaterDrams + " physical drams in its dedicated casks.",
 					"actual water creator must refuse its post-placement capacity fault");
 				fault.Check(1, 1);
 				NativeAbsent(Context, fault.First);
@@ -72,8 +73,8 @@ namespace ThousandAndFirst
 				Context.Check(!ReferenceEquals(water, fault.First) && ReferenceEquals(water, fault.Second),
 					"retry must return exactly the second witnessed factory original");
 				Context.Check(VerifyWaterGrant(Context.Zone, water, receipt, true, out failure), failure);
-				Context.Check(water.GetPart<LiquidVolume>().Volume == 24
-					&& water.GetPart<LiquidVolume>().MaxVolume == 64, "retry must retain 24 drams and shipped capacity64");
+				Context.Check(water.GetPart<LiquidVolume>().Volume == KingdomQuickstartRules.StarterWaterDrams
+					&& water.GetPart<LiquidVolume>().MaxVolume == 64, "retry must retain the exact starting grant and shipped capacity64");
 				before.Check(water);
 				Context.Check(ReferenceEquals(water, CreateWater(Context.Game, Context.Zone, receipt,
 					out failure)), "unpublished water recovery must reuse the exact object");

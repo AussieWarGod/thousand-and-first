@@ -18,6 +18,8 @@
 
   <ItemGroup>
     <Compile Include="TestMain.cs" />
+    <Compile Include="KingdomQuickstartHistoricalGrantTests.cs" />
+    <Compile Include="..\Harness\KingdomQuickstartHistoricalGrant.cs" />
 	<Compile Include="KingdomHeartRungSettleTests.cs" />
 	<Compile Include="KingdomCampHeartNativeSourceTests.cs" />
 	<Compile Include="..\Harness\KingdomCampHeartNativeCensus.cs" />

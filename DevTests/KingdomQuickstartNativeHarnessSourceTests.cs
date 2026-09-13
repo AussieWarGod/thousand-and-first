@@ -46,7 +46,7 @@ namespace ThousandAndFirst.Tests
 			Ordered(Flat(Method(source, "internal void Enter(")), "Owner(); BlueprintExact(true)",
 				"ReferenceEquals(entered.Object, body)", "ReferenceEquals(entered.Cell, cell)",
 				"witness.Exact()", "Count(cell.Objects, body) == 1", "witness.Volume.MaxVolume == 64",
-				"witness.Volume.Volume == 24", "Owner(); BlueprintExact(true); witness.Exact()",
+				"witness.Volume.Volume == KingdomQuickstartRules.StarterWaterDrams", "Owner(); BlueprintExact(true); witness.Exact()",
 				"Entries++", "if (Entries == 1)", "Faults++; witness.Volume.MaxVolume = 32");
 			Ordered(Flat(Method(source, "public void Dispose(")), "Owner(); BlueprintExact(true)",
 				"catch (Exception error)", "ReferenceEquals(added, Probe)", "Parts.Remove(ProbeName)",
@@ -89,7 +89,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("internal const int ExpectedCases = 17;", Read(Provider));
 		}
 
-		[TestCase("Water", "water", "VerifyWaterGrant", "Volume == 24")]
+		[TestCase("Water", "water", "VerifyWaterGrant", "Volume == KingdomQuickstartRules.StarterWaterDrams")]
 		[TestCase("Larder", "larder", "VerifyLarderGrant", "Inventory.Objects.Count == 12")]
 		[TestCase("Materials", "stockpile", "VerifyMaterialsGrant", "Inventory.Objects.Count == 3")]
 		public void ProductionCreatorsVerifyPhysicalGrantsAndRecoverSameReferences(
