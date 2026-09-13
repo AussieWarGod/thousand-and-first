@@ -1,10 +1,40 @@
 # Current implementation and release evidence
 
-## Current 0.3.6 sight hotfix — private verified; public promotion pending
+## Current 0.3.6 sight hotfix — published and finalized
 
-Private Alpha 0.3.6 is verified and finalized. Public promotion remains pending; the public
-listing still serves 0.3.4. Failed public 0.3.5 and its refusal evidence remain unchanged.
-Broader Beta acceptance remains incomplete.
+Public Alpha 0.3.6 is published, verified and finalized. It supersedes 0.3.4 on the public
+listing. Failed public 0.3.5 and its refusal evidence remain unchanged. Earlier version and
+pending-publication statements below describe their historical checkpoints; this section
+controls current delivery status. Broader Beta acceptance remains incomplete.
+
+### Public 0.3.6 — published and finalized
+
+[Run 34761004824](https://github.com/AussieWarGod/thousand-and-first/actions/runs/34761004824)
+passed all applicable hosted, licensed, submit, verify and finalize jobs at immutable
+`v0.3.6`, source `2624c4fb2b7d8dffeaef6fca1a19aa0174e79de5`. PR200 prepared the private receipt binding and
+public metadata; PR201 used a normal checked dev-to-main merge commit. The shared actual Alpha
+metadata preflight passed again before tagging. The existing maintainer exception admitted tag
+creation; no protection setting changed, required merge check was bypassed, upload retried or
+tag moved. The owned runner stopped after terminal finalization.
+
+All eleven licensed release gates passed, including 14,794 main and 5,747 portable cases with
+zero managed skips, all four engine compile modes, 46 launcher cases and package boundaries.
+Three foreign-owned PACKAGE/COPY/BACKUP bind-alias fixture skips remain explicit. Public item
+`3794797472` reports `SubscribedInstallationVerified`, `attemptFinalized=true`; all 3129 package
+files match the subscribed installation. This proves one client only:
+`freshTransferVerified=false`, `releaseReady=false`.
+
+- Public receipt SHA-256: `11bf0c16f57097a814f7348636afaf964485ce1bf4823a13682218b51512af37`.
+- Plan SHA-256: `1e7b411348b90b1fa2f17a98608d6b4c58eae4e11196b97ed8858fc3f79a3afe`.
+- Installed inventory SHA-256: `666ab40c347b565459d7ebf6b997beee5503886b43606b3deed5458787ea0076`.
+- Finalization SHA-256: `2c44a3da2172ffb93474af45dd4f8b1ed6a8c42f1b22ee0084936e754ad576e6`.
+- Delivery archive: `releases/0.3.6/public/result.json`, SHA-256 `ea3db79f7d63b98df9a48c6daa632efcc56dc167039d00eef9e2767bf14df202`.
+
+Production, harness and TESTING.md remain byte-identical to the accepted private 0.3.6 source.
+The native evidence below is the original private-candidate run on those identical inputs,
+not a new public gameplay run. It proves the recorded construction/sight/save/cold-load chain;
+later heart rungs, old-save migrations, other seeds and broader feature combinations remain gaps.
+
 
 3098 staged C# files; 440,137 physical lines; 1445 direct `XRL` imports; zero at or above
 300 lines; 3129 cold-install files. Inventory SHA-256: `e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719`.
