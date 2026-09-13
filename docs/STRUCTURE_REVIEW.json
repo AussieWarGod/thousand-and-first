@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "inventorySha256": "73c87caced09ccdffc714a2475c170679e6e37a68b0fe42e92566d98c18d2907",
+  "inventorySha256": "0ebe8fb749a39bccd21578e78d95777725eb4ffc0bedba84962830baa679370c",
   "exceptions": [],
   "reviewedBy": "Codex root automated structural review",
-  "completedUtc": "2026-09-12T23:45:15Z",
+  "completedUtc": "2026-09-13T00:36:04Z",
   "oneResponsibility": {
     "status": "passed",
-    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:73c87caced09ccdffc714a2475c170679e6e37a68b0fe42e92566d98c18d2907. Inherits the site-selection review and earlier explicitly scoped reviews. The only subsequent C# edit is the runtime release identity literal 0.3.3 to 0.3.4, matching the private manifest; production callers are debug visual/gallery reports, without a gameplay or schema change. Census: 3098 files, 440099 physical lines, 1445 direct-XRL files, no size exception. Automated source review only; package/native/release acceptance remains pending. log:/tmp/taf-alpha-034-structure-2.json."
+    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:0ebe8fb749a39bccd21578e78d95777725eb4ffc0bedba84962830baa679370c. Inherits the exact private-candidate review of 73c87caced09ccdffc714a2475c170679e6e37a68b0fe42e92566d98c18d2907. The sole subsequent production delta is guide answer text naming the existing Charter admission action before the physical guest citizenship action. Both labels and order were compared with KingdomFirstGuestRuntime.Open/Admit and KingdomGrowth.OpenPhysicalFirstGuest. No branch, state, receipt or mutation change. 3098 files, 440100 lines, 1445 direct-XRL imports, no size exception. Automated source review only; native and publication evidence remain separately scoped."
   },
   "protocolsAtBoundaries": {
     "status": "passed",
-    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:73c87caced09ccdffc714a2475c170679e6e37a68b0fe42e92566d98c18d2907. Inherits the site-selection review and earlier explicitly scoped reviews. The only subsequent C# edit is the runtime release identity literal 0.3.3 to 0.3.4, matching the private manifest; production callers are debug visual/gallery reports, without a gameplay or schema change. Census: 3098 files, 440099 physical lines, 1445 direct-XRL files, no size exception. Automated source review only; package/native/release acceptance remains pending. log:/tmp/taf-alpha-034-structure-2.json."
+    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:0ebe8fb749a39bccd21578e78d95777725eb4ffc0bedba84962830baa679370c. Inherits the exact private-candidate review of 73c87caced09ccdffc714a2475c170679e6e37a68b0fe42e92566d98c18d2907. The sole subsequent production delta is guide answer text naming the existing Charter admission action before the physical guest citizenship action. Both labels and order were compared with KingdomFirstGuestRuntime.Open/Admit and KingdomGrowth.OpenPhysicalFirstGuest. No branch, state, receipt or mutation change. 3098 files, 440100 lines, 1445 direct-XRL imports, no size exception. Automated source review only; native and publication evidence remain separately scoped."
   }
 }

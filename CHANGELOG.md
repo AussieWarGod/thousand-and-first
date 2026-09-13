@@ -19,9 +19,9 @@ Young settlements tolerate typed pending spatial capture on cold load, and exact
 stamped teardown orders can resume. Native/release evidence below remains scoped
 to its actual checkpoints; the broader Beta goal is not complete.
 
-Current 3098-file census is line-cap green: 440,099 physical lines; direct `XRL`
+Current 3098-file census is line-cap green: 440,100 physical lines; direct `XRL`
 imports occur in 1445 files, 0 of them over the line limit. Inventory SHA-256:
-`73c87caced09ccdffc714a2475c170679e6e37a68b0fe42e92566d98c18d2907`. The cold-install inventory contains 3129 files.
+`0ebe8fb749a39bccd21578e78d95777725eb4ffc0bedba84962830baa679370c`. The cold-install inventory contains 3129 files.
 This isolated 0.3.4 preparation combines heart authority, shared-XL transition, rung settlement
 and camp content/fixture branches with Quickstart recovery and exact strike phase recovery.
 All four compile modes and 14775 main/5732 portable cases pass with zero skips. Automated

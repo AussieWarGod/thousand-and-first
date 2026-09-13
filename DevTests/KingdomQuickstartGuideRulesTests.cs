@@ -146,6 +146,7 @@ namespace ThousandAndFirst.Tests
 				KingdomQuickstartGuideRules.Topics()[3].Answer);
 			StringAssert.Contains("speak with the first guest",
 				KingdomQuickstartGuideRules.Topics()[3].Answer);
+			StringAssert.Contains("Admit this person through Growth", KingdomQuickstartGuideRules.Topics()[3].Answer);
 			StringAssert.Contains("Welcome as citizen", KingdomQuickstartGuideRules.Topics()[3].Answer);
 		}
 

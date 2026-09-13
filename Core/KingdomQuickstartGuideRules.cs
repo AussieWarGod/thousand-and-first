@@ -102,9 +102,10 @@ namespace ThousandAndFirst
 				"Will anyone come?",
 				"A visitor is not a citizen and does not build for you. New citizens need "
 					+ "a completed home with a spare bed. Finish the starter shelters first. "
-					+ "When the first guest arrives, open your charter and choose Read the first "
-					+ "guest's correspondence, or interact with the guest and choose speak with "
-					+ "the first guest. Choose Welcome as citizen when housing is available. "
+					+ "When a traveller writes, open your charter and choose Read the first "
+					+ "guest's correspondence, then Admit this person through Growth. This hosts "
+					+ "the visitor. Interact with them and choose speak with the first guest, "
+					+ "then Welcome as citizen when housing is available. "
 					+ "A guest can remain your guest while you finish a home."
 			},
 			new string[2]

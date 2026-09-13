@@ -119,3 +119,16 @@ no gameplay branch or persisted receipt schema changes. Harness reports now iden
 the actual candidate version. This review covers that literal identity change and
 inherits the prior source review limits. Versioned private-package and native
 acceptance remain pending; no prior failure becomes a PASS.
+
+
+## Exact first-guest instructions
+
+Current production inventory `0ebe8fb749a39bccd21578e78d95777725eb4ffc0bedba84962830baa679370c`: 3098 C# files,
+440100 physical lines, 1445 direct-XRL files, no size exception. Relative to
+`73c87caced09ccdffc714a2475c170679e6e37a68b0fe42e92566d98c18d2907`, the sole production
+change is the guide's answer text. The Charter menu offers "Admit this person through
+Growth"; that admission hosts a visitor. The hosted body's menu then offers "Welcome
+as citizen". The guide now names both steps in order, matching the actual Open/Admit
+and OpenPhysicalFirstGuest call paths read in this review. No branch, persistent state,
+receipt, stock or transaction changes. Prior housing evidence keeps its original scope;
+guide native execution and the new compile receipt remain separate acceptance checks.

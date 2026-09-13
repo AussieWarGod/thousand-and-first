@@ -2,10 +2,10 @@
 
 ## Current 0.3.4 Quickstart recovery candidate — native acceptance pending
 
-3098 staged C# files; 440,099 physical lines; cold-install inventory contains 3129 files.
+3098 staged C# files; 440,100 physical lines; cold-install inventory contains 3129 files.
 Compile inventory: 3098 sources, baseline and compatibility symbols (3094 baseline).
 Direct `XRL` imports: 1445 files, 0 over the line limit. Zero at or above 300 lines.
-Inventory SHA-256: `73c87caced09ccdffc714a2475c170679e6e37a68b0fe42e92566d98c18d2907`.
+Inventory SHA-256: `0ebe8fb749a39bccd21578e78d95777725eb4ffc0bedba84962830baa679370c`.
 Combines #141 authority, #144 shared-XL validation, #138/#139 rung settlement and #137 camp
 content/native fixture over dev with the verified 0.3.3 backmerge. Production and test-project
 merges are complete. Full-cask main/portable suites pass 14785/5742 cases with zero skips,
