@@ -263,3 +263,25 @@ Archive: `teardown/660ba354-budget-failed/`. The revised sealed script adds one 
 free hands (10 effort/hand/day), plus cadence slack. Read-only strike effort/checkpoint/job
 telemetry was added for an informative refusal if it still stalls. Production clocks,
 crew, work rates, job phases and completion remain untouched. Native rerun is owed.
+
+
+### Teardown salvage quarantine blocks release; guest observations pass
+
+The 16800-turn rerun at `77470e33`, profile `/mnt/c/taf-scenario.6nWXVw`, remains
+**FAIL** despite its two physical case summaries passing. Strict Player.log caught
+`Strike salvage insertion was vetoed, merged, replaced, or moved.` followed by
+`seal daily stage failed closed` because a sealed work root was absent. Owned game
+was stopped. Archive `teardown/77470e33-salvage-failed/result.json` SHA:
+`6c3a9fefdfc780506e1a6094737ad4f90c48481632607e00fd535ce1897f1a64`.
+No log filter or release waiver applies. Commit `e79c03d8` strengthens the native
+assertion to require the exact strike row Complete/Settled before accepting removal
+and salvage, with retained custody diagnostics. A fresh native reproduction is running.
+
+At production inventory `0ebe8fb749a39bccd21578e78d95777725eb4ffc0bedba84962830baa679370c`,
+source `660ba354`, guide topics pass 3/3 native graph checks in
+`/mnt/c/taf-scenario.3aKoHV`; first-guest correspondence passes 1/1 across two real due
+passes in `/mnt/c/taf-scenario.ur6CAD`. Both strict logs and owned stops pass. Archives:
+`alpha-034-native/guide-topics-native-check/` and
+`alpha-034-native/first-guest-native-check/`. These prove current topic content and
+exactly-once correspondence, respectively; rendered UI, physical guest admission and
+citizenship are not covered by those runs. Public Workshop remains 0.3.3.
