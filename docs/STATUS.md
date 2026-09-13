@@ -1,9 +1,20 @@
 # Current implementation and release evidence
 
-## Current 0.3.5 sight hotfix — private verified; public promotion pending
+## Current 0.3.5 sight hotfix — private verified; public upload refused
 
-The private Alpha 0.3.5 sight hotfix is verified and finalized. Public promotion and broader
-Beta acceptance remain pending. The public listing still serves 0.3.4.
+The private Alpha 0.3.5 sight hotfix is verified and finalized. The public attempt failed before
+upload; the public listing still serves 0.3.4. Broader Beta acceptance remains pending.
+
+Public tag `v0.3.5` is retained at `4629c43cf106c90b49843677f9ae834309123571`.
+[Run 34756778947](https://github.com/AussieWarGod/thousand-and-first/actions/runs/34756778947)
+refused README wording in the hosted Alpha-candidate validator: the pre-release qualification
+passed the documentation tests but violated the separate exact status-line contract. Both
+hosted source suites passed; publisher, installed verification and finalization were skipped.
+No public upload was attempted. The owned public runner was stopped afterward. PR195 and
+PR196 used normal checked merge commits; the existing maintainer exception admitted tag
+creation. No protection setting changed. The failed tag will not move or be retried; corrected
+publication requires a new version. The shared development preflight now calls the same Alpha
+metadata validator before a push, and its regression test reproduces this exact wording failure.
 
 3098 staged C# files; 440,137 physical lines; 1445 direct `XRL` imports; zero at or above
 300 lines; 3129 cold-install files. Inventory SHA-256: `4d3938534ed4663c01492bd0455a6aea9b707d76ea4f7b4442357c9aac38472d`.
