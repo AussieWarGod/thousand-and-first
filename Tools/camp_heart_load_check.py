@@ -20,9 +20,10 @@ def judge(source, loaded):
         terminal, _ = one(rows, 'SCRIPT-COMPLETE')
         require(terminal == len(rows) - 1, 'observations continue after completion')
     setup, _ = one(source, 'camp-heart-setup')
+    custody_at, custody = one(source, 'camp-heart-save-custody')
     saved, save = one(source, 'camp-heart-save')
     checks = [(i, detail) for i, (event, _, detail) in enumerate(source) if event == 'camp-heart-check']
-    require(len(checks) == 3 and setup < checks[0][0] < checks[1][0] < checks[2][0] < saved,
+    require(len(checks) == 3 and setup < checks[0][0] < checks[1][0] < checks[2][0] < custody_at < saved,
             'source paid camp phases absent or out of order')
     require(checks[2][1].startswith('native-camp-heart cases=1 passed=1 failed=0;'),
             'source did not complete the real paid upgrade and next-day check')
@@ -35,6 +36,9 @@ def judge(source, loaded):
         prior = checked
     equal_fields(save, {'paid-camp-save': 'true', 'rung': '2', 'synthetic-next-job-timber': '1', 'brush': '21'})
     identities = {name: field(save, name) for name in ('heart', 'store', 'fire')}
+    equal_fields(custody, {'store': identities['store'], 'before': 'r_KingdomBrush=21',
+                           'after': 'r_KingdomBrush=21,r_KingdomTimber=1'})
+    require(field(custody, 'added-timber') not in identities.values(), 'new timber reuses a camp object')
     require(len(set(identities.values())) == 3, 'camp object identities collide')
     tent_job = field(save, 'tent-job')
     digest = field(save, 'snapshot-sha256')

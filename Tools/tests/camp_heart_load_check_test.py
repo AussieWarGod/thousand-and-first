@@ -15,7 +15,8 @@ class CampHeartLoadCheckTests(unittest.TestCase):
         for n in (1200, 3600, 1200):
             source += [('advance-complete', 'OK', wait(n)), ('camp-heart-check', 'OK', 'phase')]
         source[-1] = ('camp-heart-check', 'OK', 'native-camp-heart cases=1 passed=1 failed=0; next-day=true')
-        source += [('camp-heart-save', 'OK', 'paid-camp-save=true; rung=2; synthetic-next-job-timber=1; brush=21; save=' + game + '; tent-job=tent-job; ' + physical + '; ' + digest),
+        source += [('camp-heart-save-custody', 'OK', 'store=store; before=r_KingdomBrush=21; after=r_KingdomBrush=21,r_KingdomTimber=1; added-timber=timber'),
+                   ('camp-heart-save', 'OK', 'paid-camp-save=true; rung=2; synthetic-next-job-timber=1; brush=21; save=' + game + '; tent-job=tent-job; ' + physical + '; ' + digest),
                    ('SCRIPT-COMPLETE', 'OK', 'done')]
         loaded = [('LOAD-BEGIN', 'OK', 'exact sealed save; game-id=' + game + '; new-game=false; mod-restore=false'),
                   ('camp-heart-loaded', 'OK', 'rung=2; basin=48; brush=21; timber=1; tent-job=tent-job; ' + physical + '; ' + digest),
