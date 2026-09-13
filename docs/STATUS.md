@@ -14,8 +14,11 @@ This reproduced option drift without a window capture. All 3377 C# inputs and ru
 matched, and the strict log and owned shutdown passed, but the complete input seal failed.
 Invalid diagnostic archive: `beta-heart-chain/bbd430f4/options-drift-invalid-1/result.json`, SHA-256
 `cc20b5c19d3dc6a54c85c9bac71eed99f6e67f9a3e208e95b75d7d5bea3a455a`.
-The Make Camp guard's native event order and full paid progression remain unverified. Isolate
-physical input in the sealed scenario before another long run; do not mask drift by resealing.
+The exact paid-chain test game now bypasses `GameManager.UpdateInput` from its game-system setup
+through owned shutdown. Its lifetime is bound to that game and its exact sealed script; other games
+and scenarios retain input. A native preflight calls the real method and requires a postfix report
+that the original did not execute. This replaces the unverified command-specific guard. Native
+verification of this isolation and full paid progression remain open; no profile is resealed.
 The shared host wait checker now retains valid elapsed overshoot, validates paired guards and
 progress, and binds chain clock observations. It does not replace native acceptance.
 
@@ -101,11 +104,9 @@ XML still match, and the strict final log passes, but this is **INVALID / INCOMP
 chain evidence. Both complete inventories, option versions, captures and shutdown records are kept
 without resealing in `beta-heart-chain/5f67495a/camp-direction-invalid-1/result.json`, SHA-256
 `a9ecc18378ea3bb2d0db21f7cf76b42d0e6919c84962d8a00f7db6e4bf931766`.
-The sealed chain now refuses an unexpected player Make Camp command during an advance before
-the typed skill handler runs, recording its caller. Other scripts and ordinary player actions
-retain their route. Command origin and the earlier missing-upgrade cause remain unproven.
-The guard's pure boundary cases and engine compiles do not establish its native event-order
-behavior; that verification and the full paid chain remain open.
+The initial command-specific guard had only pure and compile coverage. It was replaced by the
+dedicated-game input boundary above after option drift reproduced without a window capture.
+Command origin and the earlier missing-upgrade cause remain unproven.
 
 ## Paid camp cold-load coverage
 

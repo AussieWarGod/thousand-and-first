@@ -90,6 +90,10 @@ Check the sealed options file early during a long native run. If it changes, ret
 and stop before further expensive setup: that run cannot establish acceptance. Input can reach the
 game from a connected controller even while the script spends the founder's turns. A newly written
 look option is not proof of harmless initialization; trace its writer before changing sealed defaults.
+The paid-chain persona isolates `GameManager.UpdateInput` for its exact dedicated game through owned
+shutdown. It verifies the actual patched call before its first setup step. This is disclosed test
+isolation, not coverage of keyboard/controller interaction; ordinary games and other personas retain
+their input path. Do not disable physical devices or change the operator's global input settings.
 
 Use `Tools/scenario_advance_check.py` for guarded ordinary-wait accounting. The engine completes
 on the next player action opportunity, so 1201 actual turns for 1200 requested is valid. Keep the

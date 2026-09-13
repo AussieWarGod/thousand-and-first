@@ -19,9 +19,5 @@ namespace ThousandAndFirst.Harness
 			for (int i = 0; i < Steps.Length; i++) if (Script[i] != Steps[i]) return false;
 			return true;
 		}
-
-		internal static bool UnexpectedCampCommand(IList<string> Script, bool Advancing,
-			bool PlayerActor, string Command)
-			=> Advancing && PlayerActor && Command == "CommandSurvivalCamp" && Matches(Script);
 	}
 }

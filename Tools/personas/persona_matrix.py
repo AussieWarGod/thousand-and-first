@@ -132,7 +132,7 @@ QUICKSTART_EVIDENCE_ROWS = (
 GUEST_SAVE_EVIDENCE_ROWS = ("guest-save-shortage",)
 
 # The save verb observes remaining custody before publishing its snapshot.
-CAMP_HEART_EVIDENCE_ROWS = ("camp-heart-save-custody", "camp-heart-chain-founder")
+CAMP_HEART_EVIDENCE_ROWS = ("camp-heart-save-custody", "camp-heart-chain-founder", "camp-heart-chain-input")
 
 # The second counted verb. `yield-frames <frames>` hands the engine back its own render loop, which
 # an advance never does: advance keeps the engine out of XRLCore.PlayerTurn on purpose, and that is

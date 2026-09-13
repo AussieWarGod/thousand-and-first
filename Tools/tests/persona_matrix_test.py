@@ -955,7 +955,8 @@ class ShippedPersonaTest(unittest.TestCase):
                                  expected.index("guest-save-supply"), path.name)
                 expected.remove("guest-save-shortage")
             for observation, verb in (("camp-heart-save-custody", "camp-heart-save"),
-                                      ("camp-heart-chain-founder", "camp-heart-chain-setup")):
+                                      ("camp-heart-chain-founder", "camp-heart-chain-setup"),
+                                      ("camp-heart-chain-input", "stagedigest")):
                 if observation in expected:
                     self.assertIn(verb, sealed, path.name)
                     self.assertEqual(expected.index(observation) + 1,
