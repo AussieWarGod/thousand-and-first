@@ -450,9 +450,32 @@
       "save_cold_load": "see row 22",
       "negative": "unbound-stamp refusal (KingdomQuickstartLifecycleSteps.Stamped: \"the launched profile could not be named from its own sealed root\") in addition to row 20's CanPay/budget-expiry refusals",
       "driver": "Harness/KingdomQuickstartBootRequest.cs:20 (LifecycleVerb=\"quickstart-lifecycle\"), :35,43 (Lifecycle flag/grammar); Tools/scenario_profile.py QUICKSTART_LIFECYCLE_VERB/QUICKSTART_LIFECYCLE_VERBS; checker Tools/check-quickstart-lifecycle.py",
-      "status": "IMPLEMENTED_UNEXECUTED",
-      "note": "Camp-builder-owned lane (Quickstart construction chain files) -- recorded from the read-only review of test/longform-reachability, not independently exercised or edited by this branch. Source-pinned only; no native run performed.",
-      "evidence": null
+      "status": "NATIVE_PASS",
+      "note": "Canyon with advisor enabled and disabled passes the complete Quickstart chain at 86c0b5df. All four original citizens occupy the completed starter homes and the paid fire finishes after 16800 ordinary turns. Four marsh/dunes combinations remain pending.",
+      "evidence": [
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/canyon-yes/results.json",
+          "artifactSha256": "8cc20a65465ffd9efe841506eb5b00bdcf9cc9c5e418fb2471017b5718af0e5b",
+          "artifactBytes": 3634,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "canyon-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; other location combinations pending",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/canyon-no/results.json",
+          "artifactSha256": "b464d4cfa560d32c1133d4e745f3c3a8b9a28ba82338f8302d721d914571310e",
+          "artifactBytes": 3634,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "canyon-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; other location combinations pending",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        }
+      ]
     },
     {
       "id": 22,
@@ -463,9 +486,32 @@
       "save_cold_load": "this row IS the save/cold-load leg",
       "negative": "any identity mismatch (GameId/RealmId/city/zone/building/design-key/timber/water) refuses at Compare(); unbound-stamp refusal also applies",
       "driver": "Harness/KingdomQuickstartLifecycleLoad.cs::VerifyLoaded/Compare; Harness/KingdomScenarioLoadEntry.cs (LifecycleSnapshot, taf-lifecycle-save-v1: prefix); checker Tools/check-quickstart-lifecycle.py LOAD_ROWS/cold-load link",
-      "status": "IMPLEMENTED_UNEXECUTED",
-      "note": "Newly implemented on test/longform-reachability (commit 8f774cb, read-only reviewed in review-fff8eba-lifecycle-findings.md). Source-pinned only; no native run performed; this closes the cold-load gap 2d663d0 originally left as BLOCKER.",
-      "evidence": null
+      "status": "NATIVE_PASS",
+      "note": "Both canyon source sessions wrote real saves; separate cold-load sessions preserved original citizen, home, building, store and resource identity/accounting. Strict Player.log checks pass in both sessions. Evidence is bound to 86c0b5df, not every current feature.",
+      "evidence": [
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/canyon-yes/results.json",
+          "artifactSha256": "8cc20a65465ffd9efe841506eb5b00bdcf9cc9c5e418fb2471017b5718af0e5b",
+          "artifactBytes": 3634,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "canyon-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; other location combinations pending",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/canyon-no/results.json",
+          "artifactSha256": "b464d4cfa560d32c1133d4e745f3c3a8b9a28ba82338f8302d721d914571310e",
+          "artifactBytes": 3634,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "canyon-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; other location combinations pending",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        }
+      ]
     },
     {
       "id": 23,
@@ -476,9 +522,32 @@
       "save_cold_load": "runs strictly after row 22's cold-load; not itself a save/load leg",
       "negative": "job-id reuse refusal (Harness/KingdomQuickstartLifecycleLoad.cs::Act: \"the next action reported the completed job's own identity; a further action must mint its own job\")",
       "driver": "Harness/KingdomQuickstartLifecycleLoad.cs::Next/Act; checker Tools/check-quickstart-lifecycle.py NEXT_ROWS/next-action link",
-      "status": "IMPLEMENTED_UNEXECUTED",
-      "note": "Newly implemented on test/longform-reachability (commit 8f774cb, read-only reviewed in review-fff8eba-lifecycle-findings.md). Source-pinned only; no native run performed.",
-      "evidence": null
+      "status": "NATIVE_PASS",
+      "note": "Both canyon cold-load sessions commissioned a distinct new job and paid the live timber/water cost. The exact completed building remained functional. This proves commission admission and debit; completion of that second job is outside this chain.",
+      "evidence": [
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/canyon-yes/results.json",
+          "artifactSha256": "8cc20a65465ffd9efe841506eb5b00bdcf9cc9c5e418fb2471017b5718af0e5b",
+          "artifactBytes": 3634,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "canyon-yes; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; other location combinations pending",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
+          "artifactPath": "quickstart-lifecycle/86c0b5df/canyon-no/results.json",
+          "artifactSha256": "b464d4cfa560d32c1133d4e745f3c3a8b9a28ba82338f8302d721d914571310e",
+          "artifactBytes": 3634,
+          "verdict": "PASS - all five lifecycle links, strict source/load logs and owned stops",
+          "scope": "canyon-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; other location combinations pending",
+          "historicalScope": true,
+          "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        }
+      ]
     },
     {
       "id": 24,
