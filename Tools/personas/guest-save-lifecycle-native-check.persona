@@ -1,0 +1,9 @@
+# Genuine Quickstart, real guest recruitment and ordinary construction, then a real save.
+# The separate sealed load compares guest authority before activation and retries stale actions.
+DESCRIPTION=Save and cold-load the first guest's citizenship after two weeks of genuine Quickstart
+REQUEST=founding-first-city
+SCRIPT=quickstart-lifecycle marsh yes;lifecycle-open;guest-actions-quickstart;advance 8400;guest-actions-check;advance 8400;resourcedigest;lifecycle-grown;guest-save-witness;lifecycle-save;stagedigest
+VERBS=lifecycle-open,guest-actions-quickstart,guest-actions-check,lifecycle-grown,guest-save-witness,lifecycle-save
+EXPECT=QUICKSTART-BOOT-BEGIN:OK,QUICKSTART-BOOT-OBSERVED:OK,QUICKSTART-BOOT-COMPLETE:OK,QUICKSTART-BUILD-BEGIN:OK,QUICKSTART-BUILD-QUOTE:OK,QUICKSTART-BUILD-CANPAY:OK,QUICKSTART-BUILD-COMMISSION:OK,QUICKSTART-LIFECYCLE-PROFILE:OK,QUICKSTART-BUILD-COMPLETE:OK~commissioned=true,lifecycle-open:OK,guest-actions-quickstart:OK~real-quickstart=true,advance:OK,guest-actions-check:OK~cases=1 passed=1 failed=0,advance:OK,resourcedigest:OK,lifecycle-grown:OK,guest-save-witness:OK~witness=recorded,lifecycle-save:OK~real-save=true,stagedigest:OK,COMPLETE
+SET=growth,native-regression
+TIMEOUT=1800
