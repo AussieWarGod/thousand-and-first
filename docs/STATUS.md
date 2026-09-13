@@ -17,8 +17,24 @@ Invalid diagnostic archive: `beta-heart-chain/bbd430f4/options-drift-invalid-1/r
 The exact paid-chain test game now bypasses `GameManager.UpdateInput` from its game-system setup
 through owned shutdown. Its lifetime is bound to that game and its exact sealed script; other games
 and scenarios retain input. A native preflight calls the real method and requires a postfix report
-that the original did not execute. This replaces the unverified command-specific guard. Native
-verification of this isolation and full paid progression remain open; no profile is resealed.
+that the original did not execute. This replaces the unverified command-specific guard.
+At `c0891e009d2901e3523b1bfbe538aa67ffd3d2b1`, the native input probe passed, the original
+6000-turn camp path passed, fifty residents were housed, the source paid tent finished, and rung-three
+supply passed real readiness. The following ordinary day still produced no heart upgrade receipt.
+The final live assessment was Ready with 50 free hands, no competing work, enabled automation and
+permitted zoning. Its last announced reason remained NotEnoughMaterial; that retained reason does
+not prove the current settlement-pass assessment. The log confirms another daily semantic pass ran.
+No production cause is established yet. The five completed waits total 8401 actual turns for 8400
+requested; the full script requests 31200, but did not complete.
+Closed failed-run archive: `beta-heart-chain/c0891e00/material-observation-refused-1/result.json`,
+SHA-256 `23f792da06dcc92a2c1afa002a5f0d6d88f28003530ce97ec11280aeb095b495`.
+All 3377 C# inputs, runtime/Harness XML, the complete input seal, strict log and owned shutdown
+verify. This establishes the narrow input probe and unchanged sealed inputs during this attempt,
+not full heart progression or keyboard/controller interaction coverage. No profile was resealed.
+The next developer trace records heart assessments inside the real bound settlement survey,
+including loaded-index completeness, stockpile membership and lease/tally readings. It also times
+named semantic steps and the whole pass. These observers do not change upgrade decisions; their
+native execution remains pending.
 The shared host wait checker now retains valid elapsed overshoot, validates paired guards and
 progress, and binds chain clock observations. It does not replace native acceptance.
 
