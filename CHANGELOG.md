@@ -8,9 +8,9 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-## [0.3.6] — 2026-09-13 (Alpha candidate preparation)
+## [0.3.6] — 2026-09-13 (Alpha)
 
-Corrected release candidate for immediate claimed-zone lighting and full-zone city sight.
+Alpha hotfix for immediate claimed-zone lighting and full-zone city sight.
 Public 0.3.5 was refused by its hosted README metadata check before any upload; its tag remains
 unchanged. The public listing still serves 0.3.4.
 
@@ -19,10 +19,13 @@ unchanged. The public listing still serves 0.3.4.
 
 Gameplay and harness code are unchanged from verified private 0.3.5; the sole production change
 is the runtime receipt version, synchronized with manifest 0.3.6. The shared preflight now checks
-actual Alpha metadata before tagging. The proposed native .NET source-test route retains both
-full licensed suites, zero skips, Windows engine compilation and native behavioral gates.
-Current 0.3.6 delivery and native validation are pending. Earlier private 0.3.5 evidence retains
-its original source and does not become a new-version PASS.
+actual Alpha metadata before tagging. The merged native .NET source-test route retains both
+full licensed suites, zero managed skips, Windows engine compilation and native behavioral gates.
+Private 0.3.6 is verified and finalized on one subscribed client. Fresh in-game Quickstart,
+ordinary construction, four housed founders, six beds, seven canvas walls, real save/cold load,
+another paid job and full-zone rendering passed on the exact candidate. Public delivery remains
+pending; exact receipts and bounded native evidence are recorded in docs/STATUS.md.
+Earlier private 0.3.5 evidence retains its original source.
 
 ## [0.3.5] — 2026-09-13 (Alpha)
 
