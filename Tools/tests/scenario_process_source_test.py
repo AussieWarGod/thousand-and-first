@@ -114,6 +114,8 @@ class ScenarioProcessSourceTest(unittest.TestCase):
         stop = section(source, "stop_owned() {", "on_exit() {")
         self.ordered(stop, '[ -n "$ACTIVE_ROOT" ] && [ "$ACTIVE_LAUNCH" = 1 ] || return 0',
                      '-Mode stop', '-Root "$(wslpath -w "$ACTIVE_ROOT")"',
+                     '-Game "$(wslpath -w "$GAME")"', "VERDICT=FAIL", "LIFECYCLE_BROKEN=1",
+                     'ACTIVE_LAUNCH=0', '-StopRecord', '-Root "$(wslpath -w "$ACTIVE_ROOT")"',
                      '-Game "$(wslpath -w "$GAME")"', "VERDICT=FAIL", "LIFECYCLE_BROKEN=1")
         self.assertIn("trap 'on_exit $?' EXIT", source)
         run = section(source, "run_persona() {", "# ---- the matrix")
@@ -122,7 +124,9 @@ class ScenarioProcessSourceTest(unittest.TestCase):
                      'ACTIVE_LAUNCH=1', '-File "$(wslpath -w "$LAUNCHER")"')
         capture = run[run.index('-File "$(wslpath -w "$CAPTURE")"'):]
         self.ordered(capture, '-ScenarioRoot "$(wslpath -w "$root")"',
-                     '-ScenarioGame "$(wslpath -w "$GAME")"', '-Output ', "\n\tstop_owned")
+                     '-ScenarioGame "$(wslpath -w "$GAME")"', '-Output ', "\n\tif ! stop_owned; then",
+                     'check_persona_log "$persona" "$stopped_player_log"',
+                     'mv -f -- "$capture_temp" "$capture_target"')
         self.assertIn('profile=$root (retained)', run)
 
     def test_owned_capture_cannot_fall_back_to_an_unrelated_named_window(self):

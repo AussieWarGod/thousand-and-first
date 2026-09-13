@@ -14,6 +14,9 @@ namespace ThousandAndFirst.Harness
 	{
 		private sealed partial class Frame
 		{
+			private readonly List<GameObject> FixtureResidents = new List<GameObject>();
+			private readonly List<string> FixtureResidentObjectIds = new List<string>();
+
 			/// <summary>Six real NPC residents, enrolled through the production citizenship and
 			/// roster APIs - the same path a genuine arrival takes. Six is the smallest population
 			/// that reaches the Steading gate the waterstone asks for while drinking little enough
@@ -36,6 +39,14 @@ namespace ThousandAndFirst.Harness
 				for (int i = 0; i < ResidentCount; i++)
 				{
 					GameObject body = Create("NPC");
+					var movement = new XRL.World.Parts.r_TAF_CampResidentMoveProbe
+					{
+						OriginZone = Zone.ZoneID, FixtureSlot = i + 1,
+						Record = detail => KingdomScenarioJournal.Append(
+							"camp-resident-movement", true, detail)
+					};
+					Require(ReferenceEquals(body.AddPart(movement), movement),
+						"the read-only resident movement probe was not attached");
 					Require(body.Brain != null && body.Body != null && body.IsAlive
 						&& !body.IsPlayer(),
 						"taf-camp-resident-shape: fresh NPC lacks eligible physical shape");
@@ -75,9 +86,39 @@ namespace ThousandAndFirst.Harness
 						"taf-camp-resident-norow: native enrollment did not publish an exact row "
 							+ "and binding");
 					RequireRowInBook(book, body, id, i + 1);
+					FixtureResidents.Add(body);
+					FixtureResidentObjectIds.Add(body.IDIfAssigned);
 				}
 				Require(Game.TimeTicks == tick,
 					"taf-camp-enrollment-clock: fixture enrollment advanced the world clock");
+			}
+
+			private void RecordResidentPresence(string Checkpoint)
+			{
+				Evidence.Append("\nresident-census checkpoint=").Append(Checkpoint)
+					.Append("; tick=").Append(Game.TimeTicks)
+					.Append("; population=").Append(System.Population)
+					.Append("; on-roll=").Append(KingdomResidents.OnRollCount(System));
+				for (int i = 0; i < FixtureResidents.Count; i++)
+				{
+					GameObject body = FixtureResidents[i];
+					bool valid = GameObject.Validate(body);
+					Evidence.Append("\nfixture-resident=").Append(i + 1)
+						.Append("; original-object=").Append(FixtureResidentObjectIds[i])
+						.Append("; valid=").Append(valid);
+					if (!valid) continue;
+					Cell cell = body.CurrentCell;
+					Evidence.Append("; current-object=").Append(body.IDIfAssigned)
+						.Append("; resident=").Append(KingdomResidents.IdOf(body))
+						.Append("; blueprint=").Append(body.Blueprint)
+						.Append("; alive=").Append(body.IsAlive)
+						.Append("; hp=").Append(body.GetStat("Hitpoints")?.Value ?? -1)
+						.Append("; zone=").Append(body.CurrentZone?.ZoneID ?? "absent")
+						.Append("; cell=").Append(cell == null ? "absent" : cell.X + "," + cell.Y)
+						.Append("; citizen=").Append(KingdomCitizenship.BelongsTo(System, body))
+						.Append("; home=").Append(body.Brain?.StartingCell?.ToString() ?? "absent")
+						.Append("; brain-wanders=").Append(body.Brain?.Wanders ?? false);
+				}
 			}
 
 			/// <summary>The published row, read BACK through the settlement's own book: the book

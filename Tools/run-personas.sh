@@ -23,7 +23,7 @@
 #   TAF_PERSONA_REPORT=<path>            default Tools/PortableOutput/personas-report.tsv
 #   TAF_PERSONA_TIMEOUT=<seconds>        overrides every persona's own TIMEOUT
 #   TAF_PERSONA_CAPTURE_DIR=<path>        publish one native PNG only after an asserted PASS;
-#                                         failed assertion/capture keeps the prior good PNG
+#                                         failed assertion/capture/closed-record keeps the prior good PNG
 #   TAF_PERSONA_CAPTURE_WIDTH/HEIGHT      native capture window size (default 2560x1440); a
 #                                         taller window shows a taller lot at the same tile size
 #   TAF_PERSONA_SEED=<#int>               optional exact seed reused by every selected persona
@@ -185,8 +185,21 @@ stop_owned() {
 		LIFECYCLE_BROKEN=1
 		return 1
 	fi
-	ACTIVE_ROOT=""
 	ACTIVE_LAUNCH=0
+	# The process is already closed. A seal/record refusal must not retry its shutdown or
+	# permit another persona to hide the failed evidence boundary.
+	local record_log="${ACTIVE_STOP_LOG%.log}-record.log"
+	if ! powershell.exe -NoProfile -ExecutionPolicy Bypass \
+		-File "$(wslpath -w "$LAUNCHER")" -StopRecord \
+		-Root "$(wslpath -w "$ACTIVE_ROOT")" -Game "$(wslpath -w "$GAME")" \
+		> "$record_log" 2>&1
+	then
+		VERDICT=FAIL
+		DETAIL="${DETAIL:+$DETAIL; }stopped profile seal/run record refused; profile=$ACTIVE_ROOT; log=$record_log"
+		LIFECYCLE_BROKEN=1
+		return 1
+	fi
+	ACTIVE_ROOT=""
 }
 
 on_exit() {
@@ -233,12 +246,41 @@ archive_file() {
 	fi
 }
 
+# The same counted expectations and forbidden diagnostics apply before and after shutdown.
+# Each phase keeps its own raw and derived logs; a later refusal cannot erase earlier evidence.
+check_persona_log() {
+	local persona="$1" archived_player_log="$2" artifact="$3"
+	local log_allow="" checked_player_log="$archived_player_log" log_problem forbidden
+	[ "$P_GATE" != 1 ] || log_allow="scenario harness refused to open|KingdomScenarioNewGameGate[.]mutate"
+	if [ -n "$P_LOG_EXPECT" ]; then
+		log_allow=""
+		checked_player_log="$REPORT_DIR/checked-$artifact.Player.log"
+		if ! python3 "$MATRIX" expected-log "$(persona_path "$persona")" "$archived_player_log" \
+			> "$checked_player_log" 2> "$REPORT_DIR/expected-log-$artifact.log"; then
+			echo "expected diagnostic check refused; inspect raw log and expected-log-$artifact.log"
+			return 1
+		fi
+	fi
+	if [ -n "$P_LOG_FORBID" ]; then
+		if ! forbidden="$(python3 "$MATRIX" forbidden-log "$(persona_path "$persona")" \
+			"$archived_player_log" 2>&1)"; then
+			echo "Player.log carries a forbidden diagnostic: $(printf '%s' "$forbidden" \
+				| tail -n 2 | tr '\n\t' '  ')"
+			return 1
+		fi
+	fi
+	if ! log_problem="$(TAF_LOG_ALLOW="$log_allow" "$LOG_CHECK" "$checked_player_log" 2>&1)"; then
+		echo "Player.log rejected: $(printf '%s\n' "$log_problem" | tail -n 8 | tr '\n\t' '  ')"
+		return 1
+	fi
+}
+
 # ---- one persona ------------------------------------------------------------------------------
 
 # Sets VERDICT and DETAIL. Never exits: one persona's fault must not end the matrix.
 run_persona() {
 	local persona="$1" attempt="${2:-1}" root journal archived_journal player_log
-	local archived_player_log checked_player_log log_problem
+	local archived_player_log stopped_player_log log_problem
 	local timeout waited terminal problems warnings capture_problem archive_problem artifact
 	local capture_temp capture_target prepare_log launch_log capture_log
 	local -a prepare_args
@@ -302,6 +344,8 @@ run_persona() {
 		TAF_SCENARIO_SCRIPT="$P_SCRIPT" \
 		TAF_SCENARIO_START="$P_START" \
 		TAF_SCENARIO_EXTRA_VERBS="$P_VERBS" \
+		TAF_SCENARIO_ROLE="save-session" \
+		TAF_SCENARIO_TIMEOUT_SECONDS="$timeout" \
 		TAF_QUD_ROOT="$QUD_ROOT" \
 		"$PREPARE" "${prepare_args[@]}" > "$prepare_log" 2>&1
 	then
@@ -360,37 +404,8 @@ run_persona() {
 		stop_owned
 		return
 	fi
-	local log_allow=""
-	[ "$P_GATE" != 1 ] || log_allow="scenario harness refused to open|KingdomScenarioNewGameGate[.]mutate"
-	checked_player_log="$archived_player_log"
-	if [ -n "$P_LOG_EXPECT" ]; then
-		# Exact, counted diagnostic expectations affect only a derived check input. Raw evidence stays intact.
-		log_allow=""
-		checked_player_log="$REPORT_DIR/checked-$artifact.Player.log"
-		if ! python3 "$MATRIX" expected-log "$(persona_path "$persona")" "$archived_player_log" \
-			> "$checked_player_log" 2> "$REPORT_DIR/expected-log-$artifact.log"; then
-			DETAIL="expected diagnostic check refused; inspect raw log and expected-log-$artifact.log"
-			stop_owned
-			return
-		fi
-	fi
-	if [ -n "$P_LOG_FORBID" ]; then
-		# The opposite of LOG_EXPECT, and read off the RAW log: a line a persona forbids must not
-		# appear even once, and filtering it out first would be the one way to miss it.
-		local forbidden
-		if forbidden="$(python3 "$MATRIX" forbidden-log "$(persona_path "$persona")" \
-			"$archived_player_log" 2>&1)"; then
-			:
-		else
-			DETAIL="Player.log carries a forbidden diagnostic: $(printf '%s' "$forbidden" \
-				| tail -n 2 | tr '\n\t' '  ')"
-			stop_owned
-			return
-		fi
-	fi
-	if ! log_problem="$(TAF_LOG_ALLOW="$log_allow" "$LOG_CHECK" "$checked_player_log" 2>&1)"; then
-		DETAIL="Player.log rejected: $(printf '%s\n' "$log_problem" | tail -n 8 \
-			| tr '\n\t' '  ')"
+	if ! log_problem="$(check_persona_log "$persona" "$archived_player_log" "$artifact")"; then
+		DETAIL="$log_problem"
 		stop_owned
 		return
 	fi
@@ -426,7 +441,7 @@ run_persona() {
 	[ -z "$warnings" ] || DETAIL="$DETAIL; verb providers refused: $warnings"
 
 	# A PNG is evidence for this exact asserted run, not merely for a process that reached a terminal
-	# row. Keep the prior published image until both the assertion and new capture have succeeded.
+	# row. Publish only after assertion, capture and the stopped profile record all succeed.
 	capture_problem=""
 	if [ "$VERDICT" = PASS ] && [ -n "$CAPTURE_DIR" ]; then
 		capture_target="$CAPTURE_DIR/$persona.png"
@@ -449,9 +464,6 @@ run_persona() {
 		then
 			capture_problem="capture helper returned a non-PNG file"
 			rm -f -- "$capture_temp"
-		elif ! mv -f -- "$capture_temp" "$capture_target"; then
-			capture_problem="capture succeeded but atomic publication failed: $capture_target"
-			rm -f -- "$capture_temp"
 		fi
 	fi
 	if [ -n "$capture_problem" ]; then
@@ -460,7 +472,29 @@ run_persona() {
 		VERDICT=FAIL
 	fi
 	DETAIL="${DETAIL:+$DETAIL; }profile=$root (retained)"
-	stop_owned
+	if ! stop_owned; then
+		[ -z "${capture_temp:-}" ] || rm -f -- "$capture_temp"
+		return
+	fi
+	stopped_player_log="$REPORT_DIR/stopped-player-$artifact.log"
+	if ! archive_file "$player_log" "$stopped_player_log"; then
+		DETAIL="$DETAIL; could not archive stopped Player.log: $stopped_player_log"
+		VERDICT=FAIL
+	elif ! log_problem="$(check_persona_log "$persona" "$stopped_player_log" "stopped-$artifact")"; then
+		DETAIL="$DETAIL; stopped $log_problem"
+		VERDICT=FAIL
+	fi
+	if [ "$VERDICT" != PASS ]; then
+		[ -z "${capture_temp:-}" ] || rm -f -- "$capture_temp"
+		return
+	fi
+	if [ "$VERDICT" = PASS ] && [ -n "${capture_temp:-}" ]; then
+		if ! mv -f -- "$capture_temp" "$capture_target"; then
+			DETAIL="$DETAIL; capture succeeded but atomic publication failed: $capture_target"
+			VERDICT=FAIL
+			rm -f -- "$capture_temp"
+		fi
+	fi
 }
 
 # ---- the matrix -------------------------------------------------------------------------------

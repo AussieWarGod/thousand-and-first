@@ -510,6 +510,18 @@ class ExpectGrammarTest(unittest.TestCase):
 
 
 class JournalReadingTest(unittest.TestCase):
+    def test_camp_diagnostics_do_not_hide_failed_observations(self):
+        expected = [("camp-heart-check", "OK", ""), ("SCRIPT-COMPLETE", "OK", "")]
+        for diagnostic in ("TESTGROUND-CENSUS", "camp-resident-movement"):
+            for outcome in ("OK", "REFUSED"):
+                with self.subTest(diagnostic=diagnostic, outcome=outcome):
+                    rows = [(diagnostic, outcome, "observation"), *expected]
+                    problems = matrix.match(expected, matrix.significant(rows))
+                    if outcome == "OK":
+                        self.assertEqual([], problems)
+                    else:
+                        self.assertTrue(problems)
+
     def test_escapes_round_trip(self):
         self.assertEqual("a\nb\tc\\d", matrix.unescape("a\\nb\\tc\\\\d"))
 

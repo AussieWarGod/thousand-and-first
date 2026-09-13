@@ -7,7 +7,8 @@ namespace ThousandAndFirst.Harness
 	internal sealed class KingdomScenarioLoadBarrier<T>
 	{
 		private readonly object Gate = new object();
-		private readonly TaskCompletionSource<T> Parked = new TaskCompletionSource<T>();
+		private readonly TaskCompletionSource<T> Parked = new TaskCompletionSource<T>(
+			TaskCreationOptions.RunContinuationsAsynchronously);
 		private bool IsClaimed;
 		private Task StartedWork;
 		private bool ResumePrepared;

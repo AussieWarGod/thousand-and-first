@@ -255,26 +255,26 @@
       "id": 9,
       "behaviour": "Heart expansion (rungs 1-4)",
       "prerequisites": "founded heart",
-      "transitions": "envelope-authority transition (issue #141)",
-      "effects": "rung/plot rect",
+      "transitions": "paid adjacent heart upgrades 1->2->3->4 with authored envelope authority",
+      "effects": "new standing heart and settled rung/plot rectangle after each paid upgrade",
       "save_cold_load": "COVERAGE_GAP",
       "negative": "COVERAGE_GAP",
-      "driver": "fix lives on fix/issue-141-heart-authority (b1efe18), not merged to dev",
-      "status": "NONE",
-      "note": "GAP pending #141/#148 integration onto dev, not a proven defect -- see review-b1efe18-findings.md",
+      "driver": "Partial only: Tools/personas/camp-heart-native-checks.persona and Harness/KingdomCampHeartNativeProvider.cs exercise 1->2 plus one later day (row 30). No native driver covers the complete 1->4 chain.",
+      "status": "COVERAGE_GAP",
+      "note": "Source audit at bccf8cb387e5bdb773e0a36b575a9ce5a6cf3d46: the #141 authority and rung-settlement fixes are merged (docs/STATUS.md, published 0.3.4 inventory). Growth/KingdomArchitectureStamper.Transitions.cs enforces exact adjacent endpoints, frozen rectangles and basin custody. The old unmerged-branch claim is obsolete. Native paid progression through every rung, save/cold load and present/away settlement remain unverified; row 30 tracks the narrower existing 1->2 driver without claiming the full chain.",
       "evidence": null
     },
     {
       "id": 10,
       "behaviour": "Heart expansion (rung 4->5, arcology)",
       "prerequisites": "rung 4 heart",
-      "transitions": "TryAuthorizedTransition heart branch (Growth/KingdomArchitectureStamper.Transitions.cs:48-71)",
-      "effects": "n/a (refused before any transition)",
-      "save_cold_load": "n/a",
-      "negative": "n/a",
+      "transitions": "paid rung 4->5 renovation through TryAuthorizedTransition, retaining the shared Huge footprint",
+      "effects": "standing arcology, settled rung 5 and unchanged held footprint with exact basin/storage custody",
+      "save_cold_load": "COVERAGE_GAP",
+      "negative": "COVERAGE_GAP",
       "driver": "NONE",
-      "status": "DEFECT",
-      "note": "Precise basis (issue #144): rung 5 (arcology) shares rung 4's own LotSize/HeartRungEndpointsAdmit tier mapping (both bind Size=\"XL\" in Architecture/KingdomArchitectures-CivicFaith.xml, confirmed at KingdomPlotHeartRules.cs's HeartSizeForRung(4)==HeartSizeForRung(5)==PlotSize.Huge), but Transitions.cs:56's (int)After.LotSize != afterRung equality check demands LotSize's int value equal the rung NUMBER (5), which HeartRungEndpointsAdmit's shared-tier mapping can never satisfy for this one rung pair -- see camp-authority-trace.md Part 3 Section 3 for the full derivation",
+      "status": "COVERAGE_GAP",
+      "note": "The historical #144 integer/rung comparison is fixed in current source, audited at bccf8cb387e5bdb773e0a36b575a9ce5a6cf3d46. Growth/KingdomArchitectureStamper.Transitions.cs calls HeartRungEndpointsAdmit with both actual lot tiers; Growth/KingdomPlotHeartRules.cs maps rungs 4 and 5 to PlotSize.Huge and admits adjacent endpoints on that shared tier. This source proof removes the obsolete unreachability claim only. No native driver or typed receipt proves paid arcology renovation, settled rung, custody, save/cold load or its later settlement passes.",
       "evidence": null
     },
     {
@@ -471,9 +471,9 @@
       "effects": "exact physical timber/water debit, a job/receipt identity linking the commission to its output, IsFunctionallyBuilt-equivalent state (KingdomBuilt==1 + design key match on the job's own cell), a real save file with a hashed receipt",
       "save_cold_load": "see row 22 (separate row: cold-load is a second session)",
       "negative": "CanPay refusal at lifecycle-build (economy has not yet paid for the design); budget-expiry refusal at lifecycle-grown (turn budget expired before the building stood, job phase named in the refusal)",
-      "driver": "Harness/KingdomQuickstartLifecycleProvider.cs:35-38 (verbs); Harness/KingdomQuickstartLifecycleSteps.cs (Open/Build), KingdomQuickstartLifecycleFinish.cs (Grown/Save); persona Tools/personas/lifecycle-stockpile-native-check.persona; checker Tools/check-quickstart-lifecycle.py",
+      "driver": "Harness/KingdomQuickstartLifecycleProvider.cs; KingdomQuickstartLifecycleSteps.cs (Open/Build); KingdomQuickstartLifecycleFinish.cs (Grown/Save); Tools/personas/lifecycle-founding-road-refusal.persona is the bounded negative path; no positive ordinary-founding dedication driver is recorded",
       "status": "IMPLEMENTED_UNEXECUTED",
-      "note": "On branch test/longform-reachability (not yet merged to dev), read only reviewed (review-fff8eba-lifecycle-findings.md). Source-pinned only (DevTests/KingdomQuickstartLifecycleContractTests.cs); no native run performed. Cannot be marked covered or PASS until a native evidence id exists.",
+      "note": "Source audited at 3e0334b7a901e8c9f711b0475d54813917153e57: these lifecycle components are merged. lifecycle-stockpile-native-check.persona now uses the Quickstart boot and belongs to row 21. Ordinary founding realize does not dedicate a stockpile; lifecycle-founding-road-refusal.persona waits 500 ordinary turns and expects refusal. Neither a configured negative path nor Quickstart evidence proves the positive ordinary-founding dedication, paid construction and save chain. No native receipt for that positive path is attached; implement the real founder interaction and execute the full chain.",
       "evidence": null
     },
     {
@@ -486,7 +486,7 @@
       "negative": "unbound-stamp refusal (KingdomQuickstartLifecycleSteps.Stamped: \"the launched profile could not be named from its own sealed root\") in addition to row 20's CanPay/budget-expiry refusals",
       "driver": "Harness/KingdomQuickstartBootRequest.cs:20 (LifecycleVerb=\"quickstart-lifecycle\"), :35,43 (Lifecycle flag/grammar); Tools/scenario_profile.py QUICKSTART_LIFECYCLE_VERB/QUICKSTART_LIFECYCLE_VERBS; checker Tools/check-quickstart-lifecycle.py",
       "status": "NATIVE_PASS",
-      "note": "All six canyon/marsh/dunes and advisor yes/no combinations pass the complete Quickstart chain at 86c0b5df. All four original citizens occupy completed starter homes and the paid fire finishes after 16800 ordinary turns. Later production differences are the release-version literal and guide text; these receipts retain their exact inventory.",
+      "note": "All six canyon/marsh/dunes and advisor yes/no combinations pass the complete Quickstart chain at 86c0b5df. All four original citizens occupy completed starter homes and the paid fire finishes after 16800 ordinary turns. Later production differences are the release-version literal and guide text; these receipts retain their exact inventory. Exact private 0.3.6 source e8f595fb adds a fresh marsh/advisor-on construction/save/cold-load/render run; its receipt remains historical for the changed Beta load barrier. No new Beta native PASS is inferred.",
       "evidence": [
         {
           "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
@@ -552,6 +552,28 @@
           "scope": "dunes-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
           "historicalScope": true,
           "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "e8f595fb3152eeadc746a95f49a7968c5b93a54c",
+          "artifactPath": "alpha-036-heart-sight/e8f595fb/private-candidate-cold-load-1/result.json",
+          "artifactSha256": "03578178926b9f0d61828b185d6d6e3000822bf5f623c8bcb452a5be8d8bfcd1",
+          "artifactBytes": 3447,
+          "verdict": "PASS - exact private 0.3.6 Quickstart construction, first-heart fabric, save/cold load and full-zone native frames",
+          "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary advance turns, 8403 saved turns, four original housed founders, six beds, paid fire and seven canvas walls. Four source and five loaded frames draw all 2000 cells then restore gameplay sight. Exact heart survives preactivation, load and another paid job; no script replay, synthetic completion or world repair. Both complete seals, strict final logs, owned stops and all 3357 C# inputs per session bind to private source/package. Later Beta load-barrier changes are not signed by this earlier run.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "61140abd6cb5f67ea7d53dbcf06ac3f67a949ed7",
+          "artifactPath": "heart-sight/61140abd/current-harness-cold-load-1/result.json",
+          "artifactSha256": "e3c63c95dec0a4a39daa9909edd9b7e883bd135b64519b613a60c52aec139a34",
+          "artifactBytes": 3343,
+          "verdict": "PASS - Quickstart completed heart, whole-zone frames and separate cold load on asynchronous load harness",
+          "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary turns, four original citizens housed, two shelters/six beds, completed paid fire and seven-wall open heart. Four source and four loaded frames show all 2000 cells and restore native sight; exact physical components survive preactivation, cold load, another paid commission and vanilla Continue without source-script replay. Both full Local seals, 3358 C# inputs and runtime binding, strict final logs and exact owned stops verified. No enclosed-tent, all-seed, paid-rung-2 or later-progression claim.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
           "currentDevCoverage": false
         }
       ]
@@ -566,7 +588,7 @@
       "negative": "any identity mismatch (GameId/RealmId/city/zone/building/design-key/timber/water) refuses at Compare(); unbound-stamp refusal also applies",
       "driver": "Harness/KingdomQuickstartLifecycleLoad.cs::VerifyLoaded/Compare; Harness/KingdomScenarioLoadEntry.cs (LifecycleSnapshot, taf-lifecycle-save-v1: prefix); checker Tools/check-quickstart-lifecycle.py LOAD_ROWS/cold-load link",
       "status": "NATIVE_PASS",
-      "note": "All six source sessions wrote real saves; separate cold-load sessions preserved original citizen, home, building, store and resource identity/accounting. Strict Player.log checks pass in all twelve sessions. Evidence is bound to 86c0b5df, not every current feature.",
+      "note": "All six source sessions wrote real saves; separate cold-load sessions preserved original citizen, home, building, store and resource identity/accounting. Strict Player.log checks pass in all twelve sessions. Evidence is bound to 86c0b5df, not every current feature. Exact private 0.3.6 source e8f595fb adds a fresh marsh/advisor-on construction/save/cold-load/render run; its receipt remains historical for the changed Beta load barrier. No new Beta native PASS is inferred.",
       "evidence": [
         {
           "commit": "86c0b5df1c4ee7f1843285f1d0508331bd752606",
@@ -632,6 +654,28 @@
           "scope": "dunes-no; seed #43101; 16800 ordinary turns; four original citizens housed, six beds, original paid fire completed, real save/cold load and a new paid commission; later version and guide text changes are separate",
           "historicalScope": true,
           "inventoryDigest": "9a35be8ed58f0767e43c0e30d6f286590c6c0da93dffb36d9303eec51c96329f",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "e8f595fb3152eeadc746a95f49a7968c5b93a54c",
+          "artifactPath": "alpha-036-heart-sight/e8f595fb/private-candidate-cold-load-1/result.json",
+          "artifactSha256": "03578178926b9f0d61828b185d6d6e3000822bf5f623c8bcb452a5be8d8bfcd1",
+          "artifactBytes": 3447,
+          "verdict": "PASS - exact private 0.3.6 Quickstart construction, first-heart fabric, save/cold load and full-zone native frames",
+          "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary advance turns, 8403 saved turns, four original housed founders, six beds, paid fire and seven canvas walls. Four source and five loaded frames draw all 2000 cells then restore gameplay sight. Exact heart survives preactivation, load and another paid job; no script replay, synthetic completion or world repair. Both complete seals, strict final logs, owned stops and all 3357 C# inputs per session bind to private source/package. Later Beta load-barrier changes are not signed by this earlier run.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "61140abd6cb5f67ea7d53dbcf06ac3f67a949ed7",
+          "artifactPath": "heart-sight/61140abd/current-harness-cold-load-1/result.json",
+          "artifactSha256": "e3c63c95dec0a4a39daa9909edd9b7e883bd135b64519b613a60c52aec139a34",
+          "artifactBytes": 3343,
+          "verdict": "PASS - Quickstart completed heart, whole-zone frames and separate cold load on asynchronous load harness",
+          "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary turns, four original citizens housed, two shelters/six beds, completed paid fire and seven-wall open heart. Four source and four loaded frames show all 2000 cells and restore native sight; exact physical components survive preactivation, cold load, another paid commission and vanilla Continue without source-script replay. Both full Local seals, 3358 C# inputs and runtime binding, strict final logs and exact owned stops verified. No enclosed-tent, all-seed, paid-rung-2 or later-progression claim.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
           "currentDevCoverage": false
         }
       ]
@@ -823,7 +867,7 @@
       "negative": "NEGATIVE_PASS for unclaimed attachment control and gameplay visibility restoration; option-toggle, claim-loss and second-city native scenarios remain COVERAGE_GAP",
       "driver": "Harness/KingdomQuickstartSightNativeProvider.cs; Harness/KingdomQuickstartSightWitness.cs; Harness/KingdomClaimedLightNativeChecks.cs",
       "status": "NATIVE_PASS",
-      "note": "Reproduced missing initial attachment against unchanged 0.3.4 production before fixing claim publication. A diagnostic capture run passed rendering but changed PlayerOptions and failed its stop seal; retained as failed evidence. Accepted fresh runs preserve complete seals and strict logs. Initial journal postprocessing omitted boot headers or selected the wrong persona; corrected complete expectations and success-only terminal check were run over unchanged retained journals. No fabricated light, reactivation in Quickstart, historical-save or all-option claim. Row 29 adds real loaded render-loop coverage after ordinary heart completion; the existing source-only evidence is unchanged.",
+      "note": "Reproduced missing initial attachment against unchanged 0.3.4 production before fixing claim publication. A diagnostic capture run passed rendering but changed PlayerOptions and failed its stop seal; retained as failed evidence. Accepted fresh runs preserve complete seals and strict logs. Initial journal postprocessing omitted boot headers or selected the wrong persona; corrected complete expectations and success-only terminal check were run over unchanged retained journals. No fabricated light, reactivation in Quickstart, historical-save or all-option claim. Row 29 adds real loaded render-loop coverage after ordinary heart completion; the existing source-only evidence is unchanged. Exact private 0.3.6 source e8f595fb adds a fresh marsh/advisor-on construction/save/cold-load/render run; its receipt remains historical for the changed Beta load barrier. No new Beta native PASS is inferred.",
       "evidence": [
         {
           "commit": "2a106bdf1bf96e4f7029f72f5bad9606048b8f5f",
@@ -856,6 +900,28 @@
           "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary advance turns, 8403 saved turns; four original founders and six beds, completed paid fire and seven receipted canvas walls. 4 source and 4 loaded frames draw all 2000 cells and restore native gameplay visibility. Same physical heart before activation, after activation and after another paid job plus real loaded frames. No source script replay or world repair. First heart remains an open camp; no enclosed-tent, historical migration or all-option claim. Both complete seals, strict logs, owned stops and all source bytes verified.",
           "historicalScope": true,
           "inventoryDigest": "d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "e8f595fb3152eeadc746a95f49a7968c5b93a54c",
+          "artifactPath": "alpha-036-heart-sight/e8f595fb/private-candidate-cold-load-1/result.json",
+          "artifactSha256": "03578178926b9f0d61828b185d6d6e3000822bf5f623c8bcb452a5be8d8bfcd1",
+          "artifactBytes": 3447,
+          "verdict": "PASS - exact private 0.3.6 Quickstart construction, first-heart fabric, save/cold load and full-zone native frames",
+          "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary advance turns, 8403 saved turns, four original housed founders, six beds, paid fire and seven canvas walls. Four source and five loaded frames draw all 2000 cells then restore gameplay sight. Exact heart survives preactivation, load and another paid job; no script replay, synthetic completion or world repair. Both complete seals, strict final logs, owned stops and all 3357 C# inputs per session bind to private source/package. Later Beta load-barrier changes are not signed by this earlier run.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "61140abd6cb5f67ea7d53dbcf06ac3f67a949ed7",
+          "artifactPath": "heart-sight/61140abd/current-harness-cold-load-1/result.json",
+          "artifactSha256": "e3c63c95dec0a4a39daa9909edd9b7e883bd135b64519b613a60c52aec139a34",
+          "artifactBytes": 3343,
+          "verdict": "PASS - Quickstart completed heart, whole-zone frames and separate cold load on asynchronous load harness",
+          "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary turns, four original citizens housed, two shelters/six beds, completed paid fire and seven-wall open heart. Four source and four loaded frames show all 2000 cells and restore native sight; exact physical components survive preactivation, cold load, another paid commission and vanilla Continue without source-script replay. Both full Local seals, 3358 C# inputs and runtime binding, strict final logs and exact owned stops verified. No enclosed-tent, all-seed, paid-rung-2 or later-progression claim.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
           "currentDevCoverage": false
         }
       ]
@@ -895,7 +961,7 @@
       "negative": "NEGATIVE_PASS for naturally occluded cells becoming visible only during draw and saved-script replay prevention; pure continuation fault/cancellation and adversarial journal tests; no damaged-heart native mutation claim",
       "driver": "Harness/KingdomHeartSightNativeProvider.cs; Harness/KingdomHeartSightGeometry.cs; Harness/KingdomHeartSightWitness.cs; Harness/KingdomHeartSightLoad.cs; Tools/personas/heart-sight-lifecycle-native-check.persona; Tools/heart_sight_check.py",
       "status": "NATIVE_PASS",
-      "note": "The first heart is an authored open canvas horseshoe with a southern approach, not an enclosed tent or housing. Realized capture is read-only; no future deadline is forced. First source attempt completed construction/render/save but changed PlayerOptions and failed its stop seal; retained unchanged. Accepted fresh profiles author the observed look default and engine JSON format before sealing. Existing terminal load scenarios stay parked; only the exact new scenario opts into verified continuation.",
+      "note": "The first heart is an authored open canvas horseshoe with a southern approach, not an enclosed tent or housing. Realized capture is read-only; no future deadline is forced. First source attempt completed construction/render/save but changed PlayerOptions and failed its stop seal; retained unchanged. Accepted fresh profiles author the observed look default and engine JSON format before sealing. Existing terminal load scenarios stay parked; only the exact new scenario opts into verified continuation. Exact private 0.3.6 source e8f595fb adds a fresh marsh/advisor-on construction/save/cold-load/render run; its receipt remains historical for the changed Beta load barrier. No new Beta native PASS is inferred.",
       "evidence": [
         {
           "commit": "52d67656b0ecafe5fd2f0ca15c77bb2120b7539c",
@@ -906,6 +972,53 @@
           "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary advance turns, 8403 saved turns; four original founders and six beds, completed paid fire and seven receipted canvas walls. 4 source and 4 loaded frames draw all 2000 cells and restore native gameplay visibility. Same physical heart before activation, after activation and after another paid job plus real loaded frames. No source script replay or world repair. First heart remains an open camp; no enclosed-tent, historical migration or all-option claim. Both complete seals, strict logs, owned stops and all source bytes verified.",
           "historicalScope": true,
           "inventoryDigest": "d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "e8f595fb3152eeadc746a95f49a7968c5b93a54c",
+          "artifactPath": "alpha-036-heart-sight/e8f595fb/private-candidate-cold-load-1/result.json",
+          "artifactSha256": "03578178926b9f0d61828b185d6d6e3000822bf5f623c8bcb452a5be8d8bfcd1",
+          "artifactBytes": 3447,
+          "verdict": "PASS - exact private 0.3.6 Quickstart construction, first-heart fabric, save/cold load and full-zone native frames",
+          "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary advance turns, 8403 saved turns, four original housed founders, six beds, paid fire and seven canvas walls. Four source and five loaded frames draw all 2000 cells then restore gameplay sight. Exact heart survives preactivation, load and another paid job; no script replay, synthetic completion or world repair. Both complete seals, strict final logs, owned stops and all 3357 C# inputs per session bind to private source/package. Later Beta load-barrier changes are not signed by this earlier run.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "61140abd6cb5f67ea7d53dbcf06ac3f67a949ed7",
+          "artifactPath": "heart-sight/61140abd/current-harness-cold-load-1/result.json",
+          "artifactSha256": "e3c63c95dec0a4a39daa9909edd9b7e883bd135b64519b613a60c52aec139a34",
+          "artifactBytes": 3343,
+          "verdict": "PASS - Quickstart completed heart, whole-zone frames and separate cold load on asynchronous load harness",
+          "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary turns, four original citizens housed, two shelters/six beds, completed paid fire and seven-wall open heart. Four source and four loaded frames show all 2000 cells and restore native sight; exact physical components survive preactivation, cold load, another paid commission and vanilla Continue without source-script replay. Both full Local seals, 3358 C# inputs and runtime binding, strict final logs and exact owned stops verified. No enclosed-tent, all-seed, paid-rung-2 or later-progression claim.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 30,
+      "behaviour": "Paid heart upgrade 1->2 and next-day settlement",
+      "prerequisites": "Fresh stamped founding-first-city profile with synthetic founding, rung-1 completion frontier, six enrolled residents, 400 dedicated drams and 48 minted material units; all fixture state disclosed",
+      "transitions": "camp-heart-setup -> 1200 real turns -> paid bill observation -> 3600 real turns -> standing waterstone observation -> 1200 real turns -> post-upgrade founding recovery observation",
+      "effects": "Exact 18-dram, 24-stone and 1-timber bill; a distinct functional waterstone at settled rung 2; same anchored stockpile and 23 unspent brush units; camp fire re-laid; later founding-heart recovery succeeds",
+      "save_cold_load": "COVERAGE_GAP: this existing persona has no save or cold-load phase",
+      "negative": "Fixture includes occupied expansion and malformed/stale/foreign predecessor probes; fresh source-bound native evidence is required",
+      "driver": "Tools/personas/camp-heart-native-checks.persona; Harness/KingdomCampHeartNativeProvider.cs; KingdomCampHeartNativeChecksPhases.cs; KingdomCampHeartNativeAfterRaise.cs",
+      "status": "NATIVE_PASS",
+      "note": "Native ea2bf92d passes the declared paid 1→2 and next-day recovery path with full closed source-bound evidence. Setup remains synthetic and exposed to ordinary world hazards: vortices relocated residents and one died in melee, yet this attempt completed. Earlier 14e012fc, 4a344a70 and 61140abd failures remain archived; this PASS does not erase them or establish repeatability. Cold load of rung 2, independently observed later paid work, higher rungs and ordinary founding remain gaps.",
+      "evidence": [
+        {
+          "commit": "ea2bf92dee62b26e64fdae3f661aa81c1de58551",
+          "artifactPath": "beta-camp-heart/ea2bf92d/paid-rung2-ground-census-1/result.json",
+          "artifactSha256": "ffde56a6e38d4234c4ee26a8c1bfd30c49c2875d2397b5e3e976d88a16f29338",
+          "artifactBytes": 3132,
+          "verdict": "PASS - real paid rung1-to-2, stockpile conservation and next-day founding-heart recovery",
+          "scope": "Synthetic camp, six enrolled fixture residents, 400 dedicated drams and 48 minted material units; 6000 ordinary turns. Production debits 18 drams, 24 stone and 1 timber, completes a distinct functional waterstone and settled rung 2/basin capacity 48, preserves the same stockpile and 23 unspent brush, and recovers the heart one later day. Full 3359 C# inputs and runtime binding, complete Local seal, strict final log and owned stopped record verified. Vortex relocation and a melee death occurred; prior failed attempts remain retained. One passing path, not proof of hazard-free or repeatable setup, ordinary founding, save/load or higher rungs.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
           "currentDevCoverage": false
         }
       ]
@@ -1086,7 +1199,7 @@
       "id": "C9",
       "name": "Ordinary heart completion + physical custody + city sight + save/load + further construction",
       "invariants": "Seven original canvas identities and every receipted physical component remain exact through preactivation, loaded comparison and real loaded rendering; native visibility restored after every frame; saved autorunner marker prevents replay; further commission pays exact materials and water for a distinct job.",
-      "seed_turn_matrix": "Native 52d67656, seed #43101; 8400 ordinary advance turns, 8403 saved turns, 4 source frames and 4 loaded frames. No seed sweep.",
+      "seed_turn_matrix": "Native 52d67656, seed #43101; 8400 ordinary advance turns, 8403 saved turns, 4 source frames and 4 loaded frames. No seed sweep. Additional current-load-harness evidence at 61140abd: seed #43101, 8400 ordinary turns, four source/four loaded frames; exact closed records in the attached artifact. No seed sweep.",
       "expected_failure_rows": "Partial or missing canvas, changed component custody or digest, unsettled terminal, wrong saved game, missing preactivation, unpaid/reused next job, source script replay, insufficient/hidden/dark frames, leaked gameplay sight, any refused journal row, strict log error or profile-seal drift.",
       "reusable_seams": "Read-only realized architecture capture, founding terminal receipts, lifecycle save/load and paid-next verifier, real frame witness and opt-in successful Continue barrier.",
       "status": "NATIVE_PASS",
@@ -1100,6 +1213,17 @@
           "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary advance turns, 8403 saved turns; four original founders and six beds, completed paid fire and seven receipted canvas walls. 4 source and 4 loaded frames draw all 2000 cells and restore native gameplay visibility. Same physical heart before activation, after activation and after another paid job plus real loaded frames. No source script replay or world repair. First heart remains an open camp; no enclosed-tent, historical migration or all-option claim. Both complete seals, strict logs, owned stops and all source bytes verified.",
           "historicalScope": true,
           "inventoryDigest": "d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "61140abd6cb5f67ea7d53dbcf06ac3f67a949ed7",
+          "artifactPath": "heart-sight/61140abd/current-harness-cold-load-1/result.json",
+          "artifactSha256": "e3c63c95dec0a4a39daa9909edd9b7e883bd135b64519b613a60c52aec139a34",
+          "artifactBytes": 3343,
+          "verdict": "PASS - Quickstart completed heart, whole-zone frames and separate cold load on asynchronous load harness",
+          "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 8400 ordinary turns, four original citizens housed, two shelters/six beds, completed paid fire and seven-wall open heart. Four source and four loaded frames show all 2000 cells and restore native sight; exact physical components survive preactivation, cold load, another paid commission and vanilla Continue without source-script replay. Both full Local seals, 3358 C# inputs and runtime binding, strict final logs and exact owned stops verified. No enclosed-tent, all-seed, paid-rung-2 or later-progression claim.",
+          "historicalScope": true,
+          "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
           "currentDevCoverage": false
         }
       ],
