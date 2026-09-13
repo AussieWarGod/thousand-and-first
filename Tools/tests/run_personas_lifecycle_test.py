@@ -96,11 +96,15 @@ elif name == "prepare-scenario.sh":
     root = pathlib.Path(args[0])
     assert root.parent == base / "profiles"
     event("prepare", root=str(root), arguments=args,
-          request=os.environ["TAF_REQUEST"], script=os.environ["TAF_SCENARIO_SCRIPT"])
+          request=os.environ["TAF_REQUEST"], script=os.environ["TAF_SCENARIO_SCRIPT"],
+          role=os.environ.get("TAF_SCENARIO_ROLE"),
+          timeout=os.environ.get("TAF_SCENARIO_TIMEOUT_SECONDS"))
     for directory in (root / "Local", root / "Save", root / "Synced", pathlib.Path(str(root) + ".seal")):
         directory.mkdir()
         (directory / "sentinel.txt").write_text("retained fixture\n", encoding="utf-8")
     (root / "request.txt").write_text(os.environ["TAF_REQUEST"], encoding="utf-8")
+    if os.environ.get("TAF_SCENARIO_ROLE"):
+        (root / "run-record.json").write_text("fixture prepared record\n", encoding="utf-8")
     if mode == "prepare_refusal":
         refuse("fixture prepare refusal")
 elif name == "powershell.exe":
@@ -124,6 +128,8 @@ elif name == "powershell.exe":
             event("stop-record", root=str(root), game=game, argv=args)
             prior = [json.loads(line) for line in (base / "events.jsonl").read_text().splitlines()]
             assert any(row["kind"] == "stop" and row["root"] == str(root) for row in prior)
+            if not (root / "run-record.json").is_file():
+                refuse("fixture source profile has no prepared run record")
             if mode == "stop_record_refusal":
                 refuse("fixture stopped profile seal differs")
             (root / "run-record.json").write_text("fixture stopped record\n", encoding="utf-8")
@@ -441,6 +447,15 @@ class PersonaRunnerLifecycleTest(unittest.TestCase):
         self.assertIn("launch preflight refused", self.rows()[0]["detail"])
         self.assertEqual([], list((self.base / "profiles").iterdir()))
 
+    def test_source_record_is_prepared_with_the_actual_runner_timeout(self):
+        result = self.run_cli()
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        prepared = self.events("prepare")
+        self.assertEqual(1, len(prepared))
+        self.assertEqual("save-session", prepared[0]["role"])
+        self.assertEqual("10", prepared[0]["timeout"])
+        self.assertEqual(["PASS"], [row["verdict"] for row in self.rows()])
+
     def test_success_archives_and_asserts_before_stopping_each_exact_root(self):
         result = self.run_cli(names=("alpha", "beta"))
         self.assertEqual(0, result.returncode, result.stdout + result.stderr)
@@ -496,7 +511,8 @@ class PersonaRunnerLifecycleTest(unittest.TestCase):
                                  [entry["kind"] for entry in events])
                 self.assertEqual(events[-2]["root"], events[-1]["root"])
                 self.assertEqual(str(self.game), events[-1]["game"])
-                self.assertFalse((pathlib.Path(events[-1]["root"]) / "run-record.json").exists())
+                self.assertEqual("fixture prepared record\n",
+                                 (pathlib.Path(events[-1]["root"]) / "run-record.json").read_text())
                 self.assertFalse((self.base / "reload-args.json").exists())
                 self.assertNotIn("PERSONA MATRIX GREEN", result.stdout)
                 self.assert_profiles_retained()

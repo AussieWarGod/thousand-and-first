@@ -15,7 +15,7 @@ requires broader checks, not an assumed documentation-only classification.
 | Change | Development command | Additional work before acceptance |
 | --- | --- | --- |
 | README or release prose | `Tools/dev-check.sh docs` | Includes actual Workshop/Alpha metadata validation; inspect linked claims; required CI still runs. |
-| Python or shell tool | `Tools/dev-check.sh tools 'persona_runner_test.py'` | Select the actual related test module; syntax-check edited shell scripts. |
+| Python or shell tool | `Tools/dev-check.sh tools 'run_personas_lifecycle_test.py'` | Select the actual related test module; syntax-check edited shell scripts. |
 | C# rules or source contracts | `Tools/dev-check.sh main KingdomQuickstart` | Select the relevant fixture or method substring; include portable checks if that kernel changes. |
 | Portable C# kernel | `Tools/dev-check.sh portable KingdomQuickstart` | Full suites at integration. |
 | Repository-wide tooling | `Tools/dev-check.sh audit` | Required CI and any affected licensed or native checks. |

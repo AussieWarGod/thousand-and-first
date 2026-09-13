@@ -344,6 +344,8 @@ run_persona() {
 		TAF_SCENARIO_SCRIPT="$P_SCRIPT" \
 		TAF_SCENARIO_START="$P_START" \
 		TAF_SCENARIO_EXTRA_VERBS="$P_VERBS" \
+		TAF_SCENARIO_ROLE="save-session" \
+		TAF_SCENARIO_TIMEOUT_SECONDS="$timeout" \
 		TAF_QUD_ROOT="$QUD_ROOT" \
 		"$PREPARE" "${prepare_args[@]}" > "$prepare_log" 2>&1
 	then
