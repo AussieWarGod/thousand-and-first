@@ -4,6 +4,6 @@ DESCRIPTION=Quickstart immediately draws its entire claimed zone while gameplay 
 REQUEST=founding-first-city
 SCRIPT=quickstart-lifecycle marsh yes;quickstart-sight-start;yield-frames 3;quickstart-sight-check;stagedigest
 VERBS=quickstart-sight-start,quickstart-sight-check
-EXPECT=QUICKSTART-BOOT-COMPLETE:OK,quickstart-sight-start:OK~attached-at-founding=true,yield-frames:OK,quickstart-sight-check:OK~whole-zone-drawn=true,stagedigest:OK,COMPLETE
+EXPECT=QUICKSTART-BOOT-BEGIN:OK,QUICKSTART-BOOT-OBSERVED:OK,QUICKSTART-BOOT-COMPLETE:OK,QUICKSTART-BUILD-BEGIN:OK,QUICKSTART-BUILD-QUOTE:OK,QUICKSTART-BUILD-CANPAY:OK,QUICKSTART-BUILD-COMMISSION:OK,QUICKSTART-LIFECYCLE-PROFILE:OK,QUICKSTART-BUILD-COMPLETE:OK~commissioned=true,quickstart-sight-start:OK~attached-at-founding=true,yield-frames:OK,quickstart-sight-check:OK~whole-zone-drawn=true,stagedigest:OK,COMPLETE
 SET=growth,native-regression
 TIMEOUT=600
