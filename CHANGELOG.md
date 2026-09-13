@@ -27,7 +27,7 @@ to its actual checkpoints; the broader Beta goal is not complete.
 
 Current 3098-file census is line-cap green: 440,114 physical lines; direct `XRL`
 imports occur in 1445 files, 0 of them over the line limit. Inventory SHA-256:
-`8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8`. The cold-install inventory contains 3129 files.
+`d15228c9b93d402b534712ec917baf59026ff68220aec2d175c0d8dbf8fba55a`. The cold-install inventory contains 3129 files.
 This isolated 0.3.4 preparation combines heart authority, shared-XL transition, rung settlement
 and camp content/fixture branches with Quickstart recovery and exact strike phase recovery.
 All four compile modes and 14787 main/5743 portable cases pass with zero skips. Automated
