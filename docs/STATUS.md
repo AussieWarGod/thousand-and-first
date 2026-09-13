@@ -21,6 +21,13 @@ salvage, Complete/Settled receipts, removed city work rows, repeated-strike refu
 crew and a clean strict log. Native failures identified and fixed an unassigned salvage
 destination ID and stale end-of-pass work rows. Later heart-rung and broader Beta acceptance remain separate.
 Prior isolated evidence below remains bound to its original checkpoints, not this combined tree.
+Physical guest actions now pass on `d9d0f4b4`: genuine Quickstart, four living original founders,
+six beds, exact defer/admit/remain/welcome actions, one uncreeded guest enrolled, repeated action
+refusal and five citizens after another 1200 turns. Strict log and owned stop pass. Native testing
+also fixed unbound dialogue water authority, duplicate enrollment event IDs and an absent-creed
+projection mismatch. The no-bed repeated-welcome preservation case passes on `895e700e` with
+its disclosed synthetic camp. An earlier first-day founder-count loss remains an unexplained
+failed precondition; these results do not claim all-seed survival or guest save/load coverage.
 Private 0.3.4 metadata is prepared; no new tag/upload or Beta acceptance is claimed.
 
 The current draft additionally distinguishes fully authorized surveyed-heart physical access

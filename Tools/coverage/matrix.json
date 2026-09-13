@@ -784,11 +784,34 @@
       "transitions": "Charter admission -> exact hosted body -> body interaction -> explicit citizenship",
       "effects": "guest is interactable but not a citizen before explicit welcome; completed welcome enrolls exact body once",
       "save_cold_load": "COVERAGE_GAP",
-      "negative": "COVERAGE_GAP",
-      "driver": "NONE",
-      "status": "COVERAGE_GAP",
-      "note": "Correspondence and guide graph native passes do not execute these actions. Native coverage of admission, body interaction, insufficient capacity, repeated choices and cold-load continuation is still owed.",
-      "evidence": null
+      "negative": "NEGATIVE_PASS",
+      "driver": "Harness/KingdomGuestActionsNativeProvider.cs; guest-actions-native-check and guest-actions-quickstart-native-check",
+      "status": "NATIVE_PASS",
+      "note": "Real production correspondence and physical body choices with scripted exact menu input. Native d9d0f4b4 uses genuine Quickstart: four original founders, six completed beds, one uncreeded guest welcomed once, stale interaction refused and five citizens after another 1200 turns. Native 895e700e uses disclosed synthetic founding/water and proves two no-bed welcomes preserve the same hosted guest and supplies. Later refusal prose and scoped reconciliation changes are separate from that older negative inventory. An earlier first-day founder-count loss remains an unexplained failed precondition. No rendered UI, all-seed survival or guest save/load claim.",
+      "evidence": [
+        {
+          "commit": "895e700e3f459d859bb3985b7427f36bfddfa571",
+          "artifactPath": "guest-actions/895e700e/guest-actions-native-check/result.json",
+          "artifactSha256": "8296bd2eecffe7f5b5df059ca1332c9ddd486e5713b2cd4da33bb51199450279",
+          "artifactBytes": 1408,
+          "verdict": "PASS - two no-bed welcomes preserve exact guest, interaction, water and population",
+          "scope": "6000 real turns; synthetic camp and 64 drams; exact production correspondence and body actions; no rendered UI or save/load",
+          "historicalScope": true,
+          "inventoryDigest": "d15228c9b93d402b534712ec917baf59026ff68220aec2d175c0d8dbf8fba55a",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "d9d0f4b4c3fd7918cf023d189bccb7ac7781bfa0",
+          "artifactPath": "guest-actions/d9d0f4b4/guest-actions-quickstart-native-check/result.json",
+          "artifactSha256": "83ee863b3885fc5abdfbf7ceb5e0a1b95b85209452cb8fb8249fe01fb2f75740",
+          "artifactBytes": 1834,
+          "verdict": "PASS - exact fifth citizen and next settlement day after genuine Quickstart housing",
+          "scope": "8400 then 1200 real turns; four original founders, six beds, uncreeded guest, duplicate interaction refused; scripted menu input; no guest save/load",
+          "historicalScope": true,
+          "inventoryDigest": "a5e00bd45a1122917e6b164ad98373cdcc043e6c681790495086ee0a2e870182",
+          "currentDevCoverage": false
+        }
+      ]
     }
   ],
   "combinations": [

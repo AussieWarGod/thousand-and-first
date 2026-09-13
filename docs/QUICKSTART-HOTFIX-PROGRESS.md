@@ -318,3 +318,26 @@ explicitly uncovered in row 26. Public 0.3.4 release gates and subscription rema
 PR #184 merged at 730dce2e. Local release precheck stages 1–9 and stage-10 safety passed at e6438522; deploy dry-run initially refused an absent local Mods target. Re-running that read-only step with the workflow-supported `TAF_LIVE_MOD=/mnt/c/taf-release/live-mod/ThousandAndFirst`, then structure and exact-head validation passed (`/tmp/taf-034-release-final-stages.log`). This is composite local evidence, not a monolithic release-check PASS. No staging tag or upload yet.
 
 The additional native physical guest scenario failed at b8f6a07a (`/mnt/c/taf-scenario.HqEJCx`, `/tmp/taf-guest-actions-native.log`): correspondence defer/admit and real inventory dialogue action succeeded; welcome at zero beds consumed the candidate into housing refusal. Added pre-commit lodging observation; current production inventory `d15228c9b93d402b534712ec917baf59026ff68220aec2d175c0d8dbf8fba55a`. Negative repeated-welcome preservation and positive genuine Quickstart fifth-citizen scenarios are pending.
+
+## Physical first-guest path verified
+
+Native `d9d0f4b4c3fd7918cf023d189bccb7ac7781bfa0`, production
+`a5e00bd45a1122917e6b164ad98373cdcc043e6c681790495086ee0a2e870182`, passes
+`guest-actions-quickstart-native-check` at `/mnt/c/taf-scenario.q7xLGw`.
+All four original founders (514–517) are alive and citizens; six beds completed through ordinary
+Quickstart construction. The same hosted guest, Baith, with planned creed `-`, completes all five
+arrival domain callbacks and raises population from four to five. Duplicate body interaction
+changes neither population nor water. After another 1200 turns, population remains five and
+stored water is 31. Strict Player.log and receipt-backed process stop pass. Scripted exact menu
+input is disclosed; no rendered UI or guest save/load claim.
+
+Native failures led to three further production corrections after the no-bed guard:
+`e9e6215b` binds dialogue reconciliation with the existing local stock survey scope;
+`74f33b16` reserves each domain ordinal before preparing the next; `79ff78f8` preserves an absent
+creed property in the no-op projection. Captured enrollment graphs at `aab7db93` matched exactly
+(689 bytes), locating the remaining mismatch at Creed, not citizenship. A `79ff78f8` run lost one
+founder during its first day and failed before welcome; its cause is not established. The later
+pass retains the four-founder requirement and adds non-mutating death/departure observations.
+No failure is relabeled as a pass. No 0.3.4 staging tag or Steam upload has been made yet.
+
+Archived positive result: `guest-actions/d9d0f4b4/guest-actions-quickstart-native-check/result.json`, SHA-256 `83ee863b3885fc5abdfbf7ceb5e0a1b95b85209452cb8fb8249fe01fb2f75740`. All 3347 C# inputs match the pinned commit, the Local profile matches its closed seal, and the source game is stopped. Negative result: `guest-actions/895e700e/guest-actions-native-check/result.json`, SHA-256 `8296bd2eecffe7f5b5df059ca1332c9ddd486e5713b2cd4da33bb51199450279`.

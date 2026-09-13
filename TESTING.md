@@ -809,16 +809,17 @@ neither earlier launch pass supplied that proof or closes the remaining gates.
 
 ## Unattended observers for the attended light / guide / first-guest steps
 
-Three personas replace the human-eyes observations the pinned native protocol still asks for on
-the claimed-ground light, the camp guide's topics, and the first guest's correspondence. They are
-**registered, not yet run**: no native receipt exists for any of them, and nothing here is
-evidence of a pass.
+These personas inspect claimed-ground light, the camp guide's conversation graph, and first-guest
+correspondence automatically. Guide topics (three cases) and first-guest correspondence (one case)
+have native passes at `660ba354`; their exact receipts and limits are recorded in the coverage
+matrix. Those passes do not execute physical guest admission or citizenship, and do not prove
+rendered dialogue UI. Claimed-light evidence remains separately scoped in the matrix.
 
-| Persona | Command | Attended step it replaces |
+| Persona | Command | Automated observation |
 | --- | --- | --- |
 | [`claimed-light-native-check`](Tools/personas/claimed-light-native-check.persona) | `Tools/run-personas.sh claimed-light-native-check` | walking the held zone to see it lit, and reading part cardinality and `SettlementId` by eye |
-| [`guide-topics-native-check`](Tools/personas/guide-topics-native-check.persona) | `Tools/run-personas.sh guide-topics-native-check` | talking through all five topics in order, comparing each rendered answer, and checking every return to Start |
-| [`first-guest-native-check`](Tools/personas/first-guest-native-check.persona) | `Tools/run-personas.sh first-guest-native-check` | reading the opening message once, and reading the Charter next-need ordering by eye |
+| [`guide-topics-native-check`](Tools/personas/guide-topics-native-check.persona) | `Tools/run-personas.sh guide-topics-native-check` | conversation graph, topic text and return links |
+| [`first-guest-native-check`](Tools/personas/first-guest-native-check.persona) | `Tools/run-personas.sh first-guest-native-check` | one correspondence opening and the Charter next-need ordering |
 
 What the machine asserts:
 
@@ -2879,3 +2880,34 @@ and controller. Optional physical descendants may fail without stranding their s
   went dark while the forge was still lit" is a bug. Recovery says **nothing** — a settlement that
   announced every recovery would be a settlement that never stops talking about itself — so a pass
   reporting "it never told me the power came back" is correct behaviour.
+
+## Physical first-guest action regressions
+
+Run these separately: the Quickstart profile requires its explicit advisor setting, while the
+synthetic founding profile rejects a Quickstart setting.
+
+```bash
+TAF_PERSONA_SEED='#43101' Tools/run-personas.sh guest-actions-native-check
+TAF_SCENARIO_QUICKSTART_ADVISOR=yes TAF_PERSONA_SEED='#43101' \
+  Tools/run-personas.sh guest-actions-quickstart-native-check
+```
+
+The first scenario uses disclosed synthetic founding and 64 drams, with no citizens or housing.
+Real cadence opens correspondence. It defers and admits the same guest through the production
+Charter API, reads the real inventory dialogue action, chooses to remain a guest, then attempts
+two welcomes without beds. Both refusals must preserve the exact interactable body, citizenship,
+population and water. Native pass `895e700e` predates the later refusal wording and scoped
+reconciliation changes; the coverage matrix retains its exact production inventory.
+
+The second scenario uses genuine Quickstart founding, all four original citizens, ordinary
+construction of six beds, and 8400 real turns before the same production choices. Explicit
+welcome must enroll the same body once, including a guest without a creed, and stale interaction
+must preserve water and population. After another 1200 real turns, the resource report must still
+show five citizens. Native pass `d9d0f4b4` has a clean strict Player.log and a stopped owned game.
+Founder death/departure observations and exact enrollment graph captures are diagnostic only;
+they cannot cancel actions, change callback results, or supply completion, supplies or citizens.
+The earlier three-founder run remains a failed precondition with an unresolved cause.
+
+Both scenarios provide scripted menu input only after exact title and option checks. They do not
+claim rendered UI or guest save/cold-load coverage. Historical failures and their exact source
+inventories remain archived; no intermediate case marker overrides a failed strict game log.
