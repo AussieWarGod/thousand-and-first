@@ -1,38 +1,38 @@
 # Current implementation and release evidence
 
-## In-progress paid camp cold-load coverage
+## Paid camp cold-load coverage
 
-The developer camp scenario can now save its actual paid rung-2 heart, city work row, stockpile,
-fire and material custody. Its separate load route compares restored state before explicit
-recovery, then commissions a new paid fire and waits for ordinary construction completion.
-The fixture supplies one disclosed extra timber before saving; it creates no materials after load.
-Two source runs completed the paid upgrade and next-day recovery but refused the save witness.
-The diagnostic run at `da5a82343fa0ee98422ddf7214a82f9ff6dbae82` observes 21 brush before adding
-the timber, with the same 21 brush afterward. The existing ground-protection case also commissions
-a tent: its real bill is three drams and two canvas, which production classifies as brush.
-The new witness now binds that paid tent receipt and the surviving 21 original brush objects.
-It does not skip the tent commission or replace consumed materials to satisfy the old expectation.
-Both failed source runs retain closed profiles, strict logs and owned stopped records.
-Diagnostic archive: `beta-camp-cold-load/da5a8234/paid-tent-custody-1/result.json`, SHA-256
+Native developer scenario at `de82845056b1bfb8b747925f3aeb38fc72d0dfbd` passes 6000 source
+turns, real save/quit, a separate cold load and 3600 loaded turns completing another paid fire.
+The paid rung-1 to rung-2 upgrade consumes 18 drams, 24 stone and one timber, settles a functional
+waterstone and basin capacity 48, and survives next-day founding recovery. The ground-protection
+case also commissions a tent for three drams and two canvas (classified as brush), leaving 21
+original brush objects. The fixture supplies one disclosed extra timber before saving, none after load.
+
+The load witnesses bind the same heart, city work row, stockpile, camp fire, paid tent receipt,
+material custody and world clock before and after activation. The next fire pays two drams and
+one timber, then reaches Complete/EffectsSettled with a distinct functional output through vanilla
+Continue and ordinary turns; the saved new-game script is not replayed. Both complete 3369-source
+profiles, runtime/Harness XML bindings, strict final logs and exact owned stops verify.
+Archive: `beta-camp-cold-load/de828450/preactivation-paid-complete-1/result.json`, SHA-256
+`180e4014bf6c3752ff12f945834cd600ad3da2a7a6ce6716100e3bbde68e0852`.
+All four engine compile modes pass (3094/3098 ordinary, 3365/3369 developer sources).
+Focused camp checks pass: 87 main and 73 portable, zero skips; five journal-oracle cases pass.
+These focused counts do not describe the full source suites.
+
+Earlier failed evidence remains retained. The diagnostic save refusal established the paid tent's
+two-brush cost: `beta-camp-cold-load/da5a8234/paid-tent-custody-1/result.json`, SHA-256
 `1dbb7a3a52371c371ebc10abd5afeb1bf63c0844babadfda496903ef428a7173`.
-Before that accounting correction, focused checks passed (83 main, 69 portable, zero skips),
-four journal-oracle tests passed, and all four engine compile modes passed (3094/3098 ordinary,
-3364/3368 developer sources). Corrected native save/load execution remains pending;
-this does not close rung-2 persistence or Beta acceptance.
-
-At `24986884b066bfcf6f44108ad81405a6a14252bc`, the corrected source completes its real save.
-After a tooling-only expectation correction, the same stopped save was reused with byte-identical
-runtime and Harness inputs. Cold load restores the exact camp, paid tent receipt and 21 brush,
-and a distinct fire commission pays two drams and one timber. The attempt remains FAIL: the
-preactivation dispatcher incorrectly sent the new snapshot to the generic witness, and a gossip
-popup stopped the unattended continuation after 800 turns. A captured native window confirms the
-popup; both full 3369-source profiles, strict logs and owned stops are retained in
-`beta-camp-cold-load/24986884/load-route-and-popup-1/result.json`, SHA-256
+The first cold load exposed a missing preactivation route and a gossip popup blocking unattended
+turns: `beta-camp-cold-load/24986884/load-route-and-popup-1/result.json`, SHA-256
 `276d1e26c5d173411410835cf3536ab8f813e181d9867e4e66d8dd8210aee240`.
-The follow-up adds the scoped preactivation route and preserves popup suppression until the
-loaded wait finishes. Its version-2 witness also binds the saved world clock before and after
-activation. A new routing regression failed before these changes. Corrected native execution
-and independent completion of the loaded fire remain pending.
+The passing attempt adds the scoped route, requires its exact witness and retains popup suppression
+until the loaded wait finishes, then restores its original value. A routing regression failed before
+the fix. The version-2 snapshot explicitly binds the world clock.
+
+This closes the synthetic rung-2 persistence and subsequent paid-completion gap in coverage row 30.
+It does not prove ordinary Quickstart, other seeds, higher rungs, founder retention or all-feature
+Beta acceptance. Existing Quickstart evidence remains a separate scope.
 
 ## Unreleased profile inventory optimization
 

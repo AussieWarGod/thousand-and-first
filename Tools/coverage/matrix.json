@@ -1044,15 +1044,15 @@
     },
     {
       "id": 30,
-      "behaviour": "Paid heart upgrade 1->2 and next-day settlement",
-      "prerequisites": "Fresh stamped founding-first-city profile with synthetic founding, rung-1 completion frontier, six enrolled residents, 400 dedicated drams and 48 minted material units; all fixture state disclosed",
-      "transitions": "camp-heart-setup -> 1200 real turns -> paid bill observation -> 3600 real turns -> standing waterstone observation -> 1200 real turns -> post-upgrade founding recovery observation",
-      "effects": "Exact 18-dram, 24-stone and 1-timber bill; a distinct functional waterstone at settled rung 2; same anchored stockpile and 23 unspent brush units; camp fire re-laid; later founding-heart recovery succeeds",
-      "save_cold_load": "COVERAGE_GAP: this existing persona has no save or cold-load phase",
+      "behaviour": "Paid heart upgrade 1->2, next-day settlement and cold-loaded construction",
+      "prerequisites": "Fresh stamped founding-first-city profile with synthetic founding, rung-1 completion frontier, six enrolled residents, 400 dedicated drams and 48 minted material units; all fixture state disclosed; save variant supplies one disclosed timber after the paid tent consumes two brush",
+      "transitions": "camp-heart-setup -> 1200 real turns -> paid bill observation -> 3600 real turns -> standing waterstone observation -> 1200 real turns -> post-upgrade founding recovery observation -> real save/quit -> separate cold load with pre/post-activation witnesses -> next paid fire commission -> 3600 ordinary turns -> completed functional output",
+      "effects": "Exact 18-dram, 24-stone and 1-timber upgrade bill; distinct functional waterstone at settled rung 2/basin capacity 48; same anchored stockpile and 23 brush immediately after upgrade, then 21 original brush after the real three-dram/two-brush tent commission; camp fire re-laid; next-day founding recovery succeeds; saved identities, work row, tent receipt, custody and world clock survive cold load; another fire pays two drams and one timber and completes with a distinct functional output",
+      "save_cold_load": "NATIVE_PASS: exact owned real save/quit and fresh separate cold load; same snapshot before and after activation; next paid fire reaches Complete/EffectsSettled after 3600 ordinary turns",
       "negative": "Fixture includes occupied expansion and malformed/stale/foreign predecessor probes; fresh source-bound native evidence is required",
-      "driver": "Tools/personas/camp-heart-native-checks.persona; Harness/KingdomCampHeartNativeProvider.cs; KingdomCampHeartNativeChecksPhases.cs; KingdomCampHeartNativeAfterRaise.cs",
+      "driver": "Tools/personas/camp-heart-native-checks.persona; Harness/KingdomCampHeartNativeProvider.cs; KingdomCampHeartNativeChecksPhases.cs; KingdomCampHeartNativeAfterRaise.cs; Tools/personas/camp-heart-save.persona; Harness/KingdomCampHeartSave.cs; KingdomCampHeartLoad.cs; KingdomCampHeartLoadChecks.cs; Tools/camp_heart_load_check.py",
       "status": "NATIVE_PASS",
-      "note": "Native 42b252e7 passes the declared paid 1→2 and next-day recovery path after removing the proved border glowpad caster from the developer test ground. All 17 border creatures are cleared; five border widgets remain; no vortex is recorded. Two fixture residents later emigrate through normal subsidence. Earlier ea2bf92d PASS and 14e012fc/4a344a70/61140abd/c558607b/ef1f78a4 failures remain retained. This exact synthetic path does not prove other seeds, rung-2 cold load, independently observed later paid work, higher rungs or ordinary founding.",
+      "note": "Native de828450 passes the exact synthetic paid 1->2/next-day/save/cold-load/next-paid-completion path. The source runs 6000 ordinary turns and the load 3600. The paid tent explains the surviving 21 brush; one timber is supplied before save, none after load. Earlier failures remain retained, including the corrected missing preactivation route and blocking gossip popup. This scope does not prove ordinary founding or Quickstart, founder retention, other seeds or higher rungs. Earlier row-30 receipts cover only their original upgrade and next-day scope.",
       "evidence": [
         {
           "commit": "ea2bf92dee62b26e64fdae3f661aa81c1de58551",
@@ -1075,6 +1075,17 @@
           "historicalScope": true,
           "inventoryDigest": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
           "currentDevCoverage": false
+        },
+        {
+          "commit": "de82845056b1bfb8b747925f3aeb38fc72d0dfbd",
+          "artifactPath": "beta-camp-cold-load/de828450/preactivation-paid-complete-1/result.json",
+          "artifactSha256": "180e4014bf6c3752ff12f945834cd600ad3da2a7a6ce6716100e3bbde68e0852",
+          "artifactBytes": 4678,
+          "verdict": "PASS - paid rung2, next-day recovery, exact cold load and next paid completed fire",
+          "scope": "Synthetic paid camp rung1-to-2 and next-day recovery, exact saved heart/book/store/fire/material witness, separate cold load, another real paid fire commission and 3600 ordinary turns to independent completed output. One disclosed timber supplied before save, none after load. No ordinary Quickstart, higher rung or all-feature acceptance. Both complete 3369-source profiles, runtime/Harness XML binding, strict final logs and owned stopped records verified. Exact identities, city work row, paid tent receipt, 21 original brush and world clock match before and after activation. Full developer C# digest computed from the exact archived source commit; all 3369 current C# inputs are byte-identical.",
+          "historicalScope": false,
+          "inventoryDigest": "9763830753f5d45146100eda42b45ce4710a30f7caa9269544c5e45fa91c8fc9",
+          "currentDevCoverage": true
         }
       ]
     }
