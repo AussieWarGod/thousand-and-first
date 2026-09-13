@@ -5,7 +5,6 @@ using ThousandAndFirst.Simulation.City;
 using XRL;
 using XRL.World;
 using XRL.World.Parts;
-
 namespace ThousandAndFirst.Harness
 {
 	/// <summary>

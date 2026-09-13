@@ -1,14 +1,14 @@
 # Structural release contract
 
-## Current combined heart candidate census
+## Current Quickstart hotfix candidate census
 
-3098 staged production C# files; 440,100 physical lines; zero at or above 300 lines.
+3098 staged production C# files; 440,102 physical lines; zero at or above 300 lines.
 1445 files with direct `XRL` imports; 3129 cold-install files. Exact inventory:
-`0ebe8fb749a39bccd21578e78d95777725eb4ffc0bedba84962830baa679370c`.
-Combines #141/#144/#139/#137 over the dev hotfix backmerge. No combined gate or native proof
-is claimed yet. The inherited semantic review binds shipped main only and is stale here.
-The current draft adds the surveyed-heart physical-ingress distinction; retained predecessor
-compile/test and negative native results are recorded separately in `docs/STATUS.md`.
+`42d5b7cc6079c4bff660b1347956d20400cb7e17674a6b194e97199a6fd5f2ed`.
+Combines the dev integrations and Quickstart recovery fixes. Automated semantic review binds
+this exact inventory in `docs/STRUCTURE_REVIEW.json`. Native evidence retains each exercised
+build; the latest salvage identity fix is awaiting its own strict native acceptance.
+Current results and retained failures are recorded in `docs/STATUS.md`.
 
 Addendum 9 of the binding building-catalogue brief requires services to stay strictly under 300
 lines, own one responsibility, and communicate through protocols at boundaries before public

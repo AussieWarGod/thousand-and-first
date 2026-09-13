@@ -14,7 +14,8 @@ save/load and next-action chain rather than treating that fire as evidence of wo
 All six location/advisor combinations pass the complete source, cold-load and next-commission
 chain at `86c0b5df`, with strict logs and owned stops. Archives: `quickstart-lifecycle/86c0b5df/`
 under the behaviour-evidence root; coverage rows 21–23 bind their exact hashes and inventory.
-Later production changes are the release-version literal and guide text. The supplied housing
+Later production changes are the release-version literal, guide text and strike salvage
+stockpile identity binding. The supplied housing
 crisis also passes recovery and cold load with the same two survivors at `60f11aee` (row 24/C7).
 The historical-version reader remains a separate check; boot-only receipts do not replace these chains.
 
@@ -31,7 +32,14 @@ strict logs and owned shutdown for the retained save; coverage row 25 binds the 
 Creator fault fixtures use the current grant before injecting capacity or custody faults;
 the persona expects all 17 registered cases.
 
-## Current combined heart candidate — gates owed
+Native teardown must prove both the physically removed building and its exact Complete/Settled
+strike receipt before accepting the material return. Dedicated stores may begin without an
+assigned ID: inventory salvage must acquire and record that identity, while null means ground
+salvage only. The larder case exercises positive salvage; the fire case exercises zero salvage.
+Both require a refused second strike. Strict Player.log remains decisive even when case summaries
+pass. Original quarantine failures and each subsequent run retain distinct profiles and receipts.
+
+## Retained combined heart candidate — superseded checkpoint
 
 The planned compatibility compile runs across 3098 production C# sources (3094 baseline);
 the cold-install inventory contains 3129 files. Inventory `fba0d595a8b2c29876f3f74eae29914a9595d85182831f2ceddb5b44d51dfdc0`.

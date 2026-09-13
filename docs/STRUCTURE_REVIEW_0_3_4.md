@@ -132,3 +132,18 @@ as citizen". The guide now names both steps in order, matching the actual Open/A
 and OpenPhysicalFirstGuest call paths read in this review. No branch, persistent state,
 receipt, stock or transaction changes. Prior housing evidence keeps its original scope;
 guide native execution and the new compile receipt remain separate acceptance checks.
+
+
+## Strike salvage destination identity
+
+Production inventory `42d5b7cc6079c4bff660b1347956d20400cb7e17674a6b194e97199a6fd5f2ed`: 3098 C# files, 440102 physical lines,
+1445 direct-XRL files, no size exception. Relative to `0ebe8fb749a39bccd21578e78d95777725eb4ffc0bedba84962830baa679370c`, the sole production
+change assigns a selected stockpile's ID before recording SalvageAddPending.
+`IDIfAssigned` can be null for a valid dedicated chest; null in this receipt means
+ground custody. Native profile `/mnt/c/taf-scenario.8mkLj3` proved exactly that mismatch:
+item 684, count 1, correct inventory custody, both holder ID and recorded destination null.
+The engine ID getter assigns an ID only if absent and preserves existing IDs. Ground
+salvage still records null. No object placement, registry phase, custody predicate,
+quarantine handling, stock amount or work timing is relaxed. The existing strike service
+owns this identity binding; no new boundary or dependency is introduced. Automated source
+review only; native rerun and release acceptance remain separate gates.
