@@ -1,5 +1,45 @@
 # Current implementation and release evidence
 
+## Unreleased Beta validation — PR194
+
+This work does not change the finalized public 0.3.6 release below. Broader Beta acceptance
+remains incomplete. The persona runner now prepares its mandatory run record and requires
+owned shutdown, StopRecord and strict final Player.log acceptance before publishing a screenshot
+or accepting the next persona. Developer load continuations no longer run inline under completion.
+The runner and blocking-consumer regressions failed before their fixes and pass afterward.
+
+Native source/save/separate-cold-load validation at `61140abd6cb5f67ea7d53dbcf06ac3f67a949ed7`
+passes real marsh Quickstart, 8400 ordinary turns, four original citizens housed, two shelters
+and six beds, completed first-heart components, another paid commission after loading, and four
+source plus four loaded whole-zone frames with ordinary sight restored. Both complete Local seals,
+3358 C# inputs, runtime bytes, strict final logs and exact owned stopped records verify. Archive:
+`heart-sight/61140abd/current-harness-cold-load-1/result.json`, SHA-256
+`e3c63c95dec0a4a39daa9909edd9b7e883bd135b64519b613a60c52aec139a34`.
+The first heart remains a seven-wall open camp; no enclosed-building claim is made.
+
+Paid camp rung 1→2 and next-day recovery also pass at
+`ea2bf92dee62b26e64fdae3f661aa81c1de58551`: production pays 18 drams, 24 stone and 1 timber,
+raises a distinct functional waterstone, settles rung 2 and basin capacity 48, preserves the same
+stockpile and 23 unspent brush, and recovers the heart one ordinary day later. Setup deliberately
+supplies six enrolled fixture residents, 400 drams and 48 physical material units; this is synthetic
+setup, not ordinary founding. Full closed seal, 3359 C# inputs, runtime binding, strict final log and
+owned stopped record verify. Archive:
+`beta-camp-heart/ea2bf92d/paid-rung2-ground-census-1/result.json`, SHA-256
+`ffde56a6e38d4234c4ee26a8c1bfd30c49c2875d2397b5e3e976d88a16f29338`.
+
+This single PASS does not resolve test-ground reliability. Before/after cleanup observations
+recorded no vortices, but later ordinary turns teleported residents through vanilla space-time
+vortices and one resident died in melee. Prior stage/unfinished-rung failures at 14e012fc, 4a344a70
+and 61140abd remain retained; the latest closed failure is
+`beta-camp-heart/61140abd/movement-caller-1/result.json`, SHA-256
+`e1163ab7e264ce5f0a44ba68da8be4197f9c1327b1e70d063855a7434234ea07`.
+Movement traces now have separate bounded journal rows; failed census rows remain significant.
+The diagnostic validator regression failed before the change, then 63 Python and four ground
+source contracts passed. Four engine compile modes passed with 3094/3098 ordinary and 3355/3359
+developer inputs. These checks do not establish paid-rung-2 cold load, higher rungs, multiple
+settlements, arcology or complete feature coverage. The [coverage matrix](BEHAVIOUR_COVERAGE.md)
+retains those gaps.
+
 ## Current 0.3.6 sight hotfix — published and finalized
 
 Public Alpha 0.3.6 is published, verified and finalized. It supersedes 0.3.4 on the public
