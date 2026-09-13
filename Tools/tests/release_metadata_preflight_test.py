@@ -5,7 +5,7 @@ import unittest
 
 from Tools import release_metadata_preflight as preflight
 from Tools import workshop_metadata as metadata
-import workshop_metadata_test as fixtures
+from Tools.tests import workshop_metadata_test as fixtures
 
 
 class ReleaseMetadataPreflightTests(unittest.TestCase):
