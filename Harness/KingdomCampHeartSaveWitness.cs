@@ -24,7 +24,9 @@ namespace ThousandAndFirst.Harness
 					timber = unit.Id;
 				}
 			}
-			Require(brush.Count == MintedBrushUnits && timber != null, "saved camp lacks 23 brush and one timber");
+			Require(brush.Count == MintedBrushUnits && timber != null, "saved camp lacks 23 brush and one timber: store="
+				+ frame.StoreId + "; brush=" + brush.Count + "; timber=" + (timber ?? "absent")
+				+ "; raw=" + KingdomCampHeartNativeCensus.Describe(units));
 			return new KingdomCampHeartSaveSnapshot(Game.GameID, frame.System.RealmId,
 				KingdomConstruction.OwnerOf(frame.System), Zone.ZoneID, frame.HeartId, frame.JobId,
 				frame.StoreId, frame.FireId, timber, KingdomCampHeartSaveSnapshotCodec.CustodyDigest(units),

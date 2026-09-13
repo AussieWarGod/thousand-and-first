@@ -35,8 +35,14 @@ namespace ThousandAndFirst.Harness
 				foreach (string path in Directory.GetFiles(directory))
 					Require(Path.GetFileName(path) == "Cache.db", "camp save already has primary or backup evidence");
 				RequireStoreIdentity();
+				var before = ContentUnits(out _);
 				var extra = new global::System.Collections.Generic.List<string>();
 				Mint(KingdomMaterial.Timber, 1, extra);
+				var after = ContentUnits(out _);
+				Require(KingdomScenarioJournal.Append("camp-heart-save-custody", true,
+					"store=" + StoreId + "; before=" + KingdomCampHeartNativeCensus.Describe(before)
+					+ "; after=" + KingdomCampHeartNativeCensus.Describe(after) + "; added-timber=" + extra[0]) == null,
+					"camp save custody observation could not be journalled");
 				var witness = CaptureSaveWitness(Game, Zone);
 				Require(witness.TimberId == extra[0] && witness.UpgradeJobId == JobId
 					&& witness.BrushDigest == KingdomCampHeartSaveSnapshotCodec.CustodyDigest(RetainedBrush),
