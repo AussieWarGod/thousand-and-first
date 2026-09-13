@@ -33,12 +33,13 @@ This combines heart authority, shared-XL transition, rung settlement and camp co
 It also drafts surveyed-heart physical ingress independent of ordinary road-network evidence;
 protected road ground remains protected. Predecessor native ingress census was RED.
 No combined compilation, licensed-suite or native progression result is claimed yet. Earlier
-figures below remain retained evidence for their own checkpoints. Current public release is
-0.3.3; this work prepares 0.3.4 and does not change the published tag or package.
+figures below remain retained evidence for their own checkpoints.
 
-The current public Alpha manifest is `0.3.3`, published to the public Workshop item.
-Its private candidate passed subscribed-install verification and finalization (2026-09-11).
-Public delivery is recorded separately in `docs/STATUS.md`; `0.3.2` is the prior public release.
+Public release status is tracked in [docs/STATUS.md](docs/STATUS.md).
+This test protocol stays byte-identical between private-candidate binding and public
+promotion; publication updates belong in the status ledger. Historical checkpoint:
+0.3.3 passed subscribed-install verification and finalization on 2026-09-11;
+0.3.2 was the preceding public release.
 Working-tree changes do not inherit that tagged release's receipts. Any next public release
 requires a new version.
 A future v1.0 test-candidate claim requires its exact tree—not any historical
