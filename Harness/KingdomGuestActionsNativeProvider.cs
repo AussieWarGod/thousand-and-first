@@ -11,7 +11,7 @@ namespace ThousandAndFirst.Harness
 	{
 		internal const string Setup = "guest-actions-setup", Check = "guest-actions-check", Quickstart = "guest-actions-quickstart";
 		private const string Receipt = "r_TAF_ScenarioGuestActions_v1";
-		private static readonly string[] QuickstartScript = { "quickstart-lifecycle marsh yes", Quickstart, "advance 8400", Check, "stagedigest" };
+		private static readonly string[] QuickstartScript = { "quickstart-lifecycle marsh yes", Quickstart, "advance 8400", Check, "advance 1200", "stagedigest" };
 		private static readonly string[] Script = { "stagedigest", Setup, "advance 6000", Check, "stagedigest" };
 		public int ScenarioVerbApiVersion => KingdomScenarioVerbApi.Version;
 		public IEnumerable<string> ScenarioVerbs => new[] { Setup, Quickstart, Check };
@@ -23,9 +23,10 @@ namespace ThousandAndFirst.Harness
 			{
 				Require(string.IsNullOrEmpty(Argument) && (Verb == Setup || Verb == Check || Verb == Quickstart), "unexpected guest action verb");
 				Require(KingdomScenarioScript.TryRead(out IList<string> script, out _)
-					&& script.Count == Script.Length, "exact guest action script absent");
+					&& script.Count > 0, "exact guest action script absent");
 				bool quickstart = script[0] == QuickstartScript[0];
 				string[] expected = quickstart ? QuickstartScript : Script;
+				Require(script.Count == expected.Length, "guest action script length differs");
 				for (int i = 0; i < expected.Length; i++) Require(script[i] == expected[i], "guest action script differs");
 				XRLGame game = The.Game;
 				Zone zone = The.Player?.CurrentZone;

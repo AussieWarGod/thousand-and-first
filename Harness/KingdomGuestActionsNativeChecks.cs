@@ -20,6 +20,7 @@ namespace ThousandAndFirst.Harness
 		private static string ExpectedTitle;
 		private static int Pick;
 		private static bool Quickstart;
+		internal static bool ActionActive;
 		internal static readonly StringBuilder Evidence = new StringBuilder();
 		internal static bool Vacant => Game == null;
 		private static void Require(bool value, string reason) => KingdomGuestActionsNativeProvider.Require(value, reason);
@@ -121,13 +122,14 @@ namespace ThousandAndFirst.Harness
 		private static void Choose(string title, string[] options, int pick, Action action)
 		{
 			Require(ExpectedOptions == null, "another fixture menu choice is pending");
-			ExpectedTitle = title; ExpectedOptions = options; Pick = pick;
+			ExpectedTitle = title; ExpectedOptions = options; Pick = pick; ActionActive = true;
 			try
 			{
 				using (KingdomGovernanceScope.Begin(The.Player)) action();
+				Require(!KingdomSurvey.HasBoundPass, "guest action leaked its local survey scope");
 				Require(ExpectedOptions == null, "production action did not request the expected menu");
 			}
-			finally { ExpectedOptions = null; ExpectedTitle = null; }
+			finally { ExpectedOptions = null; ExpectedTitle = null; ActionActive = false; }
 		}
 
 		internal static bool Select(string title, IReadOnlyList<string> options, ref int result)

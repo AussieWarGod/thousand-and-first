@@ -326,6 +326,14 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void DialogueReconciliationOwnsLocalSurveyForWaterDebit()
+		{
+			string source = Source("Growth/KingdomGrowth.FirstGuestInteraction.cs");
+			AssertOrdered(source, "KingdomSurvey.TryBindLocalOperation(zone, system",
+				"using (scope)", "KingdomSurvey.ActiveFor(zone)", "ReconcileArrival(system, zone, survey");
+		}
+
+		[Test]
 		public void GuestBodyHasNoLootXpTradeLaborOrCombatContribution()
 		{
 			string hardening = Source(

@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "inventorySha256": "c2e5d302f4acc9ee5bd091f5b57a8f92711bc12603f252b3f327c922d8d870b8",
+  "inventorySha256": "0ed11a224e19d6938eaa5afd5e46e8d89e4d85cac628000566a9a2ce00fa9db0",
   "exceptions": [],
   "reviewedBy": "Codex root automated structural review",
-  "completedUtc": "2026-09-13T03:27:03Z",
+  "completedUtc": "2026-09-13T03:37:56Z",
   "oneResponsibility": {
     "status": "passed",
-    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:c2e5d302f4acc9ee5bd091f5b57a8f92711bc12603f252b3f327c922d8d870b8. Inherits exact inventory review 8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8. Sole production delta observes the existing assignment-level lodging gate before committing physical first-guest citizenship. A refusal leaves body custody, choice phase, water and population unchanged; the existing transactional observation still runs after commitment. No capacity, species needs, creed or receipt predicate is relaxed. Automated source review; native acceptance separately scoped."
+    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:0ed11a224e19d6938eaa5afd5e46e8d89e4d85cac628000566a9a2ce00fa9db0. Inherits exact review c2e5d302f4acc9ee5bd091f5b57a8f92711bc12603f252b3f327c922d8d870b8. Sole production delta binds TryContinueFirstGuestDecision with the existing TryBindLocalOperation scope. Reconciliation consumes the same active survey that water debit and civic identity refresh require. Existing active-zone, foreign-pass, lease, housing, custody and receipt predicates remain unchanged. Scope disposal covers successful and failed reconciliation. Automated source review; native acceptance separately scoped."
   },
   "protocolsAtBoundaries": {
     "status": "passed",
-    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:c2e5d302f4acc9ee5bd091f5b57a8f92711bc12603f252b3f327c922d8d870b8. Inherits exact inventory review 8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8. Sole production delta observes the existing assignment-level lodging gate before committing physical first-guest citizenship. A refusal leaves body custody, choice phase, water and population unchanged; the existing transactional observation still runs after commitment. No capacity, species needs, creed or receipt predicate is relaxed. Automated source review; native acceptance separately scoped."
+    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:0ed11a224e19d6938eaa5afd5e46e8d89e4d85cac628000566a9a2ce00fa9db0. Inherits exact review c2e5d302f4acc9ee5bd091f5b57a8f92711bc12603f252b3f327c922d8d870b8. Sole production delta binds TryContinueFirstGuestDecision with the existing TryBindLocalOperation scope. Reconciliation consumes the same active survey that water debit and civic identity refresh require. Existing active-zone, foreign-pass, lease, housing, custody and receipt predicates remain unchanged. Scope disposal covers successful and failed reconciliation. Automated source review; native acceptance separately scoped."
   }
 }
