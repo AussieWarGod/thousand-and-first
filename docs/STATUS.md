@@ -1,5 +1,25 @@
 # Current implementation and release evidence
 
+## Alpha 0.3.5 private candidate — verification pending
+
+The sight hotfix is prepared for private delivery. Manifest and runtime receipt identity both
+name 0.3.5. The only production change since the accepted sight/heart native source is the
+release-version literal in `Core/KingdomReleaseInfo.cs`; the structural review binds it.
+3098 staged C# files; 440,137 physical lines; 1445 direct `XRL` imports; zero at or above
+300 lines; 3129 cold-install files. Inventory SHA-256: `4d3938534ed4663c01492bd0455a6aea9b707d76ea4f7b4442357c9aac38472d`.
+
+The first candidate CI caught an unsynchronized runtime version. That failed source was
+never uploaded. The local test process was stopped after CI established the mismatch.
+The corrected candidate then refused at the documentation inventory check; its current
+census is now recorded here, in the changelog and structural contract. The next licensed
+run passed stages 1–10, including 14,794 main and 5,747 portable cases with zero skips,
+but stage 11 refused two review notes without a structured artifact reference. Those
+notes now bind the same reviewed inventory with the required `sha256:` prefix. Three
+bind-mount alias fixtures were unavailable in this environment. The corrected structural
+gate passes; the tagged full release gate remains required. Private submission, subscribed-install
+and candidate native checks remain pending; public Alpha 0.3.4 is unchanged. Earlier
+evidence retains its exact source.
+
 ## Completed first heart and cold-load city sight — native verified
 
 PR192 verifies ordinary first-heart construction and physical fabric through real save/load.
