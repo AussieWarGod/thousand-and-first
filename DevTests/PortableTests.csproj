@@ -17,11 +17,15 @@
 
   <ItemGroup>
     <Compile Include="TestMain.cs" />
+    <Compile Include="KingdomQuickstartHistoricalGrantTests.cs" />
+    <Compile Include="..\Harness\KingdomQuickstartHistoricalGrant.cs" />
     <Compile Include="KingdomHeartRungSettleTests.cs" />
     <Compile Include="KingdomCampHeartNativeSourceTests.cs" />
     <Compile Include="..\Harness\KingdomCampHeartNativeCensus.cs" />
     <Compile Include="KingdomCampHeartNativeCensusTests.cs" />
     <Compile Include="..\Core\KingdomSealPendingRules.cs" />
+    <Compile Include="..\Core\KingdomInheritanceSpatial.CaptureResult.cs" />
+    <Compile Include="..\Core\KingdomSealSpatialRules.cs" />
     <Compile Include="KingdomSealPendingRulesTests.cs" />
     <Compile Include="KingdomDepositOverflowNativeSourceTests.cs" />
     <Compile Include="KingdomQuoteSitingOccupancyNativeSourceTests.cs" />
@@ -158,6 +162,8 @@
 	<Compile Include="..\Harness\KingdomQuickstartLifecycleOpenWait.cs" />
 	<Compile Include="..\Harness\KingdomScenarioDeathRules.cs" />
 	<Compile Include="KingdomQuickstartLifecycleOpenWaitTests.cs" />
+	<Compile Include="..\Harness\KingdomQuickstartLifecycleDebitRules.cs" />
+	<Compile Include="KingdomQuickstartLifecycleDebitRulesTests.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartLifecycleStoreRules.cs" />
 	<Compile Include="KingdomQuickstartLifecycleStoreRulesTests.cs" />
 	<Compile Include="..\Harness\KingdomQuickstartLifecycleStall.Classify.cs" />

@@ -131,7 +131,7 @@ namespace ThousandAndFirst.Tests
 			// The nearest-rejected-failure selection itself moved into
 			// Growth/KingdomPlotSelectionRules.cs (engine-free, value-tested there); this file
 			// now only wires the real Zone-coupled resolver into that shard.
-			StringAssert.Contains("candidate => ResolveArchitecture(probe, candidate, Z, occupiedCells)", source);
+			StringAssert.Contains("candidate => ResolveArchitecture(probe, candidate, Z, occupiedCells, protectedCells)", source);
 		}
 
 		[Test]

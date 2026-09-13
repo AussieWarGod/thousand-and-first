@@ -129,7 +129,13 @@ namespace ThousandAndFirst
 			if (stage == null)
 			{
 				Dirty = true;
-				return TryFlushLiving("loaded world", ProbeEvenIfClean: true, out Failure);
+				bool flushed = TryFlushLiving("loaded world", ProbeEvenIfClean: true,
+					out Failure, out KingdomInheritanceSpatialCaptureResult initialSpatial);
+				if (KingdomSealSpatialRules.SpatialCaptureIsFault(flushed, initialSpatial)) return false;
+				// A young settlement may never have staged a seal. Preserve its dirty state
+				// and revision until a real street connection makes capture possible.
+				Failure = "";
+				return true;
 			}
 			if (stage.Status == KingdomSealStatus.Retired && SameCurrentIdentity(stage))
 			{
@@ -137,10 +143,19 @@ namespace ThousandAndFirst
 			}
 
 			KingdomSealRecord saved;
+			KingdomInheritanceSpatialCaptureResult spatial;
 			if (!TryCapture(kingdom, LegacyId, Generation, Revision,
-				SafeTick(game.TimeTicks), out saved, out Failure))
+				SafeTick(game.TimeTicks), out saved, out Failure, out spatial))
 			{
-				return false;
+				// A Pending capture is the settlement saying "not yet", and the daily pass has
+				// always carried it quietly. Failing closed here made the same young settlement
+				// that ran all session raise a MODERROR the moment it was saved and reloaded
+				// (issue #181). Nothing is staged, nothing is flushed, nothing is reported.
+				if (KingdomSealSpatialRules.SpatialCaptureIsFault(false, spatial)) return false;
+				KingdomLog.Log("seal: loaded world not staged yet ("
+					+ (string.IsNullOrEmpty(Failure) ? "spatial capture pending" : Failure) + ")");
+				Failure = "";
+				return true;
 			}
 			if (!KingdomSealEngineRules.MayRestoreLoadedPrimary(stage, saved))
 			{

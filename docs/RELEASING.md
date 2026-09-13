@@ -286,6 +286,11 @@ git rev-parse HEAD
 That full receipt-binding commit is `candidateCommit`. `docs/` is outside runtime staging, so the
 staged candidate remains byte-identical to the subscribed package.
 
+Freeze `TESTING.md` before this binding commit. Public packaging compares its exact bytes with
+the bound candidate and refuses later edits, even though the file is outside the Workshop payload.
+Keep changing publication status in `docs/STATUS.md` and the package README; the test protocol
+links to that ledger so promotion does not require rewriting the verified protocol.
+
 ## 5A. First public v0.3 Alpha — completed `v0.3.0`
 
 This subsection records the one-time first-publication flow. Do not rerun it or recreate its tag;

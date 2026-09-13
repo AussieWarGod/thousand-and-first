@@ -40,6 +40,18 @@ namespace ThousandAndFirst.Tests
 		private static string ReadChecksAndCases() =>
 			Read(Checks) + Read(Cases) + Read(Telemetry) + Read(Placement);
 
+		[Test]
+		public void RemovedBuildingMustHaveACompletedSettledStrikeReceipt()
+		{
+			string cases = Read(Cases);
+			Assert.That(cases, Does.Contain("RequireSettledStrike(Require);"));
+			Assert.That(cases.IndexOf("RequireSettledStrike(Require);", StringComparison.Ordinal),
+				Is.LessThan(cases.IndexOf("int salvaged = SalvageByReceipt", StringComparison.Ordinal)));
+			string telemetry = Read(Telemetry);
+			Assert.That(telemetry, Does.Contain("row.Phase == KingdomConstructionPhase.Complete"));
+			Assert.That(telemetry, Does.Contain("row.PhysicalPhase == KingdomPhysicalPhase.Settled"));
+		}
+
 		private static string ConstValue(string Source, string Name)
 		{
 			string marker = "internal const string " + Name + " = \"";
@@ -122,10 +134,10 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void SealedScriptRunsFourChecksAtTheWidenedCumulativeCadence()
+		public void SealedScriptRunsFiveChecksThroughLarderTeardown()
 		{
-			// Corrects the false "polls every tick" claim: Check() is driven only by these four
-			// sealed teardown-check verbs. Cumulative ticks 2400/6000/9600/13200 (deltas
+			// Corrects the false "polls every tick" claim: Check() is driven only by these five
+			// sealed teardown-check verbs. Cumulative ticks 2400/6000/9600/13200/16800 (deltas
 			// 2400/3600/3600/3600) per review-bba51c4-teardown-findings.md nit 1 -- widened from
 			// the prior zero-slack 2000/4800/7600/10800.
 			string source = Read(Provider);
@@ -134,14 +146,14 @@ namespace ThousandAndFirst.Tests
 			int checkVerbCount = 0;
 			int index = 0;
 			while ((index = source.IndexOf("CheckVerb,", index)) >= 0) { checkVerbCount++; index++; }
-			Assert.That(checkVerbCount, Is.EqualTo(4), "exactly four sealed CheckVerb tokens");
+			Assert.That(checkVerbCount, Is.EqualTo(5), "exactly five sealed CheckVerb tokens");
 			// Copilot #167 thread 3: every cumulative-tick list in the two Harness files must read
-			// the four numbers the sealed script produces. Provider.cs may name the prior
+			// the five numbers the sealed script produces. Provider.cs may name the prior
 			// schedule only as the explicitly superseded one; Checks.cs must not name it at all.
-			Assert.That(source, Does.Contain("Cumulative ticks 2400/6000/9600/13200"));
+			Assert.That(source, Does.Contain("Cumulative ticks 2400/6000/9600/13200/16800"));
 			Assert.That(source, Does.Contain("the prior 2000/4800/7600/10800 schedule"));
 			string checks = Read(Checks);
-			Assert.That(checks, Does.Contain("cumulative ticks 2400/6000/9600/13200"));
+			Assert.That(checks, Does.Contain("cumulative ticks 2400/6000/9600/13200/16800"));
 			Assert.That(checks, Does.Not.Contain("2000/4800/7600/10800"));
 		}
 

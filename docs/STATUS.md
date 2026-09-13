@@ -1,16 +1,27 @@
 # Current implementation and release evidence
 
-## Current 0.3.4 heart integration candidate — unverified
+## Current 0.3.4 Quickstart hotfix — release gates pending
 
-3097 staged C# files; 440,006 physical lines; cold-install inventory contains 3128 files.
-Compile inventory: 3097 sources, baseline and compatibility symbols (3093 baseline).
-Direct `XRL` imports: 1446 files, 0 over the line limit. Zero at or above 300 lines.
-Inventory SHA-256: `b80c62e7798a8df85282a9a41300d3dec5c249f627db47c404b2a662e378a115`.
+3098 staged C# files; 440,105 physical lines; cold-install inventory contains 3129 files.
+Compile inventory: 3098 sources, baseline and compatibility symbols (3094 baseline).
+Direct `XRL` imports: 1445 files, 0 over the line limit. Zero at or above 300 lines.
+Inventory SHA-256: `8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8`.
 Combines #141 authority, #144 shared-XL validation, #138/#139 rung settlement and #137 camp
 content/native fixture over dev with the verified 0.3.3 backmerge. Production and test-project
-merges are complete; compile, combined-suite, native progression and semantic review are owed.
+merges are complete. Current main/portable suites pass 14787/5743 cases with zero skips,
+and all four compile modes pass. Automated structural review binds the inventory above.
+All six location/advisor choices pass fourteen-day Quickstart, housing and paid construction,
+real save/cold load and a further paid commission on `86c0b5df`. The supplied housing crisis
+passes departure, retention of the final two, recovery and the complete save/load/next-action
+chain on `60f11aee`. Historical reader `55963285` preserves the genuine 0.3.3 fresh save,
+including its original stock and identities, without bootstrap replay. Later historical-save
+progression remains untested. Each result retains its exact inventory. Native creators (17 cases), guide topics (3) and first-guest correspondence (1) pass on
+`660ba354`. They do not prove rendered UI or physical guest admission/citizenship. Teardown passes both real build/strike cases on `b27a26c2`, including exact zero/positive
+salvage, Complete/Settled receipts, removed city work rows, repeated-strike refusal, two live
+crew and a clean strict log. Native failures identified and fixed an unassigned salvage
+destination ID and stale end-of-pass work rows. Later heart-rung and broader Beta acceptance remain separate.
 Prior isolated evidence below remains bound to its original checkpoints, not this combined tree.
-No new version/tag/upload or Beta acceptance is claimed.
+Private 0.3.4 metadata is prepared; no new tag/upload or Beta acceptance is claimed.
 
 The current draft additionally distinguishes fully authorized surveyed-heart physical access
 from ordinary positive road-network evidence. Exact public approach walkability remains required

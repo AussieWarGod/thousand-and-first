@@ -1,19 +1,59 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
-## Current combined heart candidate — gates owed
+## Quickstart housing hotfix acceptance (2026-09-13)
 
-The planned compatibility compile runs across 3097 production C# sources (3093 baseline);
-the cold-install inventory contains 3128 files. Inventory `b80c62e7798a8df85282a9a41300d3dec5c249f627db47c404b2a662e378a115`.
+The construction lifecycle now also observes the original four Quickstart citizens at startup,
+after its ordinary 16,800-turn construction interval (7,200 + 9,600), and after cold load. Each must retain its
+original physical identity, applied founding citizenship and living resident row. Startup requires
+unfinished shelter; the later observations require both reserved tent rows to be functionally
+built, sufficient physical roof capacity, and all four original citizens assigned to those homes.
+Master simulation, Growth and Lodging must remain enabled. No test citizens, housing completion,
+or home assignments are injected. The `quickstart-settlement` journal rows report measured counts;
+any refusal also fails the enclosing lifecycle step. This extends the real fire commission,
+save/load and next-action chain rather than treating that fire as evidence of working housing.
+All six location/advisor combinations pass the complete source, cold-load and next-commission
+chain at `86c0b5df`, with strict logs and owned stops. Archives: `quickstart-lifecycle/86c0b5df/`
+under the behaviour-evidence root; coverage rows 21–23 bind their exact hashes and inventory.
+Later production changes are the release-version literal, guide text and strike salvage
+stockpile identity binding and end-of-pass work projection refresh. The supplied housing
+crisis also passes recovery and cold load with the same two survivors at `60f11aee` (row 24/C7).
+The historical-version reader remains a separate check; boot-only receipts do not replace these chains.
+
+The retained public 0.3.3 fresh-save fixture uses a source-bound observer grant of 24 drams;
+new saves require the current 64-dram grant. `Tools/prepare-quickstart-033-upgrade.py REPO PIN
+SOURCE DESTINATION` verifies the old public executable/content hashes, successful fresh-save
+journal, stopped ownership, sealed inputs and exact save hashes before creating a fresh reader.
+Its sealed historical marker binds the public commit, GameID, snapshot hash and original quantity.
+The observer requires that marker to own the active cold load, then checks the actual water,
+container, custody and receipts without replenishing stock. Malformed or mismatched markers
+refuse; they do not select a default. This fixture covers that exact fresh save, not arbitrary
+historical progression. Native reader `55963285` passes preactivation and post-load checks,
+strict logs and owned shutdown for the retained save; coverage row 25 binds the result.
+Creator fault fixtures use the current grant before injecting capacity or custody faults;
+the persona expects all 17 registered cases.
+
+Native teardown must prove both the physically removed building and its exact Complete/Settled
+strike receipt before accepting the material return. Dedicated stores may begin without an
+assigned ID: inventory salvage must acquire and record that identity, while null means ground
+salvage only. The larder case exercises positive salvage; the fire case exercises zero salvage.
+Both require a refused second strike. Strict Player.log remains decisive even when case summaries
+pass. Original quarantine failures and each subsequent run retain distinct profiles and receipts.
+
+## Retained combined heart candidate — superseded checkpoint
+
+The planned compatibility compile runs across 3098 production C# sources (3094 baseline);
+the cold-install inventory contains 3129 files. Inventory `fba0d595a8b2c29876f3f74eae29914a9595d85182831f2ceddb5b44d51dfdc0`.
 This combines heart authority, shared-XL transition, rung settlement and camp content/fixture.
 It also drafts surveyed-heart physical ingress independent of ordinary road-network evidence;
 protected road ground remains protected. Predecessor native ingress census was RED.
 No combined compilation, licensed-suite or native progression result is claimed yet. Earlier
-figures below remain retained evidence for their own checkpoints. Current public release is
-0.3.3; this work prepares 0.3.4 and does not change the published tag or package.
+figures below remain retained evidence for their own checkpoints.
 
-The current public Alpha manifest is `0.3.3`, published to the public Workshop item.
-Its private candidate passed subscribed-install verification and finalization (2026-09-11).
-Public delivery is recorded separately in `docs/STATUS.md`; `0.3.2` is the prior public release.
+Public release status is tracked in [docs/STATUS.md](docs/STATUS.md).
+This test protocol stays byte-identical between private-candidate binding and public
+promotion; publication updates belong in the status ledger. Historical checkpoint:
+0.3.3 passed subscribed-install verification and finalization on 2026-09-11;
+0.3.2 was the preceding public release.
 Working-tree changes do not inherit that tagged release's receipts. Any next public release
 requires a new version.
 A future v1.0 test-candidate claim requires its exact tree—not any historical

@@ -16,6 +16,57 @@ namespace ThousandAndFirst.Tests
 			=> Assert.That(KingdomSealPendingRules.RoadlessEntrance(entrance, noEntry, streets),
 				Is.EqualTo(expected));
 
+		/// <summary>
+		/// The load path and the daily pass read ONE rule, so a state one carries the other cannot
+		/// call a fault. Pending is the settlement saying "not yet" -- the public entrance has no
+		/// witnessed street to the zone edge -- and a save/reload of that same young settlement
+		/// must not turn it into a MODERROR (issue #181).
+		/// Mutation: dropping the Pending clause makes case 4 a fault, which is the defect; making
+		/// every refusal tolerable makes cases 2 and 3 pass silently, which hides a broken reading.
+		/// </summary>
+		// The result is passed as its int: the enum is internal and this fixture is public.
+		[TestCase(false, (int)KingdomInheritanceSpatialCaptureResult.Malformed, true)]
+		[TestCase(false, (int)KingdomInheritanceSpatialCaptureResult.Unavailable, true)]
+		[TestCase(false, (int)KingdomInheritanceSpatialCaptureResult.Captured, true)]
+		[TestCase(false, (int)KingdomInheritanceSpatialCaptureResult.Pending, false)]
+		[TestCase(true, (int)KingdomInheritanceSpatialCaptureResult.Captured, false)]
+		[TestCase(true, (int)KingdomInheritanceSpatialCaptureResult.Pending, false)]
+		[TestCase(true, (int)KingdomInheritanceSpatialCaptureResult.Malformed, false)]
+		public void OnlyAPendingSpatialCaptureIsCarriedRatherThanFaulted(bool captured,
+			int spatial, bool expected)
+			=> Assert.That(KingdomSealSpatialRules.SpatialCaptureIsFault(captured,
+					(KingdomInheritanceSpatialCaptureResult)spatial),
+				Is.EqualTo(expected));
+
+		[Test]
+		public void PhysicalIngressWaitsOnlyAfterBuildingComponentsAreVerified()
+		{
+			string capture = TestMain.ReadRepositoryText("Core/KingdomInheritanceSpatial.cs");
+			Assert.That(capture, Does.Contain("out bool ingressBlocked)"));
+			Assert.That(capture, Does.Contain("return ingressBlocked ? KingdomInheritanceSpatialCaptureResult.Pending"));
+			string staging = TestMain.ReadRepositoryText("Growth/KingdomArchitectureStamper.Staging.cs");
+			int complete = staging.IndexOf("internal static bool TryVerifyComplete(");
+			int components = staging.IndexOf("!TryExactOutput(", complete);
+			int passage = staging.IndexOf("TryVerifyPassability(Z, intent, snapshot, lot", complete);
+			int ingress = staging.IndexOf("out Failure, out IngressBlocked)", complete);
+			Assert.That(components, Is.GreaterThan(complete));
+			Assert.That(passage, Is.GreaterThan(components));
+			Assert.That(ingress, Is.GreaterThan(passage));
+		}
+
+		[Test]
+		public void FirstLoadWithoutAStageAlsoCarriesTypedPending()
+		{
+			string source = TestMain.ReadRepositoryText("Core/KingdomSeal.Synchronization.cs");
+			int begin = source.IndexOf("if (stage == null)\n");
+			int end = source.IndexOf("if (stage.Status ==", begin);
+			string unstaged = source.Substring(begin, end - begin);
+			Assert.That(unstaged, Does.Contain("out Failure, out KingdomInheritanceSpatialCaptureResult initialSpatial)"));
+			Assert.That(unstaged, Does.Contain("SpatialCaptureIsFault(flushed, initialSpatial)"));
+			Assert.That(unstaged, Does.Not.Contain("Dirty = false"));
+			Assert.That(unstaged, Does.Not.Contain("Revision ="));
+		}
+
 		[Test]
 		public void PendingCaptureRefusesBeforeUnavailableFallbackOrPublication()
 		{
@@ -70,8 +121,10 @@ namespace ThousandAndFirst.Tests
 			string semantic = TestMain.ReadRepositoryText("Core/KingdomSeal.Semantic.cs");
 			Assert.That(semantic, Does.Contain("seal.ReportCaptureFailure(Reason, Failure, Spatial)"));
 			string pass = TestMain.ReadRepositoryText("Core/KingdomSystem.z21.SemanticPass.cs");
-			Assert.That(pass, Does.Contain("out failure, out spatial)"));
-			Assert.That(pass, Does.Contain("&& spatial != KingdomInheritanceSpatialCaptureResult.Pending)"));
+			// Moved with the code (issue #181): the pass still reads the TYPED result, but the
+			// Pending clause is now the shared rule both it and the load path ask.
+			Assert.That(pass, Does.Contain("out spatial), spatial))"));
+			Assert.That(pass, Does.Contain("KingdomSealSpatialRules.SpatialCaptureIsFault("));
 			Assert.That(report, Does.Contain("string.Equals(LastPendingKey, key, StringComparison.Ordinal)"));
 		}
 	}

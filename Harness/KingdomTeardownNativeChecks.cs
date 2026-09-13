@@ -5,7 +5,6 @@ using ThousandAndFirst.Simulation.City;
 using XRL;
 using XRL.World;
 using XRL.World.Parts;
-
 namespace ThousandAndFirst.Harness
 {
 	/// <summary>
@@ -79,7 +78,7 @@ namespace ThousandAndFirst.Harness
 			private Case Fire, Larder;
 			private Cell Seat;
 			private bool LarderStarted;
-			private List<GameObject> Crew;
+			internal List<GameObject> Crew;
 			internal bool Done;
 			internal readonly StringBuilder Evidence = new StringBuilder();
 
@@ -225,8 +224,8 @@ namespace ThousandAndFirst.Harness
 				return Chest;
 			}
 
-			/// <summary>Driven only by the sealed script's four teardown-check verbs (Provider.cs,
-			/// cumulative ticks 2400/6000/9600/13200), never every tick. Done only once every
+			/// <summary>Driven only by the sealed script's five teardown-check verbs (Provider.cs,
+			/// cumulative ticks 2400/6000/9600/13200/16800), never every tick. Done only once every
 			/// started case's negative path has been observed AND larder has started; forces no
 			/// transition.
 			/// <para>
@@ -248,6 +247,7 @@ namespace ThousandAndFirst.Harness
 			/// </summary>
 			internal void Check()
 			{
+				foreach (Case c in Cases) Evidence.Append(c.StrikeReceiptDiagnostic());
 				long elapsed = Game.TimeTicks - StartTicks;
 				long tick = Game.TimeTicks;
 				int onRoll = KingdomResidents.OnRollCount(System);

@@ -97,6 +97,9 @@ namespace ThousandAndFirst.Simulation.City
 			{
 				Refuse("distance observe", fault);
 			}
+			// Construction and strikes may have changed roots since check-in. Publish
+			// the same live work projection before the following spatial seal reads it.
+			written = ReadWorks(written, Z, Survey);
 			Publish(System, written);
 		}
 

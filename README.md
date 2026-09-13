@@ -4,19 +4,18 @@ Found a faction in Caves of Qud, raise settlements from reserved ground, and gov
 after you leave. Water, food, labour, materials, roads, trade, threats, civic memory, and physical
 works remain part of the same world instead of becoming a detached management screen.
 
-**Status: 0.3.3 public Alpha playtest.**
-Alpha playtest. Back up saves before updating.
+**Status: 0.3.4 pre-release source (private Alpha candidate).**
+The public listing remains the 0.3.3 public Alpha playtest.
+Back up saves before updating.
 Current evidence and remaining test limits live in
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/STATUS.md);
 historical test counts do not sign later changes.
 
-This hotfix lets construction menus and commissions read dedicated material stockpiles
-outside the settlement's background pass. Fresh Kingdom Quickstart materials also receive
-the engine identities required by routed construction inputs. Automated native checks passed
-paid construction from the camp chest and save/cold-load across all three locations and both
-advisor choices. Existing goods stay in place; no replacement supplies or blanket identity
-repair are performed. These checks do not establish building completion, ordinary play,
-or full historical-save compatibility; see
+This candidate adds four Quickstart founding citizens, two starter shelter plots and
+64 finite drams of water. Housing shortages retain the final two citizens so the
+settlement can recover. The guide explains construction, supplies and the first guest.
+New grants apply to new Quickstart worlds; completed historical grants are not replenished.
+Native acceptance and publication are still pending. See
 [test scope](https://github.com/AussieWarGod/thousand-and-first/blob/main/DevTests/QUICKSTART-BOOT-TESTS.md).
 
 ## What the mod adds

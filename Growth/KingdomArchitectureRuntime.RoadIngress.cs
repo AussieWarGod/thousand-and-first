@@ -10,9 +10,14 @@ namespace ThousandAndFirst
 		internal static bool TryVerifyPhysicalIngressRoutes(Zone Z,
 			KingdomPlotRules.PlotRect Rect, ArchitectureLayoutSnapshot Snapshot,
 			out string Failure)
+			=> TryVerifyPhysicalIngressRoutes(Z, Rect, Snapshot, out Failure, out _);
+
+		internal static bool TryVerifyPhysicalIngressRoutes(Zone Z,
+			KingdomPlotRules.PlotRect Rect, ArchitectureLayoutSnapshot Snapshot,
+			out string Failure, out bool Blocked)
 		{
 			List<ArchitecturePoint> lanes = new List<ArchitecturePoint>();
-			return TryPhysicalRoadIngressLanes(Z, Rect, Snapshot, lanes, out Failure);
+			return TryPhysicalRoadIngressLanes(Z, Rect, Snapshot, lanes, out Failure, out Blocked);
 		}
 
 		/// <summary>
@@ -25,7 +30,13 @@ namespace ThousandAndFirst
 		private static bool TryPhysicalRoadIngressLanes(Zone Z,
 			KingdomPlotRules.PlotRect Rect, ArchitectureLayoutSnapshot Snapshot,
 			IList<ArchitecturePoint> Lanes, out string Failure)
+			=> TryPhysicalRoadIngressLanes(Z, Rect, Snapshot, Lanes, out Failure, out _);
+
+		private static bool TryPhysicalRoadIngressLanes(Zone Z,
+			KingdomPlotRules.PlotRect Rect, ArchitectureLayoutSnapshot Snapshot,
+			IList<ArchitecturePoint> Lanes, out string Failure, out bool Blocked)
 		{
+			Blocked = false;
 			Failure = null;
 			if (Lanes == null) return Fail("road ingress has no result buffer", out Failure);
 			Lanes.Clear();
@@ -50,15 +61,23 @@ namespace ThousandAndFirst
 				for (int r = 0; r < route.Count; r++)
 				{
 					ArchitecturePoint point = route[r];
-					if (!KingdomRoadRules.InBounds(point.X, point.Y, Z.Width, Z.Height)
-						|| !KingdomRoads.Walkable(Z.GetCell(point.X, point.Y)))
+					if (!KingdomRoadRules.InBounds(point.X, point.Y, Z.Width, Z.Height))
+						return Fail("authored public ingress leaves the zone", out Failure);
+					if (!KingdomRoads.Walkable(Z.GetCell(point.X, point.Y)))
+					{
+						Blocked = true;
 						return Fail("authored public ingress is physically blocked at "
 							+ point.X + "," + point.Y, out Failure);
+					}
 				}
-				if (!KingdomRoadRules.InBounds(laneX, laneY, Z.Width, Z.Height)
-					|| !KingdomRoads.Walkable(Z.GetCell(laneX, laneY)))
+				if (!KingdomRoadRules.InBounds(laneX, laneY, Z.Width, Z.Height))
+					return Fail("authored public ingress lane leaves the zone", out Failure);
+				if (!KingdomRoads.Walkable(Z.GetCell(laneX, laneY)))
+				{
+					Blocked = true;
 					return Fail("authored public ingress lane is physically blocked or outside the zone",
 						out Failure);
+				}
 				int packed = KingdomRoadRules.Pack(laneX, laneY, Z.Width);
 				if (unique.Add(packed)) resolved.Add(new ArchitecturePoint(laneX, laneY));
 			}

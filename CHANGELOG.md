@@ -8,14 +8,29 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
-## Unreleased — Beta gap report
+## [0.3.4] — 2026-09-13 (Alpha)
 
-Current 3097-file census is line-cap green: 440,006 physical lines; direct `XRL`
-imports occur in 1446 files, 0 of them over the line limit. Inventory SHA-256:
-`b80c62e7798a8df85282a9a41300d3dec5c249f627db47c404b2a662e378a115`. The cold-install inventory contains 3128 files.
+Private candidate preparation; this version has not been published.
+
+Quickstart supplies four founding citizens, two shelter plots and a full finite
+64-dram water cask. Housing-driven departures retain the final two citizens so
+construction can recover. The guide explains the starter housing and first guest.
+Young settlements tolerate typed pending spatial capture on cold load, and exact
+stamped teardown orders can resume. Salvage now assigns a selected stockpile identity
+before recording inventory custody, preventing valid timber returns from quarantining
+a completed demolition. End-of-pass work records also refresh before spatial sealing,
+so a legitimately removed building does not leave a stale sealed work root.
+Native/release evidence below remains scoped
+to its actual checkpoints; the broader Beta goal is not complete.
+
+Current 3098-file census is line-cap green: 440,105 physical lines; direct `XRL`
+imports occur in 1445 files, 0 of them over the line limit. Inventory SHA-256:
+`8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8`. The cold-install inventory contains 3129 files.
 This isolated 0.3.4 preparation combines heart authority, shared-XL transition, rung settlement
-and camp content/fixture branches. Combined compile/native gates and semantic review are owed;
-all earlier checkpoint counts below are retained, never carried forward as acceptance.
+and camp content/fixture branches with Quickstart recovery and exact strike phase recovery.
+All four compile modes and 14787 main/5743 portable cases pass with zero skips. Automated
+structural review binds this inventory. Native and release acceptance remain pending;
+all earlier checkpoint counts below retain their original scope.
 
 Draft surveyed-heart ingress correction: full heart authority plus exact physical public access,
 without requiring the ordinary road network beyond the enlarged margin. Ordinary road evidence

@@ -7,8 +7,57 @@ namespace ThousandAndFirst.Harness
 {
 	internal static partial class KingdomTeardownNativeChecks
 	{
+		internal static void ObserveCrewDeath(GameObject Body, GameObject Killer, string Reason, string Category)
+		{
+			if (Retained?.Crew == null || !Retained.Crew.Contains(Body)) return;
+			Retained.Evidence.Append("; crew-death id=").Append(Body.IDIfAssigned)
+				.Append(" killer=").Append(Killer?.Blueprint ?? "none")
+				.Append(" reason=").Append(KingdomScenarioRules.Bounded(Reason ?? "none"))
+				.Append(" category=").Append(Category ?? "none");
+		}
+
 		private sealed partial class Case
 		{
+			private void RequireSettledStrike(Action<bool, string> Require)
+			{
+				Require(!System.City.WorkIds.Contains(Simulation.City.KingdomCityRules.StableId(StruckId)),
+					Name + ": the city work projection still names the removed building");
+				KingdomConstruction.TryFind(StrikeReceiptId, out KingdomConstructionJob row);
+				Require(row != null && row.Phase == KingdomConstructionPhase.Complete
+					&& row.PhysicalPhase == KingdomPhysicalPhase.Settled,
+					Name + ": removed building has an unsettled strike receipt: " + StrikeReceiptDiagnostic());
+			}
+
+			internal string StrikeReceiptDiagnostic()
+			{
+				if (string.IsNullOrEmpty(StrikeReceiptId)) return "";
+				KingdomConstruction.TryFind(StrikeReceiptId, out KingdomConstructionJob row);
+				string detail = row == null ? "missing" : row.Phase + "/" + row.PhysicalPhase
+					+ " destination=" + (row.PhysicalDestinationId ?? "null")
+					+ " item=" + (row.PhysicalItemId ?? "null") + " amount=" + row.PhysicalAmount;
+				foreach (GameObject root in Zone.GetObjects())
+				{
+					if (root.Inventory == null) continue;
+					foreach (GameObject item in root.Inventory.Objects)
+						if (item.GetStringProperty(KingdomMaterials.StrikeSalvageReceiptProperty) == StrikeReceiptId)
+							detail += " observed-item=" + (item.IDIfAssigned ?? "null")
+								+ " count=" + KingdomMaterials.RawCensusCountOf(item)
+								+ " holder=" + (root.IDIfAssigned ?? "null")
+								+ " custody=" + ReferenceEquals(item.InInventory, root);
+				}
+				return "; strike-receipt case=" + Name + " " + detail;
+			}
+
+			private string StrikeTelemetry(GameObject Root)
+			{
+				KingdomConstruction.TryFind(StrikeReceiptId, out KingdomConstructionJob row);
+				return "; strike-left=" + Root.GetIntProperty(KingdomMaterials.StrikeEffortProperty)
+					+ "; strike-total=" + Root.GetIntProperty(KingdomMaterials.StrikeTotalProperty)
+					+ "; strike-worked=" + Root.GetStringProperty(KingdomMaterials.StrikeWorkedProperty)
+					+ "; strike-job=" + (row == null ? "missing" : row.Phase.ToString())
+					+ "; strike-physical=" + (row == null ? "missing" : row.PhysicalPhase.ToString());
+			}
+
 			/// <summary>review-teardown-run15-neverbuilt.md finding 1: the job row and its tick
 			/// counter were read once at Start and never again, so an awaiting-built stall was
 			/// undiagnosable. Re-reads the raising root's own production properties every Check

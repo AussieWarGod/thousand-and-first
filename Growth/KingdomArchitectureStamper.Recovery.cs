@@ -55,7 +55,7 @@ namespace ThousandAndFirst
 				&& exact.GetIntProperty(ComponentCarriedProperty) == 1;
 		}
 
-		private static HashSet<int> ConnectionCells(Zone Z)
+		internal static HashSet<int> ConnectionCells(Zone Z)
 		{
 			HashSet<int> result = new HashSet<int>();
 			foreach (ZoneConnection connection in Z.EnumerateConnections())

@@ -114,6 +114,8 @@ namespace ThousandAndFirst.Harness
 			if (!KingdomData.TryGetBuilding(BuildKey, out KingdomRules.BuildEntry entry))
 				return Refuse(OpenStep, "the \"" + BuildKey + "\" design is missing from the live catalogue");
 			int water = KingdomGrowth.CountStoredWater(Zone);
+			if (!KingdomQuickstartSettlementChecks.Observe(Game, Zone, System, "startup", out string settlementFailure))
+				return Refuse(OpenStep, settlementFailure);
 			string opened = KingdomQuickstartLifecycleStoreRules.OpenedReceipt(Zone.ZoneID,
 				stockpile.IDIfAssigned, Game.Turns);
 			Game.SetStringGameState(OpenedKey, opened);

@@ -36,8 +36,9 @@ namespace ThousandAndFirst
 					Context.Check(TryPrepareGrant(water, receipt, KingdomQuickstartPhase.WaterStocked,
 						out string failure), failure);
 					LiquidVolume volume = water.GetPart<LiquidVolume>();
-					Context.Check(KingdomLiquids.Fill(volume, "water", 24) == 24,
-						"native water preparation must fill 24 physical drams");
+					Context.Check(KingdomLiquids.Fill(volume, "water", KingdomQuickstartRules.StarterWaterDrams)
+						== KingdomQuickstartRules.StarterWaterDrams,
+						"native water preparation must fill the exact current starting grant");
 					if (Cut == "before") throw new InvalidOperationException(NativeFaultMessage);
 					Context.Check(TryPlaceGrant(Context.Zone, water, KingdomQuickstartRules.WaterCellX,
 						KingdomQuickstartRules.WaterCellY, out failure), failure);

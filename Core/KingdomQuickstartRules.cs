@@ -39,7 +39,8 @@ namespace ThousandAndFirst
 		public const int AdvisorCellX = 28;
 		public const int AdvisorCellY = 16;
 
-		public const int StarterWaterDrams = 24;
+		// One full finite cask: enough for the longer rocky-ground opening as well as housing.
+		public const int StarterWaterDrams = 64;
 		public const int StarterFoodServings = 12;
 		public const int StarterMud = 1;
 		public const int StarterBrush = 3;
