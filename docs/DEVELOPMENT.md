@@ -14,7 +14,7 @@ requires broader checks, not an assumed documentation-only classification.
 
 | Change | Development command | Additional work before acceptance |
 | --- | --- | --- |
-| README or release prose | `Tools/dev-check.sh docs` | Inspect linked claims and metadata; required CI still runs. |
+| README or release prose | `Tools/dev-check.sh docs` | Includes actual Workshop/Alpha metadata validation; inspect linked claims; required CI still runs. |
 | Python or shell tool | `Tools/dev-check.sh tools 'persona_runner_test.py'` | Select the actual related test module; syntax-check edited shell scripts. |
 | C# rules or source contracts | `Tools/dev-check.sh main KingdomQuickstart` | Select the relevant fixture or method substring; include portable checks if that kernel changes. |
 | Portable C# kernel | `Tools/dev-check.sh portable KingdomQuickstart` | Full suites at integration. |
@@ -71,6 +71,13 @@ the private receipt, candidate lineage and frozen inputs required by the Alpha l
 change TESTING.md between private binding and public promotion. Finish the existing tagged
 workflow through verification and finalization. Do not restart or resubmit because output is
 quiet; inspect the existing process or workflow handle. No manual test gate is required.
+
+The shared `docs` command invokes the existing private/public Alpha metadata validators,
+including the exact README status and candidate record. Public 0.3.5 was refused before upload
+because a wording fix passed general documentation checks but broke the Alpha contract. Keep
+the canonical status line and explain the package target/publication distinction beside it.
+After any later release-document edit, rerun this fast preflight before tagging. This preflight
+does not prove package reproduction, ancestry, subscribed delivery or final release acceptance.
 
 Profile slow commands before changing release execution. Record wall time, platform, input
 hashes, case identities, skips and exit status. Optimize duplicate work or filesystem access;

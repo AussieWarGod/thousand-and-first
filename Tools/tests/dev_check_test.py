@@ -97,6 +97,27 @@ elif sys.argv[1] == os.getenv("FAIL_STEP"):
         self.assertEqual(self.run_check("licensed").returncode, 2)
         self.assertFalse(self.log.exists())
 
+    def docs_environment(self):
+        fake_bin = self.root / "bin"
+        fake_bin.mkdir()
+        for name in ("git", "python3"):
+            shutil.copy2(self.fake, fake_bin / name)
+        return {"PATH": str(fake_bin) + os.pathsep + os.environ["PATH"]}
+
+    def test_docs_invokes_release_metadata_before_general_readiness_tests(self):
+        result = self.run_check("docs", **self.docs_environment())
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual([row["args"][0] for row in self.calls()],
+                         ["diff", "Tools/check-doc-freshness.py",
+                          "Tools/release_metadata_preflight.py", "-m"])
+
+    def test_docs_metadata_refusal_stops_and_propagates(self):
+        result = self.run_check("docs", FAIL_STEP="Tools/release_metadata_preflight.py",
+                                **self.docs_environment())
+        self.assertEqual(result.returncode, 19)
+        self.assertEqual(self.calls()[-1]["args"], ["Tools/release_metadata_preflight.py"])
+        self.assertIn("exit=19", result.stdout)
+
     def test_invalid_selection_never_invokes_dotnet(self):
         for args in ((), ("main",), ("main", " "), ("main", "X", "Y"),
                      ("tools", "missing_test.py"), ("tools", "../escape_test.py"),

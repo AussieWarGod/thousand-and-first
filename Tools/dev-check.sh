@@ -16,6 +16,7 @@ case "$mode" in
 		[ "$#" -eq 0 ] || usage
 		git diff --check
 		python3 Tools/check-doc-freshness.py
+		python3 Tools/release_metadata_preflight.py
 		python3 -m unittest discover -s Tools/tests -p release_readiness_test.py
 		;;
 	tools)
