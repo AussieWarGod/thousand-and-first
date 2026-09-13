@@ -34,6 +34,8 @@ def judge(source, loaded):
     action, _ = one(source, "guest-actions-check")
     shortage, refusal = one(source, "guest-save-shortage")
     supply, transfer = one(source, "guest-save-supply")
+    require(transfer.startswith("native-guest-save "), "carried water record lacks its native prefix")
+    transfer = transfer[len("native-guest-save "):]
     witness, written = one(source, "guest-save-witness")
     save, _ = one(source, "lifecycle-save")
     require(action < shortage < supply < witness < save, "recruitment, shortage, refill and save are out of order")

@@ -11,7 +11,7 @@ class GuestSaveCheckTests(unittest.TestCase):
         stamp = "guest=123; population=5; receipt-sha256=" + "a" * 64 + "; world-repair=false"
         source = [("guest-actions-check", "OK", "passed"),
                   ("guest-save-shortage", "OK", "stored=0; required=2; commission-refused=true; authority-unchanged=true; materials-unchanged=true; water-debit=0"),
-                  ("guest-save-supply", "OK", "supply=carried-water; amount=8; donor=456; cask=789; donor-before=32; donor-after=24; store-before=0; store-after=8; moves=12; adjacent=true; conserved=true; authority-unchanged=true; materials-unchanged=true; world-repair=false"),
+                  ("guest-save-supply", "OK", "native-guest-save supply=carried-water; amount=8; donor=456; cask=789; donor-before=32; donor-after=24; store-before=0; store-after=8; moves=12; adjacent=true; conserved=true; authority-unchanged=true; materials-unchanged=true; world-repair=false"),
                   ("guest-save-witness", "OK", stamp),
                   ("lifecycle-save", "OK", "saved"), ("SCRIPT-COMPLETE", "OK", "done")]
         loaded = [("guest-load-preactivation", "OK", "exact-guest-authority=true; before-AfterGameLoaded=true; " + stamp),
@@ -65,7 +65,7 @@ class GuestSaveCheckTests(unittest.TestCase):
             with self.subTest(old=old), self.assertRaises(ValueError): guest_save_check.judge(source, loaded)
 
     def test_transfer_mutations_refuse(self):
-        for old, new in (("supply=carried-water", "supply=created"), ("amount=8", "amount=9"),
+        for old, new in (("native-guest-save ", ""), ("supply=carried-water", "supply=created"), ("amount=8", "amount=9"),
                          ("donor-before=32", "donor-before=33"), ("donor-after=24", "donor-after=25"),
                          ("donor-after=24", "donor-after=-1"), ("moves=12", "moves=81"),
                          ("cask=789", "cask=456"), ("store-before=0", "store-before=1"),
