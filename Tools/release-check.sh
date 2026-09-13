@@ -97,14 +97,10 @@ echo "[4/11] exact staged compile"
 ./Tools/gate.sh
 
 echo "[5/11] pure and source-contract tests"
-TEST_SCRIPT="$(wslpath -w "$REPO/DevTests/test.ps1")"
-(
-	cd /mnt/c
-	TAF_TEST_SCRIPT_WIN="$TEST_SCRIPT" TAF_QUD_BASE_WIN="$BASE_WIN" \
-	WSLENV="${WSLENV:+$WSLENV:}TAF_TEST_SCRIPT_WIN:TAF_QUD_BASE_WIN" \
-	powershell.exe -NoProfile -ExecutionPolicy Bypass -Command \
-		'$env:TAF_QUD_BASE = $env:TAF_QUD_BASE_WIN; & $env:TAF_TEST_SCRIPT_WIN; exit $LASTEXITCODE'
-)
+# Native .NET avoids thousands of source reads through Windows-to-WSL file sharing.
+# The same two projects run unfiltered with zero skips; Windows engine compiles remain above.
+TAF_DOTNET="${TAF_DOTNET:-$HOME/.dotnet/dotnet}" TAF_QUD_BASE="$BASE" \
+	"$REPO/Tools/dev-check.sh" licensed
 
 echo "[6/11] XML and tile reachability"
 python3 Tools/generate-lot-realizations.py --check

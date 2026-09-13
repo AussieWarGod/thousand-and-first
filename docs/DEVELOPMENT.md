@@ -36,11 +36,13 @@ TAF_DOTNET=/home/r/.dotnet/dotnet Tools/dev-check.sh main KingdomQuickstart
 
 Prefer native Linux .NET for focused source checks on a Linux checkout. Windows accesses to
 `\\wsl.localhost` can be expensive. This preference does not replace the release's Windows
-or licensed gates. Set `TAF_QUD_BASE` to the actual licensed Base directory when needed.
+engine compiles or hosted platform checks. Set `TAF_QUD_BASE` to the actual licensed Base
+directory when needed.
 For a full local licensed integration check, use `Tools/dev-check.sh licensed` with that SDK
 and installed data. It refuses an ambient test filter, restores and runs both projects serially,
 and stops at the first failure. This makes the same fast local route available to both agents;
-the tagged release still executes its existing Windows lane.
+the release source-test step uses this same command with the configured licensed Base directory.
+It defaults to `$HOME/.dotnet/dotnet`; set `TAF_DOTNET` when the pinned SDK is installed elsewhere.
 Keep restore beside its matching run. Never overlap .NET builds in one checkout or run this
 helper against a checkout being tested by another process. Use an isolated worktree for
 independent work. Never overlap native game scenarios or compete with the release Steam host.
@@ -83,6 +85,18 @@ Profile slow commands before changing release execution. Record wall time, platf
 hashes, case identities, skips and exit status. Optimize duplicate work or filesystem access;
 do not infer equivalent coverage from equal case counts. Stage performance changes separately
 from an urgent release candidate.
+
+The native source-test route was selected after comparing evaluated Linux and Windows inputs:
+both projects have identical source lists, compiler symbols and target framework, and every
+source byte matches the accepted Windows private 0.3.5 run. Both full licensed suites passed
+on native Linux in 49 seconds with zero skips. Hosted Windows suites, installed engine binding,
+all four Windows engine compile modes and native behavioral scenarios retain their own gates.
+This is a change to where engine-free source tests run, not evidence of native gameplay.
+Input comparison: `tooling/licensed-source-parity/917bb79d/result.json`, SHA-256
+`c60dcbaf8890ae1e0a5f25d10ffc35ab7ba7cb58d56c9ee48dccb73198aa2dfd` in the local evidence archive.
+It records all 2346 main and 1444 portable compiler inputs individually, rather than only counts.
+The subsequent test-only change updates the release-source contract to require the native Base
+handoff and shared full-suite command; gameplay test inputs and discovery rules are unchanged.
 
 ## Handoff between agents
 

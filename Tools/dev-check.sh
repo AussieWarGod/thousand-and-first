@@ -41,8 +41,14 @@ case "$mode" in
 		export TAF_REPO_ROOT="$repo" TAF_FORBID_SKIPS=1
 		unset TAF_ALLOWED_SKIPS
 		for project in "${projects[@]}"; do
-			"$dotnet_bin" restore "$project" --locked-mode -v q --nologo
-			"$dotnet_bin" run --project "$project" --no-restore -v q --nologo
+			leg=taf
+			[ "$project" != DevTests/PortableTests.csproj ] || leg=portable
+			if "$dotnet_bin" restore "$project" --locked-mode -v q --nologo; then :; else
+				rc=$?; echo "LICENSED_LEG_FAILED=$leg rc=$rc step=restore"; exit "$rc"
+			fi
+			if "$dotnet_bin" run --project "$project" --no-restore -v q --nologo; then :; else
+				rc=$?; echo "LICENSED_LEG_FAILED=$leg rc=$rc step=run"; exit "$rc"
+			fi
 		done
 		;;
 	audit)

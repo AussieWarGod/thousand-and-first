@@ -65,11 +65,13 @@ elif sys.argv[1] == os.getenv("FAIL_STEP"):
         self.assertEqual(result.returncode, 19)
         self.assertEqual([row["args"][0] for row in self.calls()], ["--version", "restore"])
         self.assertIn("exit=19", result.stdout)
+        self.assertIn("LICENSED_LEG_FAILED=taf rc=19 step=restore", result.stdout)
 
     def test_test_failure_propagates(self):
         result = self.run_check("portable", "Fixture", FAIL_STEP="run")
         self.assertEqual(result.returncode, 19)
         self.assertIn("exit=19", result.stdout)
+        self.assertIn("LICENSED_LEG_FAILED=portable rc=19 step=run", result.stdout)
 
     def test_wrong_sdk_runs_no_tests(self):
         self.assertEqual(self.run_check("main", "Fixture", FAKE_SDK="8.0.100").returncode, 2)
