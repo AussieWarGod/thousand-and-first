@@ -584,6 +584,18 @@ class MatchingTest(unittest.TestCase):
         found = matrix.parse_manifest(GREEN, "x.persona")
         self.assertEqual([], matrix.assess(found, self.green_journal(), "x.persona"))
 
+    def test_terminal_shorthand_requires_its_fixed_outcome(self):
+        for terminal, verb, good in (
+            ("COMPLETE", "SCRIPT-COMPLETE", "OK"),
+            ("STOPPED", "SCRIPT-STOPPED", "REFUSED"),
+            ("GATE-REFUSED", "GATE-REFUSED", "REFUSED"),
+        ):
+            with self.subTest(terminal=terminal):
+                expected = matrix.parse_expect(terminal, "x.persona")
+                self.assertEqual([], matrix.match(expected, [(verb, good, "")]))
+                bad = "REFUSED" if good == "OK" else "OK"
+                self.assertTrue(matrix.match(expected, [(verb, bad, "")]))
+
     def test_an_unexpected_ok_fails_as_loudly_as_a_refusal(self):
         found = matrix.parse_manifest(GREEN, "x.persona")
         extra = self.green_journal().replace(

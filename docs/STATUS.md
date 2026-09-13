@@ -29,8 +29,9 @@ Accepted local evidence, checked against the exact source and full sealed profil
 The journal oracle at `c417b980` corrects the full boot-header expectations and rejects
 refused COMPLETE rows. It validates the unchanged retained journals; no scenario or source
 was replayed or resealed to turn a failure into a pass. The ordinary run's initial postprocessor
-selected the wrong persona; its corrected persona check passes. The 61 persona tests include
-missing/refused-row mutations. Coverage row 27 records the measured scope and remaining gaps.
+selected the wrong persona; its corrected persona check passes. The 62 persona tests include
+missing/refused-row mutations and fixed success/failure outcomes for all terminal shorthands.
+Both retained journals also pass this stricter follow-up checker. Coverage row 27 records the measured scope and remaining gaps.
 
 All four licensed compile modes pass; 14790 main and 5743 portable cases pass with zero skips.
 Automated structural review binds this candidate. Public Alpha 0.3.4 remains the published build.
