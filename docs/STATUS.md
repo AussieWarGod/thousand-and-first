@@ -5,8 +5,20 @@
 A developer scenario extends the paid camp path toward rungs 3 and 4. Its disclosed city support
 uses fifty enrolled residents, eighteen authored tent rows, finite water and food stores, synthetic
 craft lessons and separately supplied material bills. Only setup housing uses a future calendar
-argument; ordinary turns must pay and complete both heart improvements. Native execution remains
-pending. This does not establish higher-rung persistence, ordinary growth or Beta acceptance.
+argument; ordinary turns must pay and complete both heart improvements. Full native completion
+remains unverified. This does not establish higher-rung persistence, ordinary growth or Beta acceptance.
+Latest attempt at `bbd430f4779bba0367eec8913e6fd8c8984f7666` was stopped early after the sealed
+options file acquired `OptionLookLocked=No`. The engine's input path can write that option when
+controller look movement is detected; the exact input source has not been independently proved.
+This reproduced option drift without a window capture. All 3377 C# inputs and runtime/Harness XML
+matched, and the strict log and owned shutdown passed, but the complete input seal failed.
+Invalid diagnostic archive: `beta-heart-chain/bbd430f4/options-drift-invalid-1/result.json`, SHA-256
+`cc20b5c19d3dc6a54c85c9bac71eed99f6e67f9a3e208e95b75d7d5bea3a455a`.
+The Make Camp guard's native event order and full paid progression remain unverified. Isolate
+physical input in the sealed scenario before another long run; do not mask drift by resealing.
+The shared host wait checker now retains valid elapsed overshoot, validates paired guards and
+progress, and binds chain clock observations. It does not replace native acceptance.
+
 The first attempt at `ec85c024226858ee65c815b979722615a4c13353` passed the original 6000-turn
 camp path but refused city support before any home was created: setup called an untyped layout
 lookup for a design requiring a typed lot. The correction reuses production plot-payload preflight.

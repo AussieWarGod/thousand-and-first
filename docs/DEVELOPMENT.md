@@ -86,6 +86,22 @@ expecting construction-input observations to reference them.
 A cropped quiet-window capture cannot exclude a blocking prompt. Use the existing full native
 window capture when the view is incomplete; never infer a completed turn from process responsiveness.
 Preserve a changed profile as invalid evidence with expected and actual inventories, not a new seal.
+Check the sealed options file early during a long native run. If it changes, retain the difference
+and stop before further expensive setup: that run cannot establish acceptance. Input can reach the
+game from a connected controller even while the script spends the founder's turns. A newly written
+look option is not proof of harmless initialization; trace its writer before changing sealed defaults.
+
+Use `Tools/scenario_advance_check.py` for guarded ordinary-wait accounting. The engine completes
+on the next player action opportunity, so 1201 actual turns for 1200 requested is valid. Keep the
+actual elapsed count; require the exact requested sequence, complete progress, paired founder guards,
+and (for the paid chain) matching `Game.Turns` observations. The checker supplements the persona,
+profile seals, owned shutdown and strict logs; its PASS alone is not native acceptance:
+
+```bash
+python3 Tools/scenario_advance_check.py /path/to/scenario-journal.tsv \
+  --requested 1200 3600 1200 1200 1200 7200 1200 6600 6600 1200 \
+  --chain-clocks --results /fresh/path/to/wait-accounting.json
+```
 
 ## Release batch
 
