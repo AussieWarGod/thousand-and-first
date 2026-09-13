@@ -1,5 +1,16 @@
 # Current implementation and release evidence
 
+## Unreleased camp test-ground correction — PR204
+
+The camp fixture preserved a glowpad at border cell `(0,15)` with the Spacetime Vortex mutation.
+Native creation and placement tracing at `ef1f78a44d9ab2df4f9a13c9e223e31c785b2d37` identifies
+that same active actor targeting an NPC and creating the vortex during ordinary combat. The
+closed failed attempt is `beta-camp-heart/ef1f78a4/vortex-caster-1/result.json`, SHA-256
+`387713d0ef3d8ed1d155b56bb491e9b4f4153ad83a41d4424f986e3da741f06c`.
+Developer test-ground cleanup now removes border creatures while retaining non-creature border
+objects and travel connections. The after-strip census refuses surviving non-player creatures.
+Fresh validation of this correction is pending; no ordinary-world cleanup or public release changes.
+
 ## Unreleased Beta validation — PR194
 
 This work does not change the finalized public 0.3.6 release below. Broader Beta acceptance
