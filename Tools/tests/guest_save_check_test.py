@@ -28,6 +28,16 @@ class GuestSaveCheckTests(unittest.TestCase):
         source, loaded = self.fixture()
         with self.assertRaises(ValueError): guest_save_check.judge(source, loaded[1:])
 
+    def test_unassigned_carried_vessel_id_is_valid_but_missing_or_duplicate_field_refuses(self):
+        source, loaded = self.fixture()
+        event, outcome, detail = source[2]
+        source[2] = event, outcome, detail.replace("donor=456", "donor=")
+        self.assertEqual("PASS", guest_save_check.judge(source, loaded)["verdict"])
+        for replacement in ("", "donor=; donor=; "):
+            source[2] = event, outcome, detail.replace("donor=456; ", replacement)
+            with self.subTest(replacement=replacement), self.assertRaises(ValueError):
+                guest_save_check.judge(source, loaded)
+
     def test_changed_identity_population_digest_or_retry_refuses(self):
         for old, new in (("guest=123", "guest=124"), ("population=5", "population=6"),
                          ("a" * 64, "b" * 64), ("stale-choice-refused=2", "stale-choice-refused=1"),

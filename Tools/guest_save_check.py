@@ -21,8 +21,9 @@ def one(rows, name):
     return matches[0]
 
 
-def field(detail, name):
-    found = re.findall(r"(?:^|;\s*)" + re.escape(name) + r"=([^;\s]+)(?=;|\s|$)", detail)
+def field(detail, name, allow_empty=False):
+    value = r"([^;\s]*)" if allow_empty else r"([^;\s]+)"
+    found = re.findall(r"(?:^|;\s*)" + re.escape(name) + "=" + value + r"(?=;|\s|$)", detail)
     require(len(found) == 1, "missing or repeated field " + name)
     return found[0]
 
@@ -53,7 +54,10 @@ def judge(source, loaded):
         numbers[name] = int(raw)
     require(numbers["donor-before"] - numbers["donor-after"] == 8 and numbers["moves"] <= 80,
             "donation did not conserve water or exceeded bounded walk")
-    require(field(transfer, "donor") != field(transfer, "cask"), "donor and cask identities collide")
+    # Carried vanilla vessels may have no assigned ID. The native observer proves the same
+    # held object/part references and inventory owner; the journal must still contain the field.
+    require(field(transfer, "donor", allow_empty=True) != field(transfer, "cask"),
+            "donor and cask identities collide")
     before, pre = one(loaded, "guest-load-preactivation")
     after, post = one(loaded, "guest-load-verified")
     life, _ = one(loaded, "lifecycle-loaded")
