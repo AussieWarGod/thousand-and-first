@@ -15,7 +15,7 @@ All six location/advisor combinations pass the complete source, cold-load and ne
 chain at `86c0b5df`, with strict logs and owned stops. Archives: `quickstart-lifecycle/86c0b5df/`
 under the behaviour-evidence root; coverage rows 21–23 bind their exact hashes and inventory.
 Later production changes are the release-version literal, guide text and strike salvage
-stockpile identity binding. The supplied housing
+stockpile identity binding and end-of-pass work projection refresh. The supplied housing
 crisis also passes recovery and cold load with the same two survivors at `60f11aee` (row 24/C7).
 The historical-version reader remains a separate check; boot-only receipts do not replace these chains.
 

@@ -18,15 +18,17 @@ construction can recover. The guide explains the starter housing and first guest
 Young settlements tolerate typed pending spatial capture on cold load, and exact
 stamped teardown orders can resume. Salvage now assigns a selected stockpile identity
 before recording inventory custody, preventing valid timber returns from quarantining
-a completed demolition. Native/release evidence below remains scoped
+a completed demolition. End-of-pass work records also refresh before spatial sealing,
+so a legitimately removed building does not leave a stale sealed work root.
+Native/release evidence below remains scoped
 to its actual checkpoints; the broader Beta goal is not complete.
 
-Current 3098-file census is line-cap green: 440,102 physical lines; direct `XRL`
+Current 3098-file census is line-cap green: 440,105 physical lines; direct `XRL`
 imports occur in 1445 files, 0 of them over the line limit. Inventory SHA-256:
-`42d5b7cc6079c4bff660b1347956d20400cb7e17674a6b194e97199a6fd5f2ed`. The cold-install inventory contains 3129 files.
+`8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8`. The cold-install inventory contains 3129 files.
 This isolated 0.3.4 preparation combines heart authority, shared-XL transition, rung settlement
 and camp content/fixture branches with Quickstart recovery and exact strike phase recovery.
-All four compile modes and 14786 main/5743 portable cases pass with zero skips. Automated
+All four compile modes and 14787 main/5743 portable cases pass with zero skips. Automated
 structural review binds this inventory. Native and release acceptance remain pending;
 all earlier checkpoint counts below retain their original scope.
 

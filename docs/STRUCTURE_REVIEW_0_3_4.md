@@ -147,3 +147,16 @@ salvage still records null. No object placement, registry phase, custody predica
 quarantine handling, stock amount or work timing is relaxed. The existing strike service
 owns this identity binding; no new boundary or dependency is introduced. Automated source
 review only; native rerun and release acceptance remain separate gates.
+
+
+## End-of-pass work projection
+
+Inventory `8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8`: 3098 C# files, 440105 lines, 1445 direct-XRL files,
+zero at or above 300 lines. Sole delta from `42d5b7cc6079c4bff660b1347956d20400cb7e17674a6b194e97199a6fd5f2ed` calls existing ReadWorks at
+CheckOut before publishing the city book. CheckIn already uses this same live-survey
+projection. Construction/strike callbacks update that survey during the pass, while the
+following spatial seal requires current work identities. No seal predicate is relaxed.
+Other-zone rows, resident/clock rows and stock accounting retain the existing rebuild
+contract. Native `b1f4277d` confirmed salvage settled but the old work row still faulted
+seal capture; the current native assertion also requires that row to be absent.
+Automated source review; exact native outcome remains pending.

@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "inventorySha256": "42d5b7cc6079c4bff660b1347956d20400cb7e17674a6b194e97199a6fd5f2ed",
+  "inventorySha256": "8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8",
   "exceptions": [],
   "reviewedBy": "Codex root automated structural review",
-  "completedUtc": "2026-09-13T01:50:21Z",
+  "completedUtc": "2026-09-13T02:02:19Z",
   "oneResponsibility": {
     "status": "passed",
-    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:42d5b7cc6079c4bff660b1347956d20400cb7e17674a6b194e97199a6fd5f2ed. Inherits exact inventory review 0ebe8fb749a39bccd21578e78d95777725eb4ffc0bedba84962830baa679370c. Sole production delta assigns a chosen stockpile ID before durable salvage custody is recorded; null remains reserved for ground salvage. Engine getter preserves assigned IDs. Existing receipt transitions, exact custody checks and quarantine remain unchanged. 3098 files, 440102 physical lines, 1445 direct-XRL files, no size exception. Automated source review; native acceptance separately scoped."
+    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8. Inherits exact inventory review 42d5b7cc6079c4bff660b1347956d20400cb7e17674a6b194e97199a6fd5f2ed. Sole production delta reuses ReadWorks at CheckOut before publishing, so the next spatial seal sees the current live survey after construction or strike. Existing rebuild preserves other-zone works, residents, clocks and stock accounting; no seal acceptance guard changes. 3098 files, 440105 physical lines, 1445 direct-XRL files, no size exception. Automated source review, with native acceptance separately scoped."
   },
   "protocolsAtBoundaries": {
     "status": "passed",
-    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:42d5b7cc6079c4bff660b1347956d20400cb7e17674a6b194e97199a6fd5f2ed. Inherits exact inventory review 0ebe8fb749a39bccd21578e78d95777725eb4ffc0bedba84962830baa679370c. Sole production delta assigns a chosen stockpile ID before durable salvage custody is recorded; null remains reserved for ground salvage. Engine getter preserves assigned IDs. Existing receipt transitions, exact custody checks and quarantine remain unchanged. 3098 files, 440102 physical lines, 1445 direct-XRL files, no size exception. Automated source review; native acceptance separately scoped."
+    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8. Inherits exact inventory review 42d5b7cc6079c4bff660b1347956d20400cb7e17674a6b194e97199a6fd5f2ed. Sole production delta reuses ReadWorks at CheckOut before publishing, so the next spatial seal sees the current live survey after construction or strike. Existing rebuild preserves other-zone works, residents, clocks and stock accounting; no seal acceptance guard changes. 3098 files, 440105 physical lines, 1445 direct-XRL files, no size exception. Automated source review, with native acceptance separately scoped."
   }
 }
