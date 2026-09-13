@@ -47,6 +47,7 @@ namespace ThousandAndFirst.Harness
 					ChainBrushDigest = KingdomCampHeartSaveSnapshotCodec.CustodyDigest(units);
 					Require(units.Count == 21 && ChainBrushDigest != null, "chain sentinel brush census differs");
 					SeedChainSupport();
+					ClearChainFounder();
 					SupplyChain(3);
 					ChainPhase = 1;
 					return "paid-heart-chain setup; stage-refused=true; synthetic-residents=50; synthetic-homes=18"

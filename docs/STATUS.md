@@ -13,6 +13,13 @@ lookup for a design requiring a typed lot. The correction reuses production plot
 Failed archive: `beta-heart-chain/ec85c024/untyped-housing-refused-1/result.json`, SHA-256
 `ebebaf1801d608c59c82fc7fcf7583ff104a0692db4595e414e4b88b9ed7fce1`.
 The full closed profile, source bindings, strict log and owned stop verify; this is not a chain PASS.
+The next attempt at `cad5ee19fef2b7ed97a3b0a6b4dee555c5b48e84` created all eighteen authored homes,
+then its observer incorrectly read the custody-only survey's unpopulated civic list. The corrected
+observer resolves actual indexed bodies against citizenship and resident rows, and uses one physical
+benefit index to check every home assignment and capacity. It also walks the founder clear of the
+final heart envelope using ordinary movement. Failed archive:
+`beta-heart-chain/cad5ee19/resident-census-refused-1/result.json`, SHA-256
+`261d9087b80871d85ce7acc1b311a4b8bc3c4babd5cd76b4a8d4c3efa8f30089`.
 
 ## Paid camp cold-load coverage
 

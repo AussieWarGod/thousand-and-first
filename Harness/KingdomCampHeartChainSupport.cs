@@ -31,9 +31,10 @@ namespace ThousandAndFirst.Harness
 				ChainStore = ChainContainer("KingdomStockpile");
 				Require(System.Population >= 2 && System.Population <= 6, "source camp population differs");
 				EnrollResidents(50 - System.Population);
-				ChainResidents.AddRange(Census().Settlers);
+				ChainResidents.AddRange(ChainResidentBodies(Census()));
 				Require(ChainResidents.Count == 50 && KingdomResidents.OnRollCount(System) == 50,
-					"city support did not enroll fifty actual bodies");
+					"city support did not enroll fifty actual bodies: bodies=" + ChainResidents.Count
+					+ "; population=" + System.Population + "; on-roll=" + KingdomResidents.OnRollCount(System));
 				KingdomLodging.OnSettlementPass(System, Zone, Census());
 				for (int i = 0; i < KingdomZoningRules.PointsForLevel(TechLevel.Foundry); i++)
 					Require(KingdomZoning.Learn(System, "disk", "paid-heart-chain-fixture-" + i),
@@ -96,19 +97,6 @@ namespace ThousandAndFirst.Harness
 					+ ChainHomes.Count + "; last=" + lastFailure);
 			}
 
-			private void RequireChainSupport()
-			{
-				var survey = Census();
-				Require(System.Population >= 50 && survey.Settlers.Count >= 50
-					&& survey.StorageCapacity >= 1024 && survey.StoredWater > 0 && survey.FoodStored > 0,
-					"city support lost population, water or food: population=" + System.Population
-					+ "; water=" + survey.StoredWater + "; food=" + survey.FoodStored);
-				foreach (var resident in ChainResidents)
-					Require(GameObject.Validate(resident) && resident.IsAlive && resident.CurrentZone == Zone
-						&& KingdomCitizenship.BelongsTo(System, resident) && KingdomResidents.TryLocate(System, resident, out _, out _)
-						&& !string.IsNullOrEmpty(KingdomLodging.HomeDesignKeyOf(Zone, resident)),
-						"an original city fixture resident lost their body, roll, citizenship or home");
-			}
 		}
 	}
 }

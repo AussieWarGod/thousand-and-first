@@ -954,11 +954,13 @@ class ShippedPersonaTest(unittest.TestCase):
                 self.assertEqual(expected.index("guest-save-shortage") + 1,
                                  expected.index("guest-save-supply"), path.name)
                 expected.remove("guest-save-shortage")
-            if "camp-heart-save-custody" in expected:
-                self.assertIn("camp-heart-save", sealed, path.name)
-                self.assertEqual(expected.index("camp-heart-save-custody") + 1,
-                                 expected.index("camp-heart-save"), path.name)
-                expected.remove("camp-heart-save-custody")
+            for observation, verb in (("camp-heart-save-custody", "camp-heart-save"),
+                                      ("camp-heart-chain-founder", "camp-heart-chain-setup")):
+                if observation in expected:
+                    self.assertIn(verb, sealed, path.name)
+                    self.assertEqual(expected.index(observation) + 1,
+                                     expected.index(verb), path.name)
+                    expected.remove(observation)
             # The script may stop early on a declared refusal, so expectations are a PREFIX of the
             # sealed verbs - never a different list, and never longer.
             self.assertLessEqual(len(expected), len(sealed), path.name)
