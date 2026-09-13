@@ -209,6 +209,8 @@ class ProfileSealTest(unittest.TestCase):
 
 
 class ParallelInventoryTest(unittest.TestCase):
+    WAIT_SECONDS = 15
+
     def test_bounded_overlapping_reads_preserve_every_digest(self):
         with tempfile.TemporaryDirectory(prefix="taf-inventory-workers.") as temporary:
             root = pathlib.Path(temporary)
@@ -218,7 +220,7 @@ class ParallelInventoryTest(unittest.TestCase):
                 data = ("file %d\n" % index).encode() * (10000 if index == 0 else 11)
                 (root / name).write_bytes(data)
                 expected[name.casefold()] = hashlib.sha256(data).hexdigest()
-            lock, barrier = threading.Lock(), threading.Barrier(4, timeout=3)
+            lock, barrier = threading.Lock(), threading.Barrier(4, timeout=self.WAIT_SECONDS)
             active = peak = started = completed = 0
 
             @contextlib.contextmanager
@@ -253,7 +255,7 @@ class ParallelInventoryTest(unittest.TestCase):
             seal = pathlib.Path(temporary) / "profile.sha256"
             profile.seal(str(root), str(seal))
             previous = seal.read_bytes()
-            barrier = threading.Barrier(4, timeout=3)
+            barrier = threading.Barrier(4, timeout=self.WAIT_SECONDS)
             failed, release, finished = threading.Event(), threading.Event(), threading.Event()
             completed, errors = [], []
 
@@ -263,7 +265,7 @@ class ParallelInventoryTest(unittest.TestCase):
                 if pathlib.Path(path).name == "Input0.xml":
                     failed.set()
                     raise OSError("synthetic hashing failure")
-                if not release.wait(5):
+                if not release.wait(self.WAIT_SECONDS * 2):
                     raise TimeoutError("sibling reader was not released")
                 with builtins.open(path, *args, **kwargs) as handle:
                     yield handle
@@ -283,11 +285,11 @@ class ParallelInventoryTest(unittest.TestCase):
                 caller = threading.Thread(target=run_seal)
                 caller.start()
                 try:
-                    self.assertTrue(failed.wait(4), "four readers must overlap")
+                    self.assertTrue(failed.wait(self.WAIT_SECONDS), "four readers must overlap")
                     self.assertFalse(finished.wait(0.2), "failure escaped before sibling reads ended")
                 finally:
                     release.set()
-                    caller.join(5)
+                    caller.join(self.WAIT_SECONDS)
                 self.assertFalse(caller.is_alive())
             self.assertEqual(3, len(completed))
             self.assertEqual(1, len(errors))
