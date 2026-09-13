@@ -4,9 +4,9 @@ Found a faction in Caves of Qud, raise settlements from reserved ground, and gov
 after you leave. Water, food, labour, materials, roads, trade, threats, civic memory, and physical
 works remain part of the same world instead of becoming a detached management screen.
 
-**Status: 0.3.4 private Alpha candidate.**
+**Status: 0.3.4 pre-release source (private Alpha candidate).**
 The public listing remains the 0.3.3 public Alpha playtest.
-Alpha playtest. Back up saves before updating.
+Back up saves before updating.
 Current evidence and remaining test limits live in
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/STATUS.md);
 historical test counts do not sign later changes.
