@@ -9,6 +9,16 @@ namespace ThousandAndFirst.Harness
 	{
 		private sealed partial class Case
 		{
+			private string StrikeTelemetry(GameObject Root)
+			{
+				KingdomConstruction.TryFind(StrikeReceiptId, out KingdomConstructionJob row);
+				return "; strike-left=" + Root.GetIntProperty(KingdomMaterials.StrikeEffortProperty)
+					+ "; strike-total=" + Root.GetIntProperty(KingdomMaterials.StrikeTotalProperty)
+					+ "; strike-worked=" + Root.GetStringProperty(KingdomMaterials.StrikeWorkedProperty)
+					+ "; strike-job=" + (row == null ? "missing" : row.Phase.ToString())
+					+ "; strike-physical=" + (row == null ? "missing" : row.PhysicalPhase.ToString());
+			}
+
 			/// <summary>review-teardown-run15-neverbuilt.md finding 1: the job row and its tick
 			/// counter were read once at Start and never again, so an awaiting-built stall was
 			/// undiagnosable. Re-reads the raising root's own production properties every Check

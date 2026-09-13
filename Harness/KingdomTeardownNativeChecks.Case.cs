@@ -161,6 +161,7 @@ namespace ThousandAndFirst.Harness
 						works.IDIfAssigned, KingdomConstruction.OwnerOf(System), Zone.ZoneID,
 						out string rowFailure), Name + ": " + rowFailure);
 					Phase = 2;
+					Evidence.Append(StrikeTelemetry(works));
 					return;
 				}
 				// A same-ID object that is NOT the exact struck reference is never a pass: a
@@ -171,7 +172,8 @@ namespace ThousandAndFirst.Harness
 					+ (StruckId ?? WorksId) + " -- a same-ID replacement is never a valid removal");
 				if (stillThere != null)
 				{
-					Evidence.Append("; case=").Append(Name).Append(" awaiting-struck=true");
+					Evidence.Append("; case=").Append(Name).Append(" awaiting-struck=true")
+						.Append(StrikeTelemetry(stillThere));
 					return;
 				}
 				// By reference too, not merely "the old id is gone".
