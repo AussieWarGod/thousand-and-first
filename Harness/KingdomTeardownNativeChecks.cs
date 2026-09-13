@@ -78,7 +78,7 @@ namespace ThousandAndFirst.Harness
 			private Case Fire, Larder;
 			private Cell Seat;
 			private bool LarderStarted;
-			private List<GameObject> Crew;
+			internal List<GameObject> Crew;
 			internal bool Done;
 			internal readonly StringBuilder Evidence = new StringBuilder();
 

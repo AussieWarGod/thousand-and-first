@@ -7,10 +7,21 @@ namespace ThousandAndFirst.Harness
 {
 	internal static partial class KingdomTeardownNativeChecks
 	{
+		internal static void ObserveCrewDeath(GameObject Body, GameObject Killer, string Reason, string Category)
+		{
+			if (Retained?.Crew == null || !Retained.Crew.Contains(Body)) return;
+			Retained.Evidence.Append("; crew-death id=").Append(Body.IDIfAssigned)
+				.Append(" killer=").Append(Killer?.Blueprint ?? "none")
+				.Append(" reason=").Append(KingdomScenarioRules.Bounded(Reason ?? "none"))
+				.Append(" category=").Append(Category ?? "none");
+		}
+
 		private sealed partial class Case
 		{
 			private void RequireSettledStrike(Action<bool, string> Require)
 			{
+				Require(!System.City.WorkIds.Contains(Simulation.City.KingdomCityRules.StableId(StruckId)),
+					Name + ": the city work projection still names the removed building");
 				KingdomConstruction.TryFind(StrikeReceiptId, out KingdomConstructionJob row);
 				Require(row != null && row.Phase == KingdomConstructionPhase.Complete
 					&& row.PhysicalPhase == KingdomPhysicalPhase.Settled,

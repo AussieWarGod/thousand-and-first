@@ -20,6 +20,15 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void CheckOutPublishesTheCurrentWorkProjectionBeforeSealCapture()
+		{
+			Ordered(TestMain.ReadRepositoryText("Simulation/City/KingdomCity.z02.CheckOut.cs"),
+				"written = ReadWorks(written, Z, Survey);", "Publish(System, written);");
+			Ordered(TestMain.ReadRepositoryText("Core/KingdomSystem.z21.SemanticPass.cs"),
+				"KingdomCity.CheckOut(this, Z, survey", "TryStageSemanticSnapshot(\"settlement pass\"");
+		}
+
+		[Test]
 		public void LogicalFamilyKeepsAuthorityOrderAndNestedContainerGround()
 		{
 			string source = KingdomCityLogicalSource.Read();

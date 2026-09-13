@@ -1,11 +1,23 @@
 using System;
 using System.Collections.Generic;
+using HarmonyLib;
 using XRL;
 using XRL.Messages;
 using XRL.World;
 
 namespace ThousandAndFirst.Harness
 {
+	// Observation only: never cancel an engine death or alter its arguments.
+	[HarmonyPatch(typeof(GameObject), "Die")]
+	internal static class KingdomTeardownCrewDeathObserver
+	{
+		[HarmonyPrefix]
+		internal static void Prefix(GameObject __instance, GameObject Killer, string Reason, string DeathCategory)
+		{
+			KingdomTeardownNativeChecks.ObserveCrewDeath(__instance, Killer, Reason, DeathCategory);
+		}
+	}
+
 	/// <summary>
 	/// Behavioural coverage: building teardown. Founds a fresh camp, dedicates water and a
 	/// materials stockpile directly (SYNTHETIC SETUP, DISCLOSED -- the same convention
