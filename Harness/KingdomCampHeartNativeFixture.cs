@@ -39,6 +39,13 @@ namespace ThousandAndFirst.Harness
 				for (int i = 0; i < ResidentCount; i++)
 				{
 					GameObject body = Create("NPC");
+					var movement = new XRL.World.Parts.r_TAF_CampResidentMoveProbe
+					{
+						OriginZone = Zone.ZoneID, FixtureSlot = i + 1,
+						Record = detail => Evidence.Append(detail)
+					};
+					Require(ReferenceEquals(body.AddPart(movement), movement),
+						"the read-only resident movement probe was not attached");
 					Require(body.Brain != null && body.Body != null && body.IsAlive
 						&& !body.IsPlayer(),
 						"taf-camp-resident-shape: fresh NPC lacks eligible physical shape");
@@ -108,6 +115,7 @@ namespace ThousandAndFirst.Harness
 						.Append("; zone=").Append(body.CurrentZone?.ZoneID ?? "absent")
 						.Append("; cell=").Append(cell == null ? "absent" : cell.X + "," + cell.Y)
 						.Append("; citizen=").Append(KingdomCitizenship.BelongsTo(System, body))
+						.Append("; home=").Append(body.Brain?.StartingCell?.ToString() ?? "absent")
 						.Append("; brain-wanders=").Append(body.Brain?.Wanders ?? false);
 				}
 			}
