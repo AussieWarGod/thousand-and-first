@@ -266,7 +266,15 @@ def local_inputs(repo: Path, config: dict, extra: dict[str, bytes] | None = None
     require(isinstance(options, dict), "pinned options not an object")
     options["OptionEnableSeed"] = "Yes"
     if config["schema"] == PROFILE_V2 and config["mode"] in ("source", "source-donor"):
-        options["r_TAF_OptionLegacyImport"] = "No"
+        # The donor births a fresh non-inheriting old realm, so it starts with import off and opts
+        # into sealing later. The Reserved inheritor is the opposite: it must be BORN opted in.
+        # QudGameBootModule.BootGame runs every IGameStateSingleton.Initialize (which is where
+        # KingdomInheritanceState reserves the copied legacy and requires KingdomInheritanceLifecycle)
+        # strictly before the [PlayerMutator] step where 0.3.1's KingdomSaveSystemRosterNewGameLoader
+        # commits its roster marker. Opting in after that point leaves the marker without the
+        # Inheritance bit while the carrier exists, and 0.3.1's own SaveSystems prefix then refuses
+        # the save with "UnexpectedMultiplicity [Inheritance: expected 0, observed 1]" (issue #87).
+        options["r_TAF_OptionLegacyImport"] = "Yes" if config["mode"] == "source" else "No"
     result["PlayerOptions.json"] = json_bytes(options)
     settings = json.loads(runtime.blob("Tools/smoke/ModSettings.json"))
     require(isinstance(settings, dict), "pinned mod settings not an object")
