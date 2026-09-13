@@ -54,6 +54,13 @@ the tent's reserved lane. Execution was stopped early as an incomplete fixture-l
 The home loop now applies production's `CrowdsExisting` and `GroundGrid.AnyRefusal` checks before
 typed preflight and staking. Archive: `beta-heart-chain/2e5ae6c1/fixture-lane-incomplete-1/result.json`,
 SHA-256 `a7fc044c6e1c4dc2575929cdedc3b2637b87c01e7efe080bfa0c6320b09ae9fe`.
+At `f4826b248944cb128ce9b6c14297313c9af42965`, correct lane guards left seventeen homes: the
+bottom candidates' authored entrance paths left the zone. A new engine-free capacity regression
+reproduces the old grid's seventeen usable lots around the actual paid tent and final heart.
+The fixture grid now offers four western and three eastern columns, with three rows clear of the southern edge;
+production crowding, ground, typed ingress and physical-completion checks still govern every home.
+Failed archive: `beta-heart-chain/f4826b24/housing-ingress-refused-1/result.json`, SHA-256
+`008e881a724d2600688e5e4701d60720900a11cd11e92c2b35439373facb7372`.
 
 ## Paid camp cold-load coverage
 

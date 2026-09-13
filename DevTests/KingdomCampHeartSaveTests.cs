@@ -204,6 +204,26 @@ namespace ThousandAndFirst.Tests
 			Assert.That(script.Where(x => x.StartsWith("advance ")).All(x => int.Parse(x.Substring(8)) <= 10000), Is.True);
 		}
 
+		[Test]
+		public void ChainHousingGridFitsEighteenLotsBesideTentAndFutureHeart()
+		{
+			Assert.That(KingdomPlotRules.TryInterior(80, 25, out var usable), Is.True);
+			var occupied = new System.Collections.Generic.List<KingdomPlotRules.PlotRect> {
+				new KingdomPlotRules.PlotRect(31, 4, 50, 21),
+				new KingdomPlotRules.PlotRect(24, 7, 29, 10) };
+			int accepted = 0;
+			foreach (var rect in KingdomCampHeartChainGrid.Candidates())
+			{
+				if (!KingdomPlotRules.Fits(rect, usable)
+					|| KingdomPlotRules.CrowdsExisting(rect, occupied)) continue;
+				occupied.Add(rect); accepted++;
+			}
+			Assert.That(accepted, Is.GreaterThanOrEqualTo(18),
+				"leave southern approach cells and every existing plot's reserved lane intact");
+			Assert.That(KingdomCampHeartChainGrid.Candidates().All(rect =>
+				KingdomPlotRules.Fits(rect, usable)), Is.True, "all candidates fit the production interior");
+		}
+
 		private static string[] Script(string name) => TestMain.ReadRepositoryText("Tools/personas/" + name + ".persona")
 			.Split('\n').Single(line => line.StartsWith("SCRIPT=", StringComparison.Ordinal)).Substring(7).Split(';');
 	}

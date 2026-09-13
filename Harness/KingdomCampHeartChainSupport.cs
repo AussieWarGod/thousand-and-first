@@ -84,46 +84,46 @@ namespace ThousandAndFirst.Harness
 			{
 				Require(KingdomData.TryGetBuilding("tentrow", out var entry), "authored tent row missing");
 				Require(KingdomPlots.TryGetSpec("tentrow", out var spec), "authored tent row spec missing");
+				Require(KingdomPlotRules.TryInterior(Zone.Width, Zone.Height, out var interior),
+					"city support ground has no plot interior");
 				string lastFailure = null;
-				for (int side = 0; side < 2 && ChainHomes.Count < 18; side++)
-					for (int y = 2; y <= 20 && ChainHomes.Count < 18; y += 6)
-						for (int column = 0; column < 3 && ChainHomes.Count < 18; column++)
+				foreach (var rect in KingdomCampHeartChainGrid.Candidates())
+				{
+					if (ChainHomes.Count == 18) break;
+					if (!KingdomPlotRules.Fits(rect, interior)) continue;
+					if (KingdomPlotRules.CrowdsExisting(rect, KingdomPlots.ReadPlots(Zone)))
+					{
+						lastFailure = "candidate crowds an existing plot's reserved lane";
+						continue;
+					}
+					var grid = new KingdomPlots.GroundGrid(Zone);
+					if (grid.AnyRefusal(rect))
+					{
+						lastFailure = "candidate contains protected or liquid ground";
+						continue;
+					}
+					if (!KingdomPlots.TryPreparePlotPayload(System, Zone, rect, entry.Key,
+						entry.Category, null, out _, out _, out lastFailure)) continue;
+					var work = KingdomPlots.Stake(System, Zone, rect, entry, spec,
+						grid, null, false);
+					Require(work != null, "synthetic home stake refused after preflight");
+					string plot = work.GetStringProperty(KingdomPlots.PlotIdProperty);
+					var works = work.GetPart<r_KingdomPlotWorks>();
+					Require(works != null && !string.IsNullOrEmpty(plot), "synthetic home lacks exact works");
+					KingdomPlots.Advance(works, System, checked(works.StartTick + works.TotalTicks));
+					GameObject home = null;
+					foreach (var root in Census().Built)
+						if (root.GetStringProperty(KingdomPlots.PlotIdProperty) == plot)
 						{
-							int x = (side == 0 ? 2 : 54) + column * 8;
-							var rect = new KingdomPlotRules.PlotRect(x, y, x + 5, y + 3);
-							if (KingdomPlotRules.CrowdsExisting(rect, KingdomPlots.ReadPlots(Zone)))
-							{
-								lastFailure = "candidate crowds an existing plot's reserved lane";
-								continue;
-							}
-							var grid = new KingdomPlots.GroundGrid(Zone);
-							if (grid.AnyRefusal(rect))
-							{
-								lastFailure = "candidate contains protected or liquid ground";
-								continue;
-							}
-							if (!KingdomPlots.TryPreparePlotPayload(System, Zone, rect, entry.Key,
-								entry.Category, null, out _, out _, out lastFailure)) continue;
-							var work = KingdomPlots.Stake(System, Zone, rect, entry, spec,
-								grid, null, false);
-							Require(work != null, "synthetic home stake refused after preflight");
-							string plot = work.GetStringProperty(KingdomPlots.PlotIdProperty);
-							var works = work.GetPart<r_KingdomPlotWorks>();
-							Require(works != null && !string.IsNullOrEmpty(plot), "synthetic home lacks exact works");
-							KingdomPlots.Advance(works, System, checked(works.StartTick + works.TotalTicks));
-							GameObject home = null;
-							foreach (var root in Census().Built)
-								if (root.GetStringProperty(KingdomPlots.PlotIdProperty) == plot)
-								{
-									Require(home == null, "synthetic home plot has multiple outputs");
-									home = root;
-								}
-							Require(home != null && KingdomUpgrade.DesignKeyOf(home) == "tentrow"
-								&& KingdomUpgrade.IsFunctionallyBuilt(home)
-								&& KingdomArchitectureStamper.TryVerifyComplete(home, Zone, out lastFailure),
-								"synthetic housing completion refused: " + lastFailure);
-							ChainHomes.Add(home);
+							Require(home == null, "synthetic home plot has multiple outputs");
+							home = root;
 						}
+					Require(home != null && KingdomUpgrade.DesignKeyOf(home) == "tentrow"
+						&& KingdomUpgrade.IsFunctionallyBuilt(home)
+						&& KingdomArchitectureStamper.TryVerifyComplete(home, Zone, out lastFailure),
+						"synthetic housing completion refused: " + lastFailure);
+					ChainHomes.Add(home);
+				}
 				Require(ChainHomes.Count == 18, "eighteen authored homes do not fit: count="
 					+ ChainHomes.Count + "; last=" + lastFailure);
 			}
