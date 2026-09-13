@@ -15,7 +15,7 @@ below it.
 - First-guest dialogue now opens the local stock transaction scope required to enroll a citizen and debit arrival water.
 - A first guest refused for lack of suitable housing stays present and available to welcome again after construction.
 
-Private candidate preparation; this version has not been published.
+Alpha hotfix for Quickstart founding, housing recovery and guest recruitment.
 
 Quickstart supplies four founding citizens, two shelter plots and a full finite
 64-dram water cask. Housing-driven departures retain the final two citizens so
