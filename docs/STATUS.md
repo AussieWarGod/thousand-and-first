@@ -1,5 +1,28 @@
 # Current implementation and release evidence
 
+## Completed first heart and cold-load city sight — native verified
+
+PR192 verifies ordinary first-heart construction and physical fabric through real save/load.
+Four original Quickstart founders remain housed in six beds; the paid fire completes; all
+seven canvas cells stand, including both flanks outside the central footprint. The first heart
+is authored open rite ground, not an enclosed tent. No future construction deadline is forced.
+
+The same physical heart compares before activation, after loading and after another paid
+commission. Vanilla Continue resumes only after the exact scenario's successful verification
+and cleanup; the saved autorunner marker prevents source replay. 4 source and 4 loaded
+frames draw all 2000 zone cells visible and lit and restore native gameplay sight afterward.
+
+Native source `52d67656b0ecafe5fd2f0ca15c77bb2120b7539c`, production inventory `d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389`.
+Both full profile seals, strict logs and owned stops pass; all 3357 C# inputs and runtime files
+bind to source. Evidence: `heart-sight/52d67656/completed-heart-cold-load-1/result.json`, SHA-256 `337ba196566bd8c4af84a180ee2473e997757d4987671a1a8cbf03b4aabf6c29`.
+All four engine compile modes, 14794 main and 5747 portable cases pass. CI also passes
+1088 tool tests with 28 environment-dependent skips. The 38 coverage tests pass; the new
+artifact references verify. Nine older evidence entries remain unresolved in the full audit.
+Coverage row 29 and combination C9 record only the measured scenario. The failed first
+source profile remains unchanged; fresh profiles author its observed look default before
+sealing, and later option changes still refuse. See `docs/HEART-SIGHT-NATIVE.md`.
+Public Alpha 0.3.4 remains the published build; the sight correction is on dev.
+
 ## Guest citizenship, shortage recovery and cold load — native verified
 
 PR190 adds a genuine Quickstart chain covering first-guest recruitment, fourteen days of

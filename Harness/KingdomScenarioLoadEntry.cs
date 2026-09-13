@@ -67,6 +67,7 @@ namespace ThousandAndFirst.Harness
 		{
 			bool priorPopup = Popup.Suppress;
 			bool quickstartVerified = false;
+			XRLGame resume = null;
 			try
 			{
 				await The.UiContext;
@@ -142,9 +143,16 @@ namespace ThousandAndFirst.Harness
 					// the further action taken on the loaded world. The action's own refusal is
 					// journalled by its verb and never converted into a load failure.
 					KingdomQuickstartLifecycleLoad.VerifyLoaded(loaded, LifecycleSnapshot);
-					KingdomQuickstartLifecycleLoad.Next(loaded, LifecycleSnapshot);
+					bool next = KingdomQuickstartLifecycleLoad.Next(loaded, LifecycleSnapshot);
 					Check(!KingdomScenarioLoadReaderWitness.HadErrors,
 						"engine reported deserialization errors");
+					if (KingdomHeartSightNativeProvider.ClaimsScript())
+					{
+						Check(next, "loaded next commission refused before heart render continuation");
+						KingdomHeartSightLoad.Prepare(loaded);
+						resume = loaded;
+						return;
+					}
 					Check(KingdomScenarioJournal.Append("SCRIPT-COMPLETE", true,
 						"native-lifecycle cold-load session complete; real-save-quit-load=true"
 						+ "; new-game-script-replayed=false; ordinary-acceptance=false") == null,
@@ -166,7 +174,9 @@ namespace ThousandAndFirst.Harness
 				if (!priorPopup && Popup.Suppress) Popup.Suppress = false;
 				try { if (QuickstartSnapshot != null) KingdomQuickstartLoadTest.Finish(quickstartVerified); }
 				finally { Armed = false; }
-				// The Continue task stays parked until the bounded owned runner stops this terminal fixture.
+				// Only this exact scenario continues through vanilla RunGame after all cleanup succeeds.
+				// Every existing terminal fixture retains the parked Continue behavior.
+				if (resume != null) Barrier.PrepareResume(resume);
 			}
 		}
 
