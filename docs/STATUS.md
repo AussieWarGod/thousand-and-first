@@ -1,24 +1,88 @@
 # Current implementation and release evidence
 
-## Alpha 0.3.5 private candidate — verification pending
+## Current 0.3.6 sight hotfix — private preparation
 
-The sight hotfix is prepared for private delivery. Manifest and runtime receipt identity both
-name 0.3.5. The only production change since the accepted sight/heart native source is the
-release-version literal in `Core/KingdomReleaseInfo.cs`; the structural review binds it.
+The corrected sight hotfix is being prepared as private Alpha 0.3.6. Public 0.3.5 failed before
+upload; its tag and refusal evidence remain unchanged. The public listing remains 0.3.4.
+No 0.3.6 delivery or native PASS is claimed yet.
+
+3098 staged C# files; 440,137 physical lines; 1445 direct `XRL` imports; zero at or above
+300 lines; 3129 cold-install files. Inventory SHA-256: `e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719`.
+
+The only production C# change from verified private 0.3.5 is the runtime release constant, from
+0.3.5 to 0.3.6, matching manifest.json. The current structural review binds that exact delta.
+Shared development preflight PR197 is merged. Native .NET release-source optimization PR198 is
+being checked separately; the candidate will incorporate its checked integration before tagging.
+Original native housing, guest and claimed-zone evidence below keeps its original source.
+
+## Retained 0.3.5 sight hotfix — private verified; public upload refused
+
+The private Alpha 0.3.5 sight hotfix is verified and finalized. The public attempt failed before
+upload; the public listing still serves 0.3.4. Broader Beta acceptance remains pending.
+
+Public tag `v0.3.5` is retained at `4629c43cf106c90b49843677f9ae834309123571`.
+[Run 34756778947](https://github.com/AussieWarGod/thousand-and-first/actions/runs/34756778947)
+refused README wording in the hosted Alpha-candidate validator: the pre-release qualification
+passed the documentation tests but violated the separate exact status-line contract. Both
+hosted source suites passed; publisher, installed verification and finalization were skipped.
+No public upload was attempted. The owned public runner was stopped afterward. PR195 and
+PR196 used normal checked merge commits; the existing maintainer exception admitted tag
+creation. No protection setting changed. The failed tag will not move or be retried; corrected
+publication requires a new version. The shared development preflight now calls the same Alpha
+metadata validator before a push, and its regression test reproduces this exact wording failure.
+
 3098 staged C# files; 440,137 physical lines; 1445 direct `XRL` imports; zero at or above
 300 lines; 3129 cold-install files. Inventory SHA-256: `4d3938534ed4663c01492bd0455a6aea9b707d76ea4f7b4442357c9aac38472d`.
+The only production change since the earlier accepted sight/heart native source is the
+release-version literal in `Core/KingdomReleaseInfo.cs`; the structural review binds it.
 
-The first candidate CI caught an unsynchronized runtime version. That failed source was
-never uploaded. The local test process was stopped after CI established the mismatch.
-The corrected candidate then refused at the documentation inventory check; its current
-census is now recorded here, in the changelog and structural contract. The next licensed
-run passed stages 1–10, including 14,794 main and 5,747 portable cases with zero skips,
-but stage 11 refused two review notes without a structured artifact reference. Those
-notes now bind the same reviewed inventory with the required `sha256:` prefix. Three
-bind-mount alias fixtures were unavailable in this environment. The corrected structural
-gate passes; the tagged full release gate remains required. Private submission, subscribed-install
-and candidate native checks remain pending; public Alpha 0.3.4 is unchanged. Earlier
-evidence retains its exact source.
+### Private 0.3.5 — verified and finalized
+
+[Release run 34752425895](https://github.com/AussieWarGod/thousand-and-first/actions/runs/34752425895)
+completed every applicable hosted, licensed, submit, verify and finalize job successfully.
+PR193 merged at `bccf8cb387e5bdb773e0a36b575a9ce5a6cf3d46`; annotated `staging-v0.3.5` names that exact source.
+The existing maintainer exception admitted release-tag creation; no branch protection was
+changed and no required merge check was bypassed. No upload was retried or tag moved.
+
+All eleven licensed gates passed: 14,794 main and 5,747 portable cases with zero managed
+skips, all four compile modes, 46 launcher cases, package/deployment boundaries and structural
+validation. Three PACKAGE/COPY/BACKUP bind-mount alias fixtures retained their explicit
+foreign-owned-environment skips. This is not a zero-total-skips claim.
+
+Private item `3796495680` reported `SubscribedInstallationVerified` and `attemptFinalized=true`.
+Every one of the 3129 package files matches the subscribed installation and all runtime bytes
+match the native source. This proves one client installation; `freshTransferVerified=false`
+and `releaseReady=false` remain explicit limits.
+
+- Private receipt SHA-256: `2eb4899dddaa8780a6953d58a853315a01debd948edba3d2ba6f465a460ca1d6`.
+- Plan SHA-256: `64af94585907d95220cf98d6abfe90b572570b963d4f75f81887f35898caaa6d`.
+- Installed inventory SHA-256: `40fa1848f4bade161dc12783af98cc5ffd074d23d6a1a50671d23fd359bda313`.
+- Finalization SHA-256: `db6191c8816e585c418c2bfb91773a3ffee8ec0528dfb2afd9496bb46609ebda`.
+- Delivery archive: `releases/0.3.5/private/result.json`, SHA-256 `a065c4298c85e5051ed11f26df4166449dc30ef577297deb3e765f43d54cea12`.
+
+After finalization and the owned runner's shutdown, the exact candidate passed the automated
+marsh/advisor-on Quickstart chain on seed `#43101`: 8400 ordinary advance turns, four original
+founders, six beds in two shelters, a completed paid fire and all seven receipted canvas walls.
+The first heart remains open rite ground, not enclosed housing. A real save at 8403 turns and
+separate cold load preserved the physical heart before activation and afterward. A distinct
+next job paid exactly one timber and two drams. Four source and four loaded frames drew all
+2000 cells visible and lit and restored ordinary gameplay sight; the saved start script did
+not replay. No synthetic completion, fabricated visibility or world repair was used.
+
+Both complete profile seals, strict logs, owned stops and run records pass. All 3357 staged
+C# inputs per session bind to the candidate; all other runtime inputs match apart from the
+intentional developer manifest. Profiles `taf-scenario.jHE73L` and `taf-scenario.CtJ0Xw`, save
+`4bf940bd-df00-4ef5-9080-c9f25c725df5`, and raw evidence remain local.
+Native archive: `alpha-035-heart-sight/bccf8cb3/private-candidate-cold-load-1/result.json`,
+SHA-256 `cbb7748c4db4b175fe924d5e30fb6216f370426b571965972c45e70f35977abe`. This bounded native proof does not establish all-seed survival,
+historical migrations, later heart rungs or all feature combinations.
+
+The verified private package receipt is copied byte-for-byte into
+`docs/PRIVATE_PACKAGE_RECEIPT.sha256`; this binding commit is the public Alpha candidate.
+Earlier preparation refused an unsynchronized runtime version, stale inventory documentation,
+then two review notes without the required artifact prefix. The first local test process was
+stopped only after CI proved the version mismatch. Those failed candidates were never uploaded;
+the final tagged source passed the full gate. Earlier native evidence keeps its original source.
 
 ## Completed first heart and cold-load city sight — native verified
 

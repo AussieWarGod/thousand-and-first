@@ -58,6 +58,9 @@ is in [docs/RELEASING.md](docs/RELEASING.md).
 
 ## Local checks
 
+Use [the shared development workflow](docs/DEVELOPMENT.md) for focused edit-loop commands,
+integration boundaries, evidence reuse, and agent handoffs. Codex and Claude use that same guide.
+
 Baseline checks, from repository root:
 
 ```bash
@@ -106,9 +109,14 @@ dotnet run --project DevTests/TafTests.csproj -v q --nologo
 Equivalent from WSL repository root:
 
 ```bash
-powershell.exe -NoProfile -ExecutionPolicy Bypass \
-  -File "$(wslpath -w "$PWD/DevTests/test.ps1")"
+TAF_DOTNET="$HOME/.dotnet/dotnet" \
+TAF_QUD_BASE="/path/to/CoQ_Data/StreamingAssets/Base" \
+  Tools/dev-check.sh licensed
 ```
+
+This runs both full source suites on native .NET with zero skips. The release source-test
+step uses the same command to avoid Windows-to-WSL source-file overhead. Windows engine
+compilation, hosted platform checks and in-game behavioral scenarios remain separate gates.
 
 Current compile and integration tooling assumes WSL plus Windows PowerShell and .NET SDK
 `9.0.306`. It defaults to Caves of Qud at
