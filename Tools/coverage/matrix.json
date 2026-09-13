@@ -812,6 +812,42 @@
           "currentDevCoverage": false
         }
       ]
+    },
+    {
+      "id": 27,
+      "behaviour": "Immediate claimed-ground lighting and drawn city sight",
+      "prerequisites": "newly founded active claimed zone; master, claimed light and city sight enabled",
+      "transitions": "claim publication -> stamped light; real draw -> whole-zone sight -> ordinary sight restored; zone reactivation -> same part",
+      "effects": "all 2000 cells drawn visible in Quickstart, including 810 naturally occluded cells; ordinary founding lights every cell and does not duplicate attachment",
+      "save_cold_load": "COVERAGE_GAP",
+      "negative": "NEGATIVE_PASS for unclaimed attachment control and gameplay visibility restoration; option-toggle, claim-loss and second-city native scenarios remain COVERAGE_GAP",
+      "driver": "Harness/KingdomQuickstartSightNativeProvider.cs; Harness/KingdomQuickstartSightWitness.cs; Harness/KingdomClaimedLightNativeChecks.cs",
+      "status": "NATIVE_PASS",
+      "note": "Reproduced missing initial attachment against unchanged 0.3.4 production before fixing claim publication. A diagnostic capture run passed rendering but changed PlayerOptions and failed its stop seal; retained as failed evidence. Accepted fresh runs preserve complete seals and strict logs. Initial journal postprocessing omitted boot headers or selected the wrong persona; corrected complete expectations and success-only terminal check were run over unchanged retained journals. No fabricated light, reactivation in Quickstart, historical-save or all-option claim.",
+      "evidence": [
+        {
+          "commit": "2a106bdf1bf96e4f7029f72f5bad9606048b8f5f",
+          "artifactPath": "claimed-sight/2a106bdf/quickstart-native/result.json",
+          "artifactSha256": "8e9631a17a6253792df4a41af9368de60bb97c21c8d7f39ccd2e4012f4d5d789",
+          "artifactBytes": 1797,
+          "verdict": "PASS - quickstart native",
+          "scope": "Genuine marsh/advisor-on Quickstart; immediate attachment without reactivation; four real frames; all 2000 cells visible and lit during draw; 810 naturally occluded cells; exact ordinary gameplay sight restored. Strict logs and sealed owned stop; no save/cold-load coverage. Journal expectations validated at c417b98046e8b10943852de53b20a29490681c47.",
+          "historicalScope": true,
+          "inventoryDigest": "d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389",
+          "currentDevCoverage": false
+        },
+        {
+          "commit": "2a106bdf1bf96e4f7029f72f5bad9606048b8f5f",
+          "artifactPath": "claimed-sight/2a106bdf/ordinary-native/result.json",
+          "artifactSha256": "2f44a0bde4aa8acd92812c613de043799ed1d0b0923466a1680b88f193b1ad2e",
+          "artifactBytes": 1794,
+          "verdict": "PASS - ordinary native",
+          "scope": "Disclosed synthetic founding through production transaction; unclaimed control has no part; immediate attachment before reactivation; same part after reactivation; four real frames light all 2000 cells; no foreign-zone light parts. Strict logs and sealed owned stop; no save/cold-load coverage. Journal expectations validated at c417b98046e8b10943852de53b20a29490681c47.",
+          "historicalScope": true,
+          "inventoryDigest": "d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389",
+          "currentDevCoverage": false
+        }
+      ]
     }
   ],
   "combinations": [

@@ -1,6 +1,44 @@
 # Current implementation and release evidence
 
-## Current 0.3.4 Quickstart hotfix — published and finalized
+## Claimed-ground sight correction — development candidate
+
+3098 staged C# files; 440,137 physical lines; 3129 cold-install files.
+Direct `XRL` imports: 1445 files; zero at or above 300 lines.
+Inventory SHA-256: `d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389`.
+
+Founding and Charter claims now attach claimed-ground light and city sight when their
+claim publishes. A second founding attaches after its exact settlement seat is established.
+These operations claim a zone already active, so waiting for zone activation left the first
+visit obscured. The existing draw-only projection and gameplay sight restoration are unchanged.
+
+New genuine Quickstart regression reproduced missing attachment on 0.3.4 production before
+any reactivation (`56b19dd4`). The fix (`3a03ca5a`) observed all 2000 cells over four real
+frames, including 810 naturally occluded cells, and restored ordinary sight after every frame.
+That diagnostic run changed PlayerOptions.json (`OptionLookLocked=No`) before stopping;
+its seal rejection is retained. Fresh accepted runs at `2a106bdf` preserved their complete
+profile seals, strict Player.log checks and receipt-owned stop records.
+The changed field is known; the trigger is not established. No options were rewritten to
+make the failed receipt pass. The ordinary founding regression also passed attachment before
+reactivation, preservation of the same part afterward, four native light frames across all
+2000 cells, and no attached part on unclaimed or foreign ground.
+
+Accepted local evidence, checked against the exact source and full sealed profile:
+- `claimed-sight/2a106bdf/quickstart-native/result.json`, SHA-256 `8e9631a17a6253792df4a41af9368de60bb97c21c8d7f39ccd2e4012f4d5d789`.
+- `claimed-sight/2a106bdf/ordinary-native/result.json`, SHA-256 `2f44a0bde4aa8acd92812c613de043799ed1d0b0923466a1680b88f193b1ad2e`.
+
+The journal oracle at `c417b980` corrects the full boot-header expectations and rejects
+refused COMPLETE rows. It validates the unchanged retained journals; no scenario or source
+was replayed or resealed to turn a failure into a pass. The ordinary run's initial postprocessor
+selected the wrong persona; its corrected persona check passes. The 62 persona tests include
+missing/refused-row mutations and fixed success/failure outcomes for all terminal shorthands.
+Both retained journals also pass this stricter follow-up checker. Coverage row 27 records the measured scope and remaining gaps.
+
+All four licensed compile modes pass; 14790 main and 5743 portable cases pass with zero skips.
+Automated structural review binds this candidate. Public Alpha 0.3.4 remains the published build.
+The first heart stage is authored as an open seven-cell canvas horseshoe around the rite ground,
+not roofed housing; its catalogue grants no beds. This correction changes no architecture.
+
+## Published 0.3.4 Quickstart hotfix — finalized
 
 3098 staged C# files; 440,124 physical lines; cold-install inventory contains 3129 files.
 Compile inventory: 3098 sources, baseline and compatibility symbols (3094 baseline).

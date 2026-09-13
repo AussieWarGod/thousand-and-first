@@ -602,6 +602,9 @@ def match(
                 "row %d verb %s, expected %s" % (index + 1, actual_verb, verb)
             )
             continue
+        # Terminal shorthand omits :OK/:REFUSED, but each terminal has a fixed outcome.
+        if verb in TERMINALS.values():
+            outcome = "OK" if verb == TERMINALS["COMPLETE"] else "REFUSED"
         if outcome and actual_outcome != outcome:
             problems.append(
                 "row %d %s is %s, expected %s"
