@@ -65,6 +65,21 @@ namespace ThousandAndFirst.Harness
 				return container;
 			}
 
+			private void HoldChainTent()
+			{
+				Require(KingdomConstruction.TryRead(out var jobs, out string failure), failure);
+				TentJobId = PaidTent(this, jobs);
+				Require(KingdomConstruction.TryFind(TentJobId, out var job) && job != null
+					&& job.Phase == KingdomConstructionPhase.Complete
+					&& job.PhysicalPhase == KingdomPhysicalPhase.EffectsSettled,
+					"source tent must complete through ordinary turns before heart materials arrive");
+				Require(KingdomConstruction.FindExactId(Zone, job.OutputId, out var tent)
+					== KingdomPhysicalLookupState.Exact, "completed source tent lacks exact physical output");
+				tent.RequirePart<r_KingdomImprovement>().Held = true;
+				Require(tent.GetPart<r_KingdomImprovement>().Held, "source tent improvement hold did not persist");
+				RequireChainCustody();
+			}
+
 			private void SeedChainHomes()
 			{
 				Require(KingdomData.TryGetBuilding("tentrow", out var entry), "authored tent row missing");

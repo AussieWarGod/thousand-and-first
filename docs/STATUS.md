@@ -29,6 +29,16 @@ The incomplete attempt is not an assertion failure or a native PASS. Its complet
 strict log, owned shutdown and native window observations are retained in
 `beta-heart-chain/23cb0a34/unbound-housing-incomplete-1/result.json`, SHA-256
 `43ccc9b0bfb4f6678f3d9885b36ac2bb80c811992f4072ef3d3e1af9d5391bee`.
+With the scoped pass at `499357a8599f283af2f3bdc260a5fc5b91aac1a7`, city setup passed in
+213.8 seconds and proved fifty physically housed residents. The following ordinary day completed
+the source tent, whose automatic tent-row improvement then spent materials intended for the heart.
+The heart-payment assertion correctly refused `NotEnoughMaterial`. Failed archive:
+`beta-heart-chain/499357a8/material-payment-refused-1/result.json`, SHA-256
+`11cd887df3d997da7d8c88bbad56dab0d57ef766ffe9a2e0ba61b1ab1bf7c47d`.
+The scenario now waits an ordinary day without the next heart materials, requires that tent's
+paid completion and exact physical output, and holds its improvement before supplying the heart.
+The complete script now requests 31200 ordinary turns. This adds an actual construction boundary;
+it neither directly completes the tent nor supplies replacement materials after a failed payment.
 
 ## Paid camp cold-load coverage
 

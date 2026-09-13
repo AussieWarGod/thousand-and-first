@@ -48,7 +48,6 @@ namespace ThousandAndFirst.Harness
 					Require(units.Count == 21 && ChainBrushDigest != null, "chain sentinel brush census differs");
 					SeedChainSupport();
 					ClearChainFounder();
-					SupplyChain(3);
 					ChainPhase = 1;
 					return "paid-heart-chain setup; stage-refused=true; synthetic-residents=50; synthetic-homes=18"
 						+ "; synthetic-water=3600; synthetic-food=1728; synthetic-knowledge=true"
@@ -56,27 +55,30 @@ namespace ThousandAndFirst.Harness
 				}
 				if (Verb == KingdomCampHeartChainScript.Supply)
 				{
-					Require(ChainPhase == 3, "court supply requires independently completed moot yard");
-					SupplyChain(4); ChainPhase = 4;
-					return "paid-heart-chain supplied; target=4; " + ChainState();
+					Require(ChainPhase == 1 || ChainPhase == 4,
+						"material supply requires the completed source tent or moot yard");
+					RequireChainSupport();
+					if (ChainPhase == 1) HoldChainTent();
+					SupplyChain(ChainPhase == 1 ? 3 : 4); ChainPhase++;
+					return "paid-heart-chain supplied; target=" + ChainTarget + "; " + ChainState();
 				}
 				Require(Verb == KingdomCampHeartChainScript.Check, "unknown paid heart chain verb");
-				if (ChainPhase == 1 || ChainPhase == 4)
+				if (ChainPhase == 2 || ChainPhase == 5)
 				{
 					CheckChainPaid(); ChainPhase++;
 					return "paid-heart-chain paid; target=" + ChainTarget + "; job=" + ChainJobId
 						+ "; water=" + ChainWater + "; materials=" + ChainSupplyClaim + "; " + ChainState();
 				}
-				if (ChainPhase == 2 || ChainPhase == 5)
+				if (ChainPhase == 3 || ChainPhase == 6)
 				{
 					CheckChainComplete(); ChainPhase++;
 					return "paid-heart-chain completed; rung=" + ChainTarget + "; job=" + ChainJobId
 						+ "; effects-settled=true; " + ChainState();
 				}
-				Require(ChainPhase == 6, "paid heart chain check out of order");
+				Require(ChainPhase == 7, "paid heart chain check out of order");
 				CheckChainComplete();
 				Require(KingdomPlots.RecoverFoundingHeart(System, Zone), "rung-four next-day recovery refused");
-				CheckChainComplete(); ChainPhase = 7;
+				CheckChainComplete(); ChainPhase = 8;
 				return "paid-heart-chain complete; paid-rungs=1->2->3->4; next-day-recovery=true"
 					+ "; ordinary-acceptance=false; save-load=untested; " + ChainState();
 			}

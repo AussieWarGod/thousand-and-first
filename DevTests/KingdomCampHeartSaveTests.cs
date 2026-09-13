@@ -188,6 +188,9 @@ namespace ThousandAndFirst.Tests
 			Assert.That(KingdomCampHeartScript.Matches(script), Is.True);
 			Assert.That(KingdomCampHeartScript.Matches(script, true), Is.False);
 			Assert.That(script.Take(9), Is.EqualTo(Script("camp-heart-native-checks")));
+			Assert.That(script.Skip(9).Take(5), Is.EqualTo(new[] {
+				"camp-heart-chain-setup", "advance 1200", "camp-heart-chain-supply",
+				"advance 1200", "camp-heart-chain-check" }));
 			Assert.That(KingdomCampHeartChainScript.Matches(null), Is.False);
 			for (int i = 0; i < script.Length; i++)
 			{
@@ -197,7 +200,7 @@ namespace ThousandAndFirst.Tests
 			}
 			Assert.That(KingdomCampHeartChainScript.Matches(script.Concat(new[] { "camp-heart-save" }).ToArray()), Is.False);
 			int turns = script.Where(x => x.StartsWith("advance ")).Sum(x => int.Parse(x.Substring(8)));
-			Assert.That(turns, Is.EqualTo(30000));
+			Assert.That(turns, Is.EqualTo(31200));
 			Assert.That(script.Where(x => x.StartsWith("advance ")).All(x => int.Parse(x.Substring(8)) <= 10000), Is.True);
 		}
 

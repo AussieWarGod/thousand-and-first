@@ -10,7 +10,7 @@ namespace ThousandAndFirst.Harness
 		private static readonly string[] Steps = {
 			"stagedigest", "camp-heart-setup", "advance 1200", "camp-heart-check",
 			"advance 3600", "camp-heart-check", "advance 1200", "camp-heart-check", "stagedigest",
-			Setup, "advance 1200", Check, "advance 7200", Check,
+			Setup, "advance 1200", Supply, "advance 1200", Check, "advance 7200", Check,
 			Supply, "advance 1200", Check, "advance 6600", "advance 6600", Check, "advance 1200", Check };
 
 		internal static bool Matches(IList<string> Script)
