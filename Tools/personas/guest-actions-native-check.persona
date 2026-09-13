@@ -1,7 +1,7 @@
 # Synthetic founding and a dedicated 64-dram reservoir; no citizens or roofs minted.
 # Real cadence opens correspondence. Scripted menu input selects exact production choices;
 # menu title/options must match before input is supplied. No rendered-UI or save/load claim.
-DESCRIPTION=defer correspondence, admit an interactable guest, remain a guest, welcome the same body once and refuse repeated interaction
+DESCRIPTION=defer correspondence, admit an interactable guest, remain a guest, refuse two welcomes without housing while preserving the same interactable guest
 REQUEST=founding-first-city
 START=8.22@40,12
 SCRIPT=stagedigest;guest-actions-setup;advance 6000;guest-actions-check;stagedigest

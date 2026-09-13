@@ -308,6 +308,7 @@ namespace ThousandAndFirst.Tests
 				+ "\"Remain our guest\"", interaction);
 			AssertOrdered(interaction,
 				"TryCheckGrowthFirstGuestCurrentApplicability",
+				"KingdomLodging.ObservePreparedArrival(system, zone, body, PlannedCreed(body)",
 				"TryBeginGrowthFirstGuestCitizenship");
 			AssertOrdered(interaction,
 				"TryBeginGrowthFirstGuestCitizenship",

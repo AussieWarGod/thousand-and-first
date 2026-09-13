@@ -19,6 +19,7 @@ namespace ThousandAndFirst.Harness
 		private static string[] ExpectedOptions;
 		private static string ExpectedTitle;
 		private static int Pick;
+		private static bool Quickstart;
 		internal static readonly StringBuilder Evidence = new StringBuilder();
 		internal static bool Vacant => Game == null;
 		private static void Require(bool value, string reason) => KingdomGuestActionsNativeProvider.Require(value, reason);
@@ -34,18 +35,28 @@ namespace ThousandAndFirst.Harness
 			return "native-guest-actions phase=awaiting; synthetic-camp=true synthetic-water=64 menu-input=scripted save-load=untested";
 		}
 
+		internal static string StartQuickstart(XRLGame game, Zone zone)
+		{
+			Require(Vacant, "guest actions already started");
+			Game = game; Zone = zone; Quickstart = true;
+			System = game.GetSystem<KingdomSystem>();
+			Require(KingdomQuickstartSettlementChecks.Observe(game, zone, System, "startup", out string failure), failure);
+			return "native-guest-actions phase=awaiting; real-quickstart=true menu-input=scripted save-load=untested";
+		}
+
 		internal static string Check(XRLGame game, Zone zone)
 		{
 			Require(ReferenceEquals(Game, game) && ReferenceEquals(Zone, zone), "guest action owner changed");
 			Require(KingdomFirstGuestRuntime.IsAwaitingAnswer(System), "real due pass did not open correspondence");
 			KingdomGrowthArrivalCandidate candidate = System.LifecycleBook.Growth.ArrivalCandidate;
+			int populationBefore = System.Population;
 			string candidateId = candidate.Id, opportunityId = candidate.FirstGuest.OpportunityId;
 			string[] correspondence = { "Admit this person through Growth", "Defer without limit", "Decline without penalty" };
 			Choose("A first guest writes to " + System.KingdomDisplayName, correspondence, 1,
 				() => KingdomFirstGuestRuntime.Open(System, The.Player));
 			Require(KingdomFirstGuestRuntime.IsAwaitingAnswer(System)
 				&& System.LifecycleBook.Growth.ArrivalCandidate.Id == candidateId
-				&& System.Population == 0, "deferral changed the candidate or admitted a citizen");
+				&& System.Population == populationBefore, "deferral changed the candidate or admitted a citizen");
 			Choose("A first guest writes to " + System.KingdomDisplayName, correspondence, 0,
 				() => KingdomFirstGuestRuntime.Open(System, The.Player));
 			candidate = System.LifecycleBook.Growth.ArrivalCandidate;
@@ -56,7 +67,7 @@ namespace ThousandAndFirst.Harness
 			GameObject body = Zone.FindObjectByID(candidate.ObjectId);
 			Require(GameObject.Validate(body) && body.GetPart<r_KingdomFirstGuestBody>() != null,
 				"hosted guest has no exact physical interaction part");
-			Require(System.Population == 0 && !KingdomCitizenship.BelongsTo(System, body), "hosting silently granted citizenship");
+			Require(System.Population == populationBefore && !KingdomCitizenship.BelongsTo(System, body), "hosting silently granted citizenship");
 			Require(KingdomGrowth.CanUsePhysicalFirstGuest(body, The.Player, candidateId, opportunityId)
 				&& !KingdomGrowth.CanUsePhysicalFirstGuest(body, body, candidateId, opportunityId), "guest interaction actor authority differs");
 			var actions = new Dictionary<string, InventoryAction>();
@@ -68,20 +79,40 @@ namespace ThousandAndFirst.Harness
 			Choose("Your first guest", bodyChoices, 2,
 				() => KingdomGrowth.OpenPhysicalFirstGuest(body, The.Player, candidateId, opportunityId));
 			Require(candidate.Phase == KingdomGrowthArrivalCandidatePhase.GuestHosted
-				&& System.Population == 0, "remaining a guest changed citizenship");
+				&& System.Population == populationBefore, "remaining a guest changed citizenship");
+			if (!Quickstart)
+			{
+				int waterBefore = KingdomGrowth.CountStoredWater(Zone);
+				for (int retry = 0; retry < 2; retry++)
+				{
+					Choose("Your first guest", bodyChoices, 0,
+						() => KingdomGrowth.OpenPhysicalFirstGuest(body, The.Player, candidateId, opportunityId));
+					Require(GameObject.Validate(body) && ReferenceEquals(Zone.FindObjectByID(candidate.ObjectId), body)
+						&& candidate.Phase == KingdomGrowthArrivalCandidatePhase.GuestHosted
+						&& candidate.FirstGuest.GuestPhase == KingdomGrowthFirstGuestGuestPhase.Hosted
+						&& System.Population == 0 && !KingdomCitizenship.BelongsTo(System, body)
+						&& KingdomGrowth.CountStoredWater(Zone) == waterBefore
+						&& KingdomGrowth.CanUsePhysicalFirstGuest(body, The.Player, candidateId, opportunityId),
+						"housing refusal consumed the guest, water, population or interaction");
+				}
+				return "native-guest-actions cases=1 passed=1 failed=0; no-beds-welcome=refused-twice same-guest=preserved"
+					+ "; synthetic-camp=true menu-input=scripted rendered-ui=false save-load=untested" + Evidence;
+			}
+			Require(KingdomGrowth.TryCountBeds(Zone, out int beds, out _) && beds >= 6
+				&& populationBefore == 4, "Quickstart did not finish its real homes with four founders");
 			Choose("Your first guest", bodyChoices, 0,
 				() => KingdomGrowth.OpenPhysicalFirstGuest(body, The.Player, candidateId, opportunityId));
 			Evidence.Append("; welcome-phase=").Append(candidate.Phase)
 				.Append(" guest-phase=").Append(candidate.FirstGuest.GuestPhase)
 				.Append(" population=").Append(System.Population);
 			Require(GameObject.Validate(body) && ReferenceEquals(Zone.FindObjectByID(body.IDIfAssigned), body)
-				&& KingdomCitizenship.BelongsTo(System, body) && System.Population == 1,
+				&& KingdomCitizenship.BelongsTo(System, body) && System.Population == populationBefore + 1,
 				"explicit welcome did not enroll the same guest exactly once");
 			Require(!KingdomGrowth.CanUsePhysicalFirstGuest(body, The.Player, candidateId, opportunityId),
 				"completed guest action remains usable");
 			int water = KingdomGrowth.CountStoredWater(Zone);
 			KingdomGrowth.OpenPhysicalFirstGuest(body, The.Player, candidateId, opportunityId);
-			Require(System.Population == 1 && KingdomGrowth.CountStoredWater(Zone) == water
+			Require(System.Population == populationBefore + 1 && KingdomGrowth.CountStoredWater(Zone) == water
 				&& KingdomCitizenship.BelongsTo(System, body), "repeated welcome changed population, water or citizenship");
 			return "native-guest-actions cases=1 passed=1 failed=0; scripted-menu-input=true rendered-ui=false save-load=untested"
 				+ Evidence;

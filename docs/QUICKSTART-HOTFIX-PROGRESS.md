@@ -312,3 +312,9 @@ Production inventory `8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5
 14787/portable 5743 tests pass with zero skips. Coverage row 7 binds this native result;
 row 2 now accurately names correspondence, with physical guest admission/citizenship
 explicitly uncovered in row 26. Public 0.3.4 release gates and subscription remain pending.
+
+## Guest action hotfix follow-up
+
+PR #184 merged at 730dce2e. Local release precheck stages 1–9 and stage-10 safety passed at e6438522; deploy dry-run initially refused an absent local Mods target. Re-running that read-only step with the workflow-supported `TAF_LIVE_MOD=/mnt/c/taf-release/live-mod/ThousandAndFirst`, then structure and exact-head validation passed (`/tmp/taf-034-release-final-stages.log`). This is composite local evidence, not a monolithic release-check PASS. No staging tag or upload yet.
+
+The additional native physical guest scenario failed at b8f6a07a (`/mnt/c/taf-scenario.HqEJCx`, `/tmp/taf-guest-actions-native.log`): correspondence defer/admit and real inventory dialogue action succeeded; welcome at zero beds consumed the candidate into housing refusal. Added pre-commit lodging observation; current production inventory `d15228c9b93d402b534712ec917baf59026ff68220aec2d175c0d8dbf8fba55a`. Negative repeated-welcome preservation and positive genuine Quickstart fifth-citizen scenarios are pending.

@@ -10,6 +10,8 @@ below it.
 
 ## [0.3.4] — 2026-09-13 (Alpha)
 
+- A first guest refused for lack of suitable housing stays present and available to welcome again after construction.
+
 Private candidate preparation; this version has not been published.
 
 Quickstart supplies four founding citizens, two shelter plots and a full finite
@@ -23,7 +25,7 @@ so a legitimately removed building does not leave a stale sealed work root.
 Native/release evidence below remains scoped
 to its actual checkpoints; the broader Beta goal is not complete.
 
-Current 3098-file census is line-cap green: 440,105 physical lines; direct `XRL`
+Current 3098-file census is line-cap green: 440,114 physical lines; direct `XRL`
 imports occur in 1445 files, 0 of them over the line limit. Inventory SHA-256:
 `8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8`. The cold-install inventory contains 3129 files.
 This isolated 0.3.4 preparation combines heart authority, shared-XL transition, rung settlement

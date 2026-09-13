@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "inventorySha256": "8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8",
+  "inventorySha256": "d15228c9b93d402b534712ec917baf59026ff68220aec2d175c0d8dbf8fba55a",
   "exceptions": [],
   "reviewedBy": "Codex root automated structural review",
-  "completedUtc": "2026-09-13T02:02:19Z",
+  "completedUtc": "2026-09-13T03:16:07Z",
   "oneResponsibility": {
     "status": "passed",
-    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8. Inherits exact inventory review 42d5b7cc6079c4bff660b1347956d20400cb7e17674a6b194e97199a6fd5f2ed. Sole production delta reuses ReadWorks at CheckOut before publishing, so the next spatial seal sees the current live survey after construction or strike. Existing rebuild preserves other-zone works, residents, clocks and stock accounting; no seal acceptance guard changes. 3098 files, 440105 physical lines, 1445 direct-XRL files, no size exception. Automated source review, with native acceptance separately scoped."
+    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:d15228c9b93d402b534712ec917baf59026ff68220aec2d175c0d8dbf8fba55a. Inherits exact inventory review 8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8. Sole production delta observes the existing assignment-level lodging gate before committing physical first-guest citizenship. A refusal leaves body custody, choice phase, water and population unchanged; the existing transactional observation still runs after commitment. No capacity, species needs, creed or receipt predicate is relaxed. Automated source review; native acceptance separately scoped."
   },
   "protocolsAtBoundaries": {
     "status": "passed",
-    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8. Inherits exact inventory review 42d5b7cc6079c4bff660b1347956d20400cb7e17674a6b194e97199a6fd5f2ed. Sole production delta reuses ReadWorks at CheckOut before publishing, so the next spatial seal sees the current live survey after construction or strike. Existing rebuild preserves other-zone works, residents, clocks and stock accounting; no seal acceptance guard changes. 3098 files, 440105 physical lines, 1445 direct-XRL files, no size exception. Automated source review, with native acceptance separately scoped."
+    "notes": "See docs/STRUCTURE_REVIEW_0_3_4.md, sha256:d15228c9b93d402b534712ec917baf59026ff68220aec2d175c0d8dbf8fba55a. Inherits exact inventory review 8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8. Sole production delta observes the existing assignment-level lodging gate before committing physical first-guest citizenship. A refusal leaves body custody, choice phase, water and population unchanged; the existing transactional observation still runs after commitment. No capacity, species needs, creed or receipt predicate is relaxed. Automated source review; native acceptance separately scoped."
   }
 }

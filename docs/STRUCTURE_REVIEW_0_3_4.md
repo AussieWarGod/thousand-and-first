@@ -160,3 +160,7 @@ Other-zone rows, resident/clock rows and stock accounting retain the existing re
 contract. Native `b1f4277d` confirmed salvage settled but the old work row still faulted
 seal capture; the current native assertion also requires that row to be absent.
 Automated source review; exact native outcome remains pending.
+
+## Preserve a hosted guest when housing refuses citizenship
+
+Inventory `d15228c9b93d402b534712ec917baf59026ff68220aec2d175c0d8dbf8fba55a` inherits `8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8`. `Growth/KingdomGrowth.PhysicalFirstGuest.Interaction.cs` now calls the existing read-only `ObservePreparedArrival` with the frozen planned creed before `TryBeginGrowthFirstGuestCitizenship`. The check owns no new data or protocol; it asks the same assignment-level authority used by the consuming transaction, which still repeats its own observation. A refusal displays a concrete housing instruction and returns before governance commit, body retraction, consumption or enrollment. No housing gate is bypassed. Source ordering remains asserted. Native regression first exposed the unguarded path at b8f6a07a: zero beds, candidate Settled/CitizenshipPrepared, population zero after explicit welcome. That failed run remains retained at `/mnt/c/taf-scenario.HqEJCx`; repaired negative and real Quickstart positive scenarios are pending. Automated source review, not a human signature.
