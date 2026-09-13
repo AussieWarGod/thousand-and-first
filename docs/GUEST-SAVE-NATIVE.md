@@ -1,7 +1,10 @@
 # First-guest citizenship save/cold-load check
 
-Status: implemented; native execution pending. This supplements the historical recruitment
-evidence in the coverage matrix. It does not change the frozen 0.3.4 release protocol.
+Status: native PASS for source `4c97470d66e845b9841d4abd74d20d6787fc0e6c`, with journal validator `b11e26fb`.
+Both separate sessions preserve their complete profile seals and pass strict logs and owned
+stop records. All 3353 C# inputs and runtime content bind to the source. Evidence:
+`guest-save/4c97470d/carried-water-recovery-1/result.json`, SHA-256 `4efadb2941868f06022198414607f3260e018dfa0be0fd4b01692e5eb74fe000`.
+Coverage row 28 and combination C8 record the measured scope. Public Alpha 0.3.4 remains unchanged.
 
 `Tools/personas/guest-save-lifecycle-native-check.persona` drives genuine marsh Quickstart
 with the advisor, four founding citizens, finite starter supplies and ordinary construction.
@@ -82,3 +85,19 @@ run records, stop receipts and closed profile seals; bind all production/harness
 the recorded commit before adding typed native evidence. Keep the actual saves local.
 Source-session completion alone does not cover guest save/load. Rendered UI, arbitrary old-save
 migration and interrupted guest enrollment remain outside this scenario.
+
+## Accepted execution
+
+Source profile saved at turn 16803 after four original founders and guest 654 (Vadan) completed
+the scenario. The empty civic store refused a two-dram commission without debit. Sixteen
+ordinary movement steps reached the actual cask; carried water fell 32->24 while civic water
+rose 0->8. No supplies were created. Separate cold load matched guest authority before
+activation and afterward, refused two stale guest choices, retained the four original housed
+founders and previous paid fire, then paid one timber and two drams for a distinct new job.
+
+The source records commit 4c97470d. Its game/harness bytes are unchanged from fcab75c6; the
+intervening correction affects only the journal prefix parser. Validator b11e26fb also accepts
+the engine's valid empty ID on an existing carried vessel while requiring the field exactly
+once. Transfer identity was checked in game through exact object/part and inventory-owner
+references. No source profile, saved state, or retained journal was rewritten for these
+parser corrections. Missing or repeated donor fields still refuse.

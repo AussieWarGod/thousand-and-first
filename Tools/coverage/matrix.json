@@ -783,11 +783,11 @@
       "prerequisites": "real unanswered first-guest opportunity and loaded held ground",
       "transitions": "Charter admission -> exact hosted body -> body interaction -> explicit citizenship",
       "effects": "guest is interactable but not a citizen before explicit welcome; completed welcome enrolls exact body once",
-      "save_cold_load": "COVERAGE_GAP",
+      "save_cold_load": "NATIVE_PASS in row 28 for the exact enrolled guest; historical migration and interrupted enrollment remain COVERAGE_GAP",
       "negative": "NEGATIVE_PASS",
       "driver": "Harness/KingdomGuestActionsNativeProvider.cs; guest-actions-native-check and guest-actions-quickstart-native-check",
       "status": "NATIVE_PASS",
-      "note": "Real production correspondence and physical body choices with scripted exact menu input. Native d9d0f4b4 uses genuine Quickstart: four original founders, six completed beds, one uncreeded guest welcomed once, stale interaction refused and five citizens after another 1200 turns. Native 895e700e uses disclosed synthetic founding/water and proves two no-bed welcomes preserve the same hosted guest and supplies. Later refusal prose and scoped reconciliation changes are separate from that older negative inventory. An earlier first-day founder-count loss remains an unexplained failed precondition. No rendered UI, all-seed survival or guest save/load claim.",
+      "note": "Real production correspondence and physical body choices with scripted exact menu input. Native d9d0f4b4 uses genuine Quickstart: four original founders, six completed beds, one uncreeded guest welcomed once, stale interaction refused and five citizens after another 1200 turns. Native 895e700e uses disclosed synthetic founding/water and proves two no-bed welcomes preserve the same hosted guest and supplies. Later refusal prose and scoped reconciliation changes are separate from that older negative inventory. An earlier first-day founder-count loss remains an unexplained failed precondition. No rendered UI or all-seed survival claim. Row28 records the separate exact guest save/cold-load scenario; the older action-only evidence is unchanged.",
       "evidence": [
         {
           "commit": "895e700e3f459d859bb3985b7427f36bfddfa571",
@@ -843,6 +843,31 @@
           "artifactBytes": 1794,
           "verdict": "PASS - ordinary native",
           "scope": "Disclosed synthetic founding through production transaction; unclaimed control has no part; immediate attachment before reactivation; same part after reactivation; four real frames light all 2000 cells; no foreign-zone light parts. Strict logs and sealed owned stop; no save/cold-load coverage. Journal expectations validated at c417b98046e8b10943852de53b20a29490681c47.",
+          "historicalScope": true,
+          "inventoryDigest": "d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389",
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 28,
+      "behaviour": "First-guest citizenship + water shortage recovery + real save/cold load",
+      "prerequisites": "Genuine Quickstart, original four founders, completed starter housing, enrolled first guest, exhausted finite civic water, existing carried pure water",
+      "transitions": "recruit exact guest -> fourteen days -> unfunded commission refuses -> founder walks to cask and pours -> real save -> separate cold load -> stale guest choices refuse -> another paid commission",
+      "effects": "same guest identity, citizenship/domain/terminal receipts, home, population and accounting before activation and after load; conserved physical water transfer; exact new job with one timber and two drams paid",
+      "save_cold_load": "NATIVE_PASS for the exact completed enrollment and original founders, housing, stores and paid building",
+      "negative": "NATIVE_PASS for unfunded commission and two stale guest retries; oracle mutations cover missing/repeated/reordered rows, changed identity/receipts, nonconserved or remote refill and profile drift; interrupted enrollment remains COVERAGE_GAP",
+      "driver": "Harness/KingdomGuestSaveNativeProvider.cs; Harness/KingdomGuestSaveSupply.cs; Harness/KingdomGuestSaveWitness.cs; Tools/personas/guest-save-lifecycle-native-check.persona; Tools/guest_save_check.py",
+      "status": "NATIVE_PASS",
+      "note": "Native source 4c97470d, validator b11e26fb. Earlier a4d2bc20 complete scenario failed at water0/needed2; 76baa664 lost founder 516 to a giant dragonfly before recruitment; 4d207e8c failed a harness material selector and sealed-option drift. All retained as failures. No wildlife suppression, founder replacement, created supplies or weakened load-commission check. The accepted run recorded no civic combat interruption; the prior combat death does not establish an AI cause. Vanilla carried donor had no assigned ID; exact object/part and inventory owner references prove transfer identity.",
+      "evidence": [
+        {
+          "commit": "4c97470d66e845b9841d4abd74d20d6787fc0e6c",
+          "artifactPath": "guest-save/4c97470d/carried-water-recovery-1/result.json",
+          "artifactSha256": "4efadb2941868f06022198414607f3260e018dfa0be0fd4b01692e5eb74fe000",
+          "artifactBytes": 3280,
+          "verdict": "PASS - guest citizenship survives real save/cold load and stale choices; unfunded construction refuses, actual carried water refills stores, then loaded construction pays exactly",
+          "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 16803 observed turns, four original founders and guest 654, six beds, finite supplies, 16 real movement steps and eight carried pure-water drams (32->24, cask0->8). Scripted menu input and physical engine transfer; no rendered interaction, arbitrary migration, interrupted enrollment or all-seed survival claim. Both closed profiles, strict logs, owned stops and exact source binding pass.",
           "historicalScope": true,
           "inventoryDigest": "d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389",
           "currentDevCoverage": false
@@ -987,6 +1012,36 @@
           "scope": "seed #43101 marsh/advisor-on; 17200 ordinary turns plus harness handoffs; 400 synthetic real drams, 100 meals, 72 physical obstacles; original citizens and real production work; strict logs and owned stops in both sessions",
           "historicalScope": true,
           "inventoryDigest": "43ae0c005513626488ce557061ad506898e9c6c26c3bd935639db5ecfff307b6",
+          "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": "C8",
+      "name": "First guest + finite water + refused construction + carried refill + cold load",
+      "rows": [
+        3,
+        4,
+        26,
+        28
+      ],
+      "coupling": "The same settlement houses its founding crew and new citizen, consumes finite shared water, refuses unpaid construction, receives real carried supplies, then reloads guest and construction authority together.",
+      "prerequisites": "Actual four-founder Quickstart with six completed beds and a physically welcomed fifth citizen; exhausted civic water and an existing founder-carried pure-water vessel.",
+      "invariants": "One unchanged guest enrollment; conserved eight-dram donor/store transfer after actual movement; refusal leaves materials, registry, guest authority and clocks unchanged; cold load preserves all original founders and exact guest receipts; stale choices cannot duplicate enrollment or debit; next job pays one timber and two drams.",
+      "seed_turn_matrix": "Native 4c97470d, marsh/advisor-on seed #43101; 8400 then 8401 observed advance turns plus handoffs, 16803 saved turns; real save and separate sealed cold load. No seed sweep.",
+      "expected_failure_rows": "Missing founder/guest/home, unfunded commission succeeding or consuming stores, unowned/non-pure/nonconserved water, remote transfer, changed receipt or clocks, missing preactivation witness, stale double enrollment/debit, unpaid or reused next job, log errors and changed profile seals.",
+      "reusable_seams": "Exact guest-save persona; physical donor/cask references; original Quickstart housing and paid-job witnesses; guest preactivation comparison; unchanged lifecycle-next funding verifier.",
+      "status": "NATIVE_PASS",
+      "evidence": [
+        {
+          "commit": "4c97470d66e845b9841d4abd74d20d6787fc0e6c",
+          "artifactPath": "guest-save/4c97470d/carried-water-recovery-1/result.json",
+          "artifactSha256": "4efadb2941868f06022198414607f3260e018dfa0be0fd4b01692e5eb74fe000",
+          "artifactBytes": 3280,
+          "verdict": "PASS - guest citizenship survives real save/cold load and stale choices; unfunded construction refuses, actual carried water refills stores, then loaded construction pays exactly",
+          "scope": "Genuine marsh/advisor-on Quickstart, seed #43101; 16803 observed turns, four original founders and guest 654, six beds, finite supplies, 16 real movement steps and eight carried pure-water drams (32->24, cask0->8). Scripted menu input and physical engine transfer; no rendered interaction, arbitrary migration, interrupted enrollment or all-seed survival claim. Both closed profiles, strict logs, owned stops and exact source binding pass.",
+          "historicalScope": true,
+          "inventoryDigest": "d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389",
           "currentDevCoverage": false
         }
       ]
