@@ -493,8 +493,18 @@ def write_options(source: str, destination: str) -> None:
     options["OptionEnableSeed"] = "Yes"
     if advisor is not None:
         options[QUICKSTART_ADVISOR_OPTION] = advisor
+    # GameObject.Move persists this previously absent option. Author its intended initial
+    # value and the engine's wire format before sealing the physical carried-water scenario.
+    # A used profile is never normalized or resealed when an engine write differs.
+    physical_guest_walk = "guest-save-supply" in tokens
+    if physical_guest_walk:
+        options["OptionLookLocked"] = "No"
     with open(destination, "w", encoding="utf-8") as handle:
-        handle.write(json.dumps(options, indent=2) + "\n")
+        if physical_guest_walk:
+            handle.write("{\n" + ",\n".join(json.dumps(key) + ":" + json.dumps(value)
+                                          for key, value in options.items()) + "\n}")
+        else:
+            handle.write(json.dumps(options, indent=2) + "\n")
     print("scenario profile exposes the native world-seed field for operator entry")
 
 

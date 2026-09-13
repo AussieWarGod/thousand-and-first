@@ -1,5 +1,29 @@
 # Current implementation and release evidence
 
+## Guest citizenship, shortage recovery and cold load — native verified
+
+PR190 adds a genuine Quickstart chain covering first-guest recruitment, fourteen days of
+ordinary activity, an unfunded construction refusal, an eight-dram transfer from the founder's
+existing carried water, real save, separate cold load, stale guest retries and another paid job.
+All four original founders, six beds, guest 654 and the original completed fire survive loading.
+The refill conserves 32->24 carried and 0->8 stored drams after 16 ordinary movement steps;
+the next loaded commission pays exactly one timber and two drams for a distinct job.
+
+Native source: `4c97470d66e845b9841d4abd74d20d6787fc0e6c`. Journal validator: `b11e26fb`.
+Production remains inventory `d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389`.
+Both closed profiles, strict logs and owned stop records pass; all 3353 C# inputs and runtime
+content bind to source. Evidence: `guest-save/4c97470d/carried-water-recovery-1/result.json`, SHA-256 `4efadb2941868f06022198414607f3260e018dfa0be0fd4b01692e5eb74fe000`.
+All four engine compile modes pass. The repository tool suite passed 1079 tests with 12 skips;
+the follow-up guest oracle passes 9 cases, including the observed native row format and an
+unassigned carried-vessel ID. Coverage row 28 and combination C8 record only this measured chain.
+
+Earlier water-exhaustion, dragonfly combat death, material-census and option-seal failures
+remain recorded in `docs/GUEST-SAVE-NATIVE.md`. The accepted run does not establish all-seed
+survival, a cause for the earlier combat death, rendered interaction, historical migration or
+interrupted enrollment. New physical-walk profiles author the initial look option and engine
+JSON format before sealing; used profiles are never repaired or resealed. The shared loaded
+construction verifier is unchanged. Public Alpha 0.3.4 remains the published release.
+
 ## Claimed-ground sight correction — development candidate
 
 3098 staged C# files; 440,137 physical lines; 3129 cold-install files.

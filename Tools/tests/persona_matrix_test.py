@@ -721,7 +721,7 @@ class ShippedPersonaTest(unittest.TestCase):
         return cases
 
     def test_every_persona_parses(self):
-        self.assertEqual(97, len(self.personas()))
+        self.assertEqual(98, len(self.personas()))
         for path in self.personas():
             found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
             self.assertTrue(found["REQUEST"])
@@ -936,6 +936,12 @@ class ShippedPersonaTest(unittest.TestCase):
                 self.assertGreater(boot_rows, 0, path.name)
                 expected = expected[boot_rows:]
                 sealed = sealed[1:]
+            # The shortage observation is emitted inside the supply verb; it has no dispatch line.
+            if "guest-save-shortage" in expected:
+                self.assertIn("guest-save-supply", sealed, path.name)
+                self.assertEqual(expected.index("guest-save-shortage") + 1,
+                                 expected.index("guest-save-supply"), path.name)
+                expected.remove("guest-save-shortage")
             # The script may stop early on a declared refusal, so expectations are a PREFIX of the
             # sealed verbs - never a different list, and never longer.
             self.assertLessEqual(len(expected), len(sealed), path.name)
