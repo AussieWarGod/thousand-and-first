@@ -21,6 +21,7 @@ namespace ThousandAndFirst.Harness
 		private static int Pick;
 		private static bool Quickstart;
 		internal static bool ActionActive;
+		internal static readonly List<GameObject> Founders = new List<GameObject>();
 		internal static readonly StringBuilder Evidence = new StringBuilder();
 		internal static bool Vacant => Game == null;
 		private static void Require(bool value, string reason) => KingdomGuestActionsNativeProvider.Require(value, reason);
@@ -42,12 +43,21 @@ namespace ThousandAndFirst.Harness
 			Game = game; Zone = zone; Quickstart = true;
 			System = game.GetSystem<KingdomSystem>();
 			Require(KingdomQuickstartSettlementChecks.Observe(game, zone, System, "startup", out string failure), failure);
+			Require(KingdomQuickstartRules.TryDecode(game.GetStringGameState(KingdomQuickstartRules.ReceiptState),
+				out var receipt), "Quickstart receipt absent");
+			foreach (string id in receipt.FounderObjectIds) Founders.Add(zone.FindObjectByID(id));
 			return "native-guest-actions phase=awaiting; real-quickstart=true menu-input=scripted save-load=untested";
 		}
 
 		internal static string Check(XRLGame game, Zone zone)
 		{
 			Require(ReferenceEquals(Game, game) && ReferenceEquals(Zone, zone), "guest action owner changed");
+			Evidence.Append("; census-population=").Append(System.Population);
+			bool countedBeds = KingdomGrowth.TryCountBeds(Zone, out int observedBeds, out _);
+			Evidence.Append(" beds=").Append(countedBeds ? observedBeds : -1);
+			foreach (GameObject founder in Founders) Evidence.Append(" founder=").Append(founder?.IDIfAssigned)
+				.Append(":alive=").Append(GameObject.Validate(founder) && founder.IsAlive)
+				.Append(":citizen=").Append(KingdomCitizenship.BelongsTo(System, founder));
 			Require(KingdomFirstGuestRuntime.IsAwaitingAnswer(System), "real due pass did not open correspondence");
 			KingdomGrowthArrivalCandidate candidate = System.LifecycleBook.Growth.ArrivalCandidate;
 			Evidence.Append("; planned-creed=").Append(candidate.PlannedCreed);

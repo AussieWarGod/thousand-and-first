@@ -84,4 +84,32 @@ namespace ThousandAndFirst.Harness
 		}
 	}
 
+	[HarmonyPatch(typeof(GameObject), "Die")]
+	internal static class KingdomGuestActionsFounderDeathDiagnostics
+	{
+		[HarmonyPrefix]
+		internal static void Before(GameObject __instance, GameObject Killer, string Reason, string DeathCategory)
+		{
+			if (!KingdomGuestActionsNativeChecks.Founders.Contains(__instance)) return;
+			KingdomGuestActionsNativeChecks.Evidence.Append("; founder-death=").Append(__instance.IDIfAssigned)
+				.Append(" killer=").Append(Killer?.Blueprint ?? "none")
+				.Append(" reason=").Append(KingdomScenarioRules.Bounded(Reason ?? "none"))
+				.Append(" category=").Append(DeathCategory ?? "none");
+		}
+	}
+
+	[HarmonyPatch(typeof(KingdomGrowth), "EmigrateAuthorized")]
+	internal static class KingdomGuestActionsFounderDepartureDiagnostics
+	{
+		[HarmonyPrefix]
+		internal static void Before(GameObject Leaver, out GameObject __state) { __state = Leaver; }
+		[HarmonyPostfix]
+		internal static void After(GameObject __state, string Cause, bool __result)
+		{
+			if (!KingdomGuestActionsNativeChecks.Founders.Contains(__state)) return;
+			KingdomGuestActionsNativeChecks.Evidence.Append("; founder-departure=").Append(__state?.IDIfAssigned)
+				.Append(" cause=").Append(Cause).Append(" accepted=").Append(__result);
+		}
+	}
+
 }
