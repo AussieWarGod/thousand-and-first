@@ -584,6 +584,18 @@ class MatchingTest(unittest.TestCase):
         found = matrix.parse_manifest(GREEN, "x.persona")
         self.assertEqual([], matrix.assess(found, self.green_journal(), "x.persona"))
 
+    def test_terminal_shorthand_requires_its_fixed_outcome(self):
+        for terminal, verb, good in (
+            ("COMPLETE", "SCRIPT-COMPLETE", "OK"),
+            ("STOPPED", "SCRIPT-STOPPED", "REFUSED"),
+            ("GATE-REFUSED", "GATE-REFUSED", "REFUSED"),
+        ):
+            with self.subTest(terminal=terminal):
+                expected = matrix.parse_expect(terminal, "x.persona")
+                self.assertEqual([], matrix.match(expected, [(verb, good, "")]))
+                bad = "REFUSED" if good == "OK" else "OK"
+                self.assertTrue(matrix.match(expected, [(verb, bad, "")]))
+
     def test_an_unexpected_ok_fails_as_loudly_as_a_refusal(self):
         found = matrix.parse_manifest(GREEN, "x.persona")
         extra = self.green_journal().replace(
@@ -709,11 +721,37 @@ class ShippedPersonaTest(unittest.TestCase):
         return cases
 
     def test_every_persona_parses(self):
-        self.assertEqual(96, len(self.personas()))
+        self.assertEqual(97, len(self.personas()))
         for path in self.personas():
             found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
             self.assertTrue(found["REQUEST"])
             self.assertTrue(found["SCRIPT_WORDS"])
+
+    def test_quickstart_sight_accepts_full_boot_and_refuses_missing_or_failed_steps(self):
+        name = "quickstart-sight-native-check.persona"
+        found = matrix.parse_manifest(
+            (ROOT / "Tools" / "personas" / name).read_text(encoding="utf-8"), name
+        )
+        boot = [
+            "QUICKSTART-BOOT-BEGIN", "QUICKSTART-BOOT-OBSERVED", "QUICKSTART-BOOT-COMPLETE",
+            "QUICKSTART-BUILD-BEGIN", "QUICKSTART-BUILD-QUOTE", "QUICKSTART-BUILD-CANPAY",
+            "QUICKSTART-BUILD-COMMISSION", "QUICKSTART-LIFECYCLE-PROFILE",
+        ]
+        rows = [row(verb, "OK") for verb in boot] + [
+            row("QUICKSTART-BUILD-COMPLETE", "OK", "commissioned=true"),
+            row("quickstart-sight-start", "OK", "attached-at-founding=true"),
+            row("yield-frames", "OK"),
+            row("quickstart-sight-check", "OK", "whole-zone-drawn=true"),
+            row("stagedigest", "OK"), row("SCRIPT-COMPLETE", "OK"),
+        ]
+        self.assertEqual([], matrix.assess(found, journal(*rows), name))
+        for i in range(len(rows)):
+            with self.subTest(missing=i):
+                self.assertTrue(matrix.assess(found, journal(*(rows[:i] + rows[i + 1:])), name))
+            with self.subTest(refused=i):
+                changed = list(rows)
+                changed[i] = changed[i].replace("\tOK\t", "\tREFUSED\t")
+                self.assertTrue(matrix.assess(found, journal(*changed), name))
 
     def test_prepared_death_persona_declares_its_own_sealable_no_argument_verb(self):
         directory = ROOT / "Tools" / "personas"

@@ -8,7 +8,8 @@ namespace ThousandAndFirst
 	/// <summary>
 	/// Attaches, restamps and revokes the claimed-ground light
 	/// (<see cref="XRL.World.ZoneParts.KingdomClaimedGroundLight"/>) on the zone the founder just
-	/// walked into. It is reached from the one semantic activation guard, so ground that stopped
+	/// walked into or just claimed. Claim publication and the semantic activation guard both
+	/// reconcile it, so ground that stopped
 	/// being the realm's &mdash; secession, exile, a claim let go &mdash; loses its light on the
 	/// next visit rather than on a sweep. The current zone only: no claim is ever thawed to be lit.
 	/// </summary>
@@ -52,9 +53,9 @@ namespace ThousandAndFirst
 			}
 			light.SettlementId = settlementId;
 			// The floor the city holds is remembered as walked, so the minimap reads as a settlement
-			// instead of a corridor. Walls and what stands on them still wait on the founder's own
-			// line of sight, and this is one-way: a claim let go stops new reveals, it does not
-			// unremember ground.
+			// instead of a corridor. The separate city-sight option opens walls during drawing;
+			// gameplay keeps ordinary line of sight. This memory is one-way: a claim let go
+			// stops new reveals, it does not unremember ground.
 			Zone.ExploreAll();
 		}
 
