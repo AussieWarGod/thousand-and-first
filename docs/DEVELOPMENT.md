@@ -79,6 +79,10 @@ beyond them. Preserve the complete approaches to paid work and future expansions
 ingress after all fixture buildings and stores are placed, before costly enrollment or turn waits.
 If work reaches its final stage but refuses physical completion, inspect the recorded construction
 reason before increasing the wait. A blocked entrance does not improve with more time.
+Readiness observations must use production staffing and competing-work inputs, not the fixture's
+initial population and an assumed empty queue. Keep the last production announcement and relevant
+ledger reason when a ready-looking action never starts. Explicitly identify synthetic stores before
+expecting construction-input observations to reference them.
 
 ## Release batch
 

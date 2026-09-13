@@ -70,6 +70,16 @@ every physical entrance before enrollment and waiting. A focused geometry regres
 previously accepted blocker. Ordinary gameplay and the 31200-turn script are unchanged.
 Failed archive: `beta-heart-chain/cb3370e9/tent-completion-refused-1/result.json`, SHA-256
 `56e4979993f0e3b02044d056368a23c0caca5c0c904470a1383ab7bcf1b1e569`.
+At `1b9d0755c76f97d83b7d236595fb9c1e0a26ec4b`, city support, all physical entrances, paid tent
+completion and rung-three material supply pass. The next ordinary day does not start the heart
+upgrade. The observer reports `Ready`, but supplied an assumed fifty free hands and no competing
+work. It now reads the same staffing and competing-work inputs used by automatic improvement,
+and reports the production announcement, zoning verdict and recent ledger notes on refusal.
+New synthetic stores also receive explicit engine IDs, as the original camp store already does;
+the previous run logged missing construction-input source identity. No root cause of the missing
+upgrade or full-chain PASS is claimed. Failed archive:
+`beta-heart-chain/1b9d0755/ready-not-started-1/result.json`, SHA-256
+`a3999fd28fe82f2fc00ffe8898c00a39f201e5d6a8b43a2b570cf4f460d4686e`.
 
 ## Paid camp cold-load coverage
 

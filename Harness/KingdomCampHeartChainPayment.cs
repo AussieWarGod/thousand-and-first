@@ -34,9 +34,9 @@ namespace ThousandAndFirst.Harness
 						ChainSupplied.Add(unit);
 					}
 				Require(KingdomMaterials.CanPayUpgrade(Zone, ChainFrom, out string failure), failure);
-				var assessment = KingdomUpgrade.Assess(System, Zone, ChainHeart, Census(), 50, false);
+				var assessment = AssessChain(out string context);
 				Require(KingdomUpgradeRules.IsReady(assessment.Verdict), "supplied heart preflight refused: "
-					+ assessment.Verdict + "; reason=" + assessment.Reason);
+					+ assessment.Verdict + "; reason=" + assessment.Reason + "; " + context);
 			}
 
 			private void CheckChainPaid()
@@ -54,9 +54,10 @@ namespace ThousandAndFirst.Harness
 					}
 				if (found == null)
 				{
-					var assessment = KingdomUpgrade.Assess(System, Zone, ChainHeart, Census(), 50, false);
+					var assessment = AssessChain(out string context);
 					Require(false, "ordinary settlement pass did not begin paid " + ChainFrom + "->" + ChainTo
-						+ "; assessment=" + assessment.Verdict + "; reason=" + assessment.Reason);
+						+ "; assessment=" + assessment.Verdict + "; reason=" + assessment.Reason
+						+ "; " + context);
 				}
 				Require(found.Id != JobId && found.Id != ChainJobId
 					&& KingdomQuickstartBuildClaims.CleanFirstPayment(found.Claims, ChainWater,
@@ -101,6 +102,34 @@ namespace ThousandAndFirst.Harness
 				Require(KingdomCampHeartSaveSnapshotCodec.CustodyDigest(units) == ChainBrushDigest,
 					"the original brush custody changed during higher-rung improvement");
 				RequireSameBodies(ChainBrush, bodies, "chain sentinel brush");
+			}
+
+			private KingdomUpgrade.Assessment AssessChain(out string Context)
+			{
+				var survey = Census();
+				var active = new List<string>();
+				foreach (var root in survey.Improvements)
+					if (root.GetPart<XRL.World.Parts.r_KingdomImprovement>()?.Working == true)
+						active.Add("working:" + root.IDIfAssigned + ":" + root.Blueprint);
+				foreach (var root in survey.Built)
+					if (KingdomConstruction.ReceiptBlocksCurrent(root))
+						active.Add("receipt:" + root.IDIfAssigned + ":" + root.Blueprint);
+				int free = Math.Max(0, System.Population - System.AssignedCrew);
+				var assessment = KingdomUpgrade.Assess(System, Zone, ChainHeart, survey, free, active.Count > 0);
+				var part = ChainHeart.GetPart<XRL.World.Parts.r_KingdomImprovement>();
+				Context = "population=" + System.Population + "; assigned=" + System.AssignedCrew
+					+ "; water-crew=" + System.WaterCrew + "; free=" + free
+					+ "; needed=" + assessment.CrewNeeded + "; competing=" + string.Join(",", active)
+					+ "; announced=" + (part == null ? "absent"
+						: ((KingdomUpgradeRules.UpgradeVerdict)part.AnnouncedReason).ToString())
+					+ "; enabled=" + KingdomUpgrade.Enabled
+					+ "; automatic-work=" + KingdomMaster.AutomaticWorkAllowed(System);
+				if (assessment.Successor != null)
+					Context += "; zoning=" + KingdomZoning.Judge(System, Zone.ZoneID, assessment.Successor).Verdict;
+				var notes = System.Ledger.Notes;
+				for (int i = Math.Max(0, notes.Count - 8); i < notes.Count; i++)
+					Context += "; ledger=" + notes[i];
+				return assessment;
 			}
 		}
 	}

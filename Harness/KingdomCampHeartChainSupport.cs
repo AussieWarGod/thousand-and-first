@@ -19,8 +19,11 @@ namespace ThousandAndFirst.Harness
 				long tick = Game.TimeTicks;
 				SeedChainHomes();
 				for (int i = 0; i < 2; i++)
-					KingdomNativeCampFounding.Dedicate(Game, Zone, System, 1800, Owned.Add,
+				{
+					var water = KingdomNativeCampFounding.Dedicate(Game, Zone, System, 1800, Owned.Add,
 						RequirePair, ChainSupplyCell);
+					RequireChainStoreId(water.ParentObject);
+				}
 				int beforeFood = Census().FoodStored;
 				for (int i = 0; i < 6; i++)
 				{
@@ -58,6 +61,7 @@ namespace ThousandAndFirst.Harness
 			private GameObject ChainContainer(string Purpose)
 			{
 				var container = Create("r_KingdomGranary");
+				RequireChainStoreId(container);
 				Require(container.Inventory != null && container.Inventory.Objects.Count == 0,
 					"synthetic granary has unexpected contents");
 				container.SetIntProperty(Purpose, 1);
@@ -66,6 +70,13 @@ namespace ThousandAndFirst.Harness
 					&& container.CurrentCell == cell && container.CurrentZone == Zone,
 					"synthetic granary placement changed its custody");
 				return container;
+			}
+
+			private void RequireChainStoreId(GameObject Store)
+			{
+				string id = Store.ID;
+				Require(!string.IsNullOrEmpty(id) && Store.IDIfAssigned == id,
+					"synthetic chain store has no assigned source identity");
 			}
 
 			private Cell ChainSupplyCell()
