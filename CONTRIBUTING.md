@@ -58,6 +58,9 @@ is in [docs/RELEASING.md](docs/RELEASING.md).
 
 ## Local checks
 
+Use [the shared development workflow](docs/DEVELOPMENT.md) for focused edit-loop commands,
+integration boundaries, evidence reuse, and agent handoffs. Codex and Claude use that same guide.
+
 Baseline checks, from repository root:
 
 ```bash

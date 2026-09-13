@@ -1,0 +1,81 @@
+# Shared development workflow
+
+This workflow applies to Codex, Claude, and human contributors. Use one implementation of
+the commands below; do not reconstruct a new release driver or test procedure each session.
+Read [STATUS.md](STATUS.md) for current acceptance, [../STANDARDS.md](../STANDARDS.md) for
+code rules, and [RELEASING.md](RELEASING.md) when preparing a release. Historical narratives
+and test counts do not establish current acceptance.
+
+## Short edit loop
+
+Choose the smallest check that exercises the change. Run it locally before pushing. Fix a
+failure and rerun the affected check; do not run every suite after each edit. Unknown impact
+requires broader checks, not an assumed documentation-only classification.
+
+| Change | Development command | Additional work before acceptance |
+| --- | --- | --- |
+| README or release prose | `Tools/dev-check.sh docs` | Inspect linked claims and metadata; required CI still runs. |
+| Python or shell tool | `Tools/dev-check.sh tools 'persona_runner_test.py'` | Select the actual related test module; syntax-check edited shell scripts. |
+| C# rules or source contracts | `Tools/dev-check.sh main KingdomQuickstart` | Select the relevant fixture or method substring; include portable checks if that kernel changes. |
+| Portable C# kernel | `Tools/dev-check.sh portable KingdomQuickstart` | Full suites at integration. |
+| Repository-wide tooling | `Tools/dev-check.sh audit` | Required CI and any affected licensed or native checks. |
+| Gameplay, persistence or engine integration | Focused C# checks, then `Tools/gate.sh` | Relevant real in-game behavioral scenarios, including complex failure/recovery and save/load where applicable. |
+
+The examples are selectors, not a universal test list. The helper refuses empty C# selectors,
+no-match tool patterns, and skipped selected C# cases. C# selection is a case-insensitive
+substring; inspect the reported selected count. Focused results never count as full-suite PASS.
+For public contributors without licensed data, select engine-free cases; installed-data cases
+belong in the existing licensed lane, not a new skip override.
+
+Use the exact SDK pinned by `global.json`. On the maintainer's WSL host:
+
+```bash
+TAF_DOTNET=/home/r/.dotnet/dotnet Tools/dev-check.sh main KingdomQuickstart
+```
+
+Prefer native Linux .NET for focused source checks on a Linux checkout. Windows accesses to
+`\\wsl.localhost` can be expensive. This preference does not replace the release's Windows
+or licensed gates. Set `TAF_QUD_BASE` to the actual licensed Base directory when needed.
+Keep restore beside its matching run. Never overlap .NET builds in one checkout or run this
+helper against a checkout being tested by another process. Use an isolated worktree for
+independent work. Never overlap native game scenarios or compete with the release Steam host.
+
+## Integration and evidence
+
+After the focused checks pass and the change is coherent, push once and let required CI run.
+Do useful independent work while remote checks run. Do not duplicate a passing CI suite locally
+without a reason such as licensed data, platform coverage, changed inputs, or investigating a
+failure. Record the reason when a costly test needs repeating.
+
+Keep existing automated integration and release gates. This document does not implement a
+documentation-only CI shortcut or authorize bypassing protection. Optimize those separately
+with tests proving their change classification and failure propagation.
+
+Reuse accepted native evidence only when its recorded runtime, harness, scenario/options,
+engine and validator bindings remain applicable. Compare the actual inputs, not commit labels
+or test counts. Describe it as evidence from the original run on identical inputs; never claim
+a new run. Changed inputs require the relevant scenarios again. New behavior needs a real
+behavioral test, not only source-text assertions. Disclose synthetic setup and untested cases.
+Preserve failed evidence, strict final logs, complete seals, and exact owned shutdown records.
+
+## Release batch
+
+Prepare version constants, manifest, Workshop lane, README, changelog and ledger together.
+Run `Tools/dev-check.sh docs` plus the applicable metadata validator before the PR. Preserve
+the private receipt, candidate lineage and frozen inputs required by the Alpha lane; do not
+change TESTING.md between private binding and public promotion. Finish the existing tagged
+workflow through verification and finalization. Do not restart or resubmit because output is
+quiet; inspect the existing process or workflow handle. No manual test gate is required.
+
+Profile slow commands before changing release execution. Record wall time, platform, input
+hashes, case identities, skips and exit status. Optimize duplicate work or filesystem access;
+do not infer equivalent coverage from equal case counts. Stage performance changes separately
+from an urgent release candidate.
+
+## Handoff between agents
+
+Keep one short current-state note with: objective and priority; branch/worktree and exact head;
+changed behavior; completed checks and evidence paths; outstanding failures/gaps; active process
+or workflow IDs and ownership records; next concrete action. Update it before switching agents.
+Inspect those authoritative handles first on resumption. Do not restart work from historical
+notes, rerun a completed gate, or ask again for an authorization already recorded in the session.
