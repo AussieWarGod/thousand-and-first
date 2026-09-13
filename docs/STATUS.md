@@ -10,7 +10,7 @@ controls current delivery status. Broader Beta acceptance remains incomplete.
 ### Public 0.3.6 — published and finalized
 
 [Run 34761004824](https://github.com/AussieWarGod/thousand-and-first/actions/runs/34761004824)
-passed all applicable hosted, licensed, publish, verify and finalize jobs at immutable
+passed all applicable hosted, licensed, submit, verify and finalize jobs at immutable
 `v0.3.6`, source `2624c4fb2b7d8dffeaef6fca1a19aa0174e79de5`. PR200 prepared the private receipt binding and
 public metadata; PR201 used a normal checked dev-to-main merge commit. The shared actual Alpha
 metadata preflight passed again before tagging. The existing maintainer exception admitted tag
