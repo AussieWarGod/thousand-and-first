@@ -2,9 +2,24 @@
 
 ## Pending heart progression source inventory
 
-The planned compatibility gate runs across 3101 production C# sources (3097 baseline);
-the cold-install inventory contains 3132 files. Inventory `aa0e8a79a59272ca79a0c506473c1834973878d799e3beb63a3cc495bd58862b`.
+The planned compatibility gate runs across 3103 production C# sources (3097 baseline);
+the cold-install inventory contains 3134 files. Inventory `6972837d3b21390d4257f84fa551f6621627a46a7542cc01edfd4d9298df84b8`.
 These counts describe the pending repair, not a public installation or native PASS.
+
+## Physical room and furniture-clearance scenario
+
+`Tools/run-personas.sh lodging-room-native` runs genuine dune Quickstart followed by one synthetic
+ordinarily adopted room with three native beds against one roof credit. Set
+`TAF_SCENARIO_QUICKSTART_ADVISOR=yes` and a fresh report/capture location; never reuse a profile.
+The twenty positional witnesses cover shared-room privacy after spare-bunk removal, open/closed/locked
+doors, walkable doorway furniture, a trapped bed, solid/walkable obstructions, wall/bed loss, each
+restoration and an original founder occupant returned exactly. They observe the real benefit
+index, privacy and capped arrival refusal; all four founders retain projected housing priority.
+
+The complete scenario passed at `765e8e59d4819f3f3960df60cc660e6279097cbf`, with strict logs,
+all 3436 pinned profile inputs and exact owned shutdown. Archive and hash are in
+[docs/STATUS.md](docs/STATUS.md). This covers one synthetic room, not paid layouts, cross-room
+public-corridor connectivity, multi-map cities, cold load or release acceptance.
 
 ## Quickstart housing hotfix acceptance (2026-09-13)
 

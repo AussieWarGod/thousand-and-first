@@ -1,0 +1,14 @@
+# Genuine Quickstart with its four original citizens. One synthetic 8x6 furnished canvas room
+# is adopted through the ordinary housing API as a one-credit tent. Three actual bedrolls prove
+# that capped extra bunks still affect privacy. All room mutations occur without advancing time;
+# detached fixture objects remain retained, and a borrowed original citizen is restored exactly.
+# The four founders consume the single credit: arrivals must remain Full while roof exists,
+# and NoRoofAtAll when it is lost. Extra bunks never bypass capacity or founder priority.
+# This proves native room/provider/lodging observations, not paid architecture or cold load.
+DESCRIPTION=real adopted room privacy reacts to spare bunks, doors, blocked floor, wall and bed loss, repair and a citizen occupant
+REQUEST=founding-first-city
+SCRIPT=quickstart-lifecycle dunes yes;stagedigest;lodging-room-native;stagedigest
+VERBS=lodging-room-native
+EXPECT=QUICKSTART-BOOT-BEGIN:OK,QUICKSTART-BOOT-OBSERVED:OK,QUICKSTART-BOOT-COMPLETE:OK,QUICKSTART-BUILD-BEGIN:OK,QUICKSTART-BUILD-QUOTE:OK,QUICKSTART-BUILD-CANPAY:OK,QUICKSTART-BUILD-COMMISSION:OK,QUICKSTART-LIFECYCLE-PROFILE:OK,QUICKSTART-BUILD-COMPLETE:OK~commissioned=true,stagedigest:OK~founded=true,room-shared-capped:OK~quarters=Close,room-private-room:OK~quarters=Private,room-open-door:OK~quarters=Private,room-closed-door:OK~quarters=Private,room-locked-door:OK~arrival=False,room-unlocked-door:OK~quarters=Private,room-chair-in-door:OK~quarters=Packed,room-door-cleared:OK~quarters=Private,room-bed-isolated:OK~quarters=Packed,room-bed-access-restored:OK~quarters=Private,room-solid-cabinet:OK~floor=21,room-cabinet-removed:OK~quarters=Private,room-furnished-floor:OK~quarters=Roomed,room-floor-restored:OK~quarters=Private,room-wall-loss:OK~arrival=False,room-wall-restored:OK~quarters=Private,room-bed-loss:OK~arrival=False,room-bed-restored:OK~quarters=Private,room-occupied-room:OK~quarters=Private,room-bunks-restored:OK~quarters=Close,lodging-room-native:OK~cases=20 passed=20 failed=0,stagedigest:OK~founded=true,COMPLETE
+SET=growth,housing,native-regression
+TIMEOUT=900

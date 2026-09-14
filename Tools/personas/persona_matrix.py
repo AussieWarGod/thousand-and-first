@@ -131,6 +131,13 @@ QUICKSTART_EVIDENCE_ROWS = (
 # Observation emitted inside guest-save-supply before the physical refill; not a callable verb.
 GUEST_SAVE_EVIDENCE_ROWS = ("guest-save-shortage",)
 
+ROOM_EVIDENCE_ROWS = tuple("room-" + name for name in (
+    "shared-capped", "private-room", "open-door", "closed-door", "locked-door",
+    "unlocked-door", "chair-in-door", "door-cleared", "bed-isolated", "bed-access-restored",
+    "solid-cabinet", "cabinet-removed", "furnished-floor", "floor-restored", "wall-loss", "wall-restored",
+    "bed-loss", "bed-restored", "occupied-room", "bunks-restored",
+))
+
 # The save verb observes remaining custody before publishing its snapshot.
 CAMP_HEART_EVIDENCE_ROWS = (
     "camp-heart-save-custody", "camp-heart-chain-founder", "camp-heart-chain-input",
@@ -536,6 +543,7 @@ def parse_expect(
             and verb not in QUICKSTART_EVIDENCE_ROWS
             and verb not in GUEST_SAVE_EVIDENCE_ROWS
             and verb not in CAMP_HEART_EVIDENCE_ROWS
+            and verb not in ROOM_EVIDENCE_ROWS
         ):
             fail("%s EXPECT item %r names an unsealable verb" % (name, item))
         parsed.append((verb, outcome, wanted.strip()))

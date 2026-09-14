@@ -81,7 +81,15 @@ namespace ThousandAndFirst
 		public static EnclosureMeasurement MeasureExactEnclosure(int StartX, int StartY,
 			ExactCellLookup Lookup)
 		{
-			if (Lookup == null) return default(EnclosureMeasurement);
+			return MeasureExactEnclosure(StartX, StartY, Lookup, MaxEnclosedRoomCells);
+		}
+
+		// Larger designated buildings use their already bounded floor scope; adoption retains 200.
+		public static EnclosureMeasurement MeasureExactEnclosure(int StartX, int StartY,
+			ExactCellLookup Lookup, int MaximumCells)
+		{
+			if (Lookup == null || MaximumCells < 1 || MaximumCells > 4000)
+				return default(EnclosureMeasurement);
 			CellObservation start = Lookup(StartX, StartY);
 			if (start.Region != EnclosureRegion.Membership)
 				return default(EnclosureMeasurement);
@@ -99,7 +107,7 @@ namespace ThousandAndFirst
 
 			while (frontier.Count > 0)
 			{
-				if (floors.Count >= MaxEnclosedRoomCells)
+				if (floors.Count >= MaximumCells)
 					return Finish(false, floors, shell, ingress, usable);
 				long packed = frontier.Dequeue();
 				int x = (int)(packed >> 32); int y = (int)packed;

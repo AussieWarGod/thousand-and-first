@@ -89,6 +89,9 @@ class Studio:
         reading = analyse(amap, palette, building, self.shapes, self.checker, pose, self.model.poses)
         reading["source_sha256"] = hashlib.sha256(original.encode()).hexdigest()
         reading["issues"] = [item.render() for item in issues]
+        for x, y in reading["blocked_doorways"]:
+            reading["issues"].append(f'draft.furniture-doorway: furniture occupies the doorway at {x},{y}. '
+                                      'Keep the doorway clear even when another entrance is usable.')
         lot_width, lot_height = self.checker.LOT_DIMENSIONS[case["size"]]
         reading["selected_lot"] = case["size"]
         reading["fits_selected_lot"] = amap.width <= lot_width and amap.height <= lot_height

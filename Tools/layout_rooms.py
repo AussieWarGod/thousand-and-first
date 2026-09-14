@@ -71,11 +71,15 @@ def analyse(amap, palette, building, shapes, checker, pose="north", poses=None):
                 blocked.add(point)
             if shape.door:
                 doors.add(point)
+                if layer == "Object":
+                    objects.discard(point)
             elif layer == "Structure" and shape.solid:
                 walls.add(point)
         fact["roles"] = roles[point]
 
-    # A chair or crate may obstruct a route; it is not a structural room boundary.
+    # Reserve every authored object footprint, including natively walkable furniture.
+    # Furniture obstructs circulation but never supplies a structural room boundary.
+    blocked |= objects
     boundary = walls | doors
     remaining = points - boundary
     spaces = []
@@ -113,7 +117,7 @@ def analyse(amap, palette, building, shapes, checker, pose="north", poses=None):
     for point, point_roles in sorted(roles.items()):
         glyph = amap.glyph_at(*point)
         accessible = point in reached
-        if glyph.pass_mode == "adjacent":
+        if point in objects or glyph.pass_mode == "adjacent":
             accessible = any(p in reached for p in neighbours(point, width, height))
         facts[point]["accessible"] = accessible
         if not accessible and (point in objects or glyph.anchors):
@@ -130,8 +134,10 @@ def analyse(amap, palette, building, shapes, checker, pose="north", poses=None):
             "exposed_beds": [list(p) for p in sorted(exposed_beds)],
             "exposed_interior": [list(p) for p in sorted(exposed)],
             "doors": len(doors), "unknown_blueprints": sorted(unknown),
+            "blocked_doorways": [list(p) for p in sorted(doors & objects)],
             "inaccessible_fixtures": inaccessible, "cells": list(facts.values()),
             "assumptions": ["Physical blueprint shape, not a live zone survey.",
+                            "All object footprints are occupied; fixtures need reachable adjacent clear floor.",
                             "Doors assumed openable for circulation; locks and body access need native tests.",
                             "Unclaimed draft cells assumed clear; no external terrain or road-width proof.",
                             "Room size and furniture readings do not award gameplay quality or privacy."]}

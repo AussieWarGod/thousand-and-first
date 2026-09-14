@@ -1,5 +1,39 @@
 # Current implementation and release evidence
 
+## Physical room and furniture clearance: native scenario accepted
+
+Lodging now measures actual sleeping rooms and clear floor using native structural observations.
+Every furniture footprint is occupied for architectural circulation, even native-walkable beds,
+chairs and containers. Each sleeping provider needs adjacent ingress-reachable clear floor;
+furniture cannot supply ingress or structural enclosure. Operable sleeping-provider coordinates
+are retained before enrollment caps, so spare bunks still limit privacy. Shared single rooms
+cannot exceed Close, and declarations can only lower measured privacy. Existing resident
+assignments, native collision and save formats are unchanged.
+
+The twenty-observation `lodging-room-native` scenario passed at
+`765e8e59d4819f3f3960df60cc660e6279097cbf`. Genuine dune Quickstart preceded a synthetic 8×6
+canvas room adopted through the ordinary API. Three real bedrolls share one roof credit. Native
+checks covered open/closed/locked doors, walkable furniture in a doorway, a trapped bed, solid and
+walkable furniture reducing clear floor, wall/bed loss, each restoration, and a temporarily
+borrowed original founder returned to the same cell. The actual benefit index, lodging privacy
+and repeated read-only arrival observations matched. The original four founders consume that
+single credit: arrivals correctly remain Full while it exists and NoRoofAtAll when it is lost.
+
+Full pinned runtime, harness, request, manifest, options and script matched all 3436 sealed inputs.
+Strict final logs, positional witnesses, capture and exact owned shutdown passed. Archive:
+`physical-rooms/765e8e59/furniture-circulation-1/result.json`, SHA-256
+`c24c08d7ea335d92bb1b6be9338968751d3f9953beaecefa49ef6b7cbbf08f3d`.
+The earlier `48dcc2da` attempt failed a wrong fixture arrival expectation; its closed failed
+archive is retained. Correcting the expectation preserved all founders and capped capacity.
+
+Focused validation passed: 195 lodging cases, 18 editor cases, 65 persona validators, six related
+source contracts, the Chromium authoring workflow and all four engine compile modes. The shared
+editor reserves authored object footprints and flags furniture on doorways even when another
+entrance is usable. Pure cases cover multiple sleeping rooms and partition changes; current native
+acceptance covers one synthetic room. Cross-room corridor connectivity, cold load, paid building
+redesign, activity/quality rewards, ordinary city balance and multi-map behavior remain owed.
+This slice is not released and does not establish Alpha/Beta acceptance.
+
 ## Native30 accepted; housing and population follow-through required
 
 Native30 at `a6e23f749255873ba33f0b3479291c062c8660e1` completed the paid heart 1→2→3→4
@@ -251,11 +285,11 @@ from the passed four-mode compile at `8df7b548`.
 
 ## Current source census for the pending heart repair
 
-Current source: 3101 sources, baseline and compatibility symbols use their
+Current source: 3103 sources, baseline and compatibility symbols use their
 respective exclusions (3097 baseline). All four engine compile modes passed.
 The cold-install inventory has 3132 files.
-3101 staged C# files / 440,422 physical lines; zero strict line-cap failures.
-Direct `XRL` imports: 1447 files, 0 over the line limit. Inventory SHA-256: `aa0e8a79a59272ca79a0c506473c1834973878d799e3beb63a3cc495bd58862b`.
+3103 staged C# files / 440,623 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1448 files, 0 over the line limit. Inventory SHA-256: `6972837d3b21390d4257f84fa551f6621627a46a7542cc01edfd4d9298df84b8`.
 This is a source census, not native acceptance or an updated exact-inventory semantic review.
 
 ## In-progress paid heart chain
@@ -3867,3 +3901,11 @@ tiles, persistent strategic armies, mass background war, and unwitnessed conques
 Detailed current ledgers live in `_notes/BRIEF-IMPLEMENTATION-AUDIT.md` and
 `_notes/CONTRACT-RUNTIME-RECONCILIATION-2026-08-25.md`. Release mechanics live in
 [RELEASING.md](RELEASING.md); structural gate semantics live in [STRUCTURE.md](STRUCTURE.md).
+
+Native room attempt at `48dcc2da` failed its first arrival expectation: the physical reading
+correctly returned one room, three bunks, twenty clear cells and Close quarters, but projected
+founder occupancy correctly returned Full for the single roof credit. The failed profile was
+closed and archived with its full pinned recipe. The fixture now requires Full while that credit
+exists and NoRoofAtAll when lost, preserving all four founders and capped enrollment. No native
+PASS is claimed. The new standalone cabinet blueprint also exposed an overly broad source-test
+count; the existing overlay test now counts only actual `Load="Merge"` overrides.

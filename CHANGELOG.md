@@ -1,5 +1,15 @@
 # Changelog
 
+**Pending room and furniture clearance (unreleased)**
+
+Measure lodging privacy from real sleeping rooms and reachable clear floor instead of plot area.
+Reserve furniture footprints even when native movement permits walking over them; require adjacent
+clear-floor bed access. Shared extra bunks still limit privacy after enrollment caps. The layout
+workbench applies occupied-space rules and flags furniture on doorways, including doors with an
+alternative entrance. Twenty native failure/restoration observations passed at `765e8e59`; see
+docs/STATUS.md for scope and the closed archive. Building redesign and room/activity rewards
+remain in progress.
+
 **Pending heart progression repair (unreleased)**
 
 Clear eligible residents from retained floors that become walls during an authored renovation
@@ -42,9 +52,9 @@ regressions to cover every added material across all fallback heart transitions 
 including historical-baseline transitions. Sixteen main cases pass; fresh native confirmation
 of the court bill remains pending under #216. Exact evidence is in docs/STATUS.md.
 
-Current 3101-file census is line-cap green: 440,422 physical lines; direct `XRL`
-imports occur in 1447 files, 0 of them over the line limit. Inventory SHA-256: `aa0e8a79a59272ca79a0c506473c1834973878d799e3beb63a3cc495bd58862b`.
-The cold-install inventory contains 3132 files. This is not evidence of a new public installation.
+Current 3103-file census is line-cap green: 440,623 physical lines; direct `XRL`
+imports occur in 1448 files, 0 of them over the line limit. Inventory SHA-256: `6972837d3b21390d4257f84fa551f6621627a46a7542cc01edfd4d9298df84b8`.
+The cold-install inventory contains 3134 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Versions are semantic: patch for fixes,
 minor for additive API and content, major for breaking changes. Supported API is defined in

@@ -1320,7 +1320,7 @@ never heard of is never an error, and a tag nothing yet consumes simply waits fo
 | Attribute | Default when absent |
 |---|---|
 | `Provides` | Nothing declared. A comma list of namespaced tags. Case and whitespace are folded; repeats collapse. Merges by key like every other attribute, and reaches buildings that already stand — a mod that adds a tag today changes who will live in a house raised a year ago, and moves nothing. |
-| `Closeness` | **Measured.** `Packed`, `Close`, `Roomed`, or `Private` — how much of a quarrel these quarters will hold (see [below](#how-close-the-quarters-are)). Case and surrounding whitespace are folded; any other word is logged and the design is measured instead. Merges and re-reads exactly like `Provides`. |
+| `Closeness` | **Measured ceiling.** `Packed`, `Close`, `Roomed`, or `Private` — an optional conservative limit on physically measured quarters (see [below](#how-close-the-quarters-are)). A declaration cannot grant missing rooms or usable space. Case and surrounding whitespace are folded; invalid values are logged and ignored. Merges and re-reads exactly like `Provides`. |
 | `Reach` | **Derived.** `plot`, `quarter`, `zone`, `city`, or `realm` — how far what this design gives actually carries (see [below](#how-far-a-building-carries)). Case and surrounding whitespace are folded; any other word is logged and the design is derived instead. Merges and re-reads exactly like `Provides`. |
 | `CrewNeeds` | Nothing demanded. A `kind:amount` list in `Carries`' own language (`strength:16`) naming the first positive capability used to rank a crew and set raising/running pace. Shipped kinds are `strength`, `intelligence`, `skill.tinkering`, `skill.harvestry`, `skill.customs`, `skill.physic`, and `skill.wayfaring`; skill thresholds are presence checks (`1`) against the settler's real vanilla skills. Unknown kinds remain mergeable and are logged, not fatal. A shortfall never blocks a tier or stalls a crewed work — it runs slower, floored, and says so once. `fieldrows` uses `skill.harvestry:1`; that skill affects pace, not eligibility or automatic improvement. |
 
@@ -1418,16 +1418,33 @@ Ship your own under your own namespace (`mymod:hearthfire`). Nothing is restrict
 How two people feel about each other always bears on whether they can live together; **how much it
 bears is the quarters**. You cannot jam five different believers into one bunkhouse and have it be
 fine, and the same five in a street of stone houses are neighbours who nod. So cohabitation is not
-one threshold but a ladder of four rungs, and a design's rung is normally **measured** rather than
-declared: the beds in its `Carries` against the ground its **tier** stands on (its physical
-`Footprint`, or the full authored lot map for a tier that declares none).
+one threshold but a ladder of four rungs. The benefit survey records the locations and capacities
+of **operable physical sleeping providers**, then measures the actual rooms containing them using
+native wall, door and safe-floor observations with architectural furniture clearance. Catalogue capacity,
+whole-plot area and exterior yards cannot supply bedroom privacy.
 
-| Rung | Measured at | Refuses a creed hostility of | Shipped designs |
-|---|---|---|---|
-| `Packed` | under 4 cells a bed | **1** — any filed dislike at all | tent, staked tent-row |
-| `Close` | under 6 cells a bed | **50** — the ambient grudge most factions hold toward strangers | timber hut, hut and yard |
-| `Roomed` | under 10 cells a bed | **75** — open hostility, filed on purpose | stone house, housing court |
-| `Private` | 10 cells a bed or more | **75** — the same as `Roomed`: walls between beds are the last tolerance architecture buys | fine house, manor |
+Only designated floor counts; adjacent existing walls and doors may bound an adopted room without
+becoming claimed floor. Locked or permanently blocked doors do not supply usable ingress. Furniture
+always occupies its footprint, even when native movement allows walking over it. It cannot supply
+circulation or usable floor, become a partition, or overlap usable ingress. Every sleeping provider
+needs orthogonally adjacent, ingress-reachable clear floor; nearby floor behind furniture does not
+make a trapped bed usable. Transient occupants do not erase a room.
+The least spacious sleeping room limits the household. These are conservative building-wide
+quarters, not individual bed ownership or a complete room-quality/activity simulation.
+
+| Rung | Physical requirements | Refuses creed hostility of |
+|---|---|---|
+| `Packed` | Unproved/exposed sleeping space, no usable doorway, a room below the adoption minimum, or under 4 usable floor cells per sleeping place | **1** |
+| `Close` | Enclosed usable quarters with at least 4 usable cells per place; a single shared sleeping room cannot exceed this rung | **50** |
+| `Roomed` | At least 6 usable cells per place in every sleeping room; separate rooms with at most two places each, or a smaller single-occupancy room | **75** |
+| `Private` | Every sleeping room has exactly one place and at least 10 usable floor cells | **75** |
+
+Privacy counts operable sleeping places before the enrollment cap is applied, not the number of
+residents who happen to be home. Extra usable bunks still share the room even when its designation
+cannot enroll more people; empty or uncredited bunks cannot make a dormitory private. Only homes
+with credited roof supply receive a room reading; enrollment still uses the capped physical supply.
+Room measurement is transient and recalculated with the physical benefit survey; no new save fields
+or blanket reassignment of existing residents are introduced.
 
 Hostility is 0–100, read off the engine's own faction table both ways (the worse direction wins), and
 same-creed always reads 0 — believers of one creed share anything, including a bunk row. An authored
@@ -1437,10 +1454,10 @@ something about the other person that a wall does not fix.
 The consequence is intended: **a diverse city has to build better housing to exist at all.** Belief
 diversity is a thing you build for, in stone.
 
-Declare `Closeness` only when the measurement reads your design's ground wrong. The base catalogue
-declares it twice, both for the same shape — a design that raises *several dwellings at once* inside
-one plot (`housecourt`, `terrace`) puts many beds on little ground and measures as one packed room
-when what is really there is the stone house's own walls repeated.
+An authored `Closeness` declaration can only lower this measured rung. Existing `housecourt` and
+`terrace` declarations remain readable, but cannot assert separate dwellings where no physical
+partitions exist. These new runtime rules require native behavioral acceptance before release;
+see [the implementation direction](docs/HOUSING-AND-POPULATION.md).
 
 #### How far a building carries
 

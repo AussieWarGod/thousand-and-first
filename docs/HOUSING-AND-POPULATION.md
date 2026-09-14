@@ -101,6 +101,9 @@ do not supply a copied formula, universal luxury requirement or a reason to add 
 The architectural quality requirement applies to **every building**, not only housing. Design
 must follow the building's actual program: the people, activities, equipment, storage and open
 space it serves. Give it coherent proportions, spatial hierarchy, thresholds and circulation.
+Reserve every furniture footprint as occupied, regardless of native walkability. Keep beds, chairs
+and storage out of doorways and circulation; provide adjacent reachable clear floor for use. This
+architectural rule applies to all building types and does not change Qud physics.
 Arrange furniture and lighting deliberately, use materials and cultural expression appropriate
 to Qud, and distinguish public approaches from private rooms and hazardous/service work areas.
 Relate entrances and fronts to useful streets, courts, parks and neighboring works. Farms,
@@ -166,3 +169,29 @@ thresholds and migration formula are not selected yet and need tests before beco
 
 Use the shared focused-check workflow before the relevant native scenarios. Record which data
 is synthetic, exact failing predicates and the ordinary-play behaviors actually witnessed.
+
+## Physical lodging implementation in progress
+
+The `codex/physical-room-lodging` slice records operable sleeping-provider coordinates at benefit
+allocation, measures rooms with adoption structural observations plus furniture clearance, and constrains
+lodging closeness by real room separation and usable floor. A spacious shared room cannot become
+Private by its footprint, and `Closeness` declarations can only reduce physical privacy. Adopted
+floor-only receipts may use adjacent walls as boundaries without acquiring their ground. Missing
+walls, locked entrances and obstructed floor have distinct physical consequences.
+
+Pure tests cover shared and paired bedrooms, partition removal, blocked/locked/missing entrances,
+furniture barriers, rotated plans, adopted floor-only authority, undesignated gaps, multiple places
+on one provider and invalid capacities. This is a foundation for #233, not its completion. Usable
+floor excludes every native Furniture-tagged object, bed and chair, including the settlement
+marker. Sleeping providers also reserve their footprints even without a Furniture tag. Beds need
+adjacent reachable floor, and furniture cannot provide ingress. This is not a decoration score.
+The native twenty-case scenario at `765e8e59` passed the actual index/privacy route, door states,
+furniture obstruction, trapped-bed access, wall/bed damage and repair, founder occupancy and
+capped-arrival refusal. See STATUS.md for its full closed archive. This is one synthetic room;
+shared-hallway connectivity between rooms, cold load, paid catalogue redesign and Quickstart
+reservation/cost migration remain required work. No release acceptance is claimed.
+
+Privacy counts operable sleeping providers before enrollment-cap allocation, so an extra usable
+bunk cannot disappear from shared-room measurements merely because its roof credit was capped.
+The existing room-adoption limit remains 200 cells; lodging measures its bounded designated scope
+(up to 4000 cells), including large halls. Neither rule is a resident-per-map limit.

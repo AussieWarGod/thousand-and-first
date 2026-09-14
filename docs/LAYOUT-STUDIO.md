@@ -91,3 +91,12 @@ After applying a runtime design, run the existing generator freshness, architect
 transition checks, relevant pure cases and engine gate. Then commission it through ordinary
 in-game flows, prove the required activities and failure/recovery, and perform save/fresh load
 where applicable. Keep costs, old jobs and existing citizen/root/storage identities intact.
+
+All authored object footprints reserve occupied space, including natively walkable beds, chairs
+and containers. Real doors remain potential circulation unless another fixture overlaps them.
+Fixture use requires orthogonally adjacent clear floor reachable from a public entrance. Furniture
+never creates a structural partition. Keep circulation and door landings clear when drawing every
+building type; native walkability is not an architectural exemption.
+
+The review reports furniture overlapping a real doorway as a design issue even if another
+entrance provides access. A usable alternative route does not excuse a cluttered doorway.

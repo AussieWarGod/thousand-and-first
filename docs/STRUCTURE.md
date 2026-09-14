@@ -1,11 +1,11 @@
 # Structural release contract
 
-## Pending heart repair source census
+## Pending physical-room lodging source census
 
-3101 staged production C# files / 440,422 physical lines: 0 exceed 300 lines, 0 are exactly 300,
+3103 staged production C# files / 440,623 physical lines: 0 exceed 300 lines, 0 are exactly 300,
 therefore 0 fail the strict cap; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000.
-1447 files with direct `XRL` imports; 0 of those exceed the line limit.
-Inventory SHA-256: `aa0e8a79a59272ca79a0c506473c1834973878d799e3beb63a3cc495bd58862b`. The semantic review ledger does not yet bind this inventory.
+1448 files with direct `XRL` imports; 0 of those exceed the line limit.
+Inventory SHA-256: `6972837d3b21390d4257f84fa551f6621627a46a7542cc01edfd4d9298df84b8`. The semantic review ledger does not yet bind this inventory.
 
 ## Current Alpha 0.3.6 candidate census
 

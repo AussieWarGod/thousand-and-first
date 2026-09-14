@@ -98,6 +98,44 @@ class RoomTopologyTests(unittest.TestCase):
         self.assertEqual([], r['inaccessible_fixtures'])
         self.assertTrue(next(c for c in r['cells'] if c['char'] == 'a')['accessible'])
 
+    def test_walkable_furniture_blocks_hallway_without_creating_rooms(self):
+        for furniture in ['b', 's']:
+            rows = ['#######', '#biiis#', '#iiiii#', '#' + furniture * 5 + '#', '###d###']
+            with self.subTest(furniture=furniture):
+                r = read(rows)
+                self.assertEqual(1, r['rooms'])
+                self.assertEqual(0, r['spaces'][0]['publicly_reachable_cells'])
+                self.assertIn([1, 1], [item['cell'] for item in r['inaccessible_fixtures']])
+                rows[3] = rows[3][:3] + 'i' + rows[3][4:]
+                repaired = read(rows)
+                self.assertEqual([], repaired['inaccessible_fixtures'])
+
+    def test_furniture_cannot_supply_its_own_access_or_diagonal_access(self):
+        r = read(['#######', '#bsiii#', '#siiii#', '#iiiii#', '###d###'])
+        self.assertIn([1, 1], [item['cell'] for item in r['inaccessible_fixtures']])
+        self.assertFalse(next(c for c in r['cells'] if c['char'] == 'b')['reached'])
+
+    def test_furniture_on_a_real_door_blocks_that_entrance(self):
+        glyphs = GLYPHS.replace('Char="d" Structure="$door"', 'Char="d" Object="$store" Structure="$door"')
+        issues = []
+        amap = CHECKER._parse_map(ET.fromstring(map_xml(self.home, glyphs)), ROOT / 'draft.xml', ROOT, 0, issues)
+        palette = SimpleNamespace(slots={name: SimpleNamespace(blueprint=name, role=name)
+            for name in ['wall', 'door', 'floor', 'bed', 'store']})
+        shapes = {name: CHECKER.BlueprintShape(name == 'wall', name == 'door')
+            for name in ['wall', 'door', 'floor', 'bed', 'store', 'root']}
+        r = analyse(amap, palette, SimpleNamespace(blueprint='root'), shapes, CHECKER)
+        self.assertEqual(1, r['rooms'])
+        self.assertEqual(0, r['spaces'][0]['publicly_reachable_cells'])
+        self.assertEqual([[3, 4]], r['blocked_doorways'])
+
+        # A second, clear entrance makes the room usable but cannot excuse doorway furniture.
+        glyphs += '<glyph Char="t" Structure="$door" Claim="building" Pass="walk" Cover="soft" Anchors="entrance:public" />'
+        rows = ['###t###', *self.home[1:]]
+        amap = CHECKER._parse_map(ET.fromstring(map_xml(rows, glyphs)), ROOT / 'draft.xml', ROOT, 0, [])
+        r = analyse(amap, palette, SimpleNamespace(blueprint='root'), shapes, CHECKER)
+        self.assertEqual([], r['inaccessible_fixtures'])
+        self.assertEqual([[3, 4]], r['blocked_doorways'])
+
     def test_bigger_yard_does_not_increase_room_space(self):
         small = read(self.home)
         padded = read(['p' * 11] * 2 + ['pp' + row + 'pp' for row in self.home] + ['p' * 11] * 2)
