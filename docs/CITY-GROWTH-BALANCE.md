@@ -43,6 +43,39 @@ infrastructure instead. Review existing population, tier and minimum-zone gates 
 an arbitrary gate unchanged does not satisfy this direction. Audit existing stage-based claim
 access so players can expand before land pressure prevents reaching the prerequisite for expansion.
 
+## Building architecture and population follow-through
+
+Architectural quality is required across **all building layouts**, not just housing. Design
+functional programs, coherent proportions and boundaries, useful rooms/workyards, deliberate
+furniture and materials, connected circulation, and good street/public-space relationships.
+Larger lots and upgrades must have useful spatial purpose. Do not choose architecture for easy
+implementation or synthetic test packing. Farms, quarries, industry, defences, water, storage
+and civic works are included in [#229](https://github.com/AussieWarGod/thousand-and-first/issues/229).
+
+The subsequent visual review confirmed that authored starter tent layouts have L-shaped walls
+and exposed beds. Declared Soft cover and a bed count do not prove a closed dwelling. Enclosed
+housing needs an actual perimeter, useful interior space, native doors and deliberate furnishing;
+an open camp or yard must communicate its different function. Larger plots and neighboring maps
+are available for this design. Do not preserve cramped plans merely to keep a dense test fixture
+on one map. See [#229](https://github.com/AussieWarGod/thousand-and-first/issues/229).
+
+Citizens must have real homes and usable beds on the correct claimed map of the same city.
+Keep home location, current location and work location distinct; lawful travel may put a person
+away from home. Visiting a different map must not clone residents, move everybody to the founder,
+or make a remote bed satisfy several people. Verify daily behavior, blocked routes, relocation,
+unloaded accounting and fresh cold load. See
+[#230](https://github.com/AussieWarGod/thousand-and-first/issues/230).
+
+Population should follow Qud's cultures, bodies, names and plausible occupations. The user
+requires weighted voluntary arrivals influenced by player faction reputation and city standing,
+with an inherited founding baseline and later kingdom-driven changes. Prefer cultures aligned
+with the player; do not replace generic farmers with a uniform assortment of creatures. Preserve
+existing identities and freeze new candidate choices across retries. The current founding code
+explicitly inherits no personal regard, and the current settler table gives 90% of its weight to
+BaseFarmer descendants; these are implementation gaps, not accepted fulfillment of the new
+direction. See [#231](https://github.com/AussieWarGod/thousand-and-first/issues/231) and
+[HOUSING-AND-POPULATION.md](HOUSING-AND-POPULATION.md) for the architecture/population audit and acceptance plan.
+
 ## Baseline and decisions still needed
 
 At source `043d0562`, plot reservations use a one-cell road margin and a percentage area
@@ -84,8 +117,11 @@ recoverable settlement when support is disrupted; explain blocked progress to th
 Existing away-travel scenarios explicitly visit an unclaimed destination. They do not prove
 a multi-claimed-map city. The dense 50-resident paid-heart fixture uses synthetic prerequisites,
 including legacy water-producer roots; it is a construction stress diagnostic, not evidence
-that an ordinary player can fit or sustain that city on one map. Full paid heart progression
-and its persistence remain separate gaps tracked by
+that an ordinary player can fit or sustain that city on one map. Native30 at `a6e23f74` passed
+the synthetic paid rung-one-through-four chain and next-day recovery; its 18 authored tentrows
+contain 54 literal beds for 50 residents, but their open geometry is the defect above. It does
+not establish convincing enclosure, ordinary population balance or multi-map life. Higher heart
+persistence and the remaining progression work are tracked by
 [#159](https://github.com/AussieWarGod/thousand-and-first/issues/159),
 [#160](https://github.com/AussieWarGod/thousand-and-first/issues/160),
 [#162](https://github.com/AussieWarGod/thousand-and-first/issues/162) and
