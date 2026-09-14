@@ -223,7 +223,7 @@
       "negative": "NEGATIVE_PASS",
       "driver": "Harness/KingdomTeardownNativeProvider.cs (teardown-setup/check)",
       "status": "NATIVE_PASS",
-      "note": "Native b27a26c2 passes both sequenced cases after 16800 real turns. Exact strike receipts must be Complete/Settled, original roots and their city work rows absent, and a repeated strike refused. Two synthetic crew survive without homes; synthetic bills remain disclosed. Unassigned stockpile identity and stale work-row seal failures are retained in docs/QUICKSTART-HOTFIX-PROGRESS.md and separate native archives. No save/cold-load teardown claim.",
+      "note": "Native abf41251 passes both sequenced cases after 16800 ordinary turns, including each real closure window, repeated public-action refusal without registry/building mutation, restored borrowed-receipt counterexample, eventual Complete/Settled strike receipts, removed roots/work rows, exact salvage and repeated-strike refusal. Synthetic founding, two stationary workers and material bills are disclosed. Earlier failures and b27a26c2 evidence remain historical. No save/cold-load teardown or catalogue-wide claim.",
       "evidence": [
         {
           "commit": "b27a26c2ecc094c03bd50432fb3f66ed9d7a5b6d",
@@ -235,6 +235,17 @@
           "historicalScope": true,
           "inventoryDigest": "8cf7e52ba30ff9d9b36ab366ae02f98d85285f54f561ff68cde6da3ef5eaecc8",
           "currentDevCoverage": false
+        },
+        {
+          "commit": "abf41251f3a7c063c7710df4179b0bdb0e283e8b",
+          "artifactPath": "strike-closure/abf41251/native-1-pass/result.json",
+          "artifactSha256": "bbfe2844048929dfcb74b073374247970520e182189e22de50839ca32765f538",
+          "artifactBytes": 3447,
+          "verdict": "PASS - real closure refusals, unchanged durable work, restored foreign receipt, eventual removal and exact salvage",
+          "scope": "Seed #43101; synthetic founding, two stationary crew and material bills; reversible borrowed-receipt probe; 16800 ordinary turns; fire zero salvage and larder positive salvage; 3454 full pinned profile inputs including 3414 C#; strict final log and owned stop; no save/cold load or ordinary-play acceptance",
+          "historicalScope": false,
+          "inventoryDigest": "1e93f7cab9d09901d1369da4fbcae0333be95f2b0fe392079b860fd976f68f6c",
+          "currentDevCoverage": true
         }
       ]
     },
@@ -358,7 +369,7 @@
       "negative": "NATIVE_PASS (overflow path)",
       "driver": "Harness/KingdomDepositOverflowNativeProvider.cs (deposit/overflow); this pass's teardown scenario exercises strike-salvage return with an exact computed delta",
       "status": "NATIVE_PASS",
-      "note": "Driver Harness/KingdomDepositOverflowNativeProvider.cs. Real artefact checksummed and confirmed present. currentDevCoverage=false: no inventory digest was cited for this run in docs/STATUS.md's overflow section (checked), so it cannot be confirmed equal to the digest of the tree being validated -- not inferred from commit content-identity. Strike-salvage leg is row 7, IMPLEMENTED_UNEXECUTED.",
+      "note": "Driver Harness/KingdomDepositOverflowNativeProvider.cs. Real artefact checksummed and confirmed present. currentDevCoverage=false: no inventory digest was cited for this run in docs/STATUS.md's overflow section (checked), so it cannot be confirmed equal to the digest of the tree being validated -- not inferred from commit content-identity. Strike-salvage leg is row 7, with exact abf41251 native evidence; that does not revalidate this separate overflow path.",
       "evidence": [
         {
           "commit": "6ba1969",

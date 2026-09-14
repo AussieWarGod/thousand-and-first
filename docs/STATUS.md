@@ -20,6 +20,11 @@ All 3,454 profile inputs (3,414 C#) match the pinned recipe and closed seal. Str
 persona expectations and exact owned shutdown pass. Native evidence archive:
 `strike-closure/abf41251/native-1-pass/result.json`, SHA-256
 `bbfe2844048929dfcb74b073374247970520e182189e22de50839ca32765f538`.
+Behavioral matrix row 7 records this proof. Its full developer compile digest is
+`1e93f7cab9d09901d1369da4fbcae0333be95f2b0fe392079b860fd976f68f6c`, independently
+reconstructed from all 3,414 sealed C# inputs in
+`strike-closure/abf41251/dev-inventory-binding-1/result.json`. This differs deliberately from
+the production-only census format below; neither implies catalogue-wide acceptance.
 
 Full licensed suites pass: 15,004 main / 5,895 portable cases, zero skips. Focused closure checks
 (16 main / 15 portable), 28 teardown source checks and documentation checks also pass.
