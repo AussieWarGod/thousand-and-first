@@ -1,21 +1,35 @@
 # Current implementation and release evidence
 
-## Strike closure feedback — native validation pending
+## Strike closure feedback — accepted native scope (abf41251)
 
 Ordinary strike refusal now distinguishes the building's own completed work awaiting closure
 from another job. Only an exact healthy owner/zone/receipt/object match receives the wait
-message; the original supersession predicate and all mutation boundaries remain unchanged.
-The teardown scenario now exercises repeated refusal without registry/building mutation,
-a disclosed borrowed-receipt counterexample with restoration, and later ordinary strike/salvage.
-Both cases must actually observe the closure window. Native execution remains pending; pure
-reload coverage does not establish cold-process teardown behavior.
+message; original supersession and mutation boundaries remain unchanged.
 
-Development compile scope: 3108 sources, baseline and compatibility symbols.
-Current census: 3108 staged C# files; 440,888 physical lines; zero at or above 300 lines.
-Direct `XRL` imports: 1451 files, 0 over the line limit. Cold-install inventory: 3141 files.
-Inventory SHA-256:
-`10b6325fb3e23b660a5609fe80485745104f2d925c523bb278af010edec488e2`. Structural review is stale until this delta is reviewed. Prior native
-and release results below retain their original inputs and do not accept this new feedback.
+Fresh native `teardown-native-check` at `abf41251f3a7c063c7710df4179b0bdb0e283e8b`
+passed 16,800 ordinary turns. Both fire and larder observed their real closure window, refused
+two public strike calls without changing the registry or building, then completed actual strike
+and removal with exactly zero/one timber salvage. The larder also refused a borrowed real
+foreign receipt and restored its original receipt without changing durable work. Repeated strike
+after removal refused. Both workers remained on the roll.
+
+Synthetic founding, two workers, stationary crew placement, supplied material bills and the
+reversible borrowed-receipt probe are disclosed. This proves the exact teardown cases, not
+ordinary city balance, every historical #175 state, native cold load or the whole catalogue.
+All 3,454 profile inputs (3,414 C#) match the pinned recipe and closed seal. Strict final log,
+persona expectations and exact owned shutdown pass. Native evidence archive:
+`strike-closure/abf41251/native-1-pass/result.json`, SHA-256
+`bbfe2844048929dfcb74b073374247970520e182189e22de50839ca32765f538`.
+
+Full licensed suites pass: 15,004 main / 5,895 portable cases, zero skips. Focused closure checks
+(16 main / 15 portable), 28 teardown source checks and documentation checks also pass.
+Development compile scope: 3108 sources, baseline and compatibility symbols, plus both
+corresponding developer harness modes. Current census: 3108 staged C# files; 440,888 physical
+lines; zero at or above 300 lines. Direct `XRL` imports: 1451 files, 0 over the line limit.
+Cold-install inventory: 3141 files. Inventory SHA-256:
+`10b6325fb3e23b660a5609fe80485745104f2d925c523bb278af010edec488e2`.
+The [structural delta review](STRUCTURE_REVIEW_STRIKE_CLOSURE.md) binds this inventory.
+This remains unreleased development; public 0.3.7 retains its original inputs.
 
 ## Building-wide Beta coverage inventory — functional acceptance remains open
 

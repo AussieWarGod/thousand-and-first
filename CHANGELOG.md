@@ -12,7 +12,8 @@ records current acceptance.
 
 - Striking a completed building awaiting its own construction closure now explains that
   pending work instead of claiming another receipt owns it. Foreign-job refusals and strike
-  permissions remain unchanged. Native refusal/recovery validation is pending.
+  permissions remain unchanged. Native fire/larder refusal, recovery, removal and exact salvage pass;
+  whole-catalogue and teardown cold-load coverage remain open.
 
 - Developer coverage tooling now inventories every shipped building configuration and its
   architectural/functional obligations before Beta. Missing and stale scenario links remain

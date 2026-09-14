@@ -5,8 +5,9 @@
 3108 staged production C# files; 440,888 physical lines; 1451 files with direct `XRL` imports;
 zero files at or above 300 lines. Inventory SHA-256: `10b6325fb3e23b660a5609fe80485745104f2d925c523bb278af010edec488e2`.
 The new engine adapter explains an existing refusal; pure rules validate exact completed-job
-identity. Strike permissions and saved fields are unchanged. Semantic review and native
-validation are pending. The earlier review below binds its original founding-reputation input.
+identity. Strike permissions and saved fields are unchanged. The automated [delta review](STRUCTURE_REVIEW_STRIKE_CLOSURE.md) and STRUCTURE_REVIEW.json
+bind this inventory. Native fire/larder scope is recorded in STATUS.md. The earlier review
+below binds its original founding-reputation input.
 
 ## Accepted founding reputation census
 

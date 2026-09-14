@@ -4,8 +4,11 @@
 
 Current census: 3108 staged sources. Branch `codex/strike-closure-feedback` distinguishes an
 owned completed job awaiting closure from foreign work. Permissions are unchanged. Shared
-pure fixture and real teardown refusal/recovery checks are in progress; native acceptance is
-pending. Current process handles live in common Git `taf-workstate.md`.
+pure fixture and real teardown refusal/recovery checks pass at `abf41251`. Native 16,800-turn
+fire/larder chain, exact salvage, borrowed-receipt restoration, full sealed profile recipe,
+strict log and owned shutdown pass; no native teardown cold-load claim. PR #253 owns integration.
+Full licensed 15,004/5,895 cases and four engine compile modes pass. Current process handles
+live in common Git `taf-workstate.md`.
 
 ## Building-wide Beta coverage
 

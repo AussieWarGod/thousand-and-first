@@ -8,7 +8,11 @@ the cold-install inventory contains 3141 files.
 scenario must observe both actual closure windows, repeated public strike refusal with unchanged
 registry/building state, borrowed foreign-receipt refusal/restoration, then normal strike and
 exact salvage. No phases or completion are forced. This extends the existing synthetic crew
-and bill fixture; native validation is pending and teardown cold load remains unproved.
+and bill fixture. Native `abf41251` passed both cases across 16,800 ordinary turns with
+exact zero/one timber salvage; full profile recipe, final strict log and owned shutdown pass.
+Full licensed suites: 15,004 main / 5,895 portable cases, zero skips; all four engine compile
+modes pass. The main-only codec test covers registry reload; teardown cold load remains unproved.
+Exact archive and synthetic limitations are recorded in docs/STATUS.md.
 
 ## Accepted founding reputation validation (40477cb7)
 
