@@ -169,6 +169,26 @@ Append-only correction: `beta-heart-chain/000bea4e/compile-documentation-correct
 SHA-256 `cafceed5b5c83c504eb1acbbe19fc23cf7725af43c245d150638d936e273eba0`.
 The wording is restored here; runtime and native-test inputs are unchanged. Documentation
 checks must be judged by their own exit and output, not the last command in a shell batch.
+At `000bea4e9f70be44f6806bde7f8ae67cd8218657`, fresh native occupancy probes passed,
+but the next bound settlement assessment refused tier-three payment: `NoGroundToGrow`;
+`plot-envelope growth would absorb public road ground at 40,16`. All 25 material units were
+indexed in the exact supplemental store, and all 50 residents were free to work. A preceding
+road pass reached Worn. The exact per-cell floor identity/state versus tally branch remains
+unobserved; both can trigger this guard. No controlled Outstanding retry, survey-stake probe,
+higher payment or completion was reached. Earlier tier-three completion remains evidence only
+from the original `454eb055` run, not this changed input set.
+Closed failed archive: `beta-heart-chain/000bea4e/heart-road-ground-refused-1/result.json`,
+SHA-256 `767e736f1d2cc9db712d29d26266cdbe2ed28c9447cb7af23515608dd1885cdb`.
+Full input seal, 3386 C# bindings, strict mod log and owned shutdown passed; scenario FAILED.
+Documentation-only correction `476c4fa4` has green CI 34800681084, including both full managed
+suites and repository audit. It does not change this native result.
+[#214](https://github.com/AussieWarGod/thousand-and-first/issues/214) tracks ordinary road wear
+inside future heart growth, its exact boundary observation, fresh-city prevention and existing-save
+recovery. Road wear excludes current plots; growth refuses worn ground newly annexed from outside
+them. The shared reservation policy must preserve usable entrances and public streets, distinguish
+incidental wear from established/paid infrastructure, and avoid disabling roads merely to pass the
+fixture. #212/#213 and higher real cold load remain open.
+
 Spatial seal capture and fixture housing observations use one local survey for their complete read.
 Source inspection found that an unbound component verifier otherwise rebuilds a survey per component.
 The previous run measured 220–225-second daily progress pauses and 3.5–6.9-second settlement passes;
