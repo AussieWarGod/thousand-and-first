@@ -29,40 +29,42 @@ namespace ThousandAndFirst.Harness
 		internal string Run()
 		{
 			Build();
-			Check("shared-capped", KingdomLodgingRules.Closeness.Close, 3, 24, true);
+			Check("shared-capped", KingdomLodgingRules.Closeness.Close, 3, 20, true);
 			Detach(Beds[1]); Detach(Beds[2]);
-			Check("private-room", KingdomLodgingRules.Closeness.Private, 1, 24, true);
+			Check("private-room", KingdomLodgingRules.Closeness.Private, 1, 22, true);
 			Door.PerformOpen(); Require(Door.Open && !DoorObject.ConsiderSolid(), "native door failed to open");
-			Check("open-door", KingdomLodgingRules.Closeness.Private, 1, 24, true);
+			Check("open-door", KingdomLodgingRules.Closeness.Private, 1, 22, true);
 			Require(Door.AttemptClose(Silent: true) && !Door.Open, "native door failed to close");
-			Check("closed-door", KingdomLodgingRules.Closeness.Private, 1, 24, true);
+			Check("closed-door", KingdomLodgingRules.Closeness.Private, 1, 22, true);
 			Door.Locked = true;
 			Check("locked-door", KingdomLodgingRules.Closeness.Packed, 0, 0, false);
 			Door.Locked = false;
-			Check("unlocked-door", KingdomLodgingRules.Closeness.Private, 1, 24, true);
-			for (int y = 2; y <= 4; y++) for (int x = 2; x <= 6; x++)
+			Check("unlocked-door", KingdomLodgingRules.Closeness.Private, 1, 22, true);
+			CheckFurnitureAccess();
+			for (int y = 1; y <= 4; y++) for (int x = 3; x <= 6; x++)
 			{
+				if (x == 6 && y == 1) continue;
 				GameObject chest = Create("Chest");
-				Require(chest.Inventory != null && chest.Inventory.Objects.Count == 0 && chest.ConsiderSolid(),
-					"room obstruction is not an empty solid chest");
+				Require(chest.Inventory != null && chest.Inventory.Objects.Count == 0 && !chest.ConsiderSolid(),
+					"room obstruction is not an empty walkable native chest");
 				Place(chest, At(x, y)); Blockers.Add(chest);
 			}
-			Check("furnished-floor", KingdomLodgingRules.Closeness.Roomed, 1, 9, true);
-			foreach (GameObject chest in Blockers) Detach(chest);
-			Check("floor-restored", KingdomLodgingRules.Closeness.Private, 1, 24, true);
+			Check("furnished-floor", KingdomLodgingRules.Closeness.Roomed, 1, 7, true);
+			foreach (GameObject cabinet in Blockers) Detach(cabinet);
+			Check("floor-restored", KingdomLodgingRules.Closeness.Private, 1, 22, true);
 			Cell wallCell = Wall.CurrentCell; Detach(Wall);
 			Check("wall-loss", KingdomLodgingRules.Closeness.Packed, 0, 0, false);
 			Place(Wall, wallCell);
-			Check("wall-restored", KingdomLodgingRules.Closeness.Private, 1, 24, true);
+			Check("wall-restored", KingdomLodgingRules.Closeness.Private, 1, 22, true);
 			Cell bedCell = Beds[0].CurrentCell; Detach(Beds[0]);
 			Check("bed-loss", KingdomLodgingRules.Closeness.Packed, 0, 0, false);
 			Place(Beds[0], bedCell);
-			Check("bed-restored", KingdomLodgingRules.Closeness.Private, 1, 24, true);
+			Check("bed-restored", KingdomLodgingRules.Closeness.Private, 1, 22, true);
 			CheckOccupied();
 			Place(Beds[1], At(3, 1)); Place(Beds[2], At(5, 1));
-			Check("bunks-restored", KingdomLodgingRules.Closeness.Close, 3, 24, true);
-			Require(Passed.Count == 14, "room scenario omitted a required case");
-			return "native-lodging-room cases=14 passed=14 failed=0; real-quickstart=true; synthetic-room=true; "
+			Check("bunks-restored", KingdomLodgingRules.Closeness.Close, 3, 20, true);
+			Require(Passed.Count == 20, "room scenario omitted a required case");
+			return "native-lodging-room cases=20 passed=20 failed=0; real-quickstart=true; synthetic-room=true; "
 				+ "roof-credit=1; usable-bunks=3; same-root=true; no-cold-load-claim=true";
 		}
 

@@ -1420,12 +1420,15 @@ bears is the quarters**. You cannot jam five different believers into one bunkho
 fine, and the same five in a street of stone houses are neighbours who nod. So cohabitation is not
 one threshold but a ladder of four rungs. The benefit survey records the locations and capacities
 of **operable physical sleeping providers**, then measures the actual rooms containing them using
-the same native wall, door and safe-floor observations as room adoption. Catalogue capacity,
+native wall, door and safe-floor observations with architectural furniture clearance. Catalogue capacity,
 whole-plot area and exterior yards cannot supply bedroom privacy.
 
 Only designated floor counts; adjacent existing walls and doors may bound an adopted room without
 becoming claimed floor. Locked or permanently blocked doors do not supply usable ingress. Furniture
-can obstruct usable floor without becoming a partition; transient occupants do not erase a room.
+always occupies its footprint, even when native movement allows walking over it. It cannot supply
+circulation or usable floor, become a partition, or overlap usable ingress. Every sleeping provider
+needs orthogonally adjacent, ingress-reachable clear floor; nearby floor behind furniture does not
+make a trapped bed usable. Transient occupants do not erase a room.
 The least spacious sleeping room limits the household. These are conservative building-wide
 quarters, not individual bed ownership or a complete room-quality/activity simulation.
 

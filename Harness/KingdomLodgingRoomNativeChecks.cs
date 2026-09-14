@@ -64,7 +64,7 @@ namespace ThousandAndFirst.Harness
 			try
 			{
 				original.RemoveObject(citizen); Place(citizen, At(4, 2));
-				Check("occupied-room", KingdomLodgingRules.Closeness.Private, 1, 24, true);
+				Check("occupied-room", KingdomLodgingRules.Closeness.Private, 1, 22, true);
 			}
 			finally
 			{

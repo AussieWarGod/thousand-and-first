@@ -2,14 +2,15 @@
 
 ## Physical room-based lodging: implementation pending native acceptance
 
-The current lodging slice measures actual sleeping rooms and usable floor through the existing
-adoption reader. Operable sleeping providers keep their physical coordinates before enrollment
+The current lodging slice measures actual sleeping rooms using adoption structural observations
+and clear floor that excludes furniture, including natively walkable beds, chairs and containers.
+Every bed needs adjacent ingress-reachable clear floor; furniture cannot supply a doorway. Operable sleeping providers keep their physical coordinates before enrollment
 caps; extra usable bunks still count as shared space. Separate rooms constrain privacy, and
 catalogue `Closeness` declarations can only reduce the physical reading. Adopted floor-only
 receipts can use adjacent walls as boundaries without claiming them. No resident assignments or
 save formats are rewritten. Housing layouts and room furniture/activity rewards are still pending.
 
-Focused checks passed: 193 lodging cases (including 15 new room cases), 93 adoption cases and five
+Focused checks passed: 195 lodging cases (including 17 new room cases), 93 adoption cases and five
 new enclosure-bound cases in each of the main and portable lanes. The larger-room overload preserves
 adoption's default 200-cell limit. New native coverage is still owed for the full provider/index/
 lodging route, real door states, wall/furniture/bed damage and repair, occupancy and cold load.
@@ -17,12 +18,13 @@ This slice is not released and does not inherit Native30 gameplay acceptance for
 
 The dedicated `lodging-room-native` persona is now implemented: genuine dune Quickstart, an
 untouched site with a synthetic 8×6 canvas room, ordinary adoption, three operable bedrolls against
-one enrollment credit, and fourteen positional native observations. It checks open/closed/locked
-doors, loss/restoration of walls and beds, obstructed/restored floor, a temporarily borrowed
+one enrollment credit, and twenty positional native observations. It checks open/closed/locked
+doors, walkable furniture in a doorway, a trapped bed, solid and walkable furniture, their repairs,
+loss/restoration of walls and beds, obstructed/restored floor, a temporarily borrowed
 original citizen and restored shared bunks. It compares the actual benefit index, lodging privacy
 and arrival decision while preserving room/root identities. The founder returns to the original
-cell; detached test objects remain retained. All 65 persona-validator tests and all four engine
-compile modes pass. Native execution and cold-load evidence are still pending; no native PASS is
+cell; detached test objects remain retained. The revised scenario passed all 65 persona-validator tests and all four engine compile modes
+(3394/3398 developer sources). Eighteen editor tests and the real Chromium authoring check pass. Native execution and cold-load evidence are still pending; no native PASS is
 claimed by adding the scenario.
 
 
@@ -280,8 +282,8 @@ from the passed four-mode compile at `8df7b548`.
 Current source: 3103 sources, baseline and compatibility symbols use their
 respective exclusions (3097 baseline). All four engine compile modes passed.
 The cold-install inventory has 3132 files.
-3103 staged C# files / 440,590 physical lines; zero strict line-cap failures.
-Direct `XRL` imports: 1448 files, 0 over the line limit. Inventory SHA-256: `36e6759cd02e083a86352d30a0a4c7431d7149b544974cde2543bc3daa569b4f`.
+3103 staged C# files / 440,623 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1448 files, 0 over the line limit. Inventory SHA-256: `6972837d3b21390d4257f84fa551f6621627a46a7542cc01edfd4d9298df84b8`.
 This is a source census, not native acceptance or an updated exact-inventory semantic review.
 
 ## In-progress paid heart chain

@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <objects>
+  <!-- Native solid furniture, with only random loot generation removed for the room fixture. -->
+  <object Name="r_TAF_LodgingRoomCabinet" Inherits="Multicabinet">
+    <tag Name="InventoryPopulationTable" Value="*delete" />
+  </object>
   <object Name="Space-Time Vortex" Load="Merge">
     <part Name="r_TAF_CampVortexOriginProbe" />
   </object>

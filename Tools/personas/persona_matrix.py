@@ -133,7 +133,8 @@ GUEST_SAVE_EVIDENCE_ROWS = ("guest-save-shortage",)
 
 ROOM_EVIDENCE_ROWS = tuple("room-" + name for name in (
     "shared-capped", "private-room", "open-door", "closed-door", "locked-door",
-    "unlocked-door", "furnished-floor", "floor-restored", "wall-loss", "wall-restored",
+    "unlocked-door", "chair-in-door", "door-cleared", "bed-isolated", "bed-access-restored",
+    "solid-cabinet", "cabinet-removed", "furnished-floor", "floor-restored", "wall-loss", "wall-restored",
     "bed-loss", "bed-restored", "occupied-room", "bunks-restored",
 ))
 

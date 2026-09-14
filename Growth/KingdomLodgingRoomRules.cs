@@ -31,6 +31,7 @@ namespace ThousandAndFirst
 		{
 			internal KingdomAdoptRules.EnclosureMeasurement Shape;
 			internal int Places;
+			internal readonly HashSet<long> Reached = new HashSet<long>();
 		}
 
 		// Uses operable physical sleeping providers. A catalogue capacity is not a bed location.
@@ -41,6 +42,8 @@ namespace ThousandAndFirst
 			if (Designation == null || Places == null || Lookup == null
 				|| Designation.Count > 4000 || Places.Count > 4000) return result;
 			HashSet<long> scope = new HashSet<long>();
+			HashSet<long> beds = new HashSet<long>();
+			for (int i = 0; i < Places.Count; i++) beds.Add(Pack(Places[i].X, Places[i].Y));
 			for (int i = 0; i < Designation.Count; i++)
 				if ((Designation[i].Use & KingdomBenefitCellUse.Plot) != 0)
 					scope.Add(Pack(Designation[i].X, Designation[i].Y));
@@ -52,6 +55,7 @@ namespace ThousandAndFirst
 				if (!observed.TryGetValue(key, out var cell))
 				{
 					cell = Lookup(x, y);
+					if (beds.Contains(key)) cell.Usable = false;
 					// Adopted rooms designate their floor, not the neighboring walls they retain.
 					if (!scope.Contains(key) && cell.Region == KingdomAdoptRules.EnclosureRegion.Membership)
 						cell = new KingdomAdoptRules.CellObservation(KingdomAdoptRules.EnclosureRegion.Outside);
@@ -73,6 +77,9 @@ namespace ThousandAndFirst
 					room = new Room { Shape = KingdomAdoptRules.MeasureExactEnclosure(
 						place.X, place.Y, bounded, scope.Count) };
 					rooms.Add(room);
+					if (room.Shape.UsableFloorCells != null)
+						foreach (ArchitecturePoint point in room.Shape.UsableFloorCells)
+							room.Reached.Add(Pack(point.X, point.Y));
 					if (room.Shape.FloorCells != null)
 						for (int c = 0; c < room.Shape.FloorCells.Count; c++)
 						{
@@ -82,6 +89,13 @@ namespace ThousandAndFirst
 					byCell[key] = room;
 				}
 				room.Places += place.Capacity;
+				if (room.Shape.Bounded && room.Shape.DoorCells > 0
+					&& room.Shape.RoomCells >= KingdomAdoptRules.MinEnclosedRoomCells
+					&& !room.Reached.Contains(Pack(place.X - 1, place.Y))
+					&& !room.Reached.Contains(Pack(place.X + 1, place.Y))
+					&& !room.Reached.Contains(Pack(place.X, place.Y - 1))
+					&& !room.Reached.Contains(Pack(place.X, place.Y + 1)))
+					result.UnusablePlaces += place.Capacity;
 			}
 			bool single = true;
 			bool paired = true;

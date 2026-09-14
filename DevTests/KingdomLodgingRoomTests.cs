@@ -42,7 +42,7 @@ namespace ThousandAndFirst.Tests
 			var reading = Read(Shared());
 			ClassicAssert.AreEqual(1, reading.SleepingRooms);
 			ClassicAssert.AreEqual(3, reading.SleepingPlaces);
-			ClassicAssert.AreEqual(24, reading.UsableFloorCells);
+			ClassicAssert.AreEqual(21, reading.UsableFloorCells);
 			ClassicAssert.AreEqual(KingdomLodgingRules.Closeness.Close, reading.Quarters);
 		}
 
@@ -51,7 +51,7 @@ namespace ThousandAndFirst.Tests
 		{
 			var reading = Read(Shared(), FloorOnly: true);
 			ClassicAssert.AreEqual(1, reading.SleepingRooms);
-			ClassicAssert.AreEqual(24, reading.UsableFloorCells);
+			ClassicAssert.AreEqual(21, reading.UsableFloorCells);
 			ClassicAssert.AreEqual(KingdomLodgingRules.Closeness.Close, reading.Quarters);
 		}
 
@@ -76,7 +76,7 @@ namespace ThousandAndFirst.Tests
 				"#iiiii#iiiii#", "#iiiii#iiiii#", "###d#####d###" };
 			var reading = Read(rows);
 			ClassicAssert.AreEqual(2, reading.SleepingRooms);
-			ClassicAssert.AreEqual(38, reading.UsableFloorCells);
+			ClassicAssert.AreEqual(36, reading.UsableFloorCells);
 			ClassicAssert.AreEqual(KingdomLodgingRules.Closeness.Private, reading.Quarters);
 			rows[3] = "#iiiiiiiiiii#";
 			reading = Read(rows);
@@ -105,6 +105,35 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void IsolatedBedCannotClaimPrivacyFromTheRestOfTheRoom()
+		{
+			string[] rows = { "########", "#bxiiii#", "#xiiiii#", "#iiiiii#", "#iiiiii#", "###d####" };
+			var reading = Read(rows);
+			ClassicAssert.AreEqual(21, reading.UsableFloorCells);
+			ClassicAssert.AreEqual(1, reading.UnusablePlaces);
+			ClassicAssert.AreEqual(KingdomLodgingRules.Closeness.Packed, reading.Quarters);
+			rows[2] = "#iiiiii#";
+			reading = Read(rows);
+			ClassicAssert.AreEqual(22, reading.UsableFloorCells);
+			ClassicAssert.AreEqual(0, reading.UnusablePlaces);
+			ClassicAssert.AreEqual(KingdomLodgingRules.Closeness.Private, reading.Quarters);
+		}
+
+		[Test]
+		public void BedAcrossEntranceCannotBecomeCirculationEvenWhenLookupCallsItWalkable()
+		{
+			string[] rows = { "########", "#biiiii#", "#iiiiii#", "#iiiiii#", "#bbbbbb#", "###d####" };
+			var reading = Read(rows);
+			ClassicAssert.AreEqual(1, reading.SleepingRooms);
+			ClassicAssert.AreEqual(0, reading.UsableFloorCells);
+			ClassicAssert.AreEqual(7, reading.UnusablePlaces);
+			rows[4] = "#bbibbb#";
+			reading = Read(rows);
+			ClassicAssert.AreEqual(18, reading.UsableFloorCells);
+			ClassicAssert.AreEqual(0, reading.UnusablePlaces);
+		}
+
+		[Test]
 		public void SameRoomIsObservedOnceAndRotationPreservesReading()
 		{
 			string[] rows = Shared();
@@ -113,7 +142,7 @@ namespace ThousandAndFirst.Tests
 				var seen = new HashSet<string>();
 				var reading = Read(rows, (x, y) => ClassicAssert.IsTrue(seen.Add(x + ":" + y)));
 				ClassicAssert.AreEqual(1, reading.SleepingRooms);
-				ClassicAssert.AreEqual(24, reading.UsableFloorCells);
+				ClassicAssert.AreEqual(21, reading.UsableFloorCells);
 				ClassicAssert.AreEqual(KingdomLodgingRules.Closeness.Close, reading.Quarters);
 				var turned = new string[rows[0].Length];
 				for (int y = 0; y < turned.Length; y++)
@@ -152,7 +181,7 @@ namespace ThousandAndFirst.Tests
 			for (int y = 1; y < 17; y++) rows[y] = "#" + new string('i', 18) + "#";
 			rows[1] = "#bibib" + new string('i', 13) + "#";
 			var reading = Read(rows);
-			ClassicAssert.AreEqual(288, reading.UsableFloorCells);
+			ClassicAssert.AreEqual(285, reading.UsableFloorCells);
 			ClassicAssert.AreEqual(0, reading.ExposedPlaces);
 			ClassicAssert.AreEqual(KingdomLodgingRules.Closeness.Close, reading.Quarters);
 		}

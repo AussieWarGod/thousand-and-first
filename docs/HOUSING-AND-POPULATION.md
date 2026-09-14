@@ -101,6 +101,9 @@ do not supply a copied formula, universal luxury requirement or a reason to add 
 The architectural quality requirement applies to **every building**, not only housing. Design
 must follow the building's actual program: the people, activities, equipment, storage and open
 space it serves. Give it coherent proportions, spatial hierarchy, thresholds and circulation.
+Reserve every furniture footprint as occupied, regardless of native walkability. Keep beds, chairs
+and storage out of doorways and circulation; provide adjacent reachable clear floor for use. This
+architectural rule applies to all building types and does not change Qud physics.
 Arrange furniture and lighting deliberately, use materials and cultural expression appropriate
 to Qud, and distinguish public approaches from private rooms and hazardous/service work areas.
 Relate entrances and fronts to useful streets, courts, parks and neighboring works. Farms,
@@ -170,7 +173,7 @@ is synthetic, exact failing predicates and the ordinary-play behaviors actually 
 ## Physical lodging implementation in progress
 
 The `codex/physical-room-lodging` slice records operable sleeping-provider coordinates at benefit
-allocation, measures rooms with the existing adoption wall/door/safe-floor reader, and constrains
+allocation, measures rooms with adoption structural observations plus furniture clearance, and constrains
 lodging closeness by real room separation and usable floor. A spacious shared room cannot become
 Private by its footprint, and `Closeness` declarations can only reduce physical privacy. Adopted
 floor-only receipts may use adjacent walls as boundaries without acquiring their ground. Missing
@@ -179,7 +182,9 @@ walls, locked entrances and obstructed floor have distinct physical consequences
 Pure tests cover shared and paired bedrooms, partition removal, blocked/locked/missing entrances,
 furniture barriers, rotated plans, adopted floor-only authority, undesignated gaps, multiple places
 on one provider and invalid capacities. This is a foundation for #233, not its completion. Usable
-floor includes passable furnishing cells; it is not a clear-floor or decoration score. Dedicated
+floor excludes every native Furniture-tagged object, bed and chair, including the settlement
+marker. Sleeping providers also reserve their footprints even without a Furniture tag. Beds need
+adjacent reachable floor, and furniture cannot provide ingress. This is not a decoration score. Dedicated
 native tests must still prove credited-provider allocation through the index, actual native wall
 and door behavior, lodging decisions, damage/repair, occupied rooms and cold load. No in-game PASS
 or release acceptance is claimed for this slice yet. The actual housing catalogue redesign and
