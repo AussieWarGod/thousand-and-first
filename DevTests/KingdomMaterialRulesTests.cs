@@ -146,7 +146,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void ShippedUpgradeMaterialBillsAreTransitionSpecificPhysicalAdditions()
+		public void ShippedUpgradeMaterialBillsPayForGrowthAndRenovation()
 		{
 			XmlDocument document = new XmlDocument();
 			document.LoadXml(TestMain.ReadRepositoryText("KingdomBuildings.xml"));
@@ -183,8 +183,12 @@ namespace ThousandAndFirst.Tests
 				{
 					KingdomMaterial material = (KingdomMaterial)i;
 					int expected = Math.Max(0, after.Get(material) - before.Get(material));
+					// The court rebuilds six pavilion floors at new slots. CampHeartTests
+					// independently counts these added WoodFloor placements in every facing.
+					if (pair.Key == "heartmoot" && successorKey == "heartcourt"
+						&& material == KingdomMaterial.ShapedTimber) expected += 6;
 					ClassicAssert.AreEqual(expected, additions.Get(material), pair.Key + " -> "
-						+ successorKey + " must charge only the added "
+						+ successorKey + " must charge the added and renovated "
 						+ KingdomMaterialRules.MaterialKey(material));
 				}
 			}

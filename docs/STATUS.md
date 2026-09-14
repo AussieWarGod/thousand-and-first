@@ -44,6 +44,16 @@ the release-metadata preflight. Fresh native confirmation of the
 changed bill, full rungs 1–4, tier-five arcology and higher-heart cold load remain outstanding.
 Earlier results below retain their original inputs and acceptance limits.
 
+CI `34807093758` at `8df7b548` failed the older material catalogue test: it assumed every
+upgrade bill was only the positive difference between direct-build totals, expecting zero
+shaped timber for the court. That omits fabric rebuilt at different authored slots. The test
+now includes the court's six renovated floors, whose actual added placements are independently
+counted by the CampHeart regression. The prior focused and compile passes do not override
+this full-suite failure. All 270 focused main material-rule cases passed with zero skips after
+the correction. This fixture is also main-only; the attempted portable selector returned no
+matches (exit 2). Replacement CI remains pending; production and Harness inputs are unchanged
+from the passed four-mode compile at `8df7b548`.
+
 ## Current source census for the pending heart repair
 
 Higher-heart persistence preparation is isolated in `codex/heart-chain-coldload`.
