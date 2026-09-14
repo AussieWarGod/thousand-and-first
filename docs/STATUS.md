@@ -51,17 +51,31 @@ now includes the court's six renovated floors, whose actual added placements are
 counted by the CampHeart regression. The prior focused and compile passes do not override
 this full-suite failure. All 270 focused main material-rule cases passed with zero skips after
 the correction. This fixture is also main-only; the attempted portable selector returned no
-matches (exit 2). Replacement CI remains pending; production and Harness inputs are unchanged
+matches (exit 2). Replacement CI `34808115103` passed at `1729bae6`; production and Harness inputs are unchanged
 from the passed four-mode compile at `8df7b548`.
 
 ## Current source census for the pending heart repair
 
 Higher-heart persistence preparation is isolated in `codex/heart-chain-coldload`.
-The new engine-free snapshot record/codec is not wired to native save or load yet;
-its format tests are not persistence acceptance. [HEART-CHAIN-COLDLOAD.md](HEART-CHAIN-COLDLOAD.md)
-records the required capture, preactivation, ordinary continuation and remaining scenarios.
-All 31 snapshot-format cases passed in both main and portable projects with zero skips;
-registration and documentation checks passed. No new engine compile or native save/load is claimed.
+The `camp-heart-chain-save` variant now follows completed rung-four next-day recovery with
+physical capture and actual Primary serialization. It preflights the next ordinary fire job
+before the higher construction waits, discloses one next-job timber at save, retains exact
+jobs/residents/support/custody fact files, and compares the whole snapshot after serialization.
+Facts bind original anchors, all four survey stakes, water mixtures, larders and material
+stockpiles. Anonymous food stacks retain their observed slot/count; the observer assigns no IDs.
+Completion checks now share one local survey and verify disposal; speedup is unmeasured.
+Continue dispatch, preactivation comparison, rearming the dedicated input owner and the loaded
+paid-job continuation remain unwritten. No new native save/load has run. Do not start its long
+acceptance run until source and consumer are integrated under the same sealed inputs.
+[HEART-CHAIN-COLDLOAD.md](HEART-CHAIN-COLDLOAD.md) records the remaining integration and scenarios.
+All 134 focused main CampHeart cases and 65 persona checks passed with zero managed skips.
+Canonical facts passed nine portable cases, including Unicode, framing, duplicate identities
+and aggregate bounds. Initial malformed-Unicode attribute data was replaced by .NET metadata;
+the corrected tests construct the invalid strings at runtime. All four final engine compiles
+passed (3096/3100 ordinary, 3390/3394 developer), including the explicit no-debit and
+material-stockpile observations. All 118 portable CampHeart cases passed with zero skips.
+These are implementation checks, not persistence acceptance. Original 31-case snapshot-format
+evidence remains separate from actual game behavior.
 
 Engine gate passed: 3100 sources, baseline and compatibility symbols use their
 respective exclusions (3096 baseline). The cold-install inventory has 3131 files.

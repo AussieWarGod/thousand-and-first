@@ -25,6 +25,10 @@ the missing shaped-timber claim blocked the upgrade before payment. Expand autho
 regressions to cover every added material across all fallback heart transitions and facings,
 including historical-baseline transitions. Sixteen main cases pass; fresh native confirmation
 of the court bill remains pending under #216. Exact evidence is in docs/STATUS.md.
+Add a developer court-save variant with physical city evidence, retained fact files and a
+post-serialization comparison. Preflight the next ordinary paid job before long waits and
+retain original stock across the disclosed one-timber save fixture. Cold-load dispatch and
+continuation remain pending; this is not native persistence acceptance.
 
 Current 3100-file census is line-cap green: 440,354 physical lines; direct `XRL`
 imports occur in 1446 files, 0 of them over the line limit. Inventory SHA-256: `4f8ee63c2752d59bcdea66586483f9273db112b5038f467ce0fd935121cfc086`.

@@ -1,6 +1,6 @@
 # Higher-heart cold-load acceptance
 
-Preparation for #159, #160, #212–#215 and draft PR #207. This remains part of the
+Work for #159, #160, #212–#216 and draft PR #207. This remains part of the
 Beta objective; it does not replace same-city multi-map acceptance in #211 or the
 land-use direction in [CITY-GROWTH-BALANCE.md](CITY-GROWTH-BALANCE.md).
 
@@ -11,9 +11,12 @@ The existing camp snapshot and observer pin rung two, its fire, its paid tent jo
 the identity, physical support or persistence of a later heart.
 
 `KingdomCampHeartChainSnapshot` and its codec define a separate bounded witness for
-completed rungs three and four. They are preparation only: no native capture,
-save verb, Continue dispatch or continuation currently consumes this record.
-Codec tests validate the evidence format, not a game save or behavior after loading.
+completed rungs three and four. A separate `camp-heart-chain-save` persona now runs the
+whole paid chain and saves after rung-four next-day recovery. Its observer captures the
+real completed heart, physical support, original anchors and paid receipts. Continue
+dispatch and the loaded next-job continuation are not wired yet; do not launch an
+acceptance run until both source and consumer are sealed together. No new native save
+has been executed. Codec tests validate the evidence format, not persistence.
 Rung five and interrupted paid handovers still require their own coverage; refusing
 them in this test record is not a gameplay restriction or completion of those tasks.
 
@@ -23,20 +26,35 @@ resident and paid heart job; population, physical water/food and the game clock.
 Separate digests bind job receipts, the resident census, support works and original
 store custody. No population limit is imposed by the codec.
 
+The save route retains four canonical fact files (`camp-heart-chain-*-facts.txt`) beside
+the external snapshot. Facts have length-prefixed fields, explicit nulls, sorted unique
+row identities, strict UTF-8 and bounded aggregate size. They include complete encoded
+per-city paid jobs, exact resident rows and physical bodies, city work rows, verified
+authored roots and their layouts, the disclosed legacy producers, all four authenticated
+stakes, water mixtures and larder/stockpile contents. Anonymous food stacks retain their
+observed inventory position and raw count; observation never assigns them an identity.
+
+Before the first higher construction wait, the save variant requests an ordinary fire
+quote outside the future court footprint, checking its two-drams/one-timber bill and no
+change to paid jobs, original store custody or civic water. It quotes again before saving,
+then explicitly adds one next-job timber to the original store. The whole snapshot must
+match again after actual Primary serialization before the save receipt is published.
+Completion reads share one local survey and prove disposal; no speedup is claimed yet.
+
 ## Required native integration
 
-1. Add an exact save variant of the paid chain. Its save verb must follow successful
+1. Implemented, unexecuted: an exact save variant of the paid chain. Its save verb follows successful
    ordinary completion, recovery and custody checks. Retain the existing unsaved
    chain and rung-two save regression. Validate the persona before game preparation.
-2. Capture the actual completed heart and its physical objects, without repairing,
+2. Implemented, unexecuted: capture the actual completed heart and its physical objects, without repairing,
    relocating, enrolling or minting anything during observation. Define canonical,
    bounded digests for per-city paid receipts, resident rows and bodies, and physical
    support works. Include the original survey stakes. Retain the underlying rows in
    evidence so a digest mismatch can be diagnosed.
-3. Preflight the next ordinary paid job before the long save run. Any synthetic
+3. Implemented, unexecuted: preflight the next ordinary paid job before the long save run. Any synthetic
    material supplied for that job must be disclosed and included in the saved custody
    census. Do not replay the 50-resident setup or backdate any completion after loading.
-4. Write the witness to the durable game state and external snapshot, save the actual
+4. Source route implemented, unexecuted: write the witness to durable game state and external snapshot, save the actual
    primary, and retain exact save/metadata/cache hashes. Verify clock and custody
    across serialization. The host must stop the owned source game before importing
    the sealed primary into a fresh, separately sealed profile.

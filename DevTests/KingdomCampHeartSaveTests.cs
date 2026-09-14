@@ -205,6 +205,25 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void HigherHeartSaveRequiresTheWholeChainAndItsOwnFinalVerb()
+		{
+			var chain = Script("camp-heart-chain");
+			var saved = Script("camp-heart-chain-save");
+			Assert.That(saved, Is.EqualTo(chain.Concat(new[] { KingdomCampHeartChainScript.Save })));
+			Assert.That(KingdomCampHeartChainScript.Matches(saved, true), Is.True);
+			Assert.That(KingdomCampHeartScript.Matches(saved), Is.True);
+			Assert.That(KingdomCampHeartScript.Matches(saved, true), Is.False);
+			Assert.That(KingdomCampHeartChainScript.Matches(chain, true), Is.False);
+			for (int i = 0; i < saved.Length; i++)
+			{
+				var changed = (string[])saved.Clone(); changed[i] += " ";
+				Assert.That(KingdomCampHeartChainScript.Matches(changed, true), Is.False);
+				Assert.That(KingdomCampHeartChainScript.Matches(saved.Where((_, at) => at != i).ToArray(), true), Is.False);
+			}
+			Assert.That(KingdomCampHeartChainScript.Matches(saved.Concat(new[] { KingdomCampHeartChainScript.Save }).ToArray()), Is.False);
+		}
+
+		[Test]
 		public void ChainHousingGridFitsEighteenLotsBesideTentAndFutureHeart()
 		{
 			Assert.That(KingdomPlotRules.TryInterior(80, 25, out var usable), Is.True);
