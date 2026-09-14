@@ -11,6 +11,25 @@ namespace ThousandAndFirst.Tests
 	public sealed class KingdomCanvasHomeTests
 	{
 		[Test]
+		public void PaidRoomWitnessReadsCompiledCoordinateAnchorsAcrossEveryMediumVariantAndPose()
+		{
+			var corpus = KingdomArchitectureCorpusFixture.Load();
+			int checkedPoses = 0;
+			foreach (var item in corpus.Cases.Where(c => c.Binding.Size == ArchitectureLotSize.Medium
+				&& (c.Tier.BuildKey == "tentrow" || c.Tier.BuildKey == "hutyard")))
+			foreach (ArchitectureFacing facing in Enum.GetValues(typeof(ArchitectureFacing)))
+			{
+				ClassicAssert.IsTrue(KingdomArchitectureRules.TryCompile(
+					KingdomArchitectureCorpusFixture.Request(corpus, item, facing), out var snapshot, out string failure), failure);
+				int expected = item.Tier.BuildKey == "tentrow" ? 17 : item.Variant.Key == "fallback" ? 16 : 15;
+				ClassicAssert.AreEqual(expected, Harness.KingdomPaidHousingRoomRules.ExpectedFloor(snapshot),
+					item.Tier.BuildKey + "/" + item.Variant.Key + "/" + facing);
+				checkedPoses++;
+			}
+			ClassicAssert.GreaterOrEqual(checkedPoses, 7 * 4);
+		}
+
+		[Test]
 		public void EveryCanvasConversionRetainsProtectedFixturesAndFundsItsCompiledDelta()
 		{
 			var corpus = KingdomArchitectureCorpusFixture.Load();

@@ -12,8 +12,8 @@ See STATUS for acceptance; the common Git-directory handoff owns current process
 
 ## Current source census — pending heart repair
 
-3105 staged sources; 440,721 physical lines; 1449 direct-XRL files; zero cap failures;
-3138 cold-install files. Inventory `cadbe858072e3c855ac94f882cb3d772f35f5d2f41f61a3a6e141f2f5df63fc8`. Native acceptance remains pending.
+3106 staged sources; 440,838 physical lines; 1450 direct-XRL files; zero cap failures;
+3139 cold-install files. Inventory `ef37cc7e787d36b6034cc9a24cf99c9278aa55a9a8f2bd06c9969327b44ae7e1`. Native acceptance remains pending.
 Use the shared Git-directory handoff for live process ownership and current validation.
 
 ## Retained combined heart candidate before surveyed-ingress draft — 2026-09-11

@@ -2,9 +2,35 @@
 
 ## Current source inventory (unreleased)
 
-The engine gate runs across 3105 production C# sources (3101 baseline);
-the cold-install inventory contains 3138 files. Inventory `5a1d8fb33c55d7e8d816561533a165505deb9d490fec0c667bf1dcdab5b50f36`.
+The engine gate runs across 3106 production C# sources (3102 baseline);
+the cold-install inventory contains 3139 files. Inventory `aef5dbb86f8a1f12942427a28bf8e00e937f0c86aa9d41ab1bf0b601d4fe1cca`.
 These counts describe the source inventory, not a public installation. Native acceptance is scoped below.
+
+Paid conversion follow-through: `Tools/personas/paid-housing-native-check.persona` uses real
+Quickstart homes, exact normal commissioning/debit, controlled test-registry price drift and a
+temporary storage-basket removal during handover. It requires Outstanding recovery, preserved
+contents and payment, and restores the catalogue before saving. The existing separate lifecycle
+load verifies the completed conversion and performs a new paid fire commission. Missing material
+units for both the conversion and that next commission, plus one brush contents sentinel
+are synthetic; no homes, citizens, water, labour or job phases are supplied. Four engine compile
+modes and 66 persona checks pass. Warm and separate cold acceptance at `d5a0e96d` is
+recorded in [STATUS](docs/STATUS.md), including full recipes, owned shutdown and limits.
+The unfinished-job/version-change case and historical geometry remain open in #239 and #240.
+The paid-housing fixture now transfers 32 existing carried drams by a physical pour before payment,
+to fund the longer wait, and probes missing/moved/wrong-token fixture restoration. Physical mismatch
+must refuse without permanently poisoning intact owner receipts; malformed owner and upgrade
+authority keep their quarantine rules. Failed native reproductions and accepted exact restoration/retry
+are recorded in STATUS and #242; no repair of previously quarantined saves is claimed.
+The required paid-housing-floor-access witness probes the actual insertion guard at paid handover:
+exact predecessor accepted, synthetic foreign chest refused, borrowed receipt refused, then exact
+recovery. The chest is removed before ordinary insertion continues; no insertion verdict is replaced.
+The cohort floor witness counts the frozen variant's additional hearth and table separately:
+seventeen clear cells in canvas, sixteen in the basic hut, fifteen in hearth-and-table variants.
+These are exact authored expectations for this fixture, not changed production quality thresholds.
+
+The native startup observer also requires four local non-wandering founder anchors. Actual paid
+construction, later housing and cold-load checks remain required; neither a passing run nor the
+anchor rule proves immunity to wildlife or repairs historical founders. See #237.
 
 ## Shared-hall access
 

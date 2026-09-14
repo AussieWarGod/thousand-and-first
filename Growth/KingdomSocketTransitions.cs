@@ -65,6 +65,7 @@ namespace ThousandAndFirst
 								}
 								root.HandleNodes(new Dictionary<string, Action<XmlDataHelper>>
 								{
+									{ "retained-transition", ReadRetained },
 									{ "transition", delegate(XmlDataHelper child)
 										{
 											string key = child.GetAttribute("Key");
@@ -196,14 +197,14 @@ namespace ThousandAndFirst
 				|| !Owner.HasStringProperty(KingdomConstruction.ReceiptProperty)
 				|| Owner.HasIntProperty(KingdomConstruction.ReceiptProperty)) return false;
 			string jobId = Owner.GetStringProperty(KingdomConstruction.ReceiptProperty);
-			KingdomSocketTransition declared;
-			string declarationDigest;
-			if (string.IsNullOrEmpty(jobId)
-				|| !TryGet(Before.BuildKey, After.BuildKey, Before.LotType, Before.LotSize,
-					out declared)
-				|| !KingdomSocketTransitionRules.TryDeclarationDigest(declared,
-					out declarationDigest)) return false;
 			KingdomSocketTransitionReceiptShape receipt = ReadReceiptShape(Owner);
+			TryGet(Before.BuildKey, After.BuildKey, Before.LotType, Before.LotSize, out var current);
+			TryRetained(receipt.DeclarationDigest, Before, After, out var retained);
+			if (string.IsNullOrEmpty(jobId)
+				|| !KingdomSocketTransitionRules.TrySelectPaidDeclaration(receipt, current, retained,
+					out var declared)
+				|| !KingdomSocketTransitionRules.TryDeclarationDigest(declared,
+					out string declarationDigest)) return false;
 			bool legacy;
 			if (!KingdomSocketTransitionRules.ReceiptAuthorizes(receipt, declared.Key,
 				declarationDigest, Before.SnapshotHash, After.SnapshotHash, jobId, out legacy))

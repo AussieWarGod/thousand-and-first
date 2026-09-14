@@ -1,5 +1,20 @@
 # Changelog
 
+**Pending Quickstart founder anchoring (unreleased)**
+
+New founding citizens start with a vanilla civic anchor on their camp approach cells. Ordinary
+work and idle behavior remain available; they no longer begin with unbounded random wandering
+while the settlement is being built. Existing citizens and combat rules are unchanged.
+
+**Pending restored fixture recovery (unreleased)**
+
+Recheck exact physical fixtures after they are restored instead of permanently quarantining an
+intact building receipt on a temporary missing, moved, duplicated or changed component. All physical
+identity checks and malformed-authority refusals remain. Existing quarantined saves are not rewritten.
+Allow a paid conversion to lay nonblocking flooring beneath its exact predecessor on the shared
+main cell during the frozen handover phase. Foreign furniture still blocks placement, including
+a foreign container with a copied payment receipt. Paid completion, retained contents/founders and separate cold continuation pass at `d5a0e96d`.
+
 **Pending enclosed canvas homes (unreleased)**
 
 Author enclosed shared shelters, separate chambers and courtyard cabins for M/L/XL plots.
@@ -11,6 +26,12 @@ only while generating the exact initial camp, preventing a legendary ape party f
 starter citizens. Marsh construction and separate cold-load checks pass at `2c0600b5`, including
 all four original citizens, real enclosed housing and entrance obstruction/recovery. Broader
 housing/conversion and release acceptance remain pending; see docs/STATUS.md.
+
+**Pending paid conversion price history (unreleased)**
+
+Retain exact historical declarations for already-paid same-set transition receipts when current
+prices change. New commissions still use current prices. Paid native construction and completed-save cold load
+pass at `d5a0e96d`; pending-job/version-change coverage remains #239, historical geometry #240.
 
 **Shared-hall access (unreleased)**
 
@@ -71,9 +92,9 @@ regressions to cover every added material across all fallback heart transitions 
 including historical-baseline transitions. Sixteen main cases pass; fresh native confirmation
 of the court bill remains pending under #216. Exact evidence is in docs/STATUS.md.
 
-Current 3105-file census is line-cap green: 440,772 physical lines; direct `XRL`
-imports occur in 1449 files, 0 of them over the line limit. Inventory SHA-256: `5a1d8fb33c55d7e8d816561533a165505deb9d490fec0c667bf1dcdab5b50f36`.
-The cold-install inventory contains 3138 files. This is not evidence of a new public installation.
+Current 3106-file census is line-cap green: 440,877 physical lines; direct `XRL`
+imports occur in 1450 files, 0 of them over the line limit. Inventory SHA-256: `aef5dbb86f8a1f12942427a28bf8e00e937f0c86aa9d41ab1bf0b601d4fe1cca`.
+The cold-install inventory contains 3139 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Versions are semantic: patch for fixes,
 minor for additive API and content, major for breaking changes. Supported API is defined in

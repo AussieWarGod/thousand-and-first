@@ -95,6 +95,14 @@ a newly finished building can spend them on its own next improvement. Keep unrel
 and their reserved lanes outside the largest heart footprint being tested. Run available read-only
 preflights before long waits, and retain both the verdict and detailed production reason on refusal.
 These checks apply to both agents; they do not replace observing the actual paid transition.
+For component lookup, use the frozen stateful anchor (`fixture:storage`), not its palette slot
+(`storage`). Reused lifecycle observers may intentionally require the original design; a home
+conversion needs its own post-conversion cohort check while preserving the original startup check.
+Before fixing a numeric room expectation, inspect the frozen variant and its actual furnishings:
+a hearth-only room and a hearth-and-table room reserve different amounts of usable floor.
+Compiled stateful anchor identities include `@x,y`; use semantic-role lookup for live components
+or strip that identity suffix when counting a decoded snapshot. Test such counters against actual
+compiled variants before a native run, and preflight them before payment.
 For long population fixtures, preflight the production subsidence equilibrium at the highest tested
 stage. Stored water and bed counts do not prove civic water support. Disclose any synthetic producer
 roots. Verify founding recovery immediately after paying the next heart improvement, before spending
@@ -106,7 +114,8 @@ contains every fixture work; capturing an old smaller book can miss newly mispla
 Retain the actual bound assessment's reason;
 a later Ready result cannot explain an earlier NoGroundToGrow refusal.
 When a shared failure sentence covers several predicates, record their actual boundary values and
-caller before another long run. Journal unexpected production refusals immediately to avoid spending
+caller before another long run. Inspect existing `architecture: foreign slot` lines in `Player.log`
+first; they already identify the blocking object, blueprint, cell and ground classification. Journal unexpected production refusals immediately to avoid spending
 the remainder of a construction wait on a job already requiring inspection.
 Commissioning clearance does not prove completion-time clearance: resident movement during the
 construction wait can repopulate future wall cells. Place the late resident at the actual paid

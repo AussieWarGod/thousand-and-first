@@ -1,5 +1,50 @@
 # Current implementation and release evidence
 
+## Paid housing and founder anchors: warm/cold behavioral checks accepted
+
+At `d5a0e96d800bfcac929a52b394e94371172018a0`, Qud 2.0.211.51, marsh Quickstart with
+advisor and seed `#1012026`, the complete paid-housing persona and separate cold process pass.
+All four original founders start with local non-wandering anchors and remain housed after
+24,000 ordinary turns: two enclosed homes, six usable sleeping places and 32 clear floor cells.
+Furniture remains occupied architectural space regardless of native walkability.
+
+The real Medium tentrow-to-hutyard conversion pays seven drams and its exact material claim.
+A controlled catalogue change to eight refuses the old receipt without registered history and
+accepts its exact retained declaration. Missing, moved and wrong-token basket probes refuse;
+exact restoration recovers without poisoning intact owner authority. Actual handover refuses
+while its basket is removed, enters Outstanding, then completes through ordinary retry with the
+same payment and original contents. The actual floor insertion guard accepts only its exact paid
+predecessor; a foreign chest, including one carrying a copied receipt, still refuses.
+
+A real save and separate-process load preserve the same paid job, frozen functional home,
+basket contents and all four housed identities. The next fire commission creates a new job
+and debits one timber and two drams. Its observed follow-up interval is 2.453 seconds, versus
+94.512 seconds before the operation scope was bound; stock also differs, so this is not an
+isolated performance benchmark. Both exact owned processes are stopped. All 3,448 warm and
+3,450 cold inputs match their pinned recipes; strict logs, persona, lifecycle, housing and
+ordinary-wait accounting pass.
+
+Closed archive: `paid-housing/d5a0e96d/anchored-warm-cold-1/result.json`, SHA-256
+`aee3c0a96e2ecb8ba341ccc0261de5a62fa9ba35e83dc850c528b3ff2c22b635`.
+CI `34882424586`, four engine compile modes and full licensed suites pass: 14,957 main and
+5,849 portable cases, zero skips (57 seconds). Focused tests include all compiled Medium
+variants/facings, retained prices, founder grants and fail-closed persona evidence.
+
+Limits: this is one map and seed. The fixture supplies missing materials for conversion and
+next fire, a brush contents sentinel and a removable foreign chest; it physically transfers
+32 existing carried drams. No residents, homes, water, labour or completed job phases are
+fabricated. Warm capture shows the converted room with clear entry, but clips the lower home;
+cold capture shows the returned menu. Neither establishes full-map framing or all-building visual
+quality. The completed-save test does not prove pending-job upgrades across versions, historical
+layout renovation, new housing at the changed price, multi-map population, or ordinary balance.
+Those remain in #239/#240 and the [architecture/population plan](HOUSING-AND-POPULATION.md).
+
+Cold load again logs the independent polity-topology reconciliation refusal in #244. Housing
+acceptance does not establish polity dispatch acceptance. Broader ecology and historical founder
+anchors remain #237; already-quarantined saves and city-wide damage remain #242. Public Alpha
+is still 0.3.6. Protected integration, 0.3.7 packaging and subscribed acceptance remain required.
+[Preserved failed runs and implementation history](PAID-HOUSING-EVIDENCE.md).
+
 ## Shared-hall access: native scenario accepted
 
 At `dc65f0866a36a2332b35d235291a13a6e03540a1`, all 29 required in-game room observations pass.
@@ -363,12 +408,12 @@ from the passed four-mode compile at `8df7b548`.
 
 ## Current source census for the pending heart repair
 
-Current cold-install inventory: 3138 files.
-Current source: 3105 sources, baseline and compatibility symbols use their
+Current cold-install inventory: 3139 files.
+Current source: 3106 sources, baseline and compatibility symbols use their
 respective exclusions (3097 baseline). All four engine compile modes passed.
 The cold-install inventory has 3132 files.
-3105 staged C# files / 440,772 physical lines; zero strict line-cap failures.
-Direct `XRL` imports: 1449 files, 0 over the line limit. Inventory SHA-256: `5a1d8fb33c55d7e8d816561533a165505deb9d490fec0c667bf1dcdab5b50f36`.
+3106 staged C# files / 440,877 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1450 files, 0 over the line limit. Inventory SHA-256: `aef5dbb86f8a1f12942427a28bf8e00e937f0c86aa9d41ab1bf0b601d4fe1cca`.
 This is a source census, not native acceptance or an updated exact-inventory semantic review.
 
 ## In-progress paid heart chain

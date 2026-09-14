@@ -25,6 +25,8 @@ namespace ThousandAndFirst
 			return true;
 		}
 
+		/// <summary>Reprove physical identity and custody on every read. A temporary physical mismatch
+		/// refuses this reading without poisoning intact owner authority; exact restoration can retry.</summary>
 		private static bool TryExactOutput(GameObject Owner, Zone Z,
 			KingdomArchitectureIntent Intent, string Lot, ArchitecturePlacement Placement,
 			out GameObject Exact, out string Failure)
@@ -40,7 +42,7 @@ namespace ThousandAndFirst
 				// the truth, not a gap. Reached mid-upgrade through TryVerifyComplete, a retagged
 				// item fails the element checks above before the census is ever counted.
 				|| !ExactComponent(Owner, Exact, Z, Intent, Lot, Placement, id, null))
-				return Quarantine(Owner, "settled layout slot " + Placement.Slot
+				return Fail("settled layout slot " + Placement.Slot
 					+ " is absent, moved, duplicated, or changed", out Failure);
 			return true;
 		}
@@ -164,6 +166,8 @@ namespace ThousandAndFirst
 				if (item.GetStringProperty(KingdomPlots.PlotIdProperty) == Lot
 					&& item.GetStringProperty(ComponentHashProperty) == Hash
 					&& item.GetIntProperty(ComponentSchemaProperty) == ComponentSchema) continue;
+				if (!blocks && Placement.Layer == ArchitectureLayer.Ground
+					&& ExactFloorUpgradePredecessor(Owner, item, Z, Cell, Lot, Hash)) continue;
 				if (KingdomPlots.ReadObject(item) == KingdomPlotRules.GroundKind.Bare) continue;
 				KingdomLog.Log("architecture: foreign slot " + Placement.Slot + " holds "
 					+ item.IDIfAssigned + " (" + item.Blueprint + ") at " + Cell.X + ","

@@ -53,6 +53,10 @@ namespace ThousandAndFirst.Harness
 						}
 						Require(body != null && body.CurrentZone == Zone && body.IsCreature && !body.IsPlayer(),
 							"original founder no longer stands in the settlement: " + id);
+						if (Stage == "startup")
+							Require(body.Brain != null && !body.Brain.Wanders && !body.Brain.WandersRandomly
+								&& body.Brain.StartingCell?.ResolveCell()?.ParentZone == Zone,
+								"new founder lacks its initial civic anchor: " + id);
 						var citizenship = body.GetPart<r_KingdomCitizenship>();
 						Require(body.GetIntProperty("KingdomCitizen") == 1 && citizenship != null
 							&& citizenship.Phase == KingdomCitizenshipPhase.Applied

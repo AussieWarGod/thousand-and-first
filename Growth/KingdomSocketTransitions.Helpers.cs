@@ -18,6 +18,7 @@ namespace ThousandAndFirst
 		{
 			loaded = false;
 			byRoute.Clear();
+			byHistoricalDigest.Clear();
 			EnsureLoaded();
 		}
 

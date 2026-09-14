@@ -63,6 +63,8 @@ BOOKKEEPING = frozenset(
         # observation about what the checker's own diagnosis found, never a verb the script
         # asked for, so it never belongs in a positional EXPECT.
         "lifecycle-grown-detail",
+        # Read-only paid-handover diagnostics; explicit retry/cohort/completion rows remain mandatory.
+        "paid-housing-detail",
         # Run 46b/47 (investigation C): the lifecycle save's own pre-activation witness row
         # (Harness/KingdomQuickstartLifecycleLoad.cs BeforeActivation), landed by the load
         # witness before AfterGameLoaded handlers run. Wiring, never a verb the script asked for,
@@ -130,6 +132,7 @@ QUICKSTART_EVIDENCE_ROWS = (
 
 # Observation emitted inside guest-save-supply before the physical refill; not a callable verb.
 GUEST_SAVE_EVIDENCE_ROWS = ("guest-save-shortage",)
+PAID_HOUSING_EVIDENCE_ROWS = ("paid-housing-water", "paid-housing-physical-probes", "paid-housing-retry", "paid-housing-floor-access", "paid-housing-cohort")
 
 ROOM_EVIDENCE_ROWS = tuple("room-" + name for name in (
     "shared-capped", "private-room", "open-door", "closed-door", "locked-door",
@@ -545,6 +548,7 @@ def parse_expect(
             and verb not in extra
             and verb not in QUICKSTART_EVIDENCE_ROWS
             and verb not in GUEST_SAVE_EVIDENCE_ROWS
+            and verb not in PAID_HOUSING_EVIDENCE_ROWS
             and verb not in CAMP_HEART_EVIDENCE_ROWS
             and verb not in ROOM_EVIDENCE_ROWS
         ):
