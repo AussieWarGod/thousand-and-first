@@ -15,6 +15,17 @@ adoption's default 200-cell limit. New native coverage is still owed for the ful
 lodging route, real door states, wall/furniture/bed damage and repair, occupancy and cold load.
 This slice is not released and does not inherit Native30 gameplay acceptance for changed inputs.
 
+The dedicated `lodging-room-native` persona is now implemented: genuine dune Quickstart, an
+untouched site with a synthetic 8×6 canvas room, ordinary adoption, three operable bedrolls against
+one enrollment credit, and fourteen positional native observations. It checks open/closed/locked
+doors, loss/restoration of walls and beds, obstructed/restored floor, a temporarily borrowed
+original citizen and restored shared bunks. It compares the actual benefit index, lodging privacy
+and arrival decision while preserving room/root identities. The founder returns to the original
+cell; detached test objects remain retained. All 65 persona-validator tests and all four engine
+compile modes pass. Native execution and cold-load evidence are still pending; no native PASS is
+claimed by adding the scenario.
+
+
 ## Native30 accepted; housing and population follow-through required
 
 Native30 at `a6e23f749255873ba33f0b3479291c062c8660e1` completed the paid heart 1→2→3→4

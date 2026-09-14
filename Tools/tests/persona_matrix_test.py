@@ -582,6 +582,27 @@ class JournalReadingTest(unittest.TestCase):
 
 
 class MatchingTest(unittest.TestCase):
+    def test_native_room_witnesses_are_required_once_in_order_with_their_verdicts(self):
+        name = "lodging-room-native.persona"
+        found = matrix.parse_manifest((ROOT / "Tools/personas" / name).read_text(), name)
+        expected = matrix.parse_expect(found["EXPECT"], name, ("lodging-room-native",))
+        witnesses = [item[0] for item in expected if item[0].startswith("room-")]
+        self.assertEqual(list(matrix.ROOM_EVIDENCE_ROWS), witnesses)
+        self.assertEqual(14, len(witnesses))
+        rows = [(verb, outcome or "OK", wanted) for verb, outcome, wanted in expected]
+        self.assertEqual([], matrix.match(expected, rows))
+        for index, (verb, outcome, wanted) in enumerate(rows):
+            if verb not in witnesses:
+                continue
+            with self.subTest(witness=verb):
+                self.assertTrue(matrix.match(expected, rows[:index] + rows[index + 1:]))
+                self.assertTrue(matrix.match(expected, rows[:index] + [rows[index]] + rows[index:]))
+                changed = list(rows)
+                changed[index] = (verb, "REFUSED", wanted)
+                self.assertTrue(matrix.match(expected, changed))
+                changed[index] = (verb, outcome, "wrong physical result")
+                self.assertTrue(matrix.match(expected, changed))
+
     def test_paid_handover_witnesses_cannot_be_missing_repeated_or_refused(self):
         witnesses = ("camp-heart-chain-handover-refusals", "camp-heart-chain-handover-cleared",
                      "camp-heart-chain-retry-obstruction", "camp-heart-chain-retry-outstanding",
@@ -759,7 +780,7 @@ class ShippedPersonaTest(unittest.TestCase):
         return cases
 
     def test_every_persona_parses(self):
-        self.assertEqual(101, len(self.personas()))
+        self.assertEqual(102, len(self.personas()))
         for path in self.personas():
             found = matrix.parse_manifest(path.read_text(encoding="utf-8"), path.name)
             self.assertTrue(found["REQUEST"])
@@ -997,6 +1018,7 @@ class ShippedPersonaTest(unittest.TestCase):
                 (("camp-heart-chain-renovation", "camp-heart-chain-survey-stakes"), "camp-heart-chain-supply"),
                 (("camp-heart-chain-renovation-refusals", "camp-heart-chain-renovation-cleared"),
                  "camp-heart-chain-check"),
+                (matrix.ROOM_EVIDENCE_ROWS, "lodging-room-native"),
             ):
                 if any(name in expected for name in observations):
                     start = expected.index(observations[0])
