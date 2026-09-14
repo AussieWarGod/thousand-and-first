@@ -70,6 +70,9 @@ or test counts. Describe it as evidence from the original run on identical input
 a new run. Changed inputs require the relevant scenarios again. New behavior needs a real
 behavioral test, not only source-text assertions. Disclose synthetic setup and untested cases.
 Preserve failed evidence, strict final logs, complete seals, and exact owned shutdown records.
+Restore borrowed identities and ownership before destroying synthetic fault objects: native
+graveyards retain tombstones. Prove production recovery before and after such probes; a live
+object census alone cannot prove cleanup.
 
 Before a long city scenario, check fixture calls against their production contracts. Authored
 housing needs the normal plot-crowding and ground checks before typed plot-payload preflight;

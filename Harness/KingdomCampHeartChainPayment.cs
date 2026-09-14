@@ -71,8 +71,7 @@ namespace ThousandAndFirst.Harness
 				foreach (var supplied in ChainSupplied)
 					Require(!ChainStore.Inventory.Objects.Contains(supplied), "billed unit still in supplemental store");
 				RequireChainCustody();
-				Require(KingdomPlots.RecoverFoundingHeart(System, Zone),
-					"founding recovery refused while the next paid heart improvement is working");
+				RequireChainFoundingRecovery("while the next paid heart improvement is working");
 				if (ChainTarget == 3)
 					KingdomCampHeartChainHandoverOccupancy.Arm(FixtureResidents[0], ChainJobId);
 			}
@@ -114,6 +113,13 @@ namespace ThousandAndFirst.Harness
 				Require(KingdomCampHeartSaveSnapshotCodec.CustodyDigest(units) == ChainBrushDigest,
 					"the original brush custody changed during higher-rung improvement");
 				RequireSameBodies(ChainBrush, bodies, "chain sentinel brush");
+			}
+
+			private void RequireChainFoundingRecovery(string Phase)
+			{
+				if (!KingdomPlots.RecoverFoundingHeart(System, Zone))
+					Require(false, "founding recovery refused " + Phase + "; "
+						+ KingdomPlots.FoundingHeartRecoveryFailureForHarness(Zone));
 			}
 
 			private KingdomUpgrade.Assessment AssessChain(out string Context)

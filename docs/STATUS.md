@@ -1,5 +1,30 @@
 # Current implementation and release evidence
 
+## Native27 closed; stake-probe cleanup repair pending
+
+Native27 at `78e8d097` passed controlled retained-floor admission/refusal, exact rung-three
+payment/completion, late-resident and protected-occupant cases, forced no-destination refusal,
+Outstanding retry and original basin/store/21 brush/track retention with fifty supported
+residents. Court material and payload preflight passed, as did all four stake admission and
+foreign/unbound/duplicate refusal probes. The court then paid its exact 50-water/121-material
+bill, but the immediate founding-recovery assertion refused retirement authority. No court
+completion or full-chain PASS occurred.
+
+Closed failed archive: `beta-heart-chain/78e8d097/court-paid-founding-recovery-refused-1/result.json`,
+SHA-256 `1dd315fb61dc1bd07cdd48f064bd8eb38874648c022e9f5c3499dc445900cc5b`.
+Full pinned recipe, strict log check and exact owned stop passed. The scenario's stronger
+founding-recovery prohibition failed, so log hygiene does not override gameplay failure.
+CI `34820124279` passed; candidate `fbaaf549` passed CI `34820439091`.
+
+Source inspection identified a likely fixture contamination: the duplicate stake was destroyed
+while carrying a borrowed founding identity and owner. Native destruction retains tombstones;
+the founding custody proof deliberately refuses foreign stake tombstones. The probe now restores
+its own allocated ID and removes borrowed owner/slot fields before destruction. It additionally
+requires production founding recovery before and after the probes. A failure-only Harness
+observer names the exact retirement predicate and conflicting tombstones. Production admission
+and retirement rules are unchanged. All 64 persona-validator tests, documentation/metadata
+checks and all four engine compile modes passed. Fresh native confirmation remains required.
+
 ## Native26 closed; occupied retained-floor repair pending (#222)
 
 Native26 at `84dc3f11` identified the intermittent `42,13` blocker: enrolled resident 1,
