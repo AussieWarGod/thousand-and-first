@@ -53,6 +53,22 @@ Keep restore beside its matching run. Never overlap .NET builds in one checkout 
 helper against a checkout being tested by another process. Use an isolated worktree for
 independent work. Never overlap native game scenarios or compete with the release Steam host.
 
+The optional Hearthpyre bridge pins exact 2.2.3 source hashes. A Workshop update to 2.2.4
+can therefore stop the canonical gate before compilation. Use an authentic upstream reference
+through the existing `TAF_HEARTHPYRE_223_ROOT` override; do not edit the installed manifest,
+relax the version/hash checks or treat an ABI stub as proof of installed compatibility.
+The author's repository is <https://gitlab.com/Armithaig/hearthpyre>; commit
+`25470b94930b46d8dc406c430253e4bf9e4ea4b9` has a `Mod/` tree matching every file in
+`DevTests/Compatibility/Hearthpyre223Abi.json`. Keep that checkout detached and outside the
+mod/release tree. Both agents can reuse the local verified reference:
+
+```bash
+python3 Tools/check-hearthpyre-abi.py --source /home/r/work/taf-scratch/upstream-hearthpyre-reference/Mod
+TAF_HEARTHPYRE_223_ROOT=/home/r/work/taf-scratch/upstream-hearthpyre-reference/Mod Tools/gate.sh --keep
+```
+
+This restores the pinned compile reference (#217); it does not add support for Hearthpyre 2.2.4.
+
 ## Integration and evidence
 
 After the focused checks pass and the change is coherent, push once and let required CI run.

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using XRL.World;
+using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Harness
 {
@@ -11,6 +12,8 @@ namespace ThousandAndFirst.Harness
 			private void SupplyChain(int Target)
 			{
 				Require(Target == 3 || Target == 4, "unknown heart chain target");
+				if (Target == 3 && KingdomScenarioScript.TryRead(out var script, out _)
+					&& KingdomCampHeartChainScript.Matches(script, true)) PreflightChainNextWork(true);
 				ChainTarget = Target; ChainFrom = Target == 3 ? "heartwaterstone" : "heartmoot";
 				ChainTo = Target == 3 ? "heartmoot" : "heartcourt";
 				ChainWater = Target == 3 ? 28 : 50;
@@ -78,8 +81,16 @@ namespace ThousandAndFirst.Harness
 
 			private void CheckChainComplete()
 			{
+				Require(!KingdomSurvey.HasBoundPass, "chain completion found an outstanding survey");
+				Require(KingdomSurvey.TryBindLocalOperation(Zone, System, out var scope, out string failure), failure);
+				using (scope) CheckChainCompleteInPass(KingdomSurvey.ActiveFor(Zone));
+				Require(!KingdomSurvey.HasBoundPass, "chain completion left its survey bound");
+			}
+
+			private void CheckChainCompleteInPass(KingdomSurvey Survey)
+			{
 				RequireChainTrack();
-				RequireChainSupport();
+				RequireChainSupportInPass(Survey);
 				if (ChainTarget == 3) Require(KingdomCampHeartChainHandoverOccupancy.Proved,
 					"post-payment resident clearance and refusal cases were not witnessed");
 				if (ChainTarget == 3) Require(KingdomCampHeartChainRetryFault.Proved,
@@ -140,7 +151,38 @@ namespace ThousandAndFirst.Harness
 				var notes = System.Ledger.Notes;
 				for (int i = Math.Max(0, notes.Count - 8); i < notes.Count; i++)
 					Context += "; ledger=" + notes[i];
+				if (!KingdomUpgradeRules.IsReady(assessment.Verdict))
+					Context += ChainGroundFailureContext(assessment.Reason);
 				return assessment;
+			}
+
+			private string ChainGroundFailureContext(string Reason)
+			{
+				int at = Reason?.LastIndexOf(" at ", StringComparison.Ordinal) ?? -1;
+				if (at < 0) return "; ground-witness=no-coordinate";
+				string[] point = Reason.Substring(at + 4).Split(',');
+				if (point.Length != 2 || !int.TryParse(point[0], out int x)
+					|| !int.TryParse(point[1], out int y) || x < 0 || x >= Zone.Width
+					|| y < 0 || y >= Zone.Height) return "; ground-witness=unparsed-coordinate";
+				var cell = Zone.GetCell(x, y);
+				if (cell == null) return "; ground-witness=missing-cell";
+				string detail = "; ground-witness=" + x + "," + y;
+				if (KingdomPlots.TryReadRect(ChainHeart, out var before))
+					detail += "; inside-predecessor=" + before.Contains(x, y);
+				foreach (var item in cell.GetObjects())
+				{
+					if (!GameObject.Validate(item)) { detail += "; invalid-object=true"; continue; }
+					detail += "; object=" + item.IDIfAssigned + "/" + item.Blueprint
+						+ "/ground=" + KingdomPlots.ReadObject(item)
+						+ "/creature=" + item.IsCreature + "/player=" + item.IsPlayer()
+						+ "/citizen=" + KingdomCitizenship.BelongsTo(System, item)
+						+ "/resident=" + KingdomResidents.IdOf(item)
+						+ "/fixture=" + FixtureResidents.Contains(item)
+						+ "/heart-stake=" + item.GetIntProperty(KingdomPlots.HeartStakeProperty)
+						+ "/plot=" + item.GetStringProperty(KingdomPlots.PlotIdProperty)
+						+ "/slot=" + item.GetStringProperty(KingdomArchitectureStamper.ComponentSlotProperty);
+				}
+				return detail;
 			}
 		}
 	}

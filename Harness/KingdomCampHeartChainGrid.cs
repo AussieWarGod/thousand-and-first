@@ -4,6 +4,9 @@ namespace ThousandAndFirst.Harness
 {
 	internal static class KingdomCampHeartChainGrid
 	{
+		internal const int HomeCount = 17;
+		internal static KingdomPlotRules.PlotRect NextWork => new KingdomPlotRules.PlotRect(16, 8, 21, 11);
+
 		internal static bool ClearsPaidApproach(KingdomPlotRules.PlotRect Candidate,
 			KingdomPlotRules.PlotRect PaidPlot)
 		{
@@ -37,7 +40,7 @@ namespace ThousandAndFirst.Harness
 					{
 						int x = (side == 0 ? 2 : 53) + column * 7;
 						var rect = new KingdomPlotRules.PlotRect(x, y, x + 5, y + 3);
-						if (ClearsWaterFootprints(rect)) yield return rect;
+						if (ClearsWaterFootprints(rect) && !KingdomPlotRules.Overlaps(rect, NextWork)) yield return rect;
 					}
 		}
 	}

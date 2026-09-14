@@ -138,6 +138,7 @@ CAMP_HEART_EVIDENCE_ROWS = (
     "camp-heart-chain-handover-refusals", "camp-heart-chain-handover-cleared",
     "camp-heart-chain-retry-obstruction", "camp-heart-chain-retry-outstanding",
     "camp-heart-chain-retry-removal", "camp-heart-chain-survey-stakes",
+    "camp-heart-chain-next-preflight",
 )
 
 # The second counted verb. `yield-frames <frames>` hands the engine back its own render loop, which
