@@ -654,7 +654,7 @@
             Footprint="12x10" Roof="Walled"
             Materials="timber:20,stone:26,shapedtimber:6" Staff="2" Manning="scaled" Carries="spirit:4,order:3"
             Contents="r_KingdomFurnishings_Civic"
-            UpgradesTo="heartcourt" UpgradeMaterials="timber:1,stone:64,shapedstone:24,marble:18,workedmetal:8">
+            UpgradesTo="heartcourt" UpgradeMaterials="timber:1,stone:64,shapedtimber:6,shapedstone:24,marble:18,workedmetal:8">
     <skin Key="verdant" Style="verdant" ColorString="&amp;g" DetailColor="G" />
     <skin Key="eater" Style="eater" ColorString="&amp;r" DetailColor="K" />
     <skin Key="bleached" ColorString="&amp;Y" DetailColor="W" />

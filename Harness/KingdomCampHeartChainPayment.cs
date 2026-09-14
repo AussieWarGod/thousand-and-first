@@ -19,7 +19,7 @@ namespace ThousandAndFirst.Harness
 					&& ChainStore?.Inventory != null && ChainStore.Inventory.Objects.Count == 0,
 					"supply requires its predecessor and empty dedicated supplemental store");
 				var tally = KingdomMaterials.UpgradeCostFor(ChainFrom);
-				Require(tally.Total() == (Target == 3 ? 25 : 115), "authored heart material quantity changed");
+				Require(tally.Total() == (Target == 3 ? 25 : 121), "authored heart material quantity changed");
 				ChainSupplyClaim = new KingdomMaterialDebitCost(tally).ToClaimString();
 				ChainSupplied.Clear();
 				foreach (KingdomMaterial material in Enum.GetValues(typeof(KingdomMaterial)))
