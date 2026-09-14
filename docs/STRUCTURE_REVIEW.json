@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "inventorySha256": "91973648605848aa1939d38f366ed6e578cd4cc07ef542bd6f6a03b76575c935",
+  "inventorySha256": "8dd650d010f8dd998d2922f21cc99b37ff79e456a6c2a67880d908bdaf5f58b9",
   "exceptions": [],
   "reviewedBy": "Codex root automated structural review",
-  "completedUtc": "2026-09-14T19:57:56Z",
+  "completedUtc": "2026-09-14T22:18:06Z",
   "oneResponsibility": {
     "status": "passed",
-    "notes": "Compared all 3106 staged production paths against reviewed private 34188ec5: 3105 byte-identical, only World/KingdomQuickstartBootstrap.Founders.cs changed (3 lines, 256 total). Exact comparison log:/tmp/taf-defensive-founders-production-comparison-1.json and census log:/tmp/taf-defensive-founders-structure-1.json; delta review docs/STRUCTURE_REVIEW_0_3_7.md. Existing fresh-grant transaction sets native Brain.Passive and verifies it immediately; reversible allocation, enrollment boundary, cohort recovery and old citizens remain unchanged. No new serialized fields, schema, protocol or responsibility. Native defensive/long-cohort acceptance remains pending and is separate from structural review."
+    "notes": "Compared every production path with released de8317db: 3102 unchanged, four changed, one new pure helper, none removed. Exact comparison log:/home/r/work/taf-scratch/behaviour-evidence/founding-regard/40477cb7/structural-review-1/taf-founding-regard-production-comparison.json; census log:/home/r/work/taf-scratch/behaviour-evidence/founding-regard/40477cb7/structural-review-1/taf-founding-regard-structure-3.json. Review docs/STRUCTURE_REVIEW_FOUNDING_REGARD.md covers canonical v1/v2 snapshot codec, prepared ledger roots, existing first-founding publication ordering, and canonical default polity options. No serialized fields reordered, added or retyped; explicit old-zero normalization and v1 observation-only semantics remain. Native 40477cb7 warm/cold accepted within its documented scope."
   },
   "protocolsAtBoundaries": {
     "status": "passed",
-    "notes": "Compared all 3106 staged production paths against reviewed private 34188ec5: 3105 byte-identical, only World/KingdomQuickstartBootstrap.Founders.cs changed (3 lines, 256 total). Exact comparison log:/tmp/taf-defensive-founders-production-comparison-1.json and census log:/tmp/taf-defensive-founders-structure-1.json; delta review docs/STRUCTURE_REVIEW_0_3_7.md. Existing fresh-grant transaction sets native Brain.Passive and verifies it immediately; reversible allocation, enrollment boundary, cohort recovery and old citizens remain unchanged. No new serialized fields, schema, protocol or responsibility. Native defensive/long-cohort acceptance remains pending and is separate from structural review."
+    "notes": "Compared every production path with released de8317db: 3102 unchanged, four changed, one new pure helper, none removed. Exact comparison log:/home/r/work/taf-scratch/behaviour-evidence/founding-regard/40477cb7/structural-review-1/taf-founding-regard-production-comparison.json; census log:/home/r/work/taf-scratch/behaviour-evidence/founding-regard/40477cb7/structural-review-1/taf-founding-regard-structure-3.json. Review docs/STRUCTURE_REVIEW_FOUNDING_REGARD.md covers canonical v1/v2 snapshot codec, prepared ledger roots, existing first-founding publication ordering, and canonical default polity options. No serialized fields reordered, added or retyped; explicit old-zero normalization and v1 observation-only semantics remain. Native 40477cb7 warm/cold accepted within its documented scope."
   }
 }

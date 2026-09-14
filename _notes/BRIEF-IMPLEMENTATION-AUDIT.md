@@ -4,7 +4,9 @@
 
 Development tree contains **3107** production C# files. New pure founding-snapshot rules and
 engine adapter implement one-time inbound inheritance; historical publication remains readable.
-Native acceptance and structural semantic review for this draft remain pending.
+Native warm/cold acceptance at `40477cb7`, full licensed integration (14,988 main /
+5,880 portable, zero skips) and current structural delta review are recorded in docs/STATUS.md.
+Reputation-weighted recruitment remains unfinished under #231.
 
 
 ## Current source census — pending heart repair

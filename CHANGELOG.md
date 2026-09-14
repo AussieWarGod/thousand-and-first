@@ -8,12 +8,13 @@ All notable changes to The Thousand and First. Historical entries retain their o
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md)
 records current acceptance.
 
-**Unreleased development — native validation pending**
+**Unreleased development**
 
 - New realms freeze the founder's reputation into their own inbound standings once.
   Later city actions evolve that baseline independently; outgoing policy remains separate.
   Existing cities and interrupted older founding transactions retain their history.
-  Native founding, retry and cold-load validation is pending; this is not in public 0.3.7.
+  Native founding, independent city regard, personal spillover and cold-load persistence pass.
+  Historical interrupted founding remains unproved natively; this is not in public 0.3.7.
 
 ## [0.3.7] — 2026-09-15 (Alpha)
 

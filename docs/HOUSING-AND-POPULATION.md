@@ -46,9 +46,10 @@ BaseFarmer descendants have 90% of the total weight; Mechanimist and Snapjaw bod
 separately. Appearance alone does not establish an occupation or a coherent culture. The development branch now adds a version-two founding snapshot in
 `Core/KingdomFounding.02.FoundingStandings.cs`: new realms inherit current personal reputation
 into their inbound standing ledger once, with outgoing policy separate. Existing realms and
-version-one interrupted transactions retain their history. This foundation has focused source
-and pure checks; native founding/retry/cold-load acceptance and recruitment weighting remain
-pending. The public 0.3.7 package retains its original behavior.
+version-one interrupted transactions retain their history. This foundation passes focused source/pure checks and a real founding, independent civic change,
+native personal spillover, ordinary construction and cold-load chain. Historical interrupted
+founding and recruitment weighting remain pending. Exact evidence and synthetic probe inputs
+are recorded in STATUS.md; public 0.3.7 retains its original behavior.
 
 `KingdomResidents.ReadRoster` already retains residents bound to other zones and binds observed
 bodies to the current zone. Its local home lookup is not proof of complete multi-map household

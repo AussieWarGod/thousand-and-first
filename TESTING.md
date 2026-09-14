@@ -8,9 +8,10 @@ missing/duplicate/reordered witnesses, an empty founding snapshot, wrong native 
 composition, cold-load replay and a changed saved standing digest. It supplements the existing
 lifecycle, exact profile, strict-log and owned-stop gates; its PASS alone is not acceptance.
 
-Focused snapshot/publication and directional tests pass. Native scenario coverage is being
-extended across real founding, independent city changes, personal reputation spillover and
-fresh cold load; it is not accepted yet. Compile validation spans across 3107 production C# sources;
+Full licensed integration passes 14,988 main and 5,880 portable cases with zero skips.
+Focused snapshot/publication and directional tests also pass. The native chain at 40477cb7 covers
+real founding, independent city changes, personal reputation spillover and fresh cold load;
+exact source, synthetic probe inputs and limits are recorded in docs/STATUS.md. Compile validation spans across 3107 production C# sources;
 the development cold-install inventory contains 3140 files. Historical native evidence below
 retains its original inputs and does not prove this changed founding behavior.
 
