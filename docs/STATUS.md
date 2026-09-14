@@ -1,5 +1,26 @@
 # Current implementation and release evidence
 
+## Fresh founder anchors: recurring ecology loss addressed, native verification pending
+
+Two unchanged `5549a947` warm attempts lost original founders to glowpads before payment.
+The first physicker died at turn 14,469; the next run lost a drifter at turn 515 (already at
+73,5, far from the camp) and a tinker at 7,580. Both failed cohort checks and remain archived:
+`paid-housing/5549a947/founder-lost-before-payment-1/result.json`, SHA-256
+`7b1e939e188768c2e6d1d5d628186fbc6d0bc758c72cc11e296871f4a33eb9ba`, and
+`paid-housing/5549a947/repeated-founder-loss-1/result.json`, SHA-256
+`0c806a31942b013562b1ebf38aedb4305862998e99da7290b7f92abbc5ea4d1a`.
+The second row's partial observed count is not a complete death census; two fatal events are logged.
+
+Vanilla BaseFarmer disables wandering, whereas our settler blueprint enables it. The new cohort
+had no initial civic anchor. Installed 2.0.211.51 Brain.Stay and Bored confirm that a non-wandering
+NPC returns to its anchor while ordinary work/idle goals remain available. Existing KingdomStations
+already uses that mechanism. Newly allocated Quickstart founders now start anchored on their
+reserved approach cells inside the reversible grant, before any simulation turn. Placement verifies
+the anchor; the native startup observer requires all four to have a local non-wandering anchor.
+Existing citizens, citizenship allegiance, combat, idle tags and worker/sleep goals are untouched.
+This is no immunity guarantee and does not repair historical unanchored founders or settle all #237.
+Native housing/retry/save/cold continuation must run again on this changed production source.
+
 ## Paid housing warm/save/cold identity checks pass; next-action stock fixture corrected
 
 At `eda49f65`, the full warm persona passed: real paid upgrade, controlled basket refusal and
@@ -519,8 +540,8 @@ Current cold-install inventory: 3139 files.
 Current source: 3106 sources, baseline and compatibility symbols use their
 respective exclusions (3097 baseline). All four engine compile modes passed.
 The cold-install inventory has 3132 files.
-3106 staged C# files / 440,870 physical lines; zero strict line-cap failures.
-Direct `XRL` imports: 1450 files, 0 over the line limit. Inventory SHA-256: `c2b9b49b906e4ce34fb6ea61d8c0c788040cfafbb31e5143368cd223343e95ab`.
+3106 staged C# files / 440,877 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1450 files, 0 over the line limit. Inventory SHA-256: `aef5dbb86f8a1f12942427a28bf8e00e937f0c86aa9d41ab1bf0b601d4fe1cca`.
 This is a source census, not native acceptance or an updated exact-inventory semantic review.
 
 ## In-progress paid heart chain

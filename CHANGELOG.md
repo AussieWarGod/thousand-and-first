@@ -1,5 +1,11 @@
 # Changelog
 
+**Pending Quickstart founder anchoring (unreleased)**
+
+New founding citizens start with a vanilla civic anchor on their camp approach cells. Ordinary
+work and idle behavior remain available; they no longer begin with unbounded random wandering
+while the settlement is being built. Existing citizens and combat rules are unchanged.
+
 **Pending restored fixture recovery (unreleased)**
 
 Recheck exact physical fixtures after they are restored instead of permanently quarantining an
@@ -86,8 +92,8 @@ regressions to cover every added material across all fallback heart transitions 
 including historical-baseline transitions. Sixteen main cases pass; fresh native confirmation
 of the court bill remains pending under #216. Exact evidence is in docs/STATUS.md.
 
-Current 3106-file census is line-cap green: 440,870 physical lines; direct `XRL`
-imports occur in 1450 files, 0 of them over the line limit. Inventory SHA-256: `c2b9b49b906e4ce34fb6ea61d8c0c788040cfafbb31e5143368cd223343e95ab`.
+Current 3106-file census is line-cap green: 440,877 physical lines; direct `XRL`
+imports occur in 1450 files, 0 of them over the line limit. Inventory SHA-256: `aef5dbb86f8a1f12942427a28bf8e00e937f0c86aa9d41ab1bf0b601d4fe1cca`.
 The cold-install inventory contains 3139 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Versions are semantic: patch for fixes,

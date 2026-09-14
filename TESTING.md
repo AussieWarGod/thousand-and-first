@@ -3,7 +3,7 @@
 ## Current source inventory (unreleased)
 
 The engine gate runs across 3106 production C# sources (3102 baseline);
-the cold-install inventory contains 3139 files. Inventory `c2b9b49b906e4ce34fb6ea61d8c0c788040cfafbb31e5143368cd223343e95ab`.
+the cold-install inventory contains 3139 files. Inventory `aef5dbb86f8a1f12942427a28bf8e00e937f0c86aa9d41ab1bf0b601d4fe1cca`.
 These counts describe the source inventory, not a public installation. Native acceptance is scoped below.
 
 Paid conversion follow-through: `Tools/personas/paid-housing-native-check.persona` uses real
@@ -26,6 +26,10 @@ recovery. The chest is removed before ordinary insertion continues; no insertion
 The cohort floor witness counts the frozen variant's additional hearth and table separately:
 seventeen clear cells in canvas, sixteen in the basic hut, fifteen in hearth-and-table variants.
 These are exact authored expectations for this fixture, not changed production quality thresholds.
+
+The native startup observer also requires four local non-wandering founder anchors. Actual paid
+construction, later housing and cold-load checks remain required; neither a passing run nor the
+anchor rule proves immunity to wildlife or repairs historical founders. See #237.
 
 ## Shared-hall access
 

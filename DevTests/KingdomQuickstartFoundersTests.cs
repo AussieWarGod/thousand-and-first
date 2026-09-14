@@ -700,7 +700,7 @@ namespace ThousandAndFirst.Tests
 			// turns before its publication was recovered, and a founder walks — while Stage A's
 			// own verification, in the call that placed them, does pin it.
 			StringAssert.Contains("private static bool VerifyFounderCohort(", recovery);
-			StringAssert.Contains("was not on its own reserved cell", founders);
+			StringAssert.Contains("was not anchored on its own reserved cell", founders);
 			StringAssert.DoesNotContain("ExactRole(", recovery);
 		}
 
