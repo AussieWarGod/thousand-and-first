@@ -138,6 +138,9 @@ ledger reason when a ready-looking action never starts. Explicitly identify synt
 expecting construction-input observations to reference them.
 A cropped quiet-window capture cannot exclude a blocking prompt. Use the existing full native
 window capture when the view is incomplete; never infer a completed turn from process responsiveness.
+Door fixtures must prove both physical and lock state: furniture entry can open a door, and native
+`PerformClose` restores `Locked` from `WasLocked`. Close before locking, then assert the actual
+production ingress reading. Restore the original open/lock flags after reversible probes.
 Preserve a changed profile as invalid evidence with expected and actual inventories, not a new seal.
 Check the sealed options file early during a long native run. If it changes, retain the difference
 and stop before further expensive setup: that run cannot establish acceptance. Input can reach the

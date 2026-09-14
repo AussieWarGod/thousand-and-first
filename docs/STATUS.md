@@ -24,6 +24,14 @@ Closed failed archive: `physical-rooms/aa4f33bb/shared-hall-1/result.json`, SHA-
 `7ee064447c8ca9aa11ee24543b256d2d654df74ca1655018c870a3942eec295a`.
 All 3,441 pinned inputs and exact owned stop verified; no whole-scenario PASS from this failure.
 
+Run `f23e7b64` confirms open-and-locked access, but the next lock case still fails: native
+`Door.PerformClose` restores `Locked` from `WasLocked`. The revised fixture now calls `Lock`
+after physically closing, requires the actual lock and production Shell reading, and restores
+all original open/lock flags after its probes. Closed failed archive:
+`physical-rooms/f23e7b64/shared-hall-1/result.json`, SHA-256
+`203baf6cc2b9b0ecfe05abb530d4064da86ca5299e7fc758dc357ce4abfc304d`.
+Full 3,441 pinned inputs and exact owned stop verified. Production code remains unchanged.
+
 ## Enclosed starter housing: marsh construction and cold load accepted
 
 At `2c0600b53832c069b665ef7dce94b1cf015850be`, genuine marsh Quickstart keeps all four original

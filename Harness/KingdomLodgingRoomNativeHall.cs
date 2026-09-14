@@ -8,6 +8,7 @@ namespace ThousandAndFirst.Harness
 	{
 		private void CheckSharedHall()
 		{
+			bool priorOpen = Door.Open, priorLocked = Door.Locked, priorWasLocked = Door.WasLocked;
 			Detach(Beds[1]); Detach(Beds[2]);
 			var partition = new List<GameObject>();
 			for (int x = 1; x <= 6; x++)
@@ -40,8 +41,12 @@ namespace ThousandAndFirst.Harness
 				HallReading("hall-open-locked", 10, 0);
 				Require(Door.AttemptClose(Silent: true) && !Door.Open && DoorObject.ConsiderSolid(),
 					"locked entrance was not physically closed");
+				Door.Lock();
+				Require(Door.Locked && !Door.Open && KingdomBenefitIndex.ReadFurnishedRoomCell(
+					Zone, Rect.X1 + 1, Rect.Y1 + 5).Region == KingdomAdoptRules.EnclosureRegion.Shell,
+					"closed entrance did not retain its lock and block production ingress");
 				HallReading("hall-exterior-locked", 0, 1);
-				Door.Locked = false;
+				Door.Unlock();
 				HallReading("hall-exterior-unlocked", 10, 0);
 			}
 			finally
@@ -53,6 +58,9 @@ namespace ThousandAndFirst.Harness
 				if (alternate.CurrentCell != null) Detach(alternate);
 				if (outsideWall.CurrentCell == null) Place(outsideWall, At(5, 5));
 				Place(Beds[1], At(3, 1)); Place(Beds[2], At(5, 1));
+				if (priorOpen) Door.PerformOpen();
+				else Require(Door.AttemptClose(Silent: true), "original closed door state was not restored");
+				Door.Locked = priorLocked; Door.WasLocked = priorWasLocked;
 			}
 			Check("hall-partitions-restored", KingdomLodgingRules.Closeness.Close, 3, 20, true);
 		}
