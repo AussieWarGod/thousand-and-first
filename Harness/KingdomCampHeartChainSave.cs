@@ -73,7 +73,7 @@ namespace ThousandAndFirst.Harness
 					+ "; snapshot-sha256=" + KingdomScenarioSaveFiles.HashText(wire) + "; physical-state-preserved=true";
 			}
 
-			private void PreflightChainNextWork(bool Journal)
+			private void PreflightChainNextWork(bool BeforeUpgrades)
 			{
 				long tick = Game.TimeTicks, turns = Game.Turns;
 				int water = Census().StoredWater;
@@ -83,21 +83,28 @@ namespace ThousandAndFirst.Harness
 					"higher-heart preflight lacks exact paid-registry state");
 				Require(KingdomData.TryGetBuilding("fire", out var entry) && entry.CostDrams == 2,
 					"higher-heart next fire design differs");
-				KingdomPlotQuote quote;
-				string failure;
-				if (Journal)
+				Require(KingdomPlots.TryQuoteCommission(System, Zone, entry, null, KingdomPlotRules.PlotSize.None,
+					out var quote, out string failure), failure ?? "higher-heart next fire quote refused");
+				var checkedRect = quote.Rect;
+				if (BeforeUpgrades)
 				{
-					// A future build needs deliberately spared ground. A normal uncommitted survey
-					// quote proves that space now; the completed-heart save uses ordinary siting.
-					var site = KingdomCampHeartChainGrid.NextWork;
-					Require(KingdomPlots.TryQuotePlan(System, Zone, entry, null, KingdomPlotRules.PlotSize.None,
-						Zone.GetCell(site.X2 + 1, site.Y1), out quote, out failure), failure);
+					// A siting hint does not bind the planner. Prove the reserved future worksite
+					// directly; the actual completed-heart save and load still use ordinary quotes.
+					checkedRect = KingdomCampHeartChainGrid.NextWork;
+					Require(KingdomPlotRules.TryInterior(Zone.Width, Zone.Height, out var interior)
+						&& KingdomPlotRules.Fits(checkedRect, interior)
+						&& !KingdomPlotRules.CrowdsExisting(checkedRect, KingdomPlots.ReadPlots(Zone))
+						&& KingdomCampHeartChainGrid.ClearsWaterFootprints(checkedRect)
+						&& !new KingdomPlots.GroundGrid(Zone).AnyRefusal(checkedRect),
+						"spare next-work lot or its lane is obstructed");
+					Require(KingdomPlots.TryPreparePlotPayload(System, Zone, checkedRect, entry.Key, entry.Category, null,
+						out var intent, out _, out failure), failure);
+					Require(KingdomArchitectureRuntime.TryDecode(intent, out var snapshot, out failure)
+						&& KingdomArchitectureRuntime.TryVerifyPhysicalIngressRoutes(Zone, checkedRect, snapshot, out failure), failure);
 				}
-				else Require(KingdomPlots.TryQuoteCommission(System, Zone, entry, null, KingdomPlotRules.PlotSize.None,
-					out quote, out failure), failure ?? "higher-heart next fire quote refused");
 				Require(KingdomPlots.TryHeartRectFor(Zone, 4, out var final)
-					&& !KingdomPlotRules.Overlaps(final, KingdomPlotRules.Reserved(quote.Rect)),
-					"higher-heart next fire quote consumes future heart ground");
+					&& !KingdomPlotRules.Overlaps(final, KingdomPlotRules.Reserved(checkedRect)),
+					"higher-heart next work consumes future heart ground");
 				var tally = new KingdomMaterialTally(); tally.Add(KingdomMaterial.Timber, 1);
 				Require(quote.WaterDrams == 2 && quote.MaterialClaim.ToClaimString()
 					== new KingdomMaterialDebitCost(tally).ToClaimString() && Game.TimeTicks == tick && Game.Turns == turns,
@@ -105,8 +112,8 @@ namespace ThousandAndFirst.Harness
 				Require(Census().StoredWater == water && KingdomCampHeartSaveSnapshotCodec.CustodyDigest(ContentUnits(out _)) == custody
 					&& KingdomScenarioDurableState.ProvesExactText(KingdomConstruction.RegistryStateKey, jobs),
 					"higher-heart next fire quote changed payment, custody or paid jobs");
-				if (Journal) Require(KingdomScenarioJournal.Append("camp-heart-chain-next-preflight", true,
-					"planned-fire-quote=true; outside-final-heart=true; water=2; timber=1; no-debit=true") == null,
+				if (BeforeUpgrades) Require(KingdomScenarioJournal.Append("camp-heart-chain-next-preflight", true,
+					"spare-site-preflight=true; ordinary-quote-price=true; outside-final-heart=true; water=2; timber=1; no-debit=true") == null,
 					"higher-heart next-job preflight journal unavailable");
 			}
 			private static string ChainFactsPath(string Root, string Domain)

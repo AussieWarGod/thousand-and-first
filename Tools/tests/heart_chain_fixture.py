@@ -85,7 +85,7 @@ def journal_fixture():
             continue
         if event in anchors: message += "; turns=" + str(clock)
         if event == "camp-heart-chain-next-preflight":
-            message += "; outside-final-heart=true; water=2; timber=1; no-debit=true"
+            message += "; ordinary-quote-price=true; outside-final-heart=true; water=2; timber=1; no-debit=true"
         if event == "camp-heart-chain-save":
             message = detail(dict({"paid-heart-chain-save": "true", "rung": snapshot["rung"]}, **check.identity(snapshot),
                                  save=snapshot["game_id"], **{"synthetic-next-job-timber": 1,

@@ -1,5 +1,23 @@
 # Current implementation and release evidence
 
+## Native22 closed; distinguish a hint from reserved ground
+
+Native22 at `a51ac81d` housed all fifty fixture residents with seventeen complete homes, then
+refused the early survey quote because the ordinary planner still selected future heart ground.
+`TryQuotePlan` treats the stake as a scoring preference, not an exact plot binding. The early
+harness assertion incorrectly promoted that preference into authority. No higher payment or
+save/load occurred. Full profile/source recipe, strict log, and exact owned stop passed; scenario
+failed. Archive `beta-heart-chain/a51ac81d/planned-next-fire-future-ground-refused-1/result.json`,
+SHA-256 `d4a7c2c9c9298531ef41f24a41282f5a170531217d875b9f0c50c084cd6b699e`.
+
+The corrected early check proves the spared rectangle, its lane, typed production payload and
+physical ingress directly, and separately checks the ordinary quoted bill without spending.
+It does not promise the planner will select that site before expansion. Actual ordinary quotes
+at completed-heart save and cold-load payment still must avoid the final heart, and the next
+paid job must finish while all original physical witnesses remain intact. Host oracle8/persona65
+passed; fresh engine/native acceptance remains pending. No runtime production code changed.
+
+
 ## Alpha priority and next-work fixture repair — 2026-09-14
 
 User direction: defer Hearthpyre compatibility until Beta; prioritize gameplay progress and
@@ -18,8 +36,8 @@ No source save or cold load occurred. The profile remains closed and must not be
 
 The fixture now leaves `(16,8)..(21,11)` for the next job and places seventeen unchanged
 three-bed tent rows; actual physical roof assignments for all fifty residents remain mandatory.
-Supply containers also keep the spare plot and its approach clear. Early preflight uses the
-ordinary survey-plan quote beside that space, with no stake or debit; after the court completes,
+Supply containers also keep the spare plot and its approach clear. Early preflight now proves the spare plot through ordinary ground, crowding, typed payload and
+physical ingress checks, plus the ordinary quoted price, with no stake or debit; after the court completes,
 the actual save and cold-loaded payment still use ordinary commission siting and must both
 remain outside the completed heart. The oracle requires both early and final proofs. This is a
 synthetic stress fixture correction, not single-map balance acceptance or a construction bypass.
@@ -86,7 +104,7 @@ from the passed four-mode compile at `8df7b548`.
 
 Higher-heart persistence preparation is isolated in `codex/heart-chain-coldload`.
 The `camp-heart-chain-save` variant now follows completed rung-four next-day recovery with
-physical capture and actual Primary serialization. It preflights an ordinary survey-plan fire quote
+physical capture and actual Primary serialization. It preflights a separate spare fire plot and the ordinary quoted price
 before the higher construction waits and ordinary commission siting at save, discloses one next-job timber at save, retains exact
 jobs/residents/support/custody fact files, and compares the whole snapshot after serialization.
 Facts bind original anchors, all four survey stakes, water mixtures, larders and material

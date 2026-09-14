@@ -57,8 +57,9 @@ class HeartChainLoadCheckTests(unittest.TestCase):
                 args[1][index] = event, "OK", args[1][index][2].replace(before, after)
                 with self.subTest(event=event, before=before), self.assertRaises(ValueError): check.judge(*args)
 
-    def test_both_early_plan_and_completed_ordinary_quote_must_leave_heart_ground(self):
-        for event, field in (("camp-heart-chain-next-preflight", "planned-fire-quote"),
+    def test_spare_site_and_completed_ordinary_quote_must_leave_heart_ground(self):
+        for event, field in (("camp-heart-chain-next-preflight", "spare-site-preflight"),
+                             ("camp-heart-chain-next-preflight", "ordinary-quote-price"),
                              ("camp-heart-chain-next-preflight", "outside-final-heart"),
                              ("camp-heart-chain-save", "normal-next-quote"),
                              ("camp-heart-chain-save", "outside-final-heart")):

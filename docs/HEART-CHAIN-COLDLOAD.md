@@ -1,5 +1,23 @@
 # Higher-heart cold-load acceptance
 
+## Native22 closed; distinguish a hint from reserved ground
+
+Native22 at `a51ac81d` housed all fifty fixture residents with seventeen complete homes, then
+refused the early survey quote because the ordinary planner still selected future heart ground.
+`TryQuotePlan` treats the stake as a scoring preference, not an exact plot binding. The early
+harness assertion incorrectly promoted that preference into authority. No higher payment or
+save/load occurred. Full profile/source recipe, strict log, and exact owned stop passed; scenario
+failed. Archive `beta-heart-chain/a51ac81d/planned-next-fire-future-ground-refused-1/result.json`,
+SHA-256 `d4a7c2c9c9298531ef41f24a41282f5a170531217d875b9f0c50c084cd6b699e`.
+
+The corrected early check proves the spared rectangle, its lane, typed production payload and
+physical ingress directly, and separately checks the ordinary quoted bill without spending.
+It does not promise the planner will select that site before expansion. Actual ordinary quotes
+at completed-heart save and cold-load payment still must avoid the final heart, and the next
+paid job must finish while all original physical witnesses remain intact. Host oracle8/persona65
+passed; fresh engine/native acceptance remains pending. No runtime production code changed.
+
+
 ## Current retry
 
 Native21 at `d46f77e3` is CLOSED FAIL before higher payment: the next fire quote occupied future
@@ -8,7 +26,7 @@ is recorded in STATUS.md. No save or load occurred.
 
 The retry retains seventeen full authored tent rows (51 physical beds), all fifty test residents,
 and every water producer, while leaving one separate small plot for the next job. Early evidence
-uses a normal uncommitted survey-plan quote there; source save and loaded payment independently
+uses ground, crowding, typed payload and physical ingress preflight there, plus the ordinary quoted price; source save and loaded payment independently
 require an ordinary commission quote outside the final heart. Housing assignment, costs, custody,
 all prior receipts, completed construction and full cold-load facts remain required. This does
 not establish ordinary one-tile balance. Main136/portable120 and host8/persona65 checks passed;

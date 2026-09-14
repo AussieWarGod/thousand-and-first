@@ -44,7 +44,7 @@ def judge(source, loaded, snapshot, digest):
                  "synthetic-next-job-timber": "1", "brush": "21", "snapshot-sha256": digest,
                  "physical-state-preserved": "true", "normal-next-quote": "true", "outside-final-heart": "true"}))
     _, preflight = one(source, "camp-heart-chain-next-preflight")
-    equal_fields(preflight, {"planned-fire-quote": "true", "outside-final-heart": "true",
+    equal_fields(preflight, {"spare-site-preflight": "true", "ordinary-quote-price": "true", "outside-final-heart": "true",
                             "water": "2", "timber": "1", "no-debit": "true"})
     names = ("LOAD-BEGIN", "camp-heart-chain-load-input", "camp-heart-chain-preactivation",
              "camp-heart-chain-loaded", "camp-heart-chain-next", "camp-heart-chain-resume",
