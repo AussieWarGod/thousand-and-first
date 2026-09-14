@@ -10,8 +10,8 @@ records current acceptance.
 
 ## [0.3.7] — 2026-09-15 (Alpha)
 
-Alpha update for enclosed housing, defensive founders and paid construction recovery. Private candidate
-2 is subscribed and native-verified; public delivery is pending.
+Alpha update for enclosed housing, defensive founders and paid construction recovery.
+Public 0.3.7 is published, verified and finalized on one subscribed client.
 
 - Give new Quickstart settlers enclosed Medium shelters with real doors and clear entrance aisles.
   Larger shared homes use separate chambers or courtyard cabins; hut conversions retain their
