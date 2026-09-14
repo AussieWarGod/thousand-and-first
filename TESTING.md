@@ -11,7 +11,9 @@ These counts describe the pending repair, not a public installation or native PA
 Run `Tools/dev-check.sh tools canvas_homes_test.py` for all current sizes/facings, separated
 sleeping rooms, straight M entrance clearance, retained readers and four-cell XL courts.
 Run `Tools/dev-check.sh main KingdomCanvasHomeTests` for the actual compiled paid renovation
-delta. The existing Quickstart lifecycle now also requires one enclosed room, three usable
+delta. Set `TAF_SCENARIO_TURN_BUDGET=17000` and `TAF_SCENARIO_TIMEOUT_SECONDS=3000` for the
+construction lifecycle; its two advances exceed the preparation default.
+The existing Quickstart lifecycle now also requires one enclosed room, three usable
 sleeping places and 17 clear floor cells in each completed M shelter. These native assertions
 are not accepted until a fresh construction/save/cold-load chain passes. Historic S saves need
 separate retained-reader evidence; the current lifecycle intentionally checks modern M lots.

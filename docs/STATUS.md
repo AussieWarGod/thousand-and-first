@@ -28,6 +28,23 @@ have one enclosed sleeping room, three accessible sleeping places and 17 clear f
 while preserving all four founders and restoring its shared survey scope. Construction, actual
 room observations, save/load and older S save behavior still need fresh native evidence.
 
+CI at `561bffd3` refused five C# expectations/contracts and one provider-census expectation.
+The Camp/Medium expectations and provider census are corrected; the unchanged timber door no
+longer attracts another timber charge when adding bedrolls. Focused catalogue (101), footprint
+(125), heart rules (91) and material rules (270) cases pass. The remaining substantive failure
+is canvas-to-hut conversion: 18 M/L/XL routes into timber, mud and block housing no longer retain
+the new furniture and root coordinates. Their target plans need deliberate compatible redesign,
+including cultural variants, real enclosure and paid material deltas. Do not weaken the retention
+contract or remove the routes to make CI green. The draft is not ready for integration.
+
+The first native attempt stopped during startup after its run record exposed the default
+10,000-turn budget against the required 16,800-turn script. No behavioral journal was produced.
+Its full pinned recipe and exact owned stop are archived at
+`enclosed-canvas-homes/561bffd3/startup-budget-abort-1/result.json`, SHA-256
+`bf37bbfde53cf27df604c7026418ddb8a171cef5c9ac38cf3ebfa909d5fb8055`.
+Use explicit 17,000-turn / 3,000-second limits for the next fresh lifecycle run, after the
+conversion contracts pass. This aborted startup supplies no gameplay acceptance.
+
 ## Physical room and furniture clearance: native scenario accepted
 
 Lodging now measures actual sleeping rooms and clear floor using native structural observations.

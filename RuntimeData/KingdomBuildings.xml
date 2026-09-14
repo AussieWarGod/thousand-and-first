@@ -133,7 +133,7 @@
             Cost="3" Ticks="900" Styles="all" Category="housing" Plot="M" Adoptable="yes"
             Roof="Soft"
             Materials="canvas:12,timber:1" Carries="roof:1" Contents="r_KingdomFurnishings_Dwelling"
-            UpgradesTo="tentrow" UpgradeMaterials="canvas:2,timber:1">
+            UpgradesTo="tentrow" UpgradeMaterials="canvas:2">
     <skin Key="canvas" ColorString="&amp;y" DetailColor="w" />
     <skin Key="verdant" Style="verdant" ColorString="&amp;g" DetailColor="w" />
     <skin Key="fungal" Style="fungal" ColorString="&amp;m" DetailColor="w" />
