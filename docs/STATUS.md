@@ -9,11 +9,39 @@ public 0.3.6 remains the published release. No 0.3.7 package, tag, subscribed re
 release acceptance exists yet. The previous ALPHA_CANDIDATE.json and private package receipt
 remain historical 0.3.6 records until the new private package is actually verified.
 
-Native24 exercises #207 at `1729bae6` with its original eighteen-home paid-chain fixture.
+Native25 exercises the payload repair at `8ceed37e` with its original eighteen-home paid-chain fixture. Native24 is closed below.
 The separate #219 seventeen-home cold-load fixture passed its spare-site check in Native23
 but then refused protected ground at `42,13`; its exact occupant remains undiagnosed. Do not
 count that failed run as paid progression or persistence acceptance. Beta requirements remain
 in CITY-GROWTH-BALANCE.md and #208–#211; synthetic support is not ordinary population balance.
+
+## Native24 closed; court receipt bound repair — 2026-09-14
+
+Native24 at `1729bae6` completed paid rung three and all controlled late-resident clearance,
+protected-occupant, failed-destination and Outstanding-removal retry cases. Original basin,
+stockpile, twenty-one brush units, unpaid track and fifty housed residents remained intact.
+Court preflight then refused `The authored plot payload exceeds the construction receipt bound.`
+No court payment or cold load occurred. Issue #221 tracks this production blocker.
+
+Closed archive: `beta-heart-chain/1729bae6/court-payload-bound-refused-1/result.json`, SHA-256
+`bd481dbf7bcb48dfc799843e8608ababe4459de4ca93382fc62a2d87e6e7de6b`.
+Full pinned profile recipe, strict log and exact owned stop passed; scenario failed. The
+previous six-timber repair cleared material preflight, but this later refusal is not court
+completion or survey-stake acceptance. Eighteen synthetic homes remain a construction stress
+fixture, not ordinary city balance.
+
+Construction's 8192-character cap was smaller than the existing architecture codec's
+16456-character envelope. The repair raises the per-job cap to 32768, retaining the 4 MiB
+registry cap, canonical formats, hashes, and architecture's 12 KiB binary cap. Existing saved
+receipts remain readable. A regression failed for court and arcology in all four fallback
+facings, then all seventeen main CampHeart cases passed after repair. Twenty compiled heart
+snapshots now round-trip inside construction envelopes with maximal skin metadata; separate
+boundary tests cover old-size, larger, exact-bound and over-bound inputs. This is source
+codec evidence, not loaded-game acceptance. Fresh native court validation remains required.
+
+Priority remains further gameplay Alphas, with Hearthpyre compatibility parked until Beta.
+PR #220 prepares private 0.3.7; #219 higher-heart cold-load work stays separate. Neither
+candidate nor capability work has been uploaded. Public 0.3.6 remains published.
 
 ## Accepted city-growth direction — planned
 
@@ -73,8 +101,8 @@ from the passed four-mode compile at `8df7b548`.
 
 Engine gate passed: 3100 sources, baseline and compatibility symbols use their
 respective exclusions (3096 baseline). The cold-install inventory has 3131 files.
-3100 staged C# files / 440,354 physical lines; zero strict line-cap failures.
-Direct `XRL` imports: 1446 files, 0 over the line limit. Inventory SHA-256: `438df06e71316df46d649b26b5dbf211cd53c69cf1e61060550dbaba1cb14304`.
+3100 staged C# files / 440,356 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1446 files, 0 over the line limit. Inventory SHA-256: `e84f0e9aca18ce55811ecbf7e3528cd2cda79c63209b80423a3273a67685ac3c`.
 This is a source census, not native acceptance or an updated exact-inventory semantic review.
 
 ## In-progress paid heart chain
@@ -1979,7 +2007,7 @@ digest. Only a `q2` receipt owes a stake, so a pre-existing `q1` save keeps its 
 every phase, Reserved included, and the completion notice counts the claims standing on the ground
 rather than trusting the branch that ran.
 
-That census:3053 staged C# files;432,593 physical lines;3084 files in the generated
+That census:3053 staged C# files;432,593 physical lines;3082 files in the generated
 cold-install inventory. Staged compilation covers3053 sources, baseline and compatibility symbols,
 run here by Roslyn 9.0.306 on Linux against the licensed Managed references with warnings as errors
 (baseline compiles 3049 of them; the optional-mod bridge is compatibility-only).
@@ -3154,7 +3182,7 @@ requires proof that no saved root exists, including after a rooting call returns
 The developer save observer now requires a canonical profile immediately before hashing and
 reproves that exact profile/revision afterward, without reconciliation in the observation path.
 Strict C#7.3 four modes plus compatibility ABI pass for 3008 production files and 80 Harness shards
-(ordinary 3004/3008, developer 3084/3088). Compiler inventory
+(ordinary 3004/3008, developer 3082/3088). Compiler inventory
 `e2593980a33b7ed381a81545f3681656077c82517fe6bd598b516cbd4130bff0`;
 production inventory `0200f24bec6290af2e55272af3bfabb230ecf577128a9455a7d84e8861231391`.
 Full suites: **12344 Taf / 3866 Portable**, zero skips; **373 Tools tests PASS**.

@@ -1,7 +1,7 @@
 # Changelog
 
-Current 3100-file census is line-cap green: 440,354 physical lines; direct `XRL`
-imports occur in 1446 files, 0 of them over the line limit. Inventory SHA-256: `438df06e71316df46d649b26b5dbf211cd53c69cf1e61060550dbaba1cb14304`.
+Current 3100-file census is line-cap green: 440,356 physical lines; direct `XRL`
+imports occur in 1446 files, 0 of them over the line limit. Inventory SHA-256: `e84f0e9aca18ce55811ecbf7e3528cd2cda79c63209b80423a3273a67685ac3c`.
 The cold-install inventory contains 3131 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Historical entries retain their original
@@ -13,6 +13,7 @@ Private candidate for heart progression and construction recovery; not yet publi
 
 - Follow successive completed heart upgrades while preserving the original basin, dedicated
   stockpile and unspent goods.
+- Fit large authored court and arcology layouts within bounded construction receipts.
 - Include six shaped-timber floor units in the moot-to-court upgrade bill.
 - Recheck eligible citizens who enter newly annexed wall sites after payment; protect the
   founder and unrelated creatures.

@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "inventorySha256": "438df06e71316df46d649b26b5dbf211cd53c69cf1e61060550dbaba1cb14304",
+  "inventorySha256": "e84f0e9aca18ce55811ecbf7e3528cd2cda79c63209b80423a3273a67685ac3c",
   "exceptions": [],
   "reviewedBy": "Codex root automated structural review",
-  "completedUtc": "2026-09-14T07:16:29Z",
+  "completedUtc": "2026-09-14T07:30:44Z",
   "oneResponsibility": {
     "status": "passed",
-    "notes": "Reviewed all 3100 staged production C# inputs against v0.3.6: 3084 byte-identical, 16 changed/added. Risk-weighted review of the entire delta is recorded in docs/STRUCTURE_REVIEW_0_3_7.md; complete inventory log:/tmp/taf-alpha037-structure-inventory.json. Bounded pure upgrade path is separated from physical receipt lookup, active capture owns one disposed survey, paid handover uses existing movement/custody protocols, and exact stakes/tracks retain narrow authority. No serialized fields or schemas change. Version constant alone identifies 0.3.7. Source validation run:34808115103; native and delivery acceptance are separate."
+    "notes": "Reviewed all 3100 staged production C# inputs against v0.3.6: 3082 byte-identical, 18 changed/added. Risk-weighted review of the entire delta is recorded in docs/STRUCTURE_REVIEW_0_3_7.md; complete inventory log:/tmp/taf-alpha037-structure-inventory-2.json. Bounded pure upgrade path is separated from physical receipt lookup, active capture owns one disposed survey, paid handover uses existing movement/custody protocols, and exact stakes/tracks retain narrow authority. No serialized fields or schemas change. Version constant alone identifies 0.3.7. Source validation run:34808115103; native and delivery acceptance are separate. Payload-cap delta admits the existing bounded authored envelope; formats, hashes, inner codec and total registry limits stay unchanged. Boundary/round-trip checks: log:/tmp/taf-court-payload-registry-green-1.log."
   },
   "protocolsAtBoundaries": {
     "status": "passed",
-    "notes": "Reviewed all 3100 staged production C# inputs against v0.3.6: 3084 byte-identical, 16 changed/added. Risk-weighted review of the entire delta is recorded in docs/STRUCTURE_REVIEW_0_3_7.md; complete inventory log:/tmp/taf-alpha037-structure-inventory.json. Bounded pure upgrade path is separated from physical receipt lookup, active capture owns one disposed survey, paid handover uses existing movement/custody protocols, and exact stakes/tracks retain narrow authority. No serialized fields or schemas change. Version constant alone identifies 0.3.7. Source validation run:34808115103; native and delivery acceptance are separate."
+    "notes": "Reviewed all 3100 staged production C# inputs against v0.3.6: 3082 byte-identical, 18 changed/added. Risk-weighted review of the entire delta is recorded in docs/STRUCTURE_REVIEW_0_3_7.md; complete inventory log:/tmp/taf-alpha037-structure-inventory-2.json. Bounded pure upgrade path is separated from physical receipt lookup, active capture owns one disposed survey, paid handover uses existing movement/custody protocols, and exact stakes/tracks retain narrow authority. No serialized fields or schemas change. Version constant alone identifies 0.3.7. Source validation run:34808115103; native and delivery acceptance are separate. Payload-cap delta admits the existing bounded authored envelope; formats, hashes, inner codec and total registry limits stay unchanged. Boundary/round-trip checks: log:/tmp/taf-court-payload-registry-green-1.log."
   }
 }

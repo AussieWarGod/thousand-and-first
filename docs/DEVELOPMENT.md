@@ -110,6 +110,8 @@ ingress after all fixture buildings and stores are placed, before costly enrollm
 Before waiting through a paid upgrade chain, compare each authored delta's added material kinds
 with its source upgrade bill across the tested facings and historical baselines. Include all
 non-natural, non-existing-authority additions, not only pieces changed by the current feature.
+Compare the complete authored snapshot plus plot wrapper against the construction payload cap,
+not only the inner architecture codec cap. Include registry round trips before a long native chain.
 Run the main-only `KingdomCampHeartTests` fixture for heart catalogue edits; an empty portable
 selector is a failed check, not portable coverage. Keep native exact-payment expectations aligned
 with the authored bill and retain the production material-claim refusal.
