@@ -1,12 +1,12 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
-## Pending heart progression source inventory
+## Current source inventory (unreleased)
 
-The planned compatibility gate runs across 3105 production C# sources (3100 baseline);
+The engine gate runs across 3105 production C# sources (3101 baseline);
 the cold-install inventory contains 3138 files. Inventory `cadbe858072e3c855ac94f882cb3d772f35f5d2f41f61a3a6e141f2f5df63fc8`.
-These counts describe the pending repair, not a public installation or native PASS.
+These counts describe the source inventory, not a public installation. Native acceptance is scoped below.
 
-## Enclosed canvas-home draft
+## Enclosed starter homes
 
 Run `Tools/dev-check.sh tools canvas_homes_test.py` for all current sizes/facings, separated
 sleeping rooms, straight M entrance clearance, retained readers and four-cell XL courts.
@@ -18,7 +18,8 @@ Set `TAF_SCENARIO_TURN_BUDGET=17000` and `TAF_SCENARIO_TIMEOUT_SECONDS=3000` for
 construction lifecycle; its two advances exceed the preparation default.
 The existing Quickstart lifecycle now also requires one enclosed room, three usable
 sleeping places and 17 clear floor cells in each completed M shelter. These native assertions
-are not accepted until a fresh construction/save/cold-load chain passes. Historic S saves need
+pass in the marsh construction/save/separate-cold-load chain at `2c0600b5`; see
+[the exact evidence scope](docs/ENCLOSED-STARTER-HOUSING-EVIDENCE.md). Historic S saves need
 separate retained-reader evidence; the current lifecycle intentionally checks modern M lots.
 
 The lifecycle persona's `CHECK=quickstart-housing` requires unique startup/grown journal

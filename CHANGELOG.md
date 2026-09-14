@@ -6,8 +6,11 @@ Author enclosed shared shelters, separate chambers and courtyard cabins for M/L/
 Keep furniture outside the entrance aisle and reserve four-cell courts. Fresh Quickstart uses
 M plots, available at Camp; old S layout readers remain explicit. Timber, mud and block
 conversions now retain the enclosed room programme and incoming furniture. Charge canvas for
-added bedrolls and previously unfunded historical-route cushions. Native construction and
-save/load acceptance are pending; see docs/STATUS.md. No release or compatibility claim.
+added bedrolls and previously unfunded historical-route cushions. Exclude ambient faction parties
+only while generating the exact initial camp, preventing a legendary ape party from killing the
+starter citizens. Marsh construction and separate cold-load checks pass at `2c0600b5`, including
+all four original citizens, real enclosed housing and entrance obstruction/recovery. Broader
+housing/conversion and release acceptance remain pending; see docs/STATUS.md.
 
 **Pending room and furniture clearance (unreleased)**
 
