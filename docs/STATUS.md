@@ -9,11 +9,51 @@ public 0.3.6 remains the published release. No 0.3.7 package, tag, subscribed re
 release acceptance exists yet. The previous ALPHA_CANDIDATE.json and private package receipt
 remain historical 0.3.6 records until the new private package is actually verified.
 
-Native25 exercises the payload repair at `8ceed37e` with its original eighteen-home paid-chain fixture. Native24 is closed below.
-The separate #219 seventeen-home cold-load fixture passed its spare-site check in Native23
-but then refused protected ground at `42,13`; its exact occupant remains undiagnosed. Do not
-count that failed run as paid progression or persistence acceptance. Beta requirements remain
-in CITY-GROWTH-BALANCE.md and #208–#211; synthetic support is not ordinary population balance.
+Native27 exercises the retained-floor and payload repairs at `78e8d097` with eighteen
+synthetic homes. Native25 and Native26 are closed below; Native26 identified the actual
+resident on retained floor. This candidate includes the same gameplay and Harness inputs,
+plus version 0.3.7. The separate #219 higher-heart cold-load fixture remains unaccepted.
+City direction remains in CITY-GROWTH-BALANCE.md and #208–#211; synthetic support is not
+ordinary population balance.
+
+## Native26 closed; occupied retained-floor repair pending (#222)
+
+Native26 at `84dc3f11` identified the intermittent `42,13` blocker: enrolled resident 1,
+object `755/NPC`, standing on predecessor `739/DirtPath` slot `g:05:03`. The authored
+upgrade impact scan refused creatures inside the old lot even where the successor remains
+walkable. No higher payment occurred. Closed failed archive:
+`beta-heart-chain/84dc3f11/retained-citizen-ground-refused-1/result.json`, SHA-256
+`6daec403076ff081ba92d32c0cb59b28b6ec5d95d2ac23f202d78a2aeb2a3c94`.
+Full pinned recipe, strict log and exact owned stop passed. CI `34818949125` passed.
+
+The repair reads declared successor placement passability before rejecting a body on retained
+ground. Blocked or unknown retained ground and foreign objects still refuse. Annexed blocked
+slots retain their existing movement authority and strict paid-clearance checks. The native
+occupancy probe now requires resident, founder and stranger admission on the same impacted
+retained walkable cell, foreign-wall refusal there, exact restoration and no debit. Fourteen
+focused source cases, all 64 persona-validator tests, documentation/metadata checks and all
+four engine compile modes passed. The first developer compile caught a duplicate test-local
+name; corrected before the successful gate. Fresh native progression acceptance remains
+pending. Public release is still 0.3.6.
+
+## Native25 closed; retained-ground diagnostic on the release branch
+
+Native25 at `8ceed37e` passed the first higher upgrade's supply, occupancy and road preflights,
+but after 1200 ordinary turns no paid moot job existed. Reassessment refused protected
+successor ground at `42,13`, the same coordinate seen in the separate cold-load fixture.
+This is intermittent: Native24 completed that leg. The actual occupant has not been identified;
+do not attribute it to a citizen, road or fixture object without a physical witness.
+
+Closed archive: `beta-heart-chain/8ceed37e/retained-ground-payment-refused-1/result.json`,
+SHA-256 `08eea5c32fd9c3eacbbd8963a78819f7cb65d134381102f18e98ce9155dc20fe`.
+Full pinned recipe, strict log and exact owned stop passed; scenario failed. No new higher
+payment, court completion or save/load acceptance occurred. The payload repair's source CI
+`34818068279` passed; that does not override this native refusal.
+
+The release branch now includes the observation-only refused-cell diagnostic already compiled
+in #219: exact object IDs/blueprints, ground classification, citizenship/resident identity,
+fixture membership and plot/component markers. It changes no production admission or movement.
+Keep #207 and #220 draft until the native blocker is understood and paid progression passes.
 
 ## Native24 closed; court receipt bound repair — 2026-09-14
 
@@ -101,9 +141,9 @@ from the passed four-mode compile at `8df7b548`.
 
 Engine gate passed: 3100 sources, baseline and compatibility symbols use their
 respective exclusions (3096 baseline). The cold-install inventory has 3131 files.
-3100 staged C# files / 440,356 physical lines; zero strict line-cap failures.
-Direct `XRL` imports: 1446 files, 0 over the line limit. Inventory SHA-256: `e84f0e9aca18ce55811ecbf7e3528cd2cda79c63209b80423a3273a67685ac3c`.
-This is a source census, not native acceptance or an updated exact-inventory semantic review.
+3100 staged C# files / 440,362 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1446 files, 0 over the line limit. Inventory SHA-256: `1f35396060ae02596850e177647cc92bf8decd9dc144b97504241851ccf2df68`.
+The updated automated structural review binds this inventory; native and delivery acceptance remain separate.
 
 ## In-progress paid heart chain
 

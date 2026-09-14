@@ -20,6 +20,7 @@ namespace ThousandAndFirst.Harness
 				Require(KingdomArchitectureRuntime.TryPrepareSuccessorForUpgrade(System, Zone, ChainHeart,
 					before, ChainTo, out var successor, out failure), failure);
 				var claim = new KingdomMaterialDebitCost(KingdomMaterials.UpgradeCostFor(ChainFrom));
+				Cell retainedCell = ProveChainRetainedGround(before, successor, claim);
 				Cell blocked = ChainEnvelopeProbeCell(before, successor, true);
 				Cell walkable = ChainEnvelopeProbeCell(before, successor, false);
 				Require(blocked != null && walkable != null, "envelope probe lacks clear annexed slots");
@@ -64,10 +65,12 @@ namespace ThousandAndFirst.Harness
 				RequireChainCustody();
 				RequireChainSupport();
 				Require(KingdomScenarioJournal.Append("camp-heart-chain-occupancy", true,
-					"synthetic-placement=true; resident-blocked-preflight=true; strict-blocked-refused=true"
+					"synthetic-placement=true; retained-walkable=true; resident-blocked-preflight=true; strict-blocked-refused=true"
+					+ "; retained-resident=true; retained-founder=true; retained-stranger=true; retained-foreign-wall-refused=true"
 					+ "; founder-blocked-refused=true; founder-walkable=true; stranger-blocked-refused=true"
 					+ "; stranger-walkable=true; foreign-wall-refused=true; restored=true; no-debit=true"
 					+ "; blocked=" + blocked.X + "," + blocked.Y
+					+ "; retained=" + retainedCell.X + "," + retainedCell.Y
 					+ "; walkable=" + walkable.X + "," + walkable.Y) == null,
 					"envelope probe journal unavailable");
 			}
