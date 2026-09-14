@@ -114,8 +114,26 @@ Upgrade preflight also preserves the earlier envelope decision for living bodies
 cells. It still checks objects on retained ground, and paid application still requires blocking
 occupants to be cleared. A new native chain probe places a fixture resident, the founder, a foreign
 NPC and a solid wall on exact annexed slots; it checks read-only admission/refusal, strict envelope
-refusal before clearance, restoration and no debit. These new probes are implemented but have not
-yet run in the engine; the latest failed run does not prove this repair.
+refusal before clearance, restoration and no debit.
+
+At `f93450c5b2a0632a77c454ca54dc3ac75bc5e7ff`, all those controlled native probes passed:
+blocked resident preflight, strict refusal before clearance, blocked founder/stranger refusals,
+walkable founder/stranger admission, foreign-wall refusal, exact restoration and no debit.
+The actual bound settlement assessment was Ready, and the real tier-three improvement paid
+exactly 28 drams and 25 material units. Founding recovery then accepted the active next receipt;
+50 fixture residents remained supported. This is narrow live evidence for occupancy admission
+and pending paid-receipt recovery, not completed higher progression.
+After the following 7200 ordinary turns, the job was `InspectionRequired` with
+`Scaffold-removal intent or successor identity changed.` The common error does not identify
+the failed predicate or whether scaffold completion or later handover called it. Both higher
+completion and persistence remain unverified. The six completed waits requested 15600 turns.
+Closed failed archive: `beta-heart-chain/f93450c5/scaffold-removal-refused-1/result.json`, SHA-256
+`ec7a653f080c3433fed55aa300274679419c3f65088c081e14a34f45927c487b`.
+The full input seal, 3383 C# bindings, strict mod log and owned shutdown passed. Four engine
+compile modes, 13 focused main envelope source-contract cases with zero skips, documentation,
+registration and CI 34796480959 passed. The scenario itself failed and the PR remains draft.
+[#212](https://github.com/AussieWarGod/thousand-and-first/issues/212) tracks the exact handover
+failure, required diagnostics and recovery coverage.
 Spatial seal capture and fixture housing observations use one local survey for their complete read.
 Source inspection found that an unbound component verifier otherwise rebuilds a survey per component.
 The previous run measured 220–225-second daily progress pauses and 3.5–6.9-second settlement passes;
