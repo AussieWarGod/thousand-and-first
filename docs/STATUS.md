@@ -1,5 +1,32 @@
 # Current implementation and release evidence
 
+## Defensive founders: source warm/cold checks accepted; replacement private candidate next
+
+At `49af5f5e0b79bf3c7fe8e2a104315159cad1c25e`, Qud 2.0.211.51, marsh Quickstart with
+advisor and the previously failed seed `#43101`, all four original founders retain defensive
+engagement and survive 8,400 ordinary turns. They occupy two real enclosed homes with six beds,
+two rooms and 34 reachable clear floor cells. The isolated NPC probe verifies proactive target
+acquisition is suppressed while a neutral attack produces actual retaliation; both test objects
+are removed before ordinary turns. Only the owned attacker receives synthetic Snapjaws allegiance.
+
+A real save and separate-process load preserve the same four housed identities and defensive
+flags. The next ordinary commission creates a new job and debits one timber and two drams.
+Source and loaded whole-zone rendering/restoration checks pass. Both exact owned processes are
+stopped; all 3,449 warm and 3,451 cold inputs match their pinned recipes, with strict logs and
+lifecycle/persona checks passing. This is source-checkout evidence, not a subscribed package claim.
+
+Closed archive: `defensive-founders/49af5f5e/completed-warm-cold-1/result.json`, SHA-256
+`85463ec430dc300348dae303569b7c16926f7b0fab80e13388145489ced7f6ed`.
+Focused 41 founder cases, four engine compile modes, structural/documentation gates and CI
+`34890102162` pass. Earlier paid-housing evidence below retains its own inputs and scope.
+
+Read-only combat logs show glowpads acquiring founder targets through bored hostility beginning
+at turn 3024. This does not identify the earlier dragonfly incident's initiator or prove general
+wilderness safety. No existing citizen factions, wildlife or damage were changed. Multiple seeds,
+other terrain profiles and historical citizens remain in #237. The immutable first private 0.3.7
+candidate below remains a failed native attempt. Replacement private delivery and subscribed
+acceptance are required before public promotion; public Alpha is still 0.3.6.
+
 ## Alpha 0.3.7: private delivery passed; native cohort failed
 
 The private candidate now includes the accepted paid-heart, room, enclosed-housing, shared-hall
@@ -17,7 +44,7 @@ Fresh civilian founders now receive Qud's defensive engagement (`Brain.Passive`)
 existing grant transaction. Recovery does not rewrite older citizens. Native checks require
 defensive engagement on the original cohort at startup, after construction and after load;
 an isolated unplaced NPC pair exercises proactive-acquisition suppression and actual retaliation.
-This change is awaiting native acceptance; it does not establish protection from wilderness attacks.
+The accepted source pair above supersedes this pending check; it does not establish protection from wilderness attacks.
 Issue [#237](https://github.com/AussieWarGod/thousand-and-first/issues/237) retains the failure.
 
 The first defensive probe at `464c07e0` refused before ordinary turns: two default NPCs
