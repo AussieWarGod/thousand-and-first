@@ -700,8 +700,25 @@ namespace ThousandAndFirst.Tests
 			// turns before its publication was recovered, and a founder walks — while Stage A's
 			// own verification, in the call that placed them, does pin it.
 			StringAssert.Contains("private static bool VerifyFounderCohort(", recovery);
-			StringAssert.Contains("was not on its own reserved cell", founders);
+			StringAssert.Contains("was not anchored on its own reserved cell", founders);
 			StringAssert.DoesNotContain("ExactRole(", recovery);
+		}
+
+		[Test]
+		public void FreshCivilianDefenseIsVerifiedWithoutRewritingRecoveredFounders()
+		{
+			string founders = TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.Founders.cs");
+			Assert.That(founders, Does.Contain("body.Brain.Passive = true;"));
+			Assert.That(founders, Does.Contain("|| !Cohort[i].Brain.Passive"));
+			string recovery = TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.Founders.Recovery.cs");
+			Assert.That(recovery, Does.Not.Contain(".Passive ="));
+			string observer = TestMain.ReadRepositoryText("Harness/KingdomQuickstartSettlementChecks.cs");
+			Assert.That(observer, Does.Contain("KingdomQuickstartDefensiveChecks.Probe();"));
+			Assert.That(observer, Does.Contain("body.Brain.Passive && !body.Brain.CanAcquireTarget()"));
+			string probe = TestMain.ReadRepositoryText("Harness/KingdomQuickstartDefensiveChecks.cs");
+			Assert.That(probe, Does.Contain("civilian.Brain.Attacked(attacker);"));
+			Assert.That(probe, Does.Contain("ReferenceEquals(civilian.Brain.Target, attacker)"));
+			Assert.That(probe, Does.Contain("finally"));
 		}
 
 		[Test]

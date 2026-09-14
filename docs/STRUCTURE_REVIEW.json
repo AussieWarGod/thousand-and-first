@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "inventorySha256": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+  "inventorySha256": "91973648605848aa1939d38f366ed6e578cd4cc07ef542bd6f6a03b76575c935",
   "exceptions": [],
   "reviewedBy": "Codex root automated structural review",
-  "completedUtc": "2026-09-13T12:47:50Z",
+  "completedUtc": "2026-09-14T19:57:56Z",
   "oneResponsibility": {
     "status": "passed",
-    "notes": "Inherits the verified private 0.3.5 production inventory sha256:4d3938534ed4663c01492bd0455a6aea9b707d76ea4f7b4442357c9aac38472d. The only production C# delta is Core/KingdomReleaseInfo.cs: the diagnostic/native-receipt version constant changes from 0.3.5 to 0.3.6 to match manifest.json. No gameplay, serialization, fields, ownership, drawing or architecture behavior changes. The existing version contract requires exact manifest/runtime identity. Root automated source review; private delivery and current native candidate evidence remain separate checks."
+    "notes": "Compared all 3106 staged production paths against reviewed private 34188ec5: 3105 byte-identical, only World/KingdomQuickstartBootstrap.Founders.cs changed (3 lines, 256 total). Exact comparison log:/tmp/taf-defensive-founders-production-comparison-1.json and census log:/tmp/taf-defensive-founders-structure-1.json; delta review docs/STRUCTURE_REVIEW_0_3_7.md. Existing fresh-grant transaction sets native Brain.Passive and verifies it immediately; reversible allocation, enrollment boundary, cohort recovery and old citizens remain unchanged. No new serialized fields, schema, protocol or responsibility. Native defensive/long-cohort acceptance remains pending and is separate from structural review."
   },
   "protocolsAtBoundaries": {
     "status": "passed",
-    "notes": "Inherits the verified private 0.3.5 production inventory sha256:4d3938534ed4663c01492bd0455a6aea9b707d76ea4f7b4442357c9aac38472d. The only production C# delta is Core/KingdomReleaseInfo.cs: the diagnostic/native-receipt version constant changes from 0.3.5 to 0.3.6 to match manifest.json. No gameplay, serialization, fields, ownership, drawing or architecture behavior changes. The existing version contract requires exact manifest/runtime identity. Root automated source review; private delivery and current native candidate evidence remain separate checks."
+    "notes": "Compared all 3106 staged production paths against reviewed private 34188ec5: 3105 byte-identical, only World/KingdomQuickstartBootstrap.Founders.cs changed (3 lines, 256 total). Exact comparison log:/tmp/taf-defensive-founders-production-comparison-1.json and census log:/tmp/taf-defensive-founders-structure-1.json; delta review docs/STRUCTURE_REVIEW_0_3_7.md. Existing fresh-grant transaction sets native Brain.Passive and verifies it immediately; reversible allocation, enrollment boundary, cohort recovery and old citizens remain unchanged. No new serialized fields, schema, protocol or responsibility. Native defensive/long-cohort acceptance remains pending and is separate from structural review."
   }
 }

@@ -18,6 +18,12 @@
 
   <ItemGroup>
     <Compile Include="TestMain.cs" />
+    <Compile Include="..\Harness\KingdomPaidHousingRoomRules.cs" />
+    <Compile Include="KingdomRetainedTransitionTests.cs" />
+    <Compile Include="KingdomLodgingRoomTests.cs" />
+    <Compile Include="KingdomRoomEnclosureBoundsTests.cs" />
+    <Compile Include="..\Growth\KingdomLodgingRoomRules.cs" />
+    <Compile Include="KingdomConstructionPayloadBoundsTests.cs" />
     <Compile Include="KingdomScenarioLoadResumeTests.cs" />
     <Compile Include="KingdomQuickstartHistoricalGrantTests.cs" />
     <Compile Include="..\Harness\KingdomQuickstartHistoricalGrant.cs" />
@@ -25,6 +31,12 @@
 	<Compile Include="KingdomCampHeartNativeSourceTests.cs" />
 	<Compile Include="..\Harness\KingdomCampHeartNativeCensus.cs" />
 	<Compile Include="KingdomCampHeartNativeCensusTests.cs" />
+    <Compile Include="..\Harness\KingdomCampHeartSaveSnapshot.cs" />
+    <Compile Include="..\Harness\KingdomCampHeartSaveSnapshotCodec.cs" />
+    <Compile Include="..\Harness\KingdomCampHeartScript.cs" />
+    <Compile Include="..\Harness\KingdomCampHeartChainScript.cs" />
+    <Compile Include="..\Harness\KingdomCampHeartChainGrid.cs" />
+    <Compile Include="KingdomCampHeartSaveTests.cs" />
     <Compile Include="..\Core\KingdomSealPendingRules.cs" />
     <Compile Include="..\Core\KingdomInheritanceSpatial.CaptureResult.cs" />
     <Compile Include="..\Core\KingdomSealSpatialRules.cs" />
@@ -758,6 +770,7 @@
 	<Compile Include="KingdomFoundingHeartReservationStateTests.cs" />
 	<Compile Include="KingdomFoundingHeartSourceTests.cs" />
 	<Compile Include="KingdomFoundingHeartChainTests.cs" />
+	<Compile Include="KingdomFoundingHeartUpgradePathTests.cs" />
 	<Compile Include="KingdomFoundingHeartReservationRuntimeSourceTests.cs" />
 	<Compile Include="KingdomFoundingHeartNativeSourceTests.cs" />
 	<Compile Include="KingdomFoundingHeartLifecycleSourceTests.cs" />
@@ -783,6 +796,7 @@
     <Compile Include="KingdomFootprintTests.cs" />
     <Compile Include="KingdomMaterialRulesTests.cs" />
     <Compile Include="KingdomCampHeartTests.cs" />
+    <Compile Include="KingdomCanvasHomeTests.cs" />
     <Compile Include="KingdomCatalogueRulesTests.cs" />
 	<Compile Include="KingdomCeremonyLogicalSource.cs" />
 	<Compile Include="KingdomCeremonyStructureSourceTests.cs" />
@@ -1175,6 +1189,7 @@
 	<Compile Include="..\Growth\KingdomFoundingHeartTerminalPlan.cs" />
 	<Compile Include="..\Growth\KingdomFoundingHeartTerminalRules.cs" />
 	<Compile Include="..\Growth\KingdomFoundingHeartChainRules.cs" />
+	<Compile Include="..\Growth\KingdomFoundingHeartUpgradePathRules.cs" />
 	<Compile Include="..\Growth\KingdomFoundingHeartRetiredGeneration.cs" />
 	<Compile Include="..\Growth\KingdomPlotLegacyEffectsPlan.cs" />
 	<Compile Include="..\Growth\KingdomPlotLegacyEffectsRules.cs" />

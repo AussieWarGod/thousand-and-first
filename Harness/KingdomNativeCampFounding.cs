@@ -62,7 +62,8 @@ namespace ThousandAndFirst.Harness
 		/// held while a camp had no basin, and it stays true whatever the basin happens to hold.
 		/// </para></summary>
 		internal static LiquidVolume Dedicate(XRLGame Game, Zone Zone, KingdomSystem System,
-			int Drams, Action<GameObject> Track, Action<bool, string> Require)
+			int Drams, Action<GameObject> Track, Action<bool, string> Require,
+			Func<Cell> SelectCell = null)
 		{
 			KingdomSurvey before = KingdomSurvey.Take(Zone, System);
 			Require(before != null, "the settlement could not be surveyed before dedication");
@@ -78,7 +79,7 @@ namespace ThousandAndFirst.Harness
 			liquid.AddDrams("water", Drams);
 			Require(liquid.Volume == Drams && liquid.IsFreshWater(),
 				"the synthetic stock is not exactly the fresh water asked for");
-			Cell target = Clear(Zone);
+			Cell target = SelectCell == null ? Clear(Zone) : SelectCell();
 			Require(target != null, "no clear cell was available for the synthetic store");
 			Require(ReferenceEquals(target.AddObject(vessel, NoStack: true), vessel),
 				"native placement substituted the reservoir");

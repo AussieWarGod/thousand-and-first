@@ -16,6 +16,8 @@
     <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="floor" Blueprint="DirtPath" Role="floor" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="wall" Blueprint="r_KingdomStructureCanvasWall" Role="wall" Material="canvas" MinTech="hands" Natural="no" />
+    <slot Key="door" Blueprint="r_KingdomFixtureDoorTimber" Role="door" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="table" Blueprint="r_KingdomFixtureTableTimber" Role="work-surface" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="bed" Blueprint="r_KingdomFixtureBedrollCanvas" Role="sleep" Material="canvas" MinTech="hands" Natural="no" />
     <slot Key="storage" Blueprint="r_KingdomFixtureBasketEmpty" Role="storage" Material="canvas" MinTech="hands" Natural="no" />
     <slot Key="seat" Blueprint="r_KingdomFixtureCushionCanvas" Role="seating" Material="canvas" MinTech="hands" Natural="no" />
@@ -306,7 +308,7 @@
   </palette>
 
   <!-- Small housing maps. -->
-  <map Key="housing-tent-s0" Width="6" Height="4" Footprint="1,0,3x2" DefaultCover="soft">
+  <map Key="housing-tent-s0" Width="6" Height="4" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
@@ -320,7 +322,7 @@
     <row Cells="..s+.." />
   </map>
 
-  <map Key="housing-tentrow-s1" Width="6" Height="4" Footprint="0,0,5x2" DefaultCover="soft">
+  <map Key="housing-tentrow-s1" Width="6" Height="4" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
@@ -334,7 +336,7 @@
 	<row Cells="..s+.." />
   </map>
 
-  <map Key="housing-hut-s0" Width="6" Height="4" Footprint="1,0,4x3" DefaultCover="walled">
+  <map Key="housing-hut-s0" Width="6" Height="4" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
@@ -351,7 +353,7 @@
 
 
 
-  <map Key="housing-hutyard-s1" Width="6" Height="4" Footprint="0,0,5x4" DefaultCover="walled">
+  <map Key="housing-hutyard-s1" Width="6" Height="4" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
@@ -368,7 +370,7 @@
     <row Cells="c,s+h." />
   </map>
 
-  <map Key="housing-mudhut-s0" Width="6" Height="4" Footprint="1,0,4x3" DefaultCover="walled">
+  <map Key="housing-mudhut-s0" Width="6" Height="4" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="d" Ground="$floor" Claim="building" Pass="walk" Cover="walled" Anchors="door:house" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
@@ -384,7 +386,7 @@
 
 
 
-  <map Key="housing-mudcourt-s1" Width="6" Height="4" Footprint="0,0,5x4" DefaultCover="walled">
+  <map Key="housing-mudcourt-s1" Width="6" Height="4" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
@@ -400,7 +402,7 @@
     <row Cells="q,s+,." />
   </map>
 
-  <map Key="housing-blockhut-s0" Width="6" Height="4" Footprint="1,0,4x3" DefaultCover="walled">
+  <map Key="housing-blockhut-s0" Width="6" Height="4" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
@@ -416,7 +418,7 @@
 
 
 
-  <map Key="housing-blockyard-s1" Width="6" Height="4" Footprint="0,0,5x4" DefaultCover="walled">
+  <map Key="housing-blockyard-s1" Width="6" Height="4" DefaultCover="walled">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="walled" />
     <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="walled" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
@@ -1015,7 +1017,7 @@
   </map>
 
   <!-- Selector-authored housing maps. Topology and semantic circulation are part of each style. -->
-  <map Key="housing-hut-verdant-s0" Width="6" Height="4" Footprint="1,0,4x3" DefaultCover="soft">
+  <map Key="housing-hut-verdant-s0" Width="6" Height="4" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
@@ -1033,7 +1035,7 @@
     <row Cells="c,s+h." />
   </map>
 
-  <map Key="housing-hut-fungal-s0" Width="6" Height="4" Footprint="1,0,4x3" DefaultCover="soft">
+  <map Key="housing-hut-fungal-s0" Width="6" Height="4" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
@@ -1050,7 +1052,7 @@
     <row Cells="u,s+h." />
   </map>
 
-  <map Key="housing-hut-hindren-s0" Width="6" Height="4" Footprint="1,0,4x3" DefaultCover="soft">
+  <map Key="housing-hut-hindren-s0" Width="6" Height="4" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
@@ -1066,7 +1068,7 @@
     <row Cells="C,s+h." />
   </map>
 
-  <map Key="housing-hut-kyakukya-s0" Width="6" Height="4" Footprint="1,0,4x3" DefaultCover="open">
+  <map Key="housing-hut-kyakukya-s0" Width="6" Height="4" DefaultCover="open">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
@@ -1083,7 +1085,7 @@
     <row Cells="M,s+h." />
   </map>
 
-  <map Key="housing-hutyard-verdant-s1" Width="6" Height="4" Footprint="0,0,5x4" DefaultCover="soft">
+  <map Key="housing-hutyard-verdant-s1" Width="6" Height="4" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
@@ -1104,7 +1106,7 @@
     <row Cells="c,s+h." />
   </map>
 
-  <map Key="housing-hutyard-fungal-s1" Width="6" Height="4" Footprint="0,0,5x4" DefaultCover="soft">
+  <map Key="housing-hutyard-fungal-s1" Width="6" Height="4" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
@@ -1125,7 +1127,7 @@
     <row Cells="q,s+h." />
   </map>
 
-  <map Key="housing-hutyard-hindren-s1" Width="6" Height="4" Footprint="0,0,5x4" DefaultCover="soft">
+  <map Key="housing-hutyard-hindren-s1" Width="6" Height="4" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
@@ -1144,7 +1146,7 @@
     <row Cells="q,s+h." />
   </map>
 
-  <map Key="housing-hutyard-kyakukya-s1" Width="6" Height="4" Footprint="0,0,5x4" DefaultCover="open">
+  <map Key="housing-hutyard-kyakukya-s1" Width="6" Height="4" DefaultCover="open">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
@@ -1375,7 +1377,7 @@
 
   <!-- Housing plan bindings. Each catalogue BuildKey appears in one tier only. -->
   <plan Key="canvas-shelter">
-    <binding Key="housing-s-canvas" Type="housing" Size="S" Facing="heart">
+    <binding Key="housing-s-canvas" Type="housing" Size="S" Facing="heart" Retained="yes">
       <tier Key="tent" BuildKey="tent" Level="0" Map="housing-tent-s0" Palette="housing-canvas-hands">
         <require Role="main" Min="1" />
         <require Role="entrance:public" Min="1" />
@@ -1396,7 +1398,7 @@
   </plan>
 
   <plan Key="timber-hut">
-    <binding Key="housing-s-timber-hut" Type="housing" Size="S" Facing="heart">
+    <binding Key="housing-s-timber-hut" Type="housing" Size="S" Facing="heart" Retained="yes">
       <tier Key="hut" BuildKey="hut" Level="0" Map="housing-hut-s0" Palette="housing-timber-hands">
         <require Role="main" Min="1" />
         <require Role="entrance:public" Min="1" />
@@ -1429,7 +1431,7 @@
   </plan>
 
   <plan Key="mud-hut">
-    <binding Key="housing-s-mud-hut" Type="housing" Size="S" Facing="heart">
+    <binding Key="housing-s-mud-hut" Type="housing" Size="S" Facing="heart" Retained="yes">
       <tier Key="mudhut" BuildKey="mudhut" Level="0" Map="housing-mudhut-s0" Palette="housing-mud-hands">
         <require Role="main" Min="1" />
         <require Role="entrance:public" Min="1" />
@@ -1450,7 +1452,7 @@
   </plan>
 
   <plan Key="ruin-block-hut">
-    <binding Key="housing-s-ruin-block" Type="housing" Size="S" Facing="heart">
+    <binding Key="housing-s-ruin-block" Type="housing" Size="S" Facing="heart" Retained="yes">
       <tier Key="blockhut" BuildKey="blockhut" Level="0" Map="housing-blockhut-s0" Palette="housing-rubble-hands">
         <require Role="main" Min="1" />
         <require Role="entrance:public" Min="1" />

@@ -1,12 +1,43 @@
 # Changelog
 
-All notable changes to The Thousand and First. Versions are semantic: patch for fixes,
-minor for additive API and content, major for breaking changes. Supported API is defined in
-[docs/API.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/API.md).
+Current 3106-file census is line-cap green: 440,880 physical lines; direct `XRL`
+imports occur in 1450 files, 0 of them over the line limit. Inventory SHA-256: `91973648605848aa1939d38f366ed6e578cd4cc07ef542bd6f6a03b76575c935`.
+The cold-install inventory contains 3139 files. This is not evidence of a new public installation.
 
-Historical entries preserve the claim made at that point. The latest version entry, `VISION.md`, and
-`docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
-below it.
+All notable changes to The Thousand and First. Historical entries retain their original scope;
+[docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md)
+records current acceptance.
+
+## [0.3.7] — 2026-09-15 (Alpha)
+
+Alpha update for enclosed housing, defensive founders and paid construction recovery. Private candidate
+2 is subscribed and native-verified; public delivery is pending.
+
+- Give new Quickstart settlers enclosed Medium shelters with real doors and clear entrance aisles.
+  Larger shared homes use separate chambers or courtyard cabins; hut conversions retain their
+  furniture and room programme. Medium plots are available from Camp.
+- Measure lodging privacy from real rooms and reachable clear floor. Beds, chairs and other
+  furniture occupy space even when Qud permits walking over them; shared halls and doorways
+  must remain clear. Extra bunks still count toward crowding.
+- Anchor new civilian founders at the camp with defensive engagement before their first turn.
+  Preserve ordinary work, idle goals and retaliation without proactive target acquisition. Reserve the initial camp's ambient faction-party encounter slot during generation.
+- Recover a paid housing conversion after exact restoration of a missing or moved fixture.
+  Preserve original storage contents and payment; permit flooring beneath only its exact paid
+  predecessor. Foreign furniture and copied receipts grant no placement exception.
+- Retain exact historical transition prices for paid receipts while new quotes use current prices.
+- Follow successive paid heart upgrades, recheck eligible residents entering new wall sites,
+  retain authenticated founding stakes and unpaid tracks, fund added court floors, and admit
+  the existing architecture payload within bounded construction receipts.
+- Add a visual layout workbench with enclosure, furniture-access and clear-floor audits.
+
+Native checks cover real four-founder housing, paid conversion, obstruction/retry, retained contents,
+24,000 ordinary turns and separate cold continuation. Shared-room tests cover native door states
+and walkable-furniture obstructions. A further seven-day source/cold pair checks defensive founders
+on the previously failed marsh seed; other seeds and terrain remain unproved. Higher-heart progression uses disclosed synthetic population
+and support; it does not establish ordinary balance or multi-map city coverage. Full building
+redesign, room/activity rewards, reputation-weighted populations, supporting land use and natural
+outward expansion remain Beta work. Historical renovations/quarantine and polity reconciliation
+after load remain tracked limitations. Hearthpyre compatibility remains deferred until Beta.
 
 ## [0.3.6] — 2026-09-13 (Alpha)
 

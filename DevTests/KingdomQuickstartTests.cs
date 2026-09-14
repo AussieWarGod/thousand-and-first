@@ -140,12 +140,13 @@ namespace ThousandAndFirst.Tests
 						|| (x >= 27 && x <= 30 && y >= 9 && y <= 17)
 						|| (x >= 29 && x <= 37 && y >= 11 && y <= 13);
 					bool endpoint = (x == 40 || x == 41) && y == 16;
-					bool shelter = x >= 21 && x <= 26 && y >= 9 && y <= 16;
+					bool shelter = x >= 18 && x <= 25
+						&& (y >= 4 && y <= 9 || y >= 14 && y <= 19);
 					// Lot A faces south (its threshold stands on its northern edge), lot B faces
 					// north; each route leaves through one reserved margin cell and one lane
 					// endpoint beyond it.
-					bool ingress = (x == 23 && (y == 8 || y == 7))
-						|| (x == 24 && (y == 17 || y == 18));
+					bool ingress = (x == 22 && (y == 3 || y == 2))
+						|| (x == 21 && (y == 20 || y == 21));
 					ClassicAssert.AreEqual(camp || endpoint || shelter || ingress,
 						KingdomQuickstartRules.RequiresPreparedGround(x, y), x + "," + y);
 					if (endpoint && !camp) endpoints++;
@@ -154,31 +155,31 @@ namespace ThousandAndFirst.Tests
 					if (camp || endpoint || shelter || ingress) prepared++;
 				}
 			ClassicAssert.AreEqual(2, endpoints);
-			// Two 6x4 lots, stacked, and the four exterior cells their authored routes walk: the
-			// mask widens by exactly 48 + 4 cells and by nothing else.
-			ClassicAssert.AreEqual(48, shelterCells);
+			// Two 8x6 lots, separated, and the four exterior cells their authored routes walk: the
+			// mask widens by exactly 96 + 4 cells and by nothing else.
+			ClassicAssert.AreEqual(96, shelterCells);
 			ClassicAssert.AreEqual(4, ingressCells);
 			ClassicAssert.AreEqual(4, KingdomQuickstartRules.ShelterIngressCellCount);
-			ClassicAssert.AreEqual(102 + 2 + 48 + 4, prepared);
+			ClassicAssert.AreEqual(102 + 2 + 96 + 4, prepared);
 			ClassicAssert.AreEqual(2, KingdomQuickstartRules.ShelterLotCount);
 			KingdomPlotRules.PlotRect first = KingdomQuickstartRules.ShelterLot(0);
 			KingdomPlotRules.PlotRect second = KingdomQuickstartRules.ShelterLot(1);
-			ClassicAssert.AreEqual(21, first.X1);
-			ClassicAssert.AreEqual(9, first.Y1);
-			ClassicAssert.AreEqual(26, first.X2);
-			ClassicAssert.AreEqual(12, first.Y2);
-			ClassicAssert.AreEqual(21, second.X1);
-			ClassicAssert.AreEqual(13, second.Y1);
-			ClassicAssert.AreEqual(26, second.X2);
-			ClassicAssert.AreEqual(16, second.Y2);
-			// Each lot is one Small plot (6x4), west of the supply column, clear of every reserved
+			ClassicAssert.AreEqual(18, first.X1);
+			ClassicAssert.AreEqual(4, first.Y1);
+			ClassicAssert.AreEqual(25, first.X2);
+			ClassicAssert.AreEqual(9, first.Y2);
+			ClassicAssert.AreEqual(18, second.X1);
+			ClassicAssert.AreEqual(14, second.Y1);
+			ClassicAssert.AreEqual(25, second.X2);
+			ClassicAssert.AreEqual(19, second.Y2);
+			// Each lot is one Medium plot (8x6), west of the supply column, clear of every reserved
 			// role cell, of the founder's start cell, of the heart rect and of the heart's extreme
 			// survey (which begins at 31). The two never overlap each other.
 			for (int i = 0; i < KingdomQuickstartRules.ShelterLotCount; i++)
 			{
 				KingdomPlotRules.PlotRect lot = KingdomQuickstartRules.ShelterLot(i);
-				ClassicAssert.AreEqual(6, lot.Width, "lot " + i + " width");
-				ClassicAssert.AreEqual(4, lot.Height, "lot " + i + " height");
+				ClassicAssert.AreEqual(8, lot.Width, "lot " + i + " width");
+				ClassicAssert.AreEqual(6, lot.Height, "lot " + i + " height");
 				Assert.That(lot.X2, Is.LessThan(31), "lot " + i + " heart survey edge");
 				foreach (int roleY in new[] { 10, 12, 14, 16 })
 					ClassicAssert.IsFalse(lot.Contains(28, roleY), "lot " + i + " role cell 28," + roleY);
@@ -205,10 +206,31 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void NewShelterFootprintsAreBuildableAtCampAndLeaveAUsableStreet()
+		{
+			for (int i = 0; i < KingdomQuickstartRules.ShelterLotCount; i++)
+			{
+				var lot = KingdomQuickstartRules.ShelterLot(i);
+				var size = KingdomPlotRules.PlotSize.Medium;
+				ClassicAssert.IsTrue(KingdomPlotRules.TryDimensions(size, out int width, out int height));
+				ClassicAssert.AreEqual(width, lot.Width);
+				ClassicAssert.AreEqual(height, lot.Height);
+				ClassicAssert.IsTrue(KingdomPlotRules.Allows(GrowthStage.Camp, size),
+					"founders must be able to finish housing before population can grow");
+				ClassicAssert.IsTrue(KingdomPlotRules.TryInterior(80, 25, out var interior));
+				ClassicAssert.IsTrue(KingdomPlotRules.Fits(lot, interior));
+			}
+			var first = KingdomQuickstartRules.ShelterLot(0);
+			var second = KingdomQuickstartRules.ShelterLot(1);
+			ClassicAssert.GreaterOrEqual(second.Y1 - first.Y2 - 1, 3,
+				"the two starter shelters must leave room for a real street");
+		}
+
+		[Test]
 		public void TheShelterLotsAreKeyedToTheTentRowAndCarrySixBeds()
 		{
-			// The re-key is the whole point of the second lot: "tent" is a 3x2 design carrying one
-			// roof, "tentrow" is the 5x2 design carrying three, so two lots are six beds and the
+			// The shared shelter carries three actual beds on its new minimum 8x6 lot.
+			// Two reserved lots therefore carry six beds and the
 			// first arrivals are not refused for want of room.
 			ClassicAssert.AreEqual("tentrow", KingdomQuickstartRules.ShelterBuildKey);
 			string rules = TestMain.ReadRepositoryText("Core/KingdomQuickstartRules.cs");
@@ -226,8 +248,8 @@ namespace ThousandAndFirst.Tests
 			Assert.That(row, Is.GreaterThanOrEqualTo(0));
 			string entry = catalogue.Substring(row, catalogue.IndexOf("/>", row,
 				StringComparison.Ordinal) - row);
-			StringAssert.Contains("Plot=\"S\"", entry);
-			StringAssert.Contains("Footprint=\"5x2\"", entry);
+			StringAssert.Contains("Plot=\"M\"", entry);
+			StringAssert.DoesNotContain("Footprint=", entry);
 			StringAssert.Contains("Ticks=\"1200\"", entry);
 			StringAssert.Contains("Carries=\"roof:3\"", entry);
 			StringAssert.DoesNotContain("Roof=", entry);

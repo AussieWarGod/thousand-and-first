@@ -49,7 +49,7 @@ namespace ThousandAndFirst
 	/// does not resume, and the journal's last row says where it stopped.
 	/// </para>
 	/// <para>
-	/// Never auto-quits or prevents player actions. Without a sealed script it writes no journal,
+	/// The exact paid-chain test game isolates physical input until shutdown. Without a sealed script it writes no journal,
 	/// suppresses no popup, and spends no turn.
 	/// </para>
 	/// </summary>
@@ -108,6 +108,7 @@ namespace ThousandAndFirst
 		public override void OnAdded()
 		{
 			base.OnAdded();
+			ArmChainInput();
 			KingdomScenarioAdvance.ArmDriver();
 			KingdomScenarioFrames.ArmDriver();
 			Prime("IGameSystem.OnAdded, before the boot sequence");
@@ -219,6 +220,7 @@ namespace ThousandAndFirst
 			KingdomScenarioJournal.Append(BeginRow, true,
 				verbs.Count + " verb(s) from " + KingdomScenarioScript.Locate());
 			Verbs = verbs;
+			if (!VerifyChainInput()) { Finish(StoppedRow, false, "paid chain input isolation failed"); return false; }
 			Cursor = quickstartLifecycle ? 1 : 0; // line 0 is the already-consumed boot command
 			return true;
 		}

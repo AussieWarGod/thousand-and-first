@@ -63,6 +63,8 @@ BOOKKEEPING = frozenset(
         # observation about what the checker's own diagnosis found, never a verb the script
         # asked for, so it never belongs in a positional EXPECT.
         "lifecycle-grown-detail",
+        # Read-only paid-handover diagnostics; explicit retry/cohort/completion rows remain mandatory.
+        "paid-housing-detail",
         # Run 46b/47 (investigation C): the lifecycle save's own pre-activation witness row
         # (Harness/KingdomQuickstartLifecycleLoad.cs BeforeActivation), landed by the load
         # witness before AfterGameLoaded handlers run. Wiring, never a verb the script asked for,
@@ -130,6 +132,27 @@ QUICKSTART_EVIDENCE_ROWS = (
 
 # Observation emitted inside guest-save-supply before the physical refill; not a callable verb.
 GUEST_SAVE_EVIDENCE_ROWS = ("guest-save-shortage",)
+PAID_HOUSING_EVIDENCE_ROWS = ("paid-housing-water", "paid-housing-physical-probes", "paid-housing-retry", "paid-housing-floor-access", "paid-housing-cohort")
+
+ROOM_EVIDENCE_ROWS = tuple("room-" + name for name in (
+    "shared-capped", "private-room", "open-door", "closed-door", "locked-door",
+    "unlocked-door", "chair-in-door", "door-cleared", "bed-isolated", "bed-access-restored",
+    "solid-cabinet", "cabinet-removed", "furnished-floor", "floor-restored", "wall-loss", "wall-restored",
+    "bed-loss", "bed-restored", "occupied-room", "bunks-restored",
+    "hall-connected", "hall-furniture-blocked", "hall-alternate-exit", "hall-alternate-obstructed",
+    "hall-route-restored", "hall-open-locked", "hall-exterior-locked", "hall-exterior-unlocked", "hall-partitions-restored",
+))
+
+# The save verb observes remaining custody before publishing its snapshot.
+CAMP_HEART_EVIDENCE_ROWS = (
+    "camp-heart-save-custody", "camp-heart-chain-founder", "camp-heart-chain-input",
+    "camp-heart-chain-spatial", "camp-heart-chain-occupancy", "camp-heart-chain-road-wear",
+    "camp-heart-chain-handover-refusals", "camp-heart-chain-handover-cleared",
+    "camp-heart-chain-retry-obstruction", "camp-heart-chain-retry-outstanding",
+    "camp-heart-chain-retry-removal", "camp-heart-chain-survey-stakes",
+    "camp-heart-chain-renovation", "camp-heart-chain-renovation-refusals",
+    "camp-heart-chain-renovation-cleared",
+)
 
 # The second counted verb. `yield-frames <frames>` hands the engine back its own render loop, which
 # an advance never does: advance keeps the engine out of XRLCore.PlayerTurn on purpose, and that is
@@ -168,6 +191,7 @@ VERB_ALPHABET = "abcdefghijklmnopqrstuvwxyz" + "0123456789" + "-."
 
 OUTCOMES = ("OK", "REFUSED")
 CHECKS = (
+    "quickstart-housing",
     "status-digest-stable",
     "travel-away",
     "travel-present",
@@ -524,6 +548,9 @@ def parse_expect(
             and verb not in extra
             and verb not in QUICKSTART_EVIDENCE_ROWS
             and verb not in GUEST_SAVE_EVIDENCE_ROWS
+            and verb not in PAID_HOUSING_EVIDENCE_ROWS
+            and verb not in CAMP_HEART_EVIDENCE_ROWS
+            and verb not in ROOM_EVIDENCE_ROWS
         ):
             fail("%s EXPECT item %r names an unsealable verb" % (name, item))
         parsed.append((verb, outcome, wanted.strip()))
@@ -568,7 +595,12 @@ def read_journal(text: str) -> list[tuple[str, str, str]]:
 
 
 def significant(rows: list[tuple[str, str, str]]) -> list[tuple[str, str, str]]:
-    return [row for row in rows if row[0] not in BOOKKEEPING]
+    # These bounded observations do not occupy scripted EXPECT positions. A failed
+    # observation remains significant, so diagnosis cannot silently lose evidence.
+    diagnostics = {"TESTGROUND-CENSUS", "camp-resident-movement", "camp-vortex-origin",
+                   "camp-heart-chain-removal"}
+    return [row for row in rows if row[0] not in BOOKKEEPING
+            and not (row[0] in diagnostics and row[1] == "OK")]
 
 
 def terminal_row(rows: list[tuple[str, str, str]]) -> str:
@@ -642,6 +674,12 @@ def assess(manifest: dict, journal: str, name: str) -> list[str]:
     rows = significant(read_journal(journal))
     extra = tuple(v for v in manifest.get("VERBS", "").split(",") if v)
     problems = match(parse_expect(manifest["EXPECT"], name, extra), rows)
+    if manifest.get("CHECK") == "quickstart-housing":
+        spec = importlib.util.spec_from_file_location(
+            "taf_persona_housing", os.path.join(os.path.dirname(__file__), "persona_housing.py"))
+        housing = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(housing)
+        problems.extend(housing.assess(read_journal(journal)))
     if manifest.get("CHECK") == "status-digest-stable":
         problems.extend(status_digest_stable(rows))
     if manifest.get("CHECK", "").startswith("travel-"):

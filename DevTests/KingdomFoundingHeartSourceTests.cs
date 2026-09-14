@@ -587,7 +587,7 @@ namespace ThousandAndFirst.Tests
 			string chain = Source("Growth/KingdomPlot2.07s.FoundingHeartClimbedChain.cs");
 			// Identity, not position: the chain starts at the identity the sealed terminal bound.
 			StringAssert.Contains("string retired = prior.FinalId;", chain);
-			StringAssert.Contains("TryImprovementSuccessorOf(retired, out job, out successor, "
+			StringAssert.Contains("TryImprovementSuccessorOf(Z, retired, out job, out successor, "
 				+ "out jobs, out objects)", chain);
 			// Every hop names itself, so the next native run says which one refused instead of
 			// leaving it to be inferred from what did not happen.
@@ -595,20 +595,14 @@ namespace ThousandAndFirst.Tests
 				"chain: receipt", "chain: removal proof", "chain: custody corroboration",
 				"chain: binds ground", "chain: retirement authority" })
 				StringAssert.Contains("HeartRefused(\"" + hop, chain);
-			StringAssert.Contains("row.SubjectId != RetiredId", chain);
-			// Exactly one job may name the retired identity: a second one refuses rather than
-			// choosing, and the count is carried into the refusal so a native run can read it.
-			StringAssert.Contains("Named++;", chain);
-			StringAssert.Contains("if (Named != 1 || Job.Phase != KingdomConstructionPhase.Complete",
-				chain);
-			StringAssert.Contains("if (Named != 1) Job = null;", chain);
-			StringAssert.Contains("KingdomConstruction.FindGlobalLiveId(Job.OutputId, out Successor)",
-				chain);
-			foreach (string fact in new[] { "KingdomConstruction.HasReceipt(successor, job)",
+			string path = Source("Growth/KingdomPlot2.07t.FoundingHeartUpgradePath.cs");
+			StringAssert.Contains("KingdomFoundingHeartUpgradePathRules.TryRead(jobs, Origin, terminal.PredecessorId,", path);
+			StringAssert.Contains("ExactFoundingHeartLiveAbsence(edge.SubjectId)", path);
+			StringAssert.Contains("KingdomConstruction.FindGlobalLiveId(Job.OutputId, out Successor)", path);
+			StringAssert.Contains("KingdomFoundingHeartUpgradePathRules.OutputReceiptMatches(Completed, pending,", path);
+			foreach (string fact in new[] { "HasChainedImprovementReceipt(Z, successor, job)",
 				"r_KingdomScaffold.HasRemovalProof(successor, job.SubjectId)",
-				"KingdomFoundingHeartChainRules.CorroboratesRetired(stamp, retired)",
-				"Job.Phase != KingdomConstructionPhase.Complete",
-				"!string.IsNullOrEmpty(Job.Failure)",
+				"KingdomFoundingHeartChainRules.CorroboratesRetired(stamp, job.SubjectId)",
 				"KingdomFoundingHeartChainRules.BindsGround(job.OutputId," })
 				StringAssert.Contains(fact, chain);
 			// The withdrawn clause: the reservation store is keyed by deterministic role
@@ -647,8 +641,8 @@ namespace ThousandAndFirst.Tests
 
 			// And the final generation's retirement is the receipt chain, never absence alone.
 			string removal = Source("Growth/KingdomPlot2.07q.FoundingHeartRecordedRemoval.cs");
-			StringAssert.Contains("ExactFoundingHeartImprovementRetirement(PredecessorId)", removal);
-			StringAssert.Contains("TryImprovementSuccessorOf(PredecessorId, out var job, "
+			StringAssert.Contains("ExactFoundingHeartImprovementRetirement(Z, PredecessorId)", removal);
+			StringAssert.Contains("TryImprovementSuccessorOf(Z, PredecessorId, out var job, "
 				+ "out var successor,", removal);
 			StringAssert.Contains("&& ExactFoundingHeartLiveAbsence(PredecessorId);", removal);
 
@@ -706,7 +700,7 @@ namespace ThousandAndFirst.Tests
 			// because a completed climb never reaches the pending read again.
 			StringAssert.Contains("internal static void ClearClimbHold(Zone Z, string RetiredId)",
 				chain);
-			StringAssert.Contains("prior.FinalId != RetiredId) return;", chain);
+			StringAssert.Contains("!FoundingUpgradePathHasSubject(Z, prior.FinalId, RetiredId)) return;", chain);
 			string handover = Source("Growth/KingdomUpgrade.25.HandoverRemoval.cs");
 			StringAssert.Contains("KingdomPlots.ClearClimbHold(Z, Job.SubjectId);", handover);
 			int complete = handover.IndexOf("if (!KingdomConstruction.Complete(ref Job))",

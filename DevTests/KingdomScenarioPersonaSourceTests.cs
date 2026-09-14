@@ -175,8 +175,8 @@ namespace ThousandAndFirst.Tests
 
 		/// <summary>
 		/// The matrix runner's own invariants: it refuses existing games, creates a fresh profile, and
-		/// asserts immutable evidence while the game is live, publishes images only for PASS, then
-		/// stops before the next persona and exits nonzero on any non-PASS verdict.
+		/// asserts immutable evidence while the game is live, records its owned stop and checks the
+		/// final log before publishing images, and exits nonzero on any non-PASS verdict.
 		/// </summary>
 		[Test]
 		public void TheMatrixRunnerIsSerialIdempotentAndFailsLoudly()
@@ -201,26 +201,38 @@ namespace ThousandAndFirst.Tests
 			int archived = runner.IndexOf("archive_file \"$journal\" \"$archived_journal\"",
 				StringComparison.Ordinal);
 			int checkInput = runner.IndexOf("checked_player_log=\"$archived_player_log\"",
-				archived, StringComparison.Ordinal);
+				StringComparison.Ordinal);
+			ClassicAssert.Greater(checkInput, -1, "shared log checker starts from its raw archive");
 			int expectedLog = runner.IndexOf("$MATRIX\" expected-log", checkInput, StringComparison.Ordinal);
 			StringAssert.Contains("\"$archived_player_log\" \\", runner);
 			int logChecked = runner.IndexOf("\"$LOG_CHECK\" \"$checked_player_log\"",
+				checkInput, StringComparison.Ordinal);
+			int liveChecked = runner.IndexOf("check_persona_log \"$persona\" \"$archived_player_log\"",
 				archived, StringComparison.Ordinal);
 			int asserted = runner.IndexOf("$MATRIX\" assert", StringComparison.Ordinal);
 			int captureGate = runner.IndexOf("if [ \"$VERDICT\" = PASS ]", asserted,
 				StringComparison.Ordinal);
 			int published = runner.IndexOf("mv -f -- \"$capture_temp\" \"$capture_target\"",
 				captureGate, StringComparison.Ordinal);
-			int captureFault = runner.IndexOf("if [ -n \"$capture_problem\" ]", published,
+			int captureFault = runner.IndexOf("if [ -n \"$capture_problem\" ]", captureGate,
 				StringComparison.Ordinal);
+			int stopped = runner.IndexOf("\n\tif ! stop_owned; then", captureGate, StringComparison.Ordinal);
+			ClassicAssert.Greater(stopped, captureGate, "the captured process must end before publication");
+			int finalChecked = runner.IndexOf("check_persona_log \"$persona\" \"$stopped_player_log\"",
+				stopped, StringComparison.Ordinal);
+			int ownedStop = runner.IndexOf("-Mode stop", StringComparison.Ordinal);
+			ClassicAssert.Greater(ownedStop, -1);
+			ClassicAssert.Greater(runner.IndexOf("-StopRecord", ownedStop, StringComparison.Ordinal),
+				ownedStop, "a stopped profile must retain a verified closed run record");
 			ClassicAssert.Greater(archived, -1, "the journal must be archived before any diagnosis returns");
-			ClassicAssert.Greater(checkInput, archived, "ordinary log checks use the retained raw archive");
+			ClassicAssert.Greater(liveChecked, archived, "ordinary log checks use the retained raw archive");
 			ClassicAssert.Greater(expectedLog, checkInput, "declared literal diagnostics derive from the raw archive");
 			ClassicAssert.Greater(logChecked, expectedLog,
 				"raw or exact-diagnostic-filtered Player.log must pass TAF diagnostics before journal assertion");
-			ClassicAssert.Greater(asserted, logChecked, "journal assertion follows clean durable evidence");
+			ClassicAssert.Greater(asserted, liveChecked, "journal assertion follows clean durable evidence");
 			ClassicAssert.Greater(captureGate, asserted, "capture is gated on the asserted verdict");
-			ClassicAssert.Greater(published, captureGate, "only a validated PASS image is published");
+			ClassicAssert.Greater(finalChecked, stopped, "late diagnostics are checked after the owned stop");
+			ClassicAssert.Greater(published, finalChecked, "only a closed, validated PASS image is published");
 			ClassicAssert.Greater(captureFault, asserted,
 				"capture failure is appended only after journal assertion");
 			StringAssert.Contains("$MATRIX\" assert \"$(persona_path \"$persona\")\" \\",

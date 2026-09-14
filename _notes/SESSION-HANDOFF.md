@@ -1,5 +1,21 @@
 # Session handoff — current v1.0 test-candidate work
 
+## Accepted city design direction — 2026-09-14
+
+Read [city growth and land-use direction](../docs/CITY-GROWTH-BALANCE.md) before changing
+plots, roads, economy or city scenarios. GitHub #208 tracks the full requirements, with
+#209 streets/public space, #210 land-use balance/rewards, and #211 multi-tile behavioral tests.
+Twenty residents per local map is a physical-space balance benchmark, not a hard cap.
+Keep three-cell roads, parks/courtyards, farms/quarries/industry/defences and the full support
+economy in scope. Beta, Quickstart reliability and complex in-game coverage remain the goal.
+See STATUS for acceptance; the common Git-directory handoff owns current process state.
+
+## Current source census — pending heart repair
+
+3106 staged sources; 440,838 physical lines; 1450 direct-XRL files; zero cap failures;
+3139 cold-install files. Inventory `ef37cc7e787d36b6034cc9a24cf99c9278aa55a9a8f2bd06c9969327b44ae7e1`. Native acceptance remains pending.
+Use the shared Git-directory handoff for live process ownership and current validation.
+
 ## Retained combined heart candidate before surveyed-ingress draft — 2026-09-11
 
 Current draft census/evidence is in docs/STATUS.md; the figures below describe its predecessor.

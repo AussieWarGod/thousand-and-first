@@ -57,6 +57,35 @@ namespace ThousandAndFirst.Tests
 			return job;
 		}
 
+		[TestCase(8192)]
+		[TestCase(8193)]
+		[TestCase(32768)]
+		public void LargePayloadRoundTripsWithoutChangingThePaidJob(int length)
+		{
+			var job = Job(KingdomConstructionRoute.Improvement);
+			job.Payload = new string('x', length);
+			ClassicAssert.IsTrue(KingdomConstructionRules.TryEncode(new[] { job }, out string wire));
+			ClassicAssert.IsTrue(KingdomConstructionRules.TryDecode(wire, out var rows));
+			ClassicAssert.AreEqual(job.Payload, rows[0].Payload);
+			ClassicAssert.AreEqual(job.Id, rows[0].Id);
+			ClassicAssert.AreEqual(job.Claims.MaterialRequested, rows[0].Claims.MaterialRequested);
+			ClassicAssert.IsTrue(KingdomConstructionRules.TryEncode(rows, out string canonical));
+			ClassicAssert.AreEqual(wire, canonical);
+		}
+
+		[Test]
+		public void OversizedPayloadRefusesBothWriterAndUntrustedRegistryReader()
+		{
+			var job = Job(KingdomConstructionRoute.Improvement);
+			ClassicAssert.IsTrue(KingdomConstructionRules.TryEncode(new[] { job }, out string wire));
+			job.Payload = new string('x', KingdomConstructionRules.MaxPayloadChars + 1);
+			ClassicAssert.IsFalse(KingdomConstructionRules.TryEncode(new[] { job }, out _));
+			string[] lines = wire.Split('\n');
+			string[] fields = lines[1].Split('|');
+			fields[19] = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(job.Payload));
+			ClassicAssert.IsFalse(KingdomConstructionRules.TryDecode(lines[0] + "\n" + string.Join("|", fields), out _));
+		}
+
 		[Test]
 		public void StampedZeroCostStrikeResumesPublishedReceiptAfterReload()
 		{

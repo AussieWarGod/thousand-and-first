@@ -163,7 +163,7 @@ namespace ThousandAndFirst
 					int slot = index;
 					GameObject body = scope.Create(() => GameObject.Create(
 						FounderBlueprints[slot]));
-					if (!GameObject.Validate(body) || !body.IsCreature || body.IsPlayer()
+					if (!GameObject.Validate(body) || !body.IsCreature || body.IsPlayer() || body.Brain == null
 						|| body.CurrentCell != null)
 					{
 						failure = "a founding body was not a fresh, unplaced creature";
@@ -181,6 +181,13 @@ namespace ThousandAndFirst
 						|| !TryPrepareMarked(body, KingdomQuickstartRules.FounderMarker(
 							Receipt, slot), out failure)
 						|| !TryPlaceGrant(Zone, body, x, y, out failure)) return null;
+					// These newly owned founders start at a civic anchor, as vanilla villagers do.
+					// Work/sleep goals may move them; idle wandering must not send them across the wild zone.
+					body.Brain.Wanders = false;
+					body.Brain.WandersRandomly = false;
+					// Civilian founders defend themselves without seeking faction enemies to attack.
+					body.Brain.Passive = true;
+					body.Brain.Stay(body.CurrentCell);
 					cohort[slot] = body;
 				}
 				return cohort[0];
@@ -233,9 +240,12 @@ namespace ThousandAndFirst
 			{
 				int x, y;
 				if (!KingdomQuickstartRules.TryFounderCell(i, out x, out y)
-					|| !ExactRole(Zone, Cohort[i], FounderBlueprints[i], x, y))
+					|| !ExactRole(Zone, Cohort[i], FounderBlueprints[i], x, y)
+					|| Cohort[i].Brain == null || Cohort[i].Brain.Wanders || Cohort[i].Brain.WandersRandomly
+					|| !Cohort[i].Brain.Passive
+					|| Cohort[i].Brain.StartingCell?.ResolveCell() != Zone.GetCell(x, y))
 				{
-					Failure = "founder " + i + " was not on its own reserved cell";
+					Failure = "founder " + i + " was not anchored on its own reserved cell";
 					return false;
 				}
 			}

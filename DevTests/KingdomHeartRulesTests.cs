@@ -187,12 +187,12 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void EveryRungIsGatedByTheStageThatLaysItsPlotAndNothingElse()
+		public void HeartPlotSizesFollowTheCurrentGroundAvailability()
 		{
-			// The heart needs no gate of its own: a settlement that cannot lay a great plot cannot
-			// close the great court, and is refused in the words it already knows.
+			// Camp can now reserve Medium ground for enclosed homes. This only measures plot
+			// availability; the waterstone catalogue still explicitly requires Steading.
 			ClassicAssert.AreEqual(GrowthStage.Camp, KingdomPlotRules.StageForSize(KingdomPlotRules.HeartSizeForRung(1)));
-			ClassicAssert.AreEqual(GrowthStage.Steading, KingdomPlotRules.StageForSize(KingdomPlotRules.HeartSizeForRung(2)));
+			ClassicAssert.AreEqual(GrowthStage.Camp, KingdomPlotRules.StageForSize(KingdomPlotRules.HeartSizeForRung(2)));
 			ClassicAssert.AreEqual(GrowthStage.Town, KingdomPlotRules.StageForSize(KingdomPlotRules.HeartSizeForRung(3)));
 			ClassicAssert.AreEqual(GrowthStage.City, KingdomPlotRules.StageForSize(KingdomPlotRules.HeartSizeForRung(4)));
 		}

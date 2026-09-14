@@ -10,6 +10,47 @@ namespace ThousandAndFirst.Tests
 {
 	public class KingdomScenarioLoadResumeTests
 	{
+		[Test]
+		public void BlockingConsumerCannotHoldTheSuccessfulLoadWorkerOpen()
+		{
+			var barrier = new KingdomScenarioLoadBarrier<object>();
+			var finish = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+			var prepared = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+			var value = new object();
+			using (var entered = new ManualResetEventSlim(false))
+			using (var release = new ManualResetEventSlim(false))
+			using (var cancel = new CancellationTokenSource())
+			{
+				Task consumer = barrier.Pending.ContinueWith(_ => {
+					entered.Set();
+					release.Wait();
+				}, cancel.Token, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+				ClassicAssert.IsTrue(barrier.TryClaim());
+				_ = barrier.Start(async () => {
+					barrier.PrepareResume(value);
+					prepared.SetResult(true);
+					await finish.Task;
+				});
+				Task worker = barrier.Work;
+				try
+				{
+					ClassicAssert.IsTrue(prepared.Task.Wait(5000));
+					finish.SetResult(true);
+					ClassicAssert.IsTrue(entered.Wait(5000));
+					ClassicAssert.IsTrue(worker.Wait(5000),
+						"consumer continuation must not keep the successful load worker inside its lock");
+					ClassicAssert.AreSame(value, barrier.Pending.Result);
+				}
+				finally
+				{
+					release.Set(); finish.TrySetResult(true); cancel.Cancel();
+					Task cleanup = Task.WhenAll(worker, consumer);
+					try { ClassicAssert.IsTrue(cleanup.Wait(5000)); }
+					catch (AggregateException) { ClassicAssert.IsTrue(cleanup.IsCompleted); }
+				}
+			}
+		}
+
 		[TestCase("success")]
 		[TestCase("fault")]
 		[TestCase("cancel")]
