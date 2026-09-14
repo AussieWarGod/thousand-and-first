@@ -422,7 +422,9 @@ jobs:
       # Windows variables into every wsl.exe child by name; WSL_UTF8 keeps wsl.exe output UTF-8.
       TAF_QUD_ROOT: /mnt/f/SteamLibrary/steamapps/common/Caves of Qud
       TAF_LIVE_MOD: /mnt/c/taf-release/live-mod/ThousandAndFirst
-      WSLENV: TAF_TAG:TAF_TAG_OBJECT:TAF_COMMIT:TAF_LANE:TAF_MODE:TAF_ITEM:TAF_VERSION:TAF_EXPECTED_RECEIPT_SHA:TAF_EXPECTED_NOTE_SHA:TAF_RUN:TAF_REPO_URL:TAF_QUD_ROOT:TAF_LIVE_MOD:TAF_RELEASE_ROOT_WSL
+      # Optional authentic ABI reference; gate.sh still verifies every pinned source hash.
+      TAF_HEARTHPYRE_223_ROOT: ${{ vars.TAF_HEARTHPYRE_223_ROOT }}
+      WSLENV: TAF_TAG:TAF_TAG_OBJECT:TAF_COMMIT:TAF_LANE:TAF_MODE:TAF_ITEM:TAF_VERSION:TAF_EXPECTED_RECEIPT_SHA:TAF_EXPECTED_NOTE_SHA:TAF_RUN:TAF_REPO_URL:TAF_QUD_ROOT:TAF_LIVE_MOD:TAF_HEARTHPYRE_223_ROOT:TAF_RELEASE_ROOT_WSL
       WSL_UTF8: '1'
     outputs:
       run_dir_win: ${{ steps.preflight.outputs.run_dir_win }}

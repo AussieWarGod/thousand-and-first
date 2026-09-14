@@ -3,7 +3,7 @@
 ## Current source inventory (unreleased)
 
 The engine gate runs across 3106 production C# sources (3102 baseline);
-the cold-install inventory contains 3139 files. Inventory `aef5dbb86f8a1f12942427a28bf8e00e937f0c86aa9d41ab1bf0b601d4fe1cca`.
+the cold-install inventory contains 3139 files. Inventory `3dc69687e01f930bffc8f840a15f4a5a885c3744a6fc17049a8ce91c5d881e62`.
 These counts describe the source inventory, not a public installation. Native acceptance is scoped below.
 
 Paid conversion follow-through: `Tools/personas/paid-housing-native-check.persona` uses real

@@ -825,6 +825,15 @@ pipeline run is the natural place to gather the evidence.
 
 ### Steam host runner runbook
 
+The optional repository Actions variable `TAF_HEARTHPYRE_223_ROOT` is forwarded unchanged
+through WSL to the existing compile gate. When the installed Workshop package differs from
+the pinned compiler reference, configure this variable to an authentic local source checkout
+as described in DEVELOPMENT.md. The gate still verifies its version and every pinned hash;
+an absent variable preserves the ordinary installed-source lookup. This is a compile fixture,
+not runtime compatibility evidence or an installed dependency downgrade. Compatibility work
+remains deferred until Beta. Verify the checkout before starting the release window.
+
+
 Preconditions on the gaming PC, all already proved by the 0.3.1 releases: a Windows desktop session
 for the account that owns items `3794797472` and `3796495680`; the Steam client running and signed
 in under that **same** Windows account; licensed Caves of Qud at

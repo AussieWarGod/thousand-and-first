@@ -1,108 +1,41 @@
 # Changelog
 
-**Pending Quickstart founder anchoring (unreleased)**
-
-New founding citizens start with a vanilla civic anchor on their camp approach cells. Ordinary
-work and idle behavior remain available; they no longer begin with unbounded random wandering
-while the settlement is being built. Existing citizens and combat rules are unchanged.
-
-**Pending restored fixture recovery (unreleased)**
-
-Recheck exact physical fixtures after they are restored instead of permanently quarantining an
-intact building receipt on a temporary missing, moved, duplicated or changed component. All physical
-identity checks and malformed-authority refusals remain. Existing quarantined saves are not rewritten.
-Allow a paid conversion to lay nonblocking flooring beneath its exact predecessor on the shared
-main cell during the frozen handover phase. Foreign furniture still blocks placement, including
-a foreign container with a copied payment receipt. Paid completion, retained contents/founders and separate cold continuation pass at `d5a0e96d`.
-
-**Pending enclosed canvas homes (unreleased)**
-
-Author enclosed shared shelters, separate chambers and courtyard cabins for M/L/XL plots.
-Keep furniture outside the entrance aisle and reserve four-cell courts. Fresh Quickstart uses
-M plots, available at Camp; old S layout readers remain explicit. Timber, mud and block
-conversions now retain the enclosed room programme and incoming furniture. Charge canvas for
-added bedrolls and previously unfunded historical-route cushions. Exclude ambient faction parties
-only while generating the exact initial camp, preventing a legendary ape party from killing the
-starter citizens. Marsh construction and separate cold-load checks pass at `2c0600b5`, including
-all four original citizens, real enclosed housing and entrance obstruction/recovery. Broader
-housing/conversion and release acceptance remain pending; see docs/STATUS.md.
-
-**Pending paid conversion price history (unreleased)**
-
-Retain exact historical declarations for already-paid same-set transition receipts when current
-prices change. New commissions still use current prices. Paid native construction and completed-save cold load
-pass at `d5a0e96d`; pending-job/version-change coverage remains #239, historical geometry #240.
-
-**Shared-hall access (unreleased)**
-
-Require an exterior approach connected through clear floor and usable doors before granting bedroom
-privacy. Internal doors no longer hide furniture-blocked shared halls; alternate exits restore access.
-All 29 native room observations pass at `dc65f086`, including shared-hall obstruction, alternate
-exits, native door states and restoration. See docs/STATUS.md for exact evidence and scope.
-
-**Pending room and furniture clearance (unreleased)**
-
-Measure lodging privacy from real sleeping rooms and reachable clear floor instead of plot area.
-Reserve furniture footprints even when native movement permits walking over them; require adjacent
-clear-floor bed access. Shared extra bunks still limit privacy after enrollment caps. The layout
-workbench applies occupied-space rules and flags furniture on doorways, including doors with an
-alternative entrance. Twenty native failure/restoration observations passed at `765e8e59`; see
-docs/STATUS.md for scope and the closed archive. Building redesign and room/activity rewards
-remain in progress.
-
-**Pending heart progression repair (unreleased)**
-
-Clear eligible residents from retained floors that become walls during an authored renovation
-(#226). Apply existing protected-body, destination and rollback rules at commissioning and
-paid handover, with strict proof before layout mutation. Preserve existing-wall and unmapped
-ground protection. Native tests now require court interior preflight and paid late-clearance
-cases; fresh full-chain acceptance remains pending.
-
-Allow residents and visitors to stand on retained walkable heart floors during upgrade
-assessment. Foreign objects and occupied blocked slots retain their protections. Extend the
-native occupied-ground probes to cover the predecessor interior; full acceptance is pending.
-
-Allow large authored hearts to fit construction receipts. The construction payload limit now
-covers the architecture codec's existing bounded envelope; old receipts retain their format.
-Court and arcology payload regressions and overflow refusal tests cover the mismatch (#221).
-Native24 completed rung three, then refused the old payload bound before court payment.
-Hearthpyre compatibility work is deferred until Beta; further gameplay Alphas remain priority.
-
-Follow completed heart upgrades across successive receipts, and admit the exact next paid
-improvement while its predecessor still stands. Scope local spatial-seal reads to one survey.
-The developer city fixture gains explicit synthetic water producers and sustained-support preflight.
-Preserve envelope preflight's admission of movable residents on newly annexed upgrade ground;
-strict paid application still requires clearance. Add native resident, founder and foreign-obstruction probes.
-Native acceptance is pending.
-Permit paid handover retries to reprove already-committed scaffold removal. Preserve exact
-founding survey stakes while the heart grows around them; foreign markers remain protected.
-Controlled native obstruction/retry passed through tier three at `3742ffeb`; survey-marker
-cases remain unexecuted.
-Allow the surveyed heart to grow over exact unpaid foot tracks, preserving those tracks. Paid
-paving, foreign and ambiguous road objects remain protected. Narrow road probes passed in the
-failed `710fa082` run; tier-three track retention later passed at `3742ffeb`. Full progression
-and retention through tier four remain unproved.
-Repeat lawful resident clearance at paid handover and retry, with exact endpoints, custody and
-strict ground rechecked after movement. Add native late-resident, protected-occupant and forced
-no-destination cases. These bounded tier-three cases passed at `3742ffeb`; higher persistence
-and full-chain acceptance remain pending.
-Fund the six new timber floors when upgrading the moot yard to the great court. Previously
-the missing shaped-timber claim blocked the upgrade before payment. Expand authored-delta
-regressions to cover every added material across all fallback heart transitions and facings,
-including historical-baseline transitions. Sixteen main cases pass; fresh native confirmation
-of the court bill remains pending under #216. Exact evidence is in docs/STATUS.md.
-
 Current 3106-file census is line-cap green: 440,877 physical lines; direct `XRL`
-imports occur in 1450 files, 0 of them over the line limit. Inventory SHA-256: `aef5dbb86f8a1f12942427a28bf8e00e937f0c86aa9d41ab1bf0b601d4fe1cca`.
+imports occur in 1450 files, 0 of them over the line limit. Inventory SHA-256: `3dc69687e01f930bffc8f840a15f4a5a885c3744a6fc17049a8ce91c5d881e62`.
 The cold-install inventory contains 3139 files. This is not evidence of a new public installation.
 
-All notable changes to The Thousand and First. Versions are semantic: patch for fixes,
-minor for additive API and content, major for breaking changes. Supported API is defined in
-[docs/API.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/API.md).
+All notable changes to The Thousand and First. Historical entries retain their original scope;
+[docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md)
+records current acceptance.
 
-Historical entries preserve the claim made at that point. The latest version entry, `VISION.md`, and
-`docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
-below it.
+## [0.3.7] — 2026-09-15 (Alpha)
+
+Private candidate for enclosed housing and paid construction recovery; not yet published.
+
+- Give new Quickstart settlers enclosed Medium shelters with real doors and clear entrance aisles.
+  Larger shared homes use separate chambers or courtyard cabins; hut conversions retain their
+  furniture and room programme. Medium plots are available from Camp.
+- Measure lodging privacy from real rooms and reachable clear floor. Beds, chairs and other
+  furniture occupy space even when Qud permits walking over them; shared halls and doorways
+  must remain clear. Extra bunks still count toward crowding.
+- Anchor new founders at the camp before their first turn, preserving ordinary work and idle
+  goals. Reserve the initial camp's ambient faction-party encounter slot during generation.
+- Recover a paid housing conversion after exact restoration of a missing or moved fixture.
+  Preserve original storage contents and payment; permit flooring beneath only its exact paid
+  predecessor. Foreign furniture and copied receipts grant no placement exception.
+- Retain exact historical transition prices for paid receipts while new quotes use current prices.
+- Follow successive paid heart upgrades, recheck eligible residents entering new wall sites,
+  retain authenticated founding stakes and unpaid tracks, fund added court floors, and admit
+  the existing architecture payload within bounded construction receipts.
+- Add a visual layout workbench with enclosure, furniture-access and clear-floor audits.
+
+Native checks cover real four-founder housing, paid conversion, obstruction/retry, retained contents,
+24,000 ordinary turns and separate cold continuation. Shared-room tests cover native door states
+and walkable-furniture obstructions. Higher-heart progression uses disclosed synthetic population
+and support; it does not establish ordinary balance or multi-map city coverage. Full building
+redesign, room/activity rewards, reputation-weighted populations, supporting land use and natural
+outward expansion remain Beta work. Historical renovations/quarantine and polity reconciliation
+after load remain tracked limitations. Hearthpyre compatibility remains deferred until Beta.
 
 ## [0.3.6] — 2026-09-13 (Alpha)
 

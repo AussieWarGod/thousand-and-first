@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "inventorySha256": "e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719",
+  "inventorySha256": "3dc69687e01f930bffc8f840a15f4a5a885c3744a6fc17049a8ce91c5d881e62",
   "exceptions": [],
   "reviewedBy": "Codex root automated structural review",
-  "completedUtc": "2026-09-13T12:47:50Z",
+  "completedUtc": "2026-09-14T19:00:55Z",
   "oneResponsibility": {
     "status": "passed",
-    "notes": "Inherits the verified private 0.3.5 production inventory sha256:4d3938534ed4663c01492bd0455a6aea9b707d76ea4f7b4442357c9aac38472d. The only production C# delta is Core/KingdomReleaseInfo.cs: the diagnostic/native-receipt version constant changes from 0.3.5 to 0.3.6 to match manifest.json. No gameplay, serialization, fields, ownership, drawing or architecture behavior changes. The existing version contract requires exact manifest/runtime identity. Root automated source review; private delivery and current native candidate evidence remain separate checks."
+    "notes": "Reviewed all staged paths against prior reviewed fbaaf549: 3076 byte-identical, 30 changed/added. Complete comparison log:/tmp/taf-alpha037-production-comparison-4.json; census log:/tmp/taf-alpha037-structure-inventory-4.json; responsibility/boundary review docs/STRUCTURE_REVIEW_0_3_7.md. Pure bounded room and paid-history rules remain separate from exact engine custody, disposable survey and initial encounter adapters. Final renovation clearance rechecks protected bodies, endpoints and contents. Temporary physical refusal changes no intact receipt authority. Fresh founder anchors affect only reversible newly allocated grants. No saved schema/field layout changes. Full licensed14957/5849 zero skips and four engine compiles pass on housing source; native warm/cold archive sha256:aee3c0a96e2ecb8ba341ccc0261de5a62fa9ba35e83dc850c528b3ff2c22b635 retains its own d5a pin. Candidate production differs only by release version. No required structural finding; candidate delivery and broader gameplay acceptance remain separate."
   },
   "protocolsAtBoundaries": {
     "status": "passed",
-    "notes": "Inherits the verified private 0.3.5 production inventory sha256:4d3938534ed4663c01492bd0455a6aea9b707d76ea4f7b4442357c9aac38472d. The only production C# delta is Core/KingdomReleaseInfo.cs: the diagnostic/native-receipt version constant changes from 0.3.5 to 0.3.6 to match manifest.json. No gameplay, serialization, fields, ownership, drawing or architecture behavior changes. The existing version contract requires exact manifest/runtime identity. Root automated source review; private delivery and current native candidate evidence remain separate checks."
+    "notes": "Reviewed all staged paths against prior reviewed fbaaf549: 3076 byte-identical, 30 changed/added. Complete comparison log:/tmp/taf-alpha037-production-comparison-4.json; census log:/tmp/taf-alpha037-structure-inventory-4.json; responsibility/boundary review docs/STRUCTURE_REVIEW_0_3_7.md. Pure bounded room and paid-history rules remain separate from exact engine custody, disposable survey and initial encounter adapters. Final renovation clearance rechecks protected bodies, endpoints and contents. Temporary physical refusal changes no intact receipt authority. Fresh founder anchors affect only reversible newly allocated grants. No saved schema/field layout changes. Full licensed14957/5849 zero skips and four engine compiles pass on housing source; native warm/cold archive sha256:aee3c0a96e2ecb8ba341ccc0261de5a62fa9ba35e83dc850c528b3ff2c22b635 retains its own d5a pin. Candidate production differs only by release version. No required structural finding; candidate delivery and broader gameplay acceptance remain separate."
   }
 }

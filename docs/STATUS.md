@@ -1,5 +1,13 @@
 # Current implementation and release evidence
 
+## Alpha 0.3.7 candidate refresh
+
+The private candidate now includes the accepted paid-heart, room, enclosed-housing, shared-hall
+and paid-conversion work. Runtime version is 0.3.7; no package, staging tag or upload yet.
+Inventory SHA-256: `3dc69687e01f930bffc8f840a15f4a5a885c3744a6fc17049a8ce91c5d881e62`.
+Native evidence below retains its original source pins. Candidate release gates and subscribed
+Quickstart/cold-load acceptance remain required; public Alpha stays 0.3.6.
+
 ## Paid housing and founder anchors: warm/cold behavioral checks accepted
 
 At `d5a0e96d800bfcac929a52b394e94371172018a0`, Qud 2.0.211.51, marsh Quickstart with
