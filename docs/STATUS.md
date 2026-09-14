@@ -13,8 +13,8 @@ balance or multi-tile acceptance.
 
 ## Current source census for the pending heart repair
 
-Four engine compile modes passed: 3100 runtime sources; baseline and compatibility use their respective
-exclusions (3096 baseline). The cold-install inventory has 3131 files.
+Four engine compile modes passed: 3100 sources, baseline and compatibility symbols use their
+respective exclusions (3096 baseline). The cold-install inventory has 3131 files.
 3100 staged C# files / 440,271 physical lines; zero strict line-cap failures.
 Direct `XRL` imports: 1446 files, 0 over the line limit. Inventory SHA-256: `adbc2e2a11faaa57d8f63c8d12f0d429ed58f61a97271a95b5b6c672d434cfd1`.
 This is a source census, not native acceptance or an updated exact-inventory semantic review.
@@ -161,6 +161,14 @@ Focused scaffold-removal cases passed in both projects (24 main, 23 portable), a
 envelope source-contract cases passed, all with zero skips. Four engine compile modes passed
 (3096/3100 ordinary and 3382/3386 developer sources); registration and documentation checks passed.
 These checks do not establish native recovery.
+The final documentation wording edit at `000bea4e` failed the exact STATUS source-count
+contract, and CI 34800211070 failed that audit; both full managed CI suites passed. A following
+successful shell command masked the local docs exit code. The compile archive's docs-PASS
+summary was incorrect; its copied `taf-heart-chain-docs-29.log` retains the actual exit 1.
+Append-only correction: `beta-heart-chain/000bea4e/compile-documentation-correction-1/result.json`,
+SHA-256 `cafceed5b5c83c504eb1acbbe19fc23cf7725af43c245d150638d936e273eba0`.
+The wording is restored here; runtime and native-test inputs are unchanged. Documentation
+checks must be judged by their own exit and output, not the last command in a shell batch.
 Spatial seal capture and fixture housing observations use one local survey for their complete read.
 Source inspection found that an unbound component verifier otherwise rebuilds a survey per component.
 The previous run measured 220–225-second daily progress pauses and 3.5–6.9-second settlement passes;
