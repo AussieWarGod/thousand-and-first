@@ -794,6 +794,7 @@
     <Compile Include="KingdomFootprintTests.cs" />
     <Compile Include="KingdomMaterialRulesTests.cs" />
     <Compile Include="KingdomCampHeartTests.cs" />
+    <Compile Include="KingdomCanvasHomeTests.cs" />
     <Compile Include="KingdomCatalogueRulesTests.cs" />
 	<Compile Include="KingdomCeremonyLogicalSource.cs" />
 	<Compile Include="KingdomCeremonyStructureSourceTests.cs" />

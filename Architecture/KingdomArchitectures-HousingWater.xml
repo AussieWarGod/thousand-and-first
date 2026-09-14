@@ -16,6 +16,8 @@
     <slot Key="ground" Blueprint="DirtFloor" Role="ground" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="floor" Blueprint="DirtPath" Role="floor" Material="mud" MinTech="hands" Natural="yes" />
     <slot Key="wall" Blueprint="r_KingdomStructureCanvasWall" Role="wall" Material="canvas" MinTech="hands" Natural="no" />
+    <slot Key="door" Blueprint="r_KingdomFixtureDoorTimber" Role="door" Material="timber" MinTech="hands" Natural="no" />
+    <slot Key="table" Blueprint="r_KingdomFixtureTableTimber" Role="work-surface" Material="timber" MinTech="hands" Natural="no" />
     <slot Key="bed" Blueprint="r_KingdomFixtureBedrollCanvas" Role="sleep" Material="canvas" MinTech="hands" Natural="no" />
     <slot Key="storage" Blueprint="r_KingdomFixtureBasketEmpty" Role="storage" Material="canvas" MinTech="hands" Natural="no" />
     <slot Key="seat" Blueprint="r_KingdomFixtureCushionCanvas" Role="seating" Material="canvas" MinTech="hands" Natural="no" />
@@ -306,7 +308,7 @@
   </palette>
 
   <!-- Small housing maps. -->
-  <map Key="housing-tent-s0" Width="6" Height="4" Footprint="1,0,3x2" DefaultCover="soft">
+  <map Key="housing-tent-s0" Width="6" Height="4" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
@@ -320,7 +322,7 @@
     <row Cells="..s+.." />
   </map>
 
-  <map Key="housing-tentrow-s1" Width="6" Height="4" Footprint="0,0,5x2" DefaultCover="soft">
+  <map Key="housing-tentrow-s1" Width="6" Height="4" DefaultCover="soft">
     <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
     <glyph Char="+" Ground="$ground" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
     <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="walk" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
@@ -1375,7 +1377,7 @@
 
   <!-- Housing plan bindings. Each catalogue BuildKey appears in one tier only. -->
   <plan Key="canvas-shelter">
-    <binding Key="housing-s-canvas" Type="housing" Size="S" Facing="heart">
+    <binding Key="housing-s-canvas" Type="housing" Size="S" Facing="heart" Retained="yes">
       <tier Key="tent" BuildKey="tent" Level="0" Map="housing-tent-s0" Palette="housing-canvas-hands">
         <require Role="main" Min="1" />
         <require Role="entrance:public" Min="1" />

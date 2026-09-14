@@ -130,20 +130,19 @@
     thing a legendary trader will consent to live in.
   -->
   <building Key="tent" DisplayName="settler's tent (a roof by nightfall)" Blueprint="r_KingdomTent"
-            Cost="3" Ticks="900" Styles="all" Category="housing" Plot="S" Adoptable="yes"
-            Footprint="3x2" Roof="Soft"
-            Materials="canvas:2" Carries="roof:1" Contents="r_KingdomFurnishings_Dwelling"
-            UpgradesTo="tentrow" UpgradeMaterials="canvas:1,timber:1">
+            Cost="3" Ticks="900" Styles="all" Category="housing" Plot="M" Adoptable="yes"
+            Roof="Soft"
+            Materials="canvas:12,timber:1" Carries="roof:1" Contents="r_KingdomFurnishings_Dwelling"
+            UpgradesTo="tentrow" UpgradeMaterials="canvas:2,timber:1">
     <skin Key="canvas" ColorString="&amp;y" DetailColor="w" />
     <skin Key="verdant" Style="verdant" ColorString="&amp;g" DetailColor="w" />
     <skin Key="fungal" Style="fungal" ColorString="&amp;m" DetailColor="w" />
     <skin Key="moonstair" Style="moonstair" ColorString="&amp;c" DetailColor="w" />
     <skin Key="eater" Style="eater" ColorString="&amp;r" DetailColor="w" />
   </building>
-  <building Key="tentrow" DisplayName="staked tent-row (canvas, and a wall against the wind)" Blueprint="r_KingdomTentRow"
-            Cost="5" Ticks="1200" Styles="all" Category="housing" Plot="S" Adoptable="yes"
-            Footprint="5x2"
-            Materials="canvas:3,timber:1" Carries="roof:3" Contents="r_KingdomFurnishings_Dwelling" />
+  <building Key="tentrow" DisplayName="staked tent-row (enclosed canvas housing)" Blueprint="r_KingdomTentRow"
+            Cost="5" Ticks="1200" Styles="all" Category="housing" Plot="M" Adoptable="yes"
+            Materials="canvas:14,timber:1" Carries="roof:3" Contents="r_KingdomFurnishings_Dwelling" />
 
   <!-- STYLE: Posts and wattle want trees. The salt flats grow brinestalk and the ruin field grows fulcrete, and neither is a post - the mud-brick hut and the block hut are what those two raise instead. -->
 

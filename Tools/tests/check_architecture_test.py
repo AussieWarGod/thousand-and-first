@@ -915,6 +915,29 @@ class ArchitectureCheckerTests(unittest.TestCase):
         self.write_upgrade_repo(buildings, ET.tostring(root, encoding="unicode"))
         self.assertIn("upgrade.exact-route", self.codes(self.check()))
 
+    def test_retained_binding_cannot_replace_a_current_minimum_or_hide_bad_sizes(self) -> None:
+        buildings, architecture = self.write_upgrade_repo()
+        root = ET.fromstring(architecture)
+        for binding in root.findall('./plan/binding'):
+            if binding.get('Size') == 'S':
+                binding.set('Retained', 'yes')
+        retained = ET.tostring(root, encoding='unicode')
+        self.write_upgrade_repo(buildings, retained)
+        self.assertIn('binding.retained-size', self.codes(self.check()))
+        larger = buildings.replace('Plot="S"', 'Plot="M"')
+        for plan in root.findall('plan'):
+            for binding in list(plan.findall('binding')):
+                if binding.get('Size') == 'M':
+                    plan.remove(binding)
+        retained = ET.tostring(root, encoding='unicode')
+        self.write_upgrade_repo(larger, retained)
+        codes = self.codes(self.check())
+        self.assertNotIn('binding.size-minimum', codes)
+        self.assertNotIn('binding.retained-size', codes)
+        self.assertIn('coverage.exact-lot', codes, 'historical readers cannot stand in for the new minimum')
+        self.write_upgrade_repo(larger, retained.replace('Retained="yes"', 'Retained="true"'))
+        self.assertIn('binding.retained', self.codes(self.check()))
+
     def test_upgrade_route_rejects_target_bound_below_its_minimum_and_level_skip(self) -> None:
         buildings, architecture = self.write_upgrade_repo()
         self.write_upgrade_repo(
@@ -1793,10 +1816,10 @@ class ArchitectureCheckerTests(unittest.TestCase):
             for identity in explicit_maps
             if not CHECKER._is_generated_map(model.maps[identity[1]])
         }
-        self.assertEqual(25, len(explicit_keys))
-        self.assertEqual(101, len(explicit_maps))
-        self.assertEqual(53, len(source_explicit))
-        self.assertEqual(48, len(explicit_maps - source_explicit))
+        self.assertEqual(23, len(explicit_keys))
+        self.assertEqual(93, len(explicit_maps))
+        self.assertEqual(51, len(source_explicit))
+        self.assertEqual(42, len(explicit_maps - source_explicit))
 
     def test_functional_anchor_does_not_force_replaceable_object_to_be_stateful(self) -> None:
         replaceable = ARCHITECTURE.replace(

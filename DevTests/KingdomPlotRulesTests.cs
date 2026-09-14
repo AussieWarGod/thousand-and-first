@@ -153,7 +153,7 @@ namespace ThousandAndFirst.Tests
 
 		// --- Stage gating: the city builds bigger as it grows ------------------------------
 
-		[TestCase(GrowthStage.Camp, Size.Small)]
+		[TestCase(GrowthStage.Camp, Size.Medium)]
 		[TestCase(GrowthStage.Steading, Size.Medium)]
 		[TestCase(GrowthStage.Village, Size.Medium)]
 		[TestCase(GrowthStage.Town, Size.Large)]
@@ -164,7 +164,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[TestCase(GrowthStage.Camp, Size.Small, true)]
-		[TestCase(GrowthStage.Camp, Size.Medium, false)]
+		[TestCase(GrowthStage.Camp, Size.Medium, true)]
 		[TestCase(GrowthStage.Camp, Size.Large, false)]
 		[TestCase(GrowthStage.Camp, Size.Huge, false)]
 		[TestCase(GrowthStage.Steading, Size.Medium, true)]
@@ -190,7 +190,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[TestCase(Size.Small, GrowthStage.Camp)]
-		[TestCase(Size.Medium, GrowthStage.Steading)]
+		[TestCase(Size.Medium, GrowthStage.Camp)]
 		[TestCase(Size.Large, GrowthStage.Town)]
 		[TestCase(Size.Huge, GrowthStage.City)]
 		public void EveryTierNamesTheStageThatLiftsIt(Size Size, GrowthStage Expected)

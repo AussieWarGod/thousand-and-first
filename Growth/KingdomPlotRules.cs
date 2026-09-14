@@ -126,7 +126,7 @@ namespace ThousandAndFirst
 			switch (Stage)
 			{
 				case GrowthStage.Camp:
-					return PlotSize.Small;
+					return PlotSize.Medium;
 				case GrowthStage.Steading:
 				case GrowthStage.Village:
 					return PlotSize.Medium;
@@ -144,7 +144,7 @@ namespace ThousandAndFirst
 			switch (Size)
 			{
 				case PlotSize.Medium:
-					return GrowthStage.Steading;
+					return GrowthStage.Camp;
 				case PlotSize.Large:
 					return GrowthStage.Town;
 				case PlotSize.Huge:

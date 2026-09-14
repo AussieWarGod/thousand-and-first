@@ -2,14 +2,14 @@
 
 ## Current source census — pending heart repair
 
-**3103** production C# files; 440,623 physical lines; 1447 direct-XRL files; zero cap failures;
-3132 cold-install files. Inventory `6972837d3b21390d4257f84fa551f6621627a46a7542cc01edfd4d9298df84b8`. This census is not native acceptance.
+**3104** production C# files; 440,649 physical lines; 1448 direct-XRL files; zero cap failures;
+3136 cold-install files. Inventory `62732b7d3beca788f0cbd093ce652f11418daf72c1e802ff2ff713ecf4f6dca4`. This census is not native acceptance.
 
 ## Retained combined heart candidate before surveyed-ingress draft — 2026-09-11
 
 Current draft census/evidence is in docs/STATUS.md; the figures below describe its predecessor.
 
-**3098** production C# files; 440,044 physical lines; 1447 direct-XRL files; zero cap failures;
+**3098** production C# files; 440,044 physical lines; 1448 direct-XRL files; zero cap failures;
 3129 cold-install files. Inventory `fba0d595a8b2c29876f3f74eae29914a9595d85182831f2ceddb5b44d51dfdc0`.
 #141/#144/#139/#137 combined over dev with the 0.3.3 backmerge. Compile, native and semantic
 review are owed; old counts below are retained, not current acceptance. Public0.3.3 finalized.

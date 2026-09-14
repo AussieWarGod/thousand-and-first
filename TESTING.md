@@ -2,9 +2,19 @@
 
 ## Pending heart progression source inventory
 
-The planned compatibility gate runs across 3103 production C# sources (3097 baseline);
-the cold-install inventory contains 3134 files. Inventory `6972837d3b21390d4257f84fa551f6621627a46a7542cc01edfd4d9298df84b8`.
+The planned compatibility gate runs across 3104 production C# sources (3100 baseline);
+the cold-install inventory contains 3136 files. Inventory `62732b7d3beca788f0cbd093ce652f11418daf72c1e802ff2ff713ecf4f6dca4`.
 These counts describe the pending repair, not a public installation or native PASS.
+
+## Enclosed canvas-home draft
+
+Run `Tools/dev-check.sh tools canvas_homes_test.py` for all current sizes/facings, separated
+sleeping rooms, straight M entrance clearance, retained readers and four-cell XL courts.
+Run `Tools/dev-check.sh main KingdomCanvasHomeTests` for the actual compiled paid renovation
+delta. The existing Quickstart lifecycle now also requires one enclosed room, three usable
+sleeping places and 17 clear floor cells in each completed M shelter. These native assertions
+are not accepted until a fresh construction/save/cold-load chain passes. Historic S saves need
+separate retained-reader evidence; the current lifecycle intentionally checks modern M lots.
 
 ## Physical room and furniture-clearance scenario
 

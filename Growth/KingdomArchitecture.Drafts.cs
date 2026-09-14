@@ -192,7 +192,7 @@ namespace ThousandAndFirst
 				return order != 0 ? order : string.CompareOrdinal(a.Key, b.Key);
 			});
 			Draft = draft;
-			return true;
+			return ValidateRetainedBinding(State, Raw, draft);
 		}
 
 		private static bool TryTier(LoadState State, RawTier Raw, out ArchitectureTierDraft Draft)

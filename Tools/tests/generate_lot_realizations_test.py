@@ -105,7 +105,7 @@ class LotRealizationGeneratorTests(unittest.TestCase):
         tier_count = result.tier_count
         target = repository / "Architecture" / GENERATOR.OUTPUT_NAME
         self.assertEqual(target.read_text(encoding="utf-8"), expected)
-        self.assertEqual((map_count, plan_count, tier_count), (146, 107, 122))
+        self.assertEqual((map_count, plan_count, tier_count), (140, 104, 116))
         self.assertEqual(expected.count("<!-- realization source="), map_count)
 
         root = ET.fromstring(expected)
@@ -240,7 +240,7 @@ class LotRealizationGeneratorTests(unittest.TestCase):
                         )
                     else:
                         self.assertEqual(0, len(visible_thresholds), key)
-        self.assertEqual(len(checked_maps), 146)
+        self.assertEqual(len(checked_maps), 140)
 
     def test_site_census_accounts_every_cell_after_renovation(
         self,
@@ -547,7 +547,7 @@ class LotRealizationGeneratorTests(unittest.TestCase):
                 record.generated_key,
             )
             checked += 1
-        self.assertEqual(99, checked)
+        self.assertEqual(95, checked)
 
     def test_upgrade_family_identity_comes_from_exact_catalogue_graph(self) -> None:
         buildings = GENERATOR._buildings(GENERATOR_PATH.parents[1])
@@ -634,7 +634,7 @@ class LotRealizationGeneratorTests(unittest.TestCase):
             self.assertIn(yard_reference, generated_references, record.generated_key)
             self.assertIn(path_reference, generated_references, record.generated_key)
             checked += 1
-        self.assertEqual(146, checked)
+        self.assertEqual(140, checked)
 
     def test_only_food_grammar_uses_repeated_full_width_bands(self) -> None:
         signatures = {}
@@ -683,7 +683,7 @@ class LotRealizationGeneratorTests(unittest.TestCase):
                     f"{previous.generated_key} and {record.generated_key}",
                 )
             fingerprints[key] = record
-        self.assertEqual(115, len(fingerprints))
+        self.assertEqual(112, len(fingerprints))
 
     def test_reviewed_geometry_ignores_incidental_receipt_identity(self) -> None:
         result = GENERATOR.materialize(GENERATOR_PATH.parents[1])
@@ -728,7 +728,7 @@ class LotRealizationGeneratorTests(unittest.TestCase):
                     record.generated_key,
                 )
             checked += 1
-        self.assertEqual(146, checked)
+        self.assertEqual(140, checked)
 
     def test_generated_bindings_do_not_invent_upgrade_transitions(
         self,
@@ -757,7 +757,7 @@ class LotRealizationGeneratorTests(unittest.TestCase):
                         plan.get("Key"),
                     )
                     transition_tiers.append(tier)
-        self.assertEqual(15, len(transition_tiers))
+        self.assertEqual(12, len(transition_tiers))
 
     def test_every_generated_map_projects_features_once_inside_its_reviewed_envelope(self) -> None:
         repository = GENERATOR_PATH.parents[1]
@@ -1034,7 +1034,7 @@ class LotRealizationGeneratorTests(unittest.TestCase):
                     f"{record.generated_key} entrance {entrance} has no runtime lane",
                 )
 
-        self.assertEqual(48, explicit)
+        self.assertEqual(42, explicit)
         self.assertEqual(98, implicit)
 
     def test_exact_footprint_housing_uses_compact_family_courts_not_estate_grids(
@@ -1066,7 +1066,7 @@ class LotRealizationGeneratorTests(unittest.TestCase):
                 )
         self.assertEqual(
             set(xl_fingerprints),
-            {"canvas-shelter", "timber-hut", "mud-hut", "ruin-block-hut"},
+            {"timber-hut", "mud-hut", "ruin-block-hut"},
         )
         lineages = sorted(xl_fingerprints)
         for index, first in enumerate(lineages):
@@ -1308,11 +1308,15 @@ class LotRealizationGeneratorTests(unittest.TestCase):
         }
         checked = 0
         authored = 0
-        for _path, root in GENERATOR._source_roots(repository):
+        roots = list(GENERATOR._source_roots(repository))
+        authored_bindings = [binding for _path, root in roots for plan in root.findall("plan")
+                             for binding in plan.findall("binding")]
+        for _path, root in roots:
             for source_plan in root.findall("plan"):
                 source_plan_key = source_plan.get("Key", "")
-                authored_bindings = source_plan.findall("binding")
                 for source_binding in source_plan.findall("binding"):
+                    if source_binding.get("Retained") == "yes":
+                        continue
                     source_tiers = source_binding.findall("tier")
                     build_keys = {item.get("BuildKey", "") for item in source_tiers}
                     if not source_tiers or build_keys & GENERATOR.HEART_BUILD_KEYS:
@@ -1367,7 +1371,7 @@ class LotRealizationGeneratorTests(unittest.TestCase):
                         }
                         self.assertEqual(source_set, generated_set, plan_key)
                         checked += 1
-        self.assertEqual(107, checked)
+        self.assertEqual(104, checked)
         self.assertEqual(0, authored)
 
     def test_shipped_agrarian_line_uses_real_cross_size_renovation(self) -> None:

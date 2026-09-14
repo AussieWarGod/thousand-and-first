@@ -32,8 +32,10 @@ population balance, a housing quality review, multi-map acceptance or higher-hea
 
 The housing complaint is nevertheless a real authored defect. `housing-tent-s0` and
 `housing-tentrow-s1` in `Architecture/KingdomArchitectures-HousingWater.xml` have open L-shaped
-walls, an entrance marker without a physical door, and exterior storage. The generator's compact
-housing policy retains that small shelter on larger reservations. `housing_embodiment_test.py`
+walls, an entrance marker without a physical door, and exterior storage. At that baseline the generator's compact
+housing policy retained that small shelter on larger reservations. The current draft replaces new
+M/L/XL canvas plans with enclosed shared rooms, chambers and courtyard cabins; S remains a
+retained reader. See STATUS for current validation and unresolved save/paid-construction gaps. `housing_embodiment_test.py`
 counts literal sleep providers and non-open cover, while `TryValidateEnclosure` exempts Soft
 cover. Those checks cannot establish an enclosed tent. Audit the entire housing catalogue, its
 variants and generated lots; changing only these two maps is not the complete task.

@@ -48,9 +48,11 @@ class Studio:
                 palette = self.model.palettes[variant.palette_key or tier.palette_key]
                 building = self.buildings[tier.build_key]
                 self.cases.append({"id": len(self.cases), "label":
-                                   f"{tier.build_key} / {tier.binding.size} / {variant.key} / {amap.key}",
+                                   f"{tier.build_key} / {tier.binding.size} / {variant.key} / {amap.key}"
+                                   + (" (retained reader)" if tier.binding.retained else ""),
                                    "map": amap.key, "palette": palette.key, "building": building.key,
                                    "size": tier.binding.size, "category": building.category,
+                                   "retained": tier.binding.retained, "minimum_size": building.plot,
                                    "source": self.sources[amap.key][1]})
 
     def case(self, index):

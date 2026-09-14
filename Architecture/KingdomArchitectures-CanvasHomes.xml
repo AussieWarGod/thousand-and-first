@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Authored M shared shelter, L chambers/common room, XL cabins around four-cell courts. -->
+<KingdomArchitectures Schema="1">
+  <map Key="housing-tent-s0-lot-m-heart" Width="8" Height="6" DefaultCover="soft">
+    <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
+    <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="soft" Anchors="entrance:public" />
+    <glyph Char="+" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
+    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="c" Ground="$floor" Object="$seat" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:seat" Stateful="yes" />
+    <glyph Char="t" Ground="$floor" Object="$table" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:table" Stateful="yes" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
+    <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
+    <row Cells="########" />
+    <row Cells="#biiii@#" />
+    <row Cells="#iiiisi#" />
+    <row Cells="#cciiii#" />
+    <row Cells="#iiiiii#" />
+    <row Cells="###d####" />
+  </map>
+  <map Key="housing-tentrow-s1-lot-m-heart" Width="8" Height="6" DefaultCover="soft">
+    <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
+    <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="soft" Anchors="entrance:public" />
+    <glyph Char="+" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
+    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="c" Ground="$floor" Object="$seat" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:seat" Stateful="yes" />
+    <glyph Char="t" Ground="$floor" Object="$table" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:table" Stateful="yes" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
+    <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
+    <row Cells="########" />
+    <row Cells="#bibib@#" />
+    <row Cells="#iiiisi#" />
+    <row Cells="#cciiii#" />
+    <row Cells="#iiiiii#" />
+    <row Cells="###d####" />
+  </map>
+  <plan Key="lot-m-canvas-shelter-housing-s-canvas">
+    <binding Key="lot-m-housing-s-canvas" Type="housing" Size="M" Facing="heart">
+      <tier Key="tent" BuildKey="tent" Level="0" Map="housing-tent-s0-lot-m-heart" Palette="housing-canvas-hands">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:dwelling" Min="1" />
+        <require Role="fixture:sleep" Min="1" />
+        <require Role="fixture:storage" Min="1" />
+        <require Role="fixture:seat" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+      <tier Key="tentrow" BuildKey="tentrow" Level="1" Map="housing-tentrow-s1-lot-m-heart" Palette="housing-canvas-hands" Transition="renovate">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:dwelling" Min="1" />
+        <require Role="fixture:sleep" Min="1" />
+        <require Role="fixture:storage" Min="1" />
+        <require Role="fixture:seat" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+  <map Key="housing-tent-s0-lot-l-heart" Width="12" Height="10" DefaultCover="soft">
+    <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
+    <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="soft" />
+    <glyph Char="+" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
+    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="c" Ground="$floor" Object="$seat" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:seat" Stateful="yes" />
+    <glyph Char="t" Ground="$floor" Object="$table" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:table" Stateful="yes" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
+    <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
+    <glyph Char="e" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="soft" Anchors="entrance:public" />
+    <row Cells="############" />
+    <row Cells="#biiii#iii@#" />
+    <row Cells="#siiii#iiii#" />
+    <row Cells="#iiiii#iiis#" />
+    <row Cells="#iiiii#iiii#" />
+    <row Cells="###d#####d##" />
+    <row Cells="#iiiiiiiiii#" />
+    <row Cells="#icciiicici#" />
+    <row Cells="#itiiiiiiti#" />
+    <row Cells="#####e######" />
+  </map>
+  <map Key="housing-tentrow-s1-lot-l-heart" Width="12" Height="10" DefaultCover="soft">
+    <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
+    <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="soft" />
+    <glyph Char="+" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
+    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="c" Ground="$floor" Object="$seat" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:seat" Stateful="yes" />
+    <glyph Char="t" Ground="$floor" Object="$table" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:table" Stateful="yes" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
+    <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
+    <glyph Char="e" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="soft" Anchors="entrance:public" />
+    <row Cells="############" />
+    <row Cells="#biibi#ibi@#" />
+    <row Cells="#siiii#iiii#" />
+    <row Cells="#iiiii#iiis#" />
+    <row Cells="#iiiii#iiii#" />
+    <row Cells="###d#####d##" />
+    <row Cells="#iiiiiiiiii#" />
+    <row Cells="#icciiicici#" />
+    <row Cells="#itiiiiiiti#" />
+    <row Cells="#####e######" />
+  </map>
+  <plan Key="lot-l-canvas-shelter-housing-s-canvas">
+    <binding Key="lot-l-housing-s-canvas" Type="housing" Size="L" Facing="heart">
+      <tier Key="tent" BuildKey="tent" Level="0" Map="housing-tent-s0-lot-l-heart" Palette="housing-canvas-hands">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:dwelling" Min="1" />
+        <require Role="fixture:sleep" Min="1" />
+        <require Role="fixture:storage" Min="1" />
+        <require Role="fixture:seat" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+      <tier Key="tentrow" BuildKey="tentrow" Level="1" Map="housing-tentrow-s1-lot-l-heart" Palette="housing-canvas-hands" Transition="renovate">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:dwelling" Min="1" />
+        <require Role="fixture:sleep" Min="1" />
+        <require Role="fixture:storage" Min="1" />
+        <require Role="fixture:seat" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+  <map Key="housing-tent-s0-lot-xl-heart" Width="20" Height="18" DefaultCover="soft">
+    <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
+    <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="soft" />
+    <glyph Char="+" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
+    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="c" Ground="$floor" Object="$seat" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:seat" Stateful="yes" />
+    <glyph Char="t" Ground="$floor" Object="$table" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:table" Stateful="yes" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
+    <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
+    <row Cells="yyyyyyyyppppyyyyyyyy" />
+    <row Cells="y#######pppp#######y" />
+    <row Cells="y#biiis#pppp#iiiis#y" />
+    <row Cells="y#iiici#pppp#iiici#y" />
+    <row Cells="y#iiiii#pppp#iiiii#y" />
+    <row Cells="y#iiiii#pppp#iiiii#y" />
+    <row Cells="y###d###pppp###d###y" />
+    <row Cells="pppppppppppppppppppp" />
+    <row Cells="pppppppppppppppppppp" />
+    <row Cells="pppppppppppppppppppp" />
+    <row Cells="pppppppppppppppppppp" />
+    <row Cells="y###d###pppp###d###y" />
+    <row Cells="y#iiiis#pppp#iiii@#y" />
+    <row Cells="y#iiiii#pppp#iiiii#y" />
+    <row Cells="y#iiici#pppp#ictci#y" />
+    <row Cells="y#iiiii#pppp#iicii#y" />
+    <row Cells="y#######pppp#######y" />
+    <row Cells="yyyyyyyyp+ppyyyyyyyy" />
+  </map>
+  <map Key="housing-tentrow-s1-lot-xl-heart" Width="20" Height="18" DefaultCover="soft">
+    <glyph Char="#" Ground="$floor" Structure="$wall" Claim="building" Pass="blocked" Cover="soft" />
+    <glyph Char="d" Ground="$floor" Structure="$door" Claim="building" Pass="walk" Cover="soft" />
+    <glyph Char="+" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" Anchors="entrance:public" />
+    <glyph Char="b" Ground="$floor" Object="$bed" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:sleep" Stateful="yes" />
+    <glyph Char="s" Ground="$floor" Object="$storage" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:storage" Stateful="yes" />
+    <glyph Char="c" Ground="$floor" Object="$seat" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:seat" Stateful="yes" />
+    <glyph Char="t" Ground="$floor" Object="$table" Claim="building" Pass="adjacent" Cover="soft" Anchors="fixture:table" Stateful="yes" />
+    <glyph Char="i" Ground="$floor" Claim="building" Pass="walk" Cover="soft" />
+    <glyph Char="y" Ground="$ground" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="p" Ground="$lotpath" Claim="yard" Pass="walk" Cover="open" />
+    <glyph Char="@" Ground="$floor" Object="$building" Claim="building" Pass="adjacent" Cover="soft" Anchors="main,function:dwelling" Stateful="yes" />
+    <row Cells="yyyyyyyyppppyyyyyyyy" />
+    <row Cells="y#######pppp#######y" />
+    <row Cells="y#biiis#pppp#biiis#y" />
+    <row Cells="y#iiici#pppp#iiici#y" />
+    <row Cells="y#iiiii#pppp#iiiii#y" />
+    <row Cells="y#iiiii#pppp#iiiii#y" />
+    <row Cells="y###d###pppp###d###y" />
+    <row Cells="pppppppppppppppppppp" />
+    <row Cells="pppppppppppppppppppp" />
+    <row Cells="pppppppppppppppppppp" />
+    <row Cells="pppppppppppppppppppp" />
+    <row Cells="y###d###pppp###d###y" />
+    <row Cells="y#biiis#pppp#iiii@#y" />
+    <row Cells="y#iiiii#pppp#iiiii#y" />
+    <row Cells="y#iiici#pppp#ictci#y" />
+    <row Cells="y#iiiii#pppp#iicii#y" />
+    <row Cells="y#######pppp#######y" />
+    <row Cells="yyyyyyyyp+ppyyyyyyyy" />
+  </map>
+  <plan Key="lot-xl-canvas-shelter-housing-s-canvas">
+    <binding Key="lot-xl-housing-s-canvas" Type="housing" Size="XL" Facing="heart">
+      <tier Key="tent" BuildKey="tent" Level="0" Map="housing-tent-s0-lot-xl-heart" Palette="housing-canvas-hands">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:dwelling" Min="1" />
+        <require Role="fixture:sleep" Min="1" />
+        <require Role="fixture:storage" Min="1" />
+        <require Role="fixture:seat" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+      <tier Key="tentrow" BuildKey="tentrow" Level="1" Map="housing-tentrow-s1-lot-xl-heart" Palette="housing-canvas-hands" Transition="renovate">
+        <require Role="main" Min="1" />
+        <require Role="entrance:public" Min="1" />
+        <require Role="function:dwelling" Min="1" />
+        <require Role="fixture:sleep" Min="1" />
+        <require Role="fixture:storage" Min="1" />
+        <require Role="fixture:seat" Min="1" />
+        <variant Key="fallback" Priority="0" />
+      </tier>
+    </binding>
+  </plan>
+</KingdomArchitectures>

@@ -1,5 +1,33 @@
 # Current implementation and release evidence
 
+## Enclosed canvas housing: authored, native acceptance pending
+
+The current draft replaces generated canvas shelters with authored M (8×6), L (12×10) and
+XL (20×18) plans. M is a shared sleeping room with side seating and a straight entrance aisle;
+L separates two sleeping chambers from a furnished common room; XL separates three sleeping
+cabins and a common house around four-cell-wide courts. Every current plan has real doors,
+accessible storage and seats. Furniture reserves its footprint even when Qud permits walking
+over it. Larger land use buys physical separation, not extra declared beds: tent remains one
+sleeping place and tentrow three. Room/activity rewards beyond existing lodging privacy remain owed.
+
+Fresh Quickstart reserves two M lots with four clear rows between them, outside the largest
+heart survey. Camp permits M plots so the larger minimum cannot block founding. Existing S
+bindings are explicitly retained for historical readers and cannot satisfy current minimum
+coverage; ordinary new commissioning uses M or larger. Tent-to-row renovation adds two bedrolls
+while preserving the other furniture. Canvas bills increase with the enlarged basic shell;
+per-lot material scaling, ordinary economy balance and historical-save transitions are unproved.
+Quickstart grants direct shelter stakes; its lifecycle pays for the fire and waits for actual
+shelter completion. This does not prove an ordinary paid shelter commission or renovation.
+
+Focused checks passed: 344 Quickstart cases, 263 plot rules, three upgrade-delta cases across
+all facings, five canvas topology/programme cases, 69 checker cases, 24 generator cases and
+18 editor cases. The installed-blueprint audit passed all 1,376 resolved poses. All four engine
+compile modes passed. Visual review moved M seating off the entrance axis. These are development
+checks, not native acceptance. The lifecycle observer now requires each completed M shelter to
+have one enclosed sleeping room, three accessible sleeping places and 17 clear floor cells,
+while preserving all four founders and restoring its shared survey scope. Construction, actual
+room observations, save/load and older S save behavior still need fresh native evidence.
+
 ## Physical room and furniture clearance: native scenario accepted
 
 Lodging now measures actual sleeping rooms and clear floor using native structural observations.
@@ -285,11 +313,12 @@ from the passed four-mode compile at `8df7b548`.
 
 ## Current source census for the pending heart repair
 
-Current source: 3103 sources, baseline and compatibility symbols use their
+Current cold-install inventory: 3136 files.
+Current source: 3104 sources, baseline and compatibility symbols use their
 respective exclusions (3097 baseline). All four engine compile modes passed.
 The cold-install inventory has 3132 files.
-3103 staged C# files / 440,623 physical lines; zero strict line-cap failures.
-Direct `XRL` imports: 1448 files, 0 over the line limit. Inventory SHA-256: `6972837d3b21390d4257f84fa551f6621627a46a7542cc01edfd4d9298df84b8`.
+3104 staged C# files / 440,649 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1448 files, 0 over the line limit. Inventory SHA-256: `62732b7d3beca788f0cbd093ce652f11418daf72c1e802ff2ff713ecf4f6dca4`.
 This is a source census, not native acceptance or an updated exact-inventory semantic review.
 
 ## In-progress paid heart chain
