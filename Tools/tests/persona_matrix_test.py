@@ -588,13 +588,15 @@ class MatchingTest(unittest.TestCase):
         expected = matrix.parse_expect(found["EXPECT"], name, found["VERBS"].split(","))
         rows = [(verb, outcome or "OK", wanted) for verb, outcome, wanted in expected]
         self.assertEqual([], matrix.match(expected, rows))
-        index = next(i for i, item in enumerate(rows) if item[0] == "paid-housing-retry")
-        self.assertTrue(matrix.match(expected, rows[:index] + rows[index + 1:]))
-        self.assertTrue(matrix.match(expected, rows[:index] + [rows[index]] + rows[index:]))
-        for outcome, reason in (("REFUSED", "phase=Outstanding"), ("OK", "phase=Working")):
-            changed = list(rows)
-            changed[index] = ("paid-housing-retry", outcome, reason)
-            self.assertTrue(matrix.match(expected, changed))
+        for witness, good, bad in (("paid-housing-retry", "phase=Outstanding", "phase=Working"),
+                                   ("paid-housing-cohort", "housed=4", "housed=2")):
+            index = next(i for i, item in enumerate(rows) if item[0] == witness)
+            self.assertTrue(matrix.match(expected, rows[:index] + rows[index + 1:]))
+            self.assertTrue(matrix.match(expected, rows[:index] + [rows[index]] + rows[index:]))
+            for outcome, reason in (("REFUSED", good), ("OK", bad)):
+                changed = list(rows)
+                changed[index] = (witness, outcome, reason)
+                self.assertTrue(matrix.match(expected, changed))
 
     def test_native_room_witnesses_are_required_once_in_order_with_their_verdicts(self):
         name = "lodging-room-native.persona"

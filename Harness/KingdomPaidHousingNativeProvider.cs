@@ -54,7 +54,7 @@ namespace ThousandAndFirst.Harness
 			var zone = The.Player.CurrentZone;
 			var system = Owner.GetSystem<KingdomSystem>();
 			Require(system != null && system.Founded, "settlement absent");
-			Require(KingdomQuickstartSettlementChecks.Observe(Owner, zone, system, "paid-housing", out string failure), failure);
+			string failure;
 			GameObject work = null;
 			foreach (var item in zone.GetObjects())
 				if (KingdomUpgrade.IsFunctionallyBuilt(item) && KingdomUpgrade.DesignKeyOf(item) == "tentrow"

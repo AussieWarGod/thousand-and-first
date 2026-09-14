@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using XRL;
 using XRL.World;
+using ThousandAndFirst.Simulation.City;
 
 namespace ThousandAndFirst.Harness
 {
@@ -12,7 +13,7 @@ namespace ThousandAndFirst.Harness
 		private static string Contents, SourceId;
 		internal static void Capture(GameObject work, Zone zone)
 		{
-			Require(KingdomArchitectureStamper.TryExactAnchoredComponent(work, zone, "storage", out Storage,
+			Require(KingdomArchitectureStamper.TryExactAnchoredComponent(work, zone, "fixture:storage", out Storage,
 				out string failure) && Storage.Inventory != null, "home storage absent: " + failure);
 			StorageCell = Storage.CurrentCell; SourceId = work.IDIfAssigned;
 			var sentinel = GameObject.Create(KingdomMaterials.BlueprintFor(KingdomMaterial.Brush));
@@ -39,7 +40,7 @@ namespace ThousandAndFirst.Harness
 				KingdomPaidHousingNativeProvider.After.SnapshotHash, Storage.IDIfAssigned, Contents);
 			Require(job.SubjectId == SourceId && home.IDIfAssigned != SourceId && Storage.CurrentCell == StorageCell,
 				"conversion changed retained storage cell or predecessor identity");
-			Require(KingdomQuickstartSettlementChecks.Observe(game, zone, game.GetSystem<KingdomSystem>(), "paid-housing-complete",
+			Require(ObserveCohort(game, zone, game.GetSystem<KingdomSystem>(), "complete",
 				out string failure), failure);
 			string wire = string.Join("\n", new[] { "taf-paid-housing-v1", game.GameID, zone.ZoneID, job.Id,
 				home.IDIfAssigned, SourceId, KingdomPaidHousingNativeProvider.After.SnapshotHash,
@@ -87,7 +88,7 @@ namespace ThousandAndFirst.Harness
 				&& KingdomUpgrade.DesignKeyOf(home) == "hutyard", "converted home is not the exact paid functional output");
 			Require(KingdomArchitectureRuntime.TryRead(home, out var architecture, out string failure)
 				&& architecture.SnapshotHash == hash && KingdomArchitectureStamper.TryVerifyComplete(home, zone, out failure), failure);
-			Require(KingdomArchitectureStamper.TryExactAnchoredComponent(home, zone, "storage", out var store, out failure)
+			Require(KingdomArchitectureStamper.TryExactAnchoredComponent(home, zone, "fixture:storage", out var store, out failure)
 				&& store.IDIfAssigned == storeId && ContentDigest(store) == contents, "retained housing contents differ: " + failure);
 		}
 		internal static string ContentDigest(GameObject store)
@@ -101,6 +102,73 @@ namespace ThousandAndFirst.Harness
 			}
 			items.Sort(StringComparer.Ordinal);
 			return KingdomScenarioSaveFiles.HashText(string.Join("\n", items));
+		}
+		internal static bool ObserveCohort(XRLGame game, Zone zone, KingdomSystem system, string stage, out string failure)
+		{
+			failure = null;
+			int citizens = 0, housed = 0, homes = 0, places = 0, floor = 0;
+			try
+			{
+				KingdomPaidHousingNativeProvider.RequireScript();
+				Require(KingdomQuickstartRules.TryDecode(game.GetStringGameState(KingdomQuickstartRules.ReceiptState), out var receipt)
+					&& KingdomQuickstartRules.IsTerminal(receipt) && receipt.ZoneId == zone.ZoneID
+					&& receipt.FoundersDisposition == KingdomQuickstartFoundersDisposition.Seeded, "founder receipt differs");
+				Require(!KingdomSurvey.HasBoundPass, "cohort found a prior survey");
+				Require(KingdomSurvey.TryBindLocalOperation(zone, system, out var scope,
+					out string reason), "cohort survey unavailable");
+				using (scope)
+				{
+					var survey = KingdomSurvey.ActiveFor(zone);
+					Require(survey.TryBenefits(out var benefits, out reason), reason);
+					var residents = new HashSet<string>(StringComparer.Ordinal);
+					int converted = 0;
+					for (int i = 0; i < KingdomQuickstartRules.ShelterLotCount; i++)
+					{
+						var expected = KingdomQuickstartRules.ShelterLot(i);
+						GameObject home = null;
+						foreach (var item in zone.GetObjects())
+							if (KingdomUpgrade.IsFunctionallyBuilt(item) && KingdomPlots.TryReadRect(item, out var rect)
+								&& rect.X1 == expected.X1 && rect.Y1 == expected.Y1 && rect.X2 == expected.X2 && rect.Y2 == expected.Y2)
+							{
+								Require(home == null, "duplicate home on founder reservation"); home = item;
+							}
+						Require(home != null, "founder reservation lacks completed home");
+						string key = KingdomUpgrade.DesignKeyOf(home);
+						Require(key == "tentrow" || key == "hutyard", "unexpected founder home design");
+						if (key == "hutyard") converted++;
+						var room = benefits.RoomReadingForRoot(home.IDIfAssigned);
+						Require(room.SleepingRooms == 1 && room.SleepingPlaces == 3 && room.ExposedPlaces == 0
+							&& room.UnusablePlaces == 0 && room.UsableFloorCells >= (key == "tentrow" ? 17 : 16),
+							"home quality differs: key=" + key + "; rooms=" + room.SleepingRooms + "; places=" + room.SleepingPlaces
+							+ "; exposed=" + room.ExposedPlaces + "; unusable=" + room.UnusablePlaces + "; floor=" + room.UsableFloorCells);
+						homes++; places += room.SleepingPlaces; floor += room.UsableFloorCells;
+						foreach (var body in KingdomLodging.ResidentsOf(zone, home))
+							Require(residents.Add(body.IDIfAssigned), "one resident assigned to multiple homes");
+					}
+					Require(converted == 1, "expected exactly one completed conversion");
+					var founders = new HashSet<string>(StringComparer.Ordinal);
+					foreach (string id in receipt.FounderObjectIds)
+					{
+						Require(founders.Add(id), "founder receipt repeats an identity");
+						Require(KingdomConstruction.FindExactId(zone, id, out var body) == KingdomPhysicalLookupState.Exact
+							&& body.IsCreature && KingdomCitizenship.BelongsTo(system, body)
+							&& KingdomResidents.TryResident(system.City, KingdomResidents.IdOf(body), out var resident)
+							&& KingdomResidentRules.OnTheRoll(resident), "original founder lost identity or citizenship");
+						citizens++;
+						string key = KingdomLodging.HomeDesignKeyOf(zone, body);
+						Require(residents.Contains(id) && (key == "tentrow" || key == "hutyard"), "original founder lost usable home");
+						housed++;
+					}
+					Require(citizens == 4 && housed == 4, "original founder cohort differs");
+				}
+				Require(!KingdomSurvey.HasBoundPass, "cohort survey leaked");
+			}
+			catch (Exception error) { failure = error.Message; }
+			Require(KingdomScenarioJournal.Append("paid-housing-cohort", failure == null, "stage=" + stage
+				+ "; citizens=" + citizens + "; housed=" + housed + "; homes=" + homes + "; beds=" + places
+				+ "; clear-floor=" + floor + "; synthetic-residents=false; forced-housing=false"
+				+ (failure == null ? "" : "; failure=" + failure)) == null, "housing cohort journal unavailable");
+			return failure == null;
 		}
 		private static void Require(bool value, string failure) => KingdomPaidHousingNativeProvider.Require(value, failure);
 	}

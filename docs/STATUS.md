@@ -28,6 +28,17 @@ contents sentinel are disclosed synthetic inputs. Native execution is pending; 6
 and all four engine compile modes pass. This completed-save scenario does not cover a pending
 job across versions, historical geometry, or ordinary city balance.
 
+First native attempt at `d0d47e51` retained all four founders through 16,802 ordinary turns with
+two enclosed homes, six beds and 34 clear cells, then refused before payment because the fixture
+requested palette role `storage` instead of stateful anchor `fixture:storage`. Closed failed archive:
+`paid-housing/d0d47e51/storage-anchor-refused-1/result.json`, SHA-256
+`741538731705c229885a8feaf11ba0b655e174a35b5e0958e0c05d446a5fed67`.
+The corrected fixture also uses a dedicated post-conversion cohort observer: the original
+Quickstart observer intentionally requires two canvas homes. The new observer retains original
+identities/assignments, three enclosed beds per home and useful floor space; a furnished hut can
+spend one clear cell on its table. The initial preparation refusal for a missing advisor flag
+launched no game and is retained separately under `prepare-missing-advisor`.
+
 ## Shared-hall access: native scenario accepted
 
 At `dc65f0866a36a2332b35d235291a13a6e03540a1`, all 29 required in-game room observations pass.

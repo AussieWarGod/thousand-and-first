@@ -95,6 +95,9 @@ a newly finished building can spend them on its own next improvement. Keep unrel
 and their reserved lanes outside the largest heart footprint being tested. Run available read-only
 preflights before long waits, and retain both the verdict and detailed production reason on refusal.
 These checks apply to both agents; they do not replace observing the actual paid transition.
+For component lookup, use the frozen stateful anchor (`fixture:storage`), not its palette slot
+(`storage`). Reused lifecycle observers may intentionally require the original design; a home
+conversion needs its own post-conversion cohort check while preserving the original startup check.
 For long population fixtures, preflight the production subsidence equilibrium at the highest tested
 stage. Stored water and bed counts do not prove civic water support. Disclose any synthetic producer
 roots. Verify founding recovery immediately after paying the next heart improvement, before spending
