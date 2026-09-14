@@ -19,7 +19,7 @@ namespace ThousandAndFirst
 			KingdomFoundingHeartRetiredGeneration Generation)
 		{
 			if (Generation == KingdomFoundingHeartRetiredGeneration.Final)
-				return ExactFoundingHeartImprovementRetirement(PredecessorId);
+				return ExactFoundingHeartImprovementRetirement(Z, PredecessorId);
 			if (Generation != KingdomFoundingHeartRetiredGeneration.Works) return false;
 			return ExactFoundingHeartRetirementProof(Z, Context, PredecessorId);
 		}
@@ -32,11 +32,11 @@ namespace ThousandAndFirst
 		/// root also reads absent, so absence can refuse a chain but can never be the proof of
 		/// one.
 		/// </summary>
-		private static bool ExactFoundingHeartImprovementRetirement(string PredecessorId)
+		private static bool ExactFoundingHeartImprovementRetirement(Zone Z, string PredecessorId)
 		{
-			return TryImprovementSuccessorOf(PredecessorId, out var job, out var successor,
+			return TryImprovementSuccessorOf(Z, PredecessorId, out var job, out var successor,
 					out _, out _)
-				&& KingdomConstruction.HasReceipt(successor, job)
+				&& HasChainedImprovementReceipt(Z, successor, job)
 				&& r_KingdomScaffold.HasRemovalProof(successor, job.SubjectId)
 				&& ExactFoundingHeartLiveAbsence(PredecessorId);
 		}

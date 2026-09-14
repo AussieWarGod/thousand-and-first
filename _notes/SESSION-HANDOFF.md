@@ -1,5 +1,11 @@
 # Session handoff — current v1.0 test-candidate work
 
+## Current source census — pending heart repair
+
+3100 staged sources; 440,239 physical lines; 1446 direct-XRL files; zero cap failures;
+3131 cold-install files. Inventory `64c84eb5bc1122a294bdc18cbb05d22db2fb52c14d82c544e61731a45021e58b`. Native acceptance remains pending.
+Use the shared Git-directory handoff for live process ownership and current validation.
+
 ## Retained combined heart candidate before surveyed-ingress draft — 2026-09-11
 
 Current draft census/evidence is in docs/STATUS.md; the figures below describe its predecessor.

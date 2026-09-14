@@ -1,5 +1,11 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
+## Pending heart progression source inventory
+
+The planned compatibility gate runs across 3100 production C# sources (3096 baseline);
+the cold-install inventory contains 3131 files. Inventory `64c84eb5bc1122a294bdc18cbb05d22db2fb52c14d82c544e61731a45021e58b`.
+These counts describe the pending repair, not a public installation or native PASS.
+
 ## Quickstart housing hotfix acceptance (2026-09-13)
 
 The construction lifecycle now also observes the original four Quickstart citizens at startup,

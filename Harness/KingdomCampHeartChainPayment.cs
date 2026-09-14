@@ -68,6 +68,8 @@ namespace ThousandAndFirst.Harness
 				foreach (var supplied in ChainSupplied)
 					Require(!ChainStore.Inventory.Objects.Contains(supplied), "billed unit still in supplemental store");
 				RequireChainCustody();
+				Require(KingdomPlots.RecoverFoundingHeart(System, Zone),
+					"founding recovery refused while the next paid heart improvement is working");
 			}
 
 			private void CheckChainComplete()

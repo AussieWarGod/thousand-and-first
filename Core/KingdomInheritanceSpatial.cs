@@ -22,6 +22,17 @@ namespace ThousandAndFirst
 			Simulation.City.KingdomCityBook Book, KingdomSealRecord Record, Zone Active,
 			out string Failure)
 		{
+			if (Active == null || !ReferenceEquals(The.ZoneManager?.ActiveZone, Active))
+				return TryCaptureCore(Book, Record, Active, out Failure);
+			if (!KingdomSurvey.TryBindLocalOperation(Active, null, out var scope, out Failure))
+				return KingdomInheritanceSpatialCaptureResult.Malformed;
+			using (scope) return TryCaptureCore(Book, Record, Active, out Failure);
+		}
+
+		private static KingdomInheritanceSpatialCaptureResult TryCaptureCore(
+			Simulation.City.KingdomCityBook Book, KingdomSealRecord Record, Zone Active,
+			out string Failure)
+		{
 			Failure = "";
 			if (Book == null || Record == null || Active == null
 				|| Active.ZoneID != Record.GroundZoneId)

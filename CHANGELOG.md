@@ -1,5 +1,16 @@
 # Changelog
 
+**Pending heart progression repair (unreleased)**
+
+Follow completed heart upgrades across successive receipts, and admit the exact next paid
+improvement while its predecessor still stands. Scope local spatial-seal reads to one survey.
+The developer city fixture gains explicit synthetic water producers and sustained-support preflight.
+Native acceptance is pending.
+
+Current 3100-file census is line-cap green: 440,239 physical lines; direct `XRL`
+imports occur in 1446 files, 0 of them over the line limit. Inventory SHA-256: `64c84eb5bc1122a294bdc18cbb05d22db2fb52c14d82c544e61731a45021e58b`.
+The cold-install inventory contains 3131 files. This is not evidence of a new public installation.
+
 All notable changes to The Thousand and First. Versions are semantic: patch for fixes,
 minor for additive API and content, major for breaking changes. Supported API is defined in
 [docs/API.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/API.md).

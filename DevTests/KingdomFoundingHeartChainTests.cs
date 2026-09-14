@@ -274,8 +274,7 @@ namespace ThousandAndFirst.Tests
 				"Growth/KingdomPlot2.07s.FoundingHeartClimbedChain.cs");
 			StringAssert.Contains("internal static bool TryChainedWorkSuccessor(Zone Z, "
 				+ "int RowWorkId,", chain);
-			StringAssert.Contains("Simulation.City.KingdomCityRules.StableId(prior.FinalId) "
-				+ "!= RowWorkId", chain);
+			StringAssert.Contains("!FoundingUpgradePathNames(Z, prior.FinalId, RowWorkId)", chain);
 			StringAssert.Contains("return TryChainedFoundingHeartRoot(Z, context, out Successor);",
 				chain);
 

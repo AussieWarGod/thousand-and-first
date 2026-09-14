@@ -24,6 +24,7 @@ namespace ThousandAndFirst.Harness
 						RequirePair, ChainSupplyCell);
 					RequireChainStoreId(water.ParentObject);
 				}
+				SeedChainWaterSupport();
 				int beforeFood = Census().FoodStored;
 				for (int i = 0; i < 6; i++)
 				{

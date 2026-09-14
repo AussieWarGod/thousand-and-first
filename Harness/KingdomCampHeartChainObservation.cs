@@ -64,7 +64,16 @@ namespace ThousandAndFirst.Harness
 
 			private void RequireChainSupport()
 			{
-				var survey = Census();
+				Require(!KingdomSurvey.HasBoundPass, "support observation found an outstanding survey");
+				Require(KingdomSurvey.TryBindLocalOperation(Zone, System, out var scope,
+					out string failure), failure);
+				using (scope) RequireChainSupportInPass(KingdomSurvey.ActiveFor(Zone));
+				Require(!KingdomSurvey.HasBoundPass, "support observation left its survey bound");
+			}
+
+			private void RequireChainSupportInPass(KingdomSurvey survey)
+			{
+				RequireChainWaterSupport(survey);
 				var current = ChainResidentBodies(survey);
 				Require(System.Population >= 50 && current.Count == System.Population
 					&& current.Count == KingdomResidents.OnRollCount(System)

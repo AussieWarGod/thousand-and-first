@@ -1,13 +1,23 @@
 # Current implementation and release evidence
 
+## Current source census for the pending heart repair
+
+Planned engine gate: 3100 sources, baseline and compatibility symbols use their respective
+exclusions (3096 baseline). The cold-install inventory has 3131 files.
+3100 staged C# files / 440,239 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1446 files, 0 over the line limit. Inventory SHA-256: `64c84eb5bc1122a294bdc18cbb05d22db2fb52c14d82c544e61731a45021e58b`.
+This is a source census, not native acceptance or an updated exact-inventory semantic review.
+
 ## In-progress paid heart chain
 
 A developer scenario extends the paid camp path toward rungs 3 and 4. Its disclosed city support
-uses fifty enrolled residents, eighteen authored tent rows, finite water and food stores, synthetic
-craft lessons and separately supplied material bills. Only setup housing uses a future calendar
+uses fifty enrolled residents, eighteen authored tent rows, finite water and food stores, five
+standalone legacy water-producer objects, synthetic craft lessons and separately supplied material
+bills. The producer objects are synthetic prerequisites with their real LiquidProducer active; they
+do not establish authored waterworks-construction coverage. Only setup housing uses a future calendar
 argument; ordinary turns must pay and complete both heart improvements. Full native completion
 remains unverified. This does not establish higher-rung persistence, ordinary growth or Beta acceptance.
-Latest attempt at `bbd430f4779bba0367eec8913e6fd8c8984f7666` was stopped early after the sealed
+An earlier attempt at `bbd430f4779bba0367eec8913e6fd8c8984f7666` was stopped early after the sealed
 options file acquired `OptionLookLocked=No`. The engine's input path can write that option when
 controller look movement is detected; the exact input source has not been independently proved.
 This reproduced option drift without a window capture. All 3377 C# inputs and runtime/Harness XML
@@ -31,10 +41,30 @@ SHA-256 `23f792da06dcc92a2c1afa002a5f0d6d88f28003530ce97ec11280aeb095b495`.
 All 3377 C# inputs, runtime/Harness XML, the complete input seal, strict log and owned shutdown
 verify. This establishes the narrow input probe and unchanged sealed inputs during this attempt,
 not full heart progression or keyboard/controller interaction coverage. No profile was resealed.
-The next developer trace records heart assessments inside the real bound settlement survey,
-including loaded-index completeness, stockpile membership and lease/tally readings. It also times
-named semantic steps and the whole pass. These observers do not change upgrade decisions; their
-native execution remains pending.
+At `44551df5700600e8bd55b3e0df9d33a21695b675`, the actual bound material assessment was Ready
+and rung-three payment passed with exactly 28 drams and 25 material units. Subsequent construction
+passes refused founding-heart recovery: the second improvement had replaced the standing root's
+receipt marker, while recovery still required the first completed improvement's marker. Construction
+returned before assigning or advancing labour. The final checkpoint refused with 40 resident bodies,
+3147 stored drams and 1728 food. Departure stacks identify subsidence's civic water-support rule;
+dedicated reserves alone did not provide that support. These are separate findings, not proof that
+fixing the receipt mismatch alone would prevent those departures.
+Closed failed archive: `beta-heart-chain/44551df5/receipt-chain-support-refused-1/result.json`, SHA-256
+`eb402cda7540a0a37fcc59967f1f9aafffe053ece4dbf9bba07241a59412c182`.
+The complete input seal, source bindings, strict mod log and owned shutdown verify. Four vanilla
+FrameworkScroller.DoPageUp exceptions occurred before game entry; this is not menu-input acceptance.
+The six completed waits requested 15600 turns; the game reached 15603 turns including setup movement.
+There is no full-chain PASS, and the earlier missing-start result at c0891e00 remains unexplained.
+
+The pending repair follows the bounded completed receipt history, rejects branches, cycles, foreign
+ownership/ground and skipped rungs, then proves the final live output and its predecessor-removal
+record. A valid next improvement can hold that output's current receipt marker. The scenario now
+checks recovery immediately after payment and verifies real City support before long waits.
+Spatial seal capture and fixture housing observations use one local survey for their complete read.
+Source inspection found that an unbound component verifier otherwise rebuilds a survey per component.
+The previous run measured 220–225-second daily progress pauses and 3.5–6.9-second settlement passes;
+the exact cost of the separate seal handler was not measured. A native observer now records its time,
+unbound survey count and scope disposal. Performance gains and the production repair await native proof.
 The shared host wait checker now retains valid elapsed overshoot, validates paired guards and
 progress, and binds chain clock observations. It does not replace native acceptance.
 
