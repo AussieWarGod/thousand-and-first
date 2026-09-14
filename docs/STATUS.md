@@ -103,6 +103,12 @@ separate cold-load acceptance. Next diagnostic should record the actual death ev
 weapon and reason, or distinguish the grave object's last-damager reading from the fatal event.
 Do not grant invulnerability, fabricate citizens or weaken the four-founder requirement to pass.
 
+The next harness revision observes `BeforeDeathRemovalEvent.Send` only for original Quickstart
+citizens during the lifecycle scenario. It logs the engine's actual killer, weapon, projectile,
+location, reason and accidental flag before civic cleanup. This adds no part or save field and
+never vetoes the event. Its purpose is to identify the witnessed-death cause in #237; a future
+run, not the presence of this hook, must supply that evidence.
+
 ## Physical room and furniture clearance: native scenario accepted
 
 Lodging now measures actual sleeping rooms and clear floor using native structural observations.

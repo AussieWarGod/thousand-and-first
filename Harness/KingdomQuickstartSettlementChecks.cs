@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using HarmonyLib;
 using XRL;
 using XRL.World;
 using XRL.World.Parts;
@@ -150,4 +151,36 @@ namespace ThousandAndFirst.Harness
 			if (!Condition) throw new InvalidOperationException(Failure);
 		}
 	}
+
+	// Observe the engine's actual fatal event; never veto damage or protect a test citizen.
+	[HarmonyPatch(typeof(BeforeDeathRemovalEvent), nameof(BeforeDeathRemovalEvent.Send))]
+	internal static class KingdomQuickstartFounderDeathDiagnostics
+	{
+		[HarmonyPrefix]
+		internal static void Before(GameObject Dying, GameObject Killer, GameObject Weapon,
+			GameObject Projectile, string Reason, string ThirdPersonReason, bool Accidental)
+		{
+			if (!KingdomQuickstartBootTest.LifecycleRequested || The.Game == null || Dying == null
+				|| !KingdomQuickstartRules.TryDecode(The.Game.GetStringGameState(
+					KingdomQuickstartRules.ReceiptState), out var receipt)) return;
+			bool original = false;
+			foreach (string id in receipt.FounderObjectIds)
+				if (id == Dying.IDIfAssigned) original = true;
+			if (!original) return;
+			KingdomLog.Log("quickstart fatal event: turns=" + The.Game.Turns
+				+ "; victim=" + Describe(Dying) + "; killer=" + Describe(Killer)
+				+ "; weapon=" + Describe(Weapon) + "; projectile=" + Describe(Projectile)
+				+ "; accidental=" + Accidental + "; category=" + Dying.Physics?.LastDeathCategory
+				+ "; reason=" + KingdomScenarioRules.Bounded(ThirdPersonReason ?? Reason ?? "unstated"));
+		}
+
+		private static string Describe(GameObject Body)
+		{
+			return Body == null ? "none" : Body.Blueprint + "#" + Body.IDIfAssigned
+				+ "@" + Body.CurrentCell?.X + "," + Body.CurrentCell?.Y
+				+ "; zone=" + Body.CurrentZone?.ZoneID
+				+ "; citizen=" + Body.GetIntProperty("KingdomCitizen");
+		}
+	}
+
 }
