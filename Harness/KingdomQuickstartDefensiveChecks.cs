@@ -27,11 +27,18 @@ namespace ThousandAndFirst.Harness
 				civilian.Brain.Passive = true;
 				Require(!civilian.Brain.CanAcquireTarget() && civilian.Brain.CanFight(),
 					"defensive engagement did not suppress acquisition while preserving combat");
+				// Two default NPCs are faction allies: a single attack need not overcome that
+				// affinity. Only this owned fixture gets a neutral faction before the assault.
+				attacker.Brain.Factions = "Snapjaws-100";
+				Require(civilian.Brain.GetFeeling(attacker) == 0,
+					"retaliation fixture is not initially neutral: feeling=" + civilian.Brain.GetFeeling(attacker));
 				civilian.Brain.Attacked(attacker);
 				Require(civilian.Brain.Passive && ReferenceEquals(civilian.Brain.Target, attacker),
-					"defensive creature did not retaliate against its actual attacker");
+					"defensive creature did not retaliate: feeling=" + civilian.Brain.GetFeeling(attacker)
+					+ "; can-fight=" + civilian.Brain.CanFight() + "; passive=" + civilian.Brain.Passive
+					+ "; goals=" + civilian.Brain.Goals.Count + "; attacker-has-id=" + attacker.HasID);
 				KingdomLog.Log("quickstart defensive probe: proactive-before=true; proactive-after=false; "
-					+ "retaliation=true; synthetic-unplaced-creatures=2; synthetic-citizens=0");
+					+ "retaliation=true; synthetic-unplaced-creatures=2; synthetic-citizens=0; attacker-faction=Snapjaws");
 			}
 			finally
 			{

@@ -20,6 +20,13 @@ an isolated unplaced NPC pair exercises proactive-acquisition suppression and ac
 This change is awaiting native acceptance; it does not establish protection from wilderness attacks.
 Issue [#237](https://github.com/AussieWarGod/thousand-and-first/issues/237) retains the failure.
 
+The first defensive probe at `464c07e0` refused before ordinary turns: two default NPCs
+share faction affinity, so the expected single-assault retaliation was not a valid neutral
+counterexample. Closed failure: `defensive-founders/464c07e0/defensive-probe-refused-1/result.json`,
+SHA-256 `2639207ad067a578e0b7a9b25a8dd32d06f0565c90e7e43464b4eeccbe81dc2c`.
+The corrected fixture assigns only its owned attacker to Snapjaws, asserts native feeling zero,
+then calls `Brain.Attacked` and requires an actual target. Real citizens and wildlife are unchanged.
+
 ## Paid housing and founder anchors: warm/cold behavioral checks accepted
 
 At `d5a0e96d800bfcac929a52b394e94371172018a0`, Qud 2.0.211.51, marsh Quickstart with
