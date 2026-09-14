@@ -19,6 +19,9 @@ synthetic stress fixtures are not ordinary layout or population acceptance.
 Use [LAYOUT-STUDIO.md](LAYOUT-STUDIO.md) for the shared visual/CLI draft loop before costly
 native layout runs. It exposes room boundaries and usable space while retaining the normal
 XML, material, commissioning and native behavior gates.
+Before accepting building behavior for Beta, use [BUILDING-BEHAVIOUR.md](BUILDING-BEHAVIOUR.md)
+to inventory all shipped configurations and link their distinct obligations to actual scenarios.
+Architectural quality and functional coverage are separate requirements; mapping is not acceptance.
 
 ## Short edit loop
 

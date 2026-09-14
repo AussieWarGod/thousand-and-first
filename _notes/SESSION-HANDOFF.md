@@ -1,5 +1,13 @@
 # Session handoff — current v1.0 test-candidate work
 
+## Building-wide Beta coverage
+
+The author requires every building to meet the architectural standard AND work as intended
+before Beta (#251/#229). Use `docs/BUILDING-BEHAVIOUR.md` and the shared coverage tool to
+inventory all shipped configurations. Initial 1,390 configurations / 9,730 obligations remain
+unmapped; that describes evidence attribution, not a new bug count or a claim that no tests exist.
+Complete mappings alone never grant native acceptance. Common Git handoff owns live state.
+
 ## Unreleased founding reputation work
 
 Current development census: 3107 staged sources. Worktree `/home/r/work/taf-reputation-population`,
