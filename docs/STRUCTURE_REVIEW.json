@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "inventorySha256": "8dd650d010f8dd998d2922f21cc99b37ff79e456a6c2a67880d908bdaf5f58b9",
+  "inventorySha256": "10b6325fb3e23b660a5609fe80485745104f2d925c523bb278af010edec488e2",
   "exceptions": [],
   "reviewedBy": "Codex root automated structural review",
-  "completedUtc": "2026-09-14T22:18:06Z",
+  "completedUtc": "2026-09-14T23:18:23Z",
   "oneResponsibility": {
     "status": "passed",
-    "notes": "Compared every production path with released de8317db: 3102 unchanged, four changed, one new pure helper, none removed. Exact comparison log:/home/r/work/taf-scratch/behaviour-evidence/founding-regard/40477cb7/structural-review-1/taf-founding-regard-production-comparison.json; census log:/home/r/work/taf-scratch/behaviour-evidence/founding-regard/40477cb7/structural-review-1/taf-founding-regard-structure-3.json. Review docs/STRUCTURE_REVIEW_FOUNDING_REGARD.md covers canonical v1/v2 snapshot codec, prepared ledger roots, existing first-founding publication ordering, and canonical default polity options. No serialized fields reordered, added or retyped; explicit old-zero normalization and v1 observation-only semantics remain. Native 40477cb7 warm/cold accepted within its documented scope."
+    "notes": "Compared all 3108 production paths with dev50410440: 3105 byte-identical, two changed, one added, none removed. Exact comparison log:/home/r/work/taf-scratch/behaviour-evidence/strike-closure/abf41251/structural-review-1/production-comparison.json; census log:/home/r/work/taf-scratch/behaviour-evidence/strike-closure/abf41251/structural-review-1/census.json. Review docs/STRUCTURE_REVIEW_STRIKE_CLOSURE.md covers the pure completed-work diagnostic, current engine identity adapter and existing public-action refusal. No saved fields, wire formats, permission, material or supersession authority changes. Native fire/larder accepted within STATUS scope; no cold-load or whole-catalogue acceptance inferred."
   },
   "protocolsAtBoundaries": {
     "status": "passed",
-    "notes": "Compared every production path with released de8317db: 3102 unchanged, four changed, one new pure helper, none removed. Exact comparison log:/home/r/work/taf-scratch/behaviour-evidence/founding-regard/40477cb7/structural-review-1/taf-founding-regard-production-comparison.json; census log:/home/r/work/taf-scratch/behaviour-evidence/founding-regard/40477cb7/structural-review-1/taf-founding-regard-structure-3.json. Review docs/STRUCTURE_REVIEW_FOUNDING_REGARD.md covers canonical v1/v2 snapshot codec, prepared ledger roots, existing first-founding publication ordering, and canonical default polity options. No serialized fields reordered, added or retyped; explicit old-zero normalization and v1 observation-only semantics remain. Native 40477cb7 warm/cold accepted within its documented scope."
+    "notes": "Compared all 3108 production paths with dev50410440: 3105 byte-identical, two changed, one added, none removed. Exact comparison log:/home/r/work/taf-scratch/behaviour-evidence/strike-closure/abf41251/structural-review-1/production-comparison.json; census log:/home/r/work/taf-scratch/behaviour-evidence/strike-closure/abf41251/structural-review-1/census.json. Review docs/STRUCTURE_REVIEW_STRIKE_CLOSURE.md covers the pure completed-work diagnostic, current engine identity adapter and existing public-action refusal. No saved fields, wire formats, permission, material or supersession authority changes. Native fire/larder accepted within STATUS scope; no cold-load or whole-catalogue acceptance inferred."
   }
 }

@@ -87,7 +87,8 @@ namespace ThousandAndFirst
 				&& carried.SourceId == Building.IDIfAssigned;
 			if (carried != null && !activeStrike)
 			{
-				Failure = "That building carries another construction receipt.";
+				Failure = Supplied == null ? StrikeReceiptFailure(System, Z, Building, carried)
+					: "That building carries another construction receipt.";
 				return false;
 			}
 			if (activeStrike && carried.PhysicalPhase != KingdomPhysicalPhase.None)

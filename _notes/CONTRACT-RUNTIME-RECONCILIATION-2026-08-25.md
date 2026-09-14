@@ -2,7 +2,7 @@
 
 ## Current development census notice
 
-The unreleased founding-reputation tree has 3107 production C# files and 3,140 cold-install files.
+The unreleased strike-feedback tree has 3108 production C# files and 3,141 cold-install files.
 This is an inventory update, not acceptance of recruitment, native founding, or the historical
 findings below. Public 0.3.7 remains the released package.
 

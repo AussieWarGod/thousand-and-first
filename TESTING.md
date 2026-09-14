@@ -1,6 +1,20 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
-## Unreleased founding reputation validation
+## Unreleased strike closure validation
+
+Development compile validation spans across 3108 production C# sources;
+the cold-install inventory contains 3141 files.
+`KingdomStrikeClosureTests` runs in both main and portable projects. The teardown native
+scenario must observe both actual closure windows, repeated public strike refusal with unchanged
+registry/building state, borrowed foreign-receipt refusal/restoration, then normal strike and
+exact salvage. No phases or completion are forced. This extends the existing synthetic crew
+and bill fixture. Native `abf41251` passed both cases across 16,800 ordinary turns with
+exact zero/one timber salvage; full profile recipe, final strict log and owned shutdown pass.
+Full licensed suites: 15,004 main / 5,895 portable cases, zero skips; all four engine compile
+modes pass. The main-only codec test covers registry reload; teardown cold load remains unproved.
+Exact archive and synthetic limitations are recorded in docs/STATUS.md.
+
+## Accepted founding reputation validation (40477cb7)
 
 The paired native logs also require:
 
@@ -13,7 +27,7 @@ missing/duplicate/reordered witnesses, an empty founding snapshot, wrong native 
 composition, cold-load replay and a changed saved standing digest. It supplements the existing
 lifecycle, exact profile, strict-log and owned-stop gates; its PASS alone is not acceptance.
 
-Full licensed integration passes 14,988 main and 5,880 portable cases with zero skips.
+That accepted input passed full licensed integration: 14,988 main and 5,880 portable cases, zero skips.
 Focused snapshot/publication and directional tests also pass. The native chain at 40477cb7 covers
 real founding, independent city changes, personal reputation spillover and fresh cold load;
 exact source, synthetic probe inputs and limits are recorded in docs/STATUS.md. Compile validation spans across 3107 production C# sources;
