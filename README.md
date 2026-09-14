@@ -4,12 +4,13 @@ Found a faction in Caves of Qud, raise settlements from reserved ground, and gov
 after you leave. Water, food, labour, materials, roads, trade, threats, civic memory, and physical
 works remain part of the same world instead of becoming a detached management screen.
 
-**Status: 0.3.7 pre-release source (private Alpha candidate).**
-The 0.3.6 public Alpha playtest remains the published release. The replacement private candidate has not been uploaded or accepted.
+**Status: 0.3.7 public Alpha playtest.**
+The private candidate passed subscribed and native checks. Public delivery is pending; the listing
+currently serves 0.3.6. See the linked release ledger for verified publication status.
 Back up saves before updating. Current evidence and remaining coverage limits live in
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md).
 
-This candidate adds enclosed starter housing and measures room privacy from physical rooms,
+This Alpha adds enclosed starter housing and measures room privacy from physical rooms,
 furniture and clear access. Beds and chairs reserve space even when Qud lets people walk over
 them. New civilian founders begin anchored at their camp with defensive engagement, and paid home conversions recover after
 exact fixture restoration while preserving the original storage contents and payment.
