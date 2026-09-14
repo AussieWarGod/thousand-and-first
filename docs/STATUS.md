@@ -125,6 +125,23 @@ and no damage or allegiance rule changes. Native startup must witness the real i
 prove the same camp's interception decision permits the ordinary path outside generation. The
 cold-load witness expects no inherited generation scope. This still needs fresh native acceptance.
 
+Native run `eeba15dd` confirms the scoped encounter repair and completed housing: startup
+witnesses one reserved ambient encounter slot and verifies the same camp permits ordinary
+encounters after scope disposal. After 16,800 ordinary construction turns, all four original
+citizens are alive and housed; two rooms provide six sleeping places and 34 clear floor cells.
+No resident or completed shelter was fabricated.
+
+The full lifecycle still FAILS before saving: its entrance-obstruction fixture used old coordinate
+(24,17), now inside the enlarged M home. The production verifier correctly reported a blocked
+authored interior walk cell rather than an exterior ingress obstruction. The fixture now selects
+the unique reserved route cell immediately outside the actual lot, from the same Quickstart
+route authority recomputed by the ingress suite. The encounter observer also covers all genuine
+Quickstart modes, not only the lifecycle persona. These harness repairs need the fresh full chain.
+Closed failure: `enclosed-canvas-homes/eeba15dd/warm-cold-1/result.json`, SHA-256
+`74f072b9d694c0a215beae0e8f53875855ac4144701b60c1c1c27a632f51c61f`.
+Full 3,440 pinned inputs and exact owned shutdown verified. The successful housing observation is
+partial evidence; the refused enclosing lifecycle step means no lifecycle or cold-load PASS.
+
 ## Physical room and furniture clearance: native scenario accepted
 
 Lodging now measures actual sleeping rooms and clear floor using native structural observations.

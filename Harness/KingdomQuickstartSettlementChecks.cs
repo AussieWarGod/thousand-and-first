@@ -197,7 +197,7 @@ namespace ThousandAndFirst.Harness
 		[HarmonyPostfix]
 		internal static void After(Zone Z, bool __result)
 		{
-			if (!KingdomQuickstartBootTest.LifecycleRequested || __result) return;
+			if (__result || The.Game == null || !KingdomQuickstartRules.IsMode(The.Game.gameMode)) return;
 			if (!ReferenceEquals(ObservedGame, The.Game))
 			{
 				ObservedGame = The.Game; ObservedZone = Z?.ZoneID; Reservations = 0; Invalid = false;
