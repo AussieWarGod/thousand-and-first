@@ -109,6 +109,22 @@ location, reason and accidental flag before civic cleanup. This adds no part or 
 never vetoes the event. Its purpose is to identify the witnessed-death cause in #237; a future
 run, not the presence of this hook, must supply that evidence.
 
+The fatal-event run at `4a13eefa` identifies the killers: albino apes, including a legendary
+leader, kill all four founders at turns 36, 46, 53 and 56. A dropped Woven Tunic then blocks a
+shelter's ground placement. The engine's marsh `SafeFactionPopulation` includes Apes; reserving
+the parasang against world-map sites does not exclude this independent local faction encounter.
+The driver was deliberately stopped once the fatal events made survival acceptance impossible.
+Closed failure: `enclosed-canvas-homes/4a13eefa/fatal-event-1/result.json`, SHA-256
+`c77f0867606dbb550a82d25c8158a8cf61ba482f5b639c94d568530557fc21fc`.
+Full 3,439 pinned inputs and exact owned shutdown verified. No completed-housing/save/load claim.
+
+The pending repair scopes the ambient faction-encounter reservation to the exact selected camp's
+initial `GetZone` call. It is released before physical camp preparation; ordinary later encounters,
+other maps and explicit encounters keep the ordinary path. No live actor is removed or pacified,
+and no damage or allegiance rule changes. Native startup must witness the real interception and
+prove the same camp's interception decision permits the ordinary path outside generation. The
+cold-load witness expects no inherited generation scope. This still needs fresh native acceptance.
+
 ## Physical room and furniture clearance: native scenario accepted
 
 Lodging now measures actual sleeping rooms and clear floor using native structural observations.
@@ -394,12 +410,12 @@ from the passed four-mode compile at `8df7b548`.
 
 ## Current source census for the pending heart repair
 
-Current cold-install inventory: 3137 files.
-Current source: 3104 sources, baseline and compatibility symbols use their
+Current cold-install inventory: 3138 files.
+Current source: 3105 sources, baseline and compatibility symbols use their
 respective exclusions (3097 baseline). All four engine compile modes passed.
 The cold-install inventory has 3132 files.
-3104 staged C# files / 440,651 physical lines; zero strict line-cap failures.
-Direct `XRL` imports: 1448 files, 0 over the line limit. Inventory SHA-256: `f59df8128f09691b9da38606f6530040da2ed06eb3caf0ea95cecc9c7552dfa5`.
+3105 staged C# files / 440,721 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1449 files, 0 over the line limit. Inventory SHA-256: `cadbe858072e3c855ac94f882cb3d772f35f5d2f41f61a3a6e141f2f5df63fc8`.
 This is a source census, not native acceptance or an updated exact-inventory semantic review.
 
 ## In-progress paid heart chain

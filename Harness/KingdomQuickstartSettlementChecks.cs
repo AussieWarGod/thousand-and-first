@@ -37,6 +37,8 @@ namespace ThousandAndFirst.Harness
 				using (scope)
 				{
 					LogSettlementState(Zone, System, receipt, Stage);
+					Require(KingdomQuickstartEncounterDiagnostics.Check(Game, Zone, Stage),
+						"initial camp encounter reservation was absent or escaped its generation scope");
 					var ids = new HashSet<string>(StringComparer.Ordinal);
 					for (int i = 0; i < KingdomQuickstartRules.FounderCount; i++)
 					{
@@ -180,6 +182,42 @@ namespace ThousandAndFirst.Harness
 				+ "@" + Body.CurrentCell?.X + "," + Body.CurrentCell?.Y
 				+ "; zone=" + Body.CurrentZone?.ZoneID
 				+ "; citizen=" + Body.GetIntProperty("KingdomCitizen");
+		}
+	}
+
+
+	[HarmonyPatch(typeof(KingdomQuickstartAmbientEncounterPatch), "Before")]
+	internal static class KingdomQuickstartEncounterDiagnostics
+	{
+		private static XRLGame ObservedGame;
+		private static string ObservedZone;
+		private static int Reservations;
+		private static bool Invalid;
+
+		[HarmonyPostfix]
+		internal static void After(Zone Z, bool __result)
+		{
+			if (!KingdomQuickstartBootTest.LifecycleRequested || __result) return;
+			if (!ReferenceEquals(ObservedGame, The.Game))
+			{
+				ObservedGame = The.Game; ObservedZone = Z?.ZoneID; Reservations = 0; Invalid = false;
+			}
+			Reservations++;
+			Invalid |= Z == null || Z.ZoneID != ObservedZone
+				|| !KingdomQuickstartEncounterScope.Reserves(Z);
+		}
+
+		internal static bool Check(XRLGame Game, Zone Zone, string Stage)
+		{
+			// Call only the production interception decision, never the encounter builder.
+			// Once generation finishes, even this same camp must take the ordinary path.
+			bool result = false;
+			bool ordinary = KingdomQuickstartAmbientEncounterPatch.Before(Zone, ref result);
+			bool observed = Stage == "loaded" ? Reservations == 0
+				: ReferenceEquals(ObservedGame, Game) && ObservedZone == Zone.ZoneID && Reservations > 0;
+			KingdomLog.Log("quickstart encounter witness: stage=" + Stage + "; reserved=" + Reservations
+				+ "; observed=" + observed + "; outside-scope-ordinary=" + ordinary);
+			return observed && !Invalid && ordinary && !result && !KingdomQuickstartEncounterScope.Reserves(Zone);
 		}
 	}
 
