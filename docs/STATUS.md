@@ -1,5 +1,24 @@
 # Current implementation and release evidence
 
+## Native25 closed; retained-ground diagnostic on the release branch
+
+Native25 at `8ceed37e` passed the first higher upgrade's supply, occupancy and road preflights,
+but after 1200 ordinary turns no paid moot job existed. Reassessment refused protected
+successor ground at `42,13`, the same coordinate seen in the separate cold-load fixture.
+This is intermittent: Native24 completed that leg. The actual occupant has not been identified;
+do not attribute it to a citizen, road or fixture object without a physical witness.
+
+Closed archive: `beta-heart-chain/8ceed37e/retained-ground-payment-refused-1/result.json`,
+SHA-256 `08eea5c32fd9c3eacbbd8963a78819f7cb65d134381102f18e98ce9155dc20fe`.
+Full pinned recipe, strict log and exact owned stop passed; scenario failed. No new higher
+payment, court completion or save/load acceptance occurred. The payload repair's source CI
+`34818068279` passed; that does not override this native refusal.
+
+The release branch now includes the observation-only refused-cell diagnostic already compiled
+in #219: exact object IDs/blueprints, ground classification, citizenship/resident identity,
+fixture membership and plot/component markers. It changes no production admission or movement.
+Keep #207 and #220 draft until the native blocker is understood and paid progression passes.
+
 ## Native24 closed; court receipt bound repair — 2026-09-14
 
 Native24 at `1729bae6` completed paid rung three and all controlled late-resident clearance,
