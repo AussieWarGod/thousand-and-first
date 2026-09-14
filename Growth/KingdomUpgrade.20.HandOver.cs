@@ -17,6 +17,57 @@ namespace ThousandAndFirst
 	public static partial class KingdomUpgrade
 	{
 		/// <summary>
+		/// Rechecks a paid handover before standing eligible bodies off newly annexed wall cells.
+		/// Residents may return during construction, so commissioning clearance is insufficient.
+		/// Uses the plot route's protected-body, destination and rollback rules, then reproves
+		/// endpoints, content custody and strict ground after movement callbacks. A refusal keeps
+		/// the same paid handover retryable; no layout or funding is changed by this operation.
+		/// Reuses the caller's survey or binds one local operation, disposed on every return.
+		/// </summary>
+		internal static bool TryPrepareHandoverGround(GameObject Predecessor, GameObject Successor,
+			string SuccessorKey, r_KingdomImprovement Intent, KingdomArchitectureIntent Layout,
+			KingdomConstructionJob Job, out string Failure)
+		{
+			Failure = null;
+			Cell cell = Predecessor?.CurrentCell;
+			Zone zone = cell?.ParentZone;
+			KingdomSystem system = The.Game?.GetSystem<KingdomSystem>();
+			if (Job == null || Job.Route != KingdomConstructionRoute.Improvement
+				|| KingdomConstructionRules.IsTerminal(Job.Phase)
+				|| !ExactHandoverEndpointsAfterCallback(Predecessor, Successor, cell,
+					SuccessorKey, Intent, Job))
+			{
+				Failure = "The paid handover endpoints no longer authorize ground clearance.";
+				return false;
+			}
+			if (!KingdomSurvey.TryBindLocalOperation(zone, system, out var scope, out Failure))
+				return false;
+			using (scope)
+			{
+				if (!KingdomArchitectureRuntime.TryRead(Predecessor, out var before, out Failure))
+					return false;
+				if (!KingdomArchitectureStamper.TryProveEnvelopeGrowth(system, zone, Predecessor,
+					Successor, Layout, true, out Failure, TolerateMovableOccupants: true)) return false;
+				bool cleared = KingdomPlots.TryClearEnvelopeOccupants(system, zone, Predecessor,
+					Layout, before.Rect, out int moved, out int beasts, out Cell post, out Failure);
+				if (moved > 0 || post != null)
+					KingdomLog.Log("architecture: handover ground clearance moved=" + moved
+						+ "; beasts=" + beasts + "; complete=" + cleared + "; job=" + Job.Id);
+				if (!cleared) return false;
+				if (!ExactHandoverEndpointsAfterCallback(Predecessor, Successor, cell,
+					SuccessorKey, Intent, Job))
+				{
+					Failure = "A paid handover endpoint changed during ground clearance.";
+					return false;
+				}
+				if (!r_KingdomImprovement.VerifyHandoverContentCustody(Predecessor, Successor,
+					cell, Intent, true, out Failure)) return false;
+				return KingdomArchitectureStamper.TryProveEnvelopeGrowth(system, zone, Predecessor,
+					Successor, Layout, true, out Failure);
+			}
+		}
+
+		/// <summary>
 		/// Moves everything from the old work into the new one and takes the old work down.
 		/// <para>
 		/// Carries the contents first &mdash; liquid by its actual mixture, then every held

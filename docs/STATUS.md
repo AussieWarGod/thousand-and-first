@@ -15,8 +15,8 @@ balance or multi-tile acceptance.
 
 Engine gate passed: 3100 sources, baseline and compatibility symbols use their
 respective exclusions (3096 baseline). The cold-install inventory has 3131 files.
-3100 staged C# files / 440,299 physical lines; zero strict line-cap failures.
-Direct `XRL` imports: 1446 files, 0 over the line limit. Inventory SHA-256: `8989ef5f532e7b0b001941c3df712c964637d729ff2c760934b9a061bc076317`.
+3100 staged C# files / 440,354 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1446 files, 0 over the line limit. Inventory SHA-256: `4f8ee63c2752d59bcdea66586483f9273db112b5038f467ce0fd935121cfc086`.
 This is a source census, not native acceptance or an updated exact-inventory semantic review.
 
 ## In-progress paid heart chain
@@ -225,6 +225,23 @@ The full profile seal, all 3387 C# input bindings, strict log and exact owned sh
 CI 34802183289 passed. Neither those checks nor the narrow road probes establish full native
 acceptance. The chain targets rungs 1 through 4; the fifth arcology rung and its cold load
 remain open under #160/#144. Existing rung-two cold-load evidence does not cover later hearts.
+
+The pending #215 repair repeats lawful annexed-ground clearance at paid handover, including
+settled-effect replay. It proves paid endpoints and expansion authority before moving eligible
+bodies, uses the existing plot displacement/destination/rollback rules, then reproves endpoints,
+content custody and strict ground. The stamper still refuses any remaining blocking occupant.
+One local survey covers clearance and is disposed on all returns; nested callers retain their
+existing survey. No payment, layout receipt or save schema is changed by clearance itself.
+The native fixture now arms a real enrolled resident after payment and puts it on an annexed
+wall slot at handover. It requires founder and foreign-creature protection, an explicitly
+synthetic no-destination refusal before movement, then actual safe relocation outside the new
+plot with identity, citizenship, custody, paid claims and caller survey retained. The separate
+controlled stranger-obstruction/Outstanding retry remains required. These cases must precede
+completed tier three in the persona; full-chain acceptance cannot silently omit either case.
+Four current engine compiles passed (3096/3100 ordinary, 3384/3388 developer) and all fourteen
+envelope source-contract cases plus 213 upgrade cases passed with zero skips. Native execution of this repair remains
+pending; the earlier failed evidence is retained unchanged. Interrupted/reloaded resident
+clearance and higher-rung cold load remain open.
 
 Spatial seal capture and fixture housing observations use one local survey for their complete read.
 Source inspection found that an unbound component verifier otherwise rebuilds a survey per component.

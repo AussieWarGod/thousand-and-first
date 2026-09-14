@@ -294,6 +294,32 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void PaidHandoverClearsLateResidentsOnlyBetweenAuthorityAndStrictReproof()
+		{
+			string handover = Read("Growth/KingdomUpgrade.20.HandOver.cs");
+			AssertOrdered(handover,
+				"internal static bool TryPrepareHandoverGround(",
+				"Job.Route != KingdomConstructionRoute.Improvement",
+				"!ExactHandoverEndpointsAfterCallback(Predecessor, Successor, cell,",
+				"KingdomSurvey.TryBindLocalOperation(zone, system, out var scope, out Failure)",
+				"using (scope)",
+				"Successor, Layout, true, out Failure, TolerateMovableOccupants: true)",
+				"KingdomPlots.TryClearEnvelopeOccupants(system, zone, Predecessor,",
+				"if (!cleared) return false;",
+				"!ExactHandoverEndpointsAfterCallback(Predecessor, Successor, cell,",
+				"!r_KingdomImprovement.VerifyHandoverContentCustody(Predecessor, Successor,",
+				"Successor, Layout, true, out Failure);");
+			string contents = Read("Growth/KingdomUpgrade.24.HandoverContents.cs");
+			AssertOrdered(contents,
+				"if (!intent.HandoverEffectsDone)",
+				"? TryPrepareHandoverGround(Predecessor, Successor, SuccessorKey,",
+				"&& KingdomArchitectureStamper.TryApplyUpgrade(Predecessor, Successor,",
+				"intent.HandoverEffectsDone = true;",
+				"? TryPrepareHandoverGround(Predecessor, Successor, SuccessorKey,",
+				"&& KingdomArchitectureStamper.TryApplyUpgrade(Predecessor, Successor,");
+		}
+
+		[Test]
 		public void EveryRetryCallSiteStillProvesEnvelopeGrowthUnconditionally()
 		{
 			// Pre-debit and paid application both reach the proof, and neither gained a

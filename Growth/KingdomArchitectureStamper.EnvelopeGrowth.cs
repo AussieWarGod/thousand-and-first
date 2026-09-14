@@ -70,9 +70,9 @@ namespace ThousandAndFirst
 		/// published by an interrupted retry are the sole non-ground objects admitted in the added
 		/// envelope.
 		/// </summary>
-		/// <param name="TolerateMovableOccupants">True only on the non-mutating preflight: a body
+		/// <param name="TolerateMovableOccupants">True on preflight or before paid clearance: a body
 		/// the crew may lawfully stand aside is not ground the improvement lacks, because the
-		/// mutating path clears it before it proves this again. The mutating path passes false, so
+		/// mutating path clears it before it proves this again. Final application passes false, so
 		/// anything still standing there refuses.</param>
 		internal static bool TryProveEnvelopeGrowth(KingdomSystem System, Zone Z,
 			GameObject Owner, GameObject SuccessorOwner, KingdomArchitectureIntent Successor,

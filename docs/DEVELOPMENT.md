@@ -93,6 +93,11 @@ a later Ready result cannot explain an earlier NoGroundToGrow refusal.
 When a shared failure sentence covers several predicates, record their actual boundary values and
 caller before another long run. Journal unexpected production refusals immediately to avoid spending
 the remainder of a construction wait on a job already requiring inspection.
+Commissioning clearance does not prove completion-time clearance: resident movement during the
+construction wait can repopulate future wall cells. Place the late resident at the actual paid
+handover boundary, test protected occupants and failed displacement, and require the resulting
+clearance and retry witnesses in the persona. Do not count an unrelated natural retry as a
+controlled fault test or remove real residents merely to make a long fixture complete.
 Scope repeated physical reads across the complete operation and verify disposal; component-by-component
 unbound surveys can dominate runtime. Record actual timings before claiming a performance gain.
 Reserved plot margins are not the whole entrance route: authored lane endpoints extend one cell

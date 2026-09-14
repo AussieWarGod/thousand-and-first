@@ -72,12 +72,16 @@ namespace ThousandAndFirst.Harness
 				RequireChainCustody();
 				Require(KingdomPlots.RecoverFoundingHeart(System, Zone),
 					"founding recovery refused while the next paid heart improvement is working");
+				if (ChainTarget == 3)
+					KingdomCampHeartChainHandoverOccupancy.Arm(FixtureResidents[0], ChainJobId);
 			}
 
 			private void CheckChainComplete()
 			{
 				RequireChainTrack();
 				RequireChainSupport();
+				if (ChainTarget == 3) Require(KingdomCampHeartChainHandoverOccupancy.Proved,
+					"post-payment resident clearance and refusal cases were not witnessed");
 				if (ChainTarget == 3) Require(KingdomCampHeartChainRetryFault.Proved,
 					"controlled obstruction and Outstanding handover retry were not witnessed");
 				Require(KingdomConstruction.TryFind(ChainJobId, out var job) && job != null
