@@ -12,6 +12,12 @@ starter citizens. Marsh construction and separate cold-load checks pass at `2c06
 all four original citizens, real enclosed housing and entrance obstruction/recovery. Broader
 housing/conversion and release acceptance remain pending; see docs/STATUS.md.
 
+**Pending paid conversion price history (unreleased)**
+
+Retain exact historical declarations for already-paid same-set transition receipts when current
+prices change. New commissions still use current prices. Paid native construction and cold-load
+acceptance remain pending under #239; historical geometry transitions are separate work in #240.
+
 **Shared-hall access (unreleased)**
 
 Require an exterior approach connected through clear floor and usable doors before granting bedroom
@@ -71,9 +77,9 @@ regressions to cover every added material across all fallback heart transitions 
 including historical-baseline transitions. Sixteen main cases pass; fresh native confirmation
 of the court bill remains pending under #216. Exact evidence is in docs/STATUS.md.
 
-Current 3105-file census is line-cap green: 440,772 physical lines; direct `XRL`
-imports occur in 1449 files, 0 of them over the line limit. Inventory SHA-256: `5a1d8fb33c55d7e8d816561533a165505deb9d490fec0c667bf1dcdab5b50f36`.
-The cold-install inventory contains 3138 files. This is not evidence of a new public installation.
+Current 3106-file census is line-cap green: 440,838 physical lines; direct `XRL`
+imports occur in 1450 files, 0 of them over the line limit. Inventory SHA-256: `ef37cc7e787d36b6034cc9a24cf99c9278aa55a9a8f2bd06c9969327b44ae7e1`.
+The cold-install inventory contains 3139 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Versions are semantic: patch for fixes,
 minor for additive API and content, major for breaking changes. Supported API is defined in

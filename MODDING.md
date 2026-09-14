@@ -2315,14 +2315,14 @@ a bounded public registry before depending on or replacing those choices.
 
 ## Same-set architecture transitions
 
-`Architecture/KingdomArchitectureTransitions.xml` is a mergeable, schema-1 registry for cheap
+`Architecture/KingdomArchitectureTransitions.xml` is a mergeable, schema-2 registry for priced
 changes between two building plans that occupy the same typed, actual-sized lot. Each declaration
 is directional and must name every part of its economic delta:
 
 ```xml
-<KingdomArchitectureTransitions Schema="1">
+<KingdomArchitectureTransitions Schema="2">
   <transition Key="my-old-to-new-m" From="myold" To="mynew"
-    Type="craft" Size="M" Water="12" Materials="scrap:2" Ticks="900" />
+    Type="craft" Size="M" Mode="renovate" Water="12" Materials="scrap:2" Ticks="900" />
 </KingdomArchitectureTransitions>
 ```
 
@@ -2332,6 +2332,21 @@ is directional and must name every part of its economic delta:
 that type and actual size. Duplicate routes are refused. Reverse travel needs its own declaration.
 If no exact route exists, the action refuses before debit; the engine never derives a price from
 the two full build costs.
+
+A complete `<retained-transition>` uses the same required attributes as `<transition>`, including
+`Mode`. It retains an exact historical declaration for already-paid schema-2 receipts. Supply all
+fields; these records do not inherit missing values from an active declaration. Their canonical
+price/route digest is their identity: exact duplicates are idempotent, distinct historical prices
+coexist, and at most 256 distinct retained declarations may load. Malformed or excess records log
+an error. The history is rebuilt on registry reload.
+
+Retained entries are never returned by current-route lookup, offered as new commissions or accepted
+by new-receipt binding. Completion may select one only when its digest matches the committed receipt
+and its endpoints/type/size match the frozen layouts; the existing key, before/after hashes, job ID
+and exact property-type checks still apply. No price or layout is rewritten. Schema-one receipts
+continue the existing current-declaration adoption path and cannot select a retained price.
+Unknown history refuses; never copy an unverified digest out of a save into this registry as authority.
+This protocol is implemented but still needs native paid-work and cold-load acceptance; see STATUS.
 
 The built-in early-housing routes show the retained-fabric rule in practice. `tent` changes to
 `hut` in verdant/fungal/gyre cities, `mudhut` in common cities, or `blockhut` in eater ruins;

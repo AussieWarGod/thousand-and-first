@@ -63,4 +63,8 @@
               Water="7" Materials="scrap:6,stone:4" Ticks="1800" />
   <transition Key="tentrow-to-blockyard-xl" From="tentrow" To="blockyard" Type="housing" Size="XL" Mode="renovate"
               Water="7" Materials="scrap:6,stone:4" Ticks="1800" />
+  <!-- Exact pre-enclosure prices: paid schema-2 receipts only; never offered for new work. -->
+  <retained-transition Key="tentrow-to-hutyard-s" From="tentrow" To="hutyard" Type="housing" Size="S" Mode="renovate" Water="7" Materials="timber:7,stone:2" Ticks="1800" />
+  <retained-transition Key="tentrow-to-mudhutcourt-s" From="tentrow" To="mudhutcourt" Type="housing" Size="S" Mode="renovate" Water="7" Materials="mud:12,stone:2" Ticks="1800" />
+  <retained-transition Key="tentrow-to-blockyard-s" From="tentrow" To="blockyard" Type="housing" Size="S" Mode="renovate" Water="7" Materials="scrap:6,stone:4" Ticks="1800" />
 </KingdomArchitectureTransitions>

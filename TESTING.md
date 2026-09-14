@@ -2,8 +2,8 @@
 
 ## Current source inventory (unreleased)
 
-The engine gate runs across 3105 production C# sources (3101 baseline);
-the cold-install inventory contains 3138 files. Inventory `5a1d8fb33c55d7e8d816561533a165505deb9d490fec0c667bf1dcdab5b50f36`.
+The engine gate runs across 3106 production C# sources (3102 baseline);
+the cold-install inventory contains 3139 files. Inventory `ef37cc7e787d36b6034cc9a24cf99c9278aa55a9a8f2bd06c9969327b44ae7e1`.
 These counts describe the source inventory, not a public installation. Native acceptance is scoped below.
 
 ## Shared-hall access

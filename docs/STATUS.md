@@ -1,5 +1,23 @@
 # Current implementation and release evidence
 
+## Paid transition price history: implementation pending native acceptance
+
+Issue #239: same-set completion compared its saved declaration digest with current prices, so a
+price edit could invalidate an exact paid receipt. A receipt-only history now retains complete
+historical declarations by digest. New quotes and receipt binding still require current prices;
+completion additionally permits a registered historical digest with matching endpoints and typed lot,
+then reuses the existing exact key, before/after hashes, job and property-shape checks. No saved
+price, layout or serialized field changes. Schema-one adoption retains its existing current path.
+
+The three pre-enclosure Small shared-home conversion prices are retained from source `e61193ca`.
+Nine new cases pass in both main and portable suites: actual old/new canvas prices, current and
+legacy receipts, unknown/torn history, job/endpoint mismatch and refusal to use history as a fresh
+quote. Thirty existing transition cases and all four engine compile modes also pass.
+Actual paid construction under price change, obstruction/retry and separate cold load remain
+unproved. Some old routes may already have failed material preflight; do not infer historical
+commissionability from their XML. Issue #240 separately tracks deliberate enclosed renovation
+layouts for pre-redesign roots/furniture; retaining a price does not solve that geometry change.
+
 ## Shared-hall access: native scenario accepted
 
 At `dc65f0866a36a2332b35d235291a13a6e03540a1`, all 29 required in-game room observations pass.
@@ -363,12 +381,12 @@ from the passed four-mode compile at `8df7b548`.
 
 ## Current source census for the pending heart repair
 
-Current cold-install inventory: 3138 files.
-Current source: 3105 sources, baseline and compatibility symbols use their
+Current cold-install inventory: 3139 files.
+Current source: 3106 sources, baseline and compatibility symbols use their
 respective exclusions (3097 baseline). All four engine compile modes passed.
 The cold-install inventory has 3132 files.
-3105 staged C# files / 440,772 physical lines; zero strict line-cap failures.
-Direct `XRL` imports: 1449 files, 0 over the line limit. Inventory SHA-256: `5a1d8fb33c55d7e8d816561533a165505deb9d490fec0c667bf1dcdab5b50f36`.
+3106 staged C# files / 440,838 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1450 files, 0 over the line limit. Inventory SHA-256: `ef37cc7e787d36b6034cc9a24cf99c9278aa55a9a8f2bd06c9969327b44ae7e1`.
 This is a source census, not native acceptance or an updated exact-inventory semantic review.
 
 ## In-progress paid heart chain
