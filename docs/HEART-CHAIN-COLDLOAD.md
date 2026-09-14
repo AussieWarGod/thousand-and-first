@@ -1,5 +1,20 @@
 # Higher-heart cold-load acceptance
 
+## Current retry
+
+Native21 at `d46f77e3` is CLOSED FAIL before higher payment: the next fire quote occupied future
+court ground, and the dense fixture had filled every spare housing plot. Its full sealed archive
+is recorded in STATUS.md. No save or load occurred.
+
+The retry retains seventeen full authored tent rows (51 physical beds), all fifty test residents,
+and every water producer, while leaving one separate small plot for the next job. Early evidence
+uses a normal uncommitted survey-plan quote there; source save and loaded payment independently
+require an ordinary commission quote outside the final heart. Housing assignment, costs, custody,
+all prior receipts, completed construction and full cold-load facts remain required. This does
+not establish ordinary one-tile balance. Main136/portable120 and host8/persona65 checks passed;
+engine and native validation remain separate.
+
+
 Work for #159, #160, #212–#216 and draft PR #207. This remains part of the
 Beta objective; it does not replace same-city multi-map acceptance in #211 or the
 land-use direction in [CITY-GROWTH-BALANCE.md](CITY-GROWTH-BALANCE.md).

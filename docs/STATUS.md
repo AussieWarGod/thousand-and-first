@@ -1,5 +1,33 @@
 # Current implementation and release evidence
 
+## Alpha priority and next-work fixture repair — 2026-09-14
+
+User direction: defer Hearthpyre compatibility until Beta; prioritize gameplay progress and
+further Alpha releases. Capability work is parked, unmerged and unpublished at `4ce10bfe` on
+`codex/hearthpyre-capabilities`, tracked by #218. The next Alpha work remains heart progression,
+construction recovery, and real cold-load continuation; city balance and multi-map requirements
+remain in CITY-GROWTH-BALANCE.md and issues #208–#211.
+
+Native21 at `d46f77e3` stopped before the higher-heart payment because the next fire quote
+intersected the future court. Its dense fixture had assigned all eighteen available housing
+plots and reserved no space for the next job. Archive
+`beta-heart-chain/d46f77e3/next-fire-future-ground-refused-1/result.json`, SHA-256
+`e494924927d3579f0b671274d9ce76cb2aa524aabfd1e124dbc344e0ab22217e`:
+scenario FAIL; full pinned profile recipe (3435 entries/3397 C#), strict log and owned stop PASS.
+No source save or cold load occurred. The profile remains closed and must not be reused.
+
+The fixture now leaves `(16,8)..(21,11)` for the next job and places seventeen unchanged
+three-bed tent rows; actual physical roof assignments for all fifty residents remain mandatory.
+Supply containers also keep the spare plot and its approach clear. Early preflight uses the
+ordinary survey-plan quote beside that space, with no stake or debit; after the court completes,
+the actual save and cold-loaded payment still use ordinary commission siting and must both
+remain outside the completed heart. The oracle requires both early and final proofs. This is a
+synthetic stress fixture correction, not single-map balance acceptance or a construction bypass.
+Focused checks: 136 main / 120 portable CampHeart cases, zero skips; 8 journal/fact-oracle and
+65 persona cases passed. All four engine modes passed (3096/3100 ordinary, 3393/3397 developer);
+log `/tmp/taf-heart-chain-next-site-gate-1.log`. Fresh native source/load acceptance remains pending.
+
+
 ## Accepted city-growth direction — planned
 
 [CITY-GROWTH-BALANCE.md](CITY-GROWTH-BALANCE.md) records the user's complete city-balance
@@ -58,18 +86,18 @@ from the passed four-mode compile at `8df7b548`.
 
 Higher-heart persistence preparation is isolated in `codex/heart-chain-coldload`.
 The `camp-heart-chain-save` variant now follows completed rung-four next-day recovery with
-physical capture and actual Primary serialization. It preflights the next ordinary fire job
-before the higher construction waits, discloses one next-job timber at save, retains exact
+physical capture and actual Primary serialization. It preflights an ordinary survey-plan fire quote
+before the higher construction waits and ordinary commission siting at save, discloses one next-job timber at save, retains exact
 jobs/residents/support/custody fact files, and compares the whole snapshot after serialization.
 Facts bind original anchors, all four survey stakes, water mixtures, larders and material
 stockpiles. Anonymous food stacks retain their observed slot/count; the observer assigns no IDs.
 Completion checks now share one local survey and verify disposal; speedup is unmeasured.
 Continue dispatch, full preactivation/activation comparison, dedicated input rearming and an
 ordinary paid fire followed by 3600 requested turns are now implemented and engine-compiled,
-but not executed. The host importer validates, copies and seals all four retained fact files. The new
+but its first fresh native source attempt stopped at the early fixture preflight described above. The host importer validates, copies and seals all four retained fact files. The new
 source/load oracle checks exact identity, payment, guarded wait accounting and retained physical
-facts. No new native save/load has run. Do not start its long
-acceptance run until source and consumer are integrated under the same sealed inputs.
+facts. No higher-heart native save/load has completed. Each new attempt requires source and consumer
+under the same sealed inputs.
 [HEART-CHAIN-COLDLOAD.md](HEART-CHAIN-COLDLOAD.md) records the remaining integration and scenarios.
 Current consumer checks: 136 main and 120 portable CampHeart cases passed with zero skips;
 six host-format tests, 30 save-import tests and seven journal/fact-oracle tests passed. Shared
@@ -89,7 +117,7 @@ and 3393/3397 developer sources. Log `/tmp/taf-heart-chain-consumer-gate-2.log`,
 cover consumer code at `e3c77a36`; they do not add integration support for installed 2.2.4.
 [DEVELOPMENT.md](DEVELOPMENT.md) records the reusable authentic reference for both agents.
 The existing native driver/archive now accept the optional save persona, require actual guarded
-wait accounting and retain load facts with pinned profile inputs. No new native game has run.
+wait accounting and retain load facts with pinned profile inputs. Native21 failed before serialization.
 
 
 Earlier source-save-only checks at `52c7428d`: 134 focused main CampHeart cases and 65 persona checks passed with zero managed skips.

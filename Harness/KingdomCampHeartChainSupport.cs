@@ -85,6 +85,7 @@ namespace ThousandAndFirst.Harness
 				var plots = KingdomPlots.ReadPlots(Zone);
 				Require(KingdomPlots.TryHeartRectFor(Zone, 4, out var heart), "final heart lot absent");
 				plots.Add(heart);
+				plots.Add(KingdomCampHeartChainGrid.NextWork);
 				for (int y = 1; y < Zone.Height - 1; y++)
 					for (int x = 1; x < Zone.Width - 1; x++)
 					{
@@ -137,7 +138,7 @@ namespace ThousandAndFirst.Harness
 				string lastFailure = null;
 				foreach (var rect in KingdomCampHeartChainGrid.Candidates())
 				{
-					if (ChainHomes.Count == 18) break;
+					if (ChainHomes.Count == KingdomCampHeartChainGrid.HomeCount) break;
 					if (!KingdomPlotRules.Fits(rect, interior)) continue;
 					if (!KingdomCampHeartChainGrid.ClearsPaidApproach(rect, tentRect)
 						|| !KingdomCampHeartChainGrid.ClearsPaidApproach(rect, heartRect)) continue;
@@ -174,7 +175,7 @@ namespace ThousandAndFirst.Harness
 						"synthetic housing completion refused: " + lastFailure);
 					ChainHomes.Add(home);
 				}
-				Require(ChainHomes.Count == 18, "eighteen authored homes do not fit: count="
+				Require(ChainHomes.Count == KingdomCampHeartChainGrid.HomeCount, "seventeen authored homes do not fit: count="
 					+ ChainHomes.Count + "; last=" + lastFailure);
 				RequireChainIngress();
 			}

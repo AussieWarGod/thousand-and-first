@@ -69,7 +69,7 @@ namespace ThousandAndFirst.Harness
 				Require(KingdomScenarioSaveFiles.ReadText(Path.Combine(root, KingdomScenarioSaveFiles.ReceiptFile), 512) == receipt,
 					"higher-heart save receipt changed");
 				return "paid-heart-chain-save=true; " + KingdomCampHeartChainLoadFacts.Identity(witness)
-					+ "; synthetic-next-job-timber=1; brush=21; save=" + Game.GameID
+					+ "; normal-next-quote=true; outside-final-heart=true; synthetic-next-job-timber=1; brush=21; save=" + Game.GameID
 					+ "; snapshot-sha256=" + KingdomScenarioSaveFiles.HashText(wire) + "; physical-state-preserved=true";
 			}
 
@@ -83,8 +83,18 @@ namespace ThousandAndFirst.Harness
 					"higher-heart preflight lacks exact paid-registry state");
 				Require(KingdomData.TryGetBuilding("fire", out var entry) && entry.CostDrams == 2,
 					"higher-heart next fire design differs");
-				Require(KingdomPlots.TryQuoteCommission(System, Zone, entry, null, KingdomPlotRules.PlotSize.None,
-					out var quote, out string failure), failure ?? "higher-heart next fire quote refused");
+				KingdomPlotQuote quote;
+				string failure;
+				if (Journal)
+				{
+					// A future build needs deliberately spared ground. A normal uncommitted survey
+					// quote proves that space now; the completed-heart save uses ordinary siting.
+					var site = KingdomCampHeartChainGrid.NextWork;
+					Require(KingdomPlots.TryQuotePlan(System, Zone, entry, null, KingdomPlotRules.PlotSize.None,
+						Zone.GetCell(site.X2 + 1, site.Y1), out quote, out failure), failure);
+				}
+				else Require(KingdomPlots.TryQuoteCommission(System, Zone, entry, null, KingdomPlotRules.PlotSize.None,
+					out quote, out failure), failure ?? "higher-heart next fire quote refused");
 				Require(KingdomPlots.TryHeartRectFor(Zone, 4, out var final)
 					&& !KingdomPlotRules.Overlaps(final, KingdomPlotRules.Reserved(quote.Rect)),
 					"higher-heart next fire quote consumes future heart ground");
@@ -96,7 +106,7 @@ namespace ThousandAndFirst.Harness
 					&& KingdomScenarioDurableState.ProvesExactText(KingdomConstruction.RegistryStateKey, jobs),
 					"higher-heart next fire quote changed payment, custody or paid jobs");
 				if (Journal) Require(KingdomScenarioJournal.Append("camp-heart-chain-next-preflight", true,
-					"normal-fire-quote=true; outside-final-heart=true; water=2; timber=1; no-debit=true") == null,
+					"planned-fire-quote=true; outside-final-heart=true; water=2; timber=1; no-debit=true") == null,
 					"higher-heart next-job preflight journal unavailable");
 			}
 			private static string ChainFactsPath(string Root, string Domain)

@@ -89,7 +89,7 @@ def journal_fixture():
         if event == "camp-heart-chain-save":
             message = detail(dict({"paid-heart-chain-save": "true", "rung": snapshot["rung"]}, **check.identity(snapshot),
                                  save=snapshot["game_id"], **{"synthetic-next-job-timber": 1,
-                                 "brush": 21, "snapshot-sha256": sha(wire), "physical-state-preserved": "true"}))
+                                 "brush": 21, "snapshot-sha256": sha(wire), "physical-state-preserved": "true", "normal-next-quote": "true", "outside-final-heart": "true"}))
         source.append((event, status or "OK", message))
     def row(event, **values): return event, "OK", detail(values)
     saved_values = dict(check.identity(snapshot), **{"snapshot-sha256": sha(wire)})

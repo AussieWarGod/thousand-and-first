@@ -47,6 +47,9 @@ namespace ThousandAndFirst.Harness
 			int water = frame.Census().StoredWater;
 			Require(KingdomPlots.TryQuoteCommission(frame.System, frame.Zone, entry, null, KingdomPlotRules.PlotSize.None,
 				out var quote, out failure), failure);
+			Require(KingdomPlots.TryHeartRectFor(frame.Zone, 4, out var heartRect)
+				&& !KingdomPlotRules.Overlaps(heartRect, KingdomPlotRules.Reserved(quote.Rect)),
+				"loaded next fire quote encroaches on completed heart ground");
 			Require(KingdomMaterials.CanPay(frame.Zone, "fire", out failure), failure);
 			Require(KingdomCommission.Commission(frame.System, "fire", null, KingdomPlotRules.PlotSize.None, quote,
 				out failure), failure);

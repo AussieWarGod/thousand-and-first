@@ -224,7 +224,7 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void ChainHousingGridFitsEighteenLotsBesideTentAndFutureHeart()
+		public void ChainHousingGridFitsSeventeenLotsAndLeavesNextWorkBesideTentAndFutureHeart()
 		{
 			Assert.That(KingdomPlotRules.TryInterior(80, 25, out var usable), Is.True);
 			var occupied = new System.Collections.Generic.List<KingdomPlotRules.PlotRect> {
@@ -239,7 +239,7 @@ namespace ThousandAndFirst.Tests
 					|| KingdomPlotRules.CrowdsExisting(rect, occupied)) continue;
 				occupied.Add(rect); accepted++;
 			}
-			Assert.That(accepted, Is.GreaterThanOrEqualTo(18),
+			Assert.That(accepted, Is.GreaterThanOrEqualTo(KingdomCampHeartChainGrid.HomeCount),
 				"leave complete paid entrance approaches and every existing plot's reserved lane intact");
 			Assert.That(KingdomCampHeartChainGrid.Candidates().All(rect =>
 				KingdomPlotRules.Fits(rect, usable)), Is.True, "all candidates fit the production interior");
@@ -259,9 +259,14 @@ namespace ThousandAndFirst.Tests
 					|| !KingdomCampHeartChainGrid.ClearsPaidApproach(home, occupied[1])
 					|| KingdomPlotRules.CrowdsExisting(home, occupied)) continue;
 				occupied.Add(home);
-				if (occupied.Count == 20) break;
+				if (occupied.Count == KingdomCampHeartChainGrid.HomeCount + 2) break;
 			}
-			Assert.That(occupied.Count, Is.EqualTo(20), "eighteen homes plus both paid lots");
+			Assert.That(occupied.Count, Is.EqualTo(KingdomCampHeartChainGrid.HomeCount + 2), "seventeen homes plus both paid lots");
+			Assert.That(KingdomPlotRules.CrowdsExisting(KingdomCampHeartChainGrid.NextWork, occupied), Is.False,
+				"the next ordinary job needs its own complete plot and reserved lane");
+			Assert.That(KingdomCampHeartChainGrid.ClearsWaterFootprints(KingdomCampHeartChainGrid.NextWork), Is.True);
+			Assert.That(KingdomPlotRules.Fits(KingdomCampHeartChainGrid.NextWork, usable), Is.True);
+			occupied.Add(KingdomCampHeartChainGrid.NextWork);
 			var water = KingdomCampHeartChainGrid.WaterCourts().ToList();
 			Assert.That(water.Count, Is.EqualTo(8));
 			foreach (var court in water)

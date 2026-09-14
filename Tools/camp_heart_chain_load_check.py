@@ -42,9 +42,9 @@ def judge(source, loaded, snapshot, digest):
     _, saved = one(source, "camp-heart-chain-save")
     equal_fields(saved, dict(identity(snapshot), **{"paid-heart-chain-save": "true", "save": snapshot["game_id"],
                  "synthetic-next-job-timber": "1", "brush": "21", "snapshot-sha256": digest,
-                 "physical-state-preserved": "true"}))
+                 "physical-state-preserved": "true", "normal-next-quote": "true", "outside-final-heart": "true"}))
     _, preflight = one(source, "camp-heart-chain-next-preflight")
-    equal_fields(preflight, {"normal-fire-quote": "true", "outside-final-heart": "true",
+    equal_fields(preflight, {"planned-fire-quote": "true", "outside-final-heart": "true",
                             "water": "2", "timber": "1", "no-debit": "true"})
     names = ("LOAD-BEGIN", "camp-heart-chain-load-input", "camp-heart-chain-preactivation",
              "camp-heart-chain-loaded", "camp-heart-chain-next", "camp-heart-chain-resume",
