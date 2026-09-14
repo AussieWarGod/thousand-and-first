@@ -175,4 +175,3 @@ Quickstart observer intentionally requires two canvas homes. The new observer re
 identities/assignments, three enclosed beds per home and useful floor space; a furnished hut can
 spend one clear cell on its table. The initial preparation refusal for a missing advisor flag
 launched no game and is retained separately under `prepare-missing-advisor`.
-
