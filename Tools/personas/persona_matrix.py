@@ -132,7 +132,15 @@ QUICKSTART_EVIDENCE_ROWS = (
 GUEST_SAVE_EVIDENCE_ROWS = ("guest-save-shortage",)
 
 # The save verb observes remaining custody before publishing its snapshot.
-CAMP_HEART_EVIDENCE_ROWS = ("camp-heart-save-custody",)
+CAMP_HEART_EVIDENCE_ROWS = (
+    "camp-heart-save-custody", "camp-heart-chain-founder", "camp-heart-chain-input",
+    "camp-heart-chain-spatial", "camp-heart-chain-occupancy", "camp-heart-chain-road-wear",
+    "camp-heart-chain-handover-refusals", "camp-heart-chain-handover-cleared",
+    "camp-heart-chain-retry-obstruction", "camp-heart-chain-retry-outstanding",
+    "camp-heart-chain-retry-removal", "camp-heart-chain-survey-stakes",
+    "camp-heart-chain-renovation", "camp-heart-chain-renovation-refusals",
+    "camp-heart-chain-renovation-cleared",
+)
 
 # The second counted verb. `yield-frames <frames>` hands the engine back its own render loop, which
 # an advance never does: advance keeps the engine out of XRLCore.PlayerTurn on purpose, and that is
@@ -574,7 +582,8 @@ def read_journal(text: str) -> list[tuple[str, str, str]]:
 def significant(rows: list[tuple[str, str, str]]) -> list[tuple[str, str, str]]:
     # These bounded observations do not occupy scripted EXPECT positions. A failed
     # observation remains significant, so diagnosis cannot silently lose evidence.
-    diagnostics = {"TESTGROUND-CENSUS", "camp-resident-movement", "camp-vortex-origin"}
+    diagnostics = {"TESTGROUND-CENSUS", "camp-resident-movement", "camp-vortex-origin",
+                   "camp-heart-chain-removal"}
     return [row for row in rows if row[0] not in BOOKKEEPING
             and not (row[0] in diagnostics and row[1] == "OK")]
 

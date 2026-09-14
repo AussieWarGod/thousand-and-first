@@ -8,6 +8,24 @@ namespace ThousandAndFirst
 {
 	public static partial class KingdomRoads
 	{
+		internal static bool IsExactUnpaidTrack(Cell Cell, GameObject Floor)
+		{
+			if (Cell == null || !GameObject.Validate(Floor) || Floor.CurrentCell != Cell
+				|| Floor.CurrentZone != Cell.ParentZone || Floor.IsOwned()
+				|| !Floor.HasIntProperty(PathStateProperty) || Floor.HasStringProperty(PathStateProperty)
+				|| Floor.HasStringProperty(KingdomConstruction.ReceiptProperty)
+				|| Floor.HasIntProperty(KingdomConstruction.ReceiptProperty)
+				|| KingdomPlots.HasRectEvidence(Floor)
+				|| Floor.HasIntProperty(KingdomArchitectureStamper.ComponentSchemaProperty)
+				|| Floor.HasStringProperty(KingdomArchitectureStamper.ComponentSchemaProperty)
+				|| FindOurFloor(Cell, out var exact) != KingdomPhysicalLookupState.Exact
+				|| !ReferenceEquals(exact, Floor)) return false;
+			int state = Floor.GetIntProperty(PathStateProperty);
+			return state == (int)KingdomRoadRules.WearState.Worn && Floor.Blueprint == WornBlueprint
+				|| state == (int)KingdomRoadRules.WearState.Trodden && Floor.Blueprint == TroddenBlueprint
+				|| state == (int)KingdomRoadRules.WearState.Path && Floor.Blueprint == PathBlueprint;
+		}
+
 		private static KingdomPhysicalLookupState FindRoadId(Zone Z, string Id,
 			out GameObject Exact)
 		{

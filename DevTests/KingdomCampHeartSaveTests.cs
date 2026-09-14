@@ -180,6 +180,98 @@ namespace ThousandAndFirst.Tests
 			}
 			Assert.That(KingdomCampHeartScript.Matches(saved.Concat(new[] { "camp-heart-save" }).ToArray()), Is.False);
 		}
+		[Test]
+		public void PaidChainRequiresEveryOrdinaryWaitAndCannotClaimSaveCoverage()
+		{
+			var script = Script("camp-heart-chain");
+			Assert.That(KingdomCampHeartChainScript.Matches(script), Is.True);
+			Assert.That(KingdomCampHeartScript.Matches(script), Is.True);
+			Assert.That(KingdomCampHeartScript.Matches(script, true), Is.False);
+			Assert.That(script.Take(9), Is.EqualTo(Script("camp-heart-native-checks")));
+			Assert.That(script.Skip(9).Take(5), Is.EqualTo(new[] {
+				"camp-heart-chain-setup", "advance 1200", "camp-heart-chain-supply",
+				"advance 1200", "camp-heart-chain-check" }));
+			Assert.That(KingdomCampHeartChainScript.Matches(null), Is.False);
+			for (int i = 0; i < script.Length; i++)
+			{
+				var changed = (string[])script.Clone(); changed[i] += " ";
+				Assert.That(KingdomCampHeartChainScript.Matches(changed), Is.False);
+				Assert.That(KingdomCampHeartChainScript.Matches(script.Where((_, at) => at != i).ToArray()), Is.False);
+			}
+			Assert.That(KingdomCampHeartChainScript.Matches(script.Concat(new[] { "camp-heart-save" }).ToArray()), Is.False);
+			int turns = script.Where(x => x.StartsWith("advance ")).Sum(x => int.Parse(x.Substring(8)));
+			Assert.That(turns, Is.EqualTo(31200));
+			Assert.That(script.Where(x => x.StartsWith("advance ")).All(x => int.Parse(x.Substring(8)) <= 10000), Is.True);
+		}
+
+		[Test]
+		public void ChainHousingGridFitsEighteenLotsBesideTentAndFutureHeart()
+		{
+			Assert.That(KingdomPlotRules.TryInterior(80, 25, out var usable), Is.True);
+			var occupied = new System.Collections.Generic.List<KingdomPlotRules.PlotRect> {
+				new KingdomPlotRules.PlotRect(31, 4, 50, 21),
+				new KingdomPlotRules.PlotRect(24, 7, 29, 10) };
+			int accepted = 0;
+			foreach (var rect in KingdomCampHeartChainGrid.Candidates())
+			{
+				if (!KingdomPlotRules.Fits(rect, usable)
+					|| !KingdomCampHeartChainGrid.ClearsPaidApproach(rect, occupied[0])
+					|| !KingdomCampHeartChainGrid.ClearsPaidApproach(rect, occupied[1])
+					|| KingdomPlotRules.CrowdsExisting(rect, occupied)) continue;
+				occupied.Add(rect); accepted++;
+			}
+			Assert.That(accepted, Is.GreaterThanOrEqualTo(18),
+				"leave complete paid entrance approaches and every existing plot's reserved lane intact");
+			Assert.That(KingdomCampHeartChainGrid.Candidates().All(rect =>
+				KingdomPlotRules.Fits(rect, usable)), Is.True, "all candidates fit the production interior");
+		}
+
+		[Test]
+		public void CityFixtureReservesEveryWaterFootprintAndKeepsAllPaidApproaches()
+		{
+			Assert.That(KingdomPlotRules.TryInterior(80, 25, out var usable), Is.True);
+			var occupied = new List<KingdomPlotRules.PlotRect> {
+				new KingdomPlotRules.PlotRect(31, 4, 50, 21),
+				new KingdomPlotRules.PlotRect(24, 7, 29, 10) };
+			foreach (var home in KingdomCampHeartChainGrid.Candidates())
+			{
+				if (!KingdomPlotRules.Fits(home, usable)
+					|| !KingdomCampHeartChainGrid.ClearsPaidApproach(home, occupied[0])
+					|| !KingdomCampHeartChainGrid.ClearsPaidApproach(home, occupied[1])
+					|| KingdomPlotRules.CrowdsExisting(home, occupied)) continue;
+				occupied.Add(home);
+				if (occupied.Count == 20) break;
+			}
+			Assert.That(occupied.Count, Is.EqualTo(20), "eighteen homes plus both paid lots");
+			var water = KingdomCampHeartChainGrid.WaterCourts().ToList();
+			Assert.That(water.Count, Is.EqualTo(8));
+			foreach (var court in water)
+			{
+				Assert.That(KingdomPlotRules.ValidZoneRect(court, 80, 25), Is.True);
+				Assert.That(court.X2 - court.X1 + 1, Is.EqualTo(8));
+				Assert.That(court.Y2 - court.Y1 + 1, Is.EqualTo(6));
+				var root = new KingdomPlotRules.PlotRect(court.X1 + 3, court.Y1 + 2,
+					court.X1 + 3, court.Y1 + 2);
+				Assert.That(occupied.All(plot => !KingdomPlotRules.Overlaps(court, plot)
+					&& KingdomCampHeartChainGrid.ClearsPaidApproach(root, plot)), Is.True);
+				Assert.That(water.Count(other => KingdomPlotRules.Overlaps(court, other)), Is.EqualTo(1));
+				Assert.That(KingdomCampHeartChainGrid.ClearsWaterFootprints(root), Is.False,
+					"later supply containers must not take reserved producer ground");
+			}
+		}
+
+		[Test]
+		public void ChainHousingProtectsPaidLaneBeyondReservedMargin()
+		{
+			var tent = new KingdomPlotRules.PlotRect(24, 7, 29, 10);
+			var blocker = new KingdomPlotRules.PlotRect(23, 2, 28, 5);
+			Assert.That(KingdomPlotRules.CrowdsExisting(blocker, new[] { tent }), Is.False);
+			Assert.That(blocker.Contains(26, 5), Is.True, "recorded north-facing tent lane endpoint");
+			Assert.That(KingdomCampHeartChainGrid.ClearsPaidApproach(blocker, tent), Is.False);
+			Assert.That(KingdomCampHeartChainGrid.ClearsPaidApproach(
+				new KingdomPlotRules.PlotRect(16, 2, 21, 5), tent), Is.True);
+		}
+
 		private static string[] Script(string name) => TestMain.ReadRepositoryText("Tools/personas/" + name + ".persona")
 			.Split('\n').Single(line => line.StartsWith("SCRIPT=", StringComparison.Ordinal)).Substring(7).Split(';');
 	}

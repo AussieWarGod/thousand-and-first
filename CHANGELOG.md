@@ -1,5 +1,51 @@
 # Changelog
 
+**Pending heart progression repair (unreleased)**
+
+Clear eligible residents from retained floors that become walls during an authored renovation
+(#226). Apply existing protected-body, destination and rollback rules at commissioning and
+paid handover, with strict proof before layout mutation. Preserve existing-wall and unmapped
+ground protection. Native tests now require court interior preflight and paid late-clearance
+cases; fresh full-chain acceptance remains pending.
+
+Allow residents and visitors to stand on retained walkable heart floors during upgrade
+assessment. Foreign objects and occupied blocked slots retain their protections. Extend the
+native occupied-ground probes to cover the predecessor interior; full acceptance is pending.
+
+Allow large authored hearts to fit construction receipts. The construction payload limit now
+covers the architecture codec's existing bounded envelope; old receipts retain their format.
+Court and arcology payload regressions and overflow refusal tests cover the mismatch (#221).
+Native24 completed rung three, then refused the old payload bound before court payment.
+Hearthpyre compatibility work is deferred until Beta; further gameplay Alphas remain priority.
+
+Follow completed heart upgrades across successive receipts, and admit the exact next paid
+improvement while its predecessor still stands. Scope local spatial-seal reads to one survey.
+The developer city fixture gains explicit synthetic water producers and sustained-support preflight.
+Preserve envelope preflight's admission of movable residents on newly annexed upgrade ground;
+strict paid application still requires clearance. Add native resident, founder and foreign-obstruction probes.
+Native acceptance is pending.
+Permit paid handover retries to reprove already-committed scaffold removal. Preserve exact
+founding survey stakes while the heart grows around them; foreign markers remain protected.
+Controlled native obstruction/retry passed through tier three at `3742ffeb`; survey-marker
+cases remain unexecuted.
+Allow the surveyed heart to grow over exact unpaid foot tracks, preserving those tracks. Paid
+paving, foreign and ambiguous road objects remain protected. Narrow road probes passed in the
+failed `710fa082` run; tier-three track retention later passed at `3742ffeb`. Full progression
+and retention through tier four remain unproved.
+Repeat lawful resident clearance at paid handover and retry, with exact endpoints, custody and
+strict ground rechecked after movement. Add native late-resident, protected-occupant and forced
+no-destination cases. These bounded tier-three cases passed at `3742ffeb`; higher persistence
+and full-chain acceptance remain pending.
+Fund the six new timber floors when upgrading the moot yard to the great court. Previously
+the missing shaped-timber claim blocked the upgrade before payment. Expand authored-delta
+regressions to cover every added material across all fallback heart transitions and facings,
+including historical-baseline transitions. Sixteen main cases pass; fresh native confirmation
+of the court bill remains pending under #216. Exact evidence is in docs/STATUS.md.
+
+Current 3101-file census is line-cap green: 440,422 physical lines; direct `XRL`
+imports occur in 1447 files, 0 of them over the line limit. Inventory SHA-256: `aa0e8a79a59272ca79a0c506473c1834973878d799e3beb63a3cc495bd58862b`.
+The cold-install inventory contains 3132 files. This is not evidence of a new public installation.
+
 All notable changes to The Thousand and First. Versions are semantic: patch for fixes,
 minor for additive API and content, major for breaking changes. Supported API is defined in
 [docs/API.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/API.md).

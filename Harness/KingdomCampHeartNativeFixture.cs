@@ -33,15 +33,17 @@ namespace ThousandAndFirst.Harness
 			/// here writes book state. Proved live 2026-09-10: the forage seam's first native run
 			/// refused at setup with the opposite order.
 			/// </para></summary>
-			private void EnrollResidents()
+			private void EnrollResidents(int Count = ResidentCount)
 			{
 				long tick = Game.TimeTicks;
-				for (int i = 0; i < ResidentCount; i++)
+				for (int i = 0; i < Count; i++)
 				{
+					int slot = FixtureResidents.Count + 1;
+					int expected = System.Population + 1;
 					GameObject body = Create("NPC");
 					var movement = new XRL.World.Parts.r_TAF_CampResidentMoveProbe
 					{
-						OriginZone = Zone.ZoneID, FixtureSlot = i + 1,
+						OriginZone = Zone.ZoneID, FixtureSlot = slot,
 						Record = detail => KingdomScenarioJournal.Append(
 							"camp-resident-movement", true, detail)
 					};
@@ -62,7 +64,7 @@ namespace ThousandAndFirst.Harness
 					body.SetIntProperty("KingdomBorn", 1);
 					Require(body.GetIntProperty("KingdomBorn") == 1,
 						"taf-camp-resident-unborn: synthetic born provenance did not persist");
-					string name = "camp heart fixture resident " + (i + 1);
+					string name = "camp heart fixture resident " + slot;
 					body.GiveProperName(name, Force: true);
 					body.SetStringProperty("KingdomName", name);
 					Cell cell = KingdomNativeCampFounding.Clear(Zone);
@@ -85,7 +87,7 @@ namespace ThousandAndFirst.Harness
 						out book, out id) && ReferenceEquals(book, System.City) && id > 0,
 						"taf-camp-resident-norow: native enrollment did not publish an exact row "
 							+ "and binding");
-					RequireRowInBook(book, body, id, i + 1);
+					RequireRowInBook(book, body, id, expected);
 					FixtureResidents.Add(body);
 					FixtureResidentObjectIds.Add(body.IDIfAssigned);
 				}

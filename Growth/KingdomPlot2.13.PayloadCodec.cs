@@ -50,7 +50,7 @@ namespace ThousandAndFirst
 		/// <summary>
 		/// Canonical v2: version, exact rect, canonical UTF-8 skin, the architecture codec's three
 		/// fields, then a SHA-256 over every preceding field. Snapshot is not base64-wrapped again,
-		/// keeping the complete construction payload beneath its 8192-character wire bound.
+		/// keeping the complete construction payload beneath its bounded wire envelope.
 		/// </summary>
 		internal static bool TryEncodePlotPayload(KingdomPlotRules.PlotRect Rect, string SkinKey,
 			KingdomArchitectureIntent Intent, out string Payload, out string Failure)

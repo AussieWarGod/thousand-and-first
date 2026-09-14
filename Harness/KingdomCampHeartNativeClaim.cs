@@ -39,6 +39,7 @@ namespace ThousandAndFirst.Harness
 				Require(KingdomPlots.TryReadRect(Standing, out heart),
 					"taf-camp-claim-noheartrect: the standing heart's rect could not be read");
 				RequireStoreCellIsCrowdedOut(heart);
+				PrepareChainCommission();
 				KingdomRules.BuildEntry entry = null;
 				Require(KingdomData.TryGetBuilding(ClaimKey, out entry) && entry != null,
 					"taf-camp-claim-nodesign: the catalogue has no '" + ClaimKey + "' design");
@@ -53,6 +54,7 @@ namespace ThousandAndFirst.Harness
 						"taf-camp-claim-unstaked: the commission reported success but staked "
 							+ (after.Count - before.Count) + " plot(s)");
 					KingdomPlotRules.PlotRect laid = Added(before, after);
+					RequireChainCommissionClear(laid);
 					Require(!KingdomPlotRules.Overlaps(laid,
 						KingdomPlotRules.Reserved(heart)),
 						"taf-camp-claim-took-heart-ground: the commissioned plot lies on the "

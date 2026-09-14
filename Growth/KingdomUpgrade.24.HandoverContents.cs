@@ -94,8 +94,10 @@ namespace ThousandAndFirst
 				try
 				{
 					settled = authoredUpgrade
-						? KingdomArchitectureStamper.TryApplyUpgrade(Predecessor, Successor,
-							Predecessor.CurrentZone, authoredSuccessor, out layoutFailure)
+						? TryPrepareHandoverGround(Predecessor, Successor, SuccessorKey,
+							intent, authoredSuccessor, job, out layoutFailure)
+							&& KingdomArchitectureStamper.TryApplyUpgrade(Predecessor, Successor,
+								Predecessor.CurrentZone, authoredSuccessor, out layoutFailure)
 							&& KingdomPlots.TryStampAuthoredGrowth(Predecessor, Successor,
 								authoredSuccessor, out layoutFailure)
 						: KingdomPlots.GrowInPlace(Predecessor, Successor, SuccessorKey);
@@ -172,8 +174,10 @@ namespace ThousandAndFirst
 				try
 				{
 					settled = authoredUpgrade
-						? KingdomArchitectureStamper.TryApplyUpgrade(Predecessor, Successor,
-							Predecessor.CurrentZone, authoredSuccessor, out layoutFailure)
+						? TryPrepareHandoverGround(Predecessor, Successor, SuccessorKey,
+							intent, authoredSuccessor, job, out layoutFailure)
+							&& KingdomArchitectureStamper.TryApplyUpgrade(Predecessor, Successor,
+								Predecessor.CurrentZone, authoredSuccessor, out layoutFailure)
 							&& KingdomPlots.TryStampAuthoredGrowth(Predecessor, Successor,
 								authoredSuccessor, out layoutFailure)
 						: KingdomPlots.GrowInPlace(Predecessor, Successor, SuccessorKey);

@@ -1,5 +1,533 @@
 # Current implementation and release evidence
 
+## Native29 closed; repair occupied interior renovation ground (#226)
+
+Native29 at `55d873ec` passed the scoped full-assessment resident probe, paid rung-three
+completion and the controlled late-clearance/protected/no-destination/Outstanding retry cases.
+Court readiness then refused resident `756/NPC` at `44,12` on moot floor `3213/WoodFloor`,
+slot `g:09:04`. Authored geometry changes this retained walkable floor to a court inner wall.
+Existing clearance handled annexed cells only; the retained-floor repair intentionally did
+not admit bodies on target walls. No court payment or repaired stake probes were reached.
+
+Closed failed archive: `beta-heart-chain/55d873ec/court-retained-occupant-refused-1/result.json`,
+SHA-256 `97105af2a87d81703d389199f5c255f3057c341ac71ba0583563f9aea26348ad`.
+Full pinned recipe, strict log and exact owned stop passed. CI `34823130018` passed.
+
+The pending repair uses declared prior and successor passability to include retained
+Walkable/Adjacent-to-Blocked cells in existing lawful clearance. Existing blocked or unmapped
+prior cells gain no authority. Protected-body proof runs before debit and paid clearance;
+strict proof runs after callbacks and before every physical application attempt. Native tests
+now require court interior resident/preflight/full-assessment, founder/stranger refusal and
+actual paid late-clearance with forced no-destination refusal and unchanged payment/custody.
+Same-envelope renovations share this runtime path but do not yet have their own native
+scenario. Ten new authority cases, fifteen envelope integration-contract cases, eighteen authored-heart
+cases, all 64 persona-validator tests, documentation checks and all four engine compile modes
+passed. The portable project excludes this occupant kernel and its fixture; a no-match selector
+was rejected and is not counted as coverage. One stale source-contract suffix was corrected
+for the additional strict reproof before its successful rerun. Native validation remains pending.
+Public stays 0.3.6;
+Hearthpyre compatibility remains parked until Beta, with Alpha delivery the immediate priority.
+
+## Native28 closed; bind Harness readiness to the production survey
+
+Native28 at `574c0ddb` passed retained-floor/blocked-cell probes, rung-three payment and
+completion, controlled late-resident clearance and paid retry. Before reaching the repaired
+stake probes, court supply assessment refused enrolled resident `3087/NPC` at annexed blocked
+cell `43,4`. Production telemetry explicitly said `reason=unwitnessed`: the Harness assessment
+used an unbound custody census, while movable-occupant authority requires the active survey.
+No court payment or stake-cleanup acceptance occurred in this run.
+
+Closed archive: `beta-heart-chain/574c0ddb/court-occupied-preflight-refused-1/result.json`,
+SHA-256 `95ee89940e491d0a7031dc9a25bf14299387865fd632571e97ef3f8b2140313e`.
+Full pinned recipe, strict log and exact owned stop passed; scenario failed. CI `34821721978`
+passed. The earlier Native27 court payment remains its own bounded result.
+
+Harness readiness now binds one local operation, reads its active settlement survey and proves
+disposal. Its controlled blocked-resident probe also calls that complete readiness route,
+requiring Ready without moving the body or spending anything. The persona requires this
+additional witness. Production eligibility and movement rules are unchanged. All four engine
+compile modes, 64 persona-validator tests and documentation/metadata checks passed. Native
+progression and the #223 stake-cleanup repair still require fresh confirmation.
+
+## Native27 closed; stake-probe cleanup repair pending
+
+Native27 at `78e8d097` passed controlled retained-floor admission/refusal, exact rung-three
+payment/completion, late-resident and protected-occupant cases, forced no-destination refusal,
+Outstanding retry and original basin/store/21 brush/track retention with fifty supported
+residents. Court material and payload preflight passed, as did all four stake admission and
+foreign/unbound/duplicate refusal probes. The court then paid its exact 50-water/121-material
+bill, but the immediate founding-recovery assertion refused retirement authority. No court
+completion or full-chain PASS occurred.
+
+Closed failed archive: `beta-heart-chain/78e8d097/court-paid-founding-recovery-refused-1/result.json`,
+SHA-256 `1dd315fb61dc1bd07cdd48f064bd8eb38874648c022e9f5c3499dc445900cc5b`.
+Full pinned recipe, strict log check and exact owned stop passed. The scenario's stronger
+founding-recovery prohibition failed, so log hygiene does not override gameplay failure.
+CI `34820124279` passed; candidate `fbaaf549` passed CI `34820439091`.
+
+Source inspection identified a likely fixture contamination: the duplicate stake was destroyed
+while carrying a borrowed founding identity and owner. Native destruction retains tombstones;
+the founding custody proof deliberately refuses foreign stake tombstones. The probe now restores
+its own allocated ID and removes borrowed owner/slot fields before destruction. It additionally
+requires production founding recovery before and after the probes. A failure-only Harness
+observer names the exact retirement predicate and conflicting tombstones. Production admission
+and retirement rules are unchanged. All 64 persona-validator tests, documentation/metadata
+checks and all four engine compile modes passed. Fresh native confirmation remains required.
+
+## Native26 closed; occupied retained-floor repair pending (#222)
+
+Native26 at `84dc3f11` identified the intermittent `42,13` blocker: enrolled resident 1,
+object `755/NPC`, standing on predecessor `739/DirtPath` slot `g:05:03`. The authored
+upgrade impact scan refused creatures inside the old lot even where the successor remains
+walkable. No higher payment occurred. Closed failed archive:
+`beta-heart-chain/84dc3f11/retained-citizen-ground-refused-1/result.json`, SHA-256
+`6daec403076ff081ba92d32c0cb59b28b6ec5d95d2ac23f202d78a2aeb2a3c94`.
+Full pinned recipe, strict log and exact owned stop passed. CI `34818949125` passed.
+
+The repair reads declared successor placement passability before rejecting a body on retained
+ground. Blocked or unknown retained ground and foreign objects still refuse. Annexed blocked
+slots retain their existing movement authority and strict paid-clearance checks. The native
+occupancy probe now requires resident, founder and stranger admission on the same impacted
+retained walkable cell, foreign-wall refusal there, exact restoration and no debit. Fourteen
+focused source cases, all 64 persona-validator tests, documentation/metadata checks and all
+four engine compile modes passed. The first developer compile caught a duplicate test-local
+name; corrected before the successful gate. Fresh native progression acceptance remains
+pending. Public release is still 0.3.6.
+
+## Native25 closed; retained-ground diagnostic on the release branch
+
+Native25 at `8ceed37e` passed the first higher upgrade's supply, occupancy and road preflights,
+but after 1200 ordinary turns no paid moot job existed. Reassessment refused protected
+successor ground at `42,13`, the same coordinate seen in the separate cold-load fixture.
+This is intermittent: Native24 completed that leg. The actual occupant has not been identified;
+do not attribute it to a citizen, road or fixture object without a physical witness.
+
+Closed archive: `beta-heart-chain/8ceed37e/retained-ground-payment-refused-1/result.json`,
+SHA-256 `08eea5c32fd9c3eacbbd8963a78819f7cb65d134381102f18e98ce9155dc20fe`.
+Full pinned recipe, strict log and exact owned stop passed; scenario failed. No new higher
+payment, court completion or save/load acceptance occurred. The payload repair's source CI
+`34818068279` passed; that does not override this native refusal.
+
+The release branch now includes the observation-only refused-cell diagnostic already compiled
+in #219: exact object IDs/blueprints, ground classification, citizenship/resident identity,
+fixture membership and plot/component markers. It changes no production admission or movement.
+Keep #207 and #220 draft until the native blocker is understood and paid progression passes.
+
+## Native24 closed; court receipt bound repair — 2026-09-14
+
+Native24 at `1729bae6` completed paid rung three and all controlled late-resident clearance,
+protected-occupant, failed-destination and Outstanding-removal retry cases. Original basin,
+stockpile, twenty-one brush units, unpaid track and fifty housed residents remained intact.
+Court preflight then refused `The authored plot payload exceeds the construction receipt bound.`
+No court payment or cold load occurred. Issue #221 tracks this production blocker.
+
+Closed archive: `beta-heart-chain/1729bae6/court-payload-bound-refused-1/result.json`, SHA-256
+`bd481dbf7bcb48dfc799843e8608ababe4459de4ca93382fc62a2d87e6e7de6b`.
+Full pinned profile recipe, strict log and exact owned stop passed; scenario failed. The
+previous six-timber repair cleared material preflight, but this later refusal is not court
+completion or survey-stake acceptance. Eighteen synthetic homes remain a construction stress
+fixture, not ordinary city balance.
+
+Construction's 8192-character cap was smaller than the existing architecture codec's
+16456-character envelope. The repair raises the per-job cap to 32768, retaining the 4 MiB
+registry cap, canonical formats, hashes, and architecture's 12 KiB binary cap. Existing saved
+receipts remain readable. A regression failed for court and arcology in all four fallback
+facings, then all seventeen main CampHeart cases passed after repair. Twenty compiled heart
+snapshots now round-trip inside construction envelopes with maximal skin metadata; separate
+boundary tests cover old-size, larger, exact-bound and over-bound inputs. This is source
+codec evidence, not loaded-game acceptance. Fresh native court validation remains required.
+
+Priority remains further gameplay Alphas, with Hearthpyre compatibility parked until Beta.
+PR #220 prepares private 0.3.7; #219 higher-heart cold-load work stays separate. Neither
+candidate nor capability work has been uploaded. Public 0.3.6 remains published.
+
+## Accepted city-growth direction — planned
+
+[CITY-GROWTH-BALANCE.md](CITY-GROWTH-BALANCE.md) records the user's complete city-balance
+direction and [#208](https://github.com/AussieWarGod/thousand-and-first/issues/208) tracks it.
+Implementation tasks #209–#211 cover three-cell roads and public space, physical land-use
+balance and useful layout rewards, and genuine same-city multi-claimed-map behavioral tests.
+Roughly 20 residents per map is a design benchmark, not a hard cap. The full support economy
+must need land too. These are planned requirements; Beta and existing reliability work remain
+unfinished. Dense synthetic heart fixtures and travel to unclaimed maps do not establish this
+balance or multi-tile acceptance.
+
+## Latest heart-chain result and court-material repair
+
+Native run `3742ffeb6c9100b39484e1820c344e30c96ee80d` CLOSED FAILED at tier-four
+preflight. Tier three completed with all fifty supported fixture residents, original basin,
+store, 21 brush objects and retained unpaid track. The actual handover proved safe relocation
+of resident 755 with identity/citizenship retained, protected founder/stranger refusals and an
+explicitly synthetic no-destination refusal without movement or debit. A separate physical
+obstruction caused Outstanding, followed by committed-removal reproof and completion of the
+same paid job `92772944c40f4a3fa1b75ffa9c4c5c73`. These are bounded native witnesses for
+#215 and the controlled retry; they do not establish the original #212 failed predicate.
+
+Tier-four preflight then refused `NoGroundToGrow`: added slot `g:09:07` needs shaped timber
+absent from the exact paid improvement claim. No tier-four payment or survey-stake probe ran.
+Closed archive: `beta-heart-chain/3742ffeb/tier4-material-claim-refused-1/result.json`, SHA-256
+`7a0af3f0aae496dc9bd228bb4c86cedffde6d809288033dfd60cc6c822c8f1c9`.
+Full input seal, all 3388 C# bindings, strict mod log and exact owned shutdown passed. The
+roadless fixture's spatial capture was Pending, not a completed spatial seal. This synthetic
+support scenario remains unsuitable as ordinary city-balance or multi-claimed-map acceptance.
+
+[#216](https://github.com/AussieWarGod/thousand-and-first/issues/216) tracks the new blocker.
+The pending repair adds six shaped timber to the moot-to-court upgrade bill, matching its six
+new timber floors in every fallback facing. Native exact-payment expectation becomes 121
+material units; water remains 50 drams. Production paid-material protection remains intact.
+The regression failed before the bill change, then all 16 main CampHeart cases passed with
+zero skips. Current and historical-baseline deltas now check every added authored material,
+including fabric previously excluded by the storage-specific test. The portable selector
+returned no matches (exit 2): this fixture and its corpus helper are main-only. Coverage here
+does not include arbitrary extension-authored variants. All four engine compile modes passed
+with the repair (3096/3100 ordinary, 3384/3388 developer), as did nine documentation tests and
+the release-metadata preflight. Fresh native confirmation of the
+changed bill, full rungs 1–4, tier-five arcology and higher-heart cold load remain outstanding.
+Earlier results below retain their original inputs and acceptance limits.
+
+CI `34807093758` at `8df7b548` failed the older material catalogue test: it assumed every
+upgrade bill was only the positive difference between direct-build totals, expecting zero
+shaped timber for the court. That omits fabric rebuilt at different authored slots. The test
+now includes the court's six renovated floors, whose actual added placements are independently
+counted by the CampHeart regression. The prior focused and compile passes do not override
+this full-suite failure. All 270 focused main material-rule cases passed with zero skips after
+the correction. This fixture is also main-only; the attempted portable selector returned no
+matches (exit 2). Replacement CI remains pending; production and Harness inputs are unchanged
+from the passed four-mode compile at `8df7b548`.
+
+## Current source census for the pending heart repair
+
+Current source: 3101 sources, baseline and compatibility symbols use their
+respective exclusions (3097 baseline). All four engine compile modes passed.
+The cold-install inventory has 3132 files.
+3101 staged C# files / 440,422 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1447 files, 0 over the line limit. Inventory SHA-256: `aa0e8a79a59272ca79a0c506473c1834973878d799e3beb63a3cc495bd58862b`.
+This is a source census, not native acceptance or an updated exact-inventory semantic review.
+
+## In-progress paid heart chain
+
+A developer scenario extends the paid camp path toward rungs 3 and 4. Its disclosed city support
+uses fifty enrolled residents, eighteen authored tent rows, finite water and food stores, eight
+standalone legacy air-well court objects, synthetic craft lessons and separately supplied material
+bills. The producer objects are synthetic prerequisites with their real LiquidProducer active; they
+do not establish authored waterworks-construction coverage. Only setup housing uses a future calendar
+argument; ordinary turns must pay and complete both heart improvements. Full native completion
+remains unverified. This does not establish higher-rung persistence, ordinary growth or Beta acceptance.
+An earlier attempt at `bbd430f4779bba0367eec8913e6fd8c8984f7666` was stopped early after the sealed
+options file acquired `OptionLookLocked=No`. The engine's input path can write that option when
+controller look movement is detected; the exact input source has not been independently proved.
+This reproduced option drift without a window capture. All 3377 C# inputs and runtime/Harness XML
+matched, and the strict log and owned shutdown passed, but the complete input seal failed.
+Invalid diagnostic archive: `beta-heart-chain/bbd430f4/options-drift-invalid-1/result.json`, SHA-256
+`cc20b5c19d3dc6a54c85c9bac71eed99f6e67f9a3e208e95b75d7d5bea3a455a`.
+The exact paid-chain test game now bypasses `GameManager.UpdateInput` from its game-system setup
+through owned shutdown. Its lifetime is bound to that game and its exact sealed script; other games
+and scenarios retain input. A native preflight calls the real method and requires a postfix report
+that the original did not execute. This replaces the unverified command-specific guard.
+At `c0891e009d2901e3523b1bfbe538aa67ffd3d2b1`, the native input probe passed, the original
+6000-turn camp path passed, fifty residents were housed, the source paid tent finished, and rung-three
+supply passed real readiness. The following ordinary day still produced no heart upgrade receipt.
+The final live assessment was Ready with 50 free hands, no competing work, enabled automation and
+permitted zoning. Its last announced reason remained NotEnoughMaterial; that retained reason does
+not prove the current settlement-pass assessment. The log confirms another daily semantic pass ran.
+No production cause is established yet. The five completed waits total 8401 actual turns for 8400
+requested; the full script requests 31200, but did not complete.
+Closed failed-run archive: `beta-heart-chain/c0891e00/material-observation-refused-1/result.json`,
+SHA-256 `23f792da06dcc92a2c1afa002a5f0d6d88f28003530ce97ec11280aeb095b495`.
+All 3377 C# inputs, runtime/Harness XML, the complete input seal, strict log and owned shutdown
+verify. This establishes the narrow input probe and unchanged sealed inputs during this attempt,
+not full heart progression or keyboard/controller interaction coverage. No profile was resealed.
+At `44551df5700600e8bd55b3e0df9d33a21695b675`, the actual bound material assessment was Ready
+and rung-three payment passed with exactly 28 drams and 25 material units. Subsequent construction
+passes refused founding-heart recovery: the second improvement had replaced the standing root's
+receipt marker, while recovery still required the first completed improvement's marker. Construction
+returned before assigning or advancing labour. The final checkpoint refused with 40 resident bodies,
+3147 stored drams and 1728 food. Departure stacks identify subsidence's civic water-support rule;
+dedicated reserves alone did not provide that support. These are separate findings, not proof that
+fixing the receipt mismatch alone would prevent those departures.
+Closed failed archive: `beta-heart-chain/44551df5/receipt-chain-support-refused-1/result.json`, SHA-256
+`eb402cda7540a0a37fcc59967f1f9aafffe053ece4dbf9bba07241a59412c182`.
+The complete input seal, source bindings, strict mod log and owned shutdown verify. Four vanilla
+FrameworkScroller.DoPageUp exceptions occurred before game entry; this is not menu-input acceptance.
+The six completed waits requested 15600 turns; the game reached 15603 turns including setup movement.
+There is no full-chain PASS, and the earlier missing-start result at c0891e00 remains unexplained.
+
+At `6c47fdf1d8b6c45f60409a34f8f8c4fbfdda47b9`, all four engine compiles, focused tests and
+CI 34792879076 passed. The fresh native attempt preserved the full input seal and closed its owned
+process, but failed: the actual bound construction assessment was `NoGroundToGrow`, with all 25
+material units present, while the later checkpoint independently read `Ready`. The exact ground
+refusal text was not retained by the timing observer, so the blocking object or preflight clause is
+not established. This narrows this attempt's missing-start cause; it does not retrospectively explain
+c0891e00 or establish the receipt-chain repair.
+The five synthetic legacy air-well fields also caused a strict mod-log failure: their 12-by-9 legacy
+footprints were not reserved by single-cell supply placement, and daily spatial sealing refused
+`Footprint`. Civic support preflight alone did not prove valid spatial placement. The fixture must
+reserve complete work footprints and reprove its spatial seal before another long native attempt.
+Closed failed archive: `beta-heart-chain/6c47fdf1/material-ready-spatial-refused-1/result.json`, SHA-256
+`770d7c23f74f092803853b19d21c2e47293f063c4ac658399e5a69889a8e7618`.
+The seal observer measured 549 and 794 milliseconds, each with one unbound survey, but these were
+refused captures; they do not establish faster successful sealing. Five completed waits requested
+8400 turns; the final game clock was 8403. Full paid progression and relevant persistence remain open.
+
+The next fixture revision reserves eight complete 8-by-6 legacy air-well court footprints instead
+of five larger fields. A combined geometry test proves eighteen housing lots, both paid lots, all
+producer footprints and every producer root's approach clearance fit. The native producer setup
+checks the actual persisted legacy shape. A capture-only spatial preflight requires the ordinary
+city book to contain all fixture homes and producers before tier-three materials are supplied;
+only a complete capture or the specific roadless-public-entrance pending state may proceed. It
+proves the staged seal unchanged and journals the actual result. The bound assessment observer now
+retains its exact reason.
+
+At `043d05627d2d1ef833153ce8750bbc077b187e07`, the fresh attempt passed the original camp path,
+all eight legacy footprint checks, and the capture-only preflight with the exact roadless
+public-entrance Pending reason. The staged seal remained unchanged; this is not a completed
+spatial seal. The bound assessment then refused `NoGroundToGrow` with all 25 material units:
+`foreign or protected state occupies authored successor ground at 39,8`. A later checkpoint
+independently read Ready with 50 residents, but no tier-three receipt existed. The blocking
+object's identity was not captured. Source inspection suggests the final impacted-ground scan
+rechecks occupants already admitted by envelope preflight; that hypothesis still needs a
+controlled behavioral test and repair. Full paid progression and higher persistence remain open.
+The complete input seal, 3382 C# bindings, strict mod log and owned shutdown passed.
+Closed failed archive: `beta-heart-chain/043d0562/successor-ground-refused-1/result.json`, SHA-256
+`545dbcecdee5b10a26527085209c30a6531c7c1c281a93e57eb63ab6569394f3`.
+
+The pending repair follows the bounded completed receipt history, rejects branches, cycles, foreign
+ownership/ground and skipped rungs, then proves the final live output and its predecessor-removal
+record. A valid next improvement can hold that output's current receipt marker. The scenario now
+checks recovery immediately after payment and verifies real City support before long waits.
+Upgrade preflight also preserves the earlier envelope decision for living bodies on newly annexed
+cells. It still checks objects on retained ground, and paid application still requires blocking
+occupants to be cleared. A new native chain probe places a fixture resident, the founder, a foreign
+NPC and a solid wall on exact annexed slots; it checks read-only admission/refusal, strict envelope
+refusal before clearance, restoration and no debit.
+
+At `f93450c5b2a0632a77c454ca54dc3ac75bc5e7ff`, all those controlled native probes passed:
+blocked resident preflight, strict refusal before clearance, blocked founder/stranger refusals,
+walkable founder/stranger admission, foreign-wall refusal, exact restoration and no debit.
+The actual bound settlement assessment was Ready, and the real tier-three improvement paid
+exactly 28 drams and 25 material units. Founding recovery then accepted the active next receipt;
+50 fixture residents remained supported. This is narrow live evidence for occupancy admission
+and pending paid-receipt recovery, not completed higher progression.
+After the following 7200 ordinary turns, the job was `InspectionRequired` with
+`Scaffold-removal intent or successor identity changed.` The common error does not identify
+the failed predicate or whether scaffold completion or later handover called it. Both higher
+completion and persistence remain unverified. The six completed waits requested 15600 turns.
+Closed failed archive: `beta-heart-chain/f93450c5/scaffold-removal-refused-1/result.json`, SHA-256
+`ec7a653f080c3433fed55aa300274679419c3f65088c081e14a34f45927c487b`.
+The full input seal, 3383 C# bindings, strict mod log and owned shutdown passed. Four engine
+compile modes, 13 focused main envelope source-contract cases with zero skips, documentation,
+registration and CI 34796480959 passed. The scenario itself failed and the PR remains draft.
+[#212](https://github.com/AussieWarGod/thousand-and-first/issues/212) tracks the exact handover
+failure, required diagnostics and recovery coverage.
+The next harness revision observes the removal-proof return boundary, recording each admission
+predicate, typed intent fields, exact identities, current job state and caller stack. An unexpected
+refusal journals immediately so the host stops without waiting for the later completion checkpoint.
+It does not change the production outcome or repair #212; fresh native evidence is required.
+At `454eb05516d8b342378b69ed1096fa63bdc4140e`, both tier-three removal-proof calls passed,
+from scaffold completion and later handover. The paid moot yard reached Complete/EffectsSettled,
+retained its basin, stockpile and 21 brush units, and kept 50 supported residents. The next supply
+step refused tier-four expansion: `founding-heart ground occupies plot-envelope growth at 31,4`.
+The earlier scaffold-removal failure did not recur; it is not repaired by adding an observer.
+Closed failed archive: `beta-heart-chain/454eb055/tier4-survey-stake-refused-1/result.json`, SHA-256
+`57c1ae67eba3889359835f295495a1cbb3a615527d5fe3e5e1a73fb778ef548b`.
+Full input seal, 3384 C# bindings, strict mod log, owned shutdown and CI 34797801627 passed.
+
+The next repair admits an Outstanding improvement to scaffold-removal reproof only when its
+scaffold-removal proof already exists and final physical removal has not started. A controlled
+native obstacle must force actual layout refusal, preserve the same paid job as Outstanding,
+then prove removal recheck and completion after obstacle cleanup. This tests the retry-phase
+inconsistency; the original failed attempt did not retain its exact failed predicate.
+Heart expansion also admits only survey stakes authenticated against the same completed founding
+receipt, seal, transaction, slot, cell and globally unique identity. Foreign markers remain refused.
+Native probes cover all four real markers, foreign ownership, unbound markers and duplicate IDs.
+These combined changes are awaiting their fresh engine run; higher completion/persistence remain open.
+[#213](https://github.com/AussieWarGod/thousand-and-first/issues/213) tracks the survey-stake refusal.
+Focused scaffold-removal cases passed in both projects (24 main, 23 portable), and 13 main
+envelope source-contract cases passed, all with zero skips. Four engine compile modes passed
+(3096/3100 ordinary and 3382/3386 developer sources); registration and documentation checks passed.
+These checks do not establish native recovery.
+The final documentation wording edit at `000bea4e` failed the exact STATUS source-count
+contract, and CI 34800211070 failed that audit; both full managed CI suites passed. A following
+successful shell command masked the local docs exit code. The compile archive's docs-PASS
+summary was incorrect; its copied `taf-heart-chain-docs-29.log` retains the actual exit 1.
+Append-only correction: `beta-heart-chain/000bea4e/compile-documentation-correction-1/result.json`,
+SHA-256 `cafceed5b5c83c504eb1acbbe19fc23cf7725af43c245d150638d936e273eba0`.
+The wording is restored here; runtime and native-test inputs are unchanged. Documentation
+checks must be judged by their own exit and output, not the last command in a shell batch.
+At `000bea4e9f70be44f6806bde7f8ae67cd8218657`, fresh native occupancy probes passed,
+but the next bound settlement assessment refused tier-three payment: `NoGroundToGrow`;
+`plot-envelope growth would absorb public road ground at 40,16`. All 25 material units were
+indexed in the exact supplemental store, and all 50 residents were free to work. A preceding
+road pass reached Worn. The exact per-cell floor identity/state versus tally branch remains
+unobserved; both can trigger this guard. No controlled Outstanding retry, survey-stake probe,
+higher payment or completion was reached. Earlier tier-three completion remains evidence only
+from the original `454eb055` run, not this changed input set.
+Closed failed archive: `beta-heart-chain/000bea4e/heart-road-ground-refused-1/result.json`,
+SHA-256 `767e736f1d2cc9db712d29d26266cdbe2ed28c9447cb7af23515608dd1885cdb`.
+Full input seal, 3386 C# bindings, strict mod log and owned shutdown passed; scenario FAILED.
+Documentation-only correction `476c4fa4` has green CI 34800681084, including both full managed
+suites and repository audit. It does not change this native result.
+[#214](https://github.com/AussieWarGod/thousand-and-first/issues/214) tracks ordinary road wear
+inside future heart growth, its exact boundary observation, fresh-city prevention and existing-save
+recovery. Road wear excludes current plots; growth refuses worn ground newly annexed from outside
+them. The shared reservation policy must preserve usable entrances and public streets, distinguish
+incidental wear from established/paid infrastructure, and avoid disabling roads merely to pass the
+fixture. #212/#213 and higher real cold load remain open.
+
+The pending #214 repair admits unpaid Worn, Trodden and Path ground only within an already
+proved founding-heart accretion. Exact blueprint, live unique identity, lack of ownership,
+construction receipt and layout/plot claims are required for a physical track. Paved, foreign,
+receipt-bearing and ambiguous road objects still refuse. Ordinary building expansion retains
+its road protection. Historical traffic tally alone cannot acquire the heart's surveyed land.
+Tracks and tally are preserved; no floor deletion, demotion or save-field migration is introduced.
+This addresses fresh and already-worn cities through the same read-only admission, rather than
+preventing street wear and potentially breaking the current entrance's connection.
+All 207 main RoadRules cases (including sixteen new policy cases) and thirteen envelope
+source-contract cases passed with zero skips. All four engine compile modes passed
+(3096/3100 ordinary and 3383/3387 developer sources). The RoadRules fixture is main-only; these are not portable-suite or native results.
+New native cases cover all three unpaid wear states, maximum historic traffic, paved and foreign
+floors, empty/string and wrong-table/int receipt presence, duplicate identity refusal and no debit.
+A settled path remains under the completed heart and must retain its exact ID, cell and wear state
+through both higher upgrades and next-day recovery. Unexpected road refusals now log exact lookup,
+traffic, floor identity/state/blueprint, ownership and receipt presence.
+
+At `710fa082624b07d13a493f0256a71a675f010735`, fresh native road probes passed all three unpaid
+states, maximum tally, paid/foreign/receipt/duplicate refusals, restoration and no debit. The
+original camp and occupancy probes passed, and tier three paid exactly 28 drams and 25 material
+units. The scenario then FAILED its completion checkpoint because the controlled obstruction
+and Outstanding retry witnesses were absent. At tick 418800, both handover attempts logged
+resident NPC 3092 on annexed blocked ground at 42,8. The strict baseline required by the fault
+injector therefore could not pass. Scaffold-removal reproof itself passed in ProjectionPending,
+Working and Outstanding for the same paid job; this is not proof of the controlled case or
+completed handover. When the resident entered that cell remains unobserved.
+[#215](https://github.com/AussieWarGod/thousand-and-first/issues/215) tracks lawful occupant
+clearance at handover/retry and its deterministic regression. Do not remove protected residents
+or weaken strict layout checks to make the fixture pass. Track retention through completed
+upgrades, tier-four stakes, full-chain completion and higher persistence remain unproved.
+Closed failed archive: `beta-heart-chain/710fa082/controlled-retry-unwitnessed-1/result.json`,
+SHA-256 `26bd06c2b1da6367b45aa3235da7676c1de3442d715d90f7543ec939fbdb4a06`.
+The full profile seal, all 3387 C# input bindings, strict log and exact owned shutdown passed.
+CI 34802183289 passed. Neither those checks nor the narrow road probes establish full native
+acceptance. The chain targets rungs 1 through 4; the fifth arcology rung and its cold load
+remain open under #160/#144. Existing rung-two cold-load evidence does not cover later hearts.
+
+The pending #215 repair repeats lawful annexed-ground clearance at paid handover, including
+settled-effect replay. It proves paid endpoints and expansion authority before moving eligible
+bodies, uses the existing plot displacement/destination/rollback rules, then reproves endpoints,
+content custody and strict ground. The stamper still refuses any remaining blocking occupant.
+One local survey covers clearance and is disposed on all returns; nested callers retain their
+existing survey. No payment, layout receipt or save schema is changed by clearance itself.
+The native fixture now arms a real enrolled resident after payment and puts it on an annexed
+wall slot at handover. It requires founder and foreign-creature protection, an explicitly
+synthetic no-destination refusal before movement, then actual safe relocation outside the new
+plot with identity, citizenship, custody, paid claims and caller survey retained. The separate
+controlled stranger-obstruction/Outstanding retry remains required. These cases must precede
+completed tier three in the persona; full-chain acceptance cannot silently omit either case.
+Four current engine compiles passed (3096/3100 ordinary, 3384/3388 developer) and all fourteen
+envelope source-contract cases plus 213 upgrade cases passed with zero skips. The later
+`3742ffeb` run proved the bounded tier-three cases described above; full-chain acceptance
+remains pending and earlier failed evidence is retained unchanged. Interrupted/reloaded resident
+clearance and higher-rung cold load remain open.
+Host persona validation now recognizes the required occupancy, road, stake and controlled
+handover witnesses. Successful repeated scaffold-removal diagnostics are non-positional;
+their refusals remain fatal, and they cannot substitute for the controlled retry witness.
+All 64 persona grammar/verdict tests passed, including missing, repeated and refused handover
+rows. This corrects a host preflight refusal before launching the new native attempt.
+
+Spatial seal capture and fixture housing observations use one local survey for their complete read.
+Source inspection found that an unbound component verifier otherwise rebuilds a survey per component.
+The previous run measured 220–225-second daily progress pauses and 3.5–6.9-second settlement passes;
+the exact cost of the separate seal handler was not measured. A native observer now records its time,
+unbound survey count and scope disposal. Performance gains and the production repair await native proof.
+The shared host wait checker now retains valid elapsed overshoot, validates paired guards and
+progress, and binds chain clock observations. It does not replace native acceptance.
+
+The first attempt at `ec85c024226858ee65c815b979722615a4c13353` passed the original 6000-turn
+camp path but refused city support before any home was created: setup called an untyped layout
+lookup for a design requiring a typed lot. The correction reuses production plot-payload preflight.
+Failed archive: `beta-heart-chain/ec85c024/untyped-housing-refused-1/result.json`, SHA-256
+`ebebaf1801d608c59c82fc7fcf7583ff104a0692db4595e414e4b88b9ed7fce1`.
+The full closed profile, source bindings, strict log and owned stop verify; this is not a chain PASS.
+The next attempt at `cad5ee19fef2b7ed97a3b0a6b4dee555c5b48e84` created all eighteen authored homes,
+then its observer incorrectly read the custody-only survey's unpopulated civic list. The corrected
+observer resolves actual indexed bodies against citizenship and resident rows, and uses one physical
+benefit index to check every home assignment and capacity. It also walks the founder clear of the
+final heart envelope using ordinary movement. Failed archive:
+`beta-heart-chain/cad5ee19/resident-census-refused-1/result.json`, SHA-256
+`261d9087b80871d85ce7acc1b311a4b8bc3c4babd5cd76b4a8d4c3efa8f30089`.
+The `23cb0a347dfad7eceabecf0aa00b023f1b2fd6a8` attempt was stopped as incomplete after city
+support spent over twelve minutes without reaching its next checkpoint. Source inspection found
+that setup housing assignment ran outside the shared survey scope, allowing education/reach
+queries to rebuild physical-benefit observations for candidate homes. Setup now uses the existing
+local-operation scope, verifies its disposal, and retains every physical housing assertion.
+The incomplete attempt is not an assertion failure or a native PASS. Its complete sealed profile,
+strict log, owned shutdown and native window observations are retained in
+`beta-heart-chain/23cb0a34/unbound-housing-incomplete-1/result.json`, SHA-256
+`43ccc9b0bfb4f6678f3d9885b36ac2bb80c811992f4072ef3d3e1af9d5391bee`.
+With the scoped pass at `499357a8599f283af2f3bdc260a5fc5b91aac1a7`, city setup passed in
+213.8 seconds and proved fifty physically housed residents. The following ordinary day completed
+the source tent, whose automatic tent-row improvement then spent materials intended for the heart.
+The heart-payment assertion correctly refused `NotEnoughMaterial`. Failed archive:
+`beta-heart-chain/499357a8/material-payment-refused-1/result.json`, SHA-256
+`11cd887df3d997da7d8c88bbad56dab0d57ef766ffe9a2e0ba61b1ab1bf7c47d`.
+The scenario now waits an ordinary day without the next heart materials, requires that tent's
+paid completion and exact physical output, and holds its improvement before supplying the heart.
+The complete script now requests 31200 ordinary turns. This adds an actual construction boundary;
+it neither directly completes the tent nor supplies replacement materials after a failed payment.
+At `6c56420f214daa8abe67d0efd409e6749ed7e966`, the tent completion/hold and first supply passed,
+but heart payment refused `NoGroundToGrow`. The observer omitted the detailed production reason.
+Source and recorded geometry show the tent at `(29,7)..(34,10)` reserves a lane into the rung-three
+footprint. The chain fixture now walks the founder west before the ordinary commission and verifies
+that the resulting tent's reserved lane stays outside the final heart footprint. Other camp personas
+retain their existing commission position. Supply now checks real readiness before waiting, and
+refusals include the full production reason. Failed archive:
+`beta-heart-chain/6c56420f/expansion-ground-refused-1/result.json`, SHA-256
+`868071665a197651b5d41d5676e235063cb183e7b1d58f37197f0a6e786eebd6`.
+At `2e5ae6c169e2176fcd0018b629aabbd2c8be49b3`, the commission moved to `(24,7)..(29,10)` and
+passed the final-heart clearance check. The setup then placed a home at `(18,8)..(23,11)`, touching
+the tent's reserved lane. Execution was stopped early as an incomplete fixture-layout attempt.
+The home loop now applies production's `CrowdsExisting` and `GroundGrid.AnyRefusal` checks before
+typed preflight and staking. Archive: `beta-heart-chain/2e5ae6c1/fixture-lane-incomplete-1/result.json`,
+SHA-256 `a7fc044c6e1c4dc2575929cdedc3b2637b87c01e7efe080bfa0c6320b09ae9fe`.
+At `f4826b248944cb128ce9b6c14297313c9af42965`, correct lane guards left seventeen homes: the
+bottom candidates' authored entrance paths left the zone. A new engine-free capacity regression
+reproduces the old grid's seventeen usable lots around the actual paid tent and final heart.
+The fixture grid now offers four western and three eastern columns, with three rows clear of the southern edge;
+production crowding, ground, typed ingress and physical-completion checks still govern every home.
+Failed archive: `beta-heart-chain/f4826b24/housing-ingress-refused-1/result.json`, SHA-256
+`008e881a724d2600688e5e4701d60720900a11cd11e92c2b35439373facb7372`.
+At `cb3370e98532656cb5b538568d51a9b5cc8f45bd`, eighteen homes and fifty housed residents passed,
+but the paid tent could not finish: its authored entrance's lane endpoint extends beyond the
+reserved plot margin and was blocked by the home at `(23,2)..(28,5)`. The log records a `Done`
+stage with physical ingress refusal, so extending the wait would not resolve it. The fixture now
+preserves the full approaches of both paid plots, shifts eastern housing one cell, and verifies
+every physical entrance before enrollment and waiting. A focused geometry regression covers the
+previously accepted blocker. Ordinary gameplay and the 31200-turn script are unchanged.
+Failed archive: `beta-heart-chain/cb3370e9/tent-completion-refused-1/result.json`, SHA-256
+`56e4979993f0e3b02044d056368a23c0caca5c0c904470a1383ab7bcf1b1e569`.
+At `1b9d0755c76f97d83b7d236595fb9c1e0a26ec4b`, city support, all physical entrances, paid tent
+completion and rung-three material supply pass. The next ordinary day does not start the heart
+upgrade. The observer reports `Ready`, but supplied an assumed fifty free hands and no competing
+work. It now reads the same staffing and competing-work inputs used by automatic improvement,
+and reports the production announcement, zoning verdict and recent ledger notes on refusal.
+New synthetic stores also receive explicit engine IDs, as the original camp store already does;
+the previous run logged missing construction-input source identity. No root cause of the missing
+upgrade or full-chain PASS is claimed. Failed archive:
+`beta-heart-chain/1b9d0755/ready-not-started-1/result.json`, SHA-256
+`a3999fd28fe82f2fc00ffe8898c00a39f201e5d6a8b43a2b570cf4f460d4686e`.
+At `5f67495a669a3a094fc69ccfd0ee9d9eb5403c6c`, city support, paid tent completion and actual-input
+material readiness pass. The next wait stops progressing at 1100/1200. A full native window capture
+shows `Make Camp — Select a direction`; an earlier cropped capture could not exclude that prompt.
+The operator stopped the exact driver for owned shutdown. The closed profile also fails its full
+seal: `playeroptions.json` acquired `OptionLookLocked=No`. All 3376 C# inputs, runtime and Harness
+XML still match, and the strict final log passes, but this is **INVALID / INCOMPLETE**, not accepted
+chain evidence. Both complete inventories, option versions, captures and shutdown records are kept
+without resealing in `beta-heart-chain/5f67495a/camp-direction-invalid-1/result.json`, SHA-256
+`a9ecc18378ea3bb2d0db21f7cf76b42d0e6919c84962d8a00f7db6e4bf931766`.
+The initial command-specific guard had only pure and compile coverage. It was replaced by the
+dedicated-game input boundary above after option drift reproduced without a window capture.
+Command origin and the earlier missing-upgrade cause remain unproven.
+
 ## Paid camp cold-load coverage
 
 Native developer scenario at `de82845056b1bfb8b747925f3aeb38fc72d0dfbd` passes 6000 source

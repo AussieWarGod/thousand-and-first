@@ -6,6 +6,12 @@ Read [STATUS.md](STATUS.md) for current acceptance, [../STANDARDS.md](../STANDAR
 code rules, and [RELEASING.md](RELEASING.md) when preparing a release. Historical narratives
 and test counts do not establish current acceptance.
 
+For city growth, plots, roads, support economy or multi-tile scenarios, also read
+[CITY-GROWTH-BALANCE.md](CITY-GROWTH-BALANCE.md). It preserves the accepted user direction
+and linked work for both agents: physical expansion around a roughly 20-resident benchmark,
+three-cell roads, useful public space and layout rewards, without arbitrary population gates.
+Keep the original Beta, Quickstart reliability and complex behavioral coverage goals in scope.
+
 ## Short edit loop
 
 Choose the smallest check that exercises the change. Run it locally before pushing. Fix a
@@ -64,6 +70,83 @@ or test counts. Describe it as evidence from the original run on identical input
 a new run. Changed inputs require the relevant scenarios again. New behavior needs a real
 behavioral test, not only source-text assertions. Disclose synthetic setup and untested cases.
 Preserve failed evidence, strict final logs, complete seals, and exact owned shutdown records.
+Restore borrowed identities and ownership before destroying synthetic fault objects: native
+graveyards retain tombstones. Prove production recovery before and after such probes; a live
+object census alone cannot prove cleanup.
+
+Before a long city scenario, check fixture calls against their production contracts. Authored
+housing needs the normal plot-crowding and ground checks before typed plot-payload preflight;
+a custody-only survey has no populated civic lists.
+Use the existing local-operation survey scope when settlement APIs share physical-benefit reads,
+and prove its disposal. Account for pending paid construction before supplying exact materials:
+a newly finished building can spend them on its own next improvement. Keep unrelated test plots
+and their reserved lanes outside the largest heart footprint being tested. Run available read-only
+preflights before long waits, and retain both the verdict and detailed production reason on refusal.
+These checks apply to both agents; they do not replace observing the actual paid transition.
+For long population fixtures, preflight the production subsidence equilibrium at the highest tested
+stage. Stored water and bed counts do not prove civic water support. Disclose any synthetic producer
+roots. Verify founding recovery immediately after paying the next heart improvement, before spending
+its full construction wait; a replaced receipt marker can block the whole construction lane.
+Fixture placement must reserve the full persisted footprint of legacy works, even when only their
+root object is synthetic. A bare cell is insufficient for a 12-by-9 air-well field. Check spatial
+capture as well as subsidence support before a long wait. Prove the ordinary city book already
+contains every fixture work; capturing an old smaller book can miss newly misplaced objects.
+Retain the actual bound assessment's reason;
+a later Ready result cannot explain an earlier NoGroundToGrow refusal.
+When a shared failure sentence covers several predicates, record their actual boundary values and
+caller before another long run. Journal unexpected production refusals immediately to avoid spending
+the remainder of a construction wait on a job already requiring inspection.
+Commissioning clearance does not prove completion-time clearance: resident movement during the
+construction wait can repopulate future wall cells. Place the late resident at the actual paid
+handover boundary, test protected occupants and failed displacement, and require the resulting
+clearance and retry witnesses in the persona. Do not count an unrelated natural retry as a
+controlled fault test or remove real residents merely to make a long fixture complete.
+Validate changed personas with `python3 Tools/personas/persona_matrix.py fields PATH` before
+native preparation. New observation rows need explicit host grammar and positional expectations;
+test missing, duplicate and refused evidence. Repeated diagnostics may be non-positional only
+when their failures still stop acceptance and required behavioral witnesses remain mandatory.
+Scope repeated physical reads across the complete operation and verify disposal; component-by-component
+unbound surveys can dominate runtime. Record actual timings before claiming a performance gain.
+Reserved plot margins are not the whole entrance route: authored lane endpoints extend one cell
+beyond them. Preserve the complete approaches to paid work and future expansions. Recheck physical
+ingress after all fixture buildings and stores are placed, before costly enrollment or turn waits.
+Before waiting through a paid upgrade chain, compare each authored delta's added material kinds
+with its source upgrade bill across the tested facings and historical baselines. Include all
+non-natural, non-existing-authority additions, not only pieces changed by the current feature.
+Compare the complete authored snapshot plus plot wrapper against the construction payload cap,
+not only the inner architecture codec cap. Include registry round trips before a long native chain.
+Run the main-only `KingdomCampHeartTests` fixture for heart catalogue edits; an empty portable
+selector is a failed check, not portable coverage. Keep native exact-payment expectations aligned
+with the authored bill and retain the production material-claim refusal.
+If work reaches its final stage but refuses physical completion, inspect the recorded construction
+reason before increasing the wait. A blocked entrance does not improve with more time.
+Readiness observations must use production staffing and competing-work inputs, not the fixture's
+initial population and an assumed empty queue. Keep the last production announcement and relevant
+ledger reason when a ready-looking action never starts. Explicitly identify synthetic stores before
+expecting construction-input observations to reference them.
+A cropped quiet-window capture cannot exclude a blocking prompt. Use the existing full native
+window capture when the view is incomplete; never infer a completed turn from process responsiveness.
+Preserve a changed profile as invalid evidence with expected and actual inventories, not a new seal.
+Check the sealed options file early during a long native run. If it changes, retain the difference
+and stop before further expensive setup: that run cannot establish acceptance. Input can reach the
+game from a connected controller even while the script spends the founder's turns. A newly written
+look option is not proof of harmless initialization; trace its writer before changing sealed defaults.
+The paid-chain persona isolates `GameManager.UpdateInput` for its exact dedicated game through owned
+shutdown. It verifies the actual patched call before its first setup step. This is disclosed test
+isolation, not coverage of keyboard/controller interaction; ordinary games and other personas retain
+their input path. Do not disable physical devices or change the operator's global input settings.
+
+Use `Tools/scenario_advance_check.py` for guarded ordinary-wait accounting. The engine completes
+on the next player action opportunity, so 1201 actual turns for 1200 requested is valid. Keep the
+actual elapsed count; require the exact requested sequence, complete progress, paired founder guards,
+and (for the paid chain) matching `Game.Turns` observations. The checker supplements the persona,
+profile seals, owned shutdown and strict logs; its PASS alone is not native acceptance:
+
+```bash
+python3 Tools/scenario_advance_check.py /path/to/scenario-journal.tsv \
+  --requested 1200 3600 1200 1200 1200 7200 1200 6600 6600 1200 \
+  --chain-clocks --results /fresh/path/to/wait-accounting.json
+```
 
 ## Release batch
 

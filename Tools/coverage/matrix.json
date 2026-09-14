@@ -259,9 +259,9 @@
       "effects": "new standing heart and settled rung/plot rectangle after each paid upgrade",
       "save_cold_load": "COVERAGE_GAP",
       "negative": "COVERAGE_GAP",
-      "driver": "Partial only: Tools/personas/camp-heart-native-checks.persona and Harness/KingdomCampHeartNativeProvider.cs exercise 1->2 plus one later day (row 30). No native driver covers the complete 1->4 chain.",
+      "driver": "Tools/personas/camp-heart-chain.persona and Harness/KingdomCampHeartChainProvider.cs request 31200 ordinary turns through paid 1->2->3->4 with disclosed synthetic city support. No full-chain native PASS. Row 30 retains narrower accepted paid 1->2 and cold-load coverage.",
       "status": "COVERAGE_GAP",
-      "note": "Source audit at bccf8cb387e5bdb773e0a36b575a9ce5a6cf3d46: the #141 authority and rung-settlement fixes are merged (docs/STATUS.md, published 0.3.4 inventory). Growth/KingdomArchitectureStamper.Transitions.cs enforces exact adjacent endpoints, frozen rectangles and basin custody. The old unmerged-branch claim is obsolete. Native paid progression through every rung, save/cold load and present/away settlement remain unverified; row 30 tracks the narrower existing 1->2 driver without claiming the full chain.",
+      "note": "Source audit at bccf8cb387e5bdb773e0a36b575a9ce5a6cf3d46: the #141 authority and rung-settlement fixes are merged (docs/STATUS.md, published 0.3.4 inventory). Growth/KingdomArchitectureStamper.Transitions.cs enforces exact adjacent endpoints, frozen rectangles and basin custody. The old unmerged-branch claim is obsolete. Full-chain attempts remain incomplete or refused; latest bbd430f4 attempt was stopped after sealed input-option drift (docs/STATUS.md). Native paid progression through every rung, higher-rung save/cold load and present/away settlement remain unverified. Row 30 tracks the narrower accepted 1->2 driver without claiming the full chain.",
       "evidence": null
     },
     {
@@ -1083,9 +1083,9 @@
           "artifactBytes": 4678,
           "verdict": "PASS - paid rung2, next-day recovery, exact cold load and next paid completed fire",
           "scope": "Synthetic paid camp rung1-to-2 and next-day recovery, exact saved heart/book/store/fire/material witness, separate cold load, another real paid fire commission and 3600 ordinary turns to independent completed output. One disclosed timber supplied before save, none after load. No ordinary Quickstart, higher rung or all-feature acceptance. Both complete 3369-source profiles, runtime/Harness XML binding, strict final logs and owned stopped records verified. Exact identities, city work row, paid tent receipt, 21 original brush and world clock match before and after activation. Full developer C# digest computed from the exact archived source commit; all 3369 current C# inputs are byte-identical.",
-          "historicalScope": false,
+          "historicalScope": true,
           "inventoryDigest": "9763830753f5d45146100eda42b45ce4710a30f7caa9269544c5e45fa91c8fc9",
-          "currentDevCoverage": true
+          "currentDevCoverage": false
         }
       ]
     }
@@ -1137,7 +1137,7 @@
       "invariants": "only one successor authority claim exists per subject at a time (a heart upgrade in flight and an ordinary strike on the same lot never both hold r_KingdomScaffold successor state); a struck ordinary building's removal never clears or corrupts the heart's own pending-successor marker",
       "seed_turn_matrix": "one fixed seed; single ordering case (heart upgrade staged, then teardown ordered on an adjacent plot before the heart upgrade completes) -- no sweep",
       "expected_failure_rows": "a heart upgrade that silently completes or stalls because an unrelated teardown cleared a shared scaffold marker; a teardown that refuses because it misreads the heart's own pending marker as its own",
-      "reusable_seams": "Harness/KingdomTeardownNativeProvider.cs (teardown half); NONE for the heart-upgrade half (rows 9/10 have no driver at all)",
+      "reusable_seams": "Harness/KingdomTeardownNativeProvider.cs (teardown half); paid 1->2 driver (row 30) and in-progress paid 1->4 chain (row 9); no full-chain PASS and no 4->5 driver (row 10)",
       "status": "NONE",
       "evidence": null
     },

@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <Compile Include="TestMain.cs" />
+    <Compile Include="KingdomConstructionPayloadBoundsTests.cs" />
     <Compile Include="KingdomQuickstartHistoricalGrantTests.cs" />
     <Compile Include="..\Harness\KingdomQuickstartHistoricalGrant.cs" />
     <Compile Include="KingdomHeartRungSettleTests.cs" />
@@ -26,6 +27,8 @@
     <Compile Include="..\Harness\KingdomCampHeartSaveSnapshot.cs" />
     <Compile Include="..\Harness\KingdomCampHeartSaveSnapshotCodec.cs" />
     <Compile Include="..\Harness\KingdomCampHeartScript.cs" />
+    <Compile Include="..\Harness\KingdomCampHeartChainScript.cs" />
+    <Compile Include="..\Harness\KingdomCampHeartChainGrid.cs" />
     <Compile Include="KingdomCampHeartSaveTests.cs" />
     <Compile Include="..\Core\KingdomSealPendingRules.cs" />
     <Compile Include="..\Core\KingdomInheritanceSpatial.CaptureResult.cs" />
@@ -216,6 +219,7 @@
 	<Compile Include="KingdomPlotLabourWindowRulesTests.cs" />
 	<Compile Include="KingdomFoundingHeartRulesTests.cs" />
 	<Compile Include="KingdomFoundingHeartChainTests.cs" />
+	<Compile Include="KingdomFoundingHeartUpgradePathTests.cs" />
 	<Compile Include="KingdomFoundingHeartReservationRulesTests.cs" />
 	<Compile Include="KingdomFoundingHeartReservationStateTests.cs" />
 	<Compile Include="KingdomFoundingHeartReservationRuntimeSourceTests.cs" />
@@ -251,6 +255,8 @@
 	<Compile Include="..\Growth\KingdomFoundingHeartTerminalPlan.cs" />
 	<Compile Include="..\Growth\KingdomFoundingHeartTerminalRules.cs" />
 	<Compile Include="..\Growth\KingdomFoundingHeartChainRules.cs" />
+	<Compile Include="..\Growth\KingdomFoundingHeartUpgradePathRules.cs" />
+	<Compile Include="..\Growth\KingdomPlotHeartRules.cs" />
 	<Compile Include="..\Growth\KingdomFoundingHeartRetiredGeneration.cs" />
 	<Compile Include="..\Growth\KingdomPlotLegacyEffectsPlan.cs" />
 	<Compile Include="..\Growth\KingdomPlotLegacyEffectsRules.cs" />
@@ -268,6 +274,8 @@
     <Compile Include="..\Growth\KingdomArchitectureReceiptPrefixRules.cs" />
     <Compile Include="..\Growth\KingdomMarketHandoffIntentRules.cs" />
     <Compile Include="..\Growth\KingdomPlotDeclarations.cs" />
+    <Compile Include="..\Growth\KingdomPlotRules.cs" />
+    <Compile Include="..\Growth\KingdomPlotBoundsRules.cs" />
     <Compile Include="..\Growth\KingdomResidentDepartureOperation.cs" />
     <Compile Include="..\Growth\KingdomResidentAdmissionOperation.cs" />
     <Compile Include="..\Core\KingdomCreedKind.cs" />
@@ -930,6 +938,7 @@
 	<Compile Include="..\Growth\KingdomConstructionRules.InputRegistry.cs" />
 	<Compile Include="..\Growth\KingdomConstructionRules.InputContract.cs" />
 	<Compile Include="..\Growth\KingdomConstructionRules.OutboxCas.cs" />
+	<Compile Include="..\Growth\KingdomConstructionRules.ScaffoldWork.cs" />
 	<Compile Include="..\Growth\KingdomConstructionClaims.cs" />
 	<Compile Include="..\Growth\KingdomConstructionInputRules.cs" />
 	<Compile Include="..\Growth\KingdomConstructionInputRules.Claims.cs" />
