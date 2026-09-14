@@ -13,10 +13,10 @@ balance or multi-tile acceptance.
 
 ## Current source census for the pending heart repair
 
-Planned engine gate: 3100 sources, baseline and compatibility symbols use their respective
+Four engine compile modes passed: 3100 runtime sources; baseline and compatibility use their respective
 exclusions (3096 baseline). The cold-install inventory has 3131 files.
-3100 staged C# files / 440,243 physical lines; zero strict line-cap failures.
-Direct `XRL` imports: 1446 files, 0 over the line limit. Inventory SHA-256: `df89a78c28549126afdbb787ea31f28b6df98533617b01039bdc7917336b84c5`.
+3100 staged C# files / 440,271 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1446 files, 0 over the line limit. Inventory SHA-256: `adbc2e2a11faaa57d8f63c8d12f0d429ed58f61a97271a95b5b6c672d434cfd1`.
 This is a source census, not native acceptance or an updated exact-inventory semantic review.
 
 ## In-progress paid heart chain
@@ -138,6 +138,29 @@ The next harness revision observes the removal-proof return boundary, recording 
 predicate, typed intent fields, exact identities, current job state and caller stack. An unexpected
 refusal journals immediately so the host stops without waiting for the later completion checkpoint.
 It does not change the production outcome or repair #212; fresh native evidence is required.
+At `454eb05516d8b342378b69ed1096fa63bdc4140e`, both tier-three removal-proof calls passed,
+from scaffold completion and later handover. The paid moot yard reached Complete/EffectsSettled,
+retained its basin, stockpile and 21 brush units, and kept 50 supported residents. The next supply
+step refused tier-four expansion: `founding-heart ground occupies plot-envelope growth at 31,4`.
+The earlier scaffold-removal failure did not recur; it is not repaired by adding an observer.
+Closed failed archive: `beta-heart-chain/454eb055/tier4-survey-stake-refused-1/result.json`, SHA-256
+`57c1ae67eba3889359835f295495a1cbb3a615527d5fe3e5e1a73fb778ef548b`.
+Full input seal, 3384 C# bindings, strict mod log, owned shutdown and CI 34797801627 passed.
+
+The next repair admits an Outstanding improvement to scaffold-removal reproof only when its
+scaffold-removal proof already exists and final physical removal has not started. A controlled
+native obstacle must force actual layout refusal, preserve the same paid job as Outstanding,
+then prove removal recheck and completion after obstacle cleanup. This tests the retry-phase
+inconsistency; the original failed attempt did not retain its exact failed predicate.
+Heart expansion also admits only survey stakes authenticated against the same completed founding
+receipt, seal, transaction, slot, cell and globally unique identity. Foreign markers remain refused.
+Native probes cover all four real markers, foreign ownership, unbound markers and duplicate IDs.
+These combined changes are awaiting their fresh engine run; higher completion/persistence remain open.
+[#213](https://github.com/AussieWarGod/thousand-and-first/issues/213) tracks the survey-stake refusal.
+Focused scaffold-removal cases passed in both projects (24 main, 23 portable), and 13 main
+envelope source-contract cases passed, all with zero skips. Four engine compile modes passed
+(3096/3100 ordinary and 3382/3386 developer sources); registration and documentation checks passed.
+These checks do not establish native recovery.
 Spatial seal capture and fixture housing observations use one local survey for their complete read.
 Source inspection found that an unbound component verifier otherwise rebuilds a survey per component.
 The previous run measured 220–225-second daily progress pauses and 3.5–6.9-second settlement passes;

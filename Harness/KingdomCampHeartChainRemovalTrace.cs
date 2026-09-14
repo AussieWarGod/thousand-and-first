@@ -34,8 +34,8 @@ namespace ThousandAndFirst.Harness
 					+ "; cell=" + (cell == null ? "absent" : cell.X + "," + cell.Y)
 					+ "; blueprint=" + Blueprint + "; scaffold-id=" + ScaffoldId
 					+ "; scaffold-route=" + scaffoldRoute + "; improvement-route=" + improvement
-					+ "; admitted-phase=" + (Job.Phase == KingdomConstructionPhase.ProjectionPending
-						|| Job.Phase == KingdomConstructionPhase.Working)
+					+ "; admitted-phase=" + KingdomConstructionRules.ScaffoldRemovalPhaseAdmitted(Job.Phase,
+						Job.PhysicalPhase, improvement, r_KingdomScaffold.HasRemovalProof(Successor, ScaffoldId))
 					+ "; owns=" + KingdomConstruction.Owns(System, Z, Job)
 					+ "; current=" + KingdomConstruction.IsCurrent(Job)
 					+ "; pending=" + pending
@@ -52,6 +52,7 @@ namespace ThousandAndFirst.Harness
 					+ "; callers=" + Callers();
 				KingdomLog.Log("chain scaffold removal: " + detail);
 				KingdomScenarioJournal.Append("camp-heart-chain-removal", __result, detail);
+				KingdomCampHeartChainRetryFault.ObserveRemoval(Job, __result);
 			}
 			catch (Exception error)
 			{

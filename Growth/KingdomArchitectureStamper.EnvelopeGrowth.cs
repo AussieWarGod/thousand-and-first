@@ -226,6 +226,8 @@ namespace ThousandAndFirst
 							return Fail("a living occupant stands on plot-envelope growth ground at "
 								+ Coordinate(x, y), out Failure);
 						}
+						if (heartAccretion && item.GetIntProperty(KingdomPlots.HeartStakeProperty) == 1
+							&& KingdomPlots.IsExactFoundingHeartSurveyStake(System, Z, item)) continue;
 						if (item.GetIntProperty(KingdomPlots.HeartStakeProperty) == 1
 							|| item.GetIntProperty(KingdomPlots.HeartRelicProperty) == 1)
 							return Fail("founding-heart ground occupies plot-envelope growth at "

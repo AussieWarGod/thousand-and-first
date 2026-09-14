@@ -2,10 +2,10 @@
 
 ## Pending heart repair source census
 
-3100 staged production C# files / 440,243 physical lines: 0 exceed 300 lines, 0 are exactly 300,
+3100 staged production C# files / 440,271 physical lines: 0 exceed 300 lines, 0 are exactly 300,
 therefore 0 fail the strict cap; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000.
 1446 files with direct `XRL` imports; 0 of those exceed the line limit.
-Inventory SHA-256: `df89a78c28549126afdbb787ea31f28b6df98533617b01039bdc7917336b84c5`. The semantic review ledger does not yet bind this inventory.
+Inventory SHA-256: `adbc2e2a11faaa57d8f63c8d12f0d429ed58f61a97271a95b5b6c672d434cfd1`. The semantic review ledger does not yet bind this inventory.
 
 ## Current Alpha 0.3.6 candidate census
 

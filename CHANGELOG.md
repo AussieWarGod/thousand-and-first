@@ -8,9 +8,12 @@ The developer city fixture gains explicit synthetic water producers and sustaine
 Preserve envelope preflight's admission of movable residents on newly annexed upgrade ground;
 strict paid application still requires clearance. Add native resident, founder and foreign-obstruction probes.
 Native acceptance is pending.
+Permit paid handover retries to reprove already-committed scaffold removal. Preserve exact
+founding survey stakes while the heart grows around them; foreign markers remain protected.
+Controlled native obstruction/retry and survey-marker cases are awaiting execution.
 
-Current 3100-file census is line-cap green: 440,243 physical lines; direct `XRL`
-imports occur in 1446 files, 0 of them over the line limit. Inventory SHA-256: `df89a78c28549126afdbb787ea31f28b6df98533617b01039bdc7917336b84c5`.
+Current 3100-file census is line-cap green: 440,271 physical lines; direct `XRL`
+imports occur in 1446 files, 0 of them over the line limit. Inventory SHA-256: `adbc2e2a11faaa57d8f63c8d12f0d429ed58f61a97271a95b5b6c672d434cfd1`.
 The cold-install inventory contains 3131 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Versions are semantic: patch for fixes,

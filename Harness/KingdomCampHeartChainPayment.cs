@@ -38,6 +38,7 @@ namespace ThousandAndFirst.Harness
 				Require(KingdomUpgradeRules.IsReady(assessment.Verdict), "supplied heart preflight refused: "
 					+ assessment.Verdict + "; reason=" + assessment.Reason + "; " + context);
 				if (Target == 3) ProveChainEnvelopeOccupancy();
+				else ProveChainSurveyStakes();
 			}
 
 			private void CheckChainPaid()
@@ -76,6 +77,8 @@ namespace ThousandAndFirst.Harness
 			private void CheckChainComplete()
 			{
 				RequireChainSupport();
+				if (ChainTarget == 3) Require(KingdomCampHeartChainRetryFault.Proved,
+					"controlled obstruction and Outstanding handover retry were not witnessed");
 				Require(KingdomConstruction.TryFind(ChainJobId, out var job) && job != null
 					&& job.Phase == KingdomConstructionPhase.Complete
 					&& job.PhysicalPhase == KingdomPhysicalPhase.EffectsSettled

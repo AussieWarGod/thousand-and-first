@@ -5,6 +5,23 @@ namespace ThousandAndFirst
 {
 	public static partial class KingdomPlots
 	{
+		internal static bool IsExactFoundingHeartSurveyStake(KingdomSystem System, Zone Z,
+			GameObject Object)
+		{
+			if (System == null || !System.Founded || Z == null || !GameObject.Validate(Object)
+				|| System.ClaimedZones == null || !System.ClaimedZones.Contains(Z.ZoneID)
+				|| !TryFoundingHeartTransaction(System, Z, out string transaction)
+				|| !KingdomFoundingHeartRules.TryDecode(Z.GetZoneProperty(FoundingHeartReceiptProperty, null),
+					out KingdomFoundingHeartPlan plan)
+				|| plan.TransactionId != transaction || plan.ZoneId != Z.ZoneID
+				|| !KingdomFoundingHeartRules.Complete(plan) || !ExactFoundingHeartSeal(Z, plan)) return false;
+			for (int slot = KingdomFoundingHeartRules.NorthWestStakeSlot;
+				slot < KingdomFoundingHeartRules.WorksSlot; slot++)
+				if (Object.IDIfAssigned == KingdomFoundingHeartRules.SlotId(plan, slot))
+					return ExactFoundingHeartMark(Object, Z, plan, slot);
+			return false;
+		}
+
 		private static bool DriveFoundingHeartMark(Zone Z, FoundingHeartContext Context,
 			int Slot)
 		{
