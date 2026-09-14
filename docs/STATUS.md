@@ -15,8 +15,8 @@ balance or multi-tile acceptance.
 
 Planned engine gate: 3100 sources, baseline and compatibility symbols use their respective
 exclusions (3096 baseline). The cold-install inventory has 3131 files.
-3100 staged C# files / 440,239 physical lines; zero strict line-cap failures.
-Direct `XRL` imports: 1446 files, 0 over the line limit. Inventory SHA-256: `64c84eb5bc1122a294bdc18cbb05d22db2fb52c14d82c544e61731a45021e58b`.
+3100 staged C# files / 440,243 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1446 files, 0 over the line limit. Inventory SHA-256: `df89a78c28549126afdbb787ea31f28b6df98533617b01039bdc7917336b84c5`.
 This is a source census, not native acceptance or an updated exact-inventory semantic review.
 
 ## In-progress paid heart chain
@@ -110,6 +110,12 @@ The pending repair follows the bounded completed receipt history, rejects branch
 ownership/ground and skipped rungs, then proves the final live output and its predecessor-removal
 record. A valid next improvement can hold that output's current receipt marker. The scenario now
 checks recovery immediately after payment and verifies real City support before long waits.
+Upgrade preflight also preserves the earlier envelope decision for living bodies on newly annexed
+cells. It still checks objects on retained ground, and paid application still requires blocking
+occupants to be cleared. A new native chain probe places a fixture resident, the founder, a foreign
+NPC and a solid wall on exact annexed slots; it checks read-only admission/refusal, strict envelope
+refusal before clearance, restoration and no debit. These new probes are implemented but have not
+yet run in the engine; the latest failed run does not prove this repair.
 Spatial seal capture and fixture housing observations use one local survey for their complete read.
 Source inspection found that an unbound component verifier otherwise rebuilds a survey per component.
 The previous run measured 220–225-second daily progress pauses and 3.5–6.9-second settlement passes;

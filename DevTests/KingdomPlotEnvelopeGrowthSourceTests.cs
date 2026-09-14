@@ -219,6 +219,12 @@ namespace ThousandAndFirst.Tests
 			string preflight = Read("Growth/KingdomArchitectureStamper.UpgradePreflight.cs");
 			StringAssert.Contains("out Failure, TolerateMovableOccupants: true)) return false;",
 				preflight);
+			AssertOrdered(preflight,
+				"out Failure, TolerateMovableOccupants: true)) return false;",
+				"foreach (int packed in impacted)",
+				"if ((item.IsCreature || item.IsPlayer()) && Successor.Rect.Contains(x, y)",
+				"&& !beforeIntent.Rect.Contains(x, y)) continue;",
+				"foreign or protected state occupies authored successor ground at ");
 			string application = Read("Growth/KingdomArchitectureStamper.UpgradeApplication.cs");
 			StringAssert.DoesNotContain("TolerateMovableOccupants", application);
 		}

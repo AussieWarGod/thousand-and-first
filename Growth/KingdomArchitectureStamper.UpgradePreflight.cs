@@ -169,6 +169,10 @@ namespace ThousandAndFirst
 						|| owned.Contains(item)
 						|| item.GetIntProperty(KingdomPlots.HeartStakeProperty) == 1
 						|| KingdomPlots.ReadObject(item) == KingdomPlotRules.GroundKind.Bare) continue;
+					// The envelope proof already admitted these bodies by slot and movement authority.
+					// Retained ground still answers to this scan; paid application rechecks clearance.
+					if ((item.IsCreature || item.IsPlayer()) && Successor.Rect.Contains(x, y)
+						&& !beforeIntent.Rect.Contains(x, y)) continue;
 					return Fail("foreign or protected state occupies authored successor ground at "
 						+ Coordinate(x, y), out Failure);
 				}

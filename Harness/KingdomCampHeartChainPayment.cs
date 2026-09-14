@@ -37,6 +37,7 @@ namespace ThousandAndFirst.Harness
 				var assessment = AssessChain(out string context);
 				Require(KingdomUpgradeRules.IsReady(assessment.Verdict), "supplied heart preflight refused: "
 					+ assessment.Verdict + "; reason=" + assessment.Reason + "; " + context);
+				if (Target == 3) ProveChainEnvelopeOccupancy();
 			}
 
 			private void CheckChainPaid()

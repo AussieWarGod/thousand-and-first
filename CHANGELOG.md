@@ -5,10 +5,12 @@
 Follow completed heart upgrades across successive receipts, and admit the exact next paid
 improvement while its predecessor still stands. Scope local spatial-seal reads to one survey.
 The developer city fixture gains explicit synthetic water producers and sustained-support preflight.
+Preserve envelope preflight's admission of movable residents on newly annexed upgrade ground;
+strict paid application still requires clearance. Add native resident, founder and foreign-obstruction probes.
 Native acceptance is pending.
 
-Current 3100-file census is line-cap green: 440,239 physical lines; direct `XRL`
-imports occur in 1446 files, 0 of them over the line limit. Inventory SHA-256: `64c84eb5bc1122a294bdc18cbb05d22db2fb52c14d82c544e61731a45021e58b`.
+Current 3100-file census is line-cap green: 440,243 physical lines; direct `XRL`
+imports occur in 1446 files, 0 of them over the line limit. Inventory SHA-256: `df89a78c28549126afdbb787ea31f28b6df98533617b01039bdc7917336b84c5`.
 The cold-install inventory contains 3131 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Versions are semantic: patch for fixes,
