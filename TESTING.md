@@ -3,7 +3,7 @@
 ## Current source inventory (unreleased)
 
 The engine gate runs across 3105 production C# sources (3101 baseline);
-the cold-install inventory contains 3138 files. Inventory `cadbe858072e3c855ac94f882cb3d772f35f5d2f41f61a3a6e141f2f5df63fc8`.
+the cold-install inventory contains 3138 files. Inventory `5a1d8fb33c55d7e8d816561533a165505deb9d490fec0c667bf1dcdab5b50f36`.
 These counts describe the source inventory, not a public installation. Native acceptance is scoped below.
 
 ## Enclosed starter homes

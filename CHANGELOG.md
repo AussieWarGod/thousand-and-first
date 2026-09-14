@@ -12,6 +12,12 @@ starter citizens. Marsh construction and separate cold-load checks pass at `2c06
 all four original citizens, real enclosed housing and entrance obstruction/recovery. Broader
 housing/conversion and release acceptance remain pending; see docs/STATUS.md.
 
+**Pending shared-hall access (unreleased)**
+
+Require an exterior approach connected through clear floor and usable doors before granting bedroom
+privacy. Internal doors no longer hide furniture-blocked shared halls; alternate exits restore access.
+The expanded native scenario is pending. See docs/STATUS.md for exact evidence and scope.
+
 **Pending room and furniture clearance (unreleased)**
 
 Measure lodging privacy from real sleeping rooms and reachable clear floor instead of plot area.
@@ -64,8 +70,8 @@ regressions to cover every added material across all fallback heart transitions 
 including historical-baseline transitions. Sixteen main cases pass; fresh native confirmation
 of the court bill remains pending under #216. Exact evidence is in docs/STATUS.md.
 
-Current 3105-file census is line-cap green: 440,721 physical lines; direct `XRL`
-imports occur in 1449 files, 0 of them over the line limit. Inventory SHA-256: `cadbe858072e3c855ac94f882cb3d772f35f5d2f41f61a3a6e141f2f5df63fc8`.
+Current 3105-file census is line-cap green: 440,772 physical lines; direct `XRL`
+imports occur in 1449 files, 0 of them over the line limit. Inventory SHA-256: `5a1d8fb33c55d7e8d816561533a165505deb9d490fec0c667bf1dcdab5b50f36`.
 The cold-install inventory contains 3138 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Versions are semantic: patch for fixes,

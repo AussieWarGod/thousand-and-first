@@ -1,5 +1,20 @@
 # Current implementation and release evidence
 
+## Shared-hall access: native acceptance pending
+
+Room privacy now requires a clear route through the complete designated building to an exterior
+approach. Internal doors cannot independently grant access behind furniture-blocked halls. The
+lookup retains structural room separation and caches physical observations once; adopted floor-only
+rooms retain their adjacent doors without acquiring surrounding walls. This is bounded building
+access, not proof of a street route beyond the immediately adjacent exterior approach.
+
+Twenty main room-rule cases pass, including separated bedrooms, shared-hall obstruction, alternate
+exits and restoration. The fixture is main-only; a portable selector matched no tests and is not
+a portable PASS. The existing native scenario adds eight mandatory observations over a synthetic
+whole-building designation and actual native cells, then restores the adopted room and its benefit
+reading. It must pass before this new access behavior is accepted. Prior native20 and the marsh
+warm/cold result below retain their original source pins; neither exercised this change.
+
 ## Enclosed starter housing: marsh construction and cold load accepted
 
 At `2c0600b53832c069b665ef7dce94b1cf015850be`, genuine marsh Quickstart keeps all four original
@@ -321,8 +336,8 @@ Current cold-install inventory: 3138 files.
 Current source: 3105 sources, baseline and compatibility symbols use their
 respective exclusions (3097 baseline). All four engine compile modes passed.
 The cold-install inventory has 3132 files.
-3105 staged C# files / 440,721 physical lines; zero strict line-cap failures.
-Direct `XRL` imports: 1449 files, 0 over the line limit. Inventory SHA-256: `cadbe858072e3c855ac94f882cb3d772f35f5d2f41f61a3a6e141f2f5df63fc8`.
+3105 staged C# files / 440,772 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1449 files, 0 over the line limit. Inventory SHA-256: `5a1d8fb33c55d7e8d816561533a165505deb9d490fec0c667bf1dcdab5b50f36`.
 This is a source census, not native acceptance or an updated exact-inventory semantic review.
 
 ## In-progress paid heart chain
