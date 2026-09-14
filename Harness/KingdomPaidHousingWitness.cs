@@ -84,13 +84,19 @@ namespace ThousandAndFirst.Harness
 			string wire = string.Join("\n", new[] { "taf-paid-housing-v1", game.GameID, zone.ZoneID, job.Id,
 				home.IDIfAssigned, SourceId, KingdomPaidHousingNativeProvider.After.SnapshotHash,
 				Storage.IDIfAssigned, Contents, job.Claims.MaterialSpent });
-			Require(game.GetStringGameState(KingdomPaidHousingNativeProvider.StateKey) == null, "paid housing witness already exists");
+			RequireAbsentWitness();
 			game.SetStringGameState(KingdomPaidHousingNativeProvider.StateKey, wire);
 			Require(KingdomScenarioDurableState.ProvesExactText(KingdomPaidHousingNativeProvider.StateKey, wire), "paid housing witness not exact");
 			KingdomPaidHousingCatalogue.Restore();
 			Require(!KingdomPaidHousingCatalogue.Changed && !KingdomSurvey.HasBoundPass, "catalogue or survey scope leaked");
 			return "paid-housing completed; job=" + job.Id + "; water=7; same-material-claim=true"
 				+ "; storage-and-contents=retained; controlled-retry=true; founders=retained; catalogue-restored=true";
+		}
+		internal static void RequireAbsentWitness()
+		{
+			Require(KingdomScenarioStateShape.Classify(
+				KingdomScenarioDurableState.Observe(KingdomPaidHousingNativeProvider.StateKey), out _)
+				== KingdomDurableKeyShape.Absent, "paid housing witness already exists or has torn authority");
 		}
 		internal static void VerifyLoaded(XRLGame game)
 		{

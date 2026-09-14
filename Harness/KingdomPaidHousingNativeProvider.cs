@@ -52,6 +52,7 @@ namespace ThousandAndFirst.Harness
 		{
 			Require(Owner == null && JobId == null, "conversion was already commissioned");
 			Owner = The.Game;
+			KingdomPaidHousingWitness.RequireAbsentWitness();
 			var zone = The.Player.CurrentZone;
 			var system = Owner.GetSystem<KingdomSystem>();
 			Require(system != null && system.Founded, "settlement absent");

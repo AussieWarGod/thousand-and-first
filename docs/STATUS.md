@@ -1,5 +1,19 @@
 # Current implementation and release evidence
 
+## Full paid cohort passes; save-witness presence correction
+
+At `9d5d2cf5`, actual paid completion, controlled Outstanding retry, preserved contents and
+foreign-furniture probes all passed. The completed settlement retained all four original housed
+citizens, two enclosed rooms, six usable beds and 32 clear floor cells. The subsequent harness
+save-witness guard incorrectly used `GetStringGameState(key) == null` to prove absence; the
+engine's absent-key default is not a presence test. It is now replaced by the existing shared
+five-table observer/classifier, checked both before payment and before writing the witness.
+Production is unchanged. No saved existing key is overwritten to make the test pass.
+Closed failed archive: `paid-housing/9d5d2cf5/witness-absence-refused-1/result.json`, SHA-256
+`b128ecf5c24dd921c81e6ebe0e7676ee8de826b878cdee1b85c1f11bd48700dd`.
+Cold-load acceptance is still pending; the remaining save/load path has been checked against the
+existing lifecycle contracts before replay.
+
 ## Compiled furniture-anchor witness correction
 
 The follow-up at `8d776730` again completed the paid functional conversion and insertion probes,
