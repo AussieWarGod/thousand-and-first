@@ -1,5 +1,33 @@
 # Current implementation and release evidence
 
+## Native29 closed; repair occupied interior renovation ground (#226)
+
+Native29 at `55d873ec` passed the scoped full-assessment resident probe, paid rung-three
+completion and the controlled late-clearance/protected/no-destination/Outstanding retry cases.
+Court readiness then refused resident `756/NPC` at `44,12` on moot floor `3213/WoodFloor`,
+slot `g:09:04`. Authored geometry changes this retained walkable floor to a court inner wall.
+Existing clearance handled annexed cells only; the retained-floor repair intentionally did
+not admit bodies on target walls. No court payment or repaired stake probes were reached.
+
+Closed failed archive: `beta-heart-chain/55d873ec/court-retained-occupant-refused-1/result.json`,
+SHA-256 `97105af2a87d81703d389199f5c255f3057c341ac71ba0583563f9aea26348ad`.
+Full pinned recipe, strict log and exact owned stop passed. CI `34823130018` passed.
+
+The pending repair uses declared prior and successor passability to include retained
+Walkable/Adjacent-to-Blocked cells in existing lawful clearance. Existing blocked or unmapped
+prior cells gain no authority. Protected-body proof runs before debit and paid clearance;
+strict proof runs after callbacks and before every physical application attempt. Native tests
+now require court interior resident/preflight/full-assessment, founder/stranger refusal and
+actual paid late-clearance with forced no-destination refusal and unchanged payment/custody.
+Same-envelope renovations share this runtime path but do not yet have their own native
+scenario. Ten new authority cases, fifteen envelope integration-contract cases, eighteen authored-heart
+cases, all 64 persona-validator tests, documentation checks and all four engine compile modes
+passed. The portable project excludes this occupant kernel and its fixture; a no-match selector
+was rejected and is not counted as coverage. One stale source-contract suffix was corrected
+for the additional strict reproof before its successful rerun. Native validation remains pending.
+Public stays 0.3.6;
+Hearthpyre compatibility remains parked until Beta, with Alpha delivery the immediate priority.
+
 ## Native28 closed; bind Harness readiness to the production survey
 
 Native28 at `574c0ddb` passed retained-floor/blocked-cell probes, rung-three payment and
@@ -169,10 +197,11 @@ from the passed four-mode compile at `8df7b548`.
 
 ## Current source census for the pending heart repair
 
-Engine gate passed: 3100 sources, baseline and compatibility symbols use their
-respective exclusions (3096 baseline). The cold-install inventory has 3131 files.
-3100 staged C# files / 440,362 physical lines; zero strict line-cap failures.
-Direct `XRL` imports: 1446 files, 0 over the line limit. Inventory SHA-256: `7ceac5afb1d3089eadc9a93351d663fd8af31ccac3a44ef8e1ee68017a904420`.
+Current source: 3101 sources, baseline and compatibility symbols use their
+respective exclusions (3097 baseline). All four engine compile modes passed.
+The cold-install inventory has 3132 files.
+3101 staged C# files / 440,422 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1447 files, 0 over the line limit. Inventory SHA-256: `aa0e8a79a59272ca79a0c506473c1834973878d799e3beb63a3cc495bd58862b`.
 This is a source census, not native acceptance or an updated exact-inventory semantic review.
 
 ## In-progress paid heart chain

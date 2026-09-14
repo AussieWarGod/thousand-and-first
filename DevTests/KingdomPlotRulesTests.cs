@@ -1302,6 +1302,23 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.AreEqual(Expected, KingdomPlotRules.SlotBlocksOccupant(Passability));
 		}
 
+		[TestCase(true, true, ArchitecturePassability.Walkable, ArchitecturePassability.Blocked, true)]
+		[TestCase(true, true, ArchitecturePassability.Adjacent, ArchitecturePassability.Blocked, true)]
+		[TestCase(true, true, ArchitecturePassability.Blocked, ArchitecturePassability.Blocked, false)]
+		[TestCase(true, false, ArchitecturePassability.Walkable, ArchitecturePassability.Blocked, false)]
+		[TestCase(true, true, (ArchitecturePassability)99, ArchitecturePassability.Blocked, false)]
+		[TestCase(true, true, ArchitecturePassability.Walkable, ArchitecturePassability.Walkable, false)]
+		[TestCase(true, true, ArchitecturePassability.Walkable, ArchitecturePassability.Adjacent, false)]
+		[TestCase(true, true, ArchitecturePassability.Walkable, (ArchitecturePassability)99, false)]
+		[TestCase(false, false, ArchitecturePassability.Blocked, ArchitecturePassability.Blocked, true)]
+		[TestCase(false, false, ArchitecturePassability.Blocked, ArchitecturePassability.Walkable, false)]
+		public void NewBlockingUpgradeCellRequiresNewWallAuthority(bool Inside, bool Known,
+			ArchitecturePassability Before, ArchitecturePassability After, bool Expected)
+		{
+			ClassicAssert.AreEqual(Expected,
+				KingdomPlotRules.NewBlockingUpgradeCell(Inside, Known, Before, After));
+		}
+
 		/// <summary>
 		/// The player standing alone on a slot is an occupant, not an empty layout. A caller that
 		/// passed over them would report (0, 0, true) and the raising would land on the founder.

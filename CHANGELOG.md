@@ -2,6 +2,12 @@
 
 **Pending heart progression repair (unreleased)**
 
+Clear eligible residents from retained floors that become walls during an authored renovation
+(#226). Apply existing protected-body, destination and rollback rules at commissioning and
+paid handover, with strict proof before layout mutation. Preserve existing-wall and unmapped
+ground protection. Native tests now require court interior preflight and paid late-clearance
+cases; fresh full-chain acceptance remains pending.
+
 Allow residents and visitors to stand on retained walkable heart floors during upgrade
 assessment. Foreign objects and occupied blocked slots retain their protections. Extend the
 native occupied-ground probes to cover the predecessor interior; full acceptance is pending.
@@ -36,9 +42,9 @@ regressions to cover every added material across all fallback heart transitions 
 including historical-baseline transitions. Sixteen main cases pass; fresh native confirmation
 of the court bill remains pending under #216. Exact evidence is in docs/STATUS.md.
 
-Current 3100-file census is line-cap green: 440,362 physical lines; direct `XRL`
-imports occur in 1446 files, 0 of them over the line limit. Inventory SHA-256: `7ceac5afb1d3089eadc9a93351d663fd8af31ccac3a44ef8e1ee68017a904420`.
-The cold-install inventory contains 3131 files. This is not evidence of a new public installation.
+Current 3101-file census is line-cap green: 440,422 physical lines; direct `XRL`
+imports occur in 1447 files, 0 of them over the line limit. Inventory SHA-256: `aa0e8a79a59272ca79a0c506473c1834973878d799e3beb63a3cc495bd58862b`.
+The cold-install inventory contains 3132 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Versions are semantic: patch for fixes,
 minor for additive API and content, major for breaking changes. Supported API is defined in

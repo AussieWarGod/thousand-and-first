@@ -378,6 +378,21 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void CourtRenovationTurnsAnOccupiedMootFloorIntoAnInnerWall()
+		{
+			var corpus = KingdomArchitectureCorpusFixture.Load();
+			var moot = Map(corpus, "civic-heartmoot-l2");
+			var court = Map(corpus, "civic-heartcourt-xl3");
+			int[] oldMain = Single(moot, "main"), newMain = Single(court, "main");
+			var before = At(moot, oldMain[0] + 3, oldMain[1]);
+			var after = At(court, newMain[0] + 3, newMain[1]);
+			ClassicAssert.AreEqual(ArchitecturePassability.Walkable, before.Passability);
+			ClassicAssert.AreEqual(ArchitecturePassability.Blocked, after.Passability);
+			ClassicAssert.IsTrue(KingdomPlotRules.NewBlockingUpgradeCell(true, true,
+				before.Passability, after.Passability));
+		}
+
+		[Test]
 		public void CourtRenovationPaysForEachNewTimberFloor()
 		{
 			var corpus = KingdomArchitectureCorpusFixture.Load();

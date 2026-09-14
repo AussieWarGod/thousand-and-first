@@ -100,7 +100,7 @@ namespace ThousandAndFirst.Harness
 			}
 
 			private void ProbeChainBody(GameObject Body, Cell At, KingdomArchitectureIntent Successor,
-				KingdomMaterialDebitCost Claim, bool Accepted, bool Movable)
+				KingdomMaterialDebitCost Claim, bool Accepted, bool Movable, bool Renovation = false)
 			{
 				Cell origin = Body.CurrentCell;
 				string id = Body.ID;
@@ -111,7 +111,8 @@ namespace ThousandAndFirst.Harness
 						&& Body.CurrentCell == At && (Body.IsCreature || Body.IsPlayer()),
 						"envelope body probe failed exact placement");
 					RequireChainUpgradePreflight(Successor, Claim, Accepted, Accepted ? null
-						: "a living occupant stands on plot-envelope growth ground at " + At.X + "," + At.Y);
+						: "a living occupant stands on " + (Renovation ? "renovation" : "plot-envelope growth")
+							+ " ground at " + At.X + "," + At.Y);
 					if (Movable)
 					{
 						Require(KingdomSurvey.TryBindLocalOperation(Zone, System, out var scope,
@@ -120,9 +121,13 @@ namespace ThousandAndFirst.Harness
 						{
 							Require(KingdomPlots.IsMovableEnvelopeOccupant(System, Zone, Body),
 								"envelope resident probe did not reach movement authority");
-							Require(!KingdomArchitectureStamper.TryProveEnvelopeGrowth(System, Zone,
-								ChainHeart, null, Successor, false, out failure)
-								&& failure != null && failure.StartsWith("a living occupant stands on ",
+							Require(KingdomArchitectureRuntime.TryRead(ChainHeart, out var before, out failure), failure);
+							bool strict = Renovation
+								? KingdomArchitectureStamper.TryProveRenovationOccupants(System, Zone, before,
+									Successor, false, out _, out failure)
+								: KingdomArchitectureStamper.TryProveEnvelopeGrowth(System, Zone,
+									ChainHeart, null, Successor, false, out failure);
+							Require(!strict && failure != null && failure.StartsWith("a living occupant stands on ",
 									StringComparison.Ordinal), "strict envelope admitted an uncleared body: " + failure);
 						}
 						var assessment = AssessChain(out string context);

@@ -39,7 +39,7 @@ namespace ThousandAndFirst.Harness
 				Require(KingdomUpgradeRules.IsReady(assessment.Verdict), "supplied heart preflight refused: "
 					+ assessment.Verdict + "; reason=" + assessment.Reason + "; " + context);
 				if (Target == 3) { ProveChainEnvelopeOccupancy(); ProveChainRoadWear(); }
-				else ProveChainSurveyStakes();
+				else { ProveChainRenovationOccupancy(); ProveChainSurveyStakes(); }
 			}
 
 			private void CheckChainPaid()
@@ -72,15 +72,14 @@ namespace ThousandAndFirst.Harness
 					Require(!ChainStore.Inventory.Objects.Contains(supplied), "billed unit still in supplemental store");
 				RequireChainCustody();
 				RequireChainFoundingRecovery("while the next paid heart improvement is working");
-				if (ChainTarget == 3)
-					KingdomCampHeartChainHandoverOccupancy.Arm(FixtureResidents[0], ChainJobId);
+				KingdomCampHeartChainHandoverOccupancy.Arm(FixtureResidents[0], ChainJobId, ChainTarget == 4);
 			}
 
 			private void CheckChainComplete()
 			{
 				RequireChainTrack();
 				RequireChainSupport();
-				if (ChainTarget == 3) Require(KingdomCampHeartChainHandoverOccupancy.Proved,
+				Require(KingdomCampHeartChainHandoverOccupancy.Proved,
 					"post-payment resident clearance and refusal cases were not witnessed");
 				if (ChainTarget == 3) Require(KingdomCampHeartChainRetryFault.Proved,
 					"controlled obstruction and Outstanding handover retry were not witnessed");

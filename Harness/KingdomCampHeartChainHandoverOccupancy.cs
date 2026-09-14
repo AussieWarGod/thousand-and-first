@@ -10,7 +10,7 @@ namespace ThousandAndFirst.Harness
 	{
 		private static GameObject Resident;
 		private static string JobId, ResidentId, Materials;
-		private static bool Entered;
+		private static bool Entered, Renovation;
 		private static long Tick;
 		private static int Water, DestinationCalls;
 		private static Cell Blocked;
@@ -18,9 +18,11 @@ namespace ThousandAndFirst.Harness
 		internal static bool Proved;
 		internal static bool DenyDestinations;
 
-		internal static void Arm(GameObject Body, string PaidJob)
+		internal static void Arm(GameObject Body, string PaidJob, bool Retained = false)
 		{
-			Require(Resident == null && !Entered, "handover occupant probe armed twice");
+			Require(Resident == null && !Entered || Proved && JobId != PaidJob,
+				"handover occupant probe armed twice or before its prior proof");
+			Entered = Proved = false; Renovation = Retained; Blocked = null; DestinationCalls = 0;
 			Resident = Body; ResidentId = Body.ID; JobId = PaidJob;
 		}
 
@@ -32,27 +34,30 @@ namespace ThousandAndFirst.Harness
 			var system = The.Game.GetSystem<KingdomSystem>();
 			Zone zone = Owner.CurrentZone;
 			Survey = KingdomSurvey.ActiveFor(zone);
-			Require(KingdomCampHeartChainTrace.Active(system) && Key == "heartmoot"
+			Require(KingdomCampHeartChainTrace.Active(system) && Key == (Renovation ? "heartcourt" : "heartmoot")
 				&& KingdomSurvey.ActiveFor(zone) != null && GameObject.Validate(Resident)
 				&& Resident.CurrentZone == zone && Resident.IsAlive
 				&& KingdomPlots.IsMovableEnvelopeOccupant(system, zone, Resident),
 				"handover probe lacks its paid city and eligible resident");
 			Require(KingdomArchitectureRuntime.TryRead(Owner, out var before, out string failure), failure);
-			Require(KingdomArchitectureStamper.TryPlacementPassability(Layout, zone,
+			Require(KingdomArchitectureStamper.TryNewBlockingCells(zone, before, Layout,
 				out var slots, out failure), failure);
 			foreach (var slot in slots)
 			{
 				int x = slot.Key % zone.Width, y = slot.Key / zone.Width;
 				Cell cell = zone.GetCell(x, y);
-				if (!before.Rect.Contains(x, y) && slot.Value == ArchitecturePassability.Blocked
+				if (before.Rect.Contains(x, y) == Renovation && slot.Value == ArchitecturePassability.Blocked
 					&& cell != null && cell.IsPassable(Resident) && !cell.HasOpenLiquidVolume())
 				{ Blocked = cell; break; }
 			}
-			Require(Blocked != null, "handover probe lacks annexed wall ground");
+			Require(Blocked != null, "handover probe lacks newly blocked ground; retained=" + Renovation);
 			Tick = The.Game.TimeTicks; Materials = Job.Claims.MaterialSpent; Water = Job.Claims.WaterSpent;
 			Place(Resident, Blocked);
-			Require(!KingdomArchitectureStamper.TryProveEnvelopeGrowth(system, zone, Owner,
-				Target, Layout, true, out failure) && failure != null
+			bool strict = Renovation
+				? KingdomArchitectureStamper.TryProveRenovationOccupants(system, zone, before, Layout,
+					false, out _, out failure)
+				: KingdomArchitectureStamper.TryProveEnvelopeGrowth(system, zone, Owner, Target, Layout, true, out failure);
+			Require(!strict && failure != null
 				&& failure.StartsWith("a living occupant stands on ", StringComparison.Ordinal),
 				"late resident did not block strict handover ground: " + failure);
 			ProbeProtected(The.Player, Owner, Target, Key, Intent, Layout, Job);
@@ -74,7 +79,7 @@ namespace ThousandAndFirst.Harness
 				Unchanged(Owner, Target, Intent, Job);
 			}
 			finally { DenyDestinations = false; }
-			Record("camp-heart-chain-handover-refusals", "post-payment-resident=true; strict-refused=true"
+			Record(Renovation ? "camp-heart-chain-renovation-refusals" : "camp-heart-chain-handover-refusals", "post-payment-resident=true; strict-refused=true"
 				+ "; founder-protected=true; stranger-protected=true; synthetic-no-destination=true"
 				+ "; no-movement=true; no-debit=true; restored=true; job=" + JobId);
 			return true;
@@ -119,8 +124,11 @@ namespace ThousandAndFirst.Harness
 			Unchanged(Owner, Target, Intent, Job);
 			Require(KingdomArchitectureStamper.TryProveEnvelopeGrowth(The.Game.GetSystem<KingdomSystem>(),
 				Owner.CurrentZone, Owner, Target, Layout, true, out string failure), failure);
+			Require(KingdomArchitectureRuntime.TryRead(Owner, out var before, out failure), failure);
+			Require(KingdomArchitectureStamper.TryProveRenovationOccupants(The.Game.GetSystem<KingdomSystem>(),
+				Owner.CurrentZone, before, Layout, false, out _, out failure), failure);
 			Proved = true;
-			Record("camp-heart-chain-handover-cleared", "post-payment-resident=true; same-body=true"
+			Record(Renovation ? "camp-heart-chain-renovation-cleared" : "camp-heart-chain-handover-cleared", "post-payment-resident=true; same-body=true"
 				+ "; citizenship-retained=true; outside-successor=true; strict-ground=true; scope-restored=true; no-debit=true"
 				+ "; same-paid-job=true; job=" + JobId + "; resident=" + ResidentId);
 		}
