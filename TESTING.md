@@ -13,12 +13,13 @@ contents and payment, and restores the catalogue before saving. The existing sep
 load verifies the completed conversion and performs a new paid fire commission. Missing material
 units for both the conversion and that next commission, plus one brush contents sentinel
 are synthetic; no homes, citizens, water, labour or job phases are supplied. Four engine compile
-modes and 66 persona checks pass; native acceptance is pending in [STATUS](docs/STATUS.md).
+modes and 66 persona checks pass. Warm and separate cold acceptance at `d5a0e96d` is
+recorded in [STATUS](docs/STATUS.md), including full recipes, owned shutdown and limits.
 The unfinished-job/version-change case and historical geometry remain open in #239 and #240.
 The paid-housing fixture now transfers 32 existing carried drams by a physical pour before payment,
 to fund the longer wait, and probes missing/moved/wrong-token fixture restoration. Physical mismatch
 must refuse without permanently poisoning intact owner receipts; malformed owner and upgrade
-authority keep their quarantine rules. Failed native reproduction and pending recovery acceptance
+authority keep their quarantine rules. Failed native reproductions and accepted exact restoration/retry
 are recorded in STATUS and #242; no repair of previously quarantined saves is claimed.
 The required paid-housing-floor-access witness probes the actual insertion guard at paid handover:
 exact predecessor accepted, synthetic foreign chest refused, borrowed receipt refused, then exact

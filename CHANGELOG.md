@@ -13,7 +13,7 @@ intact building receipt on a temporary missing, moved, duplicated or changed com
 identity checks and malformed-authority refusals remain. Existing quarantined saves are not rewritten.
 Allow a paid conversion to lay nonblocking flooring beneath its exact predecessor on the shared
 main cell during the frozen handover phase. Foreign furniture still blocks placement, including
-a foreign container with a copied payment receipt. Repaired native acceptance is pending.
+a foreign container with a copied payment receipt. Paid completion, retained contents/founders and separate cold continuation pass at `d5a0e96d`.
 
 **Pending enclosed canvas homes (unreleased)**
 
@@ -30,8 +30,8 @@ housing/conversion and release acceptance remain pending; see docs/STATUS.md.
 **Pending paid conversion price history (unreleased)**
 
 Retain exact historical declarations for already-paid same-set transition receipts when current
-prices change. New commissions still use current prices. Paid native construction and cold-load
-acceptance remain pending under #239; historical geometry transitions are separate work in #240.
+prices change. New commissions still use current prices. Paid native construction and completed-save cold load
+pass at `d5a0e96d`; pending-job/version-change coverage remains #239, historical geometry #240.
 
 **Shared-hall access (unreleased)**
 
