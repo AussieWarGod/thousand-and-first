@@ -1,8 +1,8 @@
 # Release and Steam Workshop Procedure
 
-**Current public Alpha: 0.3.6, published and finalized.** Release run `34761004824` passed
+**Current public Alpha: 0.3.7, published and finalized.** Release run `34896457046` passed
 all applicable hosted, licensed, submission, subscribed verification and finalization jobs.
-[Exact public receipts and one-client limits](STATUS.md#public-036--published-and-finalized).
+[Exact public receipts and one-client limits](STATUS.md#public-037--published-and-finalized).
 Earlier release narratives below remain historical evidence, not current acceptance claims.
 
 ## Standing author ruling — 2026-09-11

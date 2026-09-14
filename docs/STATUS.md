@@ -1,5 +1,37 @@
 # Current implementation and release evidence
 
+## Public 0.3.7 — published and finalized
+
+Public Alpha 0.3.7 is published, verified and finalized, superseding 0.3.6. Earlier candidate
+and pending-publication statements below retain their historical checkpoints; this section
+controls current delivery status. The broader Beta goal remains incomplete.
+
+[Run 34896457046](https://github.com/AussieWarGod/thousand-and-first/actions/runs/34896457046)
+passed all applicable hosted, licensed, submission, subscribed-verification and finalization
+jobs at immutable `v0.3.7`, source `de8317dbab0357a4159e6228d31d9ccc8b789711`. Public metadata and the private
+receipt binding reached main through normal protected PR merges. The configured admin tag-creation
+path was used; no required check or branch protection was bypassed. No submission was retried
+and no tag moved. The exact owned runner stopped after finalization.
+
+All eleven licensed gates passed: 14,958 main and 5,850 portable cases, zero managed skips,
+four engine compile modes, 46 launcher cases and package/deployment/structural boundaries.
+Three foreign-owned PACKAGE/COPY/BACKUP bind-alias fixture skips remain explicit. Public item
+`3794797472` reports `SubscribedInstallationVerified` and `attemptFinalized=true`; all 3,139
+package files match one subscribed installation. `freshTransferVerified=false` and
+`releaseReady=false` remain the delivery tool's one-client limits.
+
+- Public receipt SHA-256: `e528ed1e7a95652a4afd30d28b3d8a0f230a7a5276be4d493b52a57eeadc15ff`.
+- Plan SHA-256: `8b55923f71006cba87c93a9cb7be509c8df2f9a87676d2992f2ccb73fd7f87e7`.
+- Installed inventory SHA-256: `14c3e169a0d8a48e10454e94f6c1433a70c7efe0e85aecce07664529bb661628`.
+- Finalization SHA-256: `e79c0981b5167bb15d014affe62dea6d59ee7e6f5fad4d0a6b3e476a8fefeec4`.
+- Delivery archive: `releases/0.3.7/public/result.json`, SHA-256 `d5f2746a5d94da7dfc0e7943a9d77444b174bed0d842ff72672ede9646807156`.
+
+Production C#, XML, harness and TESTING.md remain byte-identical to accepted private candidate 2;
+only the permitted publication metadata differs in the package. The native evidence below remains
+that original private run, not a new public gameplay run. It covers the recorded founder/housing,
+construction, sight, save/cold-load and next-commission chain. Other seeds/terrain, historical
+citizens, general camp safety, all-building redesign and multi-map balance remain in the tracker.
+
 ## Private 0.3.7 candidate 2 verified; public promotion pending
 
 [Release run 34891741613](https://github.com/AussieWarGod/thousand-and-first/actions/runs/34891741613)
