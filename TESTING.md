@@ -2,8 +2,13 @@
 
 ## Unreleased founding reputation validation
 
-The paired native logs also require `python3 Tools/founding_regard_check.py SOURCE_PLAYER_LOG
-LOADED_PLAYER_LOG --results /fresh/path/founding-regard-results.json`. This checker rejects
+The paired native logs also require:
+
+```bash
+python3 Tools/founding_regard_check.py SOURCE_PLAYER_LOG LOADED_PLAYER_LOG --results /fresh/path/founding-regard-results.json
+```
+
+This checker rejects
 missing/duplicate/reordered witnesses, an empty founding snapshot, wrong native reputation
 composition, cold-load replay and a changed saved standing digest. It supplements the existing
 lifecycle, exact profile, strict-log and owned-stop gates; its PASS alone is not acceptance.
