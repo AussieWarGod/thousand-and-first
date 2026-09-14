@@ -1,5 +1,45 @@
 # Current implementation and release evidence
 
+## Private 0.3.7 candidate 2 verified; public promotion pending
+
+[Release run 34891741613](https://github.com/AussieWarGod/thousand-and-first/actions/runs/34891741613)
+passed hosted checks, all eleven licensed gates, submission, subscribed verification and
+finalization at immutable `staging-v0.3.7-2`, source `a3c4d068ef0de3c22ba3851ab68545c4b8e31bdb`. Full licensed
+suites passed 14,958 main/5,850 portable cases with zero managed skips; all four engine compile
+modes passed. Three explicit foreign-owned PACKAGE/COPY/BACKUP bind-alias fixture skips remain.
+No required PR check or protection setting was bypassed; the configured admin tag-creation path
+was used. First private 0.3.7 and its failed native lifecycle remain unchanged.
+
+All 3,139 package files match one subscribed client and every staged runtime byte binds to this
+native candidate. `freshTransferVerified=false` and `releaseReady=false` remain tool-level limits.
+
+- Private receipt SHA-256: `3b9d26fd0dfe8920af4737197a6bd32407ff7d8216192d2e3fa8a01a778c6c80`.
+- Plan SHA-256: `0efe1a236e5b2b893e31a4d64e4ef10924c1aee01387f364e558f31b61c6098a`.
+- Installed inventory SHA-256: `1253d581fabf4cf75bc8d8dc65f13d937d8295853723a0f3f4de224f2831ba30`.
+- Finalization SHA-256: `03aee94e043cbc4209643f09edd51a9b92bca47472733cb6d4730023baf7d1f3`.
+- Delivery archive: `releases/0.3.7/private-2/result.json`, SHA-256 `6c89ead445e67844c596d9aeb648e7e502831678b72739df5a8a142486d32b05`.
+
+The fresh subscribed-candidate marsh/advisor test on seed `#43101` passes 8,400 ordinary turns:
+four original defensive founders housed in two enclosed homes, six beds, two rooms and 34 clear
+floor cells. The owned neutral NPC pair proves acquisition suppression and actual retaliation,
+then is removed; only its attacker has synthetic Snapjaws allegiance. No city population,
+housing, labour, completed jobs or visibility is fabricated. The first heart remains open civic
+ground; the separate shelters provide enclosure. The native first-heart and full-zone sight
+checks pass with 4 source and 5 loaded frames.
+
+A real save and separate cold process preserve the same housed cohort and defensive flags.
+The next ordinary commission creates a distinct job and debits one timber/two drams. Both owned
+processes are stopped. Strict logs, persona, lifecycle and exact 3,449 warm/3,451 cold recipes
+pass; all 3,409 C# inputs per session match the pin.
+Native archive: `alpha-037-heart-sight/a3c4d068/private-candidate2-cold-load-1/result.json`,
+SHA-256 `c2f2aaf660fca5dd938f49dd7769582f2abb06bf230ecbaaeaf8eefa2e8427d0`. General wilderness safety, other seeds/terrain, historical citizens,
+all-building redesign and multi-map balance remain unproved. Existing issue #244 polity
+reconciliation limits remain separate from housing and sight acceptance.
+
+The private receipt is copied exactly into `docs/PRIVATE_PACKAGE_RECEIPT.sha256`. This docs-only
+binding commit becomes the Alpha candidate; TESTING.md remains frozen through public promotion.
+Public listing still serves 0.3.6; public 0.3.7 delivery is pending.
+
 ## Defensive founders: source warm/cold checks accepted; replacement private candidate next
 
 At `49af5f5e0b79bf3c7fe8e2a104315159cad1c25e`, Qud 2.0.211.51, marsh Quickstart with
