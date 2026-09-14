@@ -134,6 +134,10 @@ compile modes, 13 focused main envelope source-contract cases with zero skips, d
 registration and CI 34796480959 passed. The scenario itself failed and the PR remains draft.
 [#212](https://github.com/AussieWarGod/thousand-and-first/issues/212) tracks the exact handover
 failure, required diagnostics and recovery coverage.
+The next harness revision observes the removal-proof return boundary, recording each admission
+predicate, typed intent fields, exact identities, current job state and caller stack. An unexpected
+refusal journals immediately so the host stops without waiting for the later completion checkpoint.
+It does not change the production outcome or repair #212; fresh native evidence is required.
 Spatial seal capture and fixture housing observations use one local survey for their complete read.
 Source inspection found that an unbound component verifier otherwise rebuilds a survey per component.
 The previous run measured 220–225-second daily progress pauses and 3.5–6.9-second settlement passes;

@@ -90,6 +90,9 @@ capture as well as subsidence support before a long wait. Prove the ordinary cit
 contains every fixture work; capturing an old smaller book can miss newly misplaced objects.
 Retain the actual bound assessment's reason;
 a later Ready result cannot explain an earlier NoGroundToGrow refusal.
+When a shared failure sentence covers several predicates, record their actual boundary values and
+caller before another long run. Journal unexpected production refusals immediately to avoid spending
+the remainder of a construction wait on a job already requiring inspection.
 Scope repeated physical reads across the complete operation and verify disposal; component-by-component
 unbound surveys can dominate runtime. Record actual timings before claiming a performance gain.
 Reserved plot margins are not the whole entrance route: authored lane endpoints extend one cell
