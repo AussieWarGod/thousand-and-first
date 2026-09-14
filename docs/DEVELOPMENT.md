@@ -78,6 +78,10 @@ For long population fixtures, preflight the production subsidence equilibrium at
 stage. Stored water and bed counts do not prove civic water support. Disclose any synthetic producer
 roots. Verify founding recovery immediately after paying the next heart improvement, before spending
 its full construction wait; a replaced receipt marker can block the whole construction lane.
+Fixture placement must reserve the full persisted footprint of legacy works, even when only their
+root object is synthetic. A bare cell is insufficient for a 12-by-9 air-well field. Check spatial
+capture as well as subsidence support before a long wait. Retain the actual bound assessment's reason;
+a later Ready result cannot explain an earlier NoGroundToGrow refusal.
 Scope repeated physical reads across the complete operation and verify disposal; component-by-component
 unbound surveys can dominate runtime. Record actual timings before claiming a performance gain.
 Reserved plot margins are not the whole entrance route: authored lane endpoints extend one cell

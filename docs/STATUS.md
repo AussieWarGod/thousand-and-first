@@ -56,6 +56,23 @@ FrameworkScroller.DoPageUp exceptions occurred before game entry; this is not me
 The six completed waits requested 15600 turns; the game reached 15603 turns including setup movement.
 There is no full-chain PASS, and the earlier missing-start result at c0891e00 remains unexplained.
 
+At `6c47fdf1d8b6c45f60409a34f8f8c4fbfdda47b9`, all four engine compiles, focused tests and
+CI 34792879076 passed. The fresh native attempt preserved the full input seal and closed its owned
+process, but failed: the actual bound construction assessment was `NoGroundToGrow`, with all 25
+material units present, while the later checkpoint independently read `Ready`. The exact ground
+refusal text was not retained by the timing observer, so the blocking object or preflight clause is
+not established. This narrows this attempt's missing-start cause; it does not retrospectively explain
+c0891e00 or establish the receipt-chain repair.
+The five synthetic legacy air-well fields also caused a strict mod-log failure: their 12-by-9 legacy
+footprints were not reserved by single-cell supply placement, and daily spatial sealing refused
+`Footprint`. Civic support preflight alone did not prove valid spatial placement. The fixture must
+reserve complete work footprints and reprove its spatial seal before another long native attempt.
+Closed failed archive: `beta-heart-chain/6c47fdf1/material-ready-spatial-refused-1/result.json`, SHA-256
+`770d7c23f74f092803853b19d21c2e47293f063c4ac658399e5a69889a8e7618`.
+The seal observer measured 549 and 794 milliseconds, each with one unbound survey, but these were
+refused captures; they do not establish faster successful sealing. Five completed waits requested
+8400 turns; the final game clock was 8403. Full paid progression and relevant persistence remain open.
+
 The pending repair follows the bounded completed receipt history, rejects branches, cycles, foreign
 ownership/ground and skipped rungs, then proves the final live output and its predecessor-removal
 record. A valid next improvement can hold that output's current receipt marker. The scenario now
