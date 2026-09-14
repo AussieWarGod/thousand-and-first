@@ -1,5 +1,12 @@
 # Session handoff — current v1.0 test-candidate work
 
+## Unreleased strike feedback
+
+Current census: 3108 staged sources. Branch `codex/strike-closure-feedback` distinguishes an
+owned completed job awaiting closure from foreign work. Permissions are unchanged. Shared
+pure fixture and real teardown refusal/recovery checks are in progress; native acceptance is
+pending. Current process handles live in common Git `taf-workstate.md`.
+
 ## Building-wide Beta coverage
 
 The author requires every building to meet the architectural standard AND work as intended

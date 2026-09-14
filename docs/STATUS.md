@@ -1,5 +1,22 @@
 # Current implementation and release evidence
 
+## Strike closure feedback — native validation pending
+
+Ordinary strike refusal now distinguishes the building's own completed work awaiting closure
+from another job. Only an exact healthy owner/zone/receipt/object match receives the wait
+message; the original supersession predicate and all mutation boundaries remain unchanged.
+The teardown scenario now exercises repeated refusal without registry/building mutation,
+a disclosed borrowed-receipt counterexample with restoration, and later ordinary strike/salvage.
+Both cases must actually observe the closure window. Native execution remains pending; pure
+reload coverage does not establish cold-process teardown behavior.
+
+Development compile scope: 3108 sources, baseline and compatibility symbols.
+Current census: 3108 staged C# files; 440,888 physical lines; zero at or above 300 lines.
+Direct `XRL` imports: 1451 files, 0 over the line limit. Cold-install inventory: 3141 files.
+Inventory SHA-256:
+`10b6325fb3e23b660a5609fe80485745104f2d925c523bb278af010edec488e2`. Structural review is stale until this delta is reviewed. Prior native
+and release results below retain their original inputs and do not accept this new feedback.
+
 ## Building-wide Beta coverage inventory — functional acceptance remains open
 
 The shared `Tools/coverage/check_coverage.py buildings` command now inventories staged XML

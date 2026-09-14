@@ -1,14 +1,18 @@
 # Changelog
 
-Current 3107-file census is line-cap green: 440,850 physical lines; direct `XRL`
-imports occur in 1450 files, 0 of them over the line limit. Inventory SHA-256: `8dd650d010f8dd998d2922f21cc99b37ff79e456a6c2a67880d908bdaf5f58b9`.
-The cold-install inventory contains 3140 files. This is not evidence of a new public installation.
+Current 3108-file census is line-cap green: 440,888 physical lines; direct `XRL`
+imports occur in 1451 files, 0 of them over the line limit. Inventory SHA-256: `10b6325fb3e23b660a5609fe80485745104f2d925c523bb278af010edec488e2`.
+The cold-install inventory contains 3141 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Historical entries retain their original scope;
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md)
 records current acceptance.
 
 **Unreleased development**
+
+- Striking a completed building awaiting its own construction closure now explains that
+  pending work instead of claiming another receipt owns it. Foreign-job refusals and strike
+  permissions remain unchanged. Native refusal/recovery validation is pending.
 
 - Developer coverage tooling now inventories every shipped building configuration and its
   architectural/functional obligations before Beta. Missing and stale scenario links remain

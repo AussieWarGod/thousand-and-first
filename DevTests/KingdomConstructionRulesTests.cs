@@ -1133,6 +1133,29 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void PendingStrikeClosureSurvivesRegistryReloadAndEndsOnlyAfterRealClosure()
+		{
+			KingdomConstructionJob job = Job(KingdomConstructionRoute.PlotCommission,
+				Phase: KingdomConstructionPhase.Complete);
+			job.OutputId = "building-1";
+			ClassicAssert.IsTrue(KingdomConstructionRules.TryEncode(new[] { job }, out string wire));
+			ClassicAssert.IsTrue(KingdomConstructionRules.TryDecode(wire, out var rows));
+			KingdomConstructionJob restored = rows[0];
+			ClassicAssert.IsTrue(KingdomConstructionRules.HasPendingOwnTerminalClosure(restored,
+				restored.OwnerKey, restored.ZoneId, restored.Id, restored.OutputId));
+			ClassicAssert.IsFalse(KingdomConstructionRules.CanSupersedeTerminal(restored,
+				restored.OwnerKey, restored.ZoneId, restored.Id, restored.OutputId));
+			ClassicAssert.IsTrue(KingdomConstructionRules.TryEncode(rows, out string after));
+			ClassicAssert.AreEqual(wire, after);
+			restored.Outbox = SettledOutbox(restored.Id, "raised");
+			restored.PhysicalPhase = KingdomPhysicalPhase.EffectsSettled;
+			ClassicAssert.IsFalse(KingdomConstructionRules.HasPendingOwnTerminalClosure(restored,
+				restored.OwnerKey, restored.ZoneId, restored.Id, restored.OutputId));
+			ClassicAssert.IsTrue(KingdomConstructionRules.CanSupersedeTerminal(restored,
+				restored.OwnerKey, restored.ZoneId, restored.Id, restored.OutputId));
+		}
+
+		[Test]
 		public void TerminalSupersessionRequiresExactOwnerZoneReceiptAndObject()
 		{
 			KingdomConstructionJob terminal = Job(KingdomConstructionRoute.PlotCommission,

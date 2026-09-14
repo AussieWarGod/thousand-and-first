@@ -1,5 +1,12 @@
 # Brief-to-implementation audit
 
+## Unreleased strike closure feedback
+
+Current development tree contains **3108** production C# files. Existing strike refusals now
+identify exact own completed work still awaiting closure; no permission or persistence change.
+Pure and native checks are being extended. Native acceptance and structural review remain
+pending; docs/STATUS.md owns current evidence. Earlier entries retain their original scope.
+
 ## Unreleased founding reputation delta
 
 Development tree contains **3107** production C# files. New pure founding-snapshot rules and

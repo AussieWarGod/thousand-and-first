@@ -1,6 +1,14 @@
 # Structural release contract
 
-## Unreleased founding reputation census
+## Unreleased strike closure census
+
+3108 staged production C# files; 440,888 physical lines; 1451 files with direct `XRL` imports;
+zero files at or above 300 lines. Inventory SHA-256: `10b6325fb3e23b660a5609fe80485745104f2d925c523bb278af010edec488e2`.
+The new engine adapter explains an existing refusal; pure rules validate exact completed-job
+identity. Strike permissions and saved fields are unchanged. Semantic review and native
+validation are pending. The earlier review below binds its original founding-reputation input.
+
+## Accepted founding reputation census
 
 3107 staged production C# files; 440,850 physical lines; zero at or above 300 lines.
 Inventory SHA-256: `8dd650d010f8dd998d2922f21cc99b37ff79e456a6c2a67880d908bdaf5f58b9`. One engine-free snapshot/publication helper replaces the
