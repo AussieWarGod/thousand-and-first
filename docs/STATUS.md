@@ -1,5 +1,31 @@
 # Current implementation and release evidence
 
+## Native30 accepted; housing and population follow-through required
+
+Native30 at `a6e23f749255873ba33f0b3479291c062c8660e1` completed the paid heart 1→2→3→4
+chain and next-day recovery. The retained walkable-cell, full bound assessment, retained-floor
+renovation, protected occupant, no-destination refusal, same-body clearance, controlled paid
+retry and founding stake recovery witnesses passed. Full pinned profile recipe, strict final
+logs, exact wait accounting and owned shutdown passed. Source CI `34825767799` passed.
+
+Accepted archive: `beta-heart-chain/a6e23f74/paid-court-renovation-chain-1/result.json`, SHA-256
+`e2eeb784ada3394244c3d5683098902a2aa937155385b1b629bd6e6249381063`. The run is closed;
+the older pending statements below describe earlier checkpoints and are superseded for this
+exact scenario. No higher-heart cold load, fifth rung or multi-map acceptance is claimed.
+
+The fixture supplies 50 resident bodies, 18 authored tentrows (54 literal beds), eight synthetic
+legacy water works and extra supplies. Its full-window image exposed the real open L-shaped
+starter housing geometry. It does not prove believable enclosure or ordinary city balance.
+Building architecture quality now applies to the entire catalogue; housing/furnishing defects
+are the first follow-through required before the next Alpha promotion. Correct citizen
+home maps and reputation-weighted population are also recorded as required work in
+[#229](https://github.com/AussieWarGod/thousand-and-first/issues/229),
+[#230](https://github.com/AussieWarGod/thousand-and-first/issues/230) and
+[#231](https://github.com/AussieWarGod/thousand-and-first/issues/231).
+See [HOUSING-AND-POPULATION.md](HOUSING-AND-POPULATION.md) for the audit, references and tests owed.
+No housing/population runtime repair is included in this documentation checkpoint. Public release
+remains 0.3.6; Hearthpyre runtime compatibility remains deferred until Beta.
+
 ## Native29 closed; repair occupied interior renovation ground (#226)
 
 Native29 at `55d873ec` passed the scoped full-assessment resident probe, paid rung-three

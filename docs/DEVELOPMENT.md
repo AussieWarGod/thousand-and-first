@@ -11,6 +11,11 @@ For city growth, plots, roads, support economy or multi-tile scenarios, also rea
 and linked work for both agents: physical expansion around a roughly 20-resident benchmark,
 three-cell roads, useful public space and layout rewards, without arbitrary population gates.
 Keep the original Beta, Quickstart reliability and complex behavioral coverage goals in scope.
+For building layouts, citizens or recruitment, also read
+[HOUSING-AND-POPULATION.md](HOUSING-AND-POPULATION.md): architectural quality applies to every
+building, citizens need correct physical home maps, and population must reflect coherent
+cultures and player/city reputation. Issues #229–#231 preserve the required work. Existing
+synthetic stress fixtures are not ordinary layout or population acceptance.
 
 ## Short edit loop
 
