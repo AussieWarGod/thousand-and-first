@@ -63,6 +63,8 @@ BOOKKEEPING = frozenset(
         # observation about what the checker's own diagnosis found, never a verb the script
         # asked for, so it never belongs in a positional EXPECT.
         "lifecycle-grown-detail",
+        # Read-only paid-handover diagnostics; explicit retry/cohort/completion rows remain mandatory.
+        "paid-housing-detail",
         # Run 46b/47 (investigation C): the lifecycle save's own pre-activation witness row
         # (Harness/KingdomQuickstartLifecycleLoad.cs BeforeActivation), landed by the load
         # witness before AfterGameLoaded handlers run. Wiring, never a verb the script asked for,

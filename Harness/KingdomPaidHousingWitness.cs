@@ -66,6 +66,8 @@ namespace ThousandAndFirst.Harness
 			Require(KingdomPaidHousingFault.Injected && KingdomPaidHousingFault.Refused && KingdomPaidHousingFault.Outstanding,
 				"actual handover did not witness the controlled storage refusal and Outstanding retry");
 			var paid = KingdomPaidHousingNativeProvider.Paid;
+			Require(KingdomSocketTransitions.TryGet(paid.FromBuildKey, paid.ToBuildKey, paid.LotType, paid.LotSize,
+				out var current) && current.WaterDrams == 8, "catalogue drift disappeared before completion");
 			Require(KingdomConstruction.TryFind(KingdomPaidHousingNativeProvider.JobId, out var job) && job != null,
 				"paid conversion job absent");
 			Require(job.Phase == KingdomConstructionPhase.Complete && job.PhysicalPhase == KingdomPhysicalPhase.EffectsSettled,

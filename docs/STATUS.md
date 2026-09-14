@@ -20,6 +20,15 @@ ordinary paid retry, retained contents, four housed founders, save and separate 
 Already-quarantined historical saves and the effect of ongoing physical damage on city-wide staging
 remain separate open work in #242.
 
+At `cf76dab5`, one run stopped before payment when a glowpad killed the original tinker at turn
+1,962 (recorded in #237; no water shortage). A further run on the same code conserved 32 carried
+drams and passed all three restoration probes, real payment/history selection and the controlled
+Outstanding handover. It still failed later with `InspectionRequired` and ground-slot `g:00:00`
+verification errors. Closed failed archive: `paid-housing/cf76dab5/post-retry-endpoint-refused-1/result.json`,
+SHA-256 `c4ac5bcec88f1bb784ff39c76c19305b3718eb7ff67ed135b11f48f239b7c69f`.
+Read-only apply/stamp/handover diagnostics now preserve the first subsequent refusal, before a
+later generic endpoint error can replace it. No completed conversion or cold-load acceptance yet.
+
 ## Paid transition price history: implementation pending native acceptance
 
 Issue #239: same-set completion compared its saved declaration digest with current prices, so a

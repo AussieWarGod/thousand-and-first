@@ -10,6 +10,7 @@ namespace ThousandAndFirst.Harness
 	{
 		internal static bool Injected, Refused, Outstanding;
 		private static string Refusal, Contents;
+		private static string LastDetail;
 		internal static bool Place(GameObject owner)
 		{
 			if (Injected || !KingdomPaidHousingCatalogue.Changed
@@ -55,6 +56,24 @@ namespace ThousandAndFirst.Harness
 				"storage-removed=true; real-handover-refused=true; storage-restored=true; phase=Outstanding; same-payment=true") == null,
 				"housing retry journal unavailable");
 		}
+		internal static void Trace(GameObject owner, GameObject target, string step, bool accepted, string failure)
+		{
+			if (!GameObject.Validate(owner) || !ReferenceEquals(The.Game, KingdomPaidHousingNativeProvider.Owner)
+				|| owner?.GetStringProperty(KingdomConstruction.ReceiptProperty) != KingdomPaidHousingNativeProvider.JobId) return;
+			Require(KingdomConstruction.TryFind(KingdomPaidHousingNativeProvider.JobId, out var job), "trace job absent");
+			var part = owner.GetPart<XRL.World.Parts.r_KingdomImprovement>();
+			string detail = "step=" + step + "; result=" + (step == "handover" ? "void" : accepted.ToString()) + "; reason=" + failure
+				+ "; phase=" + job.Phase + "; physical=" + job.PhysicalPhase + "; job-failure=" + job.Failure
+				+ "; handover-failure=" + part?.HandoverFailure + "; working=" + part?.Working
+				+ "; effects=" + part?.HandoverEffectsDone + "; scaffold=" + part?.Scaffold?.IDIfAssigned
+				+ "; owner=" + owner.IDIfAssigned + "; target=" + target?.IDIfAssigned + "; output=" + job.OutputId
+				+ "; upgrade-phase=" + owner.GetIntProperty(KingdomArchitectureStamper.UpgradePhaseProperty)
+				+ "; owner-fault=" + owner.GetStringProperty(KingdomArchitectureStamper.FaultProperty)
+				+ "; upgrade-fault=" + owner.GetStringProperty(KingdomArchitectureStamper.UpgradeFaultProperty);
+			if (detail == LastDetail) return;
+			LastDetail = detail;
+			Require(KingdomScenarioJournal.Append("paid-housing-detail", true, detail) == null, "housing trace unavailable");
+		}
 		internal static void Fault(Exception error)
 		{
 			Restore();
@@ -73,10 +92,13 @@ namespace ThousandAndFirst.Harness
 			catch (Exception error) { KingdomPaidHousingFault.Fault(error); }
 		}
 		[HarmonyPostfix]
-		internal static void Postfix(bool __state, bool __result, string Failure)
+		internal static void Postfix(GameObject Owner, GameObject Target, bool __state, bool __result, string Failure)
 		{
-			if (!__state) return;
-			try { KingdomPaidHousingFault.Observe(__result, Failure); }
+			try
+			{
+				if (__state) KingdomPaidHousingFault.Observe(__result, Failure);
+				KingdomPaidHousingFault.Trace(Owner, Target, "apply", __result, Failure);
+			}
 			catch (Exception error) { KingdomPaidHousingFault.Fault(error); }
 		}
 		[HarmonyFinalizer]
@@ -89,9 +111,23 @@ namespace ThousandAndFirst.Harness
 	internal static class KingdomPaidHousingHandoverPatch
 	{
 		[HarmonyPostfix]
-		internal static void Postfix()
+		internal static void Postfix(GameObject Predecessor, GameObject Successor)
 		{
-			try { KingdomPaidHousingFault.AfterHandover(); }
+			try
+			{
+				KingdomPaidHousingFault.AfterHandover();
+				KingdomPaidHousingFault.Trace(Predecessor, Successor, "handover", true, null);
+			}
+			catch (Exception error) { KingdomPaidHousingFault.Fault(error); }
+		}
+	}
+	[HarmonyPatch(typeof(KingdomPlots), nameof(KingdomPlots.TryStampAuthoredGrowth))]
+	internal static class KingdomPaidHousingGrowthStampPatch
+	{
+		[HarmonyPostfix]
+		internal static void Postfix(GameObject Predecessor, GameObject Successor, bool __result, string Failure)
+		{
+			try { KingdomPaidHousingFault.Trace(Predecessor, Successor, "stamp", __result, Failure); }
 			catch (Exception error) { KingdomPaidHousingFault.Fault(error); }
 		}
 	}
