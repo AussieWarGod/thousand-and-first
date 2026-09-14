@@ -23,8 +23,12 @@ namespace ThousandAndFirst.Harness
 				foreach (Faction faction in Factions.Loop())
 				{
 					if (faction == null || !system.CanReserveDirectionalRelationship(faction.Name)) continue;
-					Require(system.Standings.TryGetValue(faction.Name, out int value) &&
-						value == game.PlayerReputation.Get(faction), "founding baseline differs: " + faction.Name);
+					bool present = system.Standings.TryGetValue(faction.Name, out int value);
+					int personal = game.PlayerReputation.Get(faction);
+					Require(present && value == personal, "founding baseline differs: " + faction.Name
+						+ "; present=" + present + "; standing=" + value + "; personal=" + personal
+						+ "; ledger-count=" + system.Standings.Count
+						+ "; observation-count=" + system.RegardSpilloverObservedReputation.Count);
 					Require(system.RegardSpilloverObservedReputation.TryGetValue(faction.Name, out int observed)
 						&& observed == value, "founding observation differs: " + faction.Name);
 					compared++;
