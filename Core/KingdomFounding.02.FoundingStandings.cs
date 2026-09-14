@@ -16,7 +16,8 @@ namespace ThousandAndFirst
 			if (System == null || Realm == null || string.IsNullOrEmpty(Realm.Name)) return false;
 			if (!Realm.HasProperty(FoundingStandingsProperty))
 			{
-				if (The.Game?.PlayerReputation == null) return false;
+				if (The.Game?.PlayerReputation == null ||
+					!KingdomPolityRules.Usable(System.PolityLedger)) return false;
 				var snapshot = new List<KeyValuePair<string, int>>();
 				foreach (Faction faction in Factions.Loop())
 				{

@@ -2,8 +2,8 @@
 
 ## Unreleased founding reputation census
 
-3107 staged production C# files; 440,849 physical lines; zero at or above 300 lines.
-Inventory SHA-256: `051d929772b209a462654ea5ac2f33b9749f79ecc57ea052d449957fab874835`. One engine-free snapshot/publication helper replaces the
+3107 staged production C# files; 440,850 physical lines; zero at or above 300 lines.
+Inventory SHA-256: `8dd650d010f8dd998d2922f21cc99b37ff79e456a6c2a67880d908bdaf5f58b9`. One engine-free snapshot/publication helper replaces the
 embedded founding codec; the engine adapter captures eligible reputation and publishes validated roots.
 Existing STRUCTURE_REVIEW.json binds the released inventory, not this draft; refreshed semantic
 review and native evidence remain pending. Public 0.3.7 evidence below is historical to this change.

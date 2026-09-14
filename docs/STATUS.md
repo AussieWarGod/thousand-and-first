@@ -1,21 +1,35 @@
 # Current implementation and release evidence
 
-## Unreleased founding reputation baseline — native acceptance pending
+## Unreleased founding reputation baseline — native fix awaiting validation
 
-New realms now freeze personal reputation once into inbound civic regard. Outgoing policy
-remains separate; existing cities and version-one founding retries retain their history.
-Population culture/weighting integration under #231 is still pending.
+New realms freeze personal reputation once into inbound civic regard. Outgoing policy remains
+separate; existing cities and version-one founding retries retain their history. Culture/body/name
+selection and reputation weighting under #231 remain pending. Public 0.3.7 is unchanged.
 
-Focused checks: 364 main founding cases, 20 directional cases and 309 portable founding cases
-passed with zero skips. Production engine compilation passed for 3107 sources, baseline and compatibility symbols;
-All four production/harness engine compile modes passed; native founding/spillover/cold-load evidence remains pending.
-The probe uses explicit synthetic reputation changes through native and city APIs, with no
-fabricated residents. Public Alpha 0.3.7 retains the released behavior and its evidence below.
+First native startup at `c62cecfe` refused on Inanimate. Diagnostic `3cf2340f` proved the exact
+cause: the fresh polity options default was noncanonical, so capture skipped every faction and
+published an empty baseline. Both runs completed real founding and first paid commission, then
+stopped before ordinary construction turns; no cold load occurred. Exact owned shutdown,
+strict logs and full 3451/3452 input recipes passed. Failed archives remain:
 
-Development census: 3107 staged C# files; 440,849 physical lines; zero at or above 300 lines.
-Cold-install inventory: 3140 files. Inventory SHA-256: `051d929772b209a462654ea5ac2f33b9749f79ecc57ea052d449957fab874835`.
-Structural semantic review is stale for this draft; no new release acceptance is claimed.
+- `founding-regard/c62cecfe/baseline-refused-1/result.json`, SHA-256
+  `c0e833c6f126af6b409c2d7fc4a10c251addd9f4424959358cfdce1050c15675`.
+- `founding-regard/3cf2340f/empty-baseline-1/result.json`, SHA-256
+  `67b656ff53593f2a997a06ea823c1711f0be0880328767bcd83af6728a2a1fe8`.
 
+Fresh polity options now initialize their unobserved future-cause boundary to `long.MaxValue`,
+the existing canonical value. Historical zero defaults still normalize; conflicting options
+still quarantine. Capture refuses an invalid polity ledger before enumeration. Focused 370
+main polity cases passed. Earlier 364 main founding, 20 directional and 309 portable founding
+cases passed on their original pins; four engine modes passed before this default fix.
+The changed default passes all four engine compile modes, 370 main/338 portable polity cases
+and 20 directional cases. Three host-checker tests exercise missing/duplicate/reordered and
+corrupted native evidence. Native founding/spillover/cold-load proof remains pending.
+
+Development compile scope: 3107 sources, baseline and compatibility symbols. Census: 3107 staged C# files;
+440,850 physical lines; zero at or above 300 lines; cold-install inventory 3140 files.
+Inventory SHA-256: `8dd650d010f8dd998d2922f21cc99b37ff79e456a6c2a67880d908bdaf5f58b9`.
+Structural semantic review remains stale for this draft; no new release acceptance is claimed.
 
 ## Public 0.3.7 — published and finalized
 

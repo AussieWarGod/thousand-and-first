@@ -92,7 +92,7 @@ namespace ThousandAndFirst.Tests
 				"The.Game.PlayerReputation.Set(faction.Name", "TryPublishFoundingStandings(system, resolvedStandings, foundingRegardVersion)",
 				"faction.SetProperty(FoundingStepProperty, 2)", "system.ReassertFeelings()");
 			AssertOrdered(publication, "if (!Realm.HasProperty(FoundingStandingsProperty))",
-				"Factions.Loop()", "System.CanReserveDirectionalRelationship(faction.Name)",
+				"!KingdomPolityRules.Usable(System.PolityLedger)", "Factions.Loop()", "System.CanReserveDirectionalRelationship(faction.Name)",
 				"The.Game.PlayerReputation.Get(faction)", "KingdomFoundingRegardRules.TryEncode(2, snapshot",
 				"Realm.SetProperty(FoundingStandingsProperty, encoded)");
 			AssertOrdered(publication, "KingdomFoundingRegardRules.TryPreparePublication(Version, frozen",
