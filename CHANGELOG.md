@@ -12,11 +12,12 @@ starter citizens. Marsh construction and separate cold-load checks pass at `2c06
 all four original citizens, real enclosed housing and entrance obstruction/recovery. Broader
 housing/conversion and release acceptance remain pending; see docs/STATUS.md.
 
-**Pending shared-hall access (unreleased)**
+**Shared-hall access (unreleased)**
 
 Require an exterior approach connected through clear floor and usable doors before granting bedroom
 privacy. Internal doors no longer hide furniture-blocked shared halls; alternate exits restore access.
-The expanded native scenario is pending. See docs/STATUS.md for exact evidence and scope.
+All 29 native room observations pass at `dc65f086`, including shared-hall obstruction, alternate
+exits, native door states and restoration. See docs/STATUS.md for exact evidence and scope.
 
 **Pending room and furniture clearance (unreleased)**
 

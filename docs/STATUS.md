@@ -1,19 +1,33 @@
 # Current implementation and release evidence
 
-## Shared-hall access: native acceptance pending
+## Shared-hall access: native scenario accepted
 
-Room privacy now requires a clear route through the complete designated building to an exterior
-approach. Internal doors cannot independently grant access behind furniture-blocked halls. The
-lookup retains structural room separation and caches physical observations once; adopted floor-only
-rooms retain their adjacent doors without acquiring surrounding walls. This is bounded building
-access, not proof of a street route beyond the immediately adjacent exterior approach.
+At `dc65f0866a36a2332b35d235291a13a6e03540a1`, all 29 required in-game room observations pass.
+Walkable furniture blocks architectural circulation through shared halls and doorways. Bedroom
+privacy requires a clear route through the designated building to an exterior approach; an internal
+door alone cannot supply access. Alternate exits, obstruction removal and unlocking restore access.
+Structural enclosure remains separate from furniture, and physical observations are cached once.
 
-Twenty main room-rule cases pass, including separated bedrooms, shared-hall obstruction, alternate
-exits and restoration. The fixture is main-only; a portable selector matched no tests and is not
-a portable PASS. The existing native scenario adds nine mandatory observations over a synthetic
-whole-building designation and actual native cells, then restores the adopted room and its benefit
-reading. It must pass before this new access behavior is accepted. Prior native20 and the marsh
-warm/cold result below retain their original source pins; neither exercised this change.
+The genuine four-founder dune Quickstart adopts a synthetic 8×6 room through the ordinary API.
+The first twenty cases exercise its benefit/privacy/arrival route, furniture, doors, loss/repair and
+an original citizen restored exactly. Nine additional observations use a synthetic whole-building
+designation over native cells for the shared hall, then restore the original room, bed positions,
+door flags and adopted benefit reading. The capture was inspected and shows the restored fixture.
+This is not a commissioned catalogue layout, city balance, multi-map or cold-load acceptance.
+Access covers the designation and immediately adjacent exterior approach, not the full street route.
+
+Twenty main room-rule cases, 65 persona/oracle cases and all four engine compile modes pass.
+CI `34860042305` passes at the accepted native source pin.
+The room fixture is main-only; the portable selector matched no tests and is not a portable PASS.
+The full native archive verifies all 3,441 pinned profile inputs, strict final logs, the closed seal
+and exact owned shutdown. Archive `physical-rooms/dc65f086/shared-hall-1/result.json`, SHA-256
+`6e41dfbf71438614031e6b544832b653b3a53ce99b2e0d13e7384c8f98d6ea93`; 21 hashed artifacts.
+The marsh construction/cold-load evidence below retains its earlier source pin and did not exercise
+this shared-hall change. PR #238 and issue #233 retain the remaining scope; no public release claimed.
+
+### Earlier shared-hall failures
+
+These failures are superseded only within the accepted scenario's scope above.
 
 The first shared-hall native run at `aa4f33bb` passed the original twenty observations and five
 hallway cases, then refused the lock case. Earlier doorway furniture can open a native door;
