@@ -1,5 +1,22 @@
 # Current implementation and release evidence
 
+## Building-wide Beta coverage inventory — functional acceptance remains open
+
+The shared `Tools/coverage/check_coverage.py buildings` command now inventories staged XML
+roots and links exact configurations to the existing behavioral matrix. Initial census:
+144 buildings, four yard works, 1,390 configurations (including 72 retained-reader poses),
+and 9,730 architectural/functional obligations. All links initially remain unmapped; prior native
+evidence is not discarded, but must be attributed to its actual configuration and assertions.
+This is a coverage inventory, not 9,730 demonstrated bugs or new native acceptance.
+
+Missing works, unresolved architecture references, duplicate/unknown links and stale definition
+digests are covered by tool tests. `MAPPED` is explicitly separate from underlying row verdicts;
+even complete mappings cannot establish Beta readiness. No production or harness code, runtime
+XML, or native validator changed in this tooling slice. Fifteen focused inventory tests, 38 existing
+coverage tests and documentation checks pass. The full repository audit passed 1,182 tests
+with 11 skips; it is not native gameplay acceptance. [BUILDING-BEHAVIOUR.md](BUILDING-BEHAVIOUR.md) defines the shared
+workflow and remaining native requirements under #251, alongside architectural quality #229.
+
 ## Unreleased founding reputation — native warm/cold accepted
 
 At `40477cb7d5b5664b89466cc0fb8c36cabc7adf69`, real Quickstart founding captures 143

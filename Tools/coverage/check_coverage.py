@@ -560,6 +560,14 @@ def main(argv):
     parser = argparse.ArgumentParser()
     sub = parser.add_subparsers(dest="command")
 
+    buildings_parser = sub.add_parser("buildings", help="map shipped configurations to behavioral rows; not native acceptance")
+    buildings_parser.add_argument("--repo-root", default=os.path.join(os.path.dirname(__file__), "..", ".."))
+    buildings_parser.add_argument("--matrix", default=os.path.join(os.path.dirname(__file__), "matrix.json"))
+    buildings_parser.add_argument("--bindings", default=os.path.join(os.path.dirname(__file__), "buildings.json"))
+    buildings_parser.add_argument("--out", required=True, help="write full configuration/obligation JSON")
+    buildings_parser.add_argument("--require-mapped", action="store_true",
+                                  help="fail for unmapped/stale obligations; this is not a Beta acceptance gate")
+
     validate_parser = sub.add_parser("validate", help="schema-only, offline (default)")
     validate_parser.add_argument(
         "--matrix", default=os.path.join(os.path.dirname(__file__), "matrix.json")
@@ -608,6 +616,29 @@ def main(argv):
     parser.add_argument("--inventory-digest", default=None)
 
     args = parser.parse_args(argv)
+
+    if args.command == "buildings":
+        from pathlib import Path
+        from building_catalogue import inventory
+        from building_coverage import report
+        try:
+            doc = load(args.matrix)
+            problems = validate(doc)
+            valid_ids = {row["id"] for row in doc.get("rows", []) if isinstance(row, dict)}
+            problems.extend(validate_combinations(doc, valid_ids))
+            if problems:
+                raise ValueError("; ".join(problems))
+            result = report(inventory(Path(args.repo_root)), load(args.bindings), doc)
+            with open(args.out, "w", encoding="utf-8") as handle:
+                json.dump(result, handle, indent=2, ensure_ascii=True)
+                handle.write("\n")
+        except (OSError, ValueError, subprocess.CalledProcessError) as error:
+            print("BUILDING COVERAGE REFUSED:", error, file=sys.stderr)
+            return 1
+        print("BUILDING COVERAGE INVENTORY:", json.dumps(result["summary"], sort_keys=True))
+        print("Mapping only; native acceptance and Beta readiness are not established.")
+        gaps = result["summary"]["mappingStatuses"]
+        return 2 if args.require_mapped and (gaps.get("UNMAPPED", 0) or gaps.get("STALE_MAPPING", 0)) else 0
 
     if args.command == "audit":
         doc = load(args.matrix)

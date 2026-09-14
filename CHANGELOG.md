@@ -10,6 +10,10 @@ records current acceptance.
 
 **Unreleased development**
 
+- Developer coverage tooling now inventories every shipped building configuration and its
+  architectural/functional obligations before Beta. Missing and stale scenario links remain
+  visible; static validity and broad test results never count as whole-catalogue acceptance.
+
 - New realms freeze the founder's reputation into their own inbound standings once.
   Later city actions evolve that baseline independently; outgoing policy remains separate.
   Existing cities and interrupted older founding transactions retain their history.

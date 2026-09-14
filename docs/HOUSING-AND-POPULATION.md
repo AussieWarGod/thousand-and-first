@@ -13,6 +13,11 @@ This is planned work, not native acceptance. Follow [STATUS.md](STATUS.md) for e
 | [#231](https://github.com/AussieWarGod/thousand-and-first/issues/231) | Coherent culture/body/name/occupation selection weighted by player reputation and evolving city standing. |
 | [#233](https://github.com/AussieWarGod/thousand-and-first/issues/233) | Room size, usable furniture, crowding and quality affect actual citizen activities and building outcomes. |
 | [#234](https://github.com/AussieWarGod/thousand-and-first/issues/234) | Practical visual layout authoring and physical room/space analysis using the existing XML contract. |
+| [#251](https://github.com/AussieWarGod/thousand-and-first/issues/251) | Every building meets architectural and functional standards before Beta, with explicit configuration/behavior coverage and complex native proof. |
+
+[BUILDING-BEHAVIOUR.md](BUILDING-BEHAVIOUR.md) provides the shared catalogue inventory and
+coverage-link workflow. It exposes missing/stale mappings without treating static validity or
+a generic construction scenario as proof that every building works.
 
 Audit the whole building catalogue; deliver housing and Quickstart reliability first, then ordinary multi-map home/work behavior and
 reputation-driven arrivals in reviewable Alpha slices. Preserve the original Beta goal and complex
