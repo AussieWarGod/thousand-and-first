@@ -1,7 +1,7 @@
 # Changelog
 
-Current 3106-file census is line-cap green: 440,877 physical lines; direct `XRL`
-imports occur in 1450 files, 0 of them over the line limit. Inventory SHA-256: `3dc69687e01f930bffc8f840a15f4a5a885c3744a6fc17049a8ce91c5d881e62`.
+Current 3106-file census is line-cap green: 440,880 physical lines; direct `XRL`
+imports occur in 1450 files, 0 of them over the line limit. Inventory SHA-256: `91973648605848aa1939d38f366ed6e578cd4cc07ef542bd6f6a03b76575c935`.
 The cold-install inventory contains 3139 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Historical entries retain their original scope;
@@ -10,7 +10,7 @@ records current acceptance.
 
 ## [0.3.7] — 2026-09-15 (Alpha)
 
-Private candidate for enclosed housing and paid construction recovery; not yet published.
+Replacement private candidate for enclosed housing and paid construction recovery; public remains 0.3.6.
 
 - Give new Quickstart settlers enclosed Medium shelters with real doors and clear entrance aisles.
   Larger shared homes use separate chambers or courtyard cabins; hut conversions retain their
@@ -18,8 +18,8 @@ Private candidate for enclosed housing and paid construction recovery; not yet p
 - Measure lodging privacy from real rooms and reachable clear floor. Beds, chairs and other
   furniture occupy space even when Qud permits walking over them; shared halls and doorways
   must remain clear. Extra bunks still count toward crowding.
-- Anchor new founders at the camp before their first turn, preserving ordinary work and idle
-  goals. Reserve the initial camp's ambient faction-party encounter slot during generation.
+- Anchor new civilian founders at the camp with defensive engagement before their first turn.
+  Preserve ordinary work, idle goals and retaliation without proactive target acquisition. Reserve the initial camp's ambient faction-party encounter slot during generation.
 - Recover a paid housing conversion after exact restoration of a missing or moved fixture.
   Preserve original storage contents and payment; permit flooring beneath only its exact paid
   predecessor. Foreign furniture and copied receipts grant no placement exception.
@@ -31,7 +31,8 @@ Private candidate for enclosed housing and paid construction recovery; not yet p
 
 Native checks cover real four-founder housing, paid conversion, obstruction/retry, retained contents,
 24,000 ordinary turns and separate cold continuation. Shared-room tests cover native door states
-and walkable-furniture obstructions. Higher-heart progression uses disclosed synthetic population
+and walkable-furniture obstructions. A further seven-day source/cold pair checks defensive founders
+on the previously failed marsh seed; other seeds and terrain remain unproved. Higher-heart progression uses disclosed synthetic population
 and support; it does not establish ordinary balance or multi-map city coverage. Full building
 redesign, room/activity rewards, reputation-weighted populations, supporting land use and natural
 outward expansion remain Beta work. Historical renovations/quarantine and polity reconciliation

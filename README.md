@@ -5,13 +5,13 @@ after you leave. Water, food, labour, materials, roads, trade, threats, civic me
 works remain part of the same world instead of becoming a detached management screen.
 
 **Status: 0.3.7 pre-release source (private Alpha candidate).**
-The 0.3.6 public Alpha playtest remains the published release. This candidate has not been uploaded or accepted.
+The 0.3.6 public Alpha playtest remains the published release. The replacement private candidate has not been uploaded or accepted.
 Back up saves before updating. Current evidence and remaining coverage limits live in
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md).
 
 This candidate adds enclosed starter housing and measures room privacy from physical rooms,
 furniture and clear access. Beds and chairs reserve space even when Qud lets people walk over
-them. New founders begin anchored at their camp, and paid home conversions can recover after
+them. New civilian founders begin anchored at their camp with defensive engagement, and paid home conversions recover after
 exact fixture restoration while preserving the original storage contents and payment.
 
 Successive settlement-heart upgrades preserve their paid history and recheck new wall sites

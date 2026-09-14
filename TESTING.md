@@ -1,9 +1,21 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
+## Defensive-founder source acceptance
+
+Source `49af5f5e` passes marsh seed `#43101` warm/cold lifecycle with all four original founders
+still housed and defensive after 8,400 ordinary turns, two enclosed homes, six beds and 34 clear
+floor cells. The next paid commission debits one timber/two drams. Native neutral-assault probe
+and whole-zone rendering/restoration pass. Both owned processes are stopped; 3,449 warm/3,451 cold
+inputs match exactly. Archive `defensive-founders/49af5f5e/completed-warm-cold-1/result.json`,
+SHA-256 `85463ec430dc300348dae303569b7c16926f7b0fab80e13388145489ced7f6ed`.
+The probe uses two unplaced NPCs and assigns only its own attacker Snapjaws allegiance before
+asserting neutral feeling and actual retaliation. It fabricates no city population or housing.
+This source proof is not private package delivery acceptance; broader ecology remains #237.
+
 ## Current source inventory (unreleased)
 
 The engine gate runs across 3106 production C# sources (3102 baseline);
-the cold-install inventory contains 3139 files. Inventory `3dc69687e01f930bffc8f840a15f4a5a885c3744a6fc17049a8ce91c5d881e62`.
+the cold-install inventory contains 3139 files. Inventory `91973648605848aa1939d38f366ed6e578cd4cc07ef542bd6f6a03b76575c935`.
 These counts describe the source inventory, not a public installation. Native acceptance is scoped below.
 
 Paid conversion follow-through: `Tools/personas/paid-housing-native-check.persona` uses real

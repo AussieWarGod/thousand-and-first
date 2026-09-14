@@ -2,9 +2,9 @@
 
 ## Refreshed Alpha 0.3.7 candidate census
 
-3106 staged production C# files / 440,877 physical lines; zero at or above 300 lines.
+3106 staged production C# files / 440,880 physical lines; zero at or above 300 lines.
 1450 files with direct `XRL` imports; none exceed the cap. Cold-install inventory: 3139 files.
-Inventory SHA-256: `3dc69687e01f930bffc8f840a15f4a5a885c3744a6fc17049a8ce91c5d881e62`.
+Inventory SHA-256: `91973648605848aa1939d38f366ed6e578cd4cc07ef542bd6f6a03b76575c935`.
 The automated [delta review](STRUCTURE_REVIEW_0_3_7.md) and STRUCTURE_REVIEW.json bind this
 inventory. Native evidence retains its original source pins; candidate delivery remains pending.
 

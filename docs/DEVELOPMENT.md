@@ -86,6 +86,10 @@ Restore borrowed identities and ownership before destroying synthetic fault obje
 graveyards retain tombstones. Prove production recovery before and after such probes; a live
 object census alone cannot prove cleanup.
 
+For AI counterexamples, assert native faction feelings and combat eligibility before the trigger.
+Two default NPCs are allies; a single assault need not provoke retaliation. Use an explicitly
+owned neutral fixture, retain boundary values on refusal, and never rewrite real citizen factions.
+
 Before a long city scenario, check fixture calls against their production contracts. Authored
 housing needs the normal plot-crowding and ground checks before typed plot-payload preflight;
 a custody-only survey has no populated civic lists.

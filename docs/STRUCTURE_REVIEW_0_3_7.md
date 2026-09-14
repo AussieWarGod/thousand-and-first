@@ -1,5 +1,26 @@
 # Alpha 0.3.7 production delta review
 
+## Defensive-founder delta after the first private candidate
+
+Inventory `91973648605848aa1939d38f366ed6e578cd4cc07ef542bd6f6a03b76575c935`:
+3,106 production sources, 440,880 physical lines, 1,450 direct XRL imports, zero files at or
+above 300 lines. All 3,105 other production paths are byte-identical to reviewed `34188ec5`.
+Comparison: `/tmp/taf-defensive-founders-production-comparison-1.json`; census:
+`/tmp/taf-defensive-founders-structure-1.json`.
+
+`World/KingdomQuickstartBootstrap.Founders.cs` adds three lines (256 total). It sets native
+`Brain.Passive` only while creating fresh, transaction-owned founders and verifies that flag
+before accepting their placement. It retains the same single grant responsibility, reversible
+allocation and enrollment boundary. Existing recovery neither assigns the flag nor changes
+historical citizen authority. No serialized field or schema is added; Qud owns this existing
+brain field's persistence. No new protocol or structural exception is needed.
+
+Review by Codex root, automated identity. This establishes structural continuity only. Native
+retaliation and long-running cohort/save-load checks remain required; the first private lifecycle
+and first neutral-retaliation fixture attempt are retained failures in `docs/STATUS.md`.
+Earlier inventory reviews below retain their original scope.
+
+
 ## Refreshed housing and construction review
 
 Codex root automated review, 2026-09-15. Current inventory: 3,106 production C# files,
