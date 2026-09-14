@@ -166,6 +166,8 @@ namespace ThousandAndFirst
 				if (item.GetStringProperty(KingdomPlots.PlotIdProperty) == Lot
 					&& item.GetStringProperty(ComponentHashProperty) == Hash
 					&& item.GetIntProperty(ComponentSchemaProperty) == ComponentSchema) continue;
+				if (!blocks && Placement.Layer == ArchitectureLayer.Ground
+					&& ExactFloorUpgradePredecessor(Owner, item, Z, Cell, Lot, Hash)) continue;
 				if (KingdomPlots.ReadObject(item) == KingdomPlotRules.GroundKind.Bare) continue;
 				KingdomLog.Log("architecture: foreign slot " + Placement.Slot + " holds "
 					+ item.IDIfAssigned + " (" + item.Blueprint + ") at " + Cell.X + ","

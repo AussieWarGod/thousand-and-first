@@ -65,6 +65,7 @@ namespace ThousandAndFirst.Harness
 				"conversion lost its changed catalogue scope");
 			Require(KingdomPaidHousingFault.Injected && KingdomPaidHousingFault.Refused && KingdomPaidHousingFault.Outstanding,
 				"actual handover did not witness the controlled storage refusal and Outstanding retry");
+			Require(KingdomPaidHousingFloorProbe.Passed, "paid floor insertion lacked foreign-furniture boundary proof");
 			var paid = KingdomPaidHousingNativeProvider.Paid;
 			Require(KingdomSocketTransitions.TryGet(paid.FromBuildKey, paid.ToBuildKey, paid.LotType, paid.LotSize,
 				out var current) && current.WaterDrams == 8, "catalogue drift disappeared before completion");

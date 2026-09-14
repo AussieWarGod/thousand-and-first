@@ -1,5 +1,24 @@
 # Current implementation and release evidence
 
+## Paid housing main-cell floor: exact blocker identified, repair pending acceptance
+
+At `9dd1064b`, real payment, catalogue drift, physical restoration probes and the controlled
+Outstanding retry passed. The first subsequent refusal was layout phase four: new ground slot
+`g:06:01` encountered predecessor `676` (`r_KingdomTentRow`) on its own main cell `(19,8)`.
+The predecessor was classified as protected Held state; this was not foreign furniture.
+Closed failed archive: `paid-housing/9dd1064b/main-cell-floor-refused-1/result.json`, SHA-256
+`bfc3f2c309e0a210a4fe8c1fb059a2e0fdaa78c3c8d49316b4ea72a70a2370cd`.
+The earlier `cf76dab5` run already contained this exact category of foreign-slot diagnostic.
+
+The placement guard now permits a nonblocking ground placement beneath only its exact paid
+predecessor on the shared main cell. Current job identities, zone ownership, both receipts,
+pending successor, frozen layout headers and the phase-four upgrade receipt are required.
+Other protected objects remain obstructions. A native probe calls the actual placement guard
+at this boundary, checks refusal for a foreign chest and the same chest with a borrowed paid
+receipt, removes borrowed authority before destroying the fixture, and rechecks recovery.
+Completed conversion, retained contents/founders and separate cold load remain mandatory;
+no successful native acceptance for this repair is claimed yet.
+
 ## Restored fixture recovery: native regression found, repair pending acceptance
 
 Issue #242 was reproduced at `8a95cdc1`: a genuinely paid seven-dram Medium housing conversion
@@ -435,8 +454,8 @@ Current cold-install inventory: 3139 files.
 Current source: 3106 sources, baseline and compatibility symbols use their
 respective exclusions (3097 baseline). All four engine compile modes passed.
 The cold-install inventory has 3132 files.
-3106 staged C# files / 440,840 physical lines; zero strict line-cap failures.
-Direct `XRL` imports: 1450 files, 0 over the line limit. Inventory SHA-256: `a866079727f5c0cccb4d00c25e4692378e40bc7f95ece5309805ff932921ed93`.
+3106 staged C# files / 440,870 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1450 files, 0 over the line limit. Inventory SHA-256: `c2b9b49b906e4ce34fb6ea61d8c0c788040cfafbb31e5143368cd223343e95ab`.
 This is a source census, not native acceptance or an updated exact-inventory semantic review.
 
 ## In-progress paid heart chain

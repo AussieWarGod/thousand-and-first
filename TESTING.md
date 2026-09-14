@@ -3,7 +3,7 @@
 ## Current source inventory (unreleased)
 
 The engine gate runs across 3106 production C# sources (3102 baseline);
-the cold-install inventory contains 3139 files. Inventory `a866079727f5c0cccb4d00c25e4692378e40bc7f95ece5309805ff932921ed93`.
+the cold-install inventory contains 3139 files. Inventory `c2b9b49b906e4ce34fb6ea61d8c0c788040cfafbb31e5143368cd223343e95ab`.
 These counts describe the source inventory, not a public installation. Native acceptance is scoped below.
 
 Paid conversion follow-through: `Tools/personas/paid-housing-native-check.persona` uses real
@@ -19,6 +19,9 @@ to fund the longer wait, and probes missing/moved/wrong-token fixture restoratio
 must refuse without permanently poisoning intact owner receipts; malformed owner and upgrade
 authority keep their quarantine rules. Failed native reproduction and pending recovery acceptance
 are recorded in STATUS and #242; no repair of previously quarantined saves is claimed.
+The required paid-housing-floor-access witness probes the actual insertion guard at paid handover:
+exact predecessor accepted, synthetic foreign chest refused, borrowed receipt refused, then exact
+recovery. The chest is removed before ordinary insertion continues; no insertion verdict is replaced.
 
 ## Shared-hall access
 

@@ -591,6 +591,7 @@ class MatchingTest(unittest.TestCase):
         for witness, good, bad in (("paid-housing-water", "conserved=true", "conserved=false"),
                                    ("paid-housing-physical-probes", "restored=exact", "restored=false"),
                                    ("paid-housing-retry", "phase=Outstanding", "phase=Working"),
+                                   ("paid-housing-floor-access", "restored=exact", "restored=false"),
                                    ("paid-housing-cohort", "housed=4", "housed=2")):
             index = next(i for i, item in enumerate(rows) if item[0] == witness)
             self.assertTrue(matrix.match(expected, rows[:index] + rows[index + 1:]))

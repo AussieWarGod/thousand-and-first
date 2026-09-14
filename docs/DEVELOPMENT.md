@@ -109,7 +109,8 @@ contains every fixture work; capturing an old smaller book can miss newly mispla
 Retain the actual bound assessment's reason;
 a later Ready result cannot explain an earlier NoGroundToGrow refusal.
 When a shared failure sentence covers several predicates, record their actual boundary values and
-caller before another long run. Journal unexpected production refusals immediately to avoid spending
+caller before another long run. Inspect existing `architecture: foreign slot` lines in `Player.log`
+first; they already identify the blocking object, blueprint, cell and ground classification. Journal unexpected production refusals immediately to avoid spending
 the remainder of a construction wait on a job already requiring inspection.
 Commissioning clearance does not prove completion-time clearance: resident movement during the
 construction wait can repopulate future wall cells. Place the late resident at the actual paid

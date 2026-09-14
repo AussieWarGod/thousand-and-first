@@ -5,7 +5,9 @@
 Recheck exact physical fixtures after they are restored instead of permanently quarantining an
 intact building receipt on a temporary missing, moved, duplicated or changed component. All physical
 identity checks and malformed-authority refusals remain. Existing quarantined saves are not rewritten.
-The paid-housing scenario reproduces the old handover failure; repaired native acceptance is pending.
+Allow a paid conversion to lay nonblocking flooring beneath its exact predecessor on the shared
+main cell during the frozen handover phase. Foreign furniture still blocks placement, including
+a foreign container with a copied payment receipt. Repaired native acceptance is pending.
 
 **Pending enclosed canvas homes (unreleased)**
 
@@ -84,8 +86,8 @@ regressions to cover every added material across all fallback heart transitions 
 including historical-baseline transitions. Sixteen main cases pass; fresh native confirmation
 of the court bill remains pending under #216. Exact evidence is in docs/STATUS.md.
 
-Current 3106-file census is line-cap green: 440,840 physical lines; direct `XRL`
-imports occur in 1450 files, 0 of them over the line limit. Inventory SHA-256: `a866079727f5c0cccb4d00c25e4692378e40bc7f95ece5309805ff932921ed93`.
+Current 3106-file census is line-cap green: 440,870 physical lines; direct `XRL`
+imports occur in 1450 files, 0 of them over the line limit. Inventory SHA-256: `c2b9b49b906e4ce34fb6ea61d8c0c788040cfafbb31e5143368cd223343e95ab`.
 The cold-install inventory contains 3139 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Versions are semantic: patch for fixes,

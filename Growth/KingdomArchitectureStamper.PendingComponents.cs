@@ -8,6 +8,34 @@ namespace ThousandAndFirst
 		private const string PendingRetirementPhaseProperty =
 			"r_TAF_ArchitectureUpgradePendingRetirementPhase";
 
+		/// <summary>A nonblocking floor may be placed beneath its own paid, still-standing predecessor.
+		/// Exact job identities and the frozen phase-four upgrade receipt authorize this one main cell.</summary>
+		private static bool ExactFloorUpgradePredecessor(GameObject Target, GameObject Predecessor,
+			Zone Z, Cell Cell, string Lot, string Hash)
+		{
+			if (!GameObject.Validate(Target) || !GameObject.Validate(Predecessor)
+				|| Target.CurrentCell != Cell || Predecessor.CurrentCell != Cell || Target.CurrentZone != Z
+				|| Predecessor.CurrentZone != Z || Target.HasIntProperty(KingdomConstruction.ReceiptProperty)
+				|| !r_KingdomScaffold.IsExactPendingImprovementSuccessor(Target)
+				|| !KingdomConstruction.TryFind(Target.GetStringProperty(KingdomConstruction.ReceiptProperty), out var job)
+				|| job.Route != KingdomConstructionRoute.Improvement || job.Phase != KingdomConstructionPhase.ProjectionPending
+				|| job.OutputId != Target.IDIfAssigned || job.SubjectId != Predecessor.IDIfAssigned
+				|| !KingdomConstruction.Owns(global::XRL.The.Game?.GetSystem<KingdomSystem>(), Z, job)
+				|| !KingdomConstruction.HasReceipt(Target, job) || !KingdomConstruction.HasReceipt(Predecessor, job)
+				|| !KingdomConstruction.IsCurrent(job)
+				|| KingdomConstruction.FindExactId(Z, job.SubjectId, out var source) != KingdomPhysicalLookupState.Exact
+				|| !ReferenceEquals(source, Predecessor)
+				|| KingdomConstruction.FindExactId(Z, job.OutputId, out var output) != KingdomPhysicalLookupState.Exact
+				|| !ReferenceEquals(output, Target)
+				|| !KingdomArchitectureRuntime.TryRead(Target, out var after, out _) || after.SnapshotHash != Hash
+				|| !ExactSuccessorOwner(Target, after, Lot, out _)
+				|| Cell != Z.GetCell(after.MainWorldX, after.MainWorldY)
+				|| !TryUpgradeBase(Predecessor, Z, after, out _, out _, out _, out var delta, out var lot, out _)
+				|| lot != Lot || !TryReadUpgradeReceipt(Predecessor, Target, after, Lot, delta, out _)
+				|| Predecessor.GetIntProperty(UpgradePhaseProperty) != 4) return false;
+			return true;
+		}
+
 		/// <summary>Every successor-layout component is inert until the same durable handover
 		/// commits predecessor absence. A bare carried flag is never activation authority.</summary>
 		private static bool ExactPendingComponentState(GameObject Owner, GameObject Item,
