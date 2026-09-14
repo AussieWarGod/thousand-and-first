@@ -12,8 +12,12 @@ namespace ThousandAndFirst.Harness
 	{
 		internal static KingdomCampHeartChainSnapshot CaptureChainSaveWitness(XRLGame Game, Zone Zone,
 			string ResidentId, string TrackId, out Dictionary<string, string> Records)
+			=> CaptureChainSaveFrame(Game, Zone, ResidentId, TrackId, out Records, out _);
+
+		private static KingdomCampHeartChainSnapshot CaptureChainSaveFrame(XRLGame Game, Zone Zone,
+			string ResidentId, string TrackId, out Dictionary<string, string> Records, out Frame Frame)
 		{
-			Records = null;
+			Records = null; Frame = null;
 			Require(Game != null && ReferenceEquals(The.Game, Game) && Zone != null
 				&& ReferenceEquals(The.ZoneManager?.ActiveZone, Zone) && !KingdomSurvey.HasBoundPass,
 				"higher-heart capture requires its active game/zone and an unbound survey");
@@ -26,6 +30,7 @@ namespace ThousandAndFirst.Harness
 			using (scope) snapshot = frame.CaptureChainInPass(ResidentId, TrackId, out Records);
 			Require(!KingdomSurvey.HasBoundPass && Game.Turns == turns && Game.TimeTicks == ticks
 				&& ReferenceEquals(The.Game, Game), "higher-heart observation changed its clock, game or survey scope");
+			Frame = frame;
 			return snapshot;
 		}
 
@@ -55,6 +60,7 @@ namespace ThousandAndFirst.Harness
 					&& KingdomCitizenship.BelongsTo(System, resident) && resident.IsAlive,
 					"higher-heart displaced resident is absent, foreign or dead");
 				foreach (var item in new[] { Heart, Store, basin, track, resident }) ExactGround(Zone, item);
+				ChainBasin = basin; ChainTrack = track; ChainTrackId = TrackId; ChainTrackCell = track.CurrentCell;
 				RequireBookRow(this);
 				JobId = Heart.GetStringProperty(KingdomConstruction.ReceiptProperty);
 				Require(KingdomConstruction.TryFind(JobId, out var job) && job != null
@@ -67,6 +73,7 @@ namespace ThousandAndFirst.Harness
 				foreach (var root in survey.Built)
 					if (KingdomUpgrade.DesignKeyOf(root) == "airwellcourt") ChainProducers.Add(root);
 				RequireChainSupportInPass(survey);
+				ChainResidents.AddRange(ChainResidentBodies(survey));
 				Require(System.City.TryReadExact(out var city, out var fault), "higher-heart city columns are torn: " + fault);
 				string jobs = CaptureChainJobs(Records);
 				string residents = CaptureChainResidents(city, survey, Records);
@@ -83,13 +90,13 @@ namespace ThousandAndFirst.Harness
 				return result;
 			}
 
-			private string CaptureChainJobs(Dictionary<string, string> Records)
+			private string CaptureChainJobs(Dictionary<string, string> Records, string ExceptJob = null)
 			{
 				Require(KingdomConstruction.TryRead(out var jobs, out string failure), failure);
 				var rows = new List<string[]>();
 				foreach (var job in jobs)
 				{
-					if (job.OwnerKey != KingdomConstruction.OwnerOf(System)) continue;
+					if (job.OwnerKey != KingdomConstruction.OwnerOf(System) || job.Id == ExceptJob) continue;
 					Require(KingdomConstructionRules.TryEncode(new[] { job }, out string wire), "higher paid row cannot encode");
 					rows.Add(new[] { job.Id, Convert.ToBase64String(new UTF8Encoding(false, true).GetBytes(wire)) });
 				}

@@ -20,6 +20,7 @@ import time
 from typing import Callable
 
 import scenario_profile
+import camp_heart_chain_snapshot as heart_chain
 
 ROOT_NAME = re.compile(r"taf-scenario\.[A-Za-z0-9]+\Z")
 CLI_ROOT = re.compile(r"/mnt/c/taf-scenario\.[A-Za-z0-9]+\Z")
@@ -434,6 +435,17 @@ def prepare(source: Path, destination: Path, assert_stopped: Callable[[Path], No
         game_id = lines[1]
         snapshot = read_bytes(source / "scenario-save-snapshot.txt", MAX_SNAPSHOT)
         require(snapshot and hashlib.sha256(snapshot).hexdigest() == lines[4], "save snapshot hash mismatch")
+        chain_facts = {}
+        if snapshot.startswith(heart_chain.FAMILY):
+            chain = heart_chain.decode_snapshot(snapshot)
+            require(chain["game_id"] == game_id and chain["rung"] == 4,
+                    "higher-heart snapshot does not bind the supported court save")
+            for domain in heart_chain.DOMAINS:
+                name = heart_chain.fact_name(domain)
+                require(not os.path.lexists(local / name), "source Local already contains imported higher-heart facts")
+                data = read_bytes(source / name, heart_chain.MAX_FACT_WIRE)
+                heart_chain.decode_facts(data, domain, chain[domain + "_digest"])
+                chain_facts[name] = data
         saves = source / "Synced/Saves"
         directory(saves)
         require(sorted(path.name for path in saves.iterdir()) == [game_id], "source must contain exactly the named save directory")
@@ -449,6 +461,7 @@ def prepare(source: Path, destination: Path, assert_stopped: Callable[[Path], No
         frozen = {source / "process-ownership.json": ownership, profile_seal: seal_bytes,
                   source_seal / "request.txt": request_bytes, source / "scenario-save-receipt.txt": receipt,
                   source / "scenario-save-snapshot.txt": snapshot}
+        frozen.update({source / name: data for name, data in chain_facts.items()})
         evidence = {"schema": "taf-scenario-load-source-v1", "sourceRoot": str(source), "gameId": game_id,
                     "processAuthority": False, "sourceHashes": {str(path.relative_to(source)) if path.is_relative_to(source)
                         else ".seal/" + path.name: hashlib.sha256(data).hexdigest() for path, data in frozen.items()},
@@ -478,6 +491,8 @@ def prepare(source: Path, destination: Path, assert_stopped: Callable[[Path], No
         require(scenario_profile.inventory(str(target_local)) == expected, "copied Local differs from original closed inventory")
         write_new(target_local / "scenario-load.txt", load_request)
         write_new(target_local / "scenario-load-snapshot.txt", snapshot)
+        for name, data in chain_facts.items():
+            write_new(target_local / name, data)
     with timer.measure("save-copy"):
         create_directory(destination / "Save")
         create_directory(destination / "Synced")
@@ -500,6 +515,7 @@ def prepare(source: Path, destination: Path, assert_stopped: Callable[[Path], No
         target_expected = dict(expected)
         target_expected["scenario-load.txt"] = hashlib.sha256(load_request).hexdigest()
         target_expected["scenario-load-snapshot.txt"] = hashlib.sha256(snapshot).hexdigest()
+        target_expected.update({name: hashlib.sha256(data).hexdigest() for name, data in chain_facts.items()})
         require(inventory == target_expected, "destination Local acquired unproved content during copy")
         seal = scenario_profile.SEAL_HEADER + "\n" + "".join(inventory[key] + "  " + key + "\n" for key in sorted(inventory))
     # Written BEFORE the seal/request/evidence below, deliberately: this file's own write can fail

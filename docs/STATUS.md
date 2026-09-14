@@ -64,16 +64,34 @@ jobs/residents/support/custody fact files, and compares the whole snapshot after
 Facts bind original anchors, all four survey stakes, water mixtures, larders and material
 stockpiles. Anonymous food stacks retain their observed slot/count; the observer assigns no IDs.
 Completion checks now share one local survey and verify disposal; speedup is unmeasured.
-Continue dispatch, preactivation comparison, rearming the dedicated input owner and the loaded
-paid-job continuation remain unwritten. No new native save/load has run. Do not start its long
+Continue dispatch, full preactivation/activation comparison, dedicated input rearming and an
+ordinary paid fire followed by 3600 requested turns are now implemented, but not engine-compiled
+or executed. The host importer validates, copies and seals all four retained fact files. The new
+source/load oracle checks exact identity, payment, guarded wait accounting and retained physical
+facts. No new native save/load has run. Do not start its long
 acceptance run until source and consumer are integrated under the same sealed inputs.
 [HEART-CHAIN-COLDLOAD.md](HEART-CHAIN-COLDLOAD.md) records the remaining integration and scenarios.
-All 134 focused main CampHeart cases and 65 persona checks passed with zero managed skips.
+Current consumer checks: 136 main and 120 portable CampHeart cases passed with zero skips;
+six host-format tests, 30 save-import tests and seven journal/fact-oracle tests passed. Shared
+native/host fixtures preserve Unicode, nulls and binary field boundaries. An adversarial test
+caught resume preceding wait intent; the oracle now refuses that order. The existing shared
+load suite passed 78 cases, its save/load source contracts passed 33 after accounting for both
+popup owners, and all 65 persona tests passed. Harness registration covers 306 shards
+(63 engine-free, 243 engine-bound); registration is not compilation.
+The canonical engine gate stopped before compilation because the installed Hearthpyre manifest
+is now 2.2.4 while the exact integration reference requires 2.2.3. This is tracked in
+[#217](https://github.com/AussieWarGod/thousand-and-first/issues/217). Retained failed log:
+`/tmp/taf-heart-chain-consumer-gate-1.log`. No installed compatibility or current four-mode
+compile PASS is claimed. Restore an authentic pinned reference or review the newer integration;
+do not relabel the source or disable the check.
+
+Earlier source-save-only checks at `52c7428d`: 134 focused main CampHeart cases and 65 persona checks passed with zero managed skips.
 Canonical facts passed nine portable cases, including Unicode, framing, duplicate identities
 and aggregate bounds. Initial malformed-Unicode attribute data was replaced by .NET metadata;
 the corrected tests construct the invalid strings at runtime. All four final engine compiles
 passed (3096/3100 ordinary, 3390/3394 developer), including the explicit no-debit and
 material-stockpile observations. All 118 portable CampHeart cases passed with zero skips.
+Those four-mode results precede the new consumer and cannot establish its engine compilation.
 These are implementation checks, not persistence acceptance. Original 31-case snapshot-format
 evidence remains separate from actual game behavior.
 

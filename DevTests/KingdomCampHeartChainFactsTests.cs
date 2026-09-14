@@ -20,6 +20,14 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void SharedHostFactsRetainNullUnicodeAndFieldBoundaries()
+		{
+			string wire = Capture("custody", new[] { "λ", "a|b", "🌳", "-" },
+				new string[] { "id", null, "", "1:a" });
+			Assert.That(wire, Is.EqualTo(TestMain.ReadRepositoryText("DevTests/Fixtures/heart-chain-facts-v1.wire")));
+		}
+
+		[Test]
 		public void OrderDoesNotMatterButDomainAndEveryFieldDo()
 		{
 			var a = new[] { "resident:1", "body", "house", "12", "7" };

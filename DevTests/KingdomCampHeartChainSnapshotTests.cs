@@ -53,6 +53,15 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void SharedHostWireMatchesNativeSnapshotEncoding()
+		{
+			string wire = TestMain.ReadRepositoryText("DevTests/Fixtures/heart-chain-save-v1.wire");
+			Assert.That(Codec.TryDecode(wire, out var decoded), Is.True);
+			Assert.That(Encode(Sample()), Is.EqualTo(wire));
+			Assert.That(Encode(decoded), Is.EqualTo(wire));
+		}
+
+		[Test]
 		public void EveryTruncationAndTrailingPayloadRefusesWithoutPartialWitness()
 		{
 			byte[] bytes = Convert.FromBase64String(Encode(Sample()).Substring(Codec.Prefix.Length));

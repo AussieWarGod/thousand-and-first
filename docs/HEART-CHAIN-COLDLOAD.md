@@ -14,8 +14,9 @@ the identity, physical support or persistence of a later heart.
 completed rungs three and four. A separate `camp-heart-chain-save` persona now runs the
 whole paid chain and saves after rung-four next-day recovery. Its observer captures the
 real completed heart, physical support, original anchors and paid receipts. Continue
-dispatch and the loaded next-job continuation are not wired yet; do not launch an
-acceptance run until both source and consumer are sealed together. No new native save
+dispatch and the loaded next-job continuation are implemented but await engine compilation
+and native execution; do not launch an acceptance run until both source and consumer are
+validated and sealed together. No new native save
 has been executed. Codec tests validate the evidence format, not persistence.
 Rung five and interrupted paid handovers still require their own coverage; refusing
 them in this test record is not a gameplay restriction or completion of those tasks.
@@ -58,21 +59,37 @@ Completion reads share one local survey and prove disposal; no speedup is claime
    primary, and retain exact save/metadata/cache hashes. Verify clock and custody
    across serialization. The host must stop the owned source game before importing
    the sealed primary into a fresh, separately sealed profile.
-5. Dispatch this prefix explicitly through the existing Continue barrier and raw-reader
+5. Implemented, unexecuted: dispatch this prefix explicitly through the existing Continue barrier and raw-reader
    witness. Unknown/malformed higher-heart records must refuse, with no fallback to a
    new game, rung-two observer or alternate save. Reconstruct and compare the entire
    witness before `AfterGameLoaded` callbacks. Never populate missing data from it.
-6. After normal activation, verify all physical layouts, founding recovery, exact paid
+6. Implemented, unexecuted: after normal activation, verify all physical layouts, founding recovery, exact paid
    receipts, resident identity/citizenship, support and original stock. Re-arm input
    isolation for this dedicated loaded game; its current owner flag is nonserialized.
    Preserve ordinary input in other games and restore popup ownership on every exit.
-7. Perform the next paid action through its ordinary quote, commission and settlement
+7. Implemented, unexecuted: perform the next paid action through its ordinary quote, commission and settlement
    turns. Prove one debit, exact completion, preserved prior jobs and original custody,
    support over subsequent days, and no replay of the source script or setup.
-8. Extend host checks to require preactivation, activation, next-action and completion
-   witnesses, strict logs, full source/profile bindings and exact owned shutdown.
-   Test absent, duplicate, refused and wrong-identity evidence. A parser pass or a
+8. Host format/import/journal/fact checks implemented and tested. Integrate the existing
+   native driver and archive for the optional save persona, retaining preactivation,
+   activation, next-action and completion witnesses, strict logs, full source/profile
+   bindings and exact owned shutdown. Tests reject absent, duplicate, refused and
+   wrong-identity evidence. A parser pass or a
    `SCRIPT-COMPLETE` row alone is insufficient.
+
+The host importer binds all four source fact files to the saved digests, copies their exact
+bytes into the fresh Local profile, seals them and reproves source custody. The load observer
+retains separate preactivation, activated and completed facts. Before any new action, all facts
+must match exactly. After ordinary work, resident movement and resource use are allowed while
+original resident identities, anchors, stakes, prior jobs and 21 original brush units remain
+required; the saved timber must pay the new fire job. The oracle keeps actual wait overshoot.
+Run `Tools/dev-check.sh tools 'camp_heart_chain_*test.py'` and the existing
+`scenario_load_profile_test.py` selection for these host contracts.
+
+Current compile prerequisite: the installed Hearthpyre updated to 2.2.4 and the canonical
+gate refuses its exact 2.2.3 reference check (#217). Preserve the failed gate; restore authentic
+pinned source or review new-version support before claiming engine compilation. Do not weaken
+the version/hash check. This does not close any native persistence scenario below.
 
 ## Remaining scenarios
 

@@ -68,8 +68,8 @@ namespace ThousandAndFirst.Harness
 				KingdomScenarioSaveFiles.WriteNew(Path.Combine(root, KingdomScenarioSaveFiles.ReceiptFile), receipt);
 				Require(KingdomScenarioSaveFiles.ReadText(Path.Combine(root, KingdomScenarioSaveFiles.ReceiptFile), 512) == receipt,
 					"higher-heart save receipt changed");
-				return "paid-heart-chain-save=true; rung=4; synthetic-next-job-timber=1; brush=21; save=" + Game.GameID
-					+ "; job=" + witness.JobId + "; heart=" + witness.Heart.Id + "; store=" + witness.Store.Id
+				return "paid-heart-chain-save=true; " + KingdomCampHeartChainLoadFacts.Identity(witness)
+					+ "; synthetic-next-job-timber=1; brush=21; save=" + Game.GameID
 					+ "; snapshot-sha256=" + KingdomScenarioSaveFiles.HashText(wire) + "; physical-state-preserved=true";
 			}
 

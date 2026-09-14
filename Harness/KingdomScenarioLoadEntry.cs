@@ -25,6 +25,7 @@ namespace ThousandAndFirst.Harness
 		internal static KingdomQuickstartLifecycleSnapshot LifecycleSnapshot;
 		internal static KingdomUpgradeSnapshot UpgradeSnapshot;
 		internal static KingdomCampHeartSaveSnapshot CampSnapshot;
+		internal static KingdomCampHeartChainSnapshot ChainSnapshot;
 		internal static bool Armed;
 		internal static string SnapshotWire;
 
@@ -79,12 +80,15 @@ namespace ThousandAndFirst.Harness
 					KingdomScenarioLoadRules.MaxChars);
 				Check(KingdomScenarioLoadRules.TryParse(text, out Request), "sealed load request is malformed");
 				SnapshotWire = KingdomScenarioSaveFiles.ReadText(Path.Combine(local,
-					KingdomScenarioSaveFiles.LoadedSnapshotFile), Math.Max(KingdomScenarioSaveSnapshotCodec.MaxWireChars,
+					KingdomScenarioSaveFiles.LoadedSnapshotFile), Math.Max(KingdomCampHeartChainSnapshotCodec.MaxWireChars, Math.Max(KingdomScenarioSaveSnapshotCodec.MaxWireChars,
 						Math.Max(KingdomSubsidenceRungSaveSnapshotCodec.MaxWireChars,
-							Math.Max(KingdomQuickstartSaveSnapshotCodec.MaxWireChars, KingdomUpgradeSnapshotCodec.MaxWireChars))));
+							Math.Max(KingdomQuickstartSaveSnapshotCodec.MaxWireChars, KingdomUpgradeSnapshotCodec.MaxWireChars)))));
 				Check(KingdomScenarioSaveFiles.HashText(SnapshotWire) == Request.SnapshotSha256,
 					"sealed snapshot hash differs");
-				if (SnapshotWire.StartsWith(KingdomCampHeartSaveSnapshotCodec.Prefix, StringComparison.Ordinal))
+				if (SnapshotWire.StartsWith(KingdomCampHeartChainSnapshotCodec.Prefix, StringComparison.Ordinal))
+					Check(KingdomCampHeartChainSnapshotCodec.TryDecode(SnapshotWire, out ChainSnapshot)
+						&& ChainSnapshot.GameId == Request.GameId, "sealed higher-heart snapshot does not bind selected save");
+				else if (SnapshotWire.StartsWith(KingdomCampHeartSaveSnapshotCodec.Prefix, StringComparison.Ordinal))
 					Check(KingdomCampHeartSaveSnapshotCodec.TryDecode(SnapshotWire, out CampSnapshot)
 						&& CampSnapshot.GameId == Request.GameId, "sealed camp snapshot does not bind selected save");
 				else if (SnapshotWire.StartsWith(KingdomUpgradeSnapshotCodec.Prefix, StringComparison.Ordinal))
@@ -136,6 +140,12 @@ namespace ThousandAndFirst.Harness
 					resume = loaded;
 					return;
 				}
+				if (ChainSnapshot != null)
+				{
+					KingdomCampHeartChainLoad.Prepare(loaded, priorPopup);
+					resume = loaded;
+					return;
+				}
 				if (UpgradeSnapshot != null)
 				{
 					KingdomUpgradeLoad.VerifyLoaded(loaded);
@@ -181,7 +191,8 @@ namespace ThousandAndFirst.Harness
 			finally
 			{
 				if (RungSnapshot != null) KingdomSubsidenceRungReleaseCut.Disarm();
-				if (!priorPopup && Popup.Suppress && !KingdomCampHeartLoad.OwnsPopups) Popup.Suppress = false;
+				if (!priorPopup && Popup.Suppress && !KingdomCampHeartLoad.OwnsPopups
+					&& !KingdomCampHeartChainLoad.OwnsPopups) Popup.Suppress = false;
 				try { if (QuickstartSnapshot != null) KingdomQuickstartLoadTest.Finish(quickstartVerified); }
 				finally { Armed = false; }
 				// Only this exact scenario continues through vanilla RunGame after all cleanup succeeds.

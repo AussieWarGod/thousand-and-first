@@ -94,6 +94,11 @@ The current chain only targets rungs 1 through 4; the fifth arcology rung and it
 save/cold-load continuation remain required. Existing rung-two cold-load evidence does not
 cover later hearts. Paid progression blockers remain linked through #212–#215, including a
 resident occupying future wall ground during handover; they do not replace the balance work.
+The court's missing six-floor material bill is tracked by
+[#216](https://github.com/AussieWarGod/thousand-and-first/issues/216). Higher-heart cold-load
+implementation and its remaining acceptance work are recorded in
+[HEART-CHAIN-COLDLOAD.md](HEART-CHAIN-COLDLOAD.md). Neither synthetic support nor host-parser
+tests establish ordinary population balance or real multi-map acceptance.
 
 Follow [DEVELOPMENT.md](DEVELOPMENT.md) for the shared Codex/Claude edit loop: focused checks,
 early fixture preflights, then relevant native scenarios. Preserve failed evidence and exact
