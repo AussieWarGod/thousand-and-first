@@ -1,5 +1,20 @@
 # Current implementation and release evidence
 
+## Physical room-based lodging: implementation pending native acceptance
+
+The current lodging slice measures actual sleeping rooms and usable floor through the existing
+adoption reader. Operable sleeping providers keep their physical coordinates before enrollment
+caps; extra usable bunks still count as shared space. Separate rooms constrain privacy, and
+catalogue `Closeness` declarations can only reduce the physical reading. Adopted floor-only
+receipts can use adjacent walls as boundaries without claiming them. No resident assignments or
+save formats are rewritten. Housing layouts and room furniture/activity rewards are still pending.
+
+Focused checks passed: 193 lodging cases (including 15 new room cases), 93 adoption cases and five
+new enclosure-bound cases in each of the main and portable lanes. The larger-room overload preserves
+adoption's default 200-cell limit. New native coverage is still owed for the full provider/index/
+lodging route, real door states, wall/furniture/bed damage and repair, occupancy and cold load.
+This slice is not released and does not inherit Native30 gameplay acceptance for changed inputs.
+
 ## Native30 accepted; housing and population follow-through required
 
 Native30 at `a6e23f749255873ba33f0b3479291c062c8660e1` completed the paid heart 1→2→3→4
@@ -251,11 +266,11 @@ from the passed four-mode compile at `8df7b548`.
 
 ## Current source census for the pending heart repair
 
-Current source: 3101 sources, baseline and compatibility symbols use their
+Current source: 3103 sources, baseline and compatibility symbols use their
 respective exclusions (3097 baseline). All four engine compile modes passed.
 The cold-install inventory has 3132 files.
-3101 staged C# files / 440,422 physical lines; zero strict line-cap failures.
-Direct `XRL` imports: 1447 files, 0 over the line limit. Inventory SHA-256: `aa0e8a79a59272ca79a0c506473c1834973878d799e3beb63a3cc495bd58862b`.
+3103 staged C# files / 440,590 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1448 files, 0 over the line limit. Inventory SHA-256: `36e6759cd02e083a86352d30a0a4c7431d7149b544974cde2543bc3daa569b4f`.
 This is a source census, not native acceptance or an updated exact-inventory semantic review.
 
 ## In-progress paid heart chain

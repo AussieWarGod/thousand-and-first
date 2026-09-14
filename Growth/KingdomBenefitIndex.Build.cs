@@ -40,6 +40,7 @@ namespace ThousandAndFirst
 			result.AddStructuralTags(Z);
 			result.AddStructuralDefence(Z);
 			result.FinalizeRows();
+			result.MeasureSleepingRooms(Z);
 			if (!result.FinalizeInspectionOrder(out Failure)) return false;
 			Index = result; return true;
 		}

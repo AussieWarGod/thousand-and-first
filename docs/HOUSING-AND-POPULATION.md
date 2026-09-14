@@ -166,3 +166,26 @@ thresholds and migration formula are not selected yet and need tests before beco
 
 Use the shared focused-check workflow before the relevant native scenarios. Record which data
 is synthetic, exact failing predicates and the ordinary-play behaviors actually witnessed.
+
+## Physical lodging implementation in progress
+
+The `codex/physical-room-lodging` slice records operable sleeping-provider coordinates at benefit
+allocation, measures rooms with the existing adoption wall/door/safe-floor reader, and constrains
+lodging closeness by real room separation and usable floor. A spacious shared room cannot become
+Private by its footprint, and `Closeness` declarations can only reduce physical privacy. Adopted
+floor-only receipts may use adjacent walls as boundaries without acquiring their ground. Missing
+walls, locked entrances and obstructed floor have distinct physical consequences.
+
+Pure tests cover shared and paired bedrooms, partition removal, blocked/locked/missing entrances,
+furniture barriers, rotated plans, adopted floor-only authority, undesignated gaps, multiple places
+on one provider and invalid capacities. This is a foundation for #233, not its completion. Usable
+floor includes passable furnishing cells; it is not a clear-floor or decoration score. Dedicated
+native tests must still prove credited-provider allocation through the index, actual native wall
+and door behavior, lodging decisions, damage/repair, occupied rooms and cold load. No in-game PASS
+or release acceptance is claimed for this slice yet. The actual housing catalogue redesign and
+Quickstart reservation/cost migration remain next work under #229.
+
+Privacy counts operable sleeping providers before enrollment-cap allocation, so an extra usable
+bunk cannot disappear from shared-room measurements merely because its roof credit was capped.
+The existing room-adoption limit remains 200 cells; lodging measures its bounded designated scope
+(up to 4000 cells), including large halls. Neither rule is a resident-per-map limit.

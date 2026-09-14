@@ -65,6 +65,8 @@ namespace ThousandAndFirst
 		{
 			internal KingdomBenefitInspection Inspection;
 			internal KingdomBenefitAllocationClaim Claim;
+			internal int X;
+			internal int Y;
 		}
 	}
 }

@@ -42,9 +42,9 @@ regressions to cover every added material across all fallback heart transitions 
 including historical-baseline transitions. Sixteen main cases pass; fresh native confirmation
 of the court bill remains pending under #216. Exact evidence is in docs/STATUS.md.
 
-Current 3101-file census is line-cap green: 440,422 physical lines; direct `XRL`
-imports occur in 1447 files, 0 of them over the line limit. Inventory SHA-256: `aa0e8a79a59272ca79a0c506473c1834973878d799e3beb63a3cc495bd58862b`.
-The cold-install inventory contains 3132 files. This is not evidence of a new public installation.
+Current 3103-file census is line-cap green: 440,590 physical lines; direct `XRL`
+imports occur in 1448 files, 0 of them over the line limit. Inventory SHA-256: `36e6759cd02e083a86352d30a0a4c7431d7149b544974cde2543bc3daa569b4f`.
+The cold-install inventory contains 3134 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Versions are semantic: patch for fixes,
 minor for additive API and content, major for breaking changes. Supported API is defined in

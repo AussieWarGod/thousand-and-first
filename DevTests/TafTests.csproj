@@ -18,6 +18,9 @@
 
   <ItemGroup>
     <Compile Include="TestMain.cs" />
+    <Compile Include="KingdomLodgingRoomTests.cs" />
+    <Compile Include="KingdomRoomEnclosureBoundsTests.cs" />
+    <Compile Include="..\Growth\KingdomLodgingRoomRules.cs" />
     <Compile Include="KingdomConstructionPayloadBoundsTests.cs" />
     <Compile Include="KingdomScenarioLoadResumeTests.cs" />
     <Compile Include="KingdomQuickstartHistoricalGrantTests.cs" />

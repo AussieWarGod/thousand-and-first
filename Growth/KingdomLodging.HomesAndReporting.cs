@@ -99,9 +99,7 @@ namespace ThousandAndFirst
 			return KingdomData.TryGetBuilding(key, out Entry);
 		}
 
-		// Trusted architecture may declare a rung. Every adopted or foreign designation instead
-		// derives it from exact designated plot cells and this root's live physical roof capacity;
-		// an identity string or borrowed catalogue key never grants authored geometry.
+		// A declaration can limit privacy, but cannot grant missing walls, rooms or usable floor.
 		private static KingdomLodgingRules.Closeness QuartersOf(GameObject Home,
 			KingdomBenefitIndex Benefits)
 		{
@@ -110,17 +108,14 @@ namespace ThousandAndFirst
 				return KingdomLodgingRules.Closeness.Packed;
 			}
 			KingdomLodgingRules.Closeness declared;
+			var physical = Benefits.RoomReadingForRoot(Home.IDIfAssigned).Quarters;
 			if (string.Equals(reading.Designation.ProviderId, "taf.architecture",
 				StringComparison.Ordinal)
 				&& Declared.TryGetValue(reading.Designation.BuildingKey, out declared))
 			{
-				return declared;
+				return declared < physical ? declared : physical;
 			}
-			int cells = 0;
-			for (int i = 0; i < reading.Designation.Cells.Count; i++)
-				if ((reading.Designation.Cells[i].Use & KingdomBenefitCellUse.Plot) != 0) cells++;
-			return KingdomLodgingRules.ClosenessFromDensity(cells,
-				Benefits.AmountForRoot(Home.IDIfAssigned, "roof"));
+			return physical;
 		}
 
 		private static GameObject FindResidentByName(Zone Z, string ResidentName)
