@@ -204,7 +204,27 @@ New native cases cover all three unpaid wear states, maximum historic traffic, p
 floors, empty/string and wrong-table/int receipt presence, duplicate identity refusal and no debit.
 A settled path remains under the completed heart and must retain its exact ID, cell and wear state
 through both higher upgrades and next-day recovery. Unexpected road refusals now log exact lookup,
-traffic, floor identity/state/blueprint, ownership and receipt presence. These cases await execution.
+traffic, floor identity/state/blueprint, ownership and receipt presence.
+
+At `710fa082624b07d13a493f0256a71a675f010735`, fresh native road probes passed all three unpaid
+states, maximum tally, paid/foreign/receipt/duplicate refusals, restoration and no debit. The
+original camp and occupancy probes passed, and tier three paid exactly 28 drams and 25 material
+units. The scenario then FAILED its completion checkpoint because the controlled obstruction
+and Outstanding retry witnesses were absent. At tick 418800, both handover attempts logged
+resident NPC 3092 on annexed blocked ground at 42,8. The strict baseline required by the fault
+injector therefore could not pass. Scaffold-removal reproof itself passed in ProjectionPending,
+Working and Outstanding for the same paid job; this is not proof of the controlled case or
+completed handover. When the resident entered that cell remains unobserved.
+[#215](https://github.com/AussieWarGod/thousand-and-first/issues/215) tracks lawful occupant
+clearance at handover/retry and its deterministic regression. Do not remove protected residents
+or weaken strict layout checks to make the fixture pass. Track retention through completed
+upgrades, tier-four stakes, full-chain completion and higher persistence remain unproved.
+Closed failed archive: `beta-heart-chain/710fa082/controlled-retry-unwitnessed-1/result.json`,
+SHA-256 `26bd06c2b1da6367b45aa3235da7676c1de3442d715d90f7543ec939fbdb4a06`.
+The full profile seal, all 3387 C# input bindings, strict log and exact owned shutdown passed.
+CI 34802183289 passed. Neither those checks nor the narrow road probes establish full native
+acceptance. The chain targets rungs 1 through 4; the fifth arcology rung and its cold load
+remain open under #160/#144. Existing rung-two cold-load evidence does not cover later hearts.
 
 Spatial seal capture and fixture housing observations use one local survey for their complete read.
 Source inspection found that an unbound component verifier otherwise rebuilds a survey per component.

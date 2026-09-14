@@ -39,8 +39,9 @@ or count separate cities as one multi-tile city.
 The later physical-space clarification supersedes interpreting the earlier “20 residents per
 tile” answer as a hard gate. Do not add a recruitment cap, hidden population clamp or new
 minimum claimed-zone check merely to force the target. Tune physical requirements and useful
-infrastructure instead. Audit existing stage-based claim access so players can expand before
-land pressure prevents reaching the prerequisite for expansion.
+infrastructure instead. Review existing population, tier and minimum-zone gates too; retaining
+an arbitrary gate unchanged does not satisfy this direction. Audit existing stage-based claim
+access so players can expand before land pressure prevents reaching the prerequisite for expansion.
 
 ## Baseline and decisions still needed
 
@@ -89,6 +90,10 @@ and its persistence remain separate gaps tracked by
 [#160](https://github.com/AussieWarGod/thousand-and-first/issues/160),
 [#162](https://github.com/AussieWarGod/thousand-and-first/issues/162) and
 [#144](https://github.com/AussieWarGod/thousand-and-first/issues/144).
+The current chain only targets rungs 1 through 4; the fifth arcology rung and its real
+save/cold-load continuation remain required. Existing rung-two cold-load evidence does not
+cover later hearts. Paid progression blockers remain linked through #212–#215, including a
+resident occupying future wall ground during handover; they do not replace the balance work.
 
 Follow [DEVELOPMENT.md](DEVELOPMENT.md) for the shared Codex/Claude edit loop: focused checks,
 early fixture preflights, then relevant native scenarios. Preserve failed evidence and exact
