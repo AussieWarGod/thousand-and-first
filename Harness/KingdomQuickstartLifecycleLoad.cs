@@ -118,6 +118,7 @@ namespace ThousandAndFirst.Harness
 				return settlementFailure;
 			if (KingdomGuestSaveNativeProvider.ClaimsScript()) KingdomGuestSaveWitness.VerifyLoaded(Game);
 			if (KingdomHeartSightNativeProvider.ClaimsScript()) KingdomHeartSightWitness.VerifyLoaded(Game);
+			if (KingdomPaidHousingNativeProvider.ClaimsScript()) KingdomPaidHousingWitness.VerifyLoaded(Game);
 			// Every value here was read from the loaded game a moment ago: the system, the
 			// standing object, its own cell and that cell's zone. None is copied from the witness.
 			Observed = "realmId=" + system.RealmId + "; cityId=" + cityId + "; saveId=" + Game.GameID

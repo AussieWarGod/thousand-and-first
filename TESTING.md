@@ -6,6 +6,15 @@ The engine gate runs across 3106 production C# sources (3102 baseline);
 the cold-install inventory contains 3139 files. Inventory `ef37cc7e787d36b6034cc9a24cf99c9278aa55a9a8f2bd06c9969327b44ae7e1`.
 These counts describe the source inventory, not a public installation. Native acceptance is scoped below.
 
+Paid conversion follow-through: `Tools/personas/paid-housing-native-check.persona` uses real
+Quickstart homes, exact normal commissioning/debit, controlled test-registry price drift and a
+temporary storage-basket removal during handover. It requires Outstanding recovery, preserved
+contents and payment, and restores the catalogue before saving. The existing separate lifecycle
+load verifies the completed conversion. Missing material units and one brush contents sentinel
+are synthetic; no homes, citizens, water, labour or job phases are supplied. Four engine compile
+modes and 66 persona checks pass; native acceptance is pending in [STATUS](docs/STATUS.md).
+The unfinished-job/version-change case and historical geometry remain open in #239 and #240.
+
 ## Shared-hall access
 
 `Tools/run-personas.sh lodging-room-native` requires 29 observations. The first twenty use an

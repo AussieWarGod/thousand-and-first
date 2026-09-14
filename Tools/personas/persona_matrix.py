@@ -130,6 +130,7 @@ QUICKSTART_EVIDENCE_ROWS = (
 
 # Observation emitted inside guest-save-supply before the physical refill; not a callable verb.
 GUEST_SAVE_EVIDENCE_ROWS = ("guest-save-shortage",)
+PAID_HOUSING_EVIDENCE_ROWS = ("paid-housing-retry",)
 
 ROOM_EVIDENCE_ROWS = tuple("room-" + name for name in (
     "shared-capped", "private-room", "open-door", "closed-door", "locked-door",
@@ -545,6 +546,7 @@ def parse_expect(
             and verb not in extra
             and verb not in QUICKSTART_EVIDENCE_ROWS
             and verb not in GUEST_SAVE_EVIDENCE_ROWS
+            and verb not in PAID_HOUSING_EVIDENCE_ROWS
             and verb not in CAMP_HEART_EVIDENCE_ROWS
             and verb not in ROOM_EVIDENCE_ROWS
         ):

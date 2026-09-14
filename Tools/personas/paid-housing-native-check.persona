@@ -1,0 +1,17 @@
+# Real Quickstart, ordinary 16800-turn construction, then a paid Medium tentrow -> hutyard.
+# Supplies only missing declared materials and one brush contents sentinel. Water, homes,
+# founders, labour, payment, receipt, completion and retry phases are not fabricated.
+# Test-only registry edit after payment raises water 7 -> 8. The exact old declaration is
+# retained in the in-memory history registry; no sealed XML or saved receipt is rewritten.
+# Actual handover temporarily removes/restores its real storage basket, requiring an
+# Outstanding paid job before ordinary retry. Complete restores the original registry.
+# Separate sealed lifecycle load verifies the completed conversion and retained contents.
+# This does not prove a pending job across price-changing versions or historical geometry.
+DESCRIPTION=real paid housing conversion survives catalogue price drift and physical handover interruption
+REQUEST=founding-first-city
+SCRIPT=quickstart-lifecycle marsh yes;lifecycle-open;advance 7200;advance 9600;lifecycle-grown;paid-housing-pay;advance 7200;paid-housing-complete;lifecycle-save;stagedigest
+VERBS=lifecycle-open,lifecycle-grown,paid-housing-pay,paid-housing-complete,lifecycle-save
+EXPECT=QUICKSTART-BOOT-BEGIN:OK,QUICKSTART-BOOT-OBSERVED:OK,QUICKSTART-BOOT-COMPLETE:OK,QUICKSTART-BUILD-BEGIN:OK,QUICKSTART-BUILD-QUOTE:OK,QUICKSTART-BUILD-CANPAY:OK,QUICKSTART-BUILD-COMMISSION:OK,QUICKSTART-LIFECYCLE-PROFILE:OK,QUICKSTART-BUILD-COMPLETE:OK~commissioned=true,lifecycle-open:OK~step=startup,advance:OK,advance:OK,lifecycle-grown:OK~step=engine-turn-build,paid-housing-pay:OK~retained-authorized=true,advance:OK,paid-housing-retry:OK~phase=Outstanding,paid-housing-complete:OK~controlled-retry=true,lifecycle-save:OK~step=save,stagedigest:OK~founded=true,COMPLETE
+CHECK=quickstart-housing
+SET=growth,construction,native-regression
+TIMEOUT=3600

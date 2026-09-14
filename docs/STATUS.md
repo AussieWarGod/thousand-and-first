@@ -18,6 +18,16 @@ unproved. Some old routes may already have failed material preflight; do not inf
 commissionability from their XML. Issue #240 separately tracks deliberate enclosed renovation
 layouts for pre-redesign roots/furniture; retaining a price does not solve that geometry change.
 
+The `paid-housing-native-check` scenario now commissions an actually completed Quickstart Medium
+tent row through the normal prepared conversion API and measures physical water/material debit.
+It changes only the test registry's price from seven to eight drams after payment, requires refusal
+without registered history and recovery with exact history, then interrupts actual handover by
+temporarily removing the original storage basket. Ordinary retry must retain payment, basket and
+contents. Separate lifecycle load checks the completed home. Missing materials and one brush
+contents sentinel are disclosed synthetic inputs. Native execution is pending; 66 persona checks
+and all four engine compile modes pass. This completed-save scenario does not cover a pending
+job across versions, historical geometry, or ordinary city balance.
+
 ## Shared-hall access: native scenario accepted
 
 At `dc65f0866a36a2332b35d235291a13a6e03540a1`, all 29 required in-game room observations pass.
