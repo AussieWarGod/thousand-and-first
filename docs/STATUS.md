@@ -242,6 +242,11 @@ Four current engine compiles passed (3096/3100 ordinary, 3384/3388 developer) an
 envelope source-contract cases plus 213 upgrade cases passed with zero skips. Native execution of this repair remains
 pending; the earlier failed evidence is retained unchanged. Interrupted/reloaded resident
 clearance and higher-rung cold load remain open.
+Host persona validation now recognizes the required occupancy, road, stake and controlled
+handover witnesses. Successful repeated scaffold-removal diagnostics are non-positional;
+their refusals remain fatal, and they cannot substitute for the controlled retry witness.
+All 64 persona grammar/verdict tests passed, including missing, repeated and refused handover
+rows. This corrects a host preflight refusal before launching the new native attempt.
 
 Spatial seal capture and fixture housing observations use one local survey for their complete read.
 Source inspection found that an unbound component verifier otherwise rebuilds a survey per component.

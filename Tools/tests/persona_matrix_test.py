@@ -582,6 +582,31 @@ class JournalReadingTest(unittest.TestCase):
 
 
 class MatchingTest(unittest.TestCase):
+    def test_paid_handover_witnesses_cannot_be_missing_repeated_or_refused(self):
+        witnesses = ("camp-heart-chain-handover-refusals", "camp-heart-chain-handover-cleared",
+                     "camp-heart-chain-retry-obstruction", "camp-heart-chain-retry-outstanding",
+                     "camp-heart-chain-retry-removal")
+        spec = "advance:OK," + ",".join(name + ":OK~proved" for name in witnesses) + ",COMPLETE"
+        expected = matrix.parse_expect(spec, "handover")
+        rows = [("advance", "OK", "")] + [(name, "OK", "proved") for name in witnesses]
+        rows.append(("SCRIPT-COMPLETE", "OK", ""))
+        self.assertEqual([], matrix.match(expected, rows))
+        for index in range(1, 6):
+            with self.subTest(witness=rows[index][0]):
+                self.assertTrue(matrix.match(expected, rows[:index] + rows[index + 1:]))
+                self.assertTrue(matrix.match(expected, rows[:index] + [rows[index]] + rows[index:]))
+                refused = list(rows)
+                refused[index] = (rows[index][0], "REFUSED", "proved")
+                self.assertTrue(matrix.match(expected, refused))
+                wrong = list(rows)
+                wrong[index] = (rows[index][0], "OK", "unwitnessed")
+                self.assertTrue(matrix.match(expected, wrong))
+        trace = ("camp-heart-chain-removal", "OK", "natural reproof")
+        self.assertEqual(rows, matrix.significant(rows[:1] + [trace, trace] + rows[1:]))
+        refusal = ("camp-heart-chain-removal", "REFUSED", "identity changed")
+        self.assertIn(refusal, matrix.significant(rows + [refusal]))
+        self.assertTrue(matrix.match(expected, matrix.significant(rows[:1] + [trace] + rows[2:])))
+
     def green_journal(self):
         return journal(
             row("RUNNER-ARMED", "OK"),
@@ -962,6 +987,19 @@ class ShippedPersonaTest(unittest.TestCase):
                     self.assertEqual(expected.index(observation) + 1,
                                      expected.index(verb), path.name)
                     expected.remove(observation)
+            for observations, next_verb in (
+                (("camp-heart-chain-spatial", "camp-heart-chain-occupancy",
+                  "camp-heart-chain-road-wear"), "camp-heart-chain-supply"),
+                (("camp-heart-chain-handover-refusals", "camp-heart-chain-handover-cleared",
+                  "camp-heart-chain-retry-obstruction", "camp-heart-chain-retry-outstanding",
+                  "camp-heart-chain-retry-removal"), "camp-heart-chain-check"),
+                (("camp-heart-chain-survey-stakes",), "camp-heart-chain-supply"),
+            ):
+                if any(name in expected for name in observations):
+                    start = expected.index(observations[0])
+                    self.assertEqual(list(observations) + [next_verb],
+                                     expected[start:start + len(observations) + 1], path.name)
+                    del expected[start:start + len(observations)]
             # The script may stop early on a declared refusal, so expectations are a PREFIX of the
             # sealed verbs - never a different list, and never longer.
             self.assertLessEqual(len(expected), len(sealed), path.name)
