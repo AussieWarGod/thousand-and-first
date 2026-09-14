@@ -6,6 +6,12 @@ Read [STATUS.md](STATUS.md) for current acceptance, [../STANDARDS.md](../STANDAR
 code rules, and [RELEASING.md](RELEASING.md) when preparing a release. Historical narratives
 and test counts do not establish current acceptance.
 
+For city growth, plots, roads, support economy or multi-tile scenarios, also read
+[CITY-GROWTH-BALANCE.md](CITY-GROWTH-BALANCE.md). It preserves the accepted user direction
+and linked work for both agents: physical expansion around a roughly 20-resident benchmark,
+three-cell roads, useful public space and layout rewards, without arbitrary population gates.
+Keep the original Beta, Quickstart reliability and complex behavioral coverage goals in scope.
+
 ## Short edit loop
 
 Choose the smallest check that exercises the change. Run it locally before pushing. Fix a

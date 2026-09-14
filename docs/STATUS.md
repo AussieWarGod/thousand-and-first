@@ -1,5 +1,16 @@
 # Current implementation and release evidence
 
+## Accepted city-growth direction — planned
+
+[CITY-GROWTH-BALANCE.md](CITY-GROWTH-BALANCE.md) records the user's complete city-balance
+direction and [#208](https://github.com/AussieWarGod/thousand-and-first/issues/208) tracks it.
+Implementation tasks #209–#211 cover three-cell roads and public space, physical land-use
+balance and useful layout rewards, and genuine same-city multi-claimed-map behavioral tests.
+Roughly 20 residents per map is a design benchmark, not a hard cap. The full support economy
+must need land too. These are planned requirements; Beta and existing reliability work remain
+unfinished. Dense synthetic heart fixtures and travel to unclaimed maps do not establish this
+balance or multi-tile acceptance.
+
 ## Current source census for the pending heart repair
 
 Planned engine gate: 3100 sources, baseline and compatibility symbols use their respective
@@ -80,7 +91,20 @@ checks the actual persisted legacy shape. A capture-only spatial preflight requi
 city book to contain all fixture homes and producers before tier-three materials are supplied;
 only a complete capture or the specific roadless-public-entrance pending state may proceed. It
 proves the staged seal unchanged and journals the actual result. The bound assessment observer now
-retains its exact reason. These fixture corrections still require a fresh native run.
+retains its exact reason.
+
+At `043d05627d2d1ef833153ce8750bbc077b187e07`, the fresh attempt passed the original camp path,
+all eight legacy footprint checks, and the capture-only preflight with the exact roadless
+public-entrance Pending reason. The staged seal remained unchanged; this is not a completed
+spatial seal. The bound assessment then refused `NoGroundToGrow` with all 25 material units:
+`foreign or protected state occupies authored successor ground at 39,8`. A later checkpoint
+independently read Ready with 50 residents, but no tier-three receipt existed. The blocking
+object's identity was not captured. Source inspection suggests the final impacted-ground scan
+rechecks occupants already admitted by envelope preflight; that hypothesis still needs a
+controlled behavioral test and repair. Full paid progression and higher persistence remain open.
+The complete input seal, 3382 C# bindings, strict mod log and owned shutdown passed.
+Closed failed archive: `beta-heart-chain/043d0562/successor-ground-refused-1/result.json`, SHA-256
+`545dbcecdee5b10a26527085209c30a6531c7c1c281a93e57eb63ab6569394f3`.
 
 The pending repair follows the bounded completed receipt history, rejects branches, cycles, foreign
 ownership/ground and skipped rungs, then proves the final live output and its predecessor-removal
