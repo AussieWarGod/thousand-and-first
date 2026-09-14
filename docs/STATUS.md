@@ -1,5 +1,18 @@
 # Current implementation and release evidence
 
+## Compiled furniture-anchor witness correction
+
+The follow-up at `8d776730` again completed the paid functional conversion and insertion probes,
+then refused in the new test counter because compiled anchors carry coordinate identities
+(`fixture:hearth@x,y`), rather than bare role strings. Closed failed archive:
+`paid-housing/8d776730/floor-programme-refused-1/result.json`, SHA-256
+`1f1f62b78948f5118340ff72c6ec24072f426f7a45196e5f53f8b1cc17ef7a6d`.
+The pure harness counter now reads that identity form. A focused test compiles every current
+Medium canvas/hut variant in every facing and checks the actual counter against the expected
+17/16/15 clear cells. All five canvas-home cases pass, including existing funded-delta coverage.
+The native scenario also checks the prepared target's room programme before payment. This is
+a test correction; production remains the floor fix at `2e61ab42`. Native cohort/cold proof pending.
+
 ## Paid conversion completes; variant-aware room witness pending final native acceptance
 
 At `2e61ab42`, the actual paid conversion passed retained-price selection, the controlled basket

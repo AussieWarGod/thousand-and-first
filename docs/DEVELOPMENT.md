@@ -100,6 +100,9 @@ For component lookup, use the frozen stateful anchor (`fixture:storage`), not it
 conversion needs its own post-conversion cohort check while preserving the original startup check.
 Before fixing a numeric room expectation, inspect the frozen variant and its actual furnishings:
 a hearth-only room and a hearth-and-table room reserve different amounts of usable floor.
+Compiled stateful anchor identities include `@x,y`; use semantic-role lookup for live components
+or strip that identity suffix when counting a decoded snapshot. Test such counters against actual
+compiled variants before a native run, and preflight them before payment.
 For long population fixtures, preflight the production subsidence equilibrium at the highest tested
 stage. Stored water and bed counts do not prove civic water support. Disclose any synthetic producer
 roots. Verify founding recovery immediately after paying the next heart improvement, before spending

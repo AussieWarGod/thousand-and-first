@@ -215,19 +215,14 @@ namespace ThousandAndFirst.Harness
 		private static int ExpectedClearFloor(GameObject home)
 		{
 			Require(KingdomArchitectureRuntime.TryRead(home, out var intent, out string failure), failure);
-			Require(KingdomArchitectureRuntime.TryDecode(intent, out var snapshot, out failure), failure);
-			int tables = 0, hearths = 0;
-			foreach (var placement in snapshot.Placements)
-			{
-				if (placement.StatefulAnchor == "fixture:table") tables++;
-				if (placement.StatefulAnchor == "fixture:hearth") hearths++;
-			}
-			Require(intent.LotSize == ArchitectureLotSize.Medium && tables <= 1
-				&& (intent.BuildKey == "tentrow" ? tables == 0 && hearths == 0 : intent.BuildKey == "hutyard" && hearths == 1),
-				"unexpected shared-home furniture programme");
-			// 24 interior cells minus three beds, two seats, storage and the main object.
-			// Hut variants additionally occupy a hearth cell and, where authored, a table cell.
-			return 17 - hearths - tables;
+			return ExpectedClearFloor(intent);
+		}
+		internal static int ExpectedClearFloor(KingdomArchitectureIntent intent)
+		{
+			Require(KingdomArchitectureRuntime.TryDecode(intent, out var snapshot, out string failure), failure);
+			int floor = KingdomPaidHousingRoomRules.ExpectedFloor(snapshot);
+			Require(floor >= 15, "unexpected shared-home furniture programme: " + snapshot.BuildKey + "/" + snapshot.VariantKey);
+			return floor;
 		}
 		private static void DescribeOccupiedFloor(GameObject home, Zone zone)
 		{

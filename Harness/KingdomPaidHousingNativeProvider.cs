@@ -75,6 +75,7 @@ namespace ThousandAndFirst.Harness
 				Require(KingdomUpgrade.TryPreparePlanChange(system, zone, work, entry, Paid,
 					out var assessment, out var prepared, out failure), "conversion preflight: " + failure);
 				After = prepared.Architecture;
+				KingdomPaidHousingWitness.ExpectedClearFloor(After);
 				KingdomPaidHousingWitness.Capture(work, zone);
 				var stock = KingdomMaterials.Stock(zone).Tally.Copy();
 				int water = KingdomGrowth.CountStoredWater(zone);
