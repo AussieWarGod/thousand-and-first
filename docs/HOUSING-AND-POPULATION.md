@@ -11,6 +11,8 @@ This is planned work, not native acceptance. Follow [STATUS.md](STATUS.md) for e
 | [#229](https://github.com/AussieWarGod/thousand-and-first/issues/229) | Architectural quality across every building layout; enclosed homes are the first concrete defect. |
 | [#230](https://github.com/AussieWarGod/thousand-and-first/issues/230) | Correct physical citizens, unique usable beds and home/work/travel bindings across one multi-map city. |
 | [#231](https://github.com/AussieWarGod/thousand-and-first/issues/231) | Coherent culture/body/name/occupation selection weighted by player reputation and evolving city standing. |
+| [#233](https://github.com/AussieWarGod/thousand-and-first/issues/233) | Room size, usable furniture, crowding and quality affect actual citizen activities and building outcomes. |
+| [#234](https://github.com/AussieWarGod/thousand-and-first/issues/234) | Practical visual layout authoring and physical room/space analysis using the existing XML contract. |
 
 Audit the whole building catalogue; deliver housing and Quickstart reliability first, then ordinary multi-map home/work behavior and
 reputation-driven arrivals in reviewable Alpha slices. Preserve the original Beta goal and complex
@@ -78,6 +80,23 @@ Vanilla named village layouts, population composition and naming rules still nee
 comparative audit required by #231; inspecting the existing reference manifest is not that audit.
 
 ## Design constraints
+
+The user further requires a city and life-simulation approach: citizens need occupied rooms,
+places to mingle, useful furniture and workplaces, and room/building quality must affect their
+experience and the building's impact. Room size, available personal/shared space and furnishings
+are inputs to real activity and outcomes, not merely decoration or labels. #233 tracks those
+mechanics and their complex native tests. [LAYOUT-STUDIO.md](LAYOUT-STUDIO.md) describes the
+authoring tool that supports the redesign; completing a workbench does not complete the gameplay.
+
+Research supports connecting layout to use. The official
+[Sims 4 manual](https://eaassets-a.akamaihd.net/eahelp/manuals/the-sims-4-ps4-ukanz.pdf), pages 12–14,
+links furniture to needs, stresses doors and unobstructed movement, and distinguishes usable
+objects from broken ones. Ludeon's historical
+[Alpha 12 room-system design](https://ludeon.com/blog/page/16/) derives room roles and effects
+from contents and space; its [1.5 announcement](https://ludeon.com/blog/2024/03/anomaly-expansion-and-update-1-5-announced/)
+connects bookcases to reading and research. Our design inference is to couple room function,
+usable space, furniture and citizen activities through Qud's existing systems. These sources
+do not supply a copied formula, universal luxury requirement or a reason to add unrelated needs.
 
 The architectural quality requirement applies to **every building**, not only housing. Design
 must follow the building's actual program: the people, activities, equipment, storage and open

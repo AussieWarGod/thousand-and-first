@@ -1306,6 +1306,8 @@ def _parse_map(
     repo_root: Path,
     index: int,
     issues: List[Issue],
+    *,
+    validate_topology: bool = True,
 ) -> Optional[ArchitectureMap]:
     base_location = _location(path, repo_root, f"map[{index}]")
     _unknown_attributes(
@@ -1446,7 +1448,8 @@ def _parse_map(
     architecture_map = ArchitectureMap(
         key, width, height, footprint, default_cover, glyphs, tuple(rows), location
     )
-    _validate_map_topology(architecture_map, issues)
+    if validate_topology:
+        _validate_map_topology(architecture_map, issues)
     return architecture_map
 
 

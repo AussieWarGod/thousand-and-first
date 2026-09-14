@@ -16,6 +16,9 @@ For building layouts, citizens or recruitment, also read
 building, citizens need correct physical home maps, and population must reflect coherent
 cultures and player/city reputation. Issues #229–#231 preserve the required work. Existing
 synthetic stress fixtures are not ordinary layout or population acceptance.
+Use [LAYOUT-STUDIO.md](LAYOUT-STUDIO.md) for the shared visual/CLI draft loop before costly
+native layout runs. It exposes room boundaries and usable space while retaining the normal
+XML, material, commissioning and native behavior gates.
 
 ## Short edit loop
 

@@ -26,6 +26,34 @@ See [HOUSING-AND-POPULATION.md](HOUSING-AND-POPULATION.md) for the audit, refere
 No housing/population runtime repair is included in this documentation checkpoint. Public release
 remains 0.3.6; Hearthpyre runtime compatibility remains deferred until Beta.
 
+## Layout authoring and room audit
+
+The local [layout studio](LAYOUT-STUDIO.md) adds visual room drawing, glyph/XML editing,
+rotation, resize, undo/redo, source comparison and ordinary draft export. It uses the existing
+XML parser and installed blueprint/pose resolver. Its independent room reading distinguishes
+solid structural fabric and real Door parts from cover or doorway labels, measures clear
+interior floor separately from fixtures/yards and reports inaccessible uses and lot-size mismatch.
+Incomplete drafts remain editable with failures visible; the normal checker remains strict.
+
+The first installed-Qud census covers 344 configurations / 1,376 poses with no unresolved
+blueprint shapes. It flags 356 poses across 17 building families with sleep providers outside
+enclosed rooms. This is design triage, not 356 proved gameplay defects: intentional outdoor and
+cultural accommodation needs a function-aware review. Sample source inspection confirms the
+mud-hut doorway is only an anchor, alongside open house/finehouse variants. #229 tracks the
+whole catalogue. Room-quality gameplay effects and authoring work are #233 and #234.
+
+The non-runtime 8×6 shared-canvas example has one room, 24 interior cells, 17 clear-floor cells,
+three sleep fixtures, storage, seats and a real door, with no inaccessible fixture in the draft.
+The workbench correctly reports that it cannot fit the selected S binding and needs M or larger.
+It has no commissioned binding, revised bill or native use/upgrade/cold-load acceptance.
+
+Fifteen workbench tests and all 68 existing architecture-checker tests passed. The browser check
+passed source/draft comparison, wall loss, undo/redo, rotation, export, resize, room drawing,
+door/bed placement, malformed refusal and draft retention. An earlier browser check caught
+premature rejection of a room before its doors/main fixture existed; syntax and topology review
+are now separated only for drafts, while ordinary parsing still performs both. No gameplay
+runtime layout, citizen room-quality effect or recruitment rule is changed by this tooling slice.
+
 ## Native29 closed; repair occupied interior renovation ground (#226)
 
 Native29 at `55d873ec` passed the scoped full-assessment resident probe, paid rung-three
