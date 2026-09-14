@@ -175,4 +175,3 @@ Closed failure: `enclosed-canvas-homes/eeba15dd/warm-cold-1/result.json`, SHA-25
 `74f072b9d694c0a215beae0e8f53875855ac4144701b60c1c1c27a632f51c61f`.
 Full 3,440 pinned inputs and exact owned shutdown verified. The successful housing observation is
 partial evidence; the refused enclosing lifecycle step means no lifecycle or cold-load PASS.
-
