@@ -11,6 +11,7 @@ namespace ThousandAndFirst.Harness
 			private void ProveChainSurveyStakes()
 			{
 				long tick = Game.TimeTicks;
+				RequireChainFoundingRecovery("before survey-stake probes");
 				Require(KingdomArchitectureRuntime.TryRead(ChainHeart, out var before, out string failure), failure);
 				Require(KingdomArchitectureRuntime.TryPrepareSuccessorForUpgrade(System, Zone, ChainHeart,
 					before, ChainTo, out var successor, out failure), failure);
@@ -42,6 +43,7 @@ namespace ThousandAndFirst.Harness
 				for (int duplicate = 0; duplicate < 2; duplicate++)
 				{
 					var fake = Create(KingdomPlots.SurveyStakeBlueprint);
+					string probeId = fake.ID;
 					try
 					{
 						fake.SetIntProperty(KingdomPlots.HeartStakeProperty, 1);
@@ -57,7 +59,15 @@ namespace ThousandAndFirst.Harness
 							"unbound or duplicate survey stake admitted");
 						RequireChainUpgradePreflight(successor, claim, false, "founding-heart ground occupies plot-envelope growth at ");
 					}
-					finally { fake.Obliterate(null, Silent: true); }
+					finally
+					{
+						// Native destruction retains a tombstone. Never retire a probe under a
+						// borrowed founding identity or transaction owner.
+						fake.IDIfAssigned = probeId;
+						fake.RemoveStringProperty(KingdomPlots.FoundingHeartOwnerProperty);
+						fake.RemoveIntProperty(KingdomPlots.FoundingHeartSlotProperty);
+						fake.Obliterate(null, Silent: true);
+					}
 					Require(original.CurrentCell == at && original.IDIfAssigned == id
 						&& KingdomPlots.IsExactFoundingHeartSurveyStake(System, Zone, original),
 						"fake stake cleanup lost the original marker authority");
@@ -69,8 +79,9 @@ namespace ThousandAndFirst.Harness
 				Require(Game.TimeTicks == tick && !KingdomSurvey.HasBoundPass,
 					"survey stake probes changed time or left a bound survey");
 				RequireChainCustody();
+				RequireChainFoundingRecovery("after survey-stake probes");
 				Require(KingdomScenarioJournal.Append("camp-heart-chain-survey-stakes", true,
-					"four-exact-stakes=true; foreign-owner-refused=true; unbound-marker-refused=true"
+					"four-exact-stakes=true; founding-recovery-restored=true; foreign-owner-refused=true; unbound-marker-refused=true"
 					+ "; duplicate-id-refused=true; original-markers-retained=true; no-turns=true") == null,
 					"survey stake probe journal unavailable");
 			}

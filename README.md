@@ -9,16 +9,18 @@ The 0.3.6 public Alpha playtest remains the published release. This candidate ha
 Back up saves before updating. Current evidence and remaining coverage limits live in
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md).
 
-This candidate improves successive settlement-heart construction and paid-work recovery.
-It funds the court's six shaped-timber floor units, rechecks eligible citizens who enter
-new wall sites during construction, and preserves the original basin and dedicated stores
-across paid upgrades. Foreign structures and protected occupants still block unsafe work.
+This candidate adds enclosed starter housing and measures room privacy from physical rooms,
+furniture and clear access. Beds and chairs reserve space even when Qud lets people walk over
+them. New founders begin anchored at their camp, and paid home conversions can recover after
+exact fixture restoration while preserving the original storage contents and payment.
 
-Quickstart housing, four-founder retention and claimed-map visibility remain part of the
-Alpha regression coverage. Heart progression tests use synthetic city support; they do not
-prove ordinary population balance or complete coverage of cities spanning several claimed
-maps. Wider roads, useful public spaces, support-economy land use and natural expansion remain
-Beta work. Hearthpyre compatibility work is deferred until Beta.
+Successive settlement-heart upgrades preserve their paid history and recheck new wall sites
+before construction completes. A shared visual workbench helps authors inspect room layouts.
+Four-founder housing and paid save/load continuation have native checks; the higher-heart
+stress scenario uses synthetic city support. Multi-map balance, wider roads, useful public
+spaces, reputation-weighted populations and all-building redesign remain Beta work. Historical
+renovations and polity reconciliation after load retain known limitations in the issue tracker.
+Hearthpyre compatibility work is deferred until Beta.
 
 ## What the mod adds
 

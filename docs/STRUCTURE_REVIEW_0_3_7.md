@@ -1,5 +1,45 @@
 # Alpha 0.3.7 production delta review
 
+## Refreshed housing and construction review
+
+Codex root automated review, 2026-09-15. Current inventory: 3,106 production C# files,
+440,877 physical lines, 1,450 direct XRL imports, no file at or above 300 lines.
+Inventory SHA-256: `3dc69687e01f930bffc8f840a15f4a5a885c3744a6fc17049a8ce91c5d881e62`.
+Compared every staged production path and byte against reviewed candidate `fbaaf549`:
+3,076 are identical and 30 changed or added. Full comparison:
+`/tmp/taf-alpha037-production-comparison-4.json`; canonical census:
+`/tmp/taf-alpha037-structure-inventory-4.json`. The earlier review below is retained historical
+context; its pending native statements and smaller inventory are not current claims.
+
+| Changed responsibility | Boundary review |
+| --- | --- |
+| QuickstartRules.Shelter; PlotRules | Medium starting lots and Camp access follow real enclosed shelter geometry. Reserved approach coordinates remain deterministic and separate from founder/heart ground. No population gate or fabricated capacity. |
+| Architecture.Drafts; Records; XmlRecords; RetainedBindings | Explicit retained-size bindings preserve old readers. Minimum-size validation stays centralized; current commissioning still applies the current catalogue minimum. No saved snapshot rewrite. |
+| AdoptRules.Enclosure; LodgingRoomRules | Existing adoption bound remains unchanged; bounded designated buildings can supply their own maximum. Pure room measurement receives physical cells and sleeping providers, reserves all furniture/beds, and connects clear floor through usable doors to exterior approaches. Privacy uses density and separation; unusable/exposed rooms cannot gain privacy from catalogue area. |
+| BenefitIndex; Build; Allocation; Evaluate; ProviderRows; Rooms; Lodging.HomesAndReporting | Engine adapters collect actual operative sleeping places before enrollment caps, cache measurements in one benefit index, and return copies. Physical furniture observation is separate from native movement. Authored privacy is limited by the physical reading, never granted from a label alone. |
+| ArchitectureStamper.RenovationOccupants; UpgradeApplication; UpgradePreflight; Plot2.26e.EnvelopeClearance; PlotOccupantRules; Upgrade.20.HandOver | Pure passability comparison identifies newly blocked ground. Engine boundaries reuse protected-body classification, planned destinations, rollback and exact post-callback custody. Final application requires strict clearance. This extends lawful annex clearance to retained floors becoming walls; existing walls, unmapped ground and protected actors stay guarded. |
+| ArchitectureStamper.PendingComponents; Verification | Temporary physical mismatch refuses without altering intact owner authority. Exact restored identity/custody is rechecked; malformed owner/upgrade quarantine remains. A floor exception requires the exact current paid job, source/output, ownership, frozen successor and phase-four receipt at the shared main cell. No foreign furniture whitelist or copied-receipt authority. |
+| SocketTransitionRules; SocketTransitions; Helpers; History | Pure receipt selection separates current quotes from complete retained declarations keyed by digest. Engine lookup binds retained endpoints and typed lot before existing receipt/job/snapshot proofs. Registry bounded, reload clears both maps, and no new persistent field or receipt mutation. Legacy schema behavior remains explicit. |
+| QuickstartBootstrap.Founders; QuickstartEmbarkModule; QuickstartEncounterScope | Only freshly allocated reversible grants receive initial local Brain anchors. Exact placement checks brain and anchor before commit. Encounter suppression is disposable and bound to initial game, manager, reserved profile and actual generation context; later worlds/encounters retain their path. No old citizen, faction, saved body or wildlife deletion. |
+
+Production XML supplies deliberate enclosed canvas/hut programmes, explicit historical Small
+readers, retained price declarations and material charges for added fixtures. These are authored
+inputs to existing compiler/receipt protocols. Core/KingdomReleaseInfo.cs retains this candidate's
+0.3.7 version; it is the only production C# difference from accepted housing pin `d5a0e96d`.
+No serialized field layout or schema changes are introduced by this delta. Existing public
+entry points are retained; the enclosure overload is an implementation API extension.
+
+Evidence: run:34882424586; log:/tmp/taf-founder-anchor-gate-1.log;
+log:/tmp/taf-paid-housing-licensed-integration-1.log (14,957/5,849 cases, zero skips);
+receipt:sha256:aee3c0a96e2ecb8ba341ccc0261de5a62fa9ba35e83dc850c528b3ff2c22b635.
+The native paid-housing warm/cold pair proves its exact d5a source and scoped fixture, not this
+versioned package or all architecture. Earlier shared-room and paid-heart receipts retain their
+own pins and limits. Historical geometry/quarantine, polity reconciliation, ecology breadth,
+multi-map balance and full building/activity quality remain open issues. No required structural
+finding remains from the reviewed delta. Candidate release and subscribed acceptance are separate.
+
+## Earlier candidate review (historical)
+
 Automated source review by Codex root, under the standing author authorization. This is
 structural review, not native or delivery acceptance. Baseline: published `v0.3.6`, whose
 review bound `e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719`.

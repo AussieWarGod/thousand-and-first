@@ -1,32 +1,41 @@
 # Changelog
 
-Current 3100-file census is line-cap green: 440,362 physical lines; direct `XRL`
-imports occur in 1446 files, 0 of them over the line limit. Inventory SHA-256: `1f35396060ae02596850e177647cc92bf8decd9dc144b97504241851ccf2df68`.
-The cold-install inventory contains 3131 files. This is not evidence of a new public installation.
+Current 3106-file census is line-cap green: 440,877 physical lines; direct `XRL`
+imports occur in 1450 files, 0 of them over the line limit. Inventory SHA-256: `3dc69687e01f930bffc8f840a15f4a5a885c3744a6fc17049a8ce91c5d881e62`.
+The cold-install inventory contains 3139 files. This is not evidence of a new public installation.
 
-All notable changes to The Thousand and First. Historical entries retain their original
-scope; [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md) records current acceptance.
+All notable changes to The Thousand and First. Historical entries retain their original scope;
+[docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md)
+records current acceptance.
 
-## [0.3.7] — 2026-09-14 (Alpha)
+## [0.3.7] — 2026-09-15 (Alpha)
 
-Private candidate for heart progression and construction recovery; not yet published.
+Private candidate for enclosed housing and paid construction recovery; not yet published.
 
-- Follow successive completed heart upgrades while preserving the original basin, dedicated
-  stockpile and unspent goods.
-- Allow residents and visitors to stand on retained walkable heart floors during upgrade assessment.
-- Fit large authored court and arcology layouts within bounded construction receipts.
-- Include six shaped-timber floor units in the moot-to-court upgrade bill.
-- Recheck eligible citizens who enter newly annexed wall sites after payment; protect the
-  founder and unrelated creatures.
-- Resume paid handover after a removable obstruction without losing or duplicating its receipt.
-- Let surveyed heart expansion retain ordinary unpaid trodden tracks and authenticated
-  founding stakes; foreign structures, paid paving and ambiguous road markers stay protected.
+- Give new Quickstart settlers enclosed Medium shelters with real doors and clear entrance aisles.
+  Larger shared homes use separate chambers or courtyard cabins; hut conversions retain their
+  furniture and room programme. Medium plots are available from Camp.
+- Measure lodging privacy from real rooms and reachable clear floor. Beds, chairs and other
+  furniture occupy space even when Qud permits walking over them; shared halls and doorways
+  must remain clear. Extra bunks still count toward crowding.
+- Anchor new founders at the camp before their first turn, preserving ordinary work and idle
+  goals. Reserve the initial camp's ambient faction-party encounter slot during generation.
+- Recover a paid housing conversion after exact restoration of a missing or moved fixture.
+  Preserve original storage contents and payment; permit flooring beneath only its exact paid
+  predecessor. Foreign furniture and copied receipts grant no placement exception.
+- Retain exact historical transition prices for paid receipts while new quotes use current prices.
+- Follow successive paid heart upgrades, recheck eligible residents entering new wall sites,
+  retain authenticated founding stakes and unpaid tracks, fund added court floors, and admit
+  the existing architecture payload within bounded construction receipts.
+- Add a visual layout workbench with enclosure, furniture-access and clear-floor audits.
 
-Native paid-chain validation is in progress. Extended higher-heart save/load coverage is
-tracked separately in #219. Synthetic fifty-resident support does not establish ordinary
-one-map balance. City expansion, three-cell roads, useful public spaces and their rewards,
-land for supporting work, and same-city multi-map coverage remain Beta work. Hearthpyre
-compatibility changes are excluded from this Alpha candidate.
+Native checks cover real four-founder housing, paid conversion, obstruction/retry, retained contents,
+24,000 ordinary turns and separate cold continuation. Shared-room tests cover native door states
+and walkable-furniture obstructions. Higher-heart progression uses disclosed synthetic population
+and support; it does not establish ordinary balance or multi-map city coverage. Full building
+redesign, room/activity rewards, reputation-weighted populations, supporting land use and natural
+outward expansion remain Beta work. Historical renovations/quarantine and polity reconciliation
+after load remain tracked limitations. Hearthpyre compatibility remains deferred until Beta.
 
 ## [0.3.6] — 2026-09-13 (Alpha)
 

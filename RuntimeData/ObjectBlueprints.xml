@@ -995,7 +995,7 @@
   </object>
   <object Name="r_KingdomTentRow" Inherits="r_KingdomTent">
     <part Name="Render" DisplayName="staked tent-row" ColorString="&amp;Y" DetailColor="w" />
-    <part Name="Description" Short="Four tents in a line with a woven brake along the weather side. Nobody calls this a house, and everybody sleeps better." />
+    <part Name="Description" Short="Canvas walls shelter three bedrolls, with a door to close against the wind. Seats and storage stand aside from the clear approach to each sleeping place." />
     <part Name="Physics" Weight="400" />
     <stat Name="Hitpoints" Value="60" />
   </object>

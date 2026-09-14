@@ -65,7 +65,7 @@ namespace ThousandAndFirst.Harness
 				RequireChainCustody();
 				RequireChainSupport();
 				Require(KingdomScenarioJournal.Append("camp-heart-chain-occupancy", true,
-					"synthetic-placement=true; retained-walkable=true; resident-blocked-preflight=true; strict-blocked-refused=true"
+					"synthetic-placement=true; retained-walkable=true; scoped-assessment=true; resident-blocked-preflight=true; strict-blocked-refused=true"
 					+ "; retained-resident=true; retained-founder=true; retained-stranger=true; retained-foreign-wall-refused=true"
 					+ "; founder-blocked-refused=true; founder-walkable=true; stranger-blocked-refused=true"
 					+ "; stranger-walkable=true; foreign-wall-refused=true; restored=true; no-debit=true"
@@ -100,7 +100,7 @@ namespace ThousandAndFirst.Harness
 			}
 
 			private void ProbeChainBody(GameObject Body, Cell At, KingdomArchitectureIntent Successor,
-				KingdomMaterialDebitCost Claim, bool Accepted, bool Movable)
+				KingdomMaterialDebitCost Claim, bool Accepted, bool Movable, bool Renovation = false)
 			{
 				Cell origin = Body.CurrentCell;
 				string id = Body.ID;
@@ -111,7 +111,8 @@ namespace ThousandAndFirst.Harness
 						&& Body.CurrentCell == At && (Body.IsCreature || Body.IsPlayer()),
 						"envelope body probe failed exact placement");
 					RequireChainUpgradePreflight(Successor, Claim, Accepted, Accepted ? null
-						: "a living occupant stands on plot-envelope growth ground at " + At.X + "," + At.Y);
+						: "a living occupant stands on " + (Renovation ? "renovation" : "plot-envelope growth")
+							+ " ground at " + At.X + "," + At.Y);
 					if (Movable)
 					{
 						Require(KingdomSurvey.TryBindLocalOperation(Zone, System, out var scope,
@@ -120,11 +121,18 @@ namespace ThousandAndFirst.Harness
 						{
 							Require(KingdomPlots.IsMovableEnvelopeOccupant(System, Zone, Body),
 								"envelope resident probe did not reach movement authority");
-							Require(!KingdomArchitectureStamper.TryProveEnvelopeGrowth(System, Zone,
-								ChainHeart, null, Successor, false, out failure)
-								&& failure != null && failure.StartsWith("a living occupant stands on ",
+							Require(KingdomArchitectureRuntime.TryRead(ChainHeart, out var before, out failure), failure);
+							bool strict = Renovation
+								? KingdomArchitectureStamper.TryProveRenovationOccupants(System, Zone, before,
+									Successor, false, out _, out failure)
+								: KingdomArchitectureStamper.TryProveEnvelopeGrowth(System, Zone,
+									ChainHeart, null, Successor, false, out failure);
+							Require(!strict && failure != null && failure.StartsWith("a living occupant stands on ",
 									StringComparison.Ordinal), "strict envelope admitted an uncleared body: " + failure);
 						}
+						var assessment = AssessChain(out string context);
+						Require(KingdomUpgradeRules.IsReady(assessment.Verdict),
+							"chain assessment refused its movable resident: " + assessment.Reason + "; " + context);
 					}
 					Require(Body.CurrentCell == At && Body.IDIfAssigned == id,
 						"read-only envelope preflight moved or replaced its body");

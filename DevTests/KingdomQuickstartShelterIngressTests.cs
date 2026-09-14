@@ -27,14 +27,14 @@ namespace ThousandAndFirst.Tests
 		public void EveryShelterLotBaresExactlyItsAuthoredDoorToLaneRoute()
 		{
 			ArchitectureCorpus corpus = KingdomArchitectureCorpusFixture.Load();
-			// The lots are Small, so the runtime resolves the tent row's Small binding; the larger
+			// The lots are Medium, so the runtime resolves the tent row's Medium binding; the larger
 			// realizations of the same design belong to lots this authority never stakes.
 			List<ArchitectureCorpusCase> rows = corpus.Cases
 				.Where(item => item.Tier.BuildKey == KingdomQuickstartRules.ShelterBuildKey
-					&& item.Binding.Size == ArchitectureLotSize.Small)
+					&& item.Binding.Size == ArchitectureLotSize.Medium)
 				.ToList();
 			ClassicAssert.AreEqual(1, rows.Count,
-				"the tent row is authored by exactly one Small tier");
+				"the tent row is authored by exactly one Medium tier");
 			ClassicAssert.AreEqual(ArchitectureFrontage.Heart, rows[0].Binding.Frontage,
 				"the tent row is posed by the heart frontage law, not by road evidence");
 			// The reach the mask declares is the reserved road margin plus its lane endpoint.

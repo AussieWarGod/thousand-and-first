@@ -17,7 +17,7 @@ namespace ThousandAndFirst.Tests
 		public void ShippedCorpusCompilesEveryVariantInEveryFacing()
 		{
 			ArchitectureCorpus corpus = KingdomArchitectureCorpusFixture.Load();
-			ClassicAssert.AreEqual(89, corpus.Palettes.Count);
+			ClassicAssert.AreEqual(95, corpus.Palettes.Count);
 			ClassicAssert.AreEqual(333, corpus.Maps.Count);
 			ClassicAssert.AreEqual(344, corpus.Cases.Count);
 			ClassicAssert.IsTrue(corpus.Maps.ContainsKey("defense-watchhouse-l0"),

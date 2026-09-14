@@ -120,6 +120,8 @@ namespace ThousandAndFirst
 			HashSet<int> impacted;
 			if (!TryUpgradeImpact(beforeIntent, Successor, delta, Z, out impacted,
 				out Failure)) return false;
+			if (!TryProveRenovationOccupants(System, Z, beforeIntent, Successor, true,
+				out var newlyBlocked, out Failure)) return false;
 			if (!TryPlacementPassability(Successor, Z,
 				out Dictionary<int, ArchitecturePassability> successorSlots, out Failure)) return false;
 
@@ -174,9 +176,10 @@ namespace ThousandAndFirst
 					if (item.IsCreature || item.IsPlayer())
 					{
 						// Occupied walkable fabric stays usable during renovation, including inside
-						// the standing lot. Only annexed blocked slots have proven movement authority.
+						// the standing lot. Newly blocked cells have passed the protected-body proof.
 						if (successorSlots.TryGetValue(packed, out ArchitecturePassability declared)
 							&& !KingdomPlotRules.SlotBlocksOccupant(declared)) continue;
+						if (beforeIntent.Rect.Contains(x, y) && newlyBlocked.ContainsKey(packed)) continue;
 						if (Successor.Rect.Contains(x, y) && !beforeIntent.Rect.Contains(x, y)) continue;
 					}
 					return Fail("foreign or protected state occupies authored successor ground at "

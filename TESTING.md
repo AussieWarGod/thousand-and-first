@@ -1,10 +1,84 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
-## Pending heart progression source inventory
+## Current source inventory (unreleased)
 
-The planned compatibility gate runs across 3100 production C# sources (3096 baseline);
-the cold-install inventory contains 3131 files. Inventory `8989ef5f532e7b0b001941c3df712c964637d729ff2c760934b9a061bc076317`.
-These counts describe the pending repair, not a public installation or native PASS.
+The engine gate runs across 3106 production C# sources (3102 baseline);
+the cold-install inventory contains 3139 files. Inventory `3dc69687e01f930bffc8f840a15f4a5a885c3744a6fc17049a8ce91c5d881e62`.
+These counts describe the source inventory, not a public installation. Native acceptance is scoped below.
+
+Paid conversion follow-through: `Tools/personas/paid-housing-native-check.persona` uses real
+Quickstart homes, exact normal commissioning/debit, controlled test-registry price drift and a
+temporary storage-basket removal during handover. It requires Outstanding recovery, preserved
+contents and payment, and restores the catalogue before saving. The existing separate lifecycle
+load verifies the completed conversion and performs a new paid fire commission. Missing material
+units for both the conversion and that next commission, plus one brush contents sentinel
+are synthetic; no homes, citizens, water, labour or job phases are supplied. Four engine compile
+modes and 66 persona checks pass. Warm and separate cold acceptance at `d5a0e96d` is
+recorded in [STATUS](docs/STATUS.md), including full recipes, owned shutdown and limits.
+The unfinished-job/version-change case and historical geometry remain open in #239 and #240.
+The paid-housing fixture now transfers 32 existing carried drams by a physical pour before payment,
+to fund the longer wait, and probes missing/moved/wrong-token fixture restoration. Physical mismatch
+must refuse without permanently poisoning intact owner receipts; malformed owner and upgrade
+authority keep their quarantine rules. Failed native reproductions and accepted exact restoration/retry
+are recorded in STATUS and #242; no repair of previously quarantined saves is claimed.
+The required paid-housing-floor-access witness probes the actual insertion guard at paid handover:
+exact predecessor accepted, synthetic foreign chest refused, borrowed receipt refused, then exact
+recovery. The chest is removed before ordinary insertion continues; no insertion verdict is replaced.
+The cohort floor witness counts the frozen variant's additional hearth and table separately:
+seventeen clear cells in canvas, sixteen in the basic hut, fifteen in hearth-and-table variants.
+These are exact authored expectations for this fixture, not changed production quality thresholds.
+
+The native startup observer also requires four local non-wandering founder anchors. Actual paid
+construction, later housing and cold-load checks remain required; neither a passing run nor the
+anchor rule proves immunity to wildlife or repairs historical founders. See #237.
+
+## Shared-hall access
+
+`Tools/run-personas.sh lodging-room-native` requires 29 observations. The first twenty use an
+ordinarily adopted synthetic room's benefit/privacy/arrival route; nine more use an explicit synthetic
+whole-building designation over native cells and restore the original adopted reading. Clear halls,
+walkable furniture, alternate exits and native open/closed lock states are covered. The closed run
+at `dc65f086` passes; see [STATUS](docs/STATUS.md) for its exact source and archive. It is not paid
+catalogue, multi-map, street-network or cold-load acceptance. Pure room cases are in the main suite.
+
+## Enclosed starter homes
+
+Run `Tools/dev-check.sh tools canvas_homes_test.py` for all current sizes/facings, separated
+sleeping rooms, straight M entrance clearance, retained readers and four-cell XL courts.
+Run `Tools/dev-check.sh main KingdomCanvasHomeTests` for the actual compiled paid renovation
+delta and all 24 fixed-lot conversion routes/target variants.
+`Tools/dev-check.sh tools hut_rooms_test.py` covers current hut enclosure, fixture access,
+Small-reader boundaries and clear entrance/court circulation across 192 variant/pose combinations.
+Set `TAF_SCENARIO_TURN_BUDGET=17000` and `TAF_SCENARIO_TIMEOUT_SECONDS=3000` for the
+construction lifecycle; its two advances exceed the preparation default.
+The existing Quickstart lifecycle now also requires one enclosed room, three usable
+sleeping places and 17 clear floor cells in each completed M shelter. These native assertions
+pass in the marsh construction/save/separate-cold-load chain at `2c0600b5`; see
+[the exact evidence scope](docs/ENCLOSED-STARTER-HOUSING-EVIDENCE.md). Historic S saves need
+separate retained-reader evidence; the current lifecycle intentionally checks modern M lots.
+
+The lifecycle persona's `CHECK=quickstart-housing` requires unique startup/grown journal
+observations, all four founders, six available beds, two enclosed rooms and 34 clear floor cells
+after the full ordinary wait. Missing, duplicated, refused or contradictory observations fail.
+After a separate cold load, also run
+`python3 Tools/personas/persona_housing.py SOURCE_JOURNAL LOAD_JOURNAL --cold-load`.
+This requires the loaded observation and monotonic turn continuity; it complements the existing
+whole construction-chain verdict, strict logs, full pinned profile proof and owned shutdown.
+
+## Physical room and furniture-clearance scenario
+
+`Tools/run-personas.sh lodging-room-native` runs genuine dune Quickstart followed by one synthetic
+ordinarily adopted room with three native beds against one roof credit. Set
+`TAF_SCENARIO_QUICKSTART_ADVISOR=yes` and a fresh report/capture location; never reuse a profile.
+The twenty positional witnesses cover shared-room privacy after spare-bunk removal, open/closed/locked
+doors, walkable doorway furniture, a trapped bed, solid/walkable obstructions, wall/bed loss, each
+restoration and an original founder occupant returned exactly. They observe the real benefit
+index, privacy and capped arrival refusal; all four founders retain projected housing priority.
+
+The complete scenario passed at `765e8e59d4819f3f3960df60cc660e6279097cbf`, with strict logs,
+all 3436 pinned profile inputs and exact owned shutdown. Archive and hash are in
+[docs/STATUS.md](docs/STATUS.md). This covers one synthetic room, not paid layouts, cross-room
+public-corridor connectivity, multi-map cities, cold load or release acceptance.
 
 ## Quickstart housing hotfix acceptance (2026-09-13)
 

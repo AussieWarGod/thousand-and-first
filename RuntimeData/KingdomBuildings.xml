@@ -130,28 +130,26 @@
     thing a legendary trader will consent to live in.
   -->
   <building Key="tent" DisplayName="settler's tent (a roof by nightfall)" Blueprint="r_KingdomTent"
-            Cost="3" Ticks="900" Styles="all" Category="housing" Plot="S" Adoptable="yes"
-            Footprint="3x2" Roof="Soft"
-            Materials="canvas:2" Carries="roof:1" Contents="r_KingdomFurnishings_Dwelling"
-            UpgradesTo="tentrow" UpgradeMaterials="canvas:1,timber:1">
+            Cost="3" Ticks="900" Styles="all" Category="housing" Plot="M" Adoptable="yes"
+            Roof="Soft"
+            Materials="canvas:12,timber:1" Carries="roof:1" Contents="r_KingdomFurnishings_Dwelling"
+            UpgradesTo="tentrow" UpgradeMaterials="canvas:2">
     <skin Key="canvas" ColorString="&amp;y" DetailColor="w" />
     <skin Key="verdant" Style="verdant" ColorString="&amp;g" DetailColor="w" />
     <skin Key="fungal" Style="fungal" ColorString="&amp;m" DetailColor="w" />
     <skin Key="moonstair" Style="moonstair" ColorString="&amp;c" DetailColor="w" />
     <skin Key="eater" Style="eater" ColorString="&amp;r" DetailColor="w" />
   </building>
-  <building Key="tentrow" DisplayName="staked tent-row (canvas, and a wall against the wind)" Blueprint="r_KingdomTentRow"
-            Cost="5" Ticks="1200" Styles="all" Category="housing" Plot="S" Adoptable="yes"
-            Footprint="5x2"
-            Materials="canvas:3,timber:1" Carries="roof:3" Contents="r_KingdomFurnishings_Dwelling" />
+  <building Key="tentrow" DisplayName="staked tent-row (enclosed canvas housing)" Blueprint="r_KingdomTentRow"
+            Cost="5" Ticks="1200" Styles="all" Category="housing" Plot="M" Adoptable="yes"
+            Materials="canvas:14,timber:1" Carries="roof:3" Contents="r_KingdomFurnishings_Dwelling" />
 
   <!-- STYLE: Posts and wattle want trees. The salt flats grow brinestalk and the ruin field grows fulcrete, and neither is a post - the mud-brick hut and the block hut are what those two raise instead. -->
 
   <building Key="hut" DisplayName="timber hut" Blueprint="r_KingdomHut"
-            Cost="6" Ticks="1800" Styles="all,!common,!eater" Category="housing" Plot="S" Adoptable="yes"
-            Footprint="4x3"
+            Cost="6" Ticks="1800" Styles="all,!common,!eater" Category="housing" Plot="M" Adoptable="yes"
             Materials="timber:6,mud:2,canvas:2" Carries="roof:1" Contents="r_KingdomFurnishings_Dwelling"
-            UpgradesTo="hutyard" UpgradeMaterials="timber:4,stone:2">
+            UpgradesTo="hutyard" UpgradeMaterials="timber:4,stone:2,canvas:2">
     <!--
       A skin only ever recolours or reglyphs art that already exists; it never names a tile this
       mod ships, because a tile no check walks in both directions is a tile that renders nowhere
@@ -166,9 +164,8 @@
   </building>
   <!-- STYLE: Follows its own first rung out of the two styles with no timber to cut. -->
   <building Key="hutyard" DisplayName="hut and yard (room to work outside the door)" Blueprint="r_KingdomHutYard"
-            Cost="10" Ticks="2400" Styles="all,!common,!eater" Category="housing" Plot="S" Adoptable="yes"
-            Footprint="5x4"
-            Materials="timber:10,stone:2,canvas:2" Carries="roof:3" Contents="r_KingdomFurnishings_Dwelling" />
+            Cost="10" Ticks="2400" Styles="all,!common,!eater" Category="housing" Plot="M" Adoptable="yes"
+            Materials="timber:10,stone:2,canvas:4" Carries="roof:3" Contents="r_KingdomFurnishings_Dwelling" />
 
   <building Key="house" DisplayName="stone house" Blueprint="r_KingdomHouse"
             Cost="16" Ticks="3600" Styles="all" Category="housing" Plot="M" MinStage="Steading" Adoptable="yes"
@@ -872,14 +869,12 @@
        every ordinary answer - and it pays for that by having no timber lane at all. So its
        housing goes mud brick, not wattle, and it gets the one work the salt road makes sense of. -->
   <building Key="mudhut" DisplayName="mud-brick hut (dug out of the pan and dried in the flat sun)" Blueprint="r_KingdomMudHut" Adoptable="yes"
-            Cost="6" Ticks="1800" Styles="common" Category="housing" Plot="S"
-            Footprint="4x3"
-            Materials="mud:10,canvas:2" Carries="roof:1" Contents="r_KingdomFurnishings_Dwelling"
-            UpgradesTo="mudhutcourt" UpgradeMaterials="mud:6,stone:2" />
+            Cost="6" Ticks="1800" Styles="common" Category="housing" Plot="M"
+            Materials="mud:10,canvas:2,timber:1" Carries="roof:1" Contents="r_KingdomFurnishings_Dwelling"
+            UpgradesTo="mudhutcourt" UpgradeMaterials="mud:6,stone:2,canvas:2" />
   <building Key="mudhutcourt" DisplayName="mud-brick hut and court (a wall, and a strip of shade the street borrows)" Blueprint="r_KingdomMudHutCourt" Adoptable="yes"
-            Cost="10" Ticks="2400" Styles="common" Category="housing" Plot="S"
-            Footprint="5x4"
-            Materials="mud:16,stone:2,canvas:2" Carries="roof:3" Contents="r_KingdomFurnishings_Dwelling" />
+            Cost="10" Ticks="2400" Styles="common" Category="housing" Plot="M"
+            Materials="mud:16,stone:2,canvas:4,timber:1" Carries="roof:3" Contents="r_KingdomFurnishings_Dwelling" />
   <building Key="caravanserai" DisplayName="caravanserai (a blank wall to the wind and one gate wide enough for a laden dromad)" Blueprint="r_KingdomCaravanserai" Adoptable="yes"
             Cost="44" Ticks="7200" Styles="common" Category="civic" Plot="L" MinStage="Town"
             Districts="market,none"
@@ -928,14 +923,12 @@
        ruin), the timber lane, and the thorn palisade; it gets the same three things back out of
        what the ancients left lying about, which is the whole of what this style is for. -->
   <building Key="blockhut" DisplayName="block hut (a fallen course squared off and roofed in salvaged plate)" Blueprint="r_KingdomBlockHut" Adoptable="yes"
-            Cost="6" Ticks="1800" Styles="eater" Category="housing" Plot="S"
-            Footprint="4x3"
-            Materials="scrap:6,stone:4,canvas:2" Carries="roof:1" Contents="r_KingdomFurnishings_Dwelling"
-            UpgradesTo="blockyard" UpgradeMaterials="scrap:2,stone:2" />
+            Cost="6" Ticks="1800" Styles="eater" Category="housing" Plot="M"
+            Materials="scrap:6,stone:4,canvas:2,timber:1" Carries="roof:1" Contents="r_KingdomFurnishings_Dwelling"
+            UpgradesTo="blockyard" UpgradeMaterials="scrap:2,stone:2,canvas:2" />
   <building Key="blockyard" DisplayName="block hut and yard (two courses re-stood at a right angle, and the corner swept)" Blueprint="r_KingdomBlockYard" Adoptable="yes"
-            Cost="10" Ticks="2400" Styles="eater" Category="housing" Plot="S"
-            Footprint="5x4"
-            Materials="scrap:8,stone:6,canvas:2" Carries="roof:3" Contents="r_KingdomFurnishings_Dwelling" />
+            Cost="10" Ticks="2400" Styles="eater" Category="housing" Plot="M"
+            Materials="scrap:8,stone:6,canvas:4,timber:1" Carries="roof:3" Contents="r_KingdomFurnishings_Dwelling" />
   <building Key="rubblewall" DisplayName="re-stood course (the wall that was already here, put back up)" Blueprint="r_KingdomRubbleWall"
             Cost="6" Ticks="1800" Styles="eater" Category="defense"
             Materials="stone:6,scrap:2" Defence="3"

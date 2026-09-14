@@ -1,20 +1,297 @@
 # Current implementation and release evidence
 
-## Alpha 0.3.7 preparation — not uploaded
+## Alpha 0.3.7 candidate refresh
 
-The user requested that Hearthpyre compatibility wait until Beta and that gameplay progress
-ship through further Alphas. Capability work (#218) remains parked and is excluded here.
-This private candidate prepares the #207 heart progression and construction recovery fixes;
-public 0.3.6 remains the published release. No 0.3.7 package, tag, subscribed receipt or
-release acceptance exists yet. The previous ALPHA_CANDIDATE.json and private package receipt
-remain historical 0.3.6 records until the new private package is actually verified.
+The private candidate now includes the accepted paid-heart, room, enclosed-housing, shared-hall
+and paid-conversion work. Runtime version is 0.3.7; no package, staging tag or upload yet.
+Inventory SHA-256: `3dc69687e01f930bffc8f840a15f4a5a885c3744a6fc17049a8ce91c5d881e62`.
+Native evidence below retains its original source pins. Candidate release gates and subscribed
+Quickstart/cold-load acceptance remain required; public Alpha stays 0.3.6.
 
-Native27 exercises the retained-floor and payload repairs at `78e8d097` with eighteen
-synthetic homes. Native25 and Native26 are closed below; Native26 identified the actual
-resident on retained floor. This candidate includes the same gameplay and Harness inputs,
-plus version 0.3.7. The separate #219 higher-heart cold-load fixture remains unaccepted.
-City direction remains in CITY-GROWTH-BALANCE.md and #208–#211; synthetic support is not
-ordinary population balance.
+## Paid housing and founder anchors: warm/cold behavioral checks accepted
+
+At `d5a0e96d800bfcac929a52b394e94371172018a0`, Qud 2.0.211.51, marsh Quickstart with
+advisor and seed `#1012026`, the complete paid-housing persona and separate cold process pass.
+All four original founders start with local non-wandering anchors and remain housed after
+24,000 ordinary turns: two enclosed homes, six usable sleeping places and 32 clear floor cells.
+Furniture remains occupied architectural space regardless of native walkability.
+
+The real Medium tentrow-to-hutyard conversion pays seven drams and its exact material claim.
+A controlled catalogue change to eight refuses the old receipt without registered history and
+accepts its exact retained declaration. Missing, moved and wrong-token basket probes refuse;
+exact restoration recovers without poisoning intact owner authority. Actual handover refuses
+while its basket is removed, enters Outstanding, then completes through ordinary retry with the
+same payment and original contents. The actual floor insertion guard accepts only its exact paid
+predecessor; a foreign chest, including one carrying a copied receipt, still refuses.
+
+A real save and separate-process load preserve the same paid job, frozen functional home,
+basket contents and all four housed identities. The next fire commission creates a new job
+and debits one timber and two drams. Its observed follow-up interval is 2.453 seconds, versus
+94.512 seconds before the operation scope was bound; stock also differs, so this is not an
+isolated performance benchmark. Both exact owned processes are stopped. All 3,448 warm and
+3,450 cold inputs match their pinned recipes; strict logs, persona, lifecycle, housing and
+ordinary-wait accounting pass.
+
+Closed archive: `paid-housing/d5a0e96d/anchored-warm-cold-1/result.json`, SHA-256
+`aee3c0a96e2ecb8ba341ccc0261de5a62fa9ba35e83dc850c528b3ff2c22b635`.
+CI `34882424586`, four engine compile modes and full licensed suites pass: 14,957 main and
+5,849 portable cases, zero skips (57 seconds). Focused tests include all compiled Medium
+variants/facings, retained prices, founder grants and fail-closed persona evidence.
+
+Limits: this is one map and seed. The fixture supplies missing materials for conversion and
+next fire, a brush contents sentinel and a removable foreign chest; it physically transfers
+32 existing carried drams. No residents, homes, water, labour or completed job phases are
+fabricated. Warm capture shows the converted room with clear entry, but clips the lower home;
+cold capture shows the returned menu. Neither establishes full-map framing or all-building visual
+quality. The completed-save test does not prove pending-job upgrades across versions, historical
+layout renovation, new housing at the changed price, multi-map population, or ordinary balance.
+Those remain in #239/#240 and the [architecture/population plan](HOUSING-AND-POPULATION.md).
+
+Cold load again logs the independent polity-topology reconciliation refusal in #244. Housing
+acceptance does not establish polity dispatch acceptance. Broader ecology and historical founder
+anchors remain #237; already-quarantined saves and city-wide damage remain #242. Public Alpha
+is still 0.3.6. Protected integration, 0.3.7 packaging and subscribed acceptance remain required.
+[Preserved failed runs and implementation history](PAID-HOUSING-EVIDENCE.md).
+
+## Shared-hall access: native scenario accepted
+
+At `dc65f0866a36a2332b35d235291a13a6e03540a1`, all 29 required in-game room observations pass.
+Walkable furniture blocks architectural circulation through shared halls and doorways. Bedroom
+privacy requires a clear route through the designated building to an exterior approach; an internal
+door alone cannot supply access. Alternate exits, obstruction removal and unlocking restore access.
+Structural enclosure remains separate from furniture, and physical observations are cached once.
+
+The genuine four-founder dune Quickstart adopts a synthetic 8×6 room through the ordinary API.
+The first twenty cases exercise its benefit/privacy/arrival route, furniture, doors, loss/repair and
+an original citizen restored exactly. Nine additional observations use a synthetic whole-building
+designation over native cells for the shared hall, then restore the original room, bed positions,
+door flags and adopted benefit reading. The capture was inspected and shows the restored fixture.
+This is not a commissioned catalogue layout, city balance, multi-map or cold-load acceptance.
+Access covers the designation and immediately adjacent exterior approach, not the full street route.
+
+Twenty main room-rule cases, 65 persona/oracle cases and all four engine compile modes pass.
+CI `34860042305` passes at the accepted native source pin.
+The room fixture is main-only; the portable selector matched no tests and is not a portable PASS.
+The full native archive verifies all 3,441 pinned profile inputs, strict final logs, the closed seal
+and exact owned shutdown. Archive `physical-rooms/dc65f086/shared-hall-1/result.json`, SHA-256
+`6e41dfbf71438614031e6b544832b653b3a53ce99b2e0d13e7384c8f98d6ea93`; 21 hashed artifacts.
+The marsh construction/cold-load evidence below retains its earlier source pin and did not exercise
+this shared-hall change. PR #238 and issue #233 retain the remaining scope; no public release claimed.
+
+### Earlier shared-hall failures
+
+These failures are superseded only within the accepted scenario's scope above.
+
+The first shared-hall native run at `aa4f33bb` passed the original twenty observations and five
+hallway cases, then refused the lock case. Earlier doorway furniture can open a native door;
+locking it without closing it does not make its non-solid opening impassable. The fixture now
+requires the actual open state, observes open-and-locked access, then physically closes the door
+before expecting blocked access. This is a fixture correction, not a change to native door physics.
+Closed failed archive: `physical-rooms/aa4f33bb/shared-hall-1/result.json`, SHA-256
+`7ee064447c8ca9aa11ee24543b256d2d654df74ca1655018c870a3942eec295a`.
+All 3,441 pinned inputs and exact owned stop verified; no whole-scenario PASS from this failure.
+
+Run `f23e7b64` confirms open-and-locked access, but the next lock case still fails: native
+`Door.PerformClose` restores `Locked` from `WasLocked`. The revised fixture now calls `Lock`
+after physically closing, requires the actual lock and production Shell reading, and restores
+all original open/lock flags after its probes. Closed failed archive:
+`physical-rooms/f23e7b64/shared-hall-1/result.json`, SHA-256
+`203baf6cc2b9b0ecfe05abb530d4064da86ca5299e7fc758dc357ce4abfc304d`.
+Full 3,441 pinned inputs and exact owned stop verified. Production code remains unchanged.
+
+## Enclosed starter housing: marsh construction and cold load accepted
+
+At `2c0600b53832c069b665ef7dce94b1cf015850be`, genuine marsh Quickstart keeps all four original
+citizens alive through 16,800 ordinary turns. They occupy two completed M homes with six real
+sleeping places, two enclosed rooms and 34 clear floor cells. Furniture occupies its footprint;
+entrances and aisles remain clear. Wall/container entrance obstruction and cleanup checks pass.
+The paid fire completes, saves and survives a separate cold load; all original citizens and room
+measurements survive too, and a new paid construction order succeeds after loading.
+
+The earlier citizen deaths came from albino apes in a locally generated legendary faction party.
+Initial camp generation now reserves that ambient encounter slot through an exact disposable
+scope. Native checks witness the interception, prove the same map uses ordinary encounter logic
+outside the scope, and find no inherited scope after cold load. No actor removal, invulnerability
+or allegiance rewrite is involved. The old fixed entrance-test coordinate was replaced with a
+cell derived from the actual authored exterior route.
+
+CI `34855569975`, all four engine compile modes, strict final logs, whole lifecycle and mandatory
+housing checks pass. Full pinned recipe proof matches 3,440 warm and 3,442 cold inputs; both game
+processes are verified stopped. Archive `enclosed-canvas-homes/2c0600b5/warm-cold-1/result.json`,
+SHA-256 `f629b3ae4ae098890113312ec792d413a2821f3a031d1e3c3e45b771cc258b2b`.
+[Detailed evidence and failed-attempt history](ENCLOSED-STARTER-HOUSING-EVIDENCE.md) retain the
+scope, captures, diagnostics and earlier failures. This is not public release acceptance.
+
+Current authored canvas and timber/mud/block layouts cover M shared rooms, L sleeping chambers
+and common rooms, and XL cabins around four-cell courts. Compiled tests cover all 24 conversion
+routes/variants/facings; installed-blueprint reviews cover 192 hut poses and 1,376 architecture
+poses. Current basic homes require M ground, available at Camp; explicit S readers remain.
+Native saved paid S/larger legacy layouts, paid hut conversions, L/XL homes, other terrain/seed
+openings, activity/quality rewards, thermal safety and ordinary multi-map land/material balance
+remain unproved. Quickstart gives shelter stakes, so this does not prove paid shelter commissioning.
+Issues #229–#234 and #237 remain open for that work; Hearthpyre runtime compatibility is deferred.
+
+## Physical room and furniture clearance: native scenario accepted
+
+Lodging now measures actual sleeping rooms and clear floor using native structural observations.
+Every furniture footprint is occupied for architectural circulation, even native-walkable beds,
+chairs and containers. Each sleeping provider needs adjacent ingress-reachable clear floor;
+furniture cannot supply ingress or structural enclosure. Operable sleeping-provider coordinates
+are retained before enrollment caps, so spare bunks still limit privacy. Shared single rooms
+cannot exceed Close, and declarations can only lower measured privacy. Existing resident
+assignments, native collision and save formats are unchanged.
+
+The twenty-observation `lodging-room-native` scenario passed at
+`765e8e59d4819f3f3960df60cc660e6279097cbf`. Genuine dune Quickstart preceded a synthetic 8×6
+canvas room adopted through the ordinary API. Three real bedrolls share one roof credit. Native
+checks covered open/closed/locked doors, walkable furniture in a doorway, a trapped bed, solid and
+walkable furniture reducing clear floor, wall/bed loss, each restoration, and a temporarily
+borrowed original founder returned to the same cell. The actual benefit index, lodging privacy
+and repeated read-only arrival observations matched. The original four founders consume that
+single credit: arrivals correctly remain Full while it exists and NoRoofAtAll when it is lost.
+
+Full pinned runtime, harness, request, manifest, options and script matched all 3436 sealed inputs.
+Strict final logs, positional witnesses, capture and exact owned shutdown passed. Archive:
+`physical-rooms/765e8e59/furniture-circulation-1/result.json`, SHA-256
+`c24c08d7ea335d92bb1b6be9338968751d3f9953beaecefa49ef6b7cbbf08f3d`.
+The earlier `48dcc2da` attempt failed a wrong fixture arrival expectation; its closed failed
+archive is retained. Correcting the expectation preserved all founders and capped capacity.
+
+Focused validation passed: 195 lodging cases, 18 editor cases, 65 persona validators, six related
+source contracts, the Chromium authoring workflow and all four engine compile modes. The shared
+editor reserves authored object footprints and flags furniture on doorways even when another
+entrance is usable. Pure cases cover multiple sleeping rooms and partition changes; current native
+acceptance covers one synthetic room. Cross-room corridor connectivity, cold load, paid building
+redesign, activity/quality rewards, ordinary city balance and multi-map behavior remain owed.
+This slice is not released and does not establish Alpha/Beta acceptance.
+
+## Native30 accepted; housing and population follow-through required
+
+Native30 at `a6e23f749255873ba33f0b3479291c062c8660e1` completed the paid heart 1→2→3→4
+chain and next-day recovery. The retained walkable-cell, full bound assessment, retained-floor
+renovation, protected occupant, no-destination refusal, same-body clearance, controlled paid
+retry and founding stake recovery witnesses passed. Full pinned profile recipe, strict final
+logs, exact wait accounting and owned shutdown passed. Source CI `34825767799` passed.
+
+Accepted archive: `beta-heart-chain/a6e23f74/paid-court-renovation-chain-1/result.json`, SHA-256
+`e2eeb784ada3394244c3d5683098902a2aa937155385b1b629bd6e6249381063`. The run is closed;
+the older pending statements below describe earlier checkpoints and are superseded for this
+exact scenario. No higher-heart cold load, fifth rung or multi-map acceptance is claimed.
+
+The fixture supplies 50 resident bodies, 18 authored tentrows (54 literal beds), eight synthetic
+legacy water works and extra supplies. Its full-window image exposed the real open L-shaped
+starter housing geometry. It does not prove believable enclosure or ordinary city balance.
+Building architecture quality now applies to the entire catalogue; housing/furnishing defects
+are the first follow-through required before the next Alpha promotion. Correct citizen
+home maps and reputation-weighted population are also recorded as required work in
+[#229](https://github.com/AussieWarGod/thousand-and-first/issues/229),
+[#230](https://github.com/AussieWarGod/thousand-and-first/issues/230) and
+[#231](https://github.com/AussieWarGod/thousand-and-first/issues/231).
+See [HOUSING-AND-POPULATION.md](HOUSING-AND-POPULATION.md) for the audit, references and tests owed.
+No housing/population runtime repair is included in this documentation checkpoint. Public release
+remains 0.3.6; Hearthpyre runtime compatibility remains deferred until Beta.
+
+## Layout authoring and room audit
+
+The local [layout studio](LAYOUT-STUDIO.md) adds visual room drawing, glyph/XML editing,
+rotation, resize, undo/redo, source comparison and ordinary draft export. It uses the existing
+XML parser and installed blueprint/pose resolver. Its independent room reading distinguishes
+solid structural fabric and real Door parts from cover or doorway labels, measures clear
+interior floor separately from fixtures/yards and reports inaccessible uses and lot-size mismatch.
+Incomplete drafts remain editable with failures visible; the normal checker remains strict.
+
+The first installed-Qud census covers 344 configurations / 1,376 poses with no unresolved
+blueprint shapes. It flags 356 poses across 17 building families with sleep providers outside
+enclosed rooms. This is design triage, not 356 proved gameplay defects: intentional outdoor and
+cultural accommodation needs a function-aware review. Sample source inspection confirms the
+mud-hut doorway is only an anchor, alongside open house/finehouse variants. #229 tracks the
+whole catalogue. Room-quality gameplay effects and authoring work are #233 and #234.
+
+The non-runtime 8×6 shared-canvas example has one room, 24 interior cells, 17 clear-floor cells,
+three sleep fixtures, storage, seats and a real door, with no inaccessible fixture in the draft.
+The workbench correctly reports that it cannot fit the selected S binding and needs M or larger.
+It has no commissioned binding, revised bill or native use/upgrade/cold-load acceptance.
+
+Fifteen workbench tests and all 68 existing architecture-checker tests passed. The browser check
+passed source/draft comparison, wall loss, undo/redo, rotation, export, resize, room drawing,
+door/bed placement, malformed refusal and draft retention. An earlier browser check caught
+premature rejection of a room before its doors/main fixture existed; syntax and topology review
+are now separated only for drafts, while ordinary parsing still performs both. No gameplay
+runtime layout, citizen room-quality effect or recruitment rule is changed by this tooling slice.
+
+## Native29 closed; repair occupied interior renovation ground (#226)
+
+Native29 at `55d873ec` passed the scoped full-assessment resident probe, paid rung-three
+completion and the controlled late-clearance/protected/no-destination/Outstanding retry cases.
+Court readiness then refused resident `756/NPC` at `44,12` on moot floor `3213/WoodFloor`,
+slot `g:09:04`. Authored geometry changes this retained walkable floor to a court inner wall.
+Existing clearance handled annexed cells only; the retained-floor repair intentionally did
+not admit bodies on target walls. No court payment or repaired stake probes were reached.
+
+Closed failed archive: `beta-heart-chain/55d873ec/court-retained-occupant-refused-1/result.json`,
+SHA-256 `97105af2a87d81703d389199f5c255f3057c341ac71ba0583563f9aea26348ad`.
+Full pinned recipe, strict log and exact owned stop passed. CI `34823130018` passed.
+
+The pending repair uses declared prior and successor passability to include retained
+Walkable/Adjacent-to-Blocked cells in existing lawful clearance. Existing blocked or unmapped
+prior cells gain no authority. Protected-body proof runs before debit and paid clearance;
+strict proof runs after callbacks and before every physical application attempt. Native tests
+now require court interior resident/preflight/full-assessment, founder/stranger refusal and
+actual paid late-clearance with forced no-destination refusal and unchanged payment/custody.
+Same-envelope renovations share this runtime path but do not yet have their own native
+scenario. Ten new authority cases, fifteen envelope integration-contract cases, eighteen authored-heart
+cases, all 64 persona-validator tests, documentation checks and all four engine compile modes
+passed. The portable project excludes this occupant kernel and its fixture; a no-match selector
+was rejected and is not counted as coverage. One stale source-contract suffix was corrected
+for the additional strict reproof before its successful rerun. Native validation remains pending.
+Public stays 0.3.6;
+Hearthpyre compatibility remains parked until Beta, with Alpha delivery the immediate priority.
+
+## Native28 closed; bind Harness readiness to the production survey
+
+Native28 at `574c0ddb` passed retained-floor/blocked-cell probes, rung-three payment and
+completion, controlled late-resident clearance and paid retry. Before reaching the repaired
+stake probes, court supply assessment refused enrolled resident `3087/NPC` at annexed blocked
+cell `43,4`. Production telemetry explicitly said `reason=unwitnessed`: the Harness assessment
+used an unbound custody census, while movable-occupant authority requires the active survey.
+No court payment or stake-cleanup acceptance occurred in this run.
+
+Closed archive: `beta-heart-chain/574c0ddb/court-occupied-preflight-refused-1/result.json`,
+SHA-256 `95ee89940e491d0a7031dc9a25bf14299387865fd632571e97ef3f8b2140313e`.
+Full pinned recipe, strict log and exact owned stop passed; scenario failed. CI `34821721978`
+passed. The earlier Native27 court payment remains its own bounded result.
+
+Harness readiness now binds one local operation, reads its active settlement survey and proves
+disposal. Its controlled blocked-resident probe also calls that complete readiness route,
+requiring Ready without moving the body or spending anything. The persona requires this
+additional witness. Production eligibility and movement rules are unchanged. All four engine
+compile modes, 64 persona-validator tests and documentation/metadata checks passed. Native
+progression and the #223 stake-cleanup repair still require fresh confirmation.
+
+## Native27 closed; stake-probe cleanup repair pending
+
+Native27 at `78e8d097` passed controlled retained-floor admission/refusal, exact rung-three
+payment/completion, late-resident and protected-occupant cases, forced no-destination refusal,
+Outstanding retry and original basin/store/21 brush/track retention with fifty supported
+residents. Court material and payload preflight passed, as did all four stake admission and
+foreign/unbound/duplicate refusal probes. The court then paid its exact 50-water/121-material
+bill, but the immediate founding-recovery assertion refused retirement authority. No court
+completion or full-chain PASS occurred.
+
+Closed failed archive: `beta-heart-chain/78e8d097/court-paid-founding-recovery-refused-1/result.json`,
+SHA-256 `1dd315fb61dc1bd07cdd48f064bd8eb38874648c022e9f5c3499dc445900cc5b`.
+Full pinned recipe, strict log check and exact owned stop passed. The scenario's stronger
+founding-recovery prohibition failed, so log hygiene does not override gameplay failure.
+CI `34820124279` passed; candidate `fbaaf549` passed CI `34820439091`.
+
+Source inspection identified a likely fixture contamination: the duplicate stake was destroyed
+while carrying a borrowed founding identity and owner. Native destruction retains tombstones;
+the founding custody proof deliberately refuses foreign stake tombstones. The probe now restores
+its own allocated ID and removes borrowed owner/slot fields before destruction. It additionally
+requires production founding recovery before and after the probes. A failure-only Harness
+observer names the exact retirement predicate and conflicting tombstones. Production admission
+and retirement rules are unchanged. All 64 persona-validator tests, documentation/metadata
+checks and all four engine compile modes passed. Fresh native confirmation remains required.
 
 ## Native26 closed; occupied retained-floor repair pending (#222)
 
@@ -139,11 +416,13 @@ from the passed four-mode compile at `8df7b548`.
 
 ## Current source census for the pending heart repair
 
-Engine gate passed: 3100 sources, baseline and compatibility symbols use their
-respective exclusions (3096 baseline). The cold-install inventory has 3131 files.
-3100 staged C# files / 440,362 physical lines; zero strict line-cap failures.
-Direct `XRL` imports: 1446 files, 0 over the line limit. Inventory SHA-256: `1f35396060ae02596850e177647cc92bf8decd9dc144b97504241851ccf2df68`.
-The updated automated structural review binds this inventory; native and delivery acceptance remain separate.
+Current cold-install inventory: 3139 files.
+Current source: 3106 sources, baseline and compatibility symbols use their
+respective exclusions (3097 baseline). All four engine compile modes passed.
+The cold-install inventory has 3132 files.
+3106 staged C# files / 440,877 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1450 files, 0 over the line limit. Inventory SHA-256: `aef5dbb86f8a1f12942427a28bf8e00e937f0c86aa9d41ab1bf0b601d4fe1cca`.
+This is a source census, not native acceptance or an updated exact-inventory semantic review.
 
 ## In-progress paid heart chain
 
@@ -2047,7 +2326,7 @@ digest. Only a `q2` receipt owes a stake, so a pre-existing `q1` save keeps its 
 every phase, Reserved included, and the completion notice counts the claims standing on the ground
 rather than trusting the branch that ran.
 
-That census:3053 staged C# files;432,593 physical lines;3082 files in the generated
+That census:3053 staged C# files;432,593 physical lines;3084 files in the generated
 cold-install inventory. Staged compilation covers3053 sources, baseline and compatibility symbols,
 run here by Roslyn 9.0.306 on Linux against the licensed Managed references with warnings as errors
 (baseline compiles 3049 of them; the optional-mod bridge is compatibility-only).
@@ -3222,7 +3501,7 @@ requires proof that no saved root exists, including after a rooting call returns
 The developer save observer now requires a canonical profile immediately before hashing and
 reproves that exact profile/revision afterward, without reconciliation in the observation path.
 Strict C#7.3 four modes plus compatibility ABI pass for 3008 production files and 80 Harness shards
-(ordinary 3004/3008, developer 3082/3088). Compiler inventory
+(ordinary 3004/3008, developer 3084/3088). Compiler inventory
 `e2593980a33b7ed381a81545f3681656077c82517fe6bd598b516cbd4130bff0`;
 production inventory `0200f24bec6290af2e55272af3bfabb230ecf577128a9455a7d84e8861231391`.
 Full suites: **12344 Taf / 3866 Portable**, zero skips; **373 Tools tests PASS**.
@@ -3754,3 +4033,11 @@ tiles, persistent strategic armies, mass background war, and unwitnessed conques
 Detailed current ledgers live in `_notes/BRIEF-IMPLEMENTATION-AUDIT.md` and
 `_notes/CONTRACT-RUNTIME-RECONCILIATION-2026-08-25.md`. Release mechanics live in
 [RELEASING.md](RELEASING.md); structural gate semantics live in [STRUCTURE.md](STRUCTURE.md).
+
+Native room attempt at `48dcc2da` failed its first arrival expectation: the physical reading
+correctly returned one room, three bunks, twenty clear cells and Close quarters, but projected
+founder occupancy correctly returned Full for the single roof credit. The failed profile was
+closed and archived with its full pinned recipe. The fixture now requires Full while that credit
+exists and NoRoofAtAll when lost, preserving all four founders and capped enrollment. No native
+PASS is claimed. The new standalone cabinet blueprint also exposed an overly broad source-test
+count; the existing overlay test now counts only actual `Load="Merge"` overrides.

@@ -77,7 +77,7 @@ namespace ThousandAndFirst.Harness
 		private static bool Adjacent(Cell a, Cell b) => a != null && b != null && a.ParentZone == b.ParentZone
 			&& Math.Max(Math.Abs(a.X - b.X), Math.Abs(a.Y - b.Y)) == 1;
 
-		private static int Walk(GameObject player, Cell target)
+		internal static int Walk(GameObject player, Cell target)
 		{
 			Cell start = player.CurrentCell, end = null;
 			var previous = new Dictionary<Cell, Cell> { [start] = null };

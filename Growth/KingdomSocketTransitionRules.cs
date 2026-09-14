@@ -154,6 +154,25 @@ namespace ThousandAndFirst
 			return SameDeclaration(Supplied, CurrentDeclaration);
 		}
 
+		// Retained declarations are supplied only by the history registry, never by the receipt.
+		internal static bool TrySelectPaidDeclaration(KingdomSocketTransitionReceiptShape Receipt,
+			KingdomSocketTransition Current, KingdomSocketTransition Retained,
+			out KingdomSocketTransition Declaration)
+		{
+			Declaration = null;
+			if (!Receipt.SchemaHasInt || Receipt.SchemaHasString) return false;
+			if (Receipt.Schema == LegacyReceiptSchema)
+				return TrySnapshot(Current, out Declaration);
+			if (Receipt.Schema != ReceiptSchema || !Receipt.DeclarationHasString
+				|| Receipt.DeclarationHasInt) return false;
+			if (TryDeclarationDigest(Current, out string currentDigest)
+				&& currentDigest == Receipt.DeclarationDigest)
+				return TrySnapshot(Current, out Declaration);
+			return TryDeclarationDigest(Retained, out string retainedDigest)
+				&& retainedDigest == Receipt.DeclarationDigest
+				&& TrySnapshot(Retained, out Declaration);
+		}
+
 		/// <summary>
 		/// Pure receipt law. Every committed field has exactly one engine type. Schema 2 binds the
 		/// canonical declaration digest; exact schema 1 remains adoptable only while that field is absent.

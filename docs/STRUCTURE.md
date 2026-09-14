@@ -1,11 +1,12 @@
 # Structural release contract
 
-## Pending heart repair source census
+## Refreshed Alpha 0.3.7 candidate census
 
-3100 staged production C# files / 440,362 physical lines: 0 exceed 300 lines, 0 are exactly 300,
-therefore 0 fail the strict cap; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000.
-1446 files with direct `XRL` imports; 0 of those exceed the line limit.
-Inventory SHA-256: `1f35396060ae02596850e177647cc92bf8decd9dc144b97504241851ccf2df68`. The automated semantic review binds this inventory; see STRUCTURE_REVIEW_0_3_7.md. Native and delivery acceptance remain separate.
+3106 staged production C# files / 440,877 physical lines; zero at or above 300 lines.
+1450 files with direct `XRL` imports; none exceed the cap. Cold-install inventory: 3139 files.
+Inventory SHA-256: `3dc69687e01f930bffc8f840a15f4a5a885c3744a6fc17049a8ce91c5d881e62`.
+The automated [delta review](STRUCTURE_REVIEW_0_3_7.md) and STRUCTURE_REVIEW.json bind this
+inventory. Native evidence retains its original source pins; candidate delivery remains pending.
 
 ## Current Alpha 0.3.6 candidate census
 
