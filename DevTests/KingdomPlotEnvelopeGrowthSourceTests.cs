@@ -223,9 +223,12 @@ namespace ThousandAndFirst.Tests
 				preflight);
 			AssertOrdered(preflight,
 				"out Failure, TolerateMovableOccupants: true)) return false;",
+				"if (!TryPlacementPassability(Successor, Z,",
 				"foreach (int packed in impacted)",
-				"if ((item.IsCreature || item.IsPlayer()) && Successor.Rect.Contains(x, y)",
-				"&& !beforeIntent.Rect.Contains(x, y)) continue;",
+				"if (item.IsCreature || item.IsPlayer())",
+				"if (successorSlots.TryGetValue(packed, out ArchitecturePassability declared)",
+				"&& !KingdomPlotRules.SlotBlocksOccupant(declared)) continue;",
+				"if (Successor.Rect.Contains(x, y) && !beforeIntent.Rect.Contains(x, y)) continue;",
 				"foreign or protected state occupies authored successor ground at ");
 			string application = Read("Growth/KingdomArchitectureStamper.UpgradeApplication.cs");
 			StringAssert.DoesNotContain("TolerateMovableOccupants", application);

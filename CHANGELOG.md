@@ -2,6 +2,10 @@
 
 **Pending heart progression repair (unreleased)**
 
+Allow residents and visitors to stand on retained walkable heart floors during upgrade
+assessment. Foreign objects and occupied blocked slots retain their protections. Extend the
+native occupied-ground probes to cover the predecessor interior; full acceptance is pending.
+
 Allow large authored hearts to fit construction receipts. The construction payload limit now
 covers the architecture codec's existing bounded envelope; old receipts retain their format.
 Court and arcology payload regressions and overflow refusal tests cover the mismatch (#221).
@@ -32,8 +36,8 @@ regressions to cover every added material across all fallback heart transitions 
 including historical-baseline transitions. Sixteen main cases pass; fresh native confirmation
 of the court bill remains pending under #216. Exact evidence is in docs/STATUS.md.
 
-Current 3100-file census is line-cap green: 440,356 physical lines; direct `XRL`
-imports occur in 1446 files, 0 of them over the line limit. Inventory SHA-256: `f7aeca0050a3bbc0b2dd0682adeefff444161d539c24fe766f3c9727a0955e42`.
+Current 3100-file census is line-cap green: 440,362 physical lines; direct `XRL`
+imports occur in 1446 files, 0 of them over the line limit. Inventory SHA-256: `7ceac5afb1d3089eadc9a93351d663fd8af31ccac3a44ef8e1ee68017a904420`.
 The cold-install inventory contains 3131 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Versions are semantic: patch for fixes,

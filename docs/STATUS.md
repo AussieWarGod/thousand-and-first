@@ -1,5 +1,25 @@
 # Current implementation and release evidence
 
+## Native26 closed; occupied retained-floor repair pending (#222)
+
+Native26 at `84dc3f11` identified the intermittent `42,13` blocker: enrolled resident 1,
+object `755/NPC`, standing on predecessor `739/DirtPath` slot `g:05:03`. The authored
+upgrade impact scan refused creatures inside the old lot even where the successor remains
+walkable. No higher payment occurred. Closed failed archive:
+`beta-heart-chain/84dc3f11/retained-citizen-ground-refused-1/result.json`, SHA-256
+`6daec403076ff081ba92d32c0cb59b28b6ec5d95d2ac23f202d78a2aeb2a3c94`.
+Full pinned recipe, strict log and exact owned stop passed. CI `34818949125` passed.
+
+The repair reads declared successor placement passability before rejecting a body on retained
+ground. Blocked or unknown retained ground and foreign objects still refuse. Annexed blocked
+slots retain their existing movement authority and strict paid-clearance checks. The native
+occupancy probe now requires resident, founder and stranger admission on the same impacted
+retained walkable cell, foreign-wall refusal there, exact restoration and no debit. Fourteen
+focused source cases, all 64 persona-validator tests, documentation/metadata checks and all
+four engine compile modes passed. The first developer compile caught a duplicate test-local
+name; corrected before the successful gate. Fresh native progression acceptance remains
+pending. Public release is still 0.3.6.
+
 ## Native25 closed; retained-ground diagnostic on the release branch
 
 Native25 at `8ceed37e` passed the first higher upgrade's supply, occupancy and road preflights,
@@ -105,8 +125,8 @@ from the passed four-mode compile at `8df7b548`.
 
 Engine gate passed: 3100 sources, baseline and compatibility symbols use their
 respective exclusions (3096 baseline). The cold-install inventory has 3131 files.
-3100 staged C# files / 440,356 physical lines; zero strict line-cap failures.
-Direct `XRL` imports: 1446 files, 0 over the line limit. Inventory SHA-256: `f7aeca0050a3bbc0b2dd0682adeefff444161d539c24fe766f3c9727a0955e42`.
+3100 staged C# files / 440,362 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1446 files, 0 over the line limit. Inventory SHA-256: `7ceac5afb1d3089eadc9a93351d663fd8af31ccac3a44ef8e1ee68017a904420`.
 This is a source census, not native acceptance or an updated exact-inventory semantic review.
 
 ## In-progress paid heart chain
