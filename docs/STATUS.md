@@ -13,6 +13,13 @@ balance or multi-tile acceptance.
 
 ## Current source census for the pending heart repair
 
+Higher-heart persistence preparation is isolated in `codex/heart-chain-coldload`.
+The new engine-free snapshot record/codec is not wired to native save or load yet;
+its format tests are not persistence acceptance. [HEART-CHAIN-COLDLOAD.md](HEART-CHAIN-COLDLOAD.md)
+records the required capture, preactivation, ordinary continuation and remaining scenarios.
+All 31 snapshot-format cases passed in both main and portable projects with zero skips;
+registration and documentation checks passed. No new engine compile or native save/load is claimed.
+
 Engine gate passed: 3100 sources, baseline and compatibility symbols use their
 respective exclusions (3096 baseline). The cold-install inventory has 3131 files.
 3100 staged C# files / 440,354 physical lines; zero strict line-cap failures.

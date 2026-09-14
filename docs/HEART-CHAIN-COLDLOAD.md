@@ -1,0 +1,71 @@
+# Higher-heart cold-load acceptance
+
+Preparation for #159, #160, #212–#215 and draft PR #207. This remains part of the
+Beta objective; it does not replace same-city multi-map acceptance in #211 or the
+land-use direction in [CITY-GROWTH-BALANCE.md](CITY-GROWTH-BALANCE.md).
+
+## Current scope
+
+The existing camp snapshot and observer pin rung two, its fire, its paid tent job,
+21 brush units and one extra timber for a later job. That evidence cannot establish
+the identity, physical support or persistence of a later heart.
+
+`KingdomCampHeartChainSnapshot` and its codec define a separate bounded witness for
+completed rungs three and four. They are preparation only: no native capture,
+save verb, Continue dispatch or continuation currently consumes this record.
+Codec tests validate the evidence format, not a game save or behavior after loading.
+Rung five and interrupted paid handovers still require their own coverage; refusing
+them in this test record is not a gameplay restriction or completion of those tasks.
+
+The record binds game, realm, city and local map; the heart, original basin, original
+store and retained unpaid track by exact identity and coordinates; the displaced
+resident and paid heart job; population, physical water/food and the game clock.
+Separate digests bind job receipts, the resident census, support works and original
+store custody. No population limit is imposed by the codec.
+
+## Required native integration
+
+1. Add an exact save variant of the paid chain. Its save verb must follow successful
+   ordinary completion, recovery and custody checks. Retain the existing unsaved
+   chain and rung-two save regression. Validate the persona before game preparation.
+2. Capture the actual completed heart and its physical objects, without repairing,
+   relocating, enrolling or minting anything during observation. Define canonical,
+   bounded digests for per-city paid receipts, resident rows and bodies, and physical
+   support works. Include the original survey stakes. Retain the underlying rows in
+   evidence so a digest mismatch can be diagnosed.
+3. Preflight the next ordinary paid job before the long save run. Any synthetic
+   material supplied for that job must be disclosed and included in the saved custody
+   census. Do not replay the 50-resident setup or backdate any completion after loading.
+4. Write the witness to the durable game state and external snapshot, save the actual
+   primary, and retain exact save/metadata/cache hashes. Verify clock and custody
+   across serialization. The host must stop the owned source game before importing
+   the sealed primary into a fresh, separately sealed profile.
+5. Dispatch this prefix explicitly through the existing Continue barrier and raw-reader
+   witness. Unknown/malformed higher-heart records must refuse, with no fallback to a
+   new game, rung-two observer or alternate save. Reconstruct and compare the entire
+   witness before `AfterGameLoaded` callbacks. Never populate missing data from it.
+6. After normal activation, verify all physical layouts, founding recovery, exact paid
+   receipts, resident identity/citizenship, support and original stock. Re-arm input
+   isolation for this dedicated loaded game; its current owner flag is nonserialized.
+   Preserve ordinary input in other games and restore popup ownership on every exit.
+7. Perform the next paid action through its ordinary quote, commission and settlement
+   turns. Prove one debit, exact completion, preserved prior jobs and original custody,
+   support over subsequent days, and no replay of the source script or setup.
+8. Extend host checks to require preactivation, activation, next-action and completion
+   witnesses, strict logs, full source/profile bindings and exact owned shutdown.
+   Test absent, duplicate, refused and wrong-identity evidence. A parser pass or a
+   `SCRIPT-COMPLETE` row alone is insufficient.
+
+## Remaining scenarios
+
+- Save/load at completed higher rungs, followed by another ordinary action.
+- Save/load during a paid Outstanding handover after transient obstruction, preserving
+  the same job, physical identities, custody and no second debit.
+- Resident movement after payment; protected founder/foreign bodies; no safe destination;
+  successful later recovery and preservation of any moved post.
+- Rung-five arcology progression and persistence (#160/#144).
+- Multi-claimed-map travel, unload/reconciliation, construction, support disruptions and
+  real cold-load continuation on both maps (#211).
+
+Keep [STATUS.md](STATUS.md) authoritative for actual executed evidence. Isolated preparation
+must not change the checkout or profile of an already running native scenario.
