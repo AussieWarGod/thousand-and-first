@@ -64,8 +64,8 @@ namespace ThousandAndFirst.Harness
 			Place(Beds[1], At(3, 1)); Place(Beds[2], At(5, 1));
 			Check("bunks-restored", KingdomLodgingRules.Closeness.Close, 3, 20, true);
 			CheckSharedHall();
-			Require(Passed.Count == 28, "room scenario omitted a required case");
-			return "native-lodging-room cases=28 passed=28 failed=0; real-quickstart=true; synthetic-room=true; "
+			Require(Passed.Count == 29, "room scenario omitted a required case");
+			return "native-lodging-room cases=29 passed=29 failed=0; real-quickstart=true; synthetic-room=true; "
 				+ "roof-credit=1; usable-bunks=3; same-root=true; no-cold-load-claim=true";
 		}
 

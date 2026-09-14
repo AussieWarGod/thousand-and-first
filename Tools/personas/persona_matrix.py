@@ -137,7 +137,7 @@ ROOM_EVIDENCE_ROWS = tuple("room-" + name for name in (
     "solid-cabinet", "cabinet-removed", "furnished-floor", "floor-restored", "wall-loss", "wall-restored",
     "bed-loss", "bed-restored", "occupied-room", "bunks-restored",
     "hall-connected", "hall-furniture-blocked", "hall-alternate-exit", "hall-alternate-obstructed",
-    "hall-route-restored", "hall-exterior-locked", "hall-exterior-unlocked", "hall-partitions-restored",
+    "hall-route-restored", "hall-open-locked", "hall-exterior-locked", "hall-exterior-unlocked", "hall-partitions-restored",
 ))
 
 # The save verb observes remaining custody before publishing its snapshot.

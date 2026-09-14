@@ -588,7 +588,7 @@ class MatchingTest(unittest.TestCase):
         expected = matrix.parse_expect(found["EXPECT"], name, ("lodging-room-native",))
         witnesses = [item[0] for item in expected if item[0].startswith("room-")]
         self.assertEqual(list(matrix.ROOM_EVIDENCE_ROWS), witnesses)
-        self.assertEqual(28, len(witnesses))
+        self.assertEqual(29, len(witnesses))
         rows = [(verb, outcome or "OK", wanted) for verb, outcome, wanted in expected]
         self.assertEqual([], matrix.match(expected, rows))
         for index, (verb, outcome, wanted) in enumerate(rows):

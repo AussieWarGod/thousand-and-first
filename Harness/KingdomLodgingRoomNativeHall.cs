@@ -35,7 +35,11 @@ namespace ThousandAndFirst.Harness
 				HallReading("hall-alternate-obstructed", 0, 1);
 				Detach(chest); Detach(alternate); Place(outsideWall, At(5, 5)); Detach(chair);
 				HallReading("hall-route-restored", 10, 0);
+				Require(Door.Open && !DoorObject.ConsiderSolid(), "earlier furniture entry did not leave the door open");
 				Door.Locked = true;
+				HallReading("hall-open-locked", 10, 0);
+				Require(Door.AttemptClose(Silent: true) && !Door.Open && DoorObject.ConsiderSolid(),
+					"locked entrance was not physically closed");
 				HallReading("hall-exterior-locked", 0, 1);
 				Door.Locked = false;
 				HallReading("hall-exterior-unlocked", 10, 0);

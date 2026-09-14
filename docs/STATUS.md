@@ -10,10 +10,19 @@ access, not proof of a street route beyond the immediately adjacent exterior app
 
 Twenty main room-rule cases pass, including separated bedrooms, shared-hall obstruction, alternate
 exits and restoration. The fixture is main-only; a portable selector matched no tests and is not
-a portable PASS. The existing native scenario adds eight mandatory observations over a synthetic
+a portable PASS. The existing native scenario adds nine mandatory observations over a synthetic
 whole-building designation and actual native cells, then restores the adopted room and its benefit
 reading. It must pass before this new access behavior is accepted. Prior native20 and the marsh
 warm/cold result below retain their original source pins; neither exercised this change.
+
+The first shared-hall native run at `aa4f33bb` passed the original twenty observations and five
+hallway cases, then refused the lock case. Earlier doorway furniture can open a native door;
+locking it without closing it does not make its non-solid opening impassable. The fixture now
+requires the actual open state, observes open-and-locked access, then physically closes the door
+before expecting blocked access. This is a fixture correction, not a change to native door physics.
+Closed failed archive: `physical-rooms/aa4f33bb/shared-hall-1/result.json`, SHA-256
+`7ee064447c8ca9aa11ee24543b256d2d654df74ca1655018c870a3942eec295a`.
+All 3,441 pinned inputs and exact owned stop verified; no whole-scenario PASS from this failure.
 
 ## Enclosed starter housing: marsh construction and cold load accepted
 
