@@ -165,6 +165,9 @@ namespace ThousandAndFirst
 					&& item.GetStringProperty(ComponentHashProperty) == Hash
 					&& item.GetIntProperty(ComponentSchemaProperty) == ComponentSchema) continue;
 				if (KingdomPlots.ReadObject(item) == KingdomPlotRules.GroundKind.Bare) continue;
+				KingdomLog.Log("architecture: foreign slot " + Placement.Slot + " holds "
+					+ item.IDIfAssigned + " (" + item.Blueprint + ") at " + Cell.X + ","
+					+ Cell.Y + "; ground=" + KingdomPlots.ReadObject(item));
 				return Fail("protected or foreign state moved onto layout slot " + Placement.Slot,
 					out Failure);
 			}

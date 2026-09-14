@@ -50,7 +50,7 @@ room programme cases across 192 variant/pose combinations, 24 generator cases, 6
 and five provider-content cases. Installed-blueprint reviews report 192 valid hut configurations
 with usable enclosed beds and clear fixture access; the whole architecture audit passes all
 1,376 poses. These checks do not prove native construction, household scheduling, thermal safety,
-paid-receipt migration or ordinary city balance. Fresh native and full CI acceptance remain pending.
+paid-receipt migration or ordinary city balance. Full CI passed at `a81b6985`; fresh native acceptance remains pending.
 
 CI at `42f3883c` found a stale palette census and historical XML fixtures leaking into the
 host gallery enumeration. The current palette count is 95; fixture inputs now use `.xml.fixture`
@@ -67,6 +67,23 @@ Its full pinned recipe and exact owned stop are archived at
 `bf37bbfde53cf27df604c7026418ddb8a171cef5c9ac38cf3ebfa909d5fb8055`.
 Use explicit 17,000-turn / 3,000-second limits for the next fresh lifecycle run, after the
 conversion contracts pass. This aborted startup supplies no gameplay acceptance.
+
+The next native run at `a81b6985` used the correct 17,000-turn budget. CI passed, but the
+native lifecycle failed after 16,800 ordinary turns: original founder `494` was absent, and
+strict logs rejected eight retained S bindings plus their resulting unused maps/transitions.
+The loader's draft validation accepted `Retained=yes`, but record materialisation still had an
+older unconditional minimum-size rejection. That redundant check is removed; current commissioning
+continues to enforce the current catalogue minimum. Thirteen loader source checks pass.
+The logical source reader now includes retained-binding validation in its test input.
+
+The missing founder is unresolved. The first growth pass already reported population three while
+body `494` was still physically displaced from a future wall cell; later ground stamping repeatedly
+refused foreign state on slot `g:05:02`. This does not establish emigration or death. Read-only
+founder/roll/grave diagnostics and exact foreign-slot object diagnostics will distinguish those
+cases in the next native run. The four-original-founder acceptance requirement remains intact.
+Closed failed evidence: `enclosed-canvas-homes/a81b6985/warm-cold-1/result.json`, SHA-256
+`24576031b94705e26a71d28614a29f53f137d945f9307cc73c8ca71ebd9255a5`.
+All 3,439 pinned recipe inputs and exact owned shutdown were verified. No cold load was attempted.
 
 ## Physical room and furniture clearance: native scenario accepted
 
@@ -357,8 +374,8 @@ Current cold-install inventory: 3137 files.
 Current source: 3104 sources, baseline and compatibility symbols use their
 respective exclusions (3097 baseline). All four engine compile modes passed.
 The cold-install inventory has 3132 files.
-3104 staged C# files / 440,649 physical lines; zero strict line-cap failures.
-Direct `XRL` imports: 1448 files, 0 over the line limit. Inventory SHA-256: `62732b7d3beca788f0cbd093ce652f11418daf72c1e802ff2ff713ecf4f6dca4`.
+3104 staged C# files / 440,651 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1448 files, 0 over the line limit. Inventory SHA-256: `f59df8128f09691b9da38606f6530040da2ed06eb3caf0ea95cecc9c7552dfa5`.
 This is a source census, not native acceptance or an updated exact-inventory semantic review.
 
 ## In-progress paid heart chain

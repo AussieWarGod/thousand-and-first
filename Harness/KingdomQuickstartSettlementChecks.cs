@@ -35,6 +35,7 @@ namespace ThousandAndFirst.Harness
 					surveyFailure);
 				using (scope)
 				{
+					LogSettlementState(Zone, System, receipt, Stage);
 					var ids = new HashSet<string>(StringComparer.Ordinal);
 					for (int i = 0; i < KingdomQuickstartRules.FounderCount; i++)
 					{
@@ -117,6 +118,31 @@ namespace ThousandAndFirst.Harness
 			if (Failure != null) message += "; failure=" + Failure;
 			KingdomScenarioJournal.Append(Row, Failure == null, message);
 			return Failure == null;
+		}
+
+		// Failure diagnostics never manufacture a replacement body or infer death from absence.
+		private static void LogSettlementState(Zone Zone, KingdomSystem System,
+			KingdomQuickstartReceipt Receipt, string Stage)
+		{
+			foreach (string id in Receipt.FounderObjectIds)
+			{
+				GameObject body = Zone.FindObjectByID(id);
+				KingdomLog.Log("quickstart witness " + Stage + ": founder=" + id
+					+ "; live=" + GameObject.Validate(body) + "; resident=" + KingdomResidents.IdOf(body)
+					+ "; citizen=" + (body?.GetIntProperty("KingdomCitizen") ?? 0));
+				if (Zone.Graveyard?.Objects == null) continue;
+				foreach (GameObject dead in Zone.Graveyard.Objects)
+					if (dead?.IDIfAssigned == id)
+						KingdomLog.Log("quickstart witness " + Stage + ": grave=" + id
+							+ "; blueprint=" + dead.Blueprint);
+			}
+			if (System.City.TryRead(out var state, out var fault))
+				for (int i = 0; i < state.ResidentCount; i++)
+					if (state.TryResident(i, out var resident))
+						KingdomLog.Log("quickstart witness " + Stage + ": row=" + resident.ResidentId
+							+ "; name=" + resident.Name + "; standing=" + resident.Standing
+							+ "; cause=" + resident.Cause + "; bound=" + resident.BoundZoneId
+							+ "; home=" + resident.HomeWorkId);
 		}
 
 		private static void Require(bool Condition, string Failure)
