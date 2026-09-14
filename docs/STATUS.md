@@ -85,6 +85,24 @@ Closed failed evidence: `enclosed-canvas-homes/a81b6985/warm-cold-1/result.json`
 `24576031b94705e26a71d28614a29f53f137d945f9307cc73c8ca71ebd9255a5`.
 All 3,439 pinned recipe inputs and exact owned shutdown were verified. No cold load was attempted.
 
+A fresh run at `e62ebbe5` confirms the retained-reader repair: strict final logs pass, with no
+architecture catalogue errors. The lifecycle still fails. All four original bodies occur in the
+native graveyard and all four resident rows read `Dead / Violence`, establishing witnessed deaths
+rather than housing emigration in this run. The exact attacker and circumstances remain unknown;
+the row cause means a non-player, non-raid killer was reported, not an identified species.
+The mid-wait native capture shows enclosed canvas shells, but the required room/housing observation
+was not reached because original-citizen validation refused first. No housing or cold-load PASS.
+CI `34852019867` passes at the same pin.
+
+Closed diagnostic failure: `enclosed-canvas-homes/e62ebbe5/warm-diagnostics-1/result.json`, SHA-256
+`15f73958e17d4a1fdef8d5042b06706ab3b2aed5a109a00ccdfced67245cf978`. All 3,439 pinned recipe inputs,
+strict final log and exact owned shutdown verified; persona FAIL. The native capture is retained.
+Issue [#237](https://github.com/AussieWarGod/thousand-and-first/issues/237) tracks the original
+citizen loss, prior blocked site, attacker identification and required ordinary construction plus
+separate cold-load acceptance. Next diagnostic should record the actual death event's killer,
+weapon and reason, or distinguish the grave object's last-damager reading from the fatal event.
+Do not grant invulnerability, fabricate citizens or weaken the four-founder requirement to pass.
+
 ## Physical room and furniture clearance: native scenario accepted
 
 Lodging now measures actual sleeping rooms and clear floor using native structural observations.
