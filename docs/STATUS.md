@@ -1,5 +1,33 @@
 # Current implementation and release evidence
 
+## Native24 closed; court receipt bound repair — 2026-09-14
+
+Native24 at `1729bae6` completed paid rung three and all controlled late-resident clearance,
+protected-occupant, failed-destination and Outstanding-removal retry cases. Original basin,
+stockpile, twenty-one brush units, unpaid track and fifty housed residents remained intact.
+Court preflight then refused `The authored plot payload exceeds the construction receipt bound.`
+No court payment or cold load occurred. Issue #221 tracks this production blocker.
+
+Closed archive: `beta-heart-chain/1729bae6/court-payload-bound-refused-1/result.json`, SHA-256
+`bd481dbf7bcb48dfc799843e8608ababe4459de4ca93382fc62a2d87e6e7de6b`.
+Full pinned profile recipe, strict log and exact owned stop passed; scenario failed. The
+previous six-timber repair cleared material preflight, but this later refusal is not court
+completion or survey-stake acceptance. Eighteen synthetic homes remain a construction stress
+fixture, not ordinary city balance.
+
+Construction's 8192-character cap was smaller than the existing architecture codec's
+16456-character envelope. The repair raises the per-job cap to 32768, retaining the 4 MiB
+registry cap, canonical formats, hashes, and architecture's 12 KiB binary cap. Existing saved
+receipts remain readable. A regression failed for court and arcology in all four fallback
+facings, then all seventeen main CampHeart cases passed after repair. Twenty compiled heart
+snapshots now round-trip inside construction envelopes with maximal skin metadata; separate
+boundary tests cover old-size, larger, exact-bound and over-bound inputs. This is source
+codec evidence, not loaded-game acceptance. Fresh native court validation remains required.
+
+Priority remains further gameplay Alphas, with Hearthpyre compatibility parked until Beta.
+PR #220 prepares private 0.3.7; #219 higher-heart cold-load work stays separate. Neither
+candidate nor capability work has been uploaded. Public 0.3.6 remains published.
+
 ## Accepted city-growth direction — planned
 
 [CITY-GROWTH-BALANCE.md](CITY-GROWTH-BALANCE.md) records the user's complete city-balance
@@ -58,8 +86,8 @@ from the passed four-mode compile at `8df7b548`.
 
 Engine gate passed: 3100 sources, baseline and compatibility symbols use their
 respective exclusions (3096 baseline). The cold-install inventory has 3131 files.
-3100 staged C# files / 440,354 physical lines; zero strict line-cap failures.
-Direct `XRL` imports: 1446 files, 0 over the line limit. Inventory SHA-256: `4f8ee63c2752d59bcdea66586483f9273db112b5038f467ce0fd935121cfc086`.
+3100 staged C# files / 440,356 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1446 files, 0 over the line limit. Inventory SHA-256: `f7aeca0050a3bbc0b2dd0682adeefff444161d539c24fe766f3c9727a0955e42`.
 This is a source census, not native acceptance or an updated exact-inventory semantic review.
 
 ## In-progress paid heart chain

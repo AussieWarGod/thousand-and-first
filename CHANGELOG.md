@@ -2,6 +2,12 @@
 
 **Pending heart progression repair (unreleased)**
 
+Allow large authored hearts to fit construction receipts. The construction payload limit now
+covers the architecture codec's existing bounded envelope; old receipts retain their format.
+Court and arcology payload regressions and overflow refusal tests cover the mismatch (#221).
+Native24 completed rung three, then refused the old payload bound before court payment.
+Hearthpyre compatibility work is deferred until Beta; further gameplay Alphas remain priority.
+
 Follow completed heart upgrades across successive receipts, and admit the exact next paid
 improvement while its predecessor still stands. Scope local spatial-seal reads to one survey.
 The developer city fixture gains explicit synthetic water producers and sustained-support preflight.
@@ -26,8 +32,8 @@ regressions to cover every added material across all fallback heart transitions 
 including historical-baseline transitions. Sixteen main cases pass; fresh native confirmation
 of the court bill remains pending under #216. Exact evidence is in docs/STATUS.md.
 
-Current 3100-file census is line-cap green: 440,354 physical lines; direct `XRL`
-imports occur in 1446 files, 0 of them over the line limit. Inventory SHA-256: `4f8ee63c2752d59bcdea66586483f9273db112b5038f467ce0fd935121cfc086`.
+Current 3100-file census is line-cap green: 440,356 physical lines; direct `XRL`
+imports occur in 1446 files, 0 of them over the line limit. Inventory SHA-256: `f7aeca0050a3bbc0b2dd0682adeefff444161d539c24fe766f3c9727a0955e42`.
 The cold-install inventory contains 3131 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Versions are semantic: patch for fixes,

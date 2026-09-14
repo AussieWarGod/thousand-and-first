@@ -2331,3 +2331,12 @@ production target (variant, pose, cells, fixtures, anchors, and delta) is prepar
 before confirmation, and re-proved unchanged at commit. Retype and build-on-cleared-socket use the
 same prepare/preview/commit discipline with their own fresh target. Cancelling any preview writes
 no debit, strike, receipt, or map mutation.
+
+## Construction payload envelope
+
+The per-job construction payload limit is 32,768 characters. This admits the existing
+authored snapshot envelope (16,456 characters, controlled by a 12 KiB binary limit) plus
+plot coordinates, a bounded UTF-8 skin and digest. The total construction registry remains
+bounded at 4,194,304 characters. The canonical construction-v5 and plot-v2 encodings and
+hashes are unchanged; existing smaller receipts remain readable. Layouts must still satisfy
+all architecture, material, ownership and physical-ground validation before payment.

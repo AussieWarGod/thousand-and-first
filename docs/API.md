@@ -2101,3 +2101,12 @@ and removes the receipt; any third-party ownership change quarantines without ov
   are given the chance to.
 - **Failures degrade**: an exception in our code is logged and skipped, never propagated
   into the host game.
+
+### Construction payload capacity
+
+`KingdomConstructionRules.MaxPayloadChars` is 32,768. Construction writers and readers
+refuse larger per-job payloads; the total registry bound remains 4,194,304 characters.
+This capacity covers the existing authored snapshot envelope and plot wrapper. It does
+not grant third parties authority to write paid-job state or bypass architecture validation.
+No serialization format changes accompany this capacity correction; smaller saved receipts
+retain their original canonical bytes.
