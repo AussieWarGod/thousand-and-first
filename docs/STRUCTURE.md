@@ -2,8 +2,8 @@
 
 ## Unreleased recruitment census
 
-3112 staged production C# files; 440,989 physical lines; 1454 files with direct `XRL` imports;
-zero at or above 300 lines. Inventory SHA-256: `7c6c7c4514de45a962aefd5bfb5833b867296204e8bd0be62531ff2c86723caf`.
+3112 staged production C# files; 441,026 physical lines; 1454 files with direct `XRL` imports;
+zero at or above 300 lines. Inventory SHA-256: `edcbe79a2c2890363223ab1346f0e603eeac82fd92c649c1803e3e262f087eef`.
 Pure bounded weighting, a native catalogue adapter, isolated native naming and a shared payload
 builder replace independent recruit draws. No saved fields change; new body profiles are ordinary
 XML. Structural review is stale; preceding accepted reviews retain their original inventory.

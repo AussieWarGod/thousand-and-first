@@ -22,9 +22,9 @@ namespace ThousandAndFirst
 			try
 			{
 				Stat.NamingRnd = new Random((int)seed);
-				Name = NameMaker.MakeName(Species: Body.GetTag("Species", null),
-					Culture: Body.GetTag("Culture", null), Faction: Faction,
-					Region: Body.GetTag("NamingRegion", null), Tag: Body.GetTag("NamingTag", null),
+				Name = NameMaker.MakeName(Species: Body.GetPropertyOrTag("Species"),
+					Culture: Body.GetPropertyOrTag("Culture"), Faction: Faction,
+					Region: Body.GetPropertyOrTag("NamingRegion"), Tag: Body.GetPropertyOrTag("NamingTag"),
 					FailureOkay: true);
 				if (ValidText(Name)) return true;
 				Failure = "native settler naming returned no bounded name"; return false;

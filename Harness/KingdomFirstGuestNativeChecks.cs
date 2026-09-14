@@ -117,7 +117,8 @@ namespace ThousandAndFirst.Harness
 				Require(Emissions == 0 && !KingdomFirstGuestRuntime.IsAwaitingAnswer(System),
 					"a first guest was already awaiting an answer before any turn passed");
 				Armed = true;
-				Phase = 1;
+				Phase = 0;
+				Recruitment.BeginWaiting(Zone, Evidence);
 				Evidence.Append("\nfounded tick=").Append(Game.TimeTicks)
 					.Append("; next-arrival tick=").Append(System.NextArrivalTick)
 					.Append("; dedicated drams=").Append(KingdomGrowth.CountStoredWater(Zone))
@@ -133,9 +134,16 @@ namespace ThousandAndFirst.Harness
 			/// </summary>
 			internal void Check()
 			{
-				Require(Phase >= 1 && !Done, "first-guest setup did not run");
+				Require(Phase >= 0 && !Done, "first-guest setup did not run");
 				Require(Fault == null, "the message observer faulted: " + Fault);
 				Require(!KingdomScenarioAdvance.Pending, "turns are still owed");
+				if (Phase == 0)
+				{
+					Recruitment.CheckWaiting(Zone, Evidence);
+					Require(Emissions == 0, "empty pool opened a first guest message");
+					Phase = 1;
+					return;
+				}
 				Require(Game.TimeTicks >= System.NextArrivalTick
 					|| KingdomFirstGuestRuntime.IsAwaitingAnswer(System),
 					"the clock never reached the first arrival tick");

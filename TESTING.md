@@ -2,12 +2,16 @@
 
 ## Coherent recruitment validation pending
 
-Full licensed 15,018 main / 5,909 portable cases pass with zero skips. Four engine compile
+Full licensed 15,019 main / 5,909 portable cases pass with zero skips. Four engine compile
 modes pass across 3112 production C# sources; the cold-install inventory contains 3146 files.
 Fourteen new shared cases cover both reputation channels, monotonicity, bounds, hostility and
 fixed-event weighted draws. Native first-guest probes now require all six source factions,
 both selection routes, deterministic native names, body/culture agreement, empty hostile-pool
 refusal, and retained frozen guest identity after changed reputation across ordinary turns.
+The initial 12,000-turn native run passed at `7c386a81`; its closed archive is in STATUS.
+The expanded 18,000-turn scenario is pending and starts with an all-hostile wait, requiring no
+body or water spend, retained original debt, a downstream road checkpoint and explanatory status.
+The main-only cadence codec regression preserves debt through repeated waits and serialization.
 Those probes use reversible synthetic reputation and unplaced body samples; correspondence
 is produced by the real cadence. Physical admission, home allocation and cold load remain owed.
 

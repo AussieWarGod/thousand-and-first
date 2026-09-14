@@ -16,6 +16,38 @@ namespace ThousandAndFirst
 			out string Name, out string Failure)
 		{
 			Blueprint = Origin = Name = Failure = null;
+			if (!TryCatalogue(System, FirstGuest, out var weighted, out var origins,
+				out var factions, out Failure)) return false;
+			if (!KingdomSemanticSelectionRules.TryChoose(System.SimulationSeed,
+				KingdomSemanticSelectionRules.RulesVersion, System.CurrentSettlementId,
+				KingdomSemanticSelection.GrowthArrivalStream, KingdomSemanticSelection.PersonEventKind,
+				Ordinal, 0U, weighted, out Blueprint, out var fault))
+			{
+				Failure = "settler reputation draw refused: " + fault; return false;
+			}
+			Origin = origins[Blueprint];
+			return TryNativeName(System, Key, GameObjectFactory.Factory.Blueprints[Blueprint],
+				factions[Blueprint], out Name, out Failure);
+		}
+
+		internal static string PendingNeed(KingdomSystem System)
+		{
+			var growth = System?.LifecycleBook?.Growth;
+			if (!KingdomGrowth.Enabled || !KingdomMaster.NewWorkAllowed(System) || growth == null
+				|| growth.ArrivalCandidate != null || growth.ArrivalOpportunity != null
+				|| growth.ArrivalOp != null || growth.ArrivalDebtRanges.Count == 0) return null;
+			bool first = growth.ArrivalDebtRanges[0].FirstOrdinal == 1UL;
+			if (TryCatalogue(System, first, out _, out _, out _, out string failure)) return null;
+			return failure == KingdomRecruitmentRules.NoEligibleFailure
+				? "No settlers are willing to come: improve your reputation and the settlement's standing with their people."
+				: "Recruitment is unavailable: " + failure + ".";
+		}
+
+		private static bool TryCatalogue(KingdomSystem System, bool FirstGuest,
+			out List<KingdomSemanticWeightedEntry> weighted, out Dictionary<string, string> origins,
+			out Dictionary<string, string> factions, out string Failure)
+		{
+			weighted = null; origins = factions = null; Failure = null;
 			if (System == null || The.Game?.PlayerReputation == null
 				|| !System.TryCaptureRegardLedger(out _))
 			{
@@ -23,9 +55,9 @@ namespace ThousandAndFirst
 			}
 			if (!KingdomSemanticSelection.TryLoadSimpleCatalogue("r_KingdomSettlers", null,
 				out var source, out Failure)) return false;
-			var weighted = new List<KingdomSemanticWeightedEntry>();
-			var origins = new Dictionary<string, string>(StringComparer.Ordinal);
-			var factions = new Dictionary<string, string>(StringComparer.Ordinal);
+			weighted = new List<KingdomSemanticWeightedEntry>();
+			origins = new Dictionary<string, string>(StringComparer.Ordinal);
+			factions = new Dictionary<string, string>(StringComparer.Ordinal);
 			foreach (var entry in source)
 			{
 				if (FirstGuest && !KingdomLifecycleRules.GrowthFirstGuestBlueprintAllowed(entry.StableKey)) continue;
@@ -58,16 +90,7 @@ namespace ThousandAndFirst
 				origins.Add(entry.StableKey, origin); factions.Add(entry.StableKey, factionName);
 			}
 			if (weighted.Count == 0) { Failure = KingdomRecruitmentRules.NoEligibleFailure; return false; }
-			if (!KingdomSemanticSelectionRules.TryChoose(System.SimulationSeed,
-				KingdomSemanticSelectionRules.RulesVersion, System.CurrentSettlementId,
-				KingdomSemanticSelection.GrowthArrivalStream, KingdomSemanticSelection.PersonEventKind,
-				Ordinal, 0U, weighted, out Blueprint, out var fault))
-			{
-				Failure = "settler reputation draw refused: " + fault; return false;
-			}
-			Origin = origins[Blueprint];
-			return TryNativeName(System, Key, GameObjectFactory.Factory.Blueprints[Blueprint],
-				factions[Blueprint], out Name, out Failure);
+			return true;
 		}
 
 		private static bool ValidText(string Text)

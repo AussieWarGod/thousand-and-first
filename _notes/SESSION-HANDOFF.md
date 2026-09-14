@@ -3,8 +3,8 @@
 ## Coherent recruitment draft
 
 Current development: 3112 staged sources / 3146 package files. Six-faction coherent
-recruitment implemented; full licensed 15,018/5,909 cases and four engine modes pass. Native
-catalogue and frozen-guest checks pending; physical admission/home/cold-load/multi-map proof
+recruitment implemented; full licensed 15,019/5,909 cases and four engine modes pass. Native
+catalogue/frozen-guest checks passed at 7c386a81; expanded hostile-wait check pending; physical admission/home/cold-load/multi-map proof
 remains owed under #231/#230. No saved fields change. docs/STATUS.md and common Git handoff
 own exact scope and live handles; previous entries below retain original evidence.
 

@@ -240,3 +240,10 @@ Privacy counts operable sleeping providers before enrollment-cap allocation, so 
 bunk cannot disappear from shared-room measurements merely because its roof credit was capped.
 The existing room-adoption limit remains 200 cells; lodging measures its bounded designated scope
 (up to 4000 cells), including large halls. Neither rule is a resident-per-map limit.
+
+An all-ineligible recruitment pool must retain its due head while staffing, industry, plot work,
+lodging and roads continue. Charter must explain the reputation block alongside physical needs.
+The expanded first-guest native scenario checks this through an ordinary hostile wait, unspent
+water, no citizen, the final road-processing checkpoint and recovery of the same original debt.
+An empty camp's road checkpoint is a control-flow regression witness, not productive construction
+or whole-city balance acceptance. See STATUS for the currently executed scope.

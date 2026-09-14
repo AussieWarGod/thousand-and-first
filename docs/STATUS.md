@@ -12,15 +12,26 @@ identity; historical blueprint-only recovery keeps its original naming path.
 Both player and inbound city regard affect bounded weights. Native hostility excludes a faction;
 missing factions are unavailable. An all-ineligible pool creates no body or frozen person and
 retains the due opportunity for later peaceful relations. This is not a population quota.
-Full licensed suites pass: 15,018 main / 5,909 portable, zero skips; four engine compile modes pass.
-Native catalogue/coherence and frozen-first-guest probes are implemented but execution is pending.
+Full licensed suites pass: 15,019 main / 5,909 portable, zero skips; four engine compile modes pass.
+The first native run at `7c386a8175f1646103aeb61fb8603e624d11442f` passed catalogue/coherence
+and frozen-first-guest checks across 12,000 ordinary turns. Closed archive:
+`recruitment/7c386a81/native-1-pass/result.json`, SHA-256
+`b150724a584b32ad65abf99771fbbbbbd01fa833628bd9fdd9056e37a3fe9d50`.
+This is evidence for that earlier input, not acceptance of the changes below.
+
+Follow-up fixes an empty pool returning before downstream growth work: retain the unspent debt,
+validate/publish its clock, and continue the ordinary pass. Charter reports the reputation block
+alongside the physical need. Native naming now uses property-before-tag precedence. The expanded
+18,000-turn test adds an all-hostile ordinary wait, downstream road checkpoint, exact water/debt
+retention and recovery of the original head. Its execution is pending; the road checkpoint proves
+continued downstream processing, not productive staffing or construction in this empty camp.
 Physical admission/home allocation, cold load, ordinary multi-map recruitment and balance remain
 unproved. #231 and the original Beta goal remain open.
 
 Development compile scope: 3112 sources, baseline and compatibility symbols.
-Current census: 3112 staged C# files; 440,989 physical lines; zero at or above 300 lines.
+Current census: 3112 staged C# files; 441,026 physical lines; zero at or above 300 lines.
 Direct `XRL` imports: 1454 files, 0 over the line limit. Cold-install inventory: 3146 files.
-Inventory SHA-256: `7c6c7c4514de45a962aefd5bfb5833b867296204e8bd0be62531ff2c86723caf`. Structural review is stale for this delta.
+Inventory SHA-256: `edcbe79a2c2890363223ab1346f0e603eeac82fd92c649c1803e3e262f087eef`. Structural review is stale for this delta.
 Prior native/public evidence below retains its original inputs. Public 0.3.7 is unchanged.
 
 ## Strike closure feedback — accepted native scope (abf41251)

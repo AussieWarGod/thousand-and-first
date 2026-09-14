@@ -7,7 +7,7 @@ using XRL.World;
 
 namespace ThousandAndFirst.Harness
 {
-	internal sealed class KingdomRecruitmentNativeChecks
+	internal sealed partial class KingdomRecruitmentNativeChecks
 	{
 		private static readonly string[] FactionsToProbe =
 			{ "Farmers", "Mechanimists", "Snapjaws", "Issachari", "Hindren", "Dromad" };
@@ -62,7 +62,7 @@ namespace ThousandAndFirst.Harness
 							Require(GameObject.Validate(body) && body.Body != null && body.Brain != null
 								&& body.GetPrimaryFaction() == faction && body.CurrentCell == null,
 								"recruit did not retain its native body and source allegiance");
-							string culture = blueprint.GetTag("Culture", null), species = blueprint.GetTag("Species", null);
+							string culture = blueprint.GetPropertyOrTag("Culture"), species = blueprint.GetPropertyOrTag("Species");
 							Require((culture == null || body.GetCulture() == culture)
 								&& (species == null || body.GetSpecies() == species),
 								"recruit body disagreed with native naming culture/species");
@@ -84,6 +84,9 @@ namespace ThousandAndFirst.Harness
 		{
 			var candidate = System.LifecycleBook?.Growth?.ArrivalCandidate;
 			Require(candidate != null && candidate.FirstGuest != null, "actual first guest was not frozen");
+			Require(candidate.ArrivalOpportunityOrdinal == 1UL
+				&& candidate.ArrivalOpportunityDueTick == WaitingDue,
+				"recruitment recovery replaced the retained first debt head");
 			if (Frozen == null)
 			{
 				Frozen = candidate; FrozenName = candidate.PlannedName; FrozenOrigin = candidate.PlannedOrigin;
