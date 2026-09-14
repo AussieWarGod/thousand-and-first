@@ -1,5 +1,11 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
+## Current capability adapter draft
+
+3103 production C# files; 3,134 cold-install files. Inventory `28cdedb6b984778c59dd387bcf231945d12cf9ba751df7739e5a024da841871a`.
+Earlier reconciliation and native checkpoints remain bound to their original inputs.
+
+
 ## Retained combined heart candidate before surveyed-ingress draft — 2026-09-11
 
 Current draft census/evidence is in docs/STATUS.md; the figures below describe its predecessor.

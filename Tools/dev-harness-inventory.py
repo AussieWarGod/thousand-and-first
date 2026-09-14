@@ -139,14 +139,9 @@ def check() -> int:
     return 0
 
 
-# The ONE mode filter. The ordinary gate and the dev gate both read their source list from here, so
-# an exclusion can never be changed for one and forgotten for the other. Ordinary baseline compiles
-# a clean symbol set and therefore excludes the optional-mod bridge; ordinary compatibility compiles
-# it against the tracked ABI stub and therefore includes it.
-MODE_EXCLUSIONS = {
-    "baseline": ("Integrations/Hearthpyre223/",),
-    "compatibility": (),
-}
+# Both symbol modes include capability-only adapters. Baseline proves that their runtime
+# discovery has no compile-time dependency on a foreign mod assembly.
+MODE_EXCLUSIONS = {"baseline": (), "compatibility": ()}
 
 # The overlay is never part of an ORDINARY inventory. Keeping it out here is what makes
 # "ordinary sources plus all and only Harness" a checkable statement rather than a description.

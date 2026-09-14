@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prove Qud's directory selection leaves the optional typed bridge isolated."""
+"""Prove capability adapters compile independently of optional dependency state."""
 
 from __future__ import annotations
 
@@ -114,20 +114,16 @@ def main() -> int:
         for paths, dependencies in manifest_rows
         if dependencies
     ]
-    if foreign_rows != [((BRIDGE,), {DEPENDENCY_ID: DEPENDENCY_VERSION})]:
-        fail("optional row is not the one exact Hearthpyre 2.2.3 bridge row")
-    for paths, dependencies in manifest_rows:
-        if not dependencies and any(
-            path == "Integrations" or BRIDGE.startswith(path + "/") for path in paths
-        ):
-            fail("a common path recursively subsumes the bridge")
+    if foreign_rows:
+        fail("capability-only runtime must not require optional package versions or load order")
     matrix = {
-        "absent": (None, False, False, False, common_paths),
-        "present-2.2.3": (DEPENDENCY_VERSION, True, False, True, candidates),
-        "wrong-version": ("2.2.4", True, False, True, common_paths),
-        "disabled": (DEPENDENCY_VERSION, False, False, True, common_paths),
-        "failed": (DEPENDENCY_VERSION, True, True, True, common_paths),
-        "loads-after-taf": (DEPENDENCY_VERSION, True, False, False, common_paths),
+        "absent": (None, False, False, False, candidates),
+        "present-2.2.3": ("2.2.3", True, False, True, candidates),
+        "present-2.2.4": ("2.2.4", True, False, True, candidates),
+        "future-version": ("99.0.0", True, False, True, candidates),
+        "disabled": ("2.2.4", False, False, True, candidates),
+        "failed": ("2.2.4", True, True, True, candidates),
+        "loads-after-taf": ("2.2.4", True, False, False, candidates),
     }
     for name, (version, enabled, failed, loads_first, expected) in matrix.items():
         actual = selected(

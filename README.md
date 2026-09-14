@@ -43,9 +43,12 @@ The private package and one subscribed installation match the verified native so
 The release target is Caves of Qud **v1.0.5, core build 2.0.211.51**. Newer game builds are
 unverified until licensed integration checks pass again. There are no required mod dependencies.
 
-Hearthpyre **2.2.3** is an optional, exact-version integration when it loads first. Other
+The published 0.3.6 package includes Hearthpyre **2.2.3** as an optional, exact-version integration when it loads first. Other
 Hearthpyre versions leave core behavior unchanged. Qud Industry 0.3 has no typed integration in
 the audited build.
+
+Current development removes this older-build restriction through a read-only capability adapter.
+See [current Hearthpyre support and native-test gaps](https://github.com/AussieWarGod/thousand-and-first/issues/218).
 
 ## Install or playtest
 

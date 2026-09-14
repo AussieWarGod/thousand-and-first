@@ -505,9 +505,9 @@ class ModeInventoryTest(unittest.TestCase):
     def relative(self, paths):
         return sorted(p.relative_to(self.stage).as_posix() for p in paths)
 
-    def test_baseline_excludes_the_optional_mod_bridge(self):
+    def test_baseline_includes_capability_adapter_without_foreign_reference(self):
         self.assertEqual(
-            ["Core/A.cs"],
+            ["Core/A.cs", "Integrations/Hearthpyre223/Bridge.cs"],
             self.relative(INVENTORY.ordinary_sources(self.stage, "baseline")),
         )
 

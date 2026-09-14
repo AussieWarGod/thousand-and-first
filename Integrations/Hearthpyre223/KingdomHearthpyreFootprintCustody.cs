@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.CompilerServices;
-using Hearthpyre;
-using Hearthpyre.Realm;
 using XRL.World;
 
 namespace ThousandAndFirst.Integrations.Hearthpyre223
@@ -165,7 +163,7 @@ namespace ThousandAndFirst.Integrations.Hearthpyre223
 			return true;
 		}
 
-		private static bool TryAnySettlementClaims<TKey>(Dictionary<TKey, Settlement> Rows,
+		private static bool TryAnySettlementClaims<TKey>(IReadOnlyDictionary<TKey, Settlement> Rows,
 			string ZoneId, KingdomHearthpyreFootprintScanBudget Budget, out string Failure)
 		{
 			Failure = null;
@@ -184,7 +182,7 @@ namespace ThousandAndFirst.Integrations.Hearthpyre223
 			out bool Claims, out string Failure)
 		{
 			Claims = false; Failure = null;
-			Dictionary<string, Sector> sectors = Settlement?.SectorsByZoneID;
+			IReadOnlyDictionary<string, Sector> sectors = Settlement?.SectorsByZoneID;
 			if (sectors == null) return true;
 			if (!TryCharge(Budget, sectors.Count, out Failure)) return false;
 			foreach (KeyValuePair<string, Sector> pair in sectors)
@@ -225,7 +223,7 @@ namespace ThousandAndFirst.Integrations.Hearthpyre223
 				? 0 : RuntimeHelpers.GetHashCode(Value);
 		}
 
-		private static bool TryCountReference(List<Home> Rows, Home Wanted,
+		private static bool TryCountReference(IReadOnlyList<Home> Rows, Home Wanted,
 			KingdomHearthpyreFootprintScanBudget Budget,
 			out int Count, out string Failure)
 		{
@@ -238,7 +236,7 @@ namespace ThousandAndFirst.Integrations.Hearthpyre223
 			return true;
 		}
 
-		private static bool TryCountValue<TKey, TValue>(Dictionary<TKey, TValue> Rows,
+		private static bool TryCountValue<TKey, TValue>(IReadOnlyDictionary<TKey, TValue> Rows,
 			TValue Wanted, KingdomHearthpyreFootprintScanBudget Budget,
 			out int Count, out string Failure)
 			where TValue : class
@@ -252,7 +250,7 @@ namespace ThousandAndFirst.Integrations.Hearthpyre223
 			return true;
 		}
 
-		private static bool Bounded<TKey, TValue>(Dictionary<TKey, TValue> Rows)
+		private static bool Bounded<TKey, TValue>(IReadOnlyDictionary<TKey, TValue> Rows)
 		{
 			return Rows != null && Rows.Count
 				<= KingdomHearthpyreFootprintScanBudget.MaxRegistryEntries;

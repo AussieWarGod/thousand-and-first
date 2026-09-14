@@ -8,6 +8,20 @@ Historical entries preserve the claim made at that point. The latest version ent
 `docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
 below it.
 
+**Current development — Hearthpyre capability adapter (unreleased)**
+
+- Replace Hearthpyre's exact-version/load-order compile condition with read-only runtime
+  capability binding. Compatible upgrades retain existing ownership and adoption evidence;
+  missing or changed capabilities refuse observation. Normal development validation targets
+  installed 2.2.4 and no longer needs an older build. Native compatibility acceptance remains open
+  in [#218](https://github.com/AussieWarGod/thousand-and-first/issues/218).
+
+
+Current 3103-file census is line-cap green: 440,519 physical lines. Direct XRL
+imports occur in 1446 files, 0 of them over the line limit. Inventory
+`28cdedb6b984778c59dd387bcf231945d12cf9ba751df7739e5a024da841871a`; cold-install inventory contains 3134 files.
+Addendum 9 line-cap debt is cleared; exact-inventory human semantic review remains a release blocker.
+
 ## [0.3.6] — 2026-09-13 (Alpha)
 
 Alpha hotfix for immediate claimed-zone lighting and full-zone city sight.

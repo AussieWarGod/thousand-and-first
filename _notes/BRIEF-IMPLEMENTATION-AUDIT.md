@@ -1,5 +1,10 @@
 # Brief-to-implementation audit
 
+## Current capability adapter draft
+
+**3103** production C# files. Census `28cdedb6b984778c59dd387bcf231945d12cf9ba751df7739e5a024da841871a`. Native acceptance remains open.
+
+
 ## Retained combined heart candidate before surveyed-ingress draft — 2026-09-11
 
 Current draft census/evidence is in docs/STATUS.md; the figures below describe its predecessor.

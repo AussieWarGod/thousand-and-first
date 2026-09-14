@@ -112,3 +112,11 @@ changed behavior; completed checks and evidence paths; outstanding failures/gaps
 or workflow IDs and ownership records; next concrete action. Update it before switching agents.
 Inspect those authoritative handles first on resumption. Do not restart work from historical
 notes, rerun a completed gate, or ask again for an authorization already recorded in the session.
+
+## Current optional dependency validation
+
+Use the current installed Hearthpyre with `Tools/gate.sh`; `TAF_HEARTHPYRE_ROOT` can select another
+real installation. Do not downgrade or relabel a dependency to pass an older source pin. The
+capability adapter is included in all four compiler modes, including baseline without a foreign
+assembly reference. Current source-review pins are development evidence, not runtime version gates.
+See [HEARTHPYRE-COMPATIBILITY.md](HEARTHPYRE-COMPATIBILITY.md) for the shared checks and native matrix.

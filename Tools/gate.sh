@@ -50,7 +50,7 @@ python3 "$REPO/Tools/generate-benefit-providers.py" --check
 python3 "$REPO/Tools/generate-lot-realizations.py" --check
 python3 "$REPO/Tools/check-benefit-provider-content.py"
 python3 "$REPO/Tools/check-manifest-directories.py"
-HEARTHPYRE_SOURCE="${TAF_HEARTHPYRE_223_ROOT:-/mnt/f/SteamLibrary/steamapps/workshop/content/333640/1683847053}"
+HEARTHPYRE_SOURCE="${TAF_HEARTHPYRE_ROOT:-/mnt/f/SteamLibrary/steamapps/workshop/content/333640/1683847053}"
 if [ -d "$HEARTHPYRE_SOURCE" ]; then
 	python3 "$REPO/Tools/check-hearthpyre-abi.py" --source "$HEARTHPYRE_SOURCE"
 else
@@ -73,19 +73,18 @@ compile_mode() {
 		--mode "$mode" \
 		--output "$rendered" || return 1
 	# One shared inventory primitive for ordinary and dev alike: the mode's exclusions live in
-	# Tools/dev-harness-inventory.py, so baseline can never drop the optional-mod bridge here and
-	# keep it there.
+	# Tools/dev-harness-inventory.py. Both modes include the dependency-free capability adapter.
 	python3 "$REPO/Tools/dev-harness-inventory.py" --sources \
 		--stage "$STAGE" --mode "$mode" --out "$source_list" || return 1
 	[ -s "$source_list" ] || return 1
 	if [ "$mode" != baseline ]; then
-		stub_dll="$STAGE/Hearthpyre-2.2.3-abi.dll"
-		stub_rsp="$STAGE/hearthpyre-2.2.3-abi.rsp"
+		stub_dll="$STAGE/Hearthpyre-2.2.4-abi.dll"
+		stub_rsp="$STAGE/hearthpyre-2.2.4-abi.rsp"
 		{
 			printf '@"%s"\n' "$(unc "$rendered")"
 			printf -- '-target:library\n'
 			printf -- '-out:"%s"\n' "$(unc "$stub_dll")"
-			printf '"%s"\n' "$(unc "$REPO/DevTests/Compatibility/Hearthpyre223AbiStub.cs")"
+			printf '"%s"\n' "$(unc "$REPO/DevTests/Compatibility/Hearthpyre224AbiStub.cs")"
 		} > "$stub_rsp"
 		local stub_output stub_rc
 		set +e
@@ -95,7 +94,7 @@ compile_mode() {
 		set -e
 		printf '%s\n' "$stub_output" | grep -v 'warning CS2023' || true
 		if [ "$stub_rc" -ne 0 ]; then
-			echo "HEARTHPYRE 2.2.3 ABI STUB COMPILE FAILED"
+			echo "HEARTHPYRE 2.2.4 ABI STUB COMPILE FAILED"
 			return 1
 		fi
 	fi
@@ -138,8 +137,8 @@ prepare_dev_harness() {
 
 # The engine-touching harness shards meet a compiler ONLY here. Both public test projects are
 # deliberately Qud-free, so nothing there can vouch for a namespace, signature, or API on this path.
-# Each dev mode compiles ITS ordinary inventory plus the overlay: dev baseline must exclude the
-# optional-mod bridge exactly as ordinary baseline does, or it is not baseline plus Harness.
+# Each dev mode compiles ITS ordinary inventory plus the overlay. Baseline includes the
+# capability adapter without a foreign assembly reference, exactly as ordinary baseline does.
 compile_dev_harness() {
 	local mode="$1" rendered="$STAGE/refs-$1.rsp" rsp="$STAGE/gate-devharness-$1.rsp"
 	local source_list="$STAGE/sources-devharness-$1.list" count output rc
@@ -150,7 +149,7 @@ compile_dev_harness() {
 	{
 		printf '@"%s"\n' "$(unc "$rendered")"
 		printf -- '-out:"%s"\n' "$(unc "$STAGE/r_ThousandAndFirst-devharness-$mode.dll")"
-		[ "$mode" != compatibility ] || printf -- '-r:"%s"\n' "$(unc "$STAGE/Hearthpyre-2.2.3-abi.dll")"
+		[ "$mode" != compatibility ] || printf -- '-r:"%s"\n' "$(unc "$STAGE/Hearthpyre-2.2.4-abi.dll")"
 		while IFS= read -r f; do
 			printf '"%s"\n' "$(unc "$f")"
 		done < "$source_list"

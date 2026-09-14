@@ -1,5 +1,13 @@
 # Structural release contract
 
+## Current Hearthpyre capability adapter census
+
+3103 staged production C# files; 440,519 physical lines; zero at or above 300 lines.
+1446 files with direct `XRL` imports; 3134 cold-install files. Inventory
+`28cdedb6b984778c59dd387bcf231945d12cf9ba751df7739e5a024da841871a`. The retained release review does not bind this changed inventory;
+exact-inventory human semantic review remains a release blocker. Native compatibility is unaccepted.
+
+
 ## Current Alpha 0.3.6 candidate census
 
 3098 staged C# files; 440,137 physical lines; 1445 direct `XRL` imports; zero at or above

@@ -120,6 +120,7 @@ namespace ThousandAndFirst
 			{
 				IKingdomExternalOwnershipProvider provider =
 					Activator.CreateInstance(Type) as IKingdomExternalOwnershipProvider;
+				if (provider is IKingdomOptionalProvider optional && !optional.IsAvailable) return;
 				string id = provider?.ProviderId;
 				string version = provider?.ProviderVersion;
 				if (!KingdomExternalOwnershipRules.ValidToken(id, 64)

@@ -4,22 +4,21 @@ using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using Genkit;
-using Hearthpyre;
-using Hearthpyre.Realm;
 using ThousandAndFirst.Api;
 using XRL;
 using XRL.World;
 
 namespace ThousandAndFirst.Integrations.Hearthpyre223
 {
-	/// <summary>Exact 2.2.3 Home translator. Reads only the active zone's existing registries;
+	/// <summary>Capability-bound Home translator with stable persisted adapter identity. Reads only the active zone's existing registries;
 	/// never creates, removes, flushes, loads, or otherwise changes Hearthpyre state.</summary>
 	[KingdomForeignFootprintProvider]
 	public sealed class KingdomHearthpyreFootprintProvider
-		: IKingdomForeignFootprintProvider
+		: IKingdomForeignFootprintProvider, IKingdomOptionalProvider
 	{
 		public string ProviderId => "Hearthpyre";
-		public string ProviderVersion => "2.2.3";
+		public string ProviderVersion => RealmSystem.ContractVersion;
+		public bool IsAvailable => RealmSystem.IsAvailable;
 
 		public bool TryObserve(Zone ActiveZone, out KingdomForeignFootprint[] Footprints,
 			out string Failure)

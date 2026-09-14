@@ -1,5 +1,12 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
+## Current capability adapter validation scope
+
+Runtime capabilities are checked across 3103 production C# sources; the cold-install inventory
+contains 3134 files. The current [Hearthpyre matrix](docs/HEARTHPYRE-COMPATIBILITY.md) requires
+native evidence separately from pure tests and compiler modes. Older checkpoint counts remain historical.
+
+
 ## Quickstart housing hotfix acceptance (2026-09-13)
 
 The construction lifecycle now also observes the original four Quickstart citizens at startup,
@@ -1709,21 +1716,24 @@ back into them.
 
 ## Pass 3f — Optional external ground ownership
 
-Use exact Hearthpyre 2.2.3 for the compatible cases. Preserve a copy of each save before changing
+Use the current installed Hearthpyre for compatible cases; see
+[the updated capability matrix](docs/HEARTHPYRE-COMPATIBILITY.md). Preserve a copy of each save before changing
 the enabled-mod set. Do not use Hearthpyre wishes or UI to create TAF buildings or move citizens;
 this pass proves ownership observation, not lifecycle or construction transfer.
 
 | Step | Action | Expect |
 |---|---|---|
 | 16ag | Cold-launch with Hearthpyre absent, then found and claim ordinary ground | TAF loads and works normally. Status says no external owner observed; no missing-type/compiler error names Hearthpyre |
-| 16ah | Repeat cold launch with Hearthpyre disabled, a version other than 2.2.3, and a deliberately failed 2.2.3 copy | Each state selects the same core files as absence. TAF remains loadable; the typed shard is absent and no foreign-type error appears |
-| 16ai | With exact 2.2.3, stand in a Hearthpyre settlement parasang/sector and begin first or later-city founding | Before owner-nonce, receipt, or water mutation, a prompt names Hearthpyre 2.2.3, exact settlement GUID, sector evidence, zone, and parasang; it offers bind or leave unchanged |
+| 16ah | Repeat cold launch with Hearthpyre disabled and a deliberately failed current copy | Each state selects the complete dependency-free runtime. TAF remains loadable; no optional provider registers and no foreign-type error appears |
+| 16ah1 | Repeat with the current compatible public API under changed package metadata and with both relative load orders | The same capability adapter registers and observes the exact real owner. Changed metadata alone neither disables observation nor grants ownership |
+| 16ah2 | Enable a controlled test dependency with a missing or changed required public capability | Observation refuses with no debit or claim. The failed provider remains visible; it cannot masquerade as unowned ground. Synthetic API mutation is labelled |
+| 16ai | With current compatible Hearthpyre, stand in a Hearthpyre settlement parasang/sector and begin first or later-city founding | Before owner-nonce, receipt, or water mutation, a prompt names Hearthpyre and the stable evidence contract, exact settlement GUID, sector evidence, zone, and parasang; it offers bind or leave unchanged |
 | 16aj | Escape, choose leave unchanged, and answer no on separate attempts; compare basin, water, TAF state, Hearthpyre registries, objects, and log | Every refusal is free and byte/state neutral: no water, owner receipt, claim, settlement, sector, person, building, chronicle, or lifecycle changes |
 | 16ak | Choose bind and complete founding; save, quit, cold-load, and inspect Charter Status | One TAF claim stands with the exact persisted provider/version/settlement/sector/zone/parasang binding. The same owner is reported after load; no second Hearthpyre settlement or sector was created |
 | 16al | Interrupt/save at staged receipt, water-commit, external-bind commit, TAF publication, and completion cleanup cuts | Retry advances only the same authority. Bind evidence is in the receipt digest before debit. No cut double-spends water, loses the binding, publishes TAF without it, or duplicates either owner's records |
 | 16am | From an existing city, claim adjacent Hearthpyre-owned ground through Charter; first cancel, then bind | Cancel changes nothing. Bind revalidates immediately, claims once, and retains the same exact external owner evidence; no silent dual ownership or foreign lifecycle mutation occurs |
 | 16an | Save a bound city, disable Hearthpyre, cold-load, and remain on/return to its claimed ground | Core and save load. Binding data remains. The exact ground is reported contested/provider unavailable; semantic work and mutating Charter verbs pause before debit/mutation. No remote zone is loaded to repair it |
-| 16ao | Re-enable exact 2.2.3 without changing its registries and cold-load again | The retained binding revalidates and work resumes; no rebind prompt, fresh GUID, free work, elapsed-time double charge, or data loss occurs |
+| 16ao | Re-enable current compatible Hearthpyre without changing its registries and cold-load again | The retained binding revalidates and work resumes; no rebind prompt, fresh GUID, free work, elapsed-time double charge, or data loss occurs |
 | 16ap | On a save copy, alter/remove the referenced Hearthpyre owner or sector evidence, then visit the ground | Status names divergence and work remains paused. TAF does not guess a replacement, clear its evidence, seize the new owner, or silently continue |
 | 16aq | Found on externally unowned ground, save/cold-load, confirm the explicit-none mode remains, then make Hearthpyre claim that parasang and revisit | The persisted explicit-unowned TAF claim detects the new owner and pauses. It never becomes an invisible dual authority merely because ownership appeared later |
 | 16ar | During all cases inspect cached/active zones, Hearthpyre settlers, leadership, catalog/build records, and `Player.log` | Only the ground the player actually visits is observed. No `AddLiminal`, remote load, `PartyLeader` clear, settler conversion, foreign catalogue publication, TAF civic credit, new warning/error, or new exception occurs |
@@ -2779,7 +2789,7 @@ and controller. Optional physical descendants may fail without stranding their s
 | 139m | In a disposable save choose **Prepare this save for mod removal**, inspect/cancel both confirmations, then begin from a clean copy | Cancellation is mutation-free. Begin freezes realm/faction/game/incarnation, every known locator and owned projection disposition before cleanup, immediately fences new automatic/manual civic work, and reports every ground requiring an ordinary visit. Master-off remains a distinct reversible state |
 | 139n | Visit each frozen locator, choose exact loaded-ground cleanup, interrupt/cold-load before and after each prepared row/native callback, bring player/foreign/nested objects through custody, and revisit | Only exact TAF-owned projections/parts/objects on the frozen loaded ground are removed or made inert. Player custody and foreign objects/descendants survive. Matching absence advances one row; third state quarantines. Unvisited ground is never loaded remotely and remains named in the report; retries neither compensate twice nor silently discard obligations |
 | 139o | After all locators are clean, finalize known projections/faction/global state; save immediately, quit, remove the mod, inspect only from a backed-up copy as instructed, then reinstall and found anew from the retained prepared copy | Finalization retires exact quests/projections/faction/Journal/abilities/authorities and writes the persistent identity fence last. Report distinguishes proved known cleanup from legacy unknowns and never promises an absent mod can act. New incarnation uses fresh realm/faction/body IDs above monotonic high water and cannot reclaim tombstoned work. Any divergence keeps the mod enabled and recovery receipt intact |
-| 139p | With exact Hearthpyre 2.2.3, test overlap reject and exact bind at first/later founding and ordinary claim; save, disable/re-enable, change provider evidence, then repeat absent/wrong-version/failed/load-order cases | Only exact typed read-only provider is selected. Mode/evidence freezes before water debit and divergence gates mutation without taking foreign lifecycle. Core runs identically without shard; wrong/absent/failed versions do not compile/load it. Foreign ground/objects remain owned by their provider and no reflection guess or seizure occurs |
+| 139p | With current compatible Hearthpyre, test overlap reject and exact bind at first/later founding and ordinary claim; save, disable/re-enable, change provider evidence, then repeat absent/changed-API/failed/load-order cases | Capability-only read-only provider observes exact evidence. Mode/evidence freezes before water debit and divergence gates mutation without taking foreign lifecycle. All modes compile without a foreign reference; enabled incompatible capabilities refuse rather than imply unowned ground. Foreign ground and objects remain owned by their provider |
 | 139q | Run telemetry-off/on paired sessions for voices, memorial, locus, First Guest, First Feast, curator/lead, and Guest's Feast; run maximum lawful dense city and all cap/cap+1 cases | Off/absent gameplay bytes are equal. Export contains only declared numeric vocabulary. Record p50/p95/max, save bytes, prompts, completions, recall, obstruction/accessibility failures, and balance outcomes without retroactively moving thresholds. Every hidden loss/eviction, modal flood, unexplained stall, or native mismatch blocks promotion |
 
 ## Pass 4 — Attitudes and persistence

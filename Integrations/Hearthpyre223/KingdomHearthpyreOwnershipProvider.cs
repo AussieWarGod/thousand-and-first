@@ -1,6 +1,4 @@
 using System;
-using Hearthpyre;
-using Hearthpyre.Realm;
 using ThousandAndFirst.Api;
 using XRL.World;
 
@@ -8,10 +6,11 @@ namespace ThousandAndFirst.Integrations.Hearthpyre223
 {
 	[KingdomExternalOwnershipProvider]
 	public sealed class KingdomHearthpyreOwnershipProvider
-		: IKingdomExternalOwnershipProvider
+		: IKingdomExternalOwnershipProvider, IKingdomOptionalProvider
 	{
 		public string ProviderId => "Hearthpyre";
-		public string ProviderVersion => "2.2.3";
+		public string ProviderVersion => RealmSystem.ContractVersion;
+		public bool IsAvailable => RealmSystem.IsAvailable;
 
 		public bool TryObserve(Zone ActiveZone,
 			out KingdomExternalOwnershipObservation Observation, out string Failure)

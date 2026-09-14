@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify the exact Hearthpyre 2.2.3 ABI and the bridge's read-only boundary."""
+"""Audit the reviewed current Hearthpyre 2.2.4 source and the bridge's read-only boundary."""
 
 from __future__ import annotations
 
@@ -12,8 +12,8 @@ import sys
 
 
 ROOT = Path(__file__).resolve().parent.parent
-PIN = ROOT / "DevTests" / "Compatibility" / "Hearthpyre223Abi.json"
-STUB = ROOT / "DevTests" / "Compatibility" / "Hearthpyre223AbiStub.cs"
+PIN = ROOT / "DevTests" / "Compatibility" / "Hearthpyre224Abi.json"
+STUB = ROOT / "DevTests" / "Compatibility" / "Hearthpyre224AbiStub.cs"
 BRIDGE = ROOT / "Integrations" / "Hearthpyre223"
 DEFAULT_SOURCE = Path(
     "/mnt/f/SteamLibrary/steamapps/workshop/content/333640/1683847053"
@@ -96,6 +96,18 @@ def prove_bridge_boundary() -> None:
     for pattern in BANNED_BRIDGE_PATTERNS:
         if re.search(pattern, body):
             fail("bridge contains forbidden Hearthpyre mutation: " + pattern)
+    for path in sources:
+        text = path.read_text(encoding="utf-8-sig")
+        if path.name == "KingdomHearthpyreRealmBinding.cs":
+            for name in ("Hearthpyre.RealmSystem", "Hearthpyre.Realm.Settlement",
+                         "Hearthpyre.Realm.Sector", "Hearthpyre.Realm.Home"):
+                text = text.replace('"' + name + '"', '"resolved-capability"')
+        if re.search(r"\bHearthpyre\s*\.\s*[A-Za-z_]", text) or re.search(
+                r"^\s*using\s+Hearthpyre(?:\.|\s*;)", text, re.MULTILINE):
+            fail(path.name + " statically references a foreign type")
+    for pattern in (r"\.SetValue\s*\(", r"\.GetMethod\s*\(", r"\.Invoke\s*\("):
+        if re.search(pattern, body):
+            fail("adapter exceeds public getter/field capability boundary: " + pattern)
     required = (
         "RealmSystem.Settlements",
         "RealmSystem.SettlementsByCellID",
@@ -108,11 +120,14 @@ def prove_bridge_boundary() -> None:
         "foreach (Location2D location in Home)",
         "[KingdomForeignFootprintProvider]",
         "ReferenceEquals(The.ZoneManager.ActiveZone, ActiveZone)",
-        'ProviderVersion => "2.2.3"',
+        'ProviderVersion => RealmSystem.ContractVersion',
+        'ContractVersion = "2.2.3"',
+        'KingdomHearthpyreContract.TryBind',
+        'ReferenceEquals(ModManager.GetMod(realm.Assembly), mod)',
     )
     for proof in required:
         if proof not in body:
-            fail("bridge no longer proves required typed surface: " + proof)
+            fail("bridge no longer proves required capability/custody boundary: " + proof)
 
 
 def prove_source(source_root: Path, pin: dict) -> None:
@@ -120,11 +135,11 @@ def prove_source(source_root: Path, pin: dict) -> None:
         fail("pinned source directory is missing: " + str(source_root))
     manifest = json.loads((source_root / "manifest.json").read_text(encoding="utf-8"))
     if manifest.get("ID") != pin["id"] or manifest.get("Version") != pin["version"]:
-        fail("source manifest is not exact Hearthpyre 2.2.3")
+        fail("source manifest is not exact Hearthpyre 2.2.4")
     for relative, expected in pin["files"].items():
         path = source_root / relative
         if not path.is_file() or sha256(path) != expected:
-            fail(relative + " differs from the reviewed 2.2.3 source")
+            fail(relative + " differs from the reviewed 2.2.4 source")
     for relative, patterns in SURFACES.items():
         body = (source_root / relative).read_text(encoding="utf-8-sig")
         for pattern in patterns:
@@ -144,9 +159,9 @@ def main() -> int:
     prove_bridge_boundary()
     if not args.fixture_only:
         prove_source(args.source, pin)
-        print("exact installed Hearthpyre 2.2.3 source hashes and ABI: clean")
+        print("exact installed Hearthpyre 2.2.4 source hashes and ABI: clean")
     else:
-        print("tracked Hearthpyre 2.2.3 ABI fixture: clean (installed source not checked)")
+        print("tracked Hearthpyre 2.2.4 ABI fixture: clean (installed source not checked)")
     print("core foreign-type boundary and bridge read-only boundary: clean")
     return 0
 

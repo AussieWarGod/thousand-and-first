@@ -155,6 +155,7 @@ namespace ThousandAndFirst
 					throw new InvalidOperationException("marked type has no footprint contract");
 				IKingdomForeignFootprintProvider provider =
 					Activator.CreateInstance(Type) as IKingdomForeignFootprintProvider;
+				if (provider is IKingdomOptionalProvider optional && !optional.IsAvailable) return;
 				string id = provider?.ProviderId; string version = provider?.ProviderVersion;
 				if (!KingdomForeignFootprintSnapshotRules.SafeToken(id, 64)
 					|| !KingdomForeignFootprintSnapshotRules.SafeToken(version, 32))

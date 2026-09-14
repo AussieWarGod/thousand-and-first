@@ -120,6 +120,9 @@ as polished as the game's flagship features. These rules are binding for every s
 - Strongly typed optional integrations live in dependency/version-gated sibling directories and
   compile against a pinned ABI fixture; the core never references foreign types. Capability-only
   integrations such as Qud Industry 0.3 stay data/resolved-object based and need no typed shard.
+  Prefer public capability contracts when they can preserve exact ownership and failure behavior.
+  The Hearthpyre capability adapter compiles without foreign references, binds only reviewed public
+  reads, and retains a current source-review fixture; package versions do not gate runtime admission.
 - Internal civic-memory, polity, cargo, body, and retirement receipts are not extension APIs.
   Third parties extend declared XML/public behavior protocols or a separately reviewed typed
   provider; they never write authenticated save keys/object markers or share mutation authority.

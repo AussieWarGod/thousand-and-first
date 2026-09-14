@@ -17,6 +17,7 @@
         "/Experience/",
         "/Founding/",
         "/Growth/",
+        "/Integrations/Hearthpyre223/",
         "/Polity/",
         "/Quests/",
         "/Raids/",
@@ -26,12 +27,6 @@
         "/Treaty/",
         "/World/"
       ]
-    },
-    {
-      "Path": "/Integrations/Hearthpyre223/",
-      "Dependencies": {
-        "Hearthpyre": "2.2.3"
-      }
     }
   ]
 }

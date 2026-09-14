@@ -1,5 +1,11 @@
 # Session handoff — current v1.0 test-candidate work
 
+## Current capability adapter draft
+
+3103 staged sources; 440,519 physical lines; inventory `28cdedb6b984778c59dd387bcf231945d12cf9ba751df7739e5a024da841871a`.
+See docs/HEARTHPYRE-COMPATIBILITY.md and the common Git taf-workstate.md for live handles.
+
+
 ## Retained combined heart candidate before surveyed-ingress draft — 2026-09-11
 
 Current draft census/evidence is in docs/STATUS.md; the figures below describe its predecessor.

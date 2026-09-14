@@ -38,7 +38,10 @@ TAF owns the reject/bind prompt, founding receipt, water barrier, claim projecti
 and later divergence pause. It persists both an explicit-unowned mode and an exact bind; providers
 must not write or clear those TAF-owned receipts.
 
-The shipped Hearthpyre bridge is deliberately exact to 2.2.3 and read-only. Qud Industry 0.3 is
+The Hearthpyre adapter now uses read-only runtime capabilities and compiles without foreign
+references. Package upgrades with the required capabilities do not need an exact-version
+manifest entry. See [the current-version plan and native gaps](docs/HEARTHPYRE-COMPATIBILITY.md);
+public 0.3.6 still carries the earlier adapter. Qud Industry 0.3 is
 XML-only in the audited installation, so machinery integration remains final-resolved-capability
 plus explicit designation rather than a fake typed bridge or blueprint-name allowlist.
 

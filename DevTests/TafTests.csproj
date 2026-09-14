@@ -18,6 +18,10 @@
 
   <ItemGroup>
     <Compile Include="TestMain.cs" />
+    <Compile Include="..\Integrations\Hearthpyre223\KingdomHearthpyreContract.cs" />
+    <Compile Include="KingdomHearthpyreContractTests.cs" />
+    <Compile Include="..\Integrations\Hearthpyre223\KingdomHearthpyreCollectionViews.cs" />
+    <Compile Include="KingdomHearthpyreCollectionViewsTests.cs" />
     <Compile Include="KingdomScenarioLoadResumeTests.cs" />
     <Compile Include="KingdomQuickstartHistoricalGrantTests.cs" />
     <Compile Include="..\Harness\KingdomQuickstartHistoricalGrant.cs" />

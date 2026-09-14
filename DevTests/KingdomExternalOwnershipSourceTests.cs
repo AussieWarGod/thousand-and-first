@@ -16,25 +16,16 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void ManifestKeepsExactBridgeOutsideCommonRecursivePaths()
+		public void ManifestIncludesCapabilityAdapterWithoutDependencyVersionOrLoadOrderGate()
 		{
 			using JsonDocument document = JsonDocument.Parse(Read("manifest.json"));
 			JsonElement directories = document.RootElement.GetProperty("Directories");
-			ClassicAssert.AreEqual(2, directories.GetArrayLength());
+			ClassicAssert.AreEqual(1, directories.GetArrayLength());
 			JsonElement common = directories[0].GetProperty("Paths");
-			for (int i = 0; i < common.GetArrayLength(); i++)
-			{
-				string path = common[i].GetString();
-				ClassicAssert.IsFalse(path.StartsWith("/Integrations", StringComparison.Ordinal));
-			}
+			StringAssert.Contains("/Integrations/Hearthpyre223/", common.GetRawText());
+			ClassicAssert.IsFalse(directories[0].TryGetProperty("Dependencies", out _));
 			StringAssert.Contains("/RuntimeData/", common.GetRawText());
-			StringAssert.DoesNotContain("/Textures/", common.GetRawText(),
-				"vanilla-only runtime art must not advertise an absent local texture tree");
-			JsonElement bridge = directories[1];
-			ClassicAssert.AreEqual("/Integrations/Hearthpyre223/",
-				bridge.GetProperty("Path").GetString());
-			ClassicAssert.AreEqual("2.2.3", bridge.GetProperty("Dependencies")
-				.GetProperty("Hearthpyre").GetString());
+			StringAssert.DoesNotContain("/Textures/", common.GetRawText());
 		}
 
 		[Test]
@@ -53,10 +44,10 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void TypedShardUsesOnlyReviewedReadSurfaces()
+		public void CapabilityAdapterUsesOnlyReviewedReadSurfaces()
 		{
 			string bridge = Read("Integrations/Hearthpyre223/KingdomHearthpyreOwnershipProvider.cs");
-			StringAssert.Contains("using Hearthpyre;", bridge);
+			StringAssert.DoesNotContain("using Hearthpyre;", bridge);
 			StringAssert.Contains("RealmSystem.SettlementsByCellID", bridge);
 			StringAssert.Contains("RealmSystem.SectorsByZoneID", bridge);
 			StringAssert.Contains("settlement.SectorsByZoneID", bridge);
@@ -74,7 +65,7 @@ namespace ThousandAndFirst.Tests
 				"Integrations/Hearthpyre223/KingdomHearthpyreFootprintCustody.cs");
 			string body = bridge + custody;
 			foreach (string proof in new[] { "[KingdomForeignFootprintProvider]",
-				"ProviderId => \"Hearthpyre\"", "ProviderVersion => \"2.2.3\"",
+				"ProviderId => \"Hearthpyre\"", "ProviderVersion => RealmSystem.ContractVersion",
 				"KingdomHearthpyreFootprintScanBudget budget",
 				"ReferenceEquals(The.ZoneManager.ActiveZone, ActiveZone)",
 				"RealmSystem.SectorsByZoneID.TryGetValue", "RealmSystem.Sectors.TryGetValue",

@@ -78,9 +78,21 @@ owner appearing on explicitly unbound ground is detectable. Bindings contain str
 serialized foreign objects. Directly writing zone binding properties or invoking the internal
 founding adapter is unsupported.
 
-The shipped `Integrations/Hearthpyre223` provider implements this protocol only when exact enabled
-Hearthpyre 2.2.3 loaded first. Other versions do not load the shard. Qud Industry 0.3 has no typed
-API in the audited release and remains resolved-capability based.
+The capability adapter in `Integrations/Hearthpyre223` binds the enabled Hearthpyre public
+registry at runtime without a compile-time reference, exact package-version condition, or relative
+load-order condition. Its persisted `ProviderVersion` remains `2.2.3`, the existing evidence
+contract identity; it is not the installed package version. See
+[HEARTHPYRE-COMPATIBILITY.md](HEARTHPYRE-COMPATIBILITY.md) for capability and acceptance boundaries.
+Qud Industry 0.3 remains resolved-capability based.
+
+Ownership and footprint providers may also implement `ThousandAndFirst.Api.IKingdomOptionalProvider`.
+Its read-only `bool IsAvailable { get; }` is inspected during mod-sensitive provider registration.
+Return false only for an absent or disabled dependency. Existing providers that do not implement
+it retain their registration behavior. An enabled dependency with an incompatible API must stay
+registered and return an observation failure; hiding it would incorrectly imply unowned ground.
+Exceptions become registration faults under the existing host rules. The property must never
+change either mod, load a zone, or grant authority. A bound claim whose provider is unavailable
+retains its saved evidence and refuses mutation. Cold restart after mod changes remains required.
 
 ## Foreign exact-footprint provider protocol
 

@@ -1,5 +1,25 @@
 # Current implementation and release evidence
 
+## Current Hearthpyre compatibility development — #218
+
+Development replaces the exact 2.2.3/load-order directory condition with a dependency-free,
+read-only capability adapter. Current installed 2.2.4 is the review target; no older build is
+required for the normal gate. Existing ownership/footprint evidence identities remain stable.
+[HEARTHPYRE-COMPATIBILITY.md](HEARTHPYRE-COMPATIBILITY.md) records the design, shared checks, and
+unaccepted native matrix. This supersedes older *development* exact-version requirements below;
+public 0.3.6 delivery and historical evidence are unchanged. No native compatibility acceptance or
+new publication is claimed.
+
+
+### Capability adapter source census
+
+3103 staged C# files; 440,519 physical lines. Direct `XRL` imports: 1446 files, 0 over the line limit.
+Inventory SHA-256: `28cdedb6b984778c59dd387bcf231945d12cf9ba751df7739e5a024da841871a`. Engine gate passed 3103 sources, baseline and compatibility symbols, plus 3362-source developer
+profiles in both modes against the installed current 2.2.4 source review. Final full licensed suites:
+14,810 main and 5,763 portable, zero skips. Focused tooling passed 5 optional-boundary and 41
+developer-route cases. Native compatibility matrix remains open. Local logs:
+`/tmp/taf-capabilities-gate-2.log` and `/tmp/taf-capabilities-licensed-1.log`.
+
 ## Current 0.3.6 sight hotfix — published and finalized
 
 Public Alpha 0.3.6 is published, verified and finalized. It supersedes 0.3.4 on the public
@@ -2897,8 +2917,9 @@ implemented at this same static boundary; their native traversal and visual acce
   named assent/exemption and a reversible native ambient-stabilization ward.
 - Inheritance freezes witnessed authored receipts and a connected street graph; it never carries
   items, liquids, charge, or mutable object identity between runs.
-- External ownership is a read-only provider protocol. Exact Hearthpyre 2.2.3 is the only shipped
-  typed translator and is absent from the compile set in every other dependency state. First and
+- External ownership is a read-only provider protocol. The development Hearthpyre capability
+  adapter is included without foreign references in all dependency states; enabled compatible
+  public APIs are observed without exact package-version or load-order admission. First and
   later city receipts, plus ordinary ground claims, disclose observed overlap and offer free reject
   or exact bind. The chosen mode/evidence is inside the receipt digest before water debit and
   remains permanent TAF claim data; active-ground divergence gates load/turn/semantic and mutating
