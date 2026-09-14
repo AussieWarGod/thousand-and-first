@@ -35,7 +35,7 @@ namespace ThousandAndFirst.Harness
 					sources += "; source=" + container.IDIfAssigned + ":held=" + held + ":indexed=" + indexed;
 				}
 				KingdomLog.Log("chain assessment: tick=" + The.Game.TimeTicks + "; heart=" + Work.IDIfAssigned
-					+ "; verdict=" + Result.Verdict + "; material-demand=" + Result.Demand.MaterialsInHand
+					+ "; verdict=" + Result.Verdict + "; reason=" + Result.Reason + "; material-demand=" + Result.Demand.MaterialsInHand
 					+ "; loaded-complete=" + complete + "; loaded=" + (loaded?.Count ?? -1)
 					+ "; active-ground=" + ReferenceEquals(The.ZoneManager?.ActiveZone, Z)
 					+ "; leases=" + stock.InputLeaseAuthorityExact + "; lease-failure=" + stock.InputLeaseFailure

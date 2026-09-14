@@ -92,7 +92,7 @@ namespace ThousandAndFirst.Harness
 						if (cell == null || !cell.IsEmpty() || !cell.IsPassable()
 							|| cell.HasOpenLiquidVolume()) continue;
 						var point = new KingdomPlotRules.PlotRect(x, y, x, y);
-						bool clear = true;
+						bool clear = KingdomCampHeartChainGrid.ClearsWaterFootprints(point);
 						foreach (var plot in plots)
 							if (!KingdomCampHeartChainGrid.ClearsPaidApproach(point, plot)) clear = false;
 						foreach (var item in cell.Objects)
@@ -117,6 +117,7 @@ namespace ThousandAndFirst.Harness
 				tent.RequirePart<r_KingdomImprovement>().Held = true;
 				Require(tent.GetPart<r_KingdomImprovement>().Held, "source tent improvement hold did not persist");
 				RequireChainCustody();
+				RequireChainSpatialPreflight();
 			}
 
 			private void SeedChainHomes()

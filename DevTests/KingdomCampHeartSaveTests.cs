@@ -227,6 +227,40 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void CityFixtureReservesEveryWaterFootprintAndKeepsAllPaidApproaches()
+		{
+			Assert.That(KingdomPlotRules.TryInterior(80, 25, out var usable), Is.True);
+			var occupied = new List<KingdomPlotRules.PlotRect> {
+				new KingdomPlotRules.PlotRect(31, 4, 50, 21),
+				new KingdomPlotRules.PlotRect(24, 7, 29, 10) };
+			foreach (var home in KingdomCampHeartChainGrid.Candidates())
+			{
+				if (!KingdomPlotRules.Fits(home, usable)
+					|| !KingdomCampHeartChainGrid.ClearsPaidApproach(home, occupied[0])
+					|| !KingdomCampHeartChainGrid.ClearsPaidApproach(home, occupied[1])
+					|| KingdomPlotRules.CrowdsExisting(home, occupied)) continue;
+				occupied.Add(home);
+				if (occupied.Count == 20) break;
+			}
+			Assert.That(occupied.Count, Is.EqualTo(20), "eighteen homes plus both paid lots");
+			var water = KingdomCampHeartChainGrid.WaterCourts().ToList();
+			Assert.That(water.Count, Is.EqualTo(8));
+			foreach (var court in water)
+			{
+				Assert.That(KingdomPlotRules.ValidZoneRect(court, 80, 25), Is.True);
+				Assert.That(court.X2 - court.X1 + 1, Is.EqualTo(8));
+				Assert.That(court.Y2 - court.Y1 + 1, Is.EqualTo(6));
+				var root = new KingdomPlotRules.PlotRect(court.X1 + 3, court.Y1 + 2,
+					court.X1 + 3, court.Y1 + 2);
+				Assert.That(occupied.All(plot => !KingdomPlotRules.Overlaps(court, plot)
+					&& KingdomCampHeartChainGrid.ClearsPaidApproach(root, plot)), Is.True);
+				Assert.That(water.Count(other => KingdomPlotRules.Overlaps(court, other)), Is.EqualTo(1));
+				Assert.That(KingdomCampHeartChainGrid.ClearsWaterFootprints(root), Is.False,
+					"later supply containers must not take reserved producer ground");
+			}
+		}
+
+		[Test]
 		public void ChainHousingProtectsPaidLaneBeyondReservedMargin()
 		{
 			var tent = new KingdomPlotRules.PlotRect(24, 7, 29, 10);

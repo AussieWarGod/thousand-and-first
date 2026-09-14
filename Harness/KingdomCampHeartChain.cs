@@ -50,7 +50,7 @@ namespace ThousandAndFirst.Harness
 					ClearChainFounder();
 					ChainPhase = 1;
 					return "paid-heart-chain setup; stage-refused=true; synthetic-residents=50; synthetic-homes=18"
-						+ "; synthetic-water=3600; synthetic-legacy-water-producers=5; synthetic-food=1728; synthetic-knowledge=true; synthetic-store-identities=true"
+						+ "; synthetic-water=3600; synthetic-legacy-water-courts=8; synthetic-food=1728; synthetic-knowledge=true; synthetic-store-identities=true"
 						+ "; housing-calendar-frontier=true; no-improvement-driven=true; " + ChainState();
 				}
 				if (Verb == KingdomCampHeartChainScript.Supply)

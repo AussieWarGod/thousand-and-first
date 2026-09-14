@@ -11,8 +11,8 @@ This is a source census, not native acceptance or an updated exact-inventory sem
 ## In-progress paid heart chain
 
 A developer scenario extends the paid camp path toward rungs 3 and 4. Its disclosed city support
-uses fifty enrolled residents, eighteen authored tent rows, finite water and food stores, five
-standalone legacy water-producer objects, synthetic craft lessons and separately supplied material
+uses fifty enrolled residents, eighteen authored tent rows, finite water and food stores, eight
+standalone legacy air-well court objects, synthetic craft lessons and separately supplied material
 bills. The producer objects are synthetic prerequisites with their real LiquidProducer active; they
 do not establish authored waterworks-construction coverage. Only setup housing uses a future calendar
 argument; ordinary turns must pay and complete both heart improvements. Full native completion
@@ -72,6 +72,15 @@ Closed failed archive: `beta-heart-chain/6c47fdf1/material-ready-spatial-refused
 The seal observer measured 549 and 794 milliseconds, each with one unbound survey, but these were
 refused captures; they do not establish faster successful sealing. Five completed waits requested
 8400 turns; the final game clock was 8403. Full paid progression and relevant persistence remain open.
+
+The next fixture revision reserves eight complete 8-by-6 legacy air-well court footprints instead
+of five larger fields. A combined geometry test proves eighteen housing lots, both paid lots, all
+producer footprints and every producer root's approach clearance fit. The native producer setup
+checks the actual persisted legacy shape. A capture-only spatial preflight requires the ordinary
+city book to contain all fixture homes and producers before tier-three materials are supplied;
+only a complete capture or the specific roadless-public-entrance pending state may proceed. It
+proves the staged seal unchanged and journals the actual result. The bound assessment observer now
+retains its exact reason. These fixture corrections still require a fresh native run.
 
 The pending repair follows the bounded completed receipt history, rejects branches, cycles, foreign
 ownership/ground and skipped rungs, then proves the final live output and its predecessor-removal

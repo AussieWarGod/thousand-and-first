@@ -80,7 +80,9 @@ roots. Verify founding recovery immediately after paying the next heart improvem
 its full construction wait; a replaced receipt marker can block the whole construction lane.
 Fixture placement must reserve the full persisted footprint of legacy works, even when only their
 root object is synthetic. A bare cell is insufficient for a 12-by-9 air-well field. Check spatial
-capture as well as subsidence support before a long wait. Retain the actual bound assessment's reason;
+capture as well as subsidence support before a long wait. Prove the ordinary city book already
+contains every fixture work; capturing an old smaller book can miss newly misplaced objects.
+Retain the actual bound assessment's reason;
 a later Ready result cannot explain an earlier NoGroundToGrow refusal.
 Scope repeated physical reads across the complete operation and verify disposal; component-by-component
 unbound surveys can dominate runtime. Record actual timings before claiming a performance gain.
