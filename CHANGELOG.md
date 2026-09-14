@@ -1,42 +1,30 @@
 # Changelog
 
-**Pending heart progression repair (unreleased)**
-
-Follow completed heart upgrades across successive receipts, and admit the exact next paid
-improvement while its predecessor still stands. Scope local spatial-seal reads to one survey.
-The developer city fixture gains explicit synthetic water producers and sustained-support preflight.
-Preserve envelope preflight's admission of movable residents on newly annexed upgrade ground;
-strict paid application still requires clearance. Add native resident, founder and foreign-obstruction probes.
-Native acceptance is pending.
-Permit paid handover retries to reprove already-committed scaffold removal. Preserve exact
-founding survey stakes while the heart grows around them; foreign markers remain protected.
-Controlled native obstruction/retry passed through tier three at `3742ffeb`; survey-marker
-cases remain unexecuted.
-Allow the surveyed heart to grow over exact unpaid foot tracks, preserving those tracks. Paid
-paving, foreign and ambiguous road objects remain protected. Narrow road probes passed in the
-failed `710fa082` run; tier-three track retention later passed at `3742ffeb`. Full progression
-and retention through tier four remain unproved.
-Repeat lawful resident clearance at paid handover and retry, with exact endpoints, custody and
-strict ground rechecked after movement. Add native late-resident, protected-occupant and forced
-no-destination cases. These bounded tier-three cases passed at `3742ffeb`; higher persistence
-and full-chain acceptance remain pending.
-Fund the six new timber floors when upgrading the moot yard to the great court. Previously
-the missing shaped-timber claim blocked the upgrade before payment. Expand authored-delta
-regressions to cover every added material across all fallback heart transitions and facings,
-including historical-baseline transitions. Sixteen main cases pass; fresh native confirmation
-of the court bill remains pending under #216. Exact evidence is in docs/STATUS.md.
-
 Current 3100-file census is line-cap green: 440,354 physical lines; direct `XRL`
-imports occur in 1446 files, 0 of them over the line limit. Inventory SHA-256: `4f8ee63c2752d59bcdea66586483f9273db112b5038f467ce0fd935121cfc086`.
+imports occur in 1446 files, 0 of them over the line limit. Inventory SHA-256: `438df06e71316df46d649b26b5dbf211cd53c69cf1e61060550dbaba1cb14304`.
 The cold-install inventory contains 3131 files. This is not evidence of a new public installation.
 
-All notable changes to The Thousand and First. Versions are semantic: patch for fixes,
-minor for additive API and content, major for breaking changes. Supported API is defined in
-[docs/API.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/API.md).
+All notable changes to The Thousand and First. Historical entries retain their original
+scope; [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md) records current acceptance.
 
-Historical entries preserve the claim made at that point. The latest version entry, `VISION.md`, and
-`docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
-below it.
+## [0.3.7] — 2026-09-14 (Alpha)
+
+Private candidate for heart progression and construction recovery; not yet published.
+
+- Follow successive completed heart upgrades while preserving the original basin, dedicated
+  stockpile and unspent goods.
+- Include six shaped-timber floor units in the moot-to-court upgrade bill.
+- Recheck eligible citizens who enter newly annexed wall sites after payment; protect the
+  founder and unrelated creatures.
+- Resume paid handover after a removable obstruction without losing or duplicating its receipt.
+- Let surveyed heart expansion retain ordinary unpaid trodden tracks and authenticated
+  founding stakes; foreign structures, paid paving and ambiguous road markers stay protected.
+
+Native paid-chain validation is in progress. Extended higher-heart save/load coverage is
+tracked separately in #219. Synthetic fifty-resident support does not establish ordinary
+one-map balance. City expansion, three-cell roads, useful public spaces and their rewards,
+land for supporting work, and same-city multi-map coverage remain Beta work. Hearthpyre
+compatibility changes are excluded from this Alpha candidate.
 
 ## [0.3.6] — 2026-09-13 (Alpha)
 

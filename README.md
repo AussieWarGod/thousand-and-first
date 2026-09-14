@@ -4,23 +4,21 @@ Found a faction in Caves of Qud, raise settlements from reserved ground, and gov
 after you leave. Water, food, labour, materials, roads, trade, threats, civic memory, and physical
 works remain part of the same world instead of becoming a detached management screen.
 
-**Status: 0.3.6 public Alpha playtest.**
-Public 0.3.6 is published and finalized; one subscribed installation was verified.
-See the linked release ledger for exact evidence and remaining coverage limits.
-Back up saves before updating.
-Current evidence and remaining test limits live in
-[docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/STATUS.md);
-historical test counts do not sign later changes.
+**Status: 0.3.7 pre-release source (private Alpha candidate).**
+The 0.3.6 public Alpha playtest remains the published release. This candidate has not been uploaded or accepted.
+Back up saves before updating. Current evidence and remaining coverage limits live in
+[docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md).
 
-This Alpha fixes settlement lighting and full-zone city sight immediately after claiming
-an active zone, including Kingdom Quickstart. You no longer need to leave and return before
-the claimed map becomes visible. Drawing restores normal gameplay sight after each frame.
+This candidate improves successive settlement-heart construction and paid-work recovery.
+It funds the court's six shaped-timber floor units, rechecks eligible citizens who enter
+new wall sites during construction, and preserves the original basin and dedicated stores
+across paid upgrades. Foreign structures and protected occupants still block unsafe work.
 
-Private 0.3.6 automated checks cover ordinary construction, four housed founders, six beds, real save and
-cold load, and all 2,000 cells in actual source and loaded render frames. The completed first
-heart is open rite ground with seven canvas walls; starter shelters provide housing.
-The private package and one subscribed installation match the verified native source. See
-[the native test scope](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/HEART-SIGHT-NATIVE.md).
+Quickstart housing, four-founder retention and claimed-map visibility remain part of the
+Alpha regression coverage. Heart progression tests use synthetic city support; they do not
+prove ordinary population balance or complete coverage of cities spanning several claimed
+maps. Wider roads, useful public spaces, support-economy land use and natural expansion remain
+Beta work. Hearthpyre compatibility work is deferred until Beta.
 
 ## What the mod adds
 

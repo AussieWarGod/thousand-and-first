@@ -1,5 +1,20 @@
 # Current implementation and release evidence
 
+## Alpha 0.3.7 preparation — not uploaded
+
+The user requested that Hearthpyre compatibility wait until Beta and that gameplay progress
+ship through further Alphas. Capability work (#218) remains parked and is excluded here.
+This private candidate prepares the #207 heart progression and construction recovery fixes;
+public 0.3.6 remains the published release. No 0.3.7 package, tag, subscribed receipt or
+release acceptance exists yet. The previous ALPHA_CANDIDATE.json and private package receipt
+remain historical 0.3.6 records until the new private package is actually verified.
+
+Native24 exercises #207 at `1729bae6` with its original eighteen-home paid-chain fixture.
+The separate #219 seventeen-home cold-load fixture passed its spare-site check in Native23
+but then refused protected ground at `42,13`; its exact occupant remains undiagnosed. Do not
+count that failed run as paid progression or persistence acceptance. Beta requirements remain
+in CITY-GROWTH-BALANCE.md and #208–#211; synthetic support is not ordinary population balance.
+
 ## Accepted city-growth direction — planned
 
 [CITY-GROWTH-BALANCE.md](CITY-GROWTH-BALANCE.md) records the user's complete city-balance
@@ -59,7 +74,7 @@ from the passed four-mode compile at `8df7b548`.
 Engine gate passed: 3100 sources, baseline and compatibility symbols use their
 respective exclusions (3096 baseline). The cold-install inventory has 3131 files.
 3100 staged C# files / 440,354 physical lines; zero strict line-cap failures.
-Direct `XRL` imports: 1446 files, 0 over the line limit. Inventory SHA-256: `4f8ee63c2752d59bcdea66586483f9273db112b5038f467ce0fd935121cfc086`.
+Direct `XRL` imports: 1446 files, 0 over the line limit. Inventory SHA-256: `438df06e71316df46d649b26b5dbf211cd53c69cf1e61060550dbaba1cb14304`.
 This is a source census, not native acceptance or an updated exact-inventory semantic review.
 
 ## In-progress paid heart chain
