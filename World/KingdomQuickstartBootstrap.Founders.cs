@@ -185,6 +185,8 @@ namespace ThousandAndFirst
 					// Work/sleep goals may move them; idle wandering must not send them across the wild zone.
 					body.Brain.Wanders = false;
 					body.Brain.WandersRandomly = false;
+					// Civilian founders defend themselves without seeking faction enemies to attack.
+					body.Brain.Passive = true;
 					body.Brain.Stay(body.CurrentCell);
 					cohort[slot] = body;
 				}
@@ -240,6 +242,7 @@ namespace ThousandAndFirst
 				if (!KingdomQuickstartRules.TryFounderCell(i, out x, out y)
 					|| !ExactRole(Zone, Cohort[i], FounderBlueprints[i], x, y)
 					|| Cohort[i].Brain == null || Cohort[i].Brain.Wanders || Cohort[i].Brain.WandersRandomly
+					|| !Cohort[i].Brain.Passive
 					|| Cohort[i].Brain.StartingCell?.ResolveCell() != Zone.GetCell(x, y))
 				{
 					Failure = "founder " + i + " was not anchored on its own reserved cell";

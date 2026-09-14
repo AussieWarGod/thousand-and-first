@@ -39,6 +39,7 @@ namespace ThousandAndFirst.Harness
 					LogSettlementState(Zone, System, receipt, Stage);
 					Require(KingdomQuickstartEncounterDiagnostics.Check(Game, Zone, Stage),
 						"initial camp encounter reservation was absent or escaped its generation scope");
+					if (Stage == "startup") KingdomQuickstartDefensiveChecks.Probe();
 					var ids = new HashSet<string>(StringComparer.Ordinal);
 					for (int i = 0; i < KingdomQuickstartRules.FounderCount; i++)
 					{
@@ -53,6 +54,8 @@ namespace ThousandAndFirst.Harness
 						}
 						Require(body != null && body.CurrentZone == Zone && body.IsCreature && !body.IsPlayer(),
 							"original founder no longer stands in the settlement: " + id);
+						Require(body.Brain != null && body.Brain.Passive && !body.Brain.CanAcquireTarget(),
+							"civilian founder can proactively acquire combat targets: " + id);
 						if (Stage == "startup")
 							Require(body.Brain != null && !body.Brain.Wanders && !body.Brain.WandersRandomly
 								&& body.Brain.StartingCell?.ResolveCell()?.ParentZone == Zone,

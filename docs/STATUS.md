@@ -1,12 +1,24 @@
 # Current implementation and release evidence
 
-## Alpha 0.3.7 candidate refresh
+## Alpha 0.3.7: private delivery passed; native cohort failed
 
 The private candidate now includes the accepted paid-heart, room, enclosed-housing, shared-hall
-and paid-conversion work. Runtime version is 0.3.7; no package, staging tag or upload yet.
-Inventory SHA-256: `3dc69687e01f930bffc8f840a15f4a5a885c3744a6fc17049a8ce91c5d881e62`.
-Native evidence below retains its original source pins. Candidate release gates and subscribed
-Quickstart/cold-load acceptance remain required; public Alpha stays 0.3.6.
+and paid-conversion work. Private `staging-v0.3.7` at `34188ec5` passed delivery run
+`34884991564`; all 3,139 package/runtime/subscribed files match. Public remains 0.3.6.
+Inventory SHA-256: `91973648605848aa1939d38f366ed6e578cd4cc07ef542bd6f6a03b76575c935`.
+The subscribed candidate's marsh seed `#43101` lifecycle failed before save: original drifter
+515 was bitten to death at turn 884 by GiantDragonfly 502. Three other original founders remain
+alive; combat initiation is unknown. All 3,448 inputs and strict logs pass; cohort behavior fails.
+The owned process is stopped; no cold load occurred. Public promotion is paused.
+Closed archive: `alpha-037-heart-sight/34188ec5/founder-lost-before-save-1/result.json`, SHA-256
+`04ef1d9822aeb95a6baecf38262b148608e7d8248fd883071245fc1dd0ac8acc`.
+
+Fresh civilian founders now receive Qud's defensive engagement (`Brain.Passive`) inside their
+existing grant transaction. Recovery does not rewrite older citizens. Native checks require
+defensive engagement on the original cohort at startup, after construction and after load;
+an isolated unplaced NPC pair exercises proactive-acquisition suppression and actual retaliation.
+This change is awaiting native acceptance; it does not establish protection from wilderness attacks.
+Issue [#237](https://github.com/AussieWarGod/thousand-and-first/issues/237) retains the failure.
 
 ## Paid housing and founder anchors: warm/cold behavioral checks accepted
 
@@ -420,7 +432,7 @@ Current cold-install inventory: 3139 files.
 Current source: 3106 sources, baseline and compatibility symbols use their
 respective exclusions (3097 baseline). All four engine compile modes passed.
 The cold-install inventory has 3132 files.
-3106 staged C# files / 440,877 physical lines; zero strict line-cap failures.
+3106 staged C# files / 440,880 physical lines; zero strict line-cap failures.
 Direct `XRL` imports: 1450 files, 0 over the line limit. Inventory SHA-256: `aef5dbb86f8a1f12942427a28bf8e00e937f0c86aa9d41ab1bf0b601d4fe1cca`.
 This is a source census, not native acceptance or an updated exact-inventory semantic review.
 

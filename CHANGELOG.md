@@ -1,12 +1,21 @@
 # Changelog
 
-Current 3106-file census is line-cap green: 440,877 physical lines; direct `XRL`
-imports occur in 1450 files, 0 of them over the line limit. Inventory SHA-256: `3dc69687e01f930bffc8f840a15f4a5a885c3744a6fc17049a8ce91c5d881e62`.
+Current 3106-file census is line-cap green: 440,880 physical lines; direct `XRL`
+imports occur in 1450 files, 0 of them over the line limit. Inventory SHA-256: `91973648605848aa1939d38f366ed6e578cd4cc07ef542bd6f6a03b76575c935`.
 The cold-install inventory contains 3139 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Historical entries retain their original scope;
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md)
 records current acceptance.
+
+## Unreleased — civilian defensive engagement
+
+Fresh Quickstart founders use Qud's defensive engagement: they can retaliate when attacked,
+but do not proactively acquire faction enemies. Older citizens are not rewritten. Native
+checks observe all four original founders through construction and cold load and exercise
+acquisition/retaliation with an isolated temporary NPC pair. Native acceptance remains pending.
+Private 0.3.7 delivery passed; public promotion is paused after a founder died in its lifecycle
+check. Failure and remaining ecology work are retained in #237.
 
 ## [0.3.7] — 2026-09-15 (Alpha)
 

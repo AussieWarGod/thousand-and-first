@@ -705,6 +705,23 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void FreshCivilianDefenseIsVerifiedWithoutRewritingRecoveredFounders()
+		{
+			string founders = TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.Founders.cs");
+			Assert.That(founders, Does.Contain("body.Brain.Passive = true;"));
+			Assert.That(founders, Does.Contain("|| !Cohort[i].Brain.Passive"));
+			string recovery = TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.Founders.Recovery.cs");
+			Assert.That(recovery, Does.Not.Contain(".Passive ="));
+			string observer = TestMain.ReadRepositoryText("Harness/KingdomQuickstartSettlementChecks.cs");
+			Assert.That(observer, Does.Contain("KingdomQuickstartDefensiveChecks.Probe();"));
+			Assert.That(observer, Does.Contain("body.Brain.Passive && !body.Brain.CanAcquireTarget()"));
+			string probe = TestMain.ReadRepositoryText("Harness/KingdomQuickstartDefensiveChecks.cs");
+			Assert.That(probe, Does.Contain("civilian.Brain.Attacked(attacker);"));
+			Assert.That(probe, Does.Contain("ReferenceEquals(civilian.Brain.Target, attacker)"));
+			Assert.That(probe, Does.Contain("finally"));
+		}
+
+		[Test]
 		public void TheOriginTallyIsAddedToUnderADurableObligationAndNeverTakenAsAMaximum()
 		{
 			string enrolment = TestMain.ReadRepositoryText(
