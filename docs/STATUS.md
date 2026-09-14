@@ -3895,3 +3895,11 @@ tiles, persistent strategic armies, mass background war, and unwitnessed conques
 Detailed current ledgers live in `_notes/BRIEF-IMPLEMENTATION-AUDIT.md` and
 `_notes/CONTRACT-RUNTIME-RECONCILIATION-2026-08-25.md`. Release mechanics live in
 [RELEASING.md](RELEASING.md); structural gate semantics live in [STRUCTURE.md](STRUCTURE.md).
+
+Native room attempt at `48dcc2da` failed its first arrival expectation: the physical reading
+correctly returned one room, three bunks, twenty clear cells and Close quarters, but projected
+founder occupancy correctly returned Full for the single roof credit. The failed profile was
+closed and archived with its full pinned recipe. The fixture now requires Full while that credit
+exists and NoRoofAtAll when lost, preserving all four founders and capped enrollment. No native
+PASS is claimed. The new standalone cabinet blueprint also exposed an overly broad source-test
+count; the existing overlay test now counts only actual `Load="Merge"` overrides.

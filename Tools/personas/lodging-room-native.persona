@@ -2,6 +2,8 @@
 # is adopted through the ordinary housing API as a one-credit tent. Three actual bedrolls prove
 # that capped extra bunks still affect privacy. All room mutations occur without advancing time;
 # detached fixture objects remain retained, and a borrowed original citizen is restored exactly.
+# The four founders consume the single credit: arrivals must remain Full while roof exists,
+# and NoRoofAtAll when it is lost. Extra bunks never bypass capacity or founder priority.
 # This proves native room/provider/lodging observations, not paid architecture or cold load.
 DESCRIPTION=real adopted room privacy reacts to spare bunks, doors, blocked floor, wall and bed loss, repair and a citizen occupant
 REQUEST=founding-first-city

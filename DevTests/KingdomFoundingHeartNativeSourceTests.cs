@@ -49,7 +49,7 @@ namespace ThousandAndFirst.Tests
 		{
 			XmlDocument overlay = new XmlDocument();
 			overlay.LoadXml(Read("Harness/ObjectBlueprints.xml"));
-			ClassicAssert.AreEqual(3, overlay.DocumentElement.SelectNodes("object").Count,
+			ClassicAssert.AreEqual(3, overlay.DocumentElement.SelectNodes("object[@Load='Merge']").Count,
 				"two raid observers and one camp vortex observer are developer-only overlays");
 			XmlNodeList hearts = overlay.DocumentElement.SelectNodes("object[part[@Name='r_TAF_FoundingHeartMintProbe']]");
 			ClassicAssert.AreEqual(0, hearts.Count, "own blueprints are not defined when the Harness XML loads");

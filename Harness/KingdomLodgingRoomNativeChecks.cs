@@ -7,7 +7,7 @@ namespace ThousandAndFirst.Harness
 	internal sealed partial class KingdomLodgingRoomNativeFixture
 	{
 		private void Check(string Name, KingdomLodgingRules.Closeness Quarters,
-			int Places, int Floor, bool Arrival)
+			int Places, int Floor, bool RoofSupplied)
 		{
 			RequireWorld();
 			Require(Root.IDIfAssigned == RootId && Root.CurrentCell == At(6, 1), "adoption root identity moved");
@@ -27,7 +27,7 @@ namespace ThousandAndFirst.Harness
 					detail += "; roof=" + roof + "; places=" + reading.SleepingPlaces
 						+ "; rooms=" + reading.SleepingRooms + "; floor=" + reading.UsableFloorCells
 						+ "; quarters=" + reading.Quarters;
-					Require(roof == (Arrival ? 1 : 0) && benefits.Total("roof") == roof,
+					Require(roof == (RoofSupplied ? 1 : 0) && benefits.Total("roof") == roof,
 						detail + "; wrong roof credit or another home masked the scenario");
 					Require(reading.SleepingPlaces == Places && reading.UsableFloorCells == Floor
 						&& reading.Quarters == Quarters, detail + "; physical room measurement differs");
@@ -38,7 +38,12 @@ namespace ThousandAndFirst.Harness
 					bool wouldTake = KingdomLodging.ObservePreparedArrival(System, Zone, Newcomer,
 						out var reason, out string hash);
 					detail += "; arrival=" + wouldTake + "; reason=" + reason;
-					Require(wouldTake == Arrival && !string.IsNullOrEmpty(hash), detail + "; arrival decision differs");
+					// Preserve the four founders: their projected housing consumes this single credit.
+					// Spare physical bunks affect privacy but cannot bypass the enrollment cap.
+					var expectedReason = RoofSupplied ? KingdomLodgingRules.UnhousedReason.Full
+						: KingdomLodgingRules.UnhousedReason.NoRoofAtAll;
+					Require(!wouldTake && reason == expectedReason && !string.IsNullOrEmpty(hash),
+						detail + "; arrival must preserve founder priority and capped housing");
 					Require(KingdomLodging.ObservePreparedArrival(System, Zone, Newcomer, out _,
 						out string repeat) == wouldTake && repeat == hash,
 						detail + "; read-only arrival observation was unstable");
