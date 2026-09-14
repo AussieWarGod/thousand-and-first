@@ -1,5 +1,26 @@
 # Current implementation and release evidence
 
+## Native28 closed; bind Harness readiness to the production survey
+
+Native28 at `574c0ddb` passed retained-floor/blocked-cell probes, rung-three payment and
+completion, controlled late-resident clearance and paid retry. Before reaching the repaired
+stake probes, court supply assessment refused enrolled resident `3087/NPC` at annexed blocked
+cell `43,4`. Production telemetry explicitly said `reason=unwitnessed`: the Harness assessment
+used an unbound custody census, while movable-occupant authority requires the active survey.
+No court payment or stake-cleanup acceptance occurred in this run.
+
+Closed archive: `beta-heart-chain/574c0ddb/court-occupied-preflight-refused-1/result.json`,
+SHA-256 `95ee89940e491d0a7031dc9a25bf14299387865fd632571e97ef3f8b2140313e`.
+Full pinned recipe, strict log and exact owned stop passed; scenario failed. CI `34821721978`
+passed. The earlier Native27 court payment remains its own bounded result.
+
+Harness readiness now binds one local operation, reads its active settlement survey and proves
+disposal. Its controlled blocked-resident probe also calls that complete readiness route,
+requiring Ready without moving the body or spending anything. The persona requires this
+additional witness. Production eligibility and movement rules are unchanged. All four engine
+compile modes, 64 persona-validator tests and documentation/metadata checks passed. Native
+progression and the #223 stake-cleanup repair still require fresh confirmation.
+
 ## Native27 closed; stake-probe cleanup repair pending
 
 Native27 at `78e8d097` passed controlled retained-floor admission/refusal, exact rung-three

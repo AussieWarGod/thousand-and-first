@@ -65,7 +65,7 @@ namespace ThousandAndFirst.Harness
 				RequireChainCustody();
 				RequireChainSupport();
 				Require(KingdomScenarioJournal.Append("camp-heart-chain-occupancy", true,
-					"synthetic-placement=true; retained-walkable=true; resident-blocked-preflight=true; strict-blocked-refused=true"
+					"synthetic-placement=true; retained-walkable=true; scoped-assessment=true; resident-blocked-preflight=true; strict-blocked-refused=true"
 					+ "; retained-resident=true; retained-founder=true; retained-stranger=true; retained-foreign-wall-refused=true"
 					+ "; founder-blocked-refused=true; founder-walkable=true; stranger-blocked-refused=true"
 					+ "; stranger-walkable=true; foreign-wall-refused=true; restored=true; no-debit=true"
@@ -125,6 +125,9 @@ namespace ThousandAndFirst.Harness
 								&& failure != null && failure.StartsWith("a living occupant stands on ",
 									StringComparison.Ordinal), "strict envelope admitted an uncleared body: " + failure);
 						}
+						var assessment = AssessChain(out string context);
+						Require(KingdomUpgradeRules.IsReady(assessment.Verdict),
+							"chain assessment refused its movable resident: " + assessment.Reason + "; " + context);
 					}
 					Require(Body.CurrentCell == At && Body.IDIfAssigned == id,
 						"read-only envelope preflight moved or replaced its body");

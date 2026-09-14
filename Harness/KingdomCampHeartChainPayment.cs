@@ -124,7 +124,19 @@ namespace ThousandAndFirst.Harness
 
 			private KingdomUpgrade.Assessment AssessChain(out string Context)
 			{
-				var survey = Census();
+				Require(!KingdomSurvey.HasBoundPass, "chain assessment found an outstanding survey");
+				Require(KingdomSurvey.TryBindLocalOperation(Zone, System, out var scope,
+					out string failure), failure);
+				KingdomUpgrade.Assessment result;
+				using (scope) result = AssessChainInPass(out Context);
+				Require(!KingdomSurvey.HasBoundPass, "chain assessment left its survey bound");
+				return result;
+			}
+
+			private KingdomUpgrade.Assessment AssessChainInPass(out string Context)
+			{
+				var survey = KingdomSurvey.ActiveFor(Zone);
+				Require(survey != null, "chain assessment lacks its production survey");
 				var active = new List<string>();
 				foreach (var root in survey.Improvements)
 					if (root.GetPart<XRL.World.Parts.r_KingdomImprovement>()?.Working == true)
