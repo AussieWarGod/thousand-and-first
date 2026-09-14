@@ -3,7 +3,7 @@
 ## Pending heart progression source inventory
 
 The planned compatibility gate runs across 3104 production C# sources (3100 baseline);
-the cold-install inventory contains 3136 files. Inventory `62732b7d3beca788f0cbd093ce652f11418daf72c1e802ff2ff713ecf4f6dca4`.
+the cold-install inventory contains 3137 files. Inventory `62732b7d3beca788f0cbd093ce652f11418daf72c1e802ff2ff713ecf4f6dca4`.
 These counts describe the pending repair, not a public installation or native PASS.
 
 ## Enclosed canvas-home draft
@@ -11,7 +11,10 @@ These counts describe the pending repair, not a public installation or native PA
 Run `Tools/dev-check.sh tools canvas_homes_test.py` for all current sizes/facings, separated
 sleeping rooms, straight M entrance clearance, retained readers and four-cell XL courts.
 Run `Tools/dev-check.sh main KingdomCanvasHomeTests` for the actual compiled paid renovation
-delta. Set `TAF_SCENARIO_TURN_BUDGET=17000` and `TAF_SCENARIO_TIMEOUT_SECONDS=3000` for the
+delta and all 24 fixed-lot conversion routes/target variants.
+`Tools/dev-check.sh tools hut_rooms_test.py` covers current hut enclosure, fixture access,
+Small-reader boundaries and clear entrance/court circulation across 192 variant/pose combinations.
+Set `TAF_SCENARIO_TURN_BUDGET=17000` and `TAF_SCENARIO_TIMEOUT_SECONDS=3000` for the
 construction lifecycle; its two advances exceed the preparation default.
 The existing Quickstart lifecycle now also requires one enclosed room, three usable
 sleeping places and 17 clear floor cells in each completed M shelter. These native assertions

@@ -27,7 +27,7 @@ class BenefitProviderContentTests(unittest.TestCase):
             check=False,
         )
         self.assertEqual(0, completed.returncode, completed.stderr or completed.stdout)
-        self.assertIn("114 catalogue rows, 193 variants, 105 unique fixtures", completed.stdout)
+        self.assertIn("114 catalogue rows, 235 variants, 105 unique fixtures", completed.stdout)
         self.assertIn("exact caps, scopes, operations, and acquisition", completed.stdout)
 
     def test_generated_provider_blocks_are_current_and_deterministic(self) -> None:

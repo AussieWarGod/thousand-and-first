@@ -4,7 +4,9 @@
 
 Author enclosed shared shelters, separate chambers and courtyard cabins for M/L/XL plots.
 Keep furniture outside the entrance aisle and reserve four-cell courts. Fresh Quickstart uses
-M plots, available at Camp; old S layout readers remain explicit. Native construction and
+M plots, available at Camp; old S layout readers remain explicit. Timber, mud and block
+conversions now retain the enclosed room programme and incoming furniture. Charge canvas for
+added bedrolls and previously unfunded historical-route cushions. Native construction and
 save/load acceptance are pending; see docs/STATUS.md. No release or compatibility claim.
 
 **Pending room and furniture clearance (unreleased)**
@@ -61,7 +63,7 @@ of the court bill remains pending under #216. Exact evidence is in docs/STATUS.m
 
 Current 3104-file census is line-cap green: 440,649 physical lines; direct `XRL`
 imports occur in 1448 files, 0 of them over the line limit. Inventory SHA-256: `62732b7d3beca788f0cbd093ce652f11418daf72c1e802ff2ff713ecf4f6dca4`.
-The cold-install inventory contains 3136 files. This is not evidence of a new public installation.
+The cold-install inventory contains 3137 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Versions are semantic: patch for fixes,
 minor for additive API and content, major for breaking changes. Supported API is defined in

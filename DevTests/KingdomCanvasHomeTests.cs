@@ -10,6 +10,51 @@ namespace ThousandAndFirst.Tests
 	[TestFixture]
 	public sealed class KingdomCanvasHomeTests
 	{
+		[Test]
+		public void EveryCanvasConversionRetainsProtectedFixturesAndFundsItsCompiledDelta()
+		{
+			var corpus = KingdomArchitectureCorpusFixture.Load();
+			var routes = XDocument.Parse(TestMain.ReadRepositoryText("Architecture/KingdomArchitectureTransitions.xml"));
+			int checkedRoutes = 0, checkedPoses = 0;
+			foreach (var route in routes.Root.Elements("transition"))
+			{
+				string from = (string)route.Attribute("From"), to = (string)route.Attribute("To");
+				if (from != "tent" && from != "tentrow") continue;
+				string sizeKey = (string)route.Attribute("Size");
+				var size = sizeKey == "S" ? ArchitectureLotSize.Small : sizeKey == "M"
+					? ArchitectureLotSize.Medium : sizeKey == "L" ? ArchitectureLotSize.Large : ArchitectureLotSize.Huge;
+				var sources = corpus.Cases.Where(c => c.Tier.BuildKey == from && c.Binding.Size == size).ToList();
+				var targets = corpus.Cases.Where(c => c.Tier.BuildKey == to && c.Binding.Size == size).ToList();
+				ClassicAssert.Greater(sources.Count, 0); ClassicAssert.Greater(targets.Count, 0);
+				ClassicAssert.IsTrue(KingdomMaterialRules.TryParseMaterialCost((string)route.Attribute("Materials"),
+					out var bill, out string failure), failure);
+				foreach (var source in sources)
+				foreach (var target in targets)
+				foreach (ArchitectureFacing facing in Enum.GetValues(typeof(ArchitectureFacing)))
+				{
+					string context = from + "->" + to + "/" + sizeKey + "/" + target.Variant.Key + "/" + facing;
+					ClassicAssert.IsTrue(KingdomArchitectureRules.TryCompile(
+						KingdomArchitectureCorpusFixture.Request(corpus, source, facing), out var before, out failure), context + failure);
+					ClassicAssert.IsTrue(KingdomArchitectureRules.TryCompile(
+						KingdomArchitectureCorpusFixture.Request(corpus, target, facing), out var after, out failure), context + failure);
+					// Production freezes the declared socket edge onto the chosen target snapshot.
+					after.IncomingTransitionMode = ArchitectureTransitionMode.Renovate;
+					ClassicAssert.IsTrue(KingdomArchitectureRules.TryBuildDelta(before, after,
+						ArchitectureTransitionMode.Renovate, out var delta, out failure), context + ": " + failure);
+					ClassicAssert.IsFalse(delta.Removed.Any(p => !string.IsNullOrEmpty(p.StatefulAnchor) || p.ExistingAuthority), context);
+					foreach (var added in delta.Added.Where(p => !p.Natural && !p.ExistingAuthority))
+					{
+						ClassicAssert.IsTrue(KingdomMaterialRules.TryParseMaterial(added.Material, out var material));
+						ClassicAssert.Greater(bill.Get(material), 0, context + ": added " + added.Blueprint + "/" + added.Material);
+					}
+					checkedPoses++;
+				}
+				checkedRoutes++;
+			}
+			ClassicAssert.AreEqual(24, checkedRoutes);
+			ClassicAssert.GreaterOrEqual(checkedPoses, 24 * 4);
+		}
+
 		[TestCase(ArchitectureLotSize.Medium)]
 		[TestCase(ArchitectureLotSize.Large)]
 		[TestCase(ArchitectureLotSize.Huge)]

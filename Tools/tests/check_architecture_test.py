@@ -1816,10 +1816,10 @@ class ArchitectureCheckerTests(unittest.TestCase):
             for identity in explicit_maps
             if not CHECKER._is_generated_map(model.maps[identity[1]])
         }
-        self.assertEqual(23, len(explicit_keys))
-        self.assertEqual(93, len(explicit_maps))
-        self.assertEqual(51, len(source_explicit))
-        self.assertEqual(42, len(explicit_maps - source_explicit))
+        self.assertEqual(17, len(explicit_keys))
+        self.assertEqual(37, len(explicit_maps))
+        self.assertEqual(37, len(source_explicit))
+        self.assertEqual(0, len(explicit_maps - source_explicit))
 
     def test_functional_anchor_does_not_force_replaceable_object_to_be_stateful(self) -> None:
         replaceable = ARCHITECTURE.replace(

@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import importlib.util
 import sys
+import tempfile
+import shutil
 import unittest
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -22,6 +24,21 @@ SPEC.loader.exec_module(GENERATOR)
 
 
 class LotRealizationGeneratorTests(unittest.TestCase):
+    def legacy_hut_repository(self):
+        # Keep the generic compact-envelope generator exercised after live housing
+        # moved to authored rooms. This fixture is the prior real six-design catalogue.
+        temporary = tempfile.TemporaryDirectory(prefix="taf-compact-hut-test.")
+        self.addCleanup(temporary.cleanup)
+        repository = Path(temporary.name)
+        fixtures = Path(__file__).parent / "fixtures" / "compact-huts"
+        (repository / "Architecture").mkdir()
+        (repository / "RuntimeData").mkdir()
+        shutil.copyfile(fixtures / "architecture.fixture.xml",
+                        repository / "Architecture" / "KingdomArchitectures-HousingWater.xml")
+        shutil.copyfile(fixtures / "buildings.fixture.xml",
+                        repository / "RuntimeData" / "KingdomBuildings.xml")
+        return repository
+
     def test_layer_transforms_remove_or_replace_matching_orientation(self) -> None:
         glyph = ET.Element(
             "glyph",
@@ -105,7 +122,7 @@ class LotRealizationGeneratorTests(unittest.TestCase):
         tier_count = result.tier_count
         target = repository / "Architecture" / GENERATOR.OUTPUT_NAME
         self.assertEqual(target.read_text(encoding="utf-8"), expected)
-        self.assertEqual((map_count, plan_count, tier_count), (140, 104, 116))
+        self.assertEqual((map_count, plan_count, tier_count), (98, 95, 98))
         self.assertEqual(expected.count("<!-- realization source="), map_count)
 
         root = ET.fromstring(expected)
@@ -240,7 +257,7 @@ class LotRealizationGeneratorTests(unittest.TestCase):
                         )
                     else:
                         self.assertEqual(0, len(visible_thresholds), key)
-        self.assertEqual(len(checked_maps), 140)
+        self.assertEqual(len(checked_maps), 98)
 
     def test_site_census_accounts_every_cell_after_renovation(
         self,
@@ -344,7 +361,8 @@ class LotRealizationGeneratorTests(unittest.TestCase):
             },
             set(GENERATOR.SITE_EXPANSION_PROGRAMMES),
         )
-        self.assertEqual(set(by_source["housing-hut-s0"]), {"M", "L", "XL"})
+        self.assertNotIn("housing-hut-s0", by_source)
+        self.assertNotIn("housing-tent-s0", by_source)
         self.assertEqual(set(by_source["deepend-underbench-m0"]), {"L", "XL"})
         self.assertEqual(set(by_source["deepend-reliquary-l0"]), {"XL"})
         self.assertEqual(set(by_source["deepend-factorhouse-m0"]), {"L", "XL"})
@@ -547,7 +565,7 @@ class LotRealizationGeneratorTests(unittest.TestCase):
                 record.generated_key,
             )
             checked += 1
-        self.assertEqual(95, checked)
+        self.assertEqual(67, checked)
 
     def test_upgrade_family_identity_comes_from_exact_catalogue_graph(self) -> None:
         buildings = GENERATOR._buildings(GENERATOR_PATH.parents[1])
@@ -634,7 +652,7 @@ class LotRealizationGeneratorTests(unittest.TestCase):
             self.assertIn(yard_reference, generated_references, record.generated_key)
             self.assertIn(path_reference, generated_references, record.generated_key)
             checked += 1
-        self.assertEqual(140, checked)
+        self.assertEqual(98, checked)
 
     def test_only_food_grammar_uses_repeated_full_width_bands(self) -> None:
         signatures = {}
@@ -683,7 +701,7 @@ class LotRealizationGeneratorTests(unittest.TestCase):
                     f"{previous.generated_key} and {record.generated_key}",
                 )
             fingerprints[key] = record
-        self.assertEqual(112, len(fingerprints))
+        self.assertEqual(95, len(fingerprints))
 
     def test_reviewed_geometry_ignores_incidental_receipt_identity(self) -> None:
         result = GENERATOR.materialize(GENERATOR_PATH.parents[1])
@@ -728,7 +746,7 @@ class LotRealizationGeneratorTests(unittest.TestCase):
                     record.generated_key,
                 )
             checked += 1
-        self.assertEqual(140, checked)
+        self.assertEqual(98, checked)
 
     def test_generated_bindings_do_not_invent_upgrade_transitions(
         self,
@@ -757,7 +775,7 @@ class LotRealizationGeneratorTests(unittest.TestCase):
                         plan.get("Key"),
                     )
                     transition_tiers.append(tier)
-        self.assertEqual(12, len(transition_tiers))
+        self.assertEqual(3, len(transition_tiers))
 
     def test_every_generated_map_projects_features_once_inside_its_reviewed_envelope(self) -> None:
         repository = GENERATOR_PATH.parents[1]
@@ -856,7 +874,7 @@ class LotRealizationGeneratorTests(unittest.TestCase):
     def test_explicit_footprints_keep_one_exact_shelter_and_use_added_lot_as_yard(
         self,
     ) -> None:
-        repository = GENERATOR_PATH.parents[1]
+        repository = self.legacy_hut_repository()
         result = GENERATOR.materialize(repository)
         generated = {
             item.get("Key"): item
@@ -1035,12 +1053,12 @@ class LotRealizationGeneratorTests(unittest.TestCase):
                 )
 
         self.assertEqual(42, explicit)
-        self.assertEqual(98, implicit)
+        self.assertEqual(0, implicit)
 
     def test_exact_footprint_housing_uses_compact_family_courts_not_estate_grids(
         self,
     ) -> None:
-        result = GENERATOR.materialize(GENERATOR_PATH.parents[1])
+        result = GENERATOR.materialize(self.legacy_hut_repository())
         records = [
             record for record in result.records if record.context.footprint_width
         ]
@@ -1371,7 +1389,7 @@ class LotRealizationGeneratorTests(unittest.TestCase):
                         }
                         self.assertEqual(source_set, generated_set, plan_key)
                         checked += 1
-        self.assertEqual(104, checked)
+        self.assertEqual(95, checked)
         self.assertEqual(0, authored)
 
     def test_shipped_agrarian_line_uses_real_cross_size_renovation(self) -> None:

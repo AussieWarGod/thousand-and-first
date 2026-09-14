@@ -28,14 +28,29 @@ have one enclosed sleeping room, three accessible sleeping places and 17 clear f
 while preserving all four founders and restoring its shared survey scope. Construction, actual
 room observations, save/load and older S save behavior still need fresh native evidence.
 
-CI at `561bffd3` refused five C# expectations/contracts and one provider-census expectation.
-The Camp/Medium expectations and provider census are corrected; the unchanged timber door no
-longer attracts another timber charge when adding bedrolls. Focused catalogue (101), footprint
-(125), heart rules (91) and material rules (270) cases pass. The remaining substantive failure
-is canvas-to-hut conversion: 18 M/L/XL routes into timber, mud and block housing no longer retain
-the new furniture and root coordinates. Their target plans need deliberate compatible redesign,
-including cultural variants, real enclosure and paid material deltas. Do not weaken the retention
-contract or remove the routes to make CI green. The draft is not ready for integration.
+CI at `561bffd3` exposed five C# expectations/contracts and one provider-census expectation.
+Those findings now have focused repairs: current Camp/Medium expectations, the provider census,
+the unnecessary timber charge, and all 18 larger canvas-to-hut conversion destinations.
+The 42 authored timber/mud/block maps retain incoming furniture, root positions and circulation;
+M is a shared room, L has sleeping chambers/common space, and XL has cabins around clear courts.
+Palette and culture selectors remain; Kyakukya variants provide additional shared work tables.
+New huts also require M or larger, with explicit S historical readers. Native doors and sound
+masonry replace the old archway/rubble assumptions in current mud/block housing.
+
+The full compiled delta test covers all 24 declared conversions, every target variant and facing,
+protected furniture retention and material-kind funding. It found an older S-route defect:
+three shared-home conversions added cushions without canvas in their bills; each now pays one
+canvas. Ordinary hut expansions pay for their two additional bedrolls. The old generic compact
+housing generator still has regression coverage through retained six-design fixtures; it is no
+longer the source of current larger housing. Historic paid receipts and saved S transitions
+still need native proof; retained XML readers alone do not establish that acceptance.
+
+Focused checks pass: four canvas/delta cases, 27 transition cases, 270 material cases, three hut
+room programme cases across 192 variant/pose combinations, 24 generator cases, 69 checker cases
+and five provider-content cases. Installed-blueprint reviews report 192 valid hut configurations
+with usable enclosed beds and clear fixture access; the whole architecture audit passes all
+1,376 poses. These checks do not prove native construction, household scheduling, thermal safety,
+paid-receipt migration or ordinary city balance. Fresh native and full CI acceptance remain pending.
 
 The first native attempt stopped during startup after its run record exposed the default
 10,000-turn budget against the required 16,800-turn script. No behavioral journal was produced.
@@ -330,7 +345,7 @@ from the passed four-mode compile at `8df7b548`.
 
 ## Current source census for the pending heart repair
 
-Current cold-install inventory: 3136 files.
+Current cold-install inventory: 3137 files.
 Current source: 3104 sources, baseline and compatibility symbols use their
 respective exclusions (3097 baseline). All four engine compile modes passed.
 The cold-install inventory has 3132 files.
