@@ -57,6 +57,10 @@ and installed data. It refuses an ambient test filter, restores and runs both pr
 and stops at the first failure. This makes the same fast local route available to both agents;
 the release source-test step uses this same command with the configured licensed Base directory.
 It defaults to `$HOME/.dotnet/dotnet`; set `TAF_DOTNET` when the pinned SDK is installed elsewhere.
+Historical XML test inputs should end in `.xml.fixture` and become `.xml` only inside an
+isolated test repository. The gallery scans XML streams by their root element, so ordinary XML
+fixtures in the source checkout can otherwise alter its catalogue enumeration.
+
 Keep restore beside its matching run. Never overlap .NET builds in one checkout or run this
 helper against a checkout being tested by another process. Use an isolated worktree for
 independent work. Never overlap native game scenarios or compete with the release Steam host.

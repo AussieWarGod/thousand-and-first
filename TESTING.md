@@ -21,6 +21,14 @@ sleeping places and 17 clear floor cells in each completed M shelter. These nati
 are not accepted until a fresh construction/save/cold-load chain passes. Historic S saves need
 separate retained-reader evidence; the current lifecycle intentionally checks modern M lots.
 
+The lifecycle persona's `CHECK=quickstart-housing` requires unique startup/grown journal
+observations, all four founders, six available beds, two enclosed rooms and 34 clear floor cells
+after the full ordinary wait. Missing, duplicated, refused or contradictory observations fail.
+After a separate cold load, also run
+`python3 Tools/personas/persona_housing.py SOURCE_JOURNAL LOAD_JOURNAL --cold-load`.
+This requires the loaded observation and monotonic turn continuity; it complements the existing
+whole construction-chain verdict, strict logs, full pinned profile proof and owned shutdown.
+
 ## Physical room and furniture-clearance scenario
 
 `Tools/run-personas.sh lodging-room-native` runs genuine dune Quickstart followed by one synthetic

@@ -52,6 +52,14 @@ with usable enclosed beds and clear fixture access; the whole architecture audit
 1,376 poses. These checks do not prove native construction, household scheduling, thermal safety,
 paid-receipt migration or ordinary city balance. Fresh native and full CI acceptance remain pending.
 
+CI at `42f3883c` found a stale palette census and historical XML fixtures leaking into the
+host gallery enumeration. The current palette count is 95; fixture inputs now use `.xml.fixture`
+and materialize as XML only in isolated tests. The nine enclosure/corpus cases and five gallery
+anchor cases pass, retaining the actual 1,376-case live enumeration. Seven new host-oracle cases,
+65 persona cases and 30 driver cases pass: modern Quickstart acceptance now requires its unique
+startup/grown housing observations, and the same verifier requires loaded housing in the separate
+cold session. Missing or contradictory observations cannot disappear as bookkeeping.
+
 The first native attempt stopped during startup after its run record exposed the default
 10,000-turn budget against the required 16,800-turn script. No behavioral journal was produced.
 Its full pinned recipe and exact owned stop are archived at

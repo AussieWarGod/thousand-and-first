@@ -33,9 +33,9 @@ class LotRealizationGeneratorTests(unittest.TestCase):
         fixtures = Path(__file__).parent / "fixtures" / "compact-huts"
         (repository / "Architecture").mkdir()
         (repository / "RuntimeData").mkdir()
-        shutil.copyfile(fixtures / "architecture.fixture.xml",
+        shutil.copyfile(fixtures / "architecture.xml.fixture",
                         repository / "Architecture" / "KingdomArchitectures-HousingWater.xml")
-        shutil.copyfile(fixtures / "buildings.fixture.xml",
+        shutil.copyfile(fixtures / "buildings.xml.fixture",
                         repository / "RuntimeData" / "KingdomBuildings.xml")
         return repository
 
