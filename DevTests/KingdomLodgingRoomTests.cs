@@ -24,7 +24,7 @@ namespace ThousandAndFirst.Tests
 			return KingdomLodgingRoomRules.Measure(scope, beds, (x, y) => {
 				Observed?.Invoke(x, y);
 				if (y < 0 || y >= Rows.Length || x < 0 || x >= Rows[y].Length)
-					return new KingdomAdoptRules.CellObservation(KingdomAdoptRules.EnclosureRegion.Outside);
+					return new KingdomAdoptRules.CellObservation(KingdomAdoptRules.EnclosureRegion.Membership, true);
 				char cell = Rows[y][x];
 				return new KingdomAdoptRules.CellObservation(cell == '#' || cell == 'l'
 					? KingdomAdoptRules.EnclosureRegion.Shell : cell == 'd'
@@ -35,6 +35,52 @@ namespace ThousandAndFirst.Tests
 
 		private static string[] Shared() => new[] {
 			"########", "#bibibi#", "#iiiiii#", "#iiiiii#", "#iiiiii#", "###d####" };
+
+		[Test]
+		public void InternalDoorNeedsClearHallToExteriorAndRecoversAfterRemoval()
+		{
+			string[] rows = { "########", "#biiiii#", "#iiiiii#", "#####d##", "#iiiiii#", "#d######" };
+			var reading = Read(rows);
+			ClassicAssert.AreEqual(11, reading.UsableFloorCells);
+			ClassicAssert.AreEqual(0, reading.UnusablePlaces);
+			rows[4] = "#iixiii#";
+			reading = Read(rows);
+			ClassicAssert.AreEqual(1, reading.SleepingRooms);
+			ClassicAssert.AreEqual(0, reading.ExposedPlaces);
+			ClassicAssert.AreEqual(0, reading.UsableFloorCells);
+			ClassicAssert.AreEqual(1, reading.UnusablePlaces);
+			ClassicAssert.AreEqual(KingdomLodgingRules.Closeness.Packed, reading.Quarters);
+			rows[4] = "#iiiiii#";
+			ClassicAssert.AreEqual(11, Read(rows).UsableFloorCells);
+			rows[5] = "########";
+			ClassicAssert.AreEqual(1, Read(rows).UnusablePlaces);
+		}
+
+		[Test]
+		public void HallObstructionDoesNotBorrowAccessFromTheOtherBedroom()
+		{
+			string[] rows = { "#############", "#biiii#iiiib#", "#iiiii#iiiii#",
+				"###d#####d###", "#iiiiiiiiiii#", "#d###########" };
+			ClassicAssert.AreEqual(18, Read(rows).UsableFloorCells);
+			rows[4] = "#iiiiixiiiii#";
+			var reading = Read(rows);
+			ClassicAssert.AreEqual(2, reading.SleepingRooms);
+			ClassicAssert.AreEqual(9, reading.UsableFloorCells);
+			ClassicAssert.AreEqual(1, reading.UnusablePlaces);
+			rows[5] = "#d#######d###";
+			reading = Read(rows);
+			ClassicAssert.AreEqual(18, reading.UsableFloorCells);
+			ClassicAssert.AreEqual(0, reading.UnusablePlaces);
+		}
+
+		[Test]
+		public void AlternateExitRestoresOnlyConnectedRoomsAndOutsideFurnitureBlocksLanding()
+		{
+			string[] rows = { "########", "#biiiii#", "#iiiiii#", "#####d##", "#iixiii#", "#d###d##", ".x...x.." };
+			ClassicAssert.AreEqual(1, Read(rows, FloorOnly: false).UnusablePlaces);
+			rows[6] = ".x......";
+			ClassicAssert.AreEqual(11, Read(rows).UsableFloorCells);
+		}
 
 		[Test]
 		public void SpaciousSharedRoomDoesNotBecomePrivate()

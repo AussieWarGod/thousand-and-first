@@ -3,8 +3,17 @@
 ## Current source inventory (unreleased)
 
 The engine gate runs across 3105 production C# sources (3101 baseline);
-the cold-install inventory contains 3138 files. Inventory `cadbe858072e3c855ac94f882cb3d772f35f5d2f41f61a3a6e141f2f5df63fc8`.
+the cold-install inventory contains 3138 files. Inventory `5a1d8fb33c55d7e8d816561533a165505deb9d490fec0c667bf1dcdab5b50f36`.
 These counts describe the source inventory, not a public installation. Native acceptance is scoped below.
+
+## Shared-hall access
+
+`Tools/run-personas.sh lodging-room-native` requires 29 observations. The first twenty use an
+ordinarily adopted synthetic room's benefit/privacy/arrival route; nine more use an explicit synthetic
+whole-building designation over native cells and restore the original adopted reading. Clear halls,
+walkable furniture, alternate exits and native open/closed lock states are covered. The closed run
+at `dc65f086` passes; see [STATUS](docs/STATUS.md) for its exact source and archive. It is not paid
+catalogue, multi-map, street-network or cold-load acceptance. Pure room cases are in the main suite.
 
 ## Enclosed starter homes
 

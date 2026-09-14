@@ -190,8 +190,11 @@ adjacent reachable floor, and furniture cannot provide ingress. This is not a de
 The native twenty-case scenario at `765e8e59` passed the actual index/privacy route, door states,
 furniture obstruction, trapped-bed access, wall/bed damage and repair, founder occupancy and
 capped-arrival refusal. See STATUS.md for its full closed archive. This is one synthetic room;
-shared-hallway connectivity between rooms, cold load, paid catalogue redesign and Quickstart
-reservation/cost migration remain required work. No release acceptance is claimed.
+the later native29 scenario at `dc65f086` adds shared-hall connectivity across a synthetic designated
+building with native furniture and doors, then restores the adopted benefit authority. It covers
+only the building and its immediate exterior approach. Street access beyond that boundary, ordinary
+paid catalogue layouts, cold load and historical reservation/cost migration remain required work.
+The modern marsh Quickstart chain has separate scoped evidence in STATUS. No release acceptance is claimed.
 
 Privacy counts operable sleeping providers before enrollment-cap allocation, so an extra usable
 bunk cannot disappear from shared-room measurements merely because its roof credit was capped.

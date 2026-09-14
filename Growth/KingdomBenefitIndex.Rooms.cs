@@ -23,7 +23,7 @@ namespace ThousandAndFirst
 
 		// Architectural circulation reserves furniture even when Qud lets bodies walk over it.
 		// Keep the adoption reader's structural authority and native movement rules unchanged.
-		private static KingdomAdoptRules.CellObservation ReadFurnishedRoomCell(Zone Z, int X, int Y)
+		internal static KingdomAdoptRules.CellObservation ReadFurnishedRoomCell(Zone Z, int X, int Y)
 		{
 			var reading = KingdomAdopt.ReadCellObservation(Z, X, Y);
 			Cell cell = Z.GetCell(X, Y);

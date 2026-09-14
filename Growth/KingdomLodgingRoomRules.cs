@@ -49,18 +49,26 @@ namespace ThousandAndFirst
 					scope.Add(Pack(Designation[i].X, Designation[i].Y));
 			Dictionary<long, KingdomAdoptRules.CellObservation> observed =
 				new Dictionary<long, KingdomAdoptRules.CellObservation>();
-			KingdomAdoptRules.ExactCellLookup bounded = delegate(int x, int y)
+			KingdomAdoptRules.ExactCellLookup cached = delegate(int x, int y)
 			{
 				long key = Pack(x, y);
 				if (!observed.TryGetValue(key, out var cell))
 				{
 					cell = Lookup(x, y);
 					if (beds.Contains(key)) cell.Usable = false;
-					// Adopted rooms designate their floor, not the neighboring walls they retain.
-					if (!scope.Contains(key) && cell.Region == KingdomAdoptRules.EnclosureRegion.Membership)
-						cell = new KingdomAdoptRules.CellObservation(KingdomAdoptRules.EnclosureRegion.Outside);
+					if (beds.Contains(key) && cell.Region == KingdomAdoptRules.EnclosureRegion.Ingress)
+						cell.Region = KingdomAdoptRules.EnclosureRegion.Shell;
 					observed.Add(key, cell);
 				}
+				return cell;
+			};
+			HashSet<long> accessible = ReachFromBoundary(scope, cached);
+			KingdomAdoptRules.ExactCellLookup bounded = delegate(int x, int y)
+			{
+				var cell = cached(x, y);
+				// Adopted rooms designate their floor, not the neighboring walls they retain.
+				if (!scope.Contains(Pack(x, y)) && cell.Region == KingdomAdoptRules.EnclosureRegion.Membership)
+					return new KingdomAdoptRules.CellObservation(KingdomAdoptRules.EnclosureRegion.Outside);
 				return cell;
 			};
 			Dictionary<long, Room> byCell = new Dictionary<long, Room>();
@@ -79,7 +87,9 @@ namespace ThousandAndFirst
 					rooms.Add(room);
 					if (room.Shape.UsableFloorCells != null)
 						foreach (ArchitecturePoint point in room.Shape.UsableFloorCells)
-							room.Reached.Add(Pack(point.X, point.Y));
+							if (accessible.Contains(Pack(point.X, point.Y)))
+								room.Reached.Add(Pack(point.X, point.Y));
+					room.Shape.UsableCells = room.Reached.Count;
 					if (room.Shape.FloorCells != null)
 						for (int c = 0; c < room.Shape.FloorCells.Count; c++)
 						{
@@ -126,6 +136,47 @@ namespace ThousandAndFirst
 				: KingdomLodgingRules.Closeness.Close;
 			result.Quarters = density < separation ? density : separation;
 			return result;
+		}
+
+		// Internal doors connect rooms; only a clear approach outside the designation seeds access.
+		private static HashSet<long> ReachFromBoundary(HashSet<long> Scope,
+			KingdomAdoptRules.ExactCellLookup Lookup)
+		{
+			HashSet<long> allowed = new HashSet<long>();
+			foreach (long key in Scope)
+			{
+				int x = (int)(key >> 32), y = (int)key;
+				var cell = Lookup(x, y);
+				if (cell.Region == KingdomAdoptRules.EnclosureRegion.Ingress
+					|| cell.Region == KingdomAdoptRules.EnclosureRegion.Membership && cell.Usable)
+					allowed.Add(key);
+				foreach (long neighbor in Neighbors(x, y))
+					if (!Scope.Contains(neighbor) && Lookup((int)(neighbor >> 32), (int)neighbor).Region
+						== KingdomAdoptRules.EnclosureRegion.Ingress) allowed.Add(neighbor);
+			}
+			HashSet<long> reached = new HashSet<long>();
+			Queue<long> frontier = new Queue<long>();
+			foreach (long key in allowed)
+				foreach (long neighbor in Neighbors((int)(key >> 32), (int)key))
+				{
+					if (Scope.Contains(neighbor) || allowed.Contains(neighbor)) continue;
+					var cell = Lookup((int)(neighbor >> 32), (int)neighbor);
+					if (cell.Region == KingdomAdoptRules.EnclosureRegion.Membership
+						&& cell.Usable && reached.Add(key)) frontier.Enqueue(key);
+				}
+			while (frontier.Count != 0)
+			{
+				long key = frontier.Dequeue();
+				foreach (long neighbor in Neighbors((int)(key >> 32), (int)key))
+					if (allowed.Contains(neighbor) && reached.Add(neighbor)) frontier.Enqueue(neighbor);
+			}
+			return reached;
+		}
+
+		private static IEnumerable<long> Neighbors(int X, int Y)
+		{
+			yield return Pack(X - 1, Y); yield return Pack(X + 1, Y);
+			yield return Pack(X, Y - 1); yield return Pack(X, Y + 1);
 		}
 
 		private static long Pack(int X, int Y) => ((long)X << 32) | (uint)Y;

@@ -1,5 +1,51 @@
 # Current implementation and release evidence
 
+## Shared-hall access: native scenario accepted
+
+At `dc65f0866a36a2332b35d235291a13a6e03540a1`, all 29 required in-game room observations pass.
+Walkable furniture blocks architectural circulation through shared halls and doorways. Bedroom
+privacy requires a clear route through the designated building to an exterior approach; an internal
+door alone cannot supply access. Alternate exits, obstruction removal and unlocking restore access.
+Structural enclosure remains separate from furniture, and physical observations are cached once.
+
+The genuine four-founder dune Quickstart adopts a synthetic 8×6 room through the ordinary API.
+The first twenty cases exercise its benefit/privacy/arrival route, furniture, doors, loss/repair and
+an original citizen restored exactly. Nine additional observations use a synthetic whole-building
+designation over native cells for the shared hall, then restore the original room, bed positions,
+door flags and adopted benefit reading. The capture was inspected and shows the restored fixture.
+This is not a commissioned catalogue layout, city balance, multi-map or cold-load acceptance.
+Access covers the designation and immediately adjacent exterior approach, not the full street route.
+
+Twenty main room-rule cases, 65 persona/oracle cases and all four engine compile modes pass.
+CI `34860042305` passes at the accepted native source pin.
+The room fixture is main-only; the portable selector matched no tests and is not a portable PASS.
+The full native archive verifies all 3,441 pinned profile inputs, strict final logs, the closed seal
+and exact owned shutdown. Archive `physical-rooms/dc65f086/shared-hall-1/result.json`, SHA-256
+`6e41dfbf71438614031e6b544832b653b3a53ce99b2e0d13e7384c8f98d6ea93`; 21 hashed artifacts.
+The marsh construction/cold-load evidence below retains its earlier source pin and did not exercise
+this shared-hall change. PR #238 and issue #233 retain the remaining scope; no public release claimed.
+
+### Earlier shared-hall failures
+
+These failures are superseded only within the accepted scenario's scope above.
+
+The first shared-hall native run at `aa4f33bb` passed the original twenty observations and five
+hallway cases, then refused the lock case. Earlier doorway furniture can open a native door;
+locking it without closing it does not make its non-solid opening impassable. The fixture now
+requires the actual open state, observes open-and-locked access, then physically closes the door
+before expecting blocked access. This is a fixture correction, not a change to native door physics.
+Closed failed archive: `physical-rooms/aa4f33bb/shared-hall-1/result.json`, SHA-256
+`7ee064447c8ca9aa11ee24543b256d2d654df74ca1655018c870a3942eec295a`.
+All 3,441 pinned inputs and exact owned stop verified; no whole-scenario PASS from this failure.
+
+Run `f23e7b64` confirms open-and-locked access, but the next lock case still fails: native
+`Door.PerformClose` restores `Locked` from `WasLocked`. The revised fixture now calls `Lock`
+after physically closing, requires the actual lock and production Shell reading, and restores
+all original open/lock flags after its probes. Closed failed archive:
+`physical-rooms/f23e7b64/shared-hall-1/result.json`, SHA-256
+`203baf6cc2b9b0ecfe05abb530d4064da86ca5299e7fc758dc357ce4abfc304d`.
+Full 3,441 pinned inputs and exact owned stop verified. Production code remains unchanged.
+
 ## Enclosed starter housing: marsh construction and cold load accepted
 
 At `2c0600b53832c069b665ef7dce94b1cf015850be`, genuine marsh Quickstart keeps all four original
@@ -321,8 +367,8 @@ Current cold-install inventory: 3138 files.
 Current source: 3105 sources, baseline and compatibility symbols use their
 respective exclusions (3097 baseline). All four engine compile modes passed.
 The cold-install inventory has 3132 files.
-3105 staged C# files / 440,721 physical lines; zero strict line-cap failures.
-Direct `XRL` imports: 1449 files, 0 over the line limit. Inventory SHA-256: `cadbe858072e3c855ac94f882cb3d772f35f5d2f41f61a3a6e141f2f5df63fc8`.
+3105 staged C# files / 440,772 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1449 files, 0 over the line limit. Inventory SHA-256: `5a1d8fb33c55d7e8d816561533a165505deb9d490fec0c667bf1dcdab5b50f36`.
 This is a source census, not native acceptance or an updated exact-inventory semantic review.
 
 ## In-progress paid heart chain
