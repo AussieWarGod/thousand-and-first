@@ -1,5 +1,14 @@
 # Brief-to-implementation audit
 
+## Unreleased founding reputation delta
+
+Development tree contains **3107** production C# files. New pure founding-snapshot rules and
+engine adapter implement one-time inbound inheritance; historical publication remains readable.
+Native warm/cold acceptance at `40477cb7`, full licensed integration (14,988 main /
+5,880 portable, zero skips) and current structural delta review are recorded in docs/STATUS.md.
+Reputation-weighted recruitment remains unfinished under #231.
+
+
 ## Current source census — pending heart repair
 
 **3106** production C# files; 440,838 physical lines; 1450 direct-XRL files; zero cap failures;

@@ -1,5 +1,14 @@
 # Session handoff — current v1.0 test-candidate work
 
+## Unreleased founding reputation work
+
+Current development census: 3107 staged sources. Worktree `/home/r/work/taf-reputation-population`,
+branch `codex/reputation-populations`; snapshot inheritance implemented, recruitment integration
+pending. Native warm/cold acceptance at `40477cb7`, full licensed integration (14,988 main /
+5,880 portable, zero skips) and current structural review are recorded in docs/STATUS.md.
+Shared live handles remain in the common Git `taf-workstate.md`.
+
+
 ## Accepted city design direction — 2026-09-14
 
 Read [city growth and land-use direction](../docs/CITY-GROWTH-BALANCE.md) before changing

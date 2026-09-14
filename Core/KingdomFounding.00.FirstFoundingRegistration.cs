@@ -18,7 +18,6 @@ namespace ThousandAndFirst
 		private const string FoundingChronicleDispositionProperty =
 			"TAFFoundingChronicleDisposition_v1";
 		private const string FoundingStandingsProperty = "TAFFoundingStandings_v1";
-		private const int MaxFoundingStandingsLength = 262144;
 
 		internal static bool DirectionalAuthorityPublished(Faction Faction)
 		{
@@ -29,8 +28,8 @@ namespace ThousandAndFirst
 
 		/// <summary>
 		/// Founds the player's kingdom: creates and registers a runtime faction following the
-		/// engine's village-faction recipe, leaves both civic directions unspecified, grants the
-		/// Charter ability, and opens the chronicle. Personal regard is never copied into civic policy.
+		/// engine's village-faction recipe, initializes inbound regard, grants the Charter ability,
+		/// and opens the chronicle. Personal regard is never copied into outgoing civic policy.
 		/// </summary>
 		/// <param name="Name">Settlement display name. New engine factions use the immutable
 		/// namespaced realm id as their key.</param>

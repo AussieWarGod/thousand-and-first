@@ -43,10 +43,13 @@ variants and generated lots; changing only these two maps is not the complete ta
 `RuntimeData/PopulationTables.xml` supplies nine settler variants with fixed weights. Seven
 BaseFarmer descendants have 90% of the total weight; Mechanimist and Snapjaw bodies have 5% each.
 `KingdomSemanticSelection.TryPreparePerson` chooses blueprint, origin and shared-grammar name
-separately. Appearance alone does not establish an occupation or a coherent culture. Founding
-currently freezes an empty relationship set in `Core/KingdomFounding.02.FoundingStandings.cs`.
-The latest inheritance requirement supersedes that old design; implement it with the existing
-directional standings and transaction contracts, not a competing ledger.
+separately. Appearance alone does not establish an occupation or a coherent culture. The development branch now adds a version-two founding snapshot in
+`Core/KingdomFounding.02.FoundingStandings.cs`: new realms inherit current personal reputation
+into their inbound standing ledger once, with outgoing policy separate. Existing realms and
+version-one interrupted transactions retain their history. This foundation passes focused source/pure checks and a real founding, independent civic change,
+native personal spillover, ordinary construction and cold-load chain. Historical interrupted
+founding and recruitment weighting remain pending. Exact evidence and synthetic probe inputs
+are recorded in STATUS.md; public 0.3.7 retains its original behavior.
 
 `KingdomResidents.ReadRoster` already retains residents bound to other zones and binds observed
 bodies to the current zone. Its local home lookup is not proof of complete multi-map household

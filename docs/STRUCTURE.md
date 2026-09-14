@@ -1,5 +1,15 @@
 # Structural release contract
 
+## Unreleased founding reputation census
+
+3107 staged production C# files; 440,850 physical lines; zero at or above 300 lines.
+Inventory SHA-256: `8dd650d010f8dd998d2922f21cc99b37ff79e456a6c2a67880d908bdaf5f58b9`. One engine-free snapshot/publication helper replaces the
+embedded founding codec; the engine adapter captures eligible reputation and publishes validated roots.
+The automated [delta review](STRUCTURE_REVIEW_FOUNDING_REGARD.md) and STRUCTURE_REVIEW.json
+bind this exact production inventory. Native warm/cold scope is recorded in STATUS.md.
+Public 0.3.7 evidence below is historical to this change.
+
+
 ## Refreshed Alpha 0.3.7 candidate census
 
 3106 staged production C# files / 440,880 physical lines; zero at or above 300 lines.

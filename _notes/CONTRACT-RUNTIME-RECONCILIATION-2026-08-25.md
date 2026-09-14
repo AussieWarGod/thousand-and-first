@@ -1,5 +1,12 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
+## Current development census notice
+
+The unreleased founding-reputation tree has 3107 production C# files and 3,140 cold-install files.
+This is an inventory update, not acceptance of recruitment, native founding, or the historical
+findings below. Public 0.3.7 remains the released package.
+
+
 ## Current source census — pending heart repair
 
 3106 production C# files; 440,838 physical lines; 1450 direct-XRL files; zero cap failures;

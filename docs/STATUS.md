@@ -1,5 +1,66 @@
 # Current implementation and release evidence
 
+## Unreleased founding reputation — native warm/cold accepted
+
+At `40477cb7d5b5664b89466cc0fb8c36cabc7adf69`, real Quickstart founding captures 143
+eligible faction reputations. The controlled native probe adds 73 civic regard with Farmers,
+then changes the founder's personal reputation by 40 through the native event path. Camp
+spillover composes them to city regard 93 and zero carry, with the expected projected feeling.
+Outgoing city policy remains unspecified. These reputation changes are disclosed synthetic
+inputs; no citizens, housing, labour, completion or visibility is fabricated.
+
+After 8,400 ordinary turns, the same 143-entry standing snapshot remains intact. All four
+original citizens occupy two enclosed homes with six beds, two rooms and 34 clear floor cells.
+A real save and separate cold process preserve the same snapshot and housed cohort; founding
+and its controlled changes do not replay. Next ordinary commission creates a new job and
+spends one timber/two drams. Whole-zone drawing/restoration passes on both sides of the save.
+
+Both owned processes stopped. Lifecycle, heart/sight, reputation witness, strict logs and exact
+3,452 warm/3,454 cold input recipes pass. Archive:
+`founding-regard/40477cb7/inherited-warm-cold-1/result.json`, SHA-256
+`fdd353d37a7bca7d3c51d736aa5b4934c32621d9c933a21e612d019274b64f54`.
+Standing snapshot SHA-256: `e601015f9854ec504c90aada059594709b7e3fddc455fba30aa93f51c9a59b97`.
+This is source-checkout evidence, not new public delivery. Public 0.3.7 remains unchanged.
+Full licensed integration passed 14,988 main and 5,880 portable cases with zero skips
+(`/tmp/taf-founding-regard-licensed-1.log`); all four engine compile modes passed.
+The automated structural delta review binds this production inventory and its release check passes.
+Historical interrupted founding has pure tests but no native acceptance; reputation-weighted
+culture/body/name selection and representative multi-map arrivals remain #231 follow-through.
+The two failed native attempts below retain their exact evidence and were not relabelled.
+
+## Retained founding reputation failures and correction
+
+New realms freeze personal reputation once into inbound civic regard. Outgoing policy remains
+separate; existing cities and version-one founding retries retain their history. Culture/body/name
+selection and reputation weighting under #231 remain pending. Public 0.3.7 is unchanged.
+
+First native startup at `c62cecfe` refused on Inanimate. Diagnostic `3cf2340f` proved the exact
+cause: the fresh polity options default was noncanonical, so capture skipped every faction and
+published an empty baseline. Both runs completed real founding and first paid commission, then
+stopped before ordinary construction turns; no cold load occurred. Exact owned shutdown,
+strict logs and full 3451/3452 input recipes passed. Failed archives remain:
+
+- `founding-regard/c62cecfe/baseline-refused-1/result.json`, SHA-256
+  `c0e833c6f126af6b409c2d7fc4a10c251addd9f4424959358cfdce1050c15675`.
+- `founding-regard/3cf2340f/empty-baseline-1/result.json`, SHA-256
+  `67b656ff53593f2a997a06ea823c1711f0be0880328767bcd83af6728a2a1fe8`.
+
+Fresh polity options now initialize their unobserved future-cause boundary to `long.MaxValue`,
+the existing canonical value. Historical zero defaults still normalize; conflicting options
+still quarantine. Capture refuses an invalid polity ledger before enumeration. Focused 370
+main polity cases passed. Earlier 364 main founding, 20 directional and 309 portable founding
+cases passed on their original pins; four engine modes passed before this default fix.
+The changed default passes all four engine compile modes, 370 main/338 portable polity cases
+and 20 directional cases. Three host-checker tests exercise missing/duplicate/reordered and
+corrupted native evidence. Native proof was pending at that checkpoint; the accepted run above
+supersedes that status.
+
+Development compile scope: 3107 sources, baseline and compatibility symbols. Census: 3107 staged C# files;
+440,850 physical lines; zero at or above 300 lines; cold-install inventory 3140 files.
+Inventory SHA-256: `8dd650d010f8dd998d2922f21cc99b37ff79e456a6c2a67880d908bdaf5f58b9`.
+Structural review was stale at that checkpoint; the current delta review is recorded above.
+No new release delivery is claimed.
+
 ## Public 0.3.7 — published and finalized
 
 Public Alpha 0.3.7 is published, verified and finalized, superseding 0.3.6. Earlier candidate

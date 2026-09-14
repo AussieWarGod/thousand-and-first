@@ -136,6 +136,6 @@ namespace ThousandAndFirst
 		public KingdomPolityPresentationState Presentation;
 		public long ObservedTick;
 		public long EnableEpoch;
-		public long FutureCauseFloorTick;
+		public long FutureCauseFloorTick = long.MaxValue;
 	}
 }

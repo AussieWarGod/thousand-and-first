@@ -1,5 +1,26 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
+## Unreleased founding reputation validation
+
+The paired native logs also require:
+
+```bash
+python3 Tools/founding_regard_check.py SOURCE_PLAYER_LOG LOADED_PLAYER_LOG --results /fresh/path/founding-regard-results.json
+```
+
+This checker rejects
+missing/duplicate/reordered witnesses, an empty founding snapshot, wrong native reputation
+composition, cold-load replay and a changed saved standing digest. It supplements the existing
+lifecycle, exact profile, strict-log and owned-stop gates; its PASS alone is not acceptance.
+
+Full licensed integration passes 14,988 main and 5,880 portable cases with zero skips.
+Focused snapshot/publication and directional tests also pass. The native chain at 40477cb7 covers
+real founding, independent city changes, personal reputation spillover and fresh cold load;
+exact source, synthetic probe inputs and limits are recorded in docs/STATUS.md. Compile validation spans across 3107 production C# sources;
+the development cold-install inventory contains 3140 files. Historical native evidence below
+retains its original inputs and does not prove this changed founding behavior.
+
+
 ## Defensive-founder source acceptance
 
 Source `49af5f5e` passes marsh seed `#43101` warm/cold lifecycle with all four original founders

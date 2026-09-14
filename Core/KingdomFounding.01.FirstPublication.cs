@@ -108,7 +108,7 @@ namespace ThousandAndFirst
 			if (step < 2)
 			{
 				if (!TryReadOrFreezeFoundingStandings(system, faction,
-					out List<KeyValuePair<string, int>> frozenStandings) ||
+					out List<KeyValuePair<string, int>> frozenStandings, out int foundingRegardVersion) ||
 					!TryResolveFoundingStandings(system, faction, frozenStandings,
 						out List<KeyValuePair<Faction, int>> resolvedStandings) ||
 					!KingdomFoundingTransaction.FoundingAuthorityStillExact(
@@ -125,7 +125,7 @@ namespace ThousandAndFirst
 				{
 					return null;
 				}
-				if (!TryPublishFoundingStandings(system, resolvedStandings) ||
+				if (!TryPublishFoundingStandings(system, resolvedStandings, foundingRegardVersion) ||
 					!system.FirstIdentityMatches(TransactionID, foundingZone.ZoneID) ||
 					!KingdomFoundingTransaction.FoundingAuthorityStillExact(
 						Authority, foundingZone)) return null;

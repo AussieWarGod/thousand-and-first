@@ -1,12 +1,20 @@
 # Changelog
 
-Current 3106-file census is line-cap green: 440,880 physical lines; direct `XRL`
-imports occur in 1450 files, 0 of them over the line limit. Inventory SHA-256: `91973648605848aa1939d38f366ed6e578cd4cc07ef542bd6f6a03b76575c935`.
-The cold-install inventory contains 3139 files. This is not evidence of a new public installation.
+Current 3107-file census is line-cap green: 440,850 physical lines; direct `XRL`
+imports occur in 1450 files, 0 of them over the line limit. Inventory SHA-256: `8dd650d010f8dd998d2922f21cc99b37ff79e456a6c2a67880d908bdaf5f58b9`.
+The cold-install inventory contains 3140 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Historical entries retain their original scope;
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md)
 records current acceptance.
+
+**Unreleased development**
+
+- New realms freeze the founder's reputation into their own inbound standings once.
+  Later city actions evolve that baseline independently; outgoing policy remains separate.
+  Existing cities and interrupted older founding transactions retain their history.
+  Native founding, independent city regard, personal spillover and cold-load persistence pass.
+  Historical interrupted founding remains unproved natively; this is not in public 0.3.7.
 
 ## [0.3.7] — 2026-09-15 (Alpha)
 
