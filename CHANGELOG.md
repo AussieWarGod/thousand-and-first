@@ -10,13 +10,21 @@ strict paid application still requires clearance. Add native resident, founder a
 Native acceptance is pending.
 Permit paid handover retries to reprove already-committed scaffold removal. Preserve exact
 founding survey stakes while the heart grows around them; foreign markers remain protected.
-Controlled native obstruction/retry and survey-marker cases are awaiting execution.
+Controlled native obstruction/retry passed through tier three at `3742ffeb`; survey-marker
+cases remain unexecuted.
 Allow the surveyed heart to grow over exact unpaid foot tracks, preserving those tracks. Paid
 paving, foreign and ambiguous road objects remain protected. Narrow road probes passed in the
-failed `710fa082` run; full progression and track retention remain unproved.
+failed `710fa082` run; tier-three track retention later passed at `3742ffeb`. Full progression
+and retention through tier four remain unproved.
 Repeat lawful resident clearance at paid handover and retry, with exact endpoints, custody and
 strict ground rechecked after movement. Add native late-resident, protected-occupant and forced
-no-destination cases. Acceptance of this repair remains pending.
+no-destination cases. These bounded tier-three cases passed at `3742ffeb`; higher persistence
+and full-chain acceptance remain pending.
+Fund the six new timber floors when upgrading the moot yard to the great court. Previously
+the missing shaped-timber claim blocked the upgrade before payment. Expand authored-delta
+regressions to cover every added material across all fallback heart transitions and facings,
+including historical-baseline transitions. Sixteen main cases pass; fresh native confirmation
+of the court bill remains pending under #216. Exact evidence is in docs/STATUS.md.
 
 Current 3100-file census is line-cap green: 440,354 physical lines; direct `XRL`
 imports occur in 1446 files, 0 of them over the line limit. Inventory SHA-256: `4f8ee63c2752d59bcdea66586483f9273db112b5038f467ce0fd935121cfc086`.

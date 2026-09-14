@@ -11,6 +11,39 @@ must need land too. These are planned requirements; Beta and existing reliabilit
 unfinished. Dense synthetic heart fixtures and travel to unclaimed maps do not establish this
 balance or multi-tile acceptance.
 
+## Latest heart-chain result and court-material repair
+
+Native run `3742ffeb6c9100b39484e1820c344e30c96ee80d` CLOSED FAILED at tier-four
+preflight. Tier three completed with all fifty supported fixture residents, original basin,
+store, 21 brush objects and retained unpaid track. The actual handover proved safe relocation
+of resident 755 with identity/citizenship retained, protected founder/stranger refusals and an
+explicitly synthetic no-destination refusal without movement or debit. A separate physical
+obstruction caused Outstanding, followed by committed-removal reproof and completion of the
+same paid job `92772944c40f4a3fa1b75ffa9c4c5c73`. These are bounded native witnesses for
+#215 and the controlled retry; they do not establish the original #212 failed predicate.
+
+Tier-four preflight then refused `NoGroundToGrow`: added slot `g:09:07` needs shaped timber
+absent from the exact paid improvement claim. No tier-four payment or survey-stake probe ran.
+Closed archive: `beta-heart-chain/3742ffeb/tier4-material-claim-refused-1/result.json`, SHA-256
+`7a0af3f0aae496dc9bd228bb4c86cedffde6d809288033dfd60cc6c822c8f1c9`.
+Full input seal, all 3388 C# bindings, strict mod log and exact owned shutdown passed. The
+roadless fixture's spatial capture was Pending, not a completed spatial seal. This synthetic
+support scenario remains unsuitable as ordinary city-balance or multi-claimed-map acceptance.
+
+[#216](https://github.com/AussieWarGod/thousand-and-first/issues/216) tracks the new blocker.
+The pending repair adds six shaped timber to the moot-to-court upgrade bill, matching its six
+new timber floors in every fallback facing. Native exact-payment expectation becomes 121
+material units; water remains 50 drams. Production paid-material protection remains intact.
+The regression failed before the bill change, then all 16 main CampHeart cases passed with
+zero skips. Current and historical-baseline deltas now check every added authored material,
+including fabric previously excluded by the storage-specific test. The portable selector
+returned no matches (exit 2): this fixture and its corpus helper are main-only. Coverage here
+does not include arbitrary extension-authored variants. All four engine compile modes passed
+with the repair (3096/3100 ordinary, 3384/3388 developer), as did nine documentation tests and
+the release-metadata preflight. Fresh native confirmation of the
+changed bill, full rungs 1–4, tier-five arcology and higher-heart cold load remain outstanding.
+Earlier results below retain their original inputs and acceptance limits.
+
 ## Current source census for the pending heart repair
 
 Engine gate passed: 3100 sources, baseline and compatibility symbols use their
@@ -239,8 +272,9 @@ plot with identity, citizenship, custody, paid claims and caller survey retained
 controlled stranger-obstruction/Outstanding retry remains required. These cases must precede
 completed tier three in the persona; full-chain acceptance cannot silently omit either case.
 Four current engine compiles passed (3096/3100 ordinary, 3384/3388 developer) and all fourteen
-envelope source-contract cases plus 213 upgrade cases passed with zero skips. Native execution of this repair remains
-pending; the earlier failed evidence is retained unchanged. Interrupted/reloaded resident
+envelope source-contract cases plus 213 upgrade cases passed with zero skips. The later
+`3742ffeb` run proved the bounded tier-three cases described above; full-chain acceptance
+remains pending and earlier failed evidence is retained unchanged. Interrupted/reloaded resident
 clearance and higher-rung cold load remain open.
 Host persona validation now recognizes the required occupancy, road, stake and controlled
 handover witnesses. Successful repeated scaffold-removal diagnostics are non-positional;

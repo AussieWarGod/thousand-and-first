@@ -291,23 +291,13 @@ namespace ThousandAndFirst.Tests
 					ClassicAssert.AreEqual(1, delta.Added.Count(value =>
 						value.Blueprint == StoreBlueprint),
 						Rungs[i][0] + "->" + Rungs[i + 1][0] + " must add the missing store");
-					// And the bill that transition charges must cover every placement THIS
-					// CHANGE adds: TryPlacementClaim refuses an added, non-natural,
-					// non-existing-authority piece whose material is absent from the paid
-					// claim, and one refusal stops the whole improvement.
-					//
-					// Scoped to this change's own placements on purpose. Asserting it over
-					// EVERY added placement fails on heartmoot->heartcourt, which adds
-					// shapedtimber pavilion floor its bill does not carry - and that is true
-					// on the shipped catalogue with or without this change (verified by
-					// running the same assertion current-against-current). It is a real
-					// catalogue finding and it belongs to its own ticket, not to this one.
+					// Every newly added authored material needs authority in the paid bill,
+					// including fabric outside the storage change that introduced this fixture.
 					KingdomMaterialTally bill = bills[Rungs[i][0]];
 					for (int p = 0; p < delta.Added.Count; p++)
 					{
 						ArchitecturePlacement added = delta.Added[p];
-						if (added.Blueprint != StoreBlueprint
-							&& added.Blueprint != HearthBlueprint) continue;
+						if (added.Natural || added.ExistingAuthority) continue;
 						ClassicAssert.IsTrue(KingdomMaterialRules.TryParseMaterial(added.Material,
 							out KingdomMaterial material), added.Material);
 						ClassicAssert.Greater(bill.Get(material), 0, Rungs[i][0] + "->"
@@ -358,6 +348,48 @@ namespace ThousandAndFirst.Tests
 				ClassicAssert.AreEqual(1, nextDelta.Added.Count(value =>
 					value.Blueprint == StoreBlueprint),
 					"the store must arrive at the rung after the one the job finished");
+			}
+		}
+
+		[Test]
+		public void EveryCurrentHeartTransitionPaysForAllAddedMaterials()
+		{
+			ArchitectureCorpus corpus = KingdomArchitectureCorpusFixture.Load();
+			var bills = TransitionBills();
+			var failures = new List<string>();
+			int checkedTransitions = 0;
+			for (int i = 0; i + 1 < Rungs.Length; i++)
+				foreach (ArchitectureFacing facing in Enum.GetValues(typeof(ArchitectureFacing)))
+				{
+					var delta = Delta(corpus, Rungs[i][0], Rungs[i + 1][0], facing);
+					foreach (var group in delta.Added.Where(value => !value.Natural
+						&& !value.ExistingAuthority).GroupBy(value => value.Material))
+					{
+						if (!KingdomMaterialRules.TryParseMaterial(group.Key, out var material)
+							|| bills[Rungs[i][0]].Get(material) <= 0)
+							failures.Add(Rungs[i][0] + "->" + Rungs[i + 1][0] + " " + facing
+								+ " lacks " + group.Key + " for " + group.Count() + " added placements: "
+								+ string.Join(",", group.Select(value => value.Slot + "=" + value.Blueprint)));
+					}
+					checkedTransitions++;
+				}
+			ClassicAssert.AreEqual(16, checkedTransitions);
+			ClassicAssert.IsEmpty(failures, string.Join("\n", failures));
+		}
+
+		[Test]
+		public void CourtRenovationPaysForEachNewTimberFloor()
+		{
+			var corpus = KingdomArchitectureCorpusFixture.Load();
+			var bill = TransitionBills()["heartmoot"];
+			foreach (ArchitectureFacing facing in Enum.GetValues(typeof(ArchitectureFacing)))
+			{
+				var delta = Delta(corpus, "heartmoot", "heartcourt", facing);
+				int floors = delta.Added.Count(value => value.Blueprint == "WoodFloor"
+					&& !value.Natural && !value.ExistingAuthority);
+				ClassicAssert.Greater(floors, 0);
+				ClassicAssert.AreEqual(floors, bill.Get(KingdomMaterial.ShapedTimber),
+					"the renovated pavilion funds each newly authored timber floor: " + facing);
 			}
 		}
 

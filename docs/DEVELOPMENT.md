@@ -107,6 +107,12 @@ unbound surveys can dominate runtime. Record actual timings before claiming a pe
 Reserved plot margins are not the whole entrance route: authored lane endpoints extend one cell
 beyond them. Preserve the complete approaches to paid work and future expansions. Recheck physical
 ingress after all fixture buildings and stores are placed, before costly enrollment or turn waits.
+Before waiting through a paid upgrade chain, compare each authored delta's added material kinds
+with its source upgrade bill across the tested facings and historical baselines. Include all
+non-natural, non-existing-authority additions, not only pieces changed by the current feature.
+Run the main-only `KingdomCampHeartTests` fixture for heart catalogue edits; an empty portable
+selector is a failed check, not portable coverage. Keep native exact-payment expectations aligned
+with the authored bill and retain the production material-claim refusal.
 If work reaches its final stage but refuses physical completion, inspect the recorded construction
 reason before increasing the wait. A blocked entrance does not improve with more time.
 Readiness observations must use production staffing and competing-work inputs, not the fixture's
