@@ -1,5 +1,25 @@
 # Current implementation and release evidence
 
+## Restored fixture recovery: native regression found, repair pending acceptance
+
+Issue #242 was reproduced at `8a95cdc1`: a genuinely paid seven-dram Medium housing conversion
+accepted the retained declaration after catalogue drift and reached actual handover. Removing the
+original basket caused a physical refusal and an Outstanding job; restoring it exactly left a
+permanent owner fault. The job later required inspection and settlement staging logged errors.
+Closed failed archive: `paid-housing/8a95cdc1/restored-basket-quarantine-1/result.json`, SHA-256
+`5bcdc1ac23941f0d3f7c779d708483aa40a506efdfe1292cdd260d1319bc71b6`.
+The 24,000-turn fixture also exhausted its initial water and lost citizens for that separate reason.
+
+Physical output verification now refuses missing, moved, duplicated or changed evidence without
+poisoning intact owner authority, so exact restoration can be rechecked. Owner/publication/upgrade
+schema quarantine remains. No saved fault is erased and no missing object is recreated. The native
+fixture adds missing/moved/wrong-token restoration probes before payment and transfers 32 existing
+carried drams to the receipted cask for its extended wait. It still requires actual handover refusal,
+ordinary paid retry, retained contents, four housed founders, save and separate cold load.
+199 focused architecture cases and 66 persona checks pass; native acceptance is pending.
+Already-quarantined historical saves and the effect of ongoing physical damage on city-wide staging
+remain separate open work in #242.
+
 ## Paid transition price history: implementation pending native acceptance
 
 Issue #239: same-set completion compared its saved declaration digest with current prices, so a
@@ -406,8 +426,8 @@ Current cold-install inventory: 3139 files.
 Current source: 3106 sources, baseline and compatibility symbols use their
 respective exclusions (3097 baseline). All four engine compile modes passed.
 The cold-install inventory has 3132 files.
-3106 staged C# files / 440,838 physical lines; zero strict line-cap failures.
-Direct `XRL` imports: 1450 files, 0 over the line limit. Inventory SHA-256: `ef37cc7e787d36b6034cc9a24cf99c9278aa55a9a8f2bd06c9969327b44ae7e1`.
+3106 staged C# files / 440,840 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1450 files, 0 over the line limit. Inventory SHA-256: `a866079727f5c0cccb4d00c25e4692378e40bc7f95ece5309805ff932921ed93`.
 This is a source census, not native acceptance or an updated exact-inventory semantic review.
 
 ## In-progress paid heart chain

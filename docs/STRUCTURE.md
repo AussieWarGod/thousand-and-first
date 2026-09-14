@@ -2,10 +2,10 @@
 
 ## Pending physical-room lodging source census
 
-3106 staged production C# files / 440,838 physical lines: 0 exceed 300 lines, 0 are exactly 300,
+3106 staged production C# files / 440,840 physical lines: 0 exceed 300 lines, 0 are exactly 300,
 therefore 0 fail the strict cap; 0 exceed 1,000, 0 exceed 2,000, and 0 exceed 5,000.
 1450 files with direct `XRL` imports; 0 of those exceed the line limit.
-Inventory SHA-256: `ef37cc7e787d36b6034cc9a24cf99c9278aa55a9a8f2bd06c9969327b44ae7e1`. The semantic review ledger does not yet bind this inventory.
+Inventory SHA-256: `a866079727f5c0cccb4d00c25e4692378e40bc7f95ece5309805ff932921ed93`. The semantic review ledger does not yet bind this inventory.
 
 ## Current Alpha 0.3.6 candidate census
 

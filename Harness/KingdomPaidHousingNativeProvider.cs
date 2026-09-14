@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using XRL;
 using XRL.World;
+using XRL.World.Parts;
 
 namespace ThousandAndFirst.Harness
 {
@@ -66,6 +67,7 @@ namespace ThousandAndFirst.Harness
 				"expected medium housing declaration absent");
 			Require(Paid.WaterDrams == 7 && Paid.WorkTicks == 1800, "baseline conversion quote changed");
 			Require(KingdomData.TryGetBuilding(Paid.ToBuildKey, out var entry), "successor design absent");
+			TransferCarriedWater(zone);
 			Supply(zone, Paid);
 			Require(KingdomSurvey.TryBindLocalOperation(zone, system, out var scope, out failure), failure);
 			using (scope)
@@ -108,6 +110,36 @@ namespace ThousandAndFirst.Harness
 						&& unit.InInventory == store, "supplemental material custody failed");
 				}
 			Require(KingdomGrowth.CountStoredWater(zone) >= price.WaterDrams, "settlement cannot fund conversion water");
+		}
+		private static void TransferCarriedWater(Zone zone)
+		{
+			const int drams = 32;
+			Require(KingdomQuickstartRules.TryDecode(Owner.GetStringGameState(KingdomQuickstartRules.ReceiptState),
+				out var receipt), "water transfer lacks founder receipt");
+			Require(KingdomConstruction.FindExactId(zone, receipt.WaterObjectId, out var cask) == KingdomPhysicalLookupState.Exact,
+				"receipted water cask absent or ambiguous");
+			var water = cask.GetPart<LiquidVolume>();
+			Require(cask.Blueprint == "r_KingdomCaskRack" && cask.GetIntProperty("KingdomStores") == 1
+				&& water != null && KingdomLiquids.HasFreshWater(water) && water.MaxVolume - water.Volume >= drams,
+				"existing fresh-water cask lacks transfer space");
+			var player = The.Player;
+			GameObject donor = null;
+			foreach (var item in player.Inventory.Objects)
+				if (GameObject.Validate(item) && item.InInventory == player && item.GetPart<LiquidVolume>() is LiquidVolume held
+					&& KingdomLiquids.HasFreshWater(held) && held.Volume >= drams) { donor = item; break; }
+			Require(donor != null, "founder lacks 32 carried drams for the extended wait");
+			int moves = KingdomGuestSaveSupply.Walk(player, cask.CurrentCell);
+			Require(player.CurrentZone == zone && Math.Max(Math.Abs(player.CurrentCell.X - cask.CurrentCell.X),
+				Math.Abs(player.CurrentCell.Y - cask.CurrentCell.Y)) == 1, "founder is not beside the receipted cask");
+			var liquid = donor.GetPart<LiquidVolume>();
+			int before = water.Volume, carried = liquid.Volume, stores = KingdomGrowth.CountStoredWater(zone);
+			water.MixWith(liquid, PouredFrom: donor, Amount: drams);
+			Require(water.Volume == before + drams && liquid.Volume == carried - drams && donor.InInventory == player
+				&& KingdomGrowth.CountStoredWater(zone) == stores + drams && KingdomLiquids.HasFreshWater(water)
+				&& ReferenceEquals(cask.GetPart<LiquidVolume>(), water) && ReferenceEquals(donor.GetPart<LiquidVolume>(), liquid),
+				"carried-water transfer did not conserve exact volumes and owners");
+			Require(KingdomScenarioJournal.Append("paid-housing-water", true, "source=carried; drams=32; conserved=true; moves=" + moves
+				+ "; donor=" + donor.IDIfAssigned + "; cask=" + cask.IDIfAssigned) == null, "water transfer journal unavailable");
 		}
 		internal static void Require(bool value, string failure)
 		{

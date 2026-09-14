@@ -130,7 +130,7 @@ QUICKSTART_EVIDENCE_ROWS = (
 
 # Observation emitted inside guest-save-supply before the physical refill; not a callable verb.
 GUEST_SAVE_EVIDENCE_ROWS = ("guest-save-shortage",)
-PAID_HOUSING_EVIDENCE_ROWS = ("paid-housing-retry", "paid-housing-cohort")
+PAID_HOUSING_EVIDENCE_ROWS = ("paid-housing-water", "paid-housing-physical-probes", "paid-housing-retry", "paid-housing-cohort")
 
 ROOM_EVIDENCE_ROWS = tuple("room-" + name for name in (
     "shared-capped", "private-room", "open-door", "closed-door", "locked-door",

@@ -1,5 +1,12 @@
 # Changelog
 
+**Pending restored fixture recovery (unreleased)**
+
+Recheck exact physical fixtures after they are restored instead of permanently quarantining an
+intact building receipt on a temporary missing, moved, duplicated or changed component. All physical
+identity checks and malformed-authority refusals remain. Existing quarantined saves are not rewritten.
+The paid-housing scenario reproduces the old handover failure; repaired native acceptance is pending.
+
 **Pending enclosed canvas homes (unreleased)**
 
 Author enclosed shared shelters, separate chambers and courtyard cabins for M/L/XL plots.
@@ -77,8 +84,8 @@ regressions to cover every added material across all fallback heart transitions 
 including historical-baseline transitions. Sixteen main cases pass; fresh native confirmation
 of the court bill remains pending under #216. Exact evidence is in docs/STATUS.md.
 
-Current 3106-file census is line-cap green: 440,838 physical lines; direct `XRL`
-imports occur in 1450 files, 0 of them over the line limit. Inventory SHA-256: `ef37cc7e787d36b6034cc9a24cf99c9278aa55a9a8f2bd06c9969327b44ae7e1`.
+Current 3106-file census is line-cap green: 440,840 physical lines; direct `XRL`
+imports occur in 1450 files, 0 of them over the line limit. Inventory SHA-256: `a866079727f5c0cccb4d00c25e4692378e40bc7f95ece5309805ff932921ed93`.
 The cold-install inventory contains 3139 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Versions are semantic: patch for fixes,

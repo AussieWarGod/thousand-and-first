@@ -20,6 +20,42 @@ namespace ThousandAndFirst.Harness
 			Require(sentinel != null && ReferenceEquals(Storage.Inventory.AddObject(sentinel, null, Silent: true, NoStack: true), sentinel)
 				&& sentinel.InInventory == Storage, "synthetic contents sentinel custody failed");
 			Contents = ContentDigest(Storage);
+			ProvePhysicalRestoration(work, zone);
+		}
+		private static void ProvePhysicalRestoration(GameObject work, Zone zone)
+		{
+			Require(KingdomArchitectureStamper.TryVerifyComplete(work, zone, out string failure), failure);
+			for (int probe = 0; probe < 3; probe++)
+			{
+				string token = Storage.GetStringProperty(KingdomArchitectureStamper.ComponentTokenProperty);
+				try
+				{
+					if (probe < 2)
+					{
+						Storage.CurrentCell.RemoveObject(Storage);
+						if (probe == 1) zone.GetCell(StorageCell.X + 1, StorageCell.Y).AddObject(Storage, NoStack: true);
+					}
+					else Storage.SetStringProperty(KingdomArchitectureStamper.ComponentTokenProperty, "wrong-test-token");
+					Require(!KingdomArchitectureStamper.TryVerifyComplete(work, zone, out failure)
+						&& !string.IsNullOrEmpty(failure), "physical mismatch did not refuse: " + probe);
+					Require(!work.HasStringProperty(KingdomArchitectureStamper.FaultProperty)
+						&& !work.HasIntProperty(KingdomArchitectureStamper.FaultProperty), "physical mismatch poisoned intact owner authority");
+				}
+				finally
+				{
+					Storage.SetStringProperty(KingdomArchitectureStamper.ComponentTokenProperty, token);
+					if (Storage.CurrentCell != StorageCell)
+					{
+						Storage.CurrentCell?.RemoveObject(Storage);
+						StorageCell.AddObject(Storage, NoStack: true);
+					}
+				}
+				Require(KingdomArchitectureStamper.TryVerifyComplete(work, zone, out failure)
+					&& ContentDigest(Storage) == Contents, "exact physical restoration failed: " + failure);
+			}
+			Require(KingdomScenarioJournal.Append("paid-housing-physical-probes", true,
+				"missing=refused; moved=refused; wrong-token=refused; restored=exact; owner-authority=unchanged; contents=retained") == null,
+				"physical restoration journal unavailable");
 		}
 		internal static string Complete()
 		{

@@ -588,7 +588,9 @@ class MatchingTest(unittest.TestCase):
         expected = matrix.parse_expect(found["EXPECT"], name, found["VERBS"].split(","))
         rows = [(verb, outcome or "OK", wanted) for verb, outcome, wanted in expected]
         self.assertEqual([], matrix.match(expected, rows))
-        for witness, good, bad in (("paid-housing-retry", "phase=Outstanding", "phase=Working"),
+        for witness, good, bad in (("paid-housing-water", "conserved=true", "conserved=false"),
+                                   ("paid-housing-physical-probes", "restored=exact", "restored=false"),
+                                   ("paid-housing-retry", "phase=Outstanding", "phase=Working"),
                                    ("paid-housing-cohort", "housed=4", "housed=2")):
             index = next(i for i, item in enumerate(rows) if item[0] == witness)
             self.assertTrue(matrix.match(expected, rows[:index] + rows[index + 1:]))
@@ -1035,7 +1037,8 @@ class ShippedPersonaTest(unittest.TestCase):
                 (("camp-heart-chain-renovation-refusals", "camp-heart-chain-renovation-cleared"),
                  "camp-heart-chain-check"),
                 (matrix.ROOM_EVIDENCE_ROWS, "lodging-room-native"),
-                (matrix.PAID_HOUSING_EVIDENCE_ROWS, "paid-housing-complete"),
+                (matrix.PAID_HOUSING_EVIDENCE_ROWS[:2], "paid-housing-pay"),
+                (matrix.PAID_HOUSING_EVIDENCE_ROWS[2:], "paid-housing-complete"),
             ):
                 if any(name in expected for name in observations):
                     start = expected.index(observations[0])
