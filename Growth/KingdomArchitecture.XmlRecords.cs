@@ -144,6 +144,7 @@ namespace ThousandAndFirst
 			if (binding == null) { Skip(Xml); return; }
 			Set(State, binding, "Type", Xml.GetAttribute("Type"));
 			Set(State, binding, "Size", Xml.GetAttribute("Size"));
+			Set(State, binding, "Retained", Xml.GetAttribute("Retained"));
 			SetAlias(State, binding, "Frontage", Xml.GetAttribute("Frontage"),
 				Xml.GetAttribute("Facing"), "Facing");
 			Dictionary<string, Action<XmlDataHelper>> nodes =

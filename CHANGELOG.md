@@ -1,5 +1,17 @@
 # Changelog
 
+**Pending enclosed canvas homes (unreleased)**
+
+Author enclosed shared shelters, separate chambers and courtyard cabins for M/L/XL plots.
+Keep furniture outside the entrance aisle and reserve four-cell courts. Fresh Quickstart uses
+M plots, available at Camp; old S layout readers remain explicit. Timber, mud and block
+conversions now retain the enclosed room programme and incoming furniture. Charge canvas for
+added bedrolls and previously unfunded historical-route cushions. Exclude ambient faction parties
+only while generating the exact initial camp, preventing a legendary ape party from killing the
+starter citizens. Marsh construction and separate cold-load checks pass at `2c0600b5`, including
+all four original citizens, real enclosed housing and entrance obstruction/recovery. Broader
+housing/conversion and release acceptance remain pending; see docs/STATUS.md.
+
 **Pending room and furniture clearance (unreleased)**
 
 Measure lodging privacy from real sleeping rooms and reachable clear floor instead of plot area.
@@ -52,9 +64,9 @@ regressions to cover every added material across all fallback heart transitions 
 including historical-baseline transitions. Sixteen main cases pass; fresh native confirmation
 of the court bill remains pending under #216. Exact evidence is in docs/STATUS.md.
 
-Current 3103-file census is line-cap green: 440,623 physical lines; direct `XRL`
-imports occur in 1448 files, 0 of them over the line limit. Inventory SHA-256: `6972837d3b21390d4257f84fa551f6621627a46a7542cc01edfd4d9298df84b8`.
-The cold-install inventory contains 3134 files. This is not evidence of a new public installation.
+Current 3105-file census is line-cap green: 440,721 physical lines; direct `XRL`
+imports occur in 1449 files, 0 of them over the line limit. Inventory SHA-256: `cadbe858072e3c855ac94f882cb3d772f35f5d2f41f61a3a6e141f2f5df63fc8`.
+The cold-install inventory contains 3138 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Versions are semantic: patch for fixes,
 minor for additive API and content, major for breaking changes. Supported API is defined in

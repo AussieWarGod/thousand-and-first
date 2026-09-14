@@ -572,6 +572,7 @@ class Binding:
     facing: str
     tiers: List[Tier]
     location: str
+    retained: bool = False
     plan: "Plan" = field(init=False, repr=False)
 
 
@@ -2377,7 +2378,10 @@ def _parse_binding(
     location: str,
     issues: List[Issue],
 ) -> Optional[Binding]:
-    _unknown_attributes(element, {"Key", "Type", "Size", "Facing"}, location, issues)
+    _unknown_attributes(element, {"Key", "Type", "Size", "Facing", "Retained"}, location, issues)
+    retained = element.get("Retained", "no")
+    if retained not in {"yes", "no"}:
+        issues.append(Issue(location, "binding.retained", "Retained must be yes or no"))
     key = _required_attribute(element, "Key", location, issues)
     type_key = _required_attribute(element, "Type", location, issues)
     size = _required_attribute(element, "Size", location, issues)
@@ -2446,7 +2450,7 @@ def _parse_binding(
         issues.append(
             Issue(location, "binding.empty", "binding must declare at least one tier")
         )
-    binding = Binding(key, type_key, size, facing, tiers, location)
+    binding = Binding(key, type_key, size, facing, tiers, location, retained == "yes")
     for tier in tiers:
         tier.binding = binding
     return binding
@@ -4588,6 +4592,7 @@ def validate_model(
             building.plot in LOT_DIMENSIONS
             and tier.binding.size in LOT_DIMENSIONS
             and LOT_ORDER.index(tier.binding.size) < LOT_ORDER.index(building.plot)
+            and not tier.binding.retained
         ):
             issues.append(
                 Issue(
@@ -4597,6 +4602,11 @@ def validate_model(
                     f"Plot minimum={building.plot!r}",
                 )
             )
+        if tier.binding.retained and (building.plot not in LOT_DIMENSIONS
+                or tier.binding.size not in LOT_DIMENSIONS
+                or LOT_ORDER.index(tier.binding.size) >= LOT_ORDER.index(building.plot)):
+            issues.append(Issue(tier.location, "binding.retained-size",
+                                "Retained bindings must be strictly below the current building minimum"))
         if not building.blueprint:
             issues.append(
                 Issue(

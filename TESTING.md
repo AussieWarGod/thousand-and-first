@@ -1,10 +1,34 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
-## Pending heart progression source inventory
+## Current source inventory (unreleased)
 
-The planned compatibility gate runs across 3103 production C# sources (3097 baseline);
-the cold-install inventory contains 3134 files. Inventory `6972837d3b21390d4257f84fa551f6621627a46a7542cc01edfd4d9298df84b8`.
-These counts describe the pending repair, not a public installation or native PASS.
+The engine gate runs across 3105 production C# sources (3101 baseline);
+the cold-install inventory contains 3138 files. Inventory `cadbe858072e3c855ac94f882cb3d772f35f5d2f41f61a3a6e141f2f5df63fc8`.
+These counts describe the source inventory, not a public installation. Native acceptance is scoped below.
+
+## Enclosed starter homes
+
+Run `Tools/dev-check.sh tools canvas_homes_test.py` for all current sizes/facings, separated
+sleeping rooms, straight M entrance clearance, retained readers and four-cell XL courts.
+Run `Tools/dev-check.sh main KingdomCanvasHomeTests` for the actual compiled paid renovation
+delta and all 24 fixed-lot conversion routes/target variants.
+`Tools/dev-check.sh tools hut_rooms_test.py` covers current hut enclosure, fixture access,
+Small-reader boundaries and clear entrance/court circulation across 192 variant/pose combinations.
+Set `TAF_SCENARIO_TURN_BUDGET=17000` and `TAF_SCENARIO_TIMEOUT_SECONDS=3000` for the
+construction lifecycle; its two advances exceed the preparation default.
+The existing Quickstart lifecycle now also requires one enclosed room, three usable
+sleeping places and 17 clear floor cells in each completed M shelter. These native assertions
+pass in the marsh construction/save/separate-cold-load chain at `2c0600b5`; see
+[the exact evidence scope](docs/ENCLOSED-STARTER-HOUSING-EVIDENCE.md). Historic S saves need
+separate retained-reader evidence; the current lifecycle intentionally checks modern M lots.
+
+The lifecycle persona's `CHECK=quickstart-housing` requires unique startup/grown journal
+observations, all four founders, six available beds, two enclosed rooms and 34 clear floor cells
+after the full ordinary wait. Missing, duplicated, refused or contradictory observations fail.
+After a separate cold load, also run
+`python3 Tools/personas/persona_housing.py SOURCE_JOURNAL LOAD_JOURNAL --cold-load`.
+This requires the loaded observation and monotonic turn continuity; it complements the existing
+whole construction-chain verdict, strict logs, full pinned profile proof and owned shutdown.
 
 ## Physical room and furniture-clearance scenario
 

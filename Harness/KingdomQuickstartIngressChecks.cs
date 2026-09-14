@@ -32,8 +32,9 @@ namespace ThousandAndFirst.Harness
 				Require(seal != null, "seal coordinator absent");
 				string before = seal.NativePendingStageEvidence();
 				long tick = Game.TimeTicks;
-				// Exact exterior route pinned against the shipped tent-row map by the ingress suite.
-				Cell lane = Zone.GetCell(24, 17);
+				// Read the reserved route whose authored geometry the ingress suite recomputes.
+				// A former exterior coordinate can become interior when the minimum lot grows.
+				Cell lane = ExteriorLane(Zone, expected);
 				Require(KingdomRoads.Walkable(lane), "starter ingress was already obstructed");
 				foreach (string blueprint in new[] { "r_KingdomStructureMudWall", "r_KingdomCaskRack" })
 				{
@@ -66,6 +67,22 @@ namespace ThousandAndFirst.Harness
 			KingdomScenarioJournal.Append("quickstart-ingress", Failure == null,
 				Failure ?? "wall-and-liquid-carrier=passed; missing-entrance=refused; cleanup=exact; seal=unchanged; turns-spent=0");
 			return Failure == null;
+		}
+
+		private static Cell ExteriorLane(Zone Zone, KingdomPlotRules.PlotRect Lot)
+		{
+			Cell lane = null;
+			for (int i = 0; i < KingdomQuickstartRules.ShelterIngressCellCount; i++)
+			{
+				KingdomQuickstartRules.ShelterIngressCell(i, out int x, out int y);
+				bool adjacent = x >= Lot.X1 && x <= Lot.X2 && (y == Lot.Y1 - 1 || y == Lot.Y2 + 1)
+					|| y >= Lot.Y1 && y <= Lot.Y2 && (x == Lot.X1 - 1 || x == Lot.X2 + 1);
+				if (!adjacent) continue;
+				Require(lane == null, "starter home has more than one adjacent reserved exterior lane");
+				lane = Zone.GetCell(x, y);
+			}
+			Require(lane != null, "starter home has no reserved exterior ingress cell");
+			return lane;
 		}
 
 		private static void Require(bool Condition, string Failure)

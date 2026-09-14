@@ -607,7 +607,7 @@
       .then((r) => r.json())
       .then((data) => {
         cases = data;
-        selected = cases.find((x) => x.building === "tent" && x.size === "S");
+        selected = cases.find((x) => x.building === "tent" && !x.retained && x.size === x.minimum_size);
         filter();
       })
       .catch((error) => message(error.message));

@@ -186,6 +186,7 @@ VERB_ALPHABET = "abcdefghijklmnopqrstuvwxyz" + "0123456789" + "-."
 
 OUTCOMES = ("OK", "REFUSED")
 CHECKS = (
+    "quickstart-housing",
     "status-digest-stable",
     "travel-away",
     "travel-present",
@@ -667,6 +668,12 @@ def assess(manifest: dict, journal: str, name: str) -> list[str]:
     rows = significant(read_journal(journal))
     extra = tuple(v for v in manifest.get("VERBS", "").split(",") if v)
     problems = match(parse_expect(manifest["EXPECT"], name, extra), rows)
+    if manifest.get("CHECK") == "quickstart-housing":
+        spec = importlib.util.spec_from_file_location(
+            "taf_persona_housing", os.path.join(os.path.dirname(__file__), "persona_housing.py"))
+        housing = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(housing)
+        problems.extend(housing.assess(read_journal(journal)))
     if manifest.get("CHECK") == "status-digest-stable":
         problems.extend(status_digest_stable(rows))
     if manifest.get("CHECK", "").startswith("travel-"):

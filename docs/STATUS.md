@@ -1,5 +1,37 @@
 # Current implementation and release evidence
 
+## Enclosed starter housing: marsh construction and cold load accepted
+
+At `2c0600b53832c069b665ef7dce94b1cf015850be`, genuine marsh Quickstart keeps all four original
+citizens alive through 16,800 ordinary turns. They occupy two completed M homes with six real
+sleeping places, two enclosed rooms and 34 clear floor cells. Furniture occupies its footprint;
+entrances and aisles remain clear. Wall/container entrance obstruction and cleanup checks pass.
+The paid fire completes, saves and survives a separate cold load; all original citizens and room
+measurements survive too, and a new paid construction order succeeds after loading.
+
+The earlier citizen deaths came from albino apes in a locally generated legendary faction party.
+Initial camp generation now reserves that ambient encounter slot through an exact disposable
+scope. Native checks witness the interception, prove the same map uses ordinary encounter logic
+outside the scope, and find no inherited scope after cold load. No actor removal, invulnerability
+or allegiance rewrite is involved. The old fixed entrance-test coordinate was replaced with a
+cell derived from the actual authored exterior route.
+
+CI `34855569975`, all four engine compile modes, strict final logs, whole lifecycle and mandatory
+housing checks pass. Full pinned recipe proof matches 3,440 warm and 3,442 cold inputs; both game
+processes are verified stopped. Archive `enclosed-canvas-homes/2c0600b5/warm-cold-1/result.json`,
+SHA-256 `f629b3ae4ae098890113312ec792d413a2821f3a031d1e3c3e45b771cc258b2b`.
+[Detailed evidence and failed-attempt history](ENCLOSED-STARTER-HOUSING-EVIDENCE.md) retain the
+scope, captures, diagnostics and earlier failures. This is not public release acceptance.
+
+Current authored canvas and timber/mud/block layouts cover M shared rooms, L sleeping chambers
+and common rooms, and XL cabins around four-cell courts. Compiled tests cover all 24 conversion
+routes/variants/facings; installed-blueprint reviews cover 192 hut poses and 1,376 architecture
+poses. Current basic homes require M ground, available at Camp; explicit S readers remain.
+Native saved paid S/larger legacy layouts, paid hut conversions, L/XL homes, other terrain/seed
+openings, activity/quality rewards, thermal safety and ordinary multi-map land/material balance
+remain unproved. Quickstart gives shelter stakes, so this does not prove paid shelter commissioning.
+Issues #229–#234 and #237 remain open for that work; Hearthpyre runtime compatibility is deferred.
+
 ## Physical room and furniture clearance: native scenario accepted
 
 Lodging now measures actual sleeping rooms and clear floor using native structural observations.
@@ -285,11 +317,12 @@ from the passed four-mode compile at `8df7b548`.
 
 ## Current source census for the pending heart repair
 
-Current source: 3103 sources, baseline and compatibility symbols use their
+Current cold-install inventory: 3138 files.
+Current source: 3105 sources, baseline and compatibility symbols use their
 respective exclusions (3097 baseline). All four engine compile modes passed.
 The cold-install inventory has 3132 files.
-3103 staged C# files / 440,623 physical lines; zero strict line-cap failures.
-Direct `XRL` imports: 1448 files, 0 over the line limit. Inventory SHA-256: `6972837d3b21390d4257f84fa551f6621627a46a7542cc01edfd4d9298df84b8`.
+3105 staged C# files / 440,721 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1449 files, 0 over the line limit. Inventory SHA-256: `cadbe858072e3c855ac94f882cb3d772f35f5d2f41f61a3a6e141f2f5df63fc8`.
 This is a source census, not native acceptance or an updated exact-inventory semantic review.
 
 ## In-progress paid heart chain

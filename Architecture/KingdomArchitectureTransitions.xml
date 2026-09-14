@@ -20,7 +20,7 @@
   <transition Key="tent-to-hut-xl" From="tent" To="hut" Type="housing" Size="XL" Mode="renovate"
               Water="4" Materials="timber:4,mud:2" Ticks="1350" />
   <transition Key="tentrow-to-hutyard-s" From="tentrow" To="hutyard" Type="housing" Size="S" Mode="renovate"
-              Water="7" Materials="timber:7,stone:2" Ticks="1800" />
+              Water="7" Materials="timber:7,stone:2,canvas:1" Ticks="1800" />
   <transition Key="tentrow-to-hutyard-m" From="tentrow" To="hutyard" Type="housing" Size="M" Mode="renovate"
               Water="7" Materials="timber:7,stone:2" Ticks="1800" />
   <transition Key="tentrow-to-hutyard-l" From="tentrow" To="hutyard" Type="housing" Size="L" Mode="renovate"
@@ -38,7 +38,7 @@
   <transition Key="tent-to-mudhut-xl" From="tent" To="mudhut" Type="housing" Size="XL" Mode="renovate"
               Water="4" Materials="mud:8" Ticks="1350" />
   <transition Key="tentrow-to-mudhutcourt-s" From="tentrow" To="mudhutcourt" Type="housing" Size="S" Mode="renovate"
-              Water="7" Materials="mud:12,stone:2" Ticks="1800" />
+              Water="7" Materials="mud:12,stone:2,canvas:1" Ticks="1800" />
   <transition Key="tentrow-to-mudhutcourt-m" From="tentrow" To="mudhutcourt" Type="housing" Size="M" Mode="renovate"
               Water="7" Materials="mud:12,stone:2" Ticks="1800" />
   <transition Key="tentrow-to-mudhutcourt-l" From="tentrow" To="mudhutcourt" Type="housing" Size="L" Mode="renovate"
@@ -56,7 +56,7 @@
   <transition Key="tent-to-blockhut-xl" From="tent" To="blockhut" Type="housing" Size="XL" Mode="renovate"
               Water="4" Materials="scrap:4,stone:3" Ticks="1350" />
   <transition Key="tentrow-to-blockyard-s" From="tentrow" To="blockyard" Type="housing" Size="S" Mode="renovate"
-              Water="7" Materials="scrap:6,stone:4" Ticks="1800" />
+              Water="7" Materials="scrap:6,stone:4,canvas:1" Ticks="1800" />
   <transition Key="tentrow-to-blockyard-m" From="tentrow" To="blockyard" Type="housing" Size="M" Mode="renovate"
               Water="7" Materials="scrap:6,stone:4" Ticks="1800" />
   <transition Key="tentrow-to-blockyard-l" From="tentrow" To="blockyard" Type="housing" Size="L" Mode="renovate"
