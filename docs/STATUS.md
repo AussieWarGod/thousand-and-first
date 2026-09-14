@@ -1,5 +1,22 @@
 # Current implementation and release evidence
 
+## Unreleased founding reputation baseline — native acceptance pending
+
+New realms now freeze personal reputation once into inbound civic regard. Outgoing policy
+remains separate; existing cities and version-one founding retries retain their history.
+Population culture/weighting integration under #231 is still pending.
+
+Focused checks: 364 main founding cases, 20 directional cases and 309 portable founding cases
+passed with zero skips. Production engine compilation passed for 3107 sources, baseline and compatibility symbols;
+All four production/harness engine compile modes passed; native founding/spillover/cold-load evidence remains pending.
+The probe uses explicit synthetic reputation changes through native and city APIs, with no
+fabricated residents. Public Alpha 0.3.7 retains the released behavior and its evidence below.
+
+Development census: 3107 staged C# files; 440,849 physical lines; zero at or above 300 lines.
+Cold-install inventory: 3140 files. Inventory SHA-256: `051d929772b209a462654ea5ac2f33b9749f79ecc57ea052d449957fab874835`.
+Structural semantic review is stale for this draft; no new release acceptance is claimed.
+
+
 ## Public 0.3.7 — published and finalized
 
 Public Alpha 0.3.7 is published, verified and finalized, superseding 0.3.6. Earlier candidate

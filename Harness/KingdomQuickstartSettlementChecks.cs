@@ -40,6 +40,7 @@ namespace ThousandAndFirst.Harness
 					Require(KingdomQuickstartEncounterDiagnostics.Check(Game, Zone, Stage),
 						"initial camp encounter reservation was absent or escaped its generation scope");
 					if (Stage == "startup") KingdomQuickstartDefensiveChecks.Probe();
+					KingdomFoundingRegardNativeChecks.Observe(Game, System, Stage);
 					var ids = new HashSet<string>(StringComparer.Ordinal);
 					for (int i = 0; i < KingdomQuickstartRules.FounderCount; i++)
 					{

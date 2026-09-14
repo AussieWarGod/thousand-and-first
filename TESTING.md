@@ -1,5 +1,14 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
+## Unreleased founding reputation validation
+
+Focused snapshot/publication and directional tests pass. Native scenario coverage is being
+extended across real founding, independent city changes, personal reputation spillover and
+fresh cold load; it is not accepted yet. Compile validation spans across 3107 production C# sources;
+the development cold-install inventory contains 3140 files. Historical native evidence below
+retains its original inputs and does not prove this changed founding behavior.
+
+
 ## Defensive-founder source acceptance
 
 Source `49af5f5e` passes marsh seed `#43101` warm/cold lifecycle with all four original founders

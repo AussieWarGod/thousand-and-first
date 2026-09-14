@@ -196,8 +196,13 @@ an internal trusted path and keep their proved interior geometry.
 | `GetStanding` / `SetStanding` / `AdjustStanding` / `MirrorFeeling` | Compatibility aliases for the **inbound** `RegardForRealm` direction. New integrations should use the directional names so symmetry is never inferred accidentally. |
 | `static void Guard(string step, Action work)` | Run work inside engine dispatch without letting exceptions escape. Use for any code the engine invokes. |
 
-A clean new realm starts both civic directions, signed carry, and diagnostic observation empty; it
-does not enumerate or inherit personal reputation. Permanent, non-transient
+A clean new realm freezes the founder's current personal reputation with every eligible foreign
+faction and initializes faction-to-realm regard once. Neutral and hostile values are retained;
+outgoing realm policy and fractional carry start empty. The observation ledger records the same
+founding snapshot. Later city effects and personal spillover evolve this independent baseline;
+load and founding retries never recopy current personal reputation. Existing realms are not
+backfilled, and interrupted version-one founding snapshots retain observation-only semantics.
+Permanent, non-transient
 `AfterReputationChangeEvent` deltas spill only into
 `RegardForRealm`; `RealmPolicyToward` and vanilla personal reputation remain separate. The rate
 dampens from Camp to City; canonical signed fractional carry makes equal weighted histories

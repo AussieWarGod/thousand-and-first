@@ -2372,3 +2372,17 @@ plot coordinates, a bounded UTF-8 skin and digest. The total construction regist
 bounded at 4,194,304 characters. The canonical construction-v5 and plot-v2 encodings and
 hashes are unchanged; existing smaller receipts remain readable. Layouts must still satisfy
 all architecture, material, ownership and physical-ground validation before payment.
+
+## Founding reputation snapshot
+
+The internal `TAFFoundingStandings_v1` faction property now admits a `v2` payload for new
+founding transactions. Its ordered base64 UTF-8 faction keys and signed integer values freeze
+the founder's reputation before publication. At most 512 eligible foreign relationships and
+262144 encoded characters are accepted; malformed, noncanonical or over-capacity snapshots
+refuse without truncation. `v1` payloads remain readable with observation-only semantics.
+
+New `v2` snapshots initialize only faction-to-realm regard and its advisory observation;
+outgoing policy stays unspecified. Matching partially published subsets can complete; changed
+values, extra keys, policy or fractional carry refuse without overwriting state. Established
+realms do not gain a fabricated historical baseline. This property is internal transaction
+state, not an extension surface or a way to alter a living city's reputation.

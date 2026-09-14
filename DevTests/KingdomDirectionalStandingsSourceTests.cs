@@ -84,35 +84,21 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void CleanFoundingPublishesEmptyDirectionalAuthorityWithoutPersonalInheritance()
+		public void CleanFoundingFreezesInheritedRegardBeforeCallbacksAndKeepsPolicySeparate()
 		{
-			string founding = Source(Path.Combine("Core",
-				"KingdomFounding.01.FirstPublication.cs"));
-			string standingPublication = Source(Path.Combine("Core",
-				"KingdomFounding.02.FoundingStandings.cs"));
-			string report = Source(Path.Combine("Core", "KingdomReportsPeople.cs"));
-			AssertOrdered(founding, "TryPublishFoundingStandings(system, resolvedStandings)",
+			string founding = Source(Path.Combine("Core", "KingdomFounding.01.FirstPublication.cs"));
+			string publication = Source(Path.Combine("Core", "KingdomFounding.02.FoundingStandings.cs"));
+			AssertOrdered(founding, "TryReadOrFreezeFoundingStandings(system, faction",
+				"The.Game.PlayerReputation.Set(faction.Name", "TryPublishFoundingStandings(system, resolvedStandings, foundingRegardVersion)",
 				"faction.SetProperty(FoundingStepProperty, 2)", "system.ReassertFeelings()");
-			AssertOrdered(standingPublication,
-				"System.Standings.Count != 0",
-				"System.RealmPolicyToward.Count != 0",
-				"if (!ExactSubset(System.RegardSpilloverObservedReputation, desired))",
-				"System.DirectionalStandingSchemaVersion = 1;",
-				"return System.DirectionalStandingSchemaVersion == 1 &&",
-				"System.Standings.Count == 0",
-				"System.RealmPolicyToward.Count == 0");
-			StringAssert.Contains("new List<KeyValuePair<string, int>>()", standingPublication);
-			StringAssert.DoesNotContain("Factions.Loop()", standingPublication);
-			StringAssert.DoesNotContain("PlayerReputation.Get", standingPublication);
-			string publication = Slice(standingPublication,
-				"private static bool TryPublishFoundingStandings",
-				"private static bool ExactSubset");
-			StringAssert.DoesNotContain("System.Standings[row.Key]", publication);
-			StringAssert.DoesNotContain("System.RealmPolicyToward[row.Key]", publication);
-			StringAssert.Contains("Their regard for us and our policy toward them are separate", report);
-			StringAssert.Contains("their regard ", report);
-			StringAssert.Contains("our policy ", report);
-			ClassicAssert.GreaterOrEqual(Count(report, "\"unspecified\""), 2);
+			AssertOrdered(publication, "if (!Realm.HasProperty(FoundingStandingsProperty))",
+				"Factions.Loop()", "System.CanReserveDirectionalRelationship(faction.Name)",
+				"The.Game.PlayerReputation.Get(faction)", "KingdomFoundingRegardRules.TryEncode(2, snapshot",
+				"Realm.SetProperty(FoundingStandingsProperty, encoded)");
+			AssertOrdered(publication, "KingdomFoundingRegardRules.TryPreparePublication(Version, frozen",
+				"System.Standings = standings;", "System.RegardSpilloverObservedReputation = observations;",
+				"System.DirectionalStandingSchemaVersion = 1;");
+			StringAssert.DoesNotContain("System.RealmPolicyToward =", publication);
 		}
 
 		[Test]

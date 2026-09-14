@@ -18,7 +18,6 @@ namespace ThousandAndFirst
 		private const string FoundingChronicleDispositionProperty =
 			"TAFFoundingChronicleDisposition_v1";
 		private const string FoundingStandingsProperty = "TAFFoundingStandings_v1";
-		private const int MaxFoundingStandingsLength = 262144;
 
 		internal static bool DirectionalAuthorityPublished(Faction Faction)
 		{
