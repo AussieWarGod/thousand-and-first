@@ -82,8 +82,10 @@ namespace ThousandAndFirst.Tests
 				"probe.TryAcceptExact(Successor.Rect, after, requireExistingRoadEvidence",
 				"TryAcceptFrozenEnvelope(Z, Successor.Rect,",
 				"ConnectionCells(Z)",
-				"ReadWornRoadCells(Z)",
+				"ReadWornRoadCells(Z, heartAccretion)",
 				"KingdomRoads.FindOurFloor(cell, out road)",
+				"unpaidHeartTrack = heartAccretion",
+				"KingdomRoads.IsExactUnpaidTrack(cell, road)",
 				"item.IsCreature || item.IsPlayer()",
 				"KingdomPlots.ReadObject(item) == KingdomPlotRules.GroundKind.Bare");
 			StringAssert.Contains("KingdomArchitectureTransitionRules.AllowsLotExpansion(", source);

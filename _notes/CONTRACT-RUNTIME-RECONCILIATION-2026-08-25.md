@@ -2,8 +2,8 @@
 
 ## Current source census — pending heart repair
 
-3100 production C# files; 440,271 physical lines; 1446 direct-XRL files; zero cap failures;
-3,131 cold-install files. Inventory `adbc2e2a11faaa57d8f63c8d12f0d429ed58f61a97271a95b5b6c672d434cfd1`. This census is not native acceptance.
+3100 production C# files; 440,299 physical lines; 1446 direct-XRL files; zero cap failures;
+3,131 cold-install files. Inventory `8989ef5f532e7b0b001941c3df712c964637d729ff2c760934b9a061bc076317`. This census is not native acceptance.
 
 ## Retained combined heart candidate before surveyed-ingress draft — 2026-09-11
 

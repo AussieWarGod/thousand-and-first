@@ -37,7 +37,7 @@ namespace ThousandAndFirst.Harness
 				var assessment = AssessChain(out string context);
 				Require(KingdomUpgradeRules.IsReady(assessment.Verdict), "supplied heart preflight refused: "
 					+ assessment.Verdict + "; reason=" + assessment.Reason + "; " + context);
-				if (Target == 3) ProveChainEnvelopeOccupancy();
+				if (Target == 3) { ProveChainEnvelopeOccupancy(); ProveChainRoadWear(); }
 				else ProveChainSurveyStakes();
 			}
 
@@ -76,6 +76,7 @@ namespace ThousandAndFirst.Harness
 
 			private void CheckChainComplete()
 			{
+				RequireChainTrack();
 				RequireChainSupport();
 				if (ChainTarget == 3) Require(KingdomCampHeartChainRetryFault.Proved,
 					"controlled obstruction and Outstanding handover retry were not witnessed");

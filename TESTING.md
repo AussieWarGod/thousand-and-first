@@ -3,7 +3,7 @@
 ## Pending heart progression source inventory
 
 The planned compatibility gate runs across 3100 production C# sources (3096 baseline);
-the cold-install inventory contains 3131 files. Inventory `adbc2e2a11faaa57d8f63c8d12f0d429ed58f61a97271a95b5b6c672d434cfd1`.
+the cold-install inventory contains 3131 files. Inventory `8989ef5f532e7b0b001941c3df712c964637d729ff2c760934b9a061bc076317`.
 These counts describe the pending repair, not a public installation or native PASS.
 
 ## Quickstart housing hotfix acceptance (2026-09-13)

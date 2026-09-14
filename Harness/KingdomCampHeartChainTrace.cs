@@ -39,13 +39,34 @@ namespace ThousandAndFirst.Harness
 					+ "; loaded-complete=" + complete + "; loaded=" + (loaded?.Count ?? -1)
 					+ "; active-ground=" + ReferenceEquals(The.ZoneManager?.ActiveZone, Z)
 					+ "; leases=" + stock.InputLeaseAuthorityExact + "; lease-failure=" + stock.InputLeaseFailure
-					+ "; tally=" + stock.Tally.Describe() + sources);
+					+ "; tally=" + stock.Tally.Describe() + sources + RoadGround(Z, Result.Reason));
 			}
 			catch (Exception error)
 			{
 				KingdomScenarioJournal.Append("camp-heart-chain-diagnostic", false,
 					"assessment observer failed: " + error.GetType().Name + ": " + error.Message);
 			}
+		}
+
+		private static string RoadGround(Zone Z, string Reason)
+		{
+			const string prefix = "plot-envelope growth would absorb public road ground at ";
+			if (Reason == null || !Reason.StartsWith(prefix, StringComparison.Ordinal)) return "";
+			string[] coordinates = Reason.Substring(prefix.Length).Split(',');
+			if (coordinates.Length != 2 || !int.TryParse(coordinates[0], out int x)
+				|| !int.TryParse(coordinates[1], out int y) || Z == null) return "; road-ground=unresolved";
+			Cell cell = Z.GetCell(x, y);
+			int traffic = KingdomRoadRules.TrafficAt(KingdomRoads.ReadTally(Z), x, y);
+			var lookup = KingdomRoads.FindOurFloor(cell, out var floor);
+			string detail = "; road-lookup=" + lookup + "; road-traffic=" + traffic
+				+ "; road-tally-wear=" + KingdomRoadRules.WearAt(traffic);
+			if (floor != null) detail += "; road-id=" + floor.IDIfAssigned + "; road-blueprint=" + floor.Blueprint
+				+ "; road-state=" + floor.GetIntProperty(KingdomRoads.PathStateProperty)
+				+ "; road-owned=" + floor.IsOwned()
+				+ "; road-string-receipt=" + floor.HasStringProperty(KingdomConstruction.ReceiptProperty)
+				+ "; road-int-receipt=" + floor.HasIntProperty(KingdomConstruction.ReceiptProperty)
+				+ "; road-exact-unpaid=" + KingdomRoads.IsExactUnpaidTrack(cell, floor);
+			return detail;
 		}
 
 		internal static void Time(string Step, Stopwatch Watch, bool Result)

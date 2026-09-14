@@ -13,10 +13,10 @@ balance or multi-tile acceptance.
 
 ## Current source census for the pending heart repair
 
-Four engine compile modes passed: 3100 sources, baseline and compatibility symbols use their
+Engine gate passed: 3100 sources, baseline and compatibility symbols use their
 respective exclusions (3096 baseline). The cold-install inventory has 3131 files.
-3100 staged C# files / 440,271 physical lines; zero strict line-cap failures.
-Direct `XRL` imports: 1446 files, 0 over the line limit. Inventory SHA-256: `adbc2e2a11faaa57d8f63c8d12f0d429ed58f61a97271a95b5b6c672d434cfd1`.
+3100 staged C# files / 440,299 physical lines; zero strict line-cap failures.
+Direct `XRL` imports: 1446 files, 0 over the line limit. Inventory SHA-256: `8989ef5f532e7b0b001941c3df712c964637d729ff2c760934b9a061bc076317`.
 This is a source census, not native acceptance or an updated exact-inventory semantic review.
 
 ## In-progress paid heart chain
@@ -188,6 +188,23 @@ recovery. Road wear excludes current plots; growth refuses worn ground newly ann
 them. The shared reservation policy must preserve usable entrances and public streets, distinguish
 incidental wear from established/paid infrastructure, and avoid disabling roads merely to pass the
 fixture. #212/#213 and higher real cold load remain open.
+
+The pending #214 repair admits unpaid Worn, Trodden and Path ground only within an already
+proved founding-heart accretion. Exact blueprint, live unique identity, lack of ownership,
+construction receipt and layout/plot claims are required for a physical track. Paved, foreign,
+receipt-bearing and ambiguous road objects still refuse. Ordinary building expansion retains
+its road protection. Historical traffic tally alone cannot acquire the heart's surveyed land.
+Tracks and tally are preserved; no floor deletion, demotion or save-field migration is introduced.
+This addresses fresh and already-worn cities through the same read-only admission, rather than
+preventing street wear and potentially breaking the current entrance's connection.
+All 207 main RoadRules cases (including sixteen new policy cases) and thirteen envelope
+source-contract cases passed with zero skips. All four engine compile modes passed
+(3096/3100 ordinary and 3383/3387 developer sources). The RoadRules fixture is main-only; these are not portable-suite or native results.
+New native cases cover all three unpaid wear states, maximum historic traffic, paved and foreign
+floors, empty/string and wrong-table/int receipt presence, duplicate identity refusal and no debit.
+A settled path remains under the completed heart and must retain its exact ID, cell and wear state
+through both higher upgrades and next-day recovery. Unexpected road refusals now log exact lookup,
+traffic, floor identity/state/blueprint, ownership and receipt presence. These cases await execution.
 
 Spatial seal capture and fixture housing observations use one local survey for their complete read.
 Source inspection found that an unbound component verifier otherwise rebuilds a survey per component.

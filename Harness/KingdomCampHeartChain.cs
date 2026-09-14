@@ -73,14 +73,14 @@ namespace ThousandAndFirst.Harness
 				{
 					CheckChainComplete(); ChainPhase++;
 					return "paid-heart-chain completed; rung=" + ChainTarget + "; job=" + ChainJobId
-						+ "; effects-settled=true; " + ChainState();
+						+ "; effects-settled=true; track-retained=true; " + ChainState();
 				}
 				Require(ChainPhase == 7, "paid heart chain check out of order");
 				CheckChainComplete();
 				Require(KingdomPlots.RecoverFoundingHeart(System, Zone), "rung-four next-day recovery refused");
 				CheckChainComplete(); ChainPhase = 8;
 				return "paid-heart-chain complete; paid-rungs=1->2->3->4; next-day-recovery=true"
-					+ "; ordinary-acceptance=false; save-load=untested; " + ChainState();
+					+ "; track-retained=true; ordinary-acceptance=false; save-load=untested; " + ChainState();
 			}
 
 			private string ChainState()
