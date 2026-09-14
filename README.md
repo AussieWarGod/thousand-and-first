@@ -5,8 +5,8 @@ after you leave. Water, food, labour, materials, roads, trade, threats, civic me
 works remain part of the same world instead of becoming a detached management screen.
 
 **Status: 0.3.7 public Alpha playtest.**
-The private candidate passed subscribed and native checks. Public delivery is pending; the listing
-currently serves 0.3.6. See the linked release ledger for verified publication status.
+Public 0.3.7 is published and finalized; one subscribed installation was verified.
+See the linked release ledger for exact evidence and remaining coverage limits.
 Back up saves before updating. Current evidence and remaining coverage limits live in
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md).
 
