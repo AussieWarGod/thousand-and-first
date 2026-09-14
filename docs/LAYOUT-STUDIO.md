@@ -97,3 +97,6 @@ and containers. Real doors remain potential circulation unless another fixture o
 Fixture use requires orthogonally adjacent clear floor reachable from a public entrance. Furniture
 never creates a structural partition. Keep circulation and door landings clear when drawing every
 building type; native walkability is not an architectural exemption.
+
+The review reports furniture overlapping a real doorway as a design issue even if another
+entrance provides access. A usable alternative route does not excuse a cluttered doorway.

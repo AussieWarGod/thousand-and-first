@@ -1,32 +1,38 @@
 # Current implementation and release evidence
 
-## Physical room-based lodging: implementation pending native acceptance
+## Physical room and furniture clearance: native scenario accepted
 
-The current lodging slice measures actual sleeping rooms using adoption structural observations
-and clear floor that excludes furniture, including natively walkable beds, chairs and containers.
-Every bed needs adjacent ingress-reachable clear floor; furniture cannot supply a doorway. Operable sleeping providers keep their physical coordinates before enrollment
-caps; extra usable bunks still count as shared space. Separate rooms constrain privacy, and
-catalogue `Closeness` declarations can only reduce the physical reading. Adopted floor-only
-receipts can use adjacent walls as boundaries without claiming them. No resident assignments or
-save formats are rewritten. Housing layouts and room furniture/activity rewards are still pending.
+Lodging now measures actual sleeping rooms and clear floor using native structural observations.
+Every furniture footprint is occupied for architectural circulation, even native-walkable beds,
+chairs and containers. Each sleeping provider needs adjacent ingress-reachable clear floor;
+furniture cannot supply ingress or structural enclosure. Operable sleeping-provider coordinates
+are retained before enrollment caps, so spare bunks still limit privacy. Shared single rooms
+cannot exceed Close, and declarations can only lower measured privacy. Existing resident
+assignments, native collision and save formats are unchanged.
 
-Focused checks passed: 195 lodging cases (including 17 new room cases), 93 adoption cases and five
-new enclosure-bound cases in each of the main and portable lanes. The larger-room overload preserves
-adoption's default 200-cell limit. New native coverage is still owed for the full provider/index/
-lodging route, real door states, wall/furniture/bed damage and repair, occupancy and cold load.
-This slice is not released and does not inherit Native30 gameplay acceptance for changed inputs.
+The twenty-observation `lodging-room-native` scenario passed at
+`765e8e59d4819f3f3960df60cc660e6279097cbf`. Genuine dune Quickstart preceded a synthetic 8×6
+canvas room adopted through the ordinary API. Three real bedrolls share one roof credit. Native
+checks covered open/closed/locked doors, walkable furniture in a doorway, a trapped bed, solid and
+walkable furniture reducing clear floor, wall/bed loss, each restoration, and a temporarily
+borrowed original founder returned to the same cell. The actual benefit index, lodging privacy
+and repeated read-only arrival observations matched. The original four founders consume that
+single credit: arrivals correctly remain Full while it exists and NoRoofAtAll when it is lost.
 
-The dedicated `lodging-room-native` persona is now implemented: genuine dune Quickstart, an
-untouched site with a synthetic 8×6 canvas room, ordinary adoption, three operable bedrolls against
-one enrollment credit, and twenty positional native observations. It checks open/closed/locked
-doors, walkable furniture in a doorway, a trapped bed, solid and walkable furniture, their repairs,
-loss/restoration of walls and beds, obstructed/restored floor, a temporarily borrowed
-original citizen and restored shared bunks. It compares the actual benefit index, lodging privacy
-and arrival decision while preserving room/root identities. The founder returns to the original
-cell; detached test objects remain retained. The revised scenario passed all 65 persona-validator tests and all four engine compile modes
-(3394/3398 developer sources). Eighteen editor tests and the real Chromium authoring check pass. Native execution and cold-load evidence are still pending; no native PASS is
-claimed by adding the scenario.
+Full pinned runtime, harness, request, manifest, options and script matched all 3436 sealed inputs.
+Strict final logs, positional witnesses, capture and exact owned shutdown passed. Archive:
+`physical-rooms/765e8e59/furniture-circulation-1/result.json`, SHA-256
+`c24c08d7ea335d92bb1b6be9338968751d3f9953beaecefa49ef6b7cbbf08f3d`.
+The earlier `48dcc2da` attempt failed a wrong fixture arrival expectation; its closed failed
+archive is retained. Correcting the expectation preserved all founders and capped capacity.
 
+Focused validation passed: 195 lodging cases, 18 editor cases, 65 persona validators, six related
+source contracts, the Chromium authoring workflow and all four engine compile modes. The shared
+editor reserves authored object footprints and flags furniture on doorways even when another
+entrance is usable. Pure cases cover multiple sleeping rooms and partition changes; current native
+acceptance covers one synthetic room. Cross-room corridor connectivity, cold load, paid building
+redesign, activity/quality rewards, ordinary city balance and multi-map behavior remain owed.
+This slice is not released and does not establish Alpha/Beta acceptance.
 
 ## Native30 accepted; housing and population follow-through required
 

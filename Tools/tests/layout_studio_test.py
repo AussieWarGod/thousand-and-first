@@ -126,6 +126,15 @@ class RoomTopologyTests(unittest.TestCase):
         r = analyse(amap, palette, SimpleNamespace(blueprint='root'), shapes, CHECKER)
         self.assertEqual(1, r['rooms'])
         self.assertEqual(0, r['spaces'][0]['publicly_reachable_cells'])
+        self.assertEqual([[3, 4]], r['blocked_doorways'])
+
+        # A second, clear entrance makes the room usable but cannot excuse doorway furniture.
+        glyphs += '<glyph Char="t" Structure="$door" Claim="building" Pass="walk" Cover="soft" Anchors="entrance:public" />'
+        rows = ['###t###', *self.home[1:]]
+        amap = CHECKER._parse_map(ET.fromstring(map_xml(rows, glyphs)), ROOT / 'draft.xml', ROOT, 0, [])
+        r = analyse(amap, palette, SimpleNamespace(blueprint='root'), shapes, CHECKER)
+        self.assertEqual([], r['inaccessible_fixtures'])
+        self.assertEqual([[3, 4]], r['blocked_doorways'])
 
     def test_bigger_yard_does_not_increase_room_space(self):
         small = read(self.home)

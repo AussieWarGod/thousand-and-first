@@ -134,6 +134,7 @@ def analyse(amap, palette, building, shapes, checker, pose="north", poses=None):
             "exposed_beds": [list(p) for p in sorted(exposed_beds)],
             "exposed_interior": [list(p) for p in sorted(exposed)],
             "doors": len(doors), "unknown_blueprints": sorted(unknown),
+            "blocked_doorways": [list(p) for p in sorted(doors & objects)],
             "inaccessible_fixtures": inaccessible, "cells": list(facts.values()),
             "assumptions": ["Physical blueprint shape, not a live zone survey.",
                             "All object footprints are occupied; fixtures need reachable adjacent clear floor.",

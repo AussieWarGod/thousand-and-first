@@ -184,11 +184,12 @@ furniture barriers, rotated plans, adopted floor-only authority, undesignated ga
 on one provider and invalid capacities. This is a foundation for #233, not its completion. Usable
 floor excludes every native Furniture-tagged object, bed and chair, including the settlement
 marker. Sleeping providers also reserve their footprints even without a Furniture tag. Beds need
-adjacent reachable floor, and furniture cannot provide ingress. This is not a decoration score. Dedicated
-native tests must still prove credited-provider allocation through the index, actual native wall
-and door behavior, lodging decisions, damage/repair, occupied rooms and cold load. No in-game PASS
-or release acceptance is claimed for this slice yet. The actual housing catalogue redesign and
-Quickstart reservation/cost migration remain next work under #229.
+adjacent reachable floor, and furniture cannot provide ingress. This is not a decoration score.
+The native twenty-case scenario at `765e8e59` passed the actual index/privacy route, door states,
+furniture obstruction, trapped-bed access, wall/bed damage and repair, founder occupancy and
+capped-arrival refusal. See STATUS.md for its full closed archive. This is one synthetic room;
+shared-hallway connectivity between rooms, cold load, paid catalogue redesign and Quickstart
+reservation/cost migration remain required work. No release acceptance is claimed.
 
 Privacy counts operable sleeping providers before enrollment-cap allocation, so an extra usable
 bunk cannot disappear from shared-room measurements merely because its roof credit was capped.

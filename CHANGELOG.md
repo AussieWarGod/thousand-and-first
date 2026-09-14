@@ -1,5 +1,15 @@
 # Changelog
 
+**Pending room and furniture clearance (unreleased)**
+
+Measure lodging privacy from real sleeping rooms and reachable clear floor instead of plot area.
+Reserve furniture footprints even when native movement permits walking over them; require adjacent
+clear-floor bed access. Shared extra bunks still limit privacy after enrollment caps. The layout
+workbench applies occupied-space rules and flags furniture on doorways, including doors with an
+alternative entrance. Twenty native failure/restoration observations passed at `765e8e59`; see
+docs/STATUS.md for scope and the closed archive. Building redesign and room/activity rewards
+remain in progress.
+
 **Pending heart progression repair (unreleased)**
 
 Clear eligible residents from retained floors that become walls during an authored renovation
