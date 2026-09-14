@@ -1,5 +1,21 @@
 # Current implementation and release evidence
 
+## Native23 closed; source release validation separated from cold load
+
+Native23 at `ded5e3fe` passed the spare-site payload, ingress and ordinary-price checks,
+then refused the first higher upgrade: `NoGroundToGrow`, protected successor ground at
+`42,13`. The recorded reason does not identify the occupant. No higher payment or save/load
+occurred. Full pinned profile recipe, strict log and exact owned shutdown passed; scenario
+failed. Archive `beta-heart-chain/ded5e3fe/supplied-successor-ground-refused-1/result.json`,
+SHA-256 `658537f7480fc88c64dbca7c44aa2b0bc76df73ac0230e8095d59bfb071c656d`.
+
+The harness now appends the exact refused cell's object identities, blueprints, ground
+classifications, resident/citizenship facts and plot/component markers when a coordinate is
+available. This is observation only; it does not move occupants or relax production checks.
+PR #207's gameplay branch is being validated separately with its original eighteen-home
+paid-chain persona. PR #219's extended cold-load fixture remains a separate Beta coverage
+step. Neither the fixture changes nor this failed run establish ordinary population balance.
+
 ## Native22 closed; distinguish a hint from reserved ground
 
 Native22 at `a51ac81d` housed all fifty fixture residents with seventeen complete homes, then

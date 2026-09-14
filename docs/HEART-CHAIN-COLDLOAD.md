@@ -140,3 +140,11 @@ and load execution remains outstanding.
 
 Keep [STATUS.md](STATUS.md) authoritative for actual executed evidence. Isolated preparation
 must not change the checkout or profile of an already running native scenario.
+
+## Native23 refusal and next diagnostic
+
+The spare-site proof passed at `ded5e3fe`. The first higher upgrade then refused protected
+ground at `42,13`, before payment or save. STATUS.md records the closed failed archive.
+Failure context now records the exact cell objects without changing them. The original
+paid-chain release validation runs separately on #207; this extended persistence coverage
+remains #219. No source or loaded court has yet been accepted.
