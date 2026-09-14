@@ -65,8 +65,8 @@ Facts bind original anchors, all four survey stakes, water mixtures, larders and
 stockpiles. Anonymous food stacks retain their observed slot/count; the observer assigns no IDs.
 Completion checks now share one local survey and verify disposal; speedup is unmeasured.
 Continue dispatch, full preactivation/activation comparison, dedicated input rearming and an
-ordinary paid fire followed by 3600 requested turns are now implemented, but not engine-compiled
-or executed. The host importer validates, copies and seals all four retained fact files. The new
+ordinary paid fire followed by 3600 requested turns are now implemented and engine-compiled,
+but not executed. The host importer validates, copies and seals all four retained fact files. The new
 source/load oracle checks exact identity, payment, guarded wait accounting and retained physical
 facts. No new native save/load has run. Do not start its long
 acceptance run until source and consumer are integrated under the same sealed inputs.
@@ -81,9 +81,16 @@ popup owners, and all 65 persona tests passed. Harness registration covers 306 s
 The canonical engine gate stopped before compilation because the installed Hearthpyre manifest
 is now 2.2.4 while the exact integration reference requires 2.2.3. This is tracked in
 [#217](https://github.com/AussieWarGod/thousand-and-first/issues/217). Retained failed log:
-`/tmp/taf-heart-chain-consumer-gate-1.log`. No installed compatibility or current four-mode
-compile PASS is claimed. Restore an authentic pinned reference or review the newer integration;
-do not relabel the source or disable the check.
+`/tmp/taf-heart-chain-consumer-gate-1.log`. The exact upstream 2.2.3 reference was then recovered from the author's GitLab commit
+`25470b94930b46d8dc406c430253e4bf9e4ea4b9`; all recorded file hashes match. With the existing
+`TAF_HEARTHPYRE_223_ROOT` override, the canonical gate passed all four modes: 3096/3100 ordinary
+and 3393/3397 developer sources. Log `/tmp/taf-heart-chain-consumer-gate-2.log`, stage
+`/tmp/taf-stage.71scqQ`, developer stage `/tmp/taf-devharness.tT1ajn`. These current results
+cover consumer code at `e3c77a36`; they do not add integration support for installed 2.2.4.
+[DEVELOPMENT.md](DEVELOPMENT.md) records the reusable authentic reference for both agents.
+The existing native driver/archive now accept the optional save persona, require actual guarded
+wait accounting and retain load facts with pinned profile inputs. No new native game has run.
+
 
 Earlier source-save-only checks at `52c7428d`: 134 focused main CampHeart cases and 65 persona checks passed with zero managed skips.
 Canonical facts passed nine portable cases, including Unicode, framing, duplicate identities

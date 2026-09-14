@@ -14,8 +14,8 @@ the identity, physical support or persistence of a later heart.
 completed rungs three and four. A separate `camp-heart-chain-save` persona now runs the
 whole paid chain and saves after rung-four next-day recovery. Its observer captures the
 real completed heart, physical support, original anchors and paid receipts. Continue
-dispatch and the loaded next-job continuation are implemented but await engine compilation
-and native execution; do not launch an acceptance run until both source and consumer are
+dispatch and the loaded next-job continuation are implemented and engine-compiled but await
+native execution; do not launch an acceptance run until both source and consumer are
 validated and sealed together. No new native save
 has been executed. Codec tests validate the evidence format, not persistence.
 Rung five and interrupted paid handovers still require their own coverage; refusing
@@ -86,10 +86,13 @@ required; the saved timber must pay the new fire job. The oracle keeps actual wa
 Run `Tools/dev-check.sh tools 'camp_heart_chain_*test.py'` and the existing
 `scenario_load_profile_test.py` selection for these host contracts.
 
-Current compile prerequisite: the installed Hearthpyre updated to 2.2.4 and the canonical
-gate refuses its exact 2.2.3 reference check (#217). Preserve the failed gate; restore authentic
-pinned source or review new-version support before claiming engine compilation. Do not weaken
-the version/hash check. This does not close any native persistence scenario below.
+The installed Hearthpyre update to 2.2.4 initially stopped the canonical gate at its exact
+2.2.3 reference check (#217). An authentic upstream 2.2.3 checkout now matches all pinned hashes,
+and the four-mode gate passed using the existing reference override. See
+[DEVELOPMENT.md](DEVELOPMENT.md) for the shared command. Installed 2.2.4 integration is not
+accepted by this reference proof. The existing native driver/archive now support the optional
+save persona, actual guarded waits and complete pinned source-profile recipes; real source
+and load execution remains outstanding.
 
 ## Remaining scenarios
 

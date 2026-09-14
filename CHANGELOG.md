@@ -29,9 +29,10 @@ Add a developer court-save variant with physical city evidence, retained fact fi
 post-serialization comparison. Preflight the next ordinary paid job before long waits and
 retain original stock across the disclosed one-timber save fixture. Add dedicated cold-load
 dispatch, preactivation/activation comparison and the next ordinary paid action, with strict
-host import and journal/fact checks. Engine compilation and native continuation remain pending;
-the canonical compile gate currently refuses the installed Hearthpyre 2.2.4 source against its
-2.2.3 pin (#217). This is not native persistence acceptance.
+host import and journal/fact checks. All four engine compile modes pass using an authentic
+upstream 2.2.3 reference after the installed Hearthpyre update invalidated that reference (#217).
+Native continuation remains pending. This does not add Hearthpyre 2.2.4 support or establish
+native persistence acceptance.
 
 Current 3100-file census is line-cap green: 440,354 physical lines; direct `XRL`
 imports occur in 1446 files, 0 of them over the line limit. Inventory SHA-256: `4f8ee63c2752d59bcdea66586483f9273db112b5038f467ce0fd935121cfc086`.
