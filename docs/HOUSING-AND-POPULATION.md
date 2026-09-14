@@ -45,7 +45,7 @@ counts literal sleep providers and non-open cover, while `TryValidateEnclosure` 
 cover. Those checks cannot establish an enclosed tent. Audit the entire housing catalogue, its
 variants and generated lots; changing only these two maps is not the complete task.
 
-`RuntimeData/PopulationTables.xml` supplies nine settler variants with fixed weights. Seven
+At the older audited baseline, `RuntimeData/PopulationTables.xml` supplied nine settler variants with fixed weights. Seven
 BaseFarmer descendants have 90% of the total weight; Mechanimist and Snapjaw bodies have 5% each.
 `KingdomSemanticSelection.TryPreparePerson` chooses blueprint, origin and shared-grammar name
 separately. Appearance alone does not establish an occupation or a coherent culture. The development branch now adds a version-two founding snapshot in
@@ -59,6 +59,38 @@ are recorded in STATUS.md; public 0.3.7 retains its original behavior.
 `KingdomResidents.ReadRoster` already retains residents bound to other zones and binds observed
 bodies to the current zone. Its local home lookup is not proof of complete multi-map household
 behavior. Audit home, job, bound-body and current-zone identities through real travel and loading.
+
+## Recruitment implementation in progress
+
+New arrivals now select among 12 authored profiles across six native factions. Fixed base
+weights retain common workers and rarer specialists; actual player and inbound city regard
+multiply each base weight by two bounded factors. A channel contributes
+`100 + clamp(regard, -249, 1000) / 5` (integer truncation); zero regard contributes 100.
+Native hostile feeling in either channel excludes the profile, even if the other channel is
+favorable. These are provisional Alpha balance values, not a population or diversity quota.
+Missing factions are excluded; invalid catalogue metadata refuses before allocation. No eligible
+profile means no body, payment or frozen person; the existing due debt can retry when relations
+improve. Existing frozen arrivals and citizens do not reroll. Public 0.3.7 is unchanged.
+
+Blueprint metadata binds an ordinary one-body recruit to a single native source faction and
+origin. Native culture/species tags and anatomy remain inherited. Qud's `NameMaker` supplies
+culture/faction names inside `Stat.PushState`/`PopState`, with a separately restored naming RNG
+and event-derived seed; no sample actor is created to select a name. First guests use the same
+merged table but only the 12 bodies accepted by their durable owned-body contract. Ordinary
+extension recruits need the same explicit metadata and native allegiance checks.
+
+Installed 2.0.211.51 sources inspected: `Reputation.GetFeeling`, `Stat` RNG stack, `NameStyles.Generate`,
+`GameObject.GetCulture/GetSpecies`, and `GameObjectBlueprint.GetTag/GetPartParameter`.
+`Creatures.xml` establishes the native BaseIssachari, HindrenVillager, Dromad, Snapjaw,
+Mechanimist and BaseFarmer inheritance. `Naming.xml` uses explicit faction/culture/species
+scopes for naming. Freehold's [press kit](https://cavesofqud.com/press-kit/) describes creatures
+as retaining skills, equipment, faction allegiance and body parts; the implementation uses
+those native bodies rather than recoloring farmers. The linked GDC village-generation PDF
+exceeded the web reader's size limit; it has not supplied additional inspected claims here.
+
+Pure/engine checks pass. Native six-faction coherence, hostile pool and frozen-correspondence
+checks are pending; actual admission/home allocation, cold load, multi-map recruitment and
+broader balance remain required under #231/#230. This implementation does not close those issues.
 
 ## References inspected
 

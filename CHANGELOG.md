@@ -1,14 +1,19 @@
 # Changelog
 
-Current 3108-file census is line-cap green: 440,888 physical lines; direct `XRL`
-imports occur in 1451 files, 0 of them over the line limit. Inventory SHA-256: `10b6325fb3e23b660a5609fe80485745104f2d925c523bb278af010edec488e2`.
-The cold-install inventory contains 3141 files. This is not evidence of a new public installation.
+Current 3112-file census is line-cap green: 440,989 physical lines; direct `XRL`
+imports occur in 1454 files, 0 of them over the line limit. Inventory SHA-256: `7c6c7c4514de45a962aefd5bfb5833b867296204e8bd0be62531ff2c86723caf`.
+The cold-install inventory contains 3146 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Historical entries retain their original scope;
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md)
 records current acceptance.
 
 **Unreleased development**
+
+- New settlers draw coherent native bodies, origins and names with player/city reputation
+  weighting. Added ordinary Issachari, hindren and dromad recruits; hostile sources stay out
+  of voluntary arrivals. Existing citizens and frozen plans retain identity. Native validation
+  and further admission/home/cold-load coverage remain pending.
 
 - Striking a completed building awaiting its own construction closure now explains that
   pending work instead of claiming another receipt owns it. Foreign-job refusals and strike

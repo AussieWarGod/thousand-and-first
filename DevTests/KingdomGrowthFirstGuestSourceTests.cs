@@ -209,9 +209,9 @@ namespace ThousandAndFirst.Tests
 		public void CandidateFactsComeFromOneOwnedSemanticCatalogue()
 		{
 			string semantic = Source("Core/KingdomSemanticSelection.FirstGuest.cs");
-			StringAssert.Contains("private static List<KingdomSemanticWeightedEntry> "
-				+ "FirstGuestCatalogue()", semantic);
-			StringAssert.Contains("GrowthFirstGuestBlueprintAllowed(blueprint)", semantic);
+			StringAssert.Contains("TryPrepareSettlerPayload(system, ordinal, dueTick, true", semantic);
+			StringAssert.Contains("FirstGuest && !KingdomLifecycleRules.GrowthFirstGuestBlueprintAllowed(entry.StableKey)",
+				Source("Core/KingdomRecruitment.cs"));
 			StringAssert.Contains("cohort exactly 1", Source(
 				"Growth/KingdomFirstGuestRuntime.Facts.cs"));
 			StringAssert.DoesNotContain("PopulationManager", semantic);

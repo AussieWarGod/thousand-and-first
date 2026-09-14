@@ -1,6 +1,17 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
-## Unreleased strike closure validation
+## Coherent recruitment validation pending
+
+Full licensed 15,018 main / 5,909 portable cases pass with zero skips. Four engine compile
+modes pass across 3112 production C# sources; the cold-install inventory contains 3146 files.
+Fourteen new shared cases cover both reputation channels, monotonicity, bounds, hostility and
+fixed-event weighted draws. Native first-guest probes now require all six source factions,
+both selection routes, deterministic native names, body/culture agreement, empty hostile-pool
+refusal, and retained frozen guest identity after changed reputation across ordinary turns.
+Those probes use reversible synthetic reputation and unplaced body samples; correspondence
+is produced by the real cadence. Physical admission, home allocation and cold load remain owed.
+
+## Accepted strike closure validation (abf41251)
 
 Development compile validation spans across 3108 production C# sources;
 the cold-install inventory contains 3141 files.

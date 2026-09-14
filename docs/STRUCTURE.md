@@ -1,6 +1,14 @@
 # Structural release contract
 
-## Unreleased strike closure census
+## Unreleased recruitment census
+
+3112 staged production C# files; 440,989 physical lines; 1454 files with direct `XRL` imports;
+zero at or above 300 lines. Inventory SHA-256: `7c6c7c4514de45a962aefd5bfb5833b867296204e8bd0be62531ff2c86723caf`.
+Pure bounded weighting, a native catalogue adapter, isolated native naming and a shared payload
+builder replace independent recruit draws. No saved fields change; new body profiles are ordinary
+XML. Structural review is stale; preceding accepted reviews retain their original inventory.
+
+## Accepted strike closure census
 
 3108 staged production C# files; 440,888 physical lines; 1451 files with direct `XRL` imports;
 zero files at or above 300 lines. Inventory SHA-256: `10b6325fb3e23b660a5609fe80485745104f2d925c523bb278af010edec488e2`.

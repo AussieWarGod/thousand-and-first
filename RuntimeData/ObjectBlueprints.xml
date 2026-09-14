@@ -5,17 +5,14 @@
     <part Name="Description" Short="Road-worn and rumor-led, they carry everything they own: a bedroll, an empty skin, and the name of a place where thirst is shared." />
     <part Name="Brain" Wanders="true" Hostile="false" />
     <tag Name="r_KingdomSettler" />
+    <tag Name="r_TAF_RecruitFaction" Value="Farmers" />
+    <tag Name="r_TAF_RecruitOrigin" Value="the watervine villages" />
     <tag Name="AllowIdleBehavior" />
     <tag Name="SleepOnBed" />
   </object>
-  <!--
-	    Most settler variants inherit everything and override appearance only. The two
-	    people-variants below instead inherit a vanilla body whole, then add the same
-	    settler behaviour explicitly: culture/species, anatomy, mutations, stats, natural
-	    weapons, TextFragments, and vanilla art stay true rather than being painted onto a
-	    BaseFarmer. Enrolment replaces allegiance at the exact arrival commit.
-    Rolled from the r_KingdomSettlers population table, which other mods merge into.
-  -->
+  <!-- Historical human variants retain their bodies and meaningful specialist skills.
+       Creature-bodied recruits preserve complete native anatomy/culture. Recruitment metadata
+       binds source faction and origin; civic enrollment commits settlement allegiance later. -->
   <object Name="r_KingdomSettlerHand" Inherits="r_KingdomSettler">
 	<removebuilder Name="RandomTile" />
 	<part Name="Render" DisplayName="settler" Tile="Creatures/farmer_convert.bmp" ColorString="&amp;w" />
@@ -63,6 +60,8 @@
     <part Name="Description" Short="Road dust pales a robe kept by patient mending. The machine-prayers are a culture carried in the hands now, not an allegiance owed to anyone here." />
     <part Name="Brain" Wanders="true" Hostile="false" />
     <tag Name="r_KingdomSettler" />
+    <tag Name="r_TAF_RecruitFaction" Value="Mechanimists" />
+    <tag Name="r_TAF_RecruitOrigin" Value="the mechanimist congregations" />
     <tag Name="AllowIdleBehavior" />
     <tag Name="SleepOnBed" />
   </object>
@@ -72,6 +71,8 @@
     <part Name="Description" Short="A bedroll is lashed between twitching shoulders, and old tribeskin has been patched with cloth from half a dozen roads. A keen nose tests the settlement's smoke, stores, and strangers." />
     <part Name="Brain" Wanders="true" Hostile="false" />
     <tag Name="r_KingdomSettler" />
+    <tag Name="r_TAF_RecruitFaction" Value="Snapjaws" />
+    <tag Name="r_TAF_RecruitOrigin" Value="the snapjaw warrens" />
     <tag Name="AllowIdleBehavior" />
     <tag Name="SleepOnBed" />
   </object>

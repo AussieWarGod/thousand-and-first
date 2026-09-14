@@ -1,5 +1,28 @@
 # Current implementation and release evidence
 
+## Coherent recruitment — native validation pending
+
+New, unfrozen arrivals use one reputation-weighted catalogue: source faction, native body and
+origin agree, and names use Qud's faction/culture/species naming rules under a restored native
+RNG scope. Twelve authored profiles cover Farmers, Mechanimists, Snapjaws, Issachari, Hindren
+and Dromad. Specialist skills are distinct from culture. First guests use the same selection,
+restricted to the durable owned-body allowlist. Existing citizens and already-frozen plans retain
+identity; historical blueprint-only recovery keeps its original naming path.
+
+Both player and inbound city regard affect bounded weights. Native hostility excludes a faction;
+missing factions are unavailable. An all-ineligible pool creates no body or frozen person and
+retains the due opportunity for later peaceful relations. This is not a population quota.
+Full licensed suites pass: 15,018 main / 5,909 portable, zero skips; four engine compile modes pass.
+Native catalogue/coherence and frozen-first-guest probes are implemented but execution is pending.
+Physical admission/home allocation, cold load, ordinary multi-map recruitment and balance remain
+unproved. #231 and the original Beta goal remain open.
+
+Development compile scope: 3112 sources, baseline and compatibility symbols.
+Current census: 3112 staged C# files; 440,989 physical lines; zero at or above 300 lines.
+Direct `XRL` imports: 1454 files, 0 over the line limit. Cold-install inventory: 3146 files.
+Inventory SHA-256: `7c6c7c4514de45a962aefd5bfb5833b867296204e8bd0be62531ff2c86723caf`. Structural review is stale for this delta.
+Prior native/public evidence below retains its original inputs. Public 0.3.7 is unchanged.
+
 ## Strike closure feedback — accepted native scope (abf41251)
 
 Ordinary strike refusal now distinguishes the building's own completed work awaiting closure

@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <populations>
-  <!--
-    Who actually turns up. A settlement of identical figures reads as a barracks,
-    so arrivals roll from this table rather than from one blueprint. Every entry
-	    Most entries inherit r_KingdomSettler. A creature-bodied entry may instead inherit
-	    its vanilla body and explicitly carry r_KingdomSettler, AllowIdleBehavior, SleepOnBed,
-	    and a calm wandering Brain; this keeps culture, species, anatomy, stats, equipment,
-	    mutations, and TextFragments honest. Other mods merge either shape here.
-  -->
+  <!-- Recruitment base frequencies, before player/city reputation weighting. Ordinary workers
+       are common; specialist skills and native culture/body are separate facts. Each direct
+       one-body row needs r_TAF_RecruitFaction and r_TAF_RecruitOrigin metadata; that faction
+       must match its native Brain allegiance. Hostile factions are excluded at plan creation.
+       Frozen plans retain identity across subsequent reputation changes. -->
   <population Name="r_KingdomSettlers" Load="Merge" Style="pickone">
-	    <object Blueprint="r_KingdomSettler" Number="1" Weight="25" />
-    <object Blueprint="r_KingdomSettlerHand" Number="1" Weight="20" />
-    <object Blueprint="r_KingdomSettlerDrifter" Number="1" Weight="14" />
-    <object Blueprint="r_KingdomSettlerTinker" Number="1" Weight="10" />
-    <object Blueprint="r_KingdomSettlerScribe" Number="1" Weight="8" />
-    <object Blueprint="r_KingdomSettlerYoung" Number="1" Weight="8" />
-	    <object Blueprint="r_KingdomSettlerPhysicker" Number="1" Weight="5" />
-	    <object Blueprint="r_KingdomSettlerMechanimist" Number="1" Weight="5" />
-	    <object Blueprint="r_KingdomSettlerSnapjaw" Number="1" Weight="5" />
+    <object Blueprint="r_KingdomSettler" Number="1" Weight="18" />
+    <object Blueprint="r_KingdomSettlerHand" Number="1" Weight="12" />
+    <object Blueprint="r_KingdomSettlerDrifter" Number="1" Weight="10" />
+    <object Blueprint="r_KingdomSettlerTinker" Number="1" Weight="6" />
+    <object Blueprint="r_KingdomSettlerScribe" Number="1" Weight="4" />
+    <object Blueprint="r_KingdomSettlerYoung" Number="1" Weight="6" />
+    <object Blueprint="r_KingdomSettlerPhysicker" Number="1" Weight="4" />
+    <object Blueprint="r_KingdomSettlerMechanimist" Number="1" Weight="15" />
+    <object Blueprint="r_KingdomSettlerSnapjaw" Number="1" Weight="10" />
+    <object Blueprint="r_KingdomSettlerIssachari" Number="1" Weight="7" />
+    <object Blueprint="r_KingdomSettlerHindren" Number="1" Weight="5" />
+    <object Blueprint="r_KingdomSettlerDromad" Number="1" Weight="3" />
   </population>
   <population Name="r_KingdomGuests" Load="Merge" Style="pickone">
     <!-- Pilgrims are not generic traffic. KingdomHappenings freezes one from a qualifying

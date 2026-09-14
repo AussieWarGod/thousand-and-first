@@ -85,6 +85,7 @@ namespace ThousandAndFirst.Harness
 			private readonly Zone Zone;
 			private readonly List<GameObject> Owned = new List<GameObject>();
 			private KingdomSystem System;
+			private KingdomRecruitmentNativeChecks Recruitment;
 			private string Raw, Stored;
 			private int Emissions, Notes, PassOne;
 			internal bool Armed, Done;
@@ -98,6 +99,8 @@ namespace ThousandAndFirst.Harness
 			internal void Start()
 			{
 				System = KingdomNativeCampFounding.Found(Game, Zone, Require);
+				Recruitment = new KingdomRecruitmentNativeChecks(System, Game, Require);
+				Recruitment.Probe(Evidence);
 				Require(System.Population == 0 && System.ClaimedZones.Contains(Zone.ZoneID),
 					"the real founding is not an empty claimed camp");
 				KingdomNativeCampFounding.Dedicate(Game, Zone, System,
@@ -138,6 +141,7 @@ namespace ThousandAndFirst.Harness
 					"the clock never reached the first arrival tick");
 				Require(KingdomFirstGuestRuntime.IsAwaitingAnswer(System),
 					"no first guest is awaiting an answer after a real due pass");
+				Recruitment.Observe(Evidence);
 				Require(Emissions == 1, "the opening message was written " + Emissions
 					+ " time(s), not exactly once");
 				Require(Logged() == 1, "the retained message log holds " + Logged()

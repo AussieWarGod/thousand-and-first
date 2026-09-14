@@ -243,9 +243,9 @@
           "artifactBytes": 3447,
           "verdict": "PASS - real closure refusals, unchanged durable work, restored foreign receipt, eventual removal and exact salvage",
           "scope": "Seed #43101; synthetic founding, two stationary crew and material bills; reversible borrowed-receipt probe; 16800 ordinary turns; fire zero salvage and larder positive salvage; 3454 full pinned profile inputs including 3414 C#; strict final log and owned stop; no save/cold load or ordinary-play acceptance",
-          "historicalScope": false,
+          "historicalScope": true,
           "inventoryDigest": "1e93f7cab9d09901d1369da4fbcae0333be95f2b0fe392079b860fd976f68f6c",
-          "currentDevCoverage": true
+          "currentDevCoverage": false
         }
       ]
     },
