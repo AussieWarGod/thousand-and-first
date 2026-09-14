@@ -176,10 +176,13 @@ namespace ThousandAndFirst.Harness
 						Require(key == "tentrow" || key == "hutyard", "unexpected founder home design");
 						if (key == "hutyard") converted++;
 						var room = benefits.RoomReadingForRoot(home.IDIfAssigned);
+						int expectedFloor = ExpectedClearFloor(home);
+						if (room.UsableFloorCells < expectedFloor) DescribeOccupiedFloor(home, zone);
 						Require(room.SleepingRooms == 1 && room.SleepingPlaces == 3 && room.ExposedPlaces == 0
-							&& room.UnusablePlaces == 0 && room.UsableFloorCells >= (key == "tentrow" ? 17 : 16),
+							&& room.UnusablePlaces == 0 && room.UsableFloorCells >= expectedFloor,
 							"home quality differs: key=" + key + "; rooms=" + room.SleepingRooms + "; places=" + room.SleepingPlaces
-							+ "; exposed=" + room.ExposedPlaces + "; unusable=" + room.UnusablePlaces + "; floor=" + room.UsableFloorCells);
+							+ "; exposed=" + room.ExposedPlaces + "; unusable=" + room.UnusablePlaces + "; floor=" + room.UsableFloorCells
+							+ "; expected-floor=" + expectedFloor);
 						homes++; places += room.SleepingPlaces; floor += room.UsableFloorCells;
 						foreach (var body in KingdomLodging.ResidentsOf(zone, home))
 							Require(residents.Add(body.IDIfAssigned), "one resident assigned to multiple homes");
@@ -208,6 +211,41 @@ namespace ThousandAndFirst.Harness
 				+ "; clear-floor=" + floor + "; synthetic-residents=false; forced-housing=false"
 				+ (failure == null ? "" : "; failure=" + failure)) == null, "housing cohort journal unavailable");
 			return failure == null;
+		}
+		private static int ExpectedClearFloor(GameObject home)
+		{
+			Require(KingdomArchitectureRuntime.TryRead(home, out var intent, out string failure), failure);
+			Require(KingdomArchitectureRuntime.TryDecode(intent, out var snapshot, out failure), failure);
+			int tables = 0, hearths = 0;
+			foreach (var placement in snapshot.Placements)
+			{
+				if (placement.StatefulAnchor == "fixture:table") tables++;
+				if (placement.StatefulAnchor == "fixture:hearth") hearths++;
+			}
+			Require(intent.LotSize == ArchitectureLotSize.Medium && tables <= 1
+				&& (intent.BuildKey == "tentrow" ? tables == 0 && hearths == 0 : intent.BuildKey == "hutyard" && hearths == 1),
+				"unexpected shared-home furniture programme");
+			// 24 interior cells minus three beds, two seats, storage and the main object.
+			// Hut variants additionally occupy a hearth cell and, where authored, a table cell.
+			return 17 - hearths - tables;
+		}
+		private static void DescribeOccupiedFloor(GameObject home, Zone zone)
+		{
+			Require(KingdomPlots.TryReadRect(home, out var rect), "room diagnostic lacks its exact footprint");
+			for (int y = rect.Y1; y <= rect.Y2; y++)
+				for (int x = rect.X1; x <= rect.X2; x++)
+				{
+					var reading = KingdomBenefitIndex.ReadFurnishedRoomCell(zone, x, y);
+					if (reading.Usable || reading.Region != KingdomAdoptRules.EnclosureRegion.Membership) continue;
+					var cell = zone.GetCell(x, y);
+					var objects = new List<string>();
+					foreach (var item in cell.GetObjects())
+						if (GameObject.Validate(item)) objects.Add(item.IDIfAssigned + ":" + item.Blueprint
+							+ ":furniture=" + item.HasTagOrProperty("Furniture") + ":solid=" + item.ConsiderSolid());
+					Require(KingdomScenarioJournal.Append("paid-housing-detail", true, "room=" + home.IDIfAssigned
+						+ "; occupied-cell=" + x + "," + y + "; navigation=" + cell.NavigationWeight(null, Smart: true, IgnoreCreatures: true)
+						+ "; objects=" + string.Join(",", objects)) == null, "room diagnostic journal unavailable");
+				}
 		}
 		private static void Require(bool value, string failure) => KingdomPaidHousingNativeProvider.Require(value, failure);
 	}

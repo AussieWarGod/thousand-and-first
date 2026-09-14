@@ -22,6 +22,9 @@ are recorded in STATUS and #242; no repair of previously quarantined saves is cl
 The required paid-housing-floor-access witness probes the actual insertion guard at paid handover:
 exact predecessor accepted, synthetic foreign chest refused, borrowed receipt refused, then exact
 recovery. The chest is removed before ordinary insertion continues; no insertion verdict is replaced.
+The cohort floor witness counts the frozen variant's additional hearth and table separately:
+seventeen clear cells in canvas, sixteen in the basic hut, fifteen in hearth-and-table variants.
+These are exact authored expectations for this fixture, not changed production quality thresholds.
 
 ## Shared-hall access
 

@@ -98,6 +98,8 @@ These checks apply to both agents; they do not replace observing the actual paid
 For component lookup, use the frozen stateful anchor (`fixture:storage`), not its palette slot
 (`storage`). Reused lifecycle observers may intentionally require the original design; a home
 conversion needs its own post-conversion cohort check while preserving the original startup check.
+Before fixing a numeric room expectation, inspect the frozen variant and its actual furnishings:
+a hearth-only room and a hearth-and-table room reserve different amounts of usable floor.
 For long population fixtures, preflight the production subsidence equilibrium at the highest tested
 stage. Stored water and bed counts do not prove civic water support. Disclose any synthetic producer
 roots. Verify founding recovery immediately after paying the next heart improvement, before spending

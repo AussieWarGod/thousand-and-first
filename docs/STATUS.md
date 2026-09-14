@@ -1,5 +1,23 @@
 # Current implementation and release evidence
 
+## Paid conversion completes; variant-aware room witness pending final native acceptance
+
+At `2e61ab42`, the actual paid conversion passed retained-price selection, the controlled basket
+handover refusal/Outstanding retry, and the new insertion guard's exact-predecessor/foreign-chest/
+borrowed-receipt/recovery probes. Apply and stamp reached phase five successfully; completion
+verified the exact paid functional hut and retained basket contents before the cohort assertion.
+The run then refused because the test assumed every hut had at least sixteen clear floor cells.
+Authored Medium variants with both hearth and table have fifteen: 24 interior cells minus three
+beds, two seats, basket, main object, hearth and table. The basic hearth-only variant has sixteen.
+The layout studio independently reports those counts with enclosed beds and clear fixture access.
+
+Closed failed archive: `paid-housing/2e61ab42/floor-pass-cohort-refused-1/result.json`, SHA-256
+`3759e554f47a8ae9dc4ee729ede04fa08e6202855578e628685a2e2f61c2d52c`.
+Strict log passed; the overall persona failed, with no completed cohort or cold-load acceptance.
+The native observer now binds its expected floor count to the frozen hearth/table placements.
+It still requires three usable enclosed beds per home and all four original citizens housed;
+no production layout or quality threshold was relaxed. Refusals retain live occupied-cell detail.
+
 ## Paid housing main-cell floor: exact blocker identified, repair pending acceptance
 
 At `9dd1064b`, real payment, catalogue drift, physical restoration probes and the controlled
