@@ -102,16 +102,33 @@ namespace ThousandAndFirst.Harness
 		}
 		private static void Supply(Zone zone, KingdomSocketTransition price)
 		{
+			SupplyMaterials(zone, price.Materials);
+			Require(KingdomGrowth.CountStoredWater(zone) >= price.WaterDrams, "settlement cannot fund conversion water");
+		}
+		internal static void SupplyNextCommission(Zone zone)
+		{
+			Require(KingdomData.TryGetBuilding(KingdomQuickstartLifecycleSteps.BuildKey, out var entry), "next design absent");
+			Require(KingdomMaterialRules.TryParseMaterialCost(entry.Materials, out var cost, out string failure), failure);
+			int supplied = SupplyMaterials(zone, cost);
+			Require(KingdomMaterials.CanPay(zone, entry.Key, out failure), "next commission materials: " + failure);
+			Require(KingdomScenarioJournal.Append("paid-housing-detail", true,
+				"step=next-stock; supplied-units=" + supplied + "; design=" + entry.Key + "; materials-ready=true") == null,
+				"next-stock journal unavailable");
+		}
+		private static int SupplyMaterials(Zone zone, KingdomMaterialTally cost)
+		{
 			Require(KingdomQuickstartLifecycleSteps.TryStockpile(Owner, zone, out var store, out string failure), failure);
 			var available = KingdomMaterials.Stock(zone).Tally;
+			int supplied = 0;
 			foreach (KingdomMaterial material in Enum.GetValues(typeof(KingdomMaterial)))
-				for (int i = available.Get(material); i < price.Materials.Get(material); i++)
+				for (int i = available.Get(material); i < cost.Get(material); i++)
 				{
 					var unit = GameObject.Create(KingdomMaterials.BlueprintFor(material));
 					Require(unit != null && ReferenceEquals(store.Inventory.AddObject(unit, null, Silent: true, NoStack: true), unit)
 						&& unit.InInventory == store, "supplemental material custody failed");
+					supplied++;
 				}
-			Require(KingdomGrowth.CountStoredWater(zone) >= price.WaterDrams, "settlement cannot fund conversion water");
+			return supplied;
 		}
 		private static void TransferCarriedWater(Zone zone)
 		{

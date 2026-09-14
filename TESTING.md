@@ -10,7 +10,8 @@ Paid conversion follow-through: `Tools/personas/paid-housing-native-check.person
 Quickstart homes, exact normal commissioning/debit, controlled test-registry price drift and a
 temporary storage-basket removal during handover. It requires Outstanding recovery, preserved
 contents and payment, and restores the catalogue before saving. The existing separate lifecycle
-load verifies the completed conversion. Missing material units and one brush contents sentinel
+load verifies the completed conversion and performs a new paid fire commission. Missing material
+units for both the conversion and that next commission, plus one brush contents sentinel
 are synthetic; no homes, citizens, water, labour or job phases are supplied. Four engine compile
 modes and 66 persona checks pass; native acceptance is pending in [STATUS](docs/STATUS.md).
 The unfinished-job/version-change case and historical geometry remain open in #239 and #240.

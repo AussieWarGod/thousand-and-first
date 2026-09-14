@@ -81,6 +81,7 @@ namespace ThousandAndFirst.Harness
 				"conversion changed retained storage cell or predecessor identity");
 			Require(ObserveCohort(game, zone, game.GetSystem<KingdomSystem>(), "complete",
 				out string failure), failure);
+			KingdomPaidHousingNativeProvider.SupplyNextCommission(zone);
 			string wire = string.Join("\n", new[] { "taf-paid-housing-v1", game.GameID, zone.ZoneID, job.Id,
 				home.IDIfAssigned, SourceId, KingdomPaidHousingNativeProvider.After.SnapshotHash,
 				Storage.IDIfAssigned, Contents, job.Claims.MaterialSpent });

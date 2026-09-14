@@ -1,5 +1,25 @@
 # Current implementation and release evidence
 
+## Paid housing warm/save/cold identity checks pass; next-action stock fixture corrected
+
+At `eda49f65`, the full warm persona passed: real paid upgrade, controlled basket refusal and
+Outstanding retry, foreign-furniture insertion probes, original four housed founders, exact
+contents/payment and real save. Separate cold process re-proved the same paid job, frozen home,
+basket contents, four original housed citizens, two rooms, six beds and 32 clear floor cells.
+Its next fire commission correctly refused because the earlier conversion consumed all timber.
+The follow-up action took about 94.5 seconds before that refusal, with no local survey bound around Next.
+
+The fixture now supplies only the next design's missing material units after proving completed
+housing and before saving; the cold action still performs ordinary quote, CanPay and exact debit.
+That next action now shares a disposed local-operation survey. This is test stock and test scope;
+production resource costs, housing capacity and gameplay verdicts remain unchanged.
+Closed failed overall archive: `paid-housing/eda49f65/cold-next-refused-1/result.json`, SHA-256
+`2d549204178b62674d015beffd1135daa1c16998903005ab54c381a15ae5b0b9`.
+Both processes are proved stopped; 3,448 warm and 3,450 cold inputs match the sealed recipes.
+Warm persona and both strict logs passed, while lifecycle continuation failed. The image shows
+the converted room enclosed with a clear entrance aisle; the lower starter home is partly outside
+the captured viewport, so this is not full-map framing or all-building visual acceptance.
+
 ## Full paid cohort passes; save-witness presence correction
 
 At `9d5d2cf5`, actual paid completion, controlled Outstanding retry, preserved contents and

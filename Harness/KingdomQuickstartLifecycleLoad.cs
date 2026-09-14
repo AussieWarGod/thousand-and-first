@@ -142,8 +142,15 @@ namespace ThousandAndFirst.Harness
 		/// </summary>
 		internal static bool Next(XRLGame Game, KingdomQuickstartLifecycleSnapshot Witness)
 		{
-			string observed;
-			string failure = Act(Game, Witness, out observed);
+			string observed = null;
+			string failure;
+			if (KingdomSurvey.HasBoundPass) failure = "next action found an existing survey scope";
+			else if (KingdomSurvey.TryBindLocalOperation(The.ZoneManager?.ActiveZone,
+				Game?.GetSystem<KingdomSystem>(), out var scope, out failure))
+			{
+				using (scope) failure = Act(Game, Witness, out observed);
+				if (KingdomSurvey.HasBoundPass) failure = "next action leaked its survey scope";
+			}
 			KingdomScenarioJournal.Append(NextRow, failure == null, failure == null
 				? KingdomQuickstartLifecycleSteps.Stamped("native-lifecycle step=next-action; " + observed)
 					: KingdomQuickstartLifecycleSteps.Refuse("next-action", failure));
