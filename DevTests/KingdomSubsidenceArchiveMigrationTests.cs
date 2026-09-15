@@ -44,11 +44,11 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(historical,
 				out KingdomSettlement migrated, out int future, out failure), failure);
 			ClassicAssert.AreEqual(0, future);
-			ClassicAssert.AreEqual(4, migrated.City.SchemaVersion);
+			ClassicAssert.AreEqual(ThousandAndFirst.Simulation.City.KingdomCityRules.SchemaVersion, migrated.City.SchemaVersion);
 			ClassicAssert.AreEqual("ss1:legacy", migrated.City.SubsidenceModel);
 			ClassicAssert.AreEqual(9876L, migrated.LastSubsidenceTick);
 			ClassicAssert.IsTrue(KingdomArchivedSettlementCodec.TryEncode(migrated, out byte[] current, out failure), failure);
-			ClassicAssert.AreEqual(19, BitConverter.ToInt32(current, 4));
+			ClassicAssert.AreEqual(20, BitConverter.ToInt32(current, 4));
 			ClassicAssert.IsTrue(KingdomArchivedSettlementCodec.TryDecode(current,
 				out KingdomSettlement restored, out future, out failure), failure);
 			ClassicAssert.AreEqual("ss1:legacy", restored.City.SubsidenceModel);

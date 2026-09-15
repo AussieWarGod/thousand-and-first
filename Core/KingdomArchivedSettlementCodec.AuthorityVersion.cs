@@ -5,7 +5,7 @@ namespace ThousandAndFirst
 {
 	internal static partial class KingdomArchivedSettlementCodec
 	{
-		/// <summary>Fixed refusal for a schema outside the accepted decode set v1-v19.</summary>
+		/// <summary>Fixed refusal for a schema outside the accepted decode set v1-v20.</summary>
 		private const string UnacceptedSchemaFailure =
 			"Archived settlement projection schema version is not accepted.";
 

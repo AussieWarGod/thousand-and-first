@@ -132,7 +132,7 @@ namespace ThousandAndFirst.Simulation.City
 			return A.ResidentId == B.ResidentId && A.Name == B.Name && A.Origin == B.Origin
 				&& A.OriginCode == B.OriginCode && A.CreedCode == B.CreedCode
 				&& A.ArrivedTick == B.ArrivedTick && A.Arrived == B.Arrived
-				&& A.HomeWorkId == B.HomeWorkId
+				&& A.HomeWorkId == B.HomeWorkId && A.Residence == B.Residence
 				&& A.JobWorkId == B.JobWorkId && A.JobRole == B.JobRole
 				&& A.DayShape == B.DayShape && A.Standing == B.Standing && A.Cause == B.Cause
 				&& A.BoundZoneId == B.BoundZoneId && SameBrink(A.RoofBrink, B.RoofBrink)
