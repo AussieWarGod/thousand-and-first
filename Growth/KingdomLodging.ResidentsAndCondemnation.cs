@@ -103,8 +103,10 @@ namespace ThousandAndFirst
 			{
 				return 0;
 			}
+			if (!Simulation.City.KingdomResidents.TryRecordHomeLoss(The.Game?.GetSystem<KingdomSystem>(),
+				Z, Home, AtTick, out int recorded))
+				KingdomLog.Log("lodging: home-loss authority could not be recorded exactly");
 			List<GameObject> residents = ResidentsOf(Z, Home);
-			int recorded = 0;
 			for (int i = 0; i < residents.Count; i++)
 			{
 				// Unnamed residents never enter the brink, exactly as RunRoofBrink has it:

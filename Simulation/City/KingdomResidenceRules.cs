@@ -10,6 +10,13 @@ namespace ThousandAndFirst.Simulation.City
 		internal const int MaxTags = 32;
 		private static readonly UTF8Encoding Utf8 = new UTF8Encoding(false, true);
 
+		internal static KingdomResidentRow ObserveHomeLoss(KingdomResidentRow row, long atTick)
+		{
+			if (row.RoofBrink.Stands || string.IsNullOrEmpty(row.Name)) return row;
+			return row.WithBrink(BrinkKind.Roof, new KingdomBrinkWindow(true,
+				Math.Max(0L, atTick), KingdomBrinkRules.Unwarned), null, 0);
+		}
+
 		internal static bool TryEncode(KingdomResidence Home, out string Wire)
 		{
 			Wire = null;

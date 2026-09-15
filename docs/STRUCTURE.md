@@ -1,13 +1,12 @@
 # Structural release contract
 
-## Residence integration checkpoint
+## Absent-owner roof-loss checkpoint
 
-3119 staged production C# files; 441,537 physical lines; 1457 direct XRL imports; zero at or above
-300 lines. Inventory SHA-256: `447c50cfc41e98d6132695cbcf4c2a01b975093cd7f4eed99c12bdd52ec937f5`.
-[The automated delta review](STRUCTURE_REVIEW_RESIDENCE_LIVE.md) binds bounded residence storage,
-legacy/frozen-claim migration, archive/death receipt versions and model mutation boundaries.
-Engine home authority and absent-owner occupancy pass the controlled native visit regression;
-full ordinary travel/failure/cold acceptance remains open in #230.
+3121 staged production C# files; 441,657 physical lines; 1459 files with direct `XRL` imports;
+zero at or above 300 lines. Inventory SHA-256: `5662178c2dd8f60bc010089a6130b5156247ea4c83f6911a43c3c3db7d024587`.
+[Automated delta review](STRUCTURE_REVIEW_HOME_LOSS.md) covers canonical home ownership,
+legacy claim preservation, guarded roof publication and observed home loss. Native replay
+remains pending; architectural and functional Beta requirements remain open in #229/#251.
 
 ## Earlier recruitment census
 

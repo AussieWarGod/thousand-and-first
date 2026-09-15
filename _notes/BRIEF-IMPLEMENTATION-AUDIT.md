@@ -2,7 +2,7 @@
 
 ## Residence persistence checkpoint
 
-Current development: **3119** production C# files / 3153 package files. City schema 5, archive 20 and
+Current development: **3121** production C# files / 3155 package files. City schema 5, archive 20 and
 residence-aware death receipts preserve bounded home/profile facts. Full licensed 15,048/5,934
 cases and four engine modes pass. PR #255 stays draft: live assignment, remote capacity and
 native home-map acceptance remain open in #230. Current handles live in the common Git handoff;

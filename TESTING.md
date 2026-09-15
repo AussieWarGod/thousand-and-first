@@ -1,5 +1,11 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
+All four engine compile modes pass across 3121 production C# sources;
+the cold-install inventory contains 3155 files. Absent-owner loss uses new `sr3` claims while
+retaining historical local-body claims. Full source suites pass; native replay remains pending.
+See [current status](docs/STATUS.md) for scoped acceptance.
+
+
 ## Absent-owner home damage — native defect reproduced
 
 At `e5bac3f675b80a8ca771402010e6a8a005e83337`, a real three-person Quickstart household has

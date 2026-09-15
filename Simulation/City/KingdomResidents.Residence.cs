@@ -119,6 +119,7 @@ namespace ThousandAndFirst.Simulation.City
 				{
 					if (!KingdomResidenceRules.TryEncode(new KingdomResidence("", "", "", home.Creed,
 						home.Needs, home.Refuses, home.SelfTags), out wire)) return false;
+					row = KingdomResidenceRules.ObserveHomeLoss(row, XRL.The.Game?.TimeTicks ?? 0L);
 				}
 				if (id == row.HomeWorkId && wire == row.Residence) continue;
 				rows[i] = row.WithResidence(wire, id); changed = true;

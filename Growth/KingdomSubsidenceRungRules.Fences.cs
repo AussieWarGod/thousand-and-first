@@ -10,7 +10,7 @@ namespace ThousandAndFirst
 
 		internal static bool AdmitsRoofWrite(string stepWire, int residentId, int homeWorkId,
 			string zoneId, int standing, bool beforeStanding,
-			long beforeReached, long beforeWarned, bool stands, long reached, long warned)
+			long beforeReached, long beforeWarned, bool stands, long reached, long warned, string residence = null)
 		{
 			if (!TryFencePlan(stepWire, out KingdomSubsidenceRungPlan plan, true) || plan == null) return false;
 			for (int work = 0; work < plan.Works.Count; work++)
@@ -18,7 +18,7 @@ namespace ThousandAndFirst
 				{
 					KingdomSubsidenceRungRoof roof = plan.Works[work].Roofs[index];
 					if (roof.ResidentId != residentId) continue;
-					return homeWorkId == plan.Works[work].WorkId && zoneId == plan.ZoneId
+					return HomeOwnerMatches(plan, plan.Works[work], roof, homeWorkId, zoneId, residence)
 						&& standing == (int)Simulation.City.KingdomResidentStanding.Resident
 						&& RoofAction(plan, work, index, true, beforeStanding, beforeReached, beforeWarned)
 						!= KingdomSubsidenceEffectAction.Refuse && stands
@@ -26,6 +26,16 @@ namespace ThousandAndFirst
 						&& warned == (roof.BeforeStanding ? roof.BeforeWarned : KingdomBrinkRules.Unwarned);
 				}
 			return false;
+		}
+
+		internal static bool HomeOwnerMatches(KingdomSubsidenceRungPlan plan, KingdomSubsidenceRungWork work,
+			KingdomSubsidenceRungRoof roof, int homeWorkId, string boundZone, string residence)
+		{
+			if (homeWorkId != work.WorkId) return false;
+			if (roof.HomeZoneId == null) return boundZone == plan.ZoneId;
+			return roof.HomeZoneId == plan.ZoneId && Text(boundZone, 512, false)
+				&& Simulation.City.KingdomResidenceRules.TryDecode(residence, out var home)
+				&& Simulation.City.KingdomResidenceRules.SameHome(home, roof.HomeZoneId, work.PlotId);
 		}
 
 		internal static bool BlocksWork(string stepWire, string objectId)

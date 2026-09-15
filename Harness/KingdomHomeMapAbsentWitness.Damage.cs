@@ -34,10 +34,11 @@ namespace ThousandAndFirst.Harness
 				var residents = new Dictionary<string, GameObject>(StringComparer.Ordinal);
 				var method = AccessTools.Method(typeof(KingdomSubsidenceStepRuntime), "CaptureRungRoofs");
 				Require(method != null && (bool)method.Invoke(null, new object[] { system, system.City,
-					KingdomSurvey.ActiveFor(home), visit.Plot, roofs, residents }), "production rung roof capture refused");
+					KingdomSurvey.ActiveFor(home), visit.Plot, visit.HomeWork, roofs, residents }), "production rung roof capture refused");
 				captured = roofs.Count;
 				foreach (var roof in roofs)
-					if (roof.ResidentId == visit.Resident && roof.BodyObjectId == visit.Body) matches++;
+					if (roof.ResidentId == visit.Resident && roof.BodyObjectId == visit.Body
+						&& roof.HomeZoneId == home.ZoneID) matches++;
 			}
 			Require(!KingdomSurvey.HasBoundPass, "damage capture leaked scope");
 			r_KingdomWear wear = work.RequirePart<r_KingdomWear>();
@@ -85,7 +86,7 @@ namespace ThousandAndFirst.Harness
 				+ "; absent-brink=" + Flag(ownerRecorded) + "; home-cleared=" + Flag(rowCleared)
 				+ "; chronology-retained=" + Flag(chronologyKept) + "; ordinary-rehousing=" + Flag(repaired)
 				+ "; synthetic-damage=true; synthetic-repair=true; synthetic-housing=false; paid-repair=false";
-			bool correct = matches == 1 && ownerRecorded && rowCleared && chronologyKept && repaired;
+			bool correct = captured == 3 && recorded == 3 && matches == 1 && ownerRecorded && rowCleared && chronologyKept && repaired;
 			Require(KingdomScenarioJournal.Append("home-map-damage-observation", correct, evidence) == null,
 				"home damage evidence unavailable");
 			Require(KingdomQuickstartSettlementChecks.Observe(game, home, system, "grown", out refusal), refusal);

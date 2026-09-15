@@ -1,14 +1,18 @@
 # Changelog
 
-Current 3119-file census is line-cap green: 441,537 physical lines; direct `XRL`
-imports occur in 1457 files, 0 of them over the line limit. Inventory SHA-256: `447c50cfc41e98d6132695cbcf4c2a01b975093cd7f4eed99c12bdd52ec937f5`.
-The cold-install inventory contains 3153 files. This is not evidence of a new public installation.
+Current 3121-file census is line-cap green: 441,657 physical lines; direct `XRL`
+imports occur in 1459 files, 0 of them over the line limit. Inventory SHA-256: `5662178c2dd8f60bc010089a6130b5156247ea4c83f6911a43c3c3db7d024587`.
+The cold-install inventory contains 3155 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Historical entries retain their original scope;
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md)
 records current acceptance.
 
 **Unreleased development**
+
+- Roof-loss claims now include map-qualified home ownership, so absent owners can retain the
+  original damage tick. Exact residence guards protect publication; old frozen claims retain
+  local-body requirements. Source suites and all four engine compile modes pass; native replay is pending.
 
 - Added native save/load coverage while a founder remains on another claimed map: exact home
   authority and capacity survive before remote lookup, then the citizen returns and the city

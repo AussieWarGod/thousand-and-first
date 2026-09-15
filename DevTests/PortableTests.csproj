@@ -115,6 +115,7 @@
     <Compile Include="KingdomSubsidenceReportLossRuntimeSourceTests.cs" />
     <Compile Include="KingdomSubsidenceRungRulesTests.cs" />
     <Compile Include="KingdomSubsidenceRungCodecTests.cs" />
+    <Compile Include="KingdomSubsidenceRungHomeTests.cs" />
     <Compile Include="KingdomSubsidenceReleaseRulesTests.cs" />
     <Compile Include="KingdomSubsidenceReleaseCodecTests.cs" />
     <Compile Include="KingdomSubsidenceReleaseDriverTests.cs" />

@@ -1,5 +1,24 @@
 # Current implementation and release evidence
 
+## Absent-owner loss fix — source validation, native replay pending
+
+New `sr3` claims freeze map-qualified home ownership alongside the existing work/plot and
+resident/body identity. Exact city residence and binding checks admit an absent owner without
+forcing their map to load; an available body must still match. Historical `sr1`/`sr2` recipients
+retain their local-body obligations. Publication compares residence bytes and list identity;
+source-map home loss preserves the original recorded tick and does not start a warning window.
+The condemnation callback also records canonical absent owners before home reconciliation.
+
+Full licensed suites pass: 15,068 main and 5,954 portable cases, zero skips. Coverage includes
+mixed old/new claims, interrupted publication, moved homes, replaced residence carriers,
+unchanged chronology and old save grammar. All four engine compile modes and 66 persona checks pass. Native damage replay remains
+pending. This does not supersede the retained native failure below or establish Beta acceptance.
+
+Current census: 3121 staged C# files; 441,657 physical lines; zero at or above 300 lines.
+Direct `XRL` imports: 1459 files, 0 over the line limit. Cold-install inventory: 3155 files.
+Inventory SHA-256: `5662178c2dd8f60bc010089a6130b5156247ea4c83f6911a43c3c3db7d024587`.
+Engine gate passes for 3121 sources, baseline and compatibility symbols, plus both harness modes.
+
 ## Absent-owner home damage — native defect reproduced
 
 At `e5bac3f675b80a8ca771402010e6a8a005e83337`, a real three-person Quickstart household has
