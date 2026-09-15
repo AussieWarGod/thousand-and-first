@@ -52,9 +52,9 @@
           "artifactBytes": 4189,
           "verdict": "PASS - six-faction selection; hostile wait preserves debt/water and downstream work; original guest recovery and frozen identity; once-only correspondence",
           "scope": "18000 requested/18001 actual turns; synthetic empty camp/store, reversible reputation controls, twelve unplaced native body samples across six factions and both selection routes; road checkpoint is continued processing, not productive construction; no physical admission, housing, cold load, ordinary multi-map or balance acceptance",
-          "historicalScope": false,
+          "historicalScope": true,
           "inventoryDigest": "c56afdb08ce8e2aa513f36b5a5d2764d77ba2c744e888a787f187e27af2f5cd7",
-          "currentDevCoverage": true
+          "currentDevCoverage": false
         }
       ]
     },
@@ -1121,7 +1121,7 @@
       "negative": "NEGATIVE_PASS for all-hostile refusal and frozen-identity retention; extension catalogue and broader policies remain COVERAGE_GAP",
       "driver": "Harness/KingdomRecruitmentNativeChecks.cs; Harness/KingdomRecruitmentNativeChecks.Waiting.cs; first-guest-native-check",
       "status": "NATIVE_PASS",
-      "note": "Twelve native samples exercise both routes for six factions; they do not prove physical admission of every authored profile. An empty camp road checkpoint proves the end of the growth pass remains reachable, not productive staffing/construction. Failed native2 fixture deadline assumption and corrected native3 exact-first-epoch assertions are retained in STATUS. Actual citizenship/home/cold-load/multi-map/balance and a civic-story-disabled extension report edge remain open under #231/#230.",
+      "note": "Twelve native samples exercise both routes for six factions; they do not prove physical admission of every authored profile. An empty camp road checkpoint proves the end of the growth pass remains reachable, not productive staffing/construction. Failed native2 fixture deadline assumption and corrected native3 exact-first-epoch assertions are retained in STATUS. Actual citizenship, housing, cold load, multi-map behavior and balance and a civic-story-disabled extension report edge remain open under #231/#230.",
       "evidence": [
         {
           "commit": "10d4c2a5703ff93d974be83db96c6a16b88b28fb",
@@ -1130,9 +1130,9 @@
           "artifactBytes": 4189,
           "verdict": "PASS - six-faction selection; hostile wait preserves debt/water and downstream work; original guest recovery and frozen identity; once-only correspondence",
           "scope": "18000 requested/18001 actual turns; synthetic empty camp/store, reversible reputation controls, twelve unplaced native body samples across six factions and both selection routes; road checkpoint is continued processing, not productive construction; no physical admission, housing, cold load, ordinary multi-map or balance acceptance",
-          "historicalScope": false,
+          "historicalScope": true,
           "inventoryDigest": "c56afdb08ce8e2aa513f36b5a5d2764d77ba2c744e888a787f187e27af2f5cd7",
-          "currentDevCoverage": true
+          "currentDevCoverage": false
         }
       ]
     }

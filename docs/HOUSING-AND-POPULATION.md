@@ -247,3 +247,8 @@ The expanded first-guest native scenario checks this through an ordinary hostile
 water, no citizen, the final road-processing checkpoint and recovery of the same original debt.
 An empty camp's road checkpoint is a control-flow regression witness, not productive construction
 or whole-city balance acceptance. See STATUS for the currently executed scope.
+
+Recruitment availability reports follow the configured civic-story policy: ordinal one uses the
+owned story-guest catalogue only while civic stories are enabled. Ordinary extension recruits
+remain available when stories are disabled. Status reads must not publish option epochs, freeze
+candidates or mutate due debt. Native probes disclose temporary catalogue and option-read controls.

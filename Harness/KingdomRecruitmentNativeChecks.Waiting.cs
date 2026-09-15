@@ -54,6 +54,7 @@ namespace ThousandAndFirst.Harness
 				Evidence.Append("; recruitment-wait no-body=true debt-retained=true water-unspent=true")
 					.Append(" downstream-roads-tick=").Append(roadTick)
 					.Append(" due=").Append(WaitingDue).Append(" status-explained=true");
+				ProbeStoryPolicy(Evidence);
 			}
 			finally { Restore(); }
 			Evidence.Append(" relations-restored=true");

@@ -1,5 +1,20 @@
 # Current implementation and release evidence
 
+## Recruitment admission and report follow-through — validation pending
+
+Recruitment status now follows the configured civic-story setting: an ordinary extension recruit
+outside the story-guest allowlist is not hidden when civic stories are disabled. A synchronous
+native probe replaces only the fixture's catalogue and exact option read, verifies both routes,
+and requires no option epoch, candidate, citizen or clock mutation. Original catalogue and
+reputation are restored. It does not exercise the options UI or write the settings file.
+
+The existing Quickstart guest/save scenario now verifies the actual hosted/enrolled native body
+against its frozen blueprint and origin; citizenship retains its name/origin. Save and cold-load
+observations additionally compare native culture/species, the real resident roll and bound map,
+and starter-home assignment. These added assertions are pending native execution. The initial
+harness compile found a definite-assignment error in the new resident-row assertion; corrected
+before launching. Prior accepted native inputs below are historical for this new delta.
+
 ## Coherent recruitment — scoped native validation, admission still pending
 
 New, unfrozen arrivals use one reputation-weighted catalogue: source faction, native body and
@@ -43,13 +58,13 @@ The earlier 12,000-turn proof at `7c386a81` retains its original scope in
 Full licensed suites pass: 15,019 main / 5,909 portable, zero skips; four engine compile modes pass.
 A main-only codec regression preserves waiting debt and the original head through serialization.
 Physical admission/home allocation, native cold load, broader recruitment and balance remain under
-#231/#230. A report-policy edge for extension recruits when civic story is disabled also remains
-under review before PR #254 integration. The original Beta goal and building issues #229/#251 stay open.
+#231/#230. The report-policy correction and stronger physical/cold-load assertions above are awaiting validation
+before PR #254 integration. The original Beta goal and building issues #229/#251 stay open.
 
 Development compile scope: 3112 sources, baseline and compatibility symbols.
-Current census: 3112 staged C# files; 441,026 physical lines; zero at or above 300 lines.
+Current census: 3112 staged C# files; 441,029 physical lines; zero at or above 300 lines.
 Direct `XRL` imports: 1454 files, 0 over the line limit. Cold-install inventory: 3146 files.
-Inventory SHA-256: `edcbe79a2c2890363223ab1346f0e603eeac82fd92c649c1803e3e262f087eef`.
+Inventory SHA-256: `e9e71e2de55a777def5a6ddb283ab4b493b2e555ae2991b0543c668296017aa4`.
 Structural review remains stale. Prior evidence below retains its original inputs. Public 0.3.7 is unchanged.
 
 ## Strike closure feedback — accepted native scope (abf41251)

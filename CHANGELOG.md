@@ -1,7 +1,7 @@
 # Changelog
 
-Current 3112-file census is line-cap green: 441,026 physical lines; direct `XRL`
-imports occur in 1454 files, 0 of them over the line limit. Inventory SHA-256: `edcbe79a2c2890363223ab1346f0e603eeac82fd92c649c1803e3e262f087eef`.
+Current 3112-file census is line-cap green: 441,029 physical lines; direct `XRL`
+imports occur in 1454 files, 0 of them over the line limit. Inventory SHA-256: `e9e71e2de55a777def5a6ddb283ab4b493b2e555ae2991b0543c668296017aa4`.
 The cold-install inventory contains 3146 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Historical entries retain their original scope;
@@ -9,6 +9,10 @@ All notable changes to The Thousand and First. Historical entries retain their o
 records current acceptance.
 
 **Unreleased development**
+
+- Recruitment availability respects the civic-story setting, including ordinary extension
+  profiles outside the first-guest allowlist. Native admission/load checks now compare actual
+  body, culture, species, name, origin and resident map; this follow-through is awaiting execution.
 
 - New settlers draw coherent native bodies, origins and names with player/city reputation
   weighting. Added ordinary Issachari, hindren and dromad recruits; hostile sources stay out

@@ -36,7 +36,10 @@ namespace ThousandAndFirst
 			if (!KingdomGrowth.Enabled || !KingdomMaster.NewWorkAllowed(System) || growth == null
 				|| growth.ArrivalCandidate != null || growth.ArrivalOpportunity != null
 				|| growth.ArrivalOp != null || growth.ArrivalDebtRanges.Count == 0) return null;
-			bool first = growth.ArrivalDebtRanges[0].FirstOrdinal == 1UL;
+			// The next cadence pass observes configured story policy before choosing its pool.
+			// Reading status must not publish an option epoch or freeze an arrival.
+			bool first = growth.ArrivalDebtRanges[0].FirstOrdinal == 1UL
+				&& XRL.UI.Options.GetOption(KingdomExperienceOptions.StoryOptionId, "Yes") != "No";
 			if (TryCatalogue(System, first, out _, out _, out _, out string failure)) return null;
 			return failure == KingdomRecruitmentRules.NoEligibleFailure
 				? "No settlers are willing to come: improve your reputation and the settlement's standing with their people."

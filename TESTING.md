@@ -1,5 +1,13 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
+## Admission and report follow-through pending
+
+The report now respects configured civic-story policy. The extended native wait test temporarily
+uses one real developer-only extension blueprint outside the story-guest allowlist and a scoped
+option-read override; it requires the report and both selection routes to agree without publishing
+an option epoch or arrival. Guest action/save tests add actual native body/name/origin/culture/species
+and resident-map assertions. New native execution is pending; older proof remains scoped below.
+
 ## Coherent recruitment: scoped native PASS, admission pending
 
 Full licensed 15,019 main / 5,909 portable cases pass with zero skips. Four engine compile

@@ -13,4 +13,7 @@
   <object Name="Snapjaw Hunter 0" Load="Merge">
     <part Name="r_TAF_RaidMintProbe" />
   </object>
+  <!-- Ordinary extension recruit, deliberately outside the owned first-guest allowlist.
+       Only the sealed recruitment probe temporarily includes it in the merged catalogue. -->
+  <object Name="r_TAF_RecruitmentExtensionProbe" Inherits="r_KingdomSettlerHindren" />
 </objects>
