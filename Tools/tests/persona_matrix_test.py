@@ -522,6 +522,40 @@ class JournalReadingTest(unittest.TestCase):
                     else:
                         self.assertTrue(problems)
 
+    def test_home_damage_requires_exact_paired_witness_with_recovery(self):
+        manifest = matrix.parse_manifest(
+            "REQUEST=founding-first-city\nSCRIPT=home-map-damage-native\n"
+            "VERBS=home-map-damage-native\nEXPECT=home-map-damage-native:OK~cases=1 passed=1 failed=0,COMPLETE\n"
+            "SET=growth,native-regression\n", "home damage")
+        detail = ("resident=1; body=511; captured=3; absent-owner-matches=1; recorded=3; due=192327; "
+                  "absent-brink=true; home-cleared=true; chronology-retained=true; ordinary-rehousing=true; "
+                  "synthetic-damage=true; synthetic-repair=true; synthetic-housing=false; paid-repair=false")
+        prefix = "native-home-damage cases=1 passed=1 failed=0; "
+        observation = row("home-map-damage-observation", "OK", detail)
+        success = row("home-map-damage-native", "OK", prefix + detail)
+        terminal = row("SCRIPT-COMPLETE", "OK")
+        self.assertEqual([], matrix.assess(manifest, journal(observation, success, terminal), "home damage"))
+        bad_rows = [(success, terminal), (observation, observation, success, terminal),
+                    (success, observation, terminal), (observation, success, success, terminal),
+                    (row("home-map-damage-observation", "REFUSED", detail), success, terminal),
+                    (observation, row("home-map-damage-native", "REFUSED", prefix + detail), terminal)]
+        for changed in (detail.replace("captured=3", "captured=2"),
+                        detail.replace("recorded=3", "recorded=2"),
+                        detail.replace("chronology-retained=true", "chronology-retained=false"),
+                        detail.replace("ordinary-rehousing=true", "ordinary-rehousing=false"),
+                        detail.replace("due=192327", "due=-1"),
+                        detail.replace("resident=1", "resident=0"),
+                        detail.replace("body=511", "body="),
+                        detail + "; body=511", detail + "; unexpected=true",
+                        detail.replace("paid-repair=false", "paid-repair=true")):
+            bad_rows.append((row("home-map-damage-observation", "OK", changed),
+                             row("home-map-damage-native", "OK", prefix + changed), terminal))
+        bad_rows.append((observation, row("home-map-damage-native", "OK", prefix + detail.replace("due=192327", "due=192328")), terminal))
+        for rows in bad_rows:
+            with self.subTest(rows=rows):
+                self.assertTrue(matrix.assess(manifest, journal(*rows), "home damage"))
+
+
     def test_escapes_round_trip(self):
         self.assertEqual("a\nb\tc\\d", matrix.unescape("a\\nb\\tc\\\\d"))
 
