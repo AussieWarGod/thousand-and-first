@@ -1,5 +1,17 @@
 # Current implementation and release evidence
 
+## Save while a citizen is away — native proof pending
+
+The separate absent-save persona now leaves one original founder on the existing adjacent
+claim. Its witness compares all four canonical home/profile records and exact body bindings
+before and after cold activation, verifies source-home capacity before the harness fetches the
+remote body, then returns that exact citizen through the ordinary settlement pass. Existing
+four-founder housing checks and the next paid commission still run afterward. The controlled
+transfers do not prove ordinary walking or an unloaded city economy. No absent-save native
+acceptance yet. All four engine compile modes, six host-oracle tests, 66 persona checks and
+documentation/metadata checks pass. This is Harness/tooling only. The completed
+after-return save proof below retains its original runtime/Harness pin.
+
 ## Home-record cold load — controlled chain passes
 
 Native `5c82d435bcea89eea7bbef29e9df760e8e9b603e` completes genuine Quickstart construction,

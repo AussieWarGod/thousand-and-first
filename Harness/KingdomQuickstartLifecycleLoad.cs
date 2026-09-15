@@ -111,6 +111,7 @@ namespace ThousandAndFirst.Harness
 			int water = KingdomGrowth.CountStoredWater(zone);
 			if (water != Witness.StoredWater)
 				return "the loaded settlement holds " + water + " drams, not the saved " + Witness.StoredWater;
+			if (KingdomHomeMapAbsentProvider.ClaimsScript()) KingdomHomeMapAbsentWitness.VerifyLoaded(Game);
 			bool settlement = KingdomPaidHousingNativeProvider.ClaimsScript()
 				? KingdomPaidHousingWitness.ObserveCohort(Game, zone, system, "loaded", out string settlementFailure)
 				: KingdomQuickstartHousingLoad.ClaimsScript()

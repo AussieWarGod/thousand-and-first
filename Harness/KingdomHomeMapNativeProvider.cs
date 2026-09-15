@@ -25,7 +25,7 @@ namespace ThousandAndFirst.Harness
 			{
 				Require(Name == Verb && string.IsNullOrEmpty(Argument) && !Attempted, "home-map probe already attempted or wrong verb");
 				Require(KingdomScenarioScript.TryRead(out IList<string> script, out _)
-					&& (KingdomHomeMapSaveProvider.IsExact(script) || script.Count == 5
+					&& (KingdomHomeMapSaveProvider.IsExact(script) || KingdomHomeMapAbsentProvider.IsExact(script) || script.Count == 5
 					&& script[0] == "quickstart-lifecycle marsh yes" && script[1] == "lifecycle-open"
 					&& script[2] == "advance 8400" && script[3] == Verb && script[4] == "stagedigest"), "exact home-map script absent");
 				Attempted = true;

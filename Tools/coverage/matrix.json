@@ -1210,9 +1210,9 @@
           "artifactBytes": 8216,
           "verdict": "PASS - four founder home/profile records and exact body bindings before/after cold activation; repeat visit/return preserves home/capacity; next paid fire",
           "scope": "Real Quickstart8400ordinaryturns and real save/quit/fresh load. Internal claiming and zero-energy transfers are controlled setup; save after return only. Host-only parser correction02cbfc92 with exact runtime/Harness equality; no saved-state repair. No ordinary travel, absent-save, unique bed use, damaged-home or historical migration acceptance.",
-          "historicalScope": false,
+          "historicalScope": true,
           "inventoryDigest": "ab6a288a26d84e0b5959baa8f5a3807a4f0abbccbe2c9be84f72ee55e00eb670",
-          "currentDevCoverage": true
+          "currentDevCoverage": false
         }
       ]
     }
