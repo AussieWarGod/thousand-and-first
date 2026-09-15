@@ -1,6 +1,6 @@
 # Current implementation and release evidence
 
-## Residence integration checkpoint — native replay pending
+## Residence integration checkpoint
 
 Draft PR #255 adds bounded map/plot/optional-bed and household-profile facts to the existing
 resident row. City schema 5 and archive version 20 preserve them; older archives retain their
@@ -16,18 +16,34 @@ and departure recovery use the same home writer. Unchanged local arrival hashes 
 The native regression now also asserts exact reservation ownership and the ordinary return pass.
 
 Full licensed source validation passes: **15,048 main / 5,934 portable cases, zero skips**.
-Native replay is pending; the retained prior counterexample is not superseded by source checks.
+The controlled native regression below now passes; the earlier failed archive remains retained.
 Unique physical bed allocation, ordinary travel, absent-home damage chronology, failure/recovery
 and real save/cold load remain required. #230 and all-building #229/#251 remain open.
 
 Current census: 3119 staged C# files; 441,537 physical lines; zero at or above 300 lines.
 Inventory SHA-256: `447c50cfc41e98d6132695cbcf4c2a01b975093cd7f4eed99c12bdd52ec937f5`.
-Engine gate checks 3119 sources, baseline and compatibility symbols, plus both developer
+Engine gate passes for 3119 sources, baseline and compatibility symbols, plus both developer
 harness modes. Cold-install inventory: 3153 files.
 See [the structural review](STRUCTURE_REVIEW_RESIDENCE_LIVE.md). Source comparison and census:
 `home-map/residence-live-20260915-1/`. Public Alpha 0.3.7 is unchanged.
 
-## Multi-map home diagnostic — three production failures reproduced
+## Controlled home-map regression passes
+
+Native `149daf472019ca2553f2ca19a26ea8ba037d87a7` completed 8,400 ordinary construction turns:
+four original founders housed, two enclosed rooms, six beds and 34 clear floor cells. During
+the controlled adjacent-map visit, occupancy remained 1→1 and the exact resident appeared once.
+Home-work ID 89973561 and the map-qualified home plot survived while the current-map binding
+changed correctly. After physical return, an ordinary settlement pass retained home/capacity.
+The fixture never repaired home state. Strict Player.log, full 3,471-input / 3,430-C# recipe and
+owned shutdown pass. Archive: `home-map/149daf47/native-live-1-pass/result.json`;
+SHA-256 `25f4b1df1fcd7444b8e5190e67017c8eee1f207bdf5ba5abae3bfe92655e2cda`.
+
+Behavioral row 32 is NATIVE_PASS for this narrow regression. Internal claim entry and zero-energy
+transfers are disclosed setup. Ordinary expansion/walking, home/work routines, unique usable
+sleeping places, unloaded accounting, changed-building recovery and cold load remain #230.
+Every building still needs architectural and functional acceptance under #229/#251.
+
+## Earlier multi-map diagnostic — three production failures reproduced
 
 `home-map-native-check` first completes genuine Quickstart housing, then transfers one original
 founder to another local map of the same city. Native `729f2332d39108cef86bf01d463cd1ca0d98017b`

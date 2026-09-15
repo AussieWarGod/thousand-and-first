@@ -1,11 +1,12 @@
 # Session handoff — current v1.0 test-candidate work
 
-## Residence persistence checkpoint
+## Residence integration checkpoint
 
 Current development: 3119 staged sources / 3153 package files. City schema 5, archive 20 and
 residence-aware death receipts preserve bounded home/profile facts. Full licensed 15,048/5,934
-cases and four engine modes pass. PR #255 stays draft: live assignment, remote capacity and
-native home-map acceptance remain open in #230. Current handles live in the common Git handoff;
+cases and four engine modes pass. Native149daf47 retains the exact home/reservation through a
+controlled same-city visit and ordinary return pass. PR #255 stays draft; unique bed use,
+ordinary travel, damage recovery and cold load remain #230. Handles live in the common Git handoff;
 all-building architecture/function requirements remain #229/#251. See docs/STATUS.md.
 
 ## Coherent recruitment draft

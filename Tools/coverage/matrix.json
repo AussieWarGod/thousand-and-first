@@ -1184,14 +1184,26 @@
       "id": 32,
       "behaviour": "Persistent home and bed reservation across a same-city map visit",
       "prerequisites": "Genuine Quickstart founders and paid starter homes; internal adjacent same-city claim and controlled founder/resident transfer",
-      "transitions": "housed resident leaves home map -> original home occupancy read -> visiting-map check-in and lodging -> controlled physical return",
-      "effects": "home reservation and home identity should survive independently of current resident-map binding",
+      "transitions": "housed resident leaves home map -> exact absent-owner reservation -> visiting-map check-in and lodging -> controlled return -> ordinary home settlement pass",
+      "effects": "same map-qualified home/root and one exact reservation survive independently of current body binding",
       "save_cold_load": "COVERAGE_GAP",
-      "negative": "DEFECT - absent owner releases projected occupancy and loses both home-work ID and home plot",
+      "negative": "Absent-owner capacity retained; building loss, frozen publication recovery and cold-load scenarios remain COVERAGE_GAP",
       "driver": "Harness/KingdomHomeMapNativeProvider.cs; Tools/personas/home-map-native-check.persona",
-      "status": "DEFECT",
-      "note": "Native729f2332 completes8400 ordinary construction turns with four housed founders, two rooms and six beds. Controlled visit produces occupancy1->0, home-work1937578638->0 and home-plot->null while the same living resident correctly binds to the visiting map. Both bodies return physically without home-state repair. Internal claim entry/zero-energy transfers are synthetic; no ordinary expansion, walking, second paid district, unloaded accounting or cold-load acceptance. Required integrated fix remains #230. Closed failed artifact: home-map/729f2332/native-3-fail/result.json; SHA-256 3736396cf5c8c31804caea619cb524a34de8d09af4d07523fbfdad2254d2ac6c.",
-      "evidence": null
+      "status": "NATIVE_PASS",
+      "note": "Native149daf47 completes8400 ordinary construction turns with four housed founders, two rooms, six beds and34 clear floor cells. Occupancy stays1->1; the exact resident occurs once; home-work89973561 and map-qualified plot persist while BoundZoneId changes to the visiting map. The ordinary return settlement pass preserves identity/capacity without fixture home repair. Internal claim and zero-energy transfers remain disclosed setup. No ordinary expansion/walking, second paid district, unloaded accounting, unique sleeping-place use or cold-load acceptance. Prior729f2332 failed archive remains retained; #230 stays open.",
+      "evidence": [
+        {
+          "commit": "149daf472019ca2553f2ca19a26ea8ba037d87a7",
+          "artifactPath": "home-map/149daf47/native-live-1-pass/result.json",
+          "artifactSha256": "25f4b1df1fcd7444b8e5190e67017c8eee1f207bdf5ba5abae3bfe92655e2cda",
+          "artifactBytes": 3397,
+          "verdict": "PASS - absent reservation, map-qualified home/root, current-map binding and ordinary return settlement pass",
+          "scope": "Genuine Quickstart construction and four original founders; controlled internal adjacent claim and zero-energy transfers. Full3471input/3430C# recipe and owned stop verified. No ordinary expansion/walking, actual bed use, unloaded-map or cold-load acceptance.",
+          "historicalScope": false,
+          "inventoryDigest": "0eb1e60510cda728137064576c50affa0c9afe5a74676d438d09d7e526d124f7",
+          "currentDevCoverage": true
+        }
+      ]
     }
   ],
   "combinations": [

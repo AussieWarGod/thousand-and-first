@@ -15,6 +15,6 @@ The preceding [residence storage review](STRUCTURE_REVIEW_RESIDENCE.md) retains 
 | Row clone | Optional replacement root ID preserves every other row field. No further saved-column or codec shape change. |
 
 Source validation: 15,048 main / 5,934 portable cases, zero skips. Engine compile evidence is
-recorded separately. Native replay remains pending. Exact usable sleeping-place allocation,
+recorded separately. Native149daf47 passes controlled visiting/return home preservation. Exact usable sleeping-place allocation,
 ordinary home/work travel, cold recovery and absent-owner condemnation chronology remain #230.
 No all-building or Beta acceptance follows from this review; #229/#251 retain the full requirement.

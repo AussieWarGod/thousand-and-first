@@ -1,6 +1,6 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
-## Residence integration checkpoint — native replay pending
+## Residence integration checkpoint
 
 City schema 5 / archive 20 add canonical map-qualified residence facts. Full licensed suites
 pass 15,048 main and 5,934 portable cases, zero skips. Coverage includes named-field and
@@ -9,9 +9,25 @@ receipts, malformed columns and duplicate live bed claims through all resident m
 `home-map/residence-storage-20260915-2/` retains the checks and full production comparison.
 
 Four engine compile modes pass across 3119 production C# sources; the cold-install inventory contains 3153 files.
-No native PASS is added. Live consumers now preserve remote homes and absent reservations.
-The revised fixture asserts exact owner identity and the ordinary return pass. Native travel,
-changed buildings and save recovery remain required; the regression stays DEFECT until replay.
+## Controlled home-map regression passes
+
+Native `149daf472019ca2553f2ca19a26ea8ba037d87a7` completed 8,400 ordinary construction turns:
+four original founders housed, two enclosed rooms, six beds and 34 clear floor cells. During
+the controlled adjacent-map visit, occupancy remained 1→1 and the exact resident appeared once.
+Home-work ID 89973561 and the map-qualified home plot survived while the current-map binding
+changed correctly. After physical return, an ordinary settlement pass retained home/capacity.
+The fixture never repaired home state. Strict Player.log, full 3,471-input / 3,430-C# recipe and
+owned shutdown pass. Archive: `home-map/149daf47/native-live-1-pass/result.json`;
+SHA-256 `25f4b1df1fcd7444b8e5190e67017c8eee1f207bdf5ba5abae3bfe92655e2cda`.
+
+Behavioral row 32 is NATIVE_PASS for this narrow regression. Internal claim entry and zero-energy
+transfers are disclosed setup. Ordinary expansion/walking, home/work routines, unique usable
+sleeping places, unloaded accounting, changed-building recovery and cold load remain #230.
+Every building still needs architectural and functional acceptance under #229/#251.
+
+The local evidence audit verifies this new artifact and 67/76 total referenced entries. Nine
+historical archive paths are missing under this evidence root; their existing unresolved scope
+remains unchanged. This audit does not grant acceptance to missing historical evidence.
 
 ## Retained multi-map home regression — prior production failure
 

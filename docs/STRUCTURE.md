@@ -6,7 +6,8 @@
 300 lines. Inventory SHA-256: `447c50cfc41e98d6132695cbcf4c2a01b975093cd7f4eed99c12bdd52ec937f5`.
 [The automated delta review](STRUCTURE_REVIEW_RESIDENCE_LIVE.md) binds bounded residence storage,
 legacy/frozen-claim migration, archive/death receipt versions and model mutation boundaries.
-Engine home authority and absent-owner occupancy are integrated; native acceptance remains open in #230.
+Engine home authority and absent-owner occupancy pass the controlled native visit regression;
+full ordinary travel/failure/cold acceptance remains open in #230.
 
 ## Earlier recruitment census
 

@@ -12,7 +12,9 @@ records current acceptance.
 
 - Integrated map-qualified home authority into check-in, assignment, absent household occupancy,
   local room reads and laboratory rehouse/departure recovery. The strengthened native regression
-  is awaiting replay; unique physical sleeping places and full multi-map acceptance remain open.
+  passes after real Quickstart construction: absent capacity, exact home identity and return
+  reconciliation survive a controlled same-city visit. Unique physical sleeping places and
+  ordinary travel/save recovery remain open.
 
 - Added residence persistence groundwork: map-qualified homes, optional bed identities and
   observed household facts survive model/archive/death-receipt round trips. Legacy unknown
