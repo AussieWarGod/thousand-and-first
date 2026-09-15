@@ -1,13 +1,16 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
-## Multi-map home diagnostic pending
+## Multi-map home regression — fails on current production
 
-`home-map-native-check` requires a paid Quickstart home to remain reserved for the same founder
-while a controlled transfer places them on another claimed local map. Native319c20b4 observed
-occupancy1→0, then refused the remaining checks because the fixture had not activated that map.
-The fixture now moves both founder and resident and verifies active ground; retry pending.
-Internal claim entry and zero-energy transfer are disclosed; no normal expansion, pedestrian
-travel, second-district construction or cold-load acceptance. See issue #230 and STATUS.
+`home-map-native-check` completes real Quickstart homes, then verifies bed reservation, home
+work ID and home plot during a controlled visit to another claimed local map. Native729f2332
+observed occupancy1→0, home-work1937578638→0 and home-plot→null while the same living citizen's
+current map changed correctly. The correctness assertion fails; no production fix yet.
+
+Internal claim entry and zero-energy resident/founder transfers are disclosed. Both bodies
+return physically without repairing lost housing state. No ordinary expansion/walking,
+second paid district, unloaded population or cold-load acceptance. Full sealed inputs,
+owned shutdown and retained failed attempts are recorded in STATUS and issue #230.
 
 ## Recruitment admission and report follow-through — scoped PASS
 

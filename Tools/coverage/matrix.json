@@ -1179,6 +1179,19 @@
           "currentDevCoverage": false
         }
       ]
+    },
+    {
+      "id": 32,
+      "behaviour": "Persistent home and bed reservation across a same-city map visit",
+      "prerequisites": "Genuine Quickstart founders and paid starter homes; internal adjacent same-city claim and controlled founder/resident transfer",
+      "transitions": "housed resident leaves home map -> original home occupancy read -> visiting-map check-in and lodging -> controlled physical return",
+      "effects": "home reservation and home identity should survive independently of current resident-map binding",
+      "save_cold_load": "COVERAGE_GAP",
+      "negative": "DEFECT - absent owner releases projected occupancy and loses both home-work ID and home plot",
+      "driver": "Harness/KingdomHomeMapNativeProvider.cs; Tools/personas/home-map-native-check.persona",
+      "status": "DEFECT",
+      "note": "Native729f2332 completes8400 ordinary construction turns with four housed founders, two rooms and six beds. Controlled visit produces occupancy1->0, home-work1937578638->0 and home-plot->null while the same living resident correctly binds to the visiting map. Both bodies return physically without home-state repair. Internal claim entry/zero-energy transfers are synthetic; no ordinary expansion, walking, second paid district, unloaded accounting or cold-load acceptance. Required integrated fix remains #230. Closed failed artifact: home-map/729f2332/native-3-fail/result.json; SHA-256 3736396cf5c8c31804caea619cb524a34de8d09af4d07523fbfdad2254d2ac6c.",
+      "evidence": null
     }
   ],
   "combinations": [

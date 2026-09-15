@@ -252,3 +252,28 @@ Recruitment availability reports follow the configured civic-story policy: ordin
 owned story-guest catalogue only while civic stories are enabled. Ordinary extension recruits
 remain available when stories are disabled. Status reads must not publish option epochs, freeze
 candidates or mutate due debt. Native probes disclose temporary catalogue and option-read controls.
+
+## Multi-map home ownership follow-through
+
+Native729f2332 now reproduces the three failures described in STATUS: the same resident loses
+projected occupancy, home-work identity and its home plot on a controlled cross-map visit.
+The original home remains physically built. This is an actual failing regression, not a claim
+that ordinary multi-map play passes.
+
+The fix must distinguish persistent residence from current physical position and work location.
+Retain a map-qualified stable home/plot identity and a unique usable sleeping-place reservation;
+building replacement during paid upgrades must not make an absent owner homeless or free their
+bed. A total bed count and a live occupant census cannot establish reservation ownership.
+
+Keep residence authority with the existing city resident model. `KingdomCityBook` is an explicit
+named-field composite and `KingdomCityState` is its immutable rules-side snapshot; inspect and
+version that boundary before extending it. Do not introduce a second independent population
+ledger or infer a new home merely from the player's current map. Legacy home facts need positive
+physical evidence and a deliberate migration path, not guesses from matching coordinates.
+
+Absent household members still reserve space and affect cohabitation. Their observed needs,
+refusals and culture/creed facts must remain usable while their map is unloaded; no fabricated
+placeholder actors, silent empty-bed assumption or forced loading of every city map for a census.
+Audit all residence writers and consumers together: ordinary allocation, arrival admission,
+lab-driven moves, departures, succession, subsidence, conversions/removal and room activities.
+The broad #230/#233 requirements and ordinary multi-map/cold-load scenarios remain mandatory.
