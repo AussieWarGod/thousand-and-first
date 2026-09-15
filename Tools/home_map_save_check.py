@@ -4,8 +4,16 @@ import argparse
 import json
 from pathlib import Path
 import re
-from guest_save_check import field, one, require
+from guest_save_check import one, require
 from personas import persona_matrix
+
+
+def field(detail, name):
+    # Native home diagnostics group identity fields with spaces and separate phases with
+    # semicolons. Values in this grammar are nonempty tokens; duplicate keys always refuse.
+    found = re.findall(r"(?:^|[;\s])" + re.escape(name) + r"=([^;\s]+)(?=;|\s|$)", detail)
+    require(len(found) == 1, "missing or repeated field " + name)
+    return found[0]
 
 
 def visit(detail, reused):

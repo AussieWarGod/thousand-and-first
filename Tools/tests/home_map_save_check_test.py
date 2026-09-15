@@ -67,3 +67,16 @@ class HomeMapSaveCheckTests(unittest.TestCase):
             result = subprocess.run([sys.executable, oracle.__file__, *paths], capture_output=True, text=True)
             self.assertEqual(0, result.returncode, result.stdout + result.stderr)
             self.assertEqual("PASS", json.loads(result.stdout)["verdict"])
+
+    def test_native_space_grouped_fields_and_duplicates(self):
+        source, loaded = self.fixture()
+        for rows, index in ((source, 0), (loaded, 2)):
+            event, outcome, detail = rows[index]
+            for key in ("away-zone", "resident", "body", "original-home", "plot", "occupied-away",
+                        "visited-bound", "home-repair", "reservation-owner-exact"):
+                detail = detail.replace("; " + key + "=", " " + key + "=")
+            rows[index] = event, outcome, detail
+        self.assertEqual("PASS", oracle.judge(source, loaded)["verdict"])
+        event, outcome, detail = loaded[2]
+        loaded[2] = event, outcome, detail + " home-repair=false"
+        with self.assertRaises(ValueError): oracle.judge(source, loaded)

@@ -17,6 +17,16 @@ new-generation reservations; retry pending. Closed failed archive:
 `eae9c6d02d933fffacec6903f08cf04dc9b60b48c6548519d615b19ecf36c99f`.
 Both source and cold profiles stopped; full 3,473/3,475-input recipes verified. No cold-chain PASS.
 
+At `5c82d435`, the next source attempt stalled at the engine splash before any scenario rows;
+its exact process was stopped and the unchanged profile/capture archived at
+`home-map-save/5c82d435/native-2-startup-fail/`. The following fresh run completed both native
+sessions, including cold visit/return and the next paid commission. Its host oracle rejected
+space-grouped diagnostic fields. Original failed result remains at
+`home-map-save/5c82d435/native-3-oracle-fail/result.json`, SHA-256
+`09a9ed12dca016cca560fd333e48e25bd5272cdb26c0e5b68b7cce1d136b1a25`.
+Host-only parser correction is being checked against the unchanged sealed journals; no replay
+or modification of game state is needed. Complete acceptance awaits that evidence closure.
+
 ## Residence integration checkpoint
 
 Draft PR #255 adds bounded map/plot/optional-bed and household-profile facts to the existing
