@@ -4,7 +4,7 @@
 
 Current development: **3112** production C# files / 3146 package files. Six-faction coherent
 recruitment implemented; full licensed 15,019/5,909 cases and four engine modes pass. Native
-catalogue/frozen-guest checks passed at 7c386a81; expanded hostile-wait check pending; physical admission/home/cold-load/multi-map proof
+catalogue/frozen-guest and expanded hostile-wait checks passed at 10d4c2a5; physical admission/home/cold-load/multi-map proof
 remains owed under #231/#230. No saved fields change. docs/STATUS.md and common Git handoff
 own exact scope and live handles; previous entries below retain original evidence.
 

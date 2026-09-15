@@ -32,7 +32,7 @@
       "negative": "COVERAGE_GAP",
       "driver": "Harness/KingdomFirstGuestNativeProvider.cs (first-guest-setup/check)",
       "status": "NATIVE_PASS",
-      "note": "Native 660ba354 passes the real two-due-pass correspondence scenario. Synthetic founding and water are disclosed. Physical guest admission/citizenship is tracked separately as a coverage gap.",
+      "note": "Native 10d4c2a5 adds an all-hostile wait and original-head recovery, then proves one correspondence emission across two later checks while preserving the guest through renewed hostility. Synthetic camp/store/reputation and unplaced samples are disclosed. Earlier proof retains its exact scope. Physical admission/citizenship and cold load are separate obligations.",
       "evidence": [
         {
           "commit": "660ba354b00692bc045f95c6df916de07be9aaa3",
@@ -44,6 +44,17 @@
           "historicalScope": true,
           "inventoryDigest": "0ebe8fb749a39bccd21578e78d95777725eb4ffc0bedba84962830baa679370c",
           "currentDevCoverage": false
+        },
+        {
+          "commit": "10d4c2a5703ff93d974be83db96c6a16b88b28fb",
+          "artifactPath": "recruitment/10d4c2a5/native-3-pass/result.json",
+          "artifactSha256": "e313acf0e6dd377f74f780c37ddcc587f8b2dcc3526cbdaf31ad6b30f19f989c",
+          "artifactBytes": 4189,
+          "verdict": "PASS - six-faction selection; hostile wait preserves debt/water and downstream work; original guest recovery and frozen identity; once-only correspondence",
+          "scope": "18000 requested/18001 actual turns; synthetic empty camp/store, reversible reputation controls, twelve unplaced native body samples across six factions and both selection routes; road checkpoint is continued processing, not productive construction; no physical admission, housing, cold load, ordinary multi-map or balance acceptance",
+          "historicalScope": false,
+          "inventoryDigest": "c56afdb08ce8e2aa513f36b5a5d2764d77ba2c744e888a787f187e27af2f5cd7",
+          "currentDevCoverage": true
         }
       ]
     },
@@ -1097,6 +1108,31 @@
           "historicalScope": true,
           "inventoryDigest": "9763830753f5d45146100eda42b45ce4710a30f7caa9269544c5e45fa91c8fc9",
           "currentDevCoverage": false
+        }
+      ]
+    },
+    {
+      "id": 31,
+      "behaviour": "Reputation-weighted recruit selection and unavailable-pool recovery",
+      "prerequisites": "synthetic founded empty camp, dedicated water, actual native six-faction catalogue and controlled personal/civic reputation",
+      "transitions": "all-hostile pool -> ordinary waiting debt with downstream processing -> peaceful relations recover original head -> renewed hostility preserves frozen guest",
+      "effects": "no citizen or water spend while waiting; original ordinal/deadline retained; Charter explains recruitment and housing; native name/body/origin coherence and ambient RNG references preserved",
+      "save_cold_load": "COVERAGE_GAP; main-only cadence codec regression is not native reload",
+      "negative": "NEGATIVE_PASS for all-hostile refusal and frozen-identity retention; extension catalogue and broader policies remain COVERAGE_GAP",
+      "driver": "Harness/KingdomRecruitmentNativeChecks.cs; Harness/KingdomRecruitmentNativeChecks.Waiting.cs; first-guest-native-check",
+      "status": "NATIVE_PASS",
+      "note": "Twelve native samples exercise both routes for six factions; they do not prove physical admission of every authored profile. An empty camp road checkpoint proves the end of the growth pass remains reachable, not productive staffing/construction. Failed native2 fixture deadline assumption and corrected native3 exact-first-epoch assertions are retained in STATUS. Actual citizenship/home/cold-load/multi-map/balance and a civic-story-disabled extension report edge remain open under #231/#230.",
+      "evidence": [
+        {
+          "commit": "10d4c2a5703ff93d974be83db96c6a16b88b28fb",
+          "artifactPath": "recruitment/10d4c2a5/native-3-pass/result.json",
+          "artifactSha256": "e313acf0e6dd377f74f780c37ddcc587f8b2dcc3526cbdaf31ad6b30f19f989c",
+          "artifactBytes": 4189,
+          "verdict": "PASS - six-faction selection; hostile wait preserves debt/water and downstream work; original guest recovery and frozen identity; once-only correspondence",
+          "scope": "18000 requested/18001 actual turns; synthetic empty camp/store, reversible reputation controls, twelve unplaced native body samples across six factions and both selection routes; road checkpoint is continued processing, not productive construction; no physical admission, housing, cold load, ordinary multi-map or balance acceptance",
+          "historicalScope": false,
+          "inventoryDigest": "c56afdb08ce8e2aa513f36b5a5d2764d77ba2c744e888a787f187e27af2f5cd7",
+          "currentDevCoverage": true
         }
       ]
     }

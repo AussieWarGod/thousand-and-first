@@ -1,6 +1,6 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
-## Coherent recruitment validation pending
+## Coherent recruitment: scoped native PASS, admission pending
 
 Full licensed 15,019 main / 5,909 portable cases pass with zero skips. Four engine compile
 modes pass across 3112 production C# sources; the cold-install inventory contains 3146 files.
@@ -9,8 +9,10 @@ fixed-event weighted draws. Native first-guest probes now require all six source
 both selection routes, deterministic native names, body/culture agreement, empty hostile-pool
 refusal, and retained frozen guest identity after changed reputation across ordinary turns.
 The initial 12,000-turn native run passed at `7c386a81`; its closed archive is in STATUS.
-The expanded 18,000-turn scenario is pending and starts with an all-hostile wait, requiring no
-body or water spend, retained original debt, a downstream road checkpoint and explanatory status.
+The expanded scenario passed at `10d4c2a5`: 18,000 requested / 18,001 actual turns, all-hostile
+wait with no body or water spend, retained original debt, downstream road checkpoint, explanatory
+status, original-head recovery and frozen identity after renewed hostility. See STATUS for its
+closed archive and the retained failed attempt caused by an initial-deadline fixture assumption.
 The main-only cadence codec regression preserves debt through repeated waits and serialization.
 Those probes use reversible synthetic reputation and unplaced body samples; correspondence
 is produced by the real cadence. Physical admission, home allocation and cold load remain owed.

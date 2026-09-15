@@ -12,8 +12,8 @@ records current acceptance.
 
 - New settlers draw coherent native bodies, origins and names with player/city reputation
   weighting. Added ordinary Issachari, hindren and dromad recruits; hostile sources stay out
-  of voluntary arrivals. Existing citizens and frozen plans retain identity. Native validation
-  of the expanded hostile-wait scenario and further admission/home/cold-load coverage remain pending.
+  of voluntary arrivals. Existing citizens and frozen plans retain identity. Native selection,
+  hostile wait/recovery and frozen identity checks pass; admission/home/cold-load coverage remains pending.
   Empty recruitment retains its due arrival while other city work continues; Charter explains
   the reputation block alongside housing needs.
 

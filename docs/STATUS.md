@@ -1,45 +1,56 @@
 # Current implementation and release evidence
 
-## Coherent recruitment — native validation pending
+## Coherent recruitment — scoped native validation, admission still pending
 
 New, unfrozen arrivals use one reputation-weighted catalogue: source faction, native body and
 origin agree, and names use Qud's faction/culture/species naming rules under a restored native
-RNG scope. Twelve authored profiles cover Farmers, Mechanimists, Snapjaws, Issachari, Hindren
-and Dromad. Specialist skills are distinct from culture. First guests use the same selection,
-restricted to the durable owned-body allowlist. Existing citizens and already-frozen plans retain
-identity; historical blueprint-only recovery keeps its original naming path.
+RNG scope, with native property-before-tag precedence. Twelve authored profiles cover Farmers,
+Mechanimists, Snapjaws, Issachari, Hindren and Dromad. Specialist skills remain distinct from
+culture. First guests use the same selection restricted to their owned-body allowlist. Existing
+citizens and frozen plans keep identity; historical blueprint-only recovery retains its old path.
 
-Both player and inbound city regard affect bounded weights. Native hostility excludes a faction;
-missing factions are unavailable. An all-ineligible pool creates no body or frozen person and
-retains the due opportunity for later peaceful relations. This is not a population quota.
+Player and inbound city regard both affect bounded weights; native hostility excludes a faction.
+An empty eligible pool retains unspent arrival debt and continues downstream city work. Charter
+explains the reputation block alongside physical needs. This is not a population quota.
+
+Native `10d4c2a5703ff93d974be83db96c6a16b88b28fb` passed 18,000 requested / 18,001 actual turns:
+all six factions across both selection routes produced twelve coherent native body samples;
+fixed events repeated their names and preserved ambient RNG references. An ordinary hostile wait
+made no citizen, spent no water, retained first-epoch debt and advanced the final road-processing
+checkpoint to its due tick. Charter showed both recruitment and housing needs. Restoring relations
+opened the original arrival (Tiyuyurem, `r_KingdomSettlerHand`); renewed hostility kept that same
+candidate, name, origin, blueprint and plan hash. Correspondence emitted once across both checks.
+
+Synthetic founding/store, reversible reputation controls and unplaced samples are disclosed.
+This empty camp's road checkpoint proves continued processing, not productive staffing or construction.
+No physical admission, housing allocation, native cold load, ordinary multi-map or balance acceptance.
+All 3,461 profile inputs (3,420 C#) match the pinned recipe/seal; strict final log, guarded wait
+accounting, persona and exact owned shutdown pass. Closed archive:
+`recruitment/10d4c2a5/native-3-pass/result.json`, SHA-256
+`e313acf0e6dd377f74f780c37ddcc587f8b2dcc3526cbdaf31ad6b30f19f989c`.
+The full developer C# binding is retained in `recruitment/10d4c2a5/dev-inventory-binding-1/result.json`;
+its digest is `c56afdb08ce8e2aa513f36b5a5d2764d77ba2c744e888a787f187e27af2f5cd7`.
+
+Earlier attempt 2 at `cf97c1e0` failed a fixture comparison between founding's initial estimate
+135927 and the actual first healthy cadence deadline 136801. The corrected fixture binds the real
+first-epoch head and records boundary values; production code did not change for this correction.
+Failed archive `recruitment/cf97c1e0/native-2-fail/result.json`, SHA-256
+`b551edccb17c9c479c3f3b39e877e4dfa681c8f972ec058ef077d33cedbef366`, remains retained.
+The earlier 12,000-turn proof at `7c386a81` retains its original scope in
+`recruitment/7c386a81/native-1-pass/result.json` (SHA-256
+`b150724a584b32ad65abf99771fbbbbbd01fa833628bd9fdd9056e37a3fe9d50`).
+
 Full licensed suites pass: 15,019 main / 5,909 portable, zero skips; four engine compile modes pass.
-The first native run at `7c386a8175f1646103aeb61fb8603e624d11442f` passed catalogue/coherence
-and frozen-first-guest checks across 12,000 ordinary turns. Closed archive:
-`recruitment/7c386a81/native-1-pass/result.json`, SHA-256
-`b150724a584b32ad65abf99771fbbbbbd01fa833628bd9fdd9056e37a3fe9d50`.
-This is evidence for that earlier input, not acceptance of the changes below.
-
-Follow-up fixes an empty pool returning before downstream growth work: retain the unspent debt,
-validate/publish its clock, and continue the ordinary pass. Charter reports the reputation block
-alongside the physical need. Native naming now uses property-before-tag precedence. The expanded
-18,000-turn test adds an all-hostile ordinary wait, downstream road checkpoint, exact water/debt
-retention and recovery of the original head. Its execution is pending; the road checkpoint proves
-continued downstream processing, not productive staffing or construction in this empty camp.
-Native attempt 2 at `cf97c1e0` failed the fixture's deadline comparison: founding estimated
-135927, while the first healthy pass established the actual head at 136801. Its log shows zero
-arrivals and completed downstream passes; later assertions did not run. Closed failed archive:
-`recruitment/cf97c1e0/native-2-fail/result.json`, SHA-256
-`b551edccb17c9c479c3f3b39e877e4dfa681c8f972ec058ef077d33cedbef366`.
-The fixture now binds the actual first-epoch head, records its boundary values and requires the
-same ordinal/deadline on recovery. Production code is unchanged from attempt 2.
-Physical admission/home allocation, cold load, ordinary multi-map recruitment and balance remain
-unproved. #231 and the original Beta goal remain open.
+A main-only codec regression preserves waiting debt and the original head through serialization.
+Physical admission/home allocation, native cold load, broader recruitment and balance remain under
+#231/#230. A report-policy edge for extension recruits when civic story is disabled also remains
+under review before PR #254 integration. The original Beta goal and building issues #229/#251 stay open.
 
 Development compile scope: 3112 sources, baseline and compatibility symbols.
 Current census: 3112 staged C# files; 441,026 physical lines; zero at or above 300 lines.
 Direct `XRL` imports: 1454 files, 0 over the line limit. Cold-install inventory: 3146 files.
-Inventory SHA-256: `edcbe79a2c2890363223ab1346f0e603eeac82fd92c649c1803e3e262f087eef`. Structural review is stale for this delta.
-Prior native/public evidence below retains its original inputs. Public 0.3.7 is unchanged.
+Inventory SHA-256: `edcbe79a2c2890363223ab1346f0e603eeac82fd92c649c1803e3e262f087eef`.
+Structural review remains stale. Prior evidence below retains its original inputs. Public 0.3.7 is unchanged.
 
 ## Strike closure feedback — accepted native scope (abf41251)
 
