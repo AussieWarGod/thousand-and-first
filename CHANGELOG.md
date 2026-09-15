@@ -10,6 +10,11 @@ records current acceptance.
 
 **Unreleased development**
 
+- Added native home persistence coverage: all four founders retain canonical home facts and
+  body bindings before/after cold activation, a repeat district visit retains capacity, and
+  the loaded city pays for another building. Controlled transfers and saving after return
+  remain explicit limits; absent saves, actual bed use and ordinary travel remain open.
+
 - Integrated map-qualified home authority into check-in, assignment, absent household occupancy,
   local room reads and laboratory rehouse/departure recovery. The strengthened native regression
   passes after real Quickstart construction: absent capacity, exact home identity and return

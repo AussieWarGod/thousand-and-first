@@ -1,31 +1,33 @@
 # Current implementation and release evidence
 
-## Home-record cold-load scenario — implemented, not yet run
+## Home-record cold load — controlled chain passes
 
-The home-save persona extends real Quickstart construction and the controlled visit with an
-exact witness for all four founders, canonical residence facts and body bindings. The sealed
-lifecycle load compares it before and after activation, repeats a visit using the existing
-second claim, and retains the normal next paid construction action. Source and host-oracle
-checks are in progress; this is not cold-load acceptance. Save occurs after return, so saving
-while a citizen is absent remains separate required coverage.
+Native `5c82d435bcea89eea7bbef29e9df760e8e9b603e` completes genuine Quickstart construction,
+a same-city map visit, real save, exact owned shutdown and a fresh-process load. All four
+founders' canonical home/profile records and body bindings match before and after activation.
+The same resident then revisits the existing second claim and returns through the ordinary
+settlement pass with the same home and reserved household capacity. The loaded city commissions
+a new fire, paying one timber and two drams once. Four founders remain housed in two enclosed
+rooms with six beds and 34 clear floor cells after 8,400 ordinary turns (8,402 game turns).
 
-First native attempt at `cafe0866` proves the exact four home records and body bindings before
-and after cold activation. The repeated visit then incorrectly requested a fresh-generation
-encounter witness. The harness now uses the existing loaded-stage check, which requires zero
-new-generation reservations; retry pending. Closed failed archive:
-`home-map-save/cafe0866/native-1-fail/result.json`, SHA-256
-`eae9c6d02d933fffacec6903f08cf04dc9b60b48c6548519d615b19ecf36c99f`.
-Both source and cold profiles stopped; full 3,473/3,475-input recipes verified. No cold-chain PASS.
+Closed archive: `home-map-save/5c82d435/native-3-revalidated-pass/result.json`;
+SHA-256 `3e00e5f5cf3686e9f50b7b7bddf21052a8cdfad1e3baf4deb5d361e19b9ed6d3`. Source/load profiles have 3,473/3,475 exact sealed inputs,
+including 3,432 C# files each. Both strict logs and owned shutdowns pass. Host validator
+`02cbfc926d9e560020e14ed0a8e855ce6f236104` corrects space-grouped diagnostic parsing; the
+archive proves identical runtime and Harness bytes to the native pin and lists the three
+host-test/documentation-only changes. Six oracle tests include the real field grammar.
+No game replay or saved-state repair was used to correct the host verdict.
 
-At `5c82d435`, the next source attempt stalled at the engine splash before any scenario rows;
-its exact process was stopped and the unchanged profile/capture archived at
-`home-map-save/5c82d435/native-2-startup-fail/`. The following fresh run completed both native
-sessions, including cold visit/return and the next paid commission. Its host oracle rejected
-space-grouped diagnostic fields. Original failed result remains at
-`home-map-save/5c82d435/native-3-oracle-fail/result.json`, SHA-256
-`09a9ed12dca016cca560fd333e48e25bd5272cdb26c0e5b68b7cce1d136b1a25`.
-Host-only parser correction is being checked against the unchanged sealed journals; no replay
-or modification of game state is needed. Complete acceptance awaits that evidence closure.
+Scope: save occurs after return. Internal claiming and zero-energy transfers are disclosed
+setup. Saving while absent, ordinary walking/work travel, home damage/replacement, unloaded
+accounting, unique usable sleeping places and historical migration remain required in #230.
+This does not establish all-building or Beta acceptance; #229/#251 remain open.
+
+Retained failed attempts: `home-map-save/cafe0866/native-1-fail/` records the fixture's wrong
+fresh-generation stage on cold replay; `home-map-save/5c82d435/native-2-startup-fail/` records
+a stalled engine splash with no scenario execution; `native-3-oracle-fail/` preserves the old
+parser rejection. `native-3-revalidation-incomplete/` retains an archive attempt that refused
+stale validator metadata before recipe verification completed. None was rewritten as PASS.
 
 ## Residence integration checkpoint
 

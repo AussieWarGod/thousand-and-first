@@ -1,5 +1,34 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
+## Home-record cold load — controlled chain passes
+
+Native `5c82d435bcea89eea7bbef29e9df760e8e9b603e` completes genuine Quickstart construction,
+a same-city map visit, real save, exact owned shutdown and a fresh-process load. All four
+founders' canonical home/profile records and body bindings match before and after activation.
+The same resident then revisits the existing second claim and returns through the ordinary
+settlement pass with the same home and reserved household capacity. The loaded city commissions
+a new fire, paying one timber and two drams once. Four founders remain housed in two enclosed
+rooms with six beds and 34 clear floor cells after 8,400 ordinary turns (8,402 game turns).
+
+Closed archive: `home-map-save/5c82d435/native-3-revalidated-pass/result.json`;
+SHA-256 `3e00e5f5cf3686e9f50b7b7bddf21052a8cdfad1e3baf4deb5d361e19b9ed6d3`. Source/load profiles have 3,473/3,475 exact sealed inputs,
+including 3,432 C# files each. Both strict logs and owned shutdowns pass. Host validator
+`02cbfc926d9e560020e14ed0a8e855ce6f236104` corrects space-grouped diagnostic parsing; the
+archive proves identical runtime and Harness bytes to the native pin and lists the three
+host-test/documentation-only changes. Six oracle tests include the real field grammar.
+No game replay or saved-state repair was used to correct the host verdict.
+
+Scope: save occurs after return. Internal claiming and zero-energy transfers are disclosed
+setup. Saving while absent, ordinary walking/work travel, home damage/replacement, unloaded
+accounting, unique usable sleeping places and historical migration remain required in #230.
+This does not establish all-building or Beta acceptance; #229/#251 remain open.
+
+Retained failed attempts: `home-map-save/cafe0866/native-1-fail/` records the fixture's wrong
+fresh-generation stage on cold replay; `home-map-save/5c82d435/native-2-startup-fail/` records
+a stalled engine splash with no scenario execution; `native-3-oracle-fail/` preserves the old
+parser rejection. `native-3-revalidation-incomplete/` retains an archive attempt that refused
+stale validator metadata before recipe verification completed. None was rewritten as PASS.
+
 ## Residence integration checkpoint
 
 City schema 5 / archive 20 add canonical map-qualified residence facts. Full licensed suites

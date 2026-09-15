@@ -1,5 +1,13 @@
 # Session handoff — current v1.0 test-candidate work
 
+## Home-save cold chain passes
+
+Native5c82d435 preserves four founder homes/bindings before and after cold activation, repeat
+controlled travel/return and another paid fire. Host02cbfc92 fixes diagnostic field parsing;
+full recipe/byte equality and both owned stops are closed. See STATUS for archive and failed
+attempts. Save occurs after return; absent-save, ordinary travel, damaged homes and unique bed
+use remain #230. No new Alpha release or all-building acceptance follows.
+
 ## Residence integration checkpoint
 
 Current development: 3119 staged sources / 3153 package files. City schema 5, archive 20 and

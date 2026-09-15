@@ -1184,13 +1184,13 @@
       "id": 32,
       "behaviour": "Persistent home and bed reservation across a same-city map visit",
       "prerequisites": "Genuine Quickstart founders and paid starter homes; internal adjacent same-city claim and controlled founder/resident transfer",
-      "transitions": "housed resident leaves home map -> exact absent-owner reservation -> visiting-map check-in and lodging -> controlled return -> ordinary home settlement pass",
+      "transitions": "real starter homes -> controlled map visit and return -> save/quit/fresh load -> pre/postactivation home comparison -> repeat visit using existing claim -> ordinary return pass -> new paid commission",
       "effects": "same map-qualified home/root and one exact reservation survive independently of current body binding",
-      "save_cold_load": "COVERAGE_GAP",
-      "negative": "Absent-owner capacity retained; building loss, frozen publication recovery and cold-load scenarios remain COVERAGE_GAP",
-      "driver": "Harness/KingdomHomeMapNativeProvider.cs; Tools/personas/home-map-native-check.persona",
+      "save_cold_load": "NATIVE_PASS for saving after return: exact four-founder homes/bindings before and after activation, repeat visit and new paid job; save while absent and historical migration remain COVERAGE_GAP",
+      "negative": "Absent-owner capacity retained; building loss, frozen publication recovery and saves while absent remain COVERAGE_GAP",
+      "driver": "Harness/KingdomHomeMapNativeProvider.cs; Harness/KingdomHomeMapSaveWitness.cs; Tools/personas/home-map-native-check.persona; Tools/personas/home-map-save-native-check.persona; Tools/home_map_save_check.py",
       "status": "NATIVE_PASS",
-      "note": "Native149daf47 completes8400 ordinary construction turns with four housed founders, two rooms, six beds and34 clear floor cells. Occupancy stays1->1; the exact resident occurs once; home-work89973561 and map-qualified plot persist while BoundZoneId changes to the visiting map. The ordinary return settlement pass preserves identity/capacity without fixture home repair. Internal claim and zero-energy transfers remain disclosed setup. No ordinary expansion/walking, second paid district, unloaded accounting, unique sleeping-place use or cold-load acceptance. Prior729f2332 failed archive remains retained; #230 stays open. Home-save harness extensions change the developer inventory; the recorded visit retains its original pin. Save/cold replay is pending.",
+      "note": "Native5c82d435 preserves all four founders and their canonical home/profile facts and exact body bindings through a real save/cold load. A repeat controlled visit uses the existing second claim, preserves the exact household owner and capacity, and returns without home repair. New paid fire debits one timber/two drams. Full3473/3475-input recipes and owned stops verified. Host02cbfc92 fixes field grammar only; archive proves unchanged runtime/Harness. Save occurs after return. No ordinary walking, saving while absent, unloaded economy, unique bed use, damaged-home or historical migration acceptance; #230 stays open. Earlier failed artifacts are retained in STATUS.",
       "evidence": [
         {
           "commit": "149daf472019ca2553f2ca19a26ea8ba037d87a7",
@@ -1202,6 +1202,17 @@
           "historicalScope": true,
           "inventoryDigest": "0eb1e60510cda728137064576c50affa0c9afe5a74676d438d09d7e526d124f7",
           "currentDevCoverage": false
+        },
+        {
+          "commit": "5c82d435bcea89eea7bbef29e9df760e8e9b603e",
+          "artifactPath": "home-map-save/5c82d435/native-3-revalidated-pass/result.json",
+          "artifactSha256": "3e00e5f5cf3686e9f50b7b7bddf21052a8cdfad1e3baf4deb5d361e19b9ed6d3",
+          "artifactBytes": 8216,
+          "verdict": "PASS - four founder home/profile records and exact body bindings before/after cold activation; repeat visit/return preserves home/capacity; next paid fire",
+          "scope": "Real Quickstart8400ordinaryturns and real save/quit/fresh load. Internal claiming and zero-energy transfers are controlled setup; save after return only. Host-only parser correction02cbfc92 with exact runtime/Harness equality; no saved-state repair. No ordinary travel, absent-save, unique bed use, damaged-home or historical migration acceptance.",
+          "historicalScope": false,
+          "inventoryDigest": "ab6a288a26d84e0b5959baa8f5a3807a4f0abbccbe2c9be84f72ee55e00eb670",
+          "currentDevCoverage": true
         }
       ]
     }
