@@ -10,6 +10,10 @@ records current acceptance.
 
 **Unreleased development**
 
+- Added native save/load coverage while a founder remains on another claimed map: exact home
+  authority and capacity survive before remote lookup, then the citizen returns and the city
+  pays for new construction. Ordinary walking, damaged homes and unique bed use remain open.
+
 - Added native home persistence coverage: all four founders retain canonical home facts and
   body bindings before/after cold activation, a repeat district visit retains capacity, and
   the loaded city pays for another building. Controlled transfers and saving after return

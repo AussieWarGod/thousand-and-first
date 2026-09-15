@@ -1,16 +1,26 @@
 # Current implementation and release evidence
 
-## Save while a citizen is away — native proof pending
+## Save while a citizen is away — native chain passes
 
-The separate absent-save persona now leaves one original founder on the existing adjacent
-claim. Its witness compares all four canonical home/profile records and exact body bindings
-before and after cold activation, verifies source-home capacity before the harness fetches the
-remote body, then returns that exact citizen through the ordinary settlement pass. Existing
-four-founder housing checks and the next paid commission still run afterward. The controlled
-transfers do not prove ordinary walking or an unloaded city economy. No absent-save native
-acceptance yet. All four engine compile modes, six host-oracle tests, 66 persona checks and
-documentation/metadata checks pass. This is Harness/tooling only. The completed
-after-return save proof below retains its original runtime/Harness pin.
+Native `a70658a9a9f12090ac51b7ae9e963cd6b74aa49a` saves after genuine Quickstart construction
+with three original founders home and one on the adjacent claimed map. All four canonical
+home/profile records and exact body bindings match before and after cold activation. The absent
+owner's household retains its three reservations before the harness fetches the remote body.
+The exact citizen returns through the ordinary settlement pass, all four founders remain housed
+in two enclosed rooms/six beds, and a new fire pays one timber/two drams once. No home repair.
+
+Closed archive: `home-map-absent/a70658a9/native-1-pass/result.json`; SHA-256
+`6fa93561cb08933f0f9631f51da7ea0695117b36b6a4d7322a87e9cde4496b55`. Complete source/load profiles have
+3,476/3,478 sealed inputs, including 3,435 C# files each; both strict logs and owned shutdowns
+verify. All four engine compile modes, six host-oracle tests, 66 persona checks, documentation/
+metadata checks and CI 34927613292 pass. Production bytes remain unchanged from 149daf47.
+
+Internal claiming and zero-energy transfers are controlled setup. The capacity check precedes
+the harness's remote lookup; it does not establish that the engine never loaded that map itself.
+Ordinary walking/work travel, unloaded-city accounting, unique physical bed use, home damage/
+replacement while absent and historical migration remain open in #230. Source audit identifies
+absent-owner condemnation timing as the next native target. All-building quality and function
+remain #229/#251; no new Alpha or Beta acceptance is claimed.
 
 ## Home-record cold load — controlled chain passes
 

@@ -1,5 +1,13 @@
 # Session handoff — current v1.0 test-candidate work
 
+## Absent-home cold chain passes
+
+Native a70658a9 saves with three founders home/one away, preserves exact authority before/after
+activation and capacity before remote lookup, returns the original body, and commissions another
+paid fire. Both processes stopped; archive closed. STATUS carries exact evidence. Next #230
+case is home loss/replacement/condemnation while absent and honest roof-loss chronology. Existing
+ordinary travel, unique beds and all-building #229/#251 acceptance remain open. No Alpha release.
+
 ## Home-save cold chain passes
 
 Native5c82d435 preserves four founder homes/bindings before and after cold activation, repeat

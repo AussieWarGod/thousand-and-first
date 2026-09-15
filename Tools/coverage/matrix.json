@@ -1184,13 +1184,13 @@
       "id": 32,
       "behaviour": "Persistent home and bed reservation across a same-city map visit",
       "prerequisites": "Genuine Quickstart founders and paid starter homes; internal adjacent same-city claim and controlled founder/resident transfer",
-      "transitions": "real starter homes -> controlled map visit and return -> save/quit/fresh load -> pre/postactivation home comparison -> repeat visit using existing claim -> ordinary return pass -> new paid commission",
+      "transitions": "real starter homes -> controlled map visit/return -> leave original citizen away -> real save/quit/fresh load -> pre/postactivation authority comparison -> source capacity before remote lookup -> exact-body return -> ordinary settlement pass -> new paid commission",
       "effects": "same map-qualified home/root and one exact reservation survive independently of current body binding",
-      "save_cold_load": "NATIVE_PASS for saving after return: exact four-founder homes/bindings before and after activation, repeat visit and new paid job; save while absent and historical migration remain COVERAGE_GAP",
-      "negative": "Absent-owner capacity retained; building loss, frozen publication recovery and saves while absent remain COVERAGE_GAP",
-      "driver": "Harness/KingdomHomeMapNativeProvider.cs; Harness/KingdomHomeMapSaveWitness.cs; Tools/personas/home-map-native-check.persona; Tools/personas/home-map-save-native-check.persona; Tools/home_map_save_check.py",
+      "save_cold_load": "NATIVE_PASS for saving after return and while one citizen remains away: exact four-founder home/profile/binding authority before and after activation, capacity before harness remote lookup, exact-body return and new paid job; damaged-home and historical migration remain COVERAGE_GAP",
+      "negative": "Absent-owner capacity survives save/cold load; home loss/replacement/condemnation, frozen publication recovery and interrupted rehouse remain COVERAGE_GAP",
+      "driver": "Harness/KingdomHomeMapNativeProvider.cs; Harness/KingdomHomeMapSaveWitness.cs; Tools/personas/home-map-native-check.persona; Tools/personas/home-map-save-native-check.persona; Tools/home_map_save_check.py; Harness/KingdomHomeMapAbsentWitness.cs; Harness/KingdomHomeMapAbsentWitness.Travel.cs; Tools/personas/home-map-absent-save-native-check.persona; Tools/home_map_absent_check.py",
       "status": "NATIVE_PASS",
-      "note": "Native5c82d435 preserves all four founders and their canonical home/profile facts and exact body bindings through a real save/cold load. A repeat controlled visit uses the existing second claim, preserves the exact household owner and capacity, and returns without home repair. New paid fire debits one timber/two drams. Full3473/3475-input recipes and owned stops verified. Host02cbfc92 fixes field grammar only; archive proves unchanged runtime/Harness. Save occurs after return. No ordinary walking, saving while absent, unloaded economy, unique bed use, damaged-home or historical migration acceptance; #230 stays open. Earlier failed artifacts are retained in STATUS.",
+      "note": "Nativea70658a9 saves with3originalfoundershome/1away. Exact four-founder canonical home/profile and body-binding authority survives pre/postactivation. Household capacity3 retained before harness remote lookup; exact original citizen returns through ordinary settlement pass, then4housed founders/2rooms/6beds/34clearfloor and another paid fire. Full3476/3478sealed-input recipes, strict logs and owned stops verify. Internal claiming/zero-energy transfers are controlled setup; no ordinary walking, unloaded economy, unique bed use, home-damage chronology or historical migration acceptance. #230 and all-building #229/#251 remain open.",
       "evidence": [
         {
           "commit": "149daf472019ca2553f2ca19a26ea8ba037d87a7",
@@ -1213,6 +1213,17 @@
           "historicalScope": true,
           "inventoryDigest": "ab6a288a26d84e0b5959baa8f5a3807a4f0abbccbe2c9be84f72ee55e00eb670",
           "currentDevCoverage": false
+        },
+        {
+          "commit": "a70658a9a9f12090ac51b7ae9e963cd6b74aa49a",
+          "artifactPath": "home-map-absent/a70658a9/native-1-pass/result.json",
+          "artifactSha256": "6fa93561cb08933f0f9631f51da7ea0695117b36b6a4d7322a87e9cde4496b55",
+          "artifactBytes": 7862,
+          "verdict": "PASS - save while original citizen is away; four-founder authority before/after activation; reserved capacity before remote lookup; exact-body return and next paid fire",
+          "scope": "Real Quickstart construction, controlled baseline district visit, then save while one original citizen remains away. Exact four-founder home/profile and binding authority before and after activation; source-home capacity before harness remote lookup; exact citizen returns through ordinary settlement reconciliation, four housed founder census and next paid commission. Internal claiming and zero-energy transfers are disclosed. No ordinary walking, unloaded-city economy, damaged-home recovery, unique physical bed use or historical migration acceptance.",
+          "historicalScope": false,
+          "inventoryDigest": "185db41c89ea9d50be958ea849f9aa5443d47dfcbca3e47de371d1ed3aa0fdee",
+          "currentDevCoverage": true
         }
       ]
     }
