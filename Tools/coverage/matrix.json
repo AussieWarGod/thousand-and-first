@@ -1221,9 +1221,9 @@
           "artifactBytes": 7862,
           "verdict": "PASS - save while original citizen is away; four-founder authority before/after activation; reserved capacity before remote lookup; exact-body return and next paid fire",
           "scope": "Real Quickstart construction, controlled baseline district visit, then save while one original citizen remains away. Exact four-founder home/profile and binding authority before and after activation; source-home capacity before harness remote lookup; exact citizen returns through ordinary settlement reconciliation, four housed founder census and next paid commission. Internal claiming and zero-energy transfers are disclosed. No ordinary walking, unloaded-city economy, damaged-home recovery, unique physical bed use or historical migration acceptance.",
-          "historicalScope": false,
+          "historicalScope": true,
           "inventoryDigest": "185db41c89ea9d50be958ea849f9aa5443d47dfcbca3e47de371d1ed3aa0fdee",
-          "currentDevCoverage": true
+          "currentDevCoverage": false
         }
       ]
     }

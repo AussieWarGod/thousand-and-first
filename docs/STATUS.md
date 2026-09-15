@@ -1,5 +1,18 @@
 # Current implementation and release evidence
 
+## Absent-owner home damage — native reproduction pending
+
+A new controlled fault scenario uses the real Quickstart home and an original citizen on the
+adjacent claim. It asks the current production rung-roof capture to include that owner, then
+sets a disclosed condemnation fault, calls the production roof-loss callback, reconciles the
+home map and checks the exact loss tick. Controlled wear restoration and physical return must
+allow ordinary lodging to rehouse everyone without fixture home-row repair. This is a diagnostic
+of ownership/chronology; it does not prove paid repair or an ordinary full subsidence trajectory.
+Current source capture enumerates local citizen bodies and its apply proof requires local
+bindings. All four engine compile modes, 66 persona checks and documentation/metadata checks
+pass. The first persona check rejected a diagnostic row listed as an executable expectation;
+that declaration is corrected. Native reproduction remains pending.
+
 ## Save while a citizen is away — native chain passes
 
 Native `a70658a9a9f12090ac51b7ae9e963cd6b74aa49a` saves after genuine Quickstart construction
