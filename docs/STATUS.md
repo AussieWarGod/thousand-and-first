@@ -1,6 +1,6 @@
 # Current implementation and release evidence
 
-## Recruitment admission and report follow-through — validation pending
+## Recruitment report passed; admission retry pending
 
 Recruitment status now follows the configured civic-story setting: an ordinary extension recruit
 outside the story-guest allowlist is not hidden when civic stories are disabled. A synchronous
@@ -8,12 +8,28 @@ native probe replaces only the fixture's catalogue and exact option read, verifi
 and requires no option epoch, candidate, citizen or clock mutation. Original catalogue and
 reputation are restored. It does not exercise the options UI or write the settings file.
 
+Native `807a89fc` passed the expanded 18,000-requested / 18,001-actual-turn scenario,
+including both report-policy routes, twelve native samples, hostile waiting, original-head
+recovery and retained identity after renewed hostility. The final road-processing checkpoint
+matched due tick 292801; this empty camp does not prove productive construction. Full pinned
+recipe (3,463 inputs / 3,422 C#), strict log, guarded waits, persona and owned shutdown passed.
+Archive: `recruitment/807a89fc/native-4-pass/result.json`, SHA-256
+`4fc3d0ab6fda8309c80b9222c7d3b3449b7b16ecf40a1cebe80df693431c42c4`.
+Synthetic catalogue/option-read controls and unplaced samples remain scoped as above.
+
 The existing Quickstart guest/save scenario now verifies the actual hosted/enrolled native body
 against its frozen blueprint and origin; citizenship retains its name/origin. Save and cold-load
 observations additionally compare native culture/species, the real resident roll and bound map,
 and starter-home assignment. These added assertions are pending native execution. The initial
 harness compile found a definite-assignment error in the new resident-row assertion; corrected
-before launching. Prior accepted native inputs below are historical for this new delta.
+before launching. The first real admission run then refused at its second startup observation:
+`founding reputation probe already ran`. Both lifecycle and guest setup check the same opening.
+The harness now applies its controlled reputation change once and validates the complete retained
+witness on every observation, including repeated startup. No production change for this correction.
+The owned game is stopped; failed full-recipe archive is
+`recruitment-guest-save/807a89fc/native-1-fail/result.json`, SHA-256
+`c3d10b90eb1b500dfaaa398f35a7fe26fde9690b048d950c4ac483b47013c193`.
+Admission and cold-load assertions have not yet passed. Prior native inputs retain original scope.
 
 ## Coherent recruitment — scoped native validation, admission still pending
 
@@ -65,7 +81,8 @@ Development compile scope: 3112 sources, baseline and compatibility symbols.
 Current census: 3112 staged C# files; 441,029 physical lines; zero at or above 300 lines.
 Direct `XRL` imports: 1454 files, 0 over the line limit. Cold-install inventory: 3146 files.
 Inventory SHA-256: `e9e71e2de55a777def5a6ddb283ab4b493b2e555ae2991b0543c668296017aa4`.
-Structural review remains stale. Prior evidence below retains its original inputs. Public 0.3.7 is unchanged.
+Automated structural review binds this census in STRUCTURE_REVIEW.json and
+STRUCTURE_REVIEW_RECRUITMENT.md. Prior evidence retains its original inputs. Public 0.3.7 is unchanged.
 
 ## Strike closure feedback — accepted native scope (abf41251)
 

@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "inventorySha256": "10b6325fb3e23b660a5609fe80485745104f2d925c523bb278af010edec488e2",
+  "inventorySha256": "e9e71e2de55a777def5a6ddb283ab4b493b2e555ae2991b0543c668296017aa4",
   "exceptions": [],
   "reviewedBy": "Codex root automated structural review",
-  "completedUtc": "2026-09-14T23:18:23Z",
+  "completedUtc": "2026-09-15T00:44:39Z",
   "oneResponsibility": {
     "status": "passed",
-    "notes": "Compared all 3108 production paths with dev50410440: 3105 byte-identical, two changed, one added, none removed. Exact comparison log:/home/r/work/taf-scratch/behaviour-evidence/strike-closure/abf41251/structural-review-1/production-comparison.json; census log:/home/r/work/taf-scratch/behaviour-evidence/strike-closure/abf41251/structural-review-1/census.json. Review docs/STRUCTURE_REVIEW_STRIKE_CLOSURE.md covers the pure completed-work diagnostic, current engine identity adapter and existing public-action refusal. No saved fields, wire formats, permission, material or supersession authority changes. Native fire/larder accepted within STATUS scope; no cold-load or whole-catalogue acceptance inferred."
+    "notes": "Compared all 3112 production paths with dev ec29b4cd: 3102 byte-identical, six changed, four added, none removed. Exact comparison log:/home/r/work/taf-scratch/behaviour-evidence/recruitment/807a89fc/structural-review-1/production-comparison.json; census log:/home/r/work/taf-scratch/behaviour-evidence/recruitment/807a89fc/structural-review-1/census.json. Automated semantic delta review: docs/STRUCTURE_REVIEW_RECRUITMENT.md. Pure bounded weights, native catalogue/naming boundaries, shared plan construction, exact empty-pool waiting and read-only report policy reviewed; no saved fields or wire format changes. Native scope and pending admission/cold-load work remain in STATUS."
   },
   "protocolsAtBoundaries": {
     "status": "passed",
-    "notes": "Compared all 3108 production paths with dev50410440: 3105 byte-identical, two changed, one added, none removed. Exact comparison log:/home/r/work/taf-scratch/behaviour-evidence/strike-closure/abf41251/structural-review-1/production-comparison.json; census log:/home/r/work/taf-scratch/behaviour-evidence/strike-closure/abf41251/structural-review-1/census.json. Review docs/STRUCTURE_REVIEW_STRIKE_CLOSURE.md covers the pure completed-work diagnostic, current engine identity adapter and existing public-action refusal. No saved fields, wire formats, permission, material or supersession authority changes. Native fire/larder accepted within STATUS scope; no cold-load or whole-catalogue acceptance inferred."
+    "notes": "Compared all 3112 production paths with dev ec29b4cd: 3102 byte-identical, six changed, four added, none removed. Exact comparison log:/home/r/work/taf-scratch/behaviour-evidence/recruitment/807a89fc/structural-review-1/production-comparison.json; census log:/home/r/work/taf-scratch/behaviour-evidence/recruitment/807a89fc/structural-review-1/census.json. Automated semantic delta review: docs/STRUCTURE_REVIEW_RECRUITMENT.md. Pure bounded weights, native catalogue/naming boundaries, shared plan construction, exact empty-pool waiting and read-only report policy reviewed; no saved fields or wire format changes. Native scope and pending admission/cold-load work remain in STATUS."
   }
 }

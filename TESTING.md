@@ -6,7 +6,10 @@ The report now respects configured civic-story policy. The extended native wait 
 uses one real developer-only extension blueprint outside the story-guest allowlist and a scoped
 option-read override; it requires the report and both selection routes to agree without publishing
 an option epoch or arrival. Guest action/save tests add actual native body/name/origin/culture/species
-and resident-map assertions. New native execution is pending; older proof remains scoped below.
+and resident-map assertions. Report-policy and recovery execution passed at `807a89fc` (archive in STATUS). Admission
+execution found duplicate startup initialization in the composed harness; the retained witness
+now permits repeated observation without applying its synthetic reputation change again.
+The failed run is archived; real admission and cold-load retry remain pending.
 
 ## Coherent recruitment: scoped native PASS, admission pending
 
