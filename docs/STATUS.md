@@ -1,6 +1,6 @@
 # Current implementation and release evidence
 
-## Multi-map home diagnostic — native execution pending
+## Multi-map home diagnostic — occupancy defect observed; full probe pending
 
 A new `home-map-native-check` scenario first completes genuine Quickstart housing, then checks
 whether one original founder keeps their bed reservation, home work identity and home plot while
@@ -8,8 +8,21 @@ on another local map of the same city. It uses the internal adjacent claim API a
 zero-energy resident transfer; public expansion eligibility, ordinary walking, a second paid
 district and cross-map cold load are not covered. The assertions require correct behavior and
 are expected to expose the local-only housing reads described in #230; no failure is acceptance.
-No production fix is claimed yet. The original resident is physically returned without repairing
-a lost home property or row. Previous recruitment evidence below retains its original inputs.
+No production fix is claimed yet. Native319c20b4 completed 8,400 ordinary turns with all four
+founders housed, two rooms and six beds, then observed projected home occupancy drop from one
+to zero when the original owner was transferred away. The remaining row/plot checks refused
+because the fixture called stock-backed settlement APIs on inactive ground. The fixture now
+transfers the founder too, proves the actual active map before those calls, and returns both
+original bodies without repairing home state. This correction is pending native execution.
+
+The failed run is fully source/recipe-bound (3,464 inputs, 3,423 C#) and owned-stopped; its strict
+log and guarded-wait checker correctly reject the incomplete failed script. Archive:
+`home-map/319c20b4/native-2-fail/result.json`, SHA-256
+`f043c06388c29806a5576f48750bd6d04aaaa11e2a5e2e96969787359fe18c67`.
+An earlier preparation-only failure omitted the required explicit advisor environment setting;
+no game launched. It is retained in `home-map/319c20b4/prepare-1-fail/result.json` (SHA-256
+`3f4ba4fd3c3bd45bcc0fcc60f3a9ec7ce89d3223cbfbf171306e9a467e50d6d8`).
+Previous recruitment evidence below retains its original inputs.
 
 ## Recruitment admission, housing and cold load — scoped native PASS
 

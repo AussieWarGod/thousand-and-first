@@ -3,7 +3,9 @@
 ## Multi-map home diagnostic pending
 
 `home-map-native-check` requires a paid Quickstart home to remain reserved for the same founder
-while a controlled transfer places them on another claimed local map. Native result pending.
+while a controlled transfer places them on another claimed local map. Native319c20b4 observed
+occupancy1→0, then refused the remaining checks because the fixture had not activated that map.
+The fixture now moves both founder and resident and verifies active ground; retry pending.
 Internal claim entry and zero-energy transfer are disclosed; no normal expansion, pedestrian
 travel, second-district construction or cold-load acceptance. See issue #230 and STATUS.
 
