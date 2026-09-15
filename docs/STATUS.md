@@ -9,6 +9,14 @@ second claim, and retains the normal next paid construction action. Source and h
 checks are in progress; this is not cold-load acceptance. Save occurs after return, so saving
 while a citizen is absent remains separate required coverage.
 
+First native attempt at `cafe0866` proves the exact four home records and body bindings before
+and after cold activation. The repeated visit then incorrectly requested a fresh-generation
+encounter witness. The harness now uses the existing loaded-stage check, which requires zero
+new-generation reservations; retry pending. Closed failed archive:
+`home-map-save/cafe0866/native-1-fail/result.json`, SHA-256
+`eae9c6d02d933fffacec6903f08cf04dc9b60b48c6548519d615b19ecf36c99f`.
+Both source and cold profiles stopped; full 3,473/3,475-input recipes verified. No cold-chain PASS.
+
 ## Residence integration checkpoint
 
 Draft PR #255 adds bounded map/plot/optional-bed and household-profile facts to the existing

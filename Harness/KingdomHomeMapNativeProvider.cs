@@ -58,7 +58,8 @@ namespace ThousandAndFirst.Harness
 			Require(game != null && homeZone != null && system?.Founded == true
 				&& KingdomLodging.Enabled && !KingdomSurvey.HasBoundPass && !KingdomScenarioAdvance.Pending,
 				"requires an idle genuine Quickstart with lodging enabled");
-			Require(KingdomQuickstartSettlementChecks.Observe(game, homeZone, system, "grown", out string failure), failure);
+			Require(KingdomQuickstartSettlementChecks.Observe(game, homeZone, system,
+				ExistingAway ? "loaded" : "grown", out string failure), failure);
 			Require(KingdomQuickstartRules.TryDecode(game.GetStringGameState(KingdomQuickstartRules.ReceiptState),
 				out var receipt), "original founder receipt absent");
 			GameObject resident = homeZone.FindObjectByID(receipt.FounderObjectIds[0]);
