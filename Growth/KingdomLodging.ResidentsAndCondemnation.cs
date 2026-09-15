@@ -68,7 +68,7 @@ namespace ThousandAndFirst
 			foreach (GameObject item in KingdomSurvey.ObjectsFor(Z))
 			{
 				if (KingdomCitizenship.BelongsTo(system, item)
-					&& item.GetStringProperty(HomePlotIdProperty) == plotId)
+					&& LocalHomePlot(Z, item) == plotId)
 				{
 					list.Add(item);
 				}

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using HarmonyLib;
@@ -59,7 +60,10 @@ namespace ThousandAndFirst.Harness
 				&& original.HomeWorkId > 0 && original.BoundZoneId == homeZone.ZoneID, "original resident row lacks its real home");
 			string plot = resident.GetStringProperty(KingdomLodging.HomePlotIdProperty);
 			Require(!string.IsNullOrEmpty(plot), "original home plot absent");
-			int occupiedBefore = Occupants(system, homeZone, plot);
+			Require(KingdomResidenceRules.TryDecode(original.Residence, out var originalResidence)
+				&& KingdomResidenceRules.SameHome(originalResidence, homeZone.ZoneID, plot),
+				"original map-qualified home is absent");
+			int occupiedBefore = Occupants(system, homeZone, plot, residentId);
 			Require(occupiedBefore > 0, "home has no projected occupants before departure");
 			string awayId = homeZone.GetZoneIDFromDirection("E");
 			Require(!string.IsNullOrEmpty(awayId) && awayId != homeZone.ZoneID
@@ -94,7 +98,7 @@ namespace ThousandAndFirst.Harness
 				Require(resident.SystemMoveTo(destination, energyCost: 0, forced: false,
 					ignoreCombat: true, ignoreGravity: false, noStack: true)
 					&& resident.CurrentZone == away && resident.IDIfAssigned == bodyId, "exact resident transfer refused");
-				int occupiedAway = Occupants(system, homeZone, plot);
+				int occupiedAway = Occupants(system, homeZone, plot, residentId);
 				reserved = occupiedAway == occupiedBefore;
 				Evidence.Append("; occupied-before=").Append(occupiedBefore).Append(" occupied-away=").Append(occupiedAway);
 				Cell playerLanding = null;
@@ -113,7 +117,10 @@ namespace ThousandAndFirst.Harness
 					KingdomSurvey survey = KingdomSurvey.ActiveFor(away);
 					KingdomCity.CheckIn(system, away, survey, game.TimeTicks);
 					Require(KingdomResidents.TryResident(system.City, residentId, out var visited), "visited resident row missing");
-					rowKept = visited.HomeWorkId == original.HomeWorkId;
+					rowKept = visited.HomeWorkId == original.HomeWorkId
+						&& KingdomResidenceRules.TryDecode(visited.Residence, out var visitedResidence)
+						&& KingdomResidenceRules.SameHome(visitedResidence, homeZone.ZoneID, plot)
+						&& visitedResidence.BedId == originalResidence.BedId;
 					Evidence.Append("; visited-home=").Append(visited.HomeWorkId).Append(" visited-bound=").Append(visited.BoundZoneId);
 					Require(visited.BoundZoneId == awayId, "visit did not bind the same living resident to the actual map");
 					KingdomLodging.OnSettlementPass(system, away, survey);
@@ -138,9 +145,25 @@ namespace ThousandAndFirst.Harness
 			}
 			Require(game.Turns == turns && game.TimeTicks == tick, "controlled transfers advanced world time");
 			Require(reserved && rowKept && plotKept, "visit lost bed reservation, resident home identity or home plot");
+			Require(KingdomSurvey.TryBindLocalOperation(homeZone, system, out var returnedScope, out failure), failure);
+			using (returnedScope)
+			{
+				KingdomSurvey survey = KingdomSurvey.ActiveFor(homeZone);
+				KingdomCity.CheckIn(system, homeZone, survey, game.TimeTicks);
+				KingdomLodging.OnSettlementPass(system, homeZone, survey);
+				Require(KingdomResidents.TryResident(system.City, residentId, out var returned)
+					&& returned.BoundZoneId == homeZone.ZoneID && returned.HomeWorkId == original.HomeWorkId
+					&& KingdomResidenceRules.TryDecode(returned.Residence, out var returnedHome)
+					&& KingdomResidenceRules.SameHome(returnedHome, homeZone.ZoneID, plot)
+					&& returnedHome.BedId == originalResidence.BedId
+					&& resident.GetStringProperty(KingdomLodging.HomePlotIdProperty) == plot,
+					"ordinary settlement pass did not preserve the returned resident home");
+			}
+			Require(Occupants(system, homeZone, plot, residentId) == occupiedBefore, "return changed reserved capacity");
+			Evidence.Append("; return-settlement-pass=true reservation-owner-exact=true");
 		}
 
-		private static int Occupants(KingdomSystem System, Zone Zone, string Plot)
+		private static int Occupants(KingdomSystem System, Zone Zone, string Plot, int ResidentId)
 		{
 			Require(KingdomSurvey.TryBindLocalOperation(Zone, System, out var scope, out string failure), failure);
 			using (scope)
@@ -148,8 +171,22 @@ namespace ThousandAndFirst.Harness
 				Require(KingdomSurvey.ActiveFor(Zone).TryBenefits(out var benefits, out failure), failure);
 				var method = AccessTools.Method(typeof(KingdomLodging), "ProjectedOccupancy");
 				Require(method != null, "production occupancy reader absent");
-				var occupied = (Dictionary<string, List<GameObject>>)method.Invoke(null, new object[] { Zone, benefits });
-				return occupied.TryGetValue(Plot, out var residents) ? residents.Count : 0;
+				var occupied = method.Invoke(null, new object[] { Zone, benefits }) as IDictionary;
+				Require(occupied != null && occupied.Contains(Plot), "reserved household is absent");
+				var residents = occupied[Plot] as IList;
+				Require(residents != null, "household membership is unavailable");
+				int matches = 0, totalMatches = 0;
+				foreach (DictionaryEntry household in occupied)
+					foreach (object member in (IList)household.Value)
+					{
+						var field = AccessTools.Field(member.GetType(), "ResidentId");
+						Require(field != null, "household has no exact resident identity");
+						if ((int)field.GetValue(member) != ResidentId) continue;
+						totalMatches++;
+						if ((string)household.Key == Plot) matches++;
+					}
+				Require(matches == 1 && totalMatches == 1, "resident reservation missing or duplicated");
+				return residents.Count;
 			}
 		}
 

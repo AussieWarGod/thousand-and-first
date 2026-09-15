@@ -1,14 +1,18 @@
 # Changelog
 
-Current 3116-file census is line-cap green: 441,275 physical lines; direct `XRL`
-imports occur in 1454 files, 0 of them over the line limit. Inventory SHA-256: `27161ede9c5a702b8c80514469eeab77962e4da020895849ff53f9fed11bef03`.
-The cold-install inventory contains 3150 files. This is not evidence of a new public installation.
+Current 3119-file census is line-cap green: 441,537 physical lines; direct `XRL`
+imports occur in 1457 files, 0 of them over the line limit. Inventory SHA-256: `447c50cfc41e98d6132695cbcf4c2a01b975093cd7f4eed99c12bdd52ec937f5`.
+The cold-install inventory contains 3153 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Historical entries retain their original scope;
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md)
 records current acceptance.
 
 **Unreleased development**
+
+- Integrated map-qualified home authority into check-in, assignment, absent household occupancy,
+  local room reads and laboratory rehouse/departure recovery. The strengthened native regression
+  is awaiting replay; unique physical sleeping places and full multi-map acceptance remain open.
 
 - Added residence persistence groundwork: map-qualified homes, optional bed identities and
   observed household facts survive model/archive/death-receipt round trips. Legacy unknown

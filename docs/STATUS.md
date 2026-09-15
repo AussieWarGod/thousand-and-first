@@ -1,26 +1,31 @@
 # Current implementation and release evidence
 
-## Residence persistence checkpoint — live housing integration still pending
+## Residence integration checkpoint — native replay pending
 
 Draft PR #255 adds bounded map/plot/optional-bed and household-profile facts to the existing
 resident row. City schema 5 and archive version 20 preserve them; older archives retain their
 frozen shapes and authority-hash bases. Version-4 frozen subsidence migration changes only the
-new column and storage header. Death receipts retain the new home facts without changing old
-unknown-residence comparison bytes. Malformed current storage and duplicate live bed identities
-refuse without truncating residents, through creation, single-row and whole-roster mutations.
+new column and storage header. Death receipts retain new home facts without changing old
+unknown-residence comparison bytes. Malformed storage and duplicate live bed claims refuse.
+
+Live assignment now publishes map-qualified home authority before the body projection. Check-in
+preserves remote homes; occupancy reserves absent owners and their saved household traits.
+Source-ground reconciliation refreshes replaced roots and observes lost/condemned homes. Local
+room, osmosis and reporting reads distinguish visitors from local household members. Lab rehouse
+and departure recovery use the same home writer. Unchanged local arrival hashes retain v1 bytes.
+The native regression now also asserts exact reservation ownership and the ordinary return pass.
 
 Full licensed source validation passes: **15,048 main / 5,934 portable cases, zero skips**.
-This is a persistence/model checkpoint, not a fix to live assignment or admission. No new native
-acceptance is claimed; the three reproduced home-map failures below remain open. Next: capture
-actual home facts, retain absent household capacity, handle changed home buildings, and prove
-travel/failure/recovery plus real save/cold load. #230 and all-building #229/#251 remain open.
+Native replay is pending; the retained prior counterexample is not superseded by source checks.
+Unique physical bed allocation, ordinary travel, absent-home damage chronology, failure/recovery
+and real save/cold load remain required. #230 and all-building #229/#251 remain open.
 
-Current census: 3116 staged C# files; 441,275 physical lines; zero at or above 300 lines.
-Inventory SHA-256: `27161ede9c5a702b8c80514469eeab77962e4da020895849ff53f9fed11bef03`.
-Engine gate passes for 3116 sources, baseline and compatibility symbols, plus both developer
-harness modes. Cold-install inventory: 3150 files.
-See [the structural review](STRUCTURE_REVIEW_RESIDENCE.md). Checks and comparison are retained at
-`home-map/residence-storage-20260915-2/`. Public Alpha 0.3.7 is unchanged.
+Current census: 3119 staged C# files; 441,537 physical lines; zero at or above 300 lines.
+Inventory SHA-256: `447c50cfc41e98d6132695cbcf4c2a01b975093cd7f4eed99c12bdd52ec937f5`.
+Engine gate checks 3119 sources, baseline and compatibility symbols, plus both developer
+harness modes. Cold-install inventory: 3153 files.
+See [the structural review](STRUCTURE_REVIEW_RESIDENCE_LIVE.md). Source comparison and census:
+`home-map/residence-live-20260915-1/`. Public Alpha 0.3.7 is unchanged.
 
 ## Multi-map home diagnostic — three production failures reproduced
 
@@ -154,7 +159,7 @@ The original Beta goal and building issues #229/#251 stay open.
 
 Development compile scope: 3112 sources, baseline and compatibility symbols.
 Current census: 3112 staged C# files; 441,029 physical lines; zero at or above 300 lines.
-Direct `XRL` imports: 1454 files, 0 over the line limit. Cold-install inventory: 3146 files.
+Direct `XRL` imports: 1457 files, 0 over the line limit. Cold-install inventory: 3146 files.
 Inventory SHA-256: `e9e71e2de55a777def5a6ddb283ab4b493b2e555ae2991b0543c668296017aa4`.
 Automated structural review binds this census in STRUCTURE_REVIEW.json and
 STRUCTURE_REVIEW_RECRUITMENT.md. Prior evidence retains its original inputs. Public 0.3.7 is unchanged.
@@ -361,7 +366,7 @@ stopped; all 3,449 warm and 3,451 cold inputs match their pinned recipes, with s
 lifecycle/persona checks passing. This is source-checkout evidence, not a subscribed package claim.
 
 Closed archive: `defensive-founders/49af5f5e/completed-warm-cold-1/result.json`, SHA-256
-`85463ec430dc300348dae303569b7c16926f7b0fab80e13388145489ced7f6ed`.
+`85463ec430dc300348dae303569b7c16926f7b0fab80e13388145789ced7f6ed`.
 Focused 41 founder cases, four engine compile modes, structural/documentation gates and CI
 `34890102162` pass. Earlier paid-housing evidence below retains its own inputs and scope.
 
@@ -3400,7 +3405,7 @@ departure field and nested role snapshot. Independent bounded source reviews cle
 
 Full suites pass **13498 Taf / 4885 Portable**, zero skips; **440 Python Tools** tests pass.
 Strict four-mode C#7.3 plus ABI pass. Current census:3045 staged C# files /431,086 physical lines /
-1414 direct `XRL` imports /zero line-cap failures. Ordinary inputs3041/3045, developer3146/3150
+1414 direct `XRL` imports /zero line-cap failures. Ordinary inputs3041/3045, developer3146/3153
 with105 Harness shards. The resolver covers 3045 sources, baseline and compatibility symbols
 selecting the ordinary inputs above. Direct `XRL` imports: 1414 files, 0 over the line limit.
 Staging list:3076 files, not an installation. Inventory SHA-256: `ef84f9a05d894bdbc281e20aa1b5f02f45f4b0ca5a96771ffbeb3da903ad3f3f`; compiler
@@ -3418,7 +3423,7 @@ the exact [structural semantic review](STRUCTURE_REVIEW_0_3_1.md) is now bound a
 A fresh ss5 save/cold-load pair passed at the preceding checkpoint, before the final owner/version
 corrections; it is not retroactively relabeled. Final version-aligned native Prepared-roof death
 smoke passes6/6: two actual engine deaths, exact accounting and unchanged roof/parent state,
-then two no-replay recoveries. All3150 C# launch inputs match; owned game stopped and independent
+then two no-replay recoveries. All3153 C# launch inputs match; owned game stopped and independent
 idle verification passes. [Native evidence](/tmp/taf-031-death-native.mTKWRK/README.md).
 Clean private packaging and actual upload/subscribed-content verification still block0.3.1.
 Repeat-release finalization is a separate tooling lane;
@@ -3574,13 +3579,13 @@ production factions, saved Running and serialization untouched. Final direct-sou
 **12874 Taf / 4396 Portable**, zero skips, plus strict C#7.3 four modes and Hearthpyre ABI.
 Sixteen new concurrency cases and two dispatcher source cases cover this seam; exact journal
 format remains unchanged. Compiler digest `46addd06fe80c042e3db4180a143d196de798df36d4b6b10f702466cd9c089d8`
-matches before/after; 101 Harness sources, developer3112/3116. Evidence:
+matches before/after; 101 Harness sources, developer3112/3119. Evidence:
 [load-barrier preflight](/tmp/taf-load-barrier-sealed.4TZOfh/README.md).
 Fresh corrected native pair now **PASS**: actual save04:45:55.968 UTC and cold load05:04:51.358 UTC,
 same GameID65f23899-c2fb-4b93-a65f-7cf98f4b1a80, exact35 loaded bodies and interrupted release
 recovery/report/no-replay. Both strict journals and raw logs pass, including post-stop recheck.
 Recovery used the **explicit production prepass**, not native zone activation. Owned processes
-stopped, independent idle checks pass, and all3116 C# inputs match each launch seal. The cold
+stopped, independent idle checks pass, and all3119 C# inputs match each launch seal. The cold
 profile contains3156 sealed input files. Evidence: [fresh native pair](/tmp/taf-load-barrier-native.KeMv91/README.md).
 This developer witness does not sign ordinary gameplay or historical-save compatibility.
 

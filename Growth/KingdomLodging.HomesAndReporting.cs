@@ -143,7 +143,7 @@ namespace ThousandAndFirst
 			{
 				return null;
 			}
-			string plotId = Resident.GetStringProperty(HomePlotIdProperty);
+			string plotId = LocalHomePlot(Z, Resident);
 			if (string.IsNullOrEmpty(plotId))
 			{
 				return null;
@@ -176,6 +176,7 @@ namespace ThousandAndFirst
 				LogBenefitFailure(Z, "roll", failure);
 				return " {{r|(lodging evidence unavailable)}}";
 			}
+			if (HasRemoteHome(Z, resident)) return " {{K|(home in another district)}}";
 			GameObject home = HomeOf(Z, resident, benefits);
 			if (home == null)
 			{
@@ -215,7 +216,7 @@ namespace ThousandAndFirst
 			for (int i = 0; i < residents.Count; i++)
 			{
 				GameObject resident = residents[i];
-				if (HomeOf(Z, resident, benefits) != null)
+				if (HasRemoteHome(Z, resident) || HomeOf(Z, resident, benefits) != null)
 				{
 					housed++;
 					continue;

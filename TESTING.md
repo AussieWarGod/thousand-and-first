@@ -1,6 +1,6 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
-## Residence persistence checkpoint — model coverage only
+## Residence integration checkpoint — native replay pending
 
 City schema 5 / archive 20 add canonical map-qualified residence facts. Full licensed suites
 pass 15,048 main and 5,934 portable cases, zero skips. Coverage includes named-field and
@@ -8,12 +8,12 @@ historical archive migration, unchanged older hash bases, frozen subsidence clai
 receipts, malformed columns and duplicate live bed claims through all resident mutation paths.
 `home-map/residence-storage-20260915-2/` retains the checks and full production comparison.
 
-Four engine compile modes pass across 3116 production C# sources; the cold-install inventory contains 3150 files.
-No native PASS is added. Existing location-based lodging still needs to consume the new record;
-next acceptance must exercise real home ownership, absent capacity, changed buildings and
-travel/save recovery. Keep the native regression below as DEFECT until that behavior passes.
+Four engine compile modes pass across 3119 production C# sources; the cold-install inventory contains 3153 files.
+No native PASS is added. Live consumers now preserve remote homes and absent reservations.
+The revised fixture asserts exact owner identity and the ordinary return pass. Native travel,
+changed buildings and save recovery remain required; the regression stays DEFECT until replay.
 
-## Multi-map home regression — fails on current production
+## Retained multi-map home regression — prior production failure
 
 `home-map-native-check` completes real Quickstart homes, then verifies bed reservation, home
 work ID and home plot during a controlled visit to another claimed local map. Native729f2332
@@ -100,7 +100,7 @@ still housed and defensive after 8,400 ordinary turns, two enclosed homes, six b
 floor cells. The next paid commission debits one timber/two drams. Native neutral-assault probe
 and whole-zone rendering/restoration pass. Both owned processes are stopped; 3,449 warm/3,451 cold
 inputs match exactly. Archive `defensive-founders/49af5f5e/completed-warm-cold-1/result.json`,
-SHA-256 `85463ec430dc300348dae303569b7c16926f7b0fab80e13388145489ced7f6ed`.
+SHA-256 `85463ec430dc300348dae303569b7c16926f7b0fab80e13388145789ced7f6ed`.
 The probe uses two unplaced NPCs and assigns only its own attacker Snapjaws allegiance before
 asserting neutral feeling and actual retaliation. It fabricates no city population or housing.
 This source proof is not private package delivery acceptance; broader ecology remains #237.
@@ -512,7 +512,7 @@ or current ordinary subscriber acceptance. See [stock validation](/tmp/taf-quick
 
 Strict four-mode C#7.3 compilation and compatibility ABI pass across 3045 production C# sources.
 Current census:431,086 physical lines/1414 direct-XRL imports/zero line-cap failures. Ordinary
-inputs3041/3045, developer3146/3150 with105 Harness shards. The derived cold-install inventory contains 3076 files;
+inputs3041/3045, developer3146/3153 with105 Harness shards. The derived cold-install inventory contains 3076 files;
 this staging manifest does not establish an installation or Steam subscription.
 Production SHA256`ef84f9a05d894bdbc281e20aa1b5f02f45f4b0ca5a96771ffbeb3da903ad3f3f`,
 compiler SHA256`987e8c0de7d08217ee256f9e30eeea4eb317f9fe27c988032c8e1bcc4969c2f6`.

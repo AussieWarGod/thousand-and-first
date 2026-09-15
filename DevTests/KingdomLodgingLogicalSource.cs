@@ -12,7 +12,9 @@ namespace ThousandAndFirst.Tests
 			"Growth/KingdomLodging.BrinkAndObservation.cs",
 			"Growth/KingdomLodging.ResidentsAndCondemnation.cs",
 			"Growth/KingdomLodging.HomesAndReporting.cs",
-			"Growth/KingdomLodging.LabFriction.cs"
+			"Growth/KingdomLodging.LabFriction.cs",
+			"Growth/KingdomLodging.Households.cs",
+			"Growth/KingdomLodging.PresentObservation.cs"
 		};
 
 		internal static string Read()

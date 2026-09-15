@@ -1,16 +1,16 @@
 # Structural release contract
 
-## Residence storage checkpoint
+## Residence integration checkpoint
 
-3116 staged production C# files; 441,275 physical lines; 1454 direct XRL imports; zero at or above
-300 lines. Inventory SHA-256: `27161ede9c5a702b8c80514469eeab77962e4da020895849ff53f9fed11bef03`.
-[The automated delta review](STRUCTURE_REVIEW_RESIDENCE.md) binds bounded residence storage,
+3119 staged production C# files; 441,537 physical lines; 1457 direct XRL imports; zero at or above
+300 lines. Inventory SHA-256: `447c50cfc41e98d6132695cbcf4c2a01b975093cd7f4eed99c12bdd52ec937f5`.
+[The automated delta review](STRUCTURE_REVIEW_RESIDENCE_LIVE.md) binds bounded residence storage,
 legacy/frozen-claim migration, archive/death receipt versions and model mutation boundaries.
-Live housing integration and native acceptance remain open in #230.
+Engine home authority and absent-owner occupancy are integrated; native acceptance remains open in #230.
 
 ## Earlier recruitment census
 
-3112 staged production C# files; 441,029 physical lines; 1454 files with direct `XRL` imports;
+3112 staged production C# files; 441,029 physical lines; 1457 files with direct `XRL` imports;
 zero at or above 300 lines. Inventory SHA-256: `e9e71e2de55a777def5a6ddb283ab4b493b2e555ae2991b0543c668296017aa4`.
 Pure bounded weighting, a native catalogue adapter, isolated native naming and a shared payload
 builder replace independent recruit draws. No saved fields change; new body profiles are ordinary
