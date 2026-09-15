@@ -1,5 +1,29 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
+## Absent-owner home damage — native defect reproduced
+
+At `e5bac3f675b80a8ca771402010e6a8a005e83337`, a real three-person Quickstart household has
+one original citizen away on the adjacent claim. Production rung-roof capture includes only the
+two local members: absent-owner matches are zero. A controlled condemnation fault and the
+production loss callback likewise record only two people. Source-map settlement correctly
+clears the absent owner's home, but their roof brink and loss tick remain absent. Restoring the
+wear fault and returning the exact citizen lets ordinary lodging rehouse them; the final census
+still proves four housed founders, two rooms, six beds and 34 clear floor cells.
+
+Closed failed archive: `home-map-damage/e5bac3f6/native-1-fail/result.json`; SHA-256
+`d2107aa0f2a5d46ca9f3ccad03199b1482c8502a4e01d8ea3f1ec809c333a201`. All 3,478 sealed inputs/3,437 C#
+files and the exact owned stop verify. Strict log fails on the retained correctness assertion;
+this is a failed behavioral case, not acceptance. Four compile modes, 66 persona checks,
+documentation/metadata checks and CI34929011082 pass. The first persona check's diagnostic-step
+classification failure remains retained. Gameplay code is unchanged from149daf47.
+
+This probes current production roof capture and the condemnation callback on actual paid
+housing. Wear damage/restoration and map transfers are controlled setup; full ordinary
+subsidence, paid repair and damaged-home cold load remain unproved. The fix must carry durable
+map-qualified home ownership through capture, frozen-plan application and recovery, preserve
+historical `sr1`/`sr2` obligations, and record the original loss tick for absent owners. #230 stays
+open; all-building #229/#251 and Beta acceptance remain incomplete.
+
 ## Save while a citizen is away — native chain passes
 
 Native `a70658a9a9f12090ac51b7ae9e963cd6b74aa49a` saves after genuine Quickstart construction

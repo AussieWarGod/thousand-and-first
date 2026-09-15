@@ -1187,7 +1187,7 @@
       "transitions": "real starter homes -> controlled map visit/return -> leave original citizen away -> real save/quit/fresh load -> pre/postactivation authority comparison -> source capacity before remote lookup -> exact-body return -> ordinary settlement pass -> new paid commission",
       "effects": "same map-qualified home/root and one exact reservation survive independently of current body binding",
       "save_cold_load": "NATIVE_PASS for saving after return and while one citizen remains away: exact four-founder home/profile/binding authority before and after activation, capacity before harness remote lookup, exact-body return and new paid job; damaged-home and historical migration remain COVERAGE_GAP",
-      "negative": "Absent-owner capacity survives save/cold load; home loss/replacement/condemnation, frozen publication recovery and interrupted rehouse remain COVERAGE_GAP",
+      "negative": "NATIVE_DEFECT in row33: source-home condemnation omits absent owner from damage capture and loss timing; full frozen publication and interrupted rehouse recovery remain COVERAGE_GAP",
       "driver": "Harness/KingdomHomeMapNativeProvider.cs; Harness/KingdomHomeMapSaveWitness.cs; Tools/personas/home-map-native-check.persona; Tools/personas/home-map-save-native-check.persona; Tools/home_map_save_check.py; Harness/KingdomHomeMapAbsentWitness.cs; Harness/KingdomHomeMapAbsentWitness.Travel.cs; Tools/personas/home-map-absent-save-native-check.persona; Tools/home_map_absent_check.py",
       "status": "NATIVE_PASS",
       "note": "Nativea70658a9 saves with3originalfoundershome/1away. Exact four-founder canonical home/profile and body-binding authority survives pre/postactivation. Household capacity3 retained before harness remote lookup; exact original citizen returns through ordinary settlement pass, then4housed founders/2rooms/6beds/34clearfloor and another paid fire. Full3476/3478sealed-input recipes, strict logs and owned stops verify. Internal claiming/zero-energy transfers are controlled setup; no ordinary walking, unloaded economy, unique bed use, home-damage chronology or historical migration acceptance. #230 and all-building #229/#251 remain open.",
@@ -1226,6 +1226,19 @@
           "currentDevCoverage": false
         }
       ]
+    },
+    {
+      "id": 33,
+      "behaviour": "Home condemnation includes absent owners and preserves the loss tick",
+      "prerequisites": "Real Quickstart homes and original citizens; controlled same-city visit, internal adjacent claim, controlled wear damage/restoration",
+      "transitions": "real paid home -> owner remains away -> production rung-roof capture -> controlled condemnation and production roof-loss callback -> source-map settlement -> controlled repair/return -> ordinary rehousing",
+      "effects": "all exact home owners included once; absent home cleared with original unwarned roof-loss tick; repaired housing allows ordinary recovery",
+      "save_cold_load": "COVERAGE_GAP: damaged-home cold load and frozen roof publication recovery",
+      "negative": "Native captured2/local2/absent-owner0; loss callback recorded2; absent home cleared but brink/tick missing. Ordinary rehousing succeeds after controlled restoration.",
+      "driver": "Harness/KingdomHomeMapDamageProvider.cs; Harness/KingdomHomeMapAbsentWitness.Damage.cs; Tools/personas/home-map-damage-native-check.persona",
+      "status": "DEFECT",
+      "note": "Nativee5bac3f6 fails the absent-owner capture/loss chronology assertions after8400ordinaryturns. All4founders survive and are housed after controlled repair and ordinary settlement. This invokes production capture/callback directly; it does not execute a complete ordinary subsidence trajectory or paid repair. #230 requires durable home-based capture, versioned frozen obligations, apply/recovery and correct loss timing; #229/#251 remain open. Closed failed archive: home-map-damage/e5bac3f6/native-1-fail/result.json; SHA256 d2107aa0f2a5d46ca9f3ccad03199b1482c8502a4e01d8ea3f1ec809c333a201; 4441bytes. Failure artifacts remain in the note/STATUS because typed matrix evidence is reserved for PASS statuses.",
+      "evidence": null
     }
   ],
   "combinations": [

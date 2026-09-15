@@ -1,5 +1,14 @@
 # Session handoff — current v1.0 test-candidate work
 
+## Native absent-owner damage defect
+
+At e5bac3f6, production roof capture and condemnation callback omit the original absent owner;
+source settlement clears their home without recording the loss tick. Controlled repair/return
+and ordinary rehousing succeed. Failed archive is closed; STATUS and behavioral row33 preserve
+scope. Fix durable home ownership through capture, frozen-plan apply/recovery and loss timing;
+preserve sr1/sr2 obligations and residence publication guards. #230 remains open; no production
+fix or release follows from this diagnostic.
+
 ## Absent-home cold chain passes
 
 Native a70658a9 saves with three founders home/one away, preserves exact authority before/after
