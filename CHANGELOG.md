@@ -12,12 +12,14 @@ records current acceptance.
 
 - Recruitment availability respects the civic-story setting, including ordinary extension
   profiles outside the first-guest allowlist. Native admission/load checks now compare actual
-  body, culture, species, name, origin and resident map; this follow-through is awaiting execution.
+  body, culture, species, name, origin and resident map. Real Quickstart admission and cold load
+  preserve the same fifth citizen and starter home; shortage/refill and next paid job also pass.
 
 - New settlers draw coherent native bodies, origins and names with player/city reputation
   weighting. Added ordinary Issachari, hindren and dromad recruits; hostile sources stay out
   of voluntary arrivals. Existing citizens and frozen plans retain identity. Native selection,
-  hostile wait/recovery and frozen identity checks pass; admission/home/cold-load coverage remains pending.
+  hostile wait/recovery and frozen identity checks pass; one human guest also passes actual
+  admission, housing and cold load. Broader cultures, multi-map life and balance remain open.
   Empty recruitment retains its due arrival while other city work continues; Charter explains
   the reputation block alongside housing needs.
 

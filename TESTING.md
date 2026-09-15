@@ -1,17 +1,21 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
-## Admission and report follow-through pending
+## Recruitment admission and report follow-through — scoped PASS
 
-The report now respects configured civic-story policy. The extended native wait test temporarily
-uses one real developer-only extension blueprint outside the story-guest allowlist and a scoped
-option-read override; it requires the report and both selection routes to agree without publishing
-an option epoch or arrival. Guest action/save tests add actual native body/name/origin/culture/species
-and resident-map assertions. Report-policy and recovery execution passed at `807a89fc` (archive in STATUS). Admission
-execution found duplicate startup initialization in the composed harness; the retained witness
-now permits repeated observation without applying its synthetic reputation change again.
-The failed run is archived; real admission and cold-load retry remain pending.
+Native807a89fc proves report-policy agreement with a scoped extension catalogue/option-read probe,
+plus hostile waiting, original-head recovery and retained identity. Native9cc75930 then proves
+real guest admission, native body/name/origin/culture/species and resident-map agreement, actual
+starter housing, finite-water shortage/refill and real save/cold load. Two stale choices refuse;
+the next job pays exactly. Four founders remain housed alongside the same fifth citizen.
+The composed startup harness now applies its controlled founding reputation change once and
+verifies its retained witness on both observations. Its earlier failure is archived.
 
-## Coherent recruitment: scoped native PASS, admission pending
+Full profile recipes, strict final logs, guarded waits, validators and owned stops pass;
+exact archives and synthetic limitations are in STATUS. One human guest is not all-culture
+admission, ordinary multi-map life or balance acceptance. Rows26/28 and combinationC8 bind this
+new full developer input inventory; selection rows2/31 retain original native807a89fc scope.
+
+## Earlier coherent recruitment: original scoped native PASS
 
 Full licensed 15,019 main / 5,909 portable cases pass with zero skips. Four engine compile
 modes pass across 3112 production C# sources; the cold-install inventory contains 3146 files.
@@ -26,7 +30,8 @@ status, original-head recovery and frozen identity after renewed hostility. See 
 closed archive and the retained failed attempt caused by an initial-deadline fixture assumption.
 The main-only cadence codec regression preserves debt through repeated waits and serialization.
 Those probes use reversible synthetic reputation and unplaced body samples; correspondence
-is produced by the real cadence. Physical admission, home allocation and cold load remain owed.
+is produced by the real cadence. The later proof above adds one real human guest, home and cold load;
+broader population and multi-map acceptance remain owed.
 
 ## Accepted strike closure validation (abf41251)
 

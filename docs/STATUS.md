@@ -1,37 +1,54 @@
 # Current implementation and release evidence
 
-## Recruitment report passed; admission retry pending
+## Recruitment admission, housing and cold load — scoped native PASS
 
-Recruitment status now follows the configured civic-story setting: an ordinary extension recruit
-outside the story-guest allowlist is not hidden when civic stories are disabled. A synchronous
-native probe replaces only the fixture's catalogue and exact option read, verifies both routes,
-and requires no option epoch, candidate, citizen or clock mutation. Original catalogue and
-reputation are restored. It does not exercise the options UI or write the settings file.
+Native `9cc75930ffae7b4201872a3085f67ea61b01c1d7` completes genuine marsh/advisor-on Quickstart
+(seed #43101): four original founders survive 16,803 saved turns and occupy two enclosed rooms
+with six beds and 34 clear floor cells. Real correspondence hosts guest 768, Yywur
+(`r_KingdomSettlerHand`, native human culture/species); explicit welcome enrolls that same body
+once as citizen five. Frozen blueprint/name/origin, citizenship, living resident roll, bound map
+and actual starter-home assignment agree. No synthetic residents, beds or completed homes.
 
-Native `807a89fc` passed the expanded 18,000-requested / 18,001-actual-turn scenario,
-including both report-policy routes, twelve native samples, hostile waiting, original-head
-recovery and retained identity after renewed hostility. The final road-processing checkpoint
-matched due tick 292801; this empty camp does not prove productive construction. Full pinned
-recipe (3,463 inputs / 3,422 C#), strict log, guarded waits, persona and owned shutdown passed.
-Archive: `recruitment/807a89fc/native-4-pass/result.json`, SHA-256
+Empty civic water refuses construction without changing materials or authority. After 16 actual
+movement steps, eight drams transfer from the founder's existing carried vessel (32→24) to the
+cask (0→8). Real save and separate cold process retain exact guest authority before activation,
+then reject both stale welcome attempts without extra enrollment or water debit. The next job
+pays exactly one timber and two drams. Scripted menu input and one controlled founding-reputation
+change are disclosed; two startup observations verify the same retained standing witness.
+
+Both full profile recipes match the pinned source: 3,463 warm inputs, 3,465 cold inputs,
+3,422 C# per profile. Strict final logs, persona/lifecycle/guest validators, guarded 8,401 + 8,400
+ordinary turns, save receipt/snapshot and exact owned shutdown pass. Closed archive:
+`recruitment-guest-save/9cc75930/native-2-pass/result.json`, SHA-256
+`352c12f4a6ad9790f0322aadcdc69d83e2abd3f31d7e61f78a20a9bba4038557`.
+The matching full developer inventory binding is retained beside it at
+`recruitment-guest-save/9cc75930/dev-inventory-binding-1/result.json`.
+
+Native `807a89fc` separately passed 18,000 requested / 18,001 actual turns: twelve unplaced
+native samples across six factions and both routes; all-hostile waiting retains debt/water;
+restored relations recover the original head; renewed hostility retains the same guest identity.
+Its final road-processing checkpoint matches due tick 292801. A scoped synthetic extension
+catalogue/option-read probe proves report availability agrees with configured civic-story policy
+without publishing an option epoch or arrival. Catalogue and reputation are restored.
+Full recipe, strict log, guarded waits, persona and owned shutdown pass. Archive:
+`recruitment/807a89fc/native-4-pass/result.json`, SHA-256
 `4fc3d0ab6fda8309c80b9222c7d3b3449b7b16ecf40a1cebe80df693431c42c4`.
-Synthetic catalogue/option-read controls and unplaced samples remain scoped as above.
+Its empty-camp checkpoint proves continued processing, not productive construction. Its original
+full developer input binding remains historical after the startup-observer harness correction.
 
-The existing Quickstart guest/save scenario now verifies the actual hosted/enrolled native body
-against its frozen blueprint and origin; citizenship retains its name/origin. Save and cold-load
-observations additionally compare native culture/species, the real resident roll and bound map,
-and starter-home assignment. These added assertions are pending native execution. The initial
-harness compile found a definite-assignment error in the new resident-row assertion; corrected
-before launching. The first real admission run then refused at its second startup observation:
-`founding reputation probe already ran`. Both lifecycle and guest setup check the same opening.
-The harness now applies its controlled reputation change once and validates the complete retained
-witness on every observation, including repeated startup. No production change for this correction.
-The owned game is stopped; failed full-recipe archive is
-`recruitment-guest-save/807a89fc/native-1-fail/result.json`, SHA-256
+The first admission attempt at `807a89fc` refused before admission because two composed startup
+checks initialized the one-time founding-reputation probe. The harness now applies its controlled
+change once and verifies the full retained witness on every observation; production is unchanged.
+Failed full-recipe archive: `recruitment-guest-save/807a89fc/native-1-fail/result.json`, SHA-256
 `c3d10b90eb1b500dfaaa398f35a7fe26fde9690b048d950c4ac483b47013c193`.
-Admission and cold-load assertions have not yet passed. Prior native inputs retain original scope.
 
-## Coherent recruitment — scoped native validation, admission still pending
+This proves one human guest's real admission and persistence, not physical admission of every
+culture, ordinary multi-map life, balanced expansion, historical migration or interrupted enrollment.
+Issues #230/#231 and whole-building architecture/function #229/#251 remain open. Public 0.3.7
+is unchanged. Full licensed 15,019 main / 5,909 portable tests pass with zero skips; four engine
+compile modes and the latest documentation/coverage checks retain their recorded scope.
+
+## Earlier coherent recruitment proof — original scoped inputs
 
 New, unfrozen arrivals use one reputation-weighted catalogue: source faction, native body and
 origin agree, and names use Qud's faction/culture/species naming rules under a restored native
@@ -73,9 +90,9 @@ The earlier 12,000-turn proof at `7c386a81` retains its original scope in
 
 Full licensed suites pass: 15,019 main / 5,909 portable, zero skips; four engine compile modes pass.
 A main-only codec regression preserves waiting debt and the original head through serialization.
-Physical admission/home allocation, native cold load, broader recruitment and balance remain under
-#231/#230. The report-policy correction and stronger physical/cold-load assertions above are awaiting validation
-before PR #254 integration. The original Beta goal and building issues #229/#251 stay open.
+The later report-policy and single-guest admission/cold-load proof above supersedes those pending
+items for its exact scope. Broader recruitment, multi-map life and balance remain under #231/#230.
+The original Beta goal and building issues #229/#251 stay open.
 
 Development compile scope: 3112 sources, baseline and compatibility symbols.
 Current census: 3112 staged C# files; 441,029 physical lines; zero at or above 300 lines.
