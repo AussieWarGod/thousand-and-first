@@ -1,5 +1,16 @@
 # Current implementation and release evidence
 
+## Multi-map home diagnostic — native execution pending
+
+A new `home-map-native-check` scenario first completes genuine Quickstart housing, then checks
+whether one original founder keeps their bed reservation, home work identity and home plot while
+on another local map of the same city. It uses the internal adjacent claim API and a controlled
+zero-energy resident transfer; public expansion eligibility, ordinary walking, a second paid
+district and cross-map cold load are not covered. The assertions require correct behavior and
+are expected to expose the local-only housing reads described in #230; no failure is acceptance.
+No production fix is claimed yet. The original resident is physically returned without repairing
+a lost home property or row. Previous recruitment evidence below retains its original inputs.
+
 ## Recruitment admission, housing and cold load — scoped native PASS
 
 Native `9cc75930ffae7b4201872a3085f67ea61b01c1d7` completes genuine marsh/advisor-on Quickstart

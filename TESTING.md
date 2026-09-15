@@ -1,5 +1,12 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
+## Multi-map home diagnostic pending
+
+`home-map-native-check` requires a paid Quickstart home to remain reserved for the same founder
+while a controlled transfer places them on another claimed local map. Native result pending.
+Internal claim entry and zero-energy transfer are disclosed; no normal expansion, pedestrian
+travel, second-district construction or cold-load acceptance. See issue #230 and STATUS.
+
 ## Recruitment admission and report follow-through — scoped PASS
 
 Native807a89fc proves report-policy agreement with a scoped extension catalogue/option-read probe,
