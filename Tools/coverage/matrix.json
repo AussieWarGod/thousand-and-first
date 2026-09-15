@@ -1190,7 +1190,7 @@
       "negative": "Absent-owner capacity retained; building loss, frozen publication recovery and cold-load scenarios remain COVERAGE_GAP",
       "driver": "Harness/KingdomHomeMapNativeProvider.cs; Tools/personas/home-map-native-check.persona",
       "status": "NATIVE_PASS",
-      "note": "Native149daf47 completes8400 ordinary construction turns with four housed founders, two rooms, six beds and34 clear floor cells. Occupancy stays1->1; the exact resident occurs once; home-work89973561 and map-qualified plot persist while BoundZoneId changes to the visiting map. The ordinary return settlement pass preserves identity/capacity without fixture home repair. Internal claim and zero-energy transfers remain disclosed setup. No ordinary expansion/walking, second paid district, unloaded accounting, unique sleeping-place use or cold-load acceptance. Prior729f2332 failed archive remains retained; #230 stays open.",
+      "note": "Native149daf47 completes8400 ordinary construction turns with four housed founders, two rooms, six beds and34 clear floor cells. Occupancy stays1->1; the exact resident occurs once; home-work89973561 and map-qualified plot persist while BoundZoneId changes to the visiting map. The ordinary return settlement pass preserves identity/capacity without fixture home repair. Internal claim and zero-energy transfers remain disclosed setup. No ordinary expansion/walking, second paid district, unloaded accounting, unique sleeping-place use or cold-load acceptance. Prior729f2332 failed archive remains retained; #230 stays open. Home-save harness extensions change the developer inventory; the recorded visit retains its original pin. Save/cold replay is pending.",
       "evidence": [
         {
           "commit": "149daf472019ca2553f2ca19a26ea8ba037d87a7",
@@ -1199,9 +1199,9 @@
           "artifactBytes": 3397,
           "verdict": "PASS - absent reservation, map-qualified home/root, current-map binding and ordinary return settlement pass",
           "scope": "Genuine Quickstart construction and four original founders; controlled internal adjacent claim and zero-energy transfers. Full3471input/3430C# recipe and owned stop verified. No ordinary expansion/walking, actual bed use, unloaded-map or cold-load acceptance.",
-          "historicalScope": false,
+          "historicalScope": true,
           "inventoryDigest": "0eb1e60510cda728137064576c50affa0c9afe5a74676d438d09d7e526d124f7",
-          "currentDevCoverage": true
+          "currentDevCoverage": false
         }
       ]
     }

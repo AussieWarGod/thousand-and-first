@@ -25,9 +25,9 @@ namespace ThousandAndFirst.Harness
 			{
 				Require(Name == Verb && string.IsNullOrEmpty(Argument) && !Attempted, "home-map probe already attempted or wrong verb");
 				Require(KingdomScenarioScript.TryRead(out IList<string> script, out _)
-					&& script.Count == 5 && script[0] == "quickstart-lifecycle marsh yes"
-					&& script[1] == "lifecycle-open" && script[2] == "advance 8400"
-					&& script[3] == Verb && script[4] == "stagedigest", "exact home-map script absent");
+					&& (KingdomHomeMapSaveProvider.IsExact(script) || script.Count == 5
+					&& script[0] == "quickstart-lifecycle marsh yes" && script[1] == "lifecycle-open"
+					&& script[2] == "advance 8400" && script[3] == Verb && script[4] == "stagedigest"), "exact home-map script absent");
 				Attempted = true;
 				Run();
 				Ok = true;
@@ -41,7 +41,16 @@ namespace ThousandAndFirst.Harness
 			}
 		}
 
-		private static void Run()
+		internal static string RepeatLoadedVisit()
+		{
+			Require(!Attempted && KingdomScenarioLoadEntry.Armed && KingdomHomeMapSaveProvider.ClaimsScript(),
+				"cold home visit is not owned or already ran");
+			Attempted = true;
+			Run(true);
+			return "native-home-map cases=1 passed=1 failed=0" + Evidence;
+		}
+
+		private static void Run(bool ExistingAway = false)
 		{
 			XRLGame game = The.Game;
 			Zone homeZone = The.Player?.CurrentZone;
@@ -67,7 +76,7 @@ namespace ThousandAndFirst.Harness
 			Require(occupiedBefore > 0, "home has no projected occupants before departure");
 			string awayId = homeZone.GetZoneIDFromDirection("E");
 			Require(!string.IsNullOrEmpty(awayId) && awayId != homeZone.ZoneID
-				&& !system.ClaimedZones.Contains(awayId), "requires a new adjacent local map");
+				&& system.ClaimedZones.Contains(awayId) == ExistingAway, "adjacent claim state differs");
 			Zone away = The.ZoneManager.GetZone(awayId);
 			Require(away != null && KingdomFounding.ZonesAdjacent(homeZone.ZoneID, awayId), "adjacent local map unavailable");
 			Cell destination = null;
@@ -80,7 +89,7 @@ namespace ThousandAndFirst.Harness
 			Require(destination != null, "no empty native landing for controlled resident transfer");
 			// Diagnostic setup uses the internal claim operation and a zero-energy body transfer.
 			// It does not prove public stage eligibility, pedestrian travel or a second paid district.
-			Require(KingdomFounding.ClaimZone(away, Force: false)
+			Require((ExistingAway || KingdomFounding.ClaimZone(away, Force: false))
 				&& system.ClaimedZones.Contains(homeZone.ZoneID) && system.ClaimedZones.Contains(awayId),
 				"same city's internal adjacent claim refused");
 			Cell departure = resident.CurrentCell;
@@ -92,6 +101,7 @@ namespace ThousandAndFirst.Harness
 				.Append(" resident=").Append(residentId).Append(" body=").Append(bodyId)
 				.Append(" original-home=").Append(original.HomeWorkId).Append(" plot=").Append(plot)
 				.Append("; synthetic-claim-entry=true synthetic-transfer=true synthetic-housing=false");
+			Evidence.Append("; claim-reused=").Append(ExistingAway ? "true" : "false");
 			bool reserved, rowKept, plotKept;
 			try
 			{
@@ -163,7 +173,7 @@ namespace ThousandAndFirst.Harness
 			Evidence.Append("; return-settlement-pass=true reservation-owner-exact=true");
 		}
 
-		private static int Occupants(KingdomSystem System, Zone Zone, string Plot, int ResidentId)
+		internal static int Occupants(KingdomSystem System, Zone Zone, string Plot, int ResidentId)
 		{
 			Require(KingdomSurvey.TryBindLocalOperation(Zone, System, out var scope, out string failure), failure);
 			using (scope)

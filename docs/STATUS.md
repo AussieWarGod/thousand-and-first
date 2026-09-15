@@ -1,5 +1,14 @@
 # Current implementation and release evidence
 
+## Home-record cold-load scenario — implemented, not yet run
+
+The home-save persona extends real Quickstart construction and the controlled visit with an
+exact witness for all four founders, canonical residence facts and body bindings. The sealed
+lifecycle load compares it before and after activation, repeats a visit using the existing
+second claim, and retains the normal next paid construction action. Source and host-oracle
+checks are in progress; this is not cold-load acceptance. Save occurs after return, so saving
+while a citizen is absent remains separate required coverage.
+
 ## Residence integration checkpoint
 
 Draft PR #255 adds bounded map/plot/optional-bed and household-profile facts to the existing
