@@ -7,8 +7,8 @@ namespace ThousandAndFirst.Simulation.City
 	/// One settler. The brink windows that today live as object properties live here instead
 	/// (LIVING-CITY-ARCHITECTURE &sect;1.2(d)), because a row is what survives a zone going to disk.
 	/// <para>
-	/// One hundred fifteen declared bytes against the 120 &sect;0.0(c) budget, plus the one unique
-	/// heap name per resident. Exact origin, frozen arrival label, bound zone, creed target and
+	/// One hundred twenty-three declared bytes against the 128 &sect;0.0(c) budget, plus the name
+	/// and bounded residence heaps per resident. Exact origin, frozen arrival label, bound zone, creed target and
 	/// creed history are shared carrier/body references; none creates a second authority.
 	/// </para>
 	/// <para>
@@ -19,7 +19,7 @@ namespace ThousandAndFirst.Simulation.City
 	/// the property bag, which is what let the storage swap be invisible.
 	/// </para>
 	/// </summary>
-	internal readonly struct KingdomResidentRow
+	internal readonly partial struct KingdomResidentRow
 	{
 		internal readonly int ResidentId;
 
@@ -43,6 +43,8 @@ namespace ThousandAndFirst.Simulation.City
 		internal readonly string Arrived;
 
 		internal readonly int HomeWorkId;
+
+		internal readonly string Residence;
 
 		internal readonly int JobWorkId;
 
@@ -158,8 +160,9 @@ namespace ThousandAndFirst.Simulation.City
 			byte creedChannel,
 			string keptCreeds,
 			string origin,
-			string arrived)
+			string arrived, string residence = "")
 		{
+			Residence = residence ?? "";
 			KeptCreeds = string.IsNullOrEmpty(keptCreeds) ? null : keptCreeds;
 			ResidentId = residentId;
 			Name = name;
@@ -209,11 +212,11 @@ namespace ThousandAndFirst.Simulation.City
 			case BrinkKind.Roof:
 				return new KingdomResidentRow(ResidentId, Name, OriginCode, CreedCode, ArrivedTick, HomeWorkId, JobWorkId,
 					JobRole, DayShape, Standing, Cause, BoundZoneId, window, CreedBrink, CreedToward,
-					CreedChannel, KeptCreeds, Origin, Arrived);
+					CreedChannel, KeptCreeds, Origin, Arrived, Residence);
 			case BrinkKind.Creed:
 				return new KingdomResidentRow(ResidentId, Name, OriginCode, CreedCode, ArrivedTick, HomeWorkId, JobWorkId,
 					JobRole, DayShape, Standing, Cause, BoundZoneId, RoofBrink, window, creedToward,
-					creedChannel, KeptCreeds, Origin, Arrived);
+					creedChannel, KeptCreeds, Origin, Arrived, Residence);
 			default:
 				return this;
 			}
@@ -226,7 +229,7 @@ namespace ThousandAndFirst.Simulation.City
 		{
 			return new KingdomResidentRow(ResidentId, Name, OriginCode, CreedCode, ArrivedTick, HomeWorkId, JobWorkId,
 				JobRole, DayShape, standing, cause, BoundZoneId, RoofBrink, CreedBrink, CreedToward,
-				CreedChannel, KeptCreeds, Origin, Arrived);
+				CreedChannel, KeptCreeds, Origin, Arrived, Residence);
 		}
 
 		/// <summary>This row bound to other ground. Placement is W3; what W2 ships is the fact that
@@ -235,7 +238,7 @@ namespace ThousandAndFirst.Simulation.City
 		{
 			return new KingdomResidentRow(ResidentId, Name, OriginCode, CreedCode, ArrivedTick, HomeWorkId, JobWorkId,
 				JobRole, DayShape, Standing, Cause, boundZoneId, RoofBrink, CreedBrink, CreedToward,
-				CreedChannel, KeptCreeds, Origin, Arrived);
+				CreedChannel, KeptCreeds, Origin, Arrived, Residence);
 		}
 
 		/// <summary>This row with what the ground says about the person: their name, where they came
@@ -252,7 +255,7 @@ namespace ThousandAndFirst.Simulation.City
 		{
 			return new KingdomResidentRow(ResidentId, name, originCode, creedCode, ArrivedTick, homeWorkId, jobWorkId,
 				jobRole, dayShape, Standing, Cause, BoundZoneId, RoofBrink, CreedBrink, CreedToward,
-				CreedChannel, KeptCreeds, origin, Arrived);
+				CreedChannel, KeptCreeds, origin, Arrived, Residence);
 		}
 
 		/// <summary>This row with the creeds the person has held and left. A separate reading from
@@ -267,7 +270,7 @@ namespace ThousandAndFirst.Simulation.City
 			}
 			return new KingdomResidentRow(ResidentId, Name, OriginCode, CreedCode, ArrivedTick, HomeWorkId, JobWorkId,
 				JobRole, DayShape, Standing, Cause, BoundZoneId, RoofBrink, CreedBrink, CreedToward,
-				CreedChannel, keptCreeds, Origin, Arrived);
+				CreedChannel, keptCreeds, Origin, Arrived, Residence);
 		}
 	}
 }

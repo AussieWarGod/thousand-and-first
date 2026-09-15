@@ -186,7 +186,7 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.AreEqual(Outcome.ComputationFailure, outcome);
 			ClassicAssert.AreEqual(Basis.Unresolved, basis);
 			StringAssert.Contains("InvalidOperationException", reason);
-			CollectionAssert.AreEqual(new[] { 19, 18, 17, 16, 15 }, hasher.Order());
+			CollectionAssert.AreEqual(Descending(Codec.CurrentVersion, 15), hasher.Order());
 		}
 
 		[TestCase(0)] [TestCase(7)]
@@ -199,7 +199,7 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.AreEqual(Basis.Unresolved, basis); ClassicAssert.IsNotNull(reason);
 		}
 
-		[TestCase(-1)] [TestCase(20)] [TestCase(int.MinValue)] [TestCase(int.MaxValue)]
+		[TestCase(-1)] [TestCase(Codec.CurrentVersion + 1)] [TestCase(int.MinValue)] [TestCase(int.MaxValue)]
 		public void StoredBasisOutsideTheAcceptedSetIsMalformedAndAsksNothing(int stored)
 		{
 			RecordingHasher hasher = new RecordingHasher(Agreeing(19));
@@ -242,10 +242,10 @@ namespace ThousandAndFirst.Tests
 			int[] order = Basis.SearchOrder();
 			CollectionAssert.AreEqual(
 				Descending(Codec.CurrentVersion, Codec.LegacyVersion), order);
-			ClassicAssert.AreEqual(19, order.Length); ClassicAssert.AreEqual(19, order[0]);
+			ClassicAssert.AreEqual(Codec.CurrentVersion, order.Length); ClassicAssert.AreEqual(Codec.CurrentVersion, order[0]);
 			ClassicAssert.AreEqual(1, order[order.Length - 1]);
 			order[0] = -1;
-			ClassicAssert.AreEqual(19, Basis.SearchOrder()[0]);
+			ClassicAssert.AreEqual(Codec.CurrentVersion, Basis.SearchOrder()[0]);
 		}
 
 		[Test]
@@ -304,11 +304,11 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.IsTrue(Codec.TryEncodeVersion(value, Codec.CurrentVersion, out byte[] actual,
 				out failure), failure);
 			CollectionAssert.AreEqual(expected, actual);
-			ClassicAssert.AreEqual(19, BitConverter.ToInt32(actual, 4));
+			ClassicAssert.AreEqual(Codec.CurrentVersion, BitConverter.ToInt32(actual, 4));
 			ClassicAssert.AreEqual(Storage.FreshWire, value.City.SubsidenceModel);
 		}
 
-		[TestCase(0)] [TestCase(-1)] [TestCase(20)] [TestCase(int.MinValue)]
+		[TestCase(0)] [TestCase(-1)] [TestCase(Codec.CurrentVersion + 1)] [TestCase(int.MinValue)]
 		[TestCase(int.MaxValue)]
 		public void SchemaOutsideTheAcceptedSetIsRefusedWithoutBytes(int schema)
 		{
@@ -365,7 +365,7 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.IsTrue(Codec.TryEncodeVersion(value, Codec.ExpeditionResultVersion,
 				out byte[] before, out string failure), failure);
 			ClassicAssert.IsTrue(Codec.TryEncode(value, out byte[] saved, out failure), failure);
-			ClassicAssert.AreEqual(19, BitConverter.ToInt32(saved, 4));
+			ClassicAssert.AreEqual(Codec.CurrentVersion, BitConverter.ToInt32(saved, 4));
 			ClassicAssert.IsTrue(Codec.TryDecode(saved, out value, out int future, out failure),
 				failure);
 			ClassicAssert.AreEqual(0, future);

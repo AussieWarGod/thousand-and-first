@@ -17,6 +17,11 @@
 
   <ItemGroup>
     <Compile Include="TestMain.cs" />
+    <Compile Include="..\Simulation\City\KingdomResidence.cs" />
+    <Compile Include="..\Simulation\City\KingdomResidenceRules.cs" />
+    <Compile Include="..\Simulation\City\KingdomResidentRow.Residence.cs" />
+    <Compile Include="..\Simulation\City\KingdomCityBook.Residence.cs" />
+    <Compile Include="KingdomResidenceTests.cs" />
     <Compile Include="..\Core\KingdomFoundingRegardRules.cs" />
     <Compile Include="KingdomFoundingRegardTests.cs" />
     <Compile Include="KingdomStrikeClosureTests.cs" />

@@ -1,5 +1,18 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
+## Residence persistence checkpoint — model coverage only
+
+City schema 5 / archive 20 add canonical map-qualified residence facts. Full licensed suites
+pass 15,048 main and 5,934 portable cases, zero skips. Coverage includes named-field and
+historical archive migration, unchanged older hash bases, frozen subsidence claims, mixed death
+receipts, malformed columns and duplicate live bed claims through all resident mutation paths.
+`home-map/residence-storage-20260915-2/` retains the checks and full production comparison.
+
+Four engine compile modes pass across 3116 production C# sources; the cold-install inventory contains 3150 files.
+No native PASS is added. Existing location-based lodging still needs to consume the new record;
+next acceptance must exercise real home ownership, absent capacity, changed buildings and
+travel/save recovery. Keep the native regression below as DEFECT until that behavior passes.
+
 ## Multi-map home regression — fails on current production
 
 `home-map-native-check` completes real Quickstart homes, then verifies bed reservation, home

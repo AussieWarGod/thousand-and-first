@@ -1,5 +1,27 @@
 # Current implementation and release evidence
 
+## Residence persistence checkpoint — live housing integration still pending
+
+Draft PR #255 adds bounded map/plot/optional-bed and household-profile facts to the existing
+resident row. City schema 5 and archive version 20 preserve them; older archives retain their
+frozen shapes and authority-hash bases. Version-4 frozen subsidence migration changes only the
+new column and storage header. Death receipts retain the new home facts without changing old
+unknown-residence comparison bytes. Malformed current storage and duplicate live bed identities
+refuse without truncating residents, through creation, single-row and whole-roster mutations.
+
+Full licensed source validation passes: **15,048 main / 5,934 portable cases, zero skips**.
+This is a persistence/model checkpoint, not a fix to live assignment or admission. No new native
+acceptance is claimed; the three reproduced home-map failures below remain open. Next: capture
+actual home facts, retain absent household capacity, handle changed home buildings, and prove
+travel/failure/recovery plus real save/cold load. #230 and all-building #229/#251 remain open.
+
+Current census: 3116 staged C# files; 441,275 physical lines; zero at or above 300 lines.
+Inventory SHA-256: `27161ede9c5a702b8c80514469eeab77962e4da020895849ff53f9fed11bef03`.
+Engine gate passes for 3116 sources, baseline and compatibility symbols, plus both developer
+harness modes. Cold-install inventory: 3150 files.
+See [the structural review](STRUCTURE_REVIEW_RESIDENCE.md). Checks and comparison are retained at
+`home-map/residence-storage-20260915-2/`. Public Alpha 0.3.7 is unchanged.
+
 ## Multi-map home diagnostic — three production failures reproduced
 
 `home-map-native-check` first completes genuine Quickstart housing, then transfers one original

@@ -27,11 +27,17 @@ namespace ThousandAndFirst.Simulation.City
 			SchemaVersion = 0;
 			SubsidenceModel = null;
 			SubsidenceReadFailed = true;
+			ResidentResidences = null;
 			try
 			{
 				ReadFields();
+				if (!TryMigrateResidenceStorage())
+					throw new System.IO.InvalidDataException("City residence storage has no valid versioned shape.");
 				if (!TryMigrateSubsidenceStorage())
 					throw new System.IO.InvalidDataException("City subsidence storage has no valid versioned authority.");
+				// V4 already has the exact resident/claim columns. Adding an unknown residence
+				// cannot rewrite a frozen rung or its observations; only the storage header advances.
+				if (SchemaVersion == 4) SchemaVersion = KingdomCityRules.SchemaVersion;
 				SubsidenceReadFailed = false;
 				Normalize();
 				if (SubsidenceReadFailed)
@@ -64,7 +70,7 @@ namespace ThousandAndFirst.Simulation.City
 		internal bool HasValidSubsidenceStorage()
 		{
 			ThousandAndFirst.KingdomSubsidenceStepBook decoded;
-			return !SubsidenceReadFailed && SchemaVersion == KingdomCityRules.SchemaVersion
+			return !SubsidenceReadFailed && ValidResidenceColumns() && SchemaVersion == KingdomCityRules.SchemaVersion
 				&& ThousandAndFirst.KingdomSubsidenceStepCodec.TryDecode(SubsidenceModel, out decoded)
 				&& (!HasFrozenRung(decoded) || decoded.SettlementId == SettlementId && TryReadExact(out _, out _));
 		}

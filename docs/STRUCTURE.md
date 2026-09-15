@@ -1,6 +1,14 @@
 # Structural release contract
 
-## Unreleased recruitment census
+## Residence storage checkpoint
+
+3116 staged production C# files; 441,275 physical lines; 1454 direct XRL imports; zero at or above
+300 lines. Inventory SHA-256: `27161ede9c5a702b8c80514469eeab77962e4da020895849ff53f9fed11bef03`.
+[The automated delta review](STRUCTURE_REVIEW_RESIDENCE.md) binds bounded residence storage,
+legacy/frozen-claim migration, archive/death receipt versions and model mutation boundaries.
+Live housing integration and native acceptance remain open in #230.
+
+## Earlier recruitment census
 
 3112 staged production C# files; 441,029 physical lines; 1454 files with direct `XRL` imports;
 zero at or above 300 lines. Inventory SHA-256: `e9e71e2de55a777def5a6ddb283ab4b493b2e555ae2991b0543c668296017aa4`.

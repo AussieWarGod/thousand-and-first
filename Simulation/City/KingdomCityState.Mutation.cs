@@ -32,7 +32,8 @@ namespace ThousandAndFirst.Simulation.City
 		{
 			next = null;
 			KingdomResidentRow[] replaced;
-			if (!TryReplace(residents, index, row, out replaced))
+			if (!TryReplace(residents, index, row, out replaced)
+				|| !KingdomResidenceRules.ValidRows(replaced))
 			{
 				fault = KingdomCityFault.InvalidIndex;
 				return false;

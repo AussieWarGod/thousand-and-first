@@ -55,6 +55,7 @@ namespace ThousandAndFirst
 						&& version != PhysicalFirstGuestVersion
 						&& version != ArrivalCadenceVersion
 						&& version != ExpeditionResultVersion
+						&& version != SubsidenceStorageVersion
 						&& version != CurrentVersion)
 						throw new InvalidDataException("Archived settlement version is unsupported.");
 					string shape = ReadString(reader, MaxShapeBytes, Required: true);

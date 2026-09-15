@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "inventorySha256": "e9e71e2de55a777def5a6ddb283ab4b493b2e555ae2991b0543c668296017aa4",
+  "inventorySha256": "27161ede9c5a702b8c80514469eeab77962e4da020895849ff53f9fed11bef03",
   "exceptions": [],
   "reviewedBy": "Codex root automated structural review",
-  "completedUtc": "2026-09-15T00:44:39Z",
+  "completedUtc": "2026-09-15T02:09:48Z",
   "oneResponsibility": {
     "status": "passed",
-    "notes": "Compared all 3112 production paths with dev ec29b4cd: 3102 byte-identical, six changed, four added, none removed. Exact comparison log:/home/r/work/taf-scratch/behaviour-evidence/recruitment/807a89fc/structural-review-1/production-comparison.json; census log:/home/r/work/taf-scratch/behaviour-evidence/recruitment/807a89fc/structural-review-1/census.json. Automated semantic delta review: docs/STRUCTURE_REVIEW_RECRUITMENT.md. Pure bounded weights, native catalogue/naming boundaries, shared plan construction, exact empty-pool waiting and read-only report policy reviewed; no saved fields or wire format changes. Native scope and pending admission/cold-load work remain in STATUS."
+    "notes": "Automated delta review of all 3116 production paths against 38dc21ed: 3087 identical, 25 changed, four added, none removed. Full comparison log:/home/r/work/taf-scratch/behaviour-evidence/home-map/residence-storage-20260915-2/production-comparison.json; census log:/home/r/work/taf-scratch/behaviour-evidence/home-map/residence-storage-20260915-2/census.json. Semantic review: docs/STRUCTURE_REVIEW_RESIDENCE.md. Reviewed bounded pure residence facts, canonical named-column migration, frozen subsidence preservation, archive version/hash boundaries, death receipts and all model mutation paths. Live lodging integration and native home-map acceptance remain pending in issue #230."
   },
   "protocolsAtBoundaries": {
     "status": "passed",
-    "notes": "Compared all 3112 production paths with dev ec29b4cd: 3102 byte-identical, six changed, four added, none removed. Exact comparison log:/home/r/work/taf-scratch/behaviour-evidence/recruitment/807a89fc/structural-review-1/production-comparison.json; census log:/home/r/work/taf-scratch/behaviour-evidence/recruitment/807a89fc/structural-review-1/census.json. Automated semantic delta review: docs/STRUCTURE_REVIEW_RECRUITMENT.md. Pure bounded weights, native catalogue/naming boundaries, shared plan construction, exact empty-pool waiting and read-only report policy reviewed; no saved fields or wire format changes. Native scope and pending admission/cold-load work remain in STATUS."
+    "notes": "Automated delta review of all 3116 production paths against 38dc21ed: 3087 identical, 25 changed, four added, none removed. Full comparison log:/home/r/work/taf-scratch/behaviour-evidence/home-map/residence-storage-20260915-2/production-comparison.json; census log:/home/r/work/taf-scratch/behaviour-evidence/home-map/residence-storage-20260915-2/census.json. Semantic review: docs/STRUCTURE_REVIEW_RESIDENCE.md. Reviewed bounded pure residence facts, canonical named-column migration, frozen subsidence preservation, archive version/hash boundaries, death receipts and all model mutation paths. Live lodging integration and native home-map acceptance remain pending in issue #230."
   }
 }

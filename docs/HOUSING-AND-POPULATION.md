@@ -277,3 +277,19 @@ placeholder actors, silent empty-bed assumption or forced loading of every city 
 Audit all residence writers and consumers together: ordinary allocation, arrival admission,
 lab-driven moves, departures, succession, subsidence, conversions/removal and room activities.
 The broad #230/#233 requirements and ordinary multi-map/cold-load scenarios remain mandatory.
+
+### Residence persistence work in progress (PR #255)
+
+The city resident row now has a draft map-qualified residence record. Schema 5 adds the named
+`ResidentResidences` column; archive version 20 carries it, while older archive field shapes
+and authority-hash bases remain frozen. The canonical bounded wire distinguishes unknown legacy
+facts from observed homelessness. A home records map and plot independently of current body map
+and job. A missing bed identity is an unallocated household reservation, never proof of a unique
+physical bed. Observed creed, needs, refusals and self tags allow absent household members to
+retain their compatibility facts without loading their maps or creating substitute actors.
+
+Death receipts use residence-aware `rd2` only when needed; all-unknown `rd1` records retain
+their original canonical bytes. Malformed current records must refuse without truncating resident rows. Migration may fill only
+unknown facts; an old current-location field cannot prove a home map. Engine assignment, admission,
+remote occupancy and physical bed use still need integration and native acceptance. This data
+model work does not resolve the reproduced home-map defect or complete #230.
