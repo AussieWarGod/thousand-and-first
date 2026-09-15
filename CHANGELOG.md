@@ -1,14 +1,27 @@
 # Changelog
 
-Current 3108-file census is line-cap green: 440,888 physical lines; direct `XRL`
-imports occur in 1451 files, 0 of them over the line limit. Inventory SHA-256: `10b6325fb3e23b660a5609fe80485745104f2d925c523bb278af010edec488e2`.
-The cold-install inventory contains 3141 files. This is not evidence of a new public installation.
+Current 3112-file census is line-cap green: 441,029 physical lines; direct `XRL`
+imports occur in 1454 files, 0 of them over the line limit. Inventory SHA-256: `e9e71e2de55a777def5a6ddb283ab4b493b2e555ae2991b0543c668296017aa4`.
+The cold-install inventory contains 3146 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Historical entries retain their original scope;
 [docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md)
 records current acceptance.
 
 **Unreleased development**
+
+- Recruitment availability respects the civic-story setting, including ordinary extension
+  profiles outside the first-guest allowlist. Native admission/load checks now compare actual
+  body, culture, species, name, origin and resident map. Real Quickstart admission and cold load
+  preserve the same fifth citizen and starter home; shortage/refill and next paid job also pass.
+
+- New settlers draw coherent native bodies, origins and names with player/city reputation
+  weighting. Added ordinary Issachari, hindren and dromad recruits; hostile sources stay out
+  of voluntary arrivals. Existing citizens and frozen plans retain identity. Native selection,
+  hostile wait/recovery and frozen identity checks pass; one human guest also passes actual
+  admission, housing and cold load. Broader cultures, multi-map life and balance remain open.
+  Empty recruitment retains its due arrival while other city work continues; Charter explains
+  the reputation block alongside housing needs.
 
 - Striking a completed building awaiting its own construction closure now explains that
   pending work instead of claiming another receipt owns it. Foreign-job refusals and strike

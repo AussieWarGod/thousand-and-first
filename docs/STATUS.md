@@ -1,5 +1,106 @@
 # Current implementation and release evidence
 
+## Recruitment admission, housing and cold load — scoped native PASS
+
+Native `9cc75930ffae7b4201872a3085f67ea61b01c1d7` completes genuine marsh/advisor-on Quickstart
+(seed #43101): four original founders survive 16,803 saved turns and occupy two enclosed rooms
+with six beds and 34 clear floor cells. Real correspondence hosts guest 768, Yywur
+(`r_KingdomSettlerHand`, native human culture/species); explicit welcome enrolls that same body
+once as citizen five. Frozen blueprint/name/origin, citizenship, living resident roll, bound map
+and actual starter-home assignment agree. No synthetic residents, beds or completed homes.
+
+Empty civic water refuses construction without changing materials or authority. After 16 actual
+movement steps, eight drams transfer from the founder's existing carried vessel (32→24) to the
+cask (0→8). Real save and separate cold process retain exact guest authority before activation,
+then reject both stale welcome attempts without extra enrollment or water debit. The next job
+pays exactly one timber and two drams. Scripted menu input and one controlled founding-reputation
+change are disclosed; two startup observations verify the same retained standing witness.
+
+Both full profile recipes match the pinned source: 3,463 warm inputs, 3,465 cold inputs,
+3,422 C# per profile. Strict final logs, persona/lifecycle/guest validators, guarded 8,401 + 8,400
+ordinary turns, save receipt/snapshot and exact owned shutdown pass. Closed archive:
+`recruitment-guest-save/9cc75930/native-2-pass/result.json`, SHA-256
+`352c12f4a6ad9790f0322aadcdc69d83e2abd3f31d7e61f78a20a9bba4038557`.
+The matching full developer inventory binding is retained beside it at
+`recruitment-guest-save/9cc75930/dev-inventory-binding-1/result.json`.
+
+Native `807a89fc` separately passed 18,000 requested / 18,001 actual turns: twelve unplaced
+native samples across six factions and both routes; all-hostile waiting retains debt/water;
+restored relations recover the original head; renewed hostility retains the same guest identity.
+Its final road-processing checkpoint matches due tick 292801. A scoped synthetic extension
+catalogue/option-read probe proves report availability agrees with configured civic-story policy
+without publishing an option epoch or arrival. Catalogue and reputation are restored.
+Full recipe, strict log, guarded waits, persona and owned shutdown pass. Archive:
+`recruitment/807a89fc/native-4-pass/result.json`, SHA-256
+`4fc3d0ab6fda8309c80b9222c7d3b3449b7b16ecf40a1cebe80df693431c42c4`.
+Its empty-camp checkpoint proves continued processing, not productive construction. Its original
+full developer input binding remains historical after the startup-observer harness correction.
+
+The first admission attempt at `807a89fc` refused before admission because two composed startup
+checks initialized the one-time founding-reputation probe. The harness now applies its controlled
+change once and verifies the full retained witness on every observation; production is unchanged.
+Failed full-recipe archive: `recruitment-guest-save/807a89fc/native-1-fail/result.json`, SHA-256
+`c3d10b90eb1b500dfaaa398f35a7fe26fde9690b048d950c4ac483b47013c193`.
+
+This proves one human guest's real admission and persistence, not physical admission of every
+culture, ordinary multi-map life, balanced expansion, historical migration or interrupted enrollment.
+Issues #230/#231 and whole-building architecture/function #229/#251 remain open. Public 0.3.7
+is unchanged. Full licensed 15,019 main / 5,909 portable tests pass with zero skips; four engine
+compile modes and the latest documentation/coverage checks retain their recorded scope.
+
+## Earlier coherent recruitment proof — original scoped inputs
+
+New, unfrozen arrivals use one reputation-weighted catalogue: source faction, native body and
+origin agree, and names use Qud's faction/culture/species naming rules under a restored native
+RNG scope, with native property-before-tag precedence. Twelve authored profiles cover Farmers,
+Mechanimists, Snapjaws, Issachari, Hindren and Dromad. Specialist skills remain distinct from
+culture. First guests use the same selection restricted to their owned-body allowlist. Existing
+citizens and frozen plans keep identity; historical blueprint-only recovery retains its old path.
+
+Player and inbound city regard both affect bounded weights; native hostility excludes a faction.
+An empty eligible pool retains unspent arrival debt and continues downstream city work. Charter
+explains the reputation block alongside physical needs. This is not a population quota.
+
+Native `10d4c2a5703ff93d974be83db96c6a16b88b28fb` passed 18,000 requested / 18,001 actual turns:
+all six factions across both selection routes produced twelve coherent native body samples;
+fixed events repeated their names and preserved ambient RNG references. An ordinary hostile wait
+made no citizen, spent no water, retained first-epoch debt and advanced the final road-processing
+checkpoint to its due tick. Charter showed both recruitment and housing needs. Restoring relations
+opened the original arrival (Tiyuyurem, `r_KingdomSettlerHand`); renewed hostility kept that same
+candidate, name, origin, blueprint and plan hash. Correspondence emitted once across both checks.
+
+Synthetic founding/store, reversible reputation controls and unplaced samples are disclosed.
+This empty camp's road checkpoint proves continued processing, not productive staffing or construction.
+No physical admission, housing allocation, native cold load, ordinary multi-map or balance acceptance.
+All 3,461 profile inputs (3,420 C#) match the pinned recipe/seal; strict final log, guarded wait
+accounting, persona and exact owned shutdown pass. Closed archive:
+`recruitment/10d4c2a5/native-3-pass/result.json`, SHA-256
+`e313acf0e6dd377f74f780c37ddcc587f8b2dcc3526cbdaf31ad6b30f19f989c`.
+The full developer C# binding is retained in `recruitment/10d4c2a5/dev-inventory-binding-1/result.json`;
+its digest is `c56afdb08ce8e2aa513f36b5a5d2764d77ba2c744e888a787f187e27af2f5cd7`.
+
+Earlier attempt 2 at `cf97c1e0` failed a fixture comparison between founding's initial estimate
+135927 and the actual first healthy cadence deadline 136801. The corrected fixture binds the real
+first-epoch head and records boundary values; production code did not change for this correction.
+Failed archive `recruitment/cf97c1e0/native-2-fail/result.json`, SHA-256
+`b551edccb17c9c479c3f3b39e877e4dfa681c8f972ec058ef077d33cedbef366`, remains retained.
+The earlier 12,000-turn proof at `7c386a81` retains its original scope in
+`recruitment/7c386a81/native-1-pass/result.json` (SHA-256
+`b150724a584b32ad65abf99771fbbbbbd01fa833628bd9fdd9056e37a3fe9d50`).
+
+Full licensed suites pass: 15,019 main / 5,909 portable, zero skips; four engine compile modes pass.
+A main-only codec regression preserves waiting debt and the original head through serialization.
+The later report-policy and single-guest admission/cold-load proof above supersedes those pending
+items for its exact scope. Broader recruitment, multi-map life and balance remain under #231/#230.
+The original Beta goal and building issues #229/#251 stay open.
+
+Development compile scope: 3112 sources, baseline and compatibility symbols.
+Current census: 3112 staged C# files; 441,029 physical lines; zero at or above 300 lines.
+Direct `XRL` imports: 1454 files, 0 over the line limit. Cold-install inventory: 3146 files.
+Inventory SHA-256: `e9e71e2de55a777def5a6ddb283ab4b493b2e555ae2991b0543c668296017aa4`.
+Automated structural review binds this census in STRUCTURE_REVIEW.json and
+STRUCTURE_REVIEW_RECRUITMENT.md. Prior evidence retains its original inputs. Public 0.3.7 is unchanged.
+
 ## Strike closure feedback — accepted native scope (abf41251)
 
 Ordinary strike refusal now distinguishes the building's own completed work awaiting closure

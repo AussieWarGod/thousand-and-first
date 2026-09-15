@@ -21,6 +21,8 @@
     <Compile Include="..\Core\KingdomFoundingRegardRules.cs" />
     <Compile Include="KingdomFoundingRegardTests.cs" />
     <Compile Include="KingdomStrikeClosureTests.cs" />
+    <Compile Include="..\Simulation\Kernel\KingdomRecruitmentRules.cs" />
+    <Compile Include="KingdomRecruitmentRulesTests.cs" />
     <Compile Include="..\Harness\KingdomPaidHousingRoomRules.cs" />
     <Compile Include="KingdomRetainedTransitionTests.cs" />
     <Compile Include="KingdomLodgingRoomTests.cs" />

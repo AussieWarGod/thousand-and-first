@@ -1,6 +1,39 @@
 # The Thousand and First — Working-tree / v1.0 Test-Candidate Protocol
 
-## Unreleased strike closure validation
+## Recruitment admission and report follow-through — scoped PASS
+
+Native807a89fc proves report-policy agreement with a scoped extension catalogue/option-read probe,
+plus hostile waiting, original-head recovery and retained identity. Native9cc75930 then proves
+real guest admission, native body/name/origin/culture/species and resident-map agreement, actual
+starter housing, finite-water shortage/refill and real save/cold load. Two stale choices refuse;
+the next job pays exactly. Four founders remain housed alongside the same fifth citizen.
+The composed startup harness now applies its controlled founding reputation change once and
+verifies its retained witness on both observations. Its earlier failure is archived.
+
+Full profile recipes, strict final logs, guarded waits, validators and owned stops pass;
+exact archives and synthetic limitations are in STATUS. One human guest is not all-culture
+admission, ordinary multi-map life or balance acceptance. Rows26/28 and combinationC8 bind this
+new full developer input inventory; selection rows2/31 retain original native807a89fc scope.
+
+## Earlier coherent recruitment: original scoped native PASS
+
+Full licensed 15,019 main / 5,909 portable cases pass with zero skips. Four engine compile
+modes pass across 3112 production C# sources; the cold-install inventory contains 3146 files.
+Fourteen new shared cases cover both reputation channels, monotonicity, bounds, hostility and
+fixed-event weighted draws. Native first-guest probes now require all six source factions,
+both selection routes, deterministic native names, body/culture agreement, empty hostile-pool
+refusal, and retained frozen guest identity after changed reputation across ordinary turns.
+The initial 12,000-turn native run passed at `7c386a81`; its closed archive is in STATUS.
+The expanded scenario passed at `10d4c2a5`: 18,000 requested / 18,001 actual turns, all-hostile
+wait with no body or water spend, retained original debt, downstream road checkpoint, explanatory
+status, original-head recovery and frozen identity after renewed hostility. See STATUS for its
+closed archive and the retained failed attempt caused by an initial-deadline fixture assumption.
+The main-only cadence codec regression preserves debt through repeated waits and serialization.
+Those probes use reversible synthetic reputation and unplaced body samples; correspondence
+is produced by the real cadence. The later proof above adds one real human guest, home and cold load;
+broader population and multi-map acceptance remain owed.
+
+## Accepted strike closure validation (abf41251)
 
 Development compile validation spans across 3108 production C# sources;
 the cold-install inventory contains 3141 files.

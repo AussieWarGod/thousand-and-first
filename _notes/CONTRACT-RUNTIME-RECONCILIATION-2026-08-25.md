@@ -1,5 +1,8 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
+Current development census: 3112 production C# files / 3,146 cold-install files.
+Coherent recruitment is under native validation; earlier source/evidence below remains historical.
+
 ## Current development census notice
 
 The unreleased strike-feedback tree has 3108 production C# files and 3,141 cold-install files.

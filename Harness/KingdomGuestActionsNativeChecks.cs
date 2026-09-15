@@ -79,6 +79,7 @@ namespace ThousandAndFirst.Harness
 			GameObject body = Zone.FindObjectByID(candidate.ObjectId);
 			Require(GameObject.Validate(body) && body.GetPart<r_KingdomFirstGuestBody>() != null,
 				"hosted guest has no exact physical interaction part");
+			KingdomRecruitmentBodyWitness.Verify(body, candidate.Blueprint, candidate.PlannedOrigin, Require);
 			Require(System.Population == populationBefore && !KingdomCitizenship.BelongsTo(System, body), "hosting silently granted citizenship");
 			Require(KingdomGrowth.CanUsePhysicalFirstGuest(body, The.Player, candidateId, opportunityId)
 				&& !KingdomGrowth.CanUsePhysicalFirstGuest(body, body, candidateId, opportunityId), "guest interaction actor authority differs");
@@ -120,6 +121,12 @@ namespace ThousandAndFirst.Harness
 			Require(GameObject.Validate(body) && ReferenceEquals(Zone.FindObjectByID(body.IDIfAssigned), body)
 				&& KingdomCitizenship.BelongsTo(System, body) && System.Population == populationBefore + 1,
 				"explicit welcome did not enroll the same guest exactly once");
+			KingdomRecruitmentBodyWitness.Verify(body, candidate.Blueprint, candidate.PlannedOrigin, Require);
+			Require(body.GetStringProperty("KingdomName") == candidate.PlannedName
+				&& body.GetStringProperty("KingdomOrigin") == candidate.PlannedOrigin,
+				"citizenship changed the frozen name or origin");
+			Evidence.Append("; recruited-native-identity=true blueprint=").Append(body.Blueprint)
+				.Append(" culture=").Append(body.GetCulture()).Append(" species=").Append(body.GetSpecies());
 			Require(!KingdomGrowth.CanUsePhysicalFirstGuest(body, The.Player, candidateId, opportunityId),
 				"completed guest action remains usable");
 			int water = KingdomGrowth.CountStoredWater(Zone);

@@ -2386,3 +2386,28 @@ outgoing policy stays unspecified. Matching partially published subsets can comp
 values, extra keys, policy or fractional carry refuse without overwriting state. Established
 realms do not gain a fabricated historical baseline. This property is internal transaction
 state, not an extension surface or a way to alter a living city's reputation.
+
+
+## Coherent voluntary settlers (development)
+
+Direct `Number="1"` rows in `r_KingdomSettlers` need an ordinary body carrying
+`r_KingdomSettler`, `Brain`, `Body`, and two inherited blueprint tags:
+
+```xml
+<tag Name="r_TAF_RecruitFaction" Value="Hindren" />
+<tag Name="r_TAF_RecruitOrigin" Value="the hindren villages" />
+```
+
+The declared source must match the body's single positive native `Brain.Factions` allegiance.
+Base objects, Named objects and `GivesRep` figures cannot be cloned as generic recruits.
+Origin is bounded to 128 non-control, non-surrogate characters. Preserve actual native culture,
+species and anatomy; don't treat a profession as a species. Base weights must be positive and
+at most 1,000,000 after canonical duplicate folding. Existing simple-table restrictions on groups,
+conditional rows, builders and dynamic calls still apply. Malformed entries refuse the selection;
+missing native factions are unavailable. No fallback farmer is fabricated from an empty pool.
+
+Personal reputation and independently evolving inbound city regard weight new voluntary arrivals;
+Qud's hostile feeling excludes a source. Already-frozen plans keep identity. First-guest durable
+ownership currently admits only the shipped 12 bodies; extension rows can participate in later
+ordinary arrivals. No public citizenship authority is granted by these metadata tags.
+Native acceptance and the remaining #231 work are recorded in docs/STATUS.md.

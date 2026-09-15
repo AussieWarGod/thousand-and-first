@@ -1,5 +1,13 @@
 # Session handoff — current v1.0 test-candidate work
 
+## Coherent recruitment draft
+
+Current development: 3112 staged sources / 3146 package files. Six-faction coherent
+recruitment implemented; full licensed 15,019/5,909 cases and four engine modes pass. Native
+catalogue/frozen-guest and expanded hostile-wait checks passed at 10d4c2a5; physical admission/home/cold-load/multi-map proof
+remains owed under #231/#230. No saved fields change. docs/STATUS.md and common Git handoff
+own exact scope and live handles; previous entries below retain original evidence.
+
 ## Unreleased strike feedback
 
 Current census: 3108 staged sources. Branch `codex/strike-closure-feedback` distinguishes an

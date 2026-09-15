@@ -16,9 +16,10 @@ namespace ThousandAndFirst.Harness
 		internal static void Observe(XRLGame game, KingdomSystem system, string stage)
 		{
 			Require(game != null && system != null && system.Founded, "no founded realm for reputation probe");
-			if (stage == "startup")
+			// Composed scenarios can observe startup twice; apply the controlled change once.
+			// Every observation still verifies the complete retained standing witness below.
+			if (stage == "startup" && !game.HasStringGameState(WitnessKey))
 			{
-				Require(!game.HasStringGameState(WitnessKey), "founding reputation probe already ran");
 				int compared = 0;
 				foreach (Faction faction in Factions.Loop())
 				{
