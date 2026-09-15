@@ -25,6 +25,13 @@ alongside the physical need. Native naming now uses property-before-tag preceden
 18,000-turn test adds an all-hostile ordinary wait, downstream road checkpoint, exact water/debt
 retention and recovery of the original head. Its execution is pending; the road checkpoint proves
 continued downstream processing, not productive staffing or construction in this empty camp.
+Native attempt 2 at `cf97c1e0` failed the fixture's deadline comparison: founding estimated
+135927, while the first healthy pass established the actual head at 136801. Its log shows zero
+arrivals and completed downstream passes; later assertions did not run. Closed failed archive:
+`recruitment/cf97c1e0/native-2-fail/result.json`, SHA-256
+`b551edccb17c9c479c3f3b39e877e4dfa681c8f972ec058ef077d33cedbef366`.
+The fixture now binds the actual first-epoch head, records its boundary values and requires the
+same ordinal/deadline on recovery. Production code is unchanged from attempt 2.
 Physical admission/home allocation, cold load, ordinary multi-map recruitment and balance remain
 unproved. #231 and the original Beta goal remain open.
 

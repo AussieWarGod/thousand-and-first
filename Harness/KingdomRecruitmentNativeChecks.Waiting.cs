@@ -5,16 +5,16 @@ namespace ThousandAndFirst.Harness
 {
 	internal sealed partial class KingdomRecruitmentNativeChecks
 	{
-		private long WaitingDue;
+		private long WaitingDue, WaitingStarted;
 		private int WaitingWater;
 
 		internal void BeginWaiting(Zone Zone, StringBuilder Evidence)
 		{
-			WaitingDue = System.NextArrivalTick;
+			WaitingStarted = Game.TimeTicks;
 			WaitingWater = KingdomGrowth.CountStoredWater(Zone);
-			Require(WaitingDue > Game.TimeTicks, "recruitment wait is already due at setup");
+			Require(System.NextArrivalTick > WaitingStarted, "recruitment wait is already due at setup");
 			Capture(); SetRegards(null);
-			Evidence.Append("; recruitment-wait begin=true all-hostile=true due=").Append(WaitingDue);
+			Evidence.Append("; recruitment-wait begin=true all-hostile=true initial-estimate=").Append(System.NextArrivalTick);
 		}
 
 		internal void CheckWaiting(Zone Zone, StringBuilder Evidence)
@@ -22,10 +22,19 @@ namespace ThousandAndFirst.Harness
 			try
 			{
 				var growth = System.LifecycleBook.Growth;
-				Require(Game.TimeTicks > WaitingDue && growth.ArrivalDebtRanges.Count > 0,
+				Require(Game.TimeTicks > WaitingStarted && growth.ArrivalDebtRanges.Count > 0,
 					"ordinary turns did not retain recruitment debt");
-				Require(growth.ArrivalDebtRanges[0].FirstOrdinal == 1UL
-					&& growth.ArrivalDebtRanges[0].FirstDueTick == WaitingDue
+				// Founding's estimate precedes the first healthy epoch. Bind the actual
+				// cadence head before observing recovery; never rewrite the production clock.
+				WaitingDue = growth.ArrivalDebtRanges[0].FirstDueTick;
+				Evidence.Append("; recruitment-wait observed-head=").Append(growth.ArrivalDebtRanges[0].FirstOrdinal)
+					.Append(" due=").Append(WaitingDue).Append(" epoch-start=").Append(growth.ArrivalRateEpochStartedTick)
+					.Append(" interval=").Append(growth.ArrivalIntervalTicks)
+					.Append(" population=").Append(System.Population)
+					.Append(" candidate=").Append(growth.ArrivalCandidate?.Id ?? "none");
+				Require(WaitingDue > WaitingStarted && WaitingDue <= Game.TimeTicks
+					&& growth.ArrivalRateEpoch == 1L && growth.ArrivalDebtRanges[0].FirstOrdinal == 1UL
+					&& WaitingDue == growth.ArrivalRateEpochStartedTick + growth.ArrivalIntervalTicks
 					&& growth.ArrivalOpportunity == null && growth.ArrivalCandidate == null
 					&& growth.ArrivalOp == null && System.Population == 0,
 					"empty recruitment spent, replaced or materialized the waiting head");
