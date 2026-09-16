@@ -420,6 +420,42 @@ class DerivedInputTest(unittest.TestCase):
                 with self.assertRaises(SystemExit):
                     profile.verify(str(local), str(seal))
 
+    WATER_SCRIPT = ("stagedigest water-maintenance-setup advance 2400 water-maintenance-enroll advance 1200 "
+                    "water-maintenance-check advance 1200 water-maintenance-check advance 1200 "
+                    "water-maintenance-refill advance 1200 water-maintenance-check stagedigest")
+
+    def test_water_recipe_authors_final_growth_and_raids_values_in_engine_format(self):
+        local = self.tmp / "Local"
+        local.mkdir()
+        destination = local / "PlayerOptions.json"
+        with mock.patch.dict(os.environ, {"TAF_SCENARIO_SCRIPT": self.WATER_SCRIPT}):
+            profile.write_options(str(ROOT / "Tools" / "smoke" / "PlayerOptions.json"), str(destination))
+        template = json.loads((ROOT / "Tools" / "smoke" / "PlayerOptions.json").read_text(encoding="utf-8"))
+        template["OptionEnableSeed"] = "Yes"
+        template["r_TAF_OptionGrowth"] = "No"
+        template["r_TAF_OptionRaids"] = "No"
+        expected = ("{\n" + ",\n".join(json.dumps(k) + ":" + json.dumps(v) for k, v in template.items())
+                    + "\n}").encode()
+        self.assertEqual(expected, destination.read_bytes())
+        self.assertNotIn(b"r_TAF_OptionMaster", expected)
+        seal = self.tmp / "water.sha256"
+        profile.seal(str(local), str(seal))
+        destination.write_bytes(expected)
+        profile.verify(str(local), str(seal))
+        for drift in (expected.replace(b'"r_TAF_OptionGrowth":"No"', b'"r_TAF_OptionGrowth":"Yes"'),
+                      expected.replace(b'"r_TAF_OptionRaids":"No"', b'"r_TAF_OptionRaids":"Yes"')):
+            destination.write_bytes(drift)
+            with self.assertRaises(SystemExit):
+                profile.verify(str(local), str(seal))
+
+    def test_conflicting_option_writers_refuse_before_writing(self):
+        destination = self.tmp / "PlayerOptions.json"
+        destination.write_text("retained", encoding="utf-8")
+        script = self.PAUSE_SCRIPT + " water-maintenance-setup"
+        with mock.patch.dict(os.environ, {"TAF_SCENARIO_SCRIPT": script}), self.assertRaises(SystemExit):
+            profile.write_options(str(ROOT / "Tools" / "smoke" / "PlayerOptions.json"), str(destination))
+        self.assertEqual("retained", destination.read_text(encoding="utf-8"))
+
     def test_non_pause_recipe_options_are_unchanged(self):
         destination = self.tmp / "PlayerOptions.json"
         script = "stagedigest realize stagedigest resourcedigest status"
