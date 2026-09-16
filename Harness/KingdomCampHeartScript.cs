@@ -12,7 +12,7 @@ namespace ThousandAndFirst.Harness
 		internal static bool Matches(IList<string> Script, bool RequireSave = false)
 		{
 			if (Script == null) return false;
-			if (!RequireSave && KingdomCampHeartChainScript.Matches(Script)) return true;
+			if (!RequireSave && KingdomCampHeartChainScript.SealedTargetRung(Script) > 0) return true;
 			bool save = Script.Count == Steps.Length + 1 && Script[Steps.Length] == SaveVerb;
 			if (!save && (RequireSave || Script.Count != Steps.Length)) return false;
 			for (int i = 0; i < Steps.Length; i++) if (Script[i] != Steps[i]) return false;

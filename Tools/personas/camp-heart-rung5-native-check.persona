@@ -1,0 +1,56 @@
+# Heart rung 4 -> 5 (the great court into the hosted arcology), issue #160. The four rungs below it
+# are climbed FIRST inside this same persona by the same real settlement pass -- this script's first
+# twenty-four steps are byte-identical to camp-heart-chain, whose paid 1->2->3->4 climb is accepted
+# native evidence (docs/STATUS.md, Native30) -- so the rung-4 start state is reached lawfully rather
+# than seeded. Nothing here writes r_TAF_HeartRung and the seam never calls KingdomUpgrade.Begin,
+# KingdomPlots.Advance or KingdomArchitectureStamper.TryApplyUpgrade.
+#
+# WHAT THE FIFTH RUNG ASKS FOR THAT NO RUNG BELOW IT DOES, all seeded by camp-heart-chain-capital in
+# zero turns and all disclosed:
+#  - the arclight craft level (fourteen disk lessons, because a research node is worth zero craft
+#    points) and the roster key node:arclight, minted by KingdomZoning.Learn, which is the same call
+#    production's own research completion makes. No research node is completed here;
+#  - FOUR claimed zones. KingdomZoning.Permits -- the unfiltered gate Begin runs, not the craft gate
+#    Assess filters -- refuses MinZones="4" territory that the assessment admits as Ready. Three
+#    adjacent zones are taken with the founder's own KingdomFounding.ClaimZone;
+#  - THE CROWN. Both the zoning purpose gate and KingdomHostedArcology.CanReserveAt refuse an
+#    uncrowned city. The crown is never written: one crown hall is staked and finished on the
+#    production plot path the eighteen fixture tent rows already use, on a claimed neighbour --
+#    a fourteen-by-ten XL lot does not fit beside the twenty-by-eighteen heart, the paid tent,
+#    eighteen tent rows and eight air-well footprints -- and the crown is READ BACK through
+#    KingdomCrown.CrownedOn, which resolves from the city book;
+#  - the COMPOSITE bill. The arcology is the one improvement production prices with its own Bits
+#    ("00346") and Exotics (ingot:3, gem:2) beside the great court's UpgradeMaterials
+#    (timber:1, stone:40, shapedstone:22, marble:8, workedmetal:30, scrap:32 = 133 units).
+#    CanPayUpgrade reads only the plain tally, so a fixture that stocked it alone would preflight
+#    green and be refused at funding. Every minted bit-bearing and exotic body is classified by
+#    production's own readers and the fixture mints only while the coverage predicates refuse.
+#
+# THE FIFTH RUNG IS A SAME-FOOTPRINT RENOVATION. Rungs four and five both stand on PlotSize.Huge,
+# so the held twenty-by-eighteen rect must NOT grow, and Transition="renovate" is not
+# fabric-preserving: the moot pavilion, both founder statues, the rostrum and the gate torch-posts
+# are struck by design. Only the two doubly-protected placements are asserted by identity -- the
+# first basin and the heart stockpile -- and the great court itself is NOT looked for afterwards:
+# production retires the predecessor, so what is proved is the receipt chain (completed job naming
+# the court as subject and the arcology as output, receipt, scaffold removal proof, production's own
+# chained-successor reader) with the court's absence consulted LAST.
+# The rung also binds the realm's one hosted-shell authority at handover and quarantines the job
+# when it cannot, so the standing check reads that row out of its durable slots and requires it
+# Active on this ground, naming this job and this carrier. No hosted floor may have been commissioned.
+#
+# BUDGET, DISCLOSED AND AT RISK. 60000 ordinary turns against a 3600-second cap. The accepted
+# four-rung run requests 31200 of them; the arcology's own quoted labour is the largest on the
+# ladder. If this run times out rather than refuses, the fallback is the second route issue #160
+# allows -- a disclosed synthetic rung-4 heart in its own persona -- and that fallback costs the
+# three-real-climbs property this script has.
+# Not ordinary play, no save/load, no higher-rung persistence, no hosted-interior acceptance.
+DESCRIPTION=the heart climbs its fifth rung, the great court renovated into the hosted arcology, paid out of the city that raised the four below it
+REQUEST=founding-first-city
+START=8.22@40,12
+SCRIPT=stagedigest;camp-heart-setup;advance 1200;camp-heart-check;advance 3600;camp-heart-check;advance 1200;camp-heart-check;stagedigest;camp-heart-chain-setup;advance 1200;camp-heart-chain-supply;advance 1200;camp-heart-chain-check;advance 7200;camp-heart-chain-check;camp-heart-chain-supply;advance 1200;camp-heart-chain-check;advance 6600;advance 6600;camp-heart-chain-check;advance 1200;camp-heart-chain-check;camp-heart-chain-capital;camp-heart-chain-supply;advance 1200;camp-heart-chain-check;advance 6600;advance 6600;advance 6600;advance 6600;camp-heart-chain-check;advance 1200;camp-heart-chain-check
+VERBS=camp-heart-setup,camp-heart-check,camp-heart-chain-setup,camp-heart-chain-check,camp-heart-chain-supply,camp-heart-chain-capital
+EXPECT=camp-heart-chain-input:OK~original-update-skipped=true,stagedigest:OK~founded=false,camp-heart-setup:OK~native-camp-heart phase=1,advance:OK,camp-heart-check:OK~native-camp-heart phase=2,advance:OK,camp-heart-check:OK~native-camp-heart phase=3,advance:OK,camp-heart-check:OK~native-camp-heart cases=1 passed=1 failed=0,stagedigest:OK~founded=true,camp-heart-chain-founder:OK~outside-rung4=true,camp-heart-chain-setup:OK~paid-heart-chain setup,advance:OK,camp-heart-chain-spatial:OK,camp-heart-chain-occupancy:OK~synthetic-placement=true; retained-walkable=true; scoped-assessment=true,camp-heart-chain-road-wear:OK~worn-trodden-path-admitted=true,camp-heart-chain-supply:OK~target=3,advance:OK,camp-heart-chain-check:OK~paid-heart-chain paid; target=3,advance:OK,camp-heart-chain-handover-refusals:OK~post-payment-resident=true,camp-heart-chain-handover-cleared:OK~post-payment-resident=true,camp-heart-chain-retry-obstruction:OK~strict-baseline=true,camp-heart-chain-retry-outstanding:OK~phase=Outstanding,camp-heart-chain-retry-removal:OK~committed-removal-reproved=true,camp-heart-chain-check:OK~paid-heart-chain completed; rung=3,camp-heart-chain-renovation:OK~retained-new-wall=true; resident-preflight=true; scoped-assessment=true,camp-heart-chain-survey-stakes:OK~four-exact-stakes=true; founding-recovery-restored=true,camp-heart-chain-supply:OK~target=4,advance:OK,camp-heart-chain-check:OK~paid-heart-chain paid; target=4,advance:OK,advance:OK,camp-heart-chain-renovation-refusals:OK~post-payment-resident=true,camp-heart-chain-renovation-cleared:OK~post-payment-resident=true,camp-heart-chain-check:OK~paid-heart-chain completed; rung=4,advance:OK,camp-heart-chain-check:OK~paid-heart-chain rung-four leg complete;,camp-heart-chain-crown:OK~claimed-zones=4,camp-heart-chain-capital:OK~paid-heart-chain capital,camp-heart-chain-renovation:OK~retained-new-wall=true; resident-preflight=true; scoped-assessment=true,camp-heart-chain-arcology:OK~stage=preflight; rung=4,camp-heart-chain-exotics:OK~bill=,camp-heart-chain-supply:OK~target=5,advance:OK,camp-heart-chain-check:OK~paid-heart-chain paid; target=5,advance:OK,advance:OK,advance:OK,advance:OK,camp-heart-chain-renovation-refusals:OK~post-payment-resident=true,camp-heart-chain-renovation-cleared:OK~post-payment-resident=true,camp-heart-chain-check:OK~paid-heart-chain completed; rung=5,advance:OK,camp-heart-chain-arcology:OK~stage=standing; rung=5,camp-heart-chain-check:OK~paid-heart-chain arcology; paid-rungs=1->2->3->4->5,COMPLETE
+LOG_EXPECT=["MODWARN [Pets of Harvest Dawn] - Mod defining manual load order, please convert it to use the Dependencies field.","MODWARN [Pets of Harvest Dawn] - XmlDataHelper:: <...>/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/DLC/PetsPack1/Freehold_Pet_Ercolano/PopulationTables.xml line 4 char 6"]
+LOG_FORBID=["construction: founding heart recovery requires inspection","seal: settlement pass was not staged"]
+SET=camp,native-regression,test-only
+TIMEOUT=3600

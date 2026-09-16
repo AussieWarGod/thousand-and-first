@@ -11,7 +11,8 @@ namespace ThousandAndFirst.Harness
 	{
 		public int ScenarioVerbApiVersion => KingdomScenarioVerbApi.Version;
 		public IEnumerable<string> ScenarioVerbs => new[] { KingdomCampHeartChainScript.Setup,
-			KingdomCampHeartChainScript.Check, KingdomCampHeartChainScript.Supply };
+			KingdomCampHeartChainScript.Check, KingdomCampHeartChainScript.Supply,
+			KingdomCampHeartChainScript.Capital };
 		public string RunScenarioVerb(string Verb, string Argument, out bool Ok)
 		{
 			Ok = false;
@@ -19,7 +20,12 @@ namespace ThousandAndFirst.Harness
 			{
 				KingdomCampHeartNativeProvider.Require(string.IsNullOrEmpty(Argument)
 					&& KingdomScenarioScript.TryRead(out var script, out _)
-					&& KingdomCampHeartChainScript.Matches(script), "exact sealed paid heart chain absent");
+					&& KingdomCampHeartChainScript.SealedTargetRung(script) > 0,
+					"exact sealed paid heart chain absent");
+				KingdomCampHeartNativeProvider.Require(
+					Verb != KingdomCampHeartChainScript.Capital
+						|| KingdomCampHeartChainScript.MatchesRung5(script),
+					"the capital seed belongs to the sealed arcology script only");
 				string report = KingdomCampHeartNativeChecks.Chain(Verb, The.Game);
 				Ok = true;
 				return report;

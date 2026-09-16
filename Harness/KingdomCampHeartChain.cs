@@ -20,7 +20,8 @@ namespace ThousandAndFirst.Harness
 
 		private sealed partial class Frame
 		{
-			private int ChainPhase;
+			private int ChainPhase, ChainFinalRung;
+			private string ChainCapitalReport;
 			private GameObject ChainHeart, ChainBasin, ChainStore;
 			private string ChainHeartId, ChainJobId;
 			private int ChainTarget, ChainWater;
@@ -36,6 +37,11 @@ namespace ThousandAndFirst.Harness
 				{
 					Require(ChainPhase == 0, "chain setup is not repeatable");
 					ChainPhase = -1;
+					Require(KingdomScenarioScript.TryRead(out var sealedScript, out string sealedFailure),
+						sealedFailure);
+					ChainFinalRung = KingdomCampHeartChainScript.SealedTargetRung(sealedScript);
+					Require(ChainFinalRung == 4 || ChainFinalRung == 5,
+						"the sealed paid heart chain names no exact final rung");
 					ChainHeart = StandingHeart();
 					Require(KingdomPlots.HeartRung(Zone) == 2, "chain did not start at paid rung two");
 					var blocked = KingdomUpgrade.Assess(System, Zone, ChainHeart, Census(), 50, false);
@@ -53,33 +59,54 @@ namespace ThousandAndFirst.Harness
 						+ "; synthetic-water=3600; synthetic-legacy-water-courts=8; synthetic-food=1728; synthetic-knowledge=true; synthetic-store-identities=true"
 						+ "; housing-calendar-frontier=true; no-improvement-driven=true; " + ChainState();
 				}
+				if (Verb == KingdomCampHeartChainScript.Capital)
+				{
+					Require(ChainPhase == 8 && ChainFinalRung == 5,
+						"the capital seed runs exactly once, after the rung-four leg");
+					SeedChainCapital(); ChainPhase = 9;
+					return "paid-heart-chain capital; " + ChainCapitalReport + "; " + ChainState();
+				}
 				if (Verb == KingdomCampHeartChainScript.Supply)
 				{
-					Require(ChainPhase == 1 || ChainPhase == 4,
-						"material supply requires the completed source tent or moot yard");
+					Require(ChainPhase == 1 || ChainPhase == 4 || ChainPhase == 9,
+						"material supply requires the completed source tent, moot yard or crowned court");
 					RequireChainSupport();
 					if (ChainPhase == 1) HoldChainTent();
-					SupplyChain(ChainPhase == 1 ? 3 : 4); ChainPhase++;
+					SupplyChain(ChainPhase == 1 ? 3 : ChainPhase == 4 ? 4 : 5); ChainPhase++;
 					return "paid-heart-chain supplied; target=" + ChainTarget + "; " + ChainState();
 				}
 				Require(Verb == KingdomCampHeartChainScript.Check, "unknown paid heart chain verb");
-				if (ChainPhase == 2 || ChainPhase == 5)
+				if (ChainPhase == 2 || ChainPhase == 5 || ChainPhase == 10)
 				{
 					CheckChainPaid(); ChainPhase++;
 					return "paid-heart-chain paid; target=" + ChainTarget + "; job=" + ChainJobId
 						+ "; water=" + ChainWater + "; materials=" + ChainSupplyClaim + "; " + ChainState();
 				}
-				if (ChainPhase == 3 || ChainPhase == 6)
+				if (ChainPhase == 3 || ChainPhase == 6 || ChainPhase == 11)
 				{
 					CheckChainComplete(); ChainPhase++;
 					return "paid-heart-chain completed; rung=" + ChainTarget + "; job=" + ChainJobId
 						+ "; effects-settled=true; track-retained=true; " + ChainState();
 				}
-				Require(ChainPhase == 7, "paid heart chain check out of order");
+				if (ChainPhase == 7)
+				{
+					CheckChainComplete();
+					Require(KingdomPlots.RecoverFoundingHeart(System, Zone), "rung-four next-day recovery refused");
+					CheckChainComplete(); ChainPhase = 8;
+					if (ChainFinalRung == 5)
+						return "paid-heart-chain rung-four leg complete; paid-rungs=1->2->3->4"
+							+ "; next-day-recovery=true; track-retained=true; " + ChainState();
+					return "paid-heart-chain complete; paid-rungs=1->2->3->4; next-day-recovery=true"
+						+ "; track-retained=true; ordinary-acceptance=false; save-load=untested; " + ChainState();
+				}
+				Require(ChainPhase == 12 && ChainFinalRung == 5, "paid heart chain check out of order");
 				CheckChainComplete();
-				Require(KingdomPlots.RecoverFoundingHeart(System, Zone), "rung-four next-day recovery refused");
-				CheckChainComplete(); ChainPhase = 8;
-				return "paid-heart-chain complete; paid-rungs=1->2->3->4; next-day-recovery=true"
+				Require(KingdomPlots.RecoverFoundingHeart(System, Zone), "rung-five next-day recovery refused");
+				CheckChainComplete();
+				RequireChainArcology();
+				ChainPhase = 13;
+				return "paid-heart-chain arcology; paid-rungs=1->2->3->4->5; next-day-recovery=true"
+					+ "; footprint-unchanged=true; predecessor-retired=true; authority-active=true"
 					+ "; track-retained=true; ordinary-acceptance=false; save-load=untested; " + ChainState();
 			}
 

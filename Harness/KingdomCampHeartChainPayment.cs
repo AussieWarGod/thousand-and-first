@@ -11,17 +11,26 @@ namespace ThousandAndFirst.Harness
 		{
 			private void SupplyChain(int Target)
 			{
-				Require(Target == 3 || Target == 4, "unknown heart chain target");
-				ChainTarget = Target; ChainFrom = Target == 3 ? "heartwaterstone" : "heartmoot";
-				ChainTo = Target == 3 ? "heartmoot" : "heartcourt";
-				ChainWater = Target == 3 ? 28 : 50;
+				Require(Target == 3 || Target == 4 || Target == 5, "unknown heart chain target");
+				Require(Target <= ChainFinalRung, "the sealed script does not drive this target rung");
+				ChainTarget = Target;
+				ChainFrom = Target == 3 ? "heartwaterstone" : Target == 4 ? "heartmoot" : "heartcourt";
+				ChainTo = Target == 3 ? "heartmoot" : Target == 4 ? "heartcourt" : "arcology";
+				ChainWater = Target == 3 ? 28 : Target == 4 ? 50 : 94;
 				ChainHeart = StandingHeart(); ChainHeartId = ChainHeart.IDIfAssigned;
 				Require(KingdomUpgrade.DesignKeyOf(ChainHeart) == ChainFrom
 					&& ChainStore?.Inventory != null && ChainStore.Inventory.Objects.Count == 0,
 					"supply requires its predecessor and empty dedicated supplemental store");
 				var tally = KingdomMaterials.UpgradeCostFor(ChainFrom);
-				Require(tally.Total() == (Target == 3 ? 25 : 121), "authored heart material quantity changed");
-				ChainSupplyClaim = new KingdomMaterialDebitCost(tally).ToClaimString();
+				Require(tally.Total() == (Target == 3 ? 25 : Target == 4 ? 121 : 133),
+					"authored heart material quantity changed");
+				// The arcology is the one improvement production prices as a COMPOSITE: its own
+				// Bits and Exotics are reserved beside the predecessor's UpgradeMaterials
+				// (Growth/KingdomUpgrade.14.Begin.cs:155-172). Every rung below it pays materials
+				// only, and a five-rung claim built from the plain tally would be short.
+				ChainSupplyClaim = new KingdomMaterialDebitCost(tally,
+					Target == 5 ? KingdomMaterials.BitCostFor(ChainTo) : null,
+					Target == 5 ? KingdomMaterials.ExoticCostFor(ChainTo) : null).ToClaimString();
 				ChainSupplied.Clear();
 				foreach (KingdomMaterial material in Enum.GetValues(typeof(KingdomMaterial)))
 					for (int i = 0; i < tally.Get(material); i++)
@@ -34,12 +43,14 @@ namespace ThousandAndFirst.Harness
 							"synthetic chain material did not retain exact custody");
 						ChainSupplied.Add(unit);
 					}
+				if (Target == 5) SupplyChainHighCraft();
 				Require(KingdomMaterials.CanPayUpgrade(Zone, ChainFrom, out string failure), failure);
 				var assessment = AssessChain(out string context);
 				Require(KingdomUpgradeRules.IsReady(assessment.Verdict), "supplied heart preflight refused: "
 					+ assessment.Verdict + "; reason=" + assessment.Reason + "; " + context);
 				if (Target == 3) { ProveChainEnvelopeOccupancy(); ProveChainRoadWear(); }
-				else { ProveChainRenovationOccupancy(); ProveChainSurveyStakes(); }
+				else if (Target == 4) { ProveChainRenovationOccupancy(); ProveChainSurveyStakes(); }
+				else { ProveChainRenovationOccupancy(); ProveChainRetainedStakes(); }
 			}
 
 			private void CheckChainPaid()
@@ -72,7 +83,7 @@ namespace ThousandAndFirst.Harness
 					Require(!ChainStore.Inventory.Objects.Contains(supplied), "billed unit still in supplemental store");
 				RequireChainCustody();
 				RequireChainFoundingRecovery("while the next paid heart improvement is working");
-				KingdomCampHeartChainHandoverOccupancy.Arm(FixtureResidents[0], ChainJobId, ChainTarget == 4);
+				KingdomCampHeartChainHandoverOccupancy.Arm(FixtureResidents[0], ChainJobId, ChainTarget >= 4);
 			}
 
 			private void CheckChainComplete()
@@ -98,7 +109,8 @@ namespace ThousandAndFirst.Harness
 				Require(KingdomArchitectureStamper.TryExactAnchoredComponent(standing, Zone,
 					KingdomPlots.HeartBasinRole, out var basin, out failure)
 					&& ReferenceEquals(basin, ChainBasin)
-					&& BasinCapacity(standing) == (ChainTarget == 3 ? "160" : "512"),
+					&& BasinCapacity(standing) == (ChainTarget == 3 ? "160"
+						: ChainTarget == 4 ? "512" : "1024"),
 					"paid chain lost its original basin or expected capacity: " + failure);
 				Require(KingdomArchitectureStamper.TryExactAnchoredComponent(standing, Zone,
 					StorageRole, out var store, out failure) && ReferenceEquals(store, Store), failure);
