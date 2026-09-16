@@ -37,12 +37,18 @@ namespace ThousandAndFirst.Tests
 		public void EmptyCampReadsActualAutomaticStageWithoutFlushingOrInventingBodies()
 		{
 			string source = Read("Harness/KingdomWaterMaintenanceSealEvidence.cs");
+			// The roadless testground never restages after founding (#135 typed Pending), so the
+			// fixture accepts the untouched founding stage and asserts the live ledger side instead.
 			foreach (string token in new[] { "store.ReadStage(game.GameID)", "staged.Population == 0",
-				"KingdomSealProfileCaptureRules.StillMatches(", "KingdomSealRecord.TryParse(",
-				"roundtrip.Compose() == wire", "staged.WrittenTick > foundedTick",
-				"KingdomPolityProfileRules.IsUnresolvedBodyPool(staged.CanonicalBodyKeys)" }) StringAssert.Contains(token, source);
+				"staged.Revision == 1 && staged.WrittenTick == foundedTick", "KingdomSealRecord.TryParse(",
+				"roundtrip.Compose() == wire", "KingdomPolityProfileRules.IsUnresolvedBodyPool(profile.BodyKeys)",
+				"p.Source == KingdomPolitySource.CurrentRealm", "coordinator.NativeSpatialCaptureWaits(out string failure)",
+				"coordinator.NativePendingStageEvidence() == before", "stage-revision=", " stage-schema=",
+				" spatial=pending restage=none" }) StringAssert.Contains(token, source);
 			foreach (string token in new[] { "TryStage(", "TryStageSemanticSnapshot(", "TryReconcile(",
-				"TryCapture(", "SetOption(", "BodyKeys =" }) StringAssert.DoesNotContain(token, source);
+				"TryCapture(", "SetOption(", "BodyKeys =", "staged.WrittenTick > foundedTick",
+				"CommittedUnresolvedLegacyProfileSchema", "IsUnresolvedBodyPool(staged.CanonicalBodyKeys)",
+				"StillMatches(" }) StringAssert.DoesNotContain(token, source);
 			StringAssert.Contains("KingdomWaterMaintenanceSealEvidence.Verify(System, Game, LastTick", Read(Checks));
 		}
 		[Test]
