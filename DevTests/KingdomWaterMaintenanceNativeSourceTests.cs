@@ -60,8 +60,19 @@ namespace ThousandAndFirst.Tests
 			foreach (string token in new[] { "KingdomCity.CheckIn(system, Zone, survey, tick)",
 				"system.LastHeartbeatTick == heartbeat", "system.DedicationCounter == counter + 2",
 				"system.Ledger.UpkeepDrawn == 0", "system.Population == 0", "survey.Larders.Count == 0",
-				"!Vessels[i].HasIntProperty(KingdomCity.DedicationOrderProperty)" }) StringAssert.Contains(token, source);
+				"!Vessels[i].HasIntProperty(KingdomCity.DedicationOrderProperty)",
+				"KingdomWaterMaintenanceHeartStores.Water(survey, Zone, Liquids, out int heartStores, out string heart)",
+				"survey.Stores.Count == 2 + heartStores", "survey.StoredWater == 1 + heartWater" }) StringAssert.Contains(token, source);
 			StringAssert.DoesNotContain("SetIntProperty(KingdomCity.DedicationOrderProperty", source);
+			// The heart's first basin is a civic store; the fixture partitions, never assumes exactly two.
+			foreach (string token in new[] { "survey.Stores.Count == 2 &&", "ReferenceEquals(survey.Stores[0]" })
+				StringAssert.DoesNotContain(token, source + Read(Checks));
+			string heart = Read("Harness/KingdomWaterMaintenanceHeartStores.cs");
+			foreach (string token in new[] { "KingdomPlots.TrySurveyedHeart(zone, out KingdomPlotRules.PlotRect heart)",
+				"owner.GetIntProperty(\"KingdomStores\") == 1 && heart.Contains(cell.X, cell.Y)",
+				"KingdomLiquids.HasFreshWater(store) ? store.Volume : 0" }) StringAssert.Contains(token, heart);
+			foreach (string token in new[] { "SetIntProperty(", "AddDrams(", "RemoveObject(", "Fill(" }) StringAssert.DoesNotContain(token, heart);
+			StringAssert.Contains("Evidence.Append(\"\\ndedication-survey \").Append(Setup.DedicationSurvey)", Read(Checks));
 		}
 		[Test]
 		public void FreshScenarioSealsWarmupEnrollmentAndFourRealWaterIntervals()
