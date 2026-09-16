@@ -427,9 +427,21 @@
       "save_cold_load": "COVERAGE_GAP",
       "negative": "COVERAGE_GAP",
       "driver": "Harness/KingdomWaterMaintenanceNativeProvider.cs",
-      "status": "EVIDENCE_UNVERIFIED",
-      "note": "Driver Harness/KingdomWaterMaintenanceNativeProvider.cs (dev commit 1a3f6ba, #23). Native ea7d20ab run of water-maintenance-native-check refused at water-maintenance-enroll with a thrown InvalidOperationException, but investigation (investigation-water-maintenance-enroll.md) found production is correct: the fixture expects a schema-2 stage that the #135 Pending boundary never writes on the roadless testground, so the refusal is a stale fixture, not a production defect. RED artifact retained at water-maintenance/ea7d20ab/water-maintenance-native-check-1/result.json (SHA256 3fcd35bd5546f0f76861ba1e7633871083476f00934206513149c17d7d53523f; 3295 bytes); typed matrix evidence is reserved for PASS statuses. Fixture fix is in progress on test/037-travel-personas-reseal; the roaded-testground proof is tracked in #256. Do not conflate with the separate profile_schema donor/stage/downgrade proof (water-scarcity-lane-truth memory) -- that is a different migration lane, unverified mapping to this driver. Gap, not a proven defect.",
-      "evidence": null
+      "status": "NATIVE_PASS",
+      "note": "Driver Harness/KingdomWaterMaintenanceNativeProvider.cs (dev commit 1a3f6ba, #23). Native ea7d20ab run of water-maintenance-native-check refused at water-maintenance-enroll with a thrown InvalidOperationException, but investigation (investigation-water-maintenance-enroll.md) found production is correct: the fixture expects a schema-2 stage that the #135 Pending boundary never writes on the roadless testground, so the refusal is a stale fixture, not a production defect. RED artifact retained at water-maintenance/ea7d20ab/water-maintenance-native-check-1/result.json (SHA256 3fcd35bd5546f0f76861ba1e7633871083476f00934206513149c17d7d53523f; 3295 bytes); typed matrix evidence is reserved for PASS statuses. Fixture fix is in progress on test/037-travel-personas-reseal; the roaded-testground proof is tracked in #256. Do not conflate with the separate profile_schema donor/stage/downgrade proof (water-scarcity-lane-truth memory) -- that is a different migration lane, unverified mapping to this driver. Gap, not a proven defect. Native 8a558fc3 run of water-maintenance-native-check PASSES cleanly: the heart basin is now counted as a lawful third dedication store (dedication-survey stores=3 fixture=2 heart-stores=1 heart=r_KingdomFirstBasin@40,12), water-maintenance-enroll no longer refuses, and the post-stop seal check is clean (no playeroptions.json drift, unlike ea7d20ab and d72b85ee). persona_matrix.py assert returned 'expectations met'; a real departure, a drought/dry-day tally and an actual MixWith refill transfer were exercised after enroll. Artifact water-maintenance/8a558fc3/water-maintenance-native-check-1/result.json (SHA256 d2ebdb1536bfb94fe0ffce9a67990d25cd16b7fe68ddd9150f1a1aca6579a704; 4061 bytes). Fixture fix confirmed; row closed for this driver's own coverage.",
+      "evidence": [
+        {
+          "commit": "8a558fc33e0901d0e305d3118eaf24da80cc31ef",
+          "artifactPath": "water-maintenance/8a558fc3/water-maintenance-native-check-1/result.json",
+          "artifactSha256": "d2ebdb1536bfb94fe0ffce9a67990d25cd16b7fe68ddd9150f1a1aca6579a704",
+          "artifactBytes": 4061,
+          "verdict": "PASS - heart basin counted as a lawful third dedication store; enroll no longer refuses; seal check clean; real departure, drought tally and MixWith refill exercised",
+          "scope": "Native water-maintenance-native-check persona on test/037-travel-personas-reseal; SCRIPT-COMPLETE, 110 journal rows, 13 verbs ran without a refusal; persona_matrix.py assert returned expectations met; DIED/MODERROR both 0; strict Player.log check passed",
+          "historicalScope": true,
+          "inventoryDigest": "5662178c2dd8f60bc010089a6130b5156247ea4c83f6911a43c3c3db7d024587",
+          "currentDevCoverage": false
+        }
+      ]
     },
     {
       "id": 15,
@@ -453,9 +465,21 @@
       "save_cold_load": "COVERAGE_GAP",
       "negative": "NATIVE_PASS (pause fault paths exist)",
       "driver": "Harness/KingdomScenarioTravelProvider.cs, KingdomScenarioPauseController.cs",
-      "status": "EVIDENCE_UNVERIFIED",
-      "note": "Driver Harness/KingdomScenarioTravel.cs / KingdomCity.NativeTravelDemand.cs (dev commits 0c3115a #122, 62fc9c6 #126). docs/STATUS.md:72-78 narrates a native economic-present/away PASS at `53022df` (seed #165939435, profiles mlKgm8/dZxP6D) but cites no evidenceDir or artifactRef -- only \"profile and evidence retained\", which does not meet this pass's typed-evidence bar. Gap, not a proven defect; a real receipt may exist but was not located. Native ea7d20ab evidence notes (RED, status unchanged): beta-economic-present asserted cleanly in-journal (SCRIPT-COMPLETE, persona_matrix.py assert 'expectations met', taf-travel-checked mode=present) but scored FAIL because the post-stop seal check refused on a drifted playeroptions.json, not on the persona's own assertions -- artifact travel-economic-present/ea7d20ab/beta-economic-present-1/result.json (SHA256 3bb385cf2a9baab1fc49b18f414219152977341479c4a65528bab1a249ed1fa8). beta-economic-away failed a genuine in-engine refusal at verb 9 (beta-away): 'taf-travel-refused: normal walking was blocked; no clearing or teleport fallback', seed-dependent terrain/creature obstruction (interior-creature Croc observed in zone) -- artifact travel-economic-away/ea7d20ab/beta-economic-away-1/result.json (SHA256 8e2afa55eda7cf9727e6eec42106ef353a8fe5fe4051999833e82ac4cef411e1). Harness fixes for both are in progress on test/037-travel-personas-reseal; status remains EVIDENCE_UNVERIFIED until a clean typed-evidence PASS is produced.",
-      "evidence": null
+      "status": "NATIVE_PASS",
+      "note": "Driver Harness/KingdomScenarioTravel.cs / KingdomCity.NativeTravelDemand.cs (dev commits 0c3115a #122, 62fc9c6 #126). docs/STATUS.md:72-78 narrates a native economic-present/away PASS at `53022df` (seed #165939435, profiles mlKgm8/dZxP6D) but cites no evidenceDir or artifactRef -- only \"profile and evidence retained\", which does not meet this pass's typed-evidence bar. Gap, not a proven defect; a real receipt may exist but was not located. Native ea7d20ab evidence notes (RED, status unchanged): beta-economic-present asserted cleanly in-journal (SCRIPT-COMPLETE, persona_matrix.py assert 'expectations met', taf-travel-checked mode=present) but scored FAIL because the post-stop seal check refused on a drifted playeroptions.json, not on the persona's own assertions -- artifact travel-economic-present/ea7d20ab/beta-economic-present-1/result.json (SHA256 3bb385cf2a9baab1fc49b18f414219152977341479c4a65528bab1a249ed1fa8). beta-economic-away failed a genuine in-engine refusal at verb 9 (beta-away): 'taf-travel-refused: normal walking was blocked; no clearing or teleport fallback', seed-dependent terrain/creature obstruction (interior-creature Croc observed in zone) -- artifact travel-economic-away/ea7d20ab/beta-economic-away-1/result.json (SHA256 8e2afa55eda7cf9727e6eec42106ef353a8fe5fe4051999833e82ac4cef411e1). Harness fixes for both were completed on test/037-travel-personas-reseal; the away leg now has a clean typed-evidence PASS (below). Native 8a558fc3 rerun of beta-economic-away PASSES cleanly, confirming the checker fix for the stale egress=/ingress= regex in Tools/personas/persona_travel.py:106: SCRIPT-COMPLETE, 80 journal rows, 15 verbs ran without a refusal, symmetric 121-step normal walk both ways (travel-out-complete egress=10, travel-return-complete ingress=10), persona_matrix.py assert returned 'expectations met', and the seal check is clean (no playeroptions.json drift, 3481 files closed both ways). Artifact travel-economic-away/8a558fc3/beta-economic-away-1/result.json (SHA256 a26dfc0874a321272252f3d4f59b87cdee56137cac6600aca643db6ec7f2e6a0; 3136 bytes). This closes the away leg for this driver; save_cold_load and the present leg remain COVERAGE_GAP / out of this evidence's scope.",
+      "evidence": [
+        {
+          "commit": "8a558fc33e0901d0e305d3118eaf24da80cc31ef",
+          "artifactPath": "travel-economic-away/8a558fc3/beta-economic-away-1/result.json",
+          "artifactSha256": "a26dfc0874a321272252f3d4f59b87cdee56137cac6600aca643db6ec7f2e6a0",
+          "artifactBytes": 3136,
+          "verdict": "PASS - symmetric bounded normal-walk travel out and back, egress/ingress telemetry present, seal check clean",
+          "scope": "Native beta-economic-away persona on test/037-travel-personas-reseal; SCRIPT-COMPLETE, 80 journal rows, 15 verbs ran without a refusal; persona_matrix.py assert returned expectations met; DIED/MODERROR both 0; strict Player.log check passed",
+          "historicalScope": true,
+          "inventoryDigest": "5662178c2dd8f60bc010089a6130b5156247ea4c83f6911a43c3c3db7d024587",
+          "currentDevCoverage": false
+        }
+      ]
     },
     {
       "id": 17,
@@ -952,7 +976,7 @@
           "artifactSha256": "352c12f4a6ad9790f0322aadcdc69d83e2abd3f31d7e61f78a20a9bba4038557",
           "artifactBytes": 7931,
           "verdict": "PASS - real guest identity and starter home survive admission, two weeks, refill and cold load; stale actions refuse; next job pays exactly",
-          "scope": "Genuine marsh/advisor-on Quickstart seed #43101; 16803 saved turns, four original founders, six beds and guest768 Yywur/r_KingdomSettlerHand, native human culture/species. Scripted menus and one disclosed founding-reputation adjustment; repeated startup retains its exact witness. Actual16step walk and8dram carried refill, strict logs, full pinned recipes and owned stops. No all-culture admission, historical migration, interrupted enrollment, rendered UI, multi-map or balance acceptance.",
+          "scope": "Genuine marsh/advisor-on Quickstart seed #43101; 16803 saved turns, four original founders, six beds and guest768 Yywur/r_KingdomSettlerHand, native human culture/species. Scripted menus and one disclosed founding-reputation adjustment; repeated startup retains its exact witness. Actual16step walk and8dram carried refill, strict logs, full pinned recipes and owned stops. No all-culture admission, historical migration, interrupted enrollment, rendered UI, multi-map or balance acceptance. Later harness-only travel egress, pause-recipe option authoring and water-fixture founding-stage changes (test/037-travel-personas-reseal) change the inventory; this retains its original full input inventory.",
           "historicalScope": true,
           "inventoryDigest": "dab17f799e9595f7e6463fa0fab67e4e62cb41d45471ed169d897d3a3b11b148",
           "currentDevCoverage": false
@@ -1068,7 +1092,7 @@
           "artifactSha256": "352c12f4a6ad9790f0322aadcdc69d83e2abd3f31d7e61f78a20a9bba4038557",
           "artifactBytes": 7931,
           "verdict": "PASS - real guest identity and starter home survive admission, two weeks, refill and cold load; stale actions refuse; next job pays exactly",
-          "scope": "Genuine marsh/advisor-on Quickstart seed #43101; 16803 saved turns, four original founders, six beds and guest768 Yywur/r_KingdomSettlerHand, native human culture/species. Scripted menus and one disclosed founding-reputation adjustment; repeated startup retains its exact witness. Actual16step walk and8dram carried refill, strict logs, full pinned recipes and owned stops. No all-culture admission, historical migration, interrupted enrollment, rendered UI, multi-map or balance acceptance.",
+          "scope": "Genuine marsh/advisor-on Quickstart seed #43101; 16803 saved turns, four original founders, six beds and guest768 Yywur/r_KingdomSettlerHand, native human culture/species. Scripted menus and one disclosed founding-reputation adjustment; repeated startup retains its exact witness. Actual16step walk and8dram carried refill, strict logs, full pinned recipes and owned stops. No all-culture admission, historical migration, interrupted enrollment, rendered UI, multi-map or balance acceptance. Later harness-only travel egress, pause-recipe option authoring and water-fixture founding-stage changes (test/037-travel-personas-reseal) change the inventory; this retains its original full input inventory.",
           "historicalScope": true,
           "inventoryDigest": "dab17f799e9595f7e6463fa0fab67e4e62cb41d45471ed169d897d3a3b11b148",
           "currentDevCoverage": false
@@ -1464,7 +1488,7 @@
           "artifactSha256": "352c12f4a6ad9790f0322aadcdc69d83e2abd3f31d7e61f78a20a9bba4038557",
           "artifactBytes": 7931,
           "verdict": "PASS - real guest identity and starter home survive admission, two weeks, refill and cold load; stale actions refuse; next job pays exactly",
-          "scope": "Genuine marsh/advisor-on Quickstart seed #43101; 16803 saved turns, four original founders, six beds and guest768 Yywur/r_KingdomSettlerHand, native human culture/species. Scripted menus and one disclosed founding-reputation adjustment; repeated startup retains its exact witness. Actual16step walk and8dram carried refill, strict logs, full pinned recipes and owned stops. No all-culture admission, historical migration, interrupted enrollment, rendered UI, multi-map or balance acceptance.",
+          "scope": "Genuine marsh/advisor-on Quickstart seed #43101; 16803 saved turns, four original founders, six beds and guest768 Yywur/r_KingdomSettlerHand, native human culture/species. Scripted menus and one disclosed founding-reputation adjustment; repeated startup retains its exact witness. Actual16step walk and8dram carried refill, strict logs, full pinned recipes and owned stops. No all-culture admission, historical migration, interrupted enrollment, rendered UI, multi-map or balance acceptance. Later harness-only travel egress, pause-recipe option authoring and water-fixture founding-stage changes (test/037-travel-personas-reseal) change the inventory; this retains its original full input inventory.",
           "historicalScope": true,
           "inventoryDigest": "dab17f799e9595f7e6463fa0fab67e4e62cb41d45471ed169d897d3a3b11b148",
           "currentDevCoverage": false

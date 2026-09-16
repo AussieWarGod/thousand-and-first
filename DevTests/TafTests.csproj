@@ -2173,6 +2173,7 @@
 	<Compile Include="..\Harness\KingdomScenarioLoadRules.cs" />
 	<Compile Include="..\Harness\KingdomScenarioTravelRules.cs" />
 	<Compile Include="KingdomScenarioTravelRulesTests.cs" />
+	<Compile Include="KingdomScenarioTravelEgressTests.cs" />
 	<Compile Include="..\Harness\KingdomScenarioRefusal.cs" />
 	<Compile Include="KingdomScenarioRefusalTests.cs" />
 	<Compile Include="KingdomScenarioContainerStressSourceTests.cs" />

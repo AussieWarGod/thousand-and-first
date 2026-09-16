@@ -1,6 +1,9 @@
 # Synthetic citizens and dedicated liquids; actual upkeep through real engine turns.
 # Warm up an empty founded camp before enrollment; do not fabricate clock checkpoints.
 # Personal fresh water and dedicated brine remain controls; refill uses a real liquid transfer.
+# Empty-camp seal evidence reads the untouched founding stage (revision 1, schema 1) and the live
+# ledger's unresolved authority; the stripped marsh testground has no street to the zone edge, so
+# spatial capture stays typed Pending and a schema-2 empty-camp stage proof needs a roaded testground.
 DESCRIPTION=real-turn water bills cause one departure, retain loyal core and recover after refill
 REQUEST=founding-first-city
 START=8.22@40,12
