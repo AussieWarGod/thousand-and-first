@@ -1,7 +1,7 @@
 # Changelog
 
-Current 3112-file census is line-cap green: 441,115 physical lines; direct `XRL`
-imports occur in 1454 files, 0 of them over the line limit. Inventory SHA-256: `ff1b108a5f7727b2ada2daf24813fb2c111d3bdfcae375a33c0d0d79fbf6045f`.
+Current 3112-file census is line-cap green: 441,129 physical lines; direct `XRL`
+imports occur in 1454 files, 0 of them over the line limit. Inventory SHA-256: `70f6433c045a0b03cc1a43af4791ca08cd603b1eec57cafbf149277822686c16`.
 The cold-install inventory contains 3146 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Historical entries retain their original scope;
