@@ -2595,22 +2595,29 @@ namespace ThousandAndFirst.Tests
 				"KingdomChronicle.Record", ".Ledger.Note", "KingdomBrink.", "Settle(" })
 				StringAssert.DoesNotContain(mutation, observation);
 			string settle = Slice(lodgingSource,
-				"private static Dictionary<string, List<GameObject>> Settle(",
+				"private static Dictionary<string, List<HouseholdMember>> Settle(",
 				"private static void AssignOne");
 			string assign = Slice(lodgingSource, "private static void AssignOne(",
 				"private static string ChooseHome(");
 			string chooser = Slice(lodgingSource, "private static string ChooseHome(",
 				"// --- Addendum 4b");
 			string projection = Slice(lodgingSource,
-				"private static Dictionary<string, List<GameObject>> ProjectedOccupancy(",
+				"private static Dictionary<string, List<HouseholdMember>> ProjectedOccupancy(",
 				"private static bool ObserveOccupantConflicts");
-			StringAssert.Contains("AssignOne(System, Z, unassigned[i], homes, occupancy",
+			StringAssert.Contains("AssignOne(System, Z, resident, homes, occupancy",
 				settle);
-			AssertOrdered(settle,
-				"if (!string.IsNullOrEmpty(plotId) && homeByPlot.TryGetValue(plotId,",
-				"out GameObject assignedHome) && !IsCondemned(assignedHome))",
-				"AddOccupant(occupancy, plotId, resident);", "continue;",
-				"unassigned.Add(resident);");
+			AssertOrdered(settle, "TryReconcileHomes(System, Z, standing)",
+				"ReadHouseholds(Z, homes, out List<GameObject> unassigned)",
+				"AssignedPlot(occupancy, resident)",
+				"TryAssignResidence(System, Z, resident, home)",
+				"foreach (GameObject resident in unassigned)",
+				"TryAssignResidence(System, Z, resident, null)");
+			string households = TestMain.ReadRepositoryText("Growth/KingdomLodging.Households.cs");
+			StringAssert.Contains("state.ResidentCount", households);
+			StringAssert.Contains("KingdomResidentRules.OnTheRoll(row)", households);
+			StringAssert.Contains("facts.ZoneId != Ground.ZoneID", households);
+			foreach (string mutation in new[] { "TryPublish(", "TryEnsureRow(", "GetZone(", "SetStringProperty" })
+				StringAssert.DoesNotContain(mutation, households);
 			StringAssert.DoesNotContain("finehouse", settle,
 				"soft reservation must never reconsider or evict a standing assignment");
 			StringAssert.Contains("ChooseHome(Z, Resident, Homes, Occupancy", assign);

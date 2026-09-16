@@ -20,7 +20,7 @@ namespace ThousandAndFirst.Simulation.City
 					WorkKinds, WorkStages, WorkProgress, WorkNextTicks)
 				|| !ExactColumns(KingdomCityState.MaxResidents, ResidentIds, ResidentNames, ResidentOrigins,
 					ResidentOriginCodes, ResidentCreedCodes, ResidentKeptCreeds, ResidentArrivedTicks,
-					ResidentArrived, ResidentHomeWorkIds, ResidentJobWorkIds, ResidentJobRoles,
+					ResidentArrived, ResidentHomeWorkIds, ResidentResidences, ResidentJobWorkIds, ResidentJobRoles,
 					ResidentDayShapes, ResidentStandings, ResidentCauses, ResidentBoundZoneIds,
 					ResidentRoofStanding, ResidentRoofTicks, ResidentRoofWarnedTicks, ResidentCreedStanding,
 					ResidentCreedTicks, ResidentCreedWarnedTicks, ResidentCreedToward, ResidentCreedChannels)
@@ -39,6 +39,7 @@ namespace ThousandAndFirst.Simulation.City
 				if (ResidentIds[i] <= 0 || !identities.Add(ResidentIds[i])
 					|| ResidentNames[i] == null || ResidentOrigins[i] == null
 					|| ResidentArrived[i] == null || ResidentBoundZoneIds[i] == null
+					|| !ValidResidence(ResidentResidences[i])
 					|| ResidentCreedToward[i] == null || ResidentKeptCreeds[i] == null
 					|| !DefinedIn(typeof(KingdomResidentStanding), ResidentStandings[i])
 					|| !DefinedIn(typeof(KingdomStandingCause), ResidentCauses[i])

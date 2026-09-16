@@ -159,10 +159,10 @@ namespace ThousandAndFirst.Tests
 					typeof(int), typeof(long), typeof(KingdomWorkRunState) });
 			AssertRowShape(typeof(KingdomResidentRow),
 				new[] { "ResidentId", "Name", "Origin", "OriginCode", "CreedCode", "ArrivedTick", "Arrived",
-					"HomeWorkId", "JobWorkId", "JobRole", "DayShape", "Standing", "Cause", "BoundZoneId",
+					"HomeWorkId", "Residence", "JobWorkId", "JobRole", "DayShape", "Standing", "Cause", "BoundZoneId",
 					"RoofBrink", "CreedBrink", "CreedToward", "CreedChannel", "KeptCreeds" },
 				new[] { typeof(int), typeof(string), typeof(string), typeof(int), typeof(int), typeof(long), typeof(string),
-					typeof(int), typeof(int), typeof(byte), typeof(KingdomDayShape), typeof(KingdomResidentStanding),
+					typeof(int), typeof(string), typeof(int), typeof(byte), typeof(KingdomDayShape), typeof(KingdomResidentStanding),
 					typeof(KingdomStandingCause), typeof(string), typeof(KingdomBrinkWindow), typeof(KingdomBrinkWindow),
 					typeof(string), typeof(byte), typeof(string) });
 			AssertRowShape(typeof(KingdomClockRow),

@@ -9,8 +9,8 @@ the harvest cycle, extend-the-real-machines). Head at writing: `4b128cb`.
 > **Current-bound correction (2026-08-25).** This document was costed against the retired flat
 > forty-work proxy. The live City envelope is four zones times 220 plots: `W=880`, `R=956`, and
 > `64 × 2R = 122,368` maximum reckon row-visits. The composed current-realm model estimate is
-> 197,796 bytes after the resident-authority carrier correction; current advisory/ceiling rungs
-> are 320/384 KiB for the un-deferred three-city realm. Every later `40 works`, `R=116`,
+> 1,038,614 bytes including maximum residence records after the 2026-09-15 housing correction;
+> current advisory/ceiling rungs are 1152/1280 KiB for the three-city realm. Every later `40 works`, `R=116`,
 > `14,848`, 56/64-KiB, or flat-`MaxBuildings` figure in this historical design is superseded by
 > those bounds and `KingdomCityMemoryRules`. Catch-up is now re-derived from 220 legal physical
 > root containers, the 24+8 manual dedication allowances, and sixty bodies: **312 weighted units,
@@ -120,8 +120,17 @@ than a guess:
   finish catching up before the engine would even have suspended the zone they came from.
 
 **(c) Memory — `KingdomCityState`, byte by byte.** Every row is a `readonly struct` in a flat
-array (§1.3), so there is no per-row object header; the only heap strings are one name per
-resident, and zone ids and design keys are shared references.
+array (§1.3), so there is no per-row object header. Each resident now has a name and one bounded
+residence wire; zone ids and design keys otherwise remain shared references. The residence wire
+holds home map/plot, an optional exact bed identity, and observed household compatibility facts.
+It is bounded to 2048 characters, with 32 entries per tag set and bounded individual identities.
+The worst-case UTF-16 heap allowance is `32 + 2 × 2048 = 4128` bytes per resident. The row has
+123 declared field bytes, budgeted at 128; name plus residence make `ResidentRowBytes = 4320`.
+At today's caps the city model is 317,376 bytes and the complete realm is 1,038,614 bytes;
+scaled to nine zones the same formula gives 2,230,454 bytes. These are conservative model
+bounds, not measured live allocations; ordinary short records use less. Unknown legacy
+residences share the empty string. Below is the historical table, superseded by these values
+and the executable `KingdomCityMemoryRules` formula.
 
 | Row | Width | Count | Bytes |
 |---|---|---|---|

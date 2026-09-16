@@ -160,7 +160,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("public const int ExpeditionResultVersion = 18;", codec);
 			StringAssert.Contains("public const int SubsidenceStorageVersion = 19;", codec);
 			StringAssert.Contains(
-				"public const int CurrentVersion = SubsidenceStorageVersion;", codec);
+				"public const int CurrentVersion = ResidenceVersion;", codec);
 			StringAssert.Contains("version != ExpeditionResultVersion", codec);
 			StringAssert.Contains("TryEncodeBehaviourV7ForTests", codec);
 			StringAssert.Contains("TryEncodeHappeningCursorV12ForTests", codec);

@@ -9,6 +9,7 @@ namespace ThousandAndFirst.Harness
 		internal const string StepWirePrefix = "ss5:";
 		internal const string LegacyStepWirePrefix = "ss4:";
 		internal const string RungWirePrefix = "sr2:";
+		internal const string HomeRungWirePrefix = "sr3:";
 		private const int Magic = 0x52535401;
 
 		// Structural historical read/roundtrip only. Current native execution requires v2;

@@ -1,15 +1,15 @@
 {
   "schemaVersion": 1,
-  "inventorySha256": "e9e71e2de55a777def5a6ddb283ab4b493b2e555ae2991b0543c668296017aa4",
+  "inventorySha256": "5662178c2dd8f60bc010089a6130b5156247ea4c83f6911a43c3c3db7d024587",
   "exceptions": [],
   "reviewedBy": "Codex root automated structural review",
-  "completedUtc": "2026-09-15T00:44:39Z",
+  "completedUtc": "2026-09-15T04:57:29Z",
   "oneResponsibility": {
     "status": "passed",
-    "notes": "Compared all 3112 production paths with dev ec29b4cd: 3102 byte-identical, six changed, four added, none removed. Exact comparison log:/home/r/work/taf-scratch/behaviour-evidence/recruitment/807a89fc/structural-review-1/production-comparison.json; census log:/home/r/work/taf-scratch/behaviour-evidence/recruitment/807a89fc/structural-review-1/census.json. Automated semantic delta review: docs/STRUCTURE_REVIEW_RECRUITMENT.md. Pure bounded weights, native catalogue/naming boundaries, shared plan construction, exact empty-pool waiting and read-only report policy reviewed; no saved fields or wire format changes. Native scope and pending admission/cold-load work remain in STATUS."
+    "notes": "Automated delta review: 3121 production paths against 149daf47; 10 changed, 2 added. Comparison log:/home/r/work/taf-scratch/behaviour-evidence/home-map-damage/home-loss-review-20260915/production-comparison.json; census log:/home/r/work/taf-scratch/behaviour-evidence/home-map-damage/home-loss-review-20260915/census.json. Review: docs/STRUCTURE_REVIEW_HOME_LOSS.md. Canonical roof ownership, legacy wire preservation, exact carrier publication and ordinary loss clocks reviewed. Native replay pending; #230 and all-building #229/#251 remain open."
   },
   "protocolsAtBoundaries": {
     "status": "passed",
-    "notes": "Compared all 3112 production paths with dev ec29b4cd: 3102 byte-identical, six changed, four added, none removed. Exact comparison log:/home/r/work/taf-scratch/behaviour-evidence/recruitment/807a89fc/structural-review-1/production-comparison.json; census log:/home/r/work/taf-scratch/behaviour-evidence/recruitment/807a89fc/structural-review-1/census.json. Automated semantic delta review: docs/STRUCTURE_REVIEW_RECRUITMENT.md. Pure bounded weights, native catalogue/naming boundaries, shared plan construction, exact empty-pool waiting and read-only report policy reviewed; no saved fields or wire format changes. Native scope and pending admission/cold-load work remain in STATUS."
+    "notes": "Automated delta review: 3121 production paths against 149daf47; 10 changed, 2 added. Comparison log:/home/r/work/taf-scratch/behaviour-evidence/home-map-damage/home-loss-review-20260915/production-comparison.json; census log:/home/r/work/taf-scratch/behaviour-evidence/home-map-damage/home-loss-review-20260915/census.json. Review: docs/STRUCTURE_REVIEW_HOME_LOSS.md. Canonical roof ownership, legacy wire preservation, exact carrier publication and ordinary loss clocks reviewed. Native replay pending; #230 and all-building #229/#251 remain open."
   }
 }

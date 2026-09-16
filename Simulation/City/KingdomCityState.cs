@@ -135,6 +135,11 @@ namespace ThousandAndFirst.Simulation.City
 				fault = KingdomCityFault.RowCapExceeded;
 				return false;
 			}
+			if (!KingdomResidenceRules.ValidRows(residents))
+			{
+				fault = KingdomCityFault.InvalidIndex;
+				return false;
+			}
 			state = new KingdomCityState(
 				schemaVersion,
 				rulesVersion,
