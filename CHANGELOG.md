@@ -19,6 +19,12 @@ records current acceptance.
   present/away and the master settlement plan resume stay unverified pending a harness fix for
   a runner seal-check drift and a genuine away-travel refusal (rows 16-17).
 
+- Row 20 (Construction lifecycle on the founded road) corrected from `NATIVE_PASS` to
+  `NEGATIVE_PASS`: the same lifecycle-founding-road-refusal receipt proves only the bounded
+  refusal at `lifecycle-open` ("no dedicated stockpile appeared within 500 ordinary engine
+  turns of waiting"), not this row's declared positive chain or effects. The positive
+  founded-road chain remains unproven; a follow-up issue tracks it.
+
 - Recruitment availability respects the civic-story setting, including ordinary extension
   profiles outside the first-guest allowlist. Native admission/load checks now compare actual
   body, culture, species, name, origin and resident map. Real Quickstart admission and cold load

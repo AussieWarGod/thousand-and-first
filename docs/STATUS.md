@@ -10,12 +10,15 @@ founds a marsh camp, `SCRIPT-COMPLETE`, `persona_matrix.py assert` returns "expe
 `subsidence-native-checks` -- 8/8 synthetic-checkpoint cases pass on a real founding with 50
 physical residents (`subsidence/ea7d20ab/subsidence-native-checks-1/result.json`); scope stays a
 seeded elapsed checkpoint, not real world-turn advance. Row 20 (Construction lifecycle on the
-founded road) passes `lifecycle-founding-road-refusal` -- this persona's documented, intended
-terminal is the bounded refusal itself: five chunked 100-turn waits each report no dedicated
-stockpile, then `lifecycle-open` refuses at 500 ordinary turns exhausted, matched verbatim by
-`persona_matrix.py assert` (`lifecycle-founding-road/ea7d20ab/lifecycle-founding-road-refusal-1/result.json`).
-This proves only the negative/refusal path on the ordinary founding road; the positive paid-construction
-chain there remains unproved (row 21's Quickstart road carries that positive-chain coverage).
+founded road) records `lifecycle-founding-road-refusal` as `NEGATIVE_PASS` (Copilot review on
+#258 flagged the receipt as proving only the refusal, not this row's declared positive chain or
+effects): five chunked 100-turn waits each report no dedicated stockpile, then `lifecycle-open`
+refuses at 500 ordinary turns exhausted -- "no dedicated stockpile appeared within 500 ordinary
+engine turns of waiting" -- matched verbatim by `persona_matrix.py assert`
+(`lifecycle-founding-road/ea7d20ab/lifecycle-founding-road-refusal-1/result.json`). This proves
+only that bounded refusal on the ordinary founding road; the positive paid-construction chain and
+this row's declared effects there remain unproved (row 21's Quickstart road carries the separate
+positive-chain coverage; a follow-up issue tracks the ordinary founding road's positive-chain gap).
 
 The same evidence round runs row 14 (Water maintenance) native at `ea7d20ab`:
 `water-maintenance-native-check` passes its 2,400-turn automatic empty-camp warmup, then
