@@ -17,12 +17,16 @@ stockpile, then `lifecycle-open` refuses at 500 ordinary turns exhausted, matche
 This proves only the negative/refusal path on the ordinary founding road; the positive paid-construction
 chain there remains unproved (row 21's Quickstart road carries that positive-chain coverage).
 
-The same evidence round moves row 14 (Water maintenance) from `EVIDENCE_UNVERIFIED` to `DEFECT`:
+The same evidence round runs row 14 (Water maintenance) native at `ea7d20ab`:
 `water-maintenance-native-check` passes its 2,400-turn automatic empty-camp warmup, then
-`water-maintenance-enroll` throws a genuine `InvalidOperationException` from
+`water-maintenance-enroll` throws an `InvalidOperationException` from
 `Harness/KingdomWaterMaintenanceNativeProvider.cs` -- "automatic empty-camp stage did not retain
-exact committed unresolved authority" -- a production proof of a real defect, not merely an
-unexercised driver (`water-maintenance/ea7d20ab/water-maintenance-native-check-1/result.json`).
+exact committed unresolved authority". Investigation (`investigation-water-maintenance-enroll.md`)
+found production is correct: the fixture expects a schema-2 stage that the #135 Pending boundary
+never writes on the roadless testground, so this is a stale fixture, not a production defect. Row
+14 stays `EVIDENCE_UNVERIFIED`; the RED artifact is retained
+(`water-maintenance/ea7d20ab/water-maintenance-native-check-1/result.json`), the fixture fix is in
+progress on `test/037-travel-personas-reseal`, and the roaded-testground proof is tracked in #256.
 
 Rows 16 (Travel present/away) and 17 (Master settlement plan resume) stay `EVIDENCE_UNVERIFIED`:
 `beta-economic-present` asserts cleanly in-journal (taf-travel-checked, master-pause resume

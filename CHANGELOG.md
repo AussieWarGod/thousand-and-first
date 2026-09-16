@@ -12,8 +12,10 @@ records current acceptance.
 
 - Behavioural coverage evidence: founding-first-city, subsidence-native-checks and the
   lifecycle-founding-road bounded refusal now carry typed native `ea7d20ab` receipts (rows 1,
-  19 and 20 move to native pass). Water maintenance moves from an unverified gap to a recorded
-  defect: the enroll step throws after the automatic empty-camp warmup (row 14). Travel
+  19 and 20 move to native pass). Water maintenance stays an unverified gap: the enroll step
+  throws after the automatic empty-camp warmup, but investigation traced this to a stale
+  fixture expecting a schema-2 stage the roadless testground never writes, not a production
+  defect (row 14; fixture fix in progress, roaded-testground proof tracked in #256). Travel
   present/away and the master settlement plan resume stay unverified pending a harness fix for
   a runner seal-check drift and a genuine away-travel refusal (rows 16-17).
 
