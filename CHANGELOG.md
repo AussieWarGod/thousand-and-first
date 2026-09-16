@@ -1,7 +1,7 @@
 # Changelog
 
-Current 3121-file census is line-cap green: 441,657 physical lines; direct `XRL`
-imports occur in 1459 files, 0 of them over the line limit. Inventory SHA-256: `5662178c2dd8f60bc010089a6130b5156247ea4c83f6911a43c3c3db7d024587`.
+Current 3121-file census is line-cap green: 441,757 physical lines; direct `XRL`
+imports occur in 1459 files, 0 of them over the line limit. Inventory SHA-256: `1b3b64a48e2ed33bcb65389e91bfa3c1b6d7f577156327667903f709cd987451`.
 The cold-install inventory contains 3155 files. This is not evidence of a new public installation.
 
 All notable changes to The Thousand and First. Historical entries retain their original scope;
@@ -9,6 +9,12 @@ All notable changes to The Thousand and First. Historical entries retain their o
 records current acceptance.
 
 **Unreleased development**
+
+- A refused scaffold-removal proof now names the first failed identity predicate (recorded
+  cell, blueprint, route, admitted phase, ownership, currency, removal intent, exact successor,
+  gatehouse projection, live output, same output) instead of the bare shared sentence, and every
+  refusal of that proof is logged once with job, phase, scaffold and successor identities. The
+  eleven names and their order are a pure rule pinned by tests; admission is unchanged (#212).
 
 - Roof-loss claims now include map-qualified home ownership, so absent owners can retain the
   original damage tick. Exact residence guards protect publication; old frozen claims retain
@@ -44,6 +50,12 @@ records current acceptance.
   defect (row 14; fixture fix in progress, roaded-testground proof tracked in #256). Travel
   present/away and the master settlement plan resume stay unverified pending a harness fix for
   a runner seal-check drift and a genuine away-travel refusal (rows 16-17).
+
+- Row 20 (Construction lifecycle on the founded road) corrected from `NATIVE_PASS` to
+  `NEGATIVE_PASS`: the same lifecycle-founding-road-refusal receipt proves only the bounded
+  refusal at `lifecycle-open` ("no dedicated stockpile appeared within 500 ordinary engine
+  turns of waiting"), not this row's declared positive chain or effects. The positive
+  founded-road chain remains unproven; a follow-up issue tracks it.
 
 - Recruitment availability respects the civic-story setting, including ordinary extension
   profiles outside the first-guest allowlist. Native admission/load checks now compare actual

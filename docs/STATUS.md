@@ -30,9 +30,9 @@ subsidence, paid repair, frozen-application recovery and damaged-home cold load 
 The retained native failure below is superseded for this case only; #230 stays open and this
 does not establish Beta acceptance.
 
-Current census: 3121 staged C# files; 441,657 physical lines; zero at or above 300 lines.
+Current census: 3121 staged C# files; 441,757 physical lines; zero at or above 300 lines.
 Direct `XRL` imports: 1459 files, 0 over the line limit. Cold-install inventory: 3155 files.
-Inventory SHA-256: `5662178c2dd8f60bc010089a6130b5156247ea4c83f6911a43c3c3db7d024587`.
+Inventory SHA-256: `1b3b64a48e2ed33bcb65389e91bfa3c1b6d7f577156327667903f709cd987451`.
 Engine gate passes for 3121 sources, baseline and compatibility symbols, plus both harness modes.
 
 ## Absent-owner home damage — native defect reproduced
@@ -198,12 +198,15 @@ founds a marsh camp, `SCRIPT-COMPLETE`, `persona_matrix.py assert` returns "expe
 `subsidence-native-checks` -- 8/8 synthetic-checkpoint cases pass on a real founding with 50
 physical residents (`subsidence/ea7d20ab/subsidence-native-checks-1/result.json`); scope stays a
 seeded elapsed checkpoint, not real world-turn advance. Row 20 (Construction lifecycle on the
-founded road) passes `lifecycle-founding-road-refusal` -- this persona's documented, intended
-terminal is the bounded refusal itself: five chunked 100-turn waits each report no dedicated
-stockpile, then `lifecycle-open` refuses at 500 ordinary turns exhausted, matched verbatim by
-`persona_matrix.py assert` (`lifecycle-founding-road/ea7d20ab/lifecycle-founding-road-refusal-1/result.json`).
-This proves only the negative/refusal path on the ordinary founding road; the positive paid-construction
-chain there remains unproved (row 21's Quickstart road carries that positive-chain coverage).
+founded road) records `lifecycle-founding-road-refusal` as `NEGATIVE_PASS` (Copilot review on
+#258 flagged the receipt as proving only the refusal, not this row's declared positive chain or
+effects): five chunked 100-turn waits each report no dedicated stockpile, then `lifecycle-open`
+refuses at 500 ordinary turns exhausted -- "no dedicated stockpile appeared within 500 ordinary
+engine turns of waiting" -- matched verbatim by `persona_matrix.py assert`
+(`lifecycle-founding-road/ea7d20ab/lifecycle-founding-road-refusal-1/result.json`). This proves
+only that bounded refusal on the ordinary founding road; the positive paid-construction chain and
+this row's declared effects there remain unproved (row 21's Quickstart road carries the separate
+positive-chain coverage; a follow-up issue tracks the ordinary founding road's positive-chain gap).
 
 The same evidence round runs row 14 (Water maintenance) native at `ea7d20ab`:
 `water-maintenance-native-check` passes its 2,400-turn automatic empty-camp warmup, then
