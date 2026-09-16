@@ -45,6 +45,59 @@ namespace ThousandAndFirst.Harness
 			return afterZone == beforeZone + (West ? -1 : 1) && AX == (West ? 79 : 0);
 		}
 
+		/// <summary>Walking legs. The rite ground is a camp open only to the south (see
+		/// Architecture/KingdomArchitectures-CivicFaith.xml, civic-heartbasin-s0), so a founder on
+		/// the surveyed heart ground first leaves it by real southward steps, walks the parasang on
+		/// one row, and re-enters northward. Vertical steps are lawful only in Egress and Ingress.</summary>
+		internal enum Leg { Egress, Travel, Ingress, Done }
+
+		internal static bool Vertical(Leg Current) => Current == Leg.Egress || Current == Leg.Ingress;
+
+		/// <summary>Southward rows owed from (X,Y) inside the rect to the first row below it; zero
+		/// outside the rect. A rect touching the zone's last row leaves no egress row and refuses.</summary>
+		internal static bool TryEgress(int X, int Y, int X1, int Y1, int X2, int Y2, out int Steps)
+		{
+			Steps = 0;
+			if (X < 0 || X >= 80 || Y < 0 || Y >= 25 || X1 < 0 || Y1 < 0 || X2 >= 80 || Y2 >= 25
+				|| X1 > X2 || Y1 > Y2) return false;
+			if (X < X1 || X > X2 || Y < Y1 || Y > Y2) return true;
+			if (Y2 + 1 >= 25) return false;
+			Steps = Y2 - Y + 1;
+			return true;
+		}
+
+		/// <summary>The phase table: outbound is egress then travel; returning is travel then ingress.
+		/// Horizontal steps begin only once the egress is complete; ingress begins only once the
+		/// return route equals the outbound route, and ends when every egress row is walked back.</summary>
+		internal static bool TryLeg(bool Outbound, int Egress, int EgressDone, int OutSteps, int BackSteps,
+			int IngressDone, out Leg Current)
+		{
+			Current = Leg.Done;
+			if (Egress < 0 || Egress >= 25 || EgressDone < 0 || EgressDone > Egress || IngressDone < 0
+				|| IngressDone > Egress || OutSteps < 0 || BackSteps < 0 || BackSteps > OutSteps) return false;
+			if (Outbound)
+			{
+				if (BackSteps != 0 || IngressDone != 0 || (OutSteps > 0 && EgressDone < Egress)) return false;
+				Current = EgressDone < Egress ? Leg.Egress : Leg.Travel;
+				return true;
+			}
+			if (EgressDone != Egress) return false;
+			if (BackSteps < OutSteps) { if (IngressDone != 0) return false; Current = Leg.Travel; return true; }
+			Current = IngressDone < Egress ? Leg.Ingress : Leg.Done;
+			return true;
+		}
+
+		/// <summary>One real step under a leg: the parasang walk keeps the same-row rule; an egress or
+		/// ingress step is exactly one cell south or north inside the same zone.</summary>
+		internal static bool Step(string Before, int BX, int BY, string After, int AX, int AY, bool West, Leg Current)
+		{
+			if (Current == Leg.Travel) return Step(Before, BX, BY, After, AX, AY, West);
+			if (!Vertical(Current) || Before != After || AX != BX || BX < 0 || BX >= 80
+				|| BY < 0 || BY >= 25 || AY < 0 || AY >= 25
+				|| !Zone(Before, out _, out _, out _, out _, out _, out _)) return false;
+			return AY == BY + (Current == Leg.Egress ? 1 : -1);
+		}
+
 		internal static bool Clock(long Before, long After, long Now)
 			=> Before >= 0 && After >= Before && After <= Now;
 
