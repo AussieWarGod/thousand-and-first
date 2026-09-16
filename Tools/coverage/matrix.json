@@ -15,12 +15,24 @@
       "prerequisites": "fresh camp, marsh profile",
       "transitions": "found -> claimed zone",
       "effects": "KingdomSystem.Founded, ClaimedZones",
-      "save_cold_load": "not verified",
-      "negative": "not verified",
+      "save_cold_load": "COVERAGE_GAP: no save/cold-load witness in this run",
+      "negative": "COVERAGE_GAP: this persona has no negative/refusal path",
       "driver": "Harness/KingdomFirstGuestNativeProvider.cs:18 (setup founds); Harness/KingdomNativeCampFounding.cs:26 (Found)",
-      "status": "EVIDENCE_UNVERIFIED",
-      "note": "Driver Harness/KingdomFirstGuestNativeProvider.cs:18-19; historical receipt cited at e918538/a64289c (root-harness105-native.JNJnVO/report.tsv) but that evidence directory could not be located on any machine checked -- artifactPath cannot be resolved, so per the typed-evidence rule this cannot be confirmed NATIVE_PASS.",
-      "evidence": null
+      "status": "NATIVE_PASS",
+      "note": "Native ea7d20ab passes the found-first-city persona: production KingdomScenarioRealizer.foundfirstcity founds a fresh marsh camp (claimedzones=1, stage=Camp), stagedigest/resourcedigest/status all OK, SCRIPT-COMPLETE, persona_matrix.py assert 'expectations met'. This is a fresh receipt on the current dev tree, not a re-citation: the prior historical claim at e918538/a64289c (root-harness105-native.JNJnVO/report.tsv) remains unlocatable on any machine checked and stays unconfirmed. Save/cold-load and a negative path remain COVERAGE_GAP for this row.",
+      "evidence": [
+        {
+          "commit": "ea7d20ab795950bf21724c47792f0d44512444d4",
+          "artifactPath": "founding-first-city/ea7d20ab/found-first-city-1/result.json",
+          "artifactSha256": "d1565ae940666ebfa1e854622552026c5dad9536b2a0d735b3fc45efcecce090",
+          "artifactBytes": 2444,
+          "verdict": "PASS - stagedigest founded=false -> realize (production KingdomScenarioRealizer.foundfirstcity, claimedzones=1, stage=Camp) -> stagedigest founded=true stage=Camp -> resourcedigest -> status; SCRIPT-COMPLETE (15 journal rows), persona_matrix.py assert returned expectations met, strict Player.log check passed, owned process stopped and profile record sealed",
+          "scope": "Production founding transaction (found-first-city persona) on a fresh marsh camp, seed #176323182: stagedigest founded=false -> realize (production KingdomScenarioRealizer.foundfirstcity, claimedzones=1, stage=Camp) -> stagedigest founded=true, stage=Camp -> resourcedigest -> status. Terminal SCRIPT-COMPLETE, 15 journal rows, persona_matrix.py assert passed, strict Player.log check passed, owned process stopped and profile record sealed. No advance/growth, no negative path, no save/cold-load; this proves only the founding transaction itself.",
+          "historicalScope": false,
+          "inventoryDigest": "dab17f799e9595f7e6463fa0fab67e4e62cb41d45471ed169d897d3a3b11b148",
+          "currentDevCoverage": true
+        }
+      ]
     },
     {
       "id": 2,
@@ -413,10 +425,10 @@
       "transitions": "fill -> maintenance cadence",
       "effects": "volume, departure evidence",
       "save_cold_load": "COVERAGE_GAP",
-      "negative": "COVERAGE_GAP",
+      "negative": "Native ea7d20ab: water-maintenance-enroll refused with a genuine driver-thrown InvalidOperationException, not a harness assertion mismatch or runner artifact",
       "driver": "Harness/KingdomWaterMaintenanceNativeProvider.cs",
-      "status": "EVIDENCE_UNVERIFIED",
-      "note": "Driver Harness/KingdomWaterMaintenanceNativeProvider.cs (dev commit 1a3f6ba, #23). No evidenceDir/artifactRef for a native run of THIS provider was located in docs/STATUS.md within this pass. Do not conflate with the separate profile_schema donor/stage/downgrade proof (water-scarcity-lane-truth memory) -- that is a different migration lane, unverified mapping to this driver. Gap, not a proven defect.",
+      "status": "DEFECT",
+      "note": "Native ea7d20ab run of water-maintenance-native-check: water-maintenance-setup (phase=0) passes after the 2400-turn automatic empty-camp warmup, then water-maintenance-enroll REFUSES with an actual thrown InvalidOperationException from Harness/KingdomWaterMaintenanceNativeProvider.cs: 'automatic empty-camp stage did not retain exact committed unresolved authority'. SCRIPT-STOPPED at verb 4 of 13; persona_matrix.py assert confirms the refusal (rows 5-14 never reached). This is a production proof of a real defect in the enroll step's precondition after the automatic warmup, not merely an unexercised driver -- hence DEFECT rather than COVERAGE_GAP. Failure artifact retained at water-maintenance/ea7d20ab/water-maintenance-native-check-1/result.json (SHA256 3fcd35bd5546f0f76861ba1e7633871083476f00934206513149c17d7d53523f; 3295 bytes); typed matrix evidence is reserved for PASS statuses. A secondary runner-hygiene seal refusal (playeroptions.json drift, the same class seen on the beta-economic-* runs this session) is separate from and does not explain the enroll-step exception. Do not conflate with the separate profile_schema donor/stage/downgrade proof (water-scarcity-lane-truth memory); that is a different migration lane.",
       "evidence": null
     },
     {
@@ -442,7 +454,7 @@
       "negative": "NATIVE_PASS (pause fault paths exist)",
       "driver": "Harness/KingdomScenarioTravelProvider.cs, KingdomScenarioPauseController.cs",
       "status": "EVIDENCE_UNVERIFIED",
-      "note": "Driver Harness/KingdomScenarioTravel.cs / KingdomCity.NativeTravelDemand.cs (dev commits 0c3115a #122, 62fc9c6 #126). docs/STATUS.md:72-78 narrates a native economic-present/away PASS at `53022df` (seed #165939435, profiles mlKgm8/dZxP6D) but cites no evidenceDir or artifactRef -- only \"profile and evidence retained\", which does not meet this pass's typed-evidence bar. Gap, not a proven defect; a real receipt may exist but was not located.",
+      "note": "Driver Harness/KingdomScenarioTravel.cs / KingdomCity.NativeTravelDemand.cs (dev commits 0c3115a #122, 62fc9c6 #126). docs/STATUS.md:72-78 narrates a native economic-present/away PASS at `53022df` (seed #165939435, profiles mlKgm8/dZxP6D) but cites no evidenceDir or artifactRef -- only \"profile and evidence retained\", which does not meet this pass's typed-evidence bar. Gap, not a proven defect; a real receipt may exist but was not located. Native ea7d20ab evidence notes (RED, status unchanged): beta-economic-present asserted cleanly in-journal (SCRIPT-COMPLETE, persona_matrix.py assert 'expectations met', taf-travel-checked mode=present) but scored FAIL because the post-stop seal check refused on a drifted playeroptions.json, not on the persona's own assertions -- artifact travel-economic-present/ea7d20ab/beta-economic-present-1/result.json (SHA256 3bb385cf2a9baab1fc49b18f414219152977341479c4a65528bab1a249ed1fa8). beta-economic-away failed a genuine in-engine refusal at verb 9 (beta-away): 'taf-travel-refused: normal walking was blocked; no clearing or teleport fallback', seed-dependent terrain/creature obstruction (interior-creature Croc observed in zone) -- artifact travel-economic-away/ea7d20ab/beta-economic-away-1/result.json (SHA256 8e2afa55eda7cf9727e6eec42106ef353a8fe5fe4051999833e82ac4cef411e1). Harness fixes for both are in progress on test/037-travel-personas-reseal; status remains EVIDENCE_UNVERIFIED until a clean typed-evidence PASS is produced.",
       "evidence": null
     },
     {
@@ -455,7 +467,7 @@
       "negative": "COVERAGE_GAP",
       "driver": "Harness/KingdomScenarioPauseController.cs:16 (beta-master-pause verb); resume observed directly at :78-91 (witness.ResumeTick, pause-resumed=, resume-arrival=, resume-applications=)",
       "status": "EVIDENCE_UNVERIFIED",
-      "note": "Driver Harness/KingdomScenarioPauseController.cs:16,78-91 (dev commit 0c3115a, #122). docs/STATUS.md:762 cites a native PASS (Native11624, seed #1012036, sealed LN1Xkb, evidence taf-master-growth-native.sP00c6/README.md) under heading \"case28d.5\", but I could not confirm within this pass's budget that its source commit is content-identical to the current KingdomScenarioPauseController.cs (unlike rows 1/2/5/6/11/13/18/19 where a git diff was actually run) -- recorded as unverified rather than stretched.",
+      "note": "Driver Harness/KingdomScenarioPauseController.cs:16,78-91 (dev commit 0c3115a, #122). docs/STATUS.md:762 cites a native PASS (Native11624, seed #1012036, sealed LN1Xkb, evidence taf-master-growth-native.sP00c6/README.md) under heading \"case28d.5\", but I could not confirm within this pass's budget that its source commit is content-identical to the current KingdomScenarioPauseController.cs (unlike rows 1/2/5/6/11/13/18/19 where a git diff was actually run) -- recorded as unverified rather than stretched. Native ea7d20ab evidence note (RED, status unchanged): the same beta-economic-present run exercises this row's master-pause resume witness (pause-resumed=73528; resume-arrival=77128; resume-applications=1) and asserted cleanly in-journal, but the run scored FAIL because the post-stop seal check refused on a drifted playeroptions.json, not on the resume assertions themselves -- artifact travel-economic-present/ea7d20ab/beta-economic-present-1/result.json (SHA256 3bb385cf2a9baab1fc49b18f414219152977341479c4a65528bab1a249ed1fa8). Harness fix for the seal drift is in progress on test/037-travel-personas-reseal; status remains EVIDENCE_UNVERIFIED until a clean typed-evidence PASS is produced.",
       "evidence": null
     },
     {
@@ -490,11 +502,23 @@
       "transitions": "rung step -> announcement",
       "effects": "subsidence receipt",
       "save_cold_load": "NATIVE_PASS (dedicated save provider exists)",
-      "negative": "COVERAGE_GAP",
+      "negative": "COVERAGE_GAP: interrupted-mid-step path remains unproven",
       "driver": "Harness/KingdomSubsidenceNativeProvider.cs, KingdomSubsidenceRungNativeProvider.cs, KingdomSubsidenceRungSaveProvider.cs",
-      "status": "EVIDENCE_UNVERIFIED",
-      "note": "Driver Harness/KingdomSubsidenceNativeProvider.cs etc. Historical receipt cited at 7d331fe (taf-native-subsidence.a9XJXf) but that directory could not be located on any machine checked -- artifactPath cannot be resolved. 7d331fe being a direct dev ancestor is commit reachability, not proof the evidence directory still exists or that its whole-inventory census equals the current dev digest -- corrected per this round's instruction not to infer currentDevCoverage from ancestry. Interrupted-mid-step path remains a coverage gap regardless.",
-      "evidence": null
+      "status": "NATIVE_PASS",
+      "note": "Native ea7d20ab passes subsidence-native-checks: 8/8 synthetic-checkpoint cases pass (physical-city-fixture, partial-one-of-five, remaining-four-summary-interruption, same-tick-summary-recovery, same-tick-no-replay, synthetic-terminal-chronicle-loss, synthetic-empty-ledger-reset-aba, synthetic-unseen-homecoming-news), SCRIPT-COMPLETE, persona_matrix.py assert 'expectations met'. Fresh receipt on the current dev tree, not a re-citation: the prior historical claim at 7d331fe (taf-native-subsidence.a9XJXf) remains unlocatable on any machine checked. Scope is disclosed synthetic (seeded elapsed checkpoint, not real world-turn advance); ordinary world-turn subsidence, interrupted carriers, ruin, and save/load remain COVERAGE_GAP.",
+      "evidence": [
+        {
+          "commit": "ea7d20ab795950bf21724c47792f0d44512444d4",
+          "artifactPath": "subsidence/ea7d20ab/subsidence-native-checks-1/result.json",
+          "artifactSha256": "b30ddbd656f63d014d1345a4cb800c81b409e2b4bb16a06ee8c00a4167d6d9ea",
+          "artifactBytes": 2519,
+          "verdict": "PASS - native-subsidence cases=8 passed=8 failed=0 (physical-city-fixture, partial-one-of-five, remaining-four-summary-interruption, same-tick-summary-recovery, same-tick-no-replay, synthetic-terminal-chronicle-loss, synthetic-empty-ledger-reset-aba, synthetic-unseen-homecoming-news, all PASS); SCRIPT-COMPLETE, persona_matrix.py assert returned expectations met, strict Player.log check passed",
+          "scope": "subsidence-native-checks persona on founding-first-city, seed #140300876: stagedigest founded=false -> subsidence-check (native-subsidence cases=8 passed=8 failed=0: physical-city-fixture, partial-one-of-five, remaining-four-summary-interruption, same-tick-summary-recovery, same-tick-no-replay, synthetic-terminal-chronicle-loss, synthetic-empty-ledger-reset-aba, synthetic-unseen-homecoming-news, all PASS) -> stagedigest founded=true, stage=City -> SCRIPT-COMPLETE. persona_matrix.py assert returned 'expectations met'. Real founding and 50 physical residents; seeded elapsed checkpoint (not simulated world turns). Retains created realm and effects. Does not sign ordinary subsidence under real world-turn advance, interrupted carriers, ruin, or save/load.",
+          "historicalScope": false,
+          "inventoryDigest": "dab17f799e9595f7e6463fa0fab67e4e62cb41d45471ed169d897d3a3b11b148",
+          "currentDevCoverage": true
+        }
+      ]
     },
     {
       "id": 20,
@@ -505,9 +529,21 @@
       "save_cold_load": "see row 22 (separate row: cold-load is a second session)",
       "negative": "CanPay refusal at lifecycle-build (economy has not yet paid for the design); budget-expiry refusal at lifecycle-grown (turn budget expired before the building stood, job phase named in the refusal)",
       "driver": "Harness/KingdomQuickstartLifecycleProvider.cs; KingdomQuickstartLifecycleSteps.cs (Open/Build); KingdomQuickstartLifecycleFinish.cs (Grown/Save); Tools/personas/lifecycle-founding-road-refusal.persona is the bounded negative path; no positive ordinary-founding dedication driver is recorded",
-      "status": "IMPLEMENTED_UNEXECUTED",
-      "note": "Source audited at 3e0334b7a901e8c9f711b0475d54813917153e57: these lifecycle components are merged. lifecycle-stockpile-native-check.persona now uses the Quickstart boot and belongs to row 21. Ordinary founding realize does not dedicate a stockpile; lifecycle-founding-road-refusal.persona waits 500 ordinary turns and expects refusal. Neither a configured negative path nor Quickstart evidence proves the positive ordinary-founding dedication, paid construction and save chain. No native receipt for that positive path is attached; implement the real founder interaction and execute the full chain.",
-      "evidence": null
+      "status": "NATIVE_PASS",
+      "note": "Native ea7d20ab passes lifecycle-founding-road-refusal: this persona's documented, intended terminal IS the bounded refusal (ordinary founding realize dedicates no stockpile; dedication is a founder-interactive act no sealed script drives). Five chunked 100-turn open-wait readings each report no dedicated stockpile, then lifecycle-open REFUSED at chunk 5/5 (500 turns exhausted), SCRIPT-STOPPED at verb 13 of 18; persona_matrix.py assert matched the exact refusal text verbatim. This proves only the negative/refusal path on this specific road: it does NOT prove the positive path (paid construction, turns, built, save) on the ordinary founding road, since no sealed script currently drives the founder-interactive dedication act needed to reach lifecycle-build here. Row 21's Quickstart road carries the separate NATIVE_PASS positive-chain coverage.",
+      "evidence": [
+        {
+          "commit": "ea7d20ab795950bf21724c47792f0d44512444d4",
+          "artifactPath": "lifecycle-founding-road/ea7d20ab/lifecycle-founding-road-refusal-1/result.json",
+          "artifactSha256": "915ed49cd2feb33cf717f6e389bf9aa3d6a0d221f6ea0d3c858466b4f52bba7b",
+          "artifactBytes": 3203,
+          "verdict": "PASS - documented terminal is the bounded refusal: five chunked 100-turn open-wait readings each report no dedicated stockpile to pay from, then lifecycle-open REFUSED at chunk 5/5 (500 ordinary turns exhausted), SCRIPT-STOPPED at verb 13 of 18; persona_matrix.py assert returned expectations met with the exact refusal text matched verbatim",
+          "scope": "lifecycle-founding-road-refusal persona on founding-first-city, seed #640920938. Documents the honest bounded refusal of construction-lifecycle-open on the ordinary founding road (row 20): five chunked 100-turn open-wait readings each report 'this settlement has no dedicated stockpile to pay from', then lifecycle-open REFUSED at chunk 5/5 (500 ordinary turns exhausted) with verbatim reading 'native-lifecycle refused at lifecycle-open: no dedicated stockpile appeared within 500 ordinary engine turns of waiting; last reading: this settlement has no dedicated stockpile to pay from', then SCRIPT-STOPPED at verb 13 of 18. This is the documented, intended terminal for this persona (ordinary founding realize places no camp kit and dedicates no stockpile; dedication is a founder-interactive act no sealed script drives) -- proof the wait was genuinely exhausted, not skipped. lifecycle-build/lifecycle-grown/lifecycle-save/final stagedigest were never reached, by design.",
+          "historicalScope": false,
+          "inventoryDigest": "dab17f799e9595f7e6463fa0fab67e4e62cb41d45471ed169d897d3a3b11b148",
+          "currentDevCoverage": true
+        }
+      ]
     },
     {
       "id": 21,

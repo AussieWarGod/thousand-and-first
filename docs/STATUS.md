@@ -1,5 +1,42 @@
 # Current implementation and release evidence
 
+## Coverage evidence round at `ea7d20ab` — rows 1, 14, 19, 20 typed
+
+Native `ea7d20ab795950bf21724c47792f0d44512444d4` closes three long-standing
+`EVIDENCE_UNVERIFIED`/`IMPLEMENTED_UNEXECUTED` gaps with fresh, typed receipts: row 1
+(Founding, first city) passes `found-first-city` -- production `KingdomScenarioRealizer.foundfirstcity`
+founds a marsh camp, `SCRIPT-COMPLETE`, `persona_matrix.py assert` returns "expectations met"
+(`founding-first-city/ea7d20ab/found-first-city-1/result.json`). Row 19 (Subsidence) passes
+`subsidence-native-checks` -- 8/8 synthetic-checkpoint cases pass on a real founding with 50
+physical residents (`subsidence/ea7d20ab/subsidence-native-checks-1/result.json`); scope stays a
+seeded elapsed checkpoint, not real world-turn advance. Row 20 (Construction lifecycle on the
+founded road) passes `lifecycle-founding-road-refusal` -- this persona's documented, intended
+terminal is the bounded refusal itself: five chunked 100-turn waits each report no dedicated
+stockpile, then `lifecycle-open` refuses at 500 ordinary turns exhausted, matched verbatim by
+`persona_matrix.py assert` (`lifecycle-founding-road/ea7d20ab/lifecycle-founding-road-refusal-1/result.json`).
+This proves only the negative/refusal path on the ordinary founding road; the positive paid-construction
+chain there remains unproved (row 21's Quickstart road carries that positive-chain coverage).
+
+The same evidence round moves row 14 (Water maintenance) from `EVIDENCE_UNVERIFIED` to `DEFECT`:
+`water-maintenance-native-check` passes its 2,400-turn automatic empty-camp warmup, then
+`water-maintenance-enroll` throws a genuine `InvalidOperationException` from
+`Harness/KingdomWaterMaintenanceNativeProvider.cs` -- "automatic empty-camp stage did not retain
+exact committed unresolved authority" -- a production proof of a real defect, not merely an
+unexercised driver (`water-maintenance/ea7d20ab/water-maintenance-native-check-1/result.json`).
+
+Rows 16 (Travel present/away) and 17 (Master settlement plan resume) stay `EVIDENCE_UNVERIFIED`:
+`beta-economic-present` asserts cleanly in-journal (taf-travel-checked, master-pause resume
+witness pause-resumed/resume-arrival/resume-applications all present) but scores RED because the
+runner's post-stop seal check refuses on a drifted `playeroptions.json`, unrelated to the
+persona's own assertions. `beta-economic-away` scores RED on a genuine in-engine refusal at the
+`beta-away` verb: normal walking blocked near the claimed zone with no clearing or teleport
+fallback, seed-dependent terrain/creature obstruction. Both RED artifacts are retained
+(`travel-economic-present/ea7d20ab/beta-economic-present-1/result.json`,
+`travel-economic-away/ea7d20ab/beta-economic-away-1/result.json`); harness fixes for the seal
+drift and the away-travel refusal are in progress on `test/037-travel-personas-reseal`. Neither
+row is claimed as PASS until a clean typed-evidence receipt exists.
+
+
 ## Recruitment admission, housing and cold load — scoped native PASS
 
 Native `9cc75930ffae7b4201872a3085f67ea61b01c1d7` completes genuine marsh/advisor-on Quickstart
