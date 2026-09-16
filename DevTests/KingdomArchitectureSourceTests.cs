@@ -166,7 +166,10 @@ namespace ThousandAndFirst.Tests
 				"a reload must enumerate every merge stream exactly once");
 			StringAssert.Contains("state = next;", source);
 			StringAssert.Contains("does not exist in the frozen KingdomBuildings view", source);
-			StringAssert.Contains("authored binding size is smaller than its merged Plot minimum", source);
+			StringAssert.Contains("return ValidateRetainedBinding(State, Raw, draft);", source);
+			StringAssert.Contains("bindings below the current minimum must be explicitly Retained", source);
+			ClassicAssert.IsFalse(source.Contains("building.LotSize > Binding.Size"),
+				"record materialisation must retain the already-validated historical size reader");
 			StringAssert.Contains("architecture Type does not match its merged Category", source);
 			ClassicAssert.IsFalse(source.Contains("KingdomData.TryGetBuilding"));
 			ClassicAssert.IsFalse(source.Contains("KingdomData.Buildings"));
@@ -214,7 +217,7 @@ namespace ThousandAndFirst.Tests
 				source);
 			StringAssert.Contains("ExactRecordKey(BuildKey, type, ActualLotSize)", source);
 			StringAssert.Contains("records.Count != 1", source);
-			StringAssert.Contains("if (building.LotSize > Binding.Size)", source);
+			StringAssert.Contains("bool below = Draft.Size < building.LotSize;", source);
 			ClassicAssert.IsFalse(source.Contains("building.LotSize != Binding.Size"));
 			StringAssert.Contains("The requested size is identity, not a", source);
 			StringAssert.Contains("missing larger map always refuses", source);

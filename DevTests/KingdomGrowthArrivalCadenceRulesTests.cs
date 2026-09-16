@@ -40,6 +40,28 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void UnavailableRecruitmentRetainsOriginalHeadThroughWaitAndCodecRecovery()
+		{
+			KingdomGrowthBook book = ActiveCadence();
+			AssertAdvance(book, 10L, 10L, 0);
+			AssertAdvance(book, 30L, 10L, 0);
+			book = RoundTripCadence(book);
+			AssertAdvance(book, 50L, 10L, 0);
+			ClassicAssert.IsNull(book.ArrivalOpportunity);
+			ClassicAssert.AreEqual(5UL, KingdomLifecycleRules.ArrivalDebtCount(book));
+			ClassicAssert.AreEqual(1UL, book.ArrivalDebtRanges[0].FirstOrdinal);
+			ClassicAssert.AreEqual(10L, book.ArrivalDebtRanges[0].FirstDueTick);
+			ClassicAssert.AreEqual(0UL, book.ArrivalOrdinalRetiredThrough);
+			Freeze(book);
+			book = RoundTripCadence(book);
+			ClassicAssert.AreEqual(1UL, book.ArrivalOpportunity.Ordinal);
+			ClassicAssert.AreEqual(10L, book.ArrivalOpportunity.DueTick);
+			// The frozen opportunity remains unretired debt alongside the four later heads.
+			ClassicAssert.AreEqual(5UL, KingdomLifecycleRules.ArrivalDebtCount(book));
+			ClassicAssert.AreEqual(4UL, book.ArrivalDebtRanges[0].Count);
+		}
+
+		[Test]
 		public void FixedPeriodFoldRetainsLargeDebtInOneBoundedRange()
 		{
 			KingdomGrowthBook book = ActiveCadence();

@@ -1,9 +1,9 @@
 # Native creator/cleanup seam regressions on fresh synthetic ground.
 # No realize: the realm remains unfounded; this does not sign Quickstart embark or save/load.
-DESCRIPTION=real Quickstart creators and custody callbacks pass sixteen native regressions
+DESCRIPTION=real Quickstart creators and custody callbacks pass seventeen native regressions
 REQUEST=founding-first-city
 START=8.22@40,12
 SCRIPT=stagedigest;quickstart-check;stagedigest
 VERBS=quickstart-check
-EXPECT=stagedigest:OK~founded=false,quickstart-check:OK~cases=16 passed=16 failed=0,stagedigest:OK~founded=false,COMPLETE
+EXPECT=stagedigest:OK~founded=false,quickstart-check:OK~cases=17 passed=17 failed=0,stagedigest:OK~founded=false,COMPLETE
 SET=quickstart,native-regression

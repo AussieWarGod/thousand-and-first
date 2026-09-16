@@ -22,6 +22,18 @@ namespace ThousandAndFirst.Tests
 		private const string Residents = "Simulation/City/KingdomResidents.07.DepartureRecovery.cs";
 
 		[Test]
+		public void SourceContractRecoveryCannotSpendTheLastCoreCitizens()
+		{
+			Ordered(Method(Begin, "internal static bool TryBegin("),
+				"TryRecoverPending(System", "TryRecoverOrphan(System", "!TryCapture(System, Body",
+				"System.ResidentDeparture = operation;");
+			Ordered(Method(Begin, "private static bool TryCapture("),
+				"book.TryReadExact(", "KingdomResidentRules.TryProject(state,",
+				"roll.Population <= KingdomRules.LoyalCoreSettlers", "!TryCaptureRoles(System",
+				"Operation = new KingdomResidentDepartureOperation");
+		}
+
+		[Test]
 		public void SourceContractSubsidenceEntryRequiresExplicitStepIdWithoutCauseInference()
 		{
 			string entry = Method(Growth, "internal static bool EmigrateForSubsidence(");

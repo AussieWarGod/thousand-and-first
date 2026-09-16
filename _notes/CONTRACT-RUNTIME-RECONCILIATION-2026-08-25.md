@@ -1,11 +1,26 @@
 # Contract-to-runtime reconciliation — 2026-08-25
 
+Current development census: 3112 production C# files / 3,146 cold-install files.
+Coherent recruitment is under native validation; earlier source/evidence below remains historical.
+
+## Current development census notice
+
+The unreleased strike-feedback tree has 3108 production C# files and 3,141 cold-install files.
+This is an inventory update, not acceptance of recruitment, native founding, or the historical
+findings below. Public 0.3.7 remains the released package.
+
+
+## Current source census — pending heart repair
+
+3106 production C# files; 440,838 physical lines; 1450 direct-XRL files; zero cap failures;
+3,139 cold-install files. Inventory `ef37cc7e787d36b6034cc9a24cf99c9278aa55a9a8f2bd06c9969327b44ae7e1`. This census is not native acceptance.
+
 ## Retained combined heart candidate before surveyed-ingress draft — 2026-09-11
 
 Current draft census/evidence is in docs/STATUS.md; the figures below describe its predecessor.
 
-3097 production C# files; 440,053 physical lines; 1446 direct-XRL files; zero cap failures;
-3,128 cold-install files. Inventory `40ba4913664a8b427c908fc0ea75d92cd6a009223fbca8f226fd5256511c7684`.
+3098 production C# files; 440,044 physical lines; 1448 direct-XRL files; zero cap failures;
+3,129 cold-install files. Inventory `fba0d595a8b2c29876f3f74eae29914a9595d85182831f2ceddb5b44d51dfdc0`.
 #141/#144/#139/#137 combined; compile, native and semantic review owed. All earlier evidence
 below remains checkpoint-scoped. Public0.3.3 is finalized; this candidate prepares0.3.4.
 
@@ -13,7 +28,7 @@ below remains checkpoint-scoped. Public0.3.3 is finalized; this candidate prepar
 
 Integrated through dev `bcca3e5`; compile/audit and main14341/portable5491 pass, zero managed
 skips; native pending. Census3079/437201/1434,
-zero cap failures; inventory `40ba4913664a8b427c908fc0ea75d92cd6a009223fbca8f226fd5256511c7684`.
+zero cap failures; inventory `fba0d595a8b2c29876f3f74eae29914a9595d85182831f2ceddb5b44d51dfdc0`.
 Earlier evidence below remains bound to its named checkpoints.
 
 ## Retained dev hotfix backmerge — 2026-09-11

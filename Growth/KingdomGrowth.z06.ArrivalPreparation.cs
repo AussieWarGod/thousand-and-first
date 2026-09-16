@@ -185,16 +185,24 @@ namespace ThousandAndFirst
 			KingdomGrowthDomainStep enrollment = PreparePersonDomain(system, growth,
 				operation, settler, KingdomGrowthDomainStepKind.Enrollment,
 				KingdomGrowthDomainCallbackKind.Enroll, 0L, 1L);
+			if (enrollment == null) return false;
+			operation.DomainSteps.Add(enrollment);
 			KingdomGrowthDomainStep roster = PreparePersonDomain(system, growth, operation,
 				settler, KingdomGrowthDomainStepKind.Roster,
 				KingdomGrowthDomainCallbackKind.RosterAdd, 0L, 1L);
+			if (roster == null) return false;
+			operation.DomainSteps.Add(roster);
 			KingdomGrowthDomainStep creed = PreparePersonDomain(system, growth, operation,
 				settler, KingdomGrowthDomainStepKind.Creed,
 				KingdomGrowthDomainCallbackKind.CreedSet, 0L, 1L);
+			if (creed == null) return false;
+			operation.DomainSteps.Add(creed);
 			KingdomGrowthDomainStep population = PreparePersonDomain(system, growth,
 				operation, settler, KingdomGrowthDomainStepKind.Population,
 				KingdomGrowthDomainCallbackKind.PopulationAdjust, system.Population,
 				system.Population + 1L);
+			if (population == null) return false;
+			operation.DomainSteps.Add(population);
 			KingdomGrowthAccountingSnapshot accountingBefore = AccountingSnapshot(system);
 			KingdomGrowthAccountingSnapshot accountingAfter = AccountingSnapshot(system);
 			accountingAfter.ArrivalCost += KingdomRules.DramsPerArrival;
@@ -208,12 +216,7 @@ namespace ThousandAndFirst
 				AccountingHash(system, false), AccountingHash(system, true),
 				AccountingMapHash(system, false), AccountingMapHash(system, true),
 				null, null, accountingBefore, accountingAfter);
-			if (enrollment == null || roster == null || creed == null || population == null
-				|| accounting == null) return false;
-			operation.DomainSteps.Add(enrollment);
-			operation.DomainSteps.Add(roster);
-			operation.DomainSteps.Add(creed);
-			operation.DomainSteps.Add(population);
+			if (accounting == null) return false;
 			operation.DomainSteps.Add(accounting);
 			return true;
 		}

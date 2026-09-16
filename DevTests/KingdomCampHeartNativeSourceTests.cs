@@ -69,7 +69,7 @@ namespace ThousandAndFirst.Tests
 				"internal const string SetupVerb = \"camp-heart-setup\";"));
 			Assert.That(provider, Does.Contain(
 				"internal const string CheckVerb = \"camp-heart-check\";"));
-			Assert.That(provider, Does.Contain("\"stagedigest\", SetupVerb, \"advance 1200\","));
+			Assert.That(provider, Does.Contain("KingdomCampHeartScript.Matches(script)"));
 			Assert.That(provider, Does.Contain(
 				"KingdomCampHeartNativeChecks.Run(Verb, game, zone, out complete)"));
 		}
@@ -158,7 +158,8 @@ namespace ThousandAndFirst.Tests
 			Assert.That(placed, Is.LessThan(rowed), "AddObject must precede TryEnsureRow");
 			foreach (string token in new[] {
 				"System.ClaimedZones.Contains(Zone.ZoneID)",
-				"taf-camp-resident-unplaced", "RequireRowInBook(book, body, id, i + 1)",
+				"taf-camp-resident-unplaced", "int expected = System.Population + 1",
+				"RequireRowInBook(book, body, id, expected)",
 				"Book.TryResidentRow(Id, out index)", "rows[i].BoundZoneId",
 				"!body.IsPlayer() && !body.IsPlayerLed()",
 				"KingdomResidents.RollRows(System)",
@@ -359,23 +360,7 @@ namespace ThousandAndFirst.Tests
 			int end = persona.IndexOf('\n', at + 1);
 			string[] words = persona.Substring(at + 8, end - at - 8).Split(';');
 
-			string provider = Read(Provider);
-			int array = provider.IndexOf("private static readonly string[] Script = {",
-				StringComparison.Ordinal);
-			Assert.That(array, Is.GreaterThan(-1), "the provider seals no script");
-			int open = provider.IndexOf('{', array) + 1;
-			int close = provider.IndexOf("};", open, StringComparison.Ordinal);
-			string[] sealedWords = provider.Substring(open, close - open).Split(',');
-			Assert.That(sealedWords.Length, Is.EqualTo(words.Length),
-				"the persona and the provider seal different script lengths");
-			for (int i = 0; i < words.Length; i++)
-			{
-				string word = sealedWords[i].Replace("\n", "").Replace("\t", "").Trim();
-				if (word == "SetupVerb") word = "\"camp-heart-setup\"";
-				if (word == "CheckVerb") word = "\"camp-heart-check\"";
-				Assert.That(word, Is.EqualTo("\"" + words[i].Trim() + "\""),
-					"script word " + i + " differs between persona and provider");
-			}
+			Assert.That(ThousandAndFirst.Harness.KingdomCampHeartScript.Matches(words), Is.True);
 		}
 
 		/// <summary>

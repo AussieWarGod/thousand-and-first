@@ -230,8 +230,8 @@ namespace ThousandAndFirst
 			{
 				string failure;
 				KingdomInheritanceSpatialCaptureResult spatial;
-				if (!KingdomSeal.TryStageSemanticSnapshot("settlement pass", out failure, out spatial)
-					&& spatial != KingdomInheritanceSpatialCaptureResult.Pending)
+				if (KingdomSealSpatialRules.SpatialCaptureIsFault(KingdomSeal
+					.TryStageSemanticSnapshot("settlement pass", out failure, out spatial), spatial))
 				{
 					KingdomLog.Log("seal: settlement pass was not staged ("
 						+ (string.IsNullOrEmpty(failure) ? "unknown failure" : failure) + ")");

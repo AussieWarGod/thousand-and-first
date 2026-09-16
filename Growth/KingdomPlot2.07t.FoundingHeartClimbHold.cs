@@ -48,7 +48,7 @@ namespace ThousandAndFirst
 			if (!KingdomFoundingHeartChainRules.ReleasesClimbHold(held, false)) return;
 			if (!KingdomFoundingHeartTerminalRules.TryDecode(
 					Z.GetZoneProperty(FoundingHeartTerminalProperty, null), out var prior)
-				|| prior.FinalId != RetiredId) return;
+				|| !FoundingUpgradePathHasSubject(Z, prior.FinalId, RetiredId)) return;
 			Z.SetZoneProperty(FoundingHeartClimbHeldProperty, null);
 		}
 

@@ -131,7 +131,7 @@ namespace ThousandAndFirst.Tests
 		[TestCase(GrowthStage.Steading, KingdomPlotRules.PlotSize.Huge, GrowthStage.City)]
 		[TestCase(GrowthStage.City, KingdomPlotRules.PlotSize.Small, GrowthStage.City)]
 		[TestCase(GrowthStage.Village, KingdomPlotRules.PlotSize.Medium, GrowthStage.Village)]
-		[TestCase(GrowthStage.Camp, KingdomPlotRules.PlotSize.Medium, GrowthStage.Steading)]
+		[TestCase(GrowthStage.Camp, KingdomPlotRules.PlotSize.Medium, GrowthStage.Camp)]
 		public void EffectiveMinStage_TakesTheLaterOfTheTwoGates(GrowthStage authored, KingdomPlotRules.PlotSize plot, GrowthStage expected)
 		{
 			ClassicAssert.AreEqual(expected, KingdomCatalogueRules.EffectiveMinStage(authored, plot));

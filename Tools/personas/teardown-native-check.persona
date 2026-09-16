@@ -12,7 +12,7 @@
 # declared capacity. Nothing forces KingdomBuilt, the job phase or the strike receipt.
 # Not ordinary play, not a rendered Charter, no save/load and no cold-load claim.
 #
-# Four checks, cumulative ticks 2400/6000/9600/13200 (deltas 2400/3600/3600/3600), widened per
+# Five checks, cumulative ticks 2400/6000/9600/13200/16800 (deltas 2400/3600/3600/3600/3600), widened per
 # review-bba51c4-teardown-findings.md nit 1 from the prior zero-slack 2000/4800/7600/10800: the
 # first attended settlement pass after founding prices a freshly-selected raising at 0 (Assign
 # selects on that same pass, before any labour is priced against it), so the first interval is
@@ -24,7 +24,7 @@
 # FIXTURE CREW DO NOT WANDER, DISCLOSED: once kept off a raising's footprint, a crew body is
 # pinned stationary (Brain.Wanders=false, Brain.WandersRandomly=false, Brain.Stay(cell), the
 # exact production idiom for anchoring an NPC) so it cannot WANDER back onto the footprint on
-# its own between the four scripted checks. A real settlement's own wandering residents are
+# its own between the five scripted checks. A real settlement's own wandering residents are
 # never anchored this way and can still trigger issue #163 (a living occupant permanently
 # blocking an authored ground-layer slot); that production gap is being closed separately, on
 # fix/034-apply-occupant-announce.
@@ -46,11 +46,13 @@
 # outcome=crew-departed onRoll=<n> wanted=<CrewSize> tick=<t>", inside the same Fail()
 # envelope every other named refusal in this scenario uses -- a named REFUSED verb, never a
 # silently stalled incomplete case and never a false pass.
+# 0.3.4 native evidence: larder strike was first ordered at tick 13200, so the fifth
+# interval gives its 29 effort two working days at two hands, plus one cadence day.
 DESCRIPTION=a really built camp fire and larder are struck on real turns, return exactly the computed salvage, and refuse a second strike
 REQUEST=founding-first-city
 START=8.22@40,12
-SCRIPT=stagedigest;teardown-setup;advance 2400;teardown-check;advance 3600;teardown-check;advance 3600;teardown-check;advance 3600;teardown-check;stagedigest
+SCRIPT=stagedigest;teardown-setup;advance 2400;teardown-check;advance 3600;teardown-check;advance 3600;teardown-check;advance 3600;teardown-check;advance 3600;teardown-check;stagedigest
 VERBS=teardown-setup,teardown-check
-EXPECT=stagedigest:OK~founded=false,teardown-setup:OK~fire=1,advance:OK,teardown-check:OK~native-teardown,advance:OK,teardown-check:OK~native-teardown,advance:OK,teardown-check:OK~native-teardown,advance:OK,teardown-check:OK~cases=2 passed=2 failed=0,stagedigest:OK~founded=true,COMPLETE
+EXPECT=stagedigest:OK~founded=false,teardown-setup:OK~fire=1,advance:OK,teardown-check:OK~native-teardown,advance:OK,teardown-check:OK~native-teardown,advance:OK,teardown-check:OK~native-teardown,advance:OK,teardown-check:OK~native-teardown,advance:OK,teardown-check:OK~cases=2 passed=2 failed=0,stagedigest:OK~founded=true,COMPLETE
 SET=materials,growth,native-regression
 TIMEOUT=1200

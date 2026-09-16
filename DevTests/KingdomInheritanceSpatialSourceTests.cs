@@ -6,6 +6,31 @@ namespace ThousandAndFirst.Tests
 {
 	public class KingdomInheritanceSpatialSourceTests
 	{
+		/// <summary>
+		/// Both sites read the one rule: the cold load may not fail closed on a state the daily
+		/// pass carries. Pinned at both, because the defect was not in either rule but in one of
+		/// them never asking (issue #181).
+		/// </summary>
+		[Test]
+		public void TheLoadPathAndTheDailyPassClassifyASpatialCaptureTheSameWay()
+		{
+			string seal = TestMain.ReadRepositoryText("Core/KingdomSeal.Synchronization.cs");
+			int capture = seal.IndexOf("out saved, out Failure, out spatial)",
+				System.StringComparison.Ordinal);
+			ClassicAssert.GreaterOrEqual(capture, 0,
+				"the load path must take the spatial result, not discard it");
+			int classify = seal.IndexOf(
+				"if (KingdomSealSpatialRules.SpatialCaptureIsFault(false, spatial)) return false;",
+				System.StringComparison.Ordinal);
+			ClassicAssert.Greater(classify, capture,
+				"the load path must classify the result it took");
+			StringAssert.Contains("seal: loaded world not staged yet (", seal);
+			string pass = TestMain.ReadRepositoryText("Core/KingdomSystem.z21.SemanticPass.cs");
+			StringAssert.Contains("KingdomSealSpatialRules.SpatialCaptureIsFault(", pass);
+			StringAssert.DoesNotContain(
+				"spatial != KingdomInheritanceSpatialCaptureResult.Pending", pass);
+		}
+
 		[Test]
 		public void CaptureWitnessesOnlyLoadedGroundAndFrozenReceipts()
 		{

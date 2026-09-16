@@ -480,6 +480,16 @@ namespace ThousandAndFirst.Tests
 					.Replace('\\', '/');
 				if (!System.IO.File.ReadAllText(file).Contains(
 					"KingdomCitizenshipEnrollmentReason.Founding")) continue;
+				if (relative == "Harness/KingdomQuickstartSettlementChecks.cs")
+				{
+					// The native acceptance observer compares the existing reason; it never enrolls.
+					string observer = System.IO.File.ReadAllText(file);
+					StringAssert.Contains("citizenship.EnrollmentReason ==", observer);
+					foreach (string mutation in new[] { "TryEnroll(", "EnrollCitizen(",
+						"SetIntProperty(", "SetStringProperty(" })
+						Assert.That(observer.Contains(mutation), Is.False, mutation);
+					continue;
+				}
 				Assert.That(relative == "Core/KingdomCitizenshipRules.cs"
 					|| relative == "World/KingdomQuickstartBootstrap.Founders.Enrollment.cs"
 					|| relative.StartsWith("DevTests/", StringComparison.Ordinal), Is.True,
@@ -546,11 +556,12 @@ namespace ThousandAndFirst.Tests
 			Assert.That(verify, Is.GreaterThanOrEqualTo(0));
 			Assert.That(bootstrap.LastIndexOf("RunFounders(", StringComparison.Ordinal),
 				Is.GreaterThan(verify));
-			// The guide is untouched: it still knows exactly its five rule-shaped topics, and it
-			// still never states the size of the roll, which is why four founders cannot make it
-			// lie. (Its words are pinned in full by KingdomQuickstartGuideRulesTests.)
+			// Starting provisions are explicit; the current roll still needs to be read.
 			Assert.That(KingdomQuickstartGuideRules.TopicCount, Is.EqualTo(5));
-			string[] sizes = { "four settlers", "four citizens", "founding citizens",
+			Assert.That(KingdomQuickstartRules.FounderCount, Is.EqualTo(4));
+			StringAssert.Contains("normally provides four founding citizens", KingdomQuickstartGuideRules.Start);
+			StringAssert.Contains("check the citizen roll", KingdomQuickstartGuideRules.Start);
+			string[] sizes = { "four settlers", "four citizens",
 				"four of you", "four people" };
 			foreach (string size in sizes)
 			{
@@ -689,8 +700,25 @@ namespace ThousandAndFirst.Tests
 			// turns before its publication was recovered, and a founder walks — while Stage A's
 			// own verification, in the call that placed them, does pin it.
 			StringAssert.Contains("private static bool VerifyFounderCohort(", recovery);
-			StringAssert.Contains("was not on its own reserved cell", founders);
+			StringAssert.Contains("was not anchored on its own reserved cell", founders);
 			StringAssert.DoesNotContain("ExactRole(", recovery);
+		}
+
+		[Test]
+		public void FreshCivilianDefenseIsVerifiedWithoutRewritingRecoveredFounders()
+		{
+			string founders = TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.Founders.cs");
+			Assert.That(founders, Does.Contain("body.Brain.Passive = true;"));
+			Assert.That(founders, Does.Contain("|| !Cohort[i].Brain.Passive"));
+			string recovery = TestMain.ReadRepositoryText("World/KingdomQuickstartBootstrap.Founders.Recovery.cs");
+			Assert.That(recovery, Does.Not.Contain(".Passive ="));
+			string observer = TestMain.ReadRepositoryText("Harness/KingdomQuickstartSettlementChecks.cs");
+			Assert.That(observer, Does.Contain("KingdomQuickstartDefensiveChecks.Probe();"));
+			Assert.That(observer, Does.Contain("body.Brain.Passive && !body.Brain.CanAcquireTarget()"));
+			string probe = TestMain.ReadRepositoryText("Harness/KingdomQuickstartDefensiveChecks.cs");
+			Assert.That(probe, Does.Contain("civilian.Brain.Attacked(attacker);"));
+			Assert.That(probe, Does.Contain("ReferenceEquals(civilian.Brain.Target, attacker)"));
+			Assert.That(probe, Does.Contain("finally"));
 		}
 
 		[Test]

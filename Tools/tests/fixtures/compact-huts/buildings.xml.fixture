@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Retained 7403458b compact-hut generator contracts, not shipped building designs. -->
+<kingdombuildings Schema="1">
+  <building Key="hut" DisplayName="timber hut" Blueprint="r_KingdomHut" Cost="6" Ticks="1800" Styles="all,!common,!eater" Category="housing" Plot="S" Adoptable="yes" Footprint="4x3" Materials="timber:6,mud:2,canvas:2" Carries="roof:1" Contents="r_KingdomFurnishings_Dwelling" UpgradesTo="hutyard" UpgradeMaterials="timber:4,stone:2">
+    <skin Key="verdant" Style="verdant" ColorString="&amp;g" />
+    <skin Key="fungal" Style="fungal" ColorString="&amp;m" />
+    <skin Key="moonstair" Style="moonstair" ColorString="&amp;c" />
+    <skin Key="eater" Style="eater" ColorString="&amp;r" />
+    <skin Key="bleached" ColorString="&amp;Y" />
+  </building>
+  <building Key="hutyard" DisplayName="hut and yard (room to work outside the door)" Blueprint="r_KingdomHutYard" Cost="10" Ticks="2400" Styles="all,!common,!eater" Category="housing" Plot="S" Adoptable="yes" Footprint="5x4" Materials="timber:10,stone:2,canvas:2" Carries="roof:3" Contents="r_KingdomFurnishings_Dwelling" />
+  <building Key="mudhut" DisplayName="mud-brick hut (dug out of the pan and dried in the flat sun)" Blueprint="r_KingdomMudHut" Adoptable="yes" Cost="6" Ticks="1800" Styles="common" Category="housing" Plot="S" Footprint="4x3" Materials="mud:10,canvas:2" Carries="roof:1" Contents="r_KingdomFurnishings_Dwelling" UpgradesTo="mudhutcourt" UpgradeMaterials="mud:6,stone:2" />
+  <building Key="mudhutcourt" DisplayName="mud-brick hut and court (a wall, and a strip of shade the street borrows)" Blueprint="r_KingdomMudHutCourt" Adoptable="yes" Cost="10" Ticks="2400" Styles="common" Category="housing" Plot="S" Footprint="5x4" Materials="mud:16,stone:2,canvas:2" Carries="roof:3" Contents="r_KingdomFurnishings_Dwelling" />
+  <building Key="blockhut" DisplayName="block hut (a fallen course squared off and roofed in salvaged plate)" Blueprint="r_KingdomBlockHut" Adoptable="yes" Cost="6" Ticks="1800" Styles="eater" Category="housing" Plot="S" Footprint="4x3" Materials="scrap:6,stone:4,canvas:2" Carries="roof:1" Contents="r_KingdomFurnishings_Dwelling" UpgradesTo="blockyard" UpgradeMaterials="scrap:2,stone:2" />
+  <building Key="blockyard" DisplayName="block hut and yard (two courses re-stood at a right angle, and the corner swept)" Blueprint="r_KingdomBlockYard" Adoptable="yes" Cost="10" Ticks="2400" Styles="eater" Category="housing" Plot="S" Footprint="5x4" Materials="scrap:8,stone:6,canvas:2" Carries="roof:3" Contents="r_KingdomFurnishings_Dwelling" />
+</kingdombuildings>

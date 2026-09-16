@@ -125,7 +125,9 @@ namespace ThousandAndFirst
 					break;
 				}
 			}
-			string destinationId = destination?.IDIfAssigned;
+			// Null means ground salvage in the durable receipt. A dedicated chest may
+			// never have needed an ID before; assign it before recording inventory custody.
+			string destinationId = destination?.ID;
 			if (!KingdomConstruction.UpdatePhysical(ref Job,
 				KingdomPhysicalPhase.SalvageAddPending, Job.PhysicalIndex, amount,
 				Job.PhysicalSpilled, item.ID, destinationId, Job.PhysicalReceipt))

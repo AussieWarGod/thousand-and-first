@@ -28,7 +28,7 @@ namespace ThousandAndFirst
 			}
 		}
 
-		// The shelter lots: two Small plots (6x4) stacked west of the supply column, clear of the
+		// The shelter lots: two Medium plots (8x6), with four clear rows between them, west of the supply column, clear of the
 		// reserved role cells at x=28, of the founder's start cell, and of the heart's extreme
 		// survey (which begins at x=31 on an 80-wide zone), so neither row is ever marked yielding
 		// and neither contends with a heart rung for its ground. Two tent rows carry three beds
@@ -36,8 +36,8 @@ namespace ThousandAndFirst
 		// finish.
 		private static readonly KingdomPlotRules.PlotRect[] ShelterLots = BuildShelterLots();
 
-		// The tent row carries one authored public threshold: the '+' at canonical (3,3) of the
-		// 6x4 map housing-tentrow-s1, the middle of its southern edge. The heart frontage law
+		// The tent row carries one authored public threshold: the real door at canonical (3,5) of the
+		// 8x6 map housing-tentrow-s1-lot-m-heart, the middle of its southern edge. The heart frontage law
 		// poses each lot towards the founding heart, which stands south of lot A's centre and
 		// north of lot B's, so lot A is laid facing south and lot B facing north; the threshold
 		// therefore lands on each lot's outward edge and its route leaves straight out from there.
@@ -47,8 +47,8 @@ namespace ThousandAndFirst
 		// refuses any drift between the two.
 		private static readonly ShelterThreshold[] ShelterThresholds =
 		{
-			new ShelterThreshold(23, 9, 0, -1),
-			new ShelterThreshold(24, 16, 0, 1)
+			new ShelterThreshold(22, 4, 0, -1),
+			new ShelterThreshold(21, 19, 0, 1)
 		};
 
 		/// <summary>
@@ -130,8 +130,8 @@ namespace ThousandAndFirst
 		{
 			return new KingdomPlotRules.PlotRect[]
 			{
-				new KingdomPlotRules.PlotRect(21, 9, 26, 12),
-				new KingdomPlotRules.PlotRect(21, 13, 26, 16)
+				new KingdomPlotRules.PlotRect(18, 4, 25, 9),
+				new KingdomPlotRules.PlotRect(18, 14, 25, 19)
 			};
 		}
 

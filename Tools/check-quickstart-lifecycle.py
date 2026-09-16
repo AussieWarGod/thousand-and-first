@@ -10,7 +10,9 @@ The lifecycle this tool judges is one chain, not a set of independent legs:
 Three verdicts, and only one of them is success:
 
   PASS     every link's rows are present, in order, and OK.
-  FAIL     a link's rows are present but refused, out of order, or self-contradictory.
+  FAIL     a link's rows are present but refused, out of order, or self-contradictory
+           (failClass "chain"), the founder died mid-run (failClass "founder-died"), or the
+           steps named different stores (failClass "store-drift").
   BLOCKER  a link has NO rows at all. Missing reachability is never a pass: an absent link
            means the chain was never driven that far, which is exactly the state this tool
            exists to make visible.
@@ -232,6 +234,48 @@ STALL_CLASSES = (
 )
 
 
+# The founder's death is its own FAIL class, distinct from every job-stall class above and from a
+# link that merely refused: native run 36 (13122f0) lost the founder to a wandering creature
+# mid-`advance` and, until the AutoRunner learned to journal it, the run simply hung. The runner
+# now lands a SCRIPT-STOPPED row whose message opens with DIED_PREFIX and the engine's own death
+# category (Harness/KingdomScenarioAutoRunner.Death.cs); this tool names it founder-died, never a
+# pass, never a waiver, and it outranks every other verdict because it is the root cause of
+# whatever the chain failed to reach afterwards.
+STOPPED_ROW = "SCRIPT-STOPPED"
+DIED_PREFIX = "DIED "
+FOUNDER_DIED = "founder-died"
+CHAIN_FAIL = "chain"
+# Native run 38 (2fa563c): the heart's own dry store joined the bootstrap chest mid-advance and a
+# scan-based "exactly one" refused the save. Every lifecycle step now names the store it paid from
+# (storeId=, Harness/KingdomQuickstartLifecycleSteps.cs StoreClause); the chain must name ONE store
+# from open to next-action, and a drift between steps is its own FAIL class.
+STORE_DRIFT = "store-drift"
+
+
+def store_in(message: str) -> str | None:
+    """The store id a lifecycle row named, if it named one."""
+    found = re.search(r"\bstoreId=([^;\s]+)", message)
+    return found.group(1) if found else None
+
+
+def store_ids(rows: list[tuple[str, str, str]]) -> list[str]:
+    """Every distinct store id the OK lifecycle rows named, in first-seen order."""
+    seen: list[str] = []
+    for verb, outcome, message in rows:
+        name = store_in(message)
+        if outcome == "OK" and name is not None and name not in seen:
+            seen.append(name)
+    return seen
+
+
+def founder_death(rows: list[tuple[str, str, str]]) -> str | None:
+    """The message of the first SCRIPT-STOPPED row that reports the founder's death, if any."""
+    for verb, _, message in rows:
+        if verb == STOPPED_ROW and message.startswith(DIED_PREFIX):
+            return message
+    return None
+
+
 def stall_in(message: str) -> str | None:
     """The stall classification a refusal row named, if it named one."""
     found = re.search(r"\bstall=([a-z-]+)", message)
@@ -425,10 +469,21 @@ def judge(rows: list[tuple[str, str, str]]) -> dict:
             verdict, reason = FAIL, link + ": " + detail
         elif state == BLOCKER and verdict == PASS:
             verdict, reason = BLOCKER, link + ": " + detail
+    fail_class = CHAIN_FAIL if verdict == FAIL else None
+    stores = store_ids(rows)
+    if len(stores) > 1:
+        verdict, fail_class = FAIL, STORE_DRIFT
+        reason = STORE_DRIFT + ": the steps paid from different stores " + ",".join(stores)
+    death = founder_death(rows)
+    if death is not None:
+        verdict, reason, fail_class = FAIL, FOUNDER_DIED + ": " + death, FOUNDER_DIED
     return {
         "tool": "check-quickstart-lifecycle",
         "verdict": verdict,
         "reason": reason,
+        "failClass": fail_class,
+        "founderDeath": death,
+        "storeIds": stores,
         "links": links,
         "rowsRead": len(rows),
     }
@@ -698,12 +753,7 @@ def emit(report: dict, options: dict, journals: list[Path]) -> list[str]:
     paths = [Path(name) for name in options["run-record"].split(",") if name]
     if len(paths) != len(SESSIONS):
         raise ValueError("--run-record takes the two run-record.json paths, comma separated")
-    records = []
-    for path in paths:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-        if not isinstance(payload, dict):
-            raise ValueError("run record must be a JSON object")
-        records.append(payload)
+    records = [read_record(path) for path in paths]
     bound, binding_problems = bind_journals(journals, records)
     binding_problems.extend(check_stamps(journals, records))
     # A stall is never a waiver: it is reported verbatim beside a verdict that already refuses
@@ -730,6 +780,15 @@ def emit(report: dict, options: dict, journals: list[Path]) -> list[str]:
         json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
     )
     return binding_problems + problems + unresolved
+
+
+def read_record(path: Path) -> dict:
+    """One driver run record, as written. Windows PowerShell 5.1 prefixes a UTF-8 BOM; run 46's
+    session 2 was lost to json refusing it, so the record is decoded as utf-8-sig either way."""
+    payload = json.loads(path.read_text(encoding="utf-8-sig"))
+    if not isinstance(payload, dict):
+        raise ValueError("run record must be a JSON object")
+    return payload
 
 
 def main(argv: list[str]) -> int:

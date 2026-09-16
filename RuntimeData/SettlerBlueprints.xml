@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<objects>
+  <object Name="r_KingdomSettlerIssachari" Inherits="BaseIssachari">
+    <removepart Name="ConversationScript" />
+    <part Name="Render" DisplayName="Issachari traveller" />
+    <part Name="Brain" Wanders="true" Hostile="false" />
+    <tag Name="r_KingdomSettler" />
+    <tag Name="r_TAF_RecruitFaction" Value="Issachari" />
+    <tag Name="r_TAF_RecruitOrigin" Value="the salt-dune camps" />
+    <tag Name="AllowIdleBehavior" />
+    <tag Name="SleepOnBed" />
+  </object>
+  <object Name="r_KingdomSettlerHindren" Inherits="HindrenVillager">
+    <removepart Name="ConversationScript" />
+    <part Name="Render" DisplayName="hindren settler" />
+    <part Name="Brain" Wanders="true" Hostile="false" />
+    <tag Name="r_KingdomSettler" />
+    <tag Name="r_TAF_RecruitFaction" Value="Hindren" />
+    <tag Name="r_TAF_RecruitOrigin" Value="the hindren villages" />
+    <tag Name="AllowIdleBehavior" />
+    <tag Name="SleepOnBed" />
+  </object>
+  <object Name="r_KingdomSettlerDromad" Inherits="Dromad">
+    <removepart Name="ConversationScript" />
+    <part Name="Render" DisplayName="dromad settler" />
+    <part Name="Brain" Wanders="true" Hostile="false" />
+    <tag Name="r_KingdomSettler" />
+    <tag Name="r_TAF_RecruitFaction" Value="Dromad" />
+    <tag Name="r_TAF_RecruitOrigin" Value="the caravan roads" />
+    <tag Name="AllowIdleBehavior" />
+    <tag Name="SleepOnBed" />
+  </object>
+</objects>

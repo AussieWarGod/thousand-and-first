@@ -90,7 +90,7 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("Benefits.ReadingForRoot(Home.IDIfAssigned)", source);
 			StringAssert.Contains("Benefits.AmountForRoot(Home.IDIfAssigned, \"roof\")", source);
 			StringAssert.Contains("Benefits.TagsForRoot(Home.IDIfAssigned)", source);
-			StringAssert.Contains("reading.Designation.Cells", source);
+			StringAssert.Contains("Benefits.RoomReadingForRoot(Home.IDIfAssigned)", source);
 			StringAssert.Contains("reading.Designation.ProviderId, \"taf.architecture\"", source);
 			StringAssert.Contains("LogBenefitFailure", source);
 			StringAssert.DoesNotContain("KingdomQol.OfferOf", source);
@@ -105,20 +105,12 @@ namespace ThousandAndFirst.Tests
 		{
 			string source = TestMain.ReadRepositoryText(
 				"Growth/KingdomLodging.HomesAndReporting.cs");
-			int authored = source.IndexOf(
-				"reading.Designation.ProviderId, \"taf.architecture\"",
-				System.StringComparison.Ordinal);
-			int declared = source.IndexOf("Declared.TryGetValue", authored,
-				System.StringComparison.Ordinal);
-			int exactCells = source.IndexOf("reading.Designation.Cells.Count", declared,
-				System.StringComparison.Ordinal);
-			int physicalRoof = source.IndexOf(
-				"Benefits.AmountForRoot(Home.IDIfAssigned, \"roof\")", exactCells,
-				System.StringComparison.Ordinal);
-			ClassicAssert.GreaterOrEqual(authored, 0);
-			ClassicAssert.Greater(declared, authored);
-			ClassicAssert.Greater(exactCells, declared);
-			ClassicAssert.Greater(physicalRoof, exactCells);
+			StringAssert.Contains("reading.Designation.ProviderId, \"taf.architecture\"", source);
+			StringAssert.Contains("return declared < physical ? declared : physical", source);
+			StringAssert.DoesNotContain("ClosenessFromDensity", source);
+			string rooms = TestMain.ReadRepositoryText("Growth/KingdomBenefitIndex.Rooms.cs");
+			StringAssert.Contains("row.Reading.Designation.Cells, row.SleepingPlaces", rooms);
+			StringAssert.Contains("KingdomAdopt.ReadCellObservation", rooms);
 		}
 
 		// --- ParseTags: comma list -> trimmed, non-empty tokens ------------------------------

@@ -57,6 +57,13 @@ namespace ThousandAndFirst
 			Paved = 4
 		}
 
+		// Surveyed heart land predates unpaid foot traffic. Paving remains a construction claim.
+		public static bool WearReservesGrowthGround(bool HeartAccretion, int State)
+		{
+			return State != (int)WearState.Untouched
+				&& (!HeartAccretion || State < (int)WearState.Worn || State > (int)WearState.Path);
+		}
+
 		/// <summary>
 		/// Why anyone is on a given piece of ground. Four errands, and they are the four the
 		/// settlement actually simulates: sleeping and working, working and gathering, gathering

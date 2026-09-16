@@ -1,21 +1,143 @@
 # Changelog
 
-All notable changes to The Thousand and First. Versions are semantic: patch for fixes,
-minor for additive API and content, major for breaking changes. Supported API is defined in
-[docs/API.md](https://github.com/AussieWarGod/thousand-and-first/blob/main/docs/API.md).
+Current 3112-file census is line-cap green: 441,076 physical lines; direct `XRL`
+imports occur in 1454 files, 0 of them over the line limit. Inventory SHA-256: `30f36f3a5b24716b7acbcf12574022a4033d46f0261047989058649821677e38`.
+The cold-install inventory contains 3146 files. This is not evidence of a new public installation.
 
-Historical entries preserve the claim made at that point. The latest version entry, `VISION.md`, and
-`docs/STATUS.md` control current status; an explicit supersession notice controls any older wording
-below it.
+All notable changes to The Thousand and First. Historical entries retain their original scope;
+[docs/STATUS.md](https://github.com/AussieWarGod/thousand-and-first/blob/dev/docs/STATUS.md)
+records current acceptance.
 
-## Unreleased — Beta gap report
+**Unreleased development**
 
-Current 3097-file census is line-cap green: 440,053 physical lines; direct `XRL`
-imports occur in 1446 files, 0 of them over the line limit. Inventory SHA-256:
-`40ba4913664a8b427c908fc0ea75d92cd6a009223fbca8f226fd5256511c7684`. The cold-install inventory contains 3128 files.
+- Recruitment availability respects the civic-story setting, including ordinary extension
+  profiles outside the first-guest allowlist. Native admission/load checks now compare actual
+  body, culture, species, name, origin and resident map. Real Quickstart admission and cold load
+  preserve the same fifth citizen and starter home; shortage/refill and next paid job also pass.
+
+- New settlers draw coherent native bodies, origins and names with player/city reputation
+  weighting. Added ordinary Issachari, hindren and dromad recruits; hostile sources stay out
+  of voluntary arrivals. Existing citizens and frozen plans retain identity. Native selection,
+  hostile wait/recovery and frozen identity checks pass; one human guest also passes actual
+  admission, housing and cold load. Broader cultures, multi-map life and balance remain open.
+  Empty recruitment retains its due arrival while other city work continues; Charter explains
+  the reputation block alongside housing needs.
+
+- Striking a completed building awaiting its own construction closure now explains that
+  pending work instead of claiming another receipt owns it. Foreign-job refusals and strike
+  permissions remain unchanged. Native fire/larder refusal, recovery, removal and exact salvage pass;
+  whole-catalogue and teardown cold-load coverage remain open.
+
+- Developer coverage tooling now inventories every shipped building configuration and its
+  architectural/functional obligations before Beta. Missing and stale scenario links remain
+  visible; static validity and broad test results never count as whole-catalogue acceptance.
+
+- New realms freeze the founder's reputation into their own inbound standings once.
+  Later city actions evolve that baseline independently; outgoing policy remains separate.
+  Existing cities and interrupted older founding transactions retain their history.
+  Native founding, independent city regard, personal spillover and cold-load persistence pass.
+  Historical interrupted founding remains unproved natively; this is not in public 0.3.7.
+
+## [0.3.7] — 2026-09-15 (Alpha)
+
+Alpha update for enclosed housing, defensive founders and paid construction recovery.
+Public 0.3.7 is published, verified and finalized on one subscribed client.
+
+- Give new Quickstart settlers enclosed Medium shelters with real doors and clear entrance aisles.
+  Larger shared homes use separate chambers or courtyard cabins; hut conversions retain their
+  furniture and room programme. Medium plots are available from Camp.
+- Measure lodging privacy from real rooms and reachable clear floor. Beds, chairs and other
+  furniture occupy space even when Qud permits walking over them; shared halls and doorways
+  must remain clear. Extra bunks still count toward crowding.
+- Anchor new civilian founders at the camp with defensive engagement before their first turn.
+  Preserve ordinary work, idle goals and retaliation without proactive target acquisition. Reserve the initial camp's ambient faction-party encounter slot during generation.
+- Recover a paid housing conversion after exact restoration of a missing or moved fixture.
+  Preserve original storage contents and payment; permit flooring beneath only its exact paid
+  predecessor. Foreign furniture and copied receipts grant no placement exception.
+- Retain exact historical transition prices for paid receipts while new quotes use current prices.
+- Follow successive paid heart upgrades, recheck eligible residents entering new wall sites,
+  retain authenticated founding stakes and unpaid tracks, fund added court floors, and admit
+  the existing architecture payload within bounded construction receipts.
+- Add a visual layout workbench with enclosure, furniture-access and clear-floor audits.
+
+Native checks cover real four-founder housing, paid conversion, obstruction/retry, retained contents,
+24,000 ordinary turns and separate cold continuation. Shared-room tests cover native door states
+and walkable-furniture obstructions. A further seven-day source/cold pair checks defensive founders
+on the previously failed marsh seed; other seeds and terrain remain unproved. Higher-heart progression uses disclosed synthetic population
+and support; it does not establish ordinary balance or multi-map city coverage. Full building
+redesign, room/activity rewards, reputation-weighted populations, supporting land use and natural
+outward expansion remain Beta work. Historical renovations/quarantine and polity reconciliation
+after load remain tracked limitations. Hearthpyre compatibility remains deferred until Beta.
+
+## [0.3.6] — 2026-09-13 (Alpha)
+
+Alpha hotfix for immediate claimed-zone lighting and full-zone city sight.
+Public 0.3.5 was refused by its hosted README metadata check before any upload; its tag remains
+unchanged. Public 0.3.6 is now published, verified and finalized on one subscribed client.
+
+3098 staged C# files; 440,137 physical lines; 1445 direct `XRL` imports; zero at or above
+300 lines; 3129 cold-install files. Inventory SHA-256: `e3af1fefe18489009c7d43d9dfae08b888c3cb29cf7fcbbfa9e2b60da7a9a719`.
+
+Gameplay and harness code are unchanged from verified private 0.3.5; the sole production change
+is the runtime receipt version, synchronized with manifest 0.3.6. The shared preflight now checks
+actual Alpha metadata before tagging. The merged native .NET source-test route retains both
+full licensed suites, zero managed skips, Windows engine compilation and native behavioral gates.
+Private 0.3.6 is verified and finalized on one subscribed client. Fresh in-game Quickstart,
+ordinary construction, four housed founders, six beds, seven canvas walls, real save/cold load,
+another paid job and full-zone rendering passed on the exact candidate. Public delivery passed
+the tagged workflow; exact receipts and bounded native evidence are recorded in docs/STATUS.md.
+Earlier private 0.3.5 evidence retains its original source.
+
+## [0.3.5] — 2026-09-13 (Alpha)
+
+Alpha hotfix for immediate claimed-zone lighting and full-zone city sight.
+
+3098 staged C# files; 440,137 physical lines; 1445 direct `XRL` imports; zero at or above
+300 lines; 3129 cold-install files. Inventory SHA-256:
+`4d3938534ed4663c01492bd0455a6aea9b707d76ea4f7b4442357c9aac38472d`. Runtime receipt identity matches manifest 0.3.5;
+private delivery and candidate native construction/sight/save/cold-load verification passed.
+Exact evidence and release status remain in `docs/STATUS.md`.
+
+- Newly claimed active zones immediately receive settlement lighting and full-zone city sight when those options are enabled, including Kingdom Quickstart and a newly founded second city. Leaving and returning is no longer required.
+- City sight remains a drawing effect: ordinary gameplay visibility is restored after every frame.
+- Added in-game regression coverage for ordinary first-heart completion, all seven canvas walls, original founders and starter housing, real save/cold load, another paid construction job, and complete claimed-zone rendering before and after loading.
+- Added in-game coverage for first-guest citizenship across cold load and recovery from exhausted civic water using the founder's existing carried water.
+
+Earlier native sight acceptance remains bound to development inventory
+`d5ed02627728e6311a983f77d28f71102cf55ccec90c5d307a3c08989f2e6389`; candidate evidence uses the inventory above.
+
+The first heart remains an open canvas horseshoe around the basin, not an enclosed tent.
+This hotfix retains Alpha 0.3.4's housing departure floor and finite starter supplies.
+Native evidence is scoped to the recorded scenarios; broader Beta coverage remains incomplete.
+
+## [0.3.4] — 2026-09-13 (Alpha)
+
+- Guests without a creed can complete enrollment without a false state-mismatch refusal.
+- Arrival transactions now give each enrollment step a distinct event and receipt identity.
+- First-guest dialogue now opens the local stock transaction scope required to enroll a citizen and debit arrival water.
+- A first guest refused for lack of suitable housing stays present and available to welcome again after construction.
+
+Alpha hotfix for Quickstart founding, housing recovery and guest recruitment.
+
+Quickstart supplies four founding citizens, two shelter plots and a full finite
+64-dram water cask. Housing-driven departures retain the final two citizens so
+construction can recover. The guide explains the starter housing and first guest.
+Young settlements tolerate typed pending spatial capture on cold load, and exact
+stamped teardown orders can resume. Salvage now assigns a selected stockpile identity
+before recording inventory custody, preventing valid timber returns from quarantining
+a completed demolition. End-of-pass work records also refresh before spatial sealing,
+so a legitimately removed building does not leave a stale sealed work root.
+Native/release evidence below remains scoped
+to its actual checkpoints; the broader Beta goal is not complete.
+
+Current 3098-file census is line-cap green: 440,124 physical lines; direct `XRL`
+imports occur in 1445 files, 0 of them over the line limit. Inventory SHA-256:
+`a5e00bd45a1122917e6b164ad98373cdcc043e6c681790495086ee0a2e870182`. The cold-install inventory contains 3129 files.
 This isolated 0.3.4 preparation combines heart authority, shared-XL transition, rung settlement
-and camp content/fixture branches. Combined compile/native gates and semantic review are owed;
-all earlier checkpoint counts below are retained, never carried forward as acceptance.
+and camp content/fixture branches with Quickstart recovery and exact strike phase recovery.
+All four compile modes and 14790 main/5743 portable cases pass with zero skips. Automated
+structural review binds this inventory. Native and release acceptance remain pending;
+all earlier checkpoint counts below retain their original scope.
 
 Draft surveyed-heart ingress correction: full heart authority plus exact physical public access,
 without requiring the ordinary road network beyond the enlarged margin. Ordinary road evidence

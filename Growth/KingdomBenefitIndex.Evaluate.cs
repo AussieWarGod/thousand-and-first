@@ -105,7 +105,8 @@ namespace ThousandAndFirst
 			{
 				claim.ActiveTags.Add(Declaration.Provides[i]);
 			}
-			aggregate.Pending.Add(new ProviderEvaluation { Inspection = inspection, Claim = claim });
+			aggregate.Pending.Add(new ProviderEvaluation { Inspection = inspection, Claim = claim,
+				X = match.X, Y = match.Y });
 		}
 
 		private bool ShellValid(Aggregate Aggregate, KingdomDesignationMatch Match, Zone Z)

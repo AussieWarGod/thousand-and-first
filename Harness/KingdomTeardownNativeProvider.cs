@@ -1,11 +1,23 @@
 using System;
 using System.Collections.Generic;
+using HarmonyLib;
 using XRL;
 using XRL.Messages;
 using XRL.World;
 
 namespace ThousandAndFirst.Harness
 {
+	// Observation only: never cancel an engine death or alter its arguments.
+	[HarmonyPatch(typeof(GameObject), "Die")]
+	internal static class KingdomTeardownCrewDeathObserver
+	{
+		[HarmonyPrefix]
+		internal static void Prefix(GameObject __instance, GameObject Killer, string Reason, string DeathCategory)
+		{
+			KingdomTeardownNativeChecks.ObserveCrewDeath(__instance, Killer, Reason, DeathCategory);
+		}
+	}
+
 	/// <summary>
 	/// Behavioural coverage: building teardown. Founds a fresh camp, dedicates water and a
 	/// materials stockpile directly (SYNTHETIC SETUP, DISCLOSED -- the same convention
@@ -23,7 +35,7 @@ namespace ThousandAndFirst.Harness
 		internal const string SetupVerb = "teardown-setup";
 		internal const string CheckVerb = "teardown-check";
 		internal const string Receipt = "r_TAF_ScenarioTeardownNative_v1";
-		// Cumulative ticks 2400/6000/9600/13200 (deltas 2400/3600/3600/3600) -- widened per
+		// Cumulative ticks 2400/6000/9600/13200/16800 (deltas 2400/3600/3600/3600/3600) -- widened per
 		// review-bba51c4-teardown-findings.md nit 1: the prior 2000/4800/7600/10800 schedule had
 		// ZERO slack (fire's 600 labour ticks / larder's 1200 vs one 1200-tick settlement pass
 		// per checkpoint), and persona EXPECT hard-required fire fully built by tick 2000 --
@@ -35,9 +47,11 @@ namespace ThousandAndFirst.Harness
 		// second pass inside this same interval is what actually prices fire's 600 ticks. Every
 		// later interval keeps a full spare pass (3600 = 3 passes for legs needing at most 1200
 		// ticks: fire's removal/salvage, larder's own raise+strike, larder's removal).
+		// The 0.3.4 native run first ordered larder teardown at tick 13200. A final
+		// three-day interval covers its 29 effort at two hands (20/day), including cadence slack.
 		private static readonly string[] Script = { "stagedigest", SetupVerb, "advance 2400",
 			CheckVerb, "advance 3600", CheckVerb, "advance 3600", CheckVerb, "advance 3600",
-			CheckVerb, "stagedigest" };
+			CheckVerb, "advance 3600", CheckVerb, "stagedigest" };
 
 		public int ScenarioVerbApiVersion { get { return KingdomScenarioVerbApi.Version; } }
 

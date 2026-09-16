@@ -418,7 +418,7 @@ namespace ThousandAndFirst.Tests
 			CollectionAssert.AreEqual(new List<Size> { Size.Small, Size.Medium, Size.Large }, town,
 				"a town lays up to a large plot, and never smaller than the design asks for");
 			List<Size> camp = KingdomPlotRules.StakeableSizes(Size.Small, GrowthStage.Camp, chain);
-			CollectionAssert.AreEqual(new List<Size> { Size.Small }, camp, "a camp has one choice and no ceiling to buy");
+			CollectionAssert.AreEqual(new List<Size> { Size.Small, Size.Medium }, camp, "a camp can reserve enough ground for enclosed starter housing");
 		}
 
 		[Test]

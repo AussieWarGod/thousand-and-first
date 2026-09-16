@@ -32,6 +32,11 @@ namespace ThousandAndFirst
 			inspection.LimitedByDesignation |= claim.Limited;
 			inspection.OutsideDesignationContract |= claim.OutsideContract;
 			inspection.SaturatedByDesignation |= claim.Saturated;
+			// Extra usable bunks still share a room even when the designation caps enrollment.
+			for (int i = 0; i < claim.ActiveAmounts.Count; i++)
+				if (claim.ActiveAmounts[i].Kind == "roof" && claim.ActiveAmounts[i].Amount > 0)
+					Aggregate.SleepingPlaces.Add(new KingdomLodgingRoomRules.SleepingPlace(
+						Evaluation.X, Evaluation.Y, claim.ActiveAmounts[i].Amount));
 			bool credited = false;
 			for (int i = 0; i < claim.Credited.Count; i++)
 			{

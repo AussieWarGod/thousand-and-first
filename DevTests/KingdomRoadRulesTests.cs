@@ -67,6 +67,28 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.AreEqual(2, invoke.GetParameters().Length);
 		}
 
+		[TestCase(false, -1, true)]
+		[TestCase(false, 0, false)]
+		[TestCase(false, 1, true)]
+		[TestCase(false, 2, true)]
+		[TestCase(false, 3, true)]
+		[TestCase(false, 4, true)]
+		[TestCase(false, 5, true)]
+		[TestCase(false, 2147483647, true)]
+		[TestCase(true, -1, true)]
+		[TestCase(true, 0, false)]
+		[TestCase(true, 1, false)]
+		[TestCase(true, 2, false)]
+		[TestCase(true, 3, false)]
+		[TestCase(true, 4, true)]
+		[TestCase(true, 5, true)]
+		[TestCase(true, 2147483647, true)]
+		public void RoadWearRespectsPriorHeartGroundAndPaidPaving(bool HeartAccretion,
+			int State, bool Expected)
+		{
+			Assert.That(KingdomRoadRules.WearReservesGrowthGround(HeartAccretion, State), Is.EqualTo(Expected));
+		}
+
 		// --- The ladder ------------------------------------------------------------------
 
 		[TestCase(-100, KingdomRoadRules.WearState.Untouched)]

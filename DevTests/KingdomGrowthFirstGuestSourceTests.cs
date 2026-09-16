@@ -209,9 +209,9 @@ namespace ThousandAndFirst.Tests
 		public void CandidateFactsComeFromOneOwnedSemanticCatalogue()
 		{
 			string semantic = Source("Core/KingdomSemanticSelection.FirstGuest.cs");
-			StringAssert.Contains("private static List<KingdomSemanticWeightedEntry> "
-				+ "FirstGuestCatalogue()", semantic);
-			StringAssert.Contains("GrowthFirstGuestBlueprintAllowed(blueprint)", semantic);
+			StringAssert.Contains("TryPrepareSettlerPayload(system, ordinal, dueTick, true", semantic);
+			StringAssert.Contains("FirstGuest && !KingdomLifecycleRules.GrowthFirstGuestBlueprintAllowed(entry.StableKey)",
+				Source("Core/KingdomRecruitment.cs"));
 			StringAssert.Contains("cohort exactly 1", Source(
 				"Growth/KingdomFirstGuestRuntime.Facts.cs"));
 			StringAssert.DoesNotContain("PopulationManager", semantic);
@@ -308,6 +308,7 @@ namespace ThousandAndFirst.Tests
 				+ "\"Remain our guest\"", interaction);
 			AssertOrdered(interaction,
 				"TryCheckGrowthFirstGuestCurrentApplicability",
+				"KingdomLodging.ObservePreparedArrival(system, zone, body, PlannedCreed(body)",
 				"TryBeginGrowthFirstGuestCitizenship");
 			AssertOrdered(interaction,
 				"TryBeginGrowthFirstGuestCitizenship",
@@ -322,6 +323,34 @@ namespace ThousandAndFirst.Tests
 			StringAssert.DoesNotContain("EndTurnEvent", interaction);
 			StringAssert.DoesNotContain("Schedule", interaction);
 			StringAssert.DoesNotContain("Automatic", interaction);
+		}
+
+		[Test]
+		public void DialogueReconciliationOwnsLocalSurveyForWaterDebit()
+		{
+			string source = Source("Growth/KingdomGrowth.FirstGuestInteraction.cs");
+			AssertOrdered(source, "KingdomSurvey.TryBindLocalOperation(zone, system",
+				"using (scope)", "KingdomSurvey.ActiveFor(zone)", "ReconcileArrival(system, zone, survey");
+		}
+
+		[Test]
+		public void ArrivalStepsReserveDistinctOrdinalsBeforeTheNextPreparation()
+		{
+			string source = Source("Growth/KingdomGrowth.z06.ArrivalPreparation.cs");
+			AssertOrdered(source, "operation.DomainSteps.Add(enrollment)",
+				"KingdomGrowthDomainStep roster =", "operation.DomainSteps.Add(roster)",
+				"KingdomGrowthDomainStep creed =", "operation.DomainSteps.Add(creed)",
+				"KingdomGrowthDomainStep population =", "operation.DomainSteps.Add(population)",
+				"KingdomGrowthDomainStep accounting =", "operation.DomainSteps.Add(accounting)");
+		}
+
+		[Test]
+		public void EmptyCreedProjectionPreservesTheActualProperty()
+		{
+			string source = Source("Growth/KingdomGrowth.z10.ArrivalProofAndDomainHash.cs");
+			AssertOrdered(source, "case KingdomGrowthDomainStepKind.Creed:",
+				"projectedAfter && !string.IsNullOrEmpty(PlannedCreed(settler))",
+				"? PlannedCreed(settler)", ": settler.GetStringProperty(KingdomCreed.CreedProperty)");
 		}
 
 		[Test]

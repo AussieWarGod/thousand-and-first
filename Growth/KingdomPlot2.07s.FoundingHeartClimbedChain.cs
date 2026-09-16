@@ -70,12 +70,12 @@ namespace ThousandAndFirst
 			GameObject successor;
 			int jobs;
 			int objects;
-			if (!TryImprovementSuccessorOf(retired, out job, out successor, out jobs, out objects))
+			if (!TryImprovementSuccessorOf(Z, retired, out job, out successor, out jobs, out objects))
 				return HeartRefused("chain: improvement lookup: retired=" + retired
 					+ "; jobs naming it=" + jobs + "; live outputs=" + objects
 					+ "; output=" + (job == null ? "(none)" : job.OutputId)
 					+ "; phase=" + (job == null ? "(none)" : job.Phase.ToString()));
-			bool receipt = KingdomConstruction.HasReceipt(successor, job);
+			bool receipt = HasChainedImprovementReceipt(Z, successor, job);
 			if (!receipt) return HeartRefused("chain: receipt: job=" + job.Id
 				+ "; output=" + job.OutputId);
 			bool removal = r_KingdomScaffold.HasRemovalProof(successor, job.SubjectId);
@@ -93,8 +93,8 @@ namespace ThousandAndFirst
 			// settles (KingdomPlot2.34.EffectsAndFurnishing) and cannot be read here at all.
 			string stamp = successor.GetStringProperty(PlotFinalPredecessorProperty);
 			bool custody = successor.IDIfAssigned == job.OutputId
-				&& KingdomFoundingHeartChainRules.CorroboratesRetired(stamp, retired)
-				&& KingdomConstruction.HasReceipt(successor, job);
+				&& KingdomFoundingHeartChainRules.CorroboratesRetired(stamp, job.SubjectId)
+				&& HasChainedImprovementReceipt(Z, successor, job);
 			if (!custody) return HeartRefused("chain: custody corroboration: successor="
 				+ successor.IDIfAssigned + "; output=" + job.OutputId + "; predecessor stamp="
 				+ (string.IsNullOrEmpty(stamp) ? "(absent)" : stamp) + "; retired=" + retired);
@@ -138,7 +138,7 @@ namespace ThousandAndFirst
 				return false;
 			if (!KingdomFoundingHeartTerminalRules.TryDecode(
 					Z.GetZoneProperty(FoundingHeartTerminalProperty, null), out var prior)
-				|| Simulation.City.KingdomCityRules.StableId(prior.FinalId) != RowWorkId)
+				|| !FoundingUpgradePathNames(Z, prior.FinalId, RowWorkId))
 				return false;
 			if (!TryReadFoundingHeartContext(Z, plan, out FoundingHeartContext context))
 				return false;
@@ -172,70 +172,22 @@ namespace ThousandAndFirst
 		{
 			RetiredId = null;
 			Job = null;
-			if (Z == null || RowWorkId == 0) return false;
-			if (!KingdomFoundingHeartTerminalRules.TryDecode(
+			if (Z == null || RowWorkId == 0
+				|| !KingdomFoundingHeartTerminalRules.TryDecode(
 					Z.GetZoneProperty(FoundingHeartTerminalProperty, null), out var prior)
-				|| Simulation.City.KingdomCityRules.StableId(prior.FinalId) != RowWorkId)
-				return false;
+				|| !FoundingUpgradePathNames(Z, prior.FinalId, RowWorkId)) return false;
 			RetiredId = prior.FinalId;
-			if (!KingdomConstruction.TryRead(out List<KingdomConstructionJob> jobs, out _)
-				|| jobs == null) return false;
-			KingdomConstructionJob found = null;
-			int named = 0;
-			for (int i = 0; i < jobs.Count; i++)
-			{
-				KingdomConstructionJob row = jobs[i];
-				if (row == null || row.Route != KingdomConstructionRoute.Improvement
-					|| row.SubjectId != prior.FinalId) continue;
-				named++;
-				found = row;
-			}
-			// Exactly one job, and it has not completed: the climb is still owed an outcome.
-			// A completed job is not pending, and no job at all is not pending either -- that is
-			// a root that is simply gone, and it must stay malformed. This READS; whether the
-			// founder is told is the caller's to decide, because only the caller knows whether
-			// the classification was actually reached.
-			Job = found;
-			return named == 1 && found.Phase != KingdomConstructionPhase.Complete
-				&& found.Phase != KingdomConstructionPhase.Cancelled;
+			return ReadFoundingUpgradePath(Z, prior.FinalId, out _, out Job) && Job != null;
 		}
 
-		/// <summary>The one COMPLETED improvement that retired this identity, and the object it
-		/// produced. Exactly one job may name it, that job must have reached its terminal
-		/// completion phase -- a job still working has retired nothing -- and its output must
-		/// resolve to exactly one live object; anything else refuses rather than choosing.
-		/// </summary>
-		private static bool TryImprovementSuccessorOf(string RetiredId,
-			out KingdomConstructionJob Job, out GameObject Successor, out int Named,
-			out int LiveOutputs)
+		private static bool FoundingUpgradePathNames(Zone Z, string Origin, int RowWorkId)
 		{
-			Job = null;
-			Successor = null;
-			Named = 0;
-			LiveOutputs = 0;
-			if (string.IsNullOrEmpty(RetiredId)
-				|| !KingdomConstruction.TryRead(out List<KingdomConstructionJob> jobs, out _)
-				|| jobs == null) return false;
-			for (int i = 0; i < jobs.Count; i++)
-			{
-				KingdomConstructionJob row = jobs[i];
-				if (row == null || row.Route != KingdomConstructionRoute.Improvement
-					|| row.SubjectId != RetiredId) continue;
-				Named++;
-				Job = row;
-			}
-			if (Named != 1 || Job.Phase != KingdomConstructionPhase.Complete
-				|| !string.IsNullOrEmpty(Job.Failure) || string.IsNullOrEmpty(Job.OutputId)
-				|| Job.OutputId == RetiredId)
-			{
-				if (Named != 1) Job = null;
-				return false;
-			}
-			bool exact = KingdomConstruction.FindGlobalLiveId(Job.OutputId, out Successor)
-				== KingdomPhysicalLookupState.Exact && GameObject.Validate(Successor);
-			LiveOutputs = exact ? 1 : 0;
-			return exact;
+			if (Simulation.City.KingdomCityRules.StableId(Origin) == RowWorkId) return true;
+			if (!ReadFoundingUpgradePath(Z, Origin, out var completed, out var pending)) return false;
+			foreach (var edge in completed)
+				if (Simulation.City.KingdomCityRules.StableId(edge.SubjectId) == RowWorkId) return true;
+			return pending != null
+				&& Simulation.City.KingdomCityRules.StableId(pending.SubjectId) == RowWorkId;
 		}
-
 	}
 }

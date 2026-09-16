@@ -21,9 +21,8 @@ namespace ThousandAndFirst
 			if (!building.HasPlot)
 				return Fault(State, "building " + Tier.BuildKey,
 					"architecture tier points at a design with no plot");
-			if (building.LotSize > Binding.Size)
-				return Fault(State, "building " + Tier.BuildKey,
-					"authored binding size is smaller than its merged Plot minimum");
+			// TryBinding already checked the merged minimum and explicit Retained flag.
+			// Exact readers for old paid small lots must survive record materialisation.
 			if (building.Category == null
 				|| !string.Equals(building.Category, Fold(Binding.TypeKey), StringComparison.Ordinal))
 				return Fault(State, "building " + Tier.BuildKey,

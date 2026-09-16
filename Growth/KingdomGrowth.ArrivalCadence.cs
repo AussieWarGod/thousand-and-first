@@ -50,7 +50,14 @@ namespace ThousandAndFirst
 				KingdomSemanticPersonPlan person;
 				if (!KingdomSemanticSelection.TryPrepareGrowthArrivalPayload(system,
 					head.FirstOrdinal, head.FirstDueTick, firstGuest, out person,
-					out string semanticFailure)) return CadenceFault("catalog freeze", semanticFailure);
+					out string semanticFailure))
+				{
+					// Peaceful recruitment can be empty without faulting the city's other work.
+					// Keep the unspent head for a later reputation change; freeze no substitute.
+					if (semanticFailure != KingdomRecruitmentRules.NoEligibleFailure)
+						return CadenceFault("catalog freeze", semanticFailure);
+					return PublishArrivalCadence(system, growth);
+				}
 				KingdomGrowthArrivalOpportunity opportunity;
 				if (!KingdomLifecycleRules.TryFreezeGrowthArrivalOpportunity(growth,
 					person.RulesVersion, KingdomLifecycleRules.GrowthArrivalEventStreamId,
@@ -68,6 +75,11 @@ namespace ThousandAndFirst
 						interval, cohort, rulesVersion, out advanceFailure))
 					return CadenceFault("cohort transition", advanceFailure);
 			}
+			return PublishArrivalCadence(system, growth);
+		}
+
+		private static bool PublishArrivalCadence(KingdomSystem system, KingdomGrowthBook growth)
+		{
 			system.NextArrivalTick = growth.NextArrivalTick;
 			return KingdomLifecycleRules.CanOwnGrowthAuthority(growth, growth.SettlementId);
 		}

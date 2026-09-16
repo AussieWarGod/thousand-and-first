@@ -117,7 +117,12 @@ def script_journal(source: Path, mode: str) -> str:
              "source": ["stagedigest", "upgrade-source-reserved", "stagedigest"],
              "stage-source": ["stagedigest", "upgrade-stage-setup", "advance",
                               "upgrade-stage-save", "stagedigest"]}[mode]
-    progress = [row for row in rows if row[1] in ("advance-progress", "advance-complete")]
+    # The founder guard's two bookkeeping rows (Harness/KingdomScenarioFounderGuard.cs) bracket
+    # every scripted advance: `advance-guard start` lands immediately BEFORE the `advance` row
+    # (the flag is up before the wait's first spend) and `advance-guard end` immediately before
+    # `advance-complete`. They are expected exactly there and nowhere else.
+    advance_rows = ("advance-progress", "advance-complete", "advance-guard")
+    progress = [row for row in rows if row[1] in advance_rows]
     if mode == "stage-source":
         require(sum(row[1] == "advance-complete" for row in progress) == 1,
                 "stage source lacks one real completed advance")
@@ -127,9 +132,16 @@ def script_journal(source: Path, mode: str) -> str:
                 and all(advance_index < i < save_index for i, row in enumerate(rows)
                         if row[1] in ("advance-progress", "advance-complete")),
                 "stage progress escaped its actual advance")
+        guards = [i for i, row in enumerate(rows) if row[1] == "advance-guard"]
+        complete_index = next(i for i, row in enumerate(rows) if row[1] == "advance-complete")
+        require(len(guards) == 2 and guards[0] == advance_index - 1
+                and rows[guards[0]][3].startswith("start; ")
+                and advance_index < guards[1] == complete_index - 1
+                and rows[guards[1]][3].startswith("end; "),
+                "stage source founder guard rows do not bracket its actual advance")
     else:
         require(not progress, "source script unexpectedly advanced the world")
-    ordinary = [row for row in rows if row[1] not in ("advance-progress", "advance-complete")]
+    ordinary = [row for row in rows if row[1] not in advance_rows]
     prefix = ["AUTOSTART"]
     if len(ordinary) > 1 and ordinary[1][1] == "TESTGROUND-BUILT":
         prefix.append("TESTGROUND-BUILT")

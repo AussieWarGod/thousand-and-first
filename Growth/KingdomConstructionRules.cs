@@ -22,7 +22,9 @@ namespace ThousandAndFirst
 		public const int MaxZoneChars = 512;
 		public const int MaxSubjectChars = 128;
 		public const int MaxTargetChars = 256;
-		public const int MaxPayloadChars = 8192;
+		// A 12 KiB authored snapshot expands past 16 KiB as base64, before plot metadata.
+		// Keep the row bounded while admitting the architecture codec's complete envelope.
+		public const int MaxPayloadChars = 32768;
 		public const int MaxFailureChars = 2048;
 		public const int MaxPhysicalReceiptChars = 65536;
 		public const int MaxInputReceiptChars = 262144;

@@ -6,15 +6,14 @@ namespace ThousandAndFirst
 	public static partial class KingdomPlots
 	{
 		/// <summary>
-		/// Stands movable bodies off the ground an improvement is about to annex, using exactly the
+		/// Stands movable bodies off the ground an improvement is about to block, using exactly the
 		/// plot clearance: same classification ladder, same destination rules, same plan before
-		/// effect, same walk-back, same sentences. Only the ANNEXED cells are scanned -- a body
-		/// inside the standing footprint is not new ground being taken -- and only those whose
-		/// successor slot is declared Blocked, so the founder standing on what will still be a
-		/// path or a yard is not in anybody's way.
+		/// effect, same walk-back, same sentences. Newly blocked cells include renovation of
+		/// formerly walkable or adjacent-use ground inside the standing lot. Existing walls and
+		/// unmapped predecessor cells gain no movement authority; open paths remain usable.
 		/// </summary>
 		/// <param name="Before">The rect the work already stands on.</param>
-		/// <param name="Moved">Bodies left standing off the annexed ground.</param>
+		/// <param name="Moved">Bodies left standing off the newly blocked ground.</param>
 		/// <param name="Beasts">How many of them were driven rather than stood aside.</param>
 		/// <param name="Post">Where a moved post was set down, or null.</param>
 		internal static bool TryClearEnvelopeOccupants(KingdomSystem System, Zone Z,
@@ -29,27 +28,23 @@ namespace ThousandAndFirst
 			if (System == null || Z == null || Successor == null
 				|| !GameObject.Validate(Owner))
 				return ClearanceFault("no successor layout to clear for", out Refusal);
-			if (!KingdomArchitectureStamper.TryPlacementPassability(Successor, Z,
-				out Dictionary<int, ArchitecturePassability> slots, out Refusal)) return false;
-			Dictionary<int, ArchitecturePassability> annexed =
-				new Dictionary<int, ArchitecturePassability>();
-			foreach (KeyValuePair<int, ArchitecturePassability> slot in slots)
-			{
-				if (!KingdomPlotRules.SlotBlocksOccupant(slot.Value)) continue;
-				if (Before.Contains(slot.Key % Z.Width, slot.Key / Z.Width)) continue;
-				annexed[slot.Key] = slot.Value;
-			}
-			if (annexed.Count == 0) return true;
+			if (!KingdomArchitectureRuntime.TryRead(Owner, out var before, out Refusal)
+				|| before.Rect.X1 != Before.X1 || before.Rect.Y1 != Before.Y1
+				|| before.Rect.X2 != Before.X2 || before.Rect.Y2 != Before.Y2)
+				return ClearanceFault("the standing layout no longer matches its clearance boundary", out Refusal);
+			if (!KingdomArchitectureStamper.TryNewBlockingCells(Z, before, Successor,
+				out Dictionary<int, ArchitecturePassability> newlyBlocked, out Refusal)) return false;
+			if (newlyBlocked.Count == 0) return true;
 			// The whole successor rect is excluded as a destination by Rect, so nobody is stood on
 			// ground the improvement is about to take.
-			return TryClearManagedOccupants(System, Z, Owner, new HashSet<int>(annexed.Keys),
-				annexed, Successor.Rect, out Moved, out Beasts, out Post,
+			return TryClearManagedOccupants(System, Z, Owner, new HashSet<int>(newlyBlocked.Keys),
+				newlyBlocked, Successor.Rect, out Moved, out Beasts, out Post,
 				out KingdomPlotRules.OccupantVerdict ignoredVerdict, out Cell ignoredAnchor,
 				out Refusal);
 		}
 
 		/// <summary>
-		/// Names what the crew did to the annexed ground, in the raising's own words and with the
+		/// Names what the crew did to the newly blocked ground, in the raising's own words and with the
 		/// improvement's real outcome: the ground is cleared before the transition, the reserve and
 		/// the funding have had their say, so "the work goes on" is only true once they have.
 		/// <para>The once-flags are the plot route's properties, but they are set on the WORK being

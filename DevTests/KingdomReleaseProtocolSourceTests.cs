@@ -221,8 +221,8 @@ namespace ThousandAndFirst.Tests
 			StringAssert.Contains("[Reflection.AssemblyName]::GetAssemblyName", checker);
 			StringAssert.Contains("configured Qud core is", checker);
 			StringAssert.Contains("Assembly-CSharp SHA-256", checker);
-			StringAssert.Contains("TAF_QUD_BASE_WIN", checker);
-			StringAssert.Contains("$env:TAF_QUD_BASE = $env:TAF_QUD_BASE_WIN", checker);
+			StringAssert.Contains("TAF_QUD_BASE=\"$BASE\"", checker);
+			StringAssert.Contains("\"$REPO/Tools/dev-check.sh\" licensed", checker);
 			StringAssert.Contains("render-qud-refs.py",
 				Source(Path.Combine("Tools", "gate.sh")));
 			StringAssert.Contains("compile_mode baseline",

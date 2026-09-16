@@ -40,6 +40,18 @@ namespace ThousandAndFirst.Tests
 		private static string ReadChecksAndCases() =>
 			Read(Checks) + Read(Cases) + Read(Telemetry) + Read(Placement);
 
+		[Test]
+		public void RemovedBuildingMustHaveACompletedSettledStrikeReceipt()
+		{
+			string cases = Read(Cases);
+			Assert.That(cases, Does.Contain("RequireSettledStrike(Require);"));
+			Assert.That(cases.IndexOf("RequireSettledStrike(Require);", StringComparison.Ordinal),
+				Is.LessThan(cases.IndexOf("int salvaged = SalvageByReceipt", StringComparison.Ordinal)));
+			string telemetry = Read(Telemetry);
+			Assert.That(telemetry, Does.Contain("row.Phase == KingdomConstructionPhase.Complete"));
+			Assert.That(telemetry, Does.Contain("row.PhysicalPhase == KingdomPhysicalPhase.Settled"));
+		}
+
 		private static string ConstValue(string Source, string Name)
 		{
 			string marker = "internal const string " + Name + " = \"";
@@ -122,10 +134,10 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
-		public void SealedScriptRunsFourChecksAtTheWidenedCumulativeCadence()
+		public void SealedScriptRunsFiveChecksThroughLarderTeardown()
 		{
-			// Corrects the false "polls every tick" claim: Check() is driven only by these four
-			// sealed teardown-check verbs. Cumulative ticks 2400/6000/9600/13200 (deltas
+			// Corrects the false "polls every tick" claim: Check() is driven only by these five
+			// sealed teardown-check verbs. Cumulative ticks 2400/6000/9600/13200/16800 (deltas
 			// 2400/3600/3600/3600) per review-bba51c4-teardown-findings.md nit 1 -- widened from
 			// the prior zero-slack 2000/4800/7600/10800.
 			string source = Read(Provider);
@@ -134,14 +146,14 @@ namespace ThousandAndFirst.Tests
 			int checkVerbCount = 0;
 			int index = 0;
 			while ((index = source.IndexOf("CheckVerb,", index)) >= 0) { checkVerbCount++; index++; }
-			Assert.That(checkVerbCount, Is.EqualTo(4), "exactly four sealed CheckVerb tokens");
+			Assert.That(checkVerbCount, Is.EqualTo(5), "exactly five sealed CheckVerb tokens");
 			// Copilot #167 thread 3: every cumulative-tick list in the two Harness files must read
-			// the four numbers the sealed script produces. Provider.cs may name the prior
+			// the five numbers the sealed script produces. Provider.cs may name the prior
 			// schedule only as the explicitly superseded one; Checks.cs must not name it at all.
-			Assert.That(source, Does.Contain("Cumulative ticks 2400/6000/9600/13200"));
+			Assert.That(source, Does.Contain("Cumulative ticks 2400/6000/9600/13200/16800"));
 			Assert.That(source, Does.Contain("the prior 2000/4800/7600/10800 schedule"));
 			string checks = Read(Checks);
-			Assert.That(checks, Does.Contain("cumulative ticks 2400/6000/9600/13200"));
+			Assert.That(checks, Does.Contain("cumulative ticks 2400/6000/9600/13200/16800"));
 			Assert.That(checks, Does.Not.Contain("2000/4800/7600/10800"));
 		}
 
@@ -490,6 +502,52 @@ namespace ThousandAndFirst.Tests
 		/// refuse only on liveness/AvailableSettlers grounds.
 		/// </summary>
 		[Test]
+		public void TheCaseReadsThePlotsCurrentRootNotTheRetiredWorksRoot()
+		{
+			// Run 43 (6fba8b5): production re-roots the paid output on the final building and
+			// Job.OutputId names it; the case must re-resolve every Check, through the
+			// engine-free rule, and journal final=/root-source=/blueprint=/design-key=.
+			string root = Read("Harness/KingdomTeardownNativeChecks.Root.cs");
+			Assert.That(root, Does.Contain("KingdomConstruction.TryFind(JobId, out row) && row != null"));
+			Assert.That(root, Does.Contain("row.Phase == KingdomConstructionPhase.Complete"));
+			Assert.That(root, Does.Contain("survey.Built[i]"));
+			Assert.That(root, Does.Contain("KingdomConstruction.ReceiptProperty) == JobId"));
+			Assert.That(root, Does.Contain("KingdomTeardownRootResolution.Choose(WorksId, found, complete,"));
+			Assert.That(root, Does.Contain("KingdomUpgrade.DesignKeyOf(Root)"));
+			Assert.That(root, Does.Contain("larder-gate="));
+			string source = Read("Harness/KingdomTeardownNativeChecks.Case.cs");
+			Assert.That(source, Does.Contain("GameObject works = ResolveCurrentRoot();"));
+			Assert.That(source, Does.Not.Contain("GameObject works = Zone.FindObjectByID(WorksId);"));
+			Assert.That(source, Does.Contain("StruckId = works.IDIfAssigned;"));
+			Assert.That(source, Does.Contain("Zone.FindObjectByID(StruckId ?? WorksId)"));
+			Assert.That(Read("Harness/KingdomTeardownNativeChecks.Telemetry.cs"), Does.Contain(".Append(RootClause(Root))"));
+			string rule = Read("Harness/KingdomTeardownRootResolution.cs");
+			Assert.That(rule, Does.Not.Contain("using XRL"));
+			Assert.That(rule, Does.Contain("if (RowFound && RowComplete && !string.IsNullOrEmpty(RowOutputId))"));
+		}
+
+		[Test]
+		public void TheStrikeWaitsForTheRealReceiptToBecomeSupersedable()
+		{
+			// Run 45 (28a4451): production's OrderStrike refuses a building whose own terminal
+			// receipt is not yet supersedable (closure pending); the case must wait, journaling
+			// receipt-source=real, and never mint a receipt of its own.
+			string root = Read("Harness/KingdomTeardownNativeChecks.Root.cs");
+			Assert.That(root, Does.Contain("KingdomConstruction.CanSupersedeTerminalReceipt(System, Zone, Built, row)"));
+			Assert.That(root, Does.Contain("KingdomTeardownStrikeReadiness.Judge("));
+			Assert.That(root, Does.Contain("receipt-source="));
+			Assert.That(root, Does.Contain("synthetic-bill=stock-only"));
+			string source = Read("Harness/KingdomTeardownNativeChecks.Case.cs");
+			Assert.That(source, Does.Contain("if (readiness == KingdomTeardownStrikeReadiness.Verdict.WaitClosure)"));
+			Assert.That(source, Does.Contain("awaiting-supersede=true"));
+			Assert.That(source, Does.Contain("Require(readiness == KingdomTeardownStrikeReadiness.Verdict.Strike,"));
+			Assert.That(source, Does.Not.Contain("SetStringProperty(KingdomConstruction.ReceiptProperty"));
+			string rule = Read("Harness/KingdomTeardownStrikeReadiness.cs");
+			Assert.That(rule, Does.Not.Contain("using XRL"));
+			Assert.That(rule, Does.Contain("return Supersedable ? Verdict.Strike : Verdict.WaitClosure;"));
+		}
+
+		[Test]
 		public void RequireAvailableNeverAssertsThePostValueOnlyLivenessAndAvailability()
 		{
 			string enrollment = Read("Harness/KingdomTeardownCrewEnrollment.cs");
@@ -497,9 +555,19 @@ namespace ThousandAndFirst.Tests
 				"Require(GameObject.Validate(body) && body.IsAlive,"));
 			Assert.That(enrollment, Does.Contain(
 				"is dead or no longer a valid object"));
-			Assert.That(enrollment, Does.Contain(
-				"is not present in the production AvailableSettlers projection"));
 			Assert.That(enrollment, Does.Contain("bool ownRaising = AcceptablePostIds != null"));
+			// Run 39 retry 2: staged for a physical happening is healthy; only standing and ground
+			// are asserted, through the engine-free rule, and staged=/standing= are journaled.
+			Assert.That(enrollment, Does.Contain("KingdomPhysicalHappenings.IsStaged(body)"));
+			Assert.That(enrollment, Does.Contain("KingdomTeardownCrewAvailabilityRules.Judge(onRoll, grounded, staged)"));
+			Assert.That(enrollment, Does.Contain("verdict == KingdomTeardownCrewAvailabilityRules.Verdict.Accepted"));
+			Assert.That(enrollment, Does.Contain(".Describe(onRoll, grounded, staged, isAvailable)"));
+			Assert.That(enrollment, Does.Not.Contain("Require(isAvailable,"));
+			string rules = Read("Harness/KingdomTeardownCrewAvailabilityRules.cs");
+			Assert.That(rules, Does.Not.Contain("using XRL"));
+			Assert.That(rules, Does.Contain("if (!ResidentOnRoll) return Verdict.RefusedNotResident;"));
+			Assert.That(rules, Does.Contain("if (!Grounded) return Verdict.RefusedUngrounded;"));
+			Assert.That(rules, Does.Not.Contain("if (Staged)"));
 			// No Require may name the post value once a raising can exist -- disclosure only.
 			Assert.That(enrollment, Does.Not.Contain("neither free nor posted"));
 		}

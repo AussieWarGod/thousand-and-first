@@ -1,0 +1,14 @@
+# Genuine default Quickstart with four original citizens and a real paid fire commission.
+# Empty physical chests obstruct both starter shelter rectangles and the paid fire plot. An extra 400 real drams and
+# 100 edible servings isolate roof pressure. The fixture never edits clocks, departure state,
+# membership, labour or home assignments. Two ordinary roof departures must leave the same two
+# citizens across another two days; after the exact obstacles are removed, ordinary turns must
+# finish usable starter homes AND the paid fire. This is deliberately adverse setup, not a
+# statement about ordinary starting supplies. No cold-load claim belongs to this scenario.
+DESCRIPTION=delayed Quickstart housing retains two citizens who finish shelter and paid construction after the obstruction is removed
+REQUEST=founding-first-city
+SCRIPT=quickstart-lifecycle marsh yes;stagedigest;housing-delay;advance 10000;housing-retained;advance 2400;housing-retained;housing-unblock;advance 4800;housing-recovered;stagedigest
+VERBS=housing-delay,housing-retained,housing-unblock,housing-recovered
+EXPECT=QUICKSTART-BOOT-BEGIN:OK,QUICKSTART-BOOT-OBSERVED:OK,QUICKSTART-BOOT-COMPLETE:OK,QUICKSTART-BUILD-BEGIN:OK,QUICKSTART-BUILD-QUOTE:OK,QUICKSTART-BUILD-CANPAY:OK,QUICKSTART-BUILD-COMMISSION:OK,QUICKSTART-LIFECYCLE-PROFILE:OK,QUICKSTART-BUILD-COMPLETE:OK~commissioned=true,stagedigest:OK~founded=true,housing-delay:OK~housing-recovery delayed,advance:OK,housing-retained:OK~housing-recovery retained,advance:OK,housing-retained:OK~housing-recovery retained,housing-unblock:OK~housing-recovery unblocked,advance:OK,housing-recovered:OK~housing-recovery recovered,stagedigest:OK~founded=true,COMPLETE
+SET=growth,housing,native-regression
+TIMEOUT=1800
