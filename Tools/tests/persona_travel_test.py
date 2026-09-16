@@ -57,6 +57,19 @@ class TravelTests(unittest.TestCase):
                     journal[4] = ("advance-complete", "OK", f"{elapsed} turn(s) elapsed of {requested} requested")
                     self.assertEqual(not valid, bool(travel.assess(journal, mode, True)))
 
+    def test_master_pause_single_turn_advance_tolerates_next_player_action_overshoot(self):
+        # Verbatim row shape from the beta-economic-present@8a558fc3 native run report
+        # (docs/DEVELOPMENT.md: "the engine completes on the next player action opportunity,
+        # so 1201 actual turns for 1200 requested is valid"; Tools/scenario_advance_check.py
+        # accepts the same overshoot for the outer warmup/drain advances). This tolerance is
+        # exactly [requested, requested+1] and does not widen further.
+        for mode in ("present", "away"):
+            for elapsed, valid in ((1, True), (2, True), (3, False), (0, False)):
+                with self.subTest(mode=mode, elapsed=elapsed):
+                    journal = economic_rows(mode)
+                    journal[6] = ("advance-complete", "OK", f"{elapsed} turn(s) elapsed of 1 requested")
+                    self.assertEqual(not valid, bool(travel.assess(journal, mode, True)))
+
     def test_warmup_requires_a_real_day_before_observation(self):
         for fixture in (rows, economic_rows):
             for elapsed, requested, valid in ((1200, 1200, True), (1201, 1200, True),
