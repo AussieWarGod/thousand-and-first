@@ -18,8 +18,8 @@ namespace ThousandAndFirst.Harness
 			Ok = false;
 			try
 			{
-				KingdomCampHeartNativeProvider.Require(string.IsNullOrEmpty(Argument)
-					&& KingdomScenarioScript.TryRead(out var script, out _)
+				bool read = KingdomScenarioScript.TryRead(out var script, out _);
+				KingdomCampHeartNativeProvider.Require(string.IsNullOrEmpty(Argument) && read
 					&& KingdomCampHeartChainScript.SealedTargetRung(script) > 0,
 					"exact sealed paid heart chain absent");
 				KingdomCampHeartNativeProvider.Require(
