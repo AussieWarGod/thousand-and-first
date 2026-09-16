@@ -52,6 +52,18 @@ namespace ThousandAndFirst.Tests
 		}
 
 		[Test]
+		public void CurrentEnvelopeCarriesNewHomeClaimsButHistoricalEnvelopeCannot()
+		{
+			var fixture = new Fixture { Rung = "sr3:opaque-native-owner-must-validate" };
+			string wire = Wire(fixture.Snapshot());
+			ClassicAssert.IsTrue(KingdomSubsidenceRungSaveSnapshotCodec.TryDecode(wire, out var read));
+			ClassicAssert.AreEqual(fixture.Rung, read.RungWire);
+			ClassicAssert.AreEqual(wire, Wire(read));
+			fixture.Step = "ss4:opaque-native-owner-must-validate";
+			Refuses(fixture.Snapshot());
+		}
+
+		[Test]
 		public void CurrentEnvelopeBindsVersionTwoToSs5WithoutChangingTheRungSchema()
 		{
 			string wire = Wire(new Fixture().Snapshot()); byte[] bytes = Bytes(wire);

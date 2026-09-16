@@ -14,16 +14,19 @@ namespace ThousandAndFirst
 			if (!RungOwnerExact(frame)
 				|| frame.System.Bindings == null || !frame.System.Bindings.TryReadExact(out KingdomBindingTable bindings, out _)
 				|| !bindings.TryGet(roof.ResidentId, KingdomBindingKind.Resident, out KingdomBinding binding)
-				|| binding.ObjectId != roof.BodyObjectId || binding.ZoneId != frame.Plan.ZoneId
-				|| !city.TryCaptureSubsidenceRoof(roof.ResidentId, out row)
-				|| row.ZoneId != frame.Plan.ZoneId || row.HomeWorkId != work.WorkId
+				|| binding.ObjectId != roof.BodyObjectId
+				|| !city.TryCaptureSubsidenceRoof(roof.ResidentId, out row) || binding.ZoneId != row.ZoneId
 				|| row.Standing != (int)KingdomResidentStanding.Resident
-				|| !frame.Subjects.TryGetValue(roof.BodyObjectId, out GameObject body)
-				|| !GameObject.Validate(body) || body.IDIfAssigned != roof.BodyObjectId
-				|| body.CurrentZone != frame.Zone || KingdomResidents.IdOf(body) != roof.ResidentId
+				|| !KingdomSubsidenceRungRules.HomeOwnerMatches(frame.Plan, work, roof,
+					row.HomeWorkId, row.ZoneId, row.Residence)) return false;
+			bool present = frame.Subjects.TryGetValue(roof.BodyObjectId, out GameObject body);
+			if (roof.HomeZoneId != null && !present && row.ZoneId != frame.Plan.ZoneId) return true;
+			if (!present || !GameObject.Validate(body) || body.IDIfAssigned != roof.BodyObjectId
+				|| body.CurrentZone?.ZoneID != binding.ZoneId || KingdomResidents.IdOf(body) != roof.ResidentId
 				|| !KingdomCitizenship.BelongsTo(frame.System, body)
 				|| !RawRungProperty(body, KingdomLodging.HomePlotIdProperty, work.PlotId)) return false;
-			return ReferenceEquals(frame.Survey.FindBoundBody(roof.BodyObjectId, KingdomBindingKind.Resident), body);
+			return body.CurrentZone != frame.Zone ? roof.HomeZoneId != null
+				: ReferenceEquals(frame.Survey.FindBoundBody(roof.BodyObjectId, KingdomBindingKind.Resident), body);
 		}
 
 		private static bool ApplyRungRoof(RungFrame frame, int workIndex, int roofIndex)

@@ -82,26 +82,12 @@ namespace ThousandAndFirst
 		/// <summary>Purely projects the ordinary settlement pass: standing assignments keep
 		/// their beds, then every unassigned or stale-home resident is seated in normal resident
 		/// order. No property, brink, Chronicle, ledger, or cohabitation state is changed.</summary>
-		private static Dictionary<string, List<GameObject>> ProjectedOccupancy(Zone Z,
+		private static Dictionary<string, List<HouseholdMember>> ProjectedOccupancy(Zone Z,
 			KingdomBenefitIndex Benefits)
 		{
-			Dictionary<string, List<GameObject>> result =
-				new Dictionary<string, List<GameObject>>(StringComparer.Ordinal);
-			HashSet<string> standing = new HashSet<string>(StringComparer.Ordinal);
 			List<GameObject> homes = HousingIn(Z, Benefits);
-			for (int i = 0; i < homes.Count; i++)
-			{
-				string plot = homes[i].GetStringProperty(KingdomPlots.PlotIdProperty);
-				if (!string.IsNullOrEmpty(plot) && !IsCondemned(homes[i])) standing.Add(plot);
-			}
-			List<GameObject> residents = ResidentsIn(Z);
-			List<GameObject> unassigned = new List<GameObject>();
-			for (int i = 0; i < residents.Count; i++)
-			{
-				string plot = residents[i].GetStringProperty(HomePlotIdProperty);
-				if (standing.Contains(plot)) AddOccupant(result, plot, residents[i]);
-				else unassigned.Add(residents[i]);
-			}
+			var result = ReadHouseholds(Z, homes, out List<GameObject> unassigned);
+			if (result == null) return null;
 			for (int i = 0; i < unassigned.Count; i++)
 			{
 				GameObject ignoredHome;
@@ -116,7 +102,7 @@ namespace ThousandAndFirst
 		}
 
 		private static bool ObserveOccupantConflicts(List<string> Refuses,
-			List<string> SelfTags, string Creed, List<GameObject> Occupants,
+			List<string> SelfTags, string Creed, List<HouseholdMember> Occupants,
 			KingdomLodgingRules.Closeness Quarters, out List<string> Evidence)
 		{
 			Evidence = new List<string>();
@@ -124,64 +110,57 @@ namespace ThousandAndFirst
 			if (Occupants == null) return false;
 			for (int i = 0; i < Occupants.Count; i++)
 			{
-				GameObject occupant = Occupants[i];
-				string occupantCreed = occupant.GetStringProperty(KingdomCreed.CreedProperty);
-				int hostility = KingdomCreed.HostilityBetween(Creed, occupantCreed);
-				QolProfile profile = KingdomQol.ProfileOf(occupant);
-				List<string> needs = new List<string>(profile.Needs);
-				List<string> prefers = new List<string>(profile.Prefers);
-				List<string> refuses = new List<string>(profile.Refuses);
-				List<string> selfTags = SelfTagsOf(profile);
-				bool conflict = KingdomLodgingRules.Conflicts(Refuses, SelfTags,
-					refuses, selfTags, hostility, Quarters);
+				HouseholdMember occupant = Occupants[i];
+				bool conflict = MemberConflicts(Refuses, SelfTags, Creed, occupant, Quarters, out int hostility);
 				any |= conflict;
-				needs.Sort(StringComparer.Ordinal); prefers.Sort(StringComparer.Ordinal);
-				refuses.Sort(StringComparer.Ordinal); selfTags.Sort(StringComparer.Ordinal);
+				if (GameObject.Validate(occupant.Body))
+				{
+					Evidence.Add(PresentOccupantObservation(occupant.Body, hostility, Quarters, conflict));
+					continue;
+				}
 				Evidence.Add(ArrivalObservationHash(delegate(BinaryWriter writer)
 				{
-					WriteObservationString(writer, occupant.IDIfAssigned);
-					WriteObservationString(writer, occupant.Blueprint);
-					WriteObservationString(writer, occupantCreed);
-					WriteObservationList(writer, needs); WriteObservationList(writer, prefers);
-					WriteObservationList(writer, refuses); WriteObservationList(writer, selfTags);
+					writer.Write(occupant.ResidentId);
+					if (occupant.ResidentId <= 0) WriteObservationString(writer, occupant.BodyId);
+					writer.Write(occupant.Known);
+					if (occupant.Known)
+					{
+						WriteObservationString(writer, occupant.Facts.Creed);
+						WriteObservationList(writer, new List<string>(occupant.Facts.Needs));
+						WriteObservationList(writer, new List<string>(occupant.Facts.Refuses));
+						WriteObservationList(writer, new List<string>(occupant.Facts.SelfTags));
+						WriteObservationString(writer, occupant.Facts.BedId);
+					}
 					writer.Write(hostility); writer.Write((int)Quarters); writer.Write(conflict);
-				}));
+				}, "taf:lodging-reservation-observation:v1"));
 			}
 			return any;
 		}
 
-		private static bool AnyOccupantConflicts(List<string> Refuses, List<string> SelfTags, string Creed, List<GameObject> Occupants, KingdomLodgingRules.Closeness Quarters)
+		private static bool AnyOccupantConflicts(List<string> Refuses, List<string> SelfTags, string Creed, List<HouseholdMember> Occupants, KingdomLodgingRules.Closeness Quarters)
 		{
-			for (int i = 0; i < Occupants.Count; i++)
-			{
-				GameObject occupant = Occupants[i];
-				string occupantCreed = occupant.GetStringProperty(KingdomCreed.CreedProperty);
-				// Addendum 4c: which creed feelings break a household is a question about the
-				// household's own quarters, so the raw engine feeling is handed straight down and
-				// the ladder in KingdomLodgingRules decides. The single floor that used to be
-				// applied here -- only the flat -100 fault lines, never the standing -50 -- is
-				// still exactly what a home at Closeness.Private asks, and is now the top rung of
-				// four rather than the rule for every roof in the settlement.
-				int hostility = KingdomCreed.HostilityBetween(Creed, occupantCreed);
-				QolProfile theirs = KingdomQol.ProfileOf(occupant);
-				List<string> occupantSelfTags = SelfTagsOf(theirs);
-				List<string> occupantRefuses = new List<string>(theirs.Refuses);
-				if (KingdomLodgingRules.Conflicts(Refuses, SelfTags, occupantRefuses, occupantSelfTags, hostility, Quarters))
-				{
-					return true;
-				}
-			}
+			foreach (HouseholdMember member in Occupants)
+				if (MemberConflicts(Refuses, SelfTags, Creed, member, Quarters, out _)) return true;
 			return false;
 		}
 
-		private static string ArrivalObservationHash(Action<BinaryWriter> Write)
+		private static bool MemberConflicts(List<string> Refuses, List<string> SelfTags, string Creed,
+			HouseholdMember Member, KingdomLodgingRules.Closeness Quarters, out int Hostility)
+		{
+			Hostility = Member.Known ? KingdomCreed.HostilityBetween(Creed, Member.Facts.Creed) : 0;
+			return !Member.Known || KingdomLodgingRules.Conflicts(Refuses, SelfTags,
+				new List<string>(Member.Facts.Refuses), new List<string>(Member.Facts.SelfTags), Hostility, Quarters);
+		}
+
+		private static string ArrivalObservationHash(Action<BinaryWriter> Write,
+			string Domain = "taf:lodging-arrival-observation:v1")
 		{
 			if (Write == null) return null;
 			using (MemoryStream stream = new MemoryStream())
 			using (BinaryWriter writer = new BinaryWriter(stream,
 				new UTF8Encoding(false, true), true))
 			{
-				WriteObservationString(writer, "taf:lodging-arrival-observation:v1");
+				WriteObservationString(writer, Domain);
 				Write(writer); writer.Flush();
 				using (SHA256 sha = SHA256.Create())
 				{
@@ -223,15 +202,9 @@ namespace ThousandAndFirst
 			System.Ledger.Note("{{r|" + line + "}}");
 		}
 
-		private static void AddOccupant(Dictionary<string, List<GameObject>> Occupancy, string PlotId, GameObject Resident)
+		private static void AddOccupant(Dictionary<string, List<HouseholdMember>> Occupancy, string PlotId, GameObject Resident)
 		{
-			List<GameObject> list;
-			if (!Occupancy.TryGetValue(PlotId, out list))
-			{
-				list = new List<GameObject>();
-				Occupancy[PlotId] = list;
-			}
-			list.Add(Resident);
+			AddMember(Occupancy, PlotId, Member(Resident, PlotId));
 		}
 
 		// The name the roll carries this person under, which is the key the grace is filed by and

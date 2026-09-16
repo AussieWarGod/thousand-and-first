@@ -30,6 +30,8 @@ namespace ThousandAndFirst.Simulation.City
 
 		public List<int> ResidentHomeWorkIds = new List<int>();
 
+		public List<string> ResidentResidences = new List<string>();
+
 		public List<int> ResidentJobWorkIds = new List<int>();
 
 		public List<int> ResidentJobRoles = new List<int>();

@@ -253,7 +253,8 @@ def audit_archive_contract(problems):
         "public const int ArrivalCadenceVersion = 17;",
         "public const int ExpeditionResultVersion = 18;",
         "public const int SubsidenceStorageVersion = 19;",
-        "public const int CurrentVersion = SubsidenceStorageVersion;",
+        "public const int ResidenceVersion = 20;",
+        "public const int CurrentVersion = ResidenceVersion;",
         "TryEncodeLegacyV1ForTests",
         "TryEncodePreviousV2ForTests",
         "TryEncodeRaidV3ForTests",
@@ -276,7 +277,7 @@ def audit_archive_contract(problems):
     for term in expected:
         if term not in source:
             problems.append(
-                f"archive source no longer matches current v19 / historical v1-v18 contract: {term}"
+                f"archive source no longer matches current v20 / historical v1-v19 contract: {term}"
             )
     reader_versions = (
         "LegacyVersion", "PreviousVersion", "RaidVersion", "ResidentIdentityVersion",
@@ -284,7 +285,7 @@ def audit_archive_contract(problems):
         "PhysicalHappeningVersion", "ExactLogisticsVersion", "DefensiveReservationVersion",
         "SemanticSelectionVersion", "HappeningCursorVersion", "DeliveryDomainVersion",
         "CivicAuthorityVersion", "FirstGuestVersion", "PhysicalFirstGuestVersion",
-        "ArrivalCadenceVersion", "ExpeditionResultVersion", "CurrentVersion",
+        "ArrivalCadenceVersion", "ExpeditionResultVersion", "SubsidenceStorageVersion", "CurrentVersion",
     )
     require(
         problems, "Core/KingdomArchivedSettlementCodec.DecodeCloneHash.cs",
@@ -295,6 +296,8 @@ def audit_archive_contract(problems):
         problems, "Core/KingdomArchivedSettlementCodec.Schema.cs",
         'if (SchemaVersion < SubsidenceStorageVersion && Type == typeof(Simulation.City.KingdomCityBook) '
         '&& string.Equals(Name, "SubsidenceModel", StringComparison.Ordinal)) return false;',
+        'if (SchemaVersion < ResidenceVersion && Type == typeof(Simulation.City.KingdomCityBook) '
+        '&& string.Equals(Name, "ResidentResidences", StringComparison.Ordinal)) return false;',
     )
     for shard in ("ValueReader", "ValueWriter"):
         require(
@@ -306,10 +309,12 @@ def audit_archive_contract(problems):
         problems, "Core/KingdomArchivedSettlementCodec.ValueReader.cs",
         "if (SchemaVersion < SubsidenceStorageVersion) { city.SubsidenceModel = null; "
         "if (!city.TryMigrateSubsidenceStorage())",
-        "else if (!city.HasValidSubsidenceStorage())",
+        "else if (!city.TryMigrateSubsidenceStorage())",
+        "if (SchemaVersion < ResidenceVersion) city.ResidentResidences = null;",
+        "!city.TryMigrateResidenceStorage()",
     )
     # Preserve the published v17 migration-evidence passages as historical pins. They do not
-    # select the isolated draft's current reader; the exact v19 source contract above does.
+    # select the current reader; the exact v20 source contract above does.
     require(
         problems,
         "TESTING.md",

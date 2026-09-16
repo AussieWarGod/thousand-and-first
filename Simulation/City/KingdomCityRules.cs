@@ -28,7 +28,7 @@ namespace ThousandAndFirst.Simulation.City
 		/// Version 4 distinguishes absent legacy subsidence storage from damaged current authority.
 		/// </para>
 		/// </summary>
-		internal const int SchemaVersion = 4;
+		internal const int SchemaVersion = 5;
 
 		/// <summary>The rules revision the book was last advanced by. Separate from the schema:
 		/// a rules change that does not move a column still wants saying.</summary>

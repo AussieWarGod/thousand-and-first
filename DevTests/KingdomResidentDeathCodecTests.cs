@@ -50,6 +50,31 @@ namespace ThousandAndFirst.Tests
 			ClassicAssert.AreEqual(KingdomResidentDeathCodec.Row(original.Before), KingdomResidentDeathCodec.Row(copy.Before));
 		}
 
+		[TestCase(false)] [TestCase(true)]
+		public void ResidenceAwareDeathReceiptPreservesHomeAndRefusesChangedIdentity(bool accounted)
+		{
+			var receipt = DeathFixture.Receipt();
+			ClassicAssert.IsTrue(KingdomResidenceRules.TryEncode(new KingdomResidence("home-map", "plot", "bed",
+				"creed", new[] { "dry" }, new[] { "fungal" }, new[] { "human" }), out string home));
+			string legacyRow = KingdomResidentDeathCodec.Row(receipt.Before);
+			receipt.Before = receipt.Before.WithResidence(home);
+			if (accounted) receipt = DeathFixture.Accounted(receipt);
+			var journal = DeathFixture.Journal(receipt, DeathFixture.Receipt(2));
+			string wire = DeathFixture.Wire(journal);
+			StringAssert.StartsWith("rd2:", wire);
+			var recovered = DeathFixture.RoundTrip(journal);
+			ClassicAssert.AreEqual("", recovered.Entries[1].Before.Residence);
+			var loaded = recovered.Entries[0];
+			ClassicAssert.AreEqual(home, loaded.Before.Residence);
+			ClassicAssert.AreEqual(receipt.Before.BoundZoneId, loaded.Before.BoundZoneId);
+			ClassicAssert.AreNotEqual(legacyRow, KingdomResidentDeathCodec.Row(loaded.Before));
+			ClassicAssert.AreEqual(legacyRow, KingdomResidentDeathCodec.Row(loaded.Before.WithResidence("")),
+				"old receipts with unknown residence must keep their old row comparison bytes");
+			ClassicAssert.IsFalse(KingdomResidentDeathCodec.TryDecode("rd1:" + wire.Substring(4), out _));
+			loaded.Before = loaded.Before.WithResidence("invalid");
+			ClassicAssert.IsFalse(KingdomResidentDeathCodec.TryEncode(DeathFixture.Journal(loaded), out _));
+		}
+
 		[TestCase(0)] [TestCase(1)] [TestCase(2)] [TestCase(3)] [TestCase(4)] [TestCase(5)] [TestCase(6)]
 		public void EveryLegalPhaseRetainsItsOwnRequiredAccountingAndTellingState(int phase)
 		{

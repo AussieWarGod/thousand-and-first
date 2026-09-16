@@ -9,8 +9,13 @@ namespace ThousandAndFirst
 		internal static bool TryLabHome(Zone Z, GameObject Resident,
 			out GameObject Home, out string PlotId)
 		{
+			PlotId = LocalHomePlot(Z, Resident);
+			return TryLabHomeAt(Z, PlotId, out Home);
+		}
+
+		private static bool TryLabHomeAt(Zone Z, string PlotId, out GameObject Home)
+		{
 			Home = null;
-			PlotId = Resident?.GetStringProperty(HomePlotIdProperty);
 			if (Z == null || string.IsNullOrEmpty(PlotId)) return false;
 			if (!TryBenefitIndex(Z, null, out KingdomBenefitIndex benefits,
 				out string failure))
@@ -46,15 +51,9 @@ namespace ThousandAndFirst
 				if (homes[i] == source || string.Equals(homes[i].GetStringProperty(
 					KingdomPlots.PlotIdProperty), ExpectedSourcePlot, StringComparison.Ordinal))
 					homes.RemoveAt(i);
-			Dictionary<string, List<GameObject>> occupancy =
-				new Dictionary<string, List<GameObject>>(StringComparer.Ordinal);
-			List<GameObject> residents = ResidentsIn(Z);
-			for (int i = 0; i < residents.Count; i++)
-			{
-				if (ReferenceEquals(residents[i], Resident)) continue;
-				string plot = residents[i].GetStringProperty(HomePlotIdProperty);
-				if (!string.IsNullOrEmpty(plot)) AddOccupant(occupancy, plot, residents[i]);
-			}
+			var occupancy = ReadHouseholds(Z, HousingIn(Z, benefits), out _);
+			if (occupancy == null) return LabFail("Resident home authority is unavailable.", out Failure);
+			foreach (var household in occupancy.Values) household.RemoveAll(member => member.Is(Resident));
 			KingdomLodgingRules.UnhousedReason reason;
 			KingdomLodgingRules.Closeness roomiest;
 			List<string> needs;
@@ -92,16 +91,18 @@ namespace ThousandAndFirst
 		{
 			Failure = null;
 			string held = Resident?.GetStringProperty(HomePlotIdProperty);
-			if (string.Equals(held, ExpectedTargetPlot, StringComparison.Ordinal))
+			bool rowAtTarget = Simulation.City.KingdomResidents.TryResidence(System, Resident, out _,
+				out Simulation.City.KingdomResidence homeRecord)
+				&& Simulation.City.KingdomResidenceRules.SameHome(homeRecord, Z?.ZoneID, ExpectedTargetPlot);
+			if (string.Equals(held, ExpectedTargetPlot, StringComparison.Ordinal) || rowAtTarget)
 			{
-				if (!TryLabHome(Z, Resident, out GameObject recovered,
-					out string recoveredPlot)
-					|| !string.Equals(recoveredPlot, ExpectedTargetPlot,
-						StringComparison.Ordinal)
+				if (!TryLabHomeAt(Z, ExpectedTargetPlot, out GameObject recovered)
 					|| !string.Equals(recovered.IDIfAssigned, ExpectedTargetObjectId,
 						StringComparison.Ordinal))
 					return LabFail("The applied target roof can no longer be proved exactly.",
 						out Failure);
+				if (!Simulation.City.KingdomResidents.TryAssignResidence(System, Z, Resident, recovered))
+					return LabFail("The target home authority could not be recovered.", out Failure);
 				FinishLabRehouse(System, Z, Resident, ExpectedTargetPlot);
 				return true;
 			}
@@ -112,7 +113,8 @@ namespace ThousandAndFirst
 			if (!string.Equals(targetPlot, ExpectedTargetPlot, StringComparison.Ordinal)
 				|| !string.Equals(target?.IDIfAssigned, ExpectedTargetObjectId, StringComparison.Ordinal))
 				return LabFail("The exact target roof is no longer the lawful rehouse result.", out Failure);
-			Resident.SetStringProperty(HomePlotIdProperty, ExpectedTargetPlot);
+			if (!Simulation.City.KingdomResidents.TryAssignResidence(System, Z, Resident, target))
+				return LabFail("The exact home authority did not publish.", out Failure);
 			if (!string.Equals(Resident.GetStringProperty(HomePlotIdProperty),
 				ExpectedTargetPlot, StringComparison.Ordinal))
 				return LabFail("The exact home assignment did not persist.", out Failure);
