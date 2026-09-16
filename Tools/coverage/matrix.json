@@ -916,10 +916,10 @@
           "artifactSha256": "352c12f4a6ad9790f0322aadcdc69d83e2abd3f31d7e61f78a20a9bba4038557",
           "artifactBytes": 7931,
           "verdict": "PASS - real guest identity and starter home survive admission, two weeks, refill and cold load; stale actions refuse; next job pays exactly",
-          "scope": "Genuine marsh/advisor-on Quickstart seed #43101; 16803 saved turns, four original founders, six beds and guest768 Yywur/r_KingdomSettlerHand, native human culture/species. Scripted menus and one disclosed founding-reputation adjustment; repeated startup retains its exact witness. Actual16step walk and8dram carried refill, strict logs, full pinned recipes and owned stops. No all-culture admission, historical migration, interrupted enrollment, rendered UI, multi-map or balance acceptance.",
+          "scope": "Genuine marsh/advisor-on Quickstart seed #43101; 16803 saved turns, four original founders, six beds and guest768 Yywur/r_KingdomSettlerHand, native human culture/species. Scripted menus and one disclosed founding-reputation adjustment; repeated startup retains its exact witness. Actual16step walk and8dram carried refill, strict logs, full pinned recipes and owned stops. No all-culture admission, historical migration, interrupted enrollment, rendered UI, multi-map or balance acceptance. Later improvement-verdict log and envelope-occupant line diagnostics (#180) change the inventory; this retains its original full input inventory.",
           "historicalScope": false,
           "inventoryDigest": "dab17f799e9595f7e6463fa0fab67e4e62cb41d45471ed169d897d3a3b11b148",
-          "currentDevCoverage": true
+          "currentDevCoverage": false
         }
       ]
     },
@@ -1032,10 +1032,10 @@
           "artifactSha256": "352c12f4a6ad9790f0322aadcdc69d83e2abd3f31d7e61f78a20a9bba4038557",
           "artifactBytes": 7931,
           "verdict": "PASS - real guest identity and starter home survive admission, two weeks, refill and cold load; stale actions refuse; next job pays exactly",
-          "scope": "Genuine marsh/advisor-on Quickstart seed #43101; 16803 saved turns, four original founders, six beds and guest768 Yywur/r_KingdomSettlerHand, native human culture/species. Scripted menus and one disclosed founding-reputation adjustment; repeated startup retains its exact witness. Actual16step walk and8dram carried refill, strict logs, full pinned recipes and owned stops. No all-culture admission, historical migration, interrupted enrollment, rendered UI, multi-map or balance acceptance.",
+          "scope": "Genuine marsh/advisor-on Quickstart seed #43101; 16803 saved turns, four original founders, six beds and guest768 Yywur/r_KingdomSettlerHand, native human culture/species. Scripted menus and one disclosed founding-reputation adjustment; repeated startup retains its exact witness. Actual16step walk and8dram carried refill, strict logs, full pinned recipes and owned stops. No all-culture admission, historical migration, interrupted enrollment, rendered UI, multi-map or balance acceptance. Later improvement-verdict log and envelope-occupant line diagnostics (#180) change the inventory; this retains its original full input inventory.",
           "historicalScope": false,
           "inventoryDigest": "dab17f799e9595f7e6463fa0fab67e4e62cb41d45471ed169d897d3a3b11b148",
-          "currentDevCoverage": true
+          "currentDevCoverage": false
         }
       ]
     },
@@ -1356,10 +1356,10 @@
           "artifactSha256": "352c12f4a6ad9790f0322aadcdc69d83e2abd3f31d7e61f78a20a9bba4038557",
           "artifactBytes": 7931,
           "verdict": "PASS - real guest identity and starter home survive admission, two weeks, refill and cold load; stale actions refuse; next job pays exactly",
-          "scope": "Genuine marsh/advisor-on Quickstart seed #43101; 16803 saved turns, four original founders, six beds and guest768 Yywur/r_KingdomSettlerHand, native human culture/species. Scripted menus and one disclosed founding-reputation adjustment; repeated startup retains its exact witness. Actual16step walk and8dram carried refill, strict logs, full pinned recipes and owned stops. No all-culture admission, historical migration, interrupted enrollment, rendered UI, multi-map or balance acceptance.",
+          "scope": "Genuine marsh/advisor-on Quickstart seed #43101; 16803 saved turns, four original founders, six beds and guest768 Yywur/r_KingdomSettlerHand, native human culture/species. Scripted menus and one disclosed founding-reputation adjustment; repeated startup retains its exact witness. Actual16step walk and8dram carried refill, strict logs, full pinned recipes and owned stops. No all-culture admission, historical migration, interrupted enrollment, rendered UI, multi-map or balance acceptance. Later improvement-verdict log and envelope-occupant line diagnostics (#180) change the inventory; this retains its original full input inventory.",
           "historicalScope": false,
           "inventoryDigest": "dab17f799e9595f7e6463fa0fab67e4e62cb41d45471ed169d897d3a3b11b148",
-          "currentDevCoverage": true
+          "currentDevCoverage": false
         }
       ]
     },
