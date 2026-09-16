@@ -183,11 +183,11 @@ namespace ThousandAndFirst.Tests
 		{
 			string persona = Read(Persona);
 			foreach (string line in new[] { "node:arclight", "FOUR claimed zones", "THE CROWN",
-				"COMPOSITE bill", "SAME-FOOTPRINT RENOVATION", "BUDGET, DISCLOSED AND AT RISK",
+				"COMPOSITE bill", "SAME-FOOTPRINT RENOVATION", "BUDGET, DISCLOSED AND MEASURED",
 				"no save/load" })
 				Assert.That(persona, Does.Contain(line), line);
 			Assert.That(persona, Does.Contain("LOG_FORBID=[\"construction: founding heart recovery requires inspection\""));
-			Assert.That(persona, Does.Contain("TIMEOUT=3600"));
+			Assert.That(persona, Does.Contain("TIMEOUT=7000"));
 		}
 	}
 }

@@ -38,11 +38,12 @@
 # when it cannot, so the standing check reads that row out of its durable slots and requires it
 # Active on this ground, naming this job and this carrier. No hosted floor may have been commissioned.
 #
-# BUDGET, DISCLOSED AND AT RISK. 60000 ordinary turns against a 3600-second cap. The accepted
-# four-rung run requests 31200 of them; the arcology's own quoted labour is the largest on the
-# ladder. If this run times out rather than refuses, the fallback is the second route issue #160
-# allows -- a disclosed synthetic rung-4 heart in its own persona -- and that fallback costs the
-# three-real-climbs property this script has.
+# BUDGET, DISCLOSED AND MEASURED. 60000 ordinary turns inside 7000 seconds. The accepted four-rung
+# run (beta-heart-chain/a6e23f74/paid-court-renovation-chain-1) spent 2283 s on its 31200 turns,
+# AUTOSTART 2026-09-14T09:04:24.946Z to SCRIPT-COMPLETE 09:42:27.844Z: about 13.7 turns per second
+# with a fifty-resident city. 60000 turns extrapolate to at least 4400 s before any growth
+# slowdown, which is why the persona cap was raised from 3600 rather than this script shortened.
+# The margin is real but not generous, and the extrapolation is linear in a run that is not.
 # Not ordinary play, no save/load, no higher-rung persistence, no hosted-interior acceptance.
 DESCRIPTION=the heart climbs its fifth rung, the great court renovated into the hosted arcology, paid out of the city that raised the four below it
 REQUEST=founding-first-city
@@ -53,4 +54,4 @@ EXPECT=camp-heart-chain-input:OK~original-update-skipped=true,stagedigest:OK~fou
 LOG_EXPECT=["MODWARN [Pets of Harvest Dawn] - Mod defining manual load order, please convert it to use the Dependencies field.","MODWARN [Pets of Harvest Dawn] - XmlDataHelper:: <...>/steamapps/common/Caves of Qud/CoQ_Data/StreamingAssets/DLC/PetsPack1/Freehold_Pet_Ercolano/PopulationTables.xml line 4 char 6"]
 LOG_FORBID=["construction: founding heart recovery requires inspection","seal: settlement pass was not staged"]
 SET=camp,native-regression,test-only
-TIMEOUT=3600
+TIMEOUT=7000

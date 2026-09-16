@@ -217,7 +217,17 @@ OPTIONAL_KEYS = (
 SET_TAG = re.compile(r"^[a-z0-9][a-z0-9.-]*$")
 
 DEFAULT_TIMEOUT = 300
-MAX_TIMEOUT = 3600
+# Raised from 3600 for the heart's fifth rung (issue #160), on measurement rather than hope: the
+# accepted paid 1->2->3->4 chain ran its 24-verb, 31200-turn script in 2283 s of wall time
+# (AUTOSTART 2026-09-14T09:04:24.946Z to SCRIPT-COMPLETE 09:42:27.844Z in
+# beta-heart-chain/a6e23f74/paid-court-renovation-chain-1/run-scenario-journal.tsv), about 13.7
+# turns per second with a fifty-resident city. The rung-5 persona's 60000 turns extrapolate to
+# >= 4400 s before any growth slowdown, so 3600 could not have survived it. Nothing downstream
+# clamps a larger value: run-personas.sh reads the persona's own TIMEOUT (Tools/run-personas.sh:118,
+# :318) into both the wait loop (:372) and TAF_SCENARIO_TIMEOUT_SECONDS (:348), and every consumer
+# of that variable treats 3600 as a DEFAULT, not a ceiling (Tools/prepare-scenario.sh:185,
+# Tools/prepare-scenario-load.py:531; Tools/scenario_run_record.py:190,283 bound it only above zero).
+MAX_TIMEOUT = 7200
 
 DIGEST = re.compile(r"(?<![0-9a-f])[0-9a-f]{64}(?![0-9a-f])")
 

@@ -120,6 +120,12 @@ class ManifestGrammarTest(unittest.TestCase):
 
     def test_timeout_bounds(self):
         self.assertEqual(60, matrix.parse_timeout("60", "x"))
+        # Both ends of the inclusive band, by value: the ceiling moved for the rung-5 persona and a
+        # test that only checked MAX_TIMEOUT + 1 would have passed at any ceiling at all.
+        self.assertEqual(7200, matrix.MAX_TIMEOUT)
+        self.assertEqual(1, matrix.parse_timeout("1", "x"))
+        self.assertEqual(matrix.MAX_TIMEOUT,
+                         matrix.parse_timeout(str(matrix.MAX_TIMEOUT), "x"))
         for bad in ("0", "-1", "abc", str(matrix.MAX_TIMEOUT + 1), "1.5"):
             with self.assertRaises(SystemExit):
                 matrix.parse_timeout(bad, "x")
